@@ -23,10 +23,12 @@ const (
 var ErrNoConfig = fmt.Errorf("no config file exists")
 
 type Config struct {
-	MetricSink MetricSink  `json:"-"`
-	Logger     *log.Logger `json:"-"`
-	Filename   string      `json:"-"`
+	MetricSink MetricSink  `json:"-" hcl:"-"`
+	Logger     *log.Logger `json:"-" hcl:"-"`
+	Filename   string      `json:"-" hcl:"-"`
+	AuthURL    string      `json:"auth_url" hcl:"auth_url"`
 	AuthToken  string      `json:"auth_token" hcl:"auth_token"`
+	Auth       *AuthConfig `json:"auth" hcl:"auth"`
 }
 
 func (c *Config) Load() error {

@@ -10,15 +10,21 @@ import (
 	"strings"
 	"time"
 
-	"golang.org/x/crypto/ssh/terminal"
+	"github.com/dghubble/sling"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"golang.org/x/crypto/ssh/terminal"
 
+	chttp "github.com/confluentinc/cli/http"
 	"github.com/confluentinc/cli/shared"
+	//"io/ioutil"
+	"golang.org/x/oauth2"
+	"context"
 )
 
 const (
 	loginPath = "/api/sessions"
+	mePath = "/api/me"
 )
 
 var (
@@ -27,7 +33,6 @@ var (
 
 type Authentication struct {
 	Commands  []*cobra.Command
-	URL       string
 	config    *shared.Config
 }
 
@@ -43,7 +48,7 @@ func (a *Authentication) init() {
 		Short: "Login to a Confluent Control Plane.",
 		RunE:  a.login,
 	}
-	loginCmd.Flags().StringVar(&a.URL, "url", "https://confluent.cloud", "Confluent Control Plane URL")
+	loginCmd.Flags().StringVar(&a.config.AuthURL, "url", "https://confluent.cloud", "Confluent Control Plane URL")
 	logoutCmd := &cobra.Command{
 		Use:   "logout",
 		Short: "Logout of a Confluent Control Plane.",
@@ -61,7 +66,7 @@ func (a *Authentication) login(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	response, err := a.http().Post(a.URL + loginPath, "application/json", bytes.NewBuffer(payload))
+	response, err := a.http().Post(a.config.AuthURL + loginPath, "application/json", bytes.NewBuffer(payload))
 	if err != nil {
 		return err
 	}
@@ -80,9 +85,22 @@ func (a *Authentication) login(cmd *cobra.Command, args []string) error {
 			return ErrUnauthorized
 		}
 		a.config.AuthToken = token
-		err := a.config.Save()
+
+		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: a.config.AuthToken})
+		tc := oauth2.NewClient(context.Background(), ts)
+		s := sling.New().Client(tc).Base(a.config.AuthURL)
+
+		me := &shared.AuthConfig{}
+		confluentError := &chttp.ConfluentError{}
+		_, err := s.New().Get("/api/me").Receive(me, confluentError)
 		if err != nil {
-			return errors.Wrap(err, "unable to save auth token")
+			return errors.Wrap(err, "unable to fetch user info") // you just don't get me
+		}
+		a.config.Auth = me
+
+		err = a.config.Save()
+		if err != nil {
+			return errors.Wrap(err, "unable to save user auth")
 		}
 		fmt.Println("Logged in as", username)
 	}

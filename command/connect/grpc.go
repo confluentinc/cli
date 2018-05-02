@@ -16,7 +16,7 @@ func (c *GRPCClient) List(ctx context.Context) (connectors []*proto.Connector, e
 	if err != nil {
 		return nil, err
 	}
-	return resp.Connectors, nil
+	return resp.Clusters, nil
 }
 
 // The gRPC server the GPRClient talks to. Plugin authors implement this if they're using Go.
@@ -26,5 +26,5 @@ type GRPCServer struct {
 
 func (s *GRPCServer) List(ctx context.Context, req *proto.ListRequest) (resp *proto.ListResponse, err error) {
 	r, err := s.Impl.List(ctx)
-	return &proto.ListResponse{Connectors: r}, err
+	return &proto.ListResponse{Clusters: r}, err
 }

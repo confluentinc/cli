@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"os"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -28,6 +29,16 @@ func TestConfig_Load(t *testing.T) {
 			},
 			file: "/tmp/TestConfig_Load.hcl",
 		},
+		{
+			name: "should load auth url from file",
+			args: &args{
+				contents: "\"auth_url\" = \"https://stag.cpdev.cloud\"",
+			},
+			want: &Config{
+				AuthURL: "https://stag.cpdev.cloud",
+			},
+			file: "/tmp/TestConfig_Load.hcl",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -47,6 +58,7 @@ func TestConfig_Load(t *testing.T) {
 
 func TestConfig_Save(t *testing.T) {
 	type args struct {
+		url   string
 		token string
 	}
 	tests := []struct {
@@ -65,6 +77,14 @@ func TestConfig_Save(t *testing.T) {
 			file:  "/tmp/TestConfig_Save.hcl",
 		},
 		{
+			name: "save auth url to file",
+			args: &args{
+				url: "https://stag.cpdev.cloud",
+			},
+			want: "\"auth_url\" = \"https://stag.cpdev.cloud\"",
+			file:  "/tmp/TestConfig_Save.hcl",
+		},
+		{
 			name: "create parent config dirs",
 			args: &args{
 				token: "abc123",
@@ -75,13 +95,13 @@ func TestConfig_Save(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &Config{Filename: tt.file, AuthToken: tt.args.token}
+			c := &Config{Filename: tt.file, AuthToken: tt.args.token, AuthURL: tt.args.url}
 			if err := c.Save(); (err != nil) != tt.wantErr {
 				t.Errorf("Config.Save() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			got, _ := ioutil.ReadFile(tt.file)
-			if string(got) != tt.want {
-				t.Errorf("Config.Save() = %v, want %v", got, tt.want)
+			if !strings.Contains(string(got), tt.want) {
+				t.Errorf("Config.Save() = %v, want contains %v", string(got), tt.want)
 			}
 			fd, _ := os.Stat(tt.file)
 			if fd.Mode() != 0600 {

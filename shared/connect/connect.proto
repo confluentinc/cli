@@ -4,13 +4,26 @@ package connect;
 
 message Connector {
   string id = 1;
+  string name = 2;
+  string plugin = 3;
+  string kafka_cluster_id = 4;
+  string physical_cluster_id = 5;
+  string account_id = 6;
+  int32 organization_id = 7;
+  string service_provider = 8;
+  string region = 9;
+  string durability = 10;
+  string k8s_cluster_id = 11;
+  string status = 12;
+  string created = 13;
+  string updated = 14;
 }
 
 message ListRequest {    
 }
 
 message ListResponse {
-  repeated Connector connectors = 1;
+  repeated Connector clusters = 1;
 }
 
 service Connect {
