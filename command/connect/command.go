@@ -3,7 +3,6 @@ package connect
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 
@@ -100,7 +99,7 @@ func (c *Command) list(Command *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	log.Println(connectors)
+	fmt.Println(connectors)
 	return nil
 }
 

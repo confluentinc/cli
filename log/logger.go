@@ -1,7 +1,7 @@
 package log
 
 import (
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 type Logger struct {
@@ -25,5 +25,7 @@ func (l *Logger) Log(args ...interface{}) error {
 }
 
 func New() *Logger {
-	return &Logger{Logger: logrus.New()}
+	logger := &Logger{Logger: logrus.New()}
+	logger.Formatter = &logrus.TextFormatter{FullTimestamp: true, DisableLevelTruncation: true}
+	return logger
 }

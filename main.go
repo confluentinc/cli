@@ -4,14 +4,16 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+
+	"github.com/confluentinc/cli/command/auth"
 	"github.com/confluentinc/cli/command/connect"
 	"github.com/confluentinc/cli/command/kafka"
 	log "github.com/confluentinc/cli/log"
 	"github.com/confluentinc/cli/metric"
 	"github.com/confluentinc/cli/shared"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 var (
@@ -52,9 +54,14 @@ func main() {
 			MetricSink: metricSink,
 			Logger:     logger,
 		}
+		err := config.Load()
+		if err != nil && err != shared.ErrNoConfig {
+			logger.WithError(err).Errorf("unable to load config")
+		}
 	}
 
 	cli.Version = version
+	cli.AddCommand(auth.New(config)...)
 	cli.AddCommand(kafka.New(config))
 
 	conn, err := connect.New(config)

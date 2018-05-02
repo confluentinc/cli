@@ -7,8 +7,8 @@ $ make compile-proto
 $ go run main.go --help
 ```
 
-The CLI automatically adds commands when their respctive plugins are installed. Enabling the connect
-commands by installing the plugig:
+The CLI automatically adds commands when their respective plugins are installed. Enabling the connect
+commands by installing the plugins:
 
 ```
 $ make install-plugins

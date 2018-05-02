@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	metrics "github.com/armon/go-metrics"
-	"github.com/confluentinc/cli/log"
 	plugin "github.com/hashicorp/go-plugin"
 )
 
@@ -25,11 +24,6 @@ type MetricSink interface {
 	// Samples are for timing information, where quantiles are used
 	AddSample(key []string, val float32)
 	AddSampleWithLabels(key []string, val float32, labels []Label)
-}
-
-type Config struct {
-	MetricSink MetricSink
-	Logger     *log.Logger
 }
 
 var Handshake = plugin.HandshakeConfig{

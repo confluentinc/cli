@@ -38,8 +38,8 @@
   name = "github.com/hashicorp/go-plugin"
 
 [[constraint]]
-  name = "github.com/Sirupsen/logrus"
-  version = "1.0.5"
+  name = "github.com/sirupsen/logrus"
+  revision = "778f2e774c725116edbc3d039dc0dfc1cc62aae8"
 
 [[constraint]]
   name = "github.com/spf13/cobra"
@@ -56,6 +56,10 @@
 [[constraint]]
   name = "google.golang.org/grpc"
   version = "1.11.3"
+
+[[constraint]]
+  name = "github.com/hashicorp/hcl"
+  revision = "ef8a98b0bbce4a65b5aa4c368430a80ddc533168"
 
 [prune]
   go-tests = true
