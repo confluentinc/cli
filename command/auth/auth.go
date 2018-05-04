@@ -46,14 +46,15 @@ func (a *Authentication) login(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	client := chttp.NewClientWithJWT(context.Background(), a.config.AuthToken, a.config.AuthURL, a.config.Logger)
 
+	client := chttp.NewClient(chttp.BaseClient, a.config.AuthURL, a.config.Logger)
 	token, err := client.Auth.Login(email, password)
 	if err != nil {
 		return err
 	}
 	a.config.AuthToken = token
 
+	client = chttp.NewClientWithJWT(context.Background(), a.config.AuthToken, a.config.AuthURL, a.config.Logger)
 	user, err := client.Auth.User()
 	if err != nil {
 		return err
