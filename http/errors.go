@@ -1,6 +1,9 @@
 package http
 
-import "fmt"
+import (
+	"fmt"
+	"google.golang.org/grpc/status"
+)
 
 type apiError struct {
 	Code    int    `json:"code"`
@@ -22,4 +25,16 @@ func (e *ApiError) OrNil() error {
 		return e
 	}
 	return nil
+}
+
+func ConvertGRPCError(err error) error {
+	if s, ok := status.FromError(err); ok {
+		switch s.Message() {
+		case "expired":
+			return ErrExpiredToken
+		case "malformed":
+			return ErrMalformedToken
+		}
+	}
+	return err
 }

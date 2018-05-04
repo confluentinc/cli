@@ -6,9 +6,11 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/confluentinc/cli/shared"
 	plugin "github.com/hashicorp/go-plugin"
 	"github.com/spf13/cobra"
+
+	chttp "github.com/confluentinc/cli/http"
+	"github.com/confluentinc/cli/shared"
 )
 
 type Command struct {
@@ -97,7 +99,7 @@ func (c *Command) init() error {
 func (c *Command) list(Command *cobra.Command, args []string) error {
 	connectors, err := c.connect.List(context.Background())
 	if err != nil {
-		return err
+		return chttp.ConvertGRPCError(err)
 	}
 	fmt.Println(connectors)
 	return nil

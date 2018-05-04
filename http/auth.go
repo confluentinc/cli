@@ -17,7 +17,9 @@ const (
 )
 
 var (
-	ErrUnauthorized = fmt.Errorf("unauthorized")
+	ErrUnauthorized   = fmt.Errorf("unauthorized")
+	ErrExpiredToken   = fmt.Errorf("expired")
+	ErrMalformedToken = fmt.Errorf("malformed")
 )
 
 // AuthService provides methods for authenticating to Confluent Control Plane
