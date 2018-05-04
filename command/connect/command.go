@@ -9,7 +9,6 @@ import (
 	plugin "github.com/hashicorp/go-plugin"
 	"github.com/spf13/cobra"
 
-	chttp "github.com/confluentinc/cli/http"
 	"github.com/confluentinc/cli/shared"
 )
 
@@ -99,7 +98,7 @@ func (c *Command) init() error {
 func (c *Command) list(Command *cobra.Command, args []string) error {
 	connectors, err := c.connect.List(context.Background())
 	if err != nil {
-		return chttp.ConvertGRPCError(err)
+		return err
 	}
 	fmt.Println(connectors)
 	return nil

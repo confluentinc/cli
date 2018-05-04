@@ -73,7 +73,7 @@ func (c *Connect) List(ctx context.Context) ([]*proto.Connector, error) {
 		return nil, chttp.ErrUnauthorized
 	}
 	ret, _, err := c.Client.Connect.List(c.Config.Auth.Account.ID)
-	return ret, err
+	return ret, chttp.ConvertAPIError(err)
 }
 
 func check(err error) {

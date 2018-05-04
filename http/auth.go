@@ -1,7 +1,6 @@
 package http
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/dghubble/sling"
@@ -17,9 +16,8 @@ const (
 )
 
 var (
-	ErrUnauthorized   = fmt.Errorf("unauthorized")
-	ErrExpiredToken   = fmt.Errorf("expired")
-	ErrMalformedToken = fmt.Errorf("malformed")
+	// special case: login doesn't return a JSON error, just a 404
+	errUnauthorized = &ApiError{Err: &apiError{Code: 401, Message: "unauthorized"}}
 )
 
 // AuthService provides methods for authenticating to Confluent Control Plane
@@ -48,7 +46,7 @@ func (a *AuthService) Login(username, password string) (string, error) {
 	switch resp.StatusCode {
 	case http.StatusNotFound:
 		// For whatever reason, 404 is returned if credentials are bad
-		return "", ErrUnauthorized
+		return "", errUnauthorized
 	case http.StatusOK:
 		var token string
 		for _, cookie := range resp.Cookies() {
@@ -58,19 +56,19 @@ func (a *AuthService) Login(username, password string) (string, error) {
 			}
 		}
 		if token == "" {
-			return "", ErrUnauthorized
+			return "", errUnauthorized
 		}
 		return token, nil
 	}
-	return "", ErrUnauthorized
+	return "", errUnauthorized
 }
 
 func (a *AuthService) User() (*shared.AuthConfig, error) {
 	me := &shared.AuthConfig{}
-	confluentError := &ApiError{}
-	_, err := a.sling.New().Get(mePath).Receive(me, confluentError)
+	apiError := &ApiError{}
+	_, err := a.sling.New().Get(mePath).Receive(me, apiError)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to fetch user info") // you just don't get me
 	}
-	return me, confluentError.OrNil()
+	return me, apiError.OrNil()
 }

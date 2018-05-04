@@ -3,6 +3,7 @@ package connect
 import (
 	"context"
 
+	chttp "github.com/confluentinc/cli/http"
 	proto "github.com/confluentinc/cli/shared/connect"
 )
 
@@ -14,7 +15,7 @@ type GRPCClient struct {
 func (c *GRPCClient) List(ctx context.Context) (connectors []*proto.Connector, err error) {
 	resp, err := c.client.List(ctx, &proto.ListRequest{})
 	if err != nil {
-		return nil, err
+		return nil, chttp.ConvertGRPCError(err)
 	}
 	return resp.Clusters, nil
 }
