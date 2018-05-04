@@ -9,7 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/confluentinc/cli/command/connect"
-	"github.com/confluentinc/cli/http"
+	chttp "github.com/confluentinc/cli/http"
 	log "github.com/confluentinc/cli/log"
 	metric "github.com/confluentinc/cli/metric"
 	"github.com/confluentinc/cli/shared"
@@ -48,7 +48,7 @@ func main() {
 
 	var impl *Connect
 	{
-		client := http.NewClientWithJWT(context.Background(), config.AuthToken, config.AuthURL, config.Logger)
+		client := chttp.NewClientWithJWT(context.Background(), config.AuthToken, config.AuthURL, config.Logger)
 		impl = &Connect{Logger: logger, Config: config, Client: client}
 	}
 
@@ -64,11 +64,14 @@ func main() {
 type Connect struct {
 	Logger *log.Logger
 	Config *shared.Config
-	Client *http.Client
+	Client *chttp.Client
 }
 
 func (c *Connect) List(ctx context.Context) ([]*proto.Connector, error) {
 	c.Logger.Log("msg", "connect.List()")
+	if c.Config.Auth == nil {
+		return nil, chttp.ErrUnauthorized
+	}
 	ret, _, err := c.Client.Connect.List(c.Config.Auth.Account.ID)
 	return ret, err
 }
