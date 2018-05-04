@@ -5,7 +5,13 @@ import (
 	"golang.org/x/oauth2"
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/confluentinc/cli/log"
+)
+
+const (
+	timeout = time.Second * 10
 )
 
 type Client struct {
@@ -28,9 +34,7 @@ func NewClient(httpClient *http.Client, baseURL string, logger *log.Logger) *Cli
 }
 
 func NewClientWithJWT(ctx context.Context, jwt, baseURL string, logger *log.Logger) *Client {
-	//conf := &oauth2.Config{}
-	//token := &oauth2.Token{AccessToken: jwt, TokenType: "bearer"}
-	//tc := conf.Client(context.Background(), token)
+	ctx = context.WithValue(ctx, oauth2.HTTPClient, &http.Client{Timeout: timeout})
 	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: jwt})
 	tc := oauth2.NewClient(ctx, ts)
 	return NewClient(tc, baseURL, logger)

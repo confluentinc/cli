@@ -84,7 +84,7 @@ func credentials() (string, string, error) {
 	fmt.Println("Enter your Confluent Cloud credentials:")
 
 	fmt.Print("Email: ")
-	username, err := reader.ReadString('\n')
+	email, err := reader.ReadString('\n')
 	if err != nil {
 		return "", "", err
 	}
@@ -97,5 +97,5 @@ func credentials() (string, string, error) {
 	}
 	password := string(bytePassword)
 
-	return strings.TrimSpace(username), strings.TrimSpace(password), nil
+	return strings.TrimSpace(email), strings.TrimSpace(password), nil
 }
