@@ -2,33 +2,17 @@ package auth
 
 import (
 	"bufio"
-	"bytes"
-	"encoding/json"
+	"context"
 	"fmt"
-	"net/http"
 	"os"
 	"strings"
-	"time"
 
-	"github.com/dghubble/sling"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh/terminal"
 
 	chttp "github.com/confluentinc/cli/http"
 	"github.com/confluentinc/cli/shared"
-	//"io/ioutil"
-	"golang.org/x/oauth2"
-	"context"
-)
-
-const (
-	loginPath = "/api/sessions"
-	mePath = "/api/me"
-)
-
-var (
-	ErrUnauthorized = fmt.Errorf("unauthorized")
 )
 
 type Authentication struct {
@@ -58,69 +42,41 @@ func (a *Authentication) init() {
 }
 
 func (a *Authentication) login(cmd *cobra.Command, args []string) error {
-	username, password, err := credentials()
+	email, password, err := credentials()
 	if err != nil {
 		return err
 	}
-	payload, err := json.Marshal(map[string]string{"email": username, "password": password})
+	client := chttp.NewClientWithJWT(context.Background(), a.config.AuthToken, a.config.AuthURL, a.config.Logger)
+
+	token, err := client.Auth.Login(email, password)
 	if err != nil {
 		return err
 	}
-	response, err := a.http().Post(a.config.AuthURL + loginPath, "application/json", bytes.NewBuffer(payload))
+	a.config.AuthToken = token
+
+	user, err := client.Auth.User()
 	if err != nil {
 		return err
 	}
-	switch response.StatusCode {
-	case http.StatusNotFound:
-		return ErrUnauthorized
-	case http.StatusOK:
-		var token string
-		for _, cookie := range response.Cookies() {
-			if cookie.Name == "auth_token" {
-				token = cookie.Value
-				break
-			}
-		}
-		if token == "" {
-			return ErrUnauthorized
-		}
-		a.config.AuthToken = token
+	a.config.Auth = user
 
-		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: a.config.AuthToken})
-		tc := oauth2.NewClient(context.Background(), ts)
-		s := sling.New().Client(tc).Base(a.config.AuthURL)
-
-		me := &shared.AuthConfig{}
-		confluentError := &chttp.ConfluentError{}
-		_, err := s.New().Get("/api/me").Receive(me, confluentError)
-		if err != nil {
-			return errors.Wrap(err, "unable to fetch user info") // you just don't get me
-		}
-		a.config.Auth = me
-
-		err = a.config.Save()
-		if err != nil {
-			return errors.Wrap(err, "unable to save user auth")
-		}
-		fmt.Println("Logged in as", username)
+	err = a.config.Save()
+	if err != nil {
+		return errors.Wrap(err, "unable to save user auth")
 	}
+	fmt.Println("Logged in as", email)
 	return nil
 }
 
 func (a *Authentication) logout(cmd *cobra.Command, args []string) error {
 	a.config.AuthToken = ""
+	a.config.Auth = nil
 	err := a.config.Save()
 	if err != nil {
-		return errors.Wrap(err, "unable to delete auth token")
+		return errors.Wrap(err, "unable to delete user auth")
 	}
 	fmt.Println("You are now logged out")
 	return nil
-}
-
-func (a *Authentication) http() *http.Client {
-	return &http.Client{
-		Timeout: time.Second * 10,
-	}
 }
 
 func credentials() (string, string, error) {
