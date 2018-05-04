@@ -9,6 +9,7 @@ import (
 	plugin "github.com/hashicorp/go-plugin"
 	"github.com/spf13/cobra"
 
+	common "github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/shared"
 )
 
@@ -98,7 +99,7 @@ func (c *Command) init() error {
 func (c *Command) list(Command *cobra.Command, args []string) error {
 	connectors, err := c.connect.List(context.Background())
 	if err != nil {
-		return err
+		return common.HandleError(err)
 	}
 	fmt.Println(connectors)
 	return nil
