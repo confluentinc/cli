@@ -65,10 +65,10 @@ func (a *AuthService) Login(username, password string) (string, error) {
 
 func (a *AuthService) User() (*shared.AuthConfig, error) {
 	me := &shared.AuthConfig{}
-	confluentError := &ConfluentError{}
+	confluentError := &ApiError{}
 	_, err := a.sling.New().Get(mePath).Receive(me, confluentError)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to fetch user info") // you just don't get me
 	}
-	return me, nil
+	return me, confluentError.OrNil()
 }

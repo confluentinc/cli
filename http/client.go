@@ -2,7 +2,6 @@ package http
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -41,19 +40,4 @@ func NewClientWithJWT(ctx context.Context, jwt, baseURL string, logger *log.Logg
 	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: jwt})
 	tc := oauth2.NewClient(ctx, ts)
 	return NewClient(tc, baseURL, logger)
-}
-
-type confluentError struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-}
-
-type ConfluentError struct {
-	OrgId   int            `json:"organization_id"`
-	UserId  int            `json:"user_id"`
-	Err     confluentError `json:"error"`
-}
-
-func (e *ConfluentError) Error() string {
-	return fmt.Sprintf("confluent (%v): %v (org:%v, user:%v)", e.Err.Code, e.Err.Message, e.OrgId, e.UserId)
 }

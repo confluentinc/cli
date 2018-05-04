@@ -26,13 +26,13 @@ func NewConnectService(client *Client) *ConnectService {
 	}
 }
 
-// List returns the authenticated user's connect clusters.
+// List returns the authenticated user's connect clusters within a given account.
 func (s *ConnectService) List(accountID string) ([]*proto.Connector, *http.Response, error) {
 	clusters := new(proto.ListResponse)
-	confluentError := new(ConfluentError)
-	resp, err := s.sling.New().Get("/api/connectors?account_id="+accountID).Receive(clusters, confluentError)
+	apiErr := new(ApiError)
+	resp, err := s.sling.New().Get("/api/connectors?account_id="+accountID).Receive(clusters, apiErr)
 	if err != nil {
 		return nil, resp, errors.Wrap(err, "unable to fetch connectors")
 	}
-	return clusters.Clusters, resp, nil
+	return clusters.Clusters, resp, apiErr.OrNil()
 }
