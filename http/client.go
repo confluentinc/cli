@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/dghubble/sling"
 	"golang.org/x/oauth2"
 
 	"github.com/confluentinc/cli/log"
@@ -22,6 +23,7 @@ type Client struct {
 	Auth       *AuthService
 	Connect    *ConnectService
 	logger     *log.Logger
+	sling      *sling.Sling
 }
 
 func NewClient(httpClient *http.Client, baseURL string, logger *log.Logger) *Client {
@@ -29,6 +31,7 @@ func NewClient(httpClient *http.Client, baseURL string, logger *log.Logger) *Cli
 		httpClient: httpClient,
 		baseURL:    baseURL,
 		logger:     logger,
+		sling:      sling.New().Client(httpClient).Base(baseURL),
 	}
 	client.Auth = NewAuthService(client)
 	client.Connect = NewConnectService(client)

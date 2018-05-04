@@ -32,7 +32,7 @@ func NewAuthService(client *Client) *AuthService {
 	return &AuthService{
 		client: client.httpClient,
 		logger: client.logger,
-		sling: sling.New().Client(client.httpClient).Base(client.baseURL),
+		sling:  client.sling,
 	}
 }
 

@@ -22,7 +22,7 @@ func NewConnectService(client *Client) *ConnectService {
 	return &ConnectService{
 		client: client.httpClient,
 		logger: client.logger,
-		sling: sling.New().Client(client.httpClient).Base(client.baseURL),
+		sling:  client.sling,
 	}
 }
 
