@@ -14,6 +14,7 @@ type Account struct {
 	OrgID     int      `json:"organization_id" hcl:"organization_id"`
 }
 
+// API: GET /me
 type AuthConfig struct {
 	User      *User    `json:"user" hcl:"user"`
 	Account   *Account `json:"account" hcl:"account"`

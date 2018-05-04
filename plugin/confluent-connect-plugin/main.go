@@ -69,13 +69,8 @@ type Connect struct {
 
 func (c *Connect) List(ctx context.Context) ([]*proto.Connector, error) {
 	c.Logger.Log("msg", "connect.List()")
-	ret, _, err := c.Client.Connect.List()
+	ret, _, err := c.Client.Connect.List(c.Config.Auth.Account.ID)
 	return ret, err
-	//return []*proto.Connector{
-	//	{
-	//		Id: "connector-1",
-	//	},
-	//}, nil
 }
 
 func check(err error) {
