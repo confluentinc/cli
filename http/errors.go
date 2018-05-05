@@ -20,6 +20,7 @@ import (
  */
 
 var (
+	ErrIncorrectAuth  = fmt.Errorf("incorrect auth")
 	ErrUnauthorized   = fmt.Errorf("unauthorized")
 	ErrExpiredToken   = fmt.Errorf("expired")
 	ErrMalformedToken = fmt.Errorf("malformed")

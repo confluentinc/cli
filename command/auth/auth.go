@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh/terminal"
 
+	"github.com/confluentinc/cli/command/common"
 	chttp "github.com/confluentinc/cli/http"
 	"github.com/confluentinc/cli/shared"
 )
@@ -50,14 +51,18 @@ func (a *Authentication) login(cmd *cobra.Command, args []string) error {
 	client := chttp.NewClient(chttp.BaseClient, a.config.AuthURL, a.config.Logger)
 	token, err := client.Auth.Login(email, password)
 	if err != nil {
-		return err
+		err := chttp.ConvertAPIError(err)
+		if err == chttp.ErrUnauthorized {
+			return common.HandleError(chttp.ErrIncorrectAuth)
+		}
+		return common.HandleError(chttp.ConvertAPIError(err))
 	}
 	a.config.AuthToken = token
 
 	client = chttp.NewClientWithJWT(context.Background(), a.config.AuthToken, a.config.AuthURL, a.config.Logger)
 	user, err := client.Auth.User()
 	if err != nil {
-		return err
+		return common.HandleError(chttp.ConvertAPIError(err))
 	}
 	a.config.Auth = user
 
