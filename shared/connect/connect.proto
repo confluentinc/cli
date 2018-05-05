@@ -24,6 +24,7 @@ message ListRequest {
 }
 
 message ListResponse {
+  // TODO: update response to return corev1.Error once we link to cc-structs
   repeated Connector clusters = 1;
 }
 

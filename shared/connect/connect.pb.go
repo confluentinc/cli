@@ -122,6 +122,7 @@ func (*ListRequest) ProtoMessage()               {}
 func (*ListRequest) Descriptor() ([]byte, []int) { return fileDescriptorConnect, []int{1} }
 
 type ListResponse struct {
+	// TODO: update response to return corev1.Error once we link to cc-structs
 	Clusters []*Connector `protobuf:"bytes,1,rep,name=clusters" json:"clusters,omitempty"`
 }
 
