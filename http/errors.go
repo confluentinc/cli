@@ -31,14 +31,13 @@ type apiError struct {
 	Message string `json:"message"`
 }
 
+// API replies all have "error" field. Only set if non-successful HTTP response code.
 type ApiError struct {
-	OrgId   int       `json:"organization_id"`
-	UserId  int       `json:"user_id"`
 	Err     *apiError `json:"error"`
 }
 
 func (e *ApiError) Error() string {
-	return fmt.Sprintf("confluent (%v): %v (org:%v, user:%v)", e.Err.Code, e.Err.Message, e.OrgId, e.UserId)
+	return fmt.Sprintf("confluent (%v): %v", e.Err.Code, e.Err.Message)
 }
 
 func (e *ApiError) OrNil() error {
