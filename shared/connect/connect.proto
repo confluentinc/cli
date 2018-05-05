@@ -2,21 +2,22 @@ syntax = "proto3";
 
 package connect;
 
+// TODO: reuse schedv1.ConnectCluster from cc-structs
 message Connector {
   string id = 1;
   string name = 2;
-  string plugin = 3;
+  reserved 3; // ConnectPlugin plugin = 3;
   string kafka_cluster_id = 4;
-  string physical_cluster_id = 5;
-  string account_id = 6;
-  int32 organization_id = 7;
-  string service_provider = 8;
-  string region = 9;
-  string durability = 10;
-  string k8s_cluster_id = 11;
-  string status = 12;
-  string created = 13;
-  string updated = 14;
+  string physical_cluster_id = 5; // internal only
+  reserved 6; // google.protobuf.Timestamp created = 6;
+  reserved 7; // google.protobuf.Timestamp modified = 7;
+  reserved 8; // ClusterStatus status = 8;
+  string account_id = 9; // id of account, set by the auth/gateway service
+  int32 organization_id = 10;
+  reserved 11; // Durability durability = 11;
+  string service_provider = 12; // e.g. aws
+  string region = 13; // e.g. us-west-2
+  string k8s_cluster_id = 14; // internal only
 }
 
 message ListRequest {    

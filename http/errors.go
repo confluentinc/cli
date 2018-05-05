@@ -26,6 +26,7 @@ var (
 	ErrMalformedToken = fmt.Errorf("malformed")
 )
 
+// TODO: reuse corev1.Error from cc-structs
 type apiError struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`
