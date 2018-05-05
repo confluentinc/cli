@@ -20,10 +20,10 @@ var BaseClient = &http.Client{Timeout: timeout}
 type Client struct {
 	httpClient *http.Client
 	baseURL    string
-	Auth       *AuthService
-	Connect    *ConnectService
 	logger     *log.Logger
 	sling      *sling.Sling
+	Auth       *AuthService
+	Connect    *ConnectService
 }
 
 func NewClient(httpClient *http.Client, baseURL string, logger *log.Logger) *Client {

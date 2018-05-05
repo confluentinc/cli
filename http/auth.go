@@ -68,7 +68,7 @@ func (a *AuthService) User() (*shared.AuthConfig, error) {
 	apiError := &ApiError{}
 	_, err := a.sling.New().Get(mePath).Receive(me, apiError)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to fetch user info") // you just don't get me
+		return nil, errors.Wrap(err, "unable to fetch user info") // you just don't get /me
 	}
 	return me, apiError.OrNil()
 }

@@ -56,7 +56,7 @@ func ConvertAPIError(err error) error {
 			return ErrExpiredToken
 		case "malformed token":
 			return ErrMalformedToken
-		// except this one.. it includes the special case from http/auth.go:errUnauthorized
+		// except this one.. its the special case of errUnauthorized from http/auth.go
 		case "unauthorized":
 			return ErrUnauthorized
 		// TODO: assert invariant for default case: we're missing an ApiError -> HTTP Error constant mapping
