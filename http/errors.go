@@ -77,6 +77,7 @@ func ConvertGRPCError(err error) error {
 			return ErrUnauthorized
 		// TODO: assert invariant for default case: we're missing a GRPC -> HTTP Error constant mapping
 		}
+		return fmt.Errorf(s.Message())
 	}
 	return err
 }
