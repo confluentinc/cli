@@ -8,5 +8,8 @@ compile-proto:
 install-plugins:
 	go install ./plugin/...
 
+test:
+	go test -v -cover $(TEST_ARGS) ./...
+
 clean:
 	rm $(PROTO)/*.pb.go

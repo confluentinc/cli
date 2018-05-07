@@ -3,6 +3,7 @@ package connect
 import (
 	"context"
 
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/cli/shared"
 	proto "github.com/confluentinc/cli/shared/connect"
 	plugin "github.com/hashicorp/go-plugin"
@@ -16,7 +17,7 @@ type Plugin struct {
 }
 
 type Connect interface {
-	List(ctx context.Context) ([]*proto.Connector, error)
+	List(ctx context.Context) ([]*schedv1.ConnectCluster, error)
 }
 
 func (p *Plugin) GRPCClient(ctx context.Context, broker *plugin.GRPCBroker, c *grpc.ClientConn) (interface{}, error) {

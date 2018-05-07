@@ -8,12 +8,12 @@ import (
 	plugin "github.com/hashicorp/go-plugin"
 	"github.com/sirupsen/logrus"
 
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/cli/command/connect"
 	chttp "github.com/confluentinc/cli/http"
 	log "github.com/confluentinc/cli/log"
 	metric "github.com/confluentinc/cli/metric"
 	"github.com/confluentinc/cli/shared"
-	proto "github.com/confluentinc/cli/shared/connect"
 )
 
 func main() {
@@ -67,7 +67,7 @@ type Connect struct {
 	Client *chttp.Client
 }
 
-func (c *Connect) List(ctx context.Context) ([]*proto.Connector, error) {
+func (c *Connect) List(ctx context.Context) ([]*schedv1.ConnectCluster, error) {
 	c.Logger.Log("msg", "connect.List()")
 	if c.Config.Auth == nil {
 		return nil, chttp.ErrUnauthorized

@@ -6,8 +6,9 @@ import (
 	"github.com/dghubble/sling"
 	"github.com/pkg/errors"
 
-	proto "github.com/confluentinc/cli/shared/connect"
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/cli/log"
+	proto "github.com/confluentinc/cli/shared/connect"
 )
 
 // ConnectService provides methods for creating and reading connectors
@@ -27,7 +28,7 @@ func NewConnectService(client *Client) *ConnectService {
 }
 
 // List returns the authenticated user's connect clusters within a given account.
-func (s *ConnectService) List(accountID string) ([]*proto.Connector, *http.Response, error) {
+func (s *ConnectService) List(accountID string) ([]*schedv1.ConnectCluster, *http.Response, error) {
 	clusters := new(proto.ListResponse)
 	apiErr := new(ApiError)
 	resp, err := s.sling.New().Get("/api/connectors?account_id="+accountID).Receive(clusters, apiErr)

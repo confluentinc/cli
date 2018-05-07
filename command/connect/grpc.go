@@ -3,6 +3,7 @@ package connect
 import (
 	"context"
 
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	chttp "github.com/confluentinc/cli/http"
 	proto "github.com/confluentinc/cli/shared/connect"
 )
@@ -12,7 +13,7 @@ type GRPCClient struct {
 	client proto.ConnectClient
 }
 
-func (c *GRPCClient) List(ctx context.Context) (connectors []*proto.Connector, err error) {
+func (c *GRPCClient) List(ctx context.Context) (connectors []*schedv1.ConnectCluster, err error) {
 	resp, err := c.client.List(ctx, &proto.ListRequest{})
 	if err != nil {
 		return nil, chttp.ConvertGRPCError(err)
