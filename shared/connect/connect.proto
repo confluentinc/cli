@@ -2,30 +2,15 @@ syntax = "proto3";
 
 package connect;
 
-// TODO: reuse schedv1.ConnectCluster from cc-structs
-message Connector {
-  string id = 1;
-  string name = 2;
-  reserved 3; // ConnectPlugin plugin = 3;
-  string kafka_cluster_id = 4;
-  string physical_cluster_id = 5; // internal only
-  reserved 6; // google.protobuf.Timestamp created = 6;
-  reserved 7; // google.protobuf.Timestamp modified = 7;
-  reserved 8; // ClusterStatus status = 8;
-  string account_id = 9; // id of account, set by the auth/gateway service
-  int32 organization_id = 10;
-  reserved 11; // Durability durability = 11;
-  string service_provider = 12; // e.g. aws
-  string region = 13; // e.g. us-west-2
-  string k8s_cluster_id = 14; // internal only
-}
+import "kafka/core/v1/core.proto";
+import "kafka/scheduler/v1/scheduler.proto";
 
 message ListRequest {    
 }
 
 message ListResponse {
-  // TODO: update response to return corev1.Error once we link to cc-structs
-  repeated Connector clusters = 1;
+  kafka.core.v1.Error error = 1; // TODO: use this error now
+  repeated kafka.scheduler.v1.ConnectCluster clusters = 2;
 }
 
 service Connect {
