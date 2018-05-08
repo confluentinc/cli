@@ -14,6 +14,8 @@ func HandleError(err error) error {
 		fmt.Println("Your access to Confluent Cloud has expired. Please login again.")
 	case chttp.ErrIncorrectAuth:
 		fmt.Println("You have entered an incorrect username or password. Please try again.")
+	case chttp.ErrMalformedToken:
+		fmt.Println("Your auth token has been corrupted. Please login again.")
 	default:
 		return err
 	}

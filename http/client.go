@@ -31,7 +31,7 @@ func NewClient(httpClient *http.Client, baseURL string, logger *log.Logger) *Cli
 		httpClient: httpClient,
 		baseURL:    baseURL,
 		logger:     logger,
-		sling:      sling.New().Client(httpClient).Base(baseURL).Decoder(sling.JSONPBDecoder{}),
+		sling:      sling.New().Client(httpClient).Base(baseURL).Decoder(NewJSONPBDecoder()),
 	}
 	client.Auth = NewAuthService(client)
 	client.Connect = NewConnectService(client)
