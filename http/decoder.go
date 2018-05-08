@@ -8,10 +8,12 @@ import (
 	"github.com/gogo/protobuf/proto"
 )
 
+// JSONPBDecoder implements sling.Decoder to decode JSON protobuf responses.
 type JSONPBDecoder struct{
 	jsonpb.Unmarshaler
 }
 
+// NewJSONPBDecoder returns a new JSONPBDecoder that's lenient for error responses.
 func NewJSONPBDecoder() JSONPBDecoder {
 	return JSONPBDecoder{
 		jsonpb.Unmarshaler{

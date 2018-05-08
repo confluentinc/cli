@@ -34,8 +34,7 @@ func (s *ConnectService) List(accountID string) ([]*schedv1.ConnectCluster, *htt
 		return nil, resp, errors.Wrap(err, "unable to fetch connectors")
 	}
 	if clusters.Error != nil {
-		return nil, resp, clusters.Error
+		return nil, resp, errors.Wrap(clusters.Error, "error fetching connectors")
 	}
-	s.logger.Info("CLUSTERS ", clusters.Clusters)
 	return clusters.Clusters, resp, nil
 }
