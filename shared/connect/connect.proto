@@ -2,18 +2,10 @@ syntax = "proto3";
 
 package connect;
 
-import "kafka/core/v1/core.proto";
 import "kafka/scheduler/v1/scheduler.proto";
 
-message ListRequest {    
-}
-
-message ListResponse {
-  kafka.core.v1.Error error = 1; // TODO: use this error now
-  repeated kafka.scheduler.v1.ConnectCluster clusters = 2;
-}
-
+// TODO: should this definition be in cc-structs?
 service Connect {
-  rpc List(ListRequest) returns (ListResponse) {}
+  rpc List(kafka.scheduler.v1.GetConnectClustersRequest) returns (kafka.scheduler.v1.GetConnectClustersReply) {}
   // ...
 }

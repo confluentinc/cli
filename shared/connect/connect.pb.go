@@ -8,15 +8,12 @@ It is generated from these files:
 	connect.proto
 
 It has these top-level messages:
-	ListRequest
-	ListResponse
 */
 package connect
 
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
-import kafka_core_v1 "github.com/confluentinc/cc-structs/kafka/core/v1"
 import kafka_scheduler_v1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 
 import context "golang.org/x/net/context"
@@ -33,43 +30,6 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion2 // please upgrade the proto package
 
-type ListRequest struct {
-}
-
-func (m *ListRequest) Reset()                    { *m = ListRequest{} }
-func (m *ListRequest) String() string            { return proto.CompactTextString(m) }
-func (*ListRequest) ProtoMessage()               {}
-func (*ListRequest) Descriptor() ([]byte, []int) { return fileDescriptorConnect, []int{0} }
-
-type ListResponse struct {
-	Error    *kafka_core_v1.Error                 `protobuf:"bytes,1,opt,name=error" json:"error,omitempty"`
-	Clusters []*kafka_scheduler_v1.ConnectCluster `protobuf:"bytes,2,rep,name=clusters" json:"clusters,omitempty"`
-}
-
-func (m *ListResponse) Reset()                    { *m = ListResponse{} }
-func (m *ListResponse) String() string            { return proto.CompactTextString(m) }
-func (*ListResponse) ProtoMessage()               {}
-func (*ListResponse) Descriptor() ([]byte, []int) { return fileDescriptorConnect, []int{1} }
-
-func (m *ListResponse) GetError() *kafka_core_v1.Error {
-	if m != nil {
-		return m.Error
-	}
-	return nil
-}
-
-func (m *ListResponse) GetClusters() []*kafka_scheduler_v1.ConnectCluster {
-	if m != nil {
-		return m.Clusters
-	}
-	return nil
-}
-
-func init() {
-	proto.RegisterType((*ListRequest)(nil), "connect.ListRequest")
-	proto.RegisterType((*ListResponse)(nil), "connect.ListResponse")
-}
-
 // Reference imports to suppress errors if they are not otherwise used.
 var _ context.Context
 var _ grpc.ClientConn
@@ -81,7 +41,7 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for Connect service
 
 type ConnectClient interface {
-	List(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (*ListResponse, error)
+	List(ctx context.Context, in *kafka_scheduler_v1.GetConnectClustersRequest, opts ...grpc.CallOption) (*kafka_scheduler_v1.GetConnectClustersReply, error)
 }
 
 type connectClient struct {
@@ -92,8 +52,8 @@ func NewConnectClient(cc *grpc.ClientConn) ConnectClient {
 	return &connectClient{cc}
 }
 
-func (c *connectClient) List(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (*ListResponse, error) {
-	out := new(ListResponse)
+func (c *connectClient) List(ctx context.Context, in *kafka_scheduler_v1.GetConnectClustersRequest, opts ...grpc.CallOption) (*kafka_scheduler_v1.GetConnectClustersReply, error) {
+	out := new(kafka_scheduler_v1.GetConnectClustersReply)
 	err := grpc.Invoke(ctx, "/connect.Connect/List", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
@@ -104,7 +64,7 @@ func (c *connectClient) List(ctx context.Context, in *ListRequest, opts ...grpc.
 // Server API for Connect service
 
 type ConnectServer interface {
-	List(context.Context, *ListRequest) (*ListResponse, error)
+	List(context.Context, *kafka_scheduler_v1.GetConnectClustersRequest) (*kafka_scheduler_v1.GetConnectClustersReply, error)
 }
 
 func RegisterConnectServer(s *grpc.Server, srv ConnectServer) {
@@ -112,7 +72,7 @@ func RegisterConnectServer(s *grpc.Server, srv ConnectServer) {
 }
 
 func _Connect_List_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListRequest)
+	in := new(kafka_scheduler_v1.GetConnectClustersRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -124,7 +84,7 @@ func _Connect_List_Handler(srv interface{}, ctx context.Context, dec func(interf
 		FullMethod: "/connect.Connect/List",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConnectServer).List(ctx, req.(*ListRequest))
+		return srv.(ConnectServer).List(ctx, req.(*kafka_scheduler_v1.GetConnectClustersRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -145,18 +105,13 @@ var _Connect_serviceDesc = grpc.ServiceDesc{
 func init() { proto.RegisterFile("connect.proto", fileDescriptorConnect) }
 
 var fileDescriptorConnect = []byte{
-	// 208 bytes of a gzipped FileDescriptorProto
+	// 127 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x4d, 0xce, 0xcf, 0xcb,
-	0x4b, 0x4d, 0x2e, 0xd1, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0x87, 0x72, 0xa5, 0x24, 0xb2,
-	0x13, 0xd3, 0xb2, 0x13, 0xf5, 0x93, 0xf3, 0x8b, 0x52, 0xf5, 0xcb, 0x0c, 0xc1, 0x34, 0x44, 0x89,
-	0x94, 0x12, 0x44, 0xa6, 0x38, 0x39, 0x23, 0x35, 0xa5, 0x34, 0x27, 0xb5, 0x08, 0x24, 0x0d, 0xe7,
-	0x40, 0xd4, 0x28, 0xf1, 0x72, 0x71, 0xfb, 0x64, 0x16, 0x97, 0x04, 0xa5, 0x16, 0x96, 0xa6, 0x16,
-	0x97, 0x28, 0x55, 0x71, 0xf1, 0x40, 0xb8, 0xc5, 0x05, 0xf9, 0x79, 0xc5, 0xa9, 0x42, 0x5a, 0x5c,
-	0xac, 0xa9, 0x45, 0x45, 0xf9, 0x45, 0x12, 0x8c, 0x0a, 0x8c, 0x1a, 0xdc, 0x46, 0x22, 0x7a, 0x60,
-	0x23, 0xf5, 0xc0, 0x96, 0x94, 0x19, 0xea, 0xb9, 0x82, 0xe4, 0x82, 0x20, 0x4a, 0x84, 0xec, 0xb8,
-	0x38, 0x92, 0x73, 0x4a, 0x8b, 0x4b, 0x52, 0x8b, 0x8a, 0x25, 0x98, 0x14, 0x98, 0x35, 0xb8, 0x8d,
-	0x94, 0xa0, 0xca, 0x11, 0x96, 0x96, 0x19, 0xea, 0x39, 0x43, 0xdc, 0xed, 0x0c, 0x51, 0x1a, 0x04,
-	0xd7, 0x63, 0xe4, 0xc0, 0xc5, 0x0e, 0x95, 0x13, 0x32, 0xe5, 0x62, 0x01, 0x39, 0x43, 0x48, 0x44,
-	0x0f, 0xe6, 0x69, 0x24, 0x47, 0x4a, 0x89, 0xa2, 0x89, 0x42, 0xdc, 0xaa, 0xc4, 0x90, 0xc4, 0x06,
-	0xf6, 0x93, 0x31, 0x20, 0x00, 0x00, 0xff, 0xff, 0x3b, 0x19, 0x8a, 0x22, 0x2b, 0x01, 0x00, 0x00,
+	0x4b, 0x4d, 0x2e, 0xd1, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0x87, 0x72, 0xa5, 0x94, 0xb2,
+	0x13, 0xd3, 0xb2, 0x13, 0xf5, 0x8b, 0x93, 0x33, 0x52, 0x53, 0x4a, 0x73, 0x52, 0x8b, 0xf4, 0xcb,
+	0x0c, 0x11, 0x1c, 0x88, 0x62, 0xa3, 0x7c, 0x2e, 0x76, 0x67, 0x88, 0x72, 0xa1, 0x14, 0x2e, 0x16,
+	0x9f, 0xcc, 0xe2, 0x12, 0x21, 0x5d, 0x3d, 0xb0, 0x3e, 0x3d, 0x84, 0xd2, 0x32, 0x43, 0x3d, 0xf7,
+	0xd4, 0x12, 0xa8, 0x3a, 0xe7, 0x9c, 0xd2, 0xe2, 0x92, 0xd4, 0xa2, 0xe2, 0xa0, 0xd4, 0xc2, 0xd2,
+	0xd4, 0xe2, 0x12, 0x29, 0x6d, 0x62, 0x95, 0x17, 0xe4, 0x54, 0x2a, 0x31, 0x24, 0xb1, 0x81, 0xed,
+	0x35, 0x06, 0x04, 0x00, 0x00, 0xff, 0xff, 0x07, 0x5e, 0x10, 0xc0, 0xb5, 0x00, 0x00, 0x00,
 }
