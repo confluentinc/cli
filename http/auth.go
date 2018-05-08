@@ -6,6 +6,8 @@ import (
 	"github.com/dghubble/sling"
 	"github.com/pkg/errors"
 
+	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/cli/log"
 	"github.com/confluentinc/cli/shared"
 )
@@ -17,7 +19,7 @@ const (
 
 var (
 	// special case: login doesn't return a JSON error, just a 404
-	errUnauthorized = &ApiError{Err: &apiError{Code: 401, Message: "unauthorized"}}
+	errUnauthorized = &corev1.Error{Code: 401, Message: "unauthorized"}
 )
 
 // AuthService provides methods for authenticating to Confluent Control Plane
@@ -64,11 +66,16 @@ func (a *AuthService) Login(username, password string) (string, error) {
 }
 
 func (a *AuthService) User() (*shared.AuthConfig, error) {
-	me := &shared.AuthConfig{}
-	apiError := &ApiError{}
-	_, err := a.sling.New().Get(mePath).Receive(me, apiError)
+	me := &orgv1.GetUserReply{}
+	_, err := a.sling.New().Get(mePath).Receive(me, me)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to fetch user info") // you just don't get /me
 	}
-	return me, apiError.OrNil()
+	if me.Error != nil {
+		return nil, errors.Wrap(err, "error fetching user info")
+	}
+	return &shared.AuthConfig{
+		User: me.User,
+		Account: me.Account,
+	}, nil
 }

@@ -72,7 +72,7 @@ func (c *Connect) List(ctx context.Context) ([]*schedv1.ConnectCluster, error) {
 	if c.Config.Auth == nil {
 		return nil, chttp.ErrUnauthorized
 	}
-	ret, _, err := c.Client.Connect.List(c.Config.Auth.Account.ID)
+	ret, _, err := c.Client.Connect.List(c.Config.Auth.Account.Id)
 	return ret, chttp.ConvertAPIError(err)
 }
 

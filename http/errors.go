@@ -4,17 +4,19 @@ import (
 	"fmt"
 
 	"google.golang.org/grpc/status"
+
+	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
 )
 
 /*
  * Invariants:
- * - Confluent SDK (http package) always returns an ApiError.
+ * - Confluent SDK (http package) always returns a corev1.Error.
  * - Plugins always return an HTTP Error constant (top of this file)
  *
  * Error Flow:
- * - API error responses (json) are parsed into ApiError objects.
+ * - API error responses (json) are parsed into corev1.Error objects.
  *   - Note: API returns 404s for unauthorized resources, so HTTP package has to remap 404 -> 401 where appropriate.
- * - Plugins call ConvertAPIError() to transforms ApiError into HTTP Error constants
+ * - Plugins call ConvertAPIError() to transforms corev1.Error into HTTP Error constants
  * - GRPC encodes errors into Status objects when sent over the wire
  * - Commands call ConvertGRPCError() to transform these back into HTTP Error constants
  */
@@ -26,31 +28,9 @@ var (
 	ErrMalformedToken = fmt.Errorf("malformed")
 )
 
-// TODO: reuse corev1.Error from cc-structs
-type apiError struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-}
-
-// API replies all have "error" field. Only set if non-successful HTTP response code.
-type ApiError struct {
-	Err     *apiError `json:"error"`
-}
-
-func (e *ApiError) Error() string {
-	return fmt.Sprintf("confluent (%v): %v", e.Err.Code, e.Err.Message)
-}
-
-func (e *ApiError) OrNil() error {
-	if e.Err != nil {
-		return e
-	}
-	return nil
-}
-
 func ConvertAPIError(err error) error {
-	if e, ok := err.(*ApiError); ok {
-		switch e.Err.Message {
+	if e, ok := err.(*corev1.Error); ok {
+		switch e.Message {
 		// these messages are returned by the API itself
 		case "token is expired":
 			return ErrExpiredToken
@@ -59,7 +39,7 @@ func ConvertAPIError(err error) error {
 		// except this one.. its the special case of errUnauthorized from http/auth.go
 		case "unauthorized":
 			return ErrUnauthorized
-		// TODO: assert invariant for default case: we're missing an ApiError -> HTTP Error constant mapping
+		// TODO: assert invariant for default case: we're missing an corev1.Error -> HTTP Error constant mapping
 		}
 	}
 	return err

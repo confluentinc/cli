@@ -8,6 +8,10 @@ compile-proto:
 install-plugins:
 	go install ./plugin/...
 
+deps:
+	which dep 2>/dev/null || go get -u github.com/golang/dep/cmd/dep
+	dep ensure $(ARGS)
+
 test:
 	go test -v -cover $(TEST_ARGS) ./...
 

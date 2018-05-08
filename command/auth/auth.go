@@ -52,10 +52,10 @@ func (a *Authentication) login(cmd *cobra.Command, args []string) error {
 	token, err := client.Auth.Login(email, password)
 	if err != nil {
 		err := chttp.ConvertAPIError(err)
-		if err == chttp.ErrUnauthorized {
-			return common.HandleError(chttp.ErrIncorrectAuth)
+		if err == chttp.ErrUnauthorized { // special case for login failure
+			err = chttp.ErrIncorrectAuth
 		}
-		return common.HandleError(chttp.ConvertAPIError(err))
+		return common.HandleError(err)
 	}
 	a.config.AuthToken = token
 
