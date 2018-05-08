@@ -28,7 +28,7 @@
     "kafka/scheduler/v1",
     "operator/v1"
   ]
-  revision = "43cf4577208a76a4268c925f2fc79050e641d68e"
+  revision = "dcaf8a6618cc7f40fc3656486222629f90e54ebe"
 
 [[projects]]
   branch = "jsonpb"
@@ -445,6 +445,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "8a0a7852067930947385e0f0322de1f3d75e46b0d55c7dccc856623e1c2eea67"
+  inputs-digest = "6fb9859308b77cb1c8c3932dc45d4feff2e2b76435a74db61ed3101fb66bc856"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -10,27 +10,28 @@ import (
 	"google.golang.org/grpc"
 )
 
+type Connect interface {
+	List(ctx context.Context) ([]*schedv1.ConnectCluster, error)
+	Describe(ctx context.Context, cluster *schedv1.ConnectCluster) (*schedv1.ConnectCluster, error)
+}
+
 type Plugin struct {
 	plugin.NetRPCUnsupportedPlugin
 
 	Impl Connect
 }
 
-type Connect interface {
-	List(ctx context.Context) ([]*schedv1.ConnectCluster, error)
-}
-
 func (p *Plugin) GRPCClient(ctx context.Context, broker *plugin.GRPCBroker, c *grpc.ClientConn) (interface{}, error) {
 	return &GRPCClient{client: proto.NewConnectClient(c)}, nil
 }
-
-// Check that Plugin satisfies GPRCPlugin interface.
-var _ plugin.GRPCPlugin = &Plugin{}
 
 func (p *Plugin) GRPCServer(broker *plugin.GRPCBroker, s *grpc.Server) error {
 	proto.RegisterConnectServer(s, &GRPCServer{p.Impl})
 	return nil
 }
+
+// Check that Plugin satisfies GPRCPlugin interface.
+var _ plugin.GRPCPlugin = &Plugin{}
 
 func init() {
 	shared.PluginMap["connect"] = &Plugin{}

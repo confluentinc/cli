@@ -76,6 +76,16 @@ func (c *Connect) List(ctx context.Context) ([]*schedv1.ConnectCluster, error) {
 	return ret, shared.ConvertAPIError(err)
 }
 
+func (c *Connect) Describe(ctx context.Context, cluster *schedv1.ConnectCluster) (*schedv1.ConnectCluster, error) {
+	c.Logger.Log("msg", "connect.Describe()")
+	if c.Config.Auth == nil {
+		return nil, shared.ErrUnauthorized
+	}
+	cluster.AccountId = c.Config.Auth.Account.Id
+	ret, _, err := c.Client.Connect.Describe(cluster)
+	return ret, shared.ConvertAPIError(err)
+}
+
 func check(err error) {
 	if err != nil {
 		golog.Fatal(err)

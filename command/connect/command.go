@@ -9,6 +9,7 @@ import (
 	plugin "github.com/hashicorp/go-plugin"
 	"github.com/spf13/cobra"
 
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	common "github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/shared"
 )
@@ -73,9 +74,10 @@ func (c *Command) init() error {
 		RunE:  c.list,
 	})
 	c.AddCommand(&cobra.Command{
-		Use:   "describe",
+		Use:   "describe <name>",
 		Short: "Describe a connector.",
 		RunE:  c.describe,
+		Args:  cobra.ExactArgs(1),
 	})
 	c.AddCommand(&cobra.Command{
 		Use:   "delete",
@@ -110,7 +112,13 @@ func (c *Command) create(Command *cobra.Command, args []string) error {
 }
 
 func (c *Command) describe(Command *cobra.Command, args []string) error {
-	return common.HandleError(shared.ErrNotImplemented)
+	req := &schedv1.ConnectCluster{Name: args[0]}
+	connector, err := c.connect.Describe(context.Background(), req)
+	if err != nil {
+		return common.HandleError(err)
+	}
+	fmt.Println(connector)
+	return nil
 }
 
 func (c *Command) update(Command *cobra.Command, args []string) error {

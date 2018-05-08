@@ -3,6 +3,7 @@ package shared
 import (
 	"fmt"
 
+	"github.com/pkg/errors"
 	"google.golang.org/grpc/status"
 
 	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
@@ -30,6 +31,7 @@ var (
 )
 
 func ConvertAPIError(err error) error {
+	err = errors.Cause(err)
 	if e, ok := err.(*corev1.Error); ok {
 		switch e.Message {
 		// these messages are returned by the API itself
