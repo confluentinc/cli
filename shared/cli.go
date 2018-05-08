@@ -1,11 +1,16 @@
 package shared
 
 import (
-	"fmt"
-
 	metrics "github.com/armon/go-metrics"
 	plugin "github.com/hashicorp/go-plugin"
+
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 )
+
+type AuthConfig struct {
+	User      *orgv1.User    `json:"user" hcl:"user"`
+	Account   *orgv1.Account `json:"account" hcl:"account"`
+}
 
 type Label = metrics.Label
 
@@ -34,5 +39,3 @@ var Handshake = plugin.HandshakeConfig{
 
 // PluginMap is the map of plugins we can dispense.
 var PluginMap = map[string]plugin.Plugin{}
-
-var ErrNotImplemented = fmt.Errorf("not implemented")

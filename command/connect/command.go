@@ -106,21 +106,21 @@ func (c *Command) list(Command *cobra.Command, args []string) error {
 }
 
 func (c *Command) create(Command *cobra.Command, args []string) error {
-	return shared.ErrNotImplemented
+	return common.HandleError(shared.ErrNotImplemented)
 }
 
 func (c *Command) describe(Command *cobra.Command, args []string) error {
-	return shared.ErrNotImplemented
+	return common.HandleError(shared.ErrNotImplemented)
 }
 
 func (c *Command) update(Command *cobra.Command, args []string) error {
-	return shared.ErrNotImplemented
+	return common.HandleError(shared.ErrNotImplemented)
 }
 
 func (c *Command) delete(Command *cobra.Command, args []string) error {
-	return shared.ErrNotImplemented
+	return common.HandleError(shared.ErrNotImplemented)
 }
 
 func (c *Command) auth(Command *cobra.Command, args []string) error {
-	return shared.ErrNotImplemented
+	return common.HandleError(shared.ErrNotImplemented)
 }

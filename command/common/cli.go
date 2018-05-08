@@ -16,6 +16,8 @@ func HandleError(err error) error {
 		fmt.Println("You have entered an incorrect username or password. Please try again.")
 	case shared.ErrMalformedToken:
 		fmt.Println("Your auth token has been corrupted. Please login again.")
+	case shared.ErrNotImplemented:
+		fmt.Println("Sorry, this functionality is not yet available in the CLI.")
 	default:
 		return err
 	}
