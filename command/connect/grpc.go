@@ -4,7 +4,7 @@ import (
 	"context"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	chttp "github.com/confluentinc/cli/http"
+	"github.com/confluentinc/cli/shared"
 	proto "github.com/confluentinc/cli/shared/connect"
 )
 
@@ -16,7 +16,7 @@ type GRPCClient struct {
 func (c *GRPCClient) List(ctx context.Context) (connectors []*schedv1.ConnectCluster, err error) {
 	resp, err := c.client.List(ctx, &proto.ListRequest{})
 	if err != nil {
-		return nil, chttp.ConvertGRPCError(err)
+		return nil, shared.ConvertGRPCError(err)
 	}
 	return resp.Clusters, nil
 }

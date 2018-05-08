@@ -3,18 +3,18 @@ package common
 import (
 	"fmt"
 
-	chttp "github.com/confluentinc/cli/http"
+	"github.com/confluentinc/cli/shared"
 )
 
 func HandleError(err error) error {
 	switch err {
-	case chttp.ErrUnauthorized:
+	case shared.ErrUnauthorized:
 		fmt.Println("You must login to access Confluent Cloud.")
-	case chttp.ErrExpiredToken:
+	case shared.ErrExpiredToken:
 		fmt.Println("Your access to Confluent Cloud has expired. Please login again.")
-	case chttp.ErrIncorrectAuth:
+	case shared.ErrIncorrectAuth:
 		fmt.Println("You have entered an incorrect username or password. Please try again.")
-	case chttp.ErrMalformedToken:
+	case shared.ErrMalformedToken:
 		fmt.Println("Your auth token has been corrupted. Please login again.")
 	default:
 		return err

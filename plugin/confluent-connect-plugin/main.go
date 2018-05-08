@@ -70,10 +70,10 @@ type Connect struct {
 func (c *Connect) List(ctx context.Context) ([]*schedv1.ConnectCluster, error) {
 	c.Logger.Log("msg", "connect.List()")
 	if c.Config.Auth == nil {
-		return nil, chttp.ErrUnauthorized
+		return nil, shared.ErrUnauthorized
 	}
 	ret, _, err := c.Client.Connect.List(c.Config.Auth.Account.Id)
-	return ret, chttp.ConvertAPIError(err)
+	return ret, shared.ConvertAPIError(err)
 }
 
 func check(err error) {
