@@ -68,3 +68,16 @@ func (s *ConnectService) CreateS3Sink(config *schedv1.ConnectS3SinkClusterConfig
 	}
 	return reply.Cluster, resp, nil
 }
+
+// Delete destroys a given connect cluster.
+func (s *ConnectService) Delete(cluster *schedv1.ConnectCluster) (*http.Response, error) {
+	reply := new(schedv1.DeleteConnectClusterReply)
+	resp, err := s.sling.New().Delete("/api/connectors/"+cluster.Id).QueryStruct(cluster).Receive(reply, reply)
+	if err != nil {
+		return resp, errors.Wrap(err, "unable to delete connector")
+	}
+	if reply.Error != nil {
+		return resp, errors.Wrap(reply.Error, "error deleting connector")
+	}
+	return resp, nil
+}

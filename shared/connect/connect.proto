@@ -9,5 +9,6 @@ service Connect {
   rpc List(kafka.scheduler.v1.GetConnectClustersRequest) returns (kafka.scheduler.v1.GetConnectClustersReply) {}
   rpc Describe(kafka.scheduler.v1.GetConnectClusterRequest) returns (kafka.scheduler.v1.GetConnectClusterReply) {}
   rpc CreateS3Sink(kafka.scheduler.v1.CreateConnectS3SinkClusterRequest) returns (kafka.scheduler.v1.CreateConnectS3SinkClusterReply) {}
+  rpc Delete(kafka.scheduler.v1.DeleteConnectClusterRequest) returns (kafka.scheduler.v1.DeleteConnectClusterReply) {}
   // ...
 }

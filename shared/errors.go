@@ -32,8 +32,7 @@ var (
 )
 
 func ConvertAPIError(err error) error {
-	err = errors.Cause(err)
-	if e, ok := err.(*corev1.Error); ok {
+	if e, ok := errors.Cause(err).(*corev1.Error); ok {
 		switch e.Message {
 		// these messages are returned by the API itself
 		case "token is expired":
@@ -54,9 +53,8 @@ func ConvertAPIError(err error) error {
 
 func ConvertGRPCError(err error) error {
 	if s, ok := status.FromError(err); ok {
-		// these messages are from the error constants at the top of this file
 		switch s.Message() {
-		case ErrMalformedToken.Error():
+		case ErrExpiredToken.Error():
 			return ErrExpiredToken
 		case ErrMalformedToken.Error():
 			return ErrMalformedToken

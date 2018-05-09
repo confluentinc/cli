@@ -21,8 +21,8 @@ import (
 var (
 	listFields     = []string{"Name", "ServiceProvider", "Region", "Durability", "Status"}
 	listLabels     = []string{"Name", "Provider", "Region", "Durability", "Status"}
-	describeFields = []string{"Name", "KafkaClusterId", "ServiceProvider", "Region", "Status", "Endpoint", "PricePerHour"}
-	describeLabels = []string{"Name", "Kafka", "Provider", "Region", "Status", "Endpoint", "PricePerHour"}
+	describeFields = []string{"Name", "KafkaClusterId", "ServiceProvider", "Region", "Status", "PricePerHour"}
+	describeLabels = []string{"Name", "Kafka", "Provider", "Region", "Status", "PricePerHour"}
 )
 
 type Command struct {
@@ -197,7 +197,13 @@ func (c *Command) update(cmd *cobra.Command, args []string) error {
 }
 
 func (c *Command) delete(cmd *cobra.Command, args []string) error {
-	return common.HandleError(shared.ErrNotImplemented)
+	req := &schedv1.ConnectCluster{AccountId: c.config.Auth.Account.Id, Name: args[0]}
+	err := c.connect.Delete(context.Background(), req)
+	if err != nil {
+		return common.HandleError(err)
+	}
+	fmt.Println("Your connect cluster has been deleted!")
+	return nil
 }
 
 func (c *Command) auth(cmd *cobra.Command, args []string) error {

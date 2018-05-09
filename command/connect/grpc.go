@@ -37,6 +37,14 @@ func (c *GRPCClient) CreateS3Sink(ctx context.Context, config *schedv1.ConnectS3
 	return resp.Cluster, nil
 }
 
+func (c *GRPCClient) Delete(ctx context.Context, cluster *schedv1.ConnectCluster) error {
+	_, err := c.client.Delete(ctx, &schedv1.DeleteConnectClusterRequest{Cluster: cluster})
+	if err != nil {
+		return shared.ConvertGRPCError(err)
+	}
+	return nil
+}
+
 // The gRPC server the GPRClient talks to. Plugin authors implement this if they're using Go.
 type GRPCServer struct {
 	Impl Connect
@@ -55,4 +63,9 @@ func (s *GRPCServer) Describe(ctx context.Context, req *schedv1.GetConnectCluste
 func (s *GRPCServer) CreateS3Sink(ctx context.Context, req *schedv1.CreateConnectS3SinkClusterRequest) (*schedv1.CreateConnectS3SinkClusterReply, error) {
 	r, err := s.Impl.CreateS3Sink(ctx, req.Config)
 	return &schedv1.CreateConnectS3SinkClusterReply{Cluster: r}, err
+}
+
+func (s *GRPCServer) Delete(ctx context.Context, req *schedv1.DeleteConnectClusterRequest) (*schedv1.DeleteConnectClusterReply, error) {
+	err := s.Impl.Delete(ctx, req.Cluster)
+	return &schedv1.DeleteConnectClusterReply{}, err
 }

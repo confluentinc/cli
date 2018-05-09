@@ -18,7 +18,7 @@ const (
 
 var (
 	BaseClient  = &http.Client{Timeout: timeout}
-	errNotFound = &corev1.Error{Code: 404, Message: "cluster not found"} // matches gateway response
+	errNotFound = &corev1.Error{Code: http.StatusNotFound, Message: "cluster not found"} // matches gateway response
 )
 
 type Client struct {

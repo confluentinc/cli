@@ -19,7 +19,7 @@ func HandleError(err error) error {
 	case shared.ErrNotImplemented:
 		fmt.Println("Sorry, this functionality is not yet available in the CLI.")
 	case shared.ErrNotFound:
-		fmt.Println("Kafka cluster not found.")
+		fmt.Println("Kafka cluster not found.")  // TODO: parametrize ErrNotFound for better error messaging
 	default:
 		return err
 	}

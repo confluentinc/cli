@@ -110,6 +110,31 @@ func (c *Connect) CreateS3Sink(ctx context.Context, cfg *schedv1.ConnectS3SinkCl
 	return ret, nil
 }
 
+func (c *Connect) Delete(ctx context.Context, cluster *schedv1.ConnectCluster) error {
+	c.Logger.Log("msg", "connect.Delete()")
+	cluster, err := c.resolveClusterID(ctx, cluster)
+	if err != nil {
+		return shared.ConvertAPIError(err)
+	}
+	_, err = c.Client.Connect.Delete(cluster)
+	if err != nil {
+		return shared.ConvertAPIError(err)
+	}
+	return nil
+}
+
+// resolveClusterID resolves a connect cluster by name/account into a cluster with an ID
+func (c *Connect) resolveClusterID(ctx context.Context, cluster *schedv1.ConnectCluster) (*schedv1.ConnectCluster, error) {
+	if cluster.Id != "" {
+		return cluster, nil
+	}
+	cluster, err := c.Describe(ctx, cluster)
+	if err != nil {
+		return nil, err
+	}
+	return cluster, nil
+}
+
 func check(err error) {
 	if err != nil {
 		golog.Fatal(err)
