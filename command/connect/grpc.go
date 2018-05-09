@@ -29,6 +29,14 @@ func (c *GRPCClient) Describe(ctx context.Context, cluster *schedv1.ConnectClust
 	return resp.Cluster, nil
 }
 
+func (c *GRPCClient) CreateS3Sink(ctx context.Context, config *schedv1.ConnectS3SinkClusterConfig) (*schedv1.ConnectS3SinkCluster, error) {
+	resp, err := c.client.CreateS3Sink(ctx, &schedv1.CreateConnectS3SinkClusterRequest{Config: config})
+	if err != nil {
+		return nil, shared.ConvertGRPCError(err)
+	}
+	return resp.Cluster, nil
+}
+
 // The gRPC server the GPRClient talks to. Plugin authors implement this if they're using Go.
 type GRPCServer struct {
 	Impl Connect
@@ -42,4 +50,9 @@ func (s *GRPCServer) List(ctx context.Context, req *schedv1.GetConnectClustersRe
 func (s *GRPCServer) Describe(ctx context.Context, req *schedv1.GetConnectClusterRequest) (*schedv1.GetConnectClusterReply, error) {
 	r, err := s.Impl.Describe(ctx, req.Cluster)
 	return &schedv1.GetConnectClusterReply{Cluster: r}, err
+}
+
+func (s *GRPCServer) CreateS3Sink(ctx context.Context, req *schedv1.CreateConnectS3SinkClusterRequest) (*schedv1.CreateConnectS3SinkClusterReply, error) {
+	r, err := s.Impl.CreateS3Sink(ctx, req.Config)
+	return &schedv1.CreateConnectS3SinkClusterReply{Cluster: r}, err
 }

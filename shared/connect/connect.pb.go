@@ -43,6 +43,7 @@ const _ = grpc.SupportPackageIsVersion4
 type ConnectClient interface {
 	List(ctx context.Context, in *kafka_scheduler_v1.GetConnectClustersRequest, opts ...grpc.CallOption) (*kafka_scheduler_v1.GetConnectClustersReply, error)
 	Describe(ctx context.Context, in *kafka_scheduler_v1.GetConnectClusterRequest, opts ...grpc.CallOption) (*kafka_scheduler_v1.GetConnectClusterReply, error)
+	CreateS3Sink(ctx context.Context, in *kafka_scheduler_v1.CreateConnectS3SinkClusterRequest, opts ...grpc.CallOption) (*kafka_scheduler_v1.CreateConnectS3SinkClusterReply, error)
 }
 
 type connectClient struct {
@@ -71,11 +72,21 @@ func (c *connectClient) Describe(ctx context.Context, in *kafka_scheduler_v1.Get
 	return out, nil
 }
 
+func (c *connectClient) CreateS3Sink(ctx context.Context, in *kafka_scheduler_v1.CreateConnectS3SinkClusterRequest, opts ...grpc.CallOption) (*kafka_scheduler_v1.CreateConnectS3SinkClusterReply, error) {
+	out := new(kafka_scheduler_v1.CreateConnectS3SinkClusterReply)
+	err := grpc.Invoke(ctx, "/connect.Connect/CreateS3Sink", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for Connect service
 
 type ConnectServer interface {
 	List(context.Context, *kafka_scheduler_v1.GetConnectClustersRequest) (*kafka_scheduler_v1.GetConnectClustersReply, error)
 	Describe(context.Context, *kafka_scheduler_v1.GetConnectClusterRequest) (*kafka_scheduler_v1.GetConnectClusterReply, error)
+	CreateS3Sink(context.Context, *kafka_scheduler_v1.CreateConnectS3SinkClusterRequest) (*kafka_scheduler_v1.CreateConnectS3SinkClusterReply, error)
 }
 
 func RegisterConnectServer(s *grpc.Server, srv ConnectServer) {
@@ -118,6 +129,24 @@ func _Connect_Describe_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Connect_CreateS3Sink_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(kafka_scheduler_v1.CreateConnectS3SinkClusterRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConnectServer).CreateS3Sink(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/connect.Connect/CreateS3Sink",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConnectServer).CreateS3Sink(ctx, req.(*kafka_scheduler_v1.CreateConnectS3SinkClusterRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Connect_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "connect.Connect",
 	HandlerType: (*ConnectServer)(nil),
@@ -130,6 +159,10 @@ var _Connect_serviceDesc = grpc.ServiceDesc{
 			MethodName: "Describe",
 			Handler:    _Connect_Describe_Handler,
 		},
+		{
+			MethodName: "CreateS3Sink",
+			Handler:    _Connect_CreateS3Sink_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "connect.proto",
@@ -138,15 +171,17 @@ var _Connect_serviceDesc = grpc.ServiceDesc{
 func init() { proto.RegisterFile("connect.proto", fileDescriptorConnect) }
 
 var fileDescriptorConnect = []byte{
-	// 152 bytes of a gzipped FileDescriptorProto
+	// 186 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x4d, 0xce, 0xcf, 0xcb,
 	0x4b, 0x4d, 0x2e, 0xd1, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0x87, 0x72, 0xa5, 0x94, 0xb2,
 	0x13, 0xd3, 0xb2, 0x13, 0xf5, 0x8b, 0x93, 0x33, 0x52, 0x53, 0x4a, 0x73, 0x52, 0x8b, 0xf4, 0xcb,
-	0x0c, 0x11, 0x1c, 0x88, 0x62, 0xa3, 0xeb, 0x8c, 0x5c, 0xec, 0xce, 0x10, 0xf5, 0x42, 0x29, 0x5c,
+	0x0c, 0x11, 0x1c, 0x88, 0x62, 0xa3, 0xab, 0x4c, 0x5c, 0xec, 0xce, 0x10, 0xf5, 0x42, 0x29, 0x5c,
 	0x2c, 0x3e, 0x99, 0xc5, 0x25, 0x42, 0xba, 0x7a, 0x60, 0x8d, 0x7a, 0x08, 0xb5, 0x65, 0x86, 0x7a,
 	0xee, 0xa9, 0x25, 0x50, 0x75, 0xce, 0x39, 0xa5, 0xc5, 0x25, 0xa9, 0x45, 0xc5, 0x41, 0xa9, 0x85,
 	0xa5, 0xa9, 0xc5, 0x25, 0x52, 0xda, 0xc4, 0x2a, 0x2f, 0xc8, 0xa9, 0x54, 0x62, 0x10, 0x4a, 0xe3,
 	0xe2, 0x70, 0x49, 0x2d, 0x4e, 0x2e, 0xca, 0x4c, 0x4a, 0x15, 0xd2, 0x21, 0x4a, 0x2b, 0xcc, 0x22,
-	0x2d, 0x22, 0x55, 0x83, 0xed, 0x49, 0x62, 0x03, 0x7b, 0xd0, 0x18, 0x10, 0x00, 0x00, 0xff, 0xff,
-	0xa7, 0xc6, 0x0c, 0xb9, 0x1e, 0x01, 0x00, 0x00,
+	0x2d, 0x22, 0x55, 0x43, 0xec, 0xa9, 0xe1, 0xe2, 0x71, 0x2e, 0x4a, 0x4d, 0x2c, 0x49, 0x0d, 0x36,
+	0x0e, 0xce, 0xcc, 0xcb, 0x16, 0x32, 0xc5, 0xa6, 0x1b, 0xa2, 0x02, 0x6a, 0x00, 0x44, 0x21, 0x9a,
+	0xa5, 0xc6, 0xa4, 0x6a, 0x03, 0xdb, 0x9e, 0xc4, 0x06, 0x0e, 0x5e, 0x63, 0x40, 0x00, 0x00, 0x00,
+	0xff, 0xff, 0x70, 0xd9, 0x24, 0x3c, 0x9c, 0x01, 0x00, 0x00,
 }

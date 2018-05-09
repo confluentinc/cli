@@ -3,10 +3,13 @@ package connect
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 
 	plugin "github.com/hashicorp/go-plugin"
+	"github.com/ghodss/yaml"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
@@ -63,11 +66,18 @@ func (c *Command) init() error {
 	// Got a client now communicating over RPC.
 	c.connect = raw.(Connect)
 
-	c.AddCommand(&cobra.Command{
-		Use:   "create",
+	createCmd := &cobra.Command{
+		Use:   "create <name>",
 		Short: "Create a connector.",
 		RunE:  c.create,
-	})
+		Args:  cobra.ExactArgs(1),
+	}
+	createCmd.Flags().String("config", "", "Connector configuration file")
+	createCmd.MarkFlagRequired("config")
+	createCmd.Flags().String("kafka-cluster-id", "", "Kafka Cluster ID")
+	createCmd.MarkFlagRequired("kafka-cluster-id")
+	c.AddCommand(createCmd)
+
 	c.AddCommand(&cobra.Command{
 		Use:   "list",
 		Short: "List connectors.",
@@ -98,7 +108,7 @@ func (c *Command) init() error {
 	return nil
 }
 
-func (c *Command) list(Command *cobra.Command, args []string) error {
+func (c *Command) list(cmd *cobra.Command, args []string) error {
 	connectors, err := c.connect.List(context.Background())
 	if err != nil {
 		return common.HandleError(err)
@@ -107,11 +117,43 @@ func (c *Command) list(Command *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *Command) create(Command *cobra.Command, args []string) error {
-	return common.HandleError(shared.ErrNotImplemented)
+func (c *Command) create(cmd *cobra.Command, args []string) error {
+	var err error
+
+	// Create connect cluster config
+	req := &schedv1.ConnectS3SinkClusterConfig{
+		Name:      args[0],
+		AccountId: c.Config.Auth.Account.Id,
+		Options:   &schedv1.ConnectS3SinkOptions{},
+	}
+	req.KafkaClusterId, err = cmd.Flags().GetString("kafka-cluster-id")
+	if err != nil {
+		return errors.Wrap(err, "error reading --kafka-cluster-id as string")
+	}
+
+	// Set s3-sink connector options
+	filename, err := cmd.Flags().GetString("config")
+	if err != nil {
+		return errors.Wrap(err, "error reading --config as string")
+	}
+	yamlFile, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return errors.Wrapf(err, "unable to read config file %s", filename)
+	}
+	err = yaml.Unmarshal(yamlFile, req.Options)
+	if err != nil {
+		return errors.Wrapf(err, "unable to parse config file %s", filename)
+	}
+
+	connector, err := c.connect.CreateS3Sink(context.Background(), req)
+	if err != nil {
+		return common.HandleError(err)
+	}
+	fmt.Println("Created new connector", connector)
+	return nil
 }
 
-func (c *Command) describe(Command *cobra.Command, args []string) error {
+func (c *Command) describe(cmd *cobra.Command, args []string) error {
 	req := &schedv1.ConnectCluster{Name: args[0]}
 	connector, err := c.connect.Describe(context.Background(), req)
 	if err != nil {
@@ -121,14 +163,14 @@ func (c *Command) describe(Command *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *Command) update(Command *cobra.Command, args []string) error {
+func (c *Command) update(cmd *cobra.Command, args []string) error {
 	return common.HandleError(shared.ErrNotImplemented)
 }
 
-func (c *Command) delete(Command *cobra.Command, args []string) error {
+func (c *Command) delete(cmd *cobra.Command, args []string) error {
 	return common.HandleError(shared.ErrNotImplemented)
 }
 
-func (c *Command) auth(Command *cobra.Command, args []string) error {
+func (c *Command) auth(cmd *cobra.Command, args []string) error {
 	return common.HandleError(shared.ErrNotImplemented)
 }

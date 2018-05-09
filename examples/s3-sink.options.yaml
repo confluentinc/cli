@@ -1,0 +1,8 @@
+source_topics: "logs.json.kafka,logs.json.zookeeper"
+bucket_region: "us-west-1"
+bucket_name: "my-bucket"
+source_key_converter: "org.apache.kafka.connect.json.JsonConverter"
+source_value_converter: "org.apache.kafka.connect.json.JsonConverter"
+destination_format: "io.confluent.connect.s3.format.json.JsonFormat"
+max_tasks: 12
+

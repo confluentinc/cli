@@ -51,3 +51,16 @@ func (s *ConnectService) Describe(cluster *schedv1.ConnectCluster) (*schedv1.Con
 	}
 	return reply.Clusters[0], resp, nil
 }
+
+func (s *ConnectService) CreateS3Sink(config *schedv1.ConnectS3SinkClusterConfig) (*schedv1.ConnectS3SinkCluster, *http.Response, error) {
+	body := &schedv1.CreateConnectS3SinkClusterRequest{Config: config}
+	reply := new(schedv1.CreateConnectS3SinkClusterReply)
+	resp, err := s.sling.New().Post("/api/connectors/s3-sinks").BodyJSON(body).Receive(reply, reply)
+	if err != nil {
+		return nil, resp, errors.Wrap(err, "unable to create connector")
+	}
+	if reply.Error != nil {
+		return nil, resp, errors.Wrap(reply.Error, "error creating connector")
+	}
+	return reply.Cluster, resp, nil
+}

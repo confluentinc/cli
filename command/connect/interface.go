@@ -13,6 +13,7 @@ import (
 type Connect interface {
 	List(ctx context.Context) ([]*schedv1.ConnectCluster, error)
 	Describe(ctx context.Context, cluster *schedv1.ConnectCluster) (*schedv1.ConnectCluster, error)
+	CreateS3Sink(ctx context.Context, config *schedv1.ConnectS3SinkClusterConfig) (*schedv1.ConnectS3SinkCluster, error)
 }
 
 type Plugin struct {

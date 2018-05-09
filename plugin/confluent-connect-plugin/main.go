@@ -86,6 +86,12 @@ func (c *Connect) Describe(ctx context.Context, cluster *schedv1.ConnectCluster)
 	return ret, shared.ConvertAPIError(err)
 }
 
+func (c *Connect) CreateS3Sink(ctx context.Context, config *schedv1.ConnectS3SinkClusterConfig) (*schedv1.ConnectS3SinkCluster, error) {
+	c.Logger.Log("msg", "connect.CreateS3Sink()")
+	ret, _, err := c.Client.Connect.CreateS3Sink(config)
+	return ret, shared.ConvertAPIError(err)
+}
+
 func check(err error) {
 	if err != nil {
 		golog.Fatal(err)
