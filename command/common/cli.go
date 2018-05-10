@@ -23,3 +23,10 @@ func HandleError(err error) error {
 	}
 	return nil
 }
+
+func CheckLogin(config *shared.Config) error {
+	if config == nil || config.Auth == nil || config.Auth.Account == nil || config.Auth.Account.Id == "" {
+		return shared.ErrUnauthorized
+	}
+	return nil
+}

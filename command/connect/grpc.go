@@ -13,8 +13,8 @@ type GRPCClient struct {
 	client proto.ConnectClient
 }
 
-func (c *GRPCClient) List(ctx context.Context) ([]*schedv1.ConnectCluster, error) {
-	resp, err := c.client.List(ctx, &schedv1.GetConnectClustersRequest{})
+func (c *GRPCClient) List(ctx context.Context, cluster *schedv1.ConnectCluster) ([]*schedv1.ConnectCluster, error) {
+	resp, err := c.client.List(ctx, &schedv1.GetConnectClustersRequest{Cluster: cluster})
 	if err != nil {
 		return nil, shared.ConvertGRPCError(err)
 	}
@@ -43,7 +43,7 @@ type GRPCServer struct {
 }
 
 func (s *GRPCServer) List(ctx context.Context, req *schedv1.GetConnectClustersRequest) (*schedv1.GetConnectClustersReply, error) {
-	r, err := s.Impl.List(ctx)
+	r, err := s.Impl.List(ctx, req.Cluster)
 	return &schedv1.GetConnectClustersReply{Clusters: r}, err
 }
 

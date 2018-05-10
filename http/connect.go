@@ -27,9 +27,9 @@ func NewConnectService(client *Client) *ConnectService {
 }
 
 // List returns the authenticated user's connect clusters within a given account.
-func (s *ConnectService) List(accountID string) ([]*schedv1.ConnectCluster, *http.Response, error) {
+func (s *ConnectService) List(cluster *schedv1.ConnectCluster) ([]*schedv1.ConnectCluster, *http.Response, error) {
 	reply := new(schedv1.GetConnectClustersReply)
-	resp, err := s.sling.New().Get("/api/connectors?account_id="+accountID).Receive(reply, reply)
+	resp, err := s.sling.New().Get("/api/connectors").QueryStruct(cluster).Receive(reply, reply)
 	if err != nil {
 		return nil, resp, errors.Wrap(err, "unable to fetch connectors")
 	}

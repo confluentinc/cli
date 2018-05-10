@@ -49,7 +49,7 @@ func main() {
 	var impl *Connect
 	{
 		client := chttp.NewClientWithJWT(context.Background(), config.AuthToken, config.AuthURL, config.Logger)
-		impl = &Connect{Logger: logger, Config: config, Client: client}
+		impl = &Connect{Logger: logger, Client: client}
 	}
 
 	plugin.Serve(&plugin.ServeConfig{
@@ -63,25 +63,17 @@ func main() {
 
 type Connect struct {
 	Logger *log.Logger
-	Config *shared.Config
 	Client *chttp.Client
 }
 
-func (c *Connect) List(ctx context.Context) ([]*schedv1.ConnectCluster, error) {
+func (c *Connect) List(ctx context.Context, cluster *schedv1.ConnectCluster) ([]*schedv1.ConnectCluster, error) {
 	c.Logger.Log("msg", "connect.List()")
-	if c.Config.Auth == nil {
-		return nil, shared.ErrUnauthorized
-	}
-	ret, _, err := c.Client.Connect.List(c.Config.Auth.Account.Id)
+	ret, _, err := c.Client.Connect.List(cluster)
 	return ret, shared.ConvertAPIError(err)
 }
 
 func (c *Connect) Describe(ctx context.Context, cluster *schedv1.ConnectCluster) (*schedv1.ConnectCluster, error) {
 	c.Logger.Log("msg", "connect.Describe()")
-	if c.Config.Auth == nil {
-		return nil, shared.ErrUnauthorized
-	}
-	cluster.AccountId = c.Config.Auth.Account.Id
 	ret, _, err := c.Client.Connect.Describe(cluster)
 	return ret, shared.ConvertAPIError(err)
 }

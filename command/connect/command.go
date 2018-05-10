@@ -67,6 +67,14 @@ func (c *Command) init() error {
 	// Got a client now communicating over RPC.
 	c.connect = raw.(Connect)
 
+	// All commands require login first
+	c.Command.PersistentPreRun = func(cmd *cobra.Command, args []string) {
+		if err := common.CheckLogin(c.Config); err != nil {
+			common.HandleError(err)
+			os.Exit(0) // TODO: this should be 1 but that prints "exit status 1" to the console
+		}
+	}
+
 	createCmd := &cobra.Command{
 		Use:   "create <name>",
 		Short: "Create a connector.",
@@ -110,7 +118,8 @@ func (c *Command) init() error {
 }
 
 func (c *Command) list(cmd *cobra.Command, args []string) error {
-	connectors, err := c.connect.List(context.Background())
+	req := &schedv1.ConnectCluster{AccountId: c.Config.Auth.Account.Id}
+	connectors, err := c.connect.List(context.Background(), req)
 	if err != nil {
 		return common.HandleError(err)
 	}
@@ -155,7 +164,7 @@ func (c *Command) create(cmd *cobra.Command, args []string) error {
 }
 
 func (c *Command) describe(cmd *cobra.Command, args []string) error {
-	req := &schedv1.ConnectCluster{Name: args[0]}
+	req := &schedv1.ConnectCluster{AccountId: c.Config.Auth.Account.Id, Name: args[0]}
 	connector, err := c.connect.Describe(context.Background(), req)
 	if err != nil {
 		return common.HandleError(err)
