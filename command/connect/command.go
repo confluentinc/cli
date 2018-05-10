@@ -47,6 +47,7 @@ func (c *Command) init() error {
 		Plugins:          shared.PluginMap,
 		Cmd:              exec.Command("sh", "-c", path),
 		AllowedProtocols: []plugin.Protocol{plugin.ProtocolGRPC},
+		Managed:          true,
 	})
 
 	// Connect via RPC.

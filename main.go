@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/hashicorp/go-plugin"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -61,6 +62,12 @@ func main() {
 	}
 
 	cli.Version = version
+
+	// Automatically stop plugins when CLI exits
+	cli.PersistentPostRun = func(cmd *cobra.Command, args []string) {
+		plugin.CleanupClients()
+	}
+
 	cli.AddCommand(auth.New(config)...)
 	cli.AddCommand(kafka.New(config))
 
