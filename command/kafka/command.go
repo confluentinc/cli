@@ -83,9 +83,10 @@ func (c *Command) init() error {
 		RunE:  c.list,
 	})
 	c.AddCommand(&cobra.Command{
-		Use:   "describe",
+		Use:   "describe <name>",
 		Short: "Describe a Kafka cluster.",
 		RunE:  c.describe,
+		Args:  cobra.ExactArgs(1),
 	})
 	c.AddCommand(&cobra.Command{
 		Use:   "delete",
@@ -121,7 +122,13 @@ func (c *Command) list(cmd *cobra.Command, args []string) error {
 }
 
 func (c *Command) describe(cmd *cobra.Command, args []string) error {
-	return shared.ErrNotImplemented
+	req := &schedv1.KafkaCluster{AccountId: c.config.Auth.Account.Id, Name: args[0]}
+	cluster, err := c.kafka.Describe(context.Background(), req)
+	if err != nil {
+		return common.HandleError(err)
+	}
+	fmt.Println(cluster)
+	return nil
 }
 
 func (c *Command) update(cmd *cobra.Command, args []string) error {

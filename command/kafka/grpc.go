@@ -21,6 +21,14 @@ func (c *GRPCClient) List(ctx context.Context, cluster *schedv1.KafkaCluster) ([
 	return resp.Clusters, nil
 }
 
+func (c *GRPCClient) Describe(ctx context.Context, cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error) {
+	resp, err := c.client.Describe(ctx, &schedv1.GetKafkaClusterRequest{Cluster: cluster})
+	if err != nil {
+		return nil, shared.ConvertGRPCError(err)
+	}
+	return resp.Cluster, nil
+}
+
 // The gRPC server the GPRClient talks to. Plugin authors implement this if they're using Go.
 type GRPCServer struct {
 	Impl Kafka
@@ -29,4 +37,9 @@ type GRPCServer struct {
 func (s *GRPCServer) List(ctx context.Context, req *schedv1.GetKafkaClustersRequest) (*schedv1.GetKafkaClustersReply, error) {
 	r, err := s.Impl.List(ctx, req.Cluster)
 	return &schedv1.GetKafkaClustersReply{Clusters: r}, err
+}
+
+func (s *GRPCServer) Describe(ctx context.Context, req *schedv1.GetKafkaClusterRequest) (*schedv1.GetKafkaClusterReply, error) {
+	r, err := s.Impl.Describe(ctx, req.Cluster)
+	return &schedv1.GetKafkaClusterReply{Cluster: r}, err
 }

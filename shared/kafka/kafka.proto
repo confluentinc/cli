@@ -7,5 +7,6 @@ import "kafka/scheduler/v1/scheduler.proto";
 // TODO: should this definition be in cc-structs?
 service Kafka {
   rpc List(kafka.scheduler.v1.GetKafkaClustersRequest) returns (kafka.scheduler.v1.GetKafkaClustersReply) {}
+  rpc Describe(kafka.scheduler.v1.GetKafkaClusterRequest) returns (kafka.scheduler.v1.GetKafkaClusterReply) {}
   // ...
 }

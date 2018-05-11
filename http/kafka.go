@@ -38,3 +38,16 @@ func (s *KafkaService) List(cluster *schedv1.KafkaCluster) ([]*schedv1.KafkaClus
 	}
 	return reply.Clusters, resp, nil
 }
+
+// Describe returns details for a given kafka cluster.
+func (s *KafkaService) Describe(cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, *http.Response, error) {
+	reply := new(schedv1.GetKafkaClustersReply)
+	resp, err := s.sling.New().Get("/api/clusters").QueryStruct(cluster).Receive(reply, reply)
+	if err != nil {
+		return nil, resp, errors.Wrap(err, "unable to fetch kafka clusters")
+	}
+	if reply.Error != nil {
+		return nil, resp, errors.Wrap(reply.Error, "error fetching kafka clusters")
+	}
+	return reply.Clusters[0], resp, nil
+}

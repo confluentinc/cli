@@ -13,6 +13,7 @@ import (
 
 type Kafka interface {
 	List(ctx context.Context, cluster *schedv1.KafkaCluster) ([]*schedv1.KafkaCluster, error)
+	Describe(ctx context.Context, cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error)
 }
 
 type Plugin struct {

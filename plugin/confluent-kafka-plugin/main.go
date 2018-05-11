@@ -73,6 +73,12 @@ func (c *Kafka) List(ctx context.Context, cluster *schedv1.KafkaCluster) ([]*sch
 	return ret, shared.ConvertAPIError(err)
 }
 
+func (c *Kafka) Describe(ctx context.Context, cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error) {
+	c.Logger.Log("msg", "kafka.Describe()")
+	ret, _, err := c.Client.Kafka.Describe(cluster)
+	return ret, shared.ConvertAPIError(err)
+}
+
 func check(err error) {
 	if err != nil {
 		golog.Fatal(err)
