@@ -16,7 +16,7 @@ import (
 
 type Command struct {
 	*cobra.Command
-	*shared.Config
+	config *shared.Config
 	kafka Kafka
 }
 
@@ -26,7 +26,7 @@ func New(config *shared.Config) (*cobra.Command, error) {
 			Use:   "kafka",
 			Short: "Manage kafka clusters.",
 		},
-		Config: config,
+		config: config,
 	}
 	err := cmd.init()
 	return cmd.Command, err
@@ -66,7 +66,7 @@ func (c *Command) init() error {
 
 	// All commands require login first
 	c.Command.PersistentPreRun = func(cmd *cobra.Command, args []string) {
-		if err := common.CheckLogin(c.Config); err != nil {
+		if err := common.CheckLogin(c.config); err != nil {
 			common.HandleError(err)
 			os.Exit(0) // TODO: this should be 1 but that prints "exit status 1" to the console
 		}
@@ -111,7 +111,7 @@ func (c *Command) create(cmd *cobra.Command, args []string) error {
 }
 
 func (c *Command) list(cmd *cobra.Command, args []string) error {
-	req := &schedv1.KafkaCluster{AccountId: c.Config.Auth.Account.Id}
+	req := &schedv1.KafkaCluster{AccountId: c.config.Auth.Account.Id}
 	clusters, err := c.kafka.List(context.Background(), req)
 	if err != nil {
 		return common.HandleError(err)

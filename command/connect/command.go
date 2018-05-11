@@ -19,7 +19,7 @@ import (
 
 type Command struct {
 	*cobra.Command
-	*shared.Config
+	config *shared.Config
 	connect Connect
 }
 
@@ -29,7 +29,7 @@ func New(config *shared.Config) (*cobra.Command, error) {
 			Use:   "connect",
 			Short: "Manage connectors.",
 		},
-		Config: config,
+		config: config,
 	}
 	err := cmd.init()
 	return cmd.Command, err
@@ -69,7 +69,7 @@ func (c *Command) init() error {
 
 	// All commands require login first
 	c.Command.PersistentPreRun = func(cmd *cobra.Command, args []string) {
-		if err := common.CheckLogin(c.Config); err != nil {
+		if err := common.CheckLogin(c.config); err != nil {
 			common.HandleError(err)
 			os.Exit(0) // TODO: this should be 1 but that prints "exit status 1" to the console
 		}
@@ -118,7 +118,7 @@ func (c *Command) init() error {
 }
 
 func (c *Command) list(cmd *cobra.Command, args []string) error {
-	req := &schedv1.ConnectCluster{AccountId: c.Config.Auth.Account.Id}
+	req := &schedv1.ConnectCluster{AccountId: c.config.Auth.Account.Id}
 	connectors, err := c.connect.List(context.Background(), req)
 	if err != nil {
 		return common.HandleError(err)
@@ -133,7 +133,7 @@ func (c *Command) create(cmd *cobra.Command, args []string) error {
 	// Create connect cluster config
 	req := &schedv1.ConnectS3SinkClusterConfig{
 		Name:      args[0],
-		AccountId: c.Config.Auth.Account.Id,
+		AccountId: c.config.Auth.Account.Id,
 		Options:   &schedv1.ConnectS3SinkOptions{},
 	}
 	req.KafkaClusterId, err = cmd.Flags().GetString("kafka-cluster-id")
@@ -164,7 +164,7 @@ func (c *Command) create(cmd *cobra.Command, args []string) error {
 }
 
 func (c *Command) describe(cmd *cobra.Command, args []string) error {
-	req := &schedv1.ConnectCluster{AccountId: c.Config.Auth.Account.Id, Name: args[0]}
+	req := &schedv1.ConnectCluster{AccountId: c.config.Auth.Account.Id, Name: args[0]}
 	connector, err := c.connect.Describe(context.Background(), req)
 	if err != nil {
 		return common.HandleError(err)
