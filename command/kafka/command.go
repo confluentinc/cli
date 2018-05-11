@@ -15,6 +15,12 @@ import (
 	"github.com/confluentinc/cli/shared"
 )
 
+var (
+	listFields     = []string{"Name", "ServiceProvider", "Region", "Durability", "Status"}
+	listLabels     = []string{"Name", "Provider", "Region", "Durability", "Status"}
+	describeFields = []string{"Id", "Name", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "PricePerHour"}
+	describeLabels = []string{"Id", "Name", "Ingress", "Egress", "Storage", "Provider", "Region", "Status", "Endpoint", "PricePerHour"}
+)
 type Command struct {
 	*cobra.Command
 	config *shared.Config
@@ -123,7 +129,11 @@ func (c *Command) list(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return common.HandleError(err)
 	}
-	fmt.Println(clusters)
+	var data [][]string
+	for _, cluster := range clusters {
+		data = append(data, common.ToRow(cluster, listFields))
+	}
+	common.RenderTable(data, listLabels)
 	return nil
 }
 
@@ -133,7 +143,7 @@ func (c *Command) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return common.HandleError(err)
 	}
-	fmt.Println(cluster)
+	common.RenderDetail(cluster, describeFields, describeLabels)
 	return nil
 }
 

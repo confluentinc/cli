@@ -7,9 +7,9 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/ghodss/yaml"
 	"github.com/hashicorp/go-hclog"
 	plugin "github.com/hashicorp/go-plugin"
-	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
@@ -18,9 +18,16 @@ import (
 	"github.com/confluentinc/cli/shared"
 )
 
+var (
+	listFields     = []string{"Name", "ServiceProvider", "Region", "Durability", "Status"}
+	listLabels     = []string{"Name", "Provider", "Region", "Durability", "Status"}
+	describeFields = []string{"Name", "ServiceProvider", "Region", "Status", "Endpoint", "PricePerHour"}
+	describeLabels = []string{"Name", "Provider", "Region", "Status", "Endpoint", "PricePerHour"}
+)
+
 type Command struct {
 	*cobra.Command
-	config *shared.Config
+	config  *shared.Config
 	connect Connect
 }
 
@@ -125,11 +132,15 @@ func (c *Command) init() error {
 
 func (c *Command) list(cmd *cobra.Command, args []string) error {
 	req := &schedv1.ConnectCluster{AccountId: c.config.Auth.Account.Id}
-	connectors, err := c.connect.List(context.Background(), req)
+	clusters, err := c.connect.List(context.Background(), req)
 	if err != nil {
 		return common.HandleError(err)
 	}
-	fmt.Println(connectors)
+	var data [][]string
+	for _, cluster := range clusters {
+		data = append(data, common.ToRow(cluster, listFields))
+	}
+	common.RenderTable(data, listLabels)
 	return nil
 }
 
@@ -161,21 +172,22 @@ func (c *Command) create(cmd *cobra.Command, args []string) error {
 		return errors.Wrapf(err, "unable to parse config file %s", filename)
 	}
 
-	connector, err := c.connect.CreateS3Sink(context.Background(), req)
+	cluster, err := c.connect.CreateS3Sink(context.Background(), req)
 	if err != nil {
 		return common.HandleError(err)
 	}
-	fmt.Println("Created new connector", connector)
+	fmt.Println("Created new connector:")
+	common.RenderDetail(cluster.ConnectCluster, describeFields, describeLabels)
 	return nil
 }
 
 func (c *Command) describe(cmd *cobra.Command, args []string) error {
 	req := &schedv1.ConnectCluster{AccountId: c.config.Auth.Account.Id, Name: args[0]}
-	connector, err := c.connect.Describe(context.Background(), req)
+	cluster, err := c.connect.Describe(context.Background(), req)
 	if err != nil {
 		return common.HandleError(err)
 	}
-	fmt.Println(connector)
+	common.RenderDetail(cluster, describeFields, describeLabels)
 	return nil
 }
 
