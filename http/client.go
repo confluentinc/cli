@@ -23,6 +23,7 @@ type Client struct {
 	logger     *log.Logger
 	sling      *sling.Sling
 	Auth       *AuthService
+	Kafka      *KafkaService
 	Connect    *ConnectService
 }
 
@@ -34,6 +35,7 @@ func NewClient(httpClient *http.Client, baseURL string, logger *log.Logger) *Cli
 		sling:      sling.New().Client(httpClient).Base(baseURL).Decoder(NewJSONPBDecoder()),
 	}
 	client.Auth = NewAuthService(client)
+	client.Kafka = NewKafkaService(client)
 	client.Connect = NewConnectService(client)
 	return client
 }

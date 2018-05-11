@@ -1,9 +1,8 @@
 CCSTRUCTS = $(GOPATH)/src/github.com/confluentinc/cc-structs
 
-PROTO = shared/connect
-
 compile-proto:
-	protoc -I $(PROTO) -I $(CCSTRUCTS) -I $(CCSTRUCTS)/vendor $(PROTO)/*.proto --gogo_out=plugins=grpc:$(PROTO)
+	protoc -I shared/connect -I $(CCSTRUCTS) -I $(CCSTRUCTS)/vendor shared/connect/*.proto --gogo_out=plugins=grpc:shared/connect
+	protoc -I shared/kafka -I $(CCSTRUCTS) -I $(CCSTRUCTS)/vendor shared/kafka/*.proto --gogo_out=plugins=grpc:shared/kafka
 
 install-plugins:
 	go install ./plugin/...

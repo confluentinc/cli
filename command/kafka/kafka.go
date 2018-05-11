@@ -1,28 +1,77 @@
 package kafka
 
 import (
-	"github.com/confluentinc/cli/shared"
+	"context"
+	"fmt"
+	"os"
+	"os/exec"
+
+	plugin "github.com/hashicorp/go-plugin"
 	"github.com/spf13/cobra"
+
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	"github.com/confluentinc/cli/command/common"
+	"github.com/confluentinc/cli/shared"
 )
 
 type Command struct {
 	*cobra.Command
-	config *shared.Config
+	*shared.Config
+	kafka Kafka
 }
 
-func New(config *shared.Config) *cobra.Command {
+func New(config *shared.Config) (*cobra.Command, error) {
 	cmd := &Command{
 		Command: &cobra.Command{
 			Use:   "kafka",
 			Short: "Manage kafka clusters.",
 		},
-		config: config,
+		Config: config,
 	}
-	cmd.init()
-	return cmd.Command
+	err := cmd.init()
+	return cmd.Command, err
 }
 
-func (c *Command) init() {
+func (c *Command) init() error {
+	path, err := exec.LookPath("confluent-kafka-plugin")
+	if err != nil {
+		return fmt.Errorf("skipping kafka: plugin isn't installed")
+	}
+
+	// We're a host. Start by launching the plugin process.
+	client := plugin.NewClient(&plugin.ClientConfig{
+		HandshakeConfig:  shared.Handshake,
+		Plugins:          shared.PluginMap,
+		Cmd:              exec.Command("sh", "-c", path),
+		AllowedProtocols: []plugin.Protocol{plugin.ProtocolGRPC},
+		Managed:          true,
+	})
+
+	// Connect via RPC.
+	rpcClient, err := client.Client()
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		os.Exit(1)
+	}
+
+	// Request the plugin
+	raw, err := rpcClient.Dispense("kafka")
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		os.Exit(1)
+	}
+
+	// Got a client now communicating over RPC.
+	c.kafka = raw.(Kafka)
+
+	// All commands require login first
+	c.Command.PersistentPreRun = func(cmd *cobra.Command, args []string) {
+		if err := common.CheckLogin(c.Config); err != nil {
+			common.HandleError(err)
+			os.Exit(0) // TODO: this should be 1 but that prints "exit status 1" to the console
+		}
+	}
+
 	c.AddCommand(&cobra.Command{
 		Use:   "create",
 		Short: "Create a Kafka cluster.",
@@ -53,28 +102,36 @@ func (c *Command) init() {
 		Short: "Auth a Kafka cluster.",
 		RunE:  c.auth,
 	})
+
+	return nil
 }
 
-func (c *Command) create(Command *cobra.Command, args []string) error {
+func (c *Command) create(cmd *cobra.Command, args []string) error {
 	return shared.ErrNotImplemented
 }
 
-func (c *Command) list(Command *cobra.Command, args []string) error {
+func (c *Command) list(cmd *cobra.Command, args []string) error {
+	req := &schedv1.KafkaCluster{AccountId: c.Config.Auth.Account.Id}
+	clusters, err := c.kafka.List(context.Background(), req)
+	if err != nil {
+		return common.HandleError(err)
+	}
+	fmt.Println(clusters)
+	return nil
+}
+
+func (c *Command) describe(cmd *cobra.Command, args []string) error {
 	return shared.ErrNotImplemented
 }
 
-func (c *Command) describe(Command *cobra.Command, args []string) error {
+func (c *Command) update(cmd *cobra.Command, args []string) error {
 	return shared.ErrNotImplemented
 }
 
-func (c *Command) update(Command *cobra.Command, args []string) error {
+func (c *Command) delete(cmd *cobra.Command, args []string) error {
 	return shared.ErrNotImplemented
 }
 
-func (c *Command) delete(Command *cobra.Command, args []string) error {
-	return shared.ErrNotImplemented
-}
-
-func (c *Command) auth(Command *cobra.Command, args []string) error {
+func (c *Command) auth(cmd *cobra.Command, args []string) error {
 	return shared.ErrNotImplemented
 }

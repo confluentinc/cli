@@ -69,9 +69,15 @@ func main() {
 	}
 
 	cli.AddCommand(auth.New(config)...)
-	cli.AddCommand(kafka.New(config))
 
-	conn, err := connect.New(config)
+	conn, err := kafka.New(config)
+	if err != nil {
+		logger.Log("msg", err)
+	} else {
+		cli.AddCommand(conn)
+	}
+
+	conn, err = connect.New(config)
 	if err != nil {
 		logger.Log("msg", err)
 	} else {
