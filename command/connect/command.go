@@ -21,8 +21,8 @@ import (
 var (
 	listFields     = []string{"Name", "ServiceProvider", "Region", "Durability", "Status"}
 	listLabels     = []string{"Name", "Provider", "Region", "Durability", "Status"}
-	describeFields = []string{"Name", "ServiceProvider", "Region", "Status", "Endpoint", "PricePerHour"}
-	describeLabels = []string{"Name", "Provider", "Region", "Status", "Endpoint", "PricePerHour"}
+	describeFields = []string{"Name", "KafkaClusterId", "ServiceProvider", "Region", "Status", "Endpoint", "PricePerHour"}
+	describeLabels = []string{"Name", "Kafka", "Provider", "Region", "Status", "Endpoint", "PricePerHour"}
 )
 
 type Command struct {
@@ -96,8 +96,8 @@ func (c *Command) init() error {
 	}
 	createCmd.Flags().String("config", "", "Connector configuration file")
 	createCmd.MarkFlagRequired("config")
-	createCmd.Flags().String("kafka-cluster-id", "", "Kafka Cluster ID")
-	createCmd.MarkFlagRequired("kafka-cluster-id")
+	createCmd.Flags().String("kafka-cluster", "", "Kafka Cluster Name")
+	createCmd.MarkFlagRequired("kafka-cluster")
 	c.AddCommand(createCmd)
 
 	c.AddCommand(&cobra.Command{
@@ -153,9 +153,10 @@ func (c *Command) create(cmd *cobra.Command, args []string) error {
 		AccountId: c.config.Auth.Account.Id,
 		Options:   &schedv1.ConnectS3SinkOptions{},
 	}
-	req.KafkaClusterId, err = cmd.Flags().GetString("kafka-cluster-id")
+	// NOTE: KafkaClusterId is actually the Kafka Cluster name. We resolve the ID in the plugin and update this field.
+	req.KafkaClusterId, err = cmd.Flags().GetString("kafka-cluster")
 	if err != nil {
-		return errors.Wrap(err, "error reading --kafka-cluster-id as string")
+		return errors.Wrap(err, "error reading --kafka-cluster as string")
 	}
 
 	// Set s3-sink connector options

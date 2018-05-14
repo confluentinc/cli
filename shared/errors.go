@@ -28,6 +28,7 @@ var (
 	ErrUnauthorized   = fmt.Errorf("unauthorized")
 	ErrExpiredToken   = fmt.Errorf("expired")
 	ErrMalformedToken = fmt.Errorf("malformed")
+	ErrNotFound       = fmt.Errorf("not found")
 )
 
 func ConvertAPIError(err error) error {
@@ -42,6 +43,9 @@ func ConvertAPIError(err error) error {
 		// except this one.. its the special case of errUnauthorized from http/auth.go
 		case "unauthorized":
 			return ErrUnauthorized
+		// except this one.. its the special case of errNotFound from http/client.go
+		case "cluster not found":
+			return ErrNotFound
 		// TODO: assert invariant for default case: we're missing an corev1.Error -> HTTP Error constant mapping
 		}
 	}
@@ -52,12 +56,14 @@ func ConvertGRPCError(err error) error {
 	if s, ok := status.FromError(err); ok {
 		// these messages are from the error constants at the top of this file
 		switch s.Message() {
-		case "expired":
+		case ErrMalformedToken.Error():
 			return ErrExpiredToken
-		case "malformed":
+		case ErrMalformedToken.Error():
 			return ErrMalformedToken
-		case "unauthorized":
+		case ErrUnauthorized.Error():
 			return ErrUnauthorized
+		case ErrNotFound.Error():
+			return ErrNotFound
 		// TODO: assert invariant for default case: we're missing a GRPC -> HTTP Error constant mapping
 		}
 		return fmt.Errorf(s.Message())

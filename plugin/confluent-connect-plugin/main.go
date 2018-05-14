@@ -75,13 +75,39 @@ func (c *Connect) List(ctx context.Context, cluster *schedv1.ConnectCluster) ([]
 func (c *Connect) Describe(ctx context.Context, cluster *schedv1.ConnectCluster) (*schedv1.ConnectCluster, error) {
 	c.Logger.Log("msg", "connect.Describe()")
 	ret, _, err := c.Client.Connect.Describe(cluster)
-	return ret, shared.ConvertAPIError(err)
+	if err != nil {
+		return nil, shared.ConvertAPIError(err)
+	}
+
+	// Resolve the kafka cluster Name from the ID
+	kafka, _, err := c.Client.Kafka.Describe(&schedv1.KafkaCluster{AccountId: ret.AccountId, Id: ret.KafkaClusterId})
+	if err != nil {
+		return nil, shared.ConvertAPIError(err)
+	}
+	ret.KafkaClusterId = kafka.Name  // NOTE: store the Name in the ID field for the Detail view
+
+	return ret, nil
 }
 
-func (c *Connect) CreateS3Sink(ctx context.Context, config *schedv1.ConnectS3SinkClusterConfig) (*schedv1.ConnectS3SinkCluster, error) {
+func (c *Connect) CreateS3Sink(ctx context.Context, cfg *schedv1.ConnectS3SinkClusterConfig) (*schedv1.ConnectS3SinkCluster, error) {
 	c.Logger.Log("msg", "connect.CreateS3Sink()")
-	ret, _, err := c.Client.Connect.CreateS3Sink(config)
-	return ret, shared.ConvertAPIError(err)
+
+	// Resolve the kafka cluster ID from the name. (NOTE: we're storing the name in KafkaClusterId field)
+	kafkaName := cfg.KafkaClusterId
+	kafka, _, err := c.Client.Kafka.Describe(&schedv1.KafkaCluster{AccountId: cfg.AccountId, Name: kafkaName})
+	if err != nil {
+		return nil, shared.ConvertAPIError(err)
+	}
+	cfg.KafkaClusterId = kafka.Id
+
+	// Create the connect cluster
+	ret, _, err := c.Client.Connect.CreateS3Sink(cfg)
+	if err != nil {
+		return nil, shared.ConvertAPIError(err)
+	}
+	ret.KafkaClusterId = kafkaName  // NOTE: store the Name in the ID field for the Detail view
+
+	return ret, nil
 }
 
 func check(err error) {

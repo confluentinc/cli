@@ -28,7 +28,7 @@
     "kafka/scheduler/v1",
     "operator/v1"
   ]
-  revision = "dcaf8a6618cc7f40fc3656486222629f90e54ebe"
+  revision = "5be798cc72a8f445d6197f4aeb0314065abf0968"
 
 [[projects]]
   branch = "jsonpb"

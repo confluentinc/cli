@@ -49,5 +49,9 @@ func (s *KafkaService) Describe(cluster *schedv1.KafkaCluster) (*schedv1.KafkaCl
 	if reply.Error != nil {
 		return nil, resp, errors.Wrap(reply.Error, "error fetching kafka clusters")
 	}
+	// Since we're hitting the get-all endpoint instead of get-one, simulate a NotFound error if no matches return
+	if len(reply.Clusters) == 0 {
+		return nil, resp, errNotFound
+	}
 	return reply.Clusters[0], resp, nil
 }

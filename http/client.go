@@ -8,6 +8,7 @@ import (
 	"github.com/dghubble/sling"
 	"golang.org/x/oauth2"
 
+	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
 	"github.com/confluentinc/cli/log"
 )
 
@@ -15,7 +16,10 @@ const (
 	timeout = time.Second * 10
 )
 
-var BaseClient = &http.Client{Timeout: timeout}
+var (
+	BaseClient  = &http.Client{Timeout: timeout}
+	errNotFound = &corev1.Error{Code: 404, Message: "cluster not found"} // matches gateway response
+)
 
 type Client struct {
 	httpClient *http.Client

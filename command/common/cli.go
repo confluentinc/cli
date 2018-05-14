@@ -18,6 +18,8 @@ func HandleError(err error) error {
 		fmt.Println("Your auth token has been corrupted. Please login again.")
 	case shared.ErrNotImplemented:
 		fmt.Println("Sorry, this functionality is not yet available in the CLI.")
+	case shared.ErrNotFound:
+		fmt.Println("Kafka cluster not found.")
 	default:
 		return err
 	}
