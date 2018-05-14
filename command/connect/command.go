@@ -21,8 +21,8 @@ import (
 var (
 	listFields     = []string{"Name", "ServiceProvider", "Region", "Durability", "Status"}
 	listLabels     = []string{"Name", "Provider", "Region", "Durability", "Status"}
-	describeFields = []string{"Name", "KafkaClusterId", "ServiceProvider", "Region", "Status", "PricePerHour"}
-	describeLabels = []string{"Name", "Kafka", "Provider", "Region", "Status", "PricePerHour"}
+	describeFields = []string{"Name", "Plugin", "KafkaClusterId", "ServiceProvider", "Region", "Status"}
+	describeLabels = []string{"Name", "Kind", "Kafka", "Provider", "Region", "Status"}
 )
 
 type Command struct {
@@ -105,22 +105,30 @@ func (c *Command) init() error {
 		Short: "List connectors.",
 		RunE:  c.list,
 	})
+
 	c.AddCommand(&cobra.Command{
 		Use:   "describe <name>",
 		Short: "Describe a connector.",
 		RunE:  c.describe,
 		Args:  cobra.ExactArgs(1),
 	})
+
 	c.AddCommand(&cobra.Command{
 		Use:   "delete",
 		Short: "Delete a connector.",
 		RunE:  c.delete,
 	})
-	c.AddCommand(&cobra.Command{
-		Use:   "update",
+
+	updateCmd := &cobra.Command{
+		Use:   "update <name>",
 		Short: "Update a connector.",
 		RunE:  c.update,
-	})
+		Args:  cobra.ExactArgs(1),
+	}
+	updateCmd.Flags().String("config", "", "Connector configuration file")
+	updateCmd.MarkFlagRequired("config")
+	c.AddCommand(updateCmd)
+
 	c.AddCommand(&cobra.Command{
 		Use:   "auth",
 		Short: "Auth a connector.",
@@ -145,32 +153,19 @@ func (c *Command) list(cmd *cobra.Command, args []string) error {
 }
 
 func (c *Command) create(cmd *cobra.Command, args []string) error {
-	var err error
+	options, err := getConfig(cmd)
 
-	// Create connect cluster config
-	req := &schedv1.ConnectS3SinkClusterConfig{
-		Name:      args[0],
-		AccountId: c.config.Auth.Account.Id,
-		Options:   &schedv1.ConnectS3SinkOptions{},
-	}
-	// NOTE: KafkaClusterId is actually the Kafka Cluster name. We resolve the ID in the plugin and update this field.
-	req.KafkaClusterId, err = cmd.Flags().GetString("kafka-cluster")
+	kafkaClusterName, err := cmd.Flags().GetString("kafka-cluster")
 	if err != nil {
 		return errors.Wrap(err, "error reading --kafka-cluster as string")
 	}
 
-	// Set s3-sink connector options
-	filename, err := cmd.Flags().GetString("config")
-	if err != nil {
-		return errors.Wrap(err, "error reading --config as string")
-	}
-	yamlFile, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return errors.Wrapf(err, "unable to read config file %s", filename)
-	}
-	err = yaml.Unmarshal(yamlFile, req.Options)
-	if err != nil {
-		return errors.Wrapf(err, "unable to parse config file %s", filename)
+	// Create connect cluster config
+	req := &schedv1.ConnectS3SinkClusterConfig{
+		Name:           args[0],
+		AccountId:      c.config.Auth.Account.Id,
+		Options:        options,
+		KafkaClusterId: kafkaClusterName, // NOTE: We store the name in the ID field and resolve the ID in the plugin.
 	}
 
 	cluster, err := c.connect.CreateS3Sink(context.Background(), req)
@@ -179,6 +174,8 @@ func (c *Command) create(cmd *cobra.Command, args []string) error {
 	}
 	fmt.Println("Created new connector:")
 	common.RenderDetail(cluster.ConnectCluster, describeFields, describeLabels)
+	fmt.Println("\nS3/Sink Options:")
+	fmt.Println(toConfig(cluster.Options))
 	return nil
 }
 
@@ -193,7 +190,26 @@ func (c *Command) describe(cmd *cobra.Command, args []string) error {
 }
 
 func (c *Command) update(cmd *cobra.Command, args []string) error {
-	return common.HandleError(shared.ErrNotImplemented)
+	options, err := getConfig(cmd)
+
+	// Create updated connect s3-sink cluster
+	req := &schedv1.ConnectS3SinkCluster{
+		ConnectCluster: &schedv1.ConnectCluster{
+			Name:      args[0],
+			AccountId: c.config.Auth.Account.Id,
+		},
+		Options: options,
+	}
+
+	cluster, err := c.connect.UpdateS3Sink(context.Background(), req)
+	if err != nil {
+		return common.HandleError(err)
+	}
+	fmt.Println("Updated connector:")
+	common.RenderDetail(cluster.ConnectCluster, describeFields, describeLabels)
+	fmt.Println("\nS3/Sink Options:")
+	fmt.Println(toConfig(cluster.Options))
+	return nil
 }
 
 func (c *Command) delete(cmd *cobra.Command, args []string) error {
@@ -208,4 +224,30 @@ func (c *Command) delete(cmd *cobra.Command, args []string) error {
 
 func (c *Command) auth(cmd *cobra.Command, args []string) error {
 	return common.HandleError(shared.ErrNotImplemented)
+}
+
+func getConfig(cmd *cobra.Command) (*schedv1.ConnectS3SinkOptions, error) {
+	// Set s3-sink connector options
+	filename, err := cmd.Flags().GetString("config")
+	if err != nil {
+		return nil, errors.Wrap(err, "error reading --config as string")
+	}
+	yamlFile, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return nil, errors.Wrapf(err, "unable to read config file %s", filename)
+	}
+	options := &schedv1.ConnectS3SinkOptions{}
+	err = yaml.Unmarshal(yamlFile, options)
+	if err != nil {
+		return nil, errors.Wrapf(err, "unable to parse config file %s", filename)
+	}
+	return options, nil
+}
+
+func toConfig(options *schedv1.ConnectS3SinkOptions) (string, error) {
+	opts, err := yaml.Marshal(options)
+	if err != nil {
+		return "", errors.Wrapf(err, "unable to marshal options")
+	}
+	return string(opts), nil
 }
