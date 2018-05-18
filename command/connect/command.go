@@ -176,6 +176,7 @@ func (c *Command) create(cmd *cobra.Command, args []string) error {
 	common.RenderDetail(cluster.ConnectCluster, describeFields, describeLabels)
 	fmt.Println("\nS3/Sink Options:")
 	fmt.Println(toConfig(cluster.Options))
+	fmt.Println("\n\nCreate an S3 bucket policy with this user ARN:\n\t" + cluster.UserArn)
 	return nil
 }
 
@@ -209,6 +210,7 @@ func (c *Command) update(cmd *cobra.Command, args []string) error {
 	common.RenderDetail(cluster.ConnectCluster, describeFields, describeLabels)
 	fmt.Println("\nS3/Sink Options:")
 	fmt.Println(toConfig(cluster.Options))
+	fmt.Println("\n\nCreate an S3 bucket policy with this user ARN:\n\t" + cluster.UserArn)
 	return nil
 }
 
