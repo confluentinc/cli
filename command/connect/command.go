@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/ghodss/yaml"
 	"github.com/hashicorp/go-hclog"
@@ -19,10 +20,10 @@ import (
 )
 
 var (
-	listFields     = []string{"Name", "ServiceProvider", "Region", "Durability", "Status"}
-	listLabels     = []string{"Name", "Provider", "Region", "Durability", "Status"}
-	describeFields = []string{"Name", "Plugin", "KafkaClusterId", "ServiceProvider", "Region", "Status"}
-	describeLabels = []string{"Name", "Kind", "Kafka", "Provider", "Region", "Status"}
+	listFields     = []string{"Name", "Plugin", "ServiceProvider", "Region", "Status"}
+	listLabels     = []string{"Name", "Kind", "Provider", "Region", "Status"}
+	describeFields = []string{"Name", "Plugin", "KafkaClusterId", "ServiceProvider", "Region", "Durability", "Status"}
+	describeLabels = []string{"Name", "Kind", "Kafka", "Provider", "Region", "Durability", "Status"}
 )
 
 type Command struct {
@@ -186,7 +187,18 @@ func (c *Command) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return common.HandleError(err)
 	}
-	common.RenderDetail(cluster, describeFields, describeLabels)
+	switch cluster.Plugin {
+	case schedv1.ConnectPlugin_S3_SINK:
+		cl, err := c.connect.DescribeS3Sink(context.Background(), &schedv1.ConnectS3SinkCluster{
+			ConnectCluster: &schedv1.ConnectCluster{Id: cluster.Id, AccountId: cluster.AccountId},
+		})
+		if err != nil {
+			return common.HandleError(err)
+		}
+		common.RenderDetail(cl, describeFields, describeLabels)
+	default:
+		return fmt.Errorf("unknown connect plugin type: %s", cluster.Plugin.String())
+	}
 	return nil
 }
 

@@ -8,6 +8,7 @@ import "kafka/scheduler/v1/scheduler.proto";
 service Connect {
   rpc List(kafka.scheduler.v1.GetConnectClustersRequest) returns (kafka.scheduler.v1.GetConnectClustersReply) {}
   rpc Describe(kafka.scheduler.v1.GetConnectClusterRequest) returns (kafka.scheduler.v1.GetConnectClusterReply) {}
+  rpc DescribeS3Sink(kafka.scheduler.v1.GetConnectS3SinkClusterRequest) returns (kafka.scheduler.v1.GetConnectS3SinkClusterReply) {}
   rpc CreateS3Sink(kafka.scheduler.v1.CreateConnectS3SinkClusterRequest) returns (kafka.scheduler.v1.CreateConnectS3SinkClusterReply) {}
   rpc UpdateS3Sink(kafka.scheduler.v1.UpdateConnectS3SinkClusterRequest) returns (kafka.scheduler.v1.UpdateConnectS3SinkClusterReply) {}
   rpc Delete(kafka.scheduler.v1.DeleteConnectClusterRequest) returns (kafka.scheduler.v1.DeleteConnectClusterReply) {}

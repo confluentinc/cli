@@ -21,6 +21,14 @@ func (c *GRPCClient) List(ctx context.Context, cluster *schedv1.ConnectCluster) 
 	return resp.Clusters, nil
 }
 
+func (c *GRPCClient) DescribeS3Sink(ctx context.Context, cluster *schedv1.ConnectS3SinkCluster) (*schedv1.ConnectS3SinkCluster, error) {
+	resp, err := c.client.DescribeS3Sink(ctx, &schedv1.GetConnectS3SinkClusterRequest{Cluster: cluster})
+	if err != nil {
+		return nil, shared.ConvertGRPCError(err)
+	}
+	return resp.Cluster, nil
+}
+
 func (c *GRPCClient) Describe(ctx context.Context, cluster *schedv1.ConnectCluster) (*schedv1.ConnectCluster, error) {
 	resp, err := c.client.Describe(ctx, &schedv1.GetConnectClusterRequest{Cluster: cluster})
 	if err != nil {
@@ -66,6 +74,11 @@ func (s *GRPCServer) List(ctx context.Context, req *schedv1.GetConnectClustersRe
 func (s *GRPCServer) Describe(ctx context.Context, req *schedv1.GetConnectClusterRequest) (*schedv1.GetConnectClusterReply, error) {
 	r, err := s.Impl.Describe(ctx, req.Cluster)
 	return &schedv1.GetConnectClusterReply{Cluster: r}, err
+}
+
+func (s *GRPCServer) DescribeS3Sink(ctx context.Context, req *schedv1.GetConnectS3SinkClusterRequest) (*schedv1.GetConnectS3SinkClusterReply, error) {
+	r, err := s.Impl.DescribeS3Sink(ctx, req.Cluster)
+	return &schedv1.GetConnectS3SinkClusterReply{Cluster: r}, err
 }
 
 func (s *GRPCServer) CreateS3Sink(ctx context.Context, req *schedv1.CreateConnectS3SinkClusterRequest) (*schedv1.CreateConnectS3SinkClusterReply, error) {

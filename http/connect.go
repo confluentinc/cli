@@ -56,6 +56,19 @@ func (s *ConnectService) Describe(cluster *schedv1.ConnectCluster) (*schedv1.Con
 	return reply.Clusters[0], resp, nil
 }
 
+// DescribeS3Sink returns details for a given connect s3-sink cluster.
+func (s *ConnectService) DescribeS3Sink(cluster *schedv1.ConnectS3SinkCluster) (*schedv1.ConnectS3SinkCluster, *http.Response, error) {
+	reply := new(schedv1.GetConnectS3SinkClusterReply)
+	resp, err := s.sling.New().Get("/api/connectors/s3-sinks/"+cluster.Id).QueryStruct(cluster.ConnectCluster).Receive(reply, reply)
+	if err != nil {
+		return nil, resp, errors.Wrap(err, "unable to fetch connectors")
+	}
+	if reply.Error != nil {
+		return nil, resp, errors.Wrap(reply.Error, "error fetching connectors")
+	}
+	return reply.Cluster, resp, nil
+}
+
 // CreateS3Sink makes a new s3-sink connect cluster.
 func (s *ConnectService) CreateS3Sink(config *schedv1.ConnectS3SinkClusterConfig) (*schedv1.ConnectS3SinkCluster, *http.Response, error) {
 	body := &schedv1.CreateConnectS3SinkClusterRequest{Config: config}

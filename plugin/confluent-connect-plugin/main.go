@@ -78,8 +78,15 @@ func (c *Connect) Describe(ctx context.Context, cluster *schedv1.ConnectCluster)
 	if err != nil {
 		return nil, shared.ConvertAPIError(err)
 	}
+	return ret, nil
+}
 
-
+func (c *Connect) DescribeS3Sink(ctx context.Context, cluster *schedv1.ConnectS3SinkCluster) (*schedv1.ConnectS3SinkCluster, error) {
+	c.Logger.Log("msg", "connect.DescribeS3Sink()")
+	ret, _, err := c.Client.Connect.DescribeS3Sink(cluster)
+	if err != nil {
+		return nil, shared.ConvertAPIError(err)
+	}
 	return ret, nil
 }
 
