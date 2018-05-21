@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"strings"
 
 	"github.com/ghodss/yaml"
 	"github.com/hashicorp/go-hclog"
@@ -108,6 +107,13 @@ func (c *Command) init() error {
 	})
 
 	c.AddCommand(&cobra.Command{
+		Use:   "get <name>",
+		Short: "Get a connector.",
+		RunE:  c.get,
+		Args:  cobra.ExactArgs(1),
+	})
+
+	c.AddCommand(&cobra.Command{
 		Use:   "describe <name>",
 		Short: "Describe a connector.",
 		RunE:  c.describe,
@@ -150,6 +156,16 @@ func (c *Command) list(cmd *cobra.Command, args []string) error {
 		data = append(data, common.ToRow(cluster, listFields))
 	}
 	common.RenderTable(data, listLabels)
+	return nil
+}
+
+func (c *Command) get(cmd *cobra.Command, args []string) error {
+	req := &schedv1.ConnectCluster{AccountId: c.config.Auth.Account.Id, Name: args[0]}
+	cluster, err := c.connect.Describe(context.Background(), req)
+	if err != nil {
+		return common.HandleError(err)
+	}
+	common.RenderDetail(cluster, describeFields, describeLabels)
 	return nil
 }
 
@@ -196,6 +212,8 @@ func (c *Command) describe(cmd *cobra.Command, args []string) error {
 			return common.HandleError(err)
 		}
 		common.RenderDetail(cl, describeFields, describeLabels)
+		fmt.Println("\nS3 Sink Options:")
+		common.RenderDetail(cl.Options, nil, nil)
 	default:
 		return fmt.Errorf("unknown connect plugin type: %s", cluster.Plugin.String())
 	}

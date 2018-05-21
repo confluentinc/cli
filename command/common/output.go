@@ -69,8 +69,16 @@ func RenderTable(data [][]string, labels []string) {
 func RenderDetail(obj interface{}, fields []string, labels []string) {
 	c := reflect.ValueOf(obj).Elem()
 	var data [][]string
-	for i, field := range fields {
-		data = append(data, []string{labels[i], fmt.Sprintf("%v", c.FieldByName(field))})
+	if fields == nil {
+		for i := 0; i < c.NumField(); i++ {
+			field := c.Field(i)
+			fieldType := c.Type().Field(i)
+			data = append(data, []string{fieldType.Name, fmt.Sprintf("%v", field)})
+		}
+	} else {
+		for i, field := range fields {
+			data = append(data, []string{labels[i], fmt.Sprintf("%v", c.FieldByName(field))})
+		}
 	}
 	table := tablewriter.NewWriter(os.Stdout)
 	table.AppendBulk(data)
