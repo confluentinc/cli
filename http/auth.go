@@ -45,6 +45,9 @@ func (a *AuthService) Login(username, password string) (string, error) {
 		return "", err
 	}
 	resp, err := a.client.Do(req)
+	if err != nil {
+		return "", err
+	}
 	switch resp.StatusCode {
 	case http.StatusNotFound:
 		// For whatever reason, 404 is returned if credentials are bad
