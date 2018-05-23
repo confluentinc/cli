@@ -23,7 +23,7 @@ func main() {
 		logger.Log("msg", "hello")
 		defer logger.Log("msg", "goodbye")
 
-		f, err := os.OpenFile("/tmp/confluent-connect-plugin.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+		f, err := os.OpenFile("/tmp/confluent-connect-plugin.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
 		check(err)
 		logger.SetLevel(logrus.DebugLevel)
 		logger.Logger.Out = f

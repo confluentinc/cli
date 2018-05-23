@@ -49,6 +49,7 @@ import (
 	"github.com/olekukonko/tablewriter"
 )
 
+// ToRow formats a single row for inclusion in RenderTable output.
 func ToRow(obj interface{}, fields []string) []string {
 	c := reflect.ValueOf(obj).Elem()
 	var data []string
@@ -58,6 +59,7 @@ func ToRow(obj interface{}, fields []string) []string {
 	return data
 }
 
+// RenderTable outputs data in a tabular format.
 func RenderTable(data [][]string, labels []string) {
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader(labels)
@@ -66,6 +68,7 @@ func RenderTable(data [][]string, labels []string) {
 	table.Render()
 }
 
+// RenderDetail outputs a subset of fields of an object, with fields renamed by labels.
 func RenderDetail(obj interface{}, fields []string, labels []string) {
 	c := reflect.ValueOf(obj).Elem()
 	var data [][]string

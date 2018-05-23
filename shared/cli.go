@@ -7,13 +7,16 @@ import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 )
 
+// AuthConfig represents an authenticated user.
 type AuthConfig struct {
 	User      *orgv1.User    `json:"user" hcl:"user"`
 	Account   *orgv1.Account `json:"account" hcl:"account"`
 }
 
+// Label represents a key-value pair for a metric.
 type Label = metrics.Label
 
+// The MetricSink interface is used to transmit metrics information to an external system.
 type MetricSink interface {
 	// A Gauge should retain the last value it is set to
 	SetGauge(key []string, val float32)
@@ -31,6 +34,7 @@ type MetricSink interface {
 	AddSampleWithLabels(key []string, val float32, labels []Label)
 }
 
+// Handshake is a configuration for CLI to communicate with SDK components.
 var Handshake = plugin.HandshakeConfig{
 	ProtocolVersion:  1,
 	MagicCookieKey:   "CLI_PLUGIN",

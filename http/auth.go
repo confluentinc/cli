@@ -38,6 +38,7 @@ func NewAuthService(client *Client) *AuthService {
 	}
 }
 
+// Login attempts to login a user by username and password, returning either a token or an error.
 func (a *AuthService) Login(username, password string) (string, error) {
 	payload := map[string]string{"email": username, "password": password}
 	req, err := a.sling.New().Post(loginPath).BodyJSON(payload).Request()
@@ -68,6 +69,7 @@ func (a *AuthService) Login(username, password string) (string, error) {
 	return "", errUnauthorized
 }
 
+// User returns the AuthConfig for the authenticated user.
 func (a *AuthService) User() (*shared.AuthConfig, error) {
 	me := &orgv1.GetUserReply{}
 	_, err := a.sling.New().Get(mePath).Receive(me, me)

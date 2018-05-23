@@ -31,6 +31,7 @@ var (
 	ErrNotFound       = fmt.Errorf("not found")
 )
 
+// ConvertAPIError transforms a corev1.Error into one of the standard errors if it matches.
 func ConvertAPIError(err error) error {
 	if e, ok := errors.Cause(err).(*corev1.Error); ok {
 		switch e.Message {
@@ -51,6 +52,7 @@ func ConvertAPIError(err error) error {
 	return err
 }
 
+// ConvertGRPCError unboxes and returns the underlying standard error sent over gRPC if it matches.
 func ConvertGRPCError(err error) error {
 	if s, ok := status.FromError(err); ok {
 		switch s.Message() {

@@ -20,8 +20,10 @@ const (
 	defaultConfigFile = "~/.confluent/config.hcl"
 )
 
+// ErrNoConfig means that no configuration exists.
 var ErrNoConfig = fmt.Errorf("no config file exists")
 
+// Config represents the CLI configuration.
 type Config struct {
 	MetricSink MetricSink  `json:"-" hcl:"-"`
 	Logger     *log.Logger `json:"-" hcl:"-"`
@@ -31,6 +33,7 @@ type Config struct {
 	Auth       *AuthConfig `json:"auth" hcl:"auth"`
 }
 
+// Load reads the CLI config from disk.
 func (c *Config) Load() error {
 	filename, err := c.getFilename()
 	if err != nil {
@@ -50,6 +53,7 @@ func (c *Config) Load() error {
 	return nil
 }
 
+// Save writes the CLI config to disk.
 func (c *Config) Save() error {
 	cfg, err := json.Marshal(c)
 	if err != nil {
@@ -71,7 +75,7 @@ func (c *Config) Save() error {
 	if err != nil {
 		return errors.Wrapf(err, "unable to create config file: %s", filename)
 	}
-	defer f.Close()
+	defer func(){_ = f.Close()}()
 	err = printer.Fprint(f, ast)
 	if err != nil {
 		return errors.Wrapf(err, "unable to write config to file: %s", filename)
@@ -79,6 +83,7 @@ func (c *Config) Save() error {
 	return nil
 }
 
+// CheckLogin returns an error if the user is not logged in.
 func (c *Config) CheckLogin() error {
 	if c.Auth == nil || c.Auth.Account == nil || c.Auth.Account.Id == "" {
 		return ErrUnauthorized

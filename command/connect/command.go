@@ -25,14 +25,15 @@ var (
 	describeLabels = []string{"Name", "Kind", "Kafka", "Provider", "Region", "Durability", "Status"}
 )
 
-type Command struct {
+type command struct {
 	*cobra.Command
 	config  *shared.Config
 	connect Connect
 }
 
+// New returns the Cobra command for Connect.
 func New(config *shared.Config) (*cobra.Command, error) {
-	cmd := &Command{
+	cmd := &command{
 		Command: &cobra.Command{
 			Use:   "connect",
 			Short: "Manage connectors.",
@@ -43,7 +44,7 @@ func New(config *shared.Config) (*cobra.Command, error) {
 	return cmd.Command, err
 }
 
-func (c *Command) init() error {
+func (c *command) init() error {
 	path, err := exec.LookPath("confluent-connect-plugin")
 	if err != nil {
 		return fmt.Errorf("skipping connect: plugin isn't installed")
@@ -53,7 +54,7 @@ func (c *Command) init() error {
 	client := plugin.NewClient(&plugin.ClientConfig{
 		HandshakeConfig:  shared.Handshake,
 		Plugins:          shared.PluginMap,
-		Cmd:              exec.Command("sh", "-c", path),
+		Cmd:              exec.Command("sh", "-c", path), // nolint: gas
 		AllowedProtocols: []plugin.Protocol{plugin.ProtocolGRPC},
 		Managed:          true,
 		Logger: hclog.New(&hclog.LoggerOptions{
@@ -83,8 +84,8 @@ func (c *Command) init() error {
 	// All commands require login first
 	c.Command.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		if err := c.config.CheckLogin(); err != nil {
-			common.HandleError(err)
-			os.Exit(0) // TODO: this should be 1 but that prints "exit status 1" to the console
+			_ = common.HandleError(err)
+			os.Exit(1)
 		}
 	}
 
@@ -95,9 +96,9 @@ func (c *Command) init() error {
 		Args:  cobra.ExactArgs(1),
 	}
 	createCmd.Flags().String("config", "", "Connector configuration file")
-	createCmd.MarkFlagRequired("config")
+	check(createCmd.MarkFlagRequired("config"))
 	createCmd.Flags().String("kafka-cluster", "", "Kafka Cluster Name")
-	createCmd.MarkFlagRequired("kafka-cluster")
+	check(createCmd.MarkFlagRequired("kafka-cluster"))
 	c.AddCommand(createCmd)
 
 	c.AddCommand(&cobra.Command{
@@ -133,7 +134,7 @@ func (c *Command) init() error {
 		Args:  cobra.ExactArgs(1),
 	}
 	updateCmd.Flags().String("config", "", "Connector configuration file")
-	updateCmd.MarkFlagRequired("config")
+	check(updateCmd.MarkFlagRequired("config"))
 	c.AddCommand(updateCmd)
 
 	c.AddCommand(&cobra.Command{
@@ -145,7 +146,7 @@ func (c *Command) init() error {
 	return nil
 }
 
-func (c *Command) list(cmd *cobra.Command, args []string) error {
+func (c *command) list(cmd *cobra.Command, args []string) error {
 	req := &schedv1.ConnectCluster{AccountId: c.config.Auth.Account.Id}
 	clusters, err := c.connect.List(context.Background(), req)
 	if err != nil {
@@ -159,7 +160,7 @@ func (c *Command) list(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *Command) get(cmd *cobra.Command, args []string) error {
+func (c *command) get(cmd *cobra.Command, args []string) error {
 	req := &schedv1.ConnectCluster{AccountId: c.config.Auth.Account.Id, Name: args[0]}
 	cluster, err := c.connect.Describe(context.Background(), req)
 	if err != nil {
@@ -169,8 +170,11 @@ func (c *Command) get(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *Command) create(cmd *cobra.Command, args []string) error {
+func (c *command) create(cmd *cobra.Command, args []string) error {
 	options, err := getConfig(cmd)
+	if err != nil {
+		return err
+	}
 
 	kafkaClusterName, err := cmd.Flags().GetString("kafka-cluster")
 	if err != nil {
@@ -197,7 +201,7 @@ func (c *Command) create(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *Command) describe(cmd *cobra.Command, args []string) error {
+func (c *command) describe(cmd *cobra.Command, args []string) error {
 	req := &schedv1.ConnectCluster{AccountId: c.config.Auth.Account.Id, Name: args[0]}
 	cluster, err := c.connect.Describe(context.Background(), req)
 	if err != nil {
@@ -220,8 +224,11 @@ func (c *Command) describe(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *Command) update(cmd *cobra.Command, args []string) error {
+func (c *command) update(cmd *cobra.Command, args []string) error {
 	options, err := getConfig(cmd)
+	if err != nil {
+		return err
+	}
 
 	// Create updated connect s3-sink cluster
 	req := &schedv1.ConnectS3SinkCluster{
@@ -244,7 +251,7 @@ func (c *Command) update(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *Command) delete(cmd *cobra.Command, args []string) error {
+func (c *command) delete(cmd *cobra.Command, args []string) error {
 	req := &schedv1.ConnectCluster{AccountId: c.config.Auth.Account.Id, Name: args[0]}
 	err := c.connect.Delete(context.Background(), req)
 	if err != nil {
@@ -254,7 +261,7 @@ func (c *Command) delete(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *Command) auth(cmd *cobra.Command, args []string) error {
+func (c *command) auth(cmd *cobra.Command, args []string) error {
 	return common.HandleError(shared.ErrNotImplemented)
 }
 
@@ -282,4 +289,8 @@ func toConfig(options *schedv1.ConnectS3SinkOptions) (string, error) {
 		return "", errors.Wrapf(err, "unable to marshal options")
 	}
 	return string(opts), nil
+}
+
+func check(err error) {
+	panic(err)
 }

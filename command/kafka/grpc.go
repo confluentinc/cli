@@ -29,7 +29,7 @@ func (c *GRPCClient) Describe(ctx context.Context, cluster *schedv1.KafkaCluster
 	return resp.Cluster, nil
 }
 
-// The gRPC server the GPRClient talks to. Plugin authors implement this if they're using Go.
+// GRPCServer the GPRClient talks to. Plugin authors implement this if they're using Go.
 type GRPCServer struct {
 	Impl Kafka
 }

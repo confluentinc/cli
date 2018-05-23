@@ -21,14 +21,16 @@ var (
 	describeFields = []string{"Id", "Name", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "PricePerHour"}
 	describeLabels = []string{"Id", "Name", "Ingress", "Egress", "Storage", "Provider", "Region", "Status", "Endpoint", "PricePerHour"}
 )
-type Command struct {
+
+type command struct {
 	*cobra.Command
 	config *shared.Config
 	kafka  Kafka
 }
 
+// New returns the Cobra command for Kafka.
 func New(config *shared.Config) (*cobra.Command, error) {
-	cmd := &Command{
+	cmd := &command{
 		Command: &cobra.Command{
 			Use:   "kafka",
 			Short: "Manage kafka clusters.",
@@ -39,7 +41,7 @@ func New(config *shared.Config) (*cobra.Command, error) {
 	return cmd.Command, err
 }
 
-func (c *Command) init() error {
+func (c *command) init() error {
 	path, err := exec.LookPath("confluent-kafka-plugin")
 	if err != nil {
 		return fmt.Errorf("skipping kafka: plugin isn't installed")
@@ -49,7 +51,7 @@ func (c *Command) init() error {
 	client := plugin.NewClient(&plugin.ClientConfig{
 		HandshakeConfig:  shared.Handshake,
 		Plugins:          shared.PluginMap,
-		Cmd:              exec.Command("sh", "-c", path),
+		Cmd:              exec.Command("sh", "-c", path), // nolint: gas
 		AllowedProtocols: []plugin.Protocol{plugin.ProtocolGRPC},
 		Managed:          true,
 		Logger: hclog.New(&hclog.LoggerOptions{
@@ -79,8 +81,8 @@ func (c *Command) init() error {
 	// All commands require login first
 	c.Command.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		if err := c.config.CheckLogin(); err != nil {
-			common.HandleError(err)
-			os.Exit(0) // TODO: this should be 1 but that prints "exit status 1" to the console
+			_ = common.HandleError(err)
+			os.Exit(1)
 		}
 	}
 
@@ -119,11 +121,11 @@ func (c *Command) init() error {
 	return nil
 }
 
-func (c *Command) create(cmd *cobra.Command, args []string) error {
+func (c *command) create(cmd *cobra.Command, args []string) error {
 	return shared.ErrNotImplemented
 }
 
-func (c *Command) list(cmd *cobra.Command, args []string) error {
+func (c *command) list(cmd *cobra.Command, args []string) error {
 	req := &schedv1.KafkaCluster{AccountId: c.config.Auth.Account.Id}
 	clusters, err := c.kafka.List(context.Background(), req)
 	if err != nil {
@@ -137,7 +139,7 @@ func (c *Command) list(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *Command) describe(cmd *cobra.Command, args []string) error {
+func (c *command) describe(cmd *cobra.Command, args []string) error {
 	req := &schedv1.KafkaCluster{AccountId: c.config.Auth.Account.Id, Name: args[0]}
 	cluster, err := c.kafka.Describe(context.Background(), req)
 	if err != nil {
@@ -147,14 +149,14 @@ func (c *Command) describe(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *Command) update(cmd *cobra.Command, args []string) error {
+func (c *command) update(cmd *cobra.Command, args []string) error {
 	return shared.ErrNotImplemented
 }
 
-func (c *Command) delete(cmd *cobra.Command, args []string) error {
+func (c *command) delete(cmd *cobra.Command, args []string) error {
 	return shared.ErrNotImplemented
 }
 
-func (c *Command) auth(cmd *cobra.Command, args []string) error {
+func (c *command) auth(cmd *cobra.Command, args []string) error {
 	return shared.ErrNotImplemented
 }

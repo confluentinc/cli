@@ -6,6 +6,7 @@ import (
 	"github.com/confluentinc/cli/shared"
 )
 
+// HandleError provides standard error messaging for common errors.
 func HandleError(err error) error {
 	switch err {
 	case shared.ErrUnauthorized:

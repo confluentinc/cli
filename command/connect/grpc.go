@@ -61,7 +61,7 @@ func (c *GRPCClient) Delete(ctx context.Context, cluster *schedv1.ConnectCluster
 	return nil
 }
 
-// The gRPC server the GPRClient talks to. Plugin authors implement this if they're using Go.
+// GRPCServer the GPRClient talks to. Plugin authors implement this if they're using Go.
 type GRPCServer struct {
 	Impl Connect
 }

@@ -16,18 +16,19 @@ import (
 	"github.com/confluentinc/cli/shared"
 )
 
-type Authentication struct {
+type commands struct {
 	Commands  []*cobra.Command
 	config    *shared.Config
 }
 
+// New returns a list of auth-related Cobra commands.
 func New(config *shared.Config) []*cobra.Command {
-	cmd := &Authentication{config: config}
+	cmd := &commands{config: config}
 	cmd.init()
 	return cmd.Commands
 }
 
-func (a *Authentication) init() {
+func (a *commands) init() {
 	loginCmd := &cobra.Command{
 		Use:   "login",
 		Short: "Login to a Confluent Control Plane.",
@@ -42,7 +43,7 @@ func (a *Authentication) init() {
 	a.Commands = []*cobra.Command{loginCmd, logoutCmd}
 }
 
-func (a *Authentication) login(cmd *cobra.Command, args []string) error {
+func (a *commands) login(cmd *cobra.Command, args []string) error {
 	email, password, err := credentials()
 	if err != nil {
 		return err
@@ -51,7 +52,7 @@ func (a *Authentication) login(cmd *cobra.Command, args []string) error {
 	client := chttp.NewClient(chttp.BaseClient, a.config.AuthURL, a.config.Logger)
 	token, err := client.Auth.Login(email, password)
 	if err != nil {
-		err := shared.ConvertAPIError(err)
+		err = shared.ConvertAPIError(err)
 		if err == shared.ErrUnauthorized { // special case for login failure
 			err = shared.ErrIncorrectAuth
 		}
@@ -74,7 +75,7 @@ func (a *Authentication) login(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (a *Authentication) logout(cmd *cobra.Command, args []string) error {
+func (a *commands) logout(cmd *cobra.Command, args []string) error {
 	a.config.AuthToken = ""
 	a.config.Auth = nil
 	err := a.config.Save()
