@@ -37,8 +37,8 @@ func (c *GRPCClient) Describe(ctx context.Context, cluster *schedv1.ConnectClust
 	return resp.Cluster, nil
 }
 
-func (c *GRPCClient) CreateS3Sink(ctx context.Context, config *schedv1.ConnectS3SinkClusterConfig) (*schedv1.ConnectS3SinkCluster, error) {
-	resp, err := c.client.CreateS3Sink(ctx, &schedv1.CreateConnectS3SinkClusterRequest{Config: config})
+func (c *GRPCClient) CreateS3Sink(ctx context.Context, config *proto.ConnectS3SinkClusterConfig) (*schedv1.ConnectS3SinkCluster, error) {
+	resp, err := c.client.CreateS3Sink(ctx, &proto.CreateConnectS3SinkClusterRequest{Config: config})
 	if err != nil {
 		return nil, shared.ConvertGRPCError(err)
 	}
@@ -81,9 +81,9 @@ func (s *GRPCServer) DescribeS3Sink(ctx context.Context, req *schedv1.GetConnect
 	return &schedv1.GetConnectS3SinkClusterReply{Cluster: r}, err
 }
 
-func (s *GRPCServer) CreateS3Sink(ctx context.Context, req *schedv1.CreateConnectS3SinkClusterRequest) (*schedv1.CreateConnectS3SinkClusterReply, error) {
+func (s *GRPCServer) CreateS3Sink(ctx context.Context, req *proto.CreateConnectS3SinkClusterRequest) (*proto.CreateConnectS3SinkClusterReply, error) {
 	r, err := s.Impl.CreateS3Sink(ctx, req.Config)
-	return &schedv1.CreateConnectS3SinkClusterReply{Cluster: r}, err
+	return &proto.CreateConnectS3SinkClusterReply{Cluster: r}, err
 }
 
 func (s *GRPCServer) UpdateS3Sink(ctx context.Context, req *schedv1.UpdateConnectS3SinkClusterRequest) (*schedv1.UpdateConnectS3SinkClusterReply, error) {

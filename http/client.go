@@ -31,6 +31,7 @@ type Client struct {
 	Auth       *AuthService
 	Kafka      *KafkaService
 	Connect    *ConnectService
+	User       *UserService
 }
 
 // NewClient creates a Confluent SDK client.
@@ -44,6 +45,7 @@ func NewClient(httpClient *http.Client, baseURL string, logger *log.Logger) *Cli
 	client.Auth = NewAuthService(client)
 	client.Kafka = NewKafkaService(client)
 	client.Connect = NewConnectService(client)
+	client.User = NewUserService(client)
 	return client
 }
 

@@ -5,15 +5,17 @@ import (
 	golog "log"
 	"os"
 
-	plugin "github.com/hashicorp/go-plugin"
+	"github.com/hashicorp/go-plugin"
 	"github.com/sirupsen/logrus"
 
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/cli/command/connect"
 	chttp "github.com/confluentinc/cli/http"
-	log "github.com/confluentinc/cli/log"
-	metric "github.com/confluentinc/cli/metric"
+	"github.com/confluentinc/cli/log"
+	"github.com/confluentinc/cli/metric"
 	"github.com/confluentinc/cli/shared"
+	proto "github.com/confluentinc/cli/shared/connect"
 )
 
 func main() {
@@ -90,23 +92,35 @@ func (c *Connect) DescribeS3Sink(ctx context.Context, cluster *schedv1.ConnectS3
 	return ret, nil
 }
 
-func (c *Connect) CreateS3Sink(ctx context.Context, cfg *schedv1.ConnectS3SinkClusterConfig) (*schedv1.ConnectS3SinkCluster, error) {
+func (c *Connect) CreateS3Sink(ctx context.Context, cfg *proto.ConnectS3SinkClusterConfig) (*schedv1.ConnectS3SinkCluster, error) {
 	c.Logger.Log("msg", "connect.CreateS3Sink()")
+	config := &schedv1.ConnectS3SinkClusterConfig{
+		Name:      cfg.Name,
+		AccountId: cfg.AccountId,
+		Servers:   cfg.Servers,
+		Options:   cfg.Options,
+	}
 
-	// Resolve kafka name -> ID
-	kafkaName := cfg.KafkaClusterId // NOTE: the CLI stored the name in KafkaClusterId field
-	kafka, _, err := c.Client.Kafka.Describe(&schedv1.KafkaCluster{AccountId: cfg.AccountId, Name: kafkaName})
+	// Resolve kafka cluster name -> ID
+	kafka, _, err := c.Client.Kafka.Describe(&schedv1.KafkaCluster{AccountId: cfg.AccountId, Name: cfg.KafkaClusterName})
 	if err != nil {
 		return nil, shared.ConvertAPIError(err)
 	}
-	cfg.KafkaClusterId = kafka.Id
+	config.KafkaClusterId = kafka.Id
+
+	// Resolve kafka user email -> ID
+	user, _, err := c.Client.User.Describe(&orgv1.User{Email: cfg.KafkaUserEmail})
+	if err != nil {
+		return nil, shared.ConvertAPIError(err)
+	}
+	config.KafkaUserId = user.Id
 
 	// Create the connect cluster
-	ret, _, err := c.Client.Connect.CreateS3Sink(cfg)
+	ret, _, err := c.Client.Connect.CreateS3Sink(config)
 	if err != nil {
 		return nil, shared.ConvertAPIError(err)
 	}
-	ret.KafkaClusterId = kafkaName  // NOTE: store the Name in the ID field for the Detail view
+	ret.KafkaClusterId = kafka.Name // NOTE: store the Name in the ID field for the Detail view
 
 	return ret, nil
 }

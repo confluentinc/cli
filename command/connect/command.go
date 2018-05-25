@@ -9,13 +9,14 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/hashicorp/go-hclog"
-	plugin "github.com/hashicorp/go-plugin"
+	"github.com/hashicorp/go-plugin"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	common "github.com/confluentinc/cli/command/common"
+	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/shared"
+	connectv1 "github.com/confluentinc/cli/shared/connect"
 )
 
 var (
@@ -99,6 +100,8 @@ func (c *command) init() error {
 	check(createCmd.MarkFlagRequired("config"))
 	createCmd.Flags().String("kafka-cluster", "", "Kafka Cluster Name")
 	check(createCmd.MarkFlagRequired("kafka-cluster"))
+	createCmd.Flags().String("kafka-user", "", "Kafka User Email")
+	check(createCmd.MarkFlagRequired("kafka-user"))
 	c.AddCommand(createCmd)
 
 	c.AddCommand(&cobra.Command{
@@ -181,12 +184,18 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "error reading --kafka-cluster as string")
 	}
 
+	kafkaUserEmail, err := cmd.Flags().GetString("kafka-user")
+	if err != nil {
+		return errors.Wrap(err, "error reading --kafka-user as string")
+	}
+
 	// Create connect cluster config
-	req := &schedv1.ConnectS3SinkClusterConfig{
-		Name:           args[0],
-		AccountId:      c.config.Auth.Account.Id,
-		Options:        options,
-		KafkaClusterId: kafkaClusterName, // NOTE: We store the name in the ID field and resolve the ID in the plugin.
+	req := &connectv1.ConnectS3SinkClusterConfig{
+		Name:             args[0],
+		AccountId:        c.config.Auth.Account.Id,
+		Options:          options,
+		KafkaClusterName: kafkaClusterName,
+		KafkaUserEmail:   kafkaUserEmail,
 	}
 
 	cluster, err := c.connect.CreateS3Sink(context.Background(), req)
@@ -292,5 +301,7 @@ func toConfig(options *schedv1.ConnectS3SinkOptions) (string, error) {
 }
 
 func check(err error) {
-	panic(err)
+	if err != nil {
+		panic(err)
+	}
 }
