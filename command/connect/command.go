@@ -176,7 +176,7 @@ func (c *command) get(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return common.HandleError(err)
 	}
-	if err = common.Render(cluster, describeFields, describeFields, outputFormat); err != nil {
+	if err = common.Render(cluster, describeFields, describeLabels, outputFormat); err != nil {
 		return common.HandleError(err)
 	}
 	return nil

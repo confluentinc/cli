@@ -99,7 +99,7 @@ func RenderDetail(obj interface{}, fields []string, labels []string) {
 	table.Render()
 }
 
-type enumStringifyingFieldMaker struct {}
+type enumStringifyingFieldMaker struct{}
 
 func (f *enumStringifyingFieldMaker) MakeField(oldType reflect.Type, newType reflect.Type, oldTag reflect.StructTag, newTag reflect.StructTag) (reflect.Type, reflect.StructTag) {
 	if strings.Contains(string(oldTag), "protobuf:") && strings.Contains(string(oldTag), "enum=") {
@@ -117,43 +117,28 @@ func Render(obj interface{}, fields []string, labels []string, outputFormat stri
 		RenderDetail(obj, fields, labels)
 	case "json":
 		if msg, ok := obj.(proto.Message); ok {
-			m := jsonpb.Marshaler{
-				Indent:       "  ",
-				EmitDefaults: true,
-				EnumsAsInts:  false,
-			}
+			m := jsonpb.Marshaler{EmitDefaults: true, EnumsAsInts: false}
 			s, err := m.MarshalToString(msg)
 			if err != nil {
 				return err
 			}
 			tagMaker := &viewer{fields, fields, "json"}
 			fieldMaker := &enumStringifyingFieldMaker{}
-			var v = retag.ConvertFields(obj, tagMaker, fieldMaker)
-			err = json.Unmarshal([]byte(s), &v)
+			obj = retag.ConvertFields(obj, tagMaker, fieldMaker)
+			err = json.Unmarshal([]byte(s), &obj)
 			if err != nil {
 				return err
 			}
-			obj = v
-			obj, err := reTagFields(obj, fields, labels, "json")
-			if err != nil {
-				return err
-			}
-			b, err := json.MarshalIndent(obj, "", "  ")
-			if err != nil {
-				return v1.WrapErr(err, "unable to marshal object to json for rendering")
-			}
-			fmt.Printf("%v\n", string(b))
-		} else {
-			obj, err := reTagFields(obj, fields, labels, "json")
-			if err != nil {
-				return err
-			}
-			b, err := json.MarshalIndent(obj, "", "  ")
-			if err != nil {
-				return v1.WrapErr(err, "unable to marshal object to json for rendering")
-			}
-			fmt.Printf("%v\n", string(b))
 		}
+		obj, err := reTagFields(obj, fields, labels, "json")
+		if err != nil {
+			return err
+		}
+		b, err := json.MarshalIndent(obj, "", "  ")
+		if err != nil {
+			return v1.WrapErr(err, "unable to marshal object to json for rendering")
+		}
+		fmt.Printf("%v\n", string(b))
 	case "yaml":
 		b, err := yaml.Marshal(obj)
 		if err != nil {
