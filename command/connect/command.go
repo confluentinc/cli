@@ -176,8 +176,7 @@ func (c *command) get(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return common.HandleError(err)
 	}
-	//cluster.Durability = schedv1.Durability_HIGH
-	if err = common.Render(cluster, []string{"Name", "Plugin", "KafkaClusterId", "ServiceProvider", "Region", "Durability", "Status"}, []string{"Name", "Plugin", "KafkaClusterId", "ServiceProvider", "Region", "Durability", "Status"}, outputFormat); err != nil {
+	if err = common.Render(cluster, describeFields, describeFields, outputFormat); err != nil {
 		return common.HandleError(err)
 	}
 	return nil

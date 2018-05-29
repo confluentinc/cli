@@ -100,7 +100,6 @@ func RenderDetail(obj interface{}, fields []string, labels []string) {
 
 // Render outputs an object detail in a specified format, optionally with a subset of (renamed) fields.
 func Render(obj interface{}, fields []string, labels []string, outputFormat string) error {
-	fmt.Printf("Original: %v\n", obj)
 	switch outputFormat {
 	case "":
 		fallthrough
@@ -110,7 +109,6 @@ func Render(obj interface{}, fields []string, labels []string, outputFormat stri
 		if msg, ok := obj.(proto.Message); ok {
 			m := jsonpb.Marshaler{
 				Indent:       "  ",
-				//OrigName:     true,
 				EmitDefaults: true,
 				EnumsAsInts:  false,
 			}
@@ -118,25 +116,16 @@ func Render(obj interface{}, fields []string, labels []string, outputFormat stri
 			if err != nil {
 				return err
 			}
-			fmt.Printf("JSONPB: %v\n", s)
-			//var v = reflect.New(reflect.TypeOf(obj).Elem()).Interface()
 			var v = reflect.New(retag.MakeType(reflect.TypeOf(obj).Elem(), &viewer{fields, fields, "json"})).Interface()
-			//var v = schedv1.ConnectCluster{}
-			fmt.Printf("V: %v\n", v)
-			//fmt.Printf("V.Type(): %v\n", v.Type())
 			err = json.Unmarshal([]byte(s), &v)
 			if err != nil {
 				return err
 			}
-			fmt.Printf("Runmarshal: %#v\n", v)
-			//obj = v.Interface()
 			obj = v
-			fmt.Printf("TypeOf(obj): %v\n", reflect.TypeOf(obj))
 			obj, err := reTagFields(obj, fields, labels, "json")
 			if err != nil {
 				return err
 			}
-			//z := obj.(proto.Message)
 			b, err := json.MarshalIndent(obj, "", "  ")
 			if err != nil {
 				return v1.WrapErr(err, "unable to marshal object to json for rendering")
