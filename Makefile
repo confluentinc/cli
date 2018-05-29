@@ -7,8 +7,8 @@ component = $(word 1, $@)
 
 .PHONY: deps
 deps:
-	which dep 2>/dev/null || go get -u github.com/golang/dep/cmd/dep
-	which gometalinter 2>/dev/null || ( go get -u github.com/alecthomas/gometalinter && gometalinter --install &> /dev/null )
+	@which dep 2>/dev/null || go get -u github.com/golang/dep/cmd/dep
+	@which gometalinter 2>/dev/null || ( go get -u github.com/alecthomas/gometalinter && gometalinter --install &> /dev/null )
 	dep ensure $(ARGS)
 
 .PHONY: compile-proto

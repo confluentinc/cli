@@ -46,12 +46,13 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"strings"
 
+	"github.com/codyaray/retag"
 	"github.com/ghodss/yaml"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 	"github.com/olekukonko/tablewriter"
-	"gopkg.in/sevlyar/retag.v0"
 
 	"github.com/confluentinc/cc-structs/kafka/core/v1"
 )
@@ -98,6 +99,15 @@ func RenderDetail(obj interface{}, fields []string, labels []string) {
 	table.Render()
 }
 
+type enumStringifyingFieldMaker struct {}
+
+func (f *enumStringifyingFieldMaker) MakeField(oldType reflect.Type, newType reflect.Type, oldTag reflect.StructTag, newTag reflect.StructTag) (reflect.Type, reflect.StructTag) {
+	if strings.Contains(string(oldTag), "protobuf:") && strings.Contains(string(oldTag), "enum=") {
+		newType = reflect.TypeOf("")
+	}
+	return newType, newTag
+}
+
 // Render outputs an object detail in a specified format, optionally with a subset of (renamed) fields.
 func Render(obj interface{}, fields []string, labels []string, outputFormat string) error {
 	switch outputFormat {
@@ -116,7 +126,9 @@ func Render(obj interface{}, fields []string, labels []string, outputFormat stri
 			if err != nil {
 				return err
 			}
-			var v = reflect.New(retag.MakeType(reflect.TypeOf(obj).Elem(), &viewer{fields, fields, "json"})).Interface()
+			tagMaker := &viewer{fields, fields, "json"}
+			fieldMaker := &enumStringifyingFieldMaker{}
+			var v = retag.ConvertFields(obj, tagMaker, fieldMaker)
 			err = json.Unmarshal([]byte(s), &v)
 			if err != nil {
 				return err

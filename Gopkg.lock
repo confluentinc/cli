@@ -20,6 +20,12 @@
   revision = "783273d703149aaeb9897cf58613d5af48861c25"
 
 [[projects]]
+  branch = "retype"
+  name = "github.com/codyaray/retag"
+  packages = ["."]
+  revision = "4f3c7e6dfbe2e5f711a618ef9113794d5fd442fa"
+
+[[projects]]
   branch = "master"
   name = "github.com/confluentinc/cc-structs"
   packages = [
@@ -104,10 +110,12 @@
 [[projects]]
   name = "github.com/golang/protobuf"
   packages = [
+    "jsonpb",
     "proto",
     "ptypes",
     "ptypes/any",
     "ptypes/duration",
+    "ptypes/struct",
     "ptypes/timestamp"
   ]
   revision = "925541529c1fa6821df4e44ce2723319eb2be768"
@@ -406,12 +414,6 @@
   version = "v0.9.1"
 
 [[projects]]
-  branch = "master"
-  name = "gopkg.in/sevlyar/retag.v0"
-  packages = ["."]
-  revision = "de3f0096c81e55b0dfa0384a6d8c6ecd4e8c518e"
-
-[[projects]]
   name = "gopkg.in/yaml.v2"
   packages = ["."]
   revision = "5420a8b6744d3b0345ab293f6fcba19c978f1183"
@@ -469,6 +471,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "2788ad6892ce5550f8d2f74fc159012c10b20f255e0a572874eaebc6b9778607"
+  inputs-digest = "bd4385a204e11be46bc3075643bb949989ba8f0d81a3cae1cb752d3aef3b408f"
   solver-name = "gps-cdcl"
   solver-version = 1

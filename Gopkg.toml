@@ -62,6 +62,10 @@
   name = "github.com/hashicorp/hcl"
   revision = "ef8a98b0bbce4a65b5aa4c368430a80ddc533168"
 
+[[constraint]]
+  name = "github.com/codyaray/retag"
+  branch = "retype"
+
 [prune]
   go-tests = true
   unused-packages = true
