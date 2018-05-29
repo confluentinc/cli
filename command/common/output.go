@@ -117,18 +117,7 @@ func Render(obj interface{}, fields []string, labels []string, outputFormat stri
 		RenderDetail(obj, fields, labels)
 	case "json":
 		if msg, ok := obj.(proto.Message); ok {
-			m := jsonpb.Marshaler{EmitDefaults: true, EnumsAsInts: false}
-			s, err := m.MarshalToString(msg)
-			if err != nil {
-				return err
-			}
-			tagMaker := &viewer{fields, fields, "json"}
-			fieldMaker := &enumStringifyingFieldMaker{}
-			obj = retag.ConvertFields(obj, tagMaker, fieldMaker)
-			err = json.Unmarshal([]byte(s), &obj)
-			if err != nil {
-				return err
-			}
+			obj = prepareProtoStruct(msg, fields)
 		}
 		obj, err := reTagFields(obj, fields, labels, "json")
 		if err != nil {
@@ -140,13 +129,35 @@ func Render(obj interface{}, fields []string, labels []string, outputFormat stri
 		}
 		fmt.Printf("%v\n", string(b))
 	case "yaml":
+		if msg, ok := obj.(proto.Message); ok {
+			obj = prepareProtoStruct(msg, fields)
+		}
+		obj, err := reTagFields(obj, fields, labels, "json")
 		b, err := yaml.Marshal(obj)
 		if err != nil {
 			return v1.WrapErr(err, "unable to marshal object to yaml for rendering")
 		}
-		fmt.Printf("%#v\n", string(b))
+		fmt.Printf("%v\n", string(b))
 	}
 	return nil
+}
+
+// Helper which stringifies protobuf enum fields.
+// Implemented by returning an anonymous dynamic struct with string field type in place of enum fields.
+func prepareProtoStruct(msg proto.Message, fields []string) interface{} {
+	m := jsonpb.Marshaler{EmitDefaults: true, EnumsAsInts: false}
+	s, err := m.MarshalToString(msg)
+	if err != nil {
+		return err
+	}
+	tagMaker := &viewer{fields, fields, "json"}
+	fieldMaker := &enumStringifyingFieldMaker{}
+	obj := retag.ConvertFields(msg, tagMaker, fieldMaker)
+	err = json.Unmarshal([]byte(s), &obj)
+	if err != nil {
+		return err
+	}
+	return obj
 }
 
 func reTagFields(obj interface{}, fields []string, labels []string, tagName string) (interface{}, error) {
