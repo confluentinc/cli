@@ -119,10 +119,7 @@ func Render(obj interface{}, fields []string, labels []string, outputFormat stri
 		if msg, ok := obj.(proto.Message); ok {
 			obj = prepareProtoStruct(msg, fields)
 		}
-		obj, err := reTagFields(obj, fields, labels, "json")
-		if err != nil {
-			return err
-		}
+		obj = reTagFields(obj, fields, labels, "json")
 		b, err := json.MarshalIndent(obj, "", "  ")
 		if err != nil {
 			return v1.WrapErr(err, "unable to marshal object to json for rendering")
@@ -132,7 +129,7 @@ func Render(obj interface{}, fields []string, labels []string, outputFormat stri
 		if msg, ok := obj.(proto.Message); ok {
 			obj = prepareProtoStruct(msg, fields)
 		}
-		obj, err := reTagFields(obj, fields, labels, "json")
+		obj = reTagFields(obj, fields, labels, "json")
 		b, err := yaml.Marshal(obj)
 		if err != nil {
 			return v1.WrapErr(err, "unable to marshal object to yaml for rendering")
@@ -160,12 +157,12 @@ func prepareProtoStruct(msg proto.Message, fields []string) interface{} {
 	return obj
 }
 
-func reTagFields(obj interface{}, fields []string, labels []string, tagName string) (interface{}, error) {
+func reTagFields(obj interface{}, fields []string, labels []string, tagName string) interface{} {
 	if fields == nil {
-		return obj, nil
+		return obj
 	}
 	obj = retag.Convert(obj, &viewer{fields, labels, tagName})
-	return obj, nil
+	return obj
 }
 
 type viewer struct {
