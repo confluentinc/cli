@@ -406,6 +406,12 @@
   version = "v0.9.1"
 
 [[projects]]
+  branch = "master"
+  name = "gopkg.in/sevlyar/retag.v0"
+  packages = ["."]
+  revision = "de3f0096c81e55b0dfa0384a6d8c6ecd4e8c518e"
+
+[[projects]]
   name = "gopkg.in/yaml.v2"
   packages = ["."]
   revision = "5420a8b6744d3b0345ab293f6fcba19c978f1183"
@@ -463,6 +469,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "44da7fac1dfd9caea151145e3f77c7c037b7c033580c95defdeeb5e2975bf72c"
+  inputs-digest = "2788ad6892ce5550f8d2f74fc159012c10b20f255e0a572874eaebc6b9778607"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -52,6 +52,14 @@ release-s3: build
 release: get-release-image commit-release tag-release
 	make release-s3
 
+.PHONY: release-ci
+release-ci:
+ifeq ($(BRANCH_NAME),master)
+	make release
+else
+	true
+endif
+
 .PHONY: lint
 lint:
 	gometalinter ./... --vendor
