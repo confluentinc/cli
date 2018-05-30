@@ -22,7 +22,7 @@ import (
 var (
 	listFields     = []string{"Name", "Plugin", "ServiceProvider", "Region", "Status"}
 	listLabels     = []string{"Name", "Kind", "Provider", "Region", "Status"}
-	describeFields = []string{"Name", "Plugin", "KafkaClusterId", "ServiceProvider", "Region", "Durability", "Status"}
+	describeFields = []string{"name", "plugin", "kafka_cluster_id", "service_provider", "region", "durability", "status"}
 	describeLabels = []string{"Name", "Kind", "Kafka", "Provider", "Region", "Durability", "Status"}
 )
 

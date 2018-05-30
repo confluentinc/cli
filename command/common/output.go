@@ -44,6 +44,7 @@ Describe View:
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"reflect"
 	"strings"
@@ -110,6 +111,11 @@ func (f *enumStringifyingFieldMaker) MakeField(oldType reflect.Type, newType ref
 
 // Render outputs an object detail in a specified format, optionally with a subset of (renamed) fields.
 func Render(obj interface{}, fields []string, labels []string, outputFormat string) error {
+	return renderOut(obj, fields, labels, outputFormat, os.Stdout)
+}
+
+// visible for testing...
+func renderOut(obj interface{}, fields []string, labels []string, outputFormat string, out io.Writer) error {
 	switch outputFormat {
 	case "":
 		fallthrough
@@ -124,7 +130,7 @@ func Render(obj interface{}, fields []string, labels []string, outputFormat stri
 		if err != nil {
 			return v1.WrapErr(err, "unable to marshal object to json for rendering")
 		}
-		fmt.Printf("%v\n", string(b))
+		fmt.Fprintf(out, "%v\n", string(b))
 	case "yaml":
 		if msg, ok := obj.(proto.Message); ok {
 			obj = prepareProtoStruct(msg, fields)
@@ -134,7 +140,7 @@ func Render(obj interface{}, fields []string, labels []string, outputFormat stri
 		if err != nil {
 			return v1.WrapErr(err, "unable to marshal object to yaml for rendering")
 		}
-		fmt.Printf("%v\n", string(b))
+		fmt.Fprintf(out, "%v\n", string(b))
 	}
 	return nil
 }
@@ -142,12 +148,12 @@ func Render(obj interface{}, fields []string, labels []string, outputFormat stri
 // Helper which stringifies protobuf enum fields.
 // Implemented by returning an anonymous dynamic struct with string field type in place of enum fields.
 func prepareProtoStruct(msg proto.Message, fields []string) interface{} {
-	m := jsonpb.Marshaler{EmitDefaults: true, EnumsAsInts: false}
+	m := jsonpb.Marshaler{OrigName: true, EmitDefaults: true, EnumsAsInts: false}
 	s, err := m.MarshalToString(msg)
 	if err != nil {
 		return err
 	}
-	tagMaker := &viewer{fields, fields, "json"}
+	tagMaker := &viewer{fields,  fields, "json"}
 	fieldMaker := &enumStringifyingFieldMaker{}
 	obj := retag.ConvertFields(msg, tagMaker, fieldMaker)
 	err = json.Unmarshal([]byte(s), &obj)
@@ -171,18 +177,25 @@ type viewer struct {
 	tagName string
 }
 
-func (s *viewer) MakeTag(t reflect.Type, fieldIndex int) reflect.StructTag {
-	key := string(s.tagName)
+func (v *viewer) MakeTag(t reflect.Type, fieldIndex int) reflect.StructTag {
 	field := t.Field(fieldIndex)
-	value := field.Tag.Get(key)
-	value = s.updateForView(field.Name, fieldIndex)
-	tag := fmt.Sprintf(`%s:"%s"`, key, value)
+	if v.fields == nil {
+		return field.Tag
+	}
+	value, ok := field.Tag.Lookup(v.tagName)
+	if ok {
+		value = strings.Split(value, ",")[0]
+	} else {
+		value = field.Name
+	}
+	value = v.updateForView(value, fieldIndex)
+	tag := fmt.Sprintf(`%v:"%v"`, v.tagName, value)
 	return reflect.StructTag(tag)
 }
 
-func (s *viewer) updateForView(src string, fieldIndex int) string {
-	if i, ok := contains(s.fields, src); ok {
-		return s.labels[i]
+func (v *viewer) updateForView(src string, fieldIndex int) string {
+	if i, ok := contains(v.fields, src); ok {
+		return v.labels[i]
 	} else {
 		return "-"
 	}
