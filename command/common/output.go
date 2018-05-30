@@ -196,9 +196,8 @@ func (v *viewer) MakeTag(t reflect.Type, fieldIndex int) reflect.StructTag {
 func (v *viewer) updateForView(src string, fieldIndex int) string {
 	if i, ok := contains(v.fields, src); ok {
 		return v.labels[i]
-	} else {
-		return "-"
 	}
+	return "-"
 }
 
 func contains(s []string, e string) (int, bool) {
