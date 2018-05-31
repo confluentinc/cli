@@ -5,7 +5,8 @@
         "shared/errors.go:.* exported var Err.* should have comment or be unexported.*golint.*",
         "plugin/.*/main.go:.* exported (method|type) .* should have comment or be unexported.*golint.*",
         ".*Errors unhandled.*logger.Log.*gas.*",
-        ".*Errors unhandled.*fmt.Fprintf.*gas.*"
+        ".*Errors unhandled.*fmt.Fprintf.*gas.*",
+        "command/.*/command.go:.* error return value not checked \\(printer.Render.*errcheck.*"
     ],
     "Linters": {
         "gas": {

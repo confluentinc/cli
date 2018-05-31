@@ -20,6 +20,12 @@
   revision = "783273d703149aaeb9897cf58613d5af48861c25"
 
 [[projects]]
+  name = "github.com/codyaray/go-printer"
+  packages = ["."]
+  revision = "11caf1a33e852c41b90f96bb6b43aceeb0077869"
+  version = "v0.4.0"
+
+[[projects]]
   branch = "retype"
   name = "github.com/codyaray/retag"
   packages = ["."]
@@ -471,6 +477,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "bd4385a204e11be46bc3075643bb949989ba8f0d81a3cae1cb752d3aef3b408f"
+  inputs-digest = "df152a3366e8d0e4094e802100f06e8d814317a756d585eb51f325afd6937fca"
   solver-name = "gps-cdcl"
   solver-version = 1

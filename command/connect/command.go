@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/codyaray/go-printer"
 	"github.com/ghodss/yaml"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
@@ -20,10 +21,10 @@ import (
 )
 
 var (
-	listFields     = []string{"Name", "Plugin", "ServiceProvider", "Region", "Status"}
-	listLabels     = []string{"Name", "Kind", "Provider", "Region", "Status"}
-	describeFields = []string{"name", "plugin", "kafka_cluster_id", "service_provider", "region", "durability", "status"}
-	describeLabels = []string{"Name", "Kind", "Kafka", "Provider", "Region", "Durability", "Status"}
+	listFields      = []string{"Name", "Plugin", "ServiceProvider", "Region", "Status"}
+	listLabels      = []string{"Name", "Kind", "Provider", "Region", "Status"}
+	describeFields  = []string{"Name", "Plugin", "KafkaClusterId", "ServiceProvider", "Region", "Durability", "Status"}
+	describeRenames = map[string]string{"Plugin": "Kind", "KafkaClusterId": "Kafka", "ServiceProvider": "Provider"}
 )
 
 type command struct {
@@ -159,9 +160,9 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	}
 	var data [][]string
 	for _, cluster := range clusters {
-		data = append(data, common.ToRow(cluster, listFields))
+		data = append(data, printer.ToRow(cluster, listFields))
 	}
-	common.RenderTable(data, listLabels)
+	printer.RenderTable(data, listLabels)
 	return nil
 }
 
@@ -176,7 +177,7 @@ func (c *command) get(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return common.HandleError(err)
 	}
-	if err = common.Render(cluster, describeFields, describeLabels, outputFormat); err != nil {
+	if err = printer.Render(cluster, describeFields, describeRenames, nil, outputFormat); err != nil {
 		return common.HandleError(err)
 	}
 	return nil
@@ -212,7 +213,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return common.HandleError(err)
 	}
 	fmt.Println("Created new connector:")
-	common.RenderDetail(cluster.ConnectCluster, describeFields, describeLabels)
+	printer.RenderDetail(cluster.ConnectCluster, describeFields, describeRenames)
 	fmt.Println("\nS3/Sink Options:")
 	fmt.Println(toConfig(cluster.Options))
 	fmt.Println("\n\nCreate an S3 bucket policy with this user ARN:\n\t" + cluster.UserArn)
@@ -233,9 +234,9 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return common.HandleError(err)
 		}
-		common.RenderDetail(cl, describeFields, describeLabels)
+		printer.RenderDetail(cl, describeFields, describeRenames)
 		fmt.Println("\nS3 Sink Options:")
-		common.RenderDetail(cl.Options, nil, nil)
+		printer.RenderDetail(cl.Options, nil, nil)
 	default:
 		return fmt.Errorf("unknown connect plugin type: %s", cluster.Plugin.String())
 	}
@@ -262,7 +263,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return common.HandleError(err)
 	}
 	fmt.Println("Updated connector:")
-	common.RenderDetail(cluster.ConnectCluster, describeFields, describeLabels)
+	printer.RenderDetail(cluster.ConnectCluster, describeFields, describeRenames)
 	fmt.Println("\nS3/Sink Options:")
 	fmt.Println(toConfig(cluster.Options))
 	fmt.Println("\n\nCreate an S3 bucket policy with this user ARN:\n\t" + cluster.UserArn)

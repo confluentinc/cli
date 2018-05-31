@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/codyaray/go-printer"
 	"github.com/hashicorp/go-hclog"
 	plugin "github.com/hashicorp/go-plugin"
 	"github.com/spf13/cobra"
@@ -16,10 +17,10 @@ import (
 )
 
 var (
-	listFields     = []string{"Name", "ServiceProvider", "Region", "Durability", "Status"}
-	listLabels     = []string{"Name", "Provider", "Region", "Durability", "Status"}
-	describeFields = []string{"Id", "Name", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "PricePerHour"}
-	describeLabels = []string{"Id", "Name", "Ingress", "Egress", "Storage", "Provider", "Region", "Status", "Endpoint", "PricePerHour"}
+	listFields      = []string{"Name", "ServiceProvider", "Region", "Durability", "Status"}
+	listLabels      = []string{"Name", "Provider", "Region", "Durability", "Status"}
+	describeFields  = []string{"Id", "Name", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "PricePerHour"}
+	describeRenames = map[string]string{"NetworkIngress": "Ingress", "NetworkEgress": "Egress", "ServiceProvider": "Provider"}
 )
 
 type command struct {
@@ -133,9 +134,9 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	}
 	var data [][]string
 	for _, cluster := range clusters {
-		data = append(data, common.ToRow(cluster, listFields))
+		data = append(data, printer.ToRow(cluster, listFields))
 	}
-	common.RenderTable(data, listLabels)
+	printer.RenderTable(data, listLabels)
 	return nil
 }
 
@@ -145,7 +146,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return common.HandleError(err)
 	}
-	common.RenderDetail(cluster, describeFields, describeLabels)
+	printer.RenderDetail(cluster, describeFields, describeRenames)
 	return nil
 }
 
