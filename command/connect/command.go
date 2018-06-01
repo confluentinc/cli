@@ -336,6 +336,7 @@ func check(err error) {
 	}
 }
 
+// Enum is a cobra Args validator that ensures a flag value is one of a set of options.
 func Enum(flag string, options ...string) cobra.PositionalArgs {
 	return func(cmd *cobra.Command, args []string) error {
 		pluginType, err := cmd.Flags().GetString(flag)
