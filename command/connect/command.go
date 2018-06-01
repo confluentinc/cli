@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/codyaray/go-printer"
 	"github.com/ghodss/yaml"
@@ -21,10 +22,11 @@ import (
 )
 
 var (
-	listFields      = []string{"Name", "Plugin", "ServiceProvider", "Region", "Status"}
-	listLabels      = []string{"Name", "Kind", "Provider", "Region", "Status"}
-	describeFields  = []string{"Name", "Plugin", "KafkaClusterId", "ServiceProvider", "Region", "Durability", "Status"}
-	describeRenames = map[string]string{"Plugin": "Kind", "KafkaClusterId": "Kafka", "ServiceProvider": "Provider"}
+	listFields       = []string{"Name", "Plugin", "ServiceProvider", "Region", "Status"}
+	listLabels       = []string{"Name", "Kind", "Provider", "Region", "Status"}
+	describeFields   = []string{"Name", "Plugin", "KafkaClusterId", "ServiceProvider", "Region", "Durability", "Status"}
+	describeRenames  = map[string]string{"Plugin": "Kind", "KafkaClusterId": "Kafka", "ServiceProvider": "Provider"}
+	validPluginTypes = []string{"s3-sink"}
 )
 
 type command struct {
@@ -95,13 +97,14 @@ func (c *command) init() error {
 		Use:   "create <name>",
 		Short: "Create a connector.",
 		RunE:  c.create,
-		Args:  cobra.ExactArgs(1),
 	}
-	createCmd.Flags().String("config", "", "Connector configuration file")
+	createCmd.Flags().StringP("type", "t", "", fmt.Sprintf(`Connector type to create; must be one of "%s"`, strings.Join(validPluginTypes, `", "`)))
+	check(createCmd.MarkFlagRequired("type"))
+	createCmd.Flags().StringP("config", "f", "", "Connector configuration file")
 	check(createCmd.MarkFlagRequired("config"))
-	createCmd.Flags().String("kafka-cluster", "", "Kafka Cluster Name")
+	createCmd.Flags().StringP("kafka-cluster", "k", "", "Kafka Cluster Name")
 	check(createCmd.MarkFlagRequired("kafka-cluster"))
-	createCmd.Flags().String("kafka-user", "", "Kafka User Email")
+	createCmd.Flags().StringP("kafka-user", "u", "", "Kafka User Email")
 	check(createCmd.MarkFlagRequired("kafka-user"))
 	c.AddCommand(createCmd)
 
@@ -184,9 +187,13 @@ func (c *command) get(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) create(cmd *cobra.Command, args []string) error {
-	options, err := getConfig(cmd)
-	if err != nil {
+	if err := Enum("type", validPluginTypes...)(cmd, args); err != nil {
 		return err
+	}
+
+	pluginType, err := cmd.Flags().GetString("type")
+	if err != nil {
+		return errors.Wrap(err, "error reading --type as string")
 	}
 
 	kafkaClusterName, err := cmd.Flags().GetString("kafka-cluster")
@@ -197,6 +204,19 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	kafkaUserEmail, err := cmd.Flags().GetString("kafka-user")
 	if err != nil {
 		return errors.Wrap(err, "error reading --kafka-user as string")
+	}
+
+	switch pluginType {
+	case "s3-sink":
+		return c.createS3Sink(kafkaClusterName, kafkaUserEmail, cmd, args)
+	}
+	return nil
+}
+
+func (c *command) createS3Sink(kafkaClusterName, kafkaUserEmail string, cmd *cobra.Command, args []string) error {
+	options, err := getConfig(cmd)
+	if err != nil {
+		return err
 	}
 
 	// Create connect cluster config
@@ -314,4 +334,26 @@ func check(err error) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func Enum(flag string, options ...string) cobra.PositionalArgs {
+	return func(cmd *cobra.Command, args []string) error {
+		pluginType, err := cmd.Flags().GetString(flag)
+		if err != nil {
+			return err
+		}
+		if !contains(options, pluginType) {
+			return fmt.Errorf(`invalid flag '--%v "%v"', value must be one of "%v"`, flag, pluginType, strings.Join(options, `", "`))
+		}
+		return nil
+	}
+}
+
+func contains(s []string, e string) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
 }
