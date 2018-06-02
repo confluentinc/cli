@@ -18,6 +18,7 @@ import (
 )
 
 var (
+	// Injected from linker flag like `go build -ldflags "-X main.version=$VERSION"`
 	version = "0.0.0"
 
 	cli = &cobra.Command{

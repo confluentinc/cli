@@ -20,19 +20,22 @@ compile-proto:
 install-plugins:
 	go install ./plugin/...
 
+GO_LDFLAGS := "-X main.version=$(VERSION)"
+GO_BUILDFLAGS := -gcflags=-trimpath=$(GOPATH) -asmflags=-trimpath=$(GOPATH) -ldflags $(GO_LDFLAGS)
+
 .PHONY: cli
 cli:
 	@mkdir -p release/
-	GOOS=linux GOARCH=amd64 go build -gcflags=-trimpath=$(GOPATH) -asmflags=-trimpath=$(GOPATH) -o release/cli-$(VERSION)-linux-amd64 main.go
-	GOOS=darwin GOARCH=amd64 go build -gcflags=-trimpath=$(GOPATH) -asmflags=-trimpath=$(GOPATH) -o release/cli-$(VERSION)-darwin-amd64 main.go
-	GOOS=windows GOARCH=amd64 go build -gcflags=-trimpath=$(GOPATH) -asmflags=-trimpath=$(GOPATH) -o release/cli-$(VERSION)-windows-amd64 main.go
+	GOOS=linux GOARCH=amd64 go build $(GO_BUILDFLAGS) -o release/cli-$(VERSION)-linux-amd64 main.go
+	GOOS=darwin GOARCH=amd64 go build $(GO_BUILDFLAGS) -o release/cli-$(VERSION)-darwin-amd64 main.go
+	GOOS=windows GOARCH=amd64 go build $(GO_BUILDFLAGS) -o release/cli-$(VERSION)-windows-amd64 main.go
 
 .PHONY: $(COMPONENTS)
 $(COMPONENTS):
 	@mkdir -p release/
-	GOOS=linux GOARCH=amd64 go build -gcflags=-trimpath=$(GOPATH) -asmflags=-trimpath=$(GOPATH) -o release/$(component)-$(VERSION)-linux-amd64 plugin/$(component)/main.go
-	GOOS=darwin GOARCH=amd64 go build -gcflags=-trimpath=$(GOPATH) -asmflags=-trimpath=$(GOPATH) -o release/$(component)-$(VERSION)-darwin-amd64 plugin/$(component)/main.go
-	GOOS=windows GOARCH=amd64 go build -gcflags=-trimpath=$(GOPATH) -asmflags=-trimpath=$(GOPATH) -o release/$(component)-$(VERSION)-windows-amd64 plugin/$(component)/main.go
+	GOOS=linux GOARCH=amd64 go build $(GO_BUILDFLAGS) -o release/$(component)-$(VERSION)-linux-amd64 plugin/$(component)/main.go
+	GOOS=darwin GOARCH=amd64 go build $(GO_BUILDFLAGS) -o release/$(component)-$(VERSION)-darwin-amd64 plugin/$(component)/main.go
+	GOOS=windows GOARCH=amd64 go build $(GO_BUILDFLAGS) -o release/$(component)-$(VERSION)-windows-amd64 plugin/$(component)/main.go
 
 .PHONY: build
 build: cli $(COMPONENTS)
