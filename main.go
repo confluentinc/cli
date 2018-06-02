@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/confluentinc/cli/command/common"
 	"github.com/hashicorp/go-plugin"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -67,6 +68,8 @@ func main() {
 	cli.PersistentPostRun = func(cmd *cobra.Command, args []string) {
 		plugin.CleanupClients()
 	}
+
+	cli.AddCommand(common.NewCompletionCmd(cli))
 
 	cli.AddCommand(auth.New(config)...)
 
