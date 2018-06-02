@@ -1,7 +1,6 @@
-release/
-/cli
-/confluent-connect-plugin
-/confluent-kafka-plugin
+build/
+/confluent
+/confluent-*-plugin
 
 # Binaries for programs and plugins
 *.exe

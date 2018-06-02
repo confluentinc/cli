@@ -5,10 +5,19 @@ CCSTRUCTS := $(GOPATH)/src/github.com/confluentinc/cc-structs
 COMPONENTS := confluent-kafka-plugin confluent-connect-plugin
 component = $(word 1, $@)
 
+GO_LDFLAGS := -X main.version=$(VERSION)
+GO_GCFLAGS := -trimpath=$(GOPATH)
+GO_ASMFLAGS := -trimpath=$(GOPATH)
+
+RELEASE_ARCH := 386 amd64
+RELEASE_OS := linux darwin windows
+RELEASE_OSARCH := !darwin/386
+
 .PHONY: deps
 deps:
-	@which dep 2>/dev/null || go get -u github.com/golang/dep/cmd/dep
-	@which gometalinter 2>/dev/null || ( go get -u github.com/alecthomas/gometalinter && gometalinter --install &> /dev/null )
+	@which dep >/dev/null 2>&1 || go get github.com/golang/dep/cmd/dep
+	@which gometalinter >/dev/null 2>&1 || ( go get github.com/alecthomas/gometalinter && gometalinter --install &> /dev/null )
+	@which gox >/dev/null 2>&1 || go get github.com/mitchellh/gox
 	dep ensure $(ARGS)
 
 .PHONY: compile-proto
@@ -20,36 +29,21 @@ compile-proto:
 install-plugins:
 	go install ./plugin/...
 
-GO_LDFLAGS := "-X main.version=$(VERSION)"
-GO_BUILDFLAGS := -gcflags=-trimpath=$(GOPATH) -asmflags=-trimpath=$(GOPATH) -ldflags $(GO_LDFLAGS)
-
-.PHONY: cli
-cli:
-	@mkdir -p release/
-	GOOS=linux GOARCH=amd64 go build $(GO_BUILDFLAGS) -o release/cli-$(VERSION)-linux-amd64 main.go
-	GOOS=darwin GOARCH=amd64 go build $(GO_BUILDFLAGS) -o release/cli-$(VERSION)-darwin-amd64 main.go
-	GOOS=windows GOARCH=amd64 go build $(GO_BUILDFLAGS) -o release/cli-$(VERSION)-windows-amd64 main.go
-
-.PHONY: $(COMPONENTS)
-$(COMPONENTS):
-	@mkdir -p release/
-	GOOS=linux GOARCH=amd64 go build $(GO_BUILDFLAGS) -o release/$(component)-$(VERSION)-linux-amd64 plugin/$(component)/main.go
-	GOOS=darwin GOARCH=amd64 go build $(GO_BUILDFLAGS) -o release/$(component)-$(VERSION)-darwin-amd64 plugin/$(component)/main.go
-	GOOS=windows GOARCH=amd64 go build $(GO_BUILDFLAGS) -o release/$(component)-$(VERSION)-windows-amd64 plugin/$(component)/main.go
+.PHONY: dev
+dev:
+	@gox -os="$(shell go env GOOS)" -arch="$(shell go env GOARCH)" \
+	  -ldflags="$(GO_LDFLAGS)" -gcflags="$(GO_GCFLAGS)" -asmflags="$(GO_ASMFLAGS)" \
+	  -output="{{if eq .Dir \"cli\"}}confluent{{else}}{{.Dir}}{{end}}" ./...
 
 .PHONY: build
-build: cli $(COMPONENTS)
+build:
+	@gox -os="$(RELEASE_OS)" -arch="$(RELEASE_ARCH)" -osarch="$(RELEASE_OSARCH)" \
+	  -ldflags="$(GO_LDFLAGS)" -gcflags="$(GO_GCFLAGS)" -asmflags="$(GO_ASMFLAGS)" \
+	  -output="build/$(VERSION)/{{.OS}}_{{.Arch}}/{{if eq .Dir \"cli\"}}confluent{{else}}{{.Dir}}{{end}}" ./...
 
 .PHONY: release-s3
-release-s3: build
-	aws s3 cp release/cli-$(VERSION)-linux-amd64 s3://cloud-confluent-bin/cli/cli-$(VERSION)-linux-amd64
-	aws s3 cp release/cli-$(VERSION)-darwin-amd64 s3://cloud-confluent-bin/cli/cli-$(VERSION)-darwin-amd64
-	aws s3 cp release/cli-$(VERSION)-windows-amd64 s3://cloud-confluent-bin/cli/cli-$(VERSION)-windows-amd64
-	for component in $(COMPONENTS) ; do \
-		aws s3 cp release/$$component-$(VERSION)-linux-amd64 s3://cloud-confluent-bin/cli/components/$$component/$$component-$(VERSION)-linux-amd64 ; \
-		aws s3 cp release/$$component-$(VERSION)-darwin-amd64 s3://cloud-confluent-bin/cli/components/$$component/$$component-$(VERSION)-darwin-amd64 ; \
-		aws s3 cp release/$$component-$(VERSION)-windows-amd64 s3://cloud-confluent-bin/cli/components/$$component/$$component-$(VERSION)-windows-amd64 ; \
-	done
+release-s3:
+	aws s3 sync build/$(VERSION)/ s3://cloud-confluent-bin/cli/$(VERSION)/
 
 .PHONY: release
 release: get-release-image commit-release tag-release
