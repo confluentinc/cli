@@ -42,7 +42,7 @@ build:
 	  -output="build/$(VERSION)/{{.OS}}_{{.Arch}}/{{if eq .Dir \"cli\"}}confluent{{else}}{{.Dir}}{{end}}" ./...
 
 .PHONY: release-s3
-release-s3:
+release-s3: build
 	aws s3 sync build/$(VERSION)/ s3://cloud-confluent-bin/cli/$(VERSION)/
 
 .PHONY: release
