@@ -2,22 +2,12 @@ include ./mk-include/cc-semver.mk
 
 CCSTRUCTS := $(GOPATH)/src/github.com/confluentinc/cc-structs
 
-COMPONENTS := confluent-kafka-plugin confluent-connect-plugin
-component = $(word 1, $@)
-
-GO_LDFLAGS := -X main.version=$(VERSION)
-GO_GCFLAGS := -trimpath=$(GOPATH)
-GO_ASMFLAGS := -trimpath=$(GOPATH)
-
-RELEASE_ARCH := 386 amd64
-RELEASE_OS := linux darwin windows
-RELEASE_OSARCH := !darwin/386
-
 .PHONY: deps
 deps:
 	@which dep >/dev/null 2>&1 || go get github.com/golang/dep/cmd/dep
 	@which gometalinter >/dev/null 2>&1 || ( go get github.com/alecthomas/gometalinter && gometalinter --install &> /dev/null )
 	@which gox >/dev/null 2>&1 || go get github.com/mitchellh/gox
+	@which goreleaser >/dev/null 2>&1 || ( curl -s https://api.github.com/repos/goreleaser/goreleaser/releases/latest | grep "browser_download_url" | grep -i $(shell go env GOOS) | grep -i $(shell go env GOARCH | sed -e 's/amd64/x86_64/') | cut -d : -f 2,3 | tr -d \" | wget -O goreleaser.tar.gz -qi - && tar -xzvf goreleaser.tar.gz goreleaser && chmod +x goreleaser && mv goreleaser $(GOPATH)/bin/goreleaser)
 	dep ensure $(ARGS)
 
 .PHONY: compile-proto
@@ -32,22 +22,11 @@ install-plugins:
 .PHONY: dev
 dev:
 	@gox -os="$(shell go env GOOS)" -arch="$(shell go env GOARCH)" \
-	  -ldflags="$(GO_LDFLAGS)" -gcflags="$(GO_GCFLAGS)" -asmflags="$(GO_ASMFLAGS)" \
 	  -output="{{if eq .Dir \"cli\"}}confluent{{else}}{{.Dir}}{{end}}" ./...
-
-.PHONY: build
-build:
-	@gox -os="$(RELEASE_OS)" -arch="$(RELEASE_ARCH)" -osarch="$(RELEASE_OSARCH)" \
-	  -ldflags="$(GO_LDFLAGS)" -gcflags="$(GO_GCFLAGS)" -asmflags="$(GO_ASMFLAGS)" \
-	  -output="build/$(VERSION)/{{.OS}}_{{.Arch}}/{{if eq .Dir \"cli\"}}confluent{{else}}{{.Dir}}{{end}}" ./...
-
-.PHONY: release-s3
-release-s3: build
-	aws s3 sync build/$(VERSION)/ s3://cloud-confluent-bin/cli/$(VERSION)/
 
 .PHONY: release
 release: get-release-image commit-release tag-release
-	make release-s3
+	goreleaser
 
 .PHONY: release-ci
 release-ci:

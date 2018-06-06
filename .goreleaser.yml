@@ -1,0 +1,116 @@
+project_name: confluent-cli
+
+builds:
+  -
+    binary: confluent
+    main: .
+    ldflags:
+      # remove the date so builds are reproducible (identical SHAs)
+      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}}
+    gcflags:
+      - -trimpath={{.Env.GOPATH}}
+    asmflags:
+      - -trimpath={{.Env.GOPATH}}
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - 386
+    ignore:
+      - goos: darwin
+        goarch: 386
+  -
+    binary: confluent-kafka-plugin
+    main: ./plugin/confluent-kafka-plugin
+    ldflags:
+      # remove the date so builds are reproducible (identical SHAs)
+      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}}
+    gcflags:
+      - -trimpath={{.Env.GOPATH}}
+    asmflags:
+      - -trimpath={{.Env.GOPATH}}
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - 386
+    ignore:
+      - goos: darwin
+        goarch: 386
+  -
+    binary: confluent-connect-plugin
+    main: ./plugin/confluent-connect-plugin
+    ldflags:
+      # remove the date so builds are reproducible (identical SHAs)
+      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}}
+    gcflags:
+      - -trimpath={{.Env.GOPATH}}
+    asmflags:
+      - -trimpath={{.Env.GOPATH}}
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - 386
+    ignore:
+      - goos: darwin
+        goarch: 386
+
+release:
+  github:
+    owner: confluentinc
+    name: cli
+
+  prerelease: true
+
+archive:
+  files:
+  - LICENSE
+  wrap_in_directory: true
+
+  format_overrides:
+    - goos: windows
+      format: zip
+
+  replacements:
+    darwin: Darwin
+    linux: Linux
+    windows: Windows
+    386: i386
+    amd64: x86_64
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+    - '^docs:'
+    - '^test:'
+    - Merge pull request
+    - Merge branch
+    - ci skip
+
+s3:
+  -
+    bucket: cloud-confluent-bin
+    region: us-west-2
+    folder: "cli/{{.Version}}"
+
+brew:
+  github:
+    owner: confluentinc
+    name: homebrew-ccloud
+  folder: Formula
+  download_strategy: GitHubPrivateRepositoryReleaseDownloadStrategy
+
+  homepage: https://confluent.io
+  description: Confluent CLI
+
+  commit_author:
+    name: Cody A. Ray
+    email: cody@confluent.io
