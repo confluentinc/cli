@@ -5,7 +5,6 @@ package connect;
 import "kafka/core/v1/core.proto";
 import "kafka/scheduler/v1/scheduler.proto";
 
-// TODO: should this definition be in cc-structs?
 service Connect {
   rpc List(kafka.scheduler.v1.GetConnectClustersRequest) returns (kafka.scheduler.v1.GetConnectClustersReply) {}
   rpc Describe(kafka.scheduler.v1.GetConnectClusterRequest) returns (kafka.scheduler.v1.GetConnectClusterReply) {}
@@ -19,7 +18,7 @@ service Connect {
 message ConnectS3SinkClusterConfig {
   string name = 1;
   string account_id = 2;
-  string kafka_cluster_name = 3;
+  string kafka_cluster_id = 3;
   string kafka_user_email = 4;
   int32 servers = 5;
   kafka.scheduler.v1.ConnectS3SinkOptions options = 6;

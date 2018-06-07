@@ -88,7 +88,7 @@ func (c *command) init() error {
 	}
 
 	c.AddCommand(&cobra.Command{
-		Use:   "create",
+		Use:   "create NAME",
 		Short: "Create a Kafka cluster.",
 		RunE:  c.create,
 	})
@@ -98,20 +98,22 @@ func (c *command) init() error {
 		RunE:  c.list,
 	})
 	c.AddCommand(&cobra.Command{
-		Use:   "describe <name>",
+		Use:   "describe ID",
 		Short: "Describe a Kafka cluster.",
 		RunE:  c.describe,
 		Args:  cobra.ExactArgs(1),
 	})
 	c.AddCommand(&cobra.Command{
-		Use:   "delete",
-		Short: "Delete a Kafka cluster.",
-		RunE:  c.delete,
-	})
-	c.AddCommand(&cobra.Command{
-		Use:   "update",
+		Use:   "update ID",
 		Short: "Update a Kafka cluster.",
 		RunE:  c.update,
+		Args:  cobra.ExactArgs(1),
+	})
+	c.AddCommand(&cobra.Command{
+		Use:   "delete ID",
+		Short: "Delete a Kafka cluster.",
+		RunE:  c.delete,
+		Args:  cobra.ExactArgs(1),
 	})
 	c.AddCommand(&cobra.Command{
 		Use:   "auth",
@@ -141,7 +143,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) describe(cmd *cobra.Command, args []string) error {
-	req := &schedv1.KafkaCluster{AccountId: c.config.Auth.Account.Id, Name: args[0]}
+	req := &schedv1.KafkaCluster{AccountId: c.config.Auth.Account.Id, Id: args[0]}
 	cluster, err := c.kafka.Describe(context.Background(), req)
 	if err != nil {
 		return common.HandleError(err)

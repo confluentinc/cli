@@ -8,6 +8,7 @@ import (
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/cli/log"
+	"github.com/confluentinc/cli/shared"
 )
 
 // KafkaService provides methods for creating and reading kafka clusters
@@ -41,17 +42,16 @@ func (s *KafkaService) List(cluster *schedv1.KafkaCluster) ([]*schedv1.KafkaClus
 
 // Describe returns details for a given kafka cluster.
 func (s *KafkaService) Describe(cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, *http.Response, error) {
-	reply := new(schedv1.GetKafkaClustersReply)
-	resp, err := s.sling.New().Get("/api/clusters").QueryStruct(cluster).Receive(reply, reply)
+	if cluster.Id == "" {
+		return nil, nil, shared.ErrNotFound
+	}
+	reply := new(schedv1.GetKafkaClusterReply)
+	resp, err := s.sling.New().Get("/api/clusters/"+cluster.Id).QueryStruct(cluster).Receive(reply, reply)
 	if err != nil {
 		return nil, resp, errors.Wrap(err, "unable to fetch kafka clusters")
 	}
 	if reply.Error != nil {
 		return nil, resp, errors.Wrap(reply.Error, "error fetching kafka clusters")
 	}
-	// Since we're hitting the get-all endpoint instead of get-one, simulate a NotFound error if no matches return
-	if len(reply.Clusters) == 0 {
-		return nil, resp, errNotFound
-	}
-	return reply.Clusters[0], resp, nil
+	return reply.Cluster, resp, nil
 }

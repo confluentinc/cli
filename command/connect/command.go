@@ -115,7 +115,7 @@ func (c *command) init() error {
 	})
 
 	getCmd := &cobra.Command{
-		Use:   "get NAME",
+		Use:   "get ID",
 		Short: "Get a connector.",
 		RunE:  c.get,
 		Args:  cobra.ExactArgs(1),
@@ -124,14 +124,14 @@ func (c *command) init() error {
 	c.AddCommand(getCmd)
 
 	c.AddCommand(&cobra.Command{
-		Use:   "describe NAME",
+		Use:   "describe ID",
 		Short: "Describe a connector.",
 		RunE:  c.describe,
 		Args:  cobra.ExactArgs(1),
 	})
 
 	updateCmd := &cobra.Command{
-		Use:   "update NAME",
+		Use:   "update ID",
 		Short: "Update a connector.",
 		RunE:  c.update,
 		Args:  cobra.ExactArgs(1),
@@ -141,9 +141,10 @@ func (c *command) init() error {
 	c.AddCommand(updateCmd)
 
 	c.AddCommand(&cobra.Command{
-		Use:   "delete NAME",
+		Use:   "delete ID",
 		Short: "Delete a connector.",
 		RunE:  c.delete,
+		Args:  cobra.ExactArgs(1),
 	})
 
 	c.AddCommand(&cobra.Command{
@@ -175,7 +176,7 @@ func (c *command) get(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "error reading --output as string")
 	}
 
-	req := &schedv1.ConnectCluster{AccountId: c.config.Auth.Account.Id, Name: args[0]}
+	req := &schedv1.ConnectCluster{AccountId: c.config.Auth.Account.Id, Id: args[0]}
 	cluster, err := c.connect.Describe(context.Background(), req)
 	if err != nil {
 		return common.HandleError(err)
@@ -196,7 +197,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "error reading --type as string")
 	}
 
-	kafkaClusterName, err := cmd.Flags().GetString("kafka-cluster")
+	kafkaClusterID, err := cmd.Flags().GetString("kafka-cluster")
 	if err != nil {
 		return errors.Wrap(err, "error reading --kafka-cluster as string")
 	}
@@ -208,12 +209,12 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 
 	switch pluginType {
 	case "s3-sink":
-		return c.createS3Sink(kafkaClusterName, kafkaUserEmail, cmd, args)
+		return c.createS3Sink(kafkaClusterID, kafkaUserEmail, cmd, args)
 	}
 	return nil
 }
 
-func (c *command) createS3Sink(kafkaClusterName, kafkaUserEmail string, cmd *cobra.Command, args []string) error {
+func (c *command) createS3Sink(kafkaClusterID, kafkaUserEmail string, cmd *cobra.Command, args []string) error {
 	options, err := getConfig(cmd)
 	if err != nil {
 		return err
@@ -221,11 +222,11 @@ func (c *command) createS3Sink(kafkaClusterName, kafkaUserEmail string, cmd *cob
 
 	// Create connect cluster config
 	req := &connectv1.ConnectS3SinkClusterConfig{
-		Name:             args[0],
-		AccountId:        c.config.Auth.Account.Id,
-		Options:          options,
-		KafkaClusterName: kafkaClusterName,
-		KafkaUserEmail:   kafkaUserEmail,
+		Name:           args[0],
+		AccountId:      c.config.Auth.Account.Id,
+		Options:        options,
+		KafkaClusterId: kafkaClusterID,
+		KafkaUserEmail: kafkaUserEmail,
 	}
 
 	cluster, err := c.connect.CreateS3Sink(context.Background(), req)
@@ -241,7 +242,7 @@ func (c *command) createS3Sink(kafkaClusterName, kafkaUserEmail string, cmd *cob
 }
 
 func (c *command) describe(cmd *cobra.Command, args []string) error {
-	req := &schedv1.ConnectCluster{AccountId: c.config.Auth.Account.Id, Name: args[0]}
+	req := &schedv1.ConnectCluster{AccountId: c.config.Auth.Account.Id, Id: args[0]}
 	cluster, err := c.connect.Describe(context.Background(), req)
 	if err != nil {
 		return common.HandleError(err)
@@ -272,7 +273,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	// Create updated connect s3-sink cluster
 	req := &schedv1.ConnectS3SinkCluster{
 		ConnectCluster: &schedv1.ConnectCluster{
-			Name:      args[0],
+			Id:        args[0],
 			AccountId: c.config.Auth.Account.Id,
 		},
 		Options: options,
@@ -291,7 +292,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
-	req := &schedv1.ConnectCluster{AccountId: c.config.Auth.Account.Id, Name: args[0]}
+	req := &schedv1.ConnectCluster{AccountId: c.config.Auth.Account.Id, Id: args[0]}
 	err := c.connect.Delete(context.Background(), req)
 	if err != nil {
 		return common.HandleError(err)
