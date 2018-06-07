@@ -67,7 +67,7 @@ release:
     owner: confluentinc
     name: cli
 
-  prerelease: true
+  prerelease: false
 
 archive:
   files:
