@@ -135,7 +135,7 @@ func (c *sinkCommand) list(cmd *cobra.Command, args []string) error {
 	req := &schedv1.ConnectCluster{AccountId: c.config.Auth.Account.Id}
 	clusters, err := c.connect.List(context.Background(), req)
 	if err != nil {
-		return common.HandleError(err)
+		return common.HandleError(err, cmd)
 	}
 	var data [][]string
 	for _, cluster := range clusters {
@@ -154,10 +154,10 @@ func (c *sinkCommand) get(cmd *cobra.Command, args []string) error {
 	req := &schedv1.ConnectCluster{AccountId: c.config.Auth.Account.Id, Id: args[0]}
 	cluster, err := c.connect.Describe(context.Background(), req)
 	if err != nil {
-		return common.HandleError(err)
+		return common.HandleError(err, cmd)
 	}
 	if err = printer.Render(cluster, describeFields, describeRenames, nil, outputFormat); err != nil {
-		return common.HandleError(err)
+		return common.HandleError(err, cmd)
 	}
 	return nil
 }
@@ -206,7 +206,7 @@ func (c *sinkCommand) createS3Sink(kafkaClusterID, kafkaUserEmail string, cmd *c
 
 	cluster, err := c.connect.CreateS3Sink(context.Background(), req)
 	if err != nil {
-		return common.HandleError(err)
+		return common.HandleError(err, cmd)
 	}
 	fmt.Println("Created new connector:")
 	printer.RenderTableOut(cluster.ConnectCluster, describeFields, describeRenames, os.Stdout)
@@ -219,7 +219,7 @@ func (c *sinkCommand) createS3Sink(kafkaClusterID, kafkaUserEmail string, cmd *c
 func (c *sinkCommand) describe(cmd *cobra.Command, args []string) error {
 	cluster, err := c.fetch(args[0])
 	if err != nil {
-		return common.HandleError(err)
+		return common.HandleError(err, cmd)
 	}
 	switch cl := cluster.(type) {
 	case *schedv1.ConnectS3SinkCluster:
@@ -240,7 +240,7 @@ func (c *sinkCommand) edit(cmd *cobra.Command, args []string) error {
 
 	cluster, err := c.fetch(args[0])
 	if err != nil {
-		return common.HandleError(err)
+		return common.HandleError(err, cmd)
 	}
 	var objType interface{}
 	switch cl := cluster.(type) {
@@ -252,20 +252,20 @@ func (c *sinkCommand) edit(cmd *cobra.Command, args []string) error {
 
 	formatter, err := printer.NewProtoFormatter(outputFormat)
 	if err != nil {
-		return common.HandleError(err)
+		return common.HandleError(err, cmd)
 	}
 
 	edit := editor.NewWithFormatter(formatter)
 	updated, err := edit.Launch("editor-connect", cluster, objType)
 	if err != nil {
-		return common.HandleError(err)
+		return common.HandleError(err, cmd)
 	}
 
 	switch req := updated.(type) {
 	case *schedv1.ConnectS3SinkCluster:
 		cluster, err := c.connect.UpdateS3Sink(context.Background(), req)
 		if err != nil {
-			return common.HandleError(err)
+			return common.HandleError(err, cmd)
 		}
 		fmt.Println("Updated connector:")
 		printer.RenderTableOut(cluster, describeFields, describeRenames, os.Stdout)
@@ -278,7 +278,7 @@ func (c *sinkCommand) edit(cmd *cobra.Command, args []string) error {
 func (c *sinkCommand) update(cmd *cobra.Command, args []string) error {
 	cluster, err := c.fetch(args[0])
 	if err != nil {
-		return common.HandleError(err)
+		return common.HandleError(err, cmd)
 	}
 	switch cl := cluster.(type) {
 	case *schedv1.ConnectS3SinkCluster:
@@ -295,7 +295,7 @@ func (c *sinkCommand) update(cmd *cobra.Command, args []string) error {
 		}
 		cluster, err := c.connect.UpdateS3Sink(context.Background(), req)
 		if err != nil {
-			return common.HandleError(err)
+			return common.HandleError(err, cmd)
 		}
 		fmt.Println("Updated connector:")
 		printer.RenderTableOut(cluster.ConnectCluster, describeFields, describeRenames, os.Stdout)
@@ -312,14 +312,14 @@ func (c *sinkCommand) delete(cmd *cobra.Command, args []string) error {
 	req := &schedv1.ConnectCluster{AccountId: c.config.Auth.Account.Id, Id: args[0]}
 	err := c.connect.Delete(context.Background(), req)
 	if err != nil {
-		return common.HandleError(err)
+		return common.HandleError(err, cmd)
 	}
 	fmt.Println("Your connect cluster has been deleted!")
 	return nil
 }
 
 func (c *sinkCommand) auth(cmd *cobra.Command, args []string) error {
-	return common.HandleError(shared.ErrNotImplemented)
+	return common.HandleError(shared.ErrNotImplemented, cmd)
 }
 
 //

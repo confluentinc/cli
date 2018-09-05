@@ -161,6 +161,7 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:983d84175c92f08c63d5c18415120db63aa647ace9069a03d23a06d4f4b92f2f"
   name = "github.com/golang/protobuf"
   packages = [
     "jsonpb",
@@ -172,7 +173,8 @@
     "ptypes/timestamp",
     "ptypes/wrappers"
   ]
-  revision = "a47340a8e42c4ceb44c00c2a05199e24b24fcaef"
+  pruneopts = "UT"
+  revision = "7716a980bceefe9a0213654823d9ea62d23b87a2"
 
 [[projects]]
   branch = "master"
@@ -318,6 +320,14 @@
   version = "v0.8.0"
 
 [[projects]]
+  digest = "1:0028cb19b2e4c3112225cd871870f2d9cf49b9b4276531f03438a88e94be86fe"
+  name = "github.com/pmezard/go-difflib"
+  packages = ["difflib"]
+  pruneopts = "UT"
+  revision = "792786c7400a136282c1664665ae0a8db921c6c2"
+  version = "v1.0.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/rcrowley/go-metrics"
   packages = ["."]
@@ -366,6 +376,17 @@
   packages = ["."]
   revision = "b5e8006cbee93ec955a89ab31e0e3ce3204f3736"
   version = "v1.0.2"
+
+[[projects]]
+  digest = "1:c40d65817cdd41fac9aa7af8bed56927bb2d6d47e4fea566a74880f5c2b1c41e"
+  name = "github.com/stretchr/testify"
+  packages = [
+    "assert",
+    "require",
+  ]
+  pruneopts = "UT"
+  revision = "f35b8ab0b5a2cef36673838d662e249dd9c94686"
+  version = "v1.2.2"
 
 [[projects]]
   branch = "master"
@@ -551,6 +572,33 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "8ab7db24c354144934a51e048bba5c37ecd4c2478283ffe80d4e754d7b4e903d"
+  input-imports = [
+    "github.com/Shopify/sarama",
+    "github.com/armon/go-metrics",
+    "github.com/codyaray/go-editor",
+    "github.com/codyaray/go-printer",
+    "github.com/codyaray/go-printer/editor",
+    "github.com/confluentinc/cc-structs/kafka/core/v1",
+    "github.com/confluentinc/cc-structs/kafka/org/v1",
+    "github.com/confluentinc/cc-structs/kafka/scheduler/v1",
+    "github.com/confluentinc/cc-structs/operator/v1",
+    "github.com/dghubble/sling",
+    "github.com/ghodss/yaml",
+    "github.com/gogo/protobuf/jsonpb",
+    "github.com/gogo/protobuf/proto",
+    "github.com/hashicorp/go-hclog",
+    "github.com/hashicorp/go-plugin",
+    "github.com/mitchellh/go-homedir",
+    "github.com/pkg/errors",
+    "github.com/sirupsen/logrus",
+    "github.com/spf13/cobra",
+    "github.com/spf13/viper",
+    "github.com/stretchr/testify/require",
+    "golang.org/x/crypto/ssh/terminal",
+    "golang.org/x/net/context",
+    "golang.org/x/oauth2",
+    "google.golang.org/grpc",
+    "google.golang.org/grpc/status",
+  ]
   solver-name = "gps-cdcl"
   solver-version = 1

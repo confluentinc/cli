@@ -85,11 +85,11 @@ func (c *topicCommand) init() {
 func (c *topicCommand) list(cmd *cobra.Command, args []string) error {
 	client, err := NewSaramaKafkaForConfig(c.config)
 	if err != nil {
-		return common.HandleError(shared.KafkaError(err))
+		return common.HandleError(shared.KafkaError(err), cmd)
 	}
 	topics, err := client.Topics()
 	if err != nil {
-		return common.HandleError(shared.KafkaError(err))
+		return common.HandleError(shared.KafkaError(err), cmd)
 	}
 	for _, topic := range topics {
 		fmt.Println(topic)
@@ -100,19 +100,19 @@ func (c *topicCommand) list(cmd *cobra.Command, args []string) error {
 func (c *topicCommand) create(cmd *cobra.Command, args []string) error {
 	partitions, err := cmd.Flags().GetInt32("partitions")
 	if err != nil {
-		return common.HandleError(err)
+		return common.HandleError(err, cmd)
 	}
 	replicationFactor, err := cmd.Flags().GetInt16("replication-factor")
 	if err != nil {
-		return common.HandleError(err)
+		return common.HandleError(err, cmd)
 	}
 	configs, err := cmd.Flags().GetStringSlice("config")
 	if err != nil {
-		return common.HandleError(err)
+		return common.HandleError(err, cmd)
 	}
 	client, err := NewSaramaAdminForConfig(c.config)
 	if err != nil {
-		return common.HandleError(shared.KafkaError(err))
+		return common.HandleError(shared.KafkaError(err), cmd)
 	}
 	entries := map[string]*string{}
 	for _, config := range configs {
@@ -125,7 +125,7 @@ func (c *topicCommand) create(cmd *cobra.Command, args []string) error {
 		ConfigEntries:     entries,
 	}
 	err = client.CreateTopic(args[0], config, false)
-	return common.HandleError(shared.KafkaError(err))
+	return common.HandleError(shared.KafkaError(err), cmd)
 }
 
 func (c *topicCommand) describe(cmd *cobra.Command, args []string) error {
@@ -139,10 +139,10 @@ func (c *topicCommand) update(cmd *cobra.Command, args []string) error {
 func (c *topicCommand) delete(cmd *cobra.Command, args []string) error {
 	client, err := NewSaramaAdminForConfig(c.config)
 	if err != nil {
-		return common.HandleError(shared.KafkaError(err))
+		return common.HandleError(shared.KafkaError(err), cmd)
 	}
 	err = client.DeleteTopic(args[0])
-	return common.HandleError(shared.KafkaError(err))
+	return common.HandleError(shared.KafkaError(err), cmd)
 }
 
 func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {

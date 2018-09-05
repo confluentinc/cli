@@ -4,35 +4,37 @@ import (
 	"fmt"
 
 	"github.com/codyaray/go-editor"
+	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/shared"
 )
 
 // HandleError provides standard error messaging for common errors.
-func HandleError(err error) error {
+func HandleError(err error, cmd *cobra.Command) error {
+	out := cmd.OutOrStderr()
 	switch err {
 	case shared.ErrNoContext:
 		fallthrough
 	case shared.ErrUnauthorized:
-		fmt.Println("You must login to access Confluent Cloud.")
+		fmt.Fprintln(out, "You must login to access Confluent Cloud.")
 	case shared.ErrExpiredToken:
-		fmt.Println("Your access to Confluent Cloud has expired. Please login again.")
+		fmt.Fprintln(out, "Your access to Confluent Cloud has expired. Please login again.")
 	case shared.ErrIncorrectAuth:
-		fmt.Println("You have entered an incorrect username or password. Please try again.")
+		fmt.Fprintln(out, "You have entered an incorrect username or password. Please try again.")
 	case shared.ErrMalformedToken:
-		fmt.Println("Your auth token has been corrupted. Please login again.")
+		fmt.Fprintln(out, "Your auth token has been corrupted. Please login again.")
 	case shared.ErrNotImplemented:
-		fmt.Println("Sorry, this functionality is not yet available in the CLI.")
+		fmt.Fprintln(out, "Sorry, this functionality is not yet available in the CLI.")
 	case shared.ErrNotFound:
-		fmt.Println("Kafka cluster not found.") // TODO: parametrize ErrNotFound for better error messaging
+		fmt.Fprintln(out, "Kafka cluster not found.") // TODO: parametrize ErrNotFound for better error messaging
 	default:
 		switch err.(type) {
 		case editor.ErrEditing:
-			fmt.Println(err)
+			fmt.Fprintln(out, err)
 		case shared.NotAuthenticatedError:
-			fmt.Println(err)
+			fmt.Fprintln(out, err)
 		case shared.KafkaError:
-			fmt.Println(err)
+			fmt.Fprintln(out, err)
 		default:
 			return err
 		}
