@@ -33,10 +33,10 @@ func New(config *shared.Config) []*cobra.Command {
 	var defaultJwtHTTPClientFactory = func(ctx context.Context, jwt string, baseURL string, logger *log.Logger) *chttp.Client {
 		return chttp.NewClientWithJWT(ctx, jwt, baseURL, logger)
 	}
-	return newAuth(config, command.NewTerminalPrompt(os.Stdin), defaultAnonHTTPClientFactory, defaultJwtHTTPClientFactory)
+	return newCommands(config, command.NewTerminalPrompt(os.Stdin), defaultAnonHTTPClientFactory, defaultJwtHTTPClientFactory)
 }
 
-func newAuth(config *shared.Config, prompt command.Prompt,
+func newCommands(config *shared.Config, prompt command.Prompt,
 	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *chttp.Client,
 	jwtHTTPClientFactory func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *chttp.Client,
 ) []*cobra.Command {

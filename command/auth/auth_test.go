@@ -111,5 +111,5 @@ func newAuthCommand(prompt command.Prompt, auth *mock.Auth, req *require.Asserti
 		Credentials: make(map[string]*shared.Credential),
 		Contexts:    make(map[string]*shared.Context),
 	}
-	return newAuth(config, prompt, mockAnonHTTPClientFactory, mockJwtHTTPClientFactory), config
+	return newCommands(config, prompt, mockAnonHTTPClientFactory, mockJwtHTTPClientFactory), config
 }
