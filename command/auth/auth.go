@@ -3,7 +3,6 @@ package auth
 import (
 	"context"
 	"fmt"
-	"io"
 	"os"
 	"strings"
 
@@ -24,7 +23,7 @@ type commands struct {
 	Commands []*cobra.Command
 	config   *shared.Config
 	// for testing
-	Stdin                 command.Prompt
+	prompt                command.Prompt
 	anonHttpClientFactory AnonHttpClientFactory
 	jwtHttpClientFactory  JwtHttpClientFactory
 }
@@ -40,24 +39,29 @@ func New(config *shared.Config) []*cobra.Command {
 	return newForTesting(config, command.NewTerminalPrompt(os.Stdin), defaultAnonHttpClientFactory, defaultJwtHttpClientFactory)
 }
 
-func newForTesting(config *shared.Config, stdin command.Prompt, anonHttpClientFactory AnonHttpClientFactory, jwtHttpClientFactory JwtHttpClientFactory) []*cobra.Command {
-	cmd := &commands{config: config, Stdin: stdin, anonHttpClientFactory: anonHttpClientFactory, jwtHttpClientFactory: jwtHttpClientFactory}
+func newForTesting(config *shared.Config, prompt command.Prompt, anonHttpClientFactory AnonHttpClientFactory, jwtHttpClientFactory JwtHttpClientFactory) []*cobra.Command {
+	cmd := &commands{config: config, prompt: prompt, anonHttpClientFactory: anonHttpClientFactory, jwtHttpClientFactory: jwtHttpClientFactory}
 	cmd.init()
 	return cmd.Commands
 }
 
 func (a *commands) init() {
+	var setPromptOutput = func(cmd *cobra.Command, args []string) {
+		a.prompt.SetOutput(cmd.OutOrStderr())
+	}
 	loginCmd := &cobra.Command{
 		Use:   "login",
 		Short: "Login to a Confluent Control Plane.",
 		RunE:  a.login,
 	}
 	loginCmd.Flags().String("url", "https://confluent.cloud", "Confluent Control Plane URL")
+	loginCmd.PersistentPreRun = setPromptOutput
 	logoutCmd := &cobra.Command{
 		Use:   "logout",
 		Short: "Logout of a Confluent Control Plane.",
 		RunE:  a.logout,
 	}
+	logoutCmd.PersistentPreRun = setPromptOutput
 	a.Commands = []*cobra.Command{loginCmd, logoutCmd}
 }
 
@@ -67,7 +71,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	a.config.AuthURL = url
-	email, password, err := a.credentials(cmd.OutOrStderr())
+	email, password, err := a.credentials()
 	if err != nil {
 		return err
 	}
@@ -96,7 +100,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.Wrap(err, "unable to save user auth")
 	}
-	fmt.Fprintln(cmd.OutOrStderr(), "Logged in as", email)
+	a.prompt.Println("Logged in as", email)
 	return nil
 }
 
@@ -107,22 +111,22 @@ func (a *commands) logout(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.Wrap(err, "unable to delete user auth")
 	}
-	fmt.Fprintln(cmd.OutOrStderr(), "You are now logged out")
+	a.prompt.Println("You are now logged out")
 	return nil
 }
 
-func (a *commands) credentials(out io.Writer) (string, string, error) {
-	fmt.Fprintln(out, "Enter your Confluent Cloud credentials:")
+func (a *commands) credentials() (string, string, error) {
+	a.prompt.Println("Enter your Confluent Cloud credentials:")
 
-	fmt.Fprint(out, "Email: ")
-	email, err := a.Stdin.ReadString('\n')
+	a.prompt.Println("Email: ")
+	email, err := a.prompt.ReadString('\n')
 	if err != nil {
 		return "", "", err
 	}
 
-	fmt.Fprint(out, "Password: ")
-	bytePassword, err := a.Stdin.ReadPassword(0)
-	fmt.Fprintln(out)
+	a.prompt.Println("Password: ")
+	bytePassword, err := a.prompt.ReadPassword(0)
+	a.prompt.Println()
 	if err != nil {
 		return "", "", err
 	}

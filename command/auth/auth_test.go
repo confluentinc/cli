@@ -93,12 +93,8 @@ func TestLogout(t *testing.T) {
 
 func prompt(username, password string) *mock.Prompt {
 	return &mock.Prompt{
-		ReadStringFunc: func(delim byte) (string, error) {
-			return username, nil
-		},
-		ReadPasswordFunc: func(fd int) ([]byte, error) {
-			return []byte(password), nil
-		},
+		Strings:   []string{username},
+		Passwords: []string{password},
 	}
 }
 
