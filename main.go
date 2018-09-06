@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/confluentinc/cli/command"
 	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/command/config"
 	"github.com/hashicorp/go-plugin"
@@ -65,6 +66,8 @@ func main() {
 		}
 	}
 
+	prompt := command.NewTerminalPrompt(os.Stdin)
+
 	cli.Version = version
 
 	// Automatically stop plugins when CLI exits
@@ -74,7 +77,7 @@ func main() {
 
 	cli.AddCommand(config.New(cfg))
 
-	cli.AddCommand(common.NewCompletionCmd(cli))
+	cli.AddCommand(common.NewCompletionCmd(cli, prompt))
 
 	cli.AddCommand(auth.New(cfg)...)
 

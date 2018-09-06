@@ -15,6 +15,7 @@ import (
 type Prompt interface {
 	ReadString(delim byte) (string, error)
 	ReadPassword(fd int) ([]byte, error)
+	GetOutput() io.Writer
 	SetOutput(out io.Writer)
 	Println(...interface{}) (n int, err error)
 	Print(...interface{}) (n int, err error)
@@ -41,6 +42,11 @@ func (p *TerminalPrompt) ReadString(delim byte) (string, error) {
 // ReadPassword reads a line of input from a terminal without local echo.
 func (p *TerminalPrompt) ReadPassword(fd int) ([]byte, error) {
 	return terminal.ReadPassword(fd)
+}
+
+// GetOutput returns the writer to which the Print* methods will write.
+func (p *TerminalPrompt) GetOutput() io.Writer {
+	return p.Out
 }
 
 // SetOutput updates the writer to which the Print* methods will write.

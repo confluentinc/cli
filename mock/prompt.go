@@ -34,6 +34,11 @@ func (mock *Prompt) ReadPassword(fd int) ([]byte, error) {
 	return []byte(mock.Passwords[mock.PasswordIndex-1]), nil
 }
 
+// GetOutput gets the output writer
+func (mock *Prompt) GetOutput() io.Writer {
+	return mock.Out
+}
+
 // SetOutput sets the output writer
 func (mock *Prompt) SetOutput(out io.Writer) {
 	mock.Out = out

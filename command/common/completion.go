@@ -2,9 +2,10 @@ package common
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/spf13/cobra"
+
+	terminal "github.com/confluentinc/cli/command"
 )
 
 const longDescription = `Output shell completion code for the specified shell (bash or zsh).
@@ -40,12 +41,14 @@ Install zsh completions:
 type command struct {
 	*cobra.Command
 	rootCmd *cobra.Command
+	prompt  terminal.Prompt
 }
 
 // NewCompletionCmd returns the Cobra command for shell completion.
-func NewCompletionCmd(rootCmd *cobra.Command) *cobra.Command {
+func NewCompletionCmd(rootCmd *cobra.Command, prompt terminal.Prompt) *cobra.Command {
 	cmd := &command{
 		rootCmd: rootCmd,
+		prompt:  prompt,
 	}
 	cmd.init()
 	return cmd.Command
@@ -64,9 +67,9 @@ func (c *command) init() {
 func (c *command) completion(cmd *cobra.Command, args []string) error {
 	var err error
 	if args[0] == "bash" {
-		err = c.rootCmd.GenBashCompletion(os.Stdout)
+		err = c.rootCmd.GenBashCompletion(c.prompt.GetOutput())
 	} else if args[0] == "zsh" {
-		err = c.rootCmd.GenZshCompletion(os.Stdout)
+		err = c.rootCmd.GenZshCompletion(c.prompt.GetOutput())
 	} else {
 		err = fmt.Errorf(`unsupported shell type "%s"`, args[0])
 	}
