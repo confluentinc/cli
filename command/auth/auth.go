@@ -118,13 +118,13 @@ func (a *commands) logout(cmd *cobra.Command, args []string) error {
 func (a *commands) credentials() (string, string, error) {
 	a.prompt.Println("Enter your Confluent Cloud credentials:")
 
-	a.prompt.Println("Email: ")
+	a.prompt.Print("Email: ")
 	email, err := a.prompt.ReadString('\n')
 	if err != nil {
 		return "", "", err
 	}
 
-	a.prompt.Println("Password: ")
+	a.prompt.Print("Password: ")
 	bytePassword, err := a.prompt.ReadPassword(0)
 	a.prompt.Println()
 	if err != nil {
