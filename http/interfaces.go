@@ -14,25 +14,30 @@ import (
 	"github.com/confluentinc/cli/shared"
 )
 
+// Auth allows authenticating in Confluent Cloud
 type Auth interface {
 	Login(username, password string) (string, error)
 	User() (*shared.AuthConfig, error)
 }
 
+// User service allows managing users in Confluent Cloud
 type User interface {
 	List() ([]*orgv1.User, *http.Response, error)
 	Describe(user *orgv1.User) (*orgv1.User, *http.Response, error)
 }
 
+// APIKey service allows managing API Keys in Confluent Cloud
 type APIKey interface {
 	Create(key *orgv1.ApiKey) (*orgv1.ApiKey, *http.Response, error)
 }
 
+// Kafka service allows managing Kafka clusters in Confluent Cloud
 type Kafka interface {
 	List(cluster *schedv1.KafkaCluster) ([]*schedv1.KafkaCluster, *http.Response, error)
 	Describe(cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, *http.Response, error)
 }
 
+// Connect service allows managing Connect clusters in Confluent Cloud
 type Connect interface {
 	List(cluster *schedv1.ConnectCluster) ([]*schedv1.ConnectCluster, *http.Response, error)
 	Describe(cluster *schedv1.ConnectCluster) (*schedv1.ConnectCluster, *http.Response, error)

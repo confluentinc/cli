@@ -16,31 +16,31 @@ import (
 	"github.com/confluentinc/cli/shared"
 )
 
-type AnonHttpClientFactory func(baseURL string, logger *log.Logger) *chttp.Client
-type JwtHttpClientFactory func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *chttp.Client
-
 type commands struct {
 	Commands []*cobra.Command
 	config   *shared.Config
 	// for testing
 	prompt                command.Prompt
-	anonHttpClientFactory AnonHttpClientFactory
-	jwtHttpClientFactory  JwtHttpClientFactory
+	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *chttp.Client
+	jwtHTTPClientFactory  func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *chttp.Client
 }
 
 // New returns a list of auth-related Cobra commands.
 func New(config *shared.Config) []*cobra.Command {
-	var defaultAnonHttpClientFactory = func(baseURL string, logger *log.Logger) *chttp.Client {
+	var defaultAnonHTTPClientFactory = func(baseURL string, logger *log.Logger) *chttp.Client {
 		return chttp.NewClient(chttp.BaseClient, baseURL, logger)
 	}
-	var defaultJwtHttpClientFactory = func(ctx context.Context, jwt string, baseURL string, logger *log.Logger) *chttp.Client {
+	var defaultJwtHTTPClientFactory = func(ctx context.Context, jwt string, baseURL string, logger *log.Logger) *chttp.Client {
 		return chttp.NewClientWithJWT(ctx, jwt, baseURL, logger)
 	}
-	return newForTesting(config, command.NewTerminalPrompt(os.Stdin), defaultAnonHttpClientFactory, defaultJwtHttpClientFactory)
+	return newAuth(config, command.NewTerminalPrompt(os.Stdin), defaultAnonHTTPClientFactory, defaultJwtHTTPClientFactory)
 }
 
-func newForTesting(config *shared.Config, prompt command.Prompt, anonHttpClientFactory AnonHttpClientFactory, jwtHttpClientFactory JwtHttpClientFactory) []*cobra.Command {
-	cmd := &commands{config: config, prompt: prompt, anonHttpClientFactory: anonHttpClientFactory, jwtHttpClientFactory: jwtHttpClientFactory}
+func newAuth(config *shared.Config, prompt command.Prompt,
+	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *chttp.Client,
+	jwtHTTPClientFactory func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *chttp.Client,
+) []*cobra.Command {
+	cmd := &commands{config: config, prompt: prompt, anonHTTPClientFactory: anonHTTPClientFactory, jwtHTTPClientFactory: jwtHTTPClientFactory}
 	cmd.init()
 	return cmd.Commands
 }
@@ -76,7 +76,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	client := a.anonHttpClientFactory(a.config.AuthURL, a.config.Logger)
+	client := a.anonHTTPClientFactory(a.config.AuthURL, a.config.Logger)
 	token, err := client.Auth.Login(email, password)
 	if err != nil {
 		err = shared.ConvertAPIError(err)
@@ -87,7 +87,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	}
 	a.config.AuthToken = token
 
-	client = a.jwtHttpClientFactory(context.Background(), a.config.AuthToken, a.config.AuthURL, a.config.Logger)
+	client = a.jwtHTTPClientFactory(context.Background(), a.config.AuthToken, a.config.AuthURL, a.config.Logger)
 	user, err := client.Auth.User()
 	if err != nil {
 		return common.HandleError(shared.ConvertAPIError(err), cmd)

@@ -15,10 +15,14 @@
         ".*Potential file inclusion via variable.*gosec.*",
         "command/.*/command.go:.* Subprocess launched with variable.*gosec.*",
 
+        ".*error return value not checked .*.Print.*errcheck.*",
         ".*error return value not checked .*fmt.Fprintf.*errcheck.*",
+        ".*error return value not checked .*fmt.Fprintln.*errcheck.*",
         "command/.*/.*.go:.* error return value not checked .*printer.Render.*errcheck.*",
 
-        "command/common/cli.go:.* cyclomatic complexity .* of function HandleError\\(\\) is high .*gocyclo.*"
+        "command/common/cli.go:.* cyclomatic complexity .* of function HandleError\\(\\) is high .*gocyclo.*",
+
+        "mock/.*.go:.*package comment should be of the form.*golint.*"
     ],
     "Linters": {
         "gas": {

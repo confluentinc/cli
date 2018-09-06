@@ -99,11 +99,11 @@ func prompt(username, password string) *mock.Prompt {
 }
 
 func newAuthCommand(prompt command.Prompt, auth *mock.Auth, req *require.Assertions) ([]*cobra.Command, *shared.Config) {
-	var mockAnonHttpClientFactory = func(baseURL string, logger *log.Logger) *chttp.Client {
+	var mockAnonHTTPClientFactory = func(baseURL string, logger *log.Logger) *chttp.Client {
 		req.Equal("https://confluent.cloud", baseURL)
 		return &chttp.Client{Auth: auth}
 	}
-	var mockJwtHttpClientFactory = func(ctx context.Context, jwt, baseURL string, logger *log.Logger) *chttp.Client {
+	var mockJwtHTTPClientFactory = func(ctx context.Context, jwt, baseURL string, logger *log.Logger) *chttp.Client {
 		return &chttp.Client{Auth: auth}
 	}
 	config := &shared.Config{
@@ -111,5 +111,5 @@ func newAuthCommand(prompt command.Prompt, auth *mock.Auth, req *require.Asserti
 		Credentials: make(map[string]*shared.Credential),
 		Contexts:    make(map[string]*shared.Context),
 	}
-	return newForTesting(config, prompt, mockAnonHttpClientFactory, mockJwtHttpClientFactory), config
+	return newAuth(config, prompt, mockAnonHTTPClientFactory, mockJwtHTTPClientFactory), config
 }
