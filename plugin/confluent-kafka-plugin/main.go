@@ -36,10 +36,10 @@ func main() {
 
 	var config *shared.Config
 	{
-		config = &shared.Config{
+		config = shared.NewConfig(&shared.Config{
 			MetricSink: metricSink,
 			Logger:     logger,
-		}
+		})
 		err := config.Load()
 		if err != nil && err != shared.ErrNoConfig {
 			logger.WithError(err).Errorf("unable to load config")

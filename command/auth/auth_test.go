@@ -42,7 +42,7 @@ func TestLoginSuccess(t *testing.T) {
 	req.Equal("y0ur.jwt.T0kEn", config.AuthToken)
 	req.Equal(&orgv1.User{Id: 23, Email: "cody@confluent.io", FirstName: "Cody"}, config.Auth.User)
 
-	config = &shared.Config{}
+	config = shared.NewConfig()
 	config.Load()
 	name := "login-cody@confluent.io-https://confluent.cloud"
 	req.Contains(config.Platforms, name)
@@ -85,7 +85,7 @@ func TestLogout(t *testing.T) {
 	req.NoError(err)
 	req.Contains(output, "You are now logged out")
 
-	config = &shared.Config{}
+	config = shared.NewConfig()
 	config.Load()
 	req.Empty(config.AuthToken)
 	req.Empty(config.Auth)
@@ -106,10 +106,6 @@ func newAuthCommand(prompt command.Prompt, auth *mock.Auth, req *require.Asserti
 	var mockJwtHTTPClientFactory = func(ctx context.Context, jwt, baseURL string, logger *log.Logger) *chttp.Client {
 		return &chttp.Client{Auth: auth}
 	}
-	config := &shared.Config{
-		Platforms:   make(map[string]*shared.Platform),
-		Credentials: make(map[string]*shared.Credential),
-		Contexts:    make(map[string]*shared.Context),
-	}
+	config := shared.NewConfig()
 	return newCommands(config, prompt, mockAnonHTTPClientFactory, mockJwtHTTPClientFactory), config
 }

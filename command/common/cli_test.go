@@ -10,9 +10,6 @@ import (
 )
 
 func TestHandleError(t *testing.T) {
-	type args struct {
-		err error
-	}
 	tests := []struct {
 		name    string
 		err     error

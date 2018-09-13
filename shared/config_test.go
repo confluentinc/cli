@@ -48,7 +48,8 @@ func TestConfig_Load(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &Config{Filename: tt.file}
+			c := NewConfig()
+			c.Filename = tt.file
 			ioutil.WriteFile(tt.file, []byte(tt.args.contents), 0644)
 			if err := c.Load(); (err != nil) != tt.wantErr {
 				t.Errorf("Config.Load() error = %v, wantErr %v", err, tt.wantErr)

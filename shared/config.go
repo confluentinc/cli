@@ -34,11 +34,22 @@ type Config struct {
 	CurrentContext string                 `json:"current_context" hcl:"current_context"`
 }
 
-// Load reads the CLI config from disk.
-func (c *Config) Load() error {
+// NewConfig initializes a new Config object
+func NewConfig(config ...*Config) *Config {
+	var c *Config
+	if config == nil {
+		c = &Config{}
+	} else {
+		c = config[0]
+	}
 	c.Platforms = map[string]*Platform{}
 	c.Credentials = map[string]*Credential{}
 	c.Contexts = map[string]*Context{}
+	return c
+}
+
+// Load reads the CLI config from disk.
+func (c *Config) Load() error {
 	filename, err := c.getFilename()
 	if err != nil {
 		return err
@@ -81,7 +92,7 @@ func (c *Config) Save() error {
 // Context returns the current Context object.
 func (c *Config) Context() (*Context, error) {
 	if c.CurrentContext == "" {
-		return nil, ErrUnauthorized
+		return nil, ErrNoContext
 	}
 	return c.Contexts[c.CurrentContext], nil
 }
