@@ -66,6 +66,10 @@
   name = "github.com/confluentinc/cc-structs"
   revision = "248ddbe629b2afc045dde5ccb9825b3ce22a62ba"
 
+[[constraint]]
+  name = "github.com/codyaray/go-printer"
+  version = "0.7.0"
+
 [prune]
   go-tests = true
   unused-packages = true
