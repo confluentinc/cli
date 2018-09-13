@@ -20,17 +20,11 @@
 
 [[projects]]
   branch = "master"
-<<<<<<< HEAD
-  name = "github.com/armon/go-metrics"
-  packages = ["."]
-  revision = "783273d703149aaeb9897cf58613d5af48861c25"
-=======
   digest = "1:ef5b0622d834c139454148b8fd0c92bb314828900532b267ae62da9fec109866"
   name = "github.com/armon/go-metrics"
   packages = ["."]
   pruneopts = "UT"
   revision = "3c58d8115a78a6879e5df75ae900846768d36895"
->>>>>>> fix printer dep
 
 [[projects]]
   name = "github.com/codyaray/go-editor"
@@ -39,10 +33,7 @@
   version = "v0.3.0"
 
 [[projects]]
-<<<<<<< HEAD
-=======
   digest = "1:a8f25601c3bdacdd4e00380b6b87dfa8e08ef46e6f0daba47f7ea5d49a718a68"
->>>>>>> fix printer dep
   name = "github.com/codyaray/go-printer"
   packages = [
     ".",
@@ -52,28 +43,17 @@
     "tables",
     "transforms"
   ]
-<<<<<<< HEAD
-  revision = "e8b2ade4a445db4f29c82780fedddc709f51ed24"
-  version = "v0.5.0"
+  pruneopts = "UT"
+  revision = "96057be9a7271f80254f5bd47477aaed763420b6"
+  version = "v0.8.0"
 
 [[projects]]
   branch = "retype"
+  digest = "1:5da0ad1d3a1ec7fcb37a25f7a10f5692f65b8b27f3123c80609c4dbf35bdae4e"
   name = "github.com/codyaray/retag"
   packages = ["."]
+  pruneopts = "UT"
   revision = "4f3c7e6dfbe2e5f711a618ef9113794d5fd442fa"
-=======
-  pruneopts = "UT"
-  revision = "1f46124b669d2f8fdf203d898febf502f1a291ad"
-  version = "v0.7.0"
-
-[[projects]]
-  branch = "master"
-  digest = "1:adba2652a3e3c74fe9b2ceac6f54115ea04c0f0220cb612bffe4eae56dc328ca"
-  name = "github.com/codyaray/retag"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "de3f0096c81e55b0dfa0384a6d8c6ecd4e8c518e"
->>>>>>> fix printer dep
 
 [[projects]]
   name = "github.com/confluentinc/cc-structs"
@@ -91,19 +71,12 @@
   revision = "fb17e76fc0765088cb13dfc2d1f8b451a34bc2e2"
 
 [[projects]]
-<<<<<<< HEAD
-  name = "github.com/davecgh/go-spew"
-  packages = ["spew"]
-  revision = "346938d642f2ec3594ed81d874461961cd0faa76"
-  version = "v1.1.0"
-=======
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   pruneopts = "UT"
   revision = "8991bc29aa16c548c550c7ff78260e27b9ab7c73"
   version = "v1.1.1"
->>>>>>> fix printer dep
 
 [[projects]]
   branch = "jsonpb"
@@ -120,17 +93,11 @@
 
 [[projects]]
   branch = "master"
-<<<<<<< HEAD
-  name = "github.com/eapache/go-xerial-snappy"
-  packages = ["."]
-  revision = "040cc1a32f578808623071247fdbd5cc43f37f5f"
-=======
   digest = "1:79f16588b5576b1b3cd90e48d2374cc9a1a8776862d28d8fd0f23b0e15534967"
   name = "github.com/eapache/go-xerial-snappy"
   packages = ["."]
   pruneopts = "UT"
   revision = "776d5712da21bc4762676d614db1d8a64f4238b0"
->>>>>>> fix printer dep
 
 [[projects]]
   name = "github.com/eapache/queue"
@@ -139,23 +106,15 @@
   version = "v1.1.0"
 
 [[projects]]
-<<<<<<< HEAD
-=======
   digest = "1:899234af23e5793c34e06fd397f86ba33af5307b959b6a7afd19b63db065a9d7"
->>>>>>> fix printer dep
   name = "github.com/emicklei/go-restful"
   packages = [
     ".",
     "log"
   ]
-<<<<<<< HEAD
-  revision = "2810ccc68e0ca445fa81ebfa03fbf70aca5c41ae"
-  version = "v2.7.0"
-=======
   pruneopts = "UT"
   revision = "3eb9738c1697594ea6e71a7156a9bb32ed216cf0"
   version = "v2.8.0"
->>>>>>> fix printer dep
 
 [[projects]]
   name = "github.com/fsnotify/fsnotify"
@@ -170,42 +129,20 @@
   version = "v1.0.0"
 
 [[projects]]
-<<<<<<< HEAD
-  branch = "master"
-=======
   digest = "1:2997679181d901ac8aaf4330d11138ecf3974c6d3334995ff36f20cbd597daf8"
->>>>>>> fix printer dep
   name = "github.com/go-openapi/jsonpointer"
   packages = ["."]
   revision = "3a0015ad55fa9873f41605d3e8f28cd279c32ab2"
   version = "0.16.0"
 
 [[projects]]
-<<<<<<< HEAD
-  branch = "master"
-=======
   digest = "1:1ae3f233d75a731b164ca9feafd8ed646cbedf1784095876ed6988ce8aa88b1f"
->>>>>>> fix printer dep
   name = "github.com/go-openapi/jsonreference"
   packages = ["."]
   revision = "3fb327e6747da3043567ee86abd02bb6376b6be2"
   version = "0.16.0"
 
 [[projects]]
-<<<<<<< HEAD
-  branch = "master"
-  name = "github.com/go-openapi/spec"
-  packages = ["."]
-  revision = "bcff419492eeeb01f76e77d2ebc714dc97b607f5"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/go-openapi/swag"
-  packages = ["."]
-  revision = "811b1089cde9dad18d4d0c2d09fbdbf28dbd27a5"
-
-[[projects]]
-=======
   digest = "1:3e5bdbd2a071c72c778c28fd7b5dfde95cdfbcef412f364377e031877205e418"
   name = "github.com/go-openapi/spec"
   packages = ["."]
@@ -223,7 +160,6 @@
 
 [[projects]]
   digest = "1:35621fe20f140f05a0c4ef662c26c0ab4ee50bca78aa30fe87d33120bd28165e"
->>>>>>> fix printer dep
   name = "github.com/gogo/protobuf"
   packages = [
     "gogoproto",
@@ -233,14 +169,9 @@
     "sortkeys",
     "types"
   ]
-<<<<<<< HEAD
-  revision = "1adfc126b41513cc696b209667c8656ea7aac67c"
-  version = "v1.0.0"
-=======
   pruneopts = "UT"
   revision = "636bf0302bc95575d69441b25a2603156ffdddf1"
   version = "v1.1.1"
->>>>>>> fix printer dep
 
 [[projects]]
   branch = "master"
@@ -285,31 +216,6 @@
 
 [[projects]]
   branch = "master"
-<<<<<<< HEAD
-  name = "github.com/hashicorp/go-hclog"
-  packages = ["."]
-  revision = "69ff559dc25f3b435631604f573a5fa1efdb6433"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/hashicorp/go-immutable-radix"
-  packages = ["."]
-  revision = "7f3cd4390caab3250a57f30efdb2a65dd7649ecf"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/hashicorp/go-plugin"
-  packages = ["."]
-  revision = "e8d22c780116115ae5624720c9af0c97afe4f551"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/hashicorp/golang-lru"
-  packages = ["simplelru"]
-  revision = "0fb14efe8c47ae851c0034ed7a448854d3d34cf3"
-
-[[projects]]
-=======
   digest = "1:d900a5ae66a3181783dbf38e4a23505cdabd3e8e881c3d49ae8aa498b571b886"
   name = "github.com/hashicorp/go-hclog"
   packages = ["."]
@@ -342,7 +248,6 @@
 
 [[projects]]
   digest = "1:c0d19ab64b32ce9fe5cf4ddceba78d5bc9807f0016db6b1183599da3dcc24d10"
->>>>>>> fix printer dep
   name = "github.com/hashicorp/hcl"
   packages = [
     ".",
@@ -356,15 +261,6 @@
     "json/scanner",
     "json/token"
   ]
-<<<<<<< HEAD
-  revision = "ef8a98b0bbce4a65b5aa4c368430a80ddc533168"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/hashicorp/yamux"
-  packages = ["."]
-  revision = "3520598351bb3500a49ae9563f5539666ae0a27c"
-=======
   pruneopts = "UT"
   revision = "8cb6e5b959231cc1119e43259c4a608f9c51a241"
   version = "v1.0.0"
@@ -376,7 +272,6 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "cc6d2ea263b2471faabce371255777a365bf8306"
->>>>>>> fix printer dep
 
 [[projects]]
   name = "github.com/inconshreveable/mousetrap"
@@ -385,15 +280,6 @@
   version = "v1.0"
 
 [[projects]]
-<<<<<<< HEAD
-  name = "github.com/magiconair/properties"
-  packages = ["."]
-  revision = "c3beff4c2358b44d0493c7dda585e7db7ff28ae6"
-  version = "v1.7.6"
-
-[[projects]]
-  branch = "master"
-=======
   digest = "1:3e551bbb3a7c0ab2a2bf4660e7fcad16db089fdcfbb44b0199e62838038623ea"
   name = "github.com/json-iterator/go"
   packages = ["."]
@@ -412,40 +298,12 @@
 [[projects]]
   branch = "master"
   digest = "1:84a5a2b67486d5d67060ac393aa255d05d24ed5ee41daecd5635ec22657b6492"
->>>>>>> fix printer dep
   name = "github.com/mailru/easyjson"
   packages = [
     "buffer",
     "jlexer",
     "jwriter"
   ]
-<<<<<<< HEAD
-  revision = "8b799c424f57fa123fc63a99d6383bc6e4c02578"
-
-[[projects]]
-  name = "github.com/mattn/go-runewidth"
-  packages = ["."]
-  revision = "9e777a8366cce605130a531d2cd6363d07ad7317"
-  version = "v0.0.2"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/mitchellh/go-homedir"
-  packages = ["."]
-  revision = "b8bc1bf767474819792c23f32d8286a45736f1c6"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/mitchellh/go-testing-interface"
-  packages = ["."]
-  revision = "a61a99592b77c9ba629d254a693acffaeb4b7e28"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/mitchellh/mapstructure"
-  packages = ["."]
-  revision = "00c29f56e2386353d58c599509e8dc3801b0d716"
-=======
   pruneopts = "UT"
   revision = "60711f1a8329503b04e1c88535f419d0bb440bff"
 
@@ -496,7 +354,6 @@
   pruneopts = "UT"
   revision = "4b7aa43c6742a2c18fdef89dd197aaae7dac7ccd"
   version = "1.0.1"
->>>>>>> fix printer dep
 
 [[projects]]
   name = "github.com/oklog/run"
@@ -506,19 +363,6 @@
 
 [[projects]]
   branch = "master"
-<<<<<<< HEAD
-  name = "github.com/olekukonko/tablewriter"
-  packages = ["."]
-  revision = "d4647c9c7a84d847478d890b816b7d8b62b0b279"
-
-[[projects]]
-  name = "github.com/pelletier/go-toml"
-  packages = ["."]
-  revision = "acdc4509485b587f5e675510c4f2c63e90ff68a8"
-  version = "v1.1.0"
-
-[[projects]]
-=======
   digest = "1:f611266e3ac01ab4adb6f1d67f6c1be82998d02f452faff450596658712d860b"
   name = "github.com/olekukonko/tablewriter"
   packages = ["."]
@@ -535,20 +379,14 @@
 
 [[projects]]
   digest = "1:4f0885b3f0dba96128a09a6f4b4231c42688fbd05f323224c6aa5adc9f4e87bf"
->>>>>>> fix printer dep
   name = "github.com/pierrec/lz4"
   packages = [
     ".",
     "internal/xxh32"
   ]
-<<<<<<< HEAD
-  revision = "1958fd8fff7f115e79725b1288e0b878b3e06b00"
-  version = "v2.0.3"
-=======
   pruneopts = "UT"
   revision = "bb6bfd13c6a262f1943c0446eb25b7f54c1fb9a2"
   version = "v2.0.6"
->>>>>>> fix printer dep
 
 [[projects]]
   name = "github.com/pkg/errors"
