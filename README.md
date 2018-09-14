@@ -103,7 +103,7 @@ To install the CLI:
 This requires golang 1.10. Otherwise, `make deps` will fail on installing `gorelease`.
 
 ```
-$ make compile-proto
+$ make compile
 $ go run main.go --help
 ```
 

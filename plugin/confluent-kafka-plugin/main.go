@@ -78,6 +78,18 @@ func (c *Kafka) Describe(ctx context.Context, cluster *schedv1.KafkaCluster) (*s
 	return ret, shared.ConvertAPIError(err)
 }
 
+func (c *Kafka) Create(ctx context.Context, config *schedv1.KafkaClusterConfig) (*schedv1.KafkaCluster, error) {
+	c.Logger.Log("msg", "kafka.Create()")
+	ret, _, err := c.Client.Kafka.Create(config)
+	return ret, shared.ConvertAPIError(err)
+}
+
+func (c *Kafka) Delete(ctx context.Context, cluster *schedv1.KafkaCluster) error {
+	c.Logger.Log("msg", "kafka.Delete()")
+	_, err := c.Client.Kafka.Delete(cluster)
+	return shared.ConvertAPIError(err)
+}
+
 func check(err error) {
 	if err != nil {
 		golog.Fatal(err)

@@ -8,5 +8,7 @@ import "kafka/scheduler/v1/scheduler.proto";
 service Kafka {
   rpc List(kafka.scheduler.v1.GetKafkaClustersRequest) returns (kafka.scheduler.v1.GetKafkaClustersReply) {}
   rpc Describe(kafka.scheduler.v1.GetKafkaClusterRequest) returns (kafka.scheduler.v1.GetKafkaClusterReply) {}
+  rpc Create(kafka.scheduler.v1.CreateKafkaClusterRequest) returns (kafka.scheduler.v1.CreateKafkaClusterReply) {}
+  rpc Delete(kafka.scheduler.v1.DeleteKafkaClusterRequest) returns (kafka.scheduler.v1.DeleteKafkaClusterReply) {}
   // ...
 }

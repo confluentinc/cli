@@ -11,8 +11,8 @@ deps:
 
 	dep ensure $(ARGS)
 
-.PHONY: compile-proto
-compile-proto:
+.PHONY: compile
+compile:
 	protoc -I shared/connect -I $(CCSTRUCTS) -I $(CCSTRUCTS)/vendor shared/connect/*.proto --gogo_out=plugins=grpc:shared/connect
 	protoc -I shared/kafka -I $(CCSTRUCTS) -I $(CCSTRUCTS)/vendor shared/kafka/*.proto --gogo_out=plugins=grpc:shared/kafka
 

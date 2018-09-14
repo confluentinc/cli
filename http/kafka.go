@@ -55,3 +55,31 @@ func (s *KafkaService) Describe(cluster *schedv1.KafkaCluster) (*schedv1.KafkaCl
 	}
 	return reply.Cluster, resp, nil
 }
+
+// Create provisions a new kafka cluster as described by the given config.
+func (s *KafkaService) Create(config *schedv1.KafkaClusterConfig) (*schedv1.KafkaCluster, *http.Response, error) {
+	body := &schedv1.CreateKafkaClusterRequest{Config: config}
+	reply := new(schedv1.CreateKafkaClusterReply)
+	resp, err := s.sling.New().Post("/api/clusters").BodyJSON(body).Receive(reply, reply)
+	if err != nil {
+		return nil, resp, errors.Wrap(err, "unable to create kafka cluster")
+	}
+	if reply.Error != nil {
+		return nil, resp, errors.Wrap(reply.Error, "error creating kafka cluster")
+	}
+	return reply.Cluster, resp, nil
+}
+
+// Delete terminates the given kafka cluster.
+func (s *KafkaService) Delete(cluster *schedv1.KafkaCluster) (*http.Response, error) {
+	if cluster.Id == "" {
+		return nil, shared.ErrNotFound
+	}
+	body := &schedv1.DeleteKafkaClusterRequest{Cluster: cluster}
+	reply := new(schedv1.DeleteKafkaClusterReply)
+	resp, err := s.sling.New().Delete("/api/clusters/"+cluster.Id).BodyJSON(body).Receive(reply, reply)
+	if err != nil {
+		return resp, errors.Wrap(err, "unable to delete kafka cluster: "+cluster.Id)
+	}
+	return resp, nil
+}

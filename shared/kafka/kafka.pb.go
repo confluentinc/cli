@@ -43,6 +43,8 @@ const _ = grpc.SupportPackageIsVersion4
 type KafkaClient interface {
 	List(ctx context.Context, in *kafka_scheduler_v1.GetKafkaClustersRequest, opts ...grpc.CallOption) (*kafka_scheduler_v1.GetKafkaClustersReply, error)
 	Describe(ctx context.Context, in *kafka_scheduler_v1.GetKafkaClusterRequest, opts ...grpc.CallOption) (*kafka_scheduler_v1.GetKafkaClusterReply, error)
+	Create(ctx context.Context, in *kafka_scheduler_v1.CreateKafkaClusterRequest, opts ...grpc.CallOption) (*kafka_scheduler_v1.CreateKafkaClusterReply, error)
+	Delete(ctx context.Context, in *kafka_scheduler_v1.DeleteKafkaClusterRequest, opts ...grpc.CallOption) (*kafka_scheduler_v1.DeleteKafkaClusterReply, error)
 }
 
 type kafkaClient struct {
@@ -71,11 +73,31 @@ func (c *kafkaClient) Describe(ctx context.Context, in *kafka_scheduler_v1.GetKa
 	return out, nil
 }
 
+func (c *kafkaClient) Create(ctx context.Context, in *kafka_scheduler_v1.CreateKafkaClusterRequest, opts ...grpc.CallOption) (*kafka_scheduler_v1.CreateKafkaClusterReply, error) {
+	out := new(kafka_scheduler_v1.CreateKafkaClusterReply)
+	err := grpc.Invoke(ctx, "/connect.Kafka/Create", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *kafkaClient) Delete(ctx context.Context, in *kafka_scheduler_v1.DeleteKafkaClusterRequest, opts ...grpc.CallOption) (*kafka_scheduler_v1.DeleteKafkaClusterReply, error) {
+	out := new(kafka_scheduler_v1.DeleteKafkaClusterReply)
+	err := grpc.Invoke(ctx, "/connect.Kafka/Delete", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for Kafka service
 
 type KafkaServer interface {
 	List(context.Context, *kafka_scheduler_v1.GetKafkaClustersRequest) (*kafka_scheduler_v1.GetKafkaClustersReply, error)
 	Describe(context.Context, *kafka_scheduler_v1.GetKafkaClusterRequest) (*kafka_scheduler_v1.GetKafkaClusterReply, error)
+	Create(context.Context, *kafka_scheduler_v1.CreateKafkaClusterRequest) (*kafka_scheduler_v1.CreateKafkaClusterReply, error)
+	Delete(context.Context, *kafka_scheduler_v1.DeleteKafkaClusterRequest) (*kafka_scheduler_v1.DeleteKafkaClusterReply, error)
 }
 
 func RegisterKafkaServer(s *grpc.Server, srv KafkaServer) {
@@ -118,6 +140,42 @@ func _Kafka_Describe_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Kafka_Create_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(kafka_scheduler_v1.CreateKafkaClusterRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(KafkaServer).Create(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/connect.Kafka/Create",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(KafkaServer).Create(ctx, req.(*kafka_scheduler_v1.CreateKafkaClusterRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Kafka_Delete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(kafka_scheduler_v1.DeleteKafkaClusterRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(KafkaServer).Delete(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/connect.Kafka/Delete",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(KafkaServer).Delete(ctx, req.(*kafka_scheduler_v1.DeleteKafkaClusterRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Kafka_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "connect.Kafka",
 	HandlerType: (*KafkaServer)(nil),
@@ -130,6 +188,14 @@ var _Kafka_serviceDesc = grpc.ServiceDesc{
 			MethodName: "Describe",
 			Handler:    _Kafka_Describe_Handler,
 		},
+		{
+			MethodName: "Create",
+			Handler:    _Kafka_Create_Handler,
+		},
+		{
+			MethodName: "Delete",
+			Handler:    _Kafka_Delete_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "kafka.proto",
@@ -138,15 +204,17 @@ var _Kafka_serviceDesc = grpc.ServiceDesc{
 func init() { proto.RegisterFile("kafka.proto", fileDescriptorKafka) }
 
 var fileDescriptorKafka = []byte{
-	// 152 bytes of a gzipped FileDescriptorProto
+	// 190 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0xce, 0x4e, 0x4c, 0xcb,
 	0x4e, 0xd4, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0x4f, 0xce, 0xcf, 0xcb, 0x4b, 0x4d, 0x2e,
 	0x91, 0x52, 0x02, 0x8b, 0xea, 0x17, 0x27, 0x67, 0xa4, 0xa6, 0x94, 0xe6, 0xa4, 0x16, 0xe9, 0x97,
-	0x19, 0x22, 0x38, 0x10, 0xc5, 0x46, 0x67, 0x19, 0xb9, 0x58, 0xbd, 0x41, 0xca, 0x84, 0x12, 0xb8,
+	0x19, 0x22, 0x38, 0x10, 0xc5, 0x46, 0x73, 0x99, 0xb9, 0x58, 0xbd, 0x41, 0xca, 0x84, 0x12, 0xb8,
 	0x58, 0x7c, 0x32, 0x8b, 0x4b, 0x84, 0xb4, 0xf5, 0x20, 0x86, 0x21, 0x54, 0x96, 0x19, 0xea, 0xb9,
 	0xa7, 0x96, 0x80, 0x55, 0x39, 0xe7, 0x94, 0x16, 0x97, 0xa4, 0x16, 0x15, 0x07, 0xa5, 0x16, 0x96,
 	0xa6, 0x16, 0x97, 0x48, 0x69, 0x12, 0xa7, 0xb8, 0x20, 0xa7, 0x52, 0x89, 0x41, 0x28, 0x89, 0x8b,
 	0xc3, 0x25, 0xb5, 0x38, 0xb9, 0x28, 0x33, 0x29, 0x55, 0x48, 0x8b, 0x08, 0x8d, 0x30, 0x4b, 0x34,
-	0x88, 0x52, 0x0b, 0xb6, 0x23, 0x89, 0x0d, 0xec, 0x2d, 0x63, 0x40, 0x00, 0x00, 0x00, 0xff, 0xff,
-	0xa6, 0x33, 0xe4, 0xec, 0x12, 0x01, 0x00, 0x00,
+	0x88, 0x52, 0x0b, 0xb1, 0x23, 0x8d, 0x8b, 0xcd, 0xb9, 0x28, 0x35, 0xb1, 0x24, 0x55, 0x48, 0x17,
+	0x9b, 0x2e, 0x88, 0x1c, 0x36, 0x4b, 0xb4, 0x89, 0x55, 0x0e, 0xb7, 0xc7, 0x25, 0x35, 0x27, 0x15,
+	0x97, 0x3d, 0x10, 0x39, 0xa2, 0xed, 0xc1, 0xa6, 0x1c, 0x6c, 0x4f, 0x12, 0x1b, 0x38, 0x9a, 0x8c,
+	0x01, 0x01, 0x00, 0x00, 0xff, 0xff, 0x1e, 0x51, 0xe2, 0x88, 0xe2, 0x01, 0x00, 0x00,
 }

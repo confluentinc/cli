@@ -14,6 +14,7 @@ import (
 	"github.com/spf13/cobra"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	opv1 "github.com/confluentinc/cc-structs/operator/v1"
 	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/shared"
 	connectv1 "github.com/confluentinc/cli/shared/connect"
@@ -332,7 +333,7 @@ func (c *sinkCommand) fetch(id string) (interface{}, error) {
 		return nil, err
 	}
 	switch cluster.Plugin {
-	case schedv1.ConnectPlugin_S3_SINK:
+	case opv1.ConnectPlugin_S3_SINK:
 		cl, err := c.connect.DescribeS3Sink(context.Background(), &schedv1.ConnectS3SinkCluster{
 			ConnectCluster: &schedv1.ConnectCluster{Id: cluster.Id, AccountId: cluster.AccountId},
 		})
