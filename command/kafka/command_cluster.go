@@ -58,11 +58,15 @@ func (c *clusterCommand) init() {
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	}
+	createCmd.Flags().String("cloud", "", "aws or gcp")
+	createCmd.Flags().String("region", "", "a valid region in the given cloud")
 	// default to smallest size allowed
 	createCmd.Flags().Int32("ingress", 1, "network ingress in MB/s")
 	createCmd.Flags().Int32("egress", 1, "network egress in MB/s")
 	createCmd.Flags().Int32("storage", 500, "total usable data storage in GB")
 	createCmd.Flags().Bool("multizone", false, "use multiple zones for high availability")
+	createCmd.MarkFlagRequired("cloud")
+	createCmd.MarkFlagRequired("region")
 	c.AddCommand(createCmd)
 
 	c.AddCommand(&cobra.Command{
@@ -111,6 +115,14 @@ func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
+	cloud, err := cmd.Flags().GetString("cloud")
+	if err != nil {
+		return common.HandleError(err)
+	}
+	region, err := cmd.Flags().GetString("region")
+	if err != nil {
+		return common.HandleError(err)
+	}
 	ingress, err := cmd.Flags().GetInt32("ingress")
 	if err != nil {
 		return common.HandleError(err)
@@ -132,12 +144,14 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		durability = schedv1.Durability_HIGH
 	}
 	config := &schedv1.KafkaClusterConfig{
-		AccountId:      c.config.Auth.Account.Id,
-		Name:           args[0],
-		NetworkIngress: ingress,
-		NetworkEgress:  egress,
-		Storage:        storage,
-		Durability:     durability,
+		AccountId:       c.config.Auth.Account.Id,
+		Name:            args[0],
+		ServiceProvider: cloud,
+		Region:          region,
+		NetworkIngress:  ingress,
+		NetworkEgress:   egress,
+		Storage:         storage,
+		Durability:      durability,
 	}
 	cluster, err := c.kafka.Create(context.Background(), config)
 	if err != nil {
