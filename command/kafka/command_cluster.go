@@ -65,8 +65,8 @@ func (c *clusterCommand) init() {
 	createCmd.Flags().Int32("egress", 1, "network egress in MB/s")
 	createCmd.Flags().Int32("storage", 500, "total usable data storage in GB")
 	createCmd.Flags().Bool("multizone", false, "use multiple zones for high availability")
-	createCmd.MarkFlagRequired("cloud")
-	createCmd.MarkFlagRequired("region")
+	check(createCmd.MarkFlagRequired("cloud"))
+	check(createCmd.MarkFlagRequired("region"))
 	c.AddCommand(createCmd)
 
 	c.AddCommand(&cobra.Command{
@@ -286,4 +286,10 @@ func (c *clusterCommand) createKafkaCreds(kafkaClusterID string) (string, string
 	}
 	fmt.Println("Okay, we've created an API key. If needed, you can see it with `confluent kafka auth`.")
 	return key.Key, key.Secret, nil
+}
+
+func check(err error) {
+	if err != nil {
+		panic(err)
+	}
 }
