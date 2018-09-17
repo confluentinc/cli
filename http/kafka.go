@@ -81,5 +81,8 @@ func (s *KafkaService) Delete(cluster *schedv1.KafkaCluster) (*http.Response, er
 	if err != nil {
 		return resp, errors.Wrap(err, "unable to delete kafka cluster: "+cluster.Id)
 	}
+	if reply.Error != nil {
+		return resp, errors.Wrap(reply.Error, "error deleting kafka cluster")
+	}
 	return resp, nil
 }
