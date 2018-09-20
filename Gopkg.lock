@@ -64,7 +64,7 @@
   revision = "4f3c7e6dfbe2e5f711a618ef9113794d5fd442fa"
 
 [[projects]]
-  digest = "1:95d22ab4463faba6930116112127ae943b40348b372959cbe9b80c148c193af9"
+  digest = "1:f9027ac68b842bd7f7aeea7818a537ea975fbda973faca0d7f4f2405d88046da"
   name = "github.com/confluentinc/cc-structs"
   packages = [
     "kafka/core/v1",
@@ -73,7 +73,7 @@
     "operator/v1",
   ]
   pruneopts = "UT"
-  revision = "a761e09a583594e0f2c9b9f65e46b0508c63c956"
+  revision = "248ddbe629b2afc045dde5ccb9825b3ce22a62ba"
 
 [[projects]]
   digest = "1:38724ee117eaeb604001a7922bdb48f794ac6ebc423bdfbd7a9a75a410667a42"

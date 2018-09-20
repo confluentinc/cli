@@ -64,7 +64,7 @@
 
 [[constraint]]
   name = "github.com/confluentinc/cc-structs"
-  revision = "a761e09a583594e0f2c9b9f65e46b0508c63c956"
+  revision = "248ddbe629b2afc045dde5ccb9825b3ce22a62ba"
 
 [prune]
   go-tests = true
