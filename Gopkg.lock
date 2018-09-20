@@ -56,14 +56,6 @@
   version = "v0.5.0"
 
 [[projects]]
-  branch = "master"
-  digest = "1:38724ee117eaeb604001a7922bdb48f794ac6ebc423bdfbd7a9a75a410667a42"
-  name = "github.com/codyaray/proto-go-setter"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "fb17e76fc0765088cb13dfc2d1f8b451a34bc2e2"
-
-[[projects]]
   branch = "retype"
   digest = "1:5da0ad1d3a1ec7fcb37a25f7a10f5692f65b8b27f3123c80609c4dbf35bdae4e"
   name = "github.com/codyaray/retag"
@@ -82,6 +74,13 @@
   ]
   pruneopts = "UT"
   revision = "a761e09a583594e0f2c9b9f65e46b0508c63c956"
+
+[[projects]]
+  digest = "1:38724ee117eaeb604001a7922bdb48f794ac6ebc423bdfbd7a9a75a410667a42"
+  name = "github.com/confluentinc/proto-go-setter"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "fb17e76fc0765088cb13dfc2d1f8b451a34bc2e2"
 
 [[projects]]
   digest = "1:a2c1d0e43bd3baaa071d1b9ed72c27d78169b2b269f71c105ac4ba34b1be4a39"
