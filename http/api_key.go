@@ -42,6 +42,20 @@ func (s *APIKeyService) Create(key *schedv1.ApiKey) (*schedv1.ApiKey, *http.Resp
 	return reply.ApiKey, resp, nil
 }
 
+// List gets an existing API Key
+func (s *APIKeyService) List(key *schedv1.ApiKey) ([]*schedv1.ApiKey, *http.Response, error) {
+	request := &schedv1.GetApiKeysRequest{ApiKey: key}
+	reply := new(schedv1.GetApiKeysReply)
+	resp, err := s.sling.New().Get("/api/api_keys").BodyJSON(request).Receive(reply, reply)
+	if err != nil {
+		return nil, resp, errors.Wrap(err, "unable to retreive API keys")
+	}
+	if reply.Error != nil {
+		return nil, resp, errors.Wrap(reply.Error, "error retreiving API keys")
+	}
+	return reply.ApiKeys, resp, nil
+}
+
 // Delete removes an API Key
 func (s *APIKeyService) Delete(key *schedv1.ApiKey) (*http.Response, error) {
 	// check if key's id is the zero value - implies that this required field is not set
