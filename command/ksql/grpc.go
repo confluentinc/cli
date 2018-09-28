@@ -37,6 +37,14 @@ func (c *GRPCClient) Delete(ctx context.Context, cluster *schedv1.KSQLCluster) e
 	return nil
 }
 
+func (c *GRPCClient) Create(ctx context.Context, config *schedv1.KSQLClusterConfig) (*schedv1.KSQLCluster, error) {
+	resp, err := c.client.Create(ctx, &schedv1.CreateKSQLClusterRequest{Config: config})
+	if err != nil {
+		return nil, shared.ConvertGRPCError(err)
+	}
+	return resp.Cluster, nil
+}
+
 // GRPCServer the GPRClient talks to. Plugin authors implement this if they're using Go.
 type GRPCServer struct {
 	Impl Ksql

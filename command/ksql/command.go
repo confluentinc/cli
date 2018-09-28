@@ -1,144 +1,83 @@
 package ksql
 
 import (
-	"context"
 	"fmt"
 	"os"
+	"os/exec"
 
-	"github.com/codyaray/go-printer"
+	"github.com/hashicorp/go-hclog"
+	plugin "github.com/hashicorp/go-plugin"
 	"github.com/spf13/cobra"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/shared"
 )
 
-var (
-	listFields      = []string{"Id", "Name", "KafkaClusterId", "Storage", "Servers", "Region", "Status"}
-	listLabels      = []string{"Id", "Name", "Kafka", "Storage", "Servers", "Region", "Status"}
-	describeFields  = []string{"Id", "Name", "KafkaClusterId", "Storage", "Servers", "Region", "Status"}
-	describeRenames = map[string]string{"KafkaClusterId": "Kafka"}
-)
-
-type clusterCommand struct {
+type command struct {
 	*cobra.Command
 	config *shared.Config
 	ksql  Ksql
 }
 
-// NewClusterCommand returns the Cobra clusterCommand for Ksql Cluster.
-func NewClusterCommand(config *shared.Config, ksql Ksql) *cobra.Command {
-	cmd := &clusterCommand{
+// New returns the Cobra command for Kafka.
+func New(config *shared.Config) (*cobra.Command, error) {
+	cmd := &command{
 		Command: &cobra.Command{
 			Use:   "ksql",
-			Short: "Manage ksql clusters.",
+			Short: "Manage kafka.",
 		},
 		config: config,
-		ksql:  ksql,
 	}
-	cmd.init()
-	return cmd.Command
+	err := cmd.init()
+	return cmd.Command, err
 }
 
-func (c *clusterCommand) init() {
-	c.AddCommand(&cobra.Command{
-		Use:   "list",
-		Short: "List ksql clusters.",
-		RunE:  c.list,
+func (c *command) init() error {
+	path, err := exec.LookPath("confluent-ksql-plugin")
+	if err != nil {
+		return fmt.Errorf("skipping ksql: plugin isn't installed")
+	}
+
+	// We're a host. Start by launching the plugin process.
+	client := plugin.NewClient(&plugin.ClientConfig{
+		HandshakeConfig:  shared.Handshake,
+		Plugins:          shared.PluginMap,
+		Cmd:              exec.Command("sh", "-c", path), // nolint: gas
+		AllowedProtocols: []plugin.Protocol{plugin.ProtocolGRPC},
+		Managed:          true,
+		Logger: hclog.New(&hclog.LoggerOptions{
+			Output: hclog.DefaultOutput,
+			Level:  hclog.Info,
+			Name:   "plugin",
+		}),
 	})
 
-	createCmd := &cobra.Command{
-		Use:   "create NAME",
-		Short: "Create a ksql cluster.",
-		RunE:  c.create,
-		Args:  cobra.ExactArgs(1),
-	}
-	createCmd.Flags().String("kafka-cluster", "", "Kafka Cluster ID")
-	check(createCmd.MarkFlagRequired("kafka-cluster"))
-	createCmd.Flags().Int32("storage", 50, "total usable data storage in GB")
-	check(createCmd.MarkFlagRequired("storage"))
-	createCmd.Flags().Int32("servers", 1, "number of servers in the cluster")
-
-	c.AddCommand(createCmd)
-
-	c.AddCommand(&cobra.Command{
-		Use:   "describe ID",
-		Short: "Describe a ksql cluster.",
-		RunE:  c.describe,
-		Args:  cobra.ExactArgs(1),
-	})
-	c.AddCommand(&cobra.Command{
-		Use:   "delete ID",
-		Short: "Delete a ksql cluster.",
-		RunE:  c.delete,
-		Args:  cobra.ExactArgs(1),
-	})
-}
-
-func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
-	req := &schedv1.KSQLCluster{AccountId: c.config.Auth.Account.Id}
-	clusters, err := c.ksql.List(context.Background(), req)
+	// Connect via RPC.
+	rpcClient, err := client.Client()
 	if err != nil {
-		return common.HandleError(err)
+		fmt.Println("Error:", err.Error())
+		os.Exit(1)
 	}
-	var data [][]string
-	for _, cluster := range clusters {
-		data = append(data, printer.ToRow(cluster, listFields))
+
+	// Request the plugin
+	raw, err := rpcClient.Dispense("ksql")
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		os.Exit(1)
 	}
-	printer.RenderCollectionTable(data, listLabels)
+
+	// Got a client now communicating over RPC.
+	c.ksql = raw.(Ksql)
+
+	// All commands require login first
+	c.Command.PersistentPreRun = func(cmd *cobra.Command, args []string) {
+		if err = c.config.CheckLogin(); err != nil {
+			_ = common.HandleError(err)
+			os.Exit(1)
+		}
+	}
+
+	c.AddCommand(NewClusterCommand(c.config, c.ksql))
+
 	return nil
-}
-
-func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
-	kafkaClusterID, err := cmd.Flags().GetString("kafka-cluster")
-	if err != nil {
-		return common.HandleError(err)
-	}
-	storage, err := cmd.Flags().GetInt32("storage")
-	if err != nil {
-		return common.HandleError(err)
-	}
-	servers, err := cmd.Flags().GetInt32("servers")
-	if err != nil {
-		return common.HandleError(err)
-	}
-	config := &schedv1.KSQLClusterConfig{
-		AccountId:       c.config.Auth.Account.Id,
-		Name:            args[0],
-		Servers: servers,
-		Storage: storage,
-		KafkaClusterId: kafkaClusterID,
-	}
-	cluster, err := c.ksql.Create(context.Background(), config)
-	if err != nil {
-		return common.HandleError(err)
-	}
-	printer.RenderTableOut(cluster, describeFields, describeRenames, os.Stdout)
-	return nil
-}
-
-func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
-	req := &schedv1.KSQLCluster{AccountId: c.config.Auth.Account.Id, Id: args[0]}
-	cluster, err := c.ksql.Describe(context.Background(), req)
-	if err != nil {
-		return common.HandleError(err)
-	}
-	printer.RenderTableOut(cluster, describeFields, describeRenames, os.Stdout)
-	return nil
-}
-
-func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
-	req := &schedv1.KSQLCluster{AccountId: c.config.Auth.Account.Id, Id: args[0]}
-	err := c.ksql.Delete(context.Background(), req)
-	if err != nil {
-		return common.HandleError(err)
-	}
-	fmt.Printf("The ksql cluster %s has been deleted.\n", args[0])
-	return nil
-}
-
-func check(err error) {
-	if err != nil {
-		panic(err)
-	}
 }
