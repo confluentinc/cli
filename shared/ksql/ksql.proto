@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package ksql;
+
+import "kafka/scheduler/v1/scheduler.proto";
+
+service Ksql {
+  rpc List(kafka.scheduler.v1.GetKSQLClustersRequest) returns (kafka.scheduler.v1.GetKSQLClustersReply) {}
+  rpc Describe(kafka.scheduler.v1.GetKSQLClusterRequest) returns (kafka.scheduler.v1.GetKSQLClusterReply) {}
+  rpc Delete(kafka.scheduler.v1.DeleteKSQLClusterRequest) returns (kafka.scheduler.v1.DeleteKSQLClusterReply) {}
+  rpc Create(kafka.scheduler.v1.CreateKSQLClusterRequest) returns (kafka.scheduler.v1.CreateKSQLClusterReply) {}
+}
+
