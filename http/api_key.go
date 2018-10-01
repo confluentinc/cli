@@ -19,6 +19,8 @@ type APIKeyService struct {
 	logger *log.Logger
 }
 
+var _ APIKey = (*APIKeyService)(nil)
+
 // NewAPIKeyService returns a new APIKeyService.
 func NewAPIKeyService(client *Client) *APIKeyService {
 	return &APIKeyService{
