@@ -23,18 +23,18 @@ var (
 type clusterCommand struct {
 	*cobra.Command
 	config *shared.Config
-	ksql  Ksql
+	ksql   Ksql
 }
 
 // NewClusterCommand returns the Cobra clusterCommand for Ksql Cluster.
 func NewClusterCommand(config *shared.Config, ksql Ksql) *cobra.Command {
 	cmd := &clusterCommand{
 		Command: &cobra.Command{
-			Use:   "cluster",
-			Short: "Manage ksql clusters.",
+			Use:   "app",
+			Short: "Manage ksql apps.",
 		},
 		config: config,
-		ksql:  ksql,
+		ksql:   ksql,
 	}
 	cmd.init()
 	return cmd.Command
@@ -43,13 +43,13 @@ func NewClusterCommand(config *shared.Config, ksql Ksql) *cobra.Command {
 func (c *clusterCommand) init() {
 	c.AddCommand(&cobra.Command{
 		Use:   "list",
-		Short: "List ksql clusters.",
+		Short: "List ksql apps.",
 		RunE:  c.list,
 	})
 
 	createCmd := &cobra.Command{
 		Use:   "create NAME",
-		Short: "Create a ksql cluster.",
+		Short: "Create a ksql app.",
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -63,13 +63,13 @@ func (c *clusterCommand) init() {
 
 	c.AddCommand(&cobra.Command{
 		Use:   "describe ID",
-		Short: "Describe a ksql cluster.",
+		Short: "Describe a ksql app.",
 		RunE:  c.describe,
 		Args:  cobra.ExactArgs(1),
 	})
 	c.AddCommand(&cobra.Command{
 		Use:   "delete ID",
-		Short: "Delete a ksql cluster.",
+		Short: "Delete a ksql app.",
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
 	})
@@ -103,10 +103,10 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		return common.HandleError(err)
 	}
 	config := &schedv1.KSQLClusterConfig{
-		AccountId:       c.config.Auth.Account.Id,
-		Name:            args[0],
-		Servers: servers,
-		Storage: storage,
+		AccountId:      c.config.Auth.Account.Id,
+		Name:           args[0],
+		Servers:        servers,
+		Storage:        storage,
 		KafkaClusterId: kafkaClusterID,
 	}
 	cluster, err := c.ksql.Create(context.Background(), config)
@@ -133,7 +133,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return common.HandleError(err)
 	}
-	fmt.Printf("The ksql cluster %s has been deleted.\n", args[0])
+	fmt.Printf("The ksql app %s has been deleted.\n", args[0])
 	return nil
 }
 

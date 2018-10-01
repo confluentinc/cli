@@ -24,7 +24,7 @@ func New(config *shared.Config) (*cobra.Command, error) {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:   "ksql",
-			Short: "Manage kafka.",
+			Short: "Manage ksql.",
 		},
 		config: config,
 	}
