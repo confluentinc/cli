@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/dghubble/sling"
+	"github.com/codyaray/sling"
 	"golang.org/x/oauth2"
 
 	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
