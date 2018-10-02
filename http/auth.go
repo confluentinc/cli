@@ -3,7 +3,7 @@ package http
 import (
 	"net/http"
 
-	"github.com/dghubble/sling"
+	"github.com/codyaray/sling"
 	"github.com/pkg/errors"
 
 	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
