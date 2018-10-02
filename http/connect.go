@@ -18,6 +18,8 @@ type ConnectService struct {
 	logger *log.Logger
 }
 
+var _ Connect = (*ConnectService)(nil)
+
 // NewConnectService returns a new ConnectService.
 func NewConnectService(client *Client) *ConnectService {
 	return &ConnectService{

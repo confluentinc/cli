@@ -29,6 +29,8 @@ type AuthService struct {
 	logger *log.Logger
 }
 
+var _ Auth = (*AuthService)(nil)
+
 // NewAuthService returns a new AuthService.
 func NewAuthService(client *Client) *AuthService {
 	return &AuthService{

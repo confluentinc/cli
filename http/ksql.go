@@ -18,6 +18,8 @@ type KsqlService struct {
 	logger *log.Logger
 }
 
+var _ KSQL = (*KsqlService)(nil)
+
 // NewKsqlService returns a new KsqlService.
 func NewKsqlService(client *Client) *KsqlService {
 	return &KsqlService{

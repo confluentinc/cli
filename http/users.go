@@ -17,6 +17,8 @@ type UserService struct {
 	logger *log.Logger
 }
 
+var _ User = (*UserService)(nil)
+
 // NewUserService returns a new UserService.
 func NewUserService(client *Client) *UserService {
 	return &UserService{

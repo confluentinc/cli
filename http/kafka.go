@@ -18,6 +18,8 @@ type KafkaService struct {
 	logger *log.Logger
 }
 
+var _ Kafka = (*KafkaService)(nil)
+
 // NewKafkaService returns a new KafkaService.
 func NewKafkaService(client *Client) *KafkaService {
 	return &KafkaService{
