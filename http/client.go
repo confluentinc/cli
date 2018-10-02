@@ -33,7 +33,7 @@ type Client struct {
 	Connect    Connect
 	User       User
 	APIKey     APIKey
-	Ksql       *KsqlService
+	Ksql       KSQL
 }
 
 // NewClient creates a Confluent SDK client.

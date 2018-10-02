@@ -47,3 +47,10 @@ type Connect interface {
 	Delete(cluster *schedv1.ConnectCluster) (*http.Response, error)
 }
 
+// KSQL service allows managing KSQL clusters in Confluent Cloud
+type KSQL interface {
+	List(cluster *schedv1.KSQLCluster) ([]*schedv1.KSQLCluster, *http.Response, error)
+	Describe(cluster *schedv1.KSQLCluster) (*schedv1.KSQLCluster, *http.Response, error)
+	Create(config *schedv1.KSQLClusterConfig) (*schedv1.KSQLCluster, *http.Response, error)
+	Delete(cluster *schedv1.KSQLCluster) (*http.Response, error)
+}
