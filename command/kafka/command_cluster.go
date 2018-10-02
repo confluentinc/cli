@@ -116,27 +116,27 @@ func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	cloud, err := cmd.Flags().GetString("cloud")
 	if err != nil {
-		return common.HandleError(err)
+		return common.HandleError(err, cmd)
 	}
 	region, err := cmd.Flags().GetString("region")
 	if err != nil {
-		return common.HandleError(err)
+		return common.HandleError(err, cmd)
 	}
 	ingress, err := cmd.Flags().GetInt32("ingress")
 	if err != nil {
-		return common.HandleError(err)
+		return common.HandleError(err, cmd)
 	}
 	egress, err := cmd.Flags().GetInt32("egress")
 	if err != nil {
-		return common.HandleError(err)
+		return common.HandleError(err, cmd)
 	}
 	storage, err := cmd.Flags().GetInt32("storage")
 	if err != nil {
-		return common.HandleError(err)
+		return common.HandleError(err, cmd)
 	}
 	multizone, err := cmd.Flags().GetBool("multizone")
 	if err != nil {
-		return common.HandleError(err)
+		return common.HandleError(err, cmd)
 	}
 	durability := schedv1.Durability_LOW
 	if multizone {
@@ -155,7 +155,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	cluster, err := c.kafka.Create(context.Background(), config)
 	if err != nil {
 		// TODO: don't swallow validation errors (reportedly separately)
-		return common.HandleError(err)
+		return common.HandleError(err, cmd)
 	}
 	printer.RenderTableOut(cluster, describeFields, describeRenames, os.Stdout)
 	return nil
@@ -179,7 +179,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	req := &schedv1.KafkaCluster{AccountId: c.config.Auth.Account.Id, Id: args[0]}
 	err := c.kafka.Delete(context.Background(), req)
 	if err != nil {
-		return common.HandleError(err)
+		return common.HandleError(err, cmd)
 	}
 	fmt.Printf("The kafka cluster %s has been deleted.\n", args[0])
 	return nil

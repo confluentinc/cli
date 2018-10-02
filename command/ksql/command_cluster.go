@@ -79,7 +79,7 @@ func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 	req := &schedv1.KSQLCluster{AccountId: c.config.Auth.Account.Id}
 	clusters, err := c.ksql.List(context.Background(), req)
 	if err != nil {
-		return common.HandleError(err)
+		return common.HandleError(err, cmd)
 	}
 	var data [][]string
 	for _, cluster := range clusters {
@@ -92,15 +92,15 @@ func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	kafkaClusterID, err := cmd.Flags().GetString("kafka-cluster")
 	if err != nil {
-		return common.HandleError(err)
+		return common.HandleError(err, cmd)
 	}
 	storage, err := cmd.Flags().GetInt32("storage")
 	if err != nil {
-		return common.HandleError(err)
+		return common.HandleError(err, cmd)
 	}
 	servers, err := cmd.Flags().GetInt32("servers")
 	if err != nil {
-		return common.HandleError(err)
+		return common.HandleError(err, cmd)
 	}
 	config := &schedv1.KSQLClusterConfig{
 		AccountId:      c.config.Auth.Account.Id,
@@ -111,7 +111,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	}
 	cluster, err := c.ksql.Create(context.Background(), config)
 	if err != nil {
-		return common.HandleError(err)
+		return common.HandleError(err, cmd)
 	}
 	printer.RenderTableOut(cluster, describeFields, describeRenames, os.Stdout)
 	return nil
@@ -121,7 +121,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	req := &schedv1.KSQLCluster{AccountId: c.config.Auth.Account.Id, Id: args[0]}
 	cluster, err := c.ksql.Describe(context.Background(), req)
 	if err != nil {
-		return common.HandleError(err)
+		return common.HandleError(err, cmd)
 	}
 	printer.RenderTableOut(cluster, describeFields, describeRenames, os.Stdout)
 	return nil
@@ -131,7 +131,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	req := &schedv1.KSQLCluster{AccountId: c.config.Auth.Account.Id, Id: args[0]}
 	err := c.ksql.Delete(context.Background(), req)
 	if err != nil {
-		return common.HandleError(err)
+		return common.HandleError(err, cmd)
 	}
 	fmt.Printf("The ksql app %s has been deleted.\n", args[0])
 	return nil

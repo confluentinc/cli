@@ -72,7 +72,7 @@ func (c *command) init() error {
 	// All commands require login first
 	c.Command.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		if err = c.config.CheckLogin(); err != nil {
-			_ = common.HandleError(err)
+			_ = common.HandleError(err, cmd)
 			os.Exit(1)
 		}
 	}
