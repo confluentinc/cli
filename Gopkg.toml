@@ -54,7 +54,7 @@
   version = "1.11.3"
 
 [[constraint]]
-  name = "github.com/dghubble/sling"
+  name = "github.com/codyaray/sling"
   source = "github.com/codyaray/sling"
   branch = "jsonpb"
 

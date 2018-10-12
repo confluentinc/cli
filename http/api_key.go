@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/dghubble/sling"
+	"github.com/codyaray/sling"
 	"github.com/pkg/errors"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"

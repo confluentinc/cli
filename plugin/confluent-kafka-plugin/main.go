@@ -5,7 +5,6 @@ import (
 	golog "log"
 	"os"
 
-	plugin "github.com/hashicorp/go-plugin"
 	"github.com/sirupsen/logrus"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
@@ -23,7 +22,7 @@ func main() {
 		logger.Log("msg", "hello")
 		defer logger.Log("msg", "goodbye")
 
-		f, err := os.OpenFile("/tmp/confluent-kafka-plugin.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
+		f, err := os.OpenFile(os.TempDir() +"/confluent-kafka-plugin.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
 		check(err)
 		logger.SetLevel(logrus.DebugLevel)
 		logger.Logger.Out = f
@@ -52,13 +51,10 @@ func main() {
 		impl = &Kafka{Logger: logger, Client: client}
 	}
 
-	plugin.Serve(&plugin.ServeConfig{
-		HandshakeConfig: shared.Handshake,
-		Plugins: map[string]plugin.Plugin{
-			"kafka": &kafka.Plugin{Impl: impl},
-		},
-		GRPCServer: plugin.DefaultGRPCServer,
-	})
+	cli, err := kafka.New(config, impl)
+	if err = cli.Execute(); err != nil {
+		os.Exit(1)
+	}
 }
 
 type Kafka struct {

@@ -2,8 +2,7 @@ package shared
 
 import (
 	metrics "github.com/armon/go-metrics"
-	plugin "github.com/hashicorp/go-plugin"
-
+	"github.com/spf13/cobra"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 )
 
@@ -62,12 +61,11 @@ type MetricSink interface {
 	AddSampleWithLabels(key []string, val float32, labels []Label)
 }
 
-// Handshake is a configuration for CLI to communicate with SDK components.
-var Handshake = plugin.HandshakeConfig{
-	ProtocolVersion:  1,
-	MagicCookieKey:   "CLI_PLUGIN",
-	MagicCookieValue: "hello",
-}
+func RemoveHelpCommand(cmd *cobra.Command) {
+	// remove redundant help command
+	cmd.SetHelpCommand(&cobra.Command{
+		Use:    "no-help",
+		Hidden: true,
+	})
 
-// PluginMap is the map of plugins we can dispense.
-var PluginMap = map[string]plugin.Plugin{}
+}

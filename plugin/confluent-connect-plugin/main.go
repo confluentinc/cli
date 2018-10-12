@@ -5,7 +5,6 @@ import (
 	golog "log"
 	"os"
 
-	"github.com/hashicorp/go-plugin"
 	"github.com/sirupsen/logrus"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
@@ -54,13 +53,10 @@ func main() {
 		impl = &Connect{Logger: logger, Client: client}
 	}
 
-	plugin.Serve(&plugin.ServeConfig{
-		HandshakeConfig: shared.Handshake,
-		Plugins: map[string]plugin.Plugin{
-			"connect": &connect.Plugin{Impl: impl},
-		},
-		GRPCServer: plugin.DefaultGRPCServer,
-	})
+	cli, err := connect.New(config, impl)
+	if err = cli.Execute(); err != nil {
+		os.Exit(1)
+	}
 }
 
 type Connect struct {

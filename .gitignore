@@ -11,8 +11,8 @@ git-setup-semaphore.sh
 *.so
 *.dylib
 .idea
-
 .#*
+cli
 
 # Test binary, build with `go test -c`
 *.test

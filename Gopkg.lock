@@ -80,7 +80,7 @@
 
 [[projects]]
   branch = "jsonpb"
-  name = "github.com/dghubble/sling"
+  name = "github.com/codyaray/sling"
   packages = ["."]
   revision = "0b86fc2ffcc6ab1986c8cb00497c29ab202e926e"
   source = "github.com/codyaray/sling"
@@ -683,7 +683,7 @@
     "github.com/confluentinc/cc-structs/kafka/org/v1",
     "github.com/confluentinc/cc-structs/kafka/scheduler/v1",
     "github.com/confluentinc/cc-structs/operator/v1",
-    "github.com/dghubble/sling",
+    "github.com/codyaray/sling",
     "github.com/ghodss/yaml",
     "github.com/gogo/protobuf/jsonpb",
     "github.com/gogo/protobuf/proto",

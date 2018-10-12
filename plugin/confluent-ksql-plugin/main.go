@@ -5,7 +5,6 @@ import (
 	golog "log"
 	"os"
 
-	plugin "github.com/hashicorp/go-plugin"
 	"github.com/sirupsen/logrus"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
@@ -52,13 +51,11 @@ func main() {
 		impl = &Ksql{Logger: logger, Client: client}
 	}
 
-	plugin.Serve(&plugin.ServeConfig{
-		HandshakeConfig: shared.Handshake,
-		Plugins: map[string]plugin.Plugin{
-			"ksql": &ksql.Plugin{Impl: impl},
-		},
-		GRPCServer: plugin.DefaultGRPCServer,
-	})
+
+	cli, err := ksql.New(config, impl)
+	if err = cli.Execute(); err != nil {
+		os.Exit(1)
+	}
 }
 
 type Ksql struct {

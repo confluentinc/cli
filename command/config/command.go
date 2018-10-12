@@ -25,5 +25,11 @@ func New(config *shared.Config) *cobra.Command {
 }
 
 func (c *command) init() {
+	// remove redundant help command
+	c.SetHelpCommand(&cobra.Command{
+		Use:    "no-help",
+		Hidden: true,
+	})
+
 	c.AddCommand(NewContext(c.config))
 }

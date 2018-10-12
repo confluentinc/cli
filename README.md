@@ -96,19 +96,28 @@ To install the CLI:
     tar -xzvf confluent-cli_${VERSION}_${OS}_${ARCH}.tar.gz
     sudo mv confluent-cli_${VERSION}_${OS}_${ARCH}/confluent* /usr/local/bin
 
-**Note: You MUST add the plugin binaries to your `$PATH` for the CLI to work.**
-
 ## Developing
 
-This requires golang 1.10. Otherwise, `make deps` will fail on installing `gorelease`.
+This requires golang 1.11. Otherwise, `make deps` will fail on installing `gorelease` and `os.UserCacheDir`.
+
+1. Compile the connect s3 protobuf object and build the main CLI 
 
 ```
 $ make compile
-$ go run main.go --help
+$ go build main.go
 ```
 
-The CLI automatically adds commands when their respective plugins are installed. Enabling the connect
-commands by installing the plugins:
+The CLI automatically adds commands when their respective plugins are installed to your [user cache directory](https://golang.org/pkg/os/#UserCacheDir). 
+Enable the commands by installing the plugins and logging in:
+
+2. Set `$GOBIN` to your [user cache directory](https://golang.org/pkg/os/#UserCacheDir).
+
+```
+# on darwin(Mac OSX)
+$ export GOBIN=$HOME/Library/Caches/confluent
+```
+
+3. Install the plugin binaries
 
 ```
 $ make install-plugins
@@ -117,7 +126,7 @@ $ make install-plugins
 Now you can run:
 
 ```
-$ go run main.go connect list
+$ ./cli connect list
 ```
 
 # Packaging and Distribution
