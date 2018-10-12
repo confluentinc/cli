@@ -18,12 +18,12 @@ func TestHandleError(t *testing.T) {
 	}{
 		{
 			name: "static message",
-			err: shared.ErrUnauthorized,
+			err:  shared.ErrUnauthorized,
 			want: "You must login to access Confluent Cloud.\n",
 		},
 		{
 			name: "dynamic message",
-			err: shared.NotAuthenticatedError(fmt.Errorf("some dynamic message")),
+			err:  shared.NotAuthenticatedError(fmt.Errorf("some dynamic message")),
 			want: "some dynamic message\n",
 		},
 	}

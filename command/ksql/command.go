@@ -1,8 +1,8 @@
 package ksql
 
 import (
-	"os"
 	"github.com/spf13/cobra"
+	"os"
 
 	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/shared"
@@ -11,7 +11,7 @@ import (
 type command struct {
 	*cobra.Command
 	config *shared.Config
-	ksql  Ksql
+	ksql   Ksql
 }
 
 // New returns the Cobra command for Kafka.
@@ -22,7 +22,7 @@ func New(config *shared.Config, ksql Ksql) (*cobra.Command, error) {
 			Short: "Manage ksql.",
 		},
 		config: config,
-		ksql: ksql,
+		ksql:   ksql,
 	}
 	err := cmd.init()
 	return cmd.Command, err

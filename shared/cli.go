@@ -2,8 +2,8 @@ package shared
 
 import (
 	metrics "github.com/armon/go-metrics"
-	"github.com/spf13/cobra"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	"github.com/spf13/cobra"
 )
 
 // AuthConfig represents an authenticated user.

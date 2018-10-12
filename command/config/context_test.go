@@ -43,7 +43,7 @@ func TestContext(t *testing.T) {
 
 	output, err = run("context", "list")
 	req.NoError(err)
-	req.NotContains(output,"other-context")
+	req.NotContains(output, "other-context")
 
 	output, err = run("context", "use", "my-context")
 	req.NoError(err)

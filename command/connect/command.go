@@ -3,9 +3,9 @@ package connect
 import (
 	"os"
 
-	"github.com/spf13/cobra"
 	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/shared"
+	"github.com/spf13/cobra"
 )
 
 type command struct {
@@ -21,7 +21,7 @@ func New(config *shared.Config, connect Connect) (*cobra.Command, error) {
 			Use:   "connect",
 			Short: "Manage connect.",
 		},
-		config: config,
+		config:  config,
 		connect: connect,
 	}
 

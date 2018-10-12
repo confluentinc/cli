@@ -46,7 +46,6 @@ func newCommands(config *shared.Config, prompt command.Prompt,
 }
 
 func (a *commands) init() {
-
 	var setPromptOutput = func(cmd *cobra.Command, args []string) {
 		a.prompt.SetOutput(cmd.OutOrStderr())
 	}

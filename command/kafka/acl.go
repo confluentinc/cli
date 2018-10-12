@@ -3,9 +3,8 @@ package kafka
 import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"strings"
 	"reflect"
-	"fmt"
+	"strings"
 )
 
 const ALL = "*"
@@ -17,9 +16,9 @@ type AclBindings []AclBinding
 // C3 reference:
 // https://github.com/confluentinc/blueway/blob/master/control-center/src/main/java/io/confluent/controlcenter/rest/jackson/KafkaModule.java#L115-L126
 type AclBinding struct {
-	Pattern *ResourcePattern     	`json:"pattern"`
-	Entry   *AccessControlEntry 	`json:"entry"`
-	errors 	[]string				`json:"-"`
+	Pattern *ResourcePattern    `json:"pattern"`
+	Entry   *AccessControlEntry `json:"entry"`
+	errors  []string            `json:"-"`
 }
 
 // Java reference:
@@ -27,10 +26,10 @@ type AclBinding struct {
 // C3 reference:
 // https://github.com/confluentinc/blueway/blob/master/control-center/src/main/java/io/confluent/controlcenter/rest/jackson/KafkaModule.java#L148-L170
 type AccessControlEntry struct {
-	Principal       string              `json:"principal"`
+	Principal string `json:"principal"`
 	//Host            string              `json:"host"`
-	Operation       AclOperation        `json:"operation"`
-	PermissionType  AclPermissionType   `json:"permissionType"`
+	Operation      AclOperation      `json:"operation"`
+	PermissionType AclPermissionType `json:"permissionType"`
 }
 
 // Java reference:
@@ -73,21 +72,22 @@ func ResourceFlags() *pflag.FlagSet {
 	}
 
 	for _, rt := range resourceTypes {
-		flgSet.String(rt, "", "Bind ACL to resource " + rt)
+		flgSet.String(rt, "", "Bind ACL to resource "+rt)
 	}
 	return flgSet
 }
 
-func AclBindingsFromCMD(cmd *cobra.Command) {
-	aclBinding = &AclBinding{}
+func AclBindingsFromCMD(cmd *cobra.Command) *AclBinding {
+	aclBinding := &AclBinding{}
 	cmd.Flags().Visit(visitor(aclBinding))
 
-	return
+	return aclBinding
 }
 
 // Java reference:
 // https://github.com/confluentinc/cc-kafka/blob/trunk/clients/src/main/java/org/apache/kafka/common/acl/AclOperation.java
 type AclOperation string
+
 var AclOperations = []string{
 	"READ",
 	"WRITE",
@@ -106,19 +106,15 @@ var AclOperations = []string{
 // Java reference:
 // https://github.com/confluentinc/cc-kafka/blob/trunk/clients/src/main/java/org/apache/kafka/common/acl/AclPermissionType.java
 type AclPermissionType string
-var AclPermissions = []string{
-	"deny",
-	"allow",
-}
 
 // Java reference:
 // https://github.com/confluentinc/cc-kafka/blob/trunk/clients/src/main/java/org/apache/kafka/common/resource/ResourcePattern.java
 // C3 reference:
 // https://github.com/confluentinc/blueway/blob/master/control-center/src/main/java/io/confluent/controlcenter/rest/jackson/KafkaModule.java#L128-L146
 type ResourcePattern struct {
-	Resource    ResourceType    `json:"resourceType"`
-	Name        string          `json:"name"`
-	Type   		PatternType     `json:"patternType"`
+	Resource ResourceType `json:"resourceType"`
+	Name     string       `json:"name"`
+	Type     PatternType  `json:"patternType"`
 }
 
 func visitor(b *AclBinding) func(*pflag.Flag) {
@@ -157,13 +153,12 @@ func visitor(b *AclBinding) func(*pflag.Flag) {
 				b.Entry.Operation = AclOperation(v)
 				break
 			}
-			b.errors = append(b.errors, "Invalid operation: " + v)
+			b.errors = append(b.errors, "Invalid operation: "+v)
 		}
 	}
 }
 
 func isSet(v interface{}) bool {
-	fmt.Printf("test %s", v)
 	return !reflect.DeepEqual(v, reflect.Zero(reflect.TypeOf(v)).Interface())
 }
 
@@ -175,5 +170,3 @@ func isValid(actual string, allowable []string) bool {
 	}
 	return false
 }
-
-

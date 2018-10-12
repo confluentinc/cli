@@ -17,8 +17,8 @@ import (
 	"github.com/confluentinc/cli/metric"
 	"github.com/confluentinc/cli/shared"
 	"github.com/mitchellh/go-homedir"
-	"os/exec"
 	"io/ioutil"
+	"os/exec"
 	"strings"
 )
 
@@ -88,6 +88,8 @@ func runner(c *cobra.Command, args []string) {
 	cmd := exec.Command(filepath.Join(cachedir, fmt.Sprintf("confluent-%s-plugin", c.Name())), args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
+
 	check(cmd.Run())
 }
 
@@ -130,16 +132,16 @@ func init() {
 	files, err := ioutil.ReadDir(cachedir)
 	check(err)
 
-	for _, file := range files{
+	for _, file := range files {
 		if strings.HasPrefix(file.Name(), "confluent-") {
 			tmp := strings.Split(file.Name(), "-")
 			if len(tmp) < 3 {
 				continue
 			}
 			cmd := &cobra.Command{
-				Use: tmp[1],
+				Use:   tmp[1],
 				Short: "Run Confluent " + strings.Title(tmp[1]) + " CLI",
-				Run: runner,
+				Run:   runner,
 			}
 			cmd.SetHelpFunc(deferHelp)
 			plugins = append(plugins, cmd)

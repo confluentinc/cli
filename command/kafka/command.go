@@ -23,7 +23,7 @@ func New(config *shared.Config, kafka Kafka) (*cobra.Command, error) {
 			Short: "Manage kafka.",
 		},
 		config: config,
-		kafka: kafka,
+		kafka:  kafka,
 	}
 	err := cmd.init()
 	return cmd.Command, err
