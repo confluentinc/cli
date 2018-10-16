@@ -34,6 +34,7 @@ type Client struct {
 	User       User
 	APIKey     APIKey
 	Ksql       KSQL
+	Metrics    Metrics
 }
 
 // NewClient creates a Confluent SDK client.
@@ -50,6 +51,7 @@ func NewClient(httpClient *http.Client, baseURL string, logger *log.Logger) *Cli
 	client.User = NewUserService(client)
 	client.APIKey = NewAPIKeyService(client)
 	client.Ksql = NewKsqlService(client)
+	client.Metrics = NewMetricsService(client)
 	return client
 }
 
