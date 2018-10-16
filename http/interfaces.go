@@ -3,12 +3,14 @@
 // go:generate mocker --prefix "" --out mock/http_apikey.go --pkg mock http APIKey
 // go:generate mocker --prefix "" --out mock/http_kafka.go --pkg mock http Kafka
 // go:generate mocker --prefix "" --out mock/http_connect.go --pkg mock http Connect
+// go:generate mocker --prefix "" --out mock/http_metrics.go --pkg mock http Metrics
 
 package http
 
 import (
 	"net/http"
 
+	metricsv1 "github.com/confluentinc/cc-structs/kafka/metrics/v1"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/cli/shared"
@@ -57,4 +59,10 @@ type KSQL interface {
 	Describe(cluster *schedv1.KSQLCluster) (*schedv1.KSQLCluster, *http.Response, error)
 	Create(config *schedv1.KSQLClusterConfig) (*schedv1.KSQLCluster, *http.Response, error)
 	Delete(cluster *schedv1.KSQLCluster) (*http.Response, error)
+}
+
+// Metrics service allows Kafka and Schema Registry metrics retrieval
+type Metrics interface {
+	KafkaMetrics(clusterIDs []string, dateStart string, dateEnd string) (map[string]*metricsv1.KafkaMetric, *http.Response, error)
+	SchemaRegistryMetrics(clusterID string) (*metricsv1.SchemaRegistryMetric, *http.Response, error)
 }

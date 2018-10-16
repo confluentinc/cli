@@ -68,6 +68,7 @@
   name = "github.com/confluentinc/cc-structs"
   packages = [
     "kafka/core/v1",
+    "kafka/metrics/v1",
     "kafka/org/v1",
     "kafka/scheduler/v1",
     "operator/v1",
@@ -742,6 +743,7 @@
     "github.com/codyaray/go-printer",
     "github.com/codyaray/go-printer/editor",
     "github.com/confluentinc/cc-structs/kafka/core/v1",
+    "github.com/confluentinc/cc-structs/kafka/metrics/v1",
     "github.com/confluentinc/cc-structs/kafka/org/v1",
     "github.com/confluentinc/cc-structs/kafka/scheduler/v1",
     "github.com/confluentinc/cc-structs/operator/v1",
