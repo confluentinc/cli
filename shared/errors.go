@@ -1,12 +1,15 @@
 package shared
 
 import (
+	"encoding/json"
 	"fmt"
 
+	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/status"
-
-	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
+	"io"
+	"io/ioutil"
+	"net/http"
 )
 
 /*
@@ -16,7 +19,7 @@ import (
  *
  * Error Flow:
  * - API error responses (json) are parsed into corev1.Error objects.
- *   - Note: API returns 404s for unauthorized resources, so HTTP package has to remap 404 -> 401 where appropriate.
+ * - Note: API returns 404s for unauthorized resources, so HTTP package has to remap 404 -> 401 where appropriate.
  * - Plugins call ConvertAPIError() to transforms corev1.Error into HTTP Error constants
  * - GRPC encodes errors into Status objects when sent over the wire
  * - Commands call ConvertGRPCError() to transform these back into HTTP Error constants
@@ -33,7 +36,17 @@ var (
 	ErrMalformedToken = fmt.Errorf("malformed")
 	ErrNotFound       = fmt.Errorf("not found")
 	ErrNoContext      = fmt.Errorf("context not set")
+	ErrBadRequest     = fmt.Errorf("malformed request")
 )
+
+type KafkaAPIError struct {
+	Field string `json:"field"`
+	Msg   string `json:"message"`
+}
+
+func (e *KafkaAPIError) Error() string {
+	return e.Msg
+}
 
 // ConvertAPIError transforms a corev1.Error into one of the standard errors if it matches.
 func ConvertAPIError(err error) error {
@@ -73,4 +86,43 @@ func ConvertGRPCError(err error) error {
 		return fmt.Errorf(s.Message())
 	}
 	return err
+}
+
+func readBody(r io.ReadCloser) []byte {
+	defer r.Close()
+	payload, _ := ioutil.ReadAll(r)
+	fmt.Println(len(payload))
+	return payload
+}
+
+// HandleKafkaAPIError returns an instance of KafkaAPIError
+// Java Reference:
+// https://github.com/confluentinc/blueway/blob/master/control-center/src/main/java/io/confluent/controlcenter/rest/KafkaExceptionMapper.java
+func HandleKafkaAPIError(resp *http.Response, err error) error {
+	if err != nil {
+		return &KafkaAPIError{
+			Msg: err.Error(),
+		}
+	}
+
+	switch resp.StatusCode {
+	case http.StatusOK:
+		fallthrough
+	case http.StatusNoContent:
+		break
+	case http.StatusUnauthorized:
+		return ErrExpiredToken
+	default:
+		var err KafkaAPIError
+		body := readBody(resp.Body)
+		if json.Valid(body) {
+			json.Unmarshal(body, &err)
+			return &err
+		}
+		return &KafkaAPIError{
+			Field: "Unexpected HTTP error",
+			Msg:   string(body),
+		}
+	}
+	return nil
 }

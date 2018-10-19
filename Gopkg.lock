@@ -96,7 +96,7 @@
 [[projects]]
   branch = "jsonpb"
   digest = "1:da2a1e4fce4e94d1d61ba4617a5c25926f8386657b956e50e3cfec9e4e630948"
-  name = "github.com/dghubble/sling"
+  name = "github.com/codyaray/sling"
   packages = ["."]
   pruneopts = "UT"
   revision = "0b86fc2ffcc6ab1986c8cb00497c29ab202e926e"

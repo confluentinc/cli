@@ -3,7 +3,7 @@ package http
 import (
 	metricsv1 "github.com/confluentinc/cc-structs/kafka/metrics/v1"
 	"github.com/confluentinc/cli/log"
-	"github.com/dghubble/sling"
+	"github.com/codyaray/sling"
 	"net/http"
 	"strings"
 )

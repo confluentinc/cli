@@ -14,6 +14,7 @@ import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/cli/shared"
+	"github.com/confluentinc/cli/shared/kafka"
 )
 
 // Auth allows authenticating in Confluent Cloud
@@ -40,6 +41,16 @@ type Kafka interface {
 	Describe(cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, *http.Response, error)
 	Create(config *schedv1.KafkaClusterConfig) (*schedv1.KafkaCluster, *http.Response, error)
 	Delete(cluster *schedv1.KafkaCluster) (*http.Response, error)
+	ConfigureKafkaAPI(clusterid, apiEndpoint string)
+	ListTopic() ([]kafka.KafkaTopicDescription, error)
+	DescribeTopic(topic *kafka.KafkaAPITopicRequest) (*kafka.KafkaTopicDescription, error)
+	CreateTopic(topic *kafka.KafkaAPITopicRequest) error
+	DeleteTopic(topic *kafka.KafkaAPITopicRequest) error
+	UpdateTopic(conf *kafka.KafkaAPITopicRequest) error
+	ListTopicConfig(conf *kafka.KafkaAPITopicRequest) ([]*kafka.KafkaTopicConfigEntry, error)
+	ListACL(aclBinding *kafka.KafkaAPIACLFilterRequest) (*kafka.KafkaAPIACLFilterReply, error)
+	CreateACL(aclBinding *kafka.KafkaAPIACLRequest) error
+	DeleteACL(aclBinding *kafka.KafkaAPIACLFilterRequest) error
 }
 
 // Connect service allows managing Connect clusters in Confluent Cloud

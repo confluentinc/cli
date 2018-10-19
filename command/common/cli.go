@@ -2,6 +2,7 @@ package common
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/codyaray/go-editor"
 	"github.com/spf13/cobra"
@@ -38,4 +39,9 @@ func HandleError(err error, cmd *cobra.Command) error {
 		return err
 	}
 	return nil
+}
+
+// IsSet returns true if an interface has a non-zero value set
+func IsSet(v interface{}) bool {
+	return !reflect.DeepEqual(v, reflect.Zero(reflect.TypeOf(v)).Interface())
 }

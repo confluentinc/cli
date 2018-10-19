@@ -54,13 +54,9 @@
   version = "1.11.3"
 
 [[constraint]]
-  name = "github.com/dghubble/sling"
+  name = "github.com/codyaray/sling"
   source = "github.com/codyaray/sling"
   branch = "jsonpb"
-
-[[constraint]]
-  name = "github.com/Shopify/sarama"
-  revision = "e7238b119b7daab993720f0153eafb88e2b0ac1f"
 
 [[constraint]]
   name = "github.com/confluentinc/cc-structs"

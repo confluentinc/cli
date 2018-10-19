@@ -16,6 +16,7 @@ type AuthConfig struct {
 // KafkaClusterConfig represents a connection to a Kafka cluster.
 type KafkaClusterConfig struct {
 	Bootstrap string `json:"bootstrap_servers" hcl:"bootstrap_servers"`
+	APIEndpoint string `json:"api_endpoint,omitempty" hcl:"api_endpoint"`
 	APIKey    string `json:"api_key" hcl:"api_key"`
 	APISecret string `json:"api_secret" hcl:"api_secret"`
 }

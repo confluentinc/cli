@@ -11,12 +11,13 @@ import (
 
 	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/shared"
+	"github.com/confluentinc/cli/shared/kafka"
 )
 
 type command struct {
 	*cobra.Command
 	config *shared.Config
-	kafka  Kafka
+	kafka  kafka.Kafka
 }
 
 // New returns the Cobra command for Kafka.
@@ -33,6 +34,14 @@ func New(config *shared.Config) (*cobra.Command, error) {
 }
 
 func (c *command) init() error {
+	// All commands require login first
+	c.Command.PersistentPreRun = func(cmd *cobra.Command, args []string) {
+		if err := c.config.CheckLogin(); err != nil {
+			_ = common.HandleError(err, cmd)
+			os.Exit(1)
+		}
+	}
+
 	path, err := exec.LookPath("confluent-kafka-plugin")
 	if err != nil {
 		return fmt.Errorf("skipping kafka: plugin isn't installed")
@@ -67,7 +76,7 @@ func (c *command) init() error {
 	}
 
 	// Got a client now communicating over RPC.
-	c.kafka = raw.(Kafka)
+	c.kafka = raw.(kafka.Kafka)
 
 	// All commands require login first
 	c.Command.PersistentPreRun = func(cmd *cobra.Command, args []string) {
@@ -79,6 +88,7 @@ func (c *command) init() error {
 
 	c.AddCommand(NewClusterCommand(c.config, c.kafka))
 	c.AddCommand(NewTopicCommand(c.config, c.kafka))
+	c.AddCommand(NewACLCommand(c.config, c.kafka))
 
 	return nil
 }

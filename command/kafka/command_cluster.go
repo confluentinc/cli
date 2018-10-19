@@ -13,25 +13,25 @@ import (
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/cli/command/common"
-	chttp "github.com/confluentinc/cli/http"
 	"github.com/confluentinc/cli/shared"
+	"github.com/confluentinc/cli/shared/kafka"
 )
 
 var (
 	listFields      = []string{"Id", "Name", "ServiceProvider", "Region", "Durability", "Status"}
 	listLabels      = []string{"Id", "Name", "Provider", "Region", "Durability", "Status"}
-	describeFields  = []string{"Id", "Name", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "PricePerHour"}
+	describeFields  = []string{"Id", "Name", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "ApiEndpoint", "PricePerHour"}
 	describeRenames = map[string]string{"NetworkIngress": "Ingress", "NetworkEgress": "Egress", "ServiceProvider": "Provider"}
 )
 
 type clusterCommand struct {
 	*cobra.Command
 	config *shared.Config
-	kafka  Kafka
+	kafka  kafka.Kafka
 }
 
 // NewClusterCommand returns the Cobra clusterCommand for Kafka Cluster.
-func NewClusterCommand(config *shared.Config, kafka Kafka) *cobra.Command {
+func NewClusterCommand(config *shared.Config, kafka kafka.Kafka) *cobra.Command {
 	cmd := &clusterCommand{
 		Command: &cobra.Command{
 			Use:   "cluster",
@@ -223,10 +223,12 @@ func (c *clusterCommand) auth(cmd *cobra.Command, args []string) error {
 	if c.config.Platforms[cfg.Platform].KafkaClusters == nil {
 		c.config.Platforms[cfg.Platform].KafkaClusters = map[string]shared.KafkaClusterConfig{}
 	}
+
 	c.config.Platforms[cfg.Platform].KafkaClusters[cfg.Kafka] = shared.KafkaClusterConfig{
-		Bootstrap: strings.TrimPrefix(kc.Endpoint, "SASL_SSL://"),
-		APIKey:    key,
-		APISecret: secret,
+		Bootstrap:   strings.TrimPrefix(kc.Endpoint, "SASL_SSL://"),
+		APIEndpoint: kc.ApiEndpoint,
+		APIKey:      key,
+		APISecret:   secret,
 	}
 	return c.config.Save()
 }
@@ -275,8 +277,7 @@ func promptForKafkaCreds() (string, string, error) {
 }
 
 func (c *clusterCommand) createKafkaCreds(kafkaClusterID string) (string, string, error) {
-	client := chttp.NewClientWithJWT(context.Background(), c.config.AuthToken, c.config.AuthURL, c.config.Logger)
-	key, _, err := client.APIKey.Create(&schedv1.ApiKey{
+	key, err := c.kafka.CreateAPIKey(context.Background(), &schedv1.ApiKey{
 		UserId: c.config.Auth.User.Id,
 		LogicalClusters: []*schedv1.ApiKey_Cluster{
 			&schedv1.ApiKey_Cluster{Id: kafkaClusterID},

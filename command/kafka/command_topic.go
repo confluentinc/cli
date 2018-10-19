@@ -1,24 +1,26 @@
 package kafka
 
 import (
-	"fmt"
+	"context"
 	"strings"
 
-	"github.com/Shopify/sarama"
+	printer "github.com/codyaray/go-printer"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/shared"
+	"github.com/confluentinc/cli/shared/kafka"
+	"os"
 )
 
 type topicCommand struct {
 	*cobra.Command
 	config *shared.Config
-	kafka  Kafka
+	kafka  kafka.Kafka
 }
 
 // NewTopicCommand returns the Cobra clusterCommand for Kafka Cluster.
-func NewTopicCommand(config *shared.Config, kafka Kafka) *cobra.Command {
+func NewTopicCommand(config *shared.Config, kafka kafka.Kafka) *cobra.Command {
 	cmd := &topicCommand{
 		Command: &cobra.Command{
 			Use:   "topic",
@@ -46,8 +48,9 @@ func (c *topicCommand) init() {
 		Args:  cobra.ExactArgs(1),
 	}
 	createCmd.Flags().Int32("partitions", 12, "Number of topic partitions.")
-	createCmd.Flags().Int16("replication-factor", 3, "Replication factor.")
+	createCmd.Flags().Int32("replication-factor", 3, "Replication factor.")
 	createCmd.Flags().StringSlice("config", nil, "A comma separated list of topic configuration (key=value) overrides for the topic being created.")
+	createCmd.Flags().Bool("dry-run", false, "Execute request without committing change to Kafka")
 	c.AddCommand(createCmd)
 
 	c.AddCommand(&cobra.Command{
@@ -56,12 +59,15 @@ func (c *topicCommand) init() {
 		RunE:  c.describe,
 		Args:  cobra.ExactArgs(1),
 	})
-	c.AddCommand(&cobra.Command{
+	updateCmd := &cobra.Command{
 		Use:   "update TOPIC",
 		Short: "Update a Kafka topic.",
 		RunE:  c.update,
 		Args:  cobra.ExactArgs(1),
-	})
+	}
+	updateCmd.Flags().StringSlice("config", nil, "A comma separated list of topic configuration (key=value) overrides for the topic being created.")
+	c.AddCommand(updateCmd)
+
 	c.AddCommand(&cobra.Command{
 		Use:   "delete TOPIC",
 		Short: "Delete a Kafka topic.",
@@ -83,65 +89,116 @@ func (c *topicCommand) init() {
 }
 
 func (c *topicCommand) list(cmd *cobra.Command, args []string) error {
-	client, err := NewSaramaKafkaForConfig(c.config)
+	resp, err := c.kafka.ListTopic(context.Background())
 	if err != nil {
-		return common.HandleError(shared.KafkaError(err), cmd)
+		return common.HandleError(err, cmd)
 	}
-	topics, err := client.Topics()
-	if err != nil {
-		return common.HandleError(shared.KafkaError(err), cmd)
+
+	var data [][]string
+	for _, topic := range resp.Topics {
+		data = append(data, printer.ToRow(&struct{ Topic string }{topic}, []string{"Topic"}))
 	}
-	for _, topic := range topics {
-		fmt.Println(topic)
-	}
+	printer.RenderCollectionTable(data, []string{"topic"})
 	return nil
 }
 
 func (c *topicCommand) create(cmd *cobra.Command, args []string) error {
-	partitions, err := cmd.Flags().GetInt32("partitions")
+	req := kafka.NewKafkaAPITopicRequest(&kafka.KafkaTopicSpecification{Configs: make(map[string]string)}, false)
+
+	req.Spec.Name = args[0]
+	var err error
+
+	req.Spec.NumPartitions, err = cmd.Flags().GetInt32("partitions")
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
-	replicationFactor, err := cmd.Flags().GetInt16("replication-factor")
+
+	req.Spec.ReplicationFactor, err = cmd.Flags().GetInt32("replication-factor")
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
+
+	req.Validate, err = cmd.Flags().GetBool("dry-run")
+	if err != nil {
+		return common.HandleError(err, cmd)
+	}
+
 	configs, err := cmd.Flags().GetStringSlice("config")
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
-	client, err := NewSaramaAdminForConfig(c.config)
-	if err != nil {
-		return common.HandleError(shared.KafkaError(err), cmd)
-	}
-	entries := map[string]*string{}
+
 	for _, config := range configs {
 		pair := strings.SplitN(config, "=", 2)
-		entries[pair[0]] = &pair[1]
+		req.Spec.Configs[pair[0]] = pair[1]
 	}
-	config := &sarama.TopicDetail{
-		NumPartitions:     partitions,
-		ReplicationFactor: replicationFactor,
-		ConfigEntries:     entries,
-	}
-	err = client.CreateTopic(args[0], config, false)
+
+	_, err = c.kafka.CreateTopic(context.Background(), req)
 	return common.HandleError(shared.KafkaError(err), cmd)
 }
 
 func (c *topicCommand) describe(cmd *cobra.Command, args []string) error {
-	return shared.ErrNotImplemented
-}
-
-func (c *topicCommand) update(cmd *cobra.Command, args []string) error {
-	return shared.ErrNotImplemented
-}
-
-func (c *topicCommand) delete(cmd *cobra.Command, args []string) error {
-	client, err := NewSaramaAdminForConfig(c.config)
+	conf := &kafka.KafkaTopicSpecification{Name: args[0]}
+	resp, err := c.kafka.DescribeTopic(context.Background(), kafka.NewKafkaAPITopicRequest(conf, false))
 	if err != nil {
 		return common.HandleError(shared.KafkaError(err), cmd)
 	}
-	err = client.DeleteTopic(args[0])
+
+	// tabulate results for display
+	var data [][]string
+	type partitionInfo struct {
+		Partition int32
+		Leader    int32
+		Replicas  []int32
+		ISR       []int32
+	}
+	var topicInfo = struct {
+		Name              string
+		PartitionCount    int
+		ReplicationFactor int
+	}{
+		Name:              resp.Name,
+		PartitionCount:    len(resp.Partitions),
+		ReplicationFactor: len(resp.Partitions[0].Replicas),
+	}
+
+	printer.NewTablePrinter().PrintObj(&topicInfo, os.Stdout)
+	for _, tp := range resp.Partitions {
+		p := &partitionInfo{}
+		p.Partition = tp.Partition
+		p.Leader = tp.Leader.ID
+
+		for idx, r := range tp.Replicas {
+			p.Replicas = append(p.Replicas, r.ID)
+			if idx < len(tp.ISR) {
+				p.ISR = append(p.ISR, r.ID)
+			}
+		}
+		data = append(data, printer.ToRow(p, []string{"Partition", "Leader", "Replicas", "ISR"}))
+	}
+	printer.RenderCollectionTable(data, []string{"Partition", "Leader", "Replicas", "ISR"})
+	return nil
+}
+
+func (c *topicCommand) update(cmd *cobra.Command, args []string) error {
+	conf := &kafka.KafkaTopicSpecification{Name: args[0], Configs: make(map[string]string)}
+	configs, err := cmd.Flags().GetStringSlice("config")
+	if err != nil {
+		return common.HandleError(err, cmd)
+	}
+
+	for _, config := range configs {
+		pair := strings.SplitN(config, "=", 2)
+		conf.Configs[pair[0]] = pair[1]
+	}
+
+	_, err = c.kafka.UpdateTopic(context.Background(), kafka.NewKafkaAPITopicRequest(conf, false))
+	return common.HandleError(shared.KafkaError(err), cmd)
+}
+
+func (c *topicCommand) delete(cmd *cobra.Command, args []string) error {
+	conf := &kafka.KafkaTopicSpecification{Name: args[0]}
+	_, err := c.kafka.DeleteTopic(context.Background(), kafka.NewKafkaAPITopicRequest(conf, false))
 	return common.HandleError(shared.KafkaError(err), cmd)
 }
 

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	golog "log"
 	"os"
 
@@ -9,11 +10,11 @@ import (
 	"github.com/sirupsen/logrus"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/cli/command/kafka"
 	chttp "github.com/confluentinc/cli/http"
 	log "github.com/confluentinc/cli/log"
 	metric "github.com/confluentinc/cli/metric"
 	"github.com/confluentinc/cli/shared"
+	"github.com/confluentinc/cli/shared/kafka"
 )
 
 func main() {
@@ -49,6 +50,10 @@ func main() {
 	var impl *Kafka
 	{
 		client := chttp.NewClientWithJWT(context.Background(), config.AuthToken, config.AuthURL, config.Logger)
+		if cfg, err := config.Context(); err == nil {
+			client.Kafka.ConfigureKafkaAPI(cfg.Kafka,
+				config.Platforms[cfg.Platform].KafkaClusters[cfg.Kafka].APIEndpoint)
+		}
 		impl = &Kafka{Logger: logger, Client: client}
 	}
 
@@ -64,6 +69,11 @@ func main() {
 type Kafka struct {
 	Logger *log.Logger
 	Client *chttp.Client
+}
+
+func (c *Kafka) CreateAPIKey(ctx context.Context, apiKey *schedv1.ApiKey) (*schedv1.ApiKey, error) {
+	ret, _, err := c.Client.APIKey.Create(apiKey)
+	return ret, shared.ConvertAPIError(err)
 }
 
 func (c *Kafka) List(ctx context.Context, cluster *schedv1.KafkaCluster) ([]*schedv1.KafkaCluster, error) {
@@ -88,6 +98,65 @@ func (c *Kafka) Delete(ctx context.Context, cluster *schedv1.KafkaCluster) error
 	c.Logger.Log("msg", "kafka.Delete()")
 	_, err := c.Client.Kafka.Delete(cluster)
 	return shared.ConvertAPIError(err)
+}
+
+// ListTopic lists all non-internal topics in the current Kafka cluster context
+func (c *Kafka) ListTopic(ctx context.Context) (*kafka.ListKafkaTopicReply, error) {
+	c.Logger.Log("msg", "kafka.ListTopic()")
+
+	topics, err := c.Client.Kafka.ListTopic()
+	if err != nil {
+		return nil, err
+	}
+
+	topicList := &kafka.ListKafkaTopicReply{}
+	for _, topic := range topics {
+		topicList.Topics = append(topicList.Topics, topic.Name)
+	}
+	return topicList, err
+}
+
+// CreateTopic creates a new Kafka Topic in the current Kafka Cluster context
+func (c *Kafka) CreateTopic(ctx context.Context, conf *kafka.KafkaAPITopicRequest) (*kafka.KafkaAPIResponse, error) {
+	c.Logger.Log("msg", "kafka.CreateTopic()")
+	return &kafka.KafkaAPIResponse{}, c.Client.Kafka.CreateTopic(conf)
+}
+
+// DescribeTopic returns details for a Kafka Topic in the current Kafka Cluster context
+func (c *Kafka) DescribeTopic(ctx context.Context, conf *kafka.KafkaAPITopicRequest) (*kafka.KafkaTopicDescription, error) {
+	c.Logger.Log("msg", fmt.Sprintf("kafka.DescribeTopic(%s)", conf.Spec.Name))
+	return c.Client.Kafka.DescribeTopic(conf)
+}
+
+// DeleteTopic deletes a Kafka Topic in the current Kafka Cluster context
+func (c *Kafka) DeleteTopic(ctx context.Context, conf *kafka.KafkaAPITopicRequest) (*kafka.KafkaAPIResponse, error) {
+	c.Logger.Log("msg", "kafka.DeleteTopic()")
+	return &kafka.KafkaAPIResponse{}, c.Client.Kafka.DeleteTopic(conf)
+}
+
+// UpdateTopic updates any existing Topic's configuration in the current Kafka Cluster context
+func (c *Kafka) UpdateTopic(ctx context.Context, conf *kafka.KafkaAPITopicRequest) (*kafka.KafkaAPIResponse, error) {
+	c.Logger.Log("msg", "kafka.Update")
+	return &kafka.KafkaAPIResponse{}, c.Client.Kafka.UpdateTopic(conf)
+}
+
+// ListACL registers a new ACL with the currently Kafka cluster context
+func (c *Kafka) ListACL(ctx context.Context, conf *kafka.KafkaAPIACLFilterRequest) (*kafka.KafkaAPIACLFilterReply, error) {
+	c.Logger.Log("msg", "kafka.ListACL()")
+	return c.Client.Kafka.ListACL(conf)
+}
+
+// CreateACL registers a new ACL with the currently Kafka Cluster context
+func (c *Kafka) CreateACL(ctx context.Context, conf *kafka.KafkaAPIACLRequest) (*kafka.KafkaAPIResponse, error) {
+	c.Logger.Log("msg", "kafka.CreateACL()")
+	return &kafka.KafkaAPIResponse{}, c.Client.Kafka.CreateACL(conf)
+}
+
+// DeleteACL registers a new ACL with the currently Kafka Cluster context
+func (c *Kafka) DeleteACL(ctx context.Context, conf *kafka.KafkaAPIACLFilterRequest) (*kafka.KafkaAPIResponse, error) {
+	c.Logger.Log("msg", "kafka.DeleteACL()")
+	return &kafka.KafkaAPIResponse{}, c.Client.Kafka.DeleteACL(conf)
+
 }
 
 func check(err error) {

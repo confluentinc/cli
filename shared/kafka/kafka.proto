@@ -1,13 +1,198 @@
 syntax = "proto3";
 
-package connect;
+package kafka;
 
 import "kafka/scheduler/v1/scheduler.proto";
 
 // TODO: should this definition be in cc-structs?
 service Kafka {
-  rpc List(kafka.scheduler.v1.GetKafkaClustersRequest) returns (kafka.scheduler.v1.GetKafkaClustersReply) {}
-  rpc Describe(kafka.scheduler.v1.GetKafkaClusterRequest) returns (kafka.scheduler.v1.GetKafkaClusterReply) {}
-  rpc Create(kafka.scheduler.v1.CreateKafkaClusterRequest) returns (kafka.scheduler.v1.CreateKafkaClusterReply) {}
-  rpc Delete(kafka.scheduler.v1.DeleteKafkaClusterRequest) returns (kafka.scheduler.v1.DeleteKafkaClusterReply) {}
+    rpc CreateAPIKey (kafka.scheduler.v1.CreateApiKeyRequest) returns (kafka.scheduler.v1.CreateApiKeyReply)  {}
+    rpc List (kafka.scheduler.v1.GetKafkaClustersRequest) returns (kafka.scheduler.v1.GetKafkaClustersReply) {}
+    rpc Describe (kafka.scheduler.v1.GetKafkaClusterRequest) returns (kafka.scheduler.v1.GetKafkaClusterReply) {}
+    rpc Create (kafka.scheduler.v1.CreateKafkaClusterRequest) returns (kafka.scheduler.v1.CreateKafkaClusterReply) {}
+    rpc Delete (kafka.scheduler.v1.DeleteKafkaClusterRequest) returns (kafka.scheduler.v1.DeleteKafkaClusterReply) {}
+    rpc ListTopic (ListTopicParams) returns (ListKafkaTopicReply) {}
+    rpc DescribeTopic (KafkaAPITopicRequest) returns (KafkaTopicDescription) {}
+    rpc CreateTopic (KafkaAPITopicRequest) returns (KafkaAPIResponse) {}
+    rpc DeleteTopic (KafkaAPITopicRequest) returns (KafkaAPIResponse) {}
+    rpc UpdateTopic (KafkaAPITopicRequest) returns (KafkaAPIResponse) {}
+    rpc ListACL (KafkaAPIACLFilterRequest) returns (KafkaAPIACLFilterReply) {}
+    rpc CreateACL (KafkaAPIACLRequest) returns (KafkaAPIResponse) {}
+    rpc DeleteACL (KafkaAPIACLFilterRequest) returns (KafkaAPIResponse) {}
+}
+
+// AccessControlEntryConfig wraps AccessControlEntry
+// Apache Kafka reference
+// https://github.com/confluen  tinc/cc-kafka/blob/trunk/clients/src/main/java/org/apache/kafka/common/acl/AccessControlEntry.java
+message AccessControlEntryConfig {
+    // Apache Kafka reference
+    // https://github.com/confluentinc/cc-kafka/blob/trunk/clients/src/main/java/org/apache/kafka/common/acl/AclPermissionType.java
+    enum ACLPermissionType {
+        ALLOW = 0;
+        DENY = 1;
+    }
+    // Apache Kafka reference
+    // https://github.com/confluentinc/cc-kafka/blob/trunk/clients/src/main/java/org/apache/kafka/common/acl/AclOperation.java
+    enum ACLOperation {
+        ALL = 0;
+        READ = 1;
+        WRITE = 2;
+        CREATE = 3;
+        DELETE = 4;
+        ALTER = 5;
+        DESCRIBE = 6;
+        CLUSTER_ACTION = 7;
+        DESCRIBE_CONFIGS = 8;
+        ALTER_CONFIGS = 9;
+        IDEMPOTENT_WRITE = 10;
+    }
+    string principal = 1;
+    string operation = 2;
+    string host = 3;
+    string permissionType = 4;
+}
+
+// ResourcePatternConfig wraps ResroucePattern
+// Apache Kafka reference
+// https://github.com/confluentinc/cc-kafka/blob/trunk/clients/src/main/java/org/apache/kafka/common/resource/ResourcePattern.java
+message ResourcePatternConfig {
+    // Apache Kafka reference
+    // https://github.com/confluentinc/cc-kafka/blob/trunk/clients/src/main/java/org/apache/kafka/common/resource/ResourceType.java
+    enum ResourceType {
+        TOPIC = 0;
+        GROUP = 1;
+        CLUSTER = 2;
+        TRANSACTION_ID = 3;
+        DELEGATION_TOKEN = 4;
+    }
+    // Apache Kafka reference
+    // https://github.com/confluentinc/cc-kafka/blob/trunk/clients/src/main/java/org/apache/kafka/common/resource/PatternType.java
+    enum PatternType {
+        LITERAL = 0;
+        PREFIXED = 1;
+        CONFLUENT_ALL_TENANT_LITERAL = 2;
+        CONFLUENT_ALL_TENANT_PREFIXED = 3;
+        CONFLUENT_ALL_TENANT_ANY = 4;
+        CONFLUENT_ONLY_TENANT_MATCH = 5;
+    }
+    string resourceType = 1;
+    string name = 2;
+    string patternType = 3;
+}
+
+// KafkaAPIACLRequest wraps an AclBinding
+// Apache Kafka reference
+// https://github.com/confluentinc/cc-kafka/blob/trunk/clients/src/main/java/org/apache/kafka/common/acl/AclBinding.java
+message KafkaAPIACLRequest {
+    ResourcePatternConfig pattern = 1;
+    AccessControlEntryConfig entry = 2;
+}
+
+// KafkaAPIACLFilterRequest wraps an AclBindingFilter
+// Apache Kafka reference
+// https://github.com/confluentinc/cc-kafka/blob/trunk/clients/src/main/java/org/apache/kafka/common/acl/AclBindingFilter.java
+message KafkaAPIACLFilterRequest {
+    ResourcePatternConfig patternFilter = 1;
+    AccessControlEntryConfig entryFilter = 2;
+}
+
+// KafkaAPIACLFilterResponse returns an array of AclBinding objects
+message KafkaAPIACLFilterReply {
+    repeated KafkaAPIACLRequest results =1;
+}
+
+// KafkaAPIResponse represents a generic response to the KafkaAPI requester caller
+message KafkaAPIResponse {
+    bytes msg = 1;
+    string err = 2;
+}
+
+// ListTopicParams represents the ListTopic empty param list
+message ListTopicParams {}
+
+// ListKafkaTopicReply returns an array of topic names
+message ListKafkaTopicReply {
+    repeated string topics = 1;
+}
+
+
+// KafkaTopicSpecification wraps NewTopic
+// Apache Kafka reference
+// https://github.com/confluentinc/cc-kafka/blob/trunk/clients/src/main/java/org/apache/kafka/clients/admin/NewTopic.java
+message KafkaTopicSpecification {
+    string name = 1;
+    sfixed32 numPartitions = 2;
+    sfixed32 replicationFactor =3;
+    map<string, string> configs = 5;
+}
+
+// KafkaAPITopicRequest describes a Kafka Topic request.
+message KafkaAPITopicRequest {
+    KafkaTopicSpecification spec = 1;
+    bool validate = 2;
+}
+
+// KafkaNode wraps Node
+// Apache Kafka reference
+// https://github.com/confluentinc/cc-kafka/blob/trunk/clients/src/main/java/org/apache/kafka/common/Node.java
+message KafkaNode {
+    sfixed32 ID = 1;
+    string Host = 2;
+    sfixed32 Port = 3;
+    string Rack = 4;
+}
+
+// KafkaTopicPartitionInfo wraps TopicPartitionInfo
+// Apache Kafka reference
+// https://github.com/confluentinc/cc-kafka/blob/trunk/clients/src/main/java/org/apache/kafka/common/TopicPartitionInfo.java
+message KafkaTopicPartitionInfo {
+    sfixed32 Partition = 1;
+    KafkaNode Leader = 2;
+    repeated KafkaNode Replicas = 3;
+    repeated KafkaNode ISR = 4;
+}
+
+// KafkaATopicDescription wraps TopicDescription
+// Apache Kafka reference
+// https://github.com/confluentinc/cc-kafka/blob/trunk/clients/src/main/java/org/apache/kafka/clients/admin/TopicDescription.java
+message KafkaTopicDescription {
+    string Name = 1;
+    bool Internal = 2;
+    repeated KafkaTopicPartitionInfo Partitions = 3;
+}
+
+// KafkaTopicConfigSource wraps ConfigEntry
+// Apache Kafka reference
+// https://github.com/confluentinc/cc-kafka/blob/trunk/clients/src/main/java/org/apache/kafka/clients/admin/ConfigEntry.java
+enum KafkaTopicConfigSource {
+    DYNAMIC_TOPIC_CONFIG = 0;           // dynamic topic config that is configured for a specific topic
+    DYNAMIC_BROKER_CONFIG = 1;          // dynamic broker config that is configured for a specific broker
+    DYNAMIC_DEFAULT_BROKER_CONFIG = 2;  // dynamic broker config that is configured as default for all brokers in the cluster
+    STATIC_BROKER_CONFIG = 3;           // static broker config provided as broker properties at start up (e.g. server.properties file)
+    DEFAULT_CONFIG = 4;                 // built-in default configuration for configs that have a default value
+    UNKNOWN = 5;                        // source unknown e.g. in the ConfigEntry used for alter requests where source is not set
+}
+
+// KafkaTopicConfigSynonym describes alternative names(topic-level overrides) for Kafka Configuration Entries
+// Apache Kafka reference
+// https://github.com/confluentinc/cc-kafka/blob/trunk/clients/src/main/java/org/apache/kafka/clients/admin/ConfigEntry.java
+message KafkaTopicConfigSynonym {
+    string name = 1;
+    string value = 2;
+    string source = 3;
+}
+
+// KafkaTopicConfigEntry describes a Configuration Entry
+// Apache Kafka reference
+// https://github.com/confluentinc/cc-kafka/blob/trunk/clients/src/main/java/org/apache/kafka/clients/admin/ConfigEntry.java
+message KafkaTopicConfigEntry {
+    string name = 1;
+    string value = 2;
+    string source = 3;
+    repeated KafkaTopicConfigSynonym synonyms = 4;
+}
+
+// KafkaConfigRequest describes a collection of KafkaConfigEntry
+message KafkaAPITopicConfigRequest {
+    repeated KafkaTopicConfigEntry entries = 1;
 }
