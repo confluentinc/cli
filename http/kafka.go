@@ -74,10 +74,20 @@ func (s *KafkaService) Create(config *schedv1.KafkaClusterConfig) (*schedv1.Kafk
 
 // Delete terminates the given kafka cluster.
 func (s *KafkaService) Delete(cluster *schedv1.KafkaCluster) (*http.Response, error) {
+	return s.delete(cluster, false)
+}
+
+// DeletePhysical terminates the given physical kafka cluster and all active logical kafkas.
+// This is only supported for users who login with an @confluent.io email address.
+func (s *KafkaService) DeletePhysical(cluster *schedv1.KafkaCluster) (*http.Response, error) {
+	return s.delete(cluster, true)
+}
+
+func (s *KafkaService) delete(cluster *schedv1.KafkaCluster, destroyPhysical bool) (*http.Response, error) {
 	if cluster.Id == "" {
 		return nil, shared.ErrNotFound
 	}
-	body := &schedv1.DeleteKafkaClusterRequest{Cluster: cluster}
+	body := &schedv1.DeleteKafkaClusterRequest{Cluster: cluster, DestroyPhysical: destroyPhysical}
 	reply := new(schedv1.DeleteKafkaClusterReply)
 	resp, err := s.sling.New().Delete("/api/clusters/"+cluster.Id).BodyJSON(body).Receive(reply, reply)
 	if err != nil {
