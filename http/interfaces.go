@@ -38,6 +38,7 @@ type Kafka interface {
 	Describe(cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, *http.Response, error)
 	Create(config *schedv1.KafkaClusterConfig) (*schedv1.KafkaCluster, *http.Response, error)
 	Delete(cluster *schedv1.KafkaCluster) (*http.Response, error)
+	DeletePhysical(cluster *schedv1.KafkaCluster) (*http.Response, error)
 }
 
 // Connect service allows managing Connect clusters in Confluent Cloud
