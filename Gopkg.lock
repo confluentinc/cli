@@ -64,16 +64,18 @@
   revision = "4f3c7e6dfbe2e5f711a618ef9113794d5fd442fa"
 
 [[projects]]
-  digest = "1:02615aaec0c7801447c2493a254fba817cd947dfa182507a4b5e1b5cad5231d8"
+  digest = "1:117f02c19ffa3d8928bb18609b2303674a09d9cff57382d1f55be54c022c77fb"
   name = "github.com/confluentinc/cc-structs"
   packages = [
     "kafka/core/v1",
     "kafka/org/v1",
     "kafka/scheduler/v1",
     "operator/v1",
+    "scheduler_plugins/common/v1",
+    "scheduler_plugins/connect/v1",
   ]
   pruneopts = "UT"
-  revision = "8bf61f9b1ef035bc211c63ff6ffdd0febaae3e26"
+  revision = "9e4088a50c2c43c232f8a35462869f891ea4fdd0"
 
 [[projects]]
   digest = "1:38724ee117eaeb604001a7922bdb48f794ac6ebc423bdfbd7a9a75a410667a42"

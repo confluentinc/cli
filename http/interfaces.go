@@ -29,7 +29,7 @@ type User interface {
 // APIKey service allows managing API Keys in Confluent Cloud
 type APIKey interface {
 	Create(key *schedv1.ApiKey) (*schedv1.ApiKey, *http.Response, error)
-    Delete(key *schedv1.ApiKey) (*http.Response, error)
+	Delete(key *schedv1.ApiKey) (*http.Response, error)
 }
 
 // Kafka service allows managing Kafka clusters in Confluent Cloud
