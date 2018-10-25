@@ -40,12 +40,12 @@ func (m *MetricsService) KafkaMetrics(logicalClusterIDs []string, dateStart stri
 	metricsReply := new(metricsv1.GetKafkaMetricsReply)
 	resp, err := m.sling.New().Get(path).Receive(metricsReply, metricsReply)
 	if err != nil {
-		return kafkaMetrics, resp, err
+		return nil, resp, err
 	}
-	if metricsReply.Error == nil {
-		return metricsReply.Metrics, resp, nil
+	if metricsReply.Error != nil {
+		return metricsReply.Metrics, resp, metricsReply.Error
 	}
-	return metricsReply.Metrics, resp, metricsReply.Error
+	return metricsReply.Metrics, resp, nil
 
 }
 
@@ -57,9 +57,10 @@ func (m *MetricsService) SchemaRegistryMetrics(logicalClusterID string) (*metric
 	if err != nil {
 		return nil, resp, err
 	}
-	if metricsReply.Error == nil {
-		return metricsReply.Metric, resp, nil
+	if metricsReply.Error != nil {
+		return nil, resp, metricsReply.Error
+
 	}
-	return nil, resp, metricsReply.Error
+	return metricsReply.Metric, resp, nil
 
 }
