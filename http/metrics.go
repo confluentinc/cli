@@ -32,7 +32,6 @@ func NewMetricsService(client *Client) *MetricsService {
 
 // KafkaMetrics returns the Kafka metrics
 func (m *MetricsService) KafkaMetrics(logicalClusterIDs []string, dateStart string, dateEnd string) (map[string]*metricsv1.KafkaMetric, *http.Response, error) {
-	kafkaMetrics := make(map[string]*metricsv1.KafkaMetric)
 	path := kafkaMetricsPath + "?" + "ids=" + strings.Join(logicalClusterIDs, ",") + "&from=" + dateStart
 	if len(dateEnd) != 0 {
 		path = path + "to=" + dateEnd
