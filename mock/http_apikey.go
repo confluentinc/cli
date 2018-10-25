@@ -3,13 +3,14 @@
 package mock
 
 import (
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"net/http"
 	"sync"
 )
 
 var (
 	lockAPIKeyCreate sync.RWMutex
+	lockAPIKeyDelete sync.RWMutex
 )
 
 // APIKey is a mock implementation of APIKey.
@@ -18,8 +19,11 @@ var (
 //
 //         // make and configure a mocked APIKey
 //         mockedAPIKey := &APIKey{
-//             CreateFunc: func(key *orgv1.ApiKey) (*orgv1.ApiKey, *http.Response, error) {
+//             CreateFunc: func(key *schedv1.ApiKey) (*schedv1.ApiKey, *http.Response, error) {
 // 	               panic("TODO: mock out the Create method")
+//             },
+//             DeleteFunc: func(key *schedv1.ApiKey) (*http.Response, error) {
+// 	               panic("TODO: mock out the Delete method")
 //             },
 //         }
 //
@@ -29,14 +33,22 @@ var (
 //     }
 type APIKey struct {
 	// CreateFunc mocks the Create method.
-	CreateFunc func(key *orgv1.ApiKey) (*orgv1.ApiKey, *http.Response, error)
+	CreateFunc func(key *schedv1.ApiKey) (*schedv1.ApiKey, *http.Response, error)
+
+	// DeleteFunc mocks the Delete method.
+	DeleteFunc func(key *schedv1.ApiKey) (*http.Response, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
 		// Create holds details about calls to the Create method.
 		Create []struct {
 			// Key is the key argument value.
-			Key *orgv1.ApiKey
+			Key *schedv1.ApiKey
+		}
+		// Delete holds details about calls to the Delete method.
+		Delete []struct {
+			// Key is the key argument value.
+			Key *schedv1.ApiKey
 		}
 	}
 }
@@ -46,15 +58,18 @@ func (mock *APIKey) Reset() {
 	lockAPIKeyCreate.Lock()
 	mock.calls.Create = nil
 	lockAPIKeyCreate.Unlock()
+	lockAPIKeyDelete.Lock()
+	mock.calls.Delete = nil
+	lockAPIKeyDelete.Unlock()
 }
 
 // Create calls CreateFunc.
-func (mock *APIKey) Create(key *orgv1.ApiKey) (*orgv1.ApiKey, *http.Response, error) {
+func (mock *APIKey) Create(key *schedv1.ApiKey) (*schedv1.ApiKey, *http.Response, error) {
 	if mock.CreateFunc == nil {
 		panic("moq: APIKey.CreateFunc is nil but APIKey.Create was just called")
 	}
 	callInfo := struct {
-		Key *orgv1.ApiKey
+		Key *schedv1.ApiKey
 	}{
 		Key: key,
 	}
@@ -75,13 +90,51 @@ func (mock *APIKey) CreateCalled() bool {
 // Check the length with:
 //     len(mockedAPIKey.CreateCalls())
 func (mock *APIKey) CreateCalls() []struct {
-	Key *orgv1.ApiKey
+	Key *schedv1.ApiKey
 } {
 	var calls []struct {
-		Key *orgv1.ApiKey
+		Key *schedv1.ApiKey
 	}
 	lockAPIKeyCreate.RLock()
 	calls = mock.calls.Create
 	lockAPIKeyCreate.RUnlock()
+	return calls
+}
+
+// Delete calls DeleteFunc.
+func (mock *APIKey) Delete(key *schedv1.ApiKey) (*http.Response, error) {
+	if mock.DeleteFunc == nil {
+		panic("moq: APIKey.DeleteFunc is nil but APIKey.Delete was just called")
+	}
+	callInfo := struct {
+		Key *schedv1.ApiKey
+	}{
+		Key: key,
+	}
+	lockAPIKeyDelete.Lock()
+	mock.calls.Delete = append(mock.calls.Delete, callInfo)
+	lockAPIKeyDelete.Unlock()
+	return mock.DeleteFunc(key)
+}
+
+// DeleteCalled returns true if at least one call was made to Delete.
+func (mock *APIKey) DeleteCalled() bool {
+	lockAPIKeyDelete.RLock()
+	defer lockAPIKeyDelete.RUnlock()
+	return len(mock.calls.Delete) > 0
+}
+
+// DeleteCalls gets all the calls that were made to Delete.
+// Check the length with:
+//     len(mockedAPIKey.DeleteCalls())
+func (mock *APIKey) DeleteCalls() []struct {
+	Key *schedv1.ApiKey
+} {
+	var calls []struct {
+		Key *schedv1.ApiKey
+	}
+	lockAPIKeyDelete.RLock()
+	calls = mock.calls.Delete
+	lockAPIKeyDelete.RUnlock()
 	return calls
 }
