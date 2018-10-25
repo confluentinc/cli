@@ -46,7 +46,6 @@ func (m *MetricsService) KafkaMetrics(logicalClusterIDs []string, dateStart stri
 		return metricsReply.Metrics, resp, metricsReply.Error
 	}
 	return metricsReply.Metrics, resp, nil
-
 }
 
 // SchemaRegistryMetrics returns Schema Registry metrics
@@ -58,9 +57,8 @@ func (m *MetricsService) SchemaRegistryMetrics(logicalClusterID string) (*metric
 		return nil, resp, err
 	}
 	if metricsReply.Error != nil {
-		return nil, resp, metricsReply.Error
+		return metricsReply.Metric, resp, metricsReply.Error
 
 	}
 	return metricsReply.Metric, resp, nil
-
 }
