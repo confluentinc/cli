@@ -8,11 +8,13 @@ import (
 	"github.com/hashicorp/go-hclog"
 	plugin "github.com/hashicorp/go-plugin"
 	"github.com/spf13/cobra"
-
+	"github.com/codyaray/go-printer"
 	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/shared"
 	"github.com/confluentinc/cli/shared/kafka"
 )
+
+var yamlPrinter = printer.NewYAMLPrinter()
 
 type command struct {
 	*cobra.Command

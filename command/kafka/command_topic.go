@@ -4,7 +4,6 @@ import (
 	"context"
 	"strings"
 
-	printer "github.com/codyaray/go-printer"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/command/common"
@@ -93,12 +92,7 @@ func (c *topicCommand) list(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
-
-	var data [][]string
-	for _, topic := range resp.Topics {
-		data = append(data, printer.ToRow(&struct{ Topic string }{topic}, []string{"Topic"}))
-	}
-	printer.RenderCollectionTable(data, []string{"topic"})
+	yamlPrinter.PrintObj(resp, os.Stdout)
 	return nil
 }
 
@@ -144,39 +138,7 @@ func (c *topicCommand) describe(cmd *cobra.Command, args []string) error {
 		return common.HandleError(shared.KafkaError(err), cmd)
 	}
 
-	// tabulate results for display
-	var data [][]string
-	type partitionInfo struct {
-		Partition int32
-		Leader    int32
-		Replicas  []int32
-		ISR       []int32
-	}
-	var topicInfo = struct {
-		Name              string
-		PartitionCount    int
-		ReplicationFactor int
-	}{
-		Name:              resp.Name,
-		PartitionCount:    len(resp.Partitions),
-		ReplicationFactor: len(resp.Partitions[0].Replicas),
-	}
-
-	printer.NewTablePrinter().PrintObj(&topicInfo, os.Stdout)
-	for _, tp := range resp.Partitions {
-		p := &partitionInfo{}
-		p.Partition = tp.Partition
-		p.Leader = tp.Leader.ID
-
-		for idx, r := range tp.Replicas {
-			p.Replicas = append(p.Replicas, r.ID)
-			if idx < len(tp.ISR) {
-				p.ISR = append(p.ISR, r.ID)
-			}
-		}
-		data = append(data, printer.ToRow(p, []string{"Partition", "Leader", "Replicas", "ISR"}))
-	}
-	printer.RenderCollectionTable(data, []string{"Partition", "Leader", "Replicas", "ISR"})
+	yamlPrinter.PrintObj(resp, os.Stdout)
 	return nil
 }
 

@@ -63,9 +63,11 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 		v := flag.Value.String()
 		n := strings.ToUpper(flag.Name)
 		switch n {
-		case "TOPIC":
-			fallthrough
 		case "CONSUMER_GROUP":
+			// CONSUMER_GROUP is an alias for GROUP
+			n = "GROUP"
+			fallthrough
+		case "TOPIC":
 			fallthrough
 		case "CLUSTER":
 			fallthrough

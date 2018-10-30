@@ -8,6 +8,7 @@ import (
 	"github.com/confluentinc/cli/shared/kafka"
 	"github.com/spf13/cobra"
 	"strings"
+	"os"
 )
 
 type aclCommand struct {
@@ -57,7 +58,9 @@ func (c *aclCommand) init() {
 		Args:  cobra.NoArgs,
 	}
 	lstCmd.Flags().AddFlagSet(ResourceFlags())
+	lstCmd.Flags().String("principal", "*", "Set ACL filter principal")
 	c.AddCommand(lstCmd)
+
 }
 
 func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
@@ -65,11 +68,14 @@ func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
 	if acl.errors != nil {
 		return fmt.Errorf("Failed to process input\n\t %s", acl.errors)
 	}
+
 	resp, err := c.kafka.ListACL(context.Background(), convertToFilter(acl.KafkaAPIACLRequest))
-	fmt.Printf("%v\n", resp.Results)
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
+
+	yamlPrinter.PrintObj(resp.Results, os.Stdout)
+
 	return nil
 }
 
@@ -98,6 +104,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// validateAddDelete ensures the minimum requirements for acl add and delete are met
 func validateAddDelete(b *ACLConfiguration) *ACLConfiguration {
 	if !common.IsSet(b.Entry.PermissionType) {
 		b.errors = append(b.errors, "--allow or --deny must be specified when adding or deleting an acl")
@@ -114,17 +121,20 @@ func validateAddDelete(b *ACLConfiguration) *ACLConfiguration {
 	return b
 }
 
+// validateList ensures the basic requirements for acl list are met
 func validateList(b *ACLConfiguration) *ACLConfiguration {
 	if b.Pattern == nil {
 		b.Pattern = &kafka.ResourcePatternConfig{}
 	}
-	if !common.IsSet(b.Pattern.ResourceType) || common.IsSet(b.Entry.Principal) {
+
+	if !common.IsSet(b.Pattern.ResourceType) && !common.IsSet(b.Entry.Principal) {
 		b.errors = append(b.errors,
 			"either --principal or a resource must be specified when listing acls not both ")
 	}
 	return b
 }
 
+// convertToFilter converts a KafkaAPIACLRequest to a KafkaAPIACLFilterRequest
 func convertToFilter(b *kafka.KafkaAPIACLRequest) *kafka.KafkaAPIACLFilterRequest {
 	if b.Entry.Operation == "" {
 		b.Entry.Operation = "ANY"
@@ -135,6 +145,14 @@ func convertToFilter(b *kafka.KafkaAPIACLRequest) *kafka.KafkaAPIACLFilterReques
 	if b.Entry.Host == "*" {
 		b.Entry.Host = ""
 	}
+
+	if b.Pattern.Name == "" {
+		b.Pattern.ResourceType = "ANY"
+	}
+	if b.Pattern.PatternType == "" {
+		b.Pattern.PatternType = "ANY"
+	}
+
 	return &kafka.KafkaAPIACLFilterRequest{
 		EntryFilter: b.Entry,
 		PatternFilter: b.Pattern,
