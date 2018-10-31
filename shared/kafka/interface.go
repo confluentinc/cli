@@ -27,6 +27,7 @@ type Kafka interface {
 	DeleteACL(ctx context.Context, conf *KafkaAPIACLFilterRequest) (*KafkaAPIResponse, error)
 }
 
+// NewKafkaAPITopicRequest returns an instance of KafkaAPITopicRequest
 func NewKafkaAPITopicRequest(conf *KafkaTopicSpecification, validate bool) *KafkaAPITopicRequest {
 	return &KafkaAPITopicRequest{
 		Spec:     conf,
@@ -41,10 +42,12 @@ type Plugin struct {
 	Impl Kafka
 }
 
+// GRPCClient registers a GRPC client
 func (p *Plugin) GRPCClient(ctx context.Context, broker *plugin.GRPCBroker, c *grpc.ClientConn) (interface{}, error) {
 	return &GRPCClient{client: NewKafkaClient(c)}, nil
 }
 
+// GRPCServer registers a GRPC Server
 func (p *Plugin) GRPCServer(broker *plugin.GRPCBroker, s *grpc.Server) error {
 	RegisterKafkaServer(s, &GRPCServer{p.Impl})
 	return nil

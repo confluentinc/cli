@@ -92,7 +92,7 @@ func (c *topicCommand) list(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
-	yamlPrinter.PrintObj(resp, os.Stdout)
+	jsonPrinter.PrintObj(resp, os.Stdout)
 	return nil
 }
 
@@ -138,7 +138,7 @@ func (c *topicCommand) describe(cmd *cobra.Command, args []string) error {
 		return common.HandleError(shared.KafkaError(err), cmd)
 	}
 
-	yamlPrinter.PrintObj(resp, os.Stdout)
+	jsonPrinter.PrintObj(resp, os.Stdout)
 	return nil
 }
 

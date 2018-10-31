@@ -74,7 +74,7 @@ func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
 		return common.HandleError(err, cmd)
 	}
 
-	yamlPrinter.PrintObj(resp.Results, os.Stdout)
+	jsonPrinter.PrintObj(resp.Results, os.Stdout)
 
 	return nil
 }
@@ -136,21 +136,14 @@ func validateList(b *ACLConfiguration) *ACLConfiguration {
 
 // convertToFilter converts a KafkaAPIACLRequest to a KafkaAPIACLFilterRequest
 func convertToFilter(b *kafka.KafkaAPIACLRequest) *kafka.KafkaAPIACLFilterRequest {
-	if b.Entry.Operation == "" {
-		b.Entry.Operation = "ANY"
-	}
-	if b.Entry.PermissionType == "" {
-		b.Entry.PermissionType = "ANY"
-	}
-	if b.Entry.Host == "*" {
-		b.Entry.Host = ""
-	}
+	b.Entry.Operation = kafka.AccessControlEntryConfig_ANY.String()
+	b.Entry.PermissionType = kafka.AccessControlEntryConfig_ANY.String()
+	b.Entry.Host = ""
 
 	if b.Pattern.Name == "" {
 		b.Pattern.ResourceType = "ANY"
-	}
-	if b.Pattern.PatternType == "" {
 		b.Pattern.PatternType = "ANY"
+
 	}
 
 	return &kafka.KafkaAPIACLFilterRequest{

@@ -21,10 +21,15 @@ service Kafka {
     rpc DeleteACL (KafkaAPIACLFilterRequest) returns (KafkaAPIResponse) {}
 }
 
+
 // AccessControlEntryConfig wraps AccessControlEntry
 // Apache Kafka reference
 // https://github.com/confluen  tinc/cc-kafka/blob/trunk/clients/src/main/java/org/apache/kafka/common/acl/AccessControlEntry.java
 message AccessControlEntryConfig {
+    // FilterType extracts the filter-specific PatternTypes from it's Java counterpart
+    enum FilterType {
+        ANY = 0;
+    }
     // Apache Kafka reference
     // https://github.com/confluentinc/cc-kafka/blob/trunk/clients/src/main/java/org/apache/kafka/common/acl/AclPermissionType.java
     enum ACLPermissionType {
@@ -56,6 +61,11 @@ message AccessControlEntryConfig {
 // Apache Kafka reference
 // https://github.com/confluentinc/cc-kafka/blob/trunk/clients/src/main/java/org/apache/kafka/common/resource/ResourcePattern.java
 message ResourcePatternConfig {
+    // FilterType extracts the filter-specific PatternTypes from it's Java counterpart
+    enum FilterType {
+        ANY = 0;
+        MATCH = 1;
+    }
     // Apache Kafka reference
     // https://github.com/confluentinc/cc-kafka/blob/trunk/clients/src/main/java/org/apache/kafka/common/resource/ResourceType.java
     enum ResourceType {

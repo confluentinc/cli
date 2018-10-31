@@ -66,8 +66,8 @@ func (c *GRPCClient) ListTopic(ctx context.Context) (*ListKafkaTopicReply, error
 }
 
 // DescribeTopic returns details for a Kafka Topic in the current Kafka Cluster context
-func (s *GRPCClient) DescribeTopic(ctx context.Context, conf *KafkaAPITopicRequest) (*KafkaTopicDescription, error) {
-	r, err := s.client.DescribeTopic(ctx, conf)
+func (c *GRPCClient) DescribeTopic(ctx context.Context, conf *KafkaAPITopicRequest) (*KafkaTopicDescription, error) {
+	r, err := c.client.DescribeTopic(ctx, conf)
 	if err != nil {
 		return nil, shared.ConvertGRPCError(err)
 	}
@@ -75,14 +75,14 @@ func (s *GRPCClient) DescribeTopic(ctx context.Context, conf *KafkaAPITopicReque
 }
 
 // CreateTopic creates a new Kafka Topic in the current Kafka Cluster context
-func (s *GRPCClient) CreateTopic(ctx context.Context, conf *KafkaAPITopicRequest) (*KafkaAPIResponse, error) {
-	r, err := s.client.CreateTopic(ctx, conf)
+func (c *GRPCClient) CreateTopic(ctx context.Context, conf *KafkaAPITopicRequest) (*KafkaAPIResponse, error) {
+	r, err := c.client.CreateTopic(ctx, conf)
 	return r, shared.ConvertGRPCError(err)
 }
 
 // DeleteTopic a Kafka Topic in the current Kafka Cluster context
-func (s *GRPCClient) DeleteTopic(ctx context.Context, conf *KafkaAPITopicRequest) (*KafkaAPIResponse, error) {
-	r, err := s.client.DeleteTopic(ctx, conf)
+func (c *GRPCClient) DeleteTopic(ctx context.Context, conf *KafkaAPITopicRequest) (*KafkaAPIResponse, error) {
+	r, err := c.client.DeleteTopic(ctx, conf)
 	return r, shared.ConvertGRPCError(err)
 }
 

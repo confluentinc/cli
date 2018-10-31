@@ -92,8 +92,9 @@ func ConvertGRPCError(err error) error {
 	return err
 }
 
+// readBody returns the contents of reader r.
+// The caller is still responsible for closing reader.
 func readBody(r io.ReadCloser) []byte {
-	defer r.Close()
 	payload, _ := ioutil.ReadAll(r)
 	fmt.Println(len(payload))
 	return payload
@@ -120,7 +121,9 @@ func HandleKafkaAPIError(resp *http.Response, err error) error {
 		var err KafkaAPIError
 		body := readBody(resp.Body)
 		if json.Valid(body) {
-			json.Unmarshal(body, &err)
+			if err := json.Unmarshal(body, &err); err != nil {
+				return err
+			}
 			return &err
 		}
 		return &KafkaAPIError{

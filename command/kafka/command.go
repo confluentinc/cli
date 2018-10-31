@@ -14,7 +14,7 @@ import (
 	"github.com/confluentinc/cli/shared/kafka"
 )
 
-var yamlPrinter = printer.NewYAMLPrinter()
+var jsonPrinter = printer.NewJSONPrinter().Pretty()
 
 type command struct {
 	*cobra.Command

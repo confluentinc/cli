@@ -25,11 +25,11 @@ const TOPICS = APIBASE + "/topics"
 const TOPIC = TOPICS + "/%s"
 // TOPICCONFIG endpoint which updates topic-level configuration overrides.
 const TOPICCONFIG = TOPIC + "/config"
-// TOPICDEFAULTS returns Kafka Topic defaults for the current Kafka Cluster context
+// TOPICCONFIGDEFAULT returns Kafka Topic defaults for the current Kafka Cluster context
 const TOPICCONFIGDEFAULT = APIBASE + "/topic-defaults"
 // ACL endpoint which represents the root for all ACL related control-plane activities.
 const ACL = APIBASE + "/acls"
-// ACLRESOURCE endpoint which lists all ACLs associated with a specific resource.
+// ACLSEARCH endpoint which lists all ACLs associated with a specific resource.
 const ACLSEARCH = ACL + ":search"
 
 // KafkaService provides methods for creating and reading kafka clusters.
@@ -156,13 +156,13 @@ func (s *KafkaService) DeleteTopic(conf *kafka.KafkaAPITopicRequest) (error) {
 		Delete(fmt.Sprintf(TOPIC, s.api.id, conf.Spec.Name)), nil)
 }
 
-// ListTopicConf returns a Kafka Topic configuration from the current Kafka Cluster context
+// ListTopicConfig returns a Kafka Topic configuration from the current Kafka Cluster context
 func (s *KafkaService) ListTopicConfig(conf *kafka.KafkaAPITopicRequest) ([]*kafka.KafkaTopicConfigEntry, error) {
 	var topicConf *kafka.KafkaAPITopicConfigRequest
 	return topicConf.Entries, s.handleAPIRequest(s.api.sling.Get(fmt.Sprintf(TOPICCONFIG, s.api.id, conf.Spec.Name)), &topicConf)
 }
 
-// ListTopicConfigDefaults returns the default Kafka Topic configurations for the current Kafka Cluster context
+// ListTopicConfigDefault returns the default Kafka Topic configurations for the current Kafka Cluster context
 func (s *KafkaService) ListTopicConfigDefault(conf *kafka.KafkaAPITopicRequest) (map[string]string, error) {
 	var topicConf *kafka.KafkaTopicSpecification
 	return topicConf.Configs, s.handleAPIRequest(s.api.sling.Get(fmt.Sprintf(TOPICCONFIGDEFAULT, s.api.id)), &topicConf)
@@ -223,6 +223,9 @@ func (s *KafkaService) handleAPIRequest(sling *sling.Sling, success interface{})
 	}
 
 	resp, err := s.client.Do(req)
+	if err != nil {
+		return err
+	}
 	defer resp.Body.Close()
 
 	s.logger.Log("msg", fmt.Sprintf("request: %s %s result: %+v", req.Method, req.URL, resp.StatusCode))
