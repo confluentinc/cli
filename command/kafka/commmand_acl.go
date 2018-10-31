@@ -123,11 +123,7 @@ func validateAddDelete(b *ACLConfiguration) *ACLConfiguration {
 
 // validateList ensures the basic requirements for acl list are met
 func validateList(b *ACLConfiguration) *ACLConfiguration {
-	if b.Pattern == nil {
-		b.Pattern = &kafka.ResourcePatternConfig{}
-	}
-
-	if !common.IsSet(b.Pattern.ResourceType) && !common.IsSet(b.Entry.Principal) {
+	if b.Pattern == nil || !common.IsSet(b.Pattern.ResourceType) && !common.IsSet(b.Entry.Principal) {
 		b.errors = append(b.errors,
 			"either --principal or a resource must be specified when listing acls not both ")
 	}
@@ -140,10 +136,9 @@ func convertToFilter(b *kafka.KafkaAPIACLRequest) *kafka.KafkaAPIACLFilterReques
 	b.Entry.PermissionType = kafka.AccessControlEntryConfig_ANY.String()
 	b.Entry.Host = ""
 
-	if b.Pattern.Name == "" {
+	if !common.IsSet(b.Pattern.Name) {
 		b.Pattern.ResourceType = "ANY"
 		b.Pattern.PatternType = "ANY"
-
 	}
 
 	return &kafka.KafkaAPIACLFilterRequest{

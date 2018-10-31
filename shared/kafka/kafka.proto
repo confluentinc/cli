@@ -112,10 +112,7 @@ message KafkaAPIACLFilterReply {
 }
 
 // KafkaAPIResponse represents a generic response to the KafkaAPI requester caller
-message KafkaAPIResponse {
-    bytes msg = 1;
-    string err = 2;
-}
+message KafkaAPIResponse {}
 
 // ListTopicParams represents the ListTopic empty param list
 message ListTopicParams {}
@@ -168,7 +165,8 @@ message KafkaTopicPartitionInfo {
 message KafkaTopicDescription {
     string Name = 1;
     bool Internal = 2;
-    repeated KafkaTopicPartitionInfo Partitions = 3;
+    repeated KafkaTopicConfigEntry config = 3;
+    repeated KafkaTopicPartitionInfo Partitions = 4;
 }
 
 // KafkaTopicConfigSource wraps ConfigEntry
@@ -183,7 +181,7 @@ enum KafkaTopicConfigSource {
     UNKNOWN = 5;                        // source unknown e.g. in the ConfigEntry used for alter requests where source is not set
 }
 
-// KafkaTopicConfigSynonym describes alternative names(topic-level overrides) for Kafka Configuration Entries
+// KafkaTopicConfigSynonym describes alternative names(topic-level overides) for Kafka Configuration Entries
 // Apache Kafka reference
 // https://github.com/confluentinc/cc-kafka/blob/trunk/clients/src/main/java/org/apache/kafka/clients/admin/ConfigEntry.java
 message KafkaTopicConfigSynonym {

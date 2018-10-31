@@ -110,12 +110,10 @@ func HandleKafkaAPIError(resp *http.Response, err error) error {
 		}
 	}
 
-	switch resp.StatusCode {
-	case http.StatusOK:
-		fallthrough
-	case http.StatusNoContent:
+	switch {
+	case resp.StatusCode >= http.StatusOK  && resp.StatusCode < http.StatusMultipleChoices:
 		break
-	case http.StatusUnauthorized:
+	case resp.StatusCode == http.StatusUnauthorized:
 		return ErrExpiredToken
 	default:
 		var err KafkaAPIError

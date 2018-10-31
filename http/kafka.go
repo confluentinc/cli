@@ -133,19 +133,22 @@ func (s *KafkaService) ListTopic() ([]kafka.KafkaTopicDescription, error) {
 
 // CreateTopic creates a new Kafka Topic in the current Kafka Cluster context
 func (s *KafkaService) CreateTopic(conf *kafka.KafkaAPITopicRequest) (error) {
-	resp := s.handleAPIRequest(s.api.sling.
+	return s.handleAPIRequest(s.api.sling.
 		Put(fmt.Sprintf(TOPICS, s.api.id)).
 		BodyJSON(conf.Spec).
 		QueryStruct(struct {
 			Validate bool `url:"validate"`
 		}{conf.Validate}), nil)
-	s.logger.Log("ct err: ", fmt.Sprintf("%+v", resp))
-	return resp
 	}
 
 // DescribeTopic returns details for a Kafka Topic in the current Kafka Cluster context
 func (s *KafkaService) DescribeTopic(conf *kafka.KafkaAPITopicRequest) (*kafka.KafkaTopicDescription, error) {
-	var topic *kafka.KafkaTopicDescription
+	topic := &kafka.KafkaTopicDescription{}
+	topicConf, err := s.ListTopicConfig(conf)
+	if err != nil {
+		return nil, err
+	}
+	topic.Config = topicConf
 	return topic, s.handleAPIRequest(s.api.sling.
 		Get(fmt.Sprintf(TOPIC, s.api.id, conf.Spec.Name)), &topic)
 }
@@ -158,28 +161,31 @@ func (s *KafkaService) DeleteTopic(conf *kafka.KafkaAPITopicRequest) (error) {
 
 // ListTopicConfig returns a Kafka Topic configuration from the current Kafka Cluster context
 func (s *KafkaService) ListTopicConfig(conf *kafka.KafkaAPITopicRequest) ([]*kafka.KafkaTopicConfigEntry, error) {
-	var topicConf *kafka.KafkaAPITopicConfigRequest
+	topicConf := &kafka.KafkaAPITopicConfigRequest{}
 	return topicConf.Entries, s.handleAPIRequest(s.api.sling.Get(fmt.Sprintf(TOPICCONFIG, s.api.id, conf.Spec.Name)), &topicConf)
 }
 
 // ListTopicConfigDefault returns the default Kafka Topic configurations for the current Kafka Cluster context
 func (s *KafkaService) ListTopicConfigDefault(conf *kafka.KafkaAPITopicRequest) (map[string]string, error) {
-	var topicConf *kafka.KafkaTopicSpecification
+	topicConf := &kafka.KafkaTopicSpecification{}
 	return topicConf.Configs, s.handleAPIRequest(s.api.sling.Get(fmt.Sprintf(TOPICCONFIGDEFAULT, s.api.id)), &topicConf)
 }
 
 // UpdateTopic updates any existing Topic's configuration in the current Kafka Cluster context
 func (s *KafkaService) UpdateTopic(conf *kafka.KafkaAPITopicRequest) (error) {
 	// first fetch the original topic configuration then override where appropriate
-	originals, err := s.ListTopicConfig(conf)
+	topicConf, err := s.ListTopicConfig(conf)
 	if err != nil {
 		return err
 	}
-	update(originals, conf.Spec.Configs)
+
+	if err := update(topicConf, conf.Spec.Configs); err != nil {
+		return err
+	}
 
 	return s.handleAPIRequest(s.api.sling.
 		Put(fmt.Sprintf(TOPICCONFIG, s.api.id, conf.Spec.Name)).
-		BodyJSON(&kafka.KafkaAPITopicConfigRequest{}), nil)
+		BodyJSON(&kafka.KafkaAPITopicConfigRequest{Entries: topicConf}), nil)
 }
 
 // ListACL lists all ACLs for a given principal or resource
@@ -202,13 +208,17 @@ func (s *KafkaService) DeleteACL(conf *kafka.KafkaAPIACLFilterRequest) (error) {
 }
 
 // update updates an KafkaTopicConfigEntries with the values in update
-func update(original []*kafka.KafkaTopicConfigEntry, updates map[string]string) {
+func update(original []*kafka.KafkaTopicConfigEntry, updates map[string]string) error {
 	for idx := range original {
 		if value, ok := updates[original[idx].Name]; ok {
 			original[idx].Value = value
 			delete(updates, original[idx].Name)
 		}
 	}
+	if len(updates) > 0 {
+		return fmt.Errorf("invalid configuration entries %s", updates)
+	}
+	return nil
 }
 
 // handleAPIRequest handles the interaction between the plugin and the current Kafka Cluster's control-plane
@@ -231,7 +241,6 @@ func (s *KafkaService) handleAPIRequest(sling *sling.Sling, success interface{})
 	s.logger.Log("msg", fmt.Sprintf("request: %s %s result: %+v", req.Method, req.URL, resp.StatusCode))
 
 	err = shared.HandleKafkaAPIError(resp, err)
-
 	if err != nil {
 		return err
 	}
