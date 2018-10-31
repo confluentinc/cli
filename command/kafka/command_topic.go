@@ -40,17 +40,18 @@ func (c *topicCommand) init() {
 		Args:  cobra.NoArgs,
 	})
 
-	createCmd := &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "create TOPIC",
 		Short: "Create a Kafka topic.",
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	}
-	createCmd.Flags().Int32("partitions", 12, "Number of topic partitions.")
-	createCmd.Flags().Int32("replication-factor", 3, "Replication factor.")
-	createCmd.Flags().StringSlice("config", nil, "A comma separated list of topic configuration (key=value) overrides for the topic being created.")
-	createCmd.Flags().Bool("dry-run", false, "Execute request without committing change to Kafka")
-	c.AddCommand(createCmd)
+	cmd.Flags().Int32("partitions", 12, "Number of topic partitions.")
+	cmd.Flags().Int32("replication-factor", 3, "Replication factor.")
+	cmd.Flags().StringSlice("config", nil, "A comma separated list of topic configuration (key=value) overrides for the topic being created.")
+	cmd.Flags().Bool("dry-run", false, "Execute request without committing change to Kafka")
+	cmd.Flags().SortFlags = false
+	c.AddCommand(cmd)
 
 	c.AddCommand(&cobra.Command{
 		Use:   "describe TOPIC",
@@ -58,14 +59,15 @@ func (c *topicCommand) init() {
 		RunE:  c.describe,
 		Args:  cobra.ExactArgs(1),
 	})
-	updateCmd := &cobra.Command{
+	cmd = &cobra.Command{
 		Use:   "update TOPIC",
 		Short: "Update a Kafka topic.",
 		RunE:  c.update,
 		Args:  cobra.ExactArgs(1),
 	}
-	updateCmd.Flags().StringSlice("config", nil, "A comma separated list of topic configuration (key=value) overrides for the topic being created.")
-	c.AddCommand(updateCmd)
+	cmd.Flags().StringSlice("config", nil, "A comma separated list of topic configuration (key=value) overrides for the topic being created.")
+	cmd.Flags().SortFlags = false
+	c.AddCommand(cmd)
 
 	c.AddCommand(&cobra.Command{
 		Use:   "delete TOPIC",
@@ -73,18 +75,19 @@ func (c *topicCommand) init() {
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
 	})
-	c.AddCommand(&cobra.Command{
-		Use:   "produce TOPIC",
-		Short: "Produce messages to a Kafka topic.",
-		RunE:  c.produce,
-		Args:  cobra.ExactArgs(1),
-	})
-	c.AddCommand(&cobra.Command{
-		Use:   "consume TOPIC",
-		Short: "Consume messages from a Kafka topic.",
-		RunE:  c.consume,
-		Args:  cobra.ExactArgs(1),
-	})
+	// TODO: add consume/produce functionality
+	//c.AddCommand(&cobra.Command{
+	//	Use:   "produce TOPIC",
+	//	Short: "Produce messages to a Kafka topic.",
+	//	RunE:  c.produce,
+	//	Args:  cobra.ExactArgs(1),
+	//})
+	//c.AddCommand(&cobra.Command{
+	//	Use:   "consume TOPIC",
+	//	Short: "Consume messages from a Kafka topic.",
+	//	RunE:  c.consume,
+	//	Args:  cobra.ExactArgs(1),
+	//})
 }
 
 func (c *topicCommand) list(cmd *cobra.Command, args []string) error {
@@ -164,10 +167,10 @@ func (c *topicCommand) delete(cmd *cobra.Command, args []string) error {
 	return common.HandleError(shared.KafkaError(err), cmd)
 }
 
-func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {
-	return shared.ErrNotImplemented
-}
-
-func (c *topicCommand) consume(cmd *cobra.Command, args []string) error {
-	return shared.ErrNotImplemented
-}
+//func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {
+//	return shared.ErrNotImplemented
+//}
+//
+//func (c *topicCommand) consume(cmd *cobra.Command, args []string) error {
+//	return shared.ErrNotImplemented
+//}

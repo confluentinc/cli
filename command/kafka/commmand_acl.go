@@ -33,33 +33,37 @@ func NewACLCommand(config *shared.Config, kafka kafka.Kafka) *cobra.Command {
 }
 
 func (c *aclCommand) init() {
-	addCmd := &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create a Kafka ACL.",
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
 	}
-	addCmd.Flags().AddFlagSet(ACLConfigFlags())
-	c.AddCommand(addCmd)
+	cmd.Flags().AddFlagSet(ACLConfigFlags())
+	cmd.Flags().SortFlags = false
+	c.AddCommand(cmd)
 
-	delCmd := &cobra.Command{
+	cmd = &cobra.Command{
 		Use:   "delete",
 		Short: "Delete a Kafka ACL.",
 		RunE:  c.delete,
 		Args:  cobra.NoArgs,
 	}
-	delCmd.Flags().AddFlagSet(ACLConfigFlags())
-	c.AddCommand(delCmd)
+	cmd.Flags().AddFlagSet(ACLConfigFlags())
+	cmd.Flags().SortFlags = false
+	c.AddCommand(cmd)
 
-	lstCmd := &cobra.Command{
+	cmd = &cobra.Command{
 		Use:   "list",
 		Short: "List Kafka ACLs for a resource.",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	}
-	lstCmd.Flags().AddFlagSet(ResourceFlags())
-	lstCmd.Flags().String("principal", "*", "Set ACL filter principal")
-	c.AddCommand(lstCmd)
+	cmd.Flags().AddFlagSet(ResourceFlags())
+	cmd.Flags().String("principal", "*", "Set ACL filter principal")
+	cmd.Flags().SortFlags = false
+
+	c.AddCommand(cmd)
 
 }
 

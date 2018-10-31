@@ -16,8 +16,9 @@ type ACLConfiguration struct {
 
 // ACLConfigFlags returns a flag set which can be parsed to create an ACLConfiguration object.
 func ACLConfigFlags() *pflag.FlagSet {
-	flgSet := ResourceFlags()
-	flgSet.AddFlagSet(ACLEntryFlags())
+	flgSet := ACLEntryFlags()
+	flgSet.SortFlags = false
+	flgSet.AddFlagSet(ResourceFlags())
 	return flgSet
 }
 
@@ -38,7 +39,7 @@ func ResourceFlags() *pflag.FlagSet {
 	flgSet := pflag.NewFlagSet("acl-resource", pflag.ExitOnError)
 	flgSet.String("topic", "", "Set TOPIC resource")
 	flgSet.String("consumer_group", "", "Set CONSUMER_GROUP resource")
-	flgSet.String("transaction_id", "", "Set TRANSACTION_ID resource")
+	flgSet.String("transactional_id", "", "Set TRANSACTIONAL_ID resource")
 	//flgSet.String("delegation_token", "", "Set DELEGATION_TOKEN resource. Note: Not supported on CCLOUD.")
 
 	return flgSet
@@ -71,7 +72,7 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 			fallthrough
 		case "CLUSTER":
 			fallthrough
-		case "TRANSACTION_ID":
+		case "TRANSACTIONAL_ID":
 			if common.IsSet(conf.Pattern) {
 				conf.errors = append(conf.errors, "only one resource can be specified per command execution")
 				break
@@ -79,6 +80,7 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 			conf.Pattern = &proto.ResourcePatternConfig{}
 			conf.Pattern.Name = v
 			conf.Pattern.ResourceType = n
+
 			if len(v) > 1 && strings.HasSuffix(v, "*") {
 				conf.Pattern.Name = v[:len(v)-1]
 				conf.Pattern.PatternType = proto.ResourcePatternConfig_PREFIXED.String()
