@@ -142,8 +142,8 @@ func convertToFilter(b *kafka.KafkaAPIACLRequest) *kafka.KafkaAPIACLFilterReques
 
 	if !common.IsSet(b.Pattern) {
 		b.Pattern = &kafka.ResourcePatternConfig{}
-		b.Pattern.ResourceType = "ANY"
-		b.Pattern.PatternType = "ANY"
+		b.Pattern.ResourceType = kafka.ResourcePatternConfig_ANY.String()
+		b.Pattern.PatternType = kafka.ResourcePatternConfig_ANY.String()
 	}
 
 	return &kafka.KafkaAPIACLFilterRequest{
