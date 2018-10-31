@@ -94,7 +94,7 @@ func ConvertGRPCError(err error) error {
 
 // readBody returns the contents of reader r.
 // The caller is still responsible for closing reader.
-func readBody(r io.ReadCloser) []byte {
+func readBody(r io.Reader) []byte {
 	payload, _ := ioutil.ReadAll(r)
 	fmt.Println(len(payload))
 	return payload
