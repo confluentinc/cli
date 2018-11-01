@@ -144,8 +144,8 @@ message KafkaAPITopicRequest {
 // https://github.com/confluentinc/cc-kafka/blob/trunk/clients/src/main/java/org/apache/kafka/common/Node.java
 message KafkaNode {
     sfixed32 ID = 1;
-    string Host = 2;
-    sfixed32 Port = 3;
+    sfixed32 Port = 2;
+    string Host = 3;
     string Rack = 4;
 }
 
