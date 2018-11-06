@@ -24,7 +24,10 @@
         "mock/.*.go:.*package comment should be of the form.*golint.*",
         ".*error return value not checked \\(defer resp.Body.Close\\(\\)\\).*",
         "warning: cyclomatic complexity .* of function fromArgs\\(\\) is high \\(> 10\\) \\(gocyclo\\)",
-        "shared/kafka/kafka.pb.go:.* struct of size .* could be .* \\(maligned\\)"
+        "shared/kafka/kafka.pb.go:.* struct of size .* could be .* \\(maligned\\)",
+        "shared/connect/connect.pb.go:.* struct of size .* could be .* \\(maligned\\)",
+        "warning: Subprocess launched with variable,MEDIUM,HIGH \\(gosec\\)"
+        
     ],
     "Linters": {
         "gas": {

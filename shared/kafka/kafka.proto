@@ -71,9 +71,9 @@ message ResourcePatternConfig {
     enum ResourceType {
         TOPIC = 0;
         GROUP = 1;
-        CLUSTER = 2;
-        TRANSACTION_ID = 3;
-        DELEGATION_TOKEN = 4;
+//        CLUSTER = 2;
+        TRANSACTIONAL_ID = 3;
+//        DELEGATION_TOKEN = 4;
     }
     // Apache Kafka reference
     // https://github.com/confluentinc/cc-kafka/blob/trunk/clients/src/main/java/org/apache/kafka/common/resource/PatternType.java

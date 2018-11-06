@@ -19,6 +19,12 @@ import (
 	log "github.com/confluentinc/cli/log"
 	"github.com/confluentinc/cli/metric"
 	"github.com/confluentinc/cli/shared"
+	ksqlPlugin "github.com/confluentinc/cli/shared/ksql"
+	kafkaPLugin "github.com/confluentinc/cli/shared/kafka"
+	connectPlugin "github.com/confluentinc/cli/shared/connect"
+
+
+
 )
 
 var (
@@ -71,31 +77,27 @@ func main() {
 	cli.Version = version
 
 	// Automatically stop plugins when CLI exits
-	cli.PersistentPostRun = func(cmd *cobra.Command, args []string) {
-		plugin.CleanupClients()
-	}
+	defer plugin.CleanupClients()
 
 	cli.AddCommand(config.New(cfg))
-
 	cli.AddCommand(common.NewCompletionCmd(cli, prompt))
-
 	cli.AddCommand(auth.New(cfg)...)
 
-	conn, err := kafka.New(cfg)
+	conn, err := kafka.New(cfg, common.DefaultClient(kafkaPLugin.Name))
 	if err != nil {
 		logger.Log("msg", err)
 	} else {
 		cli.AddCommand(conn)
 	}
 
-	conn, err = connect.New(cfg)
+	conn, err = connect.New(cfg, common.DefaultClient(connectPlugin.Name))
 	if err != nil {
 		logger.Log("msg", err)
 	} else {
 		cli.AddCommand(conn)
 	}
 
-	conn, err = ksql.New(cfg)
+	conn, err = ksql.New(cfg, common.DefaultClient(ksqlPlugin.Name))
 	if err != nil {
 		logger.Log("msg", err)
 	} else {
@@ -103,7 +105,7 @@ func main() {
 	}
 
 	if err := cli.Execute(); err != nil {
-		os.Exit(1)
+		fmt.Fprintf(os.Stderr, "Error executing CLI: %s\n", err.Error())
 	}
 }
 

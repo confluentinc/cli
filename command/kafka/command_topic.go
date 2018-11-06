@@ -15,18 +15,16 @@ import (
 type topicCommand struct {
 	*cobra.Command
 	config *shared.Config
-	kafka  kafka.Kafka
 }
 
 // NewTopicCommand returns the Cobra clusterCommand for Kafka Cluster.
-func NewTopicCommand(config *shared.Config, kafka kafka.Kafka) *cobra.Command {
+func NewTopicCommand(config *shared.Config) *cobra.Command {
 	cmd := &topicCommand{
 		Command: &cobra.Command{
 			Use:   "topic",
 			Short: "Manage kafka topics.",
 		},
 		config: config,
-		kafka:  kafka,
 	}
 	cmd.init()
 	return cmd.Command
@@ -91,7 +89,7 @@ func (c *topicCommand) init() {
 }
 
 func (c *topicCommand) list(cmd *cobra.Command, args []string) error {
-	resp, err := c.kafka.ListTopic(context.Background())
+	resp, err := Client.ListTopic(context.Background())
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
@@ -130,13 +128,13 @@ func (c *topicCommand) create(cmd *cobra.Command, args []string) error {
 		req.Spec.Configs[pair[0]] = pair[1]
 	}
 
-	_, err = c.kafka.CreateTopic(context.Background(), req)
+	_, err = Client.CreateTopic(context.Background(), req)
 	return common.HandleError(shared.KafkaError(err), cmd)
 }
 
 func (c *topicCommand) describe(cmd *cobra.Command, args []string) error {
 	conf := &kafka.KafkaTopicSpecification{Name: args[0]}
-	resp, err := c.kafka.DescribeTopic(context.Background(), kafka.NewKafkaAPITopicRequest(conf, false))
+	resp, err := Client.DescribeTopic(context.Background(), kafka.NewKafkaAPITopicRequest(conf, false))
 	if err != nil {
 		return common.HandleError(shared.KafkaError(err), cmd)
 	}
@@ -157,13 +155,13 @@ func (c *topicCommand) update(cmd *cobra.Command, args []string) error {
 		conf.Configs[pair[0]] = pair[1]
 	}
 
-	_, err = c.kafka.UpdateTopic(context.Background(), kafka.NewKafkaAPITopicRequest(conf, false))
+	_, err = Client.UpdateTopic(context.Background(), kafka.NewKafkaAPITopicRequest(conf, false))
 	return common.HandleError(shared.KafkaError(err), cmd)
 }
 
 func (c *topicCommand) delete(cmd *cobra.Command, args []string) error {
 	conf := &kafka.KafkaTopicSpecification{Name: args[0]}
-	_, err := c.kafka.DeleteTopic(context.Background(), kafka.NewKafkaAPITopicRequest(conf, false))
+	_, err := Client.DeleteTopic(context.Background(), kafka.NewKafkaAPITopicRequest(conf, false))
 	return common.HandleError(shared.KafkaError(err), cmd)
 }
 

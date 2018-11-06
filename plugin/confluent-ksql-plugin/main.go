@@ -9,21 +9,22 @@ import (
 	"github.com/sirupsen/logrus"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/cli/command/ksql"
 	chttp "github.com/confluentinc/cli/http"
 	log "github.com/confluentinc/cli/log"
 	metric "github.com/confluentinc/cli/metric"
 	"github.com/confluentinc/cli/shared"
+	"github.com/confluentinc/cli/shared/ksql"
+
 )
 
 func main() {
 	var logger *log.Logger
 	{
 		logger = log.New()
-		logger.Log("msg", "hello")
-		defer logger.Log("msg", "goodbye")
+		logger.Log("msg", "Instantiating plugin " + ksql.Name)
+		defer logger.Log("msg", "Shutting down plugin" + ksql.Name)
 
-		f, err := os.OpenFile("/tmp/confluent-ksql-plugin.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
+		f, err := os.OpenFile("/tmp/" + ksql.Name + ".log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
 		check(err)
 		logger.SetLevel(logrus.DebugLevel)
 		logger.Logger.Out = f
@@ -52,11 +53,11 @@ func main() {
 		impl = &Ksql{Logger: logger, Client: client}
 	}
 
+	shared.PluginMap[ksql.Name] = &ksql.Plugin{Impl: impl}
+
 	plugin.Serve(&plugin.ServeConfig{
 		HandshakeConfig: shared.Handshake,
-		Plugins: map[string]plugin.Plugin{
-			"ksql": &ksql.Plugin{Impl: impl},
-		},
+		Plugins: shared.PluginMap,
 		GRPCServer: plugin.DefaultGRPCServer,
 	})
 }

@@ -23,18 +23,16 @@ var (
 type clusterCommand struct {
 	*cobra.Command
 	config *shared.Config
-	ksql   Ksql
 }
 
 // NewClusterCommand returns the Cobra clusterCommand for Ksql Cluster.
-func NewClusterCommand(config *shared.Config, ksql Ksql) *cobra.Command {
+func NewClusterCommand(config *shared.Config) *cobra.Command {
 	cmd := &clusterCommand{
 		Command: &cobra.Command{
 			Use:   "app",
 			Short: "Manage ksql apps.",
 		},
 		config: config,
-		ksql:   ksql,
 	}
 	cmd.init()
 	return cmd.Command
@@ -77,7 +75,7 @@ func (c *clusterCommand) init() {
 
 func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 	req := &schedv1.KSQLCluster{AccountId: c.config.Auth.Account.Id}
-	clusters, err := c.ksql.List(context.Background(), req)
+	clusters, err := Client.List(context.Background(), req)
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
@@ -109,7 +107,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		Storage:        storage,
 		KafkaClusterId: kafkaClusterID,
 	}
-	cluster, err := c.ksql.Create(context.Background(), config)
+	cluster, err := Client.Create(context.Background(), config)
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
@@ -119,7 +117,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 
 func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	req := &schedv1.KSQLCluster{AccountId: c.config.Auth.Account.Id, Id: args[0]}
-	cluster, err := c.ksql.Describe(context.Background(), req)
+	cluster, err := Client.Describe(context.Background(), req)
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
@@ -129,7 +127,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	req := &schedv1.KSQLCluster{AccountId: c.config.Auth.Account.Id, Id: args[0]}
-	err := c.ksql.Delete(context.Background(), req)
+	err := Client.Delete(context.Background(), req)
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}

@@ -45,8 +45,8 @@ func ResourceFlags() *pflag.FlagSet {
 	return flgSet
 }
 
-// ParseCMD returns ACLConfiguration from the contents of cmd
-func ParseCMD(cmd *cobra.Command) *ACLConfiguration {
+// parse returns ACLConfiguration from the contents of cmd
+func parse(cmd *cobra.Command) *ACLConfiguration {
 	aclBinding := &ACLConfiguration{
 		KafkaAPIACLRequest: &proto.KafkaAPIACLRequest{
 			Entry: &proto.AccessControlEntryConfig{
@@ -72,6 +72,8 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 			fallthrough
 		case "CLUSTER":
 			fallthrough
+		case "DELEGATION_TOKEN":
+			fallthrough
 		case "TRANSACTIONAL_ID":
 			if common.IsSet(conf.Pattern) {
 				conf.errors = append(conf.errors, "only one resource can be specified per command execution")
@@ -91,6 +93,10 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 		case "ALLOW":
 			fallthrough
 		case "DENY":
+			if common.IsSet(conf.Entry.PermissionType) {
+				conf.errors = append(conf.errors, "only one resource can be specified per command execution")
+				break
+			}
 			conf.Entry.PermissionType = n
 		case "PRINCIPAL":
 			conf.Entry.Principal = "user:" + v

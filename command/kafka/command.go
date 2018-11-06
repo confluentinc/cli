@@ -1,29 +1,25 @@
 package kafka
 
 import (
-	"fmt"
-	"os"
-	"os/exec"
-
-	"github.com/hashicorp/go-hclog"
-	plugin "github.com/hashicorp/go-plugin"
-	"github.com/spf13/cobra"
 	"github.com/codyaray/go-printer"
 	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/shared"
 	"github.com/confluentinc/cli/shared/kafka"
+	"github.com/spf13/cobra"
 )
 
 var jsonPrinter = printer.NewJSONPrinter().Pretty()
 
+// Client handles communication with the service API
+var Client kafka.Kafka
+
 type command struct {
 	*cobra.Command
 	config *shared.Config
-	kafka  kafka.Kafka
 }
 
 // New returns the Cobra command for Kafka.
-func New(config *shared.Config) (*cobra.Command, error) {
+func New(config *shared.Config, run func(interface{}) error) (*cobra.Command, error) {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:   "kafka",
@@ -31,66 +27,23 @@ func New(config *shared.Config) (*cobra.Command, error) {
 		},
 		config: config,
 	}
-	err := cmd.init()
+	err := cmd.init(run)
 	return cmd.Command, err
 }
 
-func (c *command) init() error {
+func (c *command) init(run func(interface{}) error) error {
 	// All commands require login first
-	c.Command.PersistentPreRun = func(cmd *cobra.Command, args []string) {
+	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		if err := c.config.CheckLogin(); err != nil {
-			_ = common.HandleError(err, cmd)
-			os.Exit(1)
+			return common.HandleError(err, cmd)
 		}
+		// Lazy load plugin to avoid unnecessarily spawning child processes
+		return run(&Client)
 	}
 
-	path, err := exec.LookPath("confluent-kafka-plugin")
-	if err != nil {
-		return fmt.Errorf("skipping kafka: plugin isn't installed")
-	}
-
-	// We're a host. Start by launching the plugin process.
-	client := plugin.NewClient(&plugin.ClientConfig{
-		HandshakeConfig:  shared.Handshake,
-		Plugins:          shared.PluginMap,
-		Cmd:              exec.Command("sh", "-c", path), // nolint: gas
-		AllowedProtocols: []plugin.Protocol{plugin.ProtocolGRPC},
-		Managed:          true,
-		Logger: hclog.New(&hclog.LoggerOptions{
-			Output: hclog.DefaultOutput,
-			Level:  hclog.Info,
-			Name:   "plugin",
-		}),
-	})
-
-	// Connect via RPC.
-	rpcClient, err := client.Client()
-	if err != nil {
-		fmt.Println("Error:", err.Error())
-		os.Exit(1)
-	}
-
-	// Request the plugin
-	raw, err := rpcClient.Dispense("kafka")
-	if err != nil {
-		fmt.Println("Error:", err.Error())
-		os.Exit(1)
-	}
-
-	// Got a client now communicating over RPC.
-	c.kafka = raw.(kafka.Kafka)
-
-	// All commands require login first
-	c.Command.PersistentPreRun = func(cmd *cobra.Command, args []string) {
-		if err = c.config.CheckLogin(); err != nil {
-			_ = common.HandleError(err, cmd)
-			os.Exit(1)
-		}
-	}
-
-	c.AddCommand(NewClusterCommand(c.config, c.kafka))
-	c.AddCommand(NewTopicCommand(c.config, c.kafka))
-	c.AddCommand(NewACLCommand(c.config, c.kafka))
+	c.AddCommand(NewClusterCommand(c.config))
+	c.AddCommand(NewTopicCommand(c.config))
+	c.AddCommand(NewACLCommand(c.config))
 
 	return nil
 }

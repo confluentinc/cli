@@ -21,10 +21,10 @@ func main() {
 	var logger *log.Logger
 	{
 		logger = log.New()
-		logger.Log("msg", "hello")
-		defer logger.Log("msg", "goodbye")
+		logger.Log("msg", "Instantiating plugin " + kafka.Name)
+		defer logger.Log("msg", "Shutting down plugin" + kafka.Name)
 
-		f, err := os.OpenFile("/tmp/confluent-kafka-plugin.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
+		f, err := os.OpenFile("/tmp/" + kafka.Name + ".log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
 		check(err)
 		logger.SetLevel(logrus.DebugLevel)
 		logger.Logger.Out = f
@@ -57,11 +57,11 @@ func main() {
 		impl = &Kafka{Logger: logger, Client: client}
 	}
 
+	shared.PluginMap[kafka.Name] = &kafka.Plugin{Impl: impl}
+
 	plugin.Serve(&plugin.ServeConfig{
 		HandshakeConfig: shared.Handshake,
-		Plugins: map[string]plugin.Plugin{
-			"kafka": &kafka.Plugin{Impl: impl},
-		},
+		Plugins: shared.PluginMap,
 		GRPCServer: plugin.DefaultGRPCServer,
 	})
 }

@@ -14,18 +14,16 @@ import (
 type aclCommand struct {
 	*cobra.Command
 	config *shared.Config
-	kafka  kafka.Kafka
 }
 
 // NewACLCommand returns the Cobra clusterCommand for Kafka Cluster.
-func NewACLCommand(config *shared.Config, kafka kafka.Kafka) *cobra.Command {
+func NewACLCommand(config *shared.Config) *cobra.Command {
 	cmd := &aclCommand{
 		Command: &cobra.Command{
 			Use:   "acl",
 			Short: "Manage Kafka ACLs.",
 		},
 		config: config,
-		kafka:  kafka,
 	}
 
 	cmd.init()
@@ -68,12 +66,12 @@ func (c *aclCommand) init() {
 }
 
 func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
-	acl := validateList(ParseCMD(cmd))
+	acl := validateList(parse(cmd))
 	if acl.errors != nil {
 		return fmt.Errorf("Failed to process input\n\t %s", acl.errors)
 	}
 
-	resp, err := c.kafka.ListACL(context.Background(), convertToFilter(acl.KafkaAPIACLRequest))
+	resp, err := Client.ListACL(context.Background(), convertToFilter(acl.KafkaAPIACLRequest))
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
@@ -84,11 +82,11 @@ func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
 }
 
 func (c *aclCommand) create(cmd *cobra.Command, args []string) error {
-	acl := validateAddDelete(ParseCMD(cmd))
+	acl := validateAddDelete(parse(cmd))
 	if acl.errors != nil {
 		return fmt.Errorf("Failed to process input\n\t%v", strings.Join(acl.errors, "\n\t"))
 	}
-	_, err := c.kafka.CreateACL(context.Background(), acl.KafkaAPIACLRequest)
+	_, err := Client.CreateACL(context.Background(), acl.KafkaAPIACLRequest)
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
@@ -97,11 +95,11 @@ func (c *aclCommand) create(cmd *cobra.Command, args []string) error {
 }
 
 func (c *aclCommand) delete(cmd *cobra.Command, args []string) error {
-	acl := validateAddDelete(ParseCMD(cmd))
+	acl := validateAddDelete(parse(cmd))
 	if acl.errors != nil {
 		return fmt.Errorf("Failed to process input\n\t%v", strings.Join(acl.errors, "\n\t"))
 	}
-	_, err := c.kafka.DeleteACL(context.Background(), convertToFilter(acl.KafkaAPIACLRequest))
+	_, err := Client.DeleteACL(context.Background(), convertToFilter(acl.KafkaAPIACLRequest))
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}

@@ -3,12 +3,15 @@ package kafka
 import (
 	"context"
 
-	plugin "github.com/hashicorp/go-plugin"
+	"github.com/hashicorp/go-plugin"
 	"google.golang.org/grpc"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/cli/shared"
 )
+
+// Name description used for registering/disposing GRPC components
+const Name = "confluent-kafka-plugin"
 
 // Kafka describes the shared interface between the GRPC server(plugin) and the GRPC client
 type Kafka interface {
@@ -57,5 +60,5 @@ func (p *Plugin) GRPCServer(broker *plugin.GRPCBroker, s *grpc.Server) error {
 var _ plugin.GRPCPlugin = &Plugin{}
 
 func init() {
-	shared.PluginMap["kafka"] = &Plugin{}
+	shared.PluginMap[Name] = &Plugin{}
 }
