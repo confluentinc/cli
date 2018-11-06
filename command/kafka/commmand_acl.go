@@ -71,7 +71,7 @@ func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Failed to process input\n\t %s", acl.errors)
 	}
 
-	resp, err := Client.ListACL(context.Background(), convertToFilter(acl.KafkaAPIACLRequest))
+	resp, err := Client.ListACL(context.Background(), ConvertToFilter(acl.KafkaAPIACLRequest))
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
@@ -99,7 +99,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, args []string) error {
 	if acl.errors != nil {
 		return fmt.Errorf("Failed to process input\n\t%v", strings.Join(acl.errors, "\n\t"))
 	}
-	_, err := Client.DeleteACL(context.Background(), convertToFilter(acl.KafkaAPIACLRequest))
+	_, err := Client.DeleteACL(context.Background(), ConvertToFilter(acl.KafkaAPIACLRequest))
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
@@ -132,12 +132,15 @@ func validateList(b *ACLConfiguration) *ACLConfiguration {
 	return b
 }
 
-// convertToFilter converts a KafkaAPIACLRequest to a KafkaAPIACLFilterRequest
-func convertToFilter(b *kafka.KafkaAPIACLRequest) *kafka.KafkaAPIACLFilterRequest {
-	b.Entry.Operation = kafka.AccessControlEntryConfig_ANY.String()
-	b.Entry.PermissionType = kafka.AccessControlEntryConfig_ANY.String()
+// ConvertToFilter converts a KafkaAPIACLRequest to a KafkaAPIACLFilterRequest
+func ConvertToFilter(b *kafka.KafkaAPIACLRequest) *kafka.KafkaAPIACLFilterRequest {
 	b.Entry.Host = ""
-
+	if !common.IsSet(b.Entry.Operation) {
+		b.Entry.Operation = kafka.AccessControlEntryConfig_ANY.String()
+	}
+	if !common.IsSet(b.Entry.Operation) {
+		b.Entry.PermissionType = kafka.AccessControlEntryConfig_ANY.String()
+	}
 	if !common.IsSet(b.Pattern) {
 		b.Pattern = &kafka.ResourcePatternConfig{}
 		b.Pattern.ResourceType = kafka.ResourcePatternConfig_ANY.String()
