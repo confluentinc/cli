@@ -16,8 +16,18 @@ type command struct {
 	config  *shared.Config
 }
 
-// New returns the Cobra command for Connect.
-func New(config *shared.Config, run func(interface{})(error)) (*cobra.Command, error) {
+// New returns the default command object for interacting with Connect.
+func New(config *shared.Config) (*cobra.Command, error) {
+	return newCMD(config, grpcLoader)
+}
+
+// NewConnectCommand returns a command object using a custom Connect provider.
+func NewConnectCommand(config *shared.Config, provider func(interface{}) error) (*cobra.Command, error) {
+	return newCMD(config, provider)
+}
+
+// New returns a command for interacting with Connect.
+func newCMD(config *shared.Config, provider func(interface{})(error)) (*cobra.Command, error) {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:   "connect",
@@ -25,8 +35,13 @@ func New(config *shared.Config, run func(interface{})(error)) (*cobra.Command, e
 		},
 		config: config,
 	}
-	err := cmd.init(run)
+	err := cmd.init(provider)
 	return cmd.Command, err
+}
+
+// grpcLoader is the default Connect impl provider
+func grpcLoader(i interface{}) error {
+	return common.DefaultClient(connect.Name)(i)
 }
 
 func (c *command) init(run func(interface{})(error)) error {

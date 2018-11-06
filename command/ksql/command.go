@@ -16,8 +16,18 @@ type command struct {
 	config *shared.Config
 }
 
-// New returns the Cobra command for Kafka.
-func New(config *shared.Config, run func(interface{})(error)) (*cobra.Command, error) {
+// New returns the default command object for interacting with KSQL.
+func New(config *shared.Config) (*cobra.Command, error) {
+	return newCMD(config, grpcLoader)
+}
+
+// NewKSQLCommand returns a command object using a custom KSQL provider.
+func NewKSQLCommand(config *shared.Config, provider func(interface{}) error) (*cobra.Command, error) {
+	return newCMD(config, provider)
+}
+
+// New returns a command for interacting with KSQL.
+func newCMD(config *shared.Config, run func(interface{})(error)) (*cobra.Command, error) {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:   "ksql",
@@ -27,6 +37,11 @@ func New(config *shared.Config, run func(interface{})(error)) (*cobra.Command, e
 	}
 	err := cmd.init(run)
 	return cmd.Command, err
+}
+
+// grpcLoader is the default KSQL impl provider
+func grpcLoader(i interface{}) error {
+	return common.DefaultClient(ksql.Name)(i)
 }
 
 func (c *command) init(run func(interface{})(error)) error {

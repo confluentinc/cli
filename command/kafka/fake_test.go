@@ -334,7 +334,7 @@ func TestUpdateTopic(t *testing.T) {
 
 /*************** TEST setup/helpers ***************/
 func NewCMD(expect chan interface{}) *cobra.Command {
-	cmd, _ := New(conf, func(value interface{}) error {
+	cmd, _ := NewKafkaCommand(conf, func(value interface{}) error {
 		return NewPluginMock(value, expect)
 	})
 	return cmd

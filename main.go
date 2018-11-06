@@ -19,11 +19,6 @@ import (
 	log "github.com/confluentinc/cli/log"
 	"github.com/confluentinc/cli/metric"
 	"github.com/confluentinc/cli/shared"
-	ksqlPlugin "github.com/confluentinc/cli/shared/ksql"
-	kafkaPLugin "github.com/confluentinc/cli/shared/kafka"
-	connectPlugin "github.com/confluentinc/cli/shared/connect"
-
-
 
 )
 
@@ -83,21 +78,21 @@ func main() {
 	cli.AddCommand(common.NewCompletionCmd(cli, prompt))
 	cli.AddCommand(auth.New(cfg)...)
 
-	conn, err := kafka.New(cfg, common.DefaultClient(kafkaPLugin.Name))
+	conn, err := kafka.New(cfg)
 	if err != nil {
 		logger.Log("msg", err)
 	} else {
 		cli.AddCommand(conn)
 	}
 
-	conn, err = connect.New(cfg, common.DefaultClient(connectPlugin.Name))
+	conn, err = connect.New(cfg)
 	if err != nil {
 		logger.Log("msg", err)
 	} else {
 		cli.AddCommand(conn)
 	}
 
-	conn, err = ksql.New(cfg, common.DefaultClient(ksqlPlugin.Name))
+	conn, err = ksql.New(cfg)
 	if err != nil {
 		logger.Log("msg", err)
 	} else {
