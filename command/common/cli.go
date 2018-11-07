@@ -44,13 +44,6 @@ func HandleError(err error, cmd *cobra.Command) error {
 	return nil
 }
 
-// DefaultClient instantiates a GRPC client registered identified by name
-func DefaultClient(name string) func(interface{}) error {
-	return func(i interface{}) error {
-		return LoadPlugin(name, i)
-	}
-}
-
 // LoadPlugin starts a GRPC server identified by name
 func LoadPlugin(name string, value interface{}) error {
 	rv := reflect.ValueOf(value)

@@ -26,7 +26,7 @@ func NewKSQLCommand(config *shared.Config, provider func(interface{}) error) (*c
 	return newCMD(config, provider)
 }
 
-// New returns a command for interacting with KSQL.
+// newCMD returns a command for interacting with KSQL.
 func newCMD(config *shared.Config, run func(interface{})(error)) (*cobra.Command, error) {
 	cmd := &command{
 		Command: &cobra.Command{
@@ -41,7 +41,7 @@ func newCMD(config *shared.Config, run func(interface{})(error)) (*cobra.Command
 
 // grpcLoader is the default KSQL impl provider
 func grpcLoader(i interface{}) error {
-	return common.DefaultClient(ksql.Name)(i)
+	return common.LoadPlugin(ksql.Name, i)
 }
 
 func (c *command) init(run func(interface{})(error)) error {

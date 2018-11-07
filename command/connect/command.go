@@ -26,7 +26,7 @@ func NewConnectCommand(config *shared.Config, provider func(interface{}) error) 
 	return newCMD(config, provider)
 }
 
-// New returns a command for interacting with Connect.
+// newCMD returns a command for interacting with Connect.
 func newCMD(config *shared.Config, provider func(interface{})(error)) (*cobra.Command, error) {
 	cmd := &command{
 		Command: &cobra.Command{
@@ -41,7 +41,7 @@ func newCMD(config *shared.Config, provider func(interface{})(error)) (*cobra.Co
 
 // grpcLoader is the default Connect impl provider
 func grpcLoader(i interface{}) error {
-	return common.DefaultClient(connect.Name)(i)
+	return common.LoadPlugin(connect.Name, i)
 }
 
 func (c *command) init(run func(interface{})(error)) error {

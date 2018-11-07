@@ -28,7 +28,7 @@ func NewKafkaCommand(config *shared.Config, provider func(interface{}) error) (*
 	return newCMD(config, provider)
 }
 
-// New returns a command for interacting with Kafka.
+// newCMD returns a command for interacting with Kafka.
 func newCMD(config *shared.Config, provider func(interface{}) error) (*cobra.Command, error) {
 	cmd := &command{
 		Command: &cobra.Command{
@@ -42,7 +42,7 @@ func newCMD(config *shared.Config, provider func(interface{}) error) (*cobra.Com
 }
 
 func grpcLoader(i interface{}) error {
-	return common.DefaultClient(kafka.Name)(i)
+	return common.LoadPlugin(kafka.Name, i)
 }
 
 func (c *command) init(run func(interface{}) error) error {
