@@ -24,6 +24,11 @@ var resourcePatterns = []struct {
 	pattern *kafka.ResourcePatternConfig
 }{
 	{
+		args: []string{"--cluster"},
+		pattern: &kafka.ResourcePatternConfig{ResourceType: "CLUSTER", Name: "kafka-cluster",
+			PatternType: kafka.ResourcePatternConfig_LITERAL.String()},
+	},
+	{
 		args: []string{"--topic", "test-topic"},
 		pattern: &kafka.ResourcePatternConfig{ResourceType: "TOPIC", Name: "test-topic",
 			PatternType: kafka.ResourcePatternConfig_LITERAL.String()},
