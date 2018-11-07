@@ -37,6 +37,7 @@ func ACLEntryFlags() *pflag.FlagSet {
 // ResourceFlags returns a flag set which can be parsed to create a ResourcePattern object.
 func ResourceFlags() *pflag.FlagSet {
 	flgSet := pflag.NewFlagSet("acl-resource", pflag.ExitOnError)
+	flgSet.Bool("cluster", false, "Set CLUSTER resource")
 	flgSet.String("topic", "", "Set TOPIC resource")
 	flgSet.String("consumer_group", "", "Set CONSUMER_GROUP resource")
 	flgSet.String("transactional_id", "", "Set TRANSACTIONAL_ID resource")
@@ -65,31 +66,17 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 		n := strings.ToUpper(flag.Name)
 		switch n {
 		case "CONSUMER_GROUP":
-			// CONSUMER_GROUP is an alias for GROUP
-			n = "GROUP"
-			fallthrough
-		case "TOPIC":
-			fallthrough
+			setResourcePattern(conf, "GROUP", v)
 		case "CLUSTER":
+			// The only valid name for a cluster is kafka-cluster
+			// https://github.com/confluentinc/cc-kafka/blob/88823c6016ea2e306340938994d9e122abf3c6c0/core/src/main/scala/kafka/security/auth/Resource.scala#L24
+			setResourcePattern(conf, n, "kafka-cluster")
+		case "TOPIC":
 			fallthrough
 		case "DELEGATION_TOKEN":
 			fallthrough
 		case "TRANSACTIONAL_ID":
-			if common.IsSet(conf.Pattern) {
-				conf.errors = append(conf.errors, "only one resource can be specified per command execution")
-				break
-			}
-			conf.Pattern = &proto.ResourcePatternConfig{}
-			conf.Pattern.Name = v
-			conf.Pattern.ResourceType = n
-
-			if len(v) > 1 && strings.HasSuffix(v, "*") {
-				conf.Pattern.Name = v[:len(v)-1]
-				conf.Pattern.PatternType = proto.ResourcePatternConfig_PREFIXED.String()
-				break
-			}
-			conf.Pattern.Name = v
-			conf.Pattern.PatternType = proto.ResourcePatternConfig_LITERAL.String()
+			setResourcePattern(conf, n, v)
 		case "ALLOW":
 			fallthrough
 		case "DENY":
@@ -109,4 +96,22 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 			conf.errors = append(conf.errors, "Invalid operation value: "+v)
 		}
 	}
+}
+
+func setResourcePattern(conf *ACLConfiguration, n,v string) {
+	if common.IsSet(conf.Pattern) {
+		conf.errors = append(conf.errors, "only one resource can be specified per command execution")
+		return
+	}
+
+	conf.Pattern = &proto.ResourcePatternConfig{}
+	conf.Pattern.ResourceType = n
+
+	if len(v) > 1 && strings.HasSuffix(v, "*") {
+		conf.Pattern.Name = v[:len(v)-1]
+		conf.Pattern.PatternType = proto.ResourcePatternConfig_PREFIXED.String()
+		return
+	}
+	conf.Pattern.Name = v
+	conf.Pattern.PatternType = proto.ResourcePatternConfig_LITERAL.String()
 }

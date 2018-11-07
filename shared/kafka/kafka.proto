@@ -71,7 +71,7 @@ message ResourcePatternConfig {
     enum ResourceType {
         TOPIC = 0;
         GROUP = 1;
-//        CLUSTER = 2;
+        CLUSTER = 2;
         TRANSACTIONAL_ID = 3;
 //        DELEGATION_TOKEN = 4;
     }
