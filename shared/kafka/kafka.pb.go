@@ -8,8 +8,10 @@ import fmt "fmt"
 import math "math"
 import v1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 
-import context "golang.org/x/net/context"
-import grpc "google.golang.org/grpc"
+import (
+	context "golang.org/x/net/context"
+	grpc "google.golang.org/grpc"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -30,8 +32,9 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// Client API for Kafka service
-
+// KafkaClient is the client API for Kafka service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type KafkaClient interface {
 	List(ctx context.Context, in *v1.GetKafkaClustersRequest, opts ...grpc.CallOption) (*v1.GetKafkaClustersReply, error)
 	Describe(ctx context.Context, in *v1.GetKafkaClusterRequest, opts ...grpc.CallOption) (*v1.GetKafkaClusterReply, error)
@@ -83,8 +86,7 @@ func (c *kafkaClient) Delete(ctx context.Context, in *v1.DeleteKafkaClusterReque
 	return out, nil
 }
 
-// Server API for Kafka service
-
+// KafkaServer is the server API for Kafka service.
 type KafkaServer interface {
 	List(context.Context, *v1.GetKafkaClustersRequest) (*v1.GetKafkaClustersReply, error)
 	Describe(context.Context, *v1.GetKafkaClusterRequest) (*v1.GetKafkaClusterReply, error)

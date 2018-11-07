@@ -2,6 +2,7 @@ package http
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/dghubble/sling"
 	"github.com/pkg/errors"
@@ -56,4 +57,72 @@ func (s *UserService) Describe(user *orgv1.User) (*orgv1.User, *http.Response, e
 		return nil, resp, errNotFound
 	}
 	return reply.Users[0], resp, nil
+}
+
+func formatInt32(n int32) string {
+	return strconv.FormatInt(int64(n), 10)
+}
+
+// Describe returns details for a given user.
+func (s *UserService) CreateServiceAccount(user *orgv1.User) (*orgv1.User, *http.Response, error) {
+	body := &orgv1.ServiceAccountRequest{User: user}
+	reply := new(orgv1.CreateServiceAccountReply)
+	userId := formatInt32(user.Id)
+	resp, err := s.sling.New().Post("/api/users"+userId).BodyJSON(body).Receive(reply, reply)
+	if err != nil {
+		return nil, resp, errors.Wrap(err, "unable to create service account")
+	}
+	if reply.Error != nil {
+		return nil, resp, errors.Wrap(reply.Error, "error creating service account")
+	}
+
+	return reply.User, resp, nil
+}
+
+// Describe returns details for a given user.
+func (s *UserService) UpdateServiceAccount(user *orgv1.User) (*http.Response, error) {
+	body := &orgv1.ServiceAccountRequest{User: user}
+	reply := new(orgv1.ServiceAccountReply)
+	userId := formatInt32(user.Id)
+	resp, err := s.sling.New().Post("/api/users"+userId).BodyJSON(body).Receive(reply, reply)
+	if err != nil {
+		return resp, errors.Wrap(err, "unable to update service account")
+	}
+	if reply.Error != nil {
+		return resp, errors.Wrap(reply.Error, "error updating service account")
+	}
+
+	return resp, nil
+}
+
+// Describe returns details for a given user.
+func (s *UserService) DeactivateServiceAccount(user *orgv1.User) (*http.Response, error) {
+	body := &orgv1.ServiceAccountRequest{User: user}
+	reply := new(orgv1.ServiceAccountReply)
+	userId := formatInt32(user.Id)
+	resp, err := s.sling.New().Delete("/api/users"+userId).BodyJSON(body).Receive(reply, reply)
+	if err != nil {
+		return resp, errors.Wrap(err, "unable to create service account")
+	}
+	if reply.Error != nil {
+		return resp, errors.Wrap(reply.Error, "error creating service account")
+	}
+
+	return resp, nil
+}
+
+// Describe returns details for a given user.
+func (s *UserService) GetServiceAccounts(user *orgv1.User) ([]*orgv1.User, *http.Response, error) {
+	body := &orgv1.ServiceAccountRequest{User: user}
+	reply := new(orgv1.GetServiceAccountsReply)
+	userId := formatInt32(user.Id)
+	resp, err := s.sling.New().Get("/api/users"+userId).BodyJSON(body).Receive(reply, reply)
+	if err != nil {
+		return nil, resp, errors.Wrap(err, "unable to create service account")
+	}
+	if reply.Error != nil {
+		return nil, resp, errors.Wrap(reply.Error, "error creating service account")
+	}
+
+	return reply.Users, resp, nil
 }

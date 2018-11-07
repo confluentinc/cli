@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package user;
+
+import "kafka/org/v1/org.proto";
+
+// TODO: should this definition be in cc-structs?
+service User {
+
+  rpc CreateServiceAccount (kafka.org.v1.ServiceAccountRequest) returns (kafka.org.v1.CreateServiceAccountReply) {}
+  rpc DeactivateServiceAccount (kafka.org.v1.ServiceAccountRequest) returns (kafka.org.v1.ServiceAccountReply) {}
+  rpc GetServiceAccounts (kafka.org.v1.ServiceAccountRequest) returns (kafka.org.v1.GetServiceAccountsReply) {}
+  rpc UpdateServiceAccount (kafka.org.v1.ServiceAccountRequest) returns (kafka.org.v1.ServiceAccountReply) {}
+}

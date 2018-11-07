@@ -64,7 +64,7 @@
 
 [[constraint]]
   name = "github.com/confluentinc/cc-structs"
-  revision = "9e4088a50c2c43c232f8a35462869f891ea4fdd0"
+  revision = "74fe59143eb1d1bdac5207e82a3277a127190409"
 
 [[constraint]]
   name = "github.com/codyaray/go-printer"

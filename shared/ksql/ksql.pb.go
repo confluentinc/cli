@@ -8,8 +8,10 @@ import fmt "fmt"
 import math "math"
 import v1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 
-import context "golang.org/x/net/context"
-import grpc "google.golang.org/grpc"
+import (
+	context "golang.org/x/net/context"
+	grpc "google.golang.org/grpc"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -30,8 +32,9 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// Client API for Ksql service
-
+// KsqlClient is the client API for Ksql service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type KsqlClient interface {
 	List(ctx context.Context, in *v1.GetKSQLClustersRequest, opts ...grpc.CallOption) (*v1.GetKSQLClustersReply, error)
 	Describe(ctx context.Context, in *v1.GetKSQLClusterRequest, opts ...grpc.CallOption) (*v1.GetKSQLClusterReply, error)
@@ -83,8 +86,7 @@ func (c *ksqlClient) Create(ctx context.Context, in *v1.CreateKSQLClusterRequest
 	return out, nil
 }
 
-// Server API for Ksql service
-
+// KsqlServer is the server API for Ksql service.
 type KsqlServer interface {
 	List(context.Context, *v1.GetKSQLClustersRequest) (*v1.GetKSQLClustersReply, error)
 	Describe(context.Context, *v1.GetKSQLClusterRequest) (*v1.GetKSQLClusterReply, error)

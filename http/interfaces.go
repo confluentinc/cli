@@ -26,6 +26,10 @@ type Auth interface {
 type User interface {
 	List() ([]*orgv1.User, *http.Response, error)
 	Describe(user *orgv1.User) (*orgv1.User, *http.Response, error)
+	CreateServiceAccount(user *orgv1.User) (*orgv1.User, *http.Response, error)
+	UpdateServiceAccount(user *orgv1.User) (*http.Response, error)
+	DeactivateServiceAccount(user *orgv1.User) (*http.Response, error)
+	GetServiceAccounts(user *orgv1.User) ([]*orgv1.User, *http.Response, error)
 }
 
 // APIKey service allows managing API Keys in Confluent Cloud

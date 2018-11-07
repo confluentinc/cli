@@ -16,6 +16,8 @@ compile:
 	protoc -I shared/connect -I $(CCSTRUCTS) -I $(CCSTRUCTS)/vendor shared/connect/*.proto --gogo_out=plugins=grpc:shared/connect
 	protoc -I shared/kafka -I $(CCSTRUCTS) -I $(CCSTRUCTS)/vendor shared/kafka/*.proto --gogo_out=plugins=grpc:shared/kafka
 	protoc -I shared/ksql -I $(CCSTRUCTS) -I $(CCSTRUCTS)/vendor shared/ksql/*.proto --gogo_out=plugins=grpc:shared/ksql
+	protoc -I shared/user -I $(CCSTRUCTS) -I $(CCSTRUCTS)/vendor shared/user/*.proto --gogo_out=plugins=grpc:shared/user
+	protoc -I shared/api-key -I $(CCSTRUCTS) -I $(CCSTRUCTS)/vendor shared/api-key/*.proto --gogo_out=plugins=grpc:shared/api-key
 
 .PHONY: install-plugins
 install-plugins:
