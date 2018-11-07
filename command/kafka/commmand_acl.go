@@ -138,7 +138,7 @@ func ConvertToFilter(b *kafka.KafkaAPIACLRequest) *kafka.KafkaAPIACLFilterReques
 	if !common.IsSet(b.Entry.Operation) {
 		b.Entry.Operation = kafka.AccessControlEntryConfig_ANY.String()
 	}
-	if !common.IsSet(b.Entry.Operation) {
+	if !common.IsSet(b.Entry.PermissionType) {
 		b.Entry.PermissionType = kafka.AccessControlEntryConfig_ANY.String()
 	}
 	if !common.IsSet(b.Pattern) {
