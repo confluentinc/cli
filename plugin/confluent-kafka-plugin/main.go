@@ -102,11 +102,11 @@ func (c *Kafka) Delete(ctx context.Context, cluster *schedv1.KafkaCluster) error
 
 // TODO: Move filtering to the "driver" under commnad/kafka return  []KafkaTopicDescription instead
 
-// ListTopic lists all non-internal topics in the current Kafka cluster context
-func (c *Kafka) ListTopic(ctx context.Context) (*kafka.ListKafkaTopicReply, error) {
-	c.Logger.Log("msg", "kafka.ListTopic()")
+// ListTopics lists all non-internal topics in the current Kafka cluster context
+func (c *Kafka) ListTopics(ctx context.Context) (*kafka.ListKafkaTopicReply, error) {
+	c.Logger.Log("msg", "kafka.ListTopics()")
 
-	topics, err := c.Client.Kafka.ListTopic()
+	topics, err := c.Client.Kafka.ListTopics()
 	if err != nil {
 		return nil, err
 	}

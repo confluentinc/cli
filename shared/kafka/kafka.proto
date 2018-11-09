@@ -6,12 +6,12 @@ import "kafka/scheduler/v1/scheduler.proto";
 
 // TODO: should this definition be in cc-structs?
 service Kafka {
-    rpc CreateAPIKey (kafka.scheduler.v1.CreateApiKeyRequest) returns (kafka.scheduler.v1.CreateApiKeyReply)  {}
+    rpc CreateAPIKey (kafka.scheduler.v1.CreateApiKeyRequest) returns (kafka.scheduler.v1.CreateApiKeyReply) {}
     rpc List (kafka.scheduler.v1.GetKafkaClustersRequest) returns (kafka.scheduler.v1.GetKafkaClustersReply) {}
     rpc Describe (kafka.scheduler.v1.GetKafkaClusterRequest) returns (kafka.scheduler.v1.GetKafkaClusterReply) {}
     rpc Create (kafka.scheduler.v1.CreateKafkaClusterRequest) returns (kafka.scheduler.v1.CreateKafkaClusterReply) {}
     rpc Delete (kafka.scheduler.v1.DeleteKafkaClusterRequest) returns (kafka.scheduler.v1.DeleteKafkaClusterReply) {}
-    rpc ListTopic (ListTopicParams) returns (ListKafkaTopicReply) {}
+    rpc ListTopics (ListTopicParams) returns (ListKafkaTopicReply) {}
     rpc DescribeTopic (KafkaAPITopicRequest) returns (KafkaTopicDescription) {}
     rpc CreateTopic (KafkaAPITopicRequest) returns (KafkaAPIResponse) {}
     rpc DeleteTopic (KafkaAPITopicRequest) returns (KafkaAPIResponse) {}
@@ -80,10 +80,6 @@ message ResourcePatternConfig {
     enum PatternType {
         LITERAL = 0;
         PREFIXED = 1;
-        CONFLUENT_ALL_TENANT_LITERAL = 2;
-        CONFLUENT_ALL_TENANT_PREFIXED = 3;
-        CONFLUENT_ALL_TENANT_ANY = 4;
-        CONFLUENT_ONLY_TENANT_MATCH = 5;
     }
     string resourceType = 1;
     string name = 2;
@@ -128,8 +124,8 @@ message ListKafkaTopicReply {
 // https://github.com/confluentinc/cc-kafka/blob/trunk/clients/src/main/java/org/apache/kafka/clients/admin/NewTopic.java
 message KafkaTopicSpecification {
     string name = 1;
-    sfixed32 numPartitions = 2;
-    sfixed32 replicationFactor =3;
+    fixed32 numPartitions = 2;
+    fixed32 replicationFactor =3;
     map<string, string> configs = 5;
 }
 
@@ -143,8 +139,8 @@ message KafkaAPITopicRequest {
 // Apache Kafka reference
 // https://github.com/confluentinc/cc-kafka/blob/trunk/clients/src/main/java/org/apache/kafka/common/Node.java
 message KafkaNode {
-    sfixed32 ID = 1;
-    sfixed32 Port = 2;
+    fixed32 ID = 1;
+    fixed32 Port = 2;
     string Host = 3;
     string Rack = 4;
 }
@@ -153,7 +149,7 @@ message KafkaNode {
 // Apache Kafka reference
 // https://github.com/confluentinc/cc-kafka/blob/trunk/clients/src/main/java/org/apache/kafka/common/TopicPartitionInfo.java
 message KafkaTopicPartitionInfo {
-    sfixed32 Partition = 1;
+    fixed32 Partition = 1;
     KafkaNode Leader = 2;
     repeated KafkaNode Replicas = 3;
     repeated KafkaNode ISR = 4;

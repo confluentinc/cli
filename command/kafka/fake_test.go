@@ -247,7 +247,7 @@ var Topics = []struct {
 	},
 }
 
-func TestListTopic(t *testing.T) {
+func TestListTopics(t *testing.T) {
 	expect := make(chan interface{})
 	for _, topic := range Topics {
 		cmd := NewCMD(expect)
@@ -384,7 +384,7 @@ func (m *kafkaPluginMock) Delete(_ context.Context, cluster *schedv1.KafkaCluste
 	return nil
 }
 
-func (m *kafkaPluginMock) ListTopic(_ context.Context) (*kafka.ListKafkaTopicReply, error) {
+func (m *kafkaPluginMock) ListTopics(_ context.Context) (*kafka.ListKafkaTopicReply, error) {
 	return &kafka.ListKafkaTopicReply{Topics: []string{"test1", "test2", "test3"}}, nil
 }
 

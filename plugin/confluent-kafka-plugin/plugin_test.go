@@ -70,7 +70,7 @@ func TestMockClient(t *testing.T) {
 	done := make(chan struct{})
 
 	client := NewMockClient(logger, done)
-	client.Kafka.ListTopic()
+	client.Kafka.ListTopics()
 	client.Kafka.CreateTopic(&kafka.KafkaAPITopicRequest{})
 	client.Kafka.DeleteTopic(&kafka.KafkaAPITopicRequest{Spec: &kafka.KafkaTopicSpecification{Name: "topic_test"},})
 	client.Kafka.UpdateTopic(&kafka.KafkaAPITopicRequest{Spec: &kafka.KafkaTopicSpecification{Name: "topic_test"},})

@@ -14,16 +14,16 @@ type ACLConfiguration struct {
 	errors []string
 }
 
-// ACLConfigFlags returns a flag set which can be parsed to create an ACLConfiguration object.
-func ACLConfigFlags() *pflag.FlagSet {
-	flgSet := ACLEntryFlags()
+// aclConfigFlags returns a flag set which can be parsed to create an ACLConfiguration object.
+func aclConfigFlags() *pflag.FlagSet {
+	flgSet := aclEntryFlags()
 	flgSet.SortFlags = false
-	flgSet.AddFlagSet(ResourceFlags())
+	flgSet.AddFlagSet(resourceFlags())
 	return flgSet
 }
 
-// ACLEntryFlags returns a flag set which can be parsed to create an AccessControlEntry object.
-func ACLEntryFlags() *pflag.FlagSet {
+// aclEntryFlags returns a flag set which can be parsed to create an AccessControlEntry object.
+func aclEntryFlags() *pflag.FlagSet {
 	flgSet := pflag.NewFlagSet("acl-entry", pflag.ExitOnError)
 	flgSet.Bool("allow", false, "Set ACL to grant access")
 	flgSet.Bool("deny", false, "Set ACL to restrict access")
@@ -34,8 +34,8 @@ func ACLEntryFlags() *pflag.FlagSet {
 	return flgSet
 }
 
-// ResourceFlags returns a flag set which can be parsed to create a ResourcePattern object.
-func ResourceFlags() *pflag.FlagSet {
+// resourceFlags returns a flag set which can be parsed to create a ResourcePattern object.
+func resourceFlags() *pflag.FlagSet {
 	flgSet := pflag.NewFlagSet("acl-resource", pflag.ExitOnError)
 	flgSet.Bool("cluster", false, "Set CLUSTER resource")
 	flgSet.String("topic", "", "Set TOPIC resource")

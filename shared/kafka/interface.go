@@ -20,7 +20,7 @@ type Kafka interface {
 	Describe(ctx context.Context, cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error)
 	Create(ctx context.Context, config *schedv1.KafkaClusterConfig) (*schedv1.KafkaCluster, error)
 	Delete(ctx context.Context, cluster *schedv1.KafkaCluster) error
-	ListTopic(ctx context.Context) (*ListKafkaTopicReply, error)
+	ListTopics(ctx context.Context) (*ListKafkaTopicReply, error)
 	DescribeTopic(ctx context.Context, conf *KafkaAPITopicRequest) (*KafkaTopicDescription, error)
 	CreateTopic(ctx context.Context, conf *KafkaAPITopicRequest) (*KafkaAPIResponse, error)
 	DeleteTopic(ctx context.Context, conf *KafkaAPITopicRequest) (*KafkaAPIResponse, error)

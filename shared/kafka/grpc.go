@@ -50,28 +50,19 @@ func (c *GRPCClient) Create(ctx context.Context, config *schedv1.KafkaClusterCon
 // Delete removes a Kafka Cluster
 func (c *GRPCClient) Delete(ctx context.Context, cluster *schedv1.KafkaCluster) error {
 	_, err := c.client.Delete(ctx, &schedv1.DeleteKafkaClusterRequest{Cluster: cluster})
-	if err != nil {
-		return shared.ConvertGRPCError(err)
-	}
-	return nil
+	return shared.ConvertGRPCError(err)
 }
 
-// ListTopic lists all non-internal topics in the current Kafka cluster context
-func (c *GRPCClient) ListTopic(ctx context.Context) (*ListKafkaTopicReply, error) {
-	r, err := c.client.ListTopic(ctx, &ListTopicParams{})
-	if err != nil {
-		return nil, shared.ConvertGRPCError(err)
-	}
-	return r, nil
+// ListTopics lists all non-internal topics in the current Kafka cluster context
+func (c *GRPCClient) ListTopics(ctx context.Context) (*ListKafkaTopicReply, error) {
+	r, err := c.client.ListTopics(ctx, &ListTopicParams{})
+	return r, shared.ConvertGRPCError(err)
 }
 
 // DescribeTopic returns details for a Kafka Topic in the current Kafka Cluster context
 func (c *GRPCClient) DescribeTopic(ctx context.Context, conf *KafkaAPITopicRequest) (*KafkaTopicDescription, error) {
 	r, err := c.client.DescribeTopic(ctx, conf)
-	if err != nil {
-		return nil, shared.ConvertGRPCError(err)
-	}
-	return r, nil
+	return r, shared.ConvertGRPCError(err)
 }
 
 // CreateTopic creates a new Kafka Topic in the current Kafka Cluster context
@@ -145,9 +136,9 @@ func (s *GRPCServer) Delete(ctx context.Context, req *schedv1.DeleteKafkaCluster
 	return &schedv1.DeleteKafkaClusterReply{}, err
 }
 
-// ListTopic lists all non-internal topics in the current Kafka Cluster context
-func (s *GRPCServer) ListTopic(ctx context.Context, _ *ListTopicParams) (*ListKafkaTopicReply, error) {
-	return s.Impl.ListTopic(ctx)
+// ListTopics lists all non-internal topics in the current Kafka Cluster context
+func (s *GRPCServer) ListTopics(ctx context.Context, _ *ListTopicParams) (*ListKafkaTopicReply, error) {
+	return s.Impl.ListTopics(ctx)
 }
 
 // DescribeTopic returns details for a Kafka Topic in the current Kafka Cluster context

@@ -42,7 +42,7 @@ type Kafka interface {
 	Create(config *schedv1.KafkaClusterConfig) (*schedv1.KafkaCluster, *http.Response, error)
 	Delete(cluster *schedv1.KafkaCluster) (*http.Response, error)
 	ConfigureKafkaAPI(clusterid, apiEndpoint string)
-	ListTopic() ([]kafka.KafkaTopicDescription, error)
+	ListTopics() ([]kafka.KafkaTopicDescription, error)
 	DescribeTopic(topic *kafka.KafkaAPITopicRequest) (*kafka.KafkaTopicDescription, error)
 	CreateTopic(topic *kafka.KafkaAPITopicRequest) error
 	DeleteTopic(topic *kafka.KafkaAPITopicRequest) error

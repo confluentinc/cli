@@ -125,8 +125,8 @@ func (s *KafkaService) ConfigureKafkaAPI(clusterID, apiEndpoint string) {
 	}
 }
 
-// ListTopic lists all non-internal topics in the current Kafka cluster context
-func (s *KafkaService) ListTopic() ([]kafka.KafkaTopicDescription, error) {
+// ListTopics lists all non-internal topics in the current Kafka cluster context
+func (s *KafkaService) ListTopics() ([]kafka.KafkaTopicDescription, error) {
 	var topics []kafka.KafkaTopicDescription
 	return topics, s.handleAPIRequest(s.api.sling.Get(fmt.Sprintf(TOPICS, s.api.id)), &topics)
 }
@@ -163,12 +163,6 @@ func (s *KafkaService) DeleteTopic(conf *kafka.KafkaAPITopicRequest) (error) {
 func (s *KafkaService) ListTopicConfig(conf *kafka.KafkaAPITopicRequest) ([]*kafka.KafkaTopicConfigEntry, error) {
 	topicConf := &kafka.KafkaAPITopicConfigRequest{}
 	return topicConf.Entries, s.handleAPIRequest(s.api.sling.Get(fmt.Sprintf(TOPICCONFIG, s.api.id, conf.Spec.Name)), &topicConf)
-}
-
-// ListTopicConfigDefault returns the default Kafka Topic configurations for the current Kafka Cluster context
-func (s *KafkaService) ListTopicConfigDefault(conf *kafka.KafkaAPITopicRequest) (map[string]string, error) {
-	topicConf := &kafka.KafkaTopicSpecification{}
-	return topicConf.Configs, s.handleAPIRequest(s.api.sling.Get(fmt.Sprintf(TOPICCONFIGDEFAULT, s.api.id)), &topicConf)
 }
 
 // UpdateTopic updates any existing Topic's configuration in the current Kafka Cluster context

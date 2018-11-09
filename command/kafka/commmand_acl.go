@@ -1,14 +1,17 @@
 package kafka
 
 import (
-	"context"
+	"os"
 	"fmt"
+	"strings"
+	"context"
+
+	"github.com/spf13/cobra"
+
 	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/shared"
 	"github.com/confluentinc/cli/shared/kafka"
-	"github.com/spf13/cobra"
-	"strings"
-	"os"
+
 )
 
 type aclCommand struct {
@@ -37,7 +40,7 @@ func (c *aclCommand) init() {
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
 	}
-	cmd.Flags().AddFlagSet(ACLConfigFlags())
+	cmd.Flags().AddFlagSet(aclConfigFlags())
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
@@ -47,7 +50,7 @@ func (c *aclCommand) init() {
 		RunE:  c.delete,
 		Args:  cobra.NoArgs,
 	}
-	cmd.Flags().AddFlagSet(ACLConfigFlags())
+	cmd.Flags().AddFlagSet(aclConfigFlags())
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
@@ -57,7 +60,7 @@ func (c *aclCommand) init() {
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	}
-	cmd.Flags().AddFlagSet(ResourceFlags())
+	cmd.Flags().AddFlagSet(resourceFlags())
 	cmd.Flags().String("principal", "*", "Set ACL filter principal")
 	cmd.Flags().SortFlags = false
 

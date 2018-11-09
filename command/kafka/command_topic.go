@@ -1,6 +1,7 @@
 package kafka
 
 import (
+	"os"
 	"context"
 	"strings"
 
@@ -9,7 +10,6 @@ import (
 	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/shared"
 	"github.com/confluentinc/cli/shared/kafka"
-	"os"
 )
 
 type topicCommand struct {
@@ -44,8 +44,8 @@ func (c *topicCommand) init() {
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	}
-	cmd.Flags().Int32("partitions", 12, "Number of topic partitions.")
-	cmd.Flags().Int32("replication-factor", 3, "Replication factor.")
+	cmd.Flags().Uint32("partitions", 12, "Number of topic partitions.")
+	cmd.Flags().Uint32("replication-factor", 3, "Replication factor.")
 	cmd.Flags().StringSlice("config", nil, "A comma separated list of topic configuration (key=value) overrides for the topic being created.")
 	cmd.Flags().Bool("dry-run", false, "Execute request without committing change to Kafka")
 	cmd.Flags().SortFlags = false
@@ -89,7 +89,7 @@ func (c *topicCommand) init() {
 }
 
 func (c *topicCommand) list(cmd *cobra.Command, args []string) error {
-	resp, err := Client.ListTopic(context.Background())
+	resp, err := Client.ListTopics(context.Background())
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
@@ -103,12 +103,12 @@ func (c *topicCommand) create(cmd *cobra.Command, args []string) error {
 	req.Spec.Name = args[0]
 	var err error
 
-	req.Spec.NumPartitions, err = cmd.Flags().GetInt32("partitions")
+	req.Spec.NumPartitions, err = cmd.Flags().GetUint32("partitions")
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
 
-	req.Spec.ReplicationFactor, err = cmd.Flags().GetInt32("replication-factor")
+	req.Spec.ReplicationFactor, err = cmd.Flags().GetUint32("replication-factor")
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
@@ -123,10 +123,7 @@ func (c *topicCommand) create(cmd *cobra.Command, args []string) error {
 		return common.HandleError(err, cmd)
 	}
 
-	for _, config := range configs {
-		pair := strings.SplitN(config, "=", 2)
-		req.Spec.Configs[pair[0]] = pair[1]
-	}
+	req.Spec.Configs = toMap(configs)
 
 	_, err = Client.CreateTopic(context.Background(), req)
 	return common.HandleError(shared.KafkaError(err), cmd)
@@ -150,10 +147,7 @@ func (c *topicCommand) update(cmd *cobra.Command, args []string) error {
 		return common.HandleError(err, cmd)
 	}
 
-	for _, config := range configs {
-		pair := strings.SplitN(config, "=", 2)
-		conf.Configs[pair[0]] = pair[1]
-	}
+	conf.Configs = toMap(configs)
 
 	_, err = Client.UpdateTopic(context.Background(), kafka.NewKafkaAPITopicRequest(conf, false))
 	return common.HandleError(shared.KafkaError(err), cmd)
@@ -163,6 +157,15 @@ func (c *topicCommand) delete(cmd *cobra.Command, args []string) error {
 	conf := &kafka.KafkaTopicSpecification{Name: args[0]}
 	_, err := Client.DeleteTopic(context.Background(), kafka.NewKafkaAPITopicRequest(conf, false))
 	return common.HandleError(shared.KafkaError(err), cmd)
+}
+
+func toMap(configs []string) map[string]string {
+	configMap := make(map[string]string)
+	for _, config := range configs {
+		pair := strings.SplitN(config, "=", 2)
+		configMap[pair[0]] = pair[1]
+	}
+	return configMap
 }
 
 //func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {

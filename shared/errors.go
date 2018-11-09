@@ -3,13 +3,14 @@ package shared
 import (
 	"encoding/json"
 	"fmt"
-
-	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
-	"github.com/pkg/errors"
-	"google.golang.org/grpc/status"
 	"io"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/pkg/errors"
+	"google.golang.org/grpc/status"
+
+	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
 )
 
 /*
@@ -96,7 +97,6 @@ func ConvertGRPCError(err error) error {
 // The caller is still responsible for closing reader.
 func readBody(r io.Reader) []byte {
 	payload, _ := ioutil.ReadAll(r)
-	fmt.Println(len(payload))
 	return payload
 }
 
@@ -111,7 +111,7 @@ func HandleKafkaAPIError(resp *http.Response, err error) error {
 	}
 
 	switch {
-	case resp.StatusCode >= http.StatusOK  && resp.StatusCode < http.StatusMultipleChoices:
+	case resp.StatusCode >= http.StatusOK && resp.StatusCode < http.StatusMultipleChoices:
 		break
 	case resp.StatusCode == http.StatusUnauthorized:
 		return ErrExpiredToken
