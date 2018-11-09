@@ -28,7 +28,7 @@ func HandleError(err error, cmd *cobra.Command) error {
 	out := cmd.OutOrStderr()
 	if msg, ok := messages[err]; ok {
 		fmt.Fprintln(out, msg)
-		return nil
+		return err
 	}
 
 	switch err.(type) {
