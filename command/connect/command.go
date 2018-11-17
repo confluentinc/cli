@@ -42,14 +42,6 @@ func grpcLoader(i interface{}) error {
 }
 
 func (c *command) init(plugin common.Provider) error {
-	// All commands require login first
-	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		if err := c.config.CheckLogin(); err != nil {
-			return common.HandleError(err, cmd)
-		}
-		return nil
-	}
-
 	sinkCmd, err := NewSink(c.config, plugin)
 	if err != nil {
 		return err

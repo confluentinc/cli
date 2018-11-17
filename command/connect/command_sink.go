@@ -51,6 +51,9 @@ func NewSink(config *shared.Config, plugin common.Provider) (*cobra.Command, err
 
 func (c *sinkCommand) init(plugin common.Provider) error {
 	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		if err := c.config.CheckLogin(); err != nil {
+			return common.HandleError(err, cmd)
+		}
 		// Lazy load plugin to avoid unnecessarily spawning child processes
 		return plugin(&c.client)
 	}

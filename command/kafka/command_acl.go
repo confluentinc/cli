@@ -37,6 +37,9 @@ func NewACLCommand(config *shared.Config, plugin common.Provider) *cobra.Command
 func (c *aclCommand) init(plugin common.Provider) {
 
 	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		if err := c.config.CheckLogin(); err != nil {
+			return err
+		}
 		// Lazy load plugin to avoid unnecessarily spawning child processes
 		return plugin(&c.client)
 	}
