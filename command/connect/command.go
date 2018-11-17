@@ -8,9 +8,6 @@ import (
 	"github.com/confluentinc/cli/command/common"
 )
 
-// Client handles communication with the service API
-var Client connect.Connect
-
 type command struct {
 	*cobra.Command
 	config  *shared.Config
@@ -44,17 +41,16 @@ func grpcLoader(i interface{}) error {
 	return common.LoadPlugin(connect.Name, i)
 }
 
-func (c *command) init(run func(interface{})(error)) error {
+func (c *command) init(plugin common.Provider) error {
 	// All commands require login first
 	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		if err := c.config.CheckLogin(); err != nil {
 			return common.HandleError(err, cmd)
 		}
-		// Lazy load plugin to avoid unnecessarily spawning child processes
-		return run(&Client)
+		return nil
 	}
 
-	sinkCmd, err := NewSink(c.config)
+	sinkCmd, err := NewSink(c.config, plugin)
 	if err != nil {
 		return err
 	}

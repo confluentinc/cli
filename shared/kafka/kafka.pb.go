@@ -59,7 +59,7 @@ func (x KafkaTopicConfigSource) String() string {
 	return proto.EnumName(KafkaTopicConfigSource_name, int32(x))
 }
 func (KafkaTopicConfigSource) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_kafka_097a0469667d457d, []int{0}
+	return fileDescriptor_kafka_3de71f486cda0ca4, []int{0}
 }
 
 // FilterType extracts the filter-specific PatternTypes from it's Java counterpart
@@ -80,7 +80,7 @@ func (x AccessControlEntryConfig_FilterType) String() string {
 	return proto.EnumName(AccessControlEntryConfig_FilterType_name, int32(x))
 }
 func (AccessControlEntryConfig_FilterType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_kafka_097a0469667d457d, []int{0, 0}
+	return fileDescriptor_kafka_3de71f486cda0ca4, []int{0, 0}
 }
 
 // Apache Kafka reference
@@ -105,7 +105,7 @@ func (x AccessControlEntryConfig_ACLPermissionType) String() string {
 	return proto.EnumName(AccessControlEntryConfig_ACLPermissionType_name, int32(x))
 }
 func (AccessControlEntryConfig_ACLPermissionType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_kafka_097a0469667d457d, []int{0, 1}
+	return fileDescriptor_kafka_3de71f486cda0ca4, []int{0, 1}
 }
 
 // Apache Kafka reference
@@ -157,7 +157,7 @@ func (x AccessControlEntryConfig_ACLOperation) String() string {
 	return proto.EnumName(AccessControlEntryConfig_ACLOperation_name, int32(x))
 }
 func (AccessControlEntryConfig_ACLOperation) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_kafka_097a0469667d457d, []int{0, 2}
+	return fileDescriptor_kafka_3de71f486cda0ca4, []int{0, 2}
 }
 
 // FilterType extracts the filter-specific PatternTypes from it's Java counterpart
@@ -181,7 +181,7 @@ func (x ResourcePatternConfig_FilterType) String() string {
 	return proto.EnumName(ResourcePatternConfig_FilterType_name, int32(x))
 }
 func (ResourcePatternConfig_FilterType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_kafka_097a0469667d457d, []int{1, 0}
+	return fileDescriptor_kafka_3de71f486cda0ca4, []int{1, 0}
 }
 
 // Apache Kafka reference
@@ -212,7 +212,7 @@ func (x ResourcePatternConfig_ResourceType) String() string {
 	return proto.EnumName(ResourcePatternConfig_ResourceType_name, int32(x))
 }
 func (ResourcePatternConfig_ResourceType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_kafka_097a0469667d457d, []int{1, 1}
+	return fileDescriptor_kafka_3de71f486cda0ca4, []int{1, 1}
 }
 
 // Apache Kafka reference
@@ -237,7 +237,7 @@ func (x ResourcePatternConfig_PatternType) String() string {
 	return proto.EnumName(ResourcePatternConfig_PatternType_name, int32(x))
 }
 func (ResourcePatternConfig_PatternType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_kafka_097a0469667d457d, []int{1, 2}
+	return fileDescriptor_kafka_3de71f486cda0ca4, []int{1, 2}
 }
 
 // AccessControlEntryConfig wraps AccessControlEntry
@@ -257,7 +257,7 @@ func (m *AccessControlEntryConfig) Reset()         { *m = AccessControlEntryConf
 func (m *AccessControlEntryConfig) String() string { return proto.CompactTextString(m) }
 func (*AccessControlEntryConfig) ProtoMessage()    {}
 func (*AccessControlEntryConfig) Descriptor() ([]byte, []int) {
-	return fileDescriptor_kafka_097a0469667d457d, []int{0}
+	return fileDescriptor_kafka_3de71f486cda0ca4, []int{0}
 }
 func (m *AccessControlEntryConfig) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_AccessControlEntryConfig.Unmarshal(m, b)
@@ -321,7 +321,7 @@ func (m *ResourcePatternConfig) Reset()         { *m = ResourcePatternConfig{} }
 func (m *ResourcePatternConfig) String() string { return proto.CompactTextString(m) }
 func (*ResourcePatternConfig) ProtoMessage()    {}
 func (*ResourcePatternConfig) Descriptor() ([]byte, []int) {
-	return fileDescriptor_kafka_097a0469667d457d, []int{1}
+	return fileDescriptor_kafka_3de71f486cda0ca4, []int{1}
 }
 func (m *ResourcePatternConfig) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ResourcePatternConfig.Unmarshal(m, b)
@@ -362,10 +362,10 @@ func (m *ResourcePatternConfig) GetPatternType() string {
 	return ""
 }
 
-// KafkaAPIACLRequest wraps an AclBinding
+// ACLSpec wraps an AclBinding
 // Apache Kafka reference
 // https://github.com/confluentinc/cc-kafka/blob/trunk/clients/src/main/java/org/apache/kafka/common/acl/AclBinding.java
-type KafkaAPIACLRequest struct {
+type ACLSpec struct {
 	Pattern              *ResourcePatternConfig    `protobuf:"bytes,1,opt,name=pattern" json:"pattern,omitempty"`
 	Entry                *AccessControlEntryConfig `protobuf:"bytes,2,opt,name=entry" json:"entry,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}                  `json:"-"`
@@ -373,38 +373,38 @@ type KafkaAPIACLRequest struct {
 	XXX_sizecache        int32                     `json:"-"`
 }
 
-func (m *KafkaAPIACLRequest) Reset()         { *m = KafkaAPIACLRequest{} }
-func (m *KafkaAPIACLRequest) String() string { return proto.CompactTextString(m) }
-func (*KafkaAPIACLRequest) ProtoMessage()    {}
-func (*KafkaAPIACLRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_kafka_097a0469667d457d, []int{2}
+func (m *ACLSpec) Reset()         { *m = ACLSpec{} }
+func (m *ACLSpec) String() string { return proto.CompactTextString(m) }
+func (*ACLSpec) ProtoMessage()    {}
+func (*ACLSpec) Descriptor() ([]byte, []int) {
+	return fileDescriptor_kafka_3de71f486cda0ca4, []int{2}
 }
-func (m *KafkaAPIACLRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_KafkaAPIACLRequest.Unmarshal(m, b)
+func (m *ACLSpec) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ACLSpec.Unmarshal(m, b)
 }
-func (m *KafkaAPIACLRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_KafkaAPIACLRequest.Marshal(b, m, deterministic)
+func (m *ACLSpec) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ACLSpec.Marshal(b, m, deterministic)
 }
-func (dst *KafkaAPIACLRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_KafkaAPIACLRequest.Merge(dst, src)
+func (dst *ACLSpec) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ACLSpec.Merge(dst, src)
 }
-func (m *KafkaAPIACLRequest) XXX_Size() int {
-	return xxx_messageInfo_KafkaAPIACLRequest.Size(m)
+func (m *ACLSpec) XXX_Size() int {
+	return xxx_messageInfo_ACLSpec.Size(m)
 }
-func (m *KafkaAPIACLRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_KafkaAPIACLRequest.DiscardUnknown(m)
+func (m *ACLSpec) XXX_DiscardUnknown() {
+	xxx_messageInfo_ACLSpec.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_KafkaAPIACLRequest proto.InternalMessageInfo
+var xxx_messageInfo_ACLSpec proto.InternalMessageInfo
 
-func (m *KafkaAPIACLRequest) GetPattern() *ResourcePatternConfig {
+func (m *ACLSpec) GetPattern() *ResourcePatternConfig {
 	if m != nil {
 		return m.Pattern
 	}
 	return nil
 }
 
-func (m *KafkaAPIACLRequest) GetEntry() *AccessControlEntryConfig {
+func (m *ACLSpec) GetEntry() *AccessControlEntryConfig {
 	if m != nil {
 		return m.Entry
 	}
@@ -414,7 +414,7 @@ func (m *KafkaAPIACLRequest) GetEntry() *AccessControlEntryConfig {
 // KafkaAPIACLFilterRequest wraps an AclBindingFilter
 // Apache Kafka reference
 // https://github.com/confluentinc/cc-kafka/blob/trunk/clients/src/main/java/org/apache/kafka/common/acl/AclBindingFilter.java
-type KafkaAPIACLFilterRequest struct {
+type ACLFilter struct {
 	PatternFilter        *ResourcePatternConfig    `protobuf:"bytes,1,opt,name=patternFilter" json:"patternFilter,omitempty"`
 	EntryFilter          *AccessControlEntryConfig `protobuf:"bytes,2,opt,name=entryFilter" json:"entryFilter,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}                  `json:"-"`
@@ -422,38 +422,38 @@ type KafkaAPIACLFilterRequest struct {
 	XXX_sizecache        int32                     `json:"-"`
 }
 
-func (m *KafkaAPIACLFilterRequest) Reset()         { *m = KafkaAPIACLFilterRequest{} }
-func (m *KafkaAPIACLFilterRequest) String() string { return proto.CompactTextString(m) }
-func (*KafkaAPIACLFilterRequest) ProtoMessage()    {}
-func (*KafkaAPIACLFilterRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_kafka_097a0469667d457d, []int{3}
+func (m *ACLFilter) Reset()         { *m = ACLFilter{} }
+func (m *ACLFilter) String() string { return proto.CompactTextString(m) }
+func (*ACLFilter) ProtoMessage()    {}
+func (*ACLFilter) Descriptor() ([]byte, []int) {
+	return fileDescriptor_kafka_3de71f486cda0ca4, []int{3}
 }
-func (m *KafkaAPIACLFilterRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_KafkaAPIACLFilterRequest.Unmarshal(m, b)
+func (m *ACLFilter) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ACLFilter.Unmarshal(m, b)
 }
-func (m *KafkaAPIACLFilterRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_KafkaAPIACLFilterRequest.Marshal(b, m, deterministic)
+func (m *ACLFilter) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ACLFilter.Marshal(b, m, deterministic)
 }
-func (dst *KafkaAPIACLFilterRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_KafkaAPIACLFilterRequest.Merge(dst, src)
+func (dst *ACLFilter) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ACLFilter.Merge(dst, src)
 }
-func (m *KafkaAPIACLFilterRequest) XXX_Size() int {
-	return xxx_messageInfo_KafkaAPIACLFilterRequest.Size(m)
+func (m *ACLFilter) XXX_Size() int {
+	return xxx_messageInfo_ACLFilter.Size(m)
 }
-func (m *KafkaAPIACLFilterRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_KafkaAPIACLFilterRequest.DiscardUnknown(m)
+func (m *ACLFilter) XXX_DiscardUnknown() {
+	xxx_messageInfo_ACLFilter.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_KafkaAPIACLFilterRequest proto.InternalMessageInfo
+var xxx_messageInfo_ACLFilter proto.InternalMessageInfo
 
-func (m *KafkaAPIACLFilterRequest) GetPatternFilter() *ResourcePatternConfig {
+func (m *ACLFilter) GetPatternFilter() *ResourcePatternConfig {
 	if m != nil {
 		return m.PatternFilter
 	}
 	return nil
 }
 
-func (m *KafkaAPIACLFilterRequest) GetEntryFilter() *AccessControlEntryConfig {
+func (m *ACLFilter) GetEntryFilter() *AccessControlEntryConfig {
 	if m != nil {
 		return m.EntryFilter
 	}
@@ -462,17 +462,17 @@ func (m *KafkaAPIACLFilterRequest) GetEntryFilter() *AccessControlEntryConfig {
 
 // KafkaAPIACLFilterResponse returns an array of AclBinding objects
 type KafkaAPIACLFilterReply struct {
-	Results              []*KafkaAPIACLRequest `protobuf:"bytes,1,rep,name=results" json:"results,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}              `json:"-"`
-	XXX_unrecognized     []byte                `json:"-"`
-	XXX_sizecache        int32                 `json:"-"`
+	Results              []*ACLSpec `protobuf:"bytes,1,rep,name=results" json:"results,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}   `json:"-"`
+	XXX_unrecognized     []byte     `json:"-"`
+	XXX_sizecache        int32      `json:"-"`
 }
 
 func (m *KafkaAPIACLFilterReply) Reset()         { *m = KafkaAPIACLFilterReply{} }
 func (m *KafkaAPIACLFilterReply) String() string { return proto.CompactTextString(m) }
 func (*KafkaAPIACLFilterReply) ProtoMessage()    {}
 func (*KafkaAPIACLFilterReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_kafka_097a0469667d457d, []int{4}
+	return fileDescriptor_kafka_3de71f486cda0ca4, []int{4}
 }
 func (m *KafkaAPIACLFilterReply) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_KafkaAPIACLFilterReply.Unmarshal(m, b)
@@ -492,7 +492,7 @@ func (m *KafkaAPIACLFilterReply) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_KafkaAPIACLFilterReply proto.InternalMessageInfo
 
-func (m *KafkaAPIACLFilterReply) GetResults() []*KafkaAPIACLRequest {
+func (m *KafkaAPIACLFilterReply) GetResults() []*ACLSpec {
 	if m != nil {
 		return m.Results
 	}
@@ -510,7 +510,7 @@ func (m *KafkaAPIResponse) Reset()         { *m = KafkaAPIResponse{} }
 func (m *KafkaAPIResponse) String() string { return proto.CompactTextString(m) }
 func (*KafkaAPIResponse) ProtoMessage()    {}
 func (*KafkaAPIResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_kafka_097a0469667d457d, []int{5}
+	return fileDescriptor_kafka_3de71f486cda0ca4, []int{5}
 }
 func (m *KafkaAPIResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_KafkaAPIResponse.Unmarshal(m, b)
@@ -530,6 +530,55 @@ func (m *KafkaAPIResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_KafkaAPIResponse proto.InternalMessageInfo
 
+// KafkaTopicRequest wraps control-plane operations
+// cc-structs reference
+// https://github.com/confluentinc/cc-structs/blob/d247737ab9d496cd3c8deab67ba14139871c887c/kafka/scheduler/v1/scheduler.proto#L408-L447
+type KafkaTopicRequest struct {
+	Cluster              *v1.KafkaCluster `protobuf:"bytes,1,opt,name=cluster" json:"cluster,omitempty"`
+	Topic                *Topic           `protobuf:"bytes,2,opt,name=topic" json:"topic,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}         `json:"-"`
+	XXX_unrecognized     []byte           `json:"-"`
+	XXX_sizecache        int32            `json:"-"`
+}
+
+func (m *KafkaTopicRequest) Reset()         { *m = KafkaTopicRequest{} }
+func (m *KafkaTopicRequest) String() string { return proto.CompactTextString(m) }
+func (*KafkaTopicRequest) ProtoMessage()    {}
+func (*KafkaTopicRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_kafka_3de71f486cda0ca4, []int{6}
+}
+func (m *KafkaTopicRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_KafkaTopicRequest.Unmarshal(m, b)
+}
+func (m *KafkaTopicRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_KafkaTopicRequest.Marshal(b, m, deterministic)
+}
+func (dst *KafkaTopicRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_KafkaTopicRequest.Merge(dst, src)
+}
+func (m *KafkaTopicRequest) XXX_Size() int {
+	return xxx_messageInfo_KafkaTopicRequest.Size(m)
+}
+func (m *KafkaTopicRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_KafkaTopicRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_KafkaTopicRequest proto.InternalMessageInfo
+
+func (m *KafkaTopicRequest) GetCluster() *v1.KafkaCluster {
+	if m != nil {
+		return m.Cluster
+	}
+	return nil
+}
+
+func (m *KafkaTopicRequest) GetTopic() *Topic {
+	if m != nil {
+		return m.Topic
+	}
+	return nil
+}
+
 // ListTopicParams represents the ListTopic empty param list
 type ListTopicParams struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -541,7 +590,7 @@ func (m *ListTopicParams) Reset()         { *m = ListTopicParams{} }
 func (m *ListTopicParams) String() string { return proto.CompactTextString(m) }
 func (*ListTopicParams) ProtoMessage()    {}
 func (*ListTopicParams) Descriptor() ([]byte, []int) {
-	return fileDescriptor_kafka_097a0469667d457d, []int{6}
+	return fileDescriptor_kafka_3de71f486cda0ca4, []int{7}
 }
 func (m *ListTopicParams) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ListTopicParams.Unmarshal(m, b)
@@ -573,7 +622,7 @@ func (m *ListKafkaTopicReply) Reset()         { *m = ListKafkaTopicReply{} }
 func (m *ListKafkaTopicReply) String() string { return proto.CompactTextString(m) }
 func (*ListKafkaTopicReply) ProtoMessage()    {}
 func (*ListKafkaTopicReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_kafka_097a0469667d457d, []int{7}
+	return fileDescriptor_kafka_3de71f486cda0ca4, []int{8}
 }
 func (m *ListKafkaTopicReply) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ListKafkaTopicReply.Unmarshal(m, b)
@@ -605,8 +654,8 @@ func (m *ListKafkaTopicReply) GetTopics() []string {
 // https://github.com/confluentinc/cc-kafka/blob/trunk/clients/src/main/java/org/apache/kafka/clients/admin/NewTopic.java
 type KafkaTopicSpecification struct {
 	Name                 string            `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	NumPartitions        uint32            `protobuf:"fixed32,2,opt,name=numPartitions,proto3" json:"numPartitions,omitempty"`
-	ReplicationFactor    uint32            `protobuf:"fixed32,3,opt,name=replicationFactor,proto3" json:"replicationFactor,omitempty"`
+	NumPartitions        uint32            `protobuf:"varint,2,opt,name=numPartitions,proto3" json:"numPartitions,omitempty"`
+	ReplicationFactor    uint32            `protobuf:"varint,3,opt,name=replicationFactor,proto3" json:"replicationFactor,omitempty"`
 	Configs              map[string]string `protobuf:"bytes,5,rep,name=configs" json:"configs,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
 	XXX_unrecognized     []byte            `json:"-"`
@@ -617,7 +666,7 @@ func (m *KafkaTopicSpecification) Reset()         { *m = KafkaTopicSpecification
 func (m *KafkaTopicSpecification) String() string { return proto.CompactTextString(m) }
 func (*KafkaTopicSpecification) ProtoMessage()    {}
 func (*KafkaTopicSpecification) Descriptor() ([]byte, []int) {
-	return fileDescriptor_kafka_097a0469667d457d, []int{8}
+	return fileDescriptor_kafka_3de71f486cda0ca4, []int{9}
 }
 func (m *KafkaTopicSpecification) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_KafkaTopicSpecification.Unmarshal(m, b)
@@ -665,8 +714,8 @@ func (m *KafkaTopicSpecification) GetConfigs() map[string]string {
 	return nil
 }
 
-// KafkaAPITopicRequest describes a Kafka Topic request.
-type KafkaAPITopicRequest struct {
+// Topic describes a Kafka Topic request.
+type Topic struct {
 	Spec                 *KafkaTopicSpecification `protobuf:"bytes,1,opt,name=spec" json:"spec,omitempty"`
 	Validate             bool                     `protobuf:"varint,2,opt,name=validate,proto3" json:"validate,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}                 `json:"-"`
@@ -674,38 +723,38 @@ type KafkaAPITopicRequest struct {
 	XXX_sizecache        int32                    `json:"-"`
 }
 
-func (m *KafkaAPITopicRequest) Reset()         { *m = KafkaAPITopicRequest{} }
-func (m *KafkaAPITopicRequest) String() string { return proto.CompactTextString(m) }
-func (*KafkaAPITopicRequest) ProtoMessage()    {}
-func (*KafkaAPITopicRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_kafka_097a0469667d457d, []int{9}
+func (m *Topic) Reset()         { *m = Topic{} }
+func (m *Topic) String() string { return proto.CompactTextString(m) }
+func (*Topic) ProtoMessage()    {}
+func (*Topic) Descriptor() ([]byte, []int) {
+	return fileDescriptor_kafka_3de71f486cda0ca4, []int{10}
 }
-func (m *KafkaAPITopicRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_KafkaAPITopicRequest.Unmarshal(m, b)
+func (m *Topic) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Topic.Unmarshal(m, b)
 }
-func (m *KafkaAPITopicRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_KafkaAPITopicRequest.Marshal(b, m, deterministic)
+func (m *Topic) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Topic.Marshal(b, m, deterministic)
 }
-func (dst *KafkaAPITopicRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_KafkaAPITopicRequest.Merge(dst, src)
+func (dst *Topic) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Topic.Merge(dst, src)
 }
-func (m *KafkaAPITopicRequest) XXX_Size() int {
-	return xxx_messageInfo_KafkaAPITopicRequest.Size(m)
+func (m *Topic) XXX_Size() int {
+	return xxx_messageInfo_Topic.Size(m)
 }
-func (m *KafkaAPITopicRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_KafkaAPITopicRequest.DiscardUnknown(m)
+func (m *Topic) XXX_DiscardUnknown() {
+	xxx_messageInfo_Topic.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_KafkaAPITopicRequest proto.InternalMessageInfo
+var xxx_messageInfo_Topic proto.InternalMessageInfo
 
-func (m *KafkaAPITopicRequest) GetSpec() *KafkaTopicSpecification {
+func (m *Topic) GetSpec() *KafkaTopicSpecification {
 	if m != nil {
 		return m.Spec
 	}
 	return nil
 }
 
-func (m *KafkaAPITopicRequest) GetValidate() bool {
+func (m *Topic) GetValidate() bool {
 	if m != nil {
 		return m.Validate
 	}
@@ -716,10 +765,10 @@ func (m *KafkaAPITopicRequest) GetValidate() bool {
 // Apache Kafka reference
 // https://github.com/confluentinc/cc-kafka/blob/trunk/clients/src/main/java/org/apache/kafka/common/Node.java
 type KafkaNode struct {
-	ID                   uint32   `protobuf:"fixed32,1,opt,name=ID,proto3" json:"ID,omitempty"`
-	Port                 uint32   `protobuf:"fixed32,2,opt,name=Port,proto3" json:"Port,omitempty"`
-	Host                 string   `protobuf:"bytes,3,opt,name=Host,proto3" json:"Host,omitempty"`
-	Rack                 string   `protobuf:"bytes,4,opt,name=Rack,proto3" json:"Rack,omitempty"`
+	Id                   uint32   `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Port                 uint32   `protobuf:"varint,2,opt,name=port,proto3" json:"port,omitempty"`
+	Host                 string   `protobuf:"bytes,3,opt,name=host,proto3" json:"host,omitempty"`
+	Rack                 string   `protobuf:"bytes,4,opt,name=rack,proto3" json:"rack,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -729,7 +778,7 @@ func (m *KafkaNode) Reset()         { *m = KafkaNode{} }
 func (m *KafkaNode) String() string { return proto.CompactTextString(m) }
 func (*KafkaNode) ProtoMessage()    {}
 func (*KafkaNode) Descriptor() ([]byte, []int) {
-	return fileDescriptor_kafka_097a0469667d457d, []int{10}
+	return fileDescriptor_kafka_3de71f486cda0ca4, []int{11}
 }
 func (m *KafkaNode) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_KafkaNode.Unmarshal(m, b)
@@ -749,9 +798,9 @@ func (m *KafkaNode) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_KafkaNode proto.InternalMessageInfo
 
-func (m *KafkaNode) GetID() uint32 {
+func (m *KafkaNode) GetId() uint32 {
 	if m != nil {
-		return m.ID
+		return m.Id
 	}
 	return 0
 }
@@ -781,7 +830,7 @@ func (m *KafkaNode) GetRack() string {
 // Apache Kafka reference
 // https://github.com/confluentinc/cc-kafka/blob/trunk/clients/src/main/java/org/apache/kafka/common/TopicPartitionInfo.java
 type KafkaTopicPartitionInfo struct {
-	Partition            uint32       `protobuf:"fixed32,1,opt,name=Partition,proto3" json:"Partition,omitempty"`
+	Partition            uint32       `protobuf:"varint,1,opt,name=Partition,proto3" json:"Partition,omitempty"`
 	Leader               *KafkaNode   `protobuf:"bytes,2,opt,name=Leader" json:"Leader,omitempty"`
 	Replicas             []*KafkaNode `protobuf:"bytes,3,rep,name=Replicas" json:"Replicas,omitempty"`
 	ISR                  []*KafkaNode `protobuf:"bytes,4,rep,name=ISR" json:"ISR,omitempty"`
@@ -794,7 +843,7 @@ func (m *KafkaTopicPartitionInfo) Reset()         { *m = KafkaTopicPartitionInfo
 func (m *KafkaTopicPartitionInfo) String() string { return proto.CompactTextString(m) }
 func (*KafkaTopicPartitionInfo) ProtoMessage()    {}
 func (*KafkaTopicPartitionInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_kafka_097a0469667d457d, []int{11}
+	return fileDescriptor_kafka_3de71f486cda0ca4, []int{12}
 }
 func (m *KafkaTopicPartitionInfo) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_KafkaTopicPartitionInfo.Unmarshal(m, b)
@@ -859,7 +908,7 @@ func (m *KafkaTopicDescription) Reset()         { *m = KafkaTopicDescription{} }
 func (m *KafkaTopicDescription) String() string { return proto.CompactTextString(m) }
 func (*KafkaTopicDescription) ProtoMessage()    {}
 func (*KafkaTopicDescription) Descriptor() ([]byte, []int) {
-	return fileDescriptor_kafka_097a0469667d457d, []int{12}
+	return fileDescriptor_kafka_3de71f486cda0ca4, []int{13}
 }
 func (m *KafkaTopicDescription) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_KafkaTopicDescription.Unmarshal(m, b)
@@ -923,7 +972,7 @@ func (m *KafkaTopicConfigSynonym) Reset()         { *m = KafkaTopicConfigSynonym
 func (m *KafkaTopicConfigSynonym) String() string { return proto.CompactTextString(m) }
 func (*KafkaTopicConfigSynonym) ProtoMessage()    {}
 func (*KafkaTopicConfigSynonym) Descriptor() ([]byte, []int) {
-	return fileDescriptor_kafka_097a0469667d457d, []int{13}
+	return fileDescriptor_kafka_3de71f486cda0ca4, []int{14}
 }
 func (m *KafkaTopicConfigSynonym) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_KafkaTopicConfigSynonym.Unmarshal(m, b)
@@ -981,7 +1030,7 @@ func (m *KafkaTopicConfigEntry) Reset()         { *m = KafkaTopicConfigEntry{} }
 func (m *KafkaTopicConfigEntry) String() string { return proto.CompactTextString(m) }
 func (*KafkaTopicConfigEntry) ProtoMessage()    {}
 func (*KafkaTopicConfigEntry) Descriptor() ([]byte, []int) {
-	return fileDescriptor_kafka_097a0469667d457d, []int{14}
+	return fileDescriptor_kafka_3de71f486cda0ca4, []int{15}
 }
 func (m *KafkaTopicConfigEntry) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_KafkaTopicConfigEntry.Unmarshal(m, b)
@@ -1030,38 +1079,38 @@ func (m *KafkaTopicConfigEntry) GetSynonyms() []*KafkaTopicConfigSynonym {
 }
 
 // KafkaConfigRequest describes a collection of KafkaConfigEntry
-type KafkaAPITopicConfigRequest struct {
+type TopicConfig struct {
 	Entries              []*KafkaTopicConfigEntry `protobuf:"bytes,1,rep,name=entries" json:"entries,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}                 `json:"-"`
 	XXX_unrecognized     []byte                   `json:"-"`
 	XXX_sizecache        int32                    `json:"-"`
 }
 
-func (m *KafkaAPITopicConfigRequest) Reset()         { *m = KafkaAPITopicConfigRequest{} }
-func (m *KafkaAPITopicConfigRequest) String() string { return proto.CompactTextString(m) }
-func (*KafkaAPITopicConfigRequest) ProtoMessage()    {}
-func (*KafkaAPITopicConfigRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_kafka_097a0469667d457d, []int{15}
+func (m *TopicConfig) Reset()         { *m = TopicConfig{} }
+func (m *TopicConfig) String() string { return proto.CompactTextString(m) }
+func (*TopicConfig) ProtoMessage()    {}
+func (*TopicConfig) Descriptor() ([]byte, []int) {
+	return fileDescriptor_kafka_3de71f486cda0ca4, []int{16}
 }
-func (m *KafkaAPITopicConfigRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_KafkaAPITopicConfigRequest.Unmarshal(m, b)
+func (m *TopicConfig) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_TopicConfig.Unmarshal(m, b)
 }
-func (m *KafkaAPITopicConfigRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_KafkaAPITopicConfigRequest.Marshal(b, m, deterministic)
+func (m *TopicConfig) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_TopicConfig.Marshal(b, m, deterministic)
 }
-func (dst *KafkaAPITopicConfigRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_KafkaAPITopicConfigRequest.Merge(dst, src)
+func (dst *TopicConfig) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TopicConfig.Merge(dst, src)
 }
-func (m *KafkaAPITopicConfigRequest) XXX_Size() int {
-	return xxx_messageInfo_KafkaAPITopicConfigRequest.Size(m)
+func (m *TopicConfig) XXX_Size() int {
+	return xxx_messageInfo_TopicConfig.Size(m)
 }
-func (m *KafkaAPITopicConfigRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_KafkaAPITopicConfigRequest.DiscardUnknown(m)
+func (m *TopicConfig) XXX_DiscardUnknown() {
+	xxx_messageInfo_TopicConfig.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_KafkaAPITopicConfigRequest proto.InternalMessageInfo
+var xxx_messageInfo_TopicConfig proto.InternalMessageInfo
 
-func (m *KafkaAPITopicConfigRequest) GetEntries() []*KafkaTopicConfigEntry {
+func (m *TopicConfig) GetEntries() []*KafkaTopicConfigEntry {
 	if m != nil {
 		return m.Entries
 	}
@@ -1071,21 +1120,22 @@ func (m *KafkaAPITopicConfigRequest) GetEntries() []*KafkaTopicConfigEntry {
 func init() {
 	proto.RegisterType((*AccessControlEntryConfig)(nil), "kafka.AccessControlEntryConfig")
 	proto.RegisterType((*ResourcePatternConfig)(nil), "kafka.ResourcePatternConfig")
-	proto.RegisterType((*KafkaAPIACLRequest)(nil), "kafka.KafkaAPIACLRequest")
-	proto.RegisterType((*KafkaAPIACLFilterRequest)(nil), "kafka.KafkaAPIACLFilterRequest")
+	proto.RegisterType((*ACLSpec)(nil), "kafka.ACLSpec")
+	proto.RegisterType((*ACLFilter)(nil), "kafka.ACLFilter")
 	proto.RegisterType((*KafkaAPIACLFilterReply)(nil), "kafka.KafkaAPIACLFilterReply")
 	proto.RegisterType((*KafkaAPIResponse)(nil), "kafka.KafkaAPIResponse")
+	proto.RegisterType((*KafkaTopicRequest)(nil), "kafka.KafkaTopicRequest")
 	proto.RegisterType((*ListTopicParams)(nil), "kafka.ListTopicParams")
 	proto.RegisterType((*ListKafkaTopicReply)(nil), "kafka.ListKafkaTopicReply")
 	proto.RegisterType((*KafkaTopicSpecification)(nil), "kafka.KafkaTopicSpecification")
 	proto.RegisterMapType((map[string]string)(nil), "kafka.KafkaTopicSpecification.ConfigsEntry")
-	proto.RegisterType((*KafkaAPITopicRequest)(nil), "kafka.KafkaAPITopicRequest")
+	proto.RegisterType((*Topic)(nil), "kafka.Topic")
 	proto.RegisterType((*KafkaNode)(nil), "kafka.KafkaNode")
 	proto.RegisterType((*KafkaTopicPartitionInfo)(nil), "kafka.KafkaTopicPartitionInfo")
 	proto.RegisterType((*KafkaTopicDescription)(nil), "kafka.KafkaTopicDescription")
 	proto.RegisterType((*KafkaTopicConfigSynonym)(nil), "kafka.KafkaTopicConfigSynonym")
 	proto.RegisterType((*KafkaTopicConfigEntry)(nil), "kafka.KafkaTopicConfigEntry")
-	proto.RegisterType((*KafkaAPITopicConfigRequest)(nil), "kafka.KafkaAPITopicConfigRequest")
+	proto.RegisterType((*TopicConfig)(nil), "kafka.TopicConfig")
 	proto.RegisterEnum("kafka.KafkaTopicConfigSource", KafkaTopicConfigSource_name, KafkaTopicConfigSource_value)
 	proto.RegisterEnum("kafka.AccessControlEntryConfig_FilterType", AccessControlEntryConfig_FilterType_name, AccessControlEntryConfig_FilterType_value)
 	proto.RegisterEnum("kafka.AccessControlEntryConfig_ACLPermissionType", AccessControlEntryConfig_ACLPermissionType_name, AccessControlEntryConfig_ACLPermissionType_value)
@@ -1112,14 +1162,14 @@ type KafkaClient interface {
 	Describe(ctx context.Context, in *v1.GetKafkaClusterRequest, opts ...grpc.CallOption) (*v1.GetKafkaClusterReply, error)
 	Create(ctx context.Context, in *v1.CreateKafkaClusterRequest, opts ...grpc.CallOption) (*v1.CreateKafkaClusterReply, error)
 	Delete(ctx context.Context, in *v1.DeleteKafkaClusterRequest, opts ...grpc.CallOption) (*v1.DeleteKafkaClusterReply, error)
-	ListTopics(ctx context.Context, in *ListTopicParams, opts ...grpc.CallOption) (*ListKafkaTopicReply, error)
-	DescribeTopic(ctx context.Context, in *KafkaAPITopicRequest, opts ...grpc.CallOption) (*KafkaTopicDescription, error)
-	CreateTopic(ctx context.Context, in *KafkaAPITopicRequest, opts ...grpc.CallOption) (*KafkaAPIResponse, error)
-	DeleteTopic(ctx context.Context, in *KafkaAPITopicRequest, opts ...grpc.CallOption) (*KafkaAPIResponse, error)
-	UpdateTopic(ctx context.Context, in *KafkaAPITopicRequest, opts ...grpc.CallOption) (*KafkaAPIResponse, error)
-	ListACL(ctx context.Context, in *KafkaAPIACLFilterRequest, opts ...grpc.CallOption) (*KafkaAPIACLFilterReply, error)
-	CreateACL(ctx context.Context, in *KafkaAPIACLRequest, opts ...grpc.CallOption) (*KafkaAPIResponse, error)
-	DeleteACL(ctx context.Context, in *KafkaAPIACLFilterRequest, opts ...grpc.CallOption) (*KafkaAPIResponse, error)
+	ListTopics(ctx context.Context, in *KafkaTopicRequest, opts ...grpc.CallOption) (*ListKafkaTopicReply, error)
+	DescribeTopic(ctx context.Context, in *KafkaTopicRequest, opts ...grpc.CallOption) (*KafkaTopicDescription, error)
+	CreateTopic(ctx context.Context, in *KafkaTopicRequest, opts ...grpc.CallOption) (*KafkaAPIResponse, error)
+	DeleteTopic(ctx context.Context, in *KafkaTopicRequest, opts ...grpc.CallOption) (*KafkaAPIResponse, error)
+	UpdateTopic(ctx context.Context, in *KafkaTopicRequest, opts ...grpc.CallOption) (*KafkaAPIResponse, error)
+	ListACL(ctx context.Context, in *ACLFilter, opts ...grpc.CallOption) (*KafkaAPIACLFilterReply, error)
+	CreateACL(ctx context.Context, in *ACLSpec, opts ...grpc.CallOption) (*KafkaAPIResponse, error)
+	DeleteACL(ctx context.Context, in *ACLFilter, opts ...grpc.CallOption) (*KafkaAPIResponse, error)
 }
 
 type kafkaClient struct {
@@ -1175,7 +1225,7 @@ func (c *kafkaClient) Delete(ctx context.Context, in *v1.DeleteKafkaClusterReque
 	return out, nil
 }
 
-func (c *kafkaClient) ListTopics(ctx context.Context, in *ListTopicParams, opts ...grpc.CallOption) (*ListKafkaTopicReply, error) {
+func (c *kafkaClient) ListTopics(ctx context.Context, in *KafkaTopicRequest, opts ...grpc.CallOption) (*ListKafkaTopicReply, error) {
 	out := new(ListKafkaTopicReply)
 	err := c.cc.Invoke(ctx, "/kafka.Kafka/ListTopics", in, out, opts...)
 	if err != nil {
@@ -1184,7 +1234,7 @@ func (c *kafkaClient) ListTopics(ctx context.Context, in *ListTopicParams, opts 
 	return out, nil
 }
 
-func (c *kafkaClient) DescribeTopic(ctx context.Context, in *KafkaAPITopicRequest, opts ...grpc.CallOption) (*KafkaTopicDescription, error) {
+func (c *kafkaClient) DescribeTopic(ctx context.Context, in *KafkaTopicRequest, opts ...grpc.CallOption) (*KafkaTopicDescription, error) {
 	out := new(KafkaTopicDescription)
 	err := c.cc.Invoke(ctx, "/kafka.Kafka/DescribeTopic", in, out, opts...)
 	if err != nil {
@@ -1193,7 +1243,7 @@ func (c *kafkaClient) DescribeTopic(ctx context.Context, in *KafkaAPITopicReques
 	return out, nil
 }
 
-func (c *kafkaClient) CreateTopic(ctx context.Context, in *KafkaAPITopicRequest, opts ...grpc.CallOption) (*KafkaAPIResponse, error) {
+func (c *kafkaClient) CreateTopic(ctx context.Context, in *KafkaTopicRequest, opts ...grpc.CallOption) (*KafkaAPIResponse, error) {
 	out := new(KafkaAPIResponse)
 	err := c.cc.Invoke(ctx, "/kafka.Kafka/CreateTopic", in, out, opts...)
 	if err != nil {
@@ -1202,7 +1252,7 @@ func (c *kafkaClient) CreateTopic(ctx context.Context, in *KafkaAPITopicRequest,
 	return out, nil
 }
 
-func (c *kafkaClient) DeleteTopic(ctx context.Context, in *KafkaAPITopicRequest, opts ...grpc.CallOption) (*KafkaAPIResponse, error) {
+func (c *kafkaClient) DeleteTopic(ctx context.Context, in *KafkaTopicRequest, opts ...grpc.CallOption) (*KafkaAPIResponse, error) {
 	out := new(KafkaAPIResponse)
 	err := c.cc.Invoke(ctx, "/kafka.Kafka/DeleteTopic", in, out, opts...)
 	if err != nil {
@@ -1211,7 +1261,7 @@ func (c *kafkaClient) DeleteTopic(ctx context.Context, in *KafkaAPITopicRequest,
 	return out, nil
 }
 
-func (c *kafkaClient) UpdateTopic(ctx context.Context, in *KafkaAPITopicRequest, opts ...grpc.CallOption) (*KafkaAPIResponse, error) {
+func (c *kafkaClient) UpdateTopic(ctx context.Context, in *KafkaTopicRequest, opts ...grpc.CallOption) (*KafkaAPIResponse, error) {
 	out := new(KafkaAPIResponse)
 	err := c.cc.Invoke(ctx, "/kafka.Kafka/UpdateTopic", in, out, opts...)
 	if err != nil {
@@ -1220,7 +1270,7 @@ func (c *kafkaClient) UpdateTopic(ctx context.Context, in *KafkaAPITopicRequest,
 	return out, nil
 }
 
-func (c *kafkaClient) ListACL(ctx context.Context, in *KafkaAPIACLFilterRequest, opts ...grpc.CallOption) (*KafkaAPIACLFilterReply, error) {
+func (c *kafkaClient) ListACL(ctx context.Context, in *ACLFilter, opts ...grpc.CallOption) (*KafkaAPIACLFilterReply, error) {
 	out := new(KafkaAPIACLFilterReply)
 	err := c.cc.Invoke(ctx, "/kafka.Kafka/ListACL", in, out, opts...)
 	if err != nil {
@@ -1229,7 +1279,7 @@ func (c *kafkaClient) ListACL(ctx context.Context, in *KafkaAPIACLFilterRequest,
 	return out, nil
 }
 
-func (c *kafkaClient) CreateACL(ctx context.Context, in *KafkaAPIACLRequest, opts ...grpc.CallOption) (*KafkaAPIResponse, error) {
+func (c *kafkaClient) CreateACL(ctx context.Context, in *ACLSpec, opts ...grpc.CallOption) (*KafkaAPIResponse, error) {
 	out := new(KafkaAPIResponse)
 	err := c.cc.Invoke(ctx, "/kafka.Kafka/CreateACL", in, out, opts...)
 	if err != nil {
@@ -1238,7 +1288,7 @@ func (c *kafkaClient) CreateACL(ctx context.Context, in *KafkaAPIACLRequest, opt
 	return out, nil
 }
 
-func (c *kafkaClient) DeleteACL(ctx context.Context, in *KafkaAPIACLFilterRequest, opts ...grpc.CallOption) (*KafkaAPIResponse, error) {
+func (c *kafkaClient) DeleteACL(ctx context.Context, in *ACLFilter, opts ...grpc.CallOption) (*KafkaAPIResponse, error) {
 	out := new(KafkaAPIResponse)
 	err := c.cc.Invoke(ctx, "/kafka.Kafka/DeleteACL", in, out, opts...)
 	if err != nil {
@@ -1254,14 +1304,14 @@ type KafkaServer interface {
 	Describe(context.Context, *v1.GetKafkaClusterRequest) (*v1.GetKafkaClusterReply, error)
 	Create(context.Context, *v1.CreateKafkaClusterRequest) (*v1.CreateKafkaClusterReply, error)
 	Delete(context.Context, *v1.DeleteKafkaClusterRequest) (*v1.DeleteKafkaClusterReply, error)
-	ListTopics(context.Context, *ListTopicParams) (*ListKafkaTopicReply, error)
-	DescribeTopic(context.Context, *KafkaAPITopicRequest) (*KafkaTopicDescription, error)
-	CreateTopic(context.Context, *KafkaAPITopicRequest) (*KafkaAPIResponse, error)
-	DeleteTopic(context.Context, *KafkaAPITopicRequest) (*KafkaAPIResponse, error)
-	UpdateTopic(context.Context, *KafkaAPITopicRequest) (*KafkaAPIResponse, error)
-	ListACL(context.Context, *KafkaAPIACLFilterRequest) (*KafkaAPIACLFilterReply, error)
-	CreateACL(context.Context, *KafkaAPIACLRequest) (*KafkaAPIResponse, error)
-	DeleteACL(context.Context, *KafkaAPIACLFilterRequest) (*KafkaAPIResponse, error)
+	ListTopics(context.Context, *KafkaTopicRequest) (*ListKafkaTopicReply, error)
+	DescribeTopic(context.Context, *KafkaTopicRequest) (*KafkaTopicDescription, error)
+	CreateTopic(context.Context, *KafkaTopicRequest) (*KafkaAPIResponse, error)
+	DeleteTopic(context.Context, *KafkaTopicRequest) (*KafkaAPIResponse, error)
+	UpdateTopic(context.Context, *KafkaTopicRequest) (*KafkaAPIResponse, error)
+	ListACL(context.Context, *ACLFilter) (*KafkaAPIACLFilterReply, error)
+	CreateACL(context.Context, *ACLSpec) (*KafkaAPIResponse, error)
+	DeleteACL(context.Context, *ACLFilter) (*KafkaAPIResponse, error)
 }
 
 func RegisterKafkaServer(s *grpc.Server, srv KafkaServer) {
@@ -1359,7 +1409,7 @@ func _Kafka_Delete_Handler(srv interface{}, ctx context.Context, dec func(interf
 }
 
 func _Kafka_ListTopics_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListTopicParams)
+	in := new(KafkaTopicRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1371,13 +1421,13 @@ func _Kafka_ListTopics_Handler(srv interface{}, ctx context.Context, dec func(in
 		FullMethod: "/kafka.Kafka/ListTopics",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(KafkaServer).ListTopics(ctx, req.(*ListTopicParams))
+		return srv.(KafkaServer).ListTopics(ctx, req.(*KafkaTopicRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Kafka_DescribeTopic_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(KafkaAPITopicRequest)
+	in := new(KafkaTopicRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1389,13 +1439,13 @@ func _Kafka_DescribeTopic_Handler(srv interface{}, ctx context.Context, dec func
 		FullMethod: "/kafka.Kafka/DescribeTopic",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(KafkaServer).DescribeTopic(ctx, req.(*KafkaAPITopicRequest))
+		return srv.(KafkaServer).DescribeTopic(ctx, req.(*KafkaTopicRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Kafka_CreateTopic_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(KafkaAPITopicRequest)
+	in := new(KafkaTopicRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1407,13 +1457,13 @@ func _Kafka_CreateTopic_Handler(srv interface{}, ctx context.Context, dec func(i
 		FullMethod: "/kafka.Kafka/CreateTopic",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(KafkaServer).CreateTopic(ctx, req.(*KafkaAPITopicRequest))
+		return srv.(KafkaServer).CreateTopic(ctx, req.(*KafkaTopicRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Kafka_DeleteTopic_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(KafkaAPITopicRequest)
+	in := new(KafkaTopicRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1425,13 +1475,13 @@ func _Kafka_DeleteTopic_Handler(srv interface{}, ctx context.Context, dec func(i
 		FullMethod: "/kafka.Kafka/DeleteTopic",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(KafkaServer).DeleteTopic(ctx, req.(*KafkaAPITopicRequest))
+		return srv.(KafkaServer).DeleteTopic(ctx, req.(*KafkaTopicRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Kafka_UpdateTopic_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(KafkaAPITopicRequest)
+	in := new(KafkaTopicRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1443,13 +1493,13 @@ func _Kafka_UpdateTopic_Handler(srv interface{}, ctx context.Context, dec func(i
 		FullMethod: "/kafka.Kafka/UpdateTopic",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(KafkaServer).UpdateTopic(ctx, req.(*KafkaAPITopicRequest))
+		return srv.(KafkaServer).UpdateTopic(ctx, req.(*KafkaTopicRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Kafka_ListACL_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(KafkaAPIACLFilterRequest)
+	in := new(ACLFilter)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1461,13 +1511,13 @@ func _Kafka_ListACL_Handler(srv interface{}, ctx context.Context, dec func(inter
 		FullMethod: "/kafka.Kafka/ListACL",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(KafkaServer).ListACL(ctx, req.(*KafkaAPIACLFilterRequest))
+		return srv.(KafkaServer).ListACL(ctx, req.(*ACLFilter))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Kafka_CreateACL_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(KafkaAPIACLRequest)
+	in := new(ACLSpec)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1479,13 +1529,13 @@ func _Kafka_CreateACL_Handler(srv interface{}, ctx context.Context, dec func(int
 		FullMethod: "/kafka.Kafka/CreateACL",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(KafkaServer).CreateACL(ctx, req.(*KafkaAPIACLRequest))
+		return srv.(KafkaServer).CreateACL(ctx, req.(*ACLSpec))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Kafka_DeleteACL_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(KafkaAPIACLFilterRequest)
+	in := new(ACLFilter)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1497,7 +1547,7 @@ func _Kafka_DeleteACL_Handler(srv interface{}, ctx context.Context, dec func(int
 		FullMethod: "/kafka.Kafka/DeleteACL",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(KafkaServer).DeleteACL(ctx, req.(*KafkaAPIACLFilterRequest))
+		return srv.(KafkaServer).DeleteACL(ctx, req.(*ACLFilter))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1563,91 +1613,92 @@ var _Kafka_serviceDesc = grpc.ServiceDesc{
 	Metadata: "kafka.proto",
 }
 
-func init() { proto.RegisterFile("kafka.proto", fileDescriptor_kafka_097a0469667d457d) }
+func init() { proto.RegisterFile("kafka.proto", fileDescriptor_kafka_3de71f486cda0ca4) }
 
-var fileDescriptor_kafka_097a0469667d457d = []byte{
-	// 1324 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x57, 0x4b, 0x6f, 0xdb, 0x46,
-	0x10, 0x36, 0xf5, 0xd6, 0x48, 0x4e, 0xe9, 0xad, 0x9d, 0x28, 0x6a, 0xd2, 0xb8, 0x8b, 0x3e, 0xdc,
-	0x3c, 0x1c, 0xc4, 0x69, 0x8b, 0x22, 0x87, 0x02, 0x34, 0x45, 0x3b, 0x84, 0x69, 0x49, 0x58, 0xd1,
-	0x70, 0x83, 0x1e, 0x1c, 0x86, 0x5e, 0x37, 0x84, 0x69, 0x92, 0x25, 0x29, 0x03, 0x3a, 0xb7, 0xc8,
-	0x3f, 0xe8, 0x0f, 0xe8, 0xb9, 0x97, 0x02, 0x3d, 0x17, 0xfd, 0x6b, 0xc5, 0x3e, 0x48, 0x51, 0x96,
-	0x94, 0x0a, 0xc8, 0x49, 0xbb, 0x33, 0xdf, 0x3c, 0xf6, 0x9b, 0xd9, 0x59, 0x0a, 0x5a, 0x97, 0xce,
-	0xc5, 0xa5, 0xb3, 0x1b, 0xc5, 0x61, 0x1a, 0xa2, 0x2a, 0xdf, 0x74, 0x31, 0xff, 0x79, 0x9a, 0xb8,
-	0x6f, 0xe9, 0xf9, 0xd8, 0xa7, 0xf1, 0xd3, 0xeb, 0x67, 0xd3, 0x8d, 0x80, 0xe2, 0x77, 0x65, 0xe8,
-	0x68, 0xae, 0x4b, 0x93, 0x44, 0x0f, 0x83, 0x34, 0x0e, 0x7d, 0x23, 0x48, 0xe3, 0x89, 0x1e, 0x06,
-	0x17, 0xde, 0xcf, 0xe8, 0x1e, 0x34, 0xa3, 0xd8, 0x0b, 0x5c, 0x2f, 0x72, 0xfc, 0x8e, 0xb2, 0xad,
-	0xec, 0x34, 0xc9, 0x54, 0xc0, 0xb4, 0x61, 0x44, 0x63, 0x27, 0xf5, 0xc2, 0xa0, 0x53, 0x12, 0xda,
-	0x5c, 0x80, 0x10, 0x54, 0xde, 0x86, 0x49, 0xda, 0x29, 0x73, 0x05, 0x5f, 0xa3, 0x2f, 0xe1, 0x56,
-	0x44, 0xe3, 0x2b, 0x2f, 0x49, 0xbc, 0x30, 0xb0, 0x27, 0x11, 0xed, 0x54, 0xb8, 0xf6, 0x86, 0x14,
-	0x6f, 0x01, 0x1c, 0x78, 0x7e, 0x4a, 0x63, 0xb6, 0x43, 0x75, 0x28, 0x6b, 0xfd, 0x57, 0xea, 0x1a,
-	0xde, 0x81, 0x0d, 0x4d, 0xb7, 0x86, 0x33, 0x58, 0xd4, 0x84, 0xaa, 0x66, 0x59, 0x83, 0x53, 0x75,
-	0x0d, 0x35, 0xa0, 0xd2, 0x33, 0xfa, 0xaf, 0x54, 0x05, 0xff, 0xa5, 0x40, 0x5b, 0xd3, 0xad, 0x41,
-	0x9e, 0x0d, 0xf3, 0x61, 0x59, 0x02, 0x43, 0x0c, 0xad, 0xa7, 0x2a, 0xcc, 0xf0, 0x94, 0x98, 0xb6,
-	0xa1, 0x96, 0x10, 0x40, 0x4d, 0x27, 0x86, 0x66, 0x1b, 0x6a, 0x99, 0xad, 0x7b, 0x86, 0x65, 0xd8,
-	0x86, 0x5a, 0x11, 0xbe, 0x6d, 0x83, 0xa8, 0x55, 0xd4, 0x86, 0x46, 0xcf, 0x18, 0xe9, 0xc4, 0xdc,
-	0x37, 0xd4, 0x1a, 0x42, 0x70, 0x4b, 0xb7, 0x4e, 0x46, 0xb6, 0x41, 0xce, 0x34, 0xdd, 0x36, 0x07,
-	0x7d, 0xb5, 0x8e, 0x36, 0x41, 0xcd, 0x10, 0x67, 0xfa, 0xa0, 0x7f, 0x60, 0x1e, 0x8e, 0xd4, 0x06,
-	0xda, 0x80, 0x75, 0xee, 0x22, 0x17, 0x35, 0x19, 0xd0, 0xec, 0x19, 0xc7, 0xc3, 0x81, 0x6d, 0xf4,
-	0xed, 0x33, 0x91, 0x03, 0xe0, 0x77, 0x25, 0xd8, 0x22, 0x34, 0x09, 0xc7, 0xb1, 0x4b, 0x87, 0x4e,
-	0x9a, 0xd2, 0x38, 0x90, 0x55, 0xc0, 0xd0, 0x8e, 0xa5, 0x82, 0x73, 0x26, 0x0a, 0x31, 0x23, 0x63,
-	0x6c, 0x07, 0xce, 0x15, 0x95, 0x65, 0xe0, 0x6b, 0xb4, 0x0d, 0xad, 0x48, 0x38, 0xe2, 0x66, 0xa2,
-	0x10, 0x45, 0x11, 0xde, 0x5e, 0xc8, 0x33, 0x3b, 0xf6, 0xb1, 0x66, 0xeb, 0x2f, 0x55, 0x05, 0x1f,
-	0x42, 0x9b, 0x14, 0xe3, 0x34, 0xa1, 0x6a, 0x0f, 0x86, 0xa6, 0x2e, 0x50, 0x87, 0x64, 0x70, 0x32,
-	0x54, 0x15, 0xd4, 0x82, 0xba, 0xa4, 0x43, 0x2d, 0xb1, 0xe3, 0xd9, 0x44, 0xeb, 0x8f, 0x04, 0x31,
-	0x9a, 0x75, 0x66, 0xf6, 0xd4, 0x32, 0xde, 0x81, 0xd6, 0x70, 0x1a, 0x99, 0x59, 0x58, 0xa6, 0x6d,
-	0x10, 0x8d, 0xd5, 0xa4, 0x0d, 0x8d, 0x21, 0x31, 0x0e, 0xcc, 0x1f, 0x8d, 0x9e, 0xaa, 0xe0, 0x5f,
-	0x15, 0x40, 0x47, 0xac, 0x71, 0xb5, 0xa1, 0xa9, 0xe9, 0x16, 0xa1, 0xbf, 0x8c, 0x69, 0x92, 0xa2,
-	0xef, 0xa0, 0x2e, 0x53, 0xe7, 0x04, 0xb4, 0xf6, 0xee, 0xed, 0x8a, 0x96, 0x5f, 0x48, 0x1a, 0xc9,
-	0xc0, 0xe8, 0x5b, 0xa8, 0x52, 0xd6, 0xd2, 0x9c, 0x9a, 0xd6, 0xde, 0x03, 0x69, 0xb5, 0xac, 0xe7,
-	0x89, 0x40, 0xe3, 0x3f, 0x14, 0xe8, 0x14, 0xb2, 0x10, 0x34, 0x65, 0xb9, 0xec, 0xc3, 0xba, 0x74,
-	0x2f, 0xe4, 0x2b, 0x65, 0x34, 0x6b, 0x82, 0x34, 0x68, 0xf1, 0x48, 0xd2, 0xc3, 0x8a, 0xd9, 0x15,
-	0x6d, 0xf0, 0x31, 0xdc, 0x5e, 0x90, 0x62, 0xe4, 0x4f, 0xd0, 0x73, 0xa8, 0xc7, 0x34, 0x19, 0xfb,
-	0x69, 0xd2, 0x51, 0xb6, 0xcb, 0x3b, 0xad, 0xbd, 0xbb, 0xd2, 0xf1, 0x3c, 0xb1, 0x24, 0x43, 0x62,
-	0x04, 0x6a, 0xa6, 0x26, 0x34, 0x89, 0xc2, 0x20, 0xa1, 0x78, 0x03, 0x3e, 0xb2, 0xbc, 0x24, 0xb5,
-	0xc3, 0xc8, 0x73, 0x87, 0x4e, 0xec, 0x5c, 0x25, 0xf8, 0x09, 0x7c, 0xcc, 0x44, 0x1c, 0xca, 0xe5,
-	0x22, 0xe4, 0x6d, 0xa8, 0xa5, 0x6c, 0x27, 0x22, 0x36, 0x89, 0xdc, 0xe1, 0xdf, 0x4a, 0x70, 0x67,
-	0x8a, 0x1d, 0x45, 0xd4, 0xf5, 0x2e, 0x3c, 0x37, 0x9f, 0x11, 0xbc, 0x6b, 0x95, 0x42, 0xd7, 0x7e,
-	0x0e, 0xeb, 0xc1, 0xf8, 0x6a, 0xe8, 0xc4, 0xa9, 0xc7, 0x30, 0x09, 0x67, 0xa6, 0x4e, 0x66, 0x85,
-	0xe8, 0x31, 0x6c, 0xc4, 0x34, 0xf2, 0xa5, 0xa3, 0x03, 0xc7, 0x4d, 0xc3, 0x98, 0x77, 0x78, 0x9d,
-	0xcc, 0x2b, 0x90, 0x01, 0x75, 0x97, 0xf3, 0x97, 0x74, 0xaa, 0x9c, 0x8e, 0x47, 0x45, 0x3a, 0xe6,
-	0x13, 0xdb, 0x15, 0x6c, 0x27, 0x9c, 0x79, 0x92, 0xd9, 0x76, 0x5f, 0x40, 0xbb, 0xa8, 0x40, 0x2a,
-	0x94, 0x2f, 0xe9, 0x44, 0x66, 0xcf, 0x96, 0x68, 0x13, 0xaa, 0xd7, 0x8e, 0x3f, 0xce, 0xee, 0xa1,
-	0xd8, 0xbc, 0x28, 0x7d, 0xaf, 0xe0, 0x0b, 0xd8, 0xcc, 0xc8, 0x95, 0xa4, 0x89, 0x56, 0xda, 0x83,
-	0x4a, 0x12, 0x51, 0x57, 0x76, 0xd0, 0xa7, 0xef, 0xcf, 0x8b, 0x70, 0x2c, 0xea, 0x42, 0xe3, 0xda,
-	0xf1, 0xbd, 0x73, 0x27, 0x15, 0x81, 0x1a, 0x24, 0xdf, 0xe3, 0x53, 0x68, 0x72, 0xe3, 0x7e, 0x78,
-	0x4e, 0xd1, 0x2d, 0x28, 0x99, 0x3d, 0xee, 0xba, 0x4e, 0x4a, 0x66, 0x8f, 0xf1, 0x3d, 0x0c, 0xe3,
-	0x54, 0x52, 0xca, 0xd7, 0x4c, 0xf6, 0xb2, 0x30, 0xa7, 0xd9, 0x9a, 0xc9, 0x88, 0xe3, 0x5e, 0xca,
-	0xe9, 0xcc, 0xd7, 0xf8, 0x6f, 0xa5, 0x58, 0xc7, 0xbc, 0x14, 0x66, 0x70, 0x11, 0xb2, 0x97, 0x20,
-	0x17, 0xc8, 0x70, 0x53, 0x01, 0xda, 0x81, 0x9a, 0x45, 0x9d, 0xf3, 0xbc, 0xc9, 0xd5, 0xe2, 0x21,
-	0x59, 0x9e, 0x44, 0xea, 0xd1, 0x63, 0x68, 0x10, 0x51, 0xbc, 0xa4, 0x53, 0xe6, 0x85, 0x9a, 0xc7,
-	0xe6, 0x08, 0x84, 0xa1, 0x6c, 0x8e, 0x48, 0xa7, 0xb2, 0x04, 0xc8, 0x94, 0xf8, 0x1f, 0x05, 0xb6,
-	0xa6, 0x59, 0xf7, 0x68, 0xe2, 0xc6, 0x5e, 0x94, 0xf5, 0x5e, 0xbf, 0xd0, 0x7b, 0x6c, 0xcd, 0x88,
-	0x35, 0x03, 0x76, 0x47, 0x1d, 0x3f, 0x23, 0x36, 0xdb, 0xa3, 0x6f, 0xa0, 0x26, 0xfa, 0x40, 0x66,
-	0x76, 0x6f, 0xae, 0x54, 0xa2, 0x37, 0x44, 0xcf, 0x48, 0x2c, 0xfa, 0x01, 0xa0, 0xd0, 0xca, 0x22,
-	0xd5, 0xf9, 0x22, 0xcf, 0xb0, 0x49, 0x0a, 0x16, 0xf8, 0xa7, 0x22, 0xe9, 0x22, 0xc0, 0x68, 0x12,
-	0x84, 0xc1, 0xe4, 0x6a, 0xe1, 0xe5, 0x59, 0xd8, 0x7f, 0xec, 0x6a, 0x8a, 0x81, 0x24, 0x8b, 0x2c,
-	0x77, 0xf8, 0xf7, 0x19, 0x72, 0x0a, 0xe9, 0x7f, 0xb8, 0x6f, 0xf4, 0x02, 0x1a, 0x89, 0x48, 0x74,
-	0xf9, 0xb1, 0x67, 0xce, 0x43, 0x72, 0x3c, 0xb6, 0xa1, 0x3b, 0x73, 0x57, 0xe4, 0xec, 0x9b, 0x3e,
-	0x04, 0x6c, 0x08, 0x7a, 0x34, 0x9b, 0x6d, 0xef, 0xaf, 0x44, 0x06, 0x7e, 0xf8, 0xa7, 0x22, 0xc7,
-	0x65, 0x31, 0xb6, 0x48, 0xb6, 0x03, 0x9b, 0xbd, 0x57, 0x7d, 0xed, 0xd8, 0xd4, 0xcf, 0xf8, 0xeb,
-	0x26, 0x1f, 0x6b, 0x75, 0x0d, 0xdd, 0x85, 0xad, 0x4c, 0xb3, 0x4f, 0x06, 0x47, 0xf9, 0x3b, 0xae,
-	0x2a, 0xe8, 0x33, 0xb8, 0x9f, 0xa9, 0x7a, 0xc6, 0x81, 0x76, 0x62, 0xd9, 0x37, 0x20, 0x25, 0xe6,
-	0x77, 0x64, 0x6b, 0xf6, 0x9c, 0x71, 0x99, 0x7d, 0x40, 0x64, 0x46, 0x52, 0x56, 0x61, 0x6f, 0xe2,
-	0x49, 0xff, 0xa8, 0x3f, 0x38, 0xed, 0xab, 0xd5, 0xbd, 0x7f, 0x1b, 0x50, 0xe5, 0xd9, 0xa2, 0xd7,
-	0xd0, 0xd6, 0x63, 0xea, 0xa4, 0x54, 0x1b, 0x9a, 0x47, 0x74, 0x82, 0xbe, 0x92, 0xc7, 0x9d, 0x7e,
-	0xc9, 0x5d, 0x3f, 0xdb, 0x95, 0x88, 0xc8, 0x3b, 0xa2, 0x13, 0x49, 0x54, 0xf7, 0x8b, 0xff, 0x07,
-	0x46, 0xfe, 0x04, 0xaf, 0xa1, 0xd7, 0x50, 0x61, 0x13, 0x1d, 0x3d, 0x5a, 0x64, 0x70, 0x48, 0xc5,
-	0xa8, 0xd7, 0xfd, 0x71, 0x92, 0xd2, 0x38, 0xc9, 0xbc, 0x7f, 0xbd, 0x1a, 0x58, 0x44, 0x78, 0x03,
-	0x0d, 0x71, 0xf7, 0xde, 0x50, 0xf4, 0x70, 0x05, 0xc3, 0x2c, 0xc8, 0xce, 0x4a, 0x58, 0x11, 0xe3,
-	0x02, 0x6a, 0xe2, 0x70, 0xe8, 0xc9, 0xf2, 0x83, 0x2f, 0x0a, 0xf2, 0x68, 0x55, 0x78, 0x1e, 0xa7,
-	0x47, 0x7d, 0xba, 0x2c, 0x8e, 0xd0, 0xad, 0x1c, 0x67, 0x11, 0x5c, 0xc4, 0xd9, 0x07, 0xc8, 0x9f,
-	0xde, 0x04, 0xdd, 0x96, 0xc6, 0x37, 0x5e, 0xe3, 0x6e, 0xb7, 0x20, 0xbf, 0xf1, 0x24, 0xe3, 0x35,
-	0x64, 0xc1, 0x7a, 0xc6, 0x3b, 0x97, 0xa3, 0x4f, 0x6e, 0x7c, 0x07, 0x14, 0xdf, 0xa2, 0xee, 0xfc,
-	0x45, 0x2a, 0x0c, 0x4c, 0xbc, 0x86, 0x0c, 0x68, 0x09, 0x5a, 0x56, 0xf0, 0x75, 0xe7, 0x86, 0x32,
-	0xff, 0xa2, 0xe0, 0x6e, 0xc4, 0xa9, 0x3f, 0xd8, 0xcd, 0x49, 0x74, 0xfe, 0xc1, 0xd9, 0x1c, 0x41,
-	0x9d, 0x71, 0xa7, 0xe9, 0x16, 0x7a, 0x30, 0xff, 0x91, 0x34, 0xf3, 0xdd, 0xd7, 0xbd, 0xbf, 0x1c,
-	0x20, 0xf8, 0xd6, 0xa0, 0x29, 0x2f, 0x98, 0x6e, 0xa1, 0xe5, 0xdf, 0x5c, 0xef, 0xcb, 0xe7, 0x10,
-	0x9a, 0x82, 0x9d, 0x95, 0x32, 0x5a, 0xee, 0xe8, 0x4d, 0x8d, 0xff, 0xc1, 0x7b, 0xfe, 0x5f, 0x00,
-	0x00, 0x00, 0xff, 0xff, 0xb6, 0x4f, 0xc9, 0xd8, 0x1a, 0x0e, 0x00, 0x00,
+var fileDescriptor_kafka_3de71f486cda0ca4 = []byte{
+	// 1343 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x57, 0x4b, 0x6f, 0xdb, 0xc6,
+	0x16, 0x16, 0xf5, 0xd6, 0x91, 0xe4, 0x4b, 0xcf, 0x8d, 0x13, 0x5d, 0x23, 0xb9, 0xd7, 0x77, 0xd0,
+	0x87, 0x9a, 0x87, 0x83, 0xb8, 0x6d, 0x10, 0x18, 0x45, 0x01, 0x9a, 0xa2, 0x5d, 0xc2, 0x8c, 0x24,
+	0x8c, 0x68, 0xb8, 0x41, 0x17, 0x0e, 0x43, 0x8d, 0x1b, 0xc2, 0x32, 0xc9, 0x92, 0x94, 0x51, 0xed,
+	0x8b, 0xac, 0xba, 0x2a, 0xd0, 0x5f, 0xd1, 0x4d, 0x81, 0xae, 0xfb, 0xdf, 0x8a, 0x79, 0x90, 0xa2,
+	0x2c, 0x29, 0x11, 0x90, 0x95, 0x66, 0xce, 0xf9, 0xce, 0x77, 0x5e, 0x33, 0x67, 0x28, 0x68, 0x5e,
+	0x39, 0x97, 0x57, 0xce, 0x7e, 0x18, 0x05, 0x49, 0x80, 0x2a, 0x7c, 0xb3, 0x8b, 0xf9, 0xcf, 0xd3,
+	0xd8, 0x7d, 0x4b, 0xc7, 0xd3, 0x09, 0x8d, 0x9e, 0xde, 0x3c, 0x9b, 0x6f, 0x04, 0x14, 0xbf, 0x2b,
+	0x41, 0x47, 0x73, 0x5d, 0x1a, 0xc7, 0x7a, 0xe0, 0x27, 0x51, 0x30, 0x31, 0xfc, 0x24, 0x9a, 0xe9,
+	0x81, 0x7f, 0xe9, 0xfd, 0x88, 0xee, 0x43, 0x23, 0x8c, 0x3c, 0xdf, 0xf5, 0x42, 0x67, 0xd2, 0x51,
+	0xf6, 0x94, 0x6e, 0x83, 0xcc, 0x05, 0x4c, 0x1b, 0x84, 0x34, 0x72, 0x12, 0x2f, 0xf0, 0x3b, 0x45,
+	0xa1, 0xcd, 0x04, 0x08, 0x41, 0xf9, 0x6d, 0x10, 0x27, 0x9d, 0x12, 0x57, 0xf0, 0x35, 0xfa, 0x0c,
+	0xb6, 0x42, 0x1a, 0x5d, 0x7b, 0x71, 0xec, 0x05, 0xbe, 0x3d, 0x0b, 0x69, 0xa7, 0xcc, 0xb5, 0xb7,
+	0xa4, 0x78, 0x07, 0xe0, 0xd8, 0x9b, 0x24, 0x34, 0x62, 0x3b, 0x54, 0x83, 0x92, 0xd6, 0x7f, 0xa5,
+	0x16, 0x70, 0x17, 0xb6, 0x35, 0xdd, 0x1a, 0x2e, 0x60, 0x51, 0x03, 0x2a, 0x9a, 0x65, 0x0d, 0xce,
+	0xd5, 0x02, 0xaa, 0x43, 0xb9, 0x67, 0xf4, 0x5f, 0xa9, 0x0a, 0xfe, 0x53, 0x81, 0x96, 0xa6, 0x5b,
+	0x83, 0x2c, 0x1a, 0xc6, 0x61, 0x59, 0x02, 0x43, 0x0c, 0xad, 0xa7, 0x2a, 0xcc, 0xf0, 0x9c, 0x98,
+	0xb6, 0xa1, 0x16, 0x11, 0x40, 0x55, 0x27, 0x86, 0x66, 0x1b, 0x6a, 0x89, 0xad, 0x7b, 0x86, 0x65,
+	0xd8, 0x86, 0x5a, 0x16, 0xdc, 0xb6, 0x41, 0xd4, 0x0a, 0x6a, 0x41, 0xbd, 0x67, 0x8c, 0x74, 0x62,
+	0x1e, 0x19, 0x6a, 0x15, 0x21, 0xd8, 0xd2, 0xad, 0xb3, 0x91, 0x6d, 0x90, 0x0b, 0x4d, 0xb7, 0xcd,
+	0x41, 0x5f, 0xad, 0xa1, 0x3b, 0xa0, 0xa6, 0x88, 0x0b, 0x7d, 0xd0, 0x3f, 0x36, 0x4f, 0x46, 0x6a,
+	0x1d, 0x6d, 0x43, 0x9b, 0x53, 0x64, 0xa2, 0x06, 0x03, 0x9a, 0x3d, 0xe3, 0xe5, 0x70, 0x60, 0x1b,
+	0x7d, 0xfb, 0x42, 0xc4, 0x00, 0xf8, 0x5d, 0x11, 0x76, 0x08, 0x8d, 0x83, 0x69, 0xe4, 0xd2, 0xa1,
+	0x93, 0x24, 0x34, 0xf2, 0x65, 0x17, 0x30, 0xb4, 0x22, 0xa9, 0xe0, 0x35, 0x13, 0x8d, 0x58, 0x90,
+	0xb1, 0x6a, 0xfb, 0xce, 0x35, 0x95, 0x6d, 0xe0, 0x6b, 0xb4, 0x07, 0xcd, 0x50, 0x10, 0x71, 0x33,
+	0xd1, 0x88, 0xbc, 0x08, 0xef, 0xad, 0xac, 0x33, 0x4b, 0xfb, 0xa5, 0x66, 0xeb, 0xdf, 0xa9, 0x0a,
+	0x3e, 0x81, 0x16, 0xc9, 0xfb, 0x69, 0x40, 0xc5, 0x1e, 0x0c, 0x4d, 0x5d, 0xa0, 0x4e, 0xc8, 0xe0,
+	0x6c, 0xa8, 0x2a, 0xa8, 0x09, 0x35, 0x59, 0x0e, 0xb5, 0xc8, 0xd2, 0xb3, 0x89, 0xd6, 0x1f, 0x89,
+	0xc2, 0x68, 0xd6, 0x85, 0xd9, 0x53, 0x4b, 0xb8, 0x0b, 0xcd, 0xe1, 0xdc, 0x33, 0xb3, 0xb0, 0x4c,
+	0xdb, 0x20, 0x1a, 0xeb, 0x49, 0x0b, 0xea, 0x43, 0x62, 0x1c, 0x9b, 0xdf, 0x1b, 0x3d, 0x55, 0xc1,
+	0x3f, 0x43, 0x4d, 0xd3, 0xad, 0x51, 0x48, 0x5d, 0xf4, 0x1c, 0x6a, 0x32, 0x5c, 0x9e, 0x74, 0xf3,
+	0xe0, 0xfe, 0xbe, 0x38, 0xe6, 0x2b, 0x0b, 0x45, 0x52, 0x30, 0xfa, 0x1a, 0x2a, 0x94, 0x1d, 0x63,
+	0x5e, 0x8e, 0xe6, 0xc1, 0xff, 0xa4, 0xd5, 0xba, 0x73, 0x4e, 0x04, 0x1a, 0xff, 0xa6, 0x40, 0x43,
+	0xd3, 0x2d, 0x51, 0x12, 0x74, 0x04, 0x6d, 0xc9, 0x27, 0x04, 0x1b, 0x85, 0xb0, 0x68, 0x82, 0x34,
+	0x68, 0x72, 0x6a, 0xc9, 0xb0, 0x61, 0x38, 0x79, 0x1b, 0x7c, 0x04, 0x77, 0x4f, 0x19, 0x5c, 0x1b,
+	0x9a, 0x59, 0x6c, 0x84, 0x86, 0x93, 0x19, 0xea, 0x42, 0x2d, 0xa2, 0xf1, 0x74, 0x92, 0xc4, 0x1d,
+	0x65, 0xaf, 0xd4, 0x6d, 0x1e, 0x6c, 0xa5, 0xc4, 0xa2, 0x7c, 0x24, 0x55, 0x63, 0x04, 0x6a, 0xca,
+	0x41, 0x68, 0x1c, 0x06, 0x7e, 0x4c, 0x71, 0x0c, 0xdb, 0x5c, 0x66, 0x07, 0xa1, 0xe7, 0x12, 0xfa,
+	0xd3, 0x94, 0xc6, 0x09, 0x3a, 0x84, 0x9a, 0x3b, 0x99, 0xc6, 0xf3, 0x6c, 0xf7, 0x24, 0xe5, 0x7c,
+	0x6c, 0xdc, 0x3c, 0xdb, 0xe7, 0x76, 0xba, 0xc0, 0x91, 0xd4, 0x00, 0x61, 0xa8, 0x24, 0x8c, 0x4b,
+	0x66, 0xd9, 0x92, 0x96, 0x82, 0x5f, 0xa8, 0xf0, 0x36, 0xfc, 0xcb, 0xf2, 0xe2, 0x84, 0xcb, 0x86,
+	0x4e, 0xe4, 0x5c, 0xc7, 0xf8, 0x09, 0xfc, 0x9b, 0x89, 0xf2, 0xb1, 0xb0, 0xe4, 0xee, 0x42, 0x95,
+	0x9b, 0x88, 0xdc, 0x1a, 0x44, 0xee, 0xf0, 0x2f, 0x45, 0xb8, 0x37, 0xc7, 0xb2, 0x34, 0xbd, 0x4b,
+	0xcf, 0xcd, 0x46, 0x0e, 0xbf, 0x04, 0x4a, 0xee, 0x12, 0x7c, 0x02, 0x6d, 0x7f, 0x7a, 0x3d, 0x74,
+	0xa2, 0xc4, 0x63, 0x98, 0x98, 0x47, 0xd7, 0x26, 0x8b, 0x42, 0xf4, 0x18, 0xb6, 0x23, 0x1a, 0x4e,
+	0x24, 0xd1, 0xb1, 0xe3, 0x26, 0x41, 0xc4, 0x2f, 0x4c, 0x9b, 0x2c, 0x2b, 0x90, 0x01, 0x35, 0x97,
+	0x77, 0x2a, 0xee, 0x54, 0x78, 0xe1, 0x1f, 0xc9, 0x5c, 0xd7, 0x04, 0xb6, 0x2f, 0xfa, 0x1a, 0xf3,
+	0x1e, 0x93, 0xd4, 0x76, 0xf7, 0x10, 0x5a, 0x79, 0x05, 0x52, 0xa1, 0x74, 0x45, 0x67, 0x32, 0x7a,
+	0xb6, 0x44, 0x77, 0xa0, 0x72, 0xe3, 0x4c, 0xa6, 0xe9, 0xb5, 0x16, 0x9b, 0xc3, 0xe2, 0x0b, 0x05,
+	0x9f, 0x43, 0x85, 0xfb, 0x41, 0x07, 0x50, 0x8e, 0x43, 0xea, 0xca, 0x76, 0xfd, 0xf7, 0xfd, 0x81,
+	0x10, 0x8e, 0x45, 0xbb, 0x50, 0xbf, 0x71, 0x26, 0xde, 0xd8, 0x49, 0x04, 0x73, 0x9d, 0x64, 0x7b,
+	0x7c, 0x0e, 0x0d, 0x6e, 0xdc, 0x0f, 0xc6, 0x14, 0x6d, 0x41, 0xd1, 0x1b, 0x73, 0xea, 0x36, 0x29,
+	0x7a, 0x63, 0x56, 0xe0, 0x30, 0x88, 0x12, 0x59, 0x43, 0xbe, 0x5e, 0x39, 0xe7, 0x11, 0x94, 0x23,
+	0xc7, 0xbd, 0x92, 0xd3, 0x9d, 0xaf, 0xf1, 0x5f, 0x4a, 0xbe, 0x71, 0x59, 0xed, 0x4d, 0xff, 0x32,
+	0x60, 0x2f, 0x49, 0x26, 0x90, 0xee, 0xe6, 0x02, 0xd4, 0x85, 0xaa, 0x45, 0x9d, 0x71, 0x76, 0x7f,
+	0xd4, 0x7c, 0x92, 0x2c, 0x4e, 0x22, 0xf5, 0xe8, 0x31, 0xd4, 0x89, 0xe8, 0x56, 0xdc, 0x29, 0xf1,
+	0xce, 0x2c, 0x63, 0x33, 0x04, 0xc2, 0x50, 0x32, 0x47, 0xa4, 0x53, 0x5e, 0x03, 0x64, 0x4a, 0xfc,
+	0xb7, 0x02, 0x3b, 0xf3, 0xa8, 0x7b, 0x34, 0x76, 0x23, 0x2f, 0x4c, 0x0f, 0x5b, 0x3f, 0x77, 0xd8,
+	0xd8, 0x9a, 0x15, 0xd6, 0xf4, 0xd9, 0xf5, 0x77, 0x26, 0x69, 0x61, 0xd3, 0x3d, 0xfa, 0x0a, 0xaa,
+	0xa2, 0xf1, 0x32, 0xb2, 0xfb, 0x4b, 0xad, 0x12, 0x87, 0x41, 0x1c, 0x12, 0x89, 0x45, 0xdf, 0x02,
+	0xe4, 0xce, 0xae, 0x08, 0x75, 0xb9, 0xc9, 0x0b, 0xd5, 0x24, 0x39, 0x0b, 0xfc, 0x43, 0xbe, 0xe8,
+	0xc2, 0xc1, 0x68, 0xe6, 0x07, 0xfe, 0xec, 0x7a, 0xe5, 0x6d, 0x59, 0x79, 0xe0, 0xd8, 0x5d, 0x14,
+	0xb3, 0x4e, 0x36, 0x59, 0xee, 0xf0, 0xef, 0x0b, 0xc5, 0xc9, 0x85, 0xff, 0xf1, 0xdc, 0xe8, 0x10,
+	0xea, 0xb1, 0x08, 0x74, 0x7d, 0xda, 0x0b, 0xf9, 0x90, 0x0c, 0x8f, 0x0d, 0x68, 0xe6, 0xf4, 0xec,
+	0x15, 0x61, 0x03, 0xd5, 0xa3, 0xe9, 0x9c, 0x7c, 0x7f, 0xe9, 0x53, 0xf0, 0xc3, 0x3f, 0x14, 0x39,
+	0x7a, 0xf3, 0xce, 0x44, 0x74, 0x1d, 0xb8, 0xd3, 0x7b, 0xd5, 0xd7, 0x5e, 0x9a, 0xfa, 0x05, 0x7f,
+	0x0e, 0xe5, 0xeb, 0xae, 0x16, 0xd0, 0x7f, 0x60, 0x27, 0xd5, 0x1c, 0x91, 0xc1, 0x69, 0xf6, 0xf0,
+	0xab, 0x0a, 0xfa, 0x3f, 0x3c, 0x48, 0x55, 0x3d, 0xe3, 0x58, 0x3b, 0xb3, 0xec, 0x5b, 0x90, 0x22,
+	0xe3, 0x1d, 0xd9, 0x9a, 0xbd, 0x64, 0x5c, 0x62, 0x5f, 0x1c, 0xa9, 0x91, 0x94, 0x95, 0xd9, 0x23,
+	0x7a, 0xd6, 0x3f, 0xed, 0x0f, 0xce, 0xfb, 0x6a, 0xe5, 0xe0, 0xd7, 0x3a, 0x54, 0x78, 0xb4, 0xe8,
+	0x35, 0xb4, 0xf4, 0x88, 0x3a, 0x09, 0xd5, 0x86, 0xe6, 0x29, 0x9d, 0xa1, 0xcf, 0x57, 0xcd, 0x70,
+	0x89, 0x08, 0xbd, 0x53, 0x3a, 0x93, 0xd3, 0x7f, 0xf7, 0xd3, 0x0f, 0x03, 0xc3, 0xc9, 0x0c, 0x17,
+	0xd0, 0x6b, 0x28, 0xb3, 0x99, 0x8d, 0x1e, 0xad, 0x32, 0x38, 0xa1, 0x49, 0xfe, 0x81, 0x88, 0x53,
+	0xf6, 0x2f, 0x36, 0x03, 0x0b, 0x0f, 0x6f, 0xa0, 0x2e, 0x2e, 0xdb, 0x1b, 0x8a, 0x1e, 0x6e, 0x60,
+	0x98, 0x3a, 0xe9, 0x6e, 0x84, 0x15, 0x3e, 0x2e, 0xa1, 0x2a, 0x92, 0x43, 0x4f, 0xd6, 0x27, 0xbe,
+	0xca, 0xc9, 0xa3, 0x4d, 0xe1, 0x99, 0x9f, 0x1e, 0x9d, 0xd0, 0x75, 0x7e, 0x84, 0x6e, 0x63, 0x3f,
+	0xab, 0xe0, 0xc2, 0x4f, 0x0f, 0x20, 0x7b, 0x5c, 0x63, 0xd4, 0x59, 0x3a, 0xe4, 0x29, 0xed, 0xae,
+	0xd4, 0xac, 0x78, 0x76, 0x71, 0x01, 0x99, 0xd0, 0x4e, 0x2b, 0x2f, 0x5e, 0x98, 0xf5, 0x44, 0xcb,
+	0xf7, 0x28, 0x37, 0x20, 0x71, 0x01, 0x1d, 0x41, 0x53, 0x54, 0xe5, 0x43, 0x44, 0xf7, 0xf2, 0x9a,
+	0xfc, 0x47, 0x0a, 0xe7, 0x10, 0x19, 0x7f, 0x1c, 0xc7, 0x59, 0x38, 0xfe, 0xb8, 0x38, 0xbe, 0x81,
+	0x1a, 0xab, 0x97, 0xa6, 0x5b, 0x48, 0x9d, 0x7f, 0x66, 0x89, 0xcf, 0xb1, 0xdd, 0x07, 0xb7, 0xec,
+	0x16, 0x3f, 0xd4, 0x70, 0x01, 0x3d, 0x87, 0x86, 0xbc, 0x47, 0xba, 0x85, 0x6e, 0x7d, 0xa6, 0xbd,
+	0xcf, 0xeb, 0x0b, 0x68, 0x88, 0xec, 0x57, 0xfb, 0x5d, 0x6f, 0xf9, 0xa6, 0xca, 0xff, 0xde, 0x7d,
+	0xf9, 0x4f, 0x00, 0x00, 0x00, 0xff, 0xff, 0xd2, 0x43, 0xfc, 0x13, 0x18, 0x0e, 0x00, 0x00,
 }

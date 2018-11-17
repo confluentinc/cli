@@ -99,9 +99,7 @@ func main() {
 		cli.AddCommand(conn)
 	}
 
-	if err := cli.Execute(); err != nil {
-		fmt.Fprintf(os.Stderr, "Error executing CLI: %s\n", err.Error())
-	}
+	check(cli.Execute())
 }
 
 func check(err error) {

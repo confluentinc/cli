@@ -20,19 +20,19 @@ type Kafka interface {
 	Describe(ctx context.Context, cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error)
 	Create(ctx context.Context, config *schedv1.KafkaClusterConfig) (*schedv1.KafkaCluster, error)
 	Delete(ctx context.Context, cluster *schedv1.KafkaCluster) error
-	ListTopics(ctx context.Context) (*ListKafkaTopicReply, error)
-	DescribeTopic(ctx context.Context, conf *KafkaAPITopicRequest) (*KafkaTopicDescription, error)
-	CreateTopic(ctx context.Context, conf *KafkaAPITopicRequest) (*KafkaAPIResponse, error)
-	DeleteTopic(ctx context.Context, conf *KafkaAPITopicRequest) (*KafkaAPIResponse, error)
-	UpdateTopic(ctx context.Context, conf *KafkaAPITopicRequest) (*KafkaAPIResponse, error)
-	ListACL(ctx context.Context, conf *KafkaAPIACLFilterRequest) (*KafkaAPIACLFilterReply, error)
-	CreateACL(ctx context.Context, conf *KafkaAPIACLRequest) (*KafkaAPIResponse, error)
-	DeleteACL(ctx context.Context, conf *KafkaAPIACLFilterRequest) (*KafkaAPIResponse, error)
+	ListTopics(ctx context.Context, cluster *schedv1.KafkaCluster) ([]string, error)
+	DescribeTopic(ctx context.Context, cluster *schedv1.KafkaCluster, topic *Topic) (*KafkaTopicDescription, error)
+	CreateTopic(ctx context.Context, cluster *schedv1.KafkaCluster, topic *Topic) (*KafkaAPIResponse, error)
+	DeleteTopic(ctx context.Context, cluster *schedv1.KafkaCluster, topic *Topic) (*KafkaAPIResponse, error)
+	UpdateTopic(ctx context.Context, cluster *schedv1.KafkaCluster, topic *Topic) (*KafkaAPIResponse, error)
+	ListACL(ctx context.Context, conf *ACLFilter) (*KafkaAPIACLFilterReply, error)
+	CreateACL(ctx context.Context, conf *ACLSpec) (*KafkaAPIResponse, error)
+	DeleteACL(ctx context.Context, conf *ACLFilter) (*KafkaAPIResponse, error)
 }
 
-// NewKafkaAPITopicRequest returns an instance of KafkaAPITopicRequest
-func NewKafkaAPITopicRequest(conf *KafkaTopicSpecification, validate bool) *KafkaAPITopicRequest {
-	return &KafkaAPITopicRequest{
+// NewTopic returns an instance of Topic
+func NewTopic(conf *KafkaTopicSpecification, validate bool) *Topic {
+	return &Topic{
 		Spec:     conf,
 		Validate: validate,
 	}

@@ -1,11 +1,11 @@
 package shared
 
 import (
-	"encoding/json"
-	"fmt"
 	"io"
-	"io/ioutil"
+	"fmt"
 	"net/http"
+	"io/ioutil"
+	"encoding/json"
 
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/status"
@@ -20,7 +20,7 @@ import (
  *
  * Error Flow:
  * - API error responses (json) are parsed into corev1.Error objects.
- * - Note: API returns 404s for unauthorized resources, so HTTP package has to remap 404 -> 401 where appropriate.
+ *  - Note: API returns 404s for unauthorized resources, so HTTP package has to remap 404 -> 401 where appropriate.
  * - Plugins call ConvertAPIError() to transforms corev1.Error into HTTP Error constants
  * - GRPC encodes errors into Status objects when sent over the wire
  * - Commands call ConvertGRPCError() to transform these back into HTTP Error constants
@@ -105,9 +105,7 @@ func readBody(r io.Reader) []byte {
 // https://github.com/confluentinc/blueway/blob/master/control-center/src/main/java/io/confluent/controlcenter/rest/KafkaExceptionMapper.java
 func HandleKafkaAPIError(resp *http.Response, err error) error {
 	if err != nil {
-		return &KafkaAPIError{
-			Msg: err.Error(),
-		}
+		return corev1.WrapErr(err, "an error occurred handling a request ")
 	}
 
 	switch {
@@ -120,7 +118,7 @@ func HandleKafkaAPIError(resp *http.Response, err error) error {
 		body := readBody(resp.Body)
 		if json.Valid(body) {
 			if err := json.Unmarshal(body, &err); err != nil {
-				return err
+				return corev1.WrapErr(err, "")
 			}
 			return &err
 		}

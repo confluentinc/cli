@@ -11,6 +11,7 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/shared"
+	"github.com/confluentinc/cli/shared/ksql"
 )
 
 var (
@@ -23,10 +24,11 @@ var (
 type clusterCommand struct {
 	*cobra.Command
 	config *shared.Config
+	client ksql.Ksql
 }
 
 // NewClusterCommand returns the Cobra clusterCommand for Ksql Cluster.
-func NewClusterCommand(config *shared.Config) *cobra.Command {
+func NewClusterCommand(config *shared.Config, plugin common.Provider) *cobra.Command {
 	cmd := &clusterCommand{
 		Command: &cobra.Command{
 			Use:   "app",
@@ -34,11 +36,17 @@ func NewClusterCommand(config *shared.Config) *cobra.Command {
 		},
 		config: config,
 	}
-	cmd.init()
+	cmd.init(plugin)
 	return cmd.Command
 }
 
-func (c *clusterCommand) init() {
+func (c *clusterCommand) init(plugin common.Provider) {
+
+	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		// Lazy load plugin to avoid unnecessarily spawning child processes
+		return plugin(&c.client)
+	}
+
 	c.AddCommand(&cobra.Command{
 		Use:   "list",
 		Short: "List ksql apps.",
@@ -75,7 +83,7 @@ func (c *clusterCommand) init() {
 
 func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 	req := &schedv1.KSQLCluster{AccountId: c.config.Auth.Account.Id}
-	clusters, err := Client.List(context.Background(), req)
+	clusters, err := c.client.List(context.Background(), req)
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
@@ -107,7 +115,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		Storage:        storage,
 		KafkaClusterId: kafkaClusterID,
 	}
-	cluster, err := Client.Create(context.Background(), config)
+	cluster, err := c.client.Create(context.Background(), config)
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
@@ -117,7 +125,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 
 func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	req := &schedv1.KSQLCluster{AccountId: c.config.Auth.Account.Id, Id: args[0]}
-	cluster, err := Client.Describe(context.Background(), req)
+	cluster, err := c.client.Describe(context.Background(), req)
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
@@ -127,7 +135,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	req := &schedv1.KSQLCluster{AccountId: c.config.Auth.Account.Id, Id: args[0]}
-	err := Client.Delete(context.Background(), req)
+	err := c.client.Delete(context.Background(), req)
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}

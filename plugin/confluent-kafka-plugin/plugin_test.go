@@ -2,13 +2,15 @@ package main
 
 import (
 	"fmt"
-	"net/http/httptest"
+	"testing"
 	"net/http"
 	"encoding/json"
+	"net/http/httptest"
 
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	chttp "github.com/confluentinc/cli/http"
 	log "github.com/confluentinc/cli/log"
-	"testing"
+
 	"github.com/confluentinc/cli/shared/kafka"
 )
 
@@ -62,7 +64,7 @@ func handleACL(w http.ResponseWriter, req *http.Request) {
 // @Path /acls:search
 //https://github.com/confluentinc/blueway/blob/master/control-center/src/main/java/io/confluent/controlcenter/rest/KafkaResource.java#L303-L322
 func handleACLSearch(w http.ResponseWriter, req *http.Request) {
-	json.NewEncoder(w).Encode([]kafka.KafkaAPIACLRequest{})
+	json.NewEncoder(w).Encode([]kafka.ACLSpec{})
 }
 
 func TestMockClient(t *testing.T) {
@@ -70,14 +72,14 @@ func TestMockClient(t *testing.T) {
 	done := make(chan struct{})
 
 	client := NewMockClient(logger, done)
-	client.Kafka.ListTopics()
-	client.Kafka.CreateTopic(&kafka.KafkaAPITopicRequest{})
-	client.Kafka.DeleteTopic(&kafka.KafkaAPITopicRequest{Spec: &kafka.KafkaTopicSpecification{Name: "topic_test"},})
-	client.Kafka.UpdateTopic(&kafka.KafkaAPITopicRequest{Spec: &kafka.KafkaTopicSpecification{Name: "topic_test"},})
-	client.Kafka.DescribeTopic(&kafka.KafkaAPITopicRequest{Spec: &kafka.KafkaTopicSpecification{Name: "topic_test"},})
-	client.Kafka.CreateACL(&kafka.KafkaAPIACLRequest{})
-	client.Kafka.DeleteACL(&kafka.KafkaAPIACLFilterRequest{})
-	client.Kafka.ListACL(&kafka.KafkaAPIACLFilterRequest{})
+	client.Kafka.ListTopics(&schedv1.KafkaCluster{})
+	client.Kafka.CreateTopic(&schedv1.KafkaCluster{}, &kafka.Topic{})
+	client.Kafka.DeleteTopic(&schedv1.KafkaCluster{}, &kafka.Topic{Spec: &kafka.KafkaTopicSpecification{Name: "topic_test"}})
+	client.Kafka.UpdateTopic(&schedv1.KafkaCluster{}, &kafka.Topic{Spec: &kafka.KafkaTopicSpecification{Name: "topic_test"}})
+	client.Kafka.DescribeTopic(&schedv1.KafkaCluster{}, &kafka.Topic{Spec: &kafka.KafkaTopicSpecification{Name: "topic_test"}})
+	client.Kafka.CreateACL(&kafka.ACLSpec{})
+	client.Kafka.DeleteACL(&kafka.ACLFilter{})
+	client.Kafka.ListACL(&kafka.ACLFilter{})
 
 	done<-struct{}{}
 }
@@ -100,7 +102,6 @@ func NewMockClient(logger *log.Logger, done chan struct{}) *chttp.Client {
 	api = httptest.NewServer(mux)
 
 	client := chttp.NewClient(api.Client(), api.URL, logger)
-	client.Kafka.ConfigureKafkaAPI(clusterID, api.URL)
 
 	return client
 }

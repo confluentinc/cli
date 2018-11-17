@@ -8,8 +8,6 @@ import (
 	"github.com/confluentinc/cli/shared/ksql"
 )
 
-// Client handles communication with the service API
-var Client ksql.Ksql
 
 type command struct {
 	*cobra.Command
@@ -44,16 +42,15 @@ func grpcLoader(i interface{}) error {
 	return common.LoadPlugin(ksql.Name, i)
 }
 
-func (c *command) init(run func(interface{})(error)) error {
+func (c *command) init(plugin common.Provider) error {
 	// All commands require login first
 	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		if err := c.config.CheckLogin(); err != nil {
 			return common.HandleError(err, cmd)
 		}
-		// Lazy load plugin to avoid unnecessarily spawning child processes
-		return run(&Client)
+		return nil
 	}
 
-	c.AddCommand(NewClusterCommand(c.config))
+	c.AddCommand(NewClusterCommand(c.config, plugin))
 	return nil
 }

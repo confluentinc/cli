@@ -10,7 +10,7 @@ import (
 
 // ACLConfiguration wrapper used for flag parsing and validation
 type ACLConfiguration struct {
-	*proto.KafkaAPIACLRequest
+	*proto.ACLSpec
 	errors []string
 }
 
@@ -49,7 +49,7 @@ func resourceFlags() *pflag.FlagSet {
 // parse returns ACLConfiguration from the contents of cmd
 func parse(cmd *cobra.Command) *ACLConfiguration {
 	aclBinding := &ACLConfiguration{
-		KafkaAPIACLRequest: &proto.KafkaAPIACLRequest{
+		ACLSpec: &proto.ACLSpec{
 			Entry: &proto.AccessControlEntryConfig{
 				Host: "*",
 			},
@@ -86,7 +86,7 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 			}
 			conf.Entry.PermissionType = n
 		case "PRINCIPAL":
-			conf.Entry.Principal = "user:" + v
+			conf.Entry.Principal = "User:" + v
 		case "OPERATION":
 			v = strings.ToUpper(v)
 			if _, ok := proto.AccessControlEntryConfig_ACLOperation_value[v]; ok {

@@ -11,16 +11,15 @@ service Kafka {
     rpc Describe (kafka.scheduler.v1.GetKafkaClusterRequest) returns (kafka.scheduler.v1.GetKafkaClusterReply) {}
     rpc Create (kafka.scheduler.v1.CreateKafkaClusterRequest) returns (kafka.scheduler.v1.CreateKafkaClusterReply) {}
     rpc Delete (kafka.scheduler.v1.DeleteKafkaClusterRequest) returns (kafka.scheduler.v1.DeleteKafkaClusterReply) {}
-    rpc ListTopics (ListTopicParams) returns (ListKafkaTopicReply) {}
-    rpc DescribeTopic (KafkaAPITopicRequest) returns (KafkaTopicDescription) {}
-    rpc CreateTopic (KafkaAPITopicRequest) returns (KafkaAPIResponse) {}
-    rpc DeleteTopic (KafkaAPITopicRequest) returns (KafkaAPIResponse) {}
-    rpc UpdateTopic (KafkaAPITopicRequest) returns (KafkaAPIResponse) {}
-    rpc ListACL (KafkaAPIACLFilterRequest) returns (KafkaAPIACLFilterReply) {}
-    rpc CreateACL (KafkaAPIACLRequest) returns (KafkaAPIResponse) {}
-    rpc DeleteACL (KafkaAPIACLFilterRequest) returns (KafkaAPIResponse) {}
+    rpc ListTopics (KafkaTopicRequest) returns (ListKafkaTopicReply) {}
+    rpc DescribeTopic (KafkaTopicRequest) returns (KafkaTopicDescription) {}
+    rpc CreateTopic (KafkaTopicRequest) returns (KafkaAPIResponse) {}
+    rpc DeleteTopic (KafkaTopicRequest) returns (KafkaAPIResponse) {}
+    rpc UpdateTopic (KafkaTopicRequest) returns (KafkaAPIResponse) {}
+    rpc ListACL (ACLFilter) returns (KafkaAPIACLFilterReply) {}
+    rpc CreateACL (ACLSpec) returns (KafkaAPIResponse) {}
+    rpc DeleteACL (ACLFilter) returns (KafkaAPIResponse) {}
 }
-
 
 // AccessControlEntryConfig wraps AccessControlEntry
 // Apache Kafka reference
@@ -73,7 +72,7 @@ message ResourcePatternConfig {
         GROUP = 1;
         CLUSTER = 2;
         TRANSACTIONAL_ID = 3;
-//        DELEGATION_TOKEN = 4;
+//      DELEGATION_TOKEN = 4;
     }
     // Apache Kafka reference
     // https://github.com/confluentinc/cc-kafka/blob/trunk/clients/src/main/java/org/apache/kafka/common/resource/PatternType.java
@@ -86,10 +85,10 @@ message ResourcePatternConfig {
     string patternType = 3;
 }
 
-// KafkaAPIACLRequest wraps an AclBinding
+// ACLSpec wraps an AclBinding
 // Apache Kafka reference
 // https://github.com/confluentinc/cc-kafka/blob/trunk/clients/src/main/java/org/apache/kafka/common/acl/AclBinding.java
-message KafkaAPIACLRequest {
+message ACLSpec {
     ResourcePatternConfig pattern = 1;
     AccessControlEntryConfig entry = 2;
 }
@@ -97,18 +96,26 @@ message KafkaAPIACLRequest {
 // KafkaAPIACLFilterRequest wraps an AclBindingFilter
 // Apache Kafka reference
 // https://github.com/confluentinc/cc-kafka/blob/trunk/clients/src/main/java/org/apache/kafka/common/acl/AclBindingFilter.java
-message KafkaAPIACLFilterRequest {
+message ACLFilter {
     ResourcePatternConfig patternFilter = 1;
     AccessControlEntryConfig entryFilter = 2;
 }
 
 // KafkaAPIACLFilterResponse returns an array of AclBinding objects
 message KafkaAPIACLFilterReply {
-    repeated KafkaAPIACLRequest results =1;
+    repeated ACLSpec results = 1;
 }
 
 // KafkaAPIResponse represents a generic response to the KafkaAPI requester caller
 message KafkaAPIResponse {}
+
+// KafkaTopicRequest wraps control-plane operations
+// cc-structs reference
+// https://github.com/confluentinc/cc-structs/blob/d247737ab9d496cd3c8deab67ba14139871c887c/kafka/scheduler/v1/scheduler.proto#L408-L447
+message KafkaTopicRequest {
+    kafka.scheduler.v1.KafkaCluster cluster = 1;
+    Topic topic = 2;
+}
 
 // ListTopicParams represents the ListTopic empty param list
 message ListTopicParams {}
@@ -118,19 +125,18 @@ message ListKafkaTopicReply {
     repeated string topics = 1;
 }
 
-
 // KafkaTopicSpecification wraps NewTopic
 // Apache Kafka reference
 // https://github.com/confluentinc/cc-kafka/blob/trunk/clients/src/main/java/org/apache/kafka/clients/admin/NewTopic.java
 message KafkaTopicSpecification {
     string name = 1;
-    fixed32 numPartitions = 2;
-    fixed32 replicationFactor =3;
+    uint32 numPartitions = 2;
+    uint32 replicationFactor =3;
     map<string, string> configs = 5;
 }
 
-// KafkaAPITopicRequest describes a Kafka Topic request.
-message KafkaAPITopicRequest {
+// Topic describes a Kafka Topic request.
+message Topic {
     KafkaTopicSpecification spec = 1;
     bool validate = 2;
 }
@@ -139,17 +145,17 @@ message KafkaAPITopicRequest {
 // Apache Kafka reference
 // https://github.com/confluentinc/cc-kafka/blob/trunk/clients/src/main/java/org/apache/kafka/common/Node.java
 message KafkaNode {
-    fixed32 ID = 1;
-    fixed32 Port = 2;
-    string Host = 3;
-    string Rack = 4;
+    uint32 id = 1;
+    uint32 port = 2;
+    string host = 3;
+    string rack = 4;
 }
 
 // KafkaTopicPartitionInfo wraps TopicPartitionInfo
 // Apache Kafka reference
 // https://github.com/confluentinc/cc-kafka/blob/trunk/clients/src/main/java/org/apache/kafka/common/TopicPartitionInfo.java
 message KafkaTopicPartitionInfo {
-    fixed32 Partition = 1;
+    uint32 Partition = 1;
     KafkaNode Leader = 2;
     repeated KafkaNode Replicas = 3;
     repeated KafkaNode ISR = 4;
@@ -197,6 +203,6 @@ message KafkaTopicConfigEntry {
 }
 
 // KafkaConfigRequest describes a collection of KafkaConfigEntry
-message KafkaAPITopicConfigRequest {
+message TopicConfig {
     repeated KafkaTopicConfigEntry entries = 1;
 }

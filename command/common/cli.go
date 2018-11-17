@@ -23,12 +23,15 @@ var messages = map[error]string{
 	shared.ErrNotFound:       "Kafka cluster not found.", // TODO: parametrize ErrNotFound for better error messaging
 }
 
+// Provider loads a plugin
+type Provider func(interface{}) error
+
 // HandleError provides standard error messaging for common errors.
 func HandleError(err error, cmd *cobra.Command) error {
 	out := cmd.OutOrStderr()
 	if msg, ok := messages[err]; ok {
 		fmt.Fprintln(out, msg)
-		return err
+		return nil
 	}
 
 	switch err.(type) {
@@ -77,11 +80,11 @@ func LoadPlugin(name string, value interface{}) error {
 	}
 
 	// Request the plugin
-	obj2, err := rpcClient.Dispense(name)
+	impl, err := rpcClient.Dispense(name)
 	if err != nil {
 		return err
 	}
-	rv.Elem().Set(reflect.ValueOf(reflect.ValueOf(obj2).Interface()))
+	rv.Elem().Set(reflect.ValueOf(reflect.ValueOf(impl).Interface()))
 	return err
 }
 

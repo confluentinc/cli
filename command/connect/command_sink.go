@@ -13,11 +13,13 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	opv1 "github.com/confluentinc/cc-structs/operator/v1"
-	"github.com/confluentinc/cli/command/common"
+
 	"github.com/confluentinc/cli/shared"
+	"github.com/confluentinc/cli/shared/connect"
+	"github.com/confluentinc/cli/command/common"
 	connectv1 "github.com/confluentinc/cli/shared/connect"
+	opv1 "github.com/confluentinc/cc-structs/operator/v1"
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 )
 
 var (
@@ -31,10 +33,11 @@ var (
 type sinkCommand struct {
 	*cobra.Command
 	config  *shared.Config
+	client connect.Connect
 }
 
 // NewSink returns the Cobra sinkCommand for Connect Sink.
-func NewSink(config *shared.Config) (*cobra.Command, error) {
+func NewSink(config *shared.Config, plugin common.Provider) (*cobra.Command, error) {
 	cmd := &sinkCommand{
 		Command: &cobra.Command{
 			Use:   "sink",
@@ -42,11 +45,16 @@ func NewSink(config *shared.Config) (*cobra.Command, error) {
 		},
 		config:  config,
 	}
-	err := cmd.init()
+	err := cmd.init(plugin)
 	return cmd.Command, err
 }
 
-func (c *sinkCommand) init() error {
+func (c *sinkCommand) init(plugin common.Provider) error {
+	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		// Lazy load plugin to avoid unnecessarily spawning child processes
+		return plugin(&c.client)
+	}
+
 	createCmd := &cobra.Command{
 		Use:   "create NAME",
 		Short: "Create a connector.",
@@ -131,7 +139,7 @@ func (c *sinkCommand) init() error {
 
 func (c *sinkCommand) list(cmd *cobra.Command, args []string) error {
 	req := &schedv1.ConnectCluster{AccountId: c.config.Auth.Account.Id}
-	clusters, err := Client.List(context.Background(), req)
+	clusters, err := c.client.List(context.Background(), req)
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
@@ -150,7 +158,7 @@ func (c *sinkCommand) get(cmd *cobra.Command, args []string) error {
 	}
 
 	req := &schedv1.ConnectCluster{AccountId: c.config.Auth.Account.Id, Id: args[0]}
-	cluster, err := Client.Describe(context.Background(), req)
+	cluster, err := c.client.Describe(context.Background(), req)
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
@@ -202,7 +210,7 @@ func (c *sinkCommand) createS3Sink(kafkaClusterID, kafkaUserEmail string, cmd *c
 		KafkaUserEmail: kafkaUserEmail,
 	}
 
-	cluster, err := Client.CreateS3Sink(context.Background(), req)
+	cluster, err := c.client.CreateS3Sink(context.Background(), req)
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
@@ -261,7 +269,7 @@ func (c *sinkCommand) edit(cmd *cobra.Command, args []string) error {
 
 	switch req := updated.(type) {
 	case *schedv1.ConnectS3SinkCluster:
-		cluster, err := Client.UpdateS3Sink(context.Background(), req)
+		cluster, err := c.client.UpdateS3Sink(context.Background(), req)
 		if err != nil {
 			return common.HandleError(err, cmd)
 		}
@@ -291,7 +299,7 @@ func (c *sinkCommand) update(cmd *cobra.Command, args []string) error {
 			},
 			Options: options,
 		}
-		cluster, err := Client.UpdateS3Sink(context.Background(), req)
+		cluster, err := c.client.UpdateS3Sink(context.Background(), req)
 		if err != nil {
 			return common.HandleError(err, cmd)
 		}
@@ -308,7 +316,7 @@ func (c *sinkCommand) update(cmd *cobra.Command, args []string) error {
 
 func (c *sinkCommand) delete(cmd *cobra.Command, args []string) error {
 	req := &schedv1.ConnectCluster{AccountId: c.config.Auth.Account.Id, Id: args[0]}
-	err := Client.Delete(context.Background(), req)
+	err := c.client.Delete(context.Background(), req)
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
@@ -326,13 +334,13 @@ func (c *sinkCommand) auth(cmd *cobra.Command, args []string) error {
 
 func (c *sinkCommand) fetch(id string) (interface{}, error) {
 	req := &schedv1.ConnectCluster{AccountId: c.config.Auth.Account.Id, Id: id}
-	cluster, err := Client.Describe(context.Background(), req)
+	cluster, err := c.client.Describe(context.Background(), req)
 	if err != nil {
 		return nil, err
 	}
 	switch cluster.Plugin {
 	case opv1.ConnectPlugin_S3_SINK:
-		cl, err := Client.DescribeS3Sink(context.Background(), &schedv1.ConnectS3SinkCluster{
+		cl, err := c.client.DescribeS3Sink(context.Background(), &schedv1.ConnectS3SinkCluster{
 			ConnectCluster: &schedv1.ConnectCluster{Id: cluster.Id, AccountId: cluster.AccountId},
 		})
 		if err != nil {

@@ -7,18 +7,20 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/shared"
 	"github.com/confluentinc/cli/shared/kafka"
+	"github.com/confluentinc/cli/command/common"
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 )
 
 type topicCommand struct {
 	*cobra.Command
 	config *shared.Config
+	client kafka.Kafka
 }
 
 // NewTopicCommand returns the Cobra clusterCommand for Kafka Cluster.
-func NewTopicCommand(config *shared.Config) *cobra.Command {
+func NewTopicCommand(config *shared.Config, plugin common.Provider) *cobra.Command {
 	cmd := &topicCommand{
 		Command: &cobra.Command{
 			Use:   "topic",
@@ -26,11 +28,16 @@ func NewTopicCommand(config *shared.Config) *cobra.Command {
 		},
 		config: config,
 	}
-	cmd.init()
+	cmd.init(plugin)
 	return cmd.Command
 }
 
-func (c *topicCommand) init() {
+func (c *topicCommand) init(plugin common.Provider) {
+	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		// Lazy load plugin to avoid unnecessarily spawning child processes
+		return plugin(&c.client)
+	}
+
 	c.AddCommand(&cobra.Command{
 		Use:   "list",
 		Short: "List Kafka topics.",
@@ -89,31 +96,46 @@ func (c *topicCommand) init() {
 }
 
 func (c *topicCommand) list(cmd *cobra.Command, args []string) error {
-	resp, err := Client.ListTopics(context.Background())
+	ctx, _ := c.config.Context()
+
+	if ctx == nil {
+		return nil
+	}
+
+	req := &schedv1.KafkaCluster{AccountId: c.config.Auth.Account.Id, Id: ctx.Kafka}
+	resp, err := c.client.ListTopics(context.Background(), req)
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
+
 	jsonPrinter.PrintObj(resp, os.Stdout)
 	return nil
 }
 
 func (c *topicCommand) create(cmd *cobra.Command, args []string) error {
-	req := kafka.NewKafkaAPITopicRequest(&kafka.KafkaTopicSpecification{Configs: make(map[string]string)}, false)
+	ctx, _ := c.config.Context()
 
-	req.Spec.Name = args[0]
+	if ctx == nil {
+		return nil
+	}
+
+	req := &schedv1.KafkaCluster{AccountId: c.config.Auth.Account.Id, Id: ctx.Kafka}
+	topic := kafka.NewTopic(&kafka.KafkaTopicSpecification{Configs: make(map[string]string)}, false)
+
+	topic.Spec.Name = args[0]
 	var err error
 
-	req.Spec.NumPartitions, err = cmd.Flags().GetUint32("partitions")
+	topic.Spec.NumPartitions, err = cmd.Flags().GetUint32("partitions")
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
 
-	req.Spec.ReplicationFactor, err = cmd.Flags().GetUint32("replication-factor")
+	topic.Spec.ReplicationFactor, err = cmd.Flags().GetUint32("replication-factor")
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
 
-	req.Validate, err = cmd.Flags().GetBool("dry-run")
+	topic.Validate, err = cmd.Flags().GetBool("dry-run")
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
@@ -123,15 +145,23 @@ func (c *topicCommand) create(cmd *cobra.Command, args []string) error {
 		return common.HandleError(err, cmd)
 	}
 
-	req.Spec.Configs = toMap(configs)
+	topic.Spec.Configs = toMap(configs)
 
-	_, err = Client.CreateTopic(context.Background(), req)
+	_, err = c.client.CreateTopic(context.Background(), req, topic)
 	return common.HandleError(shared.KafkaError(err), cmd)
 }
 
 func (c *topicCommand) describe(cmd *cobra.Command, args []string) error {
-	conf := &kafka.KafkaTopicSpecification{Name: args[0]}
-	resp, err := Client.DescribeTopic(context.Background(), kafka.NewKafkaAPITopicRequest(conf, false))
+	ctx, _ := c.config.Context()
+
+	if ctx == nil {
+		return nil
+	}
+
+	req := &schedv1.KafkaCluster{AccountId: c.config.Auth.Account.Id, Id: ctx.Kafka}
+	topic := &kafka.KafkaTopicSpecification{Name: args[0]}
+
+	resp, err := c.client.DescribeTopic(context.Background(), req, kafka.NewTopic(topic, false))
 	if err != nil {
 		return common.HandleError(shared.KafkaError(err), cmd)
 	}
@@ -141,21 +171,35 @@ func (c *topicCommand) describe(cmd *cobra.Command, args []string) error {
 }
 
 func (c *topicCommand) update(cmd *cobra.Command, args []string) error {
-	conf := &kafka.KafkaTopicSpecification{Name: args[0], Configs: make(map[string]string)}
+	ctx, _ := c.config.Context()
+
+	if ctx == nil {
+		return nil
+	}
+
+	req := &schedv1.KafkaCluster{AccountId: c.config.Auth.Account.Id, Id: ctx.Kafka}
+	topic := &kafka.KafkaTopicSpecification{Name: args[0], Configs: make(map[string]string)}
 	configs, err := cmd.Flags().GetStringSlice("config")
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
 
-	conf.Configs = toMap(configs)
+	topic.Configs = toMap(configs)
 
-	_, err = Client.UpdateTopic(context.Background(), kafka.NewKafkaAPITopicRequest(conf, false))
+	_, err = c.client.UpdateTopic(context.Background(), req, kafka.NewTopic(topic, false))
 	return common.HandleError(shared.KafkaError(err), cmd)
 }
 
 func (c *topicCommand) delete(cmd *cobra.Command, args []string) error {
-	conf := &kafka.KafkaTopicSpecification{Name: args[0]}
-	_, err := Client.DeleteTopic(context.Background(), kafka.NewKafkaAPITopicRequest(conf, false))
+	ctx, _ := c.config.Context()
+
+	if ctx == nil {
+		return nil
+	}
+
+	req := &schedv1.KafkaCluster{AccountId: c.config.Auth.Account.Id, Id: ctx.Kafka}
+	topic := &kafka.KafkaTopicSpecification{Name: args[0]}
+	_, err := c.client.DeleteTopic(context.Background(), req, kafka.NewTopic(topic, false))
 	return common.HandleError(shared.KafkaError(err), cmd)
 }
 

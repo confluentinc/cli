@@ -17,10 +17,11 @@ import (
 type aclCommand struct {
 	*cobra.Command
 	config *shared.Config
+	client kafka.Kafka
 }
 
 // NewACLCommand returns the Cobra clusterCommand for Kafka Cluster.
-func NewACLCommand(config *shared.Config) *cobra.Command {
+func NewACLCommand(config *shared.Config, plugin common.Provider) *cobra.Command {
 	cmd := &aclCommand{
 		Command: &cobra.Command{
 			Use:   "acl",
@@ -29,11 +30,17 @@ func NewACLCommand(config *shared.Config) *cobra.Command {
 		config: config,
 	}
 
-	cmd.init()
+	cmd.init(plugin)
 	return cmd.Command
 }
 
-func (c *aclCommand) init() {
+func (c *aclCommand) init(plugin common.Provider) {
+
+	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		// Lazy load plugin to avoid unnecessarily spawning child processes
+		return plugin(&c.client)
+	}
+
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create a Kafka ACL.",
@@ -74,7 +81,7 @@ func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Failed to process input\n\t %s", acl.errors)
 	}
 
-	resp, err := Client.ListACL(context.Background(), ConvertToFilter(acl.KafkaAPIACLRequest))
+	resp, err := c.client.ListACL(context.Background(), convertToFilter(acl.ACLSpec))
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
@@ -89,7 +96,7 @@ func (c *aclCommand) create(cmd *cobra.Command, args []string) error {
 	if acl.errors != nil {
 		return fmt.Errorf("Failed to process input\n\t%v", strings.Join(acl.errors, "\n\t"))
 	}
-	_, err := Client.CreateACL(context.Background(), acl.KafkaAPIACLRequest)
+	_, err := c.client.CreateACL(context.Background(), acl.ACLSpec)
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
@@ -102,7 +109,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, args []string) error {
 	if acl.errors != nil {
 		return fmt.Errorf("Failed to process input\n\t%v", strings.Join(acl.errors, "\n\t"))
 	}
-	_, err := Client.DeleteACL(context.Background(), ConvertToFilter(acl.KafkaAPIACLRequest))
+	_, err := c.client.DeleteACL(context.Background(), convertToFilter(acl.ACLSpec))
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
@@ -135,8 +142,8 @@ func validateList(b *ACLConfiguration) *ACLConfiguration {
 	return b
 }
 
-// ConvertToFilter converts a KafkaAPIACLRequest to a KafkaAPIACLFilterRequest
-func ConvertToFilter(b *kafka.KafkaAPIACLRequest) *kafka.KafkaAPIACLFilterRequest {
+// convertToFilter converts a ACLSpec to a KafkaAPIACLFilterRequest
+func convertToFilter(b *kafka.ACLSpec) *kafka.ACLFilter{
 	b.Entry.Host = ""
 	if !common.IsSet(b.Entry.Operation) {
 		b.Entry.Operation = kafka.AccessControlEntryConfig_ANY.String()
@@ -150,7 +157,7 @@ func ConvertToFilter(b *kafka.KafkaAPIACLRequest) *kafka.KafkaAPIACLFilterReques
 		b.Pattern.PatternType = kafka.ResourcePatternConfig_ANY.String()
 	}
 
-	return &kafka.KafkaAPIACLFilterRequest{
+	return &kafka.ACLFilter{
 		EntryFilter: b.Entry,
 		PatternFilter: b.Pattern,
 	}

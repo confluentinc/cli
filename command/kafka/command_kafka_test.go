@@ -175,7 +175,7 @@ func TestCreateACL(t *testing.T) {
 			cmd.SetArgs(append(args, entry.args...))
 
 			go func() {
-				expect <- &kafka.KafkaAPIACLRequest{Pattern: resource.pattern, Entry: entry.entry}
+				expect <- &kafka.ACLSpec{Pattern: resource.pattern, Entry: entry.entry}
 			}()
 
 			if err := cmd.Execute(); err != nil {
@@ -194,7 +194,7 @@ func TestDeleteACL(t *testing.T) {
 			cmd.SetArgs(append(args, entry.args...))
 
 			go func() {
-				expect <- ConvertToFilter(&kafka.KafkaAPIACLRequest{Pattern: resource.pattern, Entry: entry.entry})
+				expect <- convertToFilter(&kafka.ACLSpec{Pattern: resource.pattern, Entry: entry.entry})
 			}()
 
 			if err := cmd.Execute(); err != nil {
@@ -211,7 +211,7 @@ func TestListResourceACL(t *testing.T) {
 		cmd.SetArgs(append([]string{"acl", "list"}, resource.args...))
 
 		go func() {
-			expect <- ConvertToFilter(&kafka.KafkaAPIACLRequest{Pattern: resource.pattern, Entry: &kafka.AccessControlEntryConfig{}})
+			expect <- convertToFilter(&kafka.ACLSpec{Pattern: resource.pattern, Entry: &kafka.AccessControlEntryConfig{}})
 		}()
 
 		if err := cmd.Execute(); err != nil {
@@ -227,7 +227,7 @@ func TestListPrincipalACL(t *testing.T) {
 		cmd.SetArgs(append([]string{"acl", "list", "--principal"}, strings.TrimPrefix(entry.entry.Principal, "user:")))
 
 		go func() {
-			expect <- ConvertToFilter(&kafka.KafkaAPIACLRequest{Entry: &kafka.AccessControlEntryConfig{Principal: entry.entry.Principal}})
+			expect <- convertToFilter(&kafka.ACLSpec{Entry: &kafka.AccessControlEntryConfig{Principal: entry.entry.Principal}})
 		}()
 
 		if err := cmd.Execute(); err != nil {
@@ -254,7 +254,7 @@ func TestListTopics(t *testing.T) {
 		cmd.SetArgs([]string{"topic", "list"})
 
 		go func() {
-			expect <- &kafka.KafkaAPITopicRequest{Spec: &kafka.KafkaTopicSpecification{Name: topic.spec.Name}}
+			expect <- &kafka.Topic{Spec: &kafka.KafkaTopicSpecification{Name: topic.spec.Name}}
 		}()
 
 		if err := cmd.Execute(); err != nil {
@@ -272,7 +272,7 @@ func TestCreateTopic(t *testing.T) {
 		cmd.SetArgs(append([]string{"topic", "create"}, topic.args...))
 
 		go func() {
-			expect <- &kafka.KafkaAPITopicRequest{Spec: topic.spec}
+			expect <- &kafka.Topic{Spec: topic.spec}
 		}()
 
 		if err := cmd.Execute(); err != nil {
@@ -290,7 +290,7 @@ func TestDescribeTopic(t *testing.T) {
 		cmd.SetArgs(append([]string{"topic", "describe"}, topic.args[0]))
 
 		go func() {
-			expect <- &kafka.KafkaAPITopicRequest{Spec: &kafka.KafkaTopicSpecification{Name: topic.spec.Name}}
+			expect <- &kafka.Topic{Spec: &kafka.KafkaTopicSpecification{Name: topic.spec.Name}}
 		}()
 
 		if err := cmd.Execute(); err != nil {
@@ -308,7 +308,7 @@ func TestDeleteTopic(t *testing.T) {
 		cmd.SetArgs(append([]string{"topic", "delete"}, topic.args[0]))
 
 		go func() {
-			expect <- &kafka.KafkaAPITopicRequest{Spec: &kafka.KafkaTopicSpecification{Name: topic.spec.Name}}
+			expect <- &kafka.Topic{Spec: &kafka.KafkaTopicSpecification{Name: topic.spec.Name}}
 		}()
 
 		if err := cmd.Execute(); err != nil {
@@ -326,7 +326,7 @@ func TestUpdateTopic(t *testing.T) {
 		cmd.SetArgs(append([]string{"topic", "update"}, topic.args[0]))
 
 		go func() {
-			expect <- &kafka.KafkaAPITopicRequest{Spec: &kafka.KafkaTopicSpecification{Name: topic.spec.Name, Configs: topic.spec.Configs}}
+			expect <- &kafka.Topic{Spec: &kafka.KafkaTopicSpecification{Name: topic.spec.Name, Configs: topic.spec.Configs}}
 		}()
 
 		if err := cmd.Execute(); err != nil {
@@ -384,35 +384,35 @@ func (m *kafkaPluginMock) Delete(_ context.Context, cluster *schedv1.KafkaCluste
 	return nil
 }
 
-func (m *kafkaPluginMock) ListTopics(_ context.Context) (*kafka.ListKafkaTopicReply, error) {
-	return &kafka.ListKafkaTopicReply{Topics: []string{"test1", "test2", "test3"}}, nil
+func (m *kafkaPluginMock) ListTopics(_ context.Context, cluster *schedv1.KafkaCluster) ([]string, error) {
+	return []string{"test1", "test2", "test3"}, nil
 }
 
-func (m *kafkaPluginMock) DescribeTopic(_ context.Context, actual *kafka.KafkaAPITopicRequest) (*kafka.KafkaTopicDescription, error) {
-	return &kafka.KafkaTopicDescription{}, assertEquals(actual, <-m.Expect)
+func (m *kafkaPluginMock) DescribeTopic(_ context.Context, cluster *schedv1.KafkaCluster, topic *kafka.Topic) (*kafka.KafkaTopicDescription, error) {
+	return &kafka.KafkaTopicDescription{}, assertEquals(topic, <-m.Expect)
 }
 
-func (m *kafkaPluginMock) CreateTopic(_ context.Context, actual *kafka.KafkaAPITopicRequest) (*kafka.KafkaAPIResponse, error) {
-	return &kafka.KafkaAPIResponse{}, assertEquals(actual, <-m.Expect)
+func (m *kafkaPluginMock) CreateTopic(_ context.Context, cluster *schedv1.KafkaCluster, topic *kafka.Topic) (*kafka.KafkaAPIResponse, error) {
+	return &kafka.KafkaAPIResponse{}, assertEquals(topic, <-m.Expect)
 }
 
-func (m *kafkaPluginMock) DeleteTopic(_ context.Context, actual *kafka.KafkaAPITopicRequest) (*kafka.KafkaAPIResponse, error) {
-	return &kafka.KafkaAPIResponse{}, assertEquals(actual, <-m.Expect)
+func (m *kafkaPluginMock) DeleteTopic(_ context.Context, cluster *schedv1.KafkaCluster, topic *kafka.Topic) (*kafka.KafkaAPIResponse, error) {
+	return &kafka.KafkaAPIResponse{}, assertEquals(topic, <-m.Expect)
 }
 
-func (m *kafkaPluginMock) UpdateTopic(_ context.Context, actual *kafka.KafkaAPITopicRequest) (*kafka.KafkaAPIResponse, error) {
-	return &kafka.KafkaAPIResponse{}, assertEquals(actual, <-m.Expect)
+func (m *kafkaPluginMock) UpdateTopic(_ context.Context, cluster *schedv1.KafkaCluster, topic *kafka.Topic) (*kafka.KafkaAPIResponse, error) {
+	return &kafka.KafkaAPIResponse{}, assertEquals(topic, <-m.Expect)
 }
 
-func (m *kafkaPluginMock) ListACL(_ context.Context, actual *kafka.KafkaAPIACLFilterRequest) (*kafka.KafkaAPIACLFilterReply, error) {
+func (m *kafkaPluginMock) ListACL(_ context.Context, actual *kafka.ACLFilter) (*kafka.KafkaAPIACLFilterReply, error) {
 	return &kafka.KafkaAPIACLFilterReply{}, assertEquals(actual, <-m.Expect)
 }
 
-func (m *kafkaPluginMock) CreateACL(_ context.Context, actual *kafka.KafkaAPIACLRequest) (*kafka.KafkaAPIResponse, error) {
+func (m *kafkaPluginMock) CreateACL(_ context.Context, actual *kafka.ACLSpec) (*kafka.KafkaAPIResponse, error) {
 	return nil, assertEquals(actual, <-m.Expect)
 }
 
-func (m *kafkaPluginMock) DeleteACL(_ context.Context, actual *kafka.KafkaAPIACLFilterRequest) (*kafka.KafkaAPIResponse, error) {
+func (m *kafkaPluginMock) DeleteACL(_ context.Context, actual *kafka.ACLFilter) (*kafka.KafkaAPIResponse, error) {
 	return &kafka.KafkaAPIResponse{}, assertEquals(actual, <-m.Expect)
 }
 

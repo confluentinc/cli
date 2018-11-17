@@ -41,16 +41,15 @@ type Kafka interface {
 	Describe(cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, *http.Response, error)
 	Create(config *schedv1.KafkaClusterConfig) (*schedv1.KafkaCluster, *http.Response, error)
 	Delete(cluster *schedv1.KafkaCluster) (*http.Response, error)
-	ConfigureKafkaAPI(clusterid, apiEndpoint string)
-	ListTopics() ([]kafka.KafkaTopicDescription, error)
-	DescribeTopic(topic *kafka.KafkaAPITopicRequest) (*kafka.KafkaTopicDescription, error)
-	CreateTopic(topic *kafka.KafkaAPITopicRequest) error
-	DeleteTopic(topic *kafka.KafkaAPITopicRequest) error
-	UpdateTopic(conf *kafka.KafkaAPITopicRequest) error
-	ListTopicConfig(conf *kafka.KafkaAPITopicRequest) ([]*kafka.KafkaTopicConfigEntry, error)
-	ListACL(aclBinding *kafka.KafkaAPIACLFilterRequest) (*kafka.KafkaAPIACLFilterReply, error)
-	CreateACL(aclBinding *kafka.KafkaAPIACLRequest) error
-	DeleteACL(aclBinding *kafka.KafkaAPIACLFilterRequest) error
+	ListTopics(cluster *schedv1.KafkaCluster) ([]kafka.KafkaTopicDescription, error)
+	DescribeTopic(cluster *schedv1.KafkaCluster, topic *kafka.Topic) (*kafka.KafkaTopicDescription, error)
+	CreateTopic(cluster *schedv1.KafkaCluster, topic *kafka.Topic) error
+	DeleteTopic(cluster *schedv1.KafkaCluster, topic *kafka.Topic) error
+	UpdateTopic(cluster *schedv1.KafkaCluster, topic *kafka.Topic) error
+	ListTopicConfig(cluster *schedv1.KafkaCluster, topic *kafka.Topic) (*kafka.TopicConfig, error)
+	ListACL(aclBinding *kafka.ACLFilter) (*kafka.KafkaAPIACLFilterReply, error)
+	CreateACL(aclBinding *kafka.ACLSpec) error
+	DeleteACL(aclBinding *kafka.ACLFilter) error
 }
 
 // Connect service allows managing Connect clusters in Confluent Cloud
