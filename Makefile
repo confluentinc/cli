@@ -6,7 +6,6 @@ include ./semver.mk
 
 .PHONY: deps
 deps:
-	@which gox >/dev/null 2>&1 || go get github.com/mitchellh/gox >/dev/null 2>&1
 	@which goreleaser >/dev/null 2>&1 || go get github.com/goreleaser/goreleaser >/dev/null 2>&1
 	@(golangci-lint --version | grep $(GOLANGCI_LINT_VERSION)) >/dev/null 2>&1 || curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(GOPATH)/bin v$(GOLANGCI_LINT_VERSION) >/dev/null 2>&1
 	@GO111MODULE=on go mod download >/dev/null 2>&1
@@ -21,10 +20,15 @@ compile:
 install-plugins:
 	@GO111MODULE=on go install ./plugin/...
 
+ifeq ($(shell uname),Darwin)
+GORELEASER_CONFIG ?= .goreleaser-mac.yml
+else
+GORELEASER_CONFIG ?= .goreleaser-linux.yml
+endif
+
 .PHONY: binary
 binary:
-	@GO111MODULE=on gox -os="$(shell go env GOOS)" -arch="$(shell go env GOARCH)" \
-	  -output="{{if eq .Dir \"cli\"}}confluent{{else}}{{.Dir}}{{end}}" ./...
+	@GO111MODULE=on goreleaser release --snapshot --rm-dist -f $(GORELEASER_CONFIG)
 
 .PHONY: release
 release: get-release-image commit-release tag-release

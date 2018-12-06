@@ -28,7 +28,7 @@ Setup the Confluent Cloud brew tap:
 
 For now, you'll need to use your Github token:
 
-    HOMEBREW_GITHUB_API_TOKEN=xxx brew install confluent-cli
+    HOMEBREW_GITHUB_API_TOKEN=xxx brew install ccloud-cli
 
 The personal access token must have the `repo` permission.
 
@@ -68,11 +68,11 @@ To download the deb for a particular version, run
     VERSION=0.10.0
     OS=Linux
     ARCH=x86_64
-    aws s3 cp s3://cloud-confluent-bin/cli/${VERSION}/confluent-cli_${VERSION}_${OS}_${ARCH}.deb .
+    aws s3 cp s3://cloud-confluent-bin/cli/${VERSION}/ccloud-cli_${VERSION}_${OS}_${ARCH}.deb .
 
 To install the CLI:
 
-    sudo apt install ./confluent-cli_${VERSION}_${OS}_${ARCH}.tar.gz
+    sudo apt install ./ccloud-cli_${VERSION}_${OS}_${ARCH}.tar.gz
 
 ### Binary Tarball from S3
 
@@ -89,12 +89,12 @@ To download a tarball for your OS and architecture:
 
     OS=Darwin
     ARCH=x86_64
-    aws s3 cp s3://cloud-confluent-bin/cli/${VERSION}/confluent-cli_${VERSION}_${OS}_${ARCH}.tar.gz .
+    aws s3 cp s3://cloud-confluent-bin/cli/${VERSION}/ccloud-cli_${VERSION}_${OS}_${ARCH}.tar.gz .
 
 To install the CLI:
 
-    tar -xzvf confluent-cli_${VERSION}_${OS}_${ARCH}.tar.gz
-    sudo mv confluent-cli_${VERSION}_${OS}_${ARCH}/confluent* /usr/local/bin
+    tar -xzvf ccloud-cli_${VERSION}_${OS}_${ARCH}.tar.gz
+    sudo mv ccloud-cli_${VERSION}_${OS}_${ARCH}/confluent* /usr/local/bin
 
 **Note: You MUST add the plugin binaries to your `$PATH` for the CLI to work.**
 

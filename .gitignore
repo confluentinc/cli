@@ -1,7 +1,5 @@
-/confluent
-/confluent-*-plugin
-cli
 bin/
+dist/
 
 .semaphore-cache/
 git-setup-semaphore.sh

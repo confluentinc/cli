@@ -1,8 +1,8 @@
-project_name: confluent-cli
+project_name: ccloud-cli
 
 builds:
   -
-    binary: confluent
+    binary: ccloud
     main: .
     ldflags:
       # remove the date so builds are reproducible (identical SHAs)
@@ -22,7 +22,7 @@ builds:
       - goos: darwin
         goarch: 386
   -
-    binary: confluent-kafka-plugin
+    binary: ccloud-kafka-plugin
     main: ./plugin/confluent-kafka-plugin
     ldflags:
       # remove the date so builds are reproducible (identical SHAs)
@@ -42,7 +42,7 @@ builds:
       - goos: darwin
         goarch: 386
   -
-    binary: confluent-connect-plugin
+    binary: ccloud-connect-plugin
     main: ./plugin/confluent-connect-plugin
     ldflags:
       # remove the date so builds are reproducible (identical SHAs)
@@ -109,7 +109,7 @@ brew:
   download_strategy: GitHubPrivateRepositoryReleaseDownloadStrategy
 
   homepage: https://confluent.io
-  description: Confluent CLI
+  description: Confluent Cloud CLI
 
   commit_author:
     name: Cody A. Ray
@@ -118,7 +118,7 @@ brew:
 nfpm:
   vendor: Confluent, Inc.
   homepage: https://confluent.io
-  description: Confluent CLI
+  description: Confluent Cloud CLI
   maintainer: Confluent Support <support@confluent.io>
   license: Copyright 2018 Confluent, Inc.
 
