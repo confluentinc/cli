@@ -135,6 +135,8 @@ func (c *command) init() error {
 
 func (c *command) create(cmd *cobra.Command, args []string) error {
 
+
+	fmt.Printf("Creating Service A")
 	name, err := cmd.Flags().GetString("name")
 	if err != nil {
 		return common.HandleError(err, cmd)
@@ -151,9 +153,14 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		OrganizationId:     c.config.Auth.User.OrganizationId,
 	}
 
+	fmt.Println("Main: Creating User Object: %s" , user.ServiceName)
+
 	user, errRet := c.user.CreateServiceAccount(context.Background(), user)
 
+	fmt.Println("Main: Retun" )
+
 	if errRet != nil {
+		fmt.Println("Main: Error " )
 		return common.HandleError(errRet, cmd)
 	}
 

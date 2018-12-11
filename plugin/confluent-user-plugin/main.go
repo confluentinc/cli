@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	golog "log"
 	"os"
 
@@ -67,8 +68,12 @@ type User struct {
 }
 
 func (c *User) CreateServiceAccount(ctx context.Context, user *orgv1.User) (*orgv1.User, error) {
-	c.Logger.Log("msg", "user.CreateServiceAccount()")
+	c.Logger.Log("msg", "user.CreateServiceAccountsss()")
+	fmt.Println("Plugin Main: " , user.ServiceName)
 	ret, _, err := c.Client.User.CreateServiceAccount(user)
+	if err != nil && err != shared.ErrNoConfig {
+		c.Logger.Log("err", "Errorr")
+	}
 	return ret, shared.ConvertAPIError(err)
 }
 

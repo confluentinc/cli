@@ -1,6 +1,7 @@
 package http
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -65,12 +66,17 @@ func formatInt32(n int32) string {
 
 // Describe returns details for a given user.
 func (s *UserService) CreateServiceAccount(user *orgv1.User) (*orgv1.User, *http.Response, error) {
-	body := &orgv1.ServiceAccountRequest{User: user}
+	body := &orgv1.CreateServiceAccountRequest{User: user}
 	reply := new(orgv1.CreateServiceAccountReply)
 	userId := formatInt32(user.Id)
+	fmt.Printf("Http: User go  %d" , userId)
+	s.logger.Log("msg", "Http: Create SA")
+	//data := "/api/users"+userId
+	s.logger.Log("Http: User go  %s" , body)
 	resp, err := s.sling.New().Post("/api/users"+userId).BodyJSON(body).Receive(reply, reply)
 	if err != nil {
-		return nil, resp, errors.Wrap(err, "unable to create service account")
+		s.logger.Log("Unable to create SA %s" , err)
+		return nil, resp, errors.Wrap(err, "Unnnable to create service account")
 	}
 	if reply.Error != nil {
 		return nil, resp, errors.Wrap(reply.Error, "error creating service account")
@@ -81,8 +87,8 @@ func (s *UserService) CreateServiceAccount(user *orgv1.User) (*orgv1.User, *http
 
 // Describe returns details for a given user.
 func (s *UserService) UpdateServiceAccount(user *orgv1.User) (*http.Response, error) {
-	body := &orgv1.ServiceAccountRequest{User: user}
-	reply := new(orgv1.ServiceAccountReply)
+	body := &orgv1.UpdateServiceAccountRequest{User: user}
+	reply := new(orgv1.UpdateServiceAccountReply)
 	userId := formatInt32(user.Id)
 	resp, err := s.sling.New().Post("/api/users"+userId).BodyJSON(body).Receive(reply, reply)
 	if err != nil {
@@ -97,15 +103,15 @@ func (s *UserService) UpdateServiceAccount(user *orgv1.User) (*http.Response, er
 
 // Describe returns details for a given user.
 func (s *UserService) DeactivateServiceAccount(user *orgv1.User) (*http.Response, error) {
-	body := &orgv1.ServiceAccountRequest{User: user}
-	reply := new(orgv1.ServiceAccountReply)
+	body := &orgv1.DeactivateServiceAccountRequest{User: user}
+	reply := new(orgv1.DeactivateServiceAccountReply)
 	userId := formatInt32(user.Id)
 	resp, err := s.sling.New().Delete("/api/users"+userId).BodyJSON(body).Receive(reply, reply)
 	if err != nil {
-		return resp, errors.Wrap(err, "unable to create service account")
+		return resp, errors.Wrap(err, "unable to deactivate service account")
 	}
 	if reply.Error != nil {
-		return resp, errors.Wrap(reply.Error, "error creating service account")
+		return resp, errors.Wrap(reply.Error, "error deactivate service account")
 	}
 
 	return resp, nil
@@ -113,15 +119,15 @@ func (s *UserService) DeactivateServiceAccount(user *orgv1.User) (*http.Response
 
 // Describe returns details for a given user.
 func (s *UserService) GetServiceAccounts(user *orgv1.User) ([]*orgv1.User, *http.Response, error) {
-	body := &orgv1.ServiceAccountRequest{User: user}
+	body := &orgv1.GetServiceAccountsRequest{User: user}
 	reply := new(orgv1.GetServiceAccountsReply)
 	userId := formatInt32(user.Id)
 	resp, err := s.sling.New().Get("/api/users"+userId).BodyJSON(body).Receive(reply, reply)
 	if err != nil {
-		return nil, resp, errors.Wrap(err, "unable to create service account")
+		return nil, resp, errors.Wrap(err, "unable to list service account")
 	}
 	if reply.Error != nil {
-		return nil, resp, errors.Wrap(reply.Error, "error creating service account")
+		return nil, resp, errors.Wrap(reply.Error, "error list service account")
 	}
 
 	return reply.Users, resp, nil
