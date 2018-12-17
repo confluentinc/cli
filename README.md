@@ -125,3 +125,12 @@ $ ./confluent connect sink
 
 Either set the `GITHUB_TOKEN` environment variable or create `~/.config/goreleaser/github_token`
 with this value. The token must have `repo` scope to deploy artifacts to Github.
+
+If you update the `.goreleaser.yml`, you'll need to regenerate the `install.sh`.
+The repo has to be open source for this to work right. Then run:
+
+    go get github.com/goreleaser/godownloader
+    godownloader --repo=confluentinc/cli --output=install.sh 
+
+If the git repo is private, update the generated `install.sh` to use `curl -n` for netrc support
+as well as set the `giturl` to use the api servers instead of the public page.

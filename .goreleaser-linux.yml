@@ -17,7 +17,7 @@ builds:
       - amd64
   -
     binary: ccloud-kafka-plugin
-    main: ./plugin/confluent-kafka-plugin
+    main: ./plugin/ccloud-kafka-plugin
     ldflags:
       # remove the date so builds are reproducible (identical SHAs)
       - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}}
@@ -31,7 +31,7 @@ builds:
       - amd64
   -
     binary: ccloud-connect-plugin
-    main: ./plugin/confluent-connect-plugin
+    main: ./plugin/ccloud-connect-plugin
     ldflags:
       # remove the date so builds are reproducible (identical SHAs)
       - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}}

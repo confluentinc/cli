@@ -24,7 +24,6 @@ require (
 	github.com/mitchellh/go-homedir v1.0.0
 	github.com/mitchellh/go-testing-interface v1.0.0 // indirect
 	github.com/olekukonko/tablewriter v0.0.0-20180912035003-be2c049b30cc // indirect
-	github.com/onsi/gomega v1.4.2 // indirect
 	github.com/pierrec/lz4 v0.0.0-20180906185208-bb6bfd13c6a2 // indirect
 	github.com/pkg/errors v0.8.0
 	github.com/rcrowley/go-metrics v0.0.0-20180503174638-e2704e165165 // indirect
@@ -34,10 +33,9 @@ require (
 	github.com/stretchr/testify v1.2.2
 	golang.org/x/crypto v0.0.0-20180910181607-0e37d006457b
 	golang.org/x/net v0.0.0-20181113165502-88d92db4c548
+	golang.org/x/sys v0.0.0-20180909124046-d0be0721c37e // indirect
 	google.golang.org/genproto v0.0.0-20180912233945-5a2fd4cab2d6 // indirect
 	google.golang.org/grpc v1.16.0
-	gopkg.in/airbrake/gobrake.v2 v2.0.9 // indirect
-	gopkg.in/gemnasium/logrus-airbrake-hook.v2 v2.1.2 // indirect
 )
 
 replace (
