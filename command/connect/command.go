@@ -9,8 +9,7 @@ import (
 
 type command struct {
 	*cobra.Command
-	config  *shared.Config
-	connect Connect
+	config *shared.Config
 }
 
 // New returns the Cobra command for Connect.

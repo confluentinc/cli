@@ -10,7 +10,6 @@ import (
 type command struct {
 	*cobra.Command
 	config *shared.Config
-	ksql   Ksql
 }
 
 // New returns the Cobra command for Kafka.
