@@ -7,33 +7,24 @@ import (
 	"github.com/confluentinc/cli/shared"
 )
 
-type command struct {
-	*cobra.Command
-	config *shared.Config
-}
-
 // New returns the Cobra command for Connect.
 func New(config *shared.Config) (*cobra.Command, error) {
-	cmd := &command{
-		Command: &cobra.Command{
-			Use:   "connect",
-			Short: "Manage connect.",
-		},
-		config: config,
+	cmd := &cobra.Command{
+		Use:   "connect",
+		Short: "Manage connect.",
 	}
-	err := cmd.init()
-	return cmd.Command, err
-}
 
-func (c *command) init() error {
 	cmdFactories := []common.CommandFactory{
 		func(config *shared.Config, plugin interface{}) *cobra.Command {
 			return NewSink(config, plugin.(Connect))
 		},
 	}
-	return common.InitCommand("confluent-connect-plugin",
+
+	err := common.InitCommand("confluent-connect-plugin",
 		"connect",
-		c.config,
-		c.Command,
+		config,
+		cmd,
 		cmdFactories)
+
+	return cmd, err
 }

@@ -7,25 +7,13 @@ import (
 	"github.com/confluentinc/cli/shared"
 )
 
-type command struct {
-	*cobra.Command
-	config *shared.Config
-}
-
 // New returns the Cobra command for Kafka.
 func New(config *shared.Config) (*cobra.Command, error) {
-	cmd := &command{
-		Command: &cobra.Command{
-			Use:   "kafka",
-			Short: "Manage kafka.",
-		},
-		config: config,
+	cmd := &cobra.Command{
+		Use:   "kafka",
+		Short: "Manage kafka.",
 	}
-	err := cmd.init()
-	return cmd.Command, err
-}
 
-func (c *command) init() error {
 	cmdFactories := []common.CommandFactory{
 		func(config *shared.Config, plugin interface{}) *cobra.Command {
 			return NewClusterCommand(config, plugin.(Kafka))
@@ -34,9 +22,11 @@ func (c *command) init() error {
 			return NewTopicCommand(config, plugin.(Kafka))
 		},
 	}
-	return common.InitCommand("confluent-kafka-plugin",
+	err := common.InitCommand("confluent-kafka-plugin",
 		"kafka",
-		c.config,
-		c.Command,
+		config,
+		cmd,
 		cmdFactories)
+
+	return cmd, err
 }
