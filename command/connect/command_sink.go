@@ -35,7 +35,7 @@ type sinkCommand struct {
 }
 
 // NewSink returns the Cobra sinkCommand for Connect Sink.
-func NewSink(config *shared.Config, connect Connect) (*cobra.Command, error) {
+func NewSink(config *shared.Config, connect Connect) *cobra.Command {
 	cmd := &sinkCommand{
 		Command: &cobra.Command{
 			Use:   "sink",
@@ -44,11 +44,11 @@ func NewSink(config *shared.Config, connect Connect) (*cobra.Command, error) {
 		config:  config,
 		connect: connect,
 	}
-	err := cmd.init()
-	return cmd.Command, err
+	cmd.init()
+	return cmd.Command
 }
 
-func (c *sinkCommand) init() error {
+func (c *sinkCommand) init() {
 	createCmd := &cobra.Command{
 		Use:   "create NAME",
 		Short: "Create a connector.",
@@ -127,8 +127,6 @@ func (c *sinkCommand) init() error {
 		Short: "Auth a connector.",
 		RunE:  c.auth,
 	})
-
-	return nil
 }
 
 func (c *sinkCommand) list(cmd *cobra.Command, args []string) error {
