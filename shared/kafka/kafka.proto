@@ -1,13 +1,23 @@
 syntax = "proto3";
 
-package connect;
+package kafka;
 
-import "kafka/scheduler/v1/scheduler.proto";
+import "github.com/confluentinc/ccloudapis/kafka/v1/kafka.proto";
+import "github.com/confluentinc/ccloudapis/auth/v1/auth.proto";
 
 // TODO: should this definition be in cc-structs?
 service Kafka {
-  rpc List(kafka.scheduler.v1.GetKafkaClustersRequest) returns (kafka.scheduler.v1.GetKafkaClustersReply) {}
-  rpc Describe(kafka.scheduler.v1.GetKafkaClusterRequest) returns (kafka.scheduler.v1.GetKafkaClusterReply) {}
-  rpc Create(kafka.scheduler.v1.CreateKafkaClusterRequest) returns (kafka.scheduler.v1.CreateKafkaClusterReply) {}
-  rpc Delete(kafka.scheduler.v1.DeleteKafkaClusterRequest) returns (kafka.scheduler.v1.DeleteKafkaClusterReply) {}
+  rpc CreateAPIKey (ccloudapis.auth.v1.CreateAPIKeyRequest) returns (ccloudapis.auth.v1.CreateAPIKeyReply) {}
+  rpc List(ccloudapis.kafka.v1.GetClustersRequest) returns (ccloudapis.kafka.v1.GetClustersReply) {}
+  rpc Describe(ccloudapis.kafka.v1.GetClusterRequest) returns (ccloudapis.kafka.v1.GetClusterReply) {}
+  rpc Create(ccloudapis.kafka.v1.CreateClusterRequest) returns (ccloudapis.kafka.v1.CreateClusterReply) {}
+  rpc Delete(ccloudapis.kafka.v1.DeleteClusterRequest) returns (ccloudapis.kafka.v1.DeleteClusterReply) {}
+  rpc ListTopics (ccloudapis.kafka.v1.ListTopicRequest) returns (ccloudapis.kafka.v1.ListTopicReply) {}
+  rpc DescribeTopic (ccloudapis.kafka.v1.DescribeTopicRequest) returns (ccloudapis.kafka.v1.DescribeTopicReply) {}
+  rpc CreateTopic (ccloudapis.kafka.v1.CreateTopicRequest) returns (ccloudapis.kafka.v1.CreateTopicReply) {}
+  rpc DeleteTopic (ccloudapis.kafka.v1.DeleteTopicRequest) returns (ccloudapis.kafka.v1.DeleteTopicReply) {}
+  rpc UpdateTopic (ccloudapis.kafka.v1.UpdateTopicRequest) returns (ccloudapis.kafka.v1.UpdateTopicReply) {}
+  rpc ListACL (ccloudapis.kafka.v1.ListACLRequest) returns (ccloudapis.kafka.v1.ListACLReply) {}
+  rpc CreateACL (ccloudapis.kafka.v1.CreateACLRequest) returns (ccloudapis.kafka.v1.CreateACLReply) {}
+  rpc DeleteACL (ccloudapis.kafka.v1.DeleteACLRequest) returns (ccloudapis.kafka.v1.DeleteACLReply) {}
 }

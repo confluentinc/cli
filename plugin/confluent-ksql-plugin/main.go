@@ -8,12 +8,12 @@ import (
 	plugin "github.com/hashicorp/go-plugin"
 	"github.com/sirupsen/logrus"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	ksqlv1 "github.com/confluentinc/ccloudapis/ksql/v1"
 	chttp "github.com/confluentinc/ccloud-sdk-go"
-	"github.com/confluentinc/cli/command/ksql"
 	log "github.com/confluentinc/cli/log"
 	metric "github.com/confluentinc/cli/metric"
 	"github.com/confluentinc/cli/shared"
+	"github.com/confluentinc/cli/shared/ksql"
 )
 
 func main() {
@@ -52,11 +52,11 @@ func main() {
 		impl = &Ksql{Logger: logger, Client: client}
 	}
 
+	shared.PluginMap[ksql.Name] = &ksql.Plugin{Impl: impl}
+
 	plugin.Serve(&plugin.ServeConfig{
 		HandshakeConfig: shared.Handshake,
-		Plugins: map[string]plugin.Plugin{
-			"ksql": &ksql.Plugin{Impl: impl},
-		},
+		Plugins: shared.PluginMap,
 		GRPCServer: plugin.DefaultGRPCServer,
 	})
 }
@@ -66,27 +66,27 @@ type Ksql struct {
 	Client *chttp.Client
 }
 
-func (c *Ksql) List(ctx context.Context, cluster *schedv1.KSQLCluster) ([]*schedv1.KSQLCluster, error) {
+func (c *Ksql) List(ctx context.Context, cluster *ksqlv1.Cluster) ([]*ksqlv1.Cluster, error) {
 	c.Logger.Log("msg", "ksql.List()")
-	ret, _, err := c.Client.Ksql.List(cluster)
+	ret, err := c.Client.KSQL.List(ctx, cluster)
 	return ret, shared.ConvertAPIError(err)
 }
 
-func (c *Ksql) Describe(ctx context.Context, cluster *schedv1.KSQLCluster) (*schedv1.KSQLCluster, error) {
+func (c *Ksql) Describe(ctx context.Context, cluster *ksqlv1.Cluster) (*ksqlv1.Cluster, error) {
 	c.Logger.Log("msg", "ksql.Describe()")
-	ret, _, err := c.Client.Ksql.Describe(cluster)
+	ret, err := c.Client.KSQL.Describe(ctx, cluster)
 	return ret, shared.ConvertAPIError(err)
 }
 
-func (c *Ksql) Create(ctx context.Context, config *schedv1.KSQLClusterConfig) (*schedv1.KSQLCluster, error) {
+func (c *Ksql) Create(ctx context.Context, config *ksqlv1.ClusterConfig) (*ksqlv1.Cluster, error) {
 	c.Logger.Log("msg", "ksql.Create()")
-	ret, _, err := c.Client.Ksql.Create(config)
+	ret, err := c.Client.KSQL.Create(ctx, config)
 	return ret, shared.ConvertAPIError(err)
 }
 
-func (c *Ksql) Delete(ctx context.Context, cluster *schedv1.KSQLCluster) error {
+func (c *Ksql) Delete(ctx context.Context, cluster *ksqlv1.Cluster) error {
 	c.Logger.Log("msg", "ksql.Delete()")
-	_, err := c.Client.Ksql.Delete(cluster)
+	err := c.Client.KSQL.Delete(ctx, cluster)
 	return shared.ConvertAPIError(err)
 }
 

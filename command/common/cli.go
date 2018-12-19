@@ -2,8 +2,12 @@ package common
 
 import (
 	"fmt"
+	"os/exec"
+	"reflect"
 
-	"github.com/codyaray/go-editor"
+	editor "github.com/codyaray/go-editor"
+	hclog "github.com/hashicorp/go-hclog"
+	plugin "github.com/hashicorp/go-plugin"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/shared"
@@ -18,6 +22,9 @@ var messages = map[error]string{
 	shared.ErrNotImplemented: "Sorry, this functionality is not yet available in the CLI.",
 	shared.ErrNotFound:       "Kafka cluster not found.", // TODO: parametrize ErrNotFound for better error messaging
 }
+
+// Provider loads a plugin
+type Provider func(interface{}) error
 
 // HandleError provides standard error messaging for common errors.
 func HandleError(err error, cmd *cobra.Command) error {
@@ -37,5 +44,47 @@ func HandleError(err error, cmd *cobra.Command) error {
 	default:
 		return err
 	}
+
 	return nil
+}
+
+// LoadPlugin starts a GRPC server identified by name
+func LoadPlugin(name string, value interface{}) error {
+	rv := reflect.ValueOf(value)
+	if rv.Kind() != reflect.Ptr || rv.IsNil() {
+		return fmt.Errorf("value of type %T must be a pointer for a GRPC client", value)
+	}
+
+	runnable, err := exec.LookPath(name)
+	if err != nil {
+		return fmt.Errorf("failed to load plugin: %s", err)
+	}
+
+	// We're a host. Start by launching the plugin process.
+	client := plugin.NewClient(&plugin.ClientConfig{
+		HandshakeConfig:  shared.Handshake,
+		Plugins:          shared.PluginMap,
+		Cmd:              exec.Command("sh", "-c", runnable), // nolint: gas
+		AllowedProtocols: []plugin.Protocol{plugin.ProtocolGRPC},
+		Managed:          true,
+		Logger: hclog.New(&hclog.LoggerOptions{
+			Output: hclog.DefaultOutput,
+			Level:  hclog.Info,
+			Name:   "plugin",
+		}),
+	})
+
+	// Connect via RPC.
+	rpcClient, err := client.Client()
+	if err != nil {
+		return err
+	}
+
+	// Request the plugin
+	impl, err := rpcClient.Dispense(name)
+	if err != nil {
+		return err
+	}
+	rv.Elem().Set(reflect.ValueOf(reflect.ValueOf(impl).Interface()))
+	return err
 }

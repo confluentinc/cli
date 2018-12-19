@@ -1,4 +1,3 @@
-CCSTRUCTS 						:= $(GOPATH)/src/github.com/confluentinc/cc-structs
 ALL_SRC               := $(shell find . -name "*.go" | grep -v -e vendor)
 GOLANGCI_LINT_VERSION := 1.12.2
 
@@ -10,11 +9,11 @@ deps:
 	@(golangci-lint --version | grep $(GOLANGCI_LINT_VERSION)) >/dev/null 2>&1 || curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(GOPATH)/bin v$(GOLANGCI_LINT_VERSION) >/dev/null 2>&1
 	@GO111MODULE=on go mod download >/dev/null 2>&1
 
-.PHONY: compile
-compile:
-	protoc -I shared/connect -I $(CCSTRUCTS) -I $(CCSTRUCTS)/vendor shared/connect/*.proto --gogo_out=plugins=grpc:shared/connect
-	protoc -I shared/kafka -I $(CCSTRUCTS) -I $(CCSTRUCTS)/vendor shared/kafka/*.proto --gogo_out=plugins=grpc:shared/kafka
-	protoc -I shared/ksql -I $(CCSTRUCTS) -I $(CCSTRUCTS)/vendor shared/ksql/*.proto --gogo_out=plugins=grpc:shared/ksql
+.PHONY: generate
+generate:
+	protoc shared/connect/*.proto -Ishared/connect -I$(GOPATH)/src --gogo_out=plugins=grpc:shared/connect
+	protoc shared/kafka/*.proto -Ishared/kafka -I$(GOPATH)/src --gogo_out=plugins=grpc:shared/kafka
+	protoc shared/ksql/*.proto -Ishared/ksql -I$(GOPATH)/src  --gogo_out=plugins=grpc:shared/ksql
 
 .PHONY: install-plugins
 install-plugins:

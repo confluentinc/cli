@@ -2,33 +2,32 @@ syntax = "proto3";
 
 package connect;
 
-import "kafka/core/v1/core.proto";
-import "kafka/scheduler/v1/scheduler.proto";
+import "github.com/confluentinc/ccloudapis/connect/v1/connect.proto";
+import "github.com/confluentinc/ccloudapis/core/v1/core.proto";
 
-service Connect {
-  rpc List(kafka.scheduler.v1.GetConnectClustersRequest) returns (kafka.scheduler.v1.GetConnectClustersReply) {}
-  rpc Describe(kafka.scheduler.v1.GetConnectClusterRequest) returns (kafka.scheduler.v1.GetConnectClusterReply) {}
-  rpc DescribeS3Sink(kafka.scheduler.v1.GetConnectS3SinkClusterRequest) returns (kafka.scheduler.v1.GetConnectS3SinkClusterReply) {}
-  rpc CreateS3Sink(CreateConnectS3SinkClusterRequest) returns (CreateConnectS3SinkClusterReply) {}
-  rpc UpdateS3Sink(kafka.scheduler.v1.UpdateConnectS3SinkClusterRequest) returns (kafka.scheduler.v1.UpdateConnectS3SinkClusterReply) {}
-  rpc Delete(kafka.scheduler.v1.DeleteConnectClusterRequest) returns (kafka.scheduler.v1.DeleteConnectClusterReply) {}
-  // ...
+service  Connect {
+  rpc List(ccloudapis.connect.v1.GetClustersRequest) returns (ccloudapis.connect.v1.GetClustersReply) {}
+  rpc Describe(ccloudapis.connect.v1.GetClusterRequest) returns (ccloudapis.connect.v1.GetClusterReply) {}
+  rpc DescribeS3Sink(ccloudapis.connect.v1.GetS3SinkClusterRequest) returns (ccloudapis.connect.v1.GetS3SinkClusterReply) {}
+  rpc CreateS3Sink(ccloudapis.connect.v1.CreateS3SinkClusterRequest) returns (ccloudapis.connect.v1.CreateS3SinkClusterReply) {}
+  rpc UpdateS3Sink(ccloudapis.connect.v1.UpdateS3SinkClusterRequest) returns (ccloudapis.connect.v1.UpdateS3SinkClusterReply) {}
+  rpc Delete(ccloudapis.connect.v1.DeleteClusterRequest) returns (ccloudapis.connect.v1.DeleteClusterReply) {}
 }
 
-message ConnectS3SinkClusterConfig {
+message S3SinkClusterConfig {
   string name = 1;
   string account_id = 2;
   string kafka_cluster_id = 3;
   string kafka_user_email = 4;
   int32 servers = 5;
-  kafka.scheduler.v1.ConnectS3SinkOptions options = 6;
+  ccloudapis.connect.v1.S3SinkOptions options = 6;
 }
 
-message CreateConnectS3SinkClusterRequest {
-  ConnectS3SinkClusterConfig config = 1;
+message CreateS3SinkClusterRequest {
+  S3SinkClusterConfig config = 1;
 }
 
-message CreateConnectS3SinkClusterReply {
-  kafka.core.v1.Error error = 1;
-  kafka.scheduler.v1.ConnectS3SinkCluster cluster = 2;
+message CreateS3SinkClusterReply {
+  ccloudapis.core.v1.Error error = 1;
+  ccloudapis.connect.v1.S3SinkCluster cluster = 2;
 }

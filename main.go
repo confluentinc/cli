@@ -71,9 +71,7 @@ func main() {
 	cli.Version = version
 
 	// Automatically stop plugins when CLI exits
-	cli.PersistentPostRun = func(cmd *cobra.Command, args []string) {
-		plugin.CleanupClients()
-	}
+	defer plugin.CleanupClients()
 
 	cli.AddCommand(config.New(cfg))
 
@@ -102,13 +100,12 @@ func main() {
 		cli.AddCommand(conn)
 	}
 
-	if err := cli.Execute(); err != nil {
-		os.Exit(1)
-	}
+	check(cli.Execute())
 }
 
 func check(err error) {
 	if err != nil {
+		plugin.CleanupClients()
 		fmt.Fprintf(os.Stderr, "Error executing CLI: %s\n", err.Error())
 		os.Exit(1)
 	}

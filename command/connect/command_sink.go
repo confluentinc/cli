@@ -13,11 +13,10 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	opv1 "github.com/confluentinc/cc-structs/operator/v1"
+	connectv1 "github.com/confluentinc/ccloudapis/connect/v1"
 	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/shared"
-	connectv1 "github.com/confluentinc/cli/shared/connect"
+	chttp "github.com/confluentinc/ccloud-sdk-go"
 )
 
 var (
@@ -31,24 +30,31 @@ var (
 type sinkCommand struct {
 	*cobra.Command
 	config  *shared.Config
-	connect Connect
+	client chttp.Connect
 }
 
 // NewSink returns the Cobra sinkCommand for Connect Sink.
-func NewSink(config *shared.Config, connect Connect) (*cobra.Command, error) {
+func NewSink(config *shared.Config, plugin common.Provider) (*cobra.Command, error) {
 	cmd := &sinkCommand{
 		Command: &cobra.Command{
 			Use:   "sink",
 			Short: "Manage sink connectors.",
 		},
 		config:  config,
-		connect: connect,
 	}
-	err := cmd.init()
+	err := cmd.init(plugin)
 	return cmd.Command, err
 }
 
-func (c *sinkCommand) init() error {
+func (c *sinkCommand) init(plugin common.Provider) error {
+	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		if err := c.config.CheckLogin(); err != nil {
+			return common.HandleError(err, cmd)
+		}
+		// Lazy load plugin to avoid unnecessarily spawning child processes
+		return plugin(&c.client)
+	}
+
 	createCmd := &cobra.Command{
 		Use:   "create NAME",
 		Short: "Create a connector.",
@@ -132,8 +138,8 @@ func (c *sinkCommand) init() error {
 }
 
 func (c *sinkCommand) list(cmd *cobra.Command, args []string) error {
-	req := &schedv1.ConnectCluster{AccountId: c.config.Auth.Account.Id}
-	clusters, err := c.connect.List(context.Background(), req)
+	req := &connectv1.Cluster{AccountId: c.config.Auth.Account.Id}
+	clusters, err := c.client.List(context.Background(), req)
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
@@ -151,8 +157,8 @@ func (c *sinkCommand) get(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "error reading --output as string")
 	}
 
-	req := &schedv1.ConnectCluster{AccountId: c.config.Auth.Account.Id, Id: args[0]}
-	cluster, err := c.connect.Describe(context.Background(), req)
+	req := &connectv1.Cluster{AccountId: c.config.Auth.Account.Id, Id: args[0]}
+	cluster, err := c.client.Describe(context.Background(), req)
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
@@ -196,20 +202,19 @@ func (c *sinkCommand) createS3Sink(kafkaClusterID, kafkaUserEmail string, cmd *c
 	}
 
 	// Create connect cluster config
-	req := &connectv1.ConnectS3SinkClusterConfig{
+	req := &connectv1.S3SinkClusterConfig{
 		Name:           args[0],
 		AccountId:      c.config.Auth.Account.Id,
 		Options:        options,
 		KafkaClusterId: kafkaClusterID,
-		KafkaUserEmail: kafkaUserEmail,
 	}
 
-	cluster, err := c.connect.CreateS3Sink(context.Background(), req)
+	cluster, err := c.client.CreateS3Sink(context.Background(), req)
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
 	fmt.Println("Created new connector:")
-	if err := printer.RenderTableOut(cluster.ConnectCluster, describeFields, describeRenames, os.Stdout); err != nil {
+	if err := printer.RenderTableOut(cluster, describeFields, describeRenames, os.Stdout); err != nil {
 		return err
 	}
 	fmt.Println("\nS3/Sink Options:")
@@ -224,7 +229,7 @@ func (c *sinkCommand) describe(cmd *cobra.Command, args []string) error {
 		return common.HandleError(err, cmd)
 	}
 	switch cl := cluster.(type) {
-	case *schedv1.ConnectS3SinkCluster:
+	case *connectv1.S3SinkCluster:
 		if err := printer.RenderTableOut(cl, describeFields, describeRenames, os.Stdout); err != nil {
 			return err
 		}
@@ -250,8 +255,8 @@ func (c *sinkCommand) edit(cmd *cobra.Command, args []string) error {
 	}
 	var objType interface{}
 	switch cl := cluster.(type) {
-	case *schedv1.ConnectS3SinkCluster:
-		objType = &schedv1.ConnectS3SinkCluster{}
+	case *connectv1.S3SinkCluster:
+		objType = &connectv1.S3SinkCluster{}
 	default:
 		return fmt.Errorf("unknown cluster type: %v", cl)
 	}
@@ -268,8 +273,8 @@ func (c *sinkCommand) edit(cmd *cobra.Command, args []string) error {
 	}
 
 	switch req := updated.(type) {
-	case *schedv1.ConnectS3SinkCluster:
-		cluster, err := c.connect.UpdateS3Sink(context.Background(), req)
+	case *connectv1.S3SinkCluster:
+		cluster, err := c.client.UpdateS3Sink(context.Background(), req)
 		if err != nil {
 			return common.HandleError(err, cmd)
 		}
@@ -289,24 +294,24 @@ func (c *sinkCommand) update(cmd *cobra.Command, args []string) error {
 		return common.HandleError(err, cmd)
 	}
 	switch cl := cluster.(type) {
-	case *schedv1.ConnectS3SinkCluster:
+	case *connectv1.S3SinkCluster:
 		options, err := getConfig(cmd)
 		if err != nil {
 			return err
 		}
-		req := &schedv1.ConnectS3SinkCluster{
-			ConnectCluster: &schedv1.ConnectCluster{
+		req := &connectv1.S3SinkCluster{
+			Cluster: &connectv1.Cluster{
 				Id:        args[0],
 				AccountId: c.config.Auth.Account.Id,
 			},
 			Options: options,
 		}
-		cluster, err := c.connect.UpdateS3Sink(context.Background(), req)
+		cluster, err := c.client.UpdateS3Sink(context.Background(), req)
 		if err != nil {
 			return common.HandleError(err, cmd)
 		}
 		fmt.Println("Updated connector:")
-		if err := printer.RenderTableOut(cluster.ConnectCluster, describeFields, describeRenames, os.Stdout); err != nil {
+		if err := printer.RenderTableOut(cluster, describeFields, describeRenames, os.Stdout); err != nil {
 			return err
 		}
 		fmt.Println("\nS3/Sink Options:")
@@ -319,8 +324,8 @@ func (c *sinkCommand) update(cmd *cobra.Command, args []string) error {
 }
 
 func (c *sinkCommand) delete(cmd *cobra.Command, args []string) error {
-	req := &schedv1.ConnectCluster{AccountId: c.config.Auth.Account.Id, Id: args[0]}
-	err := c.connect.Delete(context.Background(), req)
+	req := &connectv1.Cluster{AccountId: c.config.Auth.Account.Id, Id: args[0]}
+	err := c.client.Delete(context.Background(), req)
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
@@ -337,15 +342,15 @@ func (c *sinkCommand) auth(cmd *cobra.Command, args []string) error {
 //
 
 func (c *sinkCommand) fetch(id string) (interface{}, error) {
-	req := &schedv1.ConnectCluster{AccountId: c.config.Auth.Account.Id, Id: id}
-	cluster, err := c.connect.Describe(context.Background(), req)
+	req := &connectv1.Cluster{AccountId: c.config.Auth.Account.Id, Id: id}
+	cluster, err := c.client.Describe(context.Background(), req)
 	if err != nil {
 		return nil, err
 	}
 	switch cluster.Plugin {
-	case opv1.ConnectPlugin_S3_SINK:
-		cl, err := c.connect.DescribeS3Sink(context.Background(), &schedv1.ConnectS3SinkCluster{
-			ConnectCluster: &schedv1.ConnectCluster{Id: cluster.Id, AccountId: cluster.AccountId},
+	case connectv1.ConnectPlugin_S3_SINK:
+		cl, err := c.client.DescribeS3Sink(context.Background(), &connectv1.S3SinkCluster{
+			Cluster: &connectv1.Cluster{Id: cluster.Id, AccountId: cluster.AccountId},
 		})
 		if err != nil {
 			return nil, err
@@ -356,7 +361,7 @@ func (c *sinkCommand) fetch(id string) (interface{}, error) {
 	}
 }
 
-func getConfig(cmd *cobra.Command) (*schedv1.ConnectS3SinkOptions, error) {
+func getConfig(cmd *cobra.Command) (*connectv1.S3SinkOptions, error) {
 	// Set s3-sink connector options
 	filename, err := cmd.Flags().GetString("config")
 	if err != nil {
@@ -366,7 +371,7 @@ func getConfig(cmd *cobra.Command) (*schedv1.ConnectS3SinkOptions, error) {
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to read config file %s", filename)
 	}
-	options := &schedv1.ConnectS3SinkOptions{}
+	options := &connectv1.S3SinkOptions{}
 	err = yaml.Unmarshal(yamlFile, options)
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to parse config file %s", filename)
@@ -374,7 +379,7 @@ func getConfig(cmd *cobra.Command) (*schedv1.ConnectS3SinkOptions, error) {
 	return options, nil
 }
 
-func toConfig(options *schedv1.ConnectS3SinkOptions) (string, error) {
+func toConfig(options *connectv1.S3SinkOptions) (string, error) {
 	opts, err := yaml.Marshal(options)
 	if err != nil {
 		return "", errors.Wrapf(err, "unable to marshal options")

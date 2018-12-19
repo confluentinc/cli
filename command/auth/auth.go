@@ -28,7 +28,7 @@ type commands struct {
 // New returns a list of auth-related Cobra commands.
 func New(config *shared.Config) []*cobra.Command {
 	var defaultAnonHTTPClientFactory = func(baseURL string, logger *log.Logger) *chttp.Client {
-		return chttp.NewClient(chttp.BaseClient, baseURL, logger)
+		return chttp.NewClient(baseURL, chttp.BaseClient, logger)
 	}
 	var defaultJwtHTTPClientFactory = func(ctx context.Context, jwt string, baseURL string, logger *log.Logger) *chttp.Client {
 		return chttp.NewClientWithJWT(ctx, jwt, baseURL, logger)
@@ -77,7 +77,8 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	}
 
 	client := a.anonHTTPClientFactory(a.config.AuthURL, a.config.Logger)
-	token, err := client.Auth.Login(email, password)
+
+	token, err := client.Auth.Login(context.Background(), email, password)
 	if err != nil {
 		err = shared.ConvertAPIError(err)
 		if err == shared.ErrUnauthorized { // special case for login failure
@@ -88,13 +89,13 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	a.config.AuthToken = token
 
 	client = a.jwtHTTPClientFactory(context.Background(), a.config.AuthToken, a.config.AuthURL, a.config.Logger)
-	user, err := client.Auth.User()
+	user, err := client.Auth.User(context.Background())
 	if err != nil {
 		return common.HandleError(shared.ConvertAPIError(err), cmd)
 	}
-	a.config.Auth = user
+	a.config.Auth = &shared.AuthConfig{User: user.User, Account: user.Account}
 
-	a.createOrUpdateContext(user)
+	a.createOrUpdateContext(a.config.Auth)
 
 	err = a.config.Save()
 	if err != nil {

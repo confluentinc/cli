@@ -8,15 +8,17 @@ import (
 	"github.com/hashicorp/go-plugin"
 	"github.com/sirupsen/logrus"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
+	connectv1 "github.com/confluentinc/ccloudapis/connect/v1"
 	chttp "github.com/confluentinc/ccloud-sdk-go"
-	"github.com/confluentinc/cli/command/connect"
 	"github.com/confluentinc/cli/log"
 	"github.com/confluentinc/cli/metric"
 	"github.com/confluentinc/cli/shared"
-	proto "github.com/confluentinc/cli/shared/connect"
+	"github.com/confluentinc/cli/shared/connect"
 )
+
+// Compile-time check for Interface adherence
+var _ chttp.Connect = (*Connect)(nil)
 
 func main() {
 	var logger *log.Logger
@@ -54,11 +56,11 @@ func main() {
 		impl = &Connect{Logger: logger, Client: client}
 	}
 
+	shared.PluginMap[connect.Name] = &connect.Plugin{Impl: impl}
+
 	plugin.Serve(&plugin.ServeConfig{
 		HandshakeConfig: shared.Handshake,
-		Plugins: map[string]plugin.Plugin{
-			"connect": &connect.Plugin{Impl: impl},
-		},
+		Plugins: shared.PluginMap,
 		GRPCServer: plugin.DefaultGRPCServer,
 	})
 }
@@ -68,33 +70,33 @@ type Connect struct {
 	Client *chttp.Client
 }
 
-func (c *Connect) List(ctx context.Context, cluster *schedv1.ConnectCluster) ([]*schedv1.ConnectCluster, error) {
-	c.Logger.Log("msg", "connect.List()")
-	ret, _, err := c.Client.Connect.List(cluster)
+func (c *Connect) List(ctx context.Context, cluster *connectv1.Cluster) ([]*connectv1.Cluster, error) {
+	c.Logger.Log("msg", "connect.List()\n%+v\n", cluster)
+	ret, err := c.Client.Connect.List(ctx, cluster)
 	return ret, shared.ConvertAPIError(err)
 }
 
-func (c *Connect) Describe(ctx context.Context, cluster *schedv1.ConnectCluster) (*schedv1.ConnectCluster, error) {
+func (c *Connect) Describe(ctx context.Context, cluster *connectv1.Cluster) (*connectv1.Cluster, error) {
 	c.Logger.Log("msg", "connect.Describe()")
-	ret, _, err := c.Client.Connect.Describe(cluster)
+	ret, err := c.Client.Connect.Describe(ctx, cluster)
 	if err != nil {
 		return nil, shared.ConvertAPIError(err)
 	}
 	return ret, nil
 }
 
-func (c *Connect) DescribeS3Sink(ctx context.Context, cluster *schedv1.ConnectS3SinkCluster) (*schedv1.ConnectS3SinkCluster, error) {
+func (c *Connect) DescribeS3Sink(ctx context.Context, cluster *connectv1.S3SinkCluster) (*connectv1.S3SinkCluster, error) {
 	c.Logger.Log("msg", "connect.DescribeS3Sink()")
-	ret, _, err := c.Client.Connect.DescribeS3Sink(cluster)
+	ret, err := c.Client.Connect.DescribeS3Sink(ctx, cluster)
 	if err != nil {
 		return nil, shared.ConvertAPIError(err)
 	}
 	return ret, nil
 }
 
-func (c *Connect) CreateS3Sink(ctx context.Context, cfg *proto.ConnectS3SinkClusterConfig) (*schedv1.ConnectS3SinkCluster, error) {
+func (c *Connect) CreateS3Sink(ctx context.Context, cfg *connectv1.S3SinkClusterConfig) (*connectv1.S3SinkCluster, error) {
 	c.Logger.Log("msg", "connect.CreateS3Sink()")
-	config := &schedv1.ConnectS3SinkClusterConfig{
+	config := &connectv1.S3SinkClusterConfig{
 		Name:           cfg.Name,
 		AccountId:      cfg.AccountId,
 		KafkaClusterId: cfg.KafkaClusterId,
@@ -103,14 +105,14 @@ func (c *Connect) CreateS3Sink(ctx context.Context, cfg *proto.ConnectS3SinkClus
 	}
 
 	// Resolve kafka user email -> ID
-	user, _, err := c.Client.User.Describe(&orgv1.User{Email: cfg.KafkaUserEmail})
+	user, err := c.Client.User.Describe(ctx, &orgv1.User{Email: cfg.UserEmail})
 	if err != nil {
 		return nil, shared.ConvertAPIError(err)
 	}
 	config.KafkaUserId = user.Id
 
 	// Create the connect cluster
-	ret, _, err := c.Client.Connect.CreateS3Sink(config)
+	ret, err := c.Client.Connect.CreateS3Sink(ctx, config)
 	if err != nil {
 		return nil, shared.ConvertAPIError(err)
 	}
@@ -118,9 +120,9 @@ func (c *Connect) CreateS3Sink(ctx context.Context, cfg *proto.ConnectS3SinkClus
 	return ret, nil
 }
 
-func (c *Connect) UpdateS3Sink(ctx context.Context, cluster *schedv1.ConnectS3SinkCluster) (*schedv1.ConnectS3SinkCluster, error) {
+func (c *Connect) UpdateS3Sink(ctx context.Context, cluster *connectv1.S3SinkCluster) (*connectv1.S3SinkCluster, error) {
 	c.Logger.Log("msg", "connect.UpdateS3Sink()")
-	cluster, _, err := c.Client.Connect.UpdateS3Sink(cluster)
+	cluster, err := c.Client.Connect.UpdateS3Sink(ctx, cluster)
 	if err != nil {
 		return nil, shared.ConvertAPIError(err)
 	}
@@ -128,9 +130,9 @@ func (c *Connect) UpdateS3Sink(ctx context.Context, cluster *schedv1.ConnectS3Si
 	return cluster, nil
 }
 
-func (c *Connect) Delete(ctx context.Context, cluster *schedv1.ConnectCluster) error {
+func (c *Connect) Delete(ctx context.Context, cluster *connectv1.Cluster) error {
 	c.Logger.Log("msg", "connect.Delete()")
-	_, err := c.Client.Connect.Delete(cluster)
+	err := c.Client.Connect.Delete(ctx, cluster)
 	if err != nil {
 		return shared.ConvertAPIError(err)
 	}
