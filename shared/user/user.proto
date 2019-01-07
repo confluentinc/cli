@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package user;
+
+import "github.com/confluentinc/ccloudapis/org/v1/org.proto";
+
+service User {
+
+  rpc CreateServiceAccount (kafka.org.v1.CreateServiceAccountRequest) returns (kafka.org.v1.CreateServiceAccountReply) {}
+  rpc DeactivateServiceAccount (kafka.org.v1.DeactivateServiceAccountRequest) returns (kafka.org.v1.DeactivateServiceAccountReply) {}
+  rpc GetServiceAccounts (kafka.org.v1.GetServiceAccountsRequest) returns (kafka.org.v1.GetServiceAccountsReply) {}
+  rpc UpdateServiceAccount (kafka.org.v1.UpdateServiceAccountRequest) returns (kafka.org.v1.UpdateServiceAccountReply) {}
+}
