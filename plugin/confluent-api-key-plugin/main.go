@@ -8,13 +8,16 @@ import (
 	plugin "github.com/hashicorp/go-plugin"
 	"github.com/sirupsen/logrus"
 
-	chttp "github.com/confluentinc/cli/ccloud-sdk-go"
+	chttp "github.com/confluentinc/ccloud-sdk-go"
 	log "github.com/confluentinc/cli/log"
 	metric "github.com/confluentinc/cli/metric"
-	"github.com/confluentinc/cli/command/api-key"
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	"github.com/confluentinc/cli/shared/api-key"
+	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
 	"github.com/confluentinc/cli/shared"
 )
+
+// Compile-time check for Interface adherence
+var _ chttp.APIKey = (*ApiKey)(nil)
 
 func main() {
 	var logger *log.Logger
@@ -52,29 +55,31 @@ func main() {
 		impl = &ApiKey{Logger: logger, Client: client}
 	}
 
+	shared.PluginMap[apiKey.Name] = &apiKey.Plugin{Impl: impl}
+
 	plugin.Serve(&plugin.ServeConfig{
 		HandshakeConfig: shared.Handshake,
-		Plugins: map[string]plugin.Plugin{
-			"apiKey": &apiKey.Plugin{Impl: impl},
-		},
-		GRPCServer: plugin.DefaultGRPCServer,
+		Plugins:         shared.PluginMap,
+		GRPCServer:      plugin.DefaultGRPCServer,
 	})
 }
+
+
 
 type ApiKey struct {
 	Logger *log.Logger
 	Client *chttp.Client
 }
 
-func (c *ApiKey) Create(ctx context.Context, key *schedv1.ApiKey) (*schedv1.ApiKey, error) {
+func (c *ApiKey) Create(ctx context.Context, key *authv1.APIKey) (*authv1.APIKey, error) {
 	c.Logger.Log("msg", "apiKey.Create()")
-	ret, _, err := c.Client.APIKey.Create(key)
+	ret, err := c.Client.APIKey.Create(ctx, key)
 	return ret, shared.ConvertAPIError(err)
 }
 
-func (c *ApiKey) Delete(ctx context.Context,  key *schedv1.ApiKey) error {
+func (c *ApiKey) Delete(ctx context.Context,  key *authv1.APIKey) error {
 	c.Logger.Log("msg", "apiKey.Delete()")
-	_, err :=  c.Client.APIKey.Delete(key)
+	err :=  c.Client.APIKey.Delete(ctx, key)
 	return shared.ConvertAPIError(err)
 }
 

@@ -2,11 +2,10 @@ syntax = "proto3";
 
 package apiKey;
 
-import "kafka/scheduler/v1/scheduler.proto";
+import "github.com/confluentinc/ccloudapis/auth/v1/auth.proto";
 
-// TODO: should this definition be in cc-structs?
 service ApiKey {
 
-  rpc Create(kafka.scheduler.v1.CreateApiKeyRequest) returns (kafka.scheduler.v1.CreateApiKeyReply) {}
-  rpc Delete(kafka.scheduler.v1.DeleteApiKeyRequest) returns (kafka.scheduler.v1.DeleteApiKeyReply) {}
+  rpc Create(ccloudapis.auth.v1.CreateAPIKeyRequest) returns (ccloudapis.auth.v1.CreateAPIKeyReply) {}
+  rpc Delete(ccloudapis.auth.v1.DeleteAPIKeyRequest) returns (ccloudapis.auth.v1.DeleteAPIKeyReply) {}
 }

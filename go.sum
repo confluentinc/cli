@@ -29,6 +29,12 @@ github.com/confluentinc/ccloudapis v0.0.0-20190102202847-9ebb9f05f6b6 h1:chb5n/9
 github.com/confluentinc/ccloudapis v0.0.0-20190102202847-9ebb9f05f6b6/go.mod h1:+B1uBrbvIpULnTzb2YXqLnsA937Irc0hVeP2byyqsXo=
 github.com/confluentinc/ccloudapis v0.0.0-20190103222645-f49be438a30c h1:cX2LgA/7xo68ZwJjdL5dLj7c6Munhi1TaijY7qNG+9s=
 github.com/confluentinc/ccloudapis v0.0.0-20190103222645-f49be438a30c/go.mod h1:+B1uBrbvIpULnTzb2YXqLnsA937Irc0hVeP2byyqsXo=
+github.com/confluentinc/ccloudapis v0.0.0-20190108182337-733d6376c879 h1:+KP3YQOqvmbU2K9TckkmhL99gHrBvQZCESaQKokSAz8=
+github.com/confluentinc/ccloudapis v0.0.0-20190108182337-733d6376c879/go.mod h1:+B1uBrbvIpULnTzb2YXqLnsA937Irc0hVeP2byyqsXo=
+github.com/confluentinc/ccloudapis v0.0.0-20190109183617-46fe3b224a63 h1:ZfECvkg70xCfsy69a0tTvyy5Wx+Wuq/YCBStDr4+41k=
+github.com/confluentinc/ccloudapis v0.0.0-20190109183617-46fe3b224a63/go.mod h1:+B1uBrbvIpULnTzb2YXqLnsA937Irc0hVeP2byyqsXo=
+github.com/confluentinc/ccloudapis v0.0.0-20190109190753-e3c450060da3 h1:Cx598MnazWNFYiZK5UfvhbXhA46D4pfAnO/DG6ieRMg=
+github.com/confluentinc/ccloudapis v0.0.0-20190109190753-e3c450060da3/go.mod h1:+B1uBrbvIpULnTzb2YXqLnsA937Irc0hVeP2byyqsXo=
 github.com/confluentinc/cli v0.25.0/go.mod h1:9Fcc6HizVv8+N0513MYc9iaHA8chpfzW/ZkSKKffHj4=
 github.com/confluentinc/proto-go-setter v0.0.0-20180912191759-fb17e76fc076 h1:tJszovtvIkdc+Sq0TBZK2d8ExqQ6Y2jjUbBERqivSMk=
 github.com/confluentinc/proto-go-setter v0.0.0-20180912191759-fb17e76fc076/go.mod h1:WD/4qYOPFMs2ozq2z2VJFtHljgptKHWtOMb9ochncfA=

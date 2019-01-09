@@ -4,29 +4,33 @@ import (
 	"fmt"
 	"context"
 	"github.com/codyaray/go-printer"
+	"github.com/confluentinc/cli/shared/api-key"
 
 	"os"
-	"os/exec"
 
-	"github.com/hashicorp/go-hclog"
-	plugin "github.com/hashicorp/go-plugin"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/shared"
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
+	chttp "github.com/confluentinc/ccloud-sdk-go"
 )
 
 type command struct {
 	*cobra.Command
 	config *shared.Config
-	key  ApiKey
+	client chttp.APIKey
 }
 
 var (
 	describeFields  = []string{"Key", "Secret", "UserId"}
 	describeRenames = map[string]string{"Key": "API Key", "UserId": "Service Account Id"}
 )
+
+// grpcLoader is the default client loader for the CLI
+func grpcLoader(i interface{}) error {
+	return common.LoadPlugin(apiKey.Name, i)
+}
 
 // New returns the Cobra command for API Key.
 func New(config *shared.Config) (*cobra.Command, error) {
@@ -37,53 +41,18 @@ func New(config *shared.Config) (*cobra.Command, error) {
 		},
 		config: config,
 	}
-	err := cmd.init()
+	err := cmd.init(grpcLoader)
 	return cmd.Command, err
 }
 
-func (c *command) init() error {
-	path, err := exec.LookPath("confluent-api-key-plugin")
-	if err != nil {
-		return fmt.Errorf("skipping api-key: plugin isn't installed")
-	}
-
-	// We're a host. Start by launching the plugin process.
-	client := plugin.NewClient(&plugin.ClientConfig{
-		HandshakeConfig:  shared.Handshake,
-		Plugins:          shared.PluginMap,
-		Cmd:              exec.Command("sh", "-c", path), // nolint: gas
-		AllowedProtocols: []plugin.Protocol{plugin.ProtocolGRPC},
-		Managed:          true,
-		Logger: hclog.New(&hclog.LoggerOptions{
-			Output: hclog.DefaultOutput,
-			Level:  hclog.Info,
-			Name:   "plugin",
-		}),
-	})
-
-	// Connect via RPC.
-	rpcClient, err := client.Client()
-	if err != nil {
-		fmt.Println("Error:", err.Error())
-		os.Exit(1)
-	}
-
-	// Request the plugin
-	raw, err := rpcClient.Dispense("apiKey")
-	if err != nil {
-		fmt.Println("Error:", err.Error())
-		os.Exit(1)
-	}
-
-	// Got a client now communicating over RPC.
-	c.key = raw.(ApiKey)
-
-	// All commands require login first
-	c.Command.PersistentPreRun = func(cmd *cobra.Command, args []string) {
-		if err = c.config.CheckLogin(); err != nil {
-			_ = common.HandleError(err, cmd)
-			os.Exit(1)
+func (c *command) init(plugin common.Provider) error {
+	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		if err := c.config.CheckLogin(); err != nil {
+			fmt.Printf("failed initial login check \n\n%+v\n", c.config)
+			return err
 		}
+		// Lazy load plugin to avoid unnecessarily spawning child processes
+		return plugin(&c.client)
 	}
 
 	createCmd := &cobra.Command{
@@ -131,15 +100,15 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	}
 
 
-	key := &schedv1.ApiKey{
+	key := &authv1.APIKey{
 		UserId:      id,
 		Description: description,
-		LogicalClusters: []*schedv1.ApiKey_Cluster{
-			&schedv1.ApiKey_Cluster{Id: clusterId},
+		LogicalClusters: []*authv1.APIKey_Cluster{
+			&authv1.APIKey_Cluster{Id: clusterId},
 	    },
 	}
 
-	userKey, errRet := c.key.Create(context.Background(), key)
+	userKey, errRet := c.client.Create(context.Background(), key)
 
 	if errRet != nil {
 		return common.HandleError(errRet, cmd)
@@ -163,14 +132,14 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return common.HandleError(err, cmd)
 	}
 
-	key := &schedv1.ApiKey{
+	key := &authv1.APIKey{
 		UserId:      id,
-		LogicalClusters: []*schedv1.ApiKey_Cluster{
-			&schedv1.ApiKey_Cluster{Id: clusterId},
+		LogicalClusters: []*authv1.APIKey_Cluster{
+			&authv1.APIKey_Cluster{Id: clusterId},
 		},
 	}
 
-	errRet := c.key.Delete(context.Background(), key)
+	errRet := c.client.Delete(context.Background(), key)
 
 	if errRet != nil {
 		return common.HandleError(errRet, cmd)

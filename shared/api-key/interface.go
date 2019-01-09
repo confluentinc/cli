@@ -3,31 +3,31 @@ package apiKey
 import (
 	"context"
 
-	plugin "github.com/hashicorp/go-plugin"
+	"github.com/hashicorp/go-plugin"
 	"google.golang.org/grpc"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/cli/shared"
-	proto "github.com/confluentinc/cli/shared/api-key"
+	chttp "github.com/confluentinc/ccloud-sdk-go"
 )
 
-type ApiKey interface {
-	Create(ctx context.Context, key *schedv1.ApiKey) (*schedv1.ApiKey, error)
-	Delete(ctx context.Context, key *schedv1.ApiKey) error
-}
+// Name description used for registering/disposing GRPC components
+const Name = "confluent-api-key-plugin"
 
+
+// Plugin mates an interface with Hashicorp plugin object
 type Plugin struct {
 	plugin.NetRPCUnsupportedPlugin
-
-	Impl ApiKey
+	Impl chttp.APIKey
 }
 
+// GRPCClient registers a GRPC client
 func (p *Plugin) GRPCClient(ctx context.Context, broker *plugin.GRPCBroker, c *grpc.ClientConn) (interface{}, error) {
-	return &GRPCClient{client: proto.NewApiKeyClient(c)}, nil
+	return &GRPCClient{client: NewApiKeyClient(c)}, nil
 }
 
+// GRPCServer registers a GRPC Server
 func (p *Plugin) GRPCServer(broker *plugin.GRPCBroker, s *grpc.Server) error {
-	proto.RegisterApiKeyServer(s, &GRPCServer{p.Impl})
+	RegisterApiKeyServer(s, &GRPCServer{p.Impl})
 	return nil
 }
 
@@ -35,5 +35,7 @@ func (p *Plugin) GRPCServer(broker *plugin.GRPCBroker, s *grpc.Server) error {
 var _ plugin.GRPCPlugin = &Plugin{}
 
 func init() {
-	shared.PluginMap["apiKey"] = &Plugin{}
+	shared.PluginMap[Name] = &Plugin{}
 }
+
+

@@ -10,7 +10,7 @@ require (
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
 	github.com/confluentinc/cc-structs v0.0.0-20181109155559-7cfce9602e5d
 	github.com/confluentinc/ccloud-sdk-go v0.0.2-0.20190103222740-6245943848b0
-	github.com/confluentinc/ccloudapis v0.0.0-20190103222645-f49be438a30c
+	github.com/confluentinc/ccloudapis v0.0.0-20190109190753-e3c450060da3
 	github.com/confluentinc/proto-go-setter v0.0.0-20180912191759-fb17e76fc076 // indirect
 	github.com/dghubble/sling v1.2.0 // indirect
 	github.com/eapache/go-resiliency v1.1.0 // indirect

@@ -31,7 +31,7 @@ type S3SinkClusterConfig struct {
 	KafkaClusterId       string            `protobuf:"bytes,3,opt,name=kafka_cluster_id,json=kafkaClusterId,proto3" json:"kafka_cluster_id,omitempty"`
 	KafkaUserEmail       string            `protobuf:"bytes,4,opt,name=kafka_user_email,json=kafkaUserEmail,proto3" json:"kafka_user_email,omitempty"`
 	Servers              int32             `protobuf:"varint,5,opt,name=servers,proto3" json:"servers,omitempty"`
-	Options              *v1.S3SinkOptions `protobuf:"bytes,6,opt,name=options" json:"options,omitempty"`
+	Options              *v1.S3SinkOptions `protobuf:"bytes,6,opt,name=options,proto3" json:"options,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
 	XXX_unrecognized     []byte            `json:"-"`
 	XXX_sizecache        int32             `json:"-"`
@@ -104,7 +104,7 @@ func (m *S3SinkClusterConfig) GetOptions() *v1.S3SinkOptions {
 }
 
 type CreateS3SinkClusterRequest struct {
-	Config               *S3SinkClusterConfig `protobuf:"bytes,1,opt,name=config" json:"config,omitempty"`
+	Config               *S3SinkClusterConfig `protobuf:"bytes,1,opt,name=config,proto3" json:"config,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}             `json:"-"`
 	XXX_unrecognized     []byte               `json:"-"`
 	XXX_sizecache        int32                `json:"-"`
@@ -142,8 +142,8 @@ func (m *CreateS3SinkClusterRequest) GetConfig() *S3SinkClusterConfig {
 }
 
 type CreateS3SinkClusterReply struct {
-	Error                *v11.Error        `protobuf:"bytes,1,opt,name=error" json:"error,omitempty"`
-	Cluster              *v1.S3SinkCluster `protobuf:"bytes,2,opt,name=cluster" json:"cluster,omitempty"`
+	Error                *v11.Error        `protobuf:"bytes,1,opt,name=error,proto3" json:"error,omitempty"`
+	Cluster              *v1.S3SinkCluster `protobuf:"bytes,2,opt,name=cluster,proto3" json:"cluster,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
 	XXX_unrecognized     []byte            `json:"-"`
 	XXX_sizecache        int32             `json:"-"`

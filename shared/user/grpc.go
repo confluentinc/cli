@@ -2,14 +2,16 @@ package user
 
 import (
 	"context"
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	"github.com/confluentinc/cli/shared"
-	proto "github.com/confluentinc/cli/shared/user"
+	chttp "github.com/confluentinc/ccloud-sdk-go"
 )
+
+var _ chttp.User = (*GRPCClient)(nil)
 
 // GRPCClient is an implementation of UserClient that talks over RPC.
 type GRPCClient struct {
-	client proto.UserClient
+	client UserClient
 }
 
 // Create Service Account
@@ -49,9 +51,27 @@ func (c *GRPCClient) DeactivateServiceAccount(ctx context.Context, user *orgv1.U
 	return nil
 }
 
+// Describe User
+func (c *GRPCClient) Describe(ctx context.Context, user *orgv1.User) (*orgv1.User, error) {
+	resp, err := c.client.Describe(ctx, &orgv1.GetUserRequest{User: user})
+	if err != nil {
+		return nil, shared.ConvertGRPCError(err)
+	}
+	return resp.User, nil
+}
+
+// List Users
+func (c *GRPCClient) List(ctx context.Context) ([]*orgv1.User, error) {
+	resp, err := c.client.List(ctx, &orgv1.GetUsersRequest{})
+	if err != nil {
+		return nil, shared.ConvertGRPCError(err)
+	}
+	return resp.Users, nil
+}
+
 // GRPCServer the GPRClient talks to. Plugin authors implement this if they're using Go.
 type GRPCServer struct {
-	Impl User
+	Impl chttp.User
 }
 
 // Create Service Account
@@ -73,8 +93,21 @@ func (s *GRPCServer) GetServiceAccounts(ctx context.Context, req *orgv1.GetServi
 	return &orgv1.GetServiceAccountsReply{Users: r}, err
 }
 
-// Deactivate Service Account
+// Deactivate Users
 func (s *GRPCServer) DeactivateServiceAccount(ctx context.Context, req *orgv1.DeactivateServiceAccountRequest) (*orgv1.DeactivateServiceAccountReply, error) {
 	err := s.Impl.DeactivateServiceAccount(ctx, req.User)
 	return &orgv1.DeactivateServiceAccountReply{}, err
 }
+
+// Describe User
+func (s *GRPCServer) Describe(ctx context.Context, req *orgv1.GetUserRequest) (*orgv1.GetUserReply, error) {
+	r, err := s.Impl.Describe(ctx, req.User)
+	return &orgv1.GetUserReply{User: r}, err
+}
+
+// List User
+func (s *GRPCServer) List(ctx context.Context, req *orgv1.GetUsersRequest) (*orgv1.GetUsersReply, error) {
+	r, err := s.Impl.List(ctx)
+	return &orgv1.GetUsersReply{Users: r}, err
+}
+

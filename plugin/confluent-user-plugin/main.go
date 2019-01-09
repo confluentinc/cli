@@ -4,18 +4,20 @@ import (
 	"context"
 	golog "log"
 	"os"
-	"plugin"
 
-	"github.com/hashicorp/go-plugin"
+	plugin "github.com/hashicorp/go-plugin"
 	"github.com/sirupsen/logrus"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	"github.com/confluentinc/cli/command/user"
-	chttp "github.com/confluentinc/cli/ccloud-sdk-go"
+	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
+	"github.com/confluentinc/cli/shared/user"
+	chttp "github.com/confluentinc/ccloud-sdk-go"
 	"github.com/confluentinc/cli/log"
 	"github.com/confluentinc/cli/metric"
 	"github.com/confluentinc/cli/shared"
 )
+
+// Compile-time check for Interface adherence
+var _ chttp.User = (*User)(nil)
 
 func main() {
 	var logger *log.Logger
@@ -53,12 +55,12 @@ func main() {
 		impl = &User{Logger: logger, Client: client}
 	}
 
+	shared.PluginMap[user.Name] = &user.Plugin{Impl: impl}
+
 	plugin.Serve(&plugin.ServeConfig{
 		HandshakeConfig: shared.Handshake,
-		Plugins: map[string]plugin.Plugin{
-			"user": &user.Plugin{Impl: impl},
-		},
-		GRPCServer: plugin.DefaultGRPCServer,
+		Plugins:         shared.PluginMap,
+		GRPCServer:      plugin.DefaultGRPCServer,
 	})
 }
 
@@ -67,32 +69,43 @@ type User struct {
 	Client *chttp.Client
 }
 
+func (c *User) List(ctx context.Context) ([]*orgv1.User, error) {
+	c.Logger.Log("msg", "user.List()")
+	ret, err := c.Client.User.List(ctx)
+	c.Logger.Log("msg", "return val:::")
+	return ret, shared.ConvertAPIError(err)
+}
+
+func (c *User) Describe(ctx context.Context, user *orgv1.User) (*orgv1.User, error) {
+	c.Logger.Log("msg", "user.Describe()")
+	ret, err := c.Client.User.Describe(ctx, user)
+	c.Logger.Log("msg", "return val:::")
+	return ret, shared.ConvertAPIError(err)
+}
+
 func (c *User) CreateServiceAccount(ctx context.Context, user *orgv1.User) (*orgv1.User, error) {
 	c.Logger.Log("msg", "user.UpdateServiceAccount()")
-	ret, _, err := c.Client.User.CreateServiceAccount(user)
-	/*if err != nil && err != shared.ErrNoConfig {
-		c.Logger.Log("err", "Errorr")
-	}*/
+	ret, err := c.Client.User.CreateServiceAccount(ctx, user)
 	c.Logger.Log("msg", "return val:::")
 	return ret, shared.ConvertAPIError(err)
 }
 
 func (c *User) UpdateServiceAccount(ctx context.Context, user *orgv1.User) error {
 	c.Logger.Log("msg", "user.UpdateServiceAccount()")
-	_, err := c.Client.User.UpdateServiceAccount(user)
+	err := c.Client.User.UpdateServiceAccount(ctx, user)
 	c.Logger.Log("msg", "return val:::")
 	return shared.ConvertAPIError(err)
 }
 
 func (c *User) DeactivateServiceAccount(ctx context.Context, user *orgv1.User) error {
 	c.Logger.Log("msg", "user.DeactivateServiceAccount()")
-	_, err := c.Client.User.DeactivateServiceAccount(user)
+	err := c.Client.User.DeactivateServiceAccount(ctx, user)
 	return shared.ConvertAPIError(err)
 }
 
 func (c *User) GetServiceAccounts(ctx context.Context, user *orgv1.User) ([]*orgv1.User, error) {
 	c.Logger.Log("msg", "user.CreateServiceAccount()")
-	ret, _, err := c.Client.User.GetServiceAccounts(user)
+	ret, err := c.Client.User.GetServiceAccounts(ctx, user)
 	return ret, shared.ConvertAPIError(err)
 }
 

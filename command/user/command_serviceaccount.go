@@ -5,30 +5,37 @@ import (
 	"fmt"
 	"context"
 	"github.com/codyaray/go-printer"
+	"github.com/confluentinc/cli/shared/user"
 	"strings"
 
 	"os"
-	"os/exec"
 
-	"github.com/hashicorp/go-hclog"
-	plugin "github.com/hashicorp/go-plugin"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/shared"
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
+	chttp "github.com/confluentinc/ccloud-sdk-go"
 )
 
 type command struct {
 	*cobra.Command
 	config *shared.Config
-	user  User
+	client chttp.User
 }
 
 var (
 	accountFields  = []string{"Id", "ServiceName", "ServiceDescription", "OrganizationId"}
 	displayFields = map[string]string{"ServiceName": "Name", "ServiceDescription": "Description"}
 )
+
+const nameLength = 32
+const descriptionLength = 128
+
+// grpcLoader is the default client loader for the CLI
+func grpcLoader(i interface{}) error {
+	return common.LoadPlugin(user.Name, i)
+}
 
 // New returns the Cobra command for Users.
 func New(config *shared.Config) (*cobra.Command, error) {
@@ -39,53 +46,18 @@ func New(config *shared.Config) (*cobra.Command, error) {
 		},
 		config: config,
 	}
-	err := cmd.init()
+	err := cmd.init(grpcLoader)
 	return cmd.Command, err
 }
 
-func (c *command) init() error {
-	path, err := exec.LookPath("confluent-user-plugin")
-	if err != nil {
-		return fmt.Errorf("skipping user: plugin isn't installed")
-	}
-
-	// We're a host. Start by launching the plugin process.
-	client := plugin.NewClient(&plugin.ClientConfig{
-		HandshakeConfig:  shared.Handshake,
-		Plugins:          shared.PluginMap,
-		Cmd:              exec.Command("sh", "-c", path), // nolint: gas
-		AllowedProtocols: []plugin.Protocol{plugin.ProtocolGRPC},
-		Managed:          true,
-		Logger: hclog.New(&hclog.LoggerOptions{
-			Output: hclog.DefaultOutput,
-			Level:  hclog.Info,
-			Name:   "plugin",
-		}),
-	})
-
-	// Connect via RPC.
-	rpcClient, err := client.Client()
-	if err != nil {
-		fmt.Println("Error:", err.Error())
-		os.Exit(1)
-	}
-
-	// Request the plugin
-	raw, err := rpcClient.Dispense("user")
-	if err != nil {
-		fmt.Println("Error:", err.Error())
-		os.Exit(1)
-	}
-
-	// Got a client now communicating over RPC.
-	c.user = raw.(User)
-
-	// All commands require login first
-	c.Command.PersistentPreRun = func(cmd *cobra.Command, args []string) {
-		if err = c.config.CheckLogin(); err != nil {
-			_ = common.HandleError(err, cmd)
-			os.Exit(1)
+func (c *command) init(plugin common.Provider) error {
+	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		if err := c.config.CheckLogin(); err != nil {
+			fmt.Printf("failed initial login check \n\n%+v\n", c.config)
+			return err
 		}
+		// Lazy load plugin to avoid unnecessarily spawning child processes
+		return plugin(&c.client)
 	}
 
 	c.AddCommand(&cobra.Command{
@@ -140,9 +112,21 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
+	namelen := len(name)
+
+	if namelen > nameLength {
+		return fmt.Errorf("service name length should be less then 32 bytes.")
+	}
+
 	description, err := cmd.Flags().GetString("description")
 	if err != nil {
 		return common.HandleError(err, cmd)
+	}
+
+	descriptionlen := len(description)
+
+	if descriptionlen > descriptionLength {
+		return fmt.Errorf("description length should be less then 128 bytes.")
 	}
 
 	user := &orgv1.User{
@@ -153,7 +137,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		ServiceAccount:     true,
 	}
 
-	user, errRet := c.user.CreateServiceAccount(context.Background(), user)
+	user, errRet := c.client.CreateServiceAccount(context.Background(), user)
 
 	if errRet != nil {
 		return common.HandleError(errRet, cmd)
@@ -181,7 +165,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		OrganizationId:     c.config.Auth.User.OrganizationId,
 	}
 
-	errRet := c.user.UpdateServiceAccount(context.Background(), user)
+	errRet := c.client.UpdateServiceAccount(context.Background(), user)
 
 	if errRet != nil {
 		return common.HandleError(errRet, cmd)
@@ -214,7 +198,7 @@ func (c *command) deactivate(cmd *cobra.Command, args []string) error {
 		// To-do Call DeleteACL API
 	}
 
-	errRet := c.user.DeactivateServiceAccount(context.Background(), user)
+	errRet := c.client.DeactivateServiceAccount(context.Background(), user)
 
 	if errRet != nil {
 		return common.HandleError(errRet, cmd)
@@ -230,7 +214,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		OrganizationId:     c.config.Auth.User.OrganizationId,
 	}
 
-	users, errRet := c.user.GetServiceAccounts(context.Background(), user)
+	users, errRet := c.client.GetServiceAccounts(context.Background(), user)
 
 	if errRet != nil {
 		return common.HandleError(errRet, cmd)
