@@ -5,12 +5,13 @@ import (
 	"os/exec"
 	"reflect"
 
+	"github.com/spf13/cobra"
 	editor "github.com/codyaray/go-editor"
 	hclog "github.com/hashicorp/go-hclog"
 	plugin "github.com/hashicorp/go-plugin"
-	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/shared"
+	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 )
 
 var messages = map[error]string{
@@ -28,6 +29,13 @@ type Provider func(interface{}) error
 
 // HandleError provides standard error messaging for common errors.
 func HandleError(err error, cmd *cobra.Command) error {
+	// Maintain nil value
+	// https://golang.org/doc/faq#nil_error
+	if err == nil {
+		fmt.Printf("%s success! \n", cmd.Name())
+		return nil
+	}
+
 	out := cmd.OutOrStderr()
 	if msg, ok := messages[err]; ok {
 		fmt.Fprintln(out, msg)
@@ -87,4 +95,19 @@ func LoadPlugin(name string, value interface{}) error {
 	}
 	rv.Elem().Set(reflect.ValueOf(reflect.ValueOf(impl).Interface()))
 	return err
+}
+
+// Cluster returns the current cluster context
+func Cluster(config *shared.Config) (*kafkav1.Cluster, error) {
+	ctx, _ := config.Context()
+	if ctx == nil {
+		return nil, fmt.Errorf("no cluster selected")
+	}
+
+	conf, err := config.KafkaClusterConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	return &kafkav1.Cluster{AccountId: config.Auth.Account.Id, Id: ctx.Kafka, ApiEndpoint: conf.APIEndpoint}, nil
 }

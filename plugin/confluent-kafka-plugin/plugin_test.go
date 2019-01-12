@@ -29,6 +29,8 @@ func handleTopics(w http.ResponseWriter, req *http.Request){
 // get: https://github.com/confluentinc/blueway/blob/master/control-center/src/main/java/io/confluent/controlcenter/rest/KafkaResource.java#L161-L170
 // delete: https://github.com/confluentinc/blueway/blob/master/control-center/src/main/java/io/confluent/controlcenter/rest/KafkaResource.java#L88-L97
 func handleTopic(w http.ResponseWriter, req *http.Request){
+	var topic *kafkav1.Topic
+	json.NewDecoder(req.Body).Decode(&topic)
 
 	switch req.Method {
 	case http.MethodGet:
@@ -79,7 +81,7 @@ func TestMockClient(t *testing.T) {
 	t.Log(client.Kafka.DeleteTopic(context.Background(), &kafkav1.Cluster{}, &kafkav1.Topic{Spec: &kafkav1.TopicSpecification{Name: "topic_test"}}))
 	t.Log(client.Kafka.UpdateTopic(context.Background(), &kafkav1.Cluster{}, &kafkav1.Topic{Spec: &kafkav1.TopicSpecification{Name: "topic_test"}}))
 	t.Log(client.Kafka.DescribeTopic(context.Background(), &kafkav1.Cluster{}, &kafkav1.Topic{Spec: &kafkav1.TopicSpecification{Name: "topic_test"}}))
-	t.Log(client.Kafka.CreateACL(context.Background(), &kafkav1.Cluster{}, &kafkav1.ACLBinding{}))
+	t.Log(client.Kafka.CreateACL(context.Background(), &kafkav1.Cluster{}, []*kafkav1.ACLBinding{&kafkav1.ACLBinding{}}))
 	t.Log(client.Kafka.DeleteACL(context.Background(), &kafkav1.Cluster{}, &kafkav1.ACLFilter{}))
 	t.Log(client.Kafka.ListACL(context.Background(), &kafkav1.Cluster{}, &kafkav1.ACLFilter{}))
 
@@ -89,18 +91,20 @@ func TestMockClient(t *testing.T) {
 
 func NewMockClient(logger *log.Logger, done chan struct{}) *chttp.Client {
 	var api *httptest.Server
-	const clusterID = "test"
+	const clusterID = "cluster_test"
+	const topicID = "topic_test"
+
 	go func(){
 		<-done
 		api.Close()
 	}()
 
 	mux := 	http.NewServeMux()
-	mux.HandleFunc(fmt.Sprintf(string(chttp.TOPICS), clusterID), handleTopics)
-	mux.HandleFunc(fmt.Sprintf(string(chttp.TOPIC), clusterID, "topic_test"), handleTopic)
-	mux.HandleFunc(fmt.Sprintf(string(chttp.TOPICCONFIG), clusterID, "topic_test"), handleTopicConfig)
-	mux.HandleFunc(fmt.Sprintf(string(chttp.ACL), clusterID), handleACL)
-	mux.HandleFunc(fmt.Sprintf(string(chttp.ACLSEARCH), clusterID), handleACLSearch)
+	mux.HandleFunc(fmt.Sprintf(chttp.TOPICS, clusterID), handleTopics)
+	mux.HandleFunc(fmt.Sprintf(chttp.TOPIC, clusterID, topicID), handleTopic)
+	mux.HandleFunc(fmt.Sprintf(chttp.TOPICCONFIG, clusterID, topicID), handleTopicConfig)
+	mux.HandleFunc(fmt.Sprintf(chttp.ACL,clusterID), handleACL)
+	mux.HandleFunc(fmt.Sprintf(chttp.ACLSEARCH, clusterID), handleACLSearch)
 
 	api = httptest.NewServer(mux)
 	fmt.Println(api.URL)

@@ -34,7 +34,7 @@ var resourcePatterns = []struct {
 			PatternType: kafkav1.PatternTypes_LITERAL},
 	},
 	{
-		args: []string{"--topic", "test-topic*"},
+		args: []string{"--topic", "test-topic*", "--pattern-type", "prefixed"},
 		pattern: &kafkav1.ResourcePatternConfig{ResourceType: kafkav1.ResourceTypes_TOPIC, Name: "test-topic",
 			PatternType: kafkav1.PatternTypes_PREFIXED},
 	},
@@ -44,7 +44,7 @@ var resourcePatterns = []struct {
 			PatternType: kafkav1.PatternTypes_LITERAL},
 	},
 	{
-		args: []string{"--consumer_group", "test-group*"},
+		args: []string{"--consumer_group", "test-group*",  "--pattern-type", "prefixed"},
 		pattern: &kafkav1.ResourcePatternConfig{ResourceType: kafkav1.ResourceTypes_GROUP, Name: "test-group",
 			PatternType: kafkav1.PatternTypes_PREFIXED},
 	},
@@ -54,7 +54,7 @@ var resourcePatterns = []struct {
 			PatternType: kafkav1.PatternTypes_LITERAL},
 	},
 	{
-		args: []string{"--transactional_id", "test-transactional_id*"},
+		args: []string{"--transactional_id", "test-transactional_id*",  "--pattern-type", "prefixed"},
 		pattern: &kafkav1.ResourcePatternConfig{ResourceType: kafkav1.ResourceTypes_TRANSACTIONAL_ID, Name: "test-transactional_id",
 			PatternType: kafkav1.PatternTypes_PREFIXED},
 	},
@@ -396,33 +396,7 @@ func (m *kafkaPluginMock) ListTopics(ctx context.Context, cluster *kafkav1.Clust
 
 func (m *kafkaPluginMock) DescribeTopic(ctx context.Context, cluster *kafkav1.Cluster, topic *kafkav1.Topic) (*kafkav1.TopicDescription, error) {
 	return &kafkav1.TopicDescription{}, assertEquals(topic, <-m.Expect)
-}
-
-func (m *kafkaPluginMock) CreateTopic(ctx context.Context, cluster *kafkav1.Cluster, topic *kafkav1.Topic) error {
-	return assertEquals(topic, <-m.Expect)
-}
-
-func (m *kafkaPluginMock) DeleteTopic(ctx context.Context, cluster *kafkav1.Cluster, topic *kafkav1.Topic) error {
-	return assertEquals(topic, <-m.Expect)
-}
-
-func (m *kafkaPluginMock) UpdateTopic(ctx context.Context, cluster *kafkav1.Cluster, topic *kafkav1.Topic) error {
-	return assertEquals(topic, <-m.Expect)
-}
-
-func (m *kafkaPluginMock) ListACL(ctx context.Context, cluster *kafkav1.Cluster, filter *kafkav1.ACLFilter) ([]*kafkav1.ACLBinding, error) {
-	return []*kafkav1.ACLBinding{}, assertEquals(filter, <-m.Expect)
-}
-
-func (m *kafkaPluginMock) CreateACL(ctx context.Context, cluster *kafkav1.Cluster, binding *kafkav1.ACLBinding) error {
-	return assertEquals(binding, <-m.Expect)
-}
-
-// TODO: Included for testing, will not be exposed in the CLI
-func (m *kafkaPluginMock) ListTopicConfig(ctx context.Context, cluster *kafkav1.Cluster, topic *kafkav1.Topic) (*kafkav1.TopicConfig, error) {
-	return nil, nil
-}
-
+}*
 func (m *kafkaPluginMock) DeleteACL(ctx context.Context, cluster *kafkav1.Cluster, filter *kafkav1.ACLFilter) error {
 	return assertEquals(filter, <-m.Expect)
 }

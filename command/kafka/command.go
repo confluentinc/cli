@@ -1,15 +1,12 @@
 package kafka
 
 import (
-	"github.com/codyaray/go-printer"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/shared"
 	"github.com/confluentinc/cli/shared/kafka"
 )
-
-var jsonPrinter = printer.NewJSONPrinter().Pretty()
 
 type command struct {
 	*cobra.Command
