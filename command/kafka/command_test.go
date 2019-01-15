@@ -1,21 +1,18 @@
 package kafka
 
 import (
-	"context"
 	"fmt"
-	"reflect"
 	"strconv"
 	"strings"
 	"testing"
 
 	"github.com/spf13/cobra"
 
-	chttp "github.com/confluentinc/ccloud-sdk-go"
-	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
+	cliMock "github.com/confluentinc/cli/mock"
+
 	"github.com/confluentinc/cli/shared"
-	proto "github.com/golang/protobuf/proto"
 )
 
 var conf *shared.Config
@@ -342,7 +339,7 @@ func TestUpdateTopic(t *testing.T) {
 /*************** TEST setup/helpers ***************/
 func NewCMD(expect chan interface{}) *cobra.Command {
 	cmd, _ := NewKafkaCommand(conf, func(value interface{}) error {
-		return NewPluginMock(value, expect)
+		return cliMock.NewKafkaMock(value, expect)
 	})
 
 	return cmd
@@ -356,94 +353,6 @@ func init() {
 		Account: &orgv1.Account{Id: "testAccount"},
 	}
 	initContext(conf)
-}
-
-// Compile-time check interface adherence
-var _ chttp.Kafka = (*kafkaPluginMock)(nil)
-
-type kafkaPluginMock struct {
-	Expect chan interface{}
-}
-
-func NewPluginMock(value interface{}, expect chan interface{}) error {
-	client := &kafkaPluginMock{expect}
-	rv := reflect.ValueOf(value)
-	rv.Elem().Set(reflect.ValueOf(client))
-	return nil
-}
-
-func (m *kafkaPluginMock) CreateAPIKey(_ context.Context, apiKey *authv1.APIKey) (*authv1.APIKey, error) {
-	return apiKey, nil
-}
-
-func (m *kafkaPluginMock) List(_ context.Context, cluster *kafkav1.Cluster) ([]*kafkav1.Cluster, error) {
-	return []*kafkav1.Cluster{cluster}, nil
-}
-
-func (m *kafkaPluginMock) Describe(_ context.Context, cluster *kafkav1.Cluster) (*kafkav1.Cluster, error) {
-	return cluster, nil
-}
-
-func (m *kafkaPluginMock) Create(_ context.Context, config *kafkav1.ClusterConfig) (*kafkav1.Cluster, error) {
-	return &kafkav1.Cluster{}, nil
-}
-
-func (m *kafkaPluginMock) Delete(_ context.Context, cluster *kafkav1.Cluster) error {
-	return nil
-}
-
-func (m *kafkaPluginMock) ListTopics(ctx context.Context, cluster *kafkav1.Cluster) ([]*kafkav1.TopicDescription, error) {
-	return []*kafkav1.TopicDescription{
-		{Name: "test1"},
-		{Name: "test2"},
-		{Name: "test3"}}, nil
-}
-
-func (m *kafkaPluginMock) DescribeTopic(ctx context.Context, cluster *kafkav1.Cluster, topic *kafkav1.Topic) (*kafkav1.TopicDescription, error) {
-	node := &kafkav1.KafkaNode{Id: 1}
-	tp := &kafkav1.TopicPartitionInfo{Leader: node, Replicas: []*kafkav1.KafkaNode{node}}
-	return &kafkav1.TopicDescription{Partitions: []*kafkav1.TopicPartitionInfo{tp}},
-		assertEquals(topic, <-m.Expect)
-}
-
-func (m *kafkaPluginMock) CreateTopic(ctx context.Context, cluster *kafkav1.Cluster, topic *kafkav1.Topic) error {
-	return assertEquals(topic, <-m.Expect)
-}
-
-func (m *kafkaPluginMock) DeleteTopic(ctx context.Context, cluster *kafkav1.Cluster, topic *kafkav1.Topic) error {
-	return assertEquals(topic, <-m.Expect)
-}
-
-func (m *kafkaPluginMock) ListTopicConfig(ctx context.Context, cluster *kafkav1.Cluster, topic *kafkav1.Topic) (*kafkav1.TopicConfig, error) {
-	return nil, assertEquals(topic, <-m.Expect)
-}
-
-func (m *kafkaPluginMock) UpdateTopic(ctx context.Context, cluster *kafkav1.Cluster, topic *kafkav1.Topic) error {
-
-	return assertEquals(topic, <-m.Expect)
-}
-
-func (m *kafkaPluginMock) ListACL(ctx context.Context, cluster *kafkav1.Cluster, filter *kafkav1.ACLFilter) ([]*kafkav1.ACLBinding, error) {
-	return nil, assertEquals(filter, <-m.Expect)
-}
-
-func (m *kafkaPluginMock) CreateACL(ctx context.Context, cluster *kafkav1.Cluster, binding []*kafkav1.ACLBinding) error {
-	return assertEquals(binding[0], <-m.Expect)
-}
-
-func (m *kafkaPluginMock) DeleteACL(ctx context.Context, cluster *kafkav1.Cluster, filter *kafkav1.ACLFilter) error {
-	return assertEquals(filter, <-m.Expect)
-}
-
-func assertEquals(actual interface{}, expected interface{}) error {
-	actualMessage := actual.(proto.Message)
-	expectedMessage := expected.(proto.Message)
-
-	if !proto.Equal(actualMessage, expectedMessage) {
-		panic(fmt.Sprintf("actual: %+v\nexpected: %+v\n", actual, expected))
-		return fmt.Errorf("actual: %+v\nexpected: %+v", actual, expected)
-	}
-	return nil
 }
 
 // initContext mimics logging in with a configured context
