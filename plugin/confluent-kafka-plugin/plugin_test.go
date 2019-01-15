@@ -15,7 +15,10 @@ import (
 )
 
 var (
-	api     *httptest.Server
+	// KafkaAPI Client/Server
+	client *chttp.Client
+	server *httptest.Server
+
 	cluster = &kafkav1.Cluster{
 		Id: "cluster_test",
 	}
@@ -49,6 +52,8 @@ func handleToken(w http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case http.MethodPost:
 		_ = json.NewEncoder(w).Encode(token)
+	default:
+		w.WriteHeader(http.StatusNotFound)
 	}
 }
 
@@ -63,6 +68,8 @@ func handleTopics(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	case http.MethodPut:
 		w.WriteHeader(http.StatusNoContent)
+	default:
+		w.WriteHeader(http.StatusNotFound)
 	}
 }
 
@@ -82,6 +89,8 @@ func handleTopic(w http.ResponseWriter, req *http.Request) {
 		_ = json.NewEncoder(w).Encode(topic)
 	case http.MethodDelete:
 		w.WriteHeader(http.StatusNoContent)
+	default:
+		w.WriteHeader(http.StatusNotFound)
 	}
 
 }
@@ -97,6 +106,8 @@ func handleTopicConfig(w http.ResponseWriter, req *http.Request) {
 		_ = json.NewEncoder(w).Encode(tConfig)
 	case http.MethodPut:
 		w.WriteHeader(http.StatusNoContent)
+	default:
+		w.WriteHeader(http.StatusNotFound)
 	}
 }
 
@@ -111,6 +122,8 @@ func handleACL(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	case http.MethodDelete:
 		w.WriteHeader(http.StatusNoContent)
+	default:
+		w.WriteHeader(http.StatusNotFound)
 	}
 }
 
@@ -120,33 +133,77 @@ func handleACLSearch(w http.ResponseWriter, req *http.Request) {
 	if !handleAuthorization(w, req) {
 		return
 	}
-	_ = json.NewEncoder(w).Encode([]kafkav1.ACLBinding{})
+	switch req.Method {
+	case http.MethodPost:
+		_ = json.NewEncoder(w).Encode([]kafkav1.ACLBinding{})
+	default:
+		w.WriteHeader(http.StatusNotFound)
+	}
 }
 
 // TestMockClient ensures the plugin properly routes requests to the KafkaAPI given a particular set of arguments
-func TestMockClient(t *testing.T) {
-	logger := log.New()
-	done := make(chan struct{})
+func TestPlugin(t *testing.T) {
+	defer server.Close()
 
-	client := NewMockClient(logger, done, t)
-	t.Log(client.Kafka.ListTopics(context.Background(), cluster))
-	t.Log(client.Kafka.CreateTopic(context.Background(), cluster, topic))
-	t.Log(client.Kafka.DeleteTopic(context.Background(), cluster, topic))
-	t.Log(client.Kafka.UpdateTopic(context.Background(), cluster, topic))
-	t.Log(client.Kafka.DescribeTopic(context.Background(), cluster, topic))
-	t.Log(client.Kafka.CreateACL(context.Background(), cluster, []*kafkav1.ACLBinding{&kafkav1.ACLBinding{}}))
-	t.Log(client.Kafka.DeleteACL(context.Background(), cluster, &kafkav1.ACLFilter{}))
-	t.Log(client.Kafka.ListACL(context.Background(), cluster, &kafkav1.ACLFilter{}))
-
-	done <- struct{}{}
+	t.Run("ListTopics", testListTopics)
+	t.Run("CreateTopic", testCreateTopic)
+	t.Run("DeleteTopic", testDeleteTopic)
+	t.Run("UpdateTopic", testUpdateTopic)
+	t.Run("CreateACL", testCreateAcl)
+	t.Run("DeleteAcl", testDeleteAcl)
+	t.Run("ListAcl", testListAcl)
 }
 
-func NewMockClient(logger *log.Logger, done chan struct{}, t *testing.T) *chttp.Client {
-	go func() {
-		<-done
-		api.Close()
-	}()
+func testListTopics(t *testing.T) {
+	_, err := client.Kafka.ListTopics(context.Background(), cluster)
+	if err != nil {
+		t.Fail()
+	}
+}
 
+func testCreateTopic(t *testing.T) {
+	err := client.Kafka.CreateTopic(context.Background(), cluster, topic)
+	if err != nil {
+		t.Fail()
+	}
+}
+
+func testDeleteTopic(t *testing.T) {
+	err := client.Kafka.DeleteTopic(context.Background(), cluster, topic)
+	if err != nil {
+		t.Fail()
+	}
+}
+
+func testUpdateTopic(t *testing.T) {
+	err := client.Kafka.UpdateTopic(context.Background(), cluster, topic)
+	if err != nil {
+		t.Fail()
+	}
+}
+
+func testCreateAcl(t *testing.T) {
+	err := client.Kafka.CreateACL(context.Background(), cluster, []*kafkav1.ACLBinding{&kafkav1.ACLBinding{}})
+	if err != nil {
+		t.Fail()
+	}
+}
+
+func testListAcl(t *testing.T) {
+	err := client.Kafka.CreateACL(context.Background(), cluster, []*kafkav1.ACLBinding{&kafkav1.ACLBinding{}})
+	if err != nil {
+		t.Fail()
+	}
+}
+
+func testDeleteAcl(t *testing.T) {
+	err := client.Kafka.DeleteACL(context.Background(), cluster, &kafkav1.ACLFilter{})
+	if err != nil {
+		t.Fail()
+	}
+}
+
+func NewMockClient(logger *log.Logger) *chttp.Client {
 	mux := http.NewServeMux()
 	mux.HandleFunc(chttp.ACCESS_TOKENS, handleToken)
 	mux.HandleFunc(fmt.Sprintf(chttp.TOPICS, cluster.Id), handleTopics)
@@ -155,11 +212,15 @@ func NewMockClient(logger *log.Logger, done chan struct{}, t *testing.T) *chttp.
 	mux.HandleFunc(fmt.Sprintf(chttp.ACL, cluster.Id), handleACL)
 	mux.HandleFunc(fmt.Sprintf(chttp.ACLSEARCH, cluster.Id), handleACLSearch)
 
-	api = httptest.NewServer(mux)
+	server = httptest.NewServer(mux)
 
-	cluster.ApiEndpoint = api.URL
+	cluster.ApiEndpoint = server.URL
 
-	client := chttp.NewClient(api.URL, api.Client(), logger)
+	client := chttp.NewClient(server.URL, server.Client(), logger)
 
 	return client
+}
+
+func init() {
+	client = NewMockClient(log.New())
 }
