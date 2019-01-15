@@ -4,12 +4,13 @@ import (
 	"context"
 	"testing"
 
-	"github.com/confluentinc/cli/mock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
-	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	chttp "github.com/confluentinc/ccloud-sdk-go"
+	sdkMock "github.com/confluentinc/ccloud-sdk-go/mock"
+	cliMock "github.com/confluentinc/cli/mock"
+	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	"github.com/confluentinc/cli/command"
 	"github.com/confluentinc/cli/log"
 	"github.com/confluentinc/cli/shared"
@@ -19,12 +20,12 @@ func TestLoginSuccess(t *testing.T) {
 	req := require.New(t)
 
 	prompt := prompt("cody@confluent.io", "iambatman")
-	auth := &mock.Auth{
-		LoginFunc: func(username string, password string) (string, error) {
+	auth := &sdkMock.MockAuth{
+		LoginFunc: func(ctx context.Context, username string, password string) (string, error) {
 			return "y0ur.jwt.T0kEn", nil
 		},
-		UserFunc: func() (*shared.AuthConfig, error) {
-			return &shared.AuthConfig{
+		UserFunc: func(ctx context.Context) (*orgv1.GetUserReply, error) {
+			return &orgv1.GetUserReply{
 				User: &orgv1.User{
 					Id:        23,
 					Email:     "cody@confluent.io",
@@ -58,8 +59,8 @@ func TestLoginFail(t *testing.T) {
 	req := require.New(t)
 
 	prompt := prompt("cody@confluent.io", "iamrobin")
-	auth := &mock.Auth{
-		LoginFunc: func(username string, password string) (string, error) {
+	auth := &sdkMock.MockAuth{
+		LoginFunc: func(ctx context.Context, username string, password string) (string, error) {
 			return "", shared.ErrIncorrectAuth
 		},
 	}
@@ -74,7 +75,7 @@ func TestLogout(t *testing.T) {
 	req := require.New(t)
 
 	prompt := prompt("cody@confluent.io", "iamrobin")
-	auth := &mock.Auth{}
+	auth := &sdkMock.MockAuth{}
 	cmds, config := newAuthCommand(prompt, auth, req)
 
 	config.AuthToken = "some.token.here"
@@ -91,14 +92,14 @@ func TestLogout(t *testing.T) {
 	req.Empty(config.Auth)
 }
 
-func prompt(username, password string) *mock.Prompt {
-	return &mock.Prompt{
+func prompt(username, password string) *cliMock.Prompt {
+	return &cliMock.Prompt{
 		Strings:   []string{username},
 		Passwords: []string{password},
 	}
 }
 
-func newAuthCommand(prompt command.Prompt, auth *mock.Auth, req *require.Assertions) ([]*cobra.Command, *shared.Config) {
+func newAuthCommand(prompt command.Prompt, auth *sdkMock.MockAuth, req *require.Assertions) ([]*cobra.Command, *shared.Config) {
 	var mockAnonHTTPClientFactory = func(baseURL string, logger *log.Logger) *chttp.Client {
 		req.Equal("https://confluent.cloud", baseURL)
 		return &chttp.Client{Auth: auth}
