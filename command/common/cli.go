@@ -99,9 +99,9 @@ func LoadPlugin(name string, value interface{}) error {
 
 // Cluster returns the current cluster context
 func Cluster(config *shared.Config) (*kafkav1.Cluster, error) {
-	ctx, _ := config.Context()
-	if ctx == nil {
-		return nil, fmt.Errorf("no cluster selected")
+	ctx, err := config.Context()
+	if err != nil {
+		return nil, err
 	}
 
 	conf, err := config.KafkaClusterConfig()
