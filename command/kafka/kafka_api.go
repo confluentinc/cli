@@ -74,7 +74,7 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 		case "CONSUMER_GROUP":
 			setResourcePattern(conf, "GROUP", v)
 		case "CLUSTER":
-			// The only valid name for a cluster is client-cluster
+			// The only valid name for a cluster is kafka-cluster
 			// https://github.com/confluentinc/cc-kafka/blob/88823c6016ea2e306340938994d9e122abf3c6c0/core/src/main/scala/kafka/security/auth/Resource.scala#L24
 			setResourcePattern(conf, n, "kafka-cluster")
 		case "TOPIC":
