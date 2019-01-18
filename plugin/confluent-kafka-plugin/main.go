@@ -1,20 +1,20 @@
 package main
 
 import (
-	"os"
 	"context"
 	golog "log"
+	"os"
 
-	"github.com/sirupsen/logrus"
 	plugin "github.com/hashicorp/go-plugin"
+	"github.com/sirupsen/logrus"
 
-	"github.com/confluentinc/cli/shared"
-	"github.com/confluentinc/cli/shared/kafka"
-	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
 	chttp "github.com/confluentinc/ccloud-sdk-go"
+	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	log "github.com/confluentinc/cli/log"
 	metric "github.com/confluentinc/cli/metric"
+	"github.com/confluentinc/cli/shared"
+	"github.com/confluentinc/cli/shared/kafka"
 )
 
 // Compile-time check for Interface adherence
@@ -24,10 +24,10 @@ func main() {
 	var logger *log.Logger
 	{
 		logger = log.New()
-		logger.Log("msg", "Instantiating plugin " + kafka.Name)
-		defer logger.Log("msg", "Shutting down plugin " + kafka.Name)
+		logger.Log("msg", "Instantiating plugin "+kafka.Name)
+		defer logger.Log("msg", "Shutting down plugin "+kafka.Name)
 
-		f, err := os.OpenFile("/tmp/" + kafka.Name + ".log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
+		f, err := os.OpenFile("/tmp/"+kafka.Name+".log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
 		check(err)
 		logger.SetLevel(logrus.DebugLevel)
 		logger.Logger.Out = f
@@ -96,7 +96,7 @@ func (c *Kafka) Describe(ctx context.Context, cluster *kafkav1.Cluster) (*kafkav
 // Create creates a new cluster
 func (c *Kafka) Create(ctx context.Context, config *kafkav1.ClusterConfig) (*kafkav1.Cluster, error) {
 	c.Logger.Log(withClusterFields("create",
-		&kafkav1.Cluster{AccountId:config.AccountId, Name: config.Name})...)
+		&kafkav1.Cluster{AccountId: config.AccountId, Name: config.Name})...)
 
 	ret, err := c.Client.Kafka.Create(ctx, config)
 	return ret, shared.ConvertAPIError(err)
@@ -118,7 +118,6 @@ func (c *Kafka) ListTopics(ctx context.Context, cluster *kafkav1.Cluster) ([]*ka
 // DescribeTopic returns details for a Kafka Topic in the current Kafka Cluster context
 func (c *Kafka) DescribeTopic(ctx context.Context, cluster *kafkav1.Cluster, topic *kafkav1.Topic) (*kafkav1.TopicDescription, error) {
 	c.Logger.Log(withTopicFields("describe", cluster, topic)...)
-
 
 	return c.Client.Kafka.DescribeTopic(ctx, cluster, topic)
 }
@@ -167,19 +166,19 @@ func (c *Kafka) DeleteACL(ctx context.Context, cluster *kafkav1.Cluster, filter 
 	return c.Client.Kafka.DeleteACL(ctx, cluster, filter)
 }
 
-func withClusterFields(method string, cluster *kafkav1.Cluster)[]interface{} {
+func withClusterFields(method string, cluster *kafkav1.Cluster) []interface{} {
 	return withFields(method, "cluster", cluster, nil, nil)
 }
 
-func withTopicFields(method string, cluster *kafkav1.Cluster, topic *kafkav1.Topic)[]interface{} {
+func withTopicFields(method string, cluster *kafkav1.Cluster, topic *kafkav1.Topic) []interface{} {
 	return withFields(method, "topic", cluster, topic, nil)
 }
 
-func withACLFields(method string, cluster *kafkav1.Cluster, acl *kafkav1.ResourcePatternConfig)[]interface{} {
+func withACLFields(method string, cluster *kafkav1.Cluster, acl *kafkav1.ResourcePatternConfig) []interface{} {
 	return withFields(method, "acl", cluster, nil, acl)
 }
 
-func withFields(method string, resource string, cluster *kafkav1.Cluster, topic *kafkav1.Topic, acl *kafkav1.ResourcePatternConfig)[]interface{} {
+func withFields(method string, resource string, cluster *kafkav1.Cluster, topic *kafkav1.Topic, acl *kafkav1.ResourcePatternConfig) []interface{} {
 	fields := []interface{}{"method", method, "resource", resource}
 
 	if cluster != nil {

@@ -3,14 +3,14 @@ package connect
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/shared"
 	"github.com/confluentinc/cli/shared/connect"
-	"github.com/confluentinc/cli/command/common"
 )
 
 type command struct {
 	*cobra.Command
-	config  *shared.Config
+	config *shared.Config
 }
 
 // New returns the default command object for interacting with Connect.
@@ -24,7 +24,7 @@ func NewConnectCommand(config *shared.Config, provider func(interface{}) error) 
 }
 
 // newCMD returns a command for interacting with Connect.
-func newCMD(config *shared.Config, provider func(interface{})(error)) (*cobra.Command, error) {
+func newCMD(config *shared.Config, provider func(interface{}) error) (*cobra.Command, error) {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:   "connect",

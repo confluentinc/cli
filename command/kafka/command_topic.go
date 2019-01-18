@@ -1,22 +1,22 @@
 package kafka
 
 import (
-	"os"
-	"fmt"
 	"bufio"
 	"context"
-	"strings"
+	"fmt"
+	"os"
 	"os/signal"
+	"strings"
 
-	"github.com/spf13/cobra"
-	"github.com/codyaray/go-printer"
 	"github.com/Shopify/sarama"
+	"github.com/codyaray/go-printer"
 	"github.com/google/uuid"
+	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/command/common"
-	"github.com/confluentinc/cli/shared"
 	chttp "github.com/confluentinc/ccloud-sdk-go"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
+	"github.com/confluentinc/cli/command/common"
+	"github.com/confluentinc/cli/shared"
 )
 
 type topicCommand struct {
@@ -203,12 +203,12 @@ func (c *topicCommand) describe(cmd *cobra.Command, args []string) error {
 			isr = append(isr, replica.Id)
 		}
 
-		record := &struct{
-			Topic string
+		record := &struct {
+			Topic     string
 			Partition uint32
-			Leader uint32
-			Replicas []uint32
-			ISR []uint32
+			Leader    uint32
+			Replicas  []uint32
+			ISR       []uint32
 		}{
 			resp.Name,
 			partition.Partition,
@@ -280,7 +280,7 @@ func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {
 	// Avoid blocking in for loop so ^C can exit immediately.
 	scan := func() {
 		scanner.Scan()
-		input<-scanner.Text()
+		input <- scanner.Text()
 	}
 	// Prime reader
 	scan()
@@ -288,7 +288,7 @@ func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {
 	// Trap SIGINT to trigger a shutdown.
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt)
-	go func(){
+	go func() {
 		<-signals
 		close(input)
 	}()
@@ -307,7 +307,7 @@ func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {
 			key = record[0]
 		}
 
-		msg := &sarama.ProducerMessage{Topic:topic, Key: sarama.StringEncoder(key), Value: sarama.StringEncoder(value)}
+		msg := &sarama.ProducerMessage{Topic: topic, Key: sarama.StringEncoder(key), Value: sarama.StringEncoder(value)}
 
 		_, offset, err := producer.SendMessage(msg)
 		if err != nil {
@@ -336,7 +336,7 @@ func (c *topicCommand) consume(cmd *cobra.Command, args []string) error {
 	// Trap SIGINT to trigger a shutdown.
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt)
-	go func(){
+	go func() {
 		<-signals
 		fmt.Println("Stopping Consumer.")
 		consumer.Close()
@@ -359,7 +359,7 @@ func toMap(configs []string) (map[string]string, error) {
 	configMap := make(map[string]string)
 	for _, config := range configs {
 		pair := strings.SplitN(config, "=", 2)
-		if len(pair)< 2 {
+		if len(pair) < 2 {
 			return nil, fmt.Errorf("configuration must be in the form of key=value")
 		}
 		configMap[pair[0]] = pair[1]

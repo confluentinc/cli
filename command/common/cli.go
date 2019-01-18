@@ -5,13 +5,13 @@ import (
 	"os/exec"
 	"reflect"
 
-	"github.com/spf13/cobra"
 	editor "github.com/codyaray/go-editor"
 	hclog "github.com/hashicorp/go-hclog"
 	plugin "github.com/hashicorp/go-plugin"
+	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/shared"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
+	"github.com/confluentinc/cli/shared"
 )
 
 var messages = map[error]string{

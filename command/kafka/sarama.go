@@ -36,7 +36,7 @@ func NewSaramaProducer(config *shared.Config) (sarama.SyncProducer, error) {
 type GroupHandler struct{}
 
 // Setup is run at the beginning of a new session, before ConsumeClaim.
-func (*GroupHandler) Setup(_ sarama.ConsumerGroupSession) error   { return nil }
+func (*GroupHandler) Setup(_ sarama.ConsumerGroupSession) error { return nil }
 
 // Cleanup is run at the end of a session, once all ConsumeClaim goroutines have exited
 // but before the offsets are committed for the very last time.

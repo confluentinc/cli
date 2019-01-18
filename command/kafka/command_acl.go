@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/spf13/cobra"
 	"github.com/codyaray/go-printer"
+	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/command/common"
-	"github.com/confluentinc/cli/shared"
 	chttp "github.com/confluentinc/ccloud-sdk-go"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
+	"github.com/confluentinc/cli/command/common"
+	"github.com/confluentinc/cli/shared"
 )
 
 type aclCommand struct {
@@ -95,13 +95,13 @@ func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
 	var bindings [][]string
 	for _, binding := range resp {
 
-		record := &struct{
-			Principal string
+		record := &struct {
+			Principal  string
 			Permission string
-			Operation string
-			Resource string
-			Name string
-		} {
+			Operation  string
+			Resource   string
+			Name       string
+		}{
 			binding.Entry.Principal,
 			binding.Entry.PermissionType.String(),
 			binding.Entry.Operation.String(),
@@ -126,7 +126,7 @@ func (c *aclCommand) create(cmd *cobra.Command, args []string) error {
 	}
 
 	if acl.errors != nil {
-		return common.HandleError(fmt.Errorf("Failed to parse input \n\t" + strings.Join(acl.errors, "\n\t")), cmd)
+		return common.HandleError(fmt.Errorf("Failed to parse input \n\t"+strings.Join(acl.errors, "\n\t")), cmd)
 	}
 
 	err = c.client.CreateACL(context.Background(), cluster, []*kafkav1.ACLBinding{acl.ACLBinding})
@@ -167,7 +167,7 @@ func validateAddDelete(binding *ACLConfiguration) *ACLConfiguration {
 // validateList ensures the basic requirements for acl list are met
 func validateList(binding *ACLConfiguration) *ACLConfiguration {
 	if binding.Entry.Principal == "" || binding.Pattern == nil {
-		binding.errors = append(binding.errors,"either --principal or a resource must be specified when listing acls not both ")
+		binding.errors = append(binding.errors, "either --principal or a resource must be specified when listing acls not both ")
 	}
 	return binding
 }

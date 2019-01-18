@@ -17,9 +17,9 @@ func TestHandleError(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "static message",
-			err:  shared.ErrUnauthorized,
-			want: "You must login to access Confluent Cloud.\n",
+			name:    "static message",
+			err:     shared.ErrUnauthorized,
+			want:    "You must login to access Confluent Cloud.\n",
 			wantErr: true,
 		},
 		{

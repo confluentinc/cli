@@ -8,9 +8,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	chttp "github.com/confluentinc/ccloud-sdk-go"
-	cliMock "github.com/confluentinc/cli/mock"
-	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	sdkMock "github.com/confluentinc/ccloud-sdk-go/mock"
+	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
+	cliMock "github.com/confluentinc/cli/mock"
 
 	"github.com/confluentinc/cli/command"
 	"github.com/confluentinc/cli/log"

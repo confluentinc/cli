@@ -10,7 +10,6 @@ import (
 	"github.com/confluentinc/cli/shared"
 )
 
-
 type Plugin struct {
 	plugin.NetRPCUnsupportedPlugin
 	Impl chttp.KSQL
@@ -31,4 +30,3 @@ var _ plugin.GRPCPlugin = &Plugin{}
 func init() {
 	shared.PluginMap[Name] = &Plugin{}
 }
-

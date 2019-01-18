@@ -24,7 +24,7 @@ func NewKSQLCommand(config *shared.Config, provider func(interface{}) error) (*c
 }
 
 // newCMD returns a command for interacting with KSQL.
-func newCMD(config *shared.Config, run func(interface{})(error)) (*cobra.Command, error) {
+func newCMD(config *shared.Config, run func(interface{}) error) (*cobra.Command, error) {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:   "ksql",

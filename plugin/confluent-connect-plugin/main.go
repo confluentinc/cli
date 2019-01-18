@@ -8,9 +8,9 @@ import (
 	"github.com/hashicorp/go-plugin"
 	"github.com/sirupsen/logrus"
 
-	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
-	connectv1 "github.com/confluentinc/ccloudapis/connect/v1"
 	chttp "github.com/confluentinc/ccloud-sdk-go"
+	connectv1 "github.com/confluentinc/ccloudapis/connect/v1"
+	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	"github.com/confluentinc/cli/log"
 	"github.com/confluentinc/cli/metric"
 	"github.com/confluentinc/cli/shared"
@@ -60,8 +60,8 @@ func main() {
 
 	plugin.Serve(&plugin.ServeConfig{
 		HandshakeConfig: shared.Handshake,
-		Plugins: shared.PluginMap,
-		GRPCServer: plugin.DefaultGRPCServer,
+		Plugins:         shared.PluginMap,
+		GRPCServer:      plugin.DefaultGRPCServer,
 	})
 }
 

@@ -11,11 +11,11 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh/terminal"
 
+	chttp "github.com/confluentinc/ccloud-sdk-go"
+	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
+	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/shared"
-	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
-	chttp "github.com/confluentinc/ccloud-sdk-go"
-	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 )
 
 var (
@@ -43,7 +43,6 @@ func NewClusterCommand(config *shared.Config, plugin common.Provider) *cobra.Com
 	cmd.init(plugin)
 	return cmd.Command
 }
-
 
 func (c *clusterCommand) init(plugin common.Provider) {
 
@@ -237,10 +236,10 @@ func (c *clusterCommand) auth(cmd *cobra.Command, args []string) error {
 		c.config.Platforms[cfg.Platform].KafkaClusters = map[string]shared.KafkaClusterConfig{}
 	}
 	c.config.Platforms[cfg.Platform].KafkaClusters[cfg.Kafka] = shared.KafkaClusterConfig{
-		Bootstrap: strings.TrimPrefix(kc.Endpoint, "SASL_SSL://"),
+		Bootstrap:   strings.TrimPrefix(kc.Endpoint, "SASL_SSL://"),
 		APIEndpoint: kc.ApiEndpoint,
-		APIKey:    key,
-		APISecret: secret,
+		APIKey:      key,
+		APISecret:   secret,
 	}
 	return c.config.Save()
 }

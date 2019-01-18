@@ -32,7 +32,7 @@ func aclEntryFlags() *pflag.FlagSet {
 	//flgSet.String( "host", "*", "Set Kafka principal host. Note: Not supported on CCLOUD.")
 	flgSet.String("principal", "", "Set Kafka principal")
 	flgSet.String("operation", "", fmt.Sprintf("Set ACL Operation: [%s]",
-		listEnum(kafkav1.ACLOperations_ACLOperation_name, []string{"ANY","UNKNOWN"})))
+		listEnum(kafkav1.ACLOperations_ACLOperation_name, []string{"ANY", "UNKNOWN"})))
 	// An error is only returned if the flag name is not present.
 	// We know the flag name is present so its safe to ignore this.
 	_ = cobra.MarkFlagRequired(flgSet, "principal")
@@ -95,12 +95,12 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 				conf.Entry.Operation = kafkav1.ACLOperations_ACLOperation(op)
 				break
 			}
-			conf.errors = append(conf.errors, "Invalid operation value: "+ v)
+			conf.errors = append(conf.errors, "Invalid operation value: "+v)
 		}
 	}
 }
 
-func setResourcePattern(conf *ACLConfiguration, n,v string) {
+func setResourcePattern(conf *ACLConfiguration, n, v string) {
 	if conf.Pattern != nil {
 		conf.errors = append(conf.errors, "only one resource can be specified per command execution")
 		return
@@ -109,7 +109,7 @@ func setResourcePattern(conf *ACLConfiguration, n,v string) {
 	conf.Pattern = &kafkav1.ResourcePatternConfig{}
 	conf.Pattern.ResourceType = kafkav1.ResourceTypes_ResourceType(kafkav1.ResourceTypes_ResourceType_value[n])
 
-	if len(v) > 1 && strings.HasSuffix(v, "*")  {
+	if len(v) > 1 && strings.HasSuffix(v, "*") {
 		conf.Pattern.Name = v[:len(v)-1]
 		conf.Pattern.PatternType = kafkav1.PatternTypes_PREFIXED
 		return
@@ -120,7 +120,7 @@ func setResourcePattern(conf *ACLConfiguration, n,v string) {
 }
 
 func listEnum(enum map[int32]string, exclude []string) string {
-	var ops[]string
+	var ops []string
 
 OUTER:
 	for _, v := range enum {
