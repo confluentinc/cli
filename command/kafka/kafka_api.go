@@ -29,11 +29,14 @@ func aclEntryFlags() *pflag.FlagSet {
 	flgSet := pflag.NewFlagSet("acl-entry", pflag.ExitOnError)
 	flgSet.Bool("allow", false, "Set ACL to grant access")
 	flgSet.Bool("deny", false, "Set ACL to restrict access")
-	flgSet.String("principal", "", "Set Kafka principal")
 	//flgSet.String( "host", "*", "Set Kafka principal host. Note: Not supported on CCLOUD.")
+	flgSet.String("principal", "", "Set Kafka principal")
 	flgSet.String("operation", "", fmt.Sprintf("Set ACL Operation: [%s]",
 		listEnum(kafkav1.ACLOperations_ACLOperation_name, []string{"ANY","UNKNOWN"})))
-
+	// An error is only returned if the flag name is not present.
+	// We know the flag name is present so its safe to ignore this.
+	_ = cobra.MarkFlagRequired(flgSet, "principal")
+	_ = cobra.MarkFlagRequired(flgSet, "operation")
 	return flgSet
 }
 

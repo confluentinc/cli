@@ -29,8 +29,7 @@ type Provider func(interface{}) error
 
 // HandleError provides standard error messaging for common errors.
 func HandleError(err error, cmd *cobra.Command) error {
-	// Maintain nil value
-	// https://golang.org/doc/faq#nil_error
+	// Give an indication of successful completion
 	if err == nil {
 		fmt.Printf("%s success! \n", cmd.Name())
 		return nil
@@ -39,13 +38,13 @@ func HandleError(err error, cmd *cobra.Command) error {
 	out := cmd.OutOrStderr()
 	if msg, ok := messages[err]; ok {
 		fmt.Fprintln(out, msg)
-		return nil
+		return err
 	}
 
 	switch err.(type) {
-	case editor.ErrEditing:
-		fmt.Fprintln(out, err)
 	case shared.NotAuthenticatedError:
+		fmt.Fprintln(out, err)
+	case editor.ErrEditing:
 		fmt.Fprintln(out, err)
 	case shared.KafkaError:
 		fmt.Fprintln(out, err)

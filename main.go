@@ -101,6 +101,7 @@ func main() {
 	}
 
 	check(cli.Execute())
+	os.Exit(0)
 }
 
 func check(err error) {

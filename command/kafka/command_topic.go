@@ -338,6 +338,7 @@ func (c *topicCommand) consume(cmd *cobra.Command, args []string) error {
 	signal.Notify(signals, os.Interrupt)
 	go func(){
 		<-signals
+		fmt.Println("Stopping Consumer.")
 		consumer.Close()
 	}()
 

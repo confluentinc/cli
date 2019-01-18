@@ -50,8 +50,6 @@ func (c *aclCommand) init(plugin common.Provider) {
 		Args:  cobra.NoArgs,
 	}
 	cmd.Flags().AddFlagSet(aclConfigFlags())
-	_ = cobra.MarkFlagRequired(cmd.Flags(), "principal")
-	_ = cobra.MarkFlagRequired(cmd.Flags(), "operation")
 	cmd.Flags().SortFlags = false
 
 	c.AddCommand(cmd)
