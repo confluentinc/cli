@@ -26,7 +26,7 @@ var (
 	version = "0.0.0"
 
 	cli = &cobra.Command{
-		Use:   "confluent",
+		Use:   "ccloud",
 		Short: "Run the Confluent CLI",
 	}
 )
