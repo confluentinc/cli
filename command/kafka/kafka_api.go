@@ -47,7 +47,7 @@ func resourceFlags() *pflag.FlagSet {
 	flgSet.String("topic", "", "Set TOPIC resource")
 	flgSet.String("consumer_group", "", "Set CONSUMER_GROUP resource")
 	flgSet.String("transactional_id", "", "Set TRANSACTIONAL_ID resource")
-	//flgSet.String("pattern-type", "LITERAL", "Set for all resources prefixed by the resource name" )
+	flgSet.String("pattern-type", "LITERAL", "Set for all resources prefixed by the resource name" )
 
 	return flgSet
 }
@@ -87,6 +87,9 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 			conf.Entry.PermissionType = kafkav1.ACLPermissionTypes_ALLOW
 		case "DENY":
 			conf.Entry.PermissionType = kafkav1.ACLPermissionTypes_DENY
+		case "PATTERN-TYPE":
+			v = strings.ToUpper(v)
+			conf.Pattern.PatternType = kafkav1.PatternTypes_PatternType(kafkav1.PatternTypes_PatternType_value[v])
 		case "PRINCIPAL":
 			conf.Entry.Principal = "User:" + v
 		case "OPERATION":
@@ -108,12 +111,6 @@ func setResourcePattern(conf *ACLConfiguration, n, v string) {
 
 	conf.Pattern = &kafkav1.ResourcePatternConfig{}
 	conf.Pattern.ResourceType = kafkav1.ResourceTypes_ResourceType(kafkav1.ResourceTypes_ResourceType_value[n])
-
-	if len(v) > 1 && strings.HasSuffix(v, "*") {
-		conf.Pattern.Name = v[:len(v)-1]
-		conf.Pattern.PatternType = kafkav1.PatternTypes_PREFIXED
-		return
-	}
 
 	conf.Pattern.Name = v
 	conf.Pattern.PatternType = kafkav1.PatternTypes_LITERAL

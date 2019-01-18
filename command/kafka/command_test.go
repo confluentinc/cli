@@ -28,12 +28,12 @@ var resourcePatterns = []struct {
 			PatternType: kafkav1.PatternTypes_LITERAL},
 	},
 	{
-		args: []string{"--topic", "test-topic"},
+		args: []string{"--topic", "test-topic", "--pattern-type", "Literal"},
 		pattern: &kafkav1.ResourcePatternConfig{ResourceType: kafkav1.ResourceTypes_TOPIC, Name: "test-topic",
 			PatternType: kafkav1.PatternTypes_LITERAL},
 	},
 	{
-		args: []string{"--topic", "test-topic*"},
+		args: []string{"--topic", "test-topic", "--pattern-type", "Prefixed"},
 		pattern: &kafkav1.ResourcePatternConfig{ResourceType: kafkav1.ResourceTypes_TOPIC, Name: "test-topic",
 			PatternType: kafkav1.PatternTypes_PREFIXED},
 	},
@@ -43,7 +43,7 @@ var resourcePatterns = []struct {
 			PatternType: kafkav1.PatternTypes_LITERAL},
 	},
 	{
-		args: []string{"--consumer_group", "test-group*"},
+		args: []string{"--consumer_group", "test-group", "--pattern-type", "prefixed"},
 		pattern: &kafkav1.ResourcePatternConfig{ResourceType: kafkav1.ResourceTypes_GROUP, Name: "test-group",
 			PatternType: kafkav1.PatternTypes_PREFIXED},
 	},
@@ -53,7 +53,7 @@ var resourcePatterns = []struct {
 			PatternType: kafkav1.PatternTypes_LITERAL},
 	},
 	{
-		args: []string{"--transactional_id", "test-transactional_id*"},
+		args: []string{"--transactional_id", "test-transactional_id", "--pattern-type", "PREFIXED"},
 		pattern: &kafkav1.ResourcePatternConfig{ResourceType: kafkav1.ResourceTypes_TRANSACTIONAL_ID, Name: "test-transactional_id",
 			PatternType: kafkav1.PatternTypes_PREFIXED},
 	},
