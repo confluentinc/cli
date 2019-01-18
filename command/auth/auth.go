@@ -51,14 +51,14 @@ func (a *commands) init() {
 	}
 	loginCmd := &cobra.Command{
 		Use:   "login",
-		Short: "Login to a Confluent Control Plane.",
+		Short: "Login to a Confluent Cloud cluster.",
 		RunE:  a.login,
 	}
 	loginCmd.Flags().String("url", "https://confluent.cloud", "Confluent Control Plane URL")
 	loginCmd.PersistentPreRun = setPromptOutput
 	logoutCmd := &cobra.Command{
 		Use:   "logout",
-		Short: "Logout of a Confluent Control Plane.",
+		Short: "Logout of a Confluent Cloud cluster.",
 		RunE:  a.logout,
 	}
 	logoutCmd.PersistentPreRun = setPromptOutput

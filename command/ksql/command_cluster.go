@@ -32,7 +32,7 @@ func NewClusterCommand(config *shared.Config, plugin common.Provider) *cobra.Com
 	cmd := &clusterCommand{
 		Command: &cobra.Command{
 			Use:   "app",
-			Short: "Manage ksql apps.",
+			Short: "Manage KSQL apps.",
 		},
 		config: config,
 	}

@@ -97,12 +97,12 @@ func (c *clusterCommand) init(plugin common.Provider) {
 	})
 	c.AddCommand(&cobra.Command{
 		Use:   "auth",
-		Short: "Auth a Kafka cluster.",
+		Short: "Configure authorization for a Kafka cluster.",
 		RunE:  c.auth,
 	})
 	c.AddCommand(&cobra.Command{
 		Use:   "use ID",
-		Short: "Set a Kafka cluster in the CLI context.",
+		Short: "Specify the Kafka cluster to connect to.",
 		RunE:  c.use,
 		Args:  cobra.ExactArgs(1),
 	})
