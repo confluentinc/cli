@@ -71,7 +71,7 @@ type Connect struct {
 }
 
 func (c *Connect) List(ctx context.Context, cluster *connectv1.Cluster) ([]*connectv1.Cluster, error) {
-	c.Logger.Log("msg", "connect.List()\n%+v\n", cluster)
+	c.Logger.Log("msg", "connect.List()")
 	ret, err := c.Client.Connect.List(ctx, cluster)
 	return ret, shared.ConvertAPIError(err)
 }
