@@ -55,6 +55,13 @@ func HandleError(err error, cmd *cobra.Command) error {
 	return nil
 }
 
+// GRPCLoader returns a closure for instantiating a plugin
+func GRPCLoader(name string) (func(interface{}) error) {
+	return func(i interface{}) error {
+		return LoadPlugin(name, i)
+	}
+}
+
 // LoadPlugin starts a GRPC server identified by name
 func LoadPlugin(name string, value interface{}) error {
 	rv := reflect.ValueOf(value)
@@ -110,3 +117,4 @@ func Cluster(config *shared.Config) (*kafkav1.Cluster, error) {
 
 	return &kafkav1.Cluster{AccountId: config.Auth.Account.Id, Id: ctx.Kafka, ApiEndpoint: conf.APIEndpoint}, nil
 }
+

@@ -15,7 +15,7 @@ type command struct {
 
 // New returns the default command object for interacting with KSQL.
 func New(config *shared.Config) (*cobra.Command, error) {
-	return newCMD(config, grpcLoader)
+	return newCMD(config, common.GRPCLoader(ksql.Name))
 }
 
 // NewKSQLCommand returns a command object using a custom KSQL provider.
@@ -34,11 +34,6 @@ func newCMD(config *shared.Config, run func(interface{}) error) (*cobra.Command,
 	}
 	err := cmd.init(run)
 	return cmd.Command, err
-}
-
-// grpcLoader is the default KSQL impl provider
-func grpcLoader(i interface{}) error {
-	return common.LoadPlugin(ksql.Name, i)
 }
 
 func (c *command) init(plugin common.Provider) error {

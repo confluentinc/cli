@@ -126,66 +126,66 @@ func (s *GRPCServer) CreateAPIKey(ctx context.Context, req *authv1.CreateAPIKeyR
 // List returns a list of Kafka Cluster available to the authenticated user
 func (s *GRPCServer) List(ctx context.Context, req *kafkav1.GetClustersRequest) (*kafkav1.GetClustersReply, error) {
 	r, err := s.Impl.List(ctx, req.Cluster)
-	return &kafkav1.GetClustersReply{Clusters: r}, err
+	return &kafkav1.GetClustersReply{Clusters: r},  shared.ConvertGRPCError(err)
 }
 
 // Describe provides detailed information about a Kafka Cluster
 func (s *GRPCServer) Describe(ctx context.Context, req *kafkav1.GetClusterRequest) (*kafkav1.GetClusterReply, error) {
 	r, err := s.Impl.Describe(ctx, req.Cluster)
-	return &kafkav1.GetClusterReply{Cluster: r}, err
+	return &kafkav1.GetClusterReply{Cluster: r}, shared.ConvertGRPCError(err)
 }
 
 // Create generates a new Kafka Cluster
 func (s *GRPCServer) Create(ctx context.Context, req *kafkav1.CreateClusterRequest) (*kafkav1.CreateClusterReply, error) {
 	r, err := s.Impl.Create(ctx, req.Config)
-	return &kafkav1.CreateClusterReply{Cluster: r}, err
+	return &kafkav1.CreateClusterReply{Cluster: r}, shared.ConvertGRPCError(err)
 }
 
 // Delete removes a Kafka Cluster
 func (s *GRPCServer) Delete(ctx context.Context, req *kafkav1.DeleteClusterRequest) (*kafkav1.DeleteClusterReply, error) {
 	err := s.Impl.Delete(ctx, req.Cluster)
-	return &kafkav1.DeleteClusterReply{}, err
+	return &kafkav1.DeleteClusterReply{}, shared.ConvertGRPCError(err)
 }
 
 // ListTopics lists all non-internal topics in the current Kafka Cluster context
 func (s *GRPCServer) ListTopics(ctx context.Context, req *kafkav1.ListTopicRequest) (*kafkav1.ListTopicReply, error) {
 	topics, err := s.Impl.ListTopics(ctx, req.Cluster)
-	return &kafkav1.ListTopicReply{Topics: topics}, err
+	return &kafkav1.ListTopicReply{Topics: topics}, shared.ConvertGRPCError(err)
 }
 
 // DescribeTopic returns details for a Kafka Topic in the current Kafka Cluster context
 func (s *GRPCServer) DescribeTopic(ctx context.Context, req *kafkav1.DescribeTopicRequest) (*kafkav1.DescribeTopicReply, error) {
 	topicDescription, err := s.Impl.DescribeTopic(ctx, req.Cluster, req.Topic)
-	return &kafkav1.DescribeTopicReply{Topic: topicDescription}, err
+	return &kafkav1.DescribeTopicReply{Topic: topicDescription}, shared.ConvertGRPCError(err)
 }
 
 // CreateTopic creates a new Kafka Topic in the current Kafka Cluster context
 func (s *GRPCServer) CreateTopic(ctx context.Context, req *kafkav1.CreateTopicRequest) (*kafkav1.CreateTopicReply, error) {
-	return &kafkav1.CreateTopicReply{}, s.Impl.CreateTopic(ctx, req.Cluster, req.Topic)
+	return &kafkav1.CreateTopicReply{}, shared.ConvertGRPCError(s.Impl.CreateTopic(ctx, req.Cluster, req.Topic))
 }
 
 // DeleteTopic deletes a Kafka Topic in the current Kafka Cluster context
 func (s *GRPCServer) DeleteTopic(ctx context.Context, req *kafkav1.DeleteTopicRequest) (*kafkav1.DeleteTopicReply, error) {
-	return new(kafkav1.DeleteTopicReply), s.Impl.DeleteTopic(ctx, req.Cluster, req.Topic)
+	return new(kafkav1.DeleteTopicReply), shared.ConvertGRPCError(s.Impl.DeleteTopic(ctx, req.Cluster, req.Topic))
 }
 
 // UpdateTopic updates any existing Topic's configuration in the current Kafka Cluster context
 func (s *GRPCServer) UpdateTopic(ctx context.Context, req *kafkav1.UpdateTopicRequest) (*kafkav1.UpdateTopicReply, error) {
-	return new(kafkav1.UpdateTopicReply), s.Impl.UpdateTopic(ctx, req.Cluster, req.Topic)
+	return new(kafkav1.UpdateTopicReply), shared.ConvertGRPCError(s.Impl.UpdateTopic(ctx, req.Cluster, req.Topic))
 }
 
 // ListACL lists all ACLs for a given principal or resource
 func (s *GRPCServer) ListACL(ctx context.Context, req *kafkav1.ListACLRequest) (*kafkav1.ListACLReply, error) {
 	bindings, err := s.Impl.ListACL(ctx, req.Cluster, req.Filter)
-	return &kafkav1.ListACLReply{Results: bindings}, err
+	return &kafkav1.ListACLReply{Results: bindings},  shared.ConvertGRPCError(err)
 }
 
 // CreateACL registers a new ACL with the currently Kafka Cluster context
 func (s *GRPCServer) CreateACL(ctx context.Context, req *kafkav1.CreateACLRequest) (*kafkav1.CreateACLReply, error) {
-	return &kafkav1.CreateACLReply{}, s.Impl.CreateACL(ctx, req.Cluster, req.AclBindings)
+	return &kafkav1.CreateACLReply{}, shared.ConvertGRPCError(s.Impl.CreateACL(ctx, req.Cluster, req.AclBindings))
 }
 
 // DeleteACL removes an ACL with the currently Kafka Cluster context
 func (s *GRPCServer) DeleteACL(ctx context.Context, req *kafkav1.DeleteACLRequest) (*kafkav1.DeleteACLReply, error) {
-	return &kafkav1.DeleteACLReply{}, s.Impl.DeleteACL(ctx, req.Cluster, req.Filter)
+	return &kafkav1.DeleteACLReply{}, shared.ConvertGRPCError(s.Impl.DeleteACL(ctx, req.Cluster, req.Filter))
 }

@@ -15,7 +15,7 @@ type command struct {
 
 // New returns the default command object for interacting with Connect.
 func New(config *shared.Config) (*cobra.Command, error) {
-	return newCMD(config, grpcLoader)
+	return newCMD(config, common.GRPCLoader(connect.Name))
 }
 
 // NewConnectCommand returns a command object using a custom Connect provider.
@@ -34,11 +34,6 @@ func newCMD(config *shared.Config, provider func(interface{}) error) (*cobra.Com
 	}
 	err := cmd.init(provider)
 	return cmd.Command, err
-}
-
-// grpcLoader is the default Connect impl provider
-func grpcLoader(i interface{}) error {
-	return common.LoadPlugin(connect.Name, i)
 }
 
 func (c *command) init(plugin common.Provider) error {
