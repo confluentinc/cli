@@ -47,7 +47,7 @@ func resourceFlags() *pflag.FlagSet {
 	flgSet.String("topic", "", "Set TOPIC resource")
 	flgSet.String("consumer_group", "", "Set CONSUMER_GROUP resource")
 	flgSet.String("transactional_id", "", "Set TRANSACTIONAL_ID resource")
-	flgSet.String("pattern-type", "LITERAL", "Set for all resources prefixed by the resource name" )
+	flgSet.Bool("prefix", false, "Set to match all resource names prefixed with this value" )
 
 	return flgSet
 }
@@ -69,30 +69,28 @@ func parse(cmd *cobra.Command) *ACLConfiguration {
 func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 	return func(flag *pflag.Flag) {
 		v := flag.Value.String()
-		n := strings.ToUpper(flag.Name)
-		switch n {
-		case "CONSUMER_GROUP":
+		switch n := flag.Name; n {
+		case "consumer_group":
 			setResourcePattern(conf, "GROUP", v)
-		case "CLUSTER":
+		case "cluster":
 			// The only valid name for a cluster is kafka-cluster
 			// https://github.com/confluentinc/cc-kafka/blob/88823c6016ea2e306340938994d9e122abf3c6c0/core/src/main/scala/kafka/security/auth/Resource.scala#L24
 			setResourcePattern(conf, n, "kafka-cluster")
-		case "TOPIC":
+		case "topic":
 			fallthrough
-		case "DELEGATION_TOKEN":
+		case "delegation_token":
 			fallthrough
-		case "TRANSACTIONAL_ID":
+		case "transactional_id":
 			setResourcePattern(conf, n, v)
-		case "ALLOW":
+		case "allow":
 			conf.Entry.PermissionType = kafkav1.ACLPermissionTypes_ALLOW
-		case "DENY":
+		case "deny":
 			conf.Entry.PermissionType = kafkav1.ACLPermissionTypes_DENY
-		case "PATTERN-TYPE":
-			v = strings.ToUpper(v)
-			conf.Pattern.PatternType = kafkav1.PatternTypes_PatternType(kafkav1.PatternTypes_PatternType_value[v])
-		case "PRINCIPAL":
+		case "prefix":
+			conf.Pattern.PatternType = kafkav1.PatternTypes_PREFIXED
+		case "principal":
 			conf.Entry.Principal = "User:" + v
-		case "OPERATION":
+		case "operation":
 			v = strings.ToUpper(v)
 			if op, ok := kafkav1.ACLOperations_ACLOperation_value[v]; ok {
 				conf.Entry.Operation = kafkav1.ACLOperations_ACLOperation(op)
@@ -104,6 +102,8 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 }
 
 func setResourcePattern(conf *ACLConfiguration, n, v string) {
+	n = strings.ToUpper(n)
+
 	if conf.Pattern != nil {
 		conf.errors = append(conf.errors, "only one resource can be specified per command execution")
 		return
