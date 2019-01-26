@@ -102,7 +102,9 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 }
 
 func setResourcePattern(conf *ACLConfiguration, n, v string) {
+	/* Normalize the resource pattern name */
 	n = strings.ToUpper(n)
+	n = strings.Replace(n, "-", "_", -1 )
 
 	if conf.Pattern != nil {
 		conf.errors = append(conf.errors, "only one resource can be specified per command execution")

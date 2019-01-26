@@ -63,7 +63,7 @@ func (c *topicCommand) init(plugin common.Provider) {
 	cmd.Flags().Uint32("partitions", 12, "Number of topic partitions.")
 	cmd.Flags().Uint32("replication-factor", 3, "Replication factor.")
 	cmd.Flags().StringSlice("config", nil, "A comma separated list of topic configuration (key=value) overrides for the topic being created.")
-	cmd.Flags().Bool("dry-run", false, "Execute request without committing change to Kafka")
+	cmd.Flags().Bool("dry-run", false, "Execute request without committing changes to Kafka")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
@@ -81,6 +81,7 @@ func (c *topicCommand) init(plugin common.Provider) {
 		Args:  cobra.ExactArgs(1),
 	}
 	cmd.Flags().StringSlice("config", nil, "A comma separated list of topic configuration (key=value) overrides for the topic being created.")
+	cmd.Flags().Bool("dry-run", false, "Execute request without committing changes to Kafka")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
