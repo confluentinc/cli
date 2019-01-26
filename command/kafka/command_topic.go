@@ -241,7 +241,12 @@ func (c *topicCommand) update(cmd *cobra.Command, args []string) error {
 		return common.HandleError(err, cmd)
 	}
 
-	err = c.client.UpdateTopic(context.Background(), cluster, &kafkav1.Topic{Spec: topic, Validate: false})
+	validate, err := cmd.Flags().GetBool("dry-run")
+	if err != nil {
+		return common.HandleError(err, cmd)
+	}
+
+	err = c.client.UpdateTopic(context.Background(), cluster, &kafkav1.Topic{Spec: topic, Validate: validate})
 
 	return common.HandleError(err, cmd)
 }
