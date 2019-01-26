@@ -157,9 +157,6 @@ func (c *Kafka) ListACL(ctx context.Context, cluster *kafkav1.Cluster, filter *k
 
 // CreateACL registers a new ACL with the currently Kafka Cluster context
 func (c *Kafka) CreateACL(ctx context.Context, cluster *kafkav1.Cluster, binding []*kafkav1.ACLBinding) error {
-	if len(binding) < 1 {
-		return nil
-	}
 	c.Logger.Log(withACLFields("create", cluster, binding[0].Pattern)...)
 
 	return shared.ConvertAPIError(c.Client.Kafka.CreateACL(ctx, cluster, binding))

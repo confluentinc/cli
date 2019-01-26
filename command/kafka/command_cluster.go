@@ -295,11 +295,11 @@ func (c *clusterCommand) createKafkaCreds(kafkaClusterID string) (string, string
 			{Id: kafkaClusterID},
 		},
 	})
-	fmt.Printf("KafkaClusterID %s\n", kafkaClusterID)
+
 	if err != nil {
 		return "", "", shared.ConvertAPIError(err)
 	}
-	fmt.Println("Okay, we've created an API key. If needed, you can see it with `confluent Kafka auth`.")
+	fmt.Println("Okay, we've created an API key. If needed, you can see it with `confluent kafka auth`.")
 	return key.Key, key.Secret, nil
 }
 

@@ -45,8 +45,8 @@ func resourceFlags() *pflag.FlagSet {
 	flgSet := pflag.NewFlagSet("acl-resource", pflag.ExitOnError)
 	flgSet.Bool("cluster", false, "Set CLUSTER resource")
 	flgSet.String("topic", "", "Set TOPIC resource")
-	flgSet.String("consumer_group", "", "Set CONSUMER_GROUP resource")
-	flgSet.String("transactional_id", "", "Set TRANSACTIONAL_ID resource")
+	flgSet.String("consumer-group", "", "Set CONSUMER_GROUP resource")
+	flgSet.String("transactional-id", "", "Set TRANSACTIONAL_ID resource")
 	flgSet.Bool("prefix", false, "Set to match all resource names prefixed with this value" )
 
 	return flgSet
@@ -70,7 +70,7 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 	return func(flag *pflag.Flag) {
 		v := flag.Value.String()
 		switch n := flag.Name; n {
-		case "consumer_group":
+		case "consumer-group":
 			setResourcePattern(conf, "GROUP", v)
 		case "cluster":
 			// The only valid name for a cluster is kafka-cluster
@@ -78,9 +78,9 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 			setResourcePattern(conf, n, "kafka-cluster")
 		case "topic":
 			fallthrough
-		case "delegation_token":
+		case "delegation-token":
 			fallthrough
-		case "transactional_id":
+		case "transactional-id":
 			setResourcePattern(conf, n, v)
 		case "allow":
 			conf.Entry.PermissionType = kafkav1.ACLPermissionTypes_ALLOW

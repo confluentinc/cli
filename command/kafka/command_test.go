@@ -38,23 +38,23 @@ var resourcePatterns = []struct {
 			PatternType: kafkav1.PatternTypes_PREFIXED},
 	},
 	{
-		args: []string{"--consumer_group", "test-group"},
+		args: []string{"--consumer-group", "test-group"},
 		pattern: &kafkav1.ResourcePatternConfig{ResourceType: kafkav1.ResourceTypes_GROUP, Name: "test-group",
 			PatternType: kafkav1.PatternTypes_LITERAL},
 	},
 	{
-		args: []string{"--consumer_group", "test-group", "--prefix"},
+		args: []string{"--consumer-group", "test-group", "--prefix"},
 		pattern: &kafkav1.ResourcePatternConfig{ResourceType: kafkav1.ResourceTypes_GROUP, Name: "test-group",
 			PatternType: kafkav1.PatternTypes_PREFIXED},
 	},
 	{
-		args: []string{"--transactional_id", "test-transactional_id"},
-		pattern: &kafkav1.ResourcePatternConfig{ResourceType: kafkav1.ResourceTypes_TRANSACTIONAL_ID, Name: "test-transactional_id",
+		args: []string{"--transactional-id", "test-transactional-id"},
+		pattern: &kafkav1.ResourcePatternConfig{ResourceType: kafkav1.ResourceTypes_TRANSACTIONAL_ID, Name: "test-transactional-id",
 			PatternType: kafkav1.PatternTypes_LITERAL},
 	},
 	{
-		args: []string{"--transactional_id", "test-transactional_id", "--prefix"},
-		pattern: &kafkav1.ResourcePatternConfig{ResourceType: kafkav1.ResourceTypes_TRANSACTIONAL_ID, Name: "test-transactional_id",
+		args: []string{"--transactional-id", "test-transactional-id", "--prefix"},
+		pattern: &kafkav1.ResourcePatternConfig{ResourceType: kafkav1.ResourceTypes_TRANSACTIONAL_ID, Name: "test-transactional-id",
 			PatternType: kafkav1.PatternTypes_PREFIXED},
 	},
 }
@@ -323,7 +323,6 @@ func TestUpdateTopic(t *testing.T) {
 	for _, topic := range Topics {
 		cmd := NewCMD(expect)
 		cmd.SetArgs(append([]string{"topic", "update"}, topic.args[0:3]...))
-		fmt.Println()
 		go func() {
 			expect <- &kafkav1.Topic{Spec: &kafkav1.TopicSpecification{Name: topic.spec.Name, Configs: topic.spec.Configs}}
 		}()
