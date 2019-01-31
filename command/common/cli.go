@@ -2,6 +2,7 @@ package common
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"reflect"
 
@@ -38,7 +39,9 @@ func HandleError(err error, cmd *cobra.Command) error {
 	out := cmd.OutOrStderr()
 	if msg, ok := messages[err]; ok {
 		fmt.Fprintln(out, msg)
-		return err
+		// Cleanup plugins and exit without printing usage
+		plugin.CleanupClients()
+		os.Exit(1)
 	}
 
 	switch err.(type) {
@@ -54,6 +57,8 @@ func HandleError(err error, cmd *cobra.Command) error {
 
 	return nil
 }
+
+
 
 // GRPCLoader returns a closure for instantiating a plugin
 func GRPCLoader(name string) (func(interface{}) error) {
