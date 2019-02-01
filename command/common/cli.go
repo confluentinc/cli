@@ -2,13 +2,12 @@ package common
 
 import (
 	"fmt"
-	"os"
 	"os/exec"
 	"reflect"
 
-	editor "github.com/codyaray/go-editor"
-	hclog "github.com/hashicorp/go-hclog"
-	plugin "github.com/hashicorp/go-plugin"
+	"github.com/codyaray/go-editor"
+	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/go-plugin"
 	"github.com/spf13/cobra"
 
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
@@ -39,9 +38,8 @@ func HandleError(err error, cmd *cobra.Command) error {
 	out := cmd.OutOrStderr()
 	if msg, ok := messages[err]; ok {
 		fmt.Fprintln(out, msg)
-		// Cleanup plugins and exit without printing usage
-		plugin.CleanupClients()
-		os.Exit(1)
+		cmd.SilenceUsage = true
+		return err
 	}
 
 	switch err.(type) {
@@ -58,10 +56,8 @@ func HandleError(err error, cmd *cobra.Command) error {
 	return nil
 }
 
-
-
 // GRPCLoader returns a closure for instantiating a plugin
-func GRPCLoader(name string) (func(interface{}) error) {
+func GRPCLoader(name string) func(interface{}) error {
 	return func(i interface{}) error {
 		return LoadPlugin(name, i)
 	}
@@ -122,4 +118,3 @@ func Cluster(config *shared.Config) (*kafkav1.Cluster, error) {
 
 	return &kafkav1.Cluster{AccountId: config.Auth.Account.Id, Id: ctx.Kafka, ApiEndpoint: conf.APIEndpoint}, nil
 }
-

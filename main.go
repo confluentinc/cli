@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/confluentinc/cli/command"
@@ -16,7 +15,7 @@ import (
 	"github.com/confluentinc/cli/command/connect"
 	"github.com/confluentinc/cli/command/kafka"
 	"github.com/confluentinc/cli/command/ksql"
-	log "github.com/confluentinc/cli/log"
+	"github.com/confluentinc/cli/log"
 	"github.com/confluentinc/cli/metric"
 	"github.com/confluentinc/cli/shared"
 )
@@ -107,7 +106,6 @@ func main() {
 func check(err error) {
 	if err != nil {
 		plugin.CleanupClients()
-		fmt.Fprintf(os.Stderr, "Error executing CLI: %s\n", err.Error())
 		os.Exit(1)
 	}
 }

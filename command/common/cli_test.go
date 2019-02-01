@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/confluentinc/cli/shared"
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/cli/shared"
 )
 
 func TestHandleError(t *testing.T) {

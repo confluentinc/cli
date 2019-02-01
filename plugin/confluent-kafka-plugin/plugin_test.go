@@ -183,14 +183,14 @@ func testUpdateTopic(t *testing.T) {
 }
 
 func testCreateAcl(t *testing.T) {
-	err := client.Kafka.CreateACL(context.Background(), cluster, []*kafkav1.ACLBinding{&kafkav1.ACLBinding{}})
+	err := client.Kafka.CreateACL(context.Background(), cluster, []*kafkav1.ACLBinding{{}})
 	if err != nil {
 		t.Fail()
 	}
 }
 
 func testListAcl(t *testing.T) {
-	err := client.Kafka.CreateACL(context.Background(), cluster, []*kafkav1.ACLBinding{&kafkav1.ACLBinding{}})
+	err := client.Kafka.CreateACL(context.Background(), cluster, []*kafkav1.ACLBinding{{}})
 	if err != nil {
 		t.Fail()
 	}

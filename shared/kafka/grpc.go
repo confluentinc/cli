@@ -126,7 +126,7 @@ func (s *GRPCServer) CreateAPIKey(ctx context.Context, req *authv1.CreateAPIKeyR
 // List returns a list of Kafka Cluster available to the authenticated user
 func (s *GRPCServer) List(ctx context.Context, req *kafkav1.GetClustersRequest) (*kafkav1.GetClustersReply, error) {
 	r, err := s.Impl.List(ctx, req.Cluster)
-	return &kafkav1.GetClustersReply{Clusters: r},  shared.ConvertGRPCError(err)
+	return &kafkav1.GetClustersReply{Clusters: r}, shared.ConvertGRPCError(err)
 }
 
 // Describe provides detailed information about a Kafka Cluster
@@ -177,7 +177,7 @@ func (s *GRPCServer) UpdateTopic(ctx context.Context, req *kafkav1.UpdateTopicRe
 // ListACL lists all ACLs for a given principal or resource
 func (s *GRPCServer) ListACL(ctx context.Context, req *kafkav1.ListACLRequest) (*kafkav1.ListACLReply, error) {
 	bindings, err := s.Impl.ListACL(ctx, req.Cluster, req.Filter)
-	return &kafkav1.ListACLReply{Results: bindings},  shared.ConvertGRPCError(err)
+	return &kafkav1.ListACLReply{Results: bindings}, shared.ConvertGRPCError(err)
 }
 
 // CreateACL registers a new ACL with the currently Kafka Cluster context
