@@ -60,7 +60,7 @@ func (c *topicCommand) init(plugin common.Provider) {
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	}
-	cmd.Flags().Uint32("partitions", 12, "Number of topic partitions.")
+	cmd.Flags().Uint32("partitions", 6, "Number of topic partitions.")
 	cmd.Flags().Uint32("replication-factor", 3, "Replication factor.")
 	cmd.Flags().StringSlice("config", nil, "A comma separated list of topic configuration (key=value) overrides for the topic being created.")
 	cmd.Flags().Bool("dry-run", false, "Execute request without committing changes to Kafka")
