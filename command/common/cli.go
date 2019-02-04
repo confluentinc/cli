@@ -5,11 +5,12 @@ import (
 	"os/exec"
 	"reflect"
 
-	editor "github.com/codyaray/go-editor"
-	hclog "github.com/hashicorp/go-hclog"
-	plugin "github.com/hashicorp/go-plugin"
+	"github.com/codyaray/go-editor"
+	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/go-plugin"
 	"github.com/spf13/cobra"
 
+	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	"github.com/confluentinc/cli/shared"
 )
 
@@ -28,16 +29,23 @@ type Provider func(interface{}) error
 
 // HandleError provides standard error messaging for common errors.
 func HandleError(err error, cmd *cobra.Command) error {
-	out := cmd.OutOrStderr()
-	if msg, ok := messages[err]; ok {
-		fmt.Fprintln(out, msg)
+	// Give an indication of successful completion
+	if err == nil {
+		fmt.Printf("%s success! \n", cmd.Name())
 		return nil
 	}
 
+	out := cmd.OutOrStderr()
+	if msg, ok := messages[err]; ok {
+		fmt.Fprintln(out, msg)
+		cmd.SilenceUsage = true
+		return err
+	}
+
 	switch err.(type) {
-	case editor.ErrEditing:
-		fmt.Fprintln(out, err)
 	case shared.NotAuthenticatedError:
+		fmt.Fprintln(out, err)
+	case editor.ErrEditing:
 		fmt.Fprintln(out, err)
 	case shared.KafkaError:
 		fmt.Fprintln(out, err)
@@ -46,6 +54,13 @@ func HandleError(err error, cmd *cobra.Command) error {
 	}
 
 	return nil
+}
+
+// GRPCLoader returns a closure for instantiating a plugin
+func GRPCLoader(name string) func(interface{}) error {
+	return func(i interface{}) error {
+		return LoadPlugin(name, i)
+	}
 }
 
 // LoadPlugin starts a GRPC server identified by name
@@ -87,4 +102,19 @@ func LoadPlugin(name string, value interface{}) error {
 	}
 	rv.Elem().Set(reflect.ValueOf(reflect.ValueOf(impl).Interface()))
 	return err
+}
+
+// Cluster returns the current cluster context
+func Cluster(config *shared.Config) (*kafkav1.Cluster, error) {
+	ctx, err := config.Context()
+	if err != nil {
+		return nil, err
+	}
+
+	conf, err := config.KafkaClusterConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	return &kafkav1.Cluster{AccountId: config.Auth.Account.Id, Id: ctx.Kafka, ApiEndpoint: conf.APIEndpoint}, nil
 }

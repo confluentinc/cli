@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/confluentinc/cli/shared"
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/cli/shared"
 )
 
 func TestHandleError(t *testing.T) {
@@ -17,9 +18,10 @@ func TestHandleError(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "static message",
-			err:  shared.ErrUnauthorized,
-			want: "You must login to access Confluent Cloud.\n",
+			name:    "static message",
+			err:     shared.ErrUnauthorized,
+			want:    "You must login to access Confluent Cloud.\n",
+			wantErr: true,
 		},
 		{
 			name: "dynamic message",

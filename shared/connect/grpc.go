@@ -3,8 +3,8 @@ package connect
 import (
 	"context"
 
-	connectv1 "github.com/confluentinc/ccloudapis/connect/v1"
 	chttp "github.com/confluentinc/ccloud-sdk-go"
+	connectv1 "github.com/confluentinc/ccloudapis/connect/v1"
 	"github.com/confluentinc/cli/shared"
 )
 

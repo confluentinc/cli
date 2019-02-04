@@ -3,9 +3,9 @@ package ksql
 import (
 	"context"
 
+	chttp "github.com/confluentinc/ccloud-sdk-go"
 	ksqlv1 "github.com/confluentinc/ccloudapis/ksql/v1"
 	"github.com/confluentinc/cli/shared"
-	chttp "github.com/confluentinc/ccloud-sdk-go"
 )
 
 const Name = "confluent-ksql-plugin"

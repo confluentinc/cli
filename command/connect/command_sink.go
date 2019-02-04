@@ -13,10 +13,10 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
+	chttp "github.com/confluentinc/ccloud-sdk-go"
 	connectv1 "github.com/confluentinc/ccloudapis/connect/v1"
 	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/shared"
-	chttp "github.com/confluentinc/ccloud-sdk-go"
 )
 
 var (
@@ -29,7 +29,7 @@ var (
 
 type sinkCommand struct {
 	*cobra.Command
-	config  *shared.Config
+	config *shared.Config
 	client chttp.Connect
 }
 
@@ -40,7 +40,7 @@ func NewSink(config *shared.Config, plugin common.Provider) (*cobra.Command, err
 			Use:   "sink",
 			Short: "Manage sink connectors.",
 		},
-		config:  config,
+		config: config,
 	}
 	err := cmd.init(plugin)
 	return cmd.Command, err

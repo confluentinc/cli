@@ -58,6 +58,12 @@ func ConvertAPIError(err error) error {
 
 // ConvertGRPCError unboxes and returns the underlying standard error sent over gRPC if it matches.
 func ConvertGRPCError(err error) error {
+	// Maintain nil value
+	// https://golang.org/doc/faq#nil_error
+	if err == nil {
+		return nil
+	}
+
 	if s, ok := status.FromError(err); ok {
 		switch s.Message() {
 		case ErrExpiredToken.Error():

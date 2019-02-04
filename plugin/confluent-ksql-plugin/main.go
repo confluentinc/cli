@@ -8,8 +8,8 @@ import (
 	plugin "github.com/hashicorp/go-plugin"
 	"github.com/sirupsen/logrus"
 
-	ksqlv1 "github.com/confluentinc/ccloudapis/ksql/v1"
 	chttp "github.com/confluentinc/ccloud-sdk-go"
+	ksqlv1 "github.com/confluentinc/ccloudapis/ksql/v1"
 	log "github.com/confluentinc/cli/log"
 	metric "github.com/confluentinc/cli/metric"
 	"github.com/confluentinc/cli/shared"
@@ -56,8 +56,8 @@ func main() {
 
 	plugin.Serve(&plugin.ServeConfig{
 		HandshakeConfig: shared.Handshake,
-		Plugins: shared.PluginMap,
-		GRPCServer: plugin.DefaultGRPCServer,
+		Plugins:         shared.PluginMap,
+		GRPCServer:      plugin.DefaultGRPCServer,
 	})
 }
 

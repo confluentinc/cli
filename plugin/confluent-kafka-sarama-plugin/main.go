@@ -112,29 +112,26 @@ func (c *Kafka) Delete(ctx context.Context, cluster *kafkav1.Cluster) error {
 func (c *Kafka) ListTopics(ctx context.Context, cluster *kafkav1.Cluster) ([]*kafkav1.TopicDescription, error) {
 	c.Logger.Log(withTopicFields("list", cluster, nil)...)
 
-	ret, err := c.Client.Kafka.ListTopics(ctx, cluster)
-	return ret, shared.ConvertAPIError(err)
+	return c.Client.Kafka.ListTopics(ctx, cluster)
 }
 
 // DescribeTopic returns details for a Kafka Topic in the current Kafka Cluster context
 func (c *Kafka) DescribeTopic(ctx context.Context, cluster *kafkav1.Cluster, topic *kafkav1.Topic) (*kafkav1.TopicDescription, error) {
 	c.Logger.Log(withTopicFields("describe", cluster, topic)...)
 
-	ret, err := c.Client.Kafka.DescribeTopic(ctx, cluster, topic)
-	return ret, shared.ConvertAPIError(err)
+	return c.Client.Kafka.DescribeTopic(ctx, cluster, topic)
 }
 
 // CreateTopic creates a new Kafka Topic in the current Kafka Cluster context
 func (c *Kafka) CreateTopic(ctx context.Context, cluster *kafkav1.Cluster, topic *kafkav1.Topic) error {
 	c.Logger.Log(withTopicFields("create", cluster, topic)...)
-
-	return shared.ConvertAPIError(c.Client.Kafka.CreateTopic(ctx, cluster, topic))
+	return c.Client.Kafka.CreateTopic(ctx, cluster, topic)
 }
 
 // DeleteTopic deletes a Kafka Topic in the current Kafka Cluster context
 func (c *Kafka) DeleteTopic(ctx context.Context, cluster *kafkav1.Cluster, topic *kafkav1.Topic) error {
 	c.Logger.Log(withTopicFields("delete", cluster, topic)...)
-	return shared.ConvertAPIError(c.Client.Kafka.DeleteTopic(ctx, cluster, topic))
+	return c.Client.Kafka.DeleteTopic(ctx, cluster, topic)
 }
 
 // ListTopicConfig lists Kafka Topic topic's configuration. This is not implemented in the current version of the CLI
@@ -145,27 +142,28 @@ func (c *Kafka) ListTopicConfig(ctx context.Context, cluster *kafkav1.Cluster, t
 // UpdateTopic updates any existing Topic's configuration in the current Kafka Cluster context
 func (c *Kafka) UpdateTopic(ctx context.Context, cluster *kafkav1.Cluster, topic *kafkav1.Topic) error {
 	c.Logger.Log(withTopicFields("update", cluster, topic)...)
-	return shared.ConvertAPIError(c.Client.Kafka.UpdateTopic(ctx, cluster, topic))
+	return c.Client.Kafka.UpdateTopic(ctx, cluster, topic)
 }
 
 // ListACL registers a new ACL with the currently Kafka cluster context
 func (c *Kafka) ListACL(ctx context.Context, cluster *kafkav1.Cluster, filter *kafkav1.ACLFilter) ([]*kafkav1.ACLBinding, error) {
 	c.Logger.Log(withACLFields("list", cluster, filter.PatternFilter)...)
-	ret, err := c.Client.Kafka.ListACL(ctx, cluster, filter)
-	return ret, err
+	return c.Client.Kafka.ListACL(ctx, cluster, filter)
 }
 
 // CreateACL registers a new ACL with the currently Kafka Cluster context
 func (c *Kafka) CreateACL(ctx context.Context, cluster *kafkav1.Cluster, binding []*kafkav1.ACLBinding) error {
+	if len(binding) < 1 {
+		return nil
+	}
 	c.Logger.Log(withACLFields("create", cluster, binding[0].Pattern)...)
-
-	return shared.ConvertAPIError(c.Client.Kafka.CreateACL(ctx, cluster, binding))
+	return c.Client.Kafka.CreateACL(ctx, cluster, binding)
 }
 
 // DeleteACL registers a new ACL with the currently Kafka Cluster context
 func (c *Kafka) DeleteACL(ctx context.Context, cluster *kafkav1.Cluster, filter *kafkav1.ACLFilter) error {
 	c.Logger.Log(withACLFields("delete", cluster, filter.PatternFilter)...)
-	return shared.ConvertAPIError(c.Client.Kafka.DeleteACL(ctx, cluster, filter))
+	return c.Client.Kafka.DeleteACL(ctx, cluster, filter)
 }
 
 func withClusterFields(method string, cluster *kafkav1.Cluster) []interface{} {

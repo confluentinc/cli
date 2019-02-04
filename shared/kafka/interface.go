@@ -6,13 +6,12 @@ import (
 	"github.com/hashicorp/go-plugin"
 	"google.golang.org/grpc"
 
-	"github.com/confluentinc/cli/shared"
 	chttp "github.com/confluentinc/ccloud-sdk-go"
+	"github.com/confluentinc/cli/shared"
 )
 
 // Name description used for registering/disposing GRPC components
 const Name = "confluent-kafka-plugin"
-
 
 // Plugin mates an interface with Hashicorp plugin object
 type Plugin struct {

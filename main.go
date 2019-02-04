@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/confluentinc/cli/command"
@@ -12,16 +11,15 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+  "github.com/confluentinc/cli/command/api-key"
 	"github.com/confluentinc/cli/command/auth"
 	"github.com/confluentinc/cli/command/connect"
 	"github.com/confluentinc/cli/command/kafka"
 	"github.com/confluentinc/cli/command/ksql"
+  "github.com/confluentinc/cli/log"
+  "github.com/confluentinc/cli/metric"
+  "github.com/confluentinc/cli/shared"
 	"github.com/confluentinc/cli/command/user"
-	"github.com/confluentinc/cli/command/api-key"
-
-	log "github.com/confluentinc/cli/log"
-	"github.com/confluentinc/cli/metric"
-	"github.com/confluentinc/cli/shared"
 )
 
 var (
@@ -29,7 +27,7 @@ var (
 	version = "0.0.0"
 
 	cli = &cobra.Command{
-		Use:   "confluent",
+		Use:   "ccloud",
 		Short: "Run the Confluent CLI",
 	}
 )
@@ -118,12 +116,12 @@ func main() {
 	}
 
 	check(cli.Execute())
+	os.Exit(0)
 }
 
 func check(err error) {
 	if err != nil {
 		plugin.CleanupClients()
-		fmt.Fprintf(os.Stderr, "Error executing CLI: %s\n", err.Error())
 		os.Exit(1)
 	}
 }
