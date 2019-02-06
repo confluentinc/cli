@@ -86,7 +86,7 @@ func (c *clusterCommand) init(plugin common.Provider) {
 }
 
 func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
-	req := &ksqlv1.Cluster{AccountId: c.config.Auth.Account.Id}
+	req := &ksqlv1.KSQLCluster{AccountId: c.config.Auth.Account.Id}
 	clusters, err := c.client.List(context.Background(), req)
 	if err != nil {
 		return common.HandleError(err, cmd)
@@ -112,7 +112,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
-	config := &ksqlv1.ClusterConfig{
+	config := &ksqlv1.KSQLClusterConfig{
 		AccountId:      c.config.Auth.Account.Id,
 		Name:           args[0],
 		Servers:        servers,
@@ -127,7 +127,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
-	req := &ksqlv1.Cluster{AccountId: c.config.Auth.Account.Id, Id: args[0]}
+	req := &ksqlv1.KSQLCluster{AccountId: c.config.Auth.Account.Id, Id: args[0]}
 	cluster, err := c.client.Describe(context.Background(), req)
 	if err != nil {
 		return common.HandleError(err, cmd)
@@ -136,7 +136,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
-	req := &ksqlv1.Cluster{AccountId: c.config.Auth.Account.Id, Id: args[0]}
+	req := &ksqlv1.KSQLCluster{AccountId: c.config.Auth.Account.Id, Id: args[0]}
 	err := c.client.Delete(context.Background(), req)
 	if err != nil {
 		return common.HandleError(err, cmd)

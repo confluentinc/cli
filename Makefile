@@ -11,11 +11,11 @@ deps:
 
 .PHONY: generate
 generate:
-	protoc shared/connect/*.proto -Ishared/connect -I$(GOPATH)/src --gogo_out=plugins=grpc:shared/connect
-	protoc shared/kafka/*.proto -Ishared/kafka -I$(GOPATH)/src --gogo_out=plugins=grpc:shared/kafka
-	protoc shared/ksql/*.proto -Ishared/ksql -I$(GOPATH)/src  --gogo_out=plugins=grpc:shared/ksql
-	protoc shared/api-key/*.proto -Ishared/api-key -I$(GOPATH)/src  --gogo_out=plugins=grpc:shared/api-key
-	protoc shared/user/*.proto -Ishared/user -I$(GOPATH)/src  --gogo_out=plugins=grpc:shared/user
+	protoc shared/api-key/*.proto -Ishared/api-key -I$(GOPATH)/src -I$(GOPATH)/src/github.com/confluentinc/ccloudapis --gogo_out=plugins=grpc:shared/api-key
+	protoc shared/user/*.proto -Ishared/user -I$(GOPATH)/src -I$(GOPATH)/src/github.com/confluentinc/ccloudapis --gogo_out=plugins=grpc:shared/user
+	protoc shared/connect/*.proto -Ishared/connect -I$(GOPATH)/src -I$(GOPATH)/src/github.com/confluentinc/ccloudapis --gogo_out=plugins=grpc:shared/connect
+	protoc shared/kafka/*.proto -Ishared/kafka -I$(GOPATH)/src -I$(GOPATH)/src/github.com/confluentinc/ccloudapis --gogo_out=plugins=grpc:shared/kafka
+	protoc shared/ksql/*.proto -Ishared/ksql -I$(GOPATH)/src -I$(GOPATH)/src/github.com/confluentinc/ccloudapis --gogo_out=plugins=grpc:shared/ksql
 
 .PHONY: install-plugins
 install-plugins:

@@ -19,7 +19,7 @@ var (
 	client *chttp.Client
 	server *httptest.Server
 
-	cluster = &kafkav1.Cluster{
+	cluster = &kafkav1.KafkaCluster{
 		Id: "cluster_test",
 	}
 

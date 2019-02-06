@@ -138,7 +138,7 @@ func (c *sinkCommand) init(plugin common.Provider) error {
 }
 
 func (c *sinkCommand) list(cmd *cobra.Command, args []string) error {
-	req := &connectv1.Cluster{AccountId: c.config.Auth.Account.Id}
+	req := &connectv1.ConnectCluster{AccountId: c.config.Auth.Account.Id}
 	clusters, err := c.client.List(context.Background(), req)
 	if err != nil {
 		return common.HandleError(err, cmd)
@@ -157,7 +157,7 @@ func (c *sinkCommand) get(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "error reading --output as string")
 	}
 
-	req := &connectv1.Cluster{AccountId: c.config.Auth.Account.Id, Id: args[0]}
+	req := &connectv1.ConnectCluster{AccountId: c.config.Auth.Account.Id, Id: args[0]}
 	cluster, err := c.client.Describe(context.Background(), req)
 	if err != nil {
 		return common.HandleError(err, cmd)
@@ -202,7 +202,7 @@ func (c *sinkCommand) createS3Sink(kafkaClusterID, kafkaUserEmail string, cmd *c
 	}
 
 	// Create connect cluster config
-	req := &connectv1.S3SinkClusterConfig{
+	req := &connectv1.ConnectS3SinkClusterConfig{
 		Name:           args[0],
 		AccountId:      c.config.Auth.Account.Id,
 		Options:        options,
@@ -229,7 +229,7 @@ func (c *sinkCommand) describe(cmd *cobra.Command, args []string) error {
 		return common.HandleError(err, cmd)
 	}
 	switch cl := cluster.(type) {
-	case *connectv1.S3SinkCluster:
+	case *connectv1.ConnectS3SinkCluster:
 		if err := printer.RenderTableOut(cl, describeFields, describeRenames, os.Stdout); err != nil {
 			return err
 		}
@@ -255,8 +255,8 @@ func (c *sinkCommand) edit(cmd *cobra.Command, args []string) error {
 	}
 	var objType interface{}
 	switch cl := cluster.(type) {
-	case *connectv1.S3SinkCluster:
-		objType = &connectv1.S3SinkCluster{}
+	case *connectv1.ConnectS3SinkCluster:
+		objType = &connectv1.ConnectS3SinkCluster{}
 	default:
 		return fmt.Errorf("unknown cluster type: %v", cl)
 	}
@@ -273,7 +273,7 @@ func (c *sinkCommand) edit(cmd *cobra.Command, args []string) error {
 	}
 
 	switch req := updated.(type) {
-	case *connectv1.S3SinkCluster:
+	case *connectv1.ConnectS3SinkCluster:
 		cluster, err := c.client.UpdateS3Sink(context.Background(), req)
 		if err != nil {
 			return common.HandleError(err, cmd)
@@ -294,13 +294,13 @@ func (c *sinkCommand) update(cmd *cobra.Command, args []string) error {
 		return common.HandleError(err, cmd)
 	}
 	switch cl := cluster.(type) {
-	case *connectv1.S3SinkCluster:
+	case *connectv1.ConnectS3SinkCluster:
 		options, err := getConfig(cmd)
 		if err != nil {
 			return err
 		}
-		req := &connectv1.S3SinkCluster{
-			Cluster: &connectv1.Cluster{
+		req := &connectv1.ConnectS3SinkCluster{
+			ConnectCluster: &connectv1.ConnectCluster{
 				Id:        args[0],
 				AccountId: c.config.Auth.Account.Id,
 			},
@@ -324,7 +324,7 @@ func (c *sinkCommand) update(cmd *cobra.Command, args []string) error {
 }
 
 func (c *sinkCommand) delete(cmd *cobra.Command, args []string) error {
-	req := &connectv1.Cluster{AccountId: c.config.Auth.Account.Id, Id: args[0]}
+	req := &connectv1.ConnectCluster{AccountId: c.config.Auth.Account.Id, Id: args[0]}
 	err := c.client.Delete(context.Background(), req)
 	if err != nil {
 		return common.HandleError(err, cmd)
@@ -342,15 +342,15 @@ func (c *sinkCommand) auth(cmd *cobra.Command, args []string) error {
 //
 
 func (c *sinkCommand) fetch(id string) (interface{}, error) {
-	req := &connectv1.Cluster{AccountId: c.config.Auth.Account.Id, Id: id}
+	req := &connectv1.ConnectCluster{AccountId: c.config.Auth.Account.Id, Id: id}
 	cluster, err := c.client.Describe(context.Background(), req)
 	if err != nil {
 		return nil, err
 	}
 	switch cluster.Plugin {
 	case connectv1.ConnectPlugin_S3_SINK:
-		cl, err := c.client.DescribeS3Sink(context.Background(), &connectv1.S3SinkCluster{
-			Cluster: &connectv1.Cluster{Id: cluster.Id, AccountId: cluster.AccountId},
+		cl, err := c.client.DescribeS3Sink(context.Background(), &connectv1.ConnectS3SinkCluster{
+			ConnectCluster: &connectv1.ConnectCluster{Id: cluster.Id, AccountId: cluster.AccountId},
 		})
 		if err != nil {
 			return nil, err
@@ -361,7 +361,7 @@ func (c *sinkCommand) fetch(id string) (interface{}, error) {
 	}
 }
 
-func getConfig(cmd *cobra.Command) (*connectv1.S3SinkOptions, error) {
+func getConfig(cmd *cobra.Command) (*connectv1.ConnectS3SinkOptions, error) {
 	// Set s3-sink connector options
 	filename, err := cmd.Flags().GetString("config")
 	if err != nil {
@@ -371,7 +371,7 @@ func getConfig(cmd *cobra.Command) (*connectv1.S3SinkOptions, error) {
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to read config file %s", filename)
 	}
-	options := &connectv1.S3SinkOptions{}
+	options := &connectv1.ConnectS3SinkOptions{}
 	err = yaml.Unmarshal(yamlFile, options)
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to parse config file %s", filename)
@@ -379,7 +379,7 @@ func getConfig(cmd *cobra.Command) (*connectv1.S3SinkOptions, error) {
 	return options, nil
 }
 
-func toConfig(options *connectv1.S3SinkOptions) (string, error) {
+func toConfig(options *connectv1.ConnectS3SinkOptions) (string, error) {
 	opts, err := yaml.Marshal(options)
 	if err != nil {
 		return "", errors.Wrapf(err, "unable to marshal options")

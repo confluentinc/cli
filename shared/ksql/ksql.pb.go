@@ -36,10 +36,10 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type KSQLClient interface {
-	List(ctx context.Context, in *v1.GetClustersRequest, opts ...grpc.CallOption) (*v1.GetClustersReply, error)
-	Describe(ctx context.Context, in *v1.GetClusterRequest, opts ...grpc.CallOption) (*v1.GetClusterReply, error)
-	Delete(ctx context.Context, in *v1.DeleteClusterRequest, opts ...grpc.CallOption) (*v1.DeleteClusterReply, error)
-	Create(ctx context.Context, in *v1.CreateClusterRequest, opts ...grpc.CallOption) (*v1.CreateClusterReply, error)
+	List(ctx context.Context, in *v1.GetKSQLClustersRequest, opts ...grpc.CallOption) (*v1.GetKSQLClustersReply, error)
+	Describe(ctx context.Context, in *v1.GetKSQLClusterRequest, opts ...grpc.CallOption) (*v1.GetKSQLClusterReply, error)
+	Delete(ctx context.Context, in *v1.DeleteKSQLClusterRequest, opts ...grpc.CallOption) (*v1.DeleteKSQLClusterReply, error)
+	Create(ctx context.Context, in *v1.CreateKSQLClusterRequest, opts ...grpc.CallOption) (*v1.CreateKSQLClusterReply, error)
 }
 
 type kSQLClient struct {
@@ -50,8 +50,8 @@ func NewKSQLClient(cc *grpc.ClientConn) KSQLClient {
 	return &kSQLClient{cc}
 }
 
-func (c *kSQLClient) List(ctx context.Context, in *v1.GetClustersRequest, opts ...grpc.CallOption) (*v1.GetClustersReply, error) {
-	out := new(v1.GetClustersReply)
+func (c *kSQLClient) List(ctx context.Context, in *v1.GetKSQLClustersRequest, opts ...grpc.CallOption) (*v1.GetKSQLClustersReply, error) {
+	out := new(v1.GetKSQLClustersReply)
 	err := c.cc.Invoke(ctx, "/ksql.KSQL/List", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -59,8 +59,8 @@ func (c *kSQLClient) List(ctx context.Context, in *v1.GetClustersRequest, opts .
 	return out, nil
 }
 
-func (c *kSQLClient) Describe(ctx context.Context, in *v1.GetClusterRequest, opts ...grpc.CallOption) (*v1.GetClusterReply, error) {
-	out := new(v1.GetClusterReply)
+func (c *kSQLClient) Describe(ctx context.Context, in *v1.GetKSQLClusterRequest, opts ...grpc.CallOption) (*v1.GetKSQLClusterReply, error) {
+	out := new(v1.GetKSQLClusterReply)
 	err := c.cc.Invoke(ctx, "/ksql.KSQL/Describe", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -68,8 +68,8 @@ func (c *kSQLClient) Describe(ctx context.Context, in *v1.GetClusterRequest, opt
 	return out, nil
 }
 
-func (c *kSQLClient) Delete(ctx context.Context, in *v1.DeleteClusterRequest, opts ...grpc.CallOption) (*v1.DeleteClusterReply, error) {
-	out := new(v1.DeleteClusterReply)
+func (c *kSQLClient) Delete(ctx context.Context, in *v1.DeleteKSQLClusterRequest, opts ...grpc.CallOption) (*v1.DeleteKSQLClusterReply, error) {
+	out := new(v1.DeleteKSQLClusterReply)
 	err := c.cc.Invoke(ctx, "/ksql.KSQL/Delete", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -77,8 +77,8 @@ func (c *kSQLClient) Delete(ctx context.Context, in *v1.DeleteClusterRequest, op
 	return out, nil
 }
 
-func (c *kSQLClient) Create(ctx context.Context, in *v1.CreateClusterRequest, opts ...grpc.CallOption) (*v1.CreateClusterReply, error) {
-	out := new(v1.CreateClusterReply)
+func (c *kSQLClient) Create(ctx context.Context, in *v1.CreateKSQLClusterRequest, opts ...grpc.CallOption) (*v1.CreateKSQLClusterReply, error) {
+	out := new(v1.CreateKSQLClusterReply)
 	err := c.cc.Invoke(ctx, "/ksql.KSQL/Create", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -88,10 +88,10 @@ func (c *kSQLClient) Create(ctx context.Context, in *v1.CreateClusterRequest, op
 
 // KSQLServer is the server API for KSQL service.
 type KSQLServer interface {
-	List(context.Context, *v1.GetClustersRequest) (*v1.GetClustersReply, error)
-	Describe(context.Context, *v1.GetClusterRequest) (*v1.GetClusterReply, error)
-	Delete(context.Context, *v1.DeleteClusterRequest) (*v1.DeleteClusterReply, error)
-	Create(context.Context, *v1.CreateClusterRequest) (*v1.CreateClusterReply, error)
+	List(context.Context, *v1.GetKSQLClustersRequest) (*v1.GetKSQLClustersReply, error)
+	Describe(context.Context, *v1.GetKSQLClusterRequest) (*v1.GetKSQLClusterReply, error)
+	Delete(context.Context, *v1.DeleteKSQLClusterRequest) (*v1.DeleteKSQLClusterReply, error)
+	Create(context.Context, *v1.CreateKSQLClusterRequest) (*v1.CreateKSQLClusterReply, error)
 }
 
 func RegisterKSQLServer(s *grpc.Server, srv KSQLServer) {
@@ -99,7 +99,7 @@ func RegisterKSQLServer(s *grpc.Server, srv KSQLServer) {
 }
 
 func _KSQL_List_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(v1.GetClustersRequest)
+	in := new(v1.GetKSQLClustersRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -111,13 +111,13 @@ func _KSQL_List_Handler(srv interface{}, ctx context.Context, dec func(interface
 		FullMethod: "/ksql.KSQL/List",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(KSQLServer).List(ctx, req.(*v1.GetClustersRequest))
+		return srv.(KSQLServer).List(ctx, req.(*v1.GetKSQLClustersRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _KSQL_Describe_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(v1.GetClusterRequest)
+	in := new(v1.GetKSQLClusterRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -129,13 +129,13 @@ func _KSQL_Describe_Handler(srv interface{}, ctx context.Context, dec func(inter
 		FullMethod: "/ksql.KSQL/Describe",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(KSQLServer).Describe(ctx, req.(*v1.GetClusterRequest))
+		return srv.(KSQLServer).Describe(ctx, req.(*v1.GetKSQLClusterRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _KSQL_Delete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(v1.DeleteClusterRequest)
+	in := new(v1.DeleteKSQLClusterRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -147,13 +147,13 @@ func _KSQL_Delete_Handler(srv interface{}, ctx context.Context, dec func(interfa
 		FullMethod: "/ksql.KSQL/Delete",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(KSQLServer).Delete(ctx, req.(*v1.DeleteClusterRequest))
+		return srv.(KSQLServer).Delete(ctx, req.(*v1.DeleteKSQLClusterRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _KSQL_Create_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(v1.CreateClusterRequest)
+	in := new(v1.CreateKSQLClusterRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -165,7 +165,7 @@ func _KSQL_Create_Handler(srv interface{}, ctx context.Context, dec func(interfa
 		FullMethod: "/ksql.KSQL/Create",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(KSQLServer).Create(ctx, req.(*v1.CreateClusterRequest))
+		return srv.(KSQLServer).Create(ctx, req.(*v1.CreateKSQLClusterRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -195,21 +195,22 @@ var _KSQL_serviceDesc = grpc.ServiceDesc{
 	Metadata: "ksql.proto",
 }
 
-func init() { proto.RegisterFile("ksql.proto", fileDescriptor_ksql_672996efbae12103) }
+func init() { proto.RegisterFile("ksql.proto", fileDescriptor_ksql_10e9edb92be60c4d) }
 
-var fileDescriptor_ksql_672996efbae12103 = []byte{
-	// 207 bytes of a gzipped FileDescriptorProto
+var fileDescriptor_ksql_10e9edb92be60c4d = []byte{
+	// 210 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0xca, 0x2e, 0x2e, 0xcc,
 	0xd1, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0x01, 0xb1, 0xa5, 0x4c, 0xd3, 0x33, 0x4b, 0x32,
 	0x4a, 0x93, 0xf4, 0x92, 0xf3, 0x73, 0xf5, 0x93, 0xf3, 0xf3, 0xd2, 0x72, 0x4a, 0x53, 0xf3, 0x4a,
 	0x32, 0xf3, 0x92, 0xf5, 0x93, 0x93, 0x73, 0xf2, 0x4b, 0x53, 0x12, 0x0b, 0x32, 0x8b, 0xf5, 0x41,
-	0x0a, 0xf5, 0xcb, 0x0c, 0xf5, 0x11, 0x9a, 0x8d, 0xbe, 0x30, 0x71, 0xb1, 0x78, 0x07, 0x07, 0xfa,
-	0x08, 0x85, 0x71, 0xb1, 0xf8, 0x64, 0x16, 0x97, 0x08, 0xa9, 0xe9, 0x21, 0x34, 0xe8, 0x81, 0x15,
-	0x96, 0x19, 0xea, 0xb9, 0xa7, 0x96, 0x38, 0xe7, 0x94, 0x16, 0x97, 0xa4, 0x16, 0x15, 0x07, 0xa5,
-	0x16, 0x96, 0xa6, 0x16, 0x97, 0x48, 0xa9, 0x10, 0x54, 0x57, 0x90, 0x53, 0xa9, 0xc4, 0x20, 0x14,
-	0xc1, 0xc5, 0xe1, 0x92, 0x5a, 0x9c, 0x5c, 0x94, 0x99, 0x94, 0x2a, 0xa4, 0x8a, 0x5f, 0x0f, 0xcc,
-	0x68, 0x65, 0x42, 0xca, 0x20, 0x26, 0xc7, 0x70, 0xb1, 0xb9, 0xa4, 0xe6, 0xa4, 0x96, 0xa4, 0x0a,
-	0x69, 0x60, 0xd3, 0x00, 0x91, 0x43, 0x33, 0x5a, 0x8d, 0x08, 0x95, 0x70, 0xd3, 0x9d, 0x8b, 0x52,
-	0x13, 0x71, 0x99, 0x0e, 0x91, 0x23, 0xc6, 0x74, 0x34, 0x95, 0x60, 0xd3, 0x93, 0xd8, 0xc0, 0xa1,
-	0x6f, 0x0c, 0x08, 0x00, 0x00, 0xff, 0xff, 0x44, 0xa1, 0xcf, 0x8e, 0xc8, 0x01, 0x00, 0x00,
+	0x0a, 0xf5, 0xcb, 0x0c, 0xf5, 0x11, 0x9a, 0x8d, 0xa6, 0x30, 0x73, 0xb1, 0x78, 0x07, 0x07, 0xfa,
+	0x08, 0xc5, 0x71, 0xb1, 0xf8, 0x64, 0x16, 0x97, 0x08, 0x69, 0xe9, 0x21, 0x34, 0xe8, 0x81, 0x15,
+	0x96, 0x19, 0xea, 0xb9, 0xa7, 0x96, 0x80, 0x14, 0x39, 0xe7, 0x94, 0x16, 0x97, 0xa4, 0x16, 0x15,
+	0x07, 0xa5, 0x16, 0x96, 0xa6, 0x16, 0x97, 0x48, 0x69, 0x10, 0xa5, 0xb6, 0x20, 0xa7, 0x52, 0x89,
+	0x41, 0x28, 0x81, 0x8b, 0xc3, 0x25, 0xb5, 0x38, 0xb9, 0x28, 0x33, 0x29, 0x55, 0x48, 0x93, 0xb0,
+	0x3e, 0x98, 0x15, 0xea, 0xc4, 0x28, 0x85, 0xd8, 0x90, 0xc2, 0xc5, 0xe6, 0x92, 0x9a, 0x93, 0x5a,
+	0x92, 0x2a, 0xa4, 0x83, 0x4d, 0x13, 0x44, 0x0e, 0x8b, 0x15, 0x5a, 0x44, 0xaa, 0x86, 0xdb, 0xe2,
+	0x5c, 0x94, 0x9a, 0x88, 0xcb, 0x16, 0x88, 0x1c, 0xb1, 0xb6, 0x60, 0x51, 0x0d, 0xb6, 0x25, 0x89,
+	0x0d, 0x1c, 0x3b, 0xc6, 0x80, 0x00, 0x00, 0x00, 0xff, 0xff, 0xa2, 0x21, 0xbc, 0x6f, 0xe8, 0x01,
+	0x00, 0x00,
 }
