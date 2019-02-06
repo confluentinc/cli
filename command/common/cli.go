@@ -105,7 +105,7 @@ func LoadPlugin(name string, value interface{}) error {
 }
 
 // Cluster returns the current cluster context
-func Cluster(config *shared.Config) (*kafkav1.Cluster, error) {
+func Cluster(config *shared.Config) (*kafkav1.KafkaCluster, error) {
 	ctx, err := config.Context()
 	if err != nil {
 		return nil, err
@@ -116,5 +116,5 @@ func Cluster(config *shared.Config) (*kafkav1.Cluster, error) {
 		return nil, err
 	}
 
-	return &kafkav1.Cluster{AccountId: config.Auth.Account.Id, Id: ctx.Kafka, ApiEndpoint: conf.APIEndpoint}, nil
+	return &kafkav1.KafkaCluster{AccountId: config.Auth.Account.Id, Id: ctx.Kafka, ApiEndpoint: conf.APIEndpoint}, nil
 }

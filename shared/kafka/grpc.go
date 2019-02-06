@@ -16,32 +16,32 @@ type GRPCClient struct {
 }
 
 // GRPCClient bridges the gap between the shared interface and the GRPC interface
-func (c *GRPCClient) List(ctx context.Context, cluster *kafkav1.Cluster) ([]*kafkav1.Cluster, error) {
-	resp, err := c.client.List(ctx, &kafkav1.GetClustersRequest{Cluster: cluster})
+func (c *GRPCClient) List(ctx context.Context, cluster *kafkav1.KafkaCluster) ([]*kafkav1.KafkaCluster, error) {
+	resp, err := c.client.List(ctx, &kafkav1.GetKafkaClustersRequest{Cluster: cluster})
 	if err != nil {
 		return nil, shared.ConvertGRPCError(err)
 	}
 	return resp.Clusters, nil
 }
 
-func (c *GRPCClient) Describe(ctx context.Context, cluster *kafkav1.Cluster) (*kafkav1.Cluster, error) {
-	resp, err := c.client.Describe(ctx, &kafkav1.GetClusterRequest{Cluster: cluster})
+func (c *GRPCClient) Describe(ctx context.Context, cluster *kafkav1.KafkaCluster) (*kafkav1.KafkaCluster, error) {
+	resp, err := c.client.Describe(ctx, &kafkav1.GetKafkaClusterRequest{Cluster: cluster})
 	if err != nil {
 		return nil, shared.ConvertGRPCError(err)
 	}
 	return resp.Cluster, nil
 }
 
-func (c *GRPCClient) Create(ctx context.Context, config *kafkav1.ClusterConfig) (*kafkav1.Cluster, error) {
-	resp, err := c.client.Create(ctx, &kafkav1.CreateClusterRequest{Config: config})
+func (c *GRPCClient) Create(ctx context.Context, config *kafkav1.KafkaClusterConfig) (*kafkav1.KafkaCluster, error) {
+	resp, err := c.client.Create(ctx, &kafkav1.CreateKafkaClusterRequest{Config: config})
 	if err != nil {
 		return nil, shared.ConvertGRPCError(err)
 	}
 	return resp.Cluster, nil
 }
 
-func (c *GRPCClient) Delete(ctx context.Context, cluster *kafkav1.Cluster) error {
-	_, err := c.client.Delete(ctx, &kafkav1.DeleteClusterRequest{Cluster: cluster})
+func (c *GRPCClient) Delete(ctx context.Context, cluster *kafkav1.KafkaCluster) error {
+	_, err := c.client.Delete(ctx, &kafkav1.DeleteKafkaClusterRequest{Cluster: cluster})
 	if err != nil {
 		return shared.ConvertGRPCError(err)
 	}
@@ -49,7 +49,7 @@ func (c *GRPCClient) Delete(ctx context.Context, cluster *kafkav1.Cluster) error
 }
 
 // ListTopics lists all non-internal topics in the current Kafka cluster context
-func (c *GRPCClient) ListTopics(ctx context.Context, cluster *kafkav1.Cluster) ([]*kafkav1.TopicDescription, error) {
+func (c *GRPCClient) ListTopics(ctx context.Context, cluster *kafkav1.KafkaCluster) ([]*kafkav1.TopicDescription, error) {
 	r, err := c.client.ListTopics(ctx, &kafkav1.ListTopicRequest{Cluster: cluster})
 	if err != nil {
 		return nil, shared.ConvertGRPCError(err)
@@ -58,7 +58,7 @@ func (c *GRPCClient) ListTopics(ctx context.Context, cluster *kafkav1.Cluster) (
 }
 
 // DescribeTopic returns details for a Kafka Topic in the current Kafka Cluster context
-func (c *GRPCClient) DescribeTopic(ctx context.Context, cluster *kafkav1.Cluster, topic *kafkav1.Topic) (*kafkav1.TopicDescription, error) {
+func (c *GRPCClient) DescribeTopic(ctx context.Context, cluster *kafkav1.KafkaCluster, topic *kafkav1.Topic) (*kafkav1.TopicDescription, error) {
 	r, err := c.client.DescribeTopic(ctx, &kafkav1.DescribeTopicRequest{Cluster: cluster, Topic: topic})
 	if err != nil {
 		return nil, shared.ConvertGRPCError(err)
@@ -67,30 +67,30 @@ func (c *GRPCClient) DescribeTopic(ctx context.Context, cluster *kafkav1.Cluster
 }
 
 // CreateTopic creates a new Kafka Topic in the current Kafka Cluster context
-func (c *GRPCClient) CreateTopic(ctx context.Context, cluster *kafkav1.Cluster, topic *kafkav1.Topic) error {
+func (c *GRPCClient) CreateTopic(ctx context.Context, cluster *kafkav1.KafkaCluster, topic *kafkav1.Topic) error {
 	_, err := c.client.CreateTopic(ctx, &kafkav1.CreateTopicRequest{Cluster: cluster, Topic: topic})
 	return shared.ConvertGRPCError(err)
 }
 
 // DeleteTopic a Kafka Topic in the current Kafka Cluster context
-func (c *GRPCClient) DeleteTopic(ctx context.Context, cluster *kafkav1.Cluster, topic *kafkav1.Topic) error {
+func (c *GRPCClient) DeleteTopic(ctx context.Context, cluster *kafkav1.KafkaCluster, topic *kafkav1.Topic) error {
 	_, err := c.client.DeleteTopic(ctx, &kafkav1.DeleteTopicRequest{Cluster: cluster, Topic: topic})
 	return shared.ConvertGRPCError(err)
 }
 
 // ListTopicConfig is not currently updates any existing Topic's configuration in the current Kafka Cluster context
-func (c *GRPCClient) ListTopicConfig(ctx context.Context, cluster *kafkav1.Cluster, topic *kafkav1.Topic) (*kafkav1.TopicConfig, error) {
+func (c *GRPCClient) ListTopicConfig(ctx context.Context, cluster *kafkav1.KafkaCluster, topic *kafkav1.Topic) (*kafkav1.TopicConfig, error) {
 	return nil, shared.ErrNotImplemented
 }
 
 // UpdateTopic updates any existing Topic's configuration in the current Kafka Cluster context
-func (c *GRPCClient) UpdateTopic(ctx context.Context, cluster *kafkav1.Cluster, topic *kafkav1.Topic) error {
+func (c *GRPCClient) UpdateTopic(ctx context.Context, cluster *kafkav1.KafkaCluster, topic *kafkav1.Topic) error {
 	_, err := c.client.UpdateTopic(ctx, &kafkav1.UpdateTopicRequest{Cluster: cluster, Topic: topic})
 	return shared.ConvertGRPCError(err)
 }
 
 // ListACL lists all ACLs for a given principal or resource
-func (c *GRPCClient) ListACL(ctx context.Context, cluster *kafkav1.Cluster, filter *kafkav1.ACLFilter) ([]*kafkav1.ACLBinding, error) {
+func (c *GRPCClient) ListACL(ctx context.Context, cluster *kafkav1.KafkaCluster, filter *kafkav1.ACLFilter) ([]*kafkav1.ACLBinding, error) {
 	r, err := c.client.ListACL(ctx, &kafkav1.ListACLRequest{Cluster: cluster, Filter: filter})
 	if err != nil {
 		return nil, shared.ConvertGRPCError(err)
@@ -99,13 +99,13 @@ func (c *GRPCClient) ListACL(ctx context.Context, cluster *kafkav1.Cluster, filt
 }
 
 // CreateACL registers a new ACL with the currently Kafka Cluster context
-func (c *GRPCClient) CreateACL(ctx context.Context, cluster *kafkav1.Cluster, binding []*kafkav1.ACLBinding) error {
+func (c *GRPCClient) CreateACL(ctx context.Context, cluster *kafkav1.KafkaCluster, binding []*kafkav1.ACLBinding) error {
 	_, err := c.client.CreateACL(ctx, &kafkav1.CreateACLRequest{Cluster: cluster, AclBindings: binding})
 	return shared.ConvertGRPCError(err)
 }
 
 // DeleteACL removes an ACL with the currently Kafka Cluster context
-func (c *GRPCClient) DeleteACL(ctx context.Context, cluster *kafkav1.Cluster, filter *kafkav1.ACLFilter) error {
+func (c *GRPCClient) DeleteACL(ctx context.Context, cluster *kafkav1.KafkaCluster, filter *kafkav1.ACLFilter) error {
 	_, err := c.client.DeleteACL(ctx, &kafkav1.DeleteACLRequest{Cluster: cluster, Filter: filter})
 	return shared.ConvertGRPCError(err)
 }
@@ -118,33 +118,33 @@ type GRPCServer struct {
 }
 
 // CreateAPIKey creates a new API key for accessing a kafka cluster
-func (s *GRPCServer) CreateAPIKey(ctx context.Context, req *authv1.CreateAPIKeyRequest) (*authv1.CreateAPIKeyReply, error) {
+func (s *GRPCServer) CreateAPIKey(ctx context.Context, req *authv1.CreateApiKeyRequest) (*authv1.CreateApiKeyReply, error) {
 	//r, err := s.Impl.CreateAPIKey(ctx, req.ApiKey)
 	return nil, shared.ErrNotImplemented
 }
 
 // List returns a list of Kafka Cluster available to the authenticated user
-func (s *GRPCServer) List(ctx context.Context, req *kafkav1.GetClustersRequest) (*kafkav1.GetClustersReply, error) {
+func (s *GRPCServer) List(ctx context.Context, req *kafkav1.GetKafkaClustersRequest) (*kafkav1.GetKafkaClustersReply, error) {
 	r, err := s.Impl.List(ctx, req.Cluster)
-	return &kafkav1.GetClustersReply{Clusters: r}, shared.ConvertGRPCError(err)
+	return &kafkav1.GetKafkaClustersReply{Clusters: r}, shared.ConvertGRPCError(err)
 }
 
 // Describe provides detailed information about a Kafka Cluster
-func (s *GRPCServer) Describe(ctx context.Context, req *kafkav1.GetClusterRequest) (*kafkav1.GetClusterReply, error) {
+func (s *GRPCServer) Describe(ctx context.Context, req *kafkav1.GetKafkaClusterRequest) (*kafkav1.GetKafkaClusterReply, error) {
 	r, err := s.Impl.Describe(ctx, req.Cluster)
-	return &kafkav1.GetClusterReply{Cluster: r}, shared.ConvertGRPCError(err)
+	return &kafkav1.GetKafkaClusterReply{Cluster: r}, shared.ConvertGRPCError(err)
 }
 
 // Create generates a new Kafka Cluster
-func (s *GRPCServer) Create(ctx context.Context, req *kafkav1.CreateClusterRequest) (*kafkav1.CreateClusterReply, error) {
+func (s *GRPCServer) Create(ctx context.Context, req *kafkav1.CreateKafkaClusterRequest) (*kafkav1.CreateKafkaClusterReply, error) {
 	r, err := s.Impl.Create(ctx, req.Config)
-	return &kafkav1.CreateClusterReply{Cluster: r}, shared.ConvertGRPCError(err)
+	return &kafkav1.CreateKafkaClusterReply{Cluster: r}, shared.ConvertGRPCError(err)
 }
 
 // Delete removes a Kafka Cluster
-func (s *GRPCServer) Delete(ctx context.Context, req *kafkav1.DeleteClusterRequest) (*kafkav1.DeleteClusterReply, error) {
+func (s *GRPCServer) Delete(ctx context.Context, req *kafkav1.DeleteKafkaClusterRequest) (*kafkav1.DeleteKafkaClusterReply, error) {
 	err := s.Impl.Delete(ctx, req.Cluster)
-	return &kafkav1.DeleteClusterReply{}, shared.ConvertGRPCError(err)
+	return &kafkav1.DeleteKafkaClusterReply{}, shared.ConvertGRPCError(err)
 }
 
 // ListTopics lists all non-internal topics in the current Kafka Cluster context

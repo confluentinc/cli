@@ -70,13 +70,13 @@ type Connect struct {
 	Client *chttp.Client
 }
 
-func (c *Connect) List(ctx context.Context, cluster *connectv1.Cluster) ([]*connectv1.Cluster, error) {
+func (c *Connect) List(ctx context.Context, cluster *connectv1.ConnectCluster) ([]*connectv1.ConnectCluster, error) {
 	c.Logger.Log("msg", "connect.List()")
 	ret, err := c.Client.Connect.List(ctx, cluster)
 	return ret, shared.ConvertAPIError(err)
 }
 
-func (c *Connect) Describe(ctx context.Context, cluster *connectv1.Cluster) (*connectv1.Cluster, error) {
+func (c *Connect) Describe(ctx context.Context, cluster *connectv1.ConnectCluster) (*connectv1.ConnectCluster, error) {
 	c.Logger.Log("msg", "connect.Describe()")
 	ret, err := c.Client.Connect.Describe(ctx, cluster)
 	if err != nil {
@@ -85,7 +85,7 @@ func (c *Connect) Describe(ctx context.Context, cluster *connectv1.Cluster) (*co
 	return ret, nil
 }
 
-func (c *Connect) DescribeS3Sink(ctx context.Context, cluster *connectv1.S3SinkCluster) (*connectv1.S3SinkCluster, error) {
+func (c *Connect) DescribeS3Sink(ctx context.Context, cluster *connectv1.ConnectS3SinkCluster) (*connectv1.ConnectS3SinkCluster, error) {
 	c.Logger.Log("msg", "connect.DescribeS3Sink()")
 	ret, err := c.Client.Connect.DescribeS3Sink(ctx, cluster)
 	if err != nil {
@@ -94,9 +94,9 @@ func (c *Connect) DescribeS3Sink(ctx context.Context, cluster *connectv1.S3SinkC
 	return ret, nil
 }
 
-func (c *Connect) CreateS3Sink(ctx context.Context, cfg *connectv1.S3SinkClusterConfig) (*connectv1.S3SinkCluster, error) {
+func (c *Connect) CreateS3Sink(ctx context.Context, cfg *connectv1.ConnectS3SinkClusterConfig) (*connectv1.ConnectS3SinkCluster, error) {
 	c.Logger.Log("msg", "connect.CreateS3Sink()")
-	config := &connectv1.S3SinkClusterConfig{
+	config := &connectv1.ConnectS3SinkClusterConfig{
 		Name:           cfg.Name,
 		AccountId:      cfg.AccountId,
 		KafkaClusterId: cfg.KafkaClusterId,
@@ -120,7 +120,7 @@ func (c *Connect) CreateS3Sink(ctx context.Context, cfg *connectv1.S3SinkCluster
 	return ret, nil
 }
 
-func (c *Connect) UpdateS3Sink(ctx context.Context, cluster *connectv1.S3SinkCluster) (*connectv1.S3SinkCluster, error) {
+func (c *Connect) UpdateS3Sink(ctx context.Context, cluster *connectv1.ConnectS3SinkCluster) (*connectv1.ConnectS3SinkCluster, error) {
 	c.Logger.Log("msg", "connect.UpdateS3Sink()")
 	cluster, err := c.Client.Connect.UpdateS3Sink(ctx, cluster)
 	if err != nil {
@@ -130,7 +130,7 @@ func (c *Connect) UpdateS3Sink(ctx context.Context, cluster *connectv1.S3SinkClu
 	return cluster, nil
 }
 
-func (c *Connect) Delete(ctx context.Context, cluster *connectv1.Cluster) error {
+func (c *Connect) Delete(ctx context.Context, cluster *connectv1.ConnectCluster) error {
 	c.Logger.Log("msg", "connect.Delete()")
 	err := c.Client.Connect.Delete(ctx, cluster)
 	if err != nil {

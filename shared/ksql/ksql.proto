@@ -5,9 +5,9 @@ package ksql;
 import "github.com/confluentinc/ccloudapis/ksql/v1/ksql.proto";
 
 service KSQL {
-  rpc List(ccloudapis.ksql.v1.GetClustersRequest) returns (ccloudapis.ksql.v1.GetClustersReply) {}
-  rpc Describe(ccloudapis.ksql.v1.GetClusterRequest) returns (ccloudapis.ksql.v1.GetClusterReply) {}
-  rpc Delete(ccloudapis.ksql.v1.DeleteClusterRequest) returns (ccloudapis.ksql.v1.DeleteClusterReply) {}
-  rpc Create(ccloudapis.ksql.v1.CreateClusterRequest) returns (ccloudapis.ksql.v1.CreateClusterReply) {}
+  rpc List(ccloudapis.ksql.v1.GetKSQLClustersRequest) returns (ccloudapis.ksql.v1.GetKSQLClustersReply) {}
+  rpc Describe(ccloudapis.ksql.v1.GetKSQLClusterRequest) returns (ccloudapis.ksql.v1.GetKSQLClusterReply) {}
+  rpc Delete(ccloudapis.ksql.v1.DeleteKSQLClusterRequest) returns (ccloudapis.ksql.v1.DeleteKSQLClusterReply) {}
+  rpc Create(ccloudapis.ksql.v1.CreateKSQLClusterRequest) returns (ccloudapis.ksql.v1.CreateKSQLClusterReply) {}
 }
 

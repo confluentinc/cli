@@ -66,25 +66,25 @@ type Ksql struct {
 	Client *chttp.Client
 }
 
-func (c *Ksql) List(ctx context.Context, cluster *ksqlv1.Cluster) ([]*ksqlv1.Cluster, error) {
+func (c *Ksql) List(ctx context.Context, cluster *ksqlv1.KSQLCluster) ([]*ksqlv1.KSQLCluster, error) {
 	c.Logger.Log("msg", "ksql.List()")
 	ret, err := c.Client.KSQL.List(ctx, cluster)
 	return ret, shared.ConvertAPIError(err)
 }
 
-func (c *Ksql) Describe(ctx context.Context, cluster *ksqlv1.Cluster) (*ksqlv1.Cluster, error) {
+func (c *Ksql) Describe(ctx context.Context, cluster *ksqlv1.KSQLCluster) (*ksqlv1.KSQLCluster, error) {
 	c.Logger.Log("msg", "ksql.Describe()")
 	ret, err := c.Client.KSQL.Describe(ctx, cluster)
 	return ret, shared.ConvertAPIError(err)
 }
 
-func (c *Ksql) Create(ctx context.Context, config *ksqlv1.ClusterConfig) (*ksqlv1.Cluster, error) {
+func (c *Ksql) Create(ctx context.Context, config *ksqlv1.KSQLClusterConfig) (*ksqlv1.KSQLCluster, error) {
 	c.Logger.Log("msg", "ksql.Create()")
 	ret, err := c.Client.KSQL.Create(ctx, config)
 	return ret, shared.ConvertAPIError(err)
 }
 
-func (c *Ksql) Delete(ctx context.Context, cluster *ksqlv1.Cluster) error {
+func (c *Ksql) Delete(ctx context.Context, cluster *ksqlv1.KSQLCluster) error {
 	c.Logger.Log("msg", "ksql.Delete()")
 	err := c.Client.KSQL.Delete(ctx, cluster)
 	return shared.ConvertAPIError(err)
