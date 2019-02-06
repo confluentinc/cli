@@ -15,8 +15,8 @@ type GRPCClient struct {
 }
 
 // Create API key
-func (c *GRPCClient) Create(ctx context.Context, key *authv1.APIKey) (*authv1.APIKey, error) {
-	resp, err := c.client.Create(ctx, &authv1.CreateAPIKeyRequest{ApiKey: key})
+func (c *GRPCClient) Create(ctx context.Context, key *authv1.ApiKey) (*authv1.ApiKey, error) {
+	resp, err := c.client.Create(ctx, &authv1.CreateApiKeyRequest{ApiKey: key})
 	if err != nil {
 		return nil, shared.ConvertGRPCError(err)
 	}
@@ -24,8 +24,8 @@ func (c *GRPCClient) Create(ctx context.Context, key *authv1.APIKey) (*authv1.AP
 }
 
 // Delete API key
-func (c *GRPCClient) Delete(ctx context.Context, key *authv1.APIKey) error {
-	_, err := c.client.Delete(ctx, &authv1.DeleteAPIKeyRequest{ApiKey: key})
+func (c *GRPCClient) Delete(ctx context.Context, key *authv1.ApiKey) error {
+	_, err := c.client.Delete(ctx, &authv1.DeleteApiKeyRequest{ApiKey: key})
 	if err != nil {
 		return shared.ConvertGRPCError(err)
 	}
@@ -38,13 +38,13 @@ type GRPCServer struct {
 }
 
 // Create API Key
-func (s *GRPCServer) Create(ctx context.Context, req *authv1.CreateAPIKeyRequest) (*authv1.CreateAPIKeyReply, error) {
+func (s *GRPCServer) Create(ctx context.Context, req *authv1.CreateApiKeyRequest) (*authv1.CreateApiKeyReply, error) {
 	r, err := s.Impl.Create(ctx, req.ApiKey)
-	return &authv1.CreateAPIKeyReply{ApiKey: r}, err
+	return &authv1.CreateApiKeyReply{ApiKey: r}, err
 }
 
 // Delete API Key
-func (s *GRPCServer) Delete(ctx context.Context, req *authv1.DeleteAPIKeyRequest)(*authv1.DeleteAPIKeyReply, error) {
+func (s *GRPCServer) Delete(ctx context.Context, req *authv1.DeleteApiKeyRequest)(*authv1.DeleteApiKeyReply, error) {
 	err := s.Impl.Delete(ctx, req.ApiKey)
-	return &authv1.DeleteAPIKeyReply{},err
+	return &authv1.DeleteApiKeyReply{},err
 }

@@ -6,6 +6,6 @@ import "github.com/confluentinc/ccloudapis/auth/v1/auth.proto";
 
 service ApiKey {
 
-  rpc Create(ccloudapis.auth.v1.CreateAPIKeyRequest) returns (ccloudapis.auth.v1.CreateAPIKeyReply) {}
-  rpc Delete(ccloudapis.auth.v1.DeleteAPIKeyRequest) returns (ccloudapis.auth.v1.DeleteAPIKeyReply) {}
+  rpc Create(ccloudapis.auth.v1.CreateApiKeyRequest) returns (ccloudapis.auth.v1.CreateApiKeyReply) {}
+  rpc Delete(ccloudapis.auth.v1.DeleteApiKeyRequest) returns (ccloudapis.auth.v1.DeleteApiKeyReply) {}
 }

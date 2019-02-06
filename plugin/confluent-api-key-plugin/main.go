@@ -71,13 +71,13 @@ type ApiKey struct {
 	Client *chttp.Client
 }
 
-func (c *ApiKey) Create(ctx context.Context, key *authv1.APIKey) (*authv1.APIKey, error) {
+func (c *ApiKey) Create(ctx context.Context, key *authv1.ApiKey) (*authv1.ApiKey, error) {
 	c.Logger.Log("msg", "apiKey.Create()")
 	ret, err := c.Client.APIKey.Create(ctx, key)
 	return ret, shared.ConvertAPIError(err)
 }
 
-func (c *ApiKey) Delete(ctx context.Context,  key *authv1.APIKey) error {
+func (c *ApiKey) Delete(ctx context.Context,  key *authv1.ApiKey) error {
 	c.Logger.Log("msg", "apiKey.Delete()")
 	err :=  c.Client.APIKey.Delete(ctx, key)
 	return shared.ConvertAPIError(err)

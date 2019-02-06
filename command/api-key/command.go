@@ -100,11 +100,11 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	}
 
 
-	key := &authv1.APIKey{
+	key := &authv1.ApiKey{
 		UserId:      id,
 		Description: description,
-		LogicalClusters: []*authv1.APIKey_Cluster{
-			&authv1.APIKey_Cluster{Id: clusterId},
+		LogicalClusters: []*authv1.ApiKey_Cluster{
+			&authv1.ApiKey_Cluster{Id: clusterId},
 	    },
 	}
 
@@ -132,10 +132,10 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return common.HandleError(err, cmd)
 	}
 
-	key := &authv1.APIKey{
+	key := &authv1.ApiKey{
 		UserId:      id,
-		LogicalClusters: []*authv1.APIKey_Cluster{
-			&authv1.APIKey_Cluster{Id: clusterId},
+		LogicalClusters: []*authv1.ApiKey_Cluster{
+			&authv1.ApiKey_Cluster{Id: clusterId},
 		},
 	}
 
