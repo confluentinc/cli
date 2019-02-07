@@ -195,13 +195,14 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 func (c *clusterCommand) auth(cmd *cobra.Command, args []string) error {
 	cfg, err := c.config.Context()
 
+	if err != nil {
+		return common.HandleError(err, cmd)
+	}
+
 	if cfg.Kafka == "" {
 		return fmt.Errorf("No cluster selected. See confluent kafka use for help ")
 	}
 
-	if err != nil {
-		return common.HandleError(err, cmd)
-	}
 	cluster, known := c.config.Platforms[cfg.Platform].KafkaClusters[cfg.Kafka]
 	if known {
 		fmt.Printf("Kafka Cluster: %s\n", cfg.Kafka)
@@ -220,7 +221,7 @@ func (c *clusterCommand) auth(cmd *cobra.Command, args []string) error {
 	if userProvidingKey {
 		key, secret, err = promptForKafkaCreds()
 	} else {
-		key, secret, err = c.createKafkaCreds(cfg.Kafka)
+		key, secret, err = c.createKafkaCreds(context.Background(), cfg.Kafka)
 	}
 	if err != nil {
 		return common.HandleError(err, cmd)
@@ -287,9 +288,9 @@ func promptForKafkaCreds() (string, string, error) {
 	return strings.TrimSpace(key), strings.TrimSpace(secret), nil
 }
 
-func (c *clusterCommand) createKafkaCreds(kafkaClusterID string) (string, string, error) {
-	client := chttp.NewClientWithJWT(context.Background(), c.config.AuthToken, c.config.AuthURL, c.config.Logger)
-	key, err := client.APIKey.Create(context.Background(), &authv1.ApiKey{
+func (c *clusterCommand) createKafkaCreds(ctx context.Context, kafkaClusterID string) (string, string, error) {
+	client := chttp.NewClientWithJWT(ctx, c.config.AuthToken, c.config.AuthURL, c.config.Logger)
+	key, err := client.APIKey.Create(ctx, &authv1.ApiKey{
 		UserId: c.config.Auth.User.Id,
 		LogicalClusters: []*authv1.ApiKey_Cluster{
 			{Id: kafkaClusterID},

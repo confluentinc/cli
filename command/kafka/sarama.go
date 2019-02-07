@@ -9,7 +9,7 @@ import (
 	"github.com/confluentinc/cli/shared"
 )
 
-// NewSaramaProducer returns a sarama.ClusterAdmin configured for the CLI config
+// NewSaramaProducer returns a sarama.ClusterConsumerconfigured for the CLI config
 func NewSaramaConsumer(group string, config *shared.Config) (sarama.ConsumerGroup, error) {
 	kafka, err := config.KafkaClusterConfig()
 	if err != nil {
@@ -23,7 +23,7 @@ func NewSaramaConsumer(group string, config *shared.Config) (sarama.ConsumerGrou
 	return sarama.NewConsumerGroupFromClient(group, client)
 }
 
-// NewSaramaProducer returns a sarama.ClusterAdmin configured for the CLI config
+// NewSaramaProducer returns a sarama.ClusterProducer configured for the CLI config
 func NewSaramaProducer(config *shared.Config) (sarama.SyncProducer, error) {
 	kafka, err := config.KafkaClusterConfig()
 	if err != nil {

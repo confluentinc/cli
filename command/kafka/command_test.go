@@ -257,7 +257,7 @@ func TestListTopics(t *testing.T) {
 		}()
 
 		if err := cmd.Execute(); err != nil {
-			t.Logf("error: %s", err)
+			t.Errorf("error: %s", err)
 			t.Fail()
 			return
 		}
@@ -275,7 +275,7 @@ func TestCreateTopic(t *testing.T) {
 		}()
 
 		if err := cmd.Execute(); err != nil {
-			t.Logf("error: %s", err)
+			t.Errorf("error: %s", err)
 			t.Fail()
 			return
 		}
@@ -293,7 +293,7 @@ func TestDescribeTopic(t *testing.T) {
 		}()
 
 		if err := cmd.Execute(); err != nil {
-			t.Logf("error: %s", err)
+			t.Errorf("error: %s", err)
 			t.Fail()
 			return
 		}
@@ -311,7 +311,7 @@ func TestDeleteTopic(t *testing.T) {
 		}()
 
 		if err := cmd.Execute(); err != nil {
-			t.Logf("error: %s", err)
+			t.Errorf("error: %s", err)
 			t.Fail()
 			return
 		}
@@ -328,7 +328,7 @@ func TestUpdateTopic(t *testing.T) {
 		}()
 
 		if err := cmd.Execute(); err != nil {
-			t.Logf("error: %s", err)
+			t.Errorf("error: %s", err)
 			t.Fail()
 			return
 		}

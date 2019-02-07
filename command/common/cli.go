@@ -31,7 +31,6 @@ type Provider func(interface{}) error
 func HandleError(err error, cmd *cobra.Command) error {
 	// Give an indication of successful completion
 	if err == nil {
-		fmt.Printf("%s success! \n", cmd.Name())
 		return nil
 	}
 
