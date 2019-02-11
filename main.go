@@ -69,9 +69,6 @@ func main() {
 
 	cli.Version = version
 
-	// Automatically stop plugins when CLI exits
-	defer plugin.CleanupClients()
-
 	cli.AddCommand(config.New(cfg))
 
 	cli.AddCommand(common.NewCompletionCmd(cli, prompt))
@@ -100,6 +97,8 @@ func main() {
 	}
 
 	check(cli.Execute())
+
+	plugin.CleanupClients()
 	os.Exit(0)
 }
 

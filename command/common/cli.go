@@ -83,7 +83,7 @@ func LoadPlugin(name string, value interface{}) error {
 		Managed:          true,
 		Logger: hclog.New(&hclog.LoggerOptions{
 			Output: hclog.DefaultOutput,
-			Level:  hclog.Info,
+			Level:  hclog.Error,
 			Name:   "plugin",
 		}),
 	})
