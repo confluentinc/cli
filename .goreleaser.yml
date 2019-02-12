@@ -1,8 +1,8 @@
-project_name: ccloud-cli
+project_name: confluent-cli
 
 builds:
   -
-    binary: ccloud
+    binary: confluent
     main: .
     ldflags:
       # remove the date so builds are reproducible (identical SHAs)

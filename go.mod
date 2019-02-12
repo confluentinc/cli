@@ -13,12 +13,6 @@ require (
 	github.com/codyaray/go-printer v0.8.0
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
 	github.com/confluentinc/cc-structs v0.0.0-20181109155559-7cfce9602e5d
-	github.com/eapache/go-resiliency v1.1.0 // indirect
-	github.com/eapache/go-xerial-snappy v0.0.0-20180814174437-776d5712da21 // indirect
-	github.com/eapache/queue v1.1.0 // indirect
-	github.com/emicklei/go-restful v2.8.0+incompatible // indirect
-	github.com/go-kit/kit v0.8.0 // indirect
-	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/confluentinc/ccloud-sdk-go v0.0.5-0.20190205193832-1f6d876cdc3f
 	github.com/confluentinc/ccloudapis v0.0.0-20190205225915-829aeb3a907d
 	github.com/confluentinc/confluent-kafka-go v0.11.6
@@ -47,19 +41,11 @@ require (
 	github.com/hashicorp/go-plugin v0.0.0-20181030172320-54b6ff97d818
 	github.com/hashicorp/yamux v0.0.0-20180826203732-cc6d2ea263b2 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
-	github.com/json-iterator/go v1.1.5 // indirect
-	github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515 // indirect
 	github.com/mattn/go-runewidth v0.0.3 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.2 // indirect
 	github.com/mitchellh/go-homedir v1.0.0
 	github.com/mitchellh/go-testing-interface v1.0.0 // indirect
-	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
-	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/olekukonko/tablewriter v0.0.0-20180912035003-be2c049b30cc // indirect
-	github.com/onsi/gomega v1.4.2 // indirect
-	github.com/pascaldekloe/goe v0.0.0-20180627143212-57f6aae5913c // indirect
-	github.com/pierrec/lz4 v0.0.0-20180906185208-bb6bfd13c6a2 // indirect
-	github.com/rcrowley/go-metrics v0.0.0-20180503174638-e2704e165165 // indirect
 	github.com/openzipkin/zipkin-go v0.1.5 // indirect
 	github.com/pkg/errors v0.8.1
 	github.com/pkg/profile v1.2.1 // indirect
@@ -83,21 +69,14 @@ require (
 	github.com/shurcooL/webdavfs v0.0.0-20181215192745-5988b2d638f6 // indirect
 	github.com/sirupsen/logrus v1.3.0
 	github.com/spf13/cobra v0.0.3
-	github.com/spf13/pflag v1.0.3
+	github.com/spf13/pflag v1.0.2
 	github.com/spf13/viper v1.2.0
 	github.com/stretchr/testify v1.3.0
 	github.com/travisjeffery/proto-go-sql v0.0.0-20180327175836-681792161a58 // indirect
-	github.com/ugorji/go/codec v0.0.0-20181022190402-e5e69e061d4f // indirect
-	golang.org/x/crypto v0.0.0-20190103213133-ff983b9c42bc
-	golang.org/x/sync v0.0.0-20181221193216-37e7f081c4d4 // indirect
-	google.golang.org/appengine v1.4.0 // indirect
-	gopkg.in/airbrake/gobrake.v2 v2.0.9 // indirect
-	gopkg.in/inf.v0 v0.9.1 // indirect
-	k8s.io/klog v0.0.0-20181108234604-8139d8cb77af // indirect
-	sigs.k8s.io/yaml v1.1.0 // indirect
 	go.opencensus.io v0.19.0 // indirect
 	go4.org v0.0.0-20181109185143-00e24f1b2599 // indirect
 	golang.org/x/build v0.0.0-20190206002922-e21a90b64ba0 // indirect
+	golang.org/x/crypto v0.0.0-20190131182504-b8fe1690c613
 	golang.org/x/exp v0.0.0-20190125153040-c74c464bbbf2 // indirect
 	golang.org/x/net v0.0.0-20190125091013-d26f9f9a57f3
 	golang.org/x/oauth2 v0.0.0-20190130055435-99b60b757ec1 // indirect

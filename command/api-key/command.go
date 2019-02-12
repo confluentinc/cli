@@ -114,7 +114,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return common.HandleError(errRet, cmd)
 	}
 
-	printer.RenderTableOut(userKey, describeFields, describeRenames, os.Stdout)
+	_ = printer.RenderTableOut(userKey, describeFields, describeRenames, os.Stdout)
 	fmt.Println("Please Save the API Key and secret.")
 	return nil
 

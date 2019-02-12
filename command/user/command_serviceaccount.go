@@ -2,8 +2,8 @@ package user
 
 import (
 	"bufio"
-	"fmt"
 	"context"
+	"fmt"
 	"github.com/codyaray/go-printer"
 	"github.com/confluentinc/cli/shared/user"
 	"strings"
@@ -12,10 +12,11 @@ import (
 
 	"github.com/spf13/cobra"
 
+	chttp "github.com/confluentinc/ccloud-sdk-go"
+	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
+	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/shared"
-	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
-	chttp "github.com/confluentinc/ccloud-sdk-go"
 )
 
 type command struct {
@@ -25,7 +26,7 @@ type command struct {
 }
 
 var (
-	accountFields  = []string{"Id", "ServiceName", "ServiceDescription", "OrganizationId"}
+	accountFields = []string{"Id", "ServiceName", "ServiceDescription", "OrganizationId"}
 	displayFields = map[string]string{"ServiceName": "Name", "ServiceDescription": "Description"}
 )
 
@@ -63,7 +64,7 @@ func (c *command) init(plugin common.Provider) error {
 	c.AddCommand(&cobra.Command{
 		Use:   "list",
 		Short: "List Service Accounts.",
-		RunE:   c.list,
+		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	})
 
@@ -96,7 +97,7 @@ func (c *command) init(plugin common.Provider) error {
 		Use:   "deactivate",
 		Short: "Deactivate a Service Account.",
 		RunE:  c.deactivate,
-		Args: cobra.NoArgs,
+		Args:  cobra.NoArgs,
 	}
 	deactivateCmd.Flags().String("name", "", "service account name")
 	check(deactivateCmd.MarkFlagRequired("name"))
@@ -106,7 +107,6 @@ func (c *command) init(plugin common.Provider) error {
 }
 
 func (c *command) create(cmd *cobra.Command, args []string) error {
-
 
 	name, err := cmd.Flags().GetString("name")
 	if err != nil {
@@ -146,7 +146,6 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	return printer.RenderTableOut(user, accountFields, displayFields, os.Stdout)
 }
 
-
 func (c *command) update(cmd *cobra.Command, args []string) error {
 
 	name, err := cmd.Flags().GetString("name")
@@ -183,9 +182,9 @@ func (c *command) deactivate(cmd *cobra.Command, args []string) error {
 	}
 
 	user := &orgv1.User{
-		Id:                 c.config.Auth.User.Id,
-		ServiceName:        name,
-		OrganizationId:     c.config.Auth.User.OrganizationId,
+		Id:             c.config.Auth.User.Id,
+		ServiceName:    name,
+		OrganizationId: c.config.Auth.User.OrganizationId,
 	}
 
 	delAcl, err := deleteACL(name)
@@ -195,7 +194,11 @@ func (c *command) deactivate(cmd *cobra.Command, args []string) error {
 	}
 
 	if delAcl {
-		// To-do Call DeleteACL API
+		_ = &kafkav1.ACLFilter{
+			EntryFilter: &kafkav1.AccessControlEntryConfig{Principal: user.ServiceName},
+		}
+		// TODO: get actual delete ACL logic in here
+		// c.client.DeleteACL(context.Background, del)
 	}
 
 	errRet := c.client.DeactivateServiceAccount(context.Background(), user)
@@ -210,8 +213,8 @@ func (c *command) deactivate(cmd *cobra.Command, args []string) error {
 
 func (c *command) list(cmd *cobra.Command, args []string) error {
 	user := &orgv1.User{
-		Id:                 c.config.Auth.User.Id,
-		OrganizationId:     c.config.Auth.User.OrganizationId,
+		Id:             c.config.Auth.User.Id,
+		OrganizationId: c.config.Auth.User.OrganizationId,
 	}
 
 	users, errRet := c.client.GetServiceAccounts(context.Background(), user)
