@@ -17,7 +17,7 @@ generate:
 
 .PHONY: install-plugins
 install-plugins:
-	@GO111MODULE=on go install ./plugin/...
+	@GO111MODULE=on go install ./dist/...
 
 ifeq ($(shell uname),Darwin)
 GORELEASER_CONFIG ?= .goreleaser-mac.yml

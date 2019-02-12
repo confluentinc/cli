@@ -1,4 +1,4 @@
-project_name: ccloud-cli
+project_name: confluent-cli
 
 builds:
   -

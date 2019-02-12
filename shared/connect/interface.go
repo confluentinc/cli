@@ -11,7 +11,7 @@ import (
 )
 
 // Name description used for registering/disposing GRPC components
-const Name = "confluent-connect-plugin"
+const Name = "ccloud-connect-plugin"
 
 type Plugin struct {
 	plugin.NetRPCUnsupportedPlugin

@@ -8,8 +8,6 @@ import (
 	"github.com/confluentinc/cli/shared"
 )
 
-const Name = "confluent-ksql-plugin"
-
 var _ chttp.KSQL = (*GRPCClient)(nil)
 
 // GRPCClient is an implementation of Counter that talks over RPC.

@@ -10,6 +10,8 @@ import (
 	"github.com/confluentinc/cli/shared"
 )
 
+const Name = "ccloud-ksql-plugin"
+
 type Plugin struct {
 	plugin.NetRPCUnsupportedPlugin
 	Impl chttp.KSQL

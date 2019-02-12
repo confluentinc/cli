@@ -11,7 +11,7 @@ import (
 )
 
 // Name description used for registering/disposing GRPC components
-const Name = "confluent-kafka-plugin"
+const Name = "ccloud-kafka-plugin"
 
 // Plugin mates an interface with Hashicorp plugin object
 type Plugin struct {
