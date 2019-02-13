@@ -27,7 +27,7 @@ require (
 	github.com/gogo/protobuf v1.2.0
 	github.com/golang/lint v0.0.0-20181217174547-8f45f776aaf1 // indirect
 	github.com/golang/protobuf v1.2.1-0.20181128192352-1d3f30b51784
-	github.com/golangci/golangci-lint v1.14.0
+	github.com/golangci/golangci-lint v1.12.2
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/google/gofuzz v0.0.0-20170612174753-24818f796faf // indirect
 	github.com/google/pprof v0.0.0-20190109223431-e84dfd68c163 // indirect
