@@ -54,7 +54,7 @@ lint:
 coverage:
       ifdef CI
 	@echo "" > coverage.txt
-	@for d in $$(go list ./... | grep -v vendor); do \
+	@for d in $$(go list ./... | grep -v tools | grep -v vendor); do \
 	  GO111MODULE=on go test -v -race -coverprofile=profile.out -covermode=atomic $$d || exit 2; \
 	  if [ -f profile.out ]; then \
 	    cat profile.out >> coverage.txt; \
@@ -62,7 +62,7 @@ coverage:
 	  fi; \
 	done
       else
-	@GO111MODULE=on go test -race -cover $(TEST_ARGS) ./...
+	@GO111MODULE=on go test -race -cover $(TEST_ARGS) $(go list ./... | grep -v tools | grep -v vendor)
       endif
 
 .PHONY: test
