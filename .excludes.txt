@@ -1,0 +1,7 @@
+fmt.Print
+fmt.Println
+fmt.Printf
+fmt.Fprint
+fmt.Fprintln
+fmt.Fprintf
+

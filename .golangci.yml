@@ -1,0 +1,13 @@
+run:
+  tests: false
+
+  skip-dirs:
+  - tools
+
+linters-settings:
+  errcheck:
+    exclude: .excludes.txt 
+
+issues:
+  exclude-use-default: true
+  
