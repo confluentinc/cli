@@ -22,7 +22,7 @@ else
 GORELEASER_CONFIG ?= .goreleaser-linux.yml
 endif
 
-.PHONY: build-go 
+.PHONY: build-go
 build-go:
 	@GO111MODULE=on goreleaser release --snapshot --rm-dist -f $(GORELEASER_CONFIG)
 
