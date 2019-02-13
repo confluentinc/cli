@@ -1,12 +1,9 @@
 ALL_SRC               := $(shell find . -name "*.go" | grep -v -e vendor)
-GOLANGCI_LINT_VERSION := 1.12.2
 
 include ./semver.mk
 
 .PHONY: deps
 deps:
-	@which goreleaser >/dev/null 2>&1 || go get github.com/goreleaser/goreleaser >/dev/null 2>&1
-	@(golangci-lint --version | grep $(GOLANGCI_LINT_VERSION)) >/dev/null 2>&1 || curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(GOPATH)/bin v$(GOLANGCI_LINT_VERSION) >/dev/null 2>&1
 	@GO111MODULE=on go mod download >/dev/null 2>&1
 
 .PHONY: generate
@@ -25,8 +22,8 @@ else
 GORELEASER_CONFIG ?= .goreleaser-linux.yml
 endif
 
-.PHONY: binary
-binary:
+.PHONY: build-go 
+build-go:
 	@GO111MODULE=on goreleaser release --snapshot --rm-dist -f $(GORELEASER_CONFIG)
 
 .PHONY: release
