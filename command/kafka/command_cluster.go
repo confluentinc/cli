@@ -19,8 +19,8 @@ import (
 )
 
 var (
-	listFields      = []string{"Id", "Name", "ServiceProvider", "Region", "Durability", "Status"}
-	listLabels      = []string{"Id", "Name", "Provider", "Region", "Durability", "Status"}
+	listFields      = []string{"Id", "Name", "ServiceProvider", "Region", "Durability", "Status", "Enterprise"}
+	listLabels      = []string{"Id", "Name", "Provider", "Region", "Durability", "Status", "Enterprise"}
 	describeFields  = []string{"Id", "Name", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "ApiEndpoint", "PricePerHour"}
 	describeRenames = map[string]string{"NetworkIngress": "Ingress", "NetworkEgress": "Egress", "ServiceProvider": "Provider"}
 )
@@ -295,6 +295,7 @@ func (c *clusterCommand) createKafkaCreds(ctx context.Context, kafkaClusterID st
 		LogicalClusters: []*authv1.ApiKey_Cluster{
 			{Id: kafkaClusterID},
 		},
+		AccountId: c.config.Auth.Account.Id,
 	})
 
 	if err != nil {
