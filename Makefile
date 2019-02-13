@@ -6,7 +6,7 @@ include ./semver.mk
 deps:
 	@GO111MODULE=on go mod download >/dev/null 2>&1
 	@GO111MODULE=on go get github.com/goreleaser/goreleaser@v0.101.0
-	@GO111MODULE=on go get github.com/golangci/golangci-lint@v1.12.2
+	@GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.12.2
 
 .PHONY: generate
 generate:

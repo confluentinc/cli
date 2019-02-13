@@ -18,7 +18,6 @@ require (
 	github.com/eapache/queue v1.1.0 // indirect
 	github.com/emicklei/go-restful v2.8.0+incompatible // indirect
 	github.com/ghodss/yaml v1.0.0
-	github.com/go-critic/go-critic v0.0.0-20181204210945-ee9bf5809ead // indirect
 	github.com/go-openapi/spec v0.18.0 // indirect
 	github.com/gogo/protobuf v1.2.0
 	github.com/golang/mock v1.2.0 // indirect
