@@ -50,7 +50,10 @@ func TestConfig_Load(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			c := NewConfig()
 			c.Filename = tt.file
-			ioutil.WriteFile(tt.file, []byte(tt.args.contents), 0644)
+			err := ioutil.WriteFile(tt.file, []byte(tt.args.contents), 0644)
+			if err != nil {
+				t.Errorf("unable to test config to file: %v", err)
+			}
 			if err := c.Load(); (err != nil) != tt.wantErr {
 				t.Errorf("Config.Load() error = %v, wantErr %v", err, tt.wantErr)
 			}

@@ -45,7 +45,7 @@ func TestLoginSuccess(t *testing.T) {
 	req.Equal(&orgv1.User{Id: 23, Email: "cody@confluent.io", FirstName: "Cody"}, config.Auth.User)
 
 	config = shared.NewConfig()
-	config.Load()
+	req.NoError(config.Load())
 	name := "login-cody@confluent.io-https://confluent.cloud"
 	req.Contains(config.Platforms, name)
 	req.Equal("https://confluent.cloud", config.Platforms[name].Server)
@@ -81,14 +81,14 @@ func TestLogout(t *testing.T) {
 
 	config.AuthToken = "some.token.here"
 	config.Auth = &shared.AuthConfig{User: &orgv1.User{Id: 23}}
-	config.Save()
+	req.NoError(config.Save())
 
 	output, err := command.ExecuteCommand(cmds[1])
 	req.NoError(err)
 	req.Contains(output, "You are now logged out")
 
 	config = shared.NewConfig()
-	config.Load()
+	req.NoError(config.Load())
 	req.Empty(config.AuthToken)
 	req.Empty(config.Auth)
 }
