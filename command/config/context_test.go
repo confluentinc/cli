@@ -59,9 +59,8 @@ func TestContext(t *testing.T) {
 func run(args ...string) (string, error) {
 	config := shared.NewConfig()
 	config.Filename = filename
-	if err := config.Load(); err != nil {
-		return "", err
-	}
+	// The config may not exist yet, but we don't care
+	_ = config.Load()
 	root := New(config)
 
 	return terminal.ExecuteCommand(root, args...)
