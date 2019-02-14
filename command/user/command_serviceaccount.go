@@ -63,43 +63,43 @@ func (c *command) init(plugin common.Provider) error {
 
 	c.AddCommand(&cobra.Command{
 		Use:   "list",
-		Short: "List Service Accounts.",
+		Short: "List service accounts.",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	})
 
 	createCmd := &cobra.Command{
-		Use:   "create service account",
-		Short: "Create Service Account.",
+		Use:   "create",
+		Short: "Create a service account.",
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
 	}
-	createCmd.Flags().String("name", "", "service account name")
-	createCmd.Flags().String("description", "", "service account description")
+	createCmd.Flags().String("name", "", "Service account name.")
+	createCmd.Flags().String("description", "", "Service account description.")
 	check(createCmd.MarkFlagRequired("name"))
 	check(createCmd.MarkFlagRequired("description"))
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
 	updateCmd := &cobra.Command{
-		Use:   "update service account",
-		Short: "Update Service Description of a Service Account.",
+		Use:   "update",
+		Short: "Update service account description.",
 		RunE:  c.update,
 		Args:  cobra.NoArgs,
 	}
-	updateCmd.Flags().String("name", "", "service account name")
-	updateCmd.Flags().String("description", "", "service account description")
+	updateCmd.Flags().String("name", "", "Service account name.")
+	updateCmd.Flags().String("description", "", "Service account description.")
 	check(updateCmd.MarkFlagRequired("name"))
 	check(updateCmd.MarkFlagRequired("description"))
 	c.AddCommand(updateCmd)
 
 	deactivateCmd := &cobra.Command{
 		Use:   "deactivate",
-		Short: "Deactivate a Service Account.",
+		Short: "Deactivate a service account.",
 		RunE:  c.deactivate,
 		Args:  cobra.NoArgs,
 	}
-	deactivateCmd.Flags().String("name", "", "service account name")
+	deactivateCmd.Flags().String("name", "", "Service account name.")
 	check(deactivateCmd.MarkFlagRequired("name"))
 	c.AddCommand(deactivateCmd)
 
