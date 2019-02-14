@@ -31,8 +31,7 @@ build-go:
 
 .PHONY: release
 release: get-release-image commit-release tag-release
-	echo '$(RELEASE_SVG)' > release.svg
-	git add release.svg
+	@GO111MODULE=on go mod vendor
 	goreleaser
 
 .PHONY: fmt
