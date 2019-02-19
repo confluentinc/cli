@@ -62,7 +62,7 @@ func (c *command) init(plugin common.Provider) error {
 		Args:  cobra.NoArgs,
 	}
 	createCmd.Flags().Int32("id", 0, "service account id")
-	createCmd.MarkFlagRequired("id")
+	_ = createCmd.MarkFlagRequired("id")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
@@ -73,9 +73,9 @@ func (c *command) init(plugin common.Provider) error {
 		Args:  cobra.NoArgs,
 	}
 	deleteCmd.Flags().Int32("userId", 0, "service account id")
-	deleteCmd.MarkFlagRequired("userId")
+	_ = deleteCmd.MarkFlagRequired("userId")
 	deleteCmd.Flags().Int32("apiKeyId", 0, "api Key id")
-	deleteCmd.MarkFlagRequired("apiKeyId")
+	_ = deleteCmd.MarkFlagRequired("apiKeyId")
 	c.AddCommand(deleteCmd)
 
 	return nil

@@ -1,12 +1,10 @@
 package user
 
 import (
-	"bufio"
 	"context"
 	"fmt"
 	"github.com/codyaray/go-printer"
 	"github.com/confluentinc/cli/shared/user"
-	"strings"
 
 	"os"
 
@@ -75,8 +73,8 @@ func (c *command) init(plugin common.Provider) error {
 	}
 	createCmd.Flags().String("name", "", "service account name")
 	createCmd.Flags().String("description", "", "service account description")
-	createCmd.MarkFlagRequired("name")
-	createCmd.MarkFlagRequired("description")
+	_ = createCmd.MarkFlagRequired("name")
+	_ = createCmd.MarkFlagRequired("description")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
@@ -88,8 +86,8 @@ func (c *command) init(plugin common.Provider) error {
 	}
 	updateCmd.Flags().String("name", "", "service account name")
 	updateCmd.Flags().String("description", "", "service account description")
-	updateCmd.MarkFlagRequired("name")
-	updateCmd.MarkFlagRequired("description")
+	_ = updateCmd.MarkFlagRequired("name")
+	_ = updateCmd.MarkFlagRequired("description")
 	c.AddCommand(updateCmd)
 
 	deleteCmd := &cobra.Command{
@@ -99,7 +97,7 @@ func (c *command) init(plugin common.Provider) error {
 		Args:  cobra.NoArgs,
 	}
 	deleteCmd.Flags().String("name", "", "service account name")
-	deleteCmd.MarkFlagRequired("name")
+	_ = deleteCmd.MarkFlagRequired("name")
 	c.AddCommand(deleteCmd)
 
 	return nil
@@ -192,16 +190,6 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		OrganizationId: c.config.Auth.User.OrganizationId,
 	}
 
-	delAcl, err := deleteACL(name)
-
-	if err != nil {
-		return common.HandleError(err, cmd)
-	}
-
-	if delAcl {
-		// To-do Call DeleteACL API
-	}
-
 	errRet := c.client.DeleteServiceAccount(context.Background(), user)
 
 	if errRet != nil {
@@ -230,13 +218,3 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 
 }
 
-func deleteACL(serviceName string) (bool, error) {
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Printf("Do you want to delete all the ACLs assoicated with the %s account? [N/Y] ", serviceName)
-	response, err := reader.ReadString('\n')
-	if err != nil {
-		return false, err
-	}
-	r := strings.TrimSpace(response)
-	return r == "" || r[0] == 'y' || r[0] == 'Y', nil
-}
