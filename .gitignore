@@ -28,3 +28,4 @@ terraform.d
 .netrc
 
 coverage.txt
+ccloud

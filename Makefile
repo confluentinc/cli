@@ -1,22 +1,33 @@
 ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
 GIT_REMOTE_NAME ?= origin
 
-include ./semver.mk
+.PHONY: clean
+clean:
+	rm -rf $(shell pwd)/dist
 
 .PHONY: deps
 deps:
 	@GO111MODULE=on go mod download
+	@GO111MODULE=on go mod verify
 	@GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.12.2
+	@GO111MODULE=on go mod vendor
 
 .PHONY: generate
 generate:
-	protoc shared/connect/*.proto -Ishared/connect -I$(GOPATH)/src -I$(GOPATH)/src/github.com/confluentinc/ccloudapis --gogo_out=plugins=grpc:shared/connect
-	protoc shared/kafka/*.proto -Ishared/kafka -I$(GOPATH)/src -I$(GOPATH)/src/github.com/confluentinc/ccloudapis --gogo_out=plugins=grpc:shared/kafka
-	protoc shared/ksql/*.proto -Ishared/ksql -I$(GOPATH)/src -I$(GOPATH)/src/github.com/confluentinc/ccloudapis --gogo_out=plugins=grpc:shared/ksql
+	@GO111MOUDLE=on protoc shared/connect/*.proto -Ishared/connect -I$(shell pwd)/vendor/ -I$(shell pwd)/vendor/github.com/confluentinc/ccloudapis/ --gogo_out=plugins=grpc:shared/connect
+	@GO111MOUDLE=on protoc shared/kafka/*.proto -Ishared/kafka -I$(shell pwd)/vendor/ -I$(shell pwd)/vendor/github.com/confluentinc/ccloudapis/ --gogo_out=plugins=grpc:shared/kafka
+	@GO111MOUDLE=on protoc shared/ksql/*.proto -Ishared/ksql -I$(shell pwd)/vendor/ -I$(shell pwd)/vendor/github.com/confluentinc/ccloudapis/ --gogo_out=plugins=grpc:shared/ksql
+
+build: generate build-go install-plugins
+	echo "Building CLI..."
+
+.PHONY: build-go
+build-go:
+	@GO111MODULE=on go build -o $(shell pwd)/dist/ccloud
 
 .PHONY: install-plugins
 install-plugins:
-	@GO111MODULE=on go install ./dist/...
+	@GOBIN=$(shell pwd)/dist GO111MODULE=on go install ./plugin/...
 
 .PHONY: release
 release: get-release-image commit-release tag-release
