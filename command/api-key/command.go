@@ -129,7 +129,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return common.HandleError(err, cmd)
 	}
 
-	userId, err := cmd.Flags().GetString("userId")
+	userId, err := cmd.Flags().GetInt32("userId")
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
