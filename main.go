@@ -15,6 +15,8 @@ import (
 	"github.com/confluentinc/cli/command/connect"
 	"github.com/confluentinc/cli/command/kafka"
 	"github.com/confluentinc/cli/command/ksql"
+	"github.com/confluentinc/cli/command/user"
+	"github.com/confluentinc/cli/command/api-key"
 	"github.com/confluentinc/cli/log"
 	"github.com/confluentinc/cli/metric"
 	"github.com/confluentinc/cli/shared"
@@ -95,6 +97,21 @@ func main() {
 	} else {
 		cli.AddCommand(conn)
 	}
+
+	conn, err = user.New(cfg)
+	if err != nil {
+		logger.Log("msg", err)
+	} else {
+		cli.AddCommand(conn)
+	}
+
+	conn, err = apiKey.New(cfg)
+	if err != nil {
+		logger.Log("msg", err)
+	} else {
+		cli.AddCommand(conn)
+	}
+
 
 	check(cli.Execute())
 
