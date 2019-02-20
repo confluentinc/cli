@@ -3,23 +3,22 @@ package apiKey
 import (
 	"context"
 	"fmt"
-	"github.com/codyaray/go-printer"
-	"github.com/confluentinc/cli/shared/api-key"
-
 	"os"
 
+	"github.com/codyaray/go-printer"
 	"github.com/spf13/cobra"
 
-	chttp "github.com/confluentinc/ccloud-sdk-go"
+	ccloud "github.com/confluentinc/ccloud-sdk-go"
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
 	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/shared"
+	"github.com/confluentinc/cli/shared/api-key"
 )
 
 type command struct {
 	*cobra.Command
 	config *shared.Config
-	client chttp.APIKey
+	client ccloud.APIKey
 }
 
 var (
@@ -61,8 +60,8 @@ func (c *command) init(plugin common.Provider) error {
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
 	}
-	createCmd.Flags().Int32("id", 0, "service account id")
-	_ = createCmd.MarkFlagRequired("id")
+	createCmd.Flags().Int32("userId", 0, "service account id")
+	_ = createCmd.MarkFlagRequired("userId")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
@@ -83,8 +82,7 @@ func (c *command) init(plugin common.Provider) error {
 
 func (c *command) create(cmd *cobra.Command, args []string) error {
 
-	id, err := cmd.Flags().GetInt32("id")
-	fmt.Println("User ID: ", id)
+	userId, err := cmd.Flags().GetInt32("userId")
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
@@ -94,12 +92,9 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return common.HandleError(err, cmd)
 	}
 	description := "Service Account API Key"
-	if err != nil {
-		return common.HandleError(err, cmd)
-	}
 
 	key := &authv1.ApiKey{
-		UserId:      id,
+		UserId:      userId,
 		Description: description,
 		AccountId: c.config.Auth.Account.Id,
 		LogicalClusters: []*authv1.ApiKey_Cluster{
@@ -113,8 +108,9 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return common.HandleError(errRet, cmd)
 	}
 
-	fmt.Println("Please Save the API Key and secret.")
-	return printer.RenderTableOut(userKey, describeFields, describeRenames, os.Stdout)
+	fmt.Println("Please Save the API Key ID, API Key and Secret.")
+	var stdout = os.Stdout
+	return printer.RenderTableOut(userKey, describeFields, describeRenames, stdout)
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {

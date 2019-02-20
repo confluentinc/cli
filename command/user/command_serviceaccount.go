@@ -3,23 +3,23 @@ package user
 import (
 	"context"
 	"fmt"
-	"github.com/codyaray/go-printer"
-	"github.com/confluentinc/cli/shared/user"
-
 	"os"
 
+	"github.com/codyaray/go-printer"
 	"github.com/spf13/cobra"
 
-	chttp "github.com/confluentinc/ccloud-sdk-go"
+	ccloud "github.com/confluentinc/ccloud-sdk-go"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/shared"
+	"github.com/confluentinc/cli/shared/user"
 )
 
 type command struct {
 	*cobra.Command
 	config *shared.Config
-	client chttp.User
+	client ccloud.User
+	plugin common.Provider
 }
 
 var (
@@ -48,15 +48,18 @@ func New(config *shared.Config) (*cobra.Command, error) {
 	return cmd.Command, err
 }
 
-func (c *command) init(plugin common.Provider) error {
-	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		if err := c.config.CheckLogin(); err != nil {
-			fmt.Printf("failed initial login check \n\n%+v\n", c.config)
-			return err
-		}
-		// Lazy load plugin to avoid unnecessarily spawning child processes
-		return plugin(&c.client)
+func (c *command) getClientPlugin (cmd *cobra.Command, args []string) error {
+	if err := c.config.CheckLogin(); err != nil {
+		fmt.Printf("failed initial login check \n\n%+v\n", c.config)
+		return err
 	}
+	// Lazy load plugin to avoid unnecessarily spawning child processes
+	return c.plugin(&c.client)
+}
+
+func (c *command) init(plugin common.Provider) error {
+	c.plugin = plugin
+	c.Command.PersistentPreRunE = c.getClientPlugin
 
 	c.AddCommand(&cobra.Command{
 		Use:   "list",
