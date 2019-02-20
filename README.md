@@ -102,8 +102,6 @@ To install the CLI:
 
 This requires golang 1.11.
 
-Make sure you have `export GO111MODULE=on`.
-
 ```
 $ make deps
 $ make build
