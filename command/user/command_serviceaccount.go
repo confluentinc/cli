@@ -103,16 +103,23 @@ func (c *command) init(plugin common.Provider) error {
 	return nil
 }
 
+func requireLen(val string, maxLen int, field string) error {
+	if len(val) > maxLen {
+		return fmt.Errorf(field + "length should be less then %d bytes.",  maxLen)
+	}
+
+	return nil
+}
+
 func (c *command) create(cmd *cobra.Command, args []string) error {
 
 	name, err := cmd.Flags().GetString("name")
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
-	namelen := len(name)
 
-	if namelen > nameLength {
-		return fmt.Errorf("service name length should be less then 32 bytes.")
+	if err := requireLen(name, nameLength, "service name"); err != nil {
+		return common.HandleError(err, cmd)
 	}
 
 	description, err := cmd.Flags().GetString("description")
@@ -120,10 +127,8 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return common.HandleError(err, cmd)
 	}
 
-	descriptionlen := len(description)
-
-	if descriptionlen > descriptionLength {
-		return fmt.Errorf("description length should be less then 128 bytes.")
+	if err := requireLen(description, descriptionLength, "description"); err != nil {
+		return common.HandleError(err, cmd)
 	}
 
 	user := &orgv1.User{
@@ -154,10 +159,8 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return common.HandleError(err, cmd)
 	}
 
-	descriptionlen := len(description)
-
-	if descriptionlen > descriptionLength {
-		return fmt.Errorf("description length should be less then 128 bytes.")
+	if err := requireLen(description, descriptionLength, "description"); err != nil {
+		return common.HandleError(err, cmd)
 	}
 
 	user := &orgv1.User{
