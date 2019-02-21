@@ -6,6 +6,7 @@ import (
 	"github.com/confluentinc/cli/command"
 	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/command/config"
+	"github.com/confluentinc/cli/version"
 	"github.com/hashicorp/go-plugin"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -21,9 +22,6 @@ import (
 )
 
 var (
-	// Injected from linker flag like `go build -ldflags "-X main.version=$VERSION"`
-	version = "0.0.0"
-
 	cli = &cobra.Command{
 		Use:   "Confluent Cloud CLI",
 		Short: "Run the Confluent CLI",
@@ -67,7 +65,8 @@ func main() {
 
 	prompt := command.NewTerminalPrompt(os.Stdin)
 
-	cli.Version = version
+	cli.Version = version.Version
+	cli.AddCommand(common.NewVersionCmd())
 
 	cli.AddCommand(config.New(cfg))
 
