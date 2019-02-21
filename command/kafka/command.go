@@ -28,7 +28,7 @@ func newCMD(config *shared.Config, plugin common.Provider) (*cobra.Command, erro
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:   "kafka",
-			Short: "Manage Kafka.",
+			Short: "Manage Kafka",
 		},
 		config: config,
 	}

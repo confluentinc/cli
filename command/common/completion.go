@@ -57,7 +57,7 @@ func NewCompletionCmd(rootCmd *cobra.Command, prompt terminal.Prompt) *cobra.Com
 func (c *command) init() {
 	c.Command = &cobra.Command{
 		Use:   "completion SHELL",
-		Short: "Output shell completion code for the specified shell (bash or zsh).",
+		Short: "Output shell completion code",
 		Long:  longDescription,
 		RunE:  c.completion,
 		Args:  cobra.ExactArgs(1),

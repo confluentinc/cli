@@ -23,8 +23,8 @@ import (
 
 var (
 	cli = &cobra.Command{
-		Use:   "Confluent Cloud CLI",
-		Short: "Run the Confluent CLI",
+		Use:   "ccloud",
+		Short: "Welcome to the Confluent Cloud CLI",
 	}
 )
 
