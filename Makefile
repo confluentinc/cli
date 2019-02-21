@@ -19,8 +19,9 @@ generate:
 	@GO111MODULE=on protoc shared/connect/*.proto -Ishared/connect -I$(shell pwd)/vendor/ -I$(shell pwd)/vendor/github.com/confluentinc/ccloudapis/ --gogo_out=plugins=grpc:shared/connect
 	@GO111MODULE=on protoc shared/kafka/*.proto -Ishared/kafka -I$(shell pwd)/vendor/ -I$(shell pwd)/vendor/github.com/confluentinc/ccloudapis/ --gogo_out=plugins=grpc:shared/kafka
 	@GO111MODULE=on protoc shared/ksql/*.proto -Ishared/ksql -I$(shell pwd)/vendor/ -I$(shell pwd)/vendor/github.com/confluentinc/ccloudapis/ --gogo_out=plugins=grpc:shared/ksql
-    @GO111MODULE=on protoc shared/api-key/*.proto -Ishared/api-key -I$(shell pwd)/vendor/ -I$(shell pwd)/vendor/github.com/confluentinc/ccloudapis/ --gogo_out=plugins=grpc:shared/api-key
-    @GO111MODULE=on protoc shared/user/*.proto -Ishared/user -I$(shell pwd)/vendor/ -I$(shell pwd)/vendor/github.com/confluentinc/ccloudapis/ --gogo_out=plugins=grpc:shared/user
+  @GO111MODULE=on protoc shared/api-key/*.proto -Ishared/api-key -I$(shell pwd)/vendor/ -I$(shell pwd)/vendor/github.com/confluentinc/ccloudapis/ --gogo_out=plugins=grpc:shared/api-key
+  @GO111MODULE=on protoc shared/user/*.proto -Ishared/user -I$(shell pwd)/vendor/ -I$(shell pwd)/vendor/github.com/confluentinc/ccloudapis/ --gogo_out=plugins=grpc:shared/user
+
 build: generate build-go install-plugins
 	echo "Building CLI..."
 
@@ -55,7 +56,7 @@ lint:
 coverage:
       ifdef CI
 	@echo "" > coverage.txt
-	@for d in $$(go list ./... | grep -v tools | grep -v vendor); do \
+	@for d in $$(go list ./... | grep -v vendor); do \
 	  GO111MODULE=on go test -v -race -coverprofile=profile.out -covermode=atomic $$d || exit 2; \
 	  if [ -f profile.out ]; then \
 	    cat profile.out >> coverage.txt; \
@@ -63,7 +64,7 @@ coverage:
 	  fi; \
 	done
       else
-	@GO111MODULE=on go test -race -cover $(TEST_ARGS) $(go list ./... | grep -v tools | grep -v vendor)
+	@GO111MODULE=on go test -race -cover $(TEST_ARGS) $$(go list ./... | grep -v vendor)
       endif
 
 .PHONY: test

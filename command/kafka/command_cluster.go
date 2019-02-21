@@ -295,6 +295,7 @@ func (c *clusterCommand) createKafkaCreds(ctx context.Context, kafkaClusterID st
 		LogicalClusters: []*authv1.ApiKey_Cluster{
 			{Id: kafkaClusterID},
 		},
+		AccountId:c.config.Auth.Account.Id,
 	})
 
 	if err != nil {
