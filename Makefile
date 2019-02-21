@@ -16,9 +16,9 @@ deps:
 
 .PHONY: generate
 generate:
-	@GO111MOUDLE=on protoc shared/connect/*.proto -Ishared/connect -I$(shell pwd)/vendor/ -I$(shell pwd)/vendor/github.com/confluentinc/ccloudapis/ --gogo_out=plugins=grpc:shared/connect
-	@GO111MOUDLE=on protoc shared/kafka/*.proto -Ishared/kafka -I$(shell pwd)/vendor/ -I$(shell pwd)/vendor/github.com/confluentinc/ccloudapis/ --gogo_out=plugins=grpc:shared/kafka
-	@GO111MOUDLE=on protoc shared/ksql/*.proto -Ishared/ksql -I$(shell pwd)/vendor/ -I$(shell pwd)/vendor/github.com/confluentinc/ccloudapis/ --gogo_out=plugins=grpc:shared/ksql
+	@GO111MODULE=on protoc shared/connect/*.proto -Ishared/connect -I$(shell pwd)/vendor/ -I$(shell pwd)/vendor/github.com/confluentinc/ccloudapis/ --gogo_out=plugins=grpc:shared/connect
+	@GO111MODULE=on protoc shared/kafka/*.proto -Ishared/kafka -I$(shell pwd)/vendor/ -I$(shell pwd)/vendor/github.com/confluentinc/ccloudapis/ --gogo_out=plugins=grpc:shared/kafka
+	@GO111MODULE=on protoc shared/ksql/*.proto -Ishared/ksql -I$(shell pwd)/vendor/ -I$(shell pwd)/vendor/github.com/confluentinc/ccloudapis/ --gogo_out=plugins=grpc:shared/ksql
 
 build: generate build-go install-plugins
 	echo "Building CLI..."
