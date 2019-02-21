@@ -72,28 +72,24 @@ type User struct {
 func (c *User) List(ctx context.Context) ([]*orgv1.User, error) {
 	c.Logger.Log("msg", "user.List()")
 	ret, err := c.Client.User.List(ctx)
-	c.Logger.Log("msg", "return val:::")
 	return ret, shared.ConvertAPIError(err)
 }
 
 func (c *User) Describe(ctx context.Context, user *orgv1.User) (*orgv1.User, error) {
 	c.Logger.Log("msg", "user.Describe()")
 	ret, err := c.Client.User.Describe(ctx, user)
-	c.Logger.Log("msg", "return val:::")
 	return ret, shared.ConvertAPIError(err)
 }
 
 func (c *User) CreateServiceAccount(ctx context.Context, user *orgv1.User) (*orgv1.User, error) {
 	c.Logger.Log("msg", "user.UpdateServiceAccount()")
 	ret, err := c.Client.User.CreateServiceAccount(ctx, user)
-	c.Logger.Log("msg", "return val:::")
 	return ret, shared.ConvertAPIError(err)
 }
 
 func (c *User) UpdateServiceAccount(ctx context.Context, user *orgv1.User) error {
 	c.Logger.Log("msg", "user.UpdateServiceAccount()")
 	err := c.Client.User.UpdateServiceAccount(ctx, user)
-	c.Logger.Log("msg", "return val:::")
 	return shared.ConvertAPIError(err)
 }
 

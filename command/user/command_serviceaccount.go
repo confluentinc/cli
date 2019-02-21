@@ -108,7 +108,7 @@ func (c *command) init(plugin common.Provider) error {
 
 func requireLen(val string, maxLen int, field string) error {
 	if len(val) > maxLen {
-		return fmt.Errorf(field + "length should be less then %d bytes.",  maxLen)
+		return fmt.Errorf(field + " length should be less then %d characters.",  maxLen)
 	}
 
 	return nil
@@ -135,7 +135,6 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	}
 
 	user := &orgv1.User{
-		Id:                 c.config.Auth.User.Id,
 		ServiceName:        name,
 		ServiceDescription: description,
 		OrganizationId:     c.config.Auth.User.OrganizationId,
@@ -167,7 +166,6 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 
 	user := &orgv1.User{
-		Id:                 c.config.Auth.User.Id,
 		ServiceName:        name,
 		ServiceDescription: description,
 		OrganizationId:     c.config.Auth.User.OrganizationId,
@@ -191,7 +189,6 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	user := &orgv1.User{
-		Id:             c.config.Auth.User.Id,
 		ServiceName:    name,
 		OrganizationId: c.config.Auth.User.OrganizationId,
 	}

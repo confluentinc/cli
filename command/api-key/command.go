@@ -22,8 +22,8 @@ type command struct {
 }
 
 var (
-	describeFields  = []string{"Id", "Key", "Secret", "UserId"}
-	describeRenames = map[string]string{"Id": "Api Key Id","Key": "Api Key", "UserId": "Service Account Id"}
+	describeFields  = []string{"Key", "Secret", "UserId"}
+	describeRenames = map[string]string{"Key": "API Key", "UserId": "Service Account Id"}
 )
 
 // grpcLoader is the default client loader for the CLI
@@ -35,8 +35,8 @@ func grpcLoader(i interface{}) error {
 func New(config *shared.Config) (*cobra.Command, error) {
 	cmd := &command{
 		Command: &cobra.Command{
-			Use:   "api-keys",
-			Short: "Manage API Keys",
+			Use:   "api-key",
+			Short: "Manage API Key",
 		},
 		config: config,
 	}
@@ -60,8 +60,8 @@ func (c *command) init(plugin common.Provider) error {
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
 	}
-	createCmd.Flags().Int32("userId", 0, "service account id")
-	_ = createCmd.MarkFlagRequired("userId")
+	createCmd.Flags().Int32("userid", 0, "service account id")
+	_ = createCmd.MarkFlagRequired("userid")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
@@ -71,10 +71,10 @@ func (c *command) init(plugin common.Provider) error {
 		RunE:  c.delete,
 		Args:  cobra.NoArgs,
 	}
-	deleteCmd.Flags().Int32("userId", 0, "service account id")
-	_ = deleteCmd.MarkFlagRequired("userId")
-	deleteCmd.Flags().Int32("apiKeyId", 0, "api Key id")
-	_ = deleteCmd.MarkFlagRequired("apiKeyId")
+	deleteCmd.Flags().Int32("userid", 0, "service account id")
+	_ = deleteCmd.MarkFlagRequired("userid")
+	deleteCmd.Flags().String("apikey", "", "api Key")
+	_ = deleteCmd.MarkFlagRequired("apikey")
 	c.AddCommand(deleteCmd)
 
 	return nil
@@ -82,7 +82,7 @@ func (c *command) init(plugin common.Provider) error {
 
 func (c *command) create(cmd *cobra.Command, args []string) error {
 
-	userId, err := cmd.Flags().GetInt32("userId")
+	userId, err := cmd.Flags().GetInt32("userid")
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
@@ -115,7 +115,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
 
-	id, err := cmd.Flags().GetInt32("apiKeyId")
+	apiKey, err := cmd.Flags().GetString("apikey")
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
@@ -131,7 +131,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	key := &authv1.ApiKey{
-		Id: id,
+		Key: apiKey,
 		UserId: userId,
 		AccountId: c.config.Auth.Account.Id,
 		LogicalClusters: []*authv1.ApiKey_Cluster{
