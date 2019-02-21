@@ -113,6 +113,22 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	return printer.RenderTableOut(userKey, describeFields, describeRenames, stdout)
 }
 
+func getApiKeyId(apiKeys []*authv1.ApiKey, apiKey string)(int32, error) {
+	var id int32
+	for _, key := range apiKeys {
+		if key.Key == apiKey {
+			id = key.Id
+			break
+		}
+	}
+
+	if id == 0 {
+		return id, fmt.Errorf(" Invalid Key")
+	}
+
+	return id, nil
+}
+
 func (c *command) delete(cmd *cobra.Command, args []string) error {
 
 	apiKey, err := cmd.Flags().GetString("apikey")
@@ -125,13 +141,23 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return common.HandleError(err, cmd)
 	}
 
-	userId, err := cmd.Flags().GetInt32("userId")
+	userId, err := cmd.Flags().GetInt32("userid")
+	if err != nil {
+		return common.HandleError(err, cmd)
+	}
+
+	apiKeys, err := c.client.List(context.Background(), &authv1.ApiKey{AccountId: c.config.Auth.Account.Id});
+	if err != nil {
+		return common.HandleError(err, cmd)
+	}
+
+	id, err := getApiKeyId(apiKeys, apiKey)
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
 
 	key := &authv1.ApiKey{
-		Key: apiKey,
+		Id: id,
 		UserId: userId,
 		AccountId: c.config.Auth.Account.Id,
 		LogicalClusters: []*authv1.ApiKey_Cluster{
@@ -139,13 +165,12 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		},
 	}
 
-	errRet := c.client.Delete(context.Background(), key)
+	err = c.client.Delete(context.Background(), key)
 
-	if errRet != nil {
-		return common.HandleError(errRet, cmd)
+	if err != nil {
+		return common.HandleError(err, cmd)
 	}
 
 	return nil
-
 }
 

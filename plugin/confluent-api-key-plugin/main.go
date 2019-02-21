@@ -81,6 +81,12 @@ func (c *ApiKey) Delete(ctx context.Context, key *authv1.ApiKey) error {
 	return shared.ConvertAPIError(err)
 }
 
+func (c *ApiKey) List(ctx context.Context, key *authv1.ApiKey) ([]*authv1.ApiKey, error) {
+	c.Logger.Log("msg", "apiKey.List()")
+	ret, err := c.Client.APIKey.List(ctx, key)
+	return ret, shared.ConvertAPIError(err)
+}
+
 func check(err error) {
 	if err != nil {
 		golog.Fatal(err)

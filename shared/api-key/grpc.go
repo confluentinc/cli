@@ -32,6 +32,15 @@ func (c *GRPCClient) Delete(ctx context.Context, key *authv1.ApiKey) error {
 	return nil
 }
 
+// List API key
+func (c *GRPCClient) List(ctx context.Context, key *authv1.ApiKey) ([]*authv1.ApiKey, error) {
+	reply, err := c.client.List(ctx, &authv1.GetApiKeysRequest{ApiKey: key})
+	if err != nil {
+		return nil, shared.ConvertGRPCError(err)
+	}
+	return reply.ApiKeys, nil
+}
+
 // GRPCServer the GPRClient talks to. Plugin authors implement this if they're using Go.
 type GRPCServer struct {
 	Impl chttp.APIKey
@@ -47,4 +56,10 @@ func (s *GRPCServer) Create(ctx context.Context, req *authv1.CreateApiKeyRequest
 func (s *GRPCServer) Delete(ctx context.Context, req *authv1.DeleteApiKeyRequest) (*authv1.DeleteApiKeyReply, error) {
 	err := s.Impl.Delete(ctx, req.ApiKey)
 	return &authv1.DeleteApiKeyReply{}, err
+}
+
+// List API Keys
+func (s *GRPCServer) List(ctx context.Context, req *authv1.GetApiKeysRequest) (*authv1.GetApiKeysReply, error) {
+	r, err := s.Impl.List(ctx, req.ApiKey)
+	return &authv1.GetApiKeysReply{ApiKeys:r}, err
 }
