@@ -31,7 +31,7 @@ var (
 	host    = ""
 
 	cli = &cobra.Command{
-		Use:   "ccloud",
+		Use:   os.Args[0],
 		Short: "Welcome to the Confluent Cloud CLI",
 	}
 )
@@ -77,7 +77,7 @@ func main() {
 	version := cliVersion.NewVersion(version, commit, date, host, userAgent)
 
 	cli.Version = version.Version
-	cli.AddCommand(common.NewVersionCmd(version))
+	cli.AddCommand(common.NewVersionCmd(version, prompt))
 
 	cli.AddCommand(config.New(cfg))
 
