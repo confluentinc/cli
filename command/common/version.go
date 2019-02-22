@@ -1,22 +1,23 @@
 package common
 
 import (
-	"fmt"
 	"runtime"
 	"strconv"
 
-	"github.com/confluentinc/cli/version"
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/cli/command"
+	"github.com/confluentinc/cli/version"
 )
 
 // NewVersionCmd returns the Cobra command for the version.
-func NewVersionCmd(version *version.Version) *cobra.Command {
+func NewVersionCmd(version *version.Version, prompt command.Prompt) *cobra.Command {
 	return &cobra.Command{
 		Use:   "version",
 		Short: "Print the ccloud version",
 		Long:  "Print the ccloud version",
-		Run:   func(cmd *cobra.Command, args []string) {
-			fmt.Printf(`ccloud - Confluent Cloud CLI
+		Run: func(cmd *cobra.Command, args []string) {
+			_, _ = prompt.Printf(`ccloud - Confluent Cloud CLI
 
 Version:     %s
 Git Ref:     %s
@@ -33,6 +34,6 @@ Development: %s
 				runtime.GOARCH,
 				strconv.FormatBool(!version.IsReleased()))
 		},
-		Args:  cobra.NoArgs,
+		Args: cobra.NoArgs,
 	}
 }
