@@ -10,7 +10,7 @@ import (
 )
 
 // NewVersionCmd returns the Cobra command for the version.
-func NewVersionCmd() *cobra.Command {
+func NewVersionCmd(version *version.Version) *cobra.Command {
 	return &cobra.Command{
 		Use:   "version",
 		Short: "Print the ccloud version",
@@ -25,9 +25,9 @@ Build Host:  %s
 Go Version:  %s (%s/%s)
 Development: %s
 `, version.Version,
-				version.Ref,
+				version.Commit,
 				version.BuildDate,
-				version.Host,
+				version.BuildHost,
 				runtime.Version(),
 				runtime.GOOS,
 				runtime.GOARCH,

@@ -1,20 +1,27 @@
 package version
 
 import (
-	"fmt"
-	"runtime"
 	"strings"
 )
 
-var (
-	// Injected from linker flag like `go build -ldflags "-X 'github.com/confluentinc/cli/version.Version=$(VERSION)' -X ..."
-	Version   string = "0.0.0"
-	Ref       string
-	BuildDate string = "Unknown"
-	Host      string
-	UserAgent = fmt.Sprintf("Confluent/1.0 ccloud/%s (%s/%s)", Version, runtime.GOOS, runtime.GOARCH)
-)
+type Version struct {
+	Version   string
+	Commit    string
+	BuildDate string
+	BuildHost string
+	UserAgent string
+}
 
-func IsReleased() bool {
-	return Version != "0.0.0" && !strings.Contains(Version, "dirty") && !strings.Contains(Version, "-g")
+func NewVersion(version, commit, buildDate, buildHost, userAgent string) *Version {
+	return &Version{
+		Version:   version,
+		Commit:    commit,
+		BuildDate: buildDate,
+		BuildHost: buildHost,
+		UserAgent: userAgent,
+	}
+}
+
+func (v *Version) IsReleased() bool {
+	return v.Version != "0.0.0" && !strings.Contains(v.Version, "dirty") && !strings.Contains(v.Version, "-g")
 }

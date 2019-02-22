@@ -28,7 +28,7 @@ build: generate build-go install-plugins
 
 .PHONY: build-go
 build-go:
-	@GO111MODULE=on go build -ldflags "-X 'github.com/confluentinc/cli/version.Version=$(VERSION)' -X 'github.com/confluentinc/cli/version.Ref=$(REF)' -X 'github.com/confluentinc/cli/version.BuildDate=$(DATE)' -X 'github.com/confluentinc/cli/version.Host=$(HOSTNAME)'" -o $(shell pwd)/dist/ccloud
+	@GO111MODULE=on go build -ldflags "-X 'main.version=$(VERSION)' -X 'main.commit=$(REF)' -X 'main.date=$(DATE)' -X 'main.host=$(HOSTNAME)'" -o $(shell pwd)/dist/ccloud
 
 .PHONY: install-plugins
 install-plugins:
