@@ -69,8 +69,10 @@ func (c *command) init(plugin common.Provider) error {
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
 	}
-	createCmd.Flags().Int32("serviceaccountid", 0, "service account id")
-	createCmd.Flags().String("description", "", "description for api key")
+	createCmd.Flags().String("cluster", "", "grant access to this cluster ID")
+	_ = createCmd.MarkFlagRequired("cluster")
+	createCmd.Flags().Int32("serviceaccountid", 0, "create for a service account instead of yourself")
+	createCmd.Flags().String("description", "", "description or purpose for the API key")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
@@ -80,7 +82,6 @@ func (c *command) init(plugin common.Provider) error {
 		RunE:  c.delete,
 		Args:  cobra.NoArgs,
 	}
-	deleteCmd.Flags().Int32("serviceaccountid", 0, "service account id")
 	deleteCmd.Flags().String("apikey", "", "api Key")
 	_ = deleteCmd.MarkFlagRequired("apikey")
 	c.AddCommand(deleteCmd)
@@ -130,6 +131,11 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) create(cmd *cobra.Command, args []string) error {
+	clusterID, err := cmd.Flags().GetString("cluster")
+	if err != nil {
+		return common.HandleError(err, cmd)
+	}
+
 	userId, err := cmd.Flags().GetInt32("serviceaccountid")
 	if err != nil {
 		return common.HandleError(err, cmd)
@@ -140,18 +146,11 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return common.HandleError(err, cmd)
 	}
 
-	cluster, err := common.Cluster(c.config)
-	if err != nil {
-		return common.HandleError(err, cmd)
-	}
-
 	key := &authv1.ApiKey{
-		UserId:      userId,
-		Description: description,
-		AccountId:   c.config.Auth.Account.Id,
-		LogicalClusters: []*authv1.ApiKey_Cluster{
-			{Id: cluster.Id},
-		},
+		UserId:          userId,
+		Description:     description,
+		AccountId:       c.config.Auth.Account.Id,
+		LogicalClusters: []*authv1.ApiKey_Cluster{{Id: clusterID}},
 	}
 
 	userKey, err := c.client.Create(context.Background(), key)
@@ -159,7 +158,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return common.HandleError(err, cmd)
 	}
 
-	fmt.Println("Please Save the API Key ID, API Key and Secret.")
+	fmt.Println("Please save the API Key and Secret. THIS IS THE ONLY CHANCE YOU HAVE!")
 	return printer.RenderTableOut(userKey, createFields, createRenames, os.Stdout)
 }
 
@@ -185,16 +184,6 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return common.HandleError(err, cmd)
 	}
 
-	cluster, err := common.Cluster(c.config)
-	if err != nil {
-		return common.HandleError(err, cmd)
-	}
-
-	userId, err := cmd.Flags().GetInt32("serviceaccountid")
-	if err != nil {
-		return common.HandleError(err, cmd)
-	}
-
 	apiKeys, err := c.client.List(context.Background(), &authv1.ApiKey{AccountId: c.config.Auth.Account.Id})
 	if err != nil {
 		return common.HandleError(err, cmd)
@@ -207,11 +196,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 
 	key := &authv1.ApiKey{
 		Id:        id,
-		UserId:    userId,
 		AccountId: c.config.Auth.Account.Id,
-		LogicalClusters: []*authv1.ApiKey_Cluster{
-			{Id: cluster.Id},
-		},
 	}
 
 	err = c.client.Delete(context.Background(), key)
