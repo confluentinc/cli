@@ -1,4 +1,4 @@
-package user
+package service_account
 
 import (
 	"context"
@@ -12,19 +12,20 @@ import (
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/shared"
-	"github.com/confluentinc/cli/shared/user"
+	sharedUser "github.com/confluentinc/cli/shared/user"
 )
 
 type command struct {
 	*cobra.Command
 	config *shared.Config
 	client ccloud.User
-	plugin common.Provider
 }
 
 var (
-	accountFields = []string{"Id", "ServiceName", "ServiceDescription", "OrganizationId"}
-	displayFields = map[string]string{"ServiceName": "Name", "ServiceDescription": "Description"}
+	listFields      = []string{"Id", "ServiceName", "ServiceDescription"}
+	listLabels      = []string{"Id", "Name", "Description"}
+	describeFields  = []string{"Id", "ServiceName", "ServiceDescription"}
+	describeRenames = map[string]string{"ServiceName": "Name", "ServiceDescription": "Description"}
 )
 
 const nameLength = 32
@@ -32,15 +33,15 @@ const descriptionLength = 128
 
 // grpcLoader is the default client loader for the CLI
 func grpcLoader(i interface{}) error {
-	return common.LoadPlugin(user.Name, i)
+	return common.LoadPlugin(sharedUser.Name, i)
 }
 
 // New returns the Cobra command for Users.
 func New(config *shared.Config) (*cobra.Command, error) {
 	cmd := &command{
 		Command: &cobra.Command{
-			Use:   "service-accounts",
-			Short: "Manage service accounts.",
+			Use:   "service-account",
+			Short: "Manage service accounts",
 		},
 		config: config,
 	}
@@ -48,18 +49,14 @@ func New(config *shared.Config) (*cobra.Command, error) {
 	return cmd.Command, err
 }
 
-func (c *command) getClientPlugin (cmd *cobra.Command, args []string) error {
-	if err := c.config.CheckLogin(); err != nil {
-		fmt.Printf("failed initial login check \n\n%+v\n", c.config)
-		return err
-	}
-	// Lazy load plugin to avoid unnecessarily spawning child processes
-	return c.plugin(&c.client)
-}
-
 func (c *command) init(plugin common.Provider) error {
-	c.plugin = plugin
-	c.Command.PersistentPreRunE = c.getClientPlugin
+	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		if err := c.config.CheckLogin(); err != nil {
+			return common.HandleError(err, cmd)
+		}
+		// Lazy load plugin to avoid unnecessarily spawning child processes
+		return plugin(&c.client)
+	}
 
 	c.AddCommand(&cobra.Command{
 		Use:   "list",
@@ -108,14 +105,13 @@ func (c *command) init(plugin common.Provider) error {
 
 func requireLen(val string, maxLen int, field string) error {
 	if len(val) > maxLen {
-		return fmt.Errorf(field + " length should be less then %d characters.",  maxLen)
+		return fmt.Errorf(field+" length should be less then %d characters.", maxLen)
 	}
 
 	return nil
 }
 
 func (c *command) create(cmd *cobra.Command, args []string) error {
-
 	name, err := cmd.Flags().GetString("name")
 	if err != nil {
 		return common.HandleError(err, cmd)
@@ -141,17 +137,15 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		ServiceAccount:     true,
 	}
 
-	user, errRet := c.client.CreateServiceAccount(context.Background(), user)
-
-	if errRet != nil {
-		return common.HandleError(errRet, cmd)
+	user, err = c.client.CreateServiceAccount(context.Background(), user)
+	if err != nil {
+		return common.HandleError(err, cmd)
 	}
 
-	return printer.RenderTableOut(user, accountFields, displayFields, os.Stdout)
+	return printer.RenderTableOut(user, describeFields, describeRenames, os.Stdout)
 }
 
 func (c *command) update(cmd *cobra.Command, args []string) error {
-
 	name, err := cmd.Flags().GetString("name")
 	if err != nil {
 		return common.HandleError(err, cmd)
@@ -171,18 +165,14 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		OrganizationId:     c.config.Auth.User.OrganizationId,
 	}
 
-	errRet := c.client.UpdateServiceAccount(context.Background(), user)
-
-	if errRet != nil {
-		return common.HandleError(errRet, cmd)
+	err = c.client.UpdateServiceAccount(context.Background(), user)
+	if err != nil {
+		return common.HandleError(err, cmd)
 	}
-
 	return nil
-
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
-
 	name, err := cmd.Flags().GetString("name")
 	if err != nil {
 		return common.HandleError(err, cmd)
@@ -193,31 +183,24 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		OrganizationId: c.config.Auth.User.OrganizationId,
 	}
 
-	errRet := c.client.DeleteServiceAccount(context.Background(), user)
-
-	if errRet != nil {
-		return common.HandleError(errRet, cmd)
+	err = c.client.DeleteServiceAccount(context.Background(), user)
+	if err != nil {
+		return common.HandleError(err, cmd)
 	}
-
 	return nil
-
 }
 
 func (c *command) list(cmd *cobra.Command, args []string) error {
-	users, errRet := c.client.GetServiceAccounts(context.Background())
-
-	if errRet != nil {
-		return common.HandleError(errRet, cmd)
+	users, err := c.client.GetServiceAccounts(context.Background())
+	if err != nil {
+		return common.HandleError(err, cmd)
 	}
 
 	var data [][]string
-	for _, user := range users {
-		data = append(data, printer.ToRow(user, accountFields))
+	for _, u := range users {
+		data = append(data, printer.ToRow(u, listFields))
 	}
 
-	printer.RenderCollectionTable(data, accountFields)
-
+	printer.RenderCollectionTable(data, listLabels)
 	return nil
-
 }
-

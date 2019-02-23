@@ -55,7 +55,7 @@ func main() {
 		impl = &ApiKey{Logger: logger, Client: client}
 	}
 
-	shared.PluginMap[apiKey.Name] = &apiKey.Plugin{Impl: impl}
+	shared.PluginMap[api_key.Name] = &api_key.Plugin{Impl: impl}
 
 	plugin.Serve(&plugin.ServeConfig{
 		HandshakeConfig: shared.Handshake,

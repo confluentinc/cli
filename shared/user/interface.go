@@ -11,7 +11,7 @@ import (
 )
 
 // Name description used for registering/disposing GRPC components
-const Name = "confluent-user-plugin"
+const Name = "ccloud-user-plugin"
 
 // Plugin mates an interface with Hashicorp plugin object
 type Plugin struct {

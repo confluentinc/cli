@@ -1,9 +1,11 @@
-package apiKey
+package api_key
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/codyaray/go-printer"
 	"github.com/spf13/cobra"
@@ -22,13 +24,15 @@ type command struct {
 }
 
 var (
-	describeFields  = []string{"Key", "Secret"}
-	describeRenames = map[string]string{"Key": "API Key"}
+	listFields    = []string{"Key", "UserId", "LogicalClusters"}
+	listLabels    = []string{"Key", "Owner", "Clusters"}
+	createFields  = []string{"Key", "Secret"}
+	createRenames = map[string]string{"Key": "API Key"}
 )
 
 // grpcLoader is the default client loader for the CLI
 func grpcLoader(i interface{}) error {
-	return common.LoadPlugin(apiKey.Name, i)
+	return common.LoadPlugin(api_key.Name, i)
 }
 
 // New returns the Cobra command for API Key.
@@ -36,7 +40,7 @@ func New(config *shared.Config) (*cobra.Command, error) {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:   "api-key",
-			Short: "Manage API Key",
+			Short: "Manage API keys",
 		},
 		config: config,
 	}
@@ -47,20 +51,26 @@ func New(config *shared.Config) (*cobra.Command, error) {
 func (c *command) init(plugin common.Provider) error {
 	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		if err := c.config.CheckLogin(); err != nil {
-			fmt.Printf("failed initial login check \n\n%+v\n", c.config)
-			return err
+			return common.HandleError(err, cmd)
 		}
 		// Lazy load plugin to avoid unnecessarily spawning child processes
 		return plugin(&c.client)
 	}
 
+	c.AddCommand(&cobra.Command{
+		Use:   "list",
+		Short: "List API keys",
+		RunE:  c.list,
+	})
+
 	createCmd := &cobra.Command{
 		Use:   "create",
-		Short: "Create API Key.",
+		Short: "Create API key",
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
 	}
 	createCmd.Flags().Int32("serviceaccountid", 0, "service account id")
+	createCmd.Flags().String("description", "", "description for api key")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
@@ -78,9 +88,54 @@ func (c *command) init(plugin common.Provider) error {
 	return nil
 }
 
-func (c *command) create(cmd *cobra.Command, args []string) error {
+func (c *command) list(cmd *cobra.Command, args []string) error {
+	apiKeys, err := c.client.List(context.Background(), &authv1.ApiKey{AccountId: c.config.Auth.Account.Id})
+	if err != nil {
+		return common.HandleError(err, cmd)
+	}
 
+	type keyDisplay struct {
+		Key             string
+		Description     string
+		UserId          int32
+		LogicalClusters string
+	}
+
+	var data [][]string
+	for _, apiKey := range apiKeys {
+		// ignore keys owned by Confluent-internal user (healthcheck, etc)
+		if apiKey.UserId == 0 {
+			continue
+		}
+		var clusters []string
+		for _, c := range apiKey.LogicalClusters {
+			buf := new(bytes.Buffer)
+			buf.WriteString(c.Id)
+			// TODO: uncomment once we migrate DB so all API keys have a type
+			//buf.WriteString(" (type=")
+			//buf.WriteString(c.Type)
+			//buf.WriteString(")")
+			clusters = append(clusters, buf.String())
+		}
+		data = append(data, printer.ToRow(&keyDisplay{
+			Key:             apiKey.Key,
+			Description:     apiKey.Description,
+			UserId:          apiKey.UserId,
+			LogicalClusters: strings.Join(clusters, ", "),
+		}, listFields))
+	}
+
+	printer.RenderCollectionTable(data, listLabels)
+	return nil
+}
+
+func (c *command) create(cmd *cobra.Command, args []string) error {
 	userId, err := cmd.Flags().GetInt32("serviceaccountid")
+	if err != nil {
+		return common.HandleError(err, cmd)
+	}
+
+	description, err := cmd.Flags().GetString("description")
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
@@ -89,29 +144,26 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
-	description := "Service Account API Key"
 
 	key := &authv1.ApiKey{
 		UserId:      userId,
 		Description: description,
-		AccountId: c.config.Auth.Account.Id,
+		AccountId:   c.config.Auth.Account.Id,
 		LogicalClusters: []*authv1.ApiKey_Cluster{
 			{Id: cluster.Id},
 		},
 	}
 
-	userKey, errRet := c.client.Create(context.Background(), key)
-
-	if errRet != nil {
-		return common.HandleError(errRet, cmd)
+	userKey, err := c.client.Create(context.Background(), key)
+	if err != nil {
+		return common.HandleError(err, cmd)
 	}
 
 	fmt.Println("Please Save the API Key ID, API Key and Secret.")
-	var stdout = os.Stdout
-	return printer.RenderTableOut(userKey, describeFields, describeRenames, stdout)
+	return printer.RenderTableOut(userKey, createFields, createRenames, os.Stdout)
 }
 
-func getApiKeyId(apiKeys []*authv1.ApiKey, apiKey string)(int32, error) {
+func getApiKeyId(apiKeys []*authv1.ApiKey, apiKey string) (int32, error) {
 	var id int32
 	for _, key := range apiKeys {
 		if key.Key == apiKey {
@@ -128,7 +180,6 @@ func getApiKeyId(apiKeys []*authv1.ApiKey, apiKey string)(int32, error) {
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
-
 	apiKey, err := cmd.Flags().GetString("apikey")
 	if err != nil {
 		return common.HandleError(err, cmd)
@@ -144,7 +195,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return common.HandleError(err, cmd)
 	}
 
-	apiKeys, err := c.client.List(context.Background(), &authv1.ApiKey{AccountId: c.config.Auth.Account.Id});
+	apiKeys, err := c.client.List(context.Background(), &authv1.ApiKey{AccountId: c.config.Auth.Account.Id})
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
@@ -155,8 +206,8 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	key := &authv1.ApiKey{
-		Id: id,
-		UserId: userId,
+		Id:        id,
+		UserId:    userId,
 		AccountId: c.config.Auth.Account.Id,
 		LogicalClusters: []*authv1.ApiKey_Cluster{
 			{Id: cluster.Id},
@@ -171,4 +222,3 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 
 	return nil
 }
-

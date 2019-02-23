@@ -1,4 +1,4 @@
-package apiKey
+package api_key
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 )
 
 // Name description used for registering/disposing GRPC components
-const Name = "confluent-api-key-plugin"
+const Name = "ccloud-api-key-plugin"
 
 // Plugin mates an interface with Hashicorp plugin object
 type Plugin struct {
