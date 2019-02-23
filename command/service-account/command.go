@@ -60,14 +60,14 @@ func (c *command) init(plugin common.Provider) error {
 
 	c.AddCommand(&cobra.Command{
 		Use:   "list",
-		Short: "List Service Accounts.",
+		Short: "List service accounts",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	})
 
 	createCmd := &cobra.Command{
-		Use:   "create service account",
-		Short: "Create Service Account.",
+		Use:   "create",
+		Short: "Create a service account",
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
 	}
@@ -79,8 +79,8 @@ func (c *command) init(plugin common.Provider) error {
 	c.AddCommand(createCmd)
 
 	updateCmd := &cobra.Command{
-		Use:   "update service account",
-		Short: "Update Service Description of a Service Account.",
+		Use:   "update",
+		Short: "Update a service account",
 		RunE:  c.update,
 		Args:  cobra.NoArgs,
 	}
@@ -92,7 +92,7 @@ func (c *command) init(plugin common.Provider) error {
 
 	deleteCmd := &cobra.Command{
 		Use:   "delete",
-		Short: "Delete a Service Account.",
+		Short: "Delete a service account",
 		RunE:  c.delete,
 		Args:  cobra.NoArgs,
 	}
