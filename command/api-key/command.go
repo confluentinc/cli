@@ -22,8 +22,8 @@ type command struct {
 }
 
 var (
-	describeFields  = []string{"Key", "Secret", "UserId"}
-	describeRenames = map[string]string{"Key": "API Key", "UserId": "Service Account Id"}
+	describeFields  = []string{"Key", "Secret"}
+	describeRenames = map[string]string{"Key": "API Key"}
 )
 
 // grpcLoader is the default client loader for the CLI
@@ -60,8 +60,7 @@ func (c *command) init(plugin common.Provider) error {
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
 	}
-	createCmd.Flags().Int32("userid", 0, "service account id")
-	_ = createCmd.MarkFlagRequired("userid")
+	createCmd.Flags().Int32("serviceaccountid", 0, "service account id")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
@@ -71,8 +70,7 @@ func (c *command) init(plugin common.Provider) error {
 		RunE:  c.delete,
 		Args:  cobra.NoArgs,
 	}
-	deleteCmd.Flags().Int32("userid", 0, "service account id")
-	_ = deleteCmd.MarkFlagRequired("userid")
+	deleteCmd.Flags().Int32("serviceaccountid", 0, "service account id")
 	deleteCmd.Flags().String("apikey", "", "api Key")
 	_ = deleteCmd.MarkFlagRequired("apikey")
 	c.AddCommand(deleteCmd)
@@ -82,7 +80,7 @@ func (c *command) init(plugin common.Provider) error {
 
 func (c *command) create(cmd *cobra.Command, args []string) error {
 
-	userId, err := cmd.Flags().GetInt32("userid")
+	userId, err := cmd.Flags().GetInt32("serviceaccountid")
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
@@ -141,7 +139,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return common.HandleError(err, cmd)
 	}
 
-	userId, err := cmd.Flags().GetInt32("userid")
+	userId, err := cmd.Flags().GetInt32("serviceaccountid")
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
