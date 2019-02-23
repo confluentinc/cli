@@ -7,6 +7,8 @@ REF := $(shell [ -d .git ] && git rev-parse --short HEAD || echo "none")
 DATE := $(shell date -u)
 HOSTNAME := $(shell id -u -n)@$(shell hostname -f)
 
+BUCKET := confluent.cloud
+
 .PHONY: clean
 clean:
 	rm -rf $(shell pwd)/dist

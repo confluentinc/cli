@@ -5,6 +5,12 @@ import (
 	"os"
 	"runtime"
 
+	"github.com/confluentinc/cli/command/update"
+	"github.com/hashicorp/go-plugin"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+
 	"github.com/confluentinc/cli/command"
 	"github.com/confluentinc/cli/command/auth"
 	"github.com/confluentinc/cli/command/common"
@@ -12,11 +18,6 @@ import (
 	"github.com/confluentinc/cli/command/connect"
 	"github.com/confluentinc/cli/command/kafka"
 	"github.com/confluentinc/cli/command/ksql"
-	"github.com/hashicorp/go-plugin"
-	"github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-
 	"github.com/confluentinc/cli/log"
 	"github.com/confluentinc/cli/metric"
 	"github.com/confluentinc/cli/shared"
@@ -77,7 +78,6 @@ func main() {
 	os.Exit(0)
 }
 
-
 func BuildCommand(cfg *shared.Config, version *cliVersion.Version, factory common.GRPCPluginFactory, logger *log.Logger) *cobra.Command {
 	cli := &cobra.Command{
 		Use:   "ccloud",
@@ -88,6 +88,7 @@ func BuildCommand(cfg *shared.Config, version *cliVersion.Version, factory commo
 
 	cli.Version = version.Version
 	cli.AddCommand(common.NewVersionCmd(version, prompt))
+	cli.AddCommand(update.New("ccloud", cfg, version))
 
 	cli.AddCommand(config.New(cfg))
 
