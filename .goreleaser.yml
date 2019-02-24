@@ -64,6 +64,9 @@ builds:
       - goos: darwin
         goarch: 386
 
+release:
+  disable: true
+
 archive:
   format: binary
 
