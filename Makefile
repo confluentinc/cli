@@ -39,13 +39,11 @@ endif
 
 .PHONY: build-go
 build-go:
-	@GO111MODULE=on HOSTNAME=$(HOSTNAME) goreleaser release --rm-dist
+	@GO111MODULE=on HOSTNAME=$(HOSTNAME) goreleaser release --snapshot --rm-dist -f $(GORELEASER_CONFIG)
 
 .PHONY: release
 release: get-release-image commit-release tag-release
-	@GO111MODULE=on go mod vendor
-# (cody+norwood): temporarily skipping validation to try to unbreak CI
-	goreleaser release --skip-validate --skip-publish --rm-dist
+	@GO111MODULE=on HOSTNAME=$(HOSTNAME) goreleaser release --rm-dist
 
 .PHONY: fmt
 fmt:
