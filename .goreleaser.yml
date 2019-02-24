@@ -64,25 +64,8 @@ builds:
       - goos: darwin
         goarch: 386
 
-release:
-  github:
-    owner: confluentinc
-    name: cli
-
-  prerelease: false
-
 archive:
   format: binary
-
-changelog:
-  sort: asc
-  filters:
-    exclude:
-    - '^docs:'
-    - '^test:'
-    - Merge pull request
-    - Merge branch
-    - ci skip
 
 s3:
   -
@@ -90,34 +73,3 @@ s3:
     region: us-west-2
     folder: "ccloud-cli/{{.Version}}"
     acl: public-read
-
-#brew:
-#  github:
-#    owner: confluentinc
-#    name: homebrew-ccloud
-#  folder: Formula
-#  download_strategy: GitHubPrivateRepositoryReleaseDownloadStrategy
-#
-#  homepage: https://confluent.io
-#  description: Confluent Cloud CLI
-#
-#  commit_author:
-#    name: Cody A. Ray
-#    email: cody@confluent.io
-#
-#nfpm:
-#  vendor: Confluent, Inc.
-#  homepage: https://confluent.io
-#  description: Confluent Cloud CLI
-#  maintainer: Confluent Support <support@confluent.io>
-#  license: Copyright 2018 Confluent, Inc.
-#
-#  formats:
-#    - deb
-#
-#  replacements:
-#    darwin: Darwin
-#    linux: Linux
-#    windows: Windows
-#    386: i386
-#    amd64: x86_64
