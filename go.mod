@@ -18,6 +18,7 @@ require (
 	github.com/golangci/errcheck v0.0.0-20181003203344-ef45e06d44b6 // indirect
 	github.com/golangci/golangci-lint v1.12.2
 	github.com/google/uuid v1.1.0
+	github.com/goreleaser/goreleaser v0.101.0
 	github.com/hashicorp/go-hclog v0.0.0-20180910232447-e45cbeb79f04
 	github.com/hashicorp/go-immutable-radix v1.0.0 // indirect
 	github.com/hashicorp/go-plugin v0.0.0-20181030172320-54b6ff97d818

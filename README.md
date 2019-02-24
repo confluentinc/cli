@@ -108,5 +108,7 @@ $ make build
 $ ./dist/ccloud -h
 ```
 
-Note you need to make sure `dist` is in your `$PATH`, e.g. run `PATH="$(pwd)/dist:$PATH" ./dist/ccloud kafka cluster list`
-if you don't want to permanently modify your `$PATH`.
+# Packaging and Distribution
+
+Either set the `GITHUB_TOKEN` environment variable or create `~/.config/goreleaser/github_token`
+with this value. The token must have `repo` scope to deploy artifacts to Github.

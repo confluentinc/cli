@@ -15,6 +15,7 @@ clean:
 deps:
 	@GO111MODULE=on go mod download
 	@GO111MODULE=on go mod verify
+	@GO111MODULE=on go get github.com/goreleaser/goreleaser@v0.101.0
 	@GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.12.2
 	@GO111MODULE=on go mod vendor
 
@@ -26,16 +27,25 @@ generate:
 
 build: generate build-go install-plugins
 
-.PHONY: build-go
-build-go:
-	@GO111MODULE=on go build -ldflags "-X 'main.version=$(VERSION)' -X 'main.commit=$(REF)' -X 'main.date=$(DATE)' -X 'main.host=$(HOSTNAME)'" -o $(shell pwd)/dist/ccloud
-
 .PHONY: install-plugins
 install-plugins:
 	@GOBIN=$(shell pwd)/dist GO111MODULE=on go install ./plugin/...
 
+ifeq ($(shell uname),Darwin)
+GORELEASER_CONFIG ?= .goreleaser-mac.yml
+else
+GORELEASER_CONFIG ?= .goreleaser-linux.yml
+endif
+
+.PHONY: build-go
+build-go:
+	@GO111MODULE=on goreleaser release --snapshot --rm-dist -f $(GORELEASER_CONFIG)
+
 .PHONY: release
 release: get-release-image commit-release tag-release
+	@GO111MODULE=on go mod vendor
+# (cody+norwood): temporarily skipping validation to try to unbreak CI
+	goreleaser release --skip-validate --skip-publish --rm-dist
 
 .PHONY: fmt
 fmt:
