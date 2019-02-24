@@ -19,9 +19,8 @@ type contextCommand struct {
 func NewContext(config *shared.Config) *cobra.Command {
 	cmd := &contextCommand{
 		Command: &cobra.Command{
-			Use:     "contexts",
-			Short:   "Manage config contexts.",
-			Aliases: []string{"context"},
+			Use:   "context",
+			Short: "Manage config contexts.",
 		},
 		config: config,
 	}
