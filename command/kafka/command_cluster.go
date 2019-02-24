@@ -200,7 +200,7 @@ func (c *clusterCommand) auth(cmd *cobra.Command, args []string) error {
 	}
 
 	if cfg.Kafka == "" {
-		return fmt.Errorf("No cluster selected. See confluent kafka use for help ")
+		return fmt.Errorf("No cluster selected. See ccloud kafka use for help ")
 	}
 
 	cluster, known := c.config.Platforms[cfg.Platform].KafkaClusters[cfg.Kafka]
@@ -295,13 +295,13 @@ func (c *clusterCommand) createKafkaCreds(ctx context.Context, kafkaClusterID st
 		LogicalClusters: []*authv1.ApiKey_Cluster{
 			{Id: kafkaClusterID},
 		},
-		AccountId:c.config.Auth.Account.Id,
+		AccountId: c.config.Auth.Account.Id,
 	})
 
 	if err != nil {
 		return "", "", shared.ConvertAPIError(err)
 	}
-	fmt.Println("Okay, we've created an API key. If needed, you can see it with `confluent kafka auth`.")
+	fmt.Println("Okay, we've created an API key. If needed, you can see it with `ccloud kafka auth`.")
 	return key.Key, key.Secret, nil
 }
 
