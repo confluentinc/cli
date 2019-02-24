@@ -2,26 +2,28 @@ package update
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	cliCommand "github.com/confluentinc/cli/command"
+	"github.com/confluentinc/cli/command/update/s3"
 	"github.com/confluentinc/cli/log"
 	"github.com/confluentinc/cli/shared"
 	cliVersion "github.com/confluentinc/cli/version"
 )
 
 const (
-	S3BinBucket     = "cloud-confluent-bin"
-	S3BinRegion     = "us-west-2"
-	S3BinPrefix     = "ccloud"
-	UpdateCheckFile = "~/.ccloud_update"
+	S3BinBucket   = "cloud-confluent-bin"
+	S3BinRegion   = "us-west-2"
+	S3BinPrefix   = "cpd"
+	LastCheckFile = "~/.ccloud_update"
 )
 
 var (
 	// in priority order to check for credentials
-	AWSProfiles     = []string{"confluent-dev", "confluent", "default"}
+	AWSProfiles = []string{"confluent-dev", "confluent", "default"}
 )
 
 type command struct {
@@ -61,15 +63,24 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.Wrap(err, "error reading --yes as bool")
 	}
-	creds, err := GetCredentials(AWSProfiles)
+	creds, err := s3.GetCredentials(AWSProfiles)
 	if err != nil {
+		c.logger.Fatalf("error getting update client %s", err)
 		return err
 	}
-	updateClient, err := NewUpdateClient(&Params{
+	repo, err := s3.NewPrivateRepo(&s3.PrivateRepoParams{
 		S3BinBucket: S3BinBucket,
 		S3BinRegion: S3BinRegion,
 		S3BinPrefix: S3BinPrefix,
 		Credentials: creds,
+		Logger:      c.logger,
+	})
+	if err != nil {
+		return err
+	}
+	updateClient, err := NewUpdateClient(&Params{
+		Repository: repo,
+		Logger:     c.logger,
 	})
 	if err != nil {
 		c.logger.Fatalf("error getting update client %s", err)
@@ -87,21 +98,21 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Println(updateYes, latestVersion)
-	//doUpdate := updateClient.PromptToDownload(c.cliName, c.version.Version, latestVersion, !updateYes)
-	//if !doUpdate {
-	//	return nil
-	//}
-	//
-	//oldBin, err := os.Executable()
-	//if err != nil {
-	//	return err
-	//}
-	//if err := updateClient.UpdateBinary(c.cliName, latestVersion, oldBin); err != nil {
-	//	return err
-	//}
-	//
-	//if err := updateClient.TouchUpdateCheckFile(); err != nil {
-	//	c.logger.Fatalf("error checking for updates: %s", err)
-	//}
+	doUpdate := updateClient.PromptToDownload(c.cliName, c.version.Version, latestVersion, !updateYes)
+	if !doUpdate {
+		return nil
+	}
+
+	oldBin, err := os.Executable()
+	if err != nil {
+		return err
+	}
+	if err := updateClient.UpdateBinary("cpd", latestVersion, oldBin); err != nil {
+		return err
+	}
+
+	if err := updateClient.TouchUpdateCheckFile(); err != nil {
+		c.logger.Fatalf("error checking for updates: %s", err)
+	}
 	return nil
 }
