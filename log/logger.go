@@ -4,12 +4,12 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// Logger is the standard logger for the Confluent SDK.
+// logger is the standard logger for the Confluent SDK.
 type Logger struct {
 	*logrus.Logger
 }
 
-// New create and configures a new Logger.
+// New create and configures a new logger.
 func New() *Logger {
 	logger := &Logger{Logger: logrus.New()}
 	logger.Formatter = &logrus.TextFormatter{FullTimestamp: true, DisableLevelTruncation: true}

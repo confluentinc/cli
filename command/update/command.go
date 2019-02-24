@@ -1,9 +1,6 @@
 package update
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
@@ -15,9 +12,9 @@ import (
 )
 
 const (
-	S3BinBucket   = "cloud-confluent-bin"
+	S3BinBucket   = "confluent.cloud"
 	S3BinRegion   = "us-west-2"
-	S3BinPrefix   = "cpd"
+	S3BinPrefix   = "ccloud-cli"
 	LastCheckFile = "~/.ccloud_update"
 )
 
@@ -28,16 +25,17 @@ var (
 
 type command struct {
 	Command *cobra.Command
-	config  *shared.Config
-	logger  *log.Logger
 	cliName string
+	plugins []string
+	config  *shared.Config
 	version *cliVersion.Version
+	logger  *log.Logger
 	// for testing
 	prompt cliCommand.Prompt
 }
 
 // New returns the command for the built-in updater.
-func New(cliName string, config *shared.Config, version *cliVersion.Version) *cobra.Command {
+func New(cliName string, plugins []string, config *shared.Config, version *cliVersion.Version) *cobra.Command {
 	cmd := &command{
 		config:  config,
 		logger:  config.Logger,
@@ -63,31 +61,26 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.Wrap(err, "error reading --yes as bool")
 	}
-	creds, err := s3.GetCredentials(AWSProfiles)
-	if err != nil {
-		c.logger.Fatalf("error getting update client %s", err)
-		return err
-	}
-	repo, err := s3.NewPrivateRepo(&s3.PrivateRepoParams{
-		S3BinBucket: S3BinBucket,
+	//repo, err := s3.NewPrivateRepo(&s3.PrivateRepoParams{
+	//	S3BinBucket: S3BinBucket,
+	//	S3BinRegion: S3BinRegion,
+	//	S3BinPrefix: S3BinPrefix,
+	//	AWSProfiles: AWSProfiles,
+	//	logger:      c.logger,
+	//})
+	//if err != nil {
+	//	return err
+	//}
+	repo := &s3.PublicRepo{
 		S3BinRegion: S3BinRegion,
+		S3BinBucket: S3BinBucket,
 		S3BinPrefix: S3BinPrefix,
-		Credentials: creds,
 		Logger:      c.logger,
-	})
-	if err != nil {
-		return err
 	}
-	updateClient, err := NewUpdateClient(&Params{
-		Repository: repo,
-		Logger:     c.logger,
-	})
-	if err != nil {
-		c.logger.Fatalf("error getting update client %s", err)
-	}
+	updateClient := NewUpdateClient(repo, LastCheckFile, c.logger)
 
 	c.logger.Print("Checking for updates...")
-	updateAvailable, latestVersion, err := updateClient.CheckForUpdates("cpd", c.version.Version)
+	updateAvailable, latestVersion, err := updateClient.CheckForUpdates(c.cliName, c.version.Version)
 	if err != nil {
 		c.logger.Fatalf("error checking for updates: %s", err)
 	}
@@ -97,17 +90,17 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	fmt.Println(updateYes, latestVersion)
 	doUpdate := updateClient.PromptToDownload(c.cliName, c.version.Version, latestVersion, !updateYes)
 	if !doUpdate {
 		return nil
 	}
 
-	oldBin, err := os.Executable()
-	if err != nil {
-		return err
-	}
-	if err := updateClient.UpdateBinary("cpd", latestVersion, oldBin); err != nil {
+	//binaries := append([]string{c.cliName}, c.plugins...)
+	//oldBin, err := os.Executable()
+	//if err != nil {
+	//	return err
+	//}
+	if err := updateClient.UpdateBinary(c.cliName, latestVersion, "/tmp/ccloud"); err != nil {
 		return err
 	}
 

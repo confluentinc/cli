@@ -16,26 +16,24 @@ import (
 	"github.com/confluentinc/cli/log"
 )
 
-type Params struct {
-	Repository      Repository
-	UpdateCheckFile string
-	Logger          *log.Logger
-}
-
 type Client struct {
-	*Params
+	repository    Repository
+	lastCheckFile string
+	logger        *log.Logger
 }
 
 // NewUpdateClient returns a client for updating CLI binaries
-func NewUpdateClient(params *Params) (*Client, error) {
+func NewUpdateClient(repo Repository, lastCheckFile string, logger *log.Logger) *Client {
 	return &Client{
-		Params:  params,
-	}, nil
+		repository:    repo,
+		lastCheckFile: lastCheckFile,
+		logger:        logger,
+	}
 }
 
-// Check for new versions in s3 bucket
+// CheckForUpdates checks for new versions in the repo
 func (c *Client) CheckForUpdates(name string, currentVersion string) (updateAvailable bool, latestVersion string, err error) {
-	availableVersions, err := c.Repository.GetAvailableVersions(name)
+	availableVersions, err := c.repository.GetAvailableVersions(name)
 	if err != nil {
 		return false, "", err
 	}
@@ -54,20 +52,20 @@ func (c *Client) CheckForUpdates(name string, currentVersion string) (updateAvai
 	return false, currentVersion, nil
 }
 
-
+// PromptToDownload displays an interactive CLI prompt to download the latest version
 func (c *Client) PromptToDownload(name, currVersion, latestVersion string, confirm bool) bool {
 	if confirm && !isatty.IsTerminal(os.Stdout.Fd()) {
-		c.Logger.Warn("disable confirm as stdout is not a tty")
+		c.logger.Warn("disable confirm as stdout is not a tty")
 		confirm = false
 	}
 
-	c.Logger.Printf("New version of %s is available", name)
-	c.Logger.Printf("Current Version: %s", currVersion)
-	c.Logger.Printf("Latest Version:  %s", latestVersion)
+	c.logger.Printf("New version of %s is available", name)
+	c.logger.Printf("Current Version: %s", currVersion)
+	c.logger.Printf("Latest Version:  %s", latestVersion)
 
 	if confirm {
 		for {
-			fmt.Print("Do you want to download an install this update? (y/n): ")
+			fmt.Print("Do you want to download and install this update? (y/n): ")
 
 			reader := bufio.NewReader(os.Stdin)
 			input, _ := reader.ReadString('\n')
@@ -88,6 +86,7 @@ func (c *Client) PromptToDownload(name, currVersion, latestVersion string, confi
 	return false
 }
 
+// UpdateBinary replaces the named binary at path with the desired version
 func (c *Client) UpdateBinary(name, version, path string) error {
 	downloadDir, err := ioutil.TempDir("", name)
 	if err != nil {
@@ -95,21 +94,26 @@ func (c *Client) UpdateBinary(name, version, path string) error {
 	}
 	defer os.RemoveAll(downloadDir)
 
-	newBin, err := c.Repository.DownloadVersion(name, version, downloadDir)
+	c.logger.Printf("Downloading %s version %s...", name, version)
+	startTime := time.Now()
+
+	newBin, bytes, err := c.repository.DownloadVersion(name, version, downloadDir)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println(path)
-	fmt.Println(newBin)
-	//err = copyFile(newBin, path)
-	//if err != nil {
-	//	return err
-	//}
-	//
-	//if err := os.Chmod(oldBin, 0755); err != nil {
-	//	return err
-	//}
+	mb := float64(bytes) / 1024.0 / 1024.0
+	timeSpent := time.Since(startTime).Seconds()
+	c.logger.Printf("Done. Downloaded %.2f MB in %.0f seconds. (%.2f MB/s)", mb, timeSpent, mb/timeSpent)
+
+	err = copyFile(newBin, path)
+	if err != nil {
+		return err
+	}
+
+	if err := os.Chmod(path, 0755); err != nil {
+		return err
+	}
 
 	return nil
 }

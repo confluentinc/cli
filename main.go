@@ -42,12 +42,13 @@ func main() {
 		logger.Log("msg", "hello")
 		defer logger.Log("msg", "goodbye")
 
-		if viper.GetString("log_level") != "" {
-			level, err := logrus.ParseLevel(viper.GetString("log_level"))
+		//if viper.GetString("log_level") != "" {
+		//	level, err := logrus.ParseLevel(viper.GetString("log_level"))
+			level, err := logrus.ParseLevel("DEBUG")
 			check(err)
 			logger.SetLevel(level)
 			logger.Log("msg", "set log level", "level", level.String())
-		}
+		//}
 	}
 
 	var metricSink shared.MetricSink
@@ -88,7 +89,6 @@ func BuildCommand(cfg *shared.Config, version *cliVersion.Version, factory commo
 
 	cli.Version = version.Version
 	cli.AddCommand(common.NewVersionCmd(version, prompt))
-	cli.AddCommand(update.New("ccloud", cfg, version))
 
 	cli.AddCommand(config.New(cfg))
 
@@ -96,26 +96,34 @@ func BuildCommand(cfg *shared.Config, version *cliVersion.Version, factory commo
 
 	cli.AddCommand(auth.New(cfg)...)
 
-	conn, err := kafka.New(cfg, factory)
-	if err != nil {
-		logger.Log("msg", err)
-	} else {
-		cli.AddCommand(conn)
+	var installedPlugins []string
+	addPluginCommand := func(cmd *cobra.Command, path string) {
+		cli.AddCommand(cmd)
+		installedPlugins = append(installedPlugins, path)
 	}
 
-	conn, err = connect.New(cfg, factory)
+	conn, path, err := kafka.New(cfg, factory)
 	if err != nil {
 		logger.Log("msg", err)
 	} else {
-		cli.AddCommand(conn)
+		addPluginCommand(conn, path)
 	}
 
-	conn, err = ksql.New(cfg, factory)
+	conn, path, err = connect.New(cfg, factory)
 	if err != nil {
 		logger.Log("msg", err)
 	} else {
-		cli.AddCommand(conn)
+		addPluginCommand(conn, path)
 	}
+
+	conn, path, err = ksql.New(cfg, factory)
+	if err != nil {
+		logger.Log("msg", err)
+	} else {
+		addPluginCommand(conn, path)
+	}
+
+	cli.AddCommand(update.New("ccloud", installedPlugins, cfg, version))
 
 	return cli
 }

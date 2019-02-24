@@ -7,7 +7,6 @@ import (
 	"runtime"
 	"sort"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -24,7 +23,7 @@ type PrivateRepoParams struct {
 	S3BinBucket string
 	S3BinRegion string
 	S3BinPrefix string
-	Credentials *credentials.Credentials
+	AWSProfiles []string
 	Logger      *log.Logger
 }
 
@@ -39,9 +38,14 @@ func NewPrivateRepo(params *PrivateRepoParams) (*PrivateRepo, error) {
 		return nil, err
 	}
 
+	creds, err := GetCredentials(params.AWSProfiles)
+	if err != nil {
+		return nil, err
+	}
+
 	s, err := session.NewSession(&aws.Config{
 		Region:      aws.String(params.S3BinRegion),
-		Credentials: params.Credentials,
+		Credentials: creds,
 	})
 	if err != nil {
 		return nil, err
@@ -118,32 +122,26 @@ func (r *PrivateRepo) GetAvailableVersions(name string) (version.Collection, err
 	return availableVersions, nil
 }
 
-func (r *PrivateRepo) DownloadVersion(name, version, downloadDir string) (string, error) {
-	r.Logger.Printf("Downloading %s version %s...", name, version)
-	startTime := time.Now()
-
+func (r *PrivateRepo) DownloadVersion(name, version, downloadDir string) (string, int64, error) {
 	binName := fmt.Sprintf("%s-v%s-%s-%s", name, version, runtime.GOOS, runtime.GOARCH)
 	downloader := s3manager.NewDownloader(r.session)
 
 	downloadBinPath := filepath.Join(downloadDir, binName)
 	downloadBin, err := os.Create(downloadBinPath)
 	if err != nil {
-		return "", err
+		return "", 0, err
 	}
+	defer downloadBin.Close()
 
 	bytes, err := downloader.Download(downloadBin, &s3.GetObjectInput{
 		Bucket: aws.String(r.S3BinBucket),
 		Key:    aws.String(fmt.Sprintf("%s/%s", name, binName)),
 	})
 	if err != nil {
-		return "", err
+		return "", 0, err
 	}
 
-	mb := float64(bytes) / 1024.0 / 1024.0
-	timeSpent := time.Since(startTime).Seconds()
-	r.Logger.Printf("Done. Downloaded %.2f MB in %.0f seconds. (%.2f MB/s)", mb, timeSpent, mb/timeSpent)
-
-	return downloadBinPath, nil
+	return downloadBinPath, bytes, nil
 }
 
 func GetCredentials(allProfiles []string) (*credentials.Credentials, error) {

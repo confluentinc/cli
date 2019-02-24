@@ -14,17 +14,17 @@ type command struct {
 }
 
 // New returns the default command object for interacting with KSQL.
-func New(config *shared.Config, factory common.GRPCPluginFactory) (*cobra.Command, error) {
+func New(config *shared.Config, factory common.GRPCPluginFactory) (*cobra.Command, string, error) {
 	return newCMD(config, factory.Create(ksql.Name))
 }
 
 // NewKSQLCommand returns a command object using a custom KSQL provider.
-func NewKSQLCommand(config *shared.Config, provider common.GRPCPlugin) (*cobra.Command, error) {
+func NewKSQLCommand(config *shared.Config, provider common.GRPCPlugin) (*cobra.Command, string, error) {
 	return newCMD(config, provider)
 }
 
 // newCMD returns a command for interacting with KSQL.
-func newCMD(config *shared.Config, provider common.GRPCPlugin) (*cobra.Command, error) {
+func newCMD(config *shared.Config, provider common.GRPCPlugin) (*cobra.Command, string, error) {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:   "ksql",
@@ -32,12 +32,12 @@ func newCMD(config *shared.Config, provider common.GRPCPlugin) (*cobra.Command, 
 		},
 		config: config,
 	}
-	_, err := provider.LookupPath()
+	path, err := provider.LookupPath()
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	err = cmd.init(provider)
-	return cmd.Command, err
+	return cmd.Command, path, err
 }
 
 func (c *command) init(plugin common.GRPCPlugin) error {

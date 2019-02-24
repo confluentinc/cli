@@ -45,7 +45,6 @@ func NewClusterCommand(config *shared.Config, plugin common.GRPCPlugin) *cobra.C
 }
 
 func (c *clusterCommand) init(plugin common.GRPCPlugin) {
-
 	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		if err := c.config.CheckLogin(); err != nil {
 			return common.HandleError(err, cmd)
