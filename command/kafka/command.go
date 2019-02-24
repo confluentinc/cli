@@ -24,7 +24,7 @@ func NewKafkaCommand(config *shared.Config, provider common.Provider) (*cobra.Co
 }
 
 // newCMD returns a command for interacting with Kafka.
-func newCMD(config *shared.Config, plugin common.Provider) (*cobra.Command, error) {
+func newCMD(config *shared.Config, provider common.Provider) (*cobra.Command, error) {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:   "kafka",
@@ -32,7 +32,11 @@ func newCMD(config *shared.Config, plugin common.Provider) (*cobra.Command, erro
 		},
 		config: config,
 	}
-	err := cmd.init(plugin)
+	_, err := provider.LookupPlugin()
+	if err != nil {
+		return nil, err
+	}
+	err = cmd.init(provider)
 	return cmd.Command, err
 }
 

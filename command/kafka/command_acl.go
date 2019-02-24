@@ -40,7 +40,7 @@ func (c *aclCommand) init(plugin common.Provider) {
 			return common.HandleError(err, cmd)
 		}
 		// Lazy load plugin to avoid unnecessarily spawning child processes
-		return plugin(&c.client)
+		return plugin.LoadPlugin(&c.client)
 	}
 
 	cmd := &cobra.Command{

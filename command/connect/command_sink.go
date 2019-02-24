@@ -52,7 +52,7 @@ func (c *sinkCommand) init(plugin common.Provider) error {
 			return common.HandleError(err, cmd)
 		}
 		// Lazy load plugin to avoid unnecessarily spawning child processes
-		return plugin(&c.client)
+		return plugin.LoadPlugin(&c.client)
 	}
 
 	createCmd := &cobra.Command{

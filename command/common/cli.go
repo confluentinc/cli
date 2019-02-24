@@ -24,9 +24,6 @@ var messages = map[error]string{
 	shared.ErrNotFound:       "Kafka cluster not found.", // TODO: parametrize ErrNotFound for better error messaging
 }
 
-// Provider loads a plugin
-type Provider func(interface{}) error
-
 // HandleError provides standard error messaging for common errors.
 func HandleError(err error, cmd *cobra.Command) error {
 	// Give an indication of successful completion
@@ -55,21 +52,39 @@ func HandleError(err error, cmd *cobra.Command) error {
 	return nil
 }
 
-// GRPCLoader returns a closure for instantiating a plugin
-func GRPCLoader(name string) func(interface{}) error {
-	return func(i interface{}) error {
-		return LoadPlugin(name, i)
-	}
+// Provider loads a plugin
+type Provider interface {
+	LookupPlugin() (string, error)
+	LoadPlugin(interface{}) error
 }
 
-// LoadPlugin starts a GRPC server identified by name
-func LoadPlugin(name string, value interface{}) error {
+// PluginLoader is a helper for finding and instantiating a plugin
+type PluginLoader struct {
+	Name string
+}
+
+// GRPCLaoder returns a new PluginLoader for the given plugin
+func GRPCLoader(name string) *PluginLoader {
+	return &PluginLoader{Name: name}
+}
+
+// LookupPlugin returns the path to a plugin or an error if its not found
+func (l *PluginLoader) LookupPlugin() (string, error) {
+	runnable, err := exec.LookPath(l.Name)
+	if err != nil {
+		return "", fmt.Errorf("failed to find plugin: %s", err)
+	}
+	return runnable, nil
+}
+
+// LoadPlugin starts the plugin running as a GRPC server
+func (l *PluginLoader) LoadPlugin(value interface{}) error {
 	rv := reflect.ValueOf(value)
 	if rv.Kind() != reflect.Ptr || rv.IsNil() {
 		return fmt.Errorf("value of type %T must be a pointer for a GRPC client", value)
 	}
 
-	runnable, err := exec.LookPath(name)
+	runnable, err := exec.LookPath(l.Name)
 	if err != nil {
 		return fmt.Errorf("failed to load plugin: %s", err)
 	}
@@ -95,7 +110,7 @@ func LoadPlugin(name string, value interface{}) error {
 	}
 
 	// Request the plugin
-	impl, err := rpcClient.Dispense(name)
+	impl, err := rpcClient.Dispense(l.Name)
 	if err != nil {
 		return err
 	}

@@ -19,12 +19,12 @@ func New(config *shared.Config) (*cobra.Command, error) {
 }
 
 // NewConnectCommand returns a command object using a custom Connect provider.
-func NewConnectCommand(config *shared.Config, provider func(interface{}) error) (*cobra.Command, error) {
+func NewConnectCommand(config *shared.Config, provider common.Provider) (*cobra.Command, error) {
 	return newCMD(config, provider)
 }
 
 // newCMD returns a command for interacting with Connect.
-func newCMD(config *shared.Config, provider func(interface{}) error) (*cobra.Command, error) {
+func newCMD(config *shared.Config, provider common.Provider) (*cobra.Command, error) {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:   "connect",
@@ -32,7 +32,11 @@ func newCMD(config *shared.Config, provider func(interface{}) error) (*cobra.Com
 		},
 		config: config,
 	}
-	err := cmd.init(provider)
+	_, err := provider.LookupPlugin()
+	if err != nil {
+		return nil, err
+	}
+	err = cmd.init(provider)
 	return cmd.Command, err
 }
 

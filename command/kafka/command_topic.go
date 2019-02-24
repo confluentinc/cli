@@ -44,7 +44,7 @@ func (c *topicCommand) init(plugin common.Provider) {
 			return common.HandleError(err, cmd)
 		}
 		// Lazy load plugin to avoid unnecessarily spawning child processes
-		return plugin(&c.client)
+		return plugin.LoadPlugin(&c.client)
 	}
 
 	c.AddCommand(&cobra.Command{

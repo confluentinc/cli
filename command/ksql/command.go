@@ -19,12 +19,12 @@ func New(config *shared.Config) (*cobra.Command, error) {
 }
 
 // NewKSQLCommand returns a command object using a custom KSQL provider.
-func NewKSQLCommand(config *shared.Config, provider func(interface{}) error) (*cobra.Command, error) {
+func NewKSQLCommand(config *shared.Config, provider common.Provider) (*cobra.Command, error) {
 	return newCMD(config, provider)
 }
 
 // newCMD returns a command for interacting with KSQL.
-func newCMD(config *shared.Config, run func(interface{}) error) (*cobra.Command, error) {
+func newCMD(config *shared.Config, provider common.Provider) (*cobra.Command, error) {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:   "ksql",
@@ -32,7 +32,11 @@ func newCMD(config *shared.Config, run func(interface{}) error) (*cobra.Command,
 		},
 		config: config,
 	}
-	err := cmd.init(run)
+	_, err := provider.LookupPlugin()
+	if err != nil {
+		return nil, err
+	}
+	err = cmd.init(provider)
 	return cmd.Command, err
 }
 
