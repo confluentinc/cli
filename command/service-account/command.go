@@ -84,9 +84,9 @@ func (c *command) init(plugin common.Provider) error {
 		RunE:  c.update,
 		Args:  cobra.NoArgs,
 	}
-	updateCmd.Flags().String("name", "", "service account name")
+	updateCmd.Flags().Int32("serviceaccountid", 0, "service account id")
 	updateCmd.Flags().String("description", "", "service account description")
-	_ = updateCmd.MarkFlagRequired("name")
+	_ = updateCmd.MarkFlagRequired("serviceaccountid")
 	_ = updateCmd.MarkFlagRequired("description")
 	c.AddCommand(updateCmd)
 
@@ -96,8 +96,8 @@ func (c *command) init(plugin common.Provider) error {
 		RunE:  c.delete,
 		Args:  cobra.NoArgs,
 	}
-	deleteCmd.Flags().String("name", "", "service account name")
-	_ = deleteCmd.MarkFlagRequired("name")
+	deleteCmd.Flags().Int32("serviceaccountid", 0, "service account id")
+	_ = deleteCmd.MarkFlagRequired("serviceaccountid")
 	c.AddCommand(deleteCmd)
 
 	return nil
@@ -146,7 +146,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) update(cmd *cobra.Command, args []string) error {
-	name, err := cmd.Flags().GetString("name")
+	id, err := cmd.Flags().GetInt32("serviceaccountid")
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
@@ -160,7 +160,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 
 	user := &orgv1.User{
-		ServiceName:        name,
+		Id:        id,
 		ServiceDescription: description,
 		OrganizationId:     c.config.Auth.User.OrganizationId,
 	}
@@ -173,13 +173,13 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
-	name, err := cmd.Flags().GetString("name")
+	id, err := cmd.Flags().GetInt32("serviceaccountid")
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
 
 	user := &orgv1.User{
-		ServiceName:    name,
+		Id:        id,
 		OrganizationId: c.config.Auth.User.OrganizationId,
 	}
 
