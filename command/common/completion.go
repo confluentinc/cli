@@ -38,7 +38,7 @@ Install zsh completions:
   confluent completion zsh > "${fpath[1]}/_confluent"
 `
 
-type command struct {
+type completionCommand struct {
 	*cobra.Command
 	rootCmd *cobra.Command
 	prompt  terminal.Prompt
@@ -46,7 +46,7 @@ type command struct {
 
 // NewCompletionCmd returns the Cobra command for shell completion.
 func NewCompletionCmd(rootCmd *cobra.Command, prompt terminal.Prompt) *cobra.Command {
-	cmd := &command{
+	cmd := &completionCommand{
 		rootCmd: rootCmd,
 		prompt:  prompt,
 	}
@@ -54,17 +54,17 @@ func NewCompletionCmd(rootCmd *cobra.Command, prompt terminal.Prompt) *cobra.Com
 	return cmd.Command
 }
 
-func (c *command) init() {
+func (c *completionCommand) init() {
 	c.Command = &cobra.Command{
 		Use:   "completion SHELL",
-		Short: "Output shell completion code for the specified shell (bash or zsh).",
+		Short: "Output shell completion code",
 		Long:  longDescription,
 		RunE:  c.completion,
 		Args:  cobra.ExactArgs(1),
 	}
 }
 
-func (c *command) completion(cmd *cobra.Command, args []string) error {
+func (c *completionCommand) completion(cmd *cobra.Command, args []string) error {
 	var err error
 	if args[0] == "bash" {
 		err = c.rootCmd.GenBashCompletion(c.prompt.GetOutput())

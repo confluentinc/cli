@@ -3,6 +3,10 @@ GIT_REMOTE_NAME ?= origin
 
 include ./semver.mk
 
+REF := $(shell [ -d .git ] && git rev-parse --short HEAD || echo "none")
+DATE := $(shell date -u)
+HOSTNAME := $(shell id -u -n)@$(shell hostname -f)
+
 .PHONY: clean
 clean:
 	rm -rf $(shell pwd)/dist
@@ -23,11 +27,10 @@ generate:
   @GO111MODULE=on protoc shared/user/*.proto -Ishared/user -I$(shell pwd)/vendor/ -I$(shell pwd)/vendor/github.com/confluentinc/ccloudapis/ --gogo_out=plugins=grpc:shared/user
 
 build: generate build-go install-plugins
-	echo "Building CLI..."
 
 .PHONY: build-go
 build-go:
-	@GO111MODULE=on go build -o $(shell pwd)/dist/ccloud
+	@GO111MODULE=on go build -ldflags "-X 'main.version=$(VERSION)' -X 'main.commit=$(REF)' -X 'main.date=$(DATE)' -X 'main.host=$(HOSTNAME)'" -o $(shell pwd)/dist/ccloud
 
 .PHONY: install-plugins
 install-plugins:

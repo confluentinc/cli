@@ -16,7 +16,7 @@ func New(config *shared.Config) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:   "config",
-			Short: "Manage Confluent CLI configuration.",
+			Short: "Modify ccloud config files",
 		},
 		config: config,
 	}

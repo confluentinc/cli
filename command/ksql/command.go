@@ -28,7 +28,7 @@ func newCMD(config *shared.Config, run func(interface{}) error) (*cobra.Command,
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:   "ksql",
-			Short: "Manage KSQL.",
+			Short: "Manage KSQL",
 		},
 		config: config,
 	}

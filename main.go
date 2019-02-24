@@ -1,17 +1,19 @@
 package main
 
 import (
+	"fmt"
 	"os"
+	"runtime"
 
-	"github.com/confluentinc/cli/command"
-	"github.com/confluentinc/cli/command/common"
-	"github.com/confluentinc/cli/command/config"
 	"github.com/hashicorp/go-plugin"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/confluentinc/cli/command"
 	"github.com/confluentinc/cli/command/auth"
+	"github.com/confluentinc/cli/command/common"
+	"github.com/confluentinc/cli/command/config"
 	"github.com/confluentinc/cli/command/connect"
 	"github.com/confluentinc/cli/command/kafka"
 	"github.com/confluentinc/cli/command/ksql"
@@ -20,15 +22,19 @@ import (
 	"github.com/confluentinc/cli/log"
 	"github.com/confluentinc/cli/metric"
 	"github.com/confluentinc/cli/shared"
+	cliVersion "github.com/confluentinc/cli/version"
 )
 
 var (
-	// Injected from linker flag like `go build -ldflags "-X main.version=$VERSION"`
-	version = "0.0.0"
+	// Injected from linker flags like `go build -ldflags "-X main.version=$VERSION" -X ...`
+	version = "v0.0.0"
+	commit  = ""
+	date    = ""
+	host    = ""
 
 	cli = &cobra.Command{
-		Use:   "Confluent Cloud CLI",
-		Short: "Run the Confluent CLI",
+		Use:   os.Args[0],
+		Short: "Welcome to the Confluent Cloud CLI",
 	}
 )
 
@@ -69,7 +75,11 @@ func main() {
 
 	prompt := command.NewTerminalPrompt(os.Stdin)
 
-	cli.Version = version
+	userAgent := fmt.Sprintf("Confluent/1.0 ccloud/%s (%s/%s)", version, runtime.GOOS, runtime.GOARCH)
+	version := cliVersion.NewVersion(version, commit, date, host, userAgent)
+
+	cli.Version = version.Version
+	cli.AddCommand(common.NewVersionCmd(version, prompt))
 
 	cli.AddCommand(config.New(cfg))
 

@@ -28,7 +28,7 @@ func newCMD(config *shared.Config, provider func(interface{}) error) (*cobra.Com
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:   "connect",
-			Short: "Manage Kafka Connect.",
+			Short: "Manage Kafka Connect",
 		},
 		config: config,
 	}
