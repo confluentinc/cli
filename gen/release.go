@@ -5,7 +5,6 @@ package main
 // This program binds cli features to the goreleaser configuration.
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"path"
@@ -20,7 +19,10 @@ type Module struct {
 	Package string
 }
 
-var interfaceTemplate *template.Template
+var (
+	interfaceTemplate *template.Template
+	mainTemplate *template.Template
+)
 
 var Formatters = template.FuncMap{
 	"ToTitle": strings.Title,
@@ -33,32 +35,51 @@ func main() {
 		log.Fatalf("Failed to load goreleaser configuration", err)
 	}
 
-	module := new(Module)
-	for _, build := range release.Builds {
-		module.Name = ""
-		module.Package = ""
+	writeShared(release)
+	writeMain(release)
+}
 
-		if !strings.Contains(build.Main, "plugin/") {
-			continue
-		}
+func writeMain(release config.Project) {
+	out := openFile("main","main.go")
+	defer out.Close()
+	writeTemplate(out, interfaceTemplate, "main", extractModules(release.Builds))
+}
 
-		module.Name = build.Binary
-		module.Package = extractPackage(build.Binary)
-
-		fileHandle, err := os.Create(fmt.Sprintf(path.Join("shared", module.Package, "interface.go")))
+func writeShared(release config.Project) {
+	for _, module := range extractModules(release.Builds) {
+		out := openFile("shared_interface", "shared", module.Package, "interface.go")
+		defer out.Close()
+		err := interfaceTemplate.ExecuteTemplate(out, "plugin_interface", module)
 		if err != nil {
-			fileHandle.Close()
-			log.Fatalf("Failed to generate %s", module.Package, err)
-		}
-
-		err = interfaceTemplate.ExecuteTemplate(fileHandle, "src", module)
-		if err != nil {
-			fileHandle.Close()
 			log.Fatalf("Failed to write modules.go", err)
 		}
-		fileHandle.Close()
-
 	}
+
+}
+func openFile(name string, outputPath ...string) *os.File {
+	fileHandle, err := os.Create(path.Join(outputPath...))
+	if err != nil {
+		log.Fatalf("Failed to generate %s", name, err)
+	}
+	return fileHandle
+}
+
+func writeTemplate(out *os.File, tmpl *template.Template, name string, data interface{}) {
+	err := tmpl.ExecuteTemplate(out, name, data)
+	if err != nil {
+		log.Fatalf("Failed to write modules.go", err)
+	}
+}
+
+func extractModules(builds []config.Build) []Module  {
+	var modules []Module
+	for _, build := range builds {
+		if ok, _ := path.Match("*/plugin/*", build.Main); !ok {
+			continue
+		}
+		modules = append(modules, Module{Name: build.Binary, Package: extractPackage(build.Binary)})
+	}
+	return modules
 }
 
 // Extract package name based on naming convention outlined in README.md
@@ -77,5 +98,7 @@ func extractPackage(binary string) (string) {
 func init() {
 	interfaceTemplate = template.Must(
 		template.New("interface").Funcs(Formatters).ParseFiles(
-			path.Join("gen","templates", "shared", "interface.txt")))
+			path.Join("gen", "templates", "generated.txt"),
+			path.Join("gen", "templates", "shared", "interface.txt"),
+			path.Join("gen", "templates", "main.txt")))
 }
