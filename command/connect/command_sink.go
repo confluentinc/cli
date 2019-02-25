@@ -48,6 +48,9 @@ func NewSink(config *shared.Config, plugin common.GRPCPlugin) (*cobra.Command, e
 
 func (c *sinkCommand) init(plugin common.GRPCPlugin) error {
 	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		if err := common.SetLoggingVerbosity(cmd, c.config.Logger); err != nil {
+			return common.HandleError(err, cmd)
+		}
 		if err := c.config.CheckLogin(); err != nil {
 			return common.HandleError(err, cmd)
 		}

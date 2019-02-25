@@ -46,8 +46,12 @@ func newCommands(config *shared.Config, prompt command.Prompt,
 }
 
 func (a *commands) init() {
-	var setPromptOutput = func(cmd *cobra.Command, args []string) {
+	var preRun = func(cmd *cobra.Command, args []string) error {
+		if err := common.SetLoggingVerbosity(cmd, a.config.Logger); err != nil {
+			return common.HandleError(err, cmd)
+		}
 		a.prompt.SetOutput(cmd.OutOrStderr())
+		return nil
 	}
 	loginCmd := &cobra.Command{
 		Use:   "login",
@@ -55,13 +59,13 @@ func (a *commands) init() {
 		RunE:  a.login,
 	}
 	loginCmd.Flags().String("url", "https://confluent.cloud", "Confluent Control Plane URL")
-	loginCmd.PersistentPreRun = setPromptOutput
+	loginCmd.PersistentPreRunE = preRun
 	logoutCmd := &cobra.Command{
 		Use:   "logout",
 		Short: "Logout of Confluent Cloud",
 		RunE:  a.logout,
 	}
-	logoutCmd.PersistentPreRun = setPromptOutput
+	logoutCmd.PersistentPreRunE = preRun
 	a.Commands = []*cobra.Command{loginCmd, logoutCmd}
 }
 
