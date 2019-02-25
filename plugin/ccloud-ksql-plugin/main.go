@@ -79,7 +79,7 @@ func (c *Ksql) Describe(ctx context.Context, cluster *ksqlv1.KSQLCluster) (*ksql
 }
 
 func (c *Ksql) Create(ctx context.Context, config *ksqlv1.KSQLClusterConfig) (*ksqlv1.KSQLCluster, error) {
-	c.Logger.Log("msg", "ksql.Load()")
+	c.Logger.Log("msg", "ksql.Create()")
 	ret, err := c.Client.KSQL.Create(ctx, config)
 	return ret, shared.ConvertAPIError(err)
 }

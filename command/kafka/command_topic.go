@@ -56,7 +56,7 @@ func (c *topicCommand) init(plugin common.GRPCPlugin) {
 
 	cmd := &cobra.Command{
 		Use:   "create TOPIC",
-		Short: "Load a Kafka topic.",
+		Short: "Create a Kafka topic.",
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	}

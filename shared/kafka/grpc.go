@@ -135,7 +135,7 @@ func (s *GRPCServer) Describe(ctx context.Context, req *kafkav1.GetKafkaClusterR
 	return &kafkav1.GetKafkaClusterReply{Cluster: r}, shared.ConvertGRPCError(err)
 }
 
-// Load generates a new Kafka Cluster
+// Create generates a new Kafka Cluster
 func (s *GRPCServer) Create(ctx context.Context, req *kafkav1.CreateKafkaClusterRequest) (*kafkav1.CreateKafkaClusterReply, error) {
 	r, err := s.Impl.Create(ctx, req.Config)
 	return &kafkav1.CreateKafkaClusterReply{Cluster: r}, shared.ConvertGRPCError(err)

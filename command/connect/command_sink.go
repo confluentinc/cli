@@ -57,7 +57,7 @@ func (c *sinkCommand) init(plugin common.GRPCPlugin) error {
 
 	createCmd := &cobra.Command{
 		Use:   "create NAME",
-		Short: "Load a connector.",
+		Short: "Create a connector.",
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -201,7 +201,7 @@ func (c *sinkCommand) createS3Sink(kafkaClusterID, kafkaUserEmail string, cmd *c
 		return err
 	}
 
-	// Load connect cluster config
+	// Create connect cluster config
 	req := &connectv1.ConnectS3SinkClusterConfig{
 		Name:           args[0],
 		AccountId:      c.config.Auth.Account.Id,
@@ -219,7 +219,7 @@ func (c *sinkCommand) createS3Sink(kafkaClusterID, kafkaUserEmail string, cmd *c
 	}
 	fmt.Println("\nS3/Sink Options:")
 	fmt.Println(toConfig(cluster.Options))
-	fmt.Println("\n\nLoad an S3 bucket policy with this user ARN:\n\t" + cluster.UserArn)
+	fmt.Println("\n\nCreate an S3 bucket policy with this user ARN:\n\t" + cluster.UserArn)
 	return nil
 }
 
@@ -316,7 +316,7 @@ func (c *sinkCommand) update(cmd *cobra.Command, args []string) error {
 		}
 		fmt.Println("\nS3/Sink Options:")
 		fmt.Println(toConfig(cluster.Options))
-		fmt.Println("\n\nLoad an S3 bucket policy with this user ARN:\n\t" + cluster.UserArn)
+		fmt.Println("\n\nCreate an S3 bucket policy with this user ARN:\n\t" + cluster.UserArn)
 	default:
 		return fmt.Errorf("unknown cluster type: %v", cl)
 	}

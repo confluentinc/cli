@@ -45,7 +45,7 @@ func (c *aclCommand) init(plugin common.GRPCPlugin) {
 
 	cmd := &cobra.Command{
 		Use:   "create",
-		Short: "Load a Kafka ACL.",
+		Short: "Create a Kafka ACL",
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
 	}
@@ -56,7 +56,7 @@ func (c *aclCommand) init(plugin common.GRPCPlugin) {
 
 	cmd = &cobra.Command{
 		Use:   "delete",
-		Short: "Delete a Kafka ACL.",
+		Short: "Delete a Kafka ACL",
 		RunE:  c.delete,
 		Args:  cobra.NoArgs,
 	}
@@ -67,7 +67,7 @@ func (c *aclCommand) init(plugin common.GRPCPlugin) {
 
 	cmd = &cobra.Command{
 		Use:   "list",
-		Short: "List Kafka ACLs for a resource.",
+		Short: "List Kafka ACLs for a resource",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	}

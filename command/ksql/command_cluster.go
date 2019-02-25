@@ -52,13 +52,13 @@ func (c *clusterCommand) init(plugin common.GRPCPlugin) {
 
 	c.AddCommand(&cobra.Command{
 		Use:   "list",
-		Short: "List ksql apps.",
+		Short: "List KSQL apps",
 		RunE:  c.list,
 	})
 
 	createCmd := &cobra.Command{
 		Use:   "create NAME",
-		Short: "Load a ksql app.",
+		Short: "Create a KSQL app",
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	}

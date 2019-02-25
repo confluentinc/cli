@@ -62,7 +62,7 @@ func (c *clusterCommand) init(plugin common.GRPCPlugin) {
 
 	createCmd := &cobra.Command{
 		Use:   "create NAME",
-		Short: "Load a Kafka cluster.",
+		Short: "Create a Kafka cluster.",
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	}

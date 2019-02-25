@@ -21,7 +21,7 @@ type GRPCPluginFactory interface {
 // GRPCPluginFactoryImpl loads GRPCPlugins from the PATH
 type GRPCPluginFactoryImpl struct {}
 
-// Load returns the default GRPCPlugin for the named plugin
+// Create returns the default GRPCPlugin for the named plugin
 func (f *GRPCPluginFactoryImpl) Create(name string) GRPCPlugin {
 	return &GRPCPluginImpl{Name: name}
 }
@@ -58,7 +58,7 @@ func (l *GRPCPluginImpl) Load(value interface{}) error {
 		return fmt.Errorf("failed to load plugin: %s", err)
 	}
 
-	// We're a host. Load by launching the plugin process.
+	// We're a host. Start by launching the plugin process.
 	client := plugin.NewClient(&plugin.ClientConfig{
 		HandshakeConfig:  shared.Handshake,
 		Plugins:          shared.PluginMap,
