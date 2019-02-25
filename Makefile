@@ -50,8 +50,6 @@ release: get-release-image commit-release tag-release
 dist:
 	@# unfortunately goreleaser only supports one archive right now (either tar/zip or binaries): https://github.com/goreleaser/goreleaser/issues/705
 	@# we had goreleaser upload binaries (they're uncompressed, so goreleaser's parallel uploads will save more time with binaries than archives)
-	@rm -f dist/**/ccloud-connect-plugin*
-	@rm -f dist/**/ccloud-ksql-plugin*
 	tar -czf dist/ccloud_$(VERSION)_darwin_amd64.tar.gz -C dist/darwin_amd64 ../../LICENSE ../../INSTALL.md .
 	tar -czf dist/ccloud_$(VERSION)_linux_amd64.tar.gz -C dist/linux_amd64 ../../LICENSE ../../INSTALL.md .
 	tar -czf dist/ccloud_$(VERSION)_linux_386.tar.gz -C dist/linux_386 ../../LICENSE ../../INSTALL.md .
