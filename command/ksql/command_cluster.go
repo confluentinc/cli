@@ -32,7 +32,7 @@ func NewClusterCommand(config *shared.Config, plugin common.GRPCPlugin) *cobra.C
 	cmd := &clusterCommand{
 		Command: &cobra.Command{
 			Use:   "app",
-			Short: "Manage KSQL apps.",
+			Short: "Manage KSQL apps",
 		},
 		config: config,
 	}
@@ -73,13 +73,13 @@ func (c *clusterCommand) init(plugin common.GRPCPlugin) {
 
 	c.AddCommand(&cobra.Command{
 		Use:   "describe ID",
-		Short: "Describe a ksql app.",
+		Short: "Describe a ksql app",
 		RunE:  c.describe,
 		Args:  cobra.ExactArgs(1),
 	})
 	c.AddCommand(&cobra.Command{
 		Use:   "delete ID",
-		Short: "Delete a ksql app.",
+		Short: "Delete a ksql app",
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
 	})
