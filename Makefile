@@ -44,6 +44,23 @@ build-go:
 .PHONY: release
 release: get-release-image commit-release tag-release
 	@GO111MODULE=on HOSTNAME=$(HOSTNAME) goreleaser release --rm-dist
+	make publish
+
+.PHONY: dist
+dist:
+	@# unfortunately goreleaser only supports one archive right now (either tar/zip or binaries): https://github.com/goreleaser/goreleaser/issues/705
+	@# we had goreleaser upload binaries (they're uncompressed, so goreleaser's parallel uploads will save more time with binaries than archives)
+	@rm -f dist/**/ccloud-connect-plugin*
+	@rm -f dist/**/ccloud-ksql-plugin*
+	tar -czf dist/ccloud-$(VERSION)_darwin_amd64.tar.gz -C dist/darwin_amd64 .
+	tar -czf dist/ccloud-$(VERSION)_linux_amd64.tar.gz -C dist/linux_amd64 .
+	tar -czf dist/ccloud-$(VERSION)_linux_386.tar.gz -C dist/linux_386 .
+	zip -jqr dist/ccloud-$(VERSION)_windows_amd64.zip dist/windows_amd64/*
+	zip -jqr dist/ccloud-$(VERSION)_windows_386.zip dist/windows_386/*
+
+.PHONY: publish
+publish: dist
+	aws s3 cp dist/ s3://confluent.cloud/ccloud-cli/$(VERSION)/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip"
 
 .PHONY: fmt
 fmt:
