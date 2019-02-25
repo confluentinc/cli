@@ -15,15 +15,18 @@ import (
 // Name description used for registering/disposing GRPC components
 const Name = "{{ .Name }}"
 
+// Plugin mates an interface with Hashicorp plugin object
 type Plugin struct {
 	plugin.NetRPCUnsupportedPlugin
 	Impl chttp.{{ .Package | ToTitle }}
 }
 
+// GRPCClient registers a GRPC client
 func (p *Plugin) GRPCClient(ctx context.Context, broker *plugin.GRPCBroker, c *grpc.ClientConn) (interface{}, error) {
 	return &GRPCClient{client: New{{ .Package | ToTitle }}Client(c)}, nil
 }
 
+// GRPCServer registers a GRPC Server
 func (p *Plugin) GRPCServer(broker *plugin.GRPCBroker, s *grpc.Server) error {
 	Register{{ .Package | ToTitle }}Server(s, &GRPCServer{p.Impl})
 	return nil
