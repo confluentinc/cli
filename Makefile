@@ -59,7 +59,7 @@ dist:
 	zip -jqr dist/ccloud-$(VERSION)_windows_386.zip dist/windows_386/*
 
 .PHONY: publish
-publish:
+publish: dist
 	aws s3 cp dist/ s3://confluent.cloud/ccloud-cli/archives/$(VERSION:v%=%)/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip"
 
 .PHONY: fmt
