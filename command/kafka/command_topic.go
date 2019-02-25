@@ -30,7 +30,7 @@ func NewTopicCommand(config *shared.Config, plugin common.GRPCPlugin) *cobra.Com
 	cmd := &topicCommand{
 		Command: &cobra.Command{
 			Use:   "topic",
-			Short: "Manage Kafka topics.",
+			Short: "Manage Kafka topics",
 		},
 		config: config,
 	}
@@ -49,14 +49,14 @@ func (c *topicCommand) init(plugin common.GRPCPlugin) {
 
 	c.AddCommand(&cobra.Command{
 		Use:   "list",
-		Short: "List Kafka topics.",
+		Short: "List Kafka topics",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	})
 
 	cmd := &cobra.Command{
 		Use:   "create TOPIC",
-		Short: "Create a Kafka topic.",
+		Short: "Create a Kafka topic",
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -69,14 +69,14 @@ func (c *topicCommand) init(plugin common.GRPCPlugin) {
 
 	c.AddCommand(&cobra.Command{
 		Use:   "describe TOPIC",
-		Short: "Describe a Kafka topic.",
+		Short: "Describe a Kafka topic",
 		RunE:  c.describe,
 		Args:  cobra.ExactArgs(1),
 	})
 
 	cmd = &cobra.Command{
 		Use:   "update TOPIC",
-		Short: "Update a Kafka topic.",
+		Short: "Update a Kafka topic",
 		RunE:  c.update,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -87,14 +87,14 @@ func (c *topicCommand) init(plugin common.GRPCPlugin) {
 
 	c.AddCommand(&cobra.Command{
 		Use:   "delete TOPIC",
-		Short: "Delete a Kafka topic.",
+		Short: "Delete a Kafka topic",
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
 	})
 
 	cmd = &cobra.Command{
 		Use:   "produce TOPIC",
-		Short: "Produce messages to a Kafka topic.",
+		Short: "Produce messages to a Kafka topic",
 		RunE:  c.produce,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -103,7 +103,7 @@ func (c *topicCommand) init(plugin common.GRPCPlugin) {
 
 	cmd = &cobra.Command{
 		Use:   "consume TOPIC",
-		Short: "Consume messages from a Kafka topic.",
+		Short: "Consume messages from a Kafka topic",
 		RunE:  c.consume,
 		Args:  cobra.ExactArgs(1),
 	}
