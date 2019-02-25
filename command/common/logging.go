@@ -14,6 +14,7 @@ func SetLoggingVerbosity(cmd *cobra.Command, logger *log.Logger) error {
 	}
 	switch verbosity {
 	case 0:
+		logger.SetLevel(logrus.WarnLevel)
 	case 1:
 		logger.SetLevel(logrus.InfoLevel)
 	case 2:
