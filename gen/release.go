@@ -21,7 +21,6 @@ type Module struct {
 
 var (
 	interfaceTemplate *template.Template
-	mainTemplate *template.Template
 )
 
 var Formatters = template.FuncMap{
