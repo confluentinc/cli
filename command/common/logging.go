@@ -13,11 +13,15 @@ func SetLoggingVerbosity(cmd *cobra.Command, logger *log.Logger) error {
 		return err
 	}
 	switch verbosity {
+	case 0:
 	case 1:
 		logger.SetLevel(logrus.InfoLevel)
 	case 2:
 		logger.SetLevel(logrus.DebugLevel)
 	case 3:
+		logger.SetLevel(logrus.TraceLevel)
+	default:
+		// requested more than 3 -v's, so let's give them the max verbosity we support
 		logger.SetLevel(logrus.TraceLevel)
 	}
 	return nil
