@@ -162,7 +162,6 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	user := &orgv1.User{
 		Id:        id,
 		ServiceDescription: description,
-		OrganizationId:     c.config.Auth.User.OrganizationId,
 	}
 
 	err = c.client.UpdateServiceAccount(context.Background(), user)
@@ -180,7 +179,6 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 
 	user := &orgv1.User{
 		Id:        id,
-		OrganizationId: c.config.Auth.User.OrganizationId,
 	}
 
 	err = c.client.DeleteServiceAccount(context.Background(), user)
