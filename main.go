@@ -68,8 +68,9 @@ func main() {
 
 	userAgent := fmt.Sprintf("Confluent/1.0 ccloud/%s (%s/%s)", version, runtime.GOOS, runtime.GOARCH)
 	version := cliVersion.NewVersion(version, commit, date, host, userAgent)
+	factory := &common.ProviderFactoryImpl{}
 
-	cli := BuildCommand(cfg, version, logger)
+	cli := BuildCommand(cfg, version, factory, logger)
 	check(cli.Execute())
 
 	plugin.CleanupClients()
@@ -77,7 +78,7 @@ func main() {
 }
 
 
-func BuildCommand(cfg *shared.Config, version *cliVersion.Version, logger *log.Logger) *cobra.Command {
+func BuildCommand(cfg *shared.Config, version *cliVersion.Version, factory common.ProviderFactory, logger *log.Logger) *cobra.Command {
 	cli := &cobra.Command{
 		Use:   "ccloud",
 		Short: "Welcome to the Confluent Cloud CLI",
@@ -94,21 +95,21 @@ func BuildCommand(cfg *shared.Config, version *cliVersion.Version, logger *log.L
 
 	cli.AddCommand(auth.New(cfg)...)
 
-	conn, err := kafka.New(cfg)
+	conn, err := kafka.New(cfg, factory)
 	if err != nil {
 		logger.Log("msg", err)
 	} else {
 		cli.AddCommand(conn)
 	}
 
-	conn, err = connect.New(cfg)
+	conn, err = connect.New(cfg, factory)
 	if err != nil {
 		logger.Log("msg", err)
 	} else {
 		cli.AddCommand(conn)
 	}
 
-	conn, err = ksql.New(cfg)
+	conn, err = ksql.New(cfg, factory)
 	if err != nil {
 		logger.Log("msg", err)
 	} else {

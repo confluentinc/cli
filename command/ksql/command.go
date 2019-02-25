@@ -14,8 +14,8 @@ type command struct {
 }
 
 // New returns the default command object for interacting with KSQL.
-func New(config *shared.Config) (*cobra.Command, error) {
-	return newCMD(config, common.GRPCLoader(ksql.Name))
+func New(config *shared.Config, factory common.ProviderFactory) (*cobra.Command, error) {
+	return newCMD(config, factory.CreateProvider(ksql.Name))
 }
 
 // NewKSQLCommand returns a command object using a custom KSQL provider.

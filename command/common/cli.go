@@ -1,3 +1,6 @@
+//go:generate mocker --prefix "" --dst ../../mock/provider_factory.go --pkg mock --selfpkg github.com/confluentinc/cli cli.go ProviderFactory
+//go:generate mocker --prefix "" --dst ../../mock/provider.go --pkg mock --selfpkg github.com/confluentinc/cli cli.go Provider
+
 package common
 
 import (
@@ -50,6 +53,16 @@ func HandleError(err error, cmd *cobra.Command) error {
 	}
 
 	return nil
+}
+
+type ProviderFactory interface {
+	CreateProvider(name string) Provider
+}
+
+type ProviderFactoryImpl struct {}
+
+func (f *ProviderFactoryImpl) CreateProvider(name string) Provider {
+	return &PluginLoader{Name: name}
 }
 
 // Provider loads a plugin

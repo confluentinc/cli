@@ -14,8 +14,8 @@ type command struct {
 }
 
 // New returns the default command object for interacting with Connect.
-func New(config *shared.Config) (*cobra.Command, error) {
-	return newCMD(config, common.GRPCLoader(connect.Name))
+func New(config *shared.Config, factory common.ProviderFactory) (*cobra.Command, error) {
+	return newCMD(config, factory.CreateProvider(connect.Name))
 }
 
 // NewConnectCommand returns a command object using a custom Connect provider.

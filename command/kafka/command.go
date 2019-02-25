@@ -14,8 +14,8 @@ type command struct {
 }
 
 // New returns the default command object for interacting with Kafka.
-func New(config *shared.Config) (*cobra.Command, error) {
-	return newCMD(config, common.GRPCLoader(kafka.Name))
+func New(config *shared.Config, factory common.ProviderFactory) (*cobra.Command, error) {
+	return newCMD(config, factory.CreateProvider(kafka.Name))
 }
 
 // NewKafkaCommand returns a command object using a custom Kafka provider.
