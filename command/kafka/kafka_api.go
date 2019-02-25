@@ -89,7 +89,7 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 		case "prefix":
 			conf.Pattern.PatternType = kafkav1.PatternTypes_PREFIXED
 		case "principal":
-			conf.Entry.Principal = "User:" + v
+			conf.Entry.Principal = v
 		case "operation":
 			v = strings.ToUpper(v)
 			if op, ok := kafkav1.ACLOperations_ACLOperation_value[v]; ok {
