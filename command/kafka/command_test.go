@@ -345,6 +345,7 @@ func NewCMD(expect chan interface{}) *cobra.Command {
 			return cliMock.NewKafkaMock(value, expect)
 		},
 	})
+	cmd.PersistentFlags().CountP("verbose", "v", "increase output verbosity")
 
 	return cmd
 }
