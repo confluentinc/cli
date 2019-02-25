@@ -93,5 +93,5 @@ s3:
   -
     bucket: confluent.cloud
     region: us-west-2
-    folder: "ccloud-cli/{{.Version}}"
+    folder: "ccloud-cli/binaries/{{.Version}}"
     acl: public-read
