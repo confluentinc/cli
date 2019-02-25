@@ -95,3 +95,20 @@ s3:
     region: us-west-2
     folder: "ccloud-cli/{{.Version}}"
     acl: public-read
+
+dockers:
+  -
+    goos: linux
+    goarch: amd64
+    binaries:
+      - ccloud
+      - ccloud-kafka-plugin
+#      The world isn't ready for these yet:
+#      - ccloud-connct-plugin
+#      - ccloud-ksql-plugin
+    image_templates:
+      - "confluentinc/ccloud-cli:latest"
+      - "confluentinc/ccloud-cli:{{ .Tag }}"
+      - "confluentinc/ccloud-cli:v{{ .Major }}"
+      - "gcr.io/confluentinc/ccloud-cli:latest"
+    skip_push: false
