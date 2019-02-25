@@ -21,9 +21,9 @@ import (
 
 var (
 	listFields       = []string{"Id", "Name", "Plugin", "ServiceProvider", "Region", "Status"}
-	listLabels       = []string{"Id", "Name", "Kind", "Provider", "Region", "Status"}
+	listLabels       = []string{"Id", "Name", "Kind", "GRPCPlugin", "Region", "Status"}
 	describeFields   = []string{"Id", "Name", "Plugin", "KafkaClusterId", "ServiceProvider", "Region", "Durability", "Status"}
-	describeRenames  = map[string]string{"Plugin": "Kind", "KafkaClusterId": "Kafka", "ServiceProvider": "Provider"}
+	describeRenames  = map[string]string{"Plugin": "Kind", "KafkaClusterId": "Kafka", "ServiceProvider": "GRPCPlugin"}
 	validPluginTypes = []string{"s3"}
 )
 
@@ -34,7 +34,7 @@ type sinkCommand struct {
 }
 
 // NewSink returns the Cobra sinkCommand for Connect Sink.
-func NewSink(config *shared.Config, plugin common.Provider) (*cobra.Command, error) {
+func NewSink(config *shared.Config, plugin common.GRPCPlugin) (*cobra.Command, error) {
 	cmd := &sinkCommand{
 		Command: &cobra.Command{
 			Use:   "sink",
@@ -46,18 +46,18 @@ func NewSink(config *shared.Config, plugin common.Provider) (*cobra.Command, err
 	return cmd.Command, err
 }
 
-func (c *sinkCommand) init(plugin common.Provider) error {
+func (c *sinkCommand) init(plugin common.GRPCPlugin) error {
 	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		if err := c.config.CheckLogin(); err != nil {
 			return common.HandleError(err, cmd)
 		}
 		// Lazy load plugin to avoid unnecessarily spawning child processes
-		return plugin.LoadPlugin(&c.client)
+		return plugin.Load(&c.client)
 	}
 
 	createCmd := &cobra.Command{
 		Use:   "create NAME",
-		Short: "Create a connector.",
+		Short: "Load a connector.",
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -201,7 +201,7 @@ func (c *sinkCommand) createS3Sink(kafkaClusterID, kafkaUserEmail string, cmd *c
 		return err
 	}
 
-	// Create connect cluster config
+	// Load connect cluster config
 	req := &connectv1.ConnectS3SinkClusterConfig{
 		Name:           args[0],
 		AccountId:      c.config.Auth.Account.Id,
@@ -219,7 +219,7 @@ func (c *sinkCommand) createS3Sink(kafkaClusterID, kafkaUserEmail string, cmd *c
 	}
 	fmt.Println("\nS3/Sink Options:")
 	fmt.Println(toConfig(cluster.Options))
-	fmt.Println("\n\nCreate an S3 bucket policy with this user ARN:\n\t" + cluster.UserArn)
+	fmt.Println("\n\nLoad an S3 bucket policy with this user ARN:\n\t" + cluster.UserArn)
 	return nil
 }
 
@@ -316,7 +316,7 @@ func (c *sinkCommand) update(cmd *cobra.Command, args []string) error {
 		}
 		fmt.Println("\nS3/Sink Options:")
 		fmt.Println(toConfig(cluster.Options))
-		fmt.Println("\n\nCreate an S3 bucket policy with this user ARN:\n\t" + cluster.UserArn)
+		fmt.Println("\n\nLoad an S3 bucket policy with this user ARN:\n\t" + cluster.UserArn)
 	default:
 		return fmt.Errorf("unknown cluster type: %v", cl)
 	}

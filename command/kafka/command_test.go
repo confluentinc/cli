@@ -337,11 +337,11 @@ func TestUpdateTopic(t *testing.T) {
 
 /*************** TEST setup/helpers ***************/
 func NewCMD(expect chan interface{}) *cobra.Command {
-	cmd, _ := NewKafkaCommand(conf, &cliMock.Provider {
-		LookupPluginFunc: func() (string, error) {
+	cmd, _ := NewKafkaCommand(conf, &cliMock.GRPCPlugin {
+		LookupPathFunc: func() (string, error) {
 			return "", nil
 		},
-		LoadPluginFunc: func(value interface{}) error {
+		LoadFunc: func(value interface{}) error {
 			return cliMock.NewKafkaMock(value, expect)
 		},
 	})

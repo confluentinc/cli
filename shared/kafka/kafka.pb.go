@@ -118,7 +118,7 @@ func (c *kafkaClient) Describe(ctx context.Context, in *v11.GetKafkaClusterReque
 
 func (c *kafkaClient) Create(ctx context.Context, in *v11.CreateKafkaClusterRequest, opts ...grpc.CallOption) (*v11.CreateKafkaClusterReply, error) {
 	out := new(v11.CreateKafkaClusterReply)
-	err := c.cc.Invoke(ctx, "/kafka.Kafka/Create", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/kafka.Kafka/Load", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -291,7 +291,7 @@ func _Kafka_Create_Handler(srv interface{}, ctx context.Context, dec func(interf
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/kafka.Kafka/Create",
+		FullMethod: "/kafka.Kafka/Load",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(KafkaServer).Create(ctx, req.(*v11.CreateKafkaClusterRequest))
@@ -478,7 +478,7 @@ var _Kafka_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Kafka_Describe_Handler,
 		},
 		{
-			MethodName: "Create",
+			MethodName: "Load",
 			Handler:    _Kafka_Create_Handler,
 		},
 		{

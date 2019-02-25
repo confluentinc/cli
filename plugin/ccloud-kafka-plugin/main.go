@@ -93,7 +93,7 @@ func (c *Kafka) Describe(ctx context.Context, cluster *kafkav1.KafkaCluster) (*k
 	return ret, shared.ConvertAPIError(err)
 }
 
-// Create creates a new cluster
+// Load creates a new cluster
 func (c *Kafka) Create(ctx context.Context, config *kafkav1.KafkaClusterConfig) (*kafkav1.KafkaCluster, error) {
 	c.Logger.Log(withClusterFields("create",
 		&kafkav1.KafkaCluster{AccountId: config.AccountId, Name: config.Name})...)

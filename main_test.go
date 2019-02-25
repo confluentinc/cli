@@ -25,10 +25,10 @@ func TestAddCommands_MissingPluginsNotShownInHelpUsage(t *testing.T) {
 	})
 
 	version := cliVersion.NewVersion("1.2.3", "abc1234", "01/23/45", "CI", "ccloud/1.2.3")
-	factory := &mock.ProviderFactory{
-		CreateProviderFunc: func(name string) common.Provider {
-			return &mock.Provider{
-				LookupPluginFunc: func() (s string, e error) {
+	factory := &mock.GRPCPluginFactory{
+		CreateFunc: func(name string) common.GRPCPlugin {
+			return &mock.GRPCPlugin{
+				LookupPathFunc: func() (s string, e error) {
 					// return an error to show the plugin wasn't "found" and isn't available
 					return "", fmt.Errorf("nada")
 				},
@@ -57,10 +57,10 @@ func TestAddCommands_AvailablePluginsShownInHelpUsage(t *testing.T) {
 	})
 
 	version := cliVersion.NewVersion("1.2.3", "abc1234", "01/23/45", "CI", "ccloud/1.2.3")
-	factory := &mock.ProviderFactory{
-		CreateProviderFunc: func(name string) common.Provider {
-			return &mock.Provider{
-				LookupPluginFunc: func() (s string, e error) {
+	factory := &mock.GRPCPluginFactory{
+		CreateFunc: func(name string) common.GRPCPlugin {
+			return &mock.GRPCPlugin{
+				LookupPathFunc: func() (s string, e error) {
 					// as long as we don't return an error, the plugin is "found" and available
 					return "", nil
 				},

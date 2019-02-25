@@ -111,7 +111,7 @@ func (c *Connect) CreateS3Sink(ctx context.Context, cfg *connectv1.ConnectS3Sink
 	}
 	config.KafkaUserId = user.Id
 
-	// Create the connect cluster
+	// Load the connect cluster
 	ret, err := c.Client.Connect.CreateS3Sink(ctx, config)
 	if err != nil {
 		return nil, shared.ConvertAPIError(err)

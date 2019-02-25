@@ -26,7 +26,7 @@ type topicCommand struct {
 }
 
 // NewTopicCommand returns the Cobra clusterCommand for Kafka Cluster.
-func NewTopicCommand(config *shared.Config, plugin common.Provider) *cobra.Command {
+func NewTopicCommand(config *shared.Config, plugin common.GRPCPlugin) *cobra.Command {
 	cmd := &topicCommand{
 		Command: &cobra.Command{
 			Use:   "topic",
@@ -38,13 +38,13 @@ func NewTopicCommand(config *shared.Config, plugin common.Provider) *cobra.Comma
 	return cmd.Command
 }
 
-func (c *topicCommand) init(plugin common.Provider) {
+func (c *topicCommand) init(plugin common.GRPCPlugin) {
 	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		if err := c.config.CheckLogin(); err != nil {
 			return common.HandleError(err, cmd)
 		}
 		// Lazy load plugin to avoid unnecessarily spawning child processes
-		return plugin.LoadPlugin(&c.client)
+		return plugin.Load(&c.client)
 	}
 
 	c.AddCommand(&cobra.Command{
@@ -56,7 +56,7 @@ func (c *topicCommand) init(plugin common.Provider) {
 
 	cmd := &cobra.Command{
 		Use:   "create TOPIC",
-		Short: "Create a Kafka topic.",
+		Short: "Load a Kafka topic.",
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	}

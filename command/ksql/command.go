@@ -14,17 +14,17 @@ type command struct {
 }
 
 // New returns the default command object for interacting with KSQL.
-func New(config *shared.Config, factory common.ProviderFactory) (*cobra.Command, error) {
-	return newCMD(config, factory.CreateProvider(ksql.Name))
+func New(config *shared.Config, factory common.GRPCPluginFactory) (*cobra.Command, error) {
+	return newCMD(config, factory.Create(ksql.Name))
 }
 
 // NewKSQLCommand returns a command object using a custom KSQL provider.
-func NewKSQLCommand(config *shared.Config, provider common.Provider) (*cobra.Command, error) {
+func NewKSQLCommand(config *shared.Config, provider common.GRPCPlugin) (*cobra.Command, error) {
 	return newCMD(config, provider)
 }
 
 // newCMD returns a command for interacting with KSQL.
-func newCMD(config *shared.Config, provider common.Provider) (*cobra.Command, error) {
+func newCMD(config *shared.Config, provider common.GRPCPlugin) (*cobra.Command, error) {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:   "ksql",
@@ -32,7 +32,7 @@ func newCMD(config *shared.Config, provider common.Provider) (*cobra.Command, er
 		},
 		config: config,
 	}
-	_, err := provider.LookupPlugin()
+	_, err := provider.LookupPath()
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +40,7 @@ func newCMD(config *shared.Config, provider common.Provider) (*cobra.Command, er
 	return cmd.Command, err
 }
 
-func (c *command) init(plugin common.Provider) error {
+func (c *command) init(plugin common.GRPCPlugin) error {
 	c.AddCommand(NewClusterCommand(c.config, plugin))
 	return nil
 }

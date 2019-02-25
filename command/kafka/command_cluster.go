@@ -20,9 +20,9 @@ import (
 
 var (
 	listFields      = []string{"Id", "Name", "ServiceProvider", "Region", "Durability", "Status"}
-	listLabels      = []string{"Id", "Name", "Provider", "Region", "Durability", "Status"}
+	listLabels      = []string{"Id", "Name", "GRPCPlugin", "Region", "Durability", "Status"}
 	describeFields  = []string{"Id", "Name", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "ApiEndpoint", "PricePerHour"}
-	describeRenames = map[string]string{"NetworkIngress": "Ingress", "NetworkEgress": "Egress", "ServiceProvider": "Provider"}
+	describeRenames = map[string]string{"NetworkIngress": "Ingress", "NetworkEgress": "Egress", "ServiceProvider": "GRPCPlugin"}
 )
 
 type clusterCommand struct {
@@ -32,7 +32,7 @@ type clusterCommand struct {
 }
 
 // NewClusterCommand returns the Cobra clusterCommand for Kafka Cluster.
-func NewClusterCommand(config *shared.Config, plugin common.Provider) *cobra.Command {
+func NewClusterCommand(config *shared.Config, plugin common.GRPCPlugin) *cobra.Command {
 	cmd := &clusterCommand{
 		Command: &cobra.Command{
 			Use:   "cluster",
@@ -44,14 +44,14 @@ func NewClusterCommand(config *shared.Config, plugin common.Provider) *cobra.Com
 	return cmd.Command
 }
 
-func (c *clusterCommand) init(plugin common.Provider) {
+func (c *clusterCommand) init(plugin common.GRPCPlugin) {
 
 	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		if err := c.config.CheckLogin(); err != nil {
 			return common.HandleError(err, cmd)
 		}
 		// Lazy load plugin to avoid unnecessarily spawning child processes
-		return plugin.LoadPlugin(&c.client)
+		return plugin.Load(&c.client)
 	}
 
 	c.AddCommand(&cobra.Command{
@@ -62,7 +62,7 @@ func (c *clusterCommand) init(plugin common.Provider) {
 
 	createCmd := &cobra.Command{
 		Use:   "create NAME",
-		Short: "Create a Kafka cluster.",
+		Short: "Load a Kafka cluster.",
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	}

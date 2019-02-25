@@ -98,7 +98,7 @@ func (c *kSQLClient) Delete(ctx context.Context, in *v1.DeleteKSQLClusterRequest
 
 func (c *kSQLClient) Create(ctx context.Context, in *v1.CreateKSQLClusterRequest, opts ...grpc.CallOption) (*v1.CreateKSQLClusterReply, error) {
 	out := new(v1.CreateKSQLClusterReply)
-	err := c.cc.Invoke(ctx, "/ksql.KSQL/Create", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/ksql.KSQL/Load", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -181,7 +181,7 @@ func _KSQL_Create_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ksql.KSQL/Create",
+		FullMethod: "/ksql.KSQL/Load",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(KSQLServer).Create(ctx, req.(*v1.CreateKSQLClusterRequest))
@@ -206,7 +206,7 @@ var _KSQL_serviceDesc = grpc.ServiceDesc{
 			Handler:    _KSQL_Delete_Handler,
 		},
 		{
-			MethodName: "Create",
+			MethodName: "Load",
 			Handler:    _KSQL_Create_Handler,
 		},
 	},

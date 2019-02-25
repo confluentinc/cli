@@ -21,7 +21,7 @@ type aclCommand struct {
 }
 
 // NewACLCommand returns the Cobra clusterCommand for Kafka Cluster.
-func NewACLCommand(config *shared.Config, plugin common.Provider) *cobra.Command {
+func NewACLCommand(config *shared.Config, plugin common.GRPCPlugin) *cobra.Command {
 	cmd := &aclCommand{
 		Command: &cobra.Command{
 			Use:   "acl",
@@ -34,18 +34,18 @@ func NewACLCommand(config *shared.Config, plugin common.Provider) *cobra.Command
 	return cmd.Command
 }
 
-func (c *aclCommand) init(plugin common.Provider) {
+func (c *aclCommand) init(plugin common.GRPCPlugin) {
 	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		if err := c.config.CheckLogin(); err != nil {
 			return common.HandleError(err, cmd)
 		}
 		// Lazy load plugin to avoid unnecessarily spawning child processes
-		return plugin.LoadPlugin(&c.client)
+		return plugin.Load(&c.client)
 	}
 
 	cmd := &cobra.Command{
 		Use:   "create",
-		Short: "Create a Kafka ACL.",
+		Short: "Load a Kafka ACL.",
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
 	}

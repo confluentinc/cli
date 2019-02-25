@@ -68,7 +68,7 @@ func main() {
 
 	userAgent := fmt.Sprintf("Confluent/1.0 ccloud/%s (%s/%s)", version, runtime.GOOS, runtime.GOARCH)
 	version := cliVersion.NewVersion(version, commit, date, host, userAgent)
-	factory := &common.ProviderFactoryImpl{}
+	factory := &common.GRPCPluginFactoryImpl{}
 
 	cli := BuildCommand(cfg, version, factory, logger)
 	check(cli.Execute())
@@ -78,7 +78,7 @@ func main() {
 }
 
 
-func BuildCommand(cfg *shared.Config, version *cliVersion.Version, factory common.ProviderFactory, logger *log.Logger) *cobra.Command {
+func BuildCommand(cfg *shared.Config, version *cliVersion.Version, factory common.GRPCPluginFactory, logger *log.Logger) *cobra.Command {
 	cli := &cobra.Command{
 		Use:   "ccloud",
 		Short: "Welcome to the Confluent Cloud CLI",
