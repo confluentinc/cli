@@ -27,6 +27,8 @@ import (
 	cliVersion "github.com/confluentinc/cli/version"
 )
 
+//go:generate go run gen/release.go
+
 var (
 	// Injected from linker flags like `go build -ldflags "-X main.version=$VERSION" -X ...`
 	version = "v0.0.0"
