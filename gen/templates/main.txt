@@ -16,9 +16,6 @@ import (
 	{{- range . }}
 	"github.com/confluentinc/cli/command/{{ .Package }}"
 	{{- end }}
-	"github.com/confluentinc/cli/command/connect"
-	"github.com/confluentinc/cli/command/kafka"
-	"github.com/confluentinc/cli/command/ksql"
 	"github.com/hashicorp/go-plugin"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
