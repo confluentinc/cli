@@ -25,7 +25,7 @@ func NewACLCommand(config *shared.Config, plugin common.GRPCPlugin) *cobra.Comma
 	cmd := &aclCommand{
 		Command: &cobra.Command{
 			Use:   "acl",
-			Short: "Manage Kafka ACLs.",
+			Short: "Manage Kafka ACLs",
 		},
 		config: config,
 	}
