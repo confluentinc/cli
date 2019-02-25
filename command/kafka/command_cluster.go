@@ -36,7 +36,7 @@ func NewClusterCommand(config *shared.Config, plugin common.GRPCPlugin) *cobra.C
 	cmd := &clusterCommand{
 		Command: &cobra.Command{
 			Use:   "cluster",
-			Short: "Manage Kafka clusters.",
+			Short: "Manage Kafka clusters",
 		},
 		config: config,
 	}
@@ -56,13 +56,13 @@ func (c *clusterCommand) init(plugin common.GRPCPlugin) {
 
 	c.AddCommand(&cobra.Command{
 		Use:   "list",
-		Short: "List Kafka clusters.",
+		Short: "List Kafka clusters",
 		RunE:  c.list,
 	})
 
 	createCmd := &cobra.Command{
 		Use:   "create NAME",
-		Short: "Create a Kafka cluster.",
+		Short: "Create a Kafka cluster",
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -79,30 +79,30 @@ func (c *clusterCommand) init(plugin common.GRPCPlugin) {
 
 	c.AddCommand(&cobra.Command{
 		Use:   "describe ID",
-		Short: "Describe a Kafka cluster.",
+		Short: "Describe a Kafka cluster",
 		RunE:  c.describe,
 		Args:  cobra.ExactArgs(1),
 	})
 	c.AddCommand(&cobra.Command{
 		Use:   "update ID",
-		Short: "Update a Kafka cluster.",
+		Short: "Update a Kafka cluster",
 		RunE:  c.update,
 		Args:  cobra.ExactArgs(1),
 	})
 	c.AddCommand(&cobra.Command{
 		Use:   "delete ID",
-		Short: "Delete a Kafka cluster.",
+		Short: "Delete a Kafka cluster",
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
 	})
 	c.AddCommand(&cobra.Command{
 		Use:   "auth",
-		Short: "Configure authorization for a Kafka cluster.",
+		Short: "Configure authorization for a Kafka cluster",
 		RunE:  c.auth,
 	})
 	c.AddCommand(&cobra.Command{
 		Use:   "use ID",
-		Short: "Specify the Kafka cluster to connect to.",
+		Short: "Make the Kafka cluster active for use in other commands",
 		RunE:  c.use,
 		Args:  cobra.ExactArgs(1),
 	})
