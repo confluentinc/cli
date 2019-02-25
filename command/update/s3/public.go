@@ -94,6 +94,14 @@ func (r *PublicRepo) GetAvailableVersions(name string) (version.Collection, erro
 			continue
 		}
 
+		// Skip snapshot and dirty versions (which shouldn't be published, but accidents happen)
+		if strings.Contains(split[1], "SNAPSHOT") {
+			continue
+		}
+		if strings.Contains(split[1], "dirty") {
+			continue
+		}
+
 		ver, err := version.NewVersion(split[1])
 		if err != nil {
 			return nil, fmt.Errorf("unable to parse %s version - %s", name, err)

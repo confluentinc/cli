@@ -44,7 +44,7 @@ func main() {
 
 		//if viper.GetString("log_level") != "" {
 		//	level, err := logrus.ParseLevel(viper.GetString("log_level"))
-			level, err := logrus.ParseLevel("DEBUG")
+			level, err := logrus.ParseLevel("TRACE")
 			check(err)
 			logger.SetLevel(level)
 			logger.Log("msg", "set log level", "level", level.String())

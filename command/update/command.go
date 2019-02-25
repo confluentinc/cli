@@ -14,7 +14,7 @@ import (
 const (
 	S3BinBucket   = "confluent.cloud"
 	S3BinRegion   = "us-west-2"
-	S3BinPrefix   = "ccloud-cli"
+	S3BinPrefix   = "ccloud-cli/binaries"
 	LastCheckFile = "~/.ccloud_update"
 )
 
@@ -105,7 +105,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := updateClient.TouchUpdateCheckFile(); err != nil {
-		c.logger.Fatalf("error checking for updates: %s", err)
+		c.logger.Fatalf("error touching last check file: %s", err)
 	}
 	return nil
 }
