@@ -5,7 +5,7 @@ builds:
     binary: ccloud
     main: .
     ldflags:
-      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}  -X main.host={{.Env.HOSTNAME}}
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.Commit}} -X main.date={{.Date}}  -X main.host={{.Env.HOSTNAME}}
     gcflags:
       - -trimpath={{.Env.GOPATH}}
     asmflags:
@@ -18,7 +18,7 @@ builds:
     binary: ccloud-kafka-plugin
     main: ./plugin/ccloud-kafka-plugin
     ldflags:
-      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}  -X main.host={{.Env.HOSTNAME}}
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.Commit}} -X main.date={{.Date}}  -X main.host={{.Env.HOSTNAME}}
     gcflags:
       - -trimpath={{.Env.GOPATH}}
     asmflags:
@@ -31,7 +31,7 @@ builds:
     binary: ccloud-connect-plugin
     main: ./plugin/ccloud-connect-plugin
     ldflags:
-      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}  -X main.host={{.Env.HOSTNAME}}
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.Commit}} -X main.date={{.Date}}  -X main.host={{.Env.HOSTNAME}}
     gcflags:
       - -trimpath={{.Env.GOPATH}}
     asmflags:
@@ -44,7 +44,7 @@ builds:
     binary: ccloud-ksql-plugin
     main: ./plugin/ccloud-ksql-plugin
     ldflags:
-      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}  -X main.host={{.Env.HOSTNAME}}
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.Commit}} -X main.date={{.Date}}  -X main.host={{.Env.HOSTNAME}}
     gcflags:
       - -trimpath={{.Env.GOPATH}}
     asmflags:
