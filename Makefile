@@ -60,7 +60,7 @@ dist:
 
 .PHONY: publish
 publish: dist
-	aws s3 cp dist/ s3://confluent.cloud/ccloud-cli/archives/$(VERSION:v%=%)/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip"
+	aws s3 cp dist/ s3://confluent.cloud/ccloud-cli/archives/$(VERSION:v%=%)/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --acl public-read
 
 .PHONY: fmt
 fmt:
