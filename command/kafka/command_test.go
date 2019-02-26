@@ -1,7 +1,10 @@
 package kafka
 
 import (
+	"bytes"
+	"context"
 	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 	"testing"
@@ -9,6 +12,7 @@ import (
 	"github.com/confluentinc/cli/log"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/ccloud-sdk-go/mock"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	cliMock "github.com/confluentinc/cli/mock"
@@ -338,6 +342,40 @@ func TestUpdateTopic(t *testing.T) {
 			t.Fail()
 			return
 		}
+	}
+}
+
+/*************** TEST command_cluster ***************/
+// TODO: do this for all commands/subcommands... and for all common error messages
+func Test_HandleError_NotLoggedIn(t *testing.T) {
+	cmd, _ := NewKafkaCommand(conf, &cliMock.GRPCPlugin{
+		LookupPathFunc: func() (string, error) {
+			return "", nil
+		},
+		LoadFunc: func(value interface{}) error {
+			client := &mock.MockKafka{
+				ListFunc: func(ctx context.Context, cluster *kafkav1.KafkaCluster) ([]*kafkav1.KafkaCluster, error) {
+					return nil, shared.ErrUnauthorized
+				},
+			}
+			rv := reflect.ValueOf(value)
+			rv.Elem().Set(reflect.ValueOf(client))
+			return nil
+		},
+	})
+	cmd.PersistentFlags().CountP("verbose", "v", "increase output verbosity")
+	cmd.SetArgs(append([]string{"cluster", "list"}))
+	buf := new(bytes.Buffer)
+	cmd.SetOutput(buf)
+
+	err := cmd.Execute()
+	if err != shared.ErrUnauthorized {
+		t.Errorf("unexpected err, got %#v, want %#v", err, shared.ErrUnauthorized)
+	}
+	got := buf.String()
+	want := "You must login to access Confluent Cloud.\n"
+	if got != want {
+		t.Errorf("unexpected output, got %s, want %s", got, want)
 	}
 }
 

@@ -1,5 +1,3 @@
-// go:generate mocker --prefix "" --out mock/prompt.go --pkg mock command Prompt
-
 package command
 
 import (

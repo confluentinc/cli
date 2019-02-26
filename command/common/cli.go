@@ -31,6 +31,7 @@ func HandleError(err error, cmd *cobra.Command) error {
 	if msg, ok := messages[err]; ok {
 		fmt.Fprintln(out, msg)
 		cmd.SilenceUsage = true
+		cmd.SilenceErrors = true
 		return err
 	}
 

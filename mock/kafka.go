@@ -72,7 +72,6 @@ func (m *MockKafka) ListTopicConfig(ctx context.Context, cluster *kafkav1.KafkaC
 }
 
 func (m *MockKafka) UpdateTopic(ctx context.Context, cluster *kafkav1.KafkaCluster, topic *kafkav1.Topic) error {
-
 	return assertEquals(topic, <-m.Expect)
 }
 
