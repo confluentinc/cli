@@ -58,6 +58,11 @@ var resourcePatterns = []struct {
 		pattern: &kafkav1.ResourcePatternConfig{ResourceType: kafkav1.ResourceTypes_TRANSACTIONAL_ID, Name: "test-transactional-id",
 			PatternType: kafkav1.PatternTypes_PREFIXED},
 	},
+	{
+		args: []string{"--prefix", "--topic", "test-topic"},
+		pattern: &kafkav1.ResourcePatternConfig{ResourceType: kafkav1.ResourceTypes_TOPIC, Name: "test-topic",
+			PatternType: kafkav1.PatternTypes_PREFIXED},
+	},
 }
 
 var aclEntries = []struct {
