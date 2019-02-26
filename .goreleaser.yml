@@ -4,7 +4,7 @@ before:
   hooks:
     # to avoid goreleaser error due to `make deps` on CI: git is currently in a dirty state
     - git checkout go.mod
-
+    - git checkout go.sum
 builds:
   -
     binary: ccloud
