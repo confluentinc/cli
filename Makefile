@@ -13,11 +13,8 @@ clean:
 
 .PHONY: deps
 deps:
-	@GO111MODULE=on go mod download
-	@GO111MODULE=on go mod verify
 	@GO111MODULE=on go get github.com/goreleaser/goreleaser@v0.101.0
 	@GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.12.2
-	@GO111MODULE=on go mod vendor
 
 .PHONY: generate
 generate:
