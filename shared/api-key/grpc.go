@@ -61,5 +61,5 @@ func (s *GRPCServer) Delete(ctx context.Context, req *authv1.DeleteApiKeyRequest
 // List API Keys
 func (s *GRPCServer) List(ctx context.Context, req *authv1.GetApiKeysRequest) (*authv1.GetApiKeysReply, error) {
 	r, err := s.Impl.List(ctx, req.ApiKey)
-	return &authv1.GetApiKeysReply{ApiKeys:r}, err
+	return &authv1.GetApiKeysReply{ApiKeys: r}, err
 }

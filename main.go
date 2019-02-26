@@ -6,7 +6,7 @@ import (
 	"runtime"
 
 	"github.com/confluentinc/cli/command"
-	"github.com/confluentinc/cli/command/api-key"
+	"github.com/confluentinc/cli/command/apikey"
 	"github.com/confluentinc/cli/command/auth"
 	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/command/config"
@@ -126,7 +126,7 @@ func BuildCommand(cfg *shared.Config, version *cliVersion.Version, factory commo
 		cli.AddCommand(conn)
 	}
 
-	conn, err = api_key.New(cfg, factory)
+	conn, err = apikey.New(cfg, factory)
 	if err != nil {
 		logger.Log("msg", err)
 	} else {

@@ -11,7 +11,7 @@ import (
 )
 
 // Name description used for registering/disposing GRPC components
-const Name = "ccloud-api-key-plugin"
+const Name = "ccloud-apikey-plugin"
 
 // Plugin mates an interface with Hashicorp plugin object
 type Plugin struct {

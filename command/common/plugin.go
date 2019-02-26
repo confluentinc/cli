@@ -19,7 +19,7 @@ type GRPCPluginFactory interface {
 }
 
 // GRPCPluginFactoryImpl loads GRPCPlugins from the PATH
-type GRPCPluginFactoryImpl struct {}
+type GRPCPluginFactoryImpl struct{}
 
 // Create returns the default GRPCPlugin for the named plugin
 func (f *GRPCPluginFactoryImpl) Create(name string) GRPCPlugin {
