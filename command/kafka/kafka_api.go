@@ -89,6 +89,10 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 		case "prefix":
 			conf.Pattern.PatternType = kafkav1.PatternTypes_PREFIXED
 		case "service-account-id":
+			if v == "0" {
+				conf.Entry.Principal = "User:*"
+				break
+			}
 			conf.Entry.Principal = "User:" + v
 		case "operation":
 			v = strings.ToUpper(v)

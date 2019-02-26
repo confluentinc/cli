@@ -75,7 +75,7 @@ func (c *aclCommand) init(plugin common.GRPCPlugin) {
 		Args:  cobra.NoArgs,
 	}
 	cmd.Flags().AddFlagSet(resourceFlags())
-	cmd.Flags().String("service-account-id", "*", "Set ACL filter service account")
+	cmd.Flags().Int("service-account-id", 0, "List only ACLs for this service account")
 	cmd.Flags().SortFlags = false
 
 	c.AddCommand(cmd)
