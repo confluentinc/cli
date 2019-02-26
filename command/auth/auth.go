@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -141,7 +142,7 @@ func (a *commands) credentials() (string, string, error) {
 	}
 	password := string(bytePassword)
 
-	return email, password, nil
+	return strings.TrimSpace(email), password, nil
 }
 
 func (a *commands) createOrUpdateContext(user *shared.AuthConfig) {

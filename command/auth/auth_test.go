@@ -93,10 +93,10 @@ func TestLogout(t *testing.T) {
 	req.Empty(config.Auth)
 }
 
-func Test_credentials_ShouldSupportSpacesAtBeginOrEnd(t *testing.T) {
+func Test_credentials_NoSpacesAroundEmail_ShouldSupportSpacesAtBeginOrEnd(t *testing.T) {
 	req := require.New(t)
 
-	prompt := prompt("cody@confluent.io", " iamrobin ")
+	prompt := prompt(" cody@confluent.io ", " iamrobin ")
 	prompt.Out = os.Stdout
 	auth := &sdkMock.Auth{}
 	cmds, _ := newAuthCommand(prompt, auth, req)
