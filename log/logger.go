@@ -40,12 +40,25 @@ func New() *Logger {
 	return &Logger{l: hclog.New(&hclog.LoggerOptions{
 		//Level:      hclog.Warn,
 		//Output:     os.Stderr,
+		JSONFormat: true,
 	})}
+}
+
+func (l *Logger) Trace(args ...interface{}) {
+	if l.l.IsTrace() {
+		l.l.Trace(fmt.Sprint(args))
+	}
+}
+
+func (l *Logger) Tracef(format string, args ...interface{}) {
+	if l.l.IsTrace() {
+		l.l.Trace(fmt.Sprintf(format, args...))
+	}
 }
 
 func (l *Logger) Debug(args ...interface{}) {
 	if l.l.IsDebug() {
-		l.l.Debug(args[0].(string))
+		l.l.Debug(fmt.Sprint(args))
 	}
 }
 
@@ -54,7 +67,6 @@ func (l *Logger) Debugf(format string, args ...interface{}) {
 		l.l.Debug(fmt.Sprintf(format, args...))
 	}
 }
-
 
 func (l *Logger) Info(args ...interface{}) {
 	if l.l.IsInfo() {

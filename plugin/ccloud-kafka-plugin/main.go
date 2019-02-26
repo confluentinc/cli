@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/go-hclog"
 	plugin "github.com/hashicorp/go-plugin"
+	"github.com/sirupsen/logrus"
 
 	chttp "github.com/confluentinc/ccloud-sdk-go"
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
@@ -31,7 +32,11 @@ func main() {
 		Output: hclog.DefaultOutput,
 		Level:  hclog.Trace,
 		Name:   "plugin32",
+		JSONFormat: true,
 	})
+	logger3 := logrus.New()
+	logger3.Level = logrus.TraceLevel
+	logger3.Formatter = &logrus.JSONFormatter{}
 
 	var metricSink shared.MetricSink
 	{
@@ -53,7 +58,7 @@ func main() {
 	var impl *Kafka
 	{
 		client := chttp.NewClientWithJWT(context.Background(), config.AuthToken, config.AuthURL, config.Logger)
-		impl = &Kafka{Logger: logger, Client: client, Logger2: logger2}
+		impl = &Kafka{Logger: logger, Client: client, Logger2: logger2, Logger3: logger3}
 	}
 
 	shared.PluginMap[kafka.Name] = &kafka.Plugin{Impl: impl}
@@ -68,6 +73,7 @@ func main() {
 type Kafka struct {
 	Logger *log.Logger
 	Logger2 hclog.Logger
+	Logger3 *logrus.Logger
 	Client *chttp.Client
 }
 
@@ -81,8 +87,18 @@ func (c *Kafka) CreateAPIKey(ctx context.Context, apiKey *authv1.ApiKey) (*authv
 
 // List lists the clusters associated with an account
 func (c *Kafka) List(ctx context.Context, cluster *kafkav1.KafkaCluster) ([]*kafkav1.KafkaCluster, error) {
-	c.Logger2.Trace("GOT TO LIST STUFF")
-	c.Logger.Debug("SOME ORIGINAL LOGGER STUFF")
+	c.Logger.Error("WRAPPED LOGGER STUFF")
+	c.Logger2.Error("HCLOG STUFF")
+	c.Logger3.Error("LOGRUS STUFF")
+	c.Logger.Info("WRAPPED LOGGER STUFF")
+	c.Logger2.Info("HCLOG STUFF")
+	c.Logger3.Info("LOGRUS STUFF")
+	c.Logger.Debug("WRAPPED LOGGER STUFF")
+	c.Logger2.Debug("HCLOG STUFF")
+	c.Logger3.Debug("LOGRUS STUFF")
+	c.Logger.Trace("WRAPPED LOGGER STUFF")
+	c.Logger2.Trace("HCLOG STUFF")
+	c.Logger3.Trace("LOGRUS STUFF")
 	ret, err := c.Client.Kafka.List(ctx, cluster)
 	return ret, shared.ConvertAPIError(err)
 }
