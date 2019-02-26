@@ -30,11 +30,6 @@ var (
 	createRenames = map[string]string{"Key": "API Key"}
 )
 
-// grpcLoader is the default client loader for the CLI
-func grpcLoader(i interface{}) error {
-	return common.LoadPlugin(api_key.Name, i)
-}
-
 // New returns the Cobra command for API Key.
 func New(config *shared.Config, factory common.GRPCPluginFactory) (*cobra.Command, error) {
 	return newCMD(config, factory.Create(api_key.Name))
@@ -63,7 +58,7 @@ func (c *command) init(plugin common.GRPCPlugin) error {
 			return common.HandleError(err, cmd)
 		}
 		// Lazy load plugin to avoid unnecessarily spawning child processes
-		return plugin(&c.client)
+		return plugin.Load(&c.client)
 	}
 
 	c.AddCommand(&cobra.Command{

@@ -12,7 +12,6 @@ import (
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/shared"
-	sharedUser "github.com/confluentinc/cli/shared/user"
 )
 
 type command struct {
@@ -31,14 +30,9 @@ var (
 const nameLength = 32
 const descriptionLength = 128
 
-// grpcLoader is the default client loader for the CLI
-func grpcLoader(i interface{}) error {
-	return common.LoadPlugin(sharedUser.Name, i)
-}
-
 // New returns the Cobra command for service accounts.
 func New(config *shared.Config, factory common.GRPCPluginFactory) (*cobra.Command, error) {
-	return newCMD(config, factory.Create(service_account.Name))
+	return newCMD(config, factory.Create("service-account"))
 }
 
 // newCMD returns a command for interacting with service accounts.
@@ -64,7 +58,7 @@ func (c *command) init(plugin common.GRPCPlugin) error {
 			return common.HandleError(err, cmd)
 		}
 		// Lazy load plugin to avoid unnecessarily spawning child processes
-		return plugin(&c.client)
+		return plugin.Load(&c.client)
 	}
 
 	c.AddCommand(&cobra.Command{
