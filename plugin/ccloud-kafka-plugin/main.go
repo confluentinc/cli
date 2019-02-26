@@ -72,7 +72,7 @@ type Kafka struct {
 
 // CreateAPIKey generates an api key for a user
 func (c *Kafka) CreateAPIKey(ctx context.Context, apiKey *authv1.ApiKey) (*authv1.ApiKey, error) {
-	c.Logger.Log("method", "create", "resource", "apikey",
+	c.Logger.Log("method", "create", "resource", "api-key",
 		"user", apiKey.UserId)
 	apiKey, err := c.Client.APIKey.Create(ctx, apiKey)
 	return apiKey, shared.ConvertAPIError(err)

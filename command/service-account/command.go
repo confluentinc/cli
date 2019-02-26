@@ -88,9 +88,9 @@ func (c *command) init(plugin common.GRPCPlugin) error {
 		RunE:  c.update,
 		Args:  cobra.NoArgs,
 	}
-	updateCmd.Flags().Int32("serviceaccountid", 0, "service account id")
+	updateCmd.Flags().Int32("servic-eaccount-id", 0, "service account id")
 	updateCmd.Flags().String("description", "", "service account description")
-	_ = updateCmd.MarkFlagRequired("serviceaccountid")
+	_ = updateCmd.MarkFlagRequired("servic-eaccount-id")
 	_ = updateCmd.MarkFlagRequired("description")
 	c.AddCommand(updateCmd)
 
@@ -100,8 +100,8 @@ func (c *command) init(plugin common.GRPCPlugin) error {
 		RunE:  c.delete,
 		Args:  cobra.NoArgs,
 	}
-	deleteCmd.Flags().Int32("serviceaccountid", 0, "service account id")
-	_ = deleteCmd.MarkFlagRequired("serviceaccountid")
+	deleteCmd.Flags().Int32("service-account-id", 0, "service account id")
+	_ = deleteCmd.MarkFlagRequired("service-account-id")
 	c.AddCommand(deleteCmd)
 
 	return nil
@@ -150,7 +150,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) update(cmd *cobra.Command, args []string) error {
-	id, err := cmd.Flags().GetInt32("serviceaccountid")
+	id, err := cmd.Flags().GetInt32("service-account-id")
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
@@ -176,7 +176,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
-	id, err := cmd.Flags().GetInt32("serviceaccountid")
+	id, err := cmd.Flags().GetInt32("service-account-id")
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}

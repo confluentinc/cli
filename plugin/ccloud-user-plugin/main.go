@@ -82,7 +82,7 @@ func (c *User) Describe(ctx context.Context, user *orgv1.User) (*orgv1.User, err
 }
 
 func (c *User) CreateServiceAccount(ctx context.Context, user *orgv1.User) (*orgv1.User, error) {
-	c.Logger.Log("msg", "user.UpdateServiceAccount()")
+	c.Logger.Log("msg", "user.CreateServiceAccount()")
 	ret, err := c.Client.User.CreateServiceAccount(ctx, user)
 	return ret, shared.ConvertAPIError(err)
 }
@@ -100,7 +100,7 @@ func (c *User) DeleteServiceAccount(ctx context.Context, user *orgv1.User) error
 }
 
 func (c *User) GetServiceAccounts(ctx context.Context) ([]*orgv1.User, error) {
-	c.Logger.Log("msg", "user.CreateServiceAccount()")
+	c.Logger.Log("msg", "user.GetServiceAccounts()")
 	ret, err := c.Client.User.GetServiceAccounts(ctx)
 	return ret, shared.ConvertAPIError(err)
 }

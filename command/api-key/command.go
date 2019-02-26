@@ -75,7 +75,7 @@ func (c *command) init(plugin common.GRPCPlugin) error {
 	}
 	createCmd.Flags().String("cluster", "", "grant access to this cluster ID")
 	_ = createCmd.MarkFlagRequired("cluster")
-	createCmd.Flags().Int32("serviceaccountid", 0, "create for a service account instead of yourself")
+	createCmd.Flags().Int32("service-account-id", 0, "create for a service account instead of yourself")
 	createCmd.Flags().String("description", "", "description or purpose for the API key")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
@@ -86,8 +86,8 @@ func (c *command) init(plugin common.GRPCPlugin) error {
 		RunE:  c.delete,
 		Args:  cobra.NoArgs,
 	}
-	deleteCmd.Flags().String("apikey", "", "api Key")
-	_ = deleteCmd.MarkFlagRequired("apikey")
+	deleteCmd.Flags().String("api-key", "", "API key")
+	_ = deleteCmd.MarkFlagRequired("api-key")
 	c.AddCommand(deleteCmd)
 
 	return nil
@@ -140,7 +140,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return common.HandleError(err, cmd)
 	}
 
-	userId, err := cmd.Flags().GetInt32("serviceaccountid")
+	userId, err := cmd.Flags().GetInt32("service-account-id")
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
@@ -183,7 +183,7 @@ func getApiKeyId(apiKeys []*authv1.ApiKey, apiKey string) (int32, error) {
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
-	apiKey, err := cmd.Flags().GetString("apikey")
+	apiKey, err := cmd.Flags().GetString("api-key")
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
