@@ -241,6 +241,25 @@ func TestListPrincipalACL(t *testing.T) {
 	}
 }
 
+func TestListResourcePrincipalFilterACL(t *testing.T) {
+	expect := make(chan interface{})
+	for _, resource := range resourcePatterns {
+		args := append([]string{"acl", "list"}, resource.args...)
+		for  _, entry := range aclEntries {
+			cmd := NewCMD(expect)
+			cmd.SetArgs(append(args,"--service-account-id", strings.TrimPrefix(entry.entry.Principal, "User:")))
+
+			go func() {
+				expect <- convertToFilter(&kafkav1.ACLBinding{Pattern: resource.pattern, Entry: entry.entry})
+			}()
+
+			if err := cmd.Execute(); err != nil {
+				t.Errorf("error: %s", err)
+			}
+		}
+	}
+}
+
 /*************** TEST command_topic ***************/
 var Topics = []struct {
 	args []string

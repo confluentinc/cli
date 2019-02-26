@@ -82,7 +82,7 @@ func (c *aclCommand) init(plugin common.GRPCPlugin) {
 }
 
 func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
-	acl := validateList(parse(cmd))
+	acl := parse(cmd)
 
 	cluster, err := common.Cluster(c.config)
 	if err != nil {
@@ -164,14 +164,6 @@ func validateAddDelete(binding *ACLConfiguration) *ACLConfiguration {
 		binding.errors = append(binding.errors, "a resource flag must be specified when adding or deleting an acl")
 	}
 
-	return binding
-}
-
-// validateList ensures the basic requirements for acl list are met
-func validateList(binding *ACLConfiguration) *ACLConfiguration {
-	if binding.Entry.Principal == "" || binding.Pattern == nil {
-		binding.errors = append(binding.errors, "either --principal or a resource must be specified when listing acls not both ")
-	}
 	return binding
 }
 
