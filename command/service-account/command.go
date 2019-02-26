@@ -36,8 +36,13 @@ func grpcLoader(i interface{}) error {
 	return common.LoadPlugin(sharedUser.Name, i)
 }
 
-// New returns the Cobra command for Users.
-func New(config *shared.Config) (*cobra.Command, error) {
+// New returns the Cobra command for service accounts.
+func New(config *shared.Config, factory common.GRPCPluginFactory) (*cobra.Command, error) {
+	return newCMD(config, factory.Create(service_account.Name))
+}
+
+// newCMD returns a command for interacting with service accounts.
+func newCMD(config *shared.Config, provider common.GRPCPlugin) (*cobra.Command, error) {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:   "service-account",
@@ -45,11 +50,15 @@ func New(config *shared.Config) (*cobra.Command, error) {
 		},
 		config: config,
 	}
-	err := cmd.init(grpcLoader)
+	_, err := provider.LookupPath()
+	if err != nil {
+		return nil, err
+	}
+	err = cmd.init(provider)
 	return cmd.Command, err
 }
 
-func (c *command) init(plugin common.Provider) error {
+func (c *command) init(plugin common.GRPCPlugin) error {
 	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		if err := c.config.CheckLogin(); err != nil {
 			return common.HandleError(err, cmd)
@@ -160,7 +169,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 
 	user := &orgv1.User{
-		Id:        id,
+		Id:                 id,
 		ServiceDescription: description,
 	}
 
@@ -178,7 +187,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	user := &orgv1.User{
-		Id:        id,
+		Id: id,
 	}
 
 	err = c.client.DeleteServiceAccount(context.Background(), user)

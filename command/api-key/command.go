@@ -36,7 +36,12 @@ func grpcLoader(i interface{}) error {
 }
 
 // New returns the Cobra command for API Key.
-func New(config *shared.Config) (*cobra.Command, error) {
+func New(config *shared.Config, factory common.GRPCPluginFactory) (*cobra.Command, error) {
+	return newCMD(config, factory.Create(api_key.Name))
+}
+
+// newCMD returns a command for interacting with API Key.
+func newCMD(config *shared.Config, provider common.GRPCPlugin) (*cobra.Command, error) {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:   "api-key",
@@ -44,11 +49,15 @@ func New(config *shared.Config) (*cobra.Command, error) {
 		},
 		config: config,
 	}
-	err := cmd.init(grpcLoader)
+	_, err := provider.LookupPath()
+	if err != nil {
+		return nil, err
+	}
+	err = cmd.init(provider)
 	return cmd.Command, err
 }
 
-func (c *command) init(plugin common.Provider) error {
+func (c *command) init(plugin common.GRPCPlugin) error {
 	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		if err := c.config.CheckLogin(); err != nil {
 			return common.HandleError(err, cmd)
