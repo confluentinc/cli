@@ -14,10 +14,20 @@ type Logger struct {
 type Level int
 
 const (
+	// For information about unrecoverable events.
 	ERROR Level = iota
+
+	// For information about rare but handled events.
 	WARN
+
+	// For information about steady state operations.
 	INFO
+
+	// For programmer lowlevel analysis.
 	DEBUG
+
+	// The most verbose level. Intended to be used for the tracing of actions
+	// in code, such as function enters/exits, etc.
 	TRACE
 )
 
