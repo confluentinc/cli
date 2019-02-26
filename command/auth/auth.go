@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -33,16 +32,16 @@ func New(config *shared.Config) []*cobra.Command {
 	var defaultJwtHTTPClientFactory = func(ctx context.Context, jwt string, baseURL string, logger *log.Logger) *chttp.Client {
 		return chttp.NewClientWithJWT(ctx, jwt, baseURL, logger)
 	}
-	return newCommands(config, command.NewTerminalPrompt(os.Stdin), defaultAnonHTTPClientFactory, defaultJwtHTTPClientFactory)
+	return newCommands(config, command.NewTerminalPrompt(os.Stdin), defaultAnonHTTPClientFactory, defaultJwtHTTPClientFactory).Commands
 }
 
 func newCommands(config *shared.Config, prompt command.Prompt,
 	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *chttp.Client,
 	jwtHTTPClientFactory func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *chttp.Client,
-) []*cobra.Command {
+) *commands {
 	cmd := &commands{config: config, prompt: prompt, anonHTTPClientFactory: anonHTTPClientFactory, jwtHTTPClientFactory: jwtHTTPClientFactory}
 	cmd.init()
-	return cmd.Commands
+	return cmd
 }
 
 func (a *commands) init() {
@@ -142,7 +141,7 @@ func (a *commands) credentials() (string, string, error) {
 	}
 	password := string(bytePassword)
 
-	return strings.TrimSpace(email), strings.TrimSpace(password), nil
+	return email, password, nil
 }
 
 func (a *commands) createOrUpdateContext(user *shared.AuthConfig) {

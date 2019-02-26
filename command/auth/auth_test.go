@@ -2,9 +2,9 @@ package auth
 
 import (
 	"context"
+	"os"
 	"testing"
 
-	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
 	chttp "github.com/confluentinc/ccloud-sdk-go"
@@ -37,7 +37,7 @@ func TestLoginSuccess(t *testing.T) {
 	}
 	cmds, config := newAuthCommand(prompt, auth, req)
 
-	output, err := command.ExecuteCommand(cmds[0])
+	output, err := command.ExecuteCommand(cmds.Commands[0])
 	req.NoError(err)
 	req.Contains(output, "Logged in as cody@confluent.io")
 
@@ -67,7 +67,7 @@ func TestLoginFail(t *testing.T) {
 	}
 	cmds, _ := newAuthCommand(prompt, auth, req)
 
-	output, err := command.ExecuteCommand(cmds[0])
+	output, err := command.ExecuteCommand(cmds.Commands[0])
 	req.EqualError(err, "incorrect auth")
 	req.Contains(output, "You have entered an incorrect username or password.")
 }
@@ -83,7 +83,7 @@ func TestLogout(t *testing.T) {
 	config.Auth = &shared.AuthConfig{User: &orgv1.User{Id: 23}}
 	req.NoError(config.Save())
 
-	output, err := command.ExecuteCommand(cmds[1])
+	output, err := command.ExecuteCommand(cmds.Commands[1])
 	req.NoError(err)
 	req.Contains(output, "You are now logged out")
 
@@ -93,6 +93,20 @@ func TestLogout(t *testing.T) {
 	req.Empty(config.Auth)
 }
 
+func Test_credentials_ShouldSupportSpacesAtBeginOrEnd(t *testing.T) {
+	req := require.New(t)
+
+	prompt := prompt("cody@confluent.io", " iamrobin ")
+	prompt.Out = os.Stdout
+	auth := &sdkMock.Auth{}
+	cmds, _ := newAuthCommand(prompt, auth, req)
+
+	user, pass, err := cmds.credentials()
+	req.NoError(err)
+	req.Equal("cody@confluent.io", user)
+	req.Equal(" iamrobin ", pass)
+}
+
 func prompt(username, password string) *cliMock.Prompt {
 	return &cliMock.Prompt{
 		Strings:   []string{username},
@@ -100,7 +114,7 @@ func prompt(username, password string) *cliMock.Prompt {
 	}
 }
 
-func newAuthCommand(prompt command.Prompt, auth *sdkMock.Auth, req *require.Assertions) ([]*cobra.Command, *shared.Config) {
+func newAuthCommand(prompt command.Prompt, auth *sdkMock.Auth, req *require.Assertions) (*commands, *shared.Config) {
 	var mockAnonHTTPClientFactory = func(baseURL string, logger *log.Logger) *chttp.Client {
 		req.Equal("https://confluent.cloud", baseURL)
 		return &chttp.Client{Auth: auth}
@@ -111,7 +125,7 @@ func newAuthCommand(prompt command.Prompt, auth *sdkMock.Auth, req *require.Asse
 	config := shared.NewConfig()
 	config.Logger = log.New()
 	commands := newCommands(config, prompt, mockAnonHTTPClientFactory, mockJwtHTTPClientFactory)
-	for _, c := range commands {
+	for _, c := range commands.Commands {
 		c.PersistentFlags().CountP("verbose", "v", "increase output verbosity")
 	}
 	return commands, config
