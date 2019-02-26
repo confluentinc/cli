@@ -26,6 +26,7 @@ var (
 var Formatters = template.FuncMap{
 	"ToTitle": strings.Title,
 	"ToLower": strings.ToLower,
+	"ToUpper": strings.ToUpper,
 }
 
 func main() {

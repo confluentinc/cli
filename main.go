@@ -15,6 +15,7 @@ import (
 	"github.com/confluentinc/cli/command/config"
 	"github.com/confluentinc/cli/command/kafka"
 	"github.com/confluentinc/cli/command/connect"
+	"github.com/confluentinc/cli/command/ksql"
 	"github.com/hashicorp/go-plugin"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -113,6 +114,13 @@ func BuildCommand(cfg *shared.Config, version *cliVersion.Version, factory commo
     }
 
     conn, err = connect.New(cfg, factory)
+    if err != nil {
+    	logger.Log("msg", err)
+    } else {
+    	cli.AddCommand(conn)
+    }
+
+    conn, err = ksql.New(cfg, factory)
     if err != nil {
     	logger.Log("msg", err)
     } else {

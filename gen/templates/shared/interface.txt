@@ -1,5 +1,9 @@
 {{ define "plugin_interface" }}
-{{- template "generated" . }}
+{{ template "generated" . }}
+{{- $alias := .Package | ToTitle }}
+{{ if eq $alias "Ksql" }}
+    {{ $alias = $alias | ToUpper }}
+{{ end }}
 package {{ .Package | ToLower }}
 
 import (
@@ -18,17 +22,17 @@ const Name = "{{ .Name }}"
 // Plugin mates an interface with Hashicorp plugin object
 type Plugin struct {
 	plugin.NetRPCUnsupportedPlugin
-	Impl chttp.{{ .Package | ToTitle }}
+	Impl chttp.{{ $alias }}
 }
 
 // GRPCClient registers a GRPC client
 func (p *Plugin) GRPCClient(ctx context.Context, broker *plugin.GRPCBroker, c *grpc.ClientConn) (interface{}, error) {
-	return &GRPCClient{client: New{{ .Package | ToTitle }}Client(c)}, nil
+	return &GRPCClient{client: New{{ $alias }}Client(c)}, nil
 }
 
 // GRPCServer registers a GRPC Server
 func (p *Plugin) GRPCServer(broker *plugin.GRPCBroker, s *grpc.Server) error {
-	Register{{ .Package | ToTitle }}Server(s, &GRPCServer{p.Impl})
+	Register{{ $alias }}Server(s, &GRPCServer{p.Impl})
 	return nil
 }
 
