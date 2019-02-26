@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	golog "log"
 	"os"
 
 	plugin "github.com/hashicorp/go-plugin"
@@ -26,7 +25,7 @@ func main() {
 		defer logger.Log("msg", "goodbye")
 
 		f, err := os.OpenFile("/tmp/confluent-user-plugin.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
-		check(err)
+		check(err, logger)
 		logger.SetLevel(log.DEBUG)
 		logger.SetOutput(f)
 	}
@@ -104,8 +103,9 @@ func (c *User) GetServiceAccounts(ctx context.Context) ([]*orgv1.User, error) {
 	return ret, shared.ConvertAPIError(err)
 }
 
-func check(err error) {
+func check(err error, logger *log.Logger) {
 	if err != nil {
-		golog.Fatal(err)
+		logger.Error(err)
+		os.Exit(1)
 	}
 }

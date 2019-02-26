@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	golog "log"
 	"os"
 
 	plugin "github.com/hashicorp/go-plugin"
@@ -27,7 +26,7 @@ func main() {
 		defer logger.Log("msg", "Shutting down plugin "+kafka.Name)
 
 		f, err := os.OpenFile("/tmp/"+kafka.Name+".log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
-		check(err)
+		check(err, logger)
 		logger.SetLevel(log.DEBUG)
 		logger.SetOutput(f)
 	}
@@ -194,8 +193,9 @@ func withFields(method string, resource string, cluster *kafkav1.KafkaCluster, t
 	return fields
 }
 
-func check(err error) {
+func check(err error, logger *log.Logger) {
 	if err != nil {
-		golog.Fatal(err)
+		logger.Error(err)
+		os.Exit(1)
 	}
 }
