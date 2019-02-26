@@ -3,6 +3,7 @@ package log
 import (
 	"io"
 
+	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/sirupsen/logrus"
 )
 
@@ -10,6 +11,8 @@ import (
 type Logger struct {
 	l *logrus.Logger
 }
+
+var _ ccloud.Logger = (*Logger)(nil)
 
 type Level int
 
