@@ -11,7 +11,7 @@ require (
 	github.com/codyaray/go-printer v0.8.0
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
 	github.com/confluentinc/cc-structs v0.0.0-20190216225128-bc354c6bf010
-	github.com/confluentinc/ccloud-sdk-go v0.0.6-0.20190226153335-140bd7435d96
+	github.com/confluentinc/ccloud-sdk-go v0.0.6-0.20190226163025-48f4ae5f158f
 	github.com/confluentinc/ccloudapis v0.0.0-20190223013552-64fe4ec0c600
 	github.com/confluentinc/protoc-gen-ccloud v0.0.1 // indirect
 	github.com/coreos/go-systemd v0.0.0-20190212144455-93d5ec2c7f76 // indirect
