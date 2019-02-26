@@ -39,14 +39,8 @@ func main() {
 		logger = log.New()
 		logger.Out = os.Stdout
 		logger.Log("msg", "hello")
+		logger.SetLevel(logrus.WarnLevel)
 		defer logger.Log("msg", "goodbye")
-
-		if viper.GetString("log_level") != "" {
-			level, err := logrus.ParseLevel(viper.GetString("log_level"))
-			check(err)
-			logger.SetLevel(level)
-			logger.Log("msg", "set log level", "level", level.String())
-		}
 	}
 
 	var metricSink shared.MetricSink
@@ -77,11 +71,17 @@ func main() {
 	os.Exit(0)
 }
 
-
 func BuildCommand(cfg *shared.Config, version *cliVersion.Version, factory common.GRPCPluginFactory, logger *log.Logger) *cobra.Command {
 	cli := &cobra.Command{
 		Use:   "ccloud",
 		Short: "Welcome to the Confluent Cloud CLI",
+	}
+	cli.PersistentFlags().CountP("verbose", "v", "increase output verbosity")
+	cli.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		if err := common.SetLoggingVerbosity(cmd, logger); err != nil {
+			return common.HandleError(err, cmd)
+		}
+		return nil
 	}
 
 	prompt := command.NewTerminalPrompt(os.Stdin)

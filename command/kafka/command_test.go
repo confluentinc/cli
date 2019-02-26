@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/confluentinc/cli/log"
 	"github.com/spf13/cobra"
 
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
@@ -345,12 +346,14 @@ func NewCMD(expect chan interface{}) *cobra.Command {
 			return cliMock.NewKafkaMock(value, expect)
 		},
 	})
+	cmd.PersistentFlags().CountP("verbose", "v", "increase output verbosity")
 
 	return cmd
 }
 
 func init() {
 	conf = shared.NewConfig()
+	conf.Logger = log.New()
 	conf.AuthURL = "http://test"
 	conf.Auth = &shared.AuthConfig{
 		User:    new(orgv1.User),

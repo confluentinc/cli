@@ -109,5 +109,10 @@ func newAuthCommand(prompt command.Prompt, auth *sdkMock.MockAuth, req *require.
 		return &chttp.Client{Auth: auth}
 	}
 	config := shared.NewConfig()
-	return newCommands(config, prompt, mockAnonHTTPClientFactory, mockJwtHTTPClientFactory), config
+	config.Logger = log.New()
+	commands := newCommands(config, prompt, mockAnonHTTPClientFactory, mockJwtHTTPClientFactory)
+	for _, c := range commands {
+		c.PersistentFlags().CountP("verbose", "v", "increase output verbosity")
+	}
+	return commands, config
 }
