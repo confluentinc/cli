@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package apiKey;
+package api_key;
 
 import "github.com/confluentinc/ccloudapis/auth/v1/auth.proto";
 
