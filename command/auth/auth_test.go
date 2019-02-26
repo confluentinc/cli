@@ -21,7 +21,7 @@ func TestLoginSuccess(t *testing.T) {
 	req := require.New(t)
 
 	prompt := prompt("cody@confluent.io", "iambatman")
-	auth := &sdkMock.MockAuth{
+	auth := &sdkMock.Auth{
 		LoginFunc: func(ctx context.Context, username string, password string) (string, error) {
 			return "y0ur.jwt.T0kEn", nil
 		},
@@ -60,7 +60,7 @@ func TestLoginFail(t *testing.T) {
 	req := require.New(t)
 
 	prompt := prompt("cody@confluent.io", "iamrobin")
-	auth := &sdkMock.MockAuth{
+	auth := &sdkMock.Auth{
 		LoginFunc: func(ctx context.Context, username string, password string) (string, error) {
 			return "", shared.ErrIncorrectAuth
 		},
@@ -76,7 +76,7 @@ func TestLogout(t *testing.T) {
 	req := require.New(t)
 
 	prompt := prompt("cody@confluent.io", "iamrobin")
-	auth := &sdkMock.MockAuth{}
+	auth := &sdkMock.Auth{}
 	cmds, config := newAuthCommand(prompt, auth, req)
 
 	config.AuthToken = "some.token.here"
@@ -100,7 +100,7 @@ func prompt(username, password string) *cliMock.Prompt {
 	}
 }
 
-func newAuthCommand(prompt command.Prompt, auth *sdkMock.MockAuth, req *require.Assertions) ([]*cobra.Command, *shared.Config) {
+func newAuthCommand(prompt command.Prompt, auth *sdkMock.Auth, req *require.Assertions) ([]*cobra.Command, *shared.Config) {
 	var mockAnonHTTPClientFactory = func(baseURL string, logger *log.Logger) *chttp.Client {
 		req.Equal("https://confluent.cloud", baseURL)
 		return &chttp.Client{Auth: auth}
