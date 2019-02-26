@@ -16,7 +16,6 @@ import (
 	"github.com/confluentinc/cli/command/service-account"
 
 	"github.com/hashicorp/go-plugin"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -40,9 +39,9 @@ func main() {
 	var logger *log.Logger
 	{
 		logger = log.New()
-		logger.Out = os.Stdout
+		logger.SetOutput(os.Stdout)
 		logger.Log("msg", "hello")
-		logger.SetLevel(logrus.WarnLevel)
+		logger.SetLevel(log.WARN)
 		defer logger.Log("msg", "goodbye")
 	}
 
@@ -59,7 +58,7 @@ func main() {
 		})
 		err := cfg.Load()
 		if err != nil && err != shared.ErrNoConfig {
-			logger.WithError(err).Errorf("unable to load cfg")
+			logger.Errorf("unable to load config: %v", err)
 		}
 	}
 

@@ -1,7 +1,6 @@
 package common
 
 import (
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/log"
@@ -14,16 +13,16 @@ func SetLoggingVerbosity(cmd *cobra.Command, logger *log.Logger) error {
 	}
 	switch verbosity {
 	case 0:
-		logger.SetLevel(logrus.WarnLevel)
+		logger.SetLevel(log.WARN)
 	case 1:
-		logger.SetLevel(logrus.InfoLevel)
+		logger.SetLevel(log.INFO)
 	case 2:
-		logger.SetLevel(logrus.DebugLevel)
+		logger.SetLevel(log.DEBUG)
 	case 3:
-		logger.SetLevel(logrus.TraceLevel)
+		logger.SetLevel(log.TRACE)
 	default:
 		// requested more than 3 -v's, so let's give them the max verbosity we support
-		logger.SetLevel(logrus.TraceLevel)
+		logger.SetLevel(log.TRACE)
 	}
 	return nil
 }
