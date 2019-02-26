@@ -21,9 +21,9 @@ import (
 
 var (
 	listFields       = []string{"Id", "Name", "Plugin", "ServiceProvider", "Region", "Status"}
-	listLabels       = []string{"Id", "Name", "Kind", "Provider", "Region", "Status"}
+	listLabels       = []string{"Id", "Name", "Kind", "GRPCPlugin", "Region", "Status"}
 	describeFields   = []string{"Id", "Name", "Plugin", "KafkaClusterId", "ServiceProvider", "Region", "Durability", "Status"}
-	describeRenames  = map[string]string{"Plugin": "Kind", "KafkaClusterId": "Kafka", "ServiceProvider": "Provider"}
+	describeRenames  = map[string]string{"Plugin": "Kind", "KafkaClusterId": "Kafka", "ServiceProvider": "GRPCPlugin"}
 	validPluginTypes = []string{"s3"}
 )
 
@@ -34,11 +34,11 @@ type sinkCommand struct {
 }
 
 // NewSink returns the Cobra sinkCommand for Connect Sink.
-func NewSink(config *shared.Config, plugin common.Provider) (*cobra.Command, error) {
+func NewSink(config *shared.Config, plugin common.GRPCPlugin) (*cobra.Command, error) {
 	cmd := &sinkCommand{
 		Command: &cobra.Command{
 			Use:   "sink",
-			Short: "Manage sink connectors.",
+			Short: "Manage sink connectors",
 		},
 		config: config,
 	}
@@ -46,18 +46,21 @@ func NewSink(config *shared.Config, plugin common.Provider) (*cobra.Command, err
 	return cmd.Command, err
 }
 
-func (c *sinkCommand) init(plugin common.Provider) error {
+func (c *sinkCommand) init(plugin common.GRPCPlugin) error {
 	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		if err := common.SetLoggingVerbosity(cmd, c.config.Logger); err != nil {
+			return common.HandleError(err, cmd)
+		}
 		if err := c.config.CheckLogin(); err != nil {
 			return common.HandleError(err, cmd)
 		}
 		// Lazy load plugin to avoid unnecessarily spawning child processes
-		return plugin(&c.client)
+		return plugin.Load(&c.client)
 	}
 
 	createCmd := &cobra.Command{
 		Use:   "create NAME",
-		Short: "Create a connector.",
+		Short: "Create a connector",
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -82,13 +85,13 @@ func (c *sinkCommand) init(plugin common.Provider) error {
 
 	c.AddCommand(&cobra.Command{
 		Use:   "list",
-		Short: "List connectors.",
+		Short: "List connectors",
 		RunE:  c.list,
 	})
 
 	getCmd := &cobra.Command{
 		Use:   "get ID",
-		Short: "Get a connector.",
+		Short: "Get a connector",
 		RunE:  c.get,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -97,14 +100,14 @@ func (c *sinkCommand) init(plugin common.Provider) error {
 
 	c.AddCommand(&cobra.Command{
 		Use:   "describe ID",
-		Short: "Describe a connector.",
+		Short: "Describe a connector",
 		RunE:  c.describe,
 		Args:  cobra.ExactArgs(1),
 	})
 
 	editCmd := &cobra.Command{
 		Use:   "edit ID",
-		Short: "Edit a connector.",
+		Short: "Edit a connector",
 		RunE:  c.edit,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -113,7 +116,7 @@ func (c *sinkCommand) init(plugin common.Provider) error {
 
 	updateCmd := &cobra.Command{
 		Use:   "update ID",
-		Short: "Update a connector.",
+		Short: "Update a connector",
 		RunE:  c.update,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -123,14 +126,14 @@ func (c *sinkCommand) init(plugin common.Provider) error {
 
 	c.AddCommand(&cobra.Command{
 		Use:   "delete ID",
-		Short: "Delete a connector.",
+		Short: "Delete a connector",
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
 	})
 
 	c.AddCommand(&cobra.Command{
 		Use:   "auth",
-		Short: "Auth a connector.",
+		Short: "Auth a connector",
 		RunE:  c.auth,
 	})
 

@@ -21,11 +21,11 @@ type aclCommand struct {
 }
 
 // NewACLCommand returns the Cobra clusterCommand for Kafka Cluster.
-func NewACLCommand(config *shared.Config, plugin common.Provider) *cobra.Command {
+func NewACLCommand(config *shared.Config, plugin common.GRPCPlugin) *cobra.Command {
 	cmd := &aclCommand{
 		Command: &cobra.Command{
 			Use:   "acl",
-			Short: "Manage Kafka ACLs.",
+			Short: "Manage Kafka ACLs",
 		},
 		config: config,
 	}
@@ -34,18 +34,21 @@ func NewACLCommand(config *shared.Config, plugin common.Provider) *cobra.Command
 	return cmd.Command
 }
 
-func (c *aclCommand) init(plugin common.Provider) {
+func (c *aclCommand) init(plugin common.GRPCPlugin) {
 	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		if err := common.SetLoggingVerbosity(cmd, c.config.Logger); err != nil {
+			return common.HandleError(err, cmd)
+		}
 		if err := c.config.CheckLogin(); err != nil {
 			return common.HandleError(err, cmd)
 		}
 		// Lazy load plugin to avoid unnecessarily spawning child processes
-		return plugin(&c.client)
+		return plugin.Load(&c.client)
 	}
 
 	cmd := &cobra.Command{
 		Use:   "create",
-		Short: "Create a Kafka ACL.",
+		Short: "Create a Kafka ACL",
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
 	}
@@ -56,7 +59,7 @@ func (c *aclCommand) init(plugin common.Provider) {
 
 	cmd = &cobra.Command{
 		Use:   "delete",
-		Short: "Delete a Kafka ACL.",
+		Short: "Delete a Kafka ACL",
 		RunE:  c.delete,
 		Args:  cobra.NoArgs,
 	}
@@ -67,7 +70,7 @@ func (c *aclCommand) init(plugin common.Provider) {
 
 	cmd = &cobra.Command{
 		Use:   "list",
-		Short: "List Kafka ACLs for a resource.",
+		Short: "List Kafka ACLs for a resource",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	}

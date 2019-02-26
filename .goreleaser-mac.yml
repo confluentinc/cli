@@ -1,12 +1,11 @@
-project_name: confluent-cli
+project_name: ccloud
 
 builds:
   -
-    binary: confluent
+    binary: ccloud
     main: .
     ldflags:
-      # remove the date so builds are reproducible (identical SHAs)
-      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}}
+      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}  -X main.host={{.Env.HOSTNAME}}
     gcflags:
       - -trimpath={{.Env.GOPATH}}
     asmflags:
@@ -17,10 +16,9 @@ builds:
       - amd64
   -
     binary: ccloud-kafka-plugin
-    main: ./plugin/confluent-kafka-plugin
+    main: ./plugin/ccloud-kafka-plugin
     ldflags:
-      # remove the date so builds are reproducible (identical SHAs)
-      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}}
+      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}  -X main.host={{.Env.HOSTNAME}}
     gcflags:
       - -trimpath={{.Env.GOPATH}}
     asmflags:
@@ -31,10 +29,22 @@ builds:
       - amd64
   -
     binary: ccloud-connect-plugin
-    main: ./plugin/confluent-connect-plugin
+    main: ./plugin/ccloud-connect-plugin
     ldflags:
-      # remove the date so builds are reproducible (identical SHAs)
-      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}}
+      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}  -X main.host={{.Env.HOSTNAME}}
+    gcflags:
+      - -trimpath={{.Env.GOPATH}}
+    asmflags:
+      - -trimpath={{.Env.GOPATH}}
+    goos:
+      - darwin
+    goarch:
+      - amd64
+  -
+    binary: ccloud-ksql-plugin
+    main: ./plugin/ccloud-ksql-plugin
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}  -X main.host={{.Env.HOSTNAME}}
     gcflags:
       - -trimpath={{.Env.GOPATH}}
     asmflags:

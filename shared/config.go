@@ -105,7 +105,7 @@ func (c *Config) KafkaClusterConfig() (KafkaClusterConfig, error) {
 	}
 	cluster, found := c.Platforms[cfg.Platform].KafkaClusters[cfg.Kafka]
 	if !found {
-		e := fmt.Errorf("no auth found for Kafka %s, please run `confluent kafka cluster auth` first", cfg.Kafka)
+		e := fmt.Errorf("no auth found for Kafka %s, please run `ccloud kafka cluster auth` first", cfg.Kafka)
 		return KafkaClusterConfig{}, NotAuthenticatedError(e)
 	}
 	return cluster, nil

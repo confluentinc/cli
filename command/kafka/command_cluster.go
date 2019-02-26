@@ -20,9 +20,9 @@ import (
 
 var (
 	listFields      = []string{"Id", "Name", "ServiceProvider", "Region", "Durability", "Status"}
-	listLabels      = []string{"Id", "Name", "Provider", "Region", "Durability", "Status"}
+	listLabels      = []string{"Id", "Name", "GRPCPlugin", "Region", "Durability", "Status"}
 	describeFields  = []string{"Id", "Name", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "ApiEndpoint", "PricePerHour"}
-	describeRenames = map[string]string{"NetworkIngress": "Ingress", "NetworkEgress": "Egress", "ServiceProvider": "Provider"}
+	describeRenames = map[string]string{"NetworkIngress": "Ingress", "NetworkEgress": "Egress", "ServiceProvider": "GRPCPlugin"}
 )
 
 type clusterCommand struct {
@@ -32,11 +32,11 @@ type clusterCommand struct {
 }
 
 // NewClusterCommand returns the Cobra clusterCommand for Kafka Cluster.
-func NewClusterCommand(config *shared.Config, plugin common.Provider) *cobra.Command {
+func NewClusterCommand(config *shared.Config, plugin common.GRPCPlugin) *cobra.Command {
 	cmd := &clusterCommand{
 		Command: &cobra.Command{
 			Use:   "cluster",
-			Short: "Manage Kafka clusters.",
+			Short: "Manage Kafka clusters",
 		},
 		config: config,
 	}
@@ -44,24 +44,27 @@ func NewClusterCommand(config *shared.Config, plugin common.Provider) *cobra.Com
 	return cmd.Command
 }
 
-func (c *clusterCommand) init(plugin common.Provider) {
+func (c *clusterCommand) init(plugin common.GRPCPlugin) {
 	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		if err := common.SetLoggingVerbosity(cmd, c.config.Logger); err != nil {
+			return common.HandleError(err, cmd)
+		}
 		if err := c.config.CheckLogin(); err != nil {
 			return common.HandleError(err, cmd)
 		}
 		// Lazy load plugin to avoid unnecessarily spawning child processes
-		return plugin(&c.client)
+		return plugin.Load(&c.client)
 	}
 
 	c.AddCommand(&cobra.Command{
 		Use:   "list",
-		Short: "List Kafka clusters.",
+		Short: "List Kafka clusters",
 		RunE:  c.list,
 	})
 
 	createCmd := &cobra.Command{
 		Use:   "create NAME",
-		Short: "Create a Kafka cluster.",
+		Short: "Create a Kafka cluster",
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -78,30 +81,30 @@ func (c *clusterCommand) init(plugin common.Provider) {
 
 	c.AddCommand(&cobra.Command{
 		Use:   "describe ID",
-		Short: "Describe a Kafka cluster.",
+		Short: "Describe a Kafka cluster",
 		RunE:  c.describe,
 		Args:  cobra.ExactArgs(1),
 	})
 	c.AddCommand(&cobra.Command{
 		Use:   "update ID",
-		Short: "Update a Kafka cluster.",
+		Short: "Update a Kafka cluster",
 		RunE:  c.update,
 		Args:  cobra.ExactArgs(1),
 	})
 	c.AddCommand(&cobra.Command{
 		Use:   "delete ID",
-		Short: "Delete a Kafka cluster.",
+		Short: "Delete a Kafka cluster",
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
 	})
 	c.AddCommand(&cobra.Command{
 		Use:   "auth",
-		Short: "Configure authorization for a Kafka cluster.",
+		Short: "Configure authorization for a Kafka cluster",
 		RunE:  c.auth,
 	})
 	c.AddCommand(&cobra.Command{
 		Use:   "use ID",
-		Short: "Specify the Kafka cluster to connect to.",
+		Short: "Make the Kafka cluster active for use in other commands",
 		RunE:  c.use,
 		Args:  cobra.ExactArgs(1),
 	})
@@ -199,7 +202,7 @@ func (c *clusterCommand) auth(cmd *cobra.Command, args []string) error {
 	}
 
 	if cfg.Kafka == "" {
-		return fmt.Errorf("No cluster selected. See confluent kafka use for help ")
+		return fmt.Errorf("No cluster selected. See ccloud kafka use for help ")
 	}
 
 	cluster, known := c.config.Platforms[cfg.Platform].KafkaClusters[cfg.Kafka]
@@ -294,13 +297,13 @@ func (c *clusterCommand) createKafkaCreds(ctx context.Context, kafkaClusterID st
 		LogicalClusters: []*authv1.ApiKey_Cluster{
 			{Id: kafkaClusterID},
 		},
-		AccountId:c.config.Auth.Account.Id,
+		AccountId: c.config.Auth.Account.Id,
 	})
 
 	if err != nil {
 		return "", "", shared.ConvertAPIError(err)
 	}
-	fmt.Println("Okay, we've created an API key. If needed, you can see it with `confluent kafka auth`.")
+	fmt.Println("Okay, we've created an API key. If needed, you can see it with `ccloud kafka auth`.")
 	return key.Key, key.Secret, nil
 }
 

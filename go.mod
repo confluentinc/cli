@@ -26,6 +26,7 @@ require (
 	github.com/google/uuid v1.1.0
 	github.com/gorilla/mux v1.7.0 // indirect
 	github.com/gregjones/httpcache v0.0.0-20190212212710-3befbb6ad0cc // indirect
+	github.com/goreleaser/goreleaser v0.101.0
 	github.com/hashicorp/go-hclog v0.0.0-20180910232447-e45cbeb79f04
 	github.com/hashicorp/go-immutable-radix v1.0.0 // indirect
 	github.com/hashicorp/go-plugin v0.0.0-20181030172320-54b6ff97d818

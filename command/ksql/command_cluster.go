@@ -28,11 +28,11 @@ type clusterCommand struct {
 }
 
 // NewClusterCommand returns the Cobra clusterCommand for Ksql Cluster.
-func NewClusterCommand(config *shared.Config, plugin common.Provider) *cobra.Command {
+func NewClusterCommand(config *shared.Config, plugin common.GRPCPlugin) *cobra.Command {
 	cmd := &clusterCommand{
 		Command: &cobra.Command{
 			Use:   "app",
-			Short: "Manage KSQL apps.",
+			Short: "Manage KSQL apps",
 		},
 		config: config,
 	}
@@ -40,25 +40,28 @@ func NewClusterCommand(config *shared.Config, plugin common.Provider) *cobra.Com
 	return cmd.Command
 }
 
-func (c *clusterCommand) init(plugin common.Provider) {
+func (c *clusterCommand) init(plugin common.GRPCPlugin) {
 
 	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		if err := common.SetLoggingVerbosity(cmd, c.config.Logger); err != nil {
+			return common.HandleError(err, cmd)
+		}
 		if err := c.config.CheckLogin(); err != nil {
 			return common.HandleError(err, cmd)
 		}
 		// Lazy load plugin to avoid unnecessarily spawning child processes
-		return plugin(&c.client)
+		return plugin.Load(&c.client)
 	}
 
 	c.AddCommand(&cobra.Command{
 		Use:   "list",
-		Short: "List ksql apps.",
+		Short: "List KSQL apps",
 		RunE:  c.list,
 	})
 
 	createCmd := &cobra.Command{
 		Use:   "create NAME",
-		Short: "Create a ksql app.",
+		Short: "Create a KSQL app",
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -73,13 +76,13 @@ func (c *clusterCommand) init(plugin common.Provider) {
 
 	c.AddCommand(&cobra.Command{
 		Use:   "describe ID",
-		Short: "Describe a ksql app.",
+		Short: "Describe a ksql app",
 		RunE:  c.describe,
 		Args:  cobra.ExactArgs(1),
 	})
 	c.AddCommand(&cobra.Command{
 		Use:   "delete ID",
-		Short: "Delete a ksql app.",
+		Short: "Delete a ksql app",
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
 	})
