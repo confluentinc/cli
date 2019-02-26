@@ -12,7 +12,7 @@ import (
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/shared"
-	"github.com/confluentinc/cli/shared/user"
+	"github.com/confluentinc/cli/shared/serviceaccount"
 )
 
 type command struct {
@@ -33,7 +33,7 @@ const descriptionLength = 128
 
 // New returns the Cobra command for service accounts.
 func New(config *shared.Config, factory common.GRPCPluginFactory) (*cobra.Command, error) {
-	return newCMD(config, factory.Create(user.Name))
+	return newCMD(config, factory.Create(serviceaccount.Name))
 }
 
 // newCMD returns a command for interacting with service accounts.

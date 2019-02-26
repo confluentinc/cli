@@ -1,4 +1,4 @@
-package user
+package serviceaccount
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 )
 
 // Name description used for registering/disposing GRPC components
-const Name = "ccloud-user-plugin"
+const Name = "ccloud-serviceaccount-plugin"
 
 // Plugin mates an interface with Hashicorp plugin object
 type Plugin struct {

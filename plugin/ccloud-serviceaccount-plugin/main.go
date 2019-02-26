@@ -13,7 +13,7 @@ import (
 	"github.com/confluentinc/cli/log"
 	"github.com/confluentinc/cli/metric"
 	"github.com/confluentinc/cli/shared"
-	"github.com/confluentinc/cli/shared/user"
+	"github.com/confluentinc/cli/shared/serviceaccount"
 )
 
 // Compile-time check for Interface adherence
@@ -26,7 +26,7 @@ func main() {
 		logger.Log("msg", "hello")
 		defer logger.Log("msg", "goodbye")
 
-		f, err := os.OpenFile("/tmp/confluent-user-plugin.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
+		f, err := os.OpenFile("/tmp/confluent-serviceaccount-plugin.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
 		check(err)
 		logger.SetLevel(logrus.DebugLevel)
 		logger.Logger.Out = f
@@ -55,7 +55,7 @@ func main() {
 		impl = &User{Logger: logger, Client: client}
 	}
 
-	shared.PluginMap[user.Name] = &user.Plugin{Impl: impl}
+	shared.PluginMap[serviceaccount.Name] = &serviceaccount.Plugin{Impl: impl}
 
 	plugin.Serve(&plugin.ServeConfig{
 		HandshakeConfig: shared.Handshake,
@@ -70,37 +70,37 @@ type User struct {
 }
 
 func (c *User) List(ctx context.Context) ([]*orgv1.User, error) {
-	c.Logger.Log("msg", "user.List()")
+	c.Logger.Log("msg", "serviceaccount.List()")
 	ret, err := c.Client.User.List(ctx)
 	return ret, shared.ConvertAPIError(err)
 }
 
 func (c *User) Describe(ctx context.Context, user *orgv1.User) (*orgv1.User, error) {
-	c.Logger.Log("msg", "user.Describe()")
+	c.Logger.Log("msg", "serviceaccount.Describe()")
 	ret, err := c.Client.User.Describe(ctx, user)
 	return ret, shared.ConvertAPIError(err)
 }
 
 func (c *User) CreateServiceAccount(ctx context.Context, user *orgv1.User) (*orgv1.User, error) {
-	c.Logger.Log("msg", "user.CreateServiceAccount()")
+	c.Logger.Log("msg", "serviceaccount.CreateServiceAccount()")
 	ret, err := c.Client.User.CreateServiceAccount(ctx, user)
 	return ret, shared.ConvertAPIError(err)
 }
 
 func (c *User) UpdateServiceAccount(ctx context.Context, user *orgv1.User) error {
-	c.Logger.Log("msg", "user.UpdateServiceAccount()")
+	c.Logger.Log("msg", "serviceaccount.UpdateServiceAccount()")
 	err := c.Client.User.UpdateServiceAccount(ctx, user)
 	return shared.ConvertAPIError(err)
 }
 
 func (c *User) DeleteServiceAccount(ctx context.Context, user *orgv1.User) error {
-	c.Logger.Log("msg", "user.DeleteServiceAccount()")
+	c.Logger.Log("msg", "serviceaccount.DeleteServiceAccount()")
 	err := c.Client.User.DeleteServiceAccount(ctx, user)
 	return shared.ConvertAPIError(err)
 }
 
 func (c *User) GetServiceAccounts(ctx context.Context) ([]*orgv1.User, error) {
-	c.Logger.Log("msg", "user.GetServiceAccounts()")
+	c.Logger.Log("msg", "serviceaccount.GetServiceAccounts()")
 	ret, err := c.Client.User.GetServiceAccounts(ctx)
 	return ret, shared.ConvertAPIError(err)
 }

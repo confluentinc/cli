@@ -25,7 +25,7 @@ generate:
 	@GO111MODULE=on protoc shared/kafka/*.proto -Ishared/kafka -I$(shell pwd)/vendor/ -I$(shell pwd)/vendor/github.com/confluentinc/ccloudapis/ --gogo_out=plugins=grpc:shared/kafka
 	@GO111MODULE=on protoc shared/ksql/*.proto -Ishared/ksql -I$(shell pwd)/vendor/ -I$(shell pwd)/vendor/github.com/confluentinc/ccloudapis/ --gogo_out=plugins=grpc:shared/ksql
 	@GO111MODULE=on protoc shared/api-key/*.proto -Ishared/api-key -I$(shell pwd)/vendor/ -I$(shell pwd)/vendor/github.com/confluentinc/ccloudapis/ --gogo_out=plugins=grpc:shared/api-key
-	@GO111MODULE=on protoc shared/user/*.proto -Ishared/user -I$(shell pwd)/vendor/ -I$(shell pwd)/vendor/github.com/confluentinc/ccloudapis/ --gogo_out=plugins=grpc:shared/user
+	@GO111MODULE=on protoc shared/serviceaccount/*.proto -Ishared/serviceaccount -I$(shell pwd)/vendor/ -I$(shell pwd)/vendor/github.com/confluentinc/ccloudapis/ --gogo_out=plugins=grpc:shared/serviceaccount
 
 build: generate build-go install-plugins
 

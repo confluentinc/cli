@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package user;
+package serviceaccount;
 
 import "github.com/confluentinc/ccloudapis/org/v1/org.proto";
 
