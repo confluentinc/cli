@@ -372,7 +372,7 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 			return "", nil
 		},
 		LoadFunc: func(value interface{}) error {
-			client := &mock.MockKafka{
+			client := &mock.Kafka{
 				ListFunc: func(ctx context.Context, cluster *kafkav1.KafkaCluster) ([]*kafkav1.KafkaCluster, error) {
 					return nil, shared.ErrUnauthorized
 				},
