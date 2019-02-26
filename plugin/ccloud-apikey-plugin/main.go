@@ -13,7 +13,7 @@ import (
 	log "github.com/confluentinc/cli/log"
 	metric "github.com/confluentinc/cli/metric"
 	"github.com/confluentinc/cli/shared"
-	"github.com/confluentinc/cli/shared/api-key"
+	"github.com/confluentinc/cli/shared/apikey"
 )
 
 // Compile-time check for Interface adherence
@@ -55,7 +55,7 @@ func main() {
 		impl = &ApiKey{Logger: logger, Client: client}
 	}
 
-	shared.PluginMap[api_key.Name] = &api_key.Plugin{Impl: impl}
+	shared.PluginMap[apikey.Name] = &apikey.Plugin{Impl: impl}
 
 	plugin.Serve(&plugin.ServeConfig{
 		HandshakeConfig: shared.Handshake,

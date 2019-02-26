@@ -14,7 +14,7 @@ import (
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
 	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/shared"
-	"github.com/confluentinc/cli/shared/api-key"
+	"github.com/confluentinc/cli/shared/apikey"
 )
 
 type command struct {
@@ -32,7 +32,7 @@ var (
 
 // New returns the Cobra command for API Key.
 func New(config *shared.Config, factory common.GRPCPluginFactory) (*cobra.Command, error) {
-	return newCMD(config, factory.Create(api_key.Name))
+	return newCMD(config, factory.Create(apikey.Name))
 }
 
 // newCMD returns a command for interacting with API Key.
