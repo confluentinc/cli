@@ -69,6 +69,8 @@ github.com/confluentinc/ccloud-sdk-go v0.0.6-0.20190226144214-bda1ca8df2be h1:cE
 github.com/confluentinc/ccloud-sdk-go v0.0.6-0.20190226144214-bda1ca8df2be/go.mod h1:hQqsDUNtYGwRwEGSjsM2tOhRUJql4jWCl7fYU3wbMYE=
 github.com/confluentinc/ccloud-sdk-go v0.0.6-0.20190226153335-140bd7435d96 h1:jNEO1k7l3F80fDqQYZgbi9yeHZfcfRhd9AVl66Mgawk=
 github.com/confluentinc/ccloud-sdk-go v0.0.6-0.20190226153335-140bd7435d96/go.mod h1:hQqsDUNtYGwRwEGSjsM2tOhRUJql4jWCl7fYU3wbMYE=
+github.com/confluentinc/ccloud-sdk-go v0.0.6-0.20190226163025-48f4ae5f158f h1:wZbKVa4Qet4ccoEZLa5ev8xUYkUjC07xfgwFzEdSIx0=
+github.com/confluentinc/ccloud-sdk-go v0.0.6-0.20190226163025-48f4ae5f158f/go.mod h1:hQqsDUNtYGwRwEGSjsM2tOhRUJql4jWCl7fYU3wbMYE=
 github.com/confluentinc/ccloudapis v0.0.0-20190115160518-9b27719cade6ce70523695cf9f42ae90d466e954/go.mod h1:RGupQo6tb6J+1BnSqqueADkoC8b/F60+Ci3FMB3wDFo=
 github.com/confluentinc/ccloudapis v0.0.0-20190205225915-829aeb3a907d h1:eUy4VPDo+NbdJlwLJlDdVcAvE7YJfucQK/4xuDDP1IU=
 github.com/confluentinc/ccloudapis v0.0.0-20190205225915-829aeb3a907d/go.mod h1:hG0YoEXRfJTu0Y/PjxL3ab92Z9nn97XdGMkd9BDg5xs=
@@ -78,6 +80,8 @@ github.com/confluentinc/ccloudapis v0.0.0-20190216225928-d638ed34bc0e h1:3UyEhxQ
 github.com/confluentinc/ccloudapis v0.0.0-20190216225928-d638ed34bc0e/go.mod h1:RGupQo6tb6J+1BnSqqueADkoC8b/F60+Ci3FMB3wDFo=
 github.com/confluentinc/ccloudapis v0.0.0-20190221211938-09d97b2088c1 h1:eWqc9XJbGokNm8Kzi5ftGtnzc8bPnk661SUdfyTqL68=
 github.com/confluentinc/ccloudapis v0.0.0-20190221211938-09d97b2088c1/go.mod h1:RGupQo6tb6J+1BnSqqueADkoC8b/F60+Ci3FMB3wDFo=
+github.com/confluentinc/ccloudapis v0.0.0-20190223013552-64fe4ec0c600 h1:VPORV8Zts24tgW/zEGcZhC609RtTWfQpTOsdFW4UO1U=
+github.com/confluentinc/ccloudapis v0.0.0-20190223013552-64fe4ec0c600/go.mod h1:RGupQo6tb6J+1BnSqqueADkoC8b/F60+Ci3FMB3wDFo=
 github.com/confluentinc/proto-go-setter v0.0.0-20180912191759-fb17e76fc076 h1:tJszovtvIkdc+Sq0TBZK2d8ExqQ6Y2jjUbBERqivSMk=
 github.com/confluentinc/proto-go-setter v0.0.0-20180912191759-fb17e76fc076/go.mod h1:WD/4qYOPFMs2ozq2z2VJFtHljgptKHWtOMb9ochncfA=
 github.com/confluentinc/protoc-gen-ccloud v0.0.0-20190122202943-91a08616afd2/go.mod h1:RL4B2sjziJsuvLS6nkpqJha7026Wl3aaN4cXMSDYoc4=

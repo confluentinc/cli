@@ -1,15 +1,17 @@
 package common
 
 import (
+	"bytes"
 	"fmt"
+	"text/template"
 
 	"github.com/spf13/cobra"
 
 	terminal "github.com/confluentinc/cli/command"
 )
 
-const longDescription = `Output shell completion code for the specified shell (bash or zsh).
-The shell code must be evaluated to provide interactive completion of confluent commands.
+const longDescriptionTemplate = `Output shell completion code for the specified shell (bash or zsh).
+The shell code must be evaluated to provide interactive completion of {{.CLIName}} commands.
 
 Install bash completions on macOS:
 
@@ -18,24 +20,24 @@ Install bash completions on macOS:
   brew install bash-completion
   ## or, if running Bash 4.1+
   brew install bash-completion@2
-  # Set the confluent completion code for bash to a file that's sourced on login
-  confluent completion bash > $(brew --prefix)/etc/bash_completion.d/confluent
+  # Set the {{.CLIName}} completion code for bash to a file that's sourced on login
+  {{.CLIName}} completion bash > $(brew --prefix)/etc/bash_completion.d/{{.CLIName}}
 
 Install bash completions on Linux:
 
-  # Load the confluent completion code for bash into the current shell
-  source <(confluent completion bash)
+  # Set the {{.CLIName}} completion code for bash to a file that's sourced on login
+  {{.CLIName}} completion bash > /etc/bash_completion.d/{{.CLIName}}
 
-  # Set the confluent completion code for bash to a file that's sourced on login
-  confluent completion bash > /etc/bash_completion.d/confluent
+  # Load the {{.CLIName}} completion code for bash into the current shell
+  source /etc/bash_completion.d/{{.CLIName}}
 
 Install zsh completions:
 
-  # Load the confluent completion code for zsh into the current shell
-  source <(confluent completion zsh)
+  # Set the {{.CLIName}} completion code for zsh to autoload on startup
+  {{.CLIName}} completion zsh > "${fpath[1]}/{{.CLIName}}"
 
-  # Set the confluent completion code for zsh to autoload on startup
-  confluent completion zsh > "${fpath[1]}/_confluent"
+  # Load the {{.CLIName}} completion code for zsh into the current shell
+  source "${fpath[1]}/{{.CLIName}}"
 `
 
 type completionCommand struct {
@@ -45,16 +47,21 @@ type completionCommand struct {
 }
 
 // NewCompletionCmd returns the Cobra command for shell completion.
-func NewCompletionCmd(rootCmd *cobra.Command, prompt terminal.Prompt) *cobra.Command {
+func NewCompletionCmd(rootCmd *cobra.Command, prompt terminal.Prompt, cliName string) (*cobra.Command, error) {
 	cmd := &completionCommand{
 		rootCmd: rootCmd,
 		prompt:  prompt,
 	}
-	cmd.init()
-	return cmd.Command
+	err := cmd.init(cliName)
+	return cmd.Command, err
 }
 
-func (c *completionCommand) init() {
+func (c *completionCommand) init(cliName string) error {
+	longDescription, err := getLongDescription(cliName)
+	if err != nil {
+		return err
+	}
+
 	c.Command = &cobra.Command{
 		Use:   "completion SHELL",
 		Short: "Output shell completion code",
@@ -62,6 +69,7 @@ func (c *completionCommand) init() {
 		RunE:  c.completion,
 		Args:  cobra.ExactArgs(1),
 	}
+	return nil
 }
 
 func (c *completionCommand) completion(cmd *cobra.Command, args []string) error {
@@ -74,4 +82,14 @@ func (c *completionCommand) completion(cmd *cobra.Command, args []string) error 
 		err = fmt.Errorf(`unsupported shell type "%s"`, args[0])
 	}
 	return err
+}
+
+func getLongDescription(cliName string) (string, error) {
+	t := template.Must(template.New("longDescription").Parse(longDescriptionTemplate))
+	buf := new(bytes.Buffer)
+	data := map[string]interface{}{"CLIName": cliName}
+	if err := t.Execute(buf, data); err != nil {
+		return "", err
+	}
+	return buf.String(), nil
 }

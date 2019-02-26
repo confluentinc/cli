@@ -25,6 +25,8 @@ import (
 	cliVersion "github.com/confluentinc/cli/version"
 )
 
+const cliName = "ccloud"
+
 var (
 	// Injected from linker flags like `go build -ldflags "-X main.version=$VERSION" -X ...`
 	version = "v0.0.0"
@@ -65,7 +67,7 @@ func main() {
 
 func BuildCommand(cfg *shared.Config, version *cliVersion.Version, factory common.GRPCPluginFactory, logger *log.Logger) *cobra.Command {
 	cli := &cobra.Command{
-		Use:   "ccloud",
+		Use:   cliName,
 		Short: "Welcome to the Confluent Cloud CLI",
 	}
 	cli.PersistentFlags().CountP("verbose", "v", "increase output verbosity")
@@ -83,11 +85,16 @@ func BuildCommand(cfg *shared.Config, version *cliVersion.Version, factory commo
 
 	cli.AddCommand(config.New(cfg))
 
-	cli.AddCommand(common.NewCompletionCmd(cli, prompt))
+	conn, err := common.NewCompletionCmd(cli, prompt, cliName)
+	if err != nil {
+		logger.Log("msg", err)
+	} else {
+		cli.AddCommand(conn)
+	}
 
 	cli.AddCommand(auth.New(cfg)...)
 
-	conn, err := kafka.New(cfg, factory)
+	conn, err = kafka.New(cfg, factory)
 	if err != nil {
 		logger.Log("msg", err)
 	} else {
