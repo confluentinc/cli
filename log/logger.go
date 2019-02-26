@@ -2,6 +2,7 @@ package log
 
 import (
 	"io"
+	"os"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/sirupsen/logrus"
@@ -38,6 +39,8 @@ const (
 func New() *Logger {
 	logger := &Logger{l: logrus.New()}
 	logger.l.Formatter = &logrus.TextFormatter{FullTimestamp: true, DisableLevelTruncation: true}
+	logger.SetLevel(WARN)
+	logger.SetOutput(os.Stdout)
 	return logger
 }
 

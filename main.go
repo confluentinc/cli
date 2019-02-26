@@ -36,19 +36,9 @@ var (
 func main() {
 	viper.AutomaticEnv()
 
-	var logger *log.Logger
-	{
-		logger = log.New()
-		logger.SetOutput(os.Stdout)
-		logger.Log("msg", "hello")
-		logger.SetLevel(log.WARN)
-		defer logger.Log("msg", "goodbye")
-	}
+	logger := log.New()
 
-	var metricSink shared.MetricSink
-	{
-		metricSink = metric.NewSink()
-	}
+	metricSink := metric.NewSink()
 
 	var cfg *shared.Config
 	{
