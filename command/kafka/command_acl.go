@@ -75,7 +75,7 @@ func (c *aclCommand) init(plugin common.GRPCPlugin) {
 		Args:  cobra.NoArgs,
 	}
 	cmd.Flags().AddFlagSet(resourceFlags())
-	cmd.Flags().String("principal", "*", "Set ACL filter principal")
+	cmd.Flags().Int("service-account-id", 0, "List only ACLs for this service account")
 	cmd.Flags().SortFlags = false
 
 	c.AddCommand(cmd)
@@ -99,11 +99,11 @@ func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
 	for _, binding := range resp {
 
 		record := &struct {
-			Principal  string
-			Permission string
-			Operation  string
-			Resource   string
-			Name       string
+			ServiceAccountId string
+			Permission       string
+			Operation        string
+			Resource         string
+			Name             string
 		}{
 			binding.Entry.Principal,
 			binding.Entry.PermissionType.String(),
@@ -112,10 +112,10 @@ func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
 			binding.Pattern.Name,
 		}
 		bindings = append(bindings, printer.ToRow(record,
-			[]string{"Principal", "Permission", "Operation", "Resource", "Name"}))
+			[]string{"ServiceAccountId", "Permission", "Operation", "Resource", "Name"}))
 	}
 
-	printer.RenderCollectionTable(bindings, []string{"Principal", "Permission", "Operation", "Resource", "Name"})
+	printer.RenderCollectionTable(bindings, []string{"ServiceAccountId", "Permission", "Operation", "Resource", "Name"})
 
 	return nil
 }
