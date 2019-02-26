@@ -3,7 +3,6 @@ package log
 import (
 	"fmt"
 	"io"
-	"os"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/hashicorp/go-hclog"
@@ -39,14 +38,14 @@ const (
 // New create and configures a new Logger.
 func New() *Logger {
 	return &Logger{l: hclog.New(&hclog.LoggerOptions{
-		Level:      hclog.Warn,
-		Output:     os.Stderr,
+		//Level:      hclog.Warn,
+		//Output:     os.Stderr,
 	})}
 }
 
 func (l *Logger) Debug(args ...interface{}) {
 	if l.l.IsDebug() {
-		l.l.Debug(fmt.Sprint(args))
+		l.l.Debug(args[0].(string))
 	}
 }
 

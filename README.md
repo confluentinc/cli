@@ -105,7 +105,8 @@ This requires golang 1.11.
 ```
 $ make deps
 $ make build
-$ PATH=./dist/$(go env GOOS)_$(go env GOARCH):$PATH ccloud -h
+$ cd dist/$(go env GOOS)_$(go env GOARCH)
+$ PATH=.:$PATH ./ccloud -h
 ```
 
 # Packaging and Distribution

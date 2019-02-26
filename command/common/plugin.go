@@ -67,8 +67,8 @@ func (l *GRPCPluginImpl) Load(value interface{}) error {
 		Managed:          true,
 		Logger: hclog.New(&hclog.LoggerOptions{
 			Output: hclog.DefaultOutput,
-			Level:  hclog.Error,
-			Name:   "plugin",
+			Level:  hclog.Trace,
+			Name:   "plugin1",
 		}),
 	})
 

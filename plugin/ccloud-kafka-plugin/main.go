@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 
+	"github.com/hashicorp/go-hclog"
 	plugin "github.com/hashicorp/go-plugin"
 
 	chttp "github.com/confluentinc/ccloud-sdk-go"
@@ -22,14 +23,15 @@ func main() {
 	var logger *log.Logger
 	{
 		logger = log.New()
+		logger.SetLevel(log.TRACE)
 		logger.Log("msg", "Instantiating plugin "+kafka.Name)
 		defer logger.Log("msg", "Shutting down plugin "+kafka.Name)
-
-		f, err := os.OpenFile("/tmp/"+kafka.Name+".log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
-		check(err, logger)
-		logger.SetLevel(log.DEBUG)
-		logger.SetOutput(f)
 	}
+	logger2 := hclog.New(&hclog.LoggerOptions{
+		Output: hclog.DefaultOutput,
+		Level:  hclog.Trace,
+		Name:   "plugin32",
+	})
 
 	var metricSink shared.MetricSink
 	{
@@ -51,7 +53,7 @@ func main() {
 	var impl *Kafka
 	{
 		client := chttp.NewClientWithJWT(context.Background(), config.AuthToken, config.AuthURL, config.Logger)
-		impl = &Kafka{Logger: logger, Client: client}
+		impl = &Kafka{Logger: logger, Client: client, Logger2: logger2}
 	}
 
 	shared.PluginMap[kafka.Name] = &kafka.Plugin{Impl: impl}
@@ -65,6 +67,7 @@ func main() {
 
 type Kafka struct {
 	Logger *log.Logger
+	Logger2 hclog.Logger
 	Client *chttp.Client
 }
 
@@ -78,7 +81,8 @@ func (c *Kafka) CreateAPIKey(ctx context.Context, apiKey *authv1.ApiKey) (*authv
 
 // List lists the clusters associated with an account
 func (c *Kafka) List(ctx context.Context, cluster *kafkav1.KafkaCluster) ([]*kafkav1.KafkaCluster, error) {
-	c.Logger.Log(withClusterFields("list", cluster)...)
+	c.Logger2.Trace("GOT TO LIST STUFF")
+	c.Logger.Debug("SOME ORIGINAL LOGGER STUFF")
 	ret, err := c.Client.Kafka.List(ctx, cluster)
 	return ret, shared.ConvertAPIError(err)
 }
