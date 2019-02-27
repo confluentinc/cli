@@ -43,10 +43,10 @@ func aclEntryFlags() *pflag.FlagSet {
 // resourceFlags returns a flag set which can be parsed to create a ResourcePattern object.
 func resourceFlags() *pflag.FlagSet {
 	flgSet := pflag.NewFlagSet("acl-resource", pflag.ExitOnError)
-	flgSet.Bool("cluster", false, "Set CLUSTER resource")
-	flgSet.String("topic", "", "Set TOPIC resource")
-	flgSet.String("consumer-group", "", "Set CONSUMER_GROUP resource")
-	flgSet.String("transactional-id", "", "Set TRANSACTIONAL_ID resource")
+	flgSet.Bool("cluster", false, "Set cluster resource")
+	flgSet.String("topic", "", "Set topic resource")
+	flgSet.String("consumer-group", "", "Set consumer-group resource")
+	flgSet.String("transactional-id", "", "Set transactional-id resource")
 	flgSet.Bool("prefix", false, "Set to match all resource names prefixed with this value")
 
 	return flgSet
@@ -135,7 +135,11 @@ OUTER:
 				continue OUTER
 			}
 		}
-		ops = append(ops, v)
+		if v == "GROUP" {
+			v = "consumer-group"
+		}
+		strings.Replace(v, "_", "-",-1)
+		ops = append(ops, strings.ToLower(v))
 	}
 
 	return strings.Join(ops, ", ")

@@ -30,7 +30,6 @@ func HandleError(err error, cmd *cobra.Command) error {
 	// Intercept errors to prevent usage from being printed.
 	if msg, ok := messages[err]; ok {
 		cmd.SilenceUsage = true
-		cmd.SilenceErrors = true
 		return fmt.Errorf(msg)
 	}
 
