@@ -10,7 +10,6 @@ import (
 
 	"github.com/Shopify/sarama"
 	"github.com/codyaray/go-printer"
-	"github.com/confluentinc/cli/log"
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 
@@ -41,7 +40,7 @@ func NewTopicCommand(config *shared.Config, plugin common.GRPCPlugin) *cobra.Com
 
 func (c *topicCommand) init(plugin common.GRPCPlugin) {
 	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		if err := log.SetLoggingVerbosity(cmd, c.config.Logger); err != nil {
+		if err := common.SetLoggingVerbosity(cmd, c.config.Logger); err != nil {
 			return common.HandleError(err, cmd)
 		}
 		if err := c.config.CheckLogin(); err != nil {

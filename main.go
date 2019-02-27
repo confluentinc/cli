@@ -70,7 +70,7 @@ func BuildCommand(cfg *shared.Config, version *cliVersion.Version, factory commo
 	}
 	cli.PersistentFlags().CountP("verbose", "v", "increase output verbosity")
 	cli.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		if err := log.SetLoggingVerbosity(cmd, logger); err != nil {
+		if err := common.SetLoggingVerbosity(cmd, logger); err != nil {
 			return common.HandleError(err, cmd)
 		}
 		return nil
