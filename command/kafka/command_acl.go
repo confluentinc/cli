@@ -3,15 +3,15 @@ package kafka
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/codyaray/go-printer"
+	"github.com/hashicorp/go-multierror"
 
 	chttp "github.com/confluentinc/ccloud-sdk-go"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/shared"
-	"github.com/confluentinc/go-printer"
 )
 
 type aclCommand struct {
@@ -131,7 +131,7 @@ func (c *aclCommand) create(cmd *cobra.Command, args []string) error {
 	}
 
 	if acl.errors != nil {
-		return common.HandleError(fmt.Errorf("Failed to parse input \n\t"+strings.Join(acl.errors, "\n\t")), cmd)
+		return common.HandleError(acl.errors, cmd)
 	}
 
 	err = c.client.CreateACL(context.Background(), cluster, []*kafkav1.ACLBinding{acl.ACLBinding})
@@ -143,7 +143,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, args []string) error {
 	acl := validateAddDelete(parse(cmd))
 
 	if acl.errors != nil {
-		return common.HandleError(fmt.Errorf(strings.Join(acl.errors, "\n\t")), cmd)
+		return common.HandleError(acl.errors, cmd)
 	}
 
 	cluster, err := common.Cluster(c.config)
@@ -159,11 +159,16 @@ func (c *aclCommand) delete(cmd *cobra.Command, args []string) error {
 // validateAddDelete ensures the minimum requirements for acl add and delete are met
 func validateAddDelete(binding *ACLConfiguration) *ACLConfiguration {
 	if binding.Entry.PermissionType == kafkav1.ACLPermissionTypes_UNKNOWN {
-		binding.errors = append(binding.errors, "--allow or --deny must be specified when adding or deleting an acl")
+		binding.errors = multierror.Append(binding.errors, fmt.Errorf("--allow or --deny must be set when adding or deleting an acl"))
+	}
+
+	if binding.Pattern.PatternType == kafkav1.PatternTypes_UNKNOWN {
+		binding.Pattern.PatternType = kafkav1.PatternTypes_LITERAL
 	}
 
 	if binding.Pattern == nil || binding.Pattern.ResourceType == kafkav1.ResourceTypes_UNKNOWN {
-		binding.errors = append(binding.errors, "a resource flag must be specified when adding or deleting an acl")
+		binding.errors = multierror.Append(binding.errors, fmt.Errorf("exactly one of %v must be set",
+			listEnum(kafkav1.ResourceTypes_ResourceType_name, []string{"ANY", "UNKNOWN"})))
 	}
 	return binding
 }

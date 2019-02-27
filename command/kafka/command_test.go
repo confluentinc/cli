@@ -264,6 +264,22 @@ func TestListResourcePrincipalFilterACL(t *testing.T) {
 	}
 }
 
+func TestMultipleResourceACL(t *testing.T) {
+	expect := "exactly one of"
+	args := []string{"acl", "create", "--allow", "--operation", "read", "--service-account-id", "42",
+		"--topic", "resource1", "--consumer-group", "resource2"}
+
+	cmd := NewCMD(nil)
+	cmd.SetArgs(args)
+
+	err := cmd.Execute()
+	if !strings.Contains(err.Error(), expect) {
+		t.Logf("expected: %s got: %s", expect, err.Error())
+		t.Fail()
+		return
+	}
+}
+
 /*************** TEST command_topic ***************/
 var Topics = []struct {
 	args []string
@@ -388,13 +404,9 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 	cmd.SetOutput(buf)
 
 	err := cmd.Execute()
-	if err != shared.ErrUnauthorized {
-		t.Errorf("unexpected err, got %#v, want %#v", err, shared.ErrUnauthorized)
-	}
-	got := buf.String()
-	want := "You must login to access Confluent Cloud.\n"
-	if got != want {
-		t.Errorf("unexpected output, got %s, want %s", got, want)
+	want := "You must login to access Confluent Cloud."
+	if err.Error() != want {
+		t.Errorf("unexpected output, got %s, want %s", err, want)
 	}
 }
 

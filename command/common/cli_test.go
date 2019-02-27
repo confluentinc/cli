@@ -1,7 +1,6 @@
 package common
 
 import (
-	"bytes"
 	"fmt"
 	"testing"
 
@@ -20,25 +19,25 @@ func TestHandleError(t *testing.T) {
 		{
 			name:    "static message",
 			err:     shared.ErrUnauthorized,
-			want:    "You must login to access Confluent Cloud.\n",
+			want:    "You must login to access Confluent Cloud.",
 			wantErr: true,
 		},
 		{
-			name: "dynamic message",
-			err:  shared.NotAuthenticatedError(fmt.Errorf("some dynamic message")),
-			want: "some dynamic message\n",
+			name:    "dynamic message",
+			err:     shared.NotAuthenticatedError(fmt.Errorf("some dynamic message")),
+			want:    "some dynamic message",
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cmd := &cobra.Command{}
-			buf := new(bytes.Buffer)
-			cmd.SetOutput(buf)
-			if err := HandleError(tt.err, cmd); (err != nil) != tt.wantErr {
-				t.Errorf("HandleError() error = %v, wantErr %v", err, tt.wantErr)
+			var err error
+			if err = HandleError(tt.err, cmd); (err != nil) != tt.wantErr {
+				t.Errorf("HandleError() error: %v, wantErr: %v", err, tt.wantErr)
 			}
-			if buf.String() != tt.want {
-				t.Errorf("HandleError() got = %v, want %v", buf.String(), tt.want)
+			if err.Error() != tt.want {
+				t.Errorf("HandleError() got = %s, want: %s", err, tt.want)
 			}
 		})
 	}

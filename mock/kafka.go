@@ -76,7 +76,17 @@ func (m *MockKafka) UpdateTopic(ctx context.Context, cluster *kafkav1.KafkaClust
 }
 
 func (m *MockKafka) ListACL(ctx context.Context, cluster *kafkav1.KafkaCluster, filter *kafkav1.ACLFilter) ([]*kafkav1.ACLBinding, error) {
-	return nil, assertEquals(filter, <-m.Expect)
+	expect := <-m.Expect
+	if filter.PatternFilter.PatternType == kafkav1.PatternTypes_ANY {
+		expect.(*kafkav1.ACLFilter).PatternFilter.PatternType = kafkav1.PatternTypes_ANY
+	}
+	if filter.EntryFilter.Operation == kafkav1.ACLOperations_ANY {
+		expect.(*kafkav1.ACLFilter).EntryFilter.Operation = kafkav1.ACLOperations_ANY
+	}
+	if filter.EntryFilter.PermissionType == kafkav1.ACLPermissionTypes_ANY {
+		expect.(*kafkav1.ACLFilter).EntryFilter.PermissionType = kafkav1.ACLPermissionTypes_ANY
+	}
+	return nil, assertEquals(filter, expect)
 }
 
 func (m *MockKafka) CreateACL(ctx context.Context, cluster *kafkav1.KafkaCluster, binding []*kafkav1.ACLBinding) error {

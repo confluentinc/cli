@@ -27,26 +27,25 @@ func HandleError(err error, cmd *cobra.Command) error {
 		return nil
 	}
 
-	out := cmd.OutOrStderr()
+	// Intercept errors to prevent usage from being printed.
 	if msg, ok := messages[err]; ok {
-		fmt.Fprintln(out, msg)
 		cmd.SilenceUsage = true
-		cmd.SilenceErrors = true
-		return err
+		return fmt.Errorf(msg)
 	}
 
 	switch err.(type) {
 	case shared.NotAuthenticatedError:
-		fmt.Fprintln(out, err)
+		cmd.SilenceUsage = true
+		return err
 	case editor.ErrEditing:
-		fmt.Fprintln(out, err)
+		cmd.SilenceUsage = true
+		return err
 	case shared.KafkaError:
-		fmt.Fprintln(out, err)
-	default:
+		cmd.SilenceUsage = true
 		return err
 	}
 
-	return nil
+	return err
 }
 
 // Cluster returns the current cluster context

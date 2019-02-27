@@ -2,18 +2,18 @@ package kafka
 
 import (
 	"fmt"
+	"github.com/hashicorp/go-multierror"
 	"strings"
 
+	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-
-	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 )
 
 // ACLConfiguration wrapper used for flag parsing and validation
 type ACLConfiguration struct {
 	*kafkav1.ACLBinding
-	errors []string
+	errors error
 }
 
 // aclConfigFlags returns a flag set which can be parsed to create an ACLConfiguration object.
@@ -43,10 +43,10 @@ func aclEntryFlags() *pflag.FlagSet {
 // resourceFlags returns a flag set which can be parsed to create a ResourcePattern object.
 func resourceFlags() *pflag.FlagSet {
 	flgSet := pflag.NewFlagSet("acl-resource", pflag.ExitOnError)
-	flgSet.Bool("cluster", false, "Set CLUSTER resource")
-	flgSet.String("topic", "", "Set TOPIC resource")
-	flgSet.String("consumer-group", "", "Set CONSUMER_GROUP resource")
-	flgSet.String("transactional-id", "", "Set TRANSACTIONAL_ID resource")
+	flgSet.Bool("cluster", false, "Set cluster resource")
+	flgSet.String("topic", "", "Set topic resource")
+	flgSet.String("consumer-group", "", "Set consumer-group resource")
+	flgSet.String("transactional-id", "", "Set transactional-id resource")
 	flgSet.Bool("prefix", false, "Set to match all resource names prefixed with this value")
 
 	return flgSet
@@ -59,9 +59,7 @@ func parse(cmd *cobra.Command) *ACLConfiguration {
 			Entry: &kafkav1.AccessControlEntryConfig{
 				Host: "*",
 			},
-			Pattern: &kafkav1.ResourcePatternConfig{
-				PatternType: kafkav1.PatternTypes_LITERAL,
-			},
+			Pattern: &kafkav1.ResourcePatternConfig{},
 		},
 	}
 	cmd.Flags().Visit(fromArgs(aclBinding))
@@ -103,13 +101,19 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 				conf.Entry.Operation = kafkav1.ACLOperations_ACLOperation(op)
 				break
 			}
-			conf.errors = append(conf.errors, "Invalid operation value: "+v)
+			conf.errors = multierror.Append(conf.errors, fmt.Errorf("invalid operation value: "+v))
 		}
 	}
 }
 
 func setResourcePattern(conf *ACLConfiguration, n, v string) {
 	/* Normalize the resource pattern name */
+	if conf.Pattern.ResourceType != kafkav1.ResourceTypes_UNKNOWN {
+		conf.errors = multierror.Append(conf.errors, fmt.Errorf("exactly one of %v must be set",
+			listEnum(kafkav1.ResourceTypes_ResourceType_name, []string{"ANY", "UNKNOWN"})))
+		return
+	}
+
 	n = strings.ToUpper(n)
 	n = strings.Replace(n, "-", "_", -1)
 
@@ -131,7 +135,11 @@ OUTER:
 				continue OUTER
 			}
 		}
-		ops = append(ops, v)
+		if v == "GROUP" {
+			v = "consumer-group"
+		}
+		v = strings.Replace(v, "_", "-", -1)
+		ops = append(ops, strings.ToLower(v))
 	}
 
 	return strings.Join(ops, ", ")

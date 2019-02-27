@@ -103,9 +103,8 @@ func TestLoginFail(t *testing.T) {
 	}
 	cmds, _ := newAuthCommand(prompt, auth, req)
 
-	output, err := command.ExecuteCommand(cmds.Commands[0])
-	req.EqualError(err, "incorrect auth")
-	req.Contains(output, "You have entered an incorrect username or password.")
+	_, err := command.ExecuteCommand(cmds.Commands[0])
+	req.Contains(err.Error(), "You have entered an incorrect username or password.")
 }
 
 func TestLogout(t *testing.T) {
