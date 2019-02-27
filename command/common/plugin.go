@@ -8,9 +8,10 @@ import (
 	"os/exec"
 	"reflect"
 
+	"github.com/hashicorp/go-plugin"
+
 	"github.com/confluentinc/cli/log"
 	"github.com/confluentinc/cli/shared"
-	"github.com/hashicorp/go-plugin"
 )
 
 // GRPCPluginFactory creates GRPCServices
