@@ -1,5 +1,6 @@
 ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
 GIT_REMOTE_NAME ?= origin
+MASTER_BRANCH   ?= master
 RELEASE_BRANCH  ?= master
 
 include ./semver.mk
