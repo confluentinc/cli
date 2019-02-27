@@ -21,14 +21,12 @@ var _ chttp.Connect = (*Connect)(nil)
 func main() {
 	var logger *log.Logger
 	{
-		logger = log.New()
+		logger = log.NewWithParams(&log.Params{
+			Output: os.Stderr,
+			JSON: true,
+		})
 		logger.Log("msg", "hello")
 		defer logger.Log("msg", "goodbye")
-
-		f, err := os.OpenFile("/tmp/confluent-connect-plugin.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
-		check(err, logger)
-		logger.SetLevel(log.DEBUG)
-		logger.SetOutput(f)
 	}
 
 	var metricSink shared.MetricSink

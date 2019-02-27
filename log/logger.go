@@ -3,6 +3,7 @@ package log
 import (
 	"fmt"
 	"io"
+	"os"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/hashicorp/go-hclog"
@@ -35,18 +36,33 @@ const (
 	TRACE
 )
 
-// New create and configures a new Logger.
+type Params struct {
+	Level  Level
+	Output io.Writer
+	JSON   bool
+}
+
+// New creates a new Logger with the default configuration.
 func New() *Logger {
+	return NewWithParams(&Params{
+		Level:  WARN,
+		Output: os.Stderr,
+		JSON:   false,
+	})
+}
+
+// NewWithParams creates and configures a new Logger.
+func NewWithParams(params *Params) *Logger {
 	return &Logger{l: hclog.New(&hclog.LoggerOptions{
-		//Level:      hclog.Warn,
-		//Output:     os.Stderr,
-		JSONFormat: true,
+		Output:     params.Output,
+		JSONFormat: params.JSON,
+		Level:      parseLevel(params.Level),
 	})}
 }
 
 func (l *Logger) Trace(args ...interface{}) {
 	if l.l.IsTrace() {
-		l.l.Trace(fmt.Sprint(args))
+		l.l.Trace(fmt.Sprint(args...))
 	}
 }
 
@@ -58,7 +74,7 @@ func (l *Logger) Tracef(format string, args ...interface{}) {
 
 func (l *Logger) Debug(args ...interface{}) {
 	if l.l.IsDebug() {
-		l.l.Debug(fmt.Sprint(args))
+		l.l.Debug(fmt.Sprint(args...))
 	}
 }
 
@@ -109,30 +125,28 @@ func (l *Logger) Errorf(format string, args ...interface{}) {
 func (l *Logger) Log(args ...interface{}) {
 	if l.l.IsDebug() {
 		if args[0] != "msg" {
-			l.l.Debug(`unexpected logging call, first key should be "msg": ` + fmt.Sprint(args))
+			l.l.Debug(`unexpected logging call, first key should be "msg": ` + fmt.Sprint(args...))
 		}
 		l.l.Debug(fmt.Sprint(args[1]), args[2:]...)
 	}
 }
 
 func (l *Logger) SetLevel(level Level) {
-	switch level {
-	case ERROR:
-		l.l.SetLevel(hclog.Error)
-	case WARN:
-		l.l.SetLevel(hclog.Warn)
-	case INFO:
-		l.l.SetLevel(hclog.Info)
-	case DEBUG:
-		l.l.SetLevel(hclog.Debug)
-	case TRACE:
-		l.l.SetLevel(hclog.Trace)
-	}
+	l.l.SetLevel(parseLevel(level))
 }
 
-func (l *Logger) SetOutput(out io.Writer) {
-	l.l =  hclog.New(&hclog.LoggerOptions{
-		Level:      hclog.Warn,
-		Output:     out,
-	})
+func parseLevel(level Level) hclog.Level {
+	switch level {
+	case ERROR:
+		return hclog.Error
+	case WARN:
+		return hclog.Warn
+	case INFO:
+		return hclog.Info
+	case DEBUG:
+		return hclog.Debug
+	case TRACE:
+		return hclog.Trace
+	}
+	return hclog.NoLevel
 }
