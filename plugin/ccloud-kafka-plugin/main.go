@@ -70,14 +70,14 @@ type Kafka struct {
 
 // CreateAPIKey generates an api key for a user
 func (c *Kafka) CreateAPIKey(ctx context.Context, apiKey *authv1.ApiKey) (*authv1.ApiKey, error) {
-	c.Logger.Log("method", "create", "resource", "api-key",
-		"user", apiKey.UserId)
+	c.Logger.Log("method", "create", "resource", "api-key", "user", apiKey.UserId)
 	apiKey, err := c.Client.APIKey.Create(ctx, apiKey)
 	return apiKey, shared.ConvertAPIError(err)
 }
 
 // List lists the clusters associated with an account
 func (c *Kafka) List(ctx context.Context, cluster *kafkav1.KafkaCluster) ([]*kafkav1.KafkaCluster, error) {
+	c.Logger.Log(withClusterFields("list", cluster)...)
 	c.Logger.Error("WRAPPED LOGGER STUFF")
 	c.Logger.Info("WRAPPED LOGGER STUFF")
 	c.Logger.Debug("WRAPPED LOGGER STUFF")
@@ -182,7 +182,7 @@ func withACLFields(method string, cluster *kafkav1.KafkaCluster, acl *kafkav1.Re
 }
 
 func withFields(method string, resource string, cluster *kafkav1.KafkaCluster, topic *kafkav1.Topic, acl *kafkav1.ResourcePatternConfig) []interface{} {
-	fields := []interface{}{"method", method, "resource", resource}
+	fields := []interface{}{"msg", "request", "method", method, "resource", resource}
 
 	if cluster != nil {
 		fields = append(fields, "cluster", cluster.Id, "account", cluster.AccountId)
