@@ -138,7 +138,7 @@ OUTER:
 		if v == "GROUP" {
 			v = "consumer-group"
 		}
-		strings.Replace(v, "_", "-",-1)
+		strings.Replace(v, "_", "-", -1)
 		ops = append(ops, strings.ToLower(v))
 	}
 
