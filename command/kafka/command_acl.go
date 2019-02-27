@@ -161,6 +161,10 @@ func validateAddDelete(binding *ACLConfiguration) *ACLConfiguration {
 		binding.errors = multierror.Append(binding.errors, fmt.Errorf("--allow or --deny must be set when adding or deleting an acl"))
 	}
 
+	if binding.Pattern.PatternType == kafkav1.PatternTypes_UNKNOWN {
+		binding.Pattern.PatternType = kafkav1.PatternTypes_LITERAL
+	}
+
 	if binding.Pattern == nil || binding.Pattern.ResourceType == kafkav1.ResourceTypes_UNKNOWN {
 		binding.errors = multierror.Append(binding.errors, fmt.Errorf("exactly one of %v must be set",
 			listEnum(kafkav1.ResourceTypes_ResourceType_name, []string{"ANY", "UNKNOWN"})))

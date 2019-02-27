@@ -60,7 +60,6 @@ func parse(cmd *cobra.Command) *ACLConfiguration {
 				Host: "*",
 			},
 			Pattern: &kafkav1.ResourcePatternConfig{
-				PatternType: kafkav1.PatternTypes_LITERAL,
 			},
 		},
 	}
