@@ -135,10 +135,3 @@ func (c *Connect) Delete(ctx context.Context, cluster *connectv1.ConnectCluster)
 	}
 	return nil
 }
-
-func check(err error, logger *log.Logger) {
-	if err != nil {
-		logger.Error(err)
-		os.Exit(1)
-	}
-}

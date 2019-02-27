@@ -89,10 +89,3 @@ func (c *Ksql) Delete(ctx context.Context, cluster *ksqlv1.KSQLCluster) error {
 	err := c.Client.KSQL.Delete(ctx, cluster)
 	return shared.ConvertAPIError(err)
 }
-
-func check(err error, logger *log.Logger) {
-	if err != nil {
-		logger.Error(err)
-		os.Exit(1)
-	}
-}

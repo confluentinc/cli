@@ -101,10 +101,3 @@ func (c *User) GetServiceAccounts(ctx context.Context) ([]*orgv1.User, error) {
 	ret, err := c.Client.User.GetServiceAccounts(ctx)
 	return ret, shared.ConvertAPIError(err)
 }
-
-func check(err error, logger *log.Logger) {
-	if err != nil {
-		logger.Error(err)
-		os.Exit(1)
-	}
-}

@@ -83,10 +83,3 @@ func (c *ApiKey) List(ctx context.Context, key *authv1.ApiKey) ([]*authv1.ApiKey
 	ret, err := c.Client.APIKey.List(ctx, key)
 	return ret, shared.ConvertAPIError(err)
 }
-
-func check(err error, logger *log.Logger) {
-	if err != nil {
-		logger.Error(err)
-		os.Exit(1)
-	}
-}

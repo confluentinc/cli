@@ -77,10 +77,6 @@ func (c *Kafka) CreateAPIKey(ctx context.Context, apiKey *authv1.ApiKey) (*authv
 // List lists the clusters associated with an account
 func (c *Kafka) List(ctx context.Context, cluster *kafkav1.KafkaCluster) ([]*kafkav1.KafkaCluster, error) {
 	c.Logger.Log(withClusterFields("list", cluster)...)
-	c.Logger.Error("WRAPPED LOGGER STUFF")
-	c.Logger.Info("WRAPPED LOGGER STUFF")
-	c.Logger.Debug("WRAPPED LOGGER STUFF")
-	c.Logger.Trace("WRAPPED LOGGER STUFF")
 	ret, err := c.Client.Kafka.List(ctx, cluster)
 	return ret, shared.ConvertAPIError(err)
 }
@@ -193,11 +189,4 @@ func withFields(method string, resource string, cluster *kafkav1.KafkaCluster, t
 		fields = append(fields, "name", acl.Name, "acl_resource", acl.ResourceType)
 	}
 	return fields
-}
-
-func check(err error, logger *log.Logger) {
-	if err != nil {
-		logger.Error(err)
-		os.Exit(1)
-	}
 }
