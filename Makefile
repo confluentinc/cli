@@ -36,9 +36,12 @@ else
 GORELEASER_CONFIG ?= .goreleaser-linux.yml
 endif
 
+show-args:
+	@echo "VERSION: $(VERSION)"
+
 .PHONY: build-go
 build-go:
-	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --snapshot --rm-dist -f $(GORELEASER_CONFIG)
+	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --snapshot --rm-dist
 
 .PHONY: release
 release: get-release-image commit-release tag-release
@@ -54,10 +57,16 @@ dist:
 	tar -czf dist/ccloud_$(VERSION)_linux_386.tar.gz -C dist/linux_386 ../../LICENSE ../../INSTALL.md .
 	zip -jqr dist/ccloud_$(VERSION)_windows_amd64.zip LICENSE INSTALL.md dist/windows_amd64/*
 	zip -jqr dist/ccloud_$(VERSION)_windows_386.zip LICENSE INSTALL.md dist/windows_386/*
+	cp dist/ccloud_$(VERSION)_darwin_amd64.tar.gz dist/ccloud_latest_darwin_amd64.tar.gz
+	cp dist/ccloud_$(VERSION)_linux_amd64.tar.gz dist/ccloud_latest_linux_amd64.tar.gz
+	cp dist/ccloud_$(VERSION)_linux_386.tar.gz dist/ccloud_latest_linux_386.tar.gz
+	cp dist/ccloud_$(VERSION)_windows_amd64.zip dist/ccloud_latest_windows_amd64.zip
+	cp dist/ccloud_$(VERSION)_windows_386.zip dist/ccloud_latest_windows_386.zip
 
 .PHONY: publish
 publish: dist
-	aws s3 cp dist/ s3://confluent.cloud/ccloud-cli/archives/$(VERSION:v%=%)/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --acl public-read
+	aws s3 cp dist/ s3://confluent.cloud/ccloud-cli/archives/$(VERSION:v%=%)/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --exclude "*_latest_*" --acl public-read
+	aws s3 cp dist/ s3://confluent.cloud/ccloud-cli/archives/latest/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --exclude "*_$(VERSION)_*" --acl public-read
 
 .PHONY: fmt
 fmt:
