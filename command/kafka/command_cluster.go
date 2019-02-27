@@ -20,9 +20,9 @@ import (
 
 var (
 	listFields      = []string{"Id", "Name", "ServiceProvider", "Region", "Durability", "Status"}
-	listLabels      = []string{"Id", "Name", "GRPCPlugin", "Region", "Durability", "Status"}
+	listLabels      = []string{"Id", "Name", "Provider", "Region", "Durability", "Status"}
 	describeFields  = []string{"Id", "Name", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "ApiEndpoint", "PricePerHour"}
-	describeRenames = map[string]string{"NetworkIngress": "Ingress", "NetworkEgress": "Egress", "ServiceProvider": "GRPCPlugin"}
+	describeRenames = map[string]string{"NetworkIngress": "Ingress", "NetworkEgress": "Egress", "ServiceProvider": "Provider"}
 )
 
 type clusterCommand struct {
