@@ -22,8 +22,10 @@ func main() {
 	var logger *log.Logger
 	{
 		logger = log.NewWithParams(&log.Params{
+			// The plugins output everything. The driver's logging level decides what to keep.
+			Level:  log.TRACE,
 			Output: os.Stderr,
-			JSON: true,
+			JSON:   true,
 		})
 		logger.Log("msg", "hello")
 		defer logger.Log("msg", "goodbye")

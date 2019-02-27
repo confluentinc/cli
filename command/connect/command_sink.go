@@ -9,6 +9,7 @@ import (
 
 	"github.com/codyaray/go-printer"
 	"github.com/codyaray/go-printer/editor"
+	"github.com/confluentinc/cli/log"
 	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -48,14 +49,14 @@ func NewSink(config *shared.Config, plugin common.GRPCPlugin) (*cobra.Command, e
 
 func (c *sinkCommand) init(plugin common.GRPCPlugin) error {
 	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		if err := common.SetLoggingVerbosity(cmd, c.config.Logger); err != nil {
+		if err := log.SetLoggingVerbosity(cmd, c.config.Logger); err != nil {
 			return common.HandleError(err, cmd)
 		}
 		if err := c.config.CheckLogin(); err != nil {
 			return common.HandleError(err, cmd)
 		}
 		// Lazy load plugin to avoid unnecessarily spawning child processes
-		return plugin.Load(&c.client)
+		return plugin.Load(&c.client, c.config.Logger)
 	}
 
 	createCmd := &cobra.Command{

@@ -47,7 +47,7 @@ func newCommands(config *shared.Config, prompt command.Prompt,
 
 func (a *commands) init() {
 	var preRun = func(cmd *cobra.Command, args []string) error {
-		if err := common.SetLoggingVerbosity(cmd, a.config.Logger); err != nil {
+		if err := log.SetLoggingVerbosity(cmd, a.config.Logger); err != nil {
 			return common.HandleError(err, cmd)
 		}
 		a.prompt.SetOutput(cmd.OutOrStderr())

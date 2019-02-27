@@ -59,7 +59,7 @@ func (c *command) init(plugin common.GRPCPlugin) error {
 			return common.HandleError(err, cmd)
 		}
 		// Lazy load plugin to avoid unnecessarily spawning child processes
-		return plugin.Load(&c.client)
+		return plugin.Load(&c.client, c.config.Logger)
 	}
 
 	c.AddCommand(&cobra.Command{

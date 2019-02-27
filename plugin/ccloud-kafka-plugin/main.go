@@ -4,14 +4,13 @@ import (
 	"context"
 	"os"
 
-	"github.com/hashicorp/go-hclog"
-	plugin "github.com/hashicorp/go-plugin"
+	"github.com/hashicorp/go-plugin"
 
 	chttp "github.com/confluentinc/ccloud-sdk-go"
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
-	log "github.com/confluentinc/cli/log"
-	metric "github.com/confluentinc/cli/metric"
+	"github.com/confluentinc/cli/log"
+	"github.com/confluentinc/cli/metric"
 	"github.com/confluentinc/cli/shared"
 	"github.com/confluentinc/cli/shared/kafka"
 )
@@ -23,17 +22,14 @@ func main() {
 	var logger *log.Logger
 	{
 		logger = log.NewWithParams(&log.Params{
+			// The plugins output everything. The driver's logging level decides what to keep.
+			Level:  log.TRACE,
 			Output: os.Stderr,
-			JSON: true,
+			JSON:   true,
 		})
 		logger.Log("msg", "Instantiating plugin "+kafka.Name)
 		defer logger.Log("msg", "Shutting down plugin "+kafka.Name)
 	}
-	logger2 := hclog.New(&hclog.LoggerOptions{
-		Output: hclog.DefaultOutput,
-		Level:  hclog.Trace,
-		JSONFormat: true,
-	})
 
 	var metricSink shared.MetricSink
 	{
@@ -55,7 +51,7 @@ func main() {
 	var impl *Kafka
 	{
 		client := chttp.NewClientWithJWT(context.Background(), config.AuthToken, config.AuthURL, config.Logger)
-		impl = &Kafka{Logger: logger, Client: client, Logger2: logger2}
+		impl = &Kafka{Logger: logger, Client: client}
 	}
 
 	shared.PluginMap[kafka.Name] = &kafka.Plugin{Impl: impl}
@@ -68,9 +64,8 @@ func main() {
 }
 
 type Kafka struct {
-	Logger *log.Logger
-	Logger2 hclog.Logger
-	Client *chttp.Client
+	Logger  *log.Logger
+	Client  *chttp.Client
 }
 
 // CreateAPIKey generates an api key for a user
@@ -84,13 +79,9 @@ func (c *Kafka) CreateAPIKey(ctx context.Context, apiKey *authv1.ApiKey) (*authv
 // List lists the clusters associated with an account
 func (c *Kafka) List(ctx context.Context, cluster *kafkav1.KafkaCluster) ([]*kafkav1.KafkaCluster, error) {
 	c.Logger.Error("WRAPPED LOGGER STUFF")
-	c.Logger2.Error("HCLOG STUFF")
 	c.Logger.Info("WRAPPED LOGGER STUFF")
-	c.Logger2.Info("HCLOG STUFF")
 	c.Logger.Debug("WRAPPED LOGGER STUFF")
-	c.Logger2.Debug("HCLOG STUFF")
 	c.Logger.Trace("WRAPPED LOGGER STUFF")
-	c.Logger2.Trace("HCLOG STUFF")
 	ret, err := c.Client.Kafka.List(ctx, cluster)
 	return ret, shared.ConvertAPIError(err)
 }

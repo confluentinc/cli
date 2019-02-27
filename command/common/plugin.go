@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"reflect"
 
+	"github.com/confluentinc/cli/log"
 	"github.com/confluentinc/cli/shared"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
@@ -29,12 +30,13 @@ func (f *GRPCPluginFactoryImpl) Create(name string) GRPCPlugin {
 // GRPCPlugin represents a plugin that can be found and loaded on the CLI
 type GRPCPlugin interface {
 	LookupPath() (string, error)
-	Load(interface{}) error
+	Load(interface{}, *log.Logger) error
 }
 
 // GRPCPluginImpl finds and instantiates plugins on the PATH
 type GRPCPluginImpl struct {
-	Name string
+	Name   string
+	Logger hclog.Logger
 }
 
 // LookupPath returns the path to a plugin or an error if its not found
@@ -47,7 +49,7 @@ func (l *GRPCPluginImpl) LookupPath() (string, error) {
 }
 
 // Load starts the plugin running as a GRPC server and sets the client in value
-func (l *GRPCPluginImpl) Load(value interface{}) error {
+func (l *GRPCPluginImpl) Load(value interface{}, logger *log.Logger) error {
 	rv := reflect.ValueOf(value)
 	if rv.Kind() != reflect.Ptr || rv.IsNil() {
 		return fmt.Errorf("value of type %T must be a pointer for a GRPC client", value)
@@ -65,11 +67,7 @@ func (l *GRPCPluginImpl) Load(value interface{}) error {
 		Cmd:              exec.Command("sh", "-c", runnable), // nolint: gas
 		AllowedProtocols: []plugin.Protocol{plugin.ProtocolGRPC},
 		Managed:          true,
-		Logger: hclog.New(&hclog.LoggerOptions{
-			Output: hclog.DefaultOutput,
-			Level:  hclog.Trace,
-			Name:   l.Name,
-		}),
+		Logger:           logger.ToHCLogger(),
 	})
 
 	// Connect via RPC.

@@ -11,7 +11,8 @@ import (
 
 // Logger is the standard logger for the Confluent SDK.
 type Logger struct {
-	l hclog.Logger
+	params *Params
+	l      hclog.Logger
 }
 
 var _ ccloud.Logger = (*Logger)(nil)
@@ -53,11 +54,24 @@ func New() *Logger {
 
 // NewWithParams creates and configures a new Logger.
 func NewWithParams(params *Params) *Logger {
-	return &Logger{l: hclog.New(&hclog.LoggerOptions{
-		Output:     params.Output,
-		JSONFormat: params.JSON,
-		Level:      parseLevel(params.Level),
-	})}
+	return &Logger{
+		params: params,
+		l: hclog.New(&hclog.LoggerOptions{
+			Output:     params.Output,
+			JSONFormat: params.JSON,
+			Level:      parseLevel(params.Level),
+		}),
+	}
+}
+
+// ToHCLogger returns a hclogger with an identical configuration.
+// This is required because go-plugin only supports integrating plugin->driver logging using hclog (hashicorp's package)
+func (l *Logger) ToHCLogger() hclog.Logger {
+	return hclog.New(&hclog.LoggerOptions{
+		Output: l.params.Output,
+		Level:  parseLevel(l.params.Level),
+		//Name:   l.Name,
+	})
 }
 
 func (l *Logger) Trace(args ...interface{}) {
@@ -132,6 +146,7 @@ func (l *Logger) Log(args ...interface{}) {
 }
 
 func (l *Logger) SetLevel(level Level) {
+	l.params.Level = level // This is set so changes can be propagated to plugins via ToHCLogger
 	l.l.SetLevel(parseLevel(level))
 }
 

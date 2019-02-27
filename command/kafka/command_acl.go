@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/codyaray/go-printer"
+	"github.com/confluentinc/cli/log"
 	"github.com/spf13/cobra"
 
 	chttp "github.com/confluentinc/ccloud-sdk-go"
@@ -36,14 +37,14 @@ func NewACLCommand(config *shared.Config, plugin common.GRPCPlugin) *cobra.Comma
 
 func (c *aclCommand) init(plugin common.GRPCPlugin) {
 	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		if err := common.SetLoggingVerbosity(cmd, c.config.Logger); err != nil {
+		if err := log.SetLoggingVerbosity(cmd, c.config.Logger); err != nil {
 			return common.HandleError(err, cmd)
 		}
 		if err := c.config.CheckLogin(); err != nil {
 			return common.HandleError(err, cmd)
 		}
 		// Lazy load plugin to avoid unnecessarily spawning child processes
-		return plugin.Load(&c.client)
+		return plugin.Load(&c.client, c.config.Logger)
 	}
 
 	cmd := &cobra.Command{
