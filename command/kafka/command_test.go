@@ -388,13 +388,9 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 	cmd.SetOutput(buf)
 
 	err := cmd.Execute()
-	if err != shared.ErrUnauthorized {
-		t.Errorf("unexpected err, got %#v, want %#v", err, shared.ErrUnauthorized)
-	}
-	got := buf.String()
-	want := "You must login to access Confluent Cloud.\n"
-	if got != want {
-		t.Errorf("unexpected output, got %s, want %s", got, want)
+	want := "You must login to access Confluent Cloud."
+	if err.Error() != want {
+		t.Errorf("unexpected output, got %s, want %s", err, want)
 	}
 }
 
