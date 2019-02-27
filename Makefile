@@ -1,5 +1,7 @@
 ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
 GIT_REMOTE_NAME ?= origin
+MASTER_BRANCH   ?= master
+RELEASE_BRANCH  ?= master
 
 include ./semver.mk
 
@@ -13,11 +15,8 @@ clean:
 
 .PHONY: deps
 deps:
-	@GO111MODULE=on go mod download
-	@GO111MODULE=on go mod verify
 	@GO111MODULE=on go get github.com/goreleaser/goreleaser@v0.101.0
 	@GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.12.2
-	@GO111MODULE=on go mod vendor
 
 .PHONY: generate
 generate:
@@ -39,6 +38,9 @@ else
 GORELEASER_CONFIG ?= .goreleaser-linux.yml
 endif
 
+show-args:
+	@echo "VERSION: $(VERSION)"
+
 .PHONY: build-go
 build-go:
 	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --snapshot --rm-dist -f $(GORELEASER_CONFIG)
@@ -52,15 +54,31 @@ release: get-release-image commit-release tag-release
 dist:
 	@# unfortunately goreleaser only supports one archive right now (either tar/zip or binaries): https://github.com/goreleaser/goreleaser/issues/705
 	@# we had goreleaser upload binaries (they're uncompressed, so goreleaser's parallel uploads will save more time with binaries than archives)
-	tar -czf dist/ccloud_$(VERSION)_darwin_amd64.tar.gz -C dist/darwin_amd64 ../../LICENSE ../../INSTALL.md .
-	tar -czf dist/ccloud_$(VERSION)_linux_amd64.tar.gz -C dist/linux_amd64 ../../LICENSE ../../INSTALL.md .
-	tar -czf dist/ccloud_$(VERSION)_linux_386.tar.gz -C dist/linux_386 ../../LICENSE ../../INSTALL.md .
-	zip -jqr dist/ccloud_$(VERSION)_windows_amd64.zip LICENSE INSTALL.md dist/windows_amd64/*
-	zip -jqr dist/ccloud_$(VERSION)_windows_386.zip LICENSE INSTALL.md dist/windows_386/*
+	cp LICENSE dist/darwin_amd64/
+	cp LICENSE dist/linux_amd64/
+	cp LICENSE dist/linux_386/
+	cp LICENSE dist/windows_amd64/
+	cp LICENSE dist/windows_amd64/
+	cp INSTALL.md dist/darwin_amd64/
+	cp INSTALL.md dist/linux_amd64/
+	cp INSTALL.md dist/linux_386/
+	cp INSTALL.md dist/windows_amd64/
+	cp INSTALL.md dist/windows_amd64/
+	tar -czf dist/ccloud_$(VERSION)_darwin_amd64.tar.gz -C dist/darwin_amd64 .
+	tar -czf dist/ccloud_$(VERSION)_linux_amd64.tar.gz -C dist/linux_amd64 .
+	tar -czf dist/ccloud_$(VERSION)_linux_386.tar.gz -C dist/linux_386 .
+	zip -jqr dist/ccloud_$(VERSION)_windows_amd64.zip dist/windows_amd64/*
+	zip -jqr dist/ccloud_$(VERSION)_windows_386.zip dist/windows_386/*
+	cp dist/ccloud_$(VERSION)_darwin_amd64.tar.gz dist/ccloud_latest_darwin_amd64.tar.gz
+	cp dist/ccloud_$(VERSION)_linux_amd64.tar.gz dist/ccloud_latest_linux_amd64.tar.gz
+	cp dist/ccloud_$(VERSION)_linux_386.tar.gz dist/ccloud_latest_linux_386.tar.gz
+	cp dist/ccloud_$(VERSION)_windows_amd64.zip dist/ccloud_latest_windows_amd64.zip
+	cp dist/ccloud_$(VERSION)_windows_386.zip dist/ccloud_latest_windows_386.zip
 
 .PHONY: publish
 publish: dist
-	aws s3 cp dist/ s3://confluent.cloud/ccloud-cli/archives/$(VERSION:v%=%)/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --acl public-read
+	aws s3 cp dist/ s3://confluent.cloud/ccloud-cli/archives/$(VERSION:v%=%)/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --exclude "*_latest_*" --acl public-read
+	aws s3 cp dist/ s3://confluent.cloud/ccloud-cli/archives/latest/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --exclude "*_$(VERSION)_*" --acl public-read
 
 .PHONY: fmt
 fmt:

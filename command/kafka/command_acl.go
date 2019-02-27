@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/codyaray/go-printer"
 	"github.com/spf13/cobra"
 
 	chttp "github.com/confluentinc/ccloud-sdk-go"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/shared"
+	"github.com/confluentinc/go-printer"
 )
 
 type aclCommand struct {
@@ -43,7 +43,7 @@ func (c *aclCommand) init(plugin common.GRPCPlugin) {
 			return common.HandleError(err, cmd)
 		}
 		// Lazy load plugin to avoid unnecessarily spawning child processes
-		return plugin.Load(&c.client)
+		return plugin.Load(&c.client, c.config.Logger)
 	}
 
 	cmd := &cobra.Command{
@@ -104,18 +104,20 @@ func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
 			Operation        string
 			Resource         string
 			Name             string
+			Type             string
 		}{
 			binding.Entry.Principal,
 			binding.Entry.PermissionType.String(),
 			binding.Entry.Operation.String(),
 			binding.Pattern.ResourceType.String(),
 			binding.Pattern.Name,
+			binding.Pattern.PatternType.String(),
 		}
 		bindings = append(bindings, printer.ToRow(record,
-			[]string{"ServiceAccountId", "Permission", "Operation", "Resource", "Name"}))
+			[]string{"ServiceAccountId", "Permission", "Operation", "Resource", "Name", "Type"}))
 	}
 
-	printer.RenderCollectionTable(bindings, []string{"ServiceAccountId", "Permission", "Operation", "Resource", "Name"})
+	printer.RenderCollectionTable(bindings, []string{"ServiceAccountId", "Permission", "Operation", "Resource", "Name", "Type"})
 
 	return nil
 }

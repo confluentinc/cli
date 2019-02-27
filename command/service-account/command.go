@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/codyaray/go-printer"
 	"github.com/spf13/cobra"
 
 	ccloud "github.com/confluentinc/ccloud-sdk-go"
@@ -13,6 +12,7 @@ import (
 	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/shared"
 	"github.com/confluentinc/cli/shared/user"
+	"github.com/confluentinc/go-printer"
 )
 
 type command struct {
@@ -55,11 +55,14 @@ func newCMD(config *shared.Config, provider common.GRPCPlugin) (*cobra.Command, 
 
 func (c *command) init(plugin common.GRPCPlugin) error {
 	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		if err := common.SetLoggingVerbosity(cmd, c.config.Logger); err != nil {
+			return common.HandleError(err, cmd)
+		}
 		if err := c.config.CheckLogin(); err != nil {
 			return common.HandleError(err, cmd)
 		}
 		// Lazy load plugin to avoid unnecessarily spawning child processes
-		return plugin.Load(&c.client)
+		return plugin.Load(&c.client, c.config.Logger)
 	}
 
 	c.AddCommand(&cobra.Command{
@@ -75,8 +78,8 @@ func (c *command) init(plugin common.GRPCPlugin) error {
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
 	}
-	createCmd.Flags().String("name", "", "service account name")
-	createCmd.Flags().String("description", "", "service account description")
+	createCmd.Flags().String("name", "", "The service account name")
+	createCmd.Flags().String("description", "", "The service account description")
 	_ = createCmd.MarkFlagRequired("name")
 	_ = createCmd.MarkFlagRequired("description")
 	createCmd.Flags().SortFlags = false
@@ -88,9 +91,9 @@ func (c *command) init(plugin common.GRPCPlugin) error {
 		RunE:  c.update,
 		Args:  cobra.NoArgs,
 	}
-	updateCmd.Flags().Int32("servic-eaccount-id", 0, "service account id")
-	updateCmd.Flags().String("description", "", "service account description")
-	_ = updateCmd.MarkFlagRequired("servic-eaccount-id")
+	updateCmd.Flags().Int32("service-account-id", 0, "The service account ID")
+	updateCmd.Flags().String("description", "", "The service account description")
+	_ = updateCmd.MarkFlagRequired("service-account-id")
 	_ = updateCmd.MarkFlagRequired("description")
 	c.AddCommand(updateCmd)
 
@@ -100,7 +103,7 @@ func (c *command) init(plugin common.GRPCPlugin) error {
 		RunE:  c.delete,
 		Args:  cobra.NoArgs,
 	}
-	deleteCmd.Flags().Int32("service-account-id", 0, "service account id")
+	deleteCmd.Flags().Int32("service-account-id", 0, "The service account ID")
 	_ = deleteCmd.MarkFlagRequired("service-account-id")
 	c.AddCommand(deleteCmd)
 

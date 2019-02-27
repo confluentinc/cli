@@ -8,26 +8,39 @@ import (
 
 	chttp "github.com/confluentinc/ccloud-sdk-go"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
+	"github.com/confluentinc/cli/command"
 	"github.com/confluentinc/cli/log"
 	"github.com/confluentinc/cli/metric"
 	"github.com/confluentinc/cli/shared"
 	"github.com/confluentinc/cli/shared/user"
+	cliVersion "github.com/confluentinc/cli/version"
+)
+
+var (
+	// Injected from linker flags like `go build -ldflags "-X main.version=$VERSION" -X ...`
+	version = "v0.0.0"
+	commit  = ""
+	date    = ""
+	host    = ""
 )
 
 // Compile-time check for Interface adherence
 var _ chttp.User = (*User)(nil)
 
 func main() {
+	if len(os.Args) > 1 && (os.Args[1] == "version" || os.Args[1] == "--version") {
+		shared.PrintVersion(cliVersion.NewVersion(version, commit, date, host), command.NewTerminalPrompt(os.Stdin))
+	}
+
 	var logger *log.Logger
 	{
-		logger = log.New()
-		logger.Log("msg", "hello")
+		logger = log.NewWithParams(&log.Params{
+			// Plugins log everything. The driver decides the logging level to keep.
+			Level:  log.TRACE,
+			Output: os.Stderr,
+			JSON:   true,
+		})
 		defer logger.Log("msg", "goodbye")
-
-		f, err := os.OpenFile("/tmp/confluent-user-plugin.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
-		check(err, logger)
-		logger.SetLevel(log.DEBUG)
-		logger.SetOutput(f)
 	}
 
 	var metricSink shared.MetricSink
@@ -101,11 +114,4 @@ func (c *User) GetServiceAccounts(ctx context.Context) ([]*orgv1.User, error) {
 	c.Logger.Log("msg", "user.GetServiceAccounts()")
 	ret, err := c.Client.User.GetServiceAccounts(ctx)
 	return ret, shared.ConvertAPIError(err)
-}
-
-func check(err error, logger *log.Logger) {
-	if err != nil {
-		logger.Error(err)
-		os.Exit(1)
-	}
 }

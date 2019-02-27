@@ -1,6 +1,8 @@
 package version
 
 import (
+	"fmt"
+	"runtime"
 	"strings"
 )
 
@@ -12,13 +14,13 @@ type Version struct {
 	UserAgent string
 }
 
-func NewVersion(version, commit, buildDate, buildHost, userAgent string) *Version {
+func NewVersion(version, commit, buildDate, buildHost string) *Version {
 	return &Version{
 		Version:   version,
 		Commit:    commit,
 		BuildDate: buildDate,
 		BuildHost: buildHost,
-		UserAgent: userAgent,
+		UserAgent: fmt.Sprintf("Confluent/1.0 ccloud/%s (%s/%s)", version, runtime.GOOS, runtime.GOARCH),
 	}
 }
 

@@ -24,7 +24,7 @@ func TestAddCommands_MissingPluginsNotShownInHelpUsage(t *testing.T) {
 		Logger: logger,
 	})
 
-	version := cliVersion.NewVersion("1.2.3", "abc1234", "01/23/45", "CI", "ccloud/1.2.3")
+	version := cliVersion.NewVersion("1.2.3", "abc1234", "01/23/45", "CI")
 	factory := &mock.GRPCPluginFactory{
 		CreateFunc: func(name string) common.GRPCPlugin {
 			return &mock.GRPCPlugin{
@@ -56,7 +56,7 @@ func TestAddCommands_AvailablePluginsShownInHelpUsage(t *testing.T) {
 		Logger: logger,
 	})
 
-	version := cliVersion.NewVersion("1.2.3", "abc1234", "01/23/45", "CI", "ccloud/1.2.3")
+	version := cliVersion.NewVersion("1.2.3", "abc1234", "01/23/45", "CI")
 	factory := &mock.GRPCPluginFactory{
 		CreateFunc: func(name string) common.GRPCPlugin {
 			return &mock.GRPCPlugin{

@@ -1,16 +1,18 @@
 package log
 
 import (
+	"fmt"
 	"io"
 	"os"
 
 	"github.com/confluentinc/ccloud-sdk-go"
-	"github.com/sirupsen/logrus"
+	"github.com/hashicorp/go-hclog"
 )
 
 // Logger is the standard logger for the Confluent SDK.
 type Logger struct {
-	l *logrus.Logger
+	params *Params
+	l      hclog.Logger
 }
 
 var _ ccloud.Logger = (*Logger)(nil)
@@ -35,80 +37,132 @@ const (
 	TRACE
 )
 
-// New create and configures a new Logger.
+type Params struct {
+	Level  Level
+	Output io.Writer
+	JSON   bool
+}
+
+// New creates a new Logger with the default configuration.
 func New() *Logger {
-	logger := &Logger{l: logrus.New()}
-	logger.l.Formatter = &logrus.TextFormatter{FullTimestamp: true, DisableLevelTruncation: true}
-	logger.SetLevel(WARN)
-	logger.SetOutput(os.Stdout)
-	return logger
+	return NewWithParams(&Params{
+		Level:  WARN,
+		Output: os.Stderr,
+		JSON:   false,
+	})
+}
+
+// NewWithParams creates and configures a new Logger.
+func NewWithParams(params *Params) *Logger {
+	return &Logger{
+		params: params,
+		l: hclog.New(&hclog.LoggerOptions{
+			Output:     params.Output,
+			JSONFormat: params.JSON,
+			Level:      parseLevel(params.Level),
+		}),
+	}
+}
+
+// ToHCLogger returns a hclogger with an identical configuration.
+// This is required because go-plugin only supports hclog (their own package)
+// for integrated logging across driver and plugins
+func (l *Logger) ToHCLogger(name string) hclog.Logger {
+	return hclog.New(&hclog.LoggerOptions{
+		Output: l.params.Output,
+		Level:  parseLevel(l.params.Level),
+		Name:   name,
+	})
+}
+
+func (l *Logger) Trace(args ...interface{}) {
+	if l.l.IsTrace() {
+		l.l.Trace(fmt.Sprint(args...))
+	}
+}
+
+func (l *Logger) Tracef(format string, args ...interface{}) {
+	if l.l.IsTrace() {
+		l.l.Trace(fmt.Sprintf(format, args...))
+	}
 }
 
 func (l *Logger) Debug(args ...interface{}) {
-	l.l.Debug(args...)
+	if l.l.IsDebug() {
+		l.l.Debug(fmt.Sprint(args...))
+	}
 }
 
 func (l *Logger) Debugf(format string, args ...interface{}) {
-	l.l.Debugf(format, args...)
+	if l.l.IsDebug() {
+		l.l.Debug(fmt.Sprintf(format, args...))
+	}
 }
 
-
 func (l *Logger) Info(args ...interface{}) {
-	l.l.Info(args...)
+	if l.l.IsInfo() {
+		l.l.Info(fmt.Sprint(args...))
+	}
 }
 
 func (l *Logger) Infof(format string, args ...interface{}) {
-	l.l.Infof(format, args...)
+	if l.l.IsInfo() {
+		l.l.Info(fmt.Sprintf(format, args...))
+	}
 }
 
 func (l *Logger) Warn(args ...interface{}) {
-	l.l.Warn(args...)
+	if l.l.IsWarn() {
+		l.l.Warn(fmt.Sprint(args...))
+	}
 }
 
 func (l *Logger) Warnf(format string, args ...interface{}) {
-	l.l.Warnf(format, args...)
+	if l.l.IsWarn() {
+		l.l.Warn(fmt.Sprintf(format, args...))
+	}
 }
 
 func (l *Logger) Error(args ...interface{}) {
-	l.l.Error(args...)
+	if l.l.IsError() {
+		l.l.Error(fmt.Sprint(args...))
+	}
 }
 
 func (l *Logger) Errorf(format string, args ...interface{}) {
-	l.l.Errorf(format, args...)
+	if l.l.IsError() {
+		l.l.Error(fmt.Sprintf(format, args...))
+	}
 }
 
 // Log logs a "msg" and key-value pairs.
 // Example: Log("msg", "hello", "key1", "val1", "key2", "val2")
 func (l *Logger) Log(args ...interface{}) {
-	var msg interface{}
-	m := make(map[string]interface{})
-	for i := 0; i < len(args); i += 2 {
-		k := args[i].(string)
-		v := args[i+1]
-		if k == "msg" {
-			msg = v
-		} else {
-			m[k] = v
+	if l.l.IsDebug() {
+		if args[0] != "msg" {
+			l.l.Debug(`unexpected logging call, first key should be "msg": ` + fmt.Sprint(args...))
 		}
+		l.l.Debug(fmt.Sprint(args[1]), args[2:]...)
 	}
-	l.l.WithFields(logrus.Fields(m)).Debug(msg)
 }
 
 func (l *Logger) SetLevel(level Level) {
-	switch level {
-	case ERROR:
-		l.l.SetLevel(logrus.ErrorLevel)
-	case WARN:
-		l.l.SetLevel(logrus.WarnLevel)
-	case INFO:
-		l.l.SetLevel(logrus.InfoLevel)
-	case DEBUG:
-		l.l.SetLevel(logrus.DebugLevel)
-	case TRACE:
-		l.l.SetLevel(logrus.TraceLevel)
-	}
+	l.params.Level = level // This is set so changes can be propagated to plugins via ToHCLogger
+	l.l.SetLevel(parseLevel(level))
 }
 
-func (l *Logger) SetOutput(out io.Writer) {
-	l.l.SetOutput(out)
+func parseLevel(level Level) hclog.Level {
+	switch level {
+	case ERROR:
+		return hclog.Error
+	case WARN:
+		return hclog.Warn
+	case INFO:
+		return hclog.Info
+	case DEBUG:
+		return hclog.Debug
+	case TRACE:
+		return hclog.Trace
+	}
+	return hclog.NoLevel
 }

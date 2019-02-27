@@ -249,9 +249,9 @@ func TestListResourcePrincipalFilterACL(t *testing.T) {
 	expect := make(chan interface{})
 	for _, resource := range resourcePatterns {
 		args := append([]string{"acl", "list"}, resource.args...)
-		for  _, entry := range aclEntries {
+		for _, entry := range aclEntries {
 			cmd := NewCMD(expect)
-			cmd.SetArgs(append(args,"--service-account-id", strings.TrimPrefix(entry.entry.Principal, "User:")))
+			cmd.SetArgs(append(args, "--service-account-id", strings.TrimPrefix(entry.entry.Principal, "User:")))
 
 			go func() {
 				expect <- convertToFilter(&kafkav1.ACLBinding{Pattern: resource.pattern, Entry: entry.entry})
@@ -371,7 +371,7 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 		LookupPathFunc: func() (string, error) {
 			return "", nil
 		},
-		LoadFunc: func(value interface{}) error {
+		LoadFunc: func(value interface{}, logger *log.Logger) error {
 			client := &mock.Kafka{
 				ListFunc: func(ctx context.Context, cluster *kafkav1.KafkaCluster) ([]*kafkav1.KafkaCluster, error) {
 					return nil, shared.ErrUnauthorized
@@ -404,7 +404,7 @@ func NewCMD(expect chan interface{}) *cobra.Command {
 		LookupPathFunc: func() (string, error) {
 			return "", nil
 		},
-		LoadFunc: func(value interface{}) error {
+		LoadFunc: func(value interface{}, logger *log.Logger) error {
 			return cliMock.NewKafkaMock(value, expect)
 		},
 	})

@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/codyaray/go-printer"
 	"github.com/spf13/cobra"
 
 	chttp "github.com/confluentinc/ccloud-sdk-go"
 	ksqlv1 "github.com/confluentinc/ccloudapis/ksql/v1"
 	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/shared"
+	"github.com/confluentinc/go-printer"
 )
 
 var (
@@ -50,7 +50,7 @@ func (c *clusterCommand) init(plugin common.GRPCPlugin) {
 			return common.HandleError(err, cmd)
 		}
 		// Lazy load plugin to avoid unnecessarily spawning child processes
-		return plugin.Load(&c.client)
+		return plugin.Load(&c.client, c.config.Logger)
 	}
 
 	c.AddCommand(&cobra.Command{

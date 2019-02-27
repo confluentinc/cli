@@ -13,7 +13,7 @@ func TestVersion(t *testing.T) {
 	req := require.New(t)
 
 	root, prompt := terminal.BuildRootCommand()
-	v := version.NewVersion("1.2.3", "abc1234", "Fri Feb 22 20:55:53 UTC 2019", "CI", "ccloud/awesome 1.0")
+	v := version.NewVersion("1.2.3", "abc1234", "Fri Feb 22 20:55:53 UTC 2019", "CI")
 	cmd := NewVersionCmd(v, prompt)
 	root.AddCommand(cmd)
 
@@ -30,7 +30,7 @@ func TestDevelopmentVersion_v0(t *testing.T) {
 	req := require.New(t)
 
 	root, prompt := terminal.BuildRootCommand()
-	v := version.NewVersion("0.0.0", "abc1234", "01/23/45", "CI", "ccloud/awesome 1.0")
+	v := version.NewVersion("0.0.0", "abc1234", "01/23/45", "CI")
 	cmd := NewVersionCmd(v, prompt)
 	root.AddCommand(cmd)
 
@@ -45,7 +45,7 @@ func TestDevelopmentVersion_Dirty(t *testing.T) {
 	req := require.New(t)
 
 	root, prompt := terminal.BuildRootCommand()
-	v := version.NewVersion("1.2.3-dirty-timmy", "abc1234", "01/23/45", "CI", "ccloud/awesome 1.0")
+	v := version.NewVersion("1.2.3-dirty-timmy", "abc1234", "01/23/45", "CI")
 	cmd := NewVersionCmd(v, prompt)
 	root.AddCommand(cmd)
 
@@ -60,7 +60,7 @@ func TestDevelopmentVersion_Unmerged(t *testing.T) {
 	req := require.New(t)
 
 	root, prompt := terminal.BuildRootCommand()
-	v := version.NewVersion("1.2.3-g16dd476", "abc1234", "01/23/45", "CI", "ccloud/awesome 1.0")
+	v := version.NewVersion("1.2.3-g16dd476", "abc1234", "01/23/45", "CI")
 	cmd := NewVersionCmd(v, prompt)
 	root.AddCommand(cmd)
 

@@ -7,7 +7,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/codyaray/go-printer"
 	"github.com/spf13/cobra"
 
 	ccloud "github.com/confluentinc/ccloud-sdk-go"
@@ -15,6 +14,7 @@ import (
 	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/shared"
 	"github.com/confluentinc/cli/shared/apikey"
+	"github.com/confluentinc/go-printer"
 )
 
 type command struct {
@@ -54,11 +54,14 @@ func newCMD(config *shared.Config, provider common.GRPCPlugin) (*cobra.Command, 
 
 func (c *command) init(plugin common.GRPCPlugin) error {
 	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		if err := common.SetLoggingVerbosity(cmd, c.config.Logger); err != nil {
+			return common.HandleError(err, cmd)
+		}
 		if err := c.config.CheckLogin(); err != nil {
 			return common.HandleError(err, cmd)
 		}
 		// Lazy load plugin to avoid unnecessarily spawning child processes
-		return plugin.Load(&c.client)
+		return plugin.Load(&c.client, c.config.Logger)
 	}
 
 	c.AddCommand(&cobra.Command{
@@ -73,10 +76,10 @@ func (c *command) init(plugin common.GRPCPlugin) error {
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
 	}
-	createCmd.Flags().String("cluster", "", "grant access to this cluster ID")
+	createCmd.Flags().String("cluster", "", "Grant access to a cluster with this ID")
 	_ = createCmd.MarkFlagRequired("cluster")
-	createCmd.Flags().Int32("service-account-id", 0, "create for a service account instead of yourself")
-	createCmd.Flags().String("description", "", "description or purpose for the API key")
+	createCmd.Flags().Int32("service-account-id", 0, "Create API key for a service account")
+	createCmd.Flags().String("description", "", "Description or purpose for the API key")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 

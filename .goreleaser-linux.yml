@@ -4,6 +4,8 @@ builds:
   -
     binary: ccloud
     main: .
+    flags:
+      - -mod=readonly
     ldflags:
       - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.Commit}} -X main.date={{.Date}}  -X main.host={{.Env.HOSTNAME}}
     gcflags:
@@ -17,6 +19,8 @@ builds:
   -
     binary: ccloud-kafka-plugin
     main: ./plugin/ccloud-kafka-plugin
+    flags:
+      - -mod=readonly
     ldflags:
       - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.Commit}} -X main.date={{.Date}}  -X main.host={{.Env.HOSTNAME}}
     gcflags:
@@ -30,6 +34,8 @@ builds:
   -
     binary: ccloud-connect-plugin
     main: ./plugin/ccloud-connect-plugin
+    flags:
+      - -mod=readonly
     ldflags:
       - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.Commit}} -X main.date={{.Date}}  -X main.host={{.Env.HOSTNAME}}
     gcflags:
@@ -43,6 +49,8 @@ builds:
   -
     binary: ccloud-ksql-plugin
     main: ./plugin/ccloud-ksql-plugin
+    flags:
+      - -mod=readonly
     ldflags:
       - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.Commit}} -X main.date={{.Date}}  -X main.host={{.Env.HOSTNAME}}
     gcflags:
@@ -56,6 +64,8 @@ builds:
   -
     binary: ccloud-user-plugin
     main: ./plugin/ccloud-user-plugin
+    flags:
+      - -mod=readonly
     ldflags:
       - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.Commit}} -X main.date={{.Date}}  -X main.host={{.Env.HOSTNAME}}
     gcflags:
@@ -69,6 +79,8 @@ builds:
   -
     binary: ccloud-apikey-plugin
     main: ./plugin/ccloud-apikey-plugin
+    flags:
+      - -mod=readonly
     ldflags:
       - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.Commit}} -X main.date={{.Date}}  -X main.host={{.Env.HOSTNAME}}
     gcflags:

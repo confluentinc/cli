@@ -7,7 +7,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/codyaray/go-printer"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh/terminal"
 
@@ -16,13 +15,14 @@ import (
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/shared"
+	"github.com/confluentinc/go-printer"
 )
 
 var (
 	listFields      = []string{"Id", "Name", "ServiceProvider", "Region", "Durability", "Status"}
-	listLabels      = []string{"Id", "Name", "GRPCPlugin", "Region", "Durability", "Status"}
+	listLabels      = []string{"Id", "Name", "Provider", "Region", "Durability", "Status"}
 	describeFields  = []string{"Id", "Name", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "ApiEndpoint", "PricePerHour"}
-	describeRenames = map[string]string{"NetworkIngress": "Ingress", "NetworkEgress": "Egress", "ServiceProvider": "GRPCPlugin"}
+	describeRenames = map[string]string{"NetworkIngress": "Ingress", "NetworkEgress": "Egress", "ServiceProvider": "Provider"}
 )
 
 type clusterCommand struct {
@@ -53,7 +53,7 @@ func (c *clusterCommand) init(plugin common.GRPCPlugin) {
 			return common.HandleError(err, cmd)
 		}
 		// Lazy load plugin to avoid unnecessarily spawning child processes
-		return plugin.Load(&c.client)
+		return plugin.Load(&c.client, c.config.Logger)
 	}
 
 	c.AddCommand(&cobra.Command{
@@ -116,8 +116,17 @@ func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
+	currCtx, err := c.config.Context()
+	if err != nil && err != shared.ErrNoContext {
+		return err
+	}
 	var data [][]string
 	for _, cluster := range clusters {
+		if cluster.Id == currCtx.Kafka {
+			cluster.Id = fmt.Sprintf("* %s", cluster.Id)
+		} else {
+			cluster.Id = fmt.Sprintf("  %s", cluster.Id)
+		}
 		data = append(data, printer.ToRow(cluster, listFields))
 	}
 	printer.RenderCollectionTable(data, listLabels)

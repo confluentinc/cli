@@ -3,12 +3,15 @@ project_name: ccloud
 before:
   hooks:
     # to avoid goreleaser error due to `make deps` on CI: git is currently in a dirty state
-    - git checkout go.mod
+    # we should never see go.mod be dirty because we `go build -mod=readonly`, but we can't well control go.sum updates
+    - git checkout go.sum
 
 builds:
   -
     binary: ccloud
     main: .
+    flags:
+      - -mod=readonly
     ldflags:
       - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.Commit}} -X main.date={{.Date}}  -X main.host={{.Env.HOSTNAME}}
     gcflags:
@@ -28,6 +31,8 @@ builds:
   -
     binary: ccloud-kafka-plugin
     main: ./plugin/ccloud-kafka-plugin
+    flags:
+      - -mod=readonly
     ldflags:
       - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.Commit}} -X main.date={{.Date}}  -X main.host={{.Env.HOSTNAME}}
     gcflags:
@@ -47,6 +52,8 @@ builds:
   -
     binary: ccloud-user-plugin
     main: ./plugin/ccloud-user-plugin
+    flags:
+      - -mod=readonly
     ldflags:
       - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.Commit}} -X main.date={{.Date}}  -X main.host={{.Env.HOSTNAME}}
     gcflags:
@@ -66,6 +73,8 @@ builds:
   -
     binary: ccloud-apikey-plugin
     main: ./plugin/ccloud-apikey-plugin
+    flags:
+      - -mod=readonly
     ldflags:
       - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.Commit}} -X main.date={{.Date}}  -X main.host={{.Env.HOSTNAME}}
     gcflags:

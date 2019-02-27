@@ -4,31 +4,44 @@ import (
 	"context"
 	"os"
 
-	plugin "github.com/hashicorp/go-plugin"
+	"github.com/hashicorp/go-plugin"
 
 	chttp "github.com/confluentinc/ccloud-sdk-go"
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
-	log "github.com/confluentinc/cli/log"
-	metric "github.com/confluentinc/cli/metric"
+	"github.com/confluentinc/cli/command"
+	"github.com/confluentinc/cli/log"
+	"github.com/confluentinc/cli/metric"
 	"github.com/confluentinc/cli/shared"
 	"github.com/confluentinc/cli/shared/kafka"
+	cliVersion "github.com/confluentinc/cli/version"
+)
+
+var (
+	// Injected from linker flags like `go build -ldflags "-X main.version=$VERSION" -X ...`
+	version = "v0.0.0"
+	commit  = ""
+	date    = ""
+	host    = ""
 )
 
 // Compile-time check for Interface adherence
 var _ chttp.Kafka = (*Kafka)(nil)
 
 func main() {
+	if len(os.Args) > 1 && (os.Args[1] == "version" || os.Args[1] == "--version") {
+		shared.PrintVersion(cliVersion.NewVersion(version, commit, date, host), command.NewTerminalPrompt(os.Stdin))
+	}
+
 	var logger *log.Logger
 	{
-		logger = log.New()
-		logger.Log("msg", "Instantiating plugin "+kafka.Name)
+		logger = log.NewWithParams(&log.Params{
+			// Plugins log everything. The driver decides the logging level to keep.
+			Level:  log.TRACE,
+			Output: os.Stderr,
+			JSON:   true,
+		})
 		defer logger.Log("msg", "Shutting down plugin "+kafka.Name)
-
-		f, err := os.OpenFile("/tmp/"+kafka.Name+".log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
-		check(err, logger)
-		logger.SetLevel(log.DEBUG)
-		logger.SetOutput(f)
 	}
 
 	var metricSink shared.MetricSink
@@ -70,8 +83,7 @@ type Kafka struct {
 
 // CreateAPIKey generates an api key for a user
 func (c *Kafka) CreateAPIKey(ctx context.Context, apiKey *authv1.ApiKey) (*authv1.ApiKey, error) {
-	c.Logger.Log("method", "create", "resource", "api-key",
-		"user", apiKey.UserId)
+	c.Logger.Log("method", "create", "resource", "api-key", "user", apiKey.UserId)
 	apiKey, err := c.Client.APIKey.Create(ctx, apiKey)
 	return apiKey, shared.ConvertAPIError(err)
 }
@@ -179,7 +191,7 @@ func withACLFields(method string, cluster *kafkav1.KafkaCluster, acl *kafkav1.Re
 }
 
 func withFields(method string, resource string, cluster *kafkav1.KafkaCluster, topic *kafkav1.Topic, acl *kafkav1.ResourcePatternConfig) []interface{} {
-	fields := []interface{}{"method", method, "resource", resource}
+	fields := []interface{}{"msg", "request", "method", method, "resource", resource}
 
 	if cluster != nil {
 		fields = append(fields, "cluster", cluster.Id, "account", cluster.AccountId)
@@ -191,11 +203,4 @@ func withFields(method string, resource string, cluster *kafkav1.KafkaCluster, t
 		fields = append(fields, "name", acl.Name, "acl_resource", acl.ResourceType)
 	}
 	return fields
-}
-
-func check(err error, logger *log.Logger) {
-	if err != nil {
-		logger.Error(err)
-		os.Exit(1)
-	}
 }

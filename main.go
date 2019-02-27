@@ -1,9 +1,7 @@
 package main
 
 import (
-	"fmt"
 	"os"
-	"runtime"
 
 	"github.com/confluentinc/cli/command"
 	"github.com/confluentinc/cli/command/apikey"
@@ -14,8 +12,8 @@ import (
 	"github.com/confluentinc/cli/command/kafka"
 	"github.com/confluentinc/cli/command/ksql"
 	"github.com/confluentinc/cli/command/service-account"
-
 	"github.com/hashicorp/go-plugin"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -54,15 +52,16 @@ func main() {
 		}
 	}
 
-	userAgent := fmt.Sprintf("Confluent/1.0 ccloud/%s (%s/%s)", version, runtime.GOOS, runtime.GOARCH)
-	version := cliVersion.NewVersion(version, commit, date, host, userAgent)
+	version := cliVersion.NewVersion(version, commit, date, host)
 	factory := &common.GRPCPluginFactoryImpl{}
 
-	cli := BuildCommand(cfg, version, factory, logger)
-	check(cli.Execute())
+	defer plugin.CleanupClients()
 
-	plugin.CleanupClients()
-	os.Exit(0)
+	cli := BuildCommand(cfg, version, factory, logger)
+	err := cli.Execute()
+	if err != nil {
+		os.Exit(1)
+	}
 }
 
 func BuildCommand(cfg *shared.Config, version *cliVersion.Version, factory common.GRPCPluginFactory, logger *log.Logger) *cobra.Command {
@@ -83,7 +82,9 @@ func BuildCommand(cfg *shared.Config, version *cliVersion.Version, factory commo
 	cli.Version = version.Version
 	cli.AddCommand(common.NewVersionCmd(version, prompt))
 
-	cli.AddCommand(config.New(cfg))
+	conn := config.New(cfg)
+	conn.Hidden = true // The config/context feature isn't finished yet, so let's hide it
+	cli.AddCommand(conn)
 
 	conn, err := common.NewCompletionCmd(cli, prompt, cliName)
 	if err != nil {
@@ -130,11 +131,4 @@ func BuildCommand(cfg *shared.Config, version *cliVersion.Version, factory commo
 	}
 
 	return cli
-}
-
-func check(err error) {
-	if err != nil {
-		plugin.CleanupClients()
-		os.Exit(1)
-	}
 }

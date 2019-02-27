@@ -56,6 +56,8 @@ github.com/codyaray/go-editor v0.3.0 h1:UR09THBRSPvWSy8stAoIL76Neq0LtiK1KJAuPzrT
 github.com/codyaray/go-editor v0.3.0/go.mod h1:KTJY2oaaxgAcgmJj+NK8/gFXpOePIVDt1/3FUbBBDTY=
 github.com/codyaray/go-printer v0.8.0 h1:yEzJ3F8pZDtwbg0kQXChZhFdfKYVp2JmeqAqN28p4VI=
 github.com/codyaray/go-printer v0.8.0/go.mod h1:D3QhRgp4mumbs4wNyaZmAyztIWjd125AqqSmeD6+U04=
+github.com/codyaray/go-printer v0.9.0 h1:6pBM0Km7O/WQNIxYFHJAzsevgw+RxHfDPHR5Lg9Zrok=
+github.com/codyaray/go-printer v0.9.0/go.mod h1:D3QhRgp4mumbs4wNyaZmAyztIWjd125AqqSmeD6+U04=
 github.com/codyaray/proto-go-setter v0.0.0-20180912191759-fb17e76fc076/go.mod h1:wdKBjHZZ/HCmrfPs1UoD/Xuzat9EKHRsScG03kDM2pU=
 github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 h1:sIWhdehnHPCWoZeMVBRvb6+/73GxXKCHo9PhhWe9UcY=
 github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2/go.mod h1:HNotNNYHefttEUajcmByCW4bWNBiYd7s5mNZWzB62r0=
@@ -82,6 +84,12 @@ github.com/confluentinc/ccloudapis v0.0.0-20190221211938-09d97b2088c1 h1:eWqc9XJ
 github.com/confluentinc/ccloudapis v0.0.0-20190221211938-09d97b2088c1/go.mod h1:RGupQo6tb6J+1BnSqqueADkoC8b/F60+Ci3FMB3wDFo=
 github.com/confluentinc/ccloudapis v0.0.0-20190223013552-64fe4ec0c600 h1:VPORV8Zts24tgW/zEGcZhC609RtTWfQpTOsdFW4UO1U=
 github.com/confluentinc/ccloudapis v0.0.0-20190223013552-64fe4ec0c600/go.mod h1:RGupQo6tb6J+1BnSqqueADkoC8b/F60+Ci3FMB3wDFo=
+github.com/confluentinc/ccloudapis v0.0.0-20190227054330-86f4a19ce258 h1:PG+A0yGB6m7AMAknluVChLBhdgKNLRilsKR7BjHuhhM=
+github.com/confluentinc/ccloudapis v0.0.0-20190227054330-86f4a19ce258/go.mod h1:RGupQo6tb6J+1BnSqqueADkoC8b/F60+Ci3FMB3wDFo=
+github.com/confluentinc/ccloudapis v0.0.0-20190227065628-cf9b2483670a h1:XAtQEdDNhladJViSs4irZAYKYNb8S8a+Hn3gfHLgosw=
+github.com/confluentinc/ccloudapis v0.0.0-20190227065628-cf9b2483670a/go.mod h1:RGupQo6tb6J+1BnSqqueADkoC8b/F60+Ci3FMB3wDFo=
+github.com/confluentinc/go-printer v0.9.0 h1:AnXGsoRM5bRlQN4xnFYjbKFjl3Kvwpgbq/i3KPi3mHU=
+github.com/confluentinc/go-printer v0.9.0/go.mod h1:bOK/pPNm4ao7bZIcRnGPGca1B64nW+lApFXHZEZ0PcM=
 github.com/confluentinc/proto-go-setter v0.0.0-20180912191759-fb17e76fc076 h1:tJszovtvIkdc+Sq0TBZK2d8ExqQ6Y2jjUbBERqivSMk=
 github.com/confluentinc/proto-go-setter v0.0.0-20180912191759-fb17e76fc076/go.mod h1:WD/4qYOPFMs2ozq2z2VJFtHljgptKHWtOMb9ochncfA=
 github.com/confluentinc/protoc-gen-ccloud v0.0.0-20190122202943-91a08616afd2/go.mod h1:RL4B2sjziJsuvLS6nkpqJha7026Wl3aaN4cXMSDYoc4=

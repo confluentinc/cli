@@ -6,6 +6,8 @@ package mock
 
 import (
 	sync "sync"
+
+	github_com_confluentinc_cli_log "github.com/confluentinc/cli/log"
 )
 
 // GRPCPlugin is a mock of GRPCPlugin interface
@@ -14,13 +16,14 @@ type GRPCPlugin struct {
 	LookupPathFunc func() (string, error)
 
 	lockLoad sync.Mutex
-	LoadFunc func(arg0 interface{}) error
+	LoadFunc func(arg0 interface{}, arg1 *github_com_confluentinc_cli_log.Logger) error
 
 	calls struct {
 		LookupPath []struct {
 		}
 		Load []struct {
 			Arg0 interface{}
+			Arg1 *github_com_confluentinc_cli_log.Logger
 		}
 	}
 }
@@ -60,7 +63,7 @@ func (m *GRPCPlugin) LookupPathCalls() []struct {
 }
 
 // Load mocks base method by wrapping the associated func.
-func (m *GRPCPlugin) Load(arg0 interface{}) error {
+func (m *GRPCPlugin) Load(arg0 interface{}, arg1 *github_com_confluentinc_cli_log.Logger) error {
 	m.lockLoad.Lock()
 	defer m.lockLoad.Unlock()
 
@@ -70,13 +73,15 @@ func (m *GRPCPlugin) Load(arg0 interface{}) error {
 
 	call := struct {
 		Arg0 interface{}
+		Arg1 *github_com_confluentinc_cli_log.Logger
 	}{
 		Arg0: arg0,
+		Arg1: arg1,
 	}
 
 	m.calls.Load = append(m.calls.Load, call)
 
-	return m.LoadFunc(arg0)
+	return m.LoadFunc(arg0, arg1)
 }
 
 // LoadCalled returns true if Load was called at least once.
@@ -90,6 +95,7 @@ func (m *GRPCPlugin) LoadCalled() bool {
 // LoadCalls returns the calls made to Load.
 func (m *GRPCPlugin) LoadCalls() []struct {
 	Arg0 interface{}
+	Arg1 *github_com_confluentinc_cli_log.Logger
 } {
 	m.lockLoad.Lock()
 	defer m.lockLoad.Unlock()
