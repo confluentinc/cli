@@ -131,7 +131,7 @@ func (c *aclCommand) create(cmd *cobra.Command, args []string) error {
 	}
 
 	if acl.errors != nil {
-		return common.HandleError(fmt.Errorf("Failed to parse input \n\t"+strings.Join(acl.errors, "\n\t")), cmd)
+		return common.HandleError(fmt.Errorf(strings.Join(acl.errors, "\n\t")), cmd)
 	}
 
 	err = c.client.CreateACL(context.Background(), cluster, []*kafkav1.ACLBinding{acl.ACLBinding})
