@@ -371,7 +371,7 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 		LookupPathFunc: func() (string, error) {
 			return "", nil
 		},
-		LoadFunc: func(value interface{}) error {
+		LoadFunc: func(value interface{}, logger *log.Logger) error {
 			client := &mock.Kafka{
 				ListFunc: func(ctx context.Context, cluster *kafkav1.KafkaCluster) ([]*kafkav1.KafkaCluster, error) {
 					return nil, shared.ErrUnauthorized
@@ -404,7 +404,7 @@ func NewCMD(expect chan interface{}) *cobra.Command {
 		LookupPathFunc: func() (string, error) {
 			return "", nil
 		},
-		LoadFunc: func(value interface{}) error {
+		LoadFunc: func(value interface{}, logger *log.Logger) error {
 			return cliMock.NewKafkaMock(value, expect)
 		},
 	})
