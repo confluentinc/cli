@@ -52,11 +52,21 @@ release: get-release-image commit-release tag-release
 dist:
 	@# unfortunately goreleaser only supports one archive right now (either tar/zip or binaries): https://github.com/goreleaser/goreleaser/issues/705
 	@# we had goreleaser upload binaries (they're uncompressed, so goreleaser's parallel uploads will save more time with binaries than archives)
-	tar -czf dist/ccloud_$(VERSION)_darwin_amd64.tar.gz -C dist/darwin_amd64 ../../LICENSE ../../INSTALL.md .
-	tar -czf dist/ccloud_$(VERSION)_linux_amd64.tar.gz -C dist/linux_amd64 ../../LICENSE ../../INSTALL.md .
-	tar -czf dist/ccloud_$(VERSION)_linux_386.tar.gz -C dist/linux_386 ../../LICENSE ../../INSTALL.md .
-	zip -jqr dist/ccloud_$(VERSION)_windows_amd64.zip LICENSE INSTALL.md dist/windows_amd64/*
-	zip -jqr dist/ccloud_$(VERSION)_windows_386.zip LICENSE INSTALL.md dist/windows_386/*
+	cp LICENSE dist/darwin_amd64/
+	cp LICENSE dist/linux_amd64/
+	cp LICENSE dist/linux_386/
+	cp LICENSE dist/windows_amd64/
+	cp LICENSE dist/windows_amd64/
+	cp INSTALL.md dist/darwin_amd64/
+	cp INSTALL.md dist/linux_amd64/
+	cp INSTALL.md dist/linux_386/
+	cp INSTALL.md dist/windows_amd64/
+	cp INSTALL.md dist/windows_amd64/
+	tar -czf dist/ccloud_$(VERSION)_darwin_amd64.tar.gz -C dist/darwin_amd64 .
+	tar -czf dist/ccloud_$(VERSION)_linux_amd64.tar.gz -C dist/linux_amd64 .
+	tar -czf dist/ccloud_$(VERSION)_linux_386.tar.gz -C dist/linux_386 .
+	zip -jqr dist/ccloud_$(VERSION)_windows_amd64.zip dist/windows_amd64/*
+	zip -jqr dist/ccloud_$(VERSION)_windows_386.zip dist/windows_386/*
 	cp dist/ccloud_$(VERSION)_darwin_amd64.tar.gz dist/ccloud_latest_darwin_amd64.tar.gz
 	cp dist/ccloud_$(VERSION)_linux_amd64.tar.gz dist/ccloud_latest_linux_amd64.tar.gz
 	cp dist/ccloud_$(VERSION)_linux_386.tar.gz dist/ccloud_latest_linux_386.tar.gz
