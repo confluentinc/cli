@@ -59,8 +59,7 @@ func parse(cmd *cobra.Command) *ACLConfiguration {
 			Entry: &kafkav1.AccessControlEntryConfig{
 				Host: "*",
 			},
-			Pattern: &kafkav1.ResourcePatternConfig{
-			},
+			Pattern: &kafkav1.ResourcePatternConfig{},
 		},
 	}
 	cmd.Flags().Visit(fromArgs(aclBinding))
