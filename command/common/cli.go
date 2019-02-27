@@ -2,8 +2,8 @@ package common
 
 import (
 	"fmt"
-	"github.com/codyaray/go-editor"
 
+	"github.com/codyaray/go-editor"
 	"github.com/spf13/cobra"
 
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
