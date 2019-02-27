@@ -111,11 +111,9 @@ func setResourcePattern(conf *ACLConfiguration, n, v string) {
 	n = strings.ToUpper(n)
 	n = strings.Replace(n, "-", "_", -1)
 
-	conf.Pattern = &kafkav1.ResourcePatternConfig{}
 	conf.Pattern.ResourceType = kafkav1.ResourceTypes_ResourceType(kafkav1.ResourceTypes_ResourceType_value[n])
 
 	conf.Pattern.Name = v
-	conf.Pattern.PatternType = kafkav1.PatternTypes_LITERAL
 }
 
 func listEnum(enum map[int32]string, exclude []string) string {

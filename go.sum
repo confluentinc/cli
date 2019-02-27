@@ -82,6 +82,9 @@ github.com/confluentinc/ccloudapis v0.0.0-20190221211938-09d97b2088c1 h1:eWqc9XJ
 github.com/confluentinc/ccloudapis v0.0.0-20190221211938-09d97b2088c1/go.mod h1:RGupQo6tb6J+1BnSqqueADkoC8b/F60+Ci3FMB3wDFo=
 github.com/confluentinc/ccloudapis v0.0.0-20190223013552-64fe4ec0c600 h1:VPORV8Zts24tgW/zEGcZhC609RtTWfQpTOsdFW4UO1U=
 github.com/confluentinc/ccloudapis v0.0.0-20190223013552-64fe4ec0c600/go.mod h1:RGupQo6tb6J+1BnSqqueADkoC8b/F60+Ci3FMB3wDFo=
+github.com/confluentinc/ccloudapis v0.0.0-20190227054330-86f4a19ce258 h1:PG+A0yGB6m7AMAknluVChLBhdgKNLRilsKR7BjHuhhM=
+github.com/confluentinc/ccloudapis v0.0.0-20190227054330-86f4a19ce258/go.mod h1:RGupQo6tb6J+1BnSqqueADkoC8b/F60+Ci3FMB3wDFo=
+github.com/confluentinc/ccloudapis v0.0.0-20190227065628-cf9b2483670a/go.mod h1:RGupQo6tb6J+1BnSqqueADkoC8b/F60+Ci3FMB3wDFo=
 github.com/confluentinc/proto-go-setter v0.0.0-20180912191759-fb17e76fc076 h1:tJszovtvIkdc+Sq0TBZK2d8ExqQ6Y2jjUbBERqivSMk=
 github.com/confluentinc/proto-go-setter v0.0.0-20180912191759-fb17e76fc076/go.mod h1:WD/4qYOPFMs2ozq2z2VJFtHljgptKHWtOMb9ochncfA=
 github.com/confluentinc/protoc-gen-ccloud v0.0.0-20190122202943-91a08616afd2/go.mod h1:RL4B2sjziJsuvLS6nkpqJha7026Wl3aaN4cXMSDYoc4=

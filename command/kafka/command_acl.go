@@ -104,18 +104,20 @@ func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
 			Operation        string
 			Resource         string
 			Name             string
+			Type 			 string
 		}{
 			binding.Entry.Principal,
 			binding.Entry.PermissionType.String(),
 			binding.Entry.Operation.String(),
 			binding.Pattern.ResourceType.String(),
 			binding.Pattern.Name,
+			binding.Pattern.PatternType.String(),
 		}
 		bindings = append(bindings, printer.ToRow(record,
-			[]string{"ServiceAccountId", "Permission", "Operation", "Resource", "Name"}))
+			[]string{"ServiceAccountId", "Permission", "Operation", "Resource", "Name", "Type"}))
 	}
 
-	printer.RenderCollectionTable(bindings, []string{"ServiceAccountId", "Permission", "Operation", "Resource", "Name"})
+	printer.RenderCollectionTable(bindings, []string{"ServiceAccountId", "Permission", "Operation", "Resource", "Name", "Type"})
 
 	return nil
 }
