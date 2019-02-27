@@ -116,8 +116,17 @@ func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
+	currCtx, err := c.config.Context()
+	if err != nil && err != shared.ErrNoContext {
+		return err
+	}
 	var data [][]string
 	for _, cluster := range clusters {
+		if cluster.Id == currCtx.Kafka {
+			cluster.Id = fmt.Sprintf("* %s", cluster.Id)
+		} else {
+			cluster.Id = fmt.Sprintf("  %s", cluster.Id)
+		}
 		data = append(data, printer.ToRow(cluster, listFields))
 	}
 	printer.RenderCollectionTable(data, listLabels)

@@ -28,7 +28,7 @@ var (
 var _ chttp.User = (*User)(nil)
 
 func main() {
-	if os.Args[1] == "version" || os.Args[1] == "--version" {
+	if len(os.Args) > 1 && (os.Args[1] == "version" || os.Args[1] == "--version") {
 		shared.PrintVersion(cliVersion.NewVersion(version, commit, date, host), command.NewTerminalPrompt(os.Stdin))
 	}
 

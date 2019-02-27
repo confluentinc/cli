@@ -78,7 +78,9 @@ func BuildCommand(cfg *shared.Config, version *cliVersion.Version, factory commo
 	cli.Version = version.Version
 	cli.AddCommand(common.NewVersionCmd(version, prompt))
 
-	cli.AddCommand(config.New(cfg))
+	conn := config.New(cfg)
+	conn.Hidden = true // The config/context feature isn't finished yet, so let's hide it
+	cli.AddCommand(conn)
 
 	cli.AddCommand(common.NewCompletionCmd(cli, prompt))
 
