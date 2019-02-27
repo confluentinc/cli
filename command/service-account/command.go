@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/codyaray/go-printer"
 	"github.com/spf13/cobra"
 
 	ccloud "github.com/confluentinc/ccloud-sdk-go"
@@ -13,6 +12,7 @@ import (
 	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/shared"
 	"github.com/confluentinc/cli/shared/user"
+	"github.com/confluentinc/go-printer"
 )
 
 type command struct {

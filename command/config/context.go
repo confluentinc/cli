@@ -3,11 +3,11 @@ package config
 import (
 	"fmt"
 
-	"github.com/codyaray/go-printer"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/shared"
+	"github.com/confluentinc/go-printer"
 )
 
 type contextCommand struct {

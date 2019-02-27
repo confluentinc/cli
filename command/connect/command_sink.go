@@ -7,8 +7,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/codyaray/go-printer"
-	"github.com/codyaray/go-printer/editor"
 	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -17,6 +15,8 @@ import (
 	connectv1 "github.com/confluentinc/ccloudapis/connect/v1"
 	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/shared"
+	"github.com/confluentinc/go-printer"
+	"github.com/confluentinc/go-printer/editor"
 )
 
 var (

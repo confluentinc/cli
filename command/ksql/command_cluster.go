@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/codyaray/go-printer"
 	"github.com/spf13/cobra"
 
 	chttp "github.com/confluentinc/ccloud-sdk-go"
 	ksqlv1 "github.com/confluentinc/ccloudapis/ksql/v1"
 	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/shared"
+	"github.com/confluentinc/go-printer"
 )
 
 var (

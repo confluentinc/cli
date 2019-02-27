@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/Shopify/sarama"
-	"github.com/codyaray/go-printer"
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 
@@ -17,6 +16,7 @@ import (
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/shared"
+	"github.com/confluentinc/go-printer"
 )
 
 type topicCommand struct {

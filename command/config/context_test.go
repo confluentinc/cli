@@ -23,7 +23,7 @@ func TestContext(t *testing.T) {
 
 	output, err = run("context", "list")
 	req.NoError(err)
-	req.Equal("  CURRENT | NAME | PLATFORM | CREDENTIAL  \n+---------+------+----------+------------+\n", output)
+	req.Equal("  Current | Name | Platform | Credential  \n+---------+------+----------+------------+\n", output)
 
 	output, err = run("context", "set", "my-context", "--kafka-cluster", "bob")
 	req.NoError(err)
@@ -31,7 +31,7 @@ func TestContext(t *testing.T) {
 
 	output, err = run("context", "list")
 	req.NoError(err)
-	req.Equal("  CURRENT |    NAME    | PLATFORM | CREDENTIAL  \n+---------+------------+----------+------------+\n          | my-context |          |             \n", output)
+	req.Equal("  Current |    Name    | Platform | Credential  \n+---------+------------+----------+------------+\n          | my-context |          |             \n", output)
 
 	output, err = run("context", "get", "my-context")
 	req.NoError(err)

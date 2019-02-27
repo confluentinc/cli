@@ -7,7 +7,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/codyaray/go-printer"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh/terminal"
 
@@ -16,6 +15,7 @@ import (
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/shared"
+	"github.com/confluentinc/go-printer"
 )
 
 var (
