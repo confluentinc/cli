@@ -67,7 +67,7 @@ func (l *GRPCPluginImpl) Load(value interface{}, logger *log.Logger) error {
 		Cmd:              exec.Command("sh", "-c", runnable), // nolint: gas
 		AllowedProtocols: []plugin.Protocol{plugin.ProtocolGRPC},
 		Managed:          true,
-		Logger:           logger.ToHCLogger(),
+		Logger:           logger.ToHCLogger(l.Name),
 	})
 
 	// Connect via RPC.
