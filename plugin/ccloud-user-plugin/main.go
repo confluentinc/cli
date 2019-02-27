@@ -26,7 +26,6 @@ func main() {
 			Output: os.Stderr,
 			JSON:   true,
 		})
-		logger.Log("msg", "hello")
 		defer logger.Log("msg", "goodbye")
 	}
 

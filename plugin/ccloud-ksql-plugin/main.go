@@ -14,6 +14,9 @@ import (
 	"github.com/confluentinc/cli/shared/ksql"
 )
 
+// Compile-time check for Interface adherence
+var _ chttp.KSQL = (*Ksql)(nil)
+
 func main() {
 	var logger *log.Logger
 	{
@@ -23,7 +26,6 @@ func main() {
 			Output: os.Stderr,
 			JSON:   true,
 		})
-		logger.Log("msg", "hello")
 		defer logger.Log("msg", "goodbye")
 	}
 

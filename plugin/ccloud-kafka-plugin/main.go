@@ -27,7 +27,6 @@ func main() {
 			Output: os.Stderr,
 			JSON:   true,
 		})
-		logger.Log("msg", "Instantiating plugin "+kafka.Name)
 		defer logger.Log("msg", "Shutting down plugin "+kafka.Name)
 	}
 
