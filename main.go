@@ -1,9 +1,7 @@
 package main
 
 import (
-	"fmt"
 	"os"
-	"runtime"
 
 	"github.com/confluentinc/cli/command"
 	"github.com/confluentinc/cli/command/apikey"
@@ -52,8 +50,7 @@ func main() {
 		}
 	}
 
-	userAgent := fmt.Sprintf("Confluent/1.0 ccloud/%s (%s/%s)", version, runtime.GOOS, runtime.GOARCH)
-	version := cliVersion.NewVersion(version, commit, date, host, userAgent)
+	version := cliVersion.NewVersion(version, commit, date, host)
 	factory := &common.GRPCPluginFactoryImpl{}
 
 	cli := BuildCommand(cfg, version, factory, logger)

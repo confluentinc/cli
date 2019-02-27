@@ -73,10 +73,10 @@ func (c *command) init(plugin common.GRPCPlugin) error {
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
 	}
-	createCmd.Flags().String("cluster", "", "grant access to this cluster ID")
+	createCmd.Flags().String("cluster", "", "Grant access to a cluster with this ID")
 	_ = createCmd.MarkFlagRequired("cluster")
-	createCmd.Flags().Int32("service-account-id", 0, "create for a service account instead of yourself")
-	createCmd.Flags().String("description", "", "description or purpose for the API key")
+	createCmd.Flags().Int32("service-account-id", 0, "Create API key for a service account")
+	createCmd.Flags().String("description", "", "Description or purpose for the API key")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 

@@ -75,8 +75,8 @@ func (c *command) init(plugin common.GRPCPlugin) error {
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
 	}
-	createCmd.Flags().String("name", "", "service account name")
-	createCmd.Flags().String("description", "", "service account description")
+	createCmd.Flags().String("name", "", "The service account name")
+	createCmd.Flags().String("description", "", "The service account description")
 	_ = createCmd.MarkFlagRequired("name")
 	_ = createCmd.MarkFlagRequired("description")
 	createCmd.Flags().SortFlags = false
@@ -88,9 +88,9 @@ func (c *command) init(plugin common.GRPCPlugin) error {
 		RunE:  c.update,
 		Args:  cobra.NoArgs,
 	}
-	updateCmd.Flags().Int32("servic-eaccount-id", 0, "service account id")
-	updateCmd.Flags().String("description", "", "service account description")
-	_ = updateCmd.MarkFlagRequired("servic-eaccount-id")
+	updateCmd.Flags().Int32("service-account-id", 0, "The service account ID")
+	updateCmd.Flags().String("description", "", "The service account description")
+	_ = updateCmd.MarkFlagRequired("service-account-id")
 	_ = updateCmd.MarkFlagRequired("description")
 	c.AddCommand(updateCmd)
 
@@ -100,7 +100,7 @@ func (c *command) init(plugin common.GRPCPlugin) error {
 		RunE:  c.delete,
 		Args:  cobra.NoArgs,
 	}
-	deleteCmd.Flags().Int32("service-account-id", 0, "service account id")
+	deleteCmd.Flags().Int32("service-account-id", 0, "The service account ID")
 	_ = deleteCmd.MarkFlagRequired("service-account-id")
 	c.AddCommand(deleteCmd)
 
