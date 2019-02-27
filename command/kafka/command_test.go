@@ -264,6 +264,23 @@ func TestListResourcePrincipalFilterACL(t *testing.T) {
 	}
 }
 
+func TestMultipleResourceACL(t *testing.T) {
+
+	expect := "Only one resource may be set per execution"
+	args := []string{"acl", "create", "--allow", "--operation", "read", "--service-account-id", "42",
+		"--topic", "resource1", "--consumer-group", "resource2"}
+
+	cmd := NewCMD(nil)
+	cmd.SetArgs(args)
+
+	err := cmd.Execute()
+	if !strings.Contains(err.Error(), expect) {
+		t.Logf("expected: %s got: %s", expect,  err.Error())
+		t.Fail()
+		return
+	}
+}
+
 /*************** TEST command_topic ***************/
 var Topics = []struct {
 	args []string
