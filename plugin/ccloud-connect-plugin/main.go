@@ -9,16 +9,30 @@ import (
 	chttp "github.com/confluentinc/ccloud-sdk-go"
 	connectv1 "github.com/confluentinc/ccloudapis/connect/v1"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
+	"github.com/confluentinc/cli/command"
 	"github.com/confluentinc/cli/log"
 	"github.com/confluentinc/cli/metric"
 	"github.com/confluentinc/cli/shared"
 	"github.com/confluentinc/cli/shared/connect"
+	cliVersion "github.com/confluentinc/cli/version"
+)
+
+var (
+	// Injected from linker flags like `go build -ldflags "-X main.version=$VERSION" -X ...`
+	version = "v0.0.0"
+	commit  = ""
+	date    = ""
+	host    = ""
 )
 
 // Compile-time check for Interface adherence
 var _ chttp.Connect = (*Connect)(nil)
 
 func main() {
+	if os.Args[1] == "version" || os.Args[1] == "--version" {
+		shared.PrintVersion(cliVersion.NewVersion(version, commit, date, host), command.NewTerminalPrompt(os.Stdin))
+	}
+
 	var logger *log.Logger
 	{
 		logger = log.New()

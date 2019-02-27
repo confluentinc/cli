@@ -8,16 +8,30 @@ import (
 
 	chttp "github.com/confluentinc/ccloud-sdk-go"
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
+	"github.com/confluentinc/cli/command"
 	log "github.com/confluentinc/cli/log"
 	metric "github.com/confluentinc/cli/metric"
 	"github.com/confluentinc/cli/shared"
 	"github.com/confluentinc/cli/shared/apikey"
+	cliVersion "github.com/confluentinc/cli/version"
+)
+
+var (
+	// Injected from linker flags like `go build -ldflags "-X main.version=$VERSION" -X ...`
+	version = "v0.0.0"
+	commit  = ""
+	date    = ""
+	host    = ""
 )
 
 // Compile-time check for Interface adherence
 var _ chttp.APIKey = (*ApiKey)(nil)
 
 func main() {
+	if os.Args[1] == "version" || os.Args[1] == "--version" {
+		shared.PrintVersion(cliVersion.NewVersion(version, commit, date, host), command.NewTerminalPrompt(os.Stdin))
+	}
+
 	var logger *log.Logger
 	{
 		logger = log.New()
