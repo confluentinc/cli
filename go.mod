@@ -8,7 +8,7 @@ require (
 	github.com/Shopify/toxiproxy v2.1.3+incompatible // indirect
 	github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da
 	github.com/codyaray/go-editor v0.3.0
-	github.com/codyaray/go-printer v0.9.0 // indirect
+	github.com/codyaray/go-printer v0.9.0
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
 	github.com/confluentinc/cc-structs v0.0.0-20190216225128-bc354c6bf010
 	github.com/confluentinc/ccloud-sdk-go v0.0.6-0.20190226163025-48f4ae5f158f
