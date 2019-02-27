@@ -121,26 +121,34 @@ func (a *commands) logout(cmd *cobra.Command, args []string) error {
 }
 
 func (a *commands) credentials() (string, string, error) {
-	if _, err := a.prompt.Println("Enter your Confluent Cloud credentials:"); err != nil {
-		return "", "", err
+	email := os.Getenv("XX_CCLOUD_EMAIL")
+	password := os.Getenv("XX_CCLOUD_PASSWORD")
+	if len(email) == 0 || len(password) == 0 {
+		if _, err := a.prompt.Println("Enter your Confluent Cloud credentials:"); err != nil {
+			return "", "", err
+		}
+	}
+	if len(email) == 0 {
+		a.prompt.Print("Email: ")
+		emailFromPrompt, err := a.prompt.ReadString('\n')
+		if err != nil {
+			return "", "", err
+		}
+		email = emailFromPrompt
 	}
 
-	a.prompt.Print("Email: ")
-	email, err := a.prompt.ReadString('\n')
-	if err != nil {
-		return "", "", err
+	if len(password) == 0 {
+		a.prompt.Print("Password: ")
+		bytePassword, err := a.prompt.ReadPassword(0)
+		if err != nil {
+			return "", "", err
+		}
+		_, err = a.prompt.Println()
+		if err != nil {
+			return "", "", err
+		}
+		password = string(bytePassword)
 	}
-
-	a.prompt.Print("Password: ")
-	bytePassword, err := a.prompt.ReadPassword(0)
-	if err != nil {
-		return "", "", err
-	}
-	_, err = a.prompt.Println()
-	if err != nil {
-		return "", "", err
-	}
-	password := string(bytePassword)
 
 	return strings.TrimSpace(email), strings.TrimSpace(password), nil
 }
