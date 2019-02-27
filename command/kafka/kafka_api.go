@@ -113,6 +113,9 @@ func setResourcePattern(conf *ACLConfiguration, n, v string) {
 
 	conf.Pattern.ResourceType = kafkav1.ResourceTypes_ResourceType(kafkav1.ResourceTypes_ResourceType_value[n])
 
+	if conf.Pattern.ResourceType == kafkav1.ResourceTypes_CLUSTER {
+		conf.Pattern.PatternType = kafkav1.PatternTypes_LITERAL
+	}
 	conf.Pattern.Name = v
 }
 

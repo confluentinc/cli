@@ -166,6 +166,9 @@ func validateAddDelete(binding *ACLConfiguration) *ACLConfiguration {
 		binding.errors = append(binding.errors, "a resource flag must be specified when adding or deleting an acl")
 	}
 
+	if binding.Pattern.PatternType == kafkav1.PatternTypes_UNKNOWN {
+		binding.Pattern.PatternType = kafkav1.PatternTypes_LITERAL
+	}
 	return binding
 }
 
