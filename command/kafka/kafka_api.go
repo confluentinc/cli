@@ -2,18 +2,18 @@ package kafka
 
 import (
 	"fmt"
+	"github.com/hashicorp/go-multierror"
 	"strings"
 
+	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-
-	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 )
 
 // ACLConfiguration wrapper used for flag parsing and validation
 type ACLConfiguration struct {
 	*kafkav1.ACLBinding
-	errors []string
+	errors error
 }
 
 // aclConfigFlags returns a flag set which can be parsed to create an ACLConfiguration object.
@@ -103,7 +103,7 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 				conf.Entry.Operation = kafkav1.ACLOperations_ACLOperation(op)
 				break
 			}
-			conf.errors = append(conf.errors, "Invalid operation value: "+v)
+			conf.errors = multierror.Append(conf.errors, fmt.Errorf("invalid operation value: "+v))
 		}
 	}
 }
@@ -111,7 +111,8 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 func setResourcePattern(conf *ACLConfiguration, n, v string) {
 	/* Normalize the resource pattern name */
 	if conf.Pattern.ResourceType != kafkav1.ResourceTypes_UNKNOWN {
-		conf.errors = append(conf.errors, "Only one resource may be set per execution")
+		conf.errors = multierror.Append(conf.errors, fmt.Errorf("exactly one of %v must be set",
+			listEnum(kafkav1.ResourceTypes_ResourceType_name, []string{"ANY", "UNKNOWN"})))
 		return
 	}
 

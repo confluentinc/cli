@@ -23,9 +23,9 @@ func TestHandleError(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "dynamic message",
-			err:  shared.NotAuthenticatedError(fmt.Errorf("some dynamic message")),
-			want: "some dynamic message",
+			name:    "dynamic message",
+			err:     shared.NotAuthenticatedError(fmt.Errorf("some dynamic message")),
+			want:    "some dynamic message",
 			wantErr: true,
 		},
 	}
