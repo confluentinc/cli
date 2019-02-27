@@ -380,6 +380,42 @@ func TestUpdateTopic(t *testing.T) {
 	}
 }
 
+func TestDefaults(t *testing.T) {
+	expect := make(chan interface{})
+	cmd := NewCMD(expect)
+	cmd.SetArgs([]string{"acl", "create", "--allow", "--service-account-id", "42",
+		"--operation", "read" , "--topic", "dan"})
+	go func() {
+		expect <- &kafkav1.ACLBinding{
+			Pattern: &kafkav1.ResourcePatternConfig{ResourceType: kafkav1.ResourceTypes_TOPIC, Name:"dan",
+				PatternType: kafkav1.PatternTypes_LITERAL},
+			Entry: &kafkav1.AccessControlEntryConfig{Host:"*", Principal:"User:42",
+				Operation:kafkav1.ACLOperations_READ, PermissionType:kafkav1.ACLPermissionTypes_ALLOW},
+		}
+	}()
+
+	if err:= cmd.Execute(); err != nil {
+		t.Errorf("Topic PatternType was not set to default value of PatternTypes_LITERAL")
+	}
+
+	cmd = NewCMD(expect)
+	cmd.SetArgs([]string{"acl", "create", "--cluster", "--allow", "--service-account-id", "42",
+		"--operation", "read"})
+
+	go func() {
+		expect <- &kafkav1.ACLBinding{
+			Pattern: &kafkav1.ResourcePatternConfig{ResourceType: kafkav1.ResourceTypes_CLUSTER, Name:"kafka-cluster",
+				PatternType: kafkav1.PatternTypes_LITERAL},
+			Entry: &kafkav1.AccessControlEntryConfig{Host:"*", Principal:"User:42",
+				Operation:kafkav1.ACLOperations_READ, PermissionType:kafkav1.ACLPermissionTypes_ALLOW},
+		}
+	}()
+
+	if err:= cmd.Execute(); err != nil {
+		t.Errorf("Cluster PatternType was not set to default value of PatternTypes_LITERAL")
+	}
+}
+
 /*************** TEST command_cluster ***************/
 // TODO: do this for all commands/subcommands... and for all common error messages
 func Test_HandleError_NotLoggedIn(t *testing.T) {
