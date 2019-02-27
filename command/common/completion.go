@@ -10,7 +10,7 @@ import (
 	terminal "github.com/confluentinc/cli/command"
 )
 
-const longDescriptionTemplate = `Output shell completion code for the specified shell (bash or zsh).
+const longDescriptionTemplate = `Output shell completion code for the specified shell (bash only).
 The shell code must be evaluated to provide interactive completion of {{.CLIName}} commands.
 
 Install bash completions on macOS:
@@ -30,14 +30,6 @@ Install bash completions on Linux:
 
   # Load the {{.CLIName}} completion code for bash into the current shell
   source /etc/bash_completion.d/{{.CLIName}}
-
-Install zsh completions:
-
-  # Set the {{.CLIName}} completion code for zsh to autoload on startup
-  {{.CLIName}} completion zsh > "${fpath[1]}/{{.CLIName}}"
-
-  # Load the {{.CLIName}} completion code for zsh into the current shell
-  source "${fpath[1]}/{{.CLIName}}"
 `
 
 type completionCommand struct {
@@ -76,8 +68,6 @@ func (c *completionCommand) completion(cmd *cobra.Command, args []string) error 
 	var err error
 	if args[0] == "bash" {
 		err = c.rootCmd.GenBashCompletion(c.prompt.GetOutput())
-	} else if args[0] == "zsh" {
-		err = c.rootCmd.GenZshCompletion(c.prompt.GetOutput())
 	} else {
 		err = fmt.Errorf(`unsupported shell type "%s"`, args[0])
 	}
