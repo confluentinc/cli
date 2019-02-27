@@ -1,8 +1,9 @@
 package common
 
 import (
-	"github.com/confluentinc/cli/log"
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/cli/log"
 )
 
 func SetLoggingVerbosity(cmd *cobra.Command, logger *log.Logger) error {

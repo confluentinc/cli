@@ -65,7 +65,8 @@ func NewWithParams(params *Params) *Logger {
 }
 
 // ToHCLogger returns a hclogger with an identical configuration.
-// This is required because go-plugin only supports integrating plugin->driver logging using hclog (hashicorp's package)
+// This is required because go-plugin only supports hclog (their own package)
+// for integrated logging across driver and plugins
 func (l *Logger) ToHCLogger(name string) hclog.Logger {
 	return hclog.New(&hclog.LoggerOptions{
 		Output: l.params.Output,

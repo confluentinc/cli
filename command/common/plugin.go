@@ -10,7 +10,6 @@ import (
 
 	"github.com/confluentinc/cli/log"
 	"github.com/confluentinc/cli/shared"
-	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 )
 
@@ -35,8 +34,7 @@ type GRPCPlugin interface {
 
 // GRPCPluginImpl finds and instantiates plugins on the PATH
 type GRPCPluginImpl struct {
-	Name   string
-	Logger hclog.Logger
+	Name string
 }
 
 // LookupPath returns the path to a plugin or an error if its not found

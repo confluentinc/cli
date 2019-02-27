@@ -22,7 +22,7 @@ func main() {
 	var logger *log.Logger
 	{
 		logger = log.NewWithParams(&log.Params{
-			// The plugins output everything. The driver's logging level decides what to keep.
+			// Plugins log everything. The driver decides the logging level to keep.
 			Level:  log.TRACE,
 			Output: os.Stderr,
 			JSON:   true,
@@ -64,8 +64,8 @@ func main() {
 }
 
 type Kafka struct {
-	Logger  *log.Logger
-	Client  *chttp.Client
+	Logger *log.Logger
+	Client *chttp.Client
 }
 
 // CreateAPIKey generates an api key for a user
