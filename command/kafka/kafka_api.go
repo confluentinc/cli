@@ -110,6 +110,11 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 
 func setResourcePattern(conf *ACLConfiguration, n, v string) {
 	/* Normalize the resource pattern name */
+	if conf.Pattern.ResourceType != kafkav1.ResourceTypes_UNKNOWN {
+		conf.errors = append(conf.errors, "Only one resource may be set per execution")
+		return
+	}
+
 	n = strings.ToUpper(n)
 	n = strings.Replace(n, "-", "_", -1)
 
