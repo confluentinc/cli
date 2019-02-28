@@ -384,17 +384,17 @@ func TestDefaults(t *testing.T) {
 	expect := make(chan interface{})
 	cmd := NewCMD(expect)
 	cmd.SetArgs([]string{"acl", "create", "--allow", "--service-account-id", "42",
-		"--operation", "read" , "--topic", "dan"})
+		"--operation", "read", "--topic", "dan"})
 	go func() {
 		expect <- &kafkav1.ACLBinding{
-			Pattern: &kafkav1.ResourcePatternConfig{ResourceType: kafkav1.ResourceTypes_TOPIC, Name:"dan",
+			Pattern: &kafkav1.ResourcePatternConfig{ResourceType: kafkav1.ResourceTypes_TOPIC, Name: "dan",
 				PatternType: kafkav1.PatternTypes_LITERAL},
-			Entry: &kafkav1.AccessControlEntryConfig{Host:"*", Principal:"User:42",
-				Operation:kafkav1.ACLOperations_READ, PermissionType:kafkav1.ACLPermissionTypes_ALLOW},
+			Entry: &kafkav1.AccessControlEntryConfig{Host: "*", Principal: "User:42",
+				Operation: kafkav1.ACLOperations_READ, PermissionType: kafkav1.ACLPermissionTypes_ALLOW},
 		}
 	}()
 
-	if err:= cmd.Execute(); err != nil {
+	if err := cmd.Execute(); err != nil {
 		t.Errorf("Topic PatternType was not set to default value of PatternTypes_LITERAL")
 	}
 
@@ -404,14 +404,14 @@ func TestDefaults(t *testing.T) {
 
 	go func() {
 		expect <- &kafkav1.ACLBinding{
-			Pattern: &kafkav1.ResourcePatternConfig{ResourceType: kafkav1.ResourceTypes_CLUSTER, Name:"kafka-cluster",
+			Pattern: &kafkav1.ResourcePatternConfig{ResourceType: kafkav1.ResourceTypes_CLUSTER, Name: "kafka-cluster",
 				PatternType: kafkav1.PatternTypes_LITERAL},
-			Entry: &kafkav1.AccessControlEntryConfig{Host:"*", Principal:"User:42",
-				Operation:kafkav1.ACLOperations_READ, PermissionType:kafkav1.ACLPermissionTypes_ALLOW},
+			Entry: &kafkav1.AccessControlEntryConfig{Host: "*", Principal: "User:42",
+				Operation: kafkav1.ACLOperations_READ, PermissionType: kafkav1.ACLPermissionTypes_ALLOW},
 		}
 	}()
 
-	if err:= cmd.Execute(); err != nil {
+	if err := cmd.Execute(); err != nil {
 		t.Errorf("Cluster PatternType was not set to default value of PatternTypes_LITERAL")
 	}
 }
@@ -480,7 +480,7 @@ func initContext(config *shared.Config) {
 
 	config.Platforms[name] = &shared.Platform{
 		Server:        config.AuthURL,
-		KafkaClusters: map[string]shared.KafkaClusterConfig{name: {}},
+		KafkaClusters: map[string]*shared.KafkaClusterConfig{name: {}},
 	}
 
 	config.Credentials[name] = &shared.Credential{
