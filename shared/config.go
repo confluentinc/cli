@@ -115,7 +115,6 @@ func (c *Config) MaybeDeleteKey(apikey string) {
 	for _, platform := range c.Platforms {
 		for candidate, cluster := range platform.KafkaClusters {
 			if cluster.APIKey == apikey {
-				fmt.Println("Removing deleted key from cluster context.")
 				delete(platform.KafkaClusters, candidate)
 			}
 		}
