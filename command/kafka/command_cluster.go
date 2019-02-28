@@ -116,6 +116,12 @@ func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
+
+	// Update cluster cache
+	if len(clusters) > 0 {
+		_ = c.config.UpdateClusters(clusters)
+	}
+
 	currCtx, err := c.config.Context()
 	if err != nil && err != shared.ErrNoContext {
 		return err
@@ -129,7 +135,9 @@ func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 		}
 		data = append(data, printer.ToRow(cluster, listFields))
 	}
+
 	printer.RenderCollectionTable(data, listLabels)
+
 	return nil
 }
 
@@ -177,6 +185,9 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		// TODO: don't swallow validation errors (reportedly separately)
 		return common.HandleError(err, cmd)
 	}
+
+	// Best effort attempt to update current configuration
+	_ = c.config.AddCluster(cluster)
 	return printer.RenderTableOut(cluster, describeFields, describeRenames, os.Stdout)
 }
 
@@ -186,6 +197,13 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
+
+	if err := c.config.UpdateCluster(req); err != nil {
+		return common.HandleError(err, cmd)
+	}
+
+	// Best effort attempt to update current configuration
+	_ = c.config.UpdateCluster(cluster)
 	return printer.RenderTableOut(cluster, describeFields, describeRenames, os.Stdout)
 }
 
@@ -199,7 +217,11 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
+
 	fmt.Printf("The Kafka cluster %s has been deleted.\n", args[0])
+
+	// Best effort attempt to remove cluster from config
+	_ = c.config.MaybeDeleteCluster(req)
 	return nil
 }
 
@@ -245,9 +267,9 @@ func (c *clusterCommand) auth(cmd *cobra.Command, args []string) error {
 	}
 
 	if c.config.Platforms[cfg.Platform].KafkaClusters == nil {
-		c.config.Platforms[cfg.Platform].KafkaClusters = map[string]shared.KafkaClusterConfig{}
+		c.config.Platforms[cfg.Platform].KafkaClusters = map[string]*shared.KafkaClusterConfig{}
 	}
-	c.config.Platforms[cfg.Platform].KafkaClusters[cfg.Kafka] = shared.KafkaClusterConfig{
+	c.config.Platforms[cfg.Platform].KafkaClusters[kc.Id] = &shared.KafkaClusterConfig{
 		Bootstrap:   strings.TrimPrefix(kc.Endpoint, "SASL_SSL://"),
 		APIEndpoint: kc.ApiEndpoint,
 		APIKey:      key,

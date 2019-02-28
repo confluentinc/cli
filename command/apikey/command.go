@@ -80,6 +80,7 @@ func (c *command) init(plugin common.GRPCPlugin) error {
 	_ = createCmd.MarkFlagRequired("cluster")
 	createCmd.Flags().Int32("service-account-id", 0, "Create API key for a service account")
 	createCmd.Flags().String("description", "", "Description or purpose for the API key")
+	createCmd.Flags().Bool("use", false, "Configure cli to use this API key when interacting with the cluster")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
@@ -153,6 +154,11 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return common.HandleError(err, cmd)
 	}
 
+	storeKey, err := cmd.Flags().GetBool("use")
+	if err != nil {
+		return common.HandleError(err, cmd)
+	}
+
 	key := &authv1.ApiKey{
 		UserId:          userId,
 		Description:     description,
@@ -165,7 +171,15 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return common.HandleError(err, cmd)
 	}
 
-	fmt.Println("Please save the API Key and Secret. THIS IS THE ONLY CHANCE YOU HAVE!")
+	// TODO: Decide if this is okay or if we need to restrict its use to the current user (service-account-id 0)
+	if storeKey {
+		if err := c.config.SetKafkaClusterKey(clusterID, userKey); err != nil {
+			return common.HandleError(err, cmd)
+		}
+	} else {
+		fmt.Println("Please save the API Key and Secret. THIS IS THE ONLY CHANCE YOU HAVE!")
+	}
+
 	return printer.RenderTableOut(userKey, createFields, createRenames, os.Stdout)
 }
 

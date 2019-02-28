@@ -114,8 +114,8 @@ func (c *contextCommand) set(cmd *cobra.Command, args []string) error {
 		return common.HandleError(err, cmd)
 	}
 
-	if cmd.Flags().Changed("kafka-cluster") {
-		k, err := cmd.Flags().GetString("kafka-cluster")
+	if cmd.Flags().Changed("kafka-cluster-id") {
+		k, err := cmd.Flags().GetString("kafka-cluster-id")
 		if err != nil {
 			return common.HandleError(err, cmd)
 		}

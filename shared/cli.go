@@ -1,10 +1,9 @@
 package shared
 
 import (
-	metrics "github.com/armon/go-metrics"
-	plugin "github.com/hashicorp/go-plugin"
-
+	"github.com/armon/go-metrics"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
+	"github.com/hashicorp/go-plugin"
 )
 
 // AuthConfig represents an authenticated user.
@@ -26,7 +25,7 @@ type Platform struct {
 	Server string `json:"server" hcl:"server"`
 	// KafkaClusters store connection info for interacting directly with Kafka (e.g., topic mgmt, consume/produce, etc)
 	// N.B. These may later be exposed in the CLI to directly register kafkas (outside a Control Plane)
-	KafkaClusters map[string]KafkaClusterConfig `json:"kafka_clusters" hcl:"kafka_clusters"`
+	KafkaClusters map[string]*KafkaClusterConfig `json:"kafka_clusters" hcl:"kafka_clusters"`
 }
 
 // Credential represent an authentication mechanism for a Platform

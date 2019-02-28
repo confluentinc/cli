@@ -6,10 +6,13 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"strings"
 
 	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 
+	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
+	kafka1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	"github.com/confluentinc/cli/log"
 )
 
@@ -108,19 +111,118 @@ func (c *Config) KafkaClusterConfig() (KafkaClusterConfig, error) {
 		e := fmt.Errorf("no auth found for Kafka %s, please run `ccloud kafka cluster auth` first", cfg.Kafka)
 		return KafkaClusterConfig{}, NotAuthenticatedError(e)
 	}
-	return cluster, nil
+	return *cluster, nil
 }
 
+// SetContextKey stores apiKey within the specified cluster context
+func (c *Config) SetKafkaClusterKey(clusterId string, apiKey *authv1.ApiKey) error {
+	kafkaConf, ok := c.Platforms[c.CurrentContext].KafkaClusters[clusterId]
+	if !ok {
+		return ErrNotFound
+	}
+
+	// There is no clean way to update cluster specifics (api endpoint and bootstrap) from here
+	// Instead we will use `describe cluster` to keep these fields updated
+	kafkaConf.APIKey = apiKey.GetKey()
+	kafkaConf.APISecret = apiKey.GetSecret()
+
+	c.Platforms[c.CurrentContext].KafkaClusters[clusterId] = kafkaConf
+
+	return c.Save()
+}
+
+// AddCluster adds a cluster to the current platform context
+func (c *Config) AddCluster(cluster *kafka1.KafkaCluster) error {
+	if _, ok := c.Platforms[c.CurrentContext].KafkaClusters[cluster.Id]; !ok {
+		c.Platforms[c.CurrentContext].KafkaClusters[cluster.Id] = new(KafkaClusterConfig)
+	}
+
+	return c.UpdateCluster(cluster)
+}
+
+// UpdateCluster updates a cluster configuration within the current platform context
+func (c *Config) UpdateCluster(cluster *kafka1.KafkaCluster) error {
+	clusterConf, ok := c.Platforms[c.CurrentContext].KafkaClusters[cluster.Id]
+	if !ok {
+		return ErrNotFound
+	}
+
+	clusterConf.APIEndpoint = cluster.ApiEndpoint
+	clusterConf.Bootstrap = addBootstrapProtocol(cluster.Endpoint)
+
+	c.Platforms[c.CurrentContext].KafkaClusters[cluster.Id] = clusterConf
+
+	return c.Save()
+}
+
+// UpdateClusters updates the local cluster configurations for the current platform context
+func (c *Config) UpdateClusters(clusters []*kafka1.KafkaCluster) error {
+	platformClusters := c.Platforms[c.CurrentContext].KafkaClusters
+
+	if platformClusters == nil {
+		platformClusters = map[string]*KafkaClusterConfig{}
+	}
+
+	// index clusters which are still valid
+	valid := map[string]struct{}{}
+
+	for _, cluster := range clusters {
+		if _, ok := platformClusters[cluster.Id]; !ok {
+			platformClusters[cluster.Id] = &KafkaClusterConfig{
+				Bootstrap:   addBootstrapProtocol(cluster.GetEndpoint()),
+				APIEndpoint: cluster.GetApiEndpoint(),
+			}
+
+		}
+		valid[cluster.Id] = struct{}{}
+	}
+
+	//Remove clusters which are not longer valid
+	for id := range platformClusters {
+		if _, ok := valid[id]; !ok {
+			delete(platformClusters, id)
+		}
+	}
+
+	c.Platforms[c.CurrentContext].KafkaClusters = platformClusters
+
+	return c.Save()
+}
+
+// MaybeDeleteCluster removes a cluster from the current platform context
+func (c *Config) MaybeDeleteCluster(cluster *kafka1.KafkaCluster) error {
+	platformClusters := c.Platforms[c.CurrentContext].KafkaClusters
+
+	if _, ok := platformClusters[cluster.Id]; ok {
+		delete(platformClusters, cluster.Id)
+	}
+	c.Platforms[c.CurrentContext].KafkaClusters = platformClusters
+
+	return c.Save()
+}
+
+// UpdateClusterAPIKey updates the clusters api key within the current platform context
+func (c *Config) UpdateClusterAPIKey(clusterId string, apiKey *authv1.ApiKey) error {
+	return c.SetKafkaClusterKey(clusterId, apiKey)
+}
+
+// MaybeDeleteKey removes an ApiKey from the current platform context
 func (c *Config) MaybeDeleteKey(apikey string) {
-	for _, platform := range c.Platforms {
-		for candidate, cluster := range platform.KafkaClusters {
+	for platformKey, platform := range c.Platforms {
+		for clusterKey, cluster := range platform.KafkaClusters {
 			if cluster.APIKey == apikey {
-				delete(platform.KafkaClusters, candidate)
+				cluster.APIKey = ""
+				cluster.APISecret = ""
+				c.Platforms[platformKey].KafkaClusters[clusterKey] = cluster
 			}
 		}
 	}
 	_ = c.Save()
 	return
+}
+
+func addBootstrapProtocol(endpoint string) string {
+	return strings.TrimPrefix(endpoint, "SASL_SSL://")
 }
 
 // CheckLogin returns an error if the user is not logged in.
