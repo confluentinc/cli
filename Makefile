@@ -47,8 +47,12 @@ build-go:
 
 .PHONY: release
 release: get-release-image commit-release tag-release
-	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --rm-dist
+	make gorelease
 	make publish
+
+.PHONY: gorelease
+gorelease:
+	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --rm-dist
 
 .PHONY: dist
 dist:
