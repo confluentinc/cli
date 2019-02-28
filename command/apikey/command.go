@@ -211,6 +211,6 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
-
+	c.config.MaybeDeleteKey(apiKey)
 	return nil
 }
