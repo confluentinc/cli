@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	defaultConfigFile = "~/.confluent/config.json"
+	defaultConfigFile = "~/.ccloud/config.json"
 )
 
 // ErrNoConfig means that no configuration exists.
