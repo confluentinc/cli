@@ -196,6 +196,7 @@ func (c *topicCommand) describe(cmd *cobra.Command, args []string) error {
 		resp.Name, len(resp.Partitions), len(resp.Partitions[0].Replicas))
 
 	var partitions [][]string
+	titleRow := []string{"Topic", "Partition", "Leader", "Replicas", "ISR"}
 	for _, partition := range resp.Partitions {
 		var replicas []uint32
 		for _, replica := range partition.Replicas {
@@ -220,11 +221,25 @@ func (c *topicCommand) describe(cmd *cobra.Command, args []string) error {
 			replicas,
 			isr,
 		}
-		partitions = append(partitions, printer.ToRow(record, []string{"Topic", "Partition", "Leader", "Replicas", "ISR"}))
+		partitions = append(partitions, printer.ToRow(record, titleRow))
 	}
+	printer.RenderCollectionTable(partitions, titleRow)
 
-	printer.RenderCollectionTable(partitions, []string{"Topic", "Partition", "Leader", "Replicas", "ISR"})
+	fmt.Printf("\nTopic: %s Configuration\n ",resp.Name)
 
+	var entries [][]string
+	titleRow = []string{"Name", "Value"}
+	for _, entry := range resp.Config {
+		record := &struct {
+			Name string
+			Value string
+		}{
+			entry.Name,
+			entry.Value,
+		}
+		entries = append(entries, printer.ToRow(record, titleRow))
+	}
+	printer.RenderCollectionTable(entries, titleRow)
 	return nil
 }
 
