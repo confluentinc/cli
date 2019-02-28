@@ -225,7 +225,7 @@ func (c *topicCommand) describe(cmd *cobra.Command, args []string) error {
 	}
 	printer.RenderCollectionTable(partitions, titleRow)
 
-	fmt.Printf("\nTopic: %s Configuration\n ",resp.Name)
+	fmt.Println("\nConfiguration\n ")
 
 	var entries [][]string
 	titleRow = []string{"Name", "Value"}
