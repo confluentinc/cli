@@ -16,10 +16,7 @@ The shell code must be evaluated to provide interactive completion of {{.CLIName
 Install bash completions on macOS:
 
   # Enable bash completions using homebrew
-  ## If running Bash 3.2 included with macOS
   brew install bash-completion
-  ## or, if running Bash 4.1+
-  brew install bash-completion@2
   # Set the {{.CLIName}} completion code for bash to a file that's sourced on login
   {{.CLIName}} completion bash > $(brew --prefix)/etc/bash_completion.d/{{.CLIName}}
 
