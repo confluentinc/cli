@@ -85,12 +85,16 @@ func (c *clusterCommand) init(plugin common.GRPCPlugin) {
 		RunE:  c.describe,
 		Args:  cobra.ExactArgs(1),
 	})
-	c.AddCommand(&cobra.Command{
+
+	updateCmd := &cobra.Command{
 		Use:   "update ID",
 		Short: "Update a Kafka cluster",
 		RunE:  c.update,
 		Args:  cobra.ExactArgs(1),
-	})
+	}
+	updateCmd.Hidden = true
+	c.AddCommand(updateCmd)
+
 	c.AddCommand(&cobra.Command{
 		Use:   "delete ID",
 		Short: "Delete a Kafka cluster",
