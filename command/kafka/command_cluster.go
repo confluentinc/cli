@@ -316,7 +316,7 @@ func (c *clusterCommand) createKafkaCreds(ctx context.Context, kafkaClusterID st
 	if err != nil {
 		return "", "", shared.ConvertAPIError(err)
 	}
-	fmt.Println("Okay, we've created an API key. If needed, you can see it with `ccloud kafka auth`.")
+	fmt.Println("Okay, we've created an API key. If needed, you can see it with `ccloud kafka cluster auth`.")
 	return key.Key, key.Secret, nil
 }
 
