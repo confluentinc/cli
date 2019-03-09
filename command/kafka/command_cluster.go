@@ -217,7 +217,7 @@ func (c *clusterCommand) auth(cmd *cobra.Command, args []string) error {
 	}
 
 	if cfg.Kafka == "" {
-		return fmt.Errorf("No cluster selected. See ccloud kafka use for help ")
+		return fmt.Errorf("No cluster selected. See ccloud kafka cluster use for help ")
 	}
 
 	cluster, known := c.config.Platforms[cfg.Platform].KafkaClusters[cfg.Kafka]

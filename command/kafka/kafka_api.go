@@ -97,6 +97,7 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 			conf.Entry.Principal = "User:" + v
 		case "operation":
 			v = strings.ToUpper(v)
+			v = strings.Replace(v, "-", "_", -1)
 			if op, ok := kafkav1.ACLOperations_ACLOperation_value[v]; ok {
 				conf.Entry.Operation = kafkav1.ACLOperations_ACLOperation(op)
 				break
