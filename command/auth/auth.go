@@ -57,6 +57,7 @@ func (a *commands) init() {
 		Use:   "login",
 		Short: "Login to Confluent Cloud",
 		RunE:  a.login,
+		Args:  cobra.NoArgs,
 	}
 	loginCmd.Flags().String("url", "https://confluent.cloud", "Confluent Control Plane URL")
 	loginCmd.PersistentPreRunE = preRun
@@ -64,6 +65,7 @@ func (a *commands) init() {
 		Use:   "logout",
 		Short: "Logout of Confluent Cloud",
 		RunE:  a.logout,
+		Args:  cobra.NoArgs,
 	}
 	logoutCmd.PersistentPreRunE = preRun
 	a.Commands = []*cobra.Command{loginCmd, logoutCmd}

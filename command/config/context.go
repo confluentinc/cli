@@ -45,6 +45,7 @@ func (c *contextCommand) init() {
 		Use:   "current",
 		Short: "Show the current config context.",
 		RunE:  c.current,
+		Args:  cobra.NoArgs,
 	})
 	c.AddCommand(&cobra.Command{
 		Use:   "get [ID]",

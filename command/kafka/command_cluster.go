@@ -60,6 +60,7 @@ func (c *clusterCommand) init(plugin common.GRPCPlugin) {
 		Use:   "list",
 		Short: "List Kafka clusters",
 		RunE:  c.list,
+		Args:  cobra.NoArgs,
 	})
 
 	createCmd := &cobra.Command{
@@ -105,6 +106,7 @@ func (c *clusterCommand) init(plugin common.GRPCPlugin) {
 		Use:   "auth",
 		Short: "Configure authorization for a Kafka cluster",
 		RunE:  c.auth,
+		Args:  cobra.NoArgs,
 	})
 	c.AddCommand(&cobra.Command{
 		Use:   "use ID",

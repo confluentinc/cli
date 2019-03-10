@@ -57,6 +57,7 @@ func (c *clusterCommand) init(plugin common.GRPCPlugin) {
 		Use:   "list",
 		Short: "List KSQL apps",
 		RunE:  c.list,
+		Args:  cobra.NoArgs,
 	})
 
 	createCmd := &cobra.Command{

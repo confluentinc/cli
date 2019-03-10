@@ -87,6 +87,7 @@ func (c *sinkCommand) init(plugin common.GRPCPlugin) error {
 		Use:   "list",
 		Short: "List connectors",
 		RunE:  c.list,
+		Args:  cobra.NoArgs,
 	})
 
 	getCmd := &cobra.Command{
@@ -135,6 +136,7 @@ func (c *sinkCommand) init(plugin common.GRPCPlugin) error {
 		Use:   "auth",
 		Short: "Auth a connector",
 		RunE:  c.auth,
+		Args:  cobra.NoArgs,
 	})
 
 	return nil

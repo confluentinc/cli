@@ -68,6 +68,7 @@ func (c *command) init(plugin common.GRPCPlugin) error {
 		Use:   "list",
 		Short: "List API keys",
 		RunE:  c.list,
+		Args:  cobra.NoArgs,
 	})
 
 	createCmd := &cobra.Command{
