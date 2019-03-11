@@ -16,21 +16,6 @@ builds:
       - darwin
     goarch:
       - amd64
-  -
-    binary: ccloud-kafka-plugin
-    main: ./plugin/ccloud-kafka-plugin
-    flags:
-      - -mod=readonly
-    ldflags:
-      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.Commit}} -X main.date={{.Date}}  -X main.host={{.Env.HOSTNAME}}
-    gcflags:
-      - -trimpath={{.Env.GOPATH}}
-    asmflags:
-      - -trimpath={{.Env.GOPATH}}
-    goos:
-      - darwin
-    goarch:
-      - amd64
 #  -
 #    binary: ccloud-connect-plugin
 #    main: ./plugin/ccloud-connect-plugin

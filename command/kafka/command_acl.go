@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/spf13/cobra"
 	"github.com/codyaray/go-printer"
 	"github.com/hashicorp/go-multierror"
+	"github.com/spf13/cobra"
 
-	chttp "github.com/confluentinc/ccloud-sdk-go"
+	"github.com/confluentinc/ccloud-sdk-go"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/shared"
@@ -17,24 +17,25 @@ import (
 type aclCommand struct {
 	*cobra.Command
 	config *shared.Config
-	client chttp.Kafka
+	client ccloud.Kafka
 }
 
-// NewACLCommand returns the Cobra clusterCommand for Kafka Cluster.
-func NewACLCommand(config *shared.Config, plugin common.GRPCPlugin) *cobra.Command {
+// NewACLCommand returns the Cobra command for Kafka ACL.
+func NewACLCommand(config *shared.Config, client ccloud.Kafka) *cobra.Command {
 	cmd := &aclCommand{
 		Command: &cobra.Command{
 			Use:   "acl",
 			Short: "Manage Kafka ACLs",
 		},
 		config: config,
+		client: client,
 	}
 
-	cmd.init(plugin)
+	cmd.init()
 	return cmd.Command
 }
 
-func (c *aclCommand) init(plugin common.GRPCPlugin) {
+func (c *aclCommand) init() {
 	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		if err := common.SetLoggingVerbosity(cmd, c.config.Logger); err != nil {
 			return common.HandleError(err, cmd)
@@ -42,8 +43,7 @@ func (c *aclCommand) init(plugin common.GRPCPlugin) {
 		if err := c.config.CheckLogin(); err != nil {
 			return common.HandleError(err, cmd)
 		}
-		// Lazy load plugin to avoid unnecessarily spawning child processes
-		return plugin.Load(&c.client, c.config.Logger)
+		return nil
 	}
 
 	cmd := &cobra.Command{

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"reflect"
 	"strconv"
 	"strings"
 	"testing"
@@ -419,19 +418,9 @@ func TestDefaults(t *testing.T) {
 /*************** TEST command_cluster ***************/
 // TODO: do this for all commands/subcommands... and for all common error messages
 func Test_HandleError_NotLoggedIn(t *testing.T) {
-	cmd, _ := NewKafkaCommand(conf, &cliMock.GRPCPlugin{
-		LookupPathFunc: func() (string, error) {
-			return "", nil
-		},
-		LoadFunc: func(value interface{}, logger *log.Logger) error {
-			client := &mock.Kafka{
-				ListFunc: func(ctx context.Context, cluster *kafkav1.KafkaCluster) ([]*kafkav1.KafkaCluster, error) {
-					return nil, shared.ErrUnauthorized
-				},
-			}
-			rv := reflect.ValueOf(value)
-			rv.Elem().Set(reflect.ValueOf(client))
-			return nil
+	cmd, _ := New(conf, &mock.Kafka{
+		ListFunc: func(ctx context.Context, cluster *kafkav1.KafkaCluster) ([]*kafkav1.KafkaCluster, error) {
+			return nil, shared.ErrUnauthorized
 		},
 	})
 	cmd.PersistentFlags().CountP("verbose", "v", "increase output verbosity")
@@ -448,14 +437,7 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 
 /*************** TEST setup/helpers ***************/
 func NewCMD(expect chan interface{}) *cobra.Command {
-	cmd, _ := NewKafkaCommand(conf, &cliMock.GRPCPlugin{
-		LookupPathFunc: func() (string, error) {
-			return "", nil
-		},
-		LoadFunc: func(value interface{}, logger *log.Logger) error {
-			return cliMock.NewKafkaMock(value, expect)
-		},
-	})
+	cmd, _ := New(conf, cliMock.NewKafkaMock(expect))
 	cmd.PersistentFlags().CountP("verbose", "v", "increase output verbosity")
 
 	return cmd

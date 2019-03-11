@@ -1,8 +1,10 @@
 package main
 
 import (
+	"context"
 	"os"
 
+	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/confluentinc/cli/command"
 	"github.com/confluentinc/cli/command/apikey"
 	"github.com/confluentinc/cli/command/auth"
@@ -80,6 +82,8 @@ func BuildCommand(cfg *shared.Config, version *cliVersion.Version, factory commo
 
 	prompt := command.NewTerminalPrompt(os.Stdin)
 
+	client := ccloud.NewClientWithJWT(context.Background(), cfg.AuthToken, cfg.AuthURL, cfg.Logger)
+
 	cli.Version = version.Version
 	cli.AddCommand(common.NewVersionCmd(version, prompt))
 
@@ -96,7 +100,7 @@ func BuildCommand(cfg *shared.Config, version *cliVersion.Version, factory commo
 
 	cli.AddCommand(auth.New(cfg)...)
 
-	conn, err = kafka.New(cfg, factory)
+	conn, err = kafka.New(cfg, client.Kafka)
 	if err != nil {
 		logger.Log("msg", err)
 	} else {

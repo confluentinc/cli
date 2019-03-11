@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh/terminal"
 
-	chttp "github.com/confluentinc/ccloud-sdk-go"
+	"github.com/confluentinc/ccloud-sdk-go"
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	"github.com/confluentinc/cli/command/common"
@@ -28,23 +28,24 @@ var (
 type clusterCommand struct {
 	*cobra.Command
 	config *shared.Config
-	client chttp.Kafka
+	client ccloud.Kafka
 }
 
-// NewClusterCommand returns the Cobra clusterCommand for Kafka Cluster.
-func NewClusterCommand(config *shared.Config, plugin common.GRPCPlugin) *cobra.Command {
+// NewClusterCommand returns the Cobra command for Kafka cluster.
+func NewClusterCommand(config *shared.Config, client ccloud.Kafka) *cobra.Command {
 	cmd := &clusterCommand{
 		Command: &cobra.Command{
 			Use:   "cluster",
 			Short: "Manage Kafka clusters",
 		},
 		config: config,
+		client: client,
 	}
-	cmd.init(plugin)
+	cmd.init()
 	return cmd.Command
 }
 
-func (c *clusterCommand) init(plugin common.GRPCPlugin) {
+func (c *clusterCommand) init() {
 	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		if err := common.SetLoggingVerbosity(cmd, c.config.Logger); err != nil {
 			return common.HandleError(err, cmd)
@@ -52,8 +53,7 @@ func (c *clusterCommand) init(plugin common.GRPCPlugin) {
 		if err := c.config.CheckLogin(); err != nil {
 			return common.HandleError(err, cmd)
 		}
-		// Lazy load plugin to avoid unnecessarily spawning child processes
-		return plugin.Load(&c.client, c.config.Logger)
+		return nil
 	}
 
 	// Promote this to command.go when/if topic/ACL commands also want this flag
@@ -344,7 +344,7 @@ func promptForKafkaCreds() (string, string, error) {
 }
 
 func (c *clusterCommand) createKafkaCreds(ctx context.Context, environment string, kafkaClusterID string) (string, string, error) {
-	client := chttp.NewClientWithJWT(ctx, c.config.AuthToken, c.config.AuthURL, c.config.Logger)
+	client := ccloud.NewClientWithJWT(ctx, c.config.AuthToken, c.config.AuthURL, c.config.Logger)
 	key, err := client.APIKey.Create(ctx, &authv1.ApiKey{
 		UserId: c.config.Auth.User.Id,
 		LogicalClusters: []*authv1.ApiKey_Cluster{

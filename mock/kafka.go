@@ -3,7 +3,6 @@ package mock
 import (
 	"context"
 	"fmt"
-	"reflect"
 
 	chttp "github.com/confluentinc/ccloud-sdk-go"
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
@@ -18,11 +17,8 @@ type MockKafka struct {
 	Expect chan interface{}
 }
 
-func NewKafkaMock(value interface{}, expect chan interface{}) error {
-	client := &MockKafka{expect}
-	rv := reflect.ValueOf(value)
-	rv.Elem().Set(reflect.ValueOf(client))
-	return nil
+func NewKafkaMock(expect chan interface{}) *MockKafka {
+	return &MockKafka{expect}
 }
 
 func (m *MockKafka) CreateAPIKey(_ context.Context, apiKey *authv1.ApiKey) (*authv1.ApiKey, error) {

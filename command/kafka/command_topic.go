@@ -12,7 +12,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 
-	chttp "github.com/confluentinc/ccloud-sdk-go"
+	"github.com/confluentinc/ccloud-sdk-go"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/shared"
@@ -22,23 +22,24 @@ import (
 type topicCommand struct {
 	*cobra.Command
 	config *shared.Config
-	client chttp.Kafka
+	client ccloud.Kafka
 }
 
-// NewTopicCommand returns the Cobra clusterCommand for Kafka Cluster.
-func NewTopicCommand(config *shared.Config, plugin common.GRPCPlugin) *cobra.Command {
+// NewTopicCommand returns the Cobra command for Kafka topic.
+func NewTopicCommand(config *shared.Config, client ccloud.Kafka) *cobra.Command {
 	cmd := &topicCommand{
 		Command: &cobra.Command{
 			Use:   "topic",
 			Short: "Manage Kafka topics",
 		},
 		config: config,
+		client: client,
 	}
-	cmd.init(plugin)
+	cmd.init()
 	return cmd.Command
 }
 
-func (c *topicCommand) init(plugin common.GRPCPlugin) {
+func (c *topicCommand) init() {
 	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		if err := common.SetLoggingVerbosity(cmd, c.config.Logger); err != nil {
 			return common.HandleError(err, cmd)
@@ -46,8 +47,7 @@ func (c *topicCommand) init(plugin common.GRPCPlugin) {
 		if err := c.config.CheckLogin(); err != nil {
 			return common.HandleError(err, cmd)
 		}
-		// Lazy load plugin to avoid unnecessarily spawning child processes
-		return plugin.Load(&c.client, c.config.Logger)
+		return nil
 	}
 
 	c.AddCommand(&cobra.Command{

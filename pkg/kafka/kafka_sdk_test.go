@@ -1,22 +1,21 @@
-package main
+package kafka
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	chttp "github.com/confluentinc/ccloud-sdk-go"
+	"github.com/confluentinc/ccloud-sdk-go"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
-	log "github.com/confluentinc/cli/log"
-
-	"context"
+	"github.com/confluentinc/cli/log"
 )
 
 var (
 	// KafkaAPI Client/Server
-	client *chttp.Client
+	client *ccloud.Client
 	server *httptest.Server
 
 	cluster = &kafkav1.KafkaCluster{
@@ -141,8 +140,8 @@ func handleACLSearch(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-// TestMockClient ensures the plugin properly routes requests to the KafkaAPI given a particular set of arguments
-func TestPlugin(t *testing.T) {
+// TestKafkaSDK ensures the plugin properly routes requests to the KafkaAPI given a particular set of arguments
+func TestKafkaSDK(t *testing.T) {
 	defer server.Close()
 
 	t.Run("ListTopics", testListTopics)
@@ -203,20 +202,20 @@ func testDeleteAcl(t *testing.T) {
 	}
 }
 
-func NewMockClient(logger *log.Logger) *chttp.Client {
+func NewMockClient(logger *log.Logger) *ccloud.Client {
 	mux := http.NewServeMux()
-	mux.HandleFunc(chttp.ACCESS_TOKENS, handleToken)
-	mux.HandleFunc(fmt.Sprintf(chttp.TOPICS, cluster.Id), handleTopics)
-	mux.HandleFunc(fmt.Sprintf(chttp.TOPIC, cluster.Id, topic.Spec.Name), handleTopic)
-	mux.HandleFunc(fmt.Sprintf(chttp.TOPICCONFIG, cluster.Id, topic.Spec.Name), handleTopicConfig)
-	mux.HandleFunc(fmt.Sprintf(chttp.ACL, cluster.Id), handleACL)
-	mux.HandleFunc(fmt.Sprintf(chttp.ACLSEARCH, cluster.Id), handleACLSearch)
+	mux.HandleFunc(ccloud.ACCESS_TOKENS, handleToken)
+	mux.HandleFunc(fmt.Sprintf(ccloud.TOPICS, cluster.Id), handleTopics)
+	mux.HandleFunc(fmt.Sprintf(ccloud.TOPIC, cluster.Id, topic.Spec.Name), handleTopic)
+	mux.HandleFunc(fmt.Sprintf(ccloud.TOPICCONFIG, cluster.Id, topic.Spec.Name), handleTopicConfig)
+	mux.HandleFunc(fmt.Sprintf(ccloud.ACL, cluster.Id), handleACL)
+	mux.HandleFunc(fmt.Sprintf(ccloud.ACLSEARCH, cluster.Id), handleACLSearch)
 
 	server = httptest.NewServer(mux)
 
 	cluster.ApiEndpoint = server.URL
 
-	client := chttp.NewClient(server.URL, server.Client(), logger)
+	client := ccloud.NewClient(server.URL, server.Client(), logger)
 
 	return client
 }

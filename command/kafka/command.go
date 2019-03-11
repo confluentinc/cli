@@ -3,49 +3,36 @@ package kafka
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/command/common"
+	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/confluentinc/cli/shared"
-	"github.com/confluentinc/cli/shared/kafka"
 )
 
 type command struct {
 	*cobra.Command
 	config *shared.Config
+	client ccloud.Kafka
 }
 
 // New returns the default command object for interacting with Kafka.
-func New(config *shared.Config, factory common.GRPCPluginFactory) (*cobra.Command, error) {
-	return newCMD(config, factory.Create(kafka.Name))
-}
-
-// NewKafkaCommand returns a command object using a custom Kafka provider.
-func NewKafkaCommand(config *shared.Config, provider common.GRPCPlugin) (*cobra.Command, error) {
-	return newCMD(config, provider)
-}
-
-// newCMD returns a command for interacting with Kafka.
-func newCMD(config *shared.Config, provider common.GRPCPlugin) (*cobra.Command, error) {
+func New(config *shared.Config, client ccloud.Kafka) (*cobra.Command, error) {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:   "kafka",
 			Short: "Manage Kafka",
 		},
 		config: config,
-	}
-	_, err := provider.LookupPath()
-	if err != nil {
-		return nil, err
+		client: client,
 	}
 	// Should uncomment this when/if ACL/topic commands need this flag (currently just in cluster cmd)
 	//cmd.PersistentFlags().String("environment", "", "ID of the environment in which to run the command")
-	err = cmd.init(provider)
+	err := cmd.init()
 	return cmd.Command, err
 }
 
-func (c *command) init(plugin common.GRPCPlugin) error {
-	c.AddCommand(NewClusterCommand(c.config, plugin))
-	c.AddCommand(NewTopicCommand(c.config, plugin))
-	c.AddCommand(NewACLCommand(c.config, plugin))
+func (c *command) init() error {
+	c.AddCommand(NewClusterCommand(c.config, c.client))
+	c.AddCommand(NewTopicCommand(c.config, c.client))
+	c.AddCommand(NewACLCommand(c.config, c.client))
 
 	return nil
 }

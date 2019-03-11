@@ -29,27 +29,6 @@ builds:
       - goos: darwin
         goarch: 386
   -
-    binary: ccloud-kafka-plugin
-    main: ./plugin/ccloud-kafka-plugin
-    flags:
-      - -mod=readonly
-    ldflags:
-      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.Commit}} -X main.date={{.Date}}  -X main.host={{.Env.HOSTNAME}}
-    gcflags:
-      - -trimpath={{.Env.GOPATH}}
-    asmflags:
-      - -trimpath={{.Env.GOPATH}}
-    goos:
-      - linux
-      - darwin
-      - windows
-    goarch:
-      - amd64
-      - 386
-    ignore:
-      - goos: darwin
-        goarch: 386
-  -
     binary: ccloud-user-plugin
     main: ./plugin/ccloud-user-plugin
     flags:
