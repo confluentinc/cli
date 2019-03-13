@@ -36,6 +36,7 @@ func newCMD(config *shared.Config, provider common.GRPCPlugin) (*cobra.Command, 
 	if err != nil {
 		return nil, err
 	}
+	cmd.PersistentFlags().String("environment", "", "ID of the environment in which to run the command")
 	err = cmd.init(provider)
 	return cmd.Command, err
 }

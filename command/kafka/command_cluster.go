@@ -115,7 +115,15 @@ func (c *clusterCommand) init(plugin common.GRPCPlugin) {
 }
 
 func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
-	req := &kafkav1.KafkaCluster{AccountId: c.config.Auth.Account.Id}
+	environment, err := cmd.Flags().GetString("environment")
+	if err != nil {
+		return common.HandleError(err, cmd)
+	}
+	if environment == "" {
+		environment = c.config.Auth.Account.Id
+	}
+
+	req := &kafkav1.KafkaCluster{AccountId: environment}
 	clusters, err := c.client.List(context.Background(), req)
 	if err != nil {
 		return common.HandleError(err, cmd)
@@ -162,12 +170,19 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
+	environment, err := cmd.Flags().GetString("environment")
+	if err != nil {
+		return common.HandleError(err, cmd)
+	}
+	if environment == "" {
+		environment = c.config.Auth.Account.Id
+	}
 	durability := kafkav1.Durability_LOW
 	if multizone {
 		durability = kafkav1.Durability_HIGH
 	}
 	config := &kafkav1.KafkaClusterConfig{
-		AccountId:       c.config.Auth.Account.Id,
+		AccountId:       environment,
 		Name:            args[0],
 		ServiceProvider: cloud,
 		Region:          region,
@@ -185,7 +200,15 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
-	req := &kafkav1.KafkaCluster{AccountId: c.config.Auth.Account.Id, Id: args[0]}
+	environment, err := cmd.Flags().GetString("environment")
+	if err != nil {
+		return common.HandleError(err, cmd)
+	}
+	if environment == "" {
+		environment = c.config.Auth.Account.Id
+	}
+
+	req := &kafkav1.KafkaCluster{AccountId: environment, Id: args[0]}
 	cluster, err := c.client.Describe(context.Background(), req)
 	if err != nil {
 		return common.HandleError(err, cmd)
@@ -198,8 +221,16 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
-	req := &kafkav1.KafkaCluster{AccountId: c.config.Auth.Account.Id, Id: args[0]}
-	err := c.client.Delete(context.Background(), req)
+	environment, err := cmd.Flags().GetString("environment")
+	if err != nil {
+		return common.HandleError(err, cmd)
+	}
+	if environment == "" {
+		environment = c.config.Auth.Account.Id
+	}
+
+	req := &kafkav1.KafkaCluster{AccountId: environment, Id: args[0]}
+	err = c.client.Delete(context.Background(), req)
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
@@ -216,6 +247,14 @@ func (c *clusterCommand) auth(cmd *cobra.Command, args []string) error {
 
 	if cfg.Kafka == "" {
 		return fmt.Errorf("No cluster selected. See ccloud kafka use for help ")
+	}
+
+	environment, err := cmd.Flags().GetString("environment")
+	if err != nil {
+		return common.HandleError(err, cmd)
+	}
+	if environment == "" {
+		environment = c.config.Auth.Account.Id
 	}
 
 	cluster, known := c.config.Platforms[cfg.Platform].KafkaClusters[cfg.Kafka]
@@ -236,13 +275,13 @@ func (c *clusterCommand) auth(cmd *cobra.Command, args []string) error {
 	if userProvidingKey {
 		key, secret, err = promptForKafkaCreds()
 	} else {
-		key, secret, err = c.createKafkaCreds(context.Background(), cfg.Kafka)
+		key, secret, err = c.createKafkaCreds(context.Background(), environment, cfg.Kafka)
 	}
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
 
-	req := &kafkav1.KafkaCluster{AccountId: c.config.Auth.Account.Id, Id: cfg.Kafka}
+	req := &kafkav1.KafkaCluster{AccountId: environment, Id: cfg.Kafka}
 	kc, err := c.client.Describe(context.Background(), req)
 	if err != nil {
 		return common.HandleError(err, cmd)
@@ -303,14 +342,14 @@ func promptForKafkaCreds() (string, string, error) {
 	return strings.TrimSpace(key), strings.TrimSpace(secret), nil
 }
 
-func (c *clusterCommand) createKafkaCreds(ctx context.Context, kafkaClusterID string) (string, string, error) {
+func (c *clusterCommand) createKafkaCreds(ctx context.Context, environment string, kafkaClusterID string) (string, string, error) {
 	client := chttp.NewClientWithJWT(ctx, c.config.AuthToken, c.config.AuthURL, c.config.Logger)
 	key, err := client.APIKey.Create(ctx, &authv1.ApiKey{
 		UserId: c.config.Auth.User.Id,
 		LogicalClusters: []*authv1.ApiKey_Cluster{
 			{Id: kafkaClusterID},
 		},
-		AccountId: c.config.Auth.Account.Id,
+		AccountId: environment,
 	})
 
 	if err != nil {
