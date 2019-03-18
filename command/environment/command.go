@@ -81,11 +81,11 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 
 	var data [][]string
 	for _, environment := range environments {
-		//if cluster.Id == currCtx.Kafka {
-		//	cluster.Id = fmt.Sprintf("* %s", cluster.Id)
-		//} else {
-		environment.Id = fmt.Sprintf("  %s", environment.Id)
-		//}
+		if environment.Id == c.config.Auth.Account.Id {
+			environment.Id = fmt.Sprintf("* %s", environment.Id)
+		} else {
+			environment.Id = fmt.Sprintf("  %s", environment.Id)
+		}
 		data = append(data, printer.ToRow(environment, listFields))
 	}
 	printer.RenderCollectionTable(data, listLabels)
