@@ -91,7 +91,27 @@ builds:
     ignore:
       - goos: darwin
         goarch: 386
-
+  -
+    binary: ccloud-environment-plugin
+    main: ./plugin/ccloud-environment-plugin
+    flags:
+      - -mod=readonly
+    ldflags:
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.Commit}} -X main.date={{.Date}}  -X main.host={{.Env.HOSTNAME}}
+    gcflags:
+      - -trimpath={{.Env.GOPATH}}
+    asmflags:
+      - -trimpath={{.Env.GOPATH}}
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - 386
+    ignore:
+      - goos: darwin
+        goarch: 386
 release:
   disable: true
 

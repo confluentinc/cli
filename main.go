@@ -9,6 +9,7 @@ import (
 	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/command/config"
 	//"github.com/confluentinc/cli/command/connect"
+	"github.com/confluentinc/cli/command/environment"
 	"github.com/confluentinc/cli/command/kafka"
 	//"github.com/confluentinc/cli/command/ksql"
 	"github.com/confluentinc/cli/command/service-account"
@@ -124,6 +125,13 @@ func BuildCommand(cfg *shared.Config, version *cliVersion.Version, factory commo
 	}
 
 	conn, err = apikey.New(cfg, factory)
+	if err != nil {
+		logger.Log("msg", err)
+	} else {
+		cli.AddCommand(conn)
+	}
+
+	conn, err = environment.New(cfg, factory)
 	if err != nil {
 		logger.Log("msg", err)
 	} else {

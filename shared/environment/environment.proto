@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package environment;
+
+import "github.com/confluentinc/ccloudapis/org/v1/org.proto";
+
+service Account {
+  rpc Create(ccloudapis.org.v1.CreateAccountRequest) returns (ccloudapis.org.v1.CreateAccountReply) {}
+  rpc Update(ccloudapis.org.v1.UpdateAccountRequest) returns (ccloudapis.org.v1.UpdateAccountReply) {}
+  rpc Delete(ccloudapis.org.v1.DeleteAccountRequest) returns (ccloudapis.org.v1.DeleteAccountReply) {}
+  rpc Get(ccloudapis.org.v1.GetAccountRequest) returns (ccloudapis.org.v1.GetAccountReply) {}
+  rpc List(ccloudapis.org.v1.ListAccountsRequest) returns (ccloudapis.org.v1.ListAccountsReply) {}
+}
