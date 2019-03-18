@@ -1,6 +1,6 @@
 package connect
 
-import (
+/*import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/command/common"
@@ -48,4 +48,4 @@ func (c *command) init(plugin common.GRPCPlugin) error {
 	c.AddCommand(sinkCmd)
 
 	return nil
-}
+}*/

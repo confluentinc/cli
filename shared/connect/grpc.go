@@ -1,6 +1,6 @@
 package connect
 
-import (
+/*import (
 	"context"
 
 	chttp "github.com/confluentinc/ccloud-sdk-go"
@@ -98,4 +98,4 @@ func (s *GRPCServer) UpdateS3Sink(ctx context.Context, req *connectv1.UpdateConn
 func (s *GRPCServer) Delete(ctx context.Context, req *connectv1.DeleteConnectClusterRequest) (*connectv1.DeleteConnectClusterReply, error) {
 	err := s.Impl.Delete(ctx, req.Cluster)
 	return &connectv1.DeleteConnectClusterReply{}, err
-}
+}*/

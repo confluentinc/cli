@@ -1,6 +1,10 @@
 package main
 
-import (
+func main() {
+
+}
+
+/*import (
 	"context"
 	"os"
 
@@ -148,4 +152,4 @@ func (c *Connect) Delete(ctx context.Context, cluster *connectv1.ConnectCluster)
 		return shared.ConvertAPIError(err)
 	}
 	return nil
-}
+}*/

@@ -1,6 +1,6 @@
 package connect
 
-import (
+/*import (
 	"context"
 
 	plugin "github.com/hashicorp/go-plugin"
@@ -32,4 +32,4 @@ var _ plugin.GRPCPlugin = &Plugin{}
 
 func init() {
 	shared.PluginMap[Name] = &Plugin{}
-}
+}*/
