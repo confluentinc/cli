@@ -9,8 +9,9 @@ import (
 
 // AuthConfig represents an authenticated user.
 type AuthConfig struct {
-	User    *orgv1.User    `json:"user" hcl:"user"`
-	Account *orgv1.Account `json:"account" hcl:"account"`
+	User     *orgv1.User      `json:"user" hcl:"user"`
+	Account  *orgv1.Account   `json:"account" hcl:"account"`
+	Accounts []*orgv1.Account `json:"accounts" hcl:"accounts"`
 }
 
 // KafkaClusterConfig represents a connection to a Kafka cluster.

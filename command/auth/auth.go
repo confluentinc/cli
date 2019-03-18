@@ -97,7 +97,24 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return common.HandleError(shared.ConvertAPIError(err), cmd)
 	}
-	a.config.Auth = &shared.AuthConfig{User: user.User, Account: user.Account}
+
+	a.config.Auth.User = user.User
+	a.config.Auth.Accounts = user.Accounts
+
+	if len(a.config.Auth.Accounts) == 0 {
+		return common.HandleError(errors.New("No environments found for authenticated user!"), cmd)
+	}
+
+	// Default to 0th environment if no suitable environment is already configured
+	hasGoodEnv := false
+	for _, acc := range a.config.Auth.Accounts {
+		if acc.Id == a.config.Auth.Account.Id {
+			hasGoodEnv = true
+		}
+	}
+	if !hasGoodEnv {
+		a.config.Auth.Account = a.config.Auth.Accounts[0]
+	}
 
 	a.createOrUpdateContext(a.config.Auth)
 
@@ -106,6 +123,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "unable to save user auth")
 	}
 	_, err = a.prompt.Println("Logged in as", email)
+	_, err = a.prompt.Print("Using environment ", a.config.Auth.Account.Id, " (\"", a.config.Auth.Account.Name, "\"); use `ccloud environment list/use` to view/change environments.\n")
 	return err
 }
 
