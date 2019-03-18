@@ -56,6 +56,9 @@ func (c *clusterCommand) init(plugin common.GRPCPlugin) {
 		return plugin.Load(&c.client, c.config.Logger)
 	}
 
+	// Promote this to command.go when/if topic/ACL commands also want this flag
+	c.PersistentFlags().String("environment", "", "ID of the environment in which to run the command")
+
 	c.AddCommand(&cobra.Command{
 		Use:   "list",
 		Short: "List Kafka clusters",

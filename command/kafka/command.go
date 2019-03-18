@@ -36,7 +36,8 @@ func newCMD(config *shared.Config, provider common.GRPCPlugin) (*cobra.Command, 
 	if err != nil {
 		return nil, err
 	}
-	cmd.PersistentFlags().String("environment", "", "ID of the environment in which to run the command")
+	// Should uncomment this when/if ACL/topic commands need this flag (currently just in cluster cmd)
+	//cmd.PersistentFlags().String("environment", "", "ID of the environment in which to run the command")
 	err = cmd.init(provider)
 	return cmd.Command, err
 }
