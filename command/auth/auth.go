@@ -123,6 +123,9 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "unable to save user auth")
 	}
 	_, err = a.prompt.Println("Logged in as", email)
+	if err != nil {
+		return err
+	}
 	_, err = a.prompt.Print("Using environment ", a.config.Auth.Account.Id, " (\"", a.config.Auth.Account.Name, "\"); use `ccloud environment list/use` to view/change environments.\n")
 	return err
 }
