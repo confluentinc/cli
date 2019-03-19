@@ -98,8 +98,14 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 		return common.HandleError(shared.ConvertAPIError(err), cmd)
 	}
 
-	a.config.Auth.User = user.User
-	a.config.Auth.Accounts = user.Accounts
+	if a.config.Auth == nil {
+		a.config.Auth = &shared.AuthConfig{Account: user.Accounts[0]}
+	}
+
+	if user != nil {
+		a.config.Auth.User = user.User
+		a.config.Auth.Accounts = user.Accounts
+	}
 
 	if len(a.config.Auth.Accounts) == 0 {
 		return common.HandleError(errors.New("No environments found for authenticated user!"), cmd)

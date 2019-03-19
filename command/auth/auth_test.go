@@ -37,6 +37,7 @@ func TestCredentialsOverride(t *testing.T) {
 					Email:     "test-email",
 					FirstName: "Cody",
 				},
+				Accounts: []*orgv1.Account{{Id: "a-595", Name: "Default"}},
 			}, nil
 		},
 	}
@@ -68,6 +69,7 @@ func TestLoginSuccess(t *testing.T) {
 					Email:     "cody@confluent.io",
 					FirstName: "Cody",
 				},
+				Accounts: []*orgv1.Account{{Id: "a-595", Name: "Default"}},
 			}, nil
 		},
 	}
