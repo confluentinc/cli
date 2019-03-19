@@ -63,6 +63,7 @@ func (c *command) init(plugin common.GRPCPlugin) error {
 		Use:   "list",
 		Short: "List environments",
 		RunE:  c.list,
+		Args:  cobra.NoArgs,
 	})
 
 	c.AddCommand(&cobra.Command{
