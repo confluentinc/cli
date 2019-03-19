@@ -101,6 +101,7 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 		if acc.Id == id {
 			c.config.Auth.Account = acc
 			c.config.Save()
+			fmt.Println("Now using", id, "as the default (active) environment.")
 			return nil
 		}
 	}
