@@ -3,6 +3,7 @@ package environment
 import (
 	"context"
 	"fmt"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	ccloud "github.com/confluentinc/ccloud-sdk-go"
@@ -65,9 +66,10 @@ func (c *command) init(plugin common.GRPCPlugin) error {
 	})
 
 	c.AddCommand(&cobra.Command{
-		Use:   "use",
+		Use:   "use ID",
 		Short: "Switch to the specified environment",
 		RunE:  c.use,
+		Args:  cobra.ExactArgs(1),
 	})
 
 	return nil
@@ -93,5 +95,15 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) use(cmd *cobra.Command, args []string) error {
-	return nil
+	id := args[0]
+
+	for _, acc := range c.config.Auth.Accounts {
+		if acc.Id == id {
+			c.config.Auth.Account = acc
+			c.config.Save()
+			return nil
+		}
+	}
+
+	return common.HandleError(errors.New("Specified environment ID not found.  Use `ccloud environment list` to see available environments."), cmd)
 }
