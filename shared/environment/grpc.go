@@ -67,29 +67,29 @@ type GRPCServer struct {
 // Create account
 func (s *GRPCServer) Create(ctx context.Context, req *orgv1.CreateAccountRequest) (*orgv1.CreateAccountReply, error) {
 	r, err := s.Impl.Create(ctx, req.Account)
-	return &orgv1.CreateAccountReply{Account: r}, err
+	return &orgv1.CreateAccountReply{Account: r}, shared.ConvertGRPCError(err)
 }
 
 // Update account
 func (s *GRPCServer) Update(ctx context.Context, req *orgv1.UpdateAccountRequest) (*orgv1.UpdateAccountReply, error) {
 	err := s.Impl.Update(ctx, req.Account)
-	return &orgv1.UpdateAccountReply{}, err
+	return &orgv1.UpdateAccountReply{}, shared.ConvertGRPCError(err)
 }
 
 // Delete account
 func (s *GRPCServer) Delete(ctx context.Context, req *orgv1.DeleteAccountRequest) (*orgv1.DeleteAccountReply, error) {
 	err := s.Impl.Delete(ctx, req.Account)
-	return &orgv1.DeleteAccountReply{}, err
+	return &orgv1.DeleteAccountReply{}, shared.ConvertGRPCError(err)
 }
 
 // List accounts
 func (s *GRPCServer) Get(ctx context.Context, req *orgv1.GetAccountRequest) (*orgv1.GetAccountReply, error) {
 	r, err := s.Impl.Get(ctx, req.Account)
-	return &orgv1.GetAccountReply{Account: r}, err
+	return &orgv1.GetAccountReply{Account: r}, shared.ConvertGRPCError(err)
 }
 
 // List accounts
 func (s *GRPCServer) List(ctx context.Context, req *orgv1.ListAccountsRequest) (*orgv1.ListAccountsReply, error) {
 	r, err := s.Impl.List(ctx, nil)
-	return &orgv1.ListAccountsReply{Accounts: r}, err
+	return &orgv1.ListAccountsReply{Accounts: r}, shared.ConvertGRPCError(err)
 }

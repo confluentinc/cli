@@ -49,17 +49,17 @@ type GRPCServer struct {
 // Create API Key
 func (s *GRPCServer) Create(ctx context.Context, req *authv1.CreateApiKeyRequest) (*authv1.CreateApiKeyReply, error) {
 	r, err := s.Impl.Create(ctx, req.ApiKey)
-	return &authv1.CreateApiKeyReply{ApiKey: r}, err
+	return &authv1.CreateApiKeyReply{ApiKey: r}, shared.ConvertGRPCError(err)
 }
 
 // Delete API Key
 func (s *GRPCServer) Delete(ctx context.Context, req *authv1.DeleteApiKeyRequest) (*authv1.DeleteApiKeyReply, error) {
 	err := s.Impl.Delete(ctx, req.ApiKey)
-	return &authv1.DeleteApiKeyReply{}, err
+	return &authv1.DeleteApiKeyReply{}, shared.ConvertGRPCError(err)
 }
 
 // List API Keys
 func (s *GRPCServer) List(ctx context.Context, req *authv1.GetApiKeysRequest) (*authv1.GetApiKeysReply, error) {
 	r, err := s.Impl.List(ctx, req.ApiKey)
-	return &authv1.GetApiKeysReply{ApiKeys: r}, err
+	return &authv1.GetApiKeysReply{ApiKeys: r}, shared.ConvertGRPCError(err)
 }
