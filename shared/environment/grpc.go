@@ -52,6 +52,7 @@ func (c *GRPCClient) Get(ctx context.Context, account *orgv1.Account) (*orgv1.Ac
 
 // List accounts
 func (c *GRPCClient) List(ctx context.Context, account *orgv1.Account) ([]*orgv1.Account, error) {
+	// TODO: we should pass in the account here, but it currently expects an org.  Should investigate/change that behavior.
 	reply, err := c.client.List(ctx, &orgv1.ListAccountsRequest{})
 	if err != nil {
 		return nil, shared.ConvertGRPCError(err)
@@ -82,7 +83,7 @@ func (s *GRPCServer) Delete(ctx context.Context, req *orgv1.DeleteAccountRequest
 	return &orgv1.DeleteAccountReply{}, shared.ConvertGRPCError(err)
 }
 
-// List accounts
+// Get account
 func (s *GRPCServer) Get(ctx context.Context, req *orgv1.GetAccountRequest) (*orgv1.GetAccountReply, error) {
 	r, err := s.Impl.Get(ctx, req.Account)
 	return &orgv1.GetAccountReply{Account: r}, shared.ConvertGRPCError(err)

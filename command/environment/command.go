@@ -102,7 +102,7 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 			c.config.Auth.Account = acc
 			err := c.config.Save()
 			if err != nil {
-				return common.HandleError(errors.New("Error switching to new environment: couldn't save config."), cmd)
+				return common.HandleError(errors.New("Couldn't switch to new environment: couldn't save config."), cmd)
 			}
 			fmt.Println("Now using", id, "as the default (active) environment.")
 			return nil

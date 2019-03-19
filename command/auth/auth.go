@@ -98,24 +98,28 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 		return common.HandleError(shared.ConvertAPIError(err), cmd)
 	}
 
-	if a.config.Auth == nil {
-		a.config.Auth = &shared.AuthConfig{Account: user.Accounts[0]}
-	}
-
-	if user != nil {
-		a.config.Auth.User = user.User
-		a.config.Auth.Accounts = user.Accounts
-	}
-
-	if len(a.config.Auth.Accounts) == 0 {
+	if len(user.Accounts) == 0 {
 		return common.HandleError(errors.New("No environments found for authenticated user!"), cmd)
 	}
 
+	// If no auth config exists, initialize it
+	if a.config.Auth == nil {
+		a.config.Auth = &shared.AuthConfig{}
+	}
+
+	// Always overwrite the user and list of accounts when logging in -- but don't necessarily
+	// overwrite `Account` (current/active environment) since we want that to be remembered
+	// between CLI sessions.
+	a.config.Auth.User = user.User
+	a.config.Auth.Accounts = user.Accounts
+
 	// Default to 0th environment if no suitable environment is already configured
 	hasGoodEnv := false
-	for _, acc := range a.config.Auth.Accounts {
-		if acc.Id == a.config.Auth.Account.Id {
-			hasGoodEnv = true
+	if a.config.Auth.Account != nil {
+		for _, acc := range a.config.Auth.Accounts {
+			if acc.Id == a.config.Auth.Account.Id {
+				hasGoodEnv = true
+			}
 		}
 	}
 	if !hasGoodEnv {
