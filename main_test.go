@@ -76,6 +76,5 @@ func TestAddCommands_AvailablePluginsShownInHelpUsage(t *testing.T) {
 	output, err := command.ExecuteCommand(root, "help")
 	req.NoError(err)
 	req.Contains(output, "kafka")
-	req.Contains(output, "connect")
-	req.Contains(output, "ksql")
+	req.Contains(output, "environment")
 }
