@@ -117,13 +117,21 @@ func (c *clusterCommand) init(plugin common.GRPCPlugin) {
 	})
 }
 
-func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
+func (c *clusterCommand) getEnvironment(cmd *cobra.Command) (string, error) {
 	environment, err := cmd.Flags().GetString("environment")
 	if err != nil {
-		return common.HandleError(err, cmd)
+		return "", err
 	}
 	if environment == "" {
 		environment = c.config.Auth.Account.Id
+	}
+	return environment, nil
+}
+
+func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
+	environment, err := c.getEnvironment(cmd)
+	if err != nil {
+		return common.HandleError(err, cmd)
 	}
 
 	req := &kafkav1.KafkaCluster{AccountId: environment}
@@ -173,12 +181,9 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
-	environment, err := cmd.Flags().GetString("environment")
+	environment, err := c.getEnvironment(cmd)
 	if err != nil {
 		return common.HandleError(err, cmd)
-	}
-	if environment == "" {
-		environment = c.config.Auth.Account.Id
 	}
 	durability := kafkav1.Durability_LOW
 	if multizone {
@@ -203,12 +208,9 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
-	environment, err := cmd.Flags().GetString("environment")
+	environment, err := c.getEnvironment(cmd)
 	if err != nil {
 		return common.HandleError(err, cmd)
-	}
-	if environment == "" {
-		environment = c.config.Auth.Account.Id
 	}
 
 	req := &kafkav1.KafkaCluster{AccountId: environment, Id: args[0]}
@@ -224,12 +226,9 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
-	environment, err := cmd.Flags().GetString("environment")
+	environment, err := c.getEnvironment(cmd)
 	if err != nil {
 		return common.HandleError(err, cmd)
-	}
-	if environment == "" {
-		environment = c.config.Auth.Account.Id
 	}
 
 	req := &kafkav1.KafkaCluster{AccountId: environment, Id: args[0]}
@@ -252,12 +251,9 @@ func (c *clusterCommand) auth(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("No cluster selected. See ccloud kafka use for help ")
 	}
 
-	environment, err := cmd.Flags().GetString("environment")
+	environment, err := c.getEnvironment(cmd)
 	if err != nil {
 		return common.HandleError(err, cmd)
-	}
-	if environment == "" {
-		environment = c.config.Auth.Account.Id
 	}
 
 	cluster, known := c.config.Platforms[cfg.Platform].KafkaClusters[cfg.Kafka]
