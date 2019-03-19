@@ -13,7 +13,6 @@ require (
 	github.com/confluentinc/ccloudapis v0.0.0-20190313194524-9d1a929e8e66
 	github.com/confluentinc/go-printer v0.9.0
 	github.com/confluentinc/protoc-gen-ccloud v0.0.1 // indirect
-	github.com/ghodss/yaml v1.0.0
 	github.com/gogo/protobuf v1.2.1
 	github.com/golang/protobuf v1.2.1-0.20181128192352-1d3f30b51784
 	github.com/golang/snappy v0.0.1 // indirect
