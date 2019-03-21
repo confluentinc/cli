@@ -4,6 +4,10 @@ import (
 	"context"
 	"os"
 
+	"github.com/hashicorp/go-plugin"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+
 	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/confluentinc/cli/command"
 	"github.com/confluentinc/cli/command/apikey"
@@ -15,13 +19,9 @@ import (
 	"github.com/confluentinc/cli/command/kafka"
 	"github.com/confluentinc/cli/command/ksql"
 	"github.com/confluentinc/cli/command/service-account"
-	"github.com/hashicorp/go-plugin"
-
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-
 	"github.com/confluentinc/cli/log"
 	"github.com/confluentinc/cli/metric"
+	kafkap "github.com/confluentinc/cli/pkg/kafka"
 	"github.com/confluentinc/cli/shared"
 	cliVersion "github.com/confluentinc/cli/version"
 )
@@ -100,7 +100,7 @@ func BuildCommand(cfg *shared.Config, version *cliVersion.Version, factory commo
 
 	cli.AddCommand(auth.New(cfg)...)
 
-	conn, err = kafka.New(cfg, client.Kafka)
+	conn, err = kafka.New(cfg, kafkap.New(client, logger))
 	if err != nil {
 		logger.Log("msg", err)
 	} else {
