@@ -76,18 +76,3 @@ builds:
       - linux
     goarch:
       - amd64
-  -
-    binary: ccloud-environment-plugin
-    main: ./plugin/ccloud-environment-plugin
-    flags:
-      - -mod=readonly
-    ldflags:
-      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.Commit}} -X main.date={{.Date}}  -X main.host={{.Env.HOSTNAME}}
-    gcflags:
-      - -trimpath={{.Env.GOPATH}}
-    asmflags:
-      - -trimpath={{.Env.GOPATH}}
-    goos:
-      - linux
-    goarch:
-      - amd64

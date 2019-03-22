@@ -14,7 +14,7 @@ type command struct {
 }
 
 // New returns the default command object for interacting with Kafka.
-func New(config *shared.Config, client ccloud.Kafka) (*cobra.Command, error) {
+func New(config *shared.Config, client ccloud.Kafka) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:   "kafka",
@@ -25,14 +25,12 @@ func New(config *shared.Config, client ccloud.Kafka) (*cobra.Command, error) {
 	}
 	// Should uncomment this when/if ACL/topic commands need this flag (currently just in cluster cmd)
 	//cmd.PersistentFlags().String("environment", "", "ID of the environment in which to run the command")
-	err := cmd.init()
-	return cmd.Command, err
+	cmd.init()
+	return cmd.Command
 }
 
-func (c *command) init() error {
+func (c *command) init() {
 	c.AddCommand(NewClusterCommand(c.config, c.client))
 	c.AddCommand(NewTopicCommand(c.config, c.client))
 	c.AddCommand(NewACLCommand(c.config, c.client))
-
-	return nil
 }

@@ -6,7 +6,7 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/status"
 
-	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
+	corev1 "github.com/confluentinc/ccloudapis/core/v1"
 )
 
 /*

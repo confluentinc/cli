@@ -23,7 +23,6 @@ generate:
 #	@GO111MODULE=on protoc shared/connect/*.proto -Ishared/connect -I$(shell pwd)/vendor/ -I$(shell pwd)/vendor/github.com/confluentinc/ccloudapis/ --gogo_out=plugins=grpc:shared/connect
 	@GO111MODULE=on protoc shared/ksql/*.proto -Ishared/ksql -I$(shell pwd)/vendor/ -I$(shell pwd)/vendor/github.com/confluentinc/ccloudapis/ --gogo_out=plugins=grpc:shared/ksql
 	@GO111MODULE=on protoc shared/apikey/*.proto -Ishared/apikey -I$(shell pwd)/vendor/ -I$(shell pwd)/vendor/github.com/confluentinc/ccloudapis/ --gogo_out=plugins=grpc:shared/apikey
-	@GO111MODULE=on protoc shared/environment/*.proto -Ishared/environment -I$(shell pwd)/vendor/ -I$(shell pwd)/vendor/github.com/confluentinc/ccloudapis/ --gogo_out=plugins=grpc:shared/environment
 	@GO111MODULE=on protoc shared/user/*.proto -Ishared/user -I$(shell pwd)/vendor/ -I$(shell pwd)/vendor/github.com/confluentinc/ccloudapis/ --gogo_out=plugins=grpc:shared/user
 
 build: generate build-go install-plugins
