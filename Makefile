@@ -18,15 +18,7 @@ deps:
 	@GO111MODULE=on go get github.com/goreleaser/goreleaser@v0.101.0
 	@GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.12.2
 
-.PHONY: generate
-generate:
-#	@GO111MODULE=on protoc shared/connect/*.proto -Ishared/connect -I$(shell pwd)/vendor/ -I$(shell pwd)/vendor/github.com/confluentinc/ccloudapis/ --gogo_out=plugins=grpc:shared/connect
-
-build: generate build-go install-plugins
-
-.PHONY: install-plugins
-install-plugins:
-	@GOBIN=$(shell pwd)/dist GO111MODULE=on go install ./plugin/...
+build: build-go
 
 ifeq ($(shell uname),Darwin)
 GORELEASER_CONFIG ?= .goreleaser-mac.yml

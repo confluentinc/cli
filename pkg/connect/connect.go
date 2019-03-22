@@ -1,8 +1,4 @@
-package main
-
-func main() {
-
-}
+package connect
 
 /*import (
 	"context"
@@ -10,7 +6,7 @@ func main() {
 
 	"github.com/hashicorp/go-plugin"
 
-	chttp "github.com/confluentinc/ccloud-sdk-go"
+	"github.com/confluentinc/ccloud-sdk-go"
 	connectv1 "github.com/confluentinc/ccloudapis/connect/v1"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	"github.com/confluentinc/cli/command"
@@ -21,68 +17,16 @@ func main() {
 	cliVersion "github.com/confluentinc/cli/version"
 )
 
-var (
-	// Injected from linker flags like `go build -ldflags "-X main.version=$VERSION" -X ...`
-	version = "v0.0.0"
-	commit  = ""
-	date    = ""
-	host    = ""
-)
-
 // Compile-time check for Interface adherence
-var _ chttp.Connect = (*Connect)(nil)
-
-func main() {
-	if len(os.Args) > 1 && (os.Args[1] == "version" || os.Args[1] == "--version") {
-		shared.PrintVersion(cliVersion.NewVersion(version, commit, date, host), command.NewTerminalPrompt(os.Stdin))
-	}
-
-	var logger *log.Logger
-	{
-		logger = log.NewWithParams(&log.Params{
-			// Plugins log everything. The driver decides the logging level to keep.
-			Level:  log.TRACE,
-			Output: os.Stderr,
-			JSON:   true,
-		})
-		defer logger.Log("msg", "goodbye")
-	}
-
-	var metricSink shared.MetricSink
-	{
-		metricSink = metric.NewSink()
-	}
-
-	var config *shared.Config
-	{
-		config = shared.NewConfig(&shared.Config{
-			MetricSink: metricSink,
-			Logger:     logger,
-		})
-		err := config.Load()
-		if err != nil && err != shared.ErrNoConfig {
-			logger.Errorf("unable to load config: %v", err)
-		}
-	}
-
-	var impl *Connect
-	{
-		client := chttp.NewClientWithJWT(context.Background(), config.AuthToken, config.AuthURL, config.Logger)
-		impl = &Connect{Logger: logger, Client: client}
-	}
-
-	shared.PluginMap[connect.Name] = &connect.Plugin{Impl: impl}
-
-	plugin.Serve(&plugin.ServeConfig{
-		HandshakeConfig: shared.Handshake,
-		Plugins:         shared.PluginMap,
-		GRPCServer:      plugin.DefaultGRPCServer,
-	})
-}
+var _ ccloud.Connect = (*Connect)(nil)
 
 type Connect struct {
+	Client *ccloud.Client
 	Logger *log.Logger
-	Client *chttp.Client
+}
+
+func New(client *ccloud.Client, logger *log.Logger) *Connect {
+	return &Connect{Client: client, Logger: logger}
 }
 
 func (c *Connect) List(ctx context.Context, cluster *connectv1.ConnectCluster) ([]*connectv1.ConnectCluster, error) {

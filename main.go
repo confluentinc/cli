@@ -22,6 +22,7 @@ import (
 	"github.com/confluentinc/cli/log"
 	"github.com/confluentinc/cli/metric"
 	apikeyp "github.com/confluentinc/cli/pkg/apikey"
+	//connectp "github.com/confluentinc/cli/pkg/connect"
 	environmentp "github.com/confluentinc/cli/pkg/environment"
 	kafkap "github.com/confluentinc/cli/pkg/kafka"
 	ksqlp "github.com/confluentinc/cli/pkg/ksql"
@@ -109,15 +110,12 @@ func BuildCommand(cfg *shared.Config, version *cliVersion.Version, factory commo
 	cli.AddCommand(kafka.New(cfg, kafkap.New(client, logger)))
 
 	conn = ksql.New(cfg, ksqlp.New(client, logger))
-	conn.Hidden = true // The config/context feature isn't finished yet, so let's hide it
+	conn.Hidden = true // The ksql feature isn't finished yet, so let's hide it
 	cli.AddCommand(conn)
 
-	/*conn, err = connect.New(cfg, factory)
-	if err != nil {
-		logger.Log("msg", err)
-	} else {
-		cli.AddCommand(conn)
-	}*/
+	//conn = connect.New(cfg, connectp.New(client, logger))
+	//conn.Hidden = true // The connect feature isn't finished yet, so let's hide it
+	//cli.AddCommand()
 
 	return cli
 }

@@ -11,7 +11,7 @@ package connect
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	chttp "github.com/confluentinc/ccloud-sdk-go"
+	"github.com/confluentinc/ccloud-sdk-go"
 	connectv1 "github.com/confluentinc/ccloudapis/connect/v1"
 	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/shared"
@@ -30,23 +30,24 @@ var (
 type sinkCommand struct {
 	*cobra.Command
 	config *shared.Config
-	client chttp.Connect
+	client ccloud.Connect
 }
 
 // NewSink returns the Cobra sinkCommand for Connect Sink.
-func NewSink(config *shared.Config, plugin common.GRPCPlugin) (*cobra.Command, error) {
+func NewSink(config *shared.Config, client ccloud.Connect) *cobra.Command {
 	cmd := &sinkCommand{
 		Command: &cobra.Command{
 			Use:   "sink",
 			Short: "Manage sink connectors",
 		},
 		config: config,
+		client: client,
 	}
-	err := cmd.init(plugin)
-	return cmd.Command, err
+	cmd.init()
+	return cmd.Command
 }
 
-func (c *sinkCommand) init(plugin common.GRPCPlugin) error {
+func (c *sinkCommand) init() {
 	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		if err := common.SetLoggingVerbosity(cmd, c.config.Logger); err != nil {
 			return common.HandleError(err, cmd)
@@ -54,8 +55,7 @@ func (c *sinkCommand) init(plugin common.GRPCPlugin) error {
 		if err := c.config.CheckLogin(); err != nil {
 			return common.HandleError(err, cmd)
 		}
-		// Lazy load plugin to avoid unnecessarily spawning child processes
-		return plugin.Load(&c.client, c.config.Logger)
+		return nil
 	}
 
 	createCmd := &cobra.Command{
@@ -138,8 +138,6 @@ func (c *sinkCommand) init(plugin common.GRPCPlugin) error {
 		RunE:  c.auth,
 		Args:  cobra.NoArgs,
 	})
-
-	return nil
 }
 
 func (c *sinkCommand) list(cmd *cobra.Command, args []string) error {
