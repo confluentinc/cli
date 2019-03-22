@@ -1,9 +1,9 @@
 package ksql
 
 import (
-	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/confluentinc/cli/shared"
 )
 

@@ -21,7 +21,6 @@ deps:
 .PHONY: generate
 generate:
 #	@GO111MODULE=on protoc shared/connect/*.proto -Ishared/connect -I$(shell pwd)/vendor/ -I$(shell pwd)/vendor/github.com/confluentinc/ccloudapis/ --gogo_out=plugins=grpc:shared/connect
-	@GO111MODULE=on protoc shared/user/*.proto -Ishared/user -I$(shell pwd)/vendor/ -I$(shell pwd)/vendor/github.com/confluentinc/ccloudapis/ --gogo_out=plugins=grpc:shared/user
 
 build: generate build-go install-plugins
 

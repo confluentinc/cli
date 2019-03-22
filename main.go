@@ -25,6 +25,7 @@ import (
 	environmentp "github.com/confluentinc/cli/pkg/environment"
 	kafkap "github.com/confluentinc/cli/pkg/kafka"
 	ksqlp "github.com/confluentinc/cli/pkg/ksql"
+	userp "github.com/confluentinc/cli/pkg/user"
 	"github.com/confluentinc/cli/shared"
 	cliVersion "github.com/confluentinc/cli/version"
 )
@@ -103,6 +104,7 @@ func BuildCommand(cfg *shared.Config, version *cliVersion.Version, factory commo
 
 	cli.AddCommand(auth.New(cfg)...)
 	cli.AddCommand(environment.New(cfg, environmentp.New(client, logger)))
+	cli.AddCommand(service_account.New(cfg, userp.New(client, logger)))
 	cli.AddCommand(apikey.New(cfg, apikeyp.New(client, logger)))
 	cli.AddCommand(kafka.New(cfg, kafkap.New(client, logger)))
 
@@ -116,13 +118,6 @@ func BuildCommand(cfg *shared.Config, version *cliVersion.Version, factory commo
 	} else {
 		cli.AddCommand(conn)
 	}*/
-
-	conn, err = service_account.New(cfg, factory)
-	if err != nil {
-		logger.Log("msg", err)
-	} else {
-		cli.AddCommand(conn)
-	}
 
 	return cli
 }
