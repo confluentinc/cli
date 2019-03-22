@@ -9,11 +9,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	ccloud "github.com/confluentinc/ccloud-sdk-go"
+	"github.com/confluentinc/ccloud-sdk-go"
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
 	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/shared"
-	"github.com/confluentinc/cli/shared/apikey"
 	"github.com/confluentinc/go-printer"
 )
 
@@ -31,28 +30,20 @@ var (
 )
 
 // New returns the Cobra command for API Key.
-func New(config *shared.Config, factory common.GRPCPluginFactory) (*cobra.Command, error) {
-	return newCMD(config, factory.Create(apikey.Name))
-}
-
-// newCMD returns a command for interacting with API Key.
-func newCMD(config *shared.Config, provider common.GRPCPlugin) (*cobra.Command, error) {
+func New(config *shared.Config, client ccloud.APIKey) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:   "api-key",
 			Short: "Manage API keys",
 		},
 		config: config,
+		client: client,
 	}
-	_, err := provider.LookupPath()
-	if err != nil {
-		return nil, err
-	}
-	err = cmd.init(provider)
-	return cmd.Command, err
+	cmd.init()
+	return cmd.Command
 }
 
-func (c *command) init(plugin common.GRPCPlugin) error {
+func (c *command) init() {
 	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		if err := common.SetLoggingVerbosity(cmd, c.config.Logger); err != nil {
 			return common.HandleError(err, cmd)
@@ -60,8 +51,7 @@ func (c *command) init(plugin common.GRPCPlugin) error {
 		if err := c.config.CheckLogin(); err != nil {
 			return common.HandleError(err, cmd)
 		}
-		// Lazy load plugin to avoid unnecessarily spawning child processes
-		return plugin.Load(&c.client, c.config.Logger)
+		return nil
 	}
 
 	c.AddCommand(&cobra.Command{
@@ -93,8 +83,6 @@ func (c *command) init(plugin common.GRPCPlugin) error {
 	deleteCmd.Flags().String("api-key", "", "API key")
 	_ = deleteCmd.MarkFlagRequired("api-key")
 	c.AddCommand(deleteCmd)
-
-	return nil
 }
 
 func (c *command) list(cmd *cobra.Command, args []string) error {
