@@ -15,10 +15,10 @@ import (
 )
 
 var (
-	listFields      = []string{"Id", "Name", "KafkaClusterId", "Storage", "Servers", "Region", "Status"}
-	listLabels      = []string{"Id", "Name", "Kafka", "Storage", "Servers", "Region", "Status"}
-	describeFields  = []string{"Id", "Name", "KafkaClusterId", "Storage", "Servers", "Region", "Status"}
-	describeRenames = map[string]string{"KafkaClusterId": "Kafka"}
+	listFields      = []string{"Id", "Name", "OutputTopicPrefix", "KafkaClusterId", "Storage", "Endpoint", "Status"}
+	listLabels      = []string{"Id", "Name", "Topic Prefix", "Kafka", "Storage", "Endpoint", "Status"}
+	describeFields  = []string{"Id", "Name", "OutputTopicPrefix", "KafkaClusterId", "Storage", "Endpoint", "Status"}
+	describeRenames = map[string]string{"KafkaClusterId": "Kafka", "OutputTopicPrefix": "Topic Prefix"}
 )
 
 type clusterCommand struct {
