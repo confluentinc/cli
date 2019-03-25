@@ -4,7 +4,6 @@ import (
 	"context"
 	"os"
 
-	"github.com/hashicorp/go-plugin"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -61,18 +60,15 @@ func main() {
 	}
 
 	version := cliVersion.NewVersion(version, commit, date, host)
-	factory := &common.GRPCPluginFactoryImpl{}
 
-	defer plugin.CleanupClients()
-
-	cli := BuildCommand(cfg, version, factory, logger)
+	cli := BuildCommand(cfg, version, logger)
 	err := cli.Execute()
 	if err != nil {
 		os.Exit(1)
 	}
 }
 
-func BuildCommand(cfg *shared.Config, version *cliVersion.Version, factory common.GRPCPluginFactory, logger *log.Logger) *cobra.Command {
+func BuildCommand(cfg *shared.Config, version *cliVersion.Version, logger *log.Logger) *cobra.Command {
 	cli := &cobra.Command{
 		Use:   cliName,
 		Short: "Welcome to the Confluent Cloud CLI",

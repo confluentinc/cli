@@ -140,7 +140,7 @@ func handleACLSearch(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-// TestKafkaSDK ensures the plugin properly routes requests to the KafkaAPI given a particular set of arguments
+// TestKafkaSDK ensures the pkg properly routes requests to the KafkaAPI given a particular set of arguments
 func TestKafkaSDK(t *testing.T) {
 	defer server.Close()
 

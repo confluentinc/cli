@@ -64,17 +64,6 @@ func NewWithParams(params *Params) *Logger {
 	}
 }
 
-// ToHCLogger returns a hclogger with an identical configuration.
-// This is required because go-plugin only supports hclog (their own package)
-// for integrated logging across driver and plugins
-func (l *Logger) ToHCLogger(name string) hclog.Logger {
-	return hclog.New(&hclog.LoggerOptions{
-		Output: l.params.Output,
-		Level:  parseLevel(l.params.Level),
-		Name:   name,
-	})
-}
-
 func (l *Logger) Trace(args ...interface{}) {
 	if l.l.IsTrace() {
 		l.l.Trace(fmt.Sprint(args...))
@@ -147,7 +136,7 @@ func (l *Logger) Log(args ...interface{}) {
 }
 
 func (l *Logger) SetLevel(level Level) {
-	l.params.Level = level // This is set so changes can be propagated to plugins via ToHCLogger
+	l.params.Level = level
 	l.l.SetLevel(parseLevel(level))
 }
 

@@ -4,7 +4,7 @@ dist/
 .semaphore-cache/
 git-setup-semaphore.sh
 
-# Binaries for programs and plugins
+# Binaries for programs
 *.exe
 *.dll
 *.so

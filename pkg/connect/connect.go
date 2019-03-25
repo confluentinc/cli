@@ -4,8 +4,6 @@ package connect
 	"context"
 	"os"
 
-	"github.com/hashicorp/go-plugin"
-
 	"github.com/confluentinc/ccloud-sdk-go"
 	connectv1 "github.com/confluentinc/ccloudapis/connect/v1"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"

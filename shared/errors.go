@@ -3,23 +3,19 @@ package shared
 import (
 	"fmt"
 
-	"github.com/pkg/errors"
-	"google.golang.org/grpc/status"
-
 	corev1 "github.com/confluentinc/ccloudapis/core/v1"
+	"github.com/pkg/errors"
 )
 
 /*
  * Invariants:
  * - Confluent SDK (http package) always returns a corev1.Error.
- * - Plugins always return an HTTP Error constant (top of this file)
+ * - Pkg always return an HTTP Error constant (top of this file)
  *
  * Error Flow:
  * - API error responses (json) are parsed into corev1.Error objects.
  *   - Note: API returns 404s for unauthorized resources, so HTTP package has to remap 404 -> 401 where appropriate.
- * - Plugins call ConvertAPIError() to transforms corev1.Error into HTTP Error constants
- * - GRPC encodes errors into Status objects when sent over the wire
- * - Commands call ConvertGRPCError() to transform these back into HTTP Error constants
+ * - Pkg call ConvertAPIError() to transforms corev1.Error into HTTP Error constants
  */
 
 type NotAuthenticatedError error
@@ -52,31 +48,6 @@ func ConvertAPIError(err error) error {
 			return ErrNotFound
 			// TODO: assert invariant for default case: we're missing an corev1.Error -> HTTP Error constant mapping
 		}
-	}
-	return err
-}
-
-// ConvertGRPCError unboxes and returns the underlying standard error sent over gRPC if it matches.
-func ConvertGRPCError(err error) error {
-	// Maintain nil value
-	// https://golang.org/doc/faq#nil_error
-	if err == nil {
-		return nil
-	}
-
-	if s, ok := status.FromError(err); ok {
-		switch s.Message() {
-		case ErrExpiredToken.Error():
-			return ErrExpiredToken
-		case ErrMalformedToken.Error():
-			return ErrMalformedToken
-		case ErrUnauthorized.Error():
-			return ErrUnauthorized
-		case ErrNotFound.Error():
-			return ErrNotFound
-			// TODO: assert invariant for default case: we're missing a GRPC -> HTTP Error constant mapping
-		}
-		return fmt.Errorf(s.Message())
 	}
 	return err
 }

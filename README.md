@@ -39,8 +39,6 @@ To install the CLI:
     mkdir ccloud-cli && tar -xzvf ccloud_v${VERSION}_${OS}_${ARCH}.tar.gz -C ccloud-cli
     sudo mv ccloud-cli/ccloud* /usr/local/bin
 
-**Note: You MUST add the plugin binaries to your `$PATH` for the CLI to work.**
-
 To use the AWS S3 CLI instead of curl requires read access to Confluent Cloud AWS Prod account.
 This is where the `confluent.cloud` S3 bucket is located.
 

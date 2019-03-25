@@ -1,9 +1,7 @@
 package shared
 
 import (
-	metrics "github.com/armon/go-metrics"
-	plugin "github.com/hashicorp/go-plugin"
-
+	"github.com/armon/go-metrics"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 )
 
@@ -63,13 +61,3 @@ type MetricSink interface {
 	AddSample(key []string, val float32)
 	AddSampleWithLabels(key []string, val float32, labels []Label)
 }
-
-// Handshake is a configuration for CLI to communicate with SDK components.
-var Handshake = plugin.HandshakeConfig{
-	ProtocolVersion:  1,
-	MagicCookieKey:   "CLI_PLUGIN",
-	MagicCookieValue: "hello",
-}
-
-// PluginMap is the map of plugins we can dispense.
-var PluginMap = map[string]plugin.Plugin{}

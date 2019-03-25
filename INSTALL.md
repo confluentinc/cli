@@ -11,9 +11,9 @@ illustrates downloading and installing the binaries on Mac OS X.
         $ curl -L -o ccloud-cli.tar.gz https://s3-us-west-2.amazonaws.com/confluent.cloud/ccloud-cli/archives/0.26.0/ccloud_v0.26.0_darwin_amd64.tar.gz
         $ mkdir ccloud-cli && tar -xvzf ccloud-cli.tar.gz -C ccloud-cli
 
-2. Move the binaries (`ccloud`, `ccloud-*-plugin`) to `/usr/local/bin`, or another location in your `$PATH`:
+2. Move the `ccloud` binary to `/usr/local/bin`, or another location in your `$PATH`:
 
-        $ mv ccloud-cli/ccloud* /usr/local/bin
+        $ mv ccloud-cli/ccloud /usr/local/bin
 
 3. Confirm your ccloud CLI version.
 

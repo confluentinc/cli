@@ -28,7 +28,7 @@ func New(config *shared.Config, client ccloud.Connect) *cobra.Command {
 }
 
 func (c *command) init() {
-	sinkCmd, err := NewSink(c.config, plugin)
+	sinkCmd, err := NewSink(c.config, c.client)
 	if err != nil {
 		return err
 	}
