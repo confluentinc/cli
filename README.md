@@ -14,7 +14,7 @@ You can download a tarball with the binaries. These are both on Github releases 
 
 ### Binary Tarball from S3
 
-You can also download a binary tarball from a private S3 bucket.
+You can download a binary tarball from S3 .
 
 To list all available versions:
 
@@ -42,9 +42,7 @@ To install the CLI:
 To use the AWS S3 CLI instead of curl requires read access to Confluent Cloud AWS Prod account.
 This is where the `confluent.cloud` S3 bucket is located.
 
-## Developing
-
-This requires golang 1.11.
+### Building From Source
 
 ```
 $ make deps
@@ -52,7 +50,21 @@ $ make build
 $ PATH=dist/$(go env GOOS)_$(go env GOARCH):$PATH dist/$(go env GOOS)_$(go env GOARCH)/ccloud -h
 ```
 
-# Packaging and Distribution
+## Developing
 
-Either set the `GITHUB_TOKEN` environment variable or create `~/.config/goreleaser/github_token`
-with this value. The token must have `repo` scope to deploy artifacts to Github.
+This repo requires golang 1.11 and follows the basic
+[golang standard project layout](https://github.com/golang-standards/project-layout).
+
+Here's the basic file structure:
+
+* `cmd/confluent/main.go` - entrypoint for the CLI binary
+* `internal/cmd/command.go` - bootstraps the root `confluent` CLI command
+* `internal/cmd/<command>/<command>.go` - defines each command we support
+* `internal/pkg/sdk/<resource>/<resource>.go` - a thin wrapper around `ccloud-sdk-go` to add logging and typed errors
+   TODO: if we add logging and typed errors to the SDK, we might be able to drop the pkg/sdk stuff entirely.
+
+Things under `internal/cmd` are commands, things under `internal/pkg` are packages to be used by commands.
+
+When you add a new command or resource, you generally just need to create
+* `internal/cmd/<command>/<command>.go` (and test)
+* `internal/pkg/sdk/<resource>/<resource>.go` (and test) if its already in the SDK
