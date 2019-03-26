@@ -9,14 +9,14 @@ import (
 	"strings"
 
 	"github.com/Shopify/sarama"
-	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/go-printer"
 )
 
@@ -232,7 +232,7 @@ func (c *topicCommand) describe(cmd *cobra.Command, args []string) error {
 	titleRow = []string{"Name", "Value"}
 	for _, entry := range resp.Config {
 		record := &struct {
-			Name string
+			Name  string
 			Value string
 		}{
 			entry.Name,

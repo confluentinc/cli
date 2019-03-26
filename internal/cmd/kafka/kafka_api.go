@@ -6,9 +6,10 @@ import (
 
 	"github.com/hashicorp/go-multierror"
 
-	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+
+	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 )
 
 // ACLConfiguration wrapper used for flag parsing and validation

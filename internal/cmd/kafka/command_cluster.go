@@ -7,8 +7,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh/terminal"
 
@@ -16,6 +14,8 @@ import (
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/go-printer"
 )
 
@@ -334,6 +334,7 @@ func promptForKafkaCreds() (string, string, error) {
 	}
 
 	fmt.Print("API Secret: ")
+	// TODO: this should be using our internal prompt.ReadPassword() for testability
 	byteSecret, err := terminal.ReadPassword(0)
 	fmt.Println()
 	if err != nil {

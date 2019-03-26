@@ -7,12 +7,8 @@ package connect
 	"github.com/confluentinc/ccloud-sdk-go"
 	connectv1 "github.com/confluentinc/ccloudapis/connect/v1"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
-	"github.com/confluentinc/cli/command"
-	"github.com/confluentinc/cli/log"
-	"github.com/confluentinc/cli/metric"
-	"github.com/confluentinc/cli/shared"
-	"github.com/confluentinc/cli/shared/connect"
-	cliVersion "github.com/confluentinc/cli/version"
+	"github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 // Compile-time check for Interface adherence
