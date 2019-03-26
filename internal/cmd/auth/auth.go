@@ -32,7 +32,7 @@ func New(config *config.Config) []*cobra.Command {
 	var defaultJwtHTTPClientFactory = func(ctx context.Context, jwt string, baseURL string, logger *log.Logger) *ccloud.Client {
 		return ccloud.NewClientWithJWT(ctx, jwt, baseURL, logger)
 	}
-	return newCommands(config, terminal.NewTerminalPrompt(os.Stdin), defaultAnonHTTPClientFactory, defaultJwtHTTPClientFactory).Commands
+	return newCommands(config, terminal.NewPrompt(os.Stdin), defaultAnonHTTPClientFactory, defaultJwtHTTPClientFactory).Commands
 }
 
 func newCommands(config *config.Config, prompt terminal.Prompt,

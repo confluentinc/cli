@@ -24,7 +24,7 @@ func TestAddCommands_ShownInHelpUsage(t *testing.T) {
 
 	version := cliVersion.NewVersion("1.2.3", "abc1234", "01/23/45", "CI")
 	root := cmd.NewConfluentCommand(cfg, version, logger)
-	prompt := terminal.NewTerminalPrompt(os.Stdin)
+	prompt := terminal.NewPrompt(os.Stdin)
 	root.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		prompt.SetOutput(cmd.OutOrStderr())
 	}

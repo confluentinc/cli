@@ -27,7 +27,7 @@ func ExecuteCommandC(root *cobra.Command, args ...string) (c *cobra.Command, out
 // BuildRootCommand creates a new root command for testing
 func BuildRootCommand() (*cobra.Command, Prompt) {
 	root := &cobra.Command{}
-	prompt := NewTerminalPrompt(os.Stdin)
+	prompt := NewPrompt(os.Stdin)
 	root.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		prompt.SetOutput(cmd.OutOrStderr())
 	}

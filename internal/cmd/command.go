@@ -44,7 +44,7 @@ func NewConfluentCommand(cfg *configs.Config, ver *versions.Version, logger *log
 		return nil
 	}
 
-	prompt := terminal.NewTerminalPrompt(os.Stdin)
+	prompt := terminal.NewPrompt(os.Stdin)
 
 	client := ccloud.NewClientWithJWT(context.Background(), cfg.AuthToken, cfg.AuthURL, cfg.Logger)
 
