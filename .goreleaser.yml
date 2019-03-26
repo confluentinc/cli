@@ -5,6 +5,8 @@ before:
     # to avoid goreleaser error due to `make deps` on CI: git is currently in a dirty state
     # we should never see go.mod be dirty because we `go build -mod=readonly`, but we can't well control go.sum updates
     - git checkout go.sum
+    # TODO: [CLI-92] we delete the semaphore cache during release to workaround an issue with semaphore and goreleaser
+    - rm -rf $GOPATH/pkg/mod
 
 builds:
   -
