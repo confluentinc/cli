@@ -11,7 +11,7 @@ import (
 	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 
-	"github.com/confluentinc/cli/log"
+	"github.com/confluentinc/cli/internal/log"
 )
 
 const (

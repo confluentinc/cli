@@ -7,17 +7,17 @@ import (
 	"github.com/spf13/cobra"
 
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
-	"github.com/confluentinc/cli/shared"
+	"github.com/confluentinc/cli/internal"
 )
 
 var messages = map[error]string{
-	shared.ErrNoContext:      "You must login to access Confluent Cloud.",
-	shared.ErrUnauthorized:   "You must login to access Confluent Cloud.",
-	shared.ErrExpiredToken:   "Your access to Confluent Cloud has expired. Please login again.",
-	shared.ErrIncorrectAuth:  "You have entered an incorrect username or password. Please try again.",
-	shared.ErrMalformedToken: "Your auth token has been corrupted. Please login again.",
-	shared.ErrNotImplemented: "Sorry, this functionality is not yet available in the CLI.",
-	shared.ErrNotFound:       "Kafka cluster not found.", // TODO: parametrize ErrNotFound for better error messaging
+	internal.ErrNoContext:      "You must login to access Confluent Cloud.",
+	internal.ErrUnauthorized:   "You must login to access Confluent Cloud.",
+	internal.ErrExpiredToken:   "Your access to Confluent Cloud has expired. Please login again.",
+	internal.ErrIncorrectAuth:  "You have entered an incorrect username or password. Please try again.",
+	internal.ErrMalformedToken: "Your auth token has been corrupted. Please login again.",
+	internal.ErrNotImplemented: "Sorry, this functionality is not yet available in the CLI.",
+	internal.ErrNotFound:       "Kafka cluster not found.", // TODO: parametrize ErrNotFound for better error messaging
 }
 
 // HandleError provides standard error messaging for common errors.
@@ -34,13 +34,13 @@ func HandleError(err error, cmd *cobra.Command) error {
 	}
 
 	switch err.(type) {
-	case shared.NotAuthenticatedError:
+	case internal.NotAuthenticatedError:
 		cmd.SilenceUsage = true
 		return err
 	case editor.ErrEditing:
 		cmd.SilenceUsage = true
 		return err
-	case shared.KafkaError:
+	case internal.KafkaError:
 		cmd.SilenceUsage = true
 		return err
 	}
@@ -49,7 +49,7 @@ func HandleError(err error, cmd *cobra.Command) error {
 }
 
 // Cluster returns the current cluster context
-func Cluster(config *shared.Config) (*kafkav1.KafkaCluster, error) {
+func Cluster(config *internal.Config) (*kafkav1.KafkaCluster, error) {
 	ctx, err := config.Context()
 	if err != nil {
 		return nil, err

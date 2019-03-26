@@ -5,7 +5,7 @@ import (
 
 	"github.com/confluentinc/cli/command"
 	"github.com/confluentinc/cli/shared"
-	"github.com/confluentinc/cli/version"
+	"github.com/confluentinc/cli/internal/version"
 )
 
 // NewVersionCmd returns the Cobra command for the version.

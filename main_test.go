@@ -8,9 +8,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/cli/command"
-	"github.com/confluentinc/cli/log"
+	"github.com/confluentinc/cli/internal/log"
 	"github.com/confluentinc/cli/shared"
-	cliVersion "github.com/confluentinc/cli/version"
+	cliVersion "github.com/confluentinc/cli/internal/version"
 )
 
 func TestAddCommands_ShownInHelpUsage(t *testing.T) {

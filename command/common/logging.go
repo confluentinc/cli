@@ -3,7 +3,7 @@ package common
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/log"
+	"github.com/confluentinc/cli/internal/log"
 )
 
 func SetLoggingVerbosity(cmd *cobra.Command, logger *log.Logger) error {

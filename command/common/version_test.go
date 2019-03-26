@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	terminal "github.com/confluentinc/cli/command"
-	"github.com/confluentinc/cli/version"
+	"github.com/confluentinc/cli/internal/version"
 )
 
 func TestVersion(t *testing.T) {

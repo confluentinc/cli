@@ -13,7 +13,7 @@ import (
 	cliMock "github.com/confluentinc/cli/mock"
 
 	"github.com/confluentinc/cli/command"
-	"github.com/confluentinc/cli/log"
+	"github.com/confluentinc/cli/internal/log"
 	"github.com/confluentinc/cli/shared"
 )
 

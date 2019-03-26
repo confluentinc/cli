@@ -10,7 +10,7 @@ import (
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
-	"github.com/confluentinc/cli/log"
+	"github.com/confluentinc/cli/internal/log"
 )
 
 var (

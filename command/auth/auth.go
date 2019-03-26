@@ -12,7 +12,7 @@ import (
 	chttp "github.com/confluentinc/ccloud-sdk-go"
 	"github.com/confluentinc/cli/command"
 	"github.com/confluentinc/cli/command/common"
-	"github.com/confluentinc/cli/log"
+	"github.com/confluentinc/cli/internal/log"
 	"github.com/confluentinc/cli/shared"
 )
 

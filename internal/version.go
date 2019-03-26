@@ -1,11 +1,11 @@
-package pkg
+package internal
 
 import (
 	"runtime"
 	"strconv"
 
 	"github.com/confluentinc/cli/command"
-	"github.com/confluentinc/cli/version"
+	"github.com/confluentinc/cli/internal/version"
 )
 
 // PrintVersion prints the version to the prompt in a standardized way

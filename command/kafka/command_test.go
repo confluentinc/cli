@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/confluentinc/cli/log"
+	"github.com/confluentinc/cli/internal/log"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go/mock"
