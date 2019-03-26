@@ -65,6 +65,6 @@ Here's the basic file structure:
 
 Things under `internal/cmd` are commands, things under `internal/pkg` are packages to be used by commands.
 
-When you add a new command or resource, you generally just need to create
+When you add a new command or resource, assuming its already in the SDK, you generally just need to create
 * `internal/cmd/<command>/<command>.go` (and test)
-* `internal/pkg/sdk/<resource>/<resource>.go` (and test) if its already in the SDK
+* `internal/pkg/sdk/<resource>/<resource>.go` (and test)
