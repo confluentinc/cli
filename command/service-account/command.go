@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/confluentinc/cli/internal/errors"
+	"github.com/confluentinc/cli/internal/log"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
-	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/internal/config"
 	"github.com/confluentinc/go-printer"
 )
@@ -46,11 +47,11 @@ func New(config *config.Config, client ccloud.User) *cobra.Command {
 
 func (c *command) init() {
 	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		if err := common.SetLoggingVerbosity(cmd, c.config.Logger); err != nil {
-			return common.HandleError(err, cmd)
+		if err := log.SetLoggingVerbosity(cmd, c.config.Logger); err != nil {
+			return errors.HandleError(err, cmd)
 		}
 		if err := c.config.CheckLogin(); err != nil {
-			return common.HandleError(err, cmd)
+			return errors.HandleError(err, cmd)
 		}
 		return nil
 	}
@@ -109,20 +110,20 @@ func requireLen(val string, maxLen int, field string) error {
 func (c *command) create(cmd *cobra.Command, args []string) error {
 	name, err := cmd.Flags().GetString("name")
 	if err != nil {
-		return common.HandleError(err, cmd)
+		return errors.HandleError(err, cmd)
 	}
 
 	if err := requireLen(name, nameLength, "service name"); err != nil {
-		return common.HandleError(err, cmd)
+		return errors.HandleError(err, cmd)
 	}
 
 	description, err := cmd.Flags().GetString("description")
 	if err != nil {
-		return common.HandleError(err, cmd)
+		return errors.HandleError(err, cmd)
 	}
 
 	if err := requireLen(description, descriptionLength, "description"); err != nil {
-		return common.HandleError(err, cmd)
+		return errors.HandleError(err, cmd)
 	}
 
 	user := &orgv1.User{
@@ -134,7 +135,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 
 	user, err = c.client.CreateServiceAccount(context.Background(), user)
 	if err != nil {
-		return common.HandleError(err, cmd)
+		return errors.HandleError(err, cmd)
 	}
 
 	return printer.RenderTableOut(user, describeFields, describeRenames, os.Stdout)
@@ -143,15 +144,15 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 func (c *command) update(cmd *cobra.Command, args []string) error {
 	id, err := cmd.Flags().GetInt32("service-account-id")
 	if err != nil {
-		return common.HandleError(err, cmd)
+		return errors.HandleError(err, cmd)
 	}
 	description, err := cmd.Flags().GetString("description")
 	if err != nil {
-		return common.HandleError(err, cmd)
+		return errors.HandleError(err, cmd)
 	}
 
 	if err := requireLen(description, descriptionLength, "description"); err != nil {
-		return common.HandleError(err, cmd)
+		return errors.HandleError(err, cmd)
 	}
 
 	user := &orgv1.User{
@@ -161,7 +162,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 
 	err = c.client.UpdateServiceAccount(context.Background(), user)
 	if err != nil {
-		return common.HandleError(err, cmd)
+		return errors.HandleError(err, cmd)
 	}
 	return nil
 }
@@ -169,7 +170,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 func (c *command) delete(cmd *cobra.Command, args []string) error {
 	id, err := cmd.Flags().GetInt32("service-account-id")
 	if err != nil {
-		return common.HandleError(err, cmd)
+		return errors.HandleError(err, cmd)
 	}
 
 	user := &orgv1.User{
@@ -178,7 +179,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 
 	err = c.client.DeleteServiceAccount(context.Background(), user)
 	if err != nil {
-		return common.HandleError(err, cmd)
+		return errors.HandleError(err, cmd)
 	}
 	return nil
 }
@@ -186,7 +187,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 func (c *command) list(cmd *cobra.Command, args []string) error {
 	users, err := c.client.GetServiceAccounts(context.Background())
 	if err != nil {
-		return common.HandleError(err, cmd)
+		return errors.HandleError(err, cmd)
 	}
 
 	var data [][]string

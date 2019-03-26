@@ -5,13 +5,13 @@ import (
 	"os"
 	"testing"
 
+	"github.com/confluentinc/cli/internal/errors"
 	"github.com/stretchr/testify/require"
 
 	chttp "github.com/confluentinc/ccloud-sdk-go"
 	sdkMock "github.com/confluentinc/ccloud-sdk-go/mock"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	"github.com/confluentinc/cli/command"
-	"github.com/confluentinc/cli/internal"
 	iconfig "github.com/confluentinc/cli/internal/config"
 	"github.com/confluentinc/cli/internal/log"
 	cliMock "github.com/confluentinc/cli/mock"
@@ -100,7 +100,7 @@ func TestLoginFail(t *testing.T) {
 	prompt := prompt("cody@confluent.io", "iamrobin")
 	auth := &sdkMock.Auth{
 		LoginFunc: func(ctx context.Context, username string, password string) (string, error) {
-			return "", internal.ErrIncorrectAuth
+			return "", errors.ErrIncorrectAuth
 		},
 	}
 	cmds, _ := newAuthCommand(prompt, auth, req)

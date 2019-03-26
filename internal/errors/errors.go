@@ -1,10 +1,11 @@
-package internal
+package errors
 
 import (
 	"fmt"
 
-	corev1 "github.com/confluentinc/ccloudapis/core/v1"
 	"github.com/pkg/errors"
+
+	"github.com/confluentinc/ccloudapis/core/v1"
 )
 
 /*
@@ -17,9 +18,6 @@ import (
  *   - Note: API returns 404s for unauthorized resources, so HTTP package has to remap 404 -> 401 where appropriate.
  * - Pkg call ConvertAPIError() to transforms corev1.Error into HTTP Error constants
  */
-
-type NotAuthenticatedError error
-type KafkaError error
 
 var (
 	ErrNotImplemented = fmt.Errorf("not implemented")
@@ -34,7 +32,7 @@ var (
 // ConvertAPIError transforms a corev1.Error into one of the standard errors if it matches.
 // TODO: the SDK should expose typed errors so clients don't need to do this non-sense
 func ConvertAPIError(err error) error {
-	if e, ok := errors.Cause(err).(*corev1.Error); ok {
+	if e, ok := errors.Cause(err).(*v1.Error); ok {
 		switch e.Message {
 		// these messages are returned by the API itself
 		case "token is expired":
@@ -52,3 +50,7 @@ func ConvertAPIError(err error) error {
 	}
 	return err
 }
+
+type NotAuthenticatedError error
+type KafkaError error
+

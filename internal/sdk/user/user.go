@@ -5,7 +5,7 @@ import (
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
-	"github.com/confluentinc/cli/internal"
+	"github.com/confluentinc/cli/internal/errors"
 	"github.com/confluentinc/cli/internal/log"
 )
 
@@ -24,35 +24,35 @@ func New(client *ccloud.Client, logger *log.Logger) *User {
 func (c *User) List(ctx context.Context) ([]*orgv1.User, error) {
 	c.Logger.Log("msg", "user.List()")
 	ret, err := c.Client.User.List(ctx)
-	return ret, internal.ConvertAPIError(err)
+	return ret, errors.ConvertAPIError(err)
 }
 
 func (c *User) Describe(ctx context.Context, user *orgv1.User) (*orgv1.User, error) {
 	c.Logger.Log("msg", "user.Describe()")
 	ret, err := c.Client.User.Describe(ctx, user)
-	return ret, internal.ConvertAPIError(err)
+	return ret, errors.ConvertAPIError(err)
 }
 
 func (c *User) CreateServiceAccount(ctx context.Context, user *orgv1.User) (*orgv1.User, error) {
 	c.Logger.Log("msg", "user.CreateServiceAccount()")
 	ret, err := c.Client.User.CreateServiceAccount(ctx, user)
-	return ret, internal.ConvertAPIError(err)
+	return ret, errors.ConvertAPIError(err)
 }
 
 func (c *User) UpdateServiceAccount(ctx context.Context, user *orgv1.User) error {
 	c.Logger.Log("msg", "user.UpdateServiceAccount()")
 	err := c.Client.User.UpdateServiceAccount(ctx, user)
-	return internal.ConvertAPIError(err)
+	return errors.ConvertAPIError(err)
 }
 
 func (c *User) DeleteServiceAccount(ctx context.Context, user *orgv1.User) error {
 	c.Logger.Log("msg", "user.DeleteServiceAccount()")
 	err := c.Client.User.DeleteServiceAccount(ctx, user)
-	return internal.ConvertAPIError(err)
+	return errors.ConvertAPIError(err)
 }
 
 func (c *User) GetServiceAccounts(ctx context.Context) ([]*orgv1.User, error) {
 	c.Logger.Log("msg", "user.GetServiceAccounts()")
 	ret, err := c.Client.User.GetServiceAccounts(ctx)
-	return ret, internal.ConvertAPIError(err)
+	return ret, errors.ConvertAPIError(err)
 }

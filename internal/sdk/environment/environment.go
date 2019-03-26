@@ -5,7 +5,7 @@ import (
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
-	"github.com/confluentinc/cli/internal"
+	"github.com/confluentinc/cli/internal/errors"
 	"github.com/confluentinc/cli/internal/log"
 )
 
@@ -24,29 +24,29 @@ func New(client *ccloud.Client, logger *log.Logger) *Environment {
 func (c *Environment) Create(ctx context.Context, account *orgv1.Account) (*orgv1.Account, error) {
 	c.Logger.Log("msg", "Environment.Create()")
 	ret, err := c.Client.Account.Create(ctx, account)
-	return ret, internal.ConvertAPIError(err)
+	return ret, errors.ConvertAPIError(err)
 }
 
 func (c *Environment) Update(ctx context.Context, account *orgv1.Account) error {
 	c.Logger.Log("msg", "Environment.Update()")
 	err := c.Client.Account.Update(ctx, account)
-	return internal.ConvertAPIError(err)
+	return errors.ConvertAPIError(err)
 }
 
 func (c *Environment) Delete(ctx context.Context, account *orgv1.Account) error {
 	c.Logger.Log("msg", "Environment.Delete()")
 	err := c.Client.Account.Delete(ctx, account)
-	return internal.ConvertAPIError(err)
+	return errors.ConvertAPIError(err)
 }
 
 func (c *Environment) Get(ctx context.Context, account *orgv1.Account) (*orgv1.Account, error) {
 	c.Logger.Log("msg", "Environment.Get()")
 	ret, err := c.Client.Account.Get(ctx, account)
-	return ret, internal.ConvertAPIError(err)
+	return ret, errors.ConvertAPIError(err)
 }
 
 func (c *Environment) List(ctx context.Context, account *orgv1.Account) ([]*orgv1.Account, error) {
 	c.Logger.Log("msg", "Environment.List()")
 	ret, err := c.Client.Account.List(ctx, account)
-	return ret, internal.ConvertAPIError(err)
+	return ret, errors.ConvertAPIError(err)
 }

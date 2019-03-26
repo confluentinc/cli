@@ -5,7 +5,7 @@ import (
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
-	"github.com/confluentinc/cli/internal"
+	"github.com/confluentinc/cli/internal/errors"
 	"github.com/confluentinc/cli/internal/log"
 )
 
@@ -24,17 +24,17 @@ func New(client *ccloud.Client, logger *log.Logger) *APIKey {
 func (c *APIKey) Create(ctx context.Context, key *authv1.ApiKey) (*authv1.ApiKey, error) {
 	c.Logger.Log("msg", "apiKey.Create()")
 	ret, err := c.Client.APIKey.Create(ctx, key)
-	return ret, internal.ConvertAPIError(err)
+	return ret, errors.ConvertAPIError(err)
 }
 
 func (c *APIKey) Delete(ctx context.Context, key *authv1.ApiKey) error {
 	c.Logger.Log("msg", "apiKey.Delete()")
 	err := c.Client.APIKey.Delete(ctx, key)
-	return internal.ConvertAPIError(err)
+	return errors.ConvertAPIError(err)
 }
 
 func (c *APIKey) List(ctx context.Context, key *authv1.ApiKey) ([]*authv1.ApiKey, error) {
 	c.Logger.Log("msg", "apiKey.List()")
 	ret, err := c.Client.APIKey.List(ctx, key)
-	return ret, internal.ConvertAPIError(err)
+	return ret, errors.ConvertAPIError(err)
 }

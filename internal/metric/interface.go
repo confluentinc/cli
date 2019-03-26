@@ -1,4 +1,4 @@
-package internal
+package metric
 
 import (
 	"github.com/armon/go-metrics"

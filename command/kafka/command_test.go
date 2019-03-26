@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/confluentinc/cli/internal/errors"
 	"github.com/confluentinc/cli/internal/log"
 	"github.com/spf13/cobra"
 
@@ -16,7 +17,6 @@ import (
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	cliMock "github.com/confluentinc/cli/mock"
 
-	"github.com/confluentinc/cli/internal"
 	"github.com/confluentinc/cli/internal/config"
 )
 
@@ -421,7 +421,7 @@ func TestDefaults(t *testing.T) {
 func Test_HandleError_NotLoggedIn(t *testing.T) {
 	cmd := New(conf, &mock.Kafka{
 		ListFunc: func(ctx context.Context, cluster *kafkav1.KafkaCluster) ([]*kafkav1.KafkaCluster, error) {
-			return nil, internal.ErrUnauthorized
+			return nil, errors.ErrUnauthorized
 		},
 	})
 	cmd.PersistentFlags().CountP("verbose", "v", "increase output verbosity")

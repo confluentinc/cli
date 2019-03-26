@@ -1,4 +1,4 @@
-package common
+package completion
 
 import (
 	"testing"

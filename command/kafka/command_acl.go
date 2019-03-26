@@ -5,12 +5,13 @@ import (
 	"fmt"
 
 	"github.com/codyaray/go-printer"
+	"github.com/confluentinc/cli/internal/errors"
+	"github.com/confluentinc/cli/internal/log"
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
-	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/internal/config"
 )
 
@@ -37,11 +38,11 @@ func NewACLCommand(config *config.Config, client ccloud.Kafka) *cobra.Command {
 
 func (c *aclCommand) init() {
 	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		if err := common.SetLoggingVerbosity(cmd, c.config.Logger); err != nil {
-			return common.HandleError(err, cmd)
+		if err := log.SetLoggingVerbosity(cmd, c.config.Logger); err != nil {
+			return errors.HandleError(err, cmd)
 		}
 		if err := c.config.CheckLogin(); err != nil {
-			return common.HandleError(err, cmd)
+			return errors.HandleError(err, cmd)
 		}
 		return nil
 	}
@@ -84,15 +85,15 @@ func (c *aclCommand) init() {
 func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
 	acl := parse(cmd)
 
-	cluster, err := common.Cluster(c.config)
+	cluster, err := c.config.KafkaCluster()
 	if err != nil {
-		return common.HandleError(err, cmd)
+		return errors.HandleError(err, cmd)
 	}
 
 	resp, err := c.client.ListACL(context.Background(), cluster, convertToFilter(acl.ACLBinding))
 
 	if err != nil {
-		return common.HandleError(err, cmd)
+		return errors.HandleError(err, cmd)
 	}
 
 	var bindings [][]string
@@ -125,35 +126,35 @@ func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
 func (c *aclCommand) create(cmd *cobra.Command, args []string) error {
 	acl := validateAddDelete(parse(cmd))
 
-	cluster, err := common.Cluster(c.config)
+	cluster, err := c.config.KafkaCluster()
 	if err != nil {
-		return common.HandleError(err, cmd)
+		return errors.HandleError(err, cmd)
 	}
 
 	if acl.errors != nil {
-		return common.HandleError(acl.errors, cmd)
+		return errors.HandleError(acl.errors, cmd)
 	}
 
 	err = c.client.CreateACL(context.Background(), cluster, []*kafkav1.ACLBinding{acl.ACLBinding})
 
-	return common.HandleError(err, cmd)
+	return errors.HandleError(err, cmd)
 }
 
 func (c *aclCommand) delete(cmd *cobra.Command, args []string) error {
 	acl := validateAddDelete(parse(cmd))
 
 	if acl.errors != nil {
-		return common.HandleError(acl.errors, cmd)
+		return errors.HandleError(acl.errors, cmd)
 	}
 
-	cluster, err := common.Cluster(c.config)
+	cluster, err := c.config.KafkaCluster()
 	if err != nil {
-		return common.HandleError(err, cmd)
+		return errors.HandleError(err, cmd)
 	}
 
 	err = c.client.DeleteACL(context.Background(), cluster, convertToFilter(acl.ACLBinding))
 
-	return common.HandleError(err, cmd)
+	return errors.HandleError(err, cmd)
 }
 
 // validateAddDelete ensures the minimum requirements for acl add and delete are met

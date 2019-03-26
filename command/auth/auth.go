@@ -6,13 +6,12 @@ import (
 	"os"
 	"strings"
 
+	errors2 "github.com/confluentinc/cli/internal/errors"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	chttp "github.com/confluentinc/ccloud-sdk-go"
 	"github.com/confluentinc/cli/command"
-	"github.com/confluentinc/cli/command/common"
-	"github.com/confluentinc/cli/internal"
 	"github.com/confluentinc/cli/internal/config"
 	"github.com/confluentinc/cli/internal/log"
 )
@@ -48,8 +47,8 @@ func newCommands(config *config.Config, prompt command.Prompt,
 
 func (a *commands) init() {
 	var preRun = func(cmd *cobra.Command, args []string) error {
-		if err := common.SetLoggingVerbosity(cmd, a.config.Logger); err != nil {
-			return common.HandleError(err, cmd)
+		if err := log.SetLoggingVerbosity(cmd, a.config.Logger); err != nil {
+			return errors2.HandleError(err, cmd)
 		}
 		a.prompt.SetOutput(cmd.OutOrStderr())
 		return nil
@@ -87,22 +86,22 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 
 	token, err := client.Auth.Login(context.Background(), email, password)
 	if err != nil {
-		err = internal.ConvertAPIError(err)
-		if err == internal.ErrUnauthorized { // special case for login failure
-			err = internal.ErrIncorrectAuth
+		err = errors2.ConvertAPIError(err)
+		if err == errors2.ErrUnauthorized { // special case for login failure
+			err = errors2.ErrIncorrectAuth
 		}
-		return common.HandleError(err, cmd)
+		return errors2.HandleError(err, cmd)
 	}
 	a.config.AuthToken = token
 
 	client = a.jwtHTTPClientFactory(context.Background(), a.config.AuthToken, a.config.AuthURL, a.config.Logger)
 	user, err := client.Auth.User(context.Background())
 	if err != nil {
-		return common.HandleError(internal.ConvertAPIError(err), cmd)
+		return errors2.HandleError(errors2.ConvertAPIError(err), cmd)
 	}
 
 	if len(user.Accounts) == 0 {
-		return common.HandleError(errors.New("No environments found for authenticated user!"), cmd)
+		return errors2.HandleError(errors.New("No environments found for authenticated user!"), cmd)
 	}
 
 	// If no auth config exists, initialize it

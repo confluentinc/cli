@@ -1,12 +1,10 @@
-package common
+package errors
 
 import (
 	"fmt"
 	"testing"
 
 	"github.com/spf13/cobra"
-
-	"github.com/confluentinc/cli/internal"
 )
 
 func TestHandleError(t *testing.T) {
@@ -18,13 +16,13 @@ func TestHandleError(t *testing.T) {
 	}{
 		{
 			name:    "static message",
-			err:     internal.ErrUnauthorized,
+			err:     ErrUnauthorized,
 			want:    "You must login to access Confluent Cloud.",
 			wantErr: true,
 		},
 		{
 			name:    "dynamic message",
-			err:     internal.NotAuthenticatedError(fmt.Errorf("some dynamic message")),
+			err:     NotAuthenticatedError(fmt.Errorf("some dynamic message")),
 			want:    "some dynamic message",
 			wantErr: true,
 		},

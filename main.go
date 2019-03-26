@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 
+	"github.com/confluentinc/cli/internal/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -11,13 +12,14 @@ import (
 	"github.com/confluentinc/cli/command"
 	"github.com/confluentinc/cli/command/apikey"
 	"github.com/confluentinc/cli/command/auth"
-	"github.com/confluentinc/cli/command/common"
+	"github.com/confluentinc/cli/command/completion"
 	"github.com/confluentinc/cli/command/config"
 	//"github.com/confluentinc/cli/command/connect"
 	"github.com/confluentinc/cli/command/environment"
 	"github.com/confluentinc/cli/command/kafka"
 	"github.com/confluentinc/cli/command/ksql"
 	"github.com/confluentinc/cli/command/service-account"
+	versionc "github.com/confluentinc/cli/command/version"
 	"github.com/confluentinc/cli/internal/log"
 	"github.com/confluentinc/cli/internal/metric"
 	apikeyp "github.com/confluentinc/cli/internal/sdk/apikey"
@@ -75,8 +77,8 @@ func BuildCommand(cfg *iconfig.Config, version *cliVersion.Version, logger *log.
 	}
 	cli.PersistentFlags().CountP("verbose", "v", "increase output verbosity")
 	cli.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		if err := common.SetLoggingVerbosity(cmd, logger); err != nil {
-			return common.HandleError(err, cmd)
+		if err := log.SetLoggingVerbosity(cmd, logger); err != nil {
+			return errors.HandleError(err, cmd)
 		}
 		return nil
 	}
@@ -86,13 +88,13 @@ func BuildCommand(cfg *iconfig.Config, version *cliVersion.Version, logger *log.
 	client := ccloud.NewClientWithJWT(context.Background(), cfg.AuthToken, cfg.AuthURL, cfg.Logger)
 
 	cli.Version = version.Version
-	cli.AddCommand(common.NewVersionCmd(version, prompt))
+	cli.AddCommand(versionc.NewVersionCmd(version, prompt))
 
 	conn := config.New(cfg)
 	conn.Hidden = true // The config/context feature isn't finished yet, so let's hide it
 	cli.AddCommand(conn)
 
-	conn, err := common.NewCompletionCmd(cli, prompt, cliName)
+	conn, err := completion.NewCompletionCmd(cli, prompt, cliName)
 	if err != nil {
 		logger.Log("msg", err)
 	} else {

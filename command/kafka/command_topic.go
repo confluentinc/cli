@@ -9,12 +9,13 @@ import (
 	"strings"
 
 	"github.com/Shopify/sarama"
+	"github.com/confluentinc/cli/internal/errors"
+	"github.com/confluentinc/cli/internal/log"
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
-	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/internal/config"
 	"github.com/confluentinc/go-printer"
 )
@@ -41,11 +42,11 @@ func NewTopicCommand(config *config.Config, client ccloud.Kafka) *cobra.Command 
 
 func (c *topicCommand) init() {
 	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		if err := common.SetLoggingVerbosity(cmd, c.config.Logger); err != nil {
-			return common.HandleError(err, cmd)
+		if err := log.SetLoggingVerbosity(cmd, c.config.Logger); err != nil {
+			return errors.HandleError(err, cmd)
 		}
 		if err := c.config.CheckLogin(); err != nil {
-			return common.HandleError(err, cmd)
+			return errors.HandleError(err, cmd)
 		}
 		return nil
 	}
@@ -116,14 +117,14 @@ func (c *topicCommand) init() {
 }
 
 func (c *topicCommand) list(cmd *cobra.Command, args []string) error {
-	cluster, err := common.Cluster(c.config)
+	cluster, err := c.config.KafkaCluster()
 	if err != nil {
-		return common.HandleError(err, cmd)
+		return errors.HandleError(err, cmd)
 	}
 
 	resp, err := c.client.ListTopics(context.Background(), cluster)
 	if err != nil {
-		return common.HandleError(err, cmd)
+		return errors.HandleError(err, cmd)
 	}
 
 	var topics [][]string
@@ -137,9 +138,9 @@ func (c *topicCommand) list(cmd *cobra.Command, args []string) error {
 }
 
 func (c *topicCommand) create(cmd *cobra.Command, args []string) error {
-	cluster, err := common.Cluster(c.config)
+	cluster, err := c.config.KafkaCluster()
 	if err != nil {
-		return common.HandleError(err, cmd)
+		return errors.HandleError(err, cmd)
 	}
 
 	topic := &kafkav1.Topic{
@@ -152,44 +153,44 @@ func (c *topicCommand) create(cmd *cobra.Command, args []string) error {
 
 	topic.Spec.NumPartitions, err = cmd.Flags().GetUint32("partitions")
 	if err != nil {
-		return common.HandleError(err, cmd)
+		return errors.HandleError(err, cmd)
 	}
 
 	topic.Spec.ReplicationFactor, err = cmd.Flags().GetUint32("replication-factor")
 	if err != nil {
-		return common.HandleError(err, cmd)
+		return errors.HandleError(err, cmd)
 	}
 
 	topic.Validate, err = cmd.Flags().GetBool("dry-run")
 	if err != nil {
-		return common.HandleError(err, cmd)
+		return errors.HandleError(err, cmd)
 	}
 
 	configs, err := cmd.Flags().GetStringSlice("config")
 	if err != nil {
-		return common.HandleError(err, cmd)
+		return errors.HandleError(err, cmd)
 	}
 
 	if topic.Spec.Configs, err = toMap(configs); err != nil {
-		return common.HandleError(err, cmd)
+		return errors.HandleError(err, cmd)
 	}
 
 	err = c.client.CreateTopic(context.Background(), cluster, topic)
 
-	return common.HandleError(err, cmd)
+	return errors.HandleError(err, cmd)
 }
 
 func (c *topicCommand) describe(cmd *cobra.Command, args []string) error {
-	cluster, err := common.Cluster(c.config)
+	cluster, err := c.config.KafkaCluster()
 	if err != nil {
-		return common.HandleError(err, cmd)
+		return errors.HandleError(err, cmd)
 	}
 
 	topic := &kafkav1.TopicSpecification{Name: args[0]}
 
 	resp, err := c.client.DescribeTopic(context.Background(), cluster, &kafkav1.Topic{Spec: topic, Validate: false})
 	if err != nil {
-		return common.HandleError(err, cmd)
+		return errors.HandleError(err, cmd)
 	}
 
 	fmt.Printf("Topic: %s PartitionCount: %d ReplicationFactor: %d\n",
@@ -244,42 +245,42 @@ func (c *topicCommand) describe(cmd *cobra.Command, args []string) error {
 }
 
 func (c *topicCommand) update(cmd *cobra.Command, args []string) error {
-	cluster, err := common.Cluster(c.config)
+	cluster, err := c.config.KafkaCluster()
 	if err != nil {
-		return common.HandleError(err, cmd)
+		return errors.HandleError(err, cmd)
 	}
 
 	topic := &kafkav1.TopicSpecification{Name: args[0], Configs: make(map[string]string)}
 
 	configs, err := cmd.Flags().GetStringSlice("config")
 	if err != nil {
-		return common.HandleError(err, cmd)
+		return errors.HandleError(err, cmd)
 	}
 
 	if topic.Configs, err = toMap(configs); err != nil {
-		return common.HandleError(err, cmd)
+		return errors.HandleError(err, cmd)
 	}
 
 	validate, err := cmd.Flags().GetBool("dry-run")
 	if err != nil {
-		return common.HandleError(err, cmd)
+		return errors.HandleError(err, cmd)
 	}
 
 	err = c.client.UpdateTopic(context.Background(), cluster, &kafkav1.Topic{Spec: topic, Validate: validate})
 
-	return common.HandleError(err, cmd)
+	return errors.HandleError(err, cmd)
 }
 
 func (c *topicCommand) delete(cmd *cobra.Command, args []string) error {
-	cluster, err := common.Cluster(c.config)
+	cluster, err := c.config.KafkaCluster()
 	if err != nil {
-		return common.HandleError(err, cmd)
+		return errors.HandleError(err, cmd)
 	}
 
 	topic := &kafkav1.TopicSpecification{Name: args[0]}
 	err = c.client.DeleteTopic(context.Background(), cluster, &kafkav1.Topic{Spec: topic, Validate: false})
 
-	return common.HandleError(err, cmd)
+	return errors.HandleError(err, cmd)
 }
 
 func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {
@@ -287,14 +288,14 @@ func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {
 
 	delim, err := cmd.Flags().GetString("delimiter")
 	if err != nil {
-		return common.HandleError(err, cmd)
+		return errors.HandleError(err, cmd)
 	}
 
 	fmt.Println("Starting Kafka Producer. ^C to exit")
 
 	producer, err := NewSaramaProducer(c.config)
 	if err != nil {
-		return common.HandleError(err, cmd)
+		return errors.HandleError(err, cmd)
 	}
 
 	// Line reader for producer input
@@ -343,18 +344,18 @@ func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {
 		go scan()
 	}
 
-	return common.HandleError(producer.Close(), cmd)
+	return errors.HandleError(producer.Close(), cmd)
 }
 
 func (c *topicCommand) consume(cmd *cobra.Command, args []string) error {
 	group, err := cmd.Flags().GetString("group")
 	if err != nil {
-		return common.HandleError(err, cmd)
+		return errors.HandleError(err, cmd)
 	}
 
 	consumer, err := NewSaramaConsumer(group, c.config)
 	if err != nil {
-		return common.HandleError(err, cmd)
+		return errors.HandleError(err, cmd)
 	}
 
 	// Trap SIGINT to trigger a shutdown.
@@ -376,7 +377,7 @@ func (c *topicCommand) consume(cmd *cobra.Command, args []string) error {
 
 	err = consumer.Consume(context.Background(), []string{args[0]}, &GroupHandler{})
 
-	return common.HandleError(err, cmd)
+	return errors.HandleError(err, cmd)
 }
 
 func toMap(configs []string) (map[string]string, error) {

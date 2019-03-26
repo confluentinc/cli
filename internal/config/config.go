@@ -7,12 +7,14 @@ import (
 	"os"
 	"path"
 
-	"github.com/confluentinc/ccloudapis/org/v1"
+	errors2 "github.com/confluentinc/cli/internal/errors"
 	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 
-	"github.com/confluentinc/cli/internal"
+	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
+	"github.com/confluentinc/ccloudapis/org/v1"
 	"github.com/confluentinc/cli/internal/log"
+	"github.com/confluentinc/cli/internal/metric"
 )
 
 const (
@@ -60,7 +62,7 @@ type Context struct {
 
 // Config represents the CLI configuration.
 type Config struct {
-	MetricSink     internal.MetricSink    `json:"-" hcl:"-"`
+	MetricSink     metric.MetricSink    `json:"-" hcl:"-"`
 	Logger         *log.Logger            `json:"-" hcl:"-"`
 	Filename       string                 `json:"-" hcl:"-"`
 	AuthURL        string                 `json:"auth_url" hcl:"auth_url"`
@@ -130,7 +132,7 @@ func (c *Config) Save() error {
 // Context returns the current Context object.
 func (c *Config) Context() (*Context, error) {
 	if c.CurrentContext == "" {
-		return nil, internal.ErrNoContext
+		return nil, errors2.ErrNoContext
 	}
 	return c.Contexts[c.CurrentContext], nil
 }
@@ -144,9 +146,24 @@ func (c *Config) KafkaClusterConfig() (KafkaClusterConfig, error) {
 	cluster, found := c.Platforms[cfg.Platform].KafkaClusters[cfg.Kafka]
 	if !found {
 		e := fmt.Errorf("no auth found for Kafka %s, please run `ccloud kafka cluster auth` first", cfg.Kafka)
-		return KafkaClusterConfig{}, internal.NotAuthenticatedError(e)
+		return KafkaClusterConfig{}, errors2.NotAuthenticatedError(e)
 	}
 	return cluster, nil
+}
+
+// KafkaCluster returns the current kafka cluster context
+func (c *Config) KafkaCluster() (*kafkav1.KafkaCluster, error) {
+	ctx, err := c.Context()
+	if err != nil {
+		return nil, err
+	}
+
+	conf, err := c.KafkaClusterConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	return &kafkav1.KafkaCluster{AccountId: c.Auth.Account.Id, Id: ctx.Kafka, ApiEndpoint: conf.APIEndpoint}, nil
 }
 
 func (c *Config) MaybeDeleteKey(apikey string) {
@@ -164,7 +181,7 @@ func (c *Config) MaybeDeleteKey(apikey string) {
 // CheckLogin returns an error if the user is not logged in.
 func (c *Config) CheckLogin() error {
 	if c.Auth == nil || c.Auth.Account == nil || c.Auth.Account.Id == "" {
-		return internal.ErrUnauthorized
+		return errors2.ErrUnauthorized
 	}
 	return nil
 }
@@ -178,4 +195,19 @@ func (c *Config) getFilename() (string, error) {
 		return "", err
 	}
 	return filename, nil
+}
+
+// Cluster returns the current cluster context
+func Cluster(config *Config) (*kafkav1.KafkaCluster, error) {
+	ctx, err := config.Context()
+	if err != nil {
+		return nil, err
+	}
+
+	conf, err := config.KafkaClusterConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	return &kafkav1.KafkaCluster{AccountId: config.Auth.Account.Id, Id: ctx.Kafka, ApiEndpoint: conf.APIEndpoint}, nil
 }

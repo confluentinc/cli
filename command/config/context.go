@@ -3,9 +3,9 @@ package config
 import (
 	"fmt"
 
+	"github.com/confluentinc/cli/internal/errors"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/command/common"
 	"github.com/confluentinc/cli/internal/config"
 	"github.com/confluentinc/go-printer"
 )
@@ -104,7 +104,7 @@ func (c *contextCommand) current(cmd *cobra.Command, args []string) error {
 func (c *contextCommand) get(cmd *cobra.Command, args []string) error {
 	context, err := c.context(args)
 	if err != nil {
-		return common.HandleError(err, cmd)
+		return errors.HandleError(err, cmd)
 	}
 	return printer.RenderYAMLOut(context, nil, nil, cmd.OutOrStdout())
 }
@@ -112,13 +112,13 @@ func (c *contextCommand) get(cmd *cobra.Command, args []string) error {
 func (c *contextCommand) set(cmd *cobra.Command, args []string) error {
 	context, err := c.context(args)
 	if err != nil {
-		return common.HandleError(err, cmd)
+		return errors.HandleError(err, cmd)
 	}
 
 	if cmd.Flags().Changed("kafka-cluster") {
 		k, err := cmd.Flags().GetString("kafka-cluster")
 		if err != nil {
-			return common.HandleError(err, cmd)
+			return errors.HandleError(err, cmd)
 		}
 		context.Kafka = k
 	}
