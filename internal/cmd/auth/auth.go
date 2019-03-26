@@ -6,12 +6,11 @@ import (
 	"os"
 	"strings"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/confluentinc/cli/internal/pkg/config"
-	errorsp "github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/terminal"
 )
@@ -48,7 +47,7 @@ func newCommands(config *config.Config, prompt terminal.Prompt,
 func (a *commands) init() {
 	var preRun = func(cmd *cobra.Command, args []string) error {
 		if err := log.SetLoggingVerbosity(cmd, a.config.Logger); err != nil {
-			return errorsp.HandleError(err, cmd)
+			return errors.HandleError(err, cmd)
 		}
 		a.prompt.SetOutput(cmd.OutOrStderr())
 		return nil
@@ -86,22 +85,22 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 
 	token, err := client.Auth.Login(context.Background(), email, password)
 	if err != nil {
-		err = errorsp.ConvertAPIError(err)
-		if err == errorsp.ErrUnauthorized { // special case for login failure
-			err = errorsp.ErrIncorrectAuth
+		err = errors.ConvertAPIError(err)
+		if err == errors.ErrUnauthorized { // special case for login failure
+			err = errors.ErrIncorrectAuth
 		}
-		return errorsp.HandleError(err, cmd)
+		return errors.HandleError(err, cmd)
 	}
 	a.config.AuthToken = token
 
 	client = a.jwtHTTPClientFactory(context.Background(), a.config.AuthToken, a.config.AuthURL, a.config.Logger)
 	user, err := client.Auth.User(context.Background())
 	if err != nil {
-		return errorsp.HandleError(errorsp.ConvertAPIError(err), cmd)
+		return errors.HandleError(errors.ConvertAPIError(err), cmd)
 	}
 
 	if len(user.Accounts) == 0 {
-		return errorsp.HandleError(errors.New("No environments found for authenticated user!"), cmd)
+		return errors.HandleError(errors.New("No environments found for authenticated user!"), cmd)
 	}
 
 	// If no auth config exists, initialize it

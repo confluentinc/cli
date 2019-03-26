@@ -8,11 +8,10 @@ import (
 	"path"
 
 	"github.com/mitchellh/go-homedir"
-	"github.com/pkg/errors"
 
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	"github.com/confluentinc/ccloudapis/org/v1"
-	errorsp "github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/metric"
 )
@@ -132,7 +131,7 @@ func (c *Config) Save() error {
 // Context returns the current Context object.
 func (c *Config) Context() (*Context, error) {
 	if c.CurrentContext == "" {
-		return nil, errorsp.ErrNoContext
+		return nil, errors.ErrNoContext
 	}
 	return c.Contexts[c.CurrentContext], nil
 }
@@ -146,7 +145,7 @@ func (c *Config) KafkaClusterConfig() (KafkaClusterConfig, error) {
 	cluster, found := c.Platforms[cfg.Platform].KafkaClusters[cfg.Kafka]
 	if !found {
 		e := fmt.Errorf("no auth found for Kafka %s, please run `ccloud kafka cluster auth` first", cfg.Kafka)
-		return KafkaClusterConfig{}, errorsp.NotAuthenticatedError(e)
+		return KafkaClusterConfig{}, errors.NotAuthenticatedError(e)
 	}
 	return cluster, nil
 }
@@ -181,7 +180,7 @@ func (c *Config) MaybeDeleteKey(apikey string) {
 // CheckLogin returns an error if the user is not logged in.
 func (c *Config) CheckLogin() error {
 	if c.Auth == nil || c.Auth.Account == nil || c.Auth.Account.Id == "" {
-		return errorsp.ErrUnauthorized
+		return errors.ErrUnauthorized
 	}
 	return nil
 }

@@ -4,13 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	"github.com/confluentinc/cli/internal/pkg/config"
-	errorsp "github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/go-printer"
 )
@@ -43,10 +42,10 @@ func New(config *config.Config, client ccloud.Account) *cobra.Command {
 func (c *command) init() {
 	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		if err := log.SetLoggingVerbosity(cmd, c.config.Logger); err != nil {
-			return errorsp.HandleError(err, cmd)
+			return errors.HandleError(err, cmd)
 		}
 		if err := c.config.CheckLogin(); err != nil {
-			return errorsp.HandleError(err, cmd)
+			return errors.HandleError(err, cmd)
 		}
 		return nil
 	}
@@ -69,7 +68,7 @@ func (c *command) init() {
 func (c *command) list(cmd *cobra.Command, args []string) error {
 	environments, err := c.client.List(context.Background(), &orgv1.Account{})
 	if err != nil {
-		return errorsp.HandleError(err, cmd)
+		return errors.HandleError(err, cmd)
 	}
 
 	var data [][]string
@@ -93,12 +92,12 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 			c.config.Auth.Account = acc
 			err := c.config.Save()
 			if err != nil {
-				return errorsp.HandleError(errors.New("Couldn't switch to new environment: couldn't save config."), cmd)
+				return errors.HandleError(errors.New("Couldn't switch to new environment: couldn't save config."), cmd)
 			}
 			fmt.Println("Now using", id, "as the default (active) environment.")
 			return nil
 		}
 	}
 
-	return errorsp.HandleError(errors.New("Specified environment ID not found.  Use `ccloud environment list` to see available environments."), cmd)
+	return errors.HandleError(errors.New("Specified environment ID not found.  Use `ccloud environment list` to see available environments."), cmd)
 }

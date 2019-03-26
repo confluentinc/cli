@@ -19,6 +19,9 @@ import (
  * - Pkg call ConvertAPIError() to transforms corev1.Error into HTTP Error constants
  */
 
+type NotAuthenticatedError error
+type KafkaError error
+
 var (
 	ErrNotImplemented = fmt.Errorf("not implemented")
 	ErrIncorrectAuth  = fmt.Errorf("incorrect auth")
@@ -51,6 +54,14 @@ func ConvertAPIError(err error) error {
 	return err
 }
 
-type NotAuthenticatedError error
-type KafkaError error
+func Wrap(err error, msg string) error {
+	return errors.Wrap(err, msg)
+}
 
+func Wrapf(err error, fmt string, args ...interface{}) error {
+	return errors.Wrapf(err, fmt, args...)
+}
+
+func New(msg string) error {
+	return errors.New(msg)
+}
