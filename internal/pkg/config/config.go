@@ -62,7 +62,7 @@ type Context struct {
 
 // Config represents the CLI configuration.
 type Config struct {
-	MetricSink     metric.MetricSink      `json:"-" hcl:"-"`
+	MetricSink     metric.Sink            `json:"-" hcl:"-"`
 	Logger         *log.Logger            `json:"-" hcl:"-"`
 	Filename       string                 `json:"-" hcl:"-"`
 	AuthURL        string                 `json:"auth_url" hcl:"auth_url"`
@@ -195,19 +195,4 @@ func (c *Config) getFilename() (string, error) {
 		return "", err
 	}
 	return filename, nil
-}
-
-// Cluster returns the current cluster context
-func Cluster(config *Config) (*kafkav1.KafkaCluster, error) {
-	ctx, err := config.Context()
-	if err != nil {
-		return nil, err
-	}
-
-	conf, err := config.KafkaClusterConfig()
-	if err != nil {
-		return nil, err
-	}
-
-	return &kafkav1.KafkaCluster{AccountId: config.Auth.Account.Id, Id: ctx.Kafka, ApiEndpoint: conf.APIEndpoint}, nil
 }

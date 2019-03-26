@@ -382,8 +382,8 @@ func (c *topicCommand) consume(cmd *cobra.Command, args []string) error {
 
 func toMap(configs []string) (map[string]string, error) {
 	configMap := make(map[string]string)
-	for _, config := range configs {
-		pair := strings.SplitN(config, "=", 2)
+	for _, cfg := range configs {
+		pair := strings.SplitN(cfg, "=", 2)
 		if len(pair) < 2 {
 			return nil, fmt.Errorf("configuration must be in the form of key=value")
 		}

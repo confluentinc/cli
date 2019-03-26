@@ -192,7 +192,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	if multizone {
 		durability = kafkav1.Durability_HIGH
 	}
-	config := &kafkav1.KafkaClusterConfig{
+	cfg := &kafkav1.KafkaClusterConfig{
 		AccountId:       environment,
 		Name:            args[0],
 		ServiceProvider: cloud,
@@ -202,7 +202,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		Storage:         storage,
 		Durability:      durability,
 	}
-	cluster, err := c.client.Create(context.Background(), config)
+	cluster, err := c.client.Create(context.Background(), cfg)
 	if err != nil {
 		// TODO: don't swallow validation errors (reportedly separately)
 		return errors.HandleError(err, cmd)

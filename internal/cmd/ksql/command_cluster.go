@@ -116,14 +116,14 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleError(err, cmd)
 	}
-	config := &ksqlv1.KSQLClusterConfig{
+	cfg := &ksqlv1.KSQLClusterConfig{
 		AccountId:      c.config.Auth.Account.Id,
 		Name:           args[0],
 		Servers:        servers,
 		Storage:        storage,
 		KafkaClusterId: kafkaClusterID,
 	}
-	cluster, err := c.client.Create(context.Background(), config)
+	cluster, err := c.client.Create(context.Background(), cfg)
 	if err != nil {
 		return errors.HandleError(err, cmd)
 	}

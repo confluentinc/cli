@@ -7,8 +7,8 @@ import (
 // Label represents a key-value pair for a metric.
 type Label = metrics.Label
 
-// The MetricSink interface is used to transmit metrics information to an external system.
-type MetricSink interface {
+// The Sink interface is used to transmit metrics information to an external system.
+type Sink interface {
 	// A Gauge should retain the last value it is set to
 	SetGauge(key []string, val float32)
 	SetGaugeWithLabels(key []string, val float32, labels []Label)
