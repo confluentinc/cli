@@ -4,14 +4,14 @@ import (
 	"context"
 	"fmt"
 
-	chttp "github.com/confluentinc/ccloud-sdk-go"
+	"github.com/confluentinc/ccloud-sdk-go"
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	"github.com/golang/protobuf/proto"
 )
 
 // Compile-time check interface adherence
-var _ chttp.Kafka = (*MockKafka)(nil)
+var _ ccloud.Kafka = (*MockKafka)(nil)
 
 type MockKafka struct {
 	Expect chan interface{}

@@ -8,7 +8,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/stretchr/testify/require"
 
-	chttp "github.com/confluentinc/ccloud-sdk-go"
+	"github.com/confluentinc/ccloud-sdk-go"
 	sdkMock "github.com/confluentinc/ccloud-sdk-go/mock"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	terminal "github.com/confluentinc/cli/internal"
@@ -152,12 +152,12 @@ func prompt(username, password string) *cliMock.Prompt {
 }
 
 func newAuthCommand(prompt terminal.Prompt, auth *sdkMock.Auth, req *require.Assertions) (*commands, *iconfig.Config) {
-	var mockAnonHTTPClientFactory = func(baseURL string, logger *log.Logger) *chttp.Client {
+	var mockAnonHTTPClientFactory = func(baseURL string, logger *log.Logger) *ccloud.Client {
 		req.Equal("https://confluent.cloud", baseURL)
-		return &chttp.Client{Auth: auth}
+		return &ccloud.Client{Auth: auth}
 	}
-	var mockJwtHTTPClientFactory = func(ctx context.Context, jwt, baseURL string, logger *log.Logger) *chttp.Client {
-		return &chttp.Client{Auth: auth}
+	var mockJwtHTTPClientFactory = func(ctx context.Context, jwt, baseURL string, logger *log.Logger) *ccloud.Client {
+		return &ccloud.Client{Auth: auth}
 	}
 	cfg := iconfig.NewConfig()
 	cfg.Logger = log.New()
