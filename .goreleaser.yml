@@ -9,7 +9,7 @@ before:
 builds:
   -
     binary: ccloud
-    main: .
+    main: cmd/confluent/main.go
     flags:
       - -mod=readonly
     ldflags:

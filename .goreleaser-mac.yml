@@ -3,7 +3,7 @@ project_name: ccloud
 builds:
   -
     binary: ccloud
-    main: .
+    main: cmd/confluent/main.go
     flags:
       - -mod=readonly
     ldflags:
