@@ -14,6 +14,7 @@ require (
 	github.com/confluentinc/ccloudapis v0.0.0-20190313194524-9d1a929e8e66
 	github.com/confluentinc/go-printer v0.9.0
 	github.com/confluentinc/protoc-gen-ccloud v0.0.1 // indirect
+	github.com/cpuguy83/go-md2man v1.0.10 // indirect
 	github.com/eapache/go-resiliency v1.1.0 // indirect
 	github.com/eapache/go-xerial-snappy v0.0.0-20180814174437-776d5712da21 // indirect
 	github.com/eapache/queue v1.1.0 // indirect
@@ -53,6 +54,8 @@ require (
 	golang.org/x/sys v0.0.0-20190221222158-ec7b60b042fd // indirect
 	golang.org/x/text v0.3.1-0.20180807135948-17ff2d5776d2 // indirect
 	golang.org/x/tools v0.0.0-20190221204921-83362c3779f5 // indirect
+	google.golang.org/genproto v0.0.0-20190219182410-082222b4a5c5 // indirect
+	google.golang.org/grpc v1.18.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gopkg.in/yaml.v2 v2.2.2 // indirect
 	sourcegraph.com/sourcegraph/go-diff v0.5.0 // indirect

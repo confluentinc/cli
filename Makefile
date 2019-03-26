@@ -83,6 +83,10 @@ publish: dist-ccloud
 	aws s3 cp dist/ccloud/ s3://confluent.cloud/ccloud-cli/archives/$(VERSION:v%=%)/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --exclude "*_latest_*" --acl public-read
 	aws s3 cp dist/ccloud/ s3://confluent.cloud/ccloud-cli/archives/latest/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --exclude "*_$(VERSION)_*" --acl public-read
 
+.PHONY: docs
+docs:
+	go run cmd/docs/main.go
+
 .PHONY: fmt
 fmt:
 	@gofmt -e -s -l -w $(ALL_SRC)
