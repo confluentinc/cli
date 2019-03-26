@@ -10,8 +10,8 @@ import (
 )
 
 // NewSaramaProducer returns a sarama.ClusterConsumerconfigured for the CLI config
-func NewSaramaConsumer(group string, config *config.Config) (sarama.ConsumerGroup, error) {
-	kafka, err := config.KafkaClusterConfig()
+func NewSaramaConsumer(group string, cfg *config.Config) (sarama.ConsumerGroup, error) {
+	kafka, err := cfg.KafkaClusterConfig()
 	if err != nil {
 		return nil, err
 	}
@@ -24,8 +24,8 @@ func NewSaramaConsumer(group string, config *config.Config) (sarama.ConsumerGrou
 }
 
 // NewSaramaProducer returns a sarama.ClusterProducer configured for the CLI config
-func NewSaramaProducer(config *config.Config) (sarama.SyncProducer, error) {
-	kafka, err := config.KafkaClusterConfig()
+func NewSaramaProducer(cfg *config.Config) (sarama.SyncProducer, error) {
+	kafka, err := cfg.KafkaClusterConfig()
 	if err != nil {
 		return nil, err
 	}

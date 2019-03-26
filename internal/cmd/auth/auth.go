@@ -100,7 +100,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(user.Accounts) == 0 {
-		return errors.Handle(errors.New("No environments found for authenticated user!"), cmd)
+		return errors.Handle(errors.New("no environments found for authenticated user!"), cmd)
 	}
 
 	// If no auth config exists, initialize it

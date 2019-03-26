@@ -92,12 +92,12 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 			c.config.Auth.Account = acc
 			err := c.config.Save()
 			if err != nil {
-				return errors.Handle(errors.New("Couldn't switch to new environment: couldn't save config."), cmd)
+				return errors.Handle(errors.New("couldn't switch to new environment: couldn't save config."), cmd)
 			}
 			fmt.Println("Now using", id, "as the default (active) environment.")
 			return nil
 		}
 	}
 
-	return errors.Handle(errors.New("Specified environment ID not found.  Use `ccloud environment list` to see available environments."), cmd)
+	return errors.Handle(errors.New("specified environment ID not found.  Use `ccloud environment list` to see available environments."), cmd)
 }

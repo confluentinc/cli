@@ -33,7 +33,7 @@ var (
 )
 
 // ConvertAPIError transforms a corev1.Error into one of the standard errors if it matches.
-// TODO: the SDK should expose typed errors so clients don't need to do this non-sense
+// TODO: the SDK should expose typed errors so clients don't need to do this nonsense
 func ConvertAPIError(err error) error {
 	if e, ok := errors.Cause(err).(*v1.Error); ok {
 		switch e.Message {

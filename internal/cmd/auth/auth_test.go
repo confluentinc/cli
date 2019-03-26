@@ -5,13 +5,13 @@ import (
 	"os"
 	"testing"
 
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	sdkMock "github.com/confluentinc/ccloud-sdk-go/mock"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/terminal"
 	cliMock "github.com/confluentinc/cli/mock"
