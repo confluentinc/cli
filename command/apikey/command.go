@@ -12,13 +12,13 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go"
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
 	"github.com/confluentinc/cli/command/common"
-	"github.com/confluentinc/cli/shared"
+	"github.com/confluentinc/cli/internal/config"
 	"github.com/confluentinc/go-printer"
 )
 
 type command struct {
 	*cobra.Command
-	config *shared.Config
+	config *config.Config
 	client ccloud.APIKey
 }
 
@@ -30,7 +30,7 @@ var (
 )
 
 // New returns the Cobra command for API Key.
-func New(config *shared.Config, client ccloud.APIKey) *cobra.Command {
+func New(config *config.Config, client ccloud.APIKey) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:   "api-key",

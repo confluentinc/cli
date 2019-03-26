@@ -20,13 +20,13 @@ import (
 	"github.com/confluentinc/cli/command/service-account"
 	"github.com/confluentinc/cli/internal/log"
 	"github.com/confluentinc/cli/internal/metric"
-	apikeyp "github.com/confluentinc/cli/internal/apikey"
+	apikeyp "github.com/confluentinc/cli/internal/sdk/apikey"
 	//connectp "github.com/confluentinc/cli/pkg/connect"
-	environmentp "github.com/confluentinc/cli/internal/environment"
-	kafkap "github.com/confluentinc/cli/internal/kafka"
-	ksqlp "github.com/confluentinc/cli/internal/ksql"
-	userp "github.com/confluentinc/cli/internal/user"
-	"github.com/confluentinc/cli/shared"
+	iconfig "github.com/confluentinc/cli/internal/config"
+	environmentp "github.com/confluentinc/cli/internal/sdk/environment"
+	kafkap "github.com/confluentinc/cli/internal/sdk/kafka"
+	ksqlp "github.com/confluentinc/cli/internal/sdk/ksql"
+	userp "github.com/confluentinc/cli/internal/sdk/user"
 	cliVersion "github.com/confluentinc/cli/internal/version"
 )
 
@@ -47,14 +47,14 @@ func main() {
 
 	metricSink := metric.NewSink()
 
-	var cfg *shared.Config
+	var cfg *iconfig.Config
 	{
-		cfg = shared.NewConfig(&shared.Config{
+		cfg = iconfig.NewConfig(&iconfig.Config{
 			MetricSink: metricSink,
 			Logger:     logger,
 		})
 		err := cfg.Load()
-		if err != nil && err != shared.ErrNoConfig {
+		if err != nil && err != iconfig.ErrNoConfig {
 			logger.Errorf("unable to load config: %v", err)
 		}
 	}
@@ -68,7 +68,7 @@ func main() {
 	}
 }
 
-func BuildCommand(cfg *shared.Config, version *cliVersion.Version, logger *log.Logger) *cobra.Command {
+func BuildCommand(cfg *iconfig.Config, version *cliVersion.Version, logger *log.Logger) *cobra.Command {
 	cli := &cobra.Command{
 		Use:   cliName,
 		Short: "Welcome to the Confluent Cloud CLI",

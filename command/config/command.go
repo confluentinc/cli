@@ -3,16 +3,16 @@ package config
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/shared"
+	"github.com/confluentinc/cli/internal/config"
 )
 
 type command struct {
 	*cobra.Command
-	config *shared.Config
+	config *config.Config
 }
 
 // New returns the Cobra command for `config`.
-func New(config *shared.Config) *cobra.Command {
+func New(config *config.Config) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:   "config",

@@ -12,13 +12,14 @@ import (
 	chttp "github.com/confluentinc/ccloud-sdk-go"
 	"github.com/confluentinc/cli/command"
 	"github.com/confluentinc/cli/command/common"
+	"github.com/confluentinc/cli/internal"
+	"github.com/confluentinc/cli/internal/config"
 	"github.com/confluentinc/cli/internal/log"
-	"github.com/confluentinc/cli/shared"
 )
 
 type commands struct {
 	Commands []*cobra.Command
-	config   *shared.Config
+	config   *config.Config
 	// for testing
 	prompt                command.Prompt
 	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *chttp.Client
@@ -26,7 +27,7 @@ type commands struct {
 }
 
 // New returns a list of auth-related Cobra commands.
-func New(config *shared.Config) []*cobra.Command {
+func New(config *config.Config) []*cobra.Command {
 	var defaultAnonHTTPClientFactory = func(baseURL string, logger *log.Logger) *chttp.Client {
 		return chttp.NewClient(baseURL, chttp.BaseClient, logger)
 	}
@@ -36,7 +37,7 @@ func New(config *shared.Config) []*cobra.Command {
 	return newCommands(config, command.NewTerminalPrompt(os.Stdin), defaultAnonHTTPClientFactory, defaultJwtHTTPClientFactory).Commands
 }
 
-func newCommands(config *shared.Config, prompt command.Prompt,
+func newCommands(config *config.Config, prompt command.Prompt,
 	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *chttp.Client,
 	jwtHTTPClientFactory func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *chttp.Client,
 ) *commands {
@@ -86,9 +87,9 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 
 	token, err := client.Auth.Login(context.Background(), email, password)
 	if err != nil {
-		err = shared.ConvertAPIError(err)
-		if err == shared.ErrUnauthorized { // special case for login failure
-			err = shared.ErrIncorrectAuth
+		err = internal.ConvertAPIError(err)
+		if err == internal.ErrUnauthorized { // special case for login failure
+			err = internal.ErrIncorrectAuth
 		}
 		return common.HandleError(err, cmd)
 	}
@@ -97,7 +98,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	client = a.jwtHTTPClientFactory(context.Background(), a.config.AuthToken, a.config.AuthURL, a.config.Logger)
 	user, err := client.Auth.User(context.Background())
 	if err != nil {
-		return common.HandleError(shared.ConvertAPIError(err), cmd)
+		return common.HandleError(internal.ConvertAPIError(err), cmd)
 	}
 
 	if len(user.Accounts) == 0 {
@@ -106,7 +107,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 
 	// If no auth config exists, initialize it
 	if a.config.Auth == nil {
-		a.config.Auth = &shared.AuthConfig{}
+		a.config.Auth = &config.AuthConfig{}
 	}
 
 	// Always overwrite the user and list of accounts when logging in -- but don't necessarily
@@ -186,21 +187,21 @@ func (a *commands) credentials() (string, string, error) {
 	return strings.TrimSpace(email), password, nil
 }
 
-func (a *commands) createOrUpdateContext(user *shared.AuthConfig) {
+func (a *commands) createOrUpdateContext(user *config.AuthConfig) {
 	name := fmt.Sprintf("login-%s-%s", user.User.Email, a.config.AuthURL)
 	if _, ok := a.config.Platforms[name]; !ok {
-		a.config.Platforms[name] = &shared.Platform{
+		a.config.Platforms[name] = &config.Platform{
 			Server: a.config.AuthURL,
 		}
 	}
 	if _, ok := a.config.Credentials[name]; !ok {
-		a.config.Credentials[name] = &shared.Credential{
+		a.config.Credentials[name] = &config.Credential{
 			Username: user.User.Email,
 			// don't save password if they entered it interactively
 		}
 	}
 	if _, ok := a.config.Contexts[name]; !ok {
-		a.config.Contexts[name] = &shared.Context{
+		a.config.Contexts[name] = &config.Context{
 			Platform:   name,
 			Credential: name,
 		}

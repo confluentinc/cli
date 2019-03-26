@@ -10,11 +10,11 @@ import (
 	chttp "github.com/confluentinc/ccloud-sdk-go"
 	sdkMock "github.com/confluentinc/ccloud-sdk-go/mock"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
-	cliMock "github.com/confluentinc/cli/mock"
-
 	"github.com/confluentinc/cli/command"
+	"github.com/confluentinc/cli/internal"
+	iconfig "github.com/confluentinc/cli/internal/config"
 	"github.com/confluentinc/cli/internal/log"
-	"github.com/confluentinc/cli/shared"
+	cliMock "github.com/confluentinc/cli/mock"
 )
 
 func TestCredentialsOverride(t *testing.T) {
@@ -41,14 +41,14 @@ func TestCredentialsOverride(t *testing.T) {
 			}, nil
 		},
 	}
-	cmds, config := newAuthCommand(prompt, auth, req)
+	cmds, cfg := newAuthCommand(prompt, auth, req)
 
 	output, err := command.ExecuteCommand(cmds.Commands[0])
 	req.NoError(err)
 	req.Contains(output, "Logged in as test-email")
 
-	req.Equal("y0ur.jwt.T0kEn", config.AuthToken)
-	req.Equal(&orgv1.User{Id: 23, Email: "test-email", FirstName: "Cody"}, config.Auth.User)
+	req.Equal("y0ur.jwt.T0kEn", cfg.AuthToken)
+	req.Equal(&orgv1.User{Id: 23, Email: "test-email", FirstName: "Cody"}, cfg.Auth.User)
 
 	os.Setenv("XX_CCLOUD_EMAIL", currentEmail)
 	os.Setenv("XX_CCLOUD_PASSWORD", currentPassword)
@@ -73,25 +73,25 @@ func TestLoginSuccess(t *testing.T) {
 			}, nil
 		},
 	}
-	cmds, config := newAuthCommand(prompt, auth, req)
+	cmds, cfg := newAuthCommand(prompt, auth, req)
 
 	output, err := command.ExecuteCommand(cmds.Commands[0])
 	req.NoError(err)
 	req.Contains(output, "Logged in as cody@confluent.io")
 
-	req.Equal("y0ur.jwt.T0kEn", config.AuthToken)
-	req.Equal(&orgv1.User{Id: 23, Email: "cody@confluent.io", FirstName: "Cody"}, config.Auth.User)
+	req.Equal("y0ur.jwt.T0kEn", cfg.AuthToken)
+	req.Equal(&orgv1.User{Id: 23, Email: "cody@confluent.io", FirstName: "Cody"}, cfg.Auth.User)
 
-	config = shared.NewConfig()
-	req.NoError(config.Load())
+	cfg = iconfig.NewConfig()
+	req.NoError(cfg.Load())
 	name := "login-cody@confluent.io-https://confluent.cloud"
-	req.Contains(config.Platforms, name)
-	req.Equal("https://confluent.cloud", config.Platforms[name].Server)
-	req.Contains(config.Credentials, name)
-	req.Equal("cody@confluent.io", config.Credentials[name].Username)
-	req.Contains(config.Contexts, name)
-	req.Equal(name, config.Contexts[name].Platform)
-	req.Equal(name, config.Contexts[name].Credential)
+	req.Contains(cfg.Platforms, name)
+	req.Equal("https://confluent.cloud", cfg.Platforms[name].Server)
+	req.Contains(cfg.Credentials, name)
+	req.Equal("cody@confluent.io", cfg.Credentials[name].Username)
+	req.Contains(cfg.Contexts, name)
+	req.Equal(name, cfg.Contexts[name].Platform)
+	req.Equal(name, cfg.Contexts[name].Credential)
 }
 
 func TestLoginFail(t *testing.T) {
@@ -100,7 +100,7 @@ func TestLoginFail(t *testing.T) {
 	prompt := prompt("cody@confluent.io", "iamrobin")
 	auth := &sdkMock.Auth{
 		LoginFunc: func(ctx context.Context, username string, password string) (string, error) {
-			return "", shared.ErrIncorrectAuth
+			return "", internal.ErrIncorrectAuth
 		},
 	}
 	cmds, _ := newAuthCommand(prompt, auth, req)
@@ -114,20 +114,20 @@ func TestLogout(t *testing.T) {
 
 	prompt := prompt("cody@confluent.io", "iamrobin")
 	auth := &sdkMock.Auth{}
-	cmds, config := newAuthCommand(prompt, auth, req)
+	cmds, cfg := newAuthCommand(prompt, auth, req)
 
-	config.AuthToken = "some.token.here"
-	config.Auth = &shared.AuthConfig{User: &orgv1.User{Id: 23}}
-	req.NoError(config.Save())
+	cfg.AuthToken = "some.token.here"
+	cfg.Auth = &iconfig.AuthConfig{User: &orgv1.User{Id: 23}}
+	req.NoError(cfg.Save())
 
 	output, err := command.ExecuteCommand(cmds.Commands[1])
 	req.NoError(err)
 	req.Contains(output, "You are now logged out")
 
-	config = shared.NewConfig()
-	req.NoError(config.Load())
-	req.Empty(config.AuthToken)
-	req.Empty(config.Auth)
+	cfg = iconfig.NewConfig()
+	req.NoError(cfg.Load())
+	req.Empty(cfg.AuthToken)
+	req.Empty(cfg.Auth)
 }
 
 func Test_credentials_NoSpacesAroundEmail_ShouldSupportSpacesAtBeginOrEnd(t *testing.T) {
@@ -151,7 +151,7 @@ func prompt(username, password string) *cliMock.Prompt {
 	}
 }
 
-func newAuthCommand(prompt command.Prompt, auth *sdkMock.Auth, req *require.Assertions) (*commands, *shared.Config) {
+func newAuthCommand(prompt command.Prompt, auth *sdkMock.Auth, req *require.Assertions) (*commands, *iconfig.Config) {
 	var mockAnonHTTPClientFactory = func(baseURL string, logger *log.Logger) *chttp.Client {
 		req.Equal("https://confluent.cloud", baseURL)
 		return &chttp.Client{Auth: auth}
@@ -159,11 +159,11 @@ func newAuthCommand(prompt command.Prompt, auth *sdkMock.Auth, req *require.Asse
 	var mockJwtHTTPClientFactory = func(ctx context.Context, jwt, baseURL string, logger *log.Logger) *chttp.Client {
 		return &chttp.Client{Auth: auth}
 	}
-	config := shared.NewConfig()
-	config.Logger = log.New()
-	commands := newCommands(config, prompt, mockAnonHTTPClientFactory, mockJwtHTTPClientFactory)
+	cfg := iconfig.NewConfig()
+	cfg.Logger = log.New()
+	commands := newCommands(cfg, prompt, mockAnonHTTPClientFactory, mockJwtHTTPClientFactory)
 	for _, c := range commands.Commands {
 		c.PersistentFlags().CountP("verbose", "v", "increase output verbosity")
 	}
-	return commands, config
+	return commands, cfg
 }

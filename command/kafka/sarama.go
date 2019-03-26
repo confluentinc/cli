@@ -6,11 +6,11 @@ import (
 
 	"github.com/Shopify/sarama"
 
-	"github.com/confluentinc/cli/shared"
+	"github.com/confluentinc/cli/internal/config"
 )
 
 // NewSaramaProducer returns a sarama.ClusterConsumerconfigured for the CLI config
-func NewSaramaConsumer(group string, config *shared.Config) (sarama.ConsumerGroup, error) {
+func NewSaramaConsumer(group string, config *config.Config) (sarama.ConsumerGroup, error) {
 	kafka, err := config.KafkaClusterConfig()
 	if err != nil {
 		return nil, err
@@ -24,7 +24,7 @@ func NewSaramaConsumer(group string, config *shared.Config) (sarama.ConsumerGrou
 }
 
 // NewSaramaProducer returns a sarama.ClusterProducer configured for the CLI config
-func NewSaramaProducer(config *shared.Config) (sarama.SyncProducer, error) {
+func NewSaramaProducer(config *config.Config) (sarama.SyncProducer, error) {
 	kafka, err := config.KafkaClusterConfig()
 	if err != nil {
 		return nil, err
@@ -54,7 +54,7 @@ func (h GroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim saram
 }
 
 // saramaConf converts KafkaClusterConfig to sarama.Config
-func saramaConf(kafka shared.KafkaClusterConfig) *sarama.Config {
+func saramaConf(kafka config.KafkaClusterConfig) *sarama.Config {
 	saramaConf := sarama.NewConfig()
 	saramaConf.Version = sarama.V1_1_0_0
 	saramaConf.Net.TLS.Enable = true

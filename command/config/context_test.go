@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	terminal "github.com/confluentinc/cli/command"
-	"github.com/confluentinc/cli/shared"
+	"github.com/confluentinc/cli/internal/config"
 	"github.com/stretchr/testify/require"
 )
 
@@ -57,11 +57,11 @@ func TestContext(t *testing.T) {
 }
 
 func run(args ...string) (string, error) {
-	config := shared.NewConfig()
-	config.Filename = filename
+	cfg := config.NewConfig()
+	cfg.Filename = filename
 	// The config may not exist yet, but we don't care
-	_ = config.Load()
-	root := New(config)
+	_ = cfg.Load()
+	root := New(cfg)
 
 	return terminal.ExecuteCommand(root, args...)
 }

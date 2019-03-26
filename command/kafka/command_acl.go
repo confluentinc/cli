@@ -11,17 +11,17 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	"github.com/confluentinc/cli/command/common"
-	"github.com/confluentinc/cli/shared"
+	"github.com/confluentinc/cli/internal/config"
 )
 
 type aclCommand struct {
 	*cobra.Command
-	config *shared.Config
+	config *config.Config
 	client ccloud.Kafka
 }
 
 // NewACLCommand returns the Cobra command for Kafka ACL.
-func NewACLCommand(config *shared.Config, client ccloud.Kafka) *cobra.Command {
+func NewACLCommand(config *config.Config, client ccloud.Kafka) *cobra.Command {
 	cmd := &aclCommand{
 		Command: &cobra.Command{
 			Use:   "acl",

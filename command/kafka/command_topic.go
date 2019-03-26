@@ -15,18 +15,18 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	"github.com/confluentinc/cli/command/common"
-	"github.com/confluentinc/cli/shared"
+	"github.com/confluentinc/cli/internal/config"
 	"github.com/confluentinc/go-printer"
 )
 
 type topicCommand struct {
 	*cobra.Command
-	config *shared.Config
+	config *config.Config
 	client ccloud.Kafka
 }
 
 // NewTopicCommand returns the Cobra command for Kafka topic.
-func NewTopicCommand(config *shared.Config, client ccloud.Kafka) *cobra.Command {
+func NewTopicCommand(config *config.Config, client ccloud.Kafka) *cobra.Command {
 	cmd := &topicCommand{
 		Command: &cobra.Command{
 			Use:   "topic",

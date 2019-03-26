@@ -5,8 +5,8 @@ import (
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	ksqlv1 "github.com/confluentinc/ccloudapis/ksql/v1"
+	"github.com/confluentinc/cli/internal"
 	"github.com/confluentinc/cli/internal/log"
-	"github.com/confluentinc/cli/shared"
 )
 
 // Compile-time check for Interface adherence
@@ -24,23 +24,23 @@ func New(client *ccloud.Client, logger *log.Logger) *KSQL {
 func (c *KSQL) List(ctx context.Context, cluster *ksqlv1.KSQLCluster) ([]*ksqlv1.KSQLCluster, error) {
 	c.Logger.Log("msg", "ksql.List()")
 	ret, err := c.Client.KSQL.List(ctx, cluster)
-	return ret, shared.ConvertAPIError(err)
+	return ret, internal.ConvertAPIError(err)
 }
 
 func (c *KSQL) Describe(ctx context.Context, cluster *ksqlv1.KSQLCluster) (*ksqlv1.KSQLCluster, error) {
 	c.Logger.Log("msg", "ksql.Describe()")
 	ret, err := c.Client.KSQL.Describe(ctx, cluster)
-	return ret, shared.ConvertAPIError(err)
+	return ret, internal.ConvertAPIError(err)
 }
 
 func (c *KSQL) Create(ctx context.Context, config *ksqlv1.KSQLClusterConfig) (*ksqlv1.KSQLCluster, error) {
 	c.Logger.Log("msg", "ksql.Create()")
 	ret, err := c.Client.KSQL.Create(ctx, config)
-	return ret, shared.ConvertAPIError(err)
+	return ret, internal.ConvertAPIError(err)
 }
 
 func (c *KSQL) Delete(ctx context.Context, cluster *ksqlv1.KSQLCluster) error {
 	c.Logger.Log("msg", "ksql.Delete()")
 	err := c.Client.KSQL.Delete(ctx, cluster)
-	return shared.ConvertAPIError(err)
+	return internal.ConvertAPIError(err)
 }

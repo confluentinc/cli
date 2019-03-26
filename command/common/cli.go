@@ -8,6 +8,7 @@ import (
 
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	"github.com/confluentinc/cli/internal"
+	"github.com/confluentinc/cli/internal/config"
 )
 
 var messages = map[error]string{
@@ -49,7 +50,7 @@ func HandleError(err error, cmd *cobra.Command) error {
 }
 
 // Cluster returns the current cluster context
-func Cluster(config *internal.Config) (*kafkav1.KafkaCluster, error) {
+func Cluster(config *config.Config) (*kafkav1.KafkaCluster, error) {
 	ctx, err := config.Context()
 	if err != nil {
 		return nil, err

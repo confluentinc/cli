@@ -11,6 +11,7 @@ import (
 	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 
+	"github.com/confluentinc/cli/internal"
 	"github.com/confluentinc/cli/internal/log"
 )
 
@@ -59,7 +60,7 @@ type Context struct {
 
 // Config represents the CLI configuration.
 type Config struct {
-	MetricSink     MetricSink             `json:"-" hcl:"-"`
+	MetricSink     internal.MetricSink    `json:"-" hcl:"-"`
 	Logger         *log.Logger            `json:"-" hcl:"-"`
 	Filename       string                 `json:"-" hcl:"-"`
 	AuthURL        string                 `json:"auth_url" hcl:"auth_url"`
@@ -129,7 +130,7 @@ func (c *Config) Save() error {
 // Context returns the current Context object.
 func (c *Config) Context() (*Context, error) {
 	if c.CurrentContext == "" {
-		return nil, ErrNoContext
+		return nil, internal.ErrNoContext
 	}
 	return c.Contexts[c.CurrentContext], nil
 }
@@ -143,7 +144,7 @@ func (c *Config) KafkaClusterConfig() (KafkaClusterConfig, error) {
 	cluster, found := c.Platforms[cfg.Platform].KafkaClusters[cfg.Kafka]
 	if !found {
 		e := fmt.Errorf("no auth found for Kafka %s, please run `ccloud kafka cluster auth` first", cfg.Kafka)
-		return KafkaClusterConfig{}, NotAuthenticatedError(e)
+		return KafkaClusterConfig{}, internal.NotAuthenticatedError(e)
 	}
 	return cluster, nil
 }
@@ -163,7 +164,7 @@ func (c *Config) MaybeDeleteKey(apikey string) {
 // CheckLogin returns an error if the user is not logged in.
 func (c *Config) CheckLogin() error {
 	if c.Auth == nil || c.Auth.Account == nil || c.Auth.Account.Id == "" {
-		return ErrUnauthorized
+		return internal.ErrUnauthorized
 	}
 	return nil
 }

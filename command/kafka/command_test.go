@@ -16,10 +16,11 @@ import (
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	cliMock "github.com/confluentinc/cli/mock"
 
-	"github.com/confluentinc/cli/shared"
+	"github.com/confluentinc/cli/internal"
+	"github.com/confluentinc/cli/internal/config"
 )
 
-var conf *shared.Config
+var conf *config.Config
 
 /*************** TEST command_acl ***************/
 var resourcePatterns = []struct {
@@ -383,17 +384,17 @@ func TestDefaults(t *testing.T) {
 	expect := make(chan interface{})
 	cmd := NewCMD(expect)
 	cmd.SetArgs([]string{"acl", "create", "--allow", "--service-account-id", "42",
-		"--operation", "read" , "--topic", "dan"})
+		"--operation", "read", "--topic", "dan"})
 	go func() {
 		expect <- &kafkav1.ACLBinding{
-			Pattern: &kafkav1.ResourcePatternConfig{ResourceType: kafkav1.ResourceTypes_TOPIC, Name:"dan",
+			Pattern: &kafkav1.ResourcePatternConfig{ResourceType: kafkav1.ResourceTypes_TOPIC, Name: "dan",
 				PatternType: kafkav1.PatternTypes_LITERAL},
-			Entry: &kafkav1.AccessControlEntryConfig{Host:"*", Principal:"User:42",
-				Operation:kafkav1.ACLOperations_READ, PermissionType:kafkav1.ACLPermissionTypes_ALLOW},
+			Entry: &kafkav1.AccessControlEntryConfig{Host: "*", Principal: "User:42",
+				Operation: kafkav1.ACLOperations_READ, PermissionType: kafkav1.ACLPermissionTypes_ALLOW},
 		}
 	}()
 
-	if err:= cmd.Execute(); err != nil {
+	if err := cmd.Execute(); err != nil {
 		t.Errorf("Topic PatternType was not set to default value of PatternTypes_LITERAL")
 	}
 
@@ -403,14 +404,14 @@ func TestDefaults(t *testing.T) {
 
 	go func() {
 		expect <- &kafkav1.ACLBinding{
-			Pattern: &kafkav1.ResourcePatternConfig{ResourceType: kafkav1.ResourceTypes_CLUSTER, Name:"kafka-cluster",
+			Pattern: &kafkav1.ResourcePatternConfig{ResourceType: kafkav1.ResourceTypes_CLUSTER, Name: "kafka-cluster",
 				PatternType: kafkav1.PatternTypes_LITERAL},
-			Entry: &kafkav1.AccessControlEntryConfig{Host:"*", Principal:"User:42",
-				Operation:kafkav1.ACLOperations_READ, PermissionType:kafkav1.ACLPermissionTypes_ALLOW},
+			Entry: &kafkav1.AccessControlEntryConfig{Host: "*", Principal: "User:42",
+				Operation: kafkav1.ACLOperations_READ, PermissionType: kafkav1.ACLPermissionTypes_ALLOW},
 		}
 	}()
 
-	if err:= cmd.Execute(); err != nil {
+	if err := cmd.Execute(); err != nil {
 		t.Errorf("Cluster PatternType was not set to default value of PatternTypes_LITERAL")
 	}
 }
@@ -420,7 +421,7 @@ func TestDefaults(t *testing.T) {
 func Test_HandleError_NotLoggedIn(t *testing.T) {
 	cmd := New(conf, &mock.Kafka{
 		ListFunc: func(ctx context.Context, cluster *kafkav1.KafkaCluster) ([]*kafkav1.KafkaCluster, error) {
-			return nil, shared.ErrUnauthorized
+			return nil, internal.ErrUnauthorized
 		},
 	})
 	cmd.PersistentFlags().CountP("verbose", "v", "increase output verbosity")
@@ -444,10 +445,10 @@ func NewCMD(expect chan interface{}) *cobra.Command {
 }
 
 func init() {
-	conf = shared.NewConfig()
+	conf = config.NewConfig()
 	conf.Logger = log.New()
 	conf.AuthURL = "http://test"
-	conf.Auth = &shared.AuthConfig{
+	conf.Auth = &config.AuthConfig{
 		User:    new(orgv1.User),
 		Account: &orgv1.Account{Id: "testAccount"},
 	}
@@ -456,24 +457,24 @@ func init() {
 
 // initContext mimics logging in with a configured context
 // TODO: create auth mock
-func initContext(config *shared.Config) {
-	user := config.Auth
-	name := fmt.Sprintf("login-%s-%s", user.User.Email, config.AuthURL)
+func initContext(cfg *config.Config) {
+	user := cfg.Auth
+	name := fmt.Sprintf("login-%s-%s", user.User.Email, cfg.AuthURL)
 
-	config.Platforms[name] = &shared.Platform{
-		Server:        config.AuthURL,
-		KafkaClusters: map[string]shared.KafkaClusterConfig{name: {}},
+	cfg.Platforms[name] = &config.Platform{
+		Server:        cfg.AuthURL,
+		KafkaClusters: map[string]config.KafkaClusterConfig{name: {}},
 	}
 
-	config.Credentials[name] = &shared.Credential{
+	cfg.Credentials[name] = &config.Credential{
 		Username: user.User.Email,
 	}
 
-	config.Contexts[name] = &shared.Context{
+	cfg.Contexts[name] = &config.Context{
 		Platform:   name,
 		Credential: name,
 		Kafka:      name,
 	}
 
-	config.CurrentContext = name
+	cfg.CurrentContext = name
 }

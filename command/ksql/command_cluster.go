@@ -10,7 +10,7 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go"
 	ksqlv1 "github.com/confluentinc/ccloudapis/ksql/v1"
 	"github.com/confluentinc/cli/command/common"
-	"github.com/confluentinc/cli/shared"
+	"github.com/confluentinc/cli/internal/config"
 	"github.com/confluentinc/go-printer"
 )
 
@@ -23,12 +23,12 @@ var (
 
 type clusterCommand struct {
 	*cobra.Command
-	config *shared.Config
+	config *config.Config
 	client ccloud.KSQL
 }
 
 // NewClusterCommand returns the Cobra clusterCommand for Ksql Cluster.
-func NewClusterCommand(config *shared.Config, client ccloud.KSQL) *cobra.Command {
+func NewClusterCommand(config *config.Config, client ccloud.KSQL) *cobra.Command {
 	cmd := &clusterCommand{
 		Command: &cobra.Command{
 			Use:   "app",

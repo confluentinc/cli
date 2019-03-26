@@ -6,17 +6,17 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/command/common"
-	"github.com/confluentinc/cli/shared"
+	"github.com/confluentinc/cli/internal/config"
 	"github.com/confluentinc/go-printer"
 )
 
 type contextCommand struct {
 	*cobra.Command
-	config *shared.Config
+	config *config.Config
 }
 
 // NewContext returns the Cobra contextCommand for `config context`.
-func NewContext(config *shared.Config) *cobra.Command {
+func NewContext(config *config.Config) *cobra.Command {
 	cmd := &contextCommand{
 		Command: &cobra.Command{
 			Use:   "context",
@@ -135,11 +135,11 @@ func (c *contextCommand) delete(cmd *cobra.Command, args []string) error {
 // HELPERS
 //
 
-func (c *contextCommand) context(args []string) (*shared.Context, error) {
+func (c *contextCommand) context(args []string) (*config.Context, error) {
 	if len(args) == 1 {
 		context, ok := c.config.Contexts[args[0]]
 		if !ok {
-			context = &shared.Context{}
+			context = &config.Context{}
 			c.config.Contexts[args[0]] = context
 			return context, nil
 		}

@@ -4,12 +4,12 @@ import (
 	"os"
 	"testing"
 
+	"github.com/confluentinc/cli/internal/config"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/cli/command"
 	"github.com/confluentinc/cli/internal/log"
-	"github.com/confluentinc/cli/shared"
 	cliVersion "github.com/confluentinc/cli/internal/version"
 )
 
@@ -17,7 +17,7 @@ func TestAddCommands_ShownInHelpUsage(t *testing.T) {
 	req := require.New(t)
 
 	logger := log.New()
-	cfg := shared.NewConfig(&shared.Config{
+	cfg := config.NewConfig(&config.Config{
 		Logger: logger,
 	})
 

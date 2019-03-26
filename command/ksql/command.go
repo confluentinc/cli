@@ -4,17 +4,17 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go"
-	"github.com/confluentinc/cli/shared"
+	"github.com/confluentinc/cli/internal/config"
 )
 
 type command struct {
 	*cobra.Command
-	config *shared.Config
+	config *config.Config
 	client ccloud.KSQL
 }
 
 // New returns the default command object for interacting with KSQL.
-func New(config *shared.Config, client ccloud.KSQL) *cobra.Command {
+func New(config *config.Config, client ccloud.KSQL) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:   "ksql",

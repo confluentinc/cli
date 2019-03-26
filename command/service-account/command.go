@@ -10,13 +10,13 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	"github.com/confluentinc/cli/command/common"
-	"github.com/confluentinc/cli/shared"
+	"github.com/confluentinc/cli/internal/config"
 	"github.com/confluentinc/go-printer"
 )
 
 type command struct {
 	*cobra.Command
-	config *shared.Config
+	config *config.Config
 	client ccloud.User
 }
 
@@ -31,7 +31,7 @@ const nameLength = 32
 const descriptionLength = 128
 
 // New returns the Cobra command for service accounts.
-func New(config *shared.Config, client ccloud.User) *cobra.Command {
+func New(config *config.Config, client ccloud.User) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:   "service-account",

@@ -14,7 +14,8 @@ import (
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	"github.com/confluentinc/cli/command/common"
-	"github.com/confluentinc/cli/shared"
+	"github.com/confluentinc/cli/internal"
+	"github.com/confluentinc/cli/internal/config"
 	"github.com/confluentinc/go-printer"
 )
 
@@ -27,12 +28,12 @@ var (
 
 type clusterCommand struct {
 	*cobra.Command
-	config *shared.Config
+	config *config.Config
 	client ccloud.Kafka
 }
 
 // NewClusterCommand returns the Cobra command for Kafka cluster.
-func NewClusterCommand(config *shared.Config, client ccloud.Kafka) *cobra.Command {
+func NewClusterCommand(config *config.Config, client ccloud.Kafka) *cobra.Command {
 	cmd := &clusterCommand{
 		Command: &cobra.Command{
 			Use:   "cluster",
@@ -142,7 +143,7 @@ func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 		return common.HandleError(err, cmd)
 	}
 	currCtx, err := c.config.Context()
-	if err != nil && err != shared.ErrNoContext {
+	if err != nil && err != internal.ErrNoContext {
 		return err
 	}
 	var data [][]string
@@ -224,7 +225,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
-	return shared.ErrNotImplemented
+	return internal.ErrNotImplemented
 }
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
@@ -289,9 +290,9 @@ func (c *clusterCommand) auth(cmd *cobra.Command, args []string) error {
 	}
 
 	if c.config.Platforms[cfg.Platform].KafkaClusters == nil {
-		c.config.Platforms[cfg.Platform].KafkaClusters = map[string]shared.KafkaClusterConfig{}
+		c.config.Platforms[cfg.Platform].KafkaClusters = map[string]config.KafkaClusterConfig{}
 	}
-	c.config.Platforms[cfg.Platform].KafkaClusters[cfg.Kafka] = shared.KafkaClusterConfig{
+	c.config.Platforms[cfg.Platform].KafkaClusters[cfg.Kafka] = config.KafkaClusterConfig{
 		Bootstrap:   strings.TrimPrefix(kc.Endpoint, "SASL_SSL://"),
 		APIEndpoint: kc.ApiEndpoint,
 		APIKey:      key,
@@ -354,7 +355,7 @@ func (c *clusterCommand) createKafkaCreds(ctx context.Context, environment strin
 	})
 
 	if err != nil {
-		return "", "", shared.ConvertAPIError(err)
+		return "", "", internal.ConvertAPIError(err)
 	}
 	fmt.Println("Okay, we've created an API key. If needed, you can see it with `ccloud kafka cluster auth`.")
 	return key.Key, key.Secret, nil

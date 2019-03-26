@@ -4,17 +4,17 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go"
-	"github.com/confluentinc/cli/shared"
+	"github.com/confluentinc/cli/internal/config"
 )
 
 type command struct {
 	*cobra.Command
-	config *shared.Config
+	config *config.Config
 	client ccloud.Kafka
 }
 
 // New returns the default command object for interacting with Kafka.
-func New(config *shared.Config, client ccloud.Kafka) *cobra.Command {
+func New(config *config.Config, client ccloud.Kafka) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:   "kafka",
