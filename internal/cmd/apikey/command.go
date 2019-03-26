@@ -47,10 +47,10 @@ func New(config *config.Config, client ccloud.APIKey) *cobra.Command {
 func (c *command) init() {
 	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		if err := log.SetLoggingVerbosity(cmd, c.config.Logger); err != nil {
-			return errors.HandleError(err, cmd)
+			return errors.Handle(err, cmd)
 		}
 		if err := c.config.CheckLogin(); err != nil {
-			return errors.HandleError(err, cmd)
+			return errors.Handle(err, cmd)
 		}
 		return nil
 	}
@@ -89,7 +89,7 @@ func (c *command) init() {
 func (c *command) list(cmd *cobra.Command, args []string) error {
 	apiKeys, err := c.client.List(context.Background(), &authv1.ApiKey{AccountId: c.config.Auth.Account.Id})
 	if err != nil {
-		return errors.HandleError(err, cmd)
+		return errors.Handle(err, cmd)
 	}
 
 	type keyDisplay struct {
@@ -130,17 +130,17 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 func (c *command) create(cmd *cobra.Command, args []string) error {
 	clusterID, err := cmd.Flags().GetString("cluster")
 	if err != nil {
-		return errors.HandleError(err, cmd)
+		return errors.Handle(err, cmd)
 	}
 
 	userId, err := cmd.Flags().GetInt32("service-account-id")
 	if err != nil {
-		return errors.HandleError(err, cmd)
+		return errors.Handle(err, cmd)
 	}
 
 	description, err := cmd.Flags().GetString("description")
 	if err != nil {
-		return errors.HandleError(err, cmd)
+		return errors.Handle(err, cmd)
 	}
 
 	key := &authv1.ApiKey{
@@ -152,7 +152,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 
 	userKey, err := c.client.Create(context.Background(), key)
 	if err != nil {
-		return errors.HandleError(err, cmd)
+		return errors.Handle(err, cmd)
 	}
 
 	fmt.Println("Please save the API Key and Secret. THIS IS THE ONLY CHANCE YOU HAVE!")
@@ -178,17 +178,17 @@ func getApiKeyId(apiKeys []*authv1.ApiKey, apiKey string) (int32, error) {
 func (c *command) delete(cmd *cobra.Command, args []string) error {
 	apiKey, err := cmd.Flags().GetString("api-key")
 	if err != nil {
-		return errors.HandleError(err, cmd)
+		return errors.Handle(err, cmd)
 	}
 
 	apiKeys, err := c.client.List(context.Background(), &authv1.ApiKey{AccountId: c.config.Auth.Account.Id})
 	if err != nil {
-		return errors.HandleError(err, cmd)
+		return errors.Handle(err, cmd)
 	}
 
 	id, err := getApiKeyId(apiKeys, apiKey)
 	if err != nil {
-		return errors.HandleError(err, cmd)
+		return errors.Handle(err, cmd)
 	}
 
 	key := &authv1.ApiKey{
@@ -199,7 +199,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	err = c.client.Delete(context.Background(), key)
 
 	if err != nil {
-		return errors.HandleError(err, cmd)
+		return errors.Handle(err, cmd)
 	}
 	c.config.MaybeDeleteKey(apiKey)
 	return nil

@@ -17,8 +17,8 @@ var messages = map[error]string{
 	ErrNotFound:       "Kafka cluster not found.", // TODO: parametrize ErrNotFound for better error messaging
 }
 
-// HandleError provides standard error messaging for common errors.
-func HandleError(err error, cmd *cobra.Command) error {
+// Handle provides standard error messaging for common errors.
+func Handle(err error, cmd *cobra.Command) error {
 	// Give an indication of successful completion
 	if err == nil {
 		return nil

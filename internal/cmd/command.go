@@ -39,7 +39,7 @@ func NewConfluentCommand(cfg *configs.Config, ver *versions.Version, logger *log
 	cli.PersistentFlags().CountP("verbose", "v", "increase output verbosity")
 	cli.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		if err := log.SetLoggingVerbosity(cmd, logger); err != nil {
-			return errors.HandleError(err, cmd)
+			return errors.Handle(err, cmd)
 		}
 		return nil
 	}

@@ -45,10 +45,10 @@ func NewClusterCommand(config *config.Config, client ccloud.KSQL) *cobra.Command
 func (c *clusterCommand) init() {
 	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		if err := log.SetLoggingVerbosity(cmd, c.config.Logger); err != nil {
-			return errors.HandleError(err, cmd)
+			return errors.Handle(err, cmd)
 		}
 		if err := c.config.CheckLogin(); err != nil {
-			return errors.HandleError(err, cmd)
+			return errors.Handle(err, cmd)
 		}
 		return nil
 	}
@@ -93,7 +93,7 @@ func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 	req := &ksqlv1.KSQLCluster{AccountId: c.config.Auth.Account.Id}
 	clusters, err := c.client.List(context.Background(), req)
 	if err != nil {
-		return errors.HandleError(err, cmd)
+		return errors.Handle(err, cmd)
 	}
 	var data [][]string
 	for _, cluster := range clusters {
@@ -106,15 +106,15 @@ func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	kafkaClusterID, err := cmd.Flags().GetString("kafka-cluster")
 	if err != nil {
-		return errors.HandleError(err, cmd)
+		return errors.Handle(err, cmd)
 	}
 	storage, err := cmd.Flags().GetInt32("storage")
 	if err != nil {
-		return errors.HandleError(err, cmd)
+		return errors.Handle(err, cmd)
 	}
 	servers, err := cmd.Flags().GetInt32("servers")
 	if err != nil {
-		return errors.HandleError(err, cmd)
+		return errors.Handle(err, cmd)
 	}
 	cfg := &ksqlv1.KSQLClusterConfig{
 		AccountId:      c.config.Auth.Account.Id,
@@ -125,7 +125,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	}
 	cluster, err := c.client.Create(context.Background(), cfg)
 	if err != nil {
-		return errors.HandleError(err, cmd)
+		return errors.Handle(err, cmd)
 	}
 	return printer.RenderTableOut(cluster, describeFields, describeRenames, os.Stdout)
 }
@@ -134,7 +134,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	req := &ksqlv1.KSQLCluster{AccountId: c.config.Auth.Account.Id, Id: args[0]}
 	cluster, err := c.client.Describe(context.Background(), req)
 	if err != nil {
-		return errors.HandleError(err, cmd)
+		return errors.Handle(err, cmd)
 	}
 	return printer.RenderTableOut(cluster, describeFields, describeRenames, os.Stdout)
 }
@@ -143,7 +143,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	req := &ksqlv1.KSQLCluster{AccountId: c.config.Auth.Account.Id, Id: args[0]}
 	err := c.client.Delete(context.Background(), req)
 	if err != nil {
-		return errors.HandleError(err, cmd)
+		return errors.Handle(err, cmd)
 	}
 	fmt.Printf("The ksql app %s has been deleted.\n", args[0])
 	return nil
