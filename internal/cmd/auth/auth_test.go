@@ -11,9 +11,9 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go"
 	sdkMock "github.com/confluentinc/ccloud-sdk-go/mock"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
-	terminal "github.com/confluentinc/cli/internal"
-	iconfig "github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/terminal"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
@@ -82,7 +82,7 @@ func TestLoginSuccess(t *testing.T) {
 	req.Equal("y0ur.jwt.T0kEn", cfg.AuthToken)
 	req.Equal(&orgv1.User{Id: 23, Email: "cody@confluent.io", FirstName: "Cody"}, cfg.Auth.User)
 
-	cfg = iconfig.NewConfig()
+	cfg = config.NewConfig()
 	req.NoError(cfg.Load())
 	name := "login-cody@confluent.io-https://confluent.cloud"
 	req.Contains(cfg.Platforms, name)
@@ -117,14 +117,14 @@ func TestLogout(t *testing.T) {
 	cmds, cfg := newAuthCommand(prompt, auth, req)
 
 	cfg.AuthToken = "some.token.here"
-	cfg.Auth = &iconfig.AuthConfig{User: &orgv1.User{Id: 23}}
+	cfg.Auth = &config.AuthConfig{User: &orgv1.User{Id: 23}}
 	req.NoError(cfg.Save())
 
 	output, err := terminal.ExecuteCommand(cmds.Commands[1])
 	req.NoError(err)
 	req.Contains(output, "You are now logged out")
 
-	cfg = iconfig.NewConfig()
+	cfg = config.NewConfig()
 	req.NoError(cfg.Load())
 	req.Empty(cfg.AuthToken)
 	req.Empty(cfg.Auth)
@@ -151,7 +151,7 @@ func prompt(username, password string) *cliMock.Prompt {
 	}
 }
 
-func newAuthCommand(prompt terminal.Prompt, auth *sdkMock.Auth, req *require.Assertions) (*commands, *iconfig.Config) {
+func newAuthCommand(prompt terminal.Prompt, auth *sdkMock.Auth, req *require.Assertions) (*commands, *config.Config) {
 	var mockAnonHTTPClientFactory = func(baseURL string, logger *log.Logger) *ccloud.Client {
 		req.Equal("https://confluent.cloud", baseURL)
 		return &ccloud.Client{Auth: auth}
@@ -159,7 +159,7 @@ func newAuthCommand(prompt terminal.Prompt, auth *sdkMock.Auth, req *require.Ass
 	var mockJwtHTTPClientFactory = func(ctx context.Context, jwt, baseURL string, logger *log.Logger) *ccloud.Client {
 		return &ccloud.Client{Auth: auth}
 	}
-	cfg := iconfig.NewConfig()
+	cfg := config.NewConfig()
 	cfg.Logger = log.New()
 	commands := newCommands(cfg, prompt, mockAnonHTTPClientFactory, mockJwtHTTPClientFactory)
 	for _, c := range commands.Commands {

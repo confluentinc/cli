@@ -4,13 +4,13 @@ import (
 	"os"
 	"testing"
 
-	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
-	terminal "github.com/confluentinc/cli/internal"
 	"github.com/confluentinc/cli/internal/cmd"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/terminal"
 	cliVersion "github.com/confluentinc/cli/internal/pkg/version"
 )
 

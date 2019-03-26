@@ -10,10 +10,10 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go"
-	terminal "github.com/confluentinc/cli/internal"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	errorsp "github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/terminal"
 )
 
 type commands struct {

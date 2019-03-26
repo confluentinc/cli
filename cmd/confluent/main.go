@@ -6,10 +6,9 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/confluentinc/cli/internal/cmd"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/metric"
-	//connectp "github.com/confluentinc/cli/pkg/connect"
-	iconfig "github.com/confluentinc/cli/internal/pkg/config"
 	cliVersion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -28,14 +27,14 @@ func main() {
 
 	metricSink := metric.NewSink()
 
-	var cfg *iconfig.Config
+	var cfg *config.Config
 	{
-		cfg = iconfig.NewConfig(&iconfig.Config{
+		cfg = config.NewConfig(&config.Config{
 			MetricSink: metricSink,
 			Logger:     logger,
 		})
 		err := cfg.Load()
-		if err != nil && err != iconfig.ErrNoConfig {
+		if err != nil && err != config.ErrNoConfig {
 			logger.Errorf("unable to load config: %v", err)
 		}
 	}

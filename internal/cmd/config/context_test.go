@@ -4,8 +4,8 @@ import (
 	"os"
 	"testing"
 
-	terminal "github.com/confluentinc/cli/internal"
 	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/terminal"
 	"github.com/stretchr/testify/require"
 )
 

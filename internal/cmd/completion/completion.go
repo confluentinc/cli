@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	terminal "github.com/confluentinc/cli/internal"
+	"github.com/confluentinc/cli/internal/pkg/terminal"
 )
 
 const longDescriptionTemplate = `Output shell completion code for the specified shell (bash only).

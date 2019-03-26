@@ -3,7 +3,7 @@ package version
 import (
 	"github.com/spf13/cobra"
 
-	terminal "github.com/confluentinc/cli/internal"
+	"github.com/confluentinc/cli/internal/pkg/terminal"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 

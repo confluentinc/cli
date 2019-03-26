@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	terminal "github.com/confluentinc/cli/internal"
+	"github.com/confluentinc/cli/internal/pkg/terminal"
 )
 
 func TestCompletionBash(t *testing.T) {

@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/confluentinc/cli/internal"
+	"github.com/confluentinc/cli/internal/pkg/terminal"
 )
 
 type Version struct {
@@ -32,7 +32,7 @@ func (v *Version) IsReleased() bool {
 }
 
 // PrintVersion prints the version to the prompt in a standardized way
-func (v *Version) Print(prompt internal.Prompt) {
+func (v *Version) Print(prompt terminal.Prompt) {
 	_, _ = prompt.Printf(`ccloud - Confluent Cloud CLI
 
 Version:     %s

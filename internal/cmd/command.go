@@ -4,7 +4,6 @@ import (
 	"context"
 	"os"
 
-	"github.com/confluentinc/cli/internal"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go"
@@ -21,10 +20,12 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	apikeys "github.com/confluentinc/cli/internal/pkg/sdk/apikey"
+	//connects "github.com/confluentinc/cli/pkg/sdk/connect"
 	environments "github.com/confluentinc/cli/internal/pkg/sdk/environment"
 	kafkas "github.com/confluentinc/cli/internal/pkg/sdk/kafka"
 	ksqls "github.com/confluentinc/cli/internal/pkg/sdk/ksql"
 	users "github.com/confluentinc/cli/internal/pkg/sdk/user"
+	"github.com/confluentinc/cli/internal/pkg/terminal"
 	versions "github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -43,7 +44,7 @@ func NewConfluentCommand(cfg *configs.Config, ver *versions.Version, logger *log
 		return nil
 	}
 
-	prompt := internal.NewTerminalPrompt(os.Stdin)
+	prompt := terminal.NewTerminalPrompt(os.Stdin)
 
 	client := ccloud.NewClientWithJWT(context.Background(), cfg.AuthToken, cfg.AuthURL, cfg.Logger)
 
@@ -71,9 +72,9 @@ func NewConfluentCommand(cfg *configs.Config, ver *versions.Version, logger *log
 	conn.Hidden = true // The ksql feature isn't finished yet, so let's hide it
 	cli.AddCommand(conn)
 
-	//conn = connect.New(cfg, connectp.New(client, logger))
+	//conn = connect.New(cfg, connects.New(client, logger))
 	//conn.Hidden = true // The connect feature isn't finished yet, so let's hide it
-	//cli.AddCommand()
+	//cli.AddCommand(conn)
 
 	return cli
 }
