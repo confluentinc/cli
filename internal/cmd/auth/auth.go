@@ -47,7 +47,7 @@ func newCommands(config *config.Config, prompt terminal.Prompt,
 func (a *commands) init() {
 	var preRun = func(cmd *cobra.Command, args []string) error {
 		if err := log.SetLoggingVerbosity(cmd, a.config.Logger); err != nil {
-			return errors.Handle(err, cmd)
+			return errors.HandleCommon(err, cmd)
 		}
 		a.prompt.SetOutput(cmd.OutOrStderr())
 		return nil
@@ -89,18 +89,18 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 		if err == errors.ErrUnauthorized { // special case for login failure
 			err = errors.ErrIncorrectAuth
 		}
-		return errors.Handle(err, cmd)
+		return errors.HandleCommon(err, cmd)
 	}
 	a.config.AuthToken = token
 
 	client = a.jwtHTTPClientFactory(context.Background(), a.config.AuthToken, a.config.AuthURL, a.config.Logger)
 	user, err := client.Auth.User(context.Background())
 	if err != nil {
-		return errors.Handle(errors.ConvertAPIError(err), cmd)
+		return errors.HandleCommon(errors.ConvertAPIError(err), cmd)
 	}
 
 	if len(user.Accounts) == 0 {
-		return errors.Handle(errors.New("no environments found for authenticated user!"), cmd)
+		return errors.HandleCommon(errors.New("no environments found for authenticated user!"), cmd)
 	}
 
 	// If no auth config exists, initialize it

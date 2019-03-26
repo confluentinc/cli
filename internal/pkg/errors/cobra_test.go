@@ -31,11 +31,11 @@ func TestHandleError(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			cmd := &cobra.Command{}
 			var err error
-			if err = Handle(tt.err, cmd); (err != nil) != tt.wantErr {
-				t.Errorf("Handle() error: %v, wantErr: %v", err, tt.wantErr)
+			if err = HandleCommon(tt.err, cmd); (err != nil) != tt.wantErr {
+				t.Errorf("HandleCommon() error: %v, wantErr: %v", err, tt.wantErr)
 			}
 			if err.Error() != tt.want {
-				t.Errorf("Handle() got = %s, want: %s", err, tt.want)
+				t.Errorf("HandleCommon() got = %s, want: %s", err, tt.want)
 			}
 		})
 	}

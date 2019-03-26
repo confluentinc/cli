@@ -39,10 +39,10 @@ func NewACLCommand(config *config.Config, client ccloud.Kafka) *cobra.Command {
 func (c *aclCommand) init() {
 	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		if err := log.SetLoggingVerbosity(cmd, c.config.Logger); err != nil {
-			return errors.Handle(err, cmd)
+			return errors.HandleCommon(err, cmd)
 		}
 		if err := c.config.CheckLogin(); err != nil {
-			return errors.Handle(err, cmd)
+			return errors.HandleCommon(err, cmd)
 		}
 		return nil
 	}
@@ -87,13 +87,13 @@ func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
 
 	cluster, err := c.config.KafkaCluster()
 	if err != nil {
-		return errors.Handle(err, cmd)
+		return errors.HandleCommon(err, cmd)
 	}
 
 	resp, err := c.client.ListACL(context.Background(), cluster, convertToFilter(acl.ACLBinding))
 
 	if err != nil {
-		return errors.Handle(err, cmd)
+		return errors.HandleCommon(err, cmd)
 	}
 
 	var bindings [][]string
@@ -128,33 +128,33 @@ func (c *aclCommand) create(cmd *cobra.Command, args []string) error {
 
 	cluster, err := c.config.KafkaCluster()
 	if err != nil {
-		return errors.Handle(err, cmd)
+		return errors.HandleCommon(err, cmd)
 	}
 
 	if acl.errors != nil {
-		return errors.Handle(acl.errors, cmd)
+		return errors.HandleCommon(acl.errors, cmd)
 	}
 
 	err = c.client.CreateACL(context.Background(), cluster, []*kafkav1.ACLBinding{acl.ACLBinding})
 
-	return errors.Handle(err, cmd)
+	return errors.HandleCommon(err, cmd)
 }
 
 func (c *aclCommand) delete(cmd *cobra.Command, args []string) error {
 	acl := validateAddDelete(parse(cmd))
 
 	if acl.errors != nil {
-		return errors.Handle(acl.errors, cmd)
+		return errors.HandleCommon(acl.errors, cmd)
 	}
 
 	cluster, err := c.config.KafkaCluster()
 	if err != nil {
-		return errors.Handle(err, cmd)
+		return errors.HandleCommon(err, cmd)
 	}
 
 	err = c.client.DeleteACL(context.Background(), cluster, convertToFilter(acl.ACLBinding))
 
-	return errors.Handle(err, cmd)
+	return errors.HandleCommon(err, cmd)
 }
 
 // validateAddDelete ensures the minimum requirements for acl add and delete are met

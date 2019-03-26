@@ -42,10 +42,10 @@ func New(config *config.Config, client ccloud.Account) *cobra.Command {
 func (c *command) init() {
 	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		if err := log.SetLoggingVerbosity(cmd, c.config.Logger); err != nil {
-			return errors.Handle(err, cmd)
+			return errors.HandleCommon(err, cmd)
 		}
 		if err := c.config.CheckLogin(); err != nil {
-			return errors.Handle(err, cmd)
+			return errors.HandleCommon(err, cmd)
 		}
 		return nil
 	}
@@ -68,7 +68,7 @@ func (c *command) init() {
 func (c *command) list(cmd *cobra.Command, args []string) error {
 	environments, err := c.client.List(context.Background(), &orgv1.Account{})
 	if err != nil {
-		return errors.Handle(err, cmd)
+		return errors.HandleCommon(err, cmd)
 	}
 
 	var data [][]string
@@ -92,12 +92,12 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 			c.config.Auth.Account = acc
 			err := c.config.Save()
 			if err != nil {
-				return errors.Handle(errors.New("couldn't switch to new environment: couldn't save config."), cmd)
+				return errors.HandleCommon(errors.New("couldn't switch to new environment: couldn't save config."), cmd)
 			}
 			fmt.Println("Now using", id, "as the default (active) environment.")
 			return nil
 		}
 	}
 
-	return errors.Handle(errors.New("specified environment ID not found.  Use `ccloud environment list` to see available environments."), cmd)
+	return errors.HandleCommon(errors.New("specified environment ID not found.  Use `ccloud environment list` to see available environments."), cmd)
 }
