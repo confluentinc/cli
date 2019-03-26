@@ -74,8 +74,8 @@ type Config struct {
 	CurrentContext string                 `json:"current_context" hcl:"current_context"`
 }
 
-// NewConfig initializes a new Config object
-func NewConfig(config ...*Config) *Config {
+// New initializes a new Config object
+func New(config ...*Config) *Config {
 	var c *Config
 	if config == nil {
 		c = &Config{}

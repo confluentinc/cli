@@ -18,7 +18,7 @@ func TestAddCommands_ShownInHelpUsage(t *testing.T) {
 	req := require.New(t)
 
 	logger := log.New()
-	cfg := config.NewConfig(&config.Config{
+	cfg := config.New(&config.Config{
 		Logger: logger,
 	})
 

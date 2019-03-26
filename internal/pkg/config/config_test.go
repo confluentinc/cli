@@ -48,7 +48,7 @@ func TestConfig_Load(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := NewConfig()
+			c := New()
 			c.Filename = tt.file
 			err := ioutil.WriteFile(tt.file, []byte(tt.args.contents), 0644)
 			if err != nil {

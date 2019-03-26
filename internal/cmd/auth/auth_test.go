@@ -82,7 +82,7 @@ func TestLoginSuccess(t *testing.T) {
 	req.Equal("y0ur.jwt.T0kEn", cfg.AuthToken)
 	req.Equal(&orgv1.User{Id: 23, Email: "cody@confluent.io", FirstName: "Cody"}, cfg.Auth.User)
 
-	cfg = config.NewConfig()
+	cfg = config.New()
 	req.NoError(cfg.Load())
 	name := "login-cody@confluent.io-https://confluent.cloud"
 	req.Contains(cfg.Platforms, name)
@@ -124,7 +124,7 @@ func TestLogout(t *testing.T) {
 	req.NoError(err)
 	req.Contains(output, "You are now logged out")
 
-	cfg = config.NewConfig()
+	cfg = config.New()
 	req.NoError(cfg.Load())
 	req.Empty(cfg.AuthToken)
 	req.Empty(cfg.Auth)
@@ -159,7 +159,7 @@ func newAuthCommand(prompt terminal.Prompt, auth *sdkMock.Auth, req *require.Ass
 	var mockJwtHTTPClientFactory = func(ctx context.Context, jwt, baseURL string, logger *log.Logger) *ccloud.Client {
 		return &ccloud.Client{Auth: auth}
 	}
-	cfg := config.NewConfig()
+	cfg := config.New()
 	cfg.Logger = log.New()
 	commands := newCommands(cfg, prompt, mockAnonHTTPClientFactory, mockJwtHTTPClientFactory)
 	for _, c := range commands.Commands {

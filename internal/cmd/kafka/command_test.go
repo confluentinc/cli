@@ -445,7 +445,7 @@ func NewCMD(expect chan interface{}) *cobra.Command {
 }
 
 func init() {
-	conf = config.NewConfig()
+	conf = config.New()
 	conf.Logger = log.New()
 	conf.AuthURL = "http://test"
 	conf.Auth = &config.AuthConfig{
