@@ -8,6 +8,8 @@ before:
     # TODO: [CLI-92] we delete the semaphore cache during release to workaround an issue with semaphore and goreleaser
     - rm -rf $GOPATH/pkg/mod
 
+# NOTE: This will put all builds into the same ./dist folder.  There is no way to configure goreleaser output directories per-build, only per-project.
+# That means that we should probably not rely on the CI's directory layout for publishing binaries to s3 since cloud and rbac will be intermingled.
 builds:
   -
     binary: ccloud
@@ -15,7 +17,28 @@ builds:
     flags:
       - -mod=readonly
     ldflags:
-      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.Commit}} -X main.date={{.Date}}  -X main.host={{.Env.HOSTNAME}}
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.Commit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}} -X main.target=cloud
+    gcflags:
+      - -trimpath={{.Env.GOPATH}}
+    asmflags:
+      - -trimpath={{.Env.GOPATH}}
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - 386
+    ignore:
+      - goos: darwin
+        goarch: 386
+  -
+    binary: confluent
+    main: cmd/confluent/main.go
+    flags:
+      - -mod=readonly
+    ldflags:
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.Commit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}} -X main.target=rbac
     gcflags:
       - -trimpath={{.Env.GOPATH}}
     asmflags:
