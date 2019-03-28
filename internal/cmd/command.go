@@ -31,7 +31,7 @@ import (
 
 const cliName = "ccloud"
 
-func NewConfluentCommand(cfg *configs.Config, ver *versions.Version, logger *log.Logger) *cobra.Command {
+func NewConfluentCommand(cfg *configs.Config, ver *versions.Version, logger *log.Logger, target string) *cobra.Command {
 	cli := &cobra.Command{
 		Use:   cliName,
 		Short: "Welcome to the Confluent Cloud CLI",
@@ -63,18 +63,23 @@ func NewConfluentCommand(cfg *configs.Config, ver *versions.Version, logger *log
 	}
 
 	cli.AddCommand(auth.New(cfg)...)
-	cli.AddCommand(environment.New(cfg, environments.New(client, logger)))
-	cli.AddCommand(service_account.New(cfg, users.New(client, logger)))
-	cli.AddCommand(apikey.New(cfg, apikeys.New(client, logger)))
-	cli.AddCommand(kafka.New(cfg, kafkas.New(client, logger)))
 
-	conn = ksql.New(cfg, ksqls.New(client, logger))
-	conn.Hidden = true // The ksql feature isn't finished yet, so let's hide it
-	cli.AddCommand(conn)
+	if target == "cloud" {
+		cli.AddCommand(environment.New(cfg, environments.New(client, logger)))
+		cli.AddCommand(service_account.New(cfg, users.New(client, logger)))
+		cli.AddCommand(apikey.New(cfg, apikeys.New(client, logger)))
+		cli.AddCommand(kafka.New(cfg, kafkas.New(client, logger)))
 
-	//conn = connect.New(cfg, connects.New(client, logger))
-	//conn.Hidden = true // The connect feature isn't finished yet, so let's hide it
-	//cli.AddCommand(conn)
+		conn = ksql.New(cfg, ksqls.New(client, logger))
+		conn.Hidden = true // The ksql feature isn't finished yet, so let's hide it
+		cli.AddCommand(conn)
+
+		//conn = connect.New(cfg, connects.New(client, logger))
+		//conn.Hidden = true // The connect feature isn't finished yet, so let's hide it
+		//cli.AddCommand(conn)
+	} else if target == "rbac" {
+
+	}
 
 	return cli
 }
