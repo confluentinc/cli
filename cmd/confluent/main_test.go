@@ -23,7 +23,9 @@ func TestAddCommands_ShownInHelpUsage(t *testing.T) {
 	})
 
 	version := cliVersion.NewVersion("1.2.3", "abc1234", "01/23/45", "CI")
-	root := cmd.NewConfluentCommand(cfg, version, logger)
+
+	// Cloud test
+	root := cmd.NewConfluentCommand(cfg, version, logger, "cloud")
 	prompt := terminal.NewPrompt(os.Stdin)
 	root.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		prompt.SetOutput(cmd.OutOrStderr())
@@ -34,4 +36,30 @@ func TestAddCommands_ShownInHelpUsage(t *testing.T) {
 	req.Contains(output, "kafka")
 	//Hidden: req.Contains(output, "ksql")
 	req.Contains(output, "environment")
+	req.Contains(output, "service-account")
+	req.Contains(output, "api-key")
+	req.Contains(output, "login")
+	req.Contains(output, "logout")
+	req.Contains(output, "help")
+	req.Contains(output, "version")
+	req.Contains(output, "completion")
+
+	// RBAC test
+	root = cmd.NewConfluentCommand(cfg, version, logger, "rbac")
+	root.PersistentPreRun = func(cmd *cobra.Command, args []string) {
+		prompt.SetOutput(cmd.OutOrStderr())
+	}
+
+	output, err = terminal.ExecuteCommand(root, "help")
+	req.NoError(err)
+	req.NotContains(output, "kafka")
+	req.NotContains(output, "ksql")
+	req.NotContains(output, "environment")
+	req.NotContains(output, "service-account")
+	req.NotContains(output, "api-key")
+	req.Contains(output, "login")
+	req.Contains(output, "logout")
+	req.Contains(output, "help")
+	req.Contains(output, "version")
+	req.Contains(output, "completion")
 }
