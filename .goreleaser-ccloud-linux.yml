@@ -1,15 +1,15 @@
-project_name: confluent
+project_name: ccloud
 
-dist: dist/rbac
+dist: dist/ccloud
 
 builds:
   -
-    binary: confluent
+    binary: ccloud
     main: cmd/confluent/main.go
     flags:
       - -mod=readonly
     ldflags:
-      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.Commit}} -X main.date={{.Date}}  -X main.host={{.Env.HOSTNAME}} -X main.target=rbac
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.Commit}} -X main.date={{.Date}}  -X main.host={{.Env.HOSTNAME}} -X main.cliName=ccloud
     gcflags:
       - -trimpath={{.Env.GOPATH}}
     asmflags:

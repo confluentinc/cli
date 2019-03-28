@@ -31,7 +31,7 @@ import (
 
 const cliName = "ccloud"
 
-func NewConfluentCommand(cfg *configs.Config, ver *versions.Version, logger *log.Logger, target string) *cobra.Command {
+func NewConfluentCommand(cfg *configs.Config, ver *versions.Version, logger *log.Logger, cliName string) *cobra.Command {
 	cli := &cobra.Command{
 		Use:   cliName,
 		Short: "Welcome to the Confluent Cloud CLI",
@@ -64,7 +64,7 @@ func NewConfluentCommand(cfg *configs.Config, ver *versions.Version, logger *log
 
 	cli.AddCommand(auth.New(cfg)...)
 
-	if target == "cloud" {
+	if cliName == "ccloud" {
 		cli.AddCommand(environment.New(cfg, environments.New(client, logger)))
 		cli.AddCommand(service_account.New(cfg, users.New(client, logger)))
 		cli.AddCommand(apikey.New(cfg, apikeys.New(client, logger)))
@@ -77,7 +77,7 @@ func NewConfluentCommand(cfg *configs.Config, ver *versions.Version, logger *log
 		//conn = connect.New(cfg, connects.New(client, logger))
 		//conn.Hidden = true // The connect feature isn't finished yet, so let's hide it
 		//cli.AddCommand(conn)
-	} else if target == "rbac" {
+	} else if cliName == "confluent" {
 
 	}
 

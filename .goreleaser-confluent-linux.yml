@@ -1,6 +1,6 @@
 project_name: confluent
 
-dist: dist/rbac
+dist: dist/confluent
 
 builds:
   -
@@ -9,12 +9,12 @@ builds:
     flags:
       - -mod=readonly
     ldflags:
-      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.Commit}} -X main.date={{.Date}}  -X main.host={{.Env.HOSTNAME}} -X main.target=rbac
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.Commit}} -X main.date={{.Date}}  -X main.host={{.Env.HOSTNAME}} -X main.cliName=confluent
     gcflags:
       - -trimpath={{.Env.GOPATH}}
     asmflags:
       - -trimpath={{.Env.GOPATH}}
     goos:
-      - darwin
+      - linux
     goarch:
       - amd64

@@ -18,7 +18,7 @@ var (
 	commit  = ""
 	date    = ""
 	host    = ""
-	target  = ""
+	cliName = ""
 )
 
 func main() {
@@ -42,7 +42,7 @@ func main() {
 
 	version := cliVersion.NewVersion(version, commit, date, host)
 
-	cli := cmd.NewConfluentCommand(cfg, version, logger, target)
+	cli := cmd.NewConfluentCommand(cfg, version, logger, cliName)
 	err := cli.Execute()
 	if err != nil {
 		os.Exit(1)

@@ -31,16 +31,16 @@ show-args:
 
 .PHONY: build-go
 build-go:
-	make build-cloud
-	make build-rbac
+	make build-ccloud
+	make build-confluent
 
-.PHONY: build-cloud
-build-cloud:
-	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --snapshot --rm-dist -f .goreleaser-cloud$(GORELEASER_SUFFIX)
+.PHONY: build-ccloud
+build-ccloud:
+	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --snapshot --rm-dist -f .goreleaser-ccloud$(GORELEASER_SUFFIX)
 
-.PHONY: build-rbac
-build-rbac:
-	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --snapshot --rm-dist -f .goreleaser-rbac$(GORELEASER_SUFFIX)
+.PHONY: build-confluent
+build-confluent:
+	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --snapshot --rm-dist -f .goreleaser-confluent$(GORELEASER_SUFFIX)
 
 .PHONY: release
 release: get-release-image commit-release tag-release
@@ -51,35 +51,35 @@ release: get-release-image commit-release tag-release
 gorelease:
 	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --rm-dist
 
-.PHONY: dist-cloud
-dist-cloud:
+.PHONY: dist-ccloud
+dist-ccloud:
 	@# unfortunately goreleaser only supports one archive right now (either tar/zip or binaries): https://github.com/goreleaser/goreleaser/issues/705
 	@# we had goreleaser upload binaries (they're uncompressed, so goreleaser's parallel uploads will save more time with binaries than archives)
-	cp LICENSE dist/cloud/darwin_amd64/
-	cp LICENSE dist/cloud/linux_amd64/
-	cp LICENSE dist/cloud/linux_386/
-	cp LICENSE dist/cloud/windows_amd64/
-	cp LICENSE dist/cloud/windows_amd64/
-	cp INSTALL.md dist/cloud/darwin_amd64/
-	cp INSTALL.md dist/cloud/linux_amd64/
-	cp INSTALL.md dist/cloud/linux_386/
-	cp INSTALL.md dist/cloud/windows_amd64/
-	cp INSTALL.md dist/cloud/windows_amd64/
-	tar -czf dist/cloud/ccloud_$(VERSION)_darwin_amd64.tar.gz -C dist/cloud/darwin_amd64 .
-	tar -czf dist/cloud/ccloud_$(VERSION)_linux_amd64.tar.gz -C dist/cloud/linux_amd64 .
-	tar -czf dist/cloud/ccloud_$(VERSION)_linux_386.tar.gz -C dist/cloud/linux_386 .
-	zip -jqr dist/cloud/ccloud_$(VERSION)_windows_amd64.zip dist/cloud/windows_amd64/*
-	zip -jqr dist/cloud/ccloud_$(VERSION)_windows_386.zip dist/cloud/windows_386/*
-	cp dist/cloud/ccloud_$(VERSION)_darwin_amd64.tar.gz dist/cloud/ccloud_latest_darwin_amd64.tar.gz
-	cp dist/cloud/ccloud_$(VERSION)_linux_amd64.tar.gz dist/cloud/ccloud_latest_linux_amd64.tar.gz
-	cp dist/cloud/ccloud_$(VERSION)_linux_386.tar.gz dist/cloud/ccloud_latest_linux_386.tar.gz
-	cp dist/cloud/ccloud_$(VERSION)_windows_amd64.zip dist/cloud/ccloud_latest_windows_amd64.zip
-	cp dist/cloud/ccloud_$(VERSION)_windows_386.zip dist/cloud/ccloud_latest_windows_386.zip
+	cp LICENSE dist/ccloud/darwin_amd64/
+	cp LICENSE dist/ccloud/linux_amd64/
+	cp LICENSE dist/ccloud/linux_386/
+	cp LICENSE dist/ccloud/windows_amd64/
+	cp LICENSE dist/ccloud/windows_amd64/
+	cp INSTALL.md dist/ccloud/darwin_amd64/
+	cp INSTALL.md dist/ccloud/linux_amd64/
+	cp INSTALL.md dist/ccloud/linux_386/
+	cp INSTALL.md dist/ccloud/windows_amd64/
+	cp INSTALL.md dist/ccloud/windows_amd64/
+	tar -czf dist/ccloud/ccloud_$(VERSION)_darwin_amd64.tar.gz -C dist/ccloud/darwin_amd64 .
+	tar -czf dist/ccloud/ccloud_$(VERSION)_linux_amd64.tar.gz -C dist/ccloud/linux_amd64 .
+	tar -czf dist/ccloud/ccloud_$(VERSION)_linux_386.tar.gz -C dist/ccloud/linux_386 .
+	zip -jqr dist/ccloud/ccloud_$(VERSION)_windows_amd64.zip dist/ccloud/windows_amd64/*
+	zip -jqr dist/ccloud/ccloud_$(VERSION)_windows_386.zip dist/ccloud/windows_386/*
+	cp dist/ccloud/ccloud_$(VERSION)_darwin_amd64.tar.gz dist/ccloud/ccloud_latest_darwin_amd64.tar.gz
+	cp dist/ccloud/ccloud_$(VERSION)_linux_amd64.tar.gz dist/ccloud/ccloud_latest_linux_amd64.tar.gz
+	cp dist/ccloud/ccloud_$(VERSION)_linux_386.tar.gz dist/ccloud/ccloud_latest_linux_386.tar.gz
+	cp dist/ccloud/ccloud_$(VERSION)_windows_amd64.zip dist/ccloud/ccloud_latest_windows_amd64.zip
+	cp dist/ccloud/ccloud_$(VERSION)_windows_386.zip dist/ccloud/ccloud_latest_windows_386.zip
 
-.PHONY: publish-cloud
-publish: dist-cloud
-	aws s3 cp dist/cloud/ s3://confluent.cloud/ccloud-cli/archives/$(VERSION:v%=%)/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --exclude "*_latest_*" --acl public-read
-	aws s3 cp dist/cloud/ s3://confluent.cloud/ccloud-cli/archives/latest/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --exclude "*_$(VERSION)_*" --acl public-read
+.PHONY: publish-ccloud
+publish: dist-ccloud
+	aws s3 cp dist/ccloud/ s3://confluent.cloud/ccloud-cli/archives/$(VERSION:v%=%)/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --exclude "*_latest_*" --acl public-read
+	aws s3 cp dist/ccloud/ s3://confluent.cloud/ccloud-cli/archives/latest/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --exclude "*_$(VERSION)_*" --acl public-read
 
 .PHONY: fmt
 fmt:
