@@ -1,0 +1,20 @@
+project_name: confluent
+
+dist: dist/confluent
+
+builds:
+  -
+    binary: confluent
+    main: cmd/confluent/main.go
+    flags:
+      - -mod=readonly
+    ldflags:
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.Commit}} -X main.date={{.Date}}  -X main.host={{.Env.HOSTNAME}} -X main.cliName=confluent
+    gcflags:
+      - -trimpath={{.Env.GOPATH}}
+    asmflags:
+      - -trimpath={{.Env.GOPATH}}
+    goos:
+      - linux
+    goarch:
+      - amd64

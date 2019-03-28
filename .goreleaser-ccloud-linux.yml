@@ -1,5 +1,7 @@
 project_name: ccloud
 
+dist: dist/ccloud
+
 builds:
   -
     binary: ccloud
@@ -7,7 +9,7 @@ builds:
     flags:
       - -mod=readonly
     ldflags:
-      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.Commit}} -X main.date={{.Date}}  -X main.host={{.Env.HOSTNAME}}
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.Commit}} -X main.date={{.Date}}  -X main.host={{.Env.HOSTNAME}} -X main.cliName=ccloud
     gcflags:
       - -trimpath={{.Env.GOPATH}}
     asmflags:

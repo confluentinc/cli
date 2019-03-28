@@ -30,3 +30,4 @@ terraform.d
 coverage.txt
 ccloud
 *.sw*
+.vscode

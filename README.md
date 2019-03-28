@@ -4,7 +4,9 @@
 ![Release](release.svg)
 [![codecov](https://codecov.io/gh/confluentinc/cli/branch/master/graph/badge.svg?token=67t1cdciLU)](https://codecov.io/gh/confluentinc/cli)
 
-This is the v2 Confluent Cloud CLI. It also serves as the backbone for the Confluent "Converged CLI" efforts.
+This is the v2 Confluent *Cloud CLI*. It also serves as the backbone for the Confluent "*Converged CLI*" efforts.
+In particular, the repository also contains all of the code for the on-prem "*Confluent CLI*", which is also built
+as part of the repo's build process.
 
 ## Install
 
@@ -47,7 +49,8 @@ This is where the `confluent.cloud` S3 bucket is located.
 ```
 $ make deps
 $ make build
-$ PATH=dist/$(go env GOOS)_$(go env GOARCH):$PATH dist/$(go env GOOS)_$(go env GOARCH)/ccloud -h
+$ dist/ccloud/$(go env GOOS)_$(go env GOARCH)/ccloud -h # for cloud CLI
+$ dist/confluent/$(go env GOOS)_$(go env GOARCH)/confluent -h # for on-prem Confluent CLI
 ```
 
 ## Developing
