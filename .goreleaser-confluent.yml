@@ -1,4 +1,6 @@
-project_name: ccloud
+project_name: confluent
+
+dist: dist/confluent
 
 before:
   hooks:
@@ -11,27 +13,6 @@ before:
 # NOTE: This will put all builds into the same ./dist folder.  There is no way to configure goreleaser output directories per-build, only per-project.
 # That means that we should probably not rely on the CI's directory layout for publishing binaries to s3 since cloud and rbac will be intermingled.
 builds:
-  -
-    binary: ccloud
-    main: cmd/confluent/main.go
-    flags:
-      - -mod=readonly
-    ldflags:
-      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.Commit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}} -X main.cliName=ccloud
-    gcflags:
-      - -trimpath={{.Env.GOPATH}}
-    asmflags:
-      - -trimpath={{.Env.GOPATH}}
-    goos:
-      - linux
-      - darwin
-      - windows
-    goarch:
-      - amd64
-      - 386
-    ignore:
-      - goos: darwin
-        goarch: 386
   -
     binary: confluent
     main: cmd/confluent/main.go
@@ -63,5 +44,5 @@ s3:
   -
     bucket: confluent.cloud
     region: us-west-2
-    folder: "ccloud-cli/binaries/{{.Version}}"
+    folder: "confluent-cli/binaries/{{.Version}}"
     acl: public-read
