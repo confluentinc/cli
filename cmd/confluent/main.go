@@ -18,6 +18,7 @@ var (
 	commit  = ""
 	date    = ""
 	host    = ""
+	target  = ""
 )
 
 func main() {
