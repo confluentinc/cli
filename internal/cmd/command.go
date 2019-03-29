@@ -29,11 +29,7 @@ import (
 	versions "github.com/confluentinc/cli/internal/pkg/version"
 )
 
-var cliName = ""
-
-func NewConfluentCommand(cfg *configs.Config, ver *versions.Version, logger *log.Logger, _cliName string) *cobra.Command {
-	cliName = _cliName
-
+func NewConfluentCommand(cfg *configs.Config, ver *versions.Version, logger *log.Logger, cliName string) *cobra.Command {
 	cli := &cobra.Command{
 		Use:   cliName,
 		Short: "Welcome to the Confluent Cloud CLI",
