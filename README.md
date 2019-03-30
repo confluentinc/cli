@@ -71,3 +71,21 @@ Things under `internal/cmd` are commands, things under `internal/pkg` are packag
 When you add a new command or resource, assuming its already in the SDK, you generally just need to create
 * `internal/cmd/<command>/<command>.go` (and test)
 * `internal/pkg/sdk/<resource>/<resource>.go` (and test)
+
+### Documentation
+
+The CLI command [reference docs](https://docs.confluent.io/current/cloud/cli/command-reference/index.html)
+are programmatically generated from the Cobra commands in this repo.
+
+Just run:
+
+    $ make docs
+
+Cheat sheet:
+```
+	cli := &cobra.Command{
+		Use:               cliName,
+		Short:             "This is a short description",
+		Long:              "This is a longer synopsis",
+	}
+```

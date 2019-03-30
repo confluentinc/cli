@@ -33,10 +33,13 @@ import (
 func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Version, logger *log.Logger) (*cobra.Command, error) {
 	cli := &cobra.Command{
 		Use:               cliName,
-		Short:             "Welcome to the Confluent Cloud CLI",
+		Short:             "Confluent Cloud CLI",
+		Long:              "Manage your Confluent Cloud",
+		Version:           ver.Version,
 		DisableAutoGenTag: true,
 	}
-	cli.PersistentFlags().CountP("verbose", "v", "increase output verbosity")
+	cli.PersistentFlags().CountP("verbose", "v",
+		"increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace)")
 
 	prompt := pcmd.NewPrompt(os.Stdin)
 	updateClient, err := update.NewClient(cliName, logger)
