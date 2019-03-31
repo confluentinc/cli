@@ -63,27 +63,27 @@ func (c *Client) PromptToDownload(name, currVersion, latestVersion string, confi
 	fmt.Printf("Current Version: %s\n", currVersion)
 	fmt.Printf("Latest Version:  %s\n", latestVersion)
 
-	if confirm {
-		for {
-			fmt.Print("Do you want to download and install this update? (y/n): ")
-
-			reader := bufio.NewReader(os.Stdin)
-			input, _ := reader.ReadString('\n')
-
-			choice := string([]byte(input)[0])
-			switch choice {
-			case "y":
-				return true
-			case "n":
-				return false
-			default:
-				fmt.Printf("%s is not a valid choice", choice)
-				continue
-			}
-		}
+	if !confirm {
+		return true
 	}
 
-	return false
+	for {
+		fmt.Print("Do you want to download and install this update? (y/n): ")
+
+		reader := bufio.NewReader(os.Stdin)
+		input, _ := reader.ReadString('\n')
+
+		choice := string([]byte(input)[0])
+		switch choice {
+		case "y":
+			return true
+		case "n":
+			return false
+		default:
+			fmt.Printf("%s is not a valid choice", choice)
+			continue
+		}
+	}
 }
 
 // UpdateBinary replaces the named binary at path with the desired version
@@ -94,7 +94,7 @@ func (c *Client) UpdateBinary(name, version, path string) error {
 	}
 	defer os.RemoveAll(downloadDir)
 
-	c.logger.Infof("Downloading %s version %s...", name, version)
+	fmt.Printf("Downloading %s version %s...\n", name, version)
 	startTime := time.Now()
 
 	newBin, bytes, err := c.repository.DownloadVersion(name, version, downloadDir)
@@ -104,7 +104,7 @@ func (c *Client) UpdateBinary(name, version, path string) error {
 
 	mb := float64(bytes) / 1024.0 / 1024.0
 	timeSpent := time.Since(startTime).Seconds()
-	c.logger.Infof("Done. Downloaded %.2f MB in %.0f seconds. (%.2f MB/s)", mb, timeSpent, mb/timeSpent)
+	fmt.Printf("Done. Downloaded %.2f MB in %.0f seconds. (%.2f MB/s)\n", mb, timeSpent, mb/timeSpent)
 
 	err = copyFile(newBin, path)
 	if err != nil {

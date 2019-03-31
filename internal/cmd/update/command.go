@@ -3,10 +3,10 @@ package update
 import (
 	"os"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/terminal"
 	"github.com/confluentinc/cli/internal/pkg/updater"
@@ -19,11 +19,6 @@ const (
 	S3BinRegion   = "us-west-2"
 	S3BinPrefix   = "ccloud-cli/binaries"
 	LastCheckFile = "~/.ccloud_update"
-)
-
-var (
-	// in priority order to check for credentials
-	AWSProfiles = []string{"confluent-dev", "confluent", "default"}
 )
 
 type command struct {
@@ -52,9 +47,10 @@ func New(cliName string, config *config.Config, version *cliVersion.Version, pro
 func (c *command) init() {
 	c.Command = &cobra.Command{
 		Use:   "update",
-		Short: "Update ccloud",
-		Long:  "Update ccloud",
+		Short: "Update " + c.cliName,
+		Long:  "Update " + c.cliName,
 		RunE:  c.update,
+		Args:  cobra.NoArgs,
 	}
 	c.Command.Flags().Bool("yes", false, "Update without prompting.")
 }
@@ -64,16 +60,6 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.Wrap(err, "error reading --yes as bool")
 	}
-	//repo, err := s3.NewPrivateRepo(&s3.PrivateRepoParams{
-	//	S3BinBucket: S3BinBucket,
-	//	S3BinRegion: S3BinRegion,
-	//	S3BinPrefix: S3BinPrefix,
-	//	AWSProfiles: AWSProfiles,
-	//	logger:      c.logger,
-	//})
-	//if err != nil {
-	//	return err
-	//}
 	repo := &s3.PublicRepo{
 		S3BinRegion: S3BinRegion,
 		S3BinBucket: S3BinBucket,
@@ -85,7 +71,8 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	c.prompt.Println("Checking for updates...")
 	updateAvailable, latestVersion, err := updateClient.CheckForUpdates(c.cliName, c.version.Version)
 	if err != nil {
-		c.logger.Errorf("error checking for updates: %s", err)
+		c.Command.SilenceUsage = true
+		return errors.Wrap(err, "error checking for updates")
 	}
 
 	if !updateAvailable {
@@ -107,8 +94,9 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := updateClient.TouchUpdateCheckFile(); err != nil {
-		c.logger.Errorf("error touching last check file: %s", err)
-		return err
+		// No big deal, just log it and swallow the error
+		c.logger.Warnf("error touching last check file: %s", err)
+		return nil
 	}
 	return nil
 }
