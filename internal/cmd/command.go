@@ -30,13 +30,19 @@ import (
 	versions "github.com/confluentinc/cli/internal/pkg/version"
 )
 
-func NewConfluentCommand(cfg *configs.Config, ver *versions.Version, logger *log.Logger, cliName string) *cobra.Command {
+func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Version, logger *log.Logger) *cobra.Command {
 	cli := &cobra.Command{
 		Use:   cliName,
 		Short: "Welcome to the Confluent Cloud CLI",
 	}
 	cli.PersistentFlags().CountP("verbose", "v", "increase output verbosity")
+
+	updateClient := update.NewClient(logger)
+
 	cli.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		if err := updateClient.NotifyIfUpdateAvailable(cliName, ver.Version); err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
 		if err := log.SetLoggingVerbosity(cmd, logger); err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
@@ -60,7 +66,7 @@ func NewConfluentCommand(cfg *configs.Config, ver *versions.Version, logger *log
 	} else {
 		cli.AddCommand(conn)
 	}
-	cli.AddCommand(update.New(cliName, cfg, ver, prompt))
+	cli.AddCommand(update.New(cliName, cfg, ver, prompt, updateClient))
 
 	cli.AddCommand(auth.New(cfg)...)
 

@@ -42,7 +42,7 @@ func main() {
 
 	version := cliVersion.NewVersion(version, commit, date, host)
 
-	cli := cmd.NewConfluentCommand(cfg, version, logger, cliName)
+	cli := cmd.NewConfluentCommand(cliName, cfg, version, logger)
 	err := cli.Execute()
 	if err != nil {
 		os.Exit(1)

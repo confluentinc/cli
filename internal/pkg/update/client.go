@@ -1,4 +1,4 @@
-package updater
+package update
 
 import (
 	"bufio"
@@ -16,15 +16,15 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
-type Client struct {
+type client struct {
 	repository    Repository
 	lastCheckFile string
 	logger        *log.Logger
 }
 
-// NewUpdateClient returns a client for updating CLI binaries
-func NewUpdateClient(repo Repository, lastCheckFile string, logger *log.Logger) *Client {
-	return &Client{
+// NewClient returns a client for updating CLI binaries
+func NewClient(repo Repository, lastCheckFile string, logger *log.Logger) Client {
+	return &client{
 		repository:    repo,
 		lastCheckFile: lastCheckFile,
 		logger:        logger,
@@ -32,7 +32,7 @@ func NewUpdateClient(repo Repository, lastCheckFile string, logger *log.Logger) 
 }
 
 // CheckForUpdates checks for new versions in the repo
-func (c *Client) CheckForUpdates(name string, currentVersion string) (updateAvailable bool, latestVersion string, err error) {
+func (c *client) CheckForUpdates(name string, currentVersion string) (updateAvailable bool, latestVersion string, err error) {
 	availableVersions, err := c.repository.GetAvailableVersions(name)
 	if err != nil {
 		return false, "", err
@@ -42,7 +42,8 @@ func (c *Client) CheckForUpdates(name string, currentVersion string) (updateAvai
 
 	currVersion, err := version.NewVersion(currentVersion)
 	if err != nil {
-		return false, "", fmt.Errorf("unable to parse %s version %s - %s", name, currentVersion, err)
+		err = fmt.Errorf("unable to parse %s version %s - %s", name, currentVersion, err)
+		return false, "", err
 	}
 
 	if currVersion.LessThan(mostRecentVersion) {
@@ -52,8 +53,20 @@ func (c *Client) CheckForUpdates(name string, currentVersion string) (updateAvai
 	return false, currentVersion, nil
 }
 
+// NotifyIfUpdateAvailable prints a message if an update is available
+func (c *client) NotifyIfUpdateAvailable(name string, currentVersion string) error {
+	updateAvailable, _, err := c.CheckForUpdates(name, currentVersion)
+	if err != nil {
+		return err
+	}
+	if updateAvailable {
+		fmt.Printf("Updates are available for %s. To install them, please run:\n$ %s update\n", name, name)
+	}
+	return nil
+}
+
 // PromptToDownload displays an interactive CLI prompt to download the latest version
-func (c *Client) PromptToDownload(name, currVersion, latestVersion string, confirm bool) bool {
+func (c *client) PromptToDownload(name, currVersion, latestVersion string, confirm bool) bool {
 	if confirm && !isatty.IsTerminal(os.Stdout.Fd()) {
 		c.logger.Warn("disable confirm as stdout is not a tty")
 		confirm = false
@@ -87,7 +100,7 @@ func (c *Client) PromptToDownload(name, currVersion, latestVersion string, confi
 }
 
 // UpdateBinary replaces the named binary at path with the desired version
-func (c *Client) UpdateBinary(name, version, path string) error {
+func (c *client) UpdateBinary(name, version, path string) error {
 	downloadDir, err := ioutil.TempDir("", name)
 	if err != nil {
 		return err
@@ -118,7 +131,7 @@ func (c *Client) UpdateBinary(name, version, path string) error {
 	return nil
 }
 
-func (c *Client) TouchUpdateCheckFile() error {
+func (c *client) TouchUpdateCheckFile() error {
 	updateFile, err := homedir.Expand(c.lastCheckFile)
 	if err != nil {
 		return err
