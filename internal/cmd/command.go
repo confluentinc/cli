@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 
+	"github.com/confluentinc/cli/internal/cmd/update"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go"
@@ -59,6 +60,7 @@ func NewConfluentCommand(cfg *configs.Config, ver *versions.Version, logger *log
 	} else {
 		cli.AddCommand(conn)
 	}
+	cli.AddCommand(update.New(cliName, cfg, ver, prompt))
 
 	cli.AddCommand(auth.New(cfg)...)
 

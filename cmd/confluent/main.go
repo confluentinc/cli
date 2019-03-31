@@ -18,7 +18,7 @@ var (
 	commit  = ""
 	date    = ""
 	host    = ""
-	cliName = ""
+	cliName = "confluent"
 )
 
 func main() {
