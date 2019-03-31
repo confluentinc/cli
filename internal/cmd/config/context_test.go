@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/cli/internal/pkg/terminal"
 )
 
 var (
@@ -64,5 +64,5 @@ func run(args ...string) (string, error) {
 	_ = cfg.Load()
 	root := New(cfg)
 
-	return terminal.ExecuteCommand(root, args...)
+	return pcmd.ExecuteCommand(root, args...)
 }

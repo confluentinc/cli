@@ -7,10 +7,10 @@ import (
 
 	"github.com/spf13/cobra"
 
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
-	"github.com/confluentinc/cli/internal/pkg/terminal"
 	"github.com/confluentinc/cli/internal/pkg/update"
 	"github.com/confluentinc/cli/internal/pkg/update/s3"
 	cliVersion "github.com/confluentinc/cli/internal/pkg/version"
@@ -53,11 +53,11 @@ type command struct {
 	logger  *log.Logger
 	client  update.Client
 	// for testing
-	prompt terminal.Prompt
+	prompt pcmd.Prompt
 }
 
 // New returns the command for the built-in updater.
-func New(cliName string, config *config.Config, version *cliVersion.Version, prompt terminal.Prompt,
+func New(cliName string, config *config.Config, version *cliVersion.Version, prompt pcmd.Prompt,
 	client update.Client) *cobra.Command {
 	cmd := &command{
 		cliName: cliName,
@@ -87,7 +87,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "error reading --yes as bool")
 	}
 
-	_, _ = c.prompt.Println("Checking for updates...")
+	pcmd.Println(cmd, "Checking for updates...")
 	updateAvailable, latestVersion, err := c.client.CheckForUpdates(c.cliName, c.version.Version, true)
 	if err != nil {
 		c.Command.SilenceUsage = true
@@ -95,7 +95,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 
 	if !updateAvailable {
-		_, _ = c.prompt.Println("Already up to date")
+		pcmd.Println(cmd, "Already up to date")
 		return nil
 	}
 

@@ -6,8 +6,6 @@ import (
 	"text/template"
 
 	"github.com/spf13/cobra"
-
-	"github.com/confluentinc/cli/internal/pkg/terminal"
 )
 
 const longDescriptionTemplate = `Output shell completion code for the specified shell (bash only).
@@ -32,14 +30,12 @@ Install bash completions on Linux:
 type completionCommand struct {
 	*cobra.Command
 	rootCmd *cobra.Command
-	prompt  terminal.Prompt
 }
 
 // NewCompletionCmd returns the Cobra command for shell completion.
-func NewCompletionCmd(rootCmd *cobra.Command, prompt terminal.Prompt, cliName string) (*cobra.Command, error) {
+func NewCompletionCmd(rootCmd *cobra.Command, cliName string) (*cobra.Command, error) {
 	cmd := &completionCommand{
 		rootCmd: rootCmd,
-		prompt:  prompt,
 	}
 	err := cmd.init(cliName)
 	return cmd.Command, err
@@ -64,7 +60,7 @@ func (c *completionCommand) init(cliName string) error {
 func (c *completionCommand) completion(cmd *cobra.Command, args []string) error {
 	var err error
 	if args[0] == "bash" {
-		err = c.rootCmd.GenBashCompletion(c.prompt.GetOutput())
+		err = c.rootCmd.GenBashCompletion(cmd.OutOrStdout())
 	} else {
 		err = fmt.Errorf(`unsupported shell type "%s"`, args[0])
 	}

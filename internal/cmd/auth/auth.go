@@ -9,36 +9,35 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go"
-	"github.com/confluentinc/cli/internal/pkg/commander"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
-	"github.com/confluentinc/cli/internal/pkg/terminal"
 )
 
 type commands struct {
 	Commands []*cobra.Command
 	config   *config.Config
 	// for testing
-	prompt                terminal.Prompt
+	prompt                pcmd.Prompt
 	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *ccloud.Client
 	jwtHTTPClientFactory  func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *ccloud.Client
 }
 
 // New returns a list of auth-related Cobra commands.
-func New(prerunner commander.Commander, config *config.Config) []*cobra.Command {
+func New(prerunner pcmd.PreRunner, config *config.Config) []*cobra.Command {
 	var defaultAnonHTTPClientFactory = func(baseURL string, logger *log.Logger) *ccloud.Client {
 		return ccloud.NewClient(baseURL, ccloud.BaseClient, logger)
 	}
 	var defaultJwtHTTPClientFactory = func(ctx context.Context, jwt string, baseURL string, logger *log.Logger) *ccloud.Client {
 		return ccloud.NewClientWithJWT(ctx, jwt, baseURL, logger)
 	}
-	return newCommands(prerunner, config, terminal.NewPrompt(os.Stdin),
+	return newCommands(prerunner, config, pcmd.NewPrompt(os.Stdin),
 		defaultAnonHTTPClientFactory, defaultJwtHTTPClientFactory,
 	).Commands
 }
 
-func newCommands(prerunner commander.Commander, config *config.Config, prompt terminal.Prompt,
+func newCommands(prerunner pcmd.PreRunner, config *config.Config, prompt pcmd.Prompt,
 	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *ccloud.Client,
 	jwtHTTPClientFactory func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *ccloud.Client,
 ) *commands {
@@ -52,7 +51,7 @@ func newCommands(prerunner commander.Commander, config *config.Config, prompt te
 	return cmd
 }
 
-func (a *commands) init(prerunner commander.Commander) {
+func (a *commands) init(prerunner pcmd.PreRunner) {
 	loginCmd := &cobra.Command{
 		Use:   "login",
 		Short: "Login to Confluent Cloud",
@@ -77,7 +76,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	a.config.AuthURL = url
-	email, password, err := a.credentials()
+	email, password, err := a.credentials(cmd)
 	if err != nil {
 		return err
 	}
@@ -134,11 +133,9 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.Wrap(err, "unable to save user auth")
 	}
-	_, err = a.prompt.Println("Logged in as", email)
-	if err != nil {
-		return err
-	}
-	_, err = a.prompt.Print("Using environment ", a.config.Auth.Account.Id, " (\"", a.config.Auth.Account.Name, "\"); use `ccloud environment list/use` to view/change environments.\n")
+	pcmd.Println(cmd, "Logged in as", email)
+	pcmd.Print(cmd, "Using environment ", a.config.Auth.Account.Id,
+		" (\"", a.config.Auth.Account.Name, "\"); use `ccloud environment list/use` to view/change environments.\n")
 	return err
 }
 
@@ -149,20 +146,18 @@ func (a *commands) logout(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.Wrap(err, "unable to delete user auth")
 	}
-	_, err = a.prompt.Println("You are now logged out")
-	return err
+	pcmd.Println(cmd, "You are now logged out")
+	return nil
 }
 
-func (a *commands) credentials() (string, string, error) {
+func (a *commands) credentials(cmd *cobra.Command) (string, string, error) {
 	email := os.Getenv("XX_CCLOUD_EMAIL")
 	password := os.Getenv("XX_CCLOUD_PASSWORD")
 	if len(email) == 0 || len(password) == 0 {
-		if _, err := a.prompt.Println("Enter your Confluent Cloud credentials:"); err != nil {
-			return "", "", err
-		}
+		pcmd.Println(cmd, "Enter your Confluent Cloud credentials:")
 	}
 	if len(email) == 0 {
-		a.prompt.Print("Email: ")
+		pcmd.Print(cmd, "Email: ")
 		emailFromPrompt, err := a.prompt.ReadString('\n')
 		if err != nil {
 			return "", "", err
@@ -171,15 +166,12 @@ func (a *commands) credentials() (string, string, error) {
 	}
 
 	if len(password) == 0 {
-		a.prompt.Print("Password: ")
+		pcmd.Print(cmd, "Password: ")
 		bytePassword, err := a.prompt.ReadPassword(0)
 		if err != nil {
 			return "", "", err
 		}
-		_, err = a.prompt.Println()
-		if err != nil {
-			return "", "", err
-		}
+		pcmd.Println(cmd)
 		password = string(bytePassword)
 	}
 

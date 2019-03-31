@@ -17,7 +17,7 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/service-account"
 	"github.com/confluentinc/cli/internal/cmd/update"
 	"github.com/confluentinc/cli/internal/cmd/version"
-	"github.com/confluentinc/cli/internal/pkg/commander"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	configs "github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	apikeys "github.com/confluentinc/cli/internal/pkg/sdk/apikey"
@@ -26,7 +26,6 @@ import (
 	kafkas "github.com/confluentinc/cli/internal/pkg/sdk/kafka"
 	ksqls "github.com/confluentinc/cli/internal/pkg/sdk/ksql"
 	users "github.com/confluentinc/cli/internal/pkg/sdk/user"
-	"github.com/confluentinc/cli/internal/pkg/terminal"
 	versions "github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -37,18 +36,17 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	}
 	cli.PersistentFlags().CountP("verbose", "v", "increase output verbosity")
 
-	prompt := terminal.NewPrompt(os.Stdin)
+	prompt := pcmd.NewPrompt(os.Stdin)
 	updateClient, err := update.NewClient(cliName, logger)
 	if err != nil {
 		return nil, err
 	}
-	prerunner := &commander.PreRunner{
+	prerunner := &pcmd.PreRun{
 		UpdateClient: updateClient,
 		CLIName:      cliName,
 		Version:      ver.Version,
 		Logger:       logger,
 		Config:       cfg,
-		Prompt:       prompt,
 	}
 
 	cli.PersistentPreRunE = prerunner.Anonymous()
@@ -56,13 +54,13 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	client := ccloud.NewClientWithJWT(context.Background(), cfg.AuthToken, cfg.AuthURL, cfg.Logger)
 
 	cli.Version = ver.Version
-	cli.AddCommand(version.NewVersionCmd(prerunner, ver, prompt))
+	cli.AddCommand(version.NewVersionCmd(prerunner, ver))
 
 	conn := config.New(cfg)
 	conn.Hidden = true // The config/context feature isn't finished yet, so let's hide it
 	cli.AddCommand(conn)
 
-	conn, err = completion.NewCompletionCmd(cli, prompt, cliName)
+	conn, err = completion.NewCompletionCmd(cli, cliName)
 	if err != nil {
 		logger.Log("msg", err)
 	} else {

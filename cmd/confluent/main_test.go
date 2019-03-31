@@ -1,16 +1,14 @@
 package main
 
 import (
-	"os"
 	"testing"
 
-	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/cli/internal/cmd"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/log"
-	"github.com/confluentinc/cli/internal/pkg/terminal"
 	cliVersion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -29,12 +27,7 @@ func TestAddCommands_ShownInHelpUsage_CCloud(t *testing.T) {
 	root, err := cmd.NewConfluentCommand("ccloud", cfg, version, logger)
 	req.NoError(err)
 
-	prompt := terminal.NewPrompt(os.Stdin)
-	root.PersistentPreRun = func(cmd *cobra.Command, args []string) {
-		prompt.SetOutput(cmd.OutOrStderr())
-	}
-
-	output, err := terminal.ExecuteCommand(root, "help")
+	output, err := pcmd.ExecuteCommand(root, "help")
 	req.NoError(err)
 	req.Contains(output, "kafka")
 	//Hidden: req.Contains(output, "ksql")
@@ -63,12 +56,7 @@ func TestAddCommands_ShownInHelpUsage_Confluent(t *testing.T) {
 	root, err := cmd.NewConfluentCommand("confluent", cfg, version, logger)
 	req.NoError(err)
 
-	prompt := terminal.NewPrompt(os.Stdin)
-	root.PersistentPreRun = func(cmd *cobra.Command, args []string) {
-		prompt.SetOutput(cmd.OutOrStderr())
-	}
-
-	output, err := terminal.ExecuteCommand(root, "help")
+	output, err := pcmd.ExecuteCommand(root, "help")
 	req.NoError(err)
 	req.NotContains(output, "kafka")
 	req.NotContains(output, "ksql")

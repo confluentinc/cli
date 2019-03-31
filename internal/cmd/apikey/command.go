@@ -11,7 +11,7 @@ import (
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
-	"github.com/confluentinc/cli/internal/pkg/commander"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/go-printer"
@@ -31,7 +31,7 @@ var (
 )
 
 // New returns the Cobra command for API Key.
-func New(prerunner *commander.PreRunner, config *config.Config, client ccloud.APIKey) *cobra.Command {
+func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.APIKey) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:               "api-key",

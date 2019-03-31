@@ -8,10 +8,11 @@ import (
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
-	"github.com/confluentinc/cli/internal/pkg/commander"
+	"github.com/confluentinc/go-printer"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/go-printer"
 )
 
 type command struct {
@@ -26,7 +27,7 @@ var (
 )
 
 // New returns the Cobra command for `environment`.
-func New(prerunner *commander.PreRunner, config *config.Config, client ccloud.Account, cliName string) *cobra.Command {
+func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.Account, cliName string) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:               "environment",
