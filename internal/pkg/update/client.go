@@ -60,7 +60,7 @@ func (c *client) NotifyIfUpdateAvailable(name string, currentVersion string) err
 		return err
 	}
 	if updateAvailable {
-		fmt.Printf("Updates are available for %s. To install them, please run:\n$ %s update\n", name, name)
+		fmt.Fprintf(os.Stderr, "Updates are available for %s. To install them, please run:\n$ %s update\n\n", name, name)
 	}
 	return nil
 }

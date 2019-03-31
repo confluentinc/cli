@@ -4,21 +4,24 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go"
+	"github.com/confluentinc/cli/internal/pkg/commander"
 	"github.com/confluentinc/cli/internal/pkg/config"
 )
 
 type command struct {
 	*cobra.Command
-	config *config.Config
-	client ccloud.Kafka
+	config    *config.Config
+	client    ccloud.Kafka
+	prerunner *commander.PreRunner
 }
 
 // New returns the default command object for interacting with Kafka.
-func New(config *config.Config, client ccloud.Kafka) *cobra.Command {
+func New(prerunner commander.Commander, config *config.Config, client ccloud.Kafka) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
-			Use:   "kafka",
-			Short: "Manage Kafka",
+			Use:               "kafka",
+			Short:             "Manage Kafka",
+			PersistentPreRunE: prerunner.Authenticated(),
 		},
 		config: config,
 		client: client,

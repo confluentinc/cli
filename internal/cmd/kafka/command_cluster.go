@@ -15,7 +15,6 @@ import (
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/go-printer"
 )
 
@@ -47,16 +46,6 @@ func NewClusterCommand(config *config.Config, client ccloud.Kafka) *cobra.Comman
 }
 
 func (c *clusterCommand) init() {
-	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		if err := log.SetLoggingVerbosity(cmd, c.config.Logger); err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-		if err := c.config.CheckLogin(); err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-		return nil
-	}
-
 	// Promote this to command.go when/if topic/ACL commands also want this flag
 	c.PersistentFlags().String("environment", "", "ID of the environment in which to run the command")
 

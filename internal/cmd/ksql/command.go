@@ -1,6 +1,7 @@
 package ksql
 
 import (
+	"github.com/confluentinc/cli/internal/pkg/commander"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go"
@@ -14,11 +15,12 @@ type command struct {
 }
 
 // New returns the default command object for interacting with KSQL.
-func New(config *config.Config, client ccloud.KSQL) *cobra.Command {
+func New(prerunner *commander.PreRunner, config *config.Config, client ccloud.KSQL) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
-			Use:   "ksql",
-			Short: "Manage KSQL",
+			Use:               "ksql",
+			Short:             "Manage KSQL",
+			PersistentPreRunE: prerunner.Authenticated(),
 		},
 		config: config,
 		client: client,

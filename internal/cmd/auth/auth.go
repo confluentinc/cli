@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go"
+	"github.com/confluentinc/cli/internal/pkg/commander"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -25,33 +26,33 @@ type commands struct {
 }
 
 // New returns a list of auth-related Cobra commands.
-func New(config *config.Config) []*cobra.Command {
+func New(prerunner commander.Commander, config *config.Config) []*cobra.Command {
 	var defaultAnonHTTPClientFactory = func(baseURL string, logger *log.Logger) *ccloud.Client {
 		return ccloud.NewClient(baseURL, ccloud.BaseClient, logger)
 	}
 	var defaultJwtHTTPClientFactory = func(ctx context.Context, jwt string, baseURL string, logger *log.Logger) *ccloud.Client {
 		return ccloud.NewClientWithJWT(ctx, jwt, baseURL, logger)
 	}
-	return newCommands(config, terminal.NewPrompt(os.Stdin), defaultAnonHTTPClientFactory, defaultJwtHTTPClientFactory).Commands
+	return newCommands(prerunner, config, terminal.NewPrompt(os.Stdin),
+		defaultAnonHTTPClientFactory, defaultJwtHTTPClientFactory,
+	).Commands
 }
 
-func newCommands(config *config.Config, prompt terminal.Prompt,
+func newCommands(prerunner commander.Commander, config *config.Config, prompt terminal.Prompt,
 	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *ccloud.Client,
 	jwtHTTPClientFactory func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *ccloud.Client,
 ) *commands {
-	cmd := &commands{config: config, prompt: prompt, anonHTTPClientFactory: anonHTTPClientFactory, jwtHTTPClientFactory: jwtHTTPClientFactory}
-	cmd.init()
+	cmd := &commands{
+		config:                config,
+		prompt:                prompt,
+		anonHTTPClientFactory: anonHTTPClientFactory,
+		jwtHTTPClientFactory:  jwtHTTPClientFactory,
+	}
+	cmd.init(prerunner)
 	return cmd
 }
 
-func (a *commands) init() {
-	var preRun = func(cmd *cobra.Command, args []string) error {
-		if err := log.SetLoggingVerbosity(cmd, a.config.Logger); err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-		a.prompt.SetOutput(cmd.OutOrStderr())
-		return nil
-	}
+func (a *commands) init(prerunner commander.Commander) {
 	loginCmd := &cobra.Command{
 		Use:   "login",
 		Short: "Login to Confluent Cloud",
@@ -59,14 +60,14 @@ func (a *commands) init() {
 		Args:  cobra.NoArgs,
 	}
 	loginCmd.Flags().String("url", "https://confluent.cloud", "Confluent Control Plane URL")
-	loginCmd.PersistentPreRunE = preRun
+	loginCmd.PersistentPreRunE = prerunner.Anonymous()
 	logoutCmd := &cobra.Command{
 		Use:   "logout",
 		Short: "Logout of Confluent Cloud",
 		RunE:  a.logout,
 		Args:  cobra.NoArgs,
 	}
-	logoutCmd.PersistentPreRunE = preRun
+	logoutCmd.PersistentPreRunE = prerunner.Anonymous()
 	a.Commands = []*cobra.Command{loginCmd, logoutCmd}
 }
 

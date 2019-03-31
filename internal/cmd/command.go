@@ -17,8 +17,8 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/service-account"
 	"github.com/confluentinc/cli/internal/cmd/update"
 	"github.com/confluentinc/cli/internal/cmd/version"
+	"github.com/confluentinc/cli/internal/pkg/commander"
 	configs "github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	apikeys "github.com/confluentinc/cli/internal/pkg/sdk/apikey"
 	//connects "github.com/confluentinc/cli/pkg/sdk/connect"
@@ -37,24 +37,23 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	}
 	cli.PersistentFlags().CountP("verbose", "v", "increase output verbosity")
 
+	prompt := terminal.NewPrompt(os.Stdin)
 	updateClient := update.NewClient(logger)
-
-	cli.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		if err := updateClient.NotifyIfUpdateAvailable(cliName, ver.Version); err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-		if err := log.SetLoggingVerbosity(cmd, logger); err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-		return nil
+	prerunner := &commander.PreRunner{
+		UpdateClient: updateClient,
+		CLIName:      cliName,
+		Version:      ver.Version,
+		Logger:       logger,
+		Config:       cfg,
+		Prompt:       prompt,
 	}
 
-	prompt := terminal.NewPrompt(os.Stdin)
+	cli.PersistentPreRunE = prerunner.Anonymous()
 
 	client := ccloud.NewClientWithJWT(context.Background(), cfg.AuthToken, cfg.AuthURL, cfg.Logger)
 
 	cli.Version = ver.Version
-	cli.AddCommand(version.NewVersionCmd(ver, prompt))
+	cli.AddCommand(version.NewVersionCmd(prerunner, ver, prompt))
 
 	conn := config.New(cfg)
 	conn.Hidden = true // The config/context feature isn't finished yet, so let's hide it
@@ -68,19 +67,19 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	}
 	cli.AddCommand(update.New(cliName, cfg, ver, prompt, updateClient))
 
-	cli.AddCommand(auth.New(cfg)...)
+	cli.AddCommand(auth.New(prerunner, cfg)...)
 
 	if cliName == "ccloud" {
-		cli.AddCommand(environment.New(cfg, environments.New(client, logger)))
-		cli.AddCommand(service_account.New(cfg, users.New(client, logger)))
-		cli.AddCommand(apikey.New(cfg, apikeys.New(client, logger)))
-		cli.AddCommand(kafka.New(cfg, kafkas.New(client, logger)))
+		cli.AddCommand(environment.New(prerunner, cfg, environments.New(client, logger), cliName))
+		cli.AddCommand(service_account.New(prerunner, cfg, users.New(client, logger)))
+		cli.AddCommand(apikey.New(prerunner, cfg, apikeys.New(client, logger)))
+		cli.AddCommand(kafka.New(prerunner, cfg, kafkas.New(client, logger)))
 
-		conn = ksql.New(cfg, ksqls.New(client, logger))
+		conn = ksql.New(prerunner, cfg, ksqls.New(client, logger))
 		conn.Hidden = true // The ksql feature isn't finished yet, so let's hide it
 		cli.AddCommand(conn)
 
-		//conn = connect.New(cfg, connects.New(client, logger))
+		//conn = connect.New(prerunner, cfg, connects.New(client, logger))
 		//conn.Hidden = true // The connect feature isn't finished yet, so let's hide it
 		//cli.AddCommand(conn)
 	} else if cliName == "confluent" {

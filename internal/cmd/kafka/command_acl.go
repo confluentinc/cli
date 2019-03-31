@@ -12,7 +12,6 @@ import (
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 type aclCommand struct {
@@ -37,16 +36,6 @@ func NewACLCommand(config *config.Config, client ccloud.Kafka) *cobra.Command {
 }
 
 func (c *aclCommand) init() {
-	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		if err := log.SetLoggingVerbosity(cmd, c.config.Logger); err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-		if err := c.config.CheckLogin(); err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-		return nil
-	}
-
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create a Kafka ACL",

@@ -11,9 +11,9 @@ import (
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
+	"github.com/confluentinc/cli/internal/pkg/commander"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/go-printer"
 )
 
@@ -31,11 +31,12 @@ var (
 )
 
 // New returns the Cobra command for API Key.
-func New(config *config.Config, client ccloud.APIKey) *cobra.Command {
+func New(prerunner *commander.PreRunner, config *config.Config, client ccloud.APIKey) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
-			Use:   "api-key",
-			Short: "Manage API keys",
+			Use:               "api-key",
+			Short:             "Manage API keys",
+			PersistentPreRunE: prerunner.Authenticated(),
 		},
 		config: config,
 		client: client,
@@ -45,16 +46,6 @@ func New(config *config.Config, client ccloud.APIKey) *cobra.Command {
 }
 
 func (c *command) init() {
-	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		if err := log.SetLoggingVerbosity(cmd, c.config.Logger); err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-		if err := c.config.CheckLogin(); err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-		return nil
-	}
-
 	c.AddCommand(&cobra.Command{
 		Use:   "list",
 		Short: "List API keys",

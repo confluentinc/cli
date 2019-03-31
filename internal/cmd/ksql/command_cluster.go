@@ -11,7 +11,6 @@ import (
 	ksqlv1 "github.com/confluentinc/ccloudapis/ksql/v1"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/go-printer"
 )
 
@@ -43,16 +42,6 @@ func NewClusterCommand(config *config.Config, client ccloud.KSQL) *cobra.Command
 }
 
 func (c *clusterCommand) init() {
-	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		if err := log.SetLoggingVerbosity(cmd, c.config.Logger); err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-		if err := c.config.CheckLogin(); err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-		return nil
-	}
-
 	c.AddCommand(&cobra.Command{
 		Use:   "list",
 		Short: "List KSQL apps",

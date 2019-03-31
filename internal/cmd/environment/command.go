@@ -4,13 +4,13 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/confluentinc/cli/internal/pkg/commander"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/go-printer"
 )
 
@@ -26,11 +26,12 @@ var (
 )
 
 // New returns the Cobra command for `environment`.
-func New(config *config.Config, client ccloud.Account) *cobra.Command {
+func New(prerunner *commander.PreRunner, config *config.Config, client ccloud.Account, cliName string) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
-			Use:   "environment",
-			Short: "Manage and select ccloud environments",
+			Use:               "environment",
+			Short:             fmt.Sprintf("Manage and select %s environments", cliName),
+			PersistentPreRunE: prerunner.Authenticated(),
 		},
 		config: config,
 		client: client,
@@ -40,16 +41,6 @@ func New(config *config.Config, client ccloud.Account) *cobra.Command {
 }
 
 func (c *command) init() {
-	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		if err := log.SetLoggingVerbosity(cmd, c.config.Logger); err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-		if err := c.config.CheckLogin(); err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-		return nil
-	}
-
 	c.AddCommand(&cobra.Command{
 		Use:   "list",
 		Short: "List environments",
