@@ -63,6 +63,29 @@ func (c *command) init() {
 		RunE:  c.use,
 		Args:  cobra.ExactArgs(1),
 	})
+
+	c.AddCommand(&cobra.Command{
+		Use:   "create NAME",
+		Short: "Create a new environment",
+		RunE:  c.create,
+		Args:  cobra.ExactArgs(1),
+	})
+
+	updateCmd := &cobra.Command{
+		Use:   "update ID --name NEWNAME",
+		Short: "Update the name of an environment",
+		RunE:  c.update,
+		Args:  cobra.ExactArgs(1),
+	}
+	updateCmd.Flags().String("name", "", "New name for environment")
+	c.AddCommand(updateCmd)
+
+	c.AddCommand(&cobra.Command{
+		Use:   "delete ID",
+		Short: "Delete an environment and ALL its resources",
+		RunE:  c.delete,
+		Args:  cobra.ExactArgs(1),
+	})
 }
 
 func (c *command) list(cmd *cobra.Command, args []string) error {
@@ -100,4 +123,41 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 	}
 
 	return errors.HandleCommon(errors.New("specified environment ID not found.  Use `ccloud environment list` to see available environments."), cmd)
+}
+
+func (c *command) create(cmd *cobra.Command, args []string) error {
+	name := args[0]
+
+	_, err := c.client.Create(context.Background(), &orgv1.Account{Name: name, OrganizationId: c.config.Auth.Account.OrganizationId})
+
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	return nil
+}
+
+func (c *command) update(cmd *cobra.Command, args []string) error {
+	id := args[0]
+	newName := args[1]
+
+	err := c.client.Update(context.Background(), &orgv1.Account{Id: id, Name: newName, OrganizationId: c.config.Auth.Account.OrganizationId})
+
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	return nil
+}
+
+func (c *command) delete(cmd *cobra.Command, args []string) error {
+	id := args[0]
+
+	err := c.client.Delete(context.Background(), &orgv1.Account{Id: id, OrganizationId: c.config.Auth.Account.OrganizationId})
+
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	return nil
 }
