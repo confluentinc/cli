@@ -139,7 +139,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 
 func (c *command) update(cmd *cobra.Command, args []string) error {
 	id := args[0]
-	newName := args[1]
+	newName := cmd.Flag("name").Value.String()
 
 	err := c.client.Update(context.Background(), &orgv1.Account{Id: id, Name: newName, OrganizationId: c.config.Auth.Account.OrganizationId})
 
