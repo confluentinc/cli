@@ -75,7 +75,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "error reading --yes as bool")
 	}
 
-	c.prompt.Println("Checking for updates...")
+	_, _ = c.prompt.Println("Checking for updates...")
 	updateAvailable, latestVersion, err := c.client.CheckForUpdates(c.cliName, c.version.Version)
 	if err != nil {
 		c.Command.SilenceUsage = true
@@ -83,7 +83,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 
 	if !updateAvailable {
-		c.prompt.Println("Already up to date")
+		_, _ = c.prompt.Println("Already up to date")
 		return nil
 	}
 

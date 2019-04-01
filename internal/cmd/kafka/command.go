@@ -12,7 +12,6 @@ type command struct {
 	*cobra.Command
 	config    *config.Config
 	client    ccloud.Kafka
-	prerunner *commander.PreRunner
 }
 
 // New returns the default command object for interacting with Kafka.
