@@ -1,0 +1,42 @@
+version: v1.0
+name: CLI Build and Release Pipeline
+agent:
+  machine:
+    type: e1-standard-2
+    os_image: ubuntu1804
+blocks:
+  - name: "Setup"
+    task:
+      prologue:
+        commands:
+          - sem-version go 1.12
+          - export "SEMAPHORE_GIT_DIR=$(go env GOPATH)/src/github.com/${SEMAPHORE_PROJECT_NAME}"
+          - export "PATH=$(go env GOPATH)/bin:${PATH}"
+          - mkdir -vp "${SEMAPHORE_GIT_DIR}" "$(go env GOPATH)/bin"
+      jobs:
+      - name: "Install Go Dependencies"
+        commands:
+          make deps
+  - name: "Testing and Coverage"
+    task:
+      prologue:
+        commands:
+          - sem-version go 1.12
+      jobs:
+      - name: "Run Unit Tests"
+        commands:
+          make test
+    task:
+      jobs:
+      - name: "Generate Code Coverage"
+        commands:
+          bash <(curl -s https://codecov.io/bash)
+  - name: "Release"
+    task:
+      prologue:
+        commands:
+          - sem-version go 1.12
+      jobs:
+      - name: "Run CI Release Script"
+        commands:
+          make release-ci
