@@ -5,7 +5,7 @@ agent:
     type: e1-standard-2
     os_image: ubuntu1804
 blocks:
-  - name: "Setup"
+  - name: "Build, Test, and Release"
     task:
       secrets:
         - name: semaphore-secrets-global
@@ -24,42 +24,9 @@ blocks:
           - git config --global url."git@github.com:".insteadOf "https://github.com/"
           - chmod 400 ~/.ssh/id_rsa
       jobs:
-      - name: "Clone Repo and Install Go Deps"
         commands:
           - checkout
           - make deps
-  - name: "Testing and Coverage"
-    task:
-      secrets:
-        - name: semaphore-secrets-global
-        - name: semaphore-secrets-cli
-      prologue:
-        commands:
-          - sem-version go 1.12
-      jobs:
-      - name: "Run Unit Tests"
-        commands:
-          - checkout
           - make test
-    task:
-      secrets:
-        - name: semaphore-secrets-global
-        - name: semaphore-secrets-cli
-      jobs:
-      - name: "Generate Code Coverage"
-        commands:
-          - checkout
           - bash <(curl -s https://codecov.io/bash)
-  - name: "Release"
-    task:
-      secrets:
-        - name: semaphore-secrets-global
-        - name: semaphore-secrets-cli
-      prologue:
-        commands:
-          - sem-version go 1.12
-      jobs:
-      - name: "Run CI Release Script"
-        commands:
-          - checkout
           - make release-ci
