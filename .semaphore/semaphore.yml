@@ -25,6 +25,7 @@ blocks:
           - chmod 400 ~/.ssh/id_rsa
       jobs:
         - commands:
+          - cd $(go env GOPATH)/src
           - checkout
           - make deps
           - make test
