@@ -39,6 +39,7 @@ blocks:
       jobs:
       - name: "Run Unit Tests"
         commands:
+          - checkout
           - make test
     task:
       secrets:
@@ -47,7 +48,8 @@ blocks:
       jobs:
       - name: "Generate Code Coverage"
         commands:
-          bash <(curl -s https://codecov.io/bash)
+          - checkout
+          - bash <(curl -s https://codecov.io/bash)
   - name: "Release"
     task:
       secrets:
@@ -59,4 +61,5 @@ blocks:
       jobs:
       - name: "Run CI Release Script"
         commands:
+          - checkout
           - make release-ci
