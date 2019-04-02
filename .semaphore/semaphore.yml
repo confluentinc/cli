@@ -18,14 +18,13 @@ blocks:
       prologue:
         commands:
           - sem-version go 1.12
-          - export "SEMAPHORE_GIT_DIR=$(go env GOPATH)/src/github.com/${SEMAPHORE_PROJECT_NAME}"
+          - export "SEMAPHORE_GIT_DIR=$(go env GOPATH)/src/github.com/confluentinc/${SEMAPHORE_PROJECT_NAME}"
           - export "PATH=$(go env GOPATH)/bin:${PATH}"
           - mkdir -vp "${SEMAPHORE_GIT_DIR}" "$(go env GOPATH)/bin"
           - git config --global url."git@github.com:".insteadOf "https://github.com/"
           - chmod 400 ~/.ssh/id_rsa
       jobs:
         - commands:
-          - cd $(go env GOPATH)/src
           - checkout
           - make deps
           - make test
