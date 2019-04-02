@@ -48,8 +48,6 @@ require (
 	golang.org/x/sys v0.0.0-20190221222158-ec7b60b042fd // indirect
 	golang.org/x/text v0.3.1-0.20180807135948-17ff2d5776d2 // indirect
 	golang.org/x/tools v0.0.0-20190221204921-83362c3779f5 // indirect
-	google.golang.org/genproto v0.0.0-20190219182410-082222b4a5c5 // indirect
-	google.golang.org/grpc v1.18.0
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gopkg.in/yaml.v2 v2.2.2 // indirect
 	sourcegraph.com/sourcegraph/go-diff v0.5.0 // indirect
