@@ -16,7 +16,7 @@ blocks:
       jobs:
       - name: "Install Go Dependencies"
         commands:
-          make deps
+          - make deps
   - name: "Testing and Coverage"
     task:
       prologue:
@@ -25,7 +25,7 @@ blocks:
       jobs:
       - name: "Run Unit Tests"
         commands:
-          make test
+          - make test
     task:
       jobs:
       - name: "Generate Code Coverage"
@@ -39,4 +39,4 @@ blocks:
       jobs:
       - name: "Run CI Release Script"
         commands:
-          make release-ci
+          - make release-ci
