@@ -7,6 +7,9 @@ agent:
 blocks:
   - name: "Setup"
     task:
+      secrets:
+        - name: semaphore-secrets-global
+        - name: semaphore-secrets-cli
       prologue:
         commands:
           - sem-version go 1.12
@@ -20,6 +23,9 @@ blocks:
           - make deps
   - name: "Testing and Coverage"
     task:
+      secrets:
+        - name: semaphore-secrets-global
+        - name: semaphore-secrets-cli
       prologue:
         commands:
           - sem-version go 1.12
@@ -28,12 +34,18 @@ blocks:
         commands:
           - make test
     task:
+      secrets:
+        - name: semaphore-secrets-global
+        - name: semaphore-secrets-cli
       jobs:
       - name: "Generate Code Coverage"
         commands:
           bash <(curl -s https://codecov.io/bash)
   - name: "Release"
     task:
+      secrets:
+        - name: semaphore-secrets-global
+        - name: semaphore-secrets-cli
       prologue:
         commands:
           - sem-version go 1.12
