@@ -24,7 +24,7 @@ blocks:
           - git config --global url."git@github.com:".insteadOf "https://github.com/"
           - chmod 400 ~/.ssh/id_rsa
       jobs:
-        commands:
+        - commands:
           - checkout
           - make deps
           - make test
