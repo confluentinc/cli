@@ -10,6 +10,11 @@ blocks:
       secrets:
         - name: semaphore-secrets-global
         - name: semaphore-secrets-cli
+        - name: aws_credentials-caas_prod
+        - name: ssh_id_rsa
+        - name: netrc
+        - name: ssh_config
+        - name: gitconfig
       prologue:
         commands:
           - sem-version go 1.12
