@@ -14,8 +14,9 @@ blocks:
           - export "PATH=$(go env GOPATH)/bin:${PATH}"
           - mkdir -vp "${SEMAPHORE_GIT_DIR}" "$(go env GOPATH)/bin"
       jobs:
-      - name: "Install Go Dependencies"
+      - name: "Clone Repo and Install Go Deps"
         commands:
+          - checkout
           - make deps
   - name: "Testing and Coverage"
     task:
