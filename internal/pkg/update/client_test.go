@@ -10,7 +10,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alecthomas/units"
 	"github.com/hashicorp/go-version"
 	"github.com/jonboulle/clockwork"
 	"github.com/stretchr/testify/require"
@@ -391,8 +390,7 @@ func TestUpdateBinary(t *testing.T) {
 						req.Equal("v123.456.789", version)
 						req.Contains(downloadDir, binName)
 						clock.Advance(23 * time.Second)
-						// TODO: DownloadVersionFunc could return units.MetricBytes
-						return downloadedBin, int64(16 * units.MB), nil
+						return downloadedBin, 16 * 1000 * 1000, nil
 					},
 				},
 				Logger: log.New(),
