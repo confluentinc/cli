@@ -55,7 +55,7 @@ func (r *PreRunner) Authenticated() func(cmd *cobra.Command, args []string) erro
 
 // notifyIfUpdateAvailable prints a message if an update is available
 func (r *PreRunner) notifyIfUpdateAvailable(name string, currentVersion string) error {
-	updateAvailable, _, err := r.UpdateClient.CheckForUpdates(name, currentVersion)
+	updateAvailable, _, err := r.UpdateClient.CheckForUpdates(name, currentVersion, false)
 	if err != nil {
 		return err
 	}

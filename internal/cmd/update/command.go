@@ -84,7 +84,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 
 	_, _ = c.prompt.Println("Checking for updates...")
-	updateAvailable, latestVersion, err := c.client.CheckForUpdates(c.cliName, c.version.Version)
+	updateAvailable, latestVersion, err := c.client.CheckForUpdates(c.cliName, c.version.Version, true)
 	if err != nil {
 		c.Command.SilenceUsage = true
 		return errors.Wrap(err, "error checking for updates")
@@ -95,7 +95,13 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	doUpdate := c.client.PromptToDownload(c.cliName, c.version.Version, latestVersion, !updateYes)
+	// HACK: our packaging doesn't include the "v" in the version, so we add it back so  that the prompt is consistent
+	//   example S3 path: ccloud-cli/binaries/0.50.0/ccloud_0.50.0_darwin_amd64
+	// Without this hack, the prompt looks like
+	//   Current Version: v0.0.0
+	//   Latest Version:  0.50.0
+	// Unfortunately the "UpdateBinary" output will still show 0.50.0, and we can't hack that since it must match S3
+	doUpdate := c.client.PromptToDownload(c.cliName, c.version.Version, "v"+latestVersion, !updateYes)
 	if !doUpdate {
 		return nil
 	}

@@ -37,7 +37,7 @@ type ClientParams struct {
 }
 
 // NewClient returns a client for updating CLI binaries
-func NewClient(params *ClientParams) Client {
+func NewClient(params *ClientParams) *client {
 	if params.CheckInterval == 0 {
 		params.CheckInterval = 24 * time.Hour
 	}
@@ -50,12 +50,12 @@ func NewClient(params *ClientParams) Client {
 }
 
 // CheckForUpdates checks for new versions in the repo
-func (c *client) CheckForUpdates(name string, currentVersion string) (updateAvailable bool, latestVersion string, err error) {
+func (c *client) CheckForUpdates(name string, currentVersion string, forceCheck bool) (updateAvailable bool, latestVersion string, err error) {
 	shouldCheck, err := c.readCheckFile()
 	if err != nil {
 		return false, currentVersion, err
 	}
-	if !shouldCheck {
+	if !shouldCheck && !forceCheck{
 		return false, currentVersion, nil
 	}
 
@@ -76,7 +76,7 @@ func (c *client) CheckForUpdates(name string, currentVersion string) (updateAvai
 
 	mostRecentVersion := availableVersions[len(availableVersions)-1]
 	if currVersion.LessThan(mostRecentVersion) {
-		return true, mostRecentVersion.String(), nil
+		return true, mostRecentVersion.Original(), nil
 	}
 
 	return false, currentVersion, nil
@@ -125,7 +125,7 @@ func (c *client) UpdateBinary(name, version, path string) error {
 	defer os.RemoveAll(downloadDir)
 
 	fmt.Printf("Downloading %s version %s...\n", name, version)
-	startTime := time.Now()
+	startTime := c.Clock.Now()
 
 	newBin, bytes, err := c.Repository.DownloadVersion(name, version, downloadDir)
 	if err != nil {
@@ -133,7 +133,7 @@ func (c *client) UpdateBinary(name, version, path string) error {
 	}
 
 	mb := float64(bytes) / 1024.0 / 1024.0
-	timeSpent := time.Since(startTime).Seconds()
+	timeSpent := c.Clock.Now().Sub(startTime).Seconds()
 	fmt.Printf("Done. Downloaded %.2f MB in %.0f seconds. (%.2f MB/s)\n", mb, timeSpent, mb/timeSpent)
 
 	err = copyFile(newBin, path)
@@ -166,7 +166,7 @@ func (c *client) readCheckFile() (shouldCheck bool, err error) {
 		return true, nil
 	}
 	// if the file was updated in the last (interval), don't check again
-	if info.ModTime().After(time.Now().Add(-1 * c.CheckInterval)) {
+	if info.ModTime().After(c.Clock.Now().Add(-1 * c.CheckInterval)) {
 		return false, nil
 	}
 	return true, nil
@@ -188,7 +188,7 @@ func (c *client) touchCheckFile() error {
 		} else {
 			f.Close()
 		}
-	} else if err := os.Chtimes(checkFile, time.Now(), time.Now()); err != nil {
+	} else if err := os.Chtimes(checkFile, c.Clock.Now(), c.Clock.Now()); err != nil {
 		return err
 	}
 	return nil
