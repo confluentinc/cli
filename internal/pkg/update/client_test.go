@@ -272,11 +272,12 @@ func TestCheckForUpdates_BehaviorOverTime(t *testing.T) {
 			}, nil
 		},
 	}
+	clock := clockwork.NewFakeClockAt(time.Now())
 	client := NewClient(&ClientParams{
 		Repository: repo,
 		Logger:     log.New(),
 		CheckFile:  checkFile,
-		Clock:      clockwork.NewFakeClockAt(time.Now()),
+		Clock:      clock,
 	})
 
 	// Should check and find update
@@ -287,10 +288,8 @@ func TestCheckForUpdates_BehaviorOverTime(t *testing.T) {
 	req.True(repo.GetAvailableVersionsCalled())
 
 	// Shouldn't check anymore for 24 hours
-	lastCheck := client.Clock.Now()
 	for i := 0; i < 3; i++ {
-		lastCheck = lastCheck.Add(8 * time.Hour).Add(-1 * time.Second)
-		client.Clock = clockwork.NewFakeClockAt(lastCheck)
+		clock.Advance(8*time.Hour + -1*time.Second)
 		repo.Reset()
 
 		_, _, _ = client.CheckForUpdates("my-cli", "v1.2.3", false)
@@ -298,8 +297,7 @@ func TestCheckForUpdates_BehaviorOverTime(t *testing.T) {
 	}
 
 	// 5 days pass...
-	lastCheck = lastCheck.Add(5 * 24 * time.Hour)
-	client.Clock = clockwork.NewFakeClockAt(lastCheck)
+	clock.Advance(5 * 24 * time.Hour)
 
 	// Should check and find update
 	updateAvailable, latestVersion, err = client.CheckForUpdates("my-cli", "v1.2.3", false)
@@ -310,8 +308,7 @@ func TestCheckForUpdates_BehaviorOverTime(t *testing.T) {
 
 	// Shouldn't check anymore for 24 hours
 	for i := 0; i < 3; i++ {
-		lastCheck = lastCheck.Add(8 * time.Hour).Add(-1 * time.Second)
-		client.Clock = clockwork.NewFakeClockAt(lastCheck)
+		clock.Advance(8*time.Hour + -1*time.Second)
 		repo.Reset()
 
 		_, _, _ = client.CheckForUpdates("my-cli", "v1.2.3", false)
@@ -319,8 +316,7 @@ func TestCheckForUpdates_BehaviorOverTime(t *testing.T) {
 	}
 
 	// Finally we should check once more
-	lastCheck = lastCheck.Add(3 * time.Second)
-	client.Clock = clockwork.NewFakeClockAt(lastCheck)
+	clock.Advance(3 * time.Second)
 	repo.Reset()
 	_, _, _ = client.CheckForUpdates("my-cli", "v1.2.3", false)
 	req.True(repo.GetAvailableVersionsCalled())
