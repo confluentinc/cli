@@ -1,7 +1,9 @@
 package update
 
 import (
+	"fmt"
 	"os"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -18,18 +20,24 @@ const (
 	S3BinBucket   = "confluent.cloud"
 	S3BinRegion   = "us-west-2"
 	S3BinPrefix   = "ccloud-cli/binaries"
-	LastCheckFile = "~/.ccloud_update"
+	CheckFileFmt  = "~/.%s/update_check"
+	CheckInterval = 24 * time.Hour
 )
 
 // NewClient returns a new update.Client configured for the CLI
-func NewClient(logger *log.Logger) update.Client {
+func NewClient(cliName string, logger *log.Logger) update.Client {
 	repo := &s3.PublicRepo{
 		S3BinRegion: S3BinRegion,
 		S3BinBucket: S3BinBucket,
 		S3BinPrefix: S3BinPrefix,
 		Logger:      logger,
 	}
-	return update.NewClient(repo, LastCheckFile, logger)
+	return update.NewClient(&update.ClientParams{
+		Repository:    repo,
+		CheckFile:     fmt.Sprintf(CheckFileFmt, cliName),
+		CheckInterval: CheckInterval,
+		Logger:        logger,
+	})
 }
 
 type command struct {
@@ -100,10 +108,5 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if err := c.client.TouchUpdateCheckFile(); err != nil {
-		// No big deal, just log it and swallow the error
-		c.logger.Warnf("error touching last check file: %s", err)
-		return nil
-	}
 	return nil
 }

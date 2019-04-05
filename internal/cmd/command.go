@@ -38,7 +38,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	cli.PersistentFlags().CountP("verbose", "v", "increase output verbosity")
 
 	prompt := terminal.NewPrompt(os.Stdin)
-	updateClient := update.NewClient(logger)
+	updateClient := update.NewClient(cliName, logger)
 	prerunner := &commander.PreRunner{
 		UpdateClient: updateClient,
 		CLIName:      cliName,

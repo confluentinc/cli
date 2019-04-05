@@ -11,41 +11,70 @@ import (
 
 	"github.com/atrox/homedir"
 	"github.com/hashicorp/go-version"
+	"github.com/jonboulle/clockwork"
 	"github.com/mattn/go-isatty"
 
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 type client struct {
-	repository    Repository
-	lastCheckFile string
-	logger        *log.Logger
+	*ClientParams
+}
+
+var _ Client = (*client)(nil)
+
+// ClientParams are used to configure the update.Client
+type ClientParams struct {
+	Repository    Repository
+	Logger        *log.Logger
+	// Optional, if you wish to rate limit your update checks
+	CheckFile     string
+	// Optional, defaults to checking once every 24h
+	CheckInterval time.Duration
+	// Optional, defaults to the system clock
+	Clock         clockwork.Clock
 }
 
 // NewClient returns a client for updating CLI binaries
-func NewClient(repo Repository, lastCheckFile string, logger *log.Logger) Client {
+func NewClient(params *ClientParams) Client {
+	if params.CheckInterval == 0 {
+		params.CheckInterval = 24 * time.Hour
+	}
+	if params.Clock == nil {
+		params.Clock = clockwork.NewRealClock()
+	}
 	return &client{
-		repository:    repo,
-		lastCheckFile: lastCheckFile,
-		logger:        logger,
+		ClientParams: params,
 	}
 }
 
 // CheckForUpdates checks for new versions in the repo
 func (c *client) CheckForUpdates(name string, currentVersion string) (updateAvailable bool, latestVersion string, err error) {
-	availableVersions, err := c.repository.GetAvailableVersions(name)
+	shouldCheck, err := c.readCheckFile()
 	if err != nil {
-		return false, "", err
+		return false, currentVersion, err
 	}
-
-	mostRecentVersion := availableVersions[len(availableVersions)-1]
+	if !shouldCheck {
+		return false, currentVersion, nil
+	}
 
 	currVersion, err := version.NewVersion(currentVersion)
 	if err != nil {
-		err = fmt.Errorf("unable to parse %s version %s - %s", name, currentVersion, err)
-		return false, "", err
+		err = errors.Wrapf(err, "unable to parse %s version %s", name, currentVersion)
+		return false, currentVersion, err
 	}
 
+	availableVersions, err := c.Repository.GetAvailableVersions(name)
+	if err != nil {
+		return false, currentVersion, errors.Wrapf(err, "unable to get available versions")
+	}
+
+	if err := c.touchCheckFile(); err != nil {
+		return false, currentVersion, errors.Wrapf(err, "unable to touch last check file")
+	}
+
+	mostRecentVersion := availableVersions[len(availableVersions)-1]
 	if currVersion.LessThan(mostRecentVersion) {
 		return true, mostRecentVersion.String(), nil
 	}
@@ -53,22 +82,10 @@ func (c *client) CheckForUpdates(name string, currentVersion string) (updateAvai
 	return false, currentVersion, nil
 }
 
-// NotifyIfUpdateAvailable prints a message if an update is available
-func (c *client) NotifyIfUpdateAvailable(name string, currentVersion string) error {
-	updateAvailable, _, err := c.CheckForUpdates(name, currentVersion)
-	if err != nil {
-		return err
-	}
-	if updateAvailable {
-		fmt.Fprintf(os.Stderr, "Updates are available for %s. To install them, please run:\n$ %s update\n\n", name, name)
-	}
-	return nil
-}
-
 // PromptToDownload displays an interactive CLI prompt to download the latest version
 func (c *client) PromptToDownload(name, currVersion, latestVersion string, confirm bool) bool {
 	if confirm && !isatty.IsTerminal(os.Stdout.Fd()) {
-		c.logger.Warn("disable confirm as stdout is not a tty")
+		c.Logger.Warn("disable confirm as stdout is not a tty")
 		confirm = false
 	}
 
@@ -110,7 +127,7 @@ func (c *client) UpdateBinary(name, version, path string) error {
 	fmt.Printf("Downloading %s version %s...\n", name, version)
 	startTime := time.Now()
 
-	newBin, bytes, err := c.repository.DownloadVersion(name, version, downloadDir)
+	newBin, bytes, err := c.Repository.DownloadVersion(name, version, downloadDir)
 	if err != nil {
 		return err
 	}
@@ -131,19 +148,47 @@ func (c *client) UpdateBinary(name, version, path string) error {
 	return nil
 }
 
-func (c *client) TouchUpdateCheckFile() error {
-	updateFile, err := homedir.Expand(c.lastCheckFile)
+func (c *client) readCheckFile() (shouldCheck bool, err error) {
+	// If CheckFile is not provided, then we'll always perform the check
+	if c.CheckFile == "" {
+		return true, nil
+	}
+	updateFile, err := homedir.Expand(c.CheckFile)
+	if err != nil {
+		return false, err
+	}
+	info, err := os.Stat(updateFile)
+	if err != nil && !os.IsNotExist(err) {
+		return false, err
+	}
+	// if the file doesn't exist, check updates anyway -- indicates a new CLI install
+	if os.IsNotExist(err) {
+		return true, nil
+	}
+	// if the file was updated in the last (interval), don't check again
+	if info.ModTime().After(time.Now().Add(-1 * c.CheckInterval)) {
+		return false, nil
+	}
+	return true, nil
+}
+
+func (c *client) touchCheckFile() error {
+	// If CheckFile is not provided, then we'll skip touching
+	if c.CheckFile == "" {
+		return nil
+	}
+	checkFile, err := homedir.Expand(c.CheckFile)
 	if err != nil {
 		return err
 	}
 
-	if _, err := os.Stat(updateFile); os.IsNotExist(err) {
-		if f, err := os.Create(updateFile); err != nil {
+	if _, err := os.Stat(checkFile); os.IsNotExist(err) {
+		if f, err := os.Create(checkFile); err != nil {
 			return err
 		} else {
 			f.Close()
 		}
-	} else if err := os.Chtimes(updateFile, time.Now(), time.Now()); err != nil {
+	} else if err := os.Chtimes(checkFile, time.Now(), time.Now()); err != nil {
 		return err
 	}
 	return nil

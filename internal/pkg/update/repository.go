@@ -11,8 +11,6 @@ type Repository interface {
 // Client lets you check for updated application binaries and install them if desired
 type Client interface {
 	CheckForUpdates(name string, currentVersion string) (updateAvailable bool, latestVersion string, err error)
-	NotifyIfUpdateAvailable(name string, currentVersion string) error
 	PromptToDownload(name, currVersion, latestVersion string, confirm bool) bool
 	UpdateBinary(name, version, path string) error
-	TouchUpdateCheckFile() error
 }
