@@ -15,6 +15,8 @@ type PassThroughFileSystem struct {
 	FS   pio.FileSystem
 }
 
+var _ pio.FileSystem = (*PassThroughFileSystem)(nil)
+
 func (c *PassThroughFileSystem) Open(name string) (pio.File, error) {
 	if c.Mock.OpenFunc != nil {
 		return c.Mock.Open(name)
@@ -76,4 +78,18 @@ func (c *PassThroughFileSystem) Copy(dst io.Writer, src io.Reader) (int64, error
 		return c.Mock.Copy(dst, src)
 	}
 	return c.FS.Copy(dst, src)
+}
+
+func (c *PassThroughFileSystem) NewBufferedReader(rd io.Reader) pio.Reader {
+	if c.Mock.NewBufferedReaderFunc != nil {
+		return c.Mock.NewBufferedReader(rd)
+	}
+	return c.FS.NewBufferedReader(rd)
+}
+
+func (c *PassThroughFileSystem) IsTerminal(fd uintptr) bool {
+	if c.Mock.IsTerminalFunc != nil {
+		return c.Mock.IsTerminal(fd)
+	}
+	return c.FS.IsTerminal(fd)
 }

@@ -1,20 +1,17 @@
 package update
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 	"path/filepath"
 	"time"
 
 	"github.com/atrox/homedir"
-	"github.com/hashicorp/go-version"
-	"github.com/jonboulle/clockwork"
-	"github.com/mattn/go-isatty"
-
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/update/io"
+	"github.com/hashicorp/go-version"
+	"github.com/jonboulle/clockwork"
 )
 
 type client struct {
@@ -88,7 +85,7 @@ func (c *client) CheckForUpdates(name string, currentVersion string, forceCheck 
 
 // PromptToDownload displays an interactive CLI prompt to download the latest version
 func (c *client) PromptToDownload(name, currVersion, latestVersion string, confirm bool) bool {
-	if confirm && !isatty.IsTerminal(os.Stdout.Fd()) {
+	if confirm && !c.FS.IsTerminal(os.Stdout.Fd()) {
 		c.Logger.Warn("disable confirm as stdout is not a tty")
 		confirm = false
 	}
@@ -104,17 +101,16 @@ func (c *client) PromptToDownload(name, currVersion, latestVersion string, confi
 	for {
 		fmt.Print("Do you want to download and install this update? (y/n): ")
 
-		reader := bufio.NewReader(os.Stdin)
-		input, _ := reader.ReadString('\n')
+		reader := c.FS.NewBufferedReader(os.Stdin)
+		choice, _ := reader.ReadString('\n')
 
-		choice := string([]byte(input)[0])
 		switch choice {
-		case "y":
+		case "yes", "y", "Y":
 			return true
-		case "n":
+		case "no", "n", "N":
 			return false
 		default:
-			fmt.Printf("%s is not a valid choice", choice)
+			fmt.Printf("%s is not a valid choice\n", choice)
 			continue
 		}
 	}

@@ -2,10 +2,13 @@
 package io
 
 import (
+	"bufio"
 	"io"
 	"io/ioutil"
 	"os"
 	"time"
+
+	"github.com/mattn/go-isatty"
 )
 
 // FileSystem interface wraps IO so that we can mock it in our unit tests
@@ -22,6 +25,10 @@ type FileSystem interface {
 	TempDir(dir, prefix string) (name string, err error)
 	// io
 	Copy(dst io.Writer, src io.Reader) (written int64, err error)
+	// bufio
+	NewBufferedReader(rd io.Reader) Reader
+	// isatty
+	IsTerminal(fd uintptr) bool
 }
 
 // File interface is used by FileSystem interface to enable mocking in unit tests
@@ -33,6 +40,11 @@ type File interface {
 	io.WriterAt
 	io.Seeker
 	Stat() (os.FileInfo, error)
+}
+
+// Reader reads buffered strings
+type Reader interface {
+	ReadString(delim byte) (string, error)
 }
 
 // RealFileSystem implements fileSystem using the local disk.
@@ -49,3 +61,5 @@ func (*RealFileSystem) Remove(name string) error                         { retur
 func (*RealFileSystem) RemoveAll(path string) error                      { return os.RemoveAll(path) }
 func (*RealFileSystem) TempDir(dir, prefix string) (string, error)       { return ioutil.TempDir(dir, prefix) }
 func (*RealFileSystem) Copy(dst io.Writer, src io.Reader) (int64, error) { return io.Copy(dst, src) }
+func (*RealFileSystem) NewBufferedReader(rd io.Reader) Reader            { return bufio.NewReader(rd) }
+func (*RealFileSystem) IsTerminal(fd uintptr) bool                       { return isatty.IsTerminal(fd) }

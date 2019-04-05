@@ -1,6 +1,7 @@
 package update
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -491,4 +492,181 @@ func TestUpdateBinary(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestPromptToDownload(t *testing.T) {
+	req := require.New(t)
+
+	clock := clockwork.NewFakeClockAt(time.Now())
+	countRepeated := 0
+	countNoConfirm := 0
+	countNoPrompt := 0
+
+	makeFS := func(terminal bool, input string) pio.FileSystem {
+		return &mock.PassThroughFileSystem{
+			Mock: &mock.FileSystem{
+				IsTerminalFunc: func(fd uintptr) bool {
+					return terminal
+				},
+				NewBufferedReaderFunc: func(rd io.Reader) pio.Reader {
+					req.Equal(os.Stdin, rd)
+					fmt.Println() // to go to newline after test prompt
+					return bytes.NewBuffer([]byte(input))
+				},
+			},
+			FS: &pio.RealFileSystem{},
+		}
+	}
+
+	makeClient := func(fs pio.FileSystem) *client {
+		return NewClient(&ClientParams{
+			Repository: &mock.Repository{},
+			Logger:     log.New(),
+			Clock:      clock,
+			FS:         fs,
+		})
+	}
+
+	type args struct {
+		name          string
+		currVersion   string
+		latestVersion string
+		confirm       bool
+	}
+
+	basicArgs := args{
+		name:          "my-cli",
+		currVersion:   "v1.2.0",
+		latestVersion: "v2.0.0",
+		confirm:       true,
+	}
+
+	tests := []struct {
+		name   string
+		client *client
+		args   args
+		want   bool
+	}{
+		{
+			name:   "should prompt interactively and return true for yes",
+			client: makeClient(makeFS(true, "yes")),
+			args:   basicArgs,
+			want:   true,
+		},
+		{
+			name:   "should prompt interactively and return true for y",
+			client: makeClient(makeFS(true, "y")),
+			args:   basicArgs,
+			want:   true,
+		},
+		{
+			name:   "should prompt interactively and return true for Y",
+			client: makeClient(makeFS(true, "Y")),
+			args:   basicArgs,
+			want:   true,
+		},
+		{
+			name:   "should prompt interactively and return false for no",
+			client: makeClient(makeFS(true, "no")),
+			args:   basicArgs,
+			want:   false,
+		},
+		{
+			name:   "should prompt interactively and return false for n",
+			client: makeClient(makeFS(true, "n")),
+			args:   basicArgs,
+			want:   false,
+		},
+		{
+			name:   "should prompt interactively and return false for N",
+			client: makeClient(makeFS(true, "N")),
+			args:   basicArgs,
+			want:   false,
+		},
+		{
+			name: "should prompt repeatedly until user enters yes/no",
+			client: makeClient(&mock.PassThroughFileSystem{
+				Mock: &mock.FileSystem{
+					IsTerminalFunc: func(fd uintptr) bool {
+						return true
+					},
+					NewBufferedReaderFunc: func(rd io.Reader) pio.Reader {
+						req.Equal(os.Stdin, rd)
+						fmt.Println() // to go to newline after test prompt
+						countRepeated++
+						switch countRepeated {
+						case 1:
+							return bytes.NewBuffer([]byte("maybe"))
+						case 2:
+							return bytes.NewBuffer([]byte("youwish"))
+						case 3:
+							return bytes.NewBuffer([]byte("YES"))
+						case 4:
+							return bytes.NewBuffer([]byte("never"))
+						case 5:
+							return bytes.NewBuffer([]byte("no"))
+						}
+						return bytes.NewBuffer([]byte("n"))
+					},
+				},
+				FS: &pio.RealFileSystem{},
+			}),
+			args: basicArgs,
+			want: false,
+		},
+		{
+			name: "should skip confirmation if not requested",
+			client: makeClient(&mock.PassThroughFileSystem{
+				Mock: &mock.FileSystem{
+					IsTerminalFunc: func(fd uintptr) bool {
+						return true
+					},
+					NewBufferedReaderFunc: func(rd io.Reader) pio.Reader {
+						countNoConfirm++
+						return bytes.NewBuffer([]byte("n"))
+					},
+				},
+				FS: &pio.RealFileSystem{},
+			}),
+			args: args{
+				name:          "my-cli",
+				currVersion:   "v1.2.0",
+				latestVersion: "v2.0.0",
+				confirm:       false,
+			},
+			want: true,
+		},
+		{
+			name: "should skip confirmation if not a TTY",
+			client: makeClient(&mock.PassThroughFileSystem{
+				Mock: &mock.FileSystem{
+					IsTerminalFunc: func(fd uintptr) bool {
+						return false
+					},
+					NewBufferedReaderFunc: func(rd io.Reader) pio.Reader {
+						countNoPrompt++
+						return bytes.NewBuffer([]byte("n"))
+					},
+				},
+				FS: &pio.RealFileSystem{},
+			}),
+			args: args{
+				name:          "my-cli",
+				currVersion:   "v1.2.0",
+				latestVersion: "v2.0.0",
+				confirm:       false,
+			},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.client.PromptToDownload(tt.args.name, tt.args.currVersion, tt.args.latestVersion, tt.args.confirm); got != tt.want {
+				t.Errorf("client.PromptToDownload() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+	req.Equal(5, countRepeated)
+	req.Equal(0, countNoConfirm)
+	req.Equal(0, countNoPrompt)
 }

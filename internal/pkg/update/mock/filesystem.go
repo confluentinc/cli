@@ -42,6 +42,12 @@ type FileSystem struct {
 	lockCopy sync.Mutex
 	CopyFunc func(dst io.Writer, src io.Reader) (int64, error)
 
+	lockNewBufferedReader sync.Mutex
+	NewBufferedReaderFunc func(rd io.Reader) github_com_confluentinc_cli_internal_pkg_update_io.Reader
+
+	lockIsTerminal sync.Mutex
+	IsTerminalFunc func(fd uintptr) bool
+
 	calls struct {
 		Open []struct {
 			Name string
@@ -74,6 +80,12 @@ type FileSystem struct {
 		Copy []struct {
 			Dst io.Writer
 			Src io.Reader
+		}
+		NewBufferedReader []struct {
+			Rd io.Reader
+		}
+		IsTerminal []struct {
+			Fd uintptr
 		}
 	}
 }
@@ -435,6 +447,82 @@ func (m *FileSystem) CopyCalls() []struct {
 	return m.calls.Copy
 }
 
+// NewBufferedReader mocks base method by wrapping the associated func.
+func (m *FileSystem) NewBufferedReader(rd io.Reader) github_com_confluentinc_cli_internal_pkg_update_io.Reader {
+	m.lockNewBufferedReader.Lock()
+	defer m.lockNewBufferedReader.Unlock()
+
+	if m.NewBufferedReaderFunc == nil {
+		panic("mocker: FileSystem.NewBufferedReaderFunc is nil but FileSystem.NewBufferedReader was called.")
+	}
+
+	call := struct {
+		Rd io.Reader
+	}{
+		Rd: rd,
+	}
+
+	m.calls.NewBufferedReader = append(m.calls.NewBufferedReader, call)
+
+	return m.NewBufferedReaderFunc(rd)
+}
+
+// NewBufferedReaderCalled returns true if NewBufferedReader was called at least once.
+func (m *FileSystem) NewBufferedReaderCalled() bool {
+	m.lockNewBufferedReader.Lock()
+	defer m.lockNewBufferedReader.Unlock()
+
+	return len(m.calls.NewBufferedReader) > 0
+}
+
+// NewBufferedReaderCalls returns the calls made to NewBufferedReader.
+func (m *FileSystem) NewBufferedReaderCalls() []struct {
+	Rd io.Reader
+} {
+	m.lockNewBufferedReader.Lock()
+	defer m.lockNewBufferedReader.Unlock()
+
+	return m.calls.NewBufferedReader
+}
+
+// IsTerminal mocks base method by wrapping the associated func.
+func (m *FileSystem) IsTerminal(fd uintptr) bool {
+	m.lockIsTerminal.Lock()
+	defer m.lockIsTerminal.Unlock()
+
+	if m.IsTerminalFunc == nil {
+		panic("mocker: FileSystem.IsTerminalFunc is nil but FileSystem.IsTerminal was called.")
+	}
+
+	call := struct {
+		Fd uintptr
+	}{
+		Fd: fd,
+	}
+
+	m.calls.IsTerminal = append(m.calls.IsTerminal, call)
+
+	return m.IsTerminalFunc(fd)
+}
+
+// IsTerminalCalled returns true if IsTerminal was called at least once.
+func (m *FileSystem) IsTerminalCalled() bool {
+	m.lockIsTerminal.Lock()
+	defer m.lockIsTerminal.Unlock()
+
+	return len(m.calls.IsTerminal) > 0
+}
+
+// IsTerminalCalls returns the calls made to IsTerminal.
+func (m *FileSystem) IsTerminalCalls() []struct {
+	Fd uintptr
+} {
+	m.lockIsTerminal.Lock()
+	defer m.lockIsTerminal.Unlock()
+
+	return m.calls.IsTerminal
+}
+
 // Reset resets the calls made to the mocked methods.
 func (m *FileSystem) Reset() {
 	m.lockOpen.Lock()
@@ -464,4 +552,10 @@ func (m *FileSystem) Reset() {
 	m.lockCopy.Lock()
 	m.calls.Copy = nil
 	m.lockCopy.Unlock()
+	m.lockNewBufferedReader.Lock()
+	m.calls.NewBufferedReader = nil
+	m.lockNewBufferedReader.Unlock()
+	m.lockIsTerminal.Lock()
+	m.calls.IsTerminal = nil
+	m.lockIsTerminal.Unlock()
 }
