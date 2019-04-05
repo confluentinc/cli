@@ -5,17 +5,17 @@ import (
 	"os"
 	"time"
 
-	io2 "github.com/confluentinc/cli/internal/pkg/update/io"
+	pio "github.com/confluentinc/cli/internal/pkg/update/io"
 )
 
 // PassThroughFileSystem is useful for optionally mocking some methods
 // We have to check whether Mock.<Name>Func is nil because our mocks panic if called with nil func
 type PassThroughFileSystem struct {
 	Mock *FileSystem
-	FS   io2.FileSystem
+	FS   pio.FileSystem
 }
 
-func (c *PassThroughFileSystem) Open(name string) (io2.File, error) {
+func (c *PassThroughFileSystem) Open(name string) (pio.File, error) {
 	if c.Mock.OpenFunc != nil {
 		return c.Mock.Open(name)
 	}
@@ -29,7 +29,7 @@ func (c *PassThroughFileSystem) Stat(name string) (os.FileInfo, error) {
 	return c.FS.Stat(name)
 }
 
-func (c *PassThroughFileSystem) Create(name string) (io2.File, error) {
+func (c *PassThroughFileSystem) Create(name string) (pio.File, error) {
 	if c.Mock.CreateFunc != nil {
 		return c.Mock.Create(name)
 	}

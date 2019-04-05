@@ -11,13 +11,13 @@ import (
 	"testing"
 	"time"
 
-	io2 "github.com/confluentinc/cli/internal/pkg/update/io"
 	"github.com/hashicorp/go-version"
 	"github.com/jonboulle/clockwork"
 	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	pio "github.com/confluentinc/cli/internal/pkg/update/io"
 	"github.com/confluentinc/cli/internal/pkg/update/mock"
 )
 
@@ -33,7 +33,7 @@ func TestNewClient(t *testing.T) {
 			want: &ClientParams{
 				CheckInterval: 24 * time.Hour,
 				Clock:         clockwork.NewRealClock(),
-				FS:            &io2.RealFileSystem{},
+				FS:            &pio.RealFileSystem{},
 			},
 		},
 	}
@@ -443,7 +443,7 @@ func TestUpdateBinary(t *testing.T) {
 							return 0, errors.New("my dog ate my disks")
 						},
 					},
-					FS: &io2.RealFileSystem{},
+					FS: &pio.RealFileSystem{},
 				},
 			}),
 			args: args{
@@ -473,7 +473,7 @@ func TestUpdateBinary(t *testing.T) {
 							return errors.New("my dog ate my disks")
 						},
 					},
-					FS: &io2.RealFileSystem{},
+					FS: &pio.RealFileSystem{},
 				},
 			}),
 			args: args{
