@@ -4,6 +4,3 @@ fmt.Printf
 fmt.Fprint
 fmt.Fprintln
 fmt.Fprintf
-prompt.Print
-prompt.Println
-prompt.Printf

@@ -2,6 +2,7 @@ package update
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"os/user"
@@ -10,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	io2 "github.com/confluentinc/cli/internal/pkg/update/io"
 	"github.com/hashicorp/go-version"
 	"github.com/jonboulle/clockwork"
 	"github.com/stretchr/testify/require"
@@ -26,18 +28,19 @@ func TestNewClient(t *testing.T) {
 		want   *ClientParams
 	}{
 		{
-			name:   "should set default values (interval=24h, clock=real clock)",
+			name:   "should set default values (interval=24h, clock=real clock, fs=real fs)",
 			params: &ClientParams{},
 			want: &ClientParams{
 				CheckInterval: 24 * time.Hour,
 				Clock:         clockwork.NewRealClock(),
+				FS:            &io2.RealFileSystem{},
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := NewClient(tt.params); !reflect.DeepEqual(got.ClientParams, tt.want) {
-				t.Errorf("NewClient() = %v, want %#v", got.ClientParams, tt.want)
+				t.Errorf("NewClient() = %#v, want %#v", got.ClientParams, tt.want)
 			}
 		})
 	}
@@ -412,6 +415,66 @@ func TestUpdateBinary(t *testing.T) {
 				},
 				Logger: log.New(),
 				Clock:  clock,
+			}),
+			args: args{
+				name:    binName,
+				version: "v1",
+				path:    installedBin,
+			},
+			wantErr: true,
+		},
+		{
+			name: "err if unable to overwrite binary",
+			client: NewClient(&ClientParams{
+				Repository: &mock.Repository{
+					DownloadVersionFunc: func(name, version, downloadDir string) (string, int64, error) {
+						req.Equal(binName, name)
+						req.Equal("v1", version)
+						req.Contains(downloadDir, binName)
+						clock.Advance(23 * time.Second)
+						return downloadedBin, 16 * 1000 * 1000, nil
+					},
+				},
+				Logger: log.New(),
+				Clock:  clock,
+				FS: &mock.PassThroughFileSystem{
+					Mock: &mock.FileSystem{
+						CopyFunc: func(dst io.Writer, src io.Reader) (i int64, e error) {
+							return 0, errors.New("my dog ate my disks")
+						},
+					},
+					FS: &io2.RealFileSystem{},
+				},
+			}),
+			args: args{
+				name:    binName,
+				version: "v1",
+				path:    installedBin,
+			},
+			wantErr: true,
+		},
+		{
+			name: "err if unable to chmod binary",
+			client: NewClient(&ClientParams{
+				Repository: &mock.Repository{
+					DownloadVersionFunc: func(name, version, downloadDir string) (string, int64, error) {
+						req.Equal(binName, name)
+						req.Equal("v1", version)
+						req.Contains(downloadDir, binName)
+						clock.Advance(23 * time.Second)
+						return downloadedBin, 16 * 1000 * 1000, nil
+					},
+				},
+				Logger: log.New(),
+				Clock:  clock,
+				FS: &mock.PassThroughFileSystem{
+					Mock: &mock.FileSystem{
+						ChmodFunc: func(name string, mode os.FileMode) error {
+							return errors.New("my dog ate my disks")
+						},
+					},
+					FS: &io2.RealFileSystem{},
+				},
 			}),
 			args: args{
 				name:    binName,

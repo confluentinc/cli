@@ -3,8 +3,6 @@ package update
 import (
 	"bufio"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -16,6 +14,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/update/io"
 )
 
 type client struct {
@@ -34,6 +33,8 @@ type ClientParams struct {
 	CheckInterval time.Duration
 	// Optional, defaults to the system clock
 	Clock         clockwork.Clock
+	// Optional, defaults to the OS filesystem
+	FS            io.FileSystem
 }
 
 // NewClient returns a client for updating CLI binaries
@@ -43,6 +44,9 @@ func NewClient(params *ClientParams) *client {
 	}
 	if params.Clock == nil {
 		params.Clock = clockwork.NewRealClock()
+	}
+	if params.FS == nil {
+		params.FS = &io.RealFileSystem{}
 	}
 	return &client{
 		ClientParams: params,
@@ -118,11 +122,14 @@ func (c *client) PromptToDownload(name, currVersion, latestVersion string, confi
 
 // UpdateBinary replaces the named binary at path with the desired version
 func (c *client) UpdateBinary(name, version, path string) error {
-	downloadDir, err := ioutil.TempDir("", name)
+	downloadDir, err := c.FS.TempDir("", name)
 	if err != nil {
 		return errors.Wrapf(err, "unable to get temp dir for %s", name)
 	}
-	defer os.RemoveAll(downloadDir)
+	defer func() {
+		err = c.FS.RemoveAll(downloadDir)
+		c.Logger.Warnf("unable to clean up temp download dir %s: %s", downloadDir, err)
+	}()
 
 	fmt.Printf("Downloading %s version %s...\n", name, version)
 	startTime := c.Clock.Now()
@@ -136,12 +143,12 @@ func (c *client) UpdateBinary(name, version, path string) error {
 	timeSpent := c.Clock.Now().Sub(startTime).Seconds()
 	fmt.Printf("Done. Downloaded %.2f MB in %.0f seconds. (%.2f MB/s)\n", mb, timeSpent, mb/timeSpent)
 
-	err = copyFile(newBin, path)
+	err = c.copyFile(newBin, path)
 	if err != nil {
 		return errors.Wrapf(err, "unable to copy %s to %s", newBin, path)
 	}
 
-	if err := os.Chmod(path, 0755); err != nil {
+	if err := c.FS.Chmod(path, 0755); err != nil {
 		return errors.Wrapf(err, "unable to chmod 0755 %s", path)
 	}
 
@@ -157,7 +164,7 @@ func (c *client) readCheckFile() (shouldCheck bool, err error) {
 	if err != nil {
 		return false, err
 	}
-	info, err := os.Stat(updateFile)
+	info, err := c.FS.Stat(updateFile)
 	if err != nil && !os.IsNotExist(err) {
 		return false, err
 	}
@@ -182,13 +189,13 @@ func (c *client) touchCheckFile() error {
 		return err
 	}
 
-	if _, err := os.Stat(checkFile); os.IsNotExist(err) {
-		if f, err := os.Create(checkFile); err != nil {
+	if _, err := c.FS.Stat(checkFile); os.IsNotExist(err) {
+		if f, err := c.FS.Create(checkFile); err != nil {
 			return err
 		} else {
 			f.Close()
 		}
-	} else if err := os.Chtimes(checkFile, c.Clock.Now(), c.Clock.Now()); err != nil {
+	} else if err := c.FS.Chtimes(checkFile, c.Clock.Now(), c.Clock.Now()); err != nil {
 		return err
 	}
 	return nil
@@ -197,25 +204,25 @@ func (c *client) touchCheckFile() error {
 // copyFile copies from src to dst until either EOF is reached
 // on src or an error occurs. It verifies src exists and removes
 // the dst if it exists.
-func copyFile(src, dst string) error {
+func (c *client) copyFile(src, dst string) error {
 	cleanSrc := filepath.Clean(src)
 	cleanDst := filepath.Clean(dst)
 	if cleanSrc == cleanDst {
 		return nil
 	}
-	sf, err := os.Open(cleanSrc)
+	sf, err := c.FS.Open(cleanSrc)
 	if err != nil {
 		return err
 	}
 	defer sf.Close()
-	if err := os.Remove(cleanDst); err != nil && !os.IsNotExist(err) {
+	if err := c.FS.Remove(cleanDst); err != nil && !os.IsNotExist(err) {
 		return err
 	}
-	df, err := os.Create(cleanDst)
+	df, err := c.FS.Create(cleanDst)
 	if err != nil {
 		return err
 	}
 	defer df.Close()
-	_, err = io.Copy(df, sf)
+	_, err = c.FS.Copy(df, sf)
 	return err
 }
