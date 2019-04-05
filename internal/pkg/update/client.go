@@ -120,7 +120,7 @@ func (c *client) PromptToDownload(name, currVersion, latestVersion string, confi
 func (c *client) UpdateBinary(name, version, path string) error {
 	downloadDir, err := ioutil.TempDir("", name)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "unable to get temp dir for %s", name)
 	}
 	defer os.RemoveAll(downloadDir)
 
@@ -129,7 +129,7 @@ func (c *client) UpdateBinary(name, version, path string) error {
 
 	newBin, bytes, err := c.Repository.DownloadVersion(name, version, downloadDir)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "unable to download %s version %s to %s", name, version, downloadDir)
 	}
 
 	mb := float64(bytes) / 1024.0 / 1024.0
@@ -138,11 +138,11 @@ func (c *client) UpdateBinary(name, version, path string) error {
 
 	err = copyFile(newBin, path)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "unable to copy %s to %s", newBin, path)
 	}
 
 	if err := os.Chmod(path, 0755); err != nil {
-		return err
+		return errors.Wrapf(err, "unable to chmod 0755 %s", path)
 	}
 
 	return nil

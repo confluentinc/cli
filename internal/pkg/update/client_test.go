@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/alecthomas/units"
 	"github.com/hashicorp/go-version"
 	"github.com/jonboulle/clockwork"
 	"github.com/stretchr/testify/require"
@@ -292,12 +293,13 @@ func TestCheckForUpdates_BehaviorOverTime(t *testing.T) {
 		client.Clock = clockwork.NewFakeClockAt(lastCheck)
 		repo.Reset()
 
-		updateAvailable, latestVersion, err = client.CheckForUpdates("my-cli", "v1.2.3", false)
+		_, _, _ = client.CheckForUpdates("my-cli", "v1.2.3", false)
 		req.False(repo.GetAvailableVersionsCalled())
 	}
 
 	// 5 days pass...
-	client.Clock = clockwork.NewFakeClockAt(time.Now().Add(5 * 24 * time.Hour))
+	lastCheck = lastCheck.Add(5 * 24 * time.Hour)
+	client.Clock = clockwork.NewFakeClockAt(lastCheck)
 
 	// Should check and find update
 	updateAvailable, latestVersion, err = client.CheckForUpdates("my-cli", "v1.2.3", false)
@@ -312,9 +314,16 @@ func TestCheckForUpdates_BehaviorOverTime(t *testing.T) {
 		client.Clock = clockwork.NewFakeClockAt(lastCheck)
 		repo.Reset()
 
-		updateAvailable, latestVersion, err = client.CheckForUpdates("my-cli", "v1.2.3", false)
+		_, _, _ = client.CheckForUpdates("my-cli", "v1.2.3", false)
 		req.False(repo.GetAvailableVersionsCalled())
 	}
+
+	// Finally we should check once more
+	lastCheck = lastCheck.Add(3 * time.Second)
+	client.Clock = clockwork.NewFakeClockAt(lastCheck)
+	repo.Reset()
+	_, _, _ = client.CheckForUpdates("my-cli", "v1.2.3", false)
+	req.True(repo.GetAvailableVersionsCalled())
 }
 
 func TestCheckForUpdates_NoCheckFileGiven(t *testing.T) {
@@ -336,7 +345,7 @@ func TestCheckForUpdates_NoCheckFileGiven(t *testing.T) {
 		Clock:      clockwork.NewFakeClockAt(time.Now()),
 	})
 
-	// Should check and find the update nonstop
+	// Should check for updates every time if no CheckFile given to serve as the "last check" cache
 	for i := 0; i < 3; i++ {
 		updateAvailable, latestVersion, err := client.CheckForUpdates("my-cli", "v1.2.3", false)
 		req.NoError(err)
@@ -344,5 +353,67 @@ func TestCheckForUpdates_NoCheckFileGiven(t *testing.T) {
 		req.Equal("v3", latestVersion)
 		req.True(repo.GetAvailableVersionsCalled())
 		repo.Reset()
+	}
+}
+
+func TestUpdateBinary(t *testing.T) {
+	req := require.New(t)
+
+	binName := "fake_cli"
+
+	installDir, err := ioutil.TempDir("", "cli-test4-*")
+	require.NoError(t, err)
+	defer os.Remove(installDir)
+	installedBin := fmt.Sprintf("%s/%s", installDir, binName)
+	_ = ioutil.WriteFile(installedBin, []byte("old version"), os.ModePerm)
+
+	downloadDir, err := ioutil.TempDir("", "cli-test5-*")
+	require.NoError(t, err)
+	defer os.Remove(downloadDir)
+	downloadedBin := fmt.Sprintf("%s/%s", downloadDir, binName)
+	_ = ioutil.WriteFile(downloadedBin, []byte("new version"), os.ModePerm)
+
+	clock := clockwork.NewFakeClockAt(time.Now())
+
+	type args struct {
+		name    string
+		version string
+		path    string
+	}
+	tests := []struct {
+		name    string
+		client  *client
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "can update file",
+			client: NewClient(&ClientParams{
+				Repository: &mock.Repository{
+					DownloadVersionFunc: func(name, version, downloadDir string) (string, int64, error) {
+						req.Equal(binName, name)
+						req.Equal("v123.456.789", version)
+						req.Contains(downloadDir, binName)
+						clock.Advance(23 * time.Second)
+						// TODO: DownloadVersionFunc could return units.MetricBytes
+						return downloadedBin, int64(16 * units.MB), nil
+					},
+				},
+				Logger: log.New(),
+				Clock:  clock,
+			}),
+			args: args{
+				name:    binName,
+				version: "v123.456.789",
+				path:    installedBin,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.client.UpdateBinary(tt.args.name, tt.args.version, tt.args.path); (err != nil) != tt.wantErr {
+				t.Errorf("client.UpdateBinary() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
 	}
 }
