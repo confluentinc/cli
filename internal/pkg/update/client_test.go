@@ -382,7 +382,7 @@ func TestUpdateBinary(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "can update file",
+			name: "can update application binary",
 			client: NewClient(&ClientParams{
 				Repository: &mock.Repository{
 					DownloadVersionFunc: func(name, version, downloadDir string) (string, int64, error) {
@@ -401,6 +401,24 @@ func TestUpdateBinary(t *testing.T) {
 				version: "v123.456.789",
 				path:    installedBin,
 			},
+		},
+		{
+			name: "err if unable to download package",
+			client: NewClient(&ClientParams{
+				Repository: &mock.Repository{
+					DownloadVersionFunc: func(name, version, downloadDir string) (string, int64, error) {
+						return "", 0, errors.New("out of disk!")
+					},
+				},
+				Logger: log.New(),
+				Clock:  clock,
+			}),
+			args: args{
+				name:    binName,
+				version: "v1",
+				path:    installedBin,
+			},
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
