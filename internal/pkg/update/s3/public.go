@@ -102,12 +102,12 @@ func (r *PublicRepo) GetAvailableVersions(name string) (version.Collection, erro
 		}
 
 		// Skip binaries not for this OS
-		if split[2] != runtime.GOOS {
+		if split[2] != r.goos {
 			continue
 		}
 
 		// Skip binaries not for this Arch
-		if split[3] != runtime.GOARCH {
+		if split[3] != r.goarch {
 			continue
 		}
 
@@ -137,14 +137,14 @@ func (r *PublicRepo) GetAvailableVersions(name string) (version.Collection, erro
 
 func (r *PublicRepo) DownloadVersion(name, version, downloadDir string) (string, int64, error) {
 	downloadVersion := fmt.Sprintf("%s/%s/%s/%s_%s_%s_%s", r.endpoint, r.S3BinPrefix,
-		version, name, version, runtime.GOOS, runtime.GOARCH)
+		version, name, version, r.goos, r.goarch)
 	resp, err := http.Get(downloadVersion)
 	if err != nil {
 		return "", 0, err
 	}
 	defer resp.Body.Close()
 
-	binName := fmt.Sprintf("%s-v%s-%s-%s", name, version, runtime.GOOS, runtime.GOARCH)
+	binName := fmt.Sprintf("%s-v%s-%s-%s", name, version, r.goos, r.goarch)
 	downloadBinPath := filepath.Join(downloadDir, binName)
 
 	downloadBin, err := os.Create(downloadBinPath)
