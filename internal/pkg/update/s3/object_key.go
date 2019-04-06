@@ -37,7 +37,7 @@ func (p *VersionPrefixedKey) URLFor(name, version string) string {
 	return fmt.Sprintf("%s/%s/%s_%s_%s_%s", p.Prefix, version, name, version, p.goos, p.goarch)
 }
 
-func (p *VersionPrefixedKey) Validate(key string) (skip bool, foundVersion *version.Version, err error) {
+func (p *VersionPrefixedKey) ParseVersion(key string) (bool, *version.Version, error) {
 
 	split := strings.Split(key, "_")
 
