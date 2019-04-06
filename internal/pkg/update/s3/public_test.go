@@ -127,11 +127,12 @@ func TestPublicRepo_GetAvailableVersions(t *testing.T) {
 				S3BinRegion: tt.fields.S3BinRegion,
 				S3BinPrefix: tt.fields.S3BinPrefix,
 				Logger:      tt.fields.Logger,
-				Endpoint:    tt.fields.Endpoint,
-				// Need to inject these so tests pass in different environments (e.g., CI)
-				OS:          "darwin",
-				ARCH:        "amd64",
 			})
+			r.endpoint = tt.fields.Endpoint
+			// Need to inject these so tests pass in different environments (e.g., CI)
+			r.goos = "darwin"
+			r.goarch = "amd64"
+
 			got, err := r.GetAvailableVersions(tt.args.name)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("PublicRepo.GetAvailableVersions() error = %v, wantErr %v", err, tt.wantErr)

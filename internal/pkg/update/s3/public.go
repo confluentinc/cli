@@ -19,6 +19,10 @@ import (
 
 type PublicRepo struct {
 	*PublicRepoParams
+	// @VisibleForTesting
+	endpoint string
+	goos     string
+	goarch   string
 }
 
 type PublicRepoParams struct {
@@ -26,10 +30,6 @@ type PublicRepoParams struct {
 	S3BinRegion string
 	S3BinPrefix string
 	Logger      *log.Logger
-	// @VisibleForTesting
-	Endpoint    string
-	OS          string
-	ARCH        string
 }
 
 type ListBucketResult struct {
@@ -52,24 +52,18 @@ type Object struct {
 }
 
 func NewPublicRepo(params *PublicRepoParams) *PublicRepo {
-	if params.Endpoint == "" {
-		params.Endpoint = fmt.Sprintf("https://s3-%s.amazonaws.com/%s", params.S3BinRegion, params.S3BinBucket)
-	}
-	if params.OS == "" {
-		params.OS = runtime.GOOS
-	}
-	if params.ARCH == "" {
-		params.ARCH = runtime.GOARCH
-	}
 	return &PublicRepo{
 		PublicRepoParams: params,
+		endpoint:         fmt.Sprintf("https://s3-%s.amazonaws.com/%s", params.S3BinRegion, params.S3BinBucket),
+		goos:             runtime.GOOS,
+		goarch:           runtime.GOARCH,
 	}
 }
 
 func (r *PublicRepo) GetAvailableVersions(name string) (version.Collection, error) {
-	listVersions := fmt.Sprintf("%s?prefix=%s/", r.Endpoint, r.S3BinPrefix)
+	listVersions := fmt.Sprintf("%s?prefix=%s/", r.endpoint, r.S3BinPrefix)
 	r.Logger.Debugf("Getting available versions from %s", listVersions)
-	resp, err := http.Get(r.Endpoint)
+	resp, err := http.Get(r.endpoint)
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +136,7 @@ func (r *PublicRepo) GetAvailableVersions(name string) (version.Collection, erro
 }
 
 func (r *PublicRepo) DownloadVersion(name, version, downloadDir string) (string, int64, error) {
-	downloadVersion := fmt.Sprintf("%s/%s/%s/%s_%s_%s_%s", r.Endpoint, r.S3BinPrefix,
+	downloadVersion := fmt.Sprintf("%s/%s/%s/%s_%s_%s_%s", r.endpoint, r.S3BinPrefix,
 		version, name, version, runtime.GOOS, runtime.GOARCH)
 	resp, err := http.Get(downloadVersion)
 	if err != nil {
