@@ -30,10 +30,7 @@ func NewClient(cliName string, logger *log.Logger) update.Client {
 		S3BinRegion: S3BinRegion,
 		S3BinBucket: S3BinBucket,
 		S3BinPrefix: S3BinPrefix,
-		S3KeyParser: &s3.VersionPrefixedKeyParser{
-			Prefix: S3BinPrefix,
-			Name:   cliName,
-		},
+		S3KeyParser: s3.NewVersionPrefixedKeyParser(S3BinPrefix, cliName),
 		Logger:      logger,
 	})
 	return update.NewClient(&update.ClientParams{

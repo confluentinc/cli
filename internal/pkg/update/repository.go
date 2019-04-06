@@ -10,5 +10,5 @@ type Repository interface {
 
 	// Downloads the versioned package to download dir to downloadDir.
 	// Returns the full path to the downloaded package, the download size in bytes, or an error if one occurred.
-	DownloadVersion(name, version, downloadDir string) (string, int64, error)
+	DownloadVersion(name, version, downloadDir string) (downloadPath string, downloadedBytes int64, err error)
 }

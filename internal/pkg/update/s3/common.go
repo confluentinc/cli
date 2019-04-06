@@ -11,6 +11,7 @@ import (
 // Validates whether an S3 Key represents an installable package and parses the package version
 type KeyParser interface {
 	Validate(key string) (skip bool, foundVersion *version.Version, err error)
+	URLFor(name, version string) string
 }
 
 // Parses version-prefixed package S3 keys with the format PREFIX/VERSION/NAME_VERSION_OS_ARCH
@@ -18,17 +19,24 @@ type VersionPrefixedKeyParser struct {
 	Prefix string
 	Name   string
 	// @VisibleForTesting, defaults to runtime.GOOS and runtime.GOARCH
-	OS string
-	Arch string
+	goos   string
+	goarch string
+}
+
+func NewVersionPrefixedKeyParser(prefix, name string) *VersionPrefixedKeyParser {
+	return &VersionPrefixedKeyParser{
+		Prefix: prefix,
+		Name:   name,
+		goos:   runtime.GOOS,
+		goarch: runtime.GOARCH,
+	}
+}
+
+func (p *VersionPrefixedKeyParser) URLFor(name, version string) string {
+	return fmt.Sprintf("%s/%s/%s_%s_%s_%s", p.Prefix, version, name, version, p.goos, p.goarch)
 }
 
 func (p *VersionPrefixedKeyParser) Validate(key string) (skip bool, foundVersion *version.Version, err error) {
-	if p.OS == "" {
-		p.OS = runtime.GOOS
-	}
-	if p.Arch == "" {
-		p.Arch = runtime.GOARCH
-	}
 
 	split := strings.Split(key, "_")
 
@@ -48,12 +56,12 @@ func (p *VersionPrefixedKeyParser) Validate(key string) (skip bool, foundVersion
 	}
 
 	// Skip binaries not for this OS
-	if split[2] != runtime.GOOS {
+	if split[2] != p.goos {
 		return false, nil, nil
 	}
 
 	// Skip binaries not for this Arch
-	if split[3] != runtime.GOARCH {
+	if split[3] != p.goarch {
 		return false, nil, nil
 	}
 

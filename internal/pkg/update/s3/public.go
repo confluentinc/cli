@@ -3,23 +3,24 @@ package s3
 import (
 	"encoding/xml"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"path/filepath"
 	"runtime"
 	"sort"
 
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/hashicorp/go-version"
 
 	"github.com/confluentinc/cli/internal/pkg/log"
+	pio "github.com/confluentinc/cli/internal/pkg/update/io"
 )
 
 type PublicRepo struct {
 	*PublicRepoParams
 	// @VisibleForTesting
 	endpoint string
+	fs       pio.FileSystem
 	goos     string
 	goarch   string
 }
@@ -55,6 +56,7 @@ func NewPublicRepo(params *PublicRepoParams) *PublicRepo {
 	return &PublicRepo{
 		PublicRepoParams: params,
 		endpoint:         fmt.Sprintf("https://s3-%s.amazonaws.com/%s", params.S3BinRegion, params.S3BinBucket),
+		fs:               &pio.RealFileSystem{},
 		goos:             runtime.GOOS,
 		goarch:           runtime.GOARCH,
 	}
@@ -74,6 +76,10 @@ func (r *PublicRepo) GetAvailableVersions(name string) (version.Collection, erro
 		return nil, err
 	}
 	r.Logger.Tracef("Response from AWS: %s", string(body))
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, errors.Errorf("received unexpected response from S3: %s", resp.Status)
+	}
 
 	var result ListBucketResult
 	err = xml.Unmarshal(body, &result)
@@ -103,8 +109,8 @@ func (r *PublicRepo) GetAvailableVersions(name string) (version.Collection, erro
 }
 
 func (r *PublicRepo) DownloadVersion(name, version, downloadDir string) (string, int64, error) {
-	binName := fmt.Sprintf("%s-v%s-%s-%s", name, version, r.goos, r.goarch)
-	downloadVersion := fmt.Sprintf("%s/%s/%s/%s", r.endpoint, r.S3BinPrefix, version, binName)
+	s3URL := r.S3KeyParser.URLFor(name, version)
+	downloadVersion := fmt.Sprintf("%s/%s", r.endpoint, s3URL)
 
 	resp, err := http.Get(downloadVersion)
 	if err != nil {
@@ -112,15 +118,24 @@ func (r *PublicRepo) DownloadVersion(name, version, downloadDir string) (string,
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode != http.StatusOK {
+		body, err := ioutil.ReadAll(resp.Body)
+		if err == nil {
+			r.Logger.Tracef("Response from AWS: %s", string(body))
+		}
+		return "", 0, errors.Errorf("received unexpected response from S3: %s", resp.Status)
+	}
+
+	binName := fmt.Sprintf("%s-v%s-%s-%s", name, version, r.goos, r.goarch)
 	downloadBinPath := filepath.Join(downloadDir, binName)
 
-	downloadBin, err := os.Create(downloadBinPath)
+	downloadBin, err := r.fs.Create(downloadBinPath)
 	if err != nil {
 		return "", 0, err
 	}
 	defer downloadBin.Close()
 
-	bytes, err := io.Copy(downloadBin, resp.Body)
+	bytes, err := r.fs.Copy(downloadBin, resp.Body)
 	if err != nil {
 		return "", 0, err
 	}
