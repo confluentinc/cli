@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
 	"sort"
 	"strings"
 
@@ -23,6 +22,7 @@ type PrivateRepoParams struct {
 	S3BinBucket string
 	S3BinRegion string
 	S3BinPrefix string
+	S3ObjectKey ObjectKey
 	AWSProfiles []string
 	Logger      *log.Logger
 }
@@ -31,6 +31,9 @@ type PrivateRepo struct {
 	*PrivateRepoParams
 	session *session.Session
 	s3svc   *s3.S3
+	// @VisibleForTesting
+	goos     string
+	goarch   string
 }
 
 func NewPrivateRepo(params *PrivateRepoParams) (*PrivateRepo, error) {
@@ -82,35 +85,14 @@ func (r *PrivateRepo) GetAvailableVersions(name string) (version.Collection, err
 
 	var availableVersions version.Collection
 	for _, c := range result.Contents {
-		// Format: S3BinPrefix/NAME-v0.0.0-OS-ARCH
-		split := strings.Split(*c.Key, "-")
-
-		// Skip files that don't match our naming standards for binaries
-		if len(split) != 4 {
-			continue
-		}
-
-		// Skip non-matching binaries
-		if split[0] != fmt.Sprintf("%s/%s", r.S3BinPrefix, name) {
-			continue
-		}
-
-		// Skip binaries not for this OS
-		if split[2] != runtime.GOOS {
-			continue
-		}
-
-		// Skip binaries not for this Arch
-		if split[3] != runtime.GOARCH {
-			continue
-		}
-
-		v, err := version.NewVersion(split[1])
+		match, foundVersion, err := r.S3ObjectKey.ParseVersion(*c.Key, name)
 		if err != nil {
-			r.Logger.Warnf("WARNING: Unable to parse version %s - %s", split[1], err)
+			return nil, err
+		}
+		if !match {
 			continue
 		}
-		availableVersions = append(availableVersions, v)
+		availableVersions = append(availableVersions, foundVersion)
 	}
 
 	if len(availableVersions) <= 0 {
@@ -123,9 +105,9 @@ func (r *PrivateRepo) GetAvailableVersions(name string) (version.Collection, err
 }
 
 func (r *PrivateRepo) DownloadVersion(name, version, downloadDir string) (string, int64, error) {
-	binName := fmt.Sprintf("%s-v%s-%s-%s", name, version, runtime.GOOS, runtime.GOARCH)
 	downloader := s3manager.NewDownloader(r.session)
 
+	binName := fmt.Sprintf("%s-v%s-%s-%s", name, version, r.goos, r.goarch)
 	downloadBinPath := filepath.Join(downloadDir, binName)
 	downloadBin, err := os.Create(downloadBinPath)
 	if err != nil {
@@ -133,9 +115,10 @@ func (r *PrivateRepo) DownloadVersion(name, version, downloadDir string) (string
 	}
 	defer downloadBin.Close()
 
+	s3URL := r.S3ObjectKey.URLFor(name, version)
 	bytes, err := downloader.Download(downloadBin, &s3.GetObjectInput{
 		Bucket: aws.String(r.S3BinBucket),
-		Key:    aws.String(fmt.Sprintf("%s/%s", name, binName)),
+		Key:    aws.String(s3URL),
 	})
 	if err != nil {
 		return "", 0, err

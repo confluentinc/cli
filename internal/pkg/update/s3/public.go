@@ -9,9 +9,9 @@ import (
 	"runtime"
 	"sort"
 
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/hashicorp/go-version"
 
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	pio "github.com/confluentinc/cli/internal/pkg/update/io"
 )
@@ -89,7 +89,7 @@ func (r *PublicRepo) GetAvailableVersions(name string) (version.Collection, erro
 
 	var availableVersions version.Collection
 	for _, v := range result.Contents {
-		match, foundVersion, err := r.S3ObjectKey.ParseVersion(v.Key)
+		match, foundVersion, err := r.S3ObjectKey.ParseVersion(v.Key, name)
 		if err != nil {
 			return nil, err
 		}

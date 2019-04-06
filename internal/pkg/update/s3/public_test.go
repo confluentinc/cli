@@ -37,8 +37,8 @@ func NewMockPublicS3Error() *httptest.Server {
 	return httptest.NewServer(mux)
 }
 
-func NewTestVersionPrefixedKeyParser(prefix, name, goos, goarch string) *VersionPrefixedKey {
-	p := NewVersionPrefixedKey(prefix, name, "_")
+func NewTestVersionPrefixedKeyParser(prefix, name, goos, goarch string) *PrefixedKey {
+	p := NewPrefixedKey(prefix, "_", true)
 	p.goos = goos
 	p.goarch = goarch
 	return p

@@ -10,41 +10,49 @@ import (
 
 // ObjectKey represents an S3 Key for a versioned package
 type ObjectKey interface {
-	ParseVersion(key string) (match bool, foundVersion *version.Version, err error)
+	ParseVersion(key, name string) (match bool, foundVersion *version.Version, err error)
 	URLFor(name, version string) string
 }
 
-// VersionPrefixedKey is a version-prefixed S3 key with the format PREFIX/VERSION/NAME_VERSION_OS_ARCH
-type VersionPrefixedKey struct {
+// PrefixedKey is a prefixed S3 key
+type PrefixedKey struct {
 	Prefix string
-	Name   string
-	// Optional char used to separate sections of the package name, defaults to "_"
+	// Whether the S3 key has a VERSION prefix in the path before the package name
+	PrefixVersion bool
+	// Character used to separate sections of the package name
 	Separator string
 	// @VisibleForTesting, defaults to runtime.GOOS and runtime.GOARCH
 	goos   string
 	goarch string
 }
 
-// NewVersionPrefixedKey returns a VersionPrefixedKey for a given S3 path prefix and binary name
-func NewVersionPrefixedKey(prefix, name, sep string) *VersionPrefixedKey {
-	if sep == "" {
-		sep = "_"
-	}
-	return &VersionPrefixedKey{
-		Prefix:    prefix,
-		Name:      name,
-		Separator: sep,
-		goos:      runtime.GOOS,
-		goarch:    runtime.GOARCH,
+// NewPrefixedKey returns a PrefixedKey for a given S3 path prefix and binary name.
+//
+// You must also specify whether the S3 key is prefixed with the version as well as
+// the separator for parts of the package name (shown below with "_" separators).
+//
+// If prefixVersion, s3 key format is PREFIX/VERSION/PACKAGE_VERSION_OS_ARCH
+//        otherwise, s3 key format is PREFIX/PACKAGE_VERSION_OS_ARCH
+func NewPrefixedKey(prefix, sep string, prefixVersion bool) *PrefixedKey {
+	return &PrefixedKey{
+		Prefix:        prefix,
+		Separator:     sep,
+		PrefixVersion: prefixVersion,
+		goos:          runtime.GOOS,
+		goarch:        runtime.GOARCH,
 	}
 }
 
-func (p *VersionPrefixedKey) URLFor(name, version string) string {
+func (p *PrefixedKey) URLFor(name, version string) string {
 	packageName := strings.Join([]string{name, version, p.goos, p.goarch}, p.Separator)
-	return fmt.Sprintf("%s/%s/%s", p.Prefix, version, packageName)
+	if p.PrefixVersion {
+		return fmt.Sprintf("%s/%s/%s", p.Prefix, version, packageName)
+	} else {
+		return fmt.Sprintf("%s/%s", p.Prefix, packageName)
+	}
 }
 
-func (p *VersionPrefixedKey) ParseVersion(key string) (bool, *version.Version, error) {
+func (p *PrefixedKey) ParseVersion(key, name string) (match bool, foundVersion *version.Version, err error) {
 	split := strings.Split(key, p.Separator)
 
 	// Skip files that don't match our naming standards for binaries
@@ -58,7 +66,7 @@ func (p *VersionPrefixedKey) ParseVersion(key string) (bool, *version.Version, e
 	}
 
 	// Skip binaries other than the requested one
-	if !strings.HasSuffix(split[0], p.Name) {
+	if !strings.HasSuffix(split[0], name) {
 		return false, nil, nil
 	}
 
@@ -81,13 +89,13 @@ func (p *VersionPrefixedKey) ParseVersion(key string) (bool, *version.Version, e
 	}
 
 	// Skip if version is out of sync (which shouldn't happen, but, again, accidents happen)
-	if !strings.Contains(split[0], "/"+split[1]+"/") {
+	if p.PrefixVersion && !strings.Contains(split[0], "/"+split[1]+"/") {
 		return false, nil, nil
 	}
 
 	ver, err := version.NewSemver(split[1])
 	if err != nil {
-		return false, nil, fmt.Errorf("unable to parse %s version - %s", p.Name, err)
+		return false, nil, fmt.Errorf("unable to parse %s version - %s", name, err)
 	}
 	return true, ver, nil
 }
