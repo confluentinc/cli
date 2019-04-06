@@ -154,7 +154,6 @@ func TestPrefixedKey_URLFor(t *testing.T) {
 	type fields struct {
 		Prefix          string
 		VersionPrefixed bool
-		Separator       string
 	}
 	type args struct {
 		name    string
@@ -171,7 +170,6 @@ func TestPrefixedKey_URLFor(t *testing.T) {
 			fields: fields{
 				Prefix: "my-pre",
 				VersionPrefixed: true,
-				Separator: "_",
 			},
 			args: args{
 				name:    "fancy-cli",
@@ -184,7 +182,6 @@ func TestPrefixedKey_URLFor(t *testing.T) {
 			fields: fields{
 				Prefix: "my-pre",
 				VersionPrefixed: false,
-				Separator: "_",
 			},
 			args: args{
 				name:    "fancy-cli",
@@ -195,7 +192,7 @@ func TestPrefixedKey_URLFor(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			p := NewPrefixedKey(tt.fields.Prefix, tt.fields.Separator, tt.fields.VersionPrefixed)
+			p := NewPrefixedKey(tt.fields.Prefix, "_", tt.fields.VersionPrefixed)
 			// Need to inject these so tests pass in different environments (e.g., CI)
 			p.goos = "darwin"
 			p.goarch = "amd64"
