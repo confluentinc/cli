@@ -29,7 +29,7 @@ type PublicRepoParams struct {
 	S3BinBucket string
 	S3BinRegion string
 	S3BinPrefix string
-	S3KeyParser ObjectKey
+	S3ObjectKey ObjectKey
 	Logger      *log.Logger
 }
 
@@ -89,11 +89,11 @@ func (r *PublicRepo) GetAvailableVersions(name string) (version.Collection, erro
 
 	var availableVersions version.Collection
 	for _, v := range result.Contents {
-		found, foundVersion, err := r.S3KeyParser.ParseVersion(v.Key)
+		matches, foundVersion, err := r.S3ObjectKey.ParseVersion(v.Key)
 		if err != nil {
 			return nil, err
 		}
-		if !found {
+		if !matches {
 			continue
 		}
 		availableVersions = append(availableVersions, foundVersion)
@@ -109,7 +109,7 @@ func (r *PublicRepo) GetAvailableVersions(name string) (version.Collection, erro
 }
 
 func (r *PublicRepo) DownloadVersion(name, version, downloadDir string) (string, int64, error) {
-	s3URL := r.S3KeyParser.URLFor(name, version)
+	s3URL := r.S3ObjectKey.URLFor(name, version)
 	downloadVersion := fmt.Sprintf("%s/%s", r.endpoint, s3URL)
 
 	resp, err := http.Get(downloadVersion)

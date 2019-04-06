@@ -38,7 +38,7 @@ func NewMockPublicS3Error() *httptest.Server {
 }
 
 func NewTestVersionPrefixedKeyParser(prefix, name, goos, goarch string) *VersionPrefixedKey {
-	p := NewVersionPrefixedKeyParser(prefix, name, "_")
+	p := NewVersionPrefixedKey(prefix, name, "_")
 	p.goos = goos
 	p.goarch = goarch
 	return p
@@ -178,7 +178,7 @@ func TestPublicRepo_GetAvailableVersions(t *testing.T) {
 				S3BinBucket: tt.fields.S3BinBucket,
 				S3BinRegion: tt.fields.S3BinRegion,
 				S3BinPrefix: tt.fields.S3BinPrefix,
-				S3KeyParser: NewTestVersionPrefixedKeyParser(tt.fields.S3BinPrefix, tt.args.name, goos, goarch),
+				S3ObjectKey: NewTestVersionPrefixedKeyParser(tt.fields.S3BinPrefix, tt.args.name, goos, goarch),
 				Logger:      logger,
 			})
 			r.endpoint = tt.fields.Endpoint
@@ -300,7 +300,7 @@ func TestPublicRepo_DownloadVersion(t *testing.T) {
 				S3BinBucket: tt.fields.S3BinBucket,
 				S3BinRegion: tt.fields.S3BinRegion,
 				S3BinPrefix: tt.fields.S3BinPrefix,
-				S3KeyParser: NewTestVersionPrefixedKeyParser(tt.fields.S3BinPrefix, tt.args.name, goos, goarch),
+				S3ObjectKey: NewTestVersionPrefixedKeyParser(tt.fields.S3BinPrefix, tt.args.name, goos, goarch),
 				Logger:      log.New(),
 			})
 			r.endpoint = tt.fields.Endpoint

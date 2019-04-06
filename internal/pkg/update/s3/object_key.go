@@ -10,7 +10,7 @@ import (
 
 // ObjectKey represents an S3 Key for a versioned package
 type ObjectKey interface {
-	ParseVersion(key string) (isVersion bool, foundVersion *version.Version, err error)
+	ParseVersion(key string) (match bool, foundVersion *version.Version, err error)
 	URLFor(name, version string) string
 }
 
@@ -25,8 +25,8 @@ type VersionPrefixedKey struct {
 	goarch string
 }
 
-// NewVersionPrefixedKeyParser returns a VersionPrefixedKey for a given S3 path prefix and binary name
-func NewVersionPrefixedKeyParser(prefix, name, sep string) *VersionPrefixedKey {
+// NewVersionPrefixedKey returns a VersionPrefixedKey for a given S3 path prefix and binary name
+func NewVersionPrefixedKey(prefix, name, sep string) *VersionPrefixedKey {
 	if sep == "" {
 		sep = "_"
 	}
@@ -45,7 +45,7 @@ func (p *VersionPrefixedKey) URLFor(name, version string) string {
 }
 
 func (p *VersionPrefixedKey) ParseVersion(key string) (bool, *version.Version, error) {
-	split := strings.Split(key, "_")
+	split := strings.Split(key, p.Separator)
 
 	// Skip files that don't match our naming standards for binaries
 	if len(split) != 4 {
