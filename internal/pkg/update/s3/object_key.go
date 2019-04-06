@@ -18,27 +18,33 @@ type ObjectKey interface {
 type VersionPrefixedKey struct {
 	Prefix string
 	Name   string
+	// Optional char used to separate sections of the package name, defaults to "_"
+	Separator string
 	// @VisibleForTesting, defaults to runtime.GOOS and runtime.GOARCH
 	goos   string
 	goarch string
 }
 
 // NewVersionPrefixedKeyParser returns a VersionPrefixedKey for a given S3 path prefix and binary name
-func NewVersionPrefixedKeyParser(prefix, name string) *VersionPrefixedKey {
+func NewVersionPrefixedKeyParser(prefix, name, sep string) *VersionPrefixedKey {
+	if sep == "" {
+		sep = "_"
+	}
 	return &VersionPrefixedKey{
-		Prefix: prefix,
-		Name:   name,
-		goos:   runtime.GOOS,
-		goarch: runtime.GOARCH,
+		Prefix:    prefix,
+		Name:      name,
+		Separator: sep,
+		goos:      runtime.GOOS,
+		goarch:    runtime.GOARCH,
 	}
 }
 
 func (p *VersionPrefixedKey) URLFor(name, version string) string {
-	return fmt.Sprintf("%s/%s/%s_%s_%s_%s", p.Prefix, version, name, version, p.goos, p.goarch)
+	packageName := strings.Join([]string{name, version, p.goos, p.goarch}, p.Separator)
+	return fmt.Sprintf("%s/%s/%s", p.Prefix, version, packageName)
 }
 
 func (p *VersionPrefixedKey) ParseVersion(key string) (bool, *version.Version, error) {
-
 	split := strings.Split(key, "_")
 
 	// Skip files that don't match our naming standards for binaries
