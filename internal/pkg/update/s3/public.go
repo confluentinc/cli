@@ -63,7 +63,7 @@ func NewPublicRepo(params *PublicRepoParams) *PublicRepo {
 func (r *PublicRepo) GetAvailableVersions(name string) (version.Collection, error) {
 	listVersions := fmt.Sprintf("%s?prefix=%s/", r.endpoint, r.S3BinPrefix)
 	r.Logger.Debugf("Getting available versions from %s", listVersions)
-	resp, err := http.Get(r.endpoint)
+	resp, err := http.Get(listVersions)
 	if err != nil {
 		return nil, err
 	}

@@ -13,10 +13,13 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
-func NewMockPublicS3(res string) *httptest.Server {
+func NewMockPublicS3(prefix, response string, req *require.Assertions) *httptest.Server {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", func(writer http.ResponseWriter, request *http.Request) {
-		_, _ = io.WriteString(writer, res)
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		req.Equal("/", r.URL.Path)
+		req.Equal(1, len(r.URL.Query()))
+		req.Equal(prefix+"/", r.URL.Query()["prefix"][0])
+		_, _ = io.WriteString(w, response)
 	})
 	return httptest.NewServer(mux)
 }
@@ -56,7 +59,7 @@ func TestPublicRepo_GetAvailableVersions(t *testing.T) {
 			name: "can get available versions for requested package and current os/arch",
 			fields: fields{
 				Logger:   logger,
-				Endpoint: NewMockPublicS3(ListVersionsPublicFixture).URL,
+				Endpoint: NewMockPublicS3("ccloud-cli", ListVersionsPublicFixture, req).URL,
 			},
 			args: args{
 				name: "ccloud",
@@ -67,7 +70,7 @@ func TestPublicRepo_GetAvailableVersions(t *testing.T) {
 			name: "excludes files that don't match our naming standards",
 			fields: fields{
 				Logger:   logger,
-				Endpoint: NewMockPublicS3(ListVersionsPublicFixtureInvalidNames).URL,
+				Endpoint: NewMockPublicS3("ccloud-cli", ListVersionsPublicFixtureInvalidNames, req).URL,
 			},
 			args: args{
 				name: "confluent",
@@ -78,7 +81,7 @@ func TestPublicRepo_GetAvailableVersions(t *testing.T) {
 			name: "excludes files that aren't prefixed correctly",
 			fields: fields{
 				Logger:      logger,
-				Endpoint:    NewMockPublicS3(ListVersionsPublicFixtureInvalidPrefix).URL,
+				Endpoint:    NewMockPublicS3("confluent", ListVersionsPublicFixtureInvalidPrefix, req).URL,
 				S3BinPrefix: "confluent",
 			},
 			args: args{
@@ -90,7 +93,7 @@ func TestPublicRepo_GetAvailableVersions(t *testing.T) {
 			name: "excludes other binaries in the same bucket/path",
 			fields: fields{
 				Logger:   logger,
-				Endpoint: NewMockPublicS3(ListVersionsPublicFixtureOtherBinaries).URL,
+				Endpoint: NewMockPublicS3("ccloud-cli", ListVersionsPublicFixtureOtherBinaries, req).URL,
 			},
 			args: args{
 				name: "ccloud",
@@ -101,7 +104,7 @@ func TestPublicRepo_GetAvailableVersions(t *testing.T) {
 			name: "excludes binaries with dirty or SNAPSHOT versions",
 			fields: fields{
 				Logger:   logger,
-				Endpoint: NewMockPublicS3(ListVersionsPublicFixtureDirtyVersions).URL,
+				Endpoint: NewMockPublicS3("ccloud-cli", ListVersionsPublicFixtureDirtyVersions, req).URL,
 			},
 			args: args{
 				name: "confluent",
@@ -112,7 +115,7 @@ func TestPublicRepo_GetAvailableVersions(t *testing.T) {
 			name: "sorts by version",
 			fields: fields{
 				Logger:   logger,
-				Endpoint: NewMockPublicS3(ListVersionsPublicFixtureUnsortedVersions).URL,
+				Endpoint: NewMockPublicS3("ccloud-cli", ListVersionsPublicFixtureUnsortedVersions, req).URL,
 			},
 			args: args{
 				name: "confluent",
@@ -123,7 +126,7 @@ func TestPublicRepo_GetAvailableVersions(t *testing.T) {
 			name: "errors when no version available",
 			fields: fields{
 				Logger:   logger,
-				Endpoint: NewMockPublicS3(ListVersionsPublicFixture).URL,
+				Endpoint: NewMockPublicS3("ccloud-cli", ListVersionsPublicFixture, req).URL,
 			},
 			args: args{
 				name: "confluent",
@@ -134,7 +137,7 @@ func TestPublicRepo_GetAvailableVersions(t *testing.T) {
 			name: "errors when non-semver version found",
 			fields: fields{
 				Logger:   logger,
-				Endpoint: NewMockPublicS3(ListVersionsPublicFixtureNonSemver).URL,
+				Endpoint: NewMockPublicS3("ccloud-cli", ListVersionsPublicFixtureNonSemver, req).URL,
 			},
 			args: args{
 				name: "confluent",
@@ -144,6 +147,9 @@ func TestPublicRepo_GetAvailableVersions(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			if tt.fields.S3BinPrefix == "" {
+				tt.fields.S3BinPrefix = "ccloud-cli"
+			}
 			// Need to inject these so tests pass in different environments (e.g., CI)
 			goos := "darwin"
 			goarch := "amd64"
