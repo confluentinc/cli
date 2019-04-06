@@ -549,39 +549,45 @@ func TestPromptToDownload(t *testing.T) {
 	}{
 		{
 			name:   "should prompt interactively and return true for yes",
-			client: makeClient(makeFS(true, "yes")),
+			client: makeClient(makeFS(true, "yes\n")),
 			args:   basicArgs,
 			want:   true,
 		},
 		{
 			name:   "should prompt interactively and return true for y",
-			client: makeClient(makeFS(true, "y")),
+			client: makeClient(makeFS(true, "y\n")),
 			args:   basicArgs,
 			want:   true,
 		},
 		{
 			name:   "should prompt interactively and return true for Y",
-			client: makeClient(makeFS(true, "Y")),
+			client: makeClient(makeFS(true, "Y\n")),
 			args:   basicArgs,
 			want:   true,
 		},
 		{
 			name:   "should prompt interactively and return false for no",
-			client: makeClient(makeFS(true, "no")),
+			client: makeClient(makeFS(true, "no\n")),
 			args:   basicArgs,
 			want:   false,
 		},
 		{
 			name:   "should prompt interactively and return false for n",
-			client: makeClient(makeFS(true, "n")),
+			client: makeClient(makeFS(true, "n\n")),
 			args:   basicArgs,
 			want:   false,
 		},
 		{
 			name:   "should prompt interactively and return false for N",
-			client: makeClient(makeFS(true, "N")),
+			client: makeClient(makeFS(true, "N\n")),
 			args:   basicArgs,
 			want:   false,
+		},
+		{
+			name:   "should prompt interactively and ignore trailing whitespace",
+			client: makeClient(makeFS(true, "y \n")),
+			args:   basicArgs,
+			want:   true,
 		},
 		{
 			name: "should prompt repeatedly until user enters yes/no",
@@ -596,17 +602,17 @@ func TestPromptToDownload(t *testing.T) {
 						countRepeated++
 						switch countRepeated {
 						case 1:
-							return bytes.NewBuffer([]byte("maybe"))
+							return bytes.NewBuffer([]byte("maybe\n"))
 						case 2:
-							return bytes.NewBuffer([]byte("youwish"))
+							return bytes.NewBuffer([]byte("youwish\n"))
 						case 3:
-							return bytes.NewBuffer([]byte("YES"))
+							return bytes.NewBuffer([]byte("YES\n"))
 						case 4:
-							return bytes.NewBuffer([]byte("never"))
+							return bytes.NewBuffer([]byte("never\n"))
 						case 5:
-							return bytes.NewBuffer([]byte("no"))
+							return bytes.NewBuffer([]byte("no\n"))
 						}
-						return bytes.NewBuffer([]byte("n"))
+						return bytes.NewBuffer([]byte("n\n"))
 					},
 				},
 				FS: &pio.RealFileSystem{},
@@ -623,7 +629,7 @@ func TestPromptToDownload(t *testing.T) {
 					},
 					NewBufferedReaderFunc: func(rd io.Reader) pio.Reader {
 						countNoConfirm++
-						return bytes.NewBuffer([]byte("n"))
+						return bytes.NewBuffer([]byte("n\n"))
 					},
 				},
 				FS: &pio.RealFileSystem{},
@@ -645,7 +651,7 @@ func TestPromptToDownload(t *testing.T) {
 					},
 					NewBufferedReaderFunc: func(rd io.Reader) pio.Reader {
 						countNoPrompt++
-						return bytes.NewBuffer([]byte("n"))
+						return bytes.NewBuffer([]byte("n\n"))
 					},
 				},
 				FS: &pio.RealFileSystem{},

@@ -26,12 +26,12 @@ const (
 
 // NewClient returns a new update.Client configured for the CLI
 func NewClient(cliName string, logger *log.Logger) update.Client {
-	repo := &s3.PublicRepo{
+	repo := s3.NewPublicRepo(&s3.PublicRepoParams{
 		S3BinRegion: S3BinRegion,
 		S3BinBucket: S3BinBucket,
 		S3BinPrefix: S3BinPrefix,
 		Logger:      logger,
-	}
+	})
 	return update.NewClient(&update.ClientParams{
 		Repository:    repo,
 		CheckFile:     fmt.Sprintf(CheckFileFmt, cliName),

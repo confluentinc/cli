@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
+	"unicode"
 
 	"github.com/atrox/homedir"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -102,7 +104,9 @@ func (c *client) PromptToDownload(name, currVersion, latestVersion string, confi
 		fmt.Print("Do you want to download and install this update? (y/n): ")
 
 		reader := c.FS.NewBufferedReader(os.Stdin)
-		choice, _ := reader.ReadString('\n')
+		input, _ := reader.ReadString('\n')
+
+		choice := strings.TrimRightFunc(input, unicode.IsSpace)
 
 		switch choice {
 		case "yes", "y", "Y":
@@ -124,7 +128,9 @@ func (c *client) UpdateBinary(name, version, path string) error {
 	}
 	defer func() {
 		err = c.FS.RemoveAll(downloadDir)
-		c.Logger.Warnf("unable to clean up temp download dir %s: %s", downloadDir, err)
+		if err != nil {
+			c.Logger.Warnf("unable to clean up temp download dir %s: %s", downloadDir, err)
+		}
 	}()
 
 	fmt.Printf("Downloading %s version %s...\n", name, version)
