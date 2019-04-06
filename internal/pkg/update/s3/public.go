@@ -89,11 +89,11 @@ func (r *PublicRepo) GetAvailableVersions(name string) (version.Collection, erro
 
 	var availableVersions version.Collection
 	for _, v := range result.Contents {
-		matches, foundVersion, err := r.S3ObjectKey.ParseVersion(v.Key)
+		match, foundVersion, err := r.S3ObjectKey.ParseVersion(v.Key)
 		if err != nil {
 			return nil, err
 		}
-		if !matches {
+		if !match {
 			continue
 		}
 		availableVersions = append(availableVersions, foundVersion)

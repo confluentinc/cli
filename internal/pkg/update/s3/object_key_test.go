@@ -26,12 +26,12 @@ func TestVersionPrefixedKey_ParseVersion(t *testing.T) {
 		key string
 	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    bool
-		want1   *version.Version
-		wantErr bool
+		name      string
+		fields    fields
+		args      args
+		wantMatch bool
+		wantVer   *version.Version
+		wantErr   bool
 	}{
 		{
 			name: "should parse version from key",
@@ -42,8 +42,8 @@ func TestVersionPrefixedKey_ParseVersion(t *testing.T) {
 			args: args{
 				key: "pre/0.23.0/fancy_0.23.0_darwin_amd64",
 			},
-			want:  true,
-			want1: makeVersion("0.23.0"),
+			wantMatch: true,
+			wantVer:   makeVersion("0.23.0"),
 		},
 		{
 			name: "should support configurable separators",
@@ -55,8 +55,31 @@ func TestVersionPrefixedKey_ParseVersion(t *testing.T) {
 			args: args{
 				key: "pre/0.23.0/fancy-0.23.0-darwin-amd64",
 			},
-			want:  true,
-			want1: makeVersion("0.23.0"),
+			wantMatch: true,
+			wantVer:   makeVersion("0.23.0"),
+		},
+		{
+			name: "should support v-prefixed versions",
+			fields: fields{
+				Prefix: "pre",
+				Name:   "fancy",
+			},
+			args: args{
+				key: "pre/v0.23.0/fancy_v0.23.0_darwin_amd64",
+			},
+			wantMatch: true,
+			wantVer:   makeVersion("v0.23.0"),
+		},
+		{
+			name: "should not match if versions are different",
+			fields: fields{
+				Prefix: "pre",
+				Name:   "fancy",
+			},
+			args: args{
+				key: "pre/0.23.0/fancy_0.24.0_darwin_amd64",
+			},
+			wantMatch: false,
 		},
 		{
 			name: "should not match if prefix contains the separator",
@@ -68,7 +91,7 @@ func TestVersionPrefixedKey_ParseVersion(t *testing.T) {
 			args: args{
 				key: "my-pre/0.23.0/fancy-0.23.0-darwin-amd64",
 			},
-			want: false,
+			wantMatch: false,
 		},
 		{
 			name: "should not match if name contains the separator",
@@ -80,7 +103,7 @@ func TestVersionPrefixedKey_ParseVersion(t *testing.T) {
 			args: args{
 				key: "pre/0.23.0/fancy-cli-0.23.0-darwin-amd64",
 			},
-			want: false,
+			wantMatch: false,
 		},
 	}
 	for _, tt := range tests {
@@ -89,16 +112,16 @@ func TestVersionPrefixedKey_ParseVersion(t *testing.T) {
 			// Need to inject these so tests pass in different environments (e.g., CI)
 			p.goos = "darwin"
 			p.goarch = "amd64"
-			matches, ver, err := p.ParseVersion(tt.args.key)
+			match, ver, err := p.ParseVersion(tt.args.key)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("VersionPrefixedKey.ParseVersion() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if matches != tt.want {
-				t.Errorf("VersionPrefixedKey.ParseVersion() matches = %v, want %v", matches, tt.want)
+			if match != tt.wantMatch {
+				t.Errorf("VersionPrefixedKey.ParseVersion() match = %v, wantMatch %v", match, tt.wantMatch)
 			}
-			if !reflect.DeepEqual(ver, tt.want1) {
-				t.Errorf("VersionPrefixedKey.ParseVersion() ver = %v, want %v", ver, tt.want1)
+			if !reflect.DeepEqual(ver, tt.wantVer) {
+				t.Errorf("VersionPrefixedKey.ParseVersion() ver = %v, wantVer %v", ver, tt.wantVer)
 			}
 		})
 	}

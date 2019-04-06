@@ -80,6 +80,11 @@ func (p *VersionPrefixedKey) ParseVersion(key string) (bool, *version.Version, e
 		return false, nil, nil
 	}
 
+	// Skip if version is out of sync (which shouldn't happen, but, again, accidents happen)
+	if !strings.Contains(split[0], "/"+split[1]+"/") {
+		return false, nil, nil
+	}
+
 	ver, err := version.NewSemver(split[1])
 	if err != nil {
 		return false, nil, fmt.Errorf("unable to parse %s version - %s", p.Name, err)
