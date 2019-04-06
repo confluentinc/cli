@@ -8,14 +8,14 @@ import (
 	"github.com/hashicorp/go-version"
 )
 
-// Validates whether an S3 Key represents an installable package and parses the package version
-type KeyParser interface {
-	Validate(key string) (skip bool, foundVersion *version.Version, err error)
+// ObjectKey represents an S3 Key for a versioned package
+type ObjectKey interface {
+	ParseVersion(key string) (isVersion bool, foundVersion *version.Version, err error)
 	URLFor(name, version string) string
 }
 
-// Parses version-prefixed package S3 keys with the format PREFIX/VERSION/NAME_VERSION_OS_ARCH
-type VersionPrefixedKeyParser struct {
+// VersionPrefixedKey is a version-prefixed S3 key with the format PREFIX/VERSION/NAME_VERSION_OS_ARCH
+type VersionPrefixedKey struct {
 	Prefix string
 	Name   string
 	// @VisibleForTesting, defaults to runtime.GOOS and runtime.GOARCH
@@ -23,8 +23,9 @@ type VersionPrefixedKeyParser struct {
 	goarch string
 }
 
-func NewVersionPrefixedKeyParser(prefix, name string) *VersionPrefixedKeyParser {
-	return &VersionPrefixedKeyParser{
+// NewVersionPrefixedKeyParser returns a VersionPrefixedKey for a given S3 path prefix and binary name
+func NewVersionPrefixedKeyParser(prefix, name string) *VersionPrefixedKey {
+	return &VersionPrefixedKey{
 		Prefix: prefix,
 		Name:   name,
 		goos:   runtime.GOOS,
@@ -32,11 +33,11 @@ func NewVersionPrefixedKeyParser(prefix, name string) *VersionPrefixedKeyParser 
 	}
 }
 
-func (p *VersionPrefixedKeyParser) URLFor(name, version string) string {
+func (p *VersionPrefixedKey) URLFor(name, version string) string {
 	return fmt.Sprintf("%s/%s/%s_%s_%s_%s", p.Prefix, version, name, version, p.goos, p.goarch)
 }
 
-func (p *VersionPrefixedKeyParser) Validate(key string) (skip bool, foundVersion *version.Version, err error) {
+func (p *VersionPrefixedKey) Validate(key string) (skip bool, foundVersion *version.Version, err error) {
 
 	split := strings.Split(key, "_")
 

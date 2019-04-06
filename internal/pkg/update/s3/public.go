@@ -29,7 +29,7 @@ type PublicRepoParams struct {
 	S3BinBucket string
 	S3BinRegion string
 	S3BinPrefix string
-	S3KeyParser KeyParser
+	S3KeyParser ObjectKey
 	Logger      *log.Logger
 }
 
@@ -89,7 +89,7 @@ func (r *PublicRepo) GetAvailableVersions(name string) (version.Collection, erro
 
 	var availableVersions version.Collection
 	for _, v := range result.Contents {
-		found, foundVersion, err := r.S3KeyParser.Validate(v.Key)
+		found, foundVersion, err := r.S3KeyParser.ParseVersion(v.Key)
 		if err != nil {
 			return nil, err
 		}
