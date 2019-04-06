@@ -26,22 +26,22 @@ func TestNewClient(t *testing.T) {
 	tests := []struct {
 		name   string
 		params *ClientParams
-		want   *ClientParams
+		want   *client
 	}{
 		{
 			name:   "should set default values (interval=24h, clock=real clock, fs=real fs)",
 			params: &ClientParams{},
-			want: &ClientParams{
-				CheckInterval: 24 * time.Hour,
-				Clock:         clockwork.NewRealClock(),
-				FS:            &pio.RealFileSystem{},
+			want: &client{
+				ClientParams: &ClientParams{CheckInterval: 24 * time.Hour},
+				clock:        clockwork.NewRealClock(),
+				fs:           &pio.RealFileSystem{},
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewClient(tt.params); !reflect.DeepEqual(got.ClientParams, tt.want) {
-				t.Errorf("NewClient() = %#v, want %#v", got.ClientParams, tt.want)
+			if got := NewClient(tt.params); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NewClient() = %#v, want %#v", got, tt.want)
 			}
 		})
 	}
@@ -280,8 +280,8 @@ func TestCheckForUpdates_BehaviorOverTime(t *testing.T) {
 		Repository: repo,
 		Logger:     log.New(),
 		CheckFile:  checkFile,
-		Clock:      clock,
 	})
+	client.clock = clock
 
 	// Should check and find update
 	updateAvailable, latestVersion, err := client.CheckForUpdates("my-cli", "v1.2.3", false)
@@ -341,8 +341,8 @@ func TestCheckForUpdates_NoCheckFileGiven(t *testing.T) {
 	client := NewClient(&ClientParams{
 		Repository: repo,
 		Logger:     log.New(),
-		Clock:      clockwork.NewFakeClockAt(time.Now()),
 	})
+	client.clock = clockwork.NewFakeClockAt(time.Now())
 
 	// Should check for updates every time if no CheckFile given to serve as the "last check" cache
 	for i := 0; i < 3; i++ {
@@ -387,19 +387,22 @@ func TestUpdateBinary(t *testing.T) {
 	}{
 		{
 			name: "can update application binary",
-			client: NewClient(&ClientParams{
-				Repository: &mock.Repository{
-					DownloadVersionFunc: func(name, version, downloadDir string) (string, int64, error) {
-						req.Equal(binName, name)
-						req.Equal("v123.456.789", version)
-						req.Contains(downloadDir, binName)
-						clock.Advance(23 * time.Second)
-						return downloadedBin, 16 * 1000 * 1000, nil
+			client: &client{
+				ClientParams: &ClientParams{
+					Repository: &mock.Repository{
+						DownloadVersionFunc: func(name, version, downloadDir string) (string, int64, error) {
+							req.Equal(binName, name)
+							req.Equal("v123.456.789", version)
+							req.Contains(downloadDir, binName)
+							clock.Advance(23 * time.Second)
+							return downloadedBin, 16 * 1000 * 1000, nil
+						},
 					},
+					Logger: log.New(),
 				},
-				Logger: log.New(),
-				Clock:  clock,
-			}),
+				clock: clock,
+				fs:    &pio.RealFileSystem{},
+			},
 			args: args{
 				name:    binName,
 				version: "v123.456.789",
@@ -408,15 +411,18 @@ func TestUpdateBinary(t *testing.T) {
 		},
 		{
 			name: "err if unable to download package",
-			client: NewClient(&ClientParams{
-				Repository: &mock.Repository{
-					DownloadVersionFunc: func(name, version, downloadDir string) (string, int64, error) {
-						return "", 0, errors.New("out of disk!")
+			client: &client{
+				ClientParams: &ClientParams{
+					Repository: &mock.Repository{
+						DownloadVersionFunc: func(name, version, downloadDir string) (string, int64, error) {
+							return "", 0, errors.New("out of disk!")
+						},
 					},
+					Logger: log.New(),
 				},
-				Logger: log.New(),
-				Clock:  clock,
-			}),
+				clock: clock,
+				fs:    &pio.RealFileSystem{},
+			},
 			args: args{
 				name:    binName,
 				version: "v1",
@@ -426,19 +432,21 @@ func TestUpdateBinary(t *testing.T) {
 		},
 		{
 			name: "err if unable to overwrite binary",
-			client: NewClient(&ClientParams{
-				Repository: &mock.Repository{
-					DownloadVersionFunc: func(name, version, downloadDir string) (string, int64, error) {
-						req.Equal(binName, name)
-						req.Equal("v1", version)
-						req.Contains(downloadDir, binName)
-						clock.Advance(23 * time.Second)
-						return downloadedBin, 16 * 1000 * 1000, nil
+			client: &client{
+				ClientParams: &ClientParams{
+					Repository: &mock.Repository{
+						DownloadVersionFunc: func(name, version, downloadDir string) (string, int64, error) {
+							req.Equal(binName, name)
+							req.Equal("v1", version)
+							req.Contains(downloadDir, binName)
+							clock.Advance(23 * time.Second)
+							return downloadedBin, 16 * 1000 * 1000, nil
+						},
 					},
+					Logger: log.New(),
 				},
-				Logger: log.New(),
-				Clock:  clock,
-				FS: &mock.PassThroughFileSystem{
+				clock: clock,
+				fs: &mock.PassThroughFileSystem{
 					Mock: &mock.FileSystem{
 						CopyFunc: func(dst io.Writer, src io.Reader) (i int64, e error) {
 							return 0, errors.New("my dog ate my disks")
@@ -446,7 +454,7 @@ func TestUpdateBinary(t *testing.T) {
 					},
 					FS: &pio.RealFileSystem{},
 				},
-			}),
+			},
 			args: args{
 				name:    binName,
 				version: "v1",
@@ -456,19 +464,21 @@ func TestUpdateBinary(t *testing.T) {
 		},
 		{
 			name: "err if unable to chmod binary",
-			client: NewClient(&ClientParams{
-				Repository: &mock.Repository{
-					DownloadVersionFunc: func(name, version, downloadDir string) (string, int64, error) {
-						req.Equal(binName, name)
-						req.Equal("v1", version)
-						req.Contains(downloadDir, binName)
-						clock.Advance(23 * time.Second)
-						return downloadedBin, 16 * 1000 * 1000, nil
+			client: &client{
+				ClientParams: &ClientParams{
+					Repository: &mock.Repository{
+						DownloadVersionFunc: func(name, version, downloadDir string) (string, int64, error) {
+							req.Equal(binName, name)
+							req.Equal("v1", version)
+							req.Contains(downloadDir, binName)
+							clock.Advance(23 * time.Second)
+							return downloadedBin, 16 * 1000 * 1000, nil
+						},
 					},
+					Logger: log.New(),
 				},
-				Logger: log.New(),
-				Clock:  clock,
-				FS: &mock.PassThroughFileSystem{
+				clock: clock,
+				fs: &mock.PassThroughFileSystem{
 					Mock: &mock.FileSystem{
 						ChmodFunc: func(name string, mode os.FileMode) error {
 							return errors.New("my dog ate my disks")
@@ -476,7 +486,7 @@ func TestUpdateBinary(t *testing.T) {
 					},
 					FS: &pio.RealFileSystem{},
 				},
-			}),
+			},
 			args: args{
 				name:    binName,
 				version: "v1",
@@ -511,7 +521,7 @@ func TestPromptToDownload(t *testing.T) {
 				NewBufferedReaderFunc: func(rd io.Reader) pio.Reader {
 					req.Equal(os.Stdin, rd)
 					fmt.Println() // to go to newline after test prompt
-					return bytes.NewBuffer([]byte(input))
+					return bytes.NewBuffer([]byte(input+"\n"))
 				},
 			},
 			FS: &pio.RealFileSystem{},
@@ -519,12 +529,13 @@ func TestPromptToDownload(t *testing.T) {
 	}
 
 	makeClient := func(fs pio.FileSystem) *client {
-		return NewClient(&ClientParams{
+		client := NewClient(&ClientParams{
 			Repository: &mock.Repository{},
 			Logger:     log.New(),
-			Clock:      clock,
-			FS:         fs,
 		})
+		client.clock = clock
+		client.fs = fs
+		return client
 	}
 
 	type args struct {
@@ -549,43 +560,43 @@ func TestPromptToDownload(t *testing.T) {
 	}{
 		{
 			name:   "should prompt interactively and return true for yes",
-			client: makeClient(makeFS(true, "yes\n")),
+			client: makeClient(makeFS(true, "yes")),
 			args:   basicArgs,
 			want:   true,
 		},
 		{
 			name:   "should prompt interactively and return true for y",
-			client: makeClient(makeFS(true, "y\n")),
+			client: makeClient(makeFS(true, "y")),
 			args:   basicArgs,
 			want:   true,
 		},
 		{
 			name:   "should prompt interactively and return true for Y",
-			client: makeClient(makeFS(true, "Y\n")),
+			client: makeClient(makeFS(true, "Y")),
 			args:   basicArgs,
 			want:   true,
 		},
 		{
 			name:   "should prompt interactively and return false for no",
-			client: makeClient(makeFS(true, "no\n")),
+			client: makeClient(makeFS(true, "no")),
 			args:   basicArgs,
 			want:   false,
 		},
 		{
 			name:   "should prompt interactively and return false for n",
-			client: makeClient(makeFS(true, "n\n")),
+			client: makeClient(makeFS(true, "n")),
 			args:   basicArgs,
 			want:   false,
 		},
 		{
 			name:   "should prompt interactively and return false for N",
-			client: makeClient(makeFS(true, "N\n")),
+			client: makeClient(makeFS(true, "N")),
 			args:   basicArgs,
 			want:   false,
 		},
 		{
 			name:   "should prompt interactively and ignore trailing whitespace",
-			client: makeClient(makeFS(true, "y \n")),
+			client: makeClient(makeFS(true, "y ")),
 			args:   basicArgs,
 			want:   true,
 		},
@@ -602,17 +613,17 @@ func TestPromptToDownload(t *testing.T) {
 						countRepeated++
 						switch countRepeated {
 						case 1:
-							return bytes.NewBuffer([]byte("maybe\n"))
+							return bytes.NewBuffer([]byte("maybe"))
 						case 2:
-							return bytes.NewBuffer([]byte("youwish\n"))
+							return bytes.NewBuffer([]byte("youwish"))
 						case 3:
-							return bytes.NewBuffer([]byte("YES\n"))
+							return bytes.NewBuffer([]byte("YES"))
 						case 4:
-							return bytes.NewBuffer([]byte("never\n"))
+							return bytes.NewBuffer([]byte("never"))
 						case 5:
-							return bytes.NewBuffer([]byte("no\n"))
+							return bytes.NewBuffer([]byte("no"))
 						}
-						return bytes.NewBuffer([]byte("n\n"))
+						return bytes.NewBuffer([]byte("n"))
 					},
 				},
 				FS: &pio.RealFileSystem{},
@@ -629,7 +640,7 @@ func TestPromptToDownload(t *testing.T) {
 					},
 					NewBufferedReaderFunc: func(rd io.Reader) pio.Reader {
 						countNoConfirm++
-						return bytes.NewBuffer([]byte("n\n"))
+						return bytes.NewBuffer([]byte("n"))
 					},
 				},
 				FS: &pio.RealFileSystem{},
@@ -651,7 +662,7 @@ func TestPromptToDownload(t *testing.T) {
 					},
 					NewBufferedReaderFunc: func(rd io.Reader) pio.Reader {
 						countNoPrompt++
-						return bytes.NewBuffer([]byte("n\n"))
+						return bytes.NewBuffer([]byte("n"))
 					},
 				},
 				FS: &pio.RealFileSystem{},

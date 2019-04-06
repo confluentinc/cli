@@ -1,9 +1,9 @@
 package version
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/commander"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/pkg/commander"
 	"github.com/confluentinc/cli/internal/pkg/terminal"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
@@ -13,7 +13,6 @@ func NewVersionCmd(prerunner commander.Commander, version *version.Version, prom
 	return &cobra.Command{
 		Use:               "version",
 		Short:             "Print the ccloud version",
-		Long:              "Print the ccloud version",
 		PersistentPreRunE: prerunner.Anonymous(),
 		Run: func(cmd *cobra.Command, args []string) {
 			version.Print(prompt)

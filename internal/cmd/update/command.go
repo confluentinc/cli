@@ -30,6 +30,10 @@ func NewClient(cliName string, logger *log.Logger) update.Client {
 		S3BinRegion: S3BinRegion,
 		S3BinBucket: S3BinBucket,
 		S3BinPrefix: S3BinPrefix,
+		S3KeyParser: &s3.VersionPrefixedKeyParser{
+			Prefix: S3BinPrefix,
+			Name:   cliName,
+		},
 		Logger:      logger,
 	})
 	return update.NewClient(&update.ClientParams{
@@ -70,7 +74,6 @@ func (c *command) init() {
 	c.Command = &cobra.Command{
 		Use:   "update",
 		Short: "Update " + c.cliName,
-		Long:  "Update " + c.cliName,
 		RunE:  c.update,
 		Args:  cobra.NoArgs,
 	}

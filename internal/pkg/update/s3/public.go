@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"sort"
-	"strings"
 
 	"github.com/hashicorp/go-version"
 
@@ -29,6 +28,7 @@ type PublicRepoParams struct {
 	S3BinBucket string
 	S3BinRegion string
 	S3BinPrefix string
+	S3KeyParser KeyParser
 	Logger      *log.Logger
 }
 
@@ -83,47 +83,14 @@ func (r *PublicRepo) GetAvailableVersions(name string) (version.Collection, erro
 
 	var availableVersions version.Collection
 	for _, v := range result.Contents {
-		// Format: S3BinPrefix/VERSION/NAME_VERSION_OS_ARCH
-		split := strings.Split(v.Key, "_")
-
-		// Skip files that don't match our naming standards for binaries
-		if len(split) != 4 {
-			continue
-		}
-
-		// Skip objects from other directories
-		if !strings.HasPrefix(split[0], r.S3BinPrefix) {
-			continue
-		}
-
-		// Skip binaries other than the requested one
-		if !strings.HasSuffix(split[0], name) {
-			continue
-		}
-
-		// Skip binaries not for this OS
-		if split[2] != r.goos {
-			continue
-		}
-
-		// Skip binaries not for this Arch
-		if split[3] != r.goarch {
-			continue
-		}
-
-		// Skip snapshot and dirty versions (which shouldn't be published, but accidents happen)
-		if strings.Contains(split[1], "SNAPSHOT") {
-			continue
-		}
-		if strings.Contains(split[1], "dirty") {
-			continue
-		}
-
-		ver, err := version.NewSemver(split[1])
+		found, foundVersion, err := r.S3KeyParser.Validate(v.Key)
 		if err != nil {
-			return nil, fmt.Errorf("unable to parse %s version - %s", name, err)
+			return nil, err
 		}
-		availableVersions = append(availableVersions, ver)
+		if !found {
+			continue
+		}
+		availableVersions = append(availableVersions, foundVersion)
 	}
 
 	if len(availableVersions) <= 0 {
@@ -136,15 +103,15 @@ func (r *PublicRepo) GetAvailableVersions(name string) (version.Collection, erro
 }
 
 func (r *PublicRepo) DownloadVersion(name, version, downloadDir string) (string, int64, error) {
-	downloadVersion := fmt.Sprintf("%s/%s/%s/%s_%s_%s_%s", r.endpoint, r.S3BinPrefix,
-		version, name, version, r.goos, r.goarch)
+	binName := fmt.Sprintf("%s-v%s-%s-%s", name, version, r.goos, r.goarch)
+	downloadVersion := fmt.Sprintf("%s/%s/%s/%s", r.endpoint, r.S3BinPrefix, version, binName)
+
 	resp, err := http.Get(downloadVersion)
 	if err != nil {
 		return "", 0, err
 	}
 	defer resp.Body.Close()
 
-	binName := fmt.Sprintf("%s-v%s-%s-%s", name, version, r.goos, r.goarch)
 	downloadBinPath := filepath.Join(downloadDir, binName)
 
 	downloadBin, err := os.Create(downloadBinPath)

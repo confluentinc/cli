@@ -24,7 +24,6 @@ func NewMockPublicS3(res string) *httptest.Server {
 func TestPublicRepo_GetAvailableVersions(t *testing.T) {
 	req := require.New(t)
 	logger := log.New()
-	//logger.SetLevel(log.TRACE)
 
 	makeVersions := func(versions ...string) version.Collection {
 		col := version.Collection{}
@@ -145,16 +144,24 @@ func TestPublicRepo_GetAvailableVersions(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// Need to inject these so tests pass in different environments (e.g., CI)
+			goos := "darwin"
+			goarch := "amd64"
 			r := NewPublicRepo(&PublicRepoParams{
 				S3BinBucket: tt.fields.S3BinBucket,
 				S3BinRegion: tt.fields.S3BinRegion,
 				S3BinPrefix: tt.fields.S3BinPrefix,
-				Logger:      tt.fields.Logger,
+				S3KeyParser: &VersionPrefixedKeyParser{
+					Prefix: tt.fields.S3BinPrefix,
+					Name:   tt.args.name,
+					OS:     goos,
+					Arch:   goarch,
+				},
+				Logger: tt.fields.Logger,
 			})
 			r.endpoint = tt.fields.Endpoint
-			// Need to inject these so tests pass in different environments (e.g., CI)
-			r.goos = "darwin"
-			r.goarch = "amd64"
+			r.goos = goos
+			r.goarch = goarch
 
 			got, err := r.GetAvailableVersions(tt.args.name)
 			if (err != nil) != tt.wantErr {
