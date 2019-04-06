@@ -65,6 +65,29 @@ func TestPublicRepo_GetAvailableVersions(t *testing.T) {
 			want: makeVersions("0.47.0", "0.48.0"),
 		},
 		{
+			name: "excludes files that don't match our naming standards",
+			fields: fields{
+				Logger:   logger,
+				Endpoint: NewMockPublicS3(ListVersionsPublicFixtureInvalidNames).URL,
+			},
+			args: args{
+				name: "confluent",
+			},
+			wantErr: true,
+		},
+		{
+			name: "excludes files that aren't prefixed correctly",
+			fields: fields{
+				Logger:      logger,
+				Endpoint:    NewMockPublicS3(ListVersionsPublicFixtureInvalidPrefix).URL,
+				S3BinPrefix: "confluent",
+			},
+			args: args{
+				name: "confluent",
+			},
+			wantErr: true,
+		},
+		{
 			name: "excludes other binaries in the same bucket/path",
 			fields: fields{
 				Logger:   logger,
@@ -112,7 +135,7 @@ func TestPublicRepo_GetAvailableVersions(t *testing.T) {
 			name: "errors when non-semver version found",
 			fields: fields{
 				Logger:   logger,
-				Endpoint: NewMockPublicS3(ListVersionsPublicFixture).URL,
+				Endpoint: NewMockPublicS3(ListVersionsPublicFixtureNonSemver).URL,
 			},
 			args: args{
 				name: "confluent",

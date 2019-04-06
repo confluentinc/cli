@@ -119,7 +119,7 @@ func (r *PublicRepo) GetAvailableVersions(name string) (version.Collection, erro
 			continue
 		}
 
-		ver, err := version.NewVersion(split[1])
+		ver, err := version.NewSemver(split[1])
 		if err != nil {
 			return nil, fmt.Errorf("unable to parse %s version - %s", name, err)
 		}
