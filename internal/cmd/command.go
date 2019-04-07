@@ -30,7 +30,7 @@ import (
 	versions "github.com/confluentinc/cli/internal/pkg/version"
 )
 
-func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Version, logger *log.Logger) *cobra.Command {
+func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Version, logger *log.Logger) (*cobra.Command, error) {
 	cli := &cobra.Command{
 		Use:   cliName,
 		Short: "Welcome to the Confluent Cloud CLI",
@@ -38,7 +38,10 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	cli.PersistentFlags().CountP("verbose", "v", "increase output verbosity")
 
 	prompt := terminal.NewPrompt(os.Stdin)
-	updateClient := update.NewClient(cliName, logger)
+	updateClient, err := update.NewClient(cliName, logger)
+	if err != nil {
+		return nil, err
+	}
 	prerunner := &commander.PreRunner{
 		UpdateClient: updateClient,
 		CLIName:      cliName,
@@ -59,7 +62,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	conn.Hidden = true // The config/context feature isn't finished yet, so let's hide it
 	cli.AddCommand(conn)
 
-	conn, err := completion.NewCompletionCmd(cli, prompt, cliName)
+	conn, err = completion.NewCompletionCmd(cli, prompt, cliName)
 	if err != nil {
 		logger.Log("msg", err)
 	} else {
@@ -86,5 +89,5 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 
 	}
 
-	return cli
+	return cli, nil
 }

@@ -25,11 +25,10 @@ const (
 )
 
 // NewClient returns a new update.Client configured for the CLI
-func NewClient(cliName string, logger *log.Logger) update.Client {
+func NewClient(cliName string, logger *log.Logger) (update.Client, error) {
 	objectKey, err := s3.NewPrefixedKey(S3BinPrefix, "_", true)
 	if err != nil {
-		// This can only happen due to developer mistake. Panic instead of passing up the stack.
-		panic(err)
+		return nil, err
 	}
 	repo := s3.NewPublicRepo(&s3.PublicRepoParams{
 		S3BinRegion: S3BinRegion,
@@ -43,7 +42,7 @@ func NewClient(cliName string, logger *log.Logger) update.Client {
 		CheckFile:     fmt.Sprintf(CheckFileFmt, cliName),
 		CheckInterval: CheckInterval,
 		Logger:        logger,
-	})
+	}), nil
 }
 
 type command struct {

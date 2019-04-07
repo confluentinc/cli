@@ -132,6 +132,9 @@ func GetCredentials(allProfiles []string) (*credentials.Credentials, error) {
 	if envProfile != "" {
 		allProfiles = append(allProfiles, envProfile)
 	}
+	if len(allProfiles) == 0 {
+		allProfiles = append(allProfiles, "default")
+	}
 
 	var creds *credentials.Credentials
 	var allErrors *multierror.Error

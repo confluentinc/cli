@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/spf13/viper"
@@ -42,8 +43,13 @@ func main() {
 
 	version := cliVersion.NewVersion(version, commit, date, host)
 
-	cli := cmd.NewConfluentCommand(cliName, cfg, version, logger)
-	err := cli.Execute()
+	cli, err := cmd.NewConfluentCommand(cliName, cfg, version, logger)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	err = cli.Execute()
 	if err != nil {
 		os.Exit(1)
 	}
