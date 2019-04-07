@@ -50,6 +50,9 @@ func NewPrefixedKey(prefix, sep string, prefixVersion bool) (*PrefixedKey, error
 
 func (p *PrefixedKey) URLFor(name, version string) string {
 	packageName := strings.Join([]string{name, version, p.goos, p.goarch}, p.Separator)
+	if p.goos == "windows" {
+		packageName += ".exe"
+	}
 	prefix := p.Prefix
 	if p.Prefix != "" {
 		prefix += "/"
@@ -77,6 +80,14 @@ func (p *PrefixedKey) ParseVersion(key, name string) (match bool, foundVersion *
 	// Skip binaries other than the requested one
 	if !strings.HasSuffix(split[0], name) {
 		return false, nil, nil
+	}
+
+	// Skip binaries without the right file extension
+	if p.goos == "windows" {
+		if !strings.HasSuffix(split[3], ".exe") {
+			return false, nil, nil
+		}
+		split[3] = split[3][0 : len(split[3])-len(".exe")]
 	}
 
 	// Skip binaries not for this OS

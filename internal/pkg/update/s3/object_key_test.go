@@ -82,6 +82,8 @@ func TestPrefixedKey_ParseVersion(t *testing.T) {
 		Prefix    string
 		Separator string
 		Versioned bool
+		goos      string
+		goarch    string
 	}
 	type args struct {
 		key  string
@@ -195,17 +197,37 @@ func TestPrefixedKey_ParseVersion(t *testing.T) {
 			wantMatch: true,
 			wantVer:   makeVersion("0.23.0"),
 		},
+		{
+			name: "should require .exe for windows binaries",
+			fields: fields{
+				Prefix:    "pre",
+				Versioned: true,
+				goos:      "windows",
+				goarch:    "386",
+			},
+			args: args{
+				key: "pre/0.23.0/fancy_0.23.0_windows_386.exe",
+			},
+			wantMatch: true,
+			wantVer:   makeVersion("0.23.0"),
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.fields.Separator == "" {
 				tt.fields.Separator = "_"
 			}
+			if tt.fields.goos == "" {
+				tt.fields.goos = "darwin"
+			}
+			if tt.fields.goarch == "" {
+				tt.fields.goarch = "amd64"
+			}
 			p, err := NewPrefixedKey(tt.fields.Prefix, tt.fields.Separator, tt.fields.Versioned)
 			req.NoError(err)
 			// Need to inject these so tests pass in different environments (e.g., CI)
-			p.goos = "darwin"
-			p.goarch = "amd64"
+			p.goos = tt.fields.goos
+			p.goarch = tt.fields.goarch
 			match, ver, err := p.ParseVersion(tt.args.key, tt.args.name)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("PrefixedKey.ParseVersion() error = %v, wantErr %v", err, tt.wantErr)
@@ -226,6 +248,8 @@ func TestPrefixedKey_URLFor(t *testing.T) {
 	type fields struct {
 		Prefix          string
 		VersionPrefixed bool
+		OS              string
+		Arch            string
 	}
 	type args struct {
 		name    string
@@ -271,7 +295,7 @@ func TestPrefixedKey_URLFor(t *testing.T) {
 			want: "fancy-cli_0.1.2_darwin_amd64",
 		},
 		{
-			name:   "with empty prefix and with version prefix",
+			name: "with empty prefix and with version prefix",
 			fields: fields{
 				VersionPrefixed: true,
 			},
@@ -281,14 +305,44 @@ func TestPrefixedKey_URLFor(t *testing.T) {
 			},
 			want: "0.1.2/fancy-cli_0.1.2_darwin_amd64",
 		},
+		{
+			name: "should include file extension for windows (with prefix and version-prefix)",
+			fields: fields{
+				Prefix:          "pre",
+				VersionPrefixed: true,
+				OS:              "windows",
+				Arch:            "386",
+			},
+			args: args{
+				name:    "fancy-cli",
+				version: "0.1.2",
+			},
+			want: "pre/0.1.2/fancy-cli_0.1.2_windows_386.exe",
+		},
+		{
+			name: "should include file extension for windows (without prefix or version-prefix)",
+			fields: fields{
+				OS:   "windows",
+				Arch: "386",
+			},
+			args: args{
+				name:    "fancy-cli",
+				version: "0.1.2",
+			},
+			want: "fancy-cli_0.1.2_windows_386.exe",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			if tt.fields.OS == "" {
+				tt.fields.OS = "darwin"
+				tt.fields.Arch = "amd64"
+			}
 			p, err := NewPrefixedKey(tt.fields.Prefix, "_", tt.fields.VersionPrefixed)
 			req.NoError(err)
 			// Need to inject these so tests pass in different environments (e.g., CI)
-			p.goos = "darwin"
-			p.goarch = "amd64"
+			p.goos = tt.fields.OS
+			p.goarch = tt.fields.Arch
 			if got := p.URLFor(tt.args.name, tt.args.version); got != tt.want {
 				t.Errorf("PrefixedKey.URLFor() = %v, want %v", got, tt.want)
 			}
