@@ -150,7 +150,7 @@ func TestPrefixedKey_ParseVersion(t *testing.T) {
 			wantMatch: false,
 		},
 		{
-			name: "should not match if prefix contains the separator",
+			name: "will not match if prefix contains the separator (TODO)",
 			fields: fields{
 				Prefix:    "my-pre",
 				Separator: "-",
@@ -163,7 +163,7 @@ func TestPrefixedKey_ParseVersion(t *testing.T) {
 			wantMatch: false,
 		},
 		{
-			name: "should not match if name contains the separator",
+			name: "will not match if name contains the separator (TODO)",
 			fields: fields{
 				Prefix:    "pre",
 				Separator: "-",
