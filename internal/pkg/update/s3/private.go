@@ -2,6 +2,7 @@ package s3
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"sort"
@@ -11,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/go-version"
@@ -18,22 +20,34 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
+// s3downloader is the iface for s3manager.Downloader for testing DownloadVersion without actually connecting to s3
+type s3downloader interface {
+	Download(w io.WriterAt, input *s3.GetObjectInput, options ...func(*s3manager.Downloader)) (n int64, err error)
+}
+
+// credsFactory for testing getCredentials without actually changing your ~/.aws/credentials file
+type credsFactory interface {
+	newProvider(profile string) credentials.Provider
+}
+
 type PrivateRepoParams struct {
-	S3BinBucket string
-	S3BinRegion string
-	S3BinPrefix string
-	S3ObjectKey ObjectKey
-	AWSProfiles []string
-	Logger      *log.Logger
+	S3BinBucket  string
+	S3BinRegion  string
+	S3BinPrefix  string
+	S3ObjectKey  ObjectKey
+	AWSProfiles  []string
+	Logger       *log.Logger
+	// @VisibleForTesting
+	creds        credsFactory
+	s3svc        s3iface.S3API
+	s3downloader s3downloader
 }
 
 type PrivateRepo struct {
 	*PrivateRepoParams
-	session *session.Session
-	s3svc   *s3.S3
 	// @VisibleForTesting
-	goos     string
-	goarch   string
+	goos   string
+	goarch string
 }
 
 func NewPrivateRepo(params *PrivateRepoParams) (*PrivateRepo, error) {
@@ -41,7 +55,10 @@ func NewPrivateRepo(params *PrivateRepoParams) (*PrivateRepo, error) {
 		return nil, err
 	}
 
-	creds, err := GetCredentials(params.AWSProfiles)
+	if params.creds == nil {
+		params.creds = &sharedCredsFactory{}
+	}
+	creds, err := getCredentials(params.creds, params.AWSProfiles)
 	if err != nil {
 		return nil, err
 	}
@@ -53,10 +70,14 @@ func NewPrivateRepo(params *PrivateRepoParams) (*PrivateRepo, error) {
 	if err != nil {
 		return nil, err
 	}
+	if params.s3svc == nil {
+		params.s3svc = s3.New(s)
+	}
+	if params.s3downloader == nil {
+		params.s3downloader = s3manager.NewDownloader(s)
+	}
 	return &PrivateRepo{
 		PrivateRepoParams: params,
-		session: s,
-		s3svc:   s3.New(s),
 	}, nil
 }
 
@@ -105,8 +126,6 @@ func (r *PrivateRepo) GetAvailableVersions(name string) (version.Collection, err
 }
 
 func (r *PrivateRepo) DownloadVersion(name, version, downloadDir string) (string, int64, error) {
-	downloader := s3manager.NewDownloader(r.session)
-
 	binName := fmt.Sprintf("%s-v%s-%s-%s", name, version, r.goos, r.goarch)
 	downloadBinPath := filepath.Join(downloadDir, binName)
 	downloadBin, err := os.Create(downloadBinPath)
@@ -116,7 +135,7 @@ func (r *PrivateRepo) DownloadVersion(name, version, downloadDir string) (string
 	defer downloadBin.Close()
 
 	s3URL := r.S3ObjectKey.URLFor(name, version)
-	bytes, err := downloader.Download(downloadBin, &s3.GetObjectInput{
+	bytes, err := r.s3downloader.Download(downloadBin, &s3.GetObjectInput{
 		Bucket: aws.String(r.S3BinBucket),
 		Key:    aws.String(s3URL),
 	})
@@ -127,7 +146,7 @@ func (r *PrivateRepo) DownloadVersion(name, version, downloadDir string) (string
 	return downloadBinPath, bytes, nil
 }
 
-func GetCredentials(allProfiles []string) (*credentials.Credentials, error) {
+func getCredentials(cf credsFactory, allProfiles []string) (*credentials.Credentials, error) {
 	envProfile := os.Getenv("AWS_PROFILE")
 	if envProfile != "" {
 		allProfiles = append(allProfiles, envProfile)
@@ -139,7 +158,7 @@ func GetCredentials(allProfiles []string) (*credentials.Credentials, error) {
 	var creds *credentials.Credentials
 	var allErrors *multierror.Error
 	for _, profile := range allProfiles {
-		profileCreds := credentials.NewSharedCredentials("", profile)
+		profileCreds := credentials.NewCredentials(cf.newProvider(profile))
 		val, err := profileCreds.Get()
 		if err != nil {
 			allErrors = multierror.Append(allErrors, fmt.Errorf("error while finding creds: %s", err))
@@ -198,4 +217,14 @@ func formatError(profiles []string, origErrors error) error {
 		}
 	}
 	return newErrors.ErrorOrNil()
+}
+
+type sharedCredsFactory struct{}
+
+func (f *sharedCredsFactory) newProvider(profile string) credentials.Provider {
+	// credentials.NewSharedProvider does this internally...
+	return &credentials.SharedCredentialsProvider{
+		Filename: "",
+		Profile:  profile,
+	}
 }

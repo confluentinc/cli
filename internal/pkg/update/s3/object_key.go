@@ -1,3 +1,4 @@
+//go:generate mocker --prefix "" --dst ../mock/object_key.go --pkg mock --selfpkg github.com/confluentinc/cli object_key.go ObjectKey
 package s3
 
 import (
@@ -5,7 +6,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/hashicorp/go-version"
+	version "github.com/hashicorp/go-version" // This "version" alias is require for go:generate mocker to work
 )
 
 // ObjectKey represents an S3 Key for a versioned package
