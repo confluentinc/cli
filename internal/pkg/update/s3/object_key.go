@@ -33,22 +33,31 @@ type PrefixedKey struct {
 //
 // If prefixVersion, s3 key format is PREFIX/VERSION/PACKAGE_VERSION_OS_ARCH
 //        otherwise, s3 key format is PREFIX/PACKAGE_VERSION_OS_ARCH
-func NewPrefixedKey(prefix, sep string, prefixVersion bool) *PrefixedKey {
+//
+// Prefix may be an empty string. An error will be returned if sep is empty or a space.
+func NewPrefixedKey(prefix, sep string, prefixVersion bool) (*PrefixedKey, error) {
+	if sep == "" || sep == " " {
+		return nil, fmt.Errorf("sep must be a non-empty string")
+	}
 	return &PrefixedKey{
 		Prefix:        prefix,
-		Separator:     sep,
 		PrefixVersion: prefixVersion,
+		Separator:     sep,
 		goos:          runtime.GOOS,
 		goarch:        runtime.GOARCH,
-	}
+	}, nil
 }
 
 func (p *PrefixedKey) URLFor(name, version string) string {
 	packageName := strings.Join([]string{name, version, p.goos, p.goarch}, p.Separator)
+	prefix := p.Prefix
+	if p.Prefix != "" {
+		prefix += "/"
+	}
 	if p.PrefixVersion {
-		return fmt.Sprintf("%s/%s/%s", p.Prefix, version, packageName)
+		return fmt.Sprintf("%s%s/%s", prefix, version, packageName)
 	} else {
-		return fmt.Sprintf("%s/%s", p.Prefix, packageName)
+		return fmt.Sprintf("%s%s", prefix, packageName)
 	}
 }
 

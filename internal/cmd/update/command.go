@@ -26,11 +26,16 @@ const (
 
 // NewClient returns a new update.Client configured for the CLI
 func NewClient(cliName string, logger *log.Logger) update.Client {
+	objectKey, err := s3.NewPrefixedKey(S3BinPrefix, "_", true)
+	if err != nil {
+		// This can only happen due to developer mistake. Panic instead of passing up the stack.
+		panic(err)
+	}
 	repo := s3.NewPublicRepo(&s3.PublicRepoParams{
 		S3BinRegion: S3BinRegion,
 		S3BinBucket: S3BinBucket,
 		S3BinPrefix: S3BinPrefix,
-		S3ObjectKey: s3.NewPrefixedKey(S3BinPrefix, "_", true),
+		S3ObjectKey: objectKey,
 		Logger:      logger,
 	})
 	return update.NewClient(&update.ClientParams{

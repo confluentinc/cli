@@ -2,13 +2,74 @@ package s3
 
 import (
 	"reflect"
+	"runtime"
 	"testing"
 
 	"github.com/hashicorp/go-version"
 	"github.com/stretchr/testify/require"
 )
 
-func TestVersionPrefixedKey_ParseVersion(t *testing.T) {
+func TestNewPrefixedKey(t *testing.T) {
+	type args struct {
+		prefix        string
+		sep           string
+		prefixVersion bool
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    *PrefixedKey
+		wantErr bool
+	}{
+		{
+			name: "should return an error if sep is empty",
+			args: args{
+				prefix:        "pre",
+				sep:           "",
+				prefixVersion: false,
+			},
+			wantErr: true,
+		},
+		{
+			name: "should return an error if sep is space",
+			args: args{
+				prefix:        "pre",
+				sep:           " ",
+				prefixVersion: false,
+			},
+			wantErr: true,
+		},
+		{
+			name: "should return a PrefixedKey",
+			args: args{
+				prefix:        "",
+				sep:           "_",
+				prefixVersion: false,
+			},
+			want: &PrefixedKey{
+				Prefix:        "",
+				PrefixVersion: false,
+				Separator:     "_",
+				goos:          runtime.GOOS,
+				goarch:        runtime.GOARCH,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := NewPrefixedKey(tt.args.prefix, tt.args.sep, tt.args.prefixVersion)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("NewPrefixedKey() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NewPrefixedKey() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestPrefixedKey_ParseVersion(t *testing.T) {
 	req := require.New(t)
 
 	makeVersion := func(v string) *version.Version {
@@ -125,13 +186,23 @@ func TestVersionPrefixedKey_ParseVersion(t *testing.T) {
 			wantMatch: true,
 			wantVer:   makeVersion("0.23.0"),
 		},
+		{
+			name:   "should support empty prefix",
+			fields: fields{},
+			args: args{
+				key: "fancy_0.23.0_darwin_amd64",
+			},
+			wantMatch: true,
+			wantVer:   makeVersion("0.23.0"),
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.fields.Separator == "" {
 				tt.fields.Separator = "_"
 			}
-			p := NewPrefixedKey(tt.fields.Prefix, tt.fields.Separator, tt.fields.Versioned)
+			p, err := NewPrefixedKey(tt.fields.Prefix, tt.fields.Separator, tt.fields.Versioned)
+			req.NoError(err)
 			// Need to inject these so tests pass in different environments (e.g., CI)
 			p.goos = "darwin"
 			p.goarch = "amd64"
@@ -151,6 +222,7 @@ func TestVersionPrefixedKey_ParseVersion(t *testing.T) {
 }
 
 func TestPrefixedKey_URLFor(t *testing.T) {
+	req := require.New(t)
 	type fields struct {
 		Prefix          string
 		VersionPrefixed bool
@@ -168,7 +240,7 @@ func TestPrefixedKey_URLFor(t *testing.T) {
 		{
 			name: "with version prefix",
 			fields: fields{
-				Prefix: "my-pre",
+				Prefix:          "my-pre",
 				VersionPrefixed: true,
 			},
 			args: args{
@@ -180,7 +252,7 @@ func TestPrefixedKey_URLFor(t *testing.T) {
 		{
 			name: "without version prefix",
 			fields: fields{
-				Prefix: "my-pre",
+				Prefix:          "my-pre",
 				VersionPrefixed: false,
 			},
 			args: args{
@@ -189,10 +261,31 @@ func TestPrefixedKey_URLFor(t *testing.T) {
 			},
 			want: "my-pre/fancy-cli_v1.23.0_darwin_amd64",
 		},
+		{
+			name:   "with empty prefix and no version prefix",
+			fields: fields{},
+			args: args{
+				name:    "fancy-cli",
+				version: "0.1.2",
+			},
+			want: "fancy-cli_0.1.2_darwin_amd64",
+		},
+		{
+			name:   "with empty prefix and with version prefix",
+			fields: fields{
+				VersionPrefixed: true,
+			},
+			args: args{
+				name:    "fancy-cli",
+				version: "0.1.2",
+			},
+			want: "0.1.2/fancy-cli_0.1.2_darwin_amd64",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			p := NewPrefixedKey(tt.fields.Prefix, "_", tt.fields.VersionPrefixed)
+			p, err := NewPrefixedKey(tt.fields.Prefix, "_", tt.fields.VersionPrefixed)
+			req.NoError(err)
 			// Need to inject these so tests pass in different environments (e.g., CI)
 			p.goos = "darwin"
 			p.goarch = "amd64"
