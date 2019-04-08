@@ -1,3 +1,4 @@
+//go:generate mocker --prefix "" --dst ../mock/s3.go --pkg mock --selfpkg github.com/aws/aws-sdk-go/service/s3/s3iface $GOPATH/src/github.com/aws/aws-sdk-go/service/s3/s3iface/interface.go S3API
 package s3
 
 import (
