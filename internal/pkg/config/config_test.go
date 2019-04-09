@@ -121,3 +121,50 @@ func TestConfig_Save(t *testing.T) {
 		})
 	}
 }
+
+func TestConfig_getFilename(t *testing.T) {
+	type fields struct {
+		CLIName string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		want    string
+		wantErr bool
+	}{
+		{
+			name: "config file for ccloud binary",
+			fields: fields{
+				CLIName: "ccloud",
+			},
+			want: os.Getenv("HOME") + "/.ccloud/config.json",
+		},
+		{
+			name: "config file for confluent binary",
+			fields: fields{
+				CLIName: "confluent",
+			},
+			want: os.Getenv("HOME") + "/.confluent/config.json",
+		},
+		{
+			name: "should error if if CLIName isn't provided",
+			fields: fields{},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Config{
+				CLIName: tt.fields.CLIName,
+			}
+			got, err := c.getFilename()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Config.getFilename() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("Config.getFilename() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

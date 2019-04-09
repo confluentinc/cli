@@ -32,6 +32,7 @@ func main() {
 	var cfg *config.Config
 	{
 		cfg = config.New(&config.Config{
+			CLIName:    cliName,
 			MetricSink: metricSink,
 			Logger:     logger,
 		})

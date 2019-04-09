@@ -19,7 +19,8 @@ func TestAddCommands_ShownInHelpUsage_CCloud(t *testing.T) {
 
 	logger := log.New()
 	cfg := config.New(&config.Config{
-		Logger: logger,
+		CLIName: "ccloud",
+		Logger:  logger,
 	})
 
 	version := cliVersion.NewVersion("1.2.3", "abc1234", "01/23/45", "CI")
@@ -51,12 +52,13 @@ func TestAddCommands_ShownInHelpUsage_Confluent(t *testing.T) {
 
 	logger := log.New()
 	cfg := config.New(&config.Config{
-		Logger: logger,
+		CLIName: "confluent",
+		Logger:  logger,
 	})
 
 	version := cliVersion.NewVersion("1.2.3", "abc1234", "01/23/45", "CI")
 
-	root, err  := cmd.NewConfluentCommand("confluent", cfg, version, logger)
+	root, err := cmd.NewConfluentCommand("confluent", cfg, version, logger)
 	req.NoError(err)
 
 	prompt := terminal.NewPrompt(os.Stdin)
