@@ -14,6 +14,7 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/environment"
 	"github.com/confluentinc/cli/internal/cmd/kafka"
 	"github.com/confluentinc/cli/internal/cmd/ksql"
+	"github.com/confluentinc/cli/internal/cmd/rbac"
 	"github.com/confluentinc/cli/internal/cmd/service-account"
 	"github.com/confluentinc/cli/internal/cmd/version"
 	configs "github.com/confluentinc/cli/internal/pkg/config"
@@ -76,7 +77,7 @@ func NewConfluentCommand(cfg *configs.Config, ver *versions.Version, logger *log
 		//conn.Hidden = true // The connect feature isn't finished yet, so let's hide it
 		//cli.AddCommand(conn)
 	} else if cliName == "confluent" {
-
+		cli.AddCommand(rbac.New(cfg))
 	}
 
 	return cli
