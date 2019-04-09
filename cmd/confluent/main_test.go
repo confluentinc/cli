@@ -24,7 +24,9 @@ func TestAddCommands_ShownInHelpUsage_CCloud(t *testing.T) {
 
 	version := cliVersion.NewVersion("1.2.3", "abc1234", "01/23/45", "CI")
 
-	root := cmd.NewConfluentCommand("ccloud", cfg, version, logger)
+	root, err := cmd.NewConfluentCommand("ccloud", cfg, version, logger)
+	req.NoError(err)
+
 	prompt := terminal.NewPrompt(os.Stdin)
 	root.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		prompt.SetOutput(cmd.OutOrStderr())
@@ -54,7 +56,9 @@ func TestAddCommands_ShownInHelpUsage_Confluent(t *testing.T) {
 
 	version := cliVersion.NewVersion("1.2.3", "abc1234", "01/23/45", "CI")
 
-	root := cmd.NewConfluentCommand("confluent", cfg, version, logger)
+	root, err  := cmd.NewConfluentCommand("confluent", cfg, version, logger)
+	req.NoError(err)
+
 	prompt := terminal.NewPrompt(os.Stdin)
 	root.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		prompt.SetOutput(cmd.OutOrStderr())
