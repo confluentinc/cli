@@ -37,8 +37,7 @@ var _ Client = (*client)(nil)
 type ClientParams struct {
 	Repository Repository
 	Logger     *log.Logger
-	// Optional, if you wish to rate limit your update checks.
-	// The file will be created if it doesn't exist, but its assumed the parent directories exist.
+	// Optional, if you wish to rate limit your update checks. The parent directories must exist.
 	CheckFile string
 	// Optional, defaults to checking once every 24h
 	CheckInterval time.Duration

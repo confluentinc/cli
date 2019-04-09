@@ -60,7 +60,7 @@ func TestContext(t *testing.T) {
 func run(args ...string) (string, error) {
 	cfg := config.New()
 	cfg.Filename = filename
-	// The config may not exist yet, but we don't care
+	// The `filename` config doesn't exist; we're creating it so ignore the error
 	_ = cfg.Load()
 	root := New(cfg)
 

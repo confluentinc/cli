@@ -37,11 +37,7 @@ func main() {
 			Logger:     logger,
 		})
 		err := cfg.Load()
-		if err == config.ErrNoConfig {
-			if err := cfg.Save(); err != nil {
-				logger.Errorf("unable to create config: %v", err)
-			}
-		} else if err != nil {
+		if err != nil {
 			logger.Errorf("unable to load config: %v", err)
 		}
 	}

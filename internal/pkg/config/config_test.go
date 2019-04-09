@@ -25,6 +25,7 @@ func TestConfig_Load(t *testing.T) {
 				contents: "{\"auth_token\": \"abc123\"}",
 			},
 			want: &Config{
+				CLIName:     "confluent",
 				AuthToken:   "abc123",
 				Platforms:   map[string]*Platform{},
 				Credentials: map[string]*Credential{},
@@ -38,6 +39,7 @@ func TestConfig_Load(t *testing.T) {
 				contents: "{\"auth_url\": \"https://stag.cpdev.cloud\"}",
 			},
 			want: &Config{
+				CLIName:     "confluent",
 				AuthURL:     "https://stag.cpdev.cloud",
 				Platforms:   map[string]*Platform{},
 				Credentials: map[string]*Credential{},
@@ -147,16 +149,16 @@ func TestConfig_getFilename(t *testing.T) {
 			want: os.Getenv("HOME") + "/.confluent/config.json",
 		},
 		{
-			name: "should error if if CLIName isn't provided",
+			name:   "should default to ~/.confluent if CLIName isn't provided",
 			fields: fields{},
-			wantErr: true,
+			want:   os.Getenv("HOME") + "/.confluent/config.json",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &Config{
+			c := New(&Config{
 				CLIName: tt.fields.CLIName,
-			}
+			})
 			got, err := c.getFilename()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Config.getFilename() error = %v, wantErr %v", err, tt.wantErr)
