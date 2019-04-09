@@ -270,29 +270,22 @@ func TestPrivateRepo_GetAvailableVersions(t *testing.T) {
 		return col
 	}
 
-	type fields struct {
-		PrivateRepoParams *PrivateRepoParams
-		goos              string
-		goarch            string
-	}
 	type args struct {
 		name string
 	}
 	tests := []struct {
 		name    string
-		fields  fields
+		params  *PrivateRepoParams
 		args    args
 		want    version.Collection
 		wantErr bool
 	}{
 		{
 			name: "should error if unable to list objects",
-			fields: fields{
-				PrivateRepoParams: &PrivateRepoParams{
-					s3svc: &mock.S3API{
-						ListObjectsV2Func: func(in *s3.ListObjectsV2Input) (*s3.ListObjectsV2Output, error) {
-							return nil, fmt.Errorf("no way jose")
-						},
+			params: &PrivateRepoParams{
+				s3svc: &mock.S3API{
+					ListObjectsV2Func: func(in *s3.ListObjectsV2Input) (*s3.ListObjectsV2Output, error) {
+						return nil, fmt.Errorf("no way jose")
 					},
 				},
 			},
@@ -300,19 +293,17 @@ func TestPrivateRepo_GetAvailableVersions(t *testing.T) {
 		},
 		{
 			name: "should error if unable to parse an s3 object key",
-			fields: fields{
-				PrivateRepoParams: &PrivateRepoParams{
-					S3ObjectKey: &mock.ObjectKey{
-						ParseVersionFunc: func(key, name string) (bool, *version.Version, error) {
-							return false, nil, fmt.Errorf("beserk")
-						},
+			params: &PrivateRepoParams{
+				S3ObjectKey: &mock.ObjectKey{
+					ParseVersionFunc: func(key, name string) (bool, *version.Version, error) {
+						return false, nil, fmt.Errorf("beserk")
 					},
-					s3svc: &mock.S3API{
-						ListObjectsV2Func: func(in *s3.ListObjectsV2Input) (*s3.ListObjectsV2Output, error) {
-							return &s3.ListObjectsV2Output{
-								Contents: []*s3.Object{{Key: aws.String("i'm a cashew")}},
-							}, nil
-						},
+				},
+				s3svc: &mock.S3API{
+					ListObjectsV2Func: func(in *s3.ListObjectsV2Input) (*s3.ListObjectsV2Output, error) {
+						return &s3.ListObjectsV2Output{
+							Contents: []*s3.Object{{Key: aws.String("i'm a cashew")}},
+						}, nil
 					},
 				},
 			},
@@ -320,57 +311,55 @@ func TestPrivateRepo_GetAvailableVersions(t *testing.T) {
 		},
 		{
 			name: "should return available versions",
-			fields: fields{
-				PrivateRepoParams: &PrivateRepoParams{
-					S3ObjectKey: &mock.ObjectKey{
-						ParseVersionFunc: func(key, name string) (bool, *version.Version, error) {
-							var v *version.Version
-							var err error
-							switch key {
-							case "cpd/cpd-v0.1.1-darwin-amd64":
-								v, err = version.NewSemver("v0.1.1")
-							case "cpd/cpd-v0.1.2-darwin-amd64":
-								v, err = version.NewSemver("v0.1.2")
-							case "cpd/cpd-v0.1.3-darwin-amd64":
-								v, err = version.NewSemver("v0.1.3")
-							}
-							return true, v, err
-						},
+			params: &PrivateRepoParams{
+				S3ObjectKey: &mock.ObjectKey{
+					ParseVersionFunc: func(key, name string) (bool, *version.Version, error) {
+						var v *version.Version
+						var err error
+						switch key {
+						case "cpd/cpd-v0.1.1-darwin-amd64":
+							v, err = version.NewSemver("v0.1.1")
+						case "cpd/cpd-v0.1.2-darwin-amd64":
+							v, err = version.NewSemver("v0.1.2")
+						case "cpd/cpd-v0.1.3-darwin-amd64":
+							v, err = version.NewSemver("v0.1.3")
+						}
+						return true, v, err
 					},
-					s3svc: &mock.S3API{
-						ListObjectsV2Func: func(in *s3.ListObjectsV2Input) (*s3.ListObjectsV2Output, error) {
-							return &s3.ListObjectsV2Output{
-								CommonPrefixes: nil,
-								IsTruncated:    aws.Bool(false),
-								KeyCount:       aws.Int64(400),
-								MaxKeys:        aws.Int64(1000),
-								Name:           aws.String("cloud-confluent-bin"),
-								Prefix:         aws.String("cpd/"),
-								Contents: []*s3.Object{
-									{
-										ETag:         aws.String("\"d541fd9fc90c385830337448747a21c0-8\""),
-										Key:          aws.String("cpd/cpd-v0.1.1-darwin-amd64"),
-										LastModified: timeMustParse("2018-07-27T19:14:32Z"),
-										Size:         aws.Int64(65154324),
-										StorageClass: aws.String("STANDARD"),
-									},
-									{
-										ETag:         aws.String("\"abea850567b589272a4f252bd14a58dc-8\""),
-										Key:          aws.String("cpd/cpd-v0.1.2-darwin-amd64"),
-										LastModified: timeMustParse("2018-08-02T19:14:32Z"),
-										Size:         aws.Int64(65154324),
-										StorageClass: aws.String("STANDARD"),
-									},
-									{
-										ETag:         aws.String("\"0524a39b7db0bb5de4bfe015dc5cd78c-8\""),
-										Key:          aws.String("cpd/cpd-v0.1.3-darwin-amd64"),
-										LastModified: timeMustParse("2018-08-12T19:14:32Z"),
-										Size:         aws.Int64(65154324),
-										StorageClass: aws.String("STANDARD"),
-									},
+				},
+				s3svc: &mock.S3API{
+					ListObjectsV2Func: func(in *s3.ListObjectsV2Input) (*s3.ListObjectsV2Output, error) {
+						return &s3.ListObjectsV2Output{
+							CommonPrefixes: nil,
+							IsTruncated:    aws.Bool(false),
+							KeyCount:       aws.Int64(400),
+							MaxKeys:        aws.Int64(1000),
+							Name:           aws.String("cloud-confluent-bin"),
+							Prefix:         aws.String("cpd/"),
+							Contents: []*s3.Object{
+								{
+									ETag:         aws.String("\"d541fd9fc90c385830337448747a21c0-8\""),
+									Key:          aws.String("cpd/cpd-v0.1.1-darwin-amd64"),
+									LastModified: timeMustParse("2018-07-27T19:14:32Z"),
+									Size:         aws.Int64(65154324),
+									StorageClass: aws.String("STANDARD"),
 								},
-							}, nil
-						},
+								{
+									ETag:         aws.String("\"abea850567b589272a4f252bd14a58dc-8\""),
+									Key:          aws.String("cpd/cpd-v0.1.2-darwin-amd64"),
+									LastModified: timeMustParse("2018-08-02T19:14:32Z"),
+									Size:         aws.Int64(65154324),
+									StorageClass: aws.String("STANDARD"),
+								},
+								{
+									ETag:         aws.String("\"0524a39b7db0bb5de4bfe015dc5cd78c-8\""),
+									Key:          aws.String("cpd/cpd-v0.1.3-darwin-amd64"),
+									LastModified: timeMustParse("2018-08-12T19:14:32Z"),
+									Size:         aws.Int64(65154324),
+									StorageClass: aws.String("STANDARD"),
+								},
+							},
+						}, nil
 					},
 				},
 			},
@@ -378,45 +367,43 @@ func TestPrivateRepo_GetAvailableVersions(t *testing.T) {
 		},
 		{
 			name: "should sort versions",
-			fields: fields{
-				PrivateRepoParams: &PrivateRepoParams{
-					S3ObjectKey: &mock.ObjectKey{
-						ParseVersionFunc: func(key, name string) (bool, *version.Version, error) {
-							var v *version.Version
-							var err error
-							switch key {
-							case "cpd/cpd-v0.1.1-darwin-amd64":
-								v, err = version.NewSemver("v0.1.1")
-							case "cpd/cpd-v0.1.2-darwin-amd64":
-								v, err = version.NewSemver("v0.1.2")
-							case "cpd/cpd-v0.1.3-darwin-amd64":
-								v, err = version.NewSemver("v0.1.3")
-							}
-							return true, v, err
-						},
+			params: &PrivateRepoParams{
+				S3ObjectKey: &mock.ObjectKey{
+					ParseVersionFunc: func(key, name string) (bool, *version.Version, error) {
+						var v *version.Version
+						var err error
+						switch key {
+						case "cpd/cpd-v0.1.1-darwin-amd64":
+							v, err = version.NewSemver("v0.1.1")
+						case "cpd/cpd-v0.1.2-darwin-amd64":
+							v, err = version.NewSemver("v0.1.2")
+						case "cpd/cpd-v0.1.3-darwin-amd64":
+							v, err = version.NewSemver("v0.1.3")
+						}
+						return true, v, err
 					},
-					s3svc: &mock.S3API{
-						ListObjectsV2Func: func(in *s3.ListObjectsV2Input) (*s3.ListObjectsV2Output, error) {
-							return &s3.ListObjectsV2Output{
-								CommonPrefixes: nil,
-								IsTruncated:    aws.Bool(false),
-								KeyCount:       aws.Int64(400),
-								MaxKeys:        aws.Int64(1000),
-								Name:           aws.String("cloud-confluent-bin"),
-								Prefix:         aws.String("cpd/"),
-								Contents: []*s3.Object{
-									{
-										Key:          aws.String("cpd/cpd-v0.1.1-darwin-amd64"),
-									},
-									{
-										Key:          aws.String("cpd/cpd-v0.1.3-darwin-amd64"),
-									},
-									{
-										Key:          aws.String("cpd/cpd-v0.1.2-darwin-amd64"),
-									},
+				},
+				s3svc: &mock.S3API{
+					ListObjectsV2Func: func(in *s3.ListObjectsV2Input) (*s3.ListObjectsV2Output, error) {
+						return &s3.ListObjectsV2Output{
+							CommonPrefixes: nil,
+							IsTruncated:    aws.Bool(false),
+							KeyCount:       aws.Int64(400),
+							MaxKeys:        aws.Int64(1000),
+							Name:           aws.String("cloud-confluent-bin"),
+							Prefix:         aws.String("cpd/"),
+							Contents: []*s3.Object{
+								{
+									Key: aws.String("cpd/cpd-v0.1.1-darwin-amd64"),
 								},
-							}, nil
-						},
+								{
+									Key: aws.String("cpd/cpd-v0.1.3-darwin-amd64"),
+								},
+								{
+									Key: aws.String("cpd/cpd-v0.1.2-darwin-amd64"),
+								},
+							},
+						}, nil
 					},
 				},
 			},
@@ -425,9 +412,9 @@ func TestPrivateRepo_GetAvailableVersions(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.fields.PrivateRepoParams.Logger = log.New()
+			tt.params.Logger = log.New()
 			r := &PrivateRepo{
-				PrivateRepoParams: tt.fields.PrivateRepoParams,
+				PrivateRepoParams: tt.params,
 				// Need to inject these so tests pass in different environments (e.g., CI)
 				goos:   "darwin",
 				goarch: "amd64",
