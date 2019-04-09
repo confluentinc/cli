@@ -4,16 +4,19 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/go-printer"
 	mds "github.com/confluentinc/mds-sdk-go"
 
 	"context"
-	"fmt"
+	//"fmt"
 )
 
 var (
-	listFields = []string{"Name", "SuperUser", "AllowedOperations"}
-	listLabels = []string{"Name", "SuperUser", "AllowedOperations"}
+	listFields     = []string{"Name", "SuperUser", "AllowedOperations"}
+	listLabels     = []string{"Name", "SuperUser", "AllowedOperations"}
+	describeFields = []string{"Name", "SuperUser", "AllowedOperations"}
+	describeLabels = []string{"Name", "SuperUser", "AllowedOperations"}
 )
 
 type rolesCommand struct {
@@ -44,12 +47,19 @@ func (c *rolesCommand) init() {
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	})
+
+	c.AddCommand(&cobra.Command{
+		Use:   "describe ROLE",
+		Short: "Describes resoruceTypes and operations allowed for a given role",
+		RunE:  c.describe,
+		Args:  cobra.ExactArgs(1),
+	})
 }
 
 func (c *rolesCommand) list(cmd *cobra.Command, args []string) error {
 	roles, _, err := c.client.RoleDefinitionsApi.Roles(context.Background())
 	if err != nil {
-		fmt.Println("err! ", err)
+		return errors.HandleCommon(err, cmd)
 	}
 
 	var data [][]string
@@ -57,6 +67,21 @@ func (c *rolesCommand) list(cmd *cobra.Command, args []string) error {
 		data = append(data, printer.ToRow(&role, listFields))
 	}
 	printer.RenderCollectionTable(data, listLabels)
+
+	return nil
+}
+
+func (c *rolesCommand) describe(cmd *cobra.Command, args []string) error {
+	role := args[0]
+
+	details, _, err := c.client.RoleDefinitionsApi.RoleDetail(context.Background(), role)
+	if err != nil {
+		return errors.HandleCommon(err.(error), cmd)
+	}
+
+	var data [][]string
+	data = append(data, printer.ToRow(&details, describeFields))
+	printer.RenderCollectionTable(data, describeLabels)
 
 	return nil
 }

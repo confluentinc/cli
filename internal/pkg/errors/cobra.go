@@ -3,6 +3,8 @@ package errors
 import (
 	"fmt"
 
+	mds "github.com/confluentinc/mds-sdk-go"
+
 	"github.com/codyaray/go-editor"
 	"github.com/spf13/cobra"
 )
@@ -22,6 +24,11 @@ func HandleCommon(err error, cmd *cobra.Command) error {
 	// Give an indication of successful completion
 	if err == nil {
 		return nil
+	}
+
+	if oerr, ok := err.(mds.GenericOpenAPIError); ok {
+		cmd.SilenceUsage = true
+		return fmt.Errorf(oerr.Error())
 	}
 
 	// Intercept errors to prevent usage from being printed.
