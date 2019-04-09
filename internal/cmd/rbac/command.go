@@ -36,4 +36,5 @@ func New(config *config.Config) *cobra.Command {
 
 func (c *command) init() {
 	c.AddCommand(NewRolesCommand(c.config, c.client))
+	c.AddCommand(NewRolebindingsCommand(c.config, c.client))
 }
