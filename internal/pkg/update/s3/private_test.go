@@ -15,7 +15,9 @@ import (
 	"github.com/hashicorp/go-version"
 	"github.com/stretchr/testify/require"
 
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	pio "github.com/confluentinc/cli/internal/pkg/update/io"
 	"github.com/confluentinc/cli/internal/pkg/update/mock"
 )
 
@@ -78,7 +80,7 @@ func TestNewPrivateRepo(t *testing.T) {
 				S3ObjectKey:  &mock.ObjectKey{},
 				creds:        goodCreds,
 				s3svc:        &mock.S3API{},
-				s3downloader: &mockS3Downloader{},
+				s3downloader: &mock.Downloader{},
 			},
 			want: &PrivateRepo{
 				PrivateRepoParams: &PrivateRepoParams{
@@ -88,7 +90,7 @@ func TestNewPrivateRepo(t *testing.T) {
 					S3ObjectKey:  &mock.ObjectKey{},
 					creds:        goodCreds,
 					s3svc:        &mock.S3API{},
-					s3downloader: &mockS3Downloader{},
+					s3downloader: &mock.Downloader{},
 				},
 			},
 		},
@@ -431,6 +433,113 @@ func TestPrivateRepo_GetAvailableVersions(t *testing.T) {
 	}
 }
 
+func TestPrivateRepo_DownloadVersion(t *testing.T) {
+	req := require.New(t)
+	type args struct {
+		name        string
+		version     string
+		downloadDir string
+	}
+	tests := []struct {
+		name      string
+		params    *PrivateRepoParams
+		args      args
+		wantPath  string
+		wantBytes int64
+		wantErr   bool
+	}{
+		{
+			name: "should error if creating file fails",
+			params: &PrivateRepoParams{
+				fs: &mock.PassThroughFileSystem{
+					Mock: &mock.FileSystem{
+						CreateFunc: func(name string) (pio.File, error) {
+							return nil, errors.New("you no can do that")
+						},
+					},
+					FS: &pio.RealFileSystem{},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "should error if download fails",
+			params: &PrivateRepoParams{
+				S3BinBucket: "bigbucks",
+				S3ObjectKey: &mock.ObjectKey{
+					URLForFunc: func(name, version string) string {
+						return "/some/s3/url"
+					},
+				},
+				s3downloader: &mock.Downloader{
+					DownloadFunc: func(w io.WriterAt, input *s3.GetObjectInput, options ...func(*s3manager.Downloader)) (int64, error) {
+						req.Equal("bigbucks", *input.Bucket)
+						req.Equal("/some/s3/url", *input.Key)
+						return 0, errors.New("no space here")
+					},
+				},
+				fs: &pio.RealFileSystem{},
+			},
+			wantErr: true,
+		},
+		{
+			name: "should download version",
+			params: &PrivateRepoParams{
+				S3BinBucket: "bigbucks",
+				S3ObjectKey: &mock.ObjectKey{
+					URLForFunc: func(name, version string) string {
+						return "/some/s3/url"
+					},
+				},
+				s3downloader: &mock.Downloader{
+					DownloadFunc: func(w io.WriterAt, input *s3.GetObjectInput, options ...func(*s3manager.Downloader)) (int64, error) {
+						req.Equal("bigbucks", *input.Bucket)
+						req.Equal("/some/s3/url", *input.Key)
+						return 23, nil
+					},
+				},
+				fs: &mock.PassThroughFileSystem{
+					Mock: &mock.FileSystem{
+						CreateFunc: func(name string) (pio.File, error) {
+							return &os.File{}, nil
+						},
+					},
+					FS: &pio.RealFileSystem{},
+				},
+			},
+			args: args{
+				name: "foofighter",
+				version: "9.8.7", // TODO: shouldn't this need a v prefix?
+				downloadDir: "backdoor",
+			},
+			wantPath: "backdoor/foofighter-v9.8.7-darwin-amd64",
+			wantBytes: 23,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.params.Logger = log.New()
+			r := &PrivateRepo{
+				PrivateRepoParams: tt.params,
+				// Need to inject these so tests pass in different environments (e.g., CI)
+				goos:   "darwin",
+				goarch: "amd64",
+			}
+			gotPath, gotBytes, err := r.DownloadVersion(tt.args.name, tt.args.version, tt.args.downloadDir)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("PrivateRepo.DownloadVersion() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if gotPath != tt.wantPath {
+				t.Errorf("PrivateRepo.DownloadVersion() gotPath = %v, wantPath %v", gotPath, tt.wantPath)
+			}
+			if gotBytes != tt.wantBytes {
+				t.Errorf("PrivateRepo.DownloadVersion() gotBytes = %v, wantPath %v", gotBytes, tt.wantBytes)
+			}
+		})
+	}
+}
+
 type mockCredentialsProvider struct {
 	val     credentials.Value
 	err     error
@@ -461,12 +570,6 @@ func (m *mockCredsFactory) newProvider(profile string) credentials.Provider {
 	}
 	m.count++
 	return creds.provider
-}
-
-type mockS3Downloader struct{}
-
-func (d *mockS3Downloader) Download(w io.WriterAt, input *s3.GetObjectInput, options ...func(*s3manager.Downloader)) (n int64, err error) {
-	return 0, nil
 }
 
 func makeCreds(profile string, val credentials.Value, err error, expired bool) *mockCredsFactory {

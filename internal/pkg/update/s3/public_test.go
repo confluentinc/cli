@@ -10,13 +10,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/update/mock"
 	"github.com/hashicorp/go-version"
 	"github.com/stretchr/testify/require"
 
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	pio "github.com/confluentinc/cli/internal/pkg/update/io"
+	"github.com/confluentinc/cli/internal/pkg/update/mock"
 )
 
 func NewMockPublicS3(response, path, query string, req *require.Assertions) *httptest.Server {

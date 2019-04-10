@@ -1,4 +1,5 @@
-//go:generate mocker --prefix "" --dst ../mock/s3.go --pkg mock --selfpkg github.com/aws/aws-sdk-go/service/s3/s3iface $GOPATH/src/github.com/aws/aws-sdk-go/service/s3/s3iface/interface.go S3API
+//go:generate mocker --prefix "" --dst ../mock/s3api.go --pkg mock --selfpkg github.com/aws/aws-sdk-go/service/s3/s3iface $GOPATH/src/github.com/aws/aws-sdk-go/service/s3/s3iface/interface.go S3API
+//go:generate mocker --prefix "" --dst ../mock/Downloader.go --pkg mock --selfpkg github.com/confluentinc/cli private.go Downloader
 package s3
 
 import (
@@ -19,10 +20,11 @@ import (
 	"github.com/hashicorp/go-version"
 
 	"github.com/confluentinc/cli/internal/pkg/log"
+	pio "github.com/confluentinc/cli/internal/pkg/update/io"
 )
 
-// s3downloader is the iface for s3manager.Downloader for testing DownloadVersion without actually connecting to s3
-type s3downloader interface {
+// Downloader is the iface for s3manager.Downloader for testing DownloadVersion without actually connecting to s3
+type Downloader interface {
 	Download(w io.WriterAt, input *s3.GetObjectInput, options ...func(*s3manager.Downloader)) (n int64, err error)
 }
 
@@ -32,16 +34,17 @@ type credsFactory interface {
 }
 
 type PrivateRepoParams struct {
-	S3BinBucket  string
-	S3BinRegion  string
-	S3BinPrefix  string
-	S3ObjectKey  ObjectKey
-	AWSProfiles  []string
-	Logger       *log.Logger
+	S3BinBucket string
+	S3BinRegion string
+	S3BinPrefix string
+	S3ObjectKey ObjectKey
+	AWSProfiles []string
+	Logger      *log.Logger
 	// @VisibleForTesting
 	creds        credsFactory
 	s3svc        s3iface.S3API
-	s3downloader s3downloader
+	s3downloader Downloader
+	fs           pio.FileSystem
 }
 
 type PrivateRepo struct {
@@ -129,7 +132,7 @@ func (r *PrivateRepo) GetAvailableVersions(name string) (version.Collection, err
 func (r *PrivateRepo) DownloadVersion(name, version, downloadDir string) (string, int64, error) {
 	binName := fmt.Sprintf("%s-v%s-%s-%s", name, version, r.goos, r.goarch)
 	downloadBinPath := filepath.Join(downloadDir, binName)
-	downloadBin, err := os.Create(downloadBinPath)
+	downloadBin, err := r.fs.Create(downloadBinPath)
 	if err != nil {
 		return "", 0, err
 	}
