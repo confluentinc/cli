@@ -102,6 +102,7 @@ func (c *Config) Load() error {
 			if err := c.Save(); err != nil {
 				return errors.Wrapf(err, "unable to create config: %v", err)
 			}
+			return nil
 		}
 		return errors.Wrapf(err, "unable to read config file: %s", filename)
 	}
