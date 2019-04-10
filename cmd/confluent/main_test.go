@@ -22,6 +22,7 @@ func TestAddCommands_ShownInHelpUsage_CCloud(t *testing.T) {
 		CLIName: "ccloud",
 		Logger:  logger,
 	})
+	req.NoError(cfg.Load())
 
 	version := cliVersion.NewVersion("1.2.3", "abc1234", "01/23/45", "CI")
 
@@ -55,6 +56,7 @@ func TestAddCommands_ShownInHelpUsage_Confluent(t *testing.T) {
 		CLIName: "confluent",
 		Logger:  logger,
 	})
+	req.NoError(cfg.Load())
 
 	version := cliVersion.NewVersion("1.2.3", "abc1234", "01/23/45", "CI")
 

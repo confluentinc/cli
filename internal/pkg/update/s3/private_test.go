@@ -478,7 +478,14 @@ func TestPrivateRepo_DownloadVersion(t *testing.T) {
 						return 0, errors.New("no space here")
 					},
 				},
-				fs: &pio.RealFileSystem{},
+				fs: &mock.PassThroughFileSystem{
+					Mock: &mock.FileSystem{
+						CreateFunc: func(name string) (pio.File, error) {
+							return &os.File{}, nil
+						},
+					},
+					FS: &pio.RealFileSystem{},
+				},
 			},
 			wantErr: true,
 		},
@@ -508,11 +515,11 @@ func TestPrivateRepo_DownloadVersion(t *testing.T) {
 				},
 			},
 			args: args{
-				name: "foofighter",
-				version: "9.8.7", // TODO: shouldn't this need a v prefix?
+				name:        "foofighter",
+				version:     "9.8.7", // TODO: shouldn't this need a v prefix?
 				downloadDir: "backdoor",
 			},
-			wantPath: "backdoor/foofighter-v9.8.7-darwin-amd64",
+			wantPath:  "backdoor/foofighter-v9.8.7-darwin-amd64",
 			wantBytes: 23,
 		},
 	}
