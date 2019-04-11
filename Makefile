@@ -49,6 +49,7 @@ build-confluent:
 release: get-release-image commit-release tag-release
 	make gorelease
 	make publish
+	make publish-docs
 
 .PHONY: gorelease
 gorelease:
