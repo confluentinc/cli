@@ -523,7 +523,7 @@ func TestPromptToDownload(t *testing.T) {
 				},
 				NewBufferedReaderFunc: func(rd io.Reader) pio.Reader {
 					req.Equal(os.Stdin, rd)
-					fmt.Println() // to go to newline after test prompt
+					_, _ = fmt.Println() // to go to newline after test prompt
 					return bytes.NewBuffer([]byte(input+"\n"))
 				},
 			},
@@ -612,7 +612,7 @@ func TestPromptToDownload(t *testing.T) {
 					},
 					NewBufferedReaderFunc: func(rd io.Reader) pio.Reader {
 						req.Equal(os.Stdin, rd)
-						fmt.Println() // to go to newline after test prompt
+						_, _ = fmt.Println() // to go to newline after test prompt
 						countRepeated++
 						switch countRepeated {
 						case 1:
