@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	// Injected from linker flags like `go build -ldflags "-X main.cliName=$VERSION"`
+	// Injected from linker flags like `go build -ldflags "-X main.cliName=$NAME"`
 	cliName = "confluent"
 )
 
@@ -28,7 +28,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	err = doc.GenReSTTreeCustom(confluent, "./docs", emptyStr, sphinxRef)
+	err = doc.GenReSTTreeCustom(confluent, "./docs/"+cliName, emptyStr, sphinxRef)
 	if err != nil {
 		panic(err)
 	}

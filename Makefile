@@ -85,7 +85,12 @@ publish: dist-ccloud
 
 .PHONY: docs
 docs:
-	go run cmd/docs/main.go
+	go run -ldflags '-X main.cliName=confluent' cmd/docs/main.go
+	go run -ldflags '-X main.cliName=ccloud'    cmd/docs/main.go
+
+.PHONY: clean-docs
+clean-docs:
+	rm docs/*/*.rst
 
 .PHONY: fmt
 fmt:
