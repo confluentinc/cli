@@ -147,7 +147,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	fmt.Println("Please save the API Key and Secret. THIS IS THE ONLY CHANCE YOU HAVE!")
+	pcmd.Println(cmd, "Please save the API Key and Secret. THIS IS THE ONLY CHANCE YOU HAVE!")
 	return printer.RenderTableOut(userKey, createFields, createRenames, os.Stdout)
 }
 

@@ -1,12 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/spf13/viper"
 
 	"github.com/confluentinc/cli/internal/cmd"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/metric"
@@ -46,7 +46,7 @@ func main() {
 
 	cli, err := cmd.NewConfluentCommand(cliName, cfg, version, logger)
 	if err != nil {
-		fmt.Println(err)
+		pcmd.ErrPrintln(cli, err)
 		os.Exit(1)
 	}
 

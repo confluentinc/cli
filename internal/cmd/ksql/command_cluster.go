@@ -2,7 +2,6 @@ package ksql
 
 import (
 	"context"
-	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -11,6 +10,7 @@ import (
 	ksqlv1 "github.com/confluentinc/ccloudapis/ksql/v1"
 	"github.com/confluentinc/go-printer"
 
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
@@ -135,7 +135,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	fmt.Printf("The ksql app %s has been deleted.\n", args[0])
+	pcmd.Printf(cmd, "The ksql app %s has been deleted.\n", args[0])
 	return nil
 }
 

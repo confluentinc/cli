@@ -215,13 +215,13 @@ func (c *sinkCommand) createS3Sink(kafkaClusterID, kafkaUserEmail string, cmd *c
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
-	fmt.Println("Created new connector:")
+	pcmd.Println(cmd, "Created new connector:")
 	if err := printer.RenderTableOut(cluster, describeFields, describeRenames, os.Stdout); err != nil {
 		return err
 	}
-	fmt.Println("\nS3/Sink Options:")
-	fmt.Println(toConfig(cluster.Options))
-	fmt.Println("\n\nCreate an S3 bucket policy with this user ARN:\n\t" + cluster.UserArn)
+	pcmd.Println(cmd, "\nS3/Sink Options:")
+	pcmd.Println(cmd, toConfig(cluster.Options))
+	pcmd.Println(cmd, "\n\nCreate an S3 bucket policy with this user ARN:\n\t" + cluster.UserArn)
 	return nil
 }
 
@@ -235,7 +235,7 @@ func (c *sinkCommand) describe(cmd *cobra.Command, args []string) error {
 		if err := printer.RenderTableOut(cl, describeFields, describeRenames, os.Stdout); err != nil {
 			return err
 		}
-		fmt.Println("\nS3 Sink Options:")
+		pcmd.Println(cmd, "\nS3 Sink Options:")
 		if err := printer.RenderTableOut(cl.Options, nil, nil, os.Stdout); err != nil {
 			return err
 		}
@@ -280,7 +280,7 @@ func (c *sinkCommand) edit(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return common.HandleError(err, cmd)
 		}
-		fmt.Println("Updated connector:")
+		pcmd.Println(cmd, "Updated connector:")
 		if err := printer.RenderTableOut(cluster, describeFields, describeRenames, os.Stdout); err != nil {
 			return err
 		}
@@ -312,13 +312,13 @@ func (c *sinkCommand) update(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return common.HandleError(err, cmd)
 		}
-		fmt.Println("Updated connector:")
+		pcmd.Println(cmd, "Updated connector:")
 		if err := printer.RenderTableOut(cluster, describeFields, describeRenames, os.Stdout); err != nil {
 			return err
 		}
-		fmt.Println("\nS3/Sink Options:")
-		fmt.Println(toConfig(cluster.Options))
-		fmt.Println("\n\nCreate an S3 bucket policy with this user ARN:\n\t" + cluster.UserArn)
+		pcmd.Println(cmd, "\nS3/Sink Options:")
+		pcmd.Println(cmd, toConfig(cluster.Options))
+		pcmd.Println(cmd, "\n\nCreate an S3 bucket policy with this user ARN:\n\t" + cluster.UserArn)
 	default:
 		return fmt.Errorf("unknown cluster type: %v", cl)
 	}
@@ -331,7 +331,7 @@ func (c *sinkCommand) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return common.HandleError(err, cmd)
 	}
-	fmt.Println("Your connect cluster has been deleted!")
+	pcmd.Println(cmd, "Your connect cluster has been deleted!")
 	return nil
 }
 

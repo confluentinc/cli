@@ -497,6 +497,9 @@ func TestUpdateBinary(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			if tt.client.Out == nil {
+				tt.client.Out = os.Stdout
+			}
 			if err := tt.client.UpdateBinary(tt.args.name, tt.args.version, tt.args.path); (err != nil) != tt.wantErr {
 				t.Errorf("client.UpdateBinary() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -678,6 +681,9 @@ func TestPromptToDownload(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			if tt.client.Out == nil {
+				tt.client.Out = os.Stdout
+			}
 			if got := tt.client.PromptToDownload(tt.args.name, tt.args.currVersion, tt.args.latestVersion, tt.args.confirm); got != tt.want {
 				t.Errorf("client.PromptToDownload() = %v, want %v", got, tt.want)
 			}

@@ -14,7 +14,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
-	"github.com/confluentinc/cli/internal/pkg/update/io"
+	pio "github.com/confluentinc/cli/internal/pkg/update/io"
 )
 
 // Client lets you check for updated application binaries and install them if desired
@@ -29,7 +29,7 @@ type client struct {
 	// @VisibleForTesting, defaults to the system clock
 	clock clockwork.Clock
 	// @VisibleForTesting, defaults to the OS filesystem
-	fs io.FileSystem
+	fs pio.FileSystem
 }
 
 var _ Client = (*client)(nil)
@@ -37,6 +37,7 @@ var _ Client = (*client)(nil)
 // ClientParams are used to configure the update.Client
 type ClientParams struct {
 	Repository Repository
+	Out        pio.File
 	Logger     *log.Logger
 	// Optional, if you wish to rate limit your update checks. The parent directories must exist.
 	CheckFile string
@@ -52,7 +53,7 @@ func NewClient(params *ClientParams) *client {
 	return &client{
 		ClientParams: params,
 		clock:        clockwork.NewRealClock(),
-		fs:           &io.RealFileSystem{},
+		fs:           &pio.RealFileSystem{},
 	}
 }
 
@@ -91,21 +92,21 @@ func (c *client) CheckForUpdates(name string, currentVersion string, forceCheck 
 
 // PromptToDownload displays an interactive CLI prompt to download the latest version
 func (c *client) PromptToDownload(name, currVersion, latestVersion string, confirm bool) bool {
-	if confirm && !c.fs.IsTerminal(os.Stdout.Fd()) {
+	if confirm && !c.fs.IsTerminal(c.Out.Fd()) {
 		c.Logger.Warn("disable confirm as stdout is not a tty")
 		confirm = false
 	}
 
-	fmt.Printf("New version of %s is available\n", name)
-	fmt.Printf("Current Version: %s\n", currVersion)
-	fmt.Printf("Latest Version:  %s\n", latestVersion)
+	fmt.Fprintf(c.Out, "New version of %s is available\n", name)
+	fmt.Fprintf(c.Out, "Current Version: %s\n", currVersion)
+	fmt.Fprintf(c.Out, "Latest Version:  %s\n", latestVersion)
 
 	if !confirm {
 		return true
 	}
 
 	for {
-		fmt.Print("Do you want to download and install this update? (y/n): ")
+		fmt.Fprint(c.Out, "Do you want to download and install this update? (y/n): ")
 
 		reader := c.fs.NewBufferedReader(os.Stdin)
 		input, _ := reader.ReadString('\n')
@@ -118,7 +119,7 @@ func (c *client) PromptToDownload(name, currVersion, latestVersion string, confi
 		case "no", "n", "N":
 			return false
 		default:
-			fmt.Printf("%s is not a valid choice\n", choice)
+			fmt.Fprintf(c.Out, "%s is not a valid choice\n", choice)
 			continue
 		}
 	}
@@ -137,7 +138,7 @@ func (c *client) UpdateBinary(name, version, path string) error {
 		}
 	}()
 
-	fmt.Printf("Downloading %s version %s...\n", name, version)
+	fmt.Fprintf(c.Out, "Downloading %s version %s...\n", name, version)
 	startTime := c.clock.Now()
 
 	newBin, bytes, err := c.Repository.DownloadVersion(name, version, downloadDir)
@@ -147,7 +148,7 @@ func (c *client) UpdateBinary(name, version, path string) error {
 
 	mb := float64(bytes) / 1024.0 / 1024.0
 	timeSpent := c.clock.Now().Sub(startTime).Seconds()
-	fmt.Printf("Done. Downloaded %.2f MB in %.0f seconds. (%.2f MB/s)\n", mb, timeSpent, mb/timeSpent)
+	fmt.Fprintf(c.Out, "Done. Downloaded %.2f MB in %.0f seconds. (%.2f MB/s)\n", mb, timeSpent, mb/timeSpent)
 
 	err = c.copyFile(newBin, path)
 	if err != nil {

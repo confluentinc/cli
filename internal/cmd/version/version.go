@@ -14,7 +14,7 @@ func NewVersionCmd(prerunner pcmd.PreRunner, version *version.Version) *cobra.Co
 		Short:             "Print the ccloud version",
 		PersistentPreRunE: prerunner.Anonymous(),
 		Run: func(cmd *cobra.Command, args []string) {
-			version.Print(cmd)
+			pcmd.Println(cmd, version)
 		},
 		Args: cobra.NoArgs,
 	}

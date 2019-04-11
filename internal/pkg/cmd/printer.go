@@ -7,7 +7,8 @@ import (
 )
 
 //
-// These printers are needed because we want to write to stdout, not stderr by default. So we also add ErrPrint* too.
+// These printers are needed because we want to write to stdout, not stderr
+// as (cobra.Command).Print* does by default. So we also add ErrPrint* too.
 //
 
 // Println formats using the default formats for its operands and writes to stdout.

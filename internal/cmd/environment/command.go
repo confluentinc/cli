@@ -109,7 +109,7 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 			if err != nil {
 				return errors.HandleCommon(errors.New("couldn't switch to new environment: couldn't save config."), cmd)
 			}
-			fmt.Println("Now using", id, "as the default (active) environment.")
+			pcmd.Println(cmd, "Now using", id, "as the default (active) environment.")
 			return nil
 		}
 	}

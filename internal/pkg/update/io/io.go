@@ -40,6 +40,7 @@ type File interface {
 	io.WriterAt
 	io.Seeker
 	Stat() (os.FileInfo, error)
+	Fd() uintptr
 }
 
 // Reader reads buffered strings

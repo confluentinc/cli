@@ -16,6 +16,7 @@ import (
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	"github.com/confluentinc/go-printer"
 
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
@@ -183,7 +184,7 @@ func (c *topicCommand) describe(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	fmt.Printf("Topic: %s PartitionCount: %d ReplicationFactor: %d\n",
+	pcmd.Printf(cmd, "Topic: %s PartitionCount: %d ReplicationFactor: %d\n",
 		resp.Name, len(resp.Partitions), len(resp.Partitions[0].Replicas))
 
 	var partitions [][]string
@@ -216,7 +217,7 @@ func (c *topicCommand) describe(cmd *cobra.Command, args []string) error {
 	}
 	printer.RenderCollectionTable(partitions, titleRow)
 
-	fmt.Println("\nConfiguration\n ")
+	pcmd.Println(cmd, "\nConfiguration\n ")
 
 	var entries [][]string
 	titleRow = []string{"Name", "Value"}
@@ -281,7 +282,7 @@ func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	fmt.Println("Starting Kafka Producer. ^C to exit")
+	pcmd.Println(cmd, "Starting Kafka Producer. ^C to exit")
 
 	producer, err := NewSaramaProducer(c.config)
 	if err != nil {
@@ -326,7 +327,7 @@ func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {
 
 		_, offset, err := producer.SendMessage(msg)
 		if err != nil {
-			fmt.Printf("Failed to produce offset %d: %s\n", offset, err)
+			pcmd.Printf(cmd, "Failed to produce offset %d: %s\n", offset, err)
 		}
 
 		// Reset key prior to reuse
@@ -353,19 +354,19 @@ func (c *topicCommand) consume(cmd *cobra.Command, args []string) error {
 	signal.Notify(signals, os.Interrupt)
 	go func() {
 		<-signals
-		fmt.Println("Stopping Consumer.")
+		pcmd.Println(cmd, "Stopping Consumer.")
 		consumer.Close()
 	}()
 
 	go func() {
 		for err := range consumer.Errors() {
-			fmt.Println("ERROR", err)
+			pcmd.Println(cmd, "ERROR", err)
 		}
 	}()
 
-	fmt.Println("Starting Kafka Consumer. ^C to exit")
+	pcmd.Println(cmd, "Starting Kafka Consumer. ^C to exit")
 
-	err = consumer.Consume(context.Background(), []string{args[0]}, &GroupHandler{})
+	err = consumer.Consume(context.Background(), []string{args[0]}, &GroupHandler{Out: cmd.OutOrStdout()})
 
 	return errors.HandleCommon(err, cmd)
 }
