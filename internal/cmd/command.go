@@ -22,7 +22,7 @@ import (
 	configs "github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	apikeys "github.com/confluentinc/cli/internal/pkg/sdk/apikey"
-	//connects "github.com/confluentinc/cli/pkg/sdk/connect"
+	//connects "github.com/confluentinc/cli/internal/pkg/sdk/connect"
 	environments "github.com/confluentinc/cli/internal/pkg/sdk/environment"
 	kafkas "github.com/confluentinc/cli/internal/pkg/sdk/kafka"
 	ksqls "github.com/confluentinc/cli/internal/pkg/sdk/ksql"
@@ -65,12 +65,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	conn.Hidden = true // The config/context feature isn't finished yet, so let's hide it
 	cli.AddCommand(conn)
 
-	conn, err = completion.NewCompletionCmd(cli, cliName)
-	if err != nil {
-		logger.Log("msg", err)
-	} else {
-		cli.AddCommand(conn)
-	}
+	cli.AddCommand(completion.NewCompletionCmd(cli, cliName))
 	cli.AddCommand(update.New(cliName, cfg, ver, prompt, updateClient))
 
 	cli.AddCommand(auth.New(prerunner, cfg)...)

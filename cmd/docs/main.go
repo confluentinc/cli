@@ -15,12 +15,20 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
+var (
+	// Injected from linker flags like `go build -ldflags "-X main.cliName=$VERSION"`
+	cliName = "confluent"
+)
+
 // See https://github.com/spf13/cobra/blob/master/doc/rest_docs.md
 func main() {
 	emptyStr := func(filename string) string { return "" }
 	sphinxRef := func(name, ref string) string { return fmt.Sprintf(":ref:`%s`", ref) }
-	confluent := cmd.NewConfluentCommand(&config.Config{}, &version.Version{}, log.New())
-	err := doc.GenReSTTreeCustom(confluent, "./docs", emptyStr, sphinxRef)
+	confluent, err := cmd.NewConfluentCommand(cliName, &config.Config{}, &version.Version{}, log.New())
+	if err != nil {
+		panic(err)
+	}
+	err = doc.GenReSTTreeCustom(confluent, "./docs", emptyStr, sphinxRef)
 	if err != nil {
 		panic(err)
 	}
