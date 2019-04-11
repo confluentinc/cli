@@ -1,7 +1,10 @@
+SHELL           := /bin/bash
 ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
 GIT_REMOTE_NAME ?= origin
 MASTER_BRANCH   ?= master
 RELEASE_BRANCH  ?= master
+
+DOCS_BRANCH     ?= master
 
 include ./semver.mk
 
@@ -85,8 +88,37 @@ publish: dist-ccloud
 
 .PHONY: docs
 docs:
-	go run -ldflags '-X main.cliName=confluent' cmd/docs/main.go
-	go run -ldflags '-X main.cliName=ccloud'    cmd/docs/main.go
+	go run cmd/docs/main.go -ldflags '-X main.cliName=confluent'
+	go run cmd/docs/main.go -ldflags '-X main.cliName=ccloud'
+
+.PHONY: publish-docs
+publish-docs: docs
+	@TMP_DIR=$$(mktemp -d)/docs || exit 1; \
+		git clone git@github.com:confluentinc/docs.git $${TMP_DIR}; \
+		(cd $${TMP_DIR} || exit 1) && git checkout -b cli-$(VERSION) $(DOCS_BRANCH) && (cd - || exit 1); \
+		make publish-docs-internal BASE_DIR=$${TMP_DIR} CLI_NAME=confluent; \
+		make publish-docs-internal BASE_DIR=$${TMP_DIR} CLI_NAME=ccloud; \
+		cd $${TMP_DIR} || exit 1; \
+		git add . ; \
+		git commit -m "chore: updating CLI docs for $(VERSION)"; \
+		cd - || exit 1; \
+		hub pull-request --help; \
+		rm -rf $${TMP_DIR}
+
+.PHONY: publish-docs-internal
+publish-docs-internal:
+ifndef BASE_DIR
+	$(error BASE_DIR is not set)
+endif
+ifeq (ccloud,$(CLI_NAME))
+	$(eval DOCS_DIR := cloud/cli/command-reference)
+else ifeq (confluent,$(CLI_NAME))
+	$(eval DOCS_DIR := cli/command-reference)
+else
+	$(error CLI_NAME is not set correctly - must be one of "confluent" or "ccloud")
+endif
+	rm $(BASE_DIR)/$(DOCS_DIR)/*.rst
+	cp $(GOPATH)/src/github.com/confluentinc/cli/docs/$(CLI_NAME)/*.rst $(BASE_DIR)/$(DOCS_DIR)
 
 .PHONY: clean-docs
 clean-docs:
