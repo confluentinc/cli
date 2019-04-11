@@ -9,11 +9,12 @@ import (
 	"unicode"
 
 	"github.com/atrox/homedir"
+	"github.com/hashicorp/go-version"
+	"github.com/jonboulle/clockwork"
+
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/update/io"
-	"github.com/hashicorp/go-version"
-	"github.com/jonboulle/clockwork"
 )
 
 // Client lets you check for updated application binaries and install them if desired

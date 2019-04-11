@@ -9,9 +9,10 @@ import (
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	ksqlv1 "github.com/confluentinc/ccloudapis/ksql/v1"
+	"github.com/confluentinc/go-printer"
+
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/go-printer"
 )
 
 var (
