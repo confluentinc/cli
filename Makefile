@@ -89,8 +89,8 @@ publish: dist-ccloud
 
 .PHONY: docs
 docs:
-	@GO111MODULE=on go run cmd/docs/main.go -ldflags '-X main.cliName=confluent'
-	@GO111MODULE=on go run cmd/docs/main.go -ldflags '-X main.cliName=ccloud'
+	@GO111MODULE=on go run -ldflags '-X main.cliName=confluent' cmd/docs/main.go
+	@GO111MODULE=on go run -ldflags '-X main.cliName=ccloud' cmd/docs/main.go
 
 .PHONY: publish-docs
 publish-docs: docs
@@ -99,8 +99,8 @@ publish-docs: docs
 		cd $${TMP_DIR} || exit 1; \
 		git checkout -b cli-$(VERSION) $(DOCS_BRANCH); \
 		cd - || exit 1; \
-		make publish-docs-internal BASE_DIR=$${TMP_DIR} CLI_NAME=confluent; \
-		make publish-docs-internal BASE_DIR=$${TMP_DIR} CLI_NAME=ccloud; \
+		make publish-docs-internal BASE_DIR=$${TMP_DIR} CLI_NAME=confluent || exit 1; \
+		make publish-docs-internal BASE_DIR=$${TMP_DIR} CLI_NAME=ccloud || exit 1; \
 		cd $${TMP_DIR} || exit 1; \
 		git add . ; \
 		git commit -m "chore: updating CLI docs for $(VERSION)"; \
