@@ -103,7 +103,6 @@ publish-docs: docs
 		git add . ; \
 		git commit -m "chore: updating CLI docs for $(VERSION)"; \
 		git status; \
-		git show; \
 		hub pull-request --help; \
 		cd - || exit 1; \
 		rm -rf $${TMP_DIR}
