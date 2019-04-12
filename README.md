@@ -55,8 +55,28 @@ $ dist/confluent/$(go env GOOS)_$(go env GOARCH)/confluent -h # for on-prem Conf
 
 ## Developing
 
-This repo requires golang 1.11 and follows the basic
-[golang standard project layout](https://github.com/golang-standards/project-layout).
+This repo requires golang 1.12. We recommend you use `goenv` to manage your go versions.
+There's a `.go-version` file in this repo with the exact version we use (and test against in CI).
+
+### Go Version
+
+Fortunately `goenv` supports 1.12 already. Unfortunately this is only in their 2.0 branch which
+is still in beta, meaning that its not in brew yet. So we have to build from source.
+
+If you already have it via brew, uninstall it first:
+
+    brew uninstall goenv
+
+Now clone the repo and update your shell profile:
+
+    git clone https://github.com/syndbg/goenv.git $GOPATH/src/github.com/syndbg/goenv
+    echo 'export GOENV_ROOT="$GOPATH/src/github.com/syndbg/goenv"' >> ~/.bash_profile
+    echo 'export PATH="$GOENV_ROOT/bin:$PATH"' >> ~/.bash_profile
+    echo 'eval "$(goenv init -)"' >> ~/.bash_profile
+
+### File Layout
+
+This repo follows the [golang standard project layout](https://github.com/golang-standards/project-layout).
 
 Here's the basic file structure:
 
