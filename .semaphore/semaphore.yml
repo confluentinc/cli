@@ -31,4 +31,5 @@ blocks:
           - make deps
           - make test
           - bash <(curl -s https://codecov.io/bash)
+          - make publish-docs
           - make release-ci

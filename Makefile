@@ -102,8 +102,10 @@ publish-docs: docs
 		cd $${TMP_DIR} || exit 1; \
 		git add . ; \
 		git commit -m "chore: updating CLI docs for $(VERSION)"; \
-		cd - || exit 1; \
+		git status; \
+		git show; \
 		hub pull-request --help; \
+		cd - || exit 1; \
 		rm -rf $${TMP_DIR}
 
 .PHONY: publish-docs-internal
