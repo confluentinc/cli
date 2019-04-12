@@ -30,6 +30,6 @@ blocks:
           - checkout
           - make deps
           - make test
-          - bash <(curl -s https://codecov.io/bash)
           - make publish-docs
+          - bash <(curl -s https://codecov.io/bash)
           - make release-ci
