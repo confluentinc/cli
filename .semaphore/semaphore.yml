@@ -29,8 +29,7 @@ blocks:
         - commands:
           - checkout
           - make deps
-#          - make test
-          - make build
+          - make test
           - make publish-docs
           - bash <(curl -s https://codecov.io/bash)
           - make release-ci

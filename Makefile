@@ -89,8 +89,8 @@ publish: dist-ccloud
 
 .PHONY: docs
 docs:
-	go run cmd/docs/main.go -ldflags '-X main.cliName=confluent'
-	go run cmd/docs/main.go -ldflags '-X main.cliName=ccloud'
+	@GO111MODULE=on go run cmd/docs/main.go -ldflags '-X main.cliName=confluent'
+	@GO111MODULE=on go run cmd/docs/main.go -ldflags '-X main.cliName=ccloud'
 
 .PHONY: publish-docs
 publish-docs: docs
