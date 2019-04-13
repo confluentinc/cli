@@ -105,7 +105,7 @@ publish-docs: docs
 		git add . ; \
 		git commit -m "chore: updating CLI docs for $(VERSION)"; \
 		git status; \
-		hub pull-request --help; \
+		hub pull-request --help || exit 1; \
 		cd - || exit 1; \
 		rm -rf $${TMP_DIR}
 
