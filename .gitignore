@@ -1,8 +1,7 @@
 bin/
 dist/
 
-# TODO: figure out how to integrate our CLI command reference docs into https://github.com/confluentinc/docs
-# We don't want them stored in this repo, as per Ewen (https://confluent.slack.com/archives/C9Y6NAM6X/p1553233699097000?thread_ts=1553219127.096100&cid=C9Y6NAM6X)
+# We auto-publish these to github.com/confluentinc/docs via CI and don't want them stored in this repo
 docs/**/*.rst
 
 .semaphore-cache/

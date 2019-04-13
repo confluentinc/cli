@@ -33,10 +33,15 @@ import (
 func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Version, logger *log.Logger) (*cobra.Command, error) {
 	cli := &cobra.Command{
 		Use:               cliName,
-		Short:             "Confluent Cloud CLI",
-		Long:              "Manage your Confluent Cloud",
 		Version:           ver.Version,
 		DisableAutoGenTag: true,
+	}
+	if cliName == "ccloud" {
+		cli.Short = "Confluent Cloud CLI"
+		cli.Long = "Manage your Confluent Cloud"
+	} else {
+		cli.Short = "Confluent CLI"
+		cli.Long = "Manage your Confluent Platform"
 	}
 	cli.PersistentFlags().CountP("verbose", "v",
 		"increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace)")
