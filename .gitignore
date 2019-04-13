@@ -32,7 +32,7 @@ terraform.d
 .netrc
 
 coverage.txt
-ccloud
+/ccloud
 *.sw*
 .vscode
 
