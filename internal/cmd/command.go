@@ -77,7 +77,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		cli.AddCommand(apikey.New(prerunner, cfg, apikeys.New(client, logger)))
 		cli.AddCommand(kafka.New(prerunner, cfg, kafkas.New(client, logger)))
 
-		conn = ksql.New(prerunner, cfg, ksqls.New(client, logger))
+		conn = ksql.New(prerunner, cfg, ksqls.New(client, logger), kafkas.New(client, logger), users.New(client, logger))
 		conn.Hidden = true // The ksql feature isn't finished yet, so let's hide it
 		cli.AddCommand(conn)
 
