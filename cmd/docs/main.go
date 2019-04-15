@@ -1,7 +1,3 @@
-// +build docs
-
-// Above is a hack to avoid having to upgrade the CLI to go 1.12 in CI for a docs dependency.
-// Without this, `make test` will include this file in $(go list ./...) and fail the tests.
 package main
 
 import (
