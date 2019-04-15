@@ -11,10 +11,11 @@ import (
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
+	"github.com/confluentinc/go-printer"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/log"
-	"github.com/confluentinc/go-printer"
 )
 
 type command struct {
@@ -31,11 +32,12 @@ var (
 )
 
 // New returns the Cobra command for API Key.
-func New(config *config.Config, client ccloud.APIKey) *cobra.Command {
+func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.APIKey) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
-			Use:   "api-key",
-			Short: "Manage API keys",
+			Use:               "api-key",
+			Short:             "Manage API keys",
+			PersistentPreRunE: prerunner.Authenticated(),
 		},
 		config: config,
 		client: client,
@@ -45,16 +47,6 @@ func New(config *config.Config, client ccloud.APIKey) *cobra.Command {
 }
 
 func (c *command) init() {
-	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		if err := log.SetLoggingVerbosity(cmd, c.config.Logger); err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-		if err := c.config.CheckLogin(); err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-		return nil
-	}
-
 	c.AddCommand(&cobra.Command{
 		Use:   "list",
 		Short: "List API keys",
@@ -155,7 +147,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	fmt.Println("Please save the API Key and Secret. THIS IS THE ONLY CHANCE YOU HAVE!")
+	pcmd.Println(cmd, "Please save the API Key and Secret. THIS IS THE ONLY CHANCE YOU HAVE!")
 	return printer.RenderTableOut(userKey, createFields, createRenames, os.Stdout)
 }
 

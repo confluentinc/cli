@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/Shopify/sarama"
@@ -32,8 +33,10 @@ func NewSaramaProducer(cfg *config.Config) (sarama.SyncProducer, error) {
 	return sarama.NewSyncProducer(strings.Split(kafka.Bootstrap, ","), saramaConf(kafka))
 }
 
-// ConsumerGroupHandler instances are used to handle individual topic-partition claims.
-type GroupHandler struct{}
+// GroupHandler instances are used to handle individual topic-partition claims.
+type GroupHandler struct{
+	Out io.Writer
+}
 
 // Setup is run at the beginning of a new session, before ConsumeClaim.
 func (*GroupHandler) Setup(_ sarama.ConsumerGroupSession) error { return nil }
@@ -45,9 +48,12 @@ func (*GroupHandler) Cleanup(_ sarama.ConsumerGroupSession) error { return nil }
 // ConsumeClaim must start a consumer loop of ConsumerGroupClaim's Messages().
 // Once the Messages() channel is closed, the Handler must finish its processing
 // loop and exit.
-func (h GroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
+func (h *GroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	for msg := range claim.Messages() {
-		fmt.Println(string(msg.Value))
+		_, err := fmt.Fprintln(h.Out, string(msg.Value))
+		if err != nil {
+			return err
+		}
 		sess.MarkMessage(msg, "")
 	}
 	return nil

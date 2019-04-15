@@ -1,16 +1,14 @@
 package main
 
 import (
-	"os"
 	"testing"
 
-	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/cli/internal/cmd"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/log"
-	"github.com/confluentinc/cli/internal/pkg/terminal"
 	cliVersion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -19,18 +17,17 @@ func TestAddCommands_ShownInHelpUsage_CCloud(t *testing.T) {
 
 	logger := log.New()
 	cfg := config.New(&config.Config{
-		Logger: logger,
+		CLIName: "ccloud",
+		Logger:  logger,
 	})
+	req.NoError(cfg.Load())
 
 	version := cliVersion.NewVersion("1.2.3", "abc1234", "01/23/45", "CI")
 
-	root := cmd.NewConfluentCommand(cfg, version, logger, "ccloud")
-	prompt := terminal.NewPrompt(os.Stdin)
-	root.PersistentPreRun = func(cmd *cobra.Command, args []string) {
-		prompt.SetOutput(cmd.OutOrStderr())
-	}
+	root, err := cmd.NewConfluentCommand("ccloud", cfg, version, logger)
+	req.NoError(err)
 
-	output, err := terminal.ExecuteCommand(root, "help")
+	output, err := pcmd.ExecuteCommand(root, "help")
 	req.NoError(err)
 	req.Contains(output, "kafka")
 	//Hidden: req.Contains(output, "ksql")
@@ -49,18 +46,17 @@ func TestAddCommands_ShownInHelpUsage_Confluent(t *testing.T) {
 
 	logger := log.New()
 	cfg := config.New(&config.Config{
-		Logger: logger,
+		CLIName: "confluent",
+		Logger:  logger,
 	})
+	req.NoError(cfg.Load())
 
 	version := cliVersion.NewVersion("1.2.3", "abc1234", "01/23/45", "CI")
 
-	root := cmd.NewConfluentCommand(cfg, version, logger, "confluent")
-	prompt := terminal.NewPrompt(os.Stdin)
-	root.PersistentPreRun = func(cmd *cobra.Command, args []string) {
-		prompt.SetOutput(cmd.OutOrStderr())
-	}
+	root, err := cmd.NewConfluentCommand("confluent", cfg, version, logger)
+	req.NoError(err)
 
-	output, err := terminal.ExecuteCommand(root, "help")
+	output, err := pcmd.ExecuteCommand(root, "help")
 	req.NoError(err)
 	req.NotContains(output, "kafka")
 	req.NotContains(output, "ksql")

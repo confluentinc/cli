@@ -5,8 +5,6 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
-
-	"github.com/confluentinc/cli/internal/pkg/terminal"
 )
 
 type Version struct {
@@ -31,9 +29,9 @@ func (v *Version) IsReleased() bool {
 	return v.Version != "0.0.0" && !strings.Contains(v.Version, "dirty") && !strings.Contains(v.Version, "-g")
 }
 
-// PrintVersion prints the version to the prompt in a standardized way
-func (v *Version) Print(prompt terminal.Prompt) {
-	_, _ = prompt.Printf(`ccloud - Confluent Cloud CLI
+// String returns the version in a standardized format
+func (v *Version) String() string {
+	return fmt.Sprintf(`ccloud - Confluent Cloud CLI
 
 Version:     %s
 Git Ref:     %s

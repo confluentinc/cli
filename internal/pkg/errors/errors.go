@@ -65,3 +65,7 @@ func Wrapf(err error, fmt string, args ...interface{}) error {
 func New(msg string) error {
 	return errors.New(msg)
 }
+
+func Errorf(fmt string, args ...interface{}) error {
+	return errors.Errorf(fmt, args...)
+}

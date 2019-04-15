@@ -5,18 +5,18 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/confluentinc/cli/internal/pkg/terminal"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
 func TestCompletionBash(t *testing.T) {
 	req := require.New(t)
 
-	root, prompt := terminal.BuildRootCommand()
-	cmd, err := NewCompletionCmd(root, prompt, "ccloud")
+	root := pcmd.BuildRootCommand()
+	cmd, err := NewCompletionCmd(root,"ccloud")
 	req.NoError(err)
 	root.AddCommand(cmd)
 
-	output, err := terminal.ExecuteCommand(root, "completion", "bash")
+	output, err := pcmd.ExecuteCommand(root, "completion", "bash")
 	req.NoError(err)
 	req.Contains(output, "bash completion for")
 }
@@ -24,12 +24,12 @@ func TestCompletionBash(t *testing.T) {
 func TestCompletionZsh(t *testing.T) {
 	req := require.New(t)
 
-	root, prompt := terminal.BuildRootCommand()
-	cmd, err := NewCompletionCmd(root, prompt, "ccloud")
+	root := pcmd.BuildRootCommand()
+	cmd, err := NewCompletionCmd(root, "ccloud")
 	req.NoError(err)
 	root.AddCommand(cmd)
 
-	output, err := terminal.ExecuteCommand(root, "completion", "zsh")
+	output, err := pcmd.ExecuteCommand(root, "completion", "zsh")
 	req.Error(err)
 	req.Contains(output, "Error: unsupported shell type \"zsh\"")
 }
@@ -37,12 +37,12 @@ func TestCompletionZsh(t *testing.T) {
 func TestCompletionUnknown(t *testing.T) {
 	req := require.New(t)
 
-	root, prompt := terminal.BuildRootCommand()
-	cmd, err := NewCompletionCmd(root, prompt, "ccloud")
+	root := pcmd.BuildRootCommand()
+	cmd, err := NewCompletionCmd(root, "ccloud")
 	req.NoError(err)
 	root.AddCommand(cmd)
 
-	output, err := terminal.ExecuteCommand(root, "completion", "newsh")
+	output, err := pcmd.ExecuteCommand(root, "completion", "newsh")
 	req.Error(err)
 	req.Contains(output, "Error: unsupported shell type \"newsh\"")
 }
@@ -50,12 +50,12 @@ func TestCompletionUnknown(t *testing.T) {
 func TestCompletionNone(t *testing.T) {
 	req := require.New(t)
 
-	root, prompt := terminal.BuildRootCommand()
-	cmd, err := NewCompletionCmd(root, prompt, "ccloud")
+	root := pcmd.BuildRootCommand()
+	cmd, err := NewCompletionCmd(root, "ccloud")
 	req.NoError(err)
 	root.AddCommand(cmd)
 
-	output, err := terminal.ExecuteCommand(root, "completion")
+	output, err := pcmd.ExecuteCommand(root, "completion")
 	req.Error(err)
 	req.Contains(output, "Error: accepts 1 arg(s), received 0")
 }

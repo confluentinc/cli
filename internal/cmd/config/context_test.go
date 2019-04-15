@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/cli/internal/pkg/terminal"
 )
 
 var (
@@ -60,9 +60,9 @@ func TestContext(t *testing.T) {
 func run(args ...string) (string, error) {
 	cfg := config.New()
 	cfg.Filename = filename
-	// The config may not exist yet, but we don't care
+	// The `filename` config doesn't exist; we're creating it so ignore the error
 	_ = cfg.Load()
 	root := New(cfg)
 
-	return terminal.ExecuteCommand(root, args...)
+	return pcmd.ExecuteCommand(root, args...)
 }

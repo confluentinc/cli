@@ -2,17 +2,17 @@ package ksql
 
 import (
 	"context"
-	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	ksqlv1 "github.com/confluentinc/ccloudapis/ksql/v1"
+	"github.com/confluentinc/go-printer"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/log"
-	"github.com/confluentinc/go-printer"
 )
 
 var (
@@ -43,16 +43,6 @@ func NewClusterCommand(config *config.Config, client ccloud.KSQL) *cobra.Command
 }
 
 func (c *clusterCommand) init() {
-	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		if err := log.SetLoggingVerbosity(cmd, c.config.Logger); err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-		if err := c.config.CheckLogin(); err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-		return nil
-	}
-
 	c.AddCommand(&cobra.Command{
 		Use:   "list",
 		Short: "List KSQL apps",
@@ -145,7 +135,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	fmt.Printf("The ksql app %s has been deleted.\n", args[0])
+	pcmd.Printf(cmd, "The ksql app %s has been deleted.\n", args[0])
 	return nil
 }
 

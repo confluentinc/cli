@@ -1,8 +1,7 @@
-package terminal
+package cmd
 
 import (
 	"bytes"
-	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -25,11 +24,6 @@ func ExecuteCommandC(root *cobra.Command, args ...string) (c *cobra.Command, out
 }
 
 // BuildRootCommand creates a new root command for testing
-func BuildRootCommand() (*cobra.Command, Prompt) {
-	root := &cobra.Command{}
-	prompt := NewPrompt(os.Stdin)
-	root.PersistentPreRun = func(cmd *cobra.Command, args []string) {
-		prompt.SetOutput(cmd.OutOrStderr())
-	}
-	return root, prompt
+func BuildRootCommand() *cobra.Command {
+	return &cobra.Command{}
 }

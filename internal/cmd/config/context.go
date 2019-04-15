@@ -1,13 +1,13 @@
 package config
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/go-printer"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/go-printer"
 )
 
 type contextCommand struct {
@@ -97,7 +97,7 @@ func (c *contextCommand) use(cmd *cobra.Command, args []string) error {
 }
 
 func (c *contextCommand) current(cmd *cobra.Command, args []string) error {
-	fmt.Fprintln(cmd.OutOrStdout(), c.config.CurrentContext)
+	pcmd.Println(cmd, c.config.CurrentContext)
 	return nil
 }
 

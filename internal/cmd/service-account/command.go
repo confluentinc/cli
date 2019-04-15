@@ -9,10 +9,11 @@ import (
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
+	"github.com/confluentinc/go-printer"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/log"
-	"github.com/confluentinc/go-printer"
 )
 
 type command struct {
@@ -32,11 +33,12 @@ const nameLength = 32
 const descriptionLength = 128
 
 // New returns the Cobra command for service accounts.
-func New(config *config.Config, client ccloud.User) *cobra.Command {
+func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.User) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
-			Use:   "service-account",
-			Short: "Manage service accounts",
+			Use:               "service-account",
+			Short:             "Manage service accounts",
+			PersistentPreRunE: prerunner.Authenticated(),
 		},
 		config: config,
 		client: client,
@@ -46,16 +48,6 @@ func New(config *config.Config, client ccloud.User) *cobra.Command {
 }
 
 func (c *command) init() {
-	c.Command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		if err := log.SetLoggingVerbosity(cmd, c.config.Logger); err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-		if err := c.config.CheckLogin(); err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-		return nil
-	}
-
 	c.AddCommand(&cobra.Command{
 		Use:   "list",
 		Short: "List service accounts",

@@ -5,6 +5,8 @@ require (
 	github.com/Shopify/sarama v1.20.1
 	github.com/Shopify/toxiproxy v2.1.3+incompatible // indirect
 	github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da
+	github.com/atrox/homedir v1.0.0
+	github.com/aws/aws-sdk-go v1.15.64
 	github.com/codyaray/go-editor v0.3.0
 	github.com/codyaray/go-printer v0.9.0
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
@@ -28,7 +30,10 @@ require (
 	github.com/hashicorp/go-hclog v0.0.0-20180910232447-e45cbeb79f04
 	github.com/hashicorp/go-immutable-radix v1.0.0 // indirect
 	github.com/hashicorp/go-multierror v1.0.0
+	github.com/hashicorp/go-version v1.1.0
+	github.com/jonboulle/clockwork v0.1.0
 	github.com/kr/pretty v0.1.0 // indirect
+	github.com/mattn/go-isatty v0.0.4
 	github.com/mattn/go-runewidth v0.0.3 // indirect
 	github.com/mitchellh/go-homedir v1.0.0
 	github.com/olekukonko/tablewriter v0.0.0-20180912035003-be2c049b30cc // indirect

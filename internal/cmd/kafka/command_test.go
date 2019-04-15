@@ -13,6 +13,7 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go/mock"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
+
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -418,7 +419,7 @@ func TestDefaults(t *testing.T) {
 /*************** TEST command_cluster ***************/
 // TODO: do this for all commands/subcommands... and for all common error messages
 func Test_HandleError_NotLoggedIn(t *testing.T) {
-	cmd := New(conf, &mock.Kafka{
+	cmd := New(&cliMock.Commander{}, conf, &mock.Kafka{
 		ListFunc: func(ctx context.Context, cluster *kafkav1.KafkaCluster) ([]*kafkav1.KafkaCluster, error) {
 			return nil, errors.ErrUnauthorized
 		},
@@ -437,7 +438,7 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 
 /*************** TEST setup/helpers ***************/
 func NewCMD(expect chan interface{}) *cobra.Command {
-	cmd := New(conf, cliMock.NewKafkaMock(expect))
+	cmd := New(&cliMock.Commander{}, conf, cliMock.NewKafkaMock(expect))
 	cmd.PersistentFlags().CountP("verbose", "v", "increase output verbosity")
 
 	return cmd

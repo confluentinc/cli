@@ -11,17 +11,15 @@ import (
 
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	"github.com/confluentinc/ccloudapis/org/v1"
+
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/metric"
 )
 
 const (
-	defaultConfigFile = "~/.ccloud/config.json"
+	defaultConfigFileFmt = "~/.%s/config.json"
 )
-
-// ErrNoConfig means that no configuration exists.
-var ErrNoConfig = fmt.Errorf("no config file exists")
 
 // AuthConfig represents an authenticated user.
 type AuthConfig struct {
@@ -61,6 +59,7 @@ type Context struct {
 
 // Config represents the CLI configuration.
 type Config struct {
+	CLIName        string                 `json:"-" hcl:"-"`
 	MetricSink     metric.Sink            `json:"-" hcl:"-"`
 	Logger         *log.Logger            `json:"-" hcl:"-"`
 	Filename       string                 `json:"-" hcl:"-"`
@@ -81,6 +80,10 @@ func New(config ...*Config) *Config {
 	} else {
 		c = config[0]
 	}
+	if c.CLIName == "" {
+		// HACK: this is a workaround while we're building multiple binaries off one codebase
+		c.CLIName = "confluent"
+	}
 	c.Platforms = map[string]*Platform{}
 	c.Credentials = map[string]*Credential{}
 	c.Contexts = map[string]*Context{}
@@ -96,7 +99,11 @@ func (c *Config) Load() error {
 	input, err := ioutil.ReadFile(filename)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return ErrNoConfig
+			// Save a default version if none exists yet
+			if err := c.Save(); err != nil {
+				return errors.Wrapf(err, "unable to create config: %v", err)
+			}
+			return nil
 		}
 		return errors.Wrapf(err, "unable to read config file: %s", filename)
 	}
@@ -187,7 +194,7 @@ func (c *Config) CheckLogin() error {
 
 func (c *Config) getFilename() (string, error) {
 	if c.Filename == "" {
-		c.Filename = defaultConfigFile
+		c.Filename = fmt.Sprintf(defaultConfigFileFmt, c.CLIName)
 	}
 	filename, err := homedir.Expand(c.Filename)
 	if err != nil {
