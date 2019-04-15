@@ -83,7 +83,7 @@ func (c *command) init() {
 func (c *command) refreshEnvList(cmd *cobra.Command) error {
 	environments, err := c.client.List(context.Background(), &orgv1.Account{})
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	c.config.Auth.Accounts = environments
@@ -126,7 +126,10 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 func (c *command) use(cmd *cobra.Command, args []string) error {
 	id := args[0]
 
-	c.refreshEnvList(cmd)
+	err := c.refreshEnvList(cmd)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
 
 	for _, acc := range c.config.Auth.Accounts {
 		if acc.Id == id {
