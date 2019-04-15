@@ -80,6 +80,30 @@ func (c *command) init() {
 	})
 }
 
+func (c *command) refreshEnvList(cmd *cobra.Command) error {
+	environments, err := c.client.List(context.Background(), &orgv1.Account{})
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	c.config.Auth.Accounts = environments
+
+	// If current env has gone away, reset active env to 0th env
+	hasGoodEnv := false
+	if c.config.Auth.Account != nil {
+		for _, acc := range c.config.Auth.Accounts {
+			if acc.Id == c.config.Auth.Account.Id {
+				hasGoodEnv = true
+			}
+		}
+	}
+	if !hasGoodEnv {
+		c.config.Auth.Account = c.config.Auth.Accounts[0]
+	}
+
+	return nil
+}
+
 func (c *command) list(cmd *cobra.Command, args []string) error {
 	environments, err := c.client.List(context.Background(), &orgv1.Account{})
 	if err != nil {
@@ -101,6 +125,8 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 
 func (c *command) use(cmd *cobra.Command, args []string) error {
 	id := args[0]
+
+	c.refreshEnvList(cmd)
 
 	for _, acc := range c.config.Auth.Accounts {
 		if acc.Id == id {
