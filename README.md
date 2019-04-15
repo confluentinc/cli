@@ -71,3 +71,36 @@ Things under `internal/cmd` are commands, things under `internal/pkg` are packag
 When you add a new command or resource, assuming its already in the SDK, you generally just need to create
 * `internal/cmd/<command>/<command>.go` (and test)
 * `internal/pkg/sdk/<resource>/<resource>.go` (and test)
+
+## Testing
+
+The CLI is tested with a combination of unit tests and integration tests
+(backed by mocks). These are both contained within this repo.
+
+We also have end-to-end system tests for
+* ccloud-only functionality - [cc-system-tests](https://github.com/confluentinc/cc-system-tests/blob/master/test/cli_test.go)
+* on-prem-only functionality - [muckrake](https://github.com/confluentinc/muckrake) (TODO: fix link to CLI tests)
+
+Unit tests exist in `_test.go` files alongside the main source code files.
+
+### Integration Tests
+
+The [./test](./test) directory contains the integration tests. These build a CLI
+binary and invoke commands on it. These CLI integration tests roughly follow this
+[pattern](http://lucapette.me/writing-integration-tests-for-a-go-cli-application):
+
+1. table tests for quickly testing a variety of CLI commands
+1. golden files are expected output fixtures for spec compliance testing
+1. http test server for stubbing the Confluent Platform Control Plane API
+
+You can run just the integration tests with
+
+    make test TEST_ARGS="./test/... -v"
+
+You can update the golden files from the current output with
+
+    make test TEST_ARGS="./test/... -update"
+
+You can force rebuilding the CLI even if it already exists in `dist` with
+
+    make test TEST_ARGS="./test/... -update -rebuild -v"
