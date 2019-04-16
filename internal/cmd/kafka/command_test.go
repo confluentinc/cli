@@ -462,8 +462,7 @@ func initContext(cfg *config.Config) {
 	name := fmt.Sprintf("login-%s-%s", user.User.Email, cfg.AuthURL)
 
 	cfg.Platforms[name] = &config.Platform{
-		Server:        cfg.AuthURL,
-		KafkaClusters: map[string]config.KafkaClusterConfig{name: {}},
+		Server: cfg.AuthURL,
 	}
 
 	cfg.Credentials[name] = &config.Credential{
@@ -471,9 +470,10 @@ func initContext(cfg *config.Config) {
 	}
 
 	cfg.Contexts[name] = &config.Context{
-		Platform:   name,
-		Credential: name,
-		Kafka:      name,
+		Platform:      name,
+		Credential:    name,
+		KafkaClusters: map[string]*config.KafkaClusterConfig{name: {}},
+		Kafka:         name,
 	}
 
 	cfg.CurrentContext = name

@@ -172,10 +172,10 @@ func (s *CLITestSuite) runTest(tt CLITest, loginURL, kafkaAPIEndpoint string) {
 			req.NoError(err)
 			ctx, err := cfg.Context()
 			req.NoError(err)
-			cfg.Platforms[ctx.Platform].KafkaClusters[ctx.Kafka] = config.KafkaClusterConfig{
+			ctx.KafkaClusters[ctx.Kafka] = &config.KafkaClusterConfig{
 				APIKey:      "MYKEY",
-				APISecret:   "MYSECRET",
-				APIEndpoint: kafkaAPIEndpoint,
+				APIKeys:     map[string]*config.APIKeyPair{"MYKEY": {Key: "MYKEY", Secret: "MYSECRET"}},
+				APIEndpoint: serveKafkaAPI(t).URL,
 			}
 			err = cfg.Save()
 			req.NoError(err)

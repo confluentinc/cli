@@ -51,13 +51,13 @@ func (h *GroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sara
 }
 
 // saramaConf converts KafkaClusterConfig to sarama.Config
-func saramaConf(kafka config.KafkaClusterConfig) *sarama.Config {
+func saramaConf(kafka *config.KafkaClusterConfig) *sarama.Config {
 	saramaConf := sarama.NewConfig()
 	saramaConf.Version = sarama.V1_1_0_0
 	saramaConf.Net.TLS.Enable = true
 	saramaConf.Net.SASL.Enable = true
 	saramaConf.Net.SASL.User = kafka.APIKey
-	saramaConf.Net.SASL.Password = kafka.APISecret
+	saramaConf.Net.SASL.Password = kafka.APIKeys[kafka.APIKey].Secret
 
 	saramaConf.Producer.Return.Successes = true
 	saramaConf.Producer.Return.Errors = true

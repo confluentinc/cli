@@ -161,26 +161,38 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 			return errors.HandleCommon(err, cmd)
 		}
 
-		environment, err := pcmd.GetEnvironment(cmd, c.config)
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
+		if cfg.KafkaClusters == nil {
+			cfg.KafkaClusters = map[string]*config.KafkaClusterConfig{}
+		}
+		kcc, found := cfg.KafkaClusters[clusterID]
+		if !found {
+			environment, err := pcmd.GetEnvironment(cmd, c.config)
+			if err != nil {
+				return errors.HandleCommon(err, cmd)
+			}
+
+			req := &kafkav1.KafkaCluster{AccountId: environment, Id: clusterID}
+			kc, err := c.kafka.Describe(context.Background(), req)
+			if err != nil {
+				return errors.HandleCommon(err, cmd)
+			}
+
+			kcc = &config.KafkaClusterConfig{
+				// TODO: registering bootstrap and APIEndpoint is kind of a bad side effect of using an API key
+				// These are needed even if no API key is created, such as for managing topics via kafka-api
+				Bootstrap:   strings.TrimPrefix(kc.Endpoint, "SASL_SSL://"),
+				APIEndpoint: kc.ApiEndpoint,
+				APIKey:      userKey.Key,
+				APIKeys:     make(map[string]*config.APIKeyPair),
+			}
+
+			cfg.KafkaClusters[clusterID] = kcc
+		}
+		kcc.APIKeys[userKey.Key] = &config.APIKeyPair{
+			Key:      userKey.Key,
+			Secret:   userKey.Secret,
 		}
 
-		req := &kafkav1.KafkaCluster{AccountId: environment, Id: clusterID}
-		kc, err := c.kafka.Describe(context.Background(), req)
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-
-		if c.config.Platforms[cfg.Platform].KafkaClusters == nil {
-			c.config.Platforms[cfg.Platform].KafkaClusters = map[string]config.KafkaClusterConfig{}
-		}
-		c.config.Platforms[cfg.Platform].KafkaClusters[clusterID] = config.KafkaClusterConfig{
-			Bootstrap:   strings.TrimPrefix(kc.Endpoint, "SASL_SSL://"),
-			APIEndpoint: kc.ApiEndpoint,
-			APIKey:      userKey.Key,
-			APISecret:   userKey.Secret,
-		}
 		err = c.config.Save()
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
@@ -226,10 +238,9 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	err = c.client.Delete(context.Background(), key)
-
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	c.config.MaybeDeleteKey(apiKey)
-	return nil
+
+	return c.config.MaybeDeleteKey(apiKey)
 }

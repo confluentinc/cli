@@ -184,8 +184,7 @@ func (a *commands) createOrUpdateContext(user *config.AuthConfig) {
 	name := fmt.Sprintf("login-%s-%s", user.User.Email, a.config.AuthURL)
 	if _, ok := a.config.Platforms[name]; !ok {
 		a.config.Platforms[name] = &config.Platform{
-			Server:        a.config.AuthURL,
-			KafkaClusters: map[string]config.KafkaClusterConfig{},
+			Server: a.config.AuthURL,
 		}
 	}
 	if _, ok := a.config.Credentials[name]; !ok {
@@ -196,8 +195,9 @@ func (a *commands) createOrUpdateContext(user *config.AuthConfig) {
 	}
 	if _, ok := a.config.Contexts[name]; !ok {
 		a.config.Contexts[name] = &config.Context{
-			Platform:   name,
-			Credential: name,
+			Platform:      name,
+			Credential:    name,
+			KafkaClusters: map[string]*config.KafkaClusterConfig{},
 		}
 	}
 	a.config.CurrentContext = name

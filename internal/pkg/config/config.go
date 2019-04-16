@@ -28,21 +28,25 @@ type AuthConfig struct {
 	Accounts []*v1.Account `json:"accounts" hcl:"accounts"`
 }
 
+// APIKeyPair holds an API Key and Secret.
+type APIKeyPair struct {
+	Key    string `json:"api_key" hcl:"api_key"`
+	Secret string `json:"api_secret" hcl:"api_secret"`
+}
+
 // KafkaClusterConfig represents a connection to a Kafka cluster.
 type KafkaClusterConfig struct {
 	ID          string `json:"id" hcl:"id"`
-	Bootstrap   string `json:"bootstrap_servers" hcl:"bootstrap_servers"`
-	APIEndpoint string `json:"api_endpoint,omitempty" hcl:"api_endpoint"`
-	APIKey      string `json:"api_key" hcl:"api_key"`
-	APISecret   string `json:"api_secret" hcl:"api_secret"`
+	Bootstrap   string                 `json:"bootstrap_servers" hcl:"bootstrap_servers"`
+	APIEndpoint string                 `json:"api_endpoint,omitempty" hcl:"api_endpoint"`
+	APIKeys     map[string]*APIKeyPair `json:"api_keys,omitempty" hcl:"api_keys"`
+	// APIKey is your active api key for this cluster and references a key in the APIKeys map
+	APIKey string `json:"api_key,omitempty" hcl:"api_key"`
 }
 
 // Platform represents a Confluent Platform deployment
 type Platform struct {
 	Server string `json:"server" hcl:"server"`
-	// KafkaClusters store connection info for interacting directly with Kafka (e.g., topic mgmt, consume/produce, etc)
-	// N.B. These may later be exposed in the CLI to directly register kafkas (outside a Control Plane)
-	KafkaClusters map[string]KafkaClusterConfig `json:"kafka_clusters" hcl:"kafka_clusters"`
 }
 
 // Credential represent an authentication mechanism for a Platform
@@ -55,7 +59,11 @@ type Credential struct {
 type Context struct {
 	Platform   string `json:"platform" hcl:"platform"`
 	Credential string `json:"credentials" hcl:"credentials"`
-	Kafka      string `json:"kafka_cluster" hcl:"kafka_cluster"`
+	// KafkaClusters store connection info for interacting directly with Kafka (e.g., consume/produce, etc)
+	// N.B. These may later be exposed in the CLI to directly register kafkas (outside a Control Plane)
+	KafkaClusters map[string]*KafkaClusterConfig `json:"kafka_clusters" hcl:"kafka_clusters"`
+	// Kafka is your active Kafka cluster and references a key in the KafkaClusters map
+	Kafka string `json:"kafka_cluster" hcl:"kafka_cluster"`
 }
 
 // Config represents the CLI configuration.
@@ -145,22 +153,22 @@ func (c *Config) Context() (*Context, error) {
 }
 
 // KafkaClusterConfig returns the overridden or current KafkaClusterConfig
-func (c *Config) KafkaClusterConfig(clusterID string) (KafkaClusterConfig, error) {
+func (c *Config) KafkaClusterConfig(clusterID string) (*KafkaClusterConfig, error) {
 	cfg, err := c.Context()
 	if err != nil {
-		return KafkaClusterConfig{}, err
+		return nil, err
 	}
 
 	if clusterID == "" {
 		if cfg.Kafka == "" {
-			return KafkaClusterConfig{}, errors.ErrNoKafkaContext
+			return nil, errors.ErrNoKafkaContext
 		}
 		clusterID = cfg.Kafka
 	}
 
-	cluster, found := c.Platforms[cfg.Platform].KafkaClusters[clusterID]
+	cluster, found := cfg.KafkaClusters[cfg.Kafka]
 	if !found {
-		return KafkaClusterConfig{}, errors.UnknownKafkaContextError(fmt.Errorf(clusterID))
+		return nil, errors.UnknownKafkaContextError(fmt.Errorf(clusterID))
 	}
 	return cluster, nil
 }
@@ -174,16 +182,19 @@ func (c *Config) KafkaCluster(clusterID string) (*kafkav1.KafkaCluster, error) {
 	return &kafkav1.KafkaCluster{AccountId: c.Auth.Account.Id, Id: kafka.ID, ApiEndpoint: kafka.APIEndpoint}, nil
 }
 
-func (c *Config) MaybeDeleteKey(apikey string) {
-	for _, platform := range c.Platforms {
-		for candidate, cluster := range platform.KafkaClusters {
-			if cluster.APIKey == apikey {
-				delete(platform.KafkaClusters, candidate)
+func (c *Config) MaybeDeleteKey(apikey string) error {
+	cfg, err := c.Context()
+	if err != nil {
+		return err
+	}
+	for _, cluster := range cfg.KafkaClusters {
+		for key := range cluster.APIKeys {
+			if key == apikey {
+				delete(cluster.APIKeys, key)
 			}
 		}
 	}
-	_ = c.Save()
-	return
+	return c.Save()
 }
 
 // CheckLogin returns an error if the user is not logged in.
