@@ -23,3 +23,14 @@ func GetKafkaClusterConfig(cmd *cobra.Command, cfg *config.Config) (config.Kafka
 	}
 	return cfg.KafkaClusterConfig(clusterID)
 }
+
+func GetEnvironment(cmd *cobra.Command, cfg *config.Config) (string, error) {
+	environment, err := cmd.Flags().GetString("environment")
+	if err != nil {
+		return "", err
+	}
+	if environment == "" {
+		environment = cfg.Auth.Account.Id
+	}
+	return environment, nil
+}

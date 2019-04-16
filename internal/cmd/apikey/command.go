@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
+	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	"github.com/confluentinc/go-printer"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -20,6 +22,7 @@ type command struct {
 	*cobra.Command
 	config *config.Config
 	client ccloud.APIKey
+	kafka  ccloud.Kafka
 }
 
 var (
@@ -30,7 +33,7 @@ var (
 )
 
 // New returns the Cobra command for API Key.
-func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.APIKey) *cobra.Command {
+func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.APIKey, kafka ccloud.Kafka) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:               "api-key",
@@ -39,12 +42,15 @@ func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.APIKey) 
 		},
 		config: config,
 		client: client,
+		kafka:  kafka,
 	}
 	cmd.init()
 	return cmd.Command
 }
 
 func (c *command) init() {
+	c.PersistentFlags().String("environment", "", "ID of the environment in which to run the command")
+
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List API keys",
@@ -65,6 +71,7 @@ func (c *command) init() {
 	createCmd.Flags().String("cluster", "", "Grant access to a cluster with this ID")
 	createCmd.Flags().Int32("service-account-id", 0, "Create API key for a service account")
 	createCmd.Flags().String("description", "", "Description or purpose for the API key")
+	createCmd.Flags().Bool("use", false, "Activate this API key for the cluster")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
@@ -131,6 +138,11 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
+	use, err := cmd.Flags().GetBool("use")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
 	key := &authv1.ApiKey{
 		UserId:          userId,
 		Description:     description,
@@ -141,6 +153,38 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	userKey, err := c.client.Create(context.Background(), key)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
+	}
+
+	if use {
+		cfg, err := c.config.Context()
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+
+		environment, err := pcmd.GetEnvironment(cmd, c.config)
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+
+		req := &kafkav1.KafkaCluster{AccountId: environment, Id: cfg.Kafka}
+		kc, err := c.kafka.Describe(context.Background(), req)
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+
+		if c.config.Platforms[cfg.Platform].KafkaClusters == nil {
+			c.config.Platforms[cfg.Platform].KafkaClusters = map[string]config.KafkaClusterConfig{}
+		}
+		c.config.Platforms[cfg.Platform].KafkaClusters[cfg.Kafka] = config.KafkaClusterConfig{
+			Bootstrap:   strings.TrimPrefix(kc.Endpoint, "SASL_SSL://"),
+			APIEndpoint: kc.ApiEndpoint,
+			APIKey:      userKey.Key,
+			APISecret:   userKey.Secret,
+		}
+		err = c.config.Save()
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
 	}
 
 	pcmd.Println(cmd, "Please save the API Key and Secret. THIS IS THE ONLY CHANCE YOU HAVE!")

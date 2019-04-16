@@ -72,10 +72,11 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	cli.AddCommand(auth.New(prerunner, cfg)...)
 
 	if cliName == "ccloud" {
+		kafkaClient := kafkas.New(client, logger)
 		cli.AddCommand(environment.New(prerunner, cfg, environments.New(client, logger), cliName))
 		cli.AddCommand(service_account.New(prerunner, cfg, users.New(client, logger)))
-		cli.AddCommand(apikey.New(prerunner, cfg, apikeys.New(client, logger)))
-		cli.AddCommand(kafka.New(prerunner, cfg, kafkas.New(client, logger)))
+		cli.AddCommand(apikey.New(prerunner, cfg, apikeys.New(client, logger), kafkaClient))
+		cli.AddCommand(kafka.New(prerunner, cfg, kafkaClient))
 
 		conn = ksql.New(prerunner, cfg, ksqls.New(client, logger), kafkas.New(client, logger), users.New(client, logger))
 		conn.Hidden = true // The ksql feature isn't finished yet, so let's hide it
