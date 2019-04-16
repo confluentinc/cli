@@ -175,7 +175,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		if c.config.Platforms[cfg.Platform].KafkaClusters == nil {
 			c.config.Platforms[cfg.Platform].KafkaClusters = map[string]config.KafkaClusterConfig{}
 		}
-		c.config.Platforms[cfg.Platform].KafkaClusters[cfg.Kafka] = config.KafkaClusterConfig{
+		c.config.Platforms[cfg.Platform].KafkaClusters[clusterID] = config.KafkaClusterConfig{
 			Bootstrap:   strings.TrimPrefix(kc.Endpoint, "SASL_SSL://"),
 			APIEndpoint: kc.ApiEndpoint,
 			APIKey:      userKey.Key,
