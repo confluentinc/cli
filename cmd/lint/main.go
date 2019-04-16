@@ -118,8 +118,15 @@ func linters(cmd *cobra.Command) *multierror.Error {
 						issues = multierror.Append(issues, issue)
 					}
 				} else {
-					if !strings.HasSuffix(cmd.Use, "ID") && !strings.HasSuffix(cmd.Use, "NAME") {
-						issue := fmt.Errorf("bad usage string: must have ID or NAME in %s", fullCommand(cmd))
+					// check for "create NAME" and "<verb> ID" elsewhere
+					if strings.HasPrefix(cmd.Use, "create ") {
+						if !strings.HasSuffix(cmd.Use, "NAME") {
+							fmt.Println(cmd.Use)
+							issue := fmt.Errorf("bad usage string: must have NAME in %s", fullCommand(cmd))
+							issues = multierror.Append(issues, issue)
+						}
+					} else if !strings.HasSuffix(cmd.Use, "ID") {
+						issue := fmt.Errorf("bad usage string: must have ID in %s", fullCommand(cmd))
 						issues = multierror.Append(issues, issue)
 					}
 				}
