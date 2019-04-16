@@ -166,7 +166,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 			return errors.HandleCommon(err, cmd)
 		}
 
-		req := &kafkav1.KafkaCluster{AccountId: environment, Id: cfg.Kafka}
+		req := &kafkav1.KafkaCluster{AccountId: environment, Id: clusterID}
 		kc, err := c.kafka.Describe(context.Background(), req)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
