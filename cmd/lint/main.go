@@ -70,7 +70,8 @@ func linters(cmd *cobra.Command) *multierror.Error {
 	if !cmd.HasAvailableSubCommands() {
 		// skip special utility commands
 		if cmd.Use != "login" && cmd.Use != "logout" &&
-			cmd.Use != "version" && cmd.Use != "update" && cmd.Use != "completion SHELL" {
+			cmd.Use != "version" && cmd.Use != "completion SHELL" &&
+			!(cmd.Use == "update" && !cmd.Parent().HasParent()) {
 
 			// skip resource container commands
 			if cmd.Use != "list" && cmd.Use != "auth" &&
