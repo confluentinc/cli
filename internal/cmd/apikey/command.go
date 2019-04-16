@@ -45,12 +45,16 @@ func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.APIKey) 
 }
 
 func (c *command) init() {
-	c.AddCommand(&cobra.Command{
+	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List API keys",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
-	})
+	}
+	listCmd.Flags().String("cluster", "", "Cluster ID to list API keys for")
+	listCmd.Flags().SortFlags = false
+	c.AddCommand(listCmd)
+
 
 	createCmd := &cobra.Command{
 		Use:   "create",
