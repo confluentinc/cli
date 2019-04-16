@@ -146,6 +146,10 @@ func linters(cmd *cobra.Command) *multierror.Error {
 			}
 
 			// check that help messages are consistent
+			if len(cmd.Short) < 13 {
+				issue := fmt.Errorf("short description is too short on %s - %s", fullCommand(cmd), cmd.Short)
+				issues = multierror.Append(issues, issue)
+			}
 			if len(cmd.Short) > 43 {
 				issue := fmt.Errorf("short description is too long on %s", fullCommand(cmd))
 				issues = multierror.Append(issues, issue)
