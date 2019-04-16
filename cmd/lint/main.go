@@ -38,6 +38,7 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+	vocab.AddWordRaw("url")
 	vocab.AddWordRaw("config")
 	vocab.AddWordRaw("multizone")
 	vocab.AddWordRaw("transactional")
@@ -153,100 +154,104 @@ func linters(cmd *cobra.Command) *multierror.Error {
 					}
 				}
 			}
+		}
 
-			// check that flags aren't auto sorted
-			if cmd.Flags().HasFlags() && cmd.Flags().SortFlags == true {
-				issue := fmt.Errorf("flags unexpectedly sorted on %s", fullCommand(cmd))
-				issues = multierror.Append(issues, issue)
-			}
+		// check that flags aren't auto sorted
+		if cmd.Flags().HasFlags() && cmd.Flags().SortFlags == true {
+			issue := fmt.Errorf("flags unexpectedly sorted on %s", fullCommand(cmd))
+			issues = multierror.Append(issues, issue)
+		}
 
-			// check that help messages are consistent
-			if len(cmd.Short) < 13 {
-				issue := fmt.Errorf("short description is too short on %s - %s", fullCommand(cmd), cmd.Short)
-				issues = multierror.Append(issues, issue)
-			}
-			if len(cmd.Short) > 43 {
-				issue := fmt.Errorf("short description is too long on %s", fullCommand(cmd))
-				issues = multierror.Append(issues, issue)
-			}
-			if cmd.Short[0] < 'A' || cmd.Short[0] > 'Z' {
-				issue := fmt.Errorf("short description should start with a capital on %s", fullCommand(cmd))
-				issues = multierror.Append(issues, issue)
-			}
-			if cmd.Short[len(cmd.Short)-1] == '.' {
-				issue := fmt.Errorf("short description ends with punctuation on %s", fullCommand(cmd))
-				issues = multierror.Append(issues, issue)
-			}
-			if strings.Contains(cmd.Short, "kafka") {
-				issue := fmt.Errorf("short description should capitalize Kafka on %s", fullCommand(cmd))
-				issues = multierror.Append(issues, issue)
-			}
-			if cmd.Long != "" && (cmd.Long[0] < 'A' || cmd.Long[0] > 'Z') {
-				issue := fmt.Errorf("long description should start with a capital on %s", fullCommand(cmd))
-				issues = multierror.Append(issues, issue)
-			}
-			if cmd.Long != "" && cmd.Long[len(cmd.Long)-1] != '.' {
-				issue := fmt.Errorf("long description should end with punctuation on %s", fullCommand(cmd))
-				issues = multierror.Append(issues, issue)
-			}
-			if strings.Contains(cmd.Long, "kafka") {
-				issue := fmt.Errorf("long description should capitalize Kafka on %s", fullCommand(cmd))
-				issues = multierror.Append(issues, issue)
-			}
-			// TODO: this is an _awful_ IsTitleCase heuristic
-			if words := strings.Split(cmd.Short, " "); len(words) > 1 {
-				for _, word := range words[1:] {
-					if word[0] >= 'A' && word[0] <= 'Z' &&
-						word != "Kafka" && word != "API" && word != "ACL" && word != "ACLs" && word != "ALL" {
-						issue := fmt.Errorf("don't title case short description on %s - %s", fullCommand(cmd), cmd.Short)
-						issues = multierror.Append(issues, issue)
-					}
-				}
-			}
-
-			// check that flags are consistent
-			cmd.Flags().VisitAll(func(pf *pflag.Flag) {
-				if len(pf.Name) > 16 && pf.Name != "service-account-id" && pf.Name != "replication-factor" {
-					issue := fmt.Errorf("flag name is too long for %s on %s", pf.Name, fullCommand(cmd))
+		// check that help messages are consistent
+		if len(cmd.Short) < 13 {
+			issue := fmt.Errorf("short description is too short on %s - %s", fullCommand(cmd), cmd.Short)
+			issues = multierror.Append(issues, issue)
+		}
+		if len(cmd.Short) > 43 {
+			issue := fmt.Errorf("short description is too long on %s", fullCommand(cmd))
+			issues = multierror.Append(issues, issue)
+		}
+		if cmd.Short[0] < 'A' || cmd.Short[0] > 'Z' {
+			issue := fmt.Errorf("short description should start with a capital on %s", fullCommand(cmd))
+			issues = multierror.Append(issues, issue)
+		}
+		if cmd.Short[len(cmd.Short)-1] == '.' {
+			issue := fmt.Errorf("short description ends with punctuation on %s", fullCommand(cmd))
+			issues = multierror.Append(issues, issue)
+		}
+		if strings.Contains(cmd.Short, "kafka") {
+			issue := fmt.Errorf("short description should capitalize Kafka on %s", fullCommand(cmd))
+			issues = multierror.Append(issues, issue)
+		}
+		if cmd.Long != "" && (cmd.Long[0] < 'A' || cmd.Long[0] > 'Z') {
+			issue := fmt.Errorf("long description should start with a capital on %s", fullCommand(cmd))
+			issues = multierror.Append(issues, issue)
+		}
+		lines := strings.Split(cmd.Long, "\n")
+		if cmd.Long != "" && cmd.Long[len(cmd.Long)-1] != '.' &&
+			// ignore rule if last line is code block
+			(!strings.HasPrefix(lines[len(lines)-2], "  ")) {
+			issue := fmt.Errorf("long description should end with punctuation on %s", fullCommand(cmd))
+			issues = multierror.Append(issues, issue)
+		}
+		if strings.Contains(cmd.Long, "kafka") {
+			issue := fmt.Errorf("long description should capitalize Kafka on %s", fullCommand(cmd))
+			issues = multierror.Append(issues, issue)
+		}
+		// TODO: this is an _awful_ IsTitleCase heuristic
+		if words := strings.Split(cmd.Short, " "); len(words) > 1 {
+			for i, word := range words[1:] {
+				if word[0] >= 'A' && word[0] <= 'Z' &&
+					word != "Kafka" && word != "API" && word != "ACL" && word != "ACLs" && word != "ALL" &&
+					word != "Confluent" && !(words[i] == "Confluent" && word == "Cloud") {
+					issue := fmt.Errorf("don't title case short description on %s - %s", fullCommand(cmd), cmd.Short)
 					issues = multierror.Append(issues, issue)
 				}
-				if pf.Usage[0] < 'A' || pf.Usage[0] > 'Z' {
-					issue := fmt.Errorf("flag usage should start with a capital for %s on %s", pf.Name, fullCommand(cmd))
-					issues = multierror.Append(issues, issue)
-				}
-				if pf.Usage[len(pf.Usage)-1] == '.' {
-					issue := fmt.Errorf("flag usage ends with punctuation for %s on %s", pf.Name, fullCommand(cmd))
-					issues = multierror.Append(issues, issue)
-				}
-				nonAlpha := false
-				countDashes := 0
-				for _, l := range pf.Name {
-					if !unicode.IsLetter(l) {
-						if l == '-' {
-							countDashes++
-							// Even 2 is too long... service-account-id is the one exceptional we'll allow for now
-							if countDashes > 1 && pf.Name != "service-account-id" {
-								issue := fmt.Errorf("flag name must only have one dash for %s on %s", pf.Name, fullCommand(cmd))
-								issues = multierror.Append(issues, issue)
-							}
-						} else {
-							if !nonAlpha {
-								issue := fmt.Errorf("flag name must be letters and dash for %s on %s", pf.Name, fullCommand(cmd))
-								issues = multierror.Append(issues, issue)
-								nonAlpha = true
-							}
+			}
+		}
+
+		// check that flags are consistent
+		cmd.Flags().VisitAll(func(pf *pflag.Flag) {
+			if len(pf.Name) > 16 && pf.Name != "service-account-id" && pf.Name != "replication-factor" {
+				issue := fmt.Errorf("flag name is too long for %s on %s", pf.Name, fullCommand(cmd))
+				issues = multierror.Append(issues, issue)
+			}
+			if pf.Usage[0] < 'A' || pf.Usage[0] > 'Z' {
+				issue := fmt.Errorf("flag usage should start with a capital for %s on %s", pf.Name, fullCommand(cmd))
+				issues = multierror.Append(issues, issue)
+			}
+			if pf.Usage[len(pf.Usage)-1] == '.' {
+				issue := fmt.Errorf("flag usage ends with punctuation for %s on %s", pf.Name, fullCommand(cmd))
+				issues = multierror.Append(issues, issue)
+			}
+			nonAlpha := false
+			countDashes := 0
+			for _, l := range pf.Name {
+				if !unicode.IsLetter(l) {
+					if l == '-' {
+						countDashes++
+						// Even 2 is too long... service-account-id is the one exceptional we'll allow for now
+						if countDashes > 1 && pf.Name != "service-account-id" {
+							issue := fmt.Errorf("flag name must only have one dash for %s on %s", pf.Name, fullCommand(cmd))
+							issues = multierror.Append(issues, issue)
+						}
+					} else {
+						if !nonAlpha {
+							issue := fmt.Errorf("flag name must be letters and dash for %s on %s", pf.Name, fullCommand(cmd))
+							issues = multierror.Append(issues, issue)
+							nonAlpha = true
 						}
 					}
 				}
-				// don't allow --smushcaseflags, require dash-separated real words
-				for _, w := range strings.Split(pf.Name, "-") {
-					if ok := vocab.Spell(w); !ok {
-						issue := fmt.Errorf("flag name should consist of dash-separated real english words for %s on %s", pf.Name, fullCommand(cmd))
-						issues = multierror.Append(issues, issue)
-					}
+			}
+			// don't allow --smushcaseflags, require dash-separated real words
+			for _, w := range strings.Split(pf.Name, "-") {
+				if ok := vocab.Spell(w); !ok {
+					issue := fmt.Errorf("flag name should consist of dash-separated real english words for %s on %s", pf.Name, fullCommand(cmd))
+					issues = multierror.Append(issues, issue)
 				}
-			})
-		}
+			}
+		})
 	}
 	return issues
 }

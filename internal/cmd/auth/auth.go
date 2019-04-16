@@ -60,6 +60,7 @@ func (a *commands) init(prerunner pcmd.PreRunner) {
 		Args:  cobra.NoArgs,
 	}
 	loginCmd.Flags().String("url", "https://confluent.cloud", "Confluent Control Plane URL")
+	loginCmd.Flags().SortFlags = false
 	loginCmd.PersistentPreRunE = prerunner.Anonymous()
 	logoutCmd := &cobra.Command{
 		Use:   "logout",
