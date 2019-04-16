@@ -79,11 +79,7 @@ func (c *command) init() {
 }
 
 func (c *command) list(cmd *cobra.Command, args []string) error {
-	var cl []*authv1.ApiKey_Cluster
-	ctx, err := c.config.Context()
-	pcmd.Println(cmd, ctx.Kafka)
-	cl = append(cl, &authv1.ApiKey_Cluster{Id: ctx.Kafka})
-	apiKeys, err := c.client.List(context.Background(), &authv1.ApiKey{AccountId: c.config.Auth.Account.Id, LogicalClusters: cl})
+	apiKeys, err := c.client.List(context.Background(), &authv1.ApiKey{AccountId: c.config.Auth.Account.Id})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -95,14 +91,19 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		LogicalClusters string
 	}
 
+	ctx, err := c.config.Context()
 	var data [][]string
 	for _, apiKey := range apiKeys {
 		// ignore keys owned by Confluent-internal user (healthcheck, etc)
 		if apiKey.UserId == 0 {
 			continue
 		}
+		includeKey := false
 		var clusters []string
 		for _, c := range apiKey.LogicalClusters {
+			if c.Id == ctx.Kafka {
+				includeKey = true
+			}
 			buf := new(bytes.Buffer)
 			buf.WriteString(c.Id)
 			// TODO: uncomment once we migrate DB so all API keys have a type
@@ -111,12 +112,14 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 			//buf.WriteString(")")
 			clusters = append(clusters, buf.String())
 		}
-		data = append(data, printer.ToRow(&keyDisplay{
-			Key:             apiKey.Key,
-			Description:     apiKey.Description,
-			UserId:          apiKey.UserId,
-			LogicalClusters: strings.Join(clusters, ", "),
-		}, listFields))
+		if includeKey {
+			data = append(data, printer.ToRow(&keyDisplay{
+				Key:             apiKey.Key,
+				Description:     apiKey.Description,
+				UserId:          apiKey.UserId,
+				LogicalClusters: strings.Join(clusters, ", "),
+			}, listFields))
+		}
 	}
 
 	printer.RenderCollectionTable(data, listLabels)
