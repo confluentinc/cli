@@ -1,19 +1,14 @@
 package kafka
 
 import (
-	"bufio"
 	"context"
 	"fmt"
 	"os"
-	"strings"
-
-	"github.com/spf13/cobra"
-	"golang.org/x/crypto/ssh/terminal"
 
 	"github.com/confluentinc/ccloud-sdk-go"
-	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	"github.com/confluentinc/go-printer"
+	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
@@ -97,12 +92,6 @@ func (c *clusterCommand) init() {
 		Short: "Delete a Kafka cluster",
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
-	})
-	c.AddCommand(&cobra.Command{
-		Use:   "auth",
-		Short: "Configure authorization for a Kafka cluster",
-		RunE:  c.auth,
-		Args:  cobra.NoArgs,
 	})
 	c.AddCommand(&cobra.Command{
 		Use:   "use ID",
@@ -235,64 +224,6 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *clusterCommand) auth(cmd *cobra.Command, args []string) error {
-	cfg, err := c.config.Context()
-
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
-	if cfg.Kafka == "" {
-		return fmt.Errorf("No cluster selected. See ccloud kafka cluster use for help ")
-	}
-
-	environment, err := c.getEnvironment(cmd)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
-	cluster, known := c.config.Platforms[cfg.Platform].KafkaClusters[cfg.Kafka]
-	if known {
-		pcmd.Printf(cmd, "Kafka Cluster: %s\n", cfg.Kafka)
-		pcmd.Printf(cmd, "Bootstrap Servers: %s\n", cluster.Bootstrap)
-		pcmd.Printf(cmd, "API Key: %s\n", cluster.APIKey)
-		pcmd.Printf(cmd, "API Secret: %s\n", cluster.APISecret)
-		return nil
-	}
-
-	userProvidingKey, err := userHasKey(cmd, cfg.Kafka)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
-	var key, secret string
-	if userProvidingKey {
-		key, secret, err = promptForKafkaCreds(cmd)
-	} else {
-		key, secret, err = c.createKafkaCreds(context.Background(), cmd, environment, cfg.Kafka)
-	}
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
-	req := &kafkav1.KafkaCluster{AccountId: environment, Id: cfg.Kafka}
-	kc, err := c.client.Describe(context.Background(), req)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
-	if c.config.Platforms[cfg.Platform].KafkaClusters == nil {
-		c.config.Platforms[cfg.Platform].KafkaClusters = map[string]config.KafkaClusterConfig{}
-	}
-	c.config.Platforms[cfg.Platform].KafkaClusters[cfg.Kafka] = config.KafkaClusterConfig{
-		Bootstrap:   strings.TrimPrefix(kc.Endpoint, "SASL_SSL://"),
-		APIEndpoint: kc.ApiEndpoint,
-		APIKey:      key,
-		APISecret:   secret,
-	}
-	return c.config.Save()
-}
-
 func (c *clusterCommand) use(cmd *cobra.Command, args []string) error {
 	clusterID := args[0]
 
@@ -324,58 +255,6 @@ func (c *clusterCommand) use(cmd *cobra.Command, args []string) error {
 
 	cfg.Kafka = clusterID
 	return c.config.Save()
-}
-
-//
-// Helper functions
-//
-
-func userHasKey(cmd *cobra.Command, kafkaClusterID string) (bool, error) {
-	reader := bufio.NewReader(os.Stdin)
-	pcmd.Printf(cmd, "Do you have an API key for %s? [N/y] ", kafkaClusterID)
-	response, err := reader.ReadString('\n')
-	if err != nil {
-		return false, err
-	}
-	r := strings.TrimSpace(response)
-	return r == "" || r[0] == 'y' || r[0] == 'Y', nil
-}
-
-func promptForKafkaCreds(cmd *cobra.Command) (string, string, error) {
-	reader := bufio.NewReader(os.Stdin)
-	pcmd.Print(cmd, "API Key: ")
-	key, err := reader.ReadString('\n')
-	if err != nil {
-		return "", "", err
-	}
-
-	pcmd.Print(cmd, "API Secret: ")
-	// TODO: this should be using our internal prompt.ReadPassword() for testability
-	byteSecret, err := terminal.ReadPassword(0)
-	pcmd.Println(cmd)
-	if err != nil {
-		return "", "", err
-	}
-	secret := string(byteSecret)
-
-	return strings.TrimSpace(key), strings.TrimSpace(secret), nil
-}
-
-func (c *clusterCommand) createKafkaCreds(ctx context.Context, cmd *cobra.Command, environment string, kafkaClusterID string) (string, string, error) {
-	client := ccloud.NewClientWithJWT(ctx, c.config.AuthToken, c.config.AuthURL, c.config.Logger)
-	key, err := client.APIKey.Create(ctx, &authv1.ApiKey{
-		UserId: c.config.Auth.User.Id,
-		LogicalClusters: []*authv1.ApiKey_Cluster{
-			{Id: kafkaClusterID},
-		},
-		AccountId: environment,
-	})
-
-	if err != nil {
-		return "", "", errors.ConvertAPIError(err)
-	}
-	pcmd.Println(cmd, "Okay, we've created an API key. If needed, you can see it with `ccloud kafka cluster auth`.")
-	return key.Key, key.Secret, nil
 }
 
 func check(err error) {

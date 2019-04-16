@@ -4,7 +4,6 @@ Usage:
   ccloud kafka cluster [command]
 
 Available Commands:
-  auth        Configure authorization for a Kafka cluster
   create      Create a Kafka cluster
   delete      Delete a Kafka cluster
   describe    Describe a Kafka cluster
