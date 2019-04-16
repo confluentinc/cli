@@ -8,6 +8,7 @@ import (
 	"os"
 	"reflect"
 	"strings"
+	"unicode"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
@@ -191,6 +192,26 @@ func linters(cmd *cobra.Command) *multierror.Error {
 				if pf.Usage[len(pf.Usage)-1] == '.' {
 					issue := fmt.Errorf("flag usage ends with punctuation for %s on %s", pf.Name, fullCommand(cmd))
 					issues = multierror.Append(issues, issue)
+				}
+				nonAlpha := false
+				countDashes := 0
+				for _, l := range pf.Name {
+					if !unicode.IsLetter(l) {
+						if l == '-' {
+							countDashes++
+							// Even 2 is too long... service-account-id is the one exceptional we'll allow for now
+							if countDashes > 1 && pf.Name != "service-account-id" {
+								issue := fmt.Errorf("flag name must only have one dash for %s on %s", pf.Name, fullCommand(cmd))
+								issues = multierror.Append(issues, issue)
+							}
+						} else {
+							if !nonAlpha {
+								issue := fmt.Errorf("flag name must be letters and dash for %s on %s", pf.Name, fullCommand(cmd))
+								issues = multierror.Append(issues, issue)
+								nonAlpha = true
+							}
+						}
+					}
 				}
 			})
 		}
