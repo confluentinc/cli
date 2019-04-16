@@ -75,7 +75,9 @@ func linters(cmd *cobra.Command) *multierror.Error {
 			// skip resource container commands
 			if cmd.Use != "list" && cmd.Use != "auth" &&
 				// skip ACLs which don't have an identity (value objects rather than entities)
-				!strings.Contains(fullCommand(cmd), "kafka acl") {
+				!strings.Contains(fullCommand(cmd), "kafka acl") &&
+				// skip api-key create since you don't get to choose a name for API keys
+				!strings.Contains(fullCommand(cmd), "api-key create") {
 
 				// check whether arg parsing is setup correctly
 				if reflect.ValueOf(cmd.Args).Pointer() != reflect.ValueOf(cobra.ExactArgs(1)).Pointer() {
@@ -87,6 +89,11 @@ func linters(cmd *cobra.Command) *multierror.Error {
 				if cmd.Parent().Use == "topic" {
 					if !strings.HasSuffix(cmd.Use, "TOPIC") {
 						issue := fmt.Errorf("bad usage string: must have TOPIC in %s", fullCommand(cmd))
+						issues = multierror.Append(issues, issue)
+					}
+				} else if cmd.Parent().Use == "api-key" {
+					if !strings.HasSuffix(cmd.Use, "KEY") {
+						issue := fmt.Errorf("bad usage string: must have KEY in %s", fullCommand(cmd))
 						issues = multierror.Append(issues, issue)
 					}
 				} else {

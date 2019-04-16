@@ -59,21 +59,17 @@ func (c *command) init() {
 		Args:  cobra.NoArgs,
 	}
 	createCmd.Flags().String("cluster", "", "Grant access to a cluster with this ID")
-	_ = createCmd.MarkFlagRequired("cluster")
 	createCmd.Flags().Int32("service-account-id", 0, "Create API key for a service account")
 	createCmd.Flags().String("description", "", "Description or purpose for the API key")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
-	deleteCmd := &cobra.Command{
-		Use:   "delete",
+	c.AddCommand(&cobra.Command{
+		Use:   "delete KEY",
 		Short: "Delete API key",
 		RunE:  c.delete,
-		Args:  cobra.NoArgs,
-	}
-	deleteCmd.Flags().String("api-key", "", "API key")
-	_ = deleteCmd.MarkFlagRequired("api-key")
-	c.AddCommand(deleteCmd)
+		Args:  cobra.ExactArgs(1),
+	})
 }
 
 func (c *command) list(cmd *cobra.Command, args []string) error {
@@ -120,6 +116,16 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
+	if clusterID == "" {
+		ctx, err := c.config.Context()
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+		clusterID = ctx.Kafka
+	}
+	if clusterID == "" {
+		return errors.HandleCommon(errors.ErrNoKafkaContext, cmd)
+	}
 
 	userId, err := cmd.Flags().GetInt32("service-account-id")
 	if err != nil {
@@ -164,10 +170,7 @@ func getApiKeyId(apiKeys []*authv1.ApiKey, apiKey string) (int32, error) {
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
-	apiKey, err := cmd.Flags().GetString("api-key")
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
+	apiKey := args[0]
 
 	apiKeys, err := c.client.List(context.Background(), &authv1.ApiKey{AccountId: c.config.Auth.Account.Id})
 	if err != nil {

@@ -30,6 +30,7 @@ var (
 	ErrMalformedToken = fmt.Errorf("malformed")
 	ErrNotFound       = fmt.Errorf("not found")
 	ErrNoContext      = fmt.Errorf("context not set")
+	ErrNoKafkaContext = fmt.Errorf("kafka not set")
 )
 
 // ConvertAPIError transforms a corev1.Error into one of the standard errors if it matches.
