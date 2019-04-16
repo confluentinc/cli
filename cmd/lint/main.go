@@ -11,6 +11,7 @@ import (
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 
 	"github.com/confluentinc/cli/internal/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
@@ -182,6 +183,16 @@ func linters(cmd *cobra.Command) *multierror.Error {
 					}
 				}
 			}
+			cmd.Flags().VisitAll(func(pf *pflag.Flag) {
+				if pf.Usage[0] < 'A' || pf.Usage[0] > 'Z' {
+					issue := fmt.Errorf("flag usage should start with a capital for %s on %s", pf.Name, fullCommand(cmd))
+					issues = multierror.Append(issues, issue)
+				}
+				if pf.Usage[len(pf.Usage)-1] == '.' {
+					issue := fmt.Errorf("flag usage ends with punctuation for %s on %s", pf.Name, fullCommand(cmd))
+					issues = multierror.Append(issues, issue)
+				}
+			})
 		}
 	}
 	return issues

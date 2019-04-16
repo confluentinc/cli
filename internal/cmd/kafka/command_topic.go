@@ -59,9 +59,9 @@ func (c *topicCommand) init() {
 		Args:  cobra.ExactArgs(1),
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID")
-	cmd.Flags().Uint32("partitions", 6, "Number of topic partitions.")
-	cmd.Flags().Uint32("replication-factor", 3, "Replication factor.")
-	cmd.Flags().StringSlice("config", nil, "A comma separated list of topic configuration (key=value) overrides for the topic being created.")
+	cmd.Flags().Uint32("partitions", 6, "Number of topic partitions")
+	cmd.Flags().Uint32("replication-factor", 3, "Replication factor")
+	cmd.Flags().StringSlice("config", nil, "A comma separated list of topic configuration (key=value) overrides for the topic being created")
 	cmd.Flags().Bool("dry-run", false, "Execute request without committing changes to Kafka")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
@@ -83,7 +83,7 @@ func (c *topicCommand) init() {
 		Args:  cobra.ExactArgs(1),
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID")
-	cmd.Flags().StringSlice("config", nil, "A comma separated list of topic configuration (key=value) overrides for the topic being created.")
+	cmd.Flags().StringSlice("config", nil, "A comma separated list of topic configuration (key=value) overrides for the topic being created")
 	cmd.Flags().Bool("dry-run", false, "Execute request without committing changes to Kafka")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
