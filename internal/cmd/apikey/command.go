@@ -116,19 +116,9 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) create(cmd *cobra.Command, args []string) error {
-	clusterID, err := cmd.Flags().GetString("cluster")
+	cluster, err := pcmd.GetKafkaCluster(cmd, c.config)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
-	}
-	if clusterID == "" {
-		ctx, err := c.config.Context()
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-		clusterID = ctx.Kafka
-	}
-	if clusterID == "" {
-		return errors.HandleCommon(errors.ErrNoKafkaContext, cmd)
 	}
 
 	userId, err := cmd.Flags().GetInt32("service-account-id")
@@ -145,7 +135,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		UserId:          userId,
 		Description:     description,
 		AccountId:       c.config.Auth.Account.Id,
-		LogicalClusters: []*authv1.ApiKey_Cluster{{Id: clusterID}},
+		LogicalClusters: []*authv1.ApiKey_Cluster{{Id: cluster.Id}},
 	}
 
 	userKey, err := c.client.Create(context.Background(), key)

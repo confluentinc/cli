@@ -115,11 +115,19 @@ func linters(cmd *cobra.Command) *multierror.Error {
 				if f == nil {
 					issue := fmt.Errorf("missing --cluster override flag on %s", fullCommand(cmd))
 					issues = multierror.Append(issues, issue)
-				} else if f.Annotations[cobra.BashCompOneRequiredFlag] != nil &&
+				} else {
 					// TODO: ensuring --cluster is optional DOES NOT actually ensure that the cluster context is used
-					f.Annotations[cobra.BashCompOneRequiredFlag][0] == "true" {
-					issue := fmt.Errorf("required --cluster flag should be optional on %s", fullCommand(cmd))
-					issues = multierror.Append(issues, issue)
+					if f.Annotations[cobra.BashCompOneRequiredFlag] != nil &&
+						f.Annotations[cobra.BashCompOneRequiredFlag][0] == "true" {
+						issue := fmt.Errorf("required --cluster flag should be optional on %s", fullCommand(cmd))
+						issues = multierror.Append(issues, issue)
+					}
+
+					// check that --cluster has the right type and description (so its not a different meaning)
+					if f.Value.Type() != "string" {
+						issue := fmt.Errorf("standard --cluster flag has the wrong type on %s", fullCommand(cmd))
+						issues = multierror.Append(issues, issue)
+					}
 				}
 			}
 		}

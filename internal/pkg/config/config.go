@@ -30,6 +30,7 @@ type AuthConfig struct {
 
 // KafkaClusterConfig represents a connection to a Kafka cluster.
 type KafkaClusterConfig struct {
+	ID          string `json:"id" hcl:"id"`
 	Bootstrap   string `json:"bootstrap_servers" hcl:"bootstrap_servers"`
 	APIEndpoint string `json:"api_endpoint,omitempty" hcl:"api_endpoint"`
 	APIKey      string `json:"api_key" hcl:"api_key"`
@@ -143,33 +144,34 @@ func (c *Config) Context() (*Context, error) {
 	return c.Contexts[c.CurrentContext], nil
 }
 
-// KafkaClusterConfig returns the current KafkaClusterConfig
-func (c *Config) KafkaClusterConfig() (KafkaClusterConfig, error) {
+// KafkaClusterConfig returns the overridden or current KafkaClusterConfig
+func (c *Config) KafkaClusterConfig(clusterID string) (KafkaClusterConfig, error) {
 	cfg, err := c.Context()
 	if err != nil {
 		return KafkaClusterConfig{}, err
 	}
-	cluster, found := c.Platforms[cfg.Platform].KafkaClusters[cfg.Kafka]
+
+	if clusterID == "" {
+		if cfg.Kafka == "" {
+			return KafkaClusterConfig{}, errors.ErrNoKafkaContext
+		}
+		clusterID = cfg.Kafka
+	}
+
+	cluster, found := c.Platforms[cfg.Platform].KafkaClusters[clusterID]
 	if !found {
-		e := fmt.Errorf("no auth found for Kafka %s, please run `ccloud kafka cluster auth` first", cfg.Kafka)
-		return KafkaClusterConfig{}, errors.NotAuthenticatedError(e)
+		return KafkaClusterConfig{}, errors.UnknownKafkaContextError(fmt.Errorf(clusterID))
 	}
 	return cluster, nil
 }
 
 // KafkaCluster returns the current kafka cluster context
-func (c *Config) KafkaCluster() (*kafkav1.KafkaCluster, error) {
-	ctx, err := c.Context()
+func (c *Config) KafkaCluster(clusterID string) (*kafkav1.KafkaCluster, error) {
+	kafka, err := c.KafkaClusterConfig(clusterID)
 	if err != nil {
 		return nil, err
 	}
-
-	conf, err := c.KafkaClusterConfig()
-	if err != nil {
-		return nil, err
-	}
-
-	return &kafkav1.KafkaCluster{AccountId: c.Auth.Account.Id, Id: ctx.Kafka, ApiEndpoint: conf.APIEndpoint}, nil
+	return &kafkav1.KafkaCluster{AccountId: c.Auth.Account.Id, Id: kafka.ID, ApiEndpoint: kafka.APIEndpoint}, nil
 }
 
 func (c *Config) MaybeDeleteKey(apikey string) {

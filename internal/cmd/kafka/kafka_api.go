@@ -29,6 +29,7 @@ func aclConfigFlags() *pflag.FlagSet {
 // aclEntryFlags returns a flag set which can be parsed to create an AccessControlEntry object.
 func aclEntryFlags() *pflag.FlagSet {
 	flgSet := pflag.NewFlagSet("acl-entry", pflag.ExitOnError)
+	//flgSet.String("cluster", "", "Kafka cluster ID")
 	flgSet.Bool("allow", false, "Set ACL to grant access")
 	flgSet.Bool("deny", false, "Set ACL to restrict access to resource")
 	//flgSet.String( "host", "*", "Set Kafka principal host. Note: Not supported on CCLOUD.")
@@ -45,6 +46,7 @@ func aclEntryFlags() *pflag.FlagSet {
 // resourceFlags returns a flag set which can be parsed to create a ResourcePattern object.
 func resourceFlags() *pflag.FlagSet {
 	flgSet := pflag.NewFlagSet("acl-resource", pflag.ExitOnError)
+	//flgSet.String("cluster", "", "Kafka cluster ID")
 	flgSet.Bool("cluster", false, "Set cluster resource")
 	flgSet.String("topic", "", "Set topic resource")
 	flgSet.String("consumer-group", "", "Set consumer-group resource")

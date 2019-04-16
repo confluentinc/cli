@@ -21,6 +21,7 @@ import (
 
 type NotAuthenticatedError error
 type KafkaError error
+type UnknownKafkaContextError error
 
 var (
 	ErrNotImplemented = fmt.Errorf("not implemented")
