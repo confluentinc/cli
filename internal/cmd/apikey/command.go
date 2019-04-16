@@ -79,7 +79,11 @@ func (c *command) init() {
 }
 
 func (c *command) list(cmd *cobra.Command, args []string) error {
-	apiKeys, err := c.client.List(context.Background(), &authv1.ApiKey{AccountId: c.config.Auth.Account.Id})
+	var cl []*authv1.ApiKey_Cluster
+	ctx, err := c.config.Context()
+	pcmd.Println(cmd, ctx.Kafka)
+	cl = append(cl, &authv1.ApiKey_Cluster{Id: ctx.Kafka})
+	apiKeys, err := c.client.List(context.Background(), &authv1.ApiKey{AccountId: c.config.Auth.Account.Id, LogicalClusters: cl})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
