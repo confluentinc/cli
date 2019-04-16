@@ -164,6 +164,10 @@ func linters(cmd *cobra.Command) *multierror.Error {
 				issue := fmt.Errorf("long description should start with a capital on %s", fullCommand(cmd))
 				issues = multierror.Append(issues, issue)
 			}
+			if cmd.Long != "" && cmd.Long[len(cmd.Long)-1] != '.' {
+				issue := fmt.Errorf("long description should end with punctuation on %s", fullCommand(cmd))
+				issues = multierror.Append(issues, issue)
+			}
 			if strings.Contains(cmd.Long, "kafka") {
 				issue := fmt.Errorf("long description should capitalize Kafka on %s", fullCommand(cmd))
 				issues = multierror.Append(issues, issue)
