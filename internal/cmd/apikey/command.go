@@ -92,6 +92,9 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	}
 
 	ctx, err := c.config.Context()
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
 	var data [][]string
 	for _, apiKey := range apiKeys {
 		// ignore keys owned by Confluent-internal user (healthcheck, etc)
