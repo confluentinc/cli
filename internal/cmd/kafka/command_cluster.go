@@ -73,6 +73,7 @@ func (c *clusterCommand) init() {
 	createCmd.Flags().Bool("multizone", false, "use multiple zones for high availability")
 	check(createCmd.MarkFlagRequired("cloud"))
 	check(createCmd.MarkFlagRequired("region"))
+	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
 	c.AddCommand(&cobra.Command{

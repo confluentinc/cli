@@ -106,6 +106,7 @@ func (c *topicCommand) init() {
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID")
 	cmd.Flags().String("delimiter", ":", "Key/Value delimiter")
+	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
@@ -116,6 +117,7 @@ func (c *topicCommand) init() {
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID")
 	cmd.Flags().String("group", fmt.Sprintf("confluent_cli_consumer%s", uuid.New()), "Consumer group id")
+	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
 }

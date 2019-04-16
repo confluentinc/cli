@@ -75,6 +75,7 @@ func (c *command) init() {
 	}
 	updateCmd.Flags().String("description", "", "The service account description")
 	_ = updateCmd.MarkFlagRequired("description")
+	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
 
 	c.AddCommand(&cobra.Command{

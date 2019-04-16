@@ -128,7 +128,17 @@ func linters(cmd *cobra.Command) *multierror.Error {
 						issue := fmt.Errorf("standard --cluster flag has the wrong type on %s", fullCommand(cmd))
 						issues = multierror.Append(issues, issue)
 					}
+					if cmd.Parent().Use != "api-key" && f.Usage != "Kafka cluster ID" {
+						issue := fmt.Errorf("bad usage string: expected standard --cluster on %s", fullCommand(cmd))
+						issues = multierror.Append(issues, issue)
+					}
 				}
+			}
+
+			// check that flags aren't auto sorted
+			if cmd.Flags().HasFlags() && cmd.Flags().SortFlags == true {
+				issue := fmt.Errorf("flags unexpectedly sorted for %s", fullCommand(cmd))
+				issues = multierror.Append(issues, issue)
 			}
 		}
 	}

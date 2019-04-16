@@ -70,6 +70,7 @@ func (c *command) init() {
 		Args:  cobra.ExactArgs(1),
 	}
 	updateCmd.Flags().String("name", "", "New name for environment")
+	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
 
 	c.AddCommand(&cobra.Command{
