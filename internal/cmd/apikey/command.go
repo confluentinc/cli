@@ -1,11 +1,9 @@
 package apikey
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -25,8 +23,8 @@ type command struct {
 }
 
 var (
-	listFields    = []string{"Key", "UserId", "LogicalClusters"}
-	listLabels    = []string{"Key", "Owner", "Clusters"}
+	listFields    = []string{"Key", "UserId"}
+	listLabels    = []string{"Key", "Owner"}
 	createFields  = []string{"Key", "Secret"}
 	createRenames = map[string]string{"Key": "API Key"}
 )
@@ -102,25 +100,16 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 			continue
 		}
 		includeKey := false
-		var clusters []string
 		for _, c := range apiKey.LogicalClusters {
 			if c.Id == ctx.Kafka {
 				includeKey = true
 			}
-			buf := new(bytes.Buffer)
-			buf.WriteString(c.Id)
-			// TODO: uncomment once we migrate DB so all API keys have a type
-			//buf.WriteString(" (type=")
-			//buf.WriteString(c.Type)
-			//buf.WriteString(")")
-			clusters = append(clusters, buf.String())
 		}
 		if includeKey {
 			data = append(data, printer.ToRow(&keyDisplay{
-				Key:             apiKey.Key,
-				Description:     apiKey.Description,
-				UserId:          apiKey.UserId,
-				LogicalClusters: strings.Join(clusters, ", "),
+				Key:         apiKey.Key,
+				Description: apiKey.Description,
+				UserId:      apiKey.UserId,
 			}, listFields))
 		}
 	}
