@@ -32,6 +32,8 @@ github.com/caarlos0/ctrlc v1.0.0 h1:2DtF8GSIcajgffDFJzyG15vO+1PuBWOMUdFut7NnXhw=
 github.com/caarlos0/ctrlc v1.0.0/go.mod h1:CdXpj4rmq0q/1Eb44M9zi2nKB0QraNKuRGYGrrHhcQw=
 github.com/campoy/unique v0.0.0-20180121183637-88950e537e7e h1:V9a67dfYqPLAvzk5hMQOXYJlZ4SLIXgyKIE+ZiHzgGQ=
 github.com/campoy/unique v0.0.0-20180121183637-88950e537e7e/go.mod h1:9IOqJGCPMSc6E5ydlp5NIonxObaeu/Iub/X03EKPVYo=
+github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df h1:XXCjxndsxMyNjoZtyuyDnzSck+h681QN7vKkK0EIVq0=
+github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df/go.mod h1:X4IDm8zK6KavjWkfKQCet43DKeLii9nJhUK/seHoSbA=
 github.com/codyaray/go-editor v0.3.0 h1:UR09THBRSPvWSy8stAoIL76Neq0LtiK1KJAuPzrT5pc=
 github.com/codyaray/go-editor v0.3.0/go.mod h1:KTJY2oaaxgAcgmJj+NK8/gFXpOePIVDt1/3FUbBBDTY=
 github.com/codyaray/go-printer v0.9.0 h1:6pBM0Km7O/WQNIxYFHJAzsevgw+RxHfDPHR5Lg9Zrok=
@@ -111,7 +113,7 @@ github.com/golangci/dupl v0.0.0-20180902072040-3e9179ac440a/go.mod h1:ryS0uhF+x9
 github.com/golangci/errcheck v0.0.0-20181003203344-1765131d5be5/go.mod h1:DbHgvLiFKX1Sh2T1w8Q/h4NAI8MHIpzCdnBUDTXU3I0=
 github.com/golangci/errcheck v0.0.0-20181003203344-ef45e06d44b6 h1:i2jIkQFb8RG45DuQs+ElyROY848cSJIoIkBM+7XXypA=
 github.com/golangci/errcheck v0.0.0-20181003203344-ef45e06d44b6/go.mod h1:DbHgvLiFKX1Sh2T1w8Q/h4NAI8MHIpzCdnBUDTXU3I0=
-github.com/golangci/go-misc v0.0.0-20180628070357-927a3d87b613 h1:9kfjN3AdxcbsZBf8NjltjWihK2QfBBBZuv91cMFfDHw=
+github.com/golangci/go-misc v0.0.0-20180628070357-927a3d87b613 h1:WadunOE/TeHR8U7f0TXiJACHeU3cuFOXuKafw4rozqU=
 github.com/golangci/go-misc v0.0.0-20180628070357-927a3d87b613/go.mod h1:SyvUF2NxV+sN8upjjeVYr5W7tyxaT1JVtvhKhOn2ii8=
 github.com/golangci/go-tools v0.0.0-20180902103155-93eecd106a0b h1:FSrt9JBK7JINu5UobyIF6epfpjL66H+67KZoTbE0zwk=
 github.com/golangci/go-tools v0.0.0-20180902103155-93eecd106a0b/go.mod h1:unzUULGw35sjyOYjUt0jMTXqHlZPpPc6e+xfO4cd6mM=
@@ -121,7 +123,7 @@ github.com/golangci/gocyclo v0.0.0-20180528134321-2becd97e67ee h1:J2XAy40+7yz70u
 github.com/golangci/gocyclo v0.0.0-20180528134321-2becd97e67ee/go.mod h1:ozx7R9SIwqmqf5pRP90DhR2Oay2UIjGuKheCBCNwAYU=
 github.com/golangci/gofmt v0.0.0-20181105071733-f021c4179c82 h1:GzPqZCXdBR/5zaqMWNsxRk60z16CaQjyytNTFpei3bw=
 github.com/golangci/gofmt v0.0.0-20181105071733-f021c4179c82/go.mod h1:9qCChq59u/eW8im404Q2WWTrnBUQKjpNYKMbU4M7EFU=
-github.com/golangci/golangci-lint v1.12.2 h1:qt9YJrAcShEzxUfFOxic2snCZriHmyuBZbw+MDXZ2Pk=
+github.com/golangci/golangci-lint v1.12.2 h1:TZBt0R2qFW4SZPjI549tQmciIXPtMuYZmbS4loZvmaI=
 github.com/golangci/golangci-lint v1.12.2/go.mod h1:9Mdlb3LSCoxEJPexdOVimY9OIdG8fBKGoS9xvORuG9I=
 github.com/golangci/gosec v0.0.0-20180901114220-8afd9cbb6cfb h1:Bi7BYmZVg4C+mKGi8LeohcP2GGUl2XJD4xCkJoZSaYc=
 github.com/golangci/gosec v0.0.0-20180901114220-8afd9cbb6cfb/go.mod h1:ON/c2UR0VAAv6ZEAFKhjCLplESSmRFfZcDLASbI1GWo=
@@ -188,8 +190,9 @@ github.com/jmespath/go-jmespath v0.0.0-20160202185014-0b12d6b521d8 h1:12VvqtR6Ao
 github.com/jmespath/go-jmespath v0.0.0-20160202185014-0b12d6b521d8/go.mod h1:Nht3zPeWKUH0NzdCt2Blrr5ys8VGpn0CEB0cQHVjt7k=
 github.com/jonboulle/clockwork v0.1.0 h1:VKV+ZcuP6l3yW9doeqz6ziZGgcynBVQO+obU0+0hcPo=
 github.com/jonboulle/clockwork v0.1.0/go.mod h1:Ii8DK3G1RaLaWxj9trq07+26W01tbo22gdxWY5EU2bo=
-github.com/kamilsk/retry v0.0.0-20181229152359-495c1d672c93 h1:aP888S37c3tqOCllQAxo5xDE+LJesxR0OH7zntgoPiM=
+github.com/kamilsk/retry v0.0.0-20181229152359-495c1d672c93 h1:aqqxYIQTyx9qoSkw/VqcfHCanmNKrDmPdzxPBCDjlLo=
 github.com/kamilsk/retry v0.0.0-20181229152359-495c1d672c93/go.mod h1:vW4uuVWZOGWqkbtgGTNPGAiuN2nUBz0qYr4tb2ww4x8=
+github.com/karan/vocabulary v0.0.0-20151207201012-ca7289b4cdf4/go.mod h1:GjsQNQo7gQsBACPMlu3mVrSDIjjRv4hdURj02Jd6yQA=
 github.com/kisielk/errcheck v1.1.0/go.mod h1:EZBBE59ingxPouuu3KfxchcWSUPOHkagtvWXihfKN4Q=
 github.com/kisielk/gotool v1.0.0 h1:AV2c/EiW3KqPNT9ZKl07ehoAGi4C5/01Cfbblndcapg=
 github.com/kisielk/gotool v1.0.0/go.mod h1:XhKaO+MFFWcvkIS/tQcRk01m1F5IRFswLeQ+oQHNcck=

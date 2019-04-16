@@ -10,6 +10,7 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/client9/gospell"
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -21,11 +22,25 @@ import (
 )
 
 var (
-	debug = flag.Bool("debug", false, "print debug output")
+	debug   = flag.Bool("debug", false, "print debug output")
+	affFile = flag.String("aff-file", "", "hunspell .aff file")
+	dicFile = flag.String("dic-file", "", "hunspell .dic file")
+
+	vocab *gospell.GoSpell
 )
 
 func main() {
 	flag.Parse()
+
+	var err error
+	vocab, err = gospell.NewGoSpell(*affFile, *dicFile)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	vocab.AddWordRaw("config")
+	vocab.AddWordRaw("multizone")
+	vocab.AddWordRaw("transactional")
 
 	for _, cliName := range []string{"confluent", "ccloud"} {
 		confluent, err := cmd.NewConfluentCommand(cliName, &config.Config{}, &version.Version{}, log.New())
@@ -188,7 +203,13 @@ func linters(cmd *cobra.Command) *multierror.Error {
 					}
 				}
 			}
+
+			// check that flags are consistent
 			cmd.Flags().VisitAll(func(pf *pflag.Flag) {
+				if len(pf.Name) > 16 && pf.Name != "service-account-id" && pf.Name != "replication-factor" {
+					issue := fmt.Errorf("flag name is too long for %s on %s", pf.Name, fullCommand(cmd))
+					issues = multierror.Append(issues, issue)
+				}
 				if pf.Usage[0] < 'A' || pf.Usage[0] > 'Z' {
 					issue := fmt.Errorf("flag usage should start with a capital for %s on %s", pf.Name, fullCommand(cmd))
 					issues = multierror.Append(issues, issue)
@@ -215,6 +236,13 @@ func linters(cmd *cobra.Command) *multierror.Error {
 								nonAlpha = true
 							}
 						}
+					}
+				}
+				// don't allow --smushcaseflags, require dash-separated real words
+				for _, w := range strings.Split(pf.Name, "-") {
+					if ok := vocab.Spell(w); !ok {
+						issue := fmt.Errorf("flag name should consist of dash-separated real english words for %s on %s", pf.Name, fullCommand(cmd))
+						issues = multierror.Append(issues, issue)
 					}
 				}
 			})

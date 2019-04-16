@@ -96,9 +96,16 @@ else
 	true
 endif
 
+cmd/lint/en_US.aff:
+	@curl -s "https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+/master/en_US.aff?format=TEXT" | base64 -D > $@
+
+cmd/lint/en_US.dic:
+	@curl -s "https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+/master/en_US.dic?format=TEXT" | base64 -D > $@
+
 .PHONY: lint-cli
-lint-cli:
-	@GO111MODULE=on go run cmd/lint/main.go
+lint-cli: cmd/lint/en_US.aff cmd/lint/en_US.dic
+	GO111MODULE=on go run cmd/lint/main.go -aff-file $(word 1,$^) -dic-file $(word 2,$^)
+
 
 .PHONY: lint-go
 lint-go:
