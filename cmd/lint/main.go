@@ -62,6 +62,8 @@ func lint(cmd *cobra.Command) error {
 func linters(cmd *cobra.Command) *multierror.Error {
 	if *debug {
 		fmt.Println(fullCommand(cmd))
+		fmt.Println(cmd.Short)
+		fmt.Println()
 	}
 
 	var issues *multierror.Error
@@ -137,8 +139,44 @@ func linters(cmd *cobra.Command) *multierror.Error {
 
 			// check that flags aren't auto sorted
 			if cmd.Flags().HasFlags() && cmd.Flags().SortFlags == true {
-				issue := fmt.Errorf("flags unexpectedly sorted for %s", fullCommand(cmd))
+				issue := fmt.Errorf("flags unexpectedly sorted on %s", fullCommand(cmd))
 				issues = multierror.Append(issues, issue)
+			}
+
+			// check that help messages are consistent
+			if len(cmd.Short) > 43 {
+				issue := fmt.Errorf("short description is too long on %s", fullCommand(cmd))
+				issues = multierror.Append(issues, issue)
+			}
+			if cmd.Short[0] < 'A' || cmd.Short[0] > 'Z' {
+				issue := fmt.Errorf("short description should start with a capital on %s", fullCommand(cmd))
+				issues = multierror.Append(issues, issue)
+			}
+			if cmd.Short[len(cmd.Short)-1] == '.' {
+				issue := fmt.Errorf("short description ends with punctuation on %s", fullCommand(cmd))
+				issues = multierror.Append(issues, issue)
+			}
+			if strings.Contains(cmd.Short, "kafka") {
+				issue := fmt.Errorf("short description should capitalize Kafka on %s", fullCommand(cmd))
+				issues = multierror.Append(issues, issue)
+			}
+			if cmd.Long != "" && (cmd.Long[0] < 'A' || cmd.Long[0] > 'Z') {
+				issue := fmt.Errorf("long description should start with a capital on %s", fullCommand(cmd))
+				issues = multierror.Append(issues, issue)
+			}
+			if strings.Contains(cmd.Long, "kafka") {
+				issue := fmt.Errorf("long description should capitalize Kafka on %s", fullCommand(cmd))
+				issues = multierror.Append(issues, issue)
+			}
+			// TODO: this is an _awful_ IsTitleCase heuristic
+			if words := strings.Split(cmd.Short, " "); len(words) > 1 {
+				for _, word := range words[1:] {
+					if word[0] >= 'A' && word[0] <= 'Z' &&
+						word != "Kafka" && word != "API" && word != "ACL" && word != "ACLs" && word != "ALL" {
+						issue := fmt.Errorf("don't title case short description on %s - %s", fullCommand(cmd), cmd.Short)
+						issues = multierror.Append(issues, issue)
+					}
+				}
 			}
 		}
 	}
