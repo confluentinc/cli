@@ -96,6 +96,10 @@ else
 	true
 endif
 
+.PHONY: lint-cli
+lint-cli:
+	@GO111MODULE=on go run cmd/lint/main.go
+
 .PHONY: lint
 lint:
 	@GO111MODULE=on golangci-lint run
