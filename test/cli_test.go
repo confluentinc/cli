@@ -3,6 +3,7 @@ package test
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -27,27 +28,38 @@ import (
 
 var (
 	binaryName = "ccloud"
-	rebuild    = flag.Bool("rebuild", false, "rebuild CLI even if it already exists")
+	noRebuild  = flag.Bool("no-rebuild", false, "skip rebuilding CLI if it already exists")
 	update     = flag.Bool("update", false, "update golden files")
 )
 
-type ErrorTestSuite struct {
+type CLITest struct {
+	name        string
+	args        string
+	login       string
+	useKafka    string
+	authKafka   string
+	fixture     string
+	wantErrCode int
+	workflow    bool
+}
+
+type CLITestSuite struct {
 	suite.Suite
 }
 
-func TestErrors(t *testing.T) {
-	suite.Run(t, new(ErrorTestSuite))
+func TestCLI(t *testing.T) {
+	suite.Run(t, new(CLITestSuite))
 }
 
 // SetupSuite builds the CLI binary to test
-func (s *ErrorTestSuite) SetupSuite() {
+func (s *CLITestSuite) SetupSuite() {
 	req := require.New(s.T())
 
 	// dumb but effective
 	err := os.Chdir("..")
 	req.NoError(err)
 
-	if _, err = os.Stat(binaryPath(s.T())); os.IsNotExist(err) || *rebuild {
+	if _, err = os.Stat(binaryPath(s.T())); os.IsNotExist(err) || !*noRebuild {
 		makeCmd := exec.Command("make", "build")
 		output, err := makeCmd.CombinedOutput()
 		if err != nil {
@@ -57,90 +69,86 @@ func (s *ErrorTestSuite) SetupSuite() {
 	}
 }
 
-func (s *ErrorTestSuite) TestExitCode() {
-	tests := []struct {
-		name        string
-		args        string
-		login       string
-		useKafka    string
-		authKafka   string
-		fixture     string
-		wantErrCode int
-	}{
-		{"no args", "", "", "", "", "help-flag.golden", 0},
-		{"", "help", "", "", "", "help.golden", 0},
-		{"", "--help", "", "", "", "help-flag.golden", 0},
-		{"", "version", "", "", "", "version.golden", 0},
-		{"", "kafka cluster --help", "", "", "", "kafka-cluster-help.golden", 0},
-		{"error if not authenticated", "kafka topic create integ", "", "", "", "err-not-authenticated.golden", 1},
-		{"error if no active kafka", "kafka topic create integ", "default", "", "", "err-no-kafka.golden", 1},
-		{"error if no kafka auth", "kafka topic create integ", "default", "lkc-abc123", "", "err-no-kafka-auth.golden", 1},
-		{"error if topic already exists", "kafka topic create integ", "default", "lkc-abc123", "true", "topic-exists.golden", 1},
-		{"error if deleting non-existent api-key", "api-key delete --api-key UNKNOWN", "default", "lkc-abc123", "true", "delete-unknown-key.golden", 1},
+func (s *CLITestSuite) Test_Login_UseKafka_AuthKafka_Errors() {
+	tests := []CLITest{
+		{"no args", "", "", "", "", "help-flag.golden", 0, false},
+		{"", "help", "", "", "", "help.golden", 0, false},
+		{"", "--help", "", "", "", "help-flag.golden", 0, false},
+		{"", "version", "", "", "", "version.golden", 0, false},
+		{"", "kafka cluster --help", "", "", "", "kafka-cluster-help.golden", 0, false},
+		{"error if not authenticated", "kafka topic create integ", "", "", "", "err-not-authenticated.golden", 1, false},
+		{"error if no active kafka", "kafka topic create integ", "default", "", "", "err-no-kafka.golden", 1, false},
+		{"error if no kafka auth", "kafka topic create integ", "default", "lkc-abc123", "", "err-no-kafka-auth.golden", 1, false},
+		{"error if topic already exists", "kafka topic create integ", "default", "lkc-abc123", "true", "topic-exists.golden", 1, false},
+		{"error if deleting non-existent api-key", "api-key delete --api-key UNKNOWN", "default", "lkc-abc123", "true", "delete-unknown-key.golden", 1, false},
 	}
 	for _, tt := range tests {
-		if tt.name == "" {
-			tt.name = tt.args
-		}
-		s.T().Run(tt.name, func(t *testing.T) {
-			req := require.New(s.T())
-
-			// HACK: delete your current config to isolate tests cases...
-			// probably don't really want to do this or devs will get mad
-			cfg := config.New(&config.Config{CLIName: binaryName})
-			err := cfg.Save()
-			req.NoError(err)
-
-			if tt.login == "default" {
-				env := []string{"XX_CCLOUD_EMAIL=fake@user.com", "XX_CCLOUD_PASSWORD=pass1"}
-				runCommand(t, env, "login --url "+serve(t).URL, 0)
-			}
-
-			if tt.useKafka != "" {
-				runCommand(t, []string{}, "kafka cluster use "+tt.useKafka, 0)
-			}
-
-			if tt.authKafka != "" {
-				runCommand(t, []string{}, "api-key create --cluster "+tt.useKafka, 0)
-			}
-
-			// HACK: there's no non-interactive way to save an API key locally yet (just kafka cluster auth)
-			if tt.name == "error if topic already exists" {
-				err = cfg.Load()
-				req.NoError(err)
-				ctx, err := cfg.Context()
-				req.NoError(err)
-				cfg.Platforms[ctx.Platform].KafkaClusters[ctx.Kafka] = config.KafkaClusterConfig{
-					APIKey: "MYKEY",
-					APISecret: "MYSECRET",
-					APIEndpoint: serveKafkaAPI(t).URL,
-				}
-				err = cfg.Save()
-				req.NoError(err)
-			}
-
-			output := runCommand(t, []string{}, tt.args, tt.wantErrCode)
-
-			if *update && tt.args != "version" {
-				writeFixture(t, tt.fixture, output)
-			}
-
-			actual := string(output)
-			expected := loadFixture(t, tt.fixture)
-
-			if tt.args == "version" {
-				require.Regexp(t, expected, actual)
-				return
-			}
-
-			if !reflect.DeepEqual(actual, expected) {
-				t.Fatalf("actual = %s, expected = %s", actual, expected)
-			}
-		})
+		runTest(s.T(), tt, serve(s.T()).URL, serveKafkaAPI(s.T()).URL)
 	}
 }
 
+func runTest(t *testing.T, tt CLITest, loginURL, kafkaAPIEndpoint string) {
+	if tt.name == "" {
+		tt.name = tt.args
+	}
+	t.Run(tt.name, func(t *testing.T) {
+		req := require.New(t)
+
+		if !tt.workflow {
+			resetConfiguration(t)
+		}
+
+		if tt.login == "default" {
+			env := []string{"XX_CCLOUD_EMAIL=fake@user.com", "XX_CCLOUD_PASSWORD=pass1"}
+			runCommand(t, env, "login --url "+loginURL, 0)
+		}
+
+		if tt.useKafka != "" {
+			runCommand(t, []string{}, "kafka cluster use "+tt.useKafka, 0)
+		}
+
+		if tt.authKafka != "" {
+			runCommand(t, []string{}, "api-key create --cluster "+tt.useKafka, 0)
+		}
+
+		// HACK: there's no non-interactive way to save an API key locally yet (just kafka cluster auth)
+		if tt.name == "error if topic already exists" {
+			cfg := config.New(&config.Config{CLIName: binaryName})
+			err := cfg.Load()
+			req.NoError(err)
+			ctx, err := cfg.Context()
+			req.NoError(err)
+			cfg.Platforms[ctx.Platform].KafkaClusters[ctx.Kafka] = config.KafkaClusterConfig{
+				APIKey:      "MYKEY",
+				APISecret:   "MYSECRET",
+				APIEndpoint: kafkaAPIEndpoint,
+			}
+			err = cfg.Save()
+			req.NoError(err)
+		}
+
+		output := runCommand(t, []string{}, tt.args, tt.wantErrCode)
+
+		if *update && tt.args != "version" {
+			writeFixture(t, tt.fixture, output)
+		}
+
+		actual := string(output)
+		expected := loadFixture(t, tt.fixture)
+
+		if tt.args == "version" {
+			require.Regexp(t, expected, actual)
+			return
+		}
+
+		if !reflect.DeepEqual(actual, expected) {
+			t.Fatalf("actual = %s, expected = %s", actual, expected)
+		}
+	})
+}
+
 func runCommand(t *testing.T, env []string, args string, wantErrCode int) string {
+	_, _ = fmt.Println(binaryPath(t), args)
 	cmd := exec.Command(binaryPath(t), strings.Split(args, " ")...)
 	cmd.Env = append(os.Environ(), env...)
 	output, err := cmd.CombinedOutput()
@@ -158,6 +166,14 @@ func runCommand(t *testing.T, env []string, args string, wantErrCode int) string
 		}
 	}
 	return string(output)
+}
+
+func resetConfiguration(t *testing.T) {
+	// HACK: delete your current config to isolate tests cases for non-workflow tests...
+	// probably don't really want to do this or devs will get mad
+	cfg := config.New(&config.Config{CLIName: binaryName})
+	err := cfg.Save()
+	require.NoError(t, err)
 }
 
 func writeFixture(t *testing.T, fixture string, content string) {
@@ -182,7 +198,7 @@ func fixturePath(t *testing.T, fixture string) string {
 		t.Fatalf("problems recovering caller information")
 	}
 
-	return filepath.Join(filepath.Dir(filename), fixture)
+	return filepath.Join(filepath.Dir(filename), "fixtures", "output", fixture)
 }
 
 func binaryPath(t *testing.T) string {
