@@ -93,6 +93,9 @@ binary and invoke commands on it. These CLI integration tests roughly follow thi
 1. golden files are expected output fixtures for spec compliance testing
 1. http test server for stubbing the Confluent Platform Control Plane API
 
+Read the [CLITest](./test/cli_test.go) configuration to get a better idea
+about how to write and configure your own integration tests.
+
 You can run just the integration tests with
 
     make test TEST_ARGS="./test/... -v"

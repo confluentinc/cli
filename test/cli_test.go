@@ -32,21 +32,32 @@ var (
 	update     = flag.Bool("update", false, "update golden files")
 )
 
+// CLITest represents a test configuration
 type CLITest struct {
+	// Name to show in go test output; defaults to args if not set
 	name        string
+	// The CLI command being tested; this is a string of args and flags passed to the binary
 	args        string
+	// "default" if you need to login, or "" otherwise
 	login       string
+	// The kafka cluster ID to "use"
 	useKafka    string
+	// The API Key to set as Kafka credentials
 	authKafka   string
+	// Name of a golden output fixture containing expected output
 	fixture     string
+	// Expected exit code (e.g., 0 for success or 1 for failure)
 	wantErrCode int
+	// If true, don't reset the config/state between tests to enable testing CLI workflows
 	workflow    bool
 }
 
+// CLITestSuite is the CLI integration tests.
 type CLITestSuite struct {
 	suite.Suite
 }
 
+// TestCLI runs the CLI integration test suite.
 func TestCLI(t *testing.T) {
 	suite.Run(t, new(CLITestSuite))
 }
