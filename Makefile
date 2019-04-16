@@ -100,9 +100,12 @@ endif
 lint-cli:
 	@GO111MODULE=on go run cmd/lint/main.go
 
-.PHONY: lint
-lint:
+.PHONY: lint-go
+lint-go:
 	@GO111MODULE=on golangci-lint run
+
+.PHONY: lint
+lint: lint-go lint-cli
 
 .PHONY: coverage
 coverage:
