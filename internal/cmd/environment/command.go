@@ -101,6 +101,11 @@ func (c *command) refreshEnvList(cmd *cobra.Command) error {
 		c.config.Auth.Account = c.config.Auth.Accounts[0]
 	}
 
+	err = c.config.Save()
+	if err != nil {
+		return errors.Wrap(err, "unable to save user auth while refreshing environment list")
+	}
+
 	return nil
 }
 
