@@ -11,12 +11,14 @@ import (
 
 type command struct {
 	*cobra.Command
-	config *config.Config
-	client ccloud.KSQL
+	config      *config.Config
+	client      ccloud.KSQL
+	kafkaClient ccloud.Kafka
+	userClient  ccloud.User
 }
 
 // New returns the default command object for interacting with KSQL.
-func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.KSQL) *cobra.Command {
+func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.KSQL, kafkaClient ccloud.Kafka, userClient ccloud.User) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:               "ksql",
@@ -25,11 +27,13 @@ func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.KSQL) *c
 		},
 		config: config,
 		client: client,
+		kafkaClient: kafkaClient,
+		userClient: userClient,
 	}
 	cmd.init()
 	return cmd.Command
 }
 
 func (c *command) init() {
-	c.AddCommand(NewClusterCommand(c.config, c.client))
+	c.AddCommand(NewClusterCommand(c.config, c.client, c.kafkaClient, c.userClient))
 }
