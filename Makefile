@@ -49,7 +49,7 @@ release: get-release-image commit-release tag-release
 
 .PHONY: gorelease
 gorelease:
-	@GO111MODULE=off go get -u github.com/inconshreveable/mousetrap # dep from cobra -- incompatible with go mod
+	#@GO111MODULE=off go get -u github.com/inconshreveable/mousetrap # dep from cobra -- incompatible with go mod
 	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --rm-dist -f .goreleaser-ccloud.yml
 	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --rm-dist -f .goreleaser-confluent.yml
 
@@ -59,21 +59,24 @@ dist-ccloud:
 	@# we had goreleaser upload binaries (they're uncompressed, so goreleaser's parallel uploads will save more time with binaries than archives)
 	for os in darwin linux windows; do \
 		for arch in amd64 386; do \
+			if [ "$${os}" = "darwin" ] && [ "$${arch}" = "386" ] ; then \
+				continue ; \
+			fi; \
 			cp LICENSE dist/ccloud/$${os}_$${arch}/ ; \
 			cp INSTALL.md dist/ccloud/$${os}_$${arch}/ ; \
 			cd dist/ccloud/$${os}_$${arch}/ ; \
 			ln -s ccloud . ; \
 			suffix="" ; \
-			if $${os} -eq "windows" ; then \
-				suffix=.zip ; \
-				zip -jqr ccloud_$$(VERSION)_$${os}_$${arch}.$${suffix} ccloud ; \
+			if [ "$${os}" = "windows" ] ; then \
+				suffix=zip ; \
+				zip -jqr ccloud_$(VERSION)_$${os}_$${arch}.$${suffix} ccloud/* ; \
 			else \
-				suffix=.tar.gz ; \
-				tar -czf ccloud_$$(VERSION)_$${os}_$${arch}.$${suffix} ccloud ; \
+				suffix=tar.gz ; \
+				tar -czf ccloud_$(VERSION)_$${os}_$${arch}.$${suffix} ccloud ; \
 			fi ; \
 			rm -rf ccloud ; \
 			cd ../../../ ; \
-			cp dist/ccloud/ccloud_$$(VERSION)_$${os}_$${arch}.$${suffix} dist/ccloud/ccloud_latest_$${os}_$${arch}.$${suffix} ; \
+			cp dist/ccloud/ccloud_$(VERSION)_$${os}_$${arch}.$${suffix} dist/ccloud/ccloud_latest_$${os}_$${arch}.$${suffix} ; \
 		done ; \
 	done
 
