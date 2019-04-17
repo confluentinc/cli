@@ -83,10 +83,9 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	}
 
 	type keyDisplay struct {
-		Key             string
-		Description     string
-		UserId          int32
-		LogicalClusters string
+		Key         string
+		Description string
+		UserId      int32
 	}
 
 	ctx, err := c.config.Context()

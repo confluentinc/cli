@@ -35,21 +35,21 @@ var (
 // CLITest represents a test configuration
 type CLITest struct {
 	// Name to show in go test output; defaults to args if not set
-	name        string
+	name string
 	// The CLI command being tested; this is a string of args and flags passed to the binary
-	args        string
+	args string
 	// "default" if you need to login, or "" otherwise
-	login       string
+	login string
 	// The kafka cluster ID to "use"
-	useKafka    string
+	useKafka string
 	// The API Key to set as Kafka credentials
-	authKafka   string
+	authKafka string
 	// Name of a golden output fixture containing expected output
-	fixture     string
+	fixture string
 	// Expected exit code (e.g., 0 for success or 1 for failure)
 	wantErrCode int
 	// If true, don't reset the config/state between tests to enable testing CLI workflows
-	workflow    bool
+	workflow bool
 }
 
 // CLITestSuite is the CLI integration tests.
@@ -239,18 +239,55 @@ func serve(t *testing.T) *httptest.Server {
 		req.NoError(err)
 	})
 	mux.HandleFunc("/api/api_keys", func(w http.ResponseWriter, r *http.Request) {
-		b, err := json.Marshal(&authv1.CreateApiKeyReply{
-			ApiKey: &authv1.ApiKey{
-				Key: "MYKEY",
-				Secret: "MYSECRET",
-			},
-		})
-		require.NoError(t, err)
-		_, err = io.WriteString(w, string(b))
-		require.NoError(t, err)
+		if r.Method == "POST" {
+			_, err := fmt.Println("CHOLLA")
+			require.NoError(t, err)
+			b, err := json.Marshal(&authv1.CreateApiKeyReply{
+				ApiKey: &authv1.ApiKey{
+					Key:    "MYKEY",
+					Secret: "MYSECRET",
+					LogicalClusters: []*authv1.ApiKey_Cluster{
+						&authv1.ApiKey_Cluster{Id: "bob"},
+					},
+					UserId: 23,
+				},
+			})
+			require.NoError(t, err)
+			_, err = fmt.Println(string(b))
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(b))
+			require.NoError(t, err)
+		} else if r.Method == "GET" {
+			_, err := fmt.Println("CHOLLA")
+			require.NoError(t, err)
+			b, err := json.Marshal(&authv1.GetApiKeysReply{
+				ApiKeys: []*authv1.ApiKey{
+					&authv1.ApiKey{
+						Key:    "MYKEY",
+						Secret: "MYSECRET",
+						LogicalClusters: []*authv1.ApiKey_Cluster{
+							&authv1.ApiKey_Cluster{Id: "bob"},
+						},
+						UserId: 23,
+					},
+					&authv1.ApiKey{
+						Key:    "MYKEY2",
+						Secret: "MYSECRET2",
+						LogicalClusters: []*authv1.ApiKey_Cluster{
+							&authv1.ApiKey_Cluster{Id: "abc"},
+						},
+						UserId: 23,
+					},
+				}})
+			require.NoError(t, err)
+			_, err = fmt.Println(string(b))
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(b))
+			require.NoError(t, err)
+		}
 	})
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		_, err := io.WriteString(w, `{"error": "unexpected call to ` + r.URL.Path + `"}`)
+		_, err := io.WriteString(w, `{"error": "unexpected call to `+r.URL.Path+`"}`)
 		require.NoError(t, err)
 	})
 	return httptest.NewServer(mux)
