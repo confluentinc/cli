@@ -4,28 +4,29 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/confluentinc/ccloudapis/ksql/v1"
-	"github.com/confluentinc/cli/internal/pkg/acl"
-	"github.com/stretchr/testify/require"
 	"testing"
 
 	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/confluentinc/ccloud-sdk-go/mock"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
+	"github.com/confluentinc/ccloudapis/ksql/v1"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
+
+	"github.com/confluentinc/cli/internal/pkg/acl"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
 const (
-	kafkaClusterID = "lkc-12345"
-	ksqlClusterID = "lksqlc-12345"
+	kafkaClusterID    = "lkc-12345"
+	ksqlClusterID     = "lksqlc-12345"
 	outputTopicPrefix = "pksqlc-abcde"
-	serviceAcctID = int32(123)
-	expectedACLs = `  ServiceAccountId | Permission |    Operation     | Resource |             Name             |   Type    
+	serviceAcctID     = int32(123)
+	expectedACLs      = `  ServiceAccountId | Permission |    Operation     | Resource |             Name             |   Type    
 +------------------+------------+------------------+----------+------------------------------+----------+
   User:123         | ALLOW      | DESCRIBE         | CLUSTER  | kafka-cluster                | LITERAL   
   User:123         | ALLOW      | DESCRIBE_CONFIGS | CLUSTER  | kafka-cluster                | LITERAL   
@@ -87,7 +88,7 @@ func (suite *KSQLTestSuite) initConf() {
 	name := fmt.Sprintf("login-%s-%s", user.User.Email, suite.conf.AuthURL)
 
 	suite.conf.Platforms[name] = &config.Platform{
-		Server:        suite.conf.AuthURL,
+		Server: suite.conf.AuthURL,
 	}
 
 	suite.conf.Credentials[name] = &config.Credential{
@@ -95,29 +96,29 @@ func (suite *KSQLTestSuite) initConf() {
 	}
 
 	suite.conf.Contexts[name] = &config.Context{
-		Platform:   name,
-		Credential: name,
-		Kafka:      kafkaClusterID,
+		Platform:      name,
+		Credential:    name,
+		Kafka:         kafkaClusterID,
 		KafkaClusters: map[string]*config.KafkaClusterConfig{kafkaClusterID: {}},
 	}
 
 	suite.conf.CurrentContext = name
 
 	suite.kafkaCluster = &kafkav1.KafkaCluster{
-		Id: kafkaClusterID,
+		Id:         kafkaClusterID,
 		Enterprise: true,
 	}
 
 	suite.ksqlCluster = &v1.KSQLCluster{
-		Id: ksqlClusterID,
-		KafkaClusterId: kafkaClusterID,
+		Id:                ksqlClusterID,
+		KafkaClusterId:    kafkaClusterID,
 		OutputTopicPrefix: outputTopicPrefix,
 	}
 
 	suite.serviceAcct = &orgv1.User{
 		ServiceAccount: true,
-		ServiceName: "KSQL." + ksqlClusterID,
-		Id: serviceAcctID,
+		ServiceName:    "KSQL." + ksqlClusterID,
+		Id:             serviceAcctID,
 	}
 }
 

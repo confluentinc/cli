@@ -42,10 +42,10 @@ func NewClusterCommand(config *config.Config, client ccloud.KSQL, kafkaClient cc
 			Use:   "app",
 			Short: "Manage KSQL apps",
 		},
-		config: config,
-		client: client,
+		config:      config,
+		client:      client,
 		kafkaClient: kafkaClient,
-		userClient: userClient,
+		userClient:  userClient,
 	}
 	cmd.init()
 	return cmd.Command
@@ -87,10 +87,10 @@ func (c *clusterCommand) init() {
 	})
 
 	aclsCmd := &cobra.Command{
-		Use: "configure-acls ID TOPICS...",
+		Use:   "configure-acls ID TOPICS...",
 		Short: "Configure acls for a KSQL cluster",
-		RunE: c.configureACLs,
-		Args: cobra.MinimumNArgs(1),
+		RunE:  c.configureACLs,
+		Args:  cobra.MinimumNArgs(1),
 	}
 	aclsCmd.Flags().String("cluster", "", "Kafka Cluster ID")
 	check(createCmd.MarkFlagRequired("cluster"))
@@ -198,7 +198,7 @@ func (c *clusterCommand) buildACLBindings(serviceAccountId string, cluster *ksql
 	} {
 		bindings = append(bindings, c.createClusterAcl(op, serviceAccountId))
 	}
-	for _ ,op := range []kafkav1.ACLOperations_ACLOperation{
+	for _, op := range []kafkav1.ACLOperations_ACLOperation{
 		kafkav1.ACLOperations_CREATE,
 		kafkav1.ACLOperations_DESCRIBE,
 		kafkav1.ACLOperations_ALTER,
@@ -209,17 +209,17 @@ func (c *clusterCommand) buildACLBindings(serviceAccountId string, cluster *ksql
 		kafkav1.ACLOperations_DELETE,
 	} {
 		bindings = append(bindings, c.createAcl(cluster.OutputTopicPrefix, kafkav1.PatternTypes_PREFIXED, op, kafkav1.ResourceTypes_TOPIC, serviceAccountId))
-		bindings = append(bindings, c.createAcl("_confluent-ksql-" + cluster.OutputTopicPrefix, kafkav1.PatternTypes_PREFIXED, op, kafkav1.ResourceTypes_TOPIC, serviceAccountId))
-		bindings = append(bindings, c.createAcl("_confluent-ksql-" + cluster.OutputTopicPrefix, kafkav1.PatternTypes_PREFIXED, op, kafkav1.ResourceTypes_GROUP, serviceAccountId))
+		bindings = append(bindings, c.createAcl("_confluent-ksql-"+cluster.OutputTopicPrefix, kafkav1.PatternTypes_PREFIXED, op, kafkav1.ResourceTypes_TOPIC, serviceAccountId))
+		bindings = append(bindings, c.createAcl("_confluent-ksql-"+cluster.OutputTopicPrefix, kafkav1.PatternTypes_PREFIXED, op, kafkav1.ResourceTypes_GROUP, serviceAccountId))
 	}
-	for _, op := range[]kafkav1.ACLOperations_ACLOperation{
+	for _, op := range []kafkav1.ACLOperations_ACLOperation{
 		kafkav1.ACLOperations_DESCRIBE,
 		kafkav1.ACLOperations_DESCRIBE_CONFIGS,
 	} {
 		bindings = append(bindings, c.createAcl("*", kafkav1.PatternTypes_LITERAL, op, kafkav1.ResourceTypes_TOPIC, serviceAccountId))
 		bindings = append(bindings, c.createAcl("*", kafkav1.PatternTypes_LITERAL, op, kafkav1.ResourceTypes_GROUP, serviceAccountId))
 	}
-	for _ ,op := range []kafkav1.ACLOperations_ACLOperation{
+	for _, op := range []kafkav1.ACLOperations_ACLOperation{
 		kafkav1.ACLOperations_DESCRIBE,
 		kafkav1.ACLOperations_DESCRIBE_CONFIGS,
 		kafkav1.ACLOperations_READ,
@@ -244,7 +244,7 @@ func (c *clusterCommand) getServiceAccount(cluster *ksqlv1.KSQLCluster) (string,
 	return "", errors.New(fmt.Sprintf("No service account found for %s", cluster.Id))
 }
 
-func (c *clusterCommand) configureACLs(cmd *cobra.Command, args[]string) error {
+func (c *clusterCommand) configureACLs(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
 
 	// Get the Kafka Cluster

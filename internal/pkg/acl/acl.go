@@ -3,7 +3,8 @@ package acl
 import (
 	"io"
 
-	"github.com/codyaray/go-printer"
+	"github.com/confluentinc/go-printer"
+
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 )
 
