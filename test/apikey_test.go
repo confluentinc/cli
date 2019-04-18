@@ -3,9 +3,9 @@ package test
 func (s *CLITestSuite) TestAPIKeyCommands() {
 	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
 	tests := []CLITest{
-		{args: "api-key create --cluster bob", useKafka: "bob", fixture: "apikey3.golden", wantErrCode: 0},
-		{args: "api-key list", useKafka: "bob", fixture: "apikey1.golden", wantErrCode: 0},
-		{args: "api-key list", useKafka: "abc", fixture: "apikey2.golden", wantErrCode: 0},
+		{args: "api-key create --cluster bob", useKafka: "bob", fixture: "apikey_create_1.golden", wantErrCode: 0},
+		{args: "api-key list", useKafka: "bob", fixture: "apikey_list_1.golden", wantErrCode: 0},
+		{args: "api-key list", useKafka: "abc", fixture: "apikey_list_2.golden", wantErrCode: 0},
 	}
 	resetConfiguration(s.T())
 	for _, tt := range tests {

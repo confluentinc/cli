@@ -240,8 +240,6 @@ func serve(t *testing.T) *httptest.Server {
 	})
 	mux.HandleFunc("/api/api_keys", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
-			_, err := fmt.Println("CHOLLA")
-			require.NoError(t, err)
 			b, err := json.Marshal(&authv1.CreateApiKeyReply{
 				ApiKey: &authv1.ApiKey{
 					Key:    "MYKEY",
@@ -253,13 +251,9 @@ func serve(t *testing.T) *httptest.Server {
 				},
 			})
 			require.NoError(t, err)
-			_, err = fmt.Println(string(b))
-			require.NoError(t, err)
 			_, err = io.WriteString(w, string(b))
 			require.NoError(t, err)
 		} else if r.Method == "GET" {
-			_, err := fmt.Println("CHOLLA")
-			require.NoError(t, err)
 			b, err := json.Marshal(&authv1.GetApiKeysReply{
 				ApiKeys: []*authv1.ApiKey{
 					&authv1.ApiKey{
@@ -279,8 +273,6 @@ func serve(t *testing.T) *httptest.Server {
 						UserId: 23,
 					},
 				}})
-			require.NoError(t, err)
-			_, err = fmt.Println(string(b))
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(b))
 			require.NoError(t, err)
