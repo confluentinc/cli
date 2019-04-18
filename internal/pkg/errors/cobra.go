@@ -31,7 +31,7 @@ func HandleCommon(err error, cmd *cobra.Command) error {
 		return fmt.Errorf(msg)
 	}
 
-	switch err.(type) {
+	switch e := err.(type) {
 	case NotAuthenticatedError:
 		cmd.SilenceUsage = true
 		return err
@@ -44,6 +44,9 @@ func HandleCommon(err error, cmd *cobra.Command) error {
 	case UnknownKafkaContextError:
 		cmd.SilenceUsage = true
 		return fmt.Errorf("no auth found for Kafka %s, please run `ccloud kafka cluster auth` first", err.Error())
+	case *UnconfiguredAPIKeyContextError:
+		cmd.SilenceUsage = true
+		return err
 	}
 
 	return err

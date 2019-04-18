@@ -23,6 +23,33 @@ type NotAuthenticatedError error
 type KafkaError error
 type UnknownKafkaContextError error
 
+type UnknownAPIKeyError struct {
+	APIKey    string
+}
+
+func (e *UnknownAPIKeyError) Error() string {
+	return fmt.Sprintf("Unknown API key %s", e.APIKey)
+}
+
+func IsUnknownAPIKey(err error) bool {
+	_, ok := err.(*UnknownAPIKeyError)
+	return ok
+}
+
+type UnconfiguredAPIKeyContextError struct {
+	ClusterID string
+	APIKey    string
+}
+
+func (e *UnconfiguredAPIKeyContextError) Error() string {
+	return fmt.Sprintf("API key %s for cluster %s not configured/stored in CLI", e.APIKey, e.ClusterID)
+}
+
+func IsUnconfiguredAPIKeyContext(err error) bool {
+	_, ok := err.(*UnconfiguredAPIKeyContextError)
+	return ok
+}
+
 var (
 	ErrNotImplemented = fmt.Errorf("not implemented")
 	ErrIncorrectAuth  = fmt.Errorf("incorrect auth")

@@ -191,37 +191,16 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func getApiKeyId(apiKeys []*authv1.ApiKey, apiKey string) (int32, error) {
-	var id int32
-	for _, key := range apiKeys {
-		if key.Key == apiKey {
-			id = key.Id
-			break
-		}
-	}
-
-	if id == 0 {
-		return id, fmt.Errorf(" Invalid Key")
-	}
-
-	return id, nil
-}
-
 func (c *command) delete(cmd *cobra.Command, args []string) error {
 	apiKey := args[0]
 
-	apiKeys, err := c.client.List(context.Background(), &authv1.ApiKey{AccountId: c.config.Auth.Account.Id})
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
-	id, err := getApiKeyId(apiKeys, apiKey)
+	userKey, err := c.getAPIKey(apiKey)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 
 	key := &authv1.ApiKey{
-		Id:        id,
+		Id:        userKey.Id,
 		AccountId: c.config.Auth.Account.Id,
 	}
 
@@ -241,7 +220,35 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	return c.updateActive(apiKey, clusterID)
+	err = c.updateActive(apiKey, clusterID)
+	if err != nil {
+		if !errors.IsUnconfiguredAPIKeyContext(err) {
+			return errors.HandleCommon(err, cmd)
+		}
+		// TODO: interactive prompt for corresponding API key secret
+	}
+	return nil
+}
+
+func (c *command) getAPIKey(key string) (*authv1.ApiKey, error) {
+	apiKeys, err := c.client.List(context.Background(), &authv1.ApiKey{AccountId: c.config.Auth.Account.Id})
+	if err != nil {
+		return nil, err
+	}
+
+	var userKey *authv1.ApiKey
+	for _, apiKey := range apiKeys {
+		if apiKey.Key == key {
+			userKey = apiKey
+			break
+		}
+	}
+
+	if userKey == nil {
+		return nil, &errors.UnknownAPIKeyError{APIKey: key}
+	}
+
+	return userKey, nil
 }
 
 func (c *command) createKey(userKey *authv1.ApiKey, environment, clusterID string) error {
@@ -285,6 +292,11 @@ func (c *command) updateActive(apiKey, clusterID string) error {
 		return err
 	}
 
+	userKey, err := c.getAPIKey(apiKey)
+	if err != nil {
+		return err
+	}
+
 	// TODO: cluster (flag and active) handling will be cleaned up as part of CLI-112
 	// In PR: https://github.com/confluentinc/cli/pull/146/files#diff-7bf5d7c832065ed38ccd25c6c525b13bR148
 	cluster, found := cfg.KafkaClusters[clusterID]
@@ -294,8 +306,13 @@ func (c *command) updateActive(apiKey, clusterID string) error {
 
 	_, found = cluster.APIKeys[apiKey]
 	if !found {
-		// TODO: we should call CPAPI to see if this is a real API key that just needs configured locally
-		return fmt.Errorf("unknown API key: %s", apiKey)
+		// check if this is API key exists server-side
+		_, err := c.getAPIKey(apiKey)
+		if err != nil {
+			return err
+		}
+		// this means it exists, but we just don't have it saved locally
+		return &errors.UnconfiguredAPIKeyContextError{APIKey: apiKey, ClusterID: clusterID}
 	}
 
 	cluster.APIKey = apiKey
