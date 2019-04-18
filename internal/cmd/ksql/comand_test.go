@@ -88,7 +88,6 @@ func (suite *KSQLTestSuite) initConf() {
 
 	suite.conf.Platforms[name] = &config.Platform{
 		Server:        suite.conf.AuthURL,
-		KafkaClusters: map[string]config.KafkaClusterConfig{kafkaClusterID: {}},
 	}
 
 	suite.conf.Credentials[name] = &config.Credential{
@@ -99,6 +98,7 @@ func (suite *KSQLTestSuite) initConf() {
 		Platform:   name,
 		Credential: name,
 		Kafka:      kafkaClusterID,
+		KafkaClusters: map[string]*config.KafkaClusterConfig{kafkaClusterID: {}},
 	}
 
 	suite.conf.CurrentContext = name
