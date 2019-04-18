@@ -69,7 +69,7 @@ dist-ccloud:
 			suffix="" ; \
 			if [ "$${os}" = "windows" ] ; then \
 				suffix=zip ; \
-				zip -jq ../ccloud_$(VERSION)_$${os}_$${arch}.$${suffix} ccloud  ; \
+				zip -qr ../ccloud_$(VERSION)_$${os}_$${arch}.$${suffix} ccloud ; \
 			else \
 				suffix=tar.gz ; \
 				tar -czf ../ccloud_$(VERSION)_$${os}_$${arch}.$${suffix} ccloud ; \
