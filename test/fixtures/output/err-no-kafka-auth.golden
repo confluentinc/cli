@@ -1,0 +1,1 @@
+Error: no auth found for Kafka lkc-abc123, please run `ccloud kafka cluster auth` first

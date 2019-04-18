@@ -184,6 +184,7 @@ func (a *commands) createOrUpdateContext(user *config.AuthConfig) {
 	if _, ok := a.config.Platforms[name]; !ok {
 		a.config.Platforms[name] = &config.Platform{
 			Server: a.config.AuthURL,
+			KafkaClusters: map[string]config.KafkaClusterConfig{},
 		}
 	}
 	if _, ok := a.config.Credentials[name]; !ok {

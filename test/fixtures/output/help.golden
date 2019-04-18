@@ -1,0 +1,22 @@
+Welcome to the Confluent Cloud CLI
+
+Usage:
+  ccloud [command]
+
+Available Commands:
+  api-key         Manage API keys
+  completion      Output shell completion code
+  environment     Manage and select ccloud environments
+  help            Help about any command
+  kafka           Manage Kafka
+  login           Login to Confluent Cloud
+  logout          Logout of Confluent Cloud
+  service-account Manage service accounts
+  update          Update ccloud
+  version         Print the ccloud version
+
+Flags:
+  -h, --help            help for ccloud
+  -v, --verbose count   increase output verbosity
+
+Use "ccloud [command] --help" for more information about a command.

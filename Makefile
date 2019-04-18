@@ -57,26 +57,27 @@ gorelease:
 dist-ccloud:
 	@# unfortunately goreleaser only supports one archive right now (either tar/zip or binaries): https://github.com/goreleaser/goreleaser/issues/705
 	@# we had goreleaser upload binaries (they're uncompressed, so goreleaser's parallel uploads will save more time with binaries than archives)
-	cp LICENSE dist/ccloud/darwin_amd64/
-	cp LICENSE dist/ccloud/linux_amd64/
-	cp LICENSE dist/ccloud/linux_386/
-	cp LICENSE dist/ccloud/windows_amd64/
-	cp LICENSE dist/ccloud/windows_amd64/
-	cp INSTALL.md dist/ccloud/darwin_amd64/
-	cp INSTALL.md dist/ccloud/linux_amd64/
-	cp INSTALL.md dist/ccloud/linux_386/
-	cp INSTALL.md dist/ccloud/windows_amd64/
-	cp INSTALL.md dist/ccloud/windows_amd64/
-	tar -czf dist/ccloud/ccloud_$(VERSION)_darwin_amd64.tar.gz -C dist/ccloud/darwin_amd64 .
-	tar -czf dist/ccloud/ccloud_$(VERSION)_linux_amd64.tar.gz -C dist/ccloud/linux_amd64 .
-	tar -czf dist/ccloud/ccloud_$(VERSION)_linux_386.tar.gz -C dist/ccloud/linux_386 .
-	zip -jqr dist/ccloud/ccloud_$(VERSION)_windows_amd64.zip dist/ccloud/windows_amd64/*
-	zip -jqr dist/ccloud/ccloud_$(VERSION)_windows_386.zip dist/ccloud/windows_386/*
-	cp dist/ccloud/ccloud_$(VERSION)_darwin_amd64.tar.gz dist/ccloud/ccloud_latest_darwin_amd64.tar.gz
-	cp dist/ccloud/ccloud_$(VERSION)_linux_amd64.tar.gz dist/ccloud/ccloud_latest_linux_amd64.tar.gz
-	cp dist/ccloud/ccloud_$(VERSION)_linux_386.tar.gz dist/ccloud/ccloud_latest_linux_386.tar.gz
-	cp dist/ccloud/ccloud_$(VERSION)_windows_amd64.zip dist/ccloud/ccloud_latest_windows_amd64.zip
-	cp dist/ccloud/ccloud_$(VERSION)_windows_386.zip dist/ccloud/ccloud_latest_windows_386.zip
+	for os in darwin linux windows; do \
+		for arch in amd64 386; do \
+			if [ "$${os}" = "darwin" ] && [ "$${arch}" = "386" ] ; then \
+				continue ; \
+			fi; \
+			cp LICENSE dist/ccloud/$${os}_$${arch}/ ; \
+			cp INSTALL.md dist/ccloud/$${os}_$${arch}/ ; \
+			cd dist/ccloud/$${os}_$${arch}/ ; \
+			mkdir tmp ; mv LICENSE INSTALL.md ccloud* tmp/ ; mv tmp ccloud ; \
+			suffix="" ; \
+			if [ "$${os}" = "windows" ] ; then \
+				suffix=zip ; \
+				zip -qr ../ccloud_$(VERSION)_$${os}_$${arch}.$${suffix} ccloud ; \
+			else \
+				suffix=tar.gz ; \
+				tar -czf ../ccloud_$(VERSION)_$${os}_$${arch}.$${suffix} ccloud ; \
+			fi ; \
+			cd ../../../ ; \
+			cp dist/ccloud/ccloud_$(VERSION)_$${os}_$${arch}.$${suffix} dist/ccloud/ccloud_latest_$${os}_$${arch}.$${suffix} ; \
+		done ; \
+	done
 
 .PHONY: publish-ccloud
 publish: dist-ccloud
