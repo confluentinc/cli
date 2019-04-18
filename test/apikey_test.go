@@ -14,6 +14,6 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 		}
 		tt.login = "default"
 		tt.workflow = true
-		runTest(s.T(), tt, serve(s.T()).URL, serveKafkaAPI(s.T()).URL)
+		s.runTest(s.T(), tt, serve(s.T()).URL, serveKafkaAPI(s.T()).URL)
 	}
 }
