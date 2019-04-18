@@ -65,16 +65,15 @@ dist-ccloud:
 			cp LICENSE dist/ccloud/$${os}_$${arch}/ ; \
 			cp INSTALL.md dist/ccloud/$${os}_$${arch}/ ; \
 			cd dist/ccloud/$${os}_$${arch}/ ; \
-			ln -s ccloud . ; \
+			mkdir tmp ; mv LICENSE INSTALL.md ccloud* tmp/ ; mv tmp ccloud ; \
 			suffix="" ; \
 			if [ "$${os}" = "windows" ] ; then \
 				suffix=zip ; \
-				zip -jqr ccloud_$(VERSION)_$${os}_$${arch}.$${suffix} ccloud/* ; \
+				zip -jqr ../ccloud_$(VERSION)_$${os}_$${arch}.$${suffix} ccloud  ; \
 			else \
 				suffix=tar.gz ; \
-				tar -czf ccloud_$(VERSION)_$${os}_$${arch}.$${suffix} ccloud ; \
+				tar -czf ../ccloud_$(VERSION)_$${os}_$${arch}.$${suffix} ccloud ; \
 			fi ; \
-			rm -rf ccloud ; \
 			cd ../../../ ; \
 			cp dist/ccloud/ccloud_$(VERSION)_$${os}_$${arch}.$${suffix} dist/ccloud/ccloud_latest_$${os}_$${arch}.$${suffix} ; \
 		done ; \
