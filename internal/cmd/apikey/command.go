@@ -98,18 +98,16 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		if apiKey.UserId == 0 {
 			continue
 		}
-		includeKey := false
+
 		for _, c := range apiKey.LogicalClusters {
 			if c.Id == ctx.Kafka {
-				includeKey = true
+				data = append(data, printer.ToRow(&keyDisplay{
+					Key:         apiKey.Key,
+					Description: apiKey.Description,
+					UserId:      apiKey.UserId,
+				}, listFields))
+				break
 			}
-		}
-		if includeKey {
-			data = append(data, printer.ToRow(&keyDisplay{
-				Key:         apiKey.Key,
-				Description: apiKey.Description,
-				UserId:      apiKey.UserId,
-			}, listFields))
 		}
 	}
 
