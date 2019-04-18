@@ -31,7 +31,7 @@ func HandleCommon(err error, cmd *cobra.Command) error {
 		return fmt.Errorf(msg)
 	}
 
-	switch e := err.(type) {
+	switch err.(type) {
 	case NotAuthenticatedError:
 		cmd.SilenceUsage = true
 		return err

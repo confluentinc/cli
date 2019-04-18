@@ -292,7 +292,7 @@ func (c *command) updateActive(apiKey, clusterID string) error {
 		return err
 	}
 
-	userKey, err := c.getAPIKey(apiKey)
+	_, err = c.getAPIKey(apiKey)
 	if err != nil {
 		return err
 	}
