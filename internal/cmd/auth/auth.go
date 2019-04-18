@@ -136,7 +136,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	}
 	pcmd.Println(cmd, "Logged in as", email)
 	pcmd.Print(cmd, "Using environment ", a.config.Auth.Account.Id,
-		" (\"", a.config.Auth.Account.Name, "\"); use `ccloud environment list/use` to view/change environments.\n")
+		" (\"", a.config.Auth.Account.Name, "\")\n")
 	return err
 }
 
@@ -183,7 +183,7 @@ func (a *commands) createOrUpdateContext(user *config.AuthConfig) {
 	name := fmt.Sprintf("login-%s-%s", user.User.Email, a.config.AuthURL)
 	if _, ok := a.config.Platforms[name]; !ok {
 		a.config.Platforms[name] = &config.Platform{
-			Server: a.config.AuthURL,
+			Server:        a.config.AuthURL,
 			KafkaClusters: map[string]config.KafkaClusterConfig{},
 		}
 	}
