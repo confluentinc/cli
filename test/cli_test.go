@@ -282,15 +282,44 @@ func serve(t *testing.T) *httptest.Server {
 		req.NoError(err)
 	})
 	mux.HandleFunc("/api/api_keys", func(w http.ResponseWriter, r *http.Request) {
-		b, err := json.Marshal(&authv1.CreateApiKeyReply{
-			ApiKey: &authv1.ApiKey{
-				Key:    "MYKEY",
-				Secret: "MYSECRET",
-			},
-		})
-		require.NoError(t, err)
-		_, err = io.WriteString(w, string(b))
-		require.NoError(t, err)
+		if r.Method == "POST" {
+			b, err := json.Marshal(&authv1.CreateApiKeyReply{
+				ApiKey: &authv1.ApiKey{
+					Key:    "MYKEY",
+					Secret: "MYSECRET",
+					LogicalClusters: []*authv1.ApiKey_Cluster{
+						&authv1.ApiKey_Cluster{Id: "bob"},
+					},
+					UserId: 23,
+				},
+			})
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(b))
+			require.NoError(t, err)
+		} else if r.Method == "GET" {
+			b, err := json.Marshal(&authv1.GetApiKeysReply{
+				ApiKeys: []*authv1.ApiKey{
+					&authv1.ApiKey{
+						Key:    "MYKEY",
+						Secret: "MYSECRET",
+						LogicalClusters: []*authv1.ApiKey_Cluster{
+							&authv1.ApiKey_Cluster{Id: "bob"},
+						},
+						UserId: 23,
+					},
+					&authv1.ApiKey{
+						Key:    "MYKEY2",
+						Secret: "MYSECRET2",
+						LogicalClusters: []*authv1.ApiKey_Cluster{
+							&authv1.ApiKey_Cluster{Id: "abc"},
+						},
+						UserId: 23,
+					},
+				}})
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(b))
+			require.NoError(t, err)
+		}
 	})
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		_, err := io.WriteString(w, `{"error": "unexpected call to `+r.URL.Path+`"}`)

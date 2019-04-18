@@ -31,3 +31,4 @@ coverage.txt
 ccloud
 *.sw*
 .vscode
+**/*.DS_Store

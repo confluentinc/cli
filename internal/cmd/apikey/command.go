@@ -1,11 +1,9 @@
 package apikey
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -25,8 +23,8 @@ type command struct {
 }
 
 var (
-	listFields    = []string{"Key", "UserId", "LogicalClusters"}
-	listLabels    = []string{"Key", "Owner", "Clusters"}
+	listFields    = []string{"Key", "UserId"}
+	listLabels    = []string{"Key", "Owner"}
 	createFields  = []string{"Key", "Secret"}
 	createRenames = map[string]string{"Key": "API Key"}
 )
@@ -85,34 +83,32 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	}
 
 	type keyDisplay struct {
-		Key             string
-		Description     string
-		UserId          int32
-		LogicalClusters string
+		Key         string
+		Description string
+		UserId      int32
 	}
 
+	ctx, err := c.config.Context()
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
 	var data [][]string
 	for _, apiKey := range apiKeys {
 		// ignore keys owned by Confluent-internal user (healthcheck, etc)
 		if apiKey.UserId == 0 {
 			continue
 		}
-		var clusters []string
+
 		for _, c := range apiKey.LogicalClusters {
-			buf := new(bytes.Buffer)
-			buf.WriteString(c.Id)
-			// TODO: uncomment once we migrate DB so all API keys have a type
-			//buf.WriteString(" (type=")
-			//buf.WriteString(c.Type)
-			//buf.WriteString(")")
-			clusters = append(clusters, buf.String())
+			if c.Id == ctx.Kafka {
+				data = append(data, printer.ToRow(&keyDisplay{
+					Key:         apiKey.Key,
+					Description: apiKey.Description,
+					UserId:      apiKey.UserId,
+				}, listFields))
+				break
+			}
 		}
-		data = append(data, printer.ToRow(&keyDisplay{
-			Key:             apiKey.Key,
-			Description:     apiKey.Description,
-			UserId:          apiKey.UserId,
-			LogicalClusters: strings.Join(clusters, ", "),
-		}, listFields))
 	}
 
 	printer.RenderCollectionTable(data, listLabels)
