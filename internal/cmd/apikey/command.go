@@ -23,6 +23,7 @@ type command struct {
 	config *config.Config
 	client ccloud.APIKey
 	kafka  ccloud.Kafka
+	ch     *pcmd.ConfigHelper
 }
 
 var (
@@ -33,7 +34,7 @@ var (
 )
 
 // New returns the Cobra command for API Key.
-func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.APIKey, kafka ccloud.Kafka) *cobra.Command {
+func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.APIKey, kafka ccloud.Kafka, ch *pcmd.ConfigHelper) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:               "api-key",
@@ -43,6 +44,7 @@ func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.APIKey, 
 		config: config,
 		client: client,
 		kafka:  kafka,
+		ch:     ch,
 	}
 	cmd.init()
 	return cmd.Command
@@ -149,7 +151,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) create(cmd *cobra.Command, args []string) error {
-	cluster, err := pcmd.GetKafkaCluster(cmd, c.config)
+	cluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -300,7 +302,7 @@ func (c *command) getAPIKey(key string) (*authv1.ApiKey, error) {
 //
 
 func (c *command) hasAPIKey(key string, clusterID string) (bool, error) {
-	kcc, err := c.config.KafkaClusterConfig(clusterID)
+	kcc, err := c.ch.KafkaClusterConfig(clusterID)
 	if err != nil {
 		return false, err
 	}

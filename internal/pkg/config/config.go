@@ -9,7 +9,6 @@ import (
 
 	"github.com/mitchellh/go-homedir"
 
-	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	"github.com/confluentinc/ccloudapis/org/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -150,37 +149,6 @@ func (c *Config) Context() (*Context, error) {
 		return nil, errors.ErrNoContext
 	}
 	return c.Contexts[c.CurrentContext], nil
-}
-
-// KafkaClusterConfig returns the overridden or current KafkaClusterConfig
-func (c *Config) KafkaClusterConfig(clusterID string) (*KafkaClusterConfig, error) {
-	// TODO BUG: this will result in a NoContext error even when clusterID is passed
-	cfg, err := c.Context()
-	if err != nil {
-		return nil, err
-	}
-
-	if clusterID == "" {
-		if cfg.Kafka == "" {
-			return nil, errors.ErrNoKafkaContext
-		}
-		clusterID = cfg.Kafka
-	}
-
-	cluster, found := cfg.KafkaClusters[cfg.Kafka]
-	if !found {
-		return nil, errors.NewUnknownKafkaContextError(clusterID)
-	}
-	return cluster, nil
-}
-
-// KafkaCluster returns the current kafka cluster context
-func (c *Config) KafkaCluster(clusterID string) (*kafkav1.KafkaCluster, error) {
-	kafka, err := c.KafkaClusterConfig(clusterID)
-	if err != nil {
-		return nil, err
-	}
-	return &kafkav1.KafkaCluster{AccountId: c.Auth.Account.Id, Id: kafka.ID, ApiEndpoint: kafka.APIEndpoint}, nil
 }
 
 func (c *Config) MaybeDeleteKey(apikey string) error {

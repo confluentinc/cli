@@ -33,10 +33,12 @@ type clusterCommand struct {
 	client      ccloud.KSQL
 	kafkaClient ccloud.Kafka
 	userClient  ccloud.User
+	ch          *pcmd.ConfigHelper
 }
 
 // NewClusterCommand returns the Cobra clusterCommand for Ksql Cluster.
-func NewClusterCommand(config *config.Config, client ccloud.KSQL, kafkaClient ccloud.Kafka, userClient ccloud.User) *cobra.Command {
+func NewClusterCommand(config *config.Config, client ccloud.KSQL, kafkaClient ccloud.Kafka, userClient ccloud.User,
+	ch *pcmd.ConfigHelper) *cobra.Command {
 	cmd := &clusterCommand{
 		Command: &cobra.Command{
 			Use:   "app",
@@ -46,6 +48,7 @@ func NewClusterCommand(config *config.Config, client ccloud.KSQL, kafkaClient cc
 		client:      client,
 		kafkaClient: kafkaClient,
 		userClient:  userClient,
+		ch:          ch,
 	}
 	cmd.init()
 	return cmd.Command
@@ -113,7 +116,7 @@ func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
-	kafkaCluster, err := pcmd.GetKafkaCluster(cmd, c.config)
+	kafkaCluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -248,7 +251,7 @@ func (c *clusterCommand) configureACLs(cmd *cobra.Command, args []string) error 
 	ctx := context.Background()
 
 	// Get the Kafka Cluster
-	kafkaCluster, err := pcmd.GetKafkaCluster(cmd, c.config)
+	kafkaCluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}

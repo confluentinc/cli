@@ -16,6 +16,7 @@ import (
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/acl"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	cliMock "github.com/confluentinc/cli/mock"
@@ -138,13 +139,13 @@ func (suite *KSQLTestSuite) SetupTest() {
 	}
 	suite.userc = &mock.User{
 		GetServiceAccountsFunc: func(arg0 context.Context) (users []*orgv1.User, e error) {
-			return []*orgv1.User{suite.serviceAcct,}, nil
+			return []*orgv1.User{suite.serviceAcct}, nil
 		},
 	}
 }
 
 func (suite *KSQLTestSuite) newCMD() *cobra.Command {
-	cmd := New(&cliMock.Commander{}, suite.conf, suite.ksqlc, suite.kafkac, suite.userc)
+	cmd := New(&cliMock.Commander{}, suite.conf, suite.ksqlc, suite.kafkac, suite.userc, &pcmd.ConfigHelper{Config: suite.conf, Kafka: suite.kafkac})
 	cmd.PersistentFlags().CountP("verbose", "v", "increase output verbosity")
 	return cmd
 }
@@ -177,7 +178,7 @@ func (suite *KSQLTestSuite) TestShouldNotConfigureForPro() {
 
 	req := require.New(suite.T())
 	req.Nil(err)
-	req.False(suite.kafkac.CreateACLCalled());
+	req.False(suite.kafkac.CreateACLCalled())
 	req.Equal("Cluster is not an enterprise cluster. No ACLS need to be set", buf.String())
 }
 
@@ -191,7 +192,7 @@ func (suite *KSQLTestSuite) TestShouldNotConfigureOnDryRun() {
 
 	req := require.New(suite.T())
 	req.Nil(err)
-	req.False(suite.kafkac.CreateACLCalled());
+	req.False(suite.kafkac.CreateACLCalled())
 	req.Equal(expectedACLs, buf.String())
 }
 
