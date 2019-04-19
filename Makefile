@@ -112,7 +112,7 @@ lint-go:
 	@GO111MODULE=on golangci-lint run
 
 .PHONY: lint
-lint: lint-go lint-cli
+lint: lint-go
 
 .PHONY: coverage
 coverage:
