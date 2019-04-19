@@ -126,6 +126,12 @@ func (s *CLITestSuite) Test_Login_UseKafka_AuthKafka_Errors() {
 			useKafka:  "lkc-abc123",
 			authKafka: "true",
 		},
+		{
+			name:     "error if using unknown kafka",
+			args:     "kafka cluster use lkc-unknown",
+			fixture:  "err-use-unknown-kafka.golden",
+			login:    "default",
+		},
 	}
 	for _, tt := range tests {
 		if strings.HasPrefix(tt.name, "error") {
@@ -318,6 +324,11 @@ func serve(t *testing.T) *httptest.Server {
 	mux.HandleFunc("/api/clusters/", func(w http.ResponseWriter, r *http.Request) {
 		parts := strings.Split(r.URL.Path, "/")
 		id := parts[len(parts)-1]
+		if id == "lkc-unknown" {
+			_, err := io.WriteString(w, `{"error":{"code":404,"message":"resource not found","nested_errors":{},"details":[],"stack":null},"cluster":null}`)
+			require.NoError(t, err)
+			return
+		}
 		b, err := json.Marshal(&kafkav1.GetKafkaClusterReply{
 			Cluster: &kafkav1.KafkaCluster{
 				Id:          id,
