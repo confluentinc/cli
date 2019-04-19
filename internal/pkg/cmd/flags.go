@@ -16,10 +16,10 @@ func GetKafkaCluster(cmd *cobra.Command, cfg *config.Config) (*kafkav1.KafkaClus
 	return cfg.KafkaCluster(clusterID)
 }
 
-func GetKafkaClusterConfig(cmd *cobra.Command, cfg *config.Config) (config.KafkaClusterConfig, error) {
+func GetKafkaClusterConfig(cmd *cobra.Command, cfg *config.Config) (*config.KafkaClusterConfig, error) {
 	clusterID, err := cmd.Flags().GetString("cluster")
 	if err != nil {
-		return config.KafkaClusterConfig{}, err
+		return nil, err
 	}
 	return cfg.KafkaClusterConfig(clusterID)
 }

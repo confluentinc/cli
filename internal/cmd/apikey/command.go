@@ -193,12 +193,12 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	if err := c.storeAPIKey(userKey, environment, clusterID); err != nil {
+	if err := c.storeAPIKey(userKey, environment, cluster.Id); err != nil {
 		return errors.HandleCommon(errors.Wrapf(err, "unable to store api key locally"), cmd)
 	}
 
 	if use {
-		if err := c.useAPIKey(userKey.Key, clusterID); err != nil {
+		if err := c.useAPIKey(userKey.Key, cluster.Id); err != nil {
 			return errors.HandleCommon(errors.Wrapf(err, "unable to use/activate new api key"), cmd)
 		}
 	}
@@ -312,7 +312,7 @@ func (c *command) getAPIKey(key string) (*authv1.ApiKey, error) {
 //
 
 func (c *command) hasAPIKey(key string, clusterID string) (bool, error) {
-	kcc, err := c.config.KafkaClusterConfig()
+	kcc, err := c.config.KafkaClusterConfig(clusterID)
 	if err != nil {
 		return false, err
 	}

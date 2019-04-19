@@ -39,7 +39,7 @@ type KafkaClusterConfig struct {
 	ID          string `json:"id" hcl:"id"`
 	Bootstrap   string                 `json:"bootstrap_servers" hcl:"bootstrap_servers"`
 	APIEndpoint string                 `json:"api_endpoint,omitempty" hcl:"api_endpoint"`
-	APIKeys     map[string]*APIKeyPair `json:"api_keys,omitempty" hcl:"api_keys"`
+	APIKeys     map[string]*APIKeyPair `json:"api_keys" hcl:"api_keys"`
 	// APIKey is your active api key for this cluster and references a key in the APIKeys map
 	APIKey string `json:"api_key,omitempty" hcl:"api_key"`
 }
@@ -154,6 +154,7 @@ func (c *Config) Context() (*Context, error) {
 
 // KafkaClusterConfig returns the overridden or current KafkaClusterConfig
 func (c *Config) KafkaClusterConfig(clusterID string) (*KafkaClusterConfig, error) {
+	// TODO BUG: this will result in a NoContext error even when clusterID is passed
 	cfg, err := c.Context()
 	if err != nil {
 		return nil, err
