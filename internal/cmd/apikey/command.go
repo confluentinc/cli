@@ -72,7 +72,6 @@ func (c *command) init() {
 	createCmd.Flags().String("cluster", "", "Grant access to a cluster with this ID")
 	createCmd.Flags().Int32("service-account-id", 0, "Create API key for a service account")
 	createCmd.Flags().String("description", "", "Description or purpose for the API key")
-	createCmd.Flags().Bool("use", false, "Activate this API key for the cluster")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
@@ -165,11 +164,6 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	use, err := cmd.Flags().GetBool("use")
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
 	environment, err := pcmd.GetEnvironment(cmd, c.config)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -195,12 +189,6 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 
 	if err := c.storeAPIKey(userKey, environment, cluster.Id); err != nil {
 		return errors.HandleCommon(errors.Wrapf(err, "unable to store api key locally"), cmd)
-	}
-
-	if use {
-		if err := c.useAPIKey(userKey.Key, cluster.Id); err != nil {
-			return errors.HandleCommon(errors.Wrapf(err, "unable to use/activate new api key"), cmd)
-		}
 	}
 
 	return nil
