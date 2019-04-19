@@ -3,7 +3,6 @@ package ksql
 import (
 	"context"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/acl"
 	"os"
 	"strconv"
 
@@ -14,6 +13,7 @@ import (
 	ksqlv1 "github.com/confluentinc/ccloudapis/ksql/v1"
 	"github.com/confluentinc/go-printer"
 
+	"github.com/confluentinc/cli/internal/pkg/acl"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -65,13 +65,11 @@ func (c *clusterCommand) init() {
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	}
-
-	createCmd.Flags().String("kafka-cluster", "", "Kafka Cluster ID")
-	check(createCmd.MarkFlagRequired("kafka-cluster"))
+	createCmd.Flags().String("cluster", "", "Kafka Cluster ID")
+	check(createCmd.MarkFlagRequired("cluster"))
 	createCmd.Flags().Int32("storage", 50, "total usable data storage in GB")
 	check(createCmd.MarkFlagRequired("storage"))
 	createCmd.Flags().Int32("servers", 1, "number of servers in the cluster")
-
 	c.AddCommand(createCmd)
 
 	c.AddCommand(&cobra.Command{
@@ -80,18 +78,22 @@ func (c *clusterCommand) init() {
 		RunE:  c.describe,
 		Args:  cobra.ExactArgs(1),
 	})
+
 	c.AddCommand(&cobra.Command{
 		Use:   "delete ID",
 		Short: "Delete a ksql app",
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
 	})
+
 	aclsCmd := &cobra.Command{
 		Use: "configure-acls ID TOPICS...",
 		Short: "Configure acls for a KSQL cluster",
 		RunE: c.configureACLs,
 		Args: cobra.MinimumNArgs(1),
 	}
+	aclsCmd.Flags().String("cluster", "", "Kafka Cluster ID")
+	check(createCmd.MarkFlagRequired("cluster"))
 	aclsCmd.Flags().BoolVar(&aclsDryRun, "dry-run", false, "If specified, print the acls that will be set and exit")
 	c.AddCommand(aclsCmd)
 }
@@ -111,7 +113,7 @@ func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
-	kafkaClusterID, err := cmd.Flags().GetString("kafka-cluster")
+	kafkaCluster, err := pcmd.GetKafkaCluster(cmd, c.config)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -128,7 +130,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		Name:           args[0],
 		Servers:        servers,
 		Storage:        storage,
-		KafkaClusterId: kafkaClusterID,
+		KafkaClusterId: kafkaCluster.Id,
 	}
 	cluster, err := c.client.Create(context.Background(), cfg)
 	if err != nil {
@@ -246,11 +248,12 @@ func (c *clusterCommand) configureACLs(cmd *cobra.Command, args[]string) error {
 	ctx := context.Background()
 
 	// Get the Kafka Cluster
-	// Ensure the Kafka Cluster is an Enterprise cluster
-	kafkaCluster, err := c.config.KafkaCluster()
+	kafkaCluster, err := pcmd.GetKafkaCluster(cmd, c.config)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
+
+	// Ensure the Kafka Cluster is an Enterprise cluster
 	kafkaCluster, err = c.kafkaClient.Describe(ctx, kafkaCluster)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
