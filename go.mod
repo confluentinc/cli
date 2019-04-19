@@ -21,7 +21,7 @@ require (
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/go-critic/checkers v0.0.0-20181031185637-879460b6c936 // indirect
 	github.com/gogo/protobuf v1.2.1 // indirect
-	github.com/golang/mock v1.2.0 // indirect
+	github.com/golang/mock v1.2.0
 	github.com/golang/protobuf v1.2.1-0.20181128192352-1d3f30b51784
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/golangci/go-tools v0.0.0-20190124090046-35a9f45a5db0 // indirect
@@ -41,6 +41,8 @@ require (
 	github.com/hashicorp/go-version v1.1.0
 	github.com/jonboulle/clockwork v0.1.0
 	github.com/kamilsk/retry v0.0.0-20181229152359-495c1d672c93 // indirect
+	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect
+	github.com/kevinburke/go-bindata v3.13.0+incompatible // indirect
 	github.com/mattn/go-isatty v0.0.4
 	github.com/mattn/go-runewidth v0.0.3 // indirect
 	github.com/mitchellh/go-homedir v1.0.0
@@ -50,6 +52,7 @@ require (
 	github.com/pascaldekloe/goe v0.0.0-20180627143212-57f6aae5913c // indirect
 	github.com/pierrec/lz4 v2.0.5+incompatible // indirect
 	github.com/pkg/errors v0.8.1
+	github.com/progrium/go-basher v0.0.0-20190315062444-ad5de635edd1
 	github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a // indirect
 	github.com/shurcooL/go v0.0.0-20190121191506-3fef8c783dec // indirect
 	github.com/sirupsen/logrus v1.3.0 // indirect
@@ -57,6 +60,7 @@ require (
 	github.com/spf13/pflag v1.0.3
 	github.com/spf13/viper v1.2.0
 	github.com/stretchr/testify v1.3.0
+	github.com/travisjeffery/mocker v0.0.0-20190115171754-c0d706f8be41 // indirect
 	golang.org/x/crypto v0.0.0-20190313024323-a1f597ede03a
 	golang.org/x/text v0.3.1-0.20180807135948-17ff2d5776d2 // indirect
 	gopkg.in/yaml.v2 v2.2.2 // indirect

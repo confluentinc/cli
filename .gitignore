@@ -32,3 +32,5 @@ ccloud
 *.sw*
 .vscode
 **/*.DS_Store
+internal/cmd/local/bindata.go
+mock/local/shell_runner_mock.go
