@@ -169,7 +169,7 @@ func (c *Config) KafkaClusterConfig(clusterID string) (*KafkaClusterConfig, erro
 
 	cluster, found := cfg.KafkaClusters[cfg.Kafka]
 	if !found {
-		return nil, errors.UnknownKafkaContextError(fmt.Errorf(clusterID))
+		return nil, errors.NewUnknownKafkaContextError(clusterID)
 	}
 	return cluster, nil
 }

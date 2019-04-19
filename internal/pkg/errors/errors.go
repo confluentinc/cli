@@ -19,9 +19,25 @@ import (
  * - Pkg call ConvertAPIError() to transforms corev1.Error into HTTP Error constants
  */
 
-type NotAuthenticatedError error
-type KafkaError error
-type UnknownKafkaContextError error
+type errString struct {
+	msg string
+}
+
+func (e *errString) Error() string {
+	return e.msg
+}
+
+type NotAuthenticatedError struct{ *errString }
+
+func NewNotAuthenticatedError(msg string) NotAuthenticatedError {
+	return NotAuthenticatedError{errString: &errString{msg}}
+}
+
+type UnknownKafkaContextError struct{ *errString }
+
+func NewUnknownKafkaContextError(msg string) UnknownKafkaContextError {
+	return UnknownKafkaContextError{errString: &errString{msg}}
+}
 
 type UnknownAPIKeyError struct {
 	APIKey    string
