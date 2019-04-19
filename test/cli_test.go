@@ -39,6 +39,8 @@ type CLITest struct {
 	name string
 	// The CLI command being tested; this is a string of args and flags passed to the binary
 	args string
+	// The set of environment variables to be set when the CLI is run
+	env []string
 	// "default" if you need to login, or "" otherwise
 	login string
 	// The kafka cluster ID to "use"
@@ -341,7 +343,7 @@ func serve(t *testing.T) *httptest.Server {
 		require.NoError(t, err)
 	})
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		_, err := io.WriteString(w, `{"error": "unexpected call to `+r.URL.Path+`"}`)
+		_, err := io.WriteString(w, `{"error": {"message": "unexpected call to `+r.URL.Path+`"}}`)
 		require.NoError(t, err)
 	})
 	return httptest.NewServer(mux)

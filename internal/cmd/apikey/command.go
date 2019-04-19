@@ -68,6 +68,7 @@ func (c *command) init() {
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
 	}
+	createCmd.Flags().String("environment", "", "ID of the environment in which to run the command")
 	createCmd.Flags().String("cluster", "", "Grant access to a cluster with this ID")
 	createCmd.Flags().Int32("service-account-id", 0, "Create API key for a service account")
 	createCmd.Flags().String("description", "", "Description or purpose for the API key")
@@ -81,6 +82,20 @@ func (c *command) init() {
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
 	})
+
+	storeCmd := &cobra.Command{
+		Use: "store",
+		Short: "Store an existing API key/secret (created outside CLI) locally for CLI usage",
+		RunE: c.store,
+		Args: cobra.ExactArgs(2),
+	}
+	storeCmd.Flags().String("environment", "", "ID of the environment in which to run the command")
+	storeCmd.Flags().String("cluster", "", "Store API key for this cluster")
+	storeCmd.Flags().BoolP("force", "f", false, "Force overwrite existing secret for this key")
+	// TODO: cluster (flag and active) handling will be cleaned up as part of CLI-112
+	// In PR: https://github.com/confluentinc/cli/pull/146/files#diff-7bf5d7c832065ed38ccd25c6c525b13bR148
+	_ = storeCmd.MarkFlagRequired("cluster")
+	c.AddCommand(storeCmd)
 
 	useCmd := &cobra.Command{
 		Use:   "use",
@@ -178,12 +193,12 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	if err := c.createKey(userKey, environment, clusterID); err != nil {
-		return errors.HandleCommon(errors.Wrapf(err, "unable to save api key locally"), cmd)
+	if err := c.storeAPIKey(userKey, environment, clusterID); err != nil {
+		return errors.HandleCommon(errors.Wrapf(err, "unable to store api key locally"), cmd)
 	}
 
 	if use {
-		if err := c.updateActive(userKey.Key, clusterID); err != nil {
+		if err := c.useAPIKey(userKey.Key, clusterID); err != nil {
 			return errors.HandleCommon(errors.Wrapf(err, "unable to use/activate new api key"), cmd)
 		}
 	}
@@ -212,6 +227,45 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	return c.config.MaybeDeleteKey(apiKey)
 }
 
+func (c *command) store(cmd *cobra.Command, args []string) error {
+	key := args[0]
+	secret := args[1]
+
+	clusterID, err := cmd.Flags().GetString("cluster")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	environment, err := pcmd.GetEnvironment(cmd, c.config)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	force, err := cmd.Flags().GetBool("force")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	// Check if API key exists server-side
+	_, err = c.getAPIKey(key)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	// API key exists server-side... now check if API key exists locally already
+	if found, err := c.hasAPIKey(key, clusterID); err != nil {
+		return errors.HandleCommon(err, cmd)
+	} else if found && !force {
+		return errors.HandleCommon(errors.Errorf("Refusing to overwrite existing secret for API Key %s", key), cmd)
+	}
+
+	if err := c.storeAPIKey(&authv1.ApiKey{Key: key, Secret: secret}, environment, clusterID); err != nil {
+		return errors.HandleCommon(errors.Wrapf(err, "unable to store api key locally"), cmd)
+	}
+
+	return nil
+}
+
 func (c *command) use(cmd *cobra.Command, args []string) error {
 	apiKey := args[0]
 
@@ -220,7 +274,7 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	err = c.updateActive(apiKey, clusterID)
+	err = c.useAPIKey(apiKey, clusterID)
 	if err != nil {
 		if !errors.IsUnconfiguredAPIKeyContext(err) {
 			return errors.HandleCommon(err, cmd)
@@ -251,7 +305,23 @@ func (c *command) getAPIKey(key string) (*authv1.ApiKey, error) {
 	return userKey, nil
 }
 
-func (c *command) createKey(userKey *authv1.ApiKey, environment, clusterID string) error {
+//
+// Local API Key Store
+//
+// We should probably have an actual wrapper class or something here
+//
+
+func (c *command) hasAPIKey(key string, clusterID string) (bool, error) {
+	kcc, err := c.config.KafkaClusterConfig()
+	if err != nil {
+		return false, err
+	}
+
+	_, found := kcc.APIKeys[key]
+	return found, nil
+}
+
+func (c *command) storeAPIKey(userKey *authv1.ApiKey, environment, clusterID string) error {
 	cfg, err := c.config.Context()
 	if err != nil {
 		return err
@@ -286,7 +356,7 @@ func (c *command) createKey(userKey *authv1.ApiKey, environment, clusterID strin
 	return c.config.Save()
 }
 
-func (c *command) updateActive(apiKey, clusterID string) error {
+func (c *command) useAPIKey(apiKey, clusterID string) error {
 	cfg, err := c.config.Context()
 	if err != nil {
 		return err
