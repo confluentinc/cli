@@ -7,7 +7,7 @@ require (
 	github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da
 	github.com/atrox/homedir v1.0.0
 	github.com/aws/aws-sdk-go v1.15.64
-	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df // indirect
+	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/codyaray/go-editor v0.3.0
 	github.com/codyaray/go-printer v0.9.0
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect

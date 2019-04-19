@@ -106,7 +106,7 @@ func (c *clusterCommand) init() {
 	})
 	c.AddCommand(&cobra.Command{
 		Use:   "use ID",
-		Short: "Set the Kafka cluster in the context",
+		Short: "Make the Kafka cluster active for use in other commands",
 		RunE:  c.use,
 		Args:  cobra.ExactArgs(1),
 	})

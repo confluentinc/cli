@@ -21,6 +21,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
+	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
@@ -110,13 +111,6 @@ func (s *CLITestSuite) Test_Login_UseKafka_AuthKafka_Errors() {
 			login:   "default",
 		},
 		{
-			name:     "error if no kafka auth",
-			args:     "kafka topic create integ",
-			fixture:  "err-no-kafka-auth.golden",
-			login:    "default",
-			useKafka: "lkc-abc123",
-		},
-		{
 			name:      "error if topic already exists",
 			args:      "kafka topic create integ",
 			fixture:   "topic-exists.golden",
@@ -126,7 +120,7 @@ func (s *CLITestSuite) Test_Login_UseKafka_AuthKafka_Errors() {
 		},
 		{
 			name:      "error if deleting non-existent api-key",
-			args:      "api-key delete --api-key UNKNOWN",
+			args:      "api-key delete UNKNOWN",
 			fixture:   "delete-unknown-key.golden",
 			login:     "default",
 			useKafka:  "lkc-abc123",
@@ -320,6 +314,20 @@ func serve(t *testing.T) *httptest.Server {
 			_, err = io.WriteString(w, string(b))
 			require.NoError(t, err)
 		}
+	})
+	mux.HandleFunc("/api/clusters/", func(w http.ResponseWriter, r *http.Request) {
+		parts := strings.Split(r.URL.Path, "/")
+		id := parts[len(parts)-1]
+		b, err := json.Marshal(&kafkav1.GetKafkaClusterReply{
+			Cluster: &kafkav1.KafkaCluster{
+				Id:          id,
+				Endpoint:    "SASL_SSL://kafka-endpoint",
+				ApiEndpoint: "https://kafka-api-endpoint",
+			},
+		})
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(b))
+		require.NoError(t, err)
 	})
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		_, err := io.WriteString(w, `{"error": "unexpected call to `+r.URL.Path+`"}`)
