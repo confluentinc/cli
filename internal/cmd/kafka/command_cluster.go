@@ -294,11 +294,35 @@ func (c *clusterCommand) auth(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) use(cmd *cobra.Command, args []string) error {
+	clusterID := args[0]
+
+	environment, err := c.getEnvironment(cmd)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
 	cfg, err := c.config.Context()
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	cfg.Kafka = args[0]
+
+	req := &kafkav1.KafkaCluster{AccountId: environment, Id: clusterID}
+	kc, err := c.client.Describe(context.Background(), req)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	// TODO: we can't rely on "use" to do this if we want to support stateless usage with --cluster instead
+	if c.config.Platforms[cfg.Platform].KafkaClusters == nil {
+		c.config.Platforms[cfg.Platform].KafkaClusters = map[string]config.KafkaClusterConfig{}
+	}
+	c.config.Platforms[cfg.Platform].KafkaClusters[kc.Id] = config.KafkaClusterConfig{
+		ID:          kc.Id,
+		Bootstrap:   strings.TrimPrefix(kc.Endpoint, "SASL_SSL://"),
+		APIEndpoint: kc.ApiEndpoint,
+	}
+
+	cfg.Kafka = clusterID
 	return c.config.Save()
 }
 
