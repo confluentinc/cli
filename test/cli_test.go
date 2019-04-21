@@ -31,6 +31,7 @@ var (
 	binaryName = "ccloud"
 	noRebuild  = flag.Bool("no-rebuild", false, "skip rebuilding CLI if it already exists")
 	update     = flag.Bool("update", false, "update golden files")
+	debug      = flag.Bool("debug", false, "enable verbose output")
 )
 
 // CLITest represents a test configuration
@@ -156,15 +157,24 @@ func (s *CLITestSuite) runTest(tt CLITest, loginURL, kafkaAPIEndpoint string) {
 
 		if tt.login == "default" {
 			env := []string{"XX_CCLOUD_EMAIL=fake@user.com", "XX_CCLOUD_PASSWORD=pass1"}
-			runCommand(t, env, "login --url "+loginURL, 0)
+			output := runCommand(t, env, "login --url "+loginURL, 0)
+			if *debug{
+				fmt.Println(output)
+			}
 		}
 
 		if tt.useKafka != "" {
-			runCommand(t, []string{}, "kafka cluster use "+tt.useKafka, 0)
+			output := runCommand(t, []string{}, "kafka cluster use "+tt.useKafka, 0)
+			if *debug{
+				fmt.Println(output)
+			}
 		}
 
 		if tt.authKafka != "" {
-			runCommand(t, []string{}, "api-key create --cluster "+tt.useKafka, 0)
+			output := runCommand(t, []string{}, "api-key create --cluster "+tt.useKafka, 0)
+			if *debug{
+				fmt.Println(output)
+			}
 		}
 
 		// HACK: there's no non-interactive way to save an API key locally yet (just kafka cluster auth)
@@ -184,6 +194,9 @@ func (s *CLITestSuite) runTest(tt CLITest, loginURL, kafkaAPIEndpoint string) {
 		}
 
 		output := runCommand(t, []string{}, tt.args, tt.wantErrCode)
+		if *debug{
+			fmt.Println(output)
+		}
 
 		if *update && tt.args != "version" {
 			writeFixture(t, tt.fixture, output)

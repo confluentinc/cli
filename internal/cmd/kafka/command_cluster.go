@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -28,10 +27,11 @@ type clusterCommand struct {
 	*cobra.Command
 	config *config.Config
 	client ccloud.Kafka
+	ch     *pcmd.ConfigHelper
 }
 
 // NewClusterCommand returns the Cobra command for Kafka cluster.
-func NewClusterCommand(config *config.Config, client ccloud.Kafka) *cobra.Command {
+func NewClusterCommand(config *config.Config, client ccloud.Kafka, ch *pcmd.ConfigHelper) *cobra.Command {
 	cmd := &clusterCommand{
 		Command: &cobra.Command{
 			Use:   "cluster",
@@ -39,6 +39,7 @@ func NewClusterCommand(config *config.Config, client ccloud.Kafka) *cobra.Comman
 		},
 		config: config,
 		client: client,
+		ch:     ch,
 	}
 	cmd.init()
 	return cmd.Command
@@ -218,31 +219,19 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 func (c *clusterCommand) use(cmd *cobra.Command, args []string) error {
 	clusterID := args[0]
 
-	environment, err := pcmd.GetEnvironment(cmd, c.config)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
 	cfg, err := c.config.Context()
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	req := &kafkav1.KafkaCluster{AccountId: environment, Id: clusterID}
-	kc, err := c.client.Describe(context.Background(), req)
+	// This ensures that the clusterID actually exists or throws an error
+	environment, err := pcmd.GetEnvironment(cmd, c.ch.Config)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-
-	// TODO: we can't rely on "use" to do this if we want to support stateless usage with --cluster instead
-	if cfg.KafkaClusters == nil {
-		cfg.KafkaClusters = map[string]*config.KafkaClusterConfig{}
-	}
-	cfg.KafkaClusters[kc.Id] = &config.KafkaClusterConfig{
-		ID:          kc.Id,
-		Bootstrap:   strings.TrimPrefix(kc.Endpoint, "SASL_SSL://"),
-		APIEndpoint: kc.ApiEndpoint,
-		APIKeys:     make(map[string]*config.APIKeyPair),
+	_, err = c.ch.KafkaClusterConfig(clusterID, environment)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
 	}
 
 	cfg.Kafka = clusterID

@@ -44,6 +44,8 @@ func NewTopicCommand(config *config.Config, client ccloud.Kafka, ch *pcmd.Config
 }
 
 func (c *topicCommand) init() {
+	c.PersistentFlags().String("environment", "", "ID of the environment in which to run the command")
+
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List Kafka topics",

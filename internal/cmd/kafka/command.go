@@ -35,7 +35,7 @@ func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.Kafka, c
 }
 
 func (c *command) init() {
-	c.AddCommand(NewClusterCommand(c.config, c.client))
+	c.AddCommand(NewClusterCommand(c.config, c.client, c.ch))
 	c.AddCommand(NewTopicCommand(c.config, c.client, c.ch))
 	c.AddCommand(NewACLCommand(c.config, c.client, c.ch))
 }

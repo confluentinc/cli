@@ -243,7 +243,7 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	}
 
 	// API key exists server-side... now check if API key exists locally already
-	if found, err := c.hasAPIKey(key, clusterID); err != nil {
+	if found, err := c.hasAPIKey(key, clusterID, environment); err != nil {
 		return errors.HandleCommon(err, cmd)
 	} else if found && !force {
 		return errors.HandleCommon(errors.Errorf("Refusing to overwrite existing secret for API Key %s", key), cmd)
@@ -301,8 +301,8 @@ func (c *command) getAPIKey(key string) (*authv1.ApiKey, error) {
 // We should probably have an actual wrapper class or something here
 //
 
-func (c *command) hasAPIKey(key string, clusterID string) (bool, error) {
-	kcc, err := c.ch.KafkaClusterConfig(clusterID)
+func (c *command) hasAPIKey(key string, clusterID, environment string) (bool, error) {
+	kcc, err := c.ch.KafkaClusterConfig(clusterID, environment)
 	if err != nil {
 		return false, err
 	}

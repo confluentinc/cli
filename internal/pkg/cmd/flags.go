@@ -13,7 +13,11 @@ func GetKafkaCluster(cmd *cobra.Command, ch *ConfigHelper) (*kafkav1.KafkaCluste
 	if err != nil {
 		return nil, err
 	}
-	return ch.KafkaCluster(clusterID)
+	environment, err := GetEnvironment(cmd, ch.Config)
+	if err != nil {
+		return nil, err
+	}
+	return ch.KafkaCluster(clusterID, environment)
 }
 
 func GetKafkaClusterConfig(cmd *cobra.Command, ch *ConfigHelper) (*config.KafkaClusterConfig, error) {
@@ -21,7 +25,11 @@ func GetKafkaClusterConfig(cmd *cobra.Command, ch *ConfigHelper) (*config.KafkaC
 	if err != nil {
 		return nil, err
 	}
-	return ch.KafkaClusterConfig(clusterID)
+	environment, err := GetEnvironment(cmd, ch.Config)
+	if err != nil {
+		return nil, err
+	}
+	return ch.KafkaClusterConfig(clusterID, environment)
 }
 
 func GetEnvironment(cmd *cobra.Command, cfg *config.Config) (string, error) {
