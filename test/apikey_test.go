@@ -5,23 +5,23 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 
 	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
 	tests := []CLITest{
-		{args: "api-key create --cluster bob", login: "default", fixture: "apikey1.golden"},
+		{args: "api-key create --cluster bob", login: "default", fixture: "apikey1.golden"}, // MYKEY3
 		{args: "api-key list", useKafka: "bob", fixture: "apikey2.golden"},
 		{args: "api-key list", useKafka: "abc", fixture: "apikey3.golden"},
 
 		// create api key for active kafka cluster
 		{args: "kafka cluster use lkc-cool1", fixture: "empty.golden"},
 		{args: "api-key list", fixture: "apikey4.golden"},
-		{args: "api-key create --description my-cool-app", fixture: "apikey5.golden"},
+		{args: "api-key create --description my-cool-app", fixture: "apikey5.golden"}, // MYKEY4
 		{args: "api-key list", fixture: "apikey6.golden"},
 
 		// create api key for other kafka cluster
-		{args: "api-key create --description my-other-app --cluster lkc-other1", fixture: "apikey7.golden"},
+		{args: "api-key create --description my-other-app --cluster lkc-other1", fixture: "apikey7.golden"}, // MYKEY5
 		{args: "api-key list", fixture: "apikey6.golden"},
 		{args: "api-key list --cluster lkc-other1", fixture: "apikey8.golden"},
 
 		// create api key for non-kafka cluster
-		{args: "api-key create --description my-ksql-app --cluster lksqlc-ksql1", fixture: "apikey9.golden"},
+		{args: "api-key create --description my-ksql-app --cluster lksqlc-ksql1", fixture: "apikey9.golden"}, // MYKEY6
 		{args: "api-key list", fixture: "apikey6.golden"},
 		{args: "api-key list --cluster lksqlc-ksql1", fixture: "apikey10.golden"},
 
@@ -29,7 +29,7 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 		// TODO: use MYKEY2 should error since its not in lkc-cool1. right now i think it fails silently. no * by anything in list
 		// TODO: switch to "abc" then use MYKEY2 since it was created outside CLI and we'll need to prompt for the secret
 		{args: "api-key use MYKEY4", fixture: "empty.golden"},
-		{args: "api-key list", fixture: "apikey12.golden"},
+		{args: "api-key list", fixture: "apikey12.golden"}, // TODO: this should show * MYKEY4
 
 		// use an api key for other kafka cluster
 		{args: "api-key use MYKEY5 --cluster lkc-other1", fixture: "empty.golden"},
@@ -41,10 +41,10 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 		{args: "api-key list", fixture: "apikey12.golden"},
 		{args: "api-key list --cluster lksqlc-ksql1", fixture: "apikey14.golden"},
 
-		//// store an api-key for active kafka cluster
-		//{args: "api-key store JKLMNO0987 SECRET1", fixture: "apikey17.golden"},
-		//{args: "api-key list", fixture: "apikey12.golden"},
-		//
+		// store an api-key for active kafka cluster
+		{args: "api-key store UIAPIKEY100 UIAPISECRET100", fixture: "empty.golden"},
+		{args: "api-key list", fixture: "apikey12.golden"},
+
 		//// store an api-key for other kafka cluster
 		//{args: "api-key store MNOPQR6543 SECRET2 --cluster lkc-other1", fixture: "apikey18.golden"},
 		//{args: "api-key list", fixture: "apikey12.golden"},

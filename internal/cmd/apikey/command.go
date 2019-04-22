@@ -93,9 +93,6 @@ func (c *command) init() {
 	storeCmd.Flags().String("environment", "", "ID of the environment in which to run the command")
 	storeCmd.Flags().String("cluster", "", "Store API key for this cluster")
 	storeCmd.Flags().BoolP("force", "f", false, "Force overwrite existing secret for this key")
-	// TODO: cluster (flag and active) handling will be cleaned up as part of CLI-112
-	// In PR: https://github.com/confluentinc/cli/pull/146/files#diff-7bf5d7c832065ed38ccd25c6c525b13bR148
-	_ = storeCmd.MarkFlagRequired("cluster")
 	c.AddCommand(storeCmd)
 
 	useCmd := &cobra.Command{
@@ -219,7 +216,7 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	key := args[0]
 	secret := args[1]
 
-	clusterID, err := cmd.Flags().GetString("cluster")
+	cluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -241,13 +238,13 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	}
 
 	// API key exists server-side... now check if API key exists locally already
-	if found, err := c.hasAPIKey(key, clusterID, environment); err != nil {
+	if found, err := c.hasAPIKey(key, cluster.Id, environment); err != nil {
 		return errors.HandleCommon(err, cmd)
 	} else if found && !force {
 		return errors.HandleCommon(errors.Errorf("Refusing to overwrite existing secret for API Key %s", key), cmd)
 	}
 
-	if err := c.storeAPIKey(&authv1.ApiKey{Key: key, Secret: secret}, environment, clusterID); err != nil {
+	if err := c.storeAPIKey(&authv1.ApiKey{Key: key, Secret: secret}, environment, cluster.Id); err != nil {
 		return errors.HandleCommon(errors.Wrapf(err, "unable to store api key locally"), cmd)
 	}
 
