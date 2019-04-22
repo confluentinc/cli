@@ -109,6 +109,11 @@ func (c *command) init() {
 }
 
 func (c *command) list(cmd *cobra.Command, args []string) error {
+	cluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
 	apiKeys, err := c.client.List(context.Background(), &authv1.ApiKey{AccountId: c.config.Auth.Account.Id})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -120,10 +125,6 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		UserId      int32
 	}
 
-	ctx, err := c.config.Context()
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
 	var data [][]string
 	for _, apiKey := range apiKeys {
 		// ignore keys owned by Confluent-internal user (healthcheck, etc)
@@ -132,7 +133,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		}
 
 		for _, c := range apiKey.LogicalClusters {
-			if c.Id == ctx.Kafka {
+			if c.Id == cluster.Id {
 				data = append(data, printer.ToRow(&keyDisplay{
 					Key:         apiKey.Key,
 					Description: apiKey.Description,
