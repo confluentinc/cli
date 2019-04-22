@@ -38,35 +38,35 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 		// TODO: use MYKEY2 should error since its not in lkc-cool1. right now i think it fails silently. no * by anything in list
 		// TODO: switch to "abc" then use MYKEY2 since it was created outside CLI and we'll need to prompt for the secret
 		{args: "api-key use MYKEY4", fixture: "empty.golden"},
-		{args: "api-key list", fixture: "apikey12.golden"}, // TODO: this should show * MYKEY4
+		{args: "api-key list", fixture: "apikey11.golden"}, // TODO: this should show * MYKEY4
 
 		// use an api key for other kafka cluster
 		{args: "api-key use MYKEY5 --cluster lkc-other1", fixture: "empty.golden"},
-		{args: "api-key list", fixture: "apikey12.golden"},
-		{args: "api-key list --cluster lkc-other1", fixture: "apikey13.golden"},
+		{args: "api-key list", fixture: "apikey11.golden"},
+		{args: "api-key list --cluster lkc-other1", fixture: "apikey12.golden"},
 
 		// use an api key for non-kafka cluster
 		{args: "api-key use MYKEY6 --cluster lksqlc-ksql1", fixture: "empty.golden"},
-		{args: "api-key list", fixture: "apikey12.golden"},
-		{args: "api-key list --cluster lksqlc-ksql1", fixture: "apikey14.golden"},
+		{args: "api-key list", fixture: "apikey11.golden"},
+		{args: "api-key list --cluster lksqlc-ksql1", fixture: "apikey13.golden"},
 
 		// store an api-key for active kafka cluster
 		{args: "api-key store UIAPIKEY100 UIAPISECRET100", fixture: "empty.golden"},
-		{args: "api-key list", fixture: "apikey12.golden"},
+		{args: "api-key list", fixture: "apikey11.golden"},
 
 		// store an api-key for other kafka cluster
 		{args: "api-key store UIAPIKEY101 UIAPISECRET101 --cluster lkc-other1", fixture: "empty.golden"},
-		{args: "api-key list", fixture: "apikey12.golden"},
-		{args: "api-key list --cluster lkc-other1", fixture: "apikey13.golden"},
+		{args: "api-key list", fixture: "apikey11.golden"},
+		{args: "api-key list --cluster lkc-other1", fixture: "apikey12.golden"},
 
 		// store an api-key for non-kafka cluster
 		{args: "api-key store UIAPIKEY102 UIAPISECRET102 --cluster lksqlc-ksql1", fixture: "empty.golden"},
-		{args: "api-key list", fixture: "apikey12.golden"},
-		{args: "api-key list --cluster lksqlc-ksql1", fixture: "apikey15.golden"},
+		{args: "api-key list", fixture: "apikey11.golden"},
+		{args: "api-key list --cluster lksqlc-ksql1", fixture: "apikey14.golden"},
 
 		// store: error handling
-		{name: "error if storing unknown api key", args: "api-key store UNKNOWN SECRET", fixture: "apikey16.golden"},
-		{name: "error if storing api key with existing secret", args: "api-key store EXISTING NEWSECRET", fixture: "apikey17.golden"},
+		{name: "error if storing unknown api key", args: "api-key store UNKNOWN SECRET", fixture: "apikey15.golden"},
+		{name: "error if storing api key with existing secret", args: "api-key store EXISTING NEWSECRET", fixture: "apikey16.golden"},
 		{name: "succeed if forced to overwrite existing secret", args: "api-key store -f UIAPIKEY101 NEWSECRET", fixture: "empty.golden",
 			wantFunc: func(t *testing.T) {
 				logger := log.New()
