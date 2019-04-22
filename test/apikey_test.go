@@ -1,5 +1,14 @@
 package test
 
+import (
+	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/log"
+)
+
 func (s *CLITestSuite) TestAPIKeyCommands() {
 	loginURL := serve(s.T()).URL
 
@@ -48,17 +57,30 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 		// store an api-key for other kafka cluster
 		{args: "api-key store UIAPIKEY101 UIAPISECRET101 --cluster lkc-other1", fixture: "empty.golden"},
 		{args: "api-key list", fixture: "apikey12.golden"},
-		{args: "api-key list --cluster lkc-other1", fixture: "apikey14.golden"},
+		{args: "api-key list --cluster lkc-other1", fixture: "apikey13.golden"},
 
-		//// store an api-key for non-kafka cluster
-		//{args: "api-key store PQRSTU2109 SECRET3 --cluster lksqlc-ksql1", fixture: "apikey19.golden"},
-		//{args: "api-key list", fixture: "apikey12.golden"},
-		//{args: "api-key list --cluster lksqlc-ksql1", fixture: "apikey16.golden"},
-		//
-		//// store: error handling
-		//{name: "error if storing unknown api key", args: "api-key store UNKNOWN", fixture: "apikey20.golden"},
-		//{name: "error if storing api key with existing secret", args: "api-key store EXISTING", fixture: "apikey21.golden"},
-		//{name: "succeed if forced to overwrite existing secret", args: "api-key store EXISTING -f", fixture: "apikey22.golden"},
+		// store an api-key for non-kafka cluster
+		{args: "api-key store UIAPIKEY102 UIAPISECRET102 --cluster lksqlc-ksql1", fixture: "empty.golden"},
+		{args: "api-key list", fixture: "apikey12.golden"},
+		{args: "api-key list --cluster lksqlc-ksql1", fixture: "apikey15.golden"},
+
+		// store: error handling
+		{name: "error if storing unknown api key", args: "api-key store UNKNOWN SECRET", fixture: "apikey16.golden"},
+		{name: "error if storing api key with existing secret", args: "api-key store EXISTING NEWSECRET", fixture: "apikey17.golden"},
+		{name: "succeed if forced to overwrite existing secret", args: "api-key store -f UIAPIKEY101 NEWSECRET", fixture: "empty.golden",
+			wantFunc: func(t *testing.T) {
+				logger := log.New()
+				cfg := config.New(&config.Config{
+					CLIName: binaryName,
+					Logger:  logger,
+				})
+				require.NoError(t, cfg.Load())
+				ctx, err := cfg.Context()
+				require.NoError(t, err)
+				kcc := ctx.KafkaClusters["lkc-cool1"]
+				pair := kcc.APIKeys["UIAPIKEY101"]
+				require.Equal(t, "NEWSECRET", pair.Secret)
+			}},
 	}
 	resetConfiguration(s.T())
 	for _, tt := range tests {

@@ -55,6 +55,8 @@ type CLITest struct {
 	wantErrCode int
 	// If true, don't reset the config/state between tests to enable testing CLI workflows
 	workflow bool
+	// An optional function that allows you to specify other calls
+	wantFunc func(t *testing.T)
 }
 
 // CLITestSuite is the CLI integration tests.
@@ -138,9 +140,6 @@ func (s *CLITestSuite) Test_Login_UseKafka_AuthKafka_Errors() {
 		},
 	}
 	for _, tt := range tests {
-		if strings.HasPrefix(tt.name, "error") {
-			tt.wantErrCode = 1
-		}
 		s.runTest(tt, serve(s.T()).URL, serveKafkaAPI(s.T()).URL)
 	}
 }
@@ -148,6 +147,9 @@ func (s *CLITestSuite) Test_Login_UseKafka_AuthKafka_Errors() {
 func (s *CLITestSuite) runTest(tt CLITest, loginURL, kafkaAPIEndpoint string) {
 	if tt.name == "" {
 		tt.name = tt.args
+	}
+	if strings.HasPrefix(tt.name, "error") {
+		tt.wantErrCode = 1
 	}
 	s.T().Run(tt.name, func(t *testing.T) {
 		req := require.New(t)
@@ -213,6 +215,10 @@ func (s *CLITestSuite) runTest(tt CLITest, loginURL, kafkaAPIEndpoint string) {
 
 		if !reflect.DeepEqual(actual, expected) {
 			t.Fatalf("actual = %s, expected = %s", actual, expected)
+		}
+
+		if tt.wantFunc != nil {
+			tt.wantFunc(t)
 		}
 	})
 }
