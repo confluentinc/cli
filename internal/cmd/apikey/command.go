@@ -105,9 +105,6 @@ func (c *command) init() {
 		Args:  cobra.ExactArgs(1),
 	}
 	useCmd.Flags().String("cluster", "", "Make this API key active for this cluster")
-	// TODO: cluster (flag and active) handling will be cleaned up as part of CLI-112
-	// In PR: https://github.com/confluentinc/cli/pull/146/files#diff-7bf5d7c832065ed38ccd25c6c525b13bR148
-	_ = useCmd.MarkFlagRequired("cluster")
 	c.AddCommand(useCmd)
 }
 
@@ -259,12 +256,12 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 func (c *command) use(cmd *cobra.Command, args []string) error {
 	apiKey := args[0]
 
-	clusterID, err := cmd.Flags().GetString("cluster")
+	cluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	err = c.useAPIKey(apiKey, clusterID)
+	err = c.useAPIKey(apiKey, cluster.Id)
 	if err != nil {
 		if !errors.IsUnconfiguredAPIKeyContext(err) {
 			return errors.HandleCommon(err, cmd)

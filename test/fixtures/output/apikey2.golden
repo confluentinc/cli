@@ -1,2 +1,4 @@
-Logged in as fake@user.com
-Using environment a-595 ("default"); use `ccloud environment list/use` to view/change environments.
+   Key   | Owner  
++--------+-------+
+  MYKEY1 |    12  
+  MYKEY3 |    23  

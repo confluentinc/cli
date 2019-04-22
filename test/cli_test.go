@@ -282,12 +282,12 @@ var KEY_INDEX = int32(1)
 
 func init() {
 	KEY_STORE[KEY_INDEX] = &authv1.ApiKey{
-		Key:    "MYKEY",
-		Secret: "MYSECRET",
+		Key:    "MYKEY1",
+		Secret: "MYSECRET1",
 		LogicalClusters: []*authv1.ApiKey_Cluster{
 			&authv1.ApiKey_Cluster{Id: "bob"},
 		},
-		UserId: 23,
+		UserId: 12,
 	}
 	KEY_INDEX += 1
 	KEY_STORE[KEY_INDEX] = &authv1.ApiKey{
@@ -296,7 +296,7 @@ func init() {
 		LogicalClusters: []*authv1.ApiKey_Cluster{
 			&authv1.ApiKey_Cluster{Id: "abc"},
 		},
-		UserId: 23,
+		UserId: 18,
 	}
 	KEY_INDEX += 1
 }
@@ -331,6 +331,7 @@ func serve(t *testing.T) *httptest.Server {
 			apiKey.Id = int32(KEY_INDEX)
 			apiKey.Key = fmt.Sprintf("MYKEY%d", KEY_INDEX)
 			apiKey.Secret = fmt.Sprintf("MYSECRET%d", KEY_INDEX)
+			apiKey.UserId = 23
 			KEY_INDEX += 1
 			KEY_STORE[apiKey.Id] = apiKey
 			b, err = json.Marshal(&authv1.CreateApiKeyReply{ApiKey: apiKey})
