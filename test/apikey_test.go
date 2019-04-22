@@ -19,16 +19,16 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 		{args: "api-key create --description my-cool-app", fixture: "apikey5.golden"},
 		{args: "api-key list", fixture: "apikey6.golden"},
 
-		//// create api key for other kafka cluster
-		//{args: "api-key create --description \"my other app\" --cluster lkc-other1", fixture: "apikey7.golden"},
-		//{args: "api-key list", fixture: "apikey4.golden"},
-		//{args: "api-key list --cluster lkc-other1", fixture: "apikey8.golden"},
-		//
-		//// create api key for non-kafka cluster
-		//{args: "api-key create --description \"my ksql app\" --cluster lksqlc-ksql1", fixture: "apikey9.golden"},
-		//{args: "api-key list", fixture: "apikey4.golden"},
-		//{args: "api-key list --cluster lksqlc-ksql1", fixture: "apikey10.golden"},
-		//
+		// create api key for other kafka cluster
+		{args: "api-key create --description my-other-app --cluster lkc-other1", fixture: "apikey7.golden"},
+		{args: "api-key list", fixture: "apikey4.golden"},
+		{args: "api-key list --cluster lkc-other1", fixture: "apikey8.golden"},
+
+		// create api key for non-kafka cluster
+		{args: "api-key create --description my-ksql-app --cluster lksqlc-ksql1", fixture: "apikey9.golden"},
+		{args: "api-key list", fixture: "apikey4.golden"},
+		{args: "api-key list --cluster lksqlc-ksql1", fixture: "apikey10.golden"},
+
 		//// use an api key for active kafka cluster
 		//{args: "api-key use ABCDEF1234", fixture: "apikey11.golden"},
 		//{args: "api-key list", fixture: "apikey12.golden"},

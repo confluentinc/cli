@@ -324,12 +324,14 @@ func serve(t *testing.T) *httptest.Server {
 		if r.Method == "POST" {
 			b, err := ioutil.ReadAll(r.Body)
 			require.NoError(t, err)
-			apiKey := &authv1.ApiKey{}
-			err = json.Unmarshal(b, apiKey)
+			req := &authv1.CreateApiKeyRequest{}
+			err = json.Unmarshal(b, req)
 			require.NoError(t, err)
+			apiKey := req.ApiKey
 			apiKey.Id = int32(KEY_INDEX)
 			apiKey.Key = fmt.Sprintf("MYKEY%d", KEY_INDEX)
 			apiKey.Secret = fmt.Sprintf("MYSECRET%d", KEY_INDEX)
+			KEY_INDEX += 1
 			KEY_STORE[apiKey.Id] = apiKey
 			b, err = json.Marshal(&authv1.CreateApiKeyReply{ApiKey: apiKey})
 			require.NoError(t, err)
