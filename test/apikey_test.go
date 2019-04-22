@@ -84,10 +84,8 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 
 		// use: error handling
 		{name: "error if using non-existent api-key", args: "api-key use UNKNOWN", fixture: "apikey17.golden"},
-		{name: "error if using api-key without existing secret", args: "api-key use UIAPIKEY103", fixture: "apikey18.golden"},
-		// TODO: use MYKEY2 should error since its not in lkc-cool1. right now i think it fails silently. no * by anything in list
-		// TODO: switch to "abc" then use MYKEY2 since it was created outside CLI and we'll need to prompt for the secret
-
+		{name: "error if using api-key for wrong cluster", args: "api-key use MYKEY2", fixture: "apikey18.golden"},
+		{name: "error if using api-key without existing secret", args: "api-key use UIAPIKEY103", fixture: "apikey19.golden"},
 	}
 	resetConfiguration(s.T())
 	for _, tt := range tests {

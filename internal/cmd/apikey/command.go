@@ -254,6 +254,7 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 
 	err = c.useAPIKey(apiKey, cluster.Id)
 	if err != nil {
+		// This will error if no secret is stored
 		return errors.HandleCommon(err, cmd)
 	}
 	return nil
@@ -310,11 +311,6 @@ func (c *command) useAPIKey(apiKey, clusterID string) error {
 		return err
 	}
 
-	_, err = c.getAPIKey(apiKey)
-	if err != nil {
-		return err
-	}
-
 	cluster, found := cfg.KafkaClusters[clusterID]
 	if !found {
 		return fmt.Errorf("unknown kafka cluster: %s", clusterID)
@@ -323,11 +319,23 @@ func (c *command) useAPIKey(apiKey, clusterID string) error {
 	_, found = cluster.APIKeys[apiKey]
 	if !found {
 		// check if this is API key exists server-side
-		_, err := c.getAPIKey(apiKey)
+		key, err := c.getAPIKey(apiKey)
 		if err != nil {
 			return err
 		}
-		// this means it exists, but we just don't have it saved locally
+		// check if the key is for the right cluster
+		found := false
+		for _, c := range key.LogicalClusters {
+			if c.Id == clusterID {
+				found = true
+				break
+			}
+		}
+		// this means the requested api-key belongs to a different cluster
+		if !found{
+			return fmt.Errorf("invalid api-key %s for cluster %s", apiKey, clusterID)
+		}
+		// this means the requested api-key exists, but we just don't have the secret saved locally
 		return &errors.UnconfiguredAPIKeyContextError{APIKey: apiKey, ClusterID: clusterID}
 	}
 
