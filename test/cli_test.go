@@ -130,10 +130,10 @@ func (s *CLITestSuite) Test_Login_UseKafka_AuthKafka_Errors() {
 			authKafka: "true",
 		},
 		{
-			name:     "error if using unknown kafka",
-			args:     "kafka cluster use lkc-unknown",
-			fixture:  "err-use-unknown-kafka.golden",
-			login:    "default",
+			name:    "error if using unknown kafka",
+			args:    "kafka cluster use lkc-unknown",
+			fixture: "err-use-unknown-kafka.golden",
+			login:   "default",
 		},
 	}
 	for _, tt := range tests {
@@ -158,21 +158,21 @@ func (s *CLITestSuite) runTest(tt CLITest, loginURL, kafkaAPIEndpoint string) {
 		if tt.login == "default" {
 			env := []string{"XX_CCLOUD_EMAIL=fake@user.com", "XX_CCLOUD_PASSWORD=pass1"}
 			output := runCommand(t, env, "login --url "+loginURL, 0)
-			if *debug{
+			if *debug {
 				fmt.Println(output)
 			}
 		}
 
 		if tt.useKafka != "" {
 			output := runCommand(t, []string{}, "kafka cluster use "+tt.useKafka, 0)
-			if *debug{
+			if *debug {
 				fmt.Println(output)
 			}
 		}
 
 		if tt.authKafka != "" {
 			output := runCommand(t, []string{}, "api-key create --cluster "+tt.useKafka, 0)
-			if *debug{
+			if *debug {
 				fmt.Println(output)
 			}
 		}
@@ -193,8 +193,8 @@ func (s *CLITestSuite) runTest(tt CLITest, loginURL, kafkaAPIEndpoint string) {
 			req.NoError(err)
 		}
 
-		output := runCommand(t, []string{}, tt.args, tt.wantErrCode)
-		if *debug{
+		output := runCommand(t, tt.env, tt.args, tt.wantErrCode)
+		if *debug {
 			fmt.Println(output)
 		}
 
@@ -277,6 +277,30 @@ func binaryPath(t *testing.T) string {
 	return path.Join(dir, "dist", binaryName, runtime.GOOS+"_"+runtime.GOARCH, binaryName)
 }
 
+var KEY_STORE = map[int32]*authv1.ApiKey{}
+var KEY_INDEX = int32(1)
+
+func init() {
+	KEY_STORE[KEY_INDEX] = &authv1.ApiKey{
+		Key:    "MYKEY",
+		Secret: "MYSECRET",
+		LogicalClusters: []*authv1.ApiKey_Cluster{
+			&authv1.ApiKey_Cluster{Id: "bob"},
+		},
+		UserId: 23,
+	}
+	KEY_INDEX += 1
+	KEY_STORE[KEY_INDEX] = &authv1.ApiKey{
+		Key:    "MYKEY2",
+		Secret: "MYSECRET2",
+		LogicalClusters: []*authv1.ApiKey_Cluster{
+			&authv1.ApiKey_Cluster{Id: "abc"},
+		},
+		UserId: 23,
+	}
+	KEY_INDEX += 1
+}
+
 func serve(t *testing.T) *httptest.Server {
 	req := require.New(t)
 	mux := http.NewServeMux()
@@ -298,39 +322,25 @@ func serve(t *testing.T) *httptest.Server {
 	})
 	mux.HandleFunc("/api/api_keys", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
-			b, err := json.Marshal(&authv1.CreateApiKeyReply{
-				ApiKey: &authv1.ApiKey{
-					Key:    "MYKEY",
-					Secret: "MYSECRET",
-					LogicalClusters: []*authv1.ApiKey_Cluster{
-						&authv1.ApiKey_Cluster{Id: "bob"},
-					},
-					UserId: 23,
-				},
-			})
+			b, err := ioutil.ReadAll(r.Body)
+			require.NoError(t, err)
+			apiKey := &authv1.ApiKey{}
+			err = json.Unmarshal(b, apiKey)
+			require.NoError(t, err)
+			apiKey.Id = int32(KEY_INDEX)
+			apiKey.Key = fmt.Sprintf("MYKEY%d", KEY_INDEX)
+			apiKey.Secret = fmt.Sprintf("MYSECRET%d", KEY_INDEX)
+			KEY_STORE[apiKey.Id] = apiKey
+			b, err = json.Marshal(&authv1.CreateApiKeyReply{ApiKey: apiKey})
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(b))
 			require.NoError(t, err)
 		} else if r.Method == "GET" {
-			b, err := json.Marshal(&authv1.GetApiKeysReply{
-				ApiKeys: []*authv1.ApiKey{
-					&authv1.ApiKey{
-						Key:    "MYKEY",
-						Secret: "MYSECRET",
-						LogicalClusters: []*authv1.ApiKey_Cluster{
-							&authv1.ApiKey_Cluster{Id: "bob"},
-						},
-						UserId: 23,
-					},
-					&authv1.ApiKey{
-						Key:    "MYKEY2",
-						Secret: "MYSECRET2",
-						LogicalClusters: []*authv1.ApiKey_Cluster{
-							&authv1.ApiKey_Cluster{Id: "abc"},
-						},
-						UserId: 23,
-					},
-				}})
+			var apiKeys []*authv1.ApiKey
+			for _, a := range KEY_STORE {
+				apiKeys = append(apiKeys, a)
+			}
+			b, err := json.Marshal(&authv1.GetApiKeysReply{ApiKeys: apiKeys})
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(b))
 			require.NoError(t, err)
