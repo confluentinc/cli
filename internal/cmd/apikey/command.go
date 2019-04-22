@@ -98,7 +98,7 @@ func (c *command) init() {
 }
 
 func (c *command) list(cmd *cobra.Command, args []string) error {
-	cluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
+	kcc, err := pcmd.GetKafkaClusterConfig(cmd, c.ch)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -121,8 +121,14 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 			continue
 		}
 
+		if apiKey.Key == kcc.APIKey {
+			apiKey.Key = fmt.Sprintf("* %s", apiKey.Key)
+		} else {
+			apiKey.Key = fmt.Sprintf("  %s", apiKey.Key)
+		}
+
 		for _, c := range apiKey.LogicalClusters {
-			if c.Id == cluster.Id {
+			if c.Id == kcc.ID {
 				data = append(data, printer.ToRow(&keyDisplay{
 					Key:         apiKey.Key,
 					Description: apiKey.Description,
