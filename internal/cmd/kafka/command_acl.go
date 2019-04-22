@@ -41,8 +41,6 @@ func NewACLCommand(config *config.Config, client ccloud.Kafka, ch *pcmd.ConfigHe
 }
 
 func (c *aclCommand) init() {
-	c.PersistentFlags().String("environment", "", "ID of the environment in which to run the command")
-
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create a Kafka ACL",

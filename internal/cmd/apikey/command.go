@@ -51,8 +51,6 @@ func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.APIKey, 
 }
 
 func (c *command) init() {
-	c.PersistentFlags().String("environment", "", "ID of the environment in which to run the command")
-
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List API keys",
@@ -70,7 +68,6 @@ func (c *command) init() {
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
 	}
-	createCmd.Flags().String("environment", "", "ID of the environment in which to run the command")
 	createCmd.Flags().String("cluster", "", "Grant access to a cluster with this ID")
 	createCmd.Flags().Int32("service-account-id", 0, "Create API key for a service account")
 	createCmd.Flags().String("description", "", "Description or purpose for the API key")
@@ -90,7 +87,6 @@ func (c *command) init() {
 		RunE: c.store,
 		Args: cobra.ExactArgs(2),
 	}
-	storeCmd.Flags().String("environment", "", "ID of the environment in which to run the command")
 	storeCmd.Flags().String("cluster", "", "Store API key for this cluster")
 	storeCmd.Flags().BoolP("force", "f", false, "Force overwrite existing secret for this key")
 	c.AddCommand(storeCmd)

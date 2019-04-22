@@ -11,8 +11,7 @@ Available Commands:
   use         Make the Kafka cluster active for use in other commands
 
 Flags:
-      --environment string   ID of the environment in which to run the command
-  -h, --help                 help for cluster
+  -h, --help   help for cluster
 
 Global Flags:
   -v, --verbose count   increase output verbosity

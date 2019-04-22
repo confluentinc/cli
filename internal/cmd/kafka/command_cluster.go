@@ -46,9 +46,6 @@ func NewClusterCommand(config *config.Config, client ccloud.Kafka, ch *pcmd.Conf
 }
 
 func (c *clusterCommand) init() {
-	// Promote this to command.go when/if topic/ACL commands also want this flag
-	c.PersistentFlags().String("environment", "", "ID of the environment in which to run the command")
-
 	c.AddCommand(&cobra.Command{
 		Use:   "list",
 		Short: "List Kafka clusters",

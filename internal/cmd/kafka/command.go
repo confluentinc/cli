@@ -28,8 +28,6 @@ func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.Kafka, c
 		client: client,
 		ch:     ch,
 	}
-	// Should uncomment this when/if ACL/topic commands need this flag (currently just in cluster cmd)
-	//cmd.PersistentFlags().String("environment", "", "ID of the environment in which to run the command")
 	cmd.init()
 	return cmd.Command
 }

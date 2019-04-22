@@ -33,9 +33,13 @@ func GetKafkaClusterConfig(cmd *cobra.Command, ch *ConfigHelper) (*config.KafkaC
 }
 
 func GetEnvironment(cmd *cobra.Command, cfg *config.Config) (string, error) {
-	environment, err := cmd.Flags().GetString("environment")
-	if err != nil {
-		return "", err
+	var environment string
+	if cmd.Flags().Lookup("environment") != nil {
+		var err error
+		environment, err = cmd.Flags().GetString("environment")
+		if err != nil {
+			return "", err
+		}
 	}
 	if environment == "" {
 		environment = cfg.Auth.Account.Id

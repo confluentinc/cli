@@ -55,8 +55,6 @@ func NewClusterCommand(config *config.Config, client ccloud.KSQL, kafkaClient cc
 }
 
 func (c *clusterCommand) init() {
-	c.PersistentFlags().String("environment", "", "ID of the environment in which to run the command")
-
 	c.AddCommand(&cobra.Command{
 		Use:   "list",
 		Short: "List KSQL apps",
