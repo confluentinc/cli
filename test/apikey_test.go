@@ -45,11 +45,11 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 		{args: "api-key store UIAPIKEY100 UIAPISECRET100", fixture: "empty.golden"},
 		{args: "api-key list", fixture: "apikey12.golden"},
 
-		//// store an api-key for other kafka cluster
-		//{args: "api-key store MNOPQR6543 SECRET2 --cluster lkc-other1", fixture: "apikey18.golden"},
-		//{args: "api-key list", fixture: "apikey12.golden"},
-		//{args: "api-key list --cluster lkc-other1", fixture: "apikey14.golden"},
-		//
+		// store an api-key for other kafka cluster
+		{args: "api-key store UIAPIKEY101 UIAPISECRET101 --cluster lkc-other1", fixture: "empty.golden"},
+		{args: "api-key list", fixture: "apikey12.golden"},
+		{args: "api-key list --cluster lkc-other1", fixture: "apikey14.golden"},
+
 		//// store an api-key for non-kafka cluster
 		//{args: "api-key store PQRSTU2109 SECRET3 --cluster lksqlc-ksql1", fixture: "apikey19.golden"},
 		//{args: "api-key list", fixture: "apikey12.golden"},
