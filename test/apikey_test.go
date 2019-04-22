@@ -26,14 +26,16 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 		{args: "api-key list --cluster lksqlc-ksql1", fixture: "apikey10.golden"},
 
 		// use an api key for active kafka cluster
-		{args: "api-key use MYKEY2", fixture: "empty.golden"},
+		// TODO: use MYKEY2 should error since its not in lkc-cool1. right now i think it fails silently. no * by anything in list
+		// TODO: switch to "abc" then use MYKEY2 since it was created outside CLI and we'll need to prompt for the secret
+		{args: "api-key use MYKEY4", fixture: "empty.golden"},
 		{args: "api-key list", fixture: "apikey12.golden"},
 
-		//// use an api key for other kafka cluster
-		//{args: "api-key use DEFGHI5678 --cluster lkc-other1", fixture: "apikey13.golden"},
-		//{args: "api-key list", fixture: "apikey12.golden"},
-		//{args: "api-key list --cluster lkc-other1", fixture: "apikey14.golden"},
-		//
+		// use an api key for other kafka cluster
+		{args: "api-key use MYKEY5 --cluster lkc-other1", fixture: "empty.golden"},
+		{args: "api-key list", fixture: "apikey12.golden"},
+		{args: "api-key list --cluster lkc-other1", fixture: "apikey13.golden"},
+
 		//// use an api key for non-kafka cluster
 		//{args: "api-key use GHIJKL7890 --cluster lksqlc-ksql1", fixture: "apikey15.golden"},
 		//{args: "api-key list", fixture: "apikey12.golden"},

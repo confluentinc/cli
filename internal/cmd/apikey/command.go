@@ -355,8 +355,6 @@ func (c *command) useAPIKey(apiKey, clusterID string) error {
 		return err
 	}
 
-	// TODO: cluster (flag and active) handling will be cleaned up as part of CLI-112
-	// In PR: https://github.com/confluentinc/cli/pull/146/files#diff-7bf5d7c832065ed38ccd25c6c525b13bR148
 	cluster, found := cfg.KafkaClusters[clusterID]
 	if !found {
 		return fmt.Errorf("unknown kafka cluster: %s", clusterID)

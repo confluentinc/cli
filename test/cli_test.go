@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"runtime"
+	"sort"
 	"strings"
 	"testing"
 
@@ -280,6 +281,23 @@ func binaryPath(t *testing.T) string {
 var KEY_STORE = map[int32]*authv1.ApiKey{}
 var KEY_INDEX = int32(1)
 
+type ApiKeyList []*authv1.ApiKey
+
+// Len is part of sort.Interface.
+func (d ApiKeyList) Len() int {
+	return len(d)
+}
+
+// Swap is part of sort.Interface.
+func (d ApiKeyList) Swap(i, j int) {
+	d[i], d[j] = d[j], d[i]
+}
+
+// Less is part of sort.Interface. We use Key as the value to sort by
+func (d ApiKeyList) Less(i, j int) bool {
+	return d[i].Key < d[j].Key
+}
+
 func init() {
 	KEY_STORE[KEY_INDEX] = &authv1.ApiKey{
 		Key:    "MYKEY1",
@@ -343,6 +361,8 @@ func serve(t *testing.T) *httptest.Server {
 			for _, a := range KEY_STORE {
 				apiKeys = append(apiKeys, a)
 			}
+			// Return sorted data or the test output will not be stable
+			sort.Sort(ApiKeyList(apiKeys))
 			b, err := json.Marshal(&authv1.GetApiKeysReply{ApiKeys: apiKeys})
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(b))
