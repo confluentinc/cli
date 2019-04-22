@@ -82,7 +82,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		}
 		cli.AddCommand(environment.New(prerunner, cfg, environments.New(client, logger), cliName))
 		cli.AddCommand(service_account.New(prerunner, cfg, userClient))
-		cli.AddCommand(apikey.New(prerunner, cfg, apikeys.New(client, logger), kafkaClient, ch))
+		cli.AddCommand(apikey.New(prerunner, cfg, apikeys.New(client, logger), ch))
 		cli.AddCommand(kafka.New(prerunner, cfg, kafkaClient, ch))
 
 		conn = ksql.New(prerunner, cfg, ksqls.New(client, logger), kafkaClient, userClient, ch)

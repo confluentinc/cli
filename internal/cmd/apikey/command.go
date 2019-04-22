@@ -4,13 +4,11 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
-	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	"github.com/confluentinc/go-printer"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -22,7 +20,6 @@ type command struct {
 	*cobra.Command
 	config *config.Config
 	client ccloud.APIKey
-	kafka  ccloud.Kafka
 	ch     *pcmd.ConfigHelper
 }
 
@@ -34,7 +31,7 @@ var (
 )
 
 // New returns the Cobra command for API Key.
-func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.APIKey, kafka ccloud.Kafka, ch *pcmd.ConfigHelper) *cobra.Command {
+func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.APIKey, ch *pcmd.ConfigHelper) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:               "api-key",
@@ -43,7 +40,6 @@ func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.APIKey, 
 		},
 		config: config,
 		client: client,
-		kafka:  kafka,
 		ch:     ch,
 	}
 	cmd.init()
@@ -142,7 +138,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) create(cmd *cobra.Command, args []string) error {
-	cluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
+	kcc, err := pcmd.GetKafkaClusterConfig(cmd, c.ch)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -157,16 +153,11 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	environment, err := pcmd.GetEnvironment(cmd, c.config)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
 	key := &authv1.ApiKey{
 		UserId:          userId,
 		Description:     description,
 		AccountId:       c.config.Auth.Account.Id,
-		LogicalClusters: []*authv1.ApiKey_Cluster{{Id: cluster.Id}},
+		LogicalClusters: []*authv1.ApiKey_Cluster{{Id: kcc.ID}},
 	}
 
 	userKey, err := c.client.Create(context.Background(), key)
@@ -180,7 +171,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	if err := c.storeAPIKey(userKey, environment, cluster.Id); err != nil {
+	if err := c.storeAPIKey(cmd, userKey, kcc); err != nil {
 		return errors.HandleCommon(errors.Wrapf(err, "unable to store api key locally"), cmd)
 	}
 
@@ -212,7 +203,7 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	key := args[0]
 	secret := args[1]
 
-	cluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
+	kcc, err := pcmd.GetKafkaClusterConfig(cmd, c.ch)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -234,13 +225,13 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	}
 
 	// API key exists server-side... now check if API key exists locally already
-	if found, err := c.hasAPIKey(key, cluster.Id, environment); err != nil {
+	if found, err := c.hasAPIKey(key, kcc.ID, environment); err != nil {
 		return errors.HandleCommon(err, cmd)
 	} else if found && !force {
 		return errors.HandleCommon(errors.Errorf("Refusing to overwrite existing secret for API Key %s", key), cmd)
 	}
 
-	if err := c.storeAPIKey(&authv1.ApiKey{Key: key, Secret: secret}, environment, cluster.Id); err != nil {
+	if err := c.storeAPIKey(cmd, &authv1.ApiKey{Key: key, Secret: secret}, kcc); err != nil {
 		return errors.HandleCommon(errors.Wrapf(err, "unable to store api key locally"), cmd)
 	}
 
@@ -302,34 +293,7 @@ func (c *command) hasAPIKey(key string, clusterID, environment string) (bool, er
 	return found, nil
 }
 
-func (c *command) storeAPIKey(userKey *authv1.ApiKey, environment, clusterID string) error {
-	cfg, err := c.config.Context()
-	if err != nil {
-		return err
-	}
-
-	if cfg.KafkaClusters == nil {
-		cfg.KafkaClusters = map[string]*config.KafkaClusterConfig{}
-	}
-	kcc, found := cfg.KafkaClusters[clusterID]
-	if !found {
-		req := &kafkav1.KafkaCluster{AccountId: environment, Id: clusterID}
-		kc, err := c.kafka.Describe(context.Background(), req)
-		if err != nil {
-			return err
-		}
-
-		kcc = &config.KafkaClusterConfig{
-			// TODO: registering bootstrap and APIEndpoint is kind of a bad side effect of using an API key
-			// These are needed even if no API key is created, such as for managing topics via kafka-api
-			Bootstrap:   strings.TrimPrefix(kc.Endpoint, "SASL_SSL://"),
-			APIEndpoint: kc.ApiEndpoint,
-			APIKey:      userKey.Key,
-			APIKeys:     make(map[string]*config.APIKeyPair),
-		}
-
-		cfg.KafkaClusters[clusterID] = kcc
-	}
+func (c *command) storeAPIKey(cmd *cobra.Command, userKey *authv1.ApiKey, kcc *config.KafkaClusterConfig) error {
 	kcc.APIKeys[userKey.Key] = &config.APIKeyPair{
 		Key:    userKey.Key,
 		Secret: userKey.Secret,
