@@ -66,8 +66,8 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 
 		// store: error handling
 		{name: "error if storing unknown api key", args: "api-key store UNKNOWN SECRET", fixture: "apikey15.golden"},
-		{name: "error if storing api key with existing secret", args: "api-key store EXISTING NEWSECRET", fixture: "apikey16.golden"},
-		{name: "succeed if forced to overwrite existing secret", args: "api-key store -f UIAPIKEY101 NEWSECRET", fixture: "empty.golden",
+		{name: "error if storing api key with existing secret", args: "api-key store UIAPIKEY100 NEWSECRET", fixture: "apikey16.golden"},
+		{name: "succeed if forced to overwrite existing secret", args: "api-key store -f UIAPIKEY100 NEWSECRET", fixture: "empty.golden",
 			wantFunc: func(t *testing.T) {
 				logger := log.New()
 				cfg := config.New(&config.Config{
@@ -78,7 +78,8 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 				ctx, err := cfg.Context()
 				require.NoError(t, err)
 				kcc := ctx.KafkaClusters["lkc-cool1"]
-				pair := kcc.APIKeys["UIAPIKEY101"]
+				pair := kcc.APIKeys["UIAPIKEY100"]
+				require.NotNil(t, pair)
 				require.Equal(t, "NEWSECRET", pair.Secret)
 			}},
 	}
