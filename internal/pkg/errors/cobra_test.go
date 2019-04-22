@@ -33,7 +33,7 @@ func TestHandleError(t *testing.T) {
 		{
 			name:        "dynamic message - not first case",
 			err:         &UnconfiguredAPIKeyContextError{ClusterID: "cid", APIKey: "apikeyid"},
-			want:        "API key apikeyid for cluster cid not configured/stored in CLI",
+			want:        "please add API secret with 'api-key store apikeyid --cluster cid'",
 			wantErr:     true,
 			wantErrType: "*errors.UnconfiguredAPIKeyContextError",
 		},

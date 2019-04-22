@@ -347,6 +347,14 @@ func init() {
 		},
 		UserId: 25,
 	}
+	KEY_STORE[103] = &authv1.ApiKey{
+		Key:    "UIAPIKEY103",
+		Secret: "UIAPISECRET103",
+		LogicalClusters: []*authv1.ApiKey_Cluster{
+			&authv1.ApiKey_Cluster{Id: "lkc-cool1"},
+		},
+		UserId: 25,
+	}
 }
 
 func serve(t *testing.T) *httptest.Server {

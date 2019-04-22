@@ -254,10 +254,7 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 
 	err = c.useAPIKey(apiKey, cluster.Id)
 	if err != nil {
-		if !errors.IsUnconfiguredAPIKeyContext(err) {
-			return errors.HandleCommon(err, cmd)
-		}
-		// TODO: interactive prompt for corresponding API key secret
+		return errors.HandleCommon(err, cmd)
 	}
 	return nil
 }

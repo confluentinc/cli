@@ -58,7 +58,7 @@ type UnconfiguredAPIKeyContextError struct {
 }
 
 func (e *UnconfiguredAPIKeyContextError) Error() string {
-	return fmt.Sprintf("API key %s for cluster %s not configured/stored in CLI", e.APIKey, e.ClusterID)
+	return fmt.Sprintf("please add API secret with 'api-key store %s --cluster %s'", e.APIKey, e.ClusterID)
 }
 
 func IsUnconfiguredAPIKeyContext(err error) bool {

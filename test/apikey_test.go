@@ -35,10 +35,8 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 		{args: "api-key list --cluster lksqlc-ksql1", fixture: "apikey10.golden"},
 
 		// use an api key for active kafka cluster
-		// TODO: use MYKEY2 should error since its not in lkc-cool1. right now i think it fails silently. no * by anything in list
-		// TODO: switch to "abc" then use MYKEY2 since it was created outside CLI and we'll need to prompt for the secret
 		{args: "api-key use MYKEY4", fixture: "empty.golden"},
-		{args: "api-key list", fixture: "apikey11.golden"}, // TODO: this should show * MYKEY4
+		{args: "api-key list", fixture: "apikey11.golden"},
 
 		// use an api key for other kafka cluster
 		{args: "api-key use MYKEY5 --cluster lkc-other1", fixture: "empty.golden"},
@@ -81,7 +79,15 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 				pair := kcc.APIKeys["UIAPIKEY100"]
 				require.NotNil(t, pair)
 				require.Equal(t, "NEWSECRET", pair.Secret)
+
 			}},
+
+		// use: error handling
+		{name: "error if using non-existent api-key", args: "api-key use UNKNOWN", fixture: "apikey17.golden"},
+		{name: "error if using api-key without existing secret", args: "api-key use UIAPIKEY103", fixture: "apikey18.golden"},
+		// TODO: use MYKEY2 should error since its not in lkc-cool1. right now i think it fails silently. no * by anything in list
+		// TODO: switch to "abc" then use MYKEY2 since it was created outside CLI and we'll need to prompt for the secret
+
 	}
 	resetConfiguration(s.T())
 	for _, tt := range tests {
