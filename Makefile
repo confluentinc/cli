@@ -53,36 +53,58 @@ gorelease:
 	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --rm-dist -f .goreleaser-ccloud.yml
 	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --rm-dist -f .goreleaser-confluent.yml
 
-.PHONY: dist-ccloud
-dist-ccloud:
+.PHONY: dist-stuff
+dist-stuff:
 	@# unfortunately goreleaser only supports one archive right now (either tar/zip or binaries): https://github.com/goreleaser/goreleaser/issues/705
 	@# we had goreleaser upload binaries (they're uncompressed, so goreleaser's parallel uploads will save more time with binaries than archives)
-	for os in darwin linux windows; do \
+	@for os in darwin linux windows; do \
 		for arch in amd64 386; do \
 			if [ "$${os}" = "darwin" ] && [ "$${arch}" = "386" ] ; then \
 				continue ; \
 			fi; \
-			cp LICENSE dist/ccloud/$${os}_$${arch}/ ; \
-			cp INSTALL.md dist/ccloud/$${os}_$${arch}/ ; \
-			cd dist/ccloud/$${os}_$${arch}/ ; \
-			mkdir tmp ; mv LICENSE INSTALL.md ccloud* tmp/ ; mv tmp ccloud ; \
+			cp LICENSE dist/$(NAME)/$${os}_$${arch}/ ; \
+			cp INSTALL.md dist/$(NAME)/$${os}_$${arch}/ ; \
+			cd dist/$(NAME)/$${os}_$${arch}/ ; \
+			mkdir tmp ; mv LICENSE INSTALL.md $(NAME)* tmp/ ; mv tmp $(NAME) ; \
 			suffix="" ; \
 			if [ "$${os}" = "windows" ] ; then \
 				suffix=zip ; \
-				zip -qr ../ccloud_$(VERSION)_$${os}_$${arch}.$${suffix} ccloud ; \
+				zip -qr ../$(NAME)_$(VERSION)_$${os}_$${arch}.$${suffix} $(NAME) ; \
 			else \
 				suffix=tar.gz ; \
-				tar -czf ../ccloud_$(VERSION)_$${os}_$${arch}.$${suffix} ccloud ; \
+				tar -czf ../$(NAME)_$(VERSION)_$${os}_$${arch}.$${suffix} $(NAME) ; \
 			fi ; \
 			cd ../../../ ; \
-			cp dist/ccloud/ccloud_$(VERSION)_$${os}_$${arch}.$${suffix} dist/ccloud/ccloud_latest_$${os}_$${arch}.$${suffix} ; \
+			cp dist/$(NAME)/$(NAME)_$(VERSION)_$${os}_$${arch}.$${suffix} dist/$(NAME)/$(NAME)_latest_$${os}_$${arch}.$${suffix} ; \
 		done ; \
 	done
 
+.PHONY: dist-ccloud
+dist-ccloud:
+	make dist-stuff NAME=ccloud
+
+.PHONY: dist-confluent
+dist-confluent:
+	make dist-stuff NAME=confluent
+
+.PHONY: dist
+dist: dist-ccloud dist-confluent
+
+.PHONY: publish-stuff
+publish-stuff:
+	aws s3 cp dist/$(NAME)/ s3://confluent.cloud/$(NAME)-cli/archives/$(VERSION:v%=%)/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --include "*_checksums.txt" --exclude "*_latest_*" --acl public-read
+	aws s3 cp dist/$(NAME)/ s3://confluent.cloud/$(NAME)-cli/archives/latest/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --include "*_checksums.txt" --exclude "*_$(VERSION)_*" --acl public-read
+
 .PHONY: publish-ccloud
-publish: dist-ccloud
-	aws s3 cp dist/ccloud/ s3://confluent.cloud/ccloud-cli/archives/$(VERSION:v%=%)/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --exclude "*_latest_*" --acl public-read
-	aws s3 cp dist/ccloud/ s3://confluent.cloud/ccloud-cli/archives/latest/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --exclude "*_$(VERSION)_*" --acl public-read
+publish-ccloud: dist-ccloud
+	make publish-stuff NAME=ccloud
+
+.PHONY: publish-confluent
+publish-confluent: dist-confluent
+	make publish-stuff NAME=confluent
+
+.PHONY: publish
+publish: publish-ccloud publish-confluent
 
 .PHONY: fmt
 fmt:
@@ -105,7 +127,6 @@ cmd/lint/en_US.dic:
 .PHONY: lint-cli
 lint-cli: cmd/lint/en_US.aff cmd/lint/en_US.dic
 	GO111MODULE=on go run cmd/lint/main.go -aff-file $(word 1,$^) -dic-file $(word 2,$^) $(ARGS)
-
 
 .PHONY: lint-go
 lint-go:
