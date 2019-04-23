@@ -22,7 +22,6 @@ To list all available versions:
 
     curl -s "https://s3-us-west-2.amazonaws.com/confluent.cloud?prefix=ccloud-cli/archives/&delimiter=/" | tidy -xml --wrap 100 -i -
 
-
 To list all available packages for a version:
 
     VERSION=0.26.0 # or latest
