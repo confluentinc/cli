@@ -80,7 +80,9 @@ dist-stuff:
 			cp dist/$(NAME)/$(NAME)_$(VERSION)_$${os}_$${arch}.$${suffix} dist/$(NAME)/$(NAME)_latest_$${os}_$${arch}.$${suffix} ; \
 		done ; \
 	done
-	@cd dist/$(NAME)/ ; $(SHASUM) $(NAME)_${VERSION}_* > $(NAME)_${VERSION}_checksums.txt
+	@cd dist/$(NAME)/ ; \
+	  $(SHASUM) $(NAME)_$(VERSION)_* > $(NAME)_$(VERSION)_checksums.txt ; \
+	  $(SHASUM) $(NAME)_latest_* > $(NAME)_latest_checksums.txt
 
 .PHONY: dist-ccloud
 dist-ccloud:

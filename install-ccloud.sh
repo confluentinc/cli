@@ -48,11 +48,11 @@ execute() {
   http_download "${tmpdir}/${TARBALL}" "${TARBALL_URL}" "Accept:application/octet-stream"
   http_download "${tmpdir}/${CHECKSUM}" "${CHECKSUM_URL}" "Accept:application/octet-stream"
   hash_sha256_verify "${tmpdir}/${TARBALL}" "${tmpdir}/${CHECKSUM}"
-  srcdir="${tmpdir}/${NAME}"
+  srcdir="${tmpdir}/${BINARY}"
   rm -rf "${srcdir}"
   (cd "${tmpdir}" && untar "${TARBALL}")
   install -d "${BINDIR}"
-  for binexe in "confluent" "confluent-kafka-plugin" "confluent-connect-plugin" ; do
+  for binexe in "${BINARY}" ; do
     if [ "$OS" = "windows" ]; then
       binexe="${binexe}.exe"
     fi
