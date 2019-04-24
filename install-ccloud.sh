@@ -351,7 +351,7 @@ End of functions from https://github.com/client9/shlib
 ------------------------------------------------------------------------
 EOF
 
-PROJECT_NAME="ccloud"
+PROJECT_NAME="ccloud-cli"
 OWNER=confluentinc
 REPO="cli"
 BINARY=ccloud
@@ -381,11 +381,11 @@ adjust_os
 
 log_info "found version: ${VERSION} for ${TAG}/${OS}/${ARCH}"
 
-NAME=${PROJECT_NAME}_${VERSION}_${OS}_${ARCH}
+NAME=${BINARY}_${VERSION}_${OS}_${ARCH}
 TARBALL=${NAME}.${FORMAT}
-TARBALL_URL=https://s3-us-west-2.amazonaws.com/confluent.cloud/ccloud-cli/archives/${VERSION}/${TARBALL}
-CHECKSUM=${PROJECT_NAME}_${VERSION}_checksums.txt
-CHECKSUM_URL=https://s3-us-west-2.amazonaws.com/confluent.cloud/ccloud-cli/archives/${VERSION}/${CHECKSUM}
+TARBALL_URL=https://s3-us-west-2.amazonaws.com/confluent.cloud/${PROJECT_NAME}/archives/${VERSION}/${TARBALL}
+CHECKSUM=${BINARY}_${VERSION}_checksums.txt
+CHECKSUM_URL=https://s3-us-west-2.amazonaws.com/confluent.cloud/${PROJECT_NAME}/archives/${VERSION}/${CHECKSUM}
 
 
 execute
