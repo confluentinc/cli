@@ -96,9 +96,9 @@ tag_to_version() {
     log_crit "unable to find '${TAG}' - use 'latest' or see https://github.com/${PREFIX}/releases for details"
     exit 1
   fi
-  # if version starts with 'v', remove it
+  # if version starts with 'v', don't remove it
   TAG="$REALTAG"
-  VERSION=${TAG#v}
+  VERSION=${TAG}
 }
 adjust_format() {
   # change format (tar.gz or zip) based on ARCH
@@ -381,11 +381,11 @@ adjust_os
 
 log_info "found version: ${VERSION} for ${TAG}/${OS}/${ARCH}"
 
-NAME=${BINARY}_v${VERSION}_${OS}_${ARCH}
+NAME=${BINARY}_${VERSION}_${OS}_${ARCH}
 TARBALL=${NAME}.${FORMAT}
-TARBALL_URL=https://s3-us-west-2.amazonaws.com/confluent.cloud/${PROJECT_NAME}/archives/${VERSION}/${TARBALL}
-CHECKSUM=${BINARY}_v${VERSION}_checksums.txt
-CHECKSUM_URL=https://s3-us-west-2.amazonaws.com/confluent.cloud/${PROJECT_NAME}/archives/${VERSION}/${CHECKSUM}
+TARBALL_URL=https://s3-us-west-2.amazonaws.com/confluent.cloud/${PROJECT_NAME}/archives/${VERSION#v}/${TARBALL}
+CHECKSUM=${BINARY}_${VERSION}_checksums.txt
+CHECKSUM_URL=https://s3-us-west-2.amazonaws.com/confluent.cloud/${PROJECT_NAME}/archives/${VERSION#v}/${CHECKSUM}
 
 
 execute
