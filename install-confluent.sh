@@ -301,7 +301,7 @@ github_release() {
   owner_repo=$1
   version=$2
   test -z "$version" && version="latest"
-  s3url="https://s3-us-west-2.amazonaws.com/confluent.cloud?prefix=ccloud-cli/archives/${version}/&delimiter=/"
+  s3url="https://s3-us-west-2.amazonaws.com/confluent.cloud?prefix=ccloud-cli/archives/${version#v}/&delimiter=/"
   xml=$(http_copy "$s3url")
   exists=$(echo "$xml" | grep "<Key>") || return 1
   test -z "$version" && return 1
@@ -381,10 +381,10 @@ adjust_os
 
 log_info "found version: ${VERSION} for ${TAG}/${OS}/${ARCH}"
 
-NAME=${BINARY}_${VERSION}_${OS}_${ARCH}
+NAME=${BINARY}_v${VERSION}_${OS}_${ARCH}
 TARBALL=${NAME}.${FORMAT}
 TARBALL_URL=https://s3-us-west-2.amazonaws.com/confluent.cloud/${PROJECT_NAME}/archives/${VERSION}/${TARBALL}
-CHECKSUM=${BINARY}_${VERSION}_checksums.txt
+CHECKSUM=${BINARY}_v${VERSION}_checksums.txt
 CHECKSUM_URL=https://s3-us-west-2.amazonaws.com/confluent.cloud/${PROJECT_NAME}/archives/${VERSION}/${CHECKSUM}
 
 
