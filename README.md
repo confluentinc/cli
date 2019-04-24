@@ -14,6 +14,21 @@ The CLI has pre-built binaries for macOS, Linux, and Windows, on both i386 and x
 
 You can download a tarball with the binaries. These are both on Github releases and in S3.
 
+### One Liner
+
+The simplest way to install cross platform is with this one-liner:
+
+    curl -sL https://git.io/vhuDX | bash
+
+It'll install in `./bin` by default. **You MUST add `./bin` to your `$PATH`.**
+
+You can also install to a specific directory. For example, install to `/usr/local/bin` by running:
+
+    curl -sL https://git.io/vhuDX | sudo bash -s -- -b /usr/local/bin
+
+Note: We'll create a nicer short link before we GA the CLI.
+(Most link shorteners don't allow you to the change the underlying URL later. So don't claim it before we're ready.)
+
 ### Binary Tarball from S3
 
 You can download a binary tarball from S3 .
