@@ -10,7 +10,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/config"
 )
 
-// NewSaramaConsumer returns a sarama.ClusterConsumerconfigured for the CLI config
+// NewSaramaConsumer returns a sarama.ConsumerGroup configured for the CLI config
 func NewSaramaConsumer(group string, kafka config.KafkaClusterConfig, beginning bool) (sarama.ConsumerGroup, error) {
 	client, err := sarama.NewClient(strings.Split(kafka.Bootstrap, ","), saramaConf(kafka, beginning))
 	if err != nil {
