@@ -7,7 +7,7 @@ include ./semver.mk
 
 REF := $(shell [ -d .git ] && git rev-parse --short HEAD || echo "none")
 DATE := $(shell date -u)
-HOSTNAME := $(shell id -u -n)@$(shell hostname -f)
+HOSTNAME := $(shell id -u -n)@$(shell hostname)
 
 .PHONY: clean
 clean:
@@ -15,13 +15,15 @@ clean:
 
 .PHONY: deps
 deps:
-	@GO111MODULE=on go get github.com/goreleaser/goreleaser@v0.101.0
-	@GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.12.2
+	@GO111MODULE=on go get github.com/goreleaser/goreleaser@v0.106.0
+	@GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.16.0
 
 build: build-go
 
 ifeq ($(shell uname),Darwin)
 GORELEASER_SUFFIX ?= -mac.yml
+else ifneq (,$(findstring NT,$(shell uname)))
+GORELEASER_SUFFIX ?= -windows.yml
 else
 GORELEASER_SUFFIX ?= -linux.yml
 endif
