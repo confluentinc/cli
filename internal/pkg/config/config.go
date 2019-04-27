@@ -100,7 +100,13 @@ func (c *Config) Load() error {
 	input, err := ioutil.ReadFile(filename)
 	if err != nil {
 		if os.IsNotExist(err) {
-			// Save a default version if none exists yet
+			// Save a default version if none exists yet.
+			// First ensure path exists.
+			path := path.Dir(filename)
+			if _, err := os.Stat(path); os.IsNotExist(err) {
+				os.MkdirAll(path, 0644)
+			}
+
 			if err := c.Save(); err != nil {
 				return errors.Wrapf(err, "unable to create config: %v", err)
 			}
