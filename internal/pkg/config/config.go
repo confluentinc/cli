@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
+	"path/filepath"
 
 	"github.com/mitchellh/go-homedir"
 
@@ -101,12 +101,6 @@ func (c *Config) Load() error {
 	if err != nil {
 		if os.IsNotExist(err) {
 			// Save a default version if none exists yet.
-			// First ensure path exists.
-			path := path.Dir(filename)
-			if _, err := os.Stat(path); os.IsNotExist(err) {
-				os.MkdirAll(path, 0644)
-			}
-
 			if err := c.Save(); err != nil {
 				return errors.Wrapf(err, "unable to create config: %v", err)
 			}
@@ -131,7 +125,7 @@ func (c *Config) Save() error {
 	if err != nil {
 		return err
 	}
-	err = os.MkdirAll(path.Dir(filename), 0700)
+	err = os.MkdirAll(filepath.Dir(filename), 0700)
 	if err != nil {
 		return errors.Wrapf(err, "unable to create config directory: %s", filename)
 	}
