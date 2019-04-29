@@ -1,0 +1,11 @@
+Error: accepts 1 arg(s), received 0
+Usage:
+  ccloud kafka cluster delete ID [flags]
+
+Flags:
+  -h, --help   help for delete
+
+Global Flags:
+      --environment string   ID of the environment in which to run the command
+  -v, --verbose count        increase output verbosity
+
