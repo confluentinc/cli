@@ -18,7 +18,6 @@ require (
 	github.com/eapache/go-xerial-snappy v0.0.0-20180814174437-776d5712da21 // indirect
 	github.com/eapache/queue v1.1.0 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
-	github.com/go-critic/checkers v0.0.0-20181031185637-879460b6c936 // indirect
 	github.com/gogo/protobuf v1.2.1 // indirect
 	github.com/golang/mock v1.2.0 // indirect
 	github.com/golang/protobuf v1.2.1-0.20181128192352-1d3f30b51784
@@ -27,11 +26,7 @@ require (
 	github.com/golangci/gofmt v0.0.0-20181105071733-f021c4179c82 // indirect
 	github.com/golangci/golangci-lint v1.16.0
 	github.com/golangci/gosec v0.0.0-20180901114220-8afd9cbb6cfb // indirect
-	github.com/golangci/govet v0.0.0-20180818181408-44ddbe260190 // indirect
-	github.com/golangci/interfacer v0.0.0-20180902080945-01958817a6ec // indirect
-	github.com/golangci/lint v0.0.0-20180902080404-c2187e7932b5 // indirect
 	github.com/golangci/tools v0.0.0-20180902102414-2cefd77fef9b // indirect
-	github.com/golangci/unparam v0.0.0-20180902112548-7ad9dbcccc16 // indirect
 	github.com/google/uuid v1.1.0
 	github.com/goreleaser/goreleaser v0.106.0
 	github.com/hashicorp/go-hclog v0.0.0-20180910232447-e45cbeb79f04
@@ -39,7 +34,6 @@ require (
 	github.com/hashicorp/go-multierror v1.0.0
 	github.com/hashicorp/go-version v1.1.0
 	github.com/jonboulle/clockwork v0.1.0
-	github.com/kamilsk/retry v0.0.0-20181229152359-495c1d672c93 // indirect
 	github.com/mattn/go-isatty v0.0.4
 	github.com/mattn/go-runewidth v0.0.3 // indirect
 	github.com/mitchellh/go-homedir v1.0.0
@@ -59,7 +53,6 @@ require (
 	golang.org/x/crypto v0.0.0-20190313024323-a1f597ede03a
 	golang.org/x/net v0.0.0-20190404232315-eb5bcb51f2a3 // indirect
 	golang.org/x/oauth2 v0.0.0-20190402181905-9f3314589c9a // indirect
-	golang.org/x/sys v0.0.0-20190221222158-ec7b60b042fd // indirect
 	golang.org/x/text v0.3.1-0.20180807135948-17ff2d5776d2 // indirect
 	gopkg.in/yaml.v2 v2.2.2 // indirect
 	sourcegraph.com/sqs/pbtypes v1.0.0 // indirect
