@@ -96,10 +96,6 @@ func (s *CLITestSuite) Test_Help() {
 func (s *CLITestSuite) Test_Login_UseKafka_AuthKafka_Errors() {
 	tests := []CLITest{
 		{
-			args:    "kafka cluster --help",
-			fixture: "kafka-cluster-help.golden",
-		},
-		{
 			name:    "error if not authenticated",
 			args:    "kafka topic create integ",
 			fixture: "err-not-authenticated.golden",
