@@ -301,7 +301,7 @@ github_release() {
   owner_repo=$1
   version=$2
   test -z "$version" && version="latest"
-  s3url="https://s3-us-west-2.amazonaws.com/confluent.cloud?prefix=ccloud-cli/archives/${version#v}/&delimiter=/"
+  s3url="https://s3-us-west-2.amazonaws.com/confluent.cloud?prefix=${PROJECT_NAME}/archives/${version#v}/&delimiter=/"
   xml=$(http_copy "$s3url")
   exists=$(echo "$xml" | grep "<Key>") || return 1
   test -z "$version" && return 1
