@@ -151,21 +151,6 @@ func (c *Config) Context() (*Context, error) {
 	return c.Contexts[c.CurrentContext], nil
 }
 
-func (c *Config) MaybeDeleteKey(apikey string) error {
-	cfg, err := c.Context()
-	if err != nil {
-		return err
-	}
-	for _, cluster := range cfg.KafkaClusters {
-		for key := range cluster.APIKeys {
-			if key == apikey {
-				delete(cluster.APIKeys, key)
-			}
-		}
-	}
-	return c.Save()
-}
-
 // CheckLogin returns an error if the user is not logged in.
 func (c *Config) CheckLogin() error {
 	if c.Auth == nil || c.Auth.Account == nil || c.Auth.Account.Id == "" {

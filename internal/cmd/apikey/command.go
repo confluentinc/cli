@@ -184,7 +184,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	if err := c.keystore.StoreAPIKey(kcc.ID, environment, userKey); err != nil {
+	if err := c.keystore.StoreAPIKey(userKey, kcc.ID, environment); err != nil {
 		return errors.HandleCommon(errors.Wrapf(err, "unable to store api key locally"), cmd)
 	}
 
@@ -209,7 +209,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	return c.config.MaybeDeleteKey(apiKey)
+	return c.keystore.DeleteAPIKey(apiKey)
 }
 
 func (c *command) store(cmd *cobra.Command, args []string) error {
@@ -244,7 +244,7 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(errors.Errorf("Refusing to overwrite existing secret for API Key %s", key), cmd)
 	}
 
-	if err := c.keystore.StoreAPIKey(kcc.ID, environment, &authv1.ApiKey{Key: key, Secret: secret}); err != nil {
+	if err := c.keystore.StoreAPIKey(&authv1.ApiKey{Key: key, Secret: secret}, kcc.ID, environment); err != nil {
 		return errors.HandleCommon(errors.Wrapf(err, "unable to store api key locally"), cmd)
 	}
 

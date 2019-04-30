@@ -10,7 +10,8 @@ import (
 
 type KeyStore interface {
 	HasAPIKey(key string, clusterID, environment string) (bool, error)
-	StoreAPIKey(clusterID, environment string, key *authv1.ApiKey) error
+	StoreAPIKey(key *authv1.ApiKey, clusterID, environment string) error
+	DeleteAPIKey(key string) error
 }
 
 type ConfigKeyStore struct {
@@ -29,7 +30,7 @@ func (c *ConfigKeyStore) HasAPIKey(key string, clusterID, environment string) (b
 }
 
 // StoreAPIKey creates a new API key pair in the local key store for later usage
-func (c *ConfigKeyStore) StoreAPIKey(clusterID, environment string, key *authv1.ApiKey) error {
+func (c *ConfigKeyStore) StoreAPIKey(key *authv1.ApiKey, clusterID, environment string) error {
 	kcc, err := c.Helper.KafkaClusterConfig(clusterID, environment)
 	if err != nil {
 		return err
@@ -37,6 +38,21 @@ func (c *ConfigKeyStore) StoreAPIKey(clusterID, environment string, key *authv1.
 	kcc.APIKeys[key.Key] = &config.APIKeyPair{
 		Key:    key.Key,
 		Secret: key.Secret,
+	}
+	return c.Config.Save()
+}
+
+func (c *ConfigKeyStore) DeleteAPIKey(key string) error {
+	cfg, err := c.Config.Context()
+	if err != nil {
+		return err
+	}
+	for _, cluster := range cfg.KafkaClusters {
+		for apiKey := range cluster.APIKeys {
+			if apiKey == key {
+				delete(cluster.APIKeys, apiKey)
+			}
+		}
 	}
 	return c.Config.Save()
 }
