@@ -13,6 +13,10 @@ HOSTNAME := $(shell id -u -n)@$(shell hostname -f)
 clean:
 	rm -rf $(shell pwd)/dist
 
+.PHONY: generate
+generate:
+	@go generate ./...
+
 .PHONY: deps
 deps:
 	@GO111MODULE=on go get github.com/goreleaser/goreleaser@v0.101.0
