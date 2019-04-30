@@ -148,7 +148,12 @@ lint-go:
 	@GO111MODULE=on golangci-lint run
 
 .PHONY: lint
-lint: lint-go
+lint: lint-go lint-installers
+
+.PHONY: lint-installers
+## Lints the CLI installation scripts
+lint-installers:
+	@diff install-c* | grep -v -E "^---|^[0-9c0-9]|PROJECT_NAME|BINARY" && echo "diff between install scripts" && exit 1 || exit 0
 
 .PHONY: coverage
 coverage:
