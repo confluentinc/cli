@@ -89,7 +89,8 @@ publish: dist-ccloud
 
 .PHONY: docs
 docs:
-	@GO111MODULE=on go run -ldflags '-X main.cliName=confluent' cmd/docs/main.go
+#   TODO: we can't enable auto-docs generation for confluent until we migrate go-basher commands into cobra
+#	@GO111MODULE=on go run -ldflags '-X main.cliName=confluent' cmd/docs/main.go
 	@GO111MODULE=on go run -ldflags '-X main.cliName=ccloud' cmd/docs/main.go
 
 .PHONY: publish-docs
@@ -97,16 +98,20 @@ publish-docs: docs
 	@TMP_DIR=$$(mktemp -d)/docs || exit 1; \
 		git clone git@github.com:confluentinc/docs.git $${TMP_DIR}; \
 		cd $${TMP_DIR} || exit 1; \
-		git checkout -b cli-$(VERSION) $(DOCS_BRANCH); \
+		git checkout -b cli-$(VERSION) $(DOCS_BRANCH) || exit 1; \
 		cd - || exit 1; \
-		make publish-docs-internal BASE_DIR=$${TMP_DIR} CLI_NAME=confluent || exit 1; \
 		make publish-docs-internal BASE_DIR=$${TMP_DIR} CLI_NAME=ccloud || exit 1; \
 		cd $${TMP_DIR} || exit 1; \
+		sed -i '' 's/default "confluent_cli_consumer_[^"]*"/default "confluent_cli_consumer_<uuid>"/' cloud/cli/command-reference/ccloud_kafka_topic_consume.rst || exit 1; \
 		git add . || exit 1; \
+		git diff --cached --exit-code >/dev/null && echo "nothing to update for docs" && exit 0; \
 		git commit -m "chore: updating CLI docs for $(VERSION)" || exit 1; \
+		git push origin cli-$(VERSION) || exit 1; \
 		hub pull-request -b $(DOCS_BRANCH) -m "chore: updating CLI docs for $(VERSION)" || exit 1; \
 		cd - || exit 1; \
 		rm -rf $${TMP_DIR}
+#   TODO: we can't enable auto-docs generation for confluent until we migrate go-basher commands into cobra
+#	    make publish-docs-internal BASE_DIR=$${TMP_DIR} CLI_NAME=confluent || exit 1; \
 
 .PHONY: publish-docs-internal
 publish-docs-internal:
