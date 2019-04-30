@@ -118,8 +118,8 @@ publish: publish-ccloud publish-confluent
 .PHONY: publish-installers
 ## Publish install scripts to S3. You MUST re-run this if/when you update any install script.
 publish-installers:
-	aws s3 cp install-ccloud.sh s3://confluent.cloud/confluent-cli/install.sh --acl public-read
-	aws s3 cp install-confluent.sh s3://confluent.cloud/ccloud-cli/install.sh --acl public-read
+	aws s3 cp install-ccloud.sh s3://confluent.cloud/ccloud-cli/install.sh --acl public-read
+	aws s3 cp install-confluent.sh s3://confluent.cloud/confluent-cli/install.sh --acl public-read
 
 .PHONY: fmt
 fmt:
