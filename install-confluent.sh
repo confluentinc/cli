@@ -119,10 +119,10 @@ adjust_os() {
   true
 }
 s3_releases() {
-  s3url="https://s3-us-west-2.amazonaws.com/confluent.cloud?prefix=ccloud-cli/archives/&delimiter=/"
+  s3url="https://s3-us-west-2.amazonaws.com/confluent.cloud?prefix=${PROJECT_NAME}/archives/&delimiter=/"
   xml=$(http_copy "$s3url")
   versions=$(echo "$xml" | sed -n 's/</\
-</gp' | sed -n 's/<Prefix>ccloud-cli\/archives\/\(.*\)\//\1/p') || return 1
+</gp' | sed -n "s/<Prefix>${PROJECT_NAME}\/archives\/\(.*\)\//\1/p") || return 1
   test -z "$versions" && return 1
   echo "$versions"
 }
