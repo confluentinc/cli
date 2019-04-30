@@ -18,15 +18,15 @@ You can download a tarball with the binaries. These are both on Github releases 
 
 The simplest way to install cross platform is with this one-liner:
 
-    curl -sL https://git.io/vhuDX | bash
+    curl -sL https://cnfl.io/ccloud-cli | sh
 
-It'll install in `./bin` by default. **You MUST add `./bin` to your `$PATH`.**
+It'll install in `./bin` by default.
 
 You can also install to a specific directory. For example, install to `/usr/local/bin` by running:
 
-    curl -sL https://git.io/vhuDX | sudo bash -s -- -b /usr/local/bin
+    curl -sL https://cnfl.io/ccloud-cli | sudo sh -s -- -b /usr/local/bin
 
-Note: We'll create a nicer short link before we GA the CLI.
+Note: We'll create this nicer short link before we LA the CLI.
 (Most link shorteners don't allow you to the change the underlying URL later. So don't claim it before we're ready.)
 
 ### Binary Tarball from S3
@@ -35,20 +35,20 @@ You can download a binary tarball from S3 .
 
 To list all available versions:
 
-    curl -s "https://s3-us-west-2.amazonaws.com/confluent.cloud?prefix=ccloud-cli/archives/&delimiter=/" | tidy -xml --wrap 100 -i -
+    curl -s "https://s3-us-west-2.amazonaws.com/confluent.cloud?prefix=ccloud-cli/archives/&delimiter=/" | tidy -xml --wrap 100 -i - 2>/dev/null | sed -n "s/<Prefix>ccloud-cli\/archives\/\(.*\)\/<\/Prefix>/\1/p"
 
 To list all available packages for a version:
 
-    VERSION=0.26.0 # or latest
-    curl -s "https://s3-us-west-2.amazonaws.com/confluent.cloud?prefix=ccloud-cli/archives/${VERSION}/&delimiter=/" | tidy -xml --wrap 100 -i -
+    VERSION=v0.64.0 # or latest
+    curl -s "https://s3-us-west-2.amazonaws.com/confluent.cloud?prefix=ccloud-cli/archives/${VERSION#v}/&delimiter=/" | tidy -xml --wrap 100 -i - 2>/dev/null | sed -n "s/<Key>ccloud-cli\/archives\/${VERSION#v}\/\(.*\)<\/Key>/\1/p"
 
 To download a tarball for your OS and architecture:
 
-    VERSION=0.26.0 # or latest
+    VERSION=v0.64.0 # or latest
     OS=darwin
     ARCH=amd64
-    FILE=ccloud_v${VERSION}_${OS}_${ARCH}.tar.gz
-    curl -s https://s3-us-west-2.amazonaws.com/confluent.cloud/ccloud-cli/archives/${VERSION}/${FILE} -o ${FILE}
+    FILE=ccloud_${VERSION}_${OS}_${ARCH}.tar.gz
+    curl -s https://s3-us-west-2.amazonaws.com/confluent.cloud/ccloud-cli/archives/${VERSION#v}/${FILE} -o ${FILE}
 
 To install the CLI:
 
