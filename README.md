@@ -20,43 +20,31 @@ The simplest way to install cross platform is with this one-liner:
 
     curl -sL https://cnfl.io/ccloud-cli | sh
 
+Or for the on-prem binary (while these are separate binaries):
+
+    curl -sL https://cnfl.io/cli | sh
+
 It'll install in `./bin` by default.
+
+#### Install Dir
 
 You can also install to a specific directory. For example, install to `/usr/local/bin` by running:
 
     curl -sL https://cnfl.io/ccloud-cli | sudo sh -s -- -b /usr/local/bin
 
-Note: We'll create this nicer short link before we LA the CLI.
-(Most link shorteners don't allow you to the change the underlying URL later. So don't claim it before we're ready.)
+#### Install Version
 
-### Binary Tarball from S3
+You can list all available versions:
 
-You can download a binary tarball from S3 .
+    curl -sL https://cnfl.io/ccloud-cli | sh -s -- -l
 
-To list all available versions:
+    curl -sL https://cnfl.io/cli | sh -s -- -l
 
-    curl -s "https://s3-us-west-2.amazonaws.com/confluent.cloud?prefix=ccloud-cli/archives/&delimiter=/" | tidy -xml --wrap 100 -i - 2>/dev/null | sed -n "s/<Prefix>ccloud-cli\/archives\/\(.*\)\/<\/Prefix>/\1/p"
+And install a particular version if you desire:
 
-To list all available packages for a version:
+    curl -sL https://cnfl.io/ccloud-cli | sudo sh -s -- v0.64.0
 
-    VERSION=v0.64.0 # or latest
-    curl -s "https://s3-us-west-2.amazonaws.com/confluent.cloud?prefix=ccloud-cli/archives/${VERSION#v}/&delimiter=/" | tidy -xml --wrap 100 -i - 2>/dev/null | sed -n "s/<Key>ccloud-cli\/archives\/${VERSION#v}\/\(.*\)<\/Key>/\1/p"
-
-To download a tarball for your OS and architecture:
-
-    VERSION=v0.64.0 # or latest
-    OS=darwin
-    ARCH=amd64
-    FILE=ccloud_${VERSION}_${OS}_${ARCH}.tar.gz
-    curl -s https://s3-us-west-2.amazonaws.com/confluent.cloud/ccloud-cli/archives/${VERSION#v}/${FILE} -o ${FILE}
-
-To install the CLI:
-
-    mkdir ccloud-cli && tar -xzvf ccloud_v${VERSION}_${OS}_${ARCH}.tar.gz -C ccloud-cli
-    sudo mv ccloud-cli/ccloud* /usr/local/bin
-
-To use the AWS S3 CLI instead of curl requires read access to Confluent Cloud AWS Prod account.
-This is where the `confluent.cloud` S3 bucket is located.
+This downloads a binary tarball from S3 compiled for your distro and installs it.
 
 ### Building From Source
 
