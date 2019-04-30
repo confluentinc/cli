@@ -102,7 +102,7 @@ func (c *topicCommand) init() {
 		RunE:  c.consume,
 		Args:  cobra.ExactArgs(1),
 	}
-	cmd.Flags().String("group", fmt.Sprintf("confluent_cli_consumer%s", uuid.New()), "Consumer group id")
+	cmd.Flags().String("group", fmt.Sprintf("confluent_cli_consumer_%s", uuid.New()), "Consumer group id")
 	c.AddCommand(cmd)
 
 }
