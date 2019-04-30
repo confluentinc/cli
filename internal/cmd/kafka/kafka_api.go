@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/hashicorp/go-multierror"
@@ -145,5 +146,6 @@ OUTER:
 		ops = append(ops, strings.ToLower(v))
 	}
 
+	sort.Strings(ops)
 	return strings.Join(ops, ", ")
 }
