@@ -39,3 +39,9 @@ func (c *APIKey) List(ctx context.Context, key *authv1.ApiKey) ([]*authv1.ApiKey
 	ret, err := c.Client.APIKey.List(ctx, key)
 	return ret, errors.ConvertAPIError(err)
 }
+
+func (c *APIKey) Get(ctx context.Context, key *authv1.ApiKey) (*authv1.ApiKey, error) {
+	c.Logger.Log("msg", "apiKey.Get()")
+	ret, err := c.Client.APIKey.Get(ctx, key)
+	return ret, errors.ConvertAPIError(err)
+}

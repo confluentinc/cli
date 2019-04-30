@@ -11,7 +11,7 @@ require (
 	github.com/codyaray/go-editor v0.3.0
 	github.com/codyaray/go-printer v0.9.0
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
-	github.com/confluentinc/ccloud-sdk-go v0.0.7-0.20190319002505-737e911e0cad
+	github.com/confluentinc/ccloud-sdk-go v0.0.7-0.20190430202328-a81a22caa8c3
 	github.com/confluentinc/ccloudapis v0.0.0-20190313194524-9d1a929e8e66
 	github.com/confluentinc/go-printer v0.9.0
 	github.com/confluentinc/mds-sdk-go v0.0.0-20190408235126-e472f6157a7c // indirect
