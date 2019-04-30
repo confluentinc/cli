@@ -196,7 +196,8 @@ log_crit() {
 uname_os() {
   os=$(uname -s | tr '[:upper:]' '[:lower:]')
   case "$os" in
-    msys_nt) os="windows" ;;
+    msys*) os="windows" ;;
+    mingw*) os="windows" ;;
   esac
   echo "$os"
 }
@@ -385,6 +386,10 @@ tag_to_version
 adjust_format
 
 adjust_os
+
+if [ ${OS} = "windows" ]; then
+  FORMAT=zip ;
+fi
 
 log_info "found version: ${VERSION} for ${TAG}/${OS}/${ARCH}"
 
