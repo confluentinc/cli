@@ -20,6 +20,7 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/version"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	configs "github.com/confluentinc/cli/internal/pkg/config"
+	keystore "github.com/confluentinc/cli/internal/pkg/keystore"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	apikeys "github.com/confluentinc/cli/internal/pkg/sdk/apikey"
 	//connects "github.com/confluentinc/cli/pkg/sdk/connect"
@@ -76,13 +77,11 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	if cliName == "ccloud" {
 		kafkaClient := kafkas.New(client, logger)
 		userClient := users.New(client, logger)
-		ch := &pcmd.ConfigHelper{
-			Config: cfg,
-			Kafka: kafkaClient,
-		}
+		ch := &pcmd.ConfigHelper{Config: cfg, Client: client}
+		ks := &keystore.ConfigKeyStore{Config: cfg, Helper: ch}
 		cli.AddCommand(environment.New(prerunner, cfg, environments.New(client, logger), cliName))
 		cli.AddCommand(service_account.New(prerunner, cfg, userClient))
-		cli.AddCommand(apikey.New(prerunner, cfg, apikeys.New(client, logger), ch))
+		cli.AddCommand(apikey.New(prerunner, cfg, apikeys.New(client, logger), ch, ks))
 		cli.AddCommand(kafka.New(prerunner, cfg, kafkaClient, ch))
 
 		conn = ksql.New(prerunner, cfg, ksqls.New(client, logger), kafkaClient, userClient, ch)
