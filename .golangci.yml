@@ -5,3 +5,8 @@ run:
 linters:
   disable:
     - megacheck # doesn't work due to tools.go
+
+linters-settings:
+  errcheck:
+    exclude: .excludes.txt 
+

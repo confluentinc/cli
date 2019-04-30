@@ -7,8 +7,8 @@ require (
 	github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da
 	github.com/atrox/homedir v1.0.0
 	github.com/aws/aws-sdk-go v1.15.64
-	github.com/codyaray/go-editor v0.3.0
-	github.com/codyaray/go-printer v0.9.0
+	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
+	github.com/codyaray/go-printer v0.9.0 // indirect
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
 	github.com/confluentinc/ccloud-sdk-go v0.0.7-0.20190319002505-737e911e0cad
 	github.com/confluentinc/ccloudapis v0.0.0-20190313194524-9d1a929e8e66
@@ -20,19 +20,22 @@ require (
 	github.com/eapache/queue v1.1.0 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/gogo/protobuf v1.2.1 // indirect
-	github.com/golang/mock v1.2.0 // indirect
+	github.com/golang/mock v1.2.0
 	github.com/golang/protobuf v1.2.1-0.20181128192352-1d3f30b51784
 	github.com/golang/snappy v0.0.1 // indirect
-	github.com/golangci/errcheck v0.0.0-20181003203344-ef45e06d44b6 // indirect
-	github.com/golangci/golangci-lint v1.12.2
+	github.com/golangci/go-tools v0.0.0-20190124090046-35a9f45a5db0 // indirect
+	github.com/golangci/gofmt v0.0.0-20181105071733-f021c4179c82 // indirect
+	github.com/golangci/golangci-lint v1.16.0
+	github.com/golangci/gosec v0.0.0-20180901114220-8afd9cbb6cfb // indirect
+	github.com/golangci/tools v0.0.0-20180902102414-2cefd77fef9b // indirect
 	github.com/google/uuid v1.1.0
-	github.com/goreleaser/goreleaser v0.101.0
+	github.com/goreleaser/goreleaser v0.106.0
 	github.com/hashicorp/go-hclog v0.0.0-20180910232447-e45cbeb79f04
 	github.com/hashicorp/go-immutable-radix v1.0.0 // indirect
 	github.com/hashicorp/go-multierror v1.0.0
 	github.com/hashicorp/go-version v1.1.0
 	github.com/jonboulle/clockwork v0.1.0
-	github.com/kr/pretty v0.1.0 // indirect
+	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect
 	github.com/mattn/go-isatty v0.0.4
 	github.com/mattn/go-runewidth v0.0.3 // indirect
 	github.com/mitchellh/go-homedir v1.0.0
@@ -42,6 +45,7 @@ require (
 	github.com/pascaldekloe/goe v0.0.0-20180627143212-57f6aae5913c // indirect
 	github.com/pierrec/lz4 v2.0.5+incompatible // indirect
 	github.com/pkg/errors v0.8.1
+	github.com/progrium/go-basher v0.0.0-20190315062444-ad5de635edd1
 	github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a // indirect
 	github.com/shurcooL/go v0.0.0-20190121191506-3fef8c783dec // indirect
 	github.com/sirupsen/logrus v1.3.0 // indirect
@@ -49,13 +53,9 @@ require (
 	github.com/spf13/pflag v1.0.3
 	github.com/spf13/viper v1.2.0
 	github.com/stretchr/testify v1.3.0
-	golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2
-	golang.org/x/sys v0.0.0-20190221222158-ec7b60b042fd // indirect
+	golang.org/x/crypto v0.0.0-20190313024323-a1f597ede03a
 	golang.org/x/text v0.3.1-0.20180807135948-17ff2d5776d2 // indirect
-	golang.org/x/tools v0.0.0-20190221204921-83362c3779f5 // indirect
-	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gopkg.in/yaml.v2 v2.2.2 // indirect
-	sourcegraph.com/sourcegraph/go-diff v0.5.0 // indirect
 	sourcegraph.com/sqs/pbtypes v1.0.0 // indirect
 )
 

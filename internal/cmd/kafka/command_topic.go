@@ -42,32 +42,39 @@ func NewTopicCommand(config *config.Config, client ccloud.Kafka) *cobra.Command 
 }
 
 func (c *topicCommand) init() {
-	c.AddCommand(&cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List Kafka topics",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
-	})
+	}
+	cmd.Flags().String("cluster", "", "Kafka cluster ID")
+	cmd.Flags().SortFlags = false
+	c.AddCommand(cmd)
 
-	cmd := &cobra.Command{
+	cmd = &cobra.Command{
 		Use:   "create TOPIC",
 		Short: "Create a Kafka topic",
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	}
-	cmd.Flags().Uint32("partitions", 6, "Number of topic partitions.")
-	cmd.Flags().Uint32("replication-factor", 3, "Replication factor.")
-	cmd.Flags().StringSlice("config", nil, "A comma separated list of topic configuration (key=value) overrides for the topic being created.")
+	cmd.Flags().String("cluster", "", "Kafka cluster ID")
+	cmd.Flags().Uint32("partitions", 6, "Number of topic partitions")
+	cmd.Flags().Uint32("replication-factor", 3, "Replication factor")
+	cmd.Flags().StringSlice("config", nil, "A comma separated list of topic configuration (key=value) overrides for the topic being created")
 	cmd.Flags().Bool("dry-run", false, "Execute request without committing changes to Kafka")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
-	c.AddCommand(&cobra.Command{
+	cmd = &cobra.Command{
 		Use:   "describe TOPIC",
 		Short: "Describe a Kafka topic",
 		RunE:  c.describe,
 		Args:  cobra.ExactArgs(1),
-	})
+	}
+	cmd.Flags().String("cluster", "", "Kafka cluster ID")
+	cmd.Flags().SortFlags = false
+	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
 		Use:   "update TOPIC",
@@ -75,17 +82,21 @@ func (c *topicCommand) init() {
 		RunE:  c.update,
 		Args:  cobra.ExactArgs(1),
 	}
-	cmd.Flags().StringSlice("config", nil, "A comma separated list of topic configuration (key=value) overrides for the topic being created.")
+	cmd.Flags().String("cluster", "", "Kafka cluster ID")
+	cmd.Flags().StringSlice("config", nil, "A comma separated list of topic configuration (key=value) overrides for the topic being created")
 	cmd.Flags().Bool("dry-run", false, "Execute request without committing changes to Kafka")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
-	c.AddCommand(&cobra.Command{
+	cmd = &cobra.Command{
 		Use:   "delete TOPIC",
 		Short: "Delete a Kafka topic",
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
-	})
+	}
+	cmd.Flags().String("cluster", "", "Kafka cluster ID")
+	cmd.Flags().SortFlags = false
+	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
 		Use:   "produce TOPIC",
@@ -93,7 +104,9 @@ func (c *topicCommand) init() {
 		RunE:  c.produce,
 		Args:  cobra.ExactArgs(1),
 	}
+	cmd.Flags().String("cluster", "", "Kafka cluster ID")
 	cmd.Flags().String("delimiter", ":", "Key/Value delimiter")
+	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
@@ -102,13 +115,15 @@ func (c *topicCommand) init() {
 		RunE:  c.consume,
 		Args:  cobra.ExactArgs(1),
 	}
+	cmd.Flags().String("cluster", "", "Kafka cluster ID")
 	cmd.Flags().String("group", fmt.Sprintf("confluent_cli_consumer%s", uuid.New()), "Consumer group id")
+	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
 }
 
 func (c *topicCommand) list(cmd *cobra.Command, args []string) error {
-	cluster, err := c.config.KafkaCluster()
+	cluster, err := pcmd.GetKafkaCluster(cmd, c.config)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -129,7 +144,7 @@ func (c *topicCommand) list(cmd *cobra.Command, args []string) error {
 }
 
 func (c *topicCommand) create(cmd *cobra.Command, args []string) error {
-	cluster, err := c.config.KafkaCluster()
+	cluster, err := pcmd.GetKafkaCluster(cmd, c.config)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -172,7 +187,7 @@ func (c *topicCommand) create(cmd *cobra.Command, args []string) error {
 }
 
 func (c *topicCommand) describe(cmd *cobra.Command, args []string) error {
-	cluster, err := c.config.KafkaCluster()
+	cluster, err := pcmd.GetKafkaCluster(cmd, c.config)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -236,7 +251,7 @@ func (c *topicCommand) describe(cmd *cobra.Command, args []string) error {
 }
 
 func (c *topicCommand) update(cmd *cobra.Command, args []string) error {
-	cluster, err := c.config.KafkaCluster()
+	cluster, err := pcmd.GetKafkaCluster(cmd, c.config)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -263,7 +278,7 @@ func (c *topicCommand) update(cmd *cobra.Command, args []string) error {
 }
 
 func (c *topicCommand) delete(cmd *cobra.Command, args []string) error {
-	cluster, err := c.config.KafkaCluster()
+	cluster, err := pcmd.GetKafkaCluster(cmd, c.config)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -277,6 +292,11 @@ func (c *topicCommand) delete(cmd *cobra.Command, args []string) error {
 func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {
 	topic := args[0]
 
+	cluster, err := pcmd.GetKafkaClusterConfig(cmd, c.config)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
 	delim, err := cmd.Flags().GetString("delimiter")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -284,7 +304,7 @@ func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {
 
 	pcmd.Println(cmd, "Starting Kafka Producer. ^C to exit")
 
-	producer, err := NewSaramaProducer(c.config)
+	producer, err := NewSaramaProducer(cluster)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -339,12 +359,19 @@ func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {
 }
 
 func (c *topicCommand) consume(cmd *cobra.Command, args []string) error {
+	topic := args[0]
+
+	cluster, err := pcmd.GetKafkaClusterConfig(cmd, c.config)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
 	group, err := cmd.Flags().GetString("group")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	consumer, err := NewSaramaConsumer(group, c.config)
+	consumer, err := NewSaramaConsumer(group, cluster)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -366,7 +393,7 @@ func (c *topicCommand) consume(cmd *cobra.Command, args []string) error {
 
 	pcmd.Println(cmd, "Starting Kafka Consumer. ^C to exit")
 
-	err = consumer.Consume(context.Background(), []string{args[0]}, &GroupHandler{Out: cmd.OutOrStdout()})
+	err = consumer.Consume(context.Background(), []string{topic}, &GroupHandler{Out: cmd.OutOrStdout()})
 
 	return errors.HandleCommon(err, cmd)
 }

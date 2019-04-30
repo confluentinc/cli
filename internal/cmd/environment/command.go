@@ -64,12 +64,13 @@ func (c *command) init() {
 	})
 
 	updateCmd := &cobra.Command{
-		Use:   "update ID --name NEWNAME",
+		Use:   "update ID",
 		Short: "Update the name of an environment",
 		RunE:  c.update,
 		Args:  cobra.ExactArgs(1),
 	}
 	updateCmd.Flags().String("name", "", "New name for environment")
+	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
 
 	c.AddCommand(&cobra.Command{

@@ -7,21 +7,25 @@ include ./semver.mk
 
 REF := $(shell [ -d .git ] && git rev-parse --short HEAD || echo "none")
 DATE := $(shell date -u)
-HOSTNAME := $(shell id -u -n)@$(shell hostname -f)
+HOSTNAME := $(shell id -u -n)@$(shell hostname)
 
 .PHONY: clean
 clean:
 	rm -rf $(shell pwd)/dist
+	rm -f internal/cmd/local/bindata.go
+	rm -f mock/local/shell_runner_mock.go
 
 .PHONY: deps
 deps:
-	@GO111MODULE=on go get github.com/goreleaser/goreleaser@v0.101.0
-	@GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.12.2
+	@GO111MODULE=on go get github.com/goreleaser/goreleaser@v0.106.0
+	@GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.16.0
 
 build: build-go
 
 ifeq ($(shell uname),Darwin)
 GORELEASER_SUFFIX ?= -mac.yml
+else ifneq (,$(findstring NT,$(shell uname)))
+GORELEASER_SUFFIX ?= -windows.yml
 else
 GORELEASER_SUFFIX ?= -linux.yml
 endif
@@ -30,7 +34,7 @@ show-args:
 	@echo "VERSION: $(VERSION)"
 
 .PHONY: build-go
-build-go:
+build-go: internal/cmd/local/bindata.go
 	make build-ccloud
 	make build-confluent
 
@@ -41,6 +45,9 @@ build-ccloud:
 .PHONY: build-confluent
 build-confluent:
 	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --snapshot --rm-dist -f .goreleaser-confluent$(GORELEASER_SUFFIX)
+
+internal/cmd/local/bindata.go:
+	@go-bindata -pkg local -o internal/cmd/local/bindata.go cp_cli/
 
 .PHONY: release
 release: get-release-image commit-release tag-release
@@ -96,9 +103,23 @@ else
 	true
 endif
 
-.PHONY: lint
-lint:
+cmd/lint/en_US.aff:
+	@curl -s "https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+/master/en_US.aff?format=TEXT" | base64 -D > $@
+
+cmd/lint/en_US.dic:
+	@curl -s "https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+/master/en_US.dic?format=TEXT" | base64 -D > $@
+
+.PHONY: lint-cli
+lint-cli: cmd/lint/en_US.aff cmd/lint/en_US.dic
+	GO111MODULE=on go run cmd/lint/main.go -aff-file $(word 1,$^) -dic-file $(word 2,$^) $(ARGS)
+
+
+.PHONY: lint-go
+lint-go:
 	@GO111MODULE=on golangci-lint run
+
+.PHONY: lint
+lint: lint-go
 
 .PHONY: coverage
 coverage:
@@ -115,5 +136,11 @@ coverage:
 	@GO111MODULE=on go test -race -cover $(TEST_ARGS) $$(go list ./... | grep -v vendor)
       endif
 
+.PHONY: mocks
+mocks: mock/local/shell_runner_mock.go
+
+mock/local/shell_runner_mock.go:
+	mockgen -source internal/cmd/local/shell_runner.go -destination mock/local/shell_runner_mock.go ShellRunner
+
 .PHONY: test
-test: lint coverage
+test: internal/cmd/local/bindata.go mocks lint coverage

@@ -1,0 +1,197 @@
+--- /Users/norwood/clients/confluent-cli/src/ccs/confluent.sh	2019-04-10 09:40:37.000000000 -0700
++++ cp_cli/confluent.sh	2019-04-26 07:48:31.000000000 -0700
+@@ -16,7 +16,7 @@
+ 
+ success=false
+ # Uncomment to enable debugging on the console
+-#set -x
++# set -x
+ 
+ #currently internal option only.
+ _default_curl_timeout=10
+@@ -32,11 +32,15 @@
+ }
+ 
+ validate_and_export_dir_layout() {
+-    command_name="$( basename "${BASH_SOURCE[0]}" )"
+-
+-    confluent_bin="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+-
+-    confluent_home="$( dirname "${confluent_bin}" )"
++    if [[ -z "${CONFLUENT_HOME}" ]]; then
++        command_name="$( basename "${BASH_SOURCE[0]}" )"
++        confluent_bin="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
++        confluent_home="$( dirname "${confluent_bin}" )"
++    else
++        command_name="confluent local"
++        confluent_home="${CONFLUENT_HOME}"
++        confluent_bin="${CONFLUENT_HOME}/bin"
++    fi
+ 
+     confluent_conf="${confluent_home}/etc"
+     # workaround for the cases when 'etc' is not under the same directory as 'bin'
+@@ -1008,7 +1012,7 @@
+ validate_java_version() {
+     local target_service=${1}
+ 
+-    local warning_message="WARNING: Java version 1.8 is recommended. 
++    local warning_message="WARNING: Java version 1.8 is recommended.
+ See https://docs.confluent.io/current/installation/versions-interoperability.html"
+ 
+     # The first segment of the version number, which is '1' for releases before Java 9
+@@ -1160,7 +1164,7 @@
+     else
+       is_network_up=true
+     fi
+-  
++
+     # To populate ${confluent_version}
+     get_version
+ 
+@@ -1749,7 +1753,7 @@
+ 
+ Description:
+     Produce to Kafka topic specified by <topicname>.
+-    
++
+     By default, this command produces to the Kafka cluster on the localhost.
+     To send to another Kafka cluster, set the '--broker-list' argument.
+ 
+@@ -2189,81 +2193,84 @@
+     exit ${ERROR_CODE}
+ }
+ 
+-# Parse command-line arguments
+-[[ $# -lt 1 ]] && usage
++main() {
++    # Parse command-line arguments
++    [[ $# -lt 1 ]] && usage
+ 
+-requirements
++    requirements
+ 
+-cat <<EOF
+-This CLI is intended for development only, not for production
+-https://docs.confluent.io/current/cli/index.html
++    cat <<EOF
++    This CLI is intended for development only, not for production
++    https://docs.confluent.io/current/cli/index.html
+ 
+ EOF
+ 
+-command="${1}"
+-shift
+-case "${command}" in
+-    help)
+-        if [[ -n "${1}" ]]; then
+-            command_exists "${1}" && ( "${1}"_usage "$@" || invalid_command "${1}" )
+-        else
+-            usage
+-        fi;;
++    command="${1}"
++    shift
++    case "${command}" in
++        help)
++            if [[ -n "${1}" ]]; then
++                command_exists "${1}" && ( "${1}"_usage "$@" || invalid_command "${1}" )
++            else
++                usage
++            fi;;
+ 
+-    config)
+-        connect_subcommands "${command}" "$@";;
++        config)
++            connect_subcommands "${command}" "$@";;
++
++        connect)
++            connect_subcommands "$@";;
+ 
+-    connect)
+-        connect_subcommands "$@";;
++        consume)
++            consume_command "$@";;
+ 
+-    consume)
+-        consume_command "$@";;
++        current)
++            print_current;;
+ 
+-    current)
+-        print_current;;
++        demo)
++            demo_command "$@";;
+ 
+-    demo)
+-        demo_command "$@";;
++        destroy)
++            destroy_command;;
+ 
+-    destroy)
+-        destroy_command;;
++        list)
++            list_command "$@";;
+ 
+-    list)
+-        list_command "$@";;
++        load)
++            connect_subcommands "${command}" "$@";;
+ 
+-    load)
+-        connect_subcommands "${command}" "$@";;
++        log)
++            log_command "$@";;
+ 
+-    log)
+-        log_command "$@";;
++        produce)
++            produce_command "$@";;
+ 
+-    produce)
+-        produce_command "$@";;
++        start)
++            start_command "$@";;
+ 
+-    start)
+-        start_command "$@";;
++        status)
++            status_command "$@";;
+ 
+-    status)
+-        status_command "$@";;
++        stop)
++            stop_command "$@";;
+ 
+-    stop)
+-        stop_command "$@";;
++        top)
++            top_command "$@";;
+ 
+-    top)
+-        top_command "$@";;
++        unload)
++            connect_subcommands "${command}" "$@";;
+ 
+-    unload)
+-        connect_subcommands "${command}" "$@";;
++        acl)
++            acl_command "$@";;
+ 
+-    acl)
+-        acl_command "$@";;
++        version)
++            version_command "$@";;
+ 
+-    version)
+-        version_command "$@";;
++        *) invalid_command "${command}";;
++    esac
+ 
+-    *) invalid_command "${command}";;
+-esac
++    success=true
+ 
+-success=true
++    trap shutdown EXIT
++}
+ 
+-trap shutdown EXIT

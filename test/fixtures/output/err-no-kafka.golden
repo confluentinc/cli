@@ -1,1 +1,1 @@
-Error: no auth found for Kafka , please run `ccloud kafka cluster auth` first
+Error: You must pass --cluster or set an active kafka in your context with 'kafka cluster use'

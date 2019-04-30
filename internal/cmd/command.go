@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 
+	"github.com/progrium/go-basher"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go"
@@ -15,14 +16,16 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/environment"
 	"github.com/confluentinc/cli/internal/cmd/kafka"
 	"github.com/confluentinc/cli/internal/cmd/ksql"
+	"github.com/confluentinc/cli/internal/cmd/local"
 	"github.com/confluentinc/cli/internal/cmd/rbac"
-	"github.com/confluentinc/cli/internal/cmd/service-account"
+	service_account "github.com/confluentinc/cli/internal/cmd/service-account"
 	"github.com/confluentinc/cli/internal/cmd/update"
 	"github.com/confluentinc/cli/internal/cmd/version"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	configs "github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	apikeys "github.com/confluentinc/cli/internal/pkg/sdk/apikey"
+
 	//connects "github.com/confluentinc/cli/pkg/sdk/connect"
 	environments "github.com/confluentinc/cli/internal/pkg/sdk/environment"
 	kafkas "github.com/confluentinc/cli/internal/pkg/sdk/kafka"
@@ -87,6 +90,13 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		//cli.AddCommand(conn)
 	} else if cliName == "confluent" {
 		cli.AddCommand(rbac.New(cfg))
+
+		bash, err := basher.NewContext("/bin/bash", false)
+		if err != nil {
+			return nil, err
+		}
+		shellRunner := local.BashShellRunner{BasherContext: bash}
+		cli.AddCommand(local.New(prerunner, &shellRunner))
 	}
 
 	return cli, nil
