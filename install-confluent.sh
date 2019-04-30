@@ -9,12 +9,13 @@ usage() {
   cat <<EOF
 $this: download binaries for confluentinc/cli
 
-Usage: $this [-b] bindir [-d] [tag]
+Usage: $this [-b] bindir [-d] [tag] | -l
   -b sets bindir or installation directory, Defaults to ./bin
   -d turns on debug logging
-   [tag] is a tag from
-   https://github.com/confluentinc/cli/releases
+   [tag] is a valid version tag shown with -l
    If tag is missing, then the latest will be used.
+
+  -l returns a list of all available tags/versions
 
 EOF
   exit 2
@@ -25,9 +26,10 @@ parse_args() {
   # over-ridden by flag below
 
   BINDIR=${BINDIR:-./bin}
-  while getopts "b:dh?" arg; do
+  while getopts "b:ldh?" arg; do
     case "$arg" in
       b) BINDIR="$OPTARG" ;;
+      l) s3_releases ; exit 0 ;;
       d) log_set_priority 10 ;;
       h | \?) usage "$0" ;;
     esac
@@ -85,11 +87,11 @@ check_platform() {
 }
 tag_to_version() {
   if [ -z "${TAG}" ]; then
-    log_info "checking GitHub for latest tag"
+    log_info "checking S3 for latest tag"
   else
-    log_info "checking GitHub for tag '${TAG}'"
+    log_info "checking S3 for tag '${TAG}'"
   fi
-  REALTAG=$(github_release "$OWNER/$REPO" "${TAG}") && true
+  REALTAG=$(s3_release "${TAG}") && true
   if test -z "$REALTAG"; then
     log_crit "unable to find '${TAG}' - use 'latest' or see https://github.com/${PREFIX}/releases for details"
     exit 1
@@ -115,6 +117,23 @@ adjust_os() {
     windows) OS=windows ;;
   esac
   true
+}
+s3_releases() {
+  s3url="https://s3-us-west-2.amazonaws.com/confluent.cloud?prefix=ccloud-cli/archives/&delimiter=/"
+  xml=$(http_copy "$s3url")
+  versions=$(echo "$xml" | sed -n 's/</\
+</gp' | sed -n 's/<Prefix>ccloud-cli\/archives\/\(.*\)\//\1/p') || return 1
+  test -z "$versions" && return 1
+  echo "$versions"
+}
+s3_release() {
+  version=$1
+  test -z "$version" && version="latest"
+  s3url="https://s3-us-west-2.amazonaws.com/confluent.cloud?prefix=${PROJECT_NAME}/archives/${version#v}/&delimiter=/"
+  xml=$(http_copy "$s3url")
+  exists=$(echo "$xml" | grep "<Key>") || return 1
+  test -z "$version" && return 1
+  echo "$version"
 }
 
 cat /dev/null <<EOF
@@ -294,16 +313,6 @@ http_copy() {
   body=$(cat "$tmp")
   rm -f "${tmp}"
   echo "$body"
-}
-github_release() {
-  owner_repo=$1
-  version=$2
-  test -z "$version" && version="latest"
-  s3url="https://s3-us-west-2.amazonaws.com/confluent.cloud?prefix=${PROJECT_NAME}/archives/${version#v}/&delimiter=/"
-  xml=$(http_copy "$s3url")
-  exists=$(echo "$xml" | grep "<Key>") || return 1
-  test -z "$version" && return 1
-  echo "$version"
 }
 hash_sha256() {
   TARGET=${1:-/dev/stdin}
