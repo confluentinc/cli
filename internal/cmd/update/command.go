@@ -78,7 +78,8 @@ func (c *command) init() {
 		RunE:  c.update,
 		Args:  cobra.NoArgs,
 	}
-	c.Command.Flags().Bool("yes", false, "Update without prompting.")
+	c.Command.Flags().Bool("yes", false, "Update without prompting")
+	c.Command.Flags().SortFlags = false
 }
 
 func (c *command) update(cmd *cobra.Command, args []string) error {

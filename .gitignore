@@ -34,6 +34,4 @@ coverage.txt
 /ccloud
 *.sw*
 .vscode
-
-# If we don't check go.sum into git, then CI can't complain that it has conflicting shasums
-go.sum
+**/*.DS_Store

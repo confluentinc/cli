@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/spf13/cobra"
 
@@ -56,39 +57,33 @@ func (c *command) init() {
 	})
 
 	createCmd := &cobra.Command{
-		Use:   "create",
+		Use:   "create NAME",
 		Short: "Create a service account",
 		RunE:  c.create,
-		Args:  cobra.NoArgs,
+		Args:  cobra.ExactArgs(1),
 	}
-	createCmd.Flags().String("name", "", "The service account name")
 	createCmd.Flags().String("description", "", "The service account description")
-	_ = createCmd.MarkFlagRequired("name")
 	_ = createCmd.MarkFlagRequired("description")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
 	updateCmd := &cobra.Command{
-		Use:   "update",
+		Use:   "update ID",
 		Short: "Update a service account",
 		RunE:  c.update,
-		Args:  cobra.NoArgs,
+		Args:  cobra.ExactArgs(1),
 	}
-	updateCmd.Flags().Int32("service-account-id", 0, "The service account ID")
 	updateCmd.Flags().String("description", "", "The service account description")
-	_ = updateCmd.MarkFlagRequired("service-account-id")
 	_ = updateCmd.MarkFlagRequired("description")
+	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
 
-	deleteCmd := &cobra.Command{
-		Use:   "delete",
+	c.AddCommand(&cobra.Command{
+		Use:   "delete ID",
 		Short: "Delete a service account",
 		RunE:  c.delete,
-		Args:  cobra.NoArgs,
-	}
-	deleteCmd.Flags().Int32("service-account-id", 0, "The service account ID")
-	_ = deleteCmd.MarkFlagRequired("service-account-id")
-	c.AddCommand(deleteCmd)
+		Args:  cobra.ExactArgs(1),
+	})
 }
 
 func requireLen(val string, maxLen int, field string) error {
@@ -100,10 +95,7 @@ func requireLen(val string, maxLen int, field string) error {
 }
 
 func (c *command) create(cmd *cobra.Command, args []string) error {
-	name, err := cmd.Flags().GetString("name")
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
+	name := args[0]
 
 	if err := requireLen(name, nameLength, "service name"); err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -134,10 +126,12 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) update(cmd *cobra.Command, args []string) error {
-	id, err := cmd.Flags().GetInt32("service-account-id")
+	idp, err := strconv.Atoi(args[0])
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
+	id := int32(idp)
+
 	description, err := cmd.Flags().GetString("description")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -160,10 +154,11 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
-	id, err := cmd.Flags().GetInt32("service-account-id")
+	idp, err := strconv.Atoi(args[0])
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
+	id := int32(idp)
 
 	user := &orgv1.User{
 		Id: id,

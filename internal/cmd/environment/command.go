@@ -64,12 +64,13 @@ func (c *command) init() {
 	})
 
 	updateCmd := &cobra.Command{
-		Use:   "update ID --name NEWNAME",
+		Use:   "update ID",
 		Short: "Update the name of an environment",
 		RunE:  c.update,
 		Args:  cobra.ExactArgs(1),
 	}
 	updateCmd.Flags().String("name", "", "New name for environment")
+	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
 
 	c.AddCommand(&cobra.Command{
@@ -78,6 +79,35 @@ func (c *command) init() {
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
 	})
+}
+
+func (c *command) refreshEnvList(cmd *cobra.Command) error {
+	environments, err := c.client.List(context.Background(), &orgv1.Account{})
+	if err != nil {
+		return err
+	}
+
+	c.config.Auth.Accounts = environments
+
+	// If current env has gone away, reset active env to 0th env
+	hasGoodEnv := false
+	if c.config.Auth.Account != nil {
+		for _, acc := range c.config.Auth.Accounts {
+			if acc.Id == c.config.Auth.Account.Id {
+				hasGoodEnv = true
+			}
+		}
+	}
+	if !hasGoodEnv {
+		c.config.Auth.Account = c.config.Auth.Accounts[0]
+	}
+
+	err = c.config.Save()
+	if err != nil {
+		return errors.Wrap(err, "unable to save user auth while refreshing environment list")
+	}
+
+	return nil
 }
 
 func (c *command) list(cmd *cobra.Command, args []string) error {
@@ -101,6 +131,11 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 
 func (c *command) use(cmd *cobra.Command, args []string) error {
 	id := args[0]
+
+	err := c.refreshEnvList(cmd)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
 
 	for _, acc := range c.config.Auth.Accounts {
 		if acc.Id == id {

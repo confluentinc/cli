@@ -64,15 +64,17 @@ func (c *clusterCommand) init() {
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	}
-	createCmd.Flags().String("cloud", "", "aws or gcp")
-	createCmd.Flags().String("region", "", "a valid region in the given cloud")
+	createCmd.Flags().String("cloud", "", "Choose aws or gcp")
+	createCmd.Flags().String("region", "", "A valid region in the given cloud")
 	// default to smallest size allowed
-	createCmd.Flags().Int32("ingress", 1, "network ingress in MB/s")
-	createCmd.Flags().Int32("egress", 1, "network egress in MB/s")
-	createCmd.Flags().Int32("storage", 500, "total usable data storage in GB")
-	createCmd.Flags().Bool("multizone", false, "use multiple zones for high availability")
+	createCmd.Flags().Int32("ingress", 1, "Network ingress in MB/s")
+	createCmd.Flags().Int32("egress", 1, "Network egress in MB/s")
+	createCmd.Flags().Int32("storage", 500, "Total usable data storage in GB")
+	createCmd.Flags().Bool("multizone", false, "Use multiple zones for high availability")
 	check(createCmd.MarkFlagRequired("cloud"))
 	check(createCmd.MarkFlagRequired("region"))
+	createCmd.Flags().SortFlags = false
+	createCmd.Hidden = true
 	c.AddCommand(createCmd)
 
 	c.AddCommand(&cobra.Command{
@@ -91,12 +93,14 @@ func (c *clusterCommand) init() {
 	updateCmd.Hidden = true
 	c.AddCommand(updateCmd)
 
-	c.AddCommand(&cobra.Command{
+	deleteCmd := &cobra.Command{
 		Use:   "delete ID",
 		Short: "Delete a Kafka cluster",
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
-	})
+	}
+	deleteCmd.Hidden = true
+	c.AddCommand(deleteCmd)
 	c.AddCommand(&cobra.Command{
 		Use:   "auth",
 		Short: "Configure authorization for a Kafka cluster",
@@ -151,6 +155,10 @@ func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
+	if true {
+		return errors.ErrNotImplemented
+	}
+
 	cloud, err := cmd.Flags().GetString("cloud")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -220,6 +228,10 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
+	if true {
+		return errors.ErrNotImplemented
+	}
+
 	environment, err := c.getEnvironment(cmd)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -293,11 +305,35 @@ func (c *clusterCommand) auth(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) use(cmd *cobra.Command, args []string) error {
+	clusterID := args[0]
+
+	environment, err := c.getEnvironment(cmd)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
 	cfg, err := c.config.Context()
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	cfg.Kafka = args[0]
+
+	req := &kafkav1.KafkaCluster{AccountId: environment, Id: clusterID}
+	kc, err := c.client.Describe(context.Background(), req)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	// TODO: we can't rely on "use" to do this if we want to support stateless usage with --cluster instead
+	if c.config.Platforms[cfg.Platform].KafkaClusters == nil {
+		c.config.Platforms[cfg.Platform].KafkaClusters = map[string]config.KafkaClusterConfig{}
+	}
+	c.config.Platforms[cfg.Platform].KafkaClusters[kc.Id] = config.KafkaClusterConfig{
+		ID:          kc.Id,
+		Bootstrap:   strings.TrimPrefix(kc.Endpoint, "SASL_SSL://"),
+		APIEndpoint: kc.ApiEndpoint,
+	}
+
+	cfg.Kafka = clusterID
 	return c.config.Save()
 }
 

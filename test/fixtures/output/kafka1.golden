@@ -1,0 +1,17 @@
+Error: accepts 1 arg(s), received 0
+Usage:
+  ccloud kafka cluster create NAME [flags]
+
+Flags:
+      --cloud string    Choose aws or gcp
+      --region string   A valid region in the given cloud
+      --ingress int32   Network ingress in MB/s (default 1)
+      --egress int32    Network egress in MB/s (default 1)
+      --storage int32   Total usable data storage in GB (default 500)
+      --multizone       Use multiple zones for high availability
+  -h, --help            help for create
+
+Global Flags:
+      --environment string   ID of the environment in which to run the command
+  -v, --verbose count        increase output verbosity
+

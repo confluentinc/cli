@@ -3,14 +3,15 @@ package kafka
 import (
 	"context"
 	"fmt"
+	"os"
 
-	"github.com/codyaray/go-printer"
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 
+	acl_util "github.com/confluentinc/cli/internal/pkg/acl"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
@@ -75,7 +76,7 @@ func (c *aclCommand) init() {
 func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
 	acl := parse(cmd)
 
-	cluster, err := c.config.KafkaCluster()
+	cluster, err := c.config.KafkaCluster("")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -86,37 +87,14 @@ func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	var bindings [][]string
-	for _, binding := range resp {
-
-		record := &struct {
-			ServiceAccountId string
-			Permission       string
-			Operation        string
-			Resource         string
-			Name             string
-			Type             string
-		}{
-			binding.Entry.Principal,
-			binding.Entry.PermissionType.String(),
-			binding.Entry.Operation.String(),
-			binding.Pattern.ResourceType.String(),
-			binding.Pattern.Name,
-			binding.Pattern.PatternType.String(),
-		}
-		bindings = append(bindings, printer.ToRow(record,
-			[]string{"ServiceAccountId", "Permission", "Operation", "Resource", "Name", "Type"}))
-	}
-
-	printer.RenderCollectionTable(bindings, []string{"ServiceAccountId", "Permission", "Operation", "Resource", "Name", "Type"})
-
+	acl_util.PrintAcls(resp, os.Stdout)
 	return nil
 }
 
 func (c *aclCommand) create(cmd *cobra.Command, args []string) error {
 	acl := validateAddDelete(parse(cmd))
 
-	cluster, err := c.config.KafkaCluster()
+	cluster, err := c.config.KafkaCluster("")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -137,7 +115,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(acl.errors, cmd)
 	}
 
-	cluster, err := c.config.KafkaCluster()
+	cluster, err := c.config.KafkaCluster("")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
