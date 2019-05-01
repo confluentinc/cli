@@ -1,4 +1,6 @@
+# lint fails for any license not in allowed
 allow = ["MIT", "Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "MPL-2.0", "ISC"]
+# any license not explicitly allowed/denied will probably need a legal review (then add to the appropriate list)
 deny  = ["GPL-1.0", "GPL-2.0+", "GPL-3.0+",
          "GPL-1.0-only", "GPL-1.0-or-later", "GPL-2.0-only", "GPL-2.0-or-later", "GPL-3.0-only", "GPL-3.0-or-later",
          "AGPL-1.0-only", "AGPL-1.0-or-later", "AGPL-3.0-only", "AGPL-3.0-or-later"]
