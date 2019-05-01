@@ -120,7 +120,7 @@ lint: lint-go
 .PHONY: lint-licenses
 ## Scan and validate third-party dependeny licenses
 lint-licenses: build
-	$(eval token := $(shell grep github.com ~/.netrc -A 2 | grep password | head -1 | awk -F' ' '{ print $$2 }'))
+	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
 	@echo Licenses for ccloud binary
 	@GITHUB_TOKEN=$(token) golicense .golicense.hcl ./dist/ccloud/$(shell go env GOOS)_$(shell go env GOARCH)/ccloud
 	@echo Licenses for confluent binary
