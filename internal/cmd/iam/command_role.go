@@ -1,4 +1,4 @@
-package rbac
+package iam
 
 import (
 	"github.com/spf13/cobra"
@@ -20,15 +20,15 @@ var (
 	roleDescribeLabels = []string{"Name", "SuperUser", "AllowedOperations"}
 )
 
-type rolesCommand struct {
+type roleCommand struct {
 	*cobra.Command
 	config *config.Config
 	client *mds.APIClient
 }
 
-// NewRolesCommand returns the sub-command object for interacting with RBAC roles.
-func NewRolesCommand(config *config.Config, client *mds.APIClient) *cobra.Command {
-	cmd := &rolesCommand{
+// NewRoleCommand returns the sub-command object for interacting with RBAC roles.
+func NewRoleCommand(config *config.Config, client *mds.APIClient) *cobra.Command {
+	cmd := &roleCommand{
 		Command: &cobra.Command{
 			Use:   "role",
 			Short: "Manage RBAC/IAM roles",
@@ -41,7 +41,7 @@ func NewRolesCommand(config *config.Config, client *mds.APIClient) *cobra.Comman
 	return cmd.Command
 }
 
-func (c *rolesCommand) init() {
+func (c *roleCommand) init() {
 	c.AddCommand(&cobra.Command{
 		Use:   "list",
 		Short: "List available roles, ... or roles for a given principal", // TODO https://confluentinc.atlassian.net/wiki/spaces/PM/pages/804029551/UX+CLI+for+defining+roles ?
@@ -57,7 +57,7 @@ func (c *rolesCommand) init() {
 	})
 }
 
-func (c *rolesCommand) list(cmd *cobra.Command, args []string) error {
+func (c *roleCommand) list(cmd *cobra.Command, args []string) error {
 	roles, _, err := c.client.RoleDefinitionsApi.Roles(context.Background())
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -72,7 +72,7 @@ func (c *rolesCommand) list(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *rolesCommand) describe(cmd *cobra.Command, args []string) error {
+func (c *roleCommand) describe(cmd *cobra.Command, args []string) error {
 	role := args[0]
 
 	details, r, err := c.client.RoleDefinitionsApi.RoleDetail(context.Background(), role)

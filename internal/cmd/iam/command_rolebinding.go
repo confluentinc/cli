@@ -1,10 +1,11 @@
-package rbac
+package iam
 
 import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	//"github.com/confluentinc/go-printer"
 	"context"
 	mds "github.com/confluentinc/mds-sdk-go"
@@ -18,15 +19,15 @@ var (
 	rolebindingDescribeLabels = []string{"Name", "SuperUser", "AllowedOperations"}
 )
 
-type rolebindingsCommand struct {
+type rolebindingCommand struct {
 	*cobra.Command
 	config *config.Config
 	client *mds.APIClient
 }
 
-// NewRolebindingsCommand returns the sub-command object for interacting with RBAC rolebindings.
-func NewRolebindingsCommand(config *config.Config, client *mds.APIClient) *cobra.Command {
-	cmd := &rolebindingsCommand{
+// NewRolebindingCommand returns the sub-command object for interacting with RBAC rolebindings.
+func NewRolebindingCommand(config *config.Config, client *mds.APIClient) *cobra.Command {
+	cmd := &rolebindingCommand{
 		Command: &cobra.Command{
 			Use:   "Rolebinding",
 			Short: "Manage RBAC/IAM rolebindings",
@@ -39,7 +40,7 @@ func NewRolebindingsCommand(config *config.Config, client *mds.APIClient) *cobra
 	return cmd.Command
 }
 
-func (c *rolebindingsCommand) init() {
+func (c *rolebindingCommand) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List rolebindings",
@@ -76,7 +77,7 @@ func (c *rolebindingsCommand) init() {
 	c.AddCommand(deleteCmd)
 }
 
-func (c *rolebindingsCommand) list(cmd *cobra.Command, args []string) error {
+func (c *rolebindingCommand) list(cmd *cobra.Command, args []string) error {
 	// TODO see https://confluent.slack.com/archives/CFA95LYAK/p1554844878211100
 
 	// rolebindings, _, err := c.client.ControlPlaneApi.rolebindings(context.Background())
@@ -93,7 +94,7 @@ func (c *rolebindingsCommand) list(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *rolebindingsCommand) create(cmd *cobra.Command, args []string) error {
+func (c *rolebindingCommand) create(cmd *cobra.Command, args []string) error {
 	role, err := cmd.Flags().GetString("role")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -109,13 +110,13 @@ func (c *rolebindingsCommand) create(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	cluster, err := cmd.Flags().GetString("cluster")
+	cluster, err := pcmd.GetKafkaCluster(cmd, c.config)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 
 	// TODO https://confluent.slack.com/archives/CFA95LYAK/p1554844565210200
-	success, _, err := c.client.ControlPlaneApi.AddRoleForPrincipal(context.Background(), principal, cluster+resource, role)
+	success, _, err := c.client.ControlPlaneApi.AddRoleForPrincipal(context.Background(), principal, cluster.Id+resource, role)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -126,7 +127,7 @@ func (c *rolebindingsCommand) create(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *rolebindingsCommand) delete(cmd *cobra.Command, args []string) error {
+func (c *rolebindingCommand) delete(cmd *cobra.Command, args []string) error {
 	role, err := cmd.Flags().GetString("role")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -142,13 +143,13 @@ func (c *rolebindingsCommand) delete(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	cluster, err := cmd.Flags().GetString("cluster")
+	cluster, err := pcmd.GetKafkaCluster(cmd, c.config)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 
 	// TODO https://confluent.slack.com/archives/CFA95LYAK/p1554844565210200
-	success, _, err := c.client.ControlPlaneApi.DeleteRoleForPrincipal(context.Background(), principal, cluster+resource, role)
+	success, _, err := c.client.ControlPlaneApi.DeleteRoleForPrincipal(context.Background(), principal, cluster.Id+resource, role)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}

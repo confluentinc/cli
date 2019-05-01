@@ -1,9 +1,10 @@
-package rbac
+package iam
 
 import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/version"
 	mds "github.com/confluentinc/mds-sdk-go"
 )
 
@@ -14,10 +15,10 @@ type command struct {
 }
 
 // New returns the default command object for interacting with RBAC.
-func New(config *config.Config) *cobra.Command {
+func New(config *config.Config, version *version.Version) *cobra.Command {
 	cfg := mds.NewConfiguration()
 	cfg.BasePath = "http://localhost:8090"       // TODO
-	cfg.UserAgent = "OpenAPI-Generator/1.0.0/go" // TODO
+	cfg.UserAgent = version.UserAgent
 
 	client := mds.NewAPIClient(cfg)
 
@@ -35,6 +36,6 @@ func New(config *config.Config) *cobra.Command {
 }
 
 func (c *command) init() {
-	c.AddCommand(NewRolesCommand(c.config, c.client))
-	c.AddCommand(NewRolebindingsCommand(c.config, c.client))
+	c.AddCommand(NewRoleCommand(c.config, c.client))
+	c.AddCommand(NewRolebindingCommand(c.config, c.client))
 }
