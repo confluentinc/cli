@@ -116,6 +116,15 @@ lint-go:
 .PHONY: lint
 lint: lint-go
 
+.PHONY: lint-licenses
+## Scan and validate third-party dependeny licenses
+lint-licenses: build
+	$(eval token := $(shell grep github.com ~/.netrc -A 2 | grep password | head -1 | awk -F' ' '{ print $$2 }'))
+	@echo Licenses for ccloud binary
+	@GITHUB_TOKEN=$(token) golicense .golicense.hcl ./dist/ccloud/darwin_amd64/ccloud
+	@echo Licenses for confluent binary
+	@GITHUB_TOKEN=$(token) golicense .golicense.hcl ./dist/confluent/darwin_amd64/confluent
+
 .PHONY: coverage
 coverage:
       ifdef CI

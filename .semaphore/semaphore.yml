@@ -29,5 +29,6 @@ blocks:
           - checkout
           - make deps
           - make test
+          - make lint-licenses
           - bash <(curl -s https://codecov.io/bash)
           - make release-ci
