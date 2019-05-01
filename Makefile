@@ -17,6 +17,7 @@ clean:
 deps:
 	@GO111MODULE=on go get github.com/goreleaser/goreleaser@v0.106.0
 	@GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.16.0
+	@GO111MODULE=on go get github.com/mitchellh/golicense@v0.1.1
 
 build: build-go
 
@@ -120,10 +121,17 @@ lint: lint-go
 ## Scan and validate third-party dependeny licenses
 lint-licenses: build
 	$(eval token := $(shell grep github.com ~/.netrc -A 2 | grep password | head -1 | awk -F' ' '{ print $$2 }'))
+      ifdef CI
 	@echo Licenses for ccloud binary
 	@GITHUB_TOKEN=$(token) golicense .golicense.hcl ./dist/ccloud/darwin_amd64/ccloud
 	@echo Licenses for confluent binary
 	@GITHUB_TOKEN=$(token) golicense .golicense.hcl ./dist/confluent/darwin_amd64/confluent
+      else
+	@echo Licenses for ccloud binary
+	@GITHUB_TOKEN=$(token) golicense -plain .golicense.hcl ./dist/ccloud/darwin_amd64/ccloud
+	@echo Licenses for confluent binary
+	@GITHUB_TOKEN=$(token) golicense -plain .golicense.hcl ./dist/confluent/darwin_amd64/confluent
+      endif
 
 .PHONY: coverage
 coverage:
