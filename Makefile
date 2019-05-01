@@ -12,6 +12,8 @@ HOSTNAME := $(shell id -u -n)@$(shell hostname)
 .PHONY: clean
 clean:
 	rm -rf $(shell pwd)/dist
+	rm -f internal/cmd/local/bindata.go
+	rm -f mock/local/shell_runner_mock.go
 
 .PHONY: deps
 deps:
@@ -32,7 +34,7 @@ show-args:
 	@echo "VERSION: $(VERSION)"
 
 .PHONY: build-go
-build-go:
+build-go: internal/cmd/local/bindata.go
 	make build-ccloud
 	make build-confluent
 
@@ -43,6 +45,9 @@ build-ccloud:
 .PHONY: build-confluent
 build-confluent:
 	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --snapshot --rm-dist -f .goreleaser-confluent$(GORELEASER_SUFFIX)
+
+internal/cmd/local/bindata.go:
+	@go-bindata -pkg local -o internal/cmd/local/bindata.go cp_cli/
 
 .PHONY: release
 release: get-release-image commit-release tag-release
@@ -131,5 +136,11 @@ coverage:
 	@GO111MODULE=on go test -race -cover $(TEST_ARGS) $$(go list ./... | grep -v vendor)
       endif
 
+.PHONY: mocks
+mocks: mock/local/shell_runner_mock.go
+
+mock/local/shell_runner_mock.go:
+	mockgen -source internal/cmd/local/shell_runner.go -destination mock/local/shell_runner_mock.go ShellRunner
+
 .PHONY: test
-test: lint coverage
+test: internal/cmd/local/bindata.go mocks lint coverage

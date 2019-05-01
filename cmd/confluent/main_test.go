@@ -60,7 +60,7 @@ func TestAddCommands_ShownInHelpUsage_Confluent(t *testing.T) {
 	req.NoError(err)
 	req.NotContains(output, "kafka")
 	req.NotContains(output, "ksql")
-	req.NotContains(output, "environment")
+	req.NotContains(output, "Manage and select")
 	req.NotContains(output, "service-account")
 	req.NotContains(output, "api-key")
 	req.Contains(output, "login")
