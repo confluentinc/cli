@@ -22,6 +22,7 @@ clean:
 deps:
 	@GO111MODULE=on go get github.com/goreleaser/goreleaser@v0.106.0
 	@GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.16.0
+	@GO111MODULE=on go get github.com/mitchellh/golicense@v0.1.1
 
 build: build-go
 
@@ -169,6 +170,15 @@ lint-go:
 
 .PHONY: lint
 lint: lint-go
+
+.PHONY: lint-licenses
+## Scan and validate third-party dependeny licenses
+lint-licenses: build
+	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
+	@echo Licenses for ccloud binary
+	@GITHUB_TOKEN=$(token) golicense .golicense.hcl ./dist/ccloud/$(shell go env GOOS)_$(shell go env GOARCH)/ccloud
+	@echo Licenses for confluent binary
+	@GITHUB_TOKEN=$(token) golicense .golicense.hcl ./dist/confluent/$(shell go env GOOS)_$(shell go env GOARCH)/confluent
 
 .PHONY: coverage
 coverage:

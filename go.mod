@@ -13,14 +13,12 @@ require (
 	github.com/confluentinc/ccloudapis v0.0.0-20190313194524-9d1a929e8e66
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-printer v0.10.0
-	github.com/confluentinc/mds-sdk-go v0.0.0-20190408235126-e472f6157a7c // indirect
 	github.com/confluentinc/protoc-gen-ccloud v0.0.1 // indirect
 	github.com/cpuguy83/go-md2man v1.0.10 // indirect
 	github.com/eapache/go-resiliency v1.1.0 // indirect
 	github.com/eapache/go-xerial-snappy v0.0.0-20180814174437-776d5712da21 // indirect
 	github.com/eapache/queue v1.1.0 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
-	github.com/go-critic/checkers v0.0.0-20181031185637-879460b6c936 // indirect
 	github.com/gogo/protobuf v1.2.1 // indirect
 	github.com/golang/mock v1.2.0
 	github.com/golang/protobuf v1.2.1-0.20181128192352-1d3f30b51784
@@ -29,11 +27,7 @@ require (
 	github.com/golangci/gofmt v0.0.0-20181105071733-f021c4179c82 // indirect
 	github.com/golangci/golangci-lint v1.16.0
 	github.com/golangci/gosec v0.0.0-20180901114220-8afd9cbb6cfb // indirect
-	github.com/golangci/govet v0.0.0-20180818181408-44ddbe260190 // indirect
-	github.com/golangci/interfacer v0.0.0-20180902080945-01958817a6ec // indirect
-	github.com/golangci/lint v0.0.0-20180902080404-c2187e7932b5 // indirect
 	github.com/golangci/tools v0.0.0-20180902102414-2cefd77fef9b // indirect
-	github.com/golangci/unparam v0.0.0-20180902112548-7ad9dbcccc16 // indirect
 	github.com/google/uuid v1.1.0
 	github.com/goreleaser/goreleaser v0.106.0
 	github.com/hashicorp/go-hclog v0.0.0-20180910232447-e45cbeb79f04
@@ -63,6 +57,8 @@ require (
 	github.com/stretchr/testify v1.3.0
 	github.com/travisjeffery/mocker v0.0.0-20190115171754-c0d706f8be41 // indirect
 	golang.org/x/crypto v0.0.0-20190313024323-a1f597ede03a
+	golang.org/x/net v0.0.0-20190404232315-eb5bcb51f2a3 // indirect
+	golang.org/x/oauth2 v0.0.0-20190402181905-9f3314589c9a // indirect
 	golang.org/x/text v0.3.1-0.20180807135948-17ff2d5776d2 // indirect
 	gopkg.in/yaml.v2 v2.2.2 // indirect
 	sourcegraph.com/sqs/pbtypes v1.0.0 // indirect
