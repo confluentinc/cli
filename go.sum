@@ -116,8 +116,6 @@ github.com/golangci/check v0.0.0-20180506172741-cfe4005ccda2/go.mod h1:k9Qvh+8ju
 github.com/golangci/dupl v0.0.0-20180902072040-3e9179ac440a/go.mod h1:ryS0uhF+x9jgbj/N71xsEqODy9BN81/GonCZiOzirOk=
 github.com/golangci/errcheck v0.0.0-20181003203344-ef45e06d44b6 h1:i2jIkQFb8RG45DuQs+ElyROY848cSJIoIkBM+7XXypA=
 github.com/golangci/errcheck v0.0.0-20181003203344-ef45e06d44b6/go.mod h1:DbHgvLiFKX1Sh2T1w8Q/h4NAI8MHIpzCdnBUDTXU3I0=
-github.com/golangci/go-misc v0.0.0-20180628070357-927a3d87b613 h1:WadunOE/TeHR8U7f0TXiJACHeU3cuFOXuKafw4rozqU=
-github.com/golangci/go-misc v0.0.0-20180628070357-927a3d87b613/go.mod h1:SyvUF2NxV+sN8upjjeVYr5W7tyxaT1JVtvhKhOn2ii8=
 github.com/golangci/go-tools v0.0.0-20180109140146-af6baa5dc196/go.mod h1:unzUULGw35sjyOYjUt0jMTXqHlZPpPc6e+xfO4cd6mM=
 github.com/golangci/go-tools v0.0.0-20190124090046-35a9f45a5db0 h1:MRhC9XbUjE6XDOInSJ8pwHuPagqsyO89QDU9IdVhe3o=
 github.com/golangci/go-tools v0.0.0-20190124090046-35a9f45a5db0/go.mod h1:unzUULGw35sjyOYjUt0jMTXqHlZPpPc6e+xfO4cd6mM=
@@ -201,8 +199,6 @@ github.com/jmespath/go-jmespath v0.0.0-20160202185014-0b12d6b521d8 h1:12VvqtR6Ao
 github.com/jmespath/go-jmespath v0.0.0-20160202185014-0b12d6b521d8/go.mod h1:Nht3zPeWKUH0NzdCt2Blrr5ys8VGpn0CEB0cQHVjt7k=
 github.com/jonboulle/clockwork v0.1.0 h1:VKV+ZcuP6l3yW9doeqz6ziZGgcynBVQO+obU0+0hcPo=
 github.com/jonboulle/clockwork v0.1.0/go.mod h1:Ii8DK3G1RaLaWxj9trq07+26W01tbo22gdxWY5EU2bo=
-github.com/kamilsk/retry v0.0.0-20181229152359-495c1d672c93 h1:aqqxYIQTyx9qoSkw/VqcfHCanmNKrDmPdzxPBCDjlLo=
-github.com/kamilsk/retry v0.0.0-20181229152359-495c1d672c93/go.mod h1:vW4uuVWZOGWqkbtgGTNPGAiuN2nUBz0qYr4tb2ww4x8=
 github.com/kamilsk/retry/v4 v4.0.0/go.mod h1:0af33qDvzbhQqdOBi7iOjEpmP4brbPmNZpo7chYlgcc=
 github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 h1:iQTw/8FWTuc7uiaSepXwyf3o52HaUYcV+Tu66S3F5GA=
 github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0/go.mod h1:1NbS8ALrpOvjt0rHPNLyCIeMtbizbir8U//inJ+zuB8=
