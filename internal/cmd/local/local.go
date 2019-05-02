@@ -29,7 +29,6 @@ func New(prerunner pcmd.PreRunner, shell ShellRunner) *cobra.Command {
 	// possibly we should make this an arg and/or move it to env var
 	localCmd.Flags().String("path", "", "path to cp install")
 	_ = localCmd.MarkFlagRequired("path")
-	localCmd.Flags().SetInterspersed(false)
 	return localCmd.Command
 }
 
