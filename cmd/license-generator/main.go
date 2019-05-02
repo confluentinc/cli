@@ -14,36 +14,41 @@ import (
 
 	"github.com/google/go-github/v25/github"
 	"github.com/olekukonko/tablewriter"
+	"github.com/spf13/pflag"
 	"golang.org/x/oauth2"
 )
 
 const (
 	githubTokenEnvVar    = "GITHUB_TOKEN"
-	licenseFilenameFmt   = "legal/licenses/LICENSE-%s-%s.txt"
-	noticeFilenameFmt    = "legal/notices/NOTICE-%s-%s.txt"
-	licenseIndexFilename = "legal/licenses.txt"
+	licenseFilenameFmt   = "LICENSE-%s_%s.txt"
+	noticeFilenameFmt    = "NOTICE-%s_%s.txt"
+	licenseIndexFilename = "licenses.txt"
 )
 
 var (
 	noticeFiles = []string{"NOTICE", "NOTICES", "NOTICE.txt", "NOTICES.txt"}
+	licenseDir  = pflag.StringP("licenses-dir", "l", "./legal/licenses", "Directory in which to write licenses")
+	noticeDir   = pflag.StringP("notices-dir", "n", "./legal/notices", "Directory in which to write notices")
 )
 
 type LicenseGenerator struct {
-	Client     *github.Client
-	LicenseFmt string
-	NoticeFmt  string
+	Client       *github.Client
+	LicenseIndex string
+	LicenseFmt   string
+	NoticeFmt    string
 }
 
 // License represents a software LICENSE obtained from golicense / github
 type License struct {
-	Owner    string
-	Repo     string
-	Version  string // TODO, this isn't provided by golicense. We assume latest license is correct.
-	License  string
+	Owner   string
+	Repo    string
+	Version string // TODO, this isn't provided by golicense. We assume latest license is correct.
+	License string
 }
 
 func main() {
-	ctx := context.Background()
+	// Parse and validate flags
+	pflag.Parse()
 
 	// Validate usage - pipe from golicense
 	info, err := os.Stdin.Stat()
@@ -64,12 +69,18 @@ func main() {
 	}
 
 	// Instantiate LicenseGenerator
+	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: token},
 	)
 	tc := oauth2.NewClient(ctx, ts)
 	client := github.NewClient(tc)
-	generator := &LicenseGenerator{Client: client, LicenseFmt: licenseFilenameFmt, NoticeFmt: noticeFilenameFmt}
+	generator := &LicenseGenerator{
+		Client:       client,
+		LicenseIndex: filepath.Join(filepath.Dir(*licenseDir), licenseIndexFilename),
+		LicenseFmt:   filepath.Join(*licenseDir, licenseFilenameFmt),
+		NoticeFmt:    filepath.Join(*noticeDir, noticeFilenameFmt),
+	}
 
 	// Run it!
 	if err = generator.Run(ctx); err != nil {
@@ -79,12 +90,12 @@ func main() {
 }
 
 func (g *LicenseGenerator) Run(ctx context.Context) error {
-	licenseDir := filepath.Dir(fmt.Sprintf(licenseFilenameFmt, "example", "example"))
+	licenseDir := filepath.Dir(fmt.Sprintf(g.LicenseFmt, "example", "example"))
 	err := os.MkdirAll(licenseDir, os.ModePerm)
 	if err != nil {
 		return err
 	}
-	noticeDir := filepath.Dir(fmt.Sprintf(noticeFilenameFmt, "example", "example"))
+	noticeDir := filepath.Dir(fmt.Sprintf(g.NoticeFmt, "example", "example"))
 	err = os.MkdirAll(noticeDir, os.ModePerm)
 	if err != nil {
 		return err
@@ -122,21 +133,26 @@ func (g *LicenseGenerator) Run(ctx context.Context) error {
 		}
 	}
 
-	indexFile, err := os.Create(licenseIndexFilename)
+	// Create licenses.txt index
+	return g.CreateLicenseIndex(licenses)
+}
+
+func (g *LicenseGenerator) CreateLicenseIndex(licenses []*License) error {
+	indexFile, err := os.Create(g.LicenseIndex)
 	if err != nil {
 		return err
 	}
-	writer := tablewriter.NewWriter(bufio.NewWriter(indexFile))
+	writer := tablewriter.NewWriter(indexFile)
+	writer.SetAutoWrapText(false)
 	writer.SetHeader([]string{"Artifact", "License"})
 	for _, license := range licenses {
 		writer.Append([]string{fmt.Sprintf("github.com/%s/%s", license.Owner, license.Repo), license.License})
 	}
 	writer.Render()
-
 	return nil
 }
 
-func (g *LicenseGenerator) ParseLicense(text string) (*License , error) {
+func (g *LicenseGenerator) ParseLicense(text string) (*License, error) {
 	text = strings.Replace(text, "\n", "", -1) // convert CRLF to LF
 	columns := strings.SplitN(text, " ", 2)
 	if len(columns) != 2 {
@@ -162,13 +178,13 @@ func (g *LicenseGenerator) DownloadLicense(ctx context.Context, owner, repo stri
 		return err
 	}
 	if license == "" {
-		// This is because of the new unlicensed repos documented in .golicense.hcl
+		// TODO: HACK: This is because of the overrides documented in .golicense.hcl
 		if owner != "confluentinc" {
 			fmt.Fprintf(os.Stderr, "No contents found for github.com/%s/%s\n", owner, repo)
 		}
 		return nil
 	}
-	return ioutil.WriteFile(fmt.Sprintf(licenseFilenameFmt, owner, repo), []byte(license), os.ModePerm)
+	return ioutil.WriteFile(fmt.Sprintf(g.LicenseFmt, owner, repo), []byte(license), os.ModePerm)
 }
 
 func (g *LicenseGenerator) DownloadNotice(ctx context.Context, owner, repo string) error {
@@ -179,7 +195,7 @@ func (g *LicenseGenerator) DownloadNotice(ctx context.Context, owner, repo strin
 	if notice == "" {
 		return nil
 	}
-	return ioutil.WriteFile(fmt.Sprintf(licenseFilenameFmt, owner, repo), []byte(notice), os.ModePerm)
+	return ioutil.WriteFile(fmt.Sprintf(g.NoticeFmt, owner, repo), []byte(notice), os.ModePerm)
 }
 
 func (g *LicenseGenerator) GetLicense(ctx context.Context, owner, repo string) (string, error) {

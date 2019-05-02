@@ -65,9 +65,9 @@ gorelease:
 download-licenses:
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
 	@echo Downloading third-party licenses for ccloud binary
-	@GITHUB_TOKEN=$(token) golicense .golicense.hcl ./dist/ccloud/$(shell go env GOOS)_$(shell go env GOARCH)/ccloud | go run cmd/license-generator/main.go
-#	@echo Downloading third-party licenses for confluent binary
-#	@GITHUB_TOKEN=$(token) golicense .golicense.hcl ./dist/confluent/$(shell go env GOOS)_$(shell go env GOARCH)/confluent | go run cmd/license-generator/main.go
+	@GITHUB_TOKEN=$(token) golicense .golicense.hcl ./dist/ccloud/$(shell go env GOOS)_$(shell go env GOARCH)/ccloud | go run cmd/license-generator/main.go -l legal/ccloud/licenses -n legal/ccloud/notices
+	@echo Downloading third-party licenses for confluent binary
+	@GITHUB_TOKEN=$(token) golicense .golicense.hcl ./dist/confluent/$(shell go env GOOS)_$(shell go env GOARCH)/confluent | go run cmd/license-generator/main.go -l legal/confluent/licenses -n legal/confluent/notices
 
 .PHONY: dist-ccloud
 dist-ccloud: download-licenses
@@ -80,9 +80,9 @@ dist-ccloud: download-licenses
 			fi; \
 			cp LICENSE dist/ccloud/$${os}_$${arch}/ ; \
 			cp INSTALL.md dist/ccloud/$${os}_$${arch}/ ; \
-			cp legal/ dist/ccloud/$${os}_$${arch}/ ; \
+			cp -r legal/ccloud dist/ccloud/$${os}_$${arch}/legal ; \
 			cd dist/ccloud/$${os}_$${arch}/ ; \
-			mkdir tmp ; mv LICENSE INSTALL.md ccloud* tmp/ ; mv tmp ccloud ; \
+			mkdir tmp ; mv LICENSE INSTALL.md legal ccloud tmp/ ; mv tmp ccloud ; \
 			suffix="" ; \
 			if [ "$${os}" = "windows" ] ; then \
 				suffix=zip ; \
