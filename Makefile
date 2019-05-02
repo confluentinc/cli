@@ -23,6 +23,8 @@ deps:
 	@GO111MODULE=on go get github.com/goreleaser/goreleaser@v0.106.0
 	@GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.16.0
 	@GO111MODULE=on go get github.com/mitchellh/golicense@v0.1.1
+	@GO111MODULE=on go get github.com/golang/mock/mockgen@v1.2.0
+	@GO111MODULE=on go get github.com/kevinburke/go-bindata@v3.13.0
 
 build: build-go
 
