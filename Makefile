@@ -61,8 +61,16 @@ gorelease:
 	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --rm-dist -f .goreleaser-ccloud.yml
 	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --rm-dist -f .goreleaser-confluent.yml
 
+.PHONY: download-licenses
+download-licenses:
+	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
+	@echo Downloading third-party licenses for ccloud binary
+	@GITHUB_TOKEN=$(token) golicense .golicense.hcl ./dist/ccloud/$(shell go env GOOS)_$(shell go env GOARCH)/ccloud | go run cmd/license-generator/main.go
+#	@echo Downloading third-party licenses for confluent binary
+#	@GITHUB_TOKEN=$(token) golicense .golicense.hcl ./dist/confluent/$(shell go env GOOS)_$(shell go env GOARCH)/confluent | go run cmd/license-generator/main.go
+
 .PHONY: dist-ccloud
-dist-ccloud:
+dist-ccloud: download-licenses
 	@# unfortunately goreleaser only supports one archive right now (either tar/zip or binaries): https://github.com/goreleaser/goreleaser/issues/705
 	@# we had goreleaser upload binaries (they're uncompressed, so goreleaser's parallel uploads will save more time with binaries than archives)
 	for os in darwin linux windows; do \
@@ -72,6 +80,7 @@ dist-ccloud:
 			fi; \
 			cp LICENSE dist/ccloud/$${os}_$${arch}/ ; \
 			cp INSTALL.md dist/ccloud/$${os}_$${arch}/ ; \
+			cp legal/ dist/ccloud/$${os}_$${arch}/ ; \
 			cd dist/ccloud/$${os}_$${arch}/ ; \
 			mkdir tmp ; mv LICENSE INSTALL.md ccloud* tmp/ ; mv tmp ccloud ; \
 			suffix="" ; \

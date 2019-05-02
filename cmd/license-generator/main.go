@@ -10,60 +10,87 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 
-	"github.com/bgentry/go-netrc/netrc"
 	"github.com/google/go-github/v25/github"
-	"github.com/mitchellh/go-homedir"
+	"github.com/olekukonko/tablewriter"
 	"golang.org/x/oauth2"
 )
 
 const (
-	netrcMachine = "api.github.com"
-	licenseFmt   = "legal/licenses/LICENSE-%s-%s.txt"
-	noticeFmt    = "legal/notices/NOTICE-%s-%s.txt"
+	githubTokenEnvVar    = "GITHUB_TOKEN"
+	licenseFilenameFmt   = "legal/licenses/LICENSE-%s-%s.txt"
+	noticeFilenameFmt    = "legal/notices/NOTICE-%s-%s.txt"
+	licenseIndexFilename = "legal/licenses.txt"
 )
 
 var (
 	noticeFiles = []string{"NOTICE", "NOTICES", "NOTICE.txt", "NOTICES.txt"}
 )
 
+type LicenseGenerator struct {
+	Client     *github.Client
+	LicenseFmt string
+	NoticeFmt  string
+}
+
+// License represents a software LICENSE obtained from golicense / github
+type License struct {
+	Owner    string
+	Repo     string
+	Version  string // TODO, this isn't provided by golicense. We assume latest license is correct.
+	License  string
+}
+
 func main() {
 	ctx := context.Background()
 
+	// Validate usage - pipe from golicense
 	info, err := os.Stdin.Stat()
 	if err != nil {
-		panic(err)
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
 	}
-
 	if info.Mode()&os.ModeCharDevice != 0 {
-		fmt.Println("Please pipe the output from golicense")
-		return
+		fmt.Fprintf(os.Stderr, "Please pipe the output from golicense")
+		os.Exit(1)
 	}
 
-	token, err := getAuthFromNetrc(netrcMachine)
-	if err != nil {
-		panic(err)
+	// Validate usage - set GITHUB_TOKEN env var
+	token, ok := os.LookupEnv(githubTokenEnvVar)
+	if !ok || token == "" {
+		fmt.Fprintf(os.Stderr, "Missing environment variable: %s\n", githubTokenEnvVar)
+		os.Exit(1)
 	}
 
+	// Instantiate LicenseGenerator
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: token},
 	)
 	tc := oauth2.NewClient(ctx, ts)
 	client := github.NewClient(tc)
+	generator := &LicenseGenerator{Client: client, LicenseFmt: licenseFilenameFmt, NoticeFmt: noticeFilenameFmt}
 
-	licenseDir := filepath.Dir(fmt.Sprintf(licenseFmt, "example", "example"))
-	err = os.MkdirAll(licenseDir, os.ModePerm)
-	if err != nil {
-		panic(err)
+	// Run it!
+	if err = generator.Run(ctx); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
+		os.Exit(1)
 	}
-	noticeDir := filepath.Dir(fmt.Sprintf(noticeFmt, "example", "example"))
+}
+
+func (g *LicenseGenerator) Run(ctx context.Context) error {
+	licenseDir := filepath.Dir(fmt.Sprintf(licenseFilenameFmt, "example", "example"))
+	err := os.MkdirAll(licenseDir, os.ModePerm)
+	if err != nil {
+		return err
+	}
+	noticeDir := filepath.Dir(fmt.Sprintf(noticeFilenameFmt, "example", "example"))
 	err = os.MkdirAll(noticeDir, os.ModePerm)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
+	var licenses []*License
 	reader := bufio.NewReader(os.Stdin)
 	for {
 		text, err := reader.ReadString('\n')
@@ -71,107 +98,113 @@ func main() {
 			if err == io.EOF {
 				break
 			}
-			panic(err)
+			return err
 		}
-		text = strings.Replace(text, "\n", "", -1) // convert CRLF to LF
-		dep := strings.Split(text, " ")[0]
-		if !strings.HasPrefix(dep, "github.com") {
-			fmt.Fprintf(os.Stderr, "Unable to fetch license for %s\n", dep)
+		license, err := g.ParseLicense(text)
+		if err != nil {
+			return err
+		}
+		if license == nil {
 			continue
 		}
+		licenses = append(licenses, license)
 
-		parts := strings.Split(dep, "/")
-		if len(parts) != 3 {
-			panic(fmt.Errorf("invalid github url: %s", dep))
-		}
-		owner, repo := parts[1], parts[2]
-
-		// Get the LICENSE
-		lic, resp, err := client.Repositories.License(ctx, owner, repo)
+		// Download the project LICENSE text from github
+		err = g.DownloadLicense(ctx, license.Owner, license.Repo)
 		if err != nil {
-			if resp.StatusCode == http.StatusNotFound {
-				// This is because of the new unlicensed repos documented in .golicense.hcl
-				if owner != "confluentinc" {
-					fmt.Fprintf(os.Stderr, "No license found for %s\n", dep)
-				}
-				continue
-			}
-			panic(err)
-		}
-		contents, err := base64.StdEncoding.DecodeString(*lic.Content)
-		if err != nil {
-			panic(err)
-		}
-		err = ioutil.WriteFile(fmt.Sprintf(licenseFmt, owner, repo), contents, os.ModePerm)
-		if err != nil {
-			panic(err)
+			return err
 		}
 
-		// Get the NOTICE
-		for _, noticeFile := range noticeFiles {
-			notice, _, resp, err := client.Repositories.GetContents(ctx, owner, repo, noticeFile,
-				&github.RepositoryContentGetOptions{Ref: "master"})
-			if err != nil {
-				if resp.StatusCode == http.StatusNotFound {
-					continue
-				}
-				panic(err)
-			}
-			contents, err := notice.GetContent()
-			if err != nil {
-				panic(err)
-			}
-			err = ioutil.WriteFile(fmt.Sprintf(licenseFmt, owner, repo), []byte(contents), os.ModePerm)
-			if err != nil {
-				panic(err)
-			}
-			break
+		// Download the project NOTICE text from github
+		err = g.DownloadNotice(ctx, license.Owner, license.Repo)
+		if err != nil {
+			return err
 		}
 	}
+
+	indexFile, err := os.Create(licenseIndexFilename)
+	if err != nil {
+		return err
+	}
+	writer := tablewriter.NewWriter(bufio.NewWriter(indexFile))
+	writer.SetHeader([]string{"Artifact", "License"})
+	for _, license := range licenses {
+		writer.Append([]string{fmt.Sprintf("github.com/%s/%s", license.Owner, license.Repo), license.License})
+	}
+	writer.Render()
+
+	return nil
 }
 
-// Borrowed from https://github.com/hashicorp/go-getter/blob/master/netrc.go
-func getAuthFromNetrc(host string) (string, error) {
-	// Get the netrc file path
-	path := os.Getenv("NETRC")
-	if path == "" {
-		filename := ".netrc"
-		if runtime.GOOS == "windows" {
-			filename = "_netrc"
-		}
-
-		var err error
-		path, err = homedir.Expand("~/" + filename)
-		if err != nil {
-			return "", err
-		}
+func (g *LicenseGenerator) ParseLicense(text string) (*License , error) {
+	text = strings.Replace(text, "\n", "", -1) // convert CRLF to LF
+	columns := strings.SplitN(text, " ", 2)
+	if len(columns) != 2 {
+		return nil, fmt.Errorf("invalid golicense output: %s\n", text)
+	}
+	dep, license := strings.TrimSpace(columns[0]), strings.TrimSpace(columns[1])
+	if !strings.HasPrefix(dep, "github.com") {
+		fmt.Fprintf(os.Stderr, "Unable to fetch license for %s\n", dep)
+		return nil, nil
 	}
 
-	// If the file is not a file, then do nothing
-	if fi, err := os.Stat(path); err != nil {
-		// File doesn't exist, do nothing
-		if os.IsNotExist(err) {
+	parts := strings.Split(dep, "/")
+	if len(parts) != 3 {
+		return nil, fmt.Errorf("invalid github url: %s", dep)
+	}
+	owner, repo := parts[1], parts[2]
+	return &License{Owner: owner, Repo: repo, License: license}, nil
+}
+
+func (g *LicenseGenerator) DownloadLicense(ctx context.Context, owner, repo string) error {
+	license, err := g.GetLicense(ctx, owner, repo)
+	if err != nil {
+		return err
+	}
+	if license == "" {
+		// This is because of the new unlicensed repos documented in .golicense.hcl
+		if owner != "confluentinc" {
+			fmt.Fprintf(os.Stderr, "No contents found for github.com/%s/%s\n", owner, repo)
+		}
+		return nil
+	}
+	return ioutil.WriteFile(fmt.Sprintf(licenseFilenameFmt, owner, repo), []byte(license), os.ModePerm)
+}
+
+func (g *LicenseGenerator) DownloadNotice(ctx context.Context, owner, repo string) error {
+	notice, err := g.GetNotice(ctx, owner, repo)
+	if err != nil {
+		return err
+	}
+	if notice == "" {
+		return nil
+	}
+	return ioutil.WriteFile(fmt.Sprintf(licenseFilenameFmt, owner, repo), []byte(notice), os.ModePerm)
+}
+
+func (g *LicenseGenerator) GetLicense(ctx context.Context, owner, repo string) (string, error) {
+	lic, resp, err := g.Client.Repositories.License(ctx, owner, repo)
+	if err != nil {
+		if resp.StatusCode == http.StatusNotFound {
 			return "", nil
 		}
-
-		// Some other error!
 		return "", err
-	} else if fi.IsDir() {
-		// File is directory, ignore
-		return "", nil
 	}
+	contents, err := base64.StdEncoding.DecodeString(*lic.Content)
+	return string(contents), err
+}
 
-	// Load up the netrc file
-	net, err := netrc.ParseFile(path)
-	if err != nil {
-		return "", fmt.Errorf("error parsing netrc file at %q: %s", path, err)
+func (g *LicenseGenerator) GetNotice(ctx context.Context, owner, repo string) (string, error) {
+	for _, noticeFile := range noticeFiles {
+		notice, _, resp, err := g.Client.Repositories.GetContents(ctx, owner, repo, noticeFile,
+			&github.RepositoryContentGetOptions{Ref: "master"})
+		if err != nil {
+			if resp.StatusCode == http.StatusNotFound {
+				return "", nil
+			}
+			return "", err
+		}
+		return notice.GetContent()
 	}
-
-	machine := net.FindMachine(host)
-	if machine == nil {
-		// Machine not found, no problem
-		return "", nil
-	}
-
-	return machine.Password, nil
+	return "", nil
 }
