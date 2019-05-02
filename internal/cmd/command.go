@@ -24,8 +24,7 @@ import (
 	configs "github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	apikeys "github.com/confluentinc/cli/internal/pkg/sdk/apikey"
-
-	//connects "github.com/confluentinc/cli/pkg/sdk/connect"
+	//connects "github.com/confluentinc/cli/internal/pkg/sdk/connect"
 	environments "github.com/confluentinc/cli/internal/pkg/sdk/environment"
 	kafkas "github.com/confluentinc/cli/internal/pkg/sdk/kafka"
 	ksqls "github.com/confluentinc/cli/internal/pkg/sdk/ksql"
@@ -35,10 +34,19 @@ import (
 
 func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Version, logger *log.Logger) (*cobra.Command, error) {
 	cli := &cobra.Command{
-		Use:   cliName,
-		Short: "Welcome to the Confluent Cloud CLI",
+		Use:               cliName,
+		Version:           ver.Version,
+		DisableAutoGenTag: true,
 	}
-	cli.PersistentFlags().CountP("verbose", "v", "increase output verbosity")
+	if cliName == "ccloud" {
+		cli.Short = "Confluent Cloud CLI"
+		cli.Long = "Manage your Confluent Cloud"
+	} else {
+		cli.Short = "Confluent CLI"
+		cli.Long = "Manage your Confluent Platform"
+	}
+	cli.PersistentFlags().CountP("verbose", "v",
+		"increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace)")
 
 	prompt := pcmd.NewPrompt(os.Stdin)
 	updateClient, err := update.NewClient(cliName, logger)
@@ -64,12 +72,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	conn.Hidden = true // The config/context feature isn't finished yet, so let's hide it
 	cli.AddCommand(conn)
 
-	conn, err = completion.NewCompletionCmd(cli, cliName)
-	if err != nil {
-		logger.Log("msg", err)
-	} else {
-		cli.AddCommand(conn)
-	}
+	cli.AddCommand(completion.NewCompletionCmd(cli, cliName))
 	cli.AddCommand(update.New(cliName, cfg, ver, prompt, updateClient))
 
 	cli.AddCommand(auth.New(prerunner, cfg)...)

@@ -116,7 +116,7 @@ func (c *topicCommand) init() {
 		Args:  cobra.ExactArgs(1),
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID")
-	cmd.Flags().String("group", fmt.Sprintf("confluent_cli_consumer%s", uuid.New()), "Consumer group id")
+	cmd.Flags().String("group", fmt.Sprintf("confluent_cli_consumer_%s", uuid.New()), "Consumer group id")
 	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of topic rather than end")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)

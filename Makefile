@@ -1,7 +1,10 @@
+SHELL           := /bin/bash
 ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
 GIT_REMOTE_NAME ?= origin
 MASTER_BRANCH   ?= master
 RELEASE_BRANCH  ?= master
+
+DOCS_BRANCH     ?= master
 
 include ./semver.mk
 
@@ -54,6 +57,7 @@ internal/cmd/local/bindata.go:
 release: get-release-image commit-release tag-release
 	make gorelease
 	make publish
+	make publish-docs
 
 .PHONY: gorelease
 gorelease:
@@ -100,6 +104,51 @@ dist-ccloud: download-licenses
 publish: dist-ccloud
 	aws s3 cp dist/ccloud/ s3://confluent.cloud/ccloud-cli/archives/$(VERSION:v%=%)/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --exclude "*_latest_*" --acl public-read
 	aws s3 cp dist/ccloud/ s3://confluent.cloud/ccloud-cli/archives/latest/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --exclude "*_$(VERSION)_*" --acl public-read
+
+.PHONY: docs
+docs:
+#   TODO: we can't enable auto-docs generation for confluent until we migrate go-basher commands into cobra
+#	@GO111MODULE=on go run -ldflags '-X main.cliName=confluent' cmd/docs/main.go
+	@GO111MODULE=on go run -ldflags '-X main.cliName=ccloud' cmd/docs/main.go
+
+.PHONY: publish-docs
+publish-docs: docs
+	@TMP_DIR=$$(mktemp -d)/docs || exit 1; \
+		git clone git@github.com:confluentinc/docs.git $${TMP_DIR}; \
+		cd $${TMP_DIR} || exit 1; \
+		git checkout -b cli-$(VERSION) $(DOCS_BRANCH) || exit 1; \
+		cd - || exit 1; \
+		make publish-docs-internal BASE_DIR=$${TMP_DIR} CLI_NAME=ccloud || exit 1; \
+		cd $${TMP_DIR} || exit 1; \
+		sed -i '' 's/default "confluent_cli_consumer_[^"]*"/default "confluent_cli_consumer_<uuid>"/' cloud/cli/command-reference/ccloud_kafka_topic_consume.rst || exit 1; \
+		git add . || exit 1; \
+		git diff --cached --exit-code >/dev/null && echo "nothing to update for docs" && exit 0; \
+		git commit -m "chore: updating CLI docs for $(VERSION)" || exit 1; \
+		git push origin cli-$(VERSION) || exit 1; \
+		hub pull-request -b $(DOCS_BRANCH) -m "chore: updating CLI docs for $(VERSION)" || exit 1; \
+		cd - || exit 1; \
+		rm -rf $${TMP_DIR}
+#   TODO: we can't enable auto-docs generation for confluent until we migrate go-basher commands into cobra
+#	    make publish-docs-internal BASE_DIR=$${TMP_DIR} CLI_NAME=confluent || exit 1; \
+
+.PHONY: publish-docs-internal
+publish-docs-internal:
+ifndef BASE_DIR
+	$(error BASE_DIR is not set)
+endif
+ifeq (ccloud,$(CLI_NAME))
+	$(eval DOCS_DIR := cloud/cli/command-reference)
+else ifeq (confluent,$(CLI_NAME))
+	$(eval DOCS_DIR := cli/command-reference)
+else
+	$(error CLI_NAME is not set correctly - must be one of "confluent" or "ccloud")
+endif
+	rm $(BASE_DIR)/$(DOCS_DIR)/*.rst
+	cp $(GOPATH)/src/github.com/confluentinc/cli/docs/$(CLI_NAME)/*.rst $(BASE_DIR)/$(DOCS_DIR)
+
+.PHONY: clean-docs
+clean-docs:
+	rm docs/*/*.rst
 
 .PHONY: fmt
 fmt:
