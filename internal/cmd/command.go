@@ -17,6 +17,7 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/kafka"
 	"github.com/confluentinc/cli/internal/cmd/ksql"
 	"github.com/confluentinc/cli/internal/cmd/local"
+	"github.com/confluentinc/cli/internal/cmd/secret"
 	service_account "github.com/confluentinc/cli/internal/cmd/service-account"
 	"github.com/confluentinc/cli/internal/cmd/update"
 	"github.com/confluentinc/cli/internal/cmd/version"
@@ -30,6 +31,7 @@ import (
 	ksqls "github.com/confluentinc/cli/internal/pkg/sdk/ksql"
 	users "github.com/confluentinc/cli/internal/pkg/sdk/user"
 	versions "github.com/confluentinc/cli/internal/pkg/version"
+	secrets "github.com/confluentinc/cli/internal/pkg/secret"
 )
 
 func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Version, logger *log.Logger) (*cobra.Command, error) {
@@ -97,6 +99,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		}
 		shellRunner := local.BashShellRunner{BasherContext: bash}
 		cli.AddCommand(local.New(prerunner, &shellRunner))
+		cli.AddCommand(secret.New(prerunner, cfg, prompt, secrets.NewPasswordProtectionPlugin(logger)))
 	}
 
 	return cli, nil

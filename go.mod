@@ -38,6 +38,7 @@ require (
 	github.com/kamilsk/retry v0.0.0-20181229152359-495c1d672c93 // indirect
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect
 	github.com/kevinburke/go-bindata v3.13.0+incompatible // indirect
+	github.com/magiconair/properties v1.8.0
 	github.com/mattn/go-isatty v0.0.4
 	github.com/mattn/go-runewidth v0.0.3 // indirect
 	github.com/mitchellh/go-homedir v1.0.0
