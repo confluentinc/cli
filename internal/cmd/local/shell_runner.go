@@ -3,7 +3,7 @@ package local
 import (
 	"io"
 
-	"github.com/progrium/go-basher"
+	"github.com/DABH/go-basher"
 )
 
 // ShellRunner interface used to run shell scripts

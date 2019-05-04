@@ -1,4 +1,4 @@
-Welcome to the Confluent Cloud CLI
+Manage your Confluent Cloud
 
 Usage:
   ccloud [command]
@@ -17,7 +17,7 @@ Available Commands:
 
 Flags:
   -h, --help            help for ccloud
-  -v, --verbose count   increase output verbosity
+  -v, --verbose count   increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace)
       --version         version for ccloud
 
 Use "ccloud [command] --help" for more information about a command.
