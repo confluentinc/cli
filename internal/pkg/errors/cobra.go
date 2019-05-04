@@ -3,8 +3,9 @@ package errors
 import (
 	"fmt"
 
-	"github.com/codyaray/go-editor"
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/go-editor"
 )
 
 var messages = map[error]string{

@@ -3,9 +3,8 @@ package acl
 import (
 	"io"
 
-	"github.com/confluentinc/go-printer"
-
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
+	"github.com/confluentinc/go-printer"
 )
 
 func PrintAcls(bindingsObj []*kafkav1.ACLBinding, writer io.Writer) {

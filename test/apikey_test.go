@@ -93,6 +93,6 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 			tt.name = tt.args
 		}
 		tt.workflow = true
-		s.runTest(tt, loginURL, serveKafkaAPI(s.T()).URL)
+		s.runCcloudTest(tt, serve(s.T()).URL, serveKafkaAPI(s.T()).URL)
 	}
 }

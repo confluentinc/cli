@@ -69,6 +69,7 @@ func (c *clusterCommand) init() {
 	check(createCmd.MarkFlagRequired("cloud"))
 	check(createCmd.MarkFlagRequired("region"))
 	createCmd.Flags().SortFlags = false
+	createCmd.Hidden = true
 	c.AddCommand(createCmd)
 
 	c.AddCommand(&cobra.Command{
@@ -87,12 +88,14 @@ func (c *clusterCommand) init() {
 	updateCmd.Hidden = true
 	c.AddCommand(updateCmd)
 
-	c.AddCommand(&cobra.Command{
+	deleteCmd := &cobra.Command{
 		Use:   "delete ID",
 		Short: "Delete a Kafka cluster",
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
-	})
+	}
+	deleteCmd.Hidden = true
+	c.AddCommand(deleteCmd)
 	c.AddCommand(&cobra.Command{
 		Use:   "use ID",
 		Short: "Make the Kafka cluster active for use in other commands",
@@ -130,6 +133,10 @@ func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
+	if true {
+		return errors.ErrNotImplemented
+	}
+
 	cloud, err := cmd.Flags().GetString("cloud")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -199,7 +206,12 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
-	environment, err := pcmd.GetEnvironment(cmd, c.config)
+	if true {
+		return errors.ErrNotImplemented
+	}
+
+	environment, err := pcmd.getEnvironment(cmd, c.config)
+
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}

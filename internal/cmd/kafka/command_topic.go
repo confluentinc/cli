@@ -118,7 +118,8 @@ func (c *topicCommand) init() {
 		Args:  cobra.ExactArgs(1),
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID")
-	cmd.Flags().String("group", fmt.Sprintf("confluent_cli_consumer%s", uuid.New()), "Consumer group id")
+	cmd.Flags().String("group", fmt.Sprintf("confluent_cli_consumer_%s", uuid.New()), "Consumer group id")
+	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of topic rather than end")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
@@ -362,6 +363,10 @@ func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {
 
 func (c *topicCommand) consume(cmd *cobra.Command, args []string) error {
 	topic := args[0]
+	beginning, err := cmd.Flags().GetBool("beginning")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
 
 	cluster, err := pcmd.GetKafkaClusterConfig(cmd, c.ch)
 	if err != nil {
@@ -373,7 +378,7 @@ func (c *topicCommand) consume(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	consumer, err := NewSaramaConsumer(group, cluster)
+	consumer, err := NewSaramaConsumer(group, cluster, beginning)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
