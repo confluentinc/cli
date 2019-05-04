@@ -10,9 +10,9 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/config"
 )
 
-// NewSaramaProducer returns a sarama.ClusterConsumerconfigured for the CLI config
-func NewSaramaConsumer(group string, kafka config.KafkaClusterConfig) (sarama.ConsumerGroup, error) {
-	client, err := sarama.NewClient(strings.Split(kafka.Bootstrap, ","), saramaConf(kafka))
+// NewSaramaConsumer returns a sarama.ConsumerGroup configured for the CLI config
+func NewSaramaConsumer(group string, kafka config.KafkaClusterConfig, beginning bool) (sarama.ConsumerGroup, error) {
+	client, err := sarama.NewClient(strings.Split(kafka.Bootstrap, ","), saramaConf(kafka, beginning))
 	if err != nil {
 		return nil, err
 	}
@@ -21,11 +21,11 @@ func NewSaramaConsumer(group string, kafka config.KafkaClusterConfig) (sarama.Co
 
 // NewSaramaProducer returns a sarama.ClusterProducer configured for the CLI config
 func NewSaramaProducer(kafka config.KafkaClusterConfig) (sarama.SyncProducer, error) {
-	return sarama.NewSyncProducer(strings.Split(kafka.Bootstrap, ","), saramaConf(kafka))
+	return sarama.NewSyncProducer(strings.Split(kafka.Bootstrap, ","), saramaConf(kafka, false))
 }
 
 // GroupHandler instances are used to handle individual topic-partition claims.
-type GroupHandler struct{
+type GroupHandler struct {
 	Out io.Writer
 }
 
@@ -51,7 +51,7 @@ func (h *GroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sara
 }
 
 // saramaConf converts KafkaClusterConfig to sarama.Config
-func saramaConf(kafka config.KafkaClusterConfig) *sarama.Config {
+func saramaConf(kafka config.KafkaClusterConfig, beginning bool) *sarama.Config {
 	saramaConf := sarama.NewConfig()
 	saramaConf.Version = sarama.V1_1_0_0
 	saramaConf.Net.TLS.Enable = true
@@ -62,7 +62,11 @@ func saramaConf(kafka config.KafkaClusterConfig) *sarama.Config {
 	saramaConf.Producer.Return.Successes = true
 	saramaConf.Producer.Return.Errors = true
 
-	saramaConf.Consumer.Offsets.Initial = sarama.OffsetOldest
+	if beginning {
+		saramaConf.Consumer.Offsets.Initial = sarama.OffsetOldest
+	} else {
+		saramaConf.Consumer.Offsets.Initial = sarama.OffsetNewest
+	}
 
 	return saramaConf
 }

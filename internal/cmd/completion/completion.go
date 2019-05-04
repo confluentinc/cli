@@ -33,28 +33,22 @@ type completionCommand struct {
 }
 
 // NewCompletionCmd returns the Cobra command for shell completion.
-func NewCompletionCmd(rootCmd *cobra.Command, cliName string) (*cobra.Command, error) {
+func NewCompletionCmd(rootCmd *cobra.Command, cliName string) *cobra.Command {
 	cmd := &completionCommand{
 		rootCmd: rootCmd,
 	}
-	err := cmd.init(cliName)
-	return cmd.Command, err
+	cmd.init(cliName)
+	return cmd.Command
 }
 
-func (c *completionCommand) init(cliName string) error {
-	longDescription, err := getLongDescription(cliName)
-	if err != nil {
-		return err
-	}
-
+func (c *completionCommand) init(cliName string) {
 	c.Command = &cobra.Command{
 		Use:   "completion SHELL",
 		Short: "Output shell completion code",
-		Long:  longDescription,
+		Long:  getLongDescription(cliName),
 		RunE:  c.completion,
 		Args:  cobra.ExactArgs(1),
 	}
-	return nil
 }
 
 func (c *completionCommand) completion(cmd *cobra.Command, args []string) error {
@@ -67,12 +61,13 @@ func (c *completionCommand) completion(cmd *cobra.Command, args []string) error 
 	return err
 }
 
-func getLongDescription(cliName string) (string, error) {
+func getLongDescription(cliName string) string {
 	t := template.Must(template.New("longDescription").Parse(longDescriptionTemplate))
 	buf := new(bytes.Buffer)
 	data := map[string]interface{}{"CLIName": cliName}
 	if err := t.Execute(buf, data); err != nil {
-		return "", err
+		// We're okay with this since its definitely a development error; should never happen to users
+		panic(err)
 	}
-	return buf.String(), nil
+	return buf.String()
 }
