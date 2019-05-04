@@ -4,7 +4,7 @@ import (
 	"context"
 	"os"
 
-	"github.com/progrium/go-basher"
+	"github.com/DABH/go-basher"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go"

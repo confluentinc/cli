@@ -23,6 +23,8 @@ deps:
 	@GO111MODULE=on go get github.com/goreleaser/goreleaser@v0.106.0
 	@GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.16.0
 	@GO111MODULE=on go get github.com/mitchellh/golicense@v0.1.1
+	@GO111MODULE=on go get github.com/golang/mock/mockgen@v1.2.0
+	@GO111MODULE=on go get github.com/kevinburke/go-bindata/...@v3.13.0
 
 build: build-go
 
@@ -120,7 +122,7 @@ publish-docs: docs
 		cd - || exit 1; \
 		make publish-docs-internal BASE_DIR=$${TMP_DIR} CLI_NAME=ccloud || exit 1; \
 		cd $${TMP_DIR} || exit 1; \
-		sed -i '' 's/default "confluent_cli_consumer_[^"]*"/default "confluent_cli_consumer_<uuid>"/' cloud/cli/command-reference/ccloud_kafka_topic_consume.rst || exit 1; \
+		sed -i 's/default "confluent_cli_consumer_[^"]*"/default "confluent_cli_consumer_<uuid>"/' cloud/cli/command-reference/ccloud_kafka_topic_consume.rst || exit 1; \
 		git add . || exit 1; \
 		git diff --cached --exit-code >/dev/null && echo "nothing to update for docs" && exit 0; \
 		git commit -m "chore: updating CLI docs for $(VERSION)" || exit 1; \
