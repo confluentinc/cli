@@ -263,7 +263,7 @@ func (c *clusterCommand) auth(cmd *cobra.Command, args []string) error {
 	}
 
 	cluster, known := c.config.Platforms[cfg.Platform].KafkaClusters[cfg.Kafka]
-	if known {
+	if known && cluster.APIKey != "" {
 		pcmd.Printf(cmd, "Kafka Cluster: %s\n", cfg.Kafka)
 		pcmd.Printf(cmd, "Bootstrap Servers: %s\n", cluster.Bootstrap)
 		pcmd.Printf(cmd, "API Key: %s\n", cluster.APIKey)

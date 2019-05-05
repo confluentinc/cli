@@ -23,8 +23,8 @@ type command struct {
 }
 
 var (
-	listFields    = []string{"Key", "UserId"}
-	listLabels    = []string{"Key", "Owner"}
+	listFields    = []string{"Key", "UserId", "Description"}
+	listLabels    = []string{"Key", "Owner", "Description"}
 	createFields  = []string{"Key", "Secret"}
 	createRenames = map[string]string{"Key": "API Key"}
 )
@@ -55,7 +55,6 @@ func (c *command) init() {
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
-
 	createCmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create API key",
@@ -67,6 +66,16 @@ func (c *command) init() {
 	createCmd.Flags().String("description", "", "Description or purpose for the API key")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
+
+	updateCmd := &cobra.Command{
+		Use:   "update KEY",
+		Short: "Update API key",
+		RunE:  c.update,
+		Args:  cobra.ExactArgs(1),
+	}
+	updateCmd.Flags().String("description", "", "Description or purpose for the API key")
+	updateCmd.Flags().SortFlags = false
+	c.AddCommand(updateCmd)
 
 	c.AddCommand(&cobra.Command{
 		Use:   "delete KEY",
@@ -145,6 +154,39 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 
 	pcmd.Println(cmd, "Please save the API Key and Secret. THIS IS THE ONLY CHANCE YOU HAVE!")
 	return printer.RenderTableOut(userKey, createFields, createRenames, os.Stdout)
+}
+
+func (c *command) update(cmd *cobra.Command, args []string) error {
+	apiKey := args[0]
+
+	apiKeys, err := c.client.List(context.Background(), &authv1.ApiKey{AccountId: c.config.Auth.Account.Id})
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	id, err := getApiKeyId(apiKeys, apiKey)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	description, err := cmd.Flags().GetString("description")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	key := &authv1.ApiKey{
+		Id:          id,
+		AccountId:   c.config.Auth.Account.Id,
+		Description: description,
+	}
+
+	fmt.Println("HERE3")
+
+	err = c.client.Update(context.Background(), key)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	return nil
 }
 
 func getApiKeyId(apiKeys []*authv1.ApiKey, apiKey string) (int32, error) {
