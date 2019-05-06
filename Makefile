@@ -75,8 +75,8 @@ download-licenses:
 	@echo Downloading third-party licenses for confluent binary
 	@GITHUB_TOKEN=$(token) golicense .golicense.hcl ./dist/confluent/$(shell go env GOOS)_$(shell go env GOARCH)/confluent | go run cmd/license-downloader/main.go -l legal/confluent/licenses -n legal/confluent/notices
 
-.PHONY: dist-ccloud
-dist-ccloud: download-licenses
+.PHONY: dist
+dist: download-licenses
 	@# unfortunately goreleaser only supports one archive right now (either tar/zip or binaries): https://github.com/goreleaser/goreleaser/issues/705
 	@# we had goreleaser upload binaries (they're uncompressed, so goreleaser's parallel uploads will save more time with binaries than archives)
 	for os in darwin linux windows; do \
