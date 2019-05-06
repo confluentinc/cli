@@ -79,26 +79,29 @@ download-licenses:
 dist: download-licenses
 	@# unfortunately goreleaser only supports one archive right now (either tar/zip or binaries): https://github.com/goreleaser/goreleaser/issues/705
 	@# we had goreleaser upload binaries (they're uncompressed, so goreleaser's parallel uploads will save more time with binaries than archives)
-	for os in darwin linux windows; do \
-		for arch in amd64 386; do \
-			if [ "$${os}" = "darwin" ] && [ "$${arch}" = "386" ] ; then \
-				continue ; \
-			fi; \
-			cp LICENSE dist/ccloud/$${os}_$${arch}/ ; \
-			cp INSTALL.md dist/ccloud/$${os}_$${arch}/ ; \
-			cp -r legal/ccloud dist/ccloud/$${os}_$${arch}/legal ; \
-			cd dist/ccloud/$${os}_$${arch}/ ; \
-			mkdir tmp ; mv LICENSE INSTALL.md legal ccloud tmp/ ; mv tmp ccloud ; \
-			suffix="" ; \
-			if [ "$${os}" = "windows" ] ; then \
-				suffix=zip ; \
-				zip -qr ../ccloud_$(VERSION)_$${os}_$${arch}.$${suffix} ccloud ; \
-			else \
-				suffix=tar.gz ; \
-				tar -czf ../ccloud_$(VERSION)_$${os}_$${arch}.$${suffix} ccloud ; \
-			fi ; \
-			cd ../../../ ; \
-			cp dist/ccloud/ccloud_$(VERSION)_$${os}_$${arch}.$${suffix} dist/ccloud/ccloud_latest_$${os}_$${arch}.$${suffix} ; \
+	@rm -rf dist; cp -a build dist; set -x; \
+	for binary in ccloud confluent; do \
+		for os in `find dist/$${binary} -type d -mindepth 1 -maxdepth 1 | awk -F'/' '{ print $$3 }' | awk -F'_' '{ print $$1 }'`; do \
+			for arch in amd64 386; do \
+				if [ "$${os}" = "darwin" ] && [ "$${arch}" = "386" ] ; then \
+					continue ; \
+				fi; \
+				echo $${binary} $${os} $${arch} ; \
+				cp LICENSE dist/$${binary}/$${os}_$${arch}/ ; \
+				cp -r legal/$${binary} dist/$${binary}/$${os}_$${arch}/legal ; \
+				cd dist/$${binary}/$${os}_$${arch}/ ; \
+				mkdir tmp ; mv LICENSE legal $${binary}* tmp/ ; mv tmp $${binary} ; \
+				suffix="" ; \
+				if [ "$${os}" = "windows" ] ; then \
+					suffix=zip ; \
+					zip -qr ../$${binary}_$(VERSION)_$${os}_$${arch}.$${suffix} $${binary} ; \
+				else \
+					suffix=tar.gz ; \
+					tar -czf ../$${binary}_$(VERSION)_$${os}_$${arch}.$${suffix} $${binary} ; \
+				fi ; \
+				cd ../../../ ; \
+				cp dist/$${binary}/$${binary}_$(VERSION)_$${os}_$${arch}.$${suffix} dist/$${binary}/$${binary}_latest_$${os}_$${arch}.$${suffix} ; \
+			done ; \
 		done ; \
 	done
 
