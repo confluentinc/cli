@@ -210,7 +210,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 		return errors.ErrNotImplemented
 	}
 
-	environment, err := pcmd.getEnvironment(cmd, c.config)
+	environment, err := pcmd.GetEnvironment(cmd, c.config)
 
 	if err != nil {
 		return errors.HandleCommon(err, cmd)

@@ -12,6 +12,5 @@ Flags:
   -h, --help            help for create
 
 Global Flags:
-      --environment string   ID of the environment in which to run the command
-  -v, --verbose count        increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace)
+  -v, --verbose count   increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace)
 

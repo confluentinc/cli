@@ -191,21 +191,21 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint stri
 
 		if tt.login == "default" {
 			env := []string{"XX_CCLOUD_EMAIL=fake@user.com", "XX_CCLOUD_PASSWORD=pass1"}
-			output := runCommand(t, env, "login --url "+loginURL, 0)
+			output := runCommand(t, "ccloud", env, "login --url "+loginURL, 0)
 			if *debug {
 				fmt.Println(output)
 			}
 		}
 
 		if tt.useKafka != "" {
-			output := runCommand(t, []string{}, "kafka cluster use "+tt.useKafka, 0)
+			output := runCommand(t, "ccloud", []string{}, "kafka cluster use "+tt.useKafka, 0)
 			if *debug {
 				fmt.Println(output)
 			}
 		}
 
 		if tt.authKafka != "" {
-			output := runCommand(t, []string{}, "api-key create --cluster "+tt.useKafka, 0)
+			output := runCommand(t, "ccloud", []string{}, "api-key create --cluster "+tt.useKafka, 0)
 			if *debug {
 				fmt.Println(output)
 			}
@@ -227,7 +227,7 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint stri
 			req.NoError(err)
 		}
 
-		output := runCommand(t, tt.env, tt.args, tt.wantErrCode)
+		output := runCommand(t, "ccloud", tt.env, tt.args, tt.wantErrCode)
 		if *debug {
 			fmt.Println(output)
 		}
