@@ -76,30 +76,26 @@ download-licenses:
 	@GITHUB_TOKEN=$(token) golicense .golicense.hcl ./dist/confluent/$(shell go env GOOS)_$(shell go env GOARCH)/confluent | go run cmd/license-downloader/main.go -l legal/confluent/licenses -n legal/confluent/notices
 
 .PHONY: dist
-dist: download-licenses
+dist: #download-licenses
 	@# unfortunately goreleaser only supports one archive right now (either tar/zip or binaries): https://github.com/goreleaser/goreleaser/issues/705
 	@# we had goreleaser upload binaries (they're uncompressed, so goreleaser's parallel uploads will save more time with binaries than archives)
-	@rm -rf dist; cp -a build dist; \
-	for binary in ccloud confluent; do \
+	@for binary in ccloud confluent; do \
 		for os in `find dist/$${binary} -type d -mindepth 1 -maxdepth 1 | awk -F'/' '{ print $$3 }' | awk -F'_' '{ print $$1 }'`; do \
 			for arch in amd64 386; do \
 				if [ "$${os}" = "darwin" ] && [ "$${arch}" = "386" ] ; then \
 					continue ; \
 				fi; \
-				echo $${binary} $${os} $${arch} ; \
-				cp LICENSE dist/$${binary}/$${os}_$${arch}/ ; \
-				cp -r legal/$${binary} dist/$${binary}/$${os}_$${arch}/legal ; \
-				cd dist/$${binary}/$${os}_$${arch}/ ; \
-				mkdir tmp ; mv LICENSE legal $${binary}* tmp/ ; mv tmp $${binary} ; \
+				rm -rf /tmp/$${binary} && mkdir /tmp/$${binary} ; \
+				cp LICENSE /tmp/${binary} && cp -r legal/$${binary} /tmp/$${binary}/legal ; \
+				cp dist/$${binary}/$${os}_$${arch}/$${binary} /tmp/$${binary} ; \
 				suffix="" ; \
 				if [ "$${os}" = "windows" ] ; then \
 					suffix=zip ; \
-					zip -qr ../$${binary}_$(VERSION)_$${os}_$${arch}.$${suffix} $${binary} ; \
+					zip -qr dist/$${binary}/$${binary}_$(VERSION)_$${os}_$${arch}.$${suffix} /tmp/$${binary} ; \
 				else \
 					suffix=tar.gz ; \
-					tar -czf ../$${binary}_$(VERSION)_$${os}_$${arch}.$${suffix} $${binary} ; \
+					tar -czf dist/$${binary}/$${binary}_$(VERSION)_$${os}_$${arch}.$${suffix} -C /tmp $${binary} ; \
 				fi ; \
-				cd ../../../ ; \
 				cp dist/$${binary}/$${binary}_$(VERSION)_$${os}_$${arch}.$${suffix} dist/$${binary}/$${binary}_latest_$${os}_$${arch}.$${suffix} ; \
 			done ; \
 		done ; \
