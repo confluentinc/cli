@@ -77,17 +77,49 @@ func (s *CLITestSuite) SetupSuite() {
 	err := os.Chdir("..")
 	req.NoError(err)
 
-	if _, err = os.Stat(binaryPath(s.T())); os.IsNotExist(err) || !*noRebuild {
-		makeCmd := exec.Command("make", "build")
-		output, err := makeCmd.CombinedOutput()
-		if err != nil {
-			s.T().Log(string(output))
-			req.NoError(err)
+	for _, binary := range []string{"ccloud", "confluent"} {
+		if _, err = os.Stat(binaryPath(s.T(), binary)); os.IsNotExist(err) || !*noRebuild {
+			makeCmd := exec.Command("make", "build")
+			output, err := makeCmd.CombinedOutput()
+			if err != nil {
+				s.T().Log(string(output))
+				req.NoError(err)
+			}
 		}
 	}
 }
 
-func (s *CLITestSuite) Test_Help() {
+func (s *CLITestSuite) Test_Confluent_Help() {
+	tests := []CLITest{
+		{name: "no args", fixture: "confluent-help-flag.golden"},
+		{args: "help", fixture: "confluent-help.golden"},
+		{args: "--help", fixture: "confluent-help-flag.golden"},
+		{args: "version", fixture: "version.golden"},
+	}
+	for _, tt := range tests {
+		if tt.name == "" {
+			tt.name = tt.args
+		}
+		s.T().Run(tt.name, func(t *testing.T) {
+
+			output := runCommand(t, "confluent", []string{}, tt.args, tt.wantErrCode)
+
+			actual := string(output)
+			expected := loadFixture(t, tt.fixture)
+
+			if tt.args == "version" {
+				require.Regexp(t, expected, actual)
+				return
+			}
+
+			if !reflect.DeepEqual(actual, expected) {
+				t.Fatalf("actual = %s, expected = %s", actual, expected)
+			}
+		})
+	}
+}
+
+func (s *CLITestSuite) Test_Ccloud_Help() {
 	tests := []CLITest{
 		{name: "no args", fixture: "help-flag.golden"},
 		{args: "help", fixture: "help.golden"},
@@ -95,16 +127,12 @@ func (s *CLITestSuite) Test_Help() {
 		{args: "version", fixture: "version.golden"},
 	}
 	for _, tt := range tests {
-		s.runTest(tt, serve(s.T()).URL, serveKafkaAPI(s.T()).URL)
+		s.runCcloudTest(tt, serve(s.T()).URL, serveKafkaAPI(s.T()).URL)
 	}
 }
 
-func (s *CLITestSuite) Test_Login_UseKafka_AuthKafka_Errors() {
+func (s *CLITestSuite) Test_Ccloud_Login_UseKafka_AuthKafka_Errors() {
 	tests := []CLITest{
-		{
-			args:    "kafka cluster --help",
-			fixture: "kafka-cluster-help.golden",
-		},
 		{
 			name:    "error if not authenticated",
 			args:    "kafka topic create integ",
@@ -140,11 +168,14 @@ func (s *CLITestSuite) Test_Login_UseKafka_AuthKafka_Errors() {
 		},
 	}
 	for _, tt := range tests {
-		s.runTest(tt, serve(s.T()).URL, serveKafkaAPI(s.T()).URL)
+		if strings.HasPrefix(tt.name, "error") {
+			tt.wantErrCode = 1
+		}
+		s.runCcloudTest(tt, serve(s.T()).URL, serveKafkaAPI(s.T()).URL)
 	}
 }
 
-func (s *CLITestSuite) runTest(tt CLITest, loginURL, kafkaAPIEndpoint string) {
+func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint string) {
 	if tt.name == "" {
 		tt.name = tt.args
 	}
@@ -182,7 +213,7 @@ func (s *CLITestSuite) runTest(tt CLITest, loginURL, kafkaAPIEndpoint string) {
 
 		// HACK: there's no non-interactive way to save an API key locally yet (just kafka cluster auth)
 		if tt.name == "error if topic already exists" {
-			cfg := config.New(&config.Config{CLIName: binaryName})
+			cfg := config.New(&config.Config{CLIName: "ccloud"})
 			err := cfg.Load()
 			req.NoError(err)
 			ctx, err := cfg.Context()
@@ -223,9 +254,10 @@ func (s *CLITestSuite) runTest(tt CLITest, loginURL, kafkaAPIEndpoint string) {
 	})
 }
 
-func runCommand(t *testing.T, env []string, args string, wantErrCode int) string {
-	_, _ = fmt.Println(binaryPath(t), args)
-	cmd := exec.Command(binaryPath(t), strings.Split(args, " ")...)
+func runCommand(t *testing.T, binaryName string, env []string, args string, wantErrCode int) string {
+	path := binaryPath(t, binaryName)
+	_, _ = fmt.Println(path, args)
+	cmd := exec.Command(path, strings.Split(args, " ")...)
 	cmd.Env = append(os.Environ(), env...)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -247,7 +279,7 @@ func runCommand(t *testing.T, env []string, args string, wantErrCode int) string
 func resetConfiguration(t *testing.T) {
 	// HACK: delete your current config to isolate tests cases for non-workflow tests...
 	// probably don't really want to do this or devs will get mad
-	cfg := config.New(&config.Config{CLIName: binaryName})
+	cfg := config.New(&config.Config{CLIName: "ccloud"})
 	err := cfg.Save()
 	require.NoError(t, err)
 }
@@ -277,7 +309,7 @@ func fixturePath(t *testing.T, fixture string) string {
 	return filepath.Join(filepath.Dir(filename), "fixtures", "output", fixture)
 }
 
-func binaryPath(t *testing.T) string {
+func binaryPath(t *testing.T, binaryName string) string {
 	dir, err := os.Getwd()
 	require.NoError(t, err)
 

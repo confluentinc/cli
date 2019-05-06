@@ -19,6 +19,6 @@ func (s *CLITestSuite) TestContextCommands() {
 			tt.name = tt.args
 		}
 		tt.workflow = true
-		s.runTest(tt, serve(s.T()).URL, serveKafkaAPI(s.T()).URL)
+		s.runCcloudTest(tt, serve(s.T()).URL, serveKafkaAPI(s.T()).URL)
 	}
 }

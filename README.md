@@ -55,8 +55,28 @@ $ dist/confluent/$(go env GOOS)_$(go env GOARCH)/confluent -h # for on-prem Conf
 
 ## Developing
 
-This repo requires golang 1.11 and follows the basic
-[golang standard project layout](https://github.com/golang-standards/project-layout).
+This repo requires golang 1.12. We recommend you use `goenv` to manage your go versions.
+There's a `.go-version` file in this repo with the exact version we use (and test against in CI).
+
+### Go Version
+
+Fortunately `goenv` supports 1.12 already. Unfortunately this is only in their 2.0 branch which
+is still in beta, meaning that its not in brew yet. So we have to build from source.
+
+If you already have it via brew, uninstall it first:
+
+    brew uninstall goenv
+
+Now clone the repo and update your shell profile:
+
+    git clone https://github.com/syndbg/goenv.git $GOPATH/src/github.com/syndbg/goenv
+    echo 'export GOENV_ROOT="$GOPATH/src/github.com/syndbg/goenv"' >> ~/.bash_profile
+    echo 'export PATH="$GOENV_ROOT/bin:$PATH"' >> ~/.bash_profile
+    echo 'eval "$(goenv init -)"' >> ~/.bash_profile
+
+### File Layout
+
+This repo follows the [golang standard project layout](https://github.com/golang-standards/project-layout).
 
 Here's the basic file structure:
 
@@ -71,6 +91,24 @@ Things under `internal/cmd` are commands, things under `internal/pkg` are packag
 When you add a new command or resource, assuming its already in the SDK, you generally just need to create
 * `internal/cmd/<command>/<command>.go` (and test)
 * `internal/pkg/sdk/<resource>/<resource>.go` (and test)
+
+### Documentation
+
+The CLI command [reference docs](https://docs.confluent.io/current/cloud/cli/command-reference/index.html)
+are programmatically generated from the Cobra commands in this repo.
+
+Just run:
+
+    $ make docs
+
+Cheat sheet:
+```
+	cli := &cobra.Command{
+		Use:               cliName,
+		Short:             "This is a short description",
+		Long:              "This is a longer synopsis",
+	}
+```
 
 ## Testing
 
@@ -105,5 +143,9 @@ You can update the golden files from the current output with
     make test TEST_ARGS="./test/... -update"
 
 You can skip rebuilding the CLI if it already exists in `dist` with
+
+    make test TEST_ARGS="./test/... -no-rebuild"
+
+You can mix and match these flags. To update the golden files without rebuilding, and log verbosely
 
     make test TEST_ARGS="./test/... -update -no-rebuild -v"
