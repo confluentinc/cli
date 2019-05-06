@@ -1,6 +1,7 @@
 package local
 
 import (
+	"io/ioutil"
 	"os"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -38,8 +39,7 @@ func New(prerunner pcmd.PreRunner, shell ShellRunner) *cobra.Command {
 	}
 	localCmd.Command.RunE = localCmd.run
 	// possibly we should make this an arg and/or move it to env var
-	localCmd.Flags().String("path", "", "Path to Confluent Platform install directory")
-	_ = localCmd.MarkFlagRequired("path")
+	localCmd.Flags().String("path", "", "Path to local Confluent Platform install")
 	localCmd.Flags().SortFlags = false
 	return localCmd.Command
 }
@@ -48,6 +48,29 @@ func (c *command) run(cmd *cobra.Command, args []string) error {
 	path, err := cmd.Flags().GetString("path")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
+	}
+	if len(path) == 0 {
+		files, err := ioutil.ReadDir("./bin/")
+		if err != nil {
+			return errors.New("Must supply --path or run from Confluent Platform install location")
+		}
+		filesToCheck := map[string]bool{
+			"connect-distributed":    false,
+			"kafka-rest-start":       false,
+			"ksql-server-start":      false,
+			"zookeeper-server-start": false,
+		}
+		for _, f := range files {
+			if _, ok := filesToCheck[f.Name()]; ok {
+				filesToCheck[f.Name()] = true
+			}
+		}
+		for _, v := range filesToCheck {
+			if !v {
+				return errors.New("Must supply --path or run from Confluent Platform install location")
+			}
+		}
+		path = "./"
 	}
 	c.shell.Init(os.Stdout, os.Stderr)
 	c.shell.Export("CONFLUENT_HOME", path)
