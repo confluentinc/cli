@@ -26,7 +26,6 @@ github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc h1:cAKDfWh5Vpd
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf h1:qet1QNfXsQxTZqLG4oE62mJzwPIB8+Tee4RNCL9ulrY=
 github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf/go.mod h1:ybxpYRFXyAe+OPACYpWeL0wqObRcbAqCMya13uyzqw0=
-github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239 h1:kFOfPq6dUM1hTo4JG6LR5AXSUEsOjtdm0kw0FtQtMJA=
 github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239/go.mod h1:2FmKhYUyUczH0OGQWaF5ceTx0UBShxjsH6f8oGKYe2c=
 github.com/antihax/optional v0.0.0-20180407024304-ca021399b1a6/go.mod h1:V8iCPQYkqmusNa815XgQio277wI47sdRh1dUOLdyC6Q=
 github.com/apex/log v1.1.0 h1:J5rld6WVFi6NxA6m8GJ1LJqu3+GiTFIt3mYv27gdQWI=
@@ -35,7 +34,6 @@ github.com/apparentlymart/go-dump v0.0.0-20180507223929-23540a00eaa3/go.mod h1:o
 github.com/apparentlymart/go-textseg v1.0.0/go.mod h1:z96Txxhf3xSFMPmb5X/1W05FF/Nj9VFpLOpjS5yuumk=
 github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da h1:8GUt8eRujhVEGZFFEjBj46YV4rDjvGrNxb0KMWYkL2I=
 github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da/go.mod h1:Q73ZrmVTwzkszR9V5SSuryQ31EELlFMUz1kKyl939pY=
-github.com/atrox/homedir v1.0.0 h1:99Vwk+XECZTDLaAPeMj7vF9JMNcVarWddqPeyDzJT5E=
 github.com/atrox/homedir v1.0.0/go.mod h1:ZKVEIDNKscX8qV1TyrwLP+ayjv3XQO7wbVmc5EW00A8=
 github.com/aws/aws-sdk-go v1.15.64 h1:xI5HhxebTF+jVqVOraUDqI3kr24n+yTvslwZCo3OhGA=
 github.com/aws/aws-sdk-go v1.15.64/go.mod h1:E3/ieXAlvM0XWO57iftYVDLLvQ824smPP3ATZkfNZeM=
@@ -47,9 +45,7 @@ github.com/caarlos0/ctrlc v1.0.0 h1:2DtF8GSIcajgffDFJzyG15vO+1PuBWOMUdFut7NnXhw=
 github.com/caarlos0/ctrlc v1.0.0/go.mod h1:CdXpj4rmq0q/1Eb44M9zi2nKB0QraNKuRGYGrrHhcQw=
 github.com/campoy/unique v0.0.0-20180121183637-88950e537e7e h1:V9a67dfYqPLAvzk5hMQOXYJlZ4SLIXgyKIE+ZiHzgGQ=
 github.com/campoy/unique v0.0.0-20180121183637-88950e537e7e/go.mod h1:9IOqJGCPMSc6E5ydlp5NIonxObaeu/Iub/X03EKPVYo=
-github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df h1:XXCjxndsxMyNjoZtyuyDnzSck+h681QN7vKkK0EIVq0=
 github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df/go.mod h1:X4IDm8zK6KavjWkfKQCet43DKeLii9nJhUK/seHoSbA=
-<<<<<<< HEAD
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
 github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 h1:sIWhdehnHPCWoZeMVBRvb6+/73GxXKCHo9PhhWe9UcY=
 github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2/go.mod h1:HNotNNYHefttEUajcmByCW4bWNBiYd7s5mNZWzB62r0=
@@ -64,15 +60,6 @@ github.com/confluentinc/ccloud-sdk-go v0.0.7-0.20190515193705-ed57783609c7/go.mo
 github.com/confluentinc/ccloudapis v0.0.0-20190301100936-766355e1fe2c/go.mod h1:RGupQo6tb6J+1BnSqqueADkoC8b/F60+Ci3FMB3wDFo=
 github.com/confluentinc/ccloudapis v0.0.0-20190430183816-9fe8ee16d070 h1:iDnQrrDFWEBkDXxQcupU6CTg/7wqa3IFKLqiBAnNwV8=
 github.com/confluentinc/ccloudapis v0.0.0-20190430183816-9fe8ee16d070/go.mod h1:RGupQo6tb6J+1BnSqqueADkoC8b/F60+Ci3FMB3wDFo=
-=======
-github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 h1:sIWhdehnHPCWoZeMVBRvb6+/73GxXKCHo9PhhWe9UcY=
-github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2/go.mod h1:HNotNNYHefttEUajcmByCW4bWNBiYd7s5mNZWzB62r0=
-github.com/confluentinc/ccloud-sdk-go v0.0.7-0.20190319002505-737e911e0cad h1:xIg1kzCmH1Zgk9wdZ2KiBmtxsNY1EXXl5B0JHn9trso=
-github.com/confluentinc/ccloud-sdk-go v0.0.7-0.20190319002505-737e911e0cad/go.mod h1:zIbhvPHqy+PZLxuIDaN4Hkr1XSVffPL8ynnvJ65empo=
-github.com/confluentinc/ccloudapis v0.0.0-20190301100936-766355e1fe2c/go.mod h1:RGupQo6tb6J+1BnSqqueADkoC8b/F60+Ci3FMB3wDFo=
-github.com/confluentinc/ccloudapis v0.0.0-20190313194524-9d1a929e8e66 h1:1DC/Jl2FakVf6U7K6/OCj2rYIcpVfQBqAW6zBQs4M6c=
-github.com/confluentinc/ccloudapis v0.0.0-20190313194524-9d1a929e8e66/go.mod h1:RGupQo6tb6J+1BnSqqueADkoC8b/F60+Ci3FMB3wDFo=
->>>>>>> 499e8b6... Password Protection CLI and Plugin
 github.com/confluentinc/go-editor v0.4.0 h1:5hMjKsKmIOmlu3Yyz8zDq66Qpdin8HSmRaMhqhxRf5Y=
 github.com/confluentinc/go-editor v0.4.0/go.mod h1:sW1NzJdowffHQzy4iSbfY/ykRFMDE69I8EaT33Ebh7Y=
 github.com/confluentinc/go-printer v0.10.0 h1:JLJOeSdJL6A0YxAK24GSuoC52sPQP/chowAapSAwoBM=
@@ -82,7 +69,6 @@ github.com/confluentinc/protoc-gen-ccloud v0.0.1 h1:oTEOlStee6ln4FeKdgQevmjuma50
 github.com/confluentinc/protoc-gen-ccloud v0.0.1/go.mod h1:pDn9xwYsW8QvxGpwJ9CaomgtYBpx7FgdonHVmCo5yRo=
 github.com/confluentinc/prototools v0.0.1/go.mod h1:ycwwz5+n4KxCfEKvkF5uC21S5wKtkHKcUD7OWCOGG3k=
 github.com/confluentinc/prototools v0.0.2-0.20190205163623-ca587b85ed4e/go.mod h1:ycwwz5+n4KxCfEKvkF5uC21S5wKtkHKcUD7OWCOGG3k=
-github.com/cpuguy83/go-md2man v1.0.10 h1:BSKMNlYxDvnunlTymqtgONjNnaRV1sTpcovwwjF22jk=
 github.com/cpuguy83/go-md2man v1.0.10/go.mod h1:SmD6nW6nTyfqj6ABTjUi3V3JVMnlJmwcJI5acqYI6dE=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
@@ -92,10 +78,6 @@ github.com/dghubble/sling v1.2.1-0.20181125223409-7458fd7fa70b/go.mod h1:ZcPRuLm
 github.com/dgryski/go-metro v0.0.0-20180109044635-280f6062b5bc/go.mod h1:c9O8+fpSOX1DM8cPNSkX/qsBWdkD4yd2dpciOWQjpBw=
 github.com/dgryski/go-minhash v0.0.0-20170608043002-7fe510aff544 h1:54Y/2GF52MSJ4n63HWvNDFRtztgm6tq2UrOX61sjGKc=
 github.com/dgryski/go-minhash v0.0.0-20170608043002-7fe510aff544/go.mod h1:VBi0XHpFy0xiMySf6YpVbRqrupW4RprJ5QTyN+XvGSM=
-<<<<<<< HEAD
-github.com/dgryski/go-spooky v0.0.0-20170606183049-ed3d087f40e2/go.mod h1:hgHYKsoIw7S/hlWtP7wD1wZ7SX1jPTtKko5X9jrOgPQ=
-=======
->>>>>>> 499e8b6... Password Protection CLI and Plugin
 github.com/eapache/go-resiliency v1.1.0 h1:1NtRmCAqadE2FN4ZcN6g90TP3uk8cg9rn9eNK2197aU=
 github.com/eapache/go-resiliency v1.1.0/go.mod h1:kFI+JgMyC7bLPUVY133qvEBtVayf5mFgVsvEsIPBvNs=
 github.com/eapache/go-xerial-snappy v0.0.0-20180814174437-776d5712da21 h1:YEetp8/yCZMuEPMUDHG0CW/brkkEp8mzqk2+ODEitlw=
@@ -113,7 +95,6 @@ github.com/fsnotify/fsnotify v1.4.7 h1:IXs+QLmnXW2CcXuY+8Mzv/fWEsPGWxqefPtCP5CnV
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
 github.com/ghodss/yaml v1.0.0 h1:wQHKEahhL6wmXdzwWG11gIVCkOv05bNOh+Rxn0yngAk=
 github.com/ghodss/yaml v1.0.0/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=
-github.com/gliderlabs/ssh v0.1.4 h1:5N8AYXpaQAPy0L7linKa5aI+WRfyYagAhjksVzxh+mI=
 github.com/gliderlabs/ssh v0.1.4/go.mod h1:U7qILu1NlMHj9FlMhZLlkCdDnU1DBEAqr0aevW3Awn0=
 github.com/go-critic/checkers v0.0.0-20181031185637-879460b6c936 h1:z3p5plDo+NvU4XrN1qn3V7t46REsIchDEb2Czj0/FyA=
 github.com/go-critic/checkers v0.0.0-20181031185637-879460b6c936/go.mod h1:Cg5JCP9M6m93z6fecpRcVgD2lZf2RvPtb85ldjiShZc=
@@ -366,7 +347,6 @@ github.com/remyoudompheng/bigfft v0.0.0-20170806203942-52369c62f446/go.mod h1:uY
 github.com/rogpeppe/go-internal v1.1.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=
 github.com/rsc/goversion v1.2.0 h1:zVF4y5ciA/rw779S62bEAq4Yif1cBc/UwRkXJ2xZyT4=
 github.com/rsc/goversion v1.2.0/go.mod h1:Tf/O0TQyfRvp7NelXAyfXYRKUO+LX3KNgXc8ALRUv4k=
-github.com/russross/blackfriday v1.5.2 h1:HyvC0ARfnZBqnXwABFeSZHpKvJHJJfPz81GNueLj0oo=
 github.com/russross/blackfriday v1.5.2/go.mod h1:JO/DiYxRf+HjHt06OyowR9PTA263kcR/rfWxYHBV53g=
 github.com/ryanuber/go-glob v0.0.0-20170128012129-256dc444b735/go.mod h1:807d1WSdnB0XRJzKNil9Om6lcp/3a0v4qIHxIXzX/Yc=
 github.com/sebdah/goldie v0.0.0-20180424091453-8784dd1ab561/go.mod h1:lvjGftC8oe7XPtyrOidaMi0rp5B9+XY/ZRUynGnuaxQ=
