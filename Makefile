@@ -79,7 +79,7 @@ download-licenses:
 dist: download-licenses
 	@# unfortunately goreleaser only supports one archive right now (either tar/zip or binaries): https://github.com/goreleaser/goreleaser/issues/705
 	@# we had goreleaser upload binaries (they're uncompressed, so goreleaser's parallel uploads will save more time with binaries than archives)
-	@rm -rf dist; cp -a build dist; set -x; \
+	@rm -rf dist; cp -a build dist; \
 	for binary in ccloud confluent; do \
 		for os in `find dist/$${binary} -type d -mindepth 1 -maxdepth 1 | awk -F'/' '{ print $$3 }' | awk -F'_' '{ print $$1 }'`; do \
 			for arch in amd64 386; do \
