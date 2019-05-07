@@ -17,6 +17,20 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/keystore"
 )
 
+const longDescription = `Certain CLI commands require an API secret stored locally in order for them to
+work. This includes Kafka topic consume/produce.
+
+When you create an API key with the CLI, we automatically store the secret
+locally for use. However, when you create an API key on the UI, via the API,
+or with the CLI on another machine, the secret is not available for CLI use
+until you "store" it.
+
+(This is because secrets are irretrievable after creation, for your security.)
+
+The api-key store command lets you register an API secret created by another
+process, so you can use it just as if you had created it with the CLI.
+`
+
 type command struct {
 	*cobra.Command
 	config   *config.Config
@@ -80,22 +94,25 @@ func (c *command) init() {
 	})
 
 	storeCmd := &cobra.Command{
-		Use:   "store",
-		Short: "Store an existing API key/secret (created outside CLI) locally for CLI usage",
+		Use:   "store KEY SECRET",
+		Short: "Store an existing API key/secret locally for CLI usage",
+		Long:  longDescription,
 		RunE:  c.store,
 		Args:  cobra.ExactArgs(2),
 	}
 	storeCmd.Flags().String("cluster", "", "Store API key for this cluster")
 	storeCmd.Flags().BoolP("force", "f", false, "Force overwrite existing secret for this key")
+	storeCmd.Flags().SortFlags = false
 	c.AddCommand(storeCmd)
 
 	useCmd := &cobra.Command{
-		Use:   "use",
+		Use:   "use KEY",
 		Short: "Make the API key active for use in other commands",
 		RunE:  c.use,
 		Args:  cobra.ExactArgs(1),
 	}
 	useCmd.Flags().String("cluster", "", "Make this API key active for this cluster")
+	useCmd.Flags().SortFlags = false
 	c.AddCommand(useCmd)
 }
 

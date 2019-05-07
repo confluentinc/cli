@@ -29,7 +29,7 @@ var resourcePatterns = []struct {
 	pattern *kafkav1.ResourcePatternConfig
 }{
 	{
-		args: []string{"--cluster"},
+		args: []string{"--cluster-scope"},
 		pattern: &kafkav1.ResourcePatternConfig{ResourceType: kafkav1.ResourceTypes_CLUSTER, Name: "kafka-cluster",
 			PatternType: kafkav1.PatternTypes_LITERAL},
 	},
@@ -400,7 +400,7 @@ func TestDefaults(t *testing.T) {
 	}
 
 	cmd = NewCMD(expect)
-	cmd.SetArgs([]string{"acl", "create", "--cluster", "--allow", "--service-account-id", "42",
+	cmd.SetArgs([]string{"acl", "create", "--cluster-scope", "--allow", "--service-account-id", "42",
 		"--operation", "read"})
 
 	go func() {
