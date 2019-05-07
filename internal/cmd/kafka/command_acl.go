@@ -81,12 +81,7 @@ func (c *aclCommand) init() {
 func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
 	acl := parse(cmd)
 
-	environment, err := pcmd.GetEnvironment(cmd, c.config)
-	if err != nil {
-		return err
-	}
-
-	cluster, err := c.ch.KafkaCluster("", environment)
+	cluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -104,12 +99,7 @@ func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
 func (c *aclCommand) create(cmd *cobra.Command, args []string) error {
 	acl := validateAddDelete(parse(cmd))
 
-	environment, err := pcmd.GetEnvironment(cmd, c.config)
-	if err != nil {
-		return err
-	}
-
-	cluster, err := c.ch.KafkaCluster("", environment)
+	cluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -130,12 +120,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(acl.errors, cmd)
 	}
 
-	environment, err := pcmd.GetEnvironment(cmd, c.config)
-	if err != nil {
-		return err
-	}
-
-	cluster, err := c.ch.KafkaCluster("", environment)
+	cluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
