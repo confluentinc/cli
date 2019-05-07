@@ -98,7 +98,8 @@ dist: download-licenses
 				suffix="" ; \
 				if [ "$${os}" = "windows" ] ; then \
 					suffix=zip ; \
-					cd /tmp && zip -qr $${binary}.$${suffix} $${binary} && cd - && mv /tmp/$${binary}.$${suffix} dist/$${binary}/$${binary}_$(VERSION)_$${os}_$${arch}.$${suffix}; \
+					cd /tmp >/dev/null && zip -qr $${binary}.$${suffix} $${binary} && cd - >/dev/null ; \
+					mv /tmp/$${binary}.$${suffix} dist/$${binary}/$${binary}_$(VERSION)_$${os}_$${arch}.$${suffix}; \
 				else \
 					suffix=tar.gz ; \
 					tar -czf dist/$${binary}/$${binary}_$(VERSION)_$${os}_$${arch}.$${suffix} -C /tmp $${binary} ; \
@@ -106,10 +107,11 @@ dist: download-licenses
 				cp dist/$${binary}/$${binary}_$(VERSION)_$${os}_$${arch}.$${suffix} dist/$${binary}/$${binary}_latest_$${os}_$${arch}.$${suffix} ; \
 			done ; \
 		done ; \
+		cd dist/$${binary}/ ; \
+		  $(SHASUM) $${binary}_$(VERSION)_* > $${binary}_$(VERSION)_checksums.txt ; \
+		  $(SHASUM) $${binary}_latest_* > $${binary}_latest_checksums.txt ; \
+		  cd ../.. ; \
 	done
-	@cd dist/$(NAME)/ ; \
-	  $(SHASUM) $(NAME)_$(VERSION)_* > $(NAME)_$(VERSION)_checksums.txt ; \
-	  $(SHASUM) $(NAME)_latest_* > $(NAME)_latest_checksums.txt
 
 .PHONY: publish
 publish:
