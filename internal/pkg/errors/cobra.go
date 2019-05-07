@@ -36,15 +36,16 @@ func HandleCommon(err error, cmd *cobra.Command) error {
 	case NotAuthenticatedError:
 		cmd.SilenceUsage = true
 		return err
-	case editor.ErrEditing:
-		cmd.SilenceUsage = true
-		return err
-	case KafkaError:
-		cmd.SilenceUsage = true
-		return err
 	case UnknownKafkaContextError:
 		cmd.SilenceUsage = true
 		return fmt.Errorf("no auth found for Kafka %s, please run `ccloud kafka cluster auth` first", err.Error())
+	case *UnconfiguredAPIKeyContextError:
+		cmd.SilenceUsage = true
+		return err
+	// TODO: ErrEditing is declared incorrectly as "type ErrEditing error". That doesn't work for type switches, so put last
+	case editor.ErrEditing:
+		cmd.SilenceUsage = true
+		return err
 	}
 
 	return err

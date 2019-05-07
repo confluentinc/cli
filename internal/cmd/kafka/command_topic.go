@@ -25,10 +25,11 @@ type topicCommand struct {
 	*cobra.Command
 	config *config.Config
 	client ccloud.Kafka
+	ch     *pcmd.ConfigHelper
 }
 
 // NewTopicCommand returns the Cobra command for Kafka topic.
-func NewTopicCommand(config *config.Config, client ccloud.Kafka) *cobra.Command {
+func NewTopicCommand(config *config.Config, client ccloud.Kafka, ch *pcmd.ConfigHelper) *cobra.Command {
 	cmd := &topicCommand{
 		Command: &cobra.Command{
 			Use:   "topic",
@@ -36,6 +37,7 @@ func NewTopicCommand(config *config.Config, client ccloud.Kafka) *cobra.Command 
 		},
 		config: config,
 		client: client,
+		ch:     ch,
 	}
 	cmd.init()
 	return cmd.Command
@@ -124,7 +126,7 @@ func (c *topicCommand) init() {
 }
 
 func (c *topicCommand) list(cmd *cobra.Command, args []string) error {
-	cluster, err := pcmd.GetKafkaCluster(cmd, c.config)
+	cluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -145,7 +147,7 @@ func (c *topicCommand) list(cmd *cobra.Command, args []string) error {
 }
 
 func (c *topicCommand) create(cmd *cobra.Command, args []string) error {
-	cluster, err := pcmd.GetKafkaCluster(cmd, c.config)
+	cluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -188,7 +190,7 @@ func (c *topicCommand) create(cmd *cobra.Command, args []string) error {
 }
 
 func (c *topicCommand) describe(cmd *cobra.Command, args []string) error {
-	cluster, err := pcmd.GetKafkaCluster(cmd, c.config)
+	cluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -252,7 +254,7 @@ func (c *topicCommand) describe(cmd *cobra.Command, args []string) error {
 }
 
 func (c *topicCommand) update(cmd *cobra.Command, args []string) error {
-	cluster, err := pcmd.GetKafkaCluster(cmd, c.config)
+	cluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -279,7 +281,7 @@ func (c *topicCommand) update(cmd *cobra.Command, args []string) error {
 }
 
 func (c *topicCommand) delete(cmd *cobra.Command, args []string) error {
-	cluster, err := pcmd.GetKafkaCluster(cmd, c.config)
+	cluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -293,7 +295,7 @@ func (c *topicCommand) delete(cmd *cobra.Command, args []string) error {
 func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {
 	topic := args[0]
 
-	cluster, err := pcmd.GetKafkaClusterConfig(cmd, c.config)
+	cluster, err := pcmd.GetKafkaClusterConfig(cmd, c.ch)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -366,7 +368,7 @@ func (c *topicCommand) consume(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	cluster, err := pcmd.GetKafkaClusterConfig(cmd, c.config)
+	cluster, err := pcmd.GetKafkaClusterConfig(cmd, c.ch)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}

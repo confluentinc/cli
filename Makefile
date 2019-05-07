@@ -18,6 +18,13 @@ clean:
 	rm -f internal/cmd/local/bindata.go
 	rm -f mock/local/shell_runner_mock.go
 
+.PHONY: generate
+generate: generate-go bindata mocks
+
+.PHONY: generate-go
+generate-go:
+	@go generate ./...
+
 .PHONY: deps
 deps:
 	@GO111MODULE=on go get github.com/goreleaser/goreleaser@v0.106.0
@@ -44,7 +51,7 @@ show-args:
 	@echo "VERSION: $(VERSION)"
 
 .PHONY: build-go
-build-go: internal/cmd/local/bindata.go
+build-go:
 	make build-ccloud
 	make build-confluent
 
@@ -55,6 +62,9 @@ build-ccloud:
 .PHONY: build-confluent
 build-confluent:
 	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --snapshot --rm-dist -f .goreleaser-confluent$(GORELEASER_SUFFIX)
+
+.PHONY: bindata
+bindata: internal/cmd/local/bindata.go
 
 internal/cmd/local/bindata.go:
 	@go-bindata -pkg local -o internal/cmd/local/bindata.go cp_cli/
@@ -236,4 +246,4 @@ mock/local/shell_runner_mock.go:
 	mockgen -source internal/cmd/local/shell_runner.go -destination mock/local/shell_runner_mock.go ShellRunner
 
 .PHONY: test
-test: internal/cmd/local/bindata.go mocks lint coverage
+test: lint coverage

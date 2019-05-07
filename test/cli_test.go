@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"runtime"
+	"sort"
 	"strings"
 	"testing"
 
@@ -28,8 +29,10 @@ import (
 )
 
 var (
-	noRebuild = flag.Bool("no-rebuild", false, "skip rebuilding CLI if it already exists")
-	update    = flag.Bool("update", false, "update golden files")
+	binaryName = "ccloud"
+	noRebuild  = flag.Bool("no-rebuild", false, "skip rebuilding CLI if it already exists")
+	update     = flag.Bool("update", false, "update golden files")
+	debug      = flag.Bool("debug", false, "enable verbose output")
 )
 
 // CLITest represents a test configuration
@@ -38,6 +41,8 @@ type CLITest struct {
 	name string
 	// The CLI command being tested; this is a string of args and flags passed to the binary
 	args string
+	// The set of environment variables to be set when the CLI is run
+	env []string
 	// "default" if you need to login, or "" otherwise
 	login string
 	// The kafka cluster ID to "use"
@@ -50,6 +55,8 @@ type CLITest struct {
 	wantErrCode int
 	// If true, don't reset the config/state between tests to enable testing CLI workflows
 	workflow bool
+	// An optional function that allows you to specify other calls
+	wantFunc func(t *testing.T)
 }
 
 // CLITestSuite is the CLI integration tests.
@@ -172,6 +179,9 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint stri
 	if tt.name == "" {
 		tt.name = tt.args
 	}
+	if strings.HasPrefix(tt.name, "error") {
+		tt.wantErrCode = 1
+	}
 	s.T().Run(tt.name, func(t *testing.T) {
 		req := require.New(t)
 
@@ -181,15 +191,24 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint stri
 
 		if tt.login == "default" {
 			env := []string{"XX_CCLOUD_EMAIL=fake@user.com", "XX_CCLOUD_PASSWORD=pass1"}
-			runCommand(t, "ccloud", env, "login --url "+loginURL, 0)
+			output := runCommand(t, "ccloud", env, "login --url "+loginURL, 0)
+			if *debug {
+				fmt.Println(output)
+			}
 		}
 
 		if tt.useKafka != "" {
-			runCommand(t, "ccloud", []string{}, "kafka cluster use "+tt.useKafka, 0)
+			output := runCommand(t, "ccloud", []string{}, "kafka cluster use "+tt.useKafka, 0)
+			if *debug {
+				fmt.Println(output)
+			}
 		}
 
 		if tt.authKafka != "" {
-			runCommand(t, "ccloud", []string{}, "api-key create --cluster "+tt.useKafka, 0)
+			output := runCommand(t, "ccloud", []string{}, "api-key create --cluster "+tt.useKafka, 0)
+			if *debug {
+				fmt.Println(output)
+			}
 		}
 
 		// HACK: there's no non-interactive way to save an API key locally yet (just kafka cluster auth)
@@ -199,16 +218,19 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint stri
 			req.NoError(err)
 			ctx, err := cfg.Context()
 			req.NoError(err)
-			cfg.Platforms[ctx.Platform].KafkaClusters[ctx.Kafka] = config.KafkaClusterConfig{
+			ctx.KafkaClusters[ctx.Kafka] = &config.KafkaClusterConfig{
 				APIKey:      "MYKEY",
-				APISecret:   "MYSECRET",
-				APIEndpoint: kafkaAPIEndpoint,
+				APIKeys:     map[string]*config.APIKeyPair{"MYKEY": {Key: "MYKEY", Secret: "MYSECRET"}},
+				APIEndpoint: serveKafkaAPI(t).URL,
 			}
 			err = cfg.Save()
 			req.NoError(err)
 		}
 
-		output := runCommand(t, "ccloud", []string{}, tt.args, tt.wantErrCode)
+		output := runCommand(t, "ccloud", tt.env, tt.args, tt.wantErrCode)
+		if *debug {
+			fmt.Println(output)
+		}
 
 		if *update && tt.args != "version" {
 			writeFixture(t, tt.fixture, output)
@@ -224,6 +246,10 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint stri
 
 		if !reflect.DeepEqual(actual, expected) {
 			t.Fatalf("actual = %s, expected = %s", actual, expected)
+		}
+
+		if tt.wantFunc != nil {
+			tt.wantFunc(t)
 		}
 	})
 }
@@ -290,6 +316,79 @@ func binaryPath(t *testing.T, binaryName string) string {
 	return path.Join(dir, "dist", binaryName, runtime.GOOS+"_"+runtime.GOARCH, binaryName)
 }
 
+var KEY_STORE = map[int32]*authv1.ApiKey{}
+var KEY_INDEX = int32(1)
+
+type ApiKeyList []*authv1.ApiKey
+
+// Len is part of sort.Interface.
+func (d ApiKeyList) Len() int {
+	return len(d)
+}
+
+// Swap is part of sort.Interface.
+func (d ApiKeyList) Swap(i, j int) {
+	d[i], d[j] = d[j], d[i]
+}
+
+// Less is part of sort.Interface. We use Key as the value to sort by
+func (d ApiKeyList) Less(i, j int) bool {
+	return d[i].Key < d[j].Key
+}
+
+func init() {
+	KEY_STORE[KEY_INDEX] = &authv1.ApiKey{
+		Key:    "MYKEY1",
+		Secret: "MYSECRET1",
+		LogicalClusters: []*authv1.ApiKey_Cluster{
+			&authv1.ApiKey_Cluster{Id: "bob"},
+		},
+		UserId: 12,
+	}
+	KEY_INDEX += 1
+	KEY_STORE[KEY_INDEX] = &authv1.ApiKey{
+		Key:    "MYKEY2",
+		Secret: "MYSECRET2",
+		LogicalClusters: []*authv1.ApiKey_Cluster{
+			&authv1.ApiKey_Cluster{Id: "abc"},
+		},
+		UserId: 18,
+	}
+	KEY_INDEX += 1
+	KEY_STORE[100] = &authv1.ApiKey{
+		Key:    "UIAPIKEY100",
+		Secret: "UIAPISECRET100",
+		LogicalClusters: []*authv1.ApiKey_Cluster{
+			&authv1.ApiKey_Cluster{Id: "lkc-cool1"},
+		},
+		UserId: 25,
+	}
+	KEY_STORE[101] = &authv1.ApiKey{
+		Key:    "UIAPIKEY101",
+		Secret: "UIAPISECRET101",
+		LogicalClusters: []*authv1.ApiKey_Cluster{
+			&authv1.ApiKey_Cluster{Id: "lkc-other1"},
+		},
+		UserId: 25,
+	}
+	KEY_STORE[102] = &authv1.ApiKey{
+		Key:    "UIAPIKEY102",
+		Secret: "UIAPISECRET102",
+		LogicalClusters: []*authv1.ApiKey_Cluster{
+			&authv1.ApiKey_Cluster{Id: "lksqlc-ksql1"},
+		},
+		UserId: 25,
+	}
+	KEY_STORE[103] = &authv1.ApiKey{
+		Key:    "UIAPIKEY103",
+		Secret: "UIAPISECRET103",
+		LogicalClusters: []*authv1.ApiKey_Cluster{
+			&authv1.ApiKey_Cluster{Id: "lkc-cool1"},
+		},
+		UserId: 25,
+	}
+}
+
 func serve(t *testing.T) *httptest.Server {
 	req := require.New(t)
 	mux := http.NewServeMux()
@@ -311,39 +410,30 @@ func serve(t *testing.T) *httptest.Server {
 	})
 	mux.HandleFunc("/api/api_keys", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
-			b, err := json.Marshal(&authv1.CreateApiKeyReply{
-				ApiKey: &authv1.ApiKey{
-					Key:    "MYKEY",
-					Secret: "MYSECRET",
-					LogicalClusters: []*authv1.ApiKey_Cluster{
-						&authv1.ApiKey_Cluster{Id: "bob"},
-					},
-					UserId: 23,
-				},
-			})
+			b, err := ioutil.ReadAll(r.Body)
+			require.NoError(t, err)
+			req := &authv1.CreateApiKeyRequest{}
+			err = json.Unmarshal(b, req)
+			require.NoError(t, err)
+			apiKey := req.ApiKey
+			apiKey.Id = int32(KEY_INDEX)
+			apiKey.Key = fmt.Sprintf("MYKEY%d", KEY_INDEX)
+			apiKey.Secret = fmt.Sprintf("MYSECRET%d", KEY_INDEX)
+			apiKey.UserId = 23
+			KEY_INDEX += 1
+			KEY_STORE[apiKey.Id] = apiKey
+			b, err = json.Marshal(&authv1.CreateApiKeyReply{ApiKey: apiKey})
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(b))
 			require.NoError(t, err)
 		} else if r.Method == "GET" {
-			b, err := json.Marshal(&authv1.GetApiKeysReply{
-				ApiKeys: []*authv1.ApiKey{
-					&authv1.ApiKey{
-						Key:    "MYKEY",
-						Secret: "MYSECRET",
-						LogicalClusters: []*authv1.ApiKey_Cluster{
-							&authv1.ApiKey_Cluster{Id: "bob"},
-						},
-						UserId: 23,
-					},
-					&authv1.ApiKey{
-						Key:    "MYKEY2",
-						Secret: "MYSECRET2",
-						LogicalClusters: []*authv1.ApiKey_Cluster{
-							&authv1.ApiKey_Cluster{Id: "abc"},
-						},
-						UserId: 23,
-					},
-				}})
+			var apiKeys []*authv1.ApiKey
+			for _, a := range KEY_STORE {
+				apiKeys = append(apiKeys, a)
+			}
+			// Return sorted data or the test output will not be stable
+			sort.Sort(ApiKeyList(apiKeys))
+			b, err := json.Marshal(&authv1.GetApiKeysReply{ApiKeys: apiKeys})
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(b))
 			require.NoError(t, err)
@@ -369,7 +459,7 @@ func serve(t *testing.T) *httptest.Server {
 		require.NoError(t, err)
 	})
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		_, err := io.WriteString(w, `{"error": "unexpected call to `+r.URL.Path+`"}`)
+		_, err := io.WriteString(w, `{"error": {"message": "unexpected call to `+r.URL.Path+`"}}`)
 		require.NoError(t, err)
 	})
 	return httptest.NewServer(mux)

@@ -12,6 +12,7 @@ import (
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 
 	acl_util "github.com/confluentinc/cli/internal/pkg/acl"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
@@ -20,10 +21,11 @@ type aclCommand struct {
 	*cobra.Command
 	config *config.Config
 	client ccloud.Kafka
+	ch     *pcmd.ConfigHelper
 }
 
 // NewACLCommand returns the Cobra command for Kafka ACL.
-func NewACLCommand(config *config.Config, client ccloud.Kafka) *cobra.Command {
+func NewACLCommand(config *config.Config, client ccloud.Kafka, ch *pcmd.ConfigHelper) *cobra.Command {
 	cmd := &aclCommand{
 		Command: &cobra.Command{
 			Use:   "acl",
@@ -31,6 +33,7 @@ func NewACLCommand(config *config.Config, client ccloud.Kafka) *cobra.Command {
 		},
 		config: config,
 		client: client,
+		ch:     ch,
 	}
 
 	cmd.init()
@@ -76,7 +79,12 @@ func (c *aclCommand) init() {
 func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
 	acl := parse(cmd)
 
-	cluster, err := c.config.KafkaCluster("")
+	environment, err := pcmd.GetEnvironment(cmd, c.config)
+	if err != nil {
+		return err
+	}
+
+	cluster, err := c.ch.KafkaCluster("", environment)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -94,7 +102,12 @@ func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
 func (c *aclCommand) create(cmd *cobra.Command, args []string) error {
 	acl := validateAddDelete(parse(cmd))
 
-	cluster, err := c.config.KafkaCluster("")
+	environment, err := pcmd.GetEnvironment(cmd, c.config)
+	if err != nil {
+		return err
+	}
+
+	cluster, err := c.ch.KafkaCluster("", environment)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -115,7 +128,12 @@ func (c *aclCommand) delete(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(acl.errors, cmd)
 	}
 
-	cluster, err := c.config.KafkaCluster("")
+	environment, err := pcmd.GetEnvironment(cmd, c.config)
+	if err != nil {
+		return err
+	}
+
+	cluster, err := c.ch.KafkaCluster("", environment)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
