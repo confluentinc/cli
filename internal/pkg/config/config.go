@@ -143,6 +143,25 @@ func (c *Config) Save() error {
 	return nil
 }
 
+// Binary returns the display name for the CLI
+func (c *Config) Name() string {
+	name := "Confluent CLI"
+	if c.CLIName == "ccloud" {
+		name = "Confluent Cloud CLI"
+	}
+	return name
+}
+
+// APIName returns the display name of the remote API
+// (e.g., Confluent Platform or Confluent Cloud)
+func (c *Config) APIName() string {
+	name := "Confluent Platform"
+	if c.CLIName == "ccloud" {
+		name = "Confluent Cloud"
+	}
+	return name
+}
+
 // Context returns the current Context object.
 func (c *Config) Context() (*Context, error) {
 	if c.CurrentContext == "" {

@@ -53,13 +53,9 @@ func newCommands(prerunner pcmd.PreRunner, config *config.Config, prompt pcmd.Pr
 }
 
 func (a *commands) init(prerunner pcmd.PreRunner) {
-	name := "Confluent Platform"
-	if a.config.CLIName == "ccloud" {
-		name = "Confluent Cloud"
-	}
 	loginCmd := &cobra.Command{
 		Use:   "login",
-		Short: fmt.Sprintf("Login to %s", name),
+		Short: fmt.Sprintf("Login to %s", a.config.APIName()),
 		RunE:  a.login,
 		Args:  cobra.NoArgs,
 	}
@@ -68,7 +64,7 @@ func (a *commands) init(prerunner pcmd.PreRunner) {
 	loginCmd.PersistentPreRunE = prerunner.Anonymous()
 	logoutCmd := &cobra.Command{
 		Use:   "logout",
-		Short: fmt.Sprintf("Logout of %s", name),
+		Short: fmt.Sprintf("Logout of %s", a.config.APIName()),
 		RunE:  a.logout,
 		Args:  cobra.NoArgs,
 	}

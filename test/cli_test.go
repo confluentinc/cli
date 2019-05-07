@@ -94,7 +94,7 @@ func (s *CLITestSuite) Test_Confluent_Help() {
 		{name: "no args", fixture: "confluent-help-flag.golden"},
 		{args: "help", fixture: "confluent-help.golden"},
 		{args: "--help", fixture: "confluent-help-flag.golden"},
-		{args: "version", fixture: "version.golden"},
+		{args: "version", fixture: "confluent-version.golden"},
 	}
 	for _, tt := range tests {
 		if tt.name == "" {
