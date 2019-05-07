@@ -12,6 +12,7 @@ import (
 	"unicode"
 
 	"github.com/client9/gospell"
+	"github.com/gobuffalo/flect"
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -184,12 +185,18 @@ func linters(cmd *cobra.Command) *multierror.Error {
 		issues = multierror.Append(issues, issue)
 	}
 
+	// check whether resource names are singular
+	if flect.Singularize(cmd.Use) != cmd.Use {
+		issue := fmt.Errorf("resource names should be singular for %s", cmd.Use)
+		issues = multierror.Append(issues, issue)
+	}
+
 	// check that help messages are consistent
 	if len(cmd.Short) < 13 {
 		issue := fmt.Errorf("short description is too short on %s - %s", fullCommand(cmd), cmd.Short)
 		issues = multierror.Append(issues, issue)
 	}
-	if len(cmd.Short) > 60 {
+	if len(cmd.Short) > 55 {
 		issue := fmt.Errorf("short description is too long on %s", fullCommand(cmd))
 		issues = multierror.Append(issues, issue)
 	}
@@ -212,9 +219,9 @@ func linters(cmd *cobra.Command) *multierror.Error {
 	chomped := strings.TrimRight(cmd.Long, "\n")
 	lines := strings.Split(cmd.Long, "\n")
 	if cmd.Long != "" && chomped[len(chomped)-1] != '.' {
-		lastLine := len(lines)-1
+		lastLine := len(lines) - 1
 		if lines[len(lines)-1] == "" {
-			lastLine = len(lines)-2
+			lastLine = len(lines) - 2
 		}
 		// ignore rule if last line is code block
 		if !strings.HasPrefix(lines[lastLine], "  ") {
@@ -233,7 +240,7 @@ func linters(cmd *cobra.Command) *multierror.Error {
 			if word[0] >= 'A' && word[0] <= 'Z' &&
 				word != "Apache" && word != "Kafka" &&
 				word != "CLI" && word != "API" && word != "ACL" && word != "ACLs" && word != "ALL" &&
-				word != "Confluent" && !(words[i] == "Confluent" && word == "Cloud") {
+				word != "Confluent" && !(words[i] == "Confluent" && word == "Cloud") && !(words[i] == "Confluent" && word == "Platform") {
 				issue := fmt.Errorf("don't title case short description on %s - %s", fullCommand(cmd), cmd.Short)
 				issues = multierror.Append(issues, issue)
 			}
