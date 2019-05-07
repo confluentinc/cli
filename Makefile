@@ -111,32 +111,12 @@ dist: download-licenses
 	  $(SHASUM) $(NAME)_$(VERSION)_* > $(NAME)_$(VERSION)_checksums.txt ; \
 	  $(SHASUM) $(NAME)_latest_* > $(NAME)_latest_checksums.txt
 
-.PHONY: dist-ccloud
-dist-ccloud:
-	make dist-stuff NAME=ccloud
-
-.PHONY: dist-confluent
-dist-confluent:
-	make dist-stuff NAME=confluent
-
-.PHONY: dist
-dist: dist-ccloud dist-confluent
-
-.PHONY: publish-stuff
-publish-stuff:
-	aws s3 cp dist/$(NAME)/ s3://confluent.cloud/$(NAME)-cli/archives/$(VERSION:v%=%)/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --include "*_checksums.txt" --exclude "*_latest_*" --acl public-read
-	aws s3 cp dist/$(NAME)/ s3://confluent.cloud/$(NAME)-cli/archives/latest/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --include "*_checksums.txt" --exclude "*_$(VERSION)_*" --acl public-read
-
-.PHONY: publish-ccloud
-publish-ccloud: dist-ccloud
-	make publish-stuff NAME=ccloud
-
-.PHONY: publish-confluent
-publish-confluent: dist-confluent
-	make publish-stuff NAME=confluent
-
 .PHONY: publish
-publish: publish-ccloud publish-confluent
+publish:
+	@for binary in ccloud confluent; do \
+		aws s3 cp dist/$(NAME)/ s3://confluent.cloud/$(NAME)-cli/archives/$(VERSION:v%=%)/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --include "*_checksums.txt" --exclude "*_latest_*" --acl public-read ; \
+		aws s3 cp dist/$(NAME)/ s3://confluent.cloud/$(NAME)-cli/archives/latest/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --include "*_checksums.txt" --exclude "*_$(VERSION)_*" --acl public-read ; \
+	done
 
 .PHONY: publish-installers
 ## Publish install scripts to S3. You MUST re-run this if/when you update any install script.
@@ -227,10 +207,10 @@ lint-installers:
 ## Scan and validate third-party dependeny licenses
 lint-licenses: build
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
-	@echo Licenses for ccloud binary
-	@GITHUB_TOKEN=$(token) golicense .golicense.hcl ./dist/ccloud/$(shell go env GOOS)_$(shell go env GOARCH)/ccloud
-	@echo Licenses for confluent binary
-	@GITHUB_TOKEN=$(token) golicense .golicense.hcl ./dist/confluent/$(shell go env GOOS)_$(shell go env GOARCH)/confluent
+	@for binary in ccloud confluent; do \
+		echo Licenses for $${binary} binary ; \
+		GITHUB_TOKEN=$(token) golicense .golicense.hcl ./dist/$${binary}/$(shell go env GOOS)_$(shell go env GOARCH)/$${binary} ; \
+	done
 
 .PHONY: coverage
 coverage:
