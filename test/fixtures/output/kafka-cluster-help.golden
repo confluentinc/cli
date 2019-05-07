@@ -4,14 +4,12 @@ Usage:
   ccloud kafka cluster [command]
 
 Available Commands:
-  auth        Configure authorization for a Kafka cluster
   describe    Describe a Kafka cluster
   list        List Kafka clusters
   use         Make the Kafka cluster active for use in other commands
 
 Flags:
-      --environment string   ID of the environment in which to run the command
-  -h, --help                 help for cluster
+  -h, --help   help for cluster
 
 Global Flags:
   -v, --verbose count   increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace)

@@ -48,7 +48,7 @@ func aclEntryFlags() *pflag.FlagSet {
 func resourceFlags() *pflag.FlagSet {
 	flgSet := pflag.NewFlagSet("acl-resource", pflag.ExitOnError)
 	//flgSet.String("cluster", "", "Kafka cluster ID")
-	flgSet.Bool("cluster", false, "Set cluster resource")
+	flgSet.Bool("cluster-scope", false, "Set cluster resource")
 	flgSet.String("topic", "", "Set topic resource")
 	flgSet.String("consumer-group", "", "Set consumer-group resource")
 	flgSet.String("transactional-id", "", "Set transactional-id resource")
@@ -78,10 +78,10 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 		switch n := flag.Name; n {
 		case "consumer-group":
 			setResourcePattern(conf, "GROUP", v)
-		case "cluster":
+		case "cluster-scope":
 			// The only valid name for a cluster is kafka-cluster
 			// https://github.com/confluentinc/cc-kafka/blob/88823c6016ea2e306340938994d9e122abf3c6c0/core/src/main/scala/kafka/security/auth/Resource.scala#L24
-			setResourcePattern(conf, n, "kafka-cluster")
+			setResourcePattern(conf, "cluster", "kafka-cluster")
 		case "topic":
 			fallthrough
 		case "delegation-token":
@@ -143,6 +143,9 @@ OUTER:
 		}
 		if v == "GROUP" {
 			v = "consumer-group"
+		}
+		if v == "CLUSTER" {
+			v = "cluster-scope"
 		}
 		v = strings.Replace(v, "_", "-", -1)
 		ops = append(ops, strings.ToLower(v))

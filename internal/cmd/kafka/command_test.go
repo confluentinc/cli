@@ -8,12 +8,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/spf13/cobra"
-
+	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/confluentinc/ccloud-sdk-go/mock"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
+	"github.com/spf13/cobra"
 
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -28,7 +29,7 @@ var resourcePatterns = []struct {
 	pattern *kafkav1.ResourcePatternConfig
 }{
 	{
-		args: []string{"--cluster"},
+		args: []string{"--cluster-scope"},
 		pattern: &kafkav1.ResourcePatternConfig{ResourceType: kafkav1.ResourceTypes_CLUSTER, Name: "kafka-cluster",
 			PatternType: kafkav1.PatternTypes_LITERAL},
 	},
@@ -265,7 +266,7 @@ func TestListResourcePrincipalFilterACL(t *testing.T) {
 }
 
 func TestMultipleResourceACL(t *testing.T) {
-	expect := "exactly one of"
+	expect := "exactly one of cluster-scope, consumer-group, topic, transactional-id must be set"
 	args := []string{"acl", "create", "--allow", "--operation", "read", "--service-account-id", "42",
 		"--topic", "resource1", "--consumer-group", "resource2"}
 
@@ -274,9 +275,7 @@ func TestMultipleResourceACL(t *testing.T) {
 
 	err := cmd.Execute()
 	if !strings.Contains(err.Error(), expect) {
-		t.Logf("expected: %s got: %s", expect, err.Error())
-		t.Fail()
-		return
+		t.Errorf("expected: %s got: %s", expect, err.Error())
 	}
 }
 
@@ -399,7 +398,7 @@ func TestDefaults(t *testing.T) {
 	}
 
 	cmd = NewCMD(expect)
-	cmd.SetArgs([]string{"acl", "create", "--cluster", "--allow", "--service-account-id", "42",
+	cmd.SetArgs([]string{"acl", "create", "--cluster-scope", "--allow", "--service-account-id", "42",
 		"--operation", "read"})
 
 	go func() {
@@ -419,11 +418,12 @@ func TestDefaults(t *testing.T) {
 /*************** TEST command_cluster ***************/
 // TODO: do this for all commands/subcommands... and for all common error messages
 func Test_HandleError_NotLoggedIn(t *testing.T) {
-	cmd := New(&cliMock.Commander{}, conf, &mock.Kafka{
+	kafka := &mock.Kafka{
 		ListFunc: func(ctx context.Context, cluster *kafkav1.KafkaCluster) ([]*kafkav1.KafkaCluster, error) {
 			return nil, errors.ErrUnauthorized
 		},
-	})
+	}
+	cmd := New(&cliMock.Commander{}, conf, kafka, &pcmd.ConfigHelper{Config: conf, Client: &ccloud.Client{Kafka: kafka}})
 	cmd.PersistentFlags().CountP("verbose", "v", "increase output verbosity")
 	cmd.SetArgs(append([]string{"cluster", "list"}))
 	buf := new(bytes.Buffer)
@@ -438,7 +438,8 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 
 /*************** TEST setup/helpers ***************/
 func NewCMD(expect chan interface{}) *cobra.Command {
-	cmd := New(&cliMock.Commander{}, conf, cliMock.NewKafkaMock(expect))
+	kafka := cliMock.NewKafkaMock(expect)
+	cmd := New(&cliMock.Commander{}, conf, kafka, &pcmd.ConfigHelper{Config: conf, Client: &ccloud.Client{Kafka: kafka}})
 	cmd.PersistentFlags().CountP("verbose", "v", "increase output verbosity")
 
 	return cmd
@@ -462,8 +463,7 @@ func initContext(cfg *config.Config) {
 	name := fmt.Sprintf("login-%s-%s", user.User.Email, cfg.AuthURL)
 
 	cfg.Platforms[name] = &config.Platform{
-		Server:        cfg.AuthURL,
-		KafkaClusters: map[string]config.KafkaClusterConfig{name: {}},
+		Server: cfg.AuthURL,
 	}
 
 	cfg.Credentials[name] = &config.Credential{
@@ -471,9 +471,10 @@ func initContext(cfg *config.Config) {
 	}
 
 	cfg.Contexts[name] = &config.Context{
-		Platform:   name,
-		Credential: name,
-		Kafka:      name,
+		Platform:      name,
+		Credential:    name,
+		KafkaClusters: map[string]*config.KafkaClusterConfig{name: {}},
+		Kafka:         name,
 	}
 
 	cfg.CurrentContext = name

@@ -1,4 +1,4 @@
-Manage your Confluent Platform
+Manage your Confluent Platform.
 
 Usage:
   confluent [command]
@@ -7,8 +7,8 @@ Available Commands:
   completion  Output shell completion code
   help        Help about any command
   local       Manage local Confluent development environment
-  login       Login to Confluent Cloud
-  logout      Logout of Confluent Cloud
+  login       Login to Confluent Platform
+  logout      Logout of Confluent Platform
   update      Update confluent
   version     Print the ccloud version
 

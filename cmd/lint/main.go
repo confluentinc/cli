@@ -7,10 +7,12 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"regexp"
 	"strings"
 	"unicode"
 
 	"github.com/client9/gospell"
+	"github.com/gobuffalo/flect"
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -22,9 +24,10 @@ import (
 )
 
 var (
-	debug   = flag.Bool("debug", false, "print debug output")
-	affFile = flag.String("aff-file", "", "hunspell .aff file")
-	dicFile = flag.String("dic-file", "", "hunspell .dic file")
+	debug    = flag.Bool("debug", false, "print debug output")
+	affFile  = flag.String("aff-file", "", "hunspell .aff file")
+	dicFile  = flag.String("dic-file", "", "hunspell .dic file")
+	alnum, _ = regexp.Compile("[^a-zA-Z0-9]+")
 
 	vocab *gospell.GoSpell
 )
@@ -107,7 +110,9 @@ func linters(cmd *cobra.Command) *multierror.Error {
 				// skip ACLs which don't have an identity (value objects rather than entities)
 				!strings.Contains(fullCommand(cmd), "kafka acl") &&
 				// skip api-key create since you don't get to choose a name for API keys
-				!strings.Contains(fullCommand(cmd), "api-key create") {
+				!strings.Contains(fullCommand(cmd), "api-key create") &&
+				// skip local which delegates to bash commands
+				!strings.Contains(fullCommand(cmd), "local") {
 
 				// check whether arg parsing is setup correctly
 				if reflect.ValueOf(cmd.Args).Pointer() != reflect.ValueOf(cobra.ExactArgs(1)).Pointer() {
@@ -122,7 +127,9 @@ func linters(cmd *cobra.Command) *multierror.Error {
 						issues = multierror.Append(issues, issue)
 					}
 				} else if cmd.Parent().Use == "api-key" {
-					if !strings.HasSuffix(cmd.Use, "KEY") {
+					if !strings.HasSuffix(cmd.Use, "KEY") &&
+						// skip for api-key store command
+						!strings.HasPrefix(cmd.Use, "store") {
 						issue := fmt.Errorf("bad usage string: must have KEY in %s", fullCommand(cmd))
 						issues = multierror.Append(issues, issue)
 					}
@@ -130,7 +137,6 @@ func linters(cmd *cobra.Command) *multierror.Error {
 					// check for "create NAME" and "<verb> ID" elsewhere
 					if strings.HasPrefix(cmd.Use, "create ") {
 						if !strings.HasSuffix(cmd.Use, "NAME") {
-							fmt.Println(cmd.Use)
 							issue := fmt.Errorf("bad usage string: must have NAME in %s", fullCommand(cmd))
 							issues = multierror.Append(issues, issue)
 						}
@@ -142,10 +148,11 @@ func linters(cmd *cobra.Command) *multierror.Error {
 			}
 
 			// check whether --cluster override flag is available
-			if cmd.Parent().Use != "environment" && cmd.Parent().Use != "service-account" &&
+			if cmd.Parent().Use != "environment" && cmd.Parent().Use != "service-account" && cmd.Use != "local" &&
 				// these all require explicit cluster as id/name args
 				!strings.Contains(fullCommand(cmd), "kafka cluster") &&
 				// this doesn't need a --cluster override since you provide the api key itself to identify it
+				!strings.Contains(fullCommand(cmd), "api-key update") &&
 				!strings.Contains(fullCommand(cmd), "api-key delete") {
 				f := cmd.Flag("cluster")
 				if f == nil {
@@ -179,12 +186,25 @@ func linters(cmd *cobra.Command) *multierror.Error {
 		issues = multierror.Append(issues, issue)
 	}
 
+	// check whether commands are all lower case
+	command := strings.Split(cmd.Use, " ")[0]
+	if strings.ToLower(command) != command {
+		issue := fmt.Errorf("commands should be lower case for %s", command)
+		issues = multierror.Append(issues, issue)
+	}
+
+	// check whether resource names are singular
+	if flect.Singularize(cmd.Use) != cmd.Use {
+		issue := fmt.Errorf("resource names should be singular for %s", cmd.Use)
+		issues = multierror.Append(issues, issue)
+	}
+
 	// check that help messages are consistent
 	if len(cmd.Short) < 13 {
 		issue := fmt.Errorf("short description is too short on %s - %s", fullCommand(cmd), cmd.Short)
 		issues = multierror.Append(issues, issue)
 	}
-	if len(cmd.Short) > 43 {
+	if len(cmd.Short) > 55 {
 		issue := fmt.Errorf("short description is too long on %s", fullCommand(cmd))
 		issues = multierror.Append(issues, issue)
 	}
@@ -204,12 +224,18 @@ func linters(cmd *cobra.Command) *multierror.Error {
 		issue := fmt.Errorf("long description should start with a capital on %s", fullCommand(cmd))
 		issues = multierror.Append(issues, issue)
 	}
+	chomped := strings.TrimRight(cmd.Long, "\n")
 	lines := strings.Split(cmd.Long, "\n")
-	if cmd.Long != "" && cmd.Long[len(cmd.Long)-1] != '.' &&
+	if cmd.Long != "" && chomped[len(chomped)-1] != '.' {
+		lastLine := len(lines) - 1
+		if lines[len(lines)-1] == "" {
+			lastLine = len(lines) - 2
+		}
 		// ignore rule if last line is code block
-		(!strings.HasPrefix(lines[len(lines)-2], "  ")) {
-		issue := fmt.Errorf("long description should end with punctuation on %s", fullCommand(cmd))
-		issues = multierror.Append(issues, issue)
+		if !strings.HasPrefix(lines[lastLine], "  ") {
+			issue := fmt.Errorf("long description should end with punctuation on %s", fullCommand(cmd))
+			issues = multierror.Append(issues, issue)
+		}
 	}
 	if strings.Contains(cmd.Long, "kafka") {
 		issue := fmt.Errorf("long description should capitalize Kafka on %s", fullCommand(cmd))
@@ -218,9 +244,11 @@ func linters(cmd *cobra.Command) *multierror.Error {
 	// TODO: this is an _awful_ IsTitleCase heuristic
 	if words := strings.Split(cmd.Short, " "); len(words) > 1 {
 		for i, word := range words[1:] {
+			word = alnum.ReplaceAllString(word, "") // Remove any punctuation before comparison
 			if word[0] >= 'A' && word[0] <= 'Z' &&
-				word != "Kafka" && word != "CLI" && word != "API" && word != "ACL" && word != "ACLs" && word != "ALL" &&
-				word != "Confluent" && !(words[i] == "Confluent" && word == "Cloud") {
+				word != "Apache" && word != "Kafka" &&
+				word != "CLI" && word != "API" && word != "ACL" && word != "ACLs" && word != "ALL" &&
+				word != "Confluent" && !(words[i] == "Confluent" && word == "Cloud") && !(words[i] == "Confluent" && word == "Platform") {
 				issue := fmt.Errorf("don't title case short description on %s - %s", fullCommand(cmd), cmd.Short)
 				issues = multierror.Append(issues, issue)
 			}
@@ -256,7 +284,7 @@ func linters(cmd *cobra.Command) *multierror.Error {
 			if !unicode.IsLetter(l) {
 				if l == '-' {
 					countDashes++
-					// Even 2 is too long... service-account-id is the one exceptional we'll allow for now
+					// Even 2 is too long... service-account-id is the one exception we'll allow for now
 					if countDashes > 1 && pf.Name != "service-account-id" {
 						issue := fmt.Errorf("flag name must only have one dash for %s on %s", pf.Name, fullCommand(cmd))
 						issues = multierror.Append(issues, issue)

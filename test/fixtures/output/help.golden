@@ -1,4 +1,4 @@
-Manage your Confluent Cloud
+Manage your Confluent Cloud.
 
 Usage:
   ccloud [command]
@@ -8,7 +8,7 @@ Available Commands:
   completion      Output shell completion code
   environment     Manage and select ccloud environments
   help            Help about any command
-  kafka           Manage Kafka
+  kafka           Manage Apache Kafka
   login           Login to Confluent Cloud
   logout          Logout of Confluent Cloud
   service-account Manage service accounts

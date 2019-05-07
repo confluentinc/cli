@@ -8,18 +8,41 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/config"
 )
 
-func GetKafkaCluster(cmd *cobra.Command, cfg *config.Config) (*kafkav1.KafkaCluster, error) {
+func GetKafkaCluster(cmd *cobra.Command, ch *ConfigHelper) (*kafkav1.KafkaCluster, error) {
 	clusterID, err := cmd.Flags().GetString("cluster")
 	if err != nil {
 		return nil, err
 	}
-	return cfg.KafkaCluster(clusterID)
+	environment, err := GetEnvironment(cmd, ch.Config)
+	if err != nil {
+		return nil, err
+	}
+	return ch.KafkaCluster(clusterID, environment)
 }
 
-func GetKafkaClusterConfig(cmd *cobra.Command, cfg *config.Config) (config.KafkaClusterConfig, error) {
+func GetKafkaClusterConfig(cmd *cobra.Command, ch *ConfigHelper) (*config.KafkaClusterConfig, error) {
 	clusterID, err := cmd.Flags().GetString("cluster")
 	if err != nil {
-		return config.KafkaClusterConfig{}, err
+		return nil, err
 	}
-	return cfg.KafkaClusterConfig(clusterID)
+	environment, err := GetEnvironment(cmd, ch.Config)
+	if err != nil {
+		return nil, err
+	}
+	return ch.KafkaClusterConfig(clusterID, environment)
+}
+
+func GetEnvironment(cmd *cobra.Command, cfg *config.Config) (string, error) {
+	var environment string
+	if cmd.Flags().Lookup("environment") != nil {
+		var err error
+		environment, err = cmd.Flags().GetString("environment")
+		if err != nil {
+			return "", err
+		}
+	}
+	if environment == "" {
+		environment = cfg.Auth.Account.Id
+	}
+	return environment, nil
 }

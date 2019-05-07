@@ -1,4 +1,5 @@
 credentials: ""
 kafka_cluster: bob
+kafka_clusters: null
 platform: ""
 

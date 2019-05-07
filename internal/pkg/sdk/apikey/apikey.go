@@ -28,6 +28,12 @@ func (c *APIKey) Create(ctx context.Context, key *authv1.ApiKey) (*authv1.ApiKey
 	return ret, errors.ConvertAPIError(err)
 }
 
+func (c *APIKey) Update(ctx context.Context, key *authv1.ApiKey) error {
+	c.Logger.Log("msg", "apiKey.Update()")
+	err := c.Client.APIKey.Update(ctx, key)
+	return errors.ConvertAPIError(err)
+}
+
 func (c *APIKey) Delete(ctx context.Context, key *authv1.ApiKey) error {
 	c.Logger.Log("msg", "apiKey.Delete()")
 	err := c.Client.APIKey.Delete(ctx, key)
@@ -37,5 +43,11 @@ func (c *APIKey) Delete(ctx context.Context, key *authv1.ApiKey) error {
 func (c *APIKey) List(ctx context.Context, key *authv1.ApiKey) ([]*authv1.ApiKey, error) {
 	c.Logger.Log("msg", "apiKey.List()")
 	ret, err := c.Client.APIKey.List(ctx, key)
+	return ret, errors.ConvertAPIError(err)
+}
+
+func (c *APIKey) Get(ctx context.Context, key *authv1.ApiKey) (*authv1.ApiKey, error) {
+	c.Logger.Log("msg", "apiKey.Get()")
+	ret, err := c.Client.APIKey.Get(ctx, key)
 	return ret, errors.ConvertAPIError(err)
 }

@@ -9,6 +9,7 @@ override = {
   "github.com/gogo/protobuf": "BSD-3-Clause",
   "github.com/ghodss/yaml": "MIT",
   "github.com/rcrowley/go-metrics": "BSD-2-Clause",
+  "github.com/magiconair/properties": "BSD-2-Clause",
 
   // These aren't true (yet) but they prevent us from erroring out on proprietary bits for now
   "github.com/confluentinc/ccloud-sdk-go": "Apache-2.0",
