@@ -12,7 +12,7 @@ import (
 const longDescription = `You can test Confluent Platform by running a single-node instance locally on
 your laptop or desktop. THESE LOCAL COMMANDS ARE NOT INTENDED FOR PRODUCTION SETUP.
 
-The CLI "local"" commands help you manage and interact with this installation
+The CLI "local" commands help you manage and interact with this installation
 for exploring, testing, experimenting, and otherwise familiarizing yourself
 with Confluent Platform.
 
