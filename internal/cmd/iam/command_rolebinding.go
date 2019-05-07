@@ -3,9 +3,9 @@ package iam
 import (
 	"github.com/spf13/cobra"
 
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	//"github.com/confluentinc/go-printer"
 	"context"
 	mds "github.com/confluentinc/mds-sdk-go"
@@ -22,17 +22,19 @@ var (
 type rolebindingCommand struct {
 	*cobra.Command
 	config *config.Config
+	ch     *pcmd.ConfigHelper
 	client *mds.APIClient
 }
 
 // NewRolebindingCommand returns the sub-command object for interacting with RBAC rolebindings.
-func NewRolebindingCommand(config *config.Config, client *mds.APIClient) *cobra.Command {
+func NewRolebindingCommand(config *config.Config, ch *pcmd.ConfigHelper, client *mds.APIClient) *cobra.Command {
 	cmd := &rolebindingCommand{
 		Command: &cobra.Command{
 			Use:   "Rolebinding",
 			Short: "Manage RBAC/IAM rolebindings",
 		},
 		config: config,
+		ch:     ch,
 		client: client,
 	}
 
@@ -110,7 +112,7 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	cluster, err := pcmd.GetKafkaCluster(cmd, c.config)
+	cluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -143,7 +145,7 @@ func (c *rolebindingCommand) delete(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	cluster, err := pcmd.GetKafkaCluster(cmd, c.config)
+	cluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}

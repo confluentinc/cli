@@ -17,7 +17,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go v0.0.7-0.20190507021705-ce766a09e718
 	github.com/confluentinc/ccloudapis v0.0.0-20190430183816-9fe8ee16d070
 	github.com/confluentinc/go-editor v0.4.0
-	github.com/confluentinc/go-printer v0.10.0 // indirect
+	github.com/confluentinc/go-printer v0.10.0
 	github.com/confluentinc/mds-sdk-go v0.0.0-20190408235126-e472f6157a7c
 	github.com/confluentinc/protoc-gen-ccloud v0.0.1 // indirect
 	github.com/cpuguy83/go-md2man v1.0.10 // indirect
