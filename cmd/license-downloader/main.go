@@ -90,12 +90,21 @@ func main() {
 }
 
 func (g *LicenseDownloader) Run(ctx context.Context) error {
+	// We both remove any existing files and create any missing parent directories for licenses and notices
 	licenseDir := filepath.Dir(fmt.Sprintf(g.LicenseFmt, "example", "example"))
-	err := os.MkdirAll(licenseDir, os.ModePerm)
+	err := os.RemoveAll(licenseDir)
+	if err != nil {
+		return err
+	}
+	err = os.MkdirAll(licenseDir, os.ModePerm)
 	if err != nil {
 		return err
 	}
 	noticeDir := filepath.Dir(fmt.Sprintf(g.NoticeFmt, "example", "example"))
+	err = os.RemoveAll(noticeDir)
+	if err != nil {
+		return err
+	}
 	err = os.MkdirAll(noticeDir, os.ModePerm)
 	if err != nil {
 		return err
