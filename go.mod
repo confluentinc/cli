@@ -39,6 +39,7 @@ require (
 	github.com/golangci/tools v0.0.0-20180902102414-2cefd77fef9b // indirect
 	github.com/google/btree v1.0.0 // indirect
 	github.com/google/go-cmp v0.3.0 // indirect
+	github.com/google/go-github/v25 v25.0.2
 	github.com/google/pprof v0.0.0-20190502144155-8358a9778bd1 // indirect
 	github.com/google/uuid v1.1.0
 	github.com/goreleaser/goreleaser v0.106.0
@@ -56,7 +57,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/golicense v0.1.1
 	github.com/neurosnap/sentences v1.0.6 // indirect
-	github.com/olekukonko/tablewriter v0.0.0-20180912035003-be2c049b30cc // indirect
+	github.com/olekukonko/tablewriter v0.0.0-20180912035003-be2c049b30cc
 	github.com/onsi/ginkgo v1.7.0 // indirect
 	github.com/onsi/gomega v1.4.3 // indirect
 	github.com/pascaldekloe/goe v0.0.0-20180627143212-57f6aae5913c // indirect
@@ -78,7 +79,7 @@ require (
 	golang.org/x/lint v0.0.0-20190409202823-959b441ac422 // indirect
 	golang.org/x/mobile v0.0.0-20190415191353-3e0bab5405d6 // indirect
 	golang.org/x/net v0.0.0-20190503192946-f4e77d36d62c // indirect
-	golang.org/x/oauth2 v0.0.0-20190402181905-9f3314589c9a // indirect
+	golang.org/x/oauth2 v0.0.0-20190402181905-9f3314589c9a
 	golang.org/x/sys v0.0.0-20190502175342-a43fa875dd82 // indirect
 	golang.org/x/text v0.3.2 // indirect
 	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4 // indirect

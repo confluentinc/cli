@@ -1,4 +1,4 @@
-    Key    | Owner  
-+----------+-------+
-    MYKEY1 |    12  
-    MYKEY3 |    23  
+    Key    | Owner | Description  
++----------+-------+-------------+
+    MYKEY1 |    12 |              
+    MYKEY3 |    23 |              
