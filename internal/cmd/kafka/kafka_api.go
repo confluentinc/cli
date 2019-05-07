@@ -144,6 +144,9 @@ OUTER:
 		if v == "GROUP" {
 			v = "consumer-group"
 		}
+		if v == "CLUSTER" {
+			v = "cluster-scope"
+		}
 		v = strings.Replace(v, "_", "-", -1)
 		ops = append(ops, strings.ToLower(v))
 	}
