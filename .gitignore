@@ -1,5 +1,6 @@
 bin/
 dist/
+legal/
 
 # We auto-publish these to github.com/confluentinc/docs via CI and don't want them stored in this repo
 docs/**/*.rst
