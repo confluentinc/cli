@@ -131,13 +131,10 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	}
 	if cluster == nil {
 		cluster, err = c.config.KafkaCluster("")
-		fmt.Println("HERE1")
-		fmt.Println(cluster)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
 	}
-	fmt.Println(cluster)
 
 	userId, err := cmd.Flags().GetInt32("service-account-id")
 	if err != nil {
@@ -158,8 +155,6 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		AccountId:       c.config.Auth.Account.Id,
 		LogicalClusters: []*authv1.ApiKey_Cluster{{Id: cluster.Id}},
 	}
-
-	fmt.Println(key)
 
 	userKey, err := c.client.Create(context.Background(), key)
 	if err != nil {
@@ -189,8 +184,6 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 
 	key.Description = description
-
-	fmt.Println("HERE3")
 
 	err = c.client.Update(context.Background(), key)
 	if err != nil {
