@@ -70,28 +70,31 @@ gorelease:
 .PHONY: download-licenses
 download-licenses:
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
-	@echo Downloading third-party licenses for ccloud binary
-	@GITHUB_TOKEN=$(token) golicense .golicense.hcl ./dist/ccloud/$(shell go env GOOS)_$(shell go env GOARCH)/ccloud | go run cmd/license-downloader/main.go -l legal/ccloud/licenses -n legal/ccloud/notices
-	@echo Downloading third-party licenses for confluent binary
-	@GITHUB_TOKEN=$(token) golicense .golicense.hcl ./dist/confluent/$(shell go env GOOS)_$(shell go env GOARCH)/confluent | go run cmd/license-downloader/main.go -l legal/confluent/licenses -n legal/confluent/notices
+	@for binary in ccloud confluent; do \
+		echo Downloading third-party licenses for $${binary} binary ; \
+		GITHUB_TOKEN=$(token) golicense .golicense.hcl ./dist/$${binary}/$(shell go env GOOS)_$(shell go env GOARCH)/$${binary} | go run cmd/license-downloader/main.go -l legal/$${binary}/licenses -n legal/$${binary}/notices ; \
+		[ -z "$$(ls -A legal/$${binary}/licenses)" ] && rmdir legal/$${binary}/licenses ; \
+		[ -z "$$(ls -A legal/$${binary}/notices)" ] && rmdir legal/$${binary}/notices ; \
+	done
 
 .PHONY: dist
 dist: #download-licenses
 	@# unfortunately goreleaser only supports one archive right now (either tar/zip or binaries): https://github.com/goreleaser/goreleaser/issues/705
 	@# we had goreleaser upload binaries (they're uncompressed, so goreleaser's parallel uploads will save more time with binaries than archives)
 	@for binary in ccloud confluent; do \
-		for os in `find dist/$${binary} -type d -mindepth 1 -maxdepth 1 | awk -F'/' '{ print $$3 }' | awk -F'_' '{ print $$1 }'`; do \
-			for arch in amd64 386; do \
+		for os in $$(find dist/$${binary} -type d -mindepth 1 -maxdepth 1 | awk -F'/' '{ print $$3 }' | awk -F'_' '{ print $$1 }'); do \
+			for arch in $$(find dist/$${binary} -type d -mindepth 1 -maxdepth 1 -iname $${os}_* | awk -F'/' '{ print $$3 }' | awk -F'_' '{ print $$2 }'); do \
 				if [ "$${os}" = "darwin" ] && [ "$${arch}" = "386" ] ; then \
 					continue ; \
 				fi; \
+				[ "$${os}" = "windows" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
 				rm -rf /tmp/$${binary} && mkdir /tmp/$${binary} ; \
 				cp LICENSE /tmp/${binary} && cp -r legal/$${binary} /tmp/$${binary}/legal ; \
-				cp dist/$${binary}/$${os}_$${arch}/$${binary} /tmp/$${binary} ; \
+				cp dist/$${binary}/$${os}_$${arch}/$${binexe} /tmp/$${binary} ; \
 				suffix="" ; \
 				if [ "$${os}" = "windows" ] ; then \
 					suffix=zip ; \
-					zip -qr dist/$${binary}/$${binary}_$(VERSION)_$${os}_$${arch}.$${suffix} /tmp/$${binary} ; \
+					cd /tmp && zip -qr $${binary}.$${suffix} $${binary} && cd - && mv /tmp/$${binary}.$${suffix} dist/$${binary}/$${binary}_$(VERSION)_$${os}_$${arch}.$${suffix}; \
 				else \
 					suffix=tar.gz ; \
 					tar -czf dist/$${binary}/$${binary}_$(VERSION)_$${os}_$${arch}.$${suffix} -C /tmp $${binary} ; \
