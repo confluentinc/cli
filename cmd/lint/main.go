@@ -152,6 +152,7 @@ func linters(cmd *cobra.Command) *multierror.Error {
 				// these all require explicit cluster as id/name args
 				!strings.Contains(fullCommand(cmd), "kafka cluster") &&
 				// this doesn't need a --cluster override since you provide the api key itself to identify it
+				!strings.Contains(fullCommand(cmd), "api-key update") &&
 				!strings.Contains(fullCommand(cmd), "api-key delete") {
 				f := cmd.Flag("cluster")
 				if f == nil {
