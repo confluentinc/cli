@@ -192,12 +192,6 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	if cluster == nil {
-		cluster, err = c.config.KafkaCluster("")
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-	}
 
 	userId, err := cmd.Flags().GetInt32("service-account-id")
 	if err != nil {
