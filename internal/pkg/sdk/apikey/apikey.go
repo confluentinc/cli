@@ -2,6 +2,7 @@ package apikey
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
@@ -31,6 +32,7 @@ func (c *APIKey) Create(ctx context.Context, key *authv1.ApiKey) (*authv1.ApiKey
 func (c *APIKey) Update(ctx context.Context, key *authv1.ApiKey) error {
 	c.Logger.Log("msg", "apiKey.Update()")
 	err := c.Client.APIKey.Update(ctx, key)
+	fmt.Println(key)
 	return errors.ConvertAPIError(err)
 }
 

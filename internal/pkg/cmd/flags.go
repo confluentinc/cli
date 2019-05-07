@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/spf13/cobra"
 
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
@@ -13,6 +14,7 @@ func GetKafkaCluster(cmd *cobra.Command, cfg *config.Config) (*kafkav1.KafkaClus
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("got " + clusterID)
 	return cfg.KafkaCluster(clusterID)
 }
 

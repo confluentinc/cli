@@ -129,10 +129,22 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
+	if cluster == nil {
+		cluster, err = c.config.KafkaCluster("")
+		fmt.Println("HERE1")
+		fmt.Println(cluster)
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+	}
+	fmt.Println(cluster)
 
 	userId, err := cmd.Flags().GetInt32("service-account-id")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
+	}
+	if userId == 0 {
+		userId = c.config.Auth.User.Id
 	}
 
 	description, err := cmd.Flags().GetString("description")
@@ -146,6 +158,8 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		AccountId:       c.config.Auth.Account.Id,
 		LogicalClusters: []*authv1.ApiKey_Cluster{{Id: cluster.Id}},
 	}
+
+	fmt.Println(key)
 
 	userKey, err := c.client.Create(context.Background(), key)
 	if err != nil {
@@ -164,7 +178,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	id, err := getApiKeyId(apiKeys, apiKey)
+	_, key, err := getAPIKeyByKey(apiKeys, apiKey)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -174,11 +188,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	key := &authv1.ApiKey{
-		Id:          id,
-		AccountId:   c.config.Auth.Account.Id,
-		Description: description,
-	}
+	key.Description = description
 
 	fmt.Println("HERE3")
 
@@ -189,20 +199,25 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func getApiKeyId(apiKeys []*authv1.ApiKey, apiKey string) (int32, error) {
+func getAPIKeyByKey(apiKeys []*authv1.ApiKey, apiKey string) (int32, *authv1.ApiKey, error) {
 	var id int32
-	for _, key := range apiKeys {
-		if key.Key == apiKey {
-			id = key.Id
+	var key *authv1.ApiKey
+	for _, _key := range apiKeys {
+		if _key.Key == apiKey {
+			id = _key.Id
+			key = _key
 			break
 		}
 	}
 
 	if id == 0 {
-		return id, fmt.Errorf(" Invalid Key")
+		return id, nil, fmt.Errorf(" Invalid Key")
 	}
 
-	return id, nil
+	key.Modified = nil
+	key.Created = nil
+
+	return id, key, nil
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
@@ -213,14 +228,9 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	id, err := getApiKeyId(apiKeys, apiKey)
+	_, key, err := getAPIKeyByKey(apiKeys, apiKey)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
-	}
-
-	key := &authv1.ApiKey{
-		Id:        id,
-		AccountId: c.config.Auth.Account.Id,
 	}
 
 	err = c.client.Delete(context.Background(), key)

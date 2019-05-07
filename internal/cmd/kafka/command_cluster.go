@@ -296,6 +296,7 @@ func (c *clusterCommand) auth(cmd *cobra.Command, args []string) error {
 		c.config.Platforms[cfg.Platform].KafkaClusters = map[string]config.KafkaClusterConfig{}
 	}
 	c.config.Platforms[cfg.Platform].KafkaClusters[cfg.Kafka] = config.KafkaClusterConfig{
+		ID:          kc.Id,
 		Bootstrap:   strings.TrimPrefix(kc.Endpoint, "SASL_SSL://"),
 		APIEndpoint: kc.ApiEndpoint,
 		APIKey:      key,
