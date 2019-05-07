@@ -27,7 +27,7 @@ require (
 	github.com/flynn/go-shlex v0.0.0-20150515145356-3f9db97f8568 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/gliderlabs/ssh v0.1.4 // indirect
-	github.com/gobuffalo/flect v0.1.3 // indirect
+	github.com/gobuffalo/flect v0.1.3
 	github.com/gogo/protobuf v1.2.1 // indirect
 	github.com/golang/mock v1.2.0
 	github.com/golang/protobuf v1.2.1-0.20181128192352-1d3f30b51784
