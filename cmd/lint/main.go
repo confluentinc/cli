@@ -185,6 +185,13 @@ func linters(cmd *cobra.Command) *multierror.Error {
 		issues = multierror.Append(issues, issue)
 	}
 
+	// check whether commands are all lower case
+	command := strings.Split(cmd.Use, " ")[0]
+	if strings.ToLower(command) != command {
+		issue := fmt.Errorf("commands should be lower case for %s", command)
+		issues = multierror.Append(issues, issue)
+	}
+
 	// check whether resource names are singular
 	if flect.Singularize(cmd.Use) != cmd.Use {
 		issue := fmt.Errorf("resource names should be singular for %s", cmd.Use)
