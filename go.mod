@@ -36,7 +36,7 @@ require (
 	github.com/golangci/golangci-lint v1.16.0
 	github.com/golangci/gosec v0.0.0-20180901114220-8afd9cbb6cfb // indirect
 	github.com/golangci/tools v0.0.0-20180902102414-2cefd77fef9b // indirect
-	github.com/google/go-github/v25 v25.0.2 // indirect
+	github.com/google/go-github/v25 v25.0.2
 	github.com/google/uuid v1.1.0
 	github.com/goreleaser/goreleaser v0.106.0
 	github.com/hashicorp/go-hclog v0.0.0-20180910232447-e45cbeb79f04
@@ -50,7 +50,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/golicense v0.1.1
 	github.com/neurosnap/sentences v1.0.6 // indirect
-	github.com/olekukonko/tablewriter v0.0.0-20180912035003-be2c049b30cc // indirect
+	github.com/olekukonko/tablewriter v0.0.0-20180912035003-be2c049b30cc
 	github.com/onsi/ginkgo v1.7.0 // indirect
 	github.com/onsi/gomega v1.4.3 // indirect
 	github.com/pascaldekloe/goe v0.0.0-20180627143212-57f6aae5913c // indirect
@@ -65,7 +65,7 @@ require (
 	github.com/stretchr/testify v1.3.0
 	golang.org/x/crypto v0.0.0-20190313024323-a1f597ede03a
 	golang.org/x/net v0.0.0-20190404232315-eb5bcb51f2a3 // indirect
-	golang.org/x/oauth2 v0.0.0-20190402181905-9f3314589c9a // indirect
+	golang.org/x/oauth2 v0.0.0-20190402181905-9f3314589c9a
 	golang.org/x/text v0.3.1-0.20180807135948-17ff2d5776d2 // indirect
 	gonum.org/v1/netlib v0.0.0-20190331212654-76723241ea4e // indirect
 	gopkg.in/src-d/go-git-fixtures.v3 v3.5.0 // indirect
