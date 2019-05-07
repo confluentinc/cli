@@ -78,7 +78,7 @@ download-licenses:
 	done
 
 .PHONY: dist
-dist: #download-licenses
+dist: download-licenses
 	@# unfortunately goreleaser only supports one archive right now (either tar/zip or binaries): https://github.com/goreleaser/goreleaser/issues/705
 	@# we had goreleaser upload binaries (they're uncompressed, so goreleaser's parallel uploads will save more time with binaries than archives)
 	@for binary in ccloud confluent; do \
