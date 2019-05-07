@@ -10,6 +10,7 @@ require (
 	github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da
 	github.com/atrox/homedir v1.0.0
 	github.com/aws/aws-sdk-go v1.15.64
+	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
 	github.com/confluentinc/ccloud-sdk-go v0.0.7-0.20190430202328-a81a22caa8c3
@@ -35,6 +36,7 @@ require (
 	github.com/golangci/golangci-lint v1.16.0
 	github.com/golangci/gosec v0.0.0-20180901114220-8afd9cbb6cfb // indirect
 	github.com/golangci/tools v0.0.0-20180902102414-2cefd77fef9b // indirect
+	github.com/google/go-github/v25 v25.0.2 // indirect
 	github.com/google/uuid v1.1.0
 	github.com/goreleaser/goreleaser v0.106.0
 	github.com/hashicorp/go-hclog v0.0.0-20180910232447-e45cbeb79f04
