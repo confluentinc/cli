@@ -34,4 +34,5 @@ blocks:
           - make test
           - make lint-licenses
           - bash <(curl -s https://codecov.io/bash)
+          - git checkout go.*
           - make release-ci
