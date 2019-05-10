@@ -125,9 +125,10 @@ func (c *rolebindingCommand) parseResourcePattern(typename string, prefix bool) 
 }
 
 func (c *rolebindingCommand) validateRoleAndResourceType(roleName string, resourceType string) error {
+	fmt.Println("GET ROLE DETAIL " + roleName)
 	role, _, err := c.client.RoleDefinitionsApi.RoleDetail(context.Background(), roleName)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "Failed to look up role "+roleName+", maybe invalid role name was specified?")
 	}
 	fmt.Println("ROLE")
 	fmt.Println(role)
@@ -216,8 +217,11 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, args []string) error {
 
 	resp, err := (*http.Response)(nil), (error)(nil)
 	if resource != "" {
+		fmt.Println("HERE2")
 		parsedResourcePattern := c.parseResourcePattern(resource, prefix)
+		fmt.Println("HERE3")
 		err = c.validateRoleAndResourceType(role, parsedResourcePattern.ResourceType)
+		fmt.Println("HERE4")
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
@@ -228,11 +232,15 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, args []string) error {
 			Scope:            mds.Scope{Clusters: *scopeClusters},
 			ResourcePatterns: rp,
 		}
+		fmt.Println("HERE5")
 		resp, err = c.client.UserAndRoleMgmtApi.AddRoleResourcesForPrincipal(context.Background(), principal, role, rr)
 	} else {
-		fmt.Println("YO")
 		resp, err = c.client.UserAndRoleMgmtApi.AddRoleForPrincipal(context.Background(), principal, role, mds.Scope{Clusters: *scopeClusters})
 	}
+
+	fmt.Println(resp)
+	fmt.Println(resp.StatusCode)
+	fmt.Println(err)
 
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -246,7 +254,7 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, args []string) error {
 }
 
 func (c *rolebindingCommand) delete(cmd *cobra.Command, args []string) error {
-	/*role, err := cmd.Flags().GetString("role")
+	role, err := cmd.Flags().GetString("role")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -256,24 +264,52 @@ func (c *rolebindingCommand) delete(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
+	prefix := cmd.Flags().Changed("prefix")
+
 	principal, err := cmd.Flags().GetString("principal")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	cluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}*/
-
-	// TODO https://confluent.slack.com/archives/CFA95LYAK/p1554844565210200
-	/*success, _, err := c.client.ControlPlaneApi.DeleteRoleForPrincipal(context.Background(), principal, cluster.Id+resource, role)
+	scopeClusters, err := c.parseAndValidateScope(cmd)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	if !success {
-		return errors.HandleCommon(errors.New("the server received a valid request but did not delete the rolebinding -- perhaps parameters are invalid?"), cmd)
-	}*/
+
+	resp, err := (*http.Response)(nil), (error)(nil)
+	if resource != "" {
+		fmt.Println("HERE2")
+		parsedResourcePattern := c.parseResourcePattern(resource, prefix)
+		fmt.Println("HERE3")
+		err = c.validateRoleAndResourceType(role, parsedResourcePattern.ResourceType)
+		fmt.Println("HERE4")
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+		rp := []mds.ResourcePattern{
+			parsedResourcePattern,
+		}
+		rr := mds.ResourcesRequest{
+			Scope:            mds.Scope{Clusters: *scopeClusters},
+			ResourcePatterns: rp,
+		}
+		fmt.Println("HERE5")
+		resp, err = c.client.UserAndRoleMgmtApi.RemoveRoleResourcesForPrincipal(context.Background(), principal, role, rr)
+	} else {
+		resp, err = c.client.UserAndRoleMgmtApi.DeleteRoleForPrincipal(context.Background(), principal, role, mds.Scope{Clusters: *scopeClusters})
+	}
+
+	fmt.Println(resp)
+	fmt.Println(resp.StatusCode)
+	fmt.Println(err)
+
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	if resp.StatusCode != 200 {
+		return errors.HandleCommon(errors.Wrapf(err, "No error but received HTTP status code "+strconv.Itoa(resp.StatusCode)), cmd)
+	}
 
 	return nil
 }
