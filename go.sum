@@ -66,6 +66,8 @@ github.com/confluentinc/mds-sdk-go v0.0.0-20190408235126-e472f6157a7c h1:+pZOE1H
 github.com/confluentinc/mds-sdk-go v0.0.0-20190408235126-e472f6157a7c/go.mod h1:xO8OHaHLZZuxbHGy72sAqkvsFSS74nt2Luk7QWtuo2w=
 github.com/confluentinc/mds-sdk-go v0.0.0-20190507194611-f8a4fff5b49a h1:WOWjo/vFCXohM+muD0+Yxox7Qn0lC7DQ19mn5AtfqM8=
 github.com/confluentinc/mds-sdk-go v0.0.0-20190507194611-f8a4fff5b49a/go.mod h1:xO8OHaHLZZuxbHGy72sAqkvsFSS74nt2Luk7QWtuo2w=
+github.com/confluentinc/mds-sdk-go v0.0.0-20190510032210-d5a2f0f2210e h1:ZcuvO9t7XSg6mbgPx3vOhqg0Q9g4QxUuxtqTU5nrifQ=
+github.com/confluentinc/mds-sdk-go v0.0.0-20190510032210-d5a2f0f2210e/go.mod h1:xO8OHaHLZZuxbHGy72sAqkvsFSS74nt2Luk7QWtuo2w=
 github.com/confluentinc/protoc-gen-ccloud v0.0.0-20190122202943-91a08616afd2/go.mod h1:RL4B2sjziJsuvLS6nkpqJha7026Wl3aaN4cXMSDYoc4=
 github.com/confluentinc/protoc-gen-ccloud v0.0.1 h1:oTEOlStee6ln4FeKdgQevmjuma50EccP2MwplJRFR1I=
 github.com/confluentinc/protoc-gen-ccloud v0.0.1/go.mod h1:pDn9xwYsW8QvxGpwJ9CaomgtYBpx7FgdonHVmCo5yRo=
