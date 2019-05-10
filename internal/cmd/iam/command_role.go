@@ -14,10 +14,10 @@ import (
 )
 
 var (
-	roleListFields     = []string{"Name", "SuperUser", "AllowedOperations"}
-	roleListLabels     = []string{"Name", "SuperUser", "AllowedOperations"}
-	roleDescribeFields = []string{"Name", "SuperUser", "AllowedOperations"}
-	roleDescribeLabels = []string{"Name", "SuperUser", "AllowedOperations"}
+	roleListFields     = []string{"Name", "AccessPolicy"}
+	roleListLabels     = []string{"Name", "AccessPolicy"}
+	roleDescribeFields = []string{"Name", "AccessPolicy"}
+	roleDescribeLabels = []string{"Name", "AccessPolicy"}
 )
 
 type roleCommand struct {
