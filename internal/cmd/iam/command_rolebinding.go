@@ -59,12 +59,12 @@ func (c *rolebindingCommand) init() {
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	}
-	listCmd.Flags().String("principal", "", "Qualified principal name for the rolebinding")
-	listCmd.Flags().String("role", "", "Role name of the new rolebinding")
-	listCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the rolebinding")
-	listCmd.Flags().String("schema-registry-cluster-id", "", "Schema registry cluster ID for the rolebinding")
-	listCmd.Flags().String("ksql-cluster-id", "", "KSQL cluster ID for the rolebinding")
-	listCmd.Flags().String("connect-cluster-id", "", "Connect cluster ID for the rolebinding")
+	listCmd.Flags().String("principal", "", "Principal whose rolebindings should be listed")
+	listCmd.Flags().String("role", "", "List rolebindings under a specific role given to a principal")
+	listCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for scope of rolebinding listings")
+	listCmd.Flags().String("schema-registry-cluster-id", "", "Schema registry cluster ID for scope of rolebinding listings")
+	listCmd.Flags().String("ksql-cluster-id", "", "KSQL cluster ID for scope of rolebinding listings")
+	listCmd.Flags().String("connect-cluster-id", "", "Connect cluster ID for scope of rolebinding listings")
 	c.AddCommand(listCmd)
 
 	createCmd := &cobra.Command{
