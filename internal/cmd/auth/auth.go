@@ -102,7 +102,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(user.Accounts) == 0 {
-		return errors.HandleCommon(errors.New("no environments found for authenticated user!"), cmd)
+		return errors.HandleCommon(errors.New("No environments found for authenticated user!"), cmd)
 	}
 
 	// If no auth config exists, initialize it
@@ -133,7 +133,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 
 	err = a.config.Save()
 	if err != nil {
-		return errors.Wrap(err, "unable to save user auth")
+		return errors.Wrap(err, "Unable to save user auth")
 	}
 	pcmd.Println(cmd, "Logged in as", email)
 	pcmd.Print(cmd, "Using environment ", a.config.Auth.Account.Id,
@@ -146,7 +146,7 @@ func (a *commands) logout(cmd *cobra.Command, args []string) error {
 	a.config.Auth = nil
 	err := a.config.Save()
 	if err != nil {
-		return errors.Wrap(err, "unable to delete user auth")
+		return errors.Wrap(err, "Unable to delete user auth")
 	}
 	pcmd.Println(cmd, "You are now logged out")
 	return nil

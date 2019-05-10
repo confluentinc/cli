@@ -16,7 +16,7 @@ func New(config *config.Config) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:   "config",
-			Short: "Modify ccloud config files",
+			Short: "Modify Confluent Cloud config files",
 		},
 		config: config,
 	}

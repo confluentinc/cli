@@ -50,7 +50,7 @@ func (c *topicCommand) init() {
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	}
-	cmd.Flags().String("cluster", "", "Kafka cluster ID")
+	cmd.Flags().String("cluster", "", "Confluent Cloud cluster ID")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
@@ -60,11 +60,11 @@ func (c *topicCommand) init() {
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	}
-	cmd.Flags().String("cluster", "", "Kafka cluster ID")
+	cmd.Flags().String("cluster", "", "Confluent Cloud cluster ID")
 	cmd.Flags().Uint32("partitions", 6, "Number of topic partitions")
 	cmd.Flags().Uint32("replication-factor", 3, "Replication factor")
-	cmd.Flags().StringSlice("config", nil, "A comma separated list of topic configuration (key=value) overrides for the topic being created")
-	cmd.Flags().Bool("dry-run", false, "Execute request without committing changes to Kafka")
+	cmd.Flags().StringSlice("config", nil, "A comma-separated list of topic configuration (``key=value``) overrides for the topic being created")
+	cmd.Flags().Bool("dry-run", false, "Run the command without committing change to Kafka")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
@@ -74,7 +74,7 @@ func (c *topicCommand) init() {
 		RunE:  c.describe,
 		Args:  cobra.ExactArgs(1),
 	}
-	cmd.Flags().String("cluster", "", "Kafka cluster ID")
+	cmd.Flags().String("cluster", "", "Confluent Cloud cluster ID")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
@@ -84,8 +84,8 @@ func (c *topicCommand) init() {
 		RunE:  c.update,
 		Args:  cobra.ExactArgs(1),
 	}
-	cmd.Flags().String("cluster", "", "Kafka cluster ID")
-	cmd.Flags().StringSlice("config", nil, "A comma separated list of topic configuration (key=value) overrides for the topic being created")
+	cmd.Flags().String("cluster", "", "Confluent Cloud cluster ID")
+	cmd.Flags().StringSlice("config", nil, "A comma-separated list of topic configuration (``key=value``) overrides for the topic being created")
 	cmd.Flags().Bool("dry-run", false, "Execute request without committing changes to Kafka")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
@@ -96,7 +96,7 @@ func (c *topicCommand) init() {
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
 	}
-	cmd.Flags().String("cluster", "", "Kafka cluster ID")
+	cmd.Flags().String("cluster", "", "Confluent Cloud cluster ID")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
@@ -106,8 +106,8 @@ func (c *topicCommand) init() {
 		RunE:  c.produce,
 		Args:  cobra.ExactArgs(1),
 	}
-	cmd.Flags().String("cluster", "", "Kafka cluster ID")
-	cmd.Flags().String("delimiter", ":", "Key/Value delimiter")
+	cmd.Flags().String("cluster", "", "Confluent Cloud cluster ID")
+	cmd.Flags().String("delimiter", ":", "The key/value delimiter")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
@@ -117,8 +117,8 @@ func (c *topicCommand) init() {
 		RunE:  c.consume,
 		Args:  cobra.ExactArgs(1),
 	}
-	cmd.Flags().String("cluster", "", "Kafka cluster ID")
-	cmd.Flags().String("group", fmt.Sprintf("confluent_cli_consumer_%s", uuid.New()), "Consumer group id")
+	cmd.Flags().String("cluster", "", "Confluent Cloud cluster ID")
+	cmd.Flags().String("group", fmt.Sprintf("confluent_cli_consumer_%s", uuid.New()), "Consumer group ID")
 	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of topic rather than end")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
@@ -410,7 +410,7 @@ func toMap(configs []string) (map[string]string, error) {
 	for _, cfg := range configs {
 		pair := strings.SplitN(cfg, "=", 2)
 		if len(pair) < 2 {
-			return nil, fmt.Errorf("configuration must be in the form of key=value")
+			return nil, fmt.Errorf("THe configuration must be in the form of key=value")
 		}
 		configMap[pair[0]] = pair[1]
 	}

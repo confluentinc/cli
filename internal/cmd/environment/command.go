@@ -104,7 +104,7 @@ func (c *command) refreshEnvList(cmd *cobra.Command) error {
 
 	err = c.config.Save()
 	if err != nil {
-		return errors.Wrap(err, "unable to save user auth while refreshing environment list")
+		return errors.Wrap(err, "Unable to save user auth while refreshing environment list")
 	}
 
 	return nil
@@ -149,7 +149,7 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	return errors.HandleCommon(errors.New("specified environment ID not found.  Use `ccloud environment list` to see available environments."), cmd)
+	return errors.HandleCommon(errors.New("The specified environment ID was not found.  To see available environments, use `ccloud environment list`."), cmd)
 }
 
 func (c *command) create(cmd *cobra.Command, args []string) error {

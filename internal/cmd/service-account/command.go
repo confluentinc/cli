@@ -62,7 +62,7 @@ func (c *command) init() {
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	}
-	createCmd.Flags().String("description", "", "The service account description")
+	createCmd.Flags().String("description", "", "Description of the service account")
 	_ = createCmd.MarkFlagRequired("description")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
@@ -73,7 +73,7 @@ func (c *command) init() {
 		RunE:  c.update,
 		Args:  cobra.ExactArgs(1),
 	}
-	updateCmd.Flags().String("description", "", "The service account description")
+	updateCmd.Flags().String("description", "", "Description of the service account")
 	_ = updateCmd.MarkFlagRequired("description")
 	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
