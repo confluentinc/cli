@@ -11,6 +11,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/go-printer"
 
 	//"github.com/confluentinc/go-printer"
 	"context"
@@ -24,6 +25,8 @@ var (
 	rolebindingListLabels     = []string{"Name", "SuperUser", "AllowedOperations"}
 	rolebindingDescribeFields = []string{"Name", "SuperUser", "AllowedOperations"}
 	rolebindingDescribeLabels = []string{"Name", "SuperUser", "AllowedOperations"}
+	resourcePatternListFields = []string{"Name", "ResourceType", "PatternType"}
+	resourcePatternListLabels = []string{"Name", "ResourceType", "PatternType"}
 )
 
 type rolebindingCommand struct {
@@ -56,9 +59,12 @@ func (c *rolebindingCommand) init() {
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	}
-	listCmd.Flags().String("cluster", "", "Cluster ID for which to list rolebindings")
-	listCmd.Flags().String("topic", "", "Topic name for which to list rolebindings")
-	listCmd.Flags().SortFlags = false
+	listCmd.Flags().String("principal", "", "Qualified principal name for the rolebinding")
+	listCmd.Flags().String("role", "", "Role name of the new rolebinding")
+	listCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the rolebinding")
+	listCmd.Flags().String("schema-registry-cluster-id", "", "Schema registry cluster ID for the rolebinding")
+	listCmd.Flags().String("ksql-cluster-id", "", "KSQL cluster ID for the rolebinding")
+	listCmd.Flags().String("connect-cluster-id", "", "Connect cluster ID for the rolebinding")
 	c.AddCommand(listCmd)
 
 	createCmd := &cobra.Command{
@@ -94,18 +100,35 @@ func (c *rolebindingCommand) init() {
 }
 
 func (c *rolebindingCommand) list(cmd *cobra.Command, args []string) error {
-	// TODO see https://confluent.slack.com/archives/CFA95LYAK/p1554844878211100
+	role := "*"
+	if cmd.Flags().Changed("role") {
+		r, err := cmd.Flags().GetString("role")
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+		role = r
+	}
 
-	// rolebindings, _, err := c.client.ControlPlaneApi.rolebindings(context.Background())
-	// if err != nil {
-	// 	return errors.HandleCommon(err, cmd)
-	// }
+	principal, err := cmd.Flags().GetString("principal")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
 
-	// var data [][]string
-	// for _, rolebinding := range rolebindings {
-	// 	data = append(data, printer.ToRow(&rolebinding, rolebindingListFields))
-	// }
-	// printer.RenderCollectionTable(data, listLabels)
+	scopeClusters, err := c.parseAndValidateScope(cmd)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	resourcePatterns, _, err := c.client.UserAndRoleMgmtApi.GetRoleResourcesForPrincipal(context.Background(), principal, role, mds.Scope{Clusters: *scopeClusters})
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	var data [][]string
+	for _, pattern := range resourcePatterns {
+		data = append(data, printer.ToRow(&pattern, resourcePatternListFields))
+	}
+	printer.RenderCollectionTable(data, resourcePatternListLabels)
 
 	return nil
 }
@@ -246,7 +269,7 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != 200 && resp.StatusCode != 204 {
 		return errors.HandleCommon(errors.Wrapf(err, "No error but received HTTP status code "+strconv.Itoa(resp.StatusCode)), cmd)
 	}
 
@@ -307,7 +330,7 @@ func (c *rolebindingCommand) delete(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != 200 && resp.StatusCode != 204 {
 		return errors.HandleCommon(errors.Wrapf(err, "No error but received HTTP status code "+strconv.Itoa(resp.StatusCode)), cmd)
 	}
 
