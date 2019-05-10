@@ -59,12 +59,12 @@ func (c *clusterCommand) init() {
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	}
-	createCmd.Flags().String("cloud", "", "Choose aws or gcp")
-	createCmd.Flags().String("region", "", "A valid region in the given cloud")
+	createCmd.Flags().String("cloud", "", "Cloud type (e.g. `aws` or `gcp`")
+	createCmd.Flags().String("region", "", "Cloud region for cluster (e.g. us-west`)")
 	// default to smallest size allowed
-	createCmd.Flags().Int32("ingress", 1, "Network ingress in MB/s")
-	createCmd.Flags().Int32("egress", 1, "Network egress in MB/s")
-	createCmd.Flags().Int32("storage", 500, "Total usable data storage in GB")
+	createCmd.Flags().Int32("ingress", 1, "Network ingress in MBps")
+	createCmd.Flags().Int32("egress", 1, "Network egress in MBps")
+	createCmd.Flags().Int32("storage", 500, "Amount of data storage available in GB")
 	createCmd.Flags().Bool("multizone", false, "Use multiple zones for high availability")
 	check(createCmd.MarkFlagRequired("cloud"))
 	check(createCmd.MarkFlagRequired("region"))

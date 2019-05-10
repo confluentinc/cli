@@ -9,14 +9,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const longDescription = `You can test Confluent Platform by running a single-node instance locally on
-your laptop or desktop. THESE LOCAL COMMANDS ARE NOT INTENDED FOR PRODUCTION SETUP.
+const longDescription = `Use these commands to try out Confluent Platform by running a single-node
+instance locally on your machine. This set of commands are NOT intended for production use.
 
-The CLI "local" commands help you manage and interact with this installation
-for exploring, testing, experimenting, and otherwise familiarizing yourself
+You can use these commands to explore, test, experiment, and otherwise familiarize yourself
 with Confluent Platform.
 
-LOCAL COMMANDS ARE NOT INTENDED TO SETUP OR MANAGE CONFLUENT PLATFORM IN PRODUCTION.
+DO NOT use these commands to setup or manage Confluent Platform in production.
 `
 
 type command struct {

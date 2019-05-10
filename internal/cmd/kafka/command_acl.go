@@ -41,7 +41,7 @@ func NewACLCommand(config *config.Config, client ccloud.Kafka, ch *pcmd.ConfigHe
 }
 
 func (c *aclCommand) init() {
-	c.Command.PersistentFlags().String("cluster", "", "Kafka cluster ID")
+	c.Command.PersistentFlags().String("cluster", "", "Confluent Cloud cluster ID")
 
 	cmd := &cobra.Command{
 		Use:   "create",
@@ -133,7 +133,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, args []string) error {
 // validateAddDelete ensures the minimum requirements for acl add and delete are met
 func validateAddDelete(binding *ACLConfiguration) *ACLConfiguration {
 	if binding.Entry.PermissionType == kafkav1.ACLPermissionTypes_UNKNOWN {
-		binding.errors = multierror.Append(binding.errors, fmt.Errorf("--allow or --deny must be set when adding or deleting an acl"))
+		binding.errors = multierror.Append(binding.errors, fmt.Errorf("--allow or --deny must be set when adding or deleting an ACL"))
 	}
 
 	if binding.Pattern.PatternType == kafkav1.PatternTypes_UNKNOWN {

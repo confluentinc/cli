@@ -17,18 +17,16 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/keystore"
 )
 
-const longDescription = `Certain CLI commands require an API secret stored locally in order for them to
-work. This includes Kafka topic consume/produce.
+const longDescription = `Use this command to register an API secret created by another
+process and store it locally.
 
-When you create an API key with the CLI, we automatically store the secret
-locally for use. However, when you create an API key on the UI, via the API,
-or with the CLI on another machine, the secret is not available for CLI use
-until you "store" it.
+When you create an API key with the CLI, it is automatically stored locally.
+However, when you create an API key using the UI, API, or with the CLI on another
+machine, the secret is not available for CLI use until you "store" it. This is because
+secrets are irretrievable after creation.
 
-(This is because secrets are irretrievable after creation, for your security.)
-
-The api-key store command lets you register an API secret created by another
-process, so you can use it just as if you had created it with the CLI.
+You must have an API secret stored locally for certain CLI commands to
+work. For example, the Kafka topic consume and produce commands require an API secret.
 `
 
 type command struct {
@@ -70,7 +68,7 @@ func (c *command) init() {
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	}
-	listCmd.Flags().String("cluster", "", "Cluster ID to list API keys for")
+	listCmd.Flags().String("cluster", "", "The cluster ID")
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
@@ -80,9 +78,9 @@ func (c *command) init() {
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
 	}
-	createCmd.Flags().String("cluster", "", "Grant access to a cluster with this ID")
-	createCmd.Flags().Int32("service-account-id", 0, "Create API key for a service account")
-	createCmd.Flags().String("description", "", "Description or purpose for the API key")
+	createCmd.Flags().String("cluster", "", "The cluster ID")
+	createCmd.Flags().Int32("service-account-id", 0, "Service account ID")
+	createCmd.Flags().String("description", "", "Description of the API key")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
@@ -92,7 +90,7 @@ func (c *command) init() {
 		RunE:  c.update,
 		Args:  cobra.ExactArgs(1),
 	}
-	updateCmd.Flags().String("description", "", "Description or purpose for the API key")
+	updateCmd.Flags().String("description", "", "Description of the API key")
 	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
 
@@ -110,7 +108,7 @@ func (c *command) init() {
 		RunE:  c.store,
 		Args:  cobra.ExactArgs(2),
 	}
-	storeCmd.Flags().String("cluster", "", "Store API key for this cluster")
+	storeCmd.Flags().String("cluster", "", "The cluster ID")
 	storeCmd.Flags().BoolP("force", "f", false, "Force overwrite existing secret for this key")
 	storeCmd.Flags().SortFlags = false
 	c.AddCommand(storeCmd)
@@ -121,7 +119,7 @@ func (c *command) init() {
 		RunE:  c.use,
 		Args:  cobra.ExactArgs(1),
 	}
-	useCmd.Flags().String("cluster", "", "Make this API key active for this cluster")
+	useCmd.Flags().String("cluster", "", "The cluster ID")
 	useCmd.Flags().SortFlags = false
 	c.AddCommand(useCmd)
 }
@@ -229,14 +227,14 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	pcmd.Println(cmd, "Please save the API Key and Secret. THIS IS THE ONLY CHANCE YOU HAVE!")
+	pcmd.Println(cmd, "Save the API key and secret. The key/secret is not retrievable later.")
 	err = printer.RenderTableOut(userKey, createFields, createRenames, os.Stdout)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 
 	if err := c.keystore.StoreAPIKey(userKey, kcc.ID, environment); err != nil {
-		return errors.HandleCommon(errors.Wrapf(err, "unable to store api key locally"), cmd)
+		return errors.HandleCommon(errors.Wrapf(err, "Unable to store API key locally"), cmd)
 	}
 
 	return nil
@@ -296,7 +294,7 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := c.keystore.StoreAPIKey(&authv1.ApiKey{Key: key, Secret: secret}, kcc.ID, environment); err != nil {
-		return errors.HandleCommon(errors.Wrapf(err, "unable to store api key locally"), cmd)
+		return errors.HandleCommon(errors.Wrapf(err, "Unable to store the API key locally"), cmd)
 	}
 
 	return nil
