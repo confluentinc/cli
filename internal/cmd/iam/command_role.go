@@ -44,7 +44,7 @@ func NewRoleCommand(config *config.Config, client *mds.APIClient) *cobra.Command
 func (c *roleCommand) init() {
 	c.AddCommand(&cobra.Command{
 		Use:   "list",
-		Short: "List available roles, ... or roles for a given principal", // TODO https://confluentinc.atlassian.net/wiki/spaces/PM/pages/804029551/UX+CLI+for+defining+roles ?
+		Short: "List all available roles",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	})
