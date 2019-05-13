@@ -120,6 +120,7 @@ func (c *topicCommand) init() {
 	cmd.Flags().String("cluster", "", "Kafka cluster ID")
 	cmd.Flags().String("group", fmt.Sprintf("confluent_cli_consumer_%s", uuid.New()), "Consumer group id")
 	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of topic rather than end")
+	cmd.Flags().Int64P("offset", "O", int64(-1), "Consume starting from a specific integer offset")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
@@ -307,7 +308,7 @@ func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {
 
 	pcmd.Println(cmd, "Starting Kafka Producer. ^C to exit")
 
-	producer, err := NewSaramaProducer(cluster)
+	producer, err := NewSaramaProducer(*cluster)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -368,6 +369,11 @@ func (c *topicCommand) consume(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
+	offset, err := cmd.Flags().GetInt64("offset")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
 	cluster, err := pcmd.GetKafkaClusterConfig(cmd, c.ch)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -378,7 +384,7 @@ func (c *topicCommand) consume(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	consumer, err := NewSaramaConsumer(group, cluster, beginning)
+	consumer, err := NewSaramaConsumer(group, *cluster, beginning, offset)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
