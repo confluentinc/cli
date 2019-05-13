@@ -127,7 +127,8 @@ func (s *CLITestSuite) Test_Ccloud_Help() {
 		{args: "version", fixture: "version.golden"},
 	}
 	for _, tt := range tests {
-		s.runCcloudTest(tt, serve(s.T()).URL, serveKafkaAPI(s.T()).URL)
+		kafkaAPIURL := serveKafkaAPI(s.T()).URL
+		s.runCcloudTest(tt, serve(s.T(), kafkaAPIURL).URL, kafkaAPIURL)
 	}
 }
 
@@ -179,7 +180,8 @@ func (s *CLITestSuite) Test_Ccloud_Login_UseKafka_AuthKafka_Errors() {
 		if strings.HasPrefix(tt.name, "error") {
 			tt.wantErrCode = 1
 		}
-		s.runCcloudTest(tt, serve(s.T()).URL, serveKafkaAPI(s.T()).URL)
+		kafkaAPIURL := serveKafkaAPI(s.T()).URL
+		s.runCcloudTest(tt, serve(s.T(), kafkaAPIURL).URL, kafkaAPIURL)
 	}
 }
 
@@ -216,11 +218,11 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint stri
 				fmt.Println(output)
 			}
 			// HACK: we don't have scriptable output yet so we parse it from the table
-			key := strings.Split(strings.Split(output, "\n")[2], "|")[2]
+			key := strings.TrimSpace(strings.Split(strings.Split(output, "\n")[2], "|")[2])
 			output = runCommand(t, "ccloud", []string{}, fmt.Sprintf("api-key use %s --cluster %s", key, tt.useKafka), 0)
-			//if *debug {
+			if *debug {
 				fmt.Println(output)
-			//}
+			}
 		}
 
 		output := runCommand(t, "ccloud", tt.env, tt.args, tt.wantErrCode)
@@ -385,7 +387,7 @@ func init() {
 	}
 }
 
-func serve(t *testing.T) *httptest.Server {
+func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 	req := require.New(t)
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/sessions", func(w http.ResponseWriter, r *http.Request) {
@@ -447,7 +449,7 @@ func serve(t *testing.T) *httptest.Server {
 			Cluster: &kafkav1.KafkaCluster{
 				Id:          id,
 				Endpoint:    "SASL_SSL://kafka-endpoint",
-				ApiEndpoint: "https://kafka-api-endpoint",
+				ApiEndpoint: kafkaAPIURL,
 			},
 		})
 		require.NoError(t, err)

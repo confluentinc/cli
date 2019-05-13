@@ -68,10 +68,6 @@ endif
 run-ccloud:
 	 @go run -ldflags '-X main.cliName=ccloud' cmd/confluent/main.go $(RUN_ARGS)
 
-.PHONY: run-confluent
-run-confluent:
-	 @go run -ldflags '-X main.cliName=confluent' cmd/confluent/main.go $(ARGS)
-
 #
 # END DEVELOPMENT HELPERS
 #
