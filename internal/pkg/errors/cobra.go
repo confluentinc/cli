@@ -32,17 +32,18 @@ func HandleCommon(err error, cmd *cobra.Command) error {
 		return fmt.Errorf(msg)
 	}
 
-	switch err.(type) {
-	case NotAuthenticatedError:
-		cmd.SilenceUsage = true
-		return err
-	case UnknownKafkaContextError:
+	switch e := err.(type) {
+	case *UnspecifiedKafkaClusterError:
 		cmd.SilenceUsage = true
 		return fmt.Errorf("no auth found for Kafka %s, please run `ccloud kafka cluster auth` first", err.Error())
-	case *UnconfiguredAPIKeyContextError:
+	case *UnspecifiedAPIKeyError:
+		cmd.SilenceUsage = true
+		return fmt.Errorf("no API key selected for %s, please select an api-key first (e.g., with `api-key use`)", e.ClusterID)
+	case *UnconfiguredAPISecretError:
 		cmd.SilenceUsage = true
 		return err
-	// TODO: ErrEditing is declared incorrectly as "type ErrEditing error". That doesn't work for type switches, so put last
+	// TODO: ErrEditing is declared incorrectly as "type ErrEditing error"
+	//  That doesn't work for type switches, so put last otherwise everything will hit this case
 	case editor.ErrEditing:
 		cmd.SilenceUsage = true
 		return err

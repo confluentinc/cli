@@ -32,13 +32,13 @@ type KeyStore struct {
 	}
 }
 
-// HasAPIKey mocks base method by wrapping the associated func.
+// EnsureAPIKey mocks base method by wrapping the associated func.
 func (m *KeyStore) HasAPIKey(key, clusterID, environment string) (bool, error) {
 	m.lockHasAPIKey.Lock()
 	defer m.lockHasAPIKey.Unlock()
 
 	if m.HasAPIKeyFunc == nil {
-		panic("mocker: KeyStore.HasAPIKeyFunc is nil but KeyStore.HasAPIKey was called.")
+		panic("mocker: KeyStore.HasAPIKeyFunc is nil but KeyStore.EnsureAPIKey was called.")
 	}
 
 	call := struct {
@@ -56,7 +56,7 @@ func (m *KeyStore) HasAPIKey(key, clusterID, environment string) (bool, error) {
 	return m.HasAPIKeyFunc(key, clusterID, environment)
 }
 
-// HasAPIKeyCalled returns true if HasAPIKey was called at least once.
+// HasAPIKeyCalled returns true if EnsureAPIKey was called at least once.
 func (m *KeyStore) HasAPIKeyCalled() bool {
 	m.lockHasAPIKey.Lock()
 	defer m.lockHasAPIKey.Unlock()
@@ -64,7 +64,7 @@ func (m *KeyStore) HasAPIKeyCalled() bool {
 	return len(m.calls.HasAPIKey) > 0
 }
 
-// HasAPIKeyCalls returns the calls made to HasAPIKey.
+// HasAPIKeyCalls returns the calls made to EnsureAPIKey.
 func (m *KeyStore) HasAPIKeyCalls() []struct {
 	Key         string
 	ClusterID   string

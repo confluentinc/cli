@@ -29,11 +29,12 @@ type topicCommand struct {
 }
 
 // NewTopicCommand returns the Cobra command for Kafka topic.
-func NewTopicCommand(config *config.Config, client ccloud.Kafka, ch *pcmd.ConfigHelper) *cobra.Command {
+func NewTopicCommand(prerunner pcmd.PreRunner, config *config.Config, client ccloud.Kafka, ch *pcmd.ConfigHelper) *cobra.Command {
 	cmd := &topicCommand{
 		Command: &cobra.Command{
 			Use:   "topic",
 			Short: "Manage Kafka topics",
+			PersistentPreRunE: prerunner.AuthenticatedKafkaAPI(),
 		},
 		config: config,
 		client: client,

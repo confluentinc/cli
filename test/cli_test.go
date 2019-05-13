@@ -145,6 +145,14 @@ func (s *CLITestSuite) Test_Ccloud_Login_UseKafka_AuthKafka_Errors() {
 			login:   "default",
 		},
 		{
+			name:      "error if no api key used",
+			args:      "kafka topic create integ",
+			fixture:   "err-no-api-key.golden",
+			login:     "default",
+			useKafka:  "lkc-abc123",
+			authKafka: "true",
+		},
+		{
 			name:      "error if topic already exists",
 			args:      "kafka topic create integ",
 			fixture:   "topic-exists.golden",
@@ -183,8 +191,6 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint stri
 		tt.wantErrCode = 1
 	}
 	s.T().Run(tt.name, func(t *testing.T) {
-		req := require.New(t)
-
 		if !tt.workflow {
 			resetConfiguration(t)
 		}
@@ -209,22 +215,12 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint stri
 			if *debug {
 				fmt.Println(output)
 			}
-		}
-
-		// HACK: there's no non-interactive way to save an API key locally yet (just kafka cluster auth)
-		if tt.name == "error if topic already exists" {
-			cfg := config.New(&config.Config{CLIName: "ccloud"})
-			err := cfg.Load()
-			req.NoError(err)
-			ctx, err := cfg.Context()
-			req.NoError(err)
-			ctx.KafkaClusters[ctx.Kafka] = &config.KafkaClusterConfig{
-				APIKey:      "MYKEY",
-				APIKeys:     map[string]*config.APIKeyPair{"MYKEY": {Key: "MYKEY", Secret: "MYSECRET"}},
-				APIEndpoint: serveKafkaAPI(t).URL,
-			}
-			err = cfg.Save()
-			req.NoError(err)
+			// HACK: we don't have scriptable output yet so we parse it from the table
+			key := strings.Split(strings.Split(output, "\n")[2], "|")[2]
+			output = runCommand(t, "ccloud", []string{}, fmt.Sprintf("api-key use %s --cluster %s", key, tt.useKafka), 0)
+			//if *debug {
+				fmt.Println(output)
+			//}
 		}
 
 		output := runCommand(t, "ccloud", tt.env, tt.args, tt.wantErrCode)
@@ -265,7 +261,7 @@ func runCommand(t *testing.T, binaryName string, env []string, args string, want
 		if exitError, ok := err.(*exec.ExitError); ok {
 			if wantErrCode == 0 {
 				require.Failf(t, "unexpected error",
-					"exit %d: %s", exitError.ExitCode(), string(output))
+					"exit %d: %s\n%s", exitError.ExitCode(), args, string(output))
 			} else {
 				require.Equal(t, wantErrCode, exitError.ExitCode())
 			}

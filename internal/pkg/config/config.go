@@ -178,6 +178,23 @@ func (c *Config) CheckLogin() error {
 	return nil
 }
 
+func (c *Config) CheckHasAPIKey(clusterID string) error {
+	cfg, err := c.Context()
+	if err != nil {
+		return err
+	}
+
+	cluster, found := cfg.KafkaClusters[clusterID]
+	if !found {
+		return fmt.Errorf("unknown kafka cluster: %s", clusterID)
+	}
+
+	if cluster.APIKey == "" {
+		return &errors.UnspecifiedAPIKeyError{ClusterID: clusterID}
+	}
+	return nil
+}
+
 func (c *Config) getFilename() (string, error) {
 	if c.Filename == "" {
 		c.Filename = fmt.Sprintf(defaultConfigFileFmt, c.CLIName)
