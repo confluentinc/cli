@@ -364,7 +364,7 @@ func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {
 
 func (c *topicCommand) consume(cmd *cobra.Command, args []string) error {
 	topic := args[0]
-	beginning, err := cmd.Flags().GetBool("beginning")
+	beginning, err := cmd.Flags().GetBool("from-beginning")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
