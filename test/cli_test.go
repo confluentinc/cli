@@ -146,19 +146,19 @@ func (s *CLITestSuite) Test_Ccloud_Login_UseKafka_AuthKafka_Errors() {
 			login:   "default",
 		},
 		{
-			name:      "error if no api key used",
-			args:      "kafka topic create integ",
-			fixture:   "err-no-api-key.golden",
-			login:     "default",
-			useKafka:  "lkc-abc123",
-		},
-		{
 			name:      "error if topic already exists",
 			args:      "kafka topic create integ",
 			fixture:   "topic-exists.golden",
 			login:     "default",
 			useKafka:  "lkc-abc123",
 			authKafka: "true",
+		},
+		{
+			name:      "error if no api key used",
+			args:      "kafka topic produce integ",
+			fixture:   "err-no-api-key.golden",
+			login:     "default",
+			useKafka:  "lkc-abc123",
 		},
 		{
 			name:      "error if deleting non-existent api-key",
