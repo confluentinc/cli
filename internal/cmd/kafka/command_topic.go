@@ -23,9 +23,10 @@ import (
 
 type topicCommand struct {
 	*cobra.Command
-	config *config.Config
-	client ccloud.Kafka
-	ch     *pcmd.ConfigHelper
+	config    *config.Config
+	client    ccloud.Kafka
+	ch        *pcmd.ConfigHelper
+	prerunner pcmd.PreRunner
 }
 
 // NewTopicCommand returns the Cobra command for Kafka topic.
@@ -34,11 +35,11 @@ func NewTopicCommand(prerunner pcmd.PreRunner, config *config.Config, client ccl
 		Command: &cobra.Command{
 			Use:   "topic",
 			Short: "Manage Kafka topics",
-			PersistentPreRunE: prerunner.AuthenticatedKafkaAPI(),
 		},
-		config: config,
-		client: client,
-		ch:     ch,
+		config:    config,
+		client:    client,
+		ch:        ch,
+		prerunner: prerunner,
 	}
 	cmd.init()
 	return cmd.Command
@@ -102,10 +103,11 @@ func (c *topicCommand) init() {
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
-		Use:   "produce TOPIC",
-		Short: "Produce messages to a Kafka topic",
-		RunE:  c.produce,
-		Args:  cobra.ExactArgs(1),
+		Use:               "produce TOPIC",
+		Short:             "Produce messages to a Kafka topic",
+		RunE:              c.produce,
+		Args:              cobra.ExactArgs(1),
+		PersistentPreRunE: c.prerunner.AuthenticatedAPIKey(),
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID")
 	cmd.Flags().String("delimiter", ":", "Key/Value delimiter")
@@ -117,6 +119,7 @@ func (c *topicCommand) init() {
 		Short: "Consume messages from a Kafka topic",
 		RunE:  c.consume,
 		Args:  cobra.ExactArgs(1),
+		PersistentPreRunE: c.prerunner.AuthenticatedAPIKey(),
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID")
 	cmd.Flags().String("group", fmt.Sprintf("confluent_cli_consumer_%s", uuid.New()), "Consumer group id")
