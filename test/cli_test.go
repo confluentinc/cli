@@ -151,7 +151,6 @@ func (s *CLITestSuite) Test_Ccloud_Login_UseKafka_AuthKafka_Errors() {
 			fixture:   "err-no-api-key.golden",
 			login:     "default",
 			useKafka:  "lkc-abc123",
-			authKafka: "true",
 		},
 		{
 			name:      "error if topic already exists",

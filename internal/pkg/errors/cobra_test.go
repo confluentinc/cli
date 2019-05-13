@@ -30,13 +30,6 @@ func TestHandleError(t *testing.T) {
 			wantErr:     true,
 			wantErrType: "*errors.UnconfiguredAPISecretError",
 		},
-		{
-			name:        "dynamic message - not first case",
-			err:         &UnconfiguredAPISecretError{ClusterID: "cid", APIKey: "apikeyid"},
-			want:        "please add API secret with 'api-key store apikeyid --cluster cid'",
-			wantErr:     true,
-			wantErrType: "*errors.UnconfiguredAPISecretError",
-		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
