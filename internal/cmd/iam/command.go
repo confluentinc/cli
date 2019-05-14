@@ -17,13 +17,7 @@ type command struct {
 }
 
 // New returns the default command object for interacting with RBAC.
-func New(config *config.Config, ch *pcmd.ConfigHelper, version *version.Version) *cobra.Command {
-	cfg := mds.NewConfiguration()
-	cfg.BasePath = "http://localhost:8090" // TODO
-	cfg.UserAgent = version.UserAgent
-
-	client := mds.NewAPIClient(cfg)
-
+func New(config *config.Config, ch *pcmd.ConfigHelper, version *version.Version, client *mds.APIClient) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:   "iam",

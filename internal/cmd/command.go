@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go"
+	"github.com/confluentinc/mds-sdk-go"
 
 	"github.com/confluentinc/cli/internal/cmd/apikey"
 	"github.com/confluentinc/cli/internal/cmd/auth"
@@ -26,6 +27,7 @@ import (
 	keystore "github.com/confluentinc/cli/internal/pkg/keystore"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	apikeys "github.com/confluentinc/cli/internal/pkg/sdk/apikey"
+
 	//connects "github.com/confluentinc/cli/internal/pkg/sdk/connect"
 	environments "github.com/confluentinc/cli/internal/pkg/sdk/environment"
 	kafkas "github.com/confluentinc/cli/internal/pkg/sdk/kafka"
@@ -72,6 +74,12 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 
 	cli.PersistentPreRunE = prerunner.Anonymous()
 
+	mdsConfig := mds.NewConfiguration()
+	mdsConfig.BasePath = "http://localhost:8090" // TODO
+	mdsConfig.UserAgent = ver.UserAgent
+
+	mdsClient := mds.NewAPIClient(mdsConfig)
+
 	cli.Version = ver.Version
 	cli.AddCommand(version.NewVersionCmd(prerunner, ver))
 
@@ -82,7 +90,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	cli.AddCommand(completion.NewCompletionCmd(cli, cliName))
 	cli.AddCommand(update.New(cliName, cfg, ver, prompt, updateClient))
 
-	cli.AddCommand(auth.New(prerunner, cfg)...)
+	cli.AddCommand(auth.New(prerunner, cfg, cliName, mdsClient)...)
 
 	if cliName == "ccloud" {
 		kafkaClient := kafkas.New(client, logger)
@@ -103,7 +111,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	} else if cliName == "confluent" {
 		ch := &pcmd.ConfigHelper{Config: cfg, Client: client}
 
-		cli.AddCommand(iam.New(cfg, ch, ver))
+		cli.AddCommand(iam.New(cfg, ch, ver, mdsClient))
 
 		bash, err := basher.NewContext("/bin/bash", false)
 		if err != nil {

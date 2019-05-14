@@ -14,11 +14,15 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
+
+	mds "github.com/confluentinc/mds-sdk-go"
 )
 
 type commands struct {
-	Commands []*cobra.Command
-	config   *config.Config
+	Commands  []*cobra.Command
+	config    *config.Config
+	cliName   string
+	mdsClient *mds.APIClient
 	// for testing
 	prompt                pcmd.Prompt
 	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *ccloud.Client
@@ -26,24 +30,26 @@ type commands struct {
 }
 
 // New returns a list of auth-related Cobra commands.
-func New(prerunner pcmd.PreRunner, config *config.Config) []*cobra.Command {
+func New(prerunner pcmd.PreRunner, config *config.Config, cliName string, mdsClient *mds.APIClient) []*cobra.Command {
 	var defaultAnonHTTPClientFactory = func(baseURL string, logger *log.Logger) *ccloud.Client {
 		return ccloud.NewClient(baseURL, ccloud.BaseClient, logger)
 	}
 	var defaultJwtHTTPClientFactory = func(ctx context.Context, jwt string, baseURL string, logger *log.Logger) *ccloud.Client {
 		return ccloud.NewClientWithJWT(ctx, jwt, baseURL, logger)
 	}
-	return newCommands(prerunner, config, pcmd.NewPrompt(os.Stdin),
+	return newCommands(prerunner, config, cliName, mdsClient, pcmd.NewPrompt(os.Stdin),
 		defaultAnonHTTPClientFactory, defaultJwtHTTPClientFactory,
 	).Commands
 }
 
-func newCommands(prerunner pcmd.PreRunner, config *config.Config, prompt pcmd.Prompt,
+func newCommands(prerunner pcmd.PreRunner, config *config.Config, cliName string, mdsClient *mds.APIClient, prompt pcmd.Prompt,
 	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *ccloud.Client,
 	jwtHTTPClientFactory func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *ccloud.Client,
 ) *commands {
 	cmd := &commands{
 		config:                config,
+		cliName:               cliName,
+		mdsClient:             mdsClient,
 		prompt:                prompt,
 		anonHTTPClientFactory: anonHTTPClientFactory,
 		jwtHTTPClientFactory:  jwtHTTPClientFactory,
@@ -56,8 +62,12 @@ func (a *commands) init(prerunner pcmd.PreRunner) {
 	loginCmd := &cobra.Command{
 		Use:   "login",
 		Short: fmt.Sprintf("Login to %s", a.config.APIName()),
-		RunE:  a.login,
 		Args:  cobra.NoArgs,
+	}
+	if a.cliName == "ccloud" {
+		loginCmd.RunE = a.login
+	} else {
+		loginCmd.RunE = a.loginMDS
 	}
 	loginCmd.Flags().String("url", "https://confluent.cloud", "Confluent Control Plane URL")
 	loginCmd.Flags().SortFlags = false
@@ -78,7 +88,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	a.config.AuthURL = url
-	email, password, err := a.credentials(cmd)
+	email, password, err := a.credentials(cmd, "Email")
 	if err != nil {
 		return err
 	}
@@ -141,6 +151,34 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	return err
 }
 
+func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
+	url, err := cmd.Flags().GetString("url")
+	if err != nil {
+		return err
+	}
+	a.config.AuthURL = url
+	email, password, err := a.credentials(cmd, "Username")
+	if err != nil {
+		return err
+	}
+
+	basicContext := context.WithValue(context.Background(), mds.ContextBasicAuth, mds.BasicAuth{UserName: email, Password: password})
+	resp, _, err := a.mdsClient.TokensAuthenticationApi.GetToken(basicContext, "")
+	if err != nil {
+		return errors.HandleCommon(errors.ErrIncorrectAuth, cmd)
+	}
+	a.config.AuthToken = resp.AuthToken
+
+	err = a.config.Save()
+	if err != nil {
+		return errors.Wrap(err, "unable to save user auth")
+	}
+
+	pcmd.Println(cmd, "Logged in as", email)
+
+	return err
+}
+
 func (a *commands) logout(cmd *cobra.Command, args []string) error {
 	a.config.AuthToken = ""
 	a.config.Auth = nil
@@ -152,14 +190,20 @@ func (a *commands) logout(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (a *commands) credentials(cmd *cobra.Command) (string, string, error) {
+func (a *commands) credentials(cmd *cobra.Command, userField string) (string, string, error) {
 	email := os.Getenv("XX_CCLOUD_EMAIL")
+	if len(email) == 0 {
+		email = os.Getenv("XX_CONFLUENT_USERNAME")
+	}
 	password := os.Getenv("XX_CCLOUD_PASSWORD")
+	if len(password) == 0 {
+		password = os.Getenv("XX_CONFLUENT_PASSWORD")
+	}
 	if len(email) == 0 || len(password) == 0 {
-		pcmd.Println(cmd, "Enter your Confluent Cloud credentials:")
+		pcmd.Println(cmd, "Enter your Confluent credentials:")
 	}
 	if len(email) == 0 {
-		pcmd.Print(cmd, "Email: ")
+		pcmd.Print(cmd, userField+": ")
 		emailFromPrompt, err := a.prompt.ReadString('\n')
 		if err != nil {
 			return "", "", err

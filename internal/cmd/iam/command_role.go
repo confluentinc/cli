@@ -24,6 +24,7 @@ type roleCommand struct {
 	*cobra.Command
 	config *config.Config
 	client *mds.APIClient
+	ctx    context.Context
 }
 
 // NewRoleCommand returns the sub-command object for interacting with RBAC roles.
@@ -35,6 +36,7 @@ func NewRoleCommand(config *config.Config, client *mds.APIClient) *cobra.Command
 		},
 		config: config,
 		client: client,
+		ctx:    context.WithValue(context.Background(), mds.ContextAccessToken, config.AuthToken),
 	}
 
 	cmd.init()
@@ -58,7 +60,7 @@ func (c *roleCommand) init() {
 }
 
 func (c *roleCommand) list(cmd *cobra.Command, args []string) error {
-	roles, _, err := c.client.RoleDefinitionsApi.Roles(context.Background())
+	roles, _, err := c.client.RoleDefinitionsApi.Roles(c.ctx)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -75,10 +77,10 @@ func (c *roleCommand) list(cmd *cobra.Command, args []string) error {
 func (c *roleCommand) describe(cmd *cobra.Command, args []string) error {
 	role := args[0]
 
-	details, r, err := c.client.RoleDefinitionsApi.RoleDetail(context.Background(), role)
+	details, r, err := c.client.RoleDefinitionsApi.RoleDetail(c.ctx, role)
 	if err != nil {
 		if r.StatusCode == 204 {
-			availableRoleNames, _, err := c.client.RoleDefinitionsApi.Rolenames(context.Background())
+			availableRoleNames, _, err := c.client.RoleDefinitionsApi.Rolenames(c.ctx)
 			if err != nil {
 				return errors.HandleCommon(err, cmd)
 			}

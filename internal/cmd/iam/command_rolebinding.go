@@ -1,7 +1,6 @@
 package iam
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -34,6 +33,7 @@ type rolebindingCommand struct {
 	config *config.Config
 	ch     *pcmd.ConfigHelper
 	client *mds.APIClient
+	ctx    context.Context
 }
 
 // NewRolebindingCommand returns the sub-command object for interacting with RBAC rolebindings.
@@ -46,6 +46,7 @@ func NewRolebindingCommand(config *config.Config, ch *pcmd.ConfigHelper, client 
 		config: config,
 		ch:     ch,
 		client: client,
+		ctx:    context.WithValue(context.Background(), mds.ContextAccessToken, config.AuthToken),
 	}
 
 	cmd.init()
@@ -119,7 +120,7 @@ func (c *rolebindingCommand) list(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	resourcePatterns, _, err := c.client.UserAndRoleMgmtApi.GetRoleResourcesForPrincipal(context.Background(), principal, role, mds.Scope{Clusters: *scopeClusters})
+	resourcePatterns, _, err := c.client.UserAndRoleMgmtApi.GetRoleResourcesForPrincipal(c.ctx, principal, role, mds.Scope{Clusters: *scopeClusters})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -148,13 +149,10 @@ func (c *rolebindingCommand) parseResourcePattern(typename string, prefix bool) 
 }
 
 func (c *rolebindingCommand) validateRoleAndResourceType(roleName string, resourceType string) error {
-	fmt.Println("GET ROLE DETAIL " + roleName)
-	role, _, err := c.client.RoleDefinitionsApi.RoleDetail(context.Background(), roleName)
+	role, _, err := c.client.RoleDefinitionsApi.RoleDetail(c.ctx, roleName)
 	if err != nil {
 		return errors.Wrapf(err, "Failed to look up role "+roleName+", maybe invalid role name was specified?")
 	}
-	fmt.Println("ROLE")
-	fmt.Println(role)
 
 	allResourceTypes := []string{}
 	found := false
@@ -240,11 +238,8 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, args []string) error {
 
 	resp, err := (*http.Response)(nil), (error)(nil)
 	if resource != "" {
-		fmt.Println("HERE2")
 		parsedResourcePattern := c.parseResourcePattern(resource, prefix)
-		fmt.Println("HERE3")
 		err = c.validateRoleAndResourceType(role, parsedResourcePattern.ResourceType)
-		fmt.Println("HERE4")
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
@@ -255,15 +250,10 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, args []string) error {
 			Scope:            mds.Scope{Clusters: *scopeClusters},
 			ResourcePatterns: rp,
 		}
-		fmt.Println("HERE5")
-		resp, err = c.client.UserAndRoleMgmtApi.AddRoleResourcesForPrincipal(context.Background(), principal, role, rr)
+		resp, err = c.client.UserAndRoleMgmtApi.AddRoleResourcesForPrincipal(c.ctx, principal, role, rr)
 	} else {
-		resp, err = c.client.UserAndRoleMgmtApi.AddRoleForPrincipal(context.Background(), principal, role, mds.Scope{Clusters: *scopeClusters})
+		resp, err = c.client.UserAndRoleMgmtApi.AddRoleForPrincipal(c.ctx, principal, role, mds.Scope{Clusters: *scopeClusters})
 	}
-
-	fmt.Println(resp)
-	fmt.Println(resp.StatusCode)
-	fmt.Println(err)
 
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -301,11 +291,8 @@ func (c *rolebindingCommand) delete(cmd *cobra.Command, args []string) error {
 
 	resp, err := (*http.Response)(nil), (error)(nil)
 	if resource != "" {
-		fmt.Println("HERE2")
 		parsedResourcePattern := c.parseResourcePattern(resource, prefix)
-		fmt.Println("HERE3")
 		err = c.validateRoleAndResourceType(role, parsedResourcePattern.ResourceType)
-		fmt.Println("HERE4")
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
@@ -316,15 +303,10 @@ func (c *rolebindingCommand) delete(cmd *cobra.Command, args []string) error {
 			Scope:            mds.Scope{Clusters: *scopeClusters},
 			ResourcePatterns: rp,
 		}
-		fmt.Println("HERE5")
-		resp, err = c.client.UserAndRoleMgmtApi.RemoveRoleResourcesForPrincipal(context.Background(), principal, role, rr)
+		resp, err = c.client.UserAndRoleMgmtApi.RemoveRoleResourcesForPrincipal(c.ctx, principal, role, rr)
 	} else {
-		resp, err = c.client.UserAndRoleMgmtApi.DeleteRoleForPrincipal(context.Background(), principal, role, mds.Scope{Clusters: *scopeClusters})
+		resp, err = c.client.UserAndRoleMgmtApi.DeleteRoleForPrincipal(c.ctx, principal, role, mds.Scope{Clusters: *scopeClusters})
 	}
-
-	fmt.Println(resp)
-	fmt.Println(resp.StatusCode)
-	fmt.Println(err)
 
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
