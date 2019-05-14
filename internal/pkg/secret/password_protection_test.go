@@ -6,7 +6,6 @@ import (
 	"os"
 	"strings"
 	"testing"
-     secrets "github.com/confluentinc/cli/internal/pkg/secret"
 )
 
 
@@ -30,7 +29,7 @@ func TestPasswordProtectionSuite_CreateMasterKey(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			logger := log.New()
-			plugin := secrets.NewPasswordProtectionPlugin(logger)
+			plugin := NewPasswordProtectionPlugin(logger)
 			key, err:= plugin.CreateMasterKey(tt.args.masterKeyPassphrase)
 			if (err != nil) != tt.wantErr {
 				t.Fail()
@@ -106,7 +105,7 @@ func TestPasswordProtectionSuite_EncryptConfigFileSecrets(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			logger := log.New()
 			_ = os.MkdirAll(tt.args.secureDir, os.ModePerm)
-			plugin := secrets.NewPasswordProtectionPlugin(logger)
+			plugin := NewPasswordProtectionPlugin(logger)
 			if tt.args.setMEK {
 				err := createMasterKey(tt.args.masterKeyPassphrase, plugin)
 				if err != nil {
@@ -127,7 +126,7 @@ func TestPasswordProtectionSuite_EncryptConfigFileSecrets(t *testing.T) {
 			}
 
 			// Clean Up
-			os.Unsetenv(secrets.CONFLUENT_KEY_ENVVAR)
+			os.Unsetenv(CONFLUENT_KEY_ENVVAR)
 			os.RemoveAll(tt.args.secureDir)
 		})
 	}
@@ -166,7 +165,7 @@ func TestPasswordProtectionSuite_DecryptConfigFileSecrets(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			logger := log.New()
 			_ = os.MkdirAll(tt.args.secureDir, os.ModePerm)
-			plugin := secrets.NewPasswordProtectionPlugin(logger)
+			plugin := NewPasswordProtectionPlugin(logger)
 			err := createMasterKey(tt.args.masterKeyPassphrase, plugin)
 			if err != nil {
 				t.Fail()
@@ -196,7 +195,7 @@ func TestPasswordProtectionSuite_DecryptConfigFileSecrets(t *testing.T) {
 			}
 
 			// Clean Up
-			os.Unsetenv(secrets.CONFLUENT_KEY_ENVVAR)
+			os.Unsetenv(CONFLUENT_KEY_ENVVAR)
 			os.RemoveAll(tt.args.secureDir)
 		})
 	}
@@ -238,7 +237,7 @@ func TestPasswordProtectionSuite_AddConfigFileSecrets(t *testing.T) {
 			// SetUp
 			_ = os.MkdirAll(tt.args.secureDir, os.ModePerm)
 			logger := log.New()
-			plugin := secrets.NewPasswordProtectionPlugin(logger)
+			plugin := NewPasswordProtectionPlugin(logger)
 
 			// Set master key
 			err := createMasterKey(tt.args.masterKeyPassphrase, plugin)
@@ -270,19 +269,19 @@ func TestPasswordProtectionSuite_AddConfigFileSecrets(t *testing.T) {
 				t.Fail()
 			}
 			// Clean Up
-			os.Unsetenv(secrets.CONFLUENT_KEY_ENVVAR)
+			os.Unsetenv(CONFLUENT_KEY_ENVVAR)
 			os.RemoveAll(tt.args.secureDir)
 		})
 	}
 }
 
-func createMasterKey(passphrase string, plugin *secrets.PasswordProtectionSuite) error {
+func createMasterKey(passphrase string, plugin *PasswordProtectionSuite) error {
 	key, err := plugin.CreateMasterKey(passphrase)
 	if err != nil {
 		return err
 	}
 
-	os.Setenv(secrets.CONFLUENT_KEY_ENVVAR, key)
+	os.Setenv(CONFLUENT_KEY_ENVVAR, key)
 
 	return nil
 }
