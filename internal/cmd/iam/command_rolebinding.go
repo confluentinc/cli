@@ -20,10 +20,10 @@ import (
 )
 
 var (
-	rolebindingListFields     = []string{"Name", "SuperUser", "AllowedOperations"}
-	rolebindingListLabels     = []string{"Name", "SuperUser", "AllowedOperations"}
-	rolebindingDescribeFields = []string{"Name", "SuperUser", "AllowedOperations"}
-	rolebindingDescribeLabels = []string{"Name", "SuperUser", "AllowedOperations"}
+	// rolebindingListFields     = []string{"Name", "SuperUser", "AllowedOperations"}
+	// rolebindingListLabels     = []string{"Name", "SuperUser", "AllowedOperations"}
+	// rolebindingDescribeFields = []string{"Name", "SuperUser", "AllowedOperations"}
+	// rolebindingDescribeLabels = []string{"Name", "SuperUser", "AllowedOperations"}
 	resourcePatternListFields = []string{"Name", "ResourceType", "PatternType"}
 	resourcePatternListLabels = []string{"Name", "ResourceType", "PatternType"}
 )
@@ -41,7 +41,7 @@ func NewRolebindingCommand(config *config.Config, ch *pcmd.ConfigHelper, client 
 	cmd := &rolebindingCommand{
 		Command: &cobra.Command{
 			Use:   "rolebinding",
-			Short: "Manage RBAC/IAM rolebindings",
+			Short: "manage RBAC/IAM rolebindings",
 		},
 		config: config,
 		ch:     ch,
@@ -236,7 +236,7 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	resp, err := (*http.Response)(nil), (error)(nil)
+	resp := (*http.Response)(nil)
 	if resource != "" {
 		parsedResourcePattern := c.parseResourcePattern(resource, prefix)
 		err = c.validateRoleAndResourceType(role, parsedResourcePattern.ResourceType)
@@ -289,7 +289,7 @@ func (c *rolebindingCommand) delete(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	resp, err := (*http.Response)(nil), (error)(nil)
+	resp := (*http.Response)(nil)
 	if resource != "" {
 		parsedResourcePattern := c.parseResourcePattern(resource, prefix)
 		err = c.validateRoleAndResourceType(role, parsedResourcePattern.ResourceType)

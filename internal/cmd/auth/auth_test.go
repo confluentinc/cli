@@ -138,7 +138,7 @@ func Test_credentials_NoSpacesAroundEmail_ShouldSupportSpacesAtBeginOrEnd(t *tes
 	auth := &sdkMock.Auth{}
 	cmds, _ := newAuthCommand(prompt, auth, req)
 
-	user, pass, err := cmds.credentials(cmds.Commands[0])
+	user, pass, err := cmds.credentials(cmds.Commands[0], "Email")
 	req.NoError(err)
 	req.Equal("cody@confluent.io", user)
 	req.Equal(" iamrobin ", pass)
@@ -161,7 +161,7 @@ func newAuthCommand(prompt pcmd.Prompt, auth *sdkMock.Auth, req *require.Asserti
 	}
 	cfg := config.New()
 	cfg.Logger = log.New()
-	commands := newCommands(&cliMock.Commander{}, cfg, prompt, mockAnonHTTPClientFactory, mockJwtHTTPClientFactory)
+	commands := newCommands(&cliMock.Commander{}, cfg, "ccloud", nil, prompt, mockAnonHTTPClientFactory, mockJwtHTTPClientFactory)
 	for _, c := range commands.Commands {
 		c.PersistentFlags().CountP("verbose", "v", "increase output verbosity")
 	}
