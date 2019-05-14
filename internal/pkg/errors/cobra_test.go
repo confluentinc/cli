@@ -25,17 +25,10 @@ func TestHandleError(t *testing.T) {
 		},
 		{
 			name:        "dynamic message",
-			err:         NewNotAuthenticatedError("some dynamic message"),
-			want:        "some dynamic message",
+			err:         &UnconfiguredAPISecretError{APIKey: "MYKEY", ClusterID: "lkc-mine"},
+			want:        "please add API secret with 'api-key store MYKEY --cluster lkc-mine'",
 			wantErr:     true,
-			wantErrType: "errors.NotAuthenticatedError",
-		},
-		{
-			name:        "dynamic message - not first case",
-			err:         &UnconfiguredAPIKeyContextError{ClusterID: "cid", APIKey: "apikeyid"},
-			want:        "please add API secret with 'api-key store apikeyid --cluster cid'",
-			wantErr:     true,
-			wantErrType: "*errors.UnconfiguredAPIKeyContextError",
+			wantErrType: "*errors.UnconfiguredAPISecretError",
 		},
 	}
 	for _, tt := range tests {

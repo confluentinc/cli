@@ -127,7 +127,8 @@ func (s *CLITestSuite) Test_Ccloud_Help() {
 		{args: "version", fixture: "version.golden"},
 	}
 	for _, tt := range tests {
-		s.runCcloudTest(tt, serve(s.T()).URL, serveKafkaAPI(s.T()).URL)
+		kafkaAPIURL := serveKafkaAPI(s.T()).URL
+		s.runCcloudTest(tt, serve(s.T(), kafkaAPIURL).URL, kafkaAPIURL)
 	}
 }
 
@@ -153,6 +154,13 @@ func (s *CLITestSuite) Test_Ccloud_Login_UseKafka_AuthKafka_Errors() {
 			authKafka: "true",
 		},
 		{
+			name:      "error if no api key used",
+			args:      "kafka topic produce integ",
+			fixture:   "err-no-api-key.golden",
+			login:     "default",
+			useKafka:  "lkc-abc123",
+		},
+		{
 			name:      "error if deleting non-existent api-key",
 			args:      "api-key delete UNKNOWN",
 			fixture:   "delete-unknown-key.golden",
@@ -171,7 +179,8 @@ func (s *CLITestSuite) Test_Ccloud_Login_UseKafka_AuthKafka_Errors() {
 		if strings.HasPrefix(tt.name, "error") {
 			tt.wantErrCode = 1
 		}
-		s.runCcloudTest(tt, serve(s.T()).URL, serveKafkaAPI(s.T()).URL)
+		kafkaAPIURL := serveKafkaAPI(s.T()).URL
+		s.runCcloudTest(tt, serve(s.T(), kafkaAPIURL).URL, kafkaAPIURL)
 	}
 }
 
@@ -183,8 +192,6 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint stri
 		tt.wantErrCode = 1
 	}
 	s.T().Run(tt.name, func(t *testing.T) {
-		req := require.New(t)
-
 		if !tt.workflow {
 			resetConfiguration(t)
 		}
@@ -209,22 +216,12 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint stri
 			if *debug {
 				fmt.Println(output)
 			}
-		}
-
-		// HACK: there's no non-interactive way to save an API key locally yet (just kafka cluster auth)
-		if tt.name == "error if topic already exists" {
-			cfg := config.New(&config.Config{CLIName: "ccloud"})
-			err := cfg.Load()
-			req.NoError(err)
-			ctx, err := cfg.Context()
-			req.NoError(err)
-			ctx.KafkaClusters[ctx.Kafka] = &config.KafkaClusterConfig{
-				APIKey:      "MYKEY",
-				APIKeys:     map[string]*config.APIKeyPair{"MYKEY": {Key: "MYKEY", Secret: "MYSECRET"}},
-				APIEndpoint: serveKafkaAPI(t).URL,
+			// HACK: we don't have scriptable output yet so we parse it from the table
+			key := strings.TrimSpace(strings.Split(strings.Split(output, "\n")[2], "|")[2])
+			output = runCommand(t, "ccloud", []string{}, fmt.Sprintf("api-key use %s --cluster %s", key, tt.useKafka), 0)
+			if *debug {
+				fmt.Println(output)
 			}
-			err = cfg.Save()
-			req.NoError(err)
 		}
 
 		output := runCommand(t, "ccloud", tt.env, tt.args, tt.wantErrCode)
@@ -265,7 +262,7 @@ func runCommand(t *testing.T, binaryName string, env []string, args string, want
 		if exitError, ok := err.(*exec.ExitError); ok {
 			if wantErrCode == 0 {
 				require.Failf(t, "unexpected error",
-					"exit %d: %s", exitError.ExitCode(), string(output))
+					"exit %d: %s\n%s", exitError.ExitCode(), args, string(output))
 			} else {
 				require.Equal(t, wantErrCode, exitError.ExitCode())
 			}
@@ -389,7 +386,7 @@ func init() {
 	}
 }
 
-func serve(t *testing.T) *httptest.Server {
+func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 	req := require.New(t)
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/sessions", func(w http.ResponseWriter, r *http.Request) {
@@ -451,7 +448,7 @@ func serve(t *testing.T) *httptest.Server {
 			Cluster: &kafkav1.KafkaCluster{
 				Id:          id,
 				Endpoint:    "SASL_SSL://kafka-endpoint",
-				ApiEndpoint: "https://kafka-api-endpoint",
+				ApiEndpoint: kafkaAPIURL,
 			},
 		})
 		require.NoError(t, err)

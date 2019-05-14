@@ -10,7 +10,8 @@ import (
 )
 
 func (s *CLITestSuite) TestAPIKeyCommands() {
-	loginURL := serve(s.T()).URL
+	kafkaAPIURL := serveKafkaAPI(s.T()).URL
+	loginURL := serve(s.T(), kafkaAPIURL).URL
 
 	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
 	tests := []CLITest{

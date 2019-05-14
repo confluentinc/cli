@@ -53,7 +53,7 @@ func (c *ConfigHelper) KafkaClusterConfig(clusterID, environment string) (*confi
 			if err != ccloud.ErrNotFound {
 				return nil, err
 			}
-			return nil, errors.NewUnknownKafkaContextError(clusterID)
+			return nil, &errors.UnspecifiedKafkaClusterError{KafkaClusterID: clusterID}
 		}
 		cluster = &config.KafkaClusterConfig{
 			ID:          clusterID,
@@ -103,7 +103,7 @@ func (c *ConfigHelper) UseAPIKey(apiKey, clusterID string) error {
 			return fmt.Errorf("invalid api-key %s for cluster %s", apiKey, clusterID)
 		}
 		// this means the requested api-key exists, but we just don't have the secret saved locally
-		return &errors.UnconfiguredAPIKeyContextError{APIKey: apiKey, ClusterID: clusterID}
+		return &errors.UnconfiguredAPISecretError{APIKey: apiKey, ClusterID: clusterID}
 	}
 
 	cluster.APIKey = apiKey

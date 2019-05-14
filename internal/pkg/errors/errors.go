@@ -17,53 +17,37 @@ import (
  * - API error responses (json) are parsed into corev1.Error objects.
  *   - Note: API returns 404s for unauthorized resources, so HTTP package has to remap 404 -> 401 where appropriate.
  * - Pkg call ConvertAPIError() to transforms corev1.Error into HTTP Error constants
+ *
+ * Create a custom error object if you need a custom field in your message (like the clusterID).
+ * Otherwise just add a named error var.
  */
 
-type errString struct {
-	msg string
+// UnspecifiedKafkaClusterError means the user needs to specify a kafka cluster
+type UnspecifiedKafkaClusterError struct {
+	KafkaClusterID string
 }
 
-func (e *errString) Error() string {
-	return e.msg
+func (e *UnspecifiedKafkaClusterError) Error() string {
+	return e.KafkaClusterID
 }
 
-type NotAuthenticatedError struct{ *errString }
-
-func NewNotAuthenticatedError(msg string) NotAuthenticatedError {
-	return NotAuthenticatedError{errString: &errString{msg}}
-}
-
-type UnknownKafkaContextError struct{ *errString }
-
-func NewUnknownKafkaContextError(msg string) UnknownKafkaContextError {
-	return UnknownKafkaContextError{errString: &errString{msg}}
-}
-
-type UnknownAPIKeyError struct {
-	APIKey    string
-}
-
-func (e *UnknownAPIKeyError) Error() string {
-	return fmt.Sprintf("Unknown API key %s", e.APIKey)
-}
-
-func IsUnknownAPIKey(err error) bool {
-	_, ok := err.(*UnknownAPIKeyError)
-	return ok
-}
-
-type UnconfiguredAPIKeyContextError struct {
+// UnspecifiedAPIKeyError means the user needs to set an api-key for this cluster
+type UnspecifiedAPIKeyError struct {
 	ClusterID string
+}
+
+func (e *UnspecifiedAPIKeyError) Error() string {
+	return e.ClusterID
+}
+
+// UnconfiguredAPISecretError means the user needs to store the API secret locally
+type UnconfiguredAPISecretError struct {
 	APIKey    string
+	ClusterID string
 }
 
-func (e *UnconfiguredAPIKeyContextError) Error() string {
+func (e *UnconfiguredAPISecretError) Error() string {
 	return fmt.Sprintf("please add API secret with 'api-key store %s --cluster %s'", e.APIKey, e.ClusterID)
-}
-
-func IsUnconfiguredAPIKeyContext(err error) bool {
-	_, ok := err.(*UnconfiguredAPIKeyContextError)
-	return ok
 }
 
 var (

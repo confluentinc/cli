@@ -42,6 +42,7 @@ func NewClient(cliName string, logger *log.Logger) (update.Client, error) {
 		CheckFile:     fmt.Sprintf(CheckFileFmt, cliName),
 		CheckInterval: CheckInterval,
 		Logger:        logger,
+		Out:           os.Stdout,
 	}), nil
 }
 

@@ -13,6 +13,7 @@ import (
 type PreRunner interface {
 	Anonymous() func(cmd *cobra.Command, args []string) error
 	Authenticated() func(cmd *cobra.Command, args []string) error
+	AuthenticatedAPIKey() func(cmd *cobra.Command, args []string) error
 }
 
 // PreRun is the standard PreRunner implementation
@@ -22,6 +23,7 @@ type PreRun struct {
 	Version      string
 	Logger       *log.Logger
 	Config       *config.Config
+	ConfigHelper *ConfigHelper
 }
 
 // Anonymous provides PreRun operations for commands that may be run without a logged-in user
@@ -44,6 +46,24 @@ func (r *PreRun) Authenticated() func(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		if err := r.Config.CheckLogin(); err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+		return nil
+	}
+}
+
+// AuthenticatedAPIKey provides PreRun operations for commands that require a logged-in user with an API key
+func (r *PreRun) AuthenticatedAPIKey() func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		if err := r.Authenticated()(cmd, args); err != nil {
+			return err
+		}
+		cluster, err := GetKafkaCluster(cmd, r.ConfigHelper)
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+		err = r.Config.CheckHasAPIKey(cluster.Id)
+		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
 		return nil

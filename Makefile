@@ -50,6 +50,28 @@ endif
 show-args:
 	@echo "VERSION: $(VERSION)"
 
+#
+# START DEVELOPMENT HELPERS
+# Usage: make run-ccloud -- version
+#        make run-ccloud -- --version
+#
+
+# If the first argument is "run-ccloud"...
+ifeq (run-ccloud,$(firstword $(MAKECMDGOALS)))
+  # use the rest as arguments for "run-ccloud"
+  RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+  # ...and turn them into do-nothing targets
+  $(eval $(RUN_ARGS):;@:)
+endif
+
+.PHONY: run-ccloud
+run-ccloud:
+	 @go run -ldflags '-X main.cliName=ccloud' cmd/confluent/main.go $(RUN_ARGS)
+
+#
+# END DEVELOPMENT HELPERS
+#
+
 .PHONY: build-go
 build-go:
 	make build-ccloud
@@ -71,9 +93,9 @@ internal/cmd/local/bindata.go:
 
 .PHONY: release
 release: get-release-image commit-release tag-release
-	make gorelease
-	make publish
-	make publish-docs
+	@GO111MODULE=on make gorelease
+	@GO111MODULE=on VERSION=$(VERSION) make publish
+	@GO111MODULE=on VERSION=$(VERSION) make publish-docs
 
 .PHONY: gorelease
 gorelease:
@@ -124,7 +146,7 @@ dist: download-licenses
 	done
 
 .PHONY: publish
-publish:
+publish: dist
 	@for binary in ccloud confluent; do \
 		aws s3 cp dist/$${binary}/ s3://confluent.cloud/$${binary}-cli/archives/$(VERSION:v%=%)/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --include "*_checksums.txt" --exclude "*_latest_*" --acl public-read ; \
 		aws s3 cp dist/$${binary}/ s3://confluent.cloud/$${binary}-cli/archives/latest/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --include "*_checksums.txt" --exclude "*_$(VERSION)_*" --acl public-read ; \
