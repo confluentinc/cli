@@ -114,7 +114,7 @@ func linters(cmd *cobra.Command) *multierror.Error {
 				!strings.Contains(fullCommand(cmd), "kafka acl") &&
 				// skip api-key create since you don't get to choose a name for API keys
 				!strings.Contains(fullCommand(cmd), "api-key create") &&
-				// skip rolebinding create since you don't get to choose a name for role bindings
+				// skip rolebinding since you don't get to choose a name for role bindings
 				!strings.Contains(fullCommand(cmd), "iam rolebinding") &&
 				// skip local which delegates to bash commands
 				!strings.Contains(fullCommand(cmd), "local") {
@@ -262,7 +262,6 @@ func linters(cmd *cobra.Command) *multierror.Error {
 				word != "Apache" && word != "Kafka" &&
 				word != "CLI" && word != "API" && word != "ACL" && word != "ACLs" && word != "ALL" && word != "RBACIAM" &&
 				word != "Confluent" && !(words[i] == "Confluent" && word == "Cloud") && !(words[i] == "Confluent" && word == "Platform") {
-				fmt.Println(word)
 				issue := fmt.Errorf("don't title case short description on %s - %s", fullCommand(cmd), cmd.Short)
 				issues = multierror.Append(issues, issue)
 			}
@@ -299,7 +298,7 @@ func linters(cmd *cobra.Command) *multierror.Error {
 			if !unicode.IsLetter(l) {
 				if l == '-' {
 					countDashes++
-					// Even 2 feels too long... *-*--id have to be allowed for now though
+					// Even 2 is too long... but *-*--id have been allowed for now =/
 					if countDashes > 1 && (countDashes == 2 && !strings.HasSuffix(pf.Name, "-id") && pf.Name != "schema-registry-cluster-id") {
 						issue := fmt.Errorf("flag name must only have one dash for %s on %s", pf.Name, fullCommand(cmd))
 						issues = multierror.Append(issues, issue)
