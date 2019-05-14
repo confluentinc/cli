@@ -41,7 +41,7 @@ func NewRolebindingCommand(config *config.Config, ch *pcmd.ConfigHelper, client 
 	cmd := &rolebindingCommand{
 		Command: &cobra.Command{
 			Use:   "rolebinding",
-			Short: "manage RBAC/IAM rolebindings",
+			Short: "Manage RBAC/IAM rolebindings",
 		},
 		config: config,
 		ch:     ch,
@@ -66,6 +66,7 @@ func (c *rolebindingCommand) init() {
 	listCmd.Flags().String("schema-registry-cluster-id", "", "Schema registry cluster ID for scope of rolebinding listings")
 	listCmd.Flags().String("ksql-cluster-id", "", "KSQL cluster ID for scope of rolebinding listings")
 	listCmd.Flags().String("connect-cluster-id", "", "Connect cluster ID for scope of rolebinding listings")
+	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
 	createCmd := &cobra.Command{
@@ -82,6 +83,7 @@ func (c *rolebindingCommand) init() {
 	createCmd.Flags().String("schema-registry-cluster-id", "", "Schema registry cluster ID for the rolebinding")
 	createCmd.Flags().String("ksql-cluster-id", "", "KSQL cluster ID for the rolebinding")
 	createCmd.Flags().String("connect-cluster-id", "", "Connect cluster ID for the rolebinding")
+	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
 	deleteCmd := &cobra.Command{
@@ -97,6 +99,7 @@ func (c *rolebindingCommand) init() {
 	deleteCmd.Flags().String("schema-registry-cluster-id", "", "Schema registry cluster ID for the rolebinding")
 	deleteCmd.Flags().String("ksql-cluster-id", "", "KSQL cluster ID for the rolebinding")
 	deleteCmd.Flags().String("connect-cluster-id", "", "Connect cluster ID for the rolebinding")
+	deleteCmd.Flags().SortFlags = false
 	c.AddCommand(deleteCmd)
 }
 

@@ -43,12 +43,15 @@ func main() {
 	}
 	vocab.AddWordRaw("ccloud")
 	vocab.AddWordRaw("kafka")
+	vocab.AddWordRaw("ksql")
 	vocab.AddWordRaw("api")
 	vocab.AddWordRaw("acl")
 	vocab.AddWordRaw("url")
 	vocab.AddWordRaw("config")
 	vocab.AddWordRaw("multizone")
 	vocab.AddWordRaw("transactional")
+	vocab.AddWordRaw("iam")
+	vocab.AddWordRaw("rolebinding")
 
 	var issues *multierror.Error
 	for _, cliName := range []string{"confluent", "ccloud"} {
@@ -111,6 +114,8 @@ func linters(cmd *cobra.Command) *multierror.Error {
 				!strings.Contains(fullCommand(cmd), "kafka acl") &&
 				// skip api-key create since you don't get to choose a name for API keys
 				!strings.Contains(fullCommand(cmd), "api-key create") &&
+				// skip rolebinding create since you don't get to choose a name for role bindings
+				!strings.Contains(fullCommand(cmd), "iam rolebinding") &&
 				// skip local which delegates to bash commands
 				!strings.Contains(fullCommand(cmd), "local") {
 
@@ -133,6 +138,11 @@ func linters(cmd *cobra.Command) *multierror.Error {
 						issue := fmt.Errorf("bad usage string: must have KEY in %s", fullCommand(cmd))
 						issues = multierror.Append(issues, issue)
 					}
+				} else if cmd.Parent().Use == "role" {
+					if !strings.HasSuffix(cmd.Use, "ROLE") {
+						issue := fmt.Errorf("bad usage string: must have ROLE in %s", fullCommand(cmd))
+						issues = multierror.Append(issues, issue)
+					}
 				} else {
 					// check for "create NAME" and "<verb> ID" elsewhere
 					if strings.HasPrefix(cmd.Use, "create ") {
@@ -151,7 +161,10 @@ func linters(cmd *cobra.Command) *multierror.Error {
 			if cmd.Parent().Use != "environment" && cmd.Parent().Use != "service-account" && cmd.Use != "local" &&
 				// these all require explicit cluster as id/name args
 				!strings.Contains(fullCommand(cmd), "kafka cluster") &&
-				// this doesn't need a --cluster override since you provide the api key itself to identify it
+				// roles and rolebindings operate at the control plane layer, not per --cluster
+				!strings.Contains(fullCommand(cmd), "iam role") &&
+				!strings.Contains(fullCommand(cmd), "iam rolebinding") &&
+				// api-key doesn't need a --cluster override since you provide the api key itself to identify it
 				!strings.Contains(fullCommand(cmd), "api-key update") &&
 				!strings.Contains(fullCommand(cmd), "api-key delete") {
 				f := cmd.Flag("cluster")
@@ -247,8 +260,9 @@ func linters(cmd *cobra.Command) *multierror.Error {
 			word = alnum.ReplaceAllString(word, "") // Remove any punctuation before comparison
 			if word[0] >= 'A' && word[0] <= 'Z' &&
 				word != "Apache" && word != "Kafka" &&
-				word != "CLI" && word != "API" && word != "ACL" && word != "ACLs" && word != "ALL" &&
+				word != "CLI" && word != "API" && word != "ACL" && word != "ACLs" && word != "ALL" && word != "RBACIAM" &&
 				word != "Confluent" && !(words[i] == "Confluent" && word == "Cloud") && !(words[i] == "Confluent" && word == "Platform") {
+				fmt.Println(word)
 				issue := fmt.Errorf("don't title case short description on %s - %s", fullCommand(cmd), cmd.Short)
 				issues = multierror.Append(issues, issue)
 			}
@@ -266,7 +280,8 @@ func linters(cmd *cobra.Command) *multierror.Error {
 
 	// check that flags are consistent
 	cmd.Flags().VisitAll(func(pf *pflag.Flag) {
-		if len(pf.Name) > 16 && pf.Name != "service-account-id" && pf.Name != "replication-factor" {
+		if len(pf.Name) > 16 && pf.Name != "service-account-id" && pf.Name != "replication-factor" &&
+			pf.Name != "schema-registry-cluster-id" && pf.Name != "connect-cluster-id" {
 			issue := fmt.Errorf("flag name is too long for %s on %s", pf.Name, fullCommand(cmd))
 			issues = multierror.Append(issues, issue)
 		}
@@ -284,8 +299,8 @@ func linters(cmd *cobra.Command) *multierror.Error {
 			if !unicode.IsLetter(l) {
 				if l == '-' {
 					countDashes++
-					// Even 2 is too long... service-account-id is the one exception we'll allow for now
-					if countDashes > 1 && pf.Name != "service-account-id" {
+					// Even 2 feels too long... *-*--id have to be allowed for now though
+					if countDashes > 1 && (countDashes == 2 && !strings.HasSuffix(pf.Name, "-id") && pf.Name != "schema-registry-cluster-id") {
 						issue := fmt.Errorf("flag name must only have one dash for %s on %s", pf.Name, fullCommand(cmd))
 						issues = multierror.Append(issues, issue)
 					}
