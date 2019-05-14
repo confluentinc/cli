@@ -12,7 +12,7 @@ func TestCompletionBash(t *testing.T) {
 	req := require.New(t)
 
 	root := pcmd.BuildRootCommand()
-	cmd := NewCompletionCmd(root,"ccloud")
+	cmd := NewCompletionCmd(root, "ccloud")
 	root.AddCommand(cmd)
 
 	output, err := pcmd.ExecuteCommand(root, "completion", "bash")
