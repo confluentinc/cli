@@ -20,7 +20,7 @@ func New(prerunner pcmd.PreRunner, config *config.Config, prompt pcmd.Prompt, pl
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:               "secret",
-			Short:             "Password Management",
+			Short:             "Manage secrets for Confluent Platform",
 			PersistentPreRunE: prerunner.Authenticated(),
 		},
 		config: config,

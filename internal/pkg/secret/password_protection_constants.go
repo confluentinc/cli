@@ -2,7 +2,6 @@ package secret
 
 /* Config Provider Configs*/
 const (
-	ENCRYPTION_CONFIG_PATH = "encryptionConfigPath"
 
 	CONFIG_PROVIDER_KEY = "config.providers"
 
@@ -12,12 +11,10 @@ const (
 
 	SECURE_CONFIG_PROVIDER_CLASS = "org.apache.kafka.common.config.provider.SecurePassConfigProvider"
 
-	SECURE_CONFIG_PROVIDER_ARG1 = "config.providers.securePass.encryptionConfigPath"
 )
 
 /* Encryption Keys Metadata */
 const (
-	METADATA_KEY_PATH = "metadata.symmetric_key.0.file"
 
 	METADATA_KEY_ENVVAR = "metadata.symmetric_key.0.envvar"
 
@@ -46,13 +43,5 @@ const (
 
 /* Password Protection File Metadata */
 const (
-	SECURITY_DIR_PATH = "/etc/secure/"
-
-	CONFLUENT_MASTER_KEY_FILE_PATH =  SECURITY_DIR_PATH + "confluent_master_key.properties"
-
-	SECURE_CONFIG_FILE_PATH = SECURITY_DIR_PATH + "confluent_secure_config.properties"
-
-	CONFLUENT_HOME = "CONFLUENT_HOME"
-
 	CONFLUENT_KEY_ENVVAR = "CONFLUENT_SECURITY_MASTER_KEY"
 )

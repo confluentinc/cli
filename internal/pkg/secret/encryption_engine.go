@@ -22,6 +22,7 @@ type EncryptionEngine interface {
 	AESEncrypt(plainText string, key []byte) (string, string, error)
 	AESDecrypt(cipher string, iv string, algo string, key []byte) (string, error)
 	GenerateRandomDataKey(keyLength int) ([]byte, error)
+    GenerateMasterKey(masterKeyPassphrase string) (string, error)
 	WrapDataKey(dataKey []byte, masterKey string) (string, string, error)
 	UnWrapDataKey(dataKey string, iv string, algo string, masterKey string) ([]byte, error)
 }
@@ -50,9 +51,19 @@ func (c *EncryptEngineSuite) GenerateRandomDataKey(keyLength int) ([]byte, error
 	return key, nil
 }
 
+func (c *EncryptEngineSuite) GenerateMasterKey(masterKeyPassphrase string) (string, error) {
+	key,err := c.generateEncryptionKey(masterKeyPassphrase)
+	if err != nil {
+		return "", err
+	}
+
+	encodedKey := base64.StdEncoding.EncodeToString(key)
+	return encodedKey, nil
+}
+
 func (c *EncryptEngineSuite) WrapDataKey(dataKey []byte, masterKey string) (string, string, error) {
 	dataKeyStr := base64.StdEncoding.EncodeToString(dataKey)
-	masterKeyByte,err := c.generateEncryptionKey(masterKey)
+	masterKeyByte,err := base64.StdEncoding.DecodeString(masterKey)
 	if err != nil {
 		return "","", err
 	}
@@ -60,7 +71,7 @@ func (c *EncryptEngineSuite) WrapDataKey(dataKey []byte, masterKey string) (stri
 }
 
 func (c *EncryptEngineSuite) UnWrapDataKey(dataKey string, iv string, algo string, masterKey string) ([]byte, error) {
-	masterKeyByte, err := c.generateEncryptionKey(masterKey)
+	masterKeyByte, err := base64.StdEncoding.DecodeString(masterKey)
 	if err != nil {
 		return []byte{}, err
 	}
