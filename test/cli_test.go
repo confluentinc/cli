@@ -265,11 +265,11 @@ func (s *CLITestSuite) Test_Ccloud_Login_UseKafka_AuthKafka_Errors() {
 			authKafka: "true",
 		},
 		{
-			name:      "error if no api key used",
-			args:      "kafka topic produce integ",
-			fixture:   "err-no-api-key.golden",
-			login:     "default",
-			useKafka:  "lkc-abc123",
+			name:     "error if no api key used",
+			args:     "kafka topic produce integ",
+			fixture:  "err-no-api-key.golden",
+			login:    "default",
+			useKafka: "lkc-abc123",
 		},
 		{
 			name:      "error if deleting non-existent api-key",
@@ -449,7 +449,7 @@ func init() {
 		Key:    "MYKEY1",
 		Secret: "MYSECRET1",
 		LogicalClusters: []*authv1.ApiKey_Cluster{
-			&authv1.ApiKey_Cluster{Id: "bob"},
+			{Id: "bob"},
 		},
 		UserId: 12,
 	}
@@ -458,7 +458,7 @@ func init() {
 		Key:    "MYKEY2",
 		Secret: "MYSECRET2",
 		LogicalClusters: []*authv1.ApiKey_Cluster{
-			&authv1.ApiKey_Cluster{Id: "abc"},
+			{Id: "abc"},
 		},
 		UserId: 18,
 	}
@@ -467,7 +467,7 @@ func init() {
 		Key:    "UIAPIKEY100",
 		Secret: "UIAPISECRET100",
 		LogicalClusters: []*authv1.ApiKey_Cluster{
-			&authv1.ApiKey_Cluster{Id: "lkc-cool1"},
+			{Id: "lkc-cool1"},
 		},
 		UserId: 25,
 	}
@@ -475,7 +475,7 @@ func init() {
 		Key:    "UIAPIKEY101",
 		Secret: "UIAPISECRET101",
 		LogicalClusters: []*authv1.ApiKey_Cluster{
-			&authv1.ApiKey_Cluster{Id: "lkc-other1"},
+			{Id: "lkc-other1"},
 		},
 		UserId: 25,
 	}
@@ -483,7 +483,7 @@ func init() {
 		Key:    "UIAPIKEY102",
 		Secret: "UIAPISECRET102",
 		LogicalClusters: []*authv1.ApiKey_Cluster{
-			&authv1.ApiKey_Cluster{Id: "lksqlc-ksql1"},
+			{Id: "lksqlc-ksql1"},
 		},
 		UserId: 25,
 	}
@@ -491,7 +491,7 @@ func init() {
 		Key:    "UIAPIKEY103",
 		Secret: "UIAPISECRET103",
 		LogicalClusters: []*authv1.ApiKey_Cluster{
-			&authv1.ApiKey_Cluster{Id: "lkc-cool1"},
+			{Id: "lkc-cool1"},
 		},
 		UserId: 25,
 	}

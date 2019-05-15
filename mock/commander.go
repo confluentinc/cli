@@ -6,7 +6,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
-type Commander struct {}
+type Commander struct{}
 
 var _ cmd.PreRunner = (*Commander)(nil)
 
