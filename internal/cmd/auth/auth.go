@@ -87,10 +87,6 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 
 	token, err := client.Auth.Login(context.Background(), email, password)
 	if err != nil {
-		switch err.(type) {
-		case *ccloud.UnauthorizedError:
-			err = errors.ErrIncorrectAuth  // special case for login failure
-		}
 		return errors.HandleCommon(err, cmd)
 	}
 	a.config.AuthToken = token

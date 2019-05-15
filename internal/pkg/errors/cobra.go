@@ -12,15 +12,15 @@ import (
 
 var messages = map[error]string{
 	ErrNoContext:      "You must login to access Confluent Cloud.",
-	ErrIncorrectAuth:  "You have entered an incorrect username or password. Please try again.",
+	ErrNotLoggedIn:    "You must login to access Confluent Cloud.",
 	ErrNotImplemented: "Sorry, this functionality is not yet available in the CLI.",
 	ErrNoKafkaContext: "You must pass --cluster or set an active kafka in your context with 'kafka cluster use'",
 }
 
 var typeMessages = map[reflect.Type]string{
-	reflect.TypeOf(&ccloud.UnauthorizedError{}):   "You must login to access Confluent Cloud.",
+	reflect.TypeOf(&ccloud.InvalidLoginError{}):   "You have entered an incorrect username or password. Please try again.",
 	reflect.TypeOf(&ccloud.ExpiredTokenError{}):   "Your access to Confluent Cloud has expired. Please login again.",
-	reflect.TypeOf(&ccloud.MalformedTokenError{}): "Your auth token has been corrupted. Please login again.",
+	reflect.TypeOf(&ccloud.InvalidTokenError{}):   "Your auth token has been corrupted. Please login again.",
 }
 
 // HandleCommon provides standard error messaging for common errors.

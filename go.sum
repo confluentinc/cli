@@ -58,6 +58,10 @@ github.com/confluentinc/ccloud-sdk-go v0.0.7-0.20190507021705-ce766a09e718 h1:Uw
 github.com/confluentinc/ccloud-sdk-go v0.0.7-0.20190507021705-ce766a09e718/go.mod h1:zIbhvPHqy+PZLxuIDaN4Hkr1XSVffPL8ynnvJ65empo=
 github.com/confluentinc/ccloud-sdk-go v0.0.7-0.20190514222938-3af134fc7b52 h1:7fgcKpN/PNsfUrQ0sgvcV08XDrw/zJjLnpaBa+/0s6Y=
 github.com/confluentinc/ccloud-sdk-go v0.0.7-0.20190514222938-3af134fc7b52/go.mod h1:zIbhvPHqy+PZLxuIDaN4Hkr1XSVffPL8ynnvJ65empo=
+github.com/confluentinc/ccloud-sdk-go v0.0.7-0.20190515184731-1f813770dcd4 h1:JEzWQoUR0EpM9IExqZZh4zE8JGzebIZIxrOeEkSzC3g=
+github.com/confluentinc/ccloud-sdk-go v0.0.7-0.20190515184731-1f813770dcd4/go.mod h1:zIbhvPHqy+PZLxuIDaN4Hkr1XSVffPL8ynnvJ65empo=
+github.com/confluentinc/ccloud-sdk-go v0.0.7-0.20190515193705-ed57783609c7 h1:+uk+Z26zhP0r5EHJH7ZJ1m4RQv3KBzEsxtl7ihw1k2U=
+github.com/confluentinc/ccloud-sdk-go v0.0.7-0.20190515193705-ed57783609c7/go.mod h1:zIbhvPHqy+PZLxuIDaN4Hkr1XSVffPL8ynnvJ65empo=
 github.com/confluentinc/ccloudapis v0.0.0-20190301100936-766355e1fe2c/go.mod h1:RGupQo6tb6J+1BnSqqueADkoC8b/F60+Ci3FMB3wDFo=
 github.com/confluentinc/ccloudapis v0.0.0-20190430183816-9fe8ee16d070 h1:iDnQrrDFWEBkDXxQcupU6CTg/7wqa3IFKLqiBAnNwV8=
 github.com/confluentinc/ccloudapis v0.0.0-20190430183816-9fe8ee16d070/go.mod h1:RGupQo6tb6J+1BnSqqueADkoC8b/F60+Ci3FMB3wDFo=
@@ -259,6 +263,7 @@ github.com/hpcloud/tail v1.0.0/go.mod h1:ab1qPbhIpdTxEkNHXyeSf5vhxWSCs/tWer42PpO
 github.com/imdario/mergo v0.3.4/go.mod h1:2EnlNZ0deacrJVfApfmtdGgDfMuh/nq6Ok1EcJh5FfA=
 github.com/imdario/mergo v0.3.6 h1:xTNEAn+kxVO7dTZGu0CegyqKZmoWFI0rF8UxjlB2d28=
 github.com/imdario/mergo v0.3.6/go.mod h1:2EnlNZ0deacrJVfApfmtdGgDfMuh/nq6Ok1EcJh5FfA=
+github.com/inconshreveable/mousetrap v1.0.0 h1:Z8tu5sraLXCXIcARxBp/8cbvlwVa7Z1NHg9XEKhtSvM=
 github.com/inconshreveable/mousetrap v1.0.0/go.mod h1:PxqpIevigyE2G7u3NXJIT2ANytuPF1OarO4DADm73n8=
 github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 h1:BQSFePA1RWJOlocH6Fxy8MmwDt+yVQYULKfN0RoTN8A=
 github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99/go.mod h1:1lJo3i6rXxKeerYnT8Nvf0QmHCRC1n8sfWVwXF2Frvo=
@@ -283,6 +288,7 @@ github.com/kisielk/gotool v0.0.0-20161130080628-0de1eaf82fa3/go.mod h1:jxZFDH7IL
 github.com/kisielk/gotool v1.0.0 h1:AV2c/EiW3KqPNT9ZKl07ehoAGi4C5/01Cfbblndcapg=
 github.com/kisielk/gotool v1.0.0/go.mod h1:XhKaO+MFFWcvkIS/tQcRk01m1F5IRFswLeQ+oQHNcck=
 github.com/konsorten/go-windows-terminal-sequences v1.0.1/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
+github.com/konsorten/go-windows-terminal-sequences v1.0.2 h1:DB17ag19krx9CFsz4o3enTrPXyIXCl+2iCXH/aMAp9s=
 github.com/konsorten/go-windows-terminal-sequences v1.0.2/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
 github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=
 github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
@@ -509,6 +515,7 @@ google.golang.org/api v0.4.0/go.mod h1:8k5glujaEP+g9n7WNsDg8QP6cUVNI86fCNMcbazEt
 google.golang.org/appengine v1.1.0/go.mod h1:EbEs0AVv82hx2wNQdGPgUI5lhzA/G0D9YwlJXL52JkM=
 google.golang.org/appengine v1.2.0/go.mod h1:xpcJRLb0r/rnEns0DIKYYv+WjYCduHsrkT7/EB5XEv4=
 google.golang.org/appengine v1.4.0/go.mod h1:xpcJRLb0r/rnEns0DIKYYv+WjYCduHsrkT7/EB5XEv4=
+google.golang.org/appengine v1.5.0 h1:KxkO13IPW4Lslp2bz+KHP2E3gtFlrIGNThxkZQ3g+4c=
 google.golang.org/appengine v1.5.0/go.mod h1:xpcJRLb0r/rnEns0DIKYYv+WjYCduHsrkT7/EB5XEv4=
 google.golang.org/genproto v0.0.0-20180817151627-c66870c02cf8/go.mod h1:JiN7NxoALGmiZfu7CAH4rXhgtRTLTxftemlI0sWmxmc=
 google.golang.org/genproto v0.0.0-20180831171423-11092d34479b/go.mod h1:JiN7NxoALGmiZfu7CAH4rXhgtRTLTxftemlI0sWmxmc=

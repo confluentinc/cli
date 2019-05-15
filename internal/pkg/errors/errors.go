@@ -19,6 +19,13 @@ import (
  * Otherwise just add a named error var.
  */
 
+var (
+	ErrNotImplemented = fmt.Errorf("not implemented")
+	ErrNotLoggedIn    = fmt.Errorf("not logged in")
+	ErrNoContext      = fmt.Errorf("context not set")
+	ErrNoKafkaContext = fmt.Errorf("kafka not set")
+)
+
 // UnspecifiedKafkaClusterError means the user needs to specify a kafka cluster
 type UnspecifiedKafkaClusterError struct {
 	KafkaClusterID string
@@ -47,12 +54,9 @@ func (e *UnconfiguredAPISecretError) Error() string {
 	return fmt.Sprintf("please add API secret with 'api-key store %s --cluster %s'", e.APIKey, e.ClusterID)
 }
 
-var (
-	ErrNotImplemented = fmt.Errorf("not implemented")
-	ErrIncorrectAuth  = fmt.Errorf("incorrect auth")
-	ErrNoContext      = fmt.Errorf("context not set")
-	ErrNoKafkaContext = fmt.Errorf("kafka not set")
-)
+func New(msg string) error {
+	return errors.New(msg)
+}
 
 func Wrap(err error, msg string) error {
 	return errors.Wrap(err, msg)
@@ -60,10 +64,6 @@ func Wrap(err error, msg string) error {
 
 func Wrapf(err error, fmt string, args ...interface{}) error {
 	return errors.Wrapf(err, fmt, args...)
-}
-
-func New(msg string) error {
-	return errors.New(msg)
 }
 
 func Errorf(fmt string, args ...interface{}) error {

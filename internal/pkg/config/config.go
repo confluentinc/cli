@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/mitchellh/go-homedir"
 
 	"github.com/confluentinc/ccloudapis/org/v1"
@@ -174,7 +173,7 @@ func (c *Config) Context() (*Context, error) {
 // CheckLogin returns an error if the user is not logged in.
 func (c *Config) CheckLogin() error {
 	if c.Auth == nil || c.Auth.Account == nil || c.Auth.Account.Id == "" {
-		return &ccloud.UnauthorizedError{}
+		return errors.ErrNotLoggedIn
 	}
 	return nil
 }
