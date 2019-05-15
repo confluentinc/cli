@@ -68,7 +68,7 @@ func (c *clusterCommand) init() {
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	}
-	createCmd.Flags().String("cluster", "", "Confluent Cloud cluster ID")
+	createCmd.Flags().String("cluster", "", "Kafka cluster ID")
 	check(createCmd.MarkFlagRequired("cluster"))
 	createCmd.Flags().Int32("storage", 50, "Amount of data storage available in GB")
 	check(createCmd.MarkFlagRequired("storage"))
@@ -95,7 +95,7 @@ func (c *clusterCommand) init() {
 		RunE:  c.configureACLs,
 		Args:  cobra.MinimumNArgs(1),
 	}
-	aclsCmd.Flags().String("cluster", "", "Confluent Cloud cluster ID")
+	aclsCmd.Flags().String("cluster", "", "Kafka cluster ID")
 	check(createCmd.MarkFlagRequired("cluster"))
 	aclsCmd.Flags().BoolVar(&aclsDryRun, "dry-run", false, "If specified, print the ACLs that will be set and exit")
 	c.AddCommand(aclsCmd)
@@ -274,7 +274,7 @@ func (c *clusterCommand) configureACLs(cmd *cobra.Command, args []string) error 
 
 	// Ensure the Kafka Cluster is an Enterprise cluster
 	if !kafkaCluster.Enterprise {
-		pcmd.Printf(cmd, "Cluster is not an enterprise cluster. ACLs cannot be set.")
+		pcmd.Printf(cmd, "The Kafka cluster is not an enterprise cluster. ACLs cannot be set.")
 		return nil
 	}
 

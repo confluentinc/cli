@@ -71,7 +71,7 @@ func (c *sinkCommand) init() {
 	if ctx, _ := c.config.Context(); ctx != nil {
 		defaultKafkaCluster = ctx.Kafka
 	}
-	createCmd.Flags().StringP("kafka-cluster", "k", defaultKafkaCluster, "Confluent Cloud cluster ID")
+	createCmd.Flags().StringP("kafka-cluster", "k", defaultKafkaCluster, "Kafka cluster ID")
 	if defaultKafkaCluster == "" {
 		check(createCmd.MarkFlagRequired("kafka-cluster"))
 	}

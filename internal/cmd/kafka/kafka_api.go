@@ -50,8 +50,8 @@ func resourceFlags() *pflag.FlagSet {
 	//flgSet.String("cluster", "", "Confluent Cloud cluster ID")
 	flgSet.Bool("cluster-scope", false, "Set the cluster resource")
 	flgSet.String("topic", "", "Set the topic resource")
-	flgSet.String("consumer-group", "", "Set the Group resource")
-	flgSet.String("transactional-id", "", "Set the TxnId resource")
+	flgSet.String("consumer-group", "", "Set the Consumer Group resource")
+	flgSet.String("transactional-id", "", "Set the TransactionalID resource")
 	flgSet.Bool("prefix", false, "Set to match all resource names prefixed with this value")
 
 	return flgSet
