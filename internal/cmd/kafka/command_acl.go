@@ -29,7 +29,7 @@ func NewACLCommand(config *config.Config, client ccloud.Kafka, ch *pcmd.ConfigHe
 	cmd := &aclCommand{
 		Command: &cobra.Command{
 			Use:   "acl",
-			Short: "Manage Kafka ACLs",
+			Short: "Manage Kafka ACLs.",
 		},
 		config: config,
 		client: client,
@@ -45,7 +45,7 @@ func (c *aclCommand) init() {
 
 	cmd := &cobra.Command{
 		Use:   "create",
-		Short: "Create a Kafka ACL",
+		Short: "Create a Kafka ACL.",
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
 	}
@@ -56,7 +56,7 @@ func (c *aclCommand) init() {
 
 	cmd = &cobra.Command{
 		Use:   "delete",
-		Short: "Delete a Kafka ACL",
+		Short: "Delete a Kafka ACL.",
 		RunE:  c.delete,
 		Args:  cobra.NoArgs,
 	}
@@ -67,12 +67,12 @@ func (c *aclCommand) init() {
 
 	cmd = &cobra.Command{
 		Use:   "list",
-		Short: "List Kafka ACLs for a resource",
+		Short: "List Kafka ACLs for a resource.",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	}
 	cmd.Flags().AddFlagSet(resourceFlags())
-	cmd.Flags().Int("service-account-id", 0, "List only ACLs for this service account")
+	cmd.Flags().Int("service-account-id", 0, "Service account ID..")
 	cmd.Flags().SortFlags = false
 
 	c.AddCommand(cmd)

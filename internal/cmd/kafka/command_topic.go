@@ -34,7 +34,7 @@ func NewTopicCommand(prerunner pcmd.PreRunner, config *config.Config, client ccl
 	cmd := &topicCommand{
 		Command: &cobra.Command{
 			Use:   "topic",
-			Short: "Manage Kafka topics",
+			Short: "Manage Kafka topics.",
 		},
 		config:    config,
 		client:    client,
@@ -48,7 +48,7 @@ func NewTopicCommand(prerunner pcmd.PreRunner, config *config.Config, client ccl
 func (c *topicCommand) init() {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List Kafka topics",
+		Short: "List Kafka topics.",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	}
@@ -58,7 +58,7 @@ func (c *topicCommand) init() {
 
 	cmd = &cobra.Command{
 		Use:   "create TOPIC",
-		Short: "Create a Kafka topic",
+		Short: "Create a Kafka topic.",
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -72,7 +72,7 @@ func (c *topicCommand) init() {
 
 	cmd = &cobra.Command{
 		Use:   "describe TOPIC",
-		Short: "Describe a Kafka topic",
+		Short: "Describe a Kafka topic.",
 		RunE:  c.describe,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -82,7 +82,7 @@ func (c *topicCommand) init() {
 
 	cmd = &cobra.Command{
 		Use:   "update TOPIC",
-		Short: "Update a Kafka topic",
+		Short: "Update a Kafka topic.",
 		RunE:  c.update,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -94,7 +94,7 @@ func (c *topicCommand) init() {
 
 	cmd = &cobra.Command{
 		Use:   "delete TOPIC",
-		Short: "Delete a Kafka topic",
+		Short: "Delete a Kafka topic.",
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -104,7 +104,7 @@ func (c *topicCommand) init() {
 
 	cmd = &cobra.Command{
 		Use:               "produce TOPIC",
-		Short:             "Produce messages to a Kafka topic",
+		Short:             "Produce messages to a Kafka topic.",
 		RunE:              c.produce,
 		Args:              cobra.ExactArgs(1),
 		PersistentPreRunE: c.prerunner.AuthenticatedAPIKey(),
@@ -116,7 +116,7 @@ func (c *topicCommand) init() {
 
 	cmd = &cobra.Command{
 		Use:               "consume TOPIC",
-		Short:             "Consume messages from a Kafka topic",
+		Short:             "Consume messages from a Kafka topic.",
 		RunE:              c.consume,
 		Args:              cobra.ExactArgs(1),
 		PersistentPreRunE: c.prerunner.AuthenticatedAPIKey(),

@@ -35,7 +35,7 @@ func NewClusterCommand(config *config.Config, client ccloud.Kafka, ch *pcmd.Conf
 	cmd := &clusterCommand{
 		Command: &cobra.Command{
 			Use:   "cluster",
-			Short: "Manage Kafka clusters",
+			Short: "Manage Kafka clusters.",
 		},
 		config: config,
 		client: client,
@@ -48,14 +48,14 @@ func NewClusterCommand(config *config.Config, client ccloud.Kafka, ch *pcmd.Conf
 func (c *clusterCommand) init() {
 	c.AddCommand(&cobra.Command{
 		Use:   "list",
-		Short: "List Kafka clusters",
+		Short: "List Kafka clusters.",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	})
 
 	createCmd := &cobra.Command{
 		Use:   "create NAME",
-		Short: "Create a Kafka cluster",
+		Short: "Create a Kafka cluster.",
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -74,14 +74,14 @@ func (c *clusterCommand) init() {
 
 	c.AddCommand(&cobra.Command{
 		Use:   "describe ID",
-		Short: "Describe a Kafka cluster",
+		Short: "Describe a Kafka cluster.",
 		RunE:  c.describe,
 		Args:  cobra.ExactArgs(1),
 	})
 
 	updateCmd := &cobra.Command{
 		Use:   "update ID",
-		Short: "Update a Kafka cluster",
+		Short: "Update a Kafka cluster.",
 		RunE:  c.update,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -90,7 +90,7 @@ func (c *clusterCommand) init() {
 
 	deleteCmd := &cobra.Command{
 		Use:   "delete ID",
-		Short: "Delete a Kafka cluster",
+		Short: "Delete a Kafka cluster.",
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -98,7 +98,7 @@ func (c *clusterCommand) init() {
 	c.AddCommand(deleteCmd)
 	c.AddCommand(&cobra.Command{
 		Use:   "use ID",
-		Short: "Make the Kafka cluster active for use in other commands",
+		Short: "Make the Kafka cluster active for use in other commands.",
 		RunE:  c.use,
 		Args:  cobra.ExactArgs(1),
 	})

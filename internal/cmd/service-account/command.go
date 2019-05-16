@@ -38,7 +38,7 @@ func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.User) *c
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:               "service-account",
-			Short:             "Manage service accounts",
+			Short:             "Manage service accounts.",
 			PersistentPreRunE: prerunner.Authenticated(),
 		},
 		config: config,
@@ -51,14 +51,14 @@ func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.User) *c
 func (c *command) init() {
 	c.AddCommand(&cobra.Command{
 		Use:   "list",
-		Short: "List service accounts",
+		Short: "List service accounts.",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	})
 
 	createCmd := &cobra.Command{
 		Use:   "create NAME",
-		Short: "Create a service account",
+		Short: "Create a service account.",
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -69,7 +69,7 @@ func (c *command) init() {
 
 	updateCmd := &cobra.Command{
 		Use:   "update ID",
-		Short: "Update a service account",
+		Short: "Update a service account.",
 		RunE:  c.update,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -80,7 +80,7 @@ func (c *command) init() {
 
 	c.AddCommand(&cobra.Command{
 		Use:   "delete ID",
-		Short: "Delete a service account",
+		Short: "Delete a service account.",
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
 	})

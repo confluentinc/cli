@@ -44,28 +44,28 @@ func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.Account,
 func (c *command) init() {
 	c.AddCommand(&cobra.Command{
 		Use:   "list",
-		Short: "List environments",
+		Short: "List environments.",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	})
 
 	c.AddCommand(&cobra.Command{
 		Use:   "use ID",
-		Short: "Switch to the specified environment",
+		Short: "Switch to the specified environment.",
 		RunE:  c.use,
 		Args:  cobra.ExactArgs(1),
 	})
 
 	c.AddCommand(&cobra.Command{
 		Use:   "create NAME",
-		Short: "Create a new environment",
+		Short: "Create a new environment.",
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	})
 
 	updateCmd := &cobra.Command{
 		Use:   "update ID",
-		Short: "Update the name of an environment",
+		Short: "Update the name of an environment.",
 		RunE:  c.update,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -76,7 +76,7 @@ func (c *command) init() {
 
 	c.AddCommand(&cobra.Command{
 		Use:   "delete ID",
-		Short: "Delete an environment and ALL its resources",
+		Short: "Delete an environment and ALL of its resources.",
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
 	})

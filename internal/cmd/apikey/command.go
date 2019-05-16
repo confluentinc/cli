@@ -49,7 +49,7 @@ func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.APIKey, 
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:               "api-key",
-			Short:             "Manage API keys",
+			Short:             "Manage the API keys.",
 			PersistentPreRunE: prerunner.Authenticated(),
 		},
 		config:   config,
@@ -64,7 +64,7 @@ func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.APIKey, 
 func (c *command) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
-		Short: "List API keys",
+		Short: "List API keys.",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	}
@@ -74,7 +74,7 @@ func (c *command) init() {
 
 	createCmd := &cobra.Command{
 		Use:   "create",
-		Short: "Create API key",
+		Short: "Create API key.",
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
 	}
@@ -86,7 +86,7 @@ func (c *command) init() {
 
 	updateCmd := &cobra.Command{
 		Use:   "update KEY",
-		Short: "Update API key",
+		Short: "Update the API key.",
 		RunE:  c.update,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -96,14 +96,14 @@ func (c *command) init() {
 
 	c.AddCommand(&cobra.Command{
 		Use:   "delete KEY",
-		Short: "Delete API key",
+		Short: "Delete the API key.",
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
 	})
 
 	storeCmd := &cobra.Command{
 		Use:   "store KEY SECRET",
-		Short: "Store an existing API key/secret locally for CLI usage",
+		Short: "Store an existing API key/secret locally for CLI usage.",
 		Long:  longDescription,
 		RunE:  c.store,
 		Args:  cobra.ExactArgs(2),
@@ -115,7 +115,7 @@ func (c *command) init() {
 
 	useCmd := &cobra.Command{
 		Use:   "use KEY",
-		Short: "Make the API key active for use in other commands",
+		Short: "Make the API key active for use in other commands.",
 		RunE:  c.use,
 		Args:  cobra.ExactArgs(1),
 	}
