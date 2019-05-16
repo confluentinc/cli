@@ -25,7 +25,7 @@ func NewMasterKeyCommand(config *config.Config, prompt pcmd.Prompt, plugin secur
 	cmd := &masterKeyCommand{
 		Command: &cobra.Command{
 			Use:   "master-key",
-			Short: "Manage Master Key",
+			Short: "Manage master key",
 		},
 		config: config,
 		prompt: prompt,
@@ -38,34 +38,37 @@ func NewMasterKeyCommand(config *config.Config, prompt pcmd.Prompt, plugin secur
 func (c *masterKeyCommand) init() {
 	createCmd := &cobra.Command{
 		Use:   "create",
-		Short: "Create a Master Key",
+		Short: "Create a master key",
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
 	}
 	createCmd.Flags().String("passphrase", "", "Master Key Passphrase")
 	_ = createCmd.MarkFlagRequired("passphrase")
+	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
 	rotateMasterKeyCmd := &cobra.Command{
 		Use:   "rotate-master-key",
-		Short: "Rotate Master Key",
+		Short: "Rotate master key",
 		RunE:  c.rotate_master_key,
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.NoArgs,
 	}
 
-	rotateMasterKeyCmd.Flags().String("local-secrets-file-path", "", "Local Encrypted Config Properties File Path.")
-	_ = rotateMasterKeyCmd.MarkFlagRequired("local-secrets-file-path")
+	rotateMasterKeyCmd.Flags().String("local-secrets-file", "", "Local Encrypted Config Properties File Path")
+	_ = rotateMasterKeyCmd.MarkFlagRequired("local-secrets-file")
+	rotateMasterKeyCmd.Flags().SortFlags = false
 	c.AddCommand(rotateMasterKeyCmd)
 
 	rotateDataKeyCmd := &cobra.Command{
 		Use:   "rotate-data-key",
-		Short: "Rotate Data Key",
+		Short: "Rotate data key",
 		RunE:  c.rotate_data_key,
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.NoArgs,
 	}
 
-	rotateDataKeyCmd.Flags().String("local-secrets-file-path", "", "Local Encrypted Config Properties File Path.")
-	_ = rotateDataKeyCmd.MarkFlagRequired("local-secrets-file-path")
+	rotateDataKeyCmd.Flags().String("local-secrets-file", "", "Local Encrypted Config Properties File Path")
+	_ = rotateDataKeyCmd.MarkFlagRequired("local-secrets-file")
+	rotateDataKeyCmd.Flags().SortFlags = false
 	c.AddCommand(rotateDataKeyCmd)
 }
 
@@ -136,7 +139,7 @@ func (c *masterKeyCommand) rotate_master_key(cmd *cobra.Command, args []string) 
 		return errors.HandleCommon(err, cmd)
 	}
 
-	localSecretsPath, err := cmd.Flags().GetString("local-secrets-file-path")
+	localSecretsPath, err := cmd.Flags().GetString("local-secrets-file")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -158,7 +161,7 @@ func (c *masterKeyCommand) rotate_data_key(cmd *cobra.Command, args []string) er
 		return errors.HandleCommon(err, cmd)
 	}
 
-	localSecretsPath, err := cmd.Flags().GetString("local-secrets-file-path")
+	localSecretsPath, err := cmd.Flags().GetString("local-secrets-file")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}

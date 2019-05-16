@@ -21,7 +21,6 @@ func New(prerunner pcmd.PreRunner, config *config.Config, prompt pcmd.Prompt, pl
 		Command: &cobra.Command{
 			Use:               "secret",
 			Short:             "Manage secrets for Confluent Platform",
-			PersistentPreRunE: prerunner.Authenticated(),
 		},
 		config: config,
 		prompt: prompt,
