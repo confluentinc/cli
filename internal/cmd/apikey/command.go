@@ -79,7 +79,7 @@ func (c *command) init() {
 		Args:  cobra.NoArgs,
 	}
 	createCmd.Flags().String("cluster", "", "The cluster ID")
-	createCmd.Flags().Int32("service-account-id", 0, "Service account ID")
+	createCmd.Flags().Int32("service-account-id", 0, "Service account ID. If not specified, the API key will have full access on the cluster")
 	createCmd.Flags().String("description", "", "Description of the API key")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
