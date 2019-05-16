@@ -76,7 +76,7 @@ func GenReSTCustom(cmd *cobra.Command, w io.Writer, linkHandler func(string, str
 	buf.WriteString(name + "\n")
 	buf.WriteString(strings.Repeat("-", len(name)) + "\n\n")
 	buf.WriteString(short + "\n\n")
-	buf.WriteString("Synopsis\n")
+	buf.WriteString("Summary\n")
 	buf.WriteString("~~~~~~~~\n\n")
 	buf.WriteString("\n" + long + "\n\n")
 
@@ -94,7 +94,7 @@ func GenReSTCustom(cmd *cobra.Command, w io.Writer, linkHandler func(string, str
 		return err
 	}
 	if hasSeeAlso(cmd) {
-		buf.WriteString("SEE ALSO\n")
+		buf.WriteString("See Also\n")
 		buf.WriteString("~~~~~~~~\n\n")
 		if cmd.HasParent() {
 			parent := cmd.Parent()
