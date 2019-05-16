@@ -77,6 +77,7 @@ github.com/dghubble/sling v1.2.1-0.20181125223409-7458fd7fa70b/go.mod h1:ZcPRuLm
 github.com/dgryski/go-metro v0.0.0-20180109044635-280f6062b5bc/go.mod h1:c9O8+fpSOX1DM8cPNSkX/qsBWdkD4yd2dpciOWQjpBw=
 github.com/dgryski/go-minhash v0.0.0-20170608043002-7fe510aff544 h1:54Y/2GF52MSJ4n63HWvNDFRtztgm6tq2UrOX61sjGKc=
 github.com/dgryski/go-minhash v0.0.0-20170608043002-7fe510aff544/go.mod h1:VBi0XHpFy0xiMySf6YpVbRqrupW4RprJ5QTyN+XvGSM=
+github.com/dgryski/go-spooky v0.0.0-20170606183049-ed3d087f40e2/go.mod h1:hgHYKsoIw7S/hlWtP7wD1wZ7SX1jPTtKko5X9jrOgPQ=
 github.com/eapache/go-resiliency v1.1.0 h1:1NtRmCAqadE2FN4ZcN6g90TP3uk8cg9rn9eNK2197aU=
 github.com/eapache/go-resiliency v1.1.0/go.mod h1:kFI+JgMyC7bLPUVY133qvEBtVayf5mFgVsvEsIPBvNs=
 github.com/eapache/go-xerial-snappy v0.0.0-20180814174437-776d5712da21 h1:YEetp8/yCZMuEPMUDHG0CW/brkkEp8mzqk2+ODEitlw=
