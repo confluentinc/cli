@@ -112,7 +112,7 @@ func linters(cmd *cobra.Command) *multierror.Error {
 				// skip api-key create since you don't get to choose a name for API keys
 				!strings.Contains(fullCommand(cmd), "api-key create") &&
 				// skip local which delegates to bash commands
-				!strings.Contains(fullCommand(cmd), "local") {
+				!strings.Contains(fullCommand(cmd), "local") && cmd.Parent().Use != "file" && cmd.Parent().Use != "master-key"  {
 
 				// check whether arg parsing is setup correctly
 				if reflect.ValueOf(cmd.Args).Pointer() != reflect.ValueOf(cobra.ExactArgs(1)).Pointer() {
@@ -148,7 +148,7 @@ func linters(cmd *cobra.Command) *multierror.Error {
 			}
 
 			// check whether --cluster override flag is available
-			if cmd.Parent().Use != "environment" && cmd.Parent().Use != "service-account" && cmd.Use != "local" &&
+			if cmd.Parent().Use != "environment" && cmd.Parent().Use != "service-account" && cmd.Parent().Use != "file" && cmd.Parent().Use != "master-key" && cmd.Use != "local" &&
 				// these all require explicit cluster as id/name args
 				!strings.Contains(fullCommand(cmd), "kafka cluster") &&
 				// this doesn't need a --cluster override since you provide the api key itself to identify it
@@ -258,7 +258,7 @@ func linters(cmd *cobra.Command) *multierror.Error {
 	// don't allow smushcasecommands, require dash-separated real words
 	bareCmd := strings.Split(cmd.Use, " ")[0]
 	for _, w := range strings.Split(bareCmd, "-") {
-		if ok := vocab.Spell(w); !ok {
+		if ok := vocab.Spell(w); !ok && !strings.Contains(fullCommand(cmd), "secret file decrypt") {
 			issue := fmt.Errorf("commands should consist of dash-separated real english words for %s on %s", bareCmd, fullCommand(cmd))
 			issues = multierror.Append(issues, issue)
 		}
@@ -266,7 +266,8 @@ func linters(cmd *cobra.Command) *multierror.Error {
 
 	// check that flags are consistent
 	cmd.Flags().VisitAll(func(pf *pflag.Flag) {
-		if len(pf.Name) > 16 && pf.Name != "service-account-id" && pf.Name != "replication-factor" {
+		if len(pf.Name) > 16 && pf.Name != "service-account-id" && pf.Name != "replication-factor" && pf.Name != "local-secrets-file" &&
+			pf.Name != "remote-secrets-file"{
 			issue := fmt.Errorf("flag name is too long for %s on %s", pf.Name, fullCommand(cmd))
 			issues = multierror.Append(issues, issue)
 		}
@@ -285,7 +286,7 @@ func linters(cmd *cobra.Command) *multierror.Error {
 				if l == '-' {
 					countDashes++
 					// Even 2 is too long... service-account-id is the one exception we'll allow for now
-					if countDashes > 1 && pf.Name != "service-account-id" {
+					if countDashes > 1 && pf.Name != "service-account-id" && pf.Name != "local-secrets-file" && pf.Name != "remote-secrets-file"{
 						issue := fmt.Errorf("flag name must only have one dash for %s on %s", pf.Name, fullCommand(cmd))
 						issues = multierror.Append(issues, issue)
 					}

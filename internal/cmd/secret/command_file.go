@@ -23,7 +23,7 @@ func NewFileCommand(config *config.Config, plugin secret.PasswordProtection) *co
 	cmd := &secureFileCommand{
 		Command: &cobra.Command{
 			Use:   "file",
-			Short: "Secure secrets in Config File",
+			Short: "Secure secrets in config file",
 		},
 		config: config,
 		plugin: plugin,
@@ -35,88 +35,93 @@ func NewFileCommand(config *config.Config, plugin secret.PasswordProtection) *co
 func (c *secureFileCommand) init() {
 	encryptCmd := &cobra.Command{
 		Use:   "encrypt",
-		Short: "Encrypt secrets in config properties file.",
+		Short: "Encrypt secrets in config properties file",
 		RunE:  c.encrypt,
 		Args:  cobra.NoArgs,
 	}
-	encryptCmd.Flags().String("config-file-path", "", "Config Properties File Path.")
-	_ = encryptCmd.MarkFlagRequired("config-file-path")
+	encryptCmd.Flags().String("config-file", "", "Config Properties File Path")
+	_ = encryptCmd.MarkFlagRequired("config-file")
 
-	encryptCmd.Flags().String("local-secrets-file-path", "", "Local Encrypted Config Properties File Path.")
-	_ = encryptCmd.MarkFlagRequired("local-secrets-file-path")
+	encryptCmd.Flags().String("local-secrets-file", "", "Local Encrypted Config Properties File Path")
+	_ = encryptCmd.MarkFlagRequired("local-secrets-file")
 
-	encryptCmd.Flags().String("remote-secrets-file-path", "", "Remote Encrypted Config Properties File Path.")
-	_ = encryptCmd.MarkFlagRequired("remote-secrets-file-path")
+	encryptCmd.Flags().String("remote-secrets-file", "", "Remote Encrypted Config Properties File Path")
+	_ = encryptCmd.MarkFlagRequired("remote-secrets-file")
+	encryptCmd.Flags().SortFlags = false
 	c.AddCommand(encryptCmd)
 
 	decryptCmd := &cobra.Command{
 		Use:   "decrypt",
-		Short: "Decrypt encrypted secrets from config properties file.",
-		RunE:  c.encrypt,
+		Short: "Decrypt encrypted secrets from config properties file",
+		RunE:  c.decrypt,
 		Args:  cobra.NoArgs,
 	}
-	decryptCmd.Flags().String("config-file-path", "", "Config Properties File Path.")
-	_ = decryptCmd.MarkFlagRequired("config-file-path")
+	decryptCmd.Flags().String("config-file", "", "Config Properties File Path")
+	_ = decryptCmd.MarkFlagRequired("config-file")
 
-	decryptCmd.Flags().String("local-secrets-file-path", "", "Local Encrypted Config Properties File Path.")
-	_ = decryptCmd.MarkFlagRequired("local-secrets-file-path")
+	decryptCmd.Flags().String("local-secrets-file", "", "Local Encrypted Config Properties File Path")
+	_ = decryptCmd.MarkFlagRequired("local-secrets-file")
 
-	decryptCmd.Flags().String("output-file-path", "", "Output File Path.")
-	_ = decryptCmd.MarkFlagRequired("output-file-path")
+	decryptCmd.Flags().String("output-file", "", "Output File Path")
+	_ = decryptCmd.MarkFlagRequired("output-file")
+	decryptCmd.Flags().SortFlags = false
 	c.AddCommand(decryptCmd)
 
 	addCmd := &cobra.Command{
 		Use:   "add",
-		Short: "Add encrypted secrets to a config properties file.",
+		Short: "Add encrypted secrets to a config properties file",
 		RunE:  c.add,
 		Args:  cobra.NoArgs,
 	}
-	addCmd.Flags().String("config-file-path", "", "Config Properties File Path.")
-	_ = addCmd.MarkFlagRequired("config-file-path")
+	addCmd.Flags().String("config-file", "", "Config Properties File Path")
+	_ = addCmd.MarkFlagRequired("config-file")
 
-	addCmd.Flags().String("local-secrets-file-path", "", "Local Encrypted Config Properties File Path.")
-	_ = addCmd.MarkFlagRequired("local-secrets-file-path")
+	addCmd.Flags().String("local-secrets-file", "", "Local Encrypted Config Properties File Path")
+	_ = addCmd.MarkFlagRequired("local-secrets-file")
 
-	addCmd.Flags().String("remote-secrets-file-path", "", "Remote Encrypted Config Properties File Path.")
-	_ = addCmd.MarkFlagRequired("remote-secrets-file-path")
+	addCmd.Flags().String("remote-secrets-file", "", "Remote Encrypted Config Properties File Path")
+	_ = addCmd.MarkFlagRequired("remote-secrets-file")
 
 	addCmd.Flags().String("config", "", "List of config properties")
 	_ = addCmd.MarkFlagRequired("config")
+	addCmd.Flags().SortFlags = false
 	c.AddCommand(addCmd)
 
 	updateCmd := &cobra.Command{
 		Use:   "update",
-		Short: "Update encrypted secrets from config properties file.",
+		Short: "Update encrypted secrets from config properties file",
 		RunE:  c.add,
 		Args:  cobra.NoArgs,
 	}
-	updateCmd.Flags().String("config-file-path", "", "Config Properties File Path.")
-	_ = updateCmd.MarkFlagRequired("config-file-path")
+	updateCmd.Flags().String("config-file", "", "Config Properties File Path")
+	_ = updateCmd.MarkFlagRequired("config-file")
 
-	updateCmd.Flags().String("local-secrets-file-path", "", "Local Encrypted Config Properties File Path.")
-	_ = updateCmd.MarkFlagRequired("local-secrets-file-path")
+	updateCmd.Flags().String("local-secrets-file", "", "Local Encrypted Config Properties File Path")
+	_ = updateCmd.MarkFlagRequired("local-secrets-file")
 
-	updateCmd.Flags().String("remote-secrets-file-path", "", "Remote Encrypted Config Properties File Path.")
-	_ = updateCmd.MarkFlagRequired("remote-secrets-file-path")
+	updateCmd.Flags().String("remote-secrets-file", "", "Remote Encrypted Config Properties File Path")
+	_ = updateCmd.MarkFlagRequired("remote-secrets-file")
 
 	updateCmd.Flags().String("config", "", "List of config properties")
 	_ = updateCmd.MarkFlagRequired("config")
+	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
 
 	removeCmd := &cobra.Command{
 		Use:   "remove",
-		Short: "Delete configs from config properties file.",
+		Short: "Delete configs from config properties file",
 		RunE:  c.remove,
 		Args:  cobra.NoArgs,
 	}
-	removeCmd.Flags().String("config-file-path", "", "Config Properties File Path.")
-	_ = removeCmd.MarkFlagRequired("config-file-path")
+	removeCmd.Flags().String("config-file", "", "Config Properties File Path")
+	_ = removeCmd.MarkFlagRequired("config-file")
 
-	removeCmd.Flags().String("local-secrets-file-path", "", "Local Encrypted Config Properties File Path.")
-	_ = removeCmd.MarkFlagRequired("local-secrets-file-path")
+	removeCmd.Flags().String("local-secrets-file", "", "Local Encrypted Config Properties File Path")
+	_ = removeCmd.MarkFlagRequired("local-secrets-file")
 
 	removeCmd.Flags().String("config", "", "List of config properties")
 	_ = removeCmd.MarkFlagRequired("config")
+	removeCmd.Flags().SortFlags = false
 	c.AddCommand(removeCmd)
 }
 
@@ -135,17 +140,17 @@ func (c *secureFileCommand) encrypt(cmd *cobra.Command, args []string) error {
 }
 
 func (c *secureFileCommand) decrypt(cmd *cobra.Command, args []string) error {
-	configPath, err := cmd.Flags().GetString("config-file-path")
+	configPath, err := cmd.Flags().GetString("config-file")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	localSecretsPath, err := cmd.Flags().GetString("local-secrets-file-path")
+	localSecretsPath, err := cmd.Flags().GetString("local-secrets-file")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	outputPath, err := cmd.Flags().GetString("output-file-path")
+	outputPath, err := cmd.Flags().GetString("output-file")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -207,17 +212,17 @@ func (c *secureFileCommand) add(cmd *cobra.Command, args []string) error {
 }
 
 func (c *secureFileCommand) getConfigFilePath(cmd *cobra.Command) (string, string, string, error) {
-	configPath, err := cmd.Flags().GetString("config-file-path")
+	configPath, err := cmd.Flags().GetString("config-file")
 	if err != nil {
 		return "", "", "", errors.HandleCommon(err, cmd)
 	}
 
-	localSecretsPath, err := cmd.Flags().GetString("local-secrets-file-path")
+	localSecretsPath, err := cmd.Flags().GetString("local-secrets-file")
 	if err != nil {
 		return "", "", "", errors.HandleCommon(err, cmd)
 	}
 
-	remoteSecretsPath, err := cmd.Flags().GetString("remote-secrets-file-path")
+	remoteSecretsPath, err := cmd.Flags().GetString("remote-secrets-file")
 	if err != nil {
 		return "", "", "", errors.HandleCommon(err, cmd)
 	}
@@ -236,12 +241,12 @@ func (c *secureFileCommand) remove(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	configPath, err := cmd.Flags().GetString("config-file-path")
+	configPath, err := cmd.Flags().GetString("config-file")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	localSecretsPath, err := cmd.Flags().GetString("local-secrets-file-path")
+	localSecretsPath, err := cmd.Flags().GetString("local-secrets-file")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
