@@ -75,7 +75,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	cli.PersistentPreRunE = prerunner.Anonymous()
 
 	mdsConfig := mds.NewConfiguration()
-	mdsConfig.BasePath = "http://localhost:8090" // TODO
+	mdsConfig.BasePath = cfg.AuthURL
 	mdsConfig.UserAgent = ver.UserAgent
 
 	mdsClient := mds.NewAPIClient(mdsConfig)
