@@ -115,10 +115,10 @@ func (c *topicCommand) init() {
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
-		Use:   "consume TOPIC",
-		Short: "Consume messages from a Kafka topic",
-		RunE:  c.consume,
-		Args:  cobra.ExactArgs(1),
+		Use:               "consume TOPIC",
+		Short:             "Consume messages from a Kafka topic",
+		RunE:              c.consume,
+		Args:              cobra.ExactArgs(1),
 		PersistentPreRunE: c.prerunner.AuthenticatedAPIKey(),
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID")
@@ -367,7 +367,7 @@ func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {
 
 func (c *topicCommand) consume(cmd *cobra.Command, args []string) error {
 	topic := args[0]
-	beginning, err := cmd.Flags().GetBool("beginning")
+	beginning, err := cmd.Flags().GetBool("from-beginning")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}

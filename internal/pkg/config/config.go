@@ -35,7 +35,7 @@ type APIKeyPair struct {
 
 // KafkaClusterConfig represents a connection to a Kafka cluster.
 type KafkaClusterConfig struct {
-	ID          string `json:"id" hcl:"id"`
+	ID          string                 `json:"id" hcl:"id"`
 	Bootstrap   string                 `json:"bootstrap_servers" hcl:"bootstrap_servers"`
 	APIEndpoint string                 `json:"api_endpoint,omitempty" hcl:"api_endpoint"`
 	APIKeys     map[string]*APIKeyPair `json:"api_keys" hcl:"api_keys"`

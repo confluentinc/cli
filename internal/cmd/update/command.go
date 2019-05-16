@@ -19,21 +19,21 @@ import (
 const (
 	S3BinBucket   = "confluent.cloud"
 	S3BinRegion   = "us-west-2"
-	S3BinPrefix   = "ccloud-cli/binaries"
+	S3BinPrefix   = "%s-cli/binaries"
 	CheckFileFmt  = "~/.%s/update_check"
 	CheckInterval = 24 * time.Hour
 )
 
 // NewClient returns a new update.Client configured for the CLI
 func NewClient(cliName string, logger *log.Logger) (update.Client, error) {
-	objectKey, err := s3.NewPrefixedKey(S3BinPrefix, "_", true)
+	objectKey, err := s3.NewPrefixedKey(fmt.Sprintf(S3BinPrefix, cliName), "_", true)
 	if err != nil {
 		return nil, err
 	}
 	repo := s3.NewPublicRepo(&s3.PublicRepoParams{
 		S3BinRegion: S3BinRegion,
 		S3BinBucket: S3BinBucket,
-		S3BinPrefix: S3BinPrefix,
+		S3BinPrefix: fmt.Sprintf(S3BinPrefix, cliName),
 		S3ObjectKey: objectKey,
 		Logger:      logger,
 	})
