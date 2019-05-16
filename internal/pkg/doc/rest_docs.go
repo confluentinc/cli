@@ -27,13 +27,19 @@ import (
 )
 
 func printOptionsReST(buf *bytes.Buffer, cmd *cobra.Command, name string) error {
+	short := cmd.Short
+	long := cmd.Long
+	if len(long) == 0 {
+		long = short
+	}
+
 	flags := cmd.NonInheritedFlags()
 	flags.SetOutput(buf)
 	if flags.HasAvailableFlags() {
 		buf.WriteString("Options\n")
 		buf.WriteString("~~~~~~~\n\n::\n\n")
 		flags.PrintDefaults()
-		buf.WriteString("\n")
+		buf.WriteString("\n" + long + "\n\n")
 	}
 
 	parentFlags := cmd.InheritedFlags()
@@ -76,9 +82,8 @@ func GenReSTCustom(cmd *cobra.Command, w io.Writer, linkHandler func(string, str
 	buf.WriteString(name + "\n")
 	buf.WriteString(strings.Repeat("-", len(name)) + "\n\n")
 	buf.WriteString(short + "\n\n")
-	buf.WriteString("Summary\n")
-	buf.WriteString("~~~~~~~~\n\n")
-	buf.WriteString("\n" + long + "\n\n")
+	buf.WriteString("Description\n")
+	buf.WriteString("~~~~~~~~~~~\n\n")
 
 	if cmd.Runnable() {
 		buf.WriteString(fmt.Sprintf("::\n\n  %s\n\n", cmd.UseLine()))
