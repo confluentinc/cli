@@ -11,9 +11,10 @@ import (
 
 type command struct {
 	*cobra.Command
-	config *config.Config
-	client ccloud.Kafka
-	ch     *pcmd.ConfigHelper
+	config    *config.Config
+	client    ccloud.Kafka
+	ch        *pcmd.ConfigHelper
+	prerunner pcmd.PreRunner
 }
 
 // New returns the default command object for interacting with Kafka.
@@ -24,9 +25,10 @@ func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.Kafka, c
 			Short:             "Manage Apache Kafka",
 			PersistentPreRunE: prerunner.Authenticated(),
 		},
-		config: config,
-		client: client,
-		ch:     ch,
+		config:    config,
+		client:    client,
+		ch:        ch,
+		prerunner: prerunner,
 	}
 	cmd.init()
 	return cmd.Command
@@ -34,6 +36,6 @@ func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.Kafka, c
 
 func (c *command) init() {
 	c.AddCommand(NewClusterCommand(c.config, c.client, c.ch))
-	c.AddCommand(NewTopicCommand(c.config, c.client, c.ch))
+	c.AddCommand(NewTopicCommand(c.prerunner, c.config, c.client, c.ch))
 	c.AddCommand(NewACLCommand(c.config, c.client, c.ch))
 }

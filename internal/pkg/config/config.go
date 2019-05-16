@@ -35,7 +35,7 @@ type APIKeyPair struct {
 
 // KafkaClusterConfig represents a connection to a Kafka cluster.
 type KafkaClusterConfig struct {
-	ID          string `json:"id" hcl:"id"`
+	ID          string                 `json:"id" hcl:"id"`
 	Bootstrap   string                 `json:"bootstrap_servers" hcl:"bootstrap_servers"`
 	APIEndpoint string                 `json:"api_endpoint,omitempty" hcl:"api_endpoint"`
 	APIKeys     map[string]*APIKeyPair `json:"api_keys" hcl:"api_keys"`
@@ -174,6 +174,23 @@ func (c *Config) Context() (*Context, error) {
 func (c *Config) CheckLogin() error {
 	if c.Auth == nil || c.Auth.Account == nil || c.Auth.Account.Id == "" {
 		return errors.ErrUnauthorized
+	}
+	return nil
+}
+
+func (c *Config) CheckHasAPIKey(clusterID string) error {
+	cfg, err := c.Context()
+	if err != nil {
+		return err
+	}
+
+	cluster, found := cfg.KafkaClusters[clusterID]
+	if !found {
+		return fmt.Errorf("unknown kafka cluster: %s", clusterID)
+	}
+
+	if cluster.APIKey == "" {
+		return &errors.UnspecifiedAPIKeyError{ClusterID: clusterID}
 	}
 	return nil
 }

@@ -56,17 +56,20 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		return nil, err
 	}
 
+	client := ccloud.NewClientWithJWT(context.Background(), cfg.AuthToken, cfg.AuthURL, cfg.Logger)
+
+	ch := &pcmd.ConfigHelper{Config: cfg, Client: client}
+
 	prerunner := &pcmd.PreRun{
 		UpdateClient: updateClient,
 		CLIName:      cliName,
 		Version:      ver.Version,
 		Logger:       logger,
 		Config:       cfg,
+		ConfigHelper: ch,
 	}
 
 	cli.PersistentPreRunE = prerunner.Anonymous()
-
-	client := ccloud.NewClientWithJWT(context.Background(), cfg.AuthToken, cfg.AuthURL, cfg.Logger)
 
 	cli.Version = ver.Version
 	cli.AddCommand(version.NewVersionCmd(prerunner, ver))
@@ -83,7 +86,6 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	if cliName == "ccloud" {
 		kafkaClient := kafkas.New(client, logger)
 		userClient := users.New(client, logger)
-		ch := &pcmd.ConfigHelper{Config: cfg, Client: client}
 		ks := &keystore.ConfigKeyStore{Config: cfg, Helper: ch}
 		cli.AddCommand(environment.New(prerunner, cfg, environments.New(client, logger), cliName))
 		cli.AddCommand(service_account.New(prerunner, cfg, userClient))
