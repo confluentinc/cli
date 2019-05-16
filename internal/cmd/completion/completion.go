@@ -14,12 +14,16 @@ interactive completion of {{.CLIName}} commands.
 
 Install Bash completions on macOS:
 
+::
+
   # Enable Bash completions using homebrew
   brew install bash-completion
   # Set the {{.CLIName}} completion code for Bash to a file that's sourced on login
   {{.CLIName}} completion bash > $(brew --prefix)/etc/bash_completion.d/{{.CLIName}}
 
 Install Bash completions on Linux:
+
+::
 
   # Set the {{.CLIName}} completion code for Bash to a file that's sourced on login
   {{.CLIName}} completion bash > /etc/bash_completion.d/{{.CLIName}}

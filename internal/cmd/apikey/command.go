@@ -74,7 +74,7 @@ func (c *command) init() {
 
 	createCmd := &cobra.Command{
 		Use:   "create",
-		Short: "Create API key.",
+		Short: "Create API keys. This can be for users or service accounts. ",
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
 	}
@@ -96,14 +96,14 @@ func (c *command) init() {
 
 	c.AddCommand(&cobra.Command{
 		Use:   "delete KEY",
-		Short: "Delete the API key.",
+		Short: "Delete API keys.",
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
 	})
 
 	storeCmd := &cobra.Command{
 		Use:   "store KEY SECRET",
-		Short: "Store an existing API key/secret locally for CLI usage.",
+		Short: "Locally store an existing API key and secret pair (not created using the ccloud CLI) for use in the CLI.",
 		Long:  longDescription,
 		RunE:  c.store,
 		Args:  cobra.ExactArgs(2),
