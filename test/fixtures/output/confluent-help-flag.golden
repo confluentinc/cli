@@ -9,6 +9,7 @@ Available Commands:
   local       Manage local Confluent development environment
   login       Login to Confluent Platform
   logout      Logout of Confluent Platform
+  secret      Manage secrets for Confluent Platform
   update      Update confluent
   version     Print the ccloud version
 
