@@ -157,6 +157,7 @@ func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	a.config.AuthURL = url
+	a.mdsClient.ChangeBasePath(a.config.AuthURL)
 	email, password, err := a.credentials(cmd, "Username")
 	if err != nil {
 		return err
