@@ -3,10 +3,9 @@ package main
 import (
 	"fmt"
 
-	"github.com/spf13/cobra/doc"
-
 	"github.com/confluentinc/cli/internal/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/doc"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
