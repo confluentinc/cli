@@ -49,6 +49,7 @@ func (c *topicCommand) init() {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List Kafka topics.",
+		Example: ".. include:: ../includes/example-ref.rst",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	}
@@ -59,6 +60,7 @@ func (c *topicCommand) init() {
 	cmd = &cobra.Command{
 		Use:   "create TOPIC",
 		Short: "Create a Kafka topic.",
+		Example: ".. include:: ../includes/example-ref.rst",
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -73,6 +75,7 @@ func (c *topicCommand) init() {
 	cmd = &cobra.Command{
 		Use:   "describe TOPIC",
 		Short: "Describe a Kafka topic.",
+		Example: ".. include:: ../includes/example-ref.rst",
 		RunE:  c.describe,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -83,6 +86,7 @@ func (c *topicCommand) init() {
 	cmd = &cobra.Command{
 		Use:   "update TOPIC",
 		Short: "Update a Kafka topic.",
+		Example: ".. include:: ../includes/example-ref.rst",
 		RunE:  c.update,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -95,6 +99,7 @@ func (c *topicCommand) init() {
 	cmd = &cobra.Command{
 		Use:   "delete TOPIC",
 		Short: "Delete a Kafka topic.",
+		Example: ".. include:: ../includes/example-ref.rst",
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -105,6 +110,7 @@ func (c *topicCommand) init() {
 	cmd = &cobra.Command{
 		Use:               "produce TOPIC",
 		Short:             "Produce messages to a Kafka topic.",
+		Example: ".. include:: ../includes/example-ref.rst",
 		RunE:              c.produce,
 		Args:              cobra.ExactArgs(1),
 		PersistentPreRunE: c.prerunner.AuthenticatedAPIKey(),
@@ -117,6 +123,7 @@ func (c *topicCommand) init() {
 	cmd = &cobra.Command{
 		Use:               "consume TOPIC",
 		Short:             "Consume messages from a Kafka topic.",
+		Example: ".. include:: ../includes/example-ref.rst",
 		RunE:              c.consume,
 		Args:              cobra.ExactArgs(1),
 		PersistentPreRunE: c.prerunner.AuthenticatedAPIKey(),

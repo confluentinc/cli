@@ -46,8 +46,23 @@ func (c *aclCommand) init() {
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create a Kafka ACL.",
+		Example: ".. include:: ../includes/example-ref.rst",
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
+		Long: `.. important:: You can only specify one of either `+"``cluster``, ``consumer-group``, ``topic``,"+`
+			   or per command invocation. For example, if you want to specify both `+"``consumer-group`` and ``topic``"+`,
+			   you must specify this as two separate commands:
+
+			   ::
+
+               	ccloud kafka acl create --allow --service-account-id 1522 --operation READ --consumer-group \
+                java_example_group_1
+
+               ::
+
+               	ccloud kafka acl create --allow --service-account-id 1522 --operation READ --topic '*'
+
+For more information on configuring ACLs, see :ref:`+"`acl-manage` and :ref:`kafka_authorization`"+`.	`,
 	}
 	cmd.Flags().AddFlagSet(aclConfigFlags())
 	cmd.Flags().SortFlags = false
@@ -56,9 +71,13 @@ func (c *aclCommand) init() {
 
 	cmd = &cobra.Command{
 		Use:   "delete",
-		Short: "Delete a Kafka ACL.",
+		Short: `Delete a Kafka ACL.
+
+.. important:: .. include:: ../../includes/ccloud-acl-only.rst`,
+		Example: ".. include:: ../includes/example-ref.rst",
 		RunE:  c.delete,
 		Args:  cobra.NoArgs,
+		Long: `For more information on configuring ACLs, see `+":ref:`kafka_authorization`"+`.`,
 	}
 	cmd.Flags().AddFlagSet(aclConfigFlags())
 	cmd.Flags().SortFlags = false
@@ -67,12 +86,16 @@ func (c *aclCommand) init() {
 
 	cmd = &cobra.Command{
 		Use:   "list",
-		Short: "List Kafka ACLs for a resource.",
+		Short: `List Kafka ACLs for a resource.
+
+.. important:: .. include:: ../../includes/ccloud-acl-only.rst`,
+	    Long: "For more information on configuring ACLs, see :ref:`kafka_authorization`.",
+	    Example: ".. include:: ../includes/example-ref.rst",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	}
 	cmd.Flags().AddFlagSet(resourceFlags())
-	cmd.Flags().Int("service-account-id", 0, "Service account ID..")
+	cmd.Flags().Int("service-account-id", 0, "Service account ID.")
 	cmd.Flags().SortFlags = false
 
 	c.AddCommand(cmd)

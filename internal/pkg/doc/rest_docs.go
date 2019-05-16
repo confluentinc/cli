@@ -27,11 +27,7 @@ import (
 )
 
 func printOptionsReST(buf *bytes.Buffer, cmd *cobra.Command, name string) error {
-	short := cmd.Short
 	long := cmd.Long
-	if len(long) == 0 {
-		long = short
-	}
 
 	flags := cmd.NonInheritedFlags()
 	flags.SetOutput(buf)
@@ -50,6 +46,13 @@ func printOptionsReST(buf *bytes.Buffer, cmd *cobra.Command, name string) error 
 		parentFlags.PrintDefaults()
 		buf.WriteString("\n")
 	}
+
+	if len(cmd.Example) > 0 {
+		buf.WriteString("Examples\n")
+		buf.WriteString("~~~~~~~~\n\n")
+		buf.WriteString(fmt.Sprintf("%s\n\n", indentString(cmd.Example, "  ")))
+	}
+
 	return nil
 }
 
@@ -81,18 +84,12 @@ func GenReSTCustom(cmd *cobra.Command, w io.Writer, linkHandler func(string, str
 	buf.WriteString(".. _" + ref + ":\n\n")
 	buf.WriteString(name + "\n")
 	buf.WriteString(strings.Repeat("-", len(name)) + "\n\n")
-	buf.WriteString(short + "\n\n")
 	buf.WriteString("Description\n")
 	buf.WriteString("~~~~~~~~~~~\n\n")
+	buf.WriteString(short + "\n\n")
 
 	if cmd.Runnable() {
 		buf.WriteString(fmt.Sprintf("::\n\n  %s\n\n", cmd.UseLine()))
-	}
-
-	if len(cmd.Example) > 0 {
-		buf.WriteString("Examples\n")
-		buf.WriteString("~~~~~~~~\n\n")
-		buf.WriteString(fmt.Sprintf("::\n\n%s\n\n", indentString(cmd.Example, "  ")))
 	}
 
 	if err := printOptionsReST(buf, cmd, name); err != nil {
