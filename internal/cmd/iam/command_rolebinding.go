@@ -123,9 +123,24 @@ func (c *rolebindingCommand) list(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	resourcePatterns, _, err := c.client.UserAndRoleMgmtApi.GetRoleResourcesForPrincipal(c.ctx, principal, role, mds.Scope{Clusters: *scopeClusters})
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
+	var resourcePatterns []mds.ResourcePattern
+	if role == "*" {
+		roleNames, _, err := c.client.UserAndRoleMgmtApi.ScopedPrincipalRolenames(c.ctx, principal, mds.Scope{Clusters: *scopeClusters})
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+
+		for _, r := range roleNames {
+			resourcePatterns, _, err = c.client.UserAndRoleMgmtApi.GetRoleResourcesForPrincipal(c.ctx, principal, r, mds.Scope{Clusters: *scopeClusters})
+			if err != nil {
+				return errors.HandleCommon(err, cmd)
+			}
+		}
+	} else {
+		resourcePatterns, _, err = c.client.UserAndRoleMgmtApi.GetRoleResourcesForPrincipal(c.ctx, principal, role, mds.Scope{Clusters: *scopeClusters})
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
 	}
 
 	var data [][]string
