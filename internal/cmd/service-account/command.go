@@ -51,14 +51,28 @@ func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.User) *c
 func (c *command) init() {
 	c.AddCommand(&cobra.Command{
 		Use:   "list",
-		Short: "List service accounts.",
+		Short: `List service accounts.
+
+.. include:: ../../includes/ccloud-service-account-only.rst`,
+		Example: ".. include:: ../includes/example-ref.rst",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	})
 
 	createCmd := &cobra.Command{
 		Use:   "create NAME",
-		Short: "Create a service account.",
+		Short: `Create a service account.
+
+.. include:: ../../includes/ccloud-service-account-only.rst`,
+	    Example: `
+Create a service account named `+"``DemoServiceAccount``"+`.
+
+::
+
+  ccloud service-account create "DemoServiceAccount" \
+  --description "This is a demo service account. "
+
+.. include:: ../includes/example-ref.rst`,
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -69,7 +83,18 @@ func (c *command) init() {
 
 	updateCmd := &cobra.Command{
 		Use:   "update ID",
-		Short: "Update a service account.",
+		Short: `Update a service account.
+
+.. include:: ../../includes/ccloud-service-account-only.rst`,
+		Example: `
+Update the description of a service account with the ID `+"``2786``"+`.
+
+::
+
+    ccloud service-account update service-account-id 2786 \
+    --description "Update demo service account information. "
+
+.. include:: ../includes/example-ref.rst`,
 		RunE:  c.update,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -80,7 +105,17 @@ func (c *command) init() {
 
 	c.AddCommand(&cobra.Command{
 		Use:   "delete ID",
-		Short: "Delete a service account.",
+		Short: `Delete a service account.
+
+.. include:: ../../includes/ccloud-service-account-only.rst`,
+		Example: `
+Delete a service account with the ID `+"``2786``"+`.
+
+::
+
+    ccloud service-account delete --service-account-id 2786
+
+.. include:: ../includes/example-ref.rst		`,
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
 	})
