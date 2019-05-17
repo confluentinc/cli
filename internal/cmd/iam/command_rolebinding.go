@@ -131,7 +131,8 @@ func (c *rolebindingCommand) list(cmd *cobra.Command, args []string) error {
 		}
 
 		for _, r := range roleNames {
-			resourcePatterns, _, err = c.client.UserAndRoleMgmtApi.GetRoleResourcesForPrincipal(c.ctx, principal, r, mds.Scope{Clusters: *scopeClusters})
+			rps, _, err := c.client.UserAndRoleMgmtApi.GetRoleResourcesForPrincipal(c.ctx, principal, r, mds.Scope{Clusters: *scopeClusters})
+			resourcePatterns = append(resourcePatterns, rps...)
 			if err != nil {
 				return errors.HandleCommon(err, cmd)
 			}
