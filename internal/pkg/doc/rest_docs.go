@@ -32,8 +32,8 @@ func printOptionsReST(buf *bytes.Buffer, cmd *cobra.Command, name string) error 
 	flags := cmd.NonInheritedFlags()
 	flags.SetOutput(buf)
 	if flags.HasAvailableFlags() {
-		buf.WriteString("Options\n")
-		buf.WriteString("~~~~~~~\n\n::\n\n")
+		buf.WriteString("Flags\n")
+		buf.WriteString("~~~~~\n\n::\n\n")
 		flags.PrintDefaults()
 		buf.WriteString("\n" + long + "\n\n")
 	}
@@ -41,8 +41,8 @@ func printOptionsReST(buf *bytes.Buffer, cmd *cobra.Command, name string) error 
 	parentFlags := cmd.InheritedFlags()
 	parentFlags.SetOutput(buf)
 	if parentFlags.HasAvailableFlags() {
-		buf.WriteString("Options inherited from parent commands\n")
-		buf.WriteString("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n::\n\n")
+		buf.WriteString("Global Flags\n")
+		buf.WriteString("~~~~~~~~~~~~\n\n::\n\n")
 		parentFlags.PrintDefaults()
 		buf.WriteString("\n")
 	}

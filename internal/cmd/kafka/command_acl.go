@@ -49,18 +49,25 @@ func (c *aclCommand) init() {
 		Example: ".. include:: ../includes/example-ref.rst",
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
-		Long: `.. important:: You can only specify one of either `+"``cluster``, ``consumer-group``, ``topic``,"+`
-			   or per command invocation. For example, if you want to specify both `+"``consumer-group`` and ``topic``"+`,
-			   you must specify this as two separate commands:
+		Long: `
+- If you pass `+"``--cluster-scope``"+`, the ACL grants access to the provided operations on the Kafka
+  cluster itself.
+- If you pass `+"``--topic``"+`, the ACL grants the provided operations on the topics that start with that prefix,
+  depending on whether `+"``--prefix``"+` was also passed.
 
-			   ::
+.. important::
+	You can only specify one of either `+"``cluster``, ``consumer-group``, ``topic``, or ``transactional-id``"+`
+	per command invocation. For example, if you want to specify both `+"``consumer-group`` and ``topic``"+`,
+	you must specify this as two separate commands:
 
-               	ccloud kafka acl create --allow --service-account-id 1522 --operation READ --consumer-group \
-                java_example_group_1
+	::
 
-               ::
+		ccloud kafka acl create --allow --service-account-id 1522 --operation READ --consumer-group \
+		java_example_group_1
 
-               	ccloud kafka acl create --allow --service-account-id 1522 --operation READ --topic '*'
+	::
+
+		ccloud kafka acl create --allow --service-account-id 1522 --operation READ --topic '*'
 
 For more information on configuring ACLs, see :ref:`+"`acl-manage` and :ref:`kafka_authorization`"+`.	`,
 	}

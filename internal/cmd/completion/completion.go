@@ -48,7 +48,7 @@ func NewCompletionCmd(rootCmd *cobra.Command, cliName string) *cobra.Command {
 
 func (c *completionCommand) init(cliName string) {
 	c.Command = &cobra.Command{
-		Use:   "completion SHELL",
+		Use:   "completion <shell>",
 		Short: "Output shell completion code.",
 		Long:  getLongDescription(cliName),
 		RunE:  c.completion,

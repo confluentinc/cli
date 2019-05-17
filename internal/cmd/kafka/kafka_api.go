@@ -30,12 +30,12 @@ func aclConfigFlags() *pflag.FlagSet {
 // aclEntryFlags returns a flag set which can be parsed to create an AccessControlEntry object.
 func aclEntryFlags() *pflag.FlagSet {
 	flgSet := pflag.NewFlagSet("acl-entry", pflag.ExitOnError)
-	//flgSet.String("cluster", "", "Confluent Cloud cluster ID")
-	flgSet.Bool("allow", false, "Set ACL to grant access")
-	flgSet.Bool("deny", false, "Set ACL to restrict access to resource")
+	//flgSet.String("cluster", "", "Confluent Cloud cluster ID.")
+	flgSet.Bool("allow", false, "Set the ACL to grant access.")
+	flgSet.Bool("deny", false, "Set the ACL to restrict access to resource.")
 	//flgSet.String( "host", "*", "Set Kafka principal host. Note: Not supported on CCLOUD.")
-	flgSet.Int("service-account-id", 0, "ID of service account")
-	flgSet.String("operation", "", fmt.Sprintf("Set ACL Operation to: [%s]",
+	flgSet.Int("service-account-id", 0, "The service account ID.")
+	flgSet.String("operation", "", fmt.Sprintf("Set ACL Operation to: [%s].",
 		listEnum(kafkav1.ACLOperations_ACLOperation_name, []string{"ANY", "UNKNOWN"})))
 	// An error is only returned if the flag name is not present.
 	// We know the flag name is present so its safe to ignore this.
@@ -47,12 +47,12 @@ func aclEntryFlags() *pflag.FlagSet {
 // resourceFlags returns a flag set which can be parsed to create a ResourcePattern object.
 func resourceFlags() *pflag.FlagSet {
 	flgSet := pflag.NewFlagSet("acl-resource", pflag.ExitOnError)
-	//flgSet.String("cluster", "", "Confluent Cloud cluster ID")
-	flgSet.Bool("cluster-scope", false, "Set the cluster resource")
-	flgSet.String("topic", "", "Set the topic resource")
-	flgSet.String("consumer-group", "", "Set the Consumer Group resource")
-	flgSet.String("transactional-id", "", "Set the TransactionalID resource")
-	flgSet.Bool("prefix", false, "Set to match all resource names prefixed with this value")
+	//flgSet.String("cluster", "", "The Confluent Cloud cluster ID.")
+	flgSet.Bool("cluster-scope", false, "Set the cluster resource.")
+	flgSet.String("topic", "", "Set the topic resource.")
+	flgSet.String("consumer-group", "", "Set the Consumer Group resource.")
+	flgSet.String("transactional-id", "", "Set the TransactionalID resource.")
+	flgSet.Bool("prefix", false, "Set to match all resource names prefixed with this value.")
 
 	return flgSet
 }

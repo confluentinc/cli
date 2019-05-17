@@ -424,7 +424,7 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 		},
 	}
 	cmd := New(&cliMock.Commander{}, conf, kafka, &pcmd.ConfigHelper{Config: conf, Client: &ccloud.Client{Kafka: kafka}})
-	cmd.PersistentFlags().CountP("verbose", "v", "increase output verbosity")
+	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	cmd.SetArgs(append([]string{"cluster", "list"}))
 	buf := new(bytes.Buffer)
 	cmd.SetOutput(buf)
@@ -440,7 +440,7 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 func NewCMD(expect chan interface{}) *cobra.Command {
 	kafka := cliMock.NewKafkaMock(expect)
 	cmd := New(&cliMock.Commander{}, conf, kafka, &pcmd.ConfigHelper{Config: conf, Client: &ccloud.Client{Kafka: kafka}})
-	cmd.PersistentFlags().CountP("verbose", "v", "increase output verbosity")
+	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 
 	return cmd
 }

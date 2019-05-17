@@ -50,21 +50,21 @@ func (c *command) init() {
 	})
 
 	c.AddCommand(&cobra.Command{
-		Use:   "use ID",
+		Use:   "use <environment-id>",
 		Short: "Switch to the specified environment.",
 		RunE:  c.use,
 		Args:  cobra.ExactArgs(1),
 	})
 
 	c.AddCommand(&cobra.Command{
-		Use:   "create NAME",
+		Use:   "create <name>",
 		Short: "Create a new environment.",
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	})
 
 	updateCmd := &cobra.Command{
-		Use:   "update ID",
+		Use:   "update <environment-id>",
 		Short: "Update the name of an environment.",
 		RunE:  c.update,
 		Args:  cobra.ExactArgs(1),
@@ -75,8 +75,8 @@ func (c *command) init() {
 	c.AddCommand(updateCmd)
 
 	c.AddCommand(&cobra.Command{
-		Use:   "delete ID",
-		Short: "Delete an environment and ALL of its resources.",
+		Use:   "delete <environment-id>",
+		Short: "Delete an environment and all of its resources.",
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
 	})

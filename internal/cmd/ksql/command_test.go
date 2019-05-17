@@ -147,7 +147,7 @@ func (suite *KSQLTestSuite) SetupTest() {
 
 func (suite *KSQLTestSuite) newCMD() *cobra.Command {
 	cmd := New(&cliMock.Commander{}, suite.conf, suite.ksqlc, suite.kafkac, suite.userc, &pcmd.ConfigHelper{Config: suite.conf, Client: &ccloud.Client{Kafka: suite.kafkac}})
-	cmd.PersistentFlags().CountP("verbose", "v", "increase output verbosity")
+	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	return cmd
 }
 

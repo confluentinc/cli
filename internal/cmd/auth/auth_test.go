@@ -162,7 +162,7 @@ func newAuthCommand(prompt pcmd.Prompt, auth *sdkMock.Auth, req *require.Asserti
 	cfg.Logger = log.New()
 	commands := newCommands(&cliMock.Commander{}, cfg, prompt, mockAnonHTTPClientFactory, mockJwtHTTPClientFactory)
 	for _, c := range commands.Commands {
-		c.PersistentFlags().CountP("verbose", "v", "increase output verbosity")
+		c.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	}
 	return commands, cfg
 }

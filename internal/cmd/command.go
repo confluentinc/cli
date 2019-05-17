@@ -40,14 +40,14 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		DisableAutoGenTag: true,
 	}
 	if cliName == "ccloud" {
-		cli.Short = "Confluent Cloud CLI"
+		cli.Short = "Confluent Cloud CLI."
 		cli.Long = "Manage your Confluent Cloud."
 	} else {
 		cli.Short = "Confluent CLI"
 		cli.Long = "Manage your Confluent Platform."
 	}
 	cli.PersistentFlags().CountP("verbose", "v",
-		"increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace)")
+		"Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace)")
 
 	prompt := pcmd.NewPrompt(os.Stdin)
 
