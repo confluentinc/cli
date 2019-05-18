@@ -24,8 +24,8 @@ var (
 	// rolebindingListLabels     = []string{"Name", "SuperUser", "AllowedOperations"}
 	// rolebindingDescribeFields = []string{"Name", "SuperUser", "AllowedOperations"}
 	// rolebindingDescribeLabels = []string{"Name", "SuperUser", "AllowedOperations"}
-	resourcePatternListFields = []string{"Name", "ResourceType", "PatternType"}
-	resourcePatternListLabels = []string{"Role", "Name", "ResourceType", "PatternType"}
+	resourcePatternListFields = []string{"ResourceType", "Name", "PatternType"}
+	resourcePatternListLabels = []string{"Role", "ResourceType", "Name", "PatternType"}
 )
 
 type rolebindingCommand struct {
