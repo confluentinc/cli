@@ -25,7 +25,7 @@ var (
 	// rolebindingDescribeFields = []string{"Name", "SuperUser", "AllowedOperations"}
 	// rolebindingDescribeLabels = []string{"Name", "SuperUser", "AllowedOperations"}
 	resourcePatternListFields = []string{"Name", "ResourceType", "PatternType"}
-	resourcePatternListLabels = []string{"Name", "ResourceType", "PatternType"}
+	resourcePatternListLabels = []string{"Role", "Name", "ResourceType", "PatternType"}
 )
 
 type rolebindingCommand struct {
@@ -123,30 +123,44 @@ func (c *rolebindingCommand) list(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
+	var roleNamesWithMultiplicity []string
 	var resourcePatterns []mds.ResourcePattern
 	if role == "*" {
 		roleNames, _, err := c.client.UserAndRoleMgmtApi.ScopedPrincipalRolenames(c.ctx, principal, mds.Scope{Clusters: *scopeClusters})
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
+		//fmt.Println(roleNames)
 
 		for _, r := range roleNames {
 			rps, _, err := c.client.UserAndRoleMgmtApi.GetRoleResourcesForPrincipal(c.ctx, principal, r, mds.Scope{Clusters: *scopeClusters})
+			if len(rps) == 0 {
+				rps = []mds.ResourcePattern{mds.ResourcePattern{}}
+			}
 			resourcePatterns = append(resourcePatterns, rps...)
+			for range rps {
+				roleNamesWithMultiplicity = append(roleNamesWithMultiplicity, r)
+			}
 			if err != nil {
 				return errors.HandleCommon(err, cmd)
 			}
 		}
 	} else {
 		resourcePatterns, _, err = c.client.UserAndRoleMgmtApi.GetRoleResourcesForPrincipal(c.ctx, principal, role, mds.Scope{Clusters: *scopeClusters})
+		if len(resourcePatterns) == 0 {
+			resourcePatterns = []mds.ResourcePattern{mds.ResourcePattern{}}
+		}
+		for range resourcePatterns {
+			roleNamesWithMultiplicity = append(roleNamesWithMultiplicity, role)
+		}
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
 	}
 
 	var data [][]string
-	for _, pattern := range resourcePatterns {
-		data = append(data, printer.ToRow(&pattern, resourcePatternListFields))
+	for i, pattern := range resourcePatterns {
+		data = append(data, append([]string{roleNamesWithMultiplicity[i]}, printer.ToRow(&pattern, resourcePatternListFields)...))
 	}
 	printer.RenderCollectionTable(data, resourcePatternListLabels)
 
