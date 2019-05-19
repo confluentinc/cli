@@ -44,9 +44,9 @@ var (
 
 var rules = []linter.Rule{
 	linter.Filter(
-		linter.RequireIDNameArgument(
-			linter.IDNameArgumentConfig{CreateCommandArg: "NAME", OtherCommandsArg: "ID"},
-			map[string]linter.IDNameArgumentConfig{
+		linter.RequireNamedArgument(
+			linter.NamedArgumentConfig{CreateCommandArg: "NAME", OtherCommandsArg: "ID"},
+			map[string]linter.NamedArgumentConfig{
 				"topic":   {CreateCommandArg: "TOPIC", OtherCommandsArg: "TOPIC"},
 				"api-key": {CreateCommandArg: "N/A", OtherCommandsArg: "KEY"}},
 		),
@@ -78,7 +78,7 @@ var rules = []linter.Rule{
 	linter.RequireEndWithPunctuation("Long", true),
 	linter.RequireCapitalizeProperNouns("Long", properNouns),
 	linter.RequireNotTitleCase("Short", properNouns),
-	linter.RequireRealWords("Use"),
+	linter.RequireRealWords("Use", '-'),
 }
 
 var flagRules = []linter.FlagRule{
@@ -89,7 +89,7 @@ var flagRules = []linter.FlagRule{
 	linter.RequireFlagCharacters('-'),
 	linter.FlagFilter(linter.RequireFlagDelimiter('-', 1),
 		linter.ExcludeFlag("service-account-id")),
-	linter.RequireFlagRealWords,
+	linter.RequireFlagRealWords('-'),
 }
 
 func main() {
