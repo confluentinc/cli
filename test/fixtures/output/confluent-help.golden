@@ -6,7 +6,7 @@ Usage:
 Available Commands:
   completion  Output shell completion code
   help        Help about any command
-  local       Manage local Confluent development environment
+  local       Manage local Confluent Platform development environment
   login       Login to Confluent Platform
   logout      Logout of Confluent Platform
   update      Update confluent
