@@ -67,19 +67,6 @@ func ExcludeUse(excluded ...string) RuleFilter {
 	}
 }
 
-func ExcludeUseStartsWith(excluded ...string) RuleFilter {
-	return func(cmd *cobra.Command) bool {
-		exclude := true
-		for _, ex := range excluded {
-			if strings.HasPrefix(cmd.Use, ex) {
-				exclude = false
-				break
-			}
-		}
-		return exclude
-	}
-}
-
 func ExcludeParentUse(excluded ...string) RuleFilter {
 	blacklist := map[string]struct{}{}
 	for _, e := range excluded {
