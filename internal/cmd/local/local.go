@@ -29,7 +29,7 @@ func New(prerunner pcmd.PreRunner, shell ShellRunner) *cobra.Command {
 	localCmd := &command{
 		Command: &cobra.Command{
 			Use:               "local",
-			Short:             "Manage local Confluent development environment",
+			Short:             "Manage local Confluent Platform development environment",
 			Long:              longDescription,
 			Args:              cobra.ArbitraryArgs,
 			PersistentPreRunE: prerunner.Anonymous(),
