@@ -45,10 +45,10 @@ var (
 var rules = []linter.Rule{
 	linter.Filter(
 		linter.RequireIDNameArgument(
-			linter.IDNameArgumentConfig{"NAME", "ID"},
+			linter.IDNameArgumentConfig{CreateCommandArg: "NAME", OtherCommandsArg: "ID"},
 			map[string]linter.IDNameArgumentConfig{
-				"topic":   {"TOPIC", "TOPIC"},
-				"api-key": {"N/A", "KEY"}},
+				"topic":   {CreateCommandArg: "TOPIC", OtherCommandsArg: "TOPIC"},
+				"api-key": {CreateCommandArg: "N/A", OtherCommandsArg: "KEY"}},
 		),
 		linter.OnlyLeafCommands, linter.ExcludeCommand(utilityCommands...),
 		// skip resource container commands
