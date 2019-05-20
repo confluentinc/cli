@@ -1,10 +1,12 @@
 package doc
 
 import (
+	"bytes"
 	"io"
 	"os"
 	"strings"
 
+	"github.com/lithammer/dedent"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 )
@@ -25,7 +27,13 @@ func GenReSTIndex(cmd *cobra.Command, filename string, filePrepender func(string
 		return err
 	}
 
-	table := tablewriter.NewWriter(f)
+	// Write to a buffer so we can dedent before we print.
+	//
+	// This is needed because a space for center separator between columns also creates a space on the left,
+	// effectively indenting the table by a space. This messes up ReST which views that as a blockquote.
+	buf := &bytes.Buffer{}
+
+	table := tablewriter.NewWriter(buf)
 	table.SetAutoWrapText(false)
 	table.SetColumnSeparator(" ")
 	table.SetCenterSeparator(" ")
@@ -39,7 +47,8 @@ func GenReSTIndex(cmd *cobra.Command, filename string, filePrepender func(string
 	}
 	table.Render()
 
-	return nil
+	_, err = io.WriteString(f, dedent.Dedent(buf.String()))
+	return err
 }
 
 type command struct {
