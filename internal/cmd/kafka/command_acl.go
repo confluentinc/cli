@@ -29,7 +29,7 @@ func NewACLCommand(config *config.Config, client ccloud.Kafka, ch *pcmd.ConfigHe
 	cmd := &aclCommand{
 		Command: &cobra.Command{
 			Use:   "acl",
-			Short: "Manage Kafka ACLs.",
+			Short: `Manage Kafka ACLs. ACLs are :ref:`+"`only available <cloud-limits>`"+` for |ccloud-ent| users.`,
 		},
 		config: config,
 		client: client,
@@ -45,7 +45,7 @@ func (c *aclCommand) init() {
 
 	cmd := &cobra.Command{
 		Use:   "create",
-		Short: "Create a Kafka ACL.",
+		Short: `Create a Kafka ACL. ACLs are :ref:`+"`only available <cloud-limits>`"+` for |ccloud-ent| users.`,
 		Example: ".. include:: ../includes/example-ref.rst",
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
@@ -78,9 +78,7 @@ For more information on configuring ACLs, see :ref:`+"`acl-manage` and :ref:`kaf
 
 	cmd = &cobra.Command{
 		Use:   "delete",
-		Short: `Delete a Kafka ACL.
-
-.. important:: .. include:: ../../includes/ccloud-acl-only.rst`,
+		Short: `Delete a Kafka ACL. ACLs are :ref:`+"`only available <cloud-limits>`"+` for |ccloud-ent| users.`,
 		Example: ".. include:: ../includes/example-ref.rst",
 		RunE:  c.delete,
 		Args:  cobra.NoArgs,
@@ -93,9 +91,7 @@ For more information on configuring ACLs, see :ref:`+"`acl-manage` and :ref:`kaf
 
 	cmd = &cobra.Command{
 		Use:   "list",
-		Short: `List Kafka ACLs for a resource.
-
-.. important:: .. include:: ../../includes/ccloud-acl-only.rst`,
+		Short: `List Kafka ACLs for a resource. ACLs are :ref:`+"`only available <cloud-limits>`"+` for |ccloud-ent| users.`,
 	    Long: "For more information on configuring ACLs, see :ref:`kafka_authorization`.",
 	    Example: ".. include:: ../includes/example-ref.rst",
 		RunE:  c.list,
