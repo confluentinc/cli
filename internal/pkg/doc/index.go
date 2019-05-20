@@ -75,7 +75,7 @@ func genReSTIndex(cmd *cobra.Command, linkHandler func(string, string) string) (
 }
 
 func fullCommand(cmd *cobra.Command) string {
-	use := []string{cmd.Use}
+	use := []string{cmd.Name()}
 	cmd.VisitParents(func(command *cobra.Command) {
 		use = append([]string{command.Use}, use...)
 	})
