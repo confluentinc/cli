@@ -28,6 +28,9 @@ func GenReSTIndex(cmd *cobra.Command, filename string, filePrepender func(string
 	table := tablewriter.NewWriter(f)
 	table.SetAutoWrapText(false)
 	table.SetColumnSeparator(" ")
+	table.SetCenterSeparator(" ")
+	table.SetRowSeparator("=")
+	table.SetAutoFormatHeaders(false)
 
 	table.SetHeader([]string{"Command", "Description"})
 	for _, c := range commands {
