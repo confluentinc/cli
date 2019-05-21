@@ -2,7 +2,6 @@ package secret
 
 /* Config Provider Configs*/
 const (
-
 	CONFIG_PROVIDER_KEY = "config.providers"
 
 	SECURE_CONFIG_PROVIDER_CLASS_KEY = "config.providers.securePass.class"
@@ -10,12 +9,10 @@ const (
 	SECURE_CONFIG_PROVIDER = "securePass"
 
 	SECURE_CONFIG_PROVIDER_CLASS = "org.apache.kafka.common.config.provider.SecurePassConfigProvider"
-
 )
 
 /* Encryption Keys Metadata */
 const (
-
 	METADATA_KEY_ENVVAR = "metadata.symmetric_key.0.envvar"
 
 	METADATA_KEY_TIMESTAMP = "metadata.symmetric_key.0.created_at"
@@ -33,7 +30,6 @@ const (
 	METADATA_KEY_DEFAULT_LENGTH_BYTES = 32
 
 	METADATA_KEY_DEFAULT_ITERATIONS = 1000
-
 )
 
 /* Encryption Algorithm Metadata */

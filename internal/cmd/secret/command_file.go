@@ -1,14 +1,15 @@
 package secret
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	secret "github.com/confluentinc/cli/internal/pkg/secret"
+	"github.com/confluentinc/cli/internal/pkg/secret"
 	"github.com/spf13/cobra"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"io/ioutil"
 	"os"
-	"bufio"
 	"strings"
 )
 
@@ -16,10 +17,11 @@ type secureFileCommand struct {
 	*cobra.Command
 	config *config.Config
 	plugin secret.PasswordProtection
+	prompt pcmd.Prompt
 }
 
 // NewFileCommand returns the Cobra command for managing encrypted file.
-func NewFileCommand(config *config.Config, plugin secret.PasswordProtection) *cobra.Command {
+func NewFileCommand(config *config.Config, prompt pcmd.Prompt, plugin secret.PasswordProtection) *cobra.Command {
 	cmd := &secureFileCommand{
 		Command: &cobra.Command{
 			Use:   "file",
@@ -27,6 +29,7 @@ func NewFileCommand(config *config.Config, plugin secret.PasswordProtection) *co
 		},
 		config: config,
 		plugin: plugin,
+		prompt: prompt,
 	}
 	cmd.init()
 	return cmd.Command
@@ -39,13 +42,13 @@ func (c *secureFileCommand) init() {
 		RunE:  c.encrypt,
 		Args:  cobra.NoArgs,
 	}
-	encryptCmd.Flags().String("config-file", "", "Config Properties File Path")
+	encryptCmd.Flags().String("config-file", "", "Config properties file path")
 	_ = encryptCmd.MarkFlagRequired("config-file")
 
-	encryptCmd.Flags().String("local-secrets-file", "", "Local Encrypted Config Properties File Path")
+	encryptCmd.Flags().String("local-secrets-file", "", "Local encrypted config properties file path")
 	_ = encryptCmd.MarkFlagRequired("local-secrets-file")
 
-	encryptCmd.Flags().String("remote-secrets-file", "", "Remote Encrypted Config Properties File Path")
+	encryptCmd.Flags().String("remote-secrets-file", "", "Remote encrypted config properties file path")
 	_ = encryptCmd.MarkFlagRequired("remote-secrets-file")
 	encryptCmd.Flags().SortFlags = false
 	c.AddCommand(encryptCmd)
@@ -56,13 +59,13 @@ func (c *secureFileCommand) init() {
 		RunE:  c.decrypt,
 		Args:  cobra.NoArgs,
 	}
-	decryptCmd.Flags().String("config-file", "", "Config Properties File Path")
+	decryptCmd.Flags().String("config-file", "", "Config properties file path")
 	_ = decryptCmd.MarkFlagRequired("config-file")
 
-	decryptCmd.Flags().String("local-secrets-file", "", "Local Encrypted Config Properties File Path")
+	decryptCmd.Flags().String("local-secrets-file", "", "Local encrypted config properties file path")
 	_ = decryptCmd.MarkFlagRequired("local-secrets-file")
 
-	decryptCmd.Flags().String("output-file", "", "Output File Path")
+	decryptCmd.Flags().String("output-file", "", "Output file path")
 	_ = decryptCmd.MarkFlagRequired("output-file")
 	decryptCmd.Flags().SortFlags = false
 	c.AddCommand(decryptCmd)
@@ -73,13 +76,13 @@ func (c *secureFileCommand) init() {
 		RunE:  c.add,
 		Args:  cobra.NoArgs,
 	}
-	addCmd.Flags().String("config-file", "", "Config Properties File Path")
+	addCmd.Flags().String("config-file", "", "Config properties file path")
 	_ = addCmd.MarkFlagRequired("config-file")
 
-	addCmd.Flags().String("local-secrets-file", "", "Local Encrypted Config Properties File Path")
+	addCmd.Flags().String("local-secrets-file", "", "Local encrypted config properties file path")
 	_ = addCmd.MarkFlagRequired("local-secrets-file")
 
-	addCmd.Flags().String("remote-secrets-file", "", "Remote Encrypted Config Properties File Path")
+	addCmd.Flags().String("remote-secrets-file", "", "Remote encrypted config properties file path")
 	_ = addCmd.MarkFlagRequired("remote-secrets-file")
 
 	addCmd.Flags().String("config", "", "List of config properties")
@@ -90,16 +93,16 @@ func (c *secureFileCommand) init() {
 	updateCmd := &cobra.Command{
 		Use:   "update",
 		Short: "Update encrypted secrets from config properties file",
-		RunE:  c.add,
+		RunE:  c.update,
 		Args:  cobra.NoArgs,
 	}
-	updateCmd.Flags().String("config-file", "", "Config Properties File Path")
+	updateCmd.Flags().String("config-file", "", "Config properties file path")
 	_ = updateCmd.MarkFlagRequired("config-file")
 
-	updateCmd.Flags().String("local-secrets-file", "", "Local Encrypted Config Properties File Path")
+	updateCmd.Flags().String("local-secrets-file", "", "Local encrypted config properties file path")
 	_ = updateCmd.MarkFlagRequired("local-secrets-file")
 
-	updateCmd.Flags().String("remote-secrets-file", "", "Remote Encrypted Config Properties File Path")
+	updateCmd.Flags().String("remote-secrets-file", "", "Remote encrypted config properties file path")
 	_ = updateCmd.MarkFlagRequired("remote-secrets-file")
 
 	updateCmd.Flags().String("config", "", "List of config properties")
@@ -113,16 +116,40 @@ func (c *secureFileCommand) init() {
 		RunE:  c.remove,
 		Args:  cobra.NoArgs,
 	}
-	removeCmd.Flags().String("config-file", "", "Config Properties File Path")
+	removeCmd.Flags().String("config-file", "", "Config properties file path")
 	_ = removeCmd.MarkFlagRequired("config-file")
 
-	removeCmd.Flags().String("local-secrets-file", "", "Local Encrypted Config Properties File Path")
+	removeCmd.Flags().String("local-secrets-file", "", "Local encrypted config properties file path")
 	_ = removeCmd.MarkFlagRequired("local-secrets-file")
 
 	removeCmd.Flags().String("config", "", "List of config properties")
 	_ = removeCmd.MarkFlagRequired("config")
 	removeCmd.Flags().SortFlags = false
 	c.AddCommand(removeCmd)
+
+	rotateMasterKeyCmd := &cobra.Command{
+		Use:   "re-encrypt",
+		Short: "Rotate master key",
+		RunE:  c.rotateMasterKey,
+		Args:  cobra.NoArgs,
+	}
+
+	rotateMasterKeyCmd.Flags().String("local-secrets-file", "", "Local Encrypted Config Properties File Path")
+	_ = rotateMasterKeyCmd.MarkFlagRequired("local-secrets-file")
+	rotateMasterKeyCmd.Flags().SortFlags = false
+	c.AddCommand(rotateMasterKeyCmd)
+
+	rotateDataKeyCmd := &cobra.Command{
+		Use:   "rotate",
+		Short: "Rotate data key",
+		RunE:  c.rotateDataKey,
+		Args:  cobra.NoArgs,
+	}
+
+	rotateDataKeyCmd.Flags().String("local-secrets-file", "", "Local Encrypted Config Properties File Path")
+	_ = rotateDataKeyCmd.MarkFlagRequired("local-secrets-file")
+	rotateDataKeyCmd.Flags().SortFlags = false
+	c.AddCommand(rotateDataKeyCmd)
 }
 
 func (c *secureFileCommand) encrypt(cmd *cobra.Command, args []string) error {
@@ -174,8 +201,8 @@ func (c *secureFileCommand) getConfigs(configSource string) (string, error) {
 		return configs, err
 	}
 
-	if strings.HasPrefix(configSource, "@") {
-		filePath := configSource[1:len(configSource)]
+	if string(configSource[0]) == "@" {
+		filePath := configSource[1:]
 		data, err := ioutil.ReadFile(filePath)
 		if err != nil {
 			return "", err
@@ -188,7 +215,7 @@ func (c *secureFileCommand) getConfigs(configSource string) (string, error) {
 }
 
 func (c *secureFileCommand) add(cmd *cobra.Command, args []string) error {
-	configSource,  err :=  cmd.Flags().GetString("config")
+	configSource, err := cmd.Flags().GetString("config")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -204,6 +231,30 @@ func (c *secureFileCommand) add(cmd *cobra.Command, args []string) error {
 	}
 
 	err = c.plugin.AddEncryptedPasswords(configPath, localSecretsPath, remoteSecretsPath, newConfigs)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	return nil
+}
+
+func (c *secureFileCommand) update(cmd *cobra.Command, args []string) error {
+	configSource, err := cmd.Flags().GetString("config")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	newConfigs, err := c.getConfigs(configSource)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	configPath, localSecretsPath, remoteSecretsPath, err := c.getConfigFilePath(cmd)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	err = c.plugin.UpdateEncryptedPasswords(configPath, localSecretsPath, remoteSecretsPath, newConfigs)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -257,4 +308,86 @@ func (c *secureFileCommand) remove(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
+}
+
+func (c *secureFileCommand) rotateMasterKey(cmd *cobra.Command, args []string) error {
+	inputType := args[0]
+
+	passphrase, err := c.getMasterKeyPassphrase(inputType)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	oldPassphrase, newPassphrase, err := c.getOldPassphrase(passphrase)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	localSecretsPath, err := cmd.Flags().GetString("local-secrets-file")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	masterKey, err := c.plugin.RotateMasterKey(oldPassphrase, newPassphrase, localSecretsPath)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	pcmd.Println(cmd, "New Master Key: "+masterKey)
+	return nil
+}
+
+func (c *secureFileCommand) rotateDataKey(cmd *cobra.Command, args []string) error {
+	inputType := args[0]
+
+	passphrase, err := c.getMasterKeyPassphrase(inputType)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	localSecretsPath, err := cmd.Flags().GetString("local-secrets-file")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	err = c.plugin.RotateDataKey(passphrase, localSecretsPath)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	return nil
+}
+
+func (c *secureFileCommand) getOldPassphrase(passphrases string) (string, string, error) {
+	passphrasesArr := strings.Split(passphrases, ",")
+	if len(passphrasesArr) != 2 {
+		return "", "", fmt.Errorf("Missing old master key passphrase/ new master key passphrase.")
+	}
+
+	return passphrasesArr[0], passphrasesArr[1], nil
+}
+
+func (c *secureFileCommand) getMasterKeyPassphrase(inputType string) (string, error) {
+	passphrase := ""
+	if inputType == "" {
+		return passphrase, fmt.Errorf("Please enter master key passphrase.")
+	}
+
+	if inputType == "-" {
+		reader := bufio.NewReader(os.Stdin)
+		passphrase, err := reader.ReadString('\n')
+		return passphrase, err
+	}
+
+	if strings.HasPrefix(inputType, "@") {
+		filePath := inputType[1:]
+		data, err := ioutil.ReadFile(filePath)
+		if err != nil {
+			return passphrase, err
+		}
+		passphrase = string(data)
+		return passphrase, err
+	}
+
+	return "", fmt.Errorf("Invalid master key passphrase.")
 }

@@ -1,15 +1,15 @@
 package secret
 
 import (
+	"bufio"
 	"fmt"
-	secureplugin "github.com/confluentinc/cli/internal/pkg/secret"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	secureplugin "github.com/confluentinc/cli/internal/pkg/secret"
 	"github.com/spf13/cobra"
 	"io/ioutil"
 	"os"
-	"bufio"
 	"strings"
 )
 
@@ -46,33 +46,9 @@ func (c *masterKeyCommand) init() {
 	_ = createCmd.MarkFlagRequired("passphrase")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
-
-	rotateMasterKeyCmd := &cobra.Command{
-		Use:   "rotate-master-key",
-		Short: "Rotate master key",
-		RunE:  c.rotate_master_key,
-		Args:  cobra.NoArgs,
-	}
-
-	rotateMasterKeyCmd.Flags().String("local-secrets-file", "", "Local Encrypted Config Properties File Path")
-	_ = rotateMasterKeyCmd.MarkFlagRequired("local-secrets-file")
-	rotateMasterKeyCmd.Flags().SortFlags = false
-	c.AddCommand(rotateMasterKeyCmd)
-
-	rotateDataKeyCmd := &cobra.Command{
-		Use:   "rotate-data-key",
-		Short: "Rotate data key",
-		RunE:  c.rotate_data_key,
-		Args:  cobra.NoArgs,
-	}
-
-	rotateDataKeyCmd.Flags().String("local-secrets-file", "", "Local Encrypted Config Properties File Path")
-	_ = rotateDataKeyCmd.MarkFlagRequired("local-secrets-file")
-	rotateDataKeyCmd.Flags().SortFlags = false
-	c.AddCommand(rotateDataKeyCmd)
 }
 
-func (c *masterKeyCommand) getMasterKeyPassphrase(inputType string) (string, error){
+func (c *masterKeyCommand) getMasterKeyPassphrase(inputType string) (string, error) {
 	passphrase := ""
 	if inputType == "" {
 		return passphrase, fmt.Errorf("Please enter master key passphrase.")
@@ -85,7 +61,7 @@ func (c *masterKeyCommand) getMasterKeyPassphrase(inputType string) (string, err
 	}
 
 	if strings.HasPrefix(inputType, "@") {
-		filePath := inputType[1:len(inputType)]
+		filePath := inputType[1:]
 		data, err := ioutil.ReadFile(filePath)
 		if err != nil {
 			return passphrase, err
@@ -113,63 +89,6 @@ func (c *masterKeyCommand) create(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	pcmd.Println(cmd, "Master Key: " + masterKey)
-	return nil
-}
-
-func (c *masterKeyCommand) getOldPassphrase(passphrases string) (string, string, error) {
-	passphrasesArr := strings.Split(passphrases, ",")
-	if len(passphrasesArr) !=2 {
-		return "", "", fmt.Errorf("Missing old master key passphrase/ new master key passphrase.")
-	}
-
-	return passphrasesArr[0], passphrasesArr[1], nil
-}
-
-func (c *masterKeyCommand) rotate_master_key(cmd *cobra.Command, args []string) error {
-	inputType := args[0]
-
-	passphrase, err := c.getMasterKeyPassphrase(inputType)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
-	oldPassphrase, newPassphrase, err := c.getOldPassphrase(passphrase)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
-	localSecretsPath, err := cmd.Flags().GetString("local-secrets-file")
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
-	masterKey, err := c.plugin.RotateMasterKey(oldPassphrase, newPassphrase, localSecretsPath)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
-	pcmd.Println(cmd, "New Master Key: " + masterKey)
-	return nil
-}
-
-func (c *masterKeyCommand) rotate_data_key(cmd *cobra.Command, args []string) error {
-	inputType := args[0]
-
-	passphrase, err := c.getMasterKeyPassphrase(inputType)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
-	localSecretsPath, err := cmd.Flags().GetString("local-secrets-file")
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
-	err = c.plugin.RotateDataKey(passphrase, localSecretsPath)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
+	pcmd.Println(cmd, "Master Key: "+masterKey)
 	return nil
 }

@@ -31,8 +31,8 @@ import (
 	kafkas "github.com/confluentinc/cli/internal/pkg/sdk/kafka"
 	ksqls "github.com/confluentinc/cli/internal/pkg/sdk/ksql"
 	users "github.com/confluentinc/cli/internal/pkg/sdk/user"
-	versions "github.com/confluentinc/cli/internal/pkg/version"
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
+	versions "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Version, logger *log.Logger) (*cobra.Command, error) {

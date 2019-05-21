@@ -6,28 +6,29 @@ import (
 	"io/ioutil"
 
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
-	"regexp"
 
-	"github.com/magiconair/properties"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/magiconair/properties"
 )
 
 /**
 * Password Protection is a security plugin to securely store and add passwords to a properties file.
 * Passwords in property file are encrypted and stored in security config file.
-*/
+ */
 
 type PasswordProtection interface {
-	CreateMasterKey (passphrase string) (string, error)
+	CreateMasterKey(passphrase string) (string, error)
 	EncryptConfigFileSecrets(configFilePath string, localSecureConfigPath string, remoteSecureConfigPath string) error
 	DecryptConfigFileSecrets(configFilePath string, localSecureConfigPath string, outputFilePath string) error
 	AddEncryptedPasswords(configFilePath string, localSecureConfigPath string, remoteSecureConfigPath string, newConfigs string) error
+	UpdateEncryptedPasswords(configFilePath string, localSecureConfigPath string, remoteSecureConfigPath string, newConfigs string) error
 	RemoveEncryptedPasswords(configFilePath string, localSecureConfigPath string, removeConfigs string) error
 	RotateMasterKey(oldPassphrase string, newPassphrase string, localSecureConfigPath string) (string, error)
-	RotateDataKey(passphrase string,localSecureConfigPath string) error
+	RotateDataKey(passphrase string, localSecureConfigPath string) error
 }
 
 type PasswordProtectionSuite struct {
@@ -35,7 +36,7 @@ type PasswordProtectionSuite struct {
 }
 
 func NewPasswordProtectionPlugin(logger *log.Logger) *PasswordProtectionSuite {
-	return &PasswordProtectionSuite {Logger: logger}
+	return &PasswordProtectionSuite{Logger: logger}
 }
 
 /**
@@ -45,14 +46,14 @@ func NewPasswordProtectionPlugin(logger *log.Logger) *PasswordProtectionSuite {
  * @param passphrase New Master Key passphrase.
  * @return error: Failure nil: Success
  */
-func(c *PasswordProtectionSuite) CreateMasterKey(passphrase string) (string, error) {
+func (c *PasswordProtectionSuite) CreateMasterKey(passphrase string) (string, error) {
 
 	// Generate the metadata for master key
 	cipherSuite := NewDefaultCipherSuite()
 	return c.generateMasterKey(passphrase, cipherSuite)
 }
 
-func(c *PasswordProtectionSuite) generateMasterKey(passphrase string, cipherSuite *CipherSuite) (string, error) {
+func (c *PasswordProtectionSuite) generateMasterKey(passphrase string, cipherSuite *CipherSuite) (string, error) {
 	engine := NewEncryptionEngine(cipherSuite, c.Logger)
 
 	// Generate a new master key from passphrase
@@ -64,7 +65,7 @@ func(c *PasswordProtectionSuite) generateMasterKey(passphrase string, cipherSuit
 	return masterKey, nil
 }
 
-func(c *PasswordProtectionSuite) generateNewDataKey(masterKey string) (*CipherSuite, error) {
+func (c *PasswordProtectionSuite) generateNewDataKey(masterKey string) (*CipherSuite, error) {
 	// Generate the metadata for encryption keys
 	cipherSuite := NewDefaultCipherSuite()
 	engine := NewEncryptionEngine(cipherSuite, c.Logger)
@@ -96,7 +97,7 @@ func(c *PasswordProtectionSuite) generateNewDataKey(masterKey string) (*CipherSu
  * We also add the properties to instantiate the SecurePass provider to the config properties file.
  *
  */
-func(c *PasswordProtectionSuite) EncryptConfigFileSecrets(configFilePath string, localSecureConfigPath string, remoteSecureConfigPath string) error {
+func (c *PasswordProtectionSuite) EncryptConfigFileSecrets(configFilePath string, localSecureConfigPath string, remoteSecureConfigPath string) error {
 
 	// Check if config file path is valid.
 	if !c.isPathValid(configFilePath) {
@@ -128,7 +129,7 @@ func(c *PasswordProtectionSuite) EncryptConfigFileSecrets(configFilePath string,
  * the encrypted value from the file secureConfigPath, decrypts it using the data key and stores the output at outputFilePath.
  *
  */
-func(c *PasswordProtectionSuite) DecryptConfigFileSecrets(configFilePath string, localSecureConfigPath string, outputFilePath string) error {
+func (c *PasswordProtectionSuite) DecryptConfigFileSecrets(configFilePath string, localSecureConfigPath string, outputFilePath string) error {
 	// Check if config file path is valid
 	if !c.isPathValid(configFilePath) {
 		return fmt.Errorf("Invalid File Path" + configFilePath)
@@ -171,7 +172,7 @@ func(c *PasswordProtectionSuite) DecryptConfigFileSecrets(configFilePath string,
 				data, iv, algo := c.parseCipherValue(cipher)
 				plainSecret, err := engine.AESDecrypt(data, iv, algo, dataKey)
 				if err == nil {
-					_,_,_ = decryptedSecrets.Set(key, plainSecret)
+					_, _, _ = decryptedSecrets.Set(key, plainSecret)
 				}
 			}
 		}
@@ -192,7 +193,7 @@ func(c *PasswordProtectionSuite) DecryptConfigFileSecrets(configFilePath string,
  * @param masterPassphrase master key passphrase for verification
  * @return Failure nil: Success
  */
-func(c *PasswordProtectionSuite) RotateDataKey(masterPassphrase string, localSecureConfigPath string) error {
+func (c *PasswordProtectionSuite) RotateDataKey(masterPassphrase string, localSecureConfigPath string) error {
 	cipherSuite, err := c.loadCipherSuiteFromLocalFile(localSecureConfigPath)
 	if err != nil {
 		return err
@@ -220,7 +221,6 @@ func(c *PasswordProtectionSuite) RotateDataKey(masterPassphrase string, localSec
 	}
 
 	// Unwrap old DEK using the MEK
-	rotatedSecrets := properties.NewProperties()
 	engine := NewEncryptionEngine(&cipherSuite, c.Logger)
 	dataKey, err := c.unwrapDataKey(cipherSuite.EncryptedDataKey, engine)
 	if err != nil {
@@ -235,14 +235,14 @@ func(c *PasswordProtectionSuite) RotateDataKey(masterPassphrase string, localSec
 
 	// Re-encrypt the ciphers with new DEK
 	for key, value := range secureConfigProps.Map() {
-		if c.isCipher(value) {
+		if c.isCipher(value) && !strings.HasPrefix(key, "metadata") {
 			data, iv, algo := c.parseCipherValue(value)
 			plainSecret, err := engine.AESDecrypt(data, iv, algo, dataKey)
 			if err == nil {
 				cipher, iv, err := engine.AESEncrypt(plainSecret, newDataKey)
 				if err == nil {
 					formattedCipher := c.formatCipherValue(cipher, iv)
-					_,_,_ = rotatedSecrets.Set(key, formattedCipher)
+					_, _, _ = secureConfigProps.Set(key, formattedCipher)
 				}
 			}
 
@@ -258,9 +258,9 @@ func(c *PasswordProtectionSuite) RotateDataKey(masterPassphrase string, localSec
 
 	// Save new DEK and re-encrypted ciphers.
 	now := time.Now()
-	_,_,_ = secureConfigProps.Set(METADATA_KEY_TIMESTAMP, now.String())
-	_,_,_ = secureConfigProps.Set(METADATA_DATA_KEY, wrappedNewDK)
-	err = c.writePropertiesFile(localSecureConfigPath, rotatedSecrets)
+	_, _, _ = secureConfigProps.Set(METADATA_KEY_TIMESTAMP, now.String())
+	_, _, _ = secureConfigProps.Set(METADATA_DATA_KEY, wrappedNewDK)
+	err = c.writePropertiesFile(localSecureConfigPath, secureConfigProps)
 	if err != nil {
 		return err
 	}
@@ -275,7 +275,7 @@ func(c *PasswordProtectionSuite) RotateDataKey(masterPassphrase string, localSec
  * @param newPassphrase new master key passphrase
  * @return Failure nil: Success
  */
-func(c *PasswordProtectionSuite) RotateMasterKey(oldPassphrase string, newPassphrase string, localSecureConfigPath string) (string, error) {
+func (c *PasswordProtectionSuite) RotateMasterKey(oldPassphrase string, newPassphrase string, localSecureConfigPath string) (string, error) {
 
 	cipherSuite, err := c.loadCipherSuiteFromLocalFile(localSecureConfigPath)
 	if err != nil {
@@ -317,7 +317,6 @@ func(c *PasswordProtectionSuite) RotateMasterKey(oldPassphrase string, newPassph
 	}
 	newEncodedDataKey := c.formatCipherValue(wrappedDataKey, iv)
 
-
 	secureConfigProps, err := c.loadPropertiesFile(localSecureConfigPath)
 	if err != nil {
 		return "", err
@@ -325,8 +324,8 @@ func(c *PasswordProtectionSuite) RotateMasterKey(oldPassphrase string, newPassph
 
 	// Save DEK
 	now := time.Now()
-	_,_,_ = secureConfigProps.Set(METADATA_KEY_TIMESTAMP, now.String())
-	_,_,_ = secureConfigProps.Set(METADATA_DATA_KEY, newEncodedDataKey)
+	_, _, _ = secureConfigProps.Set(METADATA_KEY_TIMESTAMP, now.String())
+	_, _, _ = secureConfigProps.Set(METADATA_DATA_KEY, newEncodedDataKey)
 
 	err = c.writePropertiesFile(localSecureConfigPath, secureConfigProps)
 
@@ -339,19 +338,55 @@ func(c *PasswordProtectionSuite) RotateMasterKey(oldPassphrase string, newPassph
  * configFilePath:key and value as encrypted password.
  * We also add the properties to instantiate the SecurePass provider to the config properties file.
  */
-func(c *PasswordProtectionSuite) AddEncryptedPasswords(configFilePath string, localSecureConfigPath string, remoteSecureConfigPath string, newConfigs string) error {
+func (c *PasswordProtectionSuite) AddEncryptedPasswords(configFilePath string, localSecureConfigPath string, remoteSecureConfigPath string, newConfigs string) error {
 	newConfigProps := properties.MustLoadString(newConfigs)
 	configProps, err := c.loadPropertiesFile(configFilePath)
+
 	if err != nil {
 		return err
 	}
 
-	err = c.encryptConfigValues(newConfigProps, localSecureConfigPath, configProps, configFilePath,remoteSecureConfigPath)
+	if newConfigProps.Len() == 0 {
+		return fmt.Errorf("Configs file is empty !!!")
+	}
+
+	err = c.encryptConfigValues(newConfigProps, localSecureConfigPath, configProps, configFilePath, remoteSecureConfigPath)
 
 	return err
 }
 
-func(c *PasswordProtectionSuite) RemoveEncryptedPasswords(configFilePath string, localSecureConfigPath string, removeConfigs string) error {
+/**
+ * This function updates a the value of existing keys in the configFilePath property file. The original 'value' is
+ * encrypted value and stored in the secureConfigPath properties file with key as
+ * configFilePath:key and value as encrypted password.
+ * We also add the properties to instantiate the SecurePass provider to the config properties file.
+ */
+func (c *PasswordProtectionSuite) UpdateEncryptedPasswords(configFilePath string, localSecureConfigPath string, remoteSecureConfigPath string, newConfigs string) error {
+	newConfigProps := properties.MustLoadString(newConfigs)
+	configProps, err := c.loadPropertiesFile(configFilePath)
+
+	if err != nil {
+		return err
+	}
+
+	// Verify if key is already present in config file.
+	for key := range newConfigProps.Map() {
+		_, exists := configProps.Get(key)
+		if exists == false {
+			newConfigProps.Delete(key)
+		}
+	}
+
+	if newConfigProps.Len() == 0 {
+		return fmt.Errorf("Update Failed: Keys not present in config file.!!!")
+	}
+
+	err = c.encryptConfigValues(newConfigProps, localSecureConfigPath, configProps, configFilePath, remoteSecureConfigPath)
+
+	return err
+}
+
+func (c *PasswordProtectionSuite) RemoveEncryptedPasswords(configFilePath string, localSecureConfigPath string, removeConfigs string) error {
 
 	configProps, err := c.loadPropertiesFile(configFilePath)
 	if err != nil {
@@ -429,14 +464,14 @@ func (c *PasswordProtectionSuite) isPathValid(path string) bool {
 	return true
 }
 
-func(c *PasswordProtectionSuite) writePropertiesFile(path string, property *properties.Properties) error {
+func (c *PasswordProtectionSuite) writePropertiesFile(path string, property *properties.Properties) error {
 	buf := new(bytes.Buffer)
 	_, _ = property.WriteComment(buf, "", properties.ISO_8859_1)
 	err := ioutil.WriteFile(path, buf.Bytes(), 0644)
 	return err
 }
 
-func(c *PasswordProtectionSuite) loadPropertiesFile(path string) (*properties.Properties, error) {
+func (c *PasswordProtectionSuite) loadPropertiesFile(path string) (*properties.Properties, error) {
 	if !c.isPathValid(path) {
 		return properties.NewProperties(), fmt.Errorf("Invalid file path.")
 	}
@@ -445,25 +480,25 @@ func(c *PasswordProtectionSuite) loadPropertiesFile(path string) (*properties.Pr
 	return property, nil
 }
 
-func(c *PasswordProtectionSuite) isPasswordEncrypted(config string) bool {
+func (c *PasswordProtectionSuite) isPasswordEncrypted(config string) bool {
 	regex, _ := regexp.Compile("\\$\\{(.*?):((.*?):)?(.*?)\\}")
 	return regex.MatchString(config)
 }
 
-func(c *PasswordProtectionSuite) generateConfigValue(key string, path string) string {
-	return "${securePass:" + path + ":" + key + "}";
+func (c *PasswordProtectionSuite) generateConfigValue(key string, path string) string {
+	return "${securePass:" + path + ":" + key + "}"
 }
 
-func(c *PasswordProtectionSuite) formatCipherValue(cipher string, iv string) string {
-	return "ENC[" + METADATA_ENC_ALGORITHM + ",data:" + cipher + ",iv:" + iv + ",type:str]";
+func (c *PasswordProtectionSuite) formatCipherValue(cipher string, iv string) string {
+	return "ENC[" + METADATA_ENC_ALGORITHM + ",data:" + cipher + ",iv:" + iv + ",type:str]"
 }
 
-func(c *PasswordProtectionSuite) isCipher(config string) bool {
+func (c *PasswordProtectionSuite) isCipher(config string) bool {
 	regex, _ := regexp.Compile("ENC\\[(.*?)\\]")
 	return regex.MatchString(config)
 }
 
-func(c *PasswordProtectionSuite) addSecureConfigProviderProperty(property *properties.Properties) *properties.Properties {
+func (c *PasswordProtectionSuite) addSecureConfigProviderProperty(property *properties.Properties) *properties.Properties {
 	configProviders := property.GetString(CONFIG_PROVIDER_KEY, "")
 	if configProviders == "" {
 		configProviders = SECURE_CONFIG_PROVIDER
@@ -471,12 +506,12 @@ func(c *PasswordProtectionSuite) addSecureConfigProviderProperty(property *prope
 		configProviders = configProviders + "," + SECURE_CONFIG_PROVIDER
 	}
 
-	_,_,_ = property.Set(CONFIG_PROVIDER_KEY, configProviders);
-	_,_,_ = property.Set(SECURE_CONFIG_PROVIDER_CLASS_KEY, SECURE_CONFIG_PROVIDER_CLASS);
+	_, _, _ = property.Set(CONFIG_PROVIDER_KEY, configProviders)
+	_, _, _ = property.Set(SECURE_CONFIG_PROVIDER_CLASS_KEY, SECURE_CONFIG_PROVIDER_CLASS)
 	return property
 }
 
-func(c *PasswordProtectionSuite) unwrapDataKey(key string, engine EncryptionEngine) ([]byte, error) {
+func (c *PasswordProtectionSuite) unwrapDataKey(key string, engine EncryptionEngine) ([]byte, error) {
 	masterKey, err := c.loadMasterKey()
 	if err != nil {
 		return []byte{}, err
@@ -485,7 +520,7 @@ func(c *PasswordProtectionSuite) unwrapDataKey(key string, engine EncryptionEngi
 	return engine.UnWrapDataKey(data, iv, algo, masterKey)
 }
 
-func(c *PasswordProtectionSuite) fetchSecureConfigProps(localSecureConfigPath string, masterKey string) (*properties.Properties, *CipherSuite, error) {
+func (c *PasswordProtectionSuite) fetchSecureConfigProps(localSecureConfigPath string, masterKey string) (*properties.Properties, *CipherSuite, error) {
 
 	secureConfigProps, _ := c.loadPropertiesFile(localSecureConfigPath)
 
@@ -503,19 +538,19 @@ func(c *PasswordProtectionSuite) fetchSecureConfigProps(localSecureConfigPath st
 
 	// Add DEK Metadata to secureConfigProps
 	now := time.Now()
-	_,_,_ = secureConfigProps.Set(METADATA_KEY_TIMESTAMP, now.String())
+	_, _, _ = secureConfigProps.Set(METADATA_KEY_TIMESTAMP, now.String())
 
-	_,_,_ = secureConfigProps.Set(METADATA_KEY_ENVVAR, CONFLUENT_KEY_ENVVAR)
+	_, _, _ = secureConfigProps.Set(METADATA_KEY_ENVVAR, CONFLUENT_KEY_ENVVAR)
 
-	_,_,_ = secureConfigProps.Set(METADATA_KEY_LENGTH, strconv.Itoa(cipherSuites.KeyLength))
-	_,_,_ = secureConfigProps.Set(METADATA_KEY_ITERATIONS, strconv.Itoa(cipherSuites.Iterations))
-	_,_,_ = secureConfigProps.Set(METADATA_KEY_SALT, cipherSuites.Salt)
-	_,_,_ = secureConfigProps.Set(METADATA_DATA_KEY, cipherSuites.EncryptedDataKey)
+	_, _, _ = secureConfigProps.Set(METADATA_KEY_LENGTH, strconv.Itoa(cipherSuites.KeyLength))
+	_, _, _ = secureConfigProps.Set(METADATA_KEY_ITERATIONS, strconv.Itoa(cipherSuites.Iterations))
+	_, _, _ = secureConfigProps.Set(METADATA_KEY_SALT, cipherSuites.Salt)
+	_, _, _ = secureConfigProps.Set(METADATA_DATA_KEY, cipherSuites.EncryptedDataKey)
 
 	return secureConfigProps, cipherSuites, err
 }
 
-func(c *PasswordProtectionSuite) loadMasterKey() (string, error) {
+func (c *PasswordProtectionSuite) loadMasterKey() (string, error) {
 	// Check if master key is created and set in the environment variable
 	masterKey := os.Getenv(CONFLUENT_KEY_ENVVAR)
 
@@ -526,7 +561,7 @@ func(c *PasswordProtectionSuite) loadMasterKey() (string, error) {
 	return masterKey, nil
 }
 
-func(c *PasswordProtectionSuite) encryptConfigValues(matchProps *properties.Properties, localSecureConfigPath string, configProps *properties.Properties,
+func (c *PasswordProtectionSuite) encryptConfigValues(matchProps *properties.Properties, localSecureConfigPath string, configProps *properties.Properties,
 	configFilePath string, remoteConfigFilePath string) error {
 
 	// Load master Key
@@ -552,12 +587,12 @@ func(c *PasswordProtectionSuite) encryptConfigValues(matchProps *properties.Prop
 		if !c.isPasswordEncrypted(value) {
 			// Generate tuple ${providerName:[path:]key}
 			newConfigVal := c.generateConfigValue(key, remoteConfigFilePath)
-			_,_,_ = configProps.Set(key, newConfigVal)
+			_, _, _ = configProps.Set(key, newConfigVal)
 			cipher, iv, err := engine.AESEncrypt(value, dataKey)
 			if err == nil {
 				formattedCipher := c.formatCipherValue(cipher, iv)
 				pathKey := configFilePath + ":" + key
-				_,_,_ = secureConfigProps.Set(pathKey, formattedCipher)
+				_, _, _ = secureConfigProps.Set(pathKey, formattedCipher)
 			}
 		}
 
@@ -575,23 +610,21 @@ func(c *PasswordProtectionSuite) encryptConfigValues(matchProps *properties.Prop
 		return err
 	}
 
-
-
 	return nil
 }
 
-func(c *PasswordProtectionSuite) findMatchTrim(original string, pattern string, prefix string, suffix string) string {
+func (c *PasswordProtectionSuite) findMatchTrim(original string, pattern string, prefix string, suffix string) string {
 	re := regexp.MustCompile(pattern)
 	match := re.FindStringSubmatch(original)
 	substring := ""
 	if len(match) != 0 {
-		substring = strings.TrimPrefix( strings.TrimSuffix(match[0],suffix), prefix )
+		substring = strings.TrimPrefix(strings.TrimSuffix(match[0], suffix), prefix)
 	}
 
 	return substring
 }
 
-func(c *PasswordProtectionSuite) parseCipherValue(cipher string) (string, string, string) {
+func (c *PasswordProtectionSuite) parseCipherValue(cipher string) (string, string, string) {
 	data := c.findMatchTrim(cipher, "data\\:(.*?)\\,", "data:", ",")
 	iv := c.findMatchTrim(cipher, "iv\\:(.*?)\\,", "iv:", ",")
 	algo := c.findMatchTrim(cipher, "ENC\\[(.*?)\\,", "ENC[", ",")
