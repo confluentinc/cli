@@ -94,6 +94,7 @@ func (c *rolebindingCommand) init() {
 	}
 	deleteCmd.Flags().String("role", "", "Role name of the existing rolebinding")
 	deleteCmd.Flags().String("resource", "", "Qualified resource name associated with the rolebinding")
+	deleteCmd.Flags().Bool("prefix", false, "Whether the provided resource name should be treated as a prefix pattern")
 	deleteCmd.Flags().String("principal", "", "Qualified principal name associated with the rolebinding")
 	deleteCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the rolebinding")
 	deleteCmd.Flags().String("schema-registry-cluster-id", "", "Schema registry cluster ID for the rolebinding")
