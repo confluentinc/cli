@@ -1,6 +1,7 @@
 package secret
 
 import (
+	"fmt"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"io/ioutil"
 	"os"
@@ -182,15 +183,9 @@ func TestPasswordProtectionSuite_DecryptConfigFileSecrets(t *testing.T) {
 				t.Fail()
 			}
 
-			err = plugin.DecryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.outputConfigPath)
+			err = validateUsingDecryption(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.outputConfigPath, tt.args.contents, plugin)
 
 			if err != nil {
-				t.Fail()
-			}
-
-			decryptContent, _ := ioutil.ReadFile(tt.args.outputConfigPath)
-			decryptContentStr := string(decryptContent)
-			if strings.Compare(decryptContentStr, tt.args.contents) != 0 {
 				t.Fail()
 			}
 
@@ -222,11 +217,11 @@ func TestPasswordProtectionSuite_AddConfigFileSecrets(t *testing.T) {
 			args: &args{
 				masterKeyPassphrase:    "abc123",
 				contents:               "testPassword = password\n",
-				configFilePath:         "/tmp/securePass987/config.properties",
-				localSecureConfigPath:  "/tmp/securePass987/secureConfig.properties",
-				secureDir:              "/tmp/securePass987",
-				remoteSecureConfigPath: "/tmp/securePass987/secureConfig.properties",
-				outputConfigPath:       "/tmp/securePass987/output.properties",
+				configFilePath:         "/tmp/securePass987/add/config.properties",
+				localSecureConfigPath:  "/tmp/securePass987/add/secureConfig.properties",
+				secureDir:              "/tmp/securePass987/add",
+				remoteSecureConfigPath: "/tmp/securePass987/add/secureConfig.properties",
+				outputConfigPath:       "/tmp/securePass987/add/output.properties",
 				newConfigs:             "ssl.keystore.password = sslPass\ntruststore.keystore.password = keystorePass\n",
 			},
 			wantErr: false,
@@ -259,18 +254,12 @@ func TestPasswordProtectionSuite_AddConfigFileSecrets(t *testing.T) {
 				t.Fail()
 			}
 
-			// Verify passwords are added
-			err = plugin.DecryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.outputConfigPath)
+			err = validateUsingDecryption(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.outputConfigPath, tt.args.newConfigs, plugin)
 
 			if err != nil {
 				t.Fail()
 			}
 
-			decryptContent, _ := ioutil.ReadFile(tt.args.outputConfigPath)
-			decryptContentStr := string(decryptContent)
-			if strings.Compare(decryptContentStr, tt.args.newConfigs) != 0 {
-				t.Fail()
-			}
 			// Clean Up
 			os.Unsetenv(CONFLUENT_KEY_ENVVAR)
 			os.RemoveAll(tt.args.secureDir)
@@ -349,15 +338,9 @@ func TestPasswordProtectionSuite_UpdateConfigFileSecrets(t *testing.T) {
 
 			if !tt.wantErr {
 				// Verify passwords are added
-				err = plugin.DecryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.outputConfigPath)
+				err = validateUsingDecryption(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.outputConfigPath, tt.args.updateConfigs, plugin)
 
 				if err != nil {
-					t.Fail()
-				}
-
-				decryptContent, _ := ioutil.ReadFile(tt.args.outputConfigPath)
-				decryptContentStr := string(decryptContent)
-				if strings.Compare(decryptContentStr, tt.args.updateConfigs) != 0 {
 					t.Fail()
 				}
 			}
@@ -439,17 +422,12 @@ func TestPasswordProtectionSuite_RotateDataKey(t *testing.T) {
 
 			}
 
-			err = plugin.DecryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.outputConfigPath)
+			err = validateUsingDecryption(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.outputConfigPath, tt.args.contents, plugin)
 
 			if err != nil {
 				t.Fail()
 			}
 
-			decryptContent, _ := ioutil.ReadFile(tt.args.outputConfigPath)
-			decryptContentStr := string(decryptContent)
-			if strings.Compare(decryptContentStr, tt.args.contents) != 0 {
-				t.Fail()
-			}
 			// Clean Up
 			os.Unsetenv(CONFLUENT_KEY_ENVVAR)
 			os.RemoveAll(tt.args.secureDir)
@@ -519,15 +497,9 @@ func TestPasswordProtectionSuite_RotateMasterKey(t *testing.T) {
 
 			os.Setenv(CONFLUENT_KEY_ENVVAR, newKey)
 
-			err = plugin.DecryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.outputConfigPath)
+			err = validateUsingDecryption(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.outputConfigPath, tt.args.contents, plugin)
 
 			if err != nil {
-				t.Fail()
-			}
-
-			decryptContent, _ := ioutil.ReadFile(tt.args.outputConfigPath)
-			decryptContentStr := string(decryptContent)
-			if strings.Compare(decryptContentStr, tt.args.contents) != 0 {
 				t.Fail()
 			}
 
@@ -553,4 +525,26 @@ func createMasterKey(passphrase string, plugin *PasswordProtectionSuite) error {
 func createNewConfigFile(path string, contents string) error {
 	err := ioutil.WriteFile(path, []byte(contents), 0644)
 	return err
+}
+
+func validateUsingDecryption(configFilePath string, localSecureConfigPath string, outputConfigPath string, origConfigs string, plugin *PasswordProtectionSuite) error {
+	err := plugin.DecryptConfigFileSecrets(configFilePath, localSecureConfigPath, outputConfigPath)
+
+	if err != nil {
+		return fmt.Errorf("failed DecryptConfigFileSecrets mster master ")
+	}
+
+	decryptContent, _ := ioutil.ReadFile(outputConfigPath)
+	decryptContentStr := string(decryptContent)
+	decryptConfigProps := properties.MustLoadString(decryptContentStr)
+	originalConfigProps := properties.MustLoadString(origConfigs)
+	for key, value := range decryptConfigProps.Map() {
+		originalVal, _ := originalConfigProps.Get(key)
+		if value != originalVal {
+			return fmt.Errorf("Configs file is empty !!!")
+		}
+
+	}
+
+	return nil
 }
