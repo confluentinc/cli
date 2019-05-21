@@ -8,26 +8,26 @@ type Cipher interface {
 }
 
 type CipherSuite struct {
-	Iterations int
-	KeyLength int
-	MasterKeyPath string
-	Salt string
-	EncryptionAlgo string
+	Iterations       int
+	KeyLength        int
+	MasterKeyPath    string
+	Salt             string
+	EncryptionAlgo   string
 	EncryptedDataKey string
 }
 
 func NewCipherSuite(iterations int, keyLength int, masterKeyPath string, salt string, algo string, dataKey string) *CipherSuite {
-	return &CipherSuite { Iterations:iterations, KeyLength:keyLength, MasterKeyPath:masterKeyPath, Salt:salt, EncryptionAlgo:algo, EncryptedDataKey:dataKey}
+	return &CipherSuite{Iterations: iterations, KeyLength: keyLength, MasterKeyPath: masterKeyPath, Salt: salt, EncryptionAlgo: algo, EncryptedDataKey: dataKey}
 }
 
 func NewDefaultCipherSuite() *CipherSuite {
-	return &CipherSuite {
-		Iterations:METADATA_KEY_DEFAULT_ITERATIONS,
-		KeyLength:METADATA_KEY_DEFAULT_LENGTH_BYTES,
-		MasterKeyPath:"",
-		Salt:METADATA_KEY_DEFAULT_SALT ,
-		EncryptionAlgo:METADATA_ENC_ALGORITHM,
-		EncryptedDataKey:"", }
+	return &CipherSuite{
+		Iterations:       METADATA_KEY_DEFAULT_ITERATIONS,
+		KeyLength:        METADATA_KEY_DEFAULT_LENGTH_BYTES,
+		MasterKeyPath:    "",
+		Salt:             METADATA_KEY_DEFAULT_SALT,
+		EncryptionAlgo:   METADATA_ENC_ALGORITHM,
+		EncryptedDataKey: ""}
 }
 
 func (c *CipherSuite) SetIterations(iterations int) {

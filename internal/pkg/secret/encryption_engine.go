@@ -8,28 +8,28 @@ import (
 	"crypto/sha512"
 	"encoding/base32"
 	"encoding/base64"
+	"github.com/confluentinc/cli/internal/pkg/log"
+	"golang.org/x/crypto/pbkdf2"
 	"io"
 	_ "io/ioutil"
-	"golang.org/x/crypto/pbkdf2"
-	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 /**
 * Encryption Engine performs Encryption, Decryption and Hash operations.
-*/
+ */
 
 type EncryptionEngine interface {
 	AESEncrypt(plainText string, key []byte) (string, string, error)
 	AESDecrypt(cipher string, iv string, algo string, key []byte) (string, error)
 	GenerateRandomDataKey(keyLength int) ([]byte, error)
-    GenerateMasterKey(masterKeyPassphrase string) (string, error)
+	GenerateMasterKey(masterKeyPassphrase string) (string, error)
 	WrapDataKey(dataKey []byte, masterKey string) (string, string, error)
 	UnWrapDataKey(dataKey string, iv string, algo string, masterKey string) ([]byte, error)
 }
 
 type EncryptEngineSuite struct {
 	CipherSuite *CipherSuite
-	Logger *log.Logger
+	Logger      *log.Logger
 }
 
 func NewEncryptionEngine(suite *CipherSuite, logger *log.Logger) *EncryptEngineSuite {
@@ -44,7 +44,7 @@ func (c *EncryptEngineSuite) GenerateRandomDataKey(keyLength int) ([]byte, error
 	}
 
 	randomString := base32.StdEncoding.EncodeToString(randomBytes)[:keyLength]
-	key,err := c.generateEncryptionKey(randomString)
+	key, err := c.generateEncryptionKey(randomString)
 	if err != nil {
 		return randomBytes, err
 	}
@@ -52,7 +52,7 @@ func (c *EncryptEngineSuite) GenerateRandomDataKey(keyLength int) ([]byte, error
 }
 
 func (c *EncryptEngineSuite) GenerateMasterKey(masterKeyPassphrase string) (string, error) {
-	key,err := c.generateEncryptionKey(masterKeyPassphrase)
+	key, err := c.generateEncryptionKey(masterKeyPassphrase)
 	if err != nil {
 		return "", err
 	}
@@ -63,9 +63,9 @@ func (c *EncryptEngineSuite) GenerateMasterKey(masterKeyPassphrase string) (stri
 
 func (c *EncryptEngineSuite) WrapDataKey(dataKey []byte, masterKey string) (string, string, error) {
 	dataKeyStr := base64.StdEncoding.EncodeToString(dataKey)
-	masterKeyByte,err := base64.StdEncoding.DecodeString(masterKey)
+	masterKeyByte, err := base64.StdEncoding.DecodeString(masterKey)
 	if err != nil {
-		return "","", err
+		return "", "", err
 	}
 	return c.AESEncrypt(dataKeyStr, masterKeyByte)
 }
@@ -144,7 +144,7 @@ func (c *EncryptEngineSuite) decryption(crypt []byte, key []byte, iv []byte) ([]
 }
 
 func (c *EncryptEngineSuite) pKCS5Padding(ciphertext []byte, blockSize int) []byte {
-	length := len(ciphertext)%blockSize
+	length := len(ciphertext) % blockSize
 	padding := blockSize - length
 	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
 	return append(ciphertext, padtext...)
