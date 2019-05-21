@@ -2,6 +2,7 @@ package doc
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -27,6 +28,12 @@ func GenReSTIndex(cmd *cobra.Command, filename string, filePrepender func(string
 		return err
 	}
 
+	fmt.Fprintf(f, ".. toctree:\n   :hidden:\n\n")
+	for _, c := range commands {
+		fmt.Fprintf(f, "   %s\n", c.ref)
+	}
+	fmt.Fprintln(f)
+
 	// Write to a buffer so we can dedent before we print.
 	//
 	// This is needed because a space for center separator between columns also creates a space on the left,
@@ -42,7 +49,7 @@ func GenReSTIndex(cmd *cobra.Command, filename string, filePrepender func(string
 
 	table.SetHeader([]string{"Command", "Description"})
 	for _, c := range commands {
-		row := []string{c.command, c.description}
+		row := []string{linkHandler(c.command, c.ref), c.description}
 		table.Append(row)
 	}
 	table.Render()
@@ -52,14 +59,14 @@ func GenReSTIndex(cmd *cobra.Command, filename string, filePrepender func(string
 }
 
 type command struct {
-	command string
+	command     string
+	ref         string
 	description string
 }
 
 func genReSTIndex(cmd *cobra.Command, linkHandler func(string, string) string) ([]command, error) {
-	cname := fullCommand(cmd)
-	ref := strings.Replace(cname, " ", "_", -1)
-	allCommands := []command{{command: linkHandler(cname, ref), description: cmd.Short}}
+	name, ref := link(cmd)
+	allCommands := []command{{command: name, ref: ref, description: cmd.Short}}
 
 	for _, c := range cmd.Commands() {
 		if !c.IsAvailableCommand() || c.IsAdditionalHelpTopicCommand() {
@@ -72,6 +79,12 @@ func genReSTIndex(cmd *cobra.Command, linkHandler func(string, string) string) (
 		allCommands = append(allCommands, commands...)
 	}
 	return allCommands, nil
+}
+
+func link(cmd *cobra.Command) (name, ref string) {
+	name = fullCommand(cmd)
+	ref = strings.Replace(name, " ", "_", -1)
+	return
 }
 
 func fullCommand(cmd *cobra.Command) string {
