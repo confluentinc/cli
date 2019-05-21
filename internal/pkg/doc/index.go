@@ -28,7 +28,7 @@ func GenReSTIndex(cmd *cobra.Command, filename string, filePrepender func(string
 		return err
 	}
 
-	fmt.Fprintf(f, ".. toctree:\n   :hidden:\n\n")
+	fmt.Fprintf(f, ".. toctree::\n   :hidden:\n\n")
 	for _, c := range commands {
 		fmt.Fprintf(f, "   %s\n", c.ref)
 	}
