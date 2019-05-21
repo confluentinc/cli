@@ -212,18 +212,29 @@ func (c *rolebindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mds.Sco
 	}
 	scope.KafkaCluster = id
 
+	nonKafkaScopesSet := 0
+
+	if cmd.Flags().Changed("schema-registry-cluster-id") {
+		nonKafkaScopesSet++
+	}
 	id, err = cmd.Flags().GetString("schema-registry-cluster-id")
 	if err != nil {
 		return nil, errors.HandleCommon(err, cmd)
 	}
 	scope.SchemaRegistryCluster = id
 
+	if cmd.Flags().Changed("ksql-cluster-id") {
+		nonKafkaScopesSet++
+	}
 	id, err = cmd.Flags().GetString("ksql-cluster-id")
 	if err != nil {
 		return nil, errors.HandleCommon(err, cmd)
 	}
 	scope.KsqlCluster = id
 
+	if cmd.Flags().Changed("connect-cluster-id") {
+		nonKafkaScopesSet++
+	}
 	id, err = cmd.Flags().GetString("connect-cluster-id")
 	if err != nil {
 		return nil, errors.HandleCommon(err, cmd)
@@ -241,6 +252,10 @@ func (c *rolebindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mds.Sco
 		scope.KsqlCluster == "" &&
 		scope.ConnectCluster == "" {
 		return nil, errors.HandleCommon(errors.New("Must specify at least one cluster ID flag to indicate rolebinding scope"), cmd)
+	}
+
+	if nonKafkaScopesSet > 1 {
+		return nil, errors.HandleCommon(errors.New("Cannot specify more than one non-Kafka cluster ID for a scope"), cmd)
 	}
 
 	return scope, nil
