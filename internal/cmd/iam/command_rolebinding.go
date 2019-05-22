@@ -115,6 +115,13 @@ func (c *rolebindingCommand) list(cmd *cobra.Command, args []string) error {
 	}
 
 	principal, err := cmd.Flags().GetString("principal")
+	if err == nil && principal == "" {
+		return errors.New("Must specify a principal whose rolebindings should be listed")
+	}
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	err = c.validatePrincipalFormat(principal)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -168,7 +175,15 @@ func (c *rolebindingCommand) list(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *rolebindingCommand) parseResourcePattern(typename string, prefix bool) mds.ResourcePattern {
+func (c *rolebindingCommand) validatePrincipalFormat(principal string) error {
+	if len(strings.Split(principal, ":")) == 1 {
+		return errors.New("Principal must be specified in the format <Principal Type>:<Principal Name>")
+	}
+
+	return nil
+}
+
+func (c *rolebindingCommand) parseAndValidateResourcePattern(typename string, prefix bool) (mds.ResourcePattern, error) {
 	var result mds.ResourcePattern
 	if prefix {
 		result.PatternType = "PREFIXED"
@@ -176,10 +191,14 @@ func (c *rolebindingCommand) parseResourcePattern(typename string, prefix bool) 
 		result.PatternType = "LITERAL"
 	}
 
+	if len(strings.Split(typename, ":")) == 1 {
+		return result, errors.New("Resource must be specified in the format <Resource Type>:<Resource Name>")
+	}
+
 	result.ResourceType = strings.Split(typename, ":")[0]
 	result.Name = typename[strings.Index(typename, ":")+1:]
 
-	return result
+	return result, nil
 }
 
 func (c *rolebindingCommand) validateRoleAndResourceType(roleName string, resourceType string) error {
@@ -276,6 +295,13 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, args []string) error {
 	prefix := cmd.Flags().Changed("prefix")
 
 	principal, err := cmd.Flags().GetString("principal")
+	if err == nil && principal == "" {
+		return errors.New("Must specify a principal for creating the rolebinding")
+	}
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	err = c.validatePrincipalFormat(principal)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -287,7 +313,10 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, args []string) error {
 
 	resp := (*http.Response)(nil)
 	if resource != "" {
-		parsedResourcePattern := c.parseResourcePattern(resource, prefix)
+		parsedResourcePattern, err := c.parseAndValidateResourcePattern(resource, prefix)
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
 		err = c.validateRoleAndResourceType(role, parsedResourcePattern.ResourceType)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
@@ -329,6 +358,13 @@ func (c *rolebindingCommand) delete(cmd *cobra.Command, args []string) error {
 	prefix := cmd.Flags().Changed("prefix")
 
 	principal, err := cmd.Flags().GetString("principal")
+	if err == nil && principal == "" {
+		return errors.New("Must specify a principal for deleting the rolebinding")
+	}
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	err = c.validatePrincipalFormat(principal)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -340,7 +376,10 @@ func (c *rolebindingCommand) delete(cmd *cobra.Command, args []string) error {
 
 	resp := (*http.Response)(nil)
 	if resource != "" {
-		parsedResourcePattern := c.parseResourcePattern(resource, prefix)
+		parsedResourcePattern, err := c.parseAndValidateResourcePattern(resource, prefix)
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
 		err = c.validateRoleAndResourceType(role, parsedResourcePattern.ResourceType)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
