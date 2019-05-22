@@ -168,13 +168,13 @@ func (a *commands) credentials(cmd *cobra.Command) (string, string, error) {
 	}
 
 	if len(password) == 0 {
+		var err error
 		pcmd.Print(cmd, "Password: ")
-		bytePassword, err := a.prompt.ReadPassword(0)
+		password, err = a.prompt.ReadPassword()
 		if err != nil {
 			return "", "", err
 		}
 		pcmd.Println(cmd)
-		password = string(bytePassword)
 	}
 
 	return strings.TrimSpace(email), password, nil

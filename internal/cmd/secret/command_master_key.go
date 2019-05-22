@@ -3,14 +3,17 @@ package secret
 import (
 	"bufio"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"strings"
+
+	"github.com/confluentinc/go-printer"
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	secureplugin "github.com/confluentinc/cli/internal/pkg/secret"
-	"github.com/spf13/cobra"
-	"io/ioutil"
-	"os"
-	"strings"
 )
 
 type masterKeyCommand struct {
@@ -42,35 +45,47 @@ func (c *masterKeyCommand) init() {
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
 	}
-	createCmd.Flags().String("passphrase", "", "Master Key Passphrase")
-	_ = createCmd.MarkFlagRequired("passphrase")
+	createCmd.Flags().String("passphrase", "", "Key passphrase; use - to pipe from stdin or @file.txt to read from file")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 }
 
-func (c *masterKeyCommand) getMasterKeyPassphrase(inputType string) (string, error) {
-	passphrase := ""
-	if inputType == "" {
-		return passphrase, fmt.Errorf("Please enter master key passphrase.")
-	}
-
-	if inputType == "-" {
-		reader := bufio.NewReader(os.Stdin)
-		passphrase, err := reader.ReadString('\n')
-		return passphrase, err
-	}
-
-	if strings.HasPrefix(inputType, "@") {
-		filePath := inputType[1:]
-		data, err := ioutil.ReadFile(filePath)
-		if err != nil {
+func (c *masterKeyCommand) getMasterKeyPassphrase(cmd *cobra.Command, source string) (string, error) {
+	if source == "" {
+		fi, _ := os.Stdin.Stat()
+		if (fi.Mode() & os.ModeCharDevice) == 0 {
+			// TODO: should we require this or just assume that pipe to stdin implies '--passphrase -' ?
+			return "", fmt.Errorf("please specify '--passphrase -' if you intend to pipe your passphrase over stdin")
+		} else {
+			pcmd.Print(cmd, "Master Key Passphrase: ")
+			passphrase, err := c.prompt.ReadPassword()
+			pcmd.Println(cmd, "\n")
 			return passphrase, err
 		}
-		passphrase = string(data)
+	}
+
+	if source == "-" {
+		fi, _ := os.Stdin.Stat()
+		if (fi.Mode() & os.ModeCharDevice) == 0 {
+			reader := bufio.NewReader(os.Stdin)
+			passphrase, err := reader.ReadString('\n')
+			return passphrase, err
+		} else {
+			return "", fmt.Errorf("please pipe your passphrase over stdin")
+		}
+	}
+
+	if strings.HasPrefix(source, "@") {
+		filePath := source[1:]
+		data, err := ioutil.ReadFile(filePath)
+		if err != nil {
+			return "", err
+		}
+		passphrase := string(data)
 		return passphrase, err
 	}
 
-	return "", fmt.Errorf("Invalid master key passphrase.")
+	return source, nil
 }
 
 func (c *masterKeyCommand) create(cmd *cobra.Command, args []string) error {
@@ -79,7 +94,7 @@ func (c *masterKeyCommand) create(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	passphrase, err := c.getMasterKeyPassphrase(passphraseSource)
+	passphrase, err := c.getMasterKeyPassphrase(cmd, passphraseSource)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -89,6 +104,7 @@ func (c *masterKeyCommand) create(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	pcmd.Println(cmd, "Master Key: "+masterKey)
+	pcmd.Println(cmd, "Save the Master Key. It is not retrievable later.")
+	printer.RenderTableOut(&struct{MasterKey string}{MasterKey: masterKey}, []string{"MasterKey"}, map[string]string{"MasterKey": "Master Key"}, os.Stdout)
 	return nil
 }
