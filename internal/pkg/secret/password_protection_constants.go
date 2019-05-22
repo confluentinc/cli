@@ -8,22 +8,22 @@ const (
 
 	SECURE_CONFIG_PROVIDER = "securePass"
 
-	SECURE_CONFIG_PROVIDER_CLASS = "org.apache.kafka.common.config.provider.SecurePassConfigProvider"
+	SECURE_CONFIG_PROVIDER_CLASS = "io.confluent.kafka.security.config.provider.SecurePassConfigProvider"
 )
 
 /* Encryption Keys Metadata */
 const (
-	METADATA_KEY_ENVVAR = "metadata.symmetric_key.0.envvar"
+	METADATA_KEY_ENVVAR = "_metadata.symmetric_key.0.envvar"
 
-	METADATA_KEY_TIMESTAMP = "metadata.symmetric_key.0.created_at"
+	METADATA_KEY_TIMESTAMP = "_metadata.symmetric_key.0.created_at"
 
-	METADATA_KEY_LENGTH = "metadata.symmetric_key.0.length"
+	METADATA_KEY_LENGTH = "_metadata.symmetric_key.0.length"
 
-	METADATA_KEY_SALT = "metadata.symmetric_key.0.salt"
+	METADATA_KEY_SALT = "_metadata.symmetric_key.0.salt"
 
-	METADATA_KEY_ITERATIONS = "metadata.symmetric_key.0.iterations"
+	METADATA_KEY_ITERATIONS = "_metadata.symmetric_key.0.iterations"
 
-	METADATA_DATA_KEY = "metadata.symmetric_key.0.enc"
+	METADATA_DATA_KEY = "_metadata.symmetric_key.0.enc"
 
 	METADATA_KEY_DEFAULT_SALT = "727155B85D4E2C207F1BBA12681A5D5F"
 

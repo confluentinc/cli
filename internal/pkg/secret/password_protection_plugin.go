@@ -464,7 +464,7 @@ func (c *PasswordProtectionSuite) isPathValid(path string) bool {
 
 func (c *PasswordProtectionSuite) writePropertiesFile(path string, property *properties.Properties) error {
 	buf := new(bytes.Buffer)
-	_, _ = property.WriteComment(buf, "", properties.ISO_8859_1)
+	_, _ = property.WriteComment(buf, "# ", properties.ISO_8859_1)
 	err := ioutil.WriteFile(path, buf.Bytes(), 0644)
 	return err
 }
@@ -582,14 +582,15 @@ func (c *PasswordProtectionSuite) encryptConfigValues(matchProps *properties.Pro
 	for key, value := range matchProps.Map() {
 		if !c.isPasswordEncrypted(value) {
 			// Generate tuple ${providerName:[path:]key}
-			newConfigVal := c.generateConfigValue(key, remoteConfigFilePath)
+			pathKey := configFilePath + ":" + key
+			newConfigVal := c.generateConfigValue(pathKey, remoteConfigFilePath)
 			_, _, _ = configProps.Set(key, newConfigVal)
 			cipher, iv, err := engine.AESEncrypt(value, dataKey)
+
 			if err != nil {
 				return err
 			}
 			formattedCipher := c.formatCipherValue(cipher, iv)
-			pathKey := configFilePath + ":" + key
 			_, _, err = secureConfigProps.Set(pathKey, formattedCipher)
 			if err != nil {
 				return err
