@@ -69,7 +69,11 @@ func (c *masterKeyCommand) getMasterKeyPassphrase(cmd *cobra.Command, source str
 		if (fi.Mode() & os.ModeCharDevice) == 0 {
 			reader := bufio.NewReader(os.Stdin)
 			passphrase, err := reader.ReadString('\n')
-			return passphrase, err
+			if err != nil {
+				return "", err
+			}
+			// To remove the final \n
+			return passphrase[0:len(passphrase)-1], nil
 		} else {
 			return "", fmt.Errorf("please pipe your passphrase over stdin")
 		}
