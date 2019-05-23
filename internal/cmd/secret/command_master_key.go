@@ -28,8 +28,8 @@ func NewMasterKeyCommand(config *config.Config, prompt pcmd.Prompt, plugin secur
 	cmd := &masterKeyCommand{
 		Command: &cobra.Command{
 			Use:   "master-key",
-			Short: "Manage the master key for Confluent Platform.",
-			Long: "Manage the master keys with this command.",
+			Short: "Manage the master key for Confluent Platform",
+			Long: "Manage the Confluent Platform master keys with this command.",
 		},
 		config: config,
 		prompt: prompt,
@@ -42,9 +42,8 @@ func NewMasterKeyCommand(config *config.Config, prompt pcmd.Prompt, plugin secur
 func (c *masterKeyCommand) init() {
 	createCmd := &cobra.Command{
 		Use:   "create",
-		Short: "Create a master key for Confluent Platform.",
-		Long: `This command generates a master key and stores it in an environment variable. This key will be used for encryption and
-decryption of configuration value.`,
+		Short: "Create a master key for Confluent Platform",
+		Long: `This command generates a master key. This key will be used for encryption and decryption of configuration value.`,
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
 	}
@@ -108,7 +107,7 @@ func (c *masterKeyCommand) create(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	pcmd.Println(cmd, "Save the master key. It cannot be retrievable later.")
+	pcmd.Println(cmd, "Save the master key. It cannot be retrieved later.")
 	printer.RenderTableOut(&struct{MasterKey string}{MasterKey: masterKey}, []string{"MasterKey"}, map[string]string{"MasterKey": "Master Key"}, os.Stdout)
 	return nil
 }

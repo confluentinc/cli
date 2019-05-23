@@ -25,7 +25,8 @@ func NewFileCommand(config *config.Config, prompt pcmd.Prompt, plugin secret.Pas
 	cmd := &secureFileCommand{
 		Command: &cobra.Command{
 			Use:   "file",
-			Short: "Secure secrets in a configuration properties file.",
+			Short: "Secure secrets in a configuration properties file",
+			Long: "Secure secrets in a configuration properties file. ",
 		},
 		config: config,
 		plugin: plugin,
@@ -38,7 +39,9 @@ func NewFileCommand(config *config.Config, prompt pcmd.Prompt, plugin secret.Pas
 func (c *secureFileCommand) init() {
 	encryptCmd := &cobra.Command{
 		Use:   "encrypt",
-		Short: "Encrypt secrets in a configuration properties file.",
+		Short: "Encrypt secrets in a configuration properties file",
+		Long: `This command encrypts the passwords in file specified in filePath. This command returns a failure
+if a master key has not already been set using the "master-key create" command.`,
 		RunE:  c.encrypt,
 		Args:  cobra.NoArgs,
 	}
@@ -56,6 +59,8 @@ func (c *secureFileCommand) init() {
 	decryptCmd := &cobra.Command{
 		Use:   "decrypt",
 		Short: "Decrypt encrypted secrets from the configuration properties file",
+		Long: `This command decrypts the passwords in file specified in filePath. This command returns a failure
+if a master key has not already been set using the "master-key create" command.`,
 		RunE:  c.decrypt,
 		Args:  cobra.NoArgs,
 	}
@@ -72,7 +77,9 @@ func (c *secureFileCommand) init() {
 
 	addCmd := &cobra.Command{
 		Use:   "add",
-		Short: "Add encrypted secrets to a configuration properties file.",
+		Short: "Add encrypted secrets to a configuration properties file",
+		Long: `This command encrypts the password and adds it to the configuration file specified in filePath. This
+command returns a failure if a master key has not already been set using the "master-key create" command.`,
 		RunE:  c.add,
 		Args:  cobra.NoArgs,
 	}
@@ -92,7 +99,8 @@ func (c *secureFileCommand) init() {
 
 	updateCmd := &cobra.Command{
 		Use:   "update",
-		Short: "Update encrypted secrets from the configuration properties file.",
+		Short: "Update encrypted secrets from the configuration properties file",
+		Long: "Update the encrypted secrets from the configuration properties file.",
 		RunE:  c.update,
 		Args:  cobra.NoArgs,
 	}
@@ -112,7 +120,8 @@ func (c *secureFileCommand) init() {
 
 	removeCmd := &cobra.Command{
 		Use:   "remove",
-		Short: "Delete configuration values from the configuration properties file.",
+		Short: "Delete configuration values from the configuration properties file",
+		Long: "Delete the configuration values from the configuration properties file.",
 		RunE:  c.remove,
 		Args:  cobra.NoArgs,
 	}
@@ -129,7 +138,9 @@ func (c *secureFileCommand) init() {
 
 	rotateMasterKeyCmd := &cobra.Command{
 		Use:   "re-encrypt",
-		Short: "Rotate the master key.",
+		Short: "Rotate the master key",
+		Long: `This command generates a new master key and re-encrypts the file with the new master key. The new master
+key is stored in an environment variable.`,
 		RunE:  c.rotateMasterKey,
 		Args:  cobra.NoArgs,
 	}
@@ -142,6 +153,8 @@ func (c *secureFileCommand) init() {
 	rotateDataKeyCmd := &cobra.Command{
 		Use:   "rotate",
 		Short: "Rotate data key.",
+		Long: `This command generates a new data key and re-encrypts the file with the new data key. The new data
+key is stored in an environment variable.`,
 		RunE:  c.rotateDataKey,
 		Args:  cobra.NoArgs,
 	}
