@@ -18,10 +18,11 @@ type secureFileCommand struct {
 	config *config.Config
 	plugin secret.PasswordProtection
 	prompt pcmd.Prompt
+	resolv pcmd.FlagResolver
 }
 
 // NewFileCommand returns the Cobra command for managing encrypted file.
-func NewFileCommand(config *config.Config, prompt pcmd.Prompt, plugin secret.PasswordProtection) *cobra.Command {
+func NewFileCommand(config *config.Config, prompt pcmd.Prompt, resolv pcmd.FlagResolver, plugin secret.PasswordProtection) *cobra.Command {
 	cmd := &secureFileCommand{
 		Command: &cobra.Command{
 			Use:   "file",
@@ -30,6 +31,7 @@ func NewFileCommand(config *config.Config, prompt pcmd.Prompt, plugin secret.Pas
 		config: config,
 		plugin: plugin,
 		prompt: prompt,
+		resolv: resolv,
 	}
 	cmd.init()
 	return cmd.Command
@@ -190,37 +192,13 @@ func (c *secureFileCommand) decrypt(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *secureFileCommand) getConfigs(configSource string) (string, error) {
-	if configSource == "" {
-		return "", fmt.Errorf("Please enter config properties.")
-	}
-
-	if configSource == "-" {
-		reader := bufio.NewReader(os.Stdin)
-		configs, err := reader.ReadString('\n')
-		return configs, err
-	}
-
-	if string(configSource[0]) == "@" {
-		filePath := configSource[1:]
-		data, err := ioutil.ReadFile(filePath)
-		if err != nil {
-			return "", err
-		}
-		configs := string(data)
-		return configs, err
-	}
-
-	return "", fmt.Errorf("Invalid config properties source")
-}
-
 func (c *secureFileCommand) add(cmd *cobra.Command, args []string) error {
 	configSource, err := cmd.Flags().GetString("config")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	newConfigs, err := c.getConfigs(configSource)
+	newConfigs, err := c.getConfigs(cmd, configSource)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -244,7 +222,7 @@ func (c *secureFileCommand) update(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	newConfigs, err := c.getConfigs(configSource)
+	newConfigs, err := c.getConfigs(cmd, configSource)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -287,7 +265,7 @@ func (c *secureFileCommand) remove(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	removeConfigs, err := c.getConfigs(configSource)
+	removeConfigs, err := c.getConfigs(cmd, configSource)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -390,4 +368,20 @@ func (c *secureFileCommand) getMasterKeyPassphrase(inputType string) (string, er
 	}
 
 	return "", fmt.Errorf("Invalid master key passphrase.")
+}
+
+func (c *secureFileCommand) getConfigs(cmd *cobra.Command, configSource string) (string, error) {
+	newConfigs, err := c.resolv.ValueFrom(configSource, "", false)
+	if err != nil {
+		switch err {
+		case pcmd.ErrNoValueSpecified:
+			cmd.SilenceUsage = true
+			return "", fmt.Errorf("Please enter config properties.")
+		case pcmd.ErrNoPipe:
+			cmd.SilenceUsage = true
+			return "", fmt.Errorf("Please pipe your config values over stdin.")
+		}
+		return "", err
+	}
+	return newConfigs, nil
 }

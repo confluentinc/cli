@@ -12,11 +12,12 @@ type command struct {
 	*cobra.Command
 	config *config.Config
 	prompt pcmd.Prompt
+	resolv pcmd.FlagResolver
 	plugin secret.PasswordProtection
 }
 
 // New returns the default command object for Password Protection
-func New(prerunner pcmd.PreRunner, config *config.Config, prompt pcmd.Prompt, plugin secret.PasswordProtection) *cobra.Command {
+func New(prerunner pcmd.PreRunner, config *config.Config, prompt pcmd.Prompt, resolv pcmd.FlagResolver, plugin secret.PasswordProtection) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:   "secret",
@@ -24,6 +25,7 @@ func New(prerunner pcmd.PreRunner, config *config.Config, prompt pcmd.Prompt, pl
 		},
 		config: config,
 		prompt: prompt,
+		resolv: resolv,
 		plugin: plugin,
 	}
 	cmd.init()
@@ -31,6 +33,6 @@ func New(prerunner pcmd.PreRunner, config *config.Config, prompt pcmd.Prompt, pl
 }
 
 func (c *command) init() {
-	c.AddCommand(NewMasterKeyCommand(c.config, c.prompt, c.plugin))
-	c.AddCommand(NewFileCommand(c.config, c.prompt, c.plugin))
+	c.AddCommand(NewMasterKeyCommand(c.config, c.prompt, c.resolv, c.plugin))
+	c.AddCommand(NewFileCommand(c.config, c.prompt, c.resolv, c.plugin))
 }
