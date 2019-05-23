@@ -312,6 +312,7 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, args []string) error {
 	}
 
 	resp := (*http.Response)(nil)
+	var addErr error
 	if resource != "" {
 		parsedResourcePattern, err := c.parseAndValidateResourcePattern(resource, prefix)
 		if err != nil {
@@ -328,12 +329,12 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, args []string) error {
 			Scope:            mds.Scope{Clusters: *scopeClusters},
 			ResourcePatterns: rp,
 		}
-		resp, err = c.client.UserAndRoleMgmtApi.AddRoleResourcesForPrincipal(c.ctx, principal, role, rr)
+		resp, addErr = c.client.UserAndRoleMgmtApi.AddRoleResourcesForPrincipal(c.ctx, principal, role, rr)
 	} else {
-		resp, err = c.client.UserAndRoleMgmtApi.AddRoleForPrincipal(c.ctx, principal, role, mds.Scope{Clusters: *scopeClusters})
+		resp, addErr = c.client.UserAndRoleMgmtApi.AddRoleForPrincipal(c.ctx, principal, role, mds.Scope{Clusters: *scopeClusters})
 	}
 
-	if err != nil {
+	if addErr != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 
@@ -375,6 +376,7 @@ func (c *rolebindingCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	resp := (*http.Response)(nil)
+	var removeErr error
 	if resource != "" {
 		parsedResourcePattern, err := c.parseAndValidateResourcePattern(resource, prefix)
 		if err != nil {
@@ -391,12 +393,12 @@ func (c *rolebindingCommand) delete(cmd *cobra.Command, args []string) error {
 			Scope:            mds.Scope{Clusters: *scopeClusters},
 			ResourcePatterns: rp,
 		}
-		resp, err = c.client.UserAndRoleMgmtApi.RemoveRoleResourcesForPrincipal(c.ctx, principal, role, rr)
+		resp, removeErr = c.client.UserAndRoleMgmtApi.RemoveRoleResourcesForPrincipal(c.ctx, principal, role, rr)
 	} else {
-		resp, err = c.client.UserAndRoleMgmtApi.DeleteRoleForPrincipal(c.ctx, principal, role, mds.Scope{Clusters: *scopeClusters})
+		resp, removeErr = c.client.UserAndRoleMgmtApi.DeleteRoleForPrincipal(c.ctx, principal, role, mds.Scope{Clusters: *scopeClusters})
 	}
 
-	if err != nil {
+	if removeErr != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 
