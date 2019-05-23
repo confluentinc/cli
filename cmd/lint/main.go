@@ -24,10 +24,10 @@ var (
 	vocab *gospell.GoSpell
 
 	properNouns = []string{
-		"Apache", "Kafka", "CLI", "API", "ACL", "ACLs", "ALL", "Confluent Cloud", "Confluent Platform",
+		"Apache", "Kafka", "CLI", "API", "ACL", "ACLs", "ALL", "Confluent Cloud", "Confluent Platform", "RBAC", "IAM", "RBACIAM",
 	}
 	vocabWords = []string{
-		"ccloud", "kafka", "api", "acl", "url", "config", "multizone", "transactional", "iam", "rolebinding",
+		"ccloud", "kafka", "api", "acl", "url", "config", "multizone", "transactional", "ksql", "iam", "rolebinding",
 	}
 	utilityCommands = []string{
 		"login", "logout", "version", "completion SHELL", "update",
@@ -35,6 +35,7 @@ var (
 	nonClusterScopedCommands = []linter.RuleFilter{
 		linter.OnlyLeafCommands, linter.ExcludeCommand(utilityCommands...),
 		linter.ExcludeUse("local"), linter.ExcludeParentUse("environment", "service-account"),
+		linter.ExcludeCommandContains("iam"),
 		// these all require explicit cluster as id/name args
 		linter.ExcludeCommandContains("kafka cluster"),
 		// this doesn't need a --cluster override since you provide the api key itself to identify it
@@ -61,6 +62,10 @@ var rules = []linter.Rule{
 		linter.ExcludeCommandContains("local"),
 		// skip for api-key store command since KEY is not last argument
 		linter.ExcludeCommand("api-key store KEY SECRET"),
+		// skip for rolebindings since they don't have names/IDs
+		linter.ExcludeCommandContains("iam rolebinding"),
+		// roles are described by a role name, not an ID
+		linter.ExcludeCommandContains("iam role describe"),
 	),
 	// TODO: ensuring --cluster is optional DOES NOT actually ensure that the cluster context is used
 	linter.Filter(linter.RequireFlag("cluster", true), nonClusterScopedCommands...),
@@ -73,7 +78,8 @@ var rules = []linter.Rule{
 	linter.RequireLengthBetween("Short", 13, 55),
 	linter.RequireStartWithCapital("Short"),
 	linter.RequireNotEndWithPunctuation("Short"),
-	linter.RequireCapitalizeProperNouns("Short", properNouns),
+	linter.Filter(linter.RequireCapitalizeProperNouns("Short", properNouns),
+		linter.ExcludeCommandContains("iam role list")),
 	linter.RequireStartWithCapital("Long"),
 	linter.RequireEndWithPunctuation("Long", true),
 	linter.RequireCapitalizeProperNouns("Long", properNouns),
@@ -83,12 +89,12 @@ var rules = []linter.Rule{
 
 var flagRules = []linter.FlagRule{
 	linter.FlagFilter(linter.RequireFlagNameLength(2, 16),
-		linter.ExcludeFlag("service-account-id", "replication-factor")),
+		linter.ExcludeFlag("service-account-id", "replication-factor", "connect-cluster-id", "schema-registry-cluster-id")),
 	linter.RequireFlagStartWithCapital,
 	linter.RequireFlagNotEndWithPunctuation,
 	linter.RequireFlagCharacters('-'),
 	linter.FlagFilter(linter.RequireFlagDelimiter('-', 1),
-		linter.ExcludeFlag("service-account-id")),
+		linter.ExcludeFlag("service-account-id", "kafka-cluster-id", "connect-cluster-id", "schema-registry-cluster-id", "ksql-cluster-id")),
 	linter.RequireFlagRealWords('-'),
 }
 
