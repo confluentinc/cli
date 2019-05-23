@@ -68,6 +68,7 @@ require (
 	github.com/spf13/viper v1.2.0
 	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/stretchr/testify v1.3.0
+	github.com/tidwall/pretty v0.0.0-20190325153808-1166b9ac2b65
 	golang.org/x/crypto v0.0.0-20190426145343-a29dc8fdc734
 	golang.org/x/exp v0.0.0-20190429183610-475c5042d3f1 // indirect
 	golang.org/x/net v0.0.0-20190503192946-f4e77d36d62c // indirect
