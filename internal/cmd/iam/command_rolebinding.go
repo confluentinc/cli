@@ -12,21 +12,24 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/go-printer"
 
-	//"github.com/confluentinc/go-printer"
 	"context"
 
 	mds "github.com/confluentinc/mds-sdk-go"
-	//"fmt"
 )
 
 var (
-	// rolebindingListFields     = []string{"Name", "SuperUser", "AllowedOperations"}
-	// rolebindingListLabels     = []string{"Name", "SuperUser", "AllowedOperations"}
-	// rolebindingDescribeFields = []string{"Name", "SuperUser", "AllowedOperations"}
-	// rolebindingDescribeLabels = []string{"Name", "SuperUser", "AllowedOperations"}
 	resourcePatternListFields = []string{"ResourceType", "Name", "PatternType"}
 	resourcePatternListLabels = []string{"Role", "ResourceType", "Name", "PatternType"}
 )
+
+type rolebindingOptions struct {
+	role             string
+	resource         string
+	prefix           bool
+	principal        string
+	scopeClusters    mds.ScopeClusters
+	resourcesRequest mds.ResourcesRequest
+}
 
 type rolebindingCommand struct {
 	*cobra.Command
@@ -102,77 +105,6 @@ func (c *rolebindingCommand) init() {
 	deleteCmd.Flags().String("connect-cluster-id", "", "Connect cluster ID for the rolebinding")
 	deleteCmd.Flags().SortFlags = false
 	c.AddCommand(deleteCmd)
-}
-
-func (c *rolebindingCommand) list(cmd *cobra.Command, args []string) error {
-	role := "*"
-	if cmd.Flags().Changed("role") {
-		r, err := cmd.Flags().GetString("role")
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-		role = r
-	}
-
-	principal, err := cmd.Flags().GetString("principal")
-	if err == nil && principal == "" {
-		return errors.New("Must specify a principal whose rolebindings should be listed")
-	}
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	err = c.validatePrincipalFormat(principal)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
-	scopeClusters, err := c.parseAndValidateScope(cmd)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
-	var roleNamesWithMultiplicity []string
-	var resourcePatterns []mds.ResourcePattern
-	if role == "*" {
-		roleNames, _, err := c.client.UserAndRoleMgmtApi.ScopedPrincipalRolenames(c.ctx, principal, mds.Scope{Clusters: *scopeClusters})
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-		//fmt.Println(roleNames)
-
-		for _, r := range roleNames {
-			rps, _, err := c.client.UserAndRoleMgmtApi.GetRoleResourcesForPrincipal(c.ctx, principal, r, mds.Scope{Clusters: *scopeClusters})
-			if len(rps) == 0 {
-				rps = []mds.ResourcePattern{mds.ResourcePattern{}}
-			}
-			resourcePatterns = append(resourcePatterns, rps...)
-			for range rps {
-				roleNamesWithMultiplicity = append(roleNamesWithMultiplicity, r)
-			}
-			if err != nil {
-				return errors.HandleCommon(err, cmd)
-			}
-		}
-	} else {
-		resourcePatterns, _, err = c.client.UserAndRoleMgmtApi.GetRoleResourcesForPrincipal(c.ctx, principal, role, mds.Scope{Clusters: *scopeClusters})
-		if len(resourcePatterns) == 0 {
-			resourcePatterns = []mds.ResourcePattern{mds.ResourcePattern{}}
-		}
-		for range resourcePatterns {
-			roleNamesWithMultiplicity = append(roleNamesWithMultiplicity, role)
-		}
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-	}
-
-	var data [][]string
-	for i, pattern := range resourcePatterns {
-		data = append(data, append([]string{roleNamesWithMultiplicity[i]}, printer.ToRow(&pattern, resourcePatternListFields)...))
-	}
-	printer.RenderCollectionTable(data, resourcePatternListLabels)
-
-	return nil
 }
 
 func (c *rolebindingCommand) validatePrincipalFormat(principal string) error {
@@ -281,22 +213,19 @@ func (c *rolebindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mds.Sco
 	return scope, nil
 }
 
-func (c *rolebindingCommand) create(cmd *cobra.Command, args []string) error {
-	role, err := cmd.Flags().GetString("role")
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
+func (c *rolebindingCommand) list(cmd *cobra.Command, args []string) error {
+	role := "*"
+	if cmd.Flags().Changed("role") {
+		r, err := cmd.Flags().GetString("role")
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+		role = r
 	}
-
-	resource, err := cmd.Flags().GetString("resource")
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
-	prefix := cmd.Flags().Changed("prefix")
 
 	principal, err := cmd.Flags().GetString("principal")
 	if err == nil && principal == "" {
-		return errors.New("Must specify a principal for creating the rolebinding")
+		return errors.New("Must specify a principal whose rolebindings should be listed")
 	}
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -311,27 +240,121 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	resp := (*http.Response)(nil)
-	var addErr error
+	var roleNamesWithMultiplicity []string
+	var resourcePatterns []mds.ResourcePattern
+	if role == "*" {
+		roleNames, _, err := c.client.UserAndRoleMgmtApi.ScopedPrincipalRolenames(c.ctx, principal, mds.Scope{Clusters: *scopeClusters})
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+
+		for _, r := range roleNames {
+			rps, _, err := c.client.UserAndRoleMgmtApi.GetRoleResourcesForPrincipal(c.ctx, principal, r, mds.Scope{Clusters: *scopeClusters})
+			if len(rps) == 0 {
+				rps = []mds.ResourcePattern{mds.ResourcePattern{}}
+			}
+			resourcePatterns = append(resourcePatterns, rps...)
+			for range rps {
+				roleNamesWithMultiplicity = append(roleNamesWithMultiplicity, r)
+			}
+			if err != nil {
+				return errors.HandleCommon(err, cmd)
+			}
+		}
+	} else {
+		resourcePatterns, _, err = c.client.UserAndRoleMgmtApi.GetRoleResourcesForPrincipal(c.ctx, principal, role, mds.Scope{Clusters: *scopeClusters})
+		if len(resourcePatterns) == 0 {
+			resourcePatterns = []mds.ResourcePattern{mds.ResourcePattern{}}
+		}
+		for range resourcePatterns {
+			roleNamesWithMultiplicity = append(roleNamesWithMultiplicity, role)
+		}
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+	}
+
+	var data [][]string
+	for i, pattern := range resourcePatterns {
+		data = append(data, append([]string{roleNamesWithMultiplicity[i]}, printer.ToRow(&pattern, resourcePatternListFields)...))
+	}
+	printer.RenderCollectionTable(data, resourcePatternListLabels)
+
+	return nil
+}
+
+func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOptions, error) {
+	role, err := cmd.Flags().GetString("role")
+	if err != nil {
+		return nil, errors.HandleCommon(err, cmd)
+	}
+
+	resource, err := cmd.Flags().GetString("resource")
+	if err != nil {
+		return nil, errors.HandleCommon(err, cmd)
+	}
+
+	prefix := cmd.Flags().Changed("prefix")
+
+	principal, err := cmd.Flags().GetString("principal")
+	if err == nil && principal == "" {
+		return nil, errors.New("Must specify a principal for creating the rolebinding")
+	}
+	if err != nil {
+		return nil, errors.HandleCommon(err, cmd)
+	}
+	err = c.validatePrincipalFormat(principal)
+	if err != nil {
+		return nil, errors.HandleCommon(err, cmd)
+	}
+
+	scopeClusters, err := c.parseAndValidateScope(cmd)
+	if err != nil {
+		return nil, errors.HandleCommon(err, cmd)
+	}
+
+	resourcesRequest := mds.ResourcesRequest{}
 	if resource != "" {
 		parsedResourcePattern, err := c.parseAndValidateResourcePattern(resource, prefix)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return nil, errors.HandleCommon(err, cmd)
 		}
 		err = c.validateRoleAndResourceType(role, parsedResourcePattern.ResourceType)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return nil, errors.HandleCommon(err, cmd)
 		}
-		rp := []mds.ResourcePattern{
+		resourcePatterns := []mds.ResourcePattern{
 			parsedResourcePattern,
 		}
-		rr := mds.ResourcesRequest{
+		resourcesRequest = mds.ResourcesRequest{
 			Scope:            mds.Scope{Clusters: *scopeClusters},
-			ResourcePatterns: rp,
+			ResourcePatterns: resourcePatterns,
 		}
-		resp, addErr = c.client.UserAndRoleMgmtApi.AddRoleResourcesForPrincipal(c.ctx, principal, role, rr)
+	}
+
+	return &rolebindingOptions{
+			role,
+			resource,
+			prefix,
+			principal,
+			*scopeClusters,
+			resourcesRequest,
+		},
+		nil
+}
+
+func (c *rolebindingCommand) create(cmd *cobra.Command, args []string) error {
+	options, err := c.parseCommon(cmd)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	resp := (*http.Response)(nil)
+	var addErr error
+	if options.resource != "" {
+		resp, addErr = c.client.UserAndRoleMgmtApi.AddRoleResourcesForPrincipal(c.ctx, options.principal, options.role, options.resourcesRequest)
 	} else {
-		resp, addErr = c.client.UserAndRoleMgmtApi.AddRoleForPrincipal(c.ctx, principal, role, mds.Scope{Clusters: *scopeClusters})
+		resp, addErr = c.client.UserAndRoleMgmtApi.AddRoleForPrincipal(c.ctx, options.principal, options.role, mds.Scope{Clusters: options.scopeClusters})
 	}
 
 	if addErr != nil {
@@ -346,56 +369,17 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, args []string) error {
 }
 
 func (c *rolebindingCommand) delete(cmd *cobra.Command, args []string) error {
-	role, err := cmd.Flags().GetString("role")
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
-	resource, err := cmd.Flags().GetString("resource")
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
-	prefix := cmd.Flags().Changed("prefix")
-
-	principal, err := cmd.Flags().GetString("principal")
-	if err == nil && principal == "" {
-		return errors.New("Must specify a principal for deleting the rolebinding")
-	}
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	err = c.validatePrincipalFormat(principal)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
-	scopeClusters, err := c.parseAndValidateScope(cmd)
+	options, err := c.parseCommon(cmd)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 
 	resp := (*http.Response)(nil)
 	var removeErr error
-	if resource != "" {
-		parsedResourcePattern, err := c.parseAndValidateResourcePattern(resource, prefix)
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-		err = c.validateRoleAndResourceType(role, parsedResourcePattern.ResourceType)
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-		rp := []mds.ResourcePattern{
-			parsedResourcePattern,
-		}
-		rr := mds.ResourcesRequest{
-			Scope:            mds.Scope{Clusters: *scopeClusters},
-			ResourcePatterns: rp,
-		}
-		resp, removeErr = c.client.UserAndRoleMgmtApi.RemoveRoleResourcesForPrincipal(c.ctx, principal, role, rr)
+	if options.resource != "" {
+		resp, removeErr = c.client.UserAndRoleMgmtApi.RemoveRoleResourcesForPrincipal(c.ctx, options.principal, options.role, options.resourcesRequest)
 	} else {
-		resp, removeErr = c.client.UserAndRoleMgmtApi.DeleteRoleForPrincipal(c.ctx, principal, role, mds.Scope{Clusters: *scopeClusters})
+		resp, removeErr = c.client.UserAndRoleMgmtApi.DeleteRoleForPrincipal(c.ctx, options.principal, options.role, mds.Scope{Clusters: options.scopeClusters})
 	}
 
 	if removeErr != nil {
