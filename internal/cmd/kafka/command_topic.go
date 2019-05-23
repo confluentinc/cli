@@ -35,7 +35,7 @@ func NewTopicCommand(prerunner pcmd.PreRunner, config *config.Config, client ccl
 		Command: &cobra.Command{
 			Use:   "topic",
 			Short: "Manage Kafka topics",
-			Long: "Manage Kafka topics.",
+			Long:  "Manage Kafka topics.",
 		},
 		config:    config,
 		client:    client,
@@ -48,24 +48,22 @@ func NewTopicCommand(prerunner pcmd.PreRunner, config *config.Config, client ccl
 
 func (c *topicCommand) init() {
 	cmd := &cobra.Command{
-		Use:   "list",
-		Short: "List Kafka topics",
-		Long: "List Kafka topics.",
+		Use:     "list",
+		Short:   "List Kafka topics.",
 		Example: ".. include:: ../includes/example-ref.rst",
-		RunE:  c.list,
-		Args:  cobra.NoArgs,
+		RunE:    c.list,
+		Args:    cobra.NoArgs,
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
-		Use:   "create TOPIC",
-		Short: "Create a Kafka topic",
-		Long: "Create a Kafka topic.",
+		Use:     "create <topic>",
+		Short:   "Create a Kafka topic.",
 		Example: ".. include:: ../includes/example-ref.rst",
-		RunE:  c.create,
-		Args:  cobra.ExactArgs(1),
+		RunE:    c.create,
+		Args:    cobra.ExactArgs(1),
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID")
 	cmd.Flags().Uint32("partitions", 6, "Number of topic partitions")
@@ -76,24 +74,22 @@ func (c *topicCommand) init() {
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
-		Use:   "describe TOPIC",
-		Short: "Describe a Kafka topic",
-		Long: "Describe a Kafka topic.",
+		Use:     "describe <topic>",
+		Short:   "Describe a Kafka topic.",
 		Example: ".. include:: ../includes/example-ref.rst",
-		RunE:  c.describe,
-		Args:  cobra.ExactArgs(1),
+		RunE:    c.describe,
+		Args:    cobra.ExactArgs(1),
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
-		Use:   "update TOPIC",
-		Short: "Update a Kafka topic",
-		Long: "Update a Kafka topic.",
+		Use:     "update <topic>",
+		Short:   "Update a Kafka topic.",
 		Example: ".. include:: ../includes/example-ref.rst",
-		RunE:  c.update,
-		Args:  cobra.ExactArgs(1),
+		RunE:    c.update,
+		Args:    cobra.ExactArgs(1),
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID")
 	cmd.Flags().StringSlice("config", nil, "A comma-separated list of topic configuration ('key=value') overrides for the topic being created")
@@ -102,22 +98,20 @@ func (c *topicCommand) init() {
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
-		Use:   "delete TOPIC",
-		Short: "Delete a Kafka topic",
-		Long: "Delete a Kafka topic.",
+		Use:     "delete <topic>",
+		Short:   "Delete a Kafka topic.",
 		Example: ".. include:: ../includes/example-ref.rst",
-		RunE:  c.delete,
-		Args:  cobra.ExactArgs(1),
+		RunE:    c.delete,
+		Args:    cobra.ExactArgs(1),
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
-		Use:               "produce TOPIC",
-		Short:             "Produce messages to a Kafka topic",
-		Long:             "Produce messages to a Kafka topic.",
-		Example: ".. include:: ../includes/example-ref.rst",
+		Use:               "produce <topic>",
+		Short:             "Produce messages to a Kafka topic.",
+		Example:           ".. include:: ../includes/example-ref.rst",
 		RunE:              c.produce,
 		Args:              cobra.ExactArgs(1),
 		PersistentPreRunE: c.prerunner.AuthenticatedAPIKey(),
@@ -128,10 +122,9 @@ func (c *topicCommand) init() {
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
-		Use:               "consume TOPIC",
-		Short:             "Consume messages from a Kafka topic",
-		Long:             "Consume messages from a Kafka topic.",
-		Example: ".. include:: ../includes/example-ref.rst",
+		Use:               "consume <topic>",
+		Short:             "Consume messages from a Kafka topic.",
+		Example:           ".. include:: ../includes/example-ref.rst",
 		RunE:              c.consume,
 		Args:              cobra.ExactArgs(1),
 		PersistentPreRunE: c.prerunner.AuthenticatedAPIKey(),
