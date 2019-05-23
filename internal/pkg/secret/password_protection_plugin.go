@@ -73,20 +73,19 @@ func (c *PasswordProtectionSuite) generateNewDataKey(masterKey string) (*CipherS
 	// Generate a new data key. This data key will be used for encrypting the secrets.
 	dataKey, err := engine.GenerateRandomDataKey(METADATA_KEY_DEFAULT_LENGTH_BYTES)
 	if err != nil {
-		return cipherSuite, err
+		return nil, err
 	}
 
 	// Wrap data key with master key
 	encodedDataKey, err := c.wrapDataKey(engine, dataKey, masterKey)
 	if err != nil {
-		return cipherSuite, err
+		return nil, err
 	}
 	cipherSuite.SetDataKey(encodedDataKey)
 
 	// Generate the secrets file and save the metadata for encryption key.
 	//err = c.generateSecureConfigFile(cipherSuite)
 	return cipherSuite, err
-
 }
 
 /**
@@ -118,9 +117,7 @@ func (c *PasswordProtectionSuite) EncryptConfigFileSecrets(configFilePath string
 	}
 
 	// Encrypt the secrets with DEK. Save the encrypted secrets in secure config file.
-	err = c.encryptConfigValues(matchProps, localSecureConfigPath, configProps, configFilePath, remoteSecureConfigPath)
-
-	return err
+	return c.encryptConfigValues(matchProps, localSecureConfigPath, configProps, configFilePath, remoteSecureConfigPath)
 }
 
 /**
@@ -171,20 +168,17 @@ func (c *PasswordProtectionSuite) DecryptConfigFileSecrets(configFilePath string
 			if cipher != "" {
 				data, iv, algo := c.parseCipherValue(cipher)
 				plainSecret, err := engine.AESDecrypt(data, iv, algo, dataKey)
-				if err == nil {
-					_, _, _ = decryptedSecrets.Set(key, plainSecret)
+				if err != nil {
+					return fmt.Errorf("unable to decrypt %s: %s", key, err)
 				}
+				_, _, _ = decryptedSecrets.Set(key, plainSecret)
 			}
 		}
 
 	}
 
 	// Save the decrypted ciphers to output file.
-	err = c.writePropertiesFile(outputFilePath, decryptedSecrets)
-	if err != nil {
-		return err
-	}
-	return nil
+	return c.writePropertiesFile(outputFilePath, decryptedSecrets)
 }
 
 /**
@@ -238,14 +232,18 @@ func (c *PasswordProtectionSuite) RotateDataKey(masterPassphrase string, localSe
 		if c.isCipher(value) && !strings.HasPrefix(key, "metadata") {
 			data, iv, algo := c.parseCipherValue(value)
 			plainSecret, err := engine.AESDecrypt(data, iv, algo, dataKey)
-			if err == nil {
-				cipher, iv, err := engine.AESEncrypt(plainSecret, newDataKey)
-				if err == nil {
-					formattedCipher := c.formatCipherValue(cipher, iv)
-					_, _, _ = secureConfigProps.Set(key, formattedCipher)
-				}
+			if err != nil {
+				return err
 			}
-
+			cipher, iv, err := engine.AESEncrypt(plainSecret, newDataKey)
+			if err != nil {
+				return err
+			}
+			formattedCipher := c.formatCipherValue(cipher, iv)
+			_, _, err = secureConfigProps.Set(key, formattedCipher)
+			if err != nil {
+				return err
+			}
 		}
 
 	}
@@ -552,12 +550,10 @@ func (c *PasswordProtectionSuite) fetchSecureConfigProps(localSecureConfigPath s
 
 func (c *PasswordProtectionSuite) loadMasterKey() (string, error) {
 	// Check if master key is created and set in the environment variable
-	masterKey := os.Getenv(CONFLUENT_KEY_ENVVAR)
-
-	if len(masterKey) == 0 {
-		return "", fmt.Errorf("master key is not set in environment variable. set the key and execute this command again.")
+	masterKey, found := os.LookupEnv(CONFLUENT_KEY_ENVVAR)
+	if !found {
+		return "", fmt.Errorf("master key is not exported in %s environment variable; export the key and execute this command again", CONFLUENT_KEY_ENVVAR)
 	}
-
 	return masterKey, nil
 }
 
@@ -589,10 +585,14 @@ func (c *PasswordProtectionSuite) encryptConfigValues(matchProps *properties.Pro
 			newConfigVal := c.generateConfigValue(key, remoteConfigFilePath)
 			_, _, _ = configProps.Set(key, newConfigVal)
 			cipher, iv, err := engine.AESEncrypt(value, dataKey)
-			if err == nil {
-				formattedCipher := c.formatCipherValue(cipher, iv)
-				pathKey := configFilePath + ":" + key
-				_, _, _ = secureConfigProps.Set(pathKey, formattedCipher)
+			if err != nil {
+				return err
+			}
+			formattedCipher := c.formatCipherValue(cipher, iv)
+			pathKey := configFilePath + ":" + key
+			_, _, err = secureConfigProps.Set(pathKey, formattedCipher)
+			if err != nil {
+				return err
 			}
 		}
 
@@ -620,7 +620,6 @@ func (c *PasswordProtectionSuite) findMatchTrim(original string, pattern string,
 	if len(match) != 0 {
 		substring = strings.TrimPrefix(strings.TrimSuffix(match[0], suffix), prefix)
 	}
-
 	return substring
 }
 
@@ -628,6 +627,5 @@ func (c *PasswordProtectionSuite) parseCipherValue(cipher string) (string, strin
 	data := c.findMatchTrim(cipher, "data\\:(.*?)\\,", "data:", ",")
 	iv := c.findMatchTrim(cipher, "iv\\:(.*?)\\,", "iv:", ",")
 	algo := c.findMatchTrim(cipher, "ENC\\[(.*?)\\,", "ENC[", ",")
-
 	return data, iv, algo
 }
