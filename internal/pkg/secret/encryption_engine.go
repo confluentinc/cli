@@ -8,6 +8,8 @@ import (
 	"crypto/sha512"
 	"encoding/base32"
 	"encoding/base64"
+	"errors"
+	"fmt"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"golang.org/x/crypto/pbkdf2"
 	"io"
@@ -15,7 +17,7 @@ import (
 )
 
 /**
-* Encryption Engine performs Encryption, Decryption and Hash operations.
+ * Encryption Engine performs Encryption, Decryption and Hash operations.
  */
 
 type EncryptionEngine interface {
@@ -105,7 +107,20 @@ func (c *EncryptEngineSuite) AESEncrypt(plainText string, key []byte) (string, s
 	return c.encryption(plainText, key)
 }
 
-func (c *EncryptEngineSuite) encryption(src string, key []byte) (string, string, error) {
+func (c *EncryptEngineSuite) encryption(src string, key []byte) (data string, ivStr string, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			switch x := r.(type) {
+			case string:
+				err = errors.New("failed to encrypt the plain text:" + x)
+			case error:
+				err = x
+			default:
+				err = errors.New("failed to encrypt the plain text")
+			}
+		}
+	}()
+
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return "", "", err
@@ -121,7 +136,7 @@ func (c *EncryptEngineSuite) encryption(src string, key []byte) (string, string,
 	crypted := make([]byte, len(content))
 	ecb.CryptBlocks(crypted, content)
 	result := base64.StdEncoding.EncodeToString(crypted)
-	ivStr := base64.StdEncoding.EncodeToString(iv)
+	ivStr = base64.StdEncoding.EncodeToString(iv)
 	return result, ivStr, nil
 }
 
@@ -147,7 +162,20 @@ func (c *EncryptEngineSuite) generateEncryptionKey(keyPhrase string, salt string
 	return key, nil
 }
 
-func (c *EncryptEngineSuite) decryption(crypt []byte, key []byte, iv []byte) ([]byte, error) {
+func (c *EncryptEngineSuite) decryption(crypt []byte, key []byte, iv []byte) (plain []byte, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			switch x := r.(type) {
+			case string:
+				err = errors.New("failed to decrypt the cipher:" + x)
+			case error:
+				err = x
+			default:
+				err = errors.New("failed to decrypt the cipher")
+			}
+		}
+	}()
+
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return []byte{}, err
@@ -157,7 +185,7 @@ func (c *EncryptEngineSuite) decryption(crypt []byte, key []byte, iv []byte) ([]
 	decrypted := make([]byte, len(crypt))
 	ecb.CryptBlocks(decrypted, crypt)
 
-	return c.pKCS5Trimming(decrypted), nil
+	return c.pKCS5Trimming(decrypted)
 }
 
 func (c *EncryptEngineSuite) pKCS5Padding(ciphertext []byte, blockSize int) []byte {
@@ -167,9 +195,13 @@ func (c *EncryptEngineSuite) pKCS5Padding(ciphertext []byte, blockSize int) []by
 	return append(ciphertext, padtext...)
 }
 
-func (c *EncryptEngineSuite) pKCS5Trimming(encrypt []byte) []byte {
+func (c *EncryptEngineSuite) pKCS5Trimming(encrypt []byte) ([]byte, error) {
 	padding := encrypt[len(encrypt)-1]
-	return encrypt[:len(encrypt)-int(padding)]
+	length := len(encrypt)-int(padding)
+	if length < 0 || length > len(encrypt) {
+		return nil, fmt.Errorf("failed to decrypt the cipher: data is corrupted." )
+	}
+	return encrypt[:len(encrypt)-int(padding)], nil
 }
 
 /* To do add HMAC functionality */

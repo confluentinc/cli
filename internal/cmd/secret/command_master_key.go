@@ -76,6 +76,6 @@ func (c *masterKeyCommand) create(cmd *cobra.Command, args []string) error {
 	}
 
 	pcmd.Println(cmd, "Save the Master Key. It is not retrievable later.")
-	printer.RenderTableOut(&struct{MasterKey string}{MasterKey: masterKey}, []string{"MasterKey"}, map[string]string{"MasterKey": "Master Key"}, os.Stdout)
+	_ = printer.RenderTableOut(&struct{MasterKey string}{MasterKey: masterKey}, []string{"MasterKey"}, map[string]string{"MasterKey": "Master Key"}, os.Stdout)
 	return nil
 }

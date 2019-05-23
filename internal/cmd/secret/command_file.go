@@ -3,6 +3,7 @@ package secret
 import (
 	"bufio"
 	"fmt"
+	"github.com/confluentinc/go-printer"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/secret"
@@ -51,7 +52,7 @@ func (c *secureFileCommand) init() {
 	_ = encryptCmd.MarkFlagRequired("local-secrets-file")
 
 	encryptCmd.Flags().String("remote-secrets-file", "", "Remote encrypted config properties file path")
-	encryptCmd.MarkFlagRequired("remote-secrets-file")
+	_ = encryptCmd.MarkFlagRequired("remote-secrets-file")
 	encryptCmd.Flags().SortFlags = false
 	c.AddCommand(encryptCmd)
 
@@ -138,6 +139,7 @@ func (c *secureFileCommand) init() {
 
 	rotateMasterKeyCmd.Flags().String("local-secrets-file", "", "Local Encrypted Config Properties File Path")
 	_ = rotateMasterKeyCmd.MarkFlagRequired("local-secrets-file")
+	rotateMasterKeyCmd.Flags().String("passphrases", "", "Comma separated old passphrase and new passphrase; use - to pipe from stdin or @file.txt to read from file")
 	rotateMasterKeyCmd.Flags().SortFlags = false
 	c.AddCommand(rotateMasterKeyCmd)
 
@@ -150,6 +152,8 @@ func (c *secureFileCommand) init() {
 
 	rotateDataKeyCmd.Flags().String("local-secrets-file", "", "Local Encrypted Config Properties File Path")
 	_ = rotateDataKeyCmd.MarkFlagRequired("local-secrets-file")
+	rotateDataKeyCmd.Flags().String("passphrase", "", "Master key passphrase; use - to pipe from stdin or @file.txt to read from file")
+	_ = rotateDataKeyCmd.MarkFlagRequired("passphrase")
 	rotateDataKeyCmd.Flags().SortFlags = false
 	c.AddCommand(rotateDataKeyCmd)
 }
@@ -198,7 +202,7 @@ func (c *secureFileCommand) add(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	newConfigs, err := c.getConfigs(cmd, configSource)
+	newConfigs, err := c.getConfigs(cmd, configSource, "config properties")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -222,7 +226,7 @@ func (c *secureFileCommand) update(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	newConfigs, err := c.getConfigs(cmd, configSource)
+	newConfigs, err := c.getConfigs(cmd, configSource, "config properties")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -265,7 +269,7 @@ func (c *secureFileCommand) remove(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	removeConfigs, err := c.getConfigs(cmd, configSource)
+	removeConfigs, err := c.getConfigs(cmd, configSource, "config properties")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -289,14 +293,17 @@ func (c *secureFileCommand) remove(cmd *cobra.Command, args []string) error {
 }
 
 func (c *secureFileCommand) rotateMasterKey(cmd *cobra.Command, args []string) error {
-	inputType := args[0]
-
-	passphrase, err := c.getMasterKeyPassphrase(inputType)
+	passphrasesSource, err := cmd.Flags().GetString("passphrases")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	oldPassphrase, newPassphrase, err := c.getOldPassphrase(passphrase)
+	passphrases, err := c.getConfigs(cmd, passphrasesSource, "passphrase")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	oldPassphrase, newPassphrase, err := c.getOldPassphrase(passphrases)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -311,14 +318,18 @@ func (c *secureFileCommand) rotateMasterKey(cmd *cobra.Command, args []string) e
 		return errors.HandleCommon(err, cmd)
 	}
 
-	pcmd.Println(cmd, "New Master Key: "+masterKey)
+	pcmd.Println(cmd, "Save the Master Key. It is not retrievable later.")
+	_ = printer.RenderTableOut(&struct{MasterKey string}{MasterKey: masterKey}, []string{"MasterKey"}, map[string]string{"MasterKey": "Master Key"}, os.Stdout)
 	return nil
 }
 
 func (c *secureFileCommand) rotateDataKey(cmd *cobra.Command, args []string) error {
-	inputType := args[0]
+	passphraseSource, err := cmd.Flags().GetString("passphrase")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
 
-	passphrase, err := c.getMasterKeyPassphrase(inputType)
+	passphrase, err := c.getConfigs(cmd, passphraseSource, "passphrase")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -370,16 +381,16 @@ func (c *secureFileCommand) getMasterKeyPassphrase(inputType string) (string, er
 	return "", fmt.Errorf("Invalid master key passphrase.")
 }
 
-func (c *secureFileCommand) getConfigs(cmd *cobra.Command, configSource string) (string, error) {
+func (c *secureFileCommand) getConfigs(cmd *cobra.Command, configSource string, inputType string) (string, error) {
 	newConfigs, err := c.resolv.ValueFrom(configSource, "", false)
 	if err != nil {
 		switch err {
 		case pcmd.ErrNoValueSpecified:
 			cmd.SilenceUsage = true
-			return "", fmt.Errorf("Please enter config properties.")
+			return "", fmt.Errorf("Please enter" + inputType)
 		case pcmd.ErrNoPipe:
 			cmd.SilenceUsage = true
-			return "", fmt.Errorf("Please pipe your config values over stdin.")
+			return "", fmt.Errorf("Please pipe your" + inputType + "over stdin.")
 		}
 		return "", err
 	}

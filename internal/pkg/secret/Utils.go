@@ -1,8 +1,13 @@
 package secret
 
 import (
+	"bytes"
+	"fmt"
+	"io/ioutil"
+	"os"
 	"regexp"
 	"strings"
+	"github.com/magiconair/properties"
 )
 
 func GenerateConfigValue(key string, path string) string {
@@ -26,4 +31,31 @@ func findMatchTrim(original string, pattern string, prefix string, suffix string
 	}
 
 	return substring
+}
+
+func WritePropertiesFile(path string, property *properties.Properties) error {
+	buf := new(bytes.Buffer)
+	_, _ = property.WriteComment(buf, "# ", properties.ISO_8859_1)
+	err := ioutil.WriteFile(path, buf.Bytes(), 0644)
+	return err
+}
+
+func isPathValid(path string) bool {
+	if path == "" {
+		return false
+	}
+
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return false
+	}
+	return true
+}
+
+func LoadPropertiesFile(path string) (*properties.Properties, error) {
+	if !isPathValid(path) {
+		return properties.NewProperties(), fmt.Errorf("Invalid file path.")
+	}
+
+	property := properties.MustLoadFile(path, properties.ISO_8859_1)
+	return property, nil
 }
