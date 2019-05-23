@@ -420,7 +420,7 @@ func TestDefaults(t *testing.T) {
 func Test_HandleError_NotLoggedIn(t *testing.T) {
 	kafka := &mock.Kafka{
 		ListFunc: func(ctx context.Context, cluster *kafkav1.KafkaCluster) ([]*kafkav1.KafkaCluster, error) {
-			return nil, errors.ErrUnauthorized
+			return nil, errors.ErrNotLoggedIn
 		},
 	}
 	cmd := New(&cliMock.Commander{}, conf, kafka, &pcmd.ConfigHelper{Config: conf, Client: &ccloud.Client{Kafka: kafka}})

@@ -13,7 +13,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	cliMock "github.com/confluentinc/cli/mock"
 )
@@ -101,7 +100,7 @@ func TestLoginFail(t *testing.T) {
 	prompt := prompt("cody@confluent.io", "iamrobin")
 	auth := &sdkMock.Auth{
 		LoginFunc: func(ctx context.Context, username string, password string) (string, error) {
-			return "", errors.ErrIncorrectAuth
+			return "", &ccloud.InvalidLoginError{}
 		},
 	}
 	cmds, _ := newAuthCommand(prompt, auth, req)

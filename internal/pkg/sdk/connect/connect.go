@@ -25,26 +25,17 @@ func New(client *ccloud.Client, logger *log.Logger) *Connect {
 
 func (c *Connect) List(ctx context.Context, cluster *connectv1.ConnectCluster) ([]*connectv1.ConnectCluster, error) {
 	c.Logger.Log("msg", "connect.List()")
-	ret, err := c.Client.Connect.List(ctx, cluster)
-	return ret, shared.ConvertAPIError(err)
+	return c.Client.Connect.List(ctx, cluster)
 }
 
 func (c *Connect) Describe(ctx context.Context, cluster *connectv1.ConnectCluster) (*connectv1.ConnectCluster, error) {
 	c.Logger.Log("msg", "connect.Describe()")
-	ret, err := c.Client.Connect.Describe(ctx, cluster)
-	if err != nil {
-		return nil, shared.ConvertAPIError(err)
-	}
-	return ret, nil
+	return c.Client.Connect.Describe(ctx, cluster)
 }
 
 func (c *Connect) DescribeS3Sink(ctx context.Context, cluster *connectv1.ConnectS3SinkCluster) (*connectv1.ConnectS3SinkCluster, error) {
 	c.Logger.Log("msg", "connect.DescribeS3Sink()")
-	ret, err := c.Client.Connect.DescribeS3Sink(ctx, cluster)
-	if err != nil {
-		return nil, shared.ConvertAPIError(err)
-	}
-	return ret, nil
+	return c.Client.Connect.DescribeS3Sink(ctx, cluster)
 }
 
 func (c *Connect) CreateS3Sink(ctx context.Context, cfg *connectv1.ConnectS3SinkClusterConfig) (*connectv1.ConnectS3SinkCluster, error) {
@@ -60,34 +51,20 @@ func (c *Connect) CreateS3Sink(ctx context.Context, cfg *connectv1.ConnectS3Sink
 	// Resolve kafka user email -> ID
 	user, err := c.Client.User.Describe(ctx, &orgv1.User{Email: cfg.UserEmail})
 	if err != nil {
-		return nil, shared.ConvertAPIError(err)
+		return nil, err
 	}
 	config.KafkaUserId = user.Id
 
 	// Create the connect cluster
-	ret, err := c.Client.Connect.CreateS3Sink(ctx, config)
-	if err != nil {
-		return nil, shared.ConvertAPIError(err)
-	}
-
-	return ret, nil
+	return c.Client.Connect.CreateS3Sink(ctx, config)
 }
 
 func (c *Connect) UpdateS3Sink(ctx context.Context, cluster *connectv1.ConnectS3SinkCluster) (*connectv1.ConnectS3SinkCluster, error) {
 	c.Logger.Log("msg", "connect.UpdateS3Sink()")
-	cluster, err := c.Client.Connect.UpdateS3Sink(ctx, cluster)
-	if err != nil {
-		return nil, shared.ConvertAPIError(err)
-	}
-
-	return cluster, nil
+	return c.Client.Connect.UpdateS3Sink(ctx, cluster)
 }
 
 func (c *Connect) Delete(ctx context.Context, cluster *connectv1.ConnectCluster) error {
 	c.Logger.Log("msg", "connect.Delete()")
-	err := c.Client.Connect.Delete(ctx, cluster)
-	if err != nil {
-		return shared.ConvertAPIError(err)
-	}
-	return nil
+	return c.Client.Connect.Delete(ctx, cluster)
 }*/

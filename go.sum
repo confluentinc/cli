@@ -55,6 +55,12 @@ github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 h1:sIWhdehnHPCWoZeM
 github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2/go.mod h1:HNotNNYHefttEUajcmByCW4bWNBiYd7s5mNZWzB62r0=
 github.com/confluentinc/ccloud-sdk-go v0.0.7-0.20190507021705-ce766a09e718 h1:Uw6yManuVJ9IdgFo9VEGELHKydy7joUrLwjfjO6DcwM=
 github.com/confluentinc/ccloud-sdk-go v0.0.7-0.20190507021705-ce766a09e718/go.mod h1:zIbhvPHqy+PZLxuIDaN4Hkr1XSVffPL8ynnvJ65empo=
+github.com/confluentinc/ccloud-sdk-go v0.0.7-0.20190514222938-3af134fc7b52 h1:7fgcKpN/PNsfUrQ0sgvcV08XDrw/zJjLnpaBa+/0s6Y=
+github.com/confluentinc/ccloud-sdk-go v0.0.7-0.20190514222938-3af134fc7b52/go.mod h1:zIbhvPHqy+PZLxuIDaN4Hkr1XSVffPL8ynnvJ65empo=
+github.com/confluentinc/ccloud-sdk-go v0.0.7-0.20190515184731-1f813770dcd4 h1:JEzWQoUR0EpM9IExqZZh4zE8JGzebIZIxrOeEkSzC3g=
+github.com/confluentinc/ccloud-sdk-go v0.0.7-0.20190515184731-1f813770dcd4/go.mod h1:zIbhvPHqy+PZLxuIDaN4Hkr1XSVffPL8ynnvJ65empo=
+github.com/confluentinc/ccloud-sdk-go v0.0.7-0.20190515193705-ed57783609c7 h1:+uk+Z26zhP0r5EHJH7ZJ1m4RQv3KBzEsxtl7ihw1k2U=
+github.com/confluentinc/ccloud-sdk-go v0.0.7-0.20190515193705-ed57783609c7/go.mod h1:zIbhvPHqy+PZLxuIDaN4Hkr1XSVffPL8ynnvJ65empo=
 github.com/confluentinc/ccloudapis v0.0.0-20190301100936-766355e1fe2c/go.mod h1:RGupQo6tb6J+1BnSqqueADkoC8b/F60+Ci3FMB3wDFo=
 github.com/confluentinc/ccloudapis v0.0.0-20190430183816-9fe8ee16d070 h1:iDnQrrDFWEBkDXxQcupU6CTg/7wqa3IFKLqiBAnNwV8=
 github.com/confluentinc/ccloudapis v0.0.0-20190430183816-9fe8ee16d070/go.mod h1:RGupQo6tb6J+1BnSqqueADkoC8b/F60+Ci3FMB3wDFo=
@@ -150,7 +156,6 @@ github.com/golangci/dupl v0.0.0-20180902072040-3e9179ac440a h1:w8hkcTqaFpzKqonE9
 github.com/golangci/dupl v0.0.0-20180902072040-3e9179ac440a/go.mod h1:ryS0uhF+x9jgbj/N71xsEqODy9BN81/GonCZiOzirOk=
 github.com/golangci/errcheck v0.0.0-20181003203344-ef45e06d44b6 h1:i2jIkQFb8RG45DuQs+ElyROY848cSJIoIkBM+7XXypA=
 github.com/golangci/errcheck v0.0.0-20181003203344-ef45e06d44b6/go.mod h1:DbHgvLiFKX1Sh2T1w8Q/h4NAI8MHIpzCdnBUDTXU3I0=
-github.com/golangci/go-misc v0.0.0-20180628070357-927a3d87b613 h1:9kfjN3AdxcbsZBf8NjltjWihK2QfBBBZuv91cMFfDHw=
 github.com/golangci/go-misc v0.0.0-20180628070357-927a3d87b613/go.mod h1:SyvUF2NxV+sN8upjjeVYr5W7tyxaT1JVtvhKhOn2ii8=
 github.com/golangci/go-tools v0.0.0-20180109140146-af6baa5dc196/go.mod h1:unzUULGw35sjyOYjUt0jMTXqHlZPpPc6e+xfO4cd6mM=
 github.com/golangci/go-tools v0.0.0-20190124090046-35a9f45a5db0 h1:MRhC9XbUjE6XDOInSJ8pwHuPagqsyO89QDU9IdVhe3o=
