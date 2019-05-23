@@ -58,7 +58,7 @@ func (c *sinkCommand) init() {
 	}
 
 	createCmd := &cobra.Command{
-		Use:   "create NAME",
+		Use:   "create <name>",
 		Short: "Create a connector.",
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
@@ -90,7 +90,7 @@ func (c *sinkCommand) init() {
 	})
 
 	getCmd := &cobra.Command{
-		Use:   "get ID",
+		Use:   "get <id>",
 		Short: "Get a connector.",
 		RunE:  c.get,
 		Args:  cobra.ExactArgs(1),
@@ -99,14 +99,14 @@ func (c *sinkCommand) init() {
 	c.AddCommand(getCmd)
 
 	c.AddCommand(&cobra.Command{
-		Use:   "describe ID",
+		Use:   "describe <id>",
 		Short: "Describe a connector.",
 		RunE:  c.describe,
 		Args:  cobra.ExactArgs(1),
 	})
 
 	editCmd := &cobra.Command{
-		Use:   "edit ID",
+		Use:   "edit <id>",
 		Short: "Edit a connector.",
 		RunE:  c.edit,
 		Args:  cobra.ExactArgs(1),
@@ -115,7 +115,7 @@ func (c *sinkCommand) init() {
 	c.AddCommand(editCmd)
 
 	updateCmd := &cobra.Command{
-		Use:   "update ID",
+		Use:   "update <id>",
 		Short: "Update a connector.",
 		RunE:  c.update,
 		Args:  cobra.ExactArgs(1),
@@ -125,7 +125,7 @@ func (c *sinkCommand) init() {
 	c.AddCommand(updateCmd)
 
 	c.AddCommand(&cobra.Command{
-		Use:   "delete ID",
+		Use:   "delete <id>",
 		Short: "Delete a connector.",
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),

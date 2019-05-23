@@ -36,7 +36,7 @@ func (c *contextCommand) init() {
 		Args:  cobra.NoArgs,
 	})
 	c.AddCommand(&cobra.Command{
-		Use:   "use ID",
+		Use:   "use <id>",
 		Short: "Use a config context.",
 		RunE:  c.use,
 		Args:  cobra.ExactArgs(1),
@@ -64,7 +64,7 @@ func (c *contextCommand) init() {
 	c.AddCommand(setCmd)
 
 	c.AddCommand(&cobra.Command{
-		Use:   "delete ID",
+		Use:   "delete <id>",
 		Short: "Delete a config context.",
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),

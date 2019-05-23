@@ -63,7 +63,7 @@ func (c *clusterCommand) init() {
 	})
 
 	createCmd := &cobra.Command{
-		Use:   "create NAME",
+		Use:   "create <name>",
 		Short: "Create a KSQL app",
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
@@ -76,14 +76,14 @@ func (c *clusterCommand) init() {
 	c.AddCommand(createCmd)
 
 	c.AddCommand(&cobra.Command{
-		Use:   "describe ID",
+		Use:   "describe <id>",
 		Short: "Describe a KSQL app.",
 		RunE:  c.describe,
 		Args:  cobra.ExactArgs(1),
 	})
 
 	c.AddCommand(&cobra.Command{
-		Use:   "delete ID",
+		Use:   "delete <id>",
 		Short: "Delete a KSQL app.",
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),

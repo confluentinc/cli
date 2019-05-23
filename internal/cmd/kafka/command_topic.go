@@ -58,7 +58,7 @@ func (c *topicCommand) init() {
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
-		Use:   "create TOPIC",
+		Use:   "create <topic>",
 		Short: "Create a Kafka topic.",
 		Example: ".. include:: ../includes/example-ref.rst",
 		RunE:  c.create,
@@ -73,7 +73,7 @@ func (c *topicCommand) init() {
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
-		Use:   "describe TOPIC",
+		Use:   "describe <topic>",
 		Short: "Describe a Kafka topic.",
 		Example: ".. include:: ../includes/example-ref.rst",
 		RunE:  c.describe,
@@ -84,7 +84,7 @@ func (c *topicCommand) init() {
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
-		Use:   "update TOPIC",
+		Use:   "update <topic>",
 		Short: "Update a Kafka topic.",
 		Example: ".. include:: ../includes/example-ref.rst",
 		RunE:  c.update,
@@ -97,7 +97,7 @@ func (c *topicCommand) init() {
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
-		Use:   "delete TOPIC",
+		Use:   "delete <topic>",
 		Short: "Delete a Kafka topic.",
 		Example: ".. include:: ../includes/example-ref.rst",
 		RunE:  c.delete,
@@ -108,7 +108,7 @@ func (c *topicCommand) init() {
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
-		Use:               "produce TOPIC",
+		Use:               "produce <topic>",
 		Short:             "Produce messages to a Kafka topic.",
 		Example: ".. include:: ../includes/example-ref.rst",
 		RunE:              c.produce,
@@ -121,7 +121,7 @@ func (c *topicCommand) init() {
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
-		Use:               "consume TOPIC",
+		Use:               "consume <topic>",
 		Short:             "Consume messages from a Kafka topic.",
 		Example: ".. include:: ../includes/example-ref.rst",
 		RunE:              c.consume,
