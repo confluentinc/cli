@@ -64,7 +64,7 @@ func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.APIKey, 
 func (c *command) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
-		Short: "List API keys.",
+		Short: "List the API keys.",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	}
@@ -80,13 +80,13 @@ func (c *command) init() {
 	}
 	createCmd.Flags().String("cluster", "", "The cluster ID")
 	createCmd.Flags().Int32("service-account-id", 0, "Service account ID. If not specified, the API key will have full access on the cluster")
-	createCmd.Flags().String("description", "", "Description of the API key")
+	createCmd.Flags().String("description", "", "Description of API key")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
 	updateCmd := &cobra.Command{
 		Use:   "update <apikey>",
-		Short: "Update the API key.",
+		Short: "Update API key.",
 		RunE:  c.update,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -96,7 +96,7 @@ func (c *command) init() {
 
 	c.AddCommand(&cobra.Command{
 		Use:   "delete <apikey>",
-		Short: "Delete API keys.",
+		Short: "Delete the API keys.",
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
 	})
@@ -115,7 +115,7 @@ func (c *command) init() {
 
 	useCmd := &cobra.Command{
 		Use:   "use <apikey>",
-		Short: "Make the API key active for use in other commands.",
+		Short: "Make API key active for use in other commands.",
 		RunE:  c.use,
 		Args:  cobra.ExactArgs(1),
 	}
