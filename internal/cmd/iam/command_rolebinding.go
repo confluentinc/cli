@@ -41,7 +41,8 @@ func NewRolebindingCommand(config *config.Config, ch *pcmd.ConfigHelper, client 
 	cmd := &rolebindingCommand{
 		Command: &cobra.Command{
 			Use:   "rolebinding",
-			Short: "Manage RBAC/IAM rolebindings",
+			Short: "Manage RBAC and IAM role bindings",
+			Long: "Manage Role Based Access (RBAC) and Identity and Access Management (IAM) role bindings.",
 		},
 		config: config,
 		ch:     ch,
@@ -56,50 +57,55 @@ func NewRolebindingCommand(config *config.Config, ch *pcmd.ConfigHelper, client 
 func (c *rolebindingCommand) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
-		Short: "List rolebindings",
+		Short: "List role bindings",
+		Long: "List the role bindings.",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	}
 	listCmd.Flags().String("principal", "", "Principal whose rolebindings should be listed")
 	listCmd.Flags().String("role", "", "List rolebindings under a specific role given to a principal")
 	listCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for scope of rolebinding listings")
-	listCmd.Flags().String("schema-registry-cluster-id", "", "Schema registry cluster ID for scope of rolebinding listings")
+	listCmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for scope of rolebinding listings")
 	listCmd.Flags().String("ksql-cluster-id", "", "KSQL cluster ID for scope of rolebinding listings")
-	listCmd.Flags().String("connect-cluster-id", "", "Connect cluster ID for scope of rolebinding listings")
+	listCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for scope of rolebinding listings")
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
 	createCmd := &cobra.Command{
 		Use:   "create",
-		Short: "Create a new rolebinding",
+		Short: "Create a new role binding",
+		Long: "Create a new role binding.",
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
 	}
-	createCmd.Flags().String("role", "", "Role name of the new rolebinding")
-	createCmd.Flags().String("resource", "", "Qualified resource name for the rolebinding")
-	createCmd.Flags().Bool("prefix", false, "Whether the provided resource name should be treated as a prefix pattern")
-	createCmd.Flags().String("principal", "", "Qualified principal name for the rolebinding")
-	createCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the rolebinding")
-	createCmd.Flags().String("schema-registry-cluster-id", "", "Schema registry cluster ID for the rolebinding")
-	createCmd.Flags().String("ksql-cluster-id", "", "KSQL cluster ID for the rolebinding")
-	createCmd.Flags().String("connect-cluster-id", "", "Connect cluster ID for the rolebinding")
+	createCmd.Flags().String("role", "", "Role name of the new role binding.")
+	createCmd.Flags().String("resource", "", "Qualified resource name for the role binding.")
+	createCmd.Flags().Bool("prefix", false, `Whether the provided resource name is treated as a
+prefix pattern. The default is false.`)
+	createCmd.Flags().String("principal", "", "Qualified principal name for the role binding.")
+	createCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
+	createCmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding.")
+	createCmd.Flags().String("ksql-cluster-id", "", "KSQL cluster ID for the role binding.")
+	createCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for the role binding.")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
 	deleteCmd := &cobra.Command{
 		Use:   "delete",
-		Short: "Delete an existing rolebinding",
+		Short: "Delete an existing role binding",
+		Long: "Delete an existing role binding.",
 		RunE:  c.delete,
 		Args:  cobra.NoArgs,
 	}
-	deleteCmd.Flags().String("role", "", "Role name of the existing rolebinding")
-	deleteCmd.Flags().String("resource", "", "Qualified resource name associated with the rolebinding")
-	deleteCmd.Flags().Bool("prefix", false, "Whether the provided resource name should be treated as a prefix pattern")
-	deleteCmd.Flags().String("principal", "", "Qualified principal name associated with the rolebinding")
-	deleteCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the rolebinding")
-	deleteCmd.Flags().String("schema-registry-cluster-id", "", "Schema registry cluster ID for the rolebinding")
-	deleteCmd.Flags().String("ksql-cluster-id", "", "KSQL cluster ID for the rolebinding")
-	deleteCmd.Flags().String("connect-cluster-id", "", "Connect cluster ID for the rolebinding")
+	deleteCmd.Flags().String("role", "", "Role name of the existing role binding.")
+	deleteCmd.Flags().String("resource", "", "Qualified resource name associated with the role binding.")
+	deleteCmd.Flags().Bool("prefix", false, `Whether the provided resource name is treated as a
+prefix pattern. The default is false.`)
+	deleteCmd.Flags().String("principal", "", "Qualified principal name associated with the role binding.")
+	deleteCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
+	deleteCmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding.")
+	deleteCmd.Flags().String("ksql-cluster-id", "", "KSQL cluster ID for the role binding.")
+	deleteCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for the role binding.")
 	deleteCmd.Flags().SortFlags = false
 	c.AddCommand(deleteCmd)
 }
@@ -116,7 +122,7 @@ func (c *rolebindingCommand) list(cmd *cobra.Command, args []string) error {
 
 	principal, err := cmd.Flags().GetString("principal")
 	if err == nil && principal == "" {
-		return errors.New("Must specify a principal whose rolebindings should be listed")
+		return errors.New("You must specify a principal to list role bindings for.")
 	}
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -177,7 +183,7 @@ func (c *rolebindingCommand) list(cmd *cobra.Command, args []string) error {
 
 func (c *rolebindingCommand) validatePrincipalFormat(principal string) error {
 	if len(strings.Split(principal, ":")) == 1 {
-		return errors.New("Principal must be specified in the format <Principal Type>:<Principal Name>")
+		return errors.New("Principal must be specified in this format: <Principal Type>:<Principal Name>")
 	}
 
 	return nil
@@ -192,7 +198,7 @@ func (c *rolebindingCommand) parseAndValidateResourcePattern(typename string, pr
 	}
 
 	if len(strings.Split(typename, ":")) == 1 {
-		return result, errors.New("Resource must be specified in the format <Resource Type>:<Resource Name>")
+		return result, errors.New("Resource must be specified in this format: <Resource Type>:<Resource Name>")
 	}
 
 	result.ResourceType = strings.Split(typename, ":")[0]
@@ -204,7 +210,7 @@ func (c *rolebindingCommand) parseAndValidateResourcePattern(typename string, pr
 func (c *rolebindingCommand) validateRoleAndResourceType(roleName string, resourceType string) error {
 	role, _, err := c.client.RoleDefinitionsApi.RoleDetail(c.ctx, roleName)
 	if err != nil {
-		return errors.Wrapf(err, "Failed to look up role "+roleName+", maybe invalid role name was specified?")
+		return errors.Wrapf(err, "Failed to look up role "+roleName+". Was an invalid role name specified?")
 	}
 
 	allResourceTypes := []string{}
@@ -217,7 +223,7 @@ func (c *rolebindingCommand) validateRoleAndResourceType(roleName string, resour
 	}
 
 	if !found {
-		return errors.New("Invalid resource type " + resourceType + " specified, must be one of " + strings.Join(allResourceTypes, ","))
+		return errors.New("Invalid resource type " + resourceType + " specified. It must be one of " + strings.Join(allResourceTypes, ","))
 	}
 
 	return nil
@@ -264,18 +270,18 @@ func (c *rolebindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mds.Sco
 	if scope.KafkaCluster == "" && (scope.SchemaRegistryCluster != "" ||
 		scope.KsqlCluster != "" ||
 		scope.ConnectCluster != "") {
-		return nil, errors.HandleCommon(errors.New("A Kafka cluster ID must also be specified to uniquely identify the scope"), cmd)
+		return nil, errors.HandleCommon(errors.New("Must also specify a Kafka cluster ID to uniquely identify the scope."), cmd)
 	}
 
 	if scope.KafkaCluster == "" &&
 		scope.SchemaRegistryCluster == "" &&
 		scope.KsqlCluster == "" &&
 		scope.ConnectCluster == "" {
-		return nil, errors.HandleCommon(errors.New("Must specify at least one cluster ID flag to indicate rolebinding scope"), cmd)
+		return nil, errors.HandleCommon(errors.New("Must specify at least one cluster ID flag to indicate role binding scope."), cmd)
 	}
 
 	if nonKafkaScopesSet > 1 {
-		return nil, errors.HandleCommon(errors.New("Cannot specify more than one non-Kafka cluster ID for a scope"), cmd)
+		return nil, errors.HandleCommon(errors.New("Cannot specify more than one non-Kafka cluster ID for a scope."), cmd)
 	}
 
 	return scope, nil
@@ -296,7 +302,7 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, args []string) error {
 
 	principal, err := cmd.Flags().GetString("principal")
 	if err == nil && principal == "" {
-		return errors.New("Must specify a principal for creating the rolebinding")
+		return errors.New("Must specify a principal for creating the role binding.")
 	}
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -338,7 +344,7 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, args []string) error {
 	}
 
 	if resp.StatusCode != 200 && resp.StatusCode != 204 {
-		return errors.HandleCommon(errors.Wrapf(err, "No error but received HTTP status code "+strconv.Itoa(resp.StatusCode)), cmd)
+		return errors.HandleCommon(errors.Wrapf(err, "No error, but received HTTP status code "+strconv.Itoa(resp.StatusCode)), cmd)
 	}
 
 	return nil
@@ -359,7 +365,7 @@ func (c *rolebindingCommand) delete(cmd *cobra.Command, args []string) error {
 
 	principal, err := cmd.Flags().GetString("principal")
 	if err == nil && principal == "" {
-		return errors.New("Must specify a principal for deleting the rolebinding")
+		return errors.New("Must specify a principal for deleting the role binding.")
 	}
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
