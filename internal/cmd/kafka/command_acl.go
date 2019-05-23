@@ -91,8 +91,9 @@ For more information on configuring ACLs, see :ref:`+"`acl-manage` and :ref:`kaf
 
 	cmd = &cobra.Command{
 		Use:   "list",
-		Short: `List Kafka ACLs for a resource. ACLs are :ref:`+"`only available <cloud-limits>`"+` for |ccloud-ent| users.`,
-	    Long: "For more information on configuring ACLs, see :ref:`kafka_authorization`.",
+		Short: `List Kafka ACLs for a resource`,
+	    Long: `ACLs are :ref:`+"`only available <cloud-limits>`"+` for |ccloud-ent| users.
+For more information on configuring ACLs, see :ref:`+"`kafka_authorization`"+`.`,
 	    Example: ".. include:: ../includes/example-ref.rst",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,

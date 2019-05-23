@@ -24,7 +24,8 @@ func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.KSQL,
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:               "ksql",
-			Short:             "Manage KSQL.",
+			Short:             "Manage KSQL",
+			Long:             "Manage KSQL.",
 			PersistentPreRunE: prerunner.Authenticated(),
 		},
 		config:      config,

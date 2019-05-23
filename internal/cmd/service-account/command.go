@@ -38,7 +38,8 @@ func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.User) *c
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:               "service-account",
-			Short:             `Manage service accounts. Service accounts are :ref:`+"`only available <cloud-limits>`"+` for |ccloud-ent| users.`,
+			Short:             `Manage service accounts`,
+			Long:             `Manage service accounts. Service accounts are :ref:`+"`only available <cloud-limits>`"+` for |ccloud-ent| users.`,
 			PersistentPreRunE: prerunner.Authenticated(),
 		},
 		config: config,
@@ -51,7 +52,8 @@ func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.User) *c
 func (c *command) init() {
 	c.AddCommand(&cobra.Command{
 		Use:   "list",
-		Short: `List service accounts. Service accounts are :ref:`+"`only available <cloud-limits>`"+` for |ccloud-ent| users.`,
+		Short: `List service accounts`,
+		Long: `List service accounts. Service accounts are :ref:`+"`only available <cloud-limits>`"+` for |ccloud-ent| users.`,
 		Example: ".. include:: ../includes/example-ref.rst",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
@@ -59,7 +61,8 @@ func (c *command) init() {
 
 	createCmd := &cobra.Command{
 		Use:   "create NAME",
-		Short: `Create a service account. Service accounts are :ref:`+"`only available <cloud-limits>`"+` for |ccloud-ent| users.`,
+		Short: `Create a service account`,
+		Long: `Create a service account. Service accounts are :ref:`+"`only available <cloud-limits>`"+` for |ccloud-ent| users.`,
 	    Example: `
 Create a service account named `+"``DemoServiceAccount``"+`.
 
@@ -79,7 +82,8 @@ Create a service account named `+"``DemoServiceAccount``"+`.
 
 	updateCmd := &cobra.Command{
 		Use:   "update ID",
-		Short: `Update a service account. Service accounts are :ref:`+"`only available <cloud-limits>`"+` for |ccloud-ent| users.`,
+		Short: `Update a service account`,
+		Long: `Update a service account. Service accounts are :ref:`+"`only available <cloud-limits>`"+` for |ccloud-ent| users.`,
 		Example: `
 Update the description of a service account with the ID `+"``2786``"+`.
 
@@ -99,7 +103,8 @@ Update the description of a service account with the ID `+"``2786``"+`.
 
 	c.AddCommand(&cobra.Command{
 		Use:   "delete ID",
-		Short: `Delete a service account Service accounts are :ref:`+"`only available <cloud-limits>`"+` for |ccloud-ent| users.`,
+		Short: `Delete a service account`,
+		Long: `Delete a service account. Service accounts are :ref:`+"`only available <cloud-limits>`"+` for |ccloud-ent| users.`,
 		Example: `
 Delete a service account with the ID `+"``2786``"+`.
 
