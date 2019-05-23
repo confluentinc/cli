@@ -51,7 +51,7 @@ func (c *secureFileCommand) init() {
 	_ = encryptCmd.MarkFlagRequired("local-secrets-file")
 
 	encryptCmd.Flags().String("remote-secrets-file", "", "Remote encrypted config properties file path")
-	_ = encryptCmd.MarkFlagRequired("remote-secrets-file")
+	encryptCmd.MarkFlagRequired("remote-secrets-file")
 	encryptCmd.Flags().SortFlags = false
 	c.AddCommand(encryptCmd)
 
@@ -157,7 +157,7 @@ func (c *secureFileCommand) init() {
 func (c *secureFileCommand) encrypt(cmd *cobra.Command, args []string) error {
 	configPath, localSecretsPath, remoteSecretsPath, err := c.getConfigFilePath(cmd)
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, cmd)
 	}
 
 	err = c.plugin.EncryptConfigFileSecrets(configPath, localSecretsPath, remoteSecretsPath)

@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 	"github.com/magiconair/properties"
+	s1 "github.com/confluentinc/cli/internal/pkg/secret"
 )
 
 func TestPasswordProtectionSuite_CreateMasterKey(t *testing.T) {
@@ -26,11 +27,18 @@ func TestPasswordProtectionSuite_CreateMasterKey(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "InvalidTestCase: empty passphrase",
+			args: &args{
+				masterKeyPassphrase: "",
+			},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			logger := log.New()
-			plugin := NewPasswordProtectionPlugin(logger)
+			plugin := s1.NewPasswordProtectionPlugin(logger)
 			key, err := plugin.CreateMasterKey(tt.args.masterKeyPassphrase)
 			if (err != nil) != tt.wantErr {
 				t.Fail()
@@ -60,7 +68,7 @@ func TestPasswordProtectionSuite_EncryptConfigFileSecrets(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "InvalidTestCase: Master Key not set",
+			name: "InvalidTestCase: master key not set",
 			args: &args{
 				masterKeyPassphrase:    "abc123",
 				contents:               "testPassword=password",
@@ -74,7 +82,7 @@ func TestPasswordProtectionSuite_EncryptConfigFileSecrets(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "InvalidTestCase: Invalid Config File Path",
+			name: "InvalidTestCase: invalid config file path",
 			args: &args{
 				masterKeyPassphrase:    "abc123",
 				contents:               "testPassword=password",
@@ -88,10 +96,10 @@ func TestPasswordProtectionSuite_EncryptConfigFileSecrets(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "ValidTestCase: Encrypt Config File, Create New DEK",
+			name: "ValidTestCase: encrypt config file, create new dek",
 			args: &args{
 				masterKeyPassphrase:    "abc123",
-				contents:               "testPassword=password",
+				contents:               "testPassword=password,testKey=key",
 				configFilePath:         "/tmp/securePass987/config.properties",
 				localSecureConfigPath:  "/tmp/securePass987/secureConfig.properties",
 				secureDir:              "/tmp/securePass987",
@@ -106,7 +114,7 @@ func TestPasswordProtectionSuite_EncryptConfigFileSecrets(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			logger := log.New()
 			_ = os.MkdirAll(tt.args.secureDir, os.ModePerm)
-			plugin := NewPasswordProtectionPlugin(logger)
+			plugin := s1.NewPasswordProtectionPlugin(logger)
 			if tt.args.setMEK {
 				err := createMasterKey(tt.args.masterKeyPassphrase, plugin)
 				if err != nil {
@@ -126,8 +134,13 @@ func TestPasswordProtectionSuite_EncryptConfigFileSecrets(t *testing.T) {
 				t.Fail()
 			}
 
+			// Validate file contents for valid test cases
+			if !tt.wantErr {
+				validateFileContents(tt.args.contents, tt.args.configFilePath, tt.args.remoteSecureConfigPath, tt.args.localSecureConfigPath, plugin)
+			}
+
 			// Clean Up
-			os.Unsetenv(CONFLUENT_KEY_ENVVAR)
+			os.Unsetenv(s1.CONFLUENT_KEY_ENVVAR)
 			os.RemoveAll(tt.args.secureDir)
 		})
 	}
@@ -166,7 +179,7 @@ func TestPasswordProtectionSuite_DecryptConfigFileSecrets(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			logger := log.New()
 			_ = os.MkdirAll(tt.args.secureDir, os.ModePerm)
-			plugin := NewPasswordProtectionPlugin(logger)
+			plugin := s1.NewPasswordProtectionPlugin(logger)
 			err := createMasterKey(tt.args.masterKeyPassphrase, plugin)
 			if err != nil {
 				t.Fail()
@@ -190,7 +203,7 @@ func TestPasswordProtectionSuite_DecryptConfigFileSecrets(t *testing.T) {
 			}
 
 			// Clean Up
-			os.Unsetenv(CONFLUENT_KEY_ENVVAR)
+			os.Unsetenv(s1.CONFLUENT_KEY_ENVVAR)
 			os.RemoveAll(tt.args.secureDir)
 		})
 	}
@@ -235,7 +248,7 @@ func TestPasswordProtectionSuite_AddConfigFileSecrets(t *testing.T) {
 				t.Fail()
 			}
 			logger := log.New()
-			plugin := NewPasswordProtectionPlugin(logger)
+			plugin := s1.NewPasswordProtectionPlugin(logger)
 
 			// Set master key
 			err = createMasterKey(tt.args.masterKeyPassphrase, plugin)
@@ -261,7 +274,7 @@ func TestPasswordProtectionSuite_AddConfigFileSecrets(t *testing.T) {
 			}
 
 			// Clean Up
-			os.Unsetenv(CONFLUENT_KEY_ENVVAR)
+			os.Unsetenv(s1.CONFLUENT_KEY_ENVVAR)
 			os.RemoveAll(tt.args.secureDir)
 		})
 	}
@@ -317,7 +330,7 @@ func TestPasswordProtectionSuite_UpdateConfigFileSecrets(t *testing.T) {
 			// SetUp
 			_ = os.MkdirAll(tt.args.secureDir, os.ModePerm)
 			logger := log.New()
-			plugin := NewPasswordProtectionPlugin(logger)
+			plugin := s1.NewPasswordProtectionPlugin(logger)
 
 			// Set master key
 			err := createMasterKey(tt.args.masterKeyPassphrase, plugin)
@@ -345,7 +358,7 @@ func TestPasswordProtectionSuite_UpdateConfigFileSecrets(t *testing.T) {
 				}
 			}
 			// Clean Up
-			os.Unsetenv(CONFLUENT_KEY_ENVVAR)
+			os.Unsetenv(s1.CONFLUENT_KEY_ENVVAR)
 			os.RemoveAll(tt.args.secureDir)
 		})
 	}
@@ -384,7 +397,7 @@ func TestPasswordProtectionSuite_RotateDataKey(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			logger := log.New()
 			_ = os.MkdirAll(tt.args.secureDir, os.ModePerm)
-			plugin := NewPasswordProtectionPlugin(logger)
+			plugin := s1.NewPasswordProtectionPlugin(logger)
 			err := createMasterKey(tt.args.masterKeyPassphrase, plugin)
 			if err != nil {
 				t.Fail()
@@ -413,7 +426,7 @@ func TestPasswordProtectionSuite_RotateDataKey(t *testing.T) {
 			rotatedProps := properties.MustLoadFile(tt.args.localSecureConfigPath, properties.ISO_8859_1)
 			for key, value := range originalProps.Map() {
 
-				if !strings.HasPrefix(key, "metadata") {
+				if !strings.HasPrefix(key, s1.METADATA_PREFIX) {
 					cipher := rotatedProps.GetString(key, "")
 					if cipher == value {
 						t.Fail()
@@ -429,7 +442,7 @@ func TestPasswordProtectionSuite_RotateDataKey(t *testing.T) {
 			}
 
 			// Clean Up
-			os.Unsetenv(CONFLUENT_KEY_ENVVAR)
+			os.Unsetenv(s1.CONFLUENT_KEY_ENVVAR)
 			os.RemoveAll(tt.args.secureDir)
 		})
 	}
@@ -471,7 +484,7 @@ func TestPasswordProtectionSuite_RotateMasterKey(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			logger := log.New()
 			_ = os.MkdirAll(tt.args.secureDir, os.ModePerm)
-			plugin := NewPasswordProtectionPlugin(logger)
+			plugin := s1.NewPasswordProtectionPlugin(logger)
 			err := createMasterKey(tt.args.masterKeyPassphrase, plugin)
 			if err != nil {
 				t.Fail()
@@ -481,7 +494,6 @@ func TestPasswordProtectionSuite_RotateMasterKey(t *testing.T) {
 			if err != nil {
 				t.Fail()
 			}
-
 
 			err = plugin.EncryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.remoteSecureConfigPath)
 
@@ -495,7 +507,7 @@ func TestPasswordProtectionSuite_RotateMasterKey(t *testing.T) {
 				t.Fail()
 			}
 
-			os.Setenv(CONFLUENT_KEY_ENVVAR, newKey)
+			os.Setenv(s1.CONFLUENT_KEY_ENVVAR, newKey)
 
 			err = validateUsingDecryption(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.outputConfigPath, tt.args.contents, plugin)
 
@@ -504,20 +516,20 @@ func TestPasswordProtectionSuite_RotateMasterKey(t *testing.T) {
 			}
 
 			// Clean Up
-			os.Unsetenv(CONFLUENT_KEY_ENVVAR)
+			os.Unsetenv(s1.CONFLUENT_KEY_ENVVAR)
 			os.RemoveAll(tt.args.secureDir)
 		})
 	}
 }
 
 
-func createMasterKey(passphrase string, plugin *PasswordProtectionSuite) error {
+func createMasterKey(passphrase string, plugin *s1.PasswordProtectionSuite) error {
 	key, err := plugin.CreateMasterKey(passphrase)
 	if err != nil {
 		return err
 	}
 
-	os.Setenv(CONFLUENT_KEY_ENVVAR, key)
+	os.Setenv(s1.CONFLUENT_KEY_ENVVAR, key)
 
 	return nil
 }
@@ -527,7 +539,55 @@ func createNewConfigFile(path string, contents string) error {
 	return err
 }
 
-func validateUsingDecryption(configFilePath string, localSecureConfigPath string, outputConfigPath string, origConfigs string, plugin *PasswordProtectionSuite) error {
+func validateFileContents(contents string, configFile string, remoteSecretsFile string, localSecretsFile string, plugin *s1.PasswordProtectionSuite) error {
+	originalConfigs := properties.MustLoadString(contents)
+	// Load the configs.
+	configProps, err := plugin.LoadPropertiesFile(configFile)
+	if err != nil {
+		return err
+	}
+
+	secretsProps, err := plugin.LoadPropertiesFile(localSecretsFile)
+	if err != nil {
+		return err
+	}
+
+	for key, value := range configProps.Map() {
+		if strings.Contains(key, "password") {
+			// Validate the config value in config file
+			expectedVal := s1.GenerateConfigValue(key, remoteSecretsFile)
+			if strings.Compare(expectedVal, value) != 0 {
+				return fmt.Errorf("Failed to encrypt a secret config")
+			}
+
+			// Validate the secrets value in secret file
+			pathKey := configFile + ":" + key
+			secretsVal, ok := secretsProps.Get(pathKey)
+			if !ok {
+				return fmt.Errorf("Secrets config does not contain encrypted secret for key " + key)
+			}
+
+			data, iv, algo := s1.ParseCipherValue(secretsVal)
+
+			if len(strings.TrimSpace(data)) == 0 || len(strings.TrimSpace(iv)) == 0 || len(strings.TrimSpace(algo)) == 0 {
+				return fmt.Errorf("Secrets config value not in correct format.")
+			}
+
+		} else {
+			// Validate non secret configs are not modified
+			originalVal, _ := originalConfigs.Get(key)
+			if strings.Compare(originalVal, value) != 0 {
+				fmt.Errorf("Illegal Operation: non secret config modified!!!")
+			}
+		}
+
+
+	}
+
+	return nil
+}
+
+func validateUsingDecryption(configFilePath string, localSecureConfigPath string, outputConfigPath string, origConfigs string, plugin *s1.PasswordProtectionSuite) error {
 	err := plugin.DecryptConfigFileSecrets(configFilePath, localSecureConfigPath, outputConfigPath)
 
 	if err != nil {

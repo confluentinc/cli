@@ -19,7 +19,9 @@ const (
 
 	METADATA_KEY_LENGTH = "_metadata.symmetric_key.0.length"
 
-	METADATA_KEY_SALT = "_metadata.symmetric_key.0.salt"
+	METADATA_DEK_SALT = "_metadata.symmetric_key.0.salt"
+
+	METADATA_MEK_SALT = "_metadata.master_key.0.salt"
 
 	METADATA_KEY_ITERATIONS = "_metadata.symmetric_key.0.iterations"
 
@@ -30,6 +32,8 @@ const (
 	METADATA_KEY_DEFAULT_LENGTH_BYTES = 32
 
 	METADATA_KEY_DEFAULT_ITERATIONS = 1000
+
+	METADATA_PREFIX = "_metadata"
 )
 
 /* Encryption Algorithm Metadata */
@@ -40,4 +44,5 @@ const (
 /* Password Protection File Metadata */
 const (
 	CONFLUENT_KEY_ENVVAR = "CONFLUENT_SECURITY_MASTER_KEY"
+
 )

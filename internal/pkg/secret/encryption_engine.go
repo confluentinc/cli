@@ -21,7 +21,7 @@ import (
 type EncryptionEngine interface {
 	AESEncrypt(plainText string, key []byte) (string, string, error)
 	AESDecrypt(cipher string, iv string, algo string, key []byte) (string, error)
-	GenerateRandomDataKey(keyLength int) ([]byte, error)
+	GenerateRandomDataKey(keyLength int) ([]byte, string, error)
 	GenerateMasterKey(masterKeyPassphrase string) (string, error)
 	WrapDataKey(dataKey []byte, masterKey string) (string, string, error)
 	UnWrapDataKey(dataKey string, iv string, algo string, masterKey string) ([]byte, error)
@@ -36,23 +36,40 @@ func NewEncryptionEngine(suite *CipherSuite, logger *log.Logger) *EncryptEngineS
 	return &EncryptEngineSuite{CipherSuite: suite, Logger: logger}
 }
 
-func (c *EncryptEngineSuite) GenerateRandomDataKey(keyLength int) ([]byte, error) {
+func (c *EncryptEngineSuite) generateRandomString(keyLength int) (string, error) {
 	randomBytes := make([]byte, keyLength)
 	_, err := rand.Read(randomBytes)
 	if err != nil {
-		return randomBytes, err
+		return "", err
 	}
 
 	randomString := base32.StdEncoding.EncodeToString(randomBytes)[:keyLength]
-	key, err := c.generateEncryptionKey(randomString)
+	return randomString, nil
+}
+
+func (c *EncryptEngineSuite) GenerateRandomDataKey(keyLength int) ([]byte, string, error) {
+
+	// Generate random data key
+	keyString, err := c.generateRandomString(keyLength)
 	if err != nil {
-		return randomBytes, err
+		return []byte(""), "", err
 	}
-	return key, nil
+
+	// Generate random salt
+	salt, err := c.generateRandomString(keyLength)
+	if err != nil {
+		return []byte(""), "", err
+	}
+
+	key, err := c.generateEncryptionKey(keyString, salt)
+	if err != nil {
+		return []byte(""), "", err
+	}
+	return key, salt, nil
 }
 
 func (c *EncryptEngineSuite) GenerateMasterKey(masterKeyPassphrase string) (string, error) {
-	key, err := c.generateEncryptionKey(masterKeyPassphrase)
+	key, err := c.generateEncryptionKey(masterKeyPassphrase, c.CipherSuite.SaltMEK)
 	if err != nil {
 		return "", err
 	}
@@ -125,8 +142,8 @@ func (c *EncryptEngineSuite) AESDecrypt(cipher string, iv string, algo string, k
 	return string(plainText), nil
 }
 
-func (c *EncryptEngineSuite) generateEncryptionKey(keyPhrase string) ([]byte, error) {
-	key := pbkdf2.Key([]byte(keyPhrase), []byte(c.CipherSuite.Salt), c.CipherSuite.Iterations, c.CipherSuite.KeyLength, sha512.New)
+func (c *EncryptEngineSuite) generateEncryptionKey(keyPhrase string, salt string) ([]byte, error) {
+	key := pbkdf2.Key([]byte(keyPhrase), []byte(salt), c.CipherSuite.Iterations, c.CipherSuite.KeyLength, sha512.New)
 	return key, nil
 }
 
