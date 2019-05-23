@@ -162,7 +162,7 @@ func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
 	basicContext := context.WithValue(context.Background(), mds.ContextBasicAuth, mds.BasicAuth{UserName: email, Password: password})
 	resp, _, err := a.mdsClient.TokensAuthenticationApi.GetToken(basicContext, "")
 	if err != nil {
-		return errors.HandleCommon(errors.ErrIncorrectAuth, cmd)
+		return errors.HandleCommon(err, cmd)
 	}
 	a.config.AuthToken = resp.AuthToken
 
