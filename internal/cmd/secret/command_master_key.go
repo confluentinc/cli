@@ -28,8 +28,7 @@ func NewMasterKeyCommand(config *config.Config, prompt pcmd.Prompt, plugin secur
 	cmd := &masterKeyCommand{
 		Command: &cobra.Command{
 			Use:   "master-key",
-			Short: "Manage the master key for Confluent Platform",
-			Long: "Manage the Confluent Platform master keys with this command.",
+			Short: "Manage the master key for Confluent Platform.",
 		},
 		config: config,
 		prompt: prompt,
@@ -42,7 +41,7 @@ func NewMasterKeyCommand(config *config.Config, prompt pcmd.Prompt, plugin secur
 func (c *masterKeyCommand) init() {
 	createCmd := &cobra.Command{
 		Use:   "create",
-		Short: "Create a master key for Confluent Platform",
+		Short: "Create a master key for Confluent Platform.",
 		Long: `This command generates a master key. This key will be used for encryption and decryption of configuration value.`,
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
