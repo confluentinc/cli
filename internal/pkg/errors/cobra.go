@@ -19,9 +19,9 @@ var messages = map[error]string{
 }
 
 var typeMessages = map[reflect.Type]string{
-	reflect.TypeOf(&ccloud.InvalidLoginError{}):   "You have entered an incorrect username or password. Please try again.",
-	reflect.TypeOf(&ccloud.ExpiredTokenError{}):   "Your access to Confluent Cloud has expired. Please login again.",
-	reflect.TypeOf(&ccloud.InvalidTokenError{}):   "Your auth token has been corrupted. Please login again.",
+	reflect.TypeOf(&ccloud.InvalidLoginError{}): "You have entered an incorrect username or password. Please try again.",
+	reflect.TypeOf(&ccloud.ExpiredTokenError{}): "Your access to Confluent Cloud has expired. Please login again.",
+	reflect.TypeOf(&ccloud.InvalidTokenError{}): "Your auth token has been corrupted. Please login again.",
 }
 
 // HandleCommon provides standard error messaging for common errors.
@@ -33,7 +33,7 @@ func HandleCommon(err error, cmd *cobra.Command) error {
 
 	if oerr, ok := err.(mds.GenericOpenAPIError); ok {
 		cmd.SilenceUsage = true
-		return fmt.Errorf(oerr.Error())
+		return fmt.Errorf(oerr.Error() + ": " + string(oerr.Body()))
 	}
 
 	// Intercept errors to prevent usage from being printed.

@@ -358,7 +358,7 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, args []string) error {
 	}
 
 	if addErr != nil {
-		return errors.HandleCommon(err, cmd)
+		return errors.HandleCommon(addErr, cmd)
 	}
 
 	if resp.StatusCode != 200 && resp.StatusCode != 204 {
@@ -383,7 +383,7 @@ func (c *rolebindingCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	if removeErr != nil {
-		return errors.HandleCommon(err, cmd)
+		return errors.HandleCommon(removeErr, cmd)
 	}
 
 	if resp.StatusCode != 200 && resp.StatusCode != 204 {
