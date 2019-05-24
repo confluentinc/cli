@@ -27,7 +27,7 @@ var (
 		"Apache", "Kafka", "CLI", "API", "ACL", "ACLs", "ALL", "Confluent Cloud", "Confluent Platform",
 	}
 	vocabWords = []string{
-		"ccloud", "kafka", "api", "acl", "url", "config", "multizone", "transactional",
+		"ccloud", "kafka", "api", "acl", "url", "config", "multizone", "transactional", "decrypt",
 	}
 	utilityCommands = []string{
 		"login", "logout", "version", "completion SHELL", "update",
@@ -39,6 +39,8 @@ var (
 		linter.ExcludeCommandContains("kafka cluster"),
 		// this doesn't need a --cluster override since you provide the api key itself to identify it
 		linter.ExcludeCommandContains("api-key update", "api-key delete"),
+		// this doesn't need a --cluster
+		linter.ExcludeCommandContains("secret"),
 	}
 )
 
@@ -61,6 +63,8 @@ var rules = []linter.Rule{
 		linter.ExcludeCommandContains("local"),
 		// skip for api-key store command since KEY is not last argument
 		linter.ExcludeCommand("api-key store KEY SECRET"),
+		// skip secret commands
+		linter.ExcludeCommandContains("secret"),
 	),
 	// TODO: ensuring --cluster is optional DOES NOT actually ensure that the cluster context is used
 	linter.Filter(linter.RequireFlag("cluster", true), nonClusterScopedCommands...),
@@ -83,12 +87,12 @@ var rules = []linter.Rule{
 
 var flagRules = []linter.FlagRule{
 	linter.FlagFilter(linter.RequireFlagNameLength(2, 16),
-		linter.ExcludeFlag("service-account-id", "replication-factor")),
+		linter.ExcludeFlag("service-account-id", "replication-factor", "local-secrets-file", "remote-secrets-file",), ),
 	linter.RequireFlagStartWithCapital,
 	linter.RequireFlagNotEndWithPunctuation,
 	linter.RequireFlagCharacters('-'),
 	linter.FlagFilter(linter.RequireFlagDelimiter('-', 1),
-		linter.ExcludeFlag("service-account-id")),
+		linter.ExcludeFlag("service-account-id", "local-secrets-file", "remote-secrets-file", )),
 	linter.RequireFlagRealWords('-'),
 }
 
