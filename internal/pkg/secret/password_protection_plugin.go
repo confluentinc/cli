@@ -558,7 +558,10 @@ func (c *PasswordProtectionSuite) fetchSecureConfigProps(localSecureConfigPath s
 
 	// Generate a new DEK
 	cipherSuites, err := c.generateNewDataKey(masterKey)
-
+	if err != nil {
+		return nil, nil, err
+	}
+	
 	// Add DEK Metadata to secureConfigProps
 	now := time.Now()
 	_, _, err = secureConfigProps.Set(METADATA_KEY_TIMESTAMP, now.String())
