@@ -18,7 +18,8 @@ var (
 		":ref:`only available <cloud-limits>`":     "only available",
 		":ref:`acl-manage`":                        "https://docs.confluent.io/current/cloud/access-management/acl.html",
 		":ref:`kafka_authorization`":               "https://docs.confluent.io/current/kafka/authorization.html",
-		".. include:: ../includes/example-ref.rst": `  some cool code here`,
+		".. include:: ../includes/example-ref.rst": `  For a complete example of |ccloud| user account administration, service 
+  account management, and topic management, see https://docs.confluent.io/current/cloud/access-management/user-service-example.html`,
 		".. important::":                           "",
 	}
 )
