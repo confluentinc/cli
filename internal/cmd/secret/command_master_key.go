@@ -22,7 +22,7 @@ type masterKeyCommand struct {
 }
 
 // NewMasterKeyCommand returns the Cobra command for managing master key.
-func NewMasterKeyCommand(config *config.Config, prompt pcmd.Prompt, plugin secureplugin.PasswordProtection) *cobra.Command {
+func NewMasterKeyCommand(config *config.Config, prompt pcmd.Prompt, resolv pcmd.FlagResolver, plugin secureplugin.PasswordProtection) *cobra.Command {
 	cmd := &masterKeyCommand{
 		Command: &cobra.Command{
 			Use:   "master-key",
