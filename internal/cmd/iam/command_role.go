@@ -60,8 +60,8 @@ func (c *roleCommand) init() {
 
 	c.AddCommand(&cobra.Command{
 		Use:   "describe <role>",
-		Short: "Describe the resources and operations allowed for a role",
-		Long:  "Describe the resources and operations that are allowed for a role.",
+		Short: "Gets the resources and operations allowed for a role",
+		Long:  "Describe the resources and operations allowed for a role.",
 		RunE:  c.describe,
 		Args:  cobra.ExactArgs(1),
 	})
