@@ -1,7 +1,11 @@
 package iam
 
 import (
+	"os"
+
+	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
+	"github.com/tidwall/pretty"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -9,6 +13,7 @@ import (
 	mds "github.com/confluentinc/mds-sdk-go"
 
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 )
@@ -68,11 +73,28 @@ func (c *roleCommand) list(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
+	tablePrinter := tablewriter.NewWriter(os.Stdout)
 	var data [][]string
 	for _, role := range roles {
-		data = append(data, printer.ToRow(&role, roleListFields))
+		marshalled, err := json.Marshal(role.AccessPolicy)
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+		prettyRole := struct {
+			Name         string
+			AccessPolicy string
+		}{
+			role.Name,
+			string(pretty.Pretty(marshalled)),
+		}
+		data = append(data, printer.ToRow(&prettyRole, roleListFields))
 	}
-	printer.RenderCollectionTable(data, roleListLabels)
+	tablePrinter.SetAutoWrapText(false)
+	tablePrinter.SetAutoFormatHeaders(false)
+	tablePrinter.SetHeader(roleListLabels)
+	tablePrinter.AppendBulk(data)
+	tablePrinter.SetBorder(false)
+	tablePrinter.Render()
 
 	return nil
 }

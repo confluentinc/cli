@@ -173,7 +173,7 @@ func (c *Config) Context() (*Context, error) {
 // CheckLogin returns an error if the user is not logged in.
 func (c *Config) CheckLogin() error {
 	if c.Auth == nil || c.Auth.Account == nil || c.Auth.Account.Id == "" {
-		return errors.ErrUnauthorized
+		return errors.ErrNotLoggedIn
 	}
 	return nil
 }

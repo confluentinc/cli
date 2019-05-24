@@ -19,7 +19,7 @@ func TestHandleError(t *testing.T) {
 	}{
 		{
 			name:    "static message",
-			err:     ErrUnauthorized,
+			err:     ErrNotLoggedIn,
 			want:    "You must login to access Confluent Cloud.",
 			wantErr: true,
 		},
