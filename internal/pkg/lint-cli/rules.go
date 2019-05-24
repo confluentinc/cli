@@ -371,7 +371,7 @@ func RequireFlagCharacters(delim rune) FlagRule {
 // RequireFlagEndWithPunctuation checks that a flag description ends with a period
 func RequireFlagEndWithPunctuation(flag *pflag.Flag, cmd *cobra.Command) error {
 	if flag.Usage[len(flag.Usage)-1] != '.' {
-		return fmt.Errorf("flag usage ends with punctuation for %s on %s", flag.Name, FullCommand(cmd))
+		return fmt.Errorf("flag usage doesn't end with punctuation for %s on %s", flag.Name, FullCommand(cmd))
 	}
 	return nil
 }
