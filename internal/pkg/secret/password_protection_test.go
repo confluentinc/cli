@@ -62,6 +62,8 @@ func TestPasswordProtectionSuite_EncryptConfigFileSecrets(t *testing.T) {
 		secureDir              string
 		setMEK                 bool
 		createConfig           bool
+		config                 string
+		configVal              string
 	}
 	tests := []struct {
 		name    string
@@ -77,6 +79,8 @@ func TestPasswordProtectionSuite_EncryptConfigFileSecrets(t *testing.T) {
 				localSecureConfigPath:  "/tmp/securePass987/secureConfig.properties",
 				secureDir:              "/tmp/securePass987",
 				remoteSecureConfigPath: "/tmp/securePass987/secureConfig.properties",
+				config:                 "",
+				configVal:              "",
 				setMEK:                 false,
 				createConfig:           true,
 			},
@@ -91,13 +95,15 @@ func TestPasswordProtectionSuite_EncryptConfigFileSecrets(t *testing.T) {
 				localSecureConfigPath:  "/tmp/securePass987/secureConfig.properties",
 				secureDir:              "/tmp/securePass987",
 				remoteSecureConfigPath: "/tmp/securePass987/secureConfig.properties",
+				config:                 "",
+				configVal:              "",
 				setMEK:                 true,
 				createConfig:           false,
 			},
 			wantErr: true,
 		},
 		{
-			name: "ValidTestCase: encrypt config file, create new dek",
+			name: "ValidTestCase: encrypt config file with no config param, create new dek",
 			args: &args{
 				masterKeyPassphrase:    "abc123",
 				contents:               "testPassword=password,testKey=key",
@@ -105,6 +111,24 @@ func TestPasswordProtectionSuite_EncryptConfigFileSecrets(t *testing.T) {
 				localSecureConfigPath:  "/tmp/securePass987/secureConfig.properties",
 				secureDir:              "/tmp/securePass987",
 				remoteSecureConfigPath: "/tmp/securePass987/secureConfig.properties",
+				config:                 "",
+				configVal:              "",
+				setMEK:                 true,
+				createConfig:           true,
+			},
+			wantErr: false,
+		},
+		{
+			name: "ValidTestCase: encrypt config file with config param",
+			args: &args{
+				masterKeyPassphrase:    "abc123",
+				contents:               "ssl.keystore.password=password,ssl.keystore.location=/usr/ssl,ssl.keystore.key=ssl,",
+				configFilePath:         "/tmp/securePass987/config.properties",
+				localSecureConfigPath:  "/tmp/securePass987/secureConfig.properties",
+				secureDir:              "/tmp/securePass987",
+				remoteSecureConfigPath: "/tmp/securePass987/secureConfig.properties",
+				config:                 "ssl.keystore.password,ssl.keystore.location",
+				configVal:              "ssl.keystore.password=password,ssl.keystore.location=/usr/ssl",
 				setMEK:                 true,
 				createConfig:           true,
 			},
@@ -132,7 +156,7 @@ func TestPasswordProtectionSuite_EncryptConfigFileSecrets(t *testing.T) {
 				}
 			}
 
-			err := plugin.EncryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.remoteSecureConfigPath)
+			err := plugin.EncryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.remoteSecureConfigPath, tt.args.config)
 
 			if (err != nil) != tt.wantErr {
 				t.Fail()
@@ -140,7 +164,7 @@ func TestPasswordProtectionSuite_EncryptConfigFileSecrets(t *testing.T) {
 
 			// Validate file contents for valid test cases
 			if !tt.wantErr {
-				err := validateFileContents(tt.args.contents, tt.args.configFilePath, tt.args.remoteSecureConfigPath, tt.args.localSecureConfigPath, plugin)
+				err := validateFileContents(tt.args.contents, tt.args.configFilePath, tt.args.remoteSecureConfigPath, tt.args.localSecureConfigPath, plugin, tt.args.configVal)
 				if err != nil {
 					t.Fail()
 				}
@@ -247,7 +271,7 @@ func TestPasswordProtectionSuite_DecryptConfigFileSecrets(t *testing.T) {
 				t.Fail()
 			}
 
-			err = plugin.EncryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.remoteSecureConfigPath)
+			err = plugin.EncryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.remoteSecureConfigPath, "")
 
 			if err != nil {
 				t.Fail()
@@ -471,7 +495,7 @@ func TestPasswordProtectionSuite_RemoveConfigFileSecrets(t *testing.T) {
 				t.Fail()
 			}
 
-			err = plugin.EncryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.remoteSecureConfigPath)
+			err = plugin.EncryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.remoteSecureConfigPath, "")
 
 			if err != nil {
 				t.Fail()
@@ -570,7 +594,7 @@ func TestPasswordProtectionSuite_RotateDataKey(t *testing.T) {
 				t.Fail()
 			}
 
-			err = plugin.EncryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.remoteSecureConfigPath)
+			err = plugin.EncryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.remoteSecureConfigPath, "")
 
 			if err != nil {
 				t.Fail()
@@ -689,7 +713,7 @@ func TestPasswordProtectionSuite_RotateMasterKey(t *testing.T) {
 				t.Fail()
 			}
 
-			err = plugin.EncryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.remoteSecureConfigPath)
+			err = plugin.EncryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.remoteSecureConfigPath, "")
 
 			if err != nil{
 				t.Fail()
@@ -734,8 +758,9 @@ func createNewConfigFile(path string, contents string) error {
 	return err
 }
 
-func validateFileContents(contents string, configFile string, remoteSecretsFile string, localSecretsFile string, plugin *PasswordProtectionSuite) error {
+func validateFileContents(contents string, configFile string, remoteSecretsFile string, localSecretsFile string, plugin *PasswordProtectionSuite, config string) error {
 	originalConfigs := properties.MustLoadString(contents)
+	encryptedConfigs := properties.MustLoadString(config)
 	// Load the configs.
 	configProps, err := LoadPropertiesFile(configFile)
 	if err != nil {
@@ -748,37 +773,35 @@ func validateFileContents(contents string, configFile string, remoteSecretsFile 
 	}
 
 	for key, value := range configProps.Map() {
-		if strings.Contains(strings.ToLower(key), "password") {
+		_, ok := encryptedConfigs.Get(key)
+		if (config == "" && strings.Contains(strings.ToLower(key), "password")) || ok {
 			// Validate the config value in config file
 			pathKey := configFile + ":" + key
 			expectedVal := GenerateConfigValue(pathKey, remoteSecretsFile)
 			if strings.Compare(expectedVal, value) != 0 {
-				return fmt.Errorf("Failed to encrypt a secret config")
+				return fmt.Errorf("failed to encrypt a secret config")
 			}
 
 			// Validate the secrets value in secret file
 			secretsVal, ok := secretsProps.Get(pathKey)
 			if !ok {
-				return fmt.Errorf("Secrets config does not contain encrypted secret for key " + key)
+				return fmt.Errorf("secrets config does not contain encrypted secret for key " + key)
 			}
 
 			data, iv, algo := ParseCipherValue(secretsVal)
 
 			if len(strings.TrimSpace(data)) == 0 || len(strings.TrimSpace(iv)) == 0 || len(strings.TrimSpace(algo)) == 0 {
-				return fmt.Errorf("Secrets config value not in correct format.")
+				return fmt.Errorf("secrets config value not in correct format.")
 			}
 
 		} else if !strings.Contains(strings.ToLower(key), "config.provider"){
 			// Validate non secret configs are not modified
 			originalVal, _ := originalConfigs.Get(key)
 			if strings.Compare(originalVal, value) != 0 {
-				return fmt.Errorf("Illegal Operation: non secret config modified!!!")
+				return fmt.Errorf("illegal operation: non secret config modified!!!")
 			}
 		}
-
-
 	}
-
 	return nil
 }
 

@@ -20,7 +20,7 @@ import (
 
 type PasswordProtection interface {
 	CreateMasterKey(passphrase string) (string, error)
-	EncryptConfigFileSecrets(configFilePath string, localSecureConfigPath string, remoteSecureConfigPath string) error
+	EncryptConfigFileSecrets(configFilePath string, localSecureConfigPath string, remoteSecureConfigPath string, encryptConfigKeys string) error
 	DecryptConfigFileSecrets(configFilePath string, localSecureConfigPath string, outputFilePath string) error
 	AddEncryptedPasswords(configFilePath string, localSecureConfigPath string, remoteSecureConfigPath string, newConfigs string) error
 	UpdateEncryptedPasswords(configFilePath string, localSecureConfigPath string, remoteSecureConfigPath string, newConfigs string) error
@@ -95,25 +95,34 @@ func (c *PasswordProtectionSuite) generateNewDataKey(masterKey string) (*CipherS
  * We also add the properties to instantiate the SecurePass provider to the config properties file.
  *
  */
-func (c *PasswordProtectionSuite) EncryptConfigFileSecrets(configFilePath string, localSecureConfigPath string, remoteSecureConfigPath string) error {
+func (c *PasswordProtectionSuite) EncryptConfigFileSecrets(configFilePath string, localSecureConfigPath string, remoteSecureConfigPath string, encryptConfigKeys string) error {
 	// Check if config file path is valid.
 	if !c.isPathValid(configFilePath) {
 		return fmt.Errorf("Invalid File Path" + configFilePath)
 	}
-
 	// Load the configs.
 	configProps, err := LoadPropertiesFile(configFilePath)
 	if err != nil {
 		return err
 	}
 
-	// Filter the properties which have keyword 'password' in the key.
-	//To-do should we accept the list of keywords from user?
-	matchProps, err := configProps.Filter("(?i)password")
-	if err != nil {
-		return err
+	matchProps := properties.NewProperties()
+	if encryptConfigKeys != "" {
+		configs := strings.Split(encryptConfigKeys, ",")
+		for _, key := range configs {
+			value, ok := configProps.Get(key)
+			// If key present in config file
+			if ok {
+				_, _, _ = matchProps.Set(key, value)
+			}
+		}
+	} else {
+		// Filter the properties which have keyword 'password' in the key.
+		matchProps, err = configProps.Filter("(?i)password")
+		if err != nil {
+			return err
+		}
 	}
-
 	// Encrypt the secrets with DEK. Save the encrypted secrets in secure config file.
 	return c.encryptConfigValues(matchProps, localSecureConfigPath, configProps, configFilePath, remoteSecureConfigPath)
 }
