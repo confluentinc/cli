@@ -45,7 +45,7 @@ func NewRolebindingCommand(config *config.Config, ch *pcmd.ConfigHelper, client 
 		Command: &cobra.Command{
 			Use:   "rolebinding",
 			Short: "Manage RBAC and IAM role bindings",
-			Long: "Manage Role Based Access (RBAC) and Identity and Access Management (IAM) role bindings.",
+			Long:  "Manage Role Based Access (RBAC) and Identity and Access Management (IAM) role bindings.",
 		},
 		config: config,
 		ch:     ch,
@@ -61,7 +61,7 @@ func (c *rolebindingCommand) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List role bindings",
-		Long: "List the role bindings for a particular principal and scope.",
+		Long:  "List the role bindings for a particular principal and scope.",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	}
@@ -77,7 +77,7 @@ func (c *rolebindingCommand) init() {
 	createCmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create a new role binding",
-		Long: "Create a new role binding.",
+		Long:  "Create a new role binding.",
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
 	}
@@ -96,7 +96,7 @@ prefix pattern. The default is false.`)
 	deleteCmd := &cobra.Command{
 		Use:   "delete",
 		Short: "Delete an existing role binding",
-		Long: "Delete an existing role binding.",
+		Long:  "Delete an existing role binding.",
 		RunE:  c.delete,
 		Args:  cobra.NoArgs,
 	}
@@ -257,7 +257,7 @@ func (c *rolebindingCommand) list(cmd *cobra.Command, args []string) error {
 		for _, r := range roleNames {
 			rps, _, err := c.client.UserAndRoleMgmtApi.GetRoleResourcesForPrincipal(c.ctx, principal, r, mds.Scope{Clusters: *scopeClusters})
 			if len(rps) == 0 {
-				rps = []mds.ResourcePattern{mds.ResourcePattern{}}
+				rps = []mds.ResourcePattern{{}}
 			}
 			resourcePatterns = append(resourcePatterns, rps...)
 			for range rps {
@@ -270,7 +270,7 @@ func (c *rolebindingCommand) list(cmd *cobra.Command, args []string) error {
 	} else {
 		resourcePatterns, _, err = c.client.UserAndRoleMgmtApi.GetRoleResourcesForPrincipal(c.ctx, principal, role, mds.Scope{Clusters: *scopeClusters})
 		if len(resourcePatterns) == 0 {
-			resourcePatterns = []mds.ResourcePattern{mds.ResourcePattern{}}
+			resourcePatterns = []mds.ResourcePattern{{}}
 		}
 		for range resourcePatterns {
 			roleNamesWithMultiplicity = append(roleNamesWithMultiplicity, role)
