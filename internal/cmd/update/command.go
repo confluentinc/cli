@@ -79,7 +79,7 @@ func (c *command) init() {
 		RunE:  c.update,
 		Args:  cobra.NoArgs,
 	}
-	c.Command.Flags().Bool("yes", false, "Update without prompting")
+	c.Command.Flags().Bool("yes", false, "Update without prompting.")
 	c.Command.Flags().SortFlags = false
 }
 
@@ -93,11 +93,11 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	updateAvailable, latestVersion, err := c.client.CheckForUpdates(c.cliName, c.version.Version, true)
 	if err != nil {
 		c.Command.SilenceUsage = true
-		return errors.Wrap(err, "error checking for updates")
+		return errors.Wrap(err, "Error checking for updates.")
 	}
 
 	if !updateAvailable {
-		pcmd.Println(cmd, "Already up to date")
+		pcmd.Println(cmd, "Already up to date.")
 		return nil
 	}
 

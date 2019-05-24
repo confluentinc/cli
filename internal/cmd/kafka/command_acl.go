@@ -29,7 +29,7 @@ func NewACLCommand(config *config.Config, client ccloud.Kafka, ch *pcmd.ConfigHe
 	cmd := &aclCommand{
 		Command: &cobra.Command{
 			Use:   "acl",
-			Short: `Manage Kafka ACLs. ACLs are :ref:`+"`only available <cloud-limits>`"+` for |ccloud-ent| users.`,
+			Short: `Manage Kafka ACLs. This is only available for Confluent Cloud Enterprise users.`,
 		},
 		config: config,
 		client: client,
@@ -45,31 +45,23 @@ func (c *aclCommand) init() {
 
 	cmd := &cobra.Command{
 		Use:   "create",
-		Short: `Create a Kafka ACL. ACLs are :ref:`+"`only available <cloud-limits>`"+` for |ccloud-ent| users.`,
-		Example: ".. include:: ../includes/example-ref.rst",
+		Short: `Create a Kafka ACL. This is only available for Confluent Cloud Enterprise users.`,
+		Example: `You can only specify one of these flags per command invocation: `+"``cluster``, ``consumer-group``"+`,
+`+"``topic``, or ``transactional-id``"+` per command invocation. For example, if you want to specify both
+`+"``consumer-group`` and ``topic``"+`, you must specify this as two separate commands:
+
+::
+
+	ccloud kafka acl create --allow --service-account-id 1522 --operation READ --consumer-group \
+	java_example_group_1
+
+::
+
+	ccloud kafka acl create --allow --service-account-id 1522 --operation READ --topic '*'
+
+`,
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
-		Long: `
-- If you pass `+"``--cluster-scope``"+`, the ACL grants access to the provided operations on the Kafka
-  cluster itself.
-- If you pass `+"``--topic``"+`, the ACL grants the provided operations on the topics that start with that prefix,
-  depending on whether `+"``--prefix``"+` was also passed.
-
-.. important::
-	You can only specify one of either `+"``cluster``, ``consumer-group``, ``topic``, or ``transactional-id``"+`
-	per command invocation. For example, if you want to specify both `+"``consumer-group`` and ``topic``"+`,
-	you must specify this as two separate commands:
-
-	::
-
-		ccloud kafka acl create --allow --service-account-id 1522 --operation READ --consumer-group \
-		java_example_group_1
-
-	::
-
-		ccloud kafka acl create --allow --service-account-id 1522 --operation READ --topic '*'
-
-For more information on configuring ACLs, see :ref:`+"`acl-manage` and :ref:`kafka_authorization`"+`.`,
 	}
 	cmd.Flags().AddFlagSet(aclConfigFlags())
 	cmd.Flags().SortFlags = false
@@ -78,11 +70,9 @@ For more information on configuring ACLs, see :ref:`+"`acl-manage` and :ref:`kaf
 
 	cmd = &cobra.Command{
 		Use:   "delete",
-		Short: `Delete a Kafka ACL. ACLs are :ref:`+"`only available <cloud-limits>`"+` for |ccloud-ent| users.`,
-		Example: ".. include:: ../includes/example-ref.rst",
+		Short: `Delete a Kafka ACL. This is only available for Confluent Cloud Enterprise users.`,
 		RunE:  c.delete,
 		Args:  cobra.NoArgs,
-		Long: `For more information on configuring ACLs, see `+":ref:`kafka_authorization`"+`.`,
 	}
 	cmd.Flags().AddFlagSet(aclConfigFlags())
 	cmd.Flags().SortFlags = false
@@ -91,10 +81,7 @@ For more information on configuring ACLs, see :ref:`+"`acl-manage` and :ref:`kaf
 
 	cmd = &cobra.Command{
 		Use:   "list",
-		Short: `List Kafka ACLs for a resource`,
-	    Long: `ACLs are :ref:`+"`only available <cloud-limits>`"+` for |ccloud-ent| users.
-For more information on configuring ACLs, see :ref:`+"`kafka_authorization`"+`.`,
-	    Example: ".. include:: ../includes/example-ref.rst",
+		Short: `List Kafka ACLs for a resource. This is only available for Confluent Cloud Enterprise users.`,
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	}

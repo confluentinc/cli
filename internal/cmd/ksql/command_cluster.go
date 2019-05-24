@@ -42,8 +42,7 @@ func NewClusterCommand(config *config.Config, client ccloud.KSQL, kafkaClient cc
 	cmd := &clusterCommand{
 		Command: &cobra.Command{
 			Use:   "app",
-			Short: "Manage KSQL apps",
-			Long: "Manage KSQL apps.",
+			Short: "Manage KSQL apps.",
 		},
 		config:      config,
 		client:      client,
@@ -58,8 +57,7 @@ func NewClusterCommand(config *config.Config, client ccloud.KSQL, kafkaClient cc
 func (c *clusterCommand) init() {
 	c.AddCommand(&cobra.Command{
 		Use:   "list",
-		Short: "List KSQL apps",
-		Long: "List KSQL apps.",
+		Short: "List KSQL apps.",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	})
@@ -79,24 +77,21 @@ func (c *clusterCommand) init() {
 
 	c.AddCommand(&cobra.Command{
 		Use:   "describe ID",
-		Short: "Describe a KSQL app",
-		Long: "Describe a KSQL app.",
+		Short: "Describe a KSQL app.",
 		RunE:  c.describe,
 		Args:  cobra.ExactArgs(1),
 	})
 
 	c.AddCommand(&cobra.Command{
 		Use:   "delete ID",
-		Short: "Delete a KSQL app",
-		Long: "Delete a KSQL app.",
+		Short: "Delete a KSQL app.",
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
 	})
 
 	aclsCmd := &cobra.Command{
 		Use:   "configure-acls ID TOPICS...",
-		Short: "Configure ACLs for a KSQL cluster",
-		Long: "Configure ACLs for a KSQL cluster.",
+		Short: "Configure ACLs for a KSQL cluster.",
 		RunE:  c.configureACLs,
 		Args:  cobra.MinimumNArgs(1),
 	}

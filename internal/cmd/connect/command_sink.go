@@ -133,7 +133,7 @@ func (c *sinkCommand) init() {
 
 	c.AddCommand(&cobra.Command{
 		Use:   "auth",
-		Short: "Auth a connector.",
+		Short: "Authenticate a connector.",
 		RunE:  c.auth,
 		Args:  cobra.NoArgs,
 	})

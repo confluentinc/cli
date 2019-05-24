@@ -49,8 +49,7 @@ func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.APIKey, 
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:               "api-key",
-			Short:             "Manage the API keys",
-			Long:             "Manage the API keys.",
+			Short:             "Manage the API keys.",
 			PersistentPreRunE: prerunner.Authenticated(),
 		},
 		config:   config,
@@ -65,66 +64,62 @@ func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.APIKey, 
 func (c *command) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
-		Short: "List the API keys",
-		Long: "List the API keys.",
+		Short: "List the API keys.",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	}
-	listCmd.Flags().String("cluster", "", "The cluster ID")
+	listCmd.Flags().String("cluster", "", "The cluster ID.")
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
 	createCmd := &cobra.Command{
 		Use:   "create",
-		Short: "Create API keys. This can be for users or service accounts.",
+		Short: "Create API keys for users or service accounts.",
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
 	}
-	createCmd.Flags().String("cluster", "", "The cluster ID")
-	createCmd.Flags().Int32("service-account-id", 0, "Service account ID. If not specified, the API key will have full access on the cluster")
-	createCmd.Flags().String("description", "", "Description of API key")
+	createCmd.Flags().String("cluster", "", "The cluster ID.")
+	createCmd.Flags().Int32("service-account-id", 0, "Service account ID. If not specified, the API key will have full access on the cluster.")
+	createCmd.Flags().String("description", "", "Description of API key.")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
 	updateCmd := &cobra.Command{
 		Use:   "update <apikey>",
-		Short: "Update API key",
-		Long: "Update API key.",
+		Short: "Update API key.",
 		RunE:  c.update,
 		Args:  cobra.ExactArgs(1),
 	}
-	updateCmd.Flags().String("description", "", "Description of the API key")
+	updateCmd.Flags().String("description", "", "Description of the API key.")
 	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
 
 	c.AddCommand(&cobra.Command{
 		Use:   "delete <apikey>",
-		Short: "Delete API keys",
-		Long: "Delete the API keys.",
+		Short: "Delete API keys.",
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
 	})
 
 	storeCmd := &cobra.Command{
 		Use:   "store <apikey> <secret>",
-		Short: `Locally store an existing API key and secret pair for use in the CLI`,
+		Short: `Locally store an existing API key/secret for use in the CLI.`,
 		Long:  longDescription,
 		RunE:  c.store,
 		Args:  cobra.ExactArgs(2),
 	}
-	storeCmd.Flags().String("cluster", "", "The cluster ID")
-	storeCmd.Flags().BoolP("force", "f", false, "Force overwrite existing secret for this key")
+	storeCmd.Flags().String("cluster", "", "The cluster ID.")
+	storeCmd.Flags().BoolP("force", "f", false, "Force overwrite existing secret for this key.")
 	storeCmd.Flags().SortFlags = false
 	c.AddCommand(storeCmd)
 
 	useCmd := &cobra.Command{
 		Use:   "use <apikey>",
-		Short: "Make API key active for use in other commands",
-		Long: "Make API key active for use in other commands.",
+		Short: "Make API key active for use in other commands.",
 		RunE:  c.use,
 		Args:  cobra.ExactArgs(1),
 	}
-	useCmd.Flags().String("cluster", "", "The cluster ID")
+	useCmd.Flags().String("cluster", "", "The cluster ID.")
 	useCmd.Flags().SortFlags = false
 	c.AddCommand(useCmd)
 }
@@ -239,7 +234,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := c.keystore.StoreAPIKey(userKey, kcc.ID, environment); err != nil {
-		return errors.HandleCommon(errors.Wrapf(err, "Unable to store API key locally"), cmd)
+		return errors.HandleCommon(errors.Wrapf(err, "Unable to store API key locally."), cmd)
 	}
 
 	return nil
@@ -299,7 +294,7 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := c.keystore.StoreAPIKey(&authv1.ApiKey{Key: key, Secret: secret}, kcc.ID, environment); err != nil {
-		return errors.HandleCommon(errors.Wrapf(err, "Unable to store the API key locally"), cmd)
+		return errors.HandleCommon(errors.Wrapf(err, "Unable to store the API key locally."), cmd)
 	}
 
 	return nil

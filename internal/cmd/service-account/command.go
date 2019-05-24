@@ -38,8 +38,7 @@ func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.User) *c
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:               "service-account",
-			Short:             `Manage service accounts`,
-			Long:             `Manage service accounts. Service accounts are :ref:`+"`only available <cloud-limits>`"+` for |ccloud-ent| users.`,
+			Short:             `Manage service accounts. This is only available for Confluent Cloud Enterprise users.`,
 			PersistentPreRunE: prerunner.Authenticated(),
 		},
 		config: config,
@@ -52,17 +51,14 @@ func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.User) *c
 func (c *command) init() {
 	c.AddCommand(&cobra.Command{
 		Use:   "list",
-		Short: `List service accounts`,
-		Long: `List service accounts. Service accounts are :ref:`+"`only available <cloud-limits>`"+` for |ccloud-ent| users.`,
-		Example: ".. include:: ../includes/example-ref.rst",
+		Short: `List service accounts. This is only available for Confluent Cloud Enterprise users.`,
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	})
 
 	createCmd := &cobra.Command{
 		Use:   "create <name>",
-		Short: `Create a service account`,
-		Long: `Create a service account. Service accounts are :ref:`+"`only available <cloud-limits>`"+` for |ccloud-ent| users.`,
+		Short: `Create a service account. This is only available for Confluent Cloud Enterprise users.`,
 	    Example: `
 Create a service account named `+"``DemoServiceAccount``"+`.
 
@@ -71,19 +67,18 @@ Create a service account named `+"``DemoServiceAccount``"+`.
   ccloud service-account create "DemoServiceAccount" \
   --description "This is a demo service account. "
 
-.. include:: ../includes/example-ref.rst`,
+`,
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	}
-	createCmd.Flags().String("description", "", "Description of the service account")
+	createCmd.Flags().String("description", "", "Description of the service account.")
 	_ = createCmd.MarkFlagRequired("description")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
 	updateCmd := &cobra.Command{
 		Use:   "update <id>",
-		Short: `Update a service account`,
-		Long: `Update a service account. Service accounts are :ref:`+"`only available <cloud-limits>`"+` for |ccloud-ent| users.`,
+		Short: `Update a service account. This is only available for Confluent Cloud Enterprise users.`,
 		Example: `
 Update the description of a service account with the ID `+"``2786``"+`.
 
@@ -92,19 +87,18 @@ Update the description of a service account with the ID `+"``2786``"+`.
     ccloud service-account update service-account-id 2786 \
     --description "Update demo service account information. "
 
-.. include:: ../includes/example-ref.rst`,
+`,
 		RunE:  c.update,
 		Args:  cobra.ExactArgs(1),
 	}
-	updateCmd.Flags().String("description", "", "Description of the service account")
+	updateCmd.Flags().String("description", "", "Description of the service account.")
 	_ = updateCmd.MarkFlagRequired("description")
 	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
 
 	c.AddCommand(&cobra.Command{
 		Use:   "delete <id>",
-		Short: `Delete a service account`,
-		Long: `Delete a service account. Service accounts are :ref:`+"`only available <cloud-limits>`"+` for |ccloud-ent| users.`,
+		Short: `Delete a service account. This is only available for Confluent Cloud Enterprise users.`,
 		Example: `
 Delete a service account with the ID `+"``2786``"+`.
 
@@ -112,7 +106,7 @@ Delete a service account with the ID `+"``2786``"+`.
 
     ccloud service-account delete --service-account-id 2786
 
-.. include:: ../includes/example-ref.rst		`,
+`,
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
 	})

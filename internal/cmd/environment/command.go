@@ -31,7 +31,7 @@ func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.Account,
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:               "environment",
-			Short:             fmt.Sprintf("Manage and select %s environments", cliName),
+			Short:             fmt.Sprintf("Manage and select %s environments.", cliName),
 			PersistentPreRunE: prerunner.Authenticated(),
 		},
 		config: config,
@@ -44,32 +44,28 @@ func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.Account,
 func (c *command) init() {
 	c.AddCommand(&cobra.Command{
 		Use:   "list",
-		Short: "List environments",
-		Long: "List Confluent Cloud environments.",
+		Short: "List Confluent Cloud environments.",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	})
 
 	c.AddCommand(&cobra.Command{
 		Use:   "use <environment-id>",
-		Short: "Switch to the specified Confluent Cloud environment",
-		Long: "Switch to the specified environment.",
+		Short: "Switch to the specified Confluent Cloud environment.",
 		RunE:  c.use,
 		Args:  cobra.ExactArgs(1),
 	})
 
 	c.AddCommand(&cobra.Command{
 		Use:   "create <name>",
-		Short: "Create a new Confluent Cloud environment",
-		Long: "Create a new Confluent Cloud environment.",
+		Short: "Create a new Confluent Cloud environment.",
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	})
 
 	updateCmd := &cobra.Command{
 		Use:   "update <environment-id>",
-		Short: "Update the name of an existing Confluent Cloud environment",
-		Long: "Update the name of an existing Confluent Cloud environment.",
+		Short: "Update the name of an existing Confluent Cloud environment.",
 		RunE:  c.update,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -80,8 +76,7 @@ func (c *command) init() {
 
 	c.AddCommand(&cobra.Command{
 		Use:   "delete <environment-id>",
-		Short: "Delete an Confluent Cloud environment and all of its resources",
-		Long: "Delete an Confluent Cloud environment and all of its resources.",
+		Short: "Delete an Confluent Cloud environment and all of its resources.",
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
 	})

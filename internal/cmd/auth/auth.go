@@ -57,7 +57,7 @@ func (a *commands) init(prerunner pcmd.PreRunner) {
 		Use:   "login",
 		Short: fmt.Sprintf("Login to %s.", a.config.APIName()),
 		Long: fmt.Sprintf("Login to %s.", a.config.APIName()),
-		Example: ".. include:: ../includes/example-ref.rst",
+
 		RunE:  a.login,
 		Args:  cobra.NoArgs,
 	}
@@ -68,7 +68,7 @@ func (a *commands) init(prerunner pcmd.PreRunner) {
 		Use:   "logout",
 		Short: fmt.Sprintf("Logout of %s.", a.config.APIName()),
 		Long: fmt.Sprintf("Logout of %s.", a.config.APIName()),
-		Example: ".. include:: ../includes/example-ref.rst",
+
 		RunE:  a.logout,
 		Args:  cobra.NoArgs,
 	}

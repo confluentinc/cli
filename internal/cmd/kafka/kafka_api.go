@@ -48,8 +48,11 @@ func aclEntryFlags() *pflag.FlagSet {
 func resourceFlags() *pflag.FlagSet {
 	flgSet := pflag.NewFlagSet("acl-resource", pflag.ExitOnError)
 	//flgSet.String("cluster", "", "The Confluent Cloud cluster ID.")
-	flgSet.Bool("cluster-scope", false, "Set the cluster resource.")
-	flgSet.String("topic", "", "Set the topic resource.")
+	flgSet.Bool("cluster-scope", false, `Set the cluster resource. With this option the ACL grants
+access to the provided operations on the Kafka cluster itself.`)
+	flgSet.String("topic", "", `Set the topic resource. With this option the ACL grants the provided
+operations on the topics that start with that prefix, depending on whether
+the --prefix option was also passed.`)
 	flgSet.String("consumer-group", "", "Set the Consumer Group resource.")
 	flgSet.String("transactional-id", "", "Set the TransactionalID resource.")
 	flgSet.Bool("prefix", false, "Set to match all resource names prefixed with this value.")
@@ -107,7 +110,7 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 				conf.Entry.Operation = kafkav1.ACLOperations_ACLOperation(op)
 				break
 			}
-			conf.errors = multierror.Append(conf.errors, fmt.Errorf("invalid operation value: "+v))
+			conf.errors = multierror.Append(conf.errors, fmt.Errorf("Invalid operation value: "+v))
 		}
 	}
 }

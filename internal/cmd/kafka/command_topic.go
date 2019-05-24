@@ -34,8 +34,7 @@ func NewTopicCommand(prerunner pcmd.PreRunner, config *config.Config, client ccl
 	cmd := &topicCommand{
 		Command: &cobra.Command{
 			Use:   "topic",
-			Short: "Manage Kafka topics",
-			Long:  "Manage Kafka topics.",
+			Short: "Manage Kafka topics.",
 		},
 		config:    config,
 		client:    client,
@@ -50,25 +49,23 @@ func (c *topicCommand) init() {
 	cmd := &cobra.Command{
 		Use:     "list",
 		Short:   "List Kafka topics.",
-		Example: ".. include:: ../includes/example-ref.rst",
 		RunE:    c.list,
 		Args:    cobra.NoArgs,
 	}
-	cmd.Flags().String("cluster", "", "Kafka cluster ID")
+	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
 		Use:     "create <topic>",
 		Short:   "Create a Kafka topic.",
-		Example: ".. include:: ../includes/example-ref.rst",
 		RunE:    c.create,
 		Args:    cobra.ExactArgs(1),
 	}
-	cmd.Flags().String("cluster", "", "Kafka cluster ID")
-	cmd.Flags().Uint32("partitions", 6, "Number of topic partitions")
-	cmd.Flags().Uint32("replication-factor", 3, "Replication factor")
-	cmd.Flags().StringSlice("config", nil, "A comma-separated list of topic configuration ('key=value') overrides for the topic being created")
+	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	cmd.Flags().Uint32("partitions", 6, "Number of topic partitions.")
+	cmd.Flags().Uint32("replication-factor", 3, "Replication factor.")
+	cmd.Flags().StringSlice("config", nil, "A comma-separated list of topic configuration ('key=value') overrides for the topic being created.")
 	cmd.Flags().Bool("dry-run", false, "Run the command without committing changes to Kafka.")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
@@ -76,23 +73,21 @@ func (c *topicCommand) init() {
 	cmd = &cobra.Command{
 		Use:     "describe <topic>",
 		Short:   "Describe a Kafka topic.",
-		Example: ".. include:: ../includes/example-ref.rst",
 		RunE:    c.describe,
 		Args:    cobra.ExactArgs(1),
 	}
-	cmd.Flags().String("cluster", "", "Kafka cluster ID")
+	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
 		Use:     "update <topic>",
 		Short:   "Update a Kafka topic.",
-		Example: ".. include:: ../includes/example-ref.rst",
 		RunE:    c.update,
 		Args:    cobra.ExactArgs(1),
 	}
-	cmd.Flags().String("cluster", "", "Kafka cluster ID")
-	cmd.Flags().StringSlice("config", nil, "A comma-separated list of topic configuration ('key=value') overrides for the topic being created")
+	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	cmd.Flags().StringSlice("config", nil, "A comma-separated list of topic configuration ('key=value') overrides for the topic being created.")
 	cmd.Flags().Bool("dry-run", false, "Execute request without committing changes to Kafka")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
@@ -100,38 +95,35 @@ func (c *topicCommand) init() {
 	cmd = &cobra.Command{
 		Use:     "delete <topic>",
 		Short:   "Delete a Kafka topic.",
-		Example: ".. include:: ../includes/example-ref.rst",
 		RunE:    c.delete,
 		Args:    cobra.ExactArgs(1),
 	}
-	cmd.Flags().String("cluster", "", "Kafka cluster ID")
+	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
 		Use:               "produce <topic>",
 		Short:             "Produce messages to a Kafka topic.",
-		Example:           ".. include:: ../includes/example-ref.rst",
 		RunE:              c.produce,
 		Args:              cobra.ExactArgs(1),
 		PersistentPreRunE: c.prerunner.AuthenticatedAPIKey(),
 	}
-	cmd.Flags().String("cluster", "", "Kafka cluster ID")
-	cmd.Flags().String("delimiter", ":", "The key/value delimiter")
+	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	cmd.Flags().String("delimiter", ":", "The key/value delimiter.")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
 		Use:               "consume <topic>",
 		Short:             "Consume messages from a Kafka topic.",
-		Example:           ".. include:: ../includes/example-ref.rst",
 		RunE:              c.consume,
 		Args:              cobra.ExactArgs(1),
 		PersistentPreRunE: c.prerunner.AuthenticatedAPIKey(),
 	}
-	cmd.Flags().String("cluster", "", "Kafka cluster ID")
-	cmd.Flags().String("group", fmt.Sprintf("confluent_cli_consumer_%s", uuid.New()), "Consumer group ID")
-	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of topic rather than end")
+	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	cmd.Flags().String("group", fmt.Sprintf("confluent_cli_consumer_%s", uuid.New()), "Consumer group ID.")
+	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
