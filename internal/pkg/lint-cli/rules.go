@@ -209,15 +209,19 @@ func RequireNotTitleCase(field string, properNouns []string) Rule {
 	}
 	return func(cmd *cobra.Command) error {
 		fieldValue := getValueByName(cmd, field)
+		if fieldValue[len(fieldValue)-1] == '.' {
+			fieldValue = fieldValue[0:len(fieldValue)-1]
+		}
 		var issues *multierror.Error
 		words := strings.Split(fieldValue, " ")
 		for i := 0; i < len(words); i++ {
 			word := alnum.ReplaceAllString(words[i], "") // Remove any punctuation before comparison
-			if word[0] >= 'A' && word[0] <= 'Z' {
+			if word != "" && word[0] >= 'A' && word[0] <= 'Z' {
 				// We have to start our check/loop at i=0 in case the command starts with a multi-word proper noun
-				// But we don't consider capitalizing the first word of the sentence (i=0) to be title case
+				// But we don't consider capitalizing the first word of the sentence (i=0) to be title case.
+				// Likewise, if this word is starting a new sentence (i>0 && last words ends with '.'), it's ok.
 				var isTitleCase bool
-				if i == 0 {
+				if i == 0 || (i > 0 && words[i-1][len(words[i-1])-1] == '.') {
 					isTitleCase = false
 				} else {
 					isTitleCase = true
@@ -364,9 +368,9 @@ func RequireFlagCharacters(delim rune) FlagRule {
 	}
 }
 
-// RequireFlagNotEndWithPunctuation checks that a flag description doesn't end with a period
-func RequireFlagNotEndWithPunctuation(flag *pflag.Flag, cmd *cobra.Command) error {
-	if flag.Usage[len(flag.Usage)-1] == '.' {
+// RequireFlagEndWithPunctuation checks that a flag description ends with a period
+func RequireFlagEndWithPunctuation(flag *pflag.Flag, cmd *cobra.Command) error {
+	if flag.Usage[len(flag.Usage)-1] != '.' {
 		return fmt.Errorf("flag usage ends with punctuation for %s on %s", flag.Name, FullCommand(cmd))
 	}
 	return nil

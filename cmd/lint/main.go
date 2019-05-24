@@ -24,13 +24,13 @@ var (
 	vocab *gospell.GoSpell
 
 	properNouns = []string{
-		"Apache", "Kafka", "CLI", "API", "ACL", "ACLs", "ALL", "Confluent Cloud", "Confluent Platform",
+		"Apache", "Kafka", "CLI", "API", "ACL", "ACLs", "Confluent Cloud", "Confluent Platform",
 	}
 	vocabWords = []string{
 		"ccloud", "kafka", "api", "acl", "url", "config", "multizone", "transactional",
 	}
 	utilityCommands = []string{
-		"login", "logout", "version", "completion SHELL", "update",
+		"login", "logout", "version", "completion <shell>", "update",
 	}
 	nonClusterScopedCommands = []linter.RuleFilter{
 		linter.OnlyLeafCommands, linter.ExcludeCommand(utilityCommands...),
@@ -45,10 +45,12 @@ var (
 var rules = []linter.Rule{
 	linter.Filter(
 		linter.RequireNamedArgument(
-			linter.NamedArgumentConfig{CreateCommandArg: "NAME", OtherCommandsArg: "ID"},
+			linter.NamedArgumentConfig{CreateCommandArg: "<name>", OtherCommandsArg: "<id>"},
 			map[string]linter.NamedArgumentConfig{
-				"topic":   {CreateCommandArg: "TOPIC", OtherCommandsArg: "TOPIC"},
-				"api-key": {CreateCommandArg: "N/A", OtherCommandsArg: "KEY"}},
+				"environment": {CreateCommandArg: "<name>", OtherCommandsArg: "<environment-id>"},
+				"topic":       {CreateCommandArg: "<topic>", OtherCommandsArg: "<topic>"},
+				"api-key":     {CreateCommandArg: "N/A", OtherCommandsArg: "<apikey>"},
+			},
 		),
 		linter.OnlyLeafCommands, linter.ExcludeCommand(utilityCommands...),
 		// skip resource container commands
@@ -60,7 +62,7 @@ var rules = []linter.Rule{
 		// skip local which delegates to bash commands
 		linter.ExcludeCommandContains("local"),
 		// skip for api-key store command since KEY is not last argument
-		linter.ExcludeCommand("api-key store KEY SECRET"),
+		linter.ExcludeCommand("api-key store <apikey> <secret>"),
 	),
 	// TODO: ensuring --cluster is optional DOES NOT actually ensure that the cluster context is used
 	linter.Filter(linter.RequireFlag("cluster", true), nonClusterScopedCommands...),
@@ -72,7 +74,7 @@ var rules = []linter.Rule{
 	linter.RequireSingular("Use"),
 	linter.RequireLengthBetween("Short", 13, 55),
 	linter.RequireStartWithCapital("Short"),
-	linter.RequireNotEndWithPunctuation("Short"),
+	linter.RequireEndWithPunctuation("Short", false),
 	linter.RequireCapitalizeProperNouns("Short", properNouns),
 	linter.RequireStartWithCapital("Long"),
 	linter.RequireEndWithPunctuation("Long", true),
@@ -85,7 +87,7 @@ var flagRules = []linter.FlagRule{
 	linter.FlagFilter(linter.RequireFlagNameLength(2, 16),
 		linter.ExcludeFlag("service-account-id", "replication-factor")),
 	linter.RequireFlagStartWithCapital,
-	linter.RequireFlagNotEndWithPunctuation,
+	linter.RequireFlagEndWithPunctuation,
 	linter.RequireFlagCharacters('-'),
 	linter.FlagFilter(linter.RequireFlagDelimiter('-', 1),
 		linter.ExcludeFlag("service-account-id")),

@@ -76,7 +76,7 @@ func (c *command) init() {
 
 	createCmd := &cobra.Command{
 		Use:   "create",
-		Short: "Create API keys. This can be for users or service accounts. ",
+		Short: "Create API keys. This can be for users or service accounts.",
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
 	}

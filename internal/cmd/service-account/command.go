@@ -60,7 +60,7 @@ func (c *command) init() {
 	})
 
 	createCmd := &cobra.Command{
-		Use:   "create NAME",
+		Use:   "create <name>",
 		Short: `Create a service account`,
 		Long: `Create a service account. Service accounts are :ref:`+"`only available <cloud-limits>`"+` for |ccloud-ent| users.`,
 	    Example: `
@@ -81,7 +81,7 @@ Create a service account named `+"``DemoServiceAccount``"+`.
 	c.AddCommand(createCmd)
 
 	updateCmd := &cobra.Command{
-		Use:   "update ID",
+		Use:   "update <id>",
 		Short: `Update a service account`,
 		Long: `Update a service account. Service accounts are :ref:`+"`only available <cloud-limits>`"+` for |ccloud-ent| users.`,
 		Example: `
@@ -102,7 +102,7 @@ Update the description of a service account with the ID `+"``2786``"+`.
 	c.AddCommand(updateCmd)
 
 	c.AddCommand(&cobra.Command{
-		Use:   "delete ID",
+		Use:   "delete <id>",
 		Short: `Delete a service account`,
 		Long: `Delete a service account. Service accounts are :ref:`+"`only available <cloud-limits>`"+` for |ccloud-ent| users.`,
 		Example: `

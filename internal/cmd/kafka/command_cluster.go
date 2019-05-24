@@ -56,7 +56,7 @@ func (c *clusterCommand) init() {
 	})
 
 	createCmd := &cobra.Command{
-		Use:   "create NAME",
+		Use:   "create <name>",
 		Short: "Create a Kafka cluster",
 		Long: "Create a Kafka cluster.",
 		RunE:  c.create,
@@ -76,7 +76,7 @@ func (c *clusterCommand) init() {
 	c.AddCommand(createCmd)
 
 	c.AddCommand(&cobra.Command{
-		Use:   "describe ID",
+		Use:   "describe <id>",
 		Short: "Describe a Kafka cluster",
 		Long: "Describe a Kafka cluster.",
 		RunE:  c.describe,
@@ -84,7 +84,7 @@ func (c *clusterCommand) init() {
 	})
 
 	updateCmd := &cobra.Command{
-		Use:   "update ID",
+		Use:   "update <id>",
 		Short: "Update a Kafka cluster",
 		Long: "Update a Kafka cluster.",
 		RunE:  c.update,
@@ -94,7 +94,7 @@ func (c *clusterCommand) init() {
 	c.AddCommand(updateCmd)
 
 	deleteCmd := &cobra.Command{
-		Use:   "delete ID",
+		Use:   "delete <id>",
 		Short: "Delete a Kafka cluster",
 		Long: "Delete a Kafka cluster.",
 		RunE:  c.delete,
@@ -103,7 +103,7 @@ func (c *clusterCommand) init() {
 	deleteCmd.Hidden = true
 	c.AddCommand(deleteCmd)
 	c.AddCommand(&cobra.Command{
-		Use:   "use ID",
+		Use:   "use <id>",
 		Short: "Make the Kafka cluster active for use in other commands",
 		Long: "Make the Kafka cluster active for use in other commands.",
 		RunE:  c.use,

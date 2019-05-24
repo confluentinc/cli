@@ -55,8 +55,8 @@ func newCommands(prerunner pcmd.PreRunner, config *config.Config, prompt pcmd.Pr
 func (a *commands) init(prerunner pcmd.PreRunner) {
 	loginCmd := &cobra.Command{
 		Use:   "login",
-		Short: fmt.Sprintf("Login to %s", a.config.APIName()),
-		Long: fmt.Sprintf("Login to %s", a.config.APIName())+".",
+		Short: fmt.Sprintf("Login to %s.", a.config.APIName()),
+		Long: fmt.Sprintf("Login to %s.", a.config.APIName()),
 		Example: ".. include:: ../includes/example-ref.rst",
 		RunE:  a.login,
 		Args:  cobra.NoArgs,
@@ -66,8 +66,8 @@ func (a *commands) init(prerunner pcmd.PreRunner) {
 	loginCmd.PersistentPreRunE = prerunner.Anonymous()
 	logoutCmd := &cobra.Command{
 		Use:   "logout",
-		Short: fmt.Sprintf("Logout of %s", a.config.APIName()),
-		Long: fmt.Sprintf("Logout of %s", a.config.APIName())+".",
+		Short: fmt.Sprintf("Logout of %s.", a.config.APIName()),
+		Long: fmt.Sprintf("Logout of %s.", a.config.APIName()),
 		Example: ".. include:: ../includes/example-ref.rst",
 		RunE:  a.logout,
 		Args:  cobra.NoArgs,

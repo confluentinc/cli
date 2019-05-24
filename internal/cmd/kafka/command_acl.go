@@ -69,7 +69,7 @@ func (c *aclCommand) init() {
 
 		ccloud kafka acl create --allow --service-account-id 1522 --operation READ --topic '*'
 
-For more information on configuring ACLs, see :ref:`+"`acl-manage` and :ref:`kafka_authorization`"+`.	`,
+For more information on configuring ACLs, see :ref:`+"`acl-manage` and :ref:`kafka_authorization`"+`.`,
 	}
 	cmd.Flags().AddFlagSet(aclConfigFlags())
 	cmd.Flags().SortFlags = false
