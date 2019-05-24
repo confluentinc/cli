@@ -58,7 +58,7 @@ func (c *rolebindingCommand) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List role bindings",
-		Long: "List the role bindings.",
+		Long: "List the role bindings for a particular principal and scope.",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	}
