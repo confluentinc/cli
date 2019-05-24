@@ -22,6 +22,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
+	corev1 "github.com/confluentinc/ccloudapis/core/v1"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 
@@ -101,7 +102,6 @@ func (s *CLITestSuite) Test_Confluent_Help() {
 			tt.name = tt.args
 		}
 		s.T().Run(tt.name, func(t *testing.T) {
-
 			output := runCommand(t, "confluent", []string{}, tt.args, tt.wantErrCode)
 
 			actual := string(output)
@@ -117,6 +117,117 @@ func (s *CLITestSuite) Test_Confluent_Help() {
 			}
 		})
 	}
+}
+
+func (s *CLITestSuite) Test_Ccloud_Errors() {
+	t := s.T()
+	type errorer interface {
+		GetError() *corev1.Error
+	}
+	serveErrors := func(t *testing.T) string {
+		req := require.New(t)
+		write := func(w http.ResponseWriter, resp interface{}) {
+			if r, ok := resp.(errorer); ok {
+				w.WriteHeader(int(r.GetError().Code))
+			}
+			b, err := json.Marshal(resp)
+			req.NoError(err)
+			_, err = io.WriteString(w, string(b))
+			req.NoError(err)
+		}
+		mux := http.NewServeMux()
+		mux.HandleFunc("/api/sessions", func(w http.ResponseWriter, r *http.Request) {
+			b, err := ioutil.ReadAll(r.Body)
+			req.NoError(err)
+			// TODO: mark AuthenticateRequest as not internal so its in CCloudAPIs
+			// https://github.com/confluentinc/cc-structs/blob/ce0ea5a6670d21a4b5c4f4f6ebd3d30b44cbb9f1/kafka/flow/v1/flow.proto#L41
+			auth := &struct {
+				Email string
+				Password string
+			}{}
+			err = json.Unmarshal(b, auth)
+			req.NoError(err)
+			switch auth.Email {
+			case "incorrect@user.com":
+				w.WriteHeader(http.StatusForbidden)
+			case "expired@user.com":
+				http.SetCookie(w, &http.Cookie{Name: "auth_token", Value: "expired"})
+			case "malformed@user.com":
+				http.SetCookie(w, &http.Cookie{Name: "auth_token", Value: "malformed"})
+			case "invalid@user.com":
+				http.SetCookie(w, &http.Cookie{Name: "auth_token", Value: "invalid"})
+			default:
+				http.SetCookie(w, &http.Cookie{Name: "auth_token", Value: "good"})
+			}
+		})
+		mux.HandleFunc("/api/me", func(w http.ResponseWriter, r *http.Request) {
+			b, err := json.Marshal(&orgv1.GetUserReply{
+				User: &orgv1.User{
+					Id:        23,
+					Email:     "cody@confluent.io",
+					FirstName: "Cody",
+				},
+				Accounts: []*orgv1.Account{{Id: "a-595", Name: "default"}},
+			})
+			req.NoError(err)
+			_, err = io.WriteString(w, string(b))
+			req.NoError(err)
+		})
+		mux.HandleFunc("/api/clusters", func(w http.ResponseWriter, r *http.Request) {
+			switch r.Header.Get("Authorization") {
+			// TODO: these assume the upstream doesn't change its error responses. Fragile, fragile, fragile. :(
+			// https://github.com/confluentinc/cc-auth-service/blob/06db0bebb13fb64c9bc3c6e2cf0b67709b966632/jwt/token.go#L23
+			case "Bearer expired":
+				write(w, &kafkav1.GetKafkaClustersReply{Error: &corev1.Error{Message: "token is expired", Code: http.StatusUnauthorized}})
+			case "Bearer malformed":
+				write(w, &kafkav1.GetKafkaClustersReply{Error: &corev1.Error{Message: "malformed token", Code: http.StatusBadRequest}})
+			case "Bearer invalid":
+				// TODO: The response for an invalid token should be 4xx, not 500 (e.g., if you take a working token from devel and try in stag)
+				write(w, &kafkav1.GetKafkaClustersReply{Error: &corev1.Error{Message: "Token parsing error: crypto/rsa: verification error", Code: http.StatusInternalServerError}})
+			default:
+				req.Fail("reached the unreachable", "auth=%s", r.Header.Get("Authorization"))
+			}
+		})
+		server := httptest.NewServer(mux)
+		return server.URL
+	}
+
+	t.Run("invalid user or pass", func(tt *testing.T) {
+		loginURL := serveErrors(tt)
+		env := []string{"XX_CCLOUD_EMAIL=incorrect@user.com", "XX_CCLOUD_PASSWORD=pass1"}
+		output := runCommand(tt, "ccloud", env, "login --url "+loginURL, 1)
+		require.Equal(tt, "Error: You have entered an incorrect username or password. Please try again.\n", output)
+	})
+
+	t.Run("expired token", func(tt *testing.T) {
+		loginURL := serveErrors(tt)
+		env := []string{"XX_CCLOUD_EMAIL=expired@user.com", "XX_CCLOUD_PASSWORD=pass1"}
+		output := runCommand(tt, "ccloud", env, "login --url "+loginURL, 1)
+		require.Equal(tt, "Logged in as expired@user.com\nUsing environment a-595 (\"default\")\n", output)
+
+		output = runCommand(t, "ccloud", []string{}, "kafka cluster list", 1)
+		require.Equal(tt, "Error: Your access to Confluent Cloud has expired. Please login again.\n", output)
+	})
+
+	t.Run("malformed token", func(tt *testing.T) {
+		loginURL := serveErrors(tt)
+		env := []string{"XX_CCLOUD_EMAIL=malformed@user.com", "XX_CCLOUD_PASSWORD=pass1"}
+		output := runCommand(tt, "ccloud", env, "login --url "+loginURL, 1)
+		require.Equal(tt, "Logged in as malformed@user.com\nUsing environment a-595 (\"default\")\n", output)
+
+		output = runCommand(t, "ccloud", []string{}, "kafka cluster list", 1)
+		require.Equal(tt, "Error: Your auth token has been corrupted. Please login again.\n", output)
+	})
+
+	t.Run("invalid jwt", func(tt *testing.T) {
+		loginURL := serveErrors(tt)
+		env := []string{"XX_CCLOUD_EMAIL=invalid@user.com", "XX_CCLOUD_PASSWORD=pass1"}
+		output := runCommand(tt, "ccloud", env, "login --url "+loginURL, 1)
+		require.Equal(tt, "Logged in as invalid@user.com\nUsing environment a-595 (\"default\")\n", output)
+
+		output = runCommand(t, "ccloud", []string{}, "kafka cluster list", 1)
+		require.Equal(tt, "Error: Your auth token has been corrupted. Please login again.\n", output)
+	})
 }
 
 func (s *CLITestSuite) Test_Ccloud_Help() {

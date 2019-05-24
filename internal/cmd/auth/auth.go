@@ -87,10 +87,6 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 
 	token, err := client.Auth.Login(context.Background(), email, password)
 	if err != nil {
-		err = errors.ConvertAPIError(err)
-		if err == errors.ErrUnauthorized { // special case for login failure
-			err = errors.ErrIncorrectAuth
-		}
 		return errors.HandleCommon(err, cmd)
 	}
 	a.config.AuthToken = token
@@ -98,7 +94,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	client = a.jwtHTTPClientFactory(context.Background(), a.config.AuthToken, a.config.AuthURL, a.config.Logger)
 	user, err := client.Auth.User(context.Background())
 	if err != nil {
-		return errors.HandleCommon(errors.ConvertAPIError(err), cmd)
+		return errors.HandleCommon(err, cmd)
 	}
 
 	if len(user.Accounts) == 0 {
