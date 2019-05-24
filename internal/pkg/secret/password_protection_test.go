@@ -135,20 +135,17 @@ func TestPasswordProtectionSuite_EncryptConfigFileSecrets(t *testing.T) {
 			wantErr: false,
 		},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			logger := log.New()
 			_ = os.MkdirAll(tt.args.secureDir, os.ModePerm)
 			plugin := NewPasswordProtectionPlugin(logger)
-
 			if tt.args.setMEK {
 				err := createMasterKey(tt.args.masterKeyPassphrase, plugin)
 				if err != nil {
 					t.Fail()
 				}
 			}
-
 			if tt.args.createConfig {
 				err := createNewConfigFile(tt.args.configFilePath, tt.args.contents)
 				if err != nil {
@@ -272,7 +269,6 @@ func TestPasswordProtectionSuite_DecryptConfigFileSecrets(t *testing.T) {
 			}
 
 			err = plugin.EncryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.remoteSecureConfigPath, "")
-
 			if err != nil {
 				t.Fail()
 			}
@@ -299,7 +295,6 @@ func TestPasswordProtectionSuite_DecryptConfigFileSecrets(t *testing.T) {
 			}
 
 			err = validateUsingDecryption(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.outputConfigPath, tt.args.contents, plugin)
-
 			if (err != nil) != tt.wantErr {
 				t.Fail()
 			}
@@ -724,7 +719,7 @@ func TestPasswordProtectionSuite_RotateMasterKey(t *testing.T) {
 			if (err != nil) != tt.wantErr {
 				t.Fail()
 			}
-
+      
 			if !tt.wantErr {
 
 				os.Setenv(CONFLUENT_KEY_ENVVAR, newKey)

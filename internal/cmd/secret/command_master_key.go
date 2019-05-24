@@ -3,7 +3,7 @@ package secret
 import (
 	"fmt"
 	"os"
-
+  
 	"github.com/confluentinc/go-printer"
 	"github.com/spf13/cobra"
 
@@ -22,11 +22,11 @@ type masterKeyCommand struct {
 }
 
 // NewMasterKeyCommand returns the Cobra command for managing master key.
-func NewMasterKeyCommand(config *config.Config, prompt pcmd.Prompt, resolv pcmd.FlagResolver, plugin secureplugin.PasswordProtection) *cobra.Command {
+func NewMasterKeyCommand(config *config.Config, prompt pcmd.Prompt, plugin secureplugin.PasswordProtection) *cobra.Command {
 	cmd := &masterKeyCommand{
 		Command: &cobra.Command{
 			Use:   "master-key",
-			Short: "Manage master key",
+			Short: "Manage the master key for Confluent Platform.",
 		},
 		config: config,
 		prompt: prompt,
@@ -40,15 +40,16 @@ func NewMasterKeyCommand(config *config.Config, prompt pcmd.Prompt, resolv pcmd.
 func (c *masterKeyCommand) init() {
 	createCmd := &cobra.Command{
 		Use:   "create",
-		Short: "Create a master key",
+		Short: "Create a master key for Confluent Platform.",
+		Long: `This command generates a master key. This key will be used for encryption and decryption of configuration value.`,
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
 	}
-	createCmd.Flags().String("passphrase", "", "Key passphrase; use - to pipe from stdin or @file.txt to read from file")
+	createCmd.Flags().String("passphrase", "", `The key passphrase. To pipe from stdin use "-", e.g. "--passphrase -";
+to read from a file use "@<path-to-file>", e.g. "--passphrase @/User/bob/secret.properties".`)
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 }
-
 
 func (c *masterKeyCommand) create(cmd *cobra.Command, args []string) error {
 	passphraseSource, err := cmd.Flags().GetString("passphrase")
@@ -75,7 +76,7 @@ func (c *masterKeyCommand) create(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	pcmd.Println(cmd, "Save the Master Key. It is not retrievable later.")
+	pcmd.Println(cmd, "Save the master key. It cannot be retrieved later.")
 	_ = printer.RenderTableOut(&struct{MasterKey string}{MasterKey: masterKey}, []string{"MasterKey"}, map[string]string{"MasterKey": "Master Key"}, os.Stdout)
 	return nil
 }

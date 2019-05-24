@@ -44,5 +44,4 @@ const (
 /* Password Protection File Metadata */
 const (
 	CONFLUENT_KEY_ENVVAR = "CONFLUENT_SECURITY_MASTER_KEY"
-
 )

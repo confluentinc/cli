@@ -2,7 +2,7 @@ package secret
 
 import (
 	"fmt"
-
+  
 	"os"
 	"regexp"
 	"strconv"
@@ -423,7 +423,6 @@ func (c *PasswordProtectionSuite) UpdateEncryptedPasswords(configFilePath string
 }
 
 func (c *PasswordProtectionSuite) RemoveEncryptedPasswords(configFilePath string, localSecureConfigPath string, removeConfigs string) error {
-
 	configProps, err := LoadPropertiesFile(configFilePath)
 	if err != nil {
 		return err
@@ -450,7 +449,6 @@ func (c *PasswordProtectionSuite) RemoveEncryptedPasswords(configFilePath string
 		if !ok {
 			return fmt.Errorf("Config " + key + " not present in secrets file")
 		}
-
 		configProps.Delete(key)
 		secureConfigProps.Delete(pathKey)
 	}
@@ -461,7 +459,6 @@ func (c *PasswordProtectionSuite) RemoveEncryptedPasswords(configFilePath string
 	}
 
 	err = WritePropertiesFile(localSecureConfigPath, secureConfigProps)
-
 	return err
 }
 
@@ -592,7 +589,6 @@ func (c *PasswordProtectionSuite) fetchSecureConfigProps(localSecureConfigPath s
 	if err != nil {
 		return nil, nil, err
 	}
-
 	return secureConfigProps, cipherSuites, err
 }
 
