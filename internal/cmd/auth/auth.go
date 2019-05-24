@@ -139,7 +139,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 
 	err = a.config.Save()
 	if err != nil {
-		return errors.Wrap(err, "unable to save user auth")
+		return errors.Wrap(err, "Unable to save user authentication.")
 	}
 	pcmd.Println(cmd, "Logged in as", email)
 	pcmd.Print(cmd, "Using environment ", a.config.Auth.Account.Id,
@@ -168,7 +168,7 @@ func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
 
 	err = a.config.Save()
 	if err != nil {
-		return errors.Wrap(err, "unable to save user auth")
+		return errors.Wrap(err, "Unable to save user authentication.")
 	}
 
 	pcmd.Println(cmd, "Logged in as", email)

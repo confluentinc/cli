@@ -21,7 +21,8 @@ func New(config *config.Config, ch *pcmd.ConfigHelper, version *version.Version,
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:   "iam",
-			Short: "Manage RBAC/IAM permissions",
+			Short: "Manage RBAC and IAM permissions",
+			Long: "Manage Role Based Access (RBAC) and Identity and Access Management (IAM) permissions.",
 		},
 		config: config,
 		ch:     ch,
