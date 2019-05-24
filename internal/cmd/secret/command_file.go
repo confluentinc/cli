@@ -27,7 +27,7 @@ func NewFileCommand(config *config.Config, prompt pcmd.Prompt, resolv pcmd.FlagR
 	cmd := &secureFileCommand{
 		Command: &cobra.Command{
 			Use:   "file",
-			Short: "Secure secrets in a configuration properties file. ",
+			Short: "Secure secrets in a configuration properties file.",
 		},
 		config: config,
 		plugin: plugin,
