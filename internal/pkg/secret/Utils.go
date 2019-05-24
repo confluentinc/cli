@@ -18,7 +18,6 @@ func ParseCipherValue(cipher string) (string, string, string) {
 	data := findMatchTrim(cipher, "data\\:(.*?)\\,", "data:", ",")
 	iv := findMatchTrim(cipher, "iv\\:(.*?)\\,", "iv:", ",")
 	algo := findMatchTrim(cipher, "ENC\\[(.*?)\\,", "ENC[", ",")
-
 	return data, iv, algo
 }
 
@@ -29,18 +28,20 @@ func findMatchTrim(original string, pattern string, prefix string, suffix string
 	if len(match) != 0 {
 		substring = strings.TrimPrefix(strings.TrimSuffix(match[0], suffix), prefix)
 	}
-
 	return substring
 }
 
 func WritePropertiesFile(path string, property *properties.Properties) error {
 	buf := new(bytes.Buffer)
-	_, _ = property.WriteComment(buf, "# ", properties.ISO_8859_1)
-	err := ioutil.WriteFile(path, buf.Bytes(), 0644)
+	_, err := property.WriteComment(buf, "# ", properties.ISO_8859_1)
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(path, buf.Bytes(), 0644)
 	return err
 }
 
-func isPathValid(path string) bool {
+func IsPathValid(path string) bool {
 	if path == "" {
 		return false
 	}
@@ -52,10 +53,9 @@ func isPathValid(path string) bool {
 }
 
 func LoadPropertiesFile(path string) (*properties.Properties, error) {
-	if !isPathValid(path) {
+	if !IsPathValid(path) {
 		return properties.NewProperties(), fmt.Errorf("Invalid file path.")
 	}
-
 	property := properties.MustLoadFile(path, properties.ISO_8859_1)
 	return property, nil
 }

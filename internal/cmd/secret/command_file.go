@@ -139,7 +139,7 @@ func (c *secureFileCommand) init() {
 		Args:  cobra.NoArgs,
 	}
 
-	rotateMasterKeyCmd.Flags().String("local-secrets-file", "", "Local Encrypted Config Properties File Path")
+	rotateMasterKeyCmd.Flags().String("local-secrets-file", "", "Local encrypted config properties file path")
 	check(rotateMasterKeyCmd.MarkFlagRequired("local-secrets-file"))
 	rotateMasterKeyCmd.Flags().String("passphrases", "", "Comma separated old passphrase and new passphrase; use - to pipe from stdin or @file.txt to read from file")
 	rotateMasterKeyCmd.Flags().SortFlags = false
@@ -152,7 +152,7 @@ func (c *secureFileCommand) init() {
 		Args:  cobra.NoArgs,
 	}
 
-	rotateDataKeyCmd.Flags().String("local-secrets-file", "", "Local Encrypted Config Properties File Path")
+	rotateDataKeyCmd.Flags().String("local-secrets-file", "", "Local encrypted config properties file path")
 	check(rotateDataKeyCmd.MarkFlagRequired("local-secrets-file"))
 	rotateDataKeyCmd.Flags().String("passphrase", "", "Master key passphrase; use - to pipe from stdin or @file.txt to read from file")
 	check(rotateDataKeyCmd.MarkFlagRequired("passphrase"))

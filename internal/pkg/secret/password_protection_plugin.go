@@ -97,7 +97,7 @@ func (c *PasswordProtectionSuite) generateNewDataKey(masterKey string) (*CipherS
  */
 func (c *PasswordProtectionSuite) EncryptConfigFileSecrets(configFilePath string, localSecureConfigPath string, remoteSecureConfigPath string, encryptConfigKeys string) error {
 	// Check if config file path is valid.
-	if !c.isPathValid(configFilePath) {
+	if !IsPathValid(configFilePath) {
 		return fmt.Errorf("Invalid File Path" + configFilePath)
 	}
 	// Load the configs.
@@ -113,7 +113,10 @@ func (c *PasswordProtectionSuite) EncryptConfigFileSecrets(configFilePath string
 			value, ok := configProps.Get(key)
 			// If key present in config file
 			if ok {
-				_, _, _ = matchProps.Set(key, value)
+				_, _, err = matchProps.Set(key, value)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	} else {
@@ -135,12 +138,12 @@ func (c *PasswordProtectionSuite) EncryptConfigFileSecrets(configFilePath string
  */
 func (c *PasswordProtectionSuite) DecryptConfigFileSecrets(configFilePath string, localSecureConfigPath string, outputFilePath string) error {
 	// Check if config file path is valid
-	if !c.isPathValid(configFilePath) {
+	if !IsPathValid(configFilePath) {
 		return fmt.Errorf("Invalid File Path" + configFilePath)
 	}
 
 	// Check if secure config file path is valid
-	if !c.isPathValid(localSecureConfigPath) {
+	if !IsPathValid(localSecureConfigPath) {
 		return fmt.Errorf("Invalid File Path" + localSecureConfigPath)
 	}
 	// Load the config values.
@@ -178,7 +181,10 @@ func (c *PasswordProtectionSuite) DecryptConfigFileSecrets(configFilePath string
 				if err != nil {
 					return fmt.Errorf("unable to decrypt %s: %s", key, err)
 				}
-				_, _, _ = decryptedSecrets.Set(key, plainSecret)
+				_, _, err = decryptedSecrets.Set(key, plainSecret)
+				if err != nil {
+					return err
+				}
 			} else {
 				return fmt.Errorf("missing config key in secret config file.")
 			}
@@ -265,9 +271,18 @@ func (c *PasswordProtectionSuite) RotateDataKey(masterPassphrase string, localSe
 
 	// Save new DEK and re-encrypted ciphers.
 	now := time.Now()
-	_, _, _ = secureConfigProps.Set(METADATA_KEY_TIMESTAMP, now.String())
-	_, _, _ = secureConfigProps.Set(METADATA_DATA_KEY, wrappedNewDK)
-	_, _, _ = secureConfigProps.Set(METADATA_DEK_SALT, salt)
+	_, _, err = secureConfigProps.Set(METADATA_KEY_TIMESTAMP, now.String())
+	if err != nil {
+		return err
+	}
+	_, _, err = secureConfigProps.Set(METADATA_DATA_KEY, wrappedNewDK)
+	if err != nil {
+		return err
+	}
+	_, _, err = secureConfigProps.Set(METADATA_DEK_SALT, salt)
+	if err != nil {
+		return err
+	}
 	err = WritePropertiesFile(localSecureConfigPath, secureConfigProps)
 	if err != nil {
 		return err
@@ -339,8 +354,14 @@ func (c *PasswordProtectionSuite) RotateMasterKey(oldPassphrase string, newPassp
 
 	// Save DEK
 	now := time.Now()
-	_, _, _ = secureConfigProps.Set(METADATA_KEY_TIMESTAMP, now.String())
-	_, _, _ = secureConfigProps.Set(METADATA_DATA_KEY, newEncodedDataKey)
+	_, _, err = secureConfigProps.Set(METADATA_KEY_TIMESTAMP, now.String())
+	if err != nil {
+		return "", err
+	}
+	_, _, err = secureConfigProps.Set(METADATA_DATA_KEY, newEncodedDataKey)
+	if err != nil {
+		return "", err
+	}
 
 	err = WritePropertiesFile(localSecureConfigPath, secureConfigProps)
 
@@ -481,17 +502,6 @@ func (c *PasswordProtectionSuite) loadCipherSuiteFromSecureProps(secureConfigPro
 	return cipher, nil
 }
 
-func (c *PasswordProtectionSuite) isPathValid(path string) bool {
-	if path == "" {
-		return false
-	}
-
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		return false
-	}
-	return true
-}
-
 func (c *PasswordProtectionSuite) isPasswordEncrypted(config string) bool {
 	regex, _ := regexp.Compile("\\$\\{(.*?):((.*?):)?(.*?)\\}")
 	return regex.MatchString(config)
@@ -506,7 +516,7 @@ func (c *PasswordProtectionSuite) isCipher(config string) bool {
 	return regex.MatchString(config)
 }
 
-func (c *PasswordProtectionSuite) addSecureConfigProviderProperty(property *properties.Properties) *properties.Properties {
+func (c *PasswordProtectionSuite) addSecureConfigProviderProperty(property *properties.Properties) (*properties.Properties, error) {
 	configProviders := property.GetString(CONFIG_PROVIDER_KEY, "")
 	if configProviders == "" {
 		configProviders = SECURE_CONFIG_PROVIDER
@@ -514,9 +524,15 @@ func (c *PasswordProtectionSuite) addSecureConfigProviderProperty(property *prop
 		configProviders = configProviders + "," + SECURE_CONFIG_PROVIDER
 	}
 
-	_, _, _ = property.Set(CONFIG_PROVIDER_KEY, configProviders)
-	_, _, _ = property.Set(SECURE_CONFIG_PROVIDER_CLASS_KEY, SECURE_CONFIG_PROVIDER_CLASS)
-	return property
+	_, _, err := property.Set(CONFIG_PROVIDER_KEY, configProviders)
+	if err != nil {
+		return nil, err
+	}
+	_, _, err = property.Set(SECURE_CONFIG_PROVIDER_CLASS_KEY, SECURE_CONFIG_PROVIDER_CLASS)
+	if err != nil {
+		return nil, err
+	}
+	return property, nil
 }
 
 func (c *PasswordProtectionSuite) unwrapDataKey(key string, engine EncryptionEngine) ([]byte, error) {
@@ -532,7 +548,7 @@ func (c *PasswordProtectionSuite) fetchSecureConfigProps(localSecureConfigPath s
 	secureConfigProps, _ := LoadPropertiesFile(localSecureConfigPath)
 
 	// Check if secure config properties file exists and DEK is generated
-	if c.isPathValid(localSecureConfigPath) {
+	if IsPathValid(localSecureConfigPath) {
 		cipherSuite, err := c.loadCipherSuiteFromSecureProps(secureConfigProps)
 		// Data Key is already created
 		if cipherSuite.EncryptedDataKey != "" {
@@ -545,15 +561,34 @@ func (c *PasswordProtectionSuite) fetchSecureConfigProps(localSecureConfigPath s
 
 	// Add DEK Metadata to secureConfigProps
 	now := time.Now()
-	_, _, _ = secureConfigProps.Set(METADATA_KEY_TIMESTAMP, now.String())
-
-	_, _, _ = secureConfigProps.Set(METADATA_KEY_ENVVAR, CONFLUENT_KEY_ENVVAR)
-
-	_, _, _ = secureConfigProps.Set(METADATA_KEY_LENGTH, strconv.Itoa(cipherSuites.KeyLength))
-	_, _, _ = secureConfigProps.Set(METADATA_KEY_ITERATIONS, strconv.Itoa(cipherSuites.Iterations))
-	_, _, _ = secureConfigProps.Set(METADATA_DEK_SALT, cipherSuites.SaltDEK)
-	_, _, _ = secureConfigProps.Set(METADATA_DATA_KEY, cipherSuites.EncryptedDataKey)
-	_, _, _ = secureConfigProps.Set(METADATA_MEK_SALT, METADATA_KEY_DEFAULT_SALT)
+	_, _, err = secureConfigProps.Set(METADATA_KEY_TIMESTAMP, now.String())
+	if err != nil {
+		return nil, nil, err
+	}
+	_, _, err = secureConfigProps.Set(METADATA_KEY_ENVVAR, CONFLUENT_KEY_ENVVAR)
+	if err != nil {
+		return nil, nil, err
+	}
+	_, _, err = secureConfigProps.Set(METADATA_KEY_LENGTH, strconv.Itoa(cipherSuites.KeyLength))
+	if err != nil {
+		return nil, nil, err
+	}
+	_, _, err = secureConfigProps.Set(METADATA_KEY_ITERATIONS, strconv.Itoa(cipherSuites.Iterations))
+	if err != nil {
+		return nil, nil, err
+	}
+	_, _, err = secureConfigProps.Set(METADATA_DEK_SALT, cipherSuites.SaltDEK)
+	if err != nil {
+		return nil, nil, err
+	}
+	_, _, err = secureConfigProps.Set(METADATA_DATA_KEY, cipherSuites.EncryptedDataKey)
+	if err != nil {
+		return nil, nil, err
+	}
+	_, _, err = secureConfigProps.Set(METADATA_MEK_SALT, METADATA_KEY_DEFAULT_SALT)
+	if err != nil {
+		return nil, nil, err
+	}
 
 	return secureConfigProps, cipherSuites, err
 }
@@ -594,7 +629,10 @@ func (c *PasswordProtectionSuite) encryptConfigValues(matchProps *properties.Pro
 			// Generate tuple ${providerName:[path:]key}
 			pathKey := configFilePath + ":" + key
 			newConfigVal := GenerateConfigValue(pathKey, remoteConfigFilePath)
-			_, _, _ = configProps.Set(key, newConfigVal)
+			_, _, err = configProps.Set(key, newConfigVal)
+			if err != nil {
+				return err
+			}
 			cipher, iv, err := engine.AESEncrypt(value, dataKey)
 
 			if err != nil {
@@ -609,7 +647,10 @@ func (c *PasswordProtectionSuite) encryptConfigValues(matchProps *properties.Pro
 
 	}
 
-	configProps = c.addSecureConfigProviderProperty(configProps)
+	configProps, err = c.addSecureConfigProviderProperty(configProps)
+	if err != nil {
+		return err
+	}
 
 	err = WritePropertiesFile(configFilePath, configProps)
 	if err != nil {

@@ -104,10 +104,10 @@ func (c *EncryptEngineSuite) UnWrapDataKey(dataKey string, iv string, algo strin
 }
 
 func (c *EncryptEngineSuite) AESEncrypt(plainText string, key []byte) (string, string, error) {
-	return c.encryption(plainText, key)
+	return c.encrypt(plainText, key)
 }
 
-func (c *EncryptEngineSuite) encryption(src string, key []byte) (data string, ivStr string, err error) {
+func (c *EncryptEngineSuite) encrypt(src string, key []byte) (data string, ivStr string, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			switch x := r.(type) {
@@ -149,7 +149,7 @@ func (c *EncryptEngineSuite) AESDecrypt(cipher string, iv string, algo string, k
 	if err != nil {
 		return "", err
 	}
-	plainText, err := c.decryption(cipherBytes, key, ivBytes)
+	plainText, err := c.decrypt(cipherBytes, key, ivBytes)
 	if err != nil {
 		return "", err
 	}
@@ -162,7 +162,7 @@ func (c *EncryptEngineSuite) generateEncryptionKey(keyPhrase string, salt string
 	return key, nil
 }
 
-func (c *EncryptEngineSuite) decryption(crypt []byte, key []byte, iv []byte) (plain []byte, err error) {
+func (c *EncryptEngineSuite) decrypt(crypt []byte, key []byte, iv []byte) (plain []byte, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			switch x := r.(type) {
