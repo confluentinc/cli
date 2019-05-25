@@ -74,25 +74,27 @@ var rules = []linter.Rule{
 	linter.RequireFlagSort(false),
 	linter.RequireLowerCase("Use"),
 	linter.RequireSingular("Use"),
-	linter.RequireLengthBetween("Short", 13, 55),
+	linter.Filter(linter.RequireLengthBetween("Short", 13, 55),
+		linter.ExcludeCommandContains("secret"),),
 	linter.RequireStartWithCapital("Short"),
 	//linter.RequireNotEndWithPunctuation("Short"),
 	linter.RequireCapitalizeProperNouns("Short", properNouns),
 	linter.RequireStartWithCapital("Long"),
 	linter.RequireEndWithPunctuation("Long", true),
 	linter.RequireCapitalizeProperNouns("Long", properNouns),
-	linter.RequireNotTitleCase("Short", properNouns),
+	linter.Filter(linter.RequireNotTitleCase("Short", properNouns),
+		linter.ExcludeCommandContains("secret"),),
 	linter.RequireRealWords("Use", '-'),
 }
 
 var flagRules = []linter.FlagRule{
 	linter.FlagFilter(linter.RequireFlagNameLength(2, 16),
-		linter.ExcludeFlag("service-account-id", "replication-factor", "local-secrets-file", "remote-secrets-file",), ),
+		linter.ExcludeFlag("service-account-id", "replication-factor", "local-secrets-file", "remote-secrets-file", "rotate-master-key"), ),
 	linter.RequireFlagStartWithCapital,
 	//linter.RequireFlagNotEndWithPunctuation,
 	linter.RequireFlagCharacters('-'),
 	linter.FlagFilter(linter.RequireFlagDelimiter('-', 1),
-		linter.ExcludeFlag("service-account-id", "local-secrets-file", "remote-secrets-file", )),
+		linter.ExcludeFlag("service-account-id", "local-secrets-file", "remote-secrets-file", "rotate-master-key", "rotate-data-key")),
 	linter.RequireFlagRealWords('-'),
 }
 

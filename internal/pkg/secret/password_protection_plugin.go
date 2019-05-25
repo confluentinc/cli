@@ -81,8 +81,8 @@ func (c *PasswordProtectionSuite) generateNewDataKey(masterKey string) (*CipherS
 	if err != nil {
 		return nil, err
 	}
-	cipherSuite.SetDataKey(encodedDataKey)
-	cipherSuite.SetSaltDEK(salt)
+	cipherSuite.EncryptedDataKey = encodedDataKey
+	cipherSuite.SaltDEK = salt
 
 	return cipherSuite, err
 }

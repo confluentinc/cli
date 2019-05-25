@@ -1,12 +1,5 @@
 package secret
 
-type Cipher interface {
-	SetIterations(iterations int)
-	SetKeyLength(length int)
-	SetMasterKeyPath(path string)
-	SetSalt(salt string)
-}
-
 type CipherSuite struct {
 	Iterations       int
 	KeyLength        int
@@ -28,24 +21,4 @@ func NewDefaultCipherSuite() *CipherSuite {
 		SaltDEK:          "",
 		EncryptionAlgo:   METADATA_ENC_ALGORITHM,
 		EncryptedDataKey: ""}
-}
-
-func (c *CipherSuite) SetIterations(iterations int) {
-	c.Iterations = iterations
-}
-
-func (c *CipherSuite) SetKeyLength(length int) {
-	c.KeyLength = length
-}
-
-func (c *CipherSuite) SetSaltDEK(salt string) {
-	c.SaltDEK = salt
-}
-
-func (c *CipherSuite) SetSaltMEK(salt string) {
-	c.SaltDEK = salt
-}
-
-func (c *CipherSuite) SetDataKey(key string) {
-	c.EncryptedDataKey = key
 }

@@ -4,9 +4,9 @@ package secret
 const (
 	CONFIG_PROVIDER_KEY = "config.providers"
 
-	SECURE_CONFIG_PROVIDER_CLASS_KEY = "config.providers.securePass.class"
+	SECURE_CONFIG_PROVIDER_CLASS_KEY = "config.providers.securepass.class"
 
-	SECURE_CONFIG_PROVIDER = "securePass"
+	SECURE_CONFIG_PROVIDER = "securepass"
 
 	SECURE_CONFIG_PROVIDER_CLASS = "io.confluent.kafka.security.config.provider.SecurePassConfigProvider"
 )

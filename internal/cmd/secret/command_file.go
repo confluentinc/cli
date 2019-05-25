@@ -48,13 +48,13 @@ if a master key has not already been set using the "master-key create" command.`
 		Args:  cobra.NoArgs,
 	}
 	encryptCmd.Flags().String("config-file", "", "Path to the configuration properties file.")
-  check(encryptCmd.MarkFlagRequired("config-file"))
+    check(encryptCmd.MarkFlagRequired("config-file"))
 
 	encryptCmd.Flags().String("local-secrets-file", "", "Path to the local encrypted configuration properties file.")
-  check(encryptCmd.MarkFlagRequired("local-secrets-file"))
+    check(encryptCmd.MarkFlagRequired("local-secrets-file"))
 
 	encryptCmd.Flags().String("remote-secrets-file", "", "Path to the remote encrypted configuration properties file.")
-  check(encryptCmd.MarkFlagRequired("remote-secrets-file"))
+    check(encryptCmd.MarkFlagRequired("remote-secrets-file"))
 	encryptCmd.Flags().String("config", "", "List of configuration keys.")
 	encryptCmd.Flags().SortFlags = false
 	c.AddCommand(encryptCmd)
@@ -68,13 +68,13 @@ if a master key has not already been set using the "master-key create" command.`
 		Args:  cobra.NoArgs,
 	}
 	decryptCmd.Flags().String("config-file", "", "Path to the configuration properties file.")
-  check(decryptCmd.MarkFlagRequired("config-file"))
+    check(decryptCmd.MarkFlagRequired("config-file"))
 
 	decryptCmd.Flags().String("local-secrets-file", "", "Path to the local encrypted configuration properties file.")
-  check(decryptCmd.MarkFlagRequired("local-secrets-file"))
+    check(decryptCmd.MarkFlagRequired("local-secrets-file"))
 
 	decryptCmd.Flags().String("output-file", "", "Output file path.")
-  check(decryptCmd.MarkFlagRequired("output-file"))
+    check(decryptCmd.MarkFlagRequired("output-file"))
 	decryptCmd.Flags().SortFlags = false
 	c.AddCommand(decryptCmd)
 
@@ -87,16 +87,16 @@ command returns a failure if a master key has not already been set using the "ma
 		Args:  cobra.NoArgs,
 	}
 	addCmd.Flags().String("config-file", "", "Path to the configuration properties file.")
-  check(addCmd.MarkFlagRequired("config-file"))
+    check(addCmd.MarkFlagRequired("config-file"))
 
 	addCmd.Flags().String("local-secrets-file", "", "Path to the local encrypted configuration properties file.")
-  check(addCmd.MarkFlagRequired("local-secrets-file"))
+    check(addCmd.MarkFlagRequired("local-secrets-file"))
 
 	addCmd.Flags().String("remote-secrets-file", "", "Path to the remote encrypted configuration properties file.")
-  check(addCmd.MarkFlagRequired("remote-secrets-file"))
+    check(addCmd.MarkFlagRequired("remote-secrets-file"))
 
 	addCmd.Flags().String("config", "", "List of configuration properties.")
-  check(addCmd.MarkFlagRequired("config"))
+    check(addCmd.MarkFlagRequired("config"))
 	addCmd.Flags().SortFlags = false
 	c.AddCommand(addCmd)
 
@@ -107,16 +107,16 @@ command returns a failure if a master key has not already been set using the "ma
 		Args:  cobra.NoArgs,
 	}
 	updateCmd.Flags().String("config-file", "", "Path to the configuration properties file.")
-  check(updateCmd.MarkFlagRequired("config-file"))
+    check(updateCmd.MarkFlagRequired("config-file"))
 
 	updateCmd.Flags().String("local-secrets-file", "", "Path to the local encrypted configuration properties file.")
-  check(updateCmd.MarkFlagRequired("local-secrets-file"))
+    check(updateCmd.MarkFlagRequired("local-secrets-file"))
 
 	updateCmd.Flags().String("remote-secrets-file", "", "Path to the remote encrypted configuration properties file.")
-  check(updateCmd.MarkFlagRequired("remote-secrets-file"))
+    check(updateCmd.MarkFlagRequired("remote-secrets-file"))
 
 	updateCmd.Flags().String("config", "", "List of configuration properties.")
-  check(updateCmd.MarkFlagRequired("config"))
+    check(updateCmd.MarkFlagRequired("config"))
 	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
 
@@ -127,47 +127,34 @@ command returns a failure if a master key has not already been set using the "ma
 		Args:  cobra.NoArgs,
 	}
 	removeCmd.Flags().String("config-file", "", "Path to the configuration properties file.")
-  check(removeCmd.MarkFlagRequired("config-file"))
+    check(removeCmd.MarkFlagRequired("config-file"))
 
 	removeCmd.Flags().String("local-secrets-file", "", "Path to the local encrypted configuration properties file.")
-  check(removeCmd.MarkFlagRequired("local-secrets-file"))
+    check(removeCmd.MarkFlagRequired("local-secrets-file"))
 
 	removeCmd.Flags().String("config", "", "List of configuration keys.")
-  check(removeCmd.MarkFlagRequired("config"))
+    check(removeCmd.MarkFlagRequired("config"))
 	removeCmd.Flags().SortFlags = false
 	c.AddCommand(removeCmd)
 
-	rotateMasterKeyCmd := &cobra.Command{
-		Use:   "re-encrypt",
-		Short: "Rotate the master key.",
-		Long: `This command generates a new master key and re-encrypts the file with the new master key. The new master
-key is stored in an environment variable.`,
-		RunE:  c.rotateMasterKey,
-		Args:  cobra.NoArgs,
-	}
-
-	rotateMasterKeyCmd.Flags().String("local-secrets-file", "", "Path to the encrypted configuration properties file. ")
-  check(rotateMasterKeyCmd.MarkFlagRequired("local-secrets-file"))
-	rotateMasterKeyCmd.Flags().String("passphrases", "", "Comma separated old passphrase and new passphrase; use - to pipe from stdin or @file.txt to read from file")
-	rotateMasterKeyCmd.Flags().SortFlags = false
-	c.AddCommand(rotateMasterKeyCmd)
-
-	rotateDataKeyCmd := &cobra.Command{
+	rotateKeyCmd := &cobra.Command{
 		Use:   "rotate",
-		Short: "Rotate data key.",
-		Long: `This command generates a new data key and re-encrypts the file with the new data key. The new data
-key is stored in an environment variable.`,
-		RunE:  c.rotateDataKey,
+		Short: "Rotate master key or data key.",
+		Long: `Based on the flag set this command rotates either the master key or data key. --rotate-master-key: Generates a new master key and re-encrypts the  with the new master key. The new master
+key is stored in an environment variable.
+rotate-data-key: Generates a new data key and re-encrypts the file with the new data key.`,
+		RunE:  c.rotate,
 		Args:  cobra.NoArgs,
 	}
 
-	rotateDataKeyCmd.Flags().String("local-secrets-file", "", "Path to the encrypted configuration properties file. ")
-  check(rotateDataKeyCmd.MarkFlagRequired("local-secrets-file"))
-	rotateDataKeyCmd.Flags().String("passphrase", "", "Master key passphrase; use - to pipe from stdin or @file.txt to read from file")
-	check(rotateDataKeyCmd.MarkFlagRequired("passphrase"))
-	rotateDataKeyCmd.Flags().SortFlags = false
-	c.AddCommand(rotateDataKeyCmd)
-}
+	rotateKeyCmd.Flags().Bool("rotate-master-key", false, "Rotate Master Key")
+	rotateKeyCmd.Flags().Bool("rotate-data-key", false, "Rotate Data Key")
+	rotateKeyCmd.Flags().String("local-secrets-file", "", "Path to the encrypted configuration properties file. ")
+    check(rotateKeyCmd.MarkFlagRequired("local-secrets-file"))
+	rotateKeyCmd.Flags().String("passphrase", "", "Master key passphrase; use - to pipe from stdin or @file.txt to read from file")
+	rotateKeyCmd.Flags().SortFlags = false
+	c.AddCommand(rotateKeyCmd)
+	}
 
 func (c *secureFileCommand) encrypt(cmd *cobra.Command, args []string) error {
 	configSource, err := cmd.Flags().GetString("config")
@@ -316,8 +303,8 @@ func (c *secureFileCommand) remove(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *secureFileCommand) rotateMasterKey(cmd *cobra.Command, args []string) error {
-	passphrasesSource, err := cmd.Flags().GetString("passphrases")
+func (c *secureFileCommand) rotate(cmd *cobra.Command, args []string) error {
+	passphrasesSource, err := cmd.Flags().GetString("passphrase")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -327,45 +314,39 @@ func (c *secureFileCommand) rotateMasterKey(cmd *cobra.Command, args []string) e
 		return errors.HandleCommon(err, cmd)
 	}
 
-	oldPassphrase, newPassphrase, err := c.getOldPassphrase(passphrases)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
 	localSecretsPath, err := cmd.Flags().GetString("local-secrets-file")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	masterKey, err := c.plugin.RotateMasterKey(oldPassphrase, newPassphrase, localSecretsPath)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-  
-	pcmd.Println(cmd, "Save the Master Key. It is not retrievable later.")
-	_ = printer.RenderTableOut(&struct{MasterKey string}{MasterKey: masterKey}, []string{"MasterKey"}, map[string]string{"MasterKey": "Master Key"}, os.Stdout)
-	return nil
-}
-
-func (c *secureFileCommand) rotateDataKey(cmd *cobra.Command, args []string) error {
-	passphraseSource, err := cmd.Flags().GetString("passphrase")
+	rotateDEK, err := cmd.Flags().GetBool("rotate-data-key")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	passphrase, err := c.getConfigs(cmd, passphraseSource, "passphrase")
+	rotateMEK, err := cmd.Flags().GetBool("rotate-master-key")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	localSecretsPath, err := cmd.Flags().GetString("local-secrets-file")
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
+	if rotateMEK {
+		oldPassphrase, newPassphrase, err := c.getOldPassphrase(passphrases)
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
 
-	err = c.plugin.RotateDataKey(passphrase, localSecretsPath)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		masterKey, err := c.plugin.RotateMasterKey(oldPassphrase, newPassphrase, localSecretsPath)
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+
+		pcmd.Println(cmd, "Save the Master Key. It is not retrievable later.")
+		_ = printer.RenderTableOut(&struct{ MasterKey string }{MasterKey: masterKey}, []string{"MasterKey"}, map[string]string{"MasterKey": "Master Key"}, os.Stdout)
+	} else if rotateDEK {
+		err = c.plugin.RotateDataKey(passphrases, localSecretsPath)
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
 	}
 
 	return nil

@@ -11,7 +11,7 @@ import (
 )
 
 func GenerateConfigValue(key string, path string) string {
-	return "${securePass:" + path + ":" + key + "}"
+	return "${securepass:" + path + ":" + key + "}"
 }
 
 func ParseCipherValue(cipher string) (string, string, string) {
