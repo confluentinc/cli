@@ -10,7 +10,7 @@ Available Commands:
   login       Login to Confluent Platform
   logout      Logout of Confluent Platform
   update      Update confluent
-  version     Print the ccloud version
+  version     Print the confluent CLI version
 
 Flags:
   -h, --help            help for confluent
