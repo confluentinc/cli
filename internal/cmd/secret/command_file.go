@@ -1,7 +1,6 @@
 package secret
 
 import (
-	"bufio"
 	"fmt"
 	"github.com/confluentinc/go-printer"
 	"github.com/confluentinc/cli/internal/pkg/config"
@@ -9,7 +8,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/secret"
 	"github.com/spf13/cobra"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"io/ioutil"
 	"os"
 	"strings"
 )
@@ -341,7 +339,10 @@ func (c *secureFileCommand) rotate(cmd *cobra.Command, args []string) error {
 		}
 
 		pcmd.Println(cmd, "Save the Master Key. It is not retrievable later.")
-		_ = printer.RenderTableOut(&struct{ MasterKey string }{MasterKey: masterKey}, []string{"MasterKey"}, map[string]string{"MasterKey": "Master Key"}, os.Stdout)
+		err = printer.RenderTableOut(&struct{ MasterKey string }{MasterKey: masterKey}, []string{"MasterKey"}, map[string]string{"MasterKey": "Master Key"}, os.Stdout)
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
 	} else if rotateDEK {
 		err = c.plugin.RotateDataKey(passphrases, localSecretsPath)
 		if err != nil {
@@ -359,31 +360,6 @@ func (c *secureFileCommand) getOldPassphrase(passphrases string) (string, string
 	}
 
 	return passphrasesArr[0], passphrasesArr[1], nil
-}
-
-func (c *secureFileCommand) getMasterKeyPassphrase(inputType string) (string, error) {
-	passphrase := ""
-	if inputType == "" {
-		return passphrase, fmt.Errorf("Enter the master key passphrase.")
-	}
-
-	if inputType == "-" {
-		reader := bufio.NewReader(os.Stdin)
-		passphrase, err := reader.ReadString('\n')
-		return passphrase, err
-	}
-
-	if strings.HasPrefix(inputType, "@") {
-		filePath := inputType[1:]
-		data, err := ioutil.ReadFile(filePath)
-		if err != nil {
-			return passphrase, err
-		}
-		passphrase = string(data)
-		return passphrase, err
-	}
-
-	return "", fmt.Errorf("Invalid master key passphrase.")
 }
 
 func (c *secureFileCommand) getConfigs(cmd *cobra.Command, configSource string, inputType string) (string, error) {

@@ -138,7 +138,10 @@ func TestPasswordProtectionSuite_EncryptConfigFileSecrets(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			logger := log.New()
-			_ = os.MkdirAll(tt.args.secureDir, os.ModePerm)
+			err := os.MkdirAll(tt.args.secureDir, os.ModePerm)
+			if err != nil {
+				t.Fail()
+			}
 			plugin := NewPasswordProtectionPlugin(logger)
 			if tt.args.setMEK {
 				err := createMasterKey(tt.args.masterKeyPassphrase, plugin)
@@ -153,7 +156,7 @@ func TestPasswordProtectionSuite_EncryptConfigFileSecrets(t *testing.T) {
 				}
 			}
 
-			err := plugin.EncryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.remoteSecureConfigPath, tt.args.config)
+			err = plugin.EncryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.remoteSecureConfigPath, tt.args.config)
 
 			if (err != nil) != tt.wantErr {
 				t.Fail()
@@ -899,7 +902,10 @@ func validateUsingDecryption(configFilePath string, localSecureConfigPath string
 		return fmt.Errorf("failed to decrypt config file !!!")
 	}
 
-	decryptContent, _ := ioutil.ReadFile(outputConfigPath)
+	decryptContent, err := ioutil.ReadFile(outputConfigPath)
+	if err != nil {
+		return err
+	}
 	decryptContentStr := string(decryptContent)
 	decryptConfigProps := properties.MustLoadString(decryptContentStr)
 	originalConfigProps := properties.MustLoadString(origConfigs)
@@ -915,12 +921,15 @@ func validateUsingDecryption(configFilePath string, localSecureConfigPath string
 }
 
 func setUpDir (masterKeyPassphrase string, secureDir string, configFile string, contents string) (*PasswordProtectionSuite, error) {
-	_ = os.MkdirAll(secureDir, os.ModePerm)
+	err := os.MkdirAll(secureDir, os.ModePerm)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to create password protection directory")
+	}
 	logger := log.New()
 	plugin := NewPasswordProtectionPlugin(logger)
 
 	// Set master key
-	err := createMasterKey(masterKeyPassphrase, plugin)
+	err = createMasterKey(masterKeyPassphrase, plugin)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create master key")
 	}

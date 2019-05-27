@@ -172,7 +172,11 @@ func (c *PasswordProtectionSuite) DecryptConfigFileSecrets(configFilePath string
 
 	for key, value := range configProps.Map() {
 		// If config value is encrypted, decrypt it with DEK.
-		if c.isPasswordEncrypted(value) {
+		encryptedPass, err := c.isPasswordEncrypted(value)
+		if err != nil {
+			return err
+		}
+		if encryptedPass {
 			pathKey := configFilePath + ":" + key
 			cipher := secureConfigProps.GetString(pathKey, "")
 			if cipher != "" {
@@ -244,7 +248,11 @@ func (c *PasswordProtectionSuite) RotateDataKey(masterPassphrase string, localSe
 
 	// Re-encrypt the ciphers with new DEK
 	for key, value := range secureConfigProps.Map() {
-		if c.isCipher(value) && !strings.HasPrefix(key, METADATA_PREFIX) {
+		encrypted, err := c.isCipher(value)
+		if err != nil {
+			return err
+		}
+		if encrypted && !strings.HasPrefix(key, METADATA_PREFIX) {
 			data, iv, algo := ParseCipherValue(value)
 			plainSecret, err := engine.AESDecrypt(data, iv, algo, dataKey)
 			if err != nil {
@@ -499,18 +507,24 @@ func (c *PasswordProtectionSuite) loadCipherSuiteFromSecureProps(secureConfigPro
 	return cipher, nil
 }
 
-func (c *PasswordProtectionSuite) isPasswordEncrypted(config string) bool {
-	regex, _ := regexp.Compile("\\$\\{(.*?):((.*?):)?(.*?)\\}")
-	return regex.MatchString(config)
+func (c *PasswordProtectionSuite) isPasswordEncrypted(config string) (bool, error) {
+	regex, err := regexp.Compile("\\$\\{(.*?):((.*?):)?(.*?)\\}")
+	if err != nil {
+		return false, err
+	}
+	return regex.MatchString(config), nil
 }
 
 func (c *PasswordProtectionSuite) formatCipherValue(cipher string, iv string) string {
 	return "ENC[" + METADATA_ENC_ALGORITHM + ",data:" + cipher + ",iv:" + iv + ",type:str]"
 }
 
-func (c *PasswordProtectionSuite) isCipher(config string) bool {
-	regex, _ := regexp.Compile("ENC\\[(.*?)\\]")
-	return regex.MatchString(config)
+func (c *PasswordProtectionSuite) isCipher(config string) (bool, error) {
+	regex, err := regexp.Compile("ENC\\[(.*?)\\]")
+	if err != nil {
+		return false, err
+	}
+	return regex.MatchString(config), nil
 }
 
 func (c *PasswordProtectionSuite) addSecureConfigProviderProperty(property *properties.Properties) (*properties.Properties, error) {
@@ -542,7 +556,10 @@ func (c *PasswordProtectionSuite) unwrapDataKey(key string, engine EncryptionEng
 }
 
 func (c *PasswordProtectionSuite) fetchSecureConfigProps(localSecureConfigPath string, masterKey string) (*properties.Properties, *CipherSuite, error) {
-	secureConfigProps, _ := LoadPropertiesFile(localSecureConfigPath)
+	secureConfigProps, err := LoadPropertiesFile(localSecureConfigPath)
+	if err != nil {
+		secureConfigProps = properties.NewProperties()
+	}
 
 	// Check if secure config properties file exists and DEK is generated
 	if IsPathValid(localSecureConfigPath) {
@@ -624,7 +641,11 @@ func (c *PasswordProtectionSuite) encryptConfigValues(matchProps *properties.Pro
 	}
 
 	for key, value := range matchProps.Map() {
-		if !c.isPasswordEncrypted(value) {
+		encryptedPass, err := c.isPasswordEncrypted(value)
+		if err != nil {
+			return err
+		}
+		if !encryptedPass {
 			// Generate tuple ${providerName:[path:]key}
 			pathKey := configFilePath + ":" + key
 			newConfigVal := GenerateConfigValue(pathKey, remoteConfigFilePath)

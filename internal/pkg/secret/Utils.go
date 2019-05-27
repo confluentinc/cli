@@ -54,7 +54,7 @@ func IsPathValid(path string) bool {
 
 func LoadPropertiesFile(path string) (*properties.Properties, error) {
 	if !IsPathValid(path) {
-		return properties.NewProperties(), fmt.Errorf("Invalid file path.")
+		return nil, fmt.Errorf("Invalid file path.")
 	}
 	property := properties.MustLoadFile(path, properties.ISO_8859_1)
 	return property, nil
