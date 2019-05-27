@@ -213,7 +213,7 @@ func RequireNotTitleCase(field string, properNouns []string) Rule {
 		words := strings.Split(fieldValue, " ")
 		for i := 0; i < len(words); i++ {
 			word := alnum.ReplaceAllString(words[i], "") // Remove any punctuation before comparison
-			if word[0] >= 'A' && word[0] <= 'Z' {
+			if word != "" && word[0] >= 'A' && word[0] <= 'Z' {
 				// We have to start our check/loop at i=0 in case the command starts with a multi-word proper noun
 				// But we don't consider capitalizing the first word of the sentence (i=0) to be title case
 				var isTitleCase bool
