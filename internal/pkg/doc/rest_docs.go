@@ -75,10 +75,6 @@ func GenReSTCustom(cmd *cobra.Command, w io.Writer, linkHandler func(string, str
 	name := cmd.CommandPath()
 
 	short := cmd.Short
-	long := cmd.Long
-	if len(long) == 0 {
-		long = short
-	}
 	ref := strings.Replace(name, " ", "_", -1)
 
 	buf.WriteString(".. _" + ref + ":\n\n")
@@ -168,20 +164,4 @@ func GenReSTTreeCustom(cmd *cobra.Command, dir string, filePrepender func(string
 		return err
 	}
 	return nil
-}
-
-// adapted from: https://github.com/kr/text/blob/main/indent.go
-func indentString(s, p string) string {
-	var res []byte
-	b := []byte(s)
-	prefix := []byte(p)
-	bol := true
-	for _, c := range b {
-		if bol && c != '\n' {
-			res = append(res, prefix...)
-		}
-		res = append(res, c)
-		bol = c == '\n'
-	}
-	return string(res)
 }
