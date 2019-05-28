@@ -122,13 +122,13 @@ func TestPasswordProtectionSuite_EncryptConfigFileSecrets(t *testing.T) {
 			name: "ValidTestCase: encrypt config file with config param",
 			args: &args{
 				masterKeyPassphrase:    "abc123",
-				contents:               "ssl.keystore.password=password,ssl.keystore.location=/usr/ssl,ssl.keystore.key=ssl,",
+				contents:               "ssl.keystore.password=password\nssl.keystore.location=/usr/ssl\nssl.keystore.key=ssl",
 				configFilePath:         "/tmp/securePass987/config.properties",
 				localSecureConfigPath:  "/tmp/securePass987/secureConfig.properties",
 				secureDir:              "/tmp/securePass987",
 				remoteSecureConfigPath: "/tmp/securePass987/secureConfig.properties",
 				config:                 "ssl.keystore.password,ssl.keystore.location",
-				configVal:              "ssl.keystore.password=password,ssl.keystore.location=/usr/ssl",
+				configVal:              "ssl.keystore.password=password\nssl.keystore.location=/usr/ssl",
 				setMEK:                 true,
 				createConfig:           true,
 			},
@@ -840,7 +840,7 @@ func corruptEncryptedData(localSecureConfigPath string) error {
 		}
 	}
 
-	err = WritePropertiesFile(localSecureConfigPath, secretsProps)
+	err = WritePropertiesFile(localSecureConfigPath, secretsProps, true)
 	return err
 }
 
@@ -860,7 +860,7 @@ func corruptEncryptedDEK(localSecureConfigPath string) error {
 		return err
 	}
 
-	err = WritePropertiesFile(localSecureConfigPath, secretsProps)
+	err = WritePropertiesFile(localSecureConfigPath, secretsProps, true)
 	return err
 }
 

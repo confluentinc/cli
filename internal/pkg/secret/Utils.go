@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"github.com/magiconair/properties"
@@ -31,13 +32,22 @@ func findMatchTrim(original string, pattern string, prefix string, suffix string
 	return substring
 }
 
-func WritePropertiesFile(path string, property *properties.Properties) error {
+func WritePropertiesFile(path string, property *properties.Properties, writeComments bool) error {
 	buf := new(bytes.Buffer)
-	_, err := property.WriteComment(buf, "# ", properties.ISO_8859_1)
-	if err != nil {
-		return err
+	if writeComments {
+		_, err := property.WriteComment(buf, "# ", properties.ISO_8859_1)
+		if err != nil {
+			return err
+		}
+	} else {
+		_, err := property.Write(buf, properties.ISO_8859_1)
+		if err != nil {
+			return err
+		}
+
 	}
-	err = ioutil.WriteFile(path, buf.Bytes(), 0644)
+
+	err := ioutil.WriteFile(path, buf.Bytes(), 0644)
 	return err
 }
 
@@ -62,5 +72,6 @@ func LoadPropertiesFile(path string) (*properties.Properties, error) {
 }
 
 func GenerateConfigKey(path string, key string) string {
-	return path + "/" + key;
+	fileName := filepath.Base(path)
+	return fileName + "/" + key;
 }

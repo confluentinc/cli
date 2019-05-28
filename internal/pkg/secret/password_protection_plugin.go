@@ -119,6 +119,8 @@ func (c *PasswordProtectionSuite) EncryptConfigFileSecrets(configFilePath string
 				if err != nil {
 					return err
 				}
+			} else {
+				return fmt.Errorf("Key " + key + " not present in config file.")
 			}
 		}
 	} else {
@@ -159,7 +161,7 @@ func (c *PasswordProtectionSuite) DecryptConfigFileSecrets(configFilePath string
 	if err != nil {
 		return err
 	}
-	decryptedSecrets := properties.NewProperties()
+	//decryptedSecrets := properties.NewProperties()
 	cipherSuite, err := c.loadCipherSuiteFromLocalFile(localSecureConfigPath)
 	if err != nil {
 		return err
@@ -169,7 +171,8 @@ func (c *PasswordProtectionSuite) DecryptConfigFileSecrets(configFilePath string
 	// Unwrap DEK with MEK
 	dataKey, err := c.unwrapDataKey(cipherSuite.EncryptedDataKey, engine)
 	if err != nil {
-		return err
+		c.Logger.Error(err)
+		return fmt.Errorf("Failed to unwrap the Data Key due to invalid master key.")
 	}
 
 	for key, value := range configProps.Map() {
@@ -187,19 +190,21 @@ func (c *PasswordProtectionSuite) DecryptConfigFileSecrets(configFilePath string
 				if err != nil {
 					return fmt.Errorf("unable to decrypt %s: %s", key, err)
 				}
-				_, _, err = decryptedSecrets.Set(key, plainSecret)
+				_, _, err = configProps.Set(key, plainSecret)
 				if err != nil {
 					return err
 				}
 			} else {
 				return fmt.Errorf("missing config key in secret config file.")
 			}
+		} else {
+			configProps.Delete(key)
 		}
 
 	}
 
 	// Save the decrypted ciphers to output file.
-	return WritePropertiesFile(outputFilePath, decryptedSecrets)
+	return WritePropertiesFile(outputFilePath, configProps, false)
 }
 
 /**
@@ -239,7 +244,8 @@ func (c *PasswordProtectionSuite) RotateDataKey(masterPassphrase string, localSe
 	engine := NewEncryptionEngine(&cipherSuite, c.Logger)
 	dataKey, err := c.unwrapDataKey(cipherSuite.EncryptedDataKey, engine)
 	if err != nil {
-		return err
+		c.Logger.Error(err)
+		return fmt.Errorf("Failed to unwrap the Data Key due to invalid master key.")
 	}
 
 	// Generate a new DEK
@@ -293,7 +299,7 @@ func (c *PasswordProtectionSuite) RotateDataKey(masterPassphrase string, localSe
 	if err != nil {
 		return err
 	}
-	err = WritePropertiesFile(localSecureConfigPath, secureConfigProps)
+	err = WritePropertiesFile(localSecureConfigPath, secureConfigProps, true)
 	if err != nil {
 		return err
 	}
@@ -342,7 +348,8 @@ func (c *PasswordProtectionSuite) RotateMasterKey(oldPassphrase string, newPassp
 	engine := NewEncryptionEngine(&cipherSuite, c.Logger)
 	dataKey, err := c.unwrapDataKey(cipherSuite.EncryptedDataKey, engine)
 	if err != nil {
-		return "", err
+		c.Logger.Error(err)
+		return "",  fmt.Errorf("Failed to unwrap the Data Key due to invalid master key.")
 	}
 
 	newMasterKey, err := c.generateMasterKey(newPassphrase, &cipherSuite)
@@ -373,7 +380,7 @@ func (c *PasswordProtectionSuite) RotateMasterKey(oldPassphrase string, newPassp
 		return "", err
 	}
 
-	err = WritePropertiesFile(localSecureConfigPath, secureConfigProps)
+	err = WritePropertiesFile(localSecureConfigPath, secureConfigProps, true)
 
 	return newMasterKey, err
 }
@@ -420,7 +427,7 @@ func (c *PasswordProtectionSuite) UpdateEncryptedPasswords(configFilePath string
 	for key := range newConfigProps.Map() {
 		_, exists := configProps.Get(key)
 		if exists == false {
-			newConfigProps.Delete(key)
+			return fmt.Errorf("Key " + key + " not present in config file.")
 		}
 	}
 
@@ -466,12 +473,12 @@ func (c *PasswordProtectionSuite) RemoveEncryptedPasswords(configFilePath string
 		secureConfigProps.Delete(pathKey)
 	}
 
-	err = WritePropertiesFile(configFilePath, configProps)
+	err = WritePropertiesFile(configFilePath, configProps, true)
 	if err != nil {
 		return err
 	}
 
-	err = WritePropertiesFile(localSecureConfigPath, secureConfigProps)
+	err = WritePropertiesFile(localSecureConfigPath, secureConfigProps, true)
 	return err
 }
 
@@ -644,7 +651,8 @@ func (c *PasswordProtectionSuite) encryptConfigValues(matchProps *properties.Pro
 	engine := NewEncryptionEngine(cipherSuite, c.Logger)
 	dataKey, err := c.unwrapDataKey(cipherSuite.EncryptedDataKey, engine)
 	if err != nil {
-		return err
+		c.Logger.Error(err)
+		return fmt.Errorf("Failed to unwrap the Data Key due to invalid master key.")
 	}
 
 	for key, value := range matchProps.Map() {
@@ -679,12 +687,12 @@ func (c *PasswordProtectionSuite) encryptConfigValues(matchProps *properties.Pro
 		return err
 	}
 
-	err = WritePropertiesFile(configFilePath, configProps)
+	err = WritePropertiesFile(configFilePath, configProps, true)
 	if err != nil {
 		return err
 	}
 
-	err = WritePropertiesFile(localSecureConfigPath, secureConfigProps)
+	err = WritePropertiesFile(localSecureConfigPath, secureConfigProps, true )
 	if err != nil {
 		return err
 	}
