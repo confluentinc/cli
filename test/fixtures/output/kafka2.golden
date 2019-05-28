@@ -3,11 +3,8 @@ Usage:
   ccloud kafka cluster create <name> [flags]
 
 Flags:
-      --cloud aws       Cloud provider (e.g. aws or `gcp`)
-      --region string   Cloud region for cluster (e.g. us-west-2`)
-      --ingress int32   Network ingress in MBps (default 1)
-      --egress int32    Network egress in MBps (default 1)
-      --storage int32   Amount of data storage available in GB (default 500)
+      --cloud string    Cloud provider (e.g. 'aws' or 'gcp')
+      --region string   Cloud region for cluster (e.g. 'us-west-2')
       --multizone       Use multiple zones for high availability
   -h, --help            help for create
 

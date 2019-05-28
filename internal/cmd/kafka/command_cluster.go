@@ -59,12 +59,8 @@ func (c *clusterCommand) init() {
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	}
-	createCmd.Flags().String("cloud", "", "Cloud provider (e.g. `aws` or `gcp`)")
-	createCmd.Flags().String("region", "", "Cloud region for cluster (e.g. us-west-2`)")
-	// default to smallest size allowed
-	createCmd.Flags().Int32("ingress", 1, "Network ingress in MBps")
-	createCmd.Flags().Int32("egress", 1, "Network egress in MBps")
-	createCmd.Flags().Int32("storage", 500, "Amount of data storage available in GB")
+	createCmd.Flags().String("cloud", "", "Cloud provider (e.g. 'aws' or 'gcp')")
+	createCmd.Flags().String("region", "", "Cloud region for cluster (e.g. 'us-west-2')")
 	createCmd.Flags().Bool("multizone", false, "Use multiple zones for high availability")
 	check(createCmd.MarkFlagRequired("cloud"))
 	check(createCmd.MarkFlagRequired("region"))
@@ -145,18 +141,6 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	ingress, err := cmd.Flags().GetInt32("ingress")
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	egress, err := cmd.Flags().GetInt32("egress")
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	storage, err := cmd.Flags().GetInt32("storage")
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
 	multizone, err := cmd.Flags().GetBool("multizone")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -174,9 +158,6 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		Name:            args[0],
 		ServiceProvider: cloud,
 		Region:          region,
-		NetworkIngress:  ingress,
-		NetworkEgress:   egress,
-		Storage:         storage,
 		Durability:      durability,
 	}
 	cluster, err := c.client.Create(context.Background(), cfg)
