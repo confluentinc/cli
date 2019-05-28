@@ -758,7 +758,9 @@ func createNewConfigFile(path string, contents string) error {
 
 func validateFileContents(contents string, configFile string, remoteSecretsFile string, localSecretsFile string, plugin *PasswordProtectionSuite, config string) error {
 	originalConfigs := properties.MustLoadString(contents)
+	originalConfigs.DisableExpansion = true
 	encryptedConfigs := properties.MustLoadString(config)
+	encryptedConfigs.DisableExpansion = true
 	// Load the configs.
 	configProps, err := LoadPropertiesFile(configFile)
 	if err != nil {
@@ -774,7 +776,7 @@ func validateFileContents(contents string, configFile string, remoteSecretsFile 
 		_, ok := encryptedConfigs.Get(key)
 		if (config == "" && strings.Contains(strings.ToLower(key), "password")) || ok {
 			// Validate the config value in config file
-			pathKey := configFile + ":" + key
+			pathKey := GenerateConfigKey(configFile, key)
 			expectedVal := GenerateConfigValue(pathKey, remoteSecretsFile)
 			if strings.Compare(expectedVal, value) != 0 {
 				return fmt.Errorf("failed to encrypt a secret config")
@@ -877,7 +879,7 @@ func verifyConfigsRemoved(configFilePath string, localSecureConfigPath string, r
 	configs := strings.Split(removedConfigs, ",")
 
 	for _, key := range configs {
-		pathKey := configFilePath + ":" + key
+		pathKey := GenerateConfigKey(configFilePath, key)
 
 		// Check if config is removed from configs files
 		_, ok := configProps.Get(key)
@@ -909,6 +911,7 @@ func validateUsingDecryption(configFilePath string, localSecureConfigPath string
 	decryptContentStr := string(decryptContent)
 	decryptConfigProps := properties.MustLoadString(decryptContentStr)
 	originalConfigProps := properties.MustLoadString(origConfigs)
+	originalConfigProps.DisableExpansion = true
 	for key, value := range decryptConfigProps.Map() {
 		originalVal, _ := originalConfigProps.Get(key)
 		if value != originalVal {

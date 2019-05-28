@@ -2,7 +2,7 @@ package secret
 
 import (
 	"fmt"
-  
+
 	"os"
 	"regexp"
 	"strconv"
@@ -102,6 +102,7 @@ func (c *PasswordProtectionSuite) EncryptConfigFileSecrets(configFilePath string
 	}
 	// Load the configs.
 	configProps, err := LoadPropertiesFile(configFilePath)
+	configProps.DisableExpansion = true
 	if err != nil {
 		return err
 	}
@@ -110,6 +111,7 @@ func (c *PasswordProtectionSuite) EncryptConfigFileSecrets(configFilePath string
 	if encryptConfigKeys != "" {
 		configs := strings.Split(encryptConfigKeys, ",")
 		for _, key := range configs {
+			key := strings.TrimSpace(key)
 			value, ok := configProps.Get(key)
 			// If key present in config file
 			if ok {
@@ -177,7 +179,7 @@ func (c *PasswordProtectionSuite) DecryptConfigFileSecrets(configFilePath string
 			return err
 		}
 		if encryptedPass {
-			pathKey := configFilePath + ":" + key
+			pathKey := GenerateConfigKey(configFilePath, key)
 			cipher := secureConfigProps.GetString(pathKey, "")
 			if cipher != "" {
 				data, iv, algo := ParseCipherValue(cipher)
@@ -408,6 +410,7 @@ func (c *PasswordProtectionSuite) AddEncryptedPasswords(configFilePath string, l
 func (c *PasswordProtectionSuite) UpdateEncryptedPasswords(configFilePath string, localSecureConfigPath string, remoteSecureConfigPath string, newConfigs string) error {
 	newConfigProps := properties.MustLoadString(newConfigs)
 	configProps, err := LoadPropertiesFile(configFilePath)
+	configProps.DisableExpansion = true
 
 	if err != nil {
 		return err
@@ -432,11 +435,13 @@ func (c *PasswordProtectionSuite) UpdateEncryptedPasswords(configFilePath string
 
 func (c *PasswordProtectionSuite) RemoveEncryptedPasswords(configFilePath string, localSecureConfigPath string, removeConfigs string) error {
 	configProps, err := LoadPropertiesFile(configFilePath)
+	configProps.DisableExpansion = true
 	if err != nil {
 		return err
 	}
 
 	secureConfigProps, err := LoadPropertiesFile(localSecureConfigPath)
+	secureConfigProps.DisableExpansion = true
 	if err != nil {
 		return err
 	}
@@ -444,7 +449,7 @@ func (c *PasswordProtectionSuite) RemoveEncryptedPasswords(configFilePath string
 	configs := strings.Split(removeConfigs, ",")
 
 	for _, key := range configs {
-		pathKey := configFilePath + ":" + key
+		pathKey := GenerateConfigKey(configFilePath, key)
 
 		//Check if config is present
 		_, ok := configProps.Get(key)
@@ -496,6 +501,7 @@ func (c *PasswordProtectionSuite) loadCipherSuiteFromLocalFile(localSecureConfig
 func (c *PasswordProtectionSuite) loadCipherSuiteFromSecureProps(secureConfigProps *properties.Properties) (CipherSuite, error) {
 	var cipher CipherSuite
 	matchProps, err := secureConfigProps.Filter("(?i)metadata")
+	matchProps.DisableExpansion = true
 	if err != nil {
 		return cipher, err
 	}
@@ -528,6 +534,7 @@ func (c *PasswordProtectionSuite) isCipher(config string) (bool, error) {
 }
 
 func (c *PasswordProtectionSuite) addSecureConfigProviderProperty(property *properties.Properties) (*properties.Properties, error) {
+	property.DisableExpansion = true
 	configProviders := property.GetString(CONFIG_PROVIDER_KEY, "")
 	if configProviders == "" {
 		configProviders = SECURE_CONFIG_PROVIDER
@@ -575,7 +582,7 @@ func (c *PasswordProtectionSuite) fetchSecureConfigProps(localSecureConfigPath s
 	if err != nil {
 		return nil, nil, err
 	}
-	
+
 	// Add DEK Metadata to secureConfigProps
 	now := time.Now()
 	_, _, err = secureConfigProps.Set(METADATA_KEY_TIMESTAMP, now.String())
@@ -647,7 +654,7 @@ func (c *PasswordProtectionSuite) encryptConfigValues(matchProps *properties.Pro
 		}
 		if !encryptedPass {
 			// Generate tuple ${providerName:[path:]key}
-			pathKey := configFilePath + ":" + key
+			pathKey := GenerateConfigKey(configFilePath, key)
 			newConfigVal := GenerateConfigValue(pathKey, remoteConfigFilePath)
 			_, _, err = configProps.Set(key, newConfigVal)
 			if err != nil {

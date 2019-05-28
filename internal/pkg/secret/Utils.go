@@ -57,5 +57,10 @@ func LoadPropertiesFile(path string) (*properties.Properties, error) {
 		return nil, fmt.Errorf("Invalid file path.")
 	}
 	property := properties.MustLoadFile(path, properties.ISO_8859_1)
+	property.DisableExpansion = true
 	return property, nil
+}
+
+func GenerateConfigKey(path string, key string) string {
+	return path + "/" + key;
 }
