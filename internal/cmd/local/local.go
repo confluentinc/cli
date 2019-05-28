@@ -37,7 +37,7 @@ func New(prerunner pcmd.PreRunner, shell ShellRunner) *cobra.Command {
 	}
 	localCmd.Command.RunE = localCmd.run
 	// possibly we should make this an arg and/or move it to env var
-	localCmd.Flags().String("path", "", "Path to Confluent Platform install directory")
+	localCmd.Flags().String("path", "", "Path to Confluent Platform install directory.")
 	_ = localCmd.MarkFlagRequired("path")
 	localCmd.Flags().SortFlags = false
 	return localCmd.Command

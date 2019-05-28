@@ -88,7 +88,7 @@ func (c *topicCommand) init() {
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().StringSlice("config", nil, "A comma-separated list of topic configuration ('key=value') overrides for the topic being created.")
-	cmd.Flags().Bool("dry-run", false, "Execute request without committing changes to Kafka")
+	cmd.Flags().Bool("dry-run", false, "Execute request without committing changes to Kafka.")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 

@@ -67,7 +67,7 @@ var rules = []linter.Rule{
 	// TODO: ensuring --cluster is optional DOES NOT actually ensure that the cluster context is used
 	linter.Filter(linter.RequireFlag("cluster", true), nonClusterScopedCommands...),
 	linter.Filter(linter.RequireFlagType("cluster", "string"), nonClusterScopedCommands...),
-	linter.Filter(linter.RequireFlagDescription("cluster", "Kafka cluster ID"),
+	linter.Filter(linter.RequireFlagDescription("cluster", "Kafka cluster ID."),
 		append(nonClusterScopedCommands, linter.ExcludeParentUse("api-key"))...),
 	linter.RequireFlagSort(false),
 	linter.RequireLowerCase("Use"),
