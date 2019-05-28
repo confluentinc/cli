@@ -49,6 +49,12 @@ func (c *topicCommand) init() {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List Kafka topics",
+		Example: `
+List all topics.
+
+::
+
+        ccloud kafka topic list`,
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	}
@@ -59,6 +65,12 @@ func (c *topicCommand) init() {
 	cmd = &cobra.Command{
 		Use:   "create TOPIC",
 		Short: "Create a Kafka topic",
+		Example: `
+Create a topic named 'my_topic' with default options.
+
+::
+
+   ccloud kafka topic create my_topic`,
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -73,6 +85,13 @@ func (c *topicCommand) init() {
 	cmd = &cobra.Command{
 		Use:   "describe TOPIC",
 		Short: "Describe a Kafka topic",
+		Example: `
+Describe the 'my_topic' topic.
+
+::
+
+
+       ccloud kafka topic describe my_topic`,
 		RunE:  c.describe,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -83,6 +102,12 @@ func (c *topicCommand) init() {
 	cmd = &cobra.Command{
 		Use:   "update TOPIC",
 		Short: "Update a Kafka topic",
+		Example: `
+Modify the 'my_topic' topic to have a retention period of days ('259200000' milliseconds).
+
+::
+
+    ccloud kafka topic update my_topic --config="retention.ms=259200000"		`,
 		RunE:  c.update,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -95,6 +120,13 @@ func (c *topicCommand) init() {
 	cmd = &cobra.Command{
 		Use:   "delete TOPIC",
 		Short: "Delete a Kafka topic",
+		Example: `
+Delete the topics 'my_topic' and 'my_topic_avro'. Use this command carefully as data loss can occur.
+
+::
+
+        ccloud kafka topic delete my_topic
+        ccloud kafka topic delete my_topic_avro		`,
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -117,6 +149,12 @@ func (c *topicCommand) init() {
 	cmd = &cobra.Command{
 		Use:               "consume TOPIC",
 		Short:             "Consume messages from a Kafka topic",
+		Example: `
+Consume items from the 'my_topic' topic and press 'Ctrl + C' to exit.
+
+::
+
+	ccloud kafka topic consume -b my_topic`,
 		RunE:              c.consume,
 		Args:              cobra.ExactArgs(1),
 		PersistentPreRunE: c.prerunner.AuthenticatedAPIKey(),
