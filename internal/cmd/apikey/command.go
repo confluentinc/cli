@@ -103,7 +103,7 @@ func (c *command) init() {
 
 	storeCmd := &cobra.Command{
 		Use:   "store <apikey> <secret>",
-		Short: `Locally store an existing API key/secret for use in the CLI.`,
+		Short: `Store an API key/secret locally to use in the CLI.`,
 		Long:  longDescription,
 		RunE:  c.store,
 		Args:  cobra.ExactArgs(2),

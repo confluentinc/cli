@@ -76,6 +76,28 @@ func RequireNotEndWithPunctuation(field string) Rule {
 	}
 }
 
+// RequirePrefix checks that a field begins with a given suffix
+func RequirePrefix(field, suffix string) Rule {
+	return func(cmd *cobra.Command) error {
+		fieldValue := getValueByName(cmd, field)
+		if !strings.HasPrefix(fieldValue, suffix) {
+			return fmt.Errorf("%s on %s should begin with %s", normalizeDesc(field), FullCommand(cmd), suffix)
+		}
+		return nil
+	}
+}
+
+// RequireSuffix checks that a field ends with a given suffix
+func RequireSuffix(field, suffix string) Rule {
+	return func(cmd *cobra.Command) error {
+		fieldValue := getValueByName(cmd, field)
+		if !strings.HasSuffix(fieldValue, suffix) {
+			return fmt.Errorf("%s on %s should end with %s", normalizeDesc(field), FullCommand(cmd), suffix)
+		}
+		return nil
+	}
+}
+
 // RequireStartWithCapital checks that a field starts with a capital letter
 func RequireStartWithCapital(field string) Rule {
 	return func(cmd *cobra.Command) error {
@@ -112,11 +134,11 @@ func RequireLengthBetween(field string, minLength, maxLength int) Rule {
 		fieldValue := getValueByName(cmd, field)
 		var issues *multierror.Error
 		if len(fieldValue) < minLength {
-			issue := fmt.Errorf("%s is too short on %s - %s", normalizeDesc(field), FullCommand(cmd), cmd.Short)
+			issue := fmt.Errorf("%s is too short on %s (%d)", normalizeDesc(field), FullCommand(cmd), len(fieldValue))
 			issues = multierror.Append(issues, issue)
 		}
 		if len(fieldValue) > maxLength {
-			issue := fmt.Errorf("%s is too long on %s", normalizeDesc(field), FullCommand(cmd))
+			issue := fmt.Errorf("%s is too long on %s (%d)", normalizeDesc(field), FullCommand(cmd), len(fieldValue))
 			issues = multierror.Append(issues, issue)
 		}
 		return issues

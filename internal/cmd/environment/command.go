@@ -65,7 +65,7 @@ func (c *command) init() {
 
 	updateCmd := &cobra.Command{
 		Use:   "update <environment-id>",
-		Short: "Update the name of an existing Confluent Cloud environment.",
+		Short: "Update an existing Confluent Cloud environment.",
 		RunE:  c.update,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -76,7 +76,7 @@ func (c *command) init() {
 
 	c.AddCommand(&cobra.Command{
 		Use:   "delete <environment-id>",
-		Short: "Delete an Confluent Cloud environment and all of its resources.",
+		Short: "Delete a Confluent Cloud environment and all its resources.",
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
 	})

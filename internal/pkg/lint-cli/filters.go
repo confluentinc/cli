@@ -80,6 +80,7 @@ func ExcludeParentUse(excluded ...string) RuleFilter {
 	}
 }
 
+// ExcludeCommandContains specifies a blacklist of commands to which this rule does not apply
 func ExcludeCommandContains(excluded ...string) RuleFilter {
 	return func(cmd *cobra.Command) bool {
 		exclude := true
@@ -90,6 +91,20 @@ func ExcludeCommandContains(excluded ...string) RuleFilter {
 			}
 		}
 		return exclude
+	}
+}
+
+// IncludeCommandContains specifies a whitelist of commands to which this rule applies
+func IncludeCommandContains(included ...string) RuleFilter {
+	return func(cmd *cobra.Command) bool {
+		include := false
+		for _, in := range included {
+			if strings.Contains(FullCommand(cmd), in) {
+				include = true
+				break
+			}
+		}
+		return include
 	}
 }
 
