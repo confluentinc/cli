@@ -13,7 +13,7 @@ Available Commands:
   logout          Logout of Confluent Cloud.
   service-account Manage service accounts. This is only available for Confluent Cloud Enterprise users.
   update          Update ccloud
-  version         Print the CLI version.
+  version         Print the ccloud CLI version
 
 Flags:
   -h, --help            help for ccloud
