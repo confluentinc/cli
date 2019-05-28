@@ -112,6 +112,10 @@ func (s *CLITestSuite) Test_Confluent_Help() {
 				return
 			}
 
+			if *update && tt.args != "version" {
+				writeFixture(t, tt.fixture, output)
+			}
+
 			if !reflect.DeepEqual(actual, expected) {
 				t.Fatalf("actual = %s, expected = %s", actual, expected)
 			}

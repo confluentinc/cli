@@ -180,7 +180,7 @@ func (suite *KSQLTestSuite) TestShouldNotConfigureForPro() {
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.False(suite.kafkac.CreateACLCalled())
-	req.Equal("The Kafka cluster is not an enterprise cluster. No ACLS need to be set", buf.String())
+	req.Equal("The Kafka cluster is not an enterprise cluster. ACLs cannot be set.", buf.String())
 }
 
 func (suite *KSQLTestSuite) TestShouldNotConfigureOnDryRun() {

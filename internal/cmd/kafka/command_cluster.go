@@ -59,7 +59,7 @@ func (c *clusterCommand) init() {
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	}
-	createCmd.Flags().String("cloud", "", "Cloud provider (e.g. `aws` or `gcp`")
+	createCmd.Flags().String("cloud", "", "Cloud provider (e.g. `aws` or `gcp`)")
 	createCmd.Flags().String("region", "", "Cloud region for cluster (e.g. us-west-2`)")
 	// default to smallest size allowed
 	createCmd.Flags().Int32("ingress", 1, "Network ingress in MBps")
