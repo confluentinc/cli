@@ -49,7 +49,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		cli.Long = "Manage your Confluent Platform."
 	}
 	cli.PersistentFlags().CountP("verbose", "v",
-		"Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace)")
+		"increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace)")
 
 	prompt := pcmd.NewPrompt(os.Stdin)
 
