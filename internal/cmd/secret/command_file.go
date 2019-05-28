@@ -356,7 +356,7 @@ func (c *secureFileCommand) rotate(cmd *cobra.Command, args []string) error {
 func (c *secureFileCommand) getOldPassphrase(passphrases string) (string, string, error) {
 	passphrasesArr := strings.Split(passphrases, ",")
 	if len(passphrasesArr) != 2 {
-		return "", "", fmt.Errorf("Missing the master key passphrase.")
+		return "", "", fmt.Errorf("Missing the master key passphrase. Enter comma separated old and new master key passphrases")
 	}
 
 	return passphrasesArr[0], passphrasesArr[1], nil
