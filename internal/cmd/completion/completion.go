@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const longDescriptionTemplate = `Use this command to configure the output shell completion
+const longDescriptionTemplate = `Use this command to print the output shell completion
 code for the specified shell (Bash only). The shell code must be evaluated to provide
 interactive completion of {{.CLIName}} commands.
 
@@ -49,7 +49,7 @@ func NewCompletionCmd(rootCmd *cobra.Command, cliName string) *cobra.Command {
 func (c *completionCommand) init(cliName string) {
 	c.Command = &cobra.Command{
 		Use:   "completion <shell>",
-		Short: "Configure output shell completion code.",
+		Short: "Print shell completion code.",
 		Long:  getLongDescription(cliName),
 		RunE:  c.completion,
 		Args:  cobra.ExactArgs(1),
