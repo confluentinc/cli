@@ -232,7 +232,7 @@ func RequireNotTitleCase(field string, properNouns []string) Rule {
 	return func(cmd *cobra.Command) error {
 		fieldValue := getValueByName(cmd, field)
 		if fieldValue[len(fieldValue)-1] == '.' {
-			fieldValue = fieldValue[0:len(fieldValue)-1]
+			fieldValue = fieldValue[0 : len(fieldValue)-1]
 		}
 		var issues *multierror.Error
 		words := strings.Split(fieldValue, " ")

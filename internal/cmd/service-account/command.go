@@ -59,17 +59,17 @@ func (c *command) init() {
 	createCmd := &cobra.Command{
 		Use:   "create <name>",
 		Short: `Create a service account. This is only available for Confluent Cloud Enterprise users.`,
-	    Example: `
-Create a service account named `+"``DemoServiceAccount``"+`.
+		Example: `
+Create a service account named ` + "``DemoServiceAccount``" + `.
 
 ::
 
   ccloud service-account create "DemoServiceAccount" \
-  --description "This is a demo service account. "
+  --description "This is a demo service account."
 
 `,
-		RunE:  c.create,
-		Args:  cobra.ExactArgs(1),
+		RunE: c.create,
+		Args: cobra.ExactArgs(1),
 	}
 	createCmd.Flags().String("description", "", "Description of the service account.")
 	_ = createCmd.MarkFlagRequired("description")
@@ -80,16 +80,16 @@ Create a service account named `+"``DemoServiceAccount``"+`.
 		Use:   "update <id>",
 		Short: `Update a service account. This is only available for Confluent Cloud Enterprise users.`,
 		Example: `
-Update the description of a service account with the ID `+"``2786``"+`.
+Update the description of a service account with the ID ` + "``2786``" + `.
 
 ::
 
     ccloud service-account update service-account-id 2786 \
-    --description "Update demo service account information. "
+    --description "Update demo service account information."
 
 `,
-		RunE:  c.update,
-		Args:  cobra.ExactArgs(1),
+		RunE: c.update,
+		Args: cobra.ExactArgs(1),
 	}
 	updateCmd.Flags().String("description", "", "Description of the service account.")
 	_ = updateCmd.MarkFlagRequired("description")
@@ -100,15 +100,15 @@ Update the description of a service account with the ID `+"``2786``"+`.
 		Use:   "delete <id>",
 		Short: `Delete a service account. This is only available for Confluent Cloud Enterprise users.`,
 		Example: `
-Delete a service account with the ID `+"``2786``"+`.
+Delete a service account with the ID ` + "``2786``" + `.
 
 ::
 
     ccloud service-account delete --service-account-id 2786
 
 `,
-		RunE:  c.delete,
-		Args:  cobra.ExactArgs(1),
+		RunE: c.delete,
+		Args: cobra.ExactArgs(1),
 	})
 }
 

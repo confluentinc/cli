@@ -46,9 +46,9 @@ func (c *aclCommand) init() {
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: `Create a Kafka ACL. This is only available for Confluent Cloud Enterprise users.`,
-		Example: `You can only specify one of these flags per command invocation: `+"``cluster``, ``consumer-group``"+`,
-`+"``topic``, or ``transactional-id``"+` per command invocation. For example, if you want to specify both
-`+"``consumer-group`` and ``topic``"+`, you must specify this as two separate commands:
+		Example: `You can only specify one of these flags per command invocation: ` + "``cluster``, ``consumer-group``" + `,
+` + "``topic``, or ``transactional-id``" + ` per command invocation. For example, if you want to specify both
+` + "``consumer-group`` and ``topic``" + `, you must specify this as two separate commands:
 
 ::
 
@@ -60,8 +60,8 @@ func (c *aclCommand) init() {
 	ccloud kafka acl create --allow --service-account-id 1522 --operation READ --topic '*'
 
 `,
-		RunE:  c.create,
-		Args:  cobra.NoArgs,
+		RunE: c.create,
+		Args: cobra.NoArgs,
 	}
 	cmd.Flags().AddFlagSet(aclConfigFlags())
 	cmd.Flags().SortFlags = false

@@ -56,10 +56,10 @@ func (a *commands) init(prerunner pcmd.PreRunner) {
 	loginCmd := &cobra.Command{
 		Use:   "login",
 		Short: fmt.Sprintf("Login to %s.", a.config.APIName()),
-		Long: fmt.Sprintf("Login to %s.", a.config.APIName()),
+		Long:  fmt.Sprintf("Login to %s.", a.config.APIName()),
 
-		RunE:  a.login,
-		Args:  cobra.NoArgs,
+		RunE: a.login,
+		Args: cobra.NoArgs,
 	}
 	loginCmd.Flags().String("url", "https://confluent.cloud", "Confluent Control Plane URL.")
 	loginCmd.Flags().SortFlags = false
@@ -67,10 +67,10 @@ func (a *commands) init(prerunner pcmd.PreRunner) {
 	logoutCmd := &cobra.Command{
 		Use:   "logout",
 		Short: fmt.Sprintf("Logout of %s.", a.config.APIName()),
-		Long: fmt.Sprintf("Logout of %s.", a.config.APIName()),
+		Long:  fmt.Sprintf("Logout of %s.", a.config.APIName()),
 
-		RunE:  a.logout,
-		Args:  cobra.NoArgs,
+		RunE: a.logout,
+		Args: cobra.NoArgs,
 	}
 	logoutCmd.PersistentPreRunE = prerunner.Anonymous()
 	a.Commands = []*cobra.Command{loginCmd, logoutCmd}

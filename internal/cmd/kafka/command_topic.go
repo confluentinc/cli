@@ -47,20 +47,20 @@ func NewTopicCommand(prerunner pcmd.PreRunner, config *config.Config, client ccl
 
 func (c *topicCommand) init() {
 	cmd := &cobra.Command{
-		Use:     "list",
-		Short:   "List Kafka topics.",
-		RunE:    c.list,
-		Args:    cobra.NoArgs,
+		Use:   "list",
+		Short: "List Kafka topics.",
+		RunE:  c.list,
+		Args:  cobra.NoArgs,
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
-		Use:     "create <topic>",
-		Short:   "Create a Kafka topic.",
-		RunE:    c.create,
-		Args:    cobra.ExactArgs(1),
+		Use:   "create <topic>",
+		Short: "Create a Kafka topic.",
+		RunE:  c.create,
+		Args:  cobra.ExactArgs(1),
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().Uint32("partitions", 6, "Number of topic partitions.")
@@ -71,20 +71,20 @@ func (c *topicCommand) init() {
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
-		Use:     "describe <topic>",
-		Short:   "Describe a Kafka topic.",
-		RunE:    c.describe,
-		Args:    cobra.ExactArgs(1),
+		Use:   "describe <topic>",
+		Short: "Describe a Kafka topic.",
+		RunE:  c.describe,
+		Args:  cobra.ExactArgs(1),
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
-		Use:     "update <topic>",
-		Short:   "Update a Kafka topic.",
-		RunE:    c.update,
-		Args:    cobra.ExactArgs(1),
+		Use:   "update <topic>",
+		Short: "Update a Kafka topic.",
+		RunE:  c.update,
+		Args:  cobra.ExactArgs(1),
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().StringSlice("config", nil, "A comma-separated list of topic configuration ('key=value') overrides for the topic being created.")
@@ -93,10 +93,10 @@ func (c *topicCommand) init() {
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
-		Use:     "delete <topic>",
-		Short:   "Delete a Kafka topic.",
-		RunE:    c.delete,
-		Args:    cobra.ExactArgs(1),
+		Use:   "delete <topic>",
+		Short: "Delete a Kafka topic.",
+		RunE:  c.delete,
+		Args:  cobra.ExactArgs(1),
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().SortFlags = false

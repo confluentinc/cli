@@ -118,4 +118,3 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 
 	return cli, nil
 }
-
