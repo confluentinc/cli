@@ -130,7 +130,7 @@ func main() {
 
 	var issues *multierror.Error
 	for _, cliName := range []string{"confluent", "ccloud"} {
-		cli, err := cmd.NewConfluentCommand(cliName, &config.Config{}, &version.Version{}, log.New())
+		cli, err := cmd.NewConfluentCommand(cliName, &config.Config{}, &version.Version{Binary: cliName}, log.New())
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
