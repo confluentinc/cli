@@ -86,7 +86,7 @@ func (c *ConfigHelper) UseAPIKey(apiKey, clusterID string) error {
 	_, found = cluster.APIKeys[apiKey]
 	if !found {
 		// check if this is API key exists server-side
-		key, err := c.Client.APIKey.Get(context.Background(), &authv1.ApiKey{Key: apiKey})
+		key, err := c.Client.APIKey.Get(context.Background(), &authv1.ApiKey{AccountId: c.Config.Auth.Account.Id, Key: apiKey})
 		if err != nil {
 			return err
 		}

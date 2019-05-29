@@ -527,6 +527,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 			req := &authv1.CreateApiKeyRequest{}
 			err = json.Unmarshal(b, req)
 			require.NoError(t, err)
+			require.NotEmpty(t, req.ApiKey.AccountId)
 			apiKey := req.ApiKey
 			apiKey.Id = int32(KEY_INDEX)
 			apiKey.Key = fmt.Sprintf("MYKEY%d", KEY_INDEX)
@@ -539,6 +540,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 			_, err = io.WriteString(w, string(b))
 			require.NoError(t, err)
 		} else if r.Method == "GET" {
+			require.NotEmpty(t, r.URL.Query().Get("account_id"))
 			var apiKeys []*authv1.ApiKey
 			for _, a := range KEY_STORE {
 				apiKeys = append(apiKeys, a)
@@ -552,6 +554,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		}
 	})
 	mux.HandleFunc("/api/clusters/", func(w http.ResponseWriter, r *http.Request) {
+		require.NotEmpty(t, r.URL.Query().Get("account_id"))
 		parts := strings.Split(r.URL.Path, "/")
 		id := parts[len(parts)-1]
 		if id == "lkc-unknown" {
