@@ -104,16 +104,16 @@ func (s *CLITestSuite) Test_Confluent_Help() {
 		s.T().Run(tt.name, func(t *testing.T) {
 			output := runCommand(t, "confluent", []string{}, tt.args, tt.wantErrCode)
 
+			if *update && tt.args != "version" {
+				writeFixture(t, tt.fixture, output)
+			}
+
 			actual := string(output)
 			expected := loadFixture(t, tt.fixture)
 
 			if tt.args == "version" {
 				require.Regexp(t, expected, actual)
 				return
-			}
-
-			if *update && tt.args != "version" {
-				writeFixture(t, tt.fixture, output)
 			}
 
 			if !reflect.DeepEqual(actual, expected) {

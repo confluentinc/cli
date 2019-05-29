@@ -51,7 +51,7 @@ func RequireEndWithPunctuation(field string, ignoreIfEndsWithCodeBlock bool) Rul
 		fieldValue := getValueByName(cmd, field)
 		chomped := strings.TrimRight(fieldValue, "\n")
 		lines := strings.Split(fieldValue, "\n")
-		if cmd.Long != "" && chomped[len(chomped)-1] != '.' {
+		if fieldValue != "" && chomped[len(chomped)-1] != '.' {
 			lastLine := len(lines) - 1
 			if lines[len(lines)-1] == "" {
 				lastLine = len(lines) - 2
@@ -278,7 +278,7 @@ func RequireNotTitleCase(field string, properNouns []string) Rule {
 				}
 				if isTitleCase {
 					issue := fmt.Errorf("don't title case %s on %s - %s",
-						normalizeDesc(field), FullCommand(cmd), cmd.Short)
+						normalizeDesc(field), FullCommand(cmd), fieldValue)
 					issues = multierror.Append(issues, issue)
 				}
 			}
