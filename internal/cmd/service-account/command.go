@@ -38,7 +38,7 @@ func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.User) *c
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:               "service-account",
-			Short:             "Manage service accounts",
+			Short:             `Manage service accounts. This is only available for Confluent Cloud Enterprise users.`,
 			PersistentPreRunE: prerunner.Authenticated(),
 		},
 		config: config,
@@ -51,38 +51,64 @@ func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.User) *c
 func (c *command) init() {
 	c.AddCommand(&cobra.Command{
 		Use:   "list",
-		Short: "List service accounts",
+		Short: `List service accounts. This is only available for Confluent Cloud Enterprise users.`,
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	})
 
 	createCmd := &cobra.Command{
-		Use:   "create NAME",
-		Short: "Create a service account",
-		RunE:  c.create,
-		Args:  cobra.ExactArgs(1),
+		Use:   "create <name>",
+		Short: `Create a service account. This is only available for Confluent Cloud Enterprise users.`,
+		Example: `
+Create a service account named ` + "``DemoServiceAccount``" + `.
+
+::
+
+  ccloud service-account create "DemoServiceAccount" \
+  --description "This is a demo service account."
+
+`,
+		RunE: c.create,
+		Args: cobra.ExactArgs(1),
 	}
-	createCmd.Flags().String("description", "", "The service account description")
+	createCmd.Flags().String("description", "", "Description of the service account.")
 	_ = createCmd.MarkFlagRequired("description")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
 	updateCmd := &cobra.Command{
-		Use:   "update ID",
-		Short: "Update a service account",
-		RunE:  c.update,
-		Args:  cobra.ExactArgs(1),
+		Use:   "update <id>",
+		Short: `Update a service account. This is only available for Confluent Cloud Enterprise users.`,
+		Example: `
+Update the description of a service account with the ID ` + "``2786``" + `.
+
+::
+
+    ccloud service-account update service-account-id 2786 \
+    --description "Update demo service account information."
+
+`,
+		RunE: c.update,
+		Args: cobra.ExactArgs(1),
 	}
-	updateCmd.Flags().String("description", "", "The service account description")
+	updateCmd.Flags().String("description", "", "Description of the service account.")
 	_ = updateCmd.MarkFlagRequired("description")
 	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
 
 	c.AddCommand(&cobra.Command{
-		Use:   "delete ID",
-		Short: "Delete a service account",
-		RunE:  c.delete,
-		Args:  cobra.ExactArgs(1),
+		Use:   "delete <id>",
+		Short: `Delete a service account. This is only available for Confluent Cloud Enterprise users.`,
+		Example: `
+Delete a service account with the ID ` + "``2786``" + `.
+
+::
+
+    ccloud service-account delete --service-account-id 2786
+
+`,
+		RunE: c.delete,
+		Args: cobra.ExactArgs(1),
 	})
 }
 

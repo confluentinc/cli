@@ -9,14 +9,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const longDescription = `You can test Confluent Platform by running a single-node instance locally on
-your laptop or desktop. THESE LOCAL COMMANDS ARE NOT INTENDED FOR PRODUCTION SETUP.
+const longDescription = `Use these commands to try out Confluent Platform by running a single-node
+instance locally on your machine. This set of commands are NOT intended for production use.
 
-The CLI "local" commands help you manage and interact with this installation
-for exploring, testing, experimenting, and otherwise familiarizing yourself
+You can use these commands to explore, test, experiment, and otherwise familiarize yourself
 with Confluent Platform.
 
-LOCAL COMMANDS ARE NOT INTENDED TO SETUP OR MANAGE CONFLUENT PLATFORM IN PRODUCTION.
+DO NOT use these commands to setup or manage Confluent Platform in production.
 `
 
 type command struct {
@@ -29,7 +28,7 @@ func New(prerunner pcmd.PreRunner, shell ShellRunner) *cobra.Command {
 	localCmd := &command{
 		Command: &cobra.Command{
 			Use:               "local",
-			Short:             "Manage local Confluent Platform development environment",
+			Short:             "Manage local Confluent Platform development environment.",
 			Long:              longDescription,
 			Args:              cobra.ArbitraryArgs,
 			PersistentPreRunE: prerunner.Anonymous(),
@@ -38,7 +37,7 @@ func New(prerunner pcmd.PreRunner, shell ShellRunner) *cobra.Command {
 	}
 	localCmd.Command.RunE = localCmd.run
 	// possibly we should make this an arg and/or move it to env var
-	localCmd.Flags().String("path", "", "Path to Confluent Platform install directory")
+	localCmd.Flags().String("path", "", "Path to Confluent Platform install directory.")
 	_ = localCmd.MarkFlagRequired("path")
 	localCmd.Flags().SortFlags = false
 	return localCmd.Command

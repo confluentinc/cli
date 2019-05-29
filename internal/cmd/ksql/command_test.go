@@ -147,7 +147,7 @@ func (suite *KSQLTestSuite) SetupTest() {
 
 func (suite *KSQLTestSuite) newCMD() *cobra.Command {
 	cmd := New(&cliMock.Commander{}, suite.conf, suite.ksqlc, suite.kafkac, suite.userc, &pcmd.ConfigHelper{Config: suite.conf, Client: &ccloud.Client{Kafka: suite.kafkac}})
-	cmd.PersistentFlags().CountP("verbose", "v", "increase output verbosity")
+	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	return cmd
 }
 
@@ -180,7 +180,7 @@ func (suite *KSQLTestSuite) TestShouldNotConfigureForPro() {
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.False(suite.kafkac.CreateACLCalled())
-	req.Equal("Cluster is not an enterprise cluster. No ACLS need to be set", buf.String())
+	req.Equal("The Kafka cluster is not an enterprise cluster. ACLs cannot be set.", buf.String())
 }
 
 func (suite *KSQLTestSuite) TestShouldNotConfigureOnDryRun() {

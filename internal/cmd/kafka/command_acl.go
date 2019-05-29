@@ -29,7 +29,7 @@ func NewACLCommand(config *config.Config, client ccloud.Kafka, ch *pcmd.ConfigHe
 	cmd := &aclCommand{
 		Command: &cobra.Command{
 			Use:   "acl",
-			Short: "Manage Kafka ACLs",
+			Short: `Manage Kafka ACLs. This is only available for Confluent Cloud Enterprise users.`,
 		},
 		config: config,
 		client: client,
@@ -41,13 +41,27 @@ func NewACLCommand(config *config.Config, client ccloud.Kafka, ch *pcmd.ConfigHe
 }
 
 func (c *aclCommand) init() {
-	c.Command.PersistentFlags().String("cluster", "", "Kafka cluster ID")
+	c.Command.PersistentFlags().String("cluster", "", "Kafka cluster ID.")
 
 	cmd := &cobra.Command{
 		Use:   "create",
-		Short: "Create a Kafka ACL",
-		RunE:  c.create,
-		Args:  cobra.NoArgs,
+		Short: `Create a Kafka ACL. This is only available for Confluent Cloud Enterprise users.`,
+		Example: `You can only specify one of these flags per command invocation: ` + "``cluster``, ``consumer-group``" + `,
+` + "``topic``, or ``transactional-id``" + ` per command invocation. For example, if you want to specify both
+` + "``consumer-group`` and ``topic``" + `, you must specify this as two separate commands:
+
+::
+
+	ccloud kafka acl create --allow --service-account-id 1522 --operation READ --consumer-group \
+	java_example_group_1
+
+::
+
+	ccloud kafka acl create --allow --service-account-id 1522 --operation READ --topic '*'
+
+`,
+		RunE: c.create,
+		Args: cobra.NoArgs,
 	}
 	cmd.Flags().AddFlagSet(aclConfigFlags())
 	cmd.Flags().SortFlags = false
@@ -56,7 +70,7 @@ func (c *aclCommand) init() {
 
 	cmd = &cobra.Command{
 		Use:   "delete",
-		Short: "Delete a Kafka ACL",
+		Short: `Delete a Kafka ACL. This is only available for Confluent Cloud Enterprise users.`,
 		RunE:  c.delete,
 		Args:  cobra.NoArgs,
 	}
@@ -67,12 +81,12 @@ func (c *aclCommand) init() {
 
 	cmd = &cobra.Command{
 		Use:   "list",
-		Short: "List Kafka ACLs for a resource",
+		Short: `List Kafka ACLs for a resource. This is only available for Confluent Cloud Enterprise users.`,
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	}
 	cmd.Flags().AddFlagSet(resourceFlags())
-	cmd.Flags().Int("service-account-id", 0, "List only ACLs for this service account")
+	cmd.Flags().Int("service-account-id", 0, "Service account ID.")
 	cmd.Flags().SortFlags = false
 
 	c.AddCommand(cmd)
@@ -133,7 +147,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, args []string) error {
 // validateAddDelete ensures the minimum requirements for acl add and delete are met
 func validateAddDelete(binding *ACLConfiguration) *ACLConfiguration {
 	if binding.Entry.PermissionType == kafkav1.ACLPermissionTypes_UNKNOWN {
-		binding.errors = multierror.Append(binding.errors, fmt.Errorf("--allow or --deny must be set when adding or deleting an acl"))
+		binding.errors = multierror.Append(binding.errors, fmt.Errorf("--allow or --deny must be set when adding or deleting an ACL"))
 	}
 
 	if binding.Pattern.PatternType == kafkav1.PatternTypes_UNKNOWN {

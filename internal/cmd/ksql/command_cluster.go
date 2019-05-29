@@ -42,7 +42,7 @@ func NewClusterCommand(config *config.Config, client ccloud.KSQL, kafkaClient cc
 	cmd := &clusterCommand{
 		Command: &cobra.Command{
 			Use:   "app",
-			Short: "Manage KSQL apps",
+			Short: "Manage KSQL apps.",
 		},
 		config:      config,
 		client:      client,
@@ -57,7 +57,7 @@ func NewClusterCommand(config *config.Config, client ccloud.KSQL, kafkaClient cc
 func (c *clusterCommand) init() {
 	c.AddCommand(&cobra.Command{
 		Use:   "list",
-		Short: "List KSQL apps",
+		Short: "List KSQL apps.",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	})
@@ -68,36 +68,36 @@ func (c *clusterCommand) init() {
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	}
-	createCmd.Flags().String("cluster", "", "Kafka Cluster ID")
+	createCmd.Flags().String("cluster", "", "Kafka cluster ID")
 	check(createCmd.MarkFlagRequired("cluster"))
-	createCmd.Flags().Int32("storage", 50, "total usable data storage in GB")
+	createCmd.Flags().Int32("storage", 50, "Amount of data storage available in GB")
 	check(createCmd.MarkFlagRequired("storage"))
-	createCmd.Flags().Int32("servers", 1, "number of servers in the cluster")
+	createCmd.Flags().Int32("servers", 1, "Number of servers in the cluster")
 	c.AddCommand(createCmd)
 
 	c.AddCommand(&cobra.Command{
 		Use:   "describe ID",
-		Short: "Describe a ksql app",
+		Short: "Describe a KSQL app.",
 		RunE:  c.describe,
 		Args:  cobra.ExactArgs(1),
 	})
 
 	c.AddCommand(&cobra.Command{
 		Use:   "delete ID",
-		Short: "Delete a ksql app",
+		Short: "Delete a KSQL app.",
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
 	})
 
 	aclsCmd := &cobra.Command{
 		Use:   "configure-acls ID TOPICS...",
-		Short: "Configure acls for a KSQL cluster",
+		Short: "Configure ACLs for a KSQL cluster.",
 		RunE:  c.configureACLs,
 		Args:  cobra.MinimumNArgs(1),
 	}
-	aclsCmd.Flags().String("cluster", "", "Kafka Cluster ID")
+	aclsCmd.Flags().String("cluster", "", "Kafka cluster ID")
 	check(createCmd.MarkFlagRequired("cluster"))
-	aclsCmd.Flags().BoolVar(&aclsDryRun, "dry-run", false, "If specified, print the acls that will be set and exit")
+	aclsCmd.Flags().BoolVar(&aclsDryRun, "dry-run", false, "If specified, print the ACLs that will be set and exit")
 	c.AddCommand(aclsCmd)
 }
 
@@ -157,7 +157,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	pcmd.Printf(cmd, "The ksql app %s has been deleted.\n", args[0])
+	pcmd.Printf(cmd, "The KSQL app %s has been deleted.\n", args[0])
 	return nil
 }
 
@@ -274,7 +274,7 @@ func (c *clusterCommand) configureACLs(cmd *cobra.Command, args []string) error 
 
 	// Ensure the Kafka Cluster is an Enterprise cluster
 	if !kafkaCluster.Enterprise {
-		pcmd.Printf(cmd, "Cluster is not an enterprise cluster. No ACLS need to be set")
+		pcmd.Printf(cmd, "The Kafka cluster is not an enterprise cluster. ACLs cannot be set.")
 		return nil
 	}
 

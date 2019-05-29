@@ -17,12 +17,13 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/kafka"
 	"github.com/confluentinc/cli/internal/cmd/ksql"
 	"github.com/confluentinc/cli/internal/cmd/local"
-	service_account "github.com/confluentinc/cli/internal/cmd/service-account"
+	"github.com/confluentinc/cli/internal/cmd/service-account"
 	"github.com/confluentinc/cli/internal/cmd/update"
 	"github.com/confluentinc/cli/internal/cmd/version"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	configs "github.com/confluentinc/cli/internal/pkg/config"
-	keystore "github.com/confluentinc/cli/internal/pkg/keystore"
+	"github.com/confluentinc/cli/internal/pkg/help"
+	"github.com/confluentinc/cli/internal/pkg/keystore"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	apikeys "github.com/confluentinc/cli/internal/pkg/sdk/apikey"
 	//connects "github.com/confluentinc/cli/internal/pkg/sdk/connect"
@@ -39,15 +40,22 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		Version:           ver.Version,
 		DisableAutoGenTag: true,
 	}
+	cli.SetUsageFunc(func(cmd *cobra.Command) error {
+		return help.ResolveReST(cmd.UsageTemplate(), cmd)
+	})
+	cli.SetHelpFunc(func(cmd *cobra.Command, args []string) {
+		_ = help.ResolveReST(cmd.HelpTemplate(), cmd)
+	})
+
 	if cliName == "ccloud" {
-		cli.Short = "Confluent Cloud CLI"
+		cli.Short = "Confluent Cloud CLI."
 		cli.Long = "Manage your Confluent Cloud."
 	} else {
-		cli.Short = "Confluent CLI"
+		cli.Short = "Confluent CLI."
 		cli.Long = "Manage your Confluent Platform."
 	}
 	cli.PersistentFlags().CountP("verbose", "v",
-		"increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace)")
+		"Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).")
 
 	prompt := pcmd.NewPrompt(os.Stdin)
 

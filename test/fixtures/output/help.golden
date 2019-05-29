@@ -4,19 +4,19 @@ Usage:
   ccloud [command]
 
 Available Commands:
-  api-key         Manage API keys
-  completion      Output shell completion code
-  environment     Manage and select ccloud environments
+  api-key         Manage the API keys.
+  completion      Print shell completion code.
+  environment     Manage and select ccloud environments.
   help            Help about any command
-  kafka           Manage Apache Kafka
-  login           Login to Confluent Cloud
-  logout          Logout of Confluent Cloud
-  service-account Manage service accounts
-  update          Update ccloud
-  version         Print the ccloud CLI version
+  kafka           Manage Apache Kafka.
+  login           Login to Confluent Cloud.
+  logout          Logout of Confluent Cloud.
+  service-account Manage service accounts. This is only available for Confluent Cloud Enterprise users.
+  update          Update the ccloud CLI.
+  version         Print the ccloud CLI version.
 
 Flags:
   -h, --help            help for ccloud
-  -v, --verbose count   increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace)
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
 
 Use "ccloud [command] --help" for more information about a command.

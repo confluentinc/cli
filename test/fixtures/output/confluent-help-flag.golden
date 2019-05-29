@@ -4,17 +4,17 @@ Usage:
   confluent [command]
 
 Available Commands:
-  completion  Output shell completion code
+  completion  Print shell completion code.
   help        Help about any command
-  local       Manage local Confluent Platform development environment
-  login       Login to Confluent Platform
-  logout      Logout of Confluent Platform
-  update      Update confluent
-  version     Print the confluent CLI version
+  local       Manage local Confluent Platform development environment.
+  login       Login to Confluent Platform.
+  logout      Logout of Confluent Platform.
+  update      Update the confluent CLI.
+  version     Print the confluent CLI version.
 
 Flags:
   -h, --help            help for confluent
-  -v, --verbose count   increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace)
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
       --version         version for confluent
 
 Use "confluent [command] --help" for more information about a command.

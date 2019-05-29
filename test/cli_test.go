@@ -104,6 +104,10 @@ func (s *CLITestSuite) Test_Confluent_Help() {
 		s.T().Run(tt.name, func(t *testing.T) {
 			output := runCommand(t, "confluent", []string{}, tt.args, tt.wantErrCode)
 
+			if *update && tt.args != "version" {
+				writeFixture(t, tt.fixture, output)
+			}
+
 			actual := string(output)
 			expected := loadFixture(t, tt.fixture)
 
@@ -142,7 +146,7 @@ func (s *CLITestSuite) Test_Ccloud_Errors() {
 			// TODO: mark AuthenticateRequest as not internal so its in CCloudAPIs
 			// https://github.com/confluentinc/cc-structs/blob/ce0ea5a6670d21a4b5c4f4f6ebd3d30b44cbb9f1/kafka/flow/v1/flow.proto#L41
 			auth := &struct {
-				Email string
+				Email    string
 				Password string
 			}{}
 			err = json.Unmarshal(b, auth)

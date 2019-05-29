@@ -75,11 +75,11 @@ func New(cliName string, config *config.Config, version *cliVersion.Version, pro
 func (c *command) init() {
 	c.Command = &cobra.Command{
 		Use:   "update",
-		Short: "Update " + c.cliName,
+		Short: fmt.Sprintf("Update the %s CLI.", c.cliName),
 		RunE:  c.update,
 		Args:  cobra.NoArgs,
 	}
-	c.Command.Flags().Bool("yes", false, "Update without prompting")
+	c.Command.Flags().Bool("yes", false, "Update without prompting.")
 	c.Command.Flags().SortFlags = false
 }
 
@@ -93,11 +93,11 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	updateAvailable, latestVersion, err := c.client.CheckForUpdates(c.cliName, c.version.Version, true)
 	if err != nil {
 		c.Command.SilenceUsage = true
-		return errors.Wrap(err, "error checking for updates")
+		return errors.Wrap(err, "Error checking for updates.")
 	}
 
 	if !updateAvailable {
-		pcmd.Println(cmd, "Already up to date")
+		pcmd.Println(cmd, "Already up to date.")
 		return nil
 	}
 

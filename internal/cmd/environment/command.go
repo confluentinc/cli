@@ -31,7 +31,7 @@ func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.Account,
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:               "environment",
-			Short:             fmt.Sprintf("Manage and select %s environments", cliName),
+			Short:             fmt.Sprintf("Manage and select %s environments.", cliName),
 			PersistentPreRunE: prerunner.Authenticated(),
 		},
 		config: config,
@@ -44,39 +44,39 @@ func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.Account,
 func (c *command) init() {
 	c.AddCommand(&cobra.Command{
 		Use:   "list",
-		Short: "List environments",
+		Short: "List Confluent Cloud environments.",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	})
 
 	c.AddCommand(&cobra.Command{
-		Use:   "use ID",
-		Short: "Switch to the specified environment",
+		Use:   "use <environment-id>",
+		Short: "Switch to the specified Confluent Cloud environment.",
 		RunE:  c.use,
 		Args:  cobra.ExactArgs(1),
 	})
 
 	c.AddCommand(&cobra.Command{
-		Use:   "create NAME",
-		Short: "Create a new environment",
+		Use:   "create <name>",
+		Short: "Create a new Confluent Cloud environment.",
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	})
 
 	updateCmd := &cobra.Command{
-		Use:   "update ID",
-		Short: "Update the name of an environment",
+		Use:   "update <environment-id>",
+		Short: "Update an existing Confluent Cloud environment.",
 		RunE:  c.update,
 		Args:  cobra.ExactArgs(1),
 	}
-	updateCmd.Flags().String("name", "", "New name for environment")
+	updateCmd.Flags().String("name", "", "New name for Confluent Cloud environment.")
 	check(updateCmd.MarkFlagRequired("name"))
 	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
 
 	c.AddCommand(&cobra.Command{
-		Use:   "delete ID",
-		Short: "Delete an environment and ALL its resources",
+		Use:   "delete <environment-id>",
+		Short: "Delete a Confluent Cloud environment and all its resources.",
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
 	})
@@ -105,7 +105,7 @@ func (c *command) refreshEnvList(cmd *cobra.Command) error {
 
 	err = c.config.Save()
 	if err != nil {
-		return errors.Wrap(err, "unable to save user auth while refreshing environment list")
+		return errors.Wrap(err, "Unable to save user auth while refreshing environment list")
 	}
 
 	return nil
@@ -150,7 +150,7 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	return errors.HandleCommon(errors.New("specified environment ID not found.  Use `ccloud environment list` to see available environments."), cmd)
+	return errors.HandleCommon(errors.New("The specified environment ID was not found.  To see available environments, use `ccloud environment list`."), cmd)
 }
 
 func (c *command) create(cmd *cobra.Command, args []string) error {
