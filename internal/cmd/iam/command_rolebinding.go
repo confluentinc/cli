@@ -44,7 +44,7 @@ func NewRolebindingCommand(config *config.Config, ch *pcmd.ConfigHelper, client 
 	cmd := &rolebindingCommand{
 		Command: &cobra.Command{
 			Use:   "rolebinding",
-			Short: "Manage RBAC and IAM role bindings",
+			Short: "Manage RBAC and IAM role bindings.",
 			Long:  "Manage Role Based Access (RBAC) and Identity and Access Management (IAM) role bindings.",
 		},
 		config: config,
@@ -60,31 +60,30 @@ func NewRolebindingCommand(config *config.Config, ch *pcmd.ConfigHelper, client 
 func (c *rolebindingCommand) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
-		Short: "List role bindings",
+		Short: "List role bindings.",
 		Long:  "List the role bindings for a particular principal and scope.",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	}
-	listCmd.Flags().String("principal", "", "Principal whose rolebindings should be listed")
-	listCmd.Flags().String("role", "", "List rolebindings under a specific role given to a principal")
-	listCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for scope of rolebinding listings")
-	listCmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for scope of rolebinding listings")
-	listCmd.Flags().String("ksql-cluster-id", "", "KSQL cluster ID for scope of rolebinding listings")
-	listCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for scope of rolebinding listings")
+	listCmd.Flags().String("principal", "", "Principal whose rolebindings should be listed.")
+	listCmd.Flags().String("role", "", "List rolebindings under a specific role given to a principal.")
+	listCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for scope of rolebinding listings.")
+	listCmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for scope of rolebinding listings.")
+	listCmd.Flags().String("ksql-cluster-id", "", "KSQL cluster ID for scope of rolebinding listings.")
+	listCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for scope of rolebinding listings.")
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
 	createCmd := &cobra.Command{
 		Use:   "create",
-		Short: "Create a new role binding",
+		Short: "Create a new role binding.",
 		Long:  "Create a new role binding.",
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
 	}
 	createCmd.Flags().String("role", "", "Role name of the new role binding.")
 	createCmd.Flags().String("resource", "", "Qualified resource name for the role binding.")
-	createCmd.Flags().Bool("prefix", false, `Whether the provided resource name is treated as a
-prefix pattern. The default is false.`)
+	createCmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern. The default is false.")
 	createCmd.Flags().String("principal", "", "Qualified principal name for the role binding.")
 	createCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
 	createCmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding.")
@@ -95,15 +94,14 @@ prefix pattern. The default is false.`)
 
 	deleteCmd := &cobra.Command{
 		Use:   "delete",
-		Short: "Delete an existing role binding",
+		Short: "Delete an existing role binding.",
 		Long:  "Delete an existing role binding.",
 		RunE:  c.delete,
 		Args:  cobra.NoArgs,
 	}
 	deleteCmd.Flags().String("role", "", "Role name of the existing role binding.")
 	deleteCmd.Flags().String("resource", "", "Qualified resource name associated with the role binding.")
-	deleteCmd.Flags().Bool("prefix", false, `Whether the provided resource name is treated as a
-prefix pattern. The default is false.`)
+	deleteCmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern. The default is false.")
 	deleteCmd.Flags().String("principal", "", "Qualified principal name associated with the role binding.")
 	deleteCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
 	deleteCmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding.")

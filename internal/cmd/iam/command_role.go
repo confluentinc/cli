@@ -37,7 +37,7 @@ func NewRoleCommand(config *config.Config, client *mds.APIClient) *cobra.Command
 	cmd := &roleCommand{
 		Command: &cobra.Command{
 			Use:   "role",
-			Short: "Manage RBAC and IAM roles",
+			Short: "Manage RBAC and IAM roles.",
 			Long:  "Manage Role Based Access (RBAC) and Identity and Access Management (IAM) roles.",
 		},
 		config: config,
@@ -52,7 +52,7 @@ func NewRoleCommand(config *config.Config, client *mds.APIClient) *cobra.Command
 func (c *roleCommand) init() {
 	c.AddCommand(&cobra.Command{
 		Use:   "list",
-		Short: "List all of the available roles",
+		Short: "List all of the available roles.",
 		Long:  "List all of the available roles.",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
@@ -60,7 +60,7 @@ func (c *roleCommand) init() {
 
 	c.AddCommand(&cobra.Command{
 		Use:   "describe <role>",
-		Short: "Gets the resources and operations allowed for a role",
+		Short: "Gets the resources and operations allowed for a role.",
 		Long:  "Describe the resources and operations allowed for a role.",
 		RunE:  c.describe,
 		Args:  cobra.ExactArgs(1),

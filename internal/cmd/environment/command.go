@@ -76,7 +76,7 @@ func (c *command) init() {
 
 	c.AddCommand(&cobra.Command{
 		Use:   "delete <environment-id>",
-		Short: "Delete a Confluent Cloud environment and all its resources.",
+		Short: "Delete a Confluent Cloud environment and ALL its resources.",
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
 	})
