@@ -8,22 +8,27 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const longDescriptionTemplate = `Output shell completion code for the specified shell (bash only).
-The shell code must be evaluated to provide interactive completion of {{.CLIName}} commands.
+const longDescriptionTemplate = `Use this command to print the output shell completion
+code for the specified shell (Bash only). The shell code must be evaluated to provide
+interactive completion of {{.CLIName}} commands.
 
-Install bash completions on macOS:
+Install Bash completions on macOS:
 
-  # Enable bash completions using homebrew
+::
+
+  # Enable Bash completions using homebrew
   brew install bash-completion
-  # Set the {{.CLIName}} completion code for bash to a file that's sourced on login
+  # Set the {{.CLIName}} completion code for Bash to a file that's sourced on login
   {{.CLIName}} completion bash > $(brew --prefix)/etc/bash_completion.d/{{.CLIName}}
 
-Install bash completions on Linux:
+Install Bash completions on Linux:
 
-  # Set the {{.CLIName}} completion code for bash to a file that's sourced on login
+::
+
+  # Set the {{.CLIName}} completion code for Bash to a file that's sourced on login
   {{.CLIName}} completion bash > /etc/bash_completion.d/{{.CLIName}}
 
-  # Load the {{.CLIName}} completion code for bash into the current shell
+  # Load the {{.CLIName}} completion code for Bash into the current shell
   source /etc/bash_completion.d/{{.CLIName}}
 `
 
@@ -43,8 +48,8 @@ func NewCompletionCmd(rootCmd *cobra.Command, cliName string) *cobra.Command {
 
 func (c *completionCommand) init(cliName string) {
 	c.Command = &cobra.Command{
-		Use:   "completion SHELL",
-		Short: "Output shell completion code",
+		Use:   "completion <shell>",
+		Short: "Print shell completion code.",
 		Long:  getLongDescription(cliName),
 		RunE:  c.completion,
 		Args:  cobra.ExactArgs(1),

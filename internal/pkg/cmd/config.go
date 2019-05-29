@@ -86,7 +86,7 @@ func (c *ConfigHelper) UseAPIKey(apiKey, clusterID string) error {
 	_, found = cluster.APIKeys[apiKey]
 	if !found {
 		// check if this is API key exists server-side
-		key, err := c.Client.APIKey.Get(context.Background(), &authv1.ApiKey{Key: apiKey})
+		key, err := c.Client.APIKey.Get(context.Background(), &authv1.ApiKey{AccountId: c.Config.Auth.Account.Id, Key: apiKey})
 		if err != nil {
 			return err
 		}
@@ -100,7 +100,7 @@ func (c *ConfigHelper) UseAPIKey(apiKey, clusterID string) error {
 		}
 		// this means the requested api-key belongs to a different cluster
 		if !found {
-			return fmt.Errorf("invalid api-key %s for cluster %s", apiKey, clusterID)
+			return fmt.Errorf("Invalid api-key %s for cluster %s", apiKey, clusterID)
 		}
 		// this means the requested api-key exists, but we just don't have the secret saved locally
 		return &errors.UnconfiguredAPISecretError{APIKey: apiKey, ClusterID: clusterID}

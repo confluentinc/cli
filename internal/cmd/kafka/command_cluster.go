@@ -35,7 +35,7 @@ func NewClusterCommand(config *config.Config, client ccloud.Kafka, ch *pcmd.Conf
 	cmd := &clusterCommand{
 		Command: &cobra.Command{
 			Use:   "cluster",
-			Short: "Manage Kafka clusters",
+			Short: "Manage Kafka clusters.",
 		},
 		config: config,
 		client: client,
@@ -48,23 +48,19 @@ func NewClusterCommand(config *config.Config, client ccloud.Kafka, ch *pcmd.Conf
 func (c *clusterCommand) init() {
 	c.AddCommand(&cobra.Command{
 		Use:   "list",
-		Short: "List Kafka clusters",
+		Short: "List Kafka clusters.",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	})
 
 	createCmd := &cobra.Command{
-		Use:   "create NAME",
-		Short: "Create a Kafka cluster",
+		Use:   "create <name>",
+		Short: "Create a Kafka cluster.",
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	}
-	createCmd.Flags().String("cloud", "", "Choose aws or gcp")
-	createCmd.Flags().String("region", "", "A valid region in the given cloud")
-	// default to smallest size allowed
-	createCmd.Flags().Int32("ingress", 1, "Network ingress in MB/s")
-	createCmd.Flags().Int32("egress", 1, "Network egress in MB/s")
-	createCmd.Flags().Int32("storage", 500, "Total usable data storage in GB")
+	createCmd.Flags().String("cloud", "", "Cloud provider (e.g. 'aws' or 'gcp')")
+	createCmd.Flags().String("region", "", "Cloud region for cluster (e.g. 'us-west-2')")
 	createCmd.Flags().Bool("multizone", false, "Use multiple zones for high availability")
 	check(createCmd.MarkFlagRequired("cloud"))
 	check(createCmd.MarkFlagRequired("region"))
@@ -73,15 +69,15 @@ func (c *clusterCommand) init() {
 	c.AddCommand(createCmd)
 
 	c.AddCommand(&cobra.Command{
-		Use:   "describe ID",
-		Short: "Describe a Kafka cluster",
+		Use:   "describe <id>",
+		Short: "Describe a Kafka cluster.",
 		RunE:  c.describe,
 		Args:  cobra.ExactArgs(1),
 	})
 
 	updateCmd := &cobra.Command{
-		Use:   "update ID",
-		Short: "Update a Kafka cluster",
+		Use:   "update <id>",
+		Short: "Update a Kafka cluster.",
 		RunE:  c.update,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -89,16 +85,16 @@ func (c *clusterCommand) init() {
 	c.AddCommand(updateCmd)
 
 	deleteCmd := &cobra.Command{
-		Use:   "delete ID",
-		Short: "Delete a Kafka cluster",
+		Use:   "delete <id>",
+		Short: "Delete a Kafka cluster.",
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
 	}
 	deleteCmd.Hidden = true
 	c.AddCommand(deleteCmd)
 	c.AddCommand(&cobra.Command{
-		Use:   "use ID",
-		Short: "Make the Kafka cluster active for use in other commands",
+		Use:   "use <id>",
+		Short: "Make the Kafka cluster active for use in other commands.",
 		RunE:  c.use,
 		Args:  cobra.ExactArgs(1),
 	})
@@ -145,18 +141,6 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	ingress, err := cmd.Flags().GetInt32("ingress")
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	egress, err := cmd.Flags().GetInt32("egress")
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	storage, err := cmd.Flags().GetInt32("storage")
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
 	multizone, err := cmd.Flags().GetBool("multizone")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -174,9 +158,6 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		Name:            args[0],
 		ServiceProvider: cloud,
 		Region:          region,
-		NetworkIngress:  ingress,
-		NetworkEgress:   egress,
-		Storage:         storage,
 		Durability:      durability,
 	}
 	cluster, err := c.client.Create(context.Background(), cfg)

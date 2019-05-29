@@ -104,6 +104,10 @@ func (s *CLITestSuite) Test_Confluent_Help() {
 		s.T().Run(tt.name, func(t *testing.T) {
 			output := runCommand(t, "confluent", []string{}, tt.args, tt.wantErrCode)
 
+			if *update && tt.args != "version" {
+				writeFixture(t, tt.fixture, output)
+			}
+
 			actual := string(output)
 			expected := loadFixture(t, tt.fixture)
 
@@ -142,7 +146,7 @@ func (s *CLITestSuite) Test_Ccloud_Errors() {
 			// TODO: mark AuthenticateRequest as not internal so its in CCloudAPIs
 			// https://github.com/confluentinc/cc-structs/blob/ce0ea5a6670d21a4b5c4f4f6ebd3d30b44cbb9f1/kafka/flow/v1/flow.proto#L41
 			auth := &struct {
-				Email string
+				Email    string
 				Password string
 			}{}
 			err = json.Unmarshal(b, auth)
@@ -523,6 +527,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 			req := &authv1.CreateApiKeyRequest{}
 			err = json.Unmarshal(b, req)
 			require.NoError(t, err)
+			require.NotEmpty(t, req.ApiKey.AccountId)
 			apiKey := req.ApiKey
 			apiKey.Id = int32(KEY_INDEX)
 			apiKey.Key = fmt.Sprintf("MYKEY%d", KEY_INDEX)
@@ -535,6 +540,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 			_, err = io.WriteString(w, string(b))
 			require.NoError(t, err)
 		} else if r.Method == "GET" {
+			require.NotEmpty(t, r.URL.Query().Get("account_id"))
 			var apiKeys []*authv1.ApiKey
 			for _, a := range KEY_STORE {
 				apiKeys = append(apiKeys, a)
@@ -548,6 +554,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		}
 	})
 	mux.HandleFunc("/api/clusters/", func(w http.ResponseWriter, r *http.Request) {
+		require.NotEmpty(t, r.URL.Query().Get("account_id"))
 		parts := strings.Split(r.URL.Path, "/")
 		id := parts[len(parts)-1]
 		if id == "lkc-unknown" {

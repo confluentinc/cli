@@ -1,16 +1,13 @@
 Error: accepts 1 arg(s), received 0
 Usage:
-  ccloud kafka cluster create NAME [flags]
+  ccloud kafka cluster create <name> [flags]
 
 Flags:
-      --cloud string    Choose aws or gcp
-      --region string   A valid region in the given cloud
-      --ingress int32   Network ingress in MB/s (default 1)
-      --egress int32    Network egress in MB/s (default 1)
-      --storage int32   Total usable data storage in GB (default 500)
+      --cloud string    Cloud provider (e.g. 'aws' or 'gcp')
+      --region string   Cloud region for cluster (e.g. 'us-west-2')
       --multizone       Use multiple zones for high availability
   -h, --help            help for create
 
 Global Flags:
-  -v, --verbose count   increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace)
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
 

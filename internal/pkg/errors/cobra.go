@@ -18,9 +18,9 @@ var messages = map[error]string{
 }
 
 var typeMessages = map[reflect.Type]string{
-	reflect.TypeOf(&ccloud.InvalidLoginError{}):   "You have entered an incorrect username or password. Please try again.",
-	reflect.TypeOf(&ccloud.ExpiredTokenError{}):   "Your access to Confluent Cloud has expired. Please login again.",
-	reflect.TypeOf(&ccloud.InvalidTokenError{}):   "Your auth token has been corrupted. Please login again.",
+	reflect.TypeOf(&ccloud.InvalidLoginError{}): "You have entered an incorrect username or password. Please try again.",
+	reflect.TypeOf(&ccloud.ExpiredTokenError{}): "Your access to Confluent Cloud has expired. Please login again.",
+	reflect.TypeOf(&ccloud.InvalidTokenError{}): "Your auth token has been corrupted. Please login again.",
 }
 
 // HandleCommon provides standard error messaging for common errors.

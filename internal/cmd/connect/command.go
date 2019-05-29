@@ -18,7 +18,7 @@ func New(config *shared.Config, client ccloud.Connect) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:   "connect",
-			Short: "Manage Kafka Connect",
+			Short: "Manage Kafka Connect.",
 		},
 		config: config,
 		client: client,
