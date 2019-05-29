@@ -37,7 +37,7 @@ func NewSink(config *shared.Config, client ccloud.Connect) *cobra.Command {
 	cmd := &sinkCommand{
 		Command: &cobra.Command{
 			Use:   "sink",
-			Short: "Manage sink connectors",
+			Short: "Manage sink connectors.",
 		},
 		config: config,
 		client: client,
@@ -59,7 +59,7 @@ func (c *sinkCommand) init() {
 
 	createCmd := &cobra.Command{
 		Use:   "create NAME",
-		Short: "Create a connector",
+		Short: "Create a connector.",
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -71,7 +71,7 @@ func (c *sinkCommand) init() {
 	if ctx, _ := c.config.Context(); ctx != nil {
 		defaultKafkaCluster = ctx.Kafka
 	}
-	createCmd.Flags().StringP("kafka-cluster", "k", defaultKafkaCluster, "Kafka Cluster ID")
+	createCmd.Flags().StringP("kafka-cluster", "k", defaultKafkaCluster, "Kafka cluster ID")
 	if defaultKafkaCluster == "" {
 		check(createCmd.MarkFlagRequired("kafka-cluster"))
 	}
@@ -84,14 +84,14 @@ func (c *sinkCommand) init() {
 
 	c.AddCommand(&cobra.Command{
 		Use:   "list",
-		Short: "List connectors",
+		Short: "List connectors.",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	})
 
 	getCmd := &cobra.Command{
 		Use:   "get ID",
-		Short: "Get a connector",
+		Short: "Get a connector.",
 		RunE:  c.get,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -100,14 +100,14 @@ func (c *sinkCommand) init() {
 
 	c.AddCommand(&cobra.Command{
 		Use:   "describe ID",
-		Short: "Describe a connector",
+		Short: "Describe a connector.",
 		RunE:  c.describe,
 		Args:  cobra.ExactArgs(1),
 	})
 
 	editCmd := &cobra.Command{
 		Use:   "edit ID",
-		Short: "Edit a connector",
+		Short: "Edit a connector.",
 		RunE:  c.edit,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -116,7 +116,7 @@ func (c *sinkCommand) init() {
 
 	updateCmd := &cobra.Command{
 		Use:   "update ID",
-		Short: "Update a connector",
+		Short: "Update a connector.",
 		RunE:  c.update,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -126,14 +126,14 @@ func (c *sinkCommand) init() {
 
 	c.AddCommand(&cobra.Command{
 		Use:   "delete ID",
-		Short: "Delete a connector",
+		Short: "Delete a connector.",
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
 	})
 
 	c.AddCommand(&cobra.Command{
 		Use:   "auth",
-		Short: "Auth a connector",
+		Short: "Authenticate a connector.",
 		RunE:  c.auth,
 		Args:  cobra.NoArgs,
 	})

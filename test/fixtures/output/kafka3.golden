@@ -1,10 +1,10 @@
 Error: accepts 1 arg(s), received 0
 Usage:
-  ccloud kafka cluster delete ID [flags]
+  ccloud kafka cluster delete <id> [flags]
 
 Flags:
   -h, --help   help for delete
 
 Global Flags:
-  -v, --verbose count   increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace)
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
 

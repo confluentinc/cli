@@ -61,22 +61,25 @@ func newCommands(prerunner pcmd.PreRunner, config *config.Config, cliName string
 func (a *commands) init(prerunner pcmd.PreRunner) {
 	loginCmd := &cobra.Command{
 		Use:   "login",
-		Short: fmt.Sprintf("Login to %s", a.config.APIName()),
-		Args:  cobra.NoArgs,
+		Short: fmt.Sprintf("Login to %s.", a.config.APIName()),
+		Long:  fmt.Sprintf("Login to %s.", a.config.APIName()),
+		Args: cobra.NoArgs,
 	}
 	if a.cliName == "ccloud" {
 		loginCmd.RunE = a.login
 	} else {
 		loginCmd.RunE = a.loginMDS
 	}
-	loginCmd.Flags().String("url", "https://confluent.cloud", "Confluent Control Plane URL")
+	loginCmd.Flags().String("url", "https://confluent.cloud", "Confluent Control Plane URL.")
 	loginCmd.Flags().SortFlags = false
 	loginCmd.PersistentPreRunE = prerunner.Anonymous()
 	logoutCmd := &cobra.Command{
 		Use:   "logout",
-		Short: fmt.Sprintf("Logout of %s", a.config.APIName()),
-		RunE:  a.logout,
-		Args:  cobra.NoArgs,
+		Short: fmt.Sprintf("Logout of %s.", a.config.APIName()),
+		Long:  fmt.Sprintf("Logout of %s.", a.config.APIName()),
+
+		RunE: a.logout,
+		Args: cobra.NoArgs,
 	}
 	logoutCmd.PersistentPreRunE = prerunner.Anonymous()
 	a.Commands = []*cobra.Command{loginCmd, logoutCmd}
@@ -108,7 +111,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(user.Accounts) == 0 {
-		return errors.HandleCommon(errors.New("no environments found for authenticated user!"), cmd)
+		return errors.HandleCommon(errors.New("No environments found for authenticated user!"), cmd)
 	}
 
 	// If no auth config exists, initialize it
@@ -181,7 +184,7 @@ func (a *commands) logout(cmd *cobra.Command, args []string) error {
 	a.config.Auth = nil
 	err := a.config.Save()
 	if err != nil {
-		return errors.Wrap(err, "unable to delete user auth")
+		return errors.Wrap(err, "Unable to delete user auth")
 	}
 	pcmd.Println(cmd, "You are now logged out")
 	return nil
