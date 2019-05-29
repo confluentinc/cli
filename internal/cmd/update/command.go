@@ -75,7 +75,7 @@ func New(cliName string, config *config.Config, version *cliVersion.Version, pro
 func (c *command) init() {
 	c.Command = &cobra.Command{
 		Use:   "update",
-		Short: "Update " + c.cliName,
+		Short: fmt.Sprintf("Update the %s CLI.", c.cliName),
 		RunE:  c.update,
 		Args:  cobra.NoArgs,
 	}

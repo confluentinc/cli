@@ -4,13 +4,13 @@ Usage:
   confluent [command]
 
 Available Commands:
-  completion  Configure output shell completion code.
+  completion  Print shell completion code.
   help        Help about any command
   local       Manage local Confluent Platform development environment.
   login       Login to Confluent Platform.
   logout      Logout of Confluent Platform.
-  update      Update confluent
-  version     Print the confluent CLI version
+  update      Update the confluent CLI.
+  version     Print the confluent CLI version.
 
 Flags:
   -h, --help            help for confluent
