@@ -145,11 +145,11 @@ rotate-data-key: Generates a new data key and re-encrypts the file with the new 
 		Args:  cobra.NoArgs,
 	}
 
-	rotateKeyCmd.Flags().Bool("rotate-master-key", false, "Rotate Master Key")
-	rotateKeyCmd.Flags().Bool("rotate-data-key", false, "Rotate Data Key")
-	rotateKeyCmd.Flags().String("local-secrets-file", "", "Path to the encrypted configuration properties file. ")
+	rotateKeyCmd.Flags().Bool("rotate-master-key", false, "Rotate Master Key.")
+	rotateKeyCmd.Flags().Bool("rotate-data-key", false, "Rotate Data Key.")
+	rotateKeyCmd.Flags().String("local-secrets-file", "", "Path to the encrypted configuration properties file.")
     check(rotateKeyCmd.MarkFlagRequired("local-secrets-file"))
-	rotateKeyCmd.Flags().String("passphrase", "", "Master key passphrase; use - to pipe from stdin or @file.txt to read from file")
+	rotateKeyCmd.Flags().String("passphrase", "", "Master key passphrase; use - to pipe from stdin or @file.txt to read from file.")
 	rotateKeyCmd.Flags().SortFlags = false
 	c.AddCommand(rotateKeyCmd)
 	}
