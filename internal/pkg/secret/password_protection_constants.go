@@ -1,6 +1,6 @@
 package secret
 
-/* Config Provider Configs*/
+// Config Provider Configs
 const (
 	CONFIG_PROVIDER_KEY = "config.providers"
 
@@ -11,7 +11,7 @@ const (
 	SECURE_CONFIG_PROVIDER_CLASS = "io.confluent.kafka.security.config.provider.SecurePassConfigProvider"
 )
 
-/* Encryption Keys Metadata */
+// Encryption Keys Metadata
 const (
 	METADATA_KEY_ENVVAR = "_metadata.symmetric_key.0.envvar"
 
@@ -36,12 +36,21 @@ const (
 	METADATA_PREFIX = "_metadata"
 )
 
-/* Encryption Algorithm Metadata */
 const (
 	METADATA_ENC_ALGORITHM = "AES/CBC/PKCS5Padding"
+
+	DATA_PATTERN = "data\\:(.*?)\\,"
+
+	IV_PATTERN = "iv\\:(.*?)\\,"
+
+	ENC_PATTERN = "ENC\\[(.*?)\\,"
+
+	PASSWORD_PATTERN = "\\$\\{(.*?):((.*?):)?(.*?)\\}"
+
+	CIPHER_PATTERN = "ENC\\[(.*?)\\]"
 )
 
-/* Password Protection File Metadata */
+// Password Protection File Metadata
 const (
 	CONFLUENT_KEY_ENVVAR = "CONFLUENT_SECURITY_MASTER_KEY"
 )

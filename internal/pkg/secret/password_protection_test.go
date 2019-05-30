@@ -597,7 +597,10 @@ func TestPasswordProtectionSuite_RotateDataKey(t *testing.T) {
 			if err != nil {
 				t.Fail()
 			}
-			originalProps := properties.MustLoadFile(tt.args.localSecureConfigPath, properties.ISO_8859_1)
+			originalProps, err := properties.LoadFile(tt.args.localSecureConfigPath, properties.ISO_8859_1)
+			if err != nil {
+				t.Fail()
+			}
 
 			if tt.args.corruptDEK {
 				err := corruptEncryptedDEK(tt.args.localSecureConfigPath)
@@ -618,7 +621,10 @@ func TestPasswordProtectionSuite_RotateDataKey(t *testing.T) {
 
 			// Verify the encrypted values are different
 			if !tt.wantErr {
-				rotatedProps := properties.MustLoadFile(tt.args.localSecureConfigPath, properties.ISO_8859_1)
+				rotatedProps, err := properties.LoadFile(tt.args.localSecureConfigPath, properties.ISO_8859_1)
+				if err != nil {
+					t.Fail()
+				}
 				for key, value := range originalProps.Map() {
 
 					if !strings.HasPrefix(key, METADATA_PREFIX) {
@@ -757,9 +763,15 @@ func createNewConfigFile(path string, contents string) error {
 }
 
 func validateFileContents(contents string, configFile string, remoteSecretsFile string, localSecretsFile string, plugin *PasswordProtectionSuite, config string) error {
-	originalConfigs := properties.MustLoadString(contents)
+	originalConfigs, err := properties.LoadString(contents)
+	if err != nil {
+		return err
+	}
 	originalConfigs.DisableExpansion = true
-	encryptedConfigs := properties.MustLoadString(config)
+	encryptedConfigs, err := properties.LoadString(config)
+	if err != nil {
+		return err
+	}
 	encryptedConfigs.DisableExpansion = true
 	// Load the configs.
 	configProps, err := LoadPropertiesFile(configFile)
@@ -909,8 +921,14 @@ func validateUsingDecryption(configFilePath string, localSecureConfigPath string
 		return err
 	}
 	decryptContentStr := string(decryptContent)
-	decryptConfigProps := properties.MustLoadString(decryptContentStr)
-	originalConfigProps := properties.MustLoadString(origConfigs)
+	decryptConfigProps, err := properties.LoadString(decryptContentStr)
+	if err != nil {
+		return err
+	}
+	originalConfigProps, err := properties.LoadString(origConfigs)
+	if err != nil {
+		return err
+	}
 	originalConfigProps.DisableExpansion = true
 	for key, value := range decryptConfigProps.Map() {
 		originalVal, _ := originalConfigProps.Get(key)

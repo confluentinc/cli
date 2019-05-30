@@ -38,20 +38,20 @@ func NewMasterKeyCommand(config *config.Config, prompt pcmd.Prompt, resolv pcmd.
 }
 
 func (c *masterKeyCommand) init() {
-	createCmd := &cobra.Command{
-		Use:   "create",
-		Short: "Create a master key for Confluent Platform.",
+	generateCmd := &cobra.Command{
+		Use:   "generate",
+		Short: "Generate a master key for Confluent Platform.",
 		Long: `This command generates a master key. This key will be used for encryption and decryption of configuration value.`,
-		RunE:  c.create,
+		RunE:  c.generate,
 		Args:  cobra.NoArgs,
 	}
-	createCmd.Flags().String("passphrase", "", `The key passphrase. To pipe from stdin use "-", e.g. "--passphrase -";
+	generateCmd.Flags().String("passphrase", "", `The key passphrase. To pipe from stdin use "-", e.g. "--passphrase -";
 to read from a file use "@<path-to-file>", e.g. "--passphrase @/User/bob/secret.properties".`)
-	createCmd.Flags().SortFlags = false
-	c.AddCommand(createCmd)
+	generateCmd.Flags().SortFlags = false
+	c.AddCommand(generateCmd)
 }
 
-func (c *masterKeyCommand) create(cmd *cobra.Command, args []string) error {
+func (c *masterKeyCommand) generate(cmd *cobra.Command, args []string) error {
 	passphraseSource, err := cmd.Flags().GetString("passphrase")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)

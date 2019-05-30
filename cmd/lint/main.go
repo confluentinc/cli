@@ -104,12 +104,12 @@ var rules = []linter.Rule{
 
 var flagRules = []linter.FlagRule{
 	linter.FlagFilter(linter.RequireFlagNameLength(2, 16),
-		linter.ExcludeFlag("service-account-id", "replication-factor", "local-secrets-file", "remote-secrets-file", "rotate-master-key"), ),
+		linter.ExcludeFlag("service-account-id", "replication-factor", "local-secrets-file", "remote-secrets-file"), ),
 	linter.RequireFlagStartWithCapital,
 	linter.RequireFlagEndWithPunctuation,
 	linter.RequireFlagCharacters('-'),
 	linter.FlagFilter(linter.RequireFlagDelimiter('-', 1),
-		linter.ExcludeFlag("service-account-id", "local-secrets-file", "remote-secrets-file", "rotate-master-key", "rotate-data-key")),
+		linter.ExcludeFlag("service-account-id", "local-secrets-file", "remote-secrets-file")),
 	linter.RequireFlagRealWords('-'),
 }
 

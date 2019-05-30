@@ -41,7 +41,8 @@ func (c *secureFileCommand) init() {
 		Use:   "encrypt",
 		Short: "Encrypt secrets in a configuration properties file.",
 		Long: `This command encrypts the passwords in file specified in filePath. This command returns a failure
-if a master key has not already been set using the "master-key create" command.`,
+if a master key has not already been set in the environment variable. Create master key using "master-key create" 
+command and save the generated master key in environment variable.`,
 		RunE:  c.encrypt,
 		Args:  cobra.NoArgs,
 	}
@@ -138,15 +139,15 @@ command returns a failure if a master key has not already been set using the "ma
 	rotateKeyCmd := &cobra.Command{
 		Use:   "rotate",
 		Short: "Rotate master key or data key.",
-		Long: `Based on the flag set this command rotates either the master key or data key. --rotate-master-key: Generates a new master key and re-encrypts the  with the new master key. The new master
+		Long: `Based on the flag set this command rotates either the master key or data key. --master-key: Generates a new master key and re-encrypts the  with the new master key. The new master
 key is stored in an environment variable.
-rotate-data-key: Generates a new data key and re-encrypts the file with the new data key.`,
+data-key: Generates a new data key and re-encrypts the file with the new data key.`,
 		RunE:  c.rotate,
 		Args:  cobra.NoArgs,
 	}
 
-	rotateKeyCmd.Flags().Bool("rotate-master-key", false, "Rotate Master Key.")
-	rotateKeyCmd.Flags().Bool("rotate-data-key", false, "Rotate Data Key.")
+	rotateKeyCmd.Flags().Bool("master-key", false, "Rotate Master Key.")
+	rotateKeyCmd.Flags().Bool("data-key", false, "Rotate Data Key.")
 	rotateKeyCmd.Flags().String("local-secrets-file", "", "Path to the encrypted configuration properties file.")
     check(rotateKeyCmd.MarkFlagRequired("local-secrets-file"))
 	rotateKeyCmd.Flags().String("passphrase", "", "Master key passphrase; use - to pipe from stdin or @file.txt to read from file.")
@@ -317,12 +318,7 @@ func (c *secureFileCommand) rotate(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	rotateDEK, err := cmd.Flags().GetBool("rotate-data-key")
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
-	rotateMEK, err := cmd.Flags().GetBool("rotate-master-key")
+	rotateMEK, err := cmd.Flags().GetBool("master-key")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -343,7 +339,7 @@ func (c *secureFileCommand) rotate(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
-	} else if rotateDEK {
+	} else {
 		err = c.plugin.RotateDataKey(passphrases, localSecretsPath)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)

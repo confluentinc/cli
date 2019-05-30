@@ -1,4 +1,3 @@
-//go:generate mocker --prefix "" --dst mock/schemaregistry.go --pkg mock --selfpkg github.com/confluentinc/ccloud-sdk-go interfaces.go SchemaRegistry
 package cmd
 
 import (

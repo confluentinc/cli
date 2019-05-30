@@ -11,19 +11,24 @@ import (
 	"github.com/magiconair/properties"
 )
 
+var dataRegex = regexp.MustCompile(DATA_PATTERN)
+var ivRegex = regexp.MustCompile(IV_PATTERN)
+var algoRegex = regexp.MustCompile(ENC_PATTERN)
+var passwordRegex = regexp.MustCompile(PASSWORD_PATTERN)
+var cipherRegex = regexp.MustCompile(CIPHER_PATTERN)
+
 func GenerateConfigValue(key string, path string) string {
 	return "${securepass:" + path + ":" + key + "}"
 }
 
 func ParseCipherValue(cipher string) (string, string, string) {
-	data := findMatchTrim(cipher, "data\\:(.*?)\\,", "data:", ",")
-	iv := findMatchTrim(cipher, "iv\\:(.*?)\\,", "iv:", ",")
-	algo := findMatchTrim(cipher, "ENC\\[(.*?)\\,", "ENC[", ",")
+	data := findMatchTrim(cipher, dataRegex, "data:", ",")
+	iv := findMatchTrim(cipher, ivRegex, "iv:", ",")
+	algo := findMatchTrim(cipher, algoRegex, "ENC[", ",")
 	return data, iv, algo
 }
 
-func findMatchTrim(original string, pattern string, prefix string, suffix string) string {
-	re := regexp.MustCompile(pattern)
+func findMatchTrim(original string, re *regexp.Regexp, prefix string, suffix string) string {
 	match := re.FindStringSubmatch(original)
 	substring := ""
 	if len(match) != 0 {
@@ -35,12 +40,12 @@ func findMatchTrim(original string, pattern string, prefix string, suffix string
 func WritePropertiesFile(path string, property *properties.Properties, writeComments bool) error {
 	buf := new(bytes.Buffer)
 	if writeComments {
-		_, err := property.WriteComment(buf, "# ", properties.ISO_8859_1)
+		_, err := property.WriteComment(buf, "# ", properties.UTF8)
 		if err != nil {
 			return err
 		}
 	} else {
-		_, err := property.Write(buf, properties.ISO_8859_1)
+		_, err := property.Write(buf, properties.UTF8)
 		if err != nil {
 			return err
 		}
@@ -66,12 +71,17 @@ func LoadPropertiesFile(path string) (*properties.Properties, error) {
 	if !IsPathValid(path) {
 		return nil, fmt.Errorf("Invalid file path.")
 	}
-	property := properties.MustLoadFile(path, properties.ISO_8859_1)
+	property, err := properties.LoadFile(path, properties.UTF8)
+	if err != nil {
+		return nil, err
+	}
 	property.DisableExpansion = true
 	return property, nil
 }
 
 func GenerateConfigKey(path string, key string) string {
 	fileName := filepath.Base(path)
+	// Intentionally not using the filepath.Join(fileName, key), because even if this CLI is run on Windows we know that
+	// the server-side version will be running on a *nix variant and will thus have forward slashes to lookup the correct path
 	return fileName + "/" + key;
 }

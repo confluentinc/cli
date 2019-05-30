@@ -6,23 +6,17 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"crypto/sha512"
-	"encoding/base32"
 	"encoding/base64"
 	"errors"
 	"fmt"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"golang.org/x/crypto/pbkdf2"
-	"io"
-	_ "io/ioutil"
 )
 
-/**
- * Encryption Engine performs Encryption, Decryption and Hash operations.
- */
-
+// Encryption Engine performs Encryption, Decryption and Hash operations.
 type EncryptionEngine interface {
-	AESEncrypt(plainText string, key []byte) (string, string, error)
-	AESDecrypt(cipher string, iv string, algo string, key []byte) (string, error)
+	Encrypt(plainText string, key []byte) (string, string, error)
+	Decrypt(cipher string, iv string, algo string, key []byte) (string, error)
 	GenerateRandomDataKey(keyLength int) ([]byte, string, error)
 	GenerateMasterKey(masterKeyPassphrase string) (string, error)
 	WrapDataKey(dataKey []byte, masterKey string) (string, string, error)
@@ -31,12 +25,12 @@ type EncryptionEngine interface {
 
 // EncryptEngineImpl is the EncryptionEngine implementation
 type EncryptEngineImpl struct {
-	CipherSuite *CipherSuite
-	Logger      *log.Logger
+	Cipher *Cipher
+	Logger *log.Logger
 }
 
-func NewEncryptionEngine(suite *CipherSuite, logger *log.Logger) *EncryptEngineImpl {
-	return &EncryptEngineImpl{CipherSuite: suite, Logger: logger}
+func NewEncryptionEngine(suite *Cipher, logger *log.Logger) *EncryptEngineImpl {
+	return &EncryptEngineImpl{Cipher: suite, Logger: logger}
 }
 
 func (c *EncryptEngineImpl) generateRandomString(keyLength int) (string, error) {
@@ -46,8 +40,7 @@ func (c *EncryptEngineImpl) generateRandomString(keyLength int) (string, error) 
 		return "", err
 	}
 
-	randomString := base32.StdEncoding.EncodeToString(randomBytes)[:keyLength]
-	return randomString, nil
+	return string(randomBytes), nil
 }
 
 func (c *EncryptEngineImpl) GenerateRandomDataKey(keyLength int) ([]byte, string, error) {
@@ -72,7 +65,7 @@ func (c *EncryptEngineImpl) GenerateRandomDataKey(keyLength int) ([]byte, string
 }
 
 func (c *EncryptEngineImpl) GenerateMasterKey(masterKeyPassphrase string) (string, error) {
-	key, err := c.generateEncryptionKey(masterKeyPassphrase, c.CipherSuite.SaltMEK)
+	key, err := c.generateEncryptionKey(masterKeyPassphrase, c.Cipher.SaltMEK)
 	if err != nil {
 		return "", err
 	}
@@ -87,7 +80,7 @@ func (c *EncryptEngineImpl) WrapDataKey(dataKey []byte, masterKey string) (strin
 	if err != nil {
 		return "", "", err
 	}
-	return c.AESEncrypt(dataKeyStr, masterKeyByte)
+	return c.Encrypt(dataKeyStr, masterKeyByte)
 }
 
 func (c *EncryptEngineImpl) UnWrapDataKey(dataKey string, iv string, algo string, masterKey string) ([]byte, error) {
@@ -96,7 +89,7 @@ func (c *EncryptEngineImpl) UnWrapDataKey(dataKey string, iv string, algo string
 		return []byte{}, err
 	}
 
-	dataKeyEnc, err := c.AESDecrypt(dataKey, iv, c.CipherSuite.EncryptionAlgo, masterKeyByte)
+	dataKeyEnc, err := c.Decrypt(dataKey, iv, c.Cipher.EncryptionAlgo, masterKeyByte)
 	if err != nil {
 		return []byte{}, err
 	}
@@ -104,11 +97,7 @@ func (c *EncryptEngineImpl) UnWrapDataKey(dataKey string, iv string, algo string
 	return base64.StdEncoding.DecodeString(dataKeyEnc)
 }
 
-func (c *EncryptEngineImpl) AESEncrypt(plainText string, key []byte) (string, string, error) {
-	return c.encrypt(plainText, key)
-}
-
-func (c *EncryptEngineImpl) encrypt(src string, key []byte) (data string, ivStr string, err error) {
+func (c *EncryptEngineImpl) Encrypt(plainText string, key []byte) (data string, ivStr string, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			switch x := r.(type) {
@@ -128,11 +117,11 @@ func (c *EncryptEngineImpl) encrypt(src string, key []byte) (data string, ivStr 
 	}
 
 	iv := make([]byte, aes.BlockSize)
-	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
+	if _, err := rand.Read(iv); err != nil {
 		return "", "", err
 	}
-	ecb := cipher.NewCBCEncrypter(block, []byte(iv))
-	content := []byte(src)
+	ecb := cipher.NewCBCEncrypter(block, iv)
+	content := []byte(plainText)
 	content = c.pKCS5Padding(content, block.BlockSize())
 	crypted := make([]byte, len(content))
 	ecb.CryptBlocks(crypted, content)
@@ -141,7 +130,7 @@ func (c *EncryptEngineImpl) encrypt(src string, key []byte) (data string, ivStr 
 	return result, ivStr, nil
 }
 
-func (c *EncryptEngineImpl) AESDecrypt(cipher string, iv string, algo string, key []byte) (string, error) {
+func (c *EncryptEngineImpl) Decrypt(cipher string, iv string, algo string, key []byte) (string, error) {
 	cipherBytes, err := base64.StdEncoding.DecodeString(cipher)
 	if err != nil {
 		return "", err
@@ -159,7 +148,7 @@ func (c *EncryptEngineImpl) AESDecrypt(cipher string, iv string, algo string, ke
 }
 
 func (c *EncryptEngineImpl) generateEncryptionKey(keyPhrase string, salt string) ([]byte, error) {
-	key := pbkdf2.Key([]byte(keyPhrase), []byte(salt), c.CipherSuite.Iterations, c.CipherSuite.KeyLength, sha512.New)
+	key := pbkdf2.Key([]byte(keyPhrase), []byte(salt), c.Cipher.Iterations, c.Cipher.KeyLength, sha512.New)
 	return key, nil
 }
 
