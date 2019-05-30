@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"io"
 	"os"
+
+	"github.com/havoc-io/gopass"
 )
 
 // Prompt represents input and output to a terminal
