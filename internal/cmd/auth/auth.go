@@ -173,11 +173,12 @@ func (a *commands) credentials(cmd *cobra.Command) (string, string, error) {
 
 	if len(password) == 0 {
 		pcmd.Print(cmd, "Password: ")
-		password, err := a.prompt.ReadPassword()
+		bytePassword, err := a.prompt.ReadPassword()
 		if err != nil {
 			return "", "", err
 		}
 		pcmd.Println(cmd)
+		password = string(bytePassword)
 	}
 
 	a.Logger.Trace("Successfully obtained password")

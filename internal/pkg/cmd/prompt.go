@@ -11,7 +11,7 @@ import (
 // Prompt represents input and output to a terminal
 type Prompt interface {
 	ReadString(delim byte) (string, error)
-	ReadPassword() (string, error)
+	ReadPassword() ([]byte, error)
 }
 
 // RealPrompt is the standard prompt implementation
@@ -32,6 +32,6 @@ func (p *RealPrompt) ReadString(delim byte) (string, error) {
 }
 
 // ReadPassword reads a line of input from a terminal without local echo.
-func (p *RealPrompt) ReadPassword() (string, error) {
+func (p *RealPrompt) ReadPassword() ([]byte, error) {
 	return gopass.getPasswd(false)
 }
