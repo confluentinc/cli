@@ -6,7 +6,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/havoc-io/gopass"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go"
@@ -174,12 +173,11 @@ func (a *commands) credentials(cmd *cobra.Command) (string, string, error) {
 
 	if len(password) == 0 {
 		pcmd.Print(cmd, "Password: ")
-		bytePassword, err := gopass.GetPasswd()
+		password, err := a.prompt.ReadPassword()
 		if err != nil {
 			return "", "", err
 		}
 		pcmd.Println(cmd)
-		password = string(bytePassword)
 	}
 
 	a.Logger.Trace("Successfully obtained password")

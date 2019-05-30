@@ -4,14 +4,12 @@ import (
 	"bufio"
 	"io"
 	"os"
-
-	"golang.org/x/crypto/ssh/terminal"
 )
 
 // Prompt represents input and output to a terminal
 type Prompt interface {
 	ReadString(delim byte) (string, error)
-	ReadPassword(fd int) ([]byte, error)
+	ReadPassword() (string, error)
 }
 
 // RealPrompt is the standard prompt implementation
@@ -32,6 +30,6 @@ func (p *RealPrompt) ReadString(delim byte) (string, error) {
 }
 
 // ReadPassword reads a line of input from a terminal without local echo.
-func (p *RealPrompt) ReadPassword(fd int) ([]byte, error) {
-	return terminal.ReadPassword(fd)
+func (p *RealPrompt) ReadPassword() (string, error) {
+	return gopass.getPasswd(false)
 }
