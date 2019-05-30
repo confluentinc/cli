@@ -144,7 +144,14 @@ func Test_credentials_NoSpacesAroundEmail_ShouldSupportSpacesAtBeginOrEnd(t *tes
 }
 
 func prompt(username, password string) *cliMock.Prompt {
-	return &cliMock.Prompt{}
+	return &cliMock.Prompt{
+		ReadStringFunc: func(delim byte) (string, error) {
+			return "cody@confluent.io", nil
+		},
+		ReadPasswordFunc: func() ([]byte, error) {
+			return []byte(" iamrobin "), nil
+		},
+	}
 }
 
 func newAuthCommand(prompt pcmd.Prompt, auth *sdkMock.Auth, req *require.Assertions) (*commands, *config.Config) {
