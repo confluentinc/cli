@@ -16,8 +16,8 @@ builds:
   -
     binary: ccloud
     main: cmd/confluent/main.go
-    #flags:
-            #  - -mod=readonly
+    flags:
+      - -mod=readonly
     ldflags:
       - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.Commit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}} -X main.cliName=ccloud
     gcflags:
@@ -40,9 +40,9 @@ release:
 archive:
   format: binary
 
-  #s3:
-  #  -
-  #    bucket: confluent.cloud
-  #    region: us-west-2
-  #    folder: "ccloud-cli/binaries/{{.Version}}"
-  #    acl: public-read
+s3:
+  -
+    bucket: confluent.cloud
+    region: us-west-2
+    folder: "ccloud-cli/binaries/{{.Version}}"
+    acl: public-read
