@@ -17,8 +17,10 @@ func TestPasswordProtectionSuite_CreateMasterKey(t *testing.T) {
 	type args struct {
 		masterKeyPassphrase   string
 		localSecureConfigPath string
-		validateDiffKey bool
+		validateDiffKey        bool
 		secureDir             string
+		seed                  int64
+		expectedMasterKey     string
 	}
 	tests := []struct {
 		name    string
@@ -32,6 +34,8 @@ func TestPasswordProtectionSuite_CreateMasterKey(t *testing.T) {
 				masterKeyPassphrase:   "abc123",
 				localSecureConfigPath: "/tmp/securePass987/create/secureConfig.properties",
 				validateDiffKey: false,
+				expectedMasterKey: "",
+				seed: 1,
 			},
 			wantErr: false,
 		},

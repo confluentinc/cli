@@ -5,6 +5,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	mathRand "math/rand"
 	"crypto/sha512"
 	"encoding/base64"
 	"errors"
@@ -25,15 +26,27 @@ type EncryptionEngine interface {
 
 // EncryptEngineImpl is the EncryptionEngine implementation
 type EncryptEngineImpl struct {
-	Cipher *Cipher
-	Logger *log.Logger
+	Cipher        *Cipher
+	Logger        *log.Logger
+	cryptoSafeRNG  bool // should be set to true always, false for testing purpose only.
+	seed           int64 // for testing purpose
 }
 
-func NewEncryptionEngine(suite *Cipher, logger *log.Logger) *EncryptEngineImpl {
-	return &EncryptEngineImpl{Cipher: suite, Logger: logger}
+func NewEncryptionEngine(suite *Cipher, logger *log.Logger, cryptoSafeRNG bool, seed int64) *EncryptEngineImpl {
+	return &EncryptEngineImpl{Cipher: suite, Logger: logger, cryptoSafeRNG: cryptoSafeRNG, seed: seed}
 }
 
-func (c *EncryptEngineImpl) generateRandomString(keyLength int) (string, error) {
+func (c *EncryptEngineImpl) RandomNumberGenerator(keyLength int) (string, error) {
+	mathRand.Seed(c.seed)
+	randomBytes := make([]byte, keyLength)
+	for i := 0; i < keyLength; i++ {
+		randomBytes[i] = byte(mathRand.Int63())
+	}
+
+	return base64.StdEncoding.EncodeToString(randomBytes), nil
+}
+
+func (c *EncryptEngineImpl) CryptoSecureRandomNumberGenerator(keyLength int) (string, error) {
 	randomBytes := make([]byte, keyLength)
 	_, err := rand.Read(randomBytes)
 	if err != nil {
@@ -41,6 +54,14 @@ func (c *EncryptEngineImpl) generateRandomString(keyLength int) (string, error) 
 	}
 
 	return base64.StdEncoding.EncodeToString(randomBytes), nil
+}
+
+func (c *EncryptEngineImpl) generateRandomString(keyLength int) (string, error) {
+	if !c.cryptoSafeRNG {
+		return c.RandomNumberGenerator(keyLength)
+	}
+
+	return c.CryptoSecureRandomNumberGenerator(keyLength)
 }
 
 func (c *EncryptEngineImpl) GenerateRandomDataKey(keyLength int) ([]byte, string, error) {
@@ -125,17 +146,21 @@ func (c *EncryptEngineImpl) Encrypt(plainText string, key []byte) (data string, 
 		return "", "", err
 	}
 
-	iv := make([]byte, aes.BlockSize)
-	if _, err := rand.Read(iv); err != nil {
+	ivStr, err = c.generateRandomString(aes.BlockSize)
+	if err != nil {
 		return "", "", err
 	}
-	ecb := cipher.NewCBCEncrypter(block, iv)
+
+	ivBytes, err := base64.StdEncoding.DecodeString(ivStr)
+	if err != nil {
+		return "", "", err
+	}
+	ecb := cipher.NewCBCEncrypter(block, ivBytes)
 	content := []byte(plainText)
 	content = c.pKCS5Padding(content, block.BlockSize())
 	crypted := make([]byte, len(content))
 	ecb.CryptBlocks(crypted, content)
 	result := base64.StdEncoding.EncodeToString(crypted)
-	ivStr = base64.StdEncoding.EncodeToString(iv)
 	return result, ivStr, nil
 }
 
