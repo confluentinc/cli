@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"syscall"
 
 	"github.com/spf13/cobra"
 
@@ -169,7 +170,7 @@ func (a *commands) credentials(cmd *cobra.Command) (string, string, error) {
 
 	if len(password) == 0 {
 		pcmd.Print(cmd, "Password: ")
-		bytePassword, err := a.prompt.ReadPassword(0)
+		bytePassword, err := a.prompt.ReadPassword(int(syscall.Stdin))
 		if err != nil {
 			return "", "", err
 		}
