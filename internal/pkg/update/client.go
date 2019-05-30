@@ -150,9 +150,11 @@ func (c *client) UpdateBinary(name, version, path string) error {
 	timeSpent := c.clock.Now().Sub(startTime).Seconds()
 	fmt.Fprintf(c.Out, "Done. Downloaded %.2f MB in %.0f seconds. (%.2f MB/s)\n", mb, timeSpent, mb/timeSpent)
 
-	err = c.fs.Move(path, downloadDir+string(filepath.Separator)+name+".old")
+	// The old version will get deleted automatically eventually as it's in the system temp dir
+	previousVersionBinary := filepath.Join(downloadDir, name+".old")
+	err = c.fs.Move(path, previousVersionBinary)
 	if err != nil {
-		return errors.Wrapf(err, "unable to move %s to %s", path, downloadDir+string(filepath.Separator)+name+".old")
+		return errors.Wrapf(err, "unable to move %s to %s", path, previousVersionBinary)
 	}
 	err = c.copyFile(newBin, path)
 	if err != nil {
