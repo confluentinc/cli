@@ -4,14 +4,15 @@ import (
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
-	"crypto/rand"
-	mathRand "math/rand"
 	"crypto/sha512"
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/log"
+	"math/rand"
+
 	"golang.org/x/crypto/pbkdf2"
+
+	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 // Encryption Engine performs Encryption, Decryption and Hash operations.
@@ -26,42 +27,23 @@ type EncryptionEngine interface {
 
 // EncryptEngineImpl is the EncryptionEngine implementation
 type EncryptEngineImpl struct {
-	Cipher        *Cipher
-	Logger        *log.Logger
-	cryptoSafeRNG  bool // should be set to true always, false for testing purpose only.
-	seed           int64 // for testing purpose
+	Cipher     *Cipher
+	Logger     *log.Logger
+	RandSource rand.Source64
 }
 
-func NewEncryptionEngine(suite *Cipher, logger *log.Logger, cryptoSafeRNG bool, seed int64) *EncryptEngineImpl {
-	return &EncryptEngineImpl{Cipher: suite, Logger: logger, cryptoSafeRNG: cryptoSafeRNG, seed: seed}
-}
-
-func (c *EncryptEngineImpl) RandomNumberGenerator(keyLength int) (string, error) {
-	mathRand.Seed(c.seed)
-	randomBytes := make([]byte, keyLength)
-	for i := 0; i < keyLength; i++ {
-		randomBytes[i] = byte(mathRand.Int63())
-	}
-
-	return base64.StdEncoding.EncodeToString(randomBytes), nil
-}
-
-func (c *EncryptEngineImpl) CryptoSecureRandomNumberGenerator(keyLength int) (string, error) {
-	randomBytes := make([]byte, keyLength)
-	_, err := rand.Read(randomBytes)
-	if err != nil {
-		return "", err
-	}
-
-	return base64.StdEncoding.EncodeToString(randomBytes), nil
+func NewEncryptionEngine(suite *Cipher, logger *log.Logger, randSource rand.Source64) *EncryptEngineImpl {
+	return &EncryptEngineImpl{Cipher: suite, Logger: logger, RandSource: randSource}
 }
 
 func (c *EncryptEngineImpl) generateRandomString(keyLength int) (string, error) {
-	if !c.cryptoSafeRNG {
-		return c.RandomNumberGenerator(keyLength)
+	randomBytes := make([]byte, keyLength)
+	r := rand.New(c.RandSource)
+	_, err := r.Read(randomBytes)
+	if err != nil {
+		return "", err
 	}
-
-	return c.CryptoSecureRandomNumberGenerator(keyLength)
+	return base64.StdEncoding.EncodeToString(randomBytes), nil
 }
 
 func (c *EncryptEngineImpl) GenerateRandomDataKey(keyLength int) ([]byte, string, error) {

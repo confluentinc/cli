@@ -2,14 +2,15 @@ package secret
 
 import (
 	"fmt"
-
+	"math/rand"
 	"os"
 	"strconv"
 	"strings"
 
-	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/jonboulle/clockwork"
 	"github.com/magiconair/properties"
+
+	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 // Password Protection is a security plugin to securely store and add passwords to a properties file.
@@ -24,23 +25,16 @@ type PasswordProtection interface {
 	RemoveEncryptedPasswords(configFilePath string, localSecureConfigPath string, removeConfigs string) error
 	RotateMasterKey(oldPassphrase string, newPassphrase string, localSecureConfigPath string) (string, error)
 	RotateDataKey(passphrase string, localSecureConfigPath string) error
-	SetRNGSeed(seed int64, cryptoSafeRNG  bool)
 }
 
 type PasswordProtectionSuite struct {
-	Logger         *log.Logger
-	clock          clockwork.Clock
-	cryptoSafeRNG  bool // should be set to true always, false for testing purpose only.
-	seed           int64 // for testing purpose
+	Logger     *log.Logger
+	clock      clockwork.Clock
+	randSource rand.Source64
 }
 
 func NewPasswordProtectionPlugin(logger *log.Logger) *PasswordProtectionSuite {
-	return &PasswordProtectionSuite{Logger: logger, clock: clockwork.NewRealClock(), cryptoSafeRNG: true}
-}
-
-func(c *PasswordProtectionSuite) SetRNGSeed(seed int64, cryptoSafeRNG  bool) {
-	c.cryptoSafeRNG = cryptoSafeRNG
-	c.seed = seed
+	return &PasswordProtectionSuite{Logger: logger, clock: clockwork.NewRealClock(), randSource: &cryptoSource{Logger: logger}}
 }
 
 // This function generates a new data key for encryption/decryption of secrets. The DEK is wrapped using the master key and saved in the secrets file
@@ -69,7 +63,7 @@ func (c *PasswordProtectionSuite) CreateMasterKey(passphrase string, localSecure
 
 	// Generate the master key from passphrase
 	cipherSuite := NewDefaultCipher()
-	engine := NewEncryptionEngine(cipherSuite, c.Logger, c.cryptoSafeRNG, c.seed)
+	engine := NewEncryptionEngine(cipherSuite, c.Logger, c.randSource)
 	newMasterKey, salt, err := engine.GenerateMasterKey(passphrase, "")
 	if err != nil {
 		return "", err
@@ -98,7 +92,7 @@ func (c *PasswordProtectionSuite) CreateMasterKey(passphrase string, localSecure
 func (c *PasswordProtectionSuite) generateNewDataKey(masterKey string) (*Cipher, error) {
 	// Generate the metadata for encryption keys
 	cipherSuite := NewDefaultCipher()
-	engine := NewEncryptionEngine(cipherSuite, c.Logger, c.cryptoSafeRNG, c.seed)
+	engine := NewEncryptionEngine(cipherSuite, c.Logger, c.randSource)
 
 	// Generate a new data key. This data key will be used for encrypting the secrets.
 	dataKey, salt, err := engine.GenerateRandomDataKey(METADATA_KEY_DEFAULT_LENGTH_BYTES)
@@ -191,7 +185,7 @@ func (c *PasswordProtectionSuite) DecryptConfigFileSecrets(configFilePath string
 		return err
 	}
 
-	engine := NewEncryptionEngine(cipherSuite, c.Logger, c.cryptoSafeRNG, c.seed)
+	engine := NewEncryptionEngine(cipherSuite, c.Logger, c.randSource)
 	// Unwrap DEK with MEK
 	dataKey, err := c.unwrapDataKey(cipherSuite.EncryptedDataKey, engine)
 	if err != nil {
@@ -244,7 +238,7 @@ func (c *PasswordProtectionSuite) RotateDataKey(masterPassphrase string, localSe
 		return err
 	}
 
-	engine := NewEncryptionEngine(cipherSuite, c.Logger, c.cryptoSafeRNG, c.seed)
+	engine := NewEncryptionEngine(cipherSuite, c.Logger, c.randSource)
 
 	// Generate a master key from passphrase
 	userMasterKey, _, err := engine.GenerateMasterKey(masterPassphrase, cipherSuite.SaltMEK)
@@ -349,7 +343,7 @@ func (c *PasswordProtectionSuite) RotateMasterKey(oldPassphrase string, newPassp
 		return "", err
 	}
 
-	engine := NewEncryptionEngine(cipherSuite, c.Logger, c.cryptoSafeRNG, c.seed)
+	engine := NewEncryptionEngine(cipherSuite, c.Logger, c.randSource)
 
 	// Generate a master key from passphrase
 	userMasterKey, _, err := engine.GenerateMasterKey(oldPassphrase, cipherSuite.SaltMEK)
@@ -663,7 +657,7 @@ func (c *PasswordProtectionSuite) encryptConfigValues(matchProps *properties.Pro
 	}
 
 	// Unwrap DEK
-	engine := NewEncryptionEngine(cipherSuite, c.Logger, c.cryptoSafeRNG, c.seed)
+	engine := NewEncryptionEngine(cipherSuite, c.Logger, c.randSource)
 	dataKey, err := c.unwrapDataKey(cipherSuite.EncryptedDataKey, engine)
 	if err != nil {
 		c.Logger.Error(err)
