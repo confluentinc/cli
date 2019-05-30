@@ -17,7 +17,7 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/kafka"
 	"github.com/confluentinc/cli/internal/cmd/ksql"
 	"github.com/confluentinc/cli/internal/cmd/local"
-	"github.com/confluentinc/cli/internal/cmd/service-account"
+	service_account "github.com/confluentinc/cli/internal/cmd/service-account"
 	"github.com/confluentinc/cli/internal/cmd/update"
 	"github.com/confluentinc/cli/internal/cmd/version"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -26,6 +26,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/keystore"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	apikeys "github.com/confluentinc/cli/internal/pkg/sdk/apikey"
+
 	//connects "github.com/confluentinc/cli/internal/pkg/sdk/connect"
 	environments "github.com/confluentinc/cli/internal/pkg/sdk/environment"
 	kafkas "github.com/confluentinc/cli/internal/pkg/sdk/kafka"
@@ -89,7 +90,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	cli.AddCommand(completion.NewCompletionCmd(cli, cliName))
 	cli.AddCommand(update.New(cliName, cfg, ver, prompt, updateClient))
 
-	cli.AddCommand(auth.New(prerunner, cfg)...)
+	cli.AddCommand(auth.New(prerunner, cfg, logger)...)
 
 	if cliName == "ccloud" {
 		kafkaClient := kafkas.New(client, logger)
