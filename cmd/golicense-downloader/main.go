@@ -1,3 +1,7 @@
+// golicense-downloader downloads LICENSE and NOTICE files for each dependency found by github.com/mitchellh/golicense
+//
+// Usage:
+//    GITHUB_TOKEN=${token} golicense .golicense.hcl my-tool | GITHUB_TOKEN=${token} golicense-downloader -f .golicense-downloader.json -l legal/my-tool/licenses -n legal/my-tool/notices
 package main
 
 import (
@@ -30,7 +34,7 @@ var (
 	noticeFiles = []string{"NOTICE", "NOTICES", "NOTICE.txt", "NOTICES.txt"}
 	licenseDir  = pflag.StringP("licenses-dir", "l", "./legal/licenses", "Directory in which to write licenses")
 	noticeDir   = pflag.StringP("notices-dir", "n", "./legal/notices", "Directory in which to write notices")
-	configFile  = pflag.StringP("config-file", "f", "", "File from which to read license-downloader configuration")
+	configFile  = pflag.StringP("config-file", "f", "", "File from which to read golicense-downloader configuration")
 )
 
 type Config struct {
