@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/howeyc/gopass"
+	"github.com/havoc-io/gopass"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go"
