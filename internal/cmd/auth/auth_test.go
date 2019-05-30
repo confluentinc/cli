@@ -144,10 +144,7 @@ func Test_credentials_NoSpacesAroundEmail_ShouldSupportSpacesAtBeginOrEnd(t *tes
 }
 
 func prompt(username, password string) *cliMock.Prompt {
-	return &cliMock.Prompt{
-		Strings:   []string{username},
-		Passwords: []string{password},
-	}
+	return &cliMock.Prompt{}
 }
 
 func newAuthCommand(prompt pcmd.Prompt, auth *sdkMock.Auth, req *require.Assertions) (*commands, *config.Config) {
