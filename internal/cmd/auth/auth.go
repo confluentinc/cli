@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"syscall"
 
+	"github.com/howeyc/gopass"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go"
@@ -170,18 +170,19 @@ func (a *commands) credentials(cmd *cobra.Command) (string, string, error) {
 		email = emailFromPrompt
 	}
 
-	a.Logger.Trace("Successfully read email")
+	a.Logger.Trace("Successfully obtained email")
 
 	if len(password) == 0 {
 		pcmd.Print(cmd, "Password: ")
-		a.Logger.Tracef("Reading password from handle %d", int(syscall.Stdin))
-		bytePassword, err := a.prompt.ReadPassword(int(syscall.Stdin))
+		bytePassword, err := gopass.GetPasswd()
 		if err != nil {
 			return "", "", err
 		}
 		pcmd.Println(cmd)
 		password = string(bytePassword)
 	}
+
+	a.Logger.Trace("Successfully obtained password")
 
 	return strings.TrimSpace(email), password, nil
 }
