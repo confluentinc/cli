@@ -33,5 +33,5 @@ func (p *RealPrompt) ReadString(delim byte) (string, error) {
 
 // ReadPassword reads a line of input from a terminal without local echo.
 func (p *RealPrompt) ReadPassword() ([]byte, error) {
-	return gopass.getPasswd(false)
+	return gopass.GetPasswd(false)
 }
