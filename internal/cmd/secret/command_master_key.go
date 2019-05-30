@@ -3,7 +3,7 @@ package secret
 import (
 	"fmt"
 	"os"
-  
+
 	"github.com/confluentinc/go-printer"
 	"github.com/spf13/cobra"
 
@@ -41,13 +41,15 @@ func (c *masterKeyCommand) init() {
 	generateCmd := &cobra.Command{
 		Use:   "generate",
 		Short: "Generate a master key for Confluent Platform.",
-		Long: `This command generates a master key. This key will be used for encryption and decryption of configuration value.`,
+		Long:  `This command generates a master key. This key will be used for encryption and decryption of configuration value.`,
 		RunE:  c.generate,
 		Args:  cobra.NoArgs,
 	}
 	generateCmd.Flags().String("passphrase", "", `The key passphrase. To pipe from stdin use "-", e.g. "--passphrase -";
 to read from a file use "@<path-to-file>", e.g. "--passphrase @/User/bob/secret.properties".`)
 	generateCmd.Flags().SortFlags = false
+	generateCmd.Flags().String("local-secrets-file", "", "Path to the local encrypted configuration properties file.")
+	check(generateCmd.MarkFlagRequired("local-secrets-file"))
 	c.AddCommand(generateCmd)
 }
 
@@ -71,13 +73,18 @@ func (c *masterKeyCommand) generate(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	masterKey, err := c.plugin.CreateMasterKey(passphrase)
+	localSecretsPath, err := cmd.Flags().GetString("local-secrets-file")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	masterKey, err := c.plugin.CreateMasterKey(passphrase, localSecretsPath)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 
 	pcmd.Println(cmd, "Save the master key. It cannot be retrieved later.")
-	err = printer.RenderTableOut(&struct{MasterKey string}{MasterKey: masterKey}, []string{"MasterKey"}, map[string]string{"MasterKey": "Master Key"}, os.Stdout)
+	err = printer.RenderTableOut(&struct{ MasterKey string }{MasterKey: masterKey}, []string{"MasterKey"}, map[string]string{"MasterKey": "Master Key"}, os.Stdout)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}

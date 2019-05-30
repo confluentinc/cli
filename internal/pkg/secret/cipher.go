@@ -13,7 +13,7 @@ func NewDefaultCipher() *Cipher {
 	return &Cipher{
 		Iterations:       METADATA_KEY_DEFAULT_ITERATIONS,
 		KeyLength:        METADATA_KEY_DEFAULT_LENGTH_BYTES,
-		SaltMEK:          METADATA_KEY_DEFAULT_SALT,
+		SaltMEK:          "",
 		SaltDEK:          "",
 		EncryptionAlgo:   METADATA_ENC_ALGORITHM,
 		EncryptedDataKey: ""}

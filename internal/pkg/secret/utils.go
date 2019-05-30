@@ -3,12 +3,12 @@ package secret
 import (
 	"bytes"
 	"fmt"
+	"github.com/magiconair/properties"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
-	"github.com/magiconair/properties"
 )
 
 var dataRegex = regexp.MustCompile(DATA_PATTERN)
@@ -83,5 +83,5 @@ func GenerateConfigKey(path string, key string) string {
 	fileName := filepath.Base(path)
 	// Intentionally not using the filepath.Join(fileName, key), because even if this CLI is run on Windows we know that
 	// the server-side version will be running on a *nix variant and will thus have forward slashes to lookup the correct path
-	return fileName + "/" + key;
+	return fileName + "/" + key
 }

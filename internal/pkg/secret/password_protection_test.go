@@ -1,20 +1,21 @@
 package secret
 
 import (
+	"crypto/rand"
 	"encoding/base32"
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/magiconair/properties"
 	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
-	"crypto/rand"
-	"github.com/magiconair/properties"
-	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 func TestPasswordProtectionSuite_CreateMasterKey(t *testing.T) {
 	type args struct {
-		masterKeyPassphrase string
+		masterKeyPassphrase   string
+		localSecureConfigPath string
 	}
 	tests := []struct {
 		name    string
@@ -24,14 +25,16 @@ func TestPasswordProtectionSuite_CreateMasterKey(t *testing.T) {
 		{
 			name: "ValidTestCase: valid create master key",
 			args: &args{
-				masterKeyPassphrase: "abc123",
+				masterKeyPassphrase:   "abc123",
+				localSecureConfigPath: "/tmp/securePass987secureConfig.properties",
 			},
 			wantErr: false,
 		},
 		{
 			name: "InvalidTestCase: empty passphrase",
 			args: &args{
-				masterKeyPassphrase: "",
+				masterKeyPassphrase:   "",
+				localSecureConfigPath: "/tmp/securePass987/secureConfig.properties",
 			},
 			wantErr: true,
 		},
@@ -40,7 +43,7 @@ func TestPasswordProtectionSuite_CreateMasterKey(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			logger := log.New()
 			plugin := NewPasswordProtectionPlugin(logger)
-			key, err := plugin.CreateMasterKey(tt.args.masterKeyPassphrase)
+			key, err := plugin.CreateMasterKey(tt.args.masterKeyPassphrase, tt.args.localSecureConfigPath)
 			if (err != nil) != tt.wantErr {
 				t.Fail()
 			}
@@ -106,7 +109,7 @@ func TestPasswordProtectionSuite_EncryptConfigFileSecrets(t *testing.T) {
 			name: "ValidTestCase: encrypt config file with no config param, create new dek",
 			args: &args{
 				masterKeyPassphrase:    "abc123",
-				contents:               "testPassword=password,testKey=key",
+				contents:               "testPassword=password\ntestKey=key",
 				configFilePath:         "/tmp/securePass987/config.properties",
 				localSecureConfigPath:  "/tmp/securePass987/secureConfig.properties",
 				secureDir:              "/tmp/securePass987",
@@ -144,7 +147,7 @@ func TestPasswordProtectionSuite_EncryptConfigFileSecrets(t *testing.T) {
 			}
 			plugin := NewPasswordProtectionPlugin(logger)
 			if tt.args.setMEK {
-				err := createMasterKey(tt.args.masterKeyPassphrase, plugin)
+				err := createMasterKey(tt.args.masterKeyPassphrase, tt.args.localSecureConfigPath, plugin)
 				if err != nil {
 					t.Fail()
 				}
@@ -197,22 +200,6 @@ func TestPasswordProtectionSuite_DecryptConfigFileSecrets(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "ValidTestCase: Decrypt config file",
-			args: &args{
-				masterKeyPassphrase:    "abc123",
-				contents:               "testPassword = password\n",
-				configFilePath:         "/tmp/securePass987/config.properties",
-				outputConfigPath:       "/tmp/securePass987/output.properties",
-				localSecureConfigPath:  "/tmp/securePass987/secureConfig.properties",
-				secureDir:              "/tmp/securePass987",
-				remoteSecureConfigPath: "/tmp/securePass987/secureConfig.properties",
-				setNewMEK:               false,
-				corruptData:             false,
-				corruptDEK:              false,
-			},
-			wantErr: false,
-		},
-		{
 			name: "InvalidTestCase: Different master key for decryption",
 			args: &args{
 				masterKeyPassphrase:    "abc123",
@@ -222,10 +209,10 @@ func TestPasswordProtectionSuite_DecryptConfigFileSecrets(t *testing.T) {
 				secureDir:              "/tmp/securePass987",
 				remoteSecureConfigPath: "/tmp/securePass987/secureConfig.properties",
 				outputConfigPath:       "/tmp/securePass987/output.properties",
-				setNewMEK:               true,
-				corruptData:             false,
-				corruptDEK:              false,
-				newMasterKey:             "xyz233",
+				setNewMEK:              true,
+				corruptData:            false,
+				corruptDEK:             false,
+				newMasterKey:           "xyz233",
 			},
 			wantErr: true,
 		},
@@ -239,10 +226,10 @@ func TestPasswordProtectionSuite_DecryptConfigFileSecrets(t *testing.T) {
 				secureDir:              "/tmp/securePass987",
 				remoteSecureConfigPath: "/tmp/securePass987/secureConfig.properties",
 				outputConfigPath:       "/tmp/securePass987/output.properties",
-				setNewMEK:               false,
-				corruptData:             true,
-				corruptDEK:              false,
-				newMasterKey:             "xyz233",
+				setNewMEK:              false,
+				corruptData:            true,
+				corruptDEK:             false,
+				newMasterKey:           "xyz233",
 			},
 			wantErr: true,
 		},
@@ -256,17 +243,17 @@ func TestPasswordProtectionSuite_DecryptConfigFileSecrets(t *testing.T) {
 				secureDir:              "/tmp/securePass987",
 				remoteSecureConfigPath: "/tmp/securePass987/secureConfig.properties",
 				outputConfigPath:       "/tmp/securePass987/output.properties",
-				setNewMEK:               false,
-				corruptData:             false,
-				corruptDEK:              true,
-				newMasterKey:             "xyz233",
+				setNewMEK:              false,
+				corruptData:            false,
+				corruptDEK:             true,
+				newMasterKey:           "xyz233",
 			},
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			plugin, err := setUpDir (tt.args.masterKeyPassphrase, tt.args.secureDir, tt.args.configFilePath, tt.args.contents)
+			plugin, err := setUpDir(tt.args.masterKeyPassphrase, tt.args.secureDir, tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.contents)
 			if err != nil {
 				t.Fail()
 			}
@@ -291,10 +278,7 @@ func TestPasswordProtectionSuite_DecryptConfigFileSecrets(t *testing.T) {
 			}
 
 			if tt.args.setNewMEK {
-				err := createMasterKey(tt.args.newMasterKey, plugin)
-				if err != nil {
-					t.Fail()
-				}
+				os.Setenv(CONFLUENT_KEY_ENVVAR, tt.args.newMasterKey)
 			}
 
 			err = validateUsingDecryption(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.outputConfigPath, tt.args.contents, plugin)
@@ -343,7 +327,7 @@ func TestPasswordProtectionSuite_AddConfigFileSecrets(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// SetUp
-			plugin, err := setUpDir (tt.args.masterKeyPassphrase, tt.args.secureDir, tt.args.configFilePath, tt.args.contents)
+			plugin, err := setUpDir(tt.args.masterKeyPassphrase, tt.args.secureDir, tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.contents)
 			if err != nil {
 				t.Fail()
 			}
@@ -414,7 +398,7 @@ func TestPasswordProtectionSuite_UpdateConfigFileSecrets(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			plugin, err := setUpDir (tt.args.masterKeyPassphrase, tt.args.secureDir, tt.args.configFilePath, tt.args.contents)
+			plugin, err := setUpDir(tt.args.masterKeyPassphrase, tt.args.secureDir, tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.contents)
 			if err != nil {
 				t.Fail()
 			}
@@ -488,7 +472,7 @@ func TestPasswordProtectionSuite_RemoveConfigFileSecrets(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// SetUp
-			plugin, err := setUpDir (tt.args.masterKeyPassphrase, tt.args.secureDir, tt.args.configFilePath, tt.args.contents)
+			plugin, err := setUpDir(tt.args.masterKeyPassphrase, tt.args.secureDir, tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.contents)
 			if err != nil {
 				t.Fail()
 			}
@@ -548,8 +532,8 @@ func TestPasswordProtectionSuite_RotateDataKey(t *testing.T) {
 				secureDir:              "/tmp/securePass987",
 				remoteSecureConfigPath: "/tmp/securePass987/secureConfig.properties",
 				outputConfigPath:       "/tmp/securePass987/output.properties",
-				corruptDEK:              false,
-				invalidMEK:              false,
+				corruptDEK:             false,
+				invalidMEK:             false,
 			},
 			wantErr: false,
 		},
@@ -563,8 +547,8 @@ func TestPasswordProtectionSuite_RotateDataKey(t *testing.T) {
 				secureDir:              "/tmp/securePass987",
 				remoteSecureConfigPath: "/tmp/securePass987/secureConfig.properties",
 				outputConfigPath:       "/tmp/securePass987/output.properties",
-				corruptDEK:              true,
-				invalidMEK:              false,
+				corruptDEK:             true,
+				invalidMEK:             false,
 			},
 			wantErr: true,
 		},
@@ -578,16 +562,16 @@ func TestPasswordProtectionSuite_RotateDataKey(t *testing.T) {
 				secureDir:              "/tmp/securePass987",
 				remoteSecureConfigPath: "/tmp/securePass987/secureConfig.properties",
 				outputConfigPath:       "/tmp/securePass987/output.properties",
-				corruptDEK:              false,
-				invalidMEK:              true,
-				invalidPassphrase:       "random",
+				corruptDEK:             false,
+				invalidMEK:             true,
+				invalidPassphrase:      "random",
 			},
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			plugin, err := setUpDir (tt.args.masterKeyPassphrase, tt.args.secureDir, tt.args.configFilePath, tt.args.contents)
+			plugin, err := setUpDir(tt.args.masterKeyPassphrase, tt.args.secureDir, tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.contents)
 			if err != nil {
 				t.Fail()
 			}
@@ -650,7 +634,6 @@ func TestPasswordProtectionSuite_RotateDataKey(t *testing.T) {
 	}
 }
 
-
 func TestPasswordProtectionSuite_RotateMasterKey(t *testing.T) {
 	type args struct {
 		contents               string
@@ -712,14 +695,14 @@ func TestPasswordProtectionSuite_RotateMasterKey(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			plugin, err := setUpDir (tt.args.masterKeyPassphrase, tt.args.secureDir, tt.args.configFilePath, tt.args.contents)
+			plugin, err := setUpDir(tt.args.masterKeyPassphrase, tt.args.secureDir, tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.contents)
 			if err != nil {
 				t.Fail()
 			}
 
 			err = plugin.EncryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.remoteSecureConfigPath, "")
 
-			if err != nil{
+			if err != nil {
 				t.Fail()
 			}
 
@@ -728,7 +711,7 @@ func TestPasswordProtectionSuite_RotateMasterKey(t *testing.T) {
 			if (err != nil) != tt.wantErr {
 				t.Fail()
 			}
-      
+
 			if !tt.wantErr {
 
 				os.Setenv(CONFLUENT_KEY_ENVVAR, newKey)
@@ -746,8 +729,8 @@ func TestPasswordProtectionSuite_RotateMasterKey(t *testing.T) {
 	}
 }
 
-func createMasterKey(passphrase string, plugin *PasswordProtectionSuite) error {
-	key, err := plugin.CreateMasterKey(passphrase)
+func createMasterKey(passphrase string, localSecretsFile string, plugin *PasswordProtectionSuite) error {
+	key, err := plugin.CreateMasterKey(passphrase, localSecretsFile)
 	if err != nil {
 		return err
 	}
@@ -806,7 +789,7 @@ func validateFileContents(contents string, configFile string, remoteSecretsFile 
 				return fmt.Errorf("secrets config value not in correct format.")
 			}
 
-		} else if !strings.Contains(strings.ToLower(key), "config.provider"){
+		} else if !strings.Contains(strings.ToLower(key), "config.provider") {
 			// Validate non secret configs are not modified
 			originalVal, _ := originalConfigs.Get(key)
 			if strings.Compare(originalVal, value) != 0 {
@@ -863,7 +846,7 @@ func corruptEncryptedDEK(localSecureConfigPath string) error {
 	}
 
 	value := secretsProps.GetString(METADATA_DATA_KEY, "")
- 	corruptedCipher, err := generateCorruptedData(value)
+	corruptedCipher, err := generateCorruptedData(value)
 	if err != nil {
 		return err
 	}
@@ -876,7 +859,7 @@ func corruptEncryptedDEK(localSecureConfigPath string) error {
 	return err
 }
 
-func verifyConfigsRemoved(configFilePath string, localSecureConfigPath string, removedConfigs string) error{
+func verifyConfigsRemoved(configFilePath string, localSecureConfigPath string, removedConfigs string) error {
 
 	secretsProps, err := LoadPropertiesFile(localSecureConfigPath)
 	if err != nil {
@@ -941,7 +924,7 @@ func validateUsingDecryption(configFilePath string, localSecureConfigPath string
 	return nil
 }
 
-func setUpDir (masterKeyPassphrase string, secureDir string, configFile string, contents string) (*PasswordProtectionSuite, error) {
+func setUpDir(masterKeyPassphrase string, secureDir string, configFile string, localSecureConfigPath string, contents string) (*PasswordProtectionSuite, error) {
 	err := os.MkdirAll(secureDir, os.ModePerm)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create password protection directory")
@@ -950,7 +933,7 @@ func setUpDir (masterKeyPassphrase string, secureDir string, configFile string, 
 	plugin := NewPasswordProtectionPlugin(logger)
 
 	// Set master key
-	err = createMasterKey(masterKeyPassphrase, plugin)
+	err = createMasterKey(masterKeyPassphrase, localSecureConfigPath, plugin)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create master key")
 	}

@@ -18,9 +18,9 @@ type EncryptionEngine interface {
 	Encrypt(plainText string, key []byte) (string, string, error)
 	Decrypt(cipher string, iv string, algo string, key []byte) (string, error)
 	GenerateRandomDataKey(keyLength int) ([]byte, string, error)
-	GenerateMasterKey(masterKeyPassphrase string) (string, error)
+	GenerateMasterKey(masterKeyPassphrase string, salt string) (string, string, error)
 	WrapDataKey(dataKey []byte, masterKey string) (string, string, error)
-	UnWrapDataKey(dataKey string, iv string, algo string, masterKey string) ([]byte, error)
+	UnwrapDataKey(dataKey string, iv string, algo string, masterKey string) ([]byte, error)
 }
 
 // EncryptEngineImpl is the EncryptionEngine implementation
@@ -40,7 +40,7 @@ func (c *EncryptEngineImpl) generateRandomString(keyLength int) (string, error) 
 		return "", err
 	}
 
-	return string(randomBytes), nil
+	return base64.StdEncoding.EncodeToString(randomBytes), nil
 }
 
 func (c *EncryptEngineImpl) GenerateRandomDataKey(keyLength int) ([]byte, string, error) {
@@ -64,14 +64,23 @@ func (c *EncryptEngineImpl) GenerateRandomDataKey(keyLength int) ([]byte, string
 	return key, salt, nil
 }
 
-func (c *EncryptEngineImpl) GenerateMasterKey(masterKeyPassphrase string) (string, error) {
-	key, err := c.generateEncryptionKey(masterKeyPassphrase, c.Cipher.SaltMEK)
+func (c *EncryptEngineImpl) GenerateMasterKey(masterKeyPassphrase string, salt string) (string, string, error) {
+	// Generate random salt
+	var err error
+	if salt == "" {
+		salt, err = c.generateRandomString(METADATA_KEY_DEFAULT_LENGTH_BYTES)
+		if err != nil {
+			return "", "", err
+		}
+	}
+
+	key, err := c.generateEncryptionKey(masterKeyPassphrase, salt)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	encodedKey := base64.StdEncoding.EncodeToString(key)
-	return encodedKey, nil
+	return encodedKey, salt, nil
 }
 
 func (c *EncryptEngineImpl) WrapDataKey(dataKey []byte, masterKey string) (string, string, error) {
@@ -83,7 +92,7 @@ func (c *EncryptEngineImpl) WrapDataKey(dataKey []byte, masterKey string) (strin
 	return c.Encrypt(dataKeyStr, masterKeyByte)
 }
 
-func (c *EncryptEngineImpl) UnWrapDataKey(dataKey string, iv string, algo string, masterKey string) ([]byte, error) {
+func (c *EncryptEngineImpl) UnwrapDataKey(dataKey string, iv string, algo string, masterKey string) ([]byte, error) {
 	masterKeyByte, err := base64.StdEncoding.DecodeString(masterKey)
 	if err != nil {
 		return []byte{}, err
@@ -165,7 +174,7 @@ func (c *EncryptEngineImpl) decrypt(crypt []byte, key []byte, iv []byte) (plain 
 			}
 		}
 	}()
-  
+
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return []byte{}, err
@@ -187,9 +196,9 @@ func (c *EncryptEngineImpl) pKCS5Padding(ciphertext []byte, blockSize int) []byt
 
 func (c *EncryptEngineImpl) pKCS5Trimming(encrypt []byte) ([]byte, error) {
 	padding := encrypt[len(encrypt)-1]
-	length := len(encrypt)-int(padding)
+	length := len(encrypt) - int(padding)
 	if length < 0 || length > len(encrypt) {
-		return nil, fmt.Errorf("failed to decrypt the cipher: data is corrupted." )
+		return nil, fmt.Errorf("failed to decrypt the cipher: data is corrupted.")
 	}
 	return encrypt[:len(encrypt)-int(padding)], nil
 }

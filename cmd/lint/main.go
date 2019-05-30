@@ -64,7 +64,7 @@ var rules = []linter.Rule{
 		// skip local which delegates to bash commands
 		linter.ExcludeCommandContains("local"),
 		// skip for api-key store command since KEY is not last argument
-  	linter.ExcludeCommand("api-key store <apikey> <secret>"),
+		linter.ExcludeCommand("api-key store <apikey> <secret>"),
 		// skip secret commands
 		linter.ExcludeCommandContains("secret"),
 	),
@@ -85,7 +85,7 @@ var rules = []linter.Rule{
 	),
 	linter.Filter(
 		linter.RequireLengthBetween("Short", 13, 60),
-    linter.ExcludeCommandContains("secret"),
+		linter.ExcludeCommandContains("secret"),
 		// skip ACLs as they have a really long suffix/disclaimer that they're CCE only
 		linter.ExcludeCommandContains("kafka acl"),
 		// skip service-accounts as they have a really long suffix/disclaimer that they're CCE only
@@ -98,13 +98,13 @@ var rules = []linter.Rule{
 	linter.RequireEndWithPunctuation("Long", true),
 	linter.RequireCapitalizeProperNouns("Long", properNouns),
 	linter.Filter(linter.RequireNotTitleCase("Short", properNouns),
-		linter.ExcludeCommandContains("secret"),),
+		linter.ExcludeCommandContains("secret")),
 	linter.RequireRealWords("Use", '-'),
 }
 
 var flagRules = []linter.FlagRule{
 	linter.FlagFilter(linter.RequireFlagNameLength(2, 16),
-		linter.ExcludeFlag("service-account-id", "replication-factor", "local-secrets-file", "remote-secrets-file"), ),
+		linter.ExcludeFlag("service-account-id", "replication-factor", "local-secrets-file", "remote-secrets-file")),
 	linter.RequireFlagStartWithCapital,
 	linter.RequireFlagEndWithPunctuation,
 	linter.RequireFlagCharacters('-'),
