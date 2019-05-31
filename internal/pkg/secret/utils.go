@@ -3,12 +3,13 @@ package secret
 import (
 	"bytes"
 	"fmt"
-	"github.com/magiconair/properties"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/magiconair/properties"
 )
 
 var dataRegex = regexp.MustCompile(DATA_PATTERN)
@@ -56,7 +57,7 @@ func WritePropertiesFile(path string, property *properties.Properties, writeComm
 	return err
 }
 
-func IsPathValid(path string) bool {
+func DoesPathExist(path string) bool {
 	if path == "" {
 		return false
 	}
@@ -68,7 +69,7 @@ func IsPathValid(path string) bool {
 }
 
 func LoadPropertiesFile(path string) (*properties.Properties, error) {
-	if !IsPathValid(path) {
+	if !DoesPathExist(path) {
 		return nil, fmt.Errorf("Invalid file path.")
 	}
 	property, err := properties.LoadFile(path, properties.UTF8)

@@ -19,7 +19,7 @@ type Prompt interface {
 type RealPrompt struct {
 	Stdin *bufio.Reader
 	Out   io.Writer
-	Fi *os.File
+	Fi    *os.File
 }
 
 // NewPrompt returns a new RealPrompt instance which reads from reader and writes to Stdout.

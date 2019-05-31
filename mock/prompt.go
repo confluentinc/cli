@@ -128,7 +128,7 @@ func (m *Prompt) IsPipeCalled() bool {
 }
 
 // IsPipeCalls returns the calls made to IsPipe.
-func (m *Prompt)IsPipeCalls() []struct {
+func (m *Prompt) IsPipeCalls() []struct {
 } {
 	m.lockIsPipe.Lock()
 	defer m.lockIsPipe.Unlock()

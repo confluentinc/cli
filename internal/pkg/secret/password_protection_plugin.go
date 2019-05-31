@@ -28,9 +28,10 @@ type PasswordProtection interface {
 }
 
 type PasswordProtectionSuite struct {
-	Logger     *log.Logger
-	Clock      clockwork.Clock
-	RandSource rand.Source
+	Logger      *log.Logger
+	Clock       clockwork.Clock
+	RandSource  rand.Source
+	CipherSuite Cipher
 }
 
 func NewPasswordProtectionPlugin(logger *log.Logger) *PasswordProtectionSuite {
@@ -46,7 +47,7 @@ func (c *PasswordProtectionSuite) CreateMasterKey(passphrase string, localSecure
 
 	secureConfigProps := properties.NewProperties()
 	// Check if secure config properties file exists and DEK is generated
-	if IsPathValid(localSecureConfigPath) {
+	if DoesPathExist(localSecureConfigPath) {
 		secureConfigProps, err := LoadPropertiesFile(localSecureConfigPath)
 		if err != nil {
 			return "", err
@@ -118,7 +119,7 @@ func (c *PasswordProtectionSuite) generateNewDataKey(masterKey string) (*Cipher,
 // We also add the properties to instantiate the SecurePass provider to the config properties file.
 func (c *PasswordProtectionSuite) EncryptConfigFileSecrets(configFilePath string, localSecureConfigPath string, remoteSecureConfigPath string, encryptConfigKeys string) error {
 	// Check if config file path is valid.
-	if !IsPathValid(configFilePath) {
+	if !DoesPathExist(configFilePath) {
 		return fmt.Errorf("invalid config file path: %s", configFilePath)
 	}
 	// Load the configs.
@@ -160,12 +161,12 @@ func (c *PasswordProtectionSuite) EncryptConfigFileSecrets(configFilePath string
 // the encrypted value from the file secureConfigPath, decrypts it using the data key and stores the output at outputFilePath.
 func (c *PasswordProtectionSuite) DecryptConfigFileSecrets(configFilePath string, localSecureConfigPath string, outputFilePath string) error {
 	// Check if config file path is valid
-	if !IsPathValid(configFilePath) {
+	if !DoesPathExist(configFilePath) {
 		return fmt.Errorf("invalid config file path:" + configFilePath)
 	}
 
 	// Check if secure config file path is valid
-	if !IsPathValid(localSecureConfigPath) {
+	if !DoesPathExist(localSecureConfigPath) {
 		return fmt.Errorf("invalid secrets file path:" + localSecureConfigPath)
 	}
 	// Load the config values.
@@ -587,7 +588,7 @@ func (c *PasswordProtectionSuite) fetchSecureConfigProps(localSecureConfigPath s
 	}
 
 	// Check if secure config properties file exists and DEK is generated
-	if IsPathValid(localSecureConfigPath) {
+	if DoesPathExist(localSecureConfigPath) {
 		cipherSuite, err := c.loadCipherSuiteFromSecureProps(secureConfigProps)
 		if err != nil {
 			return nil, nil, err
