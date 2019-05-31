@@ -29,10 +29,10 @@ type EncryptionEngine interface {
 type EncryptEngineImpl struct {
 	Cipher     *Cipher
 	Logger     *log.Logger
-	RandSource rand.Source64
+	RandSource rand.Source
 }
 
-func NewEncryptionEngine(suite *Cipher, logger *log.Logger, randSource rand.Source64) *EncryptEngineImpl {
+func NewEncryptionEngine(suite *Cipher, logger *log.Logger, randSource rand.Source) *EncryptEngineImpl {
 	return &EncryptEngineImpl{Cipher: suite, Logger: logger, RandSource: randSource}
 }
 
