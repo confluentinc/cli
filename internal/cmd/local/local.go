@@ -33,7 +33,7 @@ func New(prerunner pcmd.PreRunner, shell ShellRunner) *cobra.Command {
 	localCmd := &command{
 		Command: &cobra.Command{
 			Use:               "local",
-			Short:             "Manage local Confluent Platform development environment.",
+			Short:             "Manage a local Confluent Platform development environment.",
 			Long:              longDescription,
 			Args:              cobra.ArbitraryArgs,
 			PersistentPreRunE: prerunner.Anonymous(),
@@ -55,7 +55,7 @@ func (c *command) run(cmd *cobra.Command, args []string) error {
 	if path == "" {
 		if home, found := os.LookupEnv("CONFLUENT_HOME"); found {
 			path = home
-		} else {
+		} else if len(args) != 0 { // if no args specified, allow so we just show usage
 			return fmt.Errorf("Pass --path /path/to/confluent flag or set environment variable CONFLUENT_HOME")
 		}
 	}

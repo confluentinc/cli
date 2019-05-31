@@ -32,6 +32,9 @@ die() {
 }
 
 validate_and_export_dir_layout() {
+    # We don't need to know CONFLUENT_HOME just to see the list of commands
+    [[ $# -lt 1 ]] && command_name="confluent local" && return
+
     if [[ -z "${CONFLUENT_HOME}" ]]; then
         command_name="$( basename "${BASH_SOURCE[0]}" )"
         confluent_bin="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -2133,7 +2136,7 @@ EOF
 
 usage() {
     cat <<EOF
-${command_name}: A command line interface to manage Confluent services
+${command_name}: Manage a local Confluent Platform development environment.
 
 Usage: ${command_name} <command> [<subcommand>] [<parameters>]
 
@@ -2194,16 +2197,16 @@ invalid_requirement() {
 }
 
 main() {
+    cat >&2 <<EOF
+    The local commands are intended for a single-node development environment
+    only, NOT for production usage. https://docs.confluent.io/current/cli/index.html
+
+EOF
+
     # Parse command-line arguments
     [[ $# -lt 1 ]] && usage
 
     requirements
-
-    cat <<EOF
-    This CLI is intended for development only, not for production
-    https://docs.confluent.io/current/cli/index.html
-
-EOF
 
     command="${1}"
     shift
