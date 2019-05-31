@@ -37,7 +37,11 @@ func (r *FlagResolverImpl) ValueFrom(source string, prompt string, secure bool) 
 
 		fmt.Fprintf(r.Out, prompt)
 		if secure {
-			value, err = r.Prompt.ReadPassword()
+			valueByte, err := r.Prompt.ReadPassword()
+			if err != nil {
+				return "", err
+			}
+			value = string(valueByte)
 		} else {
 			value, err = r.Prompt.ReadString('\n')
 		}

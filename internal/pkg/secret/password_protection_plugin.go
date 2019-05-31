@@ -28,13 +28,14 @@ type PasswordProtection interface {
 }
 
 type PasswordProtectionSuite struct {
-	Logger     *log.Logger
-	clock      clockwork.Clock
-	randSource rand.Source64
+	Logger      *log.Logger
+	Clock       clockwork.Clock
+	RandSource  rand.Source
+	CipherSuite Cipher
 }
 
 func NewPasswordProtectionPlugin(logger *log.Logger) *PasswordProtectionSuite {
-	return &PasswordProtectionSuite{Logger: logger, clock: clockwork.NewRealClock(), randSource: &cryptoSource{Logger: logger}}
+	return &PasswordProtectionSuite{Logger: logger, Clock: clockwork.NewRealClock(), RandSource: &cryptoSource{Logger: logger}}
 }
 
 // This function generates a new data key for encryption/decryption of secrets. The DEK is wrapped using the master key and saved in the secrets file
@@ -46,7 +47,7 @@ func (c *PasswordProtectionSuite) CreateMasterKey(passphrase string, localSecure
 
 	secureConfigProps := properties.NewProperties()
 	// Check if secure config properties file exists and DEK is generated
-	if IsPathValid(localSecureConfigPath) {
+	if DoesPathExist(localSecureConfigPath) {
 		secureConfigProps, err := LoadPropertiesFile(localSecureConfigPath)
 		if err != nil {
 			return "", err
@@ -63,7 +64,7 @@ func (c *PasswordProtectionSuite) CreateMasterKey(passphrase string, localSecure
 
 	// Generate the master key from passphrase
 	cipherSuite := NewDefaultCipher()
-	engine := NewEncryptionEngine(cipherSuite, c.Logger, c.randSource)
+	engine := NewEncryptionEngine(cipherSuite, c.Logger, c.RandSource)
 	newMasterKey, salt, err := engine.GenerateMasterKey(passphrase, "")
 	if err != nil {
 		return "", err
@@ -75,7 +76,7 @@ func (c *PasswordProtectionSuite) CreateMasterKey(passphrase string, localSecure
 		return "", err
 	}
 
-	now := c.clock.Now()
+	now := c.Clock.Now()
 	_, _, err = secureConfigProps.Set(METADATA_KEY_TIMESTAMP, now.String())
 	if err != nil {
 		return "", err
@@ -92,7 +93,7 @@ func (c *PasswordProtectionSuite) CreateMasterKey(passphrase string, localSecure
 func (c *PasswordProtectionSuite) generateNewDataKey(masterKey string) (*Cipher, error) {
 	// Generate the metadata for encryption keys
 	cipherSuite := NewDefaultCipher()
-	engine := NewEncryptionEngine(cipherSuite, c.Logger, c.randSource)
+	engine := NewEncryptionEngine(cipherSuite, c.Logger, c.RandSource)
 
 	// Generate a new data key. This data key will be used for encrypting the secrets.
 	dataKey, salt, err := engine.GenerateRandomDataKey(METADATA_KEY_DEFAULT_LENGTH_BYTES)
@@ -118,8 +119,8 @@ func (c *PasswordProtectionSuite) generateNewDataKey(masterKey string) (*Cipher,
 // We also add the properties to instantiate the SecurePass provider to the config properties file.
 func (c *PasswordProtectionSuite) EncryptConfigFileSecrets(configFilePath string, localSecureConfigPath string, remoteSecureConfigPath string, encryptConfigKeys string) error {
 	// Check if config file path is valid.
-	if !IsPathValid(configFilePath) {
-		return fmt.Errorf("Invalid file path: %s", configFilePath)
+	if !DoesPathExist(configFilePath) {
+		return fmt.Errorf("invalid config file path: %s", configFilePath)
 	}
 	// Load the configs.
 	configProps, err := LoadPropertiesFile(configFilePath)
@@ -160,13 +161,13 @@ func (c *PasswordProtectionSuite) EncryptConfigFileSecrets(configFilePath string
 // the encrypted value from the file secureConfigPath, decrypts it using the data key and stores the output at outputFilePath.
 func (c *PasswordProtectionSuite) DecryptConfigFileSecrets(configFilePath string, localSecureConfigPath string, outputFilePath string) error {
 	// Check if config file path is valid
-	if !IsPathValid(configFilePath) {
-		return fmt.Errorf("Invalid File Path" + configFilePath)
+	if !DoesPathExist(configFilePath) {
+		return fmt.Errorf("invalid config file path:" + configFilePath)
 	}
 
 	// Check if secure config file path is valid
-	if !IsPathValid(localSecureConfigPath) {
-		return fmt.Errorf("Invalid File Path" + localSecureConfigPath)
+	if !DoesPathExist(localSecureConfigPath) {
+		return fmt.Errorf("invalid secrets file path:" + localSecureConfigPath)
 	}
 	// Load the config values.
 	configProps, err := LoadPropertiesFile(configFilePath)
@@ -185,12 +186,12 @@ func (c *PasswordProtectionSuite) DecryptConfigFileSecrets(configFilePath string
 		return err
 	}
 
-	engine := NewEncryptionEngine(cipherSuite, c.Logger, c.randSource)
+	engine := NewEncryptionEngine(cipherSuite, c.Logger, c.RandSource)
 	// Unwrap DEK with MEK
 	dataKey, err := c.unwrapDataKey(cipherSuite.EncryptedDataKey, engine)
 	if err != nil {
 		c.Logger.Error(err)
-		return fmt.Errorf("Failed to unwrap the Data Key due to invalid master key.")
+		return fmt.Errorf("failed to unwrap the data key due to invalid master key or corrupted data key.")
 	}
 
 	for key, value := range configProps.Map() {
@@ -206,7 +207,8 @@ func (c *PasswordProtectionSuite) DecryptConfigFileSecrets(configFilePath string
 				data, iv, algo := ParseCipherValue(cipher)
 				plainSecret, err := engine.Decrypt(data, iv, algo, dataKey)
 				if err != nil {
-					return fmt.Errorf("unable to decrypt %s: %s", key, err)
+					c.Logger.Error(err)
+					return fmt.Errorf("failed to decrypt config %s due to corrupted data.", key)
 				}
 				_, _, err = configProps.Set(key, plainSecret)
 				if err != nil {
@@ -238,7 +240,7 @@ func (c *PasswordProtectionSuite) RotateDataKey(masterPassphrase string, localSe
 		return err
 	}
 
-	engine := NewEncryptionEngine(cipherSuite, c.Logger, c.randSource)
+	engine := NewEncryptionEngine(cipherSuite, c.Logger, c.RandSource)
 
 	// Generate a master key from passphrase
 	userMasterKey, _, err := engine.GenerateMasterKey(masterPassphrase, cipherSuite.SaltMEK)
@@ -248,7 +250,7 @@ func (c *PasswordProtectionSuite) RotateDataKey(masterPassphrase string, localSe
 
 	// Verify master key passphrase
 	if masterKey != userMasterKey {
-		return fmt.Errorf("Authentication Failure: Invalid master key passphrase.")
+		return fmt.Errorf("authentication failure: invalid master key passphrase.")
 	}
 
 	secureConfigProps, err := LoadPropertiesFile(localSecureConfigPath)
@@ -260,7 +262,7 @@ func (c *PasswordProtectionSuite) RotateDataKey(masterPassphrase string, localSe
 	dataKey, err := c.unwrapDataKey(cipherSuite.EncryptedDataKey, engine)
 	if err != nil {
 		c.Logger.Error(err)
-		return fmt.Errorf("Failed to unwrap the Data Key due to invalid master key.")
+		return fmt.Errorf("failed to unwrap the data key due to invalid master key or corrupted data key.")
 	}
 
 	// Generate a new DEK
@@ -301,7 +303,7 @@ func (c *PasswordProtectionSuite) RotateDataKey(masterPassphrase string, localSe
 	}
 
 	// Save new DEK and re-encrypted ciphers.
-	now := c.clock.Now()
+	now := c.Clock.Now()
 	_, _, err = secureConfigProps.Set(METADATA_KEY_TIMESTAMP, now.String())
 	if err != nil {
 		return err
@@ -325,11 +327,11 @@ func (c *PasswordProtectionSuite) RotateDataKey(masterPassphrase string, localSe
 // This function is used to change the master key. It wraps the data key with newly set master key.
 func (c *PasswordProtectionSuite) RotateMasterKey(oldPassphrase string, newPassphrase string, localSecureConfigPath string) (string, error) {
 	if len(strings.TrimSpace(oldPassphrase)) == 0 || len(strings.TrimSpace(newPassphrase)) == 0 {
-		return "", fmt.Errorf("Master key passphrase cannot be empty.")
+		return "", fmt.Errorf("master key passphrase cannot be empty.")
 	}
 
 	if strings.Compare(oldPassphrase, newPassphrase) == 0 {
-		return "", fmt.Errorf("New master key passphrase is same as the old master key passphrase.")
+		return "", fmt.Errorf("new master key passphrase is same as the old master key passphrase.")
 	}
 
 	cipherSuite, err := c.loadCipherSuiteFromLocalFile(localSecureConfigPath)
@@ -343,7 +345,7 @@ func (c *PasswordProtectionSuite) RotateMasterKey(oldPassphrase string, newPassp
 		return "", err
 	}
 
-	engine := NewEncryptionEngine(cipherSuite, c.Logger, c.randSource)
+	engine := NewEncryptionEngine(cipherSuite, c.Logger, c.RandSource)
 
 	// Generate a master key from passphrase
 	userMasterKey, _, err := engine.GenerateMasterKey(oldPassphrase, cipherSuite.SaltMEK)
@@ -353,7 +355,7 @@ func (c *PasswordProtectionSuite) RotateMasterKey(oldPassphrase string, newPassp
 
 	// Verify master key passphrase
 	if masterKey != userMasterKey {
-		return "", fmt.Errorf("Authentication Failure: Invalid master key passphrase.")
+		return "", fmt.Errorf("authentication failure: invalid master key passphrase.")
 	}
 
 	// Unwrap DEK using the MEK
@@ -381,7 +383,7 @@ func (c *PasswordProtectionSuite) RotateMasterKey(oldPassphrase string, newPassp
 	}
 
 	// Save DEK
-	now := c.clock.Now()
+	now := c.Clock.Now()
 	_, _, err = secureConfigProps.Set(METADATA_KEY_TIMESTAMP, now.String())
 	if err != nil {
 		return "", err
@@ -421,7 +423,7 @@ func (c *PasswordProtectionSuite) AddEncryptedPasswords(configFilePath string, l
 	}
 
 	if newConfigProps.Len() == 0 {
-		return fmt.Errorf("Configs file is empty !!!")
+		return fmt.Errorf("add failed: empty list of new configs")
 	}
 
 	err = c.encryptConfigValues(newConfigProps, localSecureConfigPath, configProps, configFilePath, remoteSecureConfigPath)
@@ -449,12 +451,12 @@ func (c *PasswordProtectionSuite) UpdateEncryptedPasswords(configFilePath string
 	for key := range newConfigProps.Map() {
 		_, exists := configProps.Get(key)
 		if !exists {
-			return fmt.Errorf("Key " + key + " not present in config file.")
+			return fmt.Errorf("config " + key + " not present in config file.")
 		}
 	}
 
 	if newConfigProps.Len() == 0 {
-		return fmt.Errorf("Update failed: no keys present in config file.")
+		return fmt.Errorf("update failed: empty list of update configs")
 	}
 
 	err = c.encryptConfigValues(newConfigProps, localSecureConfigPath, configProps, configFilePath, remoteSecureConfigPath)
@@ -483,13 +485,13 @@ func (c *PasswordProtectionSuite) RemoveEncryptedPasswords(configFilePath string
 		//Check if config is present
 		_, ok := configProps.Get(key)
 		if !ok {
-			return fmt.Errorf("Config " + key + " not present in config file")
+			return fmt.Errorf("config " + key + " not present in config file.")
 		}
 
 		// Check if config is removed from secrets files
 		_, ok = secureConfigProps.Get(pathKey)
 		if !ok {
-			return fmt.Errorf("Config " + key + " not present in secrets file")
+			return fmt.Errorf("config " + key + " not present in secrets file.")
 		}
 		configProps.Delete(key)
 		secureConfigProps.Delete(pathKey)
@@ -586,7 +588,7 @@ func (c *PasswordProtectionSuite) fetchSecureConfigProps(localSecureConfigPath s
 	}
 
 	// Check if secure config properties file exists and DEK is generated
-	if IsPathValid(localSecureConfigPath) {
+	if DoesPathExist(localSecureConfigPath) {
 		cipherSuite, err := c.loadCipherSuiteFromSecureProps(secureConfigProps)
 		if err != nil {
 			return nil, nil, err
@@ -604,7 +606,7 @@ func (c *PasswordProtectionSuite) fetchSecureConfigProps(localSecureConfigPath s
 	}
 
 	// Add DEK Metadata to secureConfigProps
-	now := c.clock.Now()
+	now := c.Clock.Now()
 	_, _, err = secureConfigProps.Set(METADATA_KEY_TIMESTAMP, now.String())
 	if err != nil {
 		return nil, nil, err
@@ -657,11 +659,11 @@ func (c *PasswordProtectionSuite) encryptConfigValues(matchProps *properties.Pro
 	}
 
 	// Unwrap DEK
-	engine := NewEncryptionEngine(cipherSuite, c.Logger, c.randSource)
+	engine := NewEncryptionEngine(cipherSuite, c.Logger, c.RandSource)
 	dataKey, err := c.unwrapDataKey(cipherSuite.EncryptedDataKey, engine)
 	if err != nil {
 		c.Logger.Error(err)
-		return fmt.Errorf("Failed to unwrap the Data Key due to invalid master key.")
+		return fmt.Errorf("failed to unwrap the data key due to invalid master key or corrupted data key.")
 	}
 
 	for key, value := range matchProps.Map() {

@@ -25,6 +25,7 @@ type FileSystem interface {
 	TempDir(dir, prefix string) (name string, err error)
 	// io
 	Copy(dst io.Writer, src io.Reader) (written int64, err error)
+	Move(src string, dst string) error
 	// bufio
 	NewBufferedReader(rd io.Reader) Reader
 	// isatty
@@ -62,5 +63,6 @@ func (*RealFileSystem) Remove(name string) error                         { retur
 func (*RealFileSystem) RemoveAll(path string) error                      { return os.RemoveAll(path) }
 func (*RealFileSystem) TempDir(dir, prefix string) (string, error)       { return ioutil.TempDir(dir, prefix) }
 func (*RealFileSystem) Copy(dst io.Writer, src io.Reader) (int64, error) { return io.Copy(dst, src) }
+func (*RealFileSystem) Move(src string, dst string) error                { return os.Rename(src, dst) }
 func (*RealFileSystem) NewBufferedReader(rd io.Reader) Reader            { return bufio.NewReader(rd) }
 func (*RealFileSystem) IsTerminal(fd uintptr) bool                       { return isatty.IsTerminal(fd) }

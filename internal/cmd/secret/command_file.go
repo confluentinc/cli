@@ -40,7 +40,7 @@ func (c *secureFileCommand) init() {
 	encryptCmd := &cobra.Command{
 		Use:   "encrypt",
 		Short: "Encrypt secrets in a configuration properties file.",
-		Long: `This command encrypts the passwords in file specified in filePath. This command returns a failure
+		Long: `This command encrypts the passwords in file specified in --config-file. This command returns a failure
 if a master key has not already been set in the environment variable. Create master key using "master-key create" 
 command and save the generated master key in environment variable.`,
 		RunE: c.encrypt,
@@ -61,7 +61,7 @@ command and save the generated master key in environment variable.`,
 	decryptCmd := &cobra.Command{
 		Use:   "decrypt",
 		Short: "Decrypt encrypted secrets from the configuration properties file.",
-		Long: `This command decrypts the passwords in file specified in filePath. This command returns a failure
+		Long: `This command decrypts the passwords in file specified in --config-file. This command returns a failure
 if a master key has not already been set using the "master-key create" command.`,
 		RunE: c.decrypt,
 		Args: cobra.NoArgs,
@@ -80,7 +80,7 @@ if a master key has not already been set using the "master-key create" command.`
 	addCmd := &cobra.Command{
 		Use:   "add",
 		Short: "Add encrypted secrets to a configuration properties file.",
-		Long: `This command encrypts the password and adds it to the configuration file specified in filePath. This
+		Long: `This command encrypts the password and adds it to the configuration file specified in --config-file. This
 command returns a failure if a master key has not already been set using the "master-key create" command.`,
 		RunE: c.add,
 		Args: cobra.NoArgs,

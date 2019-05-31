@@ -80,6 +80,13 @@ func (c *PassThroughFileSystem) Copy(dst io.Writer, src io.Reader) (int64, error
 	return c.FS.Copy(dst, src)
 }
 
+func (c *PassThroughFileSystem) Move(src string, dst string) error {
+	if c.Mock.MoveFunc != nil {
+		return c.Mock.Move(src, dst)
+	}
+	return c.FS.Move(src, dst)
+}
+
 func (c *PassThroughFileSystem) NewBufferedReader(rd io.Reader) pio.Reader {
 	if c.Mock.NewBufferedReaderFunc != nil {
 		return c.Mock.NewBufferedReader(rd)
