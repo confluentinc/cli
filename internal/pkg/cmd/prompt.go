@@ -19,6 +19,7 @@ type Prompt interface {
 type RealPrompt struct {
 	Stdin *bufio.Reader
 	Out   io.Writer
+	Fi *os.File
 }
 
 // NewPrompt returns a new RealPrompt instance which reads from reader and writes to Stdout.
@@ -39,7 +40,7 @@ func (p *RealPrompt) ReadPassword() ([]byte, error) {
 
 // ReadPassword reads a line of input from a terminal without local echo.
 func (p *RealPrompt) IsPipe() (bool, error) {
-	fi, err := p.Stdin.Stat()
+	fi, err := p.Fi.Stat()
 	if err != nil {
 		return false, err
 	}
