@@ -1,9 +1,14 @@
+// golicense-downloader downloads LICENSE and NOTICE files for each dependency found by github.com/mitchellh/golicense
+//
+// Usage:
+//    GITHUB_TOKEN=${token} golicense .golicense.hcl my-tool | GITHUB_TOKEN=${token} golicense-downloader -f .golicense-downloader.json -l legal/my-tool/licenses -n legal/my-tool/notices
 package main
 
 import (
 	"bufio"
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -29,9 +34,15 @@ var (
 	noticeFiles = []string{"NOTICE", "NOTICES", "NOTICE.txt", "NOTICES.txt"}
 	licenseDir  = pflag.StringP("licenses-dir", "l", "./legal/licenses", "Directory in which to write licenses")
 	noticeDir   = pflag.StringP("notices-dir", "n", "./legal/notices", "Directory in which to write notices")
+	configFile  = pflag.StringP("config-file", "f", "", "File from which to read golicense-downloader configuration")
 )
 
+type Config struct {
+	DepOverrides map[string]string `json:"depOverrides"`
+}
+
 type LicenseDownloader struct {
+	*Config
 	Client       *github.Client
 	LicenseIndex string
 	LicenseFmt   string
@@ -68,6 +79,21 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Load config file, if any
+	config := &Config{}
+	if *configFile != "" {
+		b, err := ioutil.ReadFile(*configFile)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Unable to read config file at %s: %s", *configFile, err)
+			os.Exit(1)
+		}
+		err = json.Unmarshal(b, config)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Unable to unmarshal config from %s: %s", *configFile, err)
+			os.Exit(1)
+		}
+	}
+
 	// Instantiate LicenseDownloader
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
@@ -76,6 +102,7 @@ func main() {
 	tc := oauth2.NewClient(ctx, ts)
 	client := github.NewClient(tc)
 	downloader := &LicenseDownloader{
+		Config:       config,
 		Client:       client,
 		LicenseIndex: filepath.Join(filepath.Dir(*licenseDir), licenseIndexFilename),
 		LicenseFmt:   filepath.Join(*licenseDir, licenseFilenameFmt),
@@ -168,8 +195,14 @@ func (g *LicenseDownloader) ParseLicense(text string) (*License, error) {
 		return nil, fmt.Errorf("invalid golicense output: %s\n", text)
 	}
 	dep, license := strings.TrimSpace(columns[0]), strings.TrimSpace(columns[1])
+	if override, ok := g.DepOverrides[dep]; ok {
+		dep = override
+	}
 	if !strings.HasPrefix(dep, "github.com") {
-		fmt.Fprintf(os.Stderr, "Unable to fetch license for %s\n", dep)
+		// ignore golang stdlib sub-repo packages
+		if !strings.HasPrefix(dep, "golang.org/x/") {
+			fmt.Fprintf(os.Stderr, "Unable to fetch license for %s\n", dep)
+		}
 		return nil, nil
 	}
 

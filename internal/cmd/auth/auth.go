@@ -19,6 +19,7 @@ import (
 type commands struct {
 	Commands []*cobra.Command
 	config   *config.Config
+	Logger   *log.Logger
 	// for testing
 	prompt                pcmd.Prompt
 	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *ccloud.Client
@@ -26,24 +27,25 @@ type commands struct {
 }
 
 // New returns a list of auth-related Cobra commands.
-func New(prerunner pcmd.PreRunner, config *config.Config) []*cobra.Command {
+func New(prerunner pcmd.PreRunner, config *config.Config, logger *log.Logger) []*cobra.Command {
 	var defaultAnonHTTPClientFactory = func(baseURL string, logger *log.Logger) *ccloud.Client {
 		return ccloud.NewClient(baseURL, ccloud.BaseClient, logger)
 	}
 	var defaultJwtHTTPClientFactory = func(ctx context.Context, jwt string, baseURL string, logger *log.Logger) *ccloud.Client {
 		return ccloud.NewClientWithJWT(ctx, jwt, baseURL, logger)
 	}
-	return newCommands(prerunner, config, pcmd.NewPrompt(os.Stdin),
+	return newCommands(prerunner, config, logger, pcmd.NewPrompt(os.Stdin),
 		defaultAnonHTTPClientFactory, defaultJwtHTTPClientFactory,
 	).Commands
 }
 
-func newCommands(prerunner pcmd.PreRunner, config *config.Config, prompt pcmd.Prompt,
+func newCommands(prerunner pcmd.PreRunner, config *config.Config, log *log.Logger, prompt pcmd.Prompt,
 	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *ccloud.Client,
 	jwtHTTPClientFactory func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *ccloud.Client,
 ) *commands {
 	cmd := &commands{
 		config:                config,
+		Logger:                log,
 		prompt:                prompt,
 		anonHTTPClientFactory: anonHTTPClientFactory,
 		jwtHTTPClientFactory:  jwtHTTPClientFactory,
@@ -167,15 +169,20 @@ func (a *commands) credentials(cmd *cobra.Command) (string, string, error) {
 		email = emailFromPrompt
 	}
 
+	a.Logger.Trace("Successfully obtained email")
+
 	if len(password) == 0 {
 		var err error
 		pcmd.Print(cmd, "Password: ")
-		password, err = a.prompt.ReadPassword()
+		bytePassword, err := a.prompt.ReadPassword()
 		if err != nil {
 			return "", "", err
 		}
 		pcmd.Println(cmd)
+		password = string(bytePassword)
 	}
+
+	a.Logger.Trace("Successfully obtained password")
 
 	return strings.TrimSpace(email), password, nil
 }
