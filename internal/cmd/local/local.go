@@ -13,6 +13,10 @@ import (
 const longDescription = `Use these commands to try out Confluent Platform by running a single-node
 instance locally on your machine. This set of commands are NOT intended for production use.
 
+You must download and install Confluent Platform from https://www.confluent.io/download on your
+machine. These commands require the path to the installation directory via the --path flag or
+the CONFLUENT_HOME environment variable.
+
 You can use these commands to explore, test, experiment, and otherwise familiarize yourself
 with Confluent Platform.
 
