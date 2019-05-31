@@ -46,6 +46,32 @@ And install a particular version if you desire:
 
 This downloads a binary tarball from S3 compiled for your distro and installs it.
 
+### Binary Tarball from S3
+
+You can download a binary tarball from S3.
+
+To list all available versions:
+
+    curl -s "https://s3-us-west-2.amazonaws.com/confluent.cloud?prefix=ccloud-cli/archives/&delimiter=/" | tidy -xml --wrap 100 -i - 2>/dev/null
+
+To list all available packages for a version:
+
+    VERSION=v0.95.0 # or latest
+    curl -s "https://s3-us-west-2.amazonaws.com/confluent.cloud?prefix=ccloud-cli/archives/${VERSION#v}/&delimiter=/" | tidy -xml --wrap 100 -i - 2>/dev/null
+
+To download a tarball for your OS and architecture:
+
+    VERSION=v0.95.0 # or latest
+    OS=darwin
+    ARCH=amd64
+    FILE=ccloud_v${VERSION#v}_${OS}_${ARCH}.tar.gz
+    curl -s https://s3-us-west-2.amazonaws.com/confluent.cloud/ccloud-cli/archives/${VERSION#v}/${FILE} -o ${FILE}
+
+To install the CLI:
+
+    tar -xzvf ${FILE}
+    sudo mv ccloud/ccloud /usr/local/bin
+
 ### Building From Source
 
 ```

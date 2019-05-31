@@ -23,6 +23,7 @@ type commands struct {
 	config    *config.Config
 	cliName   string
 	mdsClient *mds.APIClient
+	Logger   *log.Logger
 	// for testing
 	prompt                pcmd.Prompt
 	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *ccloud.Client
@@ -30,19 +31,19 @@ type commands struct {
 }
 
 // New returns a list of auth-related Cobra commands.
-func New(prerunner pcmd.PreRunner, config *config.Config, cliName string, mdsClient *mds.APIClient) []*cobra.Command {
+func New(prerunner pcmd.PreRunner, config *config.Config, logger *log.Logger, cliName string, mdsClient *mds.APIClient) []*cobra.Command {
 	var defaultAnonHTTPClientFactory = func(baseURL string, logger *log.Logger) *ccloud.Client {
 		return ccloud.NewClient(baseURL, ccloud.BaseClient, logger)
 	}
 	var defaultJwtHTTPClientFactory = func(ctx context.Context, jwt string, baseURL string, logger *log.Logger) *ccloud.Client {
 		return ccloud.NewClientWithJWT(ctx, jwt, baseURL, logger)
 	}
-	return newCommands(prerunner, config, cliName, mdsClient, pcmd.NewPrompt(os.Stdin),
+	return newCommands(prerunner, config, logger, cliName, mdsClient, pcmd.NewPrompt(os.Stdin),
 		defaultAnonHTTPClientFactory, defaultJwtHTTPClientFactory,
 	).Commands
 }
 
-func newCommands(prerunner pcmd.PreRunner, config *config.Config, cliName string, mdsClient *mds.APIClient, prompt pcmd.Prompt,
+func newCommands(prerunner pcmd.PreRunner, config *config.Config, log *log.Logger, cliName string, mdsClient *mds.APIClient, prompt pcmd.Prompt,
 	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *ccloud.Client,
 	jwtHTTPClientFactory func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *ccloud.Client,
 ) *commands {
@@ -50,6 +51,7 @@ func newCommands(prerunner pcmd.PreRunner, config *config.Config, cliName string
 		config:                config,
 		cliName:               cliName,
 		mdsClient:             mdsClient,
+		Logger:                log,
 		prompt:                prompt,
 		anonHTTPClientFactory: anonHTTPClientFactory,
 		jwtHTTPClientFactory:  jwtHTTPClientFactory,
@@ -211,15 +213,19 @@ func (a *commands) credentials(cmd *cobra.Command, userField string) (string, st
 		email = emailFromPrompt
 	}
 
+	a.Logger.Trace("Successfully obtained email")
+
 	if len(password) == 0 {
 		pcmd.Print(cmd, "Password: ")
-		bytePassword, err := a.prompt.ReadPassword(0)
+		bytePassword, err := a.prompt.ReadPassword()
 		if err != nil {
 			return "", "", err
 		}
 		pcmd.Println(cmd)
 		password = string(bytePassword)
 	}
+
+	a.Logger.Trace("Successfully obtained password")
 
 	return strings.TrimSpace(email), password, nil
 }
