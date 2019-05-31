@@ -6,8 +6,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestIsPathValid(t *testing.T) {
-	t.Run("IsPathValid: empty path returns false", func(t *testing.T) {
+func TestDoesPathExist(t *testing.T) {
+	t.Run("DoesPathExist: empty path returns false", func(t *testing.T) {
 		req := require.New(t)
 		valid := IsPathValid("")
 		req.False(valid)
