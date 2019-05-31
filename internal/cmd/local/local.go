@@ -1,6 +1,7 @@
 package local
 
 import (
+	"fmt"
 	"os"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -38,7 +39,6 @@ func New(prerunner pcmd.PreRunner, shell ShellRunner) *cobra.Command {
 	localCmd.Command.RunE = localCmd.run
 	// possibly we should make this an arg and/or move it to env var
 	localCmd.Flags().String("path", "", "Path to Confluent Platform install directory.")
-	_ = localCmd.MarkFlagRequired("path")
 	localCmd.Flags().SortFlags = false
 	return localCmd.Command
 }
@@ -47,6 +47,13 @@ func (c *command) run(cmd *cobra.Command, args []string) error {
 	path, err := cmd.Flags().GetString("path")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
+	}
+	if path == "" {
+		if home, found := os.LookupEnv("CONFLUENT_HOME"); found {
+			path = home
+		} else {
+			return fmt.Errorf("Pass --path /path/to/confluent flag or set environment variable CONFLUENT_HOME")
+		}
 	}
 	c.shell.Init(os.Stdout, os.Stderr)
 	c.shell.Export("CONFLUENT_HOME", path)
