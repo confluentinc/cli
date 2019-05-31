@@ -58,6 +58,10 @@ validate_and_export_dir_layout() {
     [[ "${last}" != "/" ]] && export confluent_current_dir="${confluent_current_dir}/"
 }
 
+# Put this before validate_and_export_dir_layout, because we shouldn't
+# need to know CONFLUENT_HOME just to see the list of commands
+[[ $# -lt 1 ]] && usage
+
 # Since this function performs essential initializations, call it as early as possible.
 validate_and_export_dir_layout
 
@@ -2194,9 +2198,6 @@ invalid_requirement() {
 }
 
 main() {
-    # Parse command-line arguments
-    [[ $# -lt 1 ]] && usage
-
     requirements
 
     cat <<EOF
@@ -2205,6 +2206,7 @@ main() {
 
 EOF
 
+    # Parse command-line arguments
     command="${1}"
     shift
     case "${command}" in
