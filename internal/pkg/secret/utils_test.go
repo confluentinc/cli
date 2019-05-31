@@ -9,7 +9,7 @@ import (
 func TestDoesPathExist(t *testing.T) {
 	t.Run("DoesPathExist: empty path returns false", func(t *testing.T) {
 		req := require.New(t)
-		valid := IsPathValid("")
+		valid := DoesPathExist("")
 		req.False(valid)
 	})
 }
