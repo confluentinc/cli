@@ -2201,7 +2201,7 @@ main() {
     requirements
 
     cat <<EOF
-    This CLI is intended for development only, not for production
+    This command is intended for development only, not for production
     https://docs.confluent.io/current/cli/index.html
 
 EOF
