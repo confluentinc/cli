@@ -14,7 +14,7 @@ func (s *CLITestSuite) TestKafkaCommands() {
 		// This is hidden from help, but what if you call it anyway... with args?
 		{args: "kafka cluster delete lkc-abc123", fixture: "kafka4.golden", wantErrCode: 1},
 	}
-	resetConfiguration(s.T())
+	resetConfiguration(s.T(), "ccloud")
 	for _, tt := range tests {
 		if tt.name == "" {
 			tt.name = tt.args

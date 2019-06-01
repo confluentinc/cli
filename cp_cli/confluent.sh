@@ -2196,13 +2196,17 @@ invalid_requirement() {
     exit ${ERROR_CODE}
 }
 
-main() {
-    cat >&2 <<EOF
+cat >&2 <<EOF
     The local commands are intended for a single-node development environment
     only, NOT for production usage. https://docs.confluent.io/current/cli/index.html
 
 EOF
 
+help() {
+    command_exists "${1}" && ( "${1}"_usage "$@" || invalid_command "${1}" ) || usage
+}
+
+main() {
     # Parse command-line arguments
     [[ $# -lt 1 ]] && usage
 
@@ -2213,7 +2217,7 @@ EOF
     case "${command}" in
         help)
             if [[ -n "${1}" ]]; then
-                command_exists "${1}" && ( "${1}"_usage "$@" || invalid_command "${1}" )
+                help $@
             else
                 usage
             fi;;
