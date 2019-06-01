@@ -150,7 +150,10 @@ func (c *client) UpdateBinary(name, version, path string) error {
 	timeSpent := c.clock.Now().Sub(startTime).Seconds()
 	fmt.Fprintf(c.Out, "Done. Downloaded %.2f MB in %.0f seconds. (%.2f MB/s)\n", mb, timeSpent, mb/timeSpent)
 
-	// The old version will get deleted automatically eventually as it's in the system temp dir
+	// We have to move the old binary out of the way first, then copy the new one into place,
+	// because Windows doesn't support directly overwriting a running binary.
+
+	// The old version will get deleted automatically eventually as we put it in the system's or user's temp dir
 	previousVersionBinary := filepath.Join(downloadDir, name+".old")
 	err = c.fs.Move(path, previousVersionBinary)
 	if err != nil {
@@ -158,6 +161,16 @@ func (c *client) UpdateBinary(name, version, path string) error {
 	}
 	err = c.copyFile(newBin, path)
 	if err != nil {
+		// If we moved the old binary out of the way but couldn't put the new one in place,
+		// attempt to restore the old binary to where it was before bailing
+		restoreErr := c.fs.Move(previousVersionBinary, path)
+		if restoreErr != nil {
+			// Warning: this is a bad case where the user will need to re-download the CLI.  However,
+			// we shouldn't reach here since if the Move succeeded in one direction it's likely to work
+			// in the opposite direction as well
+			return errors.Wrapf(restoreErr, "unable to move (restore) %s to %s", previousVersionBinary, path)
+		}
+
 		return errors.Wrapf(err, "unable to copy %s to %s", newBin, path)
 	}
 

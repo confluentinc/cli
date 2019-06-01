@@ -431,7 +431,7 @@ func TestUpdateBinary(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "err if unable to overwrite binary",
+			name: "err if unable to copy binary",
 			client: &client{
 				ClientParams: &ClientParams{
 					Repository: &mock.Repository{
@@ -448,6 +448,76 @@ func TestUpdateBinary(t *testing.T) {
 				clock: clock,
 				fs: &mock.PassThroughFileSystem{
 					Mock: &mock.FileSystem{
+						CopyFunc: func(dst io.Writer, src io.Reader) (i int64, e error) {
+							return 0, errors.New("my dog ate my disks")
+						},
+					},
+					FS: &pio.RealFileSystem{},
+				},
+			},
+			args: args{
+				name:    binName,
+				version: "v1",
+				path:    installedBin,
+			},
+			wantErr: true,
+		},
+		{
+			name: "err if unable to mv binary",
+			client: &client{
+				ClientParams: &ClientParams{
+					Repository: &mock.Repository{
+						DownloadVersionFunc: func(name, version, downloadDir string) (string, int64, error) {
+							req.Equal(binName, name)
+							req.Equal("v1", version)
+							req.Contains(downloadDir, binName)
+							clock.Advance(23 * time.Second)
+							return downloadedBin, 16 * 1000 * 1000, nil
+						},
+					},
+					Logger: log.New(),
+				},
+				clock: clock,
+				fs: &mock.PassThroughFileSystem{
+					Mock: &mock.FileSystem{
+						MoveFunc: func(src string, dst string) error {
+							return errors.New("move func intentionally failed")
+						},
+					},
+					FS: &pio.RealFileSystem{},
+				},
+			},
+			args: args{
+				name:    binName,
+				version: "v1",
+				path:    installedBin,
+			},
+			wantErr: true,
+		},
+		{
+			name: "err if first mv succeeds, then copy fails, then second mv fails",
+			client: &client{
+				ClientParams: &ClientParams{
+					Repository: &mock.Repository{
+						DownloadVersionFunc: func(name, version, downloadDir string) (string, int64, error) {
+							req.Equal(binName, name)
+							req.Equal("v1", version)
+							req.Contains(downloadDir, binName)
+							clock.Advance(23 * time.Second)
+							return downloadedBin, 16 * 1000 * 1000, nil
+						},
+					},
+					Logger: log.New(),
+				},
+				clock: clock,
+				fs: &mock.PassThroughFileSystem{
+					Mock: &mock.FileSystem{
+						MoveFunc: func(src string, dst string) error {
+							if dst == installedBin { // this will be the case in the second mv call
+								return errors.New("move func intentionally failed")
+							}
+							return nil
+						},
 						CopyFunc: func(dst io.Writer, src io.Reader) (i int64, e error) {
 							return 0, errors.New("my dog ate my disks")
 						},
