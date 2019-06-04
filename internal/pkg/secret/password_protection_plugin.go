@@ -190,7 +190,7 @@ func (c *PasswordProtectionSuite) DecryptConfigFileSecrets(configFilePath string
 	// Unwrap DEK with MEK
 	dataKey, err := c.unwrapDataKey(cipherSuite.EncryptedDataKey, engine)
 	if err != nil {
-		c.Logger.Error(err)
+		c.Logger.Debug(err)
 		return fmt.Errorf("failed to unwrap the data key due to invalid master key or corrupted data key.")
 	}
 
@@ -207,7 +207,7 @@ func (c *PasswordProtectionSuite) DecryptConfigFileSecrets(configFilePath string
 				data, iv, algo := ParseCipherValue(cipher)
 				plainSecret, err := engine.Decrypt(data, iv, algo, dataKey)
 				if err != nil {
-					c.Logger.Error(err)
+					c.Logger.Debug(err)
 					return fmt.Errorf("failed to decrypt config %s due to corrupted data.", key)
 				}
 				_, _, err = configProps.Set(key, plainSecret)
@@ -261,7 +261,7 @@ func (c *PasswordProtectionSuite) RotateDataKey(masterPassphrase string, localSe
 	// Unwrap old DEK using the MEK
 	dataKey, err := c.unwrapDataKey(cipherSuite.EncryptedDataKey, engine)
 	if err != nil {
-		c.Logger.Error(err)
+		c.Logger.Debug(err)
 		return fmt.Errorf("failed to unwrap the data key due to invalid master key or corrupted data key.")
 	}
 
@@ -331,7 +331,7 @@ func (c *PasswordProtectionSuite) RotateMasterKey(oldPassphrase string, newPassp
 	}
 
 	if strings.Compare(oldPassphrase, newPassphrase) == 0 {
-		return "", fmt.Errorf("new master key passphrase is same as the old master key passphrase.")
+		return "", fmt.Errorf("new master key passphrase may not be the same as the previous passphrase.")
 	}
 
 	cipherSuite, err := c.loadCipherSuiteFromLocalFile(localSecureConfigPath)
@@ -361,7 +361,7 @@ func (c *PasswordProtectionSuite) RotateMasterKey(oldPassphrase string, newPassp
 	// Unwrap DEK using the MEK
 	dataKey, err := c.unwrapDataKey(cipherSuite.EncryptedDataKey, engine)
 	if err != nil {
-		c.Logger.Error(err)
+		c.Logger.Debug(err)
 		return "", fmt.Errorf("Failed to unwrap the Data Key due to invalid master key.")
 	}
 
@@ -662,7 +662,7 @@ func (c *PasswordProtectionSuite) encryptConfigValues(matchProps *properties.Pro
 	engine := NewEncryptionEngine(cipherSuite, c.Logger, c.RandSource)
 	dataKey, err := c.unwrapDataKey(cipherSuite.EncryptedDataKey, engine)
 	if err != nil {
-		c.Logger.Error(err)
+		c.Logger.Debug(err)
 		return fmt.Errorf("failed to unwrap the data key due to invalid master key or corrupted data key.")
 	}
 

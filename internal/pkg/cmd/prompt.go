@@ -17,9 +17,9 @@ type Prompt interface {
 
 // RealPrompt is the standard prompt implementation
 type RealPrompt struct {
-	In *bufio.Reader
+	In    *bufio.Reader
 	Out   io.Writer
-	Stdin    *os.File
+	Stdin *os.File
 }
 
 // NewPrompt returns a new RealPrompt instance which reads from reader and writes to Stdout.
