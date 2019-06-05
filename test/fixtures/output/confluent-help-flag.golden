@@ -9,6 +9,7 @@ Available Commands:
   local       Manage local Confluent Platform development environment.
   login       Login to Confluent Platform.
   logout      Logout of Confluent Platform.
+  ps1         Print a prompt-string suitable for the PS1 prompt.
   update      Update the confluent CLI.
   version     Print the confluent CLI version.
 

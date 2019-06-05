@@ -24,13 +24,13 @@ var (
 	vocab *gospell.GoSpell
 
 	properNouns = []string{
-		"Apache", "Kafka", "CLI", "API", "ACL", "ACLs", "Confluent Cloud", "Confluent Platform",
+		"Apache", "Kafka", "CLI", "API", "ACL", "ACLs", "Confluent Cloud", "Confluent Platform", "PS1",
 	}
 	vocabWords = []string{
-		"ccloud", "kafka", "api", "acl", "url", "config", "multizone", "transactional",
+		"ccloud", "kafka", "api", "acl", "url", "config", "multizone", "ps1", "transactional",
 	}
 	utilityCommands = []string{
-		"login", "logout", "version", "completion <shell>", "update",
+		"login", "logout", "version", "completion <shell>", "ps1", "update",
 	}
 	nonClusterScopedCommands = []linter.RuleFilter{
 		linter.OnlyLeafCommands, linter.ExcludeCommand(utilityCommands...),
