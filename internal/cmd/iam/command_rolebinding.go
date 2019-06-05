@@ -76,8 +76,7 @@ func (c *rolebindingCommand) init() {
 
 	createCmd := &cobra.Command{
 		Use:   "create",
-		Short: "Create a new role binding.",
-		Long:  "Create a new role binding.",
+		Short: "Create a role binding.",
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
 	}
@@ -95,7 +94,6 @@ func (c *rolebindingCommand) init() {
 	deleteCmd := &cobra.Command{
 		Use:   "delete",
 		Short: "Delete an existing role binding.",
-		Long:  "Delete an existing role binding.",
 		RunE:  c.delete,
 		Args:  cobra.NoArgs,
 	}
