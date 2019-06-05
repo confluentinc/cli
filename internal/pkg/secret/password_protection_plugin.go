@@ -412,12 +412,13 @@ func (c *PasswordProtectionSuite) RotateMasterKey(oldPassphrase string, newPassp
 // configFilePath:key and value as encrypted password.
 // We also add the properties to instantiate the SecurePass provider to the config properties file.
 func (c *PasswordProtectionSuite) AddEncryptedPasswords(configFilePath string, localSecureConfigPath string, remoteSecureConfigPath string, newConfigs string) error {
+	newConfigs = strings.Replace(newConfigs, `\n`, "\n", -1)
 	newConfigProps, err := properties.LoadString(newConfigs)
 	if err != nil {
 		return err
 	}
-	configProps, err := LoadPropertiesFile(configFilePath)
 
+	configProps, err := LoadPropertiesFile(configFilePath)
 	if err != nil {
 		return err
 	}
@@ -436,6 +437,7 @@ func (c *PasswordProtectionSuite) AddEncryptedPasswords(configFilePath string, l
 // configFilePath:key and value as encrypted password.
 // We also add the properties to instantiate the SecurePass provider to the config properties file.
 func (c *PasswordProtectionSuite) UpdateEncryptedPasswords(configFilePath string, localSecureConfigPath string, remoteSecureConfigPath string, newConfigs string) error {
+	newConfigs = strings.Replace(newConfigs, `\n`, "\n", -1)
 	newConfigProps, err := properties.LoadString(newConfigs)
 	if err != nil {
 		return err
