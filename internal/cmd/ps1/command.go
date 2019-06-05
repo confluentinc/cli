@@ -70,9 +70,9 @@ Formats
 Colors
 ~~~~~~
 
-If you pass '--color' then the output will be colored heuristically based
-on the environment name. E.g., if the environment contains "prod", the output
-will be red; "dev" will be green; "stag" be yellow; everything else uncolored.
+Unless you pass '--no-color', the output will be colored heuristically based on
+the context, environment, and kafka cluster names. E.g., if the environment contains "prod",
+the output will be red; "dev" will be green; "stag" be yellow; everything else uncolored.
 
 `
 
@@ -105,7 +105,7 @@ func (c *ps1Command) init() {
 	// Ideally we'd default to ({{.CLIName}} %c) but contexts are implicit today with uber-verbose names like `login-cody@confluent.io-https://devel.cpdev.cloud`
 	c.Command.Flags().StringP("format", "f", "(%E %K)", "The format string to use.")
 	c.Command.Flags().BoolP("no-color", "g", false, "Do not colorize output based on the inferred environment (prod=red, stag=yellow, devel=green, unknown=none).")
-	c.Command.Flags().StringP("timeout", "t", "1s", "The maximum execution time in milliseconds.")
+	c.Command.Flags().StringP("timeout", "t", "200ms", "The maximum execution time in milliseconds.")
 	c.Command.Flags().SortFlags = false
 }
 
