@@ -41,7 +41,7 @@ func (c *secureFileCommand) init() {
 		Use:   "encrypt",
 		Short: "Encrypt secrets in a configuration properties file.",
 		Long: `This command encrypts the passwords in file specified in --config-file. This command returns a failure
-if a master key has not already been set in the environment variable. Create master key using "master-key create" 
+if a master key has not already been set in the environment variable. Create master key using "master-key generate"
 command and save the generated master key in environment variable.`,
 		RunE: c.encrypt,
 		Args: cobra.NoArgs,
@@ -62,7 +62,7 @@ command and save the generated master key in environment variable.`,
 		Use:   "decrypt",
 		Short: "Decrypt encrypted secrets from the configuration properties file.",
 		Long: `This command decrypts the passwords in file specified in --config-file. This command returns a failure
-if a master key has not already been set using the "master-key create" command.`,
+if a master key has not already been set using the "master-key generate" command.`,
 		RunE: c.decrypt,
 		Args: cobra.NoArgs,
 	}
@@ -81,7 +81,7 @@ if a master key has not already been set using the "master-key create" command.`
 		Use:   "add",
 		Short: "Add encrypted secrets to a configuration properties file.",
 		Long: `This command encrypts the password and adds it to the configuration file specified in --config-file. This
-command returns a failure if a master key has not already been set using the "master-key create" command.`,
+command returns a failure if a master key has not already been set using the "master-key generate" command.`,
 		RunE: c.add,
 		Args: cobra.NoArgs,
 	}
@@ -102,6 +102,7 @@ command returns a failure if a master key has not already been set using the "ma
 	updateCmd := &cobra.Command{
 		Use:   "update",
 		Short: "Update the encrypted secrets from the configuration properties file.",
+		Long: "This command updates the encrypted secrets from the configuration properties file.",
 		RunE:  c.update,
 		Args:  cobra.NoArgs,
 	}
@@ -138,16 +139,14 @@ command returns a failure if a master key has not already been set using the "ma
 
 	rotateKeyCmd := &cobra.Command{
 		Use:   "rotate",
-		Short: "Rotate master key or data key.",
-		Long: `Based on the flag set this command rotates either the master key or data key. --master-key: Generates a new master key and re-encrypts the  with the new master key. The new master
-key is stored in an environment variable.
-data-key: Generates a new data key and re-encrypts the file with the new data key.`,
+		Short: "Rotate master or data key.",
+		Long: `This command rotates either the master or data key.`,
 		RunE: c.rotate,
 		Args: cobra.NoArgs,
 	}
 
-	rotateKeyCmd.Flags().Bool("master-key", false, "Rotate Master Key.")
-	rotateKeyCmd.Flags().Bool("data-key", false, "Rotate Data Key.")
+	rotateKeyCmd.Flags().Bool("master-key", false, "Rotate the master key. Generates a new master key and re-encrypts with the new key.")
+	rotateKeyCmd.Flags().Bool("data-key", false, "Rotate data key. Generates a new data key and re-encrypts the file with the new key.")
 	rotateKeyCmd.Flags().String("local-secrets-file", "", "Path to the encrypted configuration properties file.")
 	check(rotateKeyCmd.MarkFlagRequired("local-secrets-file"))
 	rotateKeyCmd.Flags().String("passphrase", "", "Master key passphrase; use - to pipe from stdin or @file.txt to read from file.")
