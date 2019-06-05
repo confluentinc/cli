@@ -98,10 +98,12 @@ func (p *Prompt) InferEnvironmentColor() (func(a ...interface{}) string, error) 
 	if envColor != nil {
 		return envColor, nil
 	}
+
 	envColor = inferColorBasedOnEnvName(p.Config.Auth.Account.Name)
 	if envColor != nil {
 		return envColor, nil
 	}
+
 	kcc, err := getKafkaClusterConfig(p.Config)
 	if err != nil {
 		return nil, err
@@ -109,7 +111,6 @@ func (p *Prompt) InferEnvironmentColor() (func(a ...interface{}) string, error) 
 	if kcc == nil {
 		return noColor, nil
 	}
-
 	envColor = inferColorBasedOnEnvName(kcc.Name)
 	if envColor != nil {
 		return envColor, nil

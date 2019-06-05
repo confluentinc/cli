@@ -71,7 +71,7 @@ Colors
 ~~~~~~
 
 Unless you pass '--no-color', the output will be colored heuristically based on
-the context, environment, and kafka cluster names. E.g., if the environment contains "prod",
+the context, environment, and Kafka cluster names. E.g., if the environment contains "prod",
 the output will be red; "dev" will be green; "stag" be yellow; everything else uncolored.
 
 `
