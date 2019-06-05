@@ -3,8 +3,6 @@ package ps1
 import (
 	"bytes"
 	"fmt"
-	"os"
-	"path/filepath"
 	"strconv"
 	"text/template"
 	"time"
@@ -25,14 +23,14 @@ For Bash, you'll want to do something like this:
 
 ::
 
-  $ export PS1='\u@\h:\W $({{.CLIPath}} ps1)\n\$ '
+  $ export PS1='\u@\h:\W $({{.CLIName}} ps1)\n\$ '
 
 ZSH users should be aware that they will have to set the 'PROMPT_SUBST'' option first:
 
 ::
 
   $ setopt prompt_subst
-  $ export PS1='%n@%m:%~ $({{.CLIPath}} ps1)$ '
+  $ export PS1='%n@%m:%~ $({{.CLIName}} ps1)$ '
 
 To make this permanent, you must add it to your bash or zsh profile.
 
@@ -176,7 +174,7 @@ func (c *ps1Command) prompt(cmd *cobra.Command, args []string) error {
 func parseTemplate(cliName, text string) string {
 	t := template.Must(template.New("tmpl").Parse(text))
 	buf := new(bytes.Buffer)
-	data := map[string]interface{}{"CLIName": cliName, "CLIPath": filepath.Clean(os.Args[0])}
+	data := map[string]interface{}{"CLIName": cliName}
 	if err := t.Execute(buf, data); err != nil {
 		// We're okay with this since its definitely a development error; should never happen to users
 		panic(err)
