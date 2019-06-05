@@ -16,11 +16,16 @@ type Prompt struct {
 	lockReadPassword sync.Mutex
 	ReadPasswordFunc func() ([]byte, error)
 
+	lockIsPipe sync.Mutex
+	IsPipeFunc func() (bool, error)
+
 	calls struct {
 		ReadString []struct {
 			Delim byte
 		}
 		ReadPassword []struct {
+		}
+		IsPipe []struct {
 		}
 	}
 }
@@ -97,6 +102,40 @@ func (m *Prompt) ReadPasswordCalls() []struct {
 	return m.calls.ReadPassword
 }
 
+// IsPipe mocks base method by wrapping the associated func.
+func (m *Prompt) IsPipe() (bool, error) {
+	m.lockIsPipe.Lock()
+	defer m.lockIsPipe.Unlock()
+
+	if m.IsPipeFunc == nil {
+		panic("mocker: Prompt.IsPipeFunc is nil but Prompt.IsPipe was called.")
+	}
+
+	call := struct {
+	}{}
+
+	m.calls.IsPipe = append(m.calls.IsPipe, call)
+
+	return m.IsPipeFunc()
+}
+
+// IsPipeCalled returns true if IsPipe was called at least once.
+func (m *Prompt) IsPipeCalled() bool {
+	m.lockIsPipe.Lock()
+	defer m.lockIsPipe.Unlock()
+
+	return len(m.calls.IsPipe) > 0
+}
+
+// IsPipeCalls returns the calls made to IsPipe.
+func (m *Prompt) IsPipeCalls() []struct {
+} {
+	m.lockIsPipe.Lock()
+	defer m.lockIsPipe.Unlock()
+
+	return m.calls.IsPipe
+}
+
 // Reset resets the calls made to the mocked methods.
 func (m *Prompt) Reset() {
 	m.lockReadString.Lock()
@@ -105,4 +144,7 @@ func (m *Prompt) Reset() {
 	m.lockReadPassword.Lock()
 	m.calls.ReadPassword = nil
 	m.lockReadPassword.Unlock()
+	m.lockIsPipe.Lock()
+	m.calls.IsPipe = nil
+	m.lockIsPipe.Unlock()
 }

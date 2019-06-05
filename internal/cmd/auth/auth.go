@@ -172,6 +172,7 @@ func (a *commands) credentials(cmd *cobra.Command) (string, string, error) {
 	a.Logger.Trace("Successfully obtained email")
 
 	if len(password) == 0 {
+		var err error
 		pcmd.Print(cmd, "Password: ")
 		bytePassword, err := a.prompt.ReadPassword()
 		if err != nil {

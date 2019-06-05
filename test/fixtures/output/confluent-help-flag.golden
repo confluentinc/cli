@@ -10,6 +10,7 @@ Available Commands:
   login       Login to Confluent Platform.
   logout      Logout of Confluent Platform.
   ps1         Print a prompt-string suitable for the PS1 prompt.
+  secret      Manage secrets for Confluent Platform.
   update      Update the confluent CLI.
   version     Print the confluent CLI version.
 
