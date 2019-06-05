@@ -250,7 +250,7 @@ func (c *PasswordProtectionSuite) RotateDataKey(masterPassphrase string, localSe
 
 	// Verify master key passphrase
 	if masterKey != userMasterKey {
-		return fmt.Errorf("authentication failure: invalid master key passphrase.")
+		return fmt.Errorf("authentication failure: incorrect master key passphrase.")
 	}
 
 	secureConfigProps, err := LoadPropertiesFile(localSecureConfigPath)
@@ -355,7 +355,7 @@ func (c *PasswordProtectionSuite) RotateMasterKey(oldPassphrase string, newPassp
 
 	// Verify master key passphrase
 	if masterKey != userMasterKey {
-		return "", fmt.Errorf("authentication failure: invalid master key passphrase.")
+		return "", fmt.Errorf("authentication failure: incorrect master key passphrase.")
 	}
 
 	// Unwrap DEK using the MEK

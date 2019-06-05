@@ -737,7 +737,7 @@ func TestPasswordProtectionSuite_RotateDataKey(t *testing.T) {
 				invalidPassphrase:      "random",
 			},
 			wantErr:    true,
-			wantErrMsg: "authentication failure: invalid master key passphrase.",
+			wantErrMsg: "authentication failure: incorrect master key passphrase.",
 		},
 	}
 	for _, tt := range tests {
@@ -848,7 +848,7 @@ func TestPasswordProtectionSuite_RotateMasterKey(t *testing.T) {
 				invalidMEK:             true,
 			},
 			wantErr:    true,
-			wantErrMsg: "authentication failure: invalid master key passphrase.",
+			wantErrMsg: "authentication failure: incorrect master key passphrase.",
 		},
 		{
 			name: "InvalidTestCase: New master key passphrase same as old master key passphrase",
