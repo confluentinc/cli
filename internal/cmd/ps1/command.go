@@ -16,8 +16,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/ps1"
 )
 
-const longDescriptionTemplate = `Use this command to add {{.CLIName}} information in
-your PS1 prompt.
+const longDescriptionTemplate = `Use this command to add {{.CLIName}} information in your PS1 prompt.
 
 For Bash, you'll want to do something like this:
 
