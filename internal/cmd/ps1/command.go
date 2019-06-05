@@ -25,7 +25,7 @@ For Bash, you'll want to do something like this:
 
 ::
 
-  $ export PS1=${PS1}'$({{.CLIPath}} ps1)\n\$ '
+  $ export PS1='\u@\h:\W $({{.CLIPath}} ps1)\n\$ '
 
 ZSH users should be aware that they will have to set the 'PROMPT_SUBST'' option first:
 
@@ -33,6 +33,8 @@ ZSH users should be aware that they will have to set the 'PROMPT_SUBST'' option 
 
   $ setopt prompt_subst
   $ export PS1='%n@%m:%~ $({{.CLIPath}} ps1)$ '
+
+To make this permanent, you must add it to your bash or zsh profile.
 
 Formats
 ~~~~~~~
