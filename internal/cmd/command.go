@@ -19,7 +19,10 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/kafka"
 	"github.com/confluentinc/cli/internal/cmd/ksql"
 	"github.com/confluentinc/cli/internal/cmd/local"
+
+	"github.com/confluentinc/cli/internal/cmd/secret"
 	service_account "github.com/confluentinc/cli/internal/cmd/service-account"
+
 	"github.com/confluentinc/cli/internal/cmd/update"
 	"github.com/confluentinc/cli/internal/cmd/version"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -34,6 +37,7 @@ import (
 	kafkas "github.com/confluentinc/cli/internal/pkg/sdk/kafka"
 	ksqls "github.com/confluentinc/cli/internal/pkg/sdk/ksql"
 	users "github.com/confluentinc/cli/internal/pkg/sdk/user"
+	secrets "github.com/confluentinc/cli/internal/pkg/secret"
 	versions "github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -127,6 +131,8 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		}
 		shellRunner := local.BashShellRunner{BasherContext: bash}
 		cli.AddCommand(local.New(prerunner, &shellRunner))
+		resolver := &pcmd.FlagResolverImpl{Prompt: prompt, Out: os.Stdout}
+		cli.AddCommand(secret.New(prerunner, cfg, prompt, resolver, secrets.NewPasswordProtectionPlugin(logger)))
 	}
 
 	return cli, nil
