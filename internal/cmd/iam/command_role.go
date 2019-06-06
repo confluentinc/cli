@@ -15,6 +15,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
 )
 
@@ -58,7 +59,7 @@ func (c *roleCommand) init() {
 	})
 
 	c.AddCommand(&cobra.Command{
-		Use:   "describe <role>",
+		Use:   "describe <name>",
 		Short: "Describe the resources and operations allowed for a role.",
 		RunE:  c.describe,
 		Args:  cobra.ExactArgs(1),
@@ -102,7 +103,7 @@ func (c *roleCommand) describe(cmd *cobra.Command, args []string) error {
 
 	details, r, err := c.client.RoleDefinitionsApi.RoleDetail(c.ctx, role)
 	if err != nil {
-		if r.StatusCode == 204 {
+		if r.StatusCode == http.StatusNoContent {
 			availableRoleNames, _, err := c.client.RoleDefinitionsApi.Rolenames(c.ctx)
 			if err != nil {
 				return errors.HandleCommon(err, cmd)

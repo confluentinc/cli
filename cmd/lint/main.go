@@ -24,7 +24,7 @@ var (
 	vocab *gospell.GoSpell
 
 	properNouns = []string{
-		"Apache", "Kafka", "CLI", "API", "ACL", "ACLs", "ALL", "Confluent Cloud", "Confluent Platform", "RBAC", "IAM", "RBACIAM",
+		"Apache", "Kafka", "CLI", "API", "ACL", "ACLs", "ALL", "Confluent Cloud", "Confluent Platform", "RBAC", "IAM",
 	}
 	vocabWords = []string{
 		"ccloud", "kafka", "api", "acl", "url", "config", "multizone", "transactional", "ksql", "iam", "rolebinding",
@@ -49,6 +49,7 @@ var rules = []linter.Rule{
 			linter.NamedArgumentConfig{CreateCommandArg: "<name>", OtherCommandsArg: "<id>"},
 			map[string]linter.NamedArgumentConfig{
 				"environment": {CreateCommandArg: "<name>", OtherCommandsArg: "<environment-id>"},
+				"role":        {CreateCommandArg: "<name>", OtherCommandsArg: "<name>"},
 				"topic":       {CreateCommandArg: "<topic>", OtherCommandsArg: "<topic>"},
 				"api-key":     {CreateCommandArg: "N/A", OtherCommandsArg: "<apikey>"},
 			},
@@ -63,11 +64,9 @@ var rules = []linter.Rule{
 		// skip local which delegates to bash commands
 		linter.ExcludeCommandContains("local"),
 		// skip for api-key store command since KEY is not last argument
- 		linter.ExcludeCommand("api-key store <apikey> <secret>"),
+		linter.ExcludeCommand("api-key store <apikey> <secret>"),
 		// skip for rolebindings since they don't have names/IDs
 		linter.ExcludeCommandContains("iam rolebinding"),
-		// roles are described by a role name, not an ID
-		linter.ExcludeCommandContains("iam role describe"),
 	),
 	// TODO: ensuring --cluster is optional DOES NOT actually ensure that the cluster context is used
 	linter.Filter(linter.RequireFlag("cluster", true), nonClusterScopedCommands...),
@@ -92,13 +91,11 @@ var rules = []linter.Rule{
 		linter.ExcludeCommandContains("service-account"),
 	),
 	linter.RequireStartWithCapital("Short"),
-  linter.RequireEndWithPunctuation("Short", false),
-	linter.Filter(linter.RequireCapitalizeProperNouns("Short", properNouns),
-		linter.ExcludeCommandContains("iam role list")),
+	linter.RequireEndWithPunctuation("Short", false),
+	linter.Filter(linter.RequireCapitalizeProperNouns("Short", properNouns)),
 	linter.RequireStartWithCapital("Long"),
 	linter.RequireEndWithPunctuation("Long", true),
-	linter.Filter(linter.RequireCapitalizeProperNouns("Long", properNouns),
-		linter.ExcludeCommandContains("iam role list")),
+	linter.Filter(linter.RequireCapitalizeProperNouns("Long", properNouns)),
 	linter.RequireNotTitleCase("Short", properNouns),
 	linter.RequireRealWords("Use", '-'),
 }

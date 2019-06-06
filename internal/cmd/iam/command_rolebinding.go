@@ -72,6 +72,7 @@ func (c *rolebindingCommand) init() {
 	listCmd.Flags().String("ksql-cluster-id", "", "KSQL cluster ID for scope of rolebinding listings.")
 	listCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for scope of rolebinding listings.")
 	listCmd.Flags().SortFlags = false
+	check(listCmd.MarkFlagRequired("principal"))
 	c.AddCommand(listCmd)
 
 	createCmd := &cobra.Command{
@@ -82,13 +83,15 @@ func (c *rolebindingCommand) init() {
 	}
 	createCmd.Flags().String("role", "", "Role name of the new role binding.")
 	createCmd.Flags().String("resource", "", "Qualified resource name for the role binding.")
-	createCmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern. The default is false.")
+	createCmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
 	createCmd.Flags().String("principal", "", "Qualified principal name for the role binding.")
 	createCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
 	createCmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding.")
 	createCmd.Flags().String("ksql-cluster-id", "", "KSQL cluster ID for the role binding.")
 	createCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for the role binding.")
 	createCmd.Flags().SortFlags = false
+	check(createCmd.MarkFlagRequired("role"))
+	check(createCmd.MarkFlagRequired("principal"))
 	c.AddCommand(createCmd)
 
 	deleteCmd := &cobra.Command{
@@ -99,13 +102,15 @@ func (c *rolebindingCommand) init() {
 	}
 	deleteCmd.Flags().String("role", "", "Role name of the existing role binding.")
 	deleteCmd.Flags().String("resource", "", "Qualified resource name associated with the role binding.")
-	deleteCmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern. The default is false.")
+	deleteCmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
 	deleteCmd.Flags().String("principal", "", "Qualified principal name associated with the role binding.")
 	deleteCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
 	deleteCmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding.")
 	deleteCmd.Flags().String("ksql-cluster-id", "", "KSQL cluster ID for the role binding.")
 	deleteCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for the role binding.")
 	deleteCmd.Flags().SortFlags = false
+	check(createCmd.MarkFlagRequired("role"))
+	check(deleteCmd.MarkFlagRequired("principal"))
 	c.AddCommand(deleteCmd)
 }
 
@@ -125,12 +130,12 @@ func (c *rolebindingCommand) parseAndValidateResourcePattern(typename string, pr
 		result.PatternType = "LITERAL"
 	}
 
-	if len(strings.Split(typename, ":")) == 1 {
+	parts := strings.Split(typename, ":")
+	if len(parts) != 2 {
 		return result, errors.New("Resource must be specified in this format: <Resource Type>:<Resource Name>")
 	}
-
-	result.ResourceType = strings.Split(typename, ":")[0]
-	result.Name = typename[strings.Index(typename, ":")+1:]
+	result.ResourceType = parts[0]
+	result.Name = parts[1]
 
 	return result, nil
 }
@@ -138,7 +143,7 @@ func (c *rolebindingCommand) parseAndValidateResourcePattern(typename string, pr
 func (c *rolebindingCommand) validateRoleAndResourceType(roleName string, resourceType string) error {
 	role, _, err := c.client.RoleDefinitionsApi.RoleDetail(c.ctx, roleName)
 	if err != nil {
-		return errors.Wrapf(err, "Failed to look up role "+roleName+". Was an invalid role name specified?")
+		return errors.Wrapf(err, "Failed to look up role %s. Was an invalid role name specified?", roleName)
 	}
 
 	allResourceTypes := []string{}
@@ -147,11 +152,13 @@ func (c *rolebindingCommand) validateRoleAndResourceType(roleName string, resour
 		allResourceTypes = append(allResourceTypes, operation.ResourceType)
 		if operation.ResourceType == resourceType {
 			found = true
+			break
 		}
 	}
 
 	if !found {
-		return errors.New("Invalid resource type " + resourceType + " specified. It must be one of " + strings.Join(allResourceTypes, ","))
+		c.SilenceErrors = true
+		return errors.New("Invalid resource type " + resourceType + " specified. It must be one of " + strings.Join(allResourceTypes, ", "))
 	}
 
 	return nil
@@ -195,16 +202,11 @@ func (c *rolebindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mds.Sco
 	}
 	scope.ConnectCluster = id
 
-	if scope.KafkaCluster == "" && (scope.SchemaRegistryCluster != "" ||
-		scope.KsqlCluster != "" ||
-		scope.ConnectCluster != "") {
-		return nil, errors.HandleCommon(errors.New("Must also specify a Kafka cluster ID to uniquely identify the scope."), cmd)
+	if scope.KafkaCluster == "" && nonKafkaScopesSet > 0 {
+		return nil, errors.HandleCommon(errors.New("Must also specify a --kafka-cluster-id to uniquely identify the scope."), cmd)
 	}
 
-	if scope.KafkaCluster == "" &&
-		scope.SchemaRegistryCluster == "" &&
-		scope.KsqlCluster == "" &&
-		scope.ConnectCluster == "" {
+	if scope.KafkaCluster == "" && nonKafkaScopesSet == 0 {
 		return nil, errors.HandleCommon(errors.New("Must specify at least one cluster ID flag to indicate role binding scope."), cmd)
 	}
 
@@ -226,9 +228,6 @@ func (c *rolebindingCommand) list(cmd *cobra.Command, args []string) error {
 	}
 
 	principal, err := cmd.Flags().GetString("principal")
-	if err == nil && principal == "" {
-		return errors.New("You must specify a principal to list role bindings for.")
-	}
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -244,35 +243,22 @@ func (c *rolebindingCommand) list(cmd *cobra.Command, args []string) error {
 
 	var roleNamesWithMultiplicity []string
 	var resourcePatterns []mds.ResourcePattern
+	roleNames := []string{role}
 	if role == "*" {
-		roleNames, _, err := c.client.UserAndRoleMgmtApi.ScopedPrincipalRolenames(c.ctx, principal, mds.Scope{Clusters: *scopeClusters})
+		roleNames, _, err = c.client.UserAndRoleMgmtApi.ScopedPrincipalRolenames(c.ctx, principal, mds.Scope{Clusters: *scopeClusters})
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
+	}
 
-		for _, r := range roleNames {
-			rps, _, err := c.client.UserAndRoleMgmtApi.GetRoleResourcesForPrincipal(c.ctx, principal, r, mds.Scope{Clusters: *scopeClusters})
-			if len(rps) == 0 {
-				rps = []mds.ResourcePattern{{}}
-			}
-			resourcePatterns = append(resourcePatterns, rps...)
-			for range rps {
-				roleNamesWithMultiplicity = append(roleNamesWithMultiplicity, r)
-			}
-			if err != nil {
-				return errors.HandleCommon(err, cmd)
-			}
-		}
-	} else {
-		resourcePatterns, _, err = c.client.UserAndRoleMgmtApi.GetRoleResourcesForPrincipal(c.ctx, principal, role, mds.Scope{Clusters: *scopeClusters})
-		if len(resourcePatterns) == 0 {
-			resourcePatterns = []mds.ResourcePattern{{}}
-		}
-		for range resourcePatterns {
-			roleNamesWithMultiplicity = append(roleNamesWithMultiplicity, role)
-		}
+	for _, r := range roleNames {
+		rps, _, err := c.client.UserAndRoleMgmtApi.GetRoleResourcesForPrincipal(c.ctx, principal, r, mds.Scope{Clusters: *scopeClusters})
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
+		}
+		resourcePatterns = append(resourcePatterns, rps...)
+		for range rps {
+			roleNamesWithMultiplicity = append(roleNamesWithMultiplicity, r)
 		}
 	}
 
@@ -299,9 +285,6 @@ func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOption
 	prefix := cmd.Flags().Changed("prefix")
 
 	principal, err := cmd.Flags().GetString("principal")
-	if err == nil && principal == "" {
-		return nil, errors.New("Must specify a principal for the role binding.")
-	}
 	if err != nil {
 		return nil, errors.HandleCommon(err, cmd)
 	}
@@ -351,19 +334,18 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	resp := (*http.Response)(nil)
-	var addErr error
+	var resp *http.Response
 	if options.resource != "" {
-		resp, addErr = c.client.UserAndRoleMgmtApi.AddRoleResourcesForPrincipal(c.ctx, options.principal, options.role, options.resourcesRequest)
+		resp, err = c.client.UserAndRoleMgmtApi.AddRoleResourcesForPrincipal(c.ctx, options.principal, options.role, options.resourcesRequest)
 	} else {
-		resp, addErr = c.client.UserAndRoleMgmtApi.AddRoleForPrincipal(c.ctx, options.principal, options.role, mds.Scope{Clusters: options.scopeClusters})
+		resp, err = c.client.UserAndRoleMgmtApi.AddRoleForPrincipal(c.ctx, options.principal, options.role, mds.Scope{Clusters: options.scopeClusters})
 	}
 
-	if addErr != nil {
-		return errors.HandleCommon(addErr, cmd)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
 	}
 
-	if resp.StatusCode != 200 && resp.StatusCode != 204 {
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
 		return errors.HandleCommon(errors.Wrapf(err, "No error, but received HTTP status code "+strconv.Itoa(resp.StatusCode)), cmd)
 	}
 
@@ -376,21 +358,26 @@ func (c *rolebindingCommand) delete(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	resp := (*http.Response)(nil)
-	var removeErr error
+	var resp *http.Response
 	if options.resource != "" {
-		resp, removeErr = c.client.UserAndRoleMgmtApi.RemoveRoleResourcesForPrincipal(c.ctx, options.principal, options.role, options.resourcesRequest)
+		resp, err = c.client.UserAndRoleMgmtApi.RemoveRoleResourcesForPrincipal(c.ctx, options.principal, options.role, options.resourcesRequest)
 	} else {
-		resp, removeErr = c.client.UserAndRoleMgmtApi.DeleteRoleForPrincipal(c.ctx, options.principal, options.role, mds.Scope{Clusters: options.scopeClusters})
+		resp, err = c.client.UserAndRoleMgmtApi.DeleteRoleForPrincipal(c.ctx, options.principal, options.role, mds.Scope{Clusters: options.scopeClusters})
 	}
 
-	if removeErr != nil {
-		return errors.HandleCommon(removeErr, cmd)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
 	}
 
-	if resp.StatusCode != 200 && resp.StatusCode != 204 {
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
 		return errors.HandleCommon(errors.Wrapf(err, "No error, but received HTTP status code "+strconv.Itoa(resp.StatusCode)), cmd)
 	}
 
 	return nil
+}
+
+func check(err error) {
+	if err != nil {
+		panic(err)
+	}
 }

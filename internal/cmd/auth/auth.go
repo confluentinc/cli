@@ -21,9 +21,8 @@ import (
 type commands struct {
 	Commands  []*cobra.Command
 	config    *config.Config
-	cliName   string
 	mdsClient *mds.APIClient
-	Logger   *log.Logger
+	Logger    *log.Logger
 	// for testing
 	prompt                pcmd.Prompt
 	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *ccloud.Client
@@ -31,25 +30,24 @@ type commands struct {
 }
 
 // New returns a list of auth-related Cobra commands.
-func New(prerunner pcmd.PreRunner, config *config.Config, logger *log.Logger, cliName string, mdsClient *mds.APIClient) []*cobra.Command {
+func New(prerunner pcmd.PreRunner, config *config.Config, logger *log.Logger, mdsClient *mds.APIClient) []*cobra.Command {
 	var defaultAnonHTTPClientFactory = func(baseURL string, logger *log.Logger) *ccloud.Client {
 		return ccloud.NewClient(baseURL, ccloud.BaseClient, logger)
 	}
 	var defaultJwtHTTPClientFactory = func(ctx context.Context, jwt string, baseURL string, logger *log.Logger) *ccloud.Client {
 		return ccloud.NewClientWithJWT(ctx, jwt, baseURL, logger)
 	}
-	return newCommands(prerunner, config, logger, cliName, mdsClient, pcmd.NewPrompt(os.Stdin),
+	return newCommands(prerunner, config, logger, mdsClient, pcmd.NewPrompt(os.Stdin),
 		defaultAnonHTTPClientFactory, defaultJwtHTTPClientFactory,
 	).Commands
 }
 
-func newCommands(prerunner pcmd.PreRunner, config *config.Config, log *log.Logger, cliName string, mdsClient *mds.APIClient, prompt pcmd.Prompt,
+func newCommands(prerunner pcmd.PreRunner, config *config.Config, log *log.Logger, mdsClient *mds.APIClient, prompt pcmd.Prompt,
 	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *ccloud.Client,
 	jwtHTTPClientFactory func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *ccloud.Client,
 ) *commands {
 	cmd := &commands{
 		config:                config,
-		cliName:               cliName,
 		mdsClient:             mdsClient,
 		Logger:                log,
 		prompt:                prompt,
@@ -65,9 +63,9 @@ func (a *commands) init(prerunner pcmd.PreRunner) {
 		Use:   "login",
 		Short: fmt.Sprintf("Login to %s.", a.config.APIName()),
 		Long:  fmt.Sprintf("Login to %s.", a.config.APIName()),
-		Args: cobra.NoArgs,
+		Args:  cobra.NoArgs,
 	}
-	if a.cliName == "ccloud" {
+	if a.config.CLIName == "ccloud" {
 		loginCmd.RunE = a.login
 	} else {
 		loginCmd.RunE = a.loginMDS
