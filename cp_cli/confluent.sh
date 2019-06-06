@@ -61,9 +61,6 @@ validate_and_export_dir_layout() {
     [[ "${last}" != "/" ]] && export confluent_current_dir="${confluent_current_dir}/"
 }
 
-# Since this function performs essential initializations, call it as early as possible.
-validate_and_export_dir_layout
-
 # Contains the result of functions that intend to return a value besides their exit status.
 _retval=""
 
@@ -218,6 +215,10 @@ else
   JAVA="${JAVA_HOME}/bin/java"
 fi
 
+is_command() {
+  command -v "$1" >/dev/null
+}
+
 requirements() {
     local major=3
     local minor=2
@@ -225,17 +226,8 @@ requirements() {
         || [ "${BASH_VERSINFO[0]:-0}" -eq ${major} -a "${BASH_VERSINFO[1]:-0}" -lt ${minor} ] \
         && invalid_requirement "bash" "${major}.${minor}"
 
-    which curl > /dev/null 2>&1
-    status=$?
-    if [[ ${status} -ne 0 ]]; then
-        invalid_requirement "curl"
-    fi
-
-    which jq > /dev/null 2>&1
-    status=$?
-    if [[ ${status} -ne 0 ]]; then
-        FORMAT_CMD="xargs -0"
-    fi
+    is_command curl || invalid_requirement "curl"
+    is_command jq || FORMAT_CMD="xargs -0"
 }
 
 export_service_env() {
@@ -2203,10 +2195,16 @@ cat >&2 <<EOF
 EOF
 
 help() {
+    # Since this function performs essential initializations, call it as early as possible.
+    validate_and_export_dir_layout $@
+
     command_exists "${1}" && ( "${1}"_usage "$@" || invalid_command "${1}" ) || usage
 }
 
 main() {
+    # Since this function performs essential initializations, call it as early as possible.
+    validate_and_export_dir_layout $@
+
     # Parse command-line arguments
     [[ $# -lt 1 ]] && usage
 
