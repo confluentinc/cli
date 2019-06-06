@@ -33,7 +33,7 @@ die() {
 
 validate_and_export_dir_layout() {
     # We don't need to know CONFLUENT_HOME just to see the list of commands
-    [[ $# -lt 1 ]] && command_name="confluent local" && return
+    [[ $# -lt 1 ]] || [[ "$1" = "skip" ]] && command_name="confluent local" && return
 
     if [[ -z "${CONFLUENT_HOME}" ]]; then
         command_name="$( basename "${BASH_SOURCE[0]}" )"
@@ -2196,7 +2196,7 @@ EOF
 
 help() {
     # Since this function performs essential initializations, call it as early as possible.
-    validate_and_export_dir_layout $@
+    validate_and_export_dir_layout "skip"
 
     command_exists "${1}" && ( "${1}"_usage "$@" || invalid_command "${1}" ) || usage
 }
