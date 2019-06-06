@@ -67,10 +67,12 @@ func (a *commands) init(prerunner pcmd.PreRunner) {
 	}
 	if a.config.CLIName == "ccloud" {
 		loginCmd.RunE = a.login
+		loginCmd.Flags().String("url", "https://confluent.cloud", "Confluent Control Plane URL.")
 	} else {
 		loginCmd.RunE = a.loginMDS
+		loginCmd.Flags().String("url", "", "Confluent Control Plane URL.")
+		loginCmd.MarkFlagRequired("url") // because https://confluent.cloud isn't an MDS endpoint
 	}
-	loginCmd.Flags().String("url", "https://confluent.cloud", "Confluent Control Plane URL.")
 	loginCmd.Flags().SortFlags = false
 	loginCmd.PersistentPreRunE = prerunner.Anonymous()
 	logoutCmd := &cobra.Command{
