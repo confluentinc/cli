@@ -71,7 +71,7 @@ func (a *commands) init(prerunner pcmd.PreRunner) {
 	} else {
 		loginCmd.RunE = a.loginMDS
 		loginCmd.Flags().String("url", "", "Confluent Control Plane URL.")
-		loginCmd.MarkFlagRequired("url") // because https://confluent.cloud isn't an MDS endpoint
+		check(loginCmd.MarkFlagRequired("url")) // because https://confluent.cloud isn't an MDS endpoint
 	}
 	loginCmd.Flags().SortFlags = false
 	loginCmd.PersistentPreRunE = prerunner.Anonymous()
@@ -252,4 +252,10 @@ func (a *commands) createOrUpdateContext(user *config.AuthConfig) {
 		}
 	}
 	a.config.CurrentContext = name
+}
+
+func check(err error) {
+	if err != nil {
+		panic(err)
+	}
 }
