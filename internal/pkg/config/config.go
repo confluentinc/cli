@@ -9,7 +9,7 @@ import (
 
 	"github.com/mitchellh/go-homedir"
 
-	"github.com/confluentinc/ccloudapis/org/v1"
+	v1 "github.com/confluentinc/ccloudapis/org/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"

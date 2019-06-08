@@ -102,7 +102,7 @@ command returns a failure if a master key has not already been set using the "ma
 	updateCmd := &cobra.Command{
 		Use:   "update",
 		Short: "Update the encrypted secrets from the configuration properties file.",
-		Long: "This command updates the encrypted secrets from the configuration properties file.",
+		Long:  "This command updates the encrypted secrets from the configuration properties file.",
 		RunE:  c.update,
 		Args:  cobra.NoArgs,
 	}
@@ -140,9 +140,9 @@ command returns a failure if a master key has not already been set using the "ma
 	rotateKeyCmd := &cobra.Command{
 		Use:   "rotate",
 		Short: "Rotate master or data key.",
-		Long: `This command rotates either the master or data key.`,
-		RunE: c.rotate,
-		Args: cobra.NoArgs,
+		Long:  `This command rotates either the master or data key.`,
+		RunE:  c.rotate,
+		Args:  cobra.NoArgs,
 	}
 
 	rotateKeyCmd.Flags().Bool("master-key", false, "Rotate the master key. Generates a new master key and re-encrypts with the new key.")

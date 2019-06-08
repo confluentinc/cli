@@ -7,6 +7,7 @@ require (
 	github.com/Shopify/toxiproxy v2.1.3+incompatible // indirect
 	github.com/alcortesm/tgz v0.0.0-20161220082320-9c5fe88206d7 // indirect
 	github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239 // indirect
+	github.com/antihax/optional v0.0.0-20180407024304-ca021399b1a6 // indirect
 	github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da
 	github.com/atrox/homedir v1.0.0
 	github.com/aws/aws-sdk-go v1.15.64
@@ -16,7 +17,7 @@ require (
 	github.com/confluentinc/ccloudapis v0.0.0-20190430183816-9fe8ee16d070
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-printer v0.10.0
-	github.com/confluentinc/mds-sdk-go v0.0.0-20190514062152-88c83c06020a
+	github.com/confluentinc/mds-sdk-go v0.0.0-20190608043506-334f63f6e586
 	github.com/confluentinc/protoc-gen-ccloud v0.0.1 // indirect
 	github.com/cpuguy83/go-md2man v1.0.10 // indirect
 	github.com/dgryski/go-metro v0.0.0-20180109044635-280f6062b5bc // indirect
