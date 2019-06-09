@@ -18,9 +18,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	pio "github.com/confluentinc/cli/internal/pkg/io"
 	"github.com/confluentinc/cli/internal/pkg/log"
-	pio "github.com/confluentinc/cli/internal/pkg/update/io"
-	"github.com/confluentinc/cli/internal/pkg/update/mock"
+	"github.com/confluentinc/cli/internal/pkg/mock"
+	updateMock "github.com/confluentinc/cli/internal/pkg/update/mock"
 )
 
 func TestNewClient(t *testing.T) {
@@ -78,7 +79,7 @@ func TestCheckForUpdates(t *testing.T) {
 		{
 			name: "should err if currentVersion isn't semver",
 			client: NewClient(&ClientParams{
-				Repository: &mock.Repository{},
+				Repository: &updateMock.Repository{},
 				Logger:     log.New(),
 			}),
 			args: args{
@@ -92,7 +93,7 @@ func TestCheckForUpdates(t *testing.T) {
 		{
 			name: "should err if can't get versions",
 			client: NewClient(&ClientParams{
-				Repository: &mock.Repository{
+				Repository: &updateMock.Repository{
 					GetAvailableVersionsFunc: func(name string) (version.Collection, error) {
 						return nil, errors.New("zap")
 					},
@@ -110,7 +111,7 @@ func TestCheckForUpdates(t *testing.T) {
 		{
 			name: "should return the most recent version",
 			client: NewClient(&ClientParams{
-				Repository: &mock.Repository{
+				Repository: &updateMock.Repository{
 					GetAvailableVersionsFunc: func(name string) (version.Collection, error) {
 						v1, _ := version.NewSemver("v1")
 						v2, _ := version.NewSemver("v2")
@@ -133,7 +134,7 @@ func TestCheckForUpdates(t *testing.T) {
 		{
 			name: "should not check again if checked recently",
 			client: NewClient(&ClientParams{
-				Repository: &mock.Repository{
+				Repository: &updateMock.Repository{
 					GetAvailableVersionsFunc: func(name string) (version.Collection, error) {
 						require.Fail(t, "Shouldn't be called")
 						return nil, errors.New("whoops")
@@ -154,7 +155,7 @@ func TestCheckForUpdates(t *testing.T) {
 		{
 			name: "should respect forceCheck even if you checked recently",
 			client: NewClient(&ClientParams{
-				Repository: &mock.Repository{
+				Repository: &updateMock.Repository{
 					GetAvailableVersionsFunc: func(name string) (version.Collection, error) {
 						v1, _ := version.NewSemver("v1")
 						v2, _ := version.NewSemver("v2")
@@ -180,7 +181,7 @@ func TestCheckForUpdates(t *testing.T) {
 		{
 			name: "should err if you can't create the CheckFile",
 			client: NewClient(&ClientParams{
-				Repository: &mock.Repository{
+				Repository: &updateMock.Repository{
 					GetAvailableVersionsFunc: func(name string) (version.Collection, error) {
 						v1, _ := version.NewSemver("v1")
 						return version.Collection{v1}, nil
@@ -201,7 +202,7 @@ func TestCheckForUpdates(t *testing.T) {
 		{
 			name: "should err if you can't touch the CheckFile",
 			client: NewClient(&ClientParams{
-				Repository: &mock.Repository{
+				Repository: &updateMock.Repository{
 					GetAvailableVersionsFunc: func(name string) (version.Collection, error) {
 						v1, _ := version.NewSemver("v1")
 						return version.Collection{v1}, nil
@@ -222,7 +223,7 @@ func TestCheckForUpdates(t *testing.T) {
 		{
 			name: "should support files in your homedir",
 			client: NewClient(&ClientParams{
-				Repository: &mock.Repository{
+				Repository: &updateMock.Repository{
 					GetAvailableVersionsFunc: func(name string) (version.Collection, error) {
 						require.Fail(t, "Shouldn't be called")
 						return nil, errors.New("whoops")
@@ -266,7 +267,7 @@ func TestCheckForUpdates_BehaviorOverTime(t *testing.T) {
 	defer os.RemoveAll(tmpDir)
 	checkFile := fmt.Sprintf("%s/new-check-file", tmpDir)
 
-	repo := &mock.Repository{
+	repo := &updateMock.Repository{
 		GetAvailableVersionsFunc: func(name string) (version.Collection, error) {
 			v1, _ := version.NewSemver("v1")
 			v2, _ := version.NewSemver("v2")
@@ -329,7 +330,7 @@ func TestCheckForUpdates_BehaviorOverTime(t *testing.T) {
 func TestCheckForUpdates_NoCheckFileGiven(t *testing.T) {
 	req := require.New(t)
 
-	repo := &mock.Repository{
+	repo := &updateMock.Repository{
 		GetAvailableVersionsFunc: func(name string) (version.Collection, error) {
 			v1, _ := version.NewSemver("v1")
 			v2, _ := version.NewSemver("v2")
@@ -390,7 +391,7 @@ func TestUpdateBinary(t *testing.T) {
 			name: "can update application binary",
 			client: &client{
 				ClientParams: &ClientParams{
-					Repository: &mock.Repository{
+					Repository: &updateMock.Repository{
 						DownloadVersionFunc: func(name, version, downloadDir string) (string, int64, error) {
 							req.Equal(binName, name)
 							req.Equal("v123.456.789", version)
@@ -414,7 +415,7 @@ func TestUpdateBinary(t *testing.T) {
 			name: "err if unable to download package",
 			client: &client{
 				ClientParams: &ClientParams{
-					Repository: &mock.Repository{
+					Repository: &updateMock.Repository{
 						DownloadVersionFunc: func(name, version, downloadDir string) (string, int64, error) {
 							return "", 0, errors.New("out of disk!")
 						},
@@ -435,7 +436,7 @@ func TestUpdateBinary(t *testing.T) {
 			name: "err if unable to copy binary",
 			client: &client{
 				ClientParams: &ClientParams{
-					Repository: &mock.Repository{
+					Repository: &updateMock.Repository{
 						DownloadVersionFunc: func(name, version, downloadDir string) (string, int64, error) {
 							req.Equal(binName, name)
 							req.Equal("v1", version)
@@ -467,7 +468,7 @@ func TestUpdateBinary(t *testing.T) {
 			name: "no attempt to mv binary (darwin)",
 			client: &client{
 				ClientParams: &ClientParams{
-					Repository: &mock.Repository{
+					Repository: &updateMock.Repository{
 						DownloadVersionFunc: func(name, version, downloadDir string) (string, int64, error) {
 							req.Equal(binName, name)
 							req.Equal("v1", version)
@@ -500,7 +501,7 @@ func TestUpdateBinary(t *testing.T) {
 			name: "err if unable to mv binary (windows)",
 			client: &client{
 				ClientParams: &ClientParams{
-					Repository: &mock.Repository{
+					Repository: &updateMock.Repository{
 						DownloadVersionFunc: func(name, version, downloadDir string) (string, int64, error) {
 							req.Equal(binName, name)
 							req.Equal("v1", version)
@@ -533,7 +534,7 @@ func TestUpdateBinary(t *testing.T) {
 			name: "err if first mv succeeds, then copy fails, then second mv fails",
 			client: &client{
 				ClientParams: &ClientParams{
-					Repository: &mock.Repository{
+					Repository: &updateMock.Repository{
 						DownloadVersionFunc: func(name, version, downloadDir string) (string, int64, error) {
 							req.Equal(binName, name)
 							req.Equal("v1", version)
@@ -571,7 +572,7 @@ func TestUpdateBinary(t *testing.T) {
 			name: "err if unable to chmod binary",
 			client: &client{
 				ClientParams: &ClientParams{
-					Repository: &mock.Repository{
+					Repository: &updateMock.Repository{
 						DownloadVersionFunc: func(name, version, downloadDir string) (string, int64, error) {
 							req.Equal(binName, name)
 							req.Equal("v1", version)
@@ -638,7 +639,7 @@ func TestPromptToDownload(t *testing.T) {
 
 	makeClient := func(fs pio.FileSystem) *client {
 		client := NewClient(&ClientParams{
-			Repository: &mock.Repository{},
+			Repository: &updateMock.Repository{},
 			Logger:     log.New(),
 		})
 		client.clock = clock

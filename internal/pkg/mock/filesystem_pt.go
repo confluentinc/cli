@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	pio "github.com/confluentinc/cli/internal/pkg/update/io"
+	pio "github.com/confluentinc/cli/internal/pkg/io"
 )
 
 // PassThroughFileSystem is useful for optionally mocking some methods
@@ -99,4 +99,11 @@ func (c *PassThroughFileSystem) IsTerminal(fd uintptr) bool {
 		return c.Mock.IsTerminal(fd)
 	}
 	return c.FS.IsTerminal(fd)
+}
+
+func (c *PassThroughFileSystem) Glob(pattern string) (matches []string, err error) {
+	if c.Mock.GlobFunc != nil {
+		return c.Mock.Glob(pattern)
+	}
+	return c.FS.Glob(pattern)
 }

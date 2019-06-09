@@ -3,11 +3,17 @@ package local
 import (
 	"fmt"
 	"os"
+	"path/filepath"
+	"sort"
+	"strings"
 
+	"github.com/hashicorp/go-version"
+	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/io"
 )
 
 const longDescription = `Use these commands to try out Confluent Platform by running a single-node
@@ -23,13 +29,23 @@ with Confluent Platform.
 DO NOT use these commands to setup or manage Confluent Platform in production.
 `
 
+var (
+	commonInstallDirs = []string{
+		"/opt/confluent*",
+		"/usr/local/confluent*",
+		"~/confluent*",
+		"~/Downloads/confluent*",
+	}
+)
+
 type command struct {
 	*cobra.Command
 	shell ShellRunner
+	fs    io.FileSystem
 }
 
 // New returns the Cobra command for `local`.
-func New(prerunner pcmd.PreRunner, shell ShellRunner) *cobra.Command {
+func New(prerunner pcmd.PreRunner, shell ShellRunner, fs io.FileSystem) *cobra.Command {
 	localCmd := &command{
 		Command: &cobra.Command{
 			Use:               "local",
@@ -39,6 +55,7 @@ func New(prerunner pcmd.PreRunner, shell ShellRunner) *cobra.Command {
 			PersistentPreRunE: prerunner.Anonymous(),
 		},
 		shell: shell,
+		fs:    fs,
 	}
 	localCmd.Command.RunE = localCmd.run
 	localCmd.Flags().String("path", "", "Path to Confluent Platform install directory.")
@@ -54,10 +71,18 @@ func (c *command) run(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	if path == "" {
-		if home, found := os.LookupEnv("CONFLUENT_HOME"); found {
+		home, found := os.LookupEnv("CONFLUENT_HOME")
+		if found {
 			path = home
-		} else if len(args) != 0 { // if no args specified, allow so we just show usage
-			return fmt.Errorf("Pass --path /path/to/confluent flag or set environment variable CONFLUENT_HOME")
+		} else {
+			// try to determine the confluent install dir heuristically
+			if home, found, err := determineConfluentInstallDir(c.fs); err != nil {
+				return err
+			} else if found {
+				path = home
+			} else if len(args) != 0 { // don't error if no args specified, we'll just show usage
+				return fmt.Errorf("Pass --path /path/to/confluent flag or set environment variable CONFLUENT_HOME")
+			}
 		}
 	}
 	err = c.runBashCommand(path, "main", args)
@@ -65,6 +90,70 @@ func (c *command) run(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	return nil
+}
+
+// versionedDirectory is a type that implements the sort.Interface interface
+// so that versions can be sorted and the original directory path returned.
+type versionedDirectory struct{
+	dir string
+	ver *version.Version
+}
+func (v *versionedDirectory) String() string {
+	return v.dir
+}
+type byVersion []*versionedDirectory
+func (b byVersion) Len() int {
+	return len(b)
+}
+func (b byVersion) Less(i, j int) bool {
+	return b[i].ver.LessThan(b[j].ver)
+}
+func (b byVersion) Swap(i, j int) {
+	b[i], b[j] = b[j], b[i]
+}
+
+// Heuristically determine the Confluent installation directory.
+//
+// Algorithm:
+//   1. Search for a dir matching confluent* (glob) in the common places in order: (/opt, /usr/local, ~, ~/Downloads)
+//      This list is ordered by priority (always prefer /opt to ~/Downloads for example)
+//      But each directory may contain multiple matches (e.g., /opt/confluent-5.2.2, /opt/confluent-4.1.0, etc)
+//   2. For each match, try to extract a version from the format "confluent-<version>" and collect all versions
+//   3. If there were any versioned dirs, sort them by version and return the dir with the latest version
+//   4. If there were no versioned dirs but there was a match, return it (should be a dir just named "confluent" like /opt/confluent)
+func determineConfluentInstallDir(fs io.FileSystem) (string, bool, error) {
+	for _, dir := range commonInstallDirs {
+		dir, err := homedir.Expand(dir)
+		if err != nil {
+			return "", false, err
+		}
+		dir = filepath.Clean(dir)
+		if matches, err := fs.Glob(dir); err != nil {
+			return "", false, err
+		} else if len(matches) > 0 {
+			// We have at least one match in this directory. Let's choose the newest version, if there's more than one.
+			var versions []*versionedDirectory
+			for _, dir := range matches {
+				i := strings.LastIndex(dir, "confluent-")
+				if i >= 0 {
+					v, err := version.NewSemver(dir[i+len("confluent-"):])
+					if err != nil {
+						return "", false, err
+					}
+					versions = append(versions, &versionedDirectory{dir: dir, ver: v})
+				}
+			}
+			// we found at least one versioned directory
+			if len(versions) > 0 {
+				sort.Sort(byVersion(versions))
+				return versions[len(versions)-1].dir, true, nil
+			} else {
+				// no versioned directories so the match might just be a dir named "confluent"
+				return matches[0], true, nil
+			}
+		}
+	}
+	return "", false, nil
 }
 
 func (c *command) help(cmd *cobra.Command, args []string) {

@@ -13,7 +13,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
-	pio "github.com/confluentinc/cli/internal/pkg/update/io"
+	pio "github.com/confluentinc/cli/internal/pkg/io"
 )
 
 type PublicRepo struct {

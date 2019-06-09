@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/go-version"
 
 	"github.com/confluentinc/cli/internal/pkg/log"
-	pio "github.com/confluentinc/cli/internal/pkg/update/io"
+	pio "github.com/confluentinc/cli/internal/pkg/io"
 )
 
 // Downloader is the iface for s3manager.Downloader for testing DownloadVersion without actually connecting to s3

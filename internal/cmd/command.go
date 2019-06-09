@@ -28,6 +28,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	configs "github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/help"
+	"github.com/confluentinc/cli/internal/pkg/io"
 	"github.com/confluentinc/cli/internal/pkg/keystore"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	apikeys "github.com/confluentinc/cli/internal/pkg/sdk/apikey"
@@ -74,6 +75,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	client := ccloud.NewClientWithJWT(context.Background(), cfg.AuthToken, cfg.AuthURL, cfg.Logger)
 
 	ch := &pcmd.ConfigHelper{Config: cfg, Client: client}
+	fs := &io.RealFileSystem{}
 
 	prerunner := &pcmd.PreRun{
 		UpdateClient: updateClient,
@@ -129,8 +131,8 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		if err != nil {
 			return nil, err
 		}
-		shellRunner := local.BashShellRunner{BasherContext: bash}
-		cli.AddCommand(local.New(prerunner, &shellRunner))
+		shellRunner := &local.BashShellRunner{BasherContext: bash}
+		cli.AddCommand(local.New(prerunner, shellRunner, fs))
 		resolver := &pcmd.FlagResolverImpl{Prompt: prompt, Out: os.Stdout}
 		cli.AddCommand(secret.New(prerunner, cfg, prompt, resolver, secrets.NewPasswordProtectionPlugin(logger)))
 	}
