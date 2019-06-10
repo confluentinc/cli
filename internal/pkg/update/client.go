@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 	"unicode"
@@ -150,28 +151,37 @@ func (c *client) UpdateBinary(name, version, path string) error {
 	timeSpent := c.clock.Now().Sub(startTime).Seconds()
 	fmt.Fprintf(c.Out, "Done. Downloaded %.2f MB in %.0f seconds. (%.2f MB/s)\n", mb, timeSpent, mb/timeSpent)
 
-	// We have to move the old binary out of the way first, then copy the new one into place,
+	// On Windows, we have to move the old binary out of the way first, then copy the new one into place,
 	// because Windows doesn't support directly overwriting a running binary.
+	// Note, this should _only_ be done on Windows; on unix platforms, cross-devices moves can fail (e.g.
+	// binary is on another device than the system tmp dir); but on such platforms we don't need to do moves anyway
 
-	// The old version will get deleted automatically eventually as we put it in the system's or user's temp dir
-	previousVersionBinary := filepath.Join(downloadDir, name+".old")
-	err = c.fs.Move(path, previousVersionBinary)
-	if err != nil {
-		return errors.Wrapf(err, "unable to move %s to %s", path, previousVersionBinary)
-	}
-	err = c.copyFile(newBin, path)
-	if err != nil {
-		// If we moved the old binary out of the way but couldn't put the new one in place,
-		// attempt to restore the old binary to where it was before bailing
-		restoreErr := c.fs.Move(previousVersionBinary, path)
-		if restoreErr != nil {
-			// Warning: this is a bad case where the user will need to re-download the CLI.  However,
-			// we shouldn't reach here since if the Move succeeded in one direction it's likely to work
-			// in the opposite direction as well
-			return errors.Wrapf(restoreErr, "unable to move (restore) %s to %s", previousVersionBinary, path)
+	if runtime.GOOS == "windows" {
+		// The old version will get deleted automatically eventually as we put it in the system's or user's temp dir
+		previousVersionBinary := filepath.Join(downloadDir, name+".old")
+		err = c.fs.Move(path, previousVersionBinary)
+		if err != nil {
+			return errors.Wrapf(err, "unable to move %s to %s", path, previousVersionBinary)
 		}
+		err = c.copyFile(newBin, path)
+		if err != nil {
+			// If we moved the old binary out of the way but couldn't put the new one in place,
+			// attempt to restore the old binary to where it was before bailing
+			restoreErr := c.fs.Move(previousVersionBinary, path)
+			if restoreErr != nil {
+				// Warning: this is a bad case where the user will need to re-download the CLI.  However,
+				// we shouldn't reach here since if the Move succeeded in one direction it's likely to work
+				// in the opposite direction as well
+				return errors.Wrapf(restoreErr, "unable to move (restore) %s to %s", previousVersionBinary, path)
+			}
 
-		return errors.Wrapf(err, "unable to copy %s to %s", newBin, path)
+			return errors.Wrapf(err, "unable to copy %s to %s", newBin, path)
+		}
+	} else {
+		err = c.copyFile(newBin, path)
+		if err != nil {
+			return errors.Wrapf(err, "unable to copy %s to %s", newBin, path)
+		}
 	}
 
 	if err := c.fs.Chmod(path, 0755); err != nil {
