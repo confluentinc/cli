@@ -72,6 +72,12 @@ github.com/confluentinc/mds-sdk-go v0.0.0-20190514062152-88c83c06020a h1:ZXBtkPQ
 github.com/confluentinc/mds-sdk-go v0.0.0-20190514062152-88c83c06020a/go.mod h1:xO8OHaHLZZuxbHGy72sAqkvsFSS74nt2Luk7QWtuo2w=
 github.com/confluentinc/mds-sdk-go v0.0.0-20190608043506-334f63f6e586 h1:t+yKtbnLqHd0tkQFbcTRltjE8Oq8NnEFVWRKvrRHLHg=
 github.com/confluentinc/mds-sdk-go v0.0.0-20190608043506-334f63f6e586/go.mod h1:ouhJcNrAtQCtywN7BHDkpnl2Aaf7lDD157IzFDNVRao=
+github.com/confluentinc/mds-sdk-go v0.0.0-20190610043341-62d6afbe9e27 h1:FAhJngvnnvVr1KTOlx6NS+HRkEGYMH13uyQbOsnNTVo=
+github.com/confluentinc/mds-sdk-go v0.0.0-20190610043341-62d6afbe9e27/go.mod h1:ouhJcNrAtQCtywN7BHDkpnl2Aaf7lDD157IzFDNVRao=
+github.com/confluentinc/mds-sdk-go v0.0.0-20190610044549-4b8210c5ed4c h1:rS9SKE+C2SvxMAy5rAskx8HdP1XP4LsO+jlJdF/dxSg=
+github.com/confluentinc/mds-sdk-go v0.0.0-20190610044549-4b8210c5ed4c/go.mod h1:ouhJcNrAtQCtywN7BHDkpnl2Aaf7lDD157IzFDNVRao=
+github.com/confluentinc/mds-sdk-go v0.0.0-20190610045202-137cf78b1f6a h1:1rhv9IcTT1xA7wO7ES4CJIK+PhuIqnFfZ2zcwoWAf3g=
+github.com/confluentinc/mds-sdk-go v0.0.0-20190610045202-137cf78b1f6a/go.mod h1:ouhJcNrAtQCtywN7BHDkpnl2Aaf7lDD157IzFDNVRao=
 github.com/confluentinc/protoc-gen-ccloud v0.0.0-20190122202943-91a08616afd2/go.mod h1:RL4B2sjziJsuvLS6nkpqJha7026Wl3aaN4cXMSDYoc4=
 github.com/confluentinc/protoc-gen-ccloud v0.0.1 h1:oTEOlStee6ln4FeKdgQevmjuma50EccP2MwplJRFR1I=
 github.com/confluentinc/protoc-gen-ccloud v0.0.1/go.mod h1:pDn9xwYsW8QvxGpwJ9CaomgtYBpx7FgdonHVmCo5yRo=
