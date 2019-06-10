@@ -24,7 +24,7 @@ var (
 	vocab *gospell.GoSpell
 
 	properNouns = []string{
-		"Apache", "Kafka", "CLI", "API", "ACL", "ACLs", "ALL", "Confluent Cloud", "Confluent Platform", "RBAC", "IAM",
+		"Apache", "Kafka", "CLI", "API", "ACL", "ACLs", "Confluent Cloud", "Confluent Platform", "RBAC", "IAM",
 	}
 	vocabWords = []string{
 		"ccloud", "kafka", "api", "acl", "url", "config", "multizone", "transactional", "ksql", "decrypt", "iam", "rolebinding",
@@ -97,10 +97,10 @@ var rules = []linter.Rule{
 	),
 	linter.RequireStartWithCapital("Short"),
 	linter.RequireEndWithPunctuation("Short", false),
-	linter.Filter(linter.RequireCapitalizeProperNouns("Short", properNouns)),
+	linter.RequireCapitalizeProperNouns("Short", properNouns),
 	linter.RequireStartWithCapital("Long"),
 	linter.RequireEndWithPunctuation("Long", true),
-	linter.Filter(linter.RequireCapitalizeProperNouns("Long", properNouns)),
+	linter.RequireCapitalizeProperNouns("Long", properNouns),
 	linter.Filter(linter.RequireNotTitleCase("Short", properNouns),
 		linter.ExcludeCommandContains("secret")),
 	linter.RequireRealWords("Use", '-'),

@@ -157,7 +157,6 @@ func (c *rolebindingCommand) validateRoleAndResourceType(roleName string, resour
 	}
 
 	if !found {
-		c.SilenceErrors = true
 		return errors.New("Invalid resource type " + resourceType + " specified. It must be one of " + strings.Join(allResourceTypes, ", "))
 	}
 
@@ -346,7 +345,7 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, args []string) error {
 	}
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
-		return errors.HandleCommon(errors.Wrapf(err, "No error, but received HTTP status code "+strconv.Itoa(resp.StatusCode)), cmd)
+		return errors.HandleCommon(errors.Wrapf(err, "No error, but received HTTP status code %d.  Please file a support ticket with details", strconv.Itoa(resp.StatusCode)), cmd)
 	}
 
 	return nil
@@ -370,7 +369,7 @@ func (c *rolebindingCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
-		return errors.HandleCommon(errors.Wrapf(err, "No error, but received HTTP status code "+strconv.Itoa(resp.StatusCode)), cmd)
+		return errors.HandleCommon(errors.Wrapf(err, "No error, but received HTTP status code %d.  Please file a support ticket with details", strconv.Itoa(resp.StatusCode)), cmd)
 	}
 
 	return nil
