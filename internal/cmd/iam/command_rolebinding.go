@@ -2,7 +2,6 @@ package iam
 
 import (
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -345,7 +344,7 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, args []string) error {
 	}
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
-		return errors.HandleCommon(errors.Wrapf(err, "No error, but received HTTP status code %d.  Please file a support ticket with details", strconv.Itoa(resp.StatusCode)), cmd)
+		return errors.HandleCommon(errors.Wrapf(err, "No error, but received HTTP status code %d.  Please file a support ticket with details", resp.StatusCode), cmd)
 	}
 
 	return nil
@@ -369,7 +368,7 @@ func (c *rolebindingCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
-		return errors.HandleCommon(errors.Wrapf(err, "No error, but received HTTP status code %d.  Please file a support ticket with details", strconv.Itoa(resp.StatusCode)), cmd)
+		return errors.HandleCommon(errors.Wrapf(err, "No error, but received HTTP status code %d.  Please file a support ticket with details", resp.StatusCode), cmd)
 	}
 
 	return nil
