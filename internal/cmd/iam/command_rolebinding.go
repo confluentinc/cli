@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
@@ -165,40 +166,23 @@ func (c *rolebindingCommand) validateRoleAndResourceType(roleName string, resour
 func (c *rolebindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mds.ScopeClusters, error) {
 	scope := &mds.ScopeClusters{}
 
-	id, err := cmd.Flags().GetString("kafka-cluster-id")
-	if err != nil {
-		return nil, errors.HandleCommon(err, cmd)
-	}
-	scope.KafkaCluster = id
-
 	nonKafkaScopesSet := 0
 
-	if cmd.Flags().Changed("schema-registry-cluster-id") {
-		nonKafkaScopesSet++
-	}
-	id, err = cmd.Flags().GetString("schema-registry-cluster-id")
-	if err != nil {
-		return nil, errors.HandleCommon(err, cmd)
-	}
-	scope.SchemaRegistryCluster = id
-
-	if cmd.Flags().Changed("ksql-cluster-id") {
-		nonKafkaScopesSet++
-	}
-	id, err = cmd.Flags().GetString("ksql-cluster-id")
-	if err != nil {
-		return nil, errors.HandleCommon(err, cmd)
-	}
-	scope.KsqlCluster = id
-
-	if cmd.Flags().Changed("connect-cluster-id") {
-		nonKafkaScopesSet++
-	}
-	id, err = cmd.Flags().GetString("connect-cluster-id")
-	if err != nil {
-		return nil, errors.HandleCommon(err, cmd)
-	}
-	scope.ConnectCluster = id
+	cmd.Flags().Visit(func(flag *pflag.Flag) {
+		switch flag.Name {
+		case "kafka-cluster-id":
+			scope.KafkaCluster = flag.Value.String()
+		case "schema-registry-cluster-id":
+			scope.SchemaRegistryCluster = flag.Value.String()
+			nonKafkaScopesSet++
+		case "ksql-cluster-id":
+			scope.KsqlCluster = flag.Value.String()
+			nonKafkaScopesSet++
+		case "connect-cluster-id":
+			scope.ConnectCluster = flag.Value.String()
+			nonKafkaScopesSet++
+		}
+	})
 
 	if scope.KafkaCluster == "" && nonKafkaScopesSet > 0 {
 		return nil, errors.HandleCommon(errors.New("Must also specify a --kafka-cluster-id to uniquely identify the scope."), cmd)
