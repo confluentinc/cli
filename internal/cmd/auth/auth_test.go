@@ -101,7 +101,6 @@ func TestLoginSuccess(t *testing.T) {
 		req.Contains(output, "Logged in as cody@confluent.io")
 
 		req.Equal("y0ur.jwt.T0kEn", cfg.AuthToken)
-		req.NoError(cfg.Load())
 		if s.cliName == "ccloud" {
 			// MDS doesn't set some things like cfg.Auth.User since e.g. an MDS user != an orgv1 (ccloud) User
 			req.Equal(&orgv1.User{Id: 23, Email: "cody@confluent.io", FirstName: "Cody"}, cfg.Auth.User)
@@ -114,6 +113,8 @@ func TestLoginSuccess(t *testing.T) {
 			req.Contains(cfg.Contexts, name)
 			req.Equal(name, cfg.Contexts[name].Platform)
 			req.Equal(name, cfg.Contexts[name].Credential)
+		} else {
+			req.Equal("http://localhost:8090", cfg.AuthURL)
 		}
 	}
 }
