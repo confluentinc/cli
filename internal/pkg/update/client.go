@@ -44,12 +44,16 @@ type ClientParams struct {
 	CheckFile string
 	// Optional, defaults to checking once every 24h
 	CheckInterval time.Duration
+	OS            string
 }
 
 // NewClient returns a client for updating CLI binaries
 func NewClient(params *ClientParams) *client {
 	if params.CheckInterval == 0 {
 		params.CheckInterval = 24 * time.Hour
+	}
+	if params.OS == "" {
+		params.OS = runtime.GOOS
 	}
 	return &client{
 		ClientParams: params,
@@ -156,7 +160,7 @@ func (c *client) UpdateBinary(name, version, path string) error {
 	// Note, this should _only_ be done on Windows; on unix platforms, cross-devices moves can fail (e.g.
 	// binary is on another device than the system tmp dir); but on such platforms we don't need to do moves anyway
 
-	if runtime.GOOS == "windows" {
+	if c.OS == "windows" {
 		// The old version will get deleted automatically eventually as we put it in the system's or user's temp dir
 		previousVersionBinary := filepath.Join(downloadDir, name+".old")
 		err = c.fs.Move(path, previousVersionBinary)
