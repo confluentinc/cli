@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/go-editor"
+	mds "github.com/confluentinc/mds-sdk-go"
 )
 
 var messages = map[error]string{
@@ -28,6 +29,11 @@ func HandleCommon(err error, cmd *cobra.Command) error {
 	// Give an indication of successful completion
 	if err == nil {
 		return nil
+	}
+
+	if oerr, ok := err.(mds.GenericOpenAPIError); ok {
+		cmd.SilenceUsage = true
+		return fmt.Errorf(oerr.Error() + ": " + string(oerr.Body()))
 	}
 
 	// Intercept errors to prevent usage from being printed.

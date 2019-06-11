@@ -24,10 +24,10 @@ var (
 	vocab *gospell.GoSpell
 
 	properNouns = []string{
-		"Apache", "Kafka", "CLI", "API", "ACL", "ACLs", "Confluent Cloud", "Confluent Platform",
+		"Apache", "Kafka", "CLI", "API", "ACL", "ACLs", "Confluent Cloud", "Confluent Platform", "RBAC", "IAM",
 	}
 	vocabWords = []string{
-		"ccloud", "kafka", "api", "acl", "url", "config", "multizone", "transactional", "decrypt",
+		"ccloud", "kafka", "api", "acl", "url", "config", "multizone", "transactional", "ksql", "decrypt", "iam", "rolebinding",
 	}
 	utilityCommands = []string{
 		"login", "logout", "version", "completion <shell>", "update",
@@ -35,6 +35,7 @@ var (
 	nonClusterScopedCommands = []linter.RuleFilter{
 		linter.OnlyLeafCommands, linter.ExcludeCommand(utilityCommands...),
 		linter.ExcludeUse("local"), linter.ExcludeParentUse("environment", "service-account"),
+		linter.ExcludeCommandContains("iam"),
 		// these all require explicit cluster as id/name args
 		linter.ExcludeCommandContains("kafka cluster"),
 		// this doesn't need a --cluster override since you provide the api key itself to identify it
@@ -50,6 +51,7 @@ var rules = []linter.Rule{
 			linter.NamedArgumentConfig{CreateCommandArg: "<name>", OtherCommandsArg: "<id>"},
 			map[string]linter.NamedArgumentConfig{
 				"environment": {CreateCommandArg: "<name>", OtherCommandsArg: "<environment-id>"},
+				"role":        {CreateCommandArg: "<name>", OtherCommandsArg: "<name>"},
 				"topic":       {CreateCommandArg: "<topic>", OtherCommandsArg: "<topic>"},
 				"api-key":     {CreateCommandArg: "N/A", OtherCommandsArg: "<apikey>"},
 			},
@@ -65,6 +67,8 @@ var rules = []linter.Rule{
 		linter.ExcludeCommandContains("local"),
 		// skip for api-key store command since KEY is not last argument
 		linter.ExcludeCommand("api-key store <apikey> <secret>"),
+		// skip for rolebindings since they don't have names/IDs
+		linter.ExcludeCommandContains("iam rolebinding"),
 		// skip secret commands
 		linter.ExcludeCommandContains("secret"),
 	),
@@ -104,12 +108,12 @@ var rules = []linter.Rule{
 
 var flagRules = []linter.FlagRule{
 	linter.FlagFilter(linter.RequireFlagNameLength(2, 16),
-		linter.ExcludeFlag("service-account-id", "replication-factor", "local-secrets-file", "remote-secrets-file")),
+		linter.ExcludeFlag("service-account-id", "replication-factor", "connect-cluster-id", "schema-registry-cluster-id", "local-secrets-file", "remote-secrets-file")),
 	linter.RequireFlagStartWithCapital,
 	linter.RequireFlagEndWithPunctuation,
 	linter.RequireFlagCharacters('-'),
 	linter.FlagFilter(linter.RequireFlagDelimiter('-', 1),
-		linter.ExcludeFlag("service-account-id", "local-secrets-file", "remote-secrets-file")),
+		linter.ExcludeFlag("service-account-id", "kafka-cluster-id", "connect-cluster-id", "schema-registry-cluster-id", "ksql-cluster-id", "local-secrets-file", "remote-secrets-file")),
 	linter.RequireFlagRealWords('-'),
 }
 

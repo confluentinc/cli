@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"net/http"
 	"os"
 	"testing"
 
@@ -10,6 +11,8 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go"
 	sdkMock "github.com/confluentinc/ccloud-sdk-go/mock"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
+	mds "github.com/confluentinc/mds-sdk-go"
+	mdsMock "github.com/confluentinc/mds-sdk-go/mock"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
@@ -41,7 +44,7 @@ func TestCredentialsOverride(t *testing.T) {
 			}, nil
 		},
 	}
-	cmds, cfg := newAuthCommand(prompt, auth, req)
+	cmds, cfg := newAuthCommand(prompt, auth, "ccloud", req)
 
 	output, err := pcmd.ExecuteCommand(cmds.Commands[0])
 	req.NoError(err)
@@ -73,25 +76,47 @@ func TestLoginSuccess(t *testing.T) {
 			}, nil
 		},
 	}
-	cmds, cfg := newAuthCommand(prompt, auth, req)
 
-	output, err := pcmd.ExecuteCommand(cmds.Commands[0])
-	req.NoError(err)
-	req.Contains(output, "Logged in as cody@confluent.io")
+	suite := []struct {
+		cliName string
+		args    []string
+	}{
+		{
+			cliName: "ccloud",
+		},
+		{
+			cliName: "confluent",
+			args: []string{
+				"--url=http://localhost:8090",
+			},
+		},
+	}
 
-	req.Equal("y0ur.jwt.T0kEn", cfg.AuthToken)
-	req.Equal(&orgv1.User{Id: 23, Email: "cody@confluent.io", FirstName: "Cody"}, cfg.Auth.User)
+	for _, s := range suite {
+		// Login to the CLI control plane
+		cmds, cfg := newAuthCommand(prompt, auth, s.cliName, req)
 
-	cfg = config.New()
-	req.NoError(cfg.Load())
-	name := "login-cody@confluent.io-https://confluent.cloud"
-	req.Contains(cfg.Platforms, name)
-	req.Equal("https://confluent.cloud", cfg.Platforms[name].Server)
-	req.Contains(cfg.Credentials, name)
-	req.Equal("cody@confluent.io", cfg.Credentials[name].Username)
-	req.Contains(cfg.Contexts, name)
-	req.Equal(name, cfg.Contexts[name].Platform)
-	req.Equal(name, cfg.Contexts[name].Credential)
+		output, err := pcmd.ExecuteCommand(cmds.Commands[0], s.args...)
+		req.NoError(err)
+		req.Contains(output, "Logged in as cody@confluent.io")
+
+		req.Equal("y0ur.jwt.T0kEn", cfg.AuthToken)
+		if s.cliName == "ccloud" {
+			// MDS doesn't set some things like cfg.Auth.User since e.g. an MDS user != an orgv1 (ccloud) User
+			req.Equal(&orgv1.User{Id: 23, Email: "cody@confluent.io", FirstName: "Cody"}, cfg.Auth.User)
+
+			name := "login-cody@confluent.io-https://confluent.cloud"
+			req.Contains(cfg.Platforms, name)
+			req.Equal("https://confluent.cloud", cfg.Platforms[name].Server)
+			req.Contains(cfg.Credentials, name)
+			req.Equal("cody@confluent.io", cfg.Credentials[name].Username)
+			req.Contains(cfg.Contexts, name)
+			req.Equal(name, cfg.Contexts[name].Platform)
+			req.Equal(name, cfg.Contexts[name].Credential)
+		} else {
+			req.Equal("http://localhost:8090", cfg.AuthURL)
+		}
+	}
 }
 
 func TestLoginFail(t *testing.T) {
@@ -103,10 +128,25 @@ func TestLoginFail(t *testing.T) {
 			return "", &ccloud.InvalidLoginError{}
 		},
 	}
-	cmds, _ := newAuthCommand(prompt, auth, req)
+	cmds, _ := newAuthCommand(prompt, auth, "ccloud", req)
 
 	_, err := pcmd.ExecuteCommand(cmds.Commands[0])
 	req.Contains(err.Error(), "You have entered an incorrect username or password.")
+}
+
+func TestURLRequiredWithMDS(t *testing.T) {
+	req := require.New(t)
+
+	prompt := prompt("cody@confluent.io", "iamrobin")
+	auth := &sdkMock.Auth{
+		LoginFunc: func(ctx context.Context, username string, password string) (string, error) {
+			return "", &ccloud.InvalidLoginError{}
+		},
+	}
+	cmds, _ := newAuthCommand(prompt, auth, "confluent", req)
+
+	_, err := pcmd.ExecuteCommand(cmds.Commands[0])
+	req.Contains(err.Error(), "required flag(s) \"url\" not set")
 }
 
 func TestLogout(t *testing.T) {
@@ -114,7 +154,7 @@ func TestLogout(t *testing.T) {
 
 	prompt := prompt("cody@confluent.io", "iamrobin")
 	auth := &sdkMock.Auth{}
-	cmds, cfg := newAuthCommand(prompt, auth, req)
+	cmds, cfg := newAuthCommand(prompt, auth, "ccloud", req)
 
 	cfg.AuthToken = "some.token.here"
 	cfg.Auth = &config.AuthConfig{User: &orgv1.User{Id: 23}}
@@ -125,6 +165,7 @@ func TestLogout(t *testing.T) {
 	req.Contains(output, "You are now logged out")
 
 	cfg = config.New()
+	cfg.CLIName = "ccloud"
 	req.NoError(cfg.Load())
 	req.Empty(cfg.AuthToken)
 	req.Empty(cfg.Auth)
@@ -135,9 +176,9 @@ func Test_credentials_NoSpacesAroundEmail_ShouldSupportSpacesAtBeginOrEnd(t *tes
 
 	prompt := prompt(" cody@confluent.io ", " iamrobin ")
 	auth := &sdkMock.Auth{}
-	cmds, _ := newAuthCommand(prompt, auth, req)
+	cmds, _ := newAuthCommand(prompt, auth, "ccloud", req)
 
-	user, pass, err := cmds.credentials(cmds.Commands[0])
+	user, pass, err := cmds.credentials(cmds.Commands[0], "Email")
 	req.NoError(err)
 	req.Equal("cody@confluent.io", user)
 	req.Equal(" iamrobin ", pass)
@@ -154,7 +195,7 @@ func prompt(username, password string) *cliMock.Prompt {
 	}
 }
 
-func newAuthCommand(prompt pcmd.Prompt, auth *sdkMock.Auth, req *require.Assertions) (*commands, *config.Config) {
+func newAuthCommand(prompt pcmd.Prompt, auth *sdkMock.Auth, cliName string, req *require.Assertions) (*commands, *config.Config) {
 	var mockAnonHTTPClientFactory = func(baseURL string, logger *log.Logger) *ccloud.Client {
 		req.Equal("https://confluent.cloud", baseURL)
 		return &ccloud.Client{Auth: auth}
@@ -164,7 +205,22 @@ func newAuthCommand(prompt pcmd.Prompt, auth *sdkMock.Auth, req *require.Asserti
 	}
 	cfg := config.New()
 	cfg.Logger = log.New()
-	commands := newCommands(&cliMock.Commander{}, cfg, log.New(), prompt, mockAnonHTTPClientFactory, mockJwtHTTPClientFactory)
+	cfg.CLIName = cliName
+	var mdsClient *mds.APIClient
+	if cliName == "confluent" {
+		mdsConfig := mds.NewConfiguration()
+		mdsClient = mds.NewAPIClient(mdsConfig)
+		mdsClient.TokensAuthenticationApi = mdsMock.TokensAuthenticationApi{
+			GetTokenFunc: func(ctx context.Context, xSPECIALRYANHEADER string) (mds.AuthenticationResponse, *http.Response, error) {
+				return mds.AuthenticationResponse{
+					AuthToken: "y0ur.jwt.T0kEn",
+					TokenType: "JWT",
+					ExpiresIn: 100,
+				}, nil, nil
+			},
+		}
+	}
+	commands := newCommands(&cliMock.Commander{}, cfg, log.New(), mdsClient, prompt, mockAnonHTTPClientFactory, mockJwtHTTPClientFactory)
 	for _, c := range commands.Commands {
 		c.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	}
