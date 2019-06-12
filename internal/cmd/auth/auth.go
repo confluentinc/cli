@@ -61,8 +61,8 @@ func newCommands(prerunner pcmd.PreRunner, config *config.Config, log *log.Logge
 func (a *commands) init(prerunner pcmd.PreRunner) {
 	loginCmd := &cobra.Command{
 		Use:   "login",
-		Short: fmt.Sprintf("Login to %s.", a.config.APIName()),
-		Long:  fmt.Sprintf("Login to %s.", a.config.APIName()),
+		Short: fmt.Sprintf("Log in to %s.", a.config.APIName()),
+		Long:  fmt.Sprintf("Log in to %s.", a.config.APIName()),
 		Args:  cobra.NoArgs,
 	}
 	if a.config.CLIName == "ccloud" {
