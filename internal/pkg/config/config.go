@@ -171,6 +171,21 @@ func (c *Config) Context() (*Context, error) {
 	return c.Contexts[c.CurrentContext], nil
 }
 
+// KafkaClusterConfig returns the KafkaClusterConfig for the current Context
+// or nil if there is none set.
+func (c *Config) KafkaClusterConfig() (*KafkaClusterConfig, error) {
+	context, err := c.Context()
+	if err != nil {
+		return nil, err
+	}
+	kafka := context.Kafka
+	if kafka == "" {
+		return nil, nil
+	} else {
+		return context.KafkaClusters[kafka], nil
+	}
+}
+
 // CheckLogin returns an error if the user is not logged in.
 func (c *Config) CheckLogin() error {
 	if c.Auth == nil || c.Auth.Account == nil || c.Auth.Account.Id == "" {

@@ -29,7 +29,7 @@ var (
 			return config.Auth.Account.Name, nil
 		},
 		"%k": func(config *config.Config) (string, error) {
-			kcc, err := getKafkaClusterConfig(config)
+			kcc, err := config.KafkaClusterConfig()
 			if err != nil {
 				return "", err
 			}
@@ -40,7 +40,7 @@ var (
 			}
 		},
 		"%K": func(config *config.Config) (string, error) {
-			kcc, err := getKafkaClusterConfig(config)
+			kcc, err := config.KafkaClusterConfig()
 			if err != nil {
 				return "", err
 			}
@@ -51,7 +51,7 @@ var (
 			}
 		},
 		"%a": func(config *config.Config) (string, error) {
-			kcc, err := getKafkaClusterConfig(config)
+			kcc, err := config.KafkaClusterConfig()
 			if err != nil {
 				return "", err
 			}
@@ -104,7 +104,7 @@ func (p *Prompt) InferEnvironmentColor() (func(a ...interface{}) string, error) 
 		return envColor, nil
 	}
 
-	kcc, err := getKafkaClusterConfig(p.Config)
+	kcc, err := p.Config.KafkaClusterConfig()
 	if err != nil {
 		return nil, err
 	}
@@ -133,15 +133,3 @@ func inferColorBasedOnEnvName(name string) func(a ...interface{}) string {
 	return nil
 }
 
-func getKafkaClusterConfig(config *config.Config) (*config.KafkaClusterConfig, error) {
-	context, err := config.Context()
-	if err != nil {
-		return nil, err
-	}
-	kafka := context.Kafka
-	if kafka == "" {
-		return nil, nil
-	} else {
-		return context.KafkaClusters[kafka], nil
-	}
-}

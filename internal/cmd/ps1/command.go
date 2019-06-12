@@ -64,7 +64,7 @@ Formats
 
 * '%u'
 
-  The current user or credentials in use. E.g., "cody@confluent.io"
+  The current user or credentials in use. E.g., "joe@montana.com"
 
 Colors
 ~~~~~~
