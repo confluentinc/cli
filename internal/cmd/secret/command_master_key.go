@@ -41,7 +41,7 @@ func (c *masterKeyCommand) init() {
 	generateCmd := &cobra.Command{
 		Use:   "generate",
 		Short: "Generate a master key for Confluent Platform.",
-		Long:  `This command generates a master key. This key will be used for encryption and decryption of configuration value.`,
+		Long:  `This command generates a master key. This key is used for encryption and decryption of configuration values.`,
 		RunE:  c.generate,
 		Args:  cobra.NoArgs,
 	}
