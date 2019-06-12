@@ -21,7 +21,6 @@ type BashShellRunner struct {
 
 // Init initializes a runner's output streams
 func (runner *BashShellRunner) Init(stdout io.Writer, stdin io.Writer) {
-	runner.BasherContext.CopyEnv()
 	runner.BasherContext.Stdout = stdout
 	runner.BasherContext.Stderr = stdin
 }

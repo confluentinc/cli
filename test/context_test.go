@@ -13,7 +13,7 @@ func (s *CLITestSuite) TestContextCommands() {
 		{args: "config context use my-context", fixture: "context8.golden"},
 		{args: "config context current", fixture: "context9.golden"},
 	}
-	resetConfiguration(s.T())
+	resetConfiguration(s.T(), "ccloud")
 	for _, tt := range tests {
 		if tt.name == "" {
 			tt.name = tt.args

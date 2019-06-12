@@ -88,7 +88,7 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 		{name: "error if using api-key for wrong cluster", args: "api-key use MYKEY2", fixture: "apikey18.golden"},
 		{name: "error if using api-key without existing secret", args: "api-key use UIAPIKEY103", fixture: "apikey19.golden"},
 	}
-	resetConfiguration(s.T())
+	resetConfiguration(s.T(), "ccloud")
 	for _, tt := range tests {
 		if tt.name == "" {
 			tt.name = tt.args

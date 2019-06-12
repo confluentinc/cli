@@ -1,0 +1,27 @@
+    The local commands are intended for a single-node development environment
+    only, NOT for production usage. https://docs.confluent.io/current/cli/index.html
+
+Usage: confluent local list [ plugins | connectors ]
+
+Description:
+    List all the available services or plugins.
+
+    Without arguments it prints the list of all the available services.
+
+    Given 'plugins' as subcommand, prints all the connector-plugins which are
+    discoverable in the current Confluent Platform deployment.
+
+    Given 'connectors' as subcommand, prints a list of connector names that map to predefined
+    connectors. Their configuration files can be found under 'etc/' directory in Confluent Platform.
+
+
+Examples:
+    confluent list
+        Prints the available services.
+
+    confluent list plugins
+        Prints all the connector plugins (connector classes) discoverable by Connect runtime.
+
+    confluent list connectors
+        Prints a list of predefined connectors.
+

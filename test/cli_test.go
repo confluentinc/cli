@@ -98,28 +98,7 @@ func (s *CLITestSuite) Test_Confluent_Help() {
 		{args: "version", fixture: "confluent-version.golden"},
 	}
 	for _, tt := range tests {
-		if tt.name == "" {
-			tt.name = tt.args
-		}
-		s.T().Run(tt.name, func(t *testing.T) {
-			output := runCommand(t, "confluent", []string{}, tt.args, tt.wantErrCode)
-
-			if *update && tt.args != "version" {
-				writeFixture(t, tt.fixture, output)
-			}
-
-			actual := string(output)
-			expected := loadFixture(t, tt.fixture)
-
-			if tt.args == "version" {
-				require.Regexp(t, expected, actual)
-				return
-			}
-
-			if !reflect.DeepEqual(actual, expected) {
-				t.Fatalf("actual = %s, expected = %s", actual, expected)
-			}
-		})
+		s.runConfluentTest(tt)
 	}
 }
 
@@ -308,7 +287,7 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint stri
 	}
 	s.T().Run(tt.name, func(t *testing.T) {
 		if !tt.workflow {
-			resetConfiguration(t)
+			resetConfiguration(t, "ccloud")
 		}
 
 		if tt.login == "default" {
@@ -366,6 +345,37 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint stri
 	})
 }
 
+func (s *CLITestSuite) runConfluentTest(tt CLITest) {
+	if tt.name == "" {
+		tt.name = tt.args
+	}
+	if strings.HasPrefix(tt.name, "error") {
+		tt.wantErrCode = 1
+	}
+	s.T().Run(tt.name, func(t *testing.T) {
+		if !tt.workflow {
+			resetConfiguration(t, "confluent")
+		}
+		output := runCommand(t, "confluent", []string{}, tt.args, tt.wantErrCode)
+
+		if *update && tt.args != "version" {
+			writeFixture(t, tt.fixture, output)
+		}
+
+		actual := string(output)
+		expected := loadFixture(t, tt.fixture)
+
+		if tt.args == "version" {
+			require.Regexp(t, expected, actual)
+			return
+		}
+
+		if !reflect.DeepEqual(actual, expected) {
+			t.Fatalf("actual = %s, expected = %s", actual, expected)
+		}
+	})
+}
+
 func runCommand(t *testing.T, binaryName string, env []string, args string, wantErrCode int) string {
 	path := binaryPath(t, binaryName)
 	_, _ = fmt.Println(path, args)
@@ -388,10 +398,10 @@ func runCommand(t *testing.T, binaryName string, env []string, args string, want
 	return string(output)
 }
 
-func resetConfiguration(t *testing.T) {
+func resetConfiguration(t *testing.T, cliName string) {
 	// HACK: delete your current config to isolate tests cases for non-workflow tests...
 	// probably don't really want to do this or devs will get mad
-	cfg := config.New(&config.Config{CLIName: "ccloud"})
+	cfg := config.New(&config.Config{CLIName: cliName})
 	err := cfg.Save()
 	require.NoError(t, err)
 }

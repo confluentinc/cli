@@ -32,6 +32,9 @@ die() {
 }
 
 validate_and_export_dir_layout() {
+    # We don't need to know CONFLUENT_HOME just to see the list of commands
+    [[ $# -lt 1 ]] || [[ "$1" = "skip" ]] && command_name="confluent local" && return
+
     if [[ -z "${CONFLUENT_HOME}" ]]; then
         command_name="$( basename "${BASH_SOURCE[0]}" )"
         confluent_bin="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -57,9 +60,6 @@ validate_and_export_dir_layout() {
     last="${confluent_current_dir:${#confluent_current_dir}-1:1}"
     [[ "${last}" != "/" ]] && export confluent_current_dir="${confluent_current_dir}/"
 }
-
-# Since this function performs essential initializations, call it as early as possible.
-validate_and_export_dir_layout
 
 # Contains the result of functions that intend to return a value besides their exit status.
 _retval=""
@@ -215,6 +215,10 @@ else
   JAVA="${JAVA_HOME}/bin/java"
 fi
 
+is_command() {
+  command -v "$1" >/dev/null
+}
+
 requirements() {
     local major=3
     local minor=2
@@ -222,17 +226,8 @@ requirements() {
         || [ "${BASH_VERSINFO[0]:-0}" -eq ${major} -a "${BASH_VERSINFO[1]:-0}" -lt ${minor} ] \
         && invalid_requirement "bash" "${major}.${minor}"
 
-    which curl > /dev/null 2>&1
-    status=$?
-    if [[ ${status} -ne 0 ]]; then
-        invalid_requirement "curl"
-    fi
-
-    which jq > /dev/null 2>&1
-    status=$?
-    if [[ ${status} -ne 0 ]]; then
-        FORMAT_CMD="xargs -0"
-    fi
+    is_command curl || invalid_requirement "curl"
+    is_command jq || FORMAT_CMD="xargs -0"
 }
 
 export_service_env() {
@@ -2133,7 +2128,7 @@ EOF
 
 usage() {
     cat <<EOF
-${command_name}: A command line interface to manage Confluent services
+${command_name}: Manage a local Confluent Platform development environment.
 
 Usage: ${command_name} <command> [<subcommand>] [<parameters>]
 
@@ -2193,24 +2188,34 @@ invalid_requirement() {
     exit ${ERROR_CODE}
 }
 
+cat >&2 <<EOF
+    The local commands are intended for a single-node development environment
+    only, NOT for production usage. https://docs.confluent.io/current/cli/index.html
+
+EOF
+
+help() {
+    # Since this function performs essential initializations, call it as early as possible.
+    validate_and_export_dir_layout "skip"
+
+    command_exists "${1}" && ( "${1}"_usage "$@" || invalid_command "${1}" ) || usage
+}
+
 main() {
+    # Since this function performs essential initializations, call it as early as possible.
+    validate_and_export_dir_layout $@
+
     # Parse command-line arguments
     [[ $# -lt 1 ]] && usage
 
     requirements
-
-    cat <<EOF
-    This CLI is intended for development only, not for production
-    https://docs.confluent.io/current/cli/index.html
-
-EOF
 
     command="${1}"
     shift
     case "${command}" in
         help)
             if [[ -n "${1}" ]]; then
-                command_exists "${1}" && ( "${1}"_usage "$@" || invalid_command "${1}" )
+                help $@
             else
                 usage
             fi;;
