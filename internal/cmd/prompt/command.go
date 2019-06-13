@@ -12,6 +12,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/ps1"
 )
@@ -116,8 +117,8 @@ func NewPromptCmd(config *config.Config, ps1 *ps1.Prompt, logger *log.Logger) *c
 func (c *promptCommand) init() {
 	c.Command = &cobra.Command{
 		Use:   "prompt",
-		Short: c.parseTemplate("Print {{.CLIName}} CLI context for your terminal prompt."),
-		Long:  c.parseTemplate(longDescriptionTemplate),
+		Short: c.mustParseTemplate("Print {{.CLIName}} CLI context for your terminal prompt."),
+		Long:  c.mustParseTemplate(longDescriptionTemplate),
 		RunE:  c.prompt,
 		Args:  cobra.NoArgs,
 	}
@@ -168,7 +169,11 @@ func (c *promptCommand) prompt(cmd *cobra.Command, args []string) error {
 			errCh <- err
 			return
 		}
-		prompt = c.parseTemplate(prompt)
+		prompt, err = c.parseTemplate(prompt)
+		if err != nil {
+			errCh <- err
+			return
+		}
 		retCh <- prompt
 	}()
 
@@ -177,7 +182,8 @@ func (c *promptCommand) prompt(cmd *cobra.Command, args []string) error {
 	case prompt := <-retCh:
 		pcmd.Println(cmd, prompt)
 	case err := <-errCh:
-		return err
+		c.Command.SilenceUsage = true
+		return errors.Wrapf(err, `error parsing prompt format string "%s"`, format)
 	case <-time.After(timeout):
 		// log the timeout and just print nothing
 		c.logger.Warnf("timed out after %s", timeout)
@@ -187,13 +193,25 @@ func (c *promptCommand) prompt(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *promptCommand) parseTemplate(text string) string {
-	t := template.Must(template.New("tmpl").Funcs(c.ps1.GetFuncs()).Parse(text))
+func (c *promptCommand) parseTemplate(text string) (string, error) {
+	t, err := template.New("tmpl").Funcs(c.ps1.GetFuncs()).Parse(text)
+	if err != nil {
+		return "", err
+	}
 	buf := new(bytes.Buffer)
-	data := map[string]interface{}{"CLIName": c.config.CLIName, }
+	data := map[string]interface{}{"CLIName": c.config.CLIName}
 	if err := t.Execute(buf, data); err != nil {
-		// We're okay with this since its definitely a development error; should never happen to users
+		return "", err
+	}
+	return buf.String(), nil
+}
+
+// mustParseTemplate will panic if text can't be parsed or executed
+// don't call with user-provided text!
+func (c *promptCommand) mustParseTemplate(text string) string {
+	t, err := c.parseTemplate(text)
+	if err != nil {
 		panic(err)
 	}
-	return buf.String()
+	return t
 }
