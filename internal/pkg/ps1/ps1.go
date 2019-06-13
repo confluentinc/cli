@@ -1,20 +1,15 @@
 package ps1
 
 import (
+	"bytes"
 	"strings"
 	"text/template"
-
-	"github.com/fatih/color"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/template-color"
 )
 
 var (
-	red    = color.New(color.FgRed).SprintFunc()
-	yellow = color.New(color.FgYellow).SprintFunc()
-	green  = color.New(color.FgGreen).SprintFunc()
-
 	// For documentation of supported tokens, see internal/cmd/prompt/command.go
 	formatTokens = map[string]func(config *config.Config) (string, error){
 		"%c": func(config *config.Config) (string, error) {
@@ -79,6 +74,38 @@ var (
 			return "\xe2\x98\xaa ", nil
 		},
 	}
+
+	// For documentation of supported tokens, see internal/cmd/prompt/command.go
+	formatData = func(config *config.Config) (interface{}, error) {
+		kcc, err := config.KafkaClusterConfig()
+		if err != nil {
+			return nil, err
+		}
+		kafkaClusterId := "(none)"
+		kafkaClusterName := "(none)"
+		kafkaAPIKey := "(none)"
+		if kcc != nil {
+			if kcc.ID != "" {
+				kafkaClusterId = kcc.ID
+			}
+			if kcc.Name != "" {
+				kafkaClusterName = kcc.Name
+			}
+			if kcc.APIKey != "" {
+				kafkaAPIKey = kcc.APIKey
+			}
+		}
+		return map[string]interface{} {
+			"CLIName":          config.CLIName,
+			"ContextName":      config.CurrentContext,
+			"AccountId":        config.Auth.Account.Id,
+			"AccountName":      config.Auth.Account.Name,
+			"KafkaClusterId":   kafkaClusterId,
+			"KafkaClusterName": kafkaClusterName,
+			"KafkaAPIKey":      kafkaAPIKey,
+			"UserName":         config.Auth.User.Email,
+		}, nil
+	}
 )
 
 // Prompt outputs context about the current CLI config suitable for a PS1 prompt.
@@ -97,10 +124,30 @@ func (p *Prompt) Get(format string) (string, error) {
 		}
 		result = strings.ReplaceAll(result, token, v)
 	}
-	return result, nil
+	prompt, err := p.ParseTemplate(result)
+	if err != nil {
+		return "", err
+	}
+	return prompt, nil
 }
 
 func (p *Prompt) GetFuncs() template.FuncMap {
 	m := template_color.GetColorFuncs()
 	return m
+}
+
+func (p *Prompt) ParseTemplate(text string) (string, error) {
+	t, err := template.New("tmpl").Funcs(p.GetFuncs()).Parse(text)
+	if err != nil {
+		return "", err
+	}
+	buf := new(bytes.Buffer)
+	data, err := formatData(p.Config)
+	if err != nil {
+		return "", err
+	}
+	if err := t.Execute(buf, data); err != nil {
+		return "", err
+	}
+	return buf.String(), nil
 }

@@ -1,10 +1,8 @@
 package prompt
 
 import (
-	"bytes"
 	"fmt"
 	"strconv"
-	"text/template"
 	"time"
 
 	"github.com/fatih/color"
@@ -48,31 +46,31 @@ Formats
 
 '{{.CLIName}} prompt' comes with a number of formatting tokens. What follows is a list of all tokens:
 
-* '%C'
+* '%C' or {{.ContextName}}
 
   The name of the current context in use. E.g., "dev-app1", "stag-dc1", "prod"
 
-* '%e'
+* '%e' or {{.EnvironmentId}}
 
   The ID of the current environment in use. E.g., "a-4567"
 
-* '%E'
+* '%E' or {{.EnvironmentName}}
 
   The name of the current environment in use. E.g., "default", "prod-team1"
 
-* '%k'
+* '%k' or {{.KafkaClusterId}}
 
   The ID of the current Kafka cluster in use. E.g., "lkc-abc123"
 
-* '%K'
+* '%K' or {{.KafkaClusterName}}
 
   The name of the current Kafka cluster in use. E.g., "prod-us-west-2-iot"
 
-* '%a'
+* '%a' or {{.KafkaAPIKey}}
 
   The current Kafka API key in use. E.g., "ABCDEF1234567890"
 
-* '%u'
+* '%u' or {{.UserName}}
 
   The current user or credentials in use. E.g., "joe@montana.com"
 
@@ -93,6 +91,9 @@ Examples:
 
 * {{"{{"}}color "red" "some text" | colorattr "bold" | bgcolor "blue"{{"}}"}}
 * {{"{{"}}color "red"{{"}}"}} some text here {{"{{"}}resetcolor{{"}}"}}
+
+You can also mix format tokens and/or data in the same line
+* {{"{{"}}color "cyan" "%E"{{"}}"}} {{"{{"}}color "blue" .KafkaClusterId{{"}}"}}
 
 Notes:
 
@@ -178,11 +179,6 @@ func (c *promptCommand) prompt(cmd *cobra.Command, args []string) error {
 			errCh <- err
 			return
 		}
-		prompt, err = c.parseTemplate(prompt)
-		if err != nil {
-			errCh <- err
-			return
-		}
 		retCh <- prompt
 	}()
 
@@ -202,23 +198,10 @@ func (c *promptCommand) prompt(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *promptCommand) parseTemplate(text string) (string, error) {
-	t, err := template.New("tmpl").Funcs(c.ps1.GetFuncs()).Parse(text)
-	if err != nil {
-		return "", err
-	}
-	buf := new(bytes.Buffer)
-	data := map[string]interface{}{"CLIName": c.config.CLIName}
-	if err := t.Execute(buf, data); err != nil {
-		return "", err
-	}
-	return buf.String(), nil
-}
-
 // mustParseTemplate will panic if text can't be parsed or executed
 // don't call with user-provided text!
 func (c *promptCommand) mustParseTemplate(text string) string {
-	t, err := c.parseTemplate(text)
+	t, err := c.ps1.ParseTemplate(text)
 	if err != nil {
 		panic(err)
 	}
