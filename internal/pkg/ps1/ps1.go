@@ -1,8 +1,10 @@
 package ps1
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
+	"text/template"
 
 	"github.com/fatih/color"
 
@@ -14,6 +16,35 @@ var (
 	yellow = color.New(color.FgYellow).SprintFunc()
 	green  = color.New(color.FgGreen).SprintFunc()
 
+	fgColors = map[string]color.Attribute{
+		"black":   color.FgBlack,
+		"red":     color.FgRed,
+		"green":   color.FgGreen,
+		"yellow":  color.FgYellow,
+		"blue":    color.FgBlue,
+		"magenta": color.FgMagenta,
+		"cyan":    color.FgCyan,
+		"white":   color.FgWhite,
+	}
+
+	bgColors = map[string]color.Attribute{
+		"black":   color.BgBlack,
+		"red":     color.BgRed,
+		"green":   color.BgGreen,
+		"yellow":  color.BgYellow,
+		"blue":    color.BgBlue,
+		"magenta": color.BgMagenta,
+		"cyan":    color.BgCyan,
+		"white":   color.BgWhite,
+	}
+
+	colorAttrs = map[string]color.Attribute{
+		"bold":      color.Bold,
+		"underline": color.Underline,
+		"invert":    color.ReverseVideo,
+	}
+
+	// For documentation of supported tokens, see internal/cmd/prompt/command.go
 	formatTokens = map[string]func(config *config.Config) (string, error){
 		"%c": func(config *config.Config) (string, error) {
 			context := config.CurrentContext
@@ -64,6 +95,58 @@ var (
 		"%u": func(config *config.Config) (string, error) {
 			return config.Auth.User.Email, nil
 		},
+		"%X": func(config *config.Config) (string, error) {
+			// :star_and_crescent: is the closest unicode emoji to the Confluent logo
+			// like :wheel_of_dharma: is the closest unicode emoji to the Kubernetes logo
+			//
+			// This is the hex form of \u262a so that it can render on older versions of bash/zsh as well
+			// https://unicode.org/emoji/charts/full-emoji-list.html#262a
+			// https://www.fileformat.info/info/unicode/char/262a/index.htm
+			//
+			// Inspiration: https://github.com/jonmosco/kube-ps1
+			return "\xe2\x98\xaa", nil
+		},
+	}
+
+	colorFunc = func(attr color.Attribute, text ...interface{}) string {
+		// inline format
+		if len(text) > 0 {
+			return color.New(attr).Sprint(text...)
+		}
+		// block format
+		buf := &bytes.Buffer{}
+		_, _ = color.New(attr).Fprint(buf)
+		s := buf.String()
+		return s[0 : len(s)-4]
+	}
+
+	colorLookupFunc = func(name string, m map[string]color.Attribute, key string, text ...interface{}) string {
+		v, found := m[key]
+		if !found {
+			return fmt.Sprintf("#error{%s not found: %s}", name, key)
+		}
+		return colorFunc(v, text...)
+	}
+
+	ColorFuncs = template.FuncMap{
+		// inline color funcs
+		"fgcolor": func(c string, text ...interface{}) string {
+			return colorLookupFunc("fgcolor", fgColors, c, text...)
+		},
+		"bgcolor": func(c string, text ...interface{}) string {
+			return colorLookupFunc("bgcolor", bgColors, c, text...)
+		},
+		"colorattr": func(a string, text ...interface{}) string {
+			return colorLookupFunc("colorattr", colorAttrs, a, text...)
+		},
+		// color is an alias for fgcolor
+		"color": func(c string, text ...interface{}) string {
+			return colorLookupFunc("fgcolor", fgColors, c, text...)
+		},
+		// resetcolor ends all the color attributes
+		"resetcolor": func() string {
+			return colorFunc(color.Reset)
+		},
 	}
 )
 
@@ -83,7 +166,11 @@ func (p *Prompt) Get(format string) (string, error) {
 		}
 		result = strings.ReplaceAll(result, token, v)
 	}
-	return result, nil
+	envColor, err := p.InferEnvironmentColor()
+	if err != nil {
+		return "", err
+	}
+	return envColor(result), nil
 }
 
 // inferEnvironmentColor provides a heuristic for determining the environment
@@ -132,4 +219,3 @@ func inferColorBasedOnEnvName(name string) func(a ...interface{}) string {
 	}
 	return nil
 }
-

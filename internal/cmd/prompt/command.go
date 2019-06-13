@@ -38,7 +38,7 @@ Formats
 
 '{{.CLIName}} prompt' comes with a number of formatting tokens. What follows is a list of all tokens:
 
-* '%c'
+* '%C'
 
   The name of the current context in use. E.g., "dev-app1", "stag-dc1", "prod"
 
@@ -68,6 +68,26 @@ Formats
 
 Colors
 ~~~~~~
+
+There are special functions used for controlling colors.
+
+* {{"{{"}}color "<color>" "some text"{{"}}"}}
+* {{"{{"}}fgcolor "<color>" "some text"{{"}}"}}
+* {{"{{"}}bgcolor "color>" "some text"{{"}}"}}
+* {{"{{"}}colorattr "<attr>" "some text"{{"}}"}}
+
+Available colors: black, red, green, yellow, blue, magenta, cyan, white
+Available attributes: bold, underline, invert (swaps the fg/bg colors)
+
+Examples:
+
+* {{"{{"}}color "red" "some text" | colorattr "bold" | bgcolor "blue"{{"}}"}}
+* {{"{{"}}color "red"{{"}}"}} some text here {{"{{"}}resetcolor{{"}}"}}
+
+Notes:
+
+* 'color' is just an alias of 'fgcolor'
+* calling 'resetcolor' will reset all color attributes, not just the most recently set
 
 The output will be colored based on a heuristically-determined "environment".
 This environment is determined by searching the context, environment, and Kafka cluster
@@ -110,9 +130,9 @@ func (c *promptCommand) init() {
 		Args:  cobra.NoArgs,
 	}
 	// Ideally we'd default to %c but contexts are implicit today with uber-verbose names like `login-cody@confluent.io-https://devel.cpdev.cloud`
-	defaultFormat := "(%E %K)"
+	defaultFormat := `({{color "blue" "%X"}}|%E:%K)`
 	if c.config.CLIName == "confluent" {
-		defaultFormat = "(%K)"
+		defaultFormat = `({{color "blue" "%X"}}|%K)`
 	}
 	c.Command.Flags().StringP("format", "f", defaultFormat, "The format string to use.")
 	c.Command.Flags().BoolP("no-color", "g", false, "Do not colorize output based on the inferred environment (prod=red, stag=yellow, devel=green, unknown=none).")
@@ -157,14 +177,7 @@ func (c *promptCommand) prompt(cmd *cobra.Command, args []string) error {
 			return
 		}
 		prompt = parseTemplate(c.config.CLIName, prompt)
-
-		envColor, err := c.ps1.InferEnvironmentColor()
-		if err != nil {
-			errCh <- err
-			return
-		}
-
-		retCh <- envColor(prompt)
+		retCh <- prompt
 	}()
 
 	// Wait for parse results, error, or timeout
@@ -183,7 +196,7 @@ func (c *promptCommand) prompt(cmd *cobra.Command, args []string) error {
 }
 
 func parseTemplate(cliName, text string) string {
-	t := template.Must(template.New("tmpl").Parse(text))
+	t := template.Must(template.New("tmpl").Funcs(ps1.ColorFuncs).Parse(text))
 	buf := new(bytes.Buffer)
 	data := map[string]interface{}{"CLIName": cliName}
 	if err := t.Execute(buf, data); err != nil {
