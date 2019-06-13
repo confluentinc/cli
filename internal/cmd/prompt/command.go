@@ -38,7 +38,7 @@ it'll be easiest for you if you use an environment variable rather than try to e
 
 ::
 
-  $ CCLOUD_PROMPT_FMT='({{color "blue" "%X"}}|{{color "red" "%E"}}:{{color "cyan" "%K"}})'
+  $ export CCLOUD_PROMPT_FMT='({{"{{"}}color "blue" "%X"{{"}}"}}|{{"{{"}}color "red" "%E"{{"}}"}}:{{"{{"}}color "cyan" "%K"{{"}}"}})'
   $ export PS1='\u@\h:\W $({{.CLIName}} prompt -f "$CCLOUD_PROMPT_FMT")\n\$ '
 
 To make this permanent, you must add it to your bash or zsh profile.
