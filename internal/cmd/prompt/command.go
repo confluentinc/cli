@@ -25,7 +25,7 @@ For Bash, you'll want to do something like this:
 
   $ export PS1='\u@\h:\W $({{.CLIName}} prompt)\n\$ '
 
-ZSH users should be aware that they will have to set the 'PROMPT_SUBST'' option first:
+ZSH users should be aware that they will have to set the 'PROMPT_SUBST' option first:
 
 ::
 
@@ -76,30 +76,30 @@ Formats
 
   The current user or credentials in use. E.g., "joe@montana.com"
 
-> Colors
-> ~~~~~~
-> 
-> There are special functions used for controlling colors.
-> 
-> * {{"{{"}}color "<color>" "some text"{{"}}"}}
-> * {{"{{"}}fgcolor "<color>" "some text"{{"}}"}}
-> * {{"{{"}}bgcolor "color>" "some text"{{"}}"}}
-> * {{"{{"}}colorattr "<attr>" "some text"{{"}}"}}
-> 
-> Available colors: black, red, green, yellow, blue, magenta, cyan, white
-> Available attributes: bold, underline, invert (swaps the fg/bg colors)
-> 
-> Examples:
-> 
-> * {{"{{"}}color "red" "some text" | colorattr "bold" | bgcolor "blue"{{"}}"}}
-> * {{"{{"}}color "red"{{"}}"}} some text here {{"{{"}}resetcolor{{"}}"}}
-> 
-> Notes:
-> 
-> * 'color' is just an alias of 'fgcolor'
-> * calling 'resetcolor' will reset all color attributes, not just the most recently set
-> 
-> You can disable color output by passing the flag '--no-color'.
+Colors
+~~~~~~
+
+There are special functions used for controlling colors.
+
+* {{"{{"}}color "<color>" "some text"{{"}}"}}
+* {{"{{"}}fgcolor "<color>" "some text"{{"}}"}}
+* {{"{{"}}bgcolor "color>" "some text"{{"}}"}}
+* {{"{{"}}colorattr "<attr>" "some text"{{"}}"}}
+
+Available colors: black, red, green, yellow, blue, magenta, cyan, white
+Available attributes: bold, underline, invert (swaps the fg/bg colors)
+
+Examples:
+
+* {{"{{"}}color "red" "some text" | colorattr "bold" | bgcolor "blue"{{"}}"}}
+* {{"{{"}}color "red"{{"}}"}} some text here {{"{{"}}resetcolor{{"}}"}}
+
+Notes:
+
+* 'color' is just an alias of 'fgcolor'
+* calling 'resetcolor' will reset all color attributes, not just the most recently set
+
+You can disable color output by passing the flag '--no-color'.
 
 `
 
@@ -136,8 +136,8 @@ func (c *promptCommand) init() {
 	if c.config.CLIName == "confluent" {
 		defaultFormat = `({{color "blue" "%X"}}|{{color "cyan" "%K"}})`
 	}
-	c.Command.Flags().StringP("format", "f", defaultFormat, "The format string to use.")
-	c.Command.Flags().BoolP("no-color", "g", false, "Do not colorize output based on the inferred environment (prod=red, stag=yellow, devel=green, unknown=none).")
+	c.Command.Flags().StringP("format", "f", defaultFormat, "The format string to use. See the help for details.")
+	c.Command.Flags().BoolP("no-color", "g", false, "Do not include ANSI color codes in the output.")
 	c.Command.Flags().StringP("timeout", "t", "200ms", "The maximum execution time in milliseconds.")
 	c.Command.Flags().SortFlags = false
 }
