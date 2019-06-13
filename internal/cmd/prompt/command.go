@@ -1,4 +1,4 @@
-package ps1
+package prompt
 
 import (
 	"bytes"
@@ -16,27 +16,27 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/ps1"
 )
 
-const longDescriptionTemplate = `Use this command to add {{.CLIName}} information in your PS1 prompt.
+const longDescriptionTemplate = `Use this command to add {{.CLIName}} information in your terminal prompt.
 
 For Bash, you'll want to do something like this:
 
 ::
 
-  $ export PS1='\u@\h:\W $({{.CLIName}} ps1)\n\$ '
+  $ export PS1='\u@\h:\W $({{.CLIName}} prompt)\n\$ '
 
 ZSH users should be aware that they will have to set the 'PROMPT_SUBST'' option first:
 
 ::
 
   $ setopt prompt_subst
-  $ export PS1='%n@%m:%~ $({{.CLIName}} ps1)$ '
+  $ export PS1='%n@%m:%~ $({{.CLIName}} prompt)$ '
 
 To make this permanent, you must add it to your bash or zsh profile.
 
 Formats
 ~~~~~~~
 
-'{{.CLIName}} ps1' comes with a number of formatting tokens. What follows is a list of all tokens:
+'{{.CLIName}} prompt' comes with a number of formatting tokens. What follows is a list of all tokens:
 
 * '%c'
 
@@ -69,22 +69,30 @@ Formats
 Colors
 ~~~~~~
 
-Unless you pass '--no-color', the output will be colored heuristically based on
-the context, environment, and Kafka cluster names. E.g., if the environment contains "prod",
-the output will be red; "dev" will be green; "stag" be yellow; everything else uncolored.
+The output will be colored based on a heuristically-determined "environment".
+This environment is determined by searching the context, environment, and Kafka cluster
+names (in that order) for one of the following strings indicating an environment:
+- "prod" or "prd", the output will be red
+- "stag" or "stg" will be yellow
+- "dev" will be green;
+- if none of these are found, the output will not be colored
+
+You can disable color output by passing the flag '--no-color'.
 
 `
 
-type ps1Command struct {
+// UX inspired by https://github.com/djl/vcprompt
+
+type promptCommand struct {
 	*cobra.Command
 	config *config.Config
 	ps1    *ps1.Prompt
 	logger *log.Logger
 }
 
-// NewPS1Cmd returns the Cobra command for the PS1 prompt.
-func NewPS1Cmd(config *config.Config, ps1 *ps1.Prompt, logger *log.Logger) *cobra.Command {
-	cmd := &ps1Command{
+// NewPromptCmd returns the Cobra command for the PS1 prompt.
+func NewPromptCmd(config *config.Config, ps1 *ps1.Prompt, logger *log.Logger) *cobra.Command {
+	cmd := &promptCommand{
 		config: config,
 		ps1:    ps1,
 		logger: logger,
@@ -93,16 +101,20 @@ func NewPS1Cmd(config *config.Config, ps1 *ps1.Prompt, logger *log.Logger) *cobr
 	return cmd.Command
 }
 
-func (c *ps1Command) init() {
+func (c *promptCommand) init() {
 	c.Command = &cobra.Command{
-		Use:   "ps1",
-		Short: "Print a prompt-string suitable for the PS1 prompt.",
+		Use:   "prompt",
+		Short: parseTemplate(c.config.CLIName, "Print {{.CLIName}} CLI context for your terminal prompt."),
 		Long:  parseTemplate(c.config.CLIName, longDescriptionTemplate),
 		RunE:  c.prompt,
 		Args:  cobra.NoArgs,
 	}
-	// Ideally we'd default to ({{.CLIName}} %c) but contexts are implicit today with uber-verbose names like `login-cody@confluent.io-https://devel.cpdev.cloud`
-	c.Command.Flags().StringP("format", "f", "(%E %K)", "The format string to use.")
+	// Ideally we'd default to %c but contexts are implicit today with uber-verbose names like `login-cody@confluent.io-https://devel.cpdev.cloud`
+	defaultFormat := "(%E %K)"
+	if c.config.CLIName == "confluent" {
+		defaultFormat = "(%K)"
+	}
+	c.Command.Flags().StringP("format", "f", defaultFormat, "The format string to use.")
 	c.Command.Flags().BoolP("no-color", "g", false, "Do not colorize output based on the inferred environment (prod=red, stag=yellow, devel=green, unknown=none).")
 	c.Command.Flags().StringP("timeout", "t", "200ms", "The maximum execution time in milliseconds.")
 	c.Command.Flags().SortFlags = false
@@ -110,7 +122,7 @@ func (c *ps1Command) init() {
 
 // Output context about the current CLI config suitable for a PS1 prompt.
 // It allows custom user formatting the configuration by parsing format flags.
-func (c *ps1Command) prompt(cmd *cobra.Command, args []string) error {
+func (c *promptCommand) prompt(cmd *cobra.Command, args []string) error {
 	format, err := cmd.Flags().GetString("format")
 	if err != nil {
 		return err

@@ -11,7 +11,7 @@ Available Commands:
   kafka           Manage Apache Kafka.
   login           Login to Confluent Cloud.
   logout          Logout of Confluent Cloud.
-  ps1             Print a prompt-string suitable for the PS1 prompt.
+  prompt          Print ccloud CLI context for your terminal prompt.
   service-account Manage service accounts. This is only available for Confluent Cloud Enterprise users.
   update          Update the ccloud CLI.
   version         Print the ccloud CLI version.
