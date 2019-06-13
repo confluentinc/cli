@@ -32,6 +32,15 @@ ZSH users should be aware that they will have to set the 'PROMPT_SUBST'' option 
   $ setopt prompt_subst
   $ export PS1='%n@%m:%~ $({{.CLIName}} prompt)$ '
 
+You can customize the prompt by calling passing a '--format' flag, such as '-f "%X|%E:%K"'.
+If you want to create a more sophisticated prompt (such as using the built-in color functions),
+it'll be easiest for you if you use an environment variable rather than try to escape the quotes.
+
+::
+
+  $ CCLOUD_PROMPT_FMT='({{color "blue" "%X"}}|{{color "red" "%E"}}:{{color "cyan" "%K"}})'
+  $ export PS1='\u@\h:\W $({{.CLIName}} prompt -f "$CCLOUD_PROMPT_FMT")\n\$ '
+
 To make this permanent, you must add it to your bash or zsh profile.
 
 Formats
@@ -67,30 +76,30 @@ Formats
 
   The current user or credentials in use. E.g., "joe@montana.com"
 
-Colors
-~~~~~~
-
-There are special functions used for controlling colors.
-
-* {{"{{"}}color "<color>" "some text"{{"}}"}}
-* {{"{{"}}fgcolor "<color>" "some text"{{"}}"}}
-* {{"{{"}}bgcolor "color>" "some text"{{"}}"}}
-* {{"{{"}}colorattr "<attr>" "some text"{{"}}"}}
-
-Available colors: black, red, green, yellow, blue, magenta, cyan, white
-Available attributes: bold, underline, invert (swaps the fg/bg colors)
-
-Examples:
-
-* {{"{{"}}color "red" "some text" | colorattr "bold" | bgcolor "blue"{{"}}"}}
-* {{"{{"}}color "red"{{"}}"}} some text here {{"{{"}}resetcolor{{"}}"}}
-
-Notes:
-
-* 'color' is just an alias of 'fgcolor'
-* calling 'resetcolor' will reset all color attributes, not just the most recently set
-
-You can disable color output by passing the flag '--no-color'.
+> Colors
+> ~~~~~~
+> 
+> There are special functions used for controlling colors.
+> 
+> * {{"{{"}}color "<color>" "some text"{{"}}"}}
+> * {{"{{"}}fgcolor "<color>" "some text"{{"}}"}}
+> * {{"{{"}}bgcolor "color>" "some text"{{"}}"}}
+> * {{"{{"}}colorattr "<attr>" "some text"{{"}}"}}
+> 
+> Available colors: black, red, green, yellow, blue, magenta, cyan, white
+> Available attributes: bold, underline, invert (swaps the fg/bg colors)
+> 
+> Examples:
+> 
+> * {{"{{"}}color "red" "some text" | colorattr "bold" | bgcolor "blue"{{"}}"}}
+> * {{"{{"}}color "red"{{"}}"}} some text here {{"{{"}}resetcolor{{"}}"}}
+> 
+> Notes:
+> 
+> * 'color' is just an alias of 'fgcolor'
+> * calling 'resetcolor' will reset all color attributes, not just the most recently set
+> 
+> You can disable color output by passing the flag '--no-color'.
 
 `
 
