@@ -75,6 +75,7 @@ var (
 			// https://www.fileformat.info/info/unicode/char/262a/index.htm
 			//
 			// Inspiration: https://github.com/jonmosco/kube-ps1
+			// How to: https://stackoverflow.com/a/37447234/337735
 			return "\xe2\x98\xaa ", nil
 		},
 	}
