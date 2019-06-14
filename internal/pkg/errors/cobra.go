@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/spf13/cobra"
 	"github.com/hashicorp/go-multierror"
+	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	corev1 "github.com/confluentinc/ccloudapis/core/v1"
