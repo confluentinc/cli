@@ -2113,14 +2113,14 @@ version_usage() {
 Usage: ${command_name} version [<service>]
 
 Description:
-    Print the Confluent Platform flavor and version, or the individual version of a service.
+    Print the Confluent Platform version, or the individual version of a service.
 
 Examples:
     confluent version
-        Prints the flavor and version of Confluent platform.
+        Prints the version of Confluent Platform.
 
     confluent version kafka
-        Prints the version of a service included with Confluent platform, 'kafka' in this example.
+        Prints the version of a service included with Confluent Platform, 'kafka' in this example.
 
 EOF
     exit 0
@@ -2134,23 +2134,23 @@ Usage: ${command_name} <command> [<subcommand>] [<parameters>]
 
 These are the available commands:
 
-    acl         Specify acl for a service.
+    acl         Specify ACL for a service.
     config      Configure a connector.
-    consume     Consume data from topics
-    current     Get the path of the data and logs of the services managed by the current confluent run.
+    consume     Consume data from topics.
+    current     Get the path of the data and logs of the services managed by the current Confluent run.
                 Override default setting with "CONFLUENT_CURRENT" environment variable.
-    demo        Run demos provided in GitHub repo https://github.com/confluentinc/examples
-    destroy     Delete the data and logs of the current confluent run.
-    list        List available services.
+    demo        Run demos provided in GitHub repo https://github.com/confluentinc/examples.
+    destroy     Delete the data and logs of the current Confluent run.
+    list        List all available services or plugins.
     load        Load a connector.
     log         Read or tail the log of a service.
-    produce     Produce data to topics
-    start       Start all services or a specific service along with its dependencies
-    status      Get the status of all services or the status of a specific service along with its dependencies.
-    stop        Stop all services or a specific service along with the services depending on it.
-    top         Track resource usage of a service.
+    produce     Produce data to topics.
+    start       Start all services or a specific service along with its dependencies.
+    status      Get the status of all services or the status of a specific service and its dependencies.
+    stop        Stop all services or a specific service its dependent services.
+    top         View service resource usage.
     unload      Unload a connector.
-    version     Print the Confluent Platform flavor and version or the individual version of a service.
+    version     Print the Confluent CLI version or the version of a service.
 
 '${command_name} help' lists available commands. See '${command_name} help <command>' to read about a
 specific command.
