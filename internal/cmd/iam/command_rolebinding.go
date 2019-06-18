@@ -243,8 +243,8 @@ func (c *rolebindingCommand) list(cmd *cobra.Command, args []string) error {
 		if len(rps) == 0 && isClusterScopedRole(r) {
 			rps = append(rps, mds.ResourcePattern{
 				ResourceType: "Cluster",
-				Name: "",
-				PatternType: "",
+				Name:         "",
+				PatternType:  "",
 			})
 		}
 		resourcePatterns = append(resourcePatterns, rps...)
