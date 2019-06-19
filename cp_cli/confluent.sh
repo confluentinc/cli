@@ -129,6 +129,9 @@ declare -a deps_stop_ksql_server=(
 declare -a deps_start_control_center=(
     "zookeeper"
     "kafka"
+    "schema-registry"
+    "connect"
+    "ksql-server"
 )
 declare -a deps_stop_control_center=(
 )

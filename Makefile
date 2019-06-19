@@ -19,7 +19,7 @@ clean:
 	rm -f mock/local/shell_runner_mock.go
 
 .PHONY: generate
-generate: generate-go bindata mocks
+generate: generate-go mocks
 
 .PHONY: generate-go
 generate-go:
@@ -33,7 +33,7 @@ deps:
 	@GO111MODULE=on go get github.com/golang/mock/mockgen@v1.2.0
 	@GO111MODULE=on go get github.com/kevinburke/go-bindata/...@v3.13.0
 
-build: build-go
+build: bindata build-go
 
 ifeq ($(shell uname),Darwin)
 GORELEASER_SUFFIX ?= -mac.yml
@@ -272,4 +272,4 @@ mock/local/shell_runner_mock.go:
 	mockgen -source internal/cmd/local/shell_runner.go -destination mock/local/shell_runner_mock.go ShellRunner
 
 .PHONY: test
-test: lint coverage
+test: bindata mocks lint coverage
