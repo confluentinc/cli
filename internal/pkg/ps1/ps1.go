@@ -61,18 +61,6 @@ var (
 		"%u": func(config *config.Config) (string, error) {
 			return config.Auth.User.Email, nil
 		},
-		"%X": func(config *config.Config) (string, error) {
-			// :star_and_crescent: is the closest unicode emoji to the Confluent logo
-			// (like :wheel_of_dharma: is the closest unicode emoji to the Kubernetes logo)
-			//
-			// This is the hex form of \u262a so that it can render on older versions of bash/zsh as well
-			// https://unicode.org/emoji/charts/full-emoji-list.html#262a
-			// https://www.fileformat.info/info/unicode/char/262a/index.htm
-			//
-			// Inspiration: https://github.com/jonmosco/kube-ps1
-			// How to: https://stackoverflow.com/a/37447234/337735
-			return "\xe2\x98\xaa ", nil
-		},
 	}
 
 	// For documentation of supported tokens, see internal/cmd/prompt/command.go
@@ -133,6 +121,7 @@ func (p *Prompt) Get(format string) (string, error) {
 
 func (p *Prompt) GetFuncs() template.FuncMap {
 	m := template_color.GetColorFuncs()
+	m["ToUpper"] = strings.ToUpper
 	return m
 }
 

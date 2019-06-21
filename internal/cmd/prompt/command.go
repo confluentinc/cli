@@ -30,14 +30,14 @@ ZSH users should be aware that they will have to set the 'PROMPT_SUBST' option f
   $ setopt prompt_subst
   $ export PS1='%n@%m:%~ $({{.CLIName}} prompt)$ '
 
-You can customize the prompt by calling passing a '--format' flag, such as '-f "%X|%E:%K"'.
+You can customize the prompt by calling passing a '--format' flag, such as '-f "{{.CLIName}}|%E:%K"'.
 If you want to create a more sophisticated prompt (such as using the built-in color functions),
 it'll be easiest for you if you use an environment variable rather than try to escape the quotes.
 
 ::
 
-  $ export CCLOUD_PROMPT_FMT='({{"{{"}}color "blue" "%X"{{"}}"}}|{{"{{"}}color "red" "%E"{{"}}"}}:{{"{{"}}color "cyan" "%K"{{"}}"}})'
-  $ export PS1='\u@\h:\W $({{.CLIName}} prompt -f "$CCLOUD_PROMPT_FMT")\n\$ '
+  $ export {{.CLIName | ToUpper}}_PROMPT_FMT='({{"{{"}}color "blue" "{{.CLIName}}"{{"}}"}}|{{"{{"}}color "red" "%E"{{"}}"}}:{{"{{"}}color "cyan" "%K"{{"}}"}})'
+  $ export PS1='\u@\h:\W $({{.CLIName}} prompt -f "${{.CLIName | ToUpper}}_PROMPT_FMT")\n\$ '
 
 To make this permanent, you must add it to your bash or zsh profile.
 
@@ -46,31 +46,31 @@ Formats
 
 '{{.CLIName}} prompt' comes with a number of formatting tokens. What follows is a list of all tokens:
 
-* '%C' or {{.ContextName}}
+* '%C' or {{"{{"}}.ContextName{{"}}"}}
 
   The name of the current context in use. E.g., "dev-app1", "stag-dc1", "prod"
 
-* '%e' or {{.EnvironmentId}}
+* '%e' or {{"{{"}}.EnvironmentId{{"}}"}}
 
   The ID of the current environment in use. E.g., "a-4567"
 
-* '%E' or {{.EnvironmentName}}
+* '%E' or {{"{{"}}.EnvironmentName{{"}}"}}
 
   The name of the current environment in use. E.g., "default", "prod-team1"
 
-* '%k' or {{.KafkaClusterId}}
+* '%k' or {{"{{"}}.KafkaClusterId{{"}}"}}
 
   The ID of the current Kafka cluster in use. E.g., "lkc-abc123"
 
-* '%K' or {{.KafkaClusterName}}
+* '%K' or {{"{{"}}.KafkaClusterName{{"}}"}}
 
   The name of the current Kafka cluster in use. E.g., "prod-us-west-2-iot"
 
-* '%a' or {{.KafkaAPIKey}}
+* '%a' or {{"{{"}}.KafkaAPIKey{{"}}"}}
 
   The current Kafka API key in use. E.g., "ABCDEF1234567890"
 
-* '%u' or {{.UserName}}
+* '%u' or {{"{{"}}.UserName{{"}}"}}
 
   The current user or credentials in use. E.g., "joe@montana.com"
 
@@ -133,9 +133,9 @@ func (c *promptCommand) init() {
 		Args:  cobra.NoArgs,
 	}
 	// Ideally we'd default to %c but contexts are implicit today with uber-verbose names like `login-cody@confluent.io-https://devel.cpdev.cloud`
-	defaultFormat := `({{color "blue" "%X"}}|{{color "red" "%E"}}:{{color "cyan" "%K"}})`
+	defaultFormat := `({{color "blue" "ccloud"}}|{{color "red" "%E"}}:{{color "cyan" "%K"}})`
 	if c.config.CLIName == "confluent" {
-		defaultFormat = `({{color "blue" "%X"}}|{{color "cyan" "%K"}})`
+		defaultFormat = `({{color "blue" "confluent"}}|{{color "cyan" "%K"}})`
 	}
 	c.Command.Flags().StringP("format", "f", defaultFormat, "The format string to use. See the help for details.")
 	c.Command.Flags().BoolP("no-color", "g", false, "Do not include ANSI color codes in the output.")
