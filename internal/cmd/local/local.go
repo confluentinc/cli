@@ -116,11 +116,12 @@ func (b byVersion) Swap(i, j int) {
 //
 // Algorithm:
 //   1. Search for a dir matching confluent* (glob) in the common places in order: (/opt, /usr/local, ~, ~/Downloads)
-//      This list is ordered by priority (always prefer /opt to ~/Downloads for example)
-//      But each directory may contain multiple matches (e.g., /opt/confluent-5.2.2, /opt/confluent-4.1.0, etc)
-//   2. For each match, try to extract a version from the format "confluent-<version>" and collect all versions
-//   3. If there were any versioned dirs, sort them by version and return the dir with the latest version
-//   4. If there were no versioned dirs but there was a match, return it (should be a dir just named "confluent" like /opt/confluent)
+//      This list is ordered by priority (always prefer /opt to ~/Downloads for example).
+//      But each directory may contain multiple matches (e.g., /opt/confluent-5.2.2, /opt/confluent-4.1.0, etc).
+//   2. For each match, look for etc/schema-registry/connect-avro-distributed.properties as a canary to ensure it's a valid CP install dir.
+//   3. If it's a valid install dir, try to extract a version from the format "confluent-<version>" and collect all versions
+//   4. If there were any versioned dirs, sort them by version and return the dir with the latest version
+//   5. If there were no versioned dirs but there was a match, return it (should be a dir just named "confluent" like /opt/confluent)
 func determineConfluentInstallDir(fs io.FileSystem) (string, bool, error) {
 	for _, dir := range commonInstallDirs {
 		dir, err := homedir.Expand(dir)
@@ -132,8 +133,16 @@ func determineConfluentInstallDir(fs io.FileSystem) (string, bool, error) {
 			return "", false, err
 		} else if len(matches) > 0 {
 			// We have at least one match in this directory. Let's choose the newest version, if there's more than one.
+			found := false
 			var versions []*versionedDirectory
 			for _, dir := range matches {
+				if valid, err := validateConfluentPlatformInstallDir(fs, dir); err != nil {
+					return "", false, err
+				} else if !valid {
+					// Skip this match because it doesn't look like a real confluent install dir
+					continue
+				}
+				found = true
 				i := strings.LastIndex(dir, "confluent-")
 				if i >= 0 {
 					v, err := version.NewSemver(dir[i+len("confluent-"):])
@@ -147,7 +156,7 @@ func determineConfluentInstallDir(fs io.FileSystem) (string, bool, error) {
 			if len(versions) > 0 {
 				sort.Sort(byVersion(versions))
 				return versions[len(versions)-1].dir, true, nil
-			} else {
+			} else if found {
 				// no versioned directories so the match might just be a dir named "confluent"
 				return matches[0], true, nil
 			}
@@ -185,4 +194,25 @@ func (c *command) runBashCommand(path string, command string, args []string) err
 		return err
 	}
 	return nil
+}
+
+func validateConfluentPlatformInstallDir(fs io.FileSystem, dir string) (bool, error) {
+	_, err := fs.Stat(filepath.Join(dir, "etc", "schema-registry", "connect-avro-distributed.properties"))
+	if err != nil {
+		if os.IsNotExist(err) {
+			// workaround for the cases when 'etc' is not under the same directory as 'bin'
+			_, err = fs.Stat(filepath.Join(dir, "..", "etc", "schema-registry", "connect-avro-distributed.properties"))
+			if err != nil {
+				if os.IsNotExist(err) {
+					return false, nil
+				} else {
+					return false, err
+				}
+			}
+		} else {
+			return false, err
+		}
+	}
+	// If we make it here, then its a real CP install dir. Hurray!
+	return true, nil
 }

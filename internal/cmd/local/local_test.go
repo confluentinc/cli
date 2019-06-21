@@ -3,6 +3,7 @@ package local
 import (
 	"errors"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/atrox/homedir"
@@ -46,11 +47,14 @@ func TestLocalErrorDuringSource(t *testing.T) {
 
 func TestDetermineConfluentInstallDir(t *testing.T) {
 	tests := []struct {
-		name      string
+		name string
+		// glob -> matching directory names
 		dirExists map[string][]string
-		wantDir   string
-		wantFound bool
-		wantErr   bool
+		// files that exist in CP install dir (mock) for valid CP install dir canary/heuristics only
+		fileExists []string
+		wantDir    string
+		wantFound  bool
+		wantErr    bool
 	}{
 		{
 			name:      "no directories found",
@@ -83,6 +87,10 @@ func TestDetermineConfluentInstallDir(t *testing.T) {
 		{
 			name:      "multiple versioned directories found in /opt",
 			dirExists: map[string][]string{"/opt/confluent*": {"/opt/confluent-5.2.2", "/opt/confluent-4.1.0"}},
+			fileExists: []string{
+				"/opt/confluent-5.2.2/etc/schema-registry/connect-avro-distributed.properties",
+				"/opt/confluent-4.1.0/etc/schema-registry/connect-avro-distributed.properties",
+			},
 			wantDir:   "/opt/confluent-5.2.2",
 			wantFound: true,
 			wantErr:   false,
@@ -98,6 +106,44 @@ func TestDetermineConfluentInstallDir(t *testing.T) {
 			name:      "multiple versioned directory found in ~/confluent (special test because of the ~)",
 			dirExists: map[string][]string{"~/confluent*": {"~/confluent-5.2.2"}},
 			wantDir:   "~/confluent-5.2.2",
+			wantFound: true,
+			wantErr:   false,
+		},
+		{
+			name:       "not a valid CP install dir",
+			dirExists:  map[string][]string{"/opt/confluent*": {"/opt/confluent"}},
+			fileExists: []string{}, // The canary file isn't present
+			wantFound:  false,
+			wantErr:    false,
+		},
+		{
+			name:      "multiple versioned directories found in /opt (validate dir is CP installation)",
+			dirExists: map[string][]string{"/opt/confluent*": {"/opt/confluent-4.1.0", "/opt/confluent-5.2.2"}},
+			wantDir:   "/opt/confluent-5.2.2",
+			fileExists: []string{
+				"/opt/confluent-4.1.0/etc/schema-registry/connect-avro-distributed.properties",
+				"/opt/confluent-5.2.2/etc/schema-registry/connect-avro-distributed.properties",
+			},
+			wantFound: true,
+			wantErr:   false,
+		},
+		{
+			name:      "multiple versioned directories found in /opt but latest versioned dir is not valid CP install dir",
+			dirExists: map[string][]string{"/opt/confluent*": {"/opt/confluent-5.2.2", "/opt/confluent-4.1.0"}},
+			fileExists: []string{
+				"/opt/confluent-4.1.0/etc/schema-registry/connect-avro-distributed.properties",
+			},
+			wantDir:   "/opt/confluent-4.1.0",
+			wantFound: true,
+			wantErr:   false,
+		},
+		{
+			name:      "accept CONFLUENT_HOME/../etc as valid CP install dir",
+			dirExists: map[string][]string{"/opt/confluent*": {"/opt/confluent-5.2.2"}},
+			fileExists: []string{
+				"/opt/etc/schema-registry/connect-avro-distributed.properties",
+			},
+			wantDir:   "/opt/confluent-5.2.2",
 			wantFound: true,
 			wantErr:   false,
 		},
@@ -120,6 +166,18 @@ func TestDetermineConfluentInstallDir(t *testing.T) {
 					// matches won't match what happens in the real world because it still has ~ in it
 					// but we'll test for values including the ~ in them in our tests too to simplify things
 					return matches, nil
+				},
+				StatFunc: func(name string) (os.FileInfo, error) {
+					// if this isn't set, we assume the file exists since we're not testing these heuristics
+					if tt.fileExists == nil {
+						return nil, nil
+					}
+					for _, d := range tt.fileExists {
+						if filepath.Clean(d) == name {
+							return nil, nil
+						}
+					}
+					return nil, os.ErrNotExist
 				},
 			}
 			dir, found, err := determineConfluentInstallDir(fs)
