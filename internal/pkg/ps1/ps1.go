@@ -6,6 +6,7 @@ import (
 	"text/template"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/template-color"
 )
 
@@ -20,14 +21,22 @@ var (
 			return context, nil
 		},
 		"%e": func(config *config.Config) (string, error) {
-			return config.Auth.Account.Id, nil
+			if config.Auth == nil || config.Auth.Account == nil || config.Auth.Account.Id == "" {
+				return "(none)", nil
+			} else {
+				return config.Auth.Account.Id, nil
+			}
 		},
 		"%E": func(config *config.Config) (string, error) {
-			return config.Auth.Account.Name, nil
+			if config.Auth == nil || config.Auth.Account == nil || config.Auth.Account.Name == "" {
+				return "(none)", nil
+			} else {
+				return config.Auth.Account.Name, nil
+			}
 		},
 		"%k": func(config *config.Config) (string, error) {
 			kcc, err := config.KafkaClusterConfig()
-			if err != nil {
+			if err != nil && err != errors.ErrNoContext {
 				return "", err
 			}
 			if kcc == nil {
@@ -38,7 +47,7 @@ var (
 		},
 		"%K": func(config *config.Config) (string, error) {
 			kcc, err := config.KafkaClusterConfig()
-			if err != nil {
+			if err != nil && err != errors.ErrNoContext {
 				return "", err
 			}
 			if kcc == nil || kcc.Name == "" {
@@ -49,7 +58,7 @@ var (
 		},
 		"%a": func(config *config.Config) (string, error) {
 			kcc, err := config.KafkaClusterConfig()
-			if err != nil {
+			if err != nil && err != errors.ErrNoContext {
 				return "", err
 			}
 			if kcc == nil || kcc.APIKey == "" {
@@ -59,22 +68,29 @@ var (
 			}
 		},
 		"%u": func(config *config.Config) (string, error) {
-			return config.Auth.User.Email, nil
+			if config.Auth == nil || config.Auth.User == nil || config.Auth.User.Email == "" {
+				return "(none)", nil
+			} else {
+				return config.Auth.User.Email, nil
+			}
 		},
 	}
 
 	// For documentation of supported tokens, see internal/cmd/prompt/command.go
 	formatData = func(config *config.Config) (interface{}, error) {
 		kcc, err := config.KafkaClusterConfig()
-		if err != nil {
+		if err != nil && err != errors.ErrNoContext {
 			return nil, err
 		}
-		kafkaClusterId := "(none)"
+		kafkaClusterID := "(none)"
 		kafkaClusterName := "(none)"
 		kafkaAPIKey := "(none)"
+		accountID := "(none)"
+		accountName := "(none)"
+		userEmail := "(none)"
 		if kcc != nil {
 			if kcc.ID != "" {
-				kafkaClusterId = kcc.ID
+				kafkaClusterID = kcc.ID
 			}
 			if kcc.Name != "" {
 				kafkaClusterName = kcc.Name
@@ -83,15 +99,30 @@ var (
 				kafkaAPIKey = kcc.APIKey
 			}
 		}
+		if config.Auth != nil {
+			if config.Auth.Account != nil {
+				if config.Auth.Account.Id != "" {
+					accountID = config.Auth.Account.Id
+				}
+				if config.Auth.Account.Name != "" {
+					accountName = config.Auth.Account.Name
+				}
+			}
+			if config.Auth.User != nil {
+				if config.Auth.User.Email != "" {
+					userEmail = config.Auth.User.Email
+				}
+			}
+		}
 		return map[string]interface{} {
 			"CLIName":          config.CLIName,
 			"ContextName":      config.CurrentContext,
-			"AccountId":        config.Auth.Account.Id,
-			"AccountName":      config.Auth.Account.Name,
-			"KafkaClusterId":   kafkaClusterId,
+			"AccountId":        accountID,
+			"AccountName":      accountName,
+			"KafkaClusterId":   kafkaClusterID,
 			"KafkaClusterName": kafkaClusterName,
 			"KafkaAPIKey":      kafkaAPIKey,
-			"UserName":         config.Auth.User.Email,
+			"UserName":         userEmail,
 		}, nil
 	}
 )
