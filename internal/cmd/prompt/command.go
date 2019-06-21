@@ -81,7 +81,7 @@ There are special functions used for controlling colors.
 
 * {{"{{"}}color "<color>" "some text"{{"}}"}}
 * {{"{{"}}fgcolor "<color>" "some text"{{"}}"}}
-* {{"{{"}}bgcolor "color>" "some text"{{"}}"}}
+* {{"{{"}}bgcolor "<color>" "some text"{{"}}"}}
 * {{"{{"}}colorattr "<attr>" "some text"{{"}}"}}
 
 Available colors: black, red, green, yellow, blue, magenta, cyan, white
