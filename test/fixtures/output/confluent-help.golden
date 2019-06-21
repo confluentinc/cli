@@ -10,7 +10,6 @@ Available Commands:
   local       Manage a local Confluent Platform development environment.
   login       Login to Confluent Platform.
   logout      Logout of Confluent Platform.
-  prompt      Print confluent CLI context for your terminal prompt.
   secret      Manage secrets for Confluent Platform.
   update      Update the confluent CLI.
   version     Print the confluent CLI version.
