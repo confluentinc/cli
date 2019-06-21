@@ -86,8 +86,6 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	cli.Version = ver.Version
 	cli.AddCommand(version.NewVersionCmd(prerunner, ver))
 
-	cli.AddCommand(ps1.NewPromptCmd(cfg, &pps1.Prompt{Config: cfg}, logger))
-
 	conn := config.New(cfg)
 	conn.Hidden = true // The config/context feature isn't finished yet, so let's hide it
 	cli.AddCommand(conn)
@@ -98,6 +96,8 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	cli.AddCommand(auth.New(prerunner, cfg, logger)...)
 
 	if cliName == "ccloud" {
+		cli.AddCommand(ps1.NewPromptCmd(cfg, &pps1.Prompt{Config: cfg}, logger))
+
 		kafkaClient := kafkas.New(client, logger)
 		userClient := users.New(client, logger)
 		ks := &keystore.ConfigKeyStore{Config: cfg, Helper: ch}
