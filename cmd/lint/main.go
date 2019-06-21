@@ -30,7 +30,7 @@ var (
 		"ccloud", "kafka", "api", "acl", "url", "config", "multizone", "transactional", "ksql", "decrypt", "iam", "rolebinding",
 	}
 	utilityCommands = []string{
-		"login", "logout", "version", "completion <shell>", "update",
+		"login", "logout", "version", "completion <shell>", "prompt", "update",
 	}
 	nonClusterScopedCommands = []linter.RuleFilter{
 		linter.OnlyLeafCommands, linter.ExcludeCommand(utilityCommands...),

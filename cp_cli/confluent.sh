@@ -1007,7 +1007,7 @@ validate_os_version() {
 validate_java_version() {
     local target_service=${1}
 
-    local warning_message="WARNING: Java version 1.8 is recommended.
+    local warning_message="WARNING: Java version 1.8 or 1.11 is recommended.
 See https://docs.confluent.io/current/installation/versions-interoperability.html"
 
     # The first segment of the version number, which is '1' for releases before Java 9
@@ -1023,7 +1023,7 @@ See https://docs.confluent.io/current/installation/versions-interoperability.htm
         java_version=$(${JAVA} -version 2>&1 | sed -E -n 's/.* version "1.([0-9]*).*$/\1/p')
     fi
 
-    if [[ "${java_version}" -lt "8" ]]; then
+    if [[ "${java_version}" -lt "8" || ("${java_version}" -ge "9" && "${java_version}" -lt 11) ]]; then
         die "${warning_message}"
     fi
 
@@ -1031,7 +1031,7 @@ See https://docs.confluent.io/current/installation/versions-interoperability.htm
         return
     fi
 
-    if [[ "${java_version}" -ge "9" ]]; then
+    if [[ "${java_version}" -ge "12" ]]; then
         cat <<EOF
 Current Java version '${java_version}' is unsupported at this time. Confluent CLI will exit.
 
