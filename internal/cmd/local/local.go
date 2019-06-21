@@ -199,21 +199,31 @@ func (c *command) runBashCommand(path string, command string, args []string) err
 }
 
 func validateConfluentPlatformInstallDir(fs io.FileSystem, dir string) (bool, error) {
-	_, err := fs.Stat(filepath.Join(dir, "etc", "schema-registry", "connect-avro-distributed.properties"))
-	if err != nil {
-		if os.IsNotExist(err) {
-			// workaround for the cases when 'etc' is not under the same directory as 'bin'
-			_, err = fs.Stat(filepath.Join(dir, "..", "etc", "schema-registry", "connect-avro-distributed.properties"))
-			if err != nil {
-				if os.IsNotExist(err) {
-					return false, nil
-				} else {
-					return false, err
-				}
-			}
-		} else {
+	// ensure the directory exists and is, in fact, a directory
+	f, err := fs.Stat(dir)
+	switch {
+	case os.IsNotExist(err):
+		return false, nil
+	case err != nil:
+		return false, err
+	case !f.IsDir():
+		return false, nil
+	}
+
+	// look for a canary file as a simple heuristic to validate that this is a valid CP install dir
+	f, err = fs.Stat(filepath.Join(dir, "etc", "schema-registry", "connect-avro-distributed.properties"))
+	switch {
+	case os.IsNotExist(err):
+		// workaround for the cases when 'etc' is not under the same directory as 'bin'
+		f, err = fs.Stat(filepath.Join(dir, "..", "etc", "schema-registry", "connect-avro-distributed.properties"))
+		switch {
+		case os.IsNotExist(err):
+			return false, nil
+		case err != nil:
 			return false, err
 		}
+	case err != nil:
+		return false, err
 	}
 	// If we make it here, then its a real CP install dir. Hurray!
 	return true, nil

@@ -130,7 +130,13 @@ func TestDetermineConfluentInstallDir(t *testing.T) {
 			wantErr:   false,
 		},
 		{
-			name:       "not a valid CP install dir",
+			name:      "not a valid CP install dir - isn't a directory",
+			dirExists: map[string][]string{"/opt/confluent*": {"/opt/confluent-5.2.2.tar.gz"}},
+			wantFound: false,
+			wantErr:   false,
+		},
+		{
+			name:       "not a valid CP install dir - missing canary file",
 			dirExists:  map[string][]string{"/opt/confluent*": {"/opt/confluent"}},
 			fileExists: []string{}, // The canary file isn't present
 			wantFound:  false,
@@ -188,13 +194,22 @@ func TestDetermineConfluentInstallDir(t *testing.T) {
 					return matches, nil
 				},
 				StatFunc: func(name string) (os.FileInfo, error) {
-					// if this isn't set, we assume the file exists since we're not testing these heuristics
+					// Values for testing the CONFLUENT_HOME directory itself (to make sure it is, in fact, a directory)
+					if filepath.Ext(name) == ".gz" || filepath.Ext(name) == ".zip" { // tar.gz or zip file
+						return &mock.FileInfo{NameVal: name, IsDirVal: false}, nil
+					}
+					if filepath.Ext(name) != ".properties" {
+						return &mock.FileInfo{NameVal: name, IsDirVal: true}, nil
+					}
+
+					// Values for testing the canary files inside the CONFLUENT_HOME directory
 					if tt.fileExists == nil {
-						return nil, nil
+						// if fileExists isn't set, we assume the file exists since we're not testing these heuristics
+						return &mock.FileInfo{NameVal: name, IsDirVal: true}, nil
 					}
 					for _, d := range tt.fileExists {
 						if filepath.Clean(d) == name {
-							return nil, nil
+							return &mock.FileInfo{NameVal: name, IsDirVal: true}, nil
 						}
 					}
 					return nil, os.ErrNotExist
