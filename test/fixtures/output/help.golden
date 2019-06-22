@@ -9,7 +9,7 @@ Available Commands:
   environment     Manage and select ccloud environments.
   help            Help about any command
   kafka           Manage Apache Kafka.
-  login           Login to Confluent Cloud.
+  login           Log in to Confluent Cloud.
   logout          Logout of Confluent Cloud.
   prompt          Print ccloud CLI context for your terminal prompt.
   service-account Manage service accounts. This is only available for Confluent Cloud Enterprise users.

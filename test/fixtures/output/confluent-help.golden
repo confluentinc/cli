@@ -8,7 +8,7 @@ Available Commands:
   help        Help about any command
   iam         Manage RBAC and IAM permissions.
   local       Manage a local Confluent Platform development environment.
-  login       Login to Confluent Platform (required for RBAC).
+  login       Log in to Confluent Platform (required for RBAC).
   logout      Logout of Confluent Platform.
   secret      Manage secrets for Confluent Platform.
   update      Update the confluent CLI.
