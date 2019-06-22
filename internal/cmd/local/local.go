@@ -37,12 +37,13 @@ var (
 		"~/Downloads/confluent*",
 	}
 
-	validCPInstallDirCanaries = []string{
+	validCPInstallBinCanaries = []string{
 		"connect-distributed",
 		"kafka-server-start",
 		"ksql-server-start",
 		"zookeeper-server-start",
 	}
+	validCPInstallEtcCanary = filepath.Join("etc", "schema-registry", "connect-avro-distributed.properties")
 )
 
 type command struct {
@@ -125,7 +126,7 @@ func (b byVersion) Swap(i, j int) {
 //   1. Search for a dir matching confluent* (glob) in the common places in order: (/opt, /usr/local, ~, ~/Downloads)
 //      This list is ordered by priority (always prefer /opt to ~/Downloads for example).
 //      But each directory may contain multiple matches (e.g., /opt/confluent-5.2.2, /opt/confluent-4.1.0, etc).
-//   2. For each match, look for etc/schema-registry/connect-avro-distributed.properties as a canary to ensure it's a valid CP install dir.
+//   2. For each match, look for multiple well-known files as canaries to ensure it's a valid CP install dir.
 //   3. If it's a valid install dir, try to extract a version from the format "confluent-<version>" and collect all versions
 //   4. If there were any versioned dirs, sort them by version and return the dir with the latest version
 //   5. If there were no versioned dirs but there was a match, return it (should be a dir just named "confluent" like /opt/confluent)
@@ -139,8 +140,10 @@ func determineConfluentInstallDir(fs io.FileSystem) (string, bool, error) {
 		if matches, err := fs.Glob(dir); err != nil {
 			return "", false, err
 		} else if len(matches) > 0 {
-			// We have at least one match in this directory. Let's choose the newest version, if there's more than one.
-			found := false
+			// We have at least one match in this directory.
+			// Let's validate each to see if it's a real CP install dir.
+			// If there's more than one, then we'll choose the newest version.
+			foundValid := false
 			var versions []*versionedDirectory
 			for _, dir := range matches {
 				if valid, err := validateConfluentPlatformInstallDir(fs, dir); err != nil {
@@ -149,7 +152,7 @@ func determineConfluentInstallDir(fs io.FileSystem) (string, bool, error) {
 					// Skip this match because it doesn't look like a real confluent install dir
 					continue
 				}
-				found = true
+				foundValid = true
 				i := strings.LastIndex(dir, "confluent-")
 				if i >= 0 {
 					v, err := version.NewSemver(dir[i+len("confluent-"):])
@@ -159,11 +162,11 @@ func determineConfluentInstallDir(fs io.FileSystem) (string, bool, error) {
 					versions = append(versions, &versionedDirectory{dir: dir, ver: v})
 				}
 			}
-			// we found at least one versioned directory
+			// we foundValid at least one versioned directory
 			if len(versions) > 0 {
 				sort.Sort(byVersion(versions))
 				return versions[len(versions)-1].dir, true, nil
-			} else if found {
+			} else if foundValid {
 				// no versioned directories so the match might just be a dir named "confluent"
 				return matches[0], true, nil
 			}
@@ -218,8 +221,8 @@ func validateConfluentPlatformInstallDir(fs io.FileSystem, dir string) (bool, er
 	}
 
 	// Validate bin directory contents
-	filesToCheck := make(map[string]bool, len(validCPInstallDirCanaries))
-	for _, name := range validCPInstallDirCanaries {
+	filesToCheck := make(map[string]bool, len(validCPInstallBinCanaries))
+	for _, name := range validCPInstallBinCanaries {
 		filesToCheck[filepath.Join(dir, "bin", name)] = false
 	}
 	files, err := fs.ReadDir(filepath.Join(dir, "bin"))
@@ -238,11 +241,11 @@ func validateConfluentPlatformInstallDir(fs io.FileSystem, dir string) (bool, er
 	}
 
 	// Validate etc directory contents/location
-	f, err = fs.Stat(filepath.Join(dir, "etc", "schema-registry", "connect-avro-distributed.properties"))
+	f, err = fs.Stat(filepath.Join(dir, validCPInstallEtcCanary))
 	switch {
 	case os.IsNotExist(err):
 		// workaround for the cases when 'etc' is not under the same directory as 'bin'
-		f, err = fs.Stat(filepath.Join(dir, "..", "etc", "schema-registry", "connect-avro-distributed.properties"))
+		f, err = fs.Stat(filepath.Join(dir, "..", validCPInstallEtcCanary))
 		switch {
 		case os.IsNotExist(err):
 			return false, nil

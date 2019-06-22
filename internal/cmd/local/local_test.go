@@ -264,13 +264,10 @@ func TestDetermineConfluentInstallDir(t *testing.T) {
 				ReadDirFunc: func(dirname string) ([]os.FileInfo, error) {
 					if tt.fileExists == nil {
 						d := filepath.Dir(dirname)
-						tt.fileExists = append(tt.fileExists,
-							filepath.Join(d, "bin", "connect-distributed"),
-							filepath.Join(d, "bin", "kafka-server-start"),
-							filepath.Join(d, "bin", "ksql-server-start"),
-							filepath.Join(d, "bin", "zookeeper-server-start"),
-							filepath.Join(d, "etc", "schema-registry", "connect-avro-distributed.properties"),
-						)
+						for _, canary := range validCPInstallBinCanaries {
+							tt.fileExists = append(tt.fileExists, filepath.Join(d, "bin", canary))
+						}
+						tt.fileExists = append(tt.fileExists, filepath.Join(d, validCPInstallEtcCanary))
 					}
 					infos := make([]os.FileInfo, 0, len(tt.fileExists))
 					for _, f := range tt.fileExists {
