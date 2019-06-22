@@ -66,6 +66,14 @@ func (c *PassThroughFileSystem) RemoveAll(path string) error {
 	return c.FS.RemoveAll(path)
 }
 
+func (c *PassThroughFileSystem) ReadDir(dirname string) ([]os.FileInfo, error) {
+	if c.Mock.ReadDirFunc != nil {
+		return c.Mock.ReadDirFunc(dirname)
+	}
+	return c.FS.ReadDir(dirname)
+}
+
+
 func (c *PassThroughFileSystem) TempDir(dir, prefix string) (string, error) {
 	if c.Mock.TempDirFunc != nil {
 		return c.Mock.TempDir(dir, prefix)

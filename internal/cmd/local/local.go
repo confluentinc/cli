@@ -36,6 +36,13 @@ var (
 		"~/confluent*",
 		"~/Downloads/confluent*",
 	}
+
+	validCPInstallDirCanaries = []string{
+		"connect-distributed",
+		"kafka-server-start",
+		"ksql-server-start",
+		"zookeeper-server-start",
+	}
 )
 
 type command struct {
@@ -199,7 +206,7 @@ func (c *command) runBashCommand(path string, command string, args []string) err
 }
 
 func validateConfluentPlatformInstallDir(fs io.FileSystem, dir string) (bool, error) {
-	// ensure the directory exists and is, in fact, a directory
+	// Validate home directory exists and is in fact a directory
 	f, err := fs.Stat(dir)
 	switch {
 	case os.IsNotExist(err):
@@ -210,7 +217,27 @@ func validateConfluentPlatformInstallDir(fs io.FileSystem, dir string) (bool, er
 		return false, nil
 	}
 
-	// look for a canary file as a simple heuristic to validate that this is a valid CP install dir
+	// Validate bin directory contents
+	filesToCheck := make(map[string]bool, len(validCPInstallDirCanaries))
+	for _, name := range validCPInstallDirCanaries {
+		filesToCheck[filepath.Join(dir, "bin", name)] = false
+	}
+	files, err := fs.ReadDir(filepath.Join(dir, "bin"))
+	if err != nil {
+		return false, err
+	}
+	for _, f := range files {
+		if _, ok := filesToCheck[f.Name()]; ok {
+			filesToCheck[f.Name()] = true
+		}
+	}
+	for _, v := range filesToCheck {
+		if !v {
+			return false, nil
+		}
+	}
+
+	// Validate etc directory contents/location
 	f, err = fs.Stat(filepath.Join(dir, "etc", "schema-registry", "connect-avro-distributed.properties"))
 	switch {
 	case os.IsNotExist(err):
@@ -225,6 +252,7 @@ func validateConfluentPlatformInstallDir(fs io.FileSystem, dir string) (bool, er
 	case err != nil:
 		return false, err
 	}
+
 	// If we make it here, then its a real CP install dir. Hurray!
 	return true, nil
 }

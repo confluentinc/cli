@@ -36,6 +36,9 @@ type FileSystem struct {
 	lockRemoveAll sync.Mutex
 	RemoveAllFunc func(path string) error
 
+	lockReadDir sync.Mutex
+	ReadDirFunc func(dirname string) ([]os.FileInfo, error)
+
 	lockTempDir sync.Mutex
 	TempDirFunc func(dir, prefix string) (string, error)
 
@@ -78,6 +81,9 @@ type FileSystem struct {
 		}
 		RemoveAll []struct {
 			Path string
+		}
+		ReadDir []struct {
+			Dirname string
 		}
 		TempDir []struct {
 			Dir    string
@@ -378,6 +384,44 @@ func (m *FileSystem) RemoveAllCalls() []struct {
 	return m.calls.RemoveAll
 }
 
+// ReadDir mocks base method by wrapping the associated func.
+func (m *FileSystem) ReadDir(dirname string) ([]os.FileInfo, error) {
+	m.lockReadDir.Lock()
+	defer m.lockReadDir.Unlock()
+
+	if m.ReadDirFunc == nil {
+		panic("mocker: FileSystem.ReadDirFunc is nil but FileSystem.ReadDir was called.")
+	}
+
+	call := struct {
+		Dirname string
+	}{
+		Dirname: dirname,
+	}
+
+	m.calls.ReadDir = append(m.calls.ReadDir, call)
+
+	return m.ReadDirFunc(dirname)
+}
+
+// ReadDirCalled returns true if ReadDir was called at least once.
+func (m *FileSystem) ReadDirCalled() bool {
+	m.lockReadDir.Lock()
+	defer m.lockReadDir.Unlock()
+
+	return len(m.calls.ReadDir) > 0
+}
+
+// ReadDirCalls returns the calls made to ReadDir.
+func (m *FileSystem) ReadDirCalls() []struct {
+	Dirname string
+} {
+	m.lockReadDir.Lock()
+	defer m.lockReadDir.Unlock()
+
+	return m.calls.ReadDir
+}
+
 // TempDir mocks base method by wrapping the associated func.
 func (m *FileSystem) TempDir(dir, prefix string) (string, error) {
 	m.lockTempDir.Lock()
@@ -638,6 +682,9 @@ func (m *FileSystem) Reset() {
 	m.lockRemoveAll.Lock()
 	m.calls.RemoveAll = nil
 	m.lockRemoveAll.Unlock()
+	m.lockReadDir.Lock()
+	m.calls.ReadDir = nil
+	m.lockReadDir.Unlock()
 	m.lockTempDir.Lock()
 	m.calls.TempDir = nil
 	m.lockTempDir.Unlock()

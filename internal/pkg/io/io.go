@@ -23,6 +23,7 @@ type FileSystem interface {
 	Remove(name string) error
 	RemoveAll(path string) error
 	// ioutil
+	ReadDir(dirname string) ([]os.FileInfo, error)
 	TempDir(dir, prefix string) (name string, err error)
 	// io
 	Copy(dst io.Writer, src io.Reader) (written int64, err error)
@@ -64,6 +65,7 @@ func (*RealFileSystem) Chtimes(n string, a time.Time, m time.Time) error  { retu
 func (*RealFileSystem) Chmod(name string, mode os.FileMode) error         { return os.Chmod(name, mode) }
 func (*RealFileSystem) Remove(name string) error                          { return os.Remove(name) }
 func (*RealFileSystem) RemoveAll(path string) error                       { return os.RemoveAll(path) }
+func (*RealFileSystem) ReadDir(dirname string) ([]os.FileInfo, error)     { return ioutil.ReadDir(dirname) }
 func (*RealFileSystem) TempDir(dir, prefix string) (string, error)        { return ioutil.TempDir(dir, prefix) }
 func (*RealFileSystem) Copy(dst io.Writer, src io.Reader) (int64, error)  { return io.Copy(dst, src) }
 func (*RealFileSystem) Move(src string, dst string) error                 { return os.Rename(src, dst) }

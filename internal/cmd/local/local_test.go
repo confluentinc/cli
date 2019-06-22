@@ -108,7 +108,15 @@ func TestDetermineConfluentInstallDir(t *testing.T) {
 			name:      "multiple versioned directories found in /opt",
 			dirExists: map[string][]string{"/opt/confluent*": {"/opt/confluent-5.2.2", "/opt/confluent-4.1.0"}},
 			fileExists: []string{
+				"/opt/confluent-5.2.2/bin/connect-distributed",
+				"/opt/confluent-5.2.2/bin/kafka-server-start",
+				"/opt/confluent-5.2.2/bin/ksql-server-start",
+				"/opt/confluent-5.2.2/bin/zookeeper-server-start",
 				"/opt/confluent-5.2.2/etc/schema-registry/connect-avro-distributed.properties",
+				"/opt/confluent-4.1.0/bin/connect-distributed",
+				"/opt/confluent-4.1.0/bin/kafka-server-start",
+				"/opt/confluent-4.1.0/bin/ksql-server-start",
+				"/opt/confluent-4.1.0/bin/zookeeper-server-start",
 				"/opt/confluent-4.1.0/etc/schema-registry/connect-avro-distributed.properties",
 			},
 			wantDir:   "/opt/confluent-5.2.2",
@@ -119,6 +127,18 @@ func TestDetermineConfluentInstallDir(t *testing.T) {
 			name:      "multiple versioned directories found in /opt (reverse order)",
 			dirExists: map[string][]string{"/opt/confluent*": {"/opt/confluent-4.1.0", "/opt/confluent-5.2.2"}},
 			wantDir:   "/opt/confluent-5.2.2",
+			fileExists: []string{
+				"/opt/confluent-5.2.2/bin/connect-distributed",
+				"/opt/confluent-5.2.2/bin/kafka-server-start",
+				"/opt/confluent-5.2.2/bin/ksql-server-start",
+				"/opt/confluent-5.2.2/bin/zookeeper-server-start",
+				"/opt/confluent-5.2.2/etc/schema-registry/connect-avro-distributed.properties",
+				"/opt/confluent-4.1.0/bin/connect-distributed",
+				"/opt/confluent-4.1.0/bin/kafka-server-start",
+				"/opt/confluent-4.1.0/bin/ksql-server-start",
+				"/opt/confluent-4.1.0/bin/zookeeper-server-start",
+				"/opt/confluent-4.1.0/etc/schema-registry/connect-avro-distributed.properties",
+			},
 			wantFound: true,
 			wantErr:   false,
 		},
@@ -143,11 +163,30 @@ func TestDetermineConfluentInstallDir(t *testing.T) {
 			wantErr:    false,
 		},
 		{
+			name:      "not a valid CP install dir - missing kafka-server-start",
+			dirExists: map[string][]string{"/opt/confluent*": {"/opt/confluent"}},
+			fileExists: []string{
+				"/opt/confluent/bin/connect-distributed",
+				"/opt/confluent/bin/ksql-server-start",
+				"/opt/confluent/bin/zookeeper-server-start",
+			},
+			wantFound: false,
+			wantErr:   false,
+		},
+		{
 			name:      "multiple versioned directories found in /opt (validate dir is CP installation)",
 			dirExists: map[string][]string{"/opt/confluent*": {"/opt/confluent-4.1.0", "/opt/confluent-5.2.2"}},
 			wantDir:   "/opt/confluent-5.2.2",
 			fileExists: []string{
+				"/opt/confluent-4.1.0/bin/connect-distributed",
+				"/opt/confluent-4.1.0/bin/kafka-server-start",
+				"/opt/confluent-4.1.0/bin/ksql-server-start",
+				"/opt/confluent-4.1.0/bin/zookeeper-server-start",
 				"/opt/confluent-4.1.0/etc/schema-registry/connect-avro-distributed.properties",
+				"/opt/confluent-5.2.2/bin/connect-distributed",
+				"/opt/confluent-5.2.2/bin/kafka-server-start",
+				"/opt/confluent-5.2.2/bin/ksql-server-start",
+				"/opt/confluent-5.2.2/bin/zookeeper-server-start",
 				"/opt/confluent-5.2.2/etc/schema-registry/connect-avro-distributed.properties",
 			},
 			wantFound: true,
@@ -157,6 +196,10 @@ func TestDetermineConfluentInstallDir(t *testing.T) {
 			name:      "multiple versioned directories found in /opt but latest versioned dir is not valid CP install dir",
 			dirExists: map[string][]string{"/opt/confluent*": {"/opt/confluent-5.2.2", "/opt/confluent-4.1.0"}},
 			fileExists: []string{
+				"/opt/confluent-4.1.0/bin/connect-distributed",
+				"/opt/confluent-4.1.0/bin/kafka-server-start",
+				"/opt/confluent-4.1.0/bin/ksql-server-start",
+				"/opt/confluent-4.1.0/bin/zookeeper-server-start",
 				"/opt/confluent-4.1.0/etc/schema-registry/connect-avro-distributed.properties",
 			},
 			wantDir:   "/opt/confluent-4.1.0",
@@ -167,6 +210,10 @@ func TestDetermineConfluentInstallDir(t *testing.T) {
 			name:      "accept CONFLUENT_HOME/../etc as valid CP install dir",
 			dirExists: map[string][]string{"/opt/confluent*": {"/opt/confluent-5.2.2"}},
 			fileExists: []string{
+				"/opt/confluent-5.2.2/bin/connect-distributed",
+				"/opt/confluent-5.2.2/bin/kafka-server-start",
+				"/opt/confluent-5.2.2/bin/ksql-server-start",
+				"/opt/confluent-5.2.2/bin/zookeeper-server-start",
 				"/opt/etc/schema-registry/connect-avro-distributed.properties",
 			},
 			wantDir:   "/opt/confluent-5.2.2",
@@ -213,6 +260,23 @@ func TestDetermineConfluentInstallDir(t *testing.T) {
 						}
 					}
 					return nil, os.ErrNotExist
+				},
+				ReadDirFunc: func(dirname string) ([]os.FileInfo, error) {
+					if tt.fileExists == nil {
+						d := filepath.Dir(dirname)
+						tt.fileExists = append(tt.fileExists,
+							filepath.Join(d, "bin", "connect-distributed"),
+							filepath.Join(d, "bin", "kafka-server-start"),
+							filepath.Join(d, "bin", "ksql-server-start"),
+							filepath.Join(d, "bin", "zookeeper-server-start"),
+							filepath.Join(d, "etc", "schema-registry", "connect-avro-distributed.properties"),
+						)
+					}
+					infos := make([]os.FileInfo, 0, len(tt.fileExists))
+					for _, f := range tt.fileExists {
+						infos = append(infos, &mock.FileInfo{NameVal: f})
+					}
+					return infos, nil
 				},
 			}
 			dir, found, err := determineConfluentInstallDir(fs)
