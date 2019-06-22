@@ -86,6 +86,8 @@ func (c *command) help(cmd *cobra.Command, args []string) {
 func (c *command) runBashCommand(path string, command string, args []string) error {
 	c.shell.Init(os.Stdout, os.Stderr)
 	c.shell.Export("CONFLUENT_HOME", path)
+	c.shell.Export("CONFLUENT_CURRENT", os.Getenv("CONFLUENT_CURRENT"))
+	c.shell.Export("TMPDIR", os.Getenv("TMPDIR"))
 	err := c.shell.Source("cp_cli/confluent.sh", Asset)
 	if err != nil {
 		return err
