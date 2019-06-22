@@ -20,9 +20,10 @@ require (
 	github.com/confluentinc/protoc-gen-ccloud v0.0.1 // indirect
 	github.com/dgryski/go-metro v0.0.0-20180109044635-280f6062b5bc // indirect
 	github.com/dgryski/go-spooky v0.0.0-20170606183049-ed3d087f40e2 // indirect
-	github.com/eapache/go-resiliency v1.1.0 // indirect
+	github.com/eapache/go-resiliency v1.2.0 // indirect
 	github.com/eapache/go-xerial-snappy v0.0.0-20180814174437-776d5712da21 // indirect
 	github.com/eapache/queue v1.1.0 // indirect
+	github.com/fatih/color v1.7.0
 	github.com/flynn/go-shlex v0.0.0-20150515145356-3f9db97f8568 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/gliderlabs/ssh v0.1.4 // indirect

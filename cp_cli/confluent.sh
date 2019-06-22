@@ -32,6 +32,9 @@ die() {
 }
 
 validate_and_export_dir_layout() {
+    # We don't need to know CONFLUENT_HOME just to see the list of commands
+    [[ $# -lt 1 ]] || [[ "$1" = "skip" ]] && command_name="confluent local" && return
+
     if [[ -z "${CONFLUENT_HOME}" ]]; then
         command_name="$( basename "${BASH_SOURCE[0]}" )"
         confluent_bin="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -57,9 +60,6 @@ validate_and_export_dir_layout() {
     last="${confluent_current_dir:${#confluent_current_dir}-1:1}"
     [[ "${last}" != "/" ]] && export confluent_current_dir="${confluent_current_dir}/"
 }
-
-# Since this function performs essential initializations, call it as early as possible.
-validate_and_export_dir_layout
 
 # Contains the result of functions that intend to return a value besides their exit status.
 _retval=""
@@ -129,6 +129,9 @@ declare -a deps_stop_ksql_server=(
 declare -a deps_start_control_center=(
     "zookeeper"
     "kafka"
+    "schema-registry"
+    "connect"
+    "ksql-server"
 )
 declare -a deps_stop_control_center=(
 )
@@ -215,6 +218,10 @@ else
   JAVA="${JAVA_HOME}/bin/java"
 fi
 
+is_command() {
+  command -v "$1" >/dev/null
+}
+
 requirements() {
     local major=3
     local minor=2
@@ -222,17 +229,8 @@ requirements() {
         || [ "${BASH_VERSINFO[0]:-0}" -eq ${major} -a "${BASH_VERSINFO[1]:-0}" -lt ${minor} ] \
         && invalid_requirement "bash" "${major}.${minor}"
 
-    which curl > /dev/null 2>&1
-    status=$?
-    if [[ ${status} -ne 0 ]]; then
-        invalid_requirement "curl"
-    fi
-
-    which jq > /dev/null 2>&1
-    status=$?
-    if [[ ${status} -ne 0 ]]; then
-        FORMAT_CMD="xargs -0"
-    fi
+    is_command curl || invalid_requirement "curl"
+    is_command jq || FORMAT_CMD="xargs -0"
 }
 
 export_service_env() {
@@ -1012,7 +1010,7 @@ validate_os_version() {
 validate_java_version() {
     local target_service=${1}
 
-    local warning_message="WARNING: Java version 1.8 is recommended.
+    local warning_message="WARNING: Java version 1.8 or 1.11 is recommended.
 See https://docs.confluent.io/current/installation/versions-interoperability.html"
 
     # The first segment of the version number, which is '1' for releases before Java 9
@@ -1028,7 +1026,7 @@ See https://docs.confluent.io/current/installation/versions-interoperability.htm
         java_version=$(${JAVA} -version 2>&1 | sed -E -n 's/.* version "1.([0-9]*).*$/\1/p')
     fi
 
-    if [[ "${java_version}" -lt "8" ]]; then
+    if [[ "${java_version}" -lt "8" || ("${java_version}" -ge "9" && "${java_version}" -lt 11) ]]; then
         die "${warning_message}"
     fi
 
@@ -1036,7 +1034,7 @@ See https://docs.confluent.io/current/installation/versions-interoperability.htm
         return
     fi
 
-    if [[ "${java_version}" -ge "9" ]]; then
+    if [[ "${java_version}" -ge "12" ]]; then
         cat <<EOF
 Current Java version '${java_version}' is unsupported at this time. Confluent CLI will exit.
 
@@ -2118,14 +2116,14 @@ version_usage() {
 Usage: ${command_name} version [<service>]
 
 Description:
-    Print the Confluent Platform flavor and version, or the individual version of a service.
+    Print the Confluent Platform version, or the individual version of a service.
 
 Examples:
     confluent version
-        Prints the flavor and version of Confluent platform.
+        Prints the version of Confluent Platform.
 
     confluent version kafka
-        Prints the version of a service included with Confluent platform, 'kafka' in this example.
+        Prints the version of a service included with Confluent Platform, 'kafka' in this example.
 
 EOF
     exit 0
@@ -2133,29 +2131,29 @@ EOF
 
 usage() {
     cat <<EOF
-${command_name}: A command line interface to manage Confluent services
+${command_name}: Manage a local Confluent Platform development environment.
 
 Usage: ${command_name} <command> [<subcommand>] [<parameters>]
 
 These are the available commands:
 
-    acl         Specify acl for a service.
+    acl         Specify ACL for a service.
     config      Configure a connector.
-    consume     Consume data from topics
-    current     Get the path of the data and logs of the services managed by the current confluent run.
+    consume     Consume data from topics.
+    current     Get the path of the data and logs of the services managed by the current Confluent run.
                 Override default setting with "CONFLUENT_CURRENT" environment variable.
-    demo        Run demos provided in GitHub repo https://github.com/confluentinc/examples
-    destroy     Delete the data and logs of the current confluent run.
-    list        List available services.
+    demo        Run demos provided in GitHub repo https://github.com/confluentinc/examples.
+    destroy     Delete the data and logs of the current Confluent run.
+    list        List all available services or plugins.
     load        Load a connector.
     log         Read or tail the log of a service.
-    produce     Produce data to topics
-    start       Start all services or a specific service along with its dependencies
-    status      Get the status of all services or the status of a specific service along with its dependencies.
-    stop        Stop all services or a specific service along with the services depending on it.
-    top         Track resource usage of a service.
+    produce     Produce data to topics.
+    start       Start all services or a specific service along with its dependencies.
+    status      Get the status of all services or the status of a specific service and its dependencies.
+    stop        Stop all services or a specific service its dependent services.
+    top         View service resource usage.
     unload      Unload a connector.
-    version     Print the Confluent Platform flavor and version or the individual version of a service.
+    version     Print the Confluent CLI version or the version of a service.
 
 '${command_name} help' lists available commands. See '${command_name} help <command>' to read about a
 specific command.
@@ -2193,24 +2191,34 @@ invalid_requirement() {
     exit ${ERROR_CODE}
 }
 
+cat >&2 <<EOF
+    The local commands are intended for a single-node development environment
+    only, NOT for production usage. https://docs.confluent.io/current/cli/index.html
+
+EOF
+
+help() {
+    # Since this function performs essential initializations, call it as early as possible.
+    validate_and_export_dir_layout "skip"
+
+    command_exists "${1}" && ( "${1}"_usage "$@" || invalid_command "${1}" ) || usage
+}
+
 main() {
+    # Since this function performs essential initializations, call it as early as possible.
+    validate_and_export_dir_layout $@
+
     # Parse command-line arguments
     [[ $# -lt 1 ]] && usage
 
     requirements
-
-    cat <<EOF
-    This CLI is intended for development only, not for production
-    https://docs.confluent.io/current/cli/index.html
-
-EOF
 
     command="${1}"
     shift
     case "${command}" in
         help)
             if [[ -n "${1}" ]]; then
-                command_exists "${1}" && ( "${1}"_usage "$@" || invalid_command "${1}" )
+                help $@
             else
                 usage
             fi;;

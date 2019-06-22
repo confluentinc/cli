@@ -67,10 +67,12 @@ func (a *commands) init(prerunner pcmd.PreRunner) {
 	}
 	if a.config.CLIName == "ccloud" {
 		loginCmd.RunE = a.login
-		loginCmd.Flags().String("url", "https://confluent.cloud", "Confluent Control Plane URL.")
+		loginCmd.Flags().String("url", "https://confluent.cloud", "Gateway service URL.")
 	} else {
 		loginCmd.RunE = a.loginMDS
-		loginCmd.Flags().String("url", "", "Confluent Control Plane URL.")
+		loginCmd.Flags().String("url", "", "Metadata service URL.")
+		loginCmd.Short = strings.Replace(loginCmd.Short, ".", " (required for RBAC).", -1)
+		loginCmd.Long = strings.Replace(loginCmd.Long, ".", " (required for RBAC).", -1)
 		check(loginCmd.MarkFlagRequired("url")) // because https://confluent.cloud isn't an MDS endpoint
 	}
 	loginCmd.Flags().SortFlags = false

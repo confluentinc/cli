@@ -36,6 +36,7 @@ type APIKeyPair struct {
 // KafkaClusterConfig represents a connection to a Kafka cluster.
 type KafkaClusterConfig struct {
 	ID          string                 `json:"id" hcl:"id"`
+	Name        string                 `json:"name" hcl:"name"`
 	Bootstrap   string                 `json:"bootstrap_servers" hcl:"bootstrap_servers"`
 	APIEndpoint string                 `json:"api_endpoint,omitempty" hcl:"api_endpoint"`
 	APIKeys     map[string]*APIKeyPair `json:"api_keys" hcl:"api_keys"`
@@ -168,6 +169,21 @@ func (c *Config) Context() (*Context, error) {
 		return nil, errors.ErrNoContext
 	}
 	return c.Contexts[c.CurrentContext], nil
+}
+
+// KafkaClusterConfig returns the KafkaClusterConfig for the current Context
+// or nil if there is none set.
+func (c *Config) KafkaClusterConfig() (*KafkaClusterConfig, error) {
+	context, err := c.Context()
+	if err != nil {
+		return nil, err
+	}
+	kafka := context.Kafka
+	if kafka == "" {
+		return nil, nil
+	} else {
+		return context.KafkaClusters[kafka], nil
+	}
 }
 
 // CheckLogin returns an error if the user is not logged in.
