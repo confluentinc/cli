@@ -61,8 +61,8 @@ func newCommands(prerunner pcmd.PreRunner, config *config.Config, log *log.Logge
 func (a *commands) init(prerunner pcmd.PreRunner) {
 	loginCmd := &cobra.Command{
 		Use:   "login",
-		Short: fmt.Sprintf("Login to %s. This is required for RBAC.", a.config.APIName()),
-		Long:  fmt.Sprintf("Login to %s. This is required for RBAC.", a.config.APIName()),
+		Short: fmt.Sprintf("Login to %s.", a.config.APIName()),
+		Long:  fmt.Sprintf("Login to %s.", a.config.APIName()),
 		Args:  cobra.NoArgs,
 	}
 	if a.config.CLIName == "ccloud" {
@@ -71,6 +71,8 @@ func (a *commands) init(prerunner pcmd.PreRunner) {
 	} else {
 		loginCmd.RunE = a.loginMDS
 		loginCmd.Flags().String("url", "", "Metadata service URL.")
+		loginCmd.Short = strings.Replace(loginCmd.Short, ".", " (required for RBAC).", -1)
+		loginCmd.Long = strings.Replace(loginCmd.Long, ".", " (required for RBAC).", -1)
 		check(loginCmd.MarkFlagRequired("url")) // because https://confluent.cloud isn't an MDS endpoint
 	}
 	loginCmd.Flags().SortFlags = false
