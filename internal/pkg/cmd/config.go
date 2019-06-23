@@ -45,7 +45,7 @@ func (c *ConfigHelper) KafkaClusterConfig(clusterID, environment string) (*confi
 		ctx.KafkaClusters = map[string]*config.KafkaClusterConfig{}
 	}
 	cluster, found := ctx.KafkaClusters[clusterID]
-	if !found {
+	if !found || cluster.ID == "" || cluster.Name == "" || cluster.Bootstrap == "" || cluster.APIEndpoint == "" {
 		// Let's fetch the cluster details
 		req := &kafkav1.KafkaCluster{AccountId: environment, Id: clusterID}
 		kc, err := c.Client.Kafka.Describe(context.Background(), req)
@@ -57,6 +57,7 @@ func (c *ConfigHelper) KafkaClusterConfig(clusterID, environment string) (*confi
 		}
 		cluster = &config.KafkaClusterConfig{
 			ID:          clusterID,
+			Name:        kc.Name,
 			Bootstrap:   strings.TrimPrefix(kc.Endpoint, "SASL_SSL://"),
 			APIEndpoint: kc.ApiEndpoint,
 			APIKeys:     make(map[string]*config.APIKeyPair),

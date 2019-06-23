@@ -19,19 +19,19 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/kafka"
 	"github.com/confluentinc/cli/internal/cmd/ksql"
 	"github.com/confluentinc/cli/internal/cmd/local"
-
+	ps1 "github.com/confluentinc/cli/internal/cmd/prompt"
 	"github.com/confluentinc/cli/internal/cmd/secret"
 	service_account "github.com/confluentinc/cli/internal/cmd/service-account"
-
 	"github.com/confluentinc/cli/internal/cmd/update"
 	"github.com/confluentinc/cli/internal/cmd/version"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	configs "github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/help"
+	"github.com/confluentinc/cli/internal/pkg/io"
 	"github.com/confluentinc/cli/internal/pkg/keystore"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	pps1 "github.com/confluentinc/cli/internal/pkg/ps1"
 	apikeys "github.com/confluentinc/cli/internal/pkg/sdk/apikey"
-
 	//connects "github.com/confluentinc/cli/internal/pkg/sdk/connect"
 	environments "github.com/confluentinc/cli/internal/pkg/sdk/environment"
 	kafkas "github.com/confluentinc/cli/internal/pkg/sdk/kafka"
@@ -74,6 +74,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	client := ccloud.NewClientWithJWT(context.Background(), cfg.AuthToken, cfg.AuthURL, cfg.Logger)
 
 	ch := &pcmd.ConfigHelper{Config: cfg, Client: client}
+	fs := &io.RealFileSystem{}
 
 	prerunner := &pcmd.PreRun{
 		UpdateClient: updateClient,
@@ -105,6 +106,8 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	cli.AddCommand(auth.New(prerunner, cfg, logger, mdsClient)...)
 
 	if cliName == "ccloud" {
+		cli.AddCommand(ps1.NewPromptCmd(cfg, &pps1.Prompt{Config: cfg}, logger))
+
 		kafkaClient := kafkas.New(client, logger)
 		userClient := users.New(client, logger)
 		ks := &keystore.ConfigKeyStore{Config: cfg, Helper: ch}
@@ -129,8 +132,8 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		if err != nil {
 			return nil, err
 		}
-		shellRunner := local.BashShellRunner{BasherContext: bash}
-		cli.AddCommand(local.New(prerunner, &shellRunner))
+		shellRunner := &local.BashShellRunner{BasherContext: bash}
+		cli.AddCommand(local.New(prerunner, shellRunner, fs))
 		resolver := &pcmd.FlagResolverImpl{Prompt: prompt, Out: os.Stdout}
 		cli.AddCommand(secret.New(prerunner, cfg, prompt, resolver, secrets.NewPasswordProtectionPlugin(logger)))
 	}

@@ -17,8 +17,9 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
-	pio "github.com/confluentinc/cli/internal/pkg/update/io"
-	"github.com/confluentinc/cli/internal/pkg/update/mock"
+	pio "github.com/confluentinc/cli/internal/pkg/io"
+	mock "github.com/confluentinc/cli/internal/pkg/mock"
+	updateMock "github.com/confluentinc/cli/internal/pkg/update/mock"
 )
 
 func TestNewPrivateRepo(t *testing.T) {
@@ -36,7 +37,7 @@ func TestNewPrivateRepo(t *testing.T) {
 				S3BinBucket: "bucket",
 				S3BinRegion: "",
 				S3BinPrefix: "prefix",
-				S3ObjectKey: &mock.ObjectKey{},
+				S3ObjectKey: &updateMock.ObjectKey{},
 			},
 			wantErr: true,
 		},
@@ -46,7 +47,7 @@ func TestNewPrivateRepo(t *testing.T) {
 				S3BinBucket: "",
 				S3BinRegion: "region",
 				S3BinPrefix: "prefix",
-				S3ObjectKey: &mock.ObjectKey{},
+				S3ObjectKey: &updateMock.ObjectKey{},
 			},
 			wantErr: true,
 		},
@@ -56,7 +57,7 @@ func TestNewPrivateRepo(t *testing.T) {
 				S3BinBucket: "bucket",
 				S3BinRegion: "region",
 				S3BinPrefix: "",
-				S3ObjectKey: &mock.ObjectKey{},
+				S3ObjectKey: &updateMock.ObjectKey{},
 			},
 			wantErr: true,
 		},
@@ -66,7 +67,7 @@ func TestNewPrivateRepo(t *testing.T) {
 				S3BinBucket: "bucket",
 				S3BinRegion: "region",
 				S3BinPrefix: "prefix",
-				S3ObjectKey: &mock.ObjectKey{},
+				S3ObjectKey: &updateMock.ObjectKey{},
 				creds:       badCreds,
 			},
 			wantErr: true,
@@ -77,20 +78,20 @@ func TestNewPrivateRepo(t *testing.T) {
 				S3BinBucket:  "bucket",
 				S3BinRegion:  "region",
 				S3BinPrefix:  "prefix",
-				S3ObjectKey:  &mock.ObjectKey{},
+				S3ObjectKey:  &updateMock.ObjectKey{},
 				creds:        goodCreds,
-				s3svc:        &mock.S3API{},
-				s3downloader: &mock.Downloader{},
+				s3svc:        &updateMock.S3API{},
+				s3downloader: &updateMock.Downloader{},
 			},
 			want: &PrivateRepo{
 				PrivateRepoParams: &PrivateRepoParams{
 					S3BinBucket:  "bucket",
 					S3BinRegion:  "region",
 					S3BinPrefix:  "prefix",
-					S3ObjectKey:  &mock.ObjectKey{},
+					S3ObjectKey:  &updateMock.ObjectKey{},
 					creds:        goodCreds,
-					s3svc:        &mock.S3API{},
-					s3downloader: &mock.Downloader{},
+					s3svc:        &updateMock.S3API{},
+					s3downloader: &updateMock.Downloader{},
 				},
 			},
 		},
@@ -285,7 +286,7 @@ func TestPrivateRepo_GetAvailableVersions(t *testing.T) {
 		{
 			name: "should error if unable to list objects",
 			params: &PrivateRepoParams{
-				s3svc: &mock.S3API{
+				s3svc: &updateMock.S3API{
 					ListObjectsV2Func: func(in *s3.ListObjectsV2Input) (*s3.ListObjectsV2Output, error) {
 						return nil, fmt.Errorf("no way jose")
 					},
@@ -296,12 +297,12 @@ func TestPrivateRepo_GetAvailableVersions(t *testing.T) {
 		{
 			name: "should error if unable to parse an s3 object key",
 			params: &PrivateRepoParams{
-				S3ObjectKey: &mock.ObjectKey{
+				S3ObjectKey: &updateMock.ObjectKey{
 					ParseVersionFunc: func(key, name string) (bool, *version.Version, error) {
 						return false, nil, fmt.Errorf("beserk")
 					},
 				},
-				s3svc: &mock.S3API{
+				s3svc: &updateMock.S3API{
 					ListObjectsV2Func: func(in *s3.ListObjectsV2Input) (*s3.ListObjectsV2Output, error) {
 						return &s3.ListObjectsV2Output{
 							Contents: []*s3.Object{{Key: aws.String("i'm a cashew")}},
@@ -314,7 +315,7 @@ func TestPrivateRepo_GetAvailableVersions(t *testing.T) {
 		{
 			name: "should return available versions",
 			params: &PrivateRepoParams{
-				S3ObjectKey: &mock.ObjectKey{
+				S3ObjectKey: &updateMock.ObjectKey{
 					ParseVersionFunc: func(key, name string) (bool, *version.Version, error) {
 						var v *version.Version
 						var err error
@@ -329,7 +330,7 @@ func TestPrivateRepo_GetAvailableVersions(t *testing.T) {
 						return true, v, err
 					},
 				},
-				s3svc: &mock.S3API{
+				s3svc: &updateMock.S3API{
 					ListObjectsV2Func: func(in *s3.ListObjectsV2Input) (*s3.ListObjectsV2Output, error) {
 						return &s3.ListObjectsV2Output{
 							CommonPrefixes: nil,
@@ -370,7 +371,7 @@ func TestPrivateRepo_GetAvailableVersions(t *testing.T) {
 		{
 			name: "should sort versions",
 			params: &PrivateRepoParams{
-				S3ObjectKey: &mock.ObjectKey{
+				S3ObjectKey: &updateMock.ObjectKey{
 					ParseVersionFunc: func(key, name string) (bool, *version.Version, error) {
 						var v *version.Version
 						var err error
@@ -385,7 +386,7 @@ func TestPrivateRepo_GetAvailableVersions(t *testing.T) {
 						return true, v, err
 					},
 				},
-				s3svc: &mock.S3API{
+				s3svc: &updateMock.S3API{
 					ListObjectsV2Func: func(in *s3.ListObjectsV2Input) (*s3.ListObjectsV2Output, error) {
 						return &s3.ListObjectsV2Output{
 							CommonPrefixes: nil,
@@ -466,12 +467,12 @@ func TestPrivateRepo_DownloadVersion(t *testing.T) {
 			name: "should error if download fails",
 			params: &PrivateRepoParams{
 				S3BinBucket: "bigbucks",
-				S3ObjectKey: &mock.ObjectKey{
+				S3ObjectKey: &updateMock.ObjectKey{
 					URLForFunc: func(name, version string) string {
 						return "/some/s3/url"
 					},
 				},
-				s3downloader: &mock.Downloader{
+				s3downloader: &updateMock.Downloader{
 					DownloadFunc: func(w io.WriterAt, input *s3.GetObjectInput, options ...func(*s3manager.Downloader)) (int64, error) {
 						req.Equal("bigbucks", *input.Bucket)
 						req.Equal("/some/s3/url", *input.Key)
@@ -493,12 +494,12 @@ func TestPrivateRepo_DownloadVersion(t *testing.T) {
 			name: "should download version",
 			params: &PrivateRepoParams{
 				S3BinBucket: "bigbucks",
-				S3ObjectKey: &mock.ObjectKey{
+				S3ObjectKey: &updateMock.ObjectKey{
 					URLForFunc: func(name, version string) string {
 						return "/some/s3/url"
 					},
 				},
-				s3downloader: &mock.Downloader{
+				s3downloader: &updateMock.Downloader{
 					DownloadFunc: func(w io.WriterAt, input *s3.GetObjectInput, options ...func(*s3manager.Downloader)) (int64, error) {
 						req.Equal("bigbucks", *input.Bucket)
 						req.Equal("/some/s3/url", *input.Key)

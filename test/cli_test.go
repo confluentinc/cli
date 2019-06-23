@@ -575,6 +575,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		b, err := json.Marshal(&kafkav1.GetKafkaClusterReply{
 			Cluster: &kafkav1.KafkaCluster{
 				Id:          id,
+				Name:        "kafka-cluster",
 				Endpoint:    "SASL_SSL://kafka-endpoint",
 				ApiEndpoint: kafkaAPIURL,
 			},

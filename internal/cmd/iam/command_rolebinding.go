@@ -234,9 +234,18 @@ func (c *rolebindingCommand) list(cmd *cobra.Command, args []string) error {
 	}
 
 	for _, r := range roleNames {
+		// This only gets resource-scoped bindings...
 		rps, _, err := c.client.UserAndRoleMgmtApi.GetRoleResourcesForPrincipal(c.ctx, principal, r, mds.Scope{Clusters: *scopeClusters})
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
+		}
+		// ...so manually append cluster-scoped bindings when needed
+		if len(rps) == 0 && isClusterScopedRole(r) {
+			rps = append(rps, mds.ResourcePattern{
+				ResourceType: "Cluster",
+				Name:         "",
+				PatternType:  "",
+			})
 		}
 		resourcePatterns = append(resourcePatterns, rps...)
 		for range rps {
@@ -362,4 +371,21 @@ func check(err error) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+// TODO please move this to a backend route
+func isClusterScopedRole(role string) bool {
+	clusterScopedRoles := []string{
+		"SystemAdmin",
+		"ClusterAdmin",
+		"SecurityAdmin",
+		"UserAdmin",
+		"Operator",
+	}
+	for _, r := range clusterScopedRoles {
+		if r == role {
+			return true
+		}
+	}
+	return false
 }
