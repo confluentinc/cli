@@ -58,6 +58,8 @@ github.com/confluentinc/ccloud-sdk-go v0.0.7-0.20190515193705-ed57783609c7/go.mo
 github.com/confluentinc/ccloudapis v0.0.0-20190301100936-766355e1fe2c/go.mod h1:RGupQo6tb6J+1BnSqqueADkoC8b/F60+Ci3FMB3wDFo=
 github.com/confluentinc/ccloudapis v0.0.0-20190430183816-9fe8ee16d070 h1:iDnQrrDFWEBkDXxQcupU6CTg/7wqa3IFKLqiBAnNwV8=
 github.com/confluentinc/ccloudapis v0.0.0-20190430183816-9fe8ee16d070/go.mod h1:RGupQo6tb6J+1BnSqqueADkoC8b/F60+Ci3FMB3wDFo=
+github.com/confluentinc/ccloudapis v0.0.0-20190623041722-9cae0f4c848d h1:Ukmdkqu9sYkuWF8wsFztbygxEUGQGAtRasJ9UydPrBc=
+github.com/confluentinc/ccloudapis v0.0.0-20190623041722-9cae0f4c848d/go.mod h1:RGupQo6tb6J+1BnSqqueADkoC8b/F60+Ci3FMB3wDFo=
 github.com/confluentinc/go-editor v0.4.0 h1:5hMjKsKmIOmlu3Yyz8zDq66Qpdin8HSmRaMhqhxRf5Y=
 github.com/confluentinc/go-editor v0.4.0/go.mod h1:sW1NzJdowffHQzy4iSbfY/ykRFMDE69I8EaT33Ebh7Y=
 github.com/confluentinc/go-printer v0.10.0 h1:JLJOeSdJL6A0YxAK24GSuoC52sPQP/chowAapSAwoBM=
