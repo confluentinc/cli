@@ -94,7 +94,7 @@ command returns a failure if a master key has not already been set using the "ma
 	addCmd.Flags().String("remote-secrets-file", "", "Path to the remote encrypted configuration properties file.")
 	check(addCmd.MarkFlagRequired("remote-secrets-file"))
 
-	addCmd.Flags().String("config", "", "List of configuration properties.")
+	addCmd.Flags().String("config", "", "List of key/value pairs of configuration properties.")
 	check(addCmd.MarkFlagRequired("config"))
 	addCmd.Flags().SortFlags = false
 	c.AddCommand(addCmd)
@@ -115,7 +115,7 @@ command returns a failure if a master key has not already been set using the "ma
 	updateCmd.Flags().String("remote-secrets-file", "", "Path to the remote encrypted configuration properties file.")
 	check(updateCmd.MarkFlagRequired("remote-secrets-file"))
 
-	updateCmd.Flags().String("config", "", "List of configuration properties.")
+	updateCmd.Flags().String("config", "", "List of key/value pairs of configuration properties.")
 	check(updateCmd.MarkFlagRequired("config"))
 	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
