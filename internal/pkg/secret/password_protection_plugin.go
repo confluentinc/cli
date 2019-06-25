@@ -123,6 +123,11 @@ func (c *PasswordProtectionSuite) EncryptConfigFileSecrets(configFilePath string
 		return fmt.Errorf("invalid config file path: %s", configFilePath)
 	}
 	// Load the configs.
+	// Add a delimiter key at the end of the file to retain the comments in the config file.
+	err := AppendDelimiter(configFilePath)
+	if err != nil {
+		return err
+	}
 	configProps, err := LoadPropertiesFile(configFilePath)
 	configProps.DisableExpansion = true
 	if err != nil {
@@ -153,7 +158,13 @@ func (c *PasswordProtectionSuite) EncryptConfigFileSecrets(configFilePath string
 		}
 	}
 	// Encrypt the secrets with DEK. Save the encrypted secrets in secure config file.
-	return c.encryptConfigValues(matchProps, localSecureConfigPath, configProps, configFilePath, remoteSecureConfigPath)
+	err = c.encryptConfigValues(matchProps, localSecureConfigPath, configProps, configFilePath, remoteSecureConfigPath)
+	if err != nil {
+		return err
+	}
+
+	// Remove the Delimiter
+	return RemoveDelimiter(configFilePath)
 }
 
 // This function decrypts all the passwords in configFilePath properties files and stores the decrypted passwords in outputFilePath.
@@ -418,6 +429,11 @@ func (c *PasswordProtectionSuite) AddEncryptedPasswords(configFilePath string, l
 		return err
 	}
 
+	// Add a delimiter key at the end of the file to retain the comments in the config file.
+	err = AppendDelimiter(configFilePath)
+	if err != nil {
+		return err
+	}
 	configProps, err := LoadPropertiesFile(configFilePath)
 	if err != nil {
 		return err
@@ -428,8 +444,12 @@ func (c *PasswordProtectionSuite) AddEncryptedPasswords(configFilePath string, l
 	}
 
 	err = c.encryptConfigValues(newConfigProps, localSecureConfigPath, configProps, configFilePath, remoteSecureConfigPath)
+	if err != nil {
+		return err
+	}
 
-	return err
+	// Remove the Delimiter
+	return RemoveDelimiter(configFilePath)
 }
 
 // This function updates a the value of existing keys in the configFilePath property file. The original 'value' is
@@ -439,6 +459,12 @@ func (c *PasswordProtectionSuite) AddEncryptedPasswords(configFilePath string, l
 func (c *PasswordProtectionSuite) UpdateEncryptedPasswords(configFilePath string, localSecureConfigPath string, remoteSecureConfigPath string, newConfigs string) error {
 	newConfigs = strings.Replace(newConfigs, `\n`, "\n", -1)
 	newConfigProps, err := properties.LoadString(newConfigs)
+	if err != nil {
+		return err
+	}
+
+	// Add a delimiter key at the end of the file to retain the comments in the config file.
+	err = AppendDelimiter(configFilePath)
 	if err != nil {
 		return err
 	}
@@ -462,8 +488,12 @@ func (c *PasswordProtectionSuite) UpdateEncryptedPasswords(configFilePath string
 	}
 
 	err = c.encryptConfigValues(newConfigProps, localSecureConfigPath, configProps, configFilePath, remoteSecureConfigPath)
+	if err != nil {
+		return err
+	}
 
-	return err
+	// Remove the Delimiter
+	return RemoveDelimiter(configFilePath)
 }
 
 func (c *PasswordProtectionSuite) RemoveEncryptedPasswords(configFilePath string, localSecureConfigPath string, removeConfigs string) error {

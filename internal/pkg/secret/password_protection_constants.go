@@ -9,6 +9,8 @@ const (
 	SECURE_CONFIG_PROVIDER = "securepass"
 
 	SECURE_CONFIG_PROVIDER_CLASS = "io.confluent.kafka.security.config.provider.SecurePassConfigProvider"
+
+	SECURE_CONFIG_PROVIDER_DELIMITER = "config.providers.securepass.delimiter = delimiter"
 )
 
 // Encryption Keys Metadata
