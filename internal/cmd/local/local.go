@@ -251,10 +251,7 @@ func validateConfluentPlatformInstallDir(fs io.FileSystem, dir string) (bool, er
 		return false, err
 	}
 	for _, f := range files {
-		fullPath := f.Name()
-		if !filepath.IsAbs(f.Name()) {
-			fullPath = filepath.Join(dir, "bin", f.Name())
-		}
+		fullPath := filepath.Join(dir, "bin", f.Name())
 		if _, ok := filesToCheck[fullPath]; ok {
 			filesToCheck[fullPath] = true
 		}
