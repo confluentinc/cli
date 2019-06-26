@@ -1783,7 +1783,7 @@ EOF
     if [ -f ${confluent_home}/bin/kafka-console-producer ]; then
         ${confluent_home}/bin/kafka-console-producer
     else
-        echo "(not shown since Confluent Platform installation not found)"
+        echo "(not shown since Confluent Platform installation not found; specify --path or set \$CONFLUENT_HOME)"
     fi
 
     exit $exit_status
@@ -1826,7 +1826,7 @@ EOF
     if [ -f ${confluent_home}/bin/kafka-console-consumer ]; then
         ${confluent_home}/bin/kafka-console-consumer
     else
-        echo "(not shown since Confluent Platform installation not found)"
+        echo "(not shown since Confluent Platform installation not found; specify --path or set \$CONFLUENT_HOME)"
     fi
 
     exit $exit_status
