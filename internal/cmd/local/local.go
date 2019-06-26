@@ -102,14 +102,17 @@ func (c *command) run(cmd *cobra.Command, args []string) error {
 
 // versionedDirectory is a type that implements the sort.Interface interface
 // so that versions can be sorted and the original directory path returned.
-type versionedDirectory struct{
+type versionedDirectory struct {
 	dir string
 	ver *version.Version
 }
+
 func (v *versionedDirectory) String() string {
 	return v.dir
 }
+
 type byVersion []*versionedDirectory
+
 func (b byVersion) Len() int {
 	return len(b)
 }
@@ -196,6 +199,7 @@ func (c *command) runBashCommand(path string, command string, args []string) err
 	c.shell.Export("CONFLUENT_HOME", path)
 	c.shell.Export("CONFLUENT_CURRENT", os.Getenv("CONFLUENT_CURRENT"))
 	c.shell.Export("TMPDIR", os.Getenv("TMPDIR"))
+	c.shell.Export("JAVA_HOME", os.Getenv("JAVA_HOME"))
 	err := c.shell.Source("cp_cli/confluent.sh", Asset)
 	if err != nil {
 		return err
