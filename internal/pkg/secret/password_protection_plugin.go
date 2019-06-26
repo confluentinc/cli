@@ -235,8 +235,8 @@ func (c *PasswordProtectionSuite) DecryptConfigFileSecrets(configFilePath string
 
 // This function generates a new data key and re-encrypts the values in the secureConfigPath properties file with the new data key.
 func (c *PasswordProtectionSuite) RotateDataKey(masterPassphrase string, localSecureConfigPath string) error {
-	masterPassphrase = strings.TrimSpace(masterPassphrase)
-	if len(masterPassphrase) == 0 {
+	masterPassphrase = strings.TrimSuffix(masterPassphrase, "\n")
+	if len(strings.TrimSpace(masterPassphrase)) == 0 {
 		return fmt.Errorf("master key passphrase cannot be empty.")
 	}
 	cipherSuite, err := c.loadCipherSuiteFromLocalFile(localSecureConfigPath)
@@ -336,9 +336,9 @@ func (c *PasswordProtectionSuite) RotateDataKey(masterPassphrase string, localSe
 
 // This function is used to change the master key. It wraps the data key with newly set master key.
 func (c *PasswordProtectionSuite) RotateMasterKey(oldPassphrase string, newPassphrase string, localSecureConfigPath string) (string, error) {
-	oldPassphrase = strings.TrimSpace(oldPassphrase)
-	newPassphrase = strings.TrimSpace(newPassphrase)
-	if len(oldPassphrase) == 0 || len(newPassphrase) == 0 {
+	oldPassphrase = strings.TrimSuffix(oldPassphrase, "\n")
+	newPassphrase = strings.TrimSuffix(newPassphrase, "\n")
+	if len(strings.TrimSpace(oldPassphrase)) == 0 || len(strings.TrimSpace(newPassphrase)) == 0 {
 		return "", fmt.Errorf("master key passphrase cannot be empty.")
 	}
 
