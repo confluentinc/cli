@@ -30,6 +30,9 @@ Install Bash completions on Linux:
 
   # Load the {{.CLIName}} completion code for Bash into the current shell
   source /etc/bash_completion.d/{{.CLIName}}
+
+To update your completion scripts after updating the CLI, run "{{.CLIName}} completion bash"
+again and overwrite the file initially created above.
 `
 
 type completionCommand struct {
