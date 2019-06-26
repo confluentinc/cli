@@ -32,9 +32,6 @@ die() {
 }
 
 validate_and_export_dir_layout() {
-    # We don't need to know CONFLUENT_HOME just to see the list of commands
-    [[ $# -lt 1 ]] || [[ "$1" = "skip" ]] && command_name="confluent local" && return
-
     if [[ -z "${CONFLUENT_HOME}" ]]; then
         command_name="$( basename "${BASH_SOURCE[0]}" )"
         confluent_bin="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -50,6 +47,9 @@ validate_and_export_dir_layout() {
     if [[ ! -f "${confluent_conf}/schema-registry/connect-avro-distributed.properties" ]]; then
         confluent_conf="$( cd "${confluent_home}/../etc" > /dev/null 2>&1 && pwd )"
     fi
+
+    # We don't need to know CONFLUENT_HOME just to see the list of commands
+    [[ $# -lt 1 ]] || [[ "$1" = "skip" ]] && command_name="confluent local" && return
 
     [[ ! -f "${confluent_conf}/schema-registry/connect-avro-distributed.properties" ]] \
         && die "Cannot locate 'etc' directory for Confluent Platform."

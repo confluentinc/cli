@@ -73,10 +73,10 @@ func New(prerunner pcmd.PreRunner, shell ShellRunner, fs io.FileSystem) *cobra.C
 	return localCmd.Command
 }
 
-func (c *command) run(cmd *cobra.Command, args []string) error {
+func (c *command) parsePath(cmd *cobra.Command, args []string) (string, error) {
 	path, err := cmd.Flags().GetString("path")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return "", errors.HandleCommon(err, cmd)
 	}
 	if path == "" {
 		home, found := os.LookupEnv("CONFLUENT_HOME")
@@ -85,13 +85,21 @@ func (c *command) run(cmd *cobra.Command, args []string) error {
 		} else {
 			// try to determine the confluent install dir heuristically
 			if home, found, err := determineConfluentInstallDir(c.fs); err != nil {
-				return err
+				return "", err
 			} else if found {
 				path = home
 			} else if len(args) != 0 { // don't error if no args specified, we'll just show usage
-				return fmt.Errorf("Pass --path /path/to/confluent flag or set environment variable CONFLUENT_HOME")
+				return "", fmt.Errorf("Pass --path /path/to/confluent flag or set environment variable CONFLUENT_HOME")
 			}
 		}
+	}
+	return path, nil
+}
+
+func (c *command) run(cmd *cobra.Command, args []string) error {
+	path, err := c.parsePath(cmd, args)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
 	}
 	err = c.runBashCommand(path, "main", args)
 	if err != nil {
@@ -102,14 +110,17 @@ func (c *command) run(cmd *cobra.Command, args []string) error {
 
 // versionedDirectory is a type that implements the sort.Interface interface
 // so that versions can be sorted and the original directory path returned.
-type versionedDirectory struct{
+type versionedDirectory struct {
 	dir string
 	ver *version.Version
 }
+
 func (v *versionedDirectory) String() string {
 	return v.dir
 }
+
 type byVersion []*versionedDirectory
+
 func (b byVersion) Len() int {
 	return len(b)
 }
@@ -188,7 +199,10 @@ func (c *command) help(cmd *cobra.Command, args []string) {
 			a = append(a, arg)
 		}
 	}
-	_ = c.runBashCommand("", "help", a)
+	path, err := c.parsePath(cmd, args)
+	if err == nil {
+		_ = c.runBashCommand(path, "help", a)
+	}
 }
 
 func (c *command) runBashCommand(path string, command string, args []string) error {
