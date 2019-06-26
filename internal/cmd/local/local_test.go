@@ -25,12 +25,17 @@ func TestLocal(t *testing.T) {
 	_ = os.Setenv("TMPDIR", "/var/folders/some/junk")
 	defer func() { _ = os.Setenv("TMPDIR", oldTmp) }()
 
+	oldJavaHome := os.Getenv("JAVA_HOME")
+	_ = os.Setenv("JAVA_HOME", "/path/to/java")
+	defer func() { _ = os.Setenv("JAVA_HOME", oldJavaHome) }()
+
 	req := require.New(t)
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	shellRunner := mock_local.NewMockShellRunner(ctrl)
 	shellRunner.EXPECT().Init(os.Stdout, os.Stderr)
+	shellRunner.EXPECT().Export("JAVA_HOME", "/path/to/java")
 	shellRunner.EXPECT().Export("CONFLUENT_CURRENT", "/path/to/confluent/workdir")
 	shellRunner.EXPECT().Export("CONFLUENT_HOME", "blah")
 	shellRunner.EXPECT().Export("TMPDIR", "/var/folders/some/junk")
@@ -50,12 +55,17 @@ func TestLocalErrorDuringSource(t *testing.T) {
 	_ = os.Setenv("TMPDIR", "/var/folders/some/junk")
 	defer func() { _ = os.Setenv("TMPDIR", oldTmp) }()
 
+	oldJavaHome := os.Getenv("JAVA_HOME")
+	_ = os.Setenv("JAVA_HOME", "/path/to/java")
+	defer func() { _ = os.Setenv("JAVA_HOME", oldJavaHome) }()
+
 	req := require.New(t)
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	shellRunner := mock_local.NewMockShellRunner(ctrl)
 	shellRunner.EXPECT().Init(os.Stdout, os.Stderr)
+	shellRunner.EXPECT().Export("JAVA_HOME", "/path/to/java")
 	shellRunner.EXPECT().Export("CONFLUENT_CURRENT", "/path/to/confluent/workdir")
 	shellRunner.EXPECT().Export("CONFLUENT_HOME", "blah")
 	shellRunner.EXPECT().Export("TMPDIR", "/var/folders/some/junk")
