@@ -199,10 +199,9 @@ func (c *command) help(cmd *cobra.Command, args []string) {
 			a = append(a, arg)
 		}
 	}
-	path, err := c.parsePath(cmd, args)
-	if err == nil {
-		_ = c.runBashCommand(path, "help", a)
-	}
+	// Ignore error and attempt to print help anyway
+	path, _ := c.parsePath(cmd, args)
+	_ = c.runBashCommand(path, "help", a)
 }
 
 func (c *command) runBashCommand(path string, command string, args []string) error {
