@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/atrox/homedir"
 	"github.com/golang/mock/gomock"
+	"github.com/mitchellh/go-homedir"
 	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
@@ -289,6 +289,11 @@ func TestDetermineConfluentInstallDir(t *testing.T) {
 			dir, found, err := determineConfluentInstallDir(fs)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("determineConfluentInstallDir() error: %v, wantErr: %v", err, tt.wantErr)
+				return
+			}
+			tt.wantDir, err = homedir.Expand(tt.wantDir)
+			if err != nil {
+				t.Errorf("Error: %v", err)
 				return
 			}
 			if dir != tt.wantDir {

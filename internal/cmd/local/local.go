@@ -157,6 +157,12 @@ func determineConfluentInstallDir(fs io.FileSystem) (string, bool, error) {
 			foundValid := false
 			var versions []*versionedDirectory
 			for _, dir := range matches {
+				// MacOS replaces homedir with ~ under fs.Glob, so we have to
+				// call homedir.Expand again under each globbed match
+				dir, err := homedir.Expand(dir)
+				if err != nil {
+					return "", false, err
+				}
 				if valid, err := validateConfluentPlatformInstallDir(fs, dir); err != nil {
 					return "", false, err
 				} else if !valid {
@@ -245,7 +251,10 @@ func validateConfluentPlatformInstallDir(fs io.FileSystem, dir string) (bool, er
 		return false, err
 	}
 	for _, f := range files {
-		fullPath := filepath.Join(dir, "bin", f.Name())
+		fullPath := f.Name()
+		if !filepath.IsAbs(f.Name()) {
+			fullPath = filepath.Join(dir, "bin", f.Name())
+		}
 		if _, ok := filesToCheck[fullPath]; ok {
 			filesToCheck[fullPath] = true
 		}
