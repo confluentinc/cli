@@ -209,6 +209,7 @@ func (c *command) runBashCommand(path string, command string, args []string) err
 	c.shell.Export("CONFLUENT_HOME", path)
 	c.shell.Export("CONFLUENT_CURRENT", os.Getenv("CONFLUENT_CURRENT"))
 	c.shell.Export("TMPDIR", os.Getenv("TMPDIR"))
+	c.shell.Export("JAVA_HOME", os.Getenv("JAVA_HOME"))
 	err := c.shell.Source("cp_cli/confluent.sh", Asset)
 	if err != nil {
 		return err
@@ -238,13 +239,15 @@ func validateConfluentPlatformInstallDir(fs io.FileSystem, dir string) (bool, er
 	for _, name := range validCPInstallBinCanaries {
 		filesToCheck[filepath.Join(dir, "bin", name)] = false
 	}
+
 	files, err := fs.ReadDir(filepath.Join(dir, "bin"))
 	if err != nil {
 		return false, err
 	}
 	for _, f := range files {
-		if _, ok := filesToCheck[f.Name()]; ok {
-			filesToCheck[f.Name()] = true
+		fullPath := filepath.Join(dir, "bin", f.Name())
+		if _, ok := filesToCheck[fullPath]; ok {
+			filesToCheck[fullPath] = true
 		}
 	}
 	for _, v := range filesToCheck {
