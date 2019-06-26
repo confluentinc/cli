@@ -32,17 +32,22 @@ die() {
 }
 
 validate_and_export_dir_layout() {
+    # Attempt to find Confluent dir, even if just running a help command
+    if [[ ! -z "${CONFLUENT_HOME}" ]]; then
+        command_name="confluent local"
+        confluent_home="${CONFLUENT_HOME}"
+        confluent_bin="${CONFLUENT_HOME}/bin"
+    fi
+
     # We don't need to know CONFLUENT_HOME just to see the list of commands
     [[ $# -lt 1 ]] || [[ "$1" = "skip" ]] && command_name="confluent local" && return
 
+    # No need for this workaround if we are just running a help command
+    # (so okay to return above without executing the below block)
     if [[ -z "${CONFLUENT_HOME}" ]]; then
         command_name="$( basename "${BASH_SOURCE[0]}" )"
         confluent_bin="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
         confluent_home="$( dirname "${confluent_bin}" )"
-    else
-        command_name="confluent local"
-        confluent_home="${CONFLUENT_HOME}"
-        confluent_bin="${CONFLUENT_HOME}/bin"
     fi
 
     confluent_conf="${confluent_home}/etc"
@@ -1773,10 +1778,14 @@ Examples:
     confluent local produce mytopic1 --cloud --property parse.key=true --property key.separator=,
 
 Optional Arguments:
-
 EOF
 
-    ${confluent_home}/bin/kafka-console-producer
+    if [ -f ${confluent_home}/bin/kafka-console-producer ]; then
+        ${confluent_home}/bin/kafka-console-producer
+    else
+        echo "(not shown since Confluent Platform installation not found; specify --path or set \$CONFLUENT_HOME)"
+    fi
+
     exit $exit_status
 }
 
@@ -1814,7 +1823,12 @@ Examples:
 Optional Arguments:
 EOF
 
-    ${confluent_home}/bin/kafka-console-consumer
+    if [ -f ${confluent_home}/bin/kafka-console-consumer ]; then
+        ${confluent_home}/bin/kafka-console-consumer
+    else
+        echo "(not shown since Confluent Platform installation not found; specify --path or set \$CONFLUENT_HOME)"
+    fi
+
     exit $exit_status
 }
 
