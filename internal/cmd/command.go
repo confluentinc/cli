@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/DABH/go-basher"
+	"github.com/jonboulle/clockwork"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go"
@@ -83,6 +84,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		Logger:       logger,
 		Config:       cfg,
 		ConfigHelper: ch,
+		Clock:        clockwork.NewRealClock(),
 	}
 
 	cli.PersistentPreRunE = prerunner.Anonymous()
@@ -126,7 +128,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	} else if cliName == "confluent" {
 		ch := &pcmd.ConfigHelper{Config: cfg, Client: client}
 
-		cli.AddCommand(iam.New(cfg, ch, ver, mdsClient))
+		cli.AddCommand(iam.New(prerunner, cfg, ch, ver, mdsClient))
 
 		bash, err := basher.NewContext("/bin/bash", false)
 		if err != nil {

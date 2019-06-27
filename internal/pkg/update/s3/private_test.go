@@ -16,8 +16,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	pio "github.com/confluentinc/cli/internal/pkg/io"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	mock "github.com/confluentinc/cli/internal/pkg/mock"
 	updateMock "github.com/confluentinc/cli/internal/pkg/update/mock"
 )
@@ -221,17 +221,15 @@ func Test_getCredentials(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			req := require.New(t)
-			if tt.args.envVar != "" {
-				oldEnv, found := os.LookupEnv("AWS_PROFILE")
-				req.NoError(os.Setenv("AWS_PROFILE", tt.args.envVar))
-				defer func() {
-					if found {
-						req.NoError(os.Setenv("AWS_PROFILE", oldEnv))
-					} else {
-						req.NoError(os.Unsetenv("AWS_PROFILE"))
-					}
-				}()
-			}
+			oldEnv, found := os.LookupEnv("AWS_PROFILE")
+			req.NoError(os.Setenv("AWS_PROFILE", tt.args.envVar))
+			defer func() {
+				if found {
+					req.NoError(os.Setenv("AWS_PROFILE", oldEnv))
+				} else {
+					req.NoError(os.Unsetenv("AWS_PROFILE"))
+				}
+			}()
 
 			tt.args.cf.req = req
 			got, err := getCredentials(tt.args.cf, tt.args.allProfiles)
