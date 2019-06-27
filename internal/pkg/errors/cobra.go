@@ -12,15 +12,15 @@ import (
 )
 
 var messages = map[error]string{
-	ErrNoContext:      "You must login to access Confluent Cloud.",
-	ErrNotLoggedIn:    "You must login to access Confluent Cloud.",
+	ErrNoContext:      "You must login to run that command.",
+	ErrNotLoggedIn:    "You must login to run that command.",
 	ErrNotImplemented: "Sorry, this functionality is not yet available in the CLI.",
 	ErrNoKafkaContext: "You must pass --cluster or set an active kafka in your context with 'kafka cluster use'",
 }
 
 var typeMessages = map[reflect.Type]string{
 	reflect.TypeOf(&ccloud.InvalidLoginError{}): "You have entered an incorrect username or password. Please try again.",
-	reflect.TypeOf(&ccloud.ExpiredTokenError{}): "Your access to Confluent Cloud has expired. Please login again.",
+	reflect.TypeOf(&ccloud.ExpiredTokenError{}): "Your session has expired. Please login again.",
 	reflect.TypeOf(&ccloud.InvalidTokenError{}): "Your auth token has been corrupted. Please login again.",
 }
 

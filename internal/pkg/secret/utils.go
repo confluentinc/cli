@@ -86,3 +86,32 @@ func GenerateConfigKey(path string, key string) string {
 	// the server-side version will be running on a *nix variant and will thus have forward slashes to lookup the correct path
 	return fileName + "/" + key
 }
+
+func AppendDelimiter(path string) error {
+	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0)
+	if err != nil {
+		return err
+	}
+	if _, err := f.Write([]byte(SECURE_CONFIG_PROVIDER_DELIMITER)); err != nil {
+		return err
+	}
+
+	defer f.Close()
+
+	return nil
+}
+
+func RemoveDelimiter(path string) error {
+	read, err := ioutil.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	newContents := strings.Replace(string(read), SECURE_CONFIG_PROVIDER_DELIMITER, "", -1)
+
+	err = ioutil.WriteFile(path, []byte(newContents), 0)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

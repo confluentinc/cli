@@ -58,17 +58,19 @@ type RealFileSystem struct{}
 
 var _ FileSystem = (*RealFileSystem)(nil)
 
-func (*RealFileSystem) Open(name string) (File, error)                    { return os.Open(name) }
-func (*RealFileSystem) Stat(name string) (os.FileInfo, error)             { return os.Stat(name) }
-func (*RealFileSystem) Create(name string) (File, error)                  { return os.Create(name) }
-func (*RealFileSystem) Chtimes(n string, a time.Time, m time.Time) error  { return os.Chtimes(n, a, m) }
-func (*RealFileSystem) Chmod(name string, mode os.FileMode) error         { return os.Chmod(name, mode) }
-func (*RealFileSystem) Remove(name string) error                          { return os.Remove(name) }
-func (*RealFileSystem) RemoveAll(path string) error                       { return os.RemoveAll(path) }
-func (*RealFileSystem) ReadDir(dirname string) ([]os.FileInfo, error)     { return ioutil.ReadDir(dirname) }
-func (*RealFileSystem) TempDir(dir, prefix string) (string, error)        { return ioutil.TempDir(dir, prefix) }
-func (*RealFileSystem) Copy(dst io.Writer, src io.Reader) (int64, error)  { return io.Copy(dst, src) }
-func (*RealFileSystem) Move(src string, dst string) error                 { return os.Rename(src, dst) }
-func (*RealFileSystem) NewBufferedReader(rd io.Reader) Reader             { return bufio.NewReader(rd) }
-func (*RealFileSystem) IsTerminal(fd uintptr) bool                        { return isatty.IsTerminal(fd) }
-func (*RealFileSystem) Glob(pattern string) (matches []string, err error) { return filepath.Glob(pattern) }
+func (*RealFileSystem) Open(name string) (File, error)                   { return os.Open(name) }
+func (*RealFileSystem) Stat(name string) (os.FileInfo, error)            { return os.Stat(name) }
+func (*RealFileSystem) Create(name string) (File, error)                 { return os.Create(name) }
+func (*RealFileSystem) Chtimes(n string, a time.Time, m time.Time) error { return os.Chtimes(n, a, m) }
+func (*RealFileSystem) Chmod(name string, mode os.FileMode) error        { return os.Chmod(name, mode) }
+func (*RealFileSystem) Remove(name string) error                         { return os.Remove(name) }
+func (*RealFileSystem) RemoveAll(path string) error                      { return os.RemoveAll(path) }
+func (*RealFileSystem) ReadDir(dirname string) ([]os.FileInfo, error)    { return ioutil.ReadDir(dirname) }
+func (*RealFileSystem) TempDir(dir, prefix string) (string, error)       { return ioutil.TempDir(dir, prefix) }
+func (*RealFileSystem) Copy(dst io.Writer, src io.Reader) (int64, error) { return io.Copy(dst, src) }
+func (*RealFileSystem) Move(src string, dst string) error                { return os.Rename(src, dst) }
+func (*RealFileSystem) NewBufferedReader(rd io.Reader) Reader            { return bufio.NewReader(rd) }
+func (*RealFileSystem) IsTerminal(fd uintptr) bool                       { return isatty.IsTerminal(fd) }
+func (*RealFileSystem) Glob(pattern string) (matches []string, err error) {
+	return filepath.Glob(pattern)
+}

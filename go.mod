@@ -12,8 +12,8 @@ require (
 	github.com/aws/aws-sdk-go v1.15.64
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
-	github.com/confluentinc/ccloud-sdk-go v0.0.7-0.20190515193705-ed57783609c7
-	github.com/confluentinc/ccloudapis v0.0.0-20190430183816-9fe8ee16d070
+	github.com/confluentinc/ccloud-sdk-go v0.0.7-0.20190626214514-9a69a30434cf
+	github.com/confluentinc/ccloudapis v0.0.0-20190614011354-aae16fc9c75c
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-printer v0.10.0
 	github.com/confluentinc/mds-sdk-go v0.0.0-20190610045202-137cf78b1f6a
@@ -81,6 +81,7 @@ require (
 	golang.org/x/tools v0.0.0-20190503185657-3b6f9c0030f7 // indirect
 	gonum.org/v1/netlib v0.0.0-20190331212654-76723241ea4e // indirect
 	google.golang.org/appengine v1.5.0 // indirect
+	gopkg.in/square/go-jose.v2 v2.3.1
 	gopkg.in/src-d/go-git-fixtures.v3 v3.5.0 // indirect
 	gopkg.in/yaml.v2 v2.2.2 // indirect
 	sourcegraph.com/sqs/pbtypes v1.0.0 // indirect
