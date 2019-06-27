@@ -16,8 +16,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	pio "github.com/confluentinc/cli/internal/pkg/io"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	mock "github.com/confluentinc/cli/internal/pkg/mock"
 	updateMock "github.com/confluentinc/cli/internal/pkg/update/mock"
 )
