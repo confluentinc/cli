@@ -134,7 +134,7 @@ func (s *CLITestSuite) Test_Ccloud_Errors() {
 			case "incorrect@user.com":
 				w.WriteHeader(http.StatusForbidden)
 			case "expired@user.com":
-				http.SetCookie(w, &http.Cookie{Name: "auth_token", Value: "expired"})
+				http.SetCookie(w, &http.Cookie{Name: "auth_token", Value: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1MzAxMjQ4NTcsImV4cCI6MTUzMDAzODQ1NywiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSJ9.Y2ui08GPxxuV9edXUBq-JKr1VPpMSnhjSFySczCby7Y"})
 			case "malformed@user.com":
 				http.SetCookie(w, &http.Cookie{Name: "auth_token", Value: "malformed"})
 			case "invalid@user.com":
@@ -189,7 +189,7 @@ func (s *CLITestSuite) Test_Ccloud_Errors() {
 		require.Equal(tt, "Logged in as expired@user.com\nUsing environment a-595 (\"default\")\n", output)
 
 		output = runCommand(t, "ccloud", []string{}, "kafka cluster list", 1)
-		require.Equal(tt, "Error: Your access to Confluent Cloud has expired. Please login again.\n", output)
+		require.Equal(tt, "Error: Your session has expired. Please login again.\n", output)
 	})
 
 	t.Run("malformed token", func(tt *testing.T) {
@@ -515,7 +515,8 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 	req := require.New(t)
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/sessions", func(w http.ResponseWriter, r *http.Request) {
-		http.SetCookie(w, &http.Cookie{Name: "auth_token", Value: "my.fav.jwt"})
+		validToken := "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1NjE2NjA4NTcsImV4cCI6MjUzMzg2MDM4NDU3LCJhdWQiOiJ3d3cuZXhhbXBsZS5jb20iLCJzdWIiOiJqcm9ja2V0QGV4YW1wbGUuY29tIn0.G6IgrFm5i0mN7Lz9tkZQ2tZvuZ2U7HKnvxMuZAooPmE"
+		http.SetCookie(w, &http.Cookie{Name: "auth_token", Value: validToken})
 	})
 	mux.HandleFunc("/api/me", func(w http.ResponseWriter, r *http.Request) {
 		b, err := json.Marshal(&orgv1.GetUserReply{

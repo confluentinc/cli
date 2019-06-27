@@ -73,7 +73,6 @@ func (c *PassThroughFileSystem) ReadDir(dirname string) ([]os.FileInfo, error) {
 	return c.FS.ReadDir(dirname)
 }
 
-
 func (c *PassThroughFileSystem) TempDir(dir, prefix string) (string, error) {
 	if c.Mock.TempDirFunc != nil {
 		return c.Mock.TempDir(dir, prefix)

@@ -9,7 +9,6 @@ import (
 	"github.com/confluentinc/go-printer"
 	"github.com/spf13/cobra"
 	"os"
-	"strings"
 )
 
 type secureFileCommand struct {
@@ -140,7 +139,10 @@ command returns a failure if a master key has not already been set using the "ma
 	rotateKeyCmd := &cobra.Command{
 		Use:   "rotate",
 		Short: "Rotate master or data key.",
-		Long:  `This command rotates either the master or data key.`,
+		Long:  `This command rotates either the master or data key. 
+				For rotating master key specify the current master key passphrase using --passphrase flag 
+				and new master key passphrase using the --passphrase-new flag. 
+				For rotating the data key specify the current master key passphrase using --passphrase flag.`,
 		RunE:  c.rotate,
 		Args:  cobra.NoArgs,
 	}
@@ -150,6 +152,7 @@ command returns a failure if a master key has not already been set using the "ma
 	rotateKeyCmd.Flags().String("local-secrets-file", "", "Path to the encrypted configuration properties file.")
 	check(rotateKeyCmd.MarkFlagRequired("local-secrets-file"))
 	rotateKeyCmd.Flags().String("passphrase", "", "Master key passphrase; use - to pipe from stdin or @file.txt to read from file.")
+	rotateKeyCmd.Flags().String("passphrase-new", "", "New Master key passphrase; use - to pipe from stdin or @file.txt to read from file.")
 	rotateKeyCmd.Flags().SortFlags = false
 	c.AddCommand(rotateKeyCmd)
 }
@@ -294,11 +297,6 @@ func (c *secureFileCommand) remove(cmd *cobra.Command, args []string) error {
 }
 
 func (c *secureFileCommand) rotate(cmd *cobra.Command, args []string) error {
-	passphrasesSource, err := cmd.Flags().GetString("passphrase")
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
 	localSecretsPath, err := cmd.Flags().GetString("local-secrets-file")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -310,29 +308,22 @@ func (c *secureFileCommand) rotate(cmd *cobra.Command, args []string) error {
 	}
 
 	if rotateMEK {
-		oldPassphrase := ""
-		newPassphrase := ""
-		if passphrasesSource == "" {
-			oldPassphrase, err = c.getConfigs(cmd, passphrasesSource, "passphrase", "Old Master Key Passphrase: ", true)
-			if err != nil {
-				return errors.HandleCommon(err, cmd)
-			}
-			newPassphrase, err = c.getConfigs(cmd, passphrasesSource, "passphrase", "New Master Key Passphrase: ", true)
-			if err != nil {
-				return errors.HandleCommon(err, cmd)
-			}
-
-		} else {
-			passphrases, err := c.getConfigs(cmd, passphrasesSource, "passphrase", "", false)
-			if err != nil {
-				return errors.HandleCommon(err, cmd)
-			}
-
-			oldPassphrase, newPassphrase, err = c.getOldPassphrase(passphrases)
-			if err != nil {
-				return errors.HandleCommon(err, cmd)
-			}
+		oldPassphraseSource, err := cmd.Flags().GetString("passphrase")
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
 		}
+
+		oldPassphrase, err := c.getConfigs(cmd, oldPassphraseSource, "passphrase", "Old Master Key Passphrase: ", true)
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+
+		newPassphraseSource, err := cmd.Flags().GetString("passphrase-new")
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+
+		newPassphrase, err := c.getConfigs(cmd, newPassphraseSource, "passphrase-new", "New Master Key Passphrase: ", true)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
@@ -348,7 +339,11 @@ func (c *secureFileCommand) rotate(cmd *cobra.Command, args []string) error {
 			return errors.HandleCommon(err, cmd)
 		}
 	} else {
-		passphrase, err := c.getConfigs(cmd, passphrasesSource, "passphrase", "Master Key Passphrase: ", true)
+		passphraseSource, err := cmd.Flags().GetString("passphrase")
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+		passphrase, err := c.getConfigs(cmd, passphraseSource, "passphrase", "Master Key Passphrase: ", true)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
@@ -359,15 +354,6 @@ func (c *secureFileCommand) rotate(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
-}
-
-func (c *secureFileCommand) getOldPassphrase(passphrases string) (string, string, error) {
-	passphrasesArr := strings.Split(passphrases, ",")
-	if len(passphrasesArr) != 2 {
-		return "", "", fmt.Errorf("Missing the master key passphrase. Enter comma separated old and new master key passphrases")
-	}
-
-	return passphrasesArr[0], passphrasesArr[1], nil
 }
 
 func (c *secureFileCommand) getConfigs(cmd *cobra.Command, configSource string, inputType string, prompt string, secure bool) (string, error) {

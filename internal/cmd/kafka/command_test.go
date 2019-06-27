@@ -430,7 +430,7 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 	cmd.SetOutput(buf)
 
 	err := cmd.Execute()
-	want := "You must login to access Confluent Cloud."
+	want := "You must login to run that command."
 	if err.Error() != want {
 		t.Errorf("unexpected output, got %s, want %s", err, want)
 	}

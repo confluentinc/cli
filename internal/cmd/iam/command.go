@@ -17,12 +17,13 @@ type command struct {
 }
 
 // New returns the default command object for interacting with RBAC.
-func New(config *config.Config, ch *pcmd.ConfigHelper, version *version.Version, client *mds.APIClient) *cobra.Command {
+func New(prerunner pcmd.PreRunner, config *config.Config, ch *pcmd.ConfigHelper, version *version.Version, client *mds.APIClient) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
-			Use:   "iam",
-			Short: "Manage RBAC and IAM permissions.",
-			Long:  "Manage Role Based Access (RBAC) and Identity and Access Management (IAM) permissions.",
+			Use:               "iam",
+			Short:             "Manage RBAC and IAM permissions.",
+			Long:              "Manage Role Based Access (RBAC) and Identity and Access Management (IAM) permissions.",
+			PersistentPreRunE: prerunner.Authenticated(),
 		},
 		config: config,
 		ch:     ch,

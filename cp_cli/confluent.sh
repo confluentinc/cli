@@ -32,17 +32,22 @@ die() {
 }
 
 validate_and_export_dir_layout() {
+    # Attempt to find Confluent dir, even if just running a help command
+    if [[ ! -z "${CONFLUENT_HOME}" ]]; then
+        command_name="confluent local"
+        confluent_home="${CONFLUENT_HOME}"
+        confluent_bin="${CONFLUENT_HOME}/bin"
+    fi
+
     # We don't need to know CONFLUENT_HOME just to see the list of commands
     [[ $# -lt 1 ]] || [[ "$1" = "skip" ]] && command_name="confluent local" && return
 
+    # No need for this workaround if we are just running a help command
+    # (so okay to return above without executing the below block)
     if [[ -z "${CONFLUENT_HOME}" ]]; then
         command_name="$( basename "${BASH_SOURCE[0]}" )"
         confluent_bin="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
         confluent_home="$( dirname "${confluent_bin}" )"
-    else
-        command_name="confluent local"
-        confluent_home="${CONFLUENT_HOME}"
-        confluent_bin="${CONFLUENT_HOME}/bin"
     fi
 
     confluent_conf="${confluent_home}/etc"
@@ -1135,9 +1140,9 @@ is_demo_name_valid() {
     local subcommand="${3}"
 
     if [[ -z $demo_name ]]; then
-      die "'confluent demo $subcommand' requires an argument that specifies the demo name. Please run 'confluent demo list' to see available demos"
+      die "'confluent local demo $subcommand' requires an argument that specifies the demo name. Please run 'confluent local demo list' to see available demos"
     elif [[ ! -d $demo_name ]]; then
-      die "Demo $demo_name does not exist in ${confluent_home}/$repo. Please run 'confluent demo list' to see available demos"
+      die "Demo $demo_name does not exist in ${confluent_home}/$repo. Please run 'confluent local demo list' to see available demos"
     fi
 
     return 0
@@ -1176,7 +1181,7 @@ demo_command() {
         fi
         cd ${confluent_home}/$repo && git checkout ${confluent_version} 2> /dev/null
       else
-        echo "'confluent demo $subcommand $demo_name' requires network connectivity. Please try again when you are connected."
+        echo "'confluent local demo $subcommand $demo_name' requires network connectivity. Please try again when you are connected."
         return
       fi
     fi
@@ -1190,13 +1195,13 @@ demo_command() {
 
     if [[ $subcommand == "list" ]]; then
       check_demo_repo_uptodate $is_network_up "${confluent_home}/$repo"
-      echo -e "Available demos from ${confluent_home}/$repo (start a demo 'confluent demo start <demo-name>':"
+      echo -e "Available demos from ${confluent_home}/$repo (start a demo 'confluent local demo start <demo-name>':"
       ls | grep -v "README.md" | grep -v "utils" | grep -v "LICENSE"
     elif [[ $subcommand == "update" ]]; then
       if [ $is_network_up == true ]; then
         cd ${confluent_home}/$repo && git fetch --tags && git checkout ${confluent_version}
       else
-        echo "Running 'confluent demo $subcommand $demo_name' requires network connectivity. Please try again when you are connected."
+        echo "Running 'confluent local demo $subcommand $demo_name' requires network connectivity. Please try again when you are connected."
         return
       fi
     elif [[ $subcommand == "start" ]]; then
@@ -1682,7 +1687,7 @@ acl_command() {
                     else
                         echo "Please install Confluent Security Plugins to use acl schema-registry"
                     fi;;
-        *) die "Missing required <service> argument. Type 'confluent help acl' to get a list of services supporting ACL";;
+        *) die "Missing required <service> argument. Type 'confluent local help acl' to get a list of services supporting ACL";;
     esac
 }
 
@@ -1747,10 +1752,12 @@ produce_usage() {
     fi
 
     cat <<EOF
-Usage: ${command_name} produce <topicname> [--value-format avro --property value.schema=<schema>] [--cloud] [--config <filename>] [other optional args]
+Usage: ${command_name} produce <topicname> -- [--value-format avro --property value.schema=<schema>] [--cloud] [--config <filename>] [other optional args]
 
 Description:
     Produce to Kafka topic specified by <topicname>.
+
+    If flags are specified, adding -- after the topic name is required.
 
     By default, this command produces to the Kafka cluster on the localhost.
     To send to another Kafka cluster, set the '--broker-list' argument.
@@ -1766,17 +1773,21 @@ Description:
     After typing the command, enter each message on a new line. Press 'ctrl-c' to finish.
 
 Examples:
-    confluent produce mytopic1
+    confluent local produce mytopic1
 
-    confluent produce mytopic1 --value-format avro --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
+    confluent local produce mytopic1 -- --value-format avro --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
 
-    confluent produce mytopic1 --cloud --property parse.key=true --property key.separator=,
+    confluent local produce mytopic1 -- --cloud --property parse.key=true --property key.separator=,
 
 Optional Arguments:
-
 EOF
 
-    ${confluent_home}/bin/kafka-console-producer
+    if [ -f ${confluent_home}/bin/kafka-console-producer ]; then
+        ${confluent_home}/bin/kafka-console-producer
+    else
+        echo "(not shown since Confluent Platform installation not found; specify --path or set \$CONFLUENT_HOME)"
+    fi
+
     exit $exit_status
 }
 
@@ -1788,10 +1799,12 @@ consume_usage() {
     fi
 
     cat <<EOF
-Usage: ${command_name} consume <topicname> ] [--value-format avro] [--cloud] [--config <filename>] [other optional args]
+Usage: ${command_name} consume <topicname> -- [--value-format avro] [--cloud] [--config <filename>] [other optional args]
 
 Description:
     Consume from Kafka topic specified by <topicname>.
+
+    If flags are specified, adding -- after the topic name is required.
 
     By default, this command consumes from the Kafka cluster on the localhost.
     To consume from another Kafka cluster, set the '--bootstrap-server' argument.
@@ -1805,16 +1818,23 @@ Description:
     To read Avro data, specify '--value-format avro'
 
 Examples:
-    confluent consume mytopic1 --from-beginning
+    confluent local consume mytopic1
 
-    confluent consume mytopic1 --value-format avro --from-beginning
+    confluent local consume mytopic1 -- --from-beginning
 
-    confluent consume mytopic1 --cloud --property print.key=true --from-beginning
+    confluent local consume mytopic1 -- --value-format avro --from-beginning
+
+    confluent local consume mytopic1 -- --cloud --property print.key=true --from-beginning
 
 Optional Arguments:
 EOF
 
-    ${confluent_home}/bin/kafka-console-consumer
+    if [ -f ${confluent_home}/bin/kafka-console-consumer ]; then
+        ${confluent_home}/bin/kafka-console-consumer
+    else
+        echo "(not shown since Confluent Platform installation not found; specify --path or set \$CONFLUENT_HOME)"
+    fi
+
     exit $exit_status
 }
 
@@ -1835,13 +1855,13 @@ Description:
 
 
 Examples:
-    confluent list
+    confluent local list
         Prints the available services.
 
-    confluent list plugins
+    confluent local list plugins
         Prints all the connector plugins (connector classes) discoverable by Connect runtime.
 
-    confluent list connectors
+    confluent local list connectors
         Prints a list of predefined connectors.
 
 EOF
@@ -1862,10 +1882,10 @@ Output:
 
 
 Examples:
-    confluent start
+    confluent local start
         Starts all available services.
 
-    confluent start kafka
+    confluent local start kafka
         Starts kafka and zookeeper as its dependency.
 
 EOF
@@ -1886,10 +1906,10 @@ Output:
 
 
 Examples:
-    confluent stop
+    confluent local stop
         Stops all available services.
 
-    confluent stop kafka
+    confluent local stop kafka
         Stops kafka and zookeeper as its dependency.
 
 EOF
@@ -1914,16 +1934,16 @@ Description:
 
 
 Examples:
-    confluent status
+    confluent local status
         Prints the status of the available services.
 
-    confluent status kafka
+    confluent local status kafka
         Prints the status of the 'kafka' service.
 
-    confluent status connectors
+    confluent local status connectors
         Prints a list with the loaded connectors at any given moment.
 
-    confluent status file-source
+    confluent local status file-source
         Prints the status of the connector with the given name.
 
 EOF
@@ -1944,7 +1964,7 @@ Output:
 
 
 Examples:
-    confluent current
+    confluent local current
         /tmp/confluent.SpBP4fQi
 
 EOF
@@ -1958,7 +1978,7 @@ Usage: ${command_name} demo [ list | update | start | stop | info ] [ <demo-name
 Description:
     Confluent Platform demos from https://github.com/confluentinc/examples:
 
-    - Running 'confluent demo' requires internet connectivity and GitHub access.
+    - Running 'confluent local demo' requires internet connectivity and GitHub access.
     - Demos are stored locally in ${confluent_home}/examples.
     - The demos are for sandbox testing in a development environment. Never run these demos in production.
 
@@ -1971,19 +1991,19 @@ Description:
       'info <demo-name>'    : see README for specific demo
 
 Examples:
-    confluent demo list
+    confluent local demo list
         Lists names of available demos provided in the GitHub repo
 
-    confluent demo update
+    confluent local demo update
         Pulls the latest demo code from the GitHub repo
 
-    confluent demo start wikipedia
+    confluent local demo start wikipedia
         Starts a demo called wikipedia
 
-    confluent demo stop wikipedia
+    confluent local demo stop wikipedia
         Stops a demo called wikipedia
 
-    confluent demo info wikipedia
+    confluent local demo info wikipedia
         Provide README for demo called wikipedia
 
 EOF
@@ -2000,7 +2020,7 @@ Description:
 
 
 Examples:
-    confluent destroy
+    confluent local destroy
         Confirms that every service is stopped and finally prints the filesystem path that is deleted.
 
 EOF
@@ -2018,10 +2038,10 @@ Description:
 
 
 Examples:
-    confluent log connect
+    confluent local log connect
         Opens the connect log using 'less'.
 
-    confluent log kafka -f
+    confluent local log kafka -f
         Tails the kafka log and waits to print additional output until the log command is interrupted.
 
 EOF
@@ -2077,17 +2097,17 @@ Description:
 
 
 Examples:
-    confluent config s3-sink
+    confluent local config s3-sink
         Prints the current configuration of the predefined connector with name 's3-sink'
 
-    confluent config wikipedia-file-source
+    confluent local config wikipedia-file-source
         Prints the current configuration of a custom connector with name 'wikipedia-file-source'
 
-    confluent config wikipedia-file-source -d ./wikipedia-file-source.json
+    confluent local config wikipedia-file-source -d ./wikipedia-file-source.json
         Configures a connector named 'wikipedia-file-source' by passing its configuration properties in
         JSON format.
 
-    confluent config wikipedia-file-source -d ./wikipedia-file-source.properties
+    confluent local config wikipedia-file-source -d ./wikipedia-file-source.properties
         Configures a connector named 'wikipedia-file-source' by passing its configuration properties as
         java properties.
 
@@ -2119,10 +2139,10 @@ Description:
     Print the Confluent Platform version, or the individual version of a service.
 
 Examples:
-    confluent version
+    confluent local version
         Prints the version of Confluent Platform.
 
-    confluent version kafka
+    confluent local version kafka
         Prints the version of a service included with Confluent Platform, 'kafka' in this example.
 
 EOF
