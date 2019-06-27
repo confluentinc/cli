@@ -1752,10 +1752,12 @@ produce_usage() {
     fi
 
     cat <<EOF
-Usage: ${command_name} produce <topicname> [--value-format avro --property value.schema=<schema>] [--cloud] [--config <filename>] [other optional args]
+Usage: ${command_name} produce -- <topicname> [--value-format avro --property value.schema=<schema>] [--cloud] [--config <filename>] [other optional args]
 
 Description:
     Produce to Kafka topic specified by <topicname>.
+
+    If flags are specified, adding -- after produce is required.
 
     By default, this command produces to the Kafka cluster on the localhost.
     To send to another Kafka cluster, set the '--broker-list' argument.
@@ -1773,9 +1775,9 @@ Description:
 Examples:
     confluent local produce mytopic1
 
-    confluent local produce mytopic1 --value-format avro --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
+    confluent local produce -- mytopic1 --value-format avro --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
 
-    confluent local produce mytopic1 --cloud --property parse.key=true --property key.separator=,
+    confluent local produce -- mytopic1 --cloud --property parse.key=true --property key.separator=,
 
 Optional Arguments:
 EOF
@@ -1797,10 +1799,12 @@ consume_usage() {
     fi
 
     cat <<EOF
-Usage: ${command_name} consume <topicname> ] [--value-format avro] [--cloud] [--config <filename>] [other optional args]
+Usage: ${command_name} consume -- <topicname> ] [--value-format avro] [--cloud] [--config <filename>] [other optional args]
 
 Description:
     Consume from Kafka topic specified by <topicname>.
+
+    If flags are specified, adding -- after consume is required.
 
     By default, this command consumes from the Kafka cluster on the localhost.
     To consume from another Kafka cluster, set the '--bootstrap-server' argument.
@@ -1814,11 +1818,13 @@ Description:
     To read Avro data, specify '--value-format avro'
 
 Examples:
-    confluent local consume mytopic1 --from-beginning
+    confluent local consume mytopic1
 
-    confluent local consume mytopic1 --value-format avro --from-beginning
+    confluent local consume -- mytopic1 --from-beginning
 
-    confluent local consume mytopic1 --cloud --property print.key=true --from-beginning
+    confluent local consume -- mytopic1 --value-format avro --from-beginning
+
+    confluent local consume -- mytopic1 --cloud --property print.key=true --from-beginning
 
 Optional Arguments:
 EOF
