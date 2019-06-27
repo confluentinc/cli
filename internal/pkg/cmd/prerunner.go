@@ -58,15 +58,14 @@ func (r *PreRun) Authenticated() func(cmd *cobra.Command, args []string) error {
 			var claims map[string]interface{}
 			token, err := jwt.ParseSigned(r.Config.AuthToken)
 			if err != nil {
-				return errors.HandleCommon(err, cmd)
+				return errors.HandleCommon(&ccloud.InvalidTokenError{}, cmd)
 			}
 			if err := token.UnsafeClaimsWithoutVerification(&claims); err != nil {
 				return errors.HandleCommon(err, cmd)
 			}
 			if exp, ok := claims["exp"].(float64); ok {
-				if exp-float64(time.Now().Unix()) < float64(0) {
+				if float64(time.Now().Unix()) > exp {
 					return errors.HandleCommon(&ccloud.ExpiredTokenError{}, cmd)
-				} else {
 				}
 			}
 		}
