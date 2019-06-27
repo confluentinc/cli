@@ -140,9 +140,9 @@ command returns a failure if a master key has not already been set using the "ma
 		Use:   "rotate",
 		Short: "Rotate master or data key.",
 		Long:  `This command rotates either the master or data key. 
-				For rotating master key specify the old master key passphrase using --passphrase-old flag 
+				For rotating master key specify the current master key passphrase using --passphrase flag 
 				and new master key passphrase using the --passphrase-new flag. 
-				For rotating the data key specify the master key passphrase using --passphrase flag.`,
+				For rotating the data key specify the current master key passphrase using --passphrase flag.`,
 		RunE:  c.rotate,
 		Args:  cobra.NoArgs,
 	}
@@ -152,7 +152,6 @@ command returns a failure if a master key has not already been set using the "ma
 	rotateKeyCmd.Flags().String("local-secrets-file", "", "Path to the encrypted configuration properties file.")
 	check(rotateKeyCmd.MarkFlagRequired("local-secrets-file"))
 	rotateKeyCmd.Flags().String("passphrase", "", "Master key passphrase; use - to pipe from stdin or @file.txt to read from file.")
-	rotateKeyCmd.Flags().String("passphrase-old", "", "Old Master key passphrase; use - to pipe from stdin or @file.txt to read from file.")
 	rotateKeyCmd.Flags().String("passphrase-new", "", "New Master key passphrase; use - to pipe from stdin or @file.txt to read from file.")
 	rotateKeyCmd.Flags().SortFlags = false
 	c.AddCommand(rotateKeyCmd)
@@ -309,12 +308,12 @@ func (c *secureFileCommand) rotate(cmd *cobra.Command, args []string) error {
 	}
 
 	if rotateMEK {
-		oldPassphraseSource, err := cmd.Flags().GetString("passphrase-old")
+		oldPassphraseSource, err := cmd.Flags().GetString("passphrase")
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
 
-		oldPassphrase, err := c.getConfigs(cmd, oldPassphraseSource, "passphrase-old", "Old Master Key Passphrase: ", true)
+		oldPassphrase, err := c.getConfigs(cmd, oldPassphraseSource, "passphrase", "Old Master Key Passphrase: ", true)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
