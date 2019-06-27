@@ -20,7 +20,7 @@ var messages = map[error]string{
 
 var typeMessages = map[reflect.Type]string{
 	reflect.TypeOf(&ccloud.InvalidLoginError{}): "You have entered an incorrect username or password. Please try again.",
-	reflect.TypeOf(&ccloud.ExpiredTokenError{}): "Your auth token has expired. Please login again.",
+	reflect.TypeOf(&ccloud.ExpiredTokenError{}): "Your session has expired. Please login again.",
 	reflect.TypeOf(&ccloud.InvalidTokenError{}): "Your auth token has been corrupted. Please login again.",
 }
 
