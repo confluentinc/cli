@@ -88,16 +88,15 @@ func GenerateConfigKey(path string, key string) string {
 }
 
 func AppendDelimiter(path string) error {
-	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0)
 	if err != nil {
 		return err
 	}
 	if _, err := f.Write([]byte(SECURE_CONFIG_PROVIDER_DELIMITER)); err != nil {
 		return err
 	}
-	if err := f.Close(); err != nil {
-		return err
-	}
+
+	defer f.Close()
 
 	return nil
 }

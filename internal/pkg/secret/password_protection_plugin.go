@@ -123,11 +123,6 @@ func (c *PasswordProtectionSuite) EncryptConfigFileSecrets(configFilePath string
 		return fmt.Errorf("invalid config file path: %s", configFilePath)
 	}
 	// Load the configs.
-	// Add a delimiter key at the end of the file to retain the comments in the config file.
-	err := AppendDelimiter(configFilePath)
-	if err != nil {
-		return err
-	}
 	configProps, err := LoadPropertiesFile(configFilePath)
 	configProps.DisableExpansion = true
 	if err != nil {
@@ -158,13 +153,12 @@ func (c *PasswordProtectionSuite) EncryptConfigFileSecrets(configFilePath string
 		}
 	}
 	// Encrypt the secrets with DEK. Save the encrypted secrets in secure config file.
-	err = c.encryptConfigValues(matchProps, localSecureConfigPath, configProps, configFilePath, remoteSecureConfigPath)
+	err = c.encryptConfigValues(matchProps, localSecureConfigPath, configFilePath, remoteSecureConfigPath)
 	if err != nil {
 		return err
 	}
 
-	// Remove the Delimiter
-	return RemoveDelimiter(configFilePath)
+	return err
 }
 
 // This function decrypts all the passwords in configFilePath properties files and stores the decrypted passwords in outputFilePath.
@@ -429,27 +423,16 @@ func (c *PasswordProtectionSuite) AddEncryptedPasswords(configFilePath string, l
 		return err
 	}
 
-	// Add a delimiter key at the end of the file to retain the comments in the config file.
-	err = AppendDelimiter(configFilePath)
-	if err != nil {
-		return err
-	}
-	configProps, err := LoadPropertiesFile(configFilePath)
-	if err != nil {
-		return err
-	}
-
 	if newConfigProps.Len() == 0 {
 		return fmt.Errorf("add failed: empty list of new configs")
 	}
 
-	err = c.encryptConfigValues(newConfigProps, localSecureConfigPath, configProps, configFilePath, remoteSecureConfigPath)
+	err = c.encryptConfigValues(newConfigProps, localSecureConfigPath, configFilePath, remoteSecureConfigPath)
 	if err != nil {
 		return err
 	}
 
-	// Remove the Delimiter
-	return RemoveDelimiter(configFilePath)
+	return err
 }
 
 // This function updates a the value of existing keys in the configFilePath property file. The original 'value' is
@@ -487,13 +470,9 @@ func (c *PasswordProtectionSuite) UpdateEncryptedPasswords(configFilePath string
 		return fmt.Errorf("update failed: empty list of update configs")
 	}
 
-	err = c.encryptConfigValues(newConfigProps, localSecureConfigPath, configProps, configFilePath, remoteSecureConfigPath)
-	if err != nil {
-		return err
-	}
+	err = c.encryptConfigValues(newConfigProps, localSecureConfigPath, configFilePath, remoteSecureConfigPath)
 
-	// Remove the Delimiter
-	return RemoveDelimiter(configFilePath)
+	return err
 }
 
 func (c *PasswordProtectionSuite) RemoveEncryptedPasswords(configFilePath string, localSecureConfigPath string, removeConfigs string) error {
@@ -675,8 +654,8 @@ func (c *PasswordProtectionSuite) loadMasterKey() (string, error) {
 	return masterKey, nil
 }
 
-func (c *PasswordProtectionSuite) encryptConfigValues(matchProps *properties.Properties, localSecureConfigPath string, configProps *properties.Properties,
-	configFilePath string, remoteConfigFilePath string) error {
+func (c *PasswordProtectionSuite) encryptConfigValues(matchProps *properties.Properties, localSecureConfigPath string, configFilePath string,
+	remoteConfigFilePath string) error {
 
 	// Load master Key
 	masterKey, err := c.loadMasterKey()
@@ -697,6 +676,17 @@ func (c *PasswordProtectionSuite) encryptConfigValues(matchProps *properties.Pro
 		c.Logger.Debug(err)
 		return fmt.Errorf("failed to unwrap the data key due to invalid master key or corrupted data key.")
 	}
+
+	// Add a delimiter key at the end of the file to retain the last comment in the config file.
+	err = AppendDelimiter(configFilePath)
+	if err != nil {
+		return err
+	}
+	configProps, err := LoadPropertiesFile(configFilePath)
+	if err != nil {
+		return err
+	}
+	configProps.DisableExpansion = true
 
 	for key, value := range matchProps.Map() {
 		encryptedPass, err := c.isPasswordEncrypted(value)
@@ -731,6 +721,12 @@ func (c *PasswordProtectionSuite) encryptConfigValues(matchProps *properties.Pro
 	}
 
 	err = WritePropertiesFile(configFilePath, configProps, true)
+	if err != nil {
+		return err
+	}
+
+	// Remove the Delimiter
+	err = RemoveDelimiter(configFilePath)
 	if err != nil {
 		return err
 	}
