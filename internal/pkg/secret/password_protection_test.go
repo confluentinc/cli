@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/confluentinc/cli/internal/pkg/log"
-	s1 "github.com/confluentinc/cli/internal/pkg/secret"
 	"github.com/jonboulle/clockwork"
 	"github.com/magiconair/properties"
 	"github.com/stretchr/testify/require"
@@ -28,14 +27,14 @@ func TestPasswordProtectionSuite_CreateMasterKey(t *testing.T) {
 		seed                         int64
 	}
 	tests := []struct {
-		name           string
-		args           *args
-		wantErr        bool
-		wantErrMsg     string
-		wantMasterKey  string
-		wantMEKNewSeed string
+		name                      string
+		args                      *args
+		wantErr                   bool
+		wantErrMsg                string
+		wantMasterKey             string
+		wantMEKNewSeed            string
 		wantMEKWithoutSpecialChar string
-		wantEqual      bool
+		wantEqual                 bool
 	}{
 		{
 			name: "ValidTestCase: valid create master key",
@@ -61,9 +60,9 @@ func TestPasswordProtectionSuite_CreateMasterKey(t *testing.T) {
 				validateSpecialChar:          true,
 				seed:                         99,
 			},
-			wantErr:       false,
-			wantEqual:     false,
-			wantMasterKey: "G0WWpceOnaCwbQSpfrHt94SRymEAt01dpTN9IRW4fxw=",
+			wantErr:                   false,
+			wantEqual:                 false,
+			wantMasterKey:             "G0WWpceOnaCwbQSpfrHt94SRymEAt01dpTN9IRW4fxw=",
 			wantMEKWithoutSpecialChar: "XWiYpuA2A6fG/gaweaHlr4So/ZHz2swjgV1QT2mf/sM=",
 		},
 		{
@@ -77,9 +76,9 @@ func TestPasswordProtectionSuite_CreateMasterKey(t *testing.T) {
 				validateSpecialChar:          true,
 				seed:                         99,
 			},
-			wantErr:       false,
-			wantEqual:     false,
-			wantMasterKey: "vmWub/JptUEihqjgzC+5x8Y0NSeqcVqraNRDV7opmLI=",
+			wantErr:                   false,
+			wantEqual:                 false,
+			wantMasterKey:             "vmWub/JptUEihqjgzC+5x8Y0NSeqcVqraNRDV7opmLI=",
 			wantMEKWithoutSpecialChar: "XWiYpuA2A6fG/gaweaHlr4So/ZHz2swjgV1QT2mf/sM=",
 		},
 		{
@@ -93,9 +92,9 @@ func TestPasswordProtectionSuite_CreateMasterKey(t *testing.T) {
 				validateSpecialChar:          true,
 				seed:                         99,
 			},
-			wantErr:       false,
-			wantEqual:     true,
-			wantMasterKey: "XWiYpuA2A6fG/gaweaHlr4So/ZHz2swjgV1QT2mf/sM=",
+			wantErr:                   false,
+			wantEqual:                 true,
+			wantMasterKey:             "XWiYpuA2A6fG/gaweaHlr4So/ZHz2swjgV1QT2mf/sM=",
 			wantMEKWithoutSpecialChar: "XWiYpuA2A6fG/gaweaHlr4So/ZHz2swjgV1QT2mf/sM=",
 		},
 		{
@@ -134,7 +133,7 @@ func TestPasswordProtectionSuite_CreateMasterKey(t *testing.T) {
 			err := os.MkdirAll(tt.args.secureDir, os.ModePerm)
 			req.NoError(err)
 
-			plugin := s1.NewPasswordProtectionPlugin(logger)
+			plugin := NewPasswordProtectionPlugin(logger)
 			plugin.RandSource = rand.NewSource(tt.args.seed)
 
 			key, err := plugin.CreateMasterKey(tt.args.masterKeyPassphrase, tt.args.localSecureConfigPath)
@@ -252,7 +251,7 @@ config.properties/testPassword = ENC[AES/CBC/PKCS5Padding,data:SclgTBDDeLwccqtsa
 			name: "ValidTestCase: encrypt config file with last line as Comment, create new dek",
 			args: &args{
 				masterKeyPassphrase:    "abc123",
-				contents:               "testPassword=password \n#LAST LINE SHOUD NOT BE DELETED",
+				contents:               "testPassword=password\n# LAST LINE SHOUD NOT BE DELETED",
 				configFilePath:         "/tmp/securePass987/encrypt/config.properties",
 				localSecureConfigPath:  "/tmp/securePass987/encrypt/secureConfig.properties",
 				secureDir:              "/tmp/securePass987/encrypt",
@@ -263,7 +262,8 @@ config.properties/testPassword = ENC[AES/CBC/PKCS5Padding,data:SclgTBDDeLwccqtsa
 			},
 			wantErr: false,
 			wantConfigFile: `testPassword = ${securepass:/tmp/securePass987/encrypt/secureConfig.properties:config.properties/testPassword}
-#LAST LINE SHOUD NOT BE DELETED
+
+# LAST LINE SHOUD NOT BE DELETED
 config.providers = securepass
 config.providers.securepass.class = io.confluent.kafka.security.config.provider.SecurePassConfigProvider
 `,
@@ -314,7 +314,7 @@ config.properties/ssl.keystore.password = ENC[AES/CBC/PKCS5Padding,data:SclgTBDD
 			req := require.New(t)
 			err := os.MkdirAll(tt.args.secureDir, os.ModePerm)
 			req.NoError(err)
-			plugin := s1.NewPasswordProtectionPlugin(logger)
+			plugin := NewPasswordProtectionPlugin(logger)
 			plugin.RandSource = rand.NewSource(99)
 			plugin.Clock = clockwork.NewFakeClock()
 			if tt.args.setMEK {
@@ -337,7 +337,7 @@ config.properties/ssl.keystore.password = ENC[AES/CBC/PKCS5Padding,data:SclgTBDD
 			}
 
 			// Clean Up
-			os.Unsetenv(s1.CONFLUENT_KEY_ENVVAR)
+			os.Unsetenv(CONFLUENT_KEY_ENVVAR)
 			os.RemoveAll(tt.args.secureDir)
 		})
 	}
@@ -543,7 +543,7 @@ config.properties/testPassword = ENC[AES/CBC/PKCS5Padding,data:SclgTBDDeLwccqtsa
 			req.NoError(err)
 
 			if tt.args.setNewMEK {
-				os.Setenv(s1.CONFLUENT_KEY_ENVVAR, tt.args.newMasterKey)
+				os.Setenv(CONFLUENT_KEY_ENVVAR, tt.args.newMasterKey)
 			}
 
 			err = plugin.DecryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.outputConfigPath)
@@ -554,7 +554,7 @@ config.properties/testPassword = ENC[AES/CBC/PKCS5Padding,data:SclgTBDDeLwccqtsa
 			}
 
 			// Clean Up
-			os.Unsetenv(s1.CONFLUENT_KEY_ENVVAR)
+			os.Unsetenv(CONFLUENT_KEY_ENVVAR)
 			os.RemoveAll(tt.args.secureDir)
 		})
 	}
@@ -623,7 +623,7 @@ func TestPasswordProtectionSuite_AddConfigFileSecrets(t *testing.T) {
 			}
 
 			// Clean Up
-			os.Unsetenv(s1.CONFLUENT_KEY_ENVVAR)
+			os.Unsetenv(CONFLUENT_KEY_ENVVAR)
 			os.RemoveAll(tt.args.secureDir)
 		})
 	}
@@ -691,7 +691,7 @@ func TestPasswordProtectionSuite_UpdateConfigFileSecrets(t *testing.T) {
 				req.NoError(err)
 			}
 			// Clean Up
-			os.Unsetenv(s1.CONFLUENT_KEY_ENVVAR)
+			os.Unsetenv(CONFLUENT_KEY_ENVVAR)
 			os.RemoveAll(tt.args.secureDir)
 		})
 	}
@@ -763,7 +763,7 @@ func TestPasswordProtectionSuite_RemoveConfigFileSecrets(t *testing.T) {
 				req.NoError(err)
 			}
 			// Clean Up
-			os.Unsetenv(s1.CONFLUENT_KEY_ENVVAR)
+			os.Unsetenv(CONFLUENT_KEY_ENVVAR)
 			os.RemoveAll(tt.args.secureDir)
 		})
 	}
@@ -899,7 +899,7 @@ func TestPasswordProtectionSuite_RotateDataKey(t *testing.T) {
 				rotatedProps, err := properties.LoadFile(tt.args.localSecureConfigPath, properties.UTF8)
 				req.NoError(err)
 				for key, value := range originalProps.Map() {
-					if !strings.HasPrefix(key, s1.METADATA_PREFIX) {
+					if !strings.HasPrefix(key, METADATA_PREFIX) {
 						cipher := rotatedProps.GetString(key, "")
 						req.NotEqual(cipher, value)
 					}
@@ -908,7 +908,7 @@ func TestPasswordProtectionSuite_RotateDataKey(t *testing.T) {
 				req.NoError(err)
 			}
 			// Clean Up
-			os.Unsetenv(s1.CONFLUENT_KEY_ENVVAR)
+			os.Unsetenv(CONFLUENT_KEY_ENVVAR)
 			os.RemoveAll(tt.args.secureDir)
 		})
 	}
@@ -1047,24 +1047,24 @@ func TestPasswordProtectionSuite_RotateMasterKey(t *testing.T) {
 			checkError(err, tt.wantErr, tt.wantErrMsg, req)
 
 			if !tt.wantErr {
-				os.Setenv(s1.CONFLUENT_KEY_ENVVAR, newKey)
+				os.Setenv(CONFLUENT_KEY_ENVVAR, newKey)
 				err = validateUsingDecryption(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.outputConfigPath, tt.args.contents, plugin)
 				req.NoError(err)
 			}
 			// Clean Up
-			os.Unsetenv(s1.CONFLUENT_KEY_ENVVAR)
+			os.Unsetenv(CONFLUENT_KEY_ENVVAR)
 			os.RemoveAll(tt.args.secureDir)
 		})
 	}
 }
 
-func createMasterKey(passphrase string, localSecretsFile string, plugin *s1.PasswordProtectionSuite) error {
+func createMasterKey(passphrase string, localSecretsFile string, plugin *PasswordProtectionSuite) error {
 	key, err := plugin.CreateMasterKey(passphrase, localSecretsFile)
 	if err != nil {
 		fmt.Println(err)
 		return err
 	}
-	os.Setenv(s1.CONFLUENT_KEY_ENVVAR, key)
+	os.Setenv(CONFLUENT_KEY_ENVVAR, key)
 	return nil
 }
 
@@ -1080,7 +1080,7 @@ func validateFileContents(path string, expectedFileContent string, req *require.
 }
 
 func generateCorruptedData(cipher string) (string, error) {
-	data, _, _ := s1.ParseCipherValue(cipher)
+	data, _, _ := ParseCipherValue(cipher)
 	randomBytes := make([]byte, 32)
 	_, err := rand.Read(randomBytes)
 	if err != nil {
@@ -1092,36 +1092,36 @@ func generateCorruptedData(cipher string) (string, error) {
 }
 
 func corruptEncryptedDEK(localSecureConfigPath string) error {
-	secretsProps, err := s1.LoadPropertiesFile(localSecureConfigPath)
+	secretsProps, err := LoadPropertiesFile(localSecureConfigPath)
 	if err != nil {
 		return err
 	}
-	value := secretsProps.GetString(s1.METADATA_DATA_KEY, "")
+	value := secretsProps.GetString(METADATA_DATA_KEY, "")
 	corruptedCipher, err := generateCorruptedData(value)
 	if err != nil {
 		return err
 	}
-	_, _, err = secretsProps.Set(s1.METADATA_DATA_KEY, corruptedCipher)
+	_, _, err = secretsProps.Set(METADATA_DATA_KEY, corruptedCipher)
 	if err != nil {
 		return err
 	}
 
-	err = s1.WritePropertiesFile(localSecureConfigPath, secretsProps, true)
+	err = WritePropertiesFile(localSecureConfigPath, secretsProps, true)
 	return err
 }
 
 func verifyConfigsRemoved(configFilePath string, localSecureConfigPath string, removedConfigs string) error {
-	secretsProps, err := s1.LoadPropertiesFile(localSecureConfigPath)
+	secretsProps, err := LoadPropertiesFile(localSecureConfigPath)
 	if err != nil {
 		return err
 	}
-	configProps, err := s1.LoadPropertiesFile(configFilePath)
+	configProps, err := LoadPropertiesFile(configFilePath)
 	if err != nil {
 		return err
 	}
 	configs := strings.Split(removedConfigs, ",")
 	for _, key := range configs {
-		pathKey := s1.GenerateConfigKey(configFilePath, key)
+		pathKey := GenerateConfigKey(configFilePath, key)
 
 		// Check if config is removed from configs files
 		_, ok := configProps.Get(key)
@@ -1139,7 +1139,7 @@ func verifyConfigsRemoved(configFilePath string, localSecureConfigPath string, r
 	return nil
 }
 
-func validateUsingDecryption(configFilePath string, localSecureConfigPath string, outputConfigPath string, origConfigs string, plugin *s1.PasswordProtectionSuite) error {
+func validateUsingDecryption(configFilePath string, localSecureConfigPath string, outputConfigPath string, origConfigs string, plugin *PasswordProtectionSuite) error {
 	err := plugin.DecryptConfigFileSecrets(configFilePath, localSecureConfigPath, outputConfigPath)
 	if err != nil {
 		return fmt.Errorf("failed to decrypt config file !!!")
@@ -1170,13 +1170,13 @@ func validateUsingDecryption(configFilePath string, localSecureConfigPath string
 	return nil
 }
 
-func setUpDir(masterKeyPassphrase string, secureDir string, configFile string, localSecureConfigPath string, contents string) (*s1.PasswordProtectionSuite, error) {
+func setUpDir(masterKeyPassphrase string, secureDir string, configFile string, localSecureConfigPath string, contents string) (*PasswordProtectionSuite, error) {
 	err := os.MkdirAll(secureDir, os.ModePerm)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create password protection directory")
 	}
 	logger := log.New()
-	plugin := s1.NewPasswordProtectionPlugin(logger)
+	plugin := NewPasswordProtectionPlugin(logger)
 	plugin.RandSource = rand.NewSource(99)
 
 	// Set master key
