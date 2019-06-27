@@ -41,8 +41,8 @@ func NewPasswordProtectionPlugin(logger *log.Logger) *PasswordProtectionSuite {
 // This function generates a new data key for encryption/decryption of secrets. The DEK is wrapped using the master key and saved in the secrets file
 // along with other metadata.
 func (c *PasswordProtectionSuite) CreateMasterKey(passphrase string, localSecureConfigPath string) (string, error) {
-	passphrase = strings.TrimSpace(passphrase)
-	if len(passphrase) == 0 {
+	passphrase = strings.TrimSuffix(passphrase, "\n")
+	if len(strings.TrimSpace(passphrase)) == 0 {
 		return "", fmt.Errorf("master key passphrase cannot be empty")
 	}
 
