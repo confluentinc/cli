@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/DABH/go-basher"
+	"github.com/jonboulle/clockwork"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go"
@@ -83,6 +84,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		Logger:       logger,
 		Config:       cfg,
 		ConfigHelper: ch,
+		Clock:        clockwork.NewRealClock(),
 	}
 
 	cli.PersistentPreRunE = prerunner.Anonymous()

@@ -1,8 +1,7 @@
 package cmd
 
 import (
-	"time"
-
+	"github.com/jonboulle/clockwork"
 	"github.com/spf13/cobra"
 	"gopkg.in/square/go-jose.v2/jwt"
 
@@ -29,6 +28,7 @@ type PreRun struct {
 	Logger       *log.Logger
 	Config       *config.Config
 	ConfigHelper *ConfigHelper
+	Clock        clockwork.Clock
 }
 
 // Anonymous provides PreRun operations for commands that may be run without a logged-in user
@@ -64,7 +64,7 @@ func (r *PreRun) Authenticated() func(cmd *cobra.Command, args []string) error {
 				return errors.HandleCommon(err, cmd)
 			}
 			if exp, ok := claims["exp"].(float64); ok {
-				if float64(time.Now().Unix()) > exp {
+				if float64(r.Clock.Now().Unix()) > exp {
 					return errors.HandleCommon(&ccloud.ExpiredTokenError{}, cmd)
 				}
 			}
