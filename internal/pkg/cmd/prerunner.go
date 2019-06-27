@@ -56,7 +56,10 @@ func (r *PreRun) Authenticated() func(cmd *cobra.Command, args []string) error {
 		if r.Config.AuthToken != "" {
 			// Validate token (not expired)
 			var claims map[string]interface{}
-			token, _ := jwt.ParseSigned(r.Config.AuthToken)
+			token, err := jwt.ParseSigned(r.Config.AuthToken)
+			if err != nil {
+				return errors.HandleCommon(err, cmd)
+			}
 			if err := token.UnsafeClaimsWithoutVerification(&claims); err != nil {
 				return errors.HandleCommon(err, cmd)
 			}
