@@ -189,7 +189,7 @@ func (s *CLITestSuite) Test_Ccloud_Errors() {
 		require.Equal(tt, "Logged in as expired@user.com\nUsing environment a-595 (\"default\")\n", output)
 
 		output = runCommand(t, "ccloud", []string{}, "kafka cluster list", 1)
-		require.Equal(tt, "Error: Your access to Confluent Cloud has expired. Please login again.\n", output)
+		require.Equal(tt, "Error: Your auth token has expired. Please login again.\n", output)
 	})
 
 	t.Run("malformed token", func(tt *testing.T) {

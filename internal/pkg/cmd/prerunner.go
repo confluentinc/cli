@@ -1,7 +1,13 @@
 package cmd
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/spf13/cobra"
+	"gopkg.in/square/go-jose.v2/jwt"
+
+	"github.com/confluentinc/ccloud-sdk-go"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -47,6 +53,28 @@ func (r *PreRun) Authenticated() func(cmd *cobra.Command, args []string) error {
 		}
 		if err := r.Config.CheckLogin(); err != nil {
 			return errors.HandleCommon(err, cmd)
+		}
+		fmt.Println("H1")
+		if r.Config.AuthToken != "" {
+			// Validate token (not expired)
+			var claims map[string]interface{}
+			token, _ := jwt.ParseSigned(r.Config.AuthToken)
+			fmt.Println("H2")
+			if err := token.UnsafeClaimsWithoutVerification(&claims); err != nil {
+				return errors.HandleCommon(err, cmd)
+			}
+			fmt.Println("H3")
+			fmt.Println(claims["exp"].(float64))
+			if exp, ok := claims["exp"].(float64); ok {
+				fmt.Println("H4")
+				if exp - float64(time.Now().Unix()) < float64(0) {
+					fmt.Println("H5")
+					return errors.HandleCommon(&ccloud.ExpiredTokenError{}, cmd)
+				} else {
+					fmt.Println("H6")
+				}
+			}
+			fmt.Println("H7")
 		}
 		return nil
 	}
