@@ -54,6 +54,13 @@ github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 h1:sIWhdehnHPCWoZeM
 github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2/go.mod h1:HNotNNYHefttEUajcmByCW4bWNBiYd7s5mNZWzB62r0=
 github.com/confluentinc/ccloud-sdk-go v0.0.7-0.20190515193705-ed57783609c7 h1:+uk+Z26zhP0r5EHJH7ZJ1m4RQv3KBzEsxtl7ihw1k2U=
 github.com/confluentinc/ccloud-sdk-go v0.0.7-0.20190515193705-ed57783609c7/go.mod h1:zIbhvPHqy+PZLxuIDaN4Hkr1XSVffPL8ynnvJ65empo=
+github.com/confluentinc/ccloud-sdk-go v0.0.7-0.20190626214139-86c6c3b23bce h1:wfzB5yYooMBk5foZmuBgNd4gubqnubqHdfAoHNS8Hak=
+github.com/confluentinc/ccloud-sdk-go v0.0.7-0.20190626214139-86c6c3b23bce/go.mod h1:RZsyKqVROhZ6UFX4WasP6SKpG9yduHfN4DVjntK0Ji8=
+github.com/confluentinc/ccloud-sdk-go v0.0.7-0.20190626214657-3dd1b40dfc24 h1:x3UbGeNPHwycavXuz82zJHmURgny+aOawLQqLnTLktM=
+github.com/confluentinc/ccloud-sdk-go v0.0.7-0.20190626214657-3dd1b40dfc24/go.mod h1:RZsyKqVROhZ6UFX4WasP6SKpG9yduHfN4DVjntK0Ji8=
+github.com/confluentinc/ccloud-sdk-go v0.0.7-0.20190627233920-ffd6c80c1003/go.mod h1:RZsyKqVROhZ6UFX4WasP6SKpG9yduHfN4DVjntK0Ji8=
+github.com/confluentinc/ccloud-sdk-go v0.0.7 h1:Jd0DCHJHZRZl/CT+rhXJxtJvSuXwOLMudKCqdV2qDjg=
+github.com/confluentinc/ccloud-sdk-go v0.0.7/go.mod h1:RZsyKqVROhZ6UFX4WasP6SKpG9yduHfN4DVjntK0Ji8=
 github.com/confluentinc/ccloud-sdk-go v0.0.7-0.20190626214514-9a69a30434cf h1:C+Oh38efGCfEa0jM4Ytmzj+YoFPI6Y1RmR9ksqwBbio=
 github.com/confluentinc/ccloud-sdk-go v0.0.7-0.20190626214514-9a69a30434cf/go.mod h1:RZsyKqVROhZ6UFX4WasP6SKpG9yduHfN4DVjntK0Ji8=
 github.com/confluentinc/ccloudapis v0.0.0-20190301100936-766355e1fe2c/go.mod h1:RGupQo6tb6J+1BnSqqueADkoC8b/F60+Ci3FMB3wDFo=
