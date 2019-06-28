@@ -18,6 +18,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -25,6 +26,7 @@ import (
 	corev1 "github.com/confluentinc/ccloudapis/core/v1"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
+	utilv1 "github.com/confluentinc/ccloudapis/util/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 )
@@ -109,11 +111,11 @@ func (s *CLITestSuite) Test_Ccloud_Errors() {
 	}
 	serveErrors := func(t *testing.T) string {
 		req := require.New(t)
-		write := func(w http.ResponseWriter, resp interface{}) {
+		write := func(w http.ResponseWriter, resp proto.Message) {
 			if r, ok := resp.(errorer); ok {
 				w.WriteHeader(int(r.GetError().Code))
 			}
-			b, err := json.Marshal(resp)
+			b, err := utilv1.MarshalJSONToBytes(resp)
 			req.NoError(err)
 			_, err = io.WriteString(w, string(b))
 			req.NoError(err)
@@ -144,7 +146,7 @@ func (s *CLITestSuite) Test_Ccloud_Errors() {
 			}
 		})
 		mux.HandleFunc("/api/me", func(w http.ResponseWriter, r *http.Request) {
-			b, err := json.Marshal(&orgv1.GetUserReply{
+			b, err := utilv1.MarshalJSONToBytes(&orgv1.GetUserReply{
 				User: &orgv1.User{
 					Id:        23,
 					Email:     "cody@confluent.io",
@@ -519,7 +521,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		http.SetCookie(w, &http.Cookie{Name: "auth_token", Value: validToken})
 	})
 	mux.HandleFunc("/api/me", func(w http.ResponseWriter, r *http.Request) {
-		b, err := json.Marshal(&orgv1.GetUserReply{
+		b, err := utilv1.MarshalJSONToBytes(&orgv1.GetUserReply{
 			User: &orgv1.User{
 				Id:        23,
 				Email:     "cody@confluent.io",
@@ -533,10 +535,8 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 	})
 	mux.HandleFunc("/api/api_keys", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
-			b, err := ioutil.ReadAll(r.Body)
-			require.NoError(t, err)
 			req := &authv1.CreateApiKeyRequest{}
-			err = json.Unmarshal(b, req)
+			err := utilv1.UnmarshalJSON(r.Body, req)
 			require.NoError(t, err)
 			require.NotEmpty(t, req.ApiKey.AccountId)
 			apiKey := req.ApiKey
@@ -546,7 +546,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 			apiKey.UserId = 23
 			KEY_INDEX += 1
 			KEY_STORE[apiKey.Id] = apiKey
-			b, err = json.Marshal(&authv1.CreateApiKeyReply{ApiKey: apiKey})
+			b, err := utilv1.MarshalJSONToBytes(&authv1.CreateApiKeyReply{ApiKey: apiKey})
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(b))
 			require.NoError(t, err)
@@ -558,7 +558,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 			}
 			// Return sorted data or the test output will not be stable
 			sort.Sort(ApiKeyList(apiKeys))
-			b, err := json.Marshal(&authv1.GetApiKeysReply{ApiKeys: apiKeys})
+			b, err := utilv1.MarshalJSONToBytes(&authv1.GetApiKeysReply{ApiKeys: apiKeys})
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(b))
 			require.NoError(t, err)
@@ -573,7 +573,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 			require.NoError(t, err)
 			return
 		}
-		b, err := json.Marshal(&kafkav1.GetKafkaClusterReply{
+		b, err := utilv1.MarshalJSONToBytes(&kafkav1.GetKafkaClusterReply{
 			Cluster: &kafkav1.KafkaCluster{
 				Id:          id,
 				Name:        "kafka-cluster",
