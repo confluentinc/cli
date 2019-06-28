@@ -114,7 +114,7 @@ var (
 				}
 			}
 		}
-		return map[string]interface{} {
+		return map[string]interface{}{
 			"CLIName":          config.CLIName,
 			"ContextName":      config.CurrentContext,
 			"AccountId":        accountID,

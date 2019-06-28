@@ -17,20 +17,24 @@ import (
 
 func TestPasswordProtectionSuite_CreateMasterKey(t *testing.T) {
 	type args struct {
-		masterKeyPassphrase   string
-		localSecureConfigPath string
-		validateDiffKey       bool
-		secureDir             string
-		newSeed               int64
-		seed                  int64
+		masterKeyPassphrase          string
+		localSecureConfigPath        string
+		passphraseWithoutSpecialChar string
+		validateSpecialChar          bool
+		validateDiffKey              bool
+		secureDir                    string
+		newSeed                      int64
+		seed                         int64
 	}
 	tests := []struct {
-		name           string
-		args           *args
-		wantErr        bool
-		wantErrMsg     string
-		wantMasterKey  string
-		wantMEKNewSeed string
+		name                      string
+		args                      *args
+		wantErr                   bool
+		wantErrMsg                string
+		wantMasterKey             string
+		wantMEKNewSeed            string
+		wantMEKWithoutSpecialChar string
+		wantEqual                 bool
 	}{
 		{
 			name: "ValidTestCase: valid create master key",
@@ -39,10 +43,59 @@ func TestPasswordProtectionSuite_CreateMasterKey(t *testing.T) {
 				masterKeyPassphrase:   "abc123",
 				localSecureConfigPath: "/tmp/securePass987/create/secureConfig.properties",
 				validateDiffKey:       false,
+				validateSpecialChar:   false,
 				seed:                  99,
 			},
 			wantErr:       false,
 			wantMasterKey: "XWiYpuA2A6fG/gaweaHlr4So/ZHz2swjgV1QT2mf/sM=",
+		},
+		{
+			name: "ValidTestCase: valid create master key with space at the end",
+			args: &args{
+				secureDir:                    "/tmp/securePass987/create",
+				masterKeyPassphrase:          "abc123 ",
+				passphraseWithoutSpecialChar: "abc123",
+				localSecureConfigPath:        "/tmp/securePass987/create/secureConfig.properties",
+				validateDiffKey:              false,
+				validateSpecialChar:          true,
+				seed:                         99,
+			},
+			wantErr:                   false,
+			wantEqual:                 false,
+			wantMasterKey:             "G0WWpceOnaCwbQSpfrHt94SRymEAt01dpTN9IRW4fxw=",
+			wantMEKWithoutSpecialChar: "XWiYpuA2A6fG/gaweaHlr4So/ZHz2swjgV1QT2mf/sM=",
+		},
+		{
+			name: "ValidTestCase: valid create master key with tab at the end",
+			args: &args{
+				secureDir:                    "/tmp/securePass987/create",
+				masterKeyPassphrase:          "abc123\t",
+				passphraseWithoutSpecialChar: "abc123",
+				localSecureConfigPath:        "/tmp/securePass987/create/secureConfig.properties",
+				validateDiffKey:              false,
+				validateSpecialChar:          true,
+				seed:                         99,
+			},
+			wantErr:                   false,
+			wantEqual:                 false,
+			wantMasterKey:             "vmWub/JptUEihqjgzC+5x8Y0NSeqcVqraNRDV7opmLI=",
+			wantMEKWithoutSpecialChar: "XWiYpuA2A6fG/gaweaHlr4So/ZHz2swjgV1QT2mf/sM=",
+		},
+		{
+			name: "ValidTestCase: valid create master key with new line at the end",
+			args: &args{
+				secureDir:                    "/tmp/securePass987/create",
+				masterKeyPassphrase:          "abc123\n",
+				passphraseWithoutSpecialChar: "abc123",
+				localSecureConfigPath:        "/tmp/securePass987/create/secureConfig.properties",
+				validateDiffKey:              false,
+				validateSpecialChar:          true,
+				seed:                         99,
+			},
+			wantErr:                   false,
+			wantEqual:                 true,
+			wantMasterKey:             "XWiYpuA2A6fG/gaweaHlr4So/ZHz2swjgV1QT2mf/sM=",
+			wantMEKWithoutSpecialChar: "XWiYpuA2A6fG/gaweaHlr4So/ZHz2swjgV1QT2mf/sM=",
 		},
 		{
 			name: "ValidTestCase: verify for same passphrase it generates a different master key",
@@ -51,6 +104,7 @@ func TestPasswordProtectionSuite_CreateMasterKey(t *testing.T) {
 				masterKeyPassphrase:   "abc123",
 				localSecureConfigPath: "/tmp/securePass987/create/secureConfig.properties",
 				validateDiffKey:       true,
+				validateSpecialChar:   false,
 				seed:                  99,
 				newSeed:               10,
 			},
@@ -65,6 +119,7 @@ func TestPasswordProtectionSuite_CreateMasterKey(t *testing.T) {
 				masterKeyPassphrase:   "",
 				localSecureConfigPath: "/tmp/securePass987/create/secureConfig.properties",
 				validateDiffKey:       false,
+				validateSpecialChar:   false,
 				seed:                  99,
 			},
 			wantErr:    true,
@@ -93,6 +148,18 @@ func TestPasswordProtectionSuite_CreateMasterKey(t *testing.T) {
 				req.Equal(newKey, tt.wantMEKNewSeed)
 				checkError(err, tt.wantErr, tt.wantErrMsg, req)
 				req.NotEqual(key, newKey)
+			}
+
+			if tt.args.validateSpecialChar {
+				plugin.RandSource = rand.NewSource(tt.args.seed)
+				newKey, err := plugin.CreateMasterKey(tt.args.passphraseWithoutSpecialChar, tt.args.localSecureConfigPath)
+				req.Equal(newKey, tt.wantMEKWithoutSpecialChar)
+				checkError(err, tt.wantErr, tt.wantErrMsg, req)
+				if tt.wantEqual {
+					req.Equal(key, newKey)
+				} else {
+					req.NotEqual(key, newKey)
+				}
 			}
 
 			os.RemoveAll(tt.args.secureDir)
@@ -167,6 +234,36 @@ func TestPasswordProtectionSuite_EncryptConfigFileSecrets(t *testing.T) {
 			},
 			wantErr: false,
 			wantConfigFile: `testPassword = ${securepass:/tmp/securePass987/encrypt/secureConfig.properties:config.properties/testPassword}
+config.providers = securepass
+config.providers.securepass.class = io.confluent.kafka.security.config.provider.SecurePassConfigProvider
+`,
+			wantSecretsFile: `_metadata.master_key.0.salt = de0YQknpvBlnXk0fdmIT2nG2Qnj+0srV8YokdhkgXjA=
+_metadata.symmetric_key.0.created_at = 1984-04-04 00:00:00 +0000 UTC
+_metadata.symmetric_key.0.envvar = CONFLUENT_SECURITY_MASTER_KEY
+_metadata.symmetric_key.0.length = 32
+_metadata.symmetric_key.0.iterations = 1000
+_metadata.symmetric_key.0.salt = 2BEkhLYyr0iZ2wI5xxsbTJHKWul75JcuQu3BnIO4Eyw=
+_metadata.symmetric_key.0.enc = ENC[AES/CBC/PKCS5Padding,data:SlpCTPDO/uyWDOS59hkcS9vTKm2MQ284YQhBM2iFSUXgsDGPBIlYBs4BMeWFt1yn,iv:qDtNy+skN3DKhtHE/XD6yQ==,type:str]
+config.properties/testPassword = ENC[AES/CBC/PKCS5Padding,data:SclgTBDDeLwccqtsaEmDlA==,iv:3IhIyRrhQpYzp4vhVdcqqw==,type:str]
+`,
+		},
+		{
+			name: "ValidTestCase: encrypt config file with last line as Comment, create new dek",
+			args: &args{
+				masterKeyPassphrase:    "abc123",
+				contents:               "testPassword=password\n# LAST LINE SHOUD NOT BE DELETED",
+				configFilePath:         "/tmp/securePass987/encrypt/config.properties",
+				localSecureConfigPath:  "/tmp/securePass987/encrypt/secureConfig.properties",
+				secureDir:              "/tmp/securePass987/encrypt",
+				remoteSecureConfigPath: "/tmp/securePass987/encrypt/secureConfig.properties",
+				config:                 "",
+				setMEK:                 true,
+				createConfig:           true,
+			},
+			wantErr: false,
+			wantConfigFile: `testPassword = ${securepass:/tmp/securePass987/encrypt/secureConfig.properties:config.properties/testPassword}
+
+# LAST LINE SHOUD NOT BE DELETED
 config.providers = securepass
 config.providers.securepass.class = io.confluent.kafka.security.config.provider.SecurePassConfigProvider
 `,
@@ -739,6 +836,40 @@ func TestPasswordProtectionSuite_RotateDataKey(t *testing.T) {
 			wantErr:    true,
 			wantErrMsg: "authentication failure: incorrect master key passphrase.",
 		},
+		{
+			name: "InvalidTestCase: Invalid master key special character space",
+			args: &args{
+				masterKeyPassphrase:    "abc123 ",
+				contents:               "testPassword = password\n",
+				configFilePath:         "/tmp/securePass987/rotate/config.properties",
+				localSecureConfigPath:  "/tmp/securePass987/rotate/secureConfig.properties",
+				secureDir:              "/tmp/securePass987/rotate/",
+				remoteSecureConfigPath: "/tmp/securePass987/rotate/secureConfig.properties",
+				outputConfigPath:       "/tmp/securePass987/rotate/output.properties",
+				corruptDEK:             false,
+				invalidMEK:             true,
+				invalidPassphrase:      "abc123",
+			},
+			wantErr:    true,
+			wantErrMsg: "authentication failure: incorrect master key passphrase.",
+		},
+		{
+			name: "InvalidTestCase: Invalid master key special character tab",
+			args: &args{
+				masterKeyPassphrase:    "abc123\t",
+				contents:               "testPassword = password\n",
+				configFilePath:         "/tmp/securePass987/rotate/config.properties",
+				localSecureConfigPath:  "/tmp/securePass987/rotate/secureConfig.properties",
+				secureDir:              "/tmp/securePass987/rotate/",
+				remoteSecureConfigPath: "/tmp/securePass987/rotate/secureConfig.properties",
+				outputConfigPath:       "/tmp/securePass987/rotate/output.properties",
+				corruptDEK:             false,
+				invalidMEK:             true,
+				invalidPassphrase:      "abc123",
+			},
+			wantErr:    true,
+			wantErrMsg: "authentication failure: incorrect master key passphrase.",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -818,6 +949,21 @@ func TestPasswordProtectionSuite_RotateMasterKey(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "ValidTestCase: Rotate MEK with special character master key",
+			args: &args{
+				masterKeyPassphrase:    "abc123 ",
+				newMasterKeyPassphrase: "abc123",
+				contents:               "testPassword = password\n",
+				configFilePath:         "/tmp/securePass987/rotateMek/config.properties",
+				localSecureConfigPath:  "/tmp/securePass987/rotateMek/secureConfig.properties",
+				secureDir:              "/tmp/securePass987/rotateMek",
+				remoteSecureConfigPath: "/tmp/securePass987/rotateMek/secureConfig.properties",
+				outputConfigPath:       "/tmp/securePass987/rotateMek/output.properties",
+				invalidMEK:             false,
+			},
+			wantErr: false,
+		},
+		{
 			name: "InvalidTestCase: Empty master key passphrase",
 			args: &args{
 				masterKeyPassphrase:    "abc123",
@@ -838,6 +984,23 @@ func TestPasswordProtectionSuite_RotateMasterKey(t *testing.T) {
 			args: &args{
 				masterKeyPassphrase:    "abc123",
 				invalidKeyPassphrase:   "xyz456",
+				newMasterKeyPassphrase: "mnt456",
+				contents:               "testPassword = password\n",
+				configFilePath:         "/tmp/securePass987/rotateMek/config.properties",
+				localSecureConfigPath:  "/tmp/securePass987/rotateMek/secureConfig.properties",
+				secureDir:              "/tmp/securePass987/rotateMek",
+				remoteSecureConfigPath: "/tmp/securePass987/rotateMek/secureConfig.properties",
+				outputConfigPath:       "/tmp/securePass987/rotateMek/output.properties",
+				invalidMEK:             true,
+			},
+			wantErr:    true,
+			wantErrMsg: "authentication failure: incorrect master key passphrase.",
+		},
+		{
+			name: "InvalidTestCase: Incorrect old master key passphrase with special char space",
+			args: &args{
+				masterKeyPassphrase:    "abc123 ",
+				invalidKeyPassphrase:   "abc123",
 				newMasterKeyPassphrase: "mnt456",
 				contents:               "testPassword = password\n",
 				configFilePath:         "/tmp/securePass987/rotateMek/config.properties",

@@ -9,6 +9,13 @@ const (
 	SECURE_CONFIG_PROVIDER = "securepass"
 
 	SECURE_CONFIG_PROVIDER_CLASS = "io.confluent.kafka.security.config.provider.SecurePassConfigProvider"
+
+	/* The properties file writer associates comments with the next property, so if the comment is the last line in the config file
+	   the comment is deleted after performing encryption/add/update operation on the file. In order to retain the last comment we add delimiter
+	   SECURE_CONFIG_PROVIDER_DELIMITER at the end of the config file before performing the encryption/add/update operation. This delimiter is removed
+	   after the operations are completed.
+	*/
+	SECURE_CONFIG_PROVIDER_DELIMITER = "\nconfig.providers.securepass.delimiter = delimiter"
 )
 
 // Encryption Keys Metadata

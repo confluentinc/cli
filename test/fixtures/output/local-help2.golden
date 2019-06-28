@@ -16,12 +16,12 @@ Description:
 
 
 Examples:
-    confluent list
+    confluent local list
         Prints the available services.
 
-    confluent list plugins
+    confluent local list plugins
         Prints all the connector plugins (connector classes) discoverable by Connect runtime.
 
-    confluent list connectors
+    confluent local list connectors
         Prints a list of predefined connectors.
 

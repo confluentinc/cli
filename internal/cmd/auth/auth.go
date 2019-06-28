@@ -67,7 +67,7 @@ func (a *commands) init(prerunner pcmd.PreRunner) {
 	}
 	if a.config.CLIName == "ccloud" {
 		loginCmd.RunE = a.login
-		loginCmd.Flags().String("url", "https://confluent.cloud", "Gateway service URL.")
+		loginCmd.Flags().String("url", "https://confluent.cloud", "Confluent Cloud service URL.")
 	} else {
 		loginCmd.RunE = a.loginMDS
 		loginCmd.Flags().String("url", "", "Metadata service URL.")

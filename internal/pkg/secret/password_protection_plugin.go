@@ -41,6 +41,7 @@ func NewPasswordProtectionPlugin(logger *log.Logger) *PasswordProtectionSuite {
 // This function generates a new data key for encryption/decryption of secrets. The DEK is wrapped using the master key and saved in the secrets file
 // along with other metadata.
 func (c *PasswordProtectionSuite) CreateMasterKey(passphrase string, localSecureConfigPath string) (string, error) {
+	passphrase = strings.TrimSuffix(passphrase, "\n")
 	if len(strings.TrimSpace(passphrase)) == 0 {
 		return "", fmt.Errorf("master key passphrase cannot be empty")
 	}
@@ -153,7 +154,12 @@ func (c *PasswordProtectionSuite) EncryptConfigFileSecrets(configFilePath string
 		}
 	}
 	// Encrypt the secrets with DEK. Save the encrypted secrets in secure config file.
-	return c.encryptConfigValues(matchProps, localSecureConfigPath, configProps, configFilePath, remoteSecureConfigPath)
+	err = c.encryptConfigValues(matchProps, localSecureConfigPath, configFilePath, remoteSecureConfigPath)
+	if err != nil {
+		return err
+	}
+
+	return err
 }
 
 // This function decrypts all the passwords in configFilePath properties files and stores the decrypted passwords in outputFilePath.
@@ -229,6 +235,10 @@ func (c *PasswordProtectionSuite) DecryptConfigFileSecrets(configFilePath string
 
 // This function generates a new data key and re-encrypts the values in the secureConfigPath properties file with the new data key.
 func (c *PasswordProtectionSuite) RotateDataKey(masterPassphrase string, localSecureConfigPath string) error {
+	masterPassphrase = strings.TrimSuffix(masterPassphrase, "\n")
+	if len(strings.TrimSpace(masterPassphrase)) == 0 {
+		return fmt.Errorf("master key passphrase cannot be empty.")
+	}
 	cipherSuite, err := c.loadCipherSuiteFromLocalFile(localSecureConfigPath)
 	if err != nil {
 		return err
@@ -326,6 +336,8 @@ func (c *PasswordProtectionSuite) RotateDataKey(masterPassphrase string, localSe
 
 // This function is used to change the master key. It wraps the data key with newly set master key.
 func (c *PasswordProtectionSuite) RotateMasterKey(oldPassphrase string, newPassphrase string, localSecureConfigPath string) (string, error) {
+	oldPassphrase = strings.TrimSuffix(oldPassphrase, "\n")
+	newPassphrase = strings.TrimSuffix(newPassphrase, "\n")
 	if len(strings.TrimSpace(oldPassphrase)) == 0 || len(strings.TrimSpace(newPassphrase)) == 0 {
 		return "", fmt.Errorf("master key passphrase cannot be empty.")
 	}
@@ -418,16 +430,14 @@ func (c *PasswordProtectionSuite) AddEncryptedPasswords(configFilePath string, l
 		return err
 	}
 
-	configProps, err := LoadPropertiesFile(configFilePath)
-	if err != nil {
-		return err
-	}
-
 	if newConfigProps.Len() == 0 {
 		return fmt.Errorf("add failed: empty list of new configs")
 	}
 
-	err = c.encryptConfigValues(newConfigProps, localSecureConfigPath, configProps, configFilePath, remoteSecureConfigPath)
+	err = c.encryptConfigValues(newConfigProps, localSecureConfigPath, configFilePath, remoteSecureConfigPath)
+	if err != nil {
+		return err
+	}
 
 	return err
 }
@@ -439,6 +449,12 @@ func (c *PasswordProtectionSuite) AddEncryptedPasswords(configFilePath string, l
 func (c *PasswordProtectionSuite) UpdateEncryptedPasswords(configFilePath string, localSecureConfigPath string, remoteSecureConfigPath string, newConfigs string) error {
 	newConfigs = strings.Replace(newConfigs, `\n`, "\n", -1)
 	newConfigProps, err := properties.LoadString(newConfigs)
+	if err != nil {
+		return err
+	}
+
+	// Add a delimiter key at the end of the file to retain the comments in the config file.
+	err = AppendDelimiter(configFilePath)
 	if err != nil {
 		return err
 	}
@@ -461,7 +477,7 @@ func (c *PasswordProtectionSuite) UpdateEncryptedPasswords(configFilePath string
 		return fmt.Errorf("update failed: empty list of update configs")
 	}
 
-	err = c.encryptConfigValues(newConfigProps, localSecureConfigPath, configProps, configFilePath, remoteSecureConfigPath)
+	err = c.encryptConfigValues(newConfigProps, localSecureConfigPath, configFilePath, remoteSecureConfigPath)
 
 	return err
 }
@@ -645,8 +661,8 @@ func (c *PasswordProtectionSuite) loadMasterKey() (string, error) {
 	return masterKey, nil
 }
 
-func (c *PasswordProtectionSuite) encryptConfigValues(matchProps *properties.Properties, localSecureConfigPath string, configProps *properties.Properties,
-	configFilePath string, remoteConfigFilePath string) error {
+func (c *PasswordProtectionSuite) encryptConfigValues(matchProps *properties.Properties, localSecureConfigPath string, configFilePath string,
+	remoteConfigFilePath string) error {
 
 	// Load master Key
 	masterKey, err := c.loadMasterKey()
@@ -667,6 +683,17 @@ func (c *PasswordProtectionSuite) encryptConfigValues(matchProps *properties.Pro
 		c.Logger.Debug(err)
 		return fmt.Errorf("failed to unwrap the data key due to invalid master key or corrupted data key.")
 	}
+
+	// Add a delimiter key at the end of the file to retain the last comment in the config file.
+	err = AppendDelimiter(configFilePath)
+	if err != nil {
+		return err
+	}
+	configProps, err := LoadPropertiesFile(configFilePath)
+	if err != nil {
+		return err
+	}
+	configProps.DisableExpansion = true
 
 	for key, value := range matchProps.Map() {
 		encryptedPass, err := c.isPasswordEncrypted(value)
@@ -701,6 +728,12 @@ func (c *PasswordProtectionSuite) encryptConfigValues(matchProps *properties.Pro
 	}
 
 	err = WritePropertiesFile(configFilePath, configProps, true)
+	if err != nil {
+		return err
+	}
+
+	// Remove the Delimiter
+	err = RemoveDelimiter(configFilePath)
 	if err != nil {
 		return err
 	}
