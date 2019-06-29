@@ -12,8 +12,8 @@ require (
 	github.com/aws/aws-sdk-go v1.15.64
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
-	github.com/confluentinc/ccloud-sdk-go v0.0.7-0.20190626214514-9a69a30434cf
-	github.com/confluentinc/ccloudapis v0.0.0-20190623041722-9cae0f4c848d
+	github.com/confluentinc/ccloud-sdk-go v0.0.7
+	github.com/confluentinc/ccloudapis v0.0.0-20190628232638-10144ab4d3a3
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-printer v0.10.0
 	github.com/confluentinc/mds-sdk-go v0.0.0-20190610045202-137cf78b1f6a
@@ -28,7 +28,7 @@ require (
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/gliderlabs/ssh v0.1.4 // indirect
 	github.com/gobuffalo/flect v0.1.3
-	github.com/gogo/protobuf v1.2.1 // indirect
+	github.com/gogo/protobuf v1.2.1
 	github.com/golang/mock v1.2.0
 	github.com/golang/protobuf v1.3.1
 	github.com/golang/snappy v0.0.1 // indirect
