@@ -139,10 +139,10 @@ command returns a failure if a master key has not already been set using the "ma
 	rotateKeyCmd := &cobra.Command{
 		Use:   "rotate",
 		Short: "Rotate master or data key.",
-		Long:  `This command rotates either the master or data key. 
-				For rotating master key specify the current master key passphrase using --passphrase flag 
-				and new master key passphrase using the --passphrase-new flag. 
-				For rotating the data key specify the current master key passphrase using --passphrase flag.`,
+		Long:  `This command rotates either the master or data key.
+				To rotate the master key, specify the current master key passphrase flag (""--passphrase")
+				followed by the new master key passphrase flag ("--passphrase-new").
+				To rotate the data key, specify the current master key passphrase flag ("--passphrase").`,
 		RunE:  c.rotate,
 		Args:  cobra.NoArgs,
 	}
@@ -151,8 +151,8 @@ command returns a failure if a master key has not already been set using the "ma
 	rotateKeyCmd.Flags().Bool("data-key", false, "Rotate data key. Generates a new data key and re-encrypts the file with the new key.")
 	rotateKeyCmd.Flags().String("local-secrets-file", "", "Path to the encrypted configuration properties file.")
 	check(rotateKeyCmd.MarkFlagRequired("local-secrets-file"))
-	rotateKeyCmd.Flags().String("passphrase", "", "Master key passphrase; use - to pipe from stdin or @file.txt to read from file.")
-	rotateKeyCmd.Flags().String("passphrase-new", "", "New Master key passphrase; use - to pipe from stdin or @file.txt to read from file.")
+	rotateKeyCmd.Flags().String("passphrase", "", `Master key passphrase. You can use dash ("-") to pipe from stdin or @file.txt to read from file.`)
+	rotateKeyCmd.Flags().String("passphrase-new", "", `New master key passphrase. You can use dash ("-") to pipe from stdin or @file.txt to read from file.`)
 	rotateKeyCmd.Flags().SortFlags = false
 	c.AddCommand(rotateKeyCmd)
 }
