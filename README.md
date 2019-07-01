@@ -120,6 +120,14 @@ When you add a new command or resource, assuming its already in the SDK, you gen
 * `internal/cmd/<command>/<command>.go` (and test)
 * `internal/pkg/sdk/<resource>/<resource>.go` (and test)
 
+### Build Other Platforms
+
+If you have a need to build a binary for a platform that is not the current one, use the following to target a different `.goreleaser-*` file matching the destined platform.
+
+    make build-go GORELEASER_SUFFIX=-linux.yml   # build linux
+    make build-go GORELEASER_SUFFIX=-mac.yml     # build mac
+    make build-go GORELEASER_SUFFIX=-windows.yml # build windows
+
 ## Installers
 
 This repo contains installers for [install-ccloud.sh](./install-ccloud.sh) and
