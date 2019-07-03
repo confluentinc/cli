@@ -6,14 +6,14 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/atrox/homedir"
 	"github.com/golang/mock/gomock"
-	"github.com/mitchellh/go-homedir"
 	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/mock"
 	cliMock "github.com/confluentinc/cli/mock"
-	"github.com/confluentinc/cli/mock/local"
+	mock_local "github.com/confluentinc/cli/mock/local"
 )
 
 func TestLocal(t *testing.T) {

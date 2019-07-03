@@ -54,7 +54,6 @@ require (
 	github.com/magiconair/properties v1.8.0
 	github.com/mattn/go-isatty v0.0.4
 	github.com/mattn/go-runewidth v0.0.3 // indirect
-	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/golicense v0.1.1
 	github.com/neurosnap/sentences v1.0.6 // indirect
 	github.com/olekukonko/tablewriter v0.0.0-20180912035003-be2c049b30cc

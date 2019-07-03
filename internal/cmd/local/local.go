@@ -7,8 +7,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/atrox/homedir"
 	"github.com/hashicorp/go-version"
-	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"

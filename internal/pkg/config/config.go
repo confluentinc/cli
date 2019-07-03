@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/mitchellh/go-homedir"
+	"github.com/atrox/homedir"
 
 	v1 "github.com/confluentinc/ccloudapis/org/v1"
 
