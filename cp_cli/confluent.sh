@@ -1015,8 +1015,9 @@ validate_os_version() {
 validate_java_version() {
     local target_service=${1}
 
-    local warning_message="WARNING: Java version 1.8 or 1.11 is recommended.
-See https://docs.confluent.io/current/installation/versions-interoperability.html"
+    local warning_message="ERROR: The Confluent CLI requires Java version 1.8 or 1.11. 
+See https://docs.confluent.io/current/installation/versions-interoperability.html . 
+If you have multiple versions of Java installed, you may need to set JAVA_HOME to the version you want Confluent to use."
 
     # The first segment of the version number, which is '1' for releases before Java 9
     # it then becomes '9', '10', ...
