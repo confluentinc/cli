@@ -33,6 +33,10 @@ func TestLocal(t *testing.T) {
 	_ = os.Setenv("HOME", "/path/to/home")
 	defer func() { _ = os.Setenv("HOME", oldHome) }()
 
+	oldPath := os.Getenv("PATH")
+	_ = os.Setenv("PATH", "/path1:/path2")
+	defer func() { _ = os.Setenv("PATH", oldPath) }()
+
 	req := require.New(t)
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -41,6 +45,7 @@ func TestLocal(t *testing.T) {
 	shellRunner.EXPECT().Init(os.Stdout, os.Stderr)
 	shellRunner.EXPECT().Export("HOME", "/path/to/home")
 	shellRunner.EXPECT().Export("JAVA_HOME", "/path/to/java")
+	shellRunner.EXPECT().Export("PATH", "/path1:/path2")
 	shellRunner.EXPECT().Export("CONFLUENT_CURRENT", "/path/to/confluent/workdir")
 	shellRunner.EXPECT().Export("CONFLUENT_HOME", "blah")
 	shellRunner.EXPECT().Export("TMPDIR", "/var/folders/some/junk")
@@ -68,6 +73,10 @@ func TestLocalErrorDuringSource(t *testing.T) {
 	_ = os.Setenv("HOME", "/path/to/home")
 	defer func() { _ = os.Setenv("HOME", oldHome) }()
 
+	oldPath := os.Getenv("PATH")
+	_ = os.Setenv("PATH", "/path1:/path2")
+	defer func() { _ = os.Setenv("PATH", oldPath) }()
+
 	req := require.New(t)
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -76,6 +85,7 @@ func TestLocalErrorDuringSource(t *testing.T) {
 	shellRunner.EXPECT().Init(os.Stdout, os.Stderr)
 	shellRunner.EXPECT().Export("HOME", "/path/to/home")
 	shellRunner.EXPECT().Export("JAVA_HOME", "/path/to/java")
+	shellRunner.EXPECT().Export("PATH", "/path1:/path2")
 	shellRunner.EXPECT().Export("CONFLUENT_CURRENT", "/path/to/confluent/workdir")
 	shellRunner.EXPECT().Export("CONFLUENT_HOME", "blah")
 	shellRunner.EXPECT().Export("TMPDIR", "/var/folders/some/junk")

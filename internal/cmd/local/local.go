@@ -216,6 +216,7 @@ func (c *command) runBashCommand(path string, command string, args []string) err
 	c.shell.Export("CONFLUENT_CURRENT", os.Getenv("CONFLUENT_CURRENT"))
 	c.shell.Export("TMPDIR", os.Getenv("TMPDIR"))
 	c.shell.Export("JAVA_HOME", os.Getenv("JAVA_HOME"))
+	c.shell.Export("PATH", os.Getenv("PATH"))
 	c.shell.Export("HOME", os.Getenv("HOME"))
 	err := c.shell.Source("cp_cli/confluent.sh", Asset)
 	if err != nil {

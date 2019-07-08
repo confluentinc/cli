@@ -139,12 +139,12 @@ command returns a failure if a master key has not already been set using the "ma
 	rotateKeyCmd := &cobra.Command{
 		Use:   "rotate",
 		Short: "Rotate master or data key.",
-		Long:  `This command rotates either the master or data key.
+		Long: `This command rotates either the master or data key.
 				To rotate the master key, specify the current master key passphrase flag ("--passphrase")
 				followed by the new master key passphrase flag ("--passphrase-new").
 				To rotate the data key, specify the current master key passphrase flag ("--passphrase").`,
-		RunE:  c.rotate,
-		Args:  cobra.NoArgs,
+		RunE: c.rotate,
+		Args: cobra.NoArgs,
 	}
 
 	rotateKeyCmd.Flags().Bool("master-key", false, "Rotate the master key. Generates a new master key and re-encrypts with the new key.")
