@@ -2,12 +2,14 @@ package local
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/atrox/homedir"
 	"github.com/golang/mock/gomock"
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
@@ -51,7 +53,7 @@ func TestLocal(t *testing.T) {
 	shellRunner.EXPECT().Export("TMPDIR", "/var/folders/some/junk")
 	shellRunner.EXPECT().Source("cp_cli/confluent.sh", gomock.Any())
 	shellRunner.EXPECT().Run("main", gomock.Eq([]string{"local", "help"})).Return(0, nil)
-	localCmd := New(&cliMock.Commander{}, shellRunner, &mock.FileSystem{})
+	localCmd := New(&cobra.Command{}, &cliMock.Commander{}, shellRunner, &mock.FileSystem{})
 	_, err := cmd.ExecuteCommand(localCmd, "local", "--path", "blah", "help")
 	req.NoError(err)
 }
@@ -90,9 +92,84 @@ func TestLocalErrorDuringSource(t *testing.T) {
 	shellRunner.EXPECT().Export("CONFLUENT_HOME", "blah")
 	shellRunner.EXPECT().Export("TMPDIR", "/var/folders/some/junk")
 	shellRunner.EXPECT().Source("cp_cli/confluent.sh", gomock.Any()).Return(errors.New("oh no"))
-	localCmd := New(&cliMock.Commander{}, shellRunner, &mock.FileSystem{})
+	localCmd := New(&cobra.Command{}, &cliMock.Commander{}, shellRunner, &mock.FileSystem{})
 	_, err := cmd.ExecuteCommand(localCmd, "local", "--path", "blah", "help")
 	req.Error(err)
+}
+
+func TestLocalCommandSuggestions(t *testing.T) {
+	oldCurrent := os.Getenv("CONFLUENT_CURRENT")
+	_ = os.Setenv("CONFLUENT_CURRENT", "/path/to/confluent/workdir")
+	defer func() { _ = os.Setenv("CONFLUENT_CURRENT", oldCurrent) }()
+
+	oldTmp := os.Getenv("TMPDIR")
+	_ = os.Setenv("TMPDIR", "/var/folders/some/junk")
+	defer func() { _ = os.Setenv("TMPDIR", oldTmp) }()
+
+	oldJavaHome := os.Getenv("JAVA_HOME")
+	_ = os.Setenv("JAVA_HOME", "/path/to/java")
+	defer func() { _ = os.Setenv("JAVA_HOME", oldJavaHome) }()
+
+	oldHome := os.Getenv("HOME")
+	_ = os.Setenv("HOME", "/path/to/home")
+	defer func() { _ = os.Setenv("HOME", oldHome) }()
+
+	oldPath := os.Getenv("PATH")
+	_ = os.Setenv("PATH", "/path1:/path2")
+	defer func() { _ = os.Setenv("PATH", oldPath) }()
+
+	req := require.New(t)
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	shellRunner := mock_local.NewMockShellRunner(ctrl)
+	root := &cobra.Command{Use: "confluent"}
+	root.AddCommand(New(root, &cliMock.Commander{}, shellRunner, &mock.FileSystem{}))
+
+	out := executeErrorOrOut(root, "start")
+	req.Equal(`Error: unknown command "start" for "confluent"
+
+Did you mean this?
+        local start
+
+Run 'confluent --help' for usage.
+`, out)
+
+	out = executeErrorOrOut(root, "stop")
+	req.Equal(`Error: unknown command "stop" for "confluent"
+
+Did you mean this?
+        local stop
+
+Run 'confluent --help' for usage.
+`, out)
+
+	out = executeErrorOrOut(root, "help", "start")
+	req.Equal(`Error: unknown command "start" for "confluent"
+
+Did you mean this?
+        local start
+
+Run 'confluent --help' for usage.
+`, out)
+
+	out = executeErrorOrOut(root, "start", "-h")
+	req.Equal(`Error: unknown command "start" for "confluent"
+
+Did you mean this?
+        local start
+
+Run 'confluent --help' for usage.
+`, out)
+}
+
+func executeErrorOrOut(root *cobra.Command, args ...string) string {
+	out, err := cmd.ExecuteCommand(root, args...)
+	if err != nil {
+		// we do this to simulate how Cobra prints errors
+		out = fmt.Sprintf("Error: %s\n", err.Error())
+	}
+	return out
 }
 
 func TestDetermineConfluentInstallDir(t *testing.T) {

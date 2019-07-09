@@ -53,7 +53,7 @@ type command struct {
 }
 
 // New returns the Cobra command for `local`.
-func New(prerunner pcmd.PreRunner, shell ShellRunner, fs io.FileSystem) *cobra.Command {
+func New(rootCmd *cobra.Command, prerunner pcmd.PreRunner, shell ShellRunner, fs io.FileSystem) *cobra.Command {
 	localCmd := &command{
 		Command: &cobra.Command{
 			Use:               "local",
@@ -70,6 +70,12 @@ func New(prerunner pcmd.PreRunner, shell ShellRunner, fs io.FileSystem) *cobra.C
 	localCmd.Flags().SortFlags = false
 	// This is used for "confluent help local foo" and "confluent local foo --help"
 	localCmd.Command.SetHelpFunc(localCmd.help)
+
+	// Explicit suggestions since we can't use cobra's "SuggestFor" for bash commands
+	for _, cmd := range []string{"start", "stop"} {
+		rootCmd.AddCommand(localCommandError(cmd))
+	}
+
 	return localCmd.Command
 }
 
@@ -282,4 +288,26 @@ func validateConfluentPlatformInstallDir(fs io.FileSystem, dir string) (bool, er
 
 	// If we make it here, then its a real CP install dir. Hurray!
 	return true, nil
+}
+
+func localCommandError(command string) *cobra.Command {
+	err := fmt.Errorf(`unknown command "%s" for "confluent"
+
+Did you mean this?
+        local %s
+
+Run 'confluent --help' for usage.`, command, command)
+
+	runE := func(cmd *cobra.Command, args []string) error {
+		return err
+	}
+	run := func(cmd *cobra.Command, args []string) {
+		// We explicitly prepend "Error: " and append a newline to match the standard error printing format
+		pcmd.ErrPrintf(cmd, "Error: %s\n", err.Error())
+		// We exit 0 though because this means that the user explicitly requested help
+	}
+
+	cmd := &cobra.Command{Use: command, Hidden: true, SilenceUsage: true, RunE: runE}
+	cmd.SetHelpFunc(run)
+	return cmd
 }

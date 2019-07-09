@@ -64,9 +64,21 @@ ifeq (run-ccloud,$(firstword $(MAKECMDGOALS)))
   $(eval $(RUN_ARGS):;@:)
 endif
 
+# If the first argument is "run-confluent"...
+ifeq (run-confluent,$(firstword $(MAKECMDGOALS)))
+  # use the rest as arguments for "run-confluent"
+  RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+  # ...and turn them into do-nothing targets
+  $(eval $(RUN_ARGS):;@:)
+endif
+
 .PHONY: run-ccloud
 run-ccloud:
 	 @go run -ldflags '-X main.cliName=ccloud' cmd/confluent/main.go $(RUN_ARGS)
+
+.PHONY: run-confluent
+run-confluent:
+	 @go run -ldflags '-X main.cliName=confluent' cmd/confluent/main.go $(RUN_ARGS)
 
 #
 # END DEVELOPMENT HELPERS
