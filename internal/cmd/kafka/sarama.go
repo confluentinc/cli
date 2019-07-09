@@ -55,6 +55,7 @@ func saramaConf(kafka *config.KafkaClusterConfig, beginning bool) *sarama.Config
 	saramaConf := sarama.NewConfig()
 	saramaConf.Version = sarama.V1_1_0_0
 	saramaConf.Net.TLS.Enable = true
+	saramaConf.Net.TLS.Config.ServerName
 	saramaConf.Net.SASL.Enable = true
 	saramaConf.Net.SASL.User = kafka.APIKey
 	saramaConf.Net.SASL.Password = kafka.APIKeys[kafka.APIKey].Secret

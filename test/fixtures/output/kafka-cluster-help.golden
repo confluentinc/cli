@@ -4,6 +4,8 @@ Usage:
   ccloud kafka cluster [command]
 
 Available Commands:
+  create      Create a Kafka cluster.
+  delete      Delete a Kafka cluster.
   describe    Describe a Kafka cluster.
   list        List Kafka clusters.
   use         Make the Kafka cluster active for use in other commands.

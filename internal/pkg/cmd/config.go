@@ -29,6 +29,7 @@ func (c *ConfigHelper) KafkaCluster(clusterID, environment string) (*kafkav1.Kaf
 
 // KafkaClusterConfig returns the overridden or current KafkaClusterConfig
 func (c *ConfigHelper) KafkaClusterConfig(clusterID, environment string) (*config.KafkaClusterConfig, error) {
+	fmt.Println("HEREIAM1")
 	ctx, err := c.Config.Context()
 	if err != nil {
 		return nil, err
@@ -44,10 +45,12 @@ func (c *ConfigHelper) KafkaClusterConfig(clusterID, environment string) (*confi
 	if ctx.KafkaClusters == nil {
 		ctx.KafkaClusters = map[string]*config.KafkaClusterConfig{}
 	}
+	fmt.Println("HEREIAM")
 	cluster, found := ctx.KafkaClusters[clusterID]
 	if !found || cluster.ID == "" || cluster.Name == "" || cluster.Bootstrap == "" || cluster.APIEndpoint == "" {
 		// Let's fetch the cluster details
 		req := &kafkav1.KafkaCluster{AccountId: environment, Id: clusterID}
+		fmt.Println("KafkaClusterConfig", req)
 		kc, err := c.Client.Kafka.Describe(context.Background(), req)
 		if err != nil {
 			if err != ccloud.ErrNotFound {

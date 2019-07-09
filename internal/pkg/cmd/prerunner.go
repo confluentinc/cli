@@ -3,9 +3,6 @@ package cmd
 import (
 	"github.com/jonboulle/clockwork"
 	"github.com/spf13/cobra"
-	"gopkg.in/square/go-jose.v2/jwt"
-
-	"github.com/confluentinc/ccloud-sdk-go"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -53,22 +50,22 @@ func (r *PreRun) Authenticated() func(cmd *cobra.Command, args []string) error {
 		if err := r.Config.CheckLogin(); err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
-		if r.Config.AuthToken != "" {
-			// Validate token (not expired)
-			var claims map[string]interface{}
-			token, err := jwt.ParseSigned(r.Config.AuthToken)
-			if err != nil {
-				return errors.HandleCommon(&ccloud.InvalidTokenError{}, cmd)
-			}
-			if err := token.UnsafeClaimsWithoutVerification(&claims); err != nil {
-				return errors.HandleCommon(err, cmd)
-			}
-			if exp, ok := claims["exp"].(float64); ok {
-				if float64(r.Clock.Now().Unix()) > exp {
-					return errors.HandleCommon(&ccloud.ExpiredTokenError{}, cmd)
-				}
-			}
-		}
+		//if r.Config.AuthToken != "" {
+		//	// Validate token (not expired)
+		//	var claims map[string]interface{}
+		//	token, err := jwt.ParseSigned(r.Config.AuthToken)
+		//	if err != nil {
+		//		return errors.HandleCommon(&ccloud.InvalidTokenError{}, cmd)
+		//	}
+		//	if err := token.UnsafeClaimsWithoutVerification(&claims); err != nil {
+		//		return errors.HandleCommon(err, cmd)
+		//	}
+		//	if exp, ok := claims["exp"].(float64); ok {
+		//		if float64(r.Clock.Now().Unix()) > exp {
+		//			return errors.HandleCommon(&ccloud.ExpiredTokenError{}, cmd)
+		//		}
+		//	}
+		//}
 		return nil
 	}
 }

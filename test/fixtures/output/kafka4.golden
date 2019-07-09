@@ -1,10 +1,1 @@
-Error: not implemented
-Usage:
-  ccloud kafka cluster delete <id> [flags]
-
-Flags:
-  -h, --help   help for delete
-
-Global Flags:
-  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
-
+The Kafka cluster lkc-abc123 has been deleted.
