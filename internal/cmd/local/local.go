@@ -265,6 +265,9 @@ func validateConfluentPlatformInstallDir(fs io.FileSystem, dir string) (bool, er
 
 	files, err := fs.ReadDir(filepath.Join(dir, "bin"))
 	if err != nil {
+		if os.IsNotExist(err) {
+			return false, nil
+		}
 		return false, err
 	}
 	for _, f := range files {
