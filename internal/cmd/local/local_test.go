@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/mock"
 	cliMock "github.com/confluentinc/cli/mock"
 	mock_local "github.com/confluentinc/cli/mock/local"
@@ -53,7 +54,7 @@ func TestLocal(t *testing.T) {
 	shellRunner.EXPECT().Export("TMPDIR", "/var/folders/some/junk")
 	shellRunner.EXPECT().Source("cp_cli/confluent.sh", gomock.Any())
 	shellRunner.EXPECT().Run("main", gomock.Eq([]string{"local", "help"})).Return(0, nil)
-	localCmd := New(&cobra.Command{}, &cliMock.Commander{}, shellRunner, &mock.FileSystem{})
+	localCmd := New(&cobra.Command{}, &cliMock.Commander{}, shellRunner, log.New(), &mock.FileSystem{})
 	_, err := cmd.ExecuteCommand(localCmd, "local", "--path", "blah", "help")
 	req.NoError(err)
 }
@@ -92,7 +93,7 @@ func TestLocalErrorDuringSource(t *testing.T) {
 	shellRunner.EXPECT().Export("CONFLUENT_HOME", "blah")
 	shellRunner.EXPECT().Export("TMPDIR", "/var/folders/some/junk")
 	shellRunner.EXPECT().Source("cp_cli/confluent.sh", gomock.Any()).Return(errors.New("oh no"))
-	localCmd := New(&cobra.Command{}, &cliMock.Commander{}, shellRunner, &mock.FileSystem{})
+	localCmd := New(&cobra.Command{}, &cliMock.Commander{}, shellRunner, log.New(), &mock.FileSystem{})
 	_, err := cmd.ExecuteCommand(localCmd, "local", "--path", "blah", "help")
 	req.Error(err)
 }
@@ -124,7 +125,7 @@ func TestLocalCommandSuggestions(t *testing.T) {
 
 	shellRunner := mock_local.NewMockShellRunner(ctrl)
 	root := &cobra.Command{Use: "confluent"}
-	root.AddCommand(New(root, &cliMock.Commander{}, shellRunner, &mock.FileSystem{}))
+	root.AddCommand(New(root, &cliMock.Commander{}, shellRunner, log.New(), &mock.FileSystem{}))
 
 	out := executeErrorOrOut(root, "start")
 	req.Equal(`Error: unknown command "start" for "confluent"

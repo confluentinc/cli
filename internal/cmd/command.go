@@ -135,7 +135,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 			return nil, err
 		}
 		shellRunner := &local.BashShellRunner{BasherContext: bash}
-		cli.AddCommand(local.New(cli, prerunner, shellRunner, fs))
+		cli.AddCommand(local.New(cli, prerunner, shellRunner, logger, fs))
 		resolver := &pcmd.FlagResolverImpl{Prompt: prompt, Out: os.Stdout}
 		cli.AddCommand(secret.New(prerunner, cfg, prompt, resolver, secrets.NewPasswordProtectionPlugin(logger)))
 	}

@@ -14,6 +14,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/io"
+	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 const longDescription = `Use these commands to try out Confluent Platform by running a single-node
@@ -49,11 +50,12 @@ var (
 type command struct {
 	*cobra.Command
 	shell ShellRunner
+	log   *log.Logger
 	fs    io.FileSystem
 }
 
 // New returns the Cobra command for `local`.
-func New(rootCmd *cobra.Command, prerunner pcmd.PreRunner, shell ShellRunner, fs io.FileSystem) *cobra.Command {
+func New(rootCmd *cobra.Command, prerunner pcmd.PreRunner, shell ShellRunner, log *log.Logger, fs io.FileSystem) *cobra.Command {
 	localCmd := &command{
 		Command: &cobra.Command{
 			Use:               "local",
@@ -63,6 +65,7 @@ func New(rootCmd *cobra.Command, prerunner pcmd.PreRunner, shell ShellRunner, fs
 			PersistentPreRunE: prerunner.Anonymous(),
 		},
 		shell: shell,
+		log:   log,
 		fs:    fs,
 	}
 	localCmd.Command.RunE = localCmd.run
@@ -107,6 +110,8 @@ func (c *command) run(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
+	c.log.Warnf("Using Confluent installation dir: %s", path)
+	c.log.Warnf("To override Confluent installation dir, pass --path /path/to/confluent flag or set environment variable CONFLUENT_HOME")
 	err = c.runBashCommand(path, "main", args)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
