@@ -32,6 +32,7 @@ DO NOT use these commands to setup or manage Confluent Platform in production.
 
 var (
 	commonInstallDirs = []string{
+		"./confluent*",
 		"/opt/confluent*",
 		"/usr/local/confluent*",
 		"~/confluent*",
@@ -96,7 +97,10 @@ func (c *command) parsePath(cmd *cobra.Command, args []string) (string, error) {
 			if home, found, err := determineConfluentInstallDir(c.fs); err != nil {
 				return "", err
 			} else if found {
-				path = home
+				path, err = filepath.Abs(home)
+				if err != nil {
+					return "", err
+				}
 			} else if len(args) != 0 { // don't error if no args specified, we'll just show usage
 				return "", fmt.Errorf("Pass --path /path/to/confluent flag or set environment variable CONFLUENT_HOME")
 			}
@@ -145,7 +149,7 @@ func (b byVersion) Swap(i, j int) {
 // Heuristically determine the Confluent installation directory.
 //
 // Algorithm:
-//   1. Search for a dir matching confluent* (glob) in the common places in order: (/opt, /usr/local, ~, ~/Downloads)
+//   1. Search for a dir matching confluent* (glob) in the common places in order: (., /opt, /usr/local, ~, ~/Downloads)
 //      This list is ordered by priority (always prefer /opt to ~/Downloads for example).
 //      But each directory may contain multiple matches (e.g., /opt/confluent-5.2.2, /opt/confluent-4.1.0, etc).
 //   2. For each match, look for multiple well-known files as canaries to ensure it's a valid CP install dir.

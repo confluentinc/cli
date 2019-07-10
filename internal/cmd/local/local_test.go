@@ -206,6 +206,13 @@ func TestDetermineConfluentInstallDir(t *testing.T) {
 			wantErr:   false,
 		},
 		{
+			name:      "unversioned directory found in ./ and versioned directory found in /opt",
+			dirExists: map[string][]string{"./confluent*": {"./confluent"}, "/opt/confluent*": {"/opt/confluent-5.2.2"}},
+			wantDir:   "./confluent",
+			wantFound: true,
+			wantErr:   false,
+		},
+		{
 			name:      "unversioned directory found in /usr/local and versioned directory found in ~/Downloads",
 			dirExists: map[string][]string{"/usr/local/confluent*": {"/usr/local/confluent"}, "~/Downloads/confluent*": {"~/Downloads/confluent-4.1.0"}},
 			wantDir:   "/usr/local/confluent",
@@ -355,9 +362,9 @@ func TestDetermineConfluentInstallDir(t *testing.T) {
 			fs := &mock.FileSystem{
 				GlobFunc: func(pattern string) ([]string, error) {
 					var matches []string
-					// we can't just do tt.dirExists[pattern]; pattern has expanded ~ but dirExists doesn't
+					// we can't just do tt.dirExists[pattern]; pattern has expanded ~ and been cleaned but dirExists hasn't
 					for p, dir := range tt.dirExists {
-						abs, err := homedir.Expand(p)
+						abs, err := homedir.Expand(filepath.Clean(p))
 						if err != nil {
 							return nil, err
 						}
