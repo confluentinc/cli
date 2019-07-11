@@ -128,6 +128,9 @@ If you have a need to build a binary for a platform that is not the current one,
     make build-go GORELEASER_SUFFIX=-mac.yml     # build mac
     make build-go GORELEASER_SUFFIX=-windows.yml # build windows
 
+### URLS
+Use the `login` command with the `--url` option to point to a different development environment
+
 ## Installers
 
 This repo contains installers for [install-ccloud.sh](./install-ccloud.sh) and
