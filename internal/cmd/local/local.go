@@ -126,8 +126,9 @@ func (c *command) run(cmd *cobra.Command, args []string) error {
 // versionedDirectory is a type that implements the sort.Interface interface
 // so that versions can be sorted and the original directory path returned.
 type versionedDirectory struct {
-	dir string
-	ver *version.Version
+	dir     string
+	ver     *version.Version
+	nightly bool
 }
 
 func (v *versionedDirectory) String() string {
@@ -140,6 +141,17 @@ func (b byVersion) Len() int {
 	return len(b)
 }
 func (b byVersion) Less(i, j int) bool {
+	if b[i].ver.Equal(b[j].ver) {
+		if b[i].nightly && !b[j].nightly {
+			return false
+		}
+		if b[j].nightly && !b[i].nightly {
+			return true
+		}
+		// it's impossible for multiple nightlies of the same version to exist in the same directory
+		// because they'd all have the same name (e.g., confluent-5.3.0-SNAPSHOT). So this is an invalid case.
+		return true
+	}
 	return b[i].ver.LessThan(b[j].ver)
 }
 func (b byVersion) Swap(i, j int) {
@@ -153,8 +165,9 @@ func (b byVersion) Swap(i, j int) {
 //      This list is ordered by priority (always prefer /opt to ~/Downloads for example).
 //      But each directory may contain multiple matches (e.g., /opt/confluent-5.2.2, /opt/confluent-4.1.0, etc).
 //   2. For each match, look for multiple well-known files as canaries to ensure it's a valid CP install dir.
-//   3. If it's a valid install dir, try to extract a version from the format "confluent-<version>" and collect all versions
-//   4. If there were any versioned dirs, sort them by version and return the dir with the latest version
+//   3. If it's a valid install dir, try to extract a version from the format "confluent-<version>[-SNAPSHOT]" and collect all versions
+//   4. If there were any versioned dirs, sort them by version and return the dir with the latest version.
+//      (A nightly SNAPSHOT for a given version is always considered later than that version.)
 //   5. If there were no versioned dirs but there was a match, return it (should be a dir just named "confluent" like /opt/confluent)
 func determineConfluentInstallDir(fs io.FileSystem) (string, bool, error) {
 	for _, dir := range commonInstallDirs {
@@ -187,17 +200,24 @@ func determineConfluentInstallDir(fs io.FileSystem) (string, bool, error) {
 				foundValid = true
 				i := strings.LastIndex(dir, "confluent-")
 				if i >= 0 {
+					nightly := strings.HasSuffix(dir, "-SNAPSHOT")
+					dir = strings.TrimSuffix(dir, "-SNAPSHOT")
 					v, err := version.NewSemver(dir[i+len("confluent-"):])
 					if err != nil {
 						return "", false, err
 					}
-					versions = append(versions, &versionedDirectory{dir: dir, ver: v})
+					versions = append(versions, &versionedDirectory{dir: dir, ver: v, nightly: nightly})
 				}
 			}
 			// we foundValid at least one versioned directory
 			if len(versions) > 0 {
 				sort.Sort(byVersion(versions))
-				return versions[len(versions)-1].dir, true, nil
+				ver := versions[len(versions)-1]
+				dirname := ver.dir
+				if ver.nightly {
+					dirname = fmt.Sprintf("%s-SNAPSHOT", dirname)
+				}
+				return dirname, true, nil
 			} else if foundValid {
 				// no versioned directories so the match might just be a dir named "confluent"
 				return matches[0], true, nil

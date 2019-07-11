@@ -220,7 +220,7 @@ func TestDetermineConfluentInstallDir(t *testing.T) {
 			wantErr:   false,
 		},
 		{
-			name:      "broken install found in /opt",
+			name:      "broken install found in /opt without a bin dir",
 			dirExists: map[string][]string{"/opt/confluent*": {"/opt/confluent-5.2.2"}},
 			fileExists: map[string][]string{
 				"/opt/confluent-5.2.2/logs": {
@@ -370,6 +370,20 @@ func TestDetermineConfluentInstallDir(t *testing.T) {
 			wantFound: true,
 			wantErr:   false,
 		},
+		{
+			name: "nightly SNAPSHOT version found in /opt",
+			dirExists: map[string][]string{"/opt/confluent*": {"/opt/confluent-5.2.2-SNAPSHOT"}},
+			wantDir:   "/opt/confluent-5.2.2-SNAPSHOT",
+			wantFound: true,
+			wantErr:   false,
+		},
+		{
+			name: "multiple nightly SNAPSHOT versions found, first in /opt, second in /usr/local",
+			dirExists: map[string][]string{"/opt/confluent*": {"/opt/confluent-5.2.2-SNAPSHOT"}, "/usr/local/confluent*": {"/usr/local/confluent-5.3.0-SNAPSHOT"}},
+			wantDir:   "/opt/confluent-5.2.2-SNAPSHOT",
+			wantFound: true,
+			wantErr:   false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -427,7 +441,7 @@ func TestDetermineConfluentInstallDir(t *testing.T) {
 						tt.fileExists[dirname] = append(tt.fileExists[dirname], validCPInstallEtcCanary)
 					}
 					// magic token to say the dir doesn't exist, error out
-					if tt.fileExists[dirname][0] == "NOT_EXIST" {
+					if len(tt.fileExists[dirname]) > 0 && tt.fileExists[dirname][0] == "NOT_EXIST" {
 						return nil, os.ErrNotExist
 					}
 					infos := make([]os.FileInfo, 0, len(tt.fileExists[dirname]))
