@@ -42,11 +42,11 @@ func (c *command) init() {
 		RunE:    c.enable,
 		Args:    cobra.NoArgs,
 	}
-	createCmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	createCmd.Flags().String("cloud", "", "Cloud provider ('aws', 'azure', or 'gcp').")
-	_ = createCmd.MarkFlagRequired("cloud")
-	createCmd.Flags().String("geo", "", "Either 'us', 'eu', or 'apac' (only applies to Enterprise accounts).")
-	_ = createCmd.MarkFlagRequired("cloud")
+	createCmd.Flags().String("cluster", "", "Kafka cluster ID")
+	createCmd.MarkFlagRequired("cluster")
+	createCmd.Flags().String("cloud", "", "Cloud provider (e.g. 'aws', 'azure', or 'gcp')")
+	createCmd.MarkFlagRequired("cloud")
+	createCmd.Flags().String("geo", "", "Either 'us', 'eu', or 'apac' (only applies to Enterprise accounts)")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
