@@ -7,17 +7,19 @@ require (
 	github.com/Shopify/toxiproxy v2.1.3+incompatible // indirect
 	github.com/alcortesm/tgz v0.0.0-20161220082320-9c5fe88206d7 // indirect
 	github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239 // indirect
+	github.com/antihax/optional v0.0.0-20180407024304-ca021399b1a6 // indirect
 	github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da
 	github.com/atrox/homedir v1.0.0
 	github.com/aws/aws-sdk-go v1.15.64
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
 	github.com/confluentinc/ccloud-sdk-go v0.0.7
-	github.com/confluentinc/ccloudapis v0.0.0-20190628232638-10144ab4d3a3
+	github.com/confluentinc/ccloudapis v0.0.0-20190614011354-aae16fc9c75c
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-printer v0.10.0
 	github.com/confluentinc/mds-sdk-go v0.0.0-20190610045202-137cf78b1f6a
 	github.com/confluentinc/protoc-gen-ccloud v0.0.1 // indirect
+	github.com/confluentinc/schema-registry-sdk-go v0.0.0
 	github.com/dgryski/go-metro v0.0.0-20180109044635-280f6062b5bc // indirect
 	github.com/dgryski/go-spooky v0.0.0-20170606183049-ed3d087f40e2 // indirect
 	github.com/eapache/go-resiliency v1.2.0 // indirect
@@ -67,14 +69,8 @@ require (
 	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/stretchr/testify v1.3.0
 	github.com/tidwall/pretty v0.0.0-20190325153808-1166b9ac2b65
-	golang.org/x/crypto v0.0.0-20190426145343-a29dc8fdc734
-	golang.org/x/exp v0.0.0-20190429183610-475c5042d3f1 // indirect
-	golang.org/x/net v0.0.0-20190503192946-f4e77d36d62c // indirect
-	golang.org/x/oauth2 v0.0.0-20190402181905-9f3314589c9a
-	golang.org/x/sys v0.0.0-20190502175342-a43fa875dd82 // indirect
-	golang.org/x/text v0.3.2 // indirect
 	gonum.org/v1/netlib v0.0.0-20190331212654-76723241ea4e // indirect
-	google.golang.org/appengine v1.5.0 // indirect
+	google.golang.org/appengine v1.6.1 // indirect
 	gopkg.in/square/go-jose.v2 v2.3.1
 	gopkg.in/src-d/go-git-fixtures.v3 v3.5.0 // indirect
 	gopkg.in/yaml.v2 v2.2.2 // indirect
@@ -82,6 +78,8 @@ require (
 )
 
 replace (
+	github.com/confluentinc/ccloud-sdk-go => ../ccloud-sdk-go
+	github.com/confluentinc/schema-registry-sdk-go => ../schema-registry-sdk-go
 	github.com/havoc-io/gopass => github.com/havoc-io/gopass v0.0.0-20161007065903-6331a34a3f3b
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20171026124306-e509bb64fe11
 	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20170925234155-019ae5ada31d
