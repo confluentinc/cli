@@ -8,6 +8,7 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go"
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
+	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -25,6 +26,40 @@ func (c *ConfigHelper) KafkaCluster(clusterID, environment string) (*kafkav1.Kaf
 		return nil, err
 	}
 	return &kafkav1.KafkaCluster{AccountId: c.Config.Auth.Account.Id, Id: kafka.ID, ApiEndpoint: kafka.APIEndpoint}, nil
+}
+
+func (c *ConfigHelper) SchemaRegistryURL(environment string) (string, error) {
+	ctx, err := c.Config.Context()
+	if err != nil {
+		return "", err
+	}
+	if ctx.SchemaRegistryEndpoint != "" {
+		return ctx.SchemaRegistryEndpoint, nil
+	}
+
+	// Didn't find it -- ask the mothership
+	existingClusters, err := c.Client.SchemaRegistry.GetSchemaRegistryClusters(
+		context.Background(),
+		&srv1.SchemaRegistryCluster{
+			AccountId: environment,
+		})
+	if err != nil {
+		return "", err
+	}
+	switch len(existingClusters) {
+	case 0:
+		return "", nil
+	case 1:
+		endpoint := existingClusters[0].Endpoint
+		ctx.SchemaRegistryEndpoint = endpoint
+		err = c.Config.Save()
+		if err != nil {
+			return "", err
+		}
+		return endpoint, nil
+	default:
+		return "", fmt.Errorf("found multiple schema registries")
+	}
 }
 
 // KafkaClusterConfig returns the overridden or current KafkaClusterConfig
