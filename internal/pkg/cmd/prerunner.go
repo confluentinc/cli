@@ -1,13 +1,19 @@
 package cmd
 
 import (
+	"context"
+	"fmt"
 	"github.com/jonboulle/clockwork"
 	"github.com/spf13/cobra"
 	"gopkg.in/square/go-jose.v2/jwt"
+	"os"
+	"strings"
 
 	"github.com/confluentinc/ccloud-sdk-go"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
+	config_pkg "github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/update"
@@ -42,6 +48,48 @@ func (r *PreRun) Anonymous() func(cmd *cobra.Command, args []string) error {
 		}
 		return nil
 	}
+}
+
+func getSrCredentials() (key string, secret string, err error) {
+	prompt := NewPrompt(os.Stdin)
+	fmt.Println("Enter your Schema Registry API Key:")
+	key, err = prompt.ReadString('\n')
+	if err != nil {
+		return "", "", err
+	}
+	fmt.Println("Enter your Schema Registry API Secret:")
+	secret, err = prompt.ReadString('\n')
+	if err != nil {
+		return "", "", err
+	}
+
+	// Validate before returning
+	_, _, err = srsdk.APIClient{}.DefaultApi.Get(context.WithValue(context.Background(), srsdk.ContextBasicAuth, srsdk.BasicAuth{
+		UserName: key,
+		Password: secret,
+	}))
+	if err != nil {
+		return "", "", errors.Errorf("Failed to validate Schema Registry API Key and Secret")
+	}
+	return strings.TrimSpace(key), strings.TrimSpace(secret), nil
+}
+
+func SrContext(config *config.Config) (context.Context, error) {
+	if config.SrCredentials == nil || len(config.SrCredentials.Key) == 0 || len(config.SrCredentials.Secret) == 0 {
+		key, secret, err := getSrCredentials()
+		if err != nil {
+			return nil, err
+		}
+		config.SrCredentials = &config_pkg.APIKeyPair{
+			Key:    key,
+			Secret: secret,
+		}
+		config.Save()
+	}
+	return context.WithValue(context.Background(), srsdk.ContextBasicAuth, srsdk.BasicAuth{
+		UserName: config.SrCredentials.Key,
+		Password: config.SrCredentials.Secret,
+	}), nil
 }
 
 // Authenticated provides PreRun operations for commands that require a logged-in user

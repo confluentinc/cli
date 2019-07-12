@@ -7,10 +7,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-<<<<<<< HEAD
-=======
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
->>>>>>> CC-4667 CCloud CLI Supports Enabling Schema Registry
 	"github.com/spf13/cobra"
 	"strings"
 )
@@ -19,26 +16,20 @@ type command struct {
 	*cobra.Command
 	config   *config.Config
 	ccClient ccsdk.SchemaRegistry
-<<<<<<< HEAD
-=======
-	srClient srsdk.APIClient
+	srClient *srsdk.APIClient
 	ch       *pcmd.ConfigHelper
->>>>>>> CC-4667 CCloud CLI Supports Enabling Schema Registry
 }
 
-func New(prerunner pcmd.PreRunner, config *config.Config, ccloudClient ccsdk.SchemaRegistry) *cobra.Command {
+func New(prerunner pcmd.PreRunner, config *config.Config, srClient *srsdk.APIClient, ccloudClient ccsdk.SchemaRegistry) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:               "schema-registry",
-<<<<<<< HEAD
 			Short:             `Manage Schema Registry.`,
-=======
-			Short:             `Manage Confluent Schema Registry.`,
->>>>>>> CC-4667 CCloud CLI Supports Enabling Schema Registry
 			PersistentPreRunE: prerunner.Authenticated(),
 		},
 		config:   config,
 		ccClient: ccloudClient,
+		srClient: srClient,
 	}
 	cmd.init()
 	return cmd.Command
@@ -47,30 +38,19 @@ func New(prerunner pcmd.PreRunner, config *config.Config, ccloudClient ccsdk.Sch
 func (c *command) init() {
 	createCmd := &cobra.Command{
 		Use:     "create",
-<<<<<<< HEAD
 		Short:   `Create an instance of Schema Registry.`,
-=======
-		Short:   `Create a Schema Registry instance`,
->>>>>>> CC-4667 CCloud CLI Supports Enabling Schema Registry
 		Example: `ccloud schema-registry create --cloud gcp`,
 		RunE:    c.create,
 		Args:    cobra.NoArgs,
 	}
-<<<<<<< HEAD
 	createCmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	createCmd.Flags().String("cloud", "", "Cloud provider ('aws', 'azure', or 'gcp').")
 	_ = createCmd.MarkFlagRequired("cloud")
 	createCmd.Flags().String("geo", "", "Either 'us', 'eu', or 'apac' (only applies to Enterprise accounts).")
-=======
-	createCmd.Flags().String("cluster", "", "Kafka cluster ID")
-	createCmd.MarkFlagRequired("cluster")
-	createCmd.Flags().String("cloud", "", "Cloud provider (e.g. 'aws', 'azure', or 'gcp')")
-	createCmd.MarkFlagRequired("cloud")
-	createCmd.Flags().String("geo", "", "Either 'us', 'eu', or 'apac' (only applies to Enterprise accounts)")
->>>>>>> CC-4667 CCloud CLI Supports Enabling Schema Registry
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
+	c.AddCommand(NewSchemaCommand(c.config, c.srClient))
 }
 
 func (c *command) create(cmd *cobra.Command, args []string) error {

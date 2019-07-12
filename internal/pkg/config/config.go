@@ -63,7 +63,8 @@ type Context struct {
 	// N.B. These may later be exposed in the CLI to directly register kafkas (outside a Control Plane)
 	KafkaClusters map[string]*KafkaClusterConfig `json:"kafka_clusters" hcl:"kafka_clusters"`
 	// Kafka is your active Kafka cluster and references a key in the KafkaClusters map
-	Kafka string `json:"kafka_cluster" hcl:"kafka_cluster"`
+	Kafka                  string `json:"kafka_cluster" hcl:"kafka_cluster"`
+	SchemaRegistryEndpoint string `json:"schema_registry" hcl:"schema_registry"`
 }
 
 // Config represents the CLI configuration.
@@ -79,6 +80,7 @@ type Config struct {
 	Credentials    map[string]*Credential `json:"credentials" hcl:"credentials"`
 	Contexts       map[string]*Context    `json:"contexts" hcl:"contexts"`
 	CurrentContext string                 `json:"current_context" hcl:"current_context"`
+	SrCredentials  *APIKeyPair            `json:"schema_registry_credentials" hcl:"schema_registry_credentials"`
 }
 
 // New initializes a new Config object
