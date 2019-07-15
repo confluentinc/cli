@@ -95,7 +95,10 @@ func (r *PreRun) AuthenticatedAPIKey() func(cmd *cobra.Command, args []string) e
 func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, name string, currentVersion string) error {
 	updateAvailable, _, err := r.UpdateClient.CheckForUpdates(name, currentVersion, false)
 	if err != nil {
-		return err
+		// This is a convenience helper to check-for-updates before arbitrary commands. Since the CLI supports running
+		// in internet-less environments (e.g., local or on-prem deploys), swallow the error and log a warning.
+		r.Logger.Warn(err)
+		return nil
 	}
 	if updateAvailable {
 		msg := "Updates are available for %s. To install them, please run:\n$ %s update\n\n"
