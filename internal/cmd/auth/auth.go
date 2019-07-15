@@ -71,7 +71,7 @@ func (a *commands) init(prerunner pcmd.PreRunner) {
 	} else {
 		loginCmd.RunE = a.loginMDS
 		loginCmd.Flags().String("url", "", "Metadata service URL.")
-		loginCmd.Short = strings.Replace(loginCmd.Short, ".", " (required for RBAC).", -1)
+		loginCmd.Short = strings.Replace(loginCmd.Short, ".", ".", -1)
 		loginCmd.Long = strings.Replace(loginCmd.Long, ".", " (required for RBAC).", -1)
 		check(loginCmd.MarkFlagRequired("url")) // because https://confluent.cloud isn't an MDS endpoint
 	}
