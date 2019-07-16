@@ -371,14 +371,14 @@ func TestDetermineConfluentInstallDir(t *testing.T) {
 			wantErr:   false,
 		},
 		{
-			name: "nightly SNAPSHOT version found in /opt",
+			name:      "nightly SNAPSHOT version found in /opt",
 			dirExists: map[string][]string{"/opt/confluent*": {"/opt/confluent-5.2.2-SNAPSHOT"}},
 			wantDir:   "/opt/confluent-5.2.2-SNAPSHOT",
 			wantFound: true,
 			wantErr:   false,
 		},
 		{
-			name: "multiple nightly SNAPSHOT versions found, first in /opt, second in /usr/local",
+			name:      "multiple nightly SNAPSHOT versions found, first in /opt, second in /usr/local",
 			dirExists: map[string][]string{"/opt/confluent*": {"/opt/confluent-5.2.2-SNAPSHOT"}, "/usr/local/confluent*": {"/usr/local/confluent-5.3.0-SNAPSHOT"}},
 			wantDir:   "/opt/confluent-5.2.2-SNAPSHOT",
 			wantFound: true,
