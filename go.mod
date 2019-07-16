@@ -18,7 +18,11 @@ require (
 	github.com/confluentinc/go-printer v0.10.0
 	github.com/confluentinc/mds-sdk-go v0.0.0-20190610045202-137cf78b1f6a
 	github.com/confluentinc/protoc-gen-ccloud v0.0.1 // indirect
+<<<<<<< HEAD
 	github.com/confluentinc/schema-registry-sdk-go v0.0.6
+=======
+	github.com/confluentinc/schema-registry-sdk-go v0.0.0-20190610045202-31d695525e415ef1595b2106986c2296c8adb45b
+>>>>>>> Fix deps
 	github.com/dgryski/go-metro v0.0.0-20180109044635-280f6062b5bc // indirect
 	github.com/dgryski/go-spooky v0.0.0-20170606183049-ed3d087f40e2 // indirect
 	github.com/eapache/go-resiliency v1.2.0 // indirect
@@ -68,7 +72,6 @@ require (
 	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/stretchr/testify v1.3.0
 	github.com/tidwall/pretty v0.0.0-20190325153808-1166b9ac2b65
-	github.com/ugorji/go v1.1.7 // indirect
 	golang.org/x/crypto v0.0.0-20190605123033-f99c8df09eb5
 	golang.org/x/oauth2 v0.0.0-20190402181905-9f3314589c9a
 	gonum.org/v1/netlib v0.0.0-20190331212654-76723241ea4e // indirect
