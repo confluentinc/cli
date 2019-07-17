@@ -7,7 +7,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
 	"strings"
 )
@@ -16,15 +15,13 @@ type command struct {
 	*cobra.Command
 	config   *config.Config
 	ccClient ccsdk.SchemaRegistry
-	srClient srsdk.APIClient
-	ch       *pcmd.ConfigHelper
 }
 
 func New(prerunner pcmd.PreRunner, config *config.Config, ccloudClient ccsdk.SchemaRegistry) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:               "schema-registry",
-			Short:             `Manage Confluent Schema Registry.`,
+			Short:             `Manage Schema Registry.`,
 			PersistentPreRunE: prerunner.Authenticated(),
 		},
 		config:   config,
@@ -37,16 +34,15 @@ func New(prerunner pcmd.PreRunner, config *config.Config, ccloudClient ccsdk.Sch
 func (c *command) init() {
 	createCmd := &cobra.Command{
 		Use:     "create",
-		Short:   `Create a Schema Registry instance`,
+		Short:   `Create an instance of Schema Registry.`,
 		Example: `ccloud schema-registry create --cloud gcp`,
 		RunE:    c.create,
 		Args:    cobra.NoArgs,
 	}
-	createCmd.Flags().String("cluster", "", "Kafka cluster ID")
-	createCmd.MarkFlagRequired("cluster")
-	createCmd.Flags().String("cloud", "", "Cloud provider (e.g. 'aws', 'azure', or 'gcp')")
-	createCmd.MarkFlagRequired("cloud")
-	createCmd.Flags().String("geo", "", "Either 'us', 'eu', or 'apac' (only applies to Enterprise accounts)")
+	createCmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	createCmd.Flags().String("cloud", "", "Cloud provider ('aws', 'azure', or 'gcp').")
+	_ = createCmd.MarkFlagRequired("cloud")
+	createCmd.Flags().String("geo", "", "Either 'us', 'eu', or 'apac' (only applies to Enterprise accounts).")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
@@ -70,17 +66,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	}
 
 	// Trust the API will handle CCP/CCE and whether geo is required
-	var location srv1.GlobalSchemaRegistryLocation
-	switch strings.ToLower(locationFlag) {
-	case "us":
-		location = srv1.GlobalSchemaRegistryLocation_US
-	case "eu":
-		location = srv1.GlobalSchemaRegistryLocation_EU
-	case "apac":
-		location = srv1.GlobalSchemaRegistryLocation_APAC
-	default:
-		// Do nothing in default case until we can require it conditionally in CCE
-	}
+	location := srv1.GlobalSchemaRegistryLocation(srv1.GlobalSchemaRegistryLocation_value[strings.ToUpper(locationFlag)])
 
 	kafkaClusterId, err := cmd.Flags().GetString("cluster")
 	if err != nil {
