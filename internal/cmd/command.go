@@ -42,7 +42,6 @@ import (
 	users "github.com/confluentinc/cli/internal/pkg/sdk/user"
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
 	versions "github.com/confluentinc/cli/internal/pkg/version"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 )
 
 func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Version, logger *log.Logger) (*cobra.Command, error) {
@@ -130,7 +129,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		srConfig.UserAgent = ver.UserAgent
 		srClient := srsdk.NewAPIClient(srConfig)
 
-		sr := schema_registry.New(prerunner, cfg, srClient, client.SchemaRegistry)
+		sr := schema_registry.New(prerunner, cfg, client.SchemaRegistry, ch)
 		sr.Hidden = true
 		cli.AddCommand(sr)
 
