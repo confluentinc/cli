@@ -41,7 +41,7 @@ func NewSchemaCommand(config *config.Config, srSdk *srsdk.APIClient) *cobra.Comm
 func (c *schemaCommand) init() {
 
 	cmd := &cobra.Command{
-		Use:   "delete [--subject <subject>] [--version <version>]",
+		Use:   "delete --subject <subject> --version <version>",
 		Short: "Delete one or more schemas",
 		Example: `
 Delete one or more topics. This command should only be used in extreme circumstances.
@@ -73,7 +73,7 @@ Get the schema string identified by the input ID
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
-		Use:   "describe [--subject <subject>] [--version <version>]",
+		Use:   "describe --subject <subject> --version <version>",
 		Short: "Describe a schema for a given subject and version",
 		Example: `
 Describe a schema for a given subject and version
@@ -91,7 +91,7 @@ Describe a schema for a given subject and version
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
-		Use:   "list [--subject <subject>]",
+		Use:   "list --subject <subject>",
 		Short: "List all versions of a subject",
 		Example: `
 Get a list of versions registered under the specified subject.
