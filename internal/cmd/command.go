@@ -39,7 +39,6 @@ import (
 	kafkas "github.com/confluentinc/cli/internal/pkg/sdk/kafka"
 	ksqls "github.com/confluentinc/cli/internal/pkg/sdk/ksql"
 	//connects "github.com/confluentinc/cli/internal/pkg/sdk/connect"
-	schema_registrys "github.com/confluentinc/cli/internal/pkg/sdk/schema-registry"
 	users "github.com/confluentinc/cli/internal/pkg/sdk/user"
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
 	versions "github.com/confluentinc/cli/internal/pkg/version"
@@ -122,10 +121,8 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		cli.AddCommand(kafka.New(prerunner, cfg, kafkaClient, ch))
 
 		// Schema Registry
-		sr := schema_registry.New(prerunner, cfg, schema_registrys.New(client, logger))
+		sr := schema_registry.New(prerunner, cfg, client.SchemaRegistry)
 		sr.Hidden = true
-		cli.AddCommand(sr)
-
 		cli.AddCommand(sr)
 
 		conn = ksql.New(prerunner, cfg, ksqls.New(client, logger), kafkaClient, userClient, ch)
