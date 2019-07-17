@@ -53,3 +53,14 @@ func SrContext(config *config.Config) (context.Context, error) {
 		Password: config.SrCredentials.Secret,
 	}), nil
 }
+
+func SchemaRegistryClient(config *config.Config, ch *pcmd.ConfigHelper) (*srsdk.APIClient, error) {
+	srConfig := srsdk.NewConfiguration()
+	var err error
+	srConfig.BasePath, err = ch.SchemaRegistryURL(config.Auth.Account.Id)
+	if err != nil {
+		return nil, err
+	}
+	// TODO srConfig.UserAgent = GetVersion.UserAgent
+	return srsdk.NewAPIClient(srConfig), nil
+}

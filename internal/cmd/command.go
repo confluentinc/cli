@@ -41,7 +41,6 @@ import (
 	users "github.com/confluentinc/cli/internal/pkg/sdk/user"
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
 	versions "github.com/confluentinc/cli/internal/pkg/version"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 )
 
 func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Version, logger *log.Logger) (*cobra.Command, error) {
@@ -121,15 +120,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		cli.AddCommand(kafka.New(prerunner, cfg, kafkaClient, ch))
 
 		// Schema Registry
-
-		srConfig := srsdk.NewConfiguration()
-		srConfig.BasePath, err = ch.SchemaRegistryURL(cfg.Auth.Account.Id)
-		if err != nil {
-			return nil, err
-		}
-		srConfig.UserAgent = ver.UserAgent
-		srClient := srsdk.NewAPIClient(srConfig)
-		cli.AddCommand(schema_registry.New(prerunner, cfg, srClient, client.SchemaRegistry))
+		cli.AddCommand(schema_registry.New(prerunner, cfg, client.SchemaRegistry, ch))
 
 		conn = ksql.New(prerunner, cfg, ksqls.New(client, logger), kafkaClient, userClient, ch)
 		conn.Hidden = true // The ksql feature isn't finished yet, so let's hide it
