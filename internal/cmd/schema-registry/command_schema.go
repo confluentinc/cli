@@ -20,7 +20,7 @@ type schemaCommand struct {
 }
 
 func NewSchemaCommand(config *config.Config, srSdk *srsdk.APIClient) *cobra.Command {
-	ctx, err := pcmd.SrContext(config)
+	ctx, err := SrContext(config)
 	if err != nil {
 		fmt.Println(err)
 		return nil
