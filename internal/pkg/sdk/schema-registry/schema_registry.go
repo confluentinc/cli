@@ -1,12 +1,12 @@
 package schema_registry
 
 import (
-"context"
+	"context"
 
-"github.com/confluentinc/ccloud-sdk-go"
-schemaregistryv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
+	"github.com/confluentinc/ccloud-sdk-go"
+	schemaregistryv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
 
-"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 // Compile-time check for Interface adherence
@@ -34,6 +34,6 @@ func (c *SchemaRegistry) GetSchemaRegistryCluster(ctx context.Context, cluster *
 }
 
 func (c *SchemaRegistry) DeleteSchemaRegistryCluster(
-		ctx context.Context, cluster *schemaregistryv1.SchemaRegistryCluster) error {
+	ctx context.Context, cluster *schemaregistryv1.SchemaRegistryCluster) error {
 	return c.Client.SchemaRegistry.DeleteSchemaRegistryCluster(ctx, cluster)
 }
