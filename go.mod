@@ -32,11 +32,7 @@ require (
 	github.com/golang/mock v1.2.0
 	github.com/golang/protobuf v1.3.1
 	github.com/golang/snappy v0.0.1 // indirect
-	github.com/golangci/go-tools v0.0.0-20190124090046-35a9f45a5db0 // indirect
-	github.com/golangci/gofmt v0.0.0-20181105071733-f021c4179c82 // indirect
-	github.com/golangci/golangci-lint v1.16.1-0.20190402065613-de1d1ad903cd
-	github.com/golangci/gosec v0.0.0-20180901114220-8afd9cbb6cfb // indirect
-	github.com/golangci/tools v0.0.0-20180902102414-2cefd77fef9b // indirect
+	github.com/golangci/golangci-lint v1.17.1
 	github.com/google/go-cmp v0.3.0 // indirect
 	github.com/google/go-github/v25 v25.0.2
 	github.com/google/uuid v1.1.0
@@ -77,7 +73,6 @@ require (
 	golang.org/x/oauth2 v0.0.0-20190402181905-9f3314589c9a
 	golang.org/x/sys v0.0.0-20190502175342-a43fa875dd82 // indirect
 	golang.org/x/text v0.3.2 // indirect
-	golang.org/x/tools v0.0.0-20190503185657-3b6f9c0030f7 // indirect
 	gonum.org/v1/netlib v0.0.0-20190331212654-76723241ea4e // indirect
 	google.golang.org/appengine v1.5.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.3.1
