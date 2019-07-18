@@ -63,6 +63,6 @@ func SchemaRegistryClient(ch *pcmd.ConfigHelper) (client *srsdk.APIClient, err e
 	if err != nil {
 		return nil, err
 	}
-	//srConfig.UserAgent = version.UserAgent
+	srConfig.UserAgent = ch.Version.UserAgent
 	return srsdk.NewAPIClient(srConfig), nil
 }
