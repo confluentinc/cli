@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/version"
 	"strings"
 
 	"github.com/confluentinc/ccloud-sdk-go"
@@ -17,6 +18,7 @@ import (
 type ConfigHelper struct {
 	Config *config.Config
 	Client *ccloud.Client
+	*version.Version
 }
 
 // KafkaCluster returns the current kafka cluster context
