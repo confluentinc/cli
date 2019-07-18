@@ -1,11 +1,19 @@
 package schema_registry
 
-import "testing"
+import (
+	"github.com/confluentinc/cli/internal/pkg/config"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+	"testing"
+)
 
-func TestSchemaRegistryClient(t *testing.T) {
-
-}
-
-func TestSrContext(t *testing.T) {
-
+func TestSrContextFound(t *testing.T) {
+	ctx, err := SrContext(&config.Config{
+		SrCredentials: &config.APIKeyPair{
+			Key:    "aladdin",
+			Secret: "opensesame",
+		},
+	})
+	if err != nil || ctx.Value(srsdk.ContextBasicAuth) == nil {
+		t.Fail()
+	}
 }
