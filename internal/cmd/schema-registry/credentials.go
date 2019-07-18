@@ -54,10 +54,10 @@ func SrContext(config *config.Config) (context.Context, error) {
 	}), nil
 }
 
-func SchemaRegistryClient(config *config.Config, ch *pcmd.ConfigHelper) (*srsdk.APIClient, error) {
+func SchemaRegistryClient(ch *pcmd.ConfigHelper) (*srsdk.APIClient, error) {
 	srConfig := srsdk.NewConfiguration()
 	var err error
-	srConfig.BasePath, err = ch.SchemaRegistryURL(config.Auth.Account.Id)
+	srConfig.BasePath, err = ch.SchemaRegistryURL(ch.Config.Auth.Account.Id)
 	if err != nil {
 		return nil, err
 	}
