@@ -54,13 +54,15 @@ func SrContext(config *config.Config) (context.Context, error) {
 	}), nil
 }
 
-func SchemaRegistryClient(ch *pcmd.ConfigHelper) (*srsdk.APIClient, error) {
+func SchemaRegistryClient(ch *pcmd.ConfigHelper) (client *srsdk.APIClient, err error) {
 	srConfig := srsdk.NewConfiguration()
-	var err error
+	if ch.Config.Auth == nil {
+		return nil, errors.Errorf("user must be authenticated to use Schema Registry")
+	}
 	srConfig.BasePath, err = ch.SchemaRegistryURL(ch.Config.Auth.Account.Id)
 	if err != nil {
 		return nil, err
 	}
-	// TODO srConfig.UserAgent = GetVersion.UserAgent
+	//srConfig.UserAgent = version.UserAgent
 	return srsdk.NewAPIClient(srConfig), nil
 }

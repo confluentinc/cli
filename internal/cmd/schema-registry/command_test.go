@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
+	cmd2 "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -81,7 +82,7 @@ func (suite *SRTestSuite) SetupTest() {
 }
 
 func (suite *SRTestSuite) newCMD() *cobra.Command {
-	cmd := New(&cliMock.Commander{}, suite.conf, suite.srMock)
+	cmd := New(&cliMock.Commander{}, suite.conf, suite.srMock, &cmd2.ConfigHelper{})
 	return cmd
 }
 

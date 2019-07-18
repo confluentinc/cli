@@ -35,6 +35,7 @@ func getClient() *ccloud.Client {
 }
 
 func TestSchemaRegistryURL(t *testing.T) {
+	// Found locally
 	cfg := getConfig("localhost")
 	client := getClient()
 	ch := ConfigHelper{
@@ -46,6 +47,7 @@ func TestSchemaRegistryURL(t *testing.T) {
 		t.Fail()
 	}
 
+	// Not found locally
 	cfg = getConfig("")
 	ch = ConfigHelper{
 		Config: &cfg,
