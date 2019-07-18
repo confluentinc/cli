@@ -74,6 +74,8 @@ github.com/confluentinc/schema-registry-sdk-go v0.0.0-20190610045202-31d695525e4
 github.com/confluentinc/schema-registry-sdk-go v0.0.0-20190610045202-31d695525e415ef1595b2106986c2296c8adb45b/go.mod h1:a6uMMyRGCSzFfFBQhUZoL6c3OFxX87EiVj5gyvWLZsA=
 github.com/confluentinc/schema-registry-sdk-go v0.0.1 h1:rlJJ4+f8XmhfsyeL6tBqEDbXwyba/3UQEoqQGXWAt7M=
 github.com/confluentinc/schema-registry-sdk-go v0.0.1/go.mod h1:a6uMMyRGCSzFfFBQhUZoL6c3OFxX87EiVj5gyvWLZsA=
+github.com/confluentinc/schema-registry-sdk-go v0.0.3 h1:0omb53Czk6RBlGLoqbLaKZ76C8rj6H4PfVIrqas2njY=
+github.com/confluentinc/schema-registry-sdk-go v0.0.3/go.mod h1:a6uMMyRGCSzFfFBQhUZoL6c3OFxX87EiVj5gyvWLZsA=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
