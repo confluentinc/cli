@@ -107,7 +107,7 @@ Get a list of versions registered under the specified subject.
 }
 
 func (c *schemaCommand) list(cmd *cobra.Command, args []string) error {
-	srClient, err := SchemaRegistryClient(c.config, c.ch)
+	srClient, err := SchemaRegistryClient(c.ch)
 	subject, err := cmd.Flags().GetString("subject")
 	if err != nil {
 		return err
@@ -124,7 +124,7 @@ func (c *schemaCommand) list(cmd *cobra.Command, args []string) error {
 }
 
 func (c *schemaCommand) delete(cmd *cobra.Command, args []string) error {
-	srClient, err := SchemaRegistryClient(c.config, c.ch)
+	srClient, err := SchemaRegistryClient(c.ch)
 	subject, err := cmd.Flags().GetString("subject")
 	if err != nil {
 		return err
@@ -152,7 +152,7 @@ func (c *schemaCommand) delete(cmd *cobra.Command, args []string) error {
 }
 
 func (c *schemaCommand) describeById(cmd *cobra.Command, args []string) error {
-	srClient, err := SchemaRegistryClient(c.config, c.ch)
+	srClient, err := SchemaRegistryClient(c.ch)
 	schema, err := strconv.Atoi(args[0])
 	if err != nil {
 		return fmt.Errorf("unexpected argument: Must be an integer Schema ID")
@@ -166,7 +166,7 @@ func (c *schemaCommand) describeById(cmd *cobra.Command, args []string) error {
 }
 
 func (c *schemaCommand) describeBySubject(cmd *cobra.Command, args []string) error {
-	srClient, err := SchemaRegistryClient(c.config, c.ch)
+	srClient, err := SchemaRegistryClient(c.ch)
 	subject, err := cmd.Flags().GetString("subject")
 	if err != nil {
 		return err
