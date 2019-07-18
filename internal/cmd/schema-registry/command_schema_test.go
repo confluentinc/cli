@@ -10,20 +10,24 @@ import (
 	cmd2 "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/log"
-
+	"github.com/confluentinc/cli/internal/pkg/version"
 	cliMock "github.com/confluentinc/cli/mock"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+	srMock "github.com/confluentinc/schema-registry-sdk-go/mock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	net_http "net/http"
 	"testing"
 )
 
 type SchemaTestSuite struct {
 	suite.Suite
-	conf         *config.Config
-	kafkaCluster *kafkav1.KafkaCluster
-	srCluster    *srv1.SchemaRegistryCluster
-	srMock       *mock.SchemaRegistry
+	conf             *config.Config
+	kafkaCluster     *kafkav1.KafkaCluster
+	srCluster        *srv1.SchemaRegistryCluster
+	srMothershipMock *mock.SchemaRegistry
+	srClientMock     *srsdk.APIClient
 }
 
 func (suite *SchemaTestSuite) SetupSuite() {
@@ -44,6 +48,7 @@ func (suite *SchemaTestSuite) SetupSuite() {
 	suite.conf.Credentials[name] = &config.Credential{
 		Username: user.User.Email,
 	}
+	suite.conf.SrCredentials = &config.APIKeyPair{"key", "secret"}
 
 	suite.conf.Contexts[name] = &config.Context{
 		Platform:      name,
@@ -65,7 +70,7 @@ func (suite *SchemaTestSuite) SetupSuite() {
 }
 
 func (suite *SchemaTestSuite) SetupTest() {
-	suite.srMock = &mock.SchemaRegistry{
+	suite.srMothershipMock = &mock.SchemaRegistry{
 		CreateSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *srv1.SchemaRegistryClusterConfig) (*srv1.SchemaRegistryCluster, error) {
 			return suite.srCluster, nil
 		},
@@ -73,10 +78,22 @@ func (suite *SchemaTestSuite) SetupTest() {
 			return nil, nil
 		},
 	}
+
+	suite.srClientMock = &srsdk.APIClient{
+		DefaultApi: &srMock.DefaultApi{
+			GetSchemaFunc: func(ctx context.Context, id int32) (srsdk.SchemaString, *net_http.Response, error) {
+				return srsdk.SchemaString{Schema: "Potatoes"}, nil, nil
+			},
+		},
+	}
 }
 
 func (suite *SchemaTestSuite) newCMD() *cobra.Command {
-	cmd := New(&cliMock.Commander{}, suite.conf, suite.srMock, &cmd2.ConfigHelper{})
+	cmd := New(&cliMock.Commander{}, suite.conf, suite.srMothershipMock, &cmd2.ConfigHelper{Config: &config.Config{
+			Auth: &config.AuthConfig{Account: &orgv1.Account{Id: "777"}},
+		},
+		Version: &version.Version{},
+	}, suite.srClientMock)
 	return cmd
 }
 
@@ -87,7 +104,8 @@ func (suite *SchemaTestSuite) TestDescribeById() {
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
-	req.True(suite.srMock.CreateSchemaRegistryClusterCalled())
+	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
+	req.True(apiMock.GetSchemaCalled())
 }
 
 func TestSchemaSuite(t *testing.T) {

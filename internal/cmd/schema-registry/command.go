@@ -20,7 +20,7 @@ type command struct {
 	ch       *pcmd.ConfigHelper
 }
 
-func New(prerunner pcmd.PreRunner, config *config.Config, ccloudClient ccsdk.SchemaRegistry, ch *pcmd.ConfigHelper) *cobra.Command {
+func New(prerunner pcmd.PreRunner, config *config.Config, ccloudClient ccsdk.SchemaRegistry, ch *pcmd.ConfigHelper, srClient *srsdk.APIClient) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:               "schema-registry",
@@ -30,6 +30,7 @@ func New(prerunner pcmd.PreRunner, config *config.Config, ccloudClient ccsdk.Sch
 		config:   config,
 		ccClient: ccloudClient,
 		ch:       ch,
+		srClient: srClient,
 	}
 	cmd.init()
 	return cmd.Command
@@ -51,7 +52,7 @@ func (c *command) init() {
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
-	c.AddCommand(NewSchemaCommand(c.config, c.ch))
+	c.AddCommand(NewSchemaCommand(c.config, c.ch, c.srClient))
 }
 
 func (c *command) enable(cmd *cobra.Command, args []string) error {

@@ -6,6 +6,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/go-printer"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
 	"strconv"
 )
@@ -15,9 +16,10 @@ type schemaCommand struct {
 	config *config.Config
 	ch     *pcmd.ConfigHelper
 	ctx    context.Context
+	srClient *srsdk.APIClient
 }
 
-func NewSchemaCommand(config *config.Config, ch *pcmd.ConfigHelper) *cobra.Command {
+func NewSchemaCommand(config *config.Config, ch *pcmd.ConfigHelper, srClient *srsdk.APIClient) *cobra.Command {
 	ctx, err := SrContext(config)
 	if err != nil {
 		fmt.Println(err)
@@ -31,9 +33,21 @@ func NewSchemaCommand(config *config.Config, ch *pcmd.ConfigHelper) *cobra.Comma
 		config: config,
 		ctx:    ctx,
 		ch:     ch,
+		srClient: srClient,
 	}
 	schemaCmd.init()
 	return schemaCmd.Command
+}
+
+func (c *schemaCommand) getApiClient() (*srsdk.APIClient, error) {
+	if c.srClient != nil {
+		return c.srClient, nil
+	}
+	client, err := SchemaRegistryClient(c.ch)
+	if err != nil {
+		return nil, err
+	}
+	return client, nil
 }
 
 func (c *schemaCommand) init() {
@@ -107,7 +121,10 @@ Get a list of versions registered under the specified subject.
 }
 
 func (c *schemaCommand) list(cmd *cobra.Command, args []string) error {
-	srClient, err := SchemaRegistryClient(c.ch)
+	srClient, err := c.getApiClient()
+	if err != nil {
+		return err
+	}
 	subject, err := cmd.Flags().GetString("subject")
 	if err != nil {
 		return err
@@ -124,7 +141,10 @@ func (c *schemaCommand) list(cmd *cobra.Command, args []string) error {
 }
 
 func (c *schemaCommand) delete(cmd *cobra.Command, args []string) error {
-	srClient, err := SchemaRegistryClient(c.ch)
+	srClient, err := c.getApiClient()
+	if err != nil {
+		return err
+	}
 	subject, err := cmd.Flags().GetString("subject")
 	if err != nil {
 		return err
@@ -141,18 +161,22 @@ func (c *schemaCommand) delete(cmd *cobra.Command, args []string) error {
 		pcmd.Println(cmd, "Successfully deleted all versions for subject")
 		printVersions(versions)
 		return nil
+	} else {
+		versionResult, _, err := srClient.DefaultApi.DeleteSchemaVersion(c.ctx, subject, version)
+		if err != nil {
+			return err
+		}
+		pcmd.Println(cmd, "Successfully deleted version for subject")
+		printVersions([]int32{versionResult})
+		return nil
 	}
-	versionResult, _, err := srClient.DefaultApi.DeleteSchemaVersion(c.ctx, subject, version)
-	if err != nil {
-		return err
-	}
-	pcmd.Println(cmd, "Successfully deleted version for subject")
-	printVersions([]int32{versionResult})
-	return nil
 }
 
 func (c *schemaCommand) describeById(cmd *cobra.Command, args []string) error {
-	srClient, err := SchemaRegistryClient(c.ch)
+	srClient, err := c.getApiClient()
+	if err != nil {
+		return err
+	}
 	schema, err := strconv.Atoi(args[0])
 	if err != nil {
 		return fmt.Errorf("unexpected argument: Must be an integer Schema ID")
@@ -166,7 +190,10 @@ func (c *schemaCommand) describeById(cmd *cobra.Command, args []string) error {
 }
 
 func (c *schemaCommand) describeBySubject(cmd *cobra.Command, args []string) error {
-	srClient, err := SchemaRegistryClient(c.ch)
+	srClient, err := c.getApiClient()
+	if err != nil {
+		return err
+	}
 	subject, err := cmd.Flags().GetString("subject")
 	if err != nil {
 		return err

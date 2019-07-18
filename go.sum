@@ -68,6 +68,7 @@ github.com/confluentinc/protoc-gen-ccloud v0.0.1 h1:oTEOlStee6ln4FeKdgQevmjuma50
 github.com/confluentinc/protoc-gen-ccloud v0.0.1/go.mod h1:pDn9xwYsW8QvxGpwJ9CaomgtYBpx7FgdonHVmCo5yRo=
 github.com/confluentinc/prototools v0.0.1/go.mod h1:ycwwz5+n4KxCfEKvkF5uC21S5wKtkHKcUD7OWCOGG3k=
 github.com/confluentinc/prototools v0.0.2-0.20190205163623-ca587b85ed4e/go.mod h1:ycwwz5+n4KxCfEKvkF5uC21S5wKtkHKcUD7OWCOGG3k=
+github.com/confluentinc/schema-registry-sdk-go v0.0.6/go.mod h1:a6uMMyRGCSzFfFBQhUZoL6c3OFxX87EiVj5gyvWLZsA=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

@@ -11,7 +11,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/suite"
-
 	"github.com/confluentinc/ccloud-sdk-go/mock"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
@@ -82,7 +81,7 @@ func (suite *SRTestSuite) SetupTest() {
 }
 
 func (suite *SRTestSuite) newCMD() *cobra.Command {
-	cmd := New(&cliMock.Commander{}, suite.conf, suite.srMock, &cmd2.ConfigHelper{})
+	cmd := New(&cliMock.Commander{}, suite.conf, suite.srMock, &cmd2.ConfigHelper{}, nil)
 	return cmd
 }
 
