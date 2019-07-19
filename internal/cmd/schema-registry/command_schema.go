@@ -130,8 +130,7 @@ Get a list of versions registered under the specified subject.
 		RunE: c.list,
 		Args: cobra.NoArgs,
 	}
-	cmd.Flags().String("subject", "", "Subject of the schema")
-	cmd.MarkFlagRequired("subject")
+	requireSubjectFlag(cmd)
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 }
