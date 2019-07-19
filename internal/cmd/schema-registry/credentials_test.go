@@ -7,7 +7,7 @@ import (
 )
 
 func TestSrContextFound(t *testing.T) {
-	ctx, err := SrContext(&config.Config{
+	ctx, err := srContext(&config.Config{
 		SrCredentials: &config.APIKeyPair{
 			Key:    "aladdin",
 			Secret: "opensesame",
