@@ -114,7 +114,7 @@ Describe the schema by subject and version
 		RunE: c.describe,
 		Args: cobra.MaximumNArgs(1),
 	}
-	cmd.Flags().StringP("subject", "s", "", "Subject of the schema")
+	cmd.Flags().StringP("subject", "S", "", "Subject of the schema")
 	cmd.Flags().StringP("version", "V", "", "Version of the schema. Can be a specific version or 'latest'")
 	c.AddCommand(cmd)
 
@@ -271,6 +271,6 @@ func printVersions(versions []int32) {
 }
 
 func requireSubjectFlag(cmd *cobra.Command) {
-	cmd.Flags().StringP("subject", "s", "", "Subject of the schema")
+	cmd.Flags().StringP("subject", "S", "", "Subject of the schema")
 	cmd.MarkFlagRequired("subject")
 }
