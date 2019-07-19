@@ -81,13 +81,6 @@ var rules = []linter.Rule{
 	linter.RequireLowerCase("Use"),
 	linter.RequireSingular("Use"),
 	linter.Filter(
-		linter.RequireSuffix("Short", "This is only available for Confluent Cloud Enterprise users."),
-		// only include ACLs as they have a really long suffix/disclaimer that they're CCE only
-		linter.IncludeCommandContains("kafka acl"),
-		// only include service-accounts as they have a really long suffix/disclaimer that they're CCE only
-		linter.IncludeCommandContains("service-account"),
-	),
-	linter.Filter(
 		linter.RequireLengthBetween("Short", 13, 60),
 		linter.ExcludeCommandContains("secret"),
 		// skip ACLs as they have a really long suffix/disclaimer that they're CCE only

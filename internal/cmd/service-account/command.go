@@ -38,7 +38,7 @@ func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.User) *c
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:               "service-account",
-			Short:             `Manage service accounts. This is only available for Confluent Cloud Enterprise users.`,
+			Short:             `Manage service accounts.`,
 			PersistentPreRunE: prerunner.Authenticated(),
 		},
 		config: config,
@@ -51,14 +51,14 @@ func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.User) *c
 func (c *command) init() {
 	c.AddCommand(&cobra.Command{
 		Use:   "list",
-		Short: `List service accounts. This is only available for Confluent Cloud Enterprise users.`,
+		Short: `List service accounts.`,
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	})
 
 	createCmd := &cobra.Command{
 		Use:   "create <name>",
-		Short: `Create a service account. This is only available for Confluent Cloud Enterprise users.`,
+		Short: `Create a service account.`,
 		Example: `
 Create a service account named ` + "``DemoServiceAccount``" + `.
 
@@ -78,7 +78,7 @@ Create a service account named ` + "``DemoServiceAccount``" + `.
 
 	updateCmd := &cobra.Command{
 		Use:   "update <id>",
-		Short: `Update a service account. This is only available for Confluent Cloud Enterprise users.`,
+		Short: `Update a service account.`,
 		Example: `
 Update the description of a service account with the ID ` + "``2786``" + `.
 
@@ -98,7 +98,7 @@ Update the description of a service account with the ID ` + "``2786``" + `.
 
 	c.AddCommand(&cobra.Command{
 		Use:   "delete <id>",
-		Short: `Delete a service account. This is only available for Confluent Cloud Enterprise users.`,
+		Short: `Delete a service account.`,
 		Example: `
 Delete a service account with the ID ` + "``2786``" + `.
 

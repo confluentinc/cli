@@ -13,7 +13,7 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/confluentinc/ccloud-sdk-go/mock"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
-	"github.com/confluentinc/ccloudapis/ksql/v1"
+	v1 "github.com/confluentinc/ccloudapis/ksql/v1"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/acl"
@@ -166,21 +166,22 @@ func (suite *KSQLTestSuite) TestShouldConfigureACLs() {
 	req.Equal(expectedACLs, buf.String())
 }
 
-func (suite *KSQLTestSuite) TestShouldNotConfigureForPro() {
+func (suite *KSQLTestSuite) TestShouldAlsoConfigureForPro() {
 	cmd := suite.newCMD()
 	cmd.SetArgs(append([]string{"app", "configure-acls", ksqlClusterID}))
 	suite.kafkac.DescribeFunc = func(ctx context.Context, cluster *kafkav1.KafkaCluster) (cluster2 *kafkav1.KafkaCluster, e error) {
 		return &kafkav1.KafkaCluster{Id: kafkaClusterID, Enterprise: false}, nil
 	}
-	buf := new(bytes.Buffer)
-	cmd.SetOutput(buf)
 
 	err := cmd.Execute()
 
 	req := require.New(suite.T())
 	req.Nil(err)
-	req.False(suite.kafkac.CreateACLCalled())
-	req.Equal("The Kafka cluster is not an enterprise cluster. ACLs cannot be set.", buf.String())
+	req.Equal(1, len(suite.kafkac.CreateACLCalls()))
+	bindings := suite.kafkac.CreateACLCalls()[0].Binding
+	buf := new(bytes.Buffer)
+	acl.PrintAcls(bindings, buf)
+	req.Equal(expectedACLs, buf.String())
 }
 
 func (suite *KSQLTestSuite) TestShouldNotConfigureOnDryRun() {
