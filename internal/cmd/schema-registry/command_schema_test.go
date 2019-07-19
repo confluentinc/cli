@@ -90,8 +90,8 @@ func (suite *SchemaTestSuite) SetupTest() {
 
 func (suite *SchemaTestSuite) newCMD() *cobra.Command {
 	cmd := New(&cliMock.Commander{}, suite.conf, suite.srMothershipMock, &cmd2.ConfigHelper{Config: &config.Config{
-			Auth: &config.AuthConfig{Account: &orgv1.Account{Id: "777"}},
-		},
+		Auth: &config.AuthConfig{Account: &orgv1.Account{Id: "777"}},
+	},
 		Version: &version.Version{},
 	}, suite.srClientMock)
 	return cmd

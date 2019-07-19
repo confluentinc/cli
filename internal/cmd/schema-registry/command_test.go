@@ -9,13 +9,13 @@ import (
 	"github.com/stretchr/testify/require"
 	"testing"
 
-	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/suite"
 	"github.com/confluentinc/ccloud-sdk-go/mock"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	cliMock "github.com/confluentinc/cli/mock"
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/suite"
 )
 
 const (
