@@ -40,7 +40,10 @@ func srContext(config *config.Config) (context.Context, error) {
 			Key:    key,
 			Secret: secret,
 		}
-		config.Save()
+		err = config.Save()
+		if err != nil {
+			return nil, err
+		}
 	}
 	return context.WithValue(context.Background(), srsdk.ContextBasicAuth, srsdk.BasicAuth{
 		UserName: config.SrCredentials.Key,

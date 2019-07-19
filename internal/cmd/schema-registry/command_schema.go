@@ -23,7 +23,7 @@ func NewSchemaCommand(config *config.Config, ch *pcmd.ConfigHelper, srClient *sr
 	schemaCmd := &schemaCommand{
 		Command: &cobra.Command{
 			Use:   "schema",
-			Short: "Manage Schema Registry schemas",
+			Short: "Manage Schema Registry schemas.",
 		},
 		config:   config,
 		ch:       ch,
@@ -48,7 +48,7 @@ func (c *schemaCommand) getApiClient() (*srsdk.APIClient, context.Context, error
 func (c *schemaCommand) init() {
 	cmd := &cobra.Command{
 		Use:   "create --subject <subject> --schema @schema-file",
-		Short: "Create a schema",
+		Short: "Create a schema.",
 		Example: `
 Register a new schema
 
@@ -72,14 +72,14 @@ where schemafilepath may include these contents:
 		Args: cobra.NoArgs,
 	}
 	requireSubjectFlag(cmd)
-	cmd.Flags().String("schema", "", "The path to the schema file")
-	cmd.MarkFlagRequired("schema")
+	cmd.Flags().String("schema", "", "The path to the schema file.")
+	_ = cmd.MarkFlagRequired("schema")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
 		Use:   "delete --subject <subject> --version <version>",
-		Short: "Delete one or more schemas",
+		Short: "Delete one or more schemas.",
 		Example: `
 Delete one or more topics. This command should only be used in extreme circumstances.
 
@@ -90,14 +90,14 @@ Delete one or more topics. This command should only be used in extreme circumsta
 		Args: cobra.NoArgs,
 	}
 	requireSubjectFlag(cmd)
-	cmd.Flags().StringP("version", "V", "", "Version of the schema. Can be a specific version, 'all', or 'latest'")
-	cmd.MarkFlagRequired("version")
+	cmd.Flags().StringP("version", "V", "", "Version of the schema. Can be a specific version, 'all', or 'latest'.")
+	_ = cmd.MarkFlagRequired("version")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
-		Use:   "describe <schema-id>",
-		Short: "Get the schema string either by schema-id, or by subject and version",
+		Use:   "describe <schema-id> [--subject <subject>] [--version <version]",
+		Short: "Get schema either by schema-id, or by subject/version.",
 		Example: `
 Describe the schema string by schema ID
 
@@ -114,13 +114,14 @@ Describe the schema by subject and version
 		RunE: c.describe,
 		Args: cobra.MaximumNArgs(1),
 	}
-	cmd.Flags().StringP("subject", "S", "", "Subject of the schema")
-	cmd.Flags().StringP("version", "V", "", "Version of the schema. Can be a specific version or 'latest'")
+	cmd.Flags().StringP("subject", "S", "", "Subject of the schema.")
+	cmd.Flags().StringP("version", "V", "", "Version of the schema. Can be a specific version or 'latest'.")
+	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
 		Use:   "list --subject <subject>",
-		Short: "List all versions of a subject",
+		Short: "List all versions of a subject.",
 		Example: `
 Get a list of versions registered under the specified subject.
 
@@ -270,6 +271,6 @@ func printVersions(versions []int32) {
 }
 
 func requireSubjectFlag(cmd *cobra.Command) {
-	cmd.Flags().StringP("subject", "S", "", "Subject of the schema")
-	cmd.MarkFlagRequired("subject")
+	cmd.Flags().StringP("subject", "S", "", "Subject of the schema.")
+	_ = cmd.MarkFlagRequired("subject")
 }
