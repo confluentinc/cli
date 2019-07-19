@@ -19,24 +19,18 @@ func getSrCredentials() (key string, secret string, err error) {
 	if err != nil {
 		return "", "", err
 	}
+	key = strings.TrimSpace(key)
 	fmt.Println("Enter your Schema Registry API Secret:")
 	secret, err = prompt.ReadString('\n')
 	if err != nil {
 		return "", "", err
 	}
+	secret = strings.TrimSpace(secret)
 
-	// Validate before returning
-	_, _, err = srsdk.APIClient{}.DefaultApi.Get(context.WithValue(context.Background(), srsdk.ContextBasicAuth, srsdk.BasicAuth{
-		UserName: key,
-		Password: secret,
-	}))
-	if err != nil {
-		return "", "", errors.Errorf("Failed to validate Schema Registry API Key and Secret")
-	}
-	return strings.TrimSpace(key), strings.TrimSpace(secret), nil
+	return key, secret, nil
 }
 
-func SrContext(config *config.Config) (context.Context, error) {
+func srContext(config *config.Config) (context.Context, error) {
 	if config.SrCredentials == nil || len(config.SrCredentials.Key) == 0 || len(config.SrCredentials.Secret) == 0 {
 		key, secret, err := getSrCredentials()
 		if err != nil {
@@ -54,15 +48,28 @@ func SrContext(config *config.Config) (context.Context, error) {
 	}), nil
 }
 
-func SchemaRegistryClient(ch *pcmd.ConfigHelper) (client *srsdk.APIClient, err error) {
+func SchemaRegistryClient(ch *pcmd.ConfigHelper) (client *srsdk.APIClient, ctx context.Context, err error) {
+	ctx, err = srContext(ch.Config)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	srConfig := srsdk.NewConfiguration()
 	if ch.Config.Auth == nil {
-		return nil, errors.Errorf("user must be authenticated to use Schema Registry")
+		return nil, nil, errors.Errorf("user must be authenticated to use Schema Registry")
 	}
 	srConfig.BasePath, err = ch.SchemaRegistryURL(ch.Config.Auth.Account.Id)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	srConfig.UserAgent = ch.Version.UserAgent
-	return srsdk.NewAPIClient(srConfig), nil
+
+	// Validate before returning
+	client = srsdk.NewAPIClient(srConfig)
+	_, _, err = client.DefaultApi.Get(ctx)
+	if err != nil {
+		return nil, nil, errors.Errorf("Failed to validate Schema Registry API Key and Secret")
+	}
+
+	return client, ctx, nil
 }

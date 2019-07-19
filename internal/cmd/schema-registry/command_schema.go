@@ -16,23 +16,16 @@ type schemaCommand struct {
 	*cobra.Command
 	config   *config.Config
 	ch       *pcmd.ConfigHelper
-	ctx      context.Context
 	srClient *srsdk.APIClient
 }
 
 func NewSchemaCommand(config *config.Config, ch *pcmd.ConfigHelper, srClient *srsdk.APIClient) *cobra.Command {
-	ctx, err := SrContext(config)
-	if err != nil {
-		fmt.Println(err)
-		return nil
-	}
 	schemaCmd := &schemaCommand{
 		Command: &cobra.Command{
 			Use:   "schema",
 			Short: "Manage Schema Registry schemas",
 		},
 		config:   config,
-		ctx:      ctx,
 		ch:       ch,
 		srClient: srClient,
 	}
@@ -40,15 +33,16 @@ func NewSchemaCommand(config *config.Config, ch *pcmd.ConfigHelper, srClient *sr
 	return schemaCmd.Command
 }
 
-func (c *schemaCommand) getApiClient() (*srsdk.APIClient, error) {
+func (c *schemaCommand) getApiClient() (*srsdk.APIClient, context.Context, error) {
 	if c.srClient != nil {
-		return c.srClient, nil
+		// Tests/mocks
+		return c.srClient, nil, nil
 	}
-	client, err := SchemaRegistryClient(c.ch)
+	client, ctx, err := SchemaRegistryClient(c.ch)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return client, nil
+	return client, ctx, nil
 }
 
 func (c *schemaCommand) init() {
@@ -60,7 +54,20 @@ Register a new schema
 
 ::
 
-		ccloud schema-registry schema create`,
+		ccloud schema-registry schema create --subject payments --schema @schemafilepath
+
+where schemafilepath may include these contents:
+{
+   "type" : "record",
+   "namespace" : "Tutorialspoint",
+   "name" : "Employee",
+   "fields" : [
+      { "name" : "Name" , "type" : "string" },
+      { "name" : "Age" , "type" : "int" }
+   ]
+}
+
+`,
 		RunE: c.create,
 		Args: cobra.NoArgs,
 	}
@@ -83,41 +90,32 @@ Delete one or more topics. This command should only be used in extreme circumsta
 		Args: cobra.NoArgs,
 	}
 	requireSubjectFlag(cmd)
-	cmd.Flags().StringP("version", "v", "", "Version of the schema. Can be a specific version, 'all', or 'latest'")
+	cmd.Flags().StringP("version", "V", "", "Version of the schema. Can be a specific version, 'all', or 'latest'")
 	cmd.MarkFlagRequired("version")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
 		Use:   "describe <schema-id>",
-		Short: "Get the schema string identified by the input ID",
+		Short: "Get the schema string either by schema-id, or by subject and version",
 		Example: `
-Get the schema string identified by the input ID
+Describe the schema string by schema ID
 
 ::
 
-		ccloud schema-registry describe 1337`,
-		RunE: c.describeById,
-		Args: cobra.ExactArgs(1),
-	}
-	c.AddCommand(cmd)
+		ccloud schema-registry describe 1337
 
-	cmd = &cobra.Command{
-		Use:   "describe --subject <subject> --version <version>",
-		Short: "Describe a schema for a given subject and version",
-		Example: `
-Describe a schema for a given subject and version
+Describe the schema by subject and version
 
 ::
 
 		ccloud schema-registry describe --subject payments --version latest
 `,
-		RunE: c.describeBySubject,
-		Args: cobra.NoArgs,
+		RunE: c.describe,
+		Args: cobra.MaximumNArgs(1),
 	}
-	requireSubjectFlag(cmd)
-	cmd.Flags().StringP("version", "v", "", "Version of the schema. Can be a specific version or 'latest'")
-	cmd.MarkFlagRequired("version")
+	cmd.Flags().StringP("subject", "s", "", "Subject of the schema")
+	cmd.Flags().StringP("version", "V", "", "Version of the schema. Can be a specific version or 'latest'")
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
@@ -139,7 +137,7 @@ Get a list of versions registered under the specified subject.
 }
 
 func (c *schemaCommand) create(cmd *cobra.Command, args []string) error {
-	srClient, err := c.getApiClient()
+	srClient, ctx, err := c.getApiClient()
 	if err != nil {
 		return err
 	}
@@ -156,14 +154,17 @@ func (c *schemaCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	response, _, err := srClient.DefaultApi.Register(c.ctx, subject, srsdk.RegisterSchemaRequest{Schema: string(schema)})
+	response, _, err := srClient.DefaultApi.Register(ctx, subject, srsdk.RegisterSchemaRequest{Schema: string(schema)})
+	if err != nil {
+		return err
+	}
 	fmt.Printf("Successfully registered schema with ID: %v", response.Id)
 	return nil
 
 }
 
 func (c *schemaCommand) list(cmd *cobra.Command, args []string) error {
-	srClient, err := c.getApiClient()
+	srClient, ctx, err := c.getApiClient()
 	if err != nil {
 		return err
 	}
@@ -171,10 +172,9 @@ func (c *schemaCommand) list(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	versions, _, err := srClient.DefaultApi.ListVersions(c.ctx, subject)
+	versions, _, err := srClient.DefaultApi.ListVersions(ctx, subject)
 
 	if err != nil {
-		// TODO handle auth errors specifically and show user how to reset their API Keys
 		return err
 	}
 	printVersions(versions)
@@ -183,7 +183,7 @@ func (c *schemaCommand) list(cmd *cobra.Command, args []string) error {
 }
 
 func (c *schemaCommand) delete(cmd *cobra.Command, args []string) error {
-	srClient, err := c.getApiClient()
+	srClient, ctx, err := c.getApiClient()
 	if err != nil {
 		return err
 	}
@@ -196,7 +196,7 @@ func (c *schemaCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if version == "all" {
-		versions, _, err := srClient.DefaultApi.DeleteSubject(c.ctx, subject)
+		versions, _, err := srClient.DefaultApi.DeleteSubject(ctx, subject)
 		if err != nil {
 			return err
 		}
@@ -204,7 +204,7 @@ func (c *schemaCommand) delete(cmd *cobra.Command, args []string) error {
 		printVersions(versions)
 		return nil
 	} else {
-		versionResult, _, err := srClient.DefaultApi.DeleteSchemaVersion(c.ctx, subject, version)
+		versionResult, _, err := srClient.DefaultApi.DeleteSchemaVersion(ctx, subject, version)
 		if err != nil {
 			return err
 		}
@@ -214,8 +214,16 @@ func (c *schemaCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 }
 
+func (c *schemaCommand) describe(cmd *cobra.Command, args []string) error {
+	if len(args) > 0 {
+		return c.describeById(cmd, args)
+	} else {
+		return c.describeBySubject(cmd, args)
+	}
+}
+
 func (c *schemaCommand) describeById(cmd *cobra.Command, args []string) error {
-	srClient, err := c.getApiClient()
+	srClient, ctx, err := c.getApiClient()
 	if err != nil {
 		return err
 	}
@@ -223,7 +231,7 @@ func (c *schemaCommand) describeById(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("unexpected argument: Must be an integer Schema ID")
 	}
-	schemaString, _, err := srClient.DefaultApi.GetSchema(c.ctx, int32(schema))
+	schemaString, _, err := srClient.DefaultApi.GetSchema(ctx, int32(schema))
 	if err != nil {
 		return err
 	}
@@ -232,7 +240,7 @@ func (c *schemaCommand) describeById(cmd *cobra.Command, args []string) error {
 }
 
 func (c *schemaCommand) describeBySubject(cmd *cobra.Command, args []string) error {
-	srClient, err := c.getApiClient()
+	srClient, ctx, err := c.getApiClient()
 	if err != nil {
 		return err
 	}
@@ -244,7 +252,7 @@ func (c *schemaCommand) describeBySubject(cmd *cobra.Command, args []string) err
 	if err != nil {
 		return err
 	}
-	schemaString, _, err := srClient.DefaultApi.GetSchemaByVersion(c.ctx, subject, version)
+	schemaString, _, err := srClient.DefaultApi.GetSchemaByVersion(ctx, subject, version)
 	if err != nil {
 		return err
 	}
