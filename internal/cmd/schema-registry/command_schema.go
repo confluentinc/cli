@@ -8,14 +8,15 @@ import (
 	"github.com/confluentinc/go-printer"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
+	"io/ioutil"
 	"strconv"
 )
 
 type schemaCommand struct {
 	*cobra.Command
-	config *config.Config
-	ch     *pcmd.ConfigHelper
-	ctx    context.Context
+	config   *config.Config
+	ch       *pcmd.ConfigHelper
+	ctx      context.Context
 	srClient *srsdk.APIClient
 }
 
@@ -30,9 +31,9 @@ func NewSchemaCommand(config *config.Config, ch *pcmd.ConfigHelper, srClient *sr
 			Use:   "schema",
 			Short: "Manage Schema Registry schemas",
 		},
-		config: config,
-		ctx:    ctx,
-		ch:     ch,
+		config:   config,
+		ctx:      ctx,
+		ch:       ch,
 		srClient: srClient,
 	}
 	schemaCmd.init()
@@ -51,8 +52,25 @@ func (c *schemaCommand) getApiClient() (*srsdk.APIClient, error) {
 }
 
 func (c *schemaCommand) init() {
-
 	cmd := &cobra.Command{
+		Use:   "create --subject <subject> --schema @schema-file",
+		Short: "Create a schema",
+		Example: `
+Register a new schema
+
+::
+
+		ccloud schema-registry schema create`,
+		RunE: c.create,
+		Args: cobra.NoArgs,
+	}
+	requireSubjectFlag(cmd)
+	cmd.Flags().String("schema", "", "The path to the schema file")
+	cmd.MarkFlagRequired("schema")
+	cmd.Flags().SortFlags = false
+	c.AddCommand(cmd)
+
+	cmd = &cobra.Command{
 		Use:   "delete --subject <subject> --version <version>",
 		Short: "Delete one or more schemas",
 		Example: `
@@ -118,6 +136,30 @@ Get a list of versions registered under the specified subject.
 	cmd.MarkFlagRequired("subject")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
+}
+
+func (c *schemaCommand) create(cmd *cobra.Command, args []string) error {
+	srClient, err := c.getApiClient()
+	if err != nil {
+		return err
+	}
+	subject, err := cmd.Flags().GetString("subject")
+	if err != nil {
+		return err
+	}
+	schemaPath, err := cmd.Flags().GetString("schema")
+	if err != nil {
+		return err
+	}
+
+	schema, err := ioutil.ReadFile(schemaPath)
+	if err != nil {
+		return err
+	}
+	response, _, err := srClient.DefaultApi.Register(c.ctx, subject, srsdk.RegisterSchemaRequest{Schema: string(schema)})
+	fmt.Printf("Successfully registered schema with ID: %v", response.Id)
+	return nil
+
 }
 
 func (c *schemaCommand) list(cmd *cobra.Command, args []string) error {
