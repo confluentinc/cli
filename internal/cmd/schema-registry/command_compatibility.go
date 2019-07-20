@@ -1,0 +1,169 @@
+package schema_registry
+
+import (
+	"fmt"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/config"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+	"github.com/spf13/cobra"
+)
+
+type compatibilityCommand struct {
+	*cobra.Command
+	config   *config.Config
+	ch       *pcmd.ConfigHelper
+	srClient *srsdk.APIClient
+}
+
+func NewCompatibilityCommand(config *config.Config, ch *pcmd.ConfigHelper, srClient *srsdk.APIClient) *cobra.Command {
+	compatCmd := &compatibilityCommand{
+		Command: &cobra.Command{
+			Use:   "compatibility",
+			Short: "Manage Schema Registry compatibility.",
+		},
+		config:   config,
+		ch:       ch,
+		srClient: srClient,
+	}
+	compatCmd.init()
+	return compatCmd.Command
+}
+
+func (c *compatibilityCommand) init() {
+	cmd := &cobra.Command{
+		Use:   "describe",
+		Short: "Describe compatability level [--subject <subject>].",
+		Example: `
+Global configuration
+
+::
+		ccloud schema-registry compatibility describe
+
+For a specific subject
+
+::
+		ccloud schema-registry compatibility describe --subject payments`,
+		RunE: c.describe,
+		Args: cobra.NoArgs,
+	}
+	cmd.Flags().StringP("subject", "S", "", SubjectUsage)
+	cmd.Flags().SortFlags = false
+	c.AddCommand(cmd)
+
+	cmd = &cobra.Command{
+		Use:   "update <compatability> [--subject <subject>]",
+		Short: "Update the compatability level.",
+		Example: `
+<compatibility> can be BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, and NONE.
+
+Update the global config level
+
+::
+		ccloud schema-registry compatibility update FULL
+
+Update for a specific subject
+
+::
+		ccloud schema-registry compatibility update FULL --subject payments`,
+		RunE: c.update,
+		Args: cobra.ExactArgs(1),
+	}
+	cmd.Flags().StringP("subject", "S", "", SubjectUsage)
+	cmd.Flags().SortFlags = false
+	c.AddCommand(cmd)
+
+}
+
+func (c *compatibilityCommand) describe(cmd *cobra.Command, args []string) error {
+	subject, err := cmd.Flags().GetString("subject")
+	if err != nil {
+		return err
+	}
+	if subject == "" {
+		return c.describeTopLevel(cmd, args)
+	} else {
+		return c.describeSubject(cmd, args)
+	}
+}
+
+func (c *compatibilityCommand) update(cmd *cobra.Command, args []string) error {
+	subject, err := cmd.Flags().GetString("subject")
+	if err != nil {
+		return err
+	}
+	if subject == "" {
+		return c.updateTopLevel(cmd, args)
+	} else {
+		return c.updateSubject(cmd, args)
+	}
+}
+
+func (c *compatibilityCommand) describeTopLevel(cmd *cobra.Command, args []string) error {
+	srClient, ctx, err := GetApiClient(c.srClient, c.ch)
+	if err != nil {
+		return err
+	}
+
+	configResult, _, err := srClient.DefaultApi.GetTopLevelConfig(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("Compatability level: " + configResult.CompatibilityLevel)
+	return nil
+}
+
+func (c *compatibilityCommand) updateTopLevel(cmd *cobra.Command, args []string) error {
+	srClient, ctx, err := GetApiClient(c.srClient, c.ch)
+	if err != nil {
+		return err
+	}
+
+	updateReq := srsdk.ConfigUpdateRequest{Compatibility: args[0]}
+
+	_, _, err = srClient.DefaultApi.UpdateTopLevelConfig(ctx, updateReq)
+	if err != nil {
+		return err
+	}
+	fmt.Println("Successfully updated")
+	return nil
+}
+
+func (c *compatibilityCommand) describeSubject(cmd *cobra.Command, args []string) error {
+	srClient, ctx, err := GetApiClient(c.srClient, c.ch)
+	if err != nil {
+		return err
+	}
+	subject, err := cmd.Flags().GetString("subject")
+	if err != nil {
+		return err
+	}
+	configResult, _, err := srClient.DefaultApi.GetSubjectLevelConfig(ctx, subject)
+	if err != nil {
+		return err
+	}
+	fmt.Println("Compatability level: " + configResult.CompatibilityLevel)
+	return nil
+}
+
+func (c *compatibilityCommand) updateSubject(cmd *cobra.Command, args []string) error {
+	srClient, ctx, err := GetApiClient(c.srClient, c.ch)
+	if err != nil {
+		return err
+	}
+	subject, err := cmd.Flags().GetString("subject")
+	if err != nil {
+		return err
+	}
+
+	updateReq := srsdk.ConfigUpdateRequest{Compatibility: args[0]}
+
+	_, _, err = srClient.DefaultApi.UpdateSubjectLevelConfig(ctx, subject, updateReq)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("Successfully updated")
+	return nil
+}

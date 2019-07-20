@@ -52,6 +52,7 @@ func (c *command) init() {
 	c.AddCommand(createCmd)
 
 	c.AddCommand(NewSchemaCommand(c.config, c.ch, c.srClient))
+	c.AddCommand(NewCompatibilityCommand(c.config, c.ch, c.srClient))
 }
 
 func (c *command) create(cmd *cobra.Command, args []string) error {

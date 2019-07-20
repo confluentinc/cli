@@ -1,11 +1,9 @@
 package schema_registry
 
 import (
-	"context"
 	"fmt"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/go-printer"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
 	"io/ioutil"
@@ -31,18 +29,6 @@ func NewSchemaCommand(config *config.Config, ch *pcmd.ConfigHelper, srClient *sr
 	}
 	schemaCmd.init()
 	return schemaCmd.Command
-}
-
-func (c *schemaCommand) getApiClient() (*srsdk.APIClient, context.Context, error) {
-	if c.srClient != nil {
-		// Tests/mocks
-		return c.srClient, nil, nil
-	}
-	client, ctx, err := SchemaRegistryClient(c.ch)
-	if err != nil {
-		return nil, nil, err
-	}
-	return client, ctx, nil
 }
 
 func (c *schemaCommand) init() {
@@ -71,7 +57,7 @@ where schemafilepath may include these contents:
 		RunE: c.create,
 		Args: cobra.NoArgs,
 	}
-	requireSubjectFlag(cmd)
+	RequireSubjectFlag(cmd)
 	cmd.Flags().String("schema", "", "The path to the schema file.")
 	_ = cmd.MarkFlagRequired("schema")
 	cmd.Flags().SortFlags = false
@@ -89,7 +75,7 @@ Delete one or more topics. This command should only be used in extreme circumsta
 		RunE: c.delete,
 		Args: cobra.NoArgs,
 	}
-	requireSubjectFlag(cmd)
+	RequireSubjectFlag(cmd)
 	cmd.Flags().StringP("version", "V", "", "Version of the schema. Can be a specific version, 'all', or 'latest'.")
 	_ = cmd.MarkFlagRequired("version")
 	cmd.Flags().SortFlags = false
@@ -114,7 +100,7 @@ Describe the schema by subject and version
 		RunE: c.describe,
 		Args: cobra.MaximumNArgs(1),
 	}
-	cmd.Flags().StringP("subject", "S", "", "Subject of the schema.")
+	cmd.Flags().StringP("subject", "S", "", SubjectUsage)
 	cmd.Flags().StringP("version", "V", "", "Version of the schema. Can be a specific version or 'latest'.")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
@@ -131,13 +117,13 @@ Get a list of versions registered under the specified subject.
 		RunE: c.list,
 		Args: cobra.NoArgs,
 	}
-	requireSubjectFlag(cmd)
+	RequireSubjectFlag(cmd)
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 }
 
 func (c *schemaCommand) create(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := c.getApiClient()
+	srClient, ctx, err := GetApiClient(c.srClient, c.ch)
 	if err != nil {
 		return err
 	}
@@ -164,7 +150,7 @@ func (c *schemaCommand) create(cmd *cobra.Command, args []string) error {
 }
 
 func (c *schemaCommand) list(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := c.getApiClient()
+	srClient, ctx, err := GetApiClient(c.srClient, c.ch)
 	if err != nil {
 		return err
 	}
@@ -177,13 +163,13 @@ func (c *schemaCommand) list(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	printVersions(versions)
+	PrintVersions(versions)
 
 	return nil
 }
 
 func (c *schemaCommand) delete(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := c.getApiClient()
+	srClient, ctx, err := GetApiClient(c.srClient, c.ch)
 	if err != nil {
 		return err
 	}
@@ -201,7 +187,7 @@ func (c *schemaCommand) delete(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		pcmd.Println(cmd, "Successfully deleted all versions for subject")
-		printVersions(versions)
+		PrintVersions(versions)
 		return nil
 	} else {
 		versionResult, _, err := srClient.DefaultApi.DeleteSchemaVersion(ctx, subject, version)
@@ -209,7 +195,7 @@ func (c *schemaCommand) delete(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		pcmd.Println(cmd, "Successfully deleted version for subject")
-		printVersions([]int32{versionResult})
+		PrintVersions([]int32{versionResult})
 		return nil
 	}
 }
@@ -223,7 +209,7 @@ func (c *schemaCommand) describe(cmd *cobra.Command, args []string) error {
 }
 
 func (c *schemaCommand) describeById(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := c.getApiClient()
+	srClient, ctx, err := GetApiClient(c.srClient, c.ch)
 	if err != nil {
 		return err
 	}
@@ -240,7 +226,7 @@ func (c *schemaCommand) describeById(cmd *cobra.Command, args []string) error {
 }
 
 func (c *schemaCommand) describeBySubject(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := c.getApiClient()
+	srClient, ctx, err := GetApiClient(c.srClient, c.ch)
 	if err != nil {
 		return err
 	}
@@ -258,19 +244,4 @@ func (c *schemaCommand) describeBySubject(cmd *cobra.Command, args []string) err
 	}
 	pcmd.Println(cmd, schemaString.Schema)
 	return nil
-}
-
-func printVersions(versions []int32) {
-	titleRow := []string{"Version"}
-	var entries [][]string
-	for _, version := range versions {
-		record := &struct{ Version int32 }{version}
-		entries = append(entries, printer.ToRow(record, titleRow))
-	}
-	printer.RenderCollectionTable(entries, titleRow)
-}
-
-func requireSubjectFlag(cmd *cobra.Command) {
-	cmd.Flags().StringP("subject", "S", "", "Subject of the schema.")
-	_ = cmd.MarkFlagRequired("subject")
 }
