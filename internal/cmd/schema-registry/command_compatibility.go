@@ -31,6 +31,7 @@ func NewCompatibilityCommand(config *config.Config, ch *pcmd.ConfigHelper, srCli
 }
 
 func (c *compatibilityCommand) init() {
+	//Describe
 	cmd := &cobra.Command{
 		Use:   "describe",
 		Short: "Describe compatability level [--subject <subject>].",
@@ -51,6 +52,7 @@ For a specific subject
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
+	// Update
 	cmd = &cobra.Command{
 		Use:   "update <compatability> [--subject <subject>]",
 		Short: "Update the compatability level.",
@@ -73,6 +75,26 @@ Update for a specific subject
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
+	// Check
+	cmd = &cobra.Command{
+		Use:   "check --subject <subject> --version <version> --schema @path/to/schema",
+		Short: "Check an input schema against a version of the subject.",
+		Example: `
+Check an input schema against a particular version of the subject schema for compatibility in the current environment.
+
+::
+		ccloud schema-registry compatibility check --schema myschema.avro --subject payments --version latest`,
+		RunE: c.testCompat,
+		Args: cobra.NoArgs,
+	}
+	cmd.Flags().StringP("subject", "S", "", SubjectUsage)
+	_ = cmd.MarkFlagRequired("subject")
+	cmd.Flags().StringP("version", "V", "", "Version of the schema. Can be a specific version or 'latest'.")
+	_ = cmd.MarkFlagRequired("version")
+	cmd.Flags().String("schema", "", "Path to the schema file.")
+	_ = cmd.MarkFlagRequired("schema")
+	cmd.Flags().SortFlags = false
+	c.AddCommand(cmd)
 }
 
 func (c *compatibilityCommand) describe(cmd *cobra.Command, args []string) error {
@@ -184,7 +206,10 @@ func (c *compatibilityCommand) testCompat(cmd *cobra.Command, args []string) err
 		return err
 	}
 
-	schemaPath := args[0]
+	schemaPath, err := cmd.Flags().GetString("schema")
+	if err != nil {
+		return err
+	}
 
 	schema, err := ioutil.ReadFile(schemaPath)
 	if err != nil {
