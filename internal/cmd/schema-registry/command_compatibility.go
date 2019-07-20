@@ -6,6 +6,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/config"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
+	"io/ioutil"
 )
 
 type compatibilityCommand struct {
@@ -165,5 +166,40 @@ func (c *compatibilityCommand) updateSubject(cmd *cobra.Command, args []string) 
 	}
 
 	fmt.Println("Successfully updated")
+	return nil
+}
+
+func (c *compatibilityCommand) testCompat(cmd *cobra.Command, args []string) error {
+	srClient, ctx, err := GetApiClient(c.srClient, c.ch)
+	if err != nil {
+		return err
+	}
+	subject, err := cmd.Flags().GetString("subject")
+	if err != nil {
+		return err
+	}
+
+	version, err := cmd.Flags().GetString("version")
+	if err != nil {
+		return err
+	}
+
+	schemaPath := args[0]
+
+	schema, err := ioutil.ReadFile(schemaPath)
+	if err != nil {
+		return err
+	}
+
+	result, _, err := srClient.DefaultApi.TestCompatabilityBySubjectName(ctx, subject, version, srsdk.RegisterSchemaRequest{Schema: string(schema)}, nil)
+	if err != nil {
+		return err
+	}
+
+	if result.IsCompatible {
+		fmt.Println("Schemas are compatible")
+	} else {
+		fmt.Println("Schemas are not compatible")
+	}
 	return nil
 }
