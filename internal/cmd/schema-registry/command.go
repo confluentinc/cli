@@ -33,10 +33,10 @@ func New(prerunner pcmd.PreRunner, config *config.Config, ccloudClient ccsdk.Sch
 
 func (c *command) init() {
 	createCmd := &cobra.Command{
-		Use:     "create",
-		Short:   `Create an instance of Schema Registry.`,
-		Example: `ccloud schema-registry create --cloud gcp`,
-		RunE:    c.create,
+		Use:     "enable",
+		Short:   `Enable Schema Registry for this account.`,
+		Example: `ccloud schema-registry enable --cloud gcp`,
+		RunE:    c.enable,
 		Args:    cobra.NoArgs,
 	}
 	createCmd.Flags().String("cluster", "", "Kafka cluster ID.")
@@ -48,7 +48,7 @@ func (c *command) init() {
 
 }
 
-func (c *command) create(cmd *cobra.Command, args []string) error {
+func (c *command) enable(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
 
 	// Collect the parameters
