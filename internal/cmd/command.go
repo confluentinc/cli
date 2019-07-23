@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"github.com/confluentinc/cli/internal/cmd/schema-registry"
 	"os"
 
 	"github.com/DABH/go-basher"
@@ -21,7 +22,6 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/ksql"
 	"github.com/confluentinc/cli/internal/cmd/local"
 	ps1 "github.com/confluentinc/cli/internal/cmd/prompt"
-	"github.com/confluentinc/cli/internal/cmd/schema-registry"
 	"github.com/confluentinc/cli/internal/cmd/secret"
 	"github.com/confluentinc/cli/internal/cmd/service-account"
 	"github.com/confluentinc/cli/internal/cmd/update"
@@ -120,7 +120,10 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		cli.AddCommand(kafka.New(prerunner, cfg, kafkaClient, ch))
 
 		// Schema Registry
-		cli.AddCommand(schema_registry.New(prerunner, cfg, client.SchemaRegistry))
+		sr := schema_registry.New(prerunner, cfg, client.SchemaRegistry)
+		sr.Hidden = true
+		cli.AddCommand(sr)
+
 
 		conn = ksql.New(prerunner, cfg, ksqls.New(client, logger), kafkaClient, userClient, ch)
 		conn.Hidden = true // The ksql feature isn't finished yet, so let's hide it
