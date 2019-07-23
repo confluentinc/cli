@@ -87,7 +87,7 @@ func (suite *SRTestSuite) newCMD() *cobra.Command {
 
 func (suite *SRTestSuite) TestCreateSR() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"create", "--cloud", "aws", "--cluster", kafkaClusterID}))
+	cmd.SetArgs(append([]string{"enable", "--cloud", "aws", "--cluster", kafkaClusterID}))
 
 	err := cmd.Execute()
 	req := require.New(suite.T())
