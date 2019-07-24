@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"github.com/confluentinc/cli/internal/cmd/schema-registry"
 	"os"
 
 	"github.com/DABH/go-basher"
@@ -121,20 +120,10 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		cli.AddCommand(kafka.New(prerunner, cfg, kafkaClient, ch))
 
 		// Schema Registry
-		srConfig := srsdk.NewConfiguration()
-		srConfig.BasePath, err = ch.SchemaRegistryURL(cfg.Auth.Account.Id)
-		if err != nil {
-			return nil, err
-		}
-		srConfig.UserAgent = ver.UserAgent
-		srClient := srsdk.NewAPIClient(srConfig)
-
-		sr := schema_registry.New(prerunner, cfg, client.SchemaRegistry, ch)
+		// If srClient is nil, the function will look it up after prerunner verifies authentication. Exposed so tests can pass mocks
+		sr := schema_registry.New(prerunner, cfg, client.SchemaRegistry, ch, nil)
 		sr.Hidden = true
 		cli.AddCommand(sr)
-
-		// If srClient is nil, the function will look it up after prerunner verifies authentication. Exposed so tests can pass mocks
-		cli.AddCommand(schema_registry.New(prerunner, cfg, client.SchemaRegistry, ch, nil))
 
 		conn = ksql.New(prerunner, cfg, ksqls.New(client, logger), kafkaClient, userClient, ch)
 		conn.Hidden = true // The ksql feature isn't finished yet, so let's hide it
