@@ -31,8 +31,8 @@ require (
 	github.com/gliderlabs/ssh v0.1.4 // indirect
 	github.com/gobuffalo/flect v0.1.3
 	github.com/gogo/protobuf v1.2.1
-	github.com/golang/mock v1.2.0
-	github.com/golang/protobuf v1.3.1
+	github.com/golang/mock v1.3.1
+	github.com/golang/protobuf v1.3.2
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/golangci/golangci-lint v1.17.1
 	github.com/google/go-cmp v0.3.0 // indirect
@@ -69,8 +69,12 @@ require (
 	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/stretchr/testify v1.3.0
 	github.com/tidwall/pretty v0.0.0-20190325153808-1166b9ac2b65
-	golang.org/x/crypto v0.0.0-20190605123033-f99c8df09eb5
-	golang.org/x/oauth2 v0.0.0-20190402181905-9f3314589c9a
+	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4
+	golang.org/x/exp v0.0.0-20190718202018-cfdd5522f6f6 // indirect
+	golang.org/x/net v0.0.0-20190724013045-ca1201d0de80 // indirect
+	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
+	golang.org/x/sys v0.0.0-20190712062909-fae7ac547cb7 // indirect
+	golang.org/x/tools v0.0.0-20190723021737-8bb11ff117ca // indirect
 	gonum.org/v1/netlib v0.0.0-20190331212654-76723241ea4e // indirect
 	google.golang.org/appengine v1.6.1 // indirect
 	gopkg.in/square/go-jose.v2 v2.3.1
