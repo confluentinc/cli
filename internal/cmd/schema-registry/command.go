@@ -5,9 +5,9 @@ import (
 	ccsdk "github.com/confluentinc/ccloud-sdk-go"
 	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
 	"strings"
 )
@@ -51,6 +51,7 @@ func (c *command) init() {
 	createCmd.Flags().String("geo", "", "Either 'us', 'eu', or 'apac' (only applies to Enterprise accounts)")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
+	c.AddCommand(NewModeCommand(c.config, c.ch, c.srClient))
 
 	c.AddCommand(NewSchemaCommand(c.config, c.ch, c.srClient))
 	c.AddCommand(NewCompatibilityCommand(c.config, c.ch, c.srClient))
