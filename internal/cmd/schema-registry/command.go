@@ -2,6 +2,7 @@ package schema_registry
 
 import (
 	"context"
+	"fmt"
 	ccsdk "github.com/confluentinc/ccloud-sdk-go"
 	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -54,6 +55,16 @@ func (c *command) init() {
 	c.AddCommand(NewModeCommand(c.config, c.ch, c.srClient))
 
 	c.AddCommand(NewSchemaCommand(c.config, c.ch, c.srClient))
+	describeCmd := &cobra.Command{
+		Use:     "describe",
+		Short:   `Describe an instance of Schema Registry.`,
+		Example: `ccloud schema-registry describe`,
+		RunE:    c.describe,
+		Args:    cobra.NoArgs,
+	}
+
+	c.AddCommand(createCmd)
+	c.AddCommand(describeCmd)
 	c.AddCommand(NewCompatibilityCommand(c.config, c.ch, c.srClient))
 }
 
@@ -119,4 +130,37 @@ func (c *command) enable(cmd *cobra.Command, args []string) error {
 	pcmd.Println(cmd, "Endpoint: "+newCluster.Endpoint)
 
 	return nil
+}
+
+func (c *command) describe(cmd *cobra.Command, args []string) error {
+	srClient, ctx, err := GetApiClient(c.srClient, c.ch)
+	if err != nil {
+		return err
+	}
+	// Trust the API will handle CCP/CCE and whether geo is required
+	location := srv1.GlobalSchemaRegistryLocation(srv1.SchemaRegistryCluster{})
+
+
+	// Compatibility Level
+	configResult, _, err := srClient.DefaultApi.GetTopLevelConfig(ctx)
+
+	if err != nil {
+		return err
+	}
+
+
+	fmt.Println("Compatability level: " + configResult.CompatibilityLevel)
+
+	// Mode
+
+	mode,_, err:= srClient.DefaultApi.GetMode(ctx, "")
+
+	if err != nil {
+		return err
+	}
+	fmt.Println("Successfully updated"+mode.Mode)
+
+	pcmd.Println(cmd, schemaString.Schema)
+	return nil
+
 }

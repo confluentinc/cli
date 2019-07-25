@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"github.com/confluentinc/cli/internal/cmd/schema-registry"
 	"os"
 
 	"github.com/DABH/go-basher"
