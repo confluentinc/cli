@@ -3,18 +3,21 @@ package apikey
 import (
 	"context"
 	"fmt"
-	"os"
-
 	"github.com/spf13/cobra"
+	"os"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
 	"github.com/confluentinc/go-printer"
 
+	_ "github.com/confluentinc/ccloudapis/schemaregistry/v1"
+	ccsdk "github.com/confluentinc/ccloud-sdk-go"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/keystore"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+	srutil "github.com/confluentinc/cli/internal/cmd/schema-registry"
 )
 
 const longDescription = `Use this command to register an API secret created by another
@@ -34,6 +37,8 @@ type command struct {
 	config   *config.Config
 	client   ccloud.APIKey
 	ch       *pcmd.ConfigHelper
+	ccClient ccsdk.SchemaRegistry
+	srClient *srsdk.APIClient
 	keystore keystore.KeyStore
 }
 
@@ -69,6 +74,7 @@ func (c *command) init() {
 		Args:  cobra.NoArgs,
 	}
 	listCmd.Flags().String("cluster", "", "The cluster ID.")
+	listCmd.Flags().String("resource", "", "Resource ID: Logical cluster ID for Schema Registry")
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
@@ -79,6 +85,7 @@ func (c *command) init() {
 		Args:  cobra.NoArgs,
 	}
 	createCmd.Flags().String("cluster", "", "The cluster ID.")
+	createCmd.Flags().String("resource", "", "Resource ID: Logical cluster ID for Schema Registry")
 	createCmd.Flags().Int32("service-account-id", 0, "Service account ID. If not specified, the API key will have full access on the cluster.")
 	createCmd.Flags().String("description", "", "Description of API key.")
 	createCmd.Flags().SortFlags = false
@@ -195,6 +202,18 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) create(cmd *cobra.Command, args []string) error {
+	subject, err := cmd.Flags().GetString("resource-id")
+	if err != nil {
+		return err
+	}
+	if subject == "" {
+		return c.createKafkaApiKey(cmd, args)
+	} else {
+		return c.createSrApiKey(cmd, args)
+	}
+}
+
+func (c *command) createKafkaApiKey(cmd *cobra.Command, args []string) error {
 	kcc, err := pcmd.GetKafkaClusterConfig(cmd, c.ch)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -215,6 +234,61 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
+	key := &authv1.ApiKey{
+		UserId:          userId,
+		Description:     description,
+		AccountId:       c.config.Auth.Account.Id,
+		LogicalClusters: []*authv1.ApiKey_Cluster{{Id: kcc.ID}},
+	}
+
+	userKey, err := c.client.Create(context.Background(), key)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	pcmd.Println(cmd, "Save the API key and secret. The key/secret is not retrievable later.")
+	err = printer.RenderTableOut(userKey, createFields, createRenames, os.Stdout)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	if err := c.keystore.StoreAPIKey(userKey, kcc.ID, environment); err != nil {
+		return errors.HandleCommon(errors.Wrapf(err, "Unable to store API key locally."), cmd)
+	}
+
+	return nil
+}
+
+func (c *command) createSrApiKey(cmd *cobra.Command, args []string) error {
+	environment, err := pcmd.GetEnvironment(cmd, c.config)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	srClient, ctx, err := srutil.GetApiClient(c.srClient, c.ch)
+	if c.srClient != nil {
+		// Tests/mocks
+		return nil
+	}
+	client, ctx, err := srutil.SchemaRegistryClient(c.ch)
+	if err != nil {
+		return nil, nil, err
+	}
+	return client, ctx, nil
+	if err != nil {
+		return err
+	}
+
+	userId, err := cmd.Flags().GetInt32("service-account-id")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	description, err := cmd.Flags().GetString("description")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	srutil.GetApiClient()
 	key := &authv1.ApiKey{
 		UserId:          userId,
 		Description:     description,
