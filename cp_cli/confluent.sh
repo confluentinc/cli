@@ -2042,7 +2042,7 @@ Examples:
     confluent local log connect
         Opens the connect log using 'less'.
 
-    confluent local log kafka -f
+    confluent local log kafka -- -f
         Tails the kafka log and waits to print additional output until the log command is interrupted.
 
 EOF
@@ -2104,11 +2104,11 @@ Examples:
     confluent local config wikipedia-file-source
         Prints the current configuration of a custom connector with name 'wikipedia-file-source'
 
-    confluent local config wikipedia-file-source -d ./wikipedia-file-source.json
+    confluent local config wikipedia-file-source -- -d ./wikipedia-file-source.json
         Configures a connector named 'wikipedia-file-source' by passing its configuration properties in
         JSON format.
 
-    confluent local config wikipedia-file-source -d ./wikipedia-file-source.properties
+    confluent local config wikipedia-file-source -- -d ./wikipedia-file-source.properties
         Configures a connector named 'wikipedia-file-source' by passing its configuration properties as
         java properties.
 
