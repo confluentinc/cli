@@ -2062,7 +2062,7 @@ EOF
 
 load_usage() {
     cat <<EOF
-Usage: ${command_name} load [<connector-name> [-d <connector-config-file>]]
+Usage: ${command_name} load [<connector-name> [-- -d <connector-config-file>]]
 
 Description:
     Load a bundled connector with a predefined name or custom connector with a given configuration.
@@ -2084,7 +2084,7 @@ EOF
 
 config_usage() {
     cat <<EOF
-Usage: ${command_name} config <connector-name> [ -d <connector-config-file> ]
+Usage: ${command_name} config <connector-name> [-- -d <connector-config-file>]
 
 Description:
     Get or set a connector's configuration properties.
