@@ -41,7 +41,7 @@ func findMatchTrim(original string, re *regexp.Regexp, prefix string, suffix str
 func WritePropertiesFile(path string, property *properties.Properties, writeComments bool) error {
 	buf := new(bytes.Buffer)
 	if writeComments {
-		_, err := property.WriteComment(buf, "# ", properties.UTF8)
+		_, err := property.WriteComment(buf, "#", properties.UTF8)
 		if err != nil {
 			return err
 		}
