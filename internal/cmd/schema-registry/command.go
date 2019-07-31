@@ -5,9 +5,9 @@ import (
 	ccsdk "github.com/confluentinc/ccloud-sdk-go"
 	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
 	"strings"
 )

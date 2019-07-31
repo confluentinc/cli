@@ -67,13 +67,14 @@ func (c *modeCommand) update(cmd *cobra.Command, args []string) error {
 	}
 
 	if subject == "" {
-		updatedMode, _, err :=srClient.DefaultApi.UpdateTopLevelMode(ctx)
+
+		updatedMode, _, err :=srClient.DefaultApi.UpdateTopLevelMode(ctx, srsdk.ModeUpdateRequest{Mode: args[0]})
 		if err != nil {
 			return err
 		}
 		fmt.Println("Successfully updated Top Level Mode: "+ updatedMode.Mode)
 	} else {
-		updatedMode, _, err := srClient.DefaultApi.UpdateMode(ctx, subject)
+		updatedMode, _, err := srClient.DefaultApi.UpdateMode(ctx, subject, srsdk.ModeUpdateRequest{Mode: args[0]})
 		if err != nil {
 			return err
 		}
