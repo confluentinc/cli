@@ -44,27 +44,43 @@ func (c *modeCommand) init() {
 Update mode level for the specified subject to READWRITE, READONLY or IMPORT.
 
 ::
-      ccloud schema-registry mode update IMPORT
+		ccloud schema-registry mode update IMPORT
 `,
 		RunE: c.update,
 		Args: cobra.ExactArgs(1),
 	}
+	cmd.Flags().StringP("subject", "S", "", SubjectUsage)
+	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 }
 
 
 func (c *modeCommand) update(cmd *cobra.Command, args []string) error {
 
+	subject, err := cmd.Flags().GetString("subject")
+	if err != nil {
+		return err
+	}
 	srClient, ctx, err := GetApiClient(c.srClient, c.ch)
 	if err != nil {
 		return err
 	}
 
-	updatedMode, _, err := srClient.DefaultApi.UpdateMode(ctx, args[0])
-	if err != nil {
-		return err
+	if subject == "" {
+		updatedMode, _, err :=srClient.DefaultApi.UpdateTopLevelMode(ctx)
+		if err != nil {
+			return err
+		}
+		fmt.Println("Successfully updated Top Level Mode: "+ updatedMode.Mode)
+	} else {
+		updatedMode, _, err := srClient.DefaultApi.UpdateMode(ctx, subject)
+		if err != nil {
+			return err
+		}
+		fmt.Println("Successfully updated Subject level Mode: "+ updatedMode.Mode)
 	}
 
-	fmt.Println("Successfully updated to new mode: "+ updatedMode.Mode)
 	return nil
 }
+
+
