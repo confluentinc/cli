@@ -9,6 +9,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
+	"strconv"
 	"strings"
 )
 
@@ -150,6 +151,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 
 		pcmd.Println(cmd, "Cluster exists:")
 		for _, cluster := range existingClusters {
+
 			pcmd.Println(cmd, "Cluster ID:\t"+cluster.Id)
 			pcmd.Println(cmd, "Endpoint:\t"+cluster.Endpoint)
 			metrics, err := c.metricClient.SchemaRegistryMetrics(ctx, cluster.Id)
@@ -157,8 +159,8 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 				return err
 			}
 			pcmd.Println(cmd, "Logical cluster ID:\t"+metrics.LogicalClusterId)
-			pcmd.Println(cmd, "Used quota of Schemas:\t"+string(metrics.NumSchemas))
-			pcmd.Println(cmd, "Remaining quota of Schemas:\t"+string(cluster.MaxSchemas))
+			pcmd.Println(cmd, "Used quota of Schemas: \t"+strconv.Itoa(int(cluster.MaxSchemas)-int(metrics.NumSchemas)))
+			pcmd.Println(cmd, "Remaining quota of Schemas:\t"+strconv.Itoa(int(cluster.MaxSchemas)))
 			compatibilityResponse, _, _ := srClient.DefaultApi.GetTopLevelConfig(ctx)
 			pcmd.Println(cmd, "Global Compatibility:\t"+compatibilityResponse.CompatibilityLevel)
 			pcmd.Println(cmd, "Cloud Provider:\t")
