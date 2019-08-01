@@ -22,7 +22,6 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/ksql"
 	"github.com/confluentinc/cli/internal/cmd/local"
 	ps1 "github.com/confluentinc/cli/internal/cmd/prompt"
-	"github.com/confluentinc/cli/internal/cmd/schema-registry"
 	"github.com/confluentinc/cli/internal/cmd/secret"
 	"github.com/confluentinc/cli/internal/cmd/service-account"
 	"github.com/confluentinc/cli/internal/cmd/update"
@@ -122,7 +121,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 
 		// Schema Registry
 		// If srClient is nil, the function will look it up after prerunner verifies authentication. Exposed so tests can pass mocks
-		sr := schema_registry.New(prerunner, cfg, client.SchemaRegistry, ch, nil)
+		sr := schema_registry.New(prerunner, cfg, client.SchemaRegistry, ch, nil, client.Metrics)
 		sr.Hidden = true
 		cli.AddCommand(sr)
 
