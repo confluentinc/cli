@@ -2,7 +2,6 @@ package schema_registry
 
 import (
 	"context"
-	"fmt"
 	ccsdk "github.com/confluentinc/ccloud-sdk-go"
 	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -133,34 +132,57 @@ func (c *command) enable(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) describe(cmd *cobra.Command, args []string) error {
+
+	ctx := context.Background()
+	//API_KEY_TIMEOUT          := time.Minute * 15
+	//API_KEY_RETRY_DELAY      := time.Second * 10
+	// Collect the parameters
+	accountId, err := pcmd.GetEnvironment(cmd, c.config)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	// If it already exists, return the existing one
+	existingClusters, getExistingErr := c.ccClient.GetSchemaRegistryClusters(ctx, &srv1.SchemaRegistryCluster{
+		AccountId: accountId,
+	})
+	if getExistingErr != nil {
+		return errors.HandleCommon(getExistingErr, cmd)
+	}
 	srClient, ctx, err := GetApiClient(c.srClient, c.ch)
 	if err != nil {
 		return err
 	}
-	// Trust the API will handle CCP/CCE and whether geo is required
-	location := srv1.GlobalSchemaRegistryLocation(srv1.SchemaRegistryCluster{})
+	if len(existingClusters) > 0 {
 
+		pcmd.Println(cmd, "Cluster exists:")
+		for _, cluster := range existingClusters {
+			pcmd.Println(cmd, "Cluster ID: "+cluster.Id)
+			pcmd.Println(cmd, "Endpoint: "+cluster.Endpoint)
+			//err = Retry(context.Background(), API_KEY_RETRY_DELAY, API_KEY_TIMEOUT, func(ctx context.Context) error {
+			//temp:=c.client
+			//if(c.client.User.Describe())
+			//{
+			//	metrics, err :=
+			//	//.SchemaRegistryMetrics(ctx, string(cluster.Id))
+			//	if err != nil {
+			//		pcmd.Println(cmd,"errrr")
+			//
+			//		return err
+			//	} else {
+			pcmd.Println(cmd, "Logical cluster ID: "+c.metrics.GetLogicalClusterId())
+			pcmd.Println(cmd, "Used quota of Schemas: "+string(c.metrics.GetNumSchemas()))
+			//pcmd.Println(cmd, "Remaining quota of Schemas: "+string(cluster.MaxSchemas-int32(c.metrics.NumSchemas)))
+			//	}
+			//}
 
-	// Compatibility Level
-	configResult, _, err := srClient.DefaultApi.GetTopLevelConfig(ctx)
-
-	if err != nil {
-		return err
+			//}
+			compatibilityResponse, _, _ := srClient.DefaultApi.GetTopLevelConfig(ctx)
+			pcmd.Println(cmd, "Global Compatibility"+compatibilityResponse.CompatibilityLevel)
+			pcmd.Println(cmd, "Cloud Provider")
+			ModeResponse, _, _ := srClient.DefaultApi.GetTopLevelMode(ctx)
+			pcmd.Println(cmd, "Mode: "+ModeResponse.Mode)
+		}
 	}
-
-
-	fmt.Println("Compatability level: " + configResult.CompatibilityLevel)
-
-	// Mode
-
-	mode,_, err:= srClient.DefaultApi.GetMode(ctx, "")
-
-	if err != nil {
-		return err
-	}
-	fmt.Println("Successfully updated"+mode.Mode)
-
-	pcmd.Println(cmd, schemaString.Schema)
 	return nil
 
 }
