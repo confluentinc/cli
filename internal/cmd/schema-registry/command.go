@@ -14,23 +14,25 @@ import (
 
 type command struct {
 	*cobra.Command
-	config   *config.Config
-	ccClient ccsdk.SchemaRegistry
-	srClient *srsdk.APIClient
-	ch       *pcmd.ConfigHelper
+	config       *config.Config
+	ccClient     ccsdk.SchemaRegistry
+	metricClient ccsdk.Metrics
+	srClient     *srsdk.APIClient
+	ch           *pcmd.ConfigHelper
 }
 
-func New(prerunner pcmd.PreRunner, config *config.Config, ccloudClient ccsdk.SchemaRegistry, ch *pcmd.ConfigHelper, srClient *srsdk.APIClient) *cobra.Command {
+func New(prerunner pcmd.PreRunner, config *config.Config, ccloudClient ccsdk.SchemaRegistry, ch *pcmd.ConfigHelper, srClient *srsdk.APIClient, metricClient ccsdk.Metrics) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:               "schema-registry",
 			Short:             `Manage Schema Registry.`,
 			PersistentPreRunE: prerunner.Authenticated(),
 		},
-		config:   config,
-		ccClient: ccloudClient,
-		ch:       ch,
-		srClient: srClient,
+		config:       config,
+		ccClient:     ccloudClient,
+		ch:           ch,
+		srClient:     srClient,
+		metricClient: metricClient,
 	}
 	cmd.init()
 	return cmd.Command
@@ -156,32 +158,24 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 
 		pcmd.Println(cmd, "Cluster exists:")
 		for _, cluster := range existingClusters {
-			pcmd.Println(cmd, "Cluster ID: "+cluster.Id)
-			pcmd.Println(cmd, "Endpoint: "+cluster.Endpoint)
-			//err = Retry(context.Background(), API_KEY_RETRY_DELAY, API_KEY_TIMEOUT, func(ctx context.Context) error {
-			//temp:=c.client
-			//if(c.client.User.Describe())
-			//{
-			//	metrics, err :=
-			//	//.SchemaRegistryMetrics(ctx, string(cluster.Id))
-			//	if err != nil {
-			//		pcmd.Println(cmd,"errrr")
-			//
-			//		return err
-			//	} else {
-			pcmd.Println(cmd, "Logical cluster ID: "+c.metrics.GetLogicalClusterId())
-			pcmd.Println(cmd, "Used quota of Schemas: "+string(c.metrics.GetNumSchemas()))
-			//pcmd.Println(cmd, "Remaining quota of Schemas: "+string(cluster.MaxSchemas-int32(c.metrics.NumSchemas)))
-			//	}
-			//}
-
-			//}
+			pcmd.Println(cmd, "Cluster ID:\t"+cluster.Id)
+			pcmd.Println(cmd, "Endpoint:\t"+cluster.Endpoint)
+			metrics, err := c.metricClient.SchemaRegistryMetrics(ctx, cluster.Id)
+			if err != nil {
+				return err
+			}
+			pcmd.Println(cmd, "Logical cluster ID:\t"+metrics.LogicalClusterId)
+			pcmd.Println(cmd, "Used quota of Schemas:\t"+string(metrics.NumSchemas))
+			pcmd.Println(cmd, "Remaining quota of Schemas:\t"+string(cluster.MaxSchemas))
 			compatibilityResponse, _, _ := srClient.DefaultApi.GetTopLevelConfig(ctx)
-			pcmd.Println(cmd, "Global Compatibility"+compatibilityResponse.CompatibilityLevel)
-			pcmd.Println(cmd, "Cloud Provider")
+			pcmd.Println(cmd, "Global Compatibility:\t"+compatibilityResponse.CompatibilityLevel)
+			pcmd.Println(cmd, "Cloud Provider:\t")
 			ModeResponse, _, _ := srClient.DefaultApi.GetTopLevelMode(ctx)
-			pcmd.Println(cmd, "Mode: "+ModeResponse.Mode)
+			pcmd.Println(cmd, "Mode:\t"+ModeResponse.Mode)
 		}
+	} else {
+		pcmd.Println(cmd, "Schema Registry Cluster does not exist")
+		return err
 	}
 	return nil
 
