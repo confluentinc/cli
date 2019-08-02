@@ -323,7 +323,6 @@ func (c *command) createSrApiKey(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	environment, err := pcmd.GetEnvironment(cmd, c.config)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -356,45 +355,28 @@ func (c *command) createSrApiKey(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	if err := c.keystore.StoreAPIKey(userKey, src.Id, environment); err != nil {
-		return errors.HandleCommon(errors.Wrapf(err, "Unable to store API key locally."), cmd)
-	}
-
 	return nil
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
 	apiKey := args[0]
-	src, err := pcmd.GetSchemaRegistry(cmd, c.ch)
-	//Check if API key is for Schema Registry cluster
-	userkeySr, err1 := c.client.Get(context.Background(), &authv1.ApiKey{Key: apiKey, AccountId:src.AccountId})
-	//Check if API key is for Kafka cluster
-	userkeyCluster, err2 := c.client.Get(context.Background(), &authv1.ApiKey{Key: apiKey, AccountId: c.config.Auth.Account.Id})
 
-	if err1 != nil && err2 !=nil {
-		return errors.HandleCommon(err1, cmd)
-	}
-
-	if err2==nil {
-		key:= &authv1.ApiKey{
-			Id:        userkeyCluster.Id,
-			AccountId: c.config.Auth.Account.Id,
-		}
-		err = c.client.Delete(context.Background(), key)
-	} else {
-		key:= &authv1.ApiKey{
-			Id:        userkeySr.Id,
-			AccountId: src.AccountId,
-		}
-		err = c.client.Delete(context.Background(), key)
-	}
-
+	userKey, err := c.client.Get(context.Background(), &authv1.ApiKey{Key: apiKey, AccountId: c.config.Auth.Account.Id})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	return c.keystore.DeleteAPIKey(apiKey)
+	key := &authv1.ApiKey{
+		Id:        userKey.Id,
+		AccountId: c.config.Auth.Account.Id,
+	}
 
+	err = c.client.Delete(context.Background(), key)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	//Add logic here to avoid looking at Keystore for a schema registry API key?
+	return c.keystore.DeleteAPIKey(apiKey)
 }
 
 func (c *command) store(cmd *cobra.Command, args []string) error {
