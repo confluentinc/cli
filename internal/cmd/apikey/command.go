@@ -212,7 +212,11 @@ func (c *command) listSrApiKeys(cmd *cobra.Command, args []string) error {
 			continue
 		}
 
-		apiKey.Key = fmt.Sprintf("* %s", apiKey.Key)
+		if apiKey.Key == c.config.SrCredentials.Key {
+			apiKey.Key = fmt.Sprintf("* %s", apiKey.Key)
+		} else {
+			apiKey.Key = fmt.Sprintf("  %s", apiKey.Key)
+		}
 
 		for _, c := range apiKey.LogicalClusters {
 			if c.Id == src.Id {
@@ -313,7 +317,6 @@ func (c *command) createKafkaApiKey(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) createSrApiKey(cmd *cobra.Command, args []string) error {
-	//accountId, err := pcmd.GetEnvironment(cmd, c.config)
 	src, err := pcmd.GetSchemaRegistry(cmd, c.ch)
 
 	if err != nil {
