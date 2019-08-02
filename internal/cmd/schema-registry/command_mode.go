@@ -41,10 +41,11 @@ func (c *modeCommand) init() {
 		Use:   "update <mode> [--subject <subject>]",
 		Short: "Update mode for Schema Registry.",
 		Example: `
-Update mode level for the specified subject to READWRITE, READONLY or IMPORT.
+Update Schema Registry mode level to READWRITE, READONLY or IMPORT.
+--subject is an optional flag used to specify mode level for a specific subject
 
 ::
-		ccloud schema-registry mode update IMPORT
+		ccloud schema-registry mode update --subject yourSubjectName IMPORT
 `,
 		RunE: c.update,
 		Args: cobra.ExactArgs(1),
