@@ -10,14 +10,13 @@ import (
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
 	"github.com/confluentinc/go-printer"
 
-	_ "github.com/confluentinc/ccloudapis/schemaregistry/v1"
 	ccsdk "github.com/confluentinc/ccloud-sdk-go"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/keystore"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-	srutil "github.com/confluentinc/cli/internal/cmd/schema-registry"
+	//srutil "github.com/confluentinc/cli/internal/cmd/schema-registry"
 )
 
 const longDescription = `Use this command to register an API secret created by another
@@ -132,6 +131,18 @@ func (c *command) init() {
 }
 
 func (c *command) list(cmd *cobra.Command, args []string) error {
+	subject, err := cmd.Flags().GetString("resource")
+	if err != nil {
+		return err
+	}
+	if subject == "" {
+		return c.listKafkaApiKeys(cmd, args)
+	} else {
+		return c.listSrApiKeys(cmd, args)
+	}
+}
+
+func (c *command) listKafkaApiKeys(cmd *cobra.Command, args []string) error {
 	kcc, err := pcmd.GetKafkaClusterConfig(cmd, c.ch)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -177,6 +188,48 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+func (c *command) listSrApiKeys(cmd *cobra.Command, args []string) error {
+	src, err := pcmd.GetSchemaRegistry(cmd, c.ch)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	apiKeys, err := c.client.List(context.Background(), &authv1.ApiKey{AccountId: src.AccountId})
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	type keyDisplay struct {
+		Key         string
+		Description string
+		UserId      int32
+	}
+
+	var data [][]string
+	for _, apiKey := range apiKeys {
+		// ignore keys owned by Confluent-internal user (healthcheck, etc)
+		if apiKey.UserId == 0 {
+			continue
+		}
+
+		apiKey.Key = fmt.Sprintf("* %s", apiKey.Key)
+
+		for _, c := range apiKey.LogicalClusters {
+			if c.Id == src.Id {
+				data = append(data, printer.ToRow(&keyDisplay{
+					Key:         apiKey.Key,
+					Description: apiKey.Description,
+					UserId:      apiKey.UserId,
+				}, listFields))
+				break
+			}
+		}
+	}
+
+	printer.RenderCollectionTable(data, listLabels)
+	return nil
+}
+
 func (c *command) update(cmd *cobra.Command, args []string) error {
 	apiKey := args[0]
 
@@ -202,7 +255,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) create(cmd *cobra.Command, args []string) error {
-	subject, err := cmd.Flags().GetString("resource-id")
+	subject, err := cmd.Flags().GetString("resource")
 	if err != nil {
 		return err
 	}
@@ -260,23 +313,16 @@ func (c *command) createKafkaApiKey(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) createSrApiKey(cmd *cobra.Command, args []string) error {
-	environment, err := pcmd.GetEnvironment(cmd, c.config)
+	//accountId, err := pcmd.GetEnvironment(cmd, c.config)
+	src, err := pcmd.GetSchemaRegistry(cmd, c.ch)
+
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	srClient, ctx, err := srutil.GetApiClient(c.srClient, c.ch)
-	if c.srClient != nil {
-		// Tests/mocks
-		return nil
-	}
-	client, ctx, err := srutil.SchemaRegistryClient(c.ch)
+	environment, err := pcmd.GetEnvironment(cmd, c.config)
 	if err != nil {
-		return nil, nil, err
-	}
-	return client, ctx, nil
-	if err != nil {
-		return err
+		return errors.HandleCommon(err, cmd)
 	}
 
 	userId, err := cmd.Flags().GetInt32("service-account-id")
@@ -288,12 +334,12 @@ func (c *command) createSrApiKey(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	srutil.GetApiClient()
+
 	key := &authv1.ApiKey{
 		UserId:          userId,
 		Description:     description,
-		AccountId:       c.config.Auth.Account.Id,
-		LogicalClusters: []*authv1.ApiKey_Cluster{{Id: kcc.ID}},
+		AccountId:       src.AccountId,
+		LogicalClusters: []*authv1.ApiKey_Cluster{{Id: src.Id,Type:"schema_registry"}},
 	}
 
 	userKey, err := c.client.Create(context.Background(), key)
@@ -307,7 +353,7 @@ func (c *command) createSrApiKey(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	if err := c.keystore.StoreAPIKey(userKey, kcc.ID, environment); err != nil {
+	if err := c.keystore.StoreAPIKey(userKey, src.Id, environment); err != nil {
 		return errors.HandleCommon(errors.Wrapf(err, "Unable to store API key locally."), cmd)
 	}
 
@@ -316,23 +362,36 @@ func (c *command) createSrApiKey(cmd *cobra.Command, args []string) error {
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
 	apiKey := args[0]
+	src, err := pcmd.GetSchemaRegistry(cmd, c.ch)
+	//Check if API key is for Schema Registry cluster
+	userkeySr, err1 := c.client.Get(context.Background(), &authv1.ApiKey{Key: apiKey, AccountId:src.AccountId})
+	//Check if API key is for Kafka cluster
+	userkeyCluster, err2 := c.client.Get(context.Background(), &authv1.ApiKey{Key: apiKey, AccountId: c.config.Auth.Account.Id})
 
-	userKey, err := c.client.Get(context.Background(), &authv1.ApiKey{Key: apiKey, AccountId: c.config.Auth.Account.Id})
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
+	if err1 != nil && err2 !=nil {
+		return errors.HandleCommon(err1, cmd)
 	}
 
-	key := &authv1.ApiKey{
-		Id:        userKey.Id,
-		AccountId: c.config.Auth.Account.Id,
+	if err2==nil {
+		key:= &authv1.ApiKey{
+			Id:        userkeyCluster.Id,
+			AccountId: c.config.Auth.Account.Id,
+		}
+		err = c.client.Delete(context.Background(), key)
+	} else {
+		key:= &authv1.ApiKey{
+			Id:        userkeySr.Id,
+			AccountId: src.AccountId,
+		}
+		err = c.client.Delete(context.Background(), key)
 	}
 
-	err = c.client.Delete(context.Background(), key)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 
 	return c.keystore.DeleteAPIKey(apiKey)
+
 }
 
 func (c *command) store(cmd *cobra.Command, args []string) error {
