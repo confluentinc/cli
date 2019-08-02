@@ -75,20 +75,23 @@ func (s *AuthServer) Start() error {
 }
 
 // GetAuthorizationCode takes the code verifier/challenge and gets an authorization code from Auth0
-func (s *AuthServer) GetAuthorizationCode() error {
+func (s *AuthServer) GetAuthorizationCode(auth0ConnectionName string) error {
 	client := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 		  return http.ErrUseLastResponse
 	  } }
 	url := "https://" + Auth0Domain + "/authorize?" +
-		"response_type=code&" +
+		"response_type=token&" +
 		"code_challenge=" + s.CodeChallenge + "&" +
 		"code_challenge_method=S256&" +
 		"client_id=" + Auth0ClientID + "&" +
 		"redirect_uri=" + Auth0CallbackURL + "&" +
 		"scope=profile%20email&" +
 		"audience=" + Auth0Identifier + "&" +
-		"state=" + Auth0State + ""
+		"state=" + Auth0State
+	if auth0ConnectionName != "" {
+		url += "&connection=" + auth0ConnectionName
+	}
 	fmt.Println(url)
 	resp, err := client.Get(url)
 	if err != nil {

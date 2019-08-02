@@ -124,7 +124,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 		}
 
 		// Get authorization code for making subsequent token request
-		err = server.GetAuthorizationCode()
+		err = server.GetAuthorizationCode(userSSO.Sso.Auth0ConnectionName)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
