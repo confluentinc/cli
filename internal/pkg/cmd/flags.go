@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
-
+	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
 	"github.com/confluentinc/cli/internal/pkg/config"
 )
 
@@ -45,4 +45,16 @@ func GetEnvironment(cmd *cobra.Command, cfg *config.Config) (string, error) {
 		environment = cfg.Auth.Account.Id
 	}
 	return environment, nil
+}
+
+func GetSchemaRegistry(cmd *cobra.Command, ch *ConfigHelper) (*srv1.SchemaRegistryCluster, error) {
+	resourceID, err := cmd.Flags().GetString("resource")
+	if err != nil {
+		return nil, err
+	}
+	environment, err := GetEnvironment(cmd, ch.Config)
+	if err != nil {
+		return nil, err
+	}
+	return ch.SchemaRegistry(resourceID, environment)
 }
