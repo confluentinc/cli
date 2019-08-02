@@ -3,6 +3,7 @@ package schema_registry
 import (
 	"context"
 	ccsdk "github.com/confluentinc/ccloud-sdk-go"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
