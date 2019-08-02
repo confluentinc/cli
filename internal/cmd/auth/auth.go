@@ -9,7 +9,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go"
+	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 
+	auth_server "github.com/confluentinc/cli/internal/pkg/auth-server"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -102,11 +104,38 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 
 	client := a.anonHTTPClientFactory(a.config.AuthURL, a.config.Logger)
 
-	token, err := client.Auth.Login(context.Background(), email, password)
+	// Check if user has an enterprise SSO connection enabled.  If so we need to start
+	// a background HTTP server to support the authorization code flow with PKCE
+	// described at https://auth0.com/docs/flows/guides/auth-code-pkce/call-api-auth-code-pkce
+	userSSO, err := client.User.CheckEmail(context.Background(), &orgv1.User{Email: email})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	a.config.AuthToken = token
+
+	fmt.Println(userSSO.Sso.Enabled)
+	fmt.Println(userSSO.Sso.Auth0ConnectionName)
+
+	if userSSO.Sso.Enabled && userSSO.Sso.Auth0ConnectionName != "" {
+		// Be conservative: only bother trying to launch server if we have to
+		server := &auth_server.AuthServer{}
+		err = server.Start()
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+
+		// Get authorization code for making subsequent token request
+		err = server.GetAuthorizationCode()
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+
+	} else {
+		token, err := client.Auth.Login(context.Background(), email, password)
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+		a.config.AuthToken = token
+	}
 
 	client = a.jwtHTTPClientFactory(context.Background(), a.config.AuthToken, a.config.AuthURL, a.config.Logger)
 	user, err := client.Auth.User(context.Background())
