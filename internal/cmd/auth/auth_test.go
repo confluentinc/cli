@@ -30,7 +30,7 @@ func TestCredentialsOverride(t *testing.T) {
 
 	prompt := prompt("cody@confluent.io", "iambatman")
 	auth := &sdkMock.Auth{
-		LoginFunc: func(ctx context.Context, username string, password string) (string, error) {
+		LoginFunc: func(ctx context.Context, idToken string, username string, password string) (string, error) {
 			return "y0ur.jwt.T0kEn", nil
 		},
 		UserFunc: func(ctx context.Context) (*orgv1.GetUserReply, error) {
@@ -62,7 +62,7 @@ func TestLoginSuccess(t *testing.T) {
 
 	prompt := prompt("cody@confluent.io", "iambatman")
 	auth := &sdkMock.Auth{
-		LoginFunc: func(ctx context.Context, username string, password string) (string, error) {
+		LoginFunc: func(ctx context.Context, idToken string, username string, password string) (string, error) {
 			return "y0ur.jwt.T0kEn", nil
 		},
 		UserFunc: func(ctx context.Context) (*orgv1.GetUserReply, error) {
@@ -124,7 +124,7 @@ func TestLoginFail(t *testing.T) {
 
 	prompt := prompt("cody@confluent.io", "iamrobin")
 	auth := &sdkMock.Auth{
-		LoginFunc: func(ctx context.Context, username string, password string) (string, error) {
+		LoginFunc: func(ctx context.Context, idToken string, username string, password string) (string, error) {
 			return "", &ccloud.InvalidLoginError{}
 		},
 	}
@@ -139,7 +139,7 @@ func TestURLRequiredWithMDS(t *testing.T) {
 
 	prompt := prompt("cody@confluent.io", "iamrobin")
 	auth := &sdkMock.Auth{
-		LoginFunc: func(ctx context.Context, username string, password string) (string, error) {
+		LoginFunc: func(ctx context.Context, idToken string, username string, password string) (string, error) {
 			return "", &ccloud.InvalidLoginError{}
 		},
 	}
@@ -178,7 +178,7 @@ func Test_credentials_NoSpacesAroundEmail_ShouldSupportSpacesAtBeginOrEnd(t *tes
 	auth := &sdkMock.Auth{}
 	cmds, _ := newAuthCommand(prompt, auth, "ccloud", req)
 
-	user, pass, err := cmds.credentials(cmds.Commands[0], "Email")
+	user, pass, err := cmds.credentials(cmds.Commands[0], "Email", nil)
 	req.NoError(err)
 	req.Equal("cody@confluent.io", user)
 	req.Equal(" iamrobin ", pass)

@@ -85,7 +85,12 @@ func (s *AuthServer) Start(env string) error {
 	}
 
 	wg.Add(1)
-	go server.Serve(listener)
+	go func() {
+		serverErr := server.Serve(listener)
+		if serverErr != nil {
+			fmt.Println(serverErr.Error())
+		}
+	}()
 
 	return nil
 }
@@ -105,7 +110,10 @@ func (s *AuthServer) GetAuthorizationCode(auth0ConnectionName string) error {
 		url += "&connection=" + auth0ConnectionName
 	}
 
-	browser.OpenURL(url)
+	err := browser.OpenURL(url)
+	if err != nil {
+		return errors.Wrap(err, "Unable to open web browser for authorization")
+	}
 
 	// Wait until flow is finished / callback is called (or timeout...)
 	go func() {
@@ -116,7 +124,12 @@ func (s *AuthServer) GetAuthorizationCode(auth0ConnectionName string) error {
 	}()
 	wg.Wait()
 
-	defer server.Shutdown(context.Background())
+	defer func() {
+		serverErr := server.Shutdown(context.Background())
+		if serverErr != nil {
+			fmt.Println(serverErr.Error())
+		}
+	}()
 
 	return bgErr
 }
@@ -145,13 +158,16 @@ func (s *AuthServer) GetAuth0Token() error {
 		"redirect_uri=" + Auth0CallbackURL)
 	req, _ := http.NewRequest("POST", url, payload)
 	req.Header.Add("content-type", "application/x-www-form-urlencoded")
-	res, _ := http.DefaultClient.Do(req)
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return errors.Wrap(err, "Failed to perform GetAuth0Token request")
+	}
 
 	defer res.Body.Close()
 	responseBody, _ := ioutil.ReadAll(res.Body)
 
 	var data map[string]interface{}
-	err := json.Unmarshal([]byte(responseBody), &data)
+	err = json.Unmarshal([]byte(responseBody), &data)
 	if err != nil {
 		return errors.Wrap(err, "Failed to unmarshal response body in GetAuth0Token request")
 	}
