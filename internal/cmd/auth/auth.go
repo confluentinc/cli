@@ -123,7 +123,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 
 	token := ""
 
-	if userSSO.Sso.Enabled && userSSO.Sso.Auth0ConnectionName != "" {
+	if userSSO != nil && userSSO.Sso != nil && userSSO.Sso.Enabled && userSSO.Sso.Auth0ConnectionName != "" {
 		// Be conservative: only bother trying to launch server if we have to
 		server := &auth_server.AuthServer{}
 		err = server.Start(env)
@@ -271,7 +271,7 @@ func (a *commands) credentials(cmd *cobra.Command, userField string, cloudClient
 		// Fine to ignore non-nil err for this request: e.g. what if this fails due to invalid/malicious
 		// email, we want to silently continue and give the illusion of password prompt.
 		// If Auth0ConnectionName is blank (local Auth0 user) still prompt for password
-		if err == nil && userSSO.Sso.Enabled && userSSO.Sso.Auth0ConnectionName != "" {
+		if err == nil && userSSO != nil && userSSO.Sso != nil && userSSO.Sso.Enabled && userSSO.Sso.Auth0ConnectionName != "" {
 			a.Logger.Trace("User is SSO-enabled so won't prompt for password")
 			return email, password, nil
 		}
