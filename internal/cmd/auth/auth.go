@@ -97,12 +97,21 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	a.config.AuthURL = url
-	email, password, err := a.credentials(cmd, "Email")
-	if err != nil {
-		return err
+
+	// Auth configs change for Confluent internal development usage...
+	env := "prod"
+	if strings.Contains(a.config.AuthURL, "devel.cpdev.cloud") {
+		env = "devel"
+	}
+	if strings.Contains(a.config.AuthURL, "stag.cpdev.cloud") {
+		env = "stag"
 	}
 
 	client := a.anonHTTPClientFactory(a.config.AuthURL, a.config.Logger)
+	email, password, err := a.credentials(cmd, "Email", client)
+	if err != nil {
+		return err
+	}
 
 	// Check if user has an enterprise SSO connection enabled.  If so we need to start
 	// a background HTTP server to support the authorization code flow with PKCE
@@ -112,13 +121,12 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	fmt.Println(userSSO.Sso.Enabled)
-	fmt.Println(userSSO.Sso.Auth0ConnectionName)
+	token := ""
 
 	if userSSO.Sso.Enabled && userSSO.Sso.Auth0ConnectionName != "" {
 		// Be conservative: only bother trying to launch server if we have to
 		server := &auth_server.AuthServer{}
-		err = server.Start()
+		err = server.Start(env)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
@@ -129,13 +137,24 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 			return errors.HandleCommon(err, cmd)
 		}
 
-	} else {
-		token, err := client.Auth.Login(context.Background(), email, password)
+		// Exchange authorization code for Auth0 token
+		err := server.GetAuth0Token()
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
-		a.config.AuthToken = token
+
+		token, err = client.Auth.Login(context.Background(), server.Auth0IDToken, "", "")
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+	} else {
+		token, err = client.Auth.Login(context.Background(), "", email, password)
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
 	}
+
+	a.config.AuthToken = token
 
 	client = a.jwtHTTPClientFactory(context.Background(), a.config.AuthToken, a.config.AuthURL, a.config.Logger)
 	user, err := client.Auth.User(context.Background())
@@ -190,7 +209,7 @@ func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
 	}
 	a.config.AuthURL = url
 	a.mdsClient.ChangeBasePath(a.config.AuthURL)
-	email, password, err := a.credentials(cmd, "Username")
+	email, password, err := a.credentials(cmd, "Username", nil)
 	if err != nil {
 		return err
 	}
@@ -223,7 +242,7 @@ func (a *commands) logout(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (a *commands) credentials(cmd *cobra.Command, userField string) (string, string, error) {
+func (a *commands) credentials(cmd *cobra.Command, userField string, cloudClient *ccloud.Client) (string, string, error) {
 	email := os.Getenv("XX_CCLOUD_EMAIL")
 	if len(email) == 0 {
 		email = os.Getenv("XX_CONFLUENT_USERNAME")
@@ -241,10 +260,22 @@ func (a *commands) credentials(cmd *cobra.Command, userField string) (string, st
 		if err != nil {
 			return "", "", err
 		}
-		email = emailFromPrompt
+		email = strings.TrimSpace(emailFromPrompt)
 	}
 
-	a.Logger.Trace("Successfully obtained email")
+	a.Logger.Trace("Successfully obtained email " + email)
+
+	if cloudClient != nil {
+		// If SSO user, don't prompt for password
+		userSSO, err := cloudClient.User.CheckEmail(context.Background(), &orgv1.User{Email: email})
+		// Fine to ignore non-nil err for this request: e.g. what if this fails due to invalid/malicious
+		// email, we want to silently continue and give the illusion of password prompt.
+		// If Auth0ConnectionName is blank (local Auth0 user) still prompt for password
+		if err == nil && userSSO.Sso.Enabled && userSSO.Sso.Auth0ConnectionName != "" {
+			a.Logger.Trace("User is SSO-enabled so won't prompt for password")
+			return email, password, nil
+		}
+	}
 
 	if len(password) == 0 {
 		var err error
@@ -259,7 +290,7 @@ func (a *commands) credentials(cmd *cobra.Command, userField string) (string, st
 
 	a.Logger.Trace("Successfully obtained password")
 
-	return strings.TrimSpace(email), password, nil
+	return email, password, nil
 }
 
 func (a *commands) createOrUpdateContext(user *config.AuthConfig) {
