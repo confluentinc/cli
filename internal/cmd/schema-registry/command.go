@@ -3,13 +3,14 @@ package schema_registry
 import (
 	"context"
 	ccsdk "github.com/confluentinc/ccloud-sdk-go"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/go-printer"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -21,6 +22,16 @@ type command struct {
 	metricClient ccsdk.Metrics
 	srClient     *srsdk.APIClient
 	ch           *pcmd.ConfigHelper
+}
+
+type describeDisplay struct {
+	Name          string
+	ID            string
+	URL           string
+	Used          string
+	Available     string
+	Compatibility string
+	Mode          string
 }
 
 func New(prerunner pcmd.PreRunner, config *config.Config, ccloudClient ccsdk.SchemaRegistry, ch *pcmd.ConfigHelper, srClient *srsdk.APIClient, metricClient ccsdk.Metrics) *cobra.Command {
@@ -138,8 +149,10 @@ func (c *command) enable(cmd *cobra.Command, args []string) error {
 func (c *command) describe(cmd *cobra.Command, args []string) error {
 
 	ctx := context.Background()
-	//API_KEY_TIMEOUT          := time.Minute * 15
-	//API_KEY_RETRY_DELAY      := time.Second * 10
+	var data describeDisplay
+	fields := []string{"Name", "ID", "URL", "Used", "Available", "Compatibility", "Mode"}
+	renames := map[string]string{"ID": "Logical Cluster ID", "URL": "Endpoint URL", "Used": "Used Schemas", "Available": "Available Schemas", "Compatibility": "Global Compatibility"}
+
 	// Collect the parameters
 	accountId, err := pcmd.GetEnvironment(cmd, c.config)
 	if err != nil {
@@ -158,23 +171,29 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	}
 	if len(existingClusters) > 0 {
 
-		pcmd.Println(cmd, "Cluster exists:")
 		for _, cluster := range existingClusters {
 
-			pcmd.Println(cmd, "Cluster ID:\t"+cluster.Id)
-			pcmd.Println(cmd, "Endpoint:\t"+cluster.Endpoint)
 			metrics, err := c.metricClient.SchemaRegistryMetrics(ctx, cluster.Id)
+
 			if err != nil {
 				return err
 			}
-			pcmd.Println(cmd, "Logical cluster ID:\t"+metrics.LogicalClusterId)
-			pcmd.Println(cmd, "Used quota of Schemas: \t"+strconv.Itoa(int(cluster.MaxSchemas)-int(metrics.NumSchemas)))
-			pcmd.Println(cmd, "Remaining quota of Schemas:\t"+strconv.Itoa(int(cluster.MaxSchemas)))
+
 			compatibilityResponse, _, _ := srClient.DefaultApi.GetTopLevelConfig(ctx)
-			pcmd.Println(cmd, "Global Compatibility:\t"+compatibilityResponse.CompatibilityLevel)
-			pcmd.Println(cmd, "Cloud Provider:\t")
 			ModeResponse, _, _ := srClient.DefaultApi.GetTopLevelMode(ctx)
-			pcmd.Println(cmd, "Mode:\t"+ModeResponse.Mode)
+
+			if err != nil {
+				return errors.HandleCommon(err, cmd)
+			}
+
+			data.Name = cluster.Name
+			data.ID = cluster.Id
+			data.URL = cluster.Endpoint
+			data.Used = strconv.Itoa(int(metrics.NumSchemas))
+			data.Available = strconv.Itoa(int(cluster.MaxSchemas) - int(metrics.NumSchemas))
+			data.Compatibility = compatibilityResponse.CompatibilityLevel
+			data.Mode = ModeResponse.Mode
+			printer.RenderTableOut(&data, fields, renames, os.Stdout)
 		}
 	} else {
 		pcmd.Println(cmd, "Schema Registry Cluster does not exist")
