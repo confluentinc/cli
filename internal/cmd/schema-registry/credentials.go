@@ -61,7 +61,7 @@ func SchemaRegistryClient(ch *pcmd.ConfigHelper) (client *srsdk.APIClient, ctx c
 	if ch.Config.Auth == nil {
 		return nil, nil, errors.Errorf("user must be authenticated to use Schema Registry")
 	}
-	srConfig.BasePath, err = ch.SchemaRegistryURL(ch.Config.Auth.Account.Id)
+	srConfig.BasePath, err = ch.SchemaRegistryURL(ch.Config.Auth.Account.Id, ctx)
 	if err != nil {
 		return nil, nil, err
 	}
