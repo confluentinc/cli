@@ -64,7 +64,7 @@ To download a tarball for your OS and architecture:
     VERSION=v0.95.0 # or latest
     OS=darwin
     ARCH=amd64
-    FILE=ccloud_v${VERSION#v}_${OS}_${ARCH}.tar.gz
+    FILE=ccloud_${VERSION}_${OS}_${ARCH}.tar.gz
     curl -s https://s3-us-west-2.amazonaws.com/confluent.cloud/ccloud-cli/archives/${VERSION#v}/${FILE} -o ${FILE}
 
 To install the CLI:

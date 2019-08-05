@@ -29,7 +29,7 @@ func NewACLCommand(config *config.Config, client ccloud.Kafka, ch *pcmd.ConfigHe
 	cmd := &aclCommand{
 		Command: &cobra.Command{
 			Use:   "acl",
-			Short: `Manage Kafka ACLs. This is only available for Confluent Cloud Enterprise users.`,
+			Short: `Manage Kafka ACLs.`,
 		},
 		config: config,
 		client: client,
@@ -45,7 +45,7 @@ func (c *aclCommand) init() {
 
 	cmd := &cobra.Command{
 		Use:   "create",
-		Short: `Create a Kafka ACL. This is only available for Confluent Cloud Enterprise users.`,
+		Short: `Create a Kafka ACL.`,
 		Example: `You can only specify one of these flags per command invocation: ` + "``cluster``, ``consumer-group``" + `,
 ` + "``topic``, or ``transactional-id``" + ` per command invocation. For example, if you want to specify both
 ` + "``consumer-group`` and ``topic``" + `, you must specify this as two separate commands:
@@ -70,7 +70,7 @@ func (c *aclCommand) init() {
 
 	cmd = &cobra.Command{
 		Use:   "delete",
-		Short: `Delete a Kafka ACL. This is only available for Confluent Cloud Enterprise users.`,
+		Short: `Delete a Kafka ACL.`,
 		RunE:  c.delete,
 		Args:  cobra.NoArgs,
 	}
@@ -81,7 +81,7 @@ func (c *aclCommand) init() {
 
 	cmd = &cobra.Command{
 		Use:   "list",
-		Short: `List Kafka ACLs for a resource. This is only available for Confluent Cloud Enterprise users.`,
+		Short: `List Kafka ACLs for a resource.`,
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	}
