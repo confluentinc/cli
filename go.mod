@@ -12,7 +12,7 @@ require (
 	github.com/aws/aws-sdk-go v1.15.64
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
-	github.com/confluentinc/ccloud-sdk-go v0.0.8-0.20190804203620-ca3be38ff9f0
+	github.com/confluentinc/ccloud-sdk-go v0.0.8-0.20190805024857-5613bbaa771b
 	github.com/confluentinc/ccloudapis v0.0.0-20190802001453-9d2b40c45d9f
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-printer v0.10.0
@@ -67,7 +67,7 @@ require (
 	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/stretchr/testify v1.3.0
 	github.com/tidwall/pretty v0.0.0-20190325153808-1166b9ac2b65
-	github.com/ugorji/go v1.1.7 // indirect
+	github.com/ugorji/go/codec v1.1.7 // indirect
 	golang.org/x/crypto v0.0.0-20190605123033-f99c8df09eb5
 	golang.org/x/oauth2 v0.0.0-20190402181905-9f3314589c9a
 	gonum.org/v1/netlib v0.0.0-20190331212654-76723241ea4e // indirect
