@@ -31,12 +31,12 @@ func (c *ConfigHelper) KafkaCluster(clusterID, environment string) (*kafkav1.Kaf
 }
 
 func (c *ConfigHelper) SchemaRegistryURL(environment string, requestContext context.Context) (string, error) {
-	ctx, err := c.Config.Context()
+	srCluster, err := c.Config.SchemaRegistryCluster()
 	if err != nil {
 		return "", err
 	}
-	if ctx.SchemaRegistryEndpoint != "" {
-		return ctx.SchemaRegistryEndpoint, nil
+	if srCluster.SchemaRegistryEndpoint != "" {
+		return srCluster.SchemaRegistryEndpoint, nil
 	}
 
 	// Didn't find it -- ask the mothership
@@ -53,7 +53,7 @@ func (c *ConfigHelper) SchemaRegistryURL(environment string, requestContext cont
 		return "", nil
 	case 1:
 		endpoint := existingClusters[0].Endpoint
-		ctx.SchemaRegistryEndpoint = endpoint
+		srCluster.SchemaRegistryEndpoint = endpoint
 		err = c.Config.Save()
 		if err != nil {
 			return "", err

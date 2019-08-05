@@ -48,7 +48,9 @@ func (suite *SchemaTestSuite) SetupSuite() {
 	suite.conf.Credentials[name] = &config.Credential{
 		Username: user.User.Email,
 	}
-	suite.conf.SrCredentials = &config.APIKeyPair{Key: "key", Secret: "secret"}
+	srCluster, _ := suite.conf.SchemaRegistryCluster()
+
+	srCluster.SrCredentials = &config.APIKeyPair{Key: "key", Secret: "secret"}
 
 	suite.conf.Contexts[name] = &config.Context{
 		Platform:      name,

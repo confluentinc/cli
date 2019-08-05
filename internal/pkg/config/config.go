@@ -55,6 +55,11 @@ type Credential struct {
 	Password string
 }
 
+type SchemaRegistryCluster struct {
+	SchemaRegistryEndpoint string      `json:"schema_registry_endpoint" hcl:"schema_registry_endpoint"`
+	SrCredentials          *APIKeyPair `json:"schema_registry_credentials" hcl:"schema_registry_credentials"`
+}
+
 // Context represents a specific CLI context.
 type Context struct {
 	Platform   string `json:"platform" hcl:"platform"`
@@ -63,8 +68,8 @@ type Context struct {
 	// N.B. These may later be exposed in the CLI to directly register kafkas (outside a Control Plane)
 	KafkaClusters map[string]*KafkaClusterConfig `json:"kafka_clusters" hcl:"kafka_clusters"`
 	// Kafka is your active Kafka cluster and references a key in the KafkaClusters map
-	Kafka                  string `json:"kafka_cluster" hcl:"kafka_cluster"`
-	SchemaRegistryEndpoint string `json:"schema_registry" hcl:"schema_registry"`
+	Kafka                 string                 `json:"kafka_cluster" hcl:"kafka_cluster"`
+	SchemaRegistryCluster *SchemaRegistryCluster `json:"schema_registry_cluster" hcl:"schema_registry_cluster"`
 }
 
 // Config represents the CLI configuration.
@@ -80,7 +85,6 @@ type Config struct {
 	Credentials    map[string]*Credential `json:"credentials" hcl:"credentials"`
 	Contexts       map[string]*Context    `json:"contexts" hcl:"contexts"`
 	CurrentContext string                 `json:"current_context" hcl:"current_context"`
-	SrCredentials  *APIKeyPair            `json:"schema_registry_credentials" hcl:"schema_registry_credentials"`
 }
 
 // New initializes a new Config object
@@ -171,6 +175,18 @@ func (c *Config) Context() (*Context, error) {
 		return nil, errors.ErrNoContext
 	}
 	return c.Contexts[c.CurrentContext], nil
+}
+
+func (c *Config) SchemaRegistryCluster() (*SchemaRegistryCluster, error) {
+	context, err := c.Context()
+	if err != nil {
+		return nil, err
+	}
+	sr := context.SchemaRegistryCluster
+	if sr == nil {
+		context.SchemaRegistryCluster = &SchemaRegistryCluster{}
+	}
+	return context.SchemaRegistryCluster, nil
 }
 
 // KafkaClusterConfig returns the KafkaClusterConfig for the current Context

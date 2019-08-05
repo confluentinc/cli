@@ -18,7 +18,9 @@ func getConfig(endpoint string) config.Config {
 		CurrentContext: currentContext,
 		Contexts: map[string]*config.Context{
 			currentContext: {
-				SchemaRegistryEndpoint: endpoint,
+				SchemaRegistryCluster: &config.SchemaRegistryCluster{
+					SchemaRegistryEndpoint: endpoint,
+				},
 			},
 		},
 	}
@@ -42,7 +44,7 @@ func TestSchemaRegistryURL(t *testing.T) {
 		Config: &cfg,
 		Client: client,
 	}
-	if found, _ := ch.SchemaRegistryURL(""); found != "localhost" {
+	if found, _ := ch.SchemaRegistryURL("", nil); found != "localhost" {
 		t.Errorf("expected %v, but found %v", "localhost", found)
 		t.Fail()
 	}
@@ -53,7 +55,7 @@ func TestSchemaRegistryURL(t *testing.T) {
 		Config: &cfg,
 		Client: client,
 	}
-	if found, _ := ch.SchemaRegistryURL(""); found != "remotehost" {
+	if found, _ := ch.SchemaRegistryURL("", nil); found != "remotehost" {
 		t.Errorf("expected %v, but found %v", "remotehost", found)
 		t.Fail()
 	}
