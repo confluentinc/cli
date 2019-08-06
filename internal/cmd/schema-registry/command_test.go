@@ -9,11 +9,13 @@ import (
 	"github.com/stretchr/testify/require"
 	"testing"
 
+	ccsdk "github.com/confluentinc/ccloud-sdk-go"
 	"github.com/confluentinc/ccloud-sdk-go/mock"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	cliMock "github.com/confluentinc/cli/mock"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/suite"
 )
@@ -29,6 +31,8 @@ type SRTestSuite struct {
 	kafkaCluster *kafkav1.KafkaCluster
 	srCluster    *srv1.SchemaRegistryCluster
 	srMock       *mock.SchemaRegistry
+	srClient     *srsdk.APIClient
+	metrics 	 *ccsdk.Metrics
 }
 
 func (suite *SRTestSuite) SetupSuite() {
@@ -75,13 +79,13 @@ func (suite *SRTestSuite) SetupTest() {
 			return suite.srCluster, nil
 		},
 		GetSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *srv1.SchemaRegistryCluster) (*srv1.SchemaRegistryCluster, error) {
-			return nil, nil
+			return suite.srCluster, nil
 		},
 	}
 }
 
 func (suite *SRTestSuite) newCMD() *cobra.Command {
-	cmd := New(&cliMock.Commander{}, suite.conf, suite.srMock, &cmd2.ConfigHelper{}, nil)
+	cmd := New(&cliMock.Commander{}, suite.conf, suite.srMock, &cmd2.ConfigHelper{},suite.srClient, suite.metrics)
 	return cmd
 }
 
@@ -93,6 +97,16 @@ func (suite *SRTestSuite) TestCreateSR() {
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.srMock.CreateSchemaRegistryClusterCalled())
+}
+
+func (suite *SRTestSuite) TestDescribeSR() {
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"describe"}))
+
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	req.True(suite.srMock.GetSchemaRegistryClustersCalled())
 }
 
 func TestSrTestSuite(t *testing.T) {
