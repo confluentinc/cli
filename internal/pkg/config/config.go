@@ -188,6 +188,9 @@ func (c *Config) SchemaRegistryCluster() (*SchemaRegistryCluster, error) {
 	}
 	sr := context.SchemaRegistryClusters[c.Auth.Account.Id]
 	if sr == nil {
+		if context.SchemaRegistryClusters == nil {
+			context.SchemaRegistryClusters = map[string]*SchemaRegistryCluster{}
+		}
 		context.SchemaRegistryClusters[c.Auth.Account.Id] = &SchemaRegistryCluster{}
 	}
 	return context.SchemaRegistryClusters[c.Auth.Account.Id], nil
