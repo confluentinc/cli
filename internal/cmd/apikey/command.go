@@ -204,16 +204,17 @@ func (c *command) listSrApiKeys(cmd *cobra.Command, args []string) error {
 		Description string
 		UserId      int32
 	}
-
+	clusterInContext,err:=c.config.SchemaRegistryCluster()
 	var data [][]string
 	for _, apiKey := range apiKeys {
 		// ignore keys owned by Confluent-internal user (healthcheck, etc)
 		if apiKey.UserId == 0 {
 			continue
 		}
-
-		if apiKey.Key == c.config.SrCredentials.Key {
-			apiKey.Key = fmt.Sprintf("* %s", apiKey.Key)
+		if err!=nil {
+			if apiKey.Key == clusterInContext.SrCredentials.Key {
+				apiKey.Key = fmt.Sprintf("* %s", apiKey.Key)
+			}
 		} else {
 			apiKey.Key = fmt.Sprintf("  %s", apiKey.Key)
 		}
