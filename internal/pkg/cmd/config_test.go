@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/confluentinc/ccloud-sdk-go/mock"
+	"github.com/confluentinc/ccloudapis/org/v1"
 	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"testing"
@@ -18,19 +19,22 @@ func getConfig(endpoint string) config.Config {
 		CurrentContext: currentContext,
 		Contexts: map[string]*config.Context{
 			currentContext: {
-				SchemaRegistryCluster: &config.SchemaRegistryCluster{
-					SchemaRegistryEndpoint: endpoint,
+				SchemaRegistryClusters: map[string]*config.SchemaRegistryCluster{
+					"env": {
+						SchemaRegistryEndpoint: endpoint,
+					},
 				},
 			},
 		},
+		Auth: &config.AuthConfig{Account: &v1.Account{Id: "env"}},
 	}
 }
 
 func getClient() *ccloud.Client {
 	return &ccloud.Client{
 		SchemaRegistry: &mock.SchemaRegistry{
-			GetSchemaRegistryClustersFunc: func(ctx context.Context, clusterConfig *srv1.SchemaRegistryCluster) ([]*srv1.SchemaRegistryCluster, error) {
-				return []*srv1.SchemaRegistryCluster{{Endpoint: "remotehost"}}, nil
+			GetSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *srv1.SchemaRegistryCluster) (*srv1.SchemaRegistryCluster, error) {
+				return &srv1.SchemaRegistryCluster{Endpoint: "remotehost"}, nil
 			},
 		},
 	}
@@ -44,7 +48,7 @@ func TestSchemaRegistryURL(t *testing.T) {
 		Config: &cfg,
 		Client: client,
 	}
-	if found, _ := ch.SchemaRegistryURL("", nil); found != "localhost" {
+	if found, _ := ch.SchemaRegistryURL(nil); found != "localhost" {
 		t.Errorf("expected %v, but found %v", "localhost", found)
 		t.Fail()
 	}
@@ -55,7 +59,7 @@ func TestSchemaRegistryURL(t *testing.T) {
 		Config: &cfg,
 		Client: client,
 	}
-	if found, _ := ch.SchemaRegistryURL("", nil); found != "remotehost" {
+	if found, _ := ch.SchemaRegistryURL(nil); found != "remotehost" {
 		t.Errorf("expected %v, but found %v", "remotehost", found)
 		t.Fail()
 	}

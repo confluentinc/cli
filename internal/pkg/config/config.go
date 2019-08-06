@@ -68,8 +68,9 @@ type Context struct {
 	// N.B. These may later be exposed in the CLI to directly register kafkas (outside a Control Plane)
 	KafkaClusters map[string]*KafkaClusterConfig `json:"kafka_clusters" hcl:"kafka_clusters"`
 	// Kafka is your active Kafka cluster and references a key in the KafkaClusters map
-	Kafka                 string                 `json:"kafka_cluster" hcl:"kafka_cluster"`
-	SchemaRegistryCluster *SchemaRegistryCluster `json:"schema_registry_cluster" hcl:"schema_registry_cluster"`
+	Kafka string `json:"kafka_cluster" hcl:"kafka_cluster"`
+	// SR map keyed by environment-id
+	SchemaRegistryClusters map[string]*SchemaRegistryCluster `json:"schema_registry_cluster" hcl:"schema_registry_cluster"`
 }
 
 // Config represents the CLI configuration.
@@ -182,11 +183,14 @@ func (c *Config) SchemaRegistryCluster() (*SchemaRegistryCluster, error) {
 	if err != nil {
 		return nil, err
 	}
-	sr := context.SchemaRegistryCluster
-	if sr == nil {
-		context.SchemaRegistryCluster = &SchemaRegistryCluster{}
+	if c.Auth == nil || c.Auth.Account == nil {
+		return nil, errors.ErrNotLoggedIn
 	}
-	return context.SchemaRegistryCluster, nil
+	sr := context.SchemaRegistryClusters[c.Auth.Account.Id]
+	if sr == nil {
+		context.SchemaRegistryClusters[c.Auth.Account.Id] = &SchemaRegistryCluster{}
+	}
+	return context.SchemaRegistryClusters[c.Auth.Account.Id], nil
 }
 
 // KafkaClusterConfig returns the KafkaClusterConfig for the current Context
