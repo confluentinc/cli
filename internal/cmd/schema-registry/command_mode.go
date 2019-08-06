@@ -8,9 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-
 type modeCommand struct {
-
 	prerunner pcmd.PreRunner
 	*cobra.Command
 	config   *config.Config
@@ -33,7 +31,6 @@ func NewModeCommand(config *config.Config, ch *pcmd.ConfigHelper, srClient *srsd
 	return compatCmd.Command
 }
 
-
 func (c *modeCommand) init() {
 
 	// Update
@@ -55,7 +52,6 @@ Update Schema Registry mode level to READWRITE, READONLY or IMPORT.
 	c.AddCommand(cmd)
 }
 
-
 func (c *modeCommand) update(cmd *cobra.Command, args []string) error {
 
 	subject, err := cmd.Flags().GetString("subject")
@@ -69,20 +65,18 @@ func (c *modeCommand) update(cmd *cobra.Command, args []string) error {
 
 	if subject == "" {
 
-		updatedMode, _, err :=srClient.DefaultApi.UpdateTopLevelMode(ctx, srsdk.ModeUpdateRequest{Mode: args[0]})
+		updatedMode, _, err := srClient.DefaultApi.UpdateTopLevelMode(ctx, srsdk.ModeUpdateRequest{Mode: args[0]})
 		if err != nil {
 			return err
 		}
-		fmt.Println("Successfully updated Top Level Mode: "+ updatedMode.Mode)
+		fmt.Println("Successfully updated Top Level Mode: " + updatedMode.Mode)
 	} else {
 		updatedMode, _, err := srClient.DefaultApi.UpdateMode(ctx, subject, srsdk.ModeUpdateRequest{Mode: args[0]})
 		if err != nil {
 			return err
 		}
-		fmt.Println("Successfully updated Subject level Mode: "+ updatedMode.Mode)
+		fmt.Println("Successfully updated Subject level Mode: " + updatedMode.Mode)
 	}
 
 	return nil
 }
-
-

@@ -17,8 +17,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"testing"
 	net_http "net/http"
+	"testing"
 )
 
 type ModeTestSuite struct {
@@ -81,8 +81,11 @@ func (suite *ModeTestSuite) SetupTest() {
 
 	suite.srClientMock = &srsdk.APIClient{
 		DefaultApi: &srMock.DefaultApi{
-			UpdateModeFunc: func(ctx context.Context, subject string) (srsdk.ModeUpdateRequest, *net_http.Response, error) {
-				return srsdk.ModeUpdateRequest{}, nil, nil
+			UpdateModeFunc: func(ctx context.Context, subject string, body srsdk.ModeUpdateRequest) (srsdk.ModeUpdateRequest, *net_http.Response, error) {
+				return srsdk.ModeUpdateRequest{Mode: "READWRITE"}, nil, nil
+			},
+			UpdateTopLevelModeFunc: func(ctx context.Context, body srsdk.ModeUpdateRequest) (srsdk.ModeUpdateRequest, *net_http.Response, error) {
+				return srsdk.ModeUpdateRequest{Mode: "READWRITE"}, nil, nil
 			},
 		},
 	}
@@ -105,7 +108,7 @@ func (suite *ModeTestSuite) TestModeUpdate() {
 	req := require.New(suite.T())
 	req.Nil(err)
 	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
-	req.True(apiMock.GetModeCalled())
+	req.True(apiMock.GetTopLevelModeCalled())
 }
 
 func TestModeSuite(t *testing.T) {
