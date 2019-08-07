@@ -204,14 +204,14 @@ func (c *command) listSrApiKeys(cmd *cobra.Command, args []string) error {
 		Description string
 		UserId      int32
 	}
-	clusterInContext,err:=c.config.SchemaRegistryCluster()
+	clusterInContext, err := c.config.SchemaRegistryCluster()
 	var data [][]string
 	for _, apiKey := range apiKeys {
 		// ignore keys owned by Confluent-internal user (healthcheck, etc)
 		if apiKey.UserId == 0 {
 			continue
 		}
-		if err!=nil {
+		if err != nil {
 			if apiKey.Key == clusterInContext.SrCredentials.Key {
 				apiKey.Key = fmt.Sprintf("* %s", apiKey.Key)
 			}
@@ -269,6 +269,10 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	} else {
 		return c.createSrApiKey(cmd, args)
 	}
+}
+
+func (c *command) createKafkaApiKey(cmd *cobra.Command, args []string, function func(c *command)) error {
+	cluster, err := pcmd.function
 }
 
 func (c *command) createKafkaApiKey(cmd *cobra.Command, args []string) error {
@@ -342,7 +346,7 @@ func (c *command) createSrApiKey(cmd *cobra.Command, args []string) error {
 		UserId:          userId,
 		Description:     description,
 		AccountId:       src.AccountId,
-		LogicalClusters: []*authv1.ApiKey_Cluster{{Id: src.Id,Type:"schema_registry"}},
+		LogicalClusters: []*authv1.ApiKey_Cluster{{Id: src.Id, Type: "schema_registry"}},
 	}
 
 	userKey, err := c.client.Create(context.Background(), key)
