@@ -35,7 +35,7 @@ func (c *ConfigHelper) SchemaRegistry(resourceID, environment string) (*srv1.Sch
 	existingCluster, err := c.Client.SchemaRegistry.GetSchemaRegistryCluster(
 		context.Background(),
 		&srv1.SchemaRegistryCluster{
-			Id:resourceID,
+			Id:        resourceID,
 			AccountId: environment,
 		})
 
