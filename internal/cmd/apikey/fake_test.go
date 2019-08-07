@@ -2,8 +2,8 @@ package apikey
 
 import (
 	"fmt"
-	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
+	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
 	cmd2 "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/stretchr/testify/require"
@@ -28,8 +28,8 @@ type APITestSuite struct {
 	conf         *config.Config
 	kafkaCluster *kafkav1.KafkaCluster
 	srCluster    *srv1.SchemaRegistryCluster
-	apiMock       *mock.APIKey
-	ApiKey		*authv1.ApiKey
+	apiMock      *mock.APIKey
+	ApiKey       *authv1.ApiKey
 }
 
 func (suite *APITestSuite) SetupSuite() {
@@ -96,7 +96,7 @@ func (suite *APITestSuite) newCMD() *cobra.Command {
 
 func (suite *APITestSuite) TestCreateSrApiKey() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"api-key", "create","--resource", srClusterID}))
+	cmd.SetArgs(append([]string{"api-key", "create", "--resource", srClusterID}))
 
 	err := cmd.Execute()
 	req := require.New(suite.T())
@@ -106,7 +106,7 @@ func (suite *APITestSuite) TestCreateSrApiKey() {
 
 func (suite *APITestSuite) TestlistSrApiKey() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"api-key", "list","--resource", srClusterID}))
+	cmd.SetArgs(append([]string{"api-key", "list", "--resource", srClusterID}))
 
 	err := cmd.Execute()
 	req := require.New(suite.T())
