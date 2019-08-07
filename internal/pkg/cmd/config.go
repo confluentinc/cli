@@ -48,7 +48,6 @@ func (c *ConfigHelper) SchemaRegistryURL(requestContext context.Context) (string
 	if err != nil {
 		return "", err
 	}
-
 	if existingCluster == nil {
 		return "", errors.Errorf("schema registry not found")
 	}
