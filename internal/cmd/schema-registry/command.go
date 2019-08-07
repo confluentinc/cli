@@ -38,24 +38,24 @@ func New(prerunner pcmd.PreRunner, config *config.Config, ccloudClient ccsdk.Sch
 
 func (c *command) init() {
 	createCmd := &cobra.Command{
-		Use:     "create",
-		Short:   `Create an instance of Schema Registry.`,
-		Example: `ccloud schema-registry create --cloud gcp`,
-		RunE:    c.create,
+		Use:     "enable",
+		Short:   `Enable Schema Registry for this account.`,
+		Example: `ccloud schema-registry enable --cloud gcp`,
+		RunE:    c.enable,
 		Args:    cobra.NoArgs,
 	}
-	createCmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	createCmd.Flags().String("cloud", "", "Cloud provider ('aws', 'azure', or 'gcp').")
+	createCmd.Flags().String("cluster", "", "Kafka cluster ID")
+	_ = createCmd.MarkFlagRequired("cluster")
+	createCmd.Flags().String("cloud", "", "Cloud provider (e.g. 'aws', 'azure', or 'gcp')")
 	_ = createCmd.MarkFlagRequired("cloud")
-	createCmd.Flags().String("geo", "", "Either 'us', 'eu', or 'apac' (only applies to Enterprise accounts).")
+	createCmd.Flags().String("geo", "", "Either 'us', 'eu', or 'apac' (only applies to Enterprise accounts)")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
 	c.AddCommand(NewSchemaCommand(c.config, c.ch, c.srClient))
-	c.AddCommand(NewCompatibilityCommand(c.config, c.ch, c.srClient))
 }
 
-func (c *command) create(cmd *cobra.Command, args []string) error {
+func (c *command) enable(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
 
 	// Collect the parameters

@@ -69,3 +69,7 @@ func Wrapf(err error, fmt string, args ...interface{}) error {
 func Errorf(fmt string, args ...interface{}) error {
 	return errors.Errorf(fmt, args...)
 }
+
+func Cause(err error) error {
+	return errors.Cause(err)
+}

@@ -64,7 +64,7 @@ To download a tarball for your OS and architecture:
     VERSION=v0.95.0 # or latest
     OS=darwin
     ARCH=amd64
-    FILE=ccloud_v${VERSION#v}_${OS}_${ARCH}.tar.gz
+    FILE=ccloud_${VERSION}_${OS}_${ARCH}.tar.gz
     curl -s https://s3-us-west-2.amazonaws.com/confluent.cloud/ccloud-cli/archives/${VERSION#v}/${FILE} -o ${FILE}
 
 To install the CLI:
@@ -77,8 +77,8 @@ To install the CLI:
 ```
 $ make deps
 $ make build
-$ dist/ccloud/$(go env GOOS)_$(go env GOARCH)/ccloud -h # for cloud CLI
-$ dist/confluent/$(go env GOOS)_$(go env GOARCH)/confluent -h # for on-prem Confluent CLI
+$ dist/ccloud/ccloud_$(go env GOOS)_$(go env GOARCH)/ccloud -h # for cloud CLI
+$ dist/confluent/confluent_$(go env GOOS)_$(go env GOARCH)/confluent -h # for on-prem Confluent CLI
 ```
 
 ## Developing

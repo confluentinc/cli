@@ -32,7 +32,7 @@ require (
 	github.com/gobuffalo/flect v0.1.3
 	github.com/gogo/protobuf v1.2.1
 	github.com/golang/mock v1.2.0
-	github.com/golang/protobuf v1.3.1
+	github.com/golang/protobuf v1.3.2
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/golangci/golangci-lint v1.17.1
 	github.com/google/go-cmp v0.3.0 // indirect
@@ -70,8 +70,6 @@ require (
 	github.com/stretchr/testify v1.3.0
 	github.com/tidwall/pretty v0.0.0-20190325153808-1166b9ac2b65
 	github.com/ugorji/go v1.1.7 // indirect
-	golang.org/x/crypto v0.0.0-20190605123033-f99c8df09eb5
-	golang.org/x/oauth2 v0.0.0-20190402181905-9f3314589c9a
 	gonum.org/v1/netlib v0.0.0-20190331212654-76723241ea4e // indirect
 	google.golang.org/appengine v1.6.1 // indirect
 	gopkg.in/square/go-jose.v2 v2.3.1

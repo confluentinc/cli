@@ -74,7 +74,7 @@ var rules = []linter.Rule{
 		linter.ExcludeCommandContains("iam rolebinding"),
 		// skip secret commands
 		linter.ExcludeCommandContains("secret"),
-		linter.ExcludeCommandContains("schema-registry"),
+		linter.ExcludeCommandContains("schema-registry enable"),
 	),
 	// TODO: ensuring --cluster is optional DOES NOT actually ensure that the cluster context is used
 	linter.Filter(linter.RequireFlag("cluster", true), nonClusterScopedCommands...),
@@ -84,13 +84,6 @@ var rules = []linter.Rule{
 	linter.RequireFlagSort(false),
 	linter.RequireLowerCase("Use"),
 	linter.RequireSingular("Use"),
-	linter.Filter(
-		linter.RequireSuffix("Short", "This is only available for Confluent Cloud Enterprise users."),
-		// only include ACLs as they have a really long suffix/disclaimer that they're CCE only
-		linter.IncludeCommandContains("kafka acl"),
-		// only include service-accounts as they have a really long suffix/disclaimer that they're CCE only
-		linter.IncludeCommandContains("service-account"),
-	),
 	linter.Filter(
 		linter.RequireLengthBetween("Short", 13, 60),
 		linter.ExcludeCommandContains("secret"),

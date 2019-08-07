@@ -30,38 +30,35 @@ func (c *ConfigHelper) KafkaCluster(clusterID, environment string) (*kafkav1.Kaf
 	return &kafkav1.KafkaCluster{AccountId: c.Config.Auth.Account.Id, Id: kafka.ID, ApiEndpoint: kafka.APIEndpoint}, nil
 }
 
-func (c *ConfigHelper) SchemaRegistryURL(environment string) (string, error) {
-	ctx, err := c.Config.Context()
+func (c *ConfigHelper) SchemaRegistryURL(requestContext context.Context) (string, error) {
+	srCluster, err := c.Config.SchemaRegistryCluster()
 	if err != nil {
 		return "", err
 	}
-	if ctx.SchemaRegistryEndpoint != "" {
-		return ctx.SchemaRegistryEndpoint, nil
+	if srCluster.SchemaRegistryEndpoint != "" {
+		return srCluster.SchemaRegistryEndpoint, nil
 	}
 
 	// Didn't find it -- ask the mothership
-	existingClusters, err := c.Client.SchemaRegistry.GetSchemaRegistryClusters(
-		context.Background(),
+	existingCluster, err := c.Client.SchemaRegistry.GetSchemaRegistryCluster(
+		requestContext,
 		&srv1.SchemaRegistryCluster{
-			AccountId: environment,
+			AccountId: c.Config.Auth.Account.Id,
 		})
 	if err != nil {
 		return "", err
 	}
-	switch len(existingClusters) {
-	case 0:
-		return "", nil
-	case 1:
-		endpoint := existingClusters[0].Endpoint
-		ctx.SchemaRegistryEndpoint = endpoint
-		err = c.Config.Save()
-		if err != nil {
-			return "", err
-		}
-		return endpoint, nil
-	default:
-		return "", fmt.Errorf("found multiple schema registries")
+
+	if existingCluster == nil {
+		return "", errors.Errorf("schema registry not found")
 	}
+	endpoint := existingCluster.Endpoint
+	srCluster.SchemaRegistryEndpoint = endpoint
+	err = c.Config.Save()
+	if err != nil {
+		return "", err
+	}
+	return endpoint, nil
 }
 
 // KafkaClusterConfig returns the overridden or current KafkaClusterConfig

@@ -121,7 +121,9 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 
 		// Schema Registry
 		// If srClient is nil, the function will look it up after prerunner verifies authentication. Exposed so tests can pass mocks
-		cli.AddCommand(schema_registry.New(prerunner, cfg, client.SchemaRegistry, ch, nil))
+		sr := schema_registry.New(prerunner, cfg, client.SchemaRegistry, ch, nil)
+		sr.Hidden = true
+		cli.AddCommand(sr)
 
 		conn = ksql.New(prerunner, cfg, ksqls.New(client, logger), kafkaClient, userClient, ch)
 		conn.Hidden = true // The ksql feature isn't finished yet, so let's hide it

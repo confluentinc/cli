@@ -374,7 +374,7 @@ func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {
 		close(input)
 	}()
 
-	key := ""
+	var key sarama.Encoder
 	for data := range input {
 		data = strings.TrimSpace(data)
 		if data == "" {
@@ -383,12 +383,12 @@ func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {
 
 		record := strings.SplitN(data, delim, 2)
 
-		value := record[len(record)-1]
+		value := sarama.StringEncoder(record[len(record)-1])
 		if len(record) == 2 {
-			key = record[0]
+			key = sarama.StringEncoder(record[0])
 		}
 
-		msg := &sarama.ProducerMessage{Topic: topic, Key: sarama.StringEncoder(key), Value: sarama.StringEncoder(value)}
+		msg := &sarama.ProducerMessage{Topic: topic, Key: key, Value: value}
 
 		_, offset, err := producer.SendMessage(msg)
 		if err != nil {
@@ -396,7 +396,7 @@ func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {
 		}
 
 		// Reset key prior to reuse
-		key = ""
+		key = nil
 		go scan()
 	}
 

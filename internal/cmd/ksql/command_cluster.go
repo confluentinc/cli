@@ -256,12 +256,6 @@ func (c *clusterCommand) configureACLs(cmd *cobra.Command, args []string) error 
 		return errors.HandleCommon(err, cmd)
 	}
 
-	// Ensure the Kafka Cluster is an Enterprise cluster
-	kafkaCluster, err = c.kafkaClient.Describe(ctx, kafkaCluster)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
 	// Ensure the KSQL cluster talks to the current Kafka Cluster
 	req := &ksqlv1.KSQLCluster{AccountId: c.config.Auth.Account.Id, Id: args[0]}
 	cluster, err := c.client.Describe(context.Background(), req)
@@ -270,12 +264,6 @@ func (c *clusterCommand) configureACLs(cmd *cobra.Command, args []string) error 
 	}
 	if cluster.KafkaClusterId != kafkaCluster.Id {
 		pcmd.Printf(cmd, "This KSQL cluster is not backed by the current Kafka cluster.")
-	}
-
-	// Ensure the Kafka Cluster is an Enterprise cluster
-	if !kafkaCluster.Enterprise {
-		pcmd.Printf(cmd, "The Kafka cluster is not an enterprise cluster. ACLs cannot be set.")
-		return nil
 	}
 
 	serviceAccountId, err := c.getServiceAccount(cluster)

@@ -31,12 +31,16 @@ func getSrCredentials() (key string, secret string, err error) {
 }
 
 func srContext(config *config.Config) (context.Context, error) {
-	if config.SrCredentials == nil || len(config.SrCredentials.Key) == 0 || len(config.SrCredentials.Secret) == 0 {
+	srCluster, err := config.SchemaRegistryCluster()
+	if err != nil {
+		return nil, err
+	}
+	if srCluster.SrCredentials == nil || len(srCluster.SrCredentials.Key) == 0 || len(srCluster.SrCredentials.Secret) == 0 {
 		key, secret, err := getSrCredentials()
 		if err != nil {
 			return nil, err
 		}
-		config.SrCredentials = &configPkg.APIKeyPair{
+		srCluster.SrCredentials = &configPkg.APIKeyPair{
 			Key:    key,
 			Secret: secret,
 		}
@@ -46,8 +50,8 @@ func srContext(config *config.Config) (context.Context, error) {
 		}
 	}
 	return context.WithValue(context.Background(), srsdk.ContextBasicAuth, srsdk.BasicAuth{
-		UserName: config.SrCredentials.Key,
-		Password: config.SrCredentials.Secret,
+		UserName: srCluster.SrCredentials.Key,
+		Password: srCluster.SrCredentials.Secret,
 	}), nil
 }
 
@@ -61,7 +65,7 @@ func SchemaRegistryClient(ch *pcmd.ConfigHelper) (client *srsdk.APIClient, ctx c
 	if ch.Config.Auth == nil {
 		return nil, nil, errors.Errorf("user must be authenticated to use Schema Registry")
 	}
-	srConfig.BasePath, err = ch.SchemaRegistryURL(ch.Config.Auth.Account.Id)
+	srConfig.BasePath, err = ch.SchemaRegistryURL(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
