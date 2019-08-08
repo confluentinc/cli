@@ -110,7 +110,7 @@ func (suite *ModeTestSuite) TestModeUpdate() {
 	req := require.New(suite.T())
 	req.Nil(err)
 	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
-	req.True(apiMock.GetTopLevelModeCalled())
+	req.True(apiMock.UpdateTopLevelModeCalled())
 }
 
 func TestModeSuite(t *testing.T) {
