@@ -9,7 +9,6 @@ import (
 )
 
 type modeCommand struct {
-	prerunner pcmd.PreRunner
 	*cobra.Command
 	config   *config.Config
 	ch       *pcmd.ConfigHelper

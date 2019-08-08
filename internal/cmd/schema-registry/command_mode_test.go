@@ -48,7 +48,6 @@ func (suite *ModeTestSuite) SetupSuite() {
 	suite.conf.Credentials[name] = &config.Credential{
 		Username: user.User.Email,
 	}
-	suite.conf.SrCredentials = &config.APIKeyPair{Key: "key", Secret: "secret"}
 
 	suite.conf.Contexts[name] = &config.Context{
 		Platform:      name,
@@ -58,6 +57,9 @@ func (suite *ModeTestSuite) SetupSuite() {
 	}
 
 	suite.conf.CurrentContext = name
+
+	srCluster, _ := suite.conf.SchemaRegistryCluster()
+	srCluster.SrCredentials = &config.APIKeyPair{Key: "key", Secret: "secret"}
 
 	suite.kafkaCluster = &kafkav1.KafkaCluster{
 		Id:         kafkaClusterID,
