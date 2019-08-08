@@ -20,7 +20,7 @@ func NewModeCommand(config *config.Config, ch *pcmd.ConfigHelper, srClient *srsd
 	compatCmd := &modeCommand{
 		Command: &cobra.Command{
 			Use:   "mode",
-			Short: "Manage Schema Registry compatibility.",
+			Short: "Update Schema Registry mode.",
 		},
 		config:   config,
 		ch:       ch,
@@ -37,11 +37,11 @@ func (c *modeCommand) init() {
 		Use:   "update <mode> [--subject <subject>]",
 		Short: "Update mode for Schema Registry.",
 		Example: `
-Update Schema Registry mode level to READWRITE, READONLY or IMPORT.
---subject is an optional flag used to specify mode level for a specific subject
+Update Top level mode or Subject level mode of schema registry.
 
 ::
-		ccloud schema-registry mode update --subject yourSubjectName IMPORT
+		ccloud schema-registry mode update READWRITE
+		ccloud schema-registry mode update --subject subjectname READWRITE
 `,
 		RunE: c.update,
 		Args: cobra.ExactArgs(1),
