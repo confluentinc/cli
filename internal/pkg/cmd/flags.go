@@ -9,7 +9,7 @@ import (
 )
 
 func GetKafkaCluster(cmd *cobra.Command, ch *ConfigHelper) (*kafkav1.KafkaCluster, error) {
-	clusterID, err := cmd.Flags().GetString("cluster")
+	clusterID, err := cmd.Flags().GetString("resource")
 	if err != nil {
 		return nil, err
 	}
@@ -21,7 +21,7 @@ func GetKafkaCluster(cmd *cobra.Command, ch *ConfigHelper) (*kafkav1.KafkaCluste
 }
 
 func GetKafkaClusterConfig(cmd *cobra.Command, ch *ConfigHelper) (*config.KafkaClusterConfig, error) {
-	clusterID, err := cmd.Flags().GetString("cluster")
+	clusterID, err := cmd.Flags().GetString("resource")
 	if err != nil {
 		return nil, err
 	}
