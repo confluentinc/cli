@@ -1,6 +1,7 @@
 package apikey
 
 import (
+	"context"
 	"fmt"
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
 	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
@@ -70,23 +71,31 @@ func (suite *APITestSuite) SetupSuite() {
 	}
 }
 
-////Require
-//func (suite *APITestSuite) SetupTest() {
-//
-//
-//	suite.apiMock = &mock.APIKey{
-//		CreateFunc: func(ctx  context.Context,apiKey *authv1.ApiKey) (*authv1.ApiKey, error) {
-//			return &authv1.ApiKey{"abracadabra"},nil
-//		},
-//		ListFunc: func(ctx  context.Context,apiKey *authv1.ApiKey) (*authv1.ApiKey, error) {
-//			return &authv1.ApiKey{"abracadabra"},nil
-//		},
-//		DeleteFunc: func(ctx  context.Context,apiKey *authv1.ApiKey) (*authv1.ApiKey, error) {
-//			return &authv1.ApiKey{"abracadabra"},nil
-//		},
-//	}
-//
-//}
+//Require
+func (suite *APITestSuite) SetupTest() {
+
+	suite.apiMock = &mock.APIKey{
+
+		CreateFunc: func(ctx context.Context, apiKey *authv1.ApiKey) (*authv1.ApiKey, error) {
+			return &authv1.ApiKey{
+				Key:    "abrcadabra",
+				Secret: "opensesame",
+			}, nil
+		},
+		DeleteFunc: func(ctx context.Context, apiKey *authv1.ApiKey) error {
+			return nil
+		},
+		ListFunc: func(ctx context.Context, apiKey *authv1.ApiKey) ([]*authv1.ApiKey, error) {
+			var apiKeys []*authv1.ApiKey
+			apiKeys = append(apiKeys, &authv1.ApiKey{
+				Key:    "abrcadabra",
+				Secret: "opensesame",
+			})
+			return apiKeys, nil
+		},
+	}
+
+}
 
 func (suite *APITestSuite) newCMD() *cobra.Command {
 	//client ccloud.APIKey, ch *pcmd.ConfigHelper, keystore keystore.KeyStore
