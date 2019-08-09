@@ -31,7 +31,6 @@ func (c *ConfigHelper) KafkaCluster(clusterID, environment string) (*kafkav1.Kaf
 }
 func (c *ConfigHelper) SchemaRegistry(resourceID, environment string) (*srv1.SchemaRegistryCluster, error) {
 
-	// Ask Mothership for SR cluster for logical cluster ID
 	existingCluster, err := c.Client.SchemaRegistry.GetSchemaRegistryCluster(
 		context.Background(),
 		&srv1.SchemaRegistryCluster{
