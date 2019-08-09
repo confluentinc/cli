@@ -104,7 +104,7 @@ Delete a service account with the ID ` + "``2786``" + `.
 
 ::
 
-    ccloud service-account delete --service-account-id 2786
+    ccloud service-account delete 2786
 
 `,
 		RunE: c.delete,

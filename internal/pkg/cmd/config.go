@@ -3,11 +3,13 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/version"
 	"strings"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
+	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -16,6 +18,7 @@ import (
 type ConfigHelper struct {
 	Config *config.Config
 	Client *ccloud.Client
+	*version.Version
 }
 
 // KafkaCluster returns the current kafka cluster context
@@ -25,6 +28,36 @@ func (c *ConfigHelper) KafkaCluster(clusterID, environment string) (*kafkav1.Kaf
 		return nil, err
 	}
 	return &kafkav1.KafkaCluster{AccountId: c.Config.Auth.Account.Id, Id: kafka.ID, ApiEndpoint: kafka.APIEndpoint}, nil
+}
+
+func (c *ConfigHelper) SchemaRegistryURL(requestContext context.Context) (string, error) {
+	srCluster, err := c.Config.SchemaRegistryCluster()
+	if err != nil {
+		return "", err
+	}
+	if srCluster.SchemaRegistryEndpoint != "" {
+		return srCluster.SchemaRegistryEndpoint, nil
+	}
+
+	// Didn't find it -- ask the mothership
+	existingCluster, err := c.Client.SchemaRegistry.GetSchemaRegistryCluster(
+		requestContext,
+		&srv1.SchemaRegistryCluster{
+			AccountId: c.Config.Auth.Account.Id,
+		})
+	if err != nil {
+		return "", err
+	}
+	if existingCluster == nil {
+		return "", errors.Errorf("schema registry not found")
+	}
+	endpoint := existingCluster.Endpoint
+	srCluster.SchemaRegistryEndpoint = endpoint
+	err = c.Config.Save()
+	if err != nil {
+		return "", err
+	}
+	return endpoint, nil
 }
 
 // KafkaClusterConfig returns the overridden or current KafkaClusterConfig

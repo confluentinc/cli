@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"github.com/confluentinc/cli/internal/cmd/schema-registry"
 	"os"
 
 	"github.com/DABH/go-basher"
@@ -22,6 +21,7 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/ksql"
 	"github.com/confluentinc/cli/internal/cmd/local"
 	ps1 "github.com/confluentinc/cli/internal/cmd/prompt"
+	"github.com/confluentinc/cli/internal/cmd/schema-registry"
 	"github.com/confluentinc/cli/internal/cmd/secret"
 	"github.com/confluentinc/cli/internal/cmd/service-account"
 	"github.com/confluentinc/cli/internal/cmd/update"
@@ -75,7 +75,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 
 	client := ccloud.NewClientWithJWT(context.Background(), cfg.AuthToken, cfg.AuthURL, cfg.Logger)
 
-	ch := &pcmd.ConfigHelper{Config: cfg, Client: client}
+	ch := &pcmd.ConfigHelper{Config: cfg, Client: client, Version: ver}
 	fs := &io.RealFileSystem{}
 
 	prerunner := &pcmd.PreRun{
@@ -120,7 +120,8 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		cli.AddCommand(kafka.New(prerunner, cfg, kafkaClient, ch))
 
 		// Schema Registry
-		sr := schema_registry.New(prerunner, cfg, client.SchemaRegistry)
+		// If srClient is nil, the function will look it up after prerunner verifies authentication. Exposed so tests can pass mocks
+		sr := schema_registry.New(prerunner, cfg, client.SchemaRegistry, ch, nil)
 		sr.Hidden = true
 		cli.AddCommand(sr)
 

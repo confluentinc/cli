@@ -1,16 +1,14 @@
 package cmd
 
 import (
-	"github.com/jonboulle/clockwork"
-	"github.com/spf13/cobra"
-	"gopkg.in/square/go-jose.v2/jwt"
-
 	"github.com/confluentinc/ccloud-sdk-go"
-
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/update"
+	"github.com/jonboulle/clockwork"
+	"github.com/spf13/cobra"
+	"gopkg.in/square/go-jose.v2/jwt"
 )
 
 // PreRun is a helper class for automatically setting up Cobra PersistentPreRun commands
