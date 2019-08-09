@@ -16,7 +16,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/keystore"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	//srutil "github.com/confluentinc/cli/internal/cmd/schema-registry"
 )
 
@@ -38,7 +37,6 @@ type command struct {
 	client   ccloud.APIKey
 	ch       *pcmd.ConfigHelper
 	ccClient ccsdk.SchemaRegistry
-	srClient *srsdk.APIClient
 	keystore keystore.KeyStore
 }
 
@@ -73,7 +71,6 @@ func (c *command) init() {
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	}
-	//listCmd.Flags().String("cluster", "", "The cluster ID.")
 	listCmd.Flags().String("resource", "", "Resource ID: Logical cluster ID")
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
@@ -84,7 +81,6 @@ func (c *command) init() {
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
 	}
-	createCmd.Flags().String("cluster", "", "The cluster ID.")
 	createCmd.Flags().String("resource", "", "Resource ID: Logical cluster ID for Schema Registry")
 	createCmd.Flags().Int32("service-account-id", 0, "Service account ID. If not specified, the API key will have full access on the cluster.")
 	createCmd.Flags().String("description", "", "Description of API key.")
@@ -115,7 +111,7 @@ func (c *command) init() {
 		RunE:  c.store,
 		Args:  cobra.ExactArgs(2),
 	}
-	storeCmd.Flags().String("cluster", "", "The cluster ID.")
+	storeCmd.Flags().String("resource", "", "The resource ID.")
 	storeCmd.Flags().BoolP("force", "f", false, "Force overwrite existing secret for this key.")
 	storeCmd.Flags().SortFlags = false
 	c.AddCommand(storeCmd)
@@ -126,7 +122,7 @@ func (c *command) init() {
 		RunE:  c.use,
 		Args:  cobra.ExactArgs(1),
 	}
-	useCmd.Flags().String("cluster", "", "The cluster ID.")
+	useCmd.Flags().String("resource", "", "The resource ID.")
 	useCmd.Flags().SortFlags = false
 	c.AddCommand(useCmd)
 }
@@ -134,6 +130,7 @@ func (c *command) init() {
 func (c *command) srClusterInfo(cmd *cobra.Command, args []string) (accId string, clusterId string, currentKey string, err error) {
 	src, err := pcmd.GetSchemaRegistry(cmd, c.ch)
 	if err != nil {
+		pcmd.Println(cmd, "Schema Registry not set up")
 		return "", "", "", errors.HandleCommon(err, cmd)
 	}
 	clusterInContext, err := c.config.SchemaRegistryCluster()
@@ -238,13 +235,14 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 
 	var Type string
 	var clusterId string
+	var accId string
 
 	if strings.HasPrefix(resource, "lsrc-") {
 		pcmd.Println(cmd, "lsrc")
-		_, clusterId, _, err = c.srClusterInfo(cmd, args)
+		accId, clusterId, _, err = c.srClusterInfo(cmd, args)
 		Type = "schema_registry"
 	} else if strings.HasPrefix(resource, "lkc-") {
-		_, clusterId, _, err = c.kafkaClusterInfo(cmd, args)
+		accId, clusterId, _, err = c.kafkaClusterInfo(cmd, args)
 		Type = "kafka"
 	} else {
 		return errors.New("Invalid Logical cluster ID")
@@ -268,7 +266,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	key := &authv1.ApiKey{
 		UserId:          userId,
 		Description:     description,
-		AccountId:       c.config.Auth.Account.Id,
+		AccountId:       accId,
 		LogicalClusters: []*authv1.ApiKey_Cluster{{Id: clusterId, Type: Type}},
 	}
 
