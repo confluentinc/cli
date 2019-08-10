@@ -93,7 +93,7 @@ func (c *command) enable(cmd *cobra.Command, args []string) error {
 		// this hardcoded string constant
 		Name: "account schema-registry",
 	}
-	pcmd.Println(cmd, kafkaClusterId+accountId+serviceProvider)
+
 	newCluster, err := c.ccClient.CreateSchemaRegistryCluster(ctx, clusterConfig)
 	if err != nil {
 		// If it already exists, return the existing one
@@ -104,7 +104,7 @@ func (c *command) enable(cmd *cobra.Command, args []string) error {
 			return errors.HandleCommon(getExistingErr, cmd)
 		}
 		if len(existingClusters) > 0 {
-			pcmd.Println(cmd, "Cluster already exists:")
+			pcmd.Println(cmd, "Schema Registry already enabled:")
 			for _, cluster := range existingClusters {
 				pcmd.Println(cmd, "Cluster ID: "+cluster.Id)
 				pcmd.Println(cmd, "Endpoint: "+cluster.Endpoint)
@@ -114,7 +114,7 @@ func (c *command) enable(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	pcmd.Println(cmd, "Cluster already exists:")
+	pcmd.Println(cmd, "Schema Registry enabled:")
 	pcmd.Println(cmd, "Cluster ID: "+newCluster.Id)
 	pcmd.Println(cmd, "Endpoint: "+newCluster.Endpoint)
 
