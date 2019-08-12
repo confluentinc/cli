@@ -114,6 +114,7 @@ func (c *command) enable(cmd *cobra.Command, args []string) error {
 	newCluster, err := c.ccClient.CreateSchemaRegistryCluster(ctx, clusterConfig)
 	if err != nil {
 		// If it already exists, return the existing one
+
 		existingClusters, getExistingErr := c.ccClient.GetSchemaRegistryClusters(ctx, &srv1.SchemaRegistryCluster{
 			AccountId: accountId,
 		})
