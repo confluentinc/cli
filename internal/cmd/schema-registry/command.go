@@ -25,13 +25,14 @@ type command struct {
 }
 
 type describeDisplay struct {
-	Name          string
-	ID            string
-	URL           string
-	Used          string
-	Available     string
-	Compatibility string
-	Mode          string
+	Name            string
+	ID              string
+	URL             string
+	Used            string
+	Available       string
+	Compatibility   string
+	Mode            string
+	ServiceProvider string
 }
 
 func New(prerunner pcmd.PreRunner, config *config.Config, ccloudClient ccsdk.SchemaRegistry, ch *pcmd.ConfigHelper, srClient *srsdk.APIClient, metricClient *ccsdk.Metrics) *cobra.Command {
@@ -150,8 +151,8 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 
 	ctx := context.Background()
 	var data describeDisplay
-	fields := []string{"Name", "ID", "URL", "Used", "Available", "Compatibility", "Mode"}
-	renames := map[string]string{"ID": "Logical Cluster ID", "URL": "Endpoint URL", "Used": "Used Schemas", "Available": "Available Schemas", "Compatibility": "Global Compatibility"}
+	fields := []string{"Name", "ID", "URL", "Used", "Available", "Compatibility", "Mode", "ServiceProvider"}
+	renames := map[string]string{"ID": "Logical Cluster ID", "URL": "Endpoint URL", "Used": "Used Schemas", "Available": "Available Schemas", "Compatibility": "Global Compatibility", "ServiceProvider": "Service Provider"}
 
 	// Collect the parameters
 	accountId, err := pcmd.GetEnvironment(cmd, c.config)
@@ -189,6 +190,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 			data.Name = cluster.Name
 			data.ID = cluster.Id
 			data.URL = cluster.Endpoint
+			data.ServiceProvider = getServiceProviderFromUrl(data.URL)
 			data.Used = strconv.Itoa(int(metrics.NumSchemas))
 			data.Available = strconv.Itoa(int(cluster.MaxSchemas) - int(metrics.NumSchemas))
 			data.Compatibility = compatibilityResponse.CompatibilityLevel
@@ -200,5 +202,4 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	return nil
-
 }

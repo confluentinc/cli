@@ -6,6 +6,7 @@ import (
 	"github.com/confluentinc/go-printer"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
+	"strings"
 )
 
 const (
@@ -37,4 +38,14 @@ func PrintVersions(versions []int32) {
 func RequireSubjectFlag(cmd *cobra.Command) {
 	cmd.Flags().StringP("subject", "S", "", SubjectUsage)
 	_ = cmd.MarkFlagRequired("subject")
+}
+
+func getServiceProviderFromUrl(url string) string {
+	var serviceProvider string
+	if strings.Contains(url, ".aws.") {
+		serviceProvider = "AWS"
+	} else if strings.Contains(url, ".gcp.") {
+		serviceProvider = "GCP"
+	}
+	return serviceProvider
 }
