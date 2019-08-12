@@ -30,18 +30,16 @@ func (c *ConfigHelper) KafkaCluster(clusterID, environment string) (*kafkav1.Kaf
 	return &kafkav1.KafkaCluster{AccountId: c.Config.Auth.Account.Id, Id: kafka.ID, ApiEndpoint: kafka.APIEndpoint}, nil
 }
 func (c *ConfigHelper) SchemaRegistry(resourceID, environment string) (*srv1.SchemaRegistryCluster, error) {
-
-	existingCluster, err := c.Client.SchemaRegistry.GetSchemaRegistryCluster(
+	existingClusters, err := c.Client.SchemaRegistry.GetSchemaRegistryClusters(
 		context.Background(),
 		&srv1.SchemaRegistryCluster{
 			Id:        resourceID,
 			AccountId: environment,
 		})
-
 	if err != nil {
 		return nil, err
 	}
-	return existingCluster, nil
+	return existingClusters[0], nil
 }
 
 func (c *ConfigHelper) SchemaRegistryURL(requestContext context.Context) (string, error) {
