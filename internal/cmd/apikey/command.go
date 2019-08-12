@@ -80,7 +80,7 @@ func (c *command) init() {
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
 	}
-	createCmd.Flags().String("resource", "", "Resource ID: Logical cluster ID for Schema Registry")
+	createCmd.Flags().String("resource", "", "Resource ID: Logical cluster ID")
 	createCmd.Flags().Int32("service-account-id", 0, "Service account ID. If not specified, the API key will have full access on the cluster.")
 	createCmd.Flags().String("description", "", "Description of API key.")
 	createCmd.Flags().SortFlags = false
