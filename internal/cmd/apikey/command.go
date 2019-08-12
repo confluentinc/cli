@@ -16,7 +16,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/keystore"
-	//srutil "github.com/confluentinc/cli/internal/cmd/schema-registry"
 )
 
 const longDescription = `Use this command to register an API secret created by another
@@ -125,25 +124,6 @@ func (c *command) init() {
 	useCmd.Flags().String("resource", "", "The resource ID.")
 	useCmd.Flags().SortFlags = false
 	c.AddCommand(useCmd)
-}
-
-func (c *command) srClusterInfo(cmd *cobra.Command, args []string) (accId string, clusterId string, currentKey string, err error) {
-	src, err := pcmd.GetSchemaRegistry(cmd, c.ch)
-	if err != nil {
-		pcmd.Println(cmd, "Schema Registry not set up")
-		return "", "", "", errors.HandleCommon(err, cmd)
-	}
-	clusterInContext, err := c.config.SchemaRegistryCluster()
-	return src.Id, src.Id, clusterInContext.SrCredentials.Key, nil
-}
-
-func (c *command) kafkaClusterInfo(cmd *cobra.Command, args []string) (accId string, clusterId string, currentKey string, err error) {
-	kcc, err := pcmd.GetKafkaClusterConfig(cmd, c.ch)
-
-	if err != nil {
-		return "", "", "", errors.HandleCommon(err, cmd)
-	}
-	return c.config.Auth.Account.Id, kcc.ID, kcc.APIKey, nil
 }
 
 func (c *command) list(cmd *cobra.Command, args []string) error {
