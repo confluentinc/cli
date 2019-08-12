@@ -143,7 +143,6 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	var apiKeys []*authv1.ApiKey
 
 	if strings.HasPrefix(resource, "lsrc-") {
-		pcmd.Println(cmd, "lsrc")
 		accId, clusterId, currentKey, err = c.srClusterInfo(cmd, args)
 	} else if strings.HasPrefix(resource, "lkc-") {
 		accId, clusterId, currentKey, err = c.kafkaClusterInfo(cmd, args)
@@ -218,7 +217,6 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	var accId string
 
 	if strings.HasPrefix(resource, "lsrc-") {
-		pcmd.Println(cmd, "lsrc")
 		accId, clusterId, _, err = c.srClusterInfo(cmd, args)
 		Type = "schema_registry"
 	} else if strings.HasPrefix(resource, "lkc-") {
