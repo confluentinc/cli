@@ -20,7 +20,7 @@ func (c *command) srClusterInfo(cmd *cobra.Command, args []string) (accId string
 		currentKey = clusterInContext.SrCredentials.Key
 	}
 
-	return src.Id, src.Id, currentKey, nil
+	return src.AccountId, src.Id, currentKey, nil
 }
 
 func (c *command) kafkaClusterInfo(cmd *cobra.Command, args []string) (accId string, clusterId string, currentKey string, err error) {
