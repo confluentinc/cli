@@ -21,13 +21,11 @@ import (
 )
 
 var (
-	Auth0Domain      = "login.confluent.io"
-	Auth0ClientID    = "Z1Pnpscwhl5WgcEdhP3ec2O307D6HfKg"
-	Auth0CallbackURL = "http://127.0.0.1:26635/callback"
-	Auth0Identifier  = "https://confluent.auth0.com/api/v2/"
-	Auth0State       = "ConfluentCLI"
-
-	bgErr = *new(error)
+	SSOProviderDomain      = "login.confluent.io"
+	SSOProviderClientID    = "Z1Pnpscwhl5WgcEdhP3ec2O307D6HfKg"
+	SSOProviderCallbackURL = "http://127.0.0.1:26635/callback"
+	SSOProviderIdentifier  = "https://confluent.auth0.com/api/v2/"
+	SSOProviderState       = "ConfluentCLI"
 )
 
 /*
@@ -35,12 +33,13 @@ AuthServer is an HTTP server embedded in the CLI to serve callback requests for 
 The server runs in a goroutine / in the background.
 */
 type AuthServer struct {
-	server                  *http.Server
-	wg                      *sync.WaitGroup
-	CodeVerifier            string
-	CodeChallenge           string
-	Auth0AuthenticationCode string
-	Auth0IDToken            string
+	server                        *http.Server
+	wg                            *sync.WaitGroup
+	bgErr                         error
+	CodeVerifier                  string
+	CodeChallenge                 string
+	SSOProviderAuthenticationCode string
+	SSOProviderIDToken            string
 }
 
 // GenerateCodes makes code variables for use with Auth0
@@ -78,9 +77,9 @@ func (s *AuthServer) initializeInternalVariables(authURL string) {
 	}
 
 	if env == "devel" || env == "stag" {
-		Auth0Domain = "login.confluent-dev.io"
-		Auth0ClientID = "yKJfeHs2o7PdEhxDmPIqflWNE6cPieqm"
-		Auth0Identifier = "https://confluent-dev.auth0.com/api/v2/"
+		SSOProviderDomain = "login.confluent-dev.io"
+		SSOProviderClientID = "yKJfeHs2o7PdEhxDmPIqflWNE6cPieqm"
+		SSOProviderIdentifier = "https://confluent-dev.auth0.com/api/v2/"
 	}
 }
 
@@ -120,15 +119,15 @@ func (s *AuthServer) Start(authURL string) error {
 
 // GetAuthorizationCode takes the code verifier/challenge and gets an authorization code from Auth0
 func (s *AuthServer) GetAuthorizationCode(auth0ConnectionName string) error {
-	url := "https://" + Auth0Domain + "/authorize?" +
+	url := "https://" + SSOProviderDomain + "/authorize?" +
 		"response_type=code" +
 		"&code_challenge=" + s.CodeChallenge +
 		"&code_challenge_method=S256" +
-		"&client_id=" + Auth0ClientID +
-		"&redirect_uri=" + Auth0CallbackURL +
+		"&client_id=" + SSOProviderClientID +
+		"&redirect_uri=" + SSOProviderCallbackURL +
 		"&scope=email%20openid" +
-		"&audience=" + Auth0Identifier +
-		"&state=" + Auth0State
+		"&audience=" + SSOProviderIdentifier +
+		"&state=" + SSOProviderState
 	if auth0ConnectionName != "" {
 		url += "&connection=" + auth0ConnectionName
 	}
@@ -141,7 +140,7 @@ func (s *AuthServer) GetAuthorizationCode(auth0ConnectionName string) error {
 	// Wait until flow is finished / callback is called (or timeout...)
 	go func() {
 		time.Sleep(30 * time.Second)
-		bgErr = errors.New("timed out while waiting for browser authentication to occur; please try logging in again")
+		s.bgErr = errors.New("timed out while waiting for browser authentication to occur; please try logging in again")
 		s.server.Close()
 		s.wg.Done()
 	}()
@@ -154,7 +153,7 @@ func (s *AuthServer) GetAuthorizationCode(auth0ConnectionName string) error {
 		}
 	}()
 
-	return bgErr
+	return s.bgErr
 }
 
 // CallbackHandler serves the route /callback
@@ -163,9 +162,9 @@ func (s *AuthServer) CallbackHandler(rw http.ResponseWriter, request *http.Reque
 
 	codes, ok := request.URL.Query()["code"]
 	if ok {
-		s.Auth0AuthenticationCode = codes[0]
+		s.SSOProviderAuthenticationCode = codes[0]
 	} else {
-		bgErr = errors.New("authentication callback URL did not contain code parameter in query string, login will fail")
+		s.bgErr = errors.New("authentication callback URL did not contain code parameter in query string, login will fail")
 	}
 
 	s.wg.Done()
@@ -173,12 +172,12 @@ func (s *AuthServer) CallbackHandler(rw http.ResponseWriter, request *http.Reque
 
 // GetAuth0Token exchanges the obtained Auth0 authorization code for an auth/ID token from Auth0
 func (s *AuthServer) GetAuth0Token() error {
-	url := "https://" + Auth0Domain + "/oauth/token"
+	url := "https://" + SSOProviderDomain + "/oauth/token"
 	payload := strings.NewReader("grant_type=authorization_code" +
-		"&client_id=" + Auth0ClientID +
+		"&client_id=" + SSOProviderClientID +
 		"&code_verifier=" + s.CodeVerifier +
-		"&code=" + s.Auth0AuthenticationCode +
-		"&redirect_uri=" + Auth0CallbackURL)
+		"&code=" + s.SSOProviderAuthenticationCode +
+		"&redirect_uri=" + SSOProviderCallbackURL)
 	req, err := http.NewRequest("POST", url, payload)
 	if err != nil {
 		return errors.Wrap(err, "failed to construct oauth token request")
@@ -200,7 +199,7 @@ func (s *AuthServer) GetAuth0Token() error {
 
 	token, ok := data["id_token"]
 	if ok {
-		s.Auth0IDToken = token.(string)
+		s.SSOProviderIDToken = token.(string)
 	} else {
 		return errors.New("oauth token response body did not contain id_token field")
 	}

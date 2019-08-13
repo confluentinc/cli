@@ -134,7 +134,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 			return errors.HandleCommon(err, cmd)
 		}
 
-		token, err = client.Auth.Login(context.Background(), server.Auth0IDToken, "", "")
+		token, err = client.Auth.Login(context.Background(), server.SSOProviderIDToken, "", "")
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
