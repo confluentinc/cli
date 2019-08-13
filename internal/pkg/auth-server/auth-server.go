@@ -163,7 +163,10 @@ func (s *AuthServer) GetAuth0Token() error {
 		"&code_verifier=" + s.CodeVerifier +
 		"&code=" + s.Auth0AuthenticationCode +
 		"&redirect_uri=" + Auth0CallbackURL)
-	req, _ := http.NewRequest("POST", url, payload)
+	req, err := http.NewRequest("POST", url, payload)
+	if err != nil {
+		return errors.Wrap(err, "failed to construct oauth token request")
+	}
 	req.Header.Add("content-type", "application/x-www-form-urlencoded")
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
