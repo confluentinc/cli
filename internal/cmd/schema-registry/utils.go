@@ -42,6 +42,9 @@ func RequireSubjectFlag(cmd *cobra.Command) {
 
 func getServiceProviderFromUrl(url string) string {
 	var serviceProvider string
+	if url == "" {
+		return ""
+	}
 	if strings.Contains(url, ".aws.") {
 		serviceProvider = "AWS"
 	} else if strings.Contains(url, ".gcp.") {
