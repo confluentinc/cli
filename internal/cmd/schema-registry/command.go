@@ -7,6 +7,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
 	"strings"
 )
@@ -15,9 +16,11 @@ type command struct {
 	*cobra.Command
 	config   *config.Config
 	ccClient ccsdk.SchemaRegistry
+	srClient *srsdk.APIClient
+	ch       *pcmd.ConfigHelper
 }
 
-func New(prerunner pcmd.PreRunner, config *config.Config, ccloudClient ccsdk.SchemaRegistry) *cobra.Command {
+func New(prerunner pcmd.PreRunner, config *config.Config, ccloudClient ccsdk.SchemaRegistry, ch *pcmd.ConfigHelper, srClient *srsdk.APIClient) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:               "schema-registry",
@@ -26,6 +29,8 @@ func New(prerunner pcmd.PreRunner, config *config.Config, ccloudClient ccsdk.Sch
 		},
 		config:   config,
 		ccClient: ccloudClient,
+		ch:       ch,
+		srClient: srClient,
 	}
 	cmd.init()
 	return cmd.Command
@@ -39,13 +44,17 @@ func (c *command) init() {
 		RunE:    c.enable,
 		Args:    cobra.NoArgs,
 	}
-	createCmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	createCmd.Flags().String("cloud", "", "Cloud provider ('aws', 'azure', or 'gcp').")
+	createCmd.Flags().String("cluster", "", "Kafka cluster ID")
+	_ = createCmd.MarkFlagRequired("cluster")
+	createCmd.Flags().String("cloud", "", "Cloud provider (e.g. 'aws', 'azure', or 'gcp')")
 	_ = createCmd.MarkFlagRequired("cloud")
-	createCmd.Flags().String("geo", "", "Either 'us', 'eu', or 'apac' (only applies to Enterprise accounts).")
+	createCmd.Flags().String("geo", "", "Either 'us', 'eu', or 'apac' (only applies to Enterprise accounts)")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
+	c.AddCommand(NewModeCommand(c.config, c.ch, c.srClient))
 
+	c.AddCommand(NewSchemaCommand(c.config, c.ch, c.srClient))
+	c.AddCommand(NewCompatibilityCommand(c.config, c.ch, c.srClient))
 }
 
 func (c *command) enable(cmd *cobra.Command, args []string) error {

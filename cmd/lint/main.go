@@ -44,6 +44,7 @@ var (
 		linter.ExcludeCommandContains("api-key update", "api-key delete"),
 		// this doesn't need a --cluster
 		linter.ExcludeCommandContains("secret"),
+		linter.ExcludeCommandContains("schema-registry"),
 	}
 )
 

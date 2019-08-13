@@ -2,4 +2,5 @@ credentials: ""
 kafka_cluster: bob
 kafka_clusters: null
 platform: ""
+schema_registry_cluster: null
 
