@@ -263,7 +263,7 @@ func (a *commands) credentials(cmd *cobra.Command, userField string, cloudClient
 		email = strings.TrimSpace(emailFromPrompt)
 	}
 
-	a.Logger.Trace("Successfully obtained email " + email)
+	a.Logger.Trace("Successfully obtained email")
 
 	if cloudClient != nil {
 		// If SSO user, don't prompt for password
