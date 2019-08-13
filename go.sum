@@ -74,6 +74,8 @@ github.com/confluentinc/go-printer v0.10.0/go.mod h1:bOK/pPNm4ao7bZIcRnGPGca1B64
 github.com/confluentinc/mds-sdk-go v0.0.0-20190610045202-137cf78b1f6a h1:1rhv9IcTT1xA7wO7ES4CJIK+PhuIqnFfZ2zcwoWAf3g=
 github.com/confluentinc/mds-sdk-go v0.0.0-20190610045202-137cf78b1f6a/go.mod h1:ouhJcNrAtQCtywN7BHDkpnl2Aaf7lDD157IzFDNVRao=
 github.com/confluentinc/protoc-gen-ccloud v0.0.0-20190122202943-91a08616afd2/go.mod h1:RL4B2sjziJsuvLS6nkpqJha7026Wl3aaN4cXMSDYoc4=
+github.com/confluentinc/protoc-gen-ccloud v0.0.1/go.mod h1:pDn9xwYsW8QvxGpwJ9CaomgtYBpx7FgdonHVmCo5yRo=
+github.com/confluentinc/prototools v0.0.1/go.mod h1:ycwwz5+n4KxCfEKvkF5uC21S5wKtkHKcUD7OWCOGG3k=
 github.com/confluentinc/prototools v0.0.2-0.20190205163623-ca587b85ed4e/go.mod h1:ycwwz5+n4KxCfEKvkF5uC21S5wKtkHKcUD7OWCOGG3k=
 github.com/confluentinc/schema-registry-sdk-go v0.0.7 h1:94JJNNiuObevR7sqXnPm/9BgwxT2e/9WadCIZ3MYzrc=
 github.com/confluentinc/schema-registry-sdk-go v0.0.7/go.mod h1:a6uMMyRGCSzFfFBQhUZoL6c3OFxX87EiVj5gyvWLZsA=
