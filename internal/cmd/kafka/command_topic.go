@@ -377,9 +377,6 @@ func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {
 	var key sarama.Encoder
 	for data := range input {
 		data = strings.TrimSpace(data)
-		if data == "" {
-			continue
-		}
 
 		record := strings.SplitN(data, delim, 2)
 
