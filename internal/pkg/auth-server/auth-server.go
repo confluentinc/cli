@@ -103,7 +103,7 @@ func (s *AuthServer) GetAuthorizationCode(auth0ConnectionName string) error {
 		"code_challenge_method=S256&" +
 		"client_id=" + Auth0ClientID + "&" +
 		"redirect_uri=" + Auth0CallbackURL + "&" +
-		"scope=openid&" +
+		"scope=email%20openid&" +
 		"audience=" + Auth0Identifier + "&" +
 		"state=" + Auth0State
 	if auth0ConnectionName != "" {
