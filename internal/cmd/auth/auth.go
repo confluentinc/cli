@@ -256,6 +256,8 @@ func (a *commands) credentials(cmd *cobra.Command, userField string, cloudClient
 
 	a.Logger.Trace("Successfully obtained email")
 
+	// In the case of MDS login (`confluent`) or in the case of some of the mocks,
+	// cloudClient will be nll, so we need this check
 	if cloudClient != nil {
 		// If SSO user, don't prompt for password
 		userSSO, err := cloudClient.User.CheckEmail(context.Background(), &orgv1.User{Email: email})
