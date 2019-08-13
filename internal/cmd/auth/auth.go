@@ -98,15 +98,6 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	}
 	a.config.AuthURL = url
 
-	// Auth configs change for Confluent internal development usage...
-	env := "prod"
-	if strings.Contains(a.config.AuthURL, "devel.cpdev.cloud") {
-		env = "devel"
-	}
-	if strings.Contains(a.config.AuthURL, "stag.cpdev.cloud") {
-		env = "stag"
-	}
-
 	client := a.anonHTTPClientFactory(a.config.AuthURL, a.config.Logger)
 	email, password, err := a.credentials(cmd, "Email", client)
 	if err != nil {
@@ -126,7 +117,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	if userSSO != nil && userSSO.Sso != nil && userSSO.Sso.Enabled && userSSO.Sso.Auth0ConnectionName != "" {
 		// Be conservative: only bother trying to launch server if we have to
 		server := &auth_server.AuthServer{}
-		err = server.Start(env)
+		err = server.Start(a.config.AuthURL)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}

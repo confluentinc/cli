@@ -64,13 +64,29 @@ func (s *AuthServer) GenerateCodes() error {
 	return nil
 }
 
-// Start begins the server including attempting to bind the desired TCP port
-func (s *AuthServer) Start(env string) error {
+// initializeInternalVariables is an internal function used to tweak
+// certain variables for internal development and testing of the CLI's
+// auth server / SSO integration.
+func (s *AuthServer) initializeInternalVariables(authURL string) {
+	// Auth configs change for Confluent internal development usage...
+	env := "prod"
+	if strings.Contains(authURL, "devel.cpdev.cloud") {
+		env = "devel"
+	}
+	if strings.Contains(authURL, "stag.cpdev.cloud") {
+		env = "stag"
+	}
+
 	if env == "devel" || env == "stag" {
 		Auth0Domain = "login.confluent-dev.io"
 		Auth0ClientID = "yKJfeHs2o7PdEhxDmPIqflWNE6cPieqm"
 		Auth0Identifier = "https://confluent-dev.auth0.com/api/v2/"
 	}
+}
+
+// Start begins the server including attempting to bind the desired TCP port
+func (s *AuthServer) Start(authURL string) error {
+	s.initializeInternalVariables(authURL)
 
 	err := s.GenerateCodes()
 	if err != nil {
