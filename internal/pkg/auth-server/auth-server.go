@@ -29,7 +29,7 @@ var (
 )
 
 /*
-AuthServer is an HTTP server embedded in the CLI to serve callback requests for Auth0 SSO logins.
+AuthServer is an HTTP server embedded in the CLI to serve callback requests for SSO logins.
 The server runs in a goroutine / in the background.
 */
 type AuthServer struct {
@@ -42,7 +42,7 @@ type AuthServer struct {
 	SSOProviderIDToken            string
 }
 
-// GenerateCodes makes code variables for use with Auth0
+// GenerateCodes makes code variables for use with the Authorization Code + PKCE flow
 func (s *AuthServer) GenerateCodes() error {
 	randomBytes := make([]byte, 32)
 
@@ -117,8 +117,8 @@ func (s *AuthServer) Start(authURL string) error {
 	return nil
 }
 
-// GetAuthorizationCode takes the code verifier/challenge and gets an authorization code from Auth0
-func (s *AuthServer) GetAuthorizationCode(auth0ConnectionName string) error {
+// GetAuthorizationCode takes the code verifier/challenge and gets an authorization code from the SSO provider
+func (s *AuthServer) GetAuthorizationCode(ssoProviderConnectionName string) error {
 	url := "https://" + SSOProviderDomain + "/authorize?" +
 		"response_type=code" +
 		"&code_challenge=" + s.CodeChallenge +
@@ -128,8 +128,8 @@ func (s *AuthServer) GetAuthorizationCode(auth0ConnectionName string) error {
 		"&scope=email%20openid" +
 		"&audience=" + SSOProviderIdentifier +
 		"&state=" + SSOProviderState
-	if auth0ConnectionName != "" {
-		url += "&connection=" + auth0ConnectionName
+	if ssoProviderConnectionName != "" {
+		url += "&connection=" + ssoProviderConnectionName
 	}
 
 	err := browser.OpenURL(url)
@@ -170,8 +170,8 @@ func (s *AuthServer) CallbackHandler(rw http.ResponseWriter, request *http.Reque
 	s.wg.Done()
 }
 
-// GetAuth0Token exchanges the obtained Auth0 authorization code for an auth/ID token from Auth0
-func (s *AuthServer) GetAuth0Token() error {
+// GetOAuthToken exchanges the obtained authorization code for an auth/ID token from the SSO provider
+func (s *AuthServer) GetOAuthToken() error {
 	url := "https://" + SSOProviderDomain + "/oauth/token"
 	payload := strings.NewReader("grant_type=authorization_code" +
 		"&client_id=" + SSOProviderClientID +

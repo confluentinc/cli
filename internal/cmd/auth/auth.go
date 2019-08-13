@@ -128,8 +128,8 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 			return errors.HandleCommon(err, cmd)
 		}
 
-		// Exchange authorization code for Auth0 token
-		err := server.GetAuth0Token()
+		// Exchange authorization code for OAuth token from SSO orovider
+		err := server.GetOAuthToken()
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
@@ -261,7 +261,7 @@ func (a *commands) credentials(cmd *cobra.Command, userField string, cloudClient
 		userSSO, err := cloudClient.User.CheckEmail(context.Background(), &orgv1.User{Email: email})
 		// Fine to ignore non-nil err for this request: e.g. what if this fails due to invalid/malicious
 		// email, we want to silently continue and give the illusion of password prompt.
-		// If Auth0ConnectionName is blank (local Auth0 user) still prompt for password
+		// If Auth0ConnectionName is blank ("local" user) still prompt for password
 		if err == nil && userSSO != nil && userSSO.Sso != nil && userSSO.Sso.Enabled && userSSO.Sso.Auth0ConnectionName != "" {
 			a.Logger.Trace("User is SSO-enabled so won't prompt for password")
 			return email, password, nil
