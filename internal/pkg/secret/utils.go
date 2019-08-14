@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/magiconair/properties"
+	"github.com/confluentinc/properties"
 )
 
 var dataRegex = regexp.MustCompile(DATA_PATTERN)

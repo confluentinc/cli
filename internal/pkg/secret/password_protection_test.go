@@ -10,8 +10,8 @@ import (
 	"testing"
 
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/properties"
 	"github.com/jonboulle/clockwork"
-	"github.com/magiconair/properties"
 	"github.com/stretchr/testify/require"
 )
 

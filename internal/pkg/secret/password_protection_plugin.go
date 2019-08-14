@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/confluentinc/properties"
 	"github.com/jonboulle/clockwork"
-	"github.com/magiconair/properties"
 
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
