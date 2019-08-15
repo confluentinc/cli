@@ -227,7 +227,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	pcmd.Println(cmd, "Save the API key and secret. The key/secret is not retrievable later.")
+	pcmd.Println(cmd, "Save the API key and secret. The secret is not retrievable later.")
 	err = printer.RenderTableOut(userKey, createFields, createRenames, os.Stdout)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
