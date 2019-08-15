@@ -141,6 +141,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	var accId string
 	var clusterId string
 	var apiKeys []*authv1.ApiKey
+	var data [][]string
 
 	if strings.HasPrefix(resource, "lsrc-") {
 		accId, clusterId, currentKey, err = c.srClusterInfo(cmd, args)
@@ -150,8 +151,17 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		return errors.New("Invalid Logical cluster ID")
 	}
 
+	//Return resource not found errors
+	if err != nil {
+		return err
+	}
+
 	apiKeys, err = c.client.List(context.Background(), &authv1.ApiKey{AccountId: accId})
-	var data [][]string
+
+	if err != nil {
+		return err
+	}
+
 	for _, apiKey := range apiKeys {
 		// ignore keys owned by Confluent-internal user (healthcheck, etc)
 		if apiKey.UserId == 0 {
@@ -284,7 +294,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	//Add logic here to avoid looking at Keystore for a schema registry API key?
+	
 	return c.keystore.DeleteAPIKey(apiKey)
 }
 
