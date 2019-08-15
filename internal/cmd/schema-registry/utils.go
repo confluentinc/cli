@@ -41,14 +41,16 @@ func RequireSubjectFlag(cmd *cobra.Command) {
 }
 
 func getServiceProviderFromUrl(url string) string {
-	var serviceProvider string
+
 	if url == "" {
 		return ""
 	}
-	if strings.Contains(url, ".aws.") {
-		serviceProvider = "AWS"
-	} else if strings.Contains(url, ".gcp.") {
-		serviceProvider = "GCP"
+	//Endpoint url is of the form https://psrc-<id>.<location>.<service-provider>.<devel/stag/prod/env>.cpdev.cloud
+	stringSlice := strings.Split(url, ".")
+	if len(stringSlice) != 6 {
+
+		return ""
 	}
-	return serviceProvider
+
+	return strings.Trim(stringSlice[2], ".")
 }
