@@ -151,6 +151,8 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 
 	var compatibility string
 	var mode string
+	var numSchemas string
+	var availableSchemas string
 	ctx := context.Background()
 	fields := []string{"Name", "ID", "URL", "Used", "Available", "Compatibility", "Mode", "ServiceProvider"}
 	renames := map[string]string{"ID": "Logical Cluster ID", "URL": "Endpoint URL", "Used": "Used Schemas", "Available": "Available Schemas", "Compatibility": "Global Compatibility", "ServiceProvider": "Service Provider"}
@@ -175,19 +177,23 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 
 		for _, cluster := range existingClusters {
 
+			// Get Schema usage metrics
 			metrics, err := c.metricClient.SchemaRegistryMetrics(ctx, cluster.Id)
-
 			if err != nil {
-				return err
+				numSchemas = ""
+				availableSchemas = ""
+			} else {
+				numSchemas = strconv.Itoa(int(metrics.NumSchemas))
+				availableSchemas = strconv.Itoa(int(cluster.MaxSchemas) - int(metrics.NumSchemas))
 			}
-
+			// Get SR compatibility
 			compatibilityResponse, _, err := srClient.DefaultApi.GetTopLevelConfig(ctx)
 			if err != nil {
 				compatibility = ""
-			}else {
-				compatibility =compatibilityResponse.CompatibilityLevel
+			} else {
+				compatibility = compatibilityResponse.CompatibilityLevel
 			}
-
+			// Get SR Mode
 			ModeResponse, _, err := srClient.DefaultApi.GetTopLevelMode(ctx)
 			if err != nil {
 				mode = ""
@@ -197,8 +203,6 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 			}
 
 			serviceProvider := getServiceProviderFromUrl(cluster.Endpoint)
-			numSchemas := strconv.Itoa(int(metrics.NumSchemas))
-			availableSchemas := strconv.Itoa(int(cluster.MaxSchemas) - int(metrics.NumSchemas))
 
 			data := &describeDisplay{
 				Name:            cluster.Name,
