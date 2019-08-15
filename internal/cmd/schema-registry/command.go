@@ -190,8 +190,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 			printer.RenderTableOut(data, fields, renames, os.Stdout)
 		}
 	} else {
-		pcmd.Println(cmd, "Schema Registry Cluster does not exist")
-		return err
+		return errors.New("Schema Registry Cluster does not exist")
 	}
 	return nil
 }
