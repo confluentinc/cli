@@ -157,7 +157,6 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	}
 
 	apiKeys, err = c.client.List(context.Background(), &authv1.ApiKey{AccountId: accId})
-
 	if err != nil {
 		return err
 	}
@@ -294,7 +293,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	
+
 	return c.keystore.DeleteAPIKey(apiKey)
 }
 
