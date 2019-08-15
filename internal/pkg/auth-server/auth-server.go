@@ -174,6 +174,7 @@ func (s *AuthServer) CallbackHandler(rw http.ResponseWriter, request *http.Reque
 	rawCallbackFile, err := local.Asset("assets/sso_callback.html")
 	if err != nil {
 		s.bgErr = errors.New("could not read callback page template")
+		fmt.Fprintf(rw, "could not read callback page template, see CLI terminal for more details")
 	}
 	fmt.Fprintf(rw, string(rawCallbackFile))
 
