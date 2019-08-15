@@ -142,7 +142,6 @@ func (c *command) enable(cmd *cobra.Command, args []string) error {
 func (c *command) describe(cmd *cobra.Command, args []string) error {
 
 	ctx := context.Background()
-	var data describeDisplay
 	fields := []string{"Name", "ID", "URL", "Used", "Available", "Compatibility", "Mode", "ServiceProvider"}
 	renames := map[string]string{"ID": "Logical Cluster ID", "URL": "Endpoint URL", "Used": "Used Schemas", "Available": "Available Schemas", "Compatibility": "Global Compatibility", "ServiceProvider": "Service Provider"}
 
@@ -174,20 +173,21 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 
 			compatibilityResponse, _, _ := srClient.DefaultApi.GetTopLevelConfig(ctx)
 			ModeResponse, _, _ := srClient.DefaultApi.GetTopLevelMode(ctx)
+			serviceProvider := getServiceProviderFromUrl(cluster.Endpoint)
+			numSchemas := strconv.Itoa(int(metrics.NumSchemas))
+			availableSchemas := strconv.Itoa(int(cluster.MaxSchemas) - int(metrics.NumSchemas))
 
-			if err != nil {
-				return errors.HandleCommon(err, cmd)
+			data := &describeDisplay{
+				Name:            cluster.Name,
+				ID:              cluster.Id,
+				URL:             cluster.Endpoint,
+				ServiceProvider: serviceProvider,
+				Used:            numSchemas,
+				Available:       availableSchemas,
+				Compatibility:   compatibilityResponse.CompatibilityLevel,
+				Mode:            ModeResponse.Mode,
 			}
-
-			data.Name = cluster.Name
-			data.ID = cluster.Id
-			data.URL = cluster.Endpoint
-			data.ServiceProvider = getServiceProviderFromUrl(data.URL)
-			data.Used = strconv.Itoa(int(metrics.NumSchemas))
-			data.Available = strconv.Itoa(int(cluster.MaxSchemas) - int(metrics.NumSchemas))
-			data.Compatibility = compatibilityResponse.CompatibilityLevel
-			data.Mode = ModeResponse.Mode
-			printer.RenderTableOut(&data, fields, renames, os.Stdout)
+			printer.RenderTableOut(data, fields, renames, os.Stdout)
 		}
 	} else {
 		pcmd.Println(cmd, "Schema Registry Cluster does not exist")
