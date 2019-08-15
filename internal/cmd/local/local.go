@@ -245,14 +245,42 @@ func (c *command) help(cmd *cobra.Command, args []string) {
 	_ = c.runBashCommand(path, "help", a)
 }
 
+func (c *command) exportEnvironmentVariables(path string) {
+	c.shell.Export("CONFLUENT_HOME", path)
+	for _, varName := range []string{
+		"CONFLUENT_CURRENT",
+		"TMPDIR",
+		"JAVA_HOME",
+		"PATH",
+		"HOME",
+		"KAFKA_OPTS",
+		"KSQL_OPTS",
+		"CONTROL_CENTER_OPTS",
+		"SCHEMA_REGISTRY_OPTS",
+		"KAFKAREST_OPTS",
+		"KAFKA_LOG4J_OPTS",
+		"KAFKA_EXTRA_ARGS",
+		"KAFKA_HEAP_OPTS",
+		"KAFKA_JVM_PERFORMANCE_OPTS",
+		"KAFKA_GC_LOG_OPTS",
+		"KAFKA_JMX_OPTS",
+		"KAFKA_JMX_PORT",
+		"KAFKA_DEBUG",
+		"KAFKA_CLASSPATH",
+		"TERM",
+		"HTTP_PROXY",
+		"HTTPS_PROXY",
+	} {
+		if externalValue := os.Getenv(varName); externalValue != "" {
+			c.shell.Export(varName, externalValue)
+		}
+	}
+}
+
 func (c *command) runBashCommand(path string, command string, args []string) error {
 	c.shell.Init(os.Stdout, os.Stderr)
-	c.shell.Export("CONFLUENT_HOME", path)
-	c.shell.Export("CONFLUENT_CURRENT", os.Getenv("CONFLUENT_CURRENT"))
-	c.shell.Export("TMPDIR", os.Getenv("TMPDIR"))
-	c.shell.Export("JAVA_HOME", os.Getenv("JAVA_HOME"))
-	c.shell.Export("PATH", os.Getenv("PATH"))
-	c.shell.Export("HOME", os.Getenv("HOME"))
+	c.exportEnvironmentVariables(path)
+
 	err := c.shell.Source("cp_cli/confluent.sh", Asset)
 	if err != nil {
 		return err

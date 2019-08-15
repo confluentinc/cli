@@ -44,8 +44,6 @@ func (c *command) init() {
 		RunE:    c.enable,
 		Args:    cobra.NoArgs,
 	}
-	createCmd.Flags().String("cluster", "", "Kafka cluster ID")
-	_ = createCmd.MarkFlagRequired("cluster")
 	createCmd.Flags().String("cloud", "", "Cloud provider (e.g. 'aws', 'azure', or 'gcp')")
 	_ = createCmd.MarkFlagRequired("cloud")
 	createCmd.Flags().String("geo", "", "Either 'us', 'eu', or 'apac' (only applies to Enterprise accounts)")
@@ -77,14 +75,8 @@ func (c *command) enable(cmd *cobra.Command, args []string) error {
 	// Trust the API will handle CCP/CCE and whether geo is required
 	location := srv1.GlobalSchemaRegistryLocation(srv1.GlobalSchemaRegistryLocation_value[strings.ToUpper(locationFlag)])
 
-	kafkaClusterId, err := cmd.Flags().GetString("cluster")
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
 	// Build the SR instance
 	clusterConfig := &srv1.SchemaRegistryClusterConfig{
-		KafkaClusterId:  kafkaClusterId,
 		AccountId:       accountId,
 		Location:        location,
 		ServiceProvider: serviceProvider,
@@ -93,7 +85,7 @@ func (c *command) enable(cmd *cobra.Command, args []string) error {
 		// this hardcoded string constant
 		Name: "account schema-registry",
 	}
-	pcmd.Println(cmd, kafkaClusterId+accountId+serviceProvider)
+
 	newCluster, err := c.ccClient.CreateSchemaRegistryCluster(ctx, clusterConfig)
 	if err != nil {
 		// If it already exists, return the existing one
@@ -104,7 +96,7 @@ func (c *command) enable(cmd *cobra.Command, args []string) error {
 			return errors.HandleCommon(getExistingErr, cmd)
 		}
 		if len(existingClusters) > 0 {
-			pcmd.Println(cmd, "Cluster already exists:")
+			pcmd.Println(cmd, "Schema Registry already enabled:")
 			for _, cluster := range existingClusters {
 				pcmd.Println(cmd, "Cluster ID: "+cluster.Id)
 				pcmd.Println(cmd, "Endpoint: "+cluster.Endpoint)
@@ -114,7 +106,7 @@ func (c *command) enable(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	pcmd.Println(cmd, "Cluster already exists:")
+	pcmd.Println(cmd, "Schema Registry enabled:")
 	pcmd.Println(cmd, "Cluster ID: "+newCluster.Id)
 	pcmd.Println(cmd, "Endpoint: "+newCluster.Endpoint)
 
