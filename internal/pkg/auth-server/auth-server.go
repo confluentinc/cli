@@ -17,6 +17,7 @@ import (
 
 	"github.com/pkg/browser"
 
+	"github.com/confluentinc/cli/internal/cmd/local"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
@@ -25,7 +26,6 @@ var (
 	SSOProviderClientID    = "Z1Pnpscwhl5WgcEdhP3ec2O307D6HfKg"
 	SSOProviderCallbackURL = "http://127.0.0.1:26635/callback"
 	SSOProviderIdentifier  = "https://confluent.auth0.com/api/v2/"
-	SSOProviderState       = "ConfluentCLI"
 )
 
 /*
@@ -40,6 +40,7 @@ type AuthServer struct {
 	CodeChallenge                 string
 	SSOProviderAuthenticationCode string
 	SSOProviderIDToken            string
+	SSOProviderState              string
 }
 
 // GenerateCodes makes code variables for use with the Authorization Code + PKCE flow
@@ -47,6 +48,13 @@ func (s *AuthServer) GenerateCodes() error {
 	randomBytes := make([]byte, 32)
 
 	_, err := rand.Read(randomBytes)
+	if err != nil {
+		return errors.Wrap(err, "unable to generate random bytes for SSO provider state")
+	}
+
+	s.SSOProviderState = base64.RawURLEncoding.EncodeToString(randomBytes)
+
+	_, err = rand.Read(randomBytes)
 	if err != nil {
 		return errors.Wrap(err, "unable to generate random bytes for code verifier")
 	}
@@ -127,7 +135,7 @@ func (s *AuthServer) GetAuthorizationCode(ssoProviderConnectionName string) erro
 		"&redirect_uri=" + SSOProviderCallbackURL +
 		"&scope=email%20openid" +
 		"&audience=" + SSOProviderIdentifier +
-		"&state=" + SSOProviderState
+		"&state=" + s.SSOProviderState
 	if ssoProviderConnectionName != "" {
 		url += "&connection=" + ssoProviderConnectionName
 	}
@@ -158,13 +166,22 @@ func (s *AuthServer) GetAuthorizationCode(ssoProviderConnectionName string) erro
 
 // CallbackHandler serves the route /callback
 func (s *AuthServer) CallbackHandler(rw http.ResponseWriter, request *http.Request) {
-	fmt.Fprintf(rw, "CLI Authentication successful!  You may close this tab/window.")
+	states, ok := request.URL.Query()["state"]
+	if !(ok && states[0] == s.SSOProviderState) {
+		s.bgErr = errors.New("authentication callback URL either did not contain a state parameter in query string, or the state parameter was invalid; login will fail")
+	}
+
+	rawCallbackFile, err := local.Asset("assets/sso_callback.html")
+	if err != nil {
+		s.bgErr = errors.New("could not read callback page template")
+	}
+	fmt.Fprintf(rw, string(rawCallbackFile))
 
 	codes, ok := request.URL.Query()["code"]
 	if ok {
 		s.SSOProviderAuthenticationCode = codes[0]
 	} else {
-		s.bgErr = errors.New("authentication callback URL did not contain code parameter in query string, login will fail")
+		s.bgErr = errors.New("authentication callback URL did not contain code parameter in query string; login will fail")
 	}
 
 	s.wg.Done()
