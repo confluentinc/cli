@@ -2,6 +2,7 @@
 // sources:
 // cp_cli/confluent.patch (4.731kB)
 // cp_cli/confluent.sh (67.447kB)
+// assets/sso_callback.html (1.125kB)
 
 package local
 
@@ -21,7 +22,7 @@ import (
 func bindataRead(data []byte, name string) ([]byte, error) {
 	gz, err := gzip.NewReader(bytes.NewBuffer(data))
 	if err != nil {
-		return nil, fmt.Errorf("read %q: %v", name, err)
+		return nil, fmt.Errorf("Read %q: %v", name, err)
 	}
 
 	var buf bytes.Buffer
@@ -29,7 +30,7 @@ func bindataRead(data []byte, name string) ([]byte, error) {
 	clErr := gz.Close()
 
 	if err != nil {
-		return nil, fmt.Errorf("read %q: %v", name, err)
+		return nil, fmt.Errorf("Read %q: %v", name, err)
 	}
 	if clErr != nil {
 		return nil, err
@@ -85,7 +86,7 @@ func cp_cliConfluentPatch() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "cp_cli/confluent.patch", size: 4731, mode: os.FileMode(0664), modTime: time.Unix(1559260828, 0)}
+	info := bindataFileInfo{name: "cp_cli/confluent.patch", size: 4731, mode: os.FileMode(420), modTime: time.Unix(1562628108, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x2c, 0x9f, 0x94, 0x72, 0x55, 0x7c, 0xaf, 0xb0, 0xee, 0x22, 0x4, 0x46, 0xc9, 0x12, 0x31, 0x1a, 0xa6, 0xeb, 0xfc, 0xf7, 0xa, 0xe6, 0xc9, 0xae, 0x43, 0x71, 0xdd, 0x39, 0x9d, 0x77, 0xf4, 0x66}}
 	return a, nil
 }
@@ -105,8 +106,28 @@ func cp_cliConfluentSh() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "cp_cli/confluent.sh", size: 67447, mode: os.FileMode(0775), modTime: time.Unix(1565047689, 0)}
+	info := bindataFileInfo{name: "cp_cli/confluent.sh", size: 67447, mode: os.FileMode(493), modTime: time.Unix(1564540718, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x2c, 0xa5, 0x97, 0x94, 0xaa, 0xd4, 0xc7, 0xed, 0xf6, 0x6e, 0x29, 0xb3, 0x9d, 0x11, 0x7b, 0x38, 0x5b, 0xcc, 0xdb, 0x9d, 0x7b, 0xd8, 0x79, 0xfb, 0xcf, 0x84, 0x3a, 0xb8, 0x2f, 0x93, 0x3d, 0x64}}
+	return a, nil
+}
+
+var _assetsSso_callbackHtml = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x74\x54\x5d\x6f\xdb\x3a\x0c\x7d\xcf\xaf\x60\x53\x5c\xa4\x05\xe2\x28\x37\xfd\x56\x9d\x00\x45\xee\x7d\x18\x30\x60\xc3\xb0\x97\x3e\xca\x16\x6d\x13\x95\x45\x43\x62\x92\x66\x43\xff\xfb\xe0\x38\x49\xe3\x6e\xe3\x8b\x64\x9f\x03\x92\xe6\x39\x74\x7a\xf6\xdf\x97\xe5\xf7\xe7\xaf\xff\x43\x25\xb5\x5b\x0c\xd2\xee\x18\xa4\x15\x1a\xbb\x18\x00\x00\xa4\x42\xe2\x70\xb1\x64\x5f\xb8\x15\x7a\x81\xe5\xe7\x4f\xf0\xb4\x92\x0a\xbd\x50\x6e\x84\xd8\xa7\xaa\xe3\x74\xfc\x28\x5b\x87\x20\xdb\x06\xe7\x43\xc1\x57\x51\x79\x8c\xc3\x0e\x6b\x23\x63\xbb\x85\x9f\xc7\xc7\x36\x6a\x13\x4a\xf2\x1a\xa6\x8f\xbd\xd7\x8d\xb1\x96\x7c\xa9\xe1\x61\xda\xbc\xc2\x14\xae\xda\xe3\x8c\xea\x86\x83\x18\x2f\x7d\x72\x4d\x3e\xa9\x90\xca\x4a\x34\xdc\x5e\x4f\x9b\xd7\x3e\xbc\x21\x2b\x95\x86\x7f\xa7\xd3\x7f\xfa\x40\x66\xf2\x97\x32\xf0\xca\x5b\x0d\xc9\x06\xb3\x17\x92\xa4\x0c\xc6\x12\x7a\xb9\x70\xe4\xd1\x84\x31\x38\x2c\x04\x84\x9b\x31\x84\xb6\x42\x77\x2d\x02\xd7\x17\xe7\x37\xd3\xfb\x19\xde\x5e\x8e\x41\xf8\xe2\xfc\xe1\xe6\xee\xae\x28\x2e\x2f\xff\x5e\xa2\xcb\xf8\x5e\x41\xb8\x4b\x39\x86\x7d\xa6\x31\x1c\xb2\xf4\x93\xf0\x1a\x43\xe1\x78\xa3\xa1\x22\x6b\xd1\xbf\xa3\x6f\x83\xe3\xd5\xd2\x7a\x92\x19\xef\x31\x7c\x98\xb0\xa5\xd8\x38\xb3\xd5\x90\x39\xce\x5f\xfa\x99\x0b\xf6\x92\x14\xa6\x26\xb7\xd5\x30\xfa\xc6\x19\x0b\x8f\xc6\x10\x8d\x8f\x49\xc4\x40\x45\x9f\x9e\xb3\xe3\xa0\xe1\xbc\xd8\x45\x1f\x6b\xe5\x4e\x8c\xa3\xd2\x6b\xc8\xd1\x0b\x86\x3f\xb6\x59\xcd\x3e\xb4\xb7\x6b\x21\xd2\x0f\xd4\x70\x75\xff\x51\xba\x76\x64\x47\x69\xaf\x6f\x4f\xe1\xb7\xce\x71\x6a\x67\xb9\xc5\x20\x55\x9d\x6d\x07\x69\x6b\xb2\xbd\x1d\x2d\xad\x61\x87\xcf\x87\x0d\x47\x6a\xfd\xaa\x21\xa0\x33\x42\x6b\x7c\x84\x8c\x45\xb8\xd6\x70\xd3\x5a\x66\x27\xf4\xfe\x7e\x62\xd9\x94\xea\x12\x62\xc8\xe7\xc3\x4a\xa4\x89\x5a\xa9\xdc\xfa\x49\x7e\xd8\x88\x09\xb1\xda\x34\x49\xce\x5e\xd0\x8b\x5a\x35\x8e\x8d\x8d\xca\x71\xc9\xc9\x91\x94\xec\xe6\x36\x89\xeb\x72\x08\x6a\xdf\x9a\xb2\xb4\x3e\xe9\x32\x77\x26\xc6\xf9\xa8\x13\x70\x74\x52\xbe\x9a\x2d\xfa\x0b\x07\x4b\xae\x1b\x87\x82\xa9\xaa\x66\xef\xc4\xdf\x37\x13\xf2\x3d\xf1\x0c\x9e\x79\x05\xb5\xd9\x42\xee\x38\x22\x48\x45\x11\xc4\x64\x6a\x43\xde\xf2\x66\x92\x66\xe1\xd0\x56\x1b\x4f\x7e\x0b\x18\x02\x87\x08\x1b\x72\x0e\x32\x3c\x58\x08\x2d\x90\x07\xa9\x70\x57\x4d\x30\xd4\xe4\x8d\x9b\x9c\x7e\x50\xaa\xba\xf1\xb7\x7a\xb4\xbf\x93\x5f\x01\x00\x00\xff\xff\xbc\x16\x2a\xd6\x65\x04\x00\x00")
+
+func assetsSso_callbackHtmlBytes() ([]byte, error) {
+	return bindataRead(
+		_assetsSso_callbackHtml,
+		"assets/sso_callback.html",
+	)
+}
+
+func assetsSso_callbackHtml() (*asset, error) {
+	bytes, err := assetsSso_callbackHtmlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "assets/sso_callback.html", size: 1125, mode: os.FileMode(420), modTime: time.Unix(1565973824, 0)}
+	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0xe1, 0xe8, 0x53, 0xb4, 0x83, 0x2a, 0x23, 0x59, 0xeb, 0xf2, 0xda, 0xc6, 0x3c, 0x6a, 0x4d, 0xe, 0x38, 0x8b, 0x3d, 0x9d, 0x3b, 0x2b, 0x16, 0x6, 0x40, 0xe, 0xe, 0x59, 0xb5, 0x71, 0xe2, 0x7a}}
 	return a, nil
 }
 
@@ -204,6 +225,8 @@ var _bindata = map[string]func() (*asset, error){
 	"cp_cli/confluent.patch": cp_cliConfluentPatch,
 
 	"cp_cli/confluent.sh": cp_cliConfluentSh,
+
+	"assets/sso_callback.html": assetsSso_callbackHtml,
 }
 
 // AssetDir returns the file names below a certain
@@ -247,9 +270,12 @@ type bintree struct {
 }
 
 var _bintree = &bintree{nil, map[string]*bintree{
-	"cp_cli": {nil, map[string]*bintree{
-		"confluent.patch": {cp_cliConfluentPatch, map[string]*bintree{}},
-		"confluent.sh":    {cp_cliConfluentSh, map[string]*bintree{}},
+	"assets": &bintree{nil, map[string]*bintree{
+		"sso_callback.html": &bintree{assetsSso_callbackHtml, map[string]*bintree{}},
+	}},
+	"cp_cli": &bintree{nil, map[string]*bintree{
+		"confluent.patch": &bintree{cp_cliConfluentPatch, map[string]*bintree{}},
+		"confluent.sh":    &bintree{cp_cliConfluentSh, map[string]*bintree{}},
 	}},
 }}
 
