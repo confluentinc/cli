@@ -167,7 +167,7 @@ Consume items from the 'my_topic' topic and press 'Ctrl + C' to exit.
 }
 
 func (c *topicCommand) list(cmd *cobra.Command, args []string) error {
-	cluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
+	cluster, err := pcmd.GetKafkaCluster(cmd, c.ch,"cluster")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -188,7 +188,7 @@ func (c *topicCommand) list(cmd *cobra.Command, args []string) error {
 }
 
 func (c *topicCommand) create(cmd *cobra.Command, args []string) error {
-	cluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
+	cluster, err := pcmd.GetKafkaCluster(cmd, c.ch,"cluster")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -229,7 +229,7 @@ func (c *topicCommand) create(cmd *cobra.Command, args []string) error {
 }
 
 func (c *topicCommand) describe(cmd *cobra.Command, args []string) error {
-	cluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
+	cluster, err := pcmd.GetKafkaCluster(cmd, c.ch,"cluster")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -293,7 +293,7 @@ func (c *topicCommand) describe(cmd *cobra.Command, args []string) error {
 }
 
 func (c *topicCommand) update(cmd *cobra.Command, args []string) error {
-	cluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
+	cluster, err := pcmd.GetKafkaCluster(cmd, c.ch,"cluster")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -320,7 +320,7 @@ func (c *topicCommand) update(cmd *cobra.Command, args []string) error {
 }
 
 func (c *topicCommand) delete(cmd *cobra.Command, args []string) error {
-	cluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
+	cluster, err := pcmd.GetKafkaCluster(cmd, c.ch,"cluster")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -334,7 +334,7 @@ func (c *topicCommand) delete(cmd *cobra.Command, args []string) error {
 func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {
 	topic := args[0]
 
-	cluster, err := pcmd.GetKafkaClusterConfig(cmd, c.ch)
+	cluster, err := pcmd.GetKafkaClusterConfig(cmd, c.ch,"cluster")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -409,7 +409,7 @@ func (c *topicCommand) consume(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	cluster, err := pcmd.GetKafkaClusterConfig(cmd, c.ch)
+	cluster, err := pcmd.GetKafkaClusterConfig(cmd, c.ch,"cluster")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}

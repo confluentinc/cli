@@ -3,25 +3,27 @@ package apikey
 import (
 	"context"
 	"fmt"
+
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/suite"
+
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
 	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
-	cmd2 "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/log"
-	"github.com/stretchr/testify/require"
-	"testing"
-
 	"github.com/confluentinc/ccloud-sdk-go/mock"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
-	"github.com/confluentinc/cli/internal/pkg/config"
 	cliMock "github.com/confluentinc/cli/mock"
-	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/suite"
+
+	"github.com/confluentinc/cli/internal/pkg/config"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/log"
+	"testing"
 )
 
 const (
 	kafkaClusterID = "kafka"
 	srClusterID    = "sr"
+	apiKey ="abracadabra"
 )
 
 type APITestSuite struct {
@@ -30,7 +32,7 @@ type APITestSuite struct {
 	kafkaCluster *kafkav1.KafkaCluster
 	srCluster    *srv1.SchemaRegistryCluster
 	apiMock      *mock.APIKey
-	ApiKey       *authv1.ApiKey
+
 }
 
 func (suite *APITestSuite) SetupSuite() {
@@ -78,7 +80,7 @@ func (suite *APITestSuite) SetupTest() {
 
 		CreateFunc: func(ctx context.Context, apiKey *authv1.ApiKey) (*authv1.ApiKey, error) {
 			return &authv1.ApiKey{
-				Key:    "abrcadabra",
+				Key:    "abracadabra",
 				Secret: "opensesame",
 			}, nil
 		},
@@ -98,8 +100,7 @@ func (suite *APITestSuite) SetupTest() {
 }
 
 func (suite *APITestSuite) newCMD() *cobra.Command {
-	//client ccloud.APIKey, ch *pcmd.ConfigHelper, keystore keystore.KeyStore
-	cmd := New(&cliMock.Commander{}, suite.conf, nil, &cmd2.ConfigHelper{}, nil)
+	cmd := New(&cliMock.Commander{}, suite.conf, nil, &pcmd.ConfigHelper{}, nil)
 	return cmd
 }
 
@@ -113,7 +114,7 @@ func (suite *APITestSuite) TestCreateSrApiKey() {
 	req.True(suite.apiMock.CreateCalled())
 }
 
-func (suite *APITestSuite) TestlistSrApiKey() {
+func (suite *APITestSuite) TestListSrApiKey() {
 	cmd := suite.newCMD()
 	cmd.SetArgs(append([]string{"api-key", "list", "--resource", srClusterID}))
 
@@ -125,7 +126,7 @@ func (suite *APITestSuite) TestlistSrApiKey() {
 
 func (suite *APITestSuite) TestDeleteApiKey() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"api-key", "delete", srClusterID}))
+	cmd.SetArgs(append([]string{"api-key", "delete", apiKey}))
 
 	err := cmd.Execute()
 	req := require.New(suite.T())
