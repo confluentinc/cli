@@ -149,8 +149,6 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		accId, clusterId, currentKey, err = c.srClusterInfo(cmd, args)
 	} else if strings.HasPrefix(resource, "lkc-") {
 		accId, clusterId, currentKey, err = c.kafkaClusterInfo(cmd, args)
-	} else {
-		return errors.New("Invalid Logical cluster ID")
 	}
 
 	//Return resource not found errors
