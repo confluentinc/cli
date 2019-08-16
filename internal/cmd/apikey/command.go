@@ -3,19 +3,19 @@ package apikey
 import (
 	"context"
 	"fmt"
-	"github.com/spf13/cobra"
 	"os"
 	"strings"
 
+	"github.com/spf13/cobra"
+
 	"github.com/confluentinc/ccloud-sdk-go"
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
-	"github.com/confluentinc/go-printer"
-
 	ccsdk "github.com/confluentinc/ccloud-sdk-go"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/keystore"
+	"github.com/confluentinc/go-printer"
 )
 
 const longDescription = `Use this command to register an API secret created by another
@@ -70,19 +70,21 @@ func (c *command) init() {
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	}
-	listCmd.Flags().String("resource", "", "Resource ID: Logical cluster ID")
+	listCmd.Flags().String("resource", "", "The resource ID")
+	listCmd.MarkFlagRequired("resource")
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
 	createCmd := &cobra.Command{
 		Use:   "create",
-		Short: "Create API keys for users or service accounts.",
+		Short: "Create API keys for users or service accounts for a given resource.",
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
 	}
-	createCmd.Flags().String("resource", "", "Resource ID: Logical cluster ID")
+	createCmd.Flags().String("resource", "", "The resource ID")
 	createCmd.Flags().Int32("service-account-id", 0, "Service account ID. If not specified, the API key will have full access on the cluster.")
 	createCmd.Flags().String("description", "", "Description of API key.")
+	createCmd.MarkFlagRequired("resource")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
@@ -112,6 +114,7 @@ func (c *command) init() {
 	}
 	storeCmd.Flags().String("resource", "", "The resource ID.")
 	storeCmd.Flags().BoolP("force", "f", false, "Force overwrite existing secret for this key.")
+	storeCmd.MarkFlagRequired("resource")
 	storeCmd.Flags().SortFlags = false
 	c.AddCommand(storeCmd)
 
@@ -122,6 +125,7 @@ func (c *command) init() {
 		Args:  cobra.ExactArgs(1),
 	}
 	useCmd.Flags().String("resource", "", "The resource ID.")
+	useCmd.MarkFlagRequired("resource")
 	useCmd.Flags().SortFlags = false
 	c.AddCommand(useCmd)
 }
@@ -227,7 +231,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 
 	if strings.HasPrefix(resource, "lsrc-") {
 		accId, clusterId, _, err = c.srClusterInfo(cmd, args)
-		Type = "schema_registry"
+		Type = "schema-registry"
 	} else if strings.HasPrefix(resource, "lkc-") {
 		accId, clusterId, _, err = c.kafkaClusterInfo(cmd, args)
 		Type = "kafka"
@@ -301,7 +305,7 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	key := args[0]
 	secret := args[1]
 
-	kcc, err := pcmd.GetKafkaClusterConfig(cmd, c.ch)
+	kcc, err := pcmd.GetKafkaClusterConfig(cmd, c.ch,"resource")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -339,7 +343,7 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 func (c *command) use(cmd *cobra.Command, args []string) error {
 	apiKey := args[0]
 
-	cluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
+	cluster, err := pcmd.GetKafkaCluster(cmd, c.ch, "resource")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
