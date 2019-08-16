@@ -86,7 +86,7 @@ func (s *AuthServer) initializeInternalVariables(authURL string) {
 
 	if env == "devel" || env == "stag" {
 		SSOProviderDomain = "login.confluent-dev.io"
-		SSOProviderClientID = "yKJfeHs2o7PdEhxDmPIqflWNE6cPieqm"
+		SSOProviderClientID = "XKlqgOEo39iyonTl3Yv3IHWIXGKDP3fA"
 		SSOProviderIdentifier = "https://confluent-dev.auth0.com/api/v2/"
 	}
 }
