@@ -77,7 +77,7 @@ func (r *PreRun) AuthenticatedAPIKey() func(cmd *cobra.Command, args []string) e
 		if err := r.Authenticated()(cmd, args); err != nil {
 			return err
 		}
-		cluster, err := GetKafkaCluster(cmd, r.ConfigHelper,"cluster")
+		cluster, err := GetKafkaCluster(cmd, r.ConfigHelper)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}

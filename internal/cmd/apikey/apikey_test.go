@@ -5,25 +5,25 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
-	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
 	"github.com/confluentinc/ccloud-sdk-go/mock"
+	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
-	cliMock "github.com/confluentinc/cli/mock"
-
-	"github.com/confluentinc/cli/internal/pkg/config"
+	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	cliMock "github.com/confluentinc/cli/mock"
 	"testing"
 )
 
 const (
 	kafkaClusterID = "kafka"
 	srClusterID    = "sr"
-	apiKey ="abracadabra"
+	apiKey         = "abracadabra"
 )
 
 type APITestSuite struct {
@@ -32,7 +32,7 @@ type APITestSuite struct {
 	kafkaCluster *kafkav1.KafkaCluster
 	srCluster    *srv1.SchemaRegistryCluster
 	apiMock      *mock.APIKey
-
+	ApiKey       *authv1.ApiKey
 }
 
 func (suite *APITestSuite) SetupSuite() {
@@ -80,7 +80,7 @@ func (suite *APITestSuite) SetupTest() {
 
 		CreateFunc: func(ctx context.Context, apiKey *authv1.ApiKey) (*authv1.ApiKey, error) {
 			return &authv1.ApiKey{
-				Key:    "abracadabra",
+				Key:    "abrcadabra",
 				Secret: "opensesame",
 			}, nil
 		},
@@ -100,6 +100,7 @@ func (suite *APITestSuite) SetupTest() {
 }
 
 func (suite *APITestSuite) newCMD() *cobra.Command {
+	//client ccloud.APIKey, ch *pcmd.ConfigHelper, keystore keystore.KeyStore
 	cmd := New(&cliMock.Commander{}, suite.conf, nil, &pcmd.ConfigHelper{}, nil)
 	return cmd
 }
@@ -114,7 +115,7 @@ func (suite *APITestSuite) TestCreateSrApiKey() {
 	req.True(suite.apiMock.CreateCalled())
 }
 
-func (suite *APITestSuite) TestListSrApiKey() {
+func (suite *APITestSuite) TestlistSrApiKey() {
 	cmd := suite.newCMD()
 	cmd.SetArgs(append([]string{"api-key", "list", "--resource", srClusterID}))
 
