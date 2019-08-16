@@ -100,7 +100,6 @@ func (suite *APITestSuite) SetupTest() {
 }
 
 func (suite *APITestSuite) newCMD() *cobra.Command {
-	//client ccloud.APIKey, ch *pcmd.ConfigHelper, keystore keystore.KeyStore
 	cmd := New(&cliMock.Commander{}, suite.conf, nil, &pcmd.ConfigHelper{}, nil)
 	return cmd
 }
@@ -115,7 +114,7 @@ func (suite *APITestSuite) TestCreateSrApiKey() {
 	req.True(suite.apiMock.CreateCalled())
 }
 
-func (suite *APITestSuite) TestlistSrApiKey() {
+func (suite *APITestSuite) TestListSrApiKey() {
 	cmd := suite.newCMD()
 	cmd.SetArgs(append([]string{"api-key", "list", "--resource", srClusterID}))
 
