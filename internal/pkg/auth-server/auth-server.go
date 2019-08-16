@@ -23,7 +23,7 @@ import (
 
 var (
 	SSOProviderDomain      = "login.confluent.io"
-	SSOProviderClientID    = "Z1Pnpscwhl5WgcEdhP3ec2O307D6HfKg"
+	SSOProviderClientID    = "hPbGZM8G55HSaUsaaieiiAprnJaEc9rH"
 	SSOProviderCallbackURL = "http://127.0.0.1:26635/callback"
 	SSOProviderIdentifier  = "https://confluent.auth0.com/api/v2/"
 )
