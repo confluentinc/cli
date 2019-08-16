@@ -9,8 +9,7 @@ import (
 func (c *command) srClusterInfo(cmd *cobra.Command, args []string) (accId string, clusterId string, currentKey string, err error) {
 	src, err := pcmd.GetSchemaRegistry(cmd, c.ch)
 	if err != nil {
-		pcmd.Println(cmd, "Schema Registry not set up")
-		return "", "", "", errors.HandleCommon(err, cmd)
+		return "", "", "", errors.HandleCommon(errors.Wrap(err, "Schema Registry doesn't exist"), cmd)
 	}
 	clusterInContext, err := c.config.SchemaRegistryCluster()
 
@@ -31,27 +30,9 @@ func (c *command) kafkaClusterInfo(cmd *cobra.Command, args []string) (accId str
 	}
 	return c.config.Auth.Account.Id, kcc.ID, kcc.APIKey, nil
 }
-//
-//func GetKafkaCluster(cmd *cobra.Command, ch *ConfigHelper) (*kafkav1.KafkaCluster, error) {
-//	clusterID, err := cmd.Flags().GetString("cluster")
-//	if err != nil {
-//		return nil, err
-//	}
-//	environment, err := GetEnvironment(cmd, ch.Config)
-//	if err != nil {
-//		return nil, err
-//	}
-//	return ch.KafkaCluster(clusterID, environment)
-//}
-//
-//func GetKafkaClusterConfig(cmd *cobra.Command, ch *ConfigHelper) (*config.KafkaClusterConfig, error) {
-//	clusterID, err := cmd.Flags().GetString("cluster")
-//	if err != nil {
-//		return nil, err
-//	}
-//	environment, err := GetEnvironment(cmd, ch.Config)
-//	if err != nil {
-//		return nil, err
-//	}
-//	return ch.KafkaClusterConfig(clusterID, environment)
-//}
+
+func check(err error) {
+	if err != nil {
+		panic(err)
+	}
+}

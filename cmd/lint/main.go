@@ -46,6 +46,9 @@ var (
 		linter.ExcludeCommandContains("secret"),
 		linter.ExcludeCommandContains("schema-registry"),
 	}
+	apiKeyCommands = []linter.RuleFilter{
+		linter.IncludeCommandContains("api-key"),
+	}
 )
 
 var rules = []linter.Rule{
@@ -81,6 +84,10 @@ var rules = []linter.Rule{
 	linter.Filter(linter.RequireFlagType("cluster", "string"), nonClusterScopedCommands...),
 	linter.Filter(linter.RequireFlagDescription("cluster", "Kafka cluster ID."),
 		append(nonClusterScopedCommands, linter.ExcludeParentUse("api-key"))...),
+	linter.Filter(linter.RequireFlag("resource", true), apiKeyCommands...),
+	linter.Filter(linter.RequireFlagType("resource", "string"), apiKeyCommands...),
+	linter.Filter(linter.RequireFlagDescription("resource", "The resource ID."),
+		append(apiKeyCommands)...),
 	linter.RequireFlagSort(false),
 	linter.RequireLowerCase("Use"),
 	linter.RequireSingular("Use"),

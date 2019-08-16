@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"github.com/spf13/cobra"
 
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
@@ -8,8 +9,14 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/config"
 )
 
-func GetKafkaCluster(cmd *cobra.Command, ch *ConfigHelper, flagName string) (*kafkav1.KafkaCluster, error) {
-	clusterID, err := cmd.Flags().GetString(flagName)
+func GetKafkaCluster(cmd *cobra.Command, ch *ConfigHelper, flag ...string) (*kafkav1.KafkaCluster, error) {
+	var clusterID string
+	var err error
+	if len(flag) > 0 {
+		clusterID, err = cmd.Flags().GetString(flag[0])
+	} else {
+		clusterID, err = cmd.Flags().GetString("cluster")
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -20,8 +27,14 @@ func GetKafkaCluster(cmd *cobra.Command, ch *ConfigHelper, flagName string) (*ka
 	return ch.KafkaCluster(clusterID, environment)
 }
 
-func GetKafkaClusterConfig(cmd *cobra.Command, ch *ConfigHelper, flagName string) (*config.KafkaClusterConfig, error) {
-	clusterID, err := cmd.Flags().GetString(flagName)
+func GetKafkaClusterConfig(cmd *cobra.Command, ch *ConfigHelper, flag ...string) (*config.KafkaClusterConfig, error) {
+	var clusterID string
+	var err error
+	if len(flag) > 0 {
+		clusterID, err = cmd.Flags().GetString(flag[0])
+	} else {
+		clusterID, err = cmd.Flags().GetString("cluster")
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -48,6 +61,7 @@ func GetEnvironment(cmd *cobra.Command, cfg *config.Config) (string, error) {
 }
 
 func GetSchemaRegistry(cmd *cobra.Command, ch *ConfigHelper) (*srv1.SchemaRegistryCluster, error) {
+	ctx := context.Background()
 	resourceID, err := cmd.Flags().GetString("resource")
 	if err != nil {
 		return nil, err
@@ -56,5 +70,5 @@ func GetSchemaRegistry(cmd *cobra.Command, ch *ConfigHelper) (*srv1.SchemaRegist
 	if err != nil {
 		return nil, err
 	}
-	return ch.SchemaRegistry(resourceID, environment)
+	return ch.SchemaRegistry(resourceID, environment, ctx)
 }
