@@ -10,7 +10,6 @@ import (
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
-	ccsdk "github.com/confluentinc/ccloud-sdk-go"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -35,7 +34,6 @@ type command struct {
 	config   *config.Config
 	client   ccloud.APIKey
 	ch       *pcmd.ConfigHelper
-	ccClient ccsdk.SchemaRegistry
 	keystore keystore.KeyStore
 }
 
@@ -70,21 +68,21 @@ func (c *command) init() {
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	}
-	listCmd.Flags().String("resource", "", "The resource ID")
-	listCmd.MarkFlagRequired("resource")
+	listCmd.Flags().String("resource", "", "The resource ID.")
+	check(listCmd.MarkFlagRequired("resource"))
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
 	createCmd := &cobra.Command{
 		Use:   "create",
-		Short: "Create API keys for users or service accounts for a given resource.",
+		Short: "Create API keys for a given resource.",
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
 	}
-	createCmd.Flags().String("resource", "", "The resource ID")
+	createCmd.Flags().String("resource", "", "The resource ID.")
 	createCmd.Flags().Int32("service-account-id", 0, "Service account ID. If not specified, the API key will have full access on the cluster.")
 	createCmd.Flags().String("description", "", "Description of API key.")
-	createCmd.MarkFlagRequired("resource")
+	check(createCmd.MarkFlagRequired("resource"))
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
@@ -114,7 +112,7 @@ func (c *command) init() {
 	}
 	storeCmd.Flags().String("resource", "", "The resource ID.")
 	storeCmd.Flags().BoolP("force", "f", false, "Force overwrite existing secret for this key.")
-	storeCmd.MarkFlagRequired("resource")
+	check(storeCmd.MarkFlagRequired("resource"))
 	storeCmd.Flags().SortFlags = false
 	c.AddCommand(storeCmd)
 
@@ -125,7 +123,7 @@ func (c *command) init() {
 		Args:  cobra.ExactArgs(1),
 	}
 	useCmd.Flags().String("resource", "", "The resource ID.")
-	useCmd.MarkFlagRequired("resource")
+	check(useCmd.MarkFlagRequired("resource"))
 	useCmd.Flags().SortFlags = false
 	c.AddCommand(useCmd)
 }
@@ -225,18 +223,21 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	var Type string
+	var resourceType string
 	var clusterId string
 	var accId string
 
 	if strings.HasPrefix(resource, "lsrc-") {
 		accId, clusterId, _, err = c.srClusterInfo(cmd, args)
-		Type = "schema-registry"
+		resourceType = "schema-registry"
 	} else if strings.HasPrefix(resource, "lkc-") {
 		accId, clusterId, _, err = c.kafkaClusterInfo(cmd, args)
-		Type = "kafka"
+		resourceType = "kafka"
 	} else {
 		return errors.New("Invalid Logical cluster ID")
+	}
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
 	}
 
 	environment, err := pcmd.GetEnvironment(cmd, c.config)
@@ -258,7 +259,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		UserId:          userId,
 		Description:     description,
 		AccountId:       accId,
-		LogicalClusters: []*authv1.ApiKey_Cluster{{Id: clusterId, Type: Type}},
+		LogicalClusters: []*authv1.ApiKey_Cluster{{Id: clusterId, Type: resourceType}},
 	}
 
 	userKey, err := c.client.Create(context.Background(), key)
@@ -271,7 +272,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	if strings.HasPrefix(resource, "lkc-") {
+	if resourceType == "kafka" {
 		if err := c.keystore.StoreAPIKey(userKey, clusterId, environment); err != nil {
 			return errors.HandleCommon(errors.Wrapf(err, "Unable to store API key locally."), cmd)
 		}
@@ -305,7 +306,7 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	key := args[0]
 	secret := args[1]
 
-	kcc, err := pcmd.GetKafkaClusterConfig(cmd, c.ch,"resource")
+	kcc, err := pcmd.GetKafkaClusterConfig(cmd, c.ch, "resource")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
