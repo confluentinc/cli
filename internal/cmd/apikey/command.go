@@ -112,7 +112,6 @@ func (c *command) init() {
 	}
 	storeCmd.Flags().String("resource", "", "The resource ID.")
 	storeCmd.Flags().BoolP("force", "f", false, "Force overwrite existing secret for this key.")
-	check(storeCmd.MarkFlagRequired("resource"))
 	storeCmd.Flags().SortFlags = false
 	c.AddCommand(storeCmd)
 
@@ -146,9 +145,9 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	var data [][]string
 
 	if strings.HasPrefix(resource, "lsrc-") {
-		accId, clusterId, currentKey, err = c.srClusterInfo(cmd, args)
-	} else if strings.HasPrefix(resource, "lkc-") {
-		accId, clusterId, currentKey, err = c.kafkaClusterInfo(cmd, args)
+		accId, clusterId, _, err = c.srClusterInfo(cmd, args)
+	} else {
+		accId, clusterId, _, err = c.kafkaClusterInfo(cmd, args)
 	}
 
 	//Return resource not found errors
@@ -228,11 +227,9 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	if strings.HasPrefix(resource, "lsrc-") {
 		accId, clusterId, _, err = c.srClusterInfo(cmd, args)
 		resourceType = "schema-registry"
-	} else if strings.HasPrefix(resource, "lkc-") {
+	} else {
 		accId, clusterId, _, err = c.kafkaClusterInfo(cmd, args)
 		resourceType = "kafka"
-	} else {
-		return errors.New("Invalid Logical cluster ID")
 	}
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
