@@ -19,26 +19,39 @@ import (
 	mock_local "github.com/confluentinc/cli/mock/local"
 )
 
+var testEnvironmentVariables = map[string]string{
+	"CONFLUENT_CURRENT": "/path/to/confluent/workdir",
+	"TMPDIR":            "/var/folders/some/junk",
+	"JAVA_HOME":         "/path/to/java",
+	"HOME":              "/path/to/home",
+	"PATH":              "/path1:/path2",
+	"TERM":              "xterm-256color",
+}
+var oldEnvironmentVariables = map[string]string{}
+
+func prepareTestEnvironmentVariables() {
+	for k, v := range testEnvironmentVariables {
+		oldEnvironmentVariables[k] = os.Getenv(k)
+		_ = os.Setenv(k, v)
+	}
+}
+
+func verifyTestEnvironmentVariables(shellRunner *mock_local.MockShellRunner) {
+	for k, v := range testEnvironmentVariables {
+		shellRunner.EXPECT().Export(k, v)
+	}
+	shellRunner.EXPECT().Export("CONFLUENT_HOME", "blah")
+}
+
+func restoreOldEnvironmentVaribles() {
+	for k, v := range oldEnvironmentVariables {
+		_ = os.Setenv(k, v)
+	}
+}
+
 func TestLocal(t *testing.T) {
-	oldCurrent := os.Getenv("CONFLUENT_CURRENT")
-	_ = os.Setenv("CONFLUENT_CURRENT", "/path/to/confluent/workdir")
-	defer func() { _ = os.Setenv("CONFLUENT_CURRENT", oldCurrent) }()
-
-	oldTmp := os.Getenv("TMPDIR")
-	_ = os.Setenv("TMPDIR", "/var/folders/some/junk")
-	defer func() { _ = os.Setenv("TMPDIR", oldTmp) }()
-
-	oldJavaHome := os.Getenv("JAVA_HOME")
-	_ = os.Setenv("JAVA_HOME", "/path/to/java")
-	defer func() { _ = os.Setenv("JAVA_HOME", oldJavaHome) }()
-
-	oldHome := os.Getenv("HOME")
-	_ = os.Setenv("HOME", "/path/to/home")
-	defer func() { _ = os.Setenv("HOME", oldHome) }()
-
-	oldPath := os.Getenv("PATH")
-	_ = os.Setenv("PATH", "/path1:/path2")
-	defer func() { _ = os.Setenv("PATH", oldPath) }()
+	prepareTestEnvironmentVariables()
+	defer restoreOldEnvironmentVaribles()
 
 	req := require.New(t)
 	ctrl := gomock.NewController(t)
@@ -46,12 +59,7 @@ func TestLocal(t *testing.T) {
 
 	shellRunner := mock_local.NewMockShellRunner(ctrl)
 	shellRunner.EXPECT().Init(os.Stdout, os.Stderr)
-	shellRunner.EXPECT().Export("HOME", "/path/to/home")
-	shellRunner.EXPECT().Export("JAVA_HOME", "/path/to/java")
-	shellRunner.EXPECT().Export("PATH", "/path1:/path2")
-	shellRunner.EXPECT().Export("CONFLUENT_CURRENT", "/path/to/confluent/workdir")
-	shellRunner.EXPECT().Export("CONFLUENT_HOME", "blah")
-	shellRunner.EXPECT().Export("TMPDIR", "/var/folders/some/junk")
+	verifyTestEnvironmentVariables(shellRunner)
 	shellRunner.EXPECT().Source("cp_cli/confluent.sh", gomock.Any())
 	shellRunner.EXPECT().Run("main", gomock.Eq([]string{"local", "help"})).Return(0, nil)
 	localCmd := New(&cobra.Command{}, &cliMock.Commander{}, shellRunner, log.New(), &mock.FileSystem{})
@@ -60,25 +68,8 @@ func TestLocal(t *testing.T) {
 }
 
 func TestLocalErrorDuringSource(t *testing.T) {
-	oldCurrent := os.Getenv("CONFLUENT_CURRENT")
-	_ = os.Setenv("CONFLUENT_CURRENT", "/path/to/confluent/workdir")
-	defer func() { _ = os.Setenv("CONFLUENT_CURRENT", oldCurrent) }()
-
-	oldTmp := os.Getenv("TMPDIR")
-	_ = os.Setenv("TMPDIR", "/var/folders/some/junk")
-	defer func() { _ = os.Setenv("TMPDIR", oldTmp) }()
-
-	oldJavaHome := os.Getenv("JAVA_HOME")
-	_ = os.Setenv("JAVA_HOME", "/path/to/java")
-	defer func() { _ = os.Setenv("JAVA_HOME", oldJavaHome) }()
-
-	oldHome := os.Getenv("HOME")
-	_ = os.Setenv("HOME", "/path/to/home")
-	defer func() { _ = os.Setenv("HOME", oldHome) }()
-
-	oldPath := os.Getenv("PATH")
-	_ = os.Setenv("PATH", "/path1:/path2")
-	defer func() { _ = os.Setenv("PATH", oldPath) }()
+	prepareTestEnvironmentVariables()
+	defer restoreOldEnvironmentVaribles()
 
 	req := require.New(t)
 	ctrl := gomock.NewController(t)
@@ -86,12 +77,7 @@ func TestLocalErrorDuringSource(t *testing.T) {
 
 	shellRunner := mock_local.NewMockShellRunner(ctrl)
 	shellRunner.EXPECT().Init(os.Stdout, os.Stderr)
-	shellRunner.EXPECT().Export("HOME", "/path/to/home")
-	shellRunner.EXPECT().Export("JAVA_HOME", "/path/to/java")
-	shellRunner.EXPECT().Export("PATH", "/path1:/path2")
-	shellRunner.EXPECT().Export("CONFLUENT_CURRENT", "/path/to/confluent/workdir")
-	shellRunner.EXPECT().Export("CONFLUENT_HOME", "blah")
-	shellRunner.EXPECT().Export("TMPDIR", "/var/folders/some/junk")
+	verifyTestEnvironmentVariables(shellRunner)
 	shellRunner.EXPECT().Source("cp_cli/confluent.sh", gomock.Any()).Return(errors.New("oh no"))
 	localCmd := New(&cobra.Command{}, &cliMock.Commander{}, shellRunner, log.New(), &mock.FileSystem{})
 	_, err := cmd.ExecuteCommand(localCmd, "local", "--path", "blah", "help")
@@ -99,25 +85,8 @@ func TestLocalErrorDuringSource(t *testing.T) {
 }
 
 func TestLocalCommandSuggestions(t *testing.T) {
-	oldCurrent := os.Getenv("CONFLUENT_CURRENT")
-	_ = os.Setenv("CONFLUENT_CURRENT", "/path/to/confluent/workdir")
-	defer func() { _ = os.Setenv("CONFLUENT_CURRENT", oldCurrent) }()
-
-	oldTmp := os.Getenv("TMPDIR")
-	_ = os.Setenv("TMPDIR", "/var/folders/some/junk")
-	defer func() { _ = os.Setenv("TMPDIR", oldTmp) }()
-
-	oldJavaHome := os.Getenv("JAVA_HOME")
-	_ = os.Setenv("JAVA_HOME", "/path/to/java")
-	defer func() { _ = os.Setenv("JAVA_HOME", oldJavaHome) }()
-
-	oldHome := os.Getenv("HOME")
-	_ = os.Setenv("HOME", "/path/to/home")
-	defer func() { _ = os.Setenv("HOME", oldHome) }()
-
-	oldPath := os.Getenv("PATH")
-	_ = os.Setenv("PATH", "/path1:/path2")
-	defer func() { _ = os.Setenv("PATH", oldPath) }()
+	prepareTestEnvironmentVariables()
+	defer restoreOldEnvironmentVaribles()
 
 	req := require.New(t)
 	ctrl := gomock.NewController(t)
