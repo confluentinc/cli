@@ -138,7 +138,7 @@ dist: download-licenses
 				fi; \
 				[ "$${os}" = "windows" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
 				rm -rf /tmp/$${binary} && mkdir /tmp/$${binary} ; \
-				cp LICENSE /tmp/${binary} && cp -r legal/$${binary} /tmp/$${binary}/legal ; \
+				cp LICENSE /tmp/$${binary} && cp -r legal/$${binary} /tmp/$${binary}/legal ; \
 				cp dist/$${binary}/$${os}_$${arch}/$${binexe} /tmp/$${binary} ; \
 				suffix="" ; \
 				if [ "$${os}" = "windows" ] ; then \
