@@ -120,8 +120,8 @@ func (s *CLITestSuite) Test_Ccloud_Errors() {
 			_, err = io.WriteString(w, string(b))
 			req.NoError(err)
 		}
-		mux := http.NewServeMux()
-		mux.HandleFunc("/api/sessions", func(w http.ResponseWriter, r *http.Request) {
+		router := http.NewServeMux()
+		router.HandleFunc("/api/sessions", func(w http.ResponseWriter, r *http.Request) {
 			b, err := ioutil.ReadAll(r.Body)
 			req.NoError(err)
 			// TODO: mark AuthenticateRequest as not internal so its in CCloudAPIs
@@ -145,7 +145,17 @@ func (s *CLITestSuite) Test_Ccloud_Errors() {
 				http.SetCookie(w, &http.Cookie{Name: "auth_token", Value: "good"})
 			}
 		})
-		mux.HandleFunc("/api/me", func(w http.ResponseWriter, r *http.Request) {
+		router.HandleFunc("/api/check_email/", func(w http.ResponseWriter, r *http.Request) {
+			b, err := utilv1.MarshalJSONToBytes(&orgv1.GetUserReply{
+				User: &orgv1.User{
+					Email: strings.Replace(r.URL.String(), "/api/check_email/", "", 1),
+				},
+			})
+			req.NoError(err)
+			_, err = io.WriteString(w, string(b))
+			req.NoError(err)
+		})
+		router.HandleFunc("/api/me", func(w http.ResponseWriter, r *http.Request) {
 			b, err := utilv1.MarshalJSONToBytes(&orgv1.GetUserReply{
 				User: &orgv1.User{
 					Id:        23,
@@ -158,7 +168,7 @@ func (s *CLITestSuite) Test_Ccloud_Errors() {
 			_, err = io.WriteString(w, string(b))
 			req.NoError(err)
 		})
-		mux.HandleFunc("/api/clusters", func(w http.ResponseWriter, r *http.Request) {
+		router.HandleFunc("/api/clusters", func(w http.ResponseWriter, r *http.Request) {
 			switch r.Header.Get("Authorization") {
 			// TODO: these assume the upstream doesn't change its error responses. Fragile, fragile, fragile. :(
 			// https://github.com/confluentinc/cc-auth-service/blob/06db0bebb13fb64c9bc3c6e2cf0b67709b966632/jwt/token.go#L23
@@ -173,7 +183,7 @@ func (s *CLITestSuite) Test_Ccloud_Errors() {
 				req.Fail("reached the unreachable", "auth=%s", r.Header.Get("Authorization"))
 			}
 		})
-		server := httptest.NewServer(mux)
+		server := httptest.NewServer(router)
 		return server.URL
 	}
 
@@ -515,12 +525,26 @@ func init() {
 
 func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 	req := require.New(t)
-	mux := http.NewServeMux()
-	mux.HandleFunc("/api/sessions", func(w http.ResponseWriter, r *http.Request) {
+	router := http.NewServeMux()
+	router.HandleFunc("/api/sessions", func(w http.ResponseWriter, r *http.Request) {
 		validToken := "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1NjE2NjA4NTcsImV4cCI6MjUzMzg2MDM4NDU3LCJhdWQiOiJ3d3cuZXhhbXBsZS5jb20iLCJzdWIiOiJqcm9ja2V0QGV4YW1wbGUuY29tIn0.G6IgrFm5i0mN7Lz9tkZQ2tZvuZ2U7HKnvxMuZAooPmE"
 		http.SetCookie(w, &http.Cookie{Name: "auth_token", Value: validToken})
 	})
-	mux.HandleFunc("/api/me", func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc("/api/check_email/", func(w http.ResponseWriter, r *http.Request) {
+		email := strings.Replace(r.URL.String(), "/api/check_email/", "", 1)
+		reply := &orgv1.GetUserReply{}
+		switch email {
+		case "cody@confluent.io":
+			reply.User = &orgv1.User{
+				Email: "cody@confluent.io",
+			}
+		}
+		b, err := utilv1.MarshalJSONToBytes(reply)
+		req.NoError(err)
+		_, err = io.WriteString(w, string(b))
+		req.NoError(err)
+	})
+	router.HandleFunc("/api/me", func(w http.ResponseWriter, r *http.Request) {
 		b, err := utilv1.MarshalJSONToBytes(&orgv1.GetUserReply{
 			User: &orgv1.User{
 				Id:        23,
@@ -533,7 +557,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		_, err = io.WriteString(w, string(b))
 		req.NoError(err)
 	})
-	mux.HandleFunc("/api/api_keys", func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc("/api/api_keys", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
 			req := &authv1.CreateApiKeyRequest{}
 			err := utilv1.UnmarshalJSON(r.Body, req)
@@ -544,7 +568,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 			apiKey.Key = fmt.Sprintf("MYKEY%d", KEY_INDEX)
 			apiKey.Secret = fmt.Sprintf("MYSECRET%d", KEY_INDEX)
 			apiKey.UserId = 23
-			KEY_INDEX += 1
+			KEY_INDEX++
 			KEY_STORE[apiKey.Id] = apiKey
 			b, err := utilv1.MarshalJSONToBytes(&authv1.CreateApiKeyReply{ApiKey: apiKey})
 			require.NoError(t, err)
@@ -564,7 +588,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 			require.NoError(t, err)
 		}
 	})
-	mux.HandleFunc("/api/clusters/", func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc("/api/clusters/", func(w http.ResponseWriter, r *http.Request) {
 		require.NotEmpty(t, r.URL.Query().Get("account_id"))
 		parts := strings.Split(r.URL.Path, "/")
 		id := parts[len(parts)-1]
@@ -585,11 +609,11 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		_, err = io.WriteString(w, string(b))
 		require.NoError(t, err)
 	})
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		_, err := io.WriteString(w, `{"error": {"message": "unexpected call to `+r.URL.Path+`"}}`)
 		require.NoError(t, err)
 	})
-	return httptest.NewServer(mux)
+	return httptest.NewServer(router)
 }
 
 func serveKafkaAPI(t *testing.T) *httptest.Server {
