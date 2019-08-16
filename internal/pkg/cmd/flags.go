@@ -8,8 +8,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/config"
 )
 
-func GetKafkaCluster(cmd *cobra.Command, ch *ConfigHelper) (*kafkav1.KafkaCluster, error) {
-	clusterID, err := cmd.Flags().GetString("resource")
+func GetKafkaCluster(cmd *cobra.Command, ch *ConfigHelper, flagName string) (*kafkav1.KafkaCluster, error) {
+	clusterID, err := cmd.Flags().GetString(flagName)
 	if err != nil {
 		return nil, err
 	}
@@ -20,8 +20,8 @@ func GetKafkaCluster(cmd *cobra.Command, ch *ConfigHelper) (*kafkav1.KafkaCluste
 	return ch.KafkaCluster(clusterID, environment)
 }
 
-func GetKafkaClusterConfig(cmd *cobra.Command, ch *ConfigHelper) (*config.KafkaClusterConfig, error) {
-	clusterID, err := cmd.Flags().GetString("resource")
+func GetKafkaClusterConfig(cmd *cobra.Command, ch *ConfigHelper, flagName string) (*config.KafkaClusterConfig, error) {
+	clusterID, err := cmd.Flags().GetString(flagName)
 	if err != nil {
 		return nil, err
 	}
