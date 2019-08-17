@@ -111,7 +111,7 @@ func (suite *CompatibilityTestSuite) newCMD() *cobra.Command {
 		Auth: &config.AuthConfig{Account: &orgv1.Account{Id: "777"}},
 	},
 		Version: &version.Version{},
-	}, suite.srClientMock)
+	}, suite.srClientMock, nil)
 	return cmd
 }
 
