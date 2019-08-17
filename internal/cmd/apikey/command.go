@@ -122,7 +122,6 @@ func (c *command) init() {
 		Args:  cobra.ExactArgs(1),
 	}
 	useCmd.Flags().String("resource", "", "The resource ID.")
-	check(useCmd.MarkFlagRequired("resource"))
 	useCmd.Flags().SortFlags = false
 	c.AddCommand(useCmd)
 }
