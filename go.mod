@@ -15,18 +15,13 @@ require (
 	github.com/aws/aws-sdk-go v1.15.64
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
-	github.com/confluentinc/ccloud-sdk-go v0.0.7
+	github.com/confluentinc/ccloud-sdk-go v0.0.8-0.20190805024857-5613bbaa771b
 	github.com/confluentinc/ccloudapis v0.0.0-20190813215538-49a287a86b64
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-printer v0.10.0
 	github.com/confluentinc/mds-sdk-go v0.0.0-20190610045202-137cf78b1f6a
 	github.com/confluentinc/protoc-gen-ccloud v0.0.1 // indirect
 	github.com/confluentinc/prototools v0.0.2 // indirect
-	github.com/confluentinc/ccloud-sdk-go v0.0.8-0.20190805024857-5613bbaa771b
-	github.com/confluentinc/ccloudapis v0.0.0-20190802001453-9d2b40c45d9f
-	github.com/confluentinc/go-editor v0.4.0
-	github.com/confluentinc/go-printer v0.10.0
-	github.com/confluentinc/mds-sdk-go v0.0.0-20190610045202-137cf78b1f6a
 	github.com/confluentinc/schema-registry-sdk-go v0.0.7
 	github.com/dghubble/sling v1.3.0 // indirect
 	github.com/dgryski/go-metro v0.0.0-20180109044635-280f6062b5bc // indirect

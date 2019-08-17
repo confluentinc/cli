@@ -3,6 +3,7 @@ package schema_registry
 import (
 	"context"
 	"fmt"
+	ccsdk "github.com/confluentinc/ccloud-sdk-go"
 	"github.com/confluentinc/ccloud-sdk-go/mock"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
@@ -29,6 +30,7 @@ type CompatibilityTestSuite struct {
 	srCluster        *srv1.SchemaRegistryCluster
 	srMothershipMock *mock.SchemaRegistry
 	srClientMock     *srsdk.APIClient
+	metrics          *ccsdk.Metrics
 }
 
 func (suite *CompatibilityTestSuite) SetupSuite() {
@@ -111,7 +113,7 @@ func (suite *CompatibilityTestSuite) newCMD() *cobra.Command {
 		Auth: &config.AuthConfig{Account: &orgv1.Account{Id: "777"}},
 	},
 		Version: &version.Version{},
-	}, suite.srClientMock)
+	}, suite.srClientMock, suite.metrics)
 	return cmd
 }
 

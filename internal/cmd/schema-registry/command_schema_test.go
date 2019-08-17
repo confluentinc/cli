@@ -3,11 +3,12 @@ package schema_registry
 import (
 	"context"
 	"fmt"
+	ccsdk "github.com/confluentinc/ccloud-sdk-go"
 	"github.com/confluentinc/ccloud-sdk-go/mock"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
-	cmd2 "github.com/confluentinc/cli/internal/pkg/cmd"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/version"
@@ -28,6 +29,7 @@ type SchemaTestSuite struct {
 	srCluster        *srv1.SchemaRegistryCluster
 	srMothershipMock *mock.SchemaRegistry
 	srClientMock     *srsdk.APIClient
+	metrics          *ccsdk.Metrics
 }
 
 func (suite *SchemaTestSuite) SetupSuite() {
@@ -91,11 +93,11 @@ func (suite *SchemaTestSuite) SetupTest() {
 }
 
 func (suite *SchemaTestSuite) newCMD() *cobra.Command {
-	cmd := New(&cliMock.Commander{}, suite.conf, suite.srMothershipMock, &cmd2.ConfigHelper{Config: &config.Config{
+	cmd := New(&cliMock.Commander{}, suite.conf, suite.srMothershipMock, &pcmd.ConfigHelper{Config: &config.Config{
 		Auth: &config.AuthConfig{Account: &orgv1.Account{Id: "777"}},
 	},
 		Version: &version.Version{},
-	}, suite.srClientMock)
+	}, suite.srClientMock, suite.metrics)
 	return cmd
 }
 

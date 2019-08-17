@@ -206,7 +206,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 				Compatibility:   compatibility,
 				Mode:            mode,
 			}
-			printer.RenderTableOut(data, fields, renames, os.Stdout)
+			_ = printer.RenderTableOut(data, fields, renames, os.Stdout)
 		}
 	} else {
 		return errors.New("Schema registry cluster does not exist")
