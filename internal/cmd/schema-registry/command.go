@@ -35,7 +35,7 @@ type describeDisplay struct {
 	ServiceProvider string
 }
 
-func New(prerunner pcmd.PreRunner, config *config.Config, ccloudClient ccsdk.SchemaRegistry, ch *pcmd.ConfigHelper, srClient *srsdk.APIClient, metricClient *ccsdk.Metrics) *cobra.Command {
+func New(prerunner pcmd.PreRunner, config *config.Config, ccloudClient ccsdk.SchemaRegistry, ch *pcmd.ConfigHelper, srClient *srsdk.APIClient, metricClient ccsdk.Metrics) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:               "schema-registry",
@@ -46,7 +46,7 @@ func New(prerunner pcmd.PreRunner, config *config.Config, ccloudClient ccsdk.Sch
 		ccClient:     ccloudClient,
 		ch:           ch,
 		srClient:     srClient,
-		metricClient: *metricClient,
+		metricClient: metricClient,
 	}
 	cmd.init()
 	return cmd.Command
