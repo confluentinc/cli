@@ -9,7 +9,7 @@ import (
 )
 
 const longDescriptionTemplate = `Use this command to print the output shell completion
-code for the specified shell (Bash only). The shell code must be evaluated to provide
+code for the specified shell (Bash/Zsh only). The shell code must be evaluated to provide
 interactive completion of {{.CLIName}} commands.
 
 Install Bash completions on macOS:
@@ -31,7 +31,22 @@ Install Bash completions on Linux:
   # Load the {{.CLIName}} completion code for Bash into the current shell
   source /etc/bash_completion.d/{{.CLIName}}
 
-To update your completion scripts after updating the CLI, run "{{.CLIName}} completion bash"
+Add the source command above to your ~/.bashrc or ~/.profile to enable completions for new
+terminals.
+
+Install Zsh completions:
+
+::
+
+  # Set the {{.CLIName}} completion code for zsh to a file in the fpath
+  {{.CLIName}} completion zsh > ${fpath[1]}/_{{.CLIName}}
+
+  # Enable zsh completions
+  autoload -U compinit && compinit
+
+Add the autoload command in your ~/.zshrc to enable completions for new terminals
+
+To update your completion scripts after updating the CLI, run "{{.CLIName}} completion <bash|zsh>"
 again and overwrite the file initially created above.
 `
 
@@ -63,6 +78,8 @@ func (c *completionCommand) completion(cmd *cobra.Command, args []string) error 
 	var err error
 	if args[0] == "bash" {
 		err = c.rootCmd.GenBashCompletion(cmd.OutOrStdout())
+	} else	if args[0] == "zsh" {
+		err = c.rootCmd.GenZshCompletion(cmd.OutOrStdout())
 	} else {
 		err = fmt.Errorf(`unsupported shell type "%s"`, args[0])
 	}

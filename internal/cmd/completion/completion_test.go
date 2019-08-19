@@ -28,8 +28,8 @@ func TestCompletionZsh(t *testing.T) {
 	root.AddCommand(cmd)
 
 	output, err := pcmd.ExecuteCommand(root, "completion", "zsh")
-	req.Error(err)
-	req.Contains(output, "Error: unsupported shell type \"zsh\"")
+	req.NoError(err)
+	req.Contains(output, "compdef _")
 }
 
 func TestCompletionUnknown(t *testing.T) {
