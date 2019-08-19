@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/ccloud-sdk-go"
+	ccloud "github.com/confluentinc/ccloud-sdk-go"
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
@@ -69,7 +69,6 @@ func (c *command) init() {
 		Args:  cobra.NoArgs,
 	}
 	listCmd.Flags().String("resource", "", "The resource ID.")
-	check(listCmd.MarkFlagRequired("resource"))
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
@@ -82,7 +81,6 @@ func (c *command) init() {
 	createCmd.Flags().String("resource", "", "The resource ID.")
 	createCmd.Flags().Int32("service-account-id", 0, "Service account ID. If not specified, the API key will have full access on the cluster.")
 	createCmd.Flags().String("description", "", "Description of API key.")
-	check(createCmd.MarkFlagRequired("resource"))
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
@@ -122,6 +120,7 @@ func (c *command) init() {
 		Args:  cobra.ExactArgs(1),
 	}
 	useCmd.Flags().String("resource", "", "The resource ID.")
+	check(useCmd.MarkFlagRequired("resource"))
 	useCmd.Flags().SortFlags = false
 	c.AddCommand(useCmd)
 }
