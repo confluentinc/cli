@@ -87,10 +87,6 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 		{name: "error if using non-existent api-key", args: "api-key use UNKNOWN", fixture: "apikey17.golden"},
 		{name: "error if using api-key for wrong cluster", args: "api-key use MYKEY2", fixture: "apikey18.golden"},
 		{name: "error if using api-key without existing secret", args: "api-key use UIAPIKEY103", fixture: "apikey19.golden"},
-
-		// create api-key for Schema Registry
-		{args: "api-key create --resource lsrc-bob", login: "default", fixture: "apikey1.golden"}, // MYKEY3
-		{args: "api-key list --resource lsrc-bob", useKafka: "bob", fixture: "apikey2.golden"},
 	}
 	resetConfiguration(s.T(), "ccloud")
 	for _, tt := range tests {
