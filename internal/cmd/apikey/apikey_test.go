@@ -63,6 +63,9 @@ func (suite *APITestSuite) SetupSuite() {
 
 	suite.conf.CurrentContext = name
 
+	srCluster, _ := suite.conf.SchemaRegistryCluster()
+	srCluster.SrCredentials = &config.APIKeyPair{Key: "key", Secret: "secret"}
+
 	suite.kafkaCluster = &kafkav1.KafkaCluster{
 		Id:         kafkaClusterID,
 		Enterprise: true,
@@ -106,7 +109,7 @@ func (suite *APITestSuite) newCMD() *cobra.Command {
 
 func (suite *APITestSuite) TestCreateSrApiKey() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"api-key", "create", "--resource", srClusterID}))
+	cmd.SetArgs(append([]string{"create", "--resource", srClusterID}))
 
 	err := cmd.Execute()
 	req := require.New(suite.T())
@@ -116,7 +119,7 @@ func (suite *APITestSuite) TestCreateSrApiKey() {
 
 func (suite *APITestSuite) TestListSrApiKey() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"api-key", "list", "--resource", srClusterID}))
+	cmd.SetArgs(append([]string{"list", "--resource", srClusterID}))
 
 	err := cmd.Execute()
 	req := require.New(suite.T())
@@ -126,7 +129,7 @@ func (suite *APITestSuite) TestListSrApiKey() {
 
 func (suite *APITestSuite) TestDeleteApiKey() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"api-key", "delete", apiKey}))
+	cmd.SetArgs(append([]string{"delete", apiKey}))
 
 	err := cmd.Execute()
 	req := require.New(suite.T())
