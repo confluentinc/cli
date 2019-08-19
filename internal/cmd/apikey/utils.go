@@ -31,8 +31,3 @@ func (c *command) kafkaClusterInfo(cmd *cobra.Command, args []string) (accId str
 	return c.config.Auth.Account.Id, kcc.ID, kcc.APIKey, nil
 }
 
-func check(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
