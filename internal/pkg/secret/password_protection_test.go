@@ -251,7 +251,7 @@ config.properties/testPassword = ENC[AES/CBC/PKCS5Padding,data:SclgTBDDeLwccqtsa
 			name: "ValidTestCase: encrypt config file with last line as Comment, create new dek",
 			args: &args{
 				masterKeyPassphrase:    "abc123",
-				contents:               "testPassword=password\n# LAST LINE SHOUD NOT BE DELETED",
+				contents:               "testPassword=password\n# LAST LINE SHOULD NOT BE DELETED",
 				configFilePath:         "/tmp/securePass987/encrypt/config.properties",
 				localSecureConfigPath:  "/tmp/securePass987/encrypt/secureConfig.properties",
 				secureDir:              "/tmp/securePass987/encrypt",
@@ -262,10 +262,9 @@ config.properties/testPassword = ENC[AES/CBC/PKCS5Padding,data:SclgTBDDeLwccqtsa
 			},
 			wantErr: false,
 			wantConfigFile: `testPassword = ${securepass:/tmp/securePass987/encrypt/secureConfig.properties:config.properties/testPassword}
-
-# LAST LINE SHOUD NOT BE DELETED
 config.providers = securepass
 config.providers.securepass.class = io.confluent.kafka.security.config.provider.SecurePassConfigProvider
+# LAST LINE SHOULD NOT BE DELETED
 `,
 			wantSecretsFile: `_metadata.master_key.0.salt = de0YQknpvBlnXk0fdmIT2nG2Qnj+0srV8YokdhkgXjA=
 _metadata.symmetric_key.0.created_at = 1984-04-04 00:00:00 +0000 UTC
