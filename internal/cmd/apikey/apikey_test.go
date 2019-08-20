@@ -3,8 +3,6 @@ package apikey
 import (
 	"context"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/cli/internal/pkg/keystore"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -16,6 +14,8 @@ import (
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/keystore"
 
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 
