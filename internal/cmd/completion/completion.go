@@ -78,7 +78,7 @@ func (c *completionCommand) completion(cmd *cobra.Command, args []string) error 
 	var err error
 	if args[0] == "bash" {
 		err = c.rootCmd.GenBashCompletion(cmd.OutOrStdout())
-	} else	if args[0] == "zsh" {
+	} else if args[0] == "zsh" {
 		err = c.rootCmd.GenZshCompletion(cmd.OutOrStdout())
 	} else {
 		err = fmt.Errorf(`unsupported shell type "%s"`, args[0])
