@@ -231,7 +231,7 @@ func newAuthCommand(prompt pcmd.Prompt, auth *sdkMock.Auth, user *sdkMock.User, 
 	if cliName == "confluent" {
 		mdsConfig := mds.NewConfiguration()
 		mdsClient = mds.NewAPIClient(mdsConfig)
-		mdsClient.TokensAuthenticationApi = mdsMock.TokensAuthenticationApi{
+		mdsClient.TokensAuthenticationApi = &mdsMock.TokensAuthenticationApi{
 			GetTokenFunc: func(ctx context.Context, xSPECIALRYANHEADER string) (mds.AuthenticationResponse, *http.Response, error) {
 				return mds.AuthenticationResponse{
 					AuthToken: "y0ur.jwt.T0kEn",
