@@ -10,7 +10,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/go-printer"
@@ -43,13 +42,12 @@ type rolebindingOptions struct {
 type rolebindingCommand struct {
 	*cobra.Command
 	config *config.Config
-	ch     *pcmd.ConfigHelper
 	client *mds.APIClient
 	ctx    context.Context
 }
 
 // NewRolebindingCommand returns the sub-command object for interacting with RBAC rolebindings.
-func NewRolebindingCommand(config *config.Config, ch *pcmd.ConfigHelper, client *mds.APIClient) *cobra.Command {
+func NewRolebindingCommand(config *config.Config, client *mds.APIClient) *cobra.Command {
 	cmd := &rolebindingCommand{
 		Command: &cobra.Command{
 			Use:   "rolebinding",
@@ -57,7 +55,6 @@ func NewRolebindingCommand(config *config.Config, ch *pcmd.ConfigHelper, client 
 			Long:  "Manage Role Based Access (RBAC) and Identity and Access Management (IAM) role bindings.",
 		},
 		config: config,
-		ch:     ch,
 		client: client,
 		ctx:    context.WithValue(context.Background(), mds.ContextAccessToken, config.AuthToken),
 	}
