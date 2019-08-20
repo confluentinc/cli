@@ -120,7 +120,6 @@ func (c *command) init() {
 		Args:  cobra.ExactArgs(1),
 	}
 	useCmd.Flags().String("resource", "", "The resource ID.")
-	check(useCmd.MarkFlagRequired("resource"))
 	useCmd.Flags().SortFlags = false
 	c.AddCommand(useCmd)
 }
@@ -143,9 +142,9 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	var data [][]string
 
 	if strings.HasPrefix(resource, "lsrc-") {
-		accId, clusterId, _, err = c.srClusterInfo(cmd, args)
+		accId, clusterId, currentKey, err = c.srClusterInfo(cmd, args)
 	} else {
-		accId, clusterId, _, err = c.kafkaClusterInfo(cmd, args)
+		accId, clusterId, currentKey, err = c.kafkaClusterInfo(cmd, args)
 	}
 
 	//Return resource not found errors
