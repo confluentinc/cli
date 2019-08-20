@@ -19,7 +19,7 @@ type ACLConfiguration struct {
 	errors error
 }
 
-// aclConfigFlags returns a flag set which can be parsed to create an ACLConfiguration object.
+// aclConfigFlags returns a flag set which can be parsed to create a ACLConfiguration object.
 func aclConfigFlags() *pflag.FlagSet {
 	flgSet := aclEntryFlags()
 	flgSet.SortFlags = false

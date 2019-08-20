@@ -5,6 +5,7 @@ import (
 
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	"github.com/confluentinc/go-printer"
+	"github.com/confluentinc/mds-sdk-go"
 )
 
 func PrintAcls(bindingsObj []*kafkav1.ACLBinding, writer io.Writer) {
@@ -30,4 +31,31 @@ func PrintAcls(bindingsObj []*kafkav1.ACLBinding, writer io.Writer) {
 			[]string{"ServiceAccountId", "Permission", "Operation", "Resource", "Name", "Type"}))
 	}
 	printer.RenderCollectionTableOut(bindings, []string{"ServiceAccountId", "Permission", "Operation", "Resource", "Name", "Type"}, writer)
+}
+
+func PrintMdsAcls(bindingsObj []mds.AclBinding, writer io.Writer) {
+	var bindings [][]string
+	for _, binding := range bindingsObj {
+
+		record := &struct {
+			ServiceAccountId string
+			Permission       mds.AclPermissionType
+			Operation        mds.AclOperation
+			Host			 string
+			Resource         mds.AclResourceType
+			Name             string
+			Type             mds.PatternType
+		}{
+			binding.Entry.Principal,
+			binding.Entry.PermissionType,
+			binding.Entry.Operation,
+			binding.Entry.Host,
+			binding.Pattern.ResourceType,
+			binding.Pattern.Name,
+			binding.Pattern.PatternType,
+		}
+		bindings = append(bindings, printer.ToRow(record,
+			[]string{"ServiceAccountId", "Permission", "Operation", "Host", "Resource", "Name", "Type"}))
+	}
+	printer.RenderCollectionTableOut(bindings, []string{"ServiceAccountId", "Permission", "Operation", "Host", "Resource", "Name", "Type"}, writer)
 }

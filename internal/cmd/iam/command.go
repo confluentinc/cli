@@ -21,9 +21,9 @@ func New(prerunner pcmd.PreRunner, config *config.Config, ch *pcmd.ConfigHelper,
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:               "iam",
-			Short:             "Manage RBAC and IAM permissions.",
-			Long:              "Manage Role Based Access (RBAC) and Identity and Access Management (IAM) permissions.",
-			PersistentPreRunE: prerunner.Authenticated(),
+			Short:             "Manage RBAC, ACL and IAM permissions.",
+			Long:              "Manage Role Based Access (RBAC), Access Control Lists (ACL), and Identity and Access Management (IAM) permissions.",
+			//PersistentPreRunE: prerunner.Authenticated(),
 		},
 		config: config,
 		ch:     ch,
@@ -37,4 +37,5 @@ func New(prerunner pcmd.PreRunner, config *config.Config, ch *pcmd.ConfigHelper,
 func (c *command) init() {
 	c.AddCommand(NewRoleCommand(c.config, c.client))
 	c.AddCommand(NewRolebindingCommand(c.config, c.ch, c.client))
+	c.AddCommand(NewACLCommand(c.config, c.ch, c.client))
 }
