@@ -33,19 +33,19 @@ func NewSchemaCommand(config *config.Config, ch *pcmd.ConfigHelper, srClient *sr
 
 func (c *schemaCommand) init() {
 	cmd := &cobra.Command{
-		Use:   "create --subject <subject> --schema @schema-file",
+		Use:   "create --subject <subject> --schema schema-file",
 		Short: "Create a schema.",
 		Example: `
 Register a new schema
 
 ::
 
-		ccloud schema-registry schema create --subject payments --schema @schemafilepath
+		ccloud schema-registry schema create --subject payments --schema schemafilepath
 
 where schemafilepath may include these contents:
 {
    "type" : "record",
-   "namespace" : "Tutorialspoint",
+   "namespace" : "Example",
    "name" : "Employee",
    "fields" : [
       { "name" : "Name" , "type" : "string" },

@@ -7,7 +7,7 @@ import (
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
-	cmd2 "github.com/confluentinc/cli/internal/pkg/cmd"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/version"
@@ -94,11 +94,11 @@ func (suite *ModeTestSuite) SetupTest() {
 }
 
 func (suite *ModeTestSuite) newCMD() *cobra.Command {
-	cmd := New(&cliMock.Commander{}, suite.conf, suite.srMothershipMock, &cmd2.ConfigHelper{Config: &config.Config{
+	cmd := New(&cliMock.Commander{}, suite.conf, suite.srMothershipMock, &pcmd.ConfigHelper{Config: &config.Config{
 		Auth: &config.AuthConfig{Account: &orgv1.Account{Id: "777"}},
 	},
 		Version: &version.Version{},
-	}, suite.srClientMock)
+	}, suite.srClientMock, nil)
 	return cmd
 }
 

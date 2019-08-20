@@ -101,7 +101,7 @@ build-confluent:
 bindata: internal/cmd/local/bindata.go
 
 internal/cmd/local/bindata.go: cp_cli/
-	@go-bindata -pkg local -o internal/cmd/local/bindata.go cp_cli/
+	@go-bindata -pkg local -o internal/cmd/local/bindata.go cp_cli/ assets/
 
 .PHONY: release
 release: get-release-image commit-release tag-release
@@ -138,7 +138,7 @@ dist: download-licenses
 				fi; \
 				[ "$${os}" = "windows" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
 				rm -rf /tmp/$${binary} && mkdir /tmp/$${binary} ; \
-				cp LICENSE /tmp/${binary} && cp -r legal/$${binary} /tmp/$${binary}/legal ; \
+				cp LICENSE /tmp/$${binary} && cp -r legal/$${binary} /tmp/$${binary}/legal ; \
 				cp dist/$${binary}/$${os}_$${arch}/$${binexe} /tmp/$${binary} ; \
 				suffix="" ; \
 				if [ "$${os}" = "windows" ] ; then \

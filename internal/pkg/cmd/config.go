@@ -40,13 +40,20 @@ func (c *ConfigHelper) SchemaRegistryURL(requestContext context.Context) (string
 	}
 
 	// Didn't find it -- ask the mothership
-	existingCluster, err := c.Client.SchemaRegistry.GetSchemaRegistryCluster(
+	// TODO Using the plural "clusters" command for now until we can fix API compat for singular command
+	existingClusters, err := c.Client.SchemaRegistry.GetSchemaRegistryClusters(
 		requestContext,
 		&srv1.SchemaRegistryCluster{
 			AccountId: c.Config.Auth.Account.Id,
 		})
 	if err != nil {
-		return "", err
+		return "", errors.New("failed to retrieve Schema Registry data from Cloud")
+	}
+	var existingCluster *srv1.SchemaRegistryCluster
+	if len(existingClusters) > 0 {
+		existingCluster = existingClusters[0]
+	} else {
+		return "", errors.New("no Schema Registry instances found in this environment")
 	}
 	if existingCluster == nil {
 		return "", errors.Errorf("schema registry not found")

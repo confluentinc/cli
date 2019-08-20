@@ -30,7 +30,7 @@ func TestCredentialsOverride(t *testing.T) {
 
 	prompt := prompt("cody@confluent.io", "iambatman")
 	auth := &sdkMock.Auth{
-		LoginFunc: func(ctx context.Context, username string, password string) (string, error) {
+		LoginFunc: func(ctx context.Context, idToken string, username string, password string) (string, error) {
 			return "y0ur.jwt.T0kEn", nil
 		},
 		UserFunc: func(ctx context.Context) (*orgv1.GetUserReply, error) {
@@ -44,7 +44,14 @@ func TestCredentialsOverride(t *testing.T) {
 			}, nil
 		},
 	}
-	cmds, cfg := newAuthCommand(prompt, auth, "ccloud", req)
+	user := &sdkMock.User{
+		CheckEmailFunc: func(ctx context.Context, user *orgv1.User) (*orgv1.User, error) {
+			return &orgv1.User{
+				Email: "test-email",
+			}, nil
+		},
+	}
+	cmds, cfg := newAuthCommand(prompt, auth, user, "ccloud", req)
 
 	output, err := pcmd.ExecuteCommand(cmds.Commands[0])
 	req.NoError(err)
@@ -62,7 +69,7 @@ func TestLoginSuccess(t *testing.T) {
 
 	prompt := prompt("cody@confluent.io", "iambatman")
 	auth := &sdkMock.Auth{
-		LoginFunc: func(ctx context.Context, username string, password string) (string, error) {
+		LoginFunc: func(ctx context.Context, idToken string, username string, password string) (string, error) {
 			return "y0ur.jwt.T0kEn", nil
 		},
 		UserFunc: func(ctx context.Context) (*orgv1.GetUserReply, error) {
@@ -73,6 +80,13 @@ func TestLoginSuccess(t *testing.T) {
 					FirstName: "Cody",
 				},
 				Accounts: []*orgv1.Account{{Id: "a-595", Name: "Default"}},
+			}, nil
+		},
+	}
+	user := &sdkMock.User{
+		CheckEmailFunc: func(ctx context.Context, user *orgv1.User) (*orgv1.User, error) {
+			return &orgv1.User{
+				Email: "test-email",
 			}, nil
 		},
 	}
@@ -94,7 +108,7 @@ func TestLoginSuccess(t *testing.T) {
 
 	for _, s := range suite {
 		// Login to the CLI control plane
-		cmds, cfg := newAuthCommand(prompt, auth, s.cliName, req)
+		cmds, cfg := newAuthCommand(prompt, auth, user, s.cliName, req)
 
 		output, err := pcmd.ExecuteCommand(cmds.Commands[0], s.args...)
 		req.NoError(err)
@@ -124,11 +138,18 @@ func TestLoginFail(t *testing.T) {
 
 	prompt := prompt("cody@confluent.io", "iamrobin")
 	auth := &sdkMock.Auth{
-		LoginFunc: func(ctx context.Context, username string, password string) (string, error) {
+		LoginFunc: func(ctx context.Context, idToken string, username string, password string) (string, error) {
 			return "", &ccloud.InvalidLoginError{}
 		},
 	}
-	cmds, _ := newAuthCommand(prompt, auth, "ccloud", req)
+	user := &sdkMock.User{
+		CheckEmailFunc: func(ctx context.Context, user *orgv1.User) (*orgv1.User, error) {
+			return &orgv1.User{
+				Email: "test-email",
+			}, nil
+		},
+	}
+	cmds, _ := newAuthCommand(prompt, auth, user, "ccloud", req)
 
 	_, err := pcmd.ExecuteCommand(cmds.Commands[0])
 	req.Contains(err.Error(), "You have entered an incorrect username or password.")
@@ -139,11 +160,11 @@ func TestURLRequiredWithMDS(t *testing.T) {
 
 	prompt := prompt("cody@confluent.io", "iamrobin")
 	auth := &sdkMock.Auth{
-		LoginFunc: func(ctx context.Context, username string, password string) (string, error) {
+		LoginFunc: func(ctx context.Context, idToken string, username string, password string) (string, error) {
 			return "", &ccloud.InvalidLoginError{}
 		},
 	}
-	cmds, _ := newAuthCommand(prompt, auth, "confluent", req)
+	cmds, _ := newAuthCommand(prompt, auth, nil, "confluent", req)
 
 	_, err := pcmd.ExecuteCommand(cmds.Commands[0])
 	req.Contains(err.Error(), "required flag(s) \"url\" not set")
@@ -154,7 +175,7 @@ func TestLogout(t *testing.T) {
 
 	prompt := prompt("cody@confluent.io", "iamrobin")
 	auth := &sdkMock.Auth{}
-	cmds, cfg := newAuthCommand(prompt, auth, "ccloud", req)
+	cmds, cfg := newAuthCommand(prompt, auth, nil, "ccloud", req)
 
 	cfg.AuthToken = "some.token.here"
 	cfg.Auth = &config.AuthConfig{User: &orgv1.User{Id: 23}}
@@ -176,9 +197,9 @@ func Test_credentials_NoSpacesAroundEmail_ShouldSupportSpacesAtBeginOrEnd(t *tes
 
 	prompt := prompt(" cody@confluent.io ", " iamrobin ")
 	auth := &sdkMock.Auth{}
-	cmds, _ := newAuthCommand(prompt, auth, "ccloud", req)
+	cmds, _ := newAuthCommand(prompt, auth, nil, "ccloud", req)
 
-	user, pass, err := cmds.credentials(cmds.Commands[0], "Email")
+	user, pass, err := cmds.credentials(cmds.Commands[0], "Email", nil)
 	req.NoError(err)
 	req.Equal("cody@confluent.io", user)
 	req.Equal(" iamrobin ", pass)
@@ -195,13 +216,13 @@ func prompt(username, password string) *cliMock.Prompt {
 	}
 }
 
-func newAuthCommand(prompt pcmd.Prompt, auth *sdkMock.Auth, cliName string, req *require.Assertions) (*commands, *config.Config) {
+func newAuthCommand(prompt pcmd.Prompt, auth *sdkMock.Auth, user *sdkMock.User, cliName string, req *require.Assertions) (*commands, *config.Config) {
 	var mockAnonHTTPClientFactory = func(baseURL string, logger *log.Logger) *ccloud.Client {
 		req.Equal("https://confluent.cloud", baseURL)
-		return &ccloud.Client{Auth: auth}
+		return &ccloud.Client{Auth: auth, User: user}
 	}
 	var mockJwtHTTPClientFactory = func(ctx context.Context, jwt, baseURL string, logger *log.Logger) *ccloud.Client {
-		return &ccloud.Client{Auth: auth}
+		return &ccloud.Client{Auth: auth, User: user}
 	}
 	cfg := config.New()
 	cfg.Logger = log.New()

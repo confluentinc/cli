@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/magiconair/properties"
+	"github.com/confluentinc/properties"
 )
 
 var dataRegex = regexp.MustCompile(DATA_PATTERN)
@@ -41,7 +41,7 @@ func findMatchTrim(original string, re *regexp.Regexp, prefix string, suffix str
 func WritePropertiesFile(path string, property *properties.Properties, writeComments bool) error {
 	buf := new(bytes.Buffer)
 	if writeComments {
-		_, err := property.WriteComment(buf, "# ", properties.UTF8)
+		_, err := property.WriteFormattedComment(buf, properties.UTF8)
 		if err != nil {
 			return err
 		}
@@ -72,7 +72,10 @@ func LoadPropertiesFile(path string) (*properties.Properties, error) {
 	if !DoesPathExist(path) {
 		return nil, fmt.Errorf("Invalid file path.")
 	}
-	property, err := properties.LoadFile(path, properties.UTF8)
+	loader := new(properties.Loader)
+	loader.Encoding = properties.UTF8
+	loader.PreserveFormatting = true
+	property, err := loader.LoadFile(path)
 	if err != nil {
 		return nil, err
 	}
@@ -85,33 +88,4 @@ func GenerateConfigKey(path string, key string) string {
 	// Intentionally not using the filepath.Join(fileName, key), because even if this CLI is run on Windows we know that
 	// the server-side version will be running on a *nix variant and will thus have forward slashes to lookup the correct path
 	return fileName + "/" + key
-}
-
-func AppendDelimiter(path string) error {
-	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0)
-	if err != nil {
-		return err
-	}
-	if _, err := f.Write([]byte(SECURE_CONFIG_PROVIDER_DELIMITER)); err != nil {
-		return err
-	}
-
-	defer f.Close()
-
-	return nil
-}
-
-func RemoveDelimiter(path string) error {
-	read, err := ioutil.ReadFile(path)
-	if err != nil {
-		return err
-	}
-	newContents := strings.Replace(string(read), SECURE_CONFIG_PROVIDER_DELIMITER, "", -1)
-
-	err = ioutil.WriteFile(path, []byte(newContents), 0)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

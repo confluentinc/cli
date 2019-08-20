@@ -33,8 +33,8 @@ func getConfig(endpoint string) config.Config {
 func getClient() *ccloud.Client {
 	return &ccloud.Client{
 		SchemaRegistry: &mock.SchemaRegistry{
-			GetSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *srv1.SchemaRegistryCluster) (*srv1.SchemaRegistryCluster, error) {
-				return &srv1.SchemaRegistryCluster{Endpoint: "remotehost"}, nil
+			GetSchemaRegistryClustersFunc: func(ctx context.Context, clusterConfig *srv1.SchemaRegistryCluster) ([]*srv1.SchemaRegistryCluster, error) {
+				return []*srv1.SchemaRegistryCluster{&srv1.SchemaRegistryCluster{Endpoint: "remotehost"}}, nil
 			},
 		},
 	}
