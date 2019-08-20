@@ -17,7 +17,7 @@ type modeCommand struct {
 
 // NewModeCommand returns the Cobra command for Schema Registry mode.
 func NewModeCommand(config *config.Config, ch *pcmd.ConfigHelper, srClient *srsdk.APIClient) *cobra.Command {
-	compatCmd := &modeCommand{
+	modeCmd := &modeCommand{
 		Command: &cobra.Command{
 			Use:   "mode",
 			Short: "Update Schema Registry mode.",
@@ -26,8 +26,8 @@ func NewModeCommand(config *config.Config, ch *pcmd.ConfigHelper, srClient *srsd
 		ch:       ch,
 		srClient: srClient,
 	}
-	compatCmd.init()
-	return compatCmd.Command
+	modeCmd.init()
+	return modeCmd.Command
 }
 
 func (c *modeCommand) init() {
