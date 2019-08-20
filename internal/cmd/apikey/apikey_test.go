@@ -8,7 +8,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	ccsdk "github.com/confluentinc/ccloud-sdk-go"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go/mock"
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
