@@ -47,7 +47,7 @@ var (
 		linter.ExcludeCommandContains("schema-registry"),
 	}
 	resourceScopedCommands = []linter.RuleFilter{
-		linter.IncludeCommandContains("api-key use", "api-key create", "api-key list","api-key store"),
+		linter.IncludeCommandContains("api-key use", "api-key create", "api-key list", "api-key store"),
 	}
 )
 
