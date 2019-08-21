@@ -3,6 +3,7 @@ package apikey
 import (
 	"context"
 	"fmt"
+	"github.com/confluentinc/ccloud-sdk-go"
 	"testing"
 
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go/mock"
@@ -25,7 +26,7 @@ import (
 
 const (
 	kafkaClusterID = "kafka"
-	srClusterID    = "sr"
+	srClusterID    = "lsrc-sr"
 	apiKey         = "abracadabra"
 )
 
@@ -37,6 +38,7 @@ type APITestSuite struct {
 	kafkaCluster     *kafkav1.KafkaCluster
 	srCluster        *srv1.SchemaRegistryCluster
 	srMothershipMock *ccsdkmock.SchemaRegistry
+	kafkaMock		*ccsdkmock.Kafka
 }
 
 func (suite *APITestSuite) SetupSuite() {
@@ -81,6 +83,11 @@ func (suite *APITestSuite) SetupSuite() {
 
 //Require
 func (suite *APITestSuite) SetupTest() {
+	suite.kafkaMock = &ccsdkmock.Kafka{
+		DescribeFunc: func(ctx context.Context, cluster *kafkav1.KafkaCluster) (*kafkav1.KafkaCluster, error) {
+			return suite.kafkaCluster, nil
+		},
+	}
 	suite.srMothershipMock = &ccsdkmock.SchemaRegistry{
 		CreateSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *srv1.SchemaRegistryClusterConfig) (*srv1.SchemaRegistryCluster, error) {
 			return suite.srCluster, nil
@@ -135,7 +142,7 @@ func (suite *APITestSuite) SetupTest() {
 }
 
 func (suite *APITestSuite) newCMD() *cobra.Command {
-	cmd := New(&cliMock.Commander{}, suite.conf, suite.apiMock, &pcmd.ConfigHelper{Config: suite.conf}, suite.keystore)
+	cmd := New(&cliMock.Commander{}, suite.conf, suite.apiMock, &pcmd.ConfigHelper{Config: suite.conf, Client: &ccloud.Client{Kafka: suite.kafkaMock, SchemaRegistry:suite.srMothershipMock}}, suite.keystore)
 	return cmd
 }
 
@@ -152,6 +159,26 @@ func (suite *APITestSuite) TestCreateSrApiKey() {
 func (suite *APITestSuite) TestListSrApiKey() {
 	cmd := suite.newCMD()
 	cmd.SetArgs(append([]string{"list", "--resource", srClusterID}))
+
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	req.True(suite.apiMock.ListCalled())
+}
+
+func (suite *APITestSuite) TestCreateKafkaApiKey() {
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"create", "--resource", kafkaClusterID}))
+
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	req.True(suite.apiMock.CreateCalled())
+}
+
+func (suite *APITestSuite) TestListKafkaApiKey() {
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"list", "--resource", kafkaClusterID}))
 
 	err := cmd.Execute()
 	req := require.New(suite.T())
