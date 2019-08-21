@@ -105,7 +105,7 @@ var rules = []linter.Rule{
 
 var flagRules = []linter.FlagRule{
 	linter.FlagFilter(linter.RequireFlagNameLength(2, 16),
-		linter.ExcludeFlag("service-account-id", "replication-factor", "connect-cluster-id", "schema-registry-cluster-id", "local-secrets-file", "remote-secrets-file")),
+		linter.ExcludeFlag("service-account-id", "connect-cluster-id", "schema-registry-cluster-id", "local-secrets-file", "remote-secrets-file")),
 	linter.RequireFlagStartWithCapital,
 	linter.RequireFlagEndWithPunctuation,
 	linter.RequireFlagCharacters('-'),

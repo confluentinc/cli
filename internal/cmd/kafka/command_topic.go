@@ -76,7 +76,6 @@ Create a topic named 'my_topic' with default options.
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().Uint32("partitions", 6, "Number of topic partitions.")
-	cmd.Flags().Uint32("replication-factor", 3, "Replication factor.")
 	cmd.Flags().StringSlice("config", nil, "A comma-separated list of topic configuration ('key=value') overrides for the topic being created.")
 	cmd.Flags().Bool("dry-run", false, "Run the command without committing changes to Kafka.")
 	cmd.Flags().SortFlags = false
@@ -207,10 +206,8 @@ func (c *topicCommand) create(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	topic.Spec.ReplicationFactor, err = cmd.Flags().GetUint32("replication-factor")
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
+	const defaultReplicationFactor = 3
+	topic.Spec.ReplicationFactor = defaultReplicationFactor
 
 	topic.Validate, err = cmd.Flags().GetBool("dry-run")
 	if err != nil {
