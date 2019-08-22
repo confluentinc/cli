@@ -344,7 +344,7 @@ func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	pcmd.Println(cmd, "Starting Kafka Producer. ^C to exit")
+	pcmd.Println(cmd, "Starting Kafka Producer. ^C or ^D to exit")
 
 	producer, err := NewSaramaProducer(cluster)
 	if err != nil {
@@ -357,8 +357,13 @@ func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {
 
 	// Avoid blocking in for loop so ^C can exit immediately.
 	scan := func() {
-		scanner.Scan()
-		input <- scanner.Text()
+		hasNext := scanner.Scan()
+		if !hasNext && scanner.Err() == nil {
+			// Reached EOF
+			close(input)
+		} else {
+			input <- scanner.Text()
+		}
 	}
 	// Prime reader
 	scan()
