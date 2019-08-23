@@ -3,12 +3,10 @@ package apikey
 import (
 	"context"
 	"fmt"
-	"os"
-	"strings"
-
 	"github.com/spf13/cobra"
+	"os"
 
-	ccloud "github.com/confluentinc/ccloud-sdk-go"
+	"github.com/confluentinc/ccloud-sdk-go"
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
@@ -125,28 +123,15 @@ func (c *command) init() {
 }
 
 func (c *command) list(cmd *cobra.Command, args []string) error {
-	resource, err := cmd.Flags().GetString("resource")
-	if err != nil {
-		return err
-	}
-
 	type keyDisplay struct {
 		Key         string
 		Description string
 		UserId      int32
 	}
-	var currentKey string
-	var accId string
-	var clusterId string
 	var apiKeys []*authv1.ApiKey
 	var data [][]string
 
-	if strings.HasPrefix(resource, "lsrc-") {
-		accId, clusterId, currentKey, err = c.srClusterInfo(cmd, args)
-	} else {
-		accId, clusterId, currentKey, err = c.kafkaClusterInfo(cmd, args)
-	}
-
+	_, accId, clusterId, currentKey, err := c.resolveResourceID(cmd, args)
 	//Return resource not found errors
 	if err != nil {
 		return err
@@ -212,22 +197,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 
 func (c *command) create(cmd *cobra.Command, args []string) error {
 
-	resource, err := cmd.Flags().GetString("resource")
-	if err != nil {
-		return err
-	}
-
-	var resourceType string
-	var clusterId string
-	var accId string
-
-	if strings.HasPrefix(resource, "lsrc-") {
-		accId, clusterId, _, err = c.srClusterInfo(cmd, args)
-		resourceType = "schema-registry"
-	} else {
-		accId, clusterId, _, err = c.kafkaClusterInfo(cmd, args)
-		resourceType = "kafka"
-	}
+	resourceType, accId, clusterId, _, err := c.resolveResourceID(cmd, args)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}

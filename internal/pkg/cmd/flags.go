@@ -10,13 +10,10 @@ import (
 )
 
 func GetKafkaCluster(cmd *cobra.Command, ch *ConfigHelper, flag ...string) (*kafkav1.KafkaCluster, error) {
-	var clusterID string
-	var err error
-	if len(flag) > 0 {
-		clusterID, err = cmd.Flags().GetString(flag[0])
-	} else {
-		clusterID, err = cmd.Flags().GetString("cluster")
+	if len(flag) == 0 {
+		flag = []string{"cluster"}
 	}
+	clusterID, err := cmd.Flags().GetString(flag[0])
 	if err != nil {
 		return nil, err
 	}
@@ -28,13 +25,10 @@ func GetKafkaCluster(cmd *cobra.Command, ch *ConfigHelper, flag ...string) (*kaf
 }
 
 func GetKafkaClusterConfig(cmd *cobra.Command, ch *ConfigHelper, flag ...string) (*config.KafkaClusterConfig, error) {
-	var clusterID string
-	var err error
-	if len(flag) > 0 {
-		clusterID, err = cmd.Flags().GetString(flag[0])
-	} else {
-		clusterID, err = cmd.Flags().GetString("cluster")
+	if len(flag) == 0 {
+		flag = []string{"cluster"}
 	}
+	clusterID, err := cmd.Flags().GetString(flag[0])
 	if err != nil {
 		return nil, err
 	}
