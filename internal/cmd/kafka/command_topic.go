@@ -358,7 +358,7 @@ func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {
 	scanner := bufio.NewScanner(os.Stdin)
 	input := make(chan string, 1)
 
-	// Avoid blocking in for loop so ^C can exit immediately.
+	// Avoid blocking in for loop so ^C or ^D can exit immediately.
 	scan := func() {
 		hasNext := scanner.Scan()
 		if !hasNext && scanner.Err() == nil {
