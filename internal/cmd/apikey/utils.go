@@ -20,7 +20,7 @@ func (c *command) resolveResourceID(cmd *cobra.Command, args []string) (resource
 			return "", "", "", "", errors.HandleCommon(errors.Wrap(err, "Schema Registry doesn't exist"), cmd)
 		}
 		clusterInContext, _ := c.config.SchemaRegistryCluster()
-		if clusterInContext == nil || clusterInContext.SrCredentials == nil{
+		if clusterInContext == nil || clusterInContext.SrCredentials == nil {
 			currentKey = ""
 		} else {
 			currentKey = clusterInContext.SrCredentials.Key

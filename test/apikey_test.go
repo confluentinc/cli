@@ -89,8 +89,8 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 		{name: "error if using api-key without existing secret", args: "api-key use UIAPIKEY103", fixture: "apikey19.golden"},
 
 		// create api key for nschema registry cluster
-		{args: "api-key create --description my-sr-cluster --resource lsrc-1", fixture: "apikey20.golden"}, // MYKEY20
-		{args: "api-key list --resource lsrc-1", fixture: "apikey21.golden"},
+		//{args: "api-key create --description my-sr-cluster --resource lsrc-1", fixture: "apikey20.golden"}, // MYKEY20
+		//{args: "api-key list --resource lsrc-1", fixture: "apikey21.golden"},
 	}
 	resetConfiguration(s.T(), "ccloud")
 	for _, tt := range tests {
