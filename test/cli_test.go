@@ -615,9 +615,17 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		require.NoError(t, err)
 	})
 	router.HandleFunc("/api/schema_registries/", func(w http.ResponseWriter, r *http.Request) {
+		require.NotEmpty(t, r.URL.Query().Get("account_id"))
+		parts := strings.Split(r.URL.Path, "/")
+		id := parts[len(parts)-1]
+		if id=="" {
+			_, err := io.WriteString(w, `{"error":{"code":404,"message":"resource not found","nested_errors":{},"details":[],"stack":null},"cluster":null}`)
+			require.NoError(t, err)
+			return
+		}
 		srCluster := &srv1.SchemaRegistryCluster{
 			Id:        "lsrc-1",
-			AccountId: "25",
+			AccountId: "23",
 			Name:      "account schema-registry",
 			Endpoint:  "SASL_SSL://sr-endpoint",
 		}
