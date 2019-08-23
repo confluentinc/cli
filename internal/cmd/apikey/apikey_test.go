@@ -3,24 +3,23 @@ package apikey
 import (
 	"context"
 	"fmt"
-	"github.com/confluentinc/ccloud-sdk-go"
 	"testing"
 
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+
+	"github.com/confluentinc/ccloud-sdk-go"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go/mock"
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
+	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
+	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/keystore"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/mock"
-	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
-
-	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
-
-	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
@@ -149,7 +148,6 @@ func (suite *APITestSuite) newCMD() *cobra.Command {
 func (suite *APITestSuite) TestCreateSrApiKey() {
 	cmd := suite.newCMD()
 	cmd.SetArgs(append([]string{"create", "--resource", srClusterID}))
-
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -169,7 +167,6 @@ func (suite *APITestSuite) TestListSrApiKey() {
 func (suite *APITestSuite) TestCreateKafkaApiKey() {
 	cmd := suite.newCMD()
 	cmd.SetArgs(append([]string{"create", "--resource", kafkaClusterID}))
-
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -179,7 +176,6 @@ func (suite *APITestSuite) TestCreateKafkaApiKey() {
 func (suite *APITestSuite) TestListKafkaApiKey() {
 	cmd := suite.newCMD()
 	cmd.SetArgs(append([]string{"list", "--resource", kafkaClusterID}))
-
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -189,7 +185,6 @@ func (suite *APITestSuite) TestListKafkaApiKey() {
 func (suite *APITestSuite) TestDeleteApiKey() {
 	cmd := suite.newCMD()
 	cmd.SetArgs(append([]string{"delete", apiKey}))
-
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)

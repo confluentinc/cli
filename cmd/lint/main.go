@@ -40,7 +40,7 @@ var (
 		linter.ExcludeCommandContains("iam"),
 		// these all require explicit cluster as id/name args
 		linter.ExcludeCommandContains("kafka cluster"),
-		// this doesn't need a --cluster override since you provide the api key itself to identify it
+		// this uses --resource instead of --cluster
 		linter.ExcludeCommandContains("api-key"),
 		// this doesn't need a --cluster
 		linter.ExcludeCommandContains("secret"),
