@@ -26,6 +26,7 @@ import (
 	corev1 "github.com/confluentinc/ccloudapis/core/v1"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
+	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
 	utilv1 "github.com/confluentinc/ccloudapis/util/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
@@ -54,6 +55,10 @@ type CLITest struct {
 	authKafka string
 	// Name of a golden output fixture containing expected output
 	fixture string
+	//// Schema registry cluster ID
+	//srClusterId string
+	//// The API Key to set as SR credentials
+	//authSR string
 	// Expected exit code (e.g., 0 for success or 1 for failure)
 	wantErrCode int
 	// If true, don't reset the config/state between tests to enable testing CLI workflows
@@ -318,13 +323,13 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint stri
 		}
 
 		if tt.authKafka != "" {
-			output := runCommand(t, "ccloud", []string{}, "api-key create --cluster "+tt.useKafka, 0)
+			output := runCommand(t, "ccloud", []string{}, "api-key create --resource "+tt.useKafka, 0)
 			if *debug {
 				fmt.Println(output)
 			}
 			// HACK: we don't have scriptable output yet so we parse it from the table
 			key := strings.TrimSpace(strings.Split(strings.Split(output, "\n")[2], "|")[2])
-			output = runCommand(t, "ccloud", []string{}, fmt.Sprintf("api-key use %s --cluster %s", key, tt.useKafka), 0)
+			output = runCommand(t, "ccloud", []string{}, fmt.Sprintf("api-key use %s --resource %s", key, tt.useKafka), 0)
 			if *debug {
 				fmt.Println(output)
 			}
@@ -604,6 +609,20 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 				Endpoint:    "SASL_SSL://kafka-endpoint",
 				ApiEndpoint: kafkaAPIURL,
 			},
+		})
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(b))
+		require.NoError(t, err)
+	})
+	router.HandleFunc("/api/schema_registries/", func(w http.ResponseWriter, r *http.Request) {
+		srCluster := &srv1.SchemaRegistryCluster{
+			Id:        "lsrc-1",
+			AccountId: "25",
+			Name:      "account schema-registry",
+			Endpoint:  "SASL_SSL://sr-endpoint",
+		}
+		b, err := utilv1.MarshalJSONToBytes(&srv1.GetSchemaRegistryClustersReply{
+			Clusters: []*srv1.SchemaRegistryCluster{srCluster},
 		})
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(b))
