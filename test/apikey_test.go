@@ -63,10 +63,11 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 		{args: "api-key list", fixture: "apikey11.golden"},
 		{args: "api-key list --resource lksqlc-ksql1", fixture: "apikey14.golden"},
 
-		// create api key for nschema registry cluster
+		// create api key for schema registry cluster
 		{args: "api-key create --resource lsrc-1", fixture: "apikey20.golden"}, // MYKEY20
 		{args: "api-key list --resource lsrc-1", fixture: "apikey21.golden"},
-
+		// create: error handling
+		{args: "api-key create --resource lsrc-unknown", fixture: "apikey22.golden"},
 		// store: error handling
 		{name: "error if storing unknown api key", args: "api-key store UNKNOWN SECRET", fixture: "apikey15.golden"},
 		{name: "error if storing api key with existing secret", args: "api-key store UIAPIKEY100 NEWSECRET", fixture: "apikey16.golden"},
