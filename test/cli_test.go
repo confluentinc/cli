@@ -661,14 +661,14 @@ func handleKafkaClusterList(t *testing.T, kafkaAPIURL string) func(w http.Respon
 		require.NotEmpty(t, r.URL.Query().Get("account_id"))
 		parts := strings.Split(r.URL.Path, "/")
 		id := parts[len(parts)-1]
-		if id == "lkc-unknown" {
+		if id == "" {
 			_, err := io.WriteString(w, `{"error":{"code":404,"message":"resource not found","nested_errors":{},"details":[],"stack":null},"cluster":null}`)
 			require.NoError(t, err)
 			return
 		}
 		b, err := utilv1.MarshalJSONToBytes(&srv1.GetSchemaRegistryClusterReply{
 			Cluster: &srv1.SchemaRegistryCluster{
-				Id:       id,
+				Id:       "lsrc-1",
 				Name:     "account schema-registry",
 				Endpoint: "SASL_SSL://sr-endpoint",
 			},
