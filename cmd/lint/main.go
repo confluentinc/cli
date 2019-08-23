@@ -40,11 +40,14 @@ var (
 		linter.ExcludeCommandContains("iam"),
 		// these all require explicit cluster as id/name args
 		linter.ExcludeCommandContains("kafka cluster"),
-		// this doesn't need a --cluster override since you provide the api key itself to identify it
-		linter.ExcludeCommandContains("api-key update", "api-key delete"),
+		// this uses --resource instead of --cluster
+		linter.ExcludeCommandContains("api-key"),
 		// this doesn't need a --cluster
 		linter.ExcludeCommandContains("secret"),
 		linter.ExcludeCommandContains("schema-registry"),
+	}
+	resourceScopedCommands = []linter.RuleFilter{
+		linter.IncludeCommandContains("api-key use", "api-key create", "api-key list", "api-key store"),
 	}
 )
 
@@ -81,6 +84,10 @@ var rules = []linter.Rule{
 	linter.Filter(linter.RequireFlagType("cluster", "string"), nonClusterScopedCommands...),
 	linter.Filter(linter.RequireFlagDescription("cluster", "Kafka cluster ID."),
 		append(nonClusterScopedCommands, linter.ExcludeParentUse("api-key"))...),
+	linter.Filter(linter.RequireFlag("resource", true), resourceScopedCommands...),
+	linter.Filter(linter.RequireFlagType("resource", "string"), resourceScopedCommands...),
+	linter.Filter(linter.RequireFlagDescription("resource", "The resource ID."),
+		append(resourceScopedCommands)...),
 	linter.RequireFlagSort(false),
 	linter.RequireLowerCase("Use"),
 	linter.RequireSingular("Use"),
