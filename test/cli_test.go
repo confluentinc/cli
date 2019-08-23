@@ -55,10 +55,6 @@ type CLITest struct {
 	authKafka string
 	// Name of a golden output fixture containing expected output
 	fixture string
-	//// Schema registry cluster ID
-	//srClusterId string
-	//// The API Key to set as SR credentials
-	//authSR string
 	// Expected exit code (e.g., 0 for success or 1 for failure)
 	wantErrCode int
 	// If true, don't reset the config/state between tests to enable testing CLI workflows
