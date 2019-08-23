@@ -26,6 +26,7 @@ import (
 	corev1 "github.com/confluentinc/ccloudapis/core/v1"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
+	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
 	utilv1 "github.com/confluentinc/ccloudapis/util/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
@@ -54,6 +55,10 @@ type CLITest struct {
 	authKafka string
 	// Name of a golden output fixture containing expected output
 	fixture string
+	//// Schema registry cluster ID
+	//srClusterId string
+	//// The API Key to set as SR credentials
+	//authSR string
 	// Expected exit code (e.g., 0 for success or 1 for failure)
 	wantErrCode int
 	// If true, don't reset the config/state between tests to enable testing CLI workflows
@@ -603,6 +608,26 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 				Name:        "kafka-cluster",
 				Endpoint:    "SASL_SSL://kafka-endpoint",
 				ApiEndpoint: kafkaAPIURL,
+			},
+		})
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(b))
+		require.NoError(t, err)
+	})
+	router.HandleFunc("/api/schema_registries/", func(w http.ResponseWriter, r *http.Request) {
+		require.NotEmpty(t, r.URL.Query().Get("account_id"))
+		parts := strings.Split(r.URL.Path, "/")
+		id := parts[len(parts)-1]
+		if id == "lkc-unknown" {
+			_, err := io.WriteString(w, `{"error":{"code":404,"message":"resource not found","nested_errors":{},"details":[],"stack":null},"cluster":null}`)
+			require.NoError(t, err)
+			return
+		}
+		b, err := utilv1.MarshalJSONToBytes(&srv1.GetSchemaRegistryClusterReply{
+			Cluster: &srv1.SchemaRegistryCluster{
+				Id:       id,
+				Name:     "account schema-registry",
+				Endpoint: "SASL_SSL://sr-endpoint",
 			},
 		})
 		require.NoError(t, err)
