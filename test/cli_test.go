@@ -516,6 +516,14 @@ func init() {
 		},
 		UserId: 25,
 	}
+	KEY_STORE[104] = &authv1.ApiKey{
+		Key:    "MYKEY20",
+		Secret: "MYSECRET20",
+		LogicalClusters: []*authv1.ApiKey_Cluster{
+			{Id: "lsrc-1"},
+		},
+		UserId: 25,
+	}
 }
 
 func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
@@ -661,17 +669,22 @@ func handleKafkaClusterList(t *testing.T, kafkaAPIURL string) func(w http.Respon
 		require.NotEmpty(t, r.URL.Query().Get("account_id"))
 		parts := strings.Split(r.URL.Path, "/")
 		id := parts[len(parts)-1]
-		if id == "" {
+		if id != "lsrc-1" {
 			_, err := io.WriteString(w, `{"error":{"code":404,"message":"resource not found","nested_errors":{},"details":[],"stack":null},"cluster":null}`)
 			require.NoError(t, err)
 			return
 		}
-		b, err := utilv1.MarshalJSONToBytes(&srv1.GetSchemaRegistryClusterReply{
-			Cluster: &srv1.SchemaRegistryCluster{
-				Id:       "lsrc-1",
-				Name:     "account schema-registry",
-				Endpoint: "SASL_SSL://sr-endpoint",
-			},
+		//
+		//srCluster, _ := req.SchemaRegistryCluster()
+		//srCluster.SrCredentials = &config.APIKeyPair{Key: "MYKEY20", Secret: "MYSECRET20"}
+		srCluster := &srv1.SchemaRegistryCluster{
+			Id:        "lsrc-1",
+			AccountId: "25",
+			Name:      "account schema-registry",
+			Endpoint:  "SASL_SSL://sr-endpoint",
+		}
+		b, err := utilv1.MarshalJSONToBytes(&srv1.GetSchemaRegistryClustersReply{
+			Clusters: []*srv1.SchemaRegistryCluster{srCluster},
 		})
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(b))
