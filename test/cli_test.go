@@ -666,14 +666,9 @@ func handleKafkaClusterList(t *testing.T, kafkaAPIURL string) func(w http.Respon
 		require.NoError(t, err)
 	})
 	router.HandleFunc("/api/schema_registries/", func(w http.ResponseWriter, r *http.Request) {
-		require.NotEmpty(t, r.URL.Query().Get("account_id"))
-		parts := strings.Split(r.URL.Path, "/")
-		id := parts[len(parts)-1]
-		if id != "lsrc-1" {
-			_, err := io.WriteString(w, `{"error":{"code":404,"message":"resource not found","nested_errors":{},"details":[],"stack":null},"cluster":null}`)
-			require.NoError(t, err)
-			return
-		}
+		//require.NotEmpty(t, r.URL.Query().Get("account_id"))
+		//parts := strings.Split(r.URL.Path, "/")
+		//id := parts[len(parts)-1]
 		//
 		//srCluster, _ := req.SchemaRegistryCluster()
 		//srCluster.SrCredentials = &config.APIKeyPair{Key: "MYKEY20", Secret: "MYSECRET20"}
