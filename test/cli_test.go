@@ -22,11 +22,11 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/confluentinc/ccloud-sdk-go"
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
 	corev1 "github.com/confluentinc/ccloudapis/core/v1"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
+	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
 	utilv1 "github.com/confluentinc/ccloudapis/util/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
@@ -651,6 +651,26 @@ func handleKafkaClusterList(t *testing.T, kafkaAPIURL string) func(w http.Respon
 				Name:        "kafka-cluster",
 				Endpoint:    "SASL_SSL://kafka-endpoint",
 				ApiEndpoint: kafkaAPIURL,
+			},
+		})
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(b))
+		require.NoError(t, err)
+	})
+	router.HandleFunc("/api/schema_registries/", func(w http.ResponseWriter, r *http.Request) {
+		require.NotEmpty(t, r.URL.Query().Get("account_id"))
+		parts := strings.Split(r.URL.Path, "/")
+		id := parts[len(parts)-1]
+		if id == "lkc-unknown" {
+			_, err := io.WriteString(w, `{"error":{"code":404,"message":"resource not found","nested_errors":{},"details":[],"stack":null},"cluster":null}`)
+			require.NoError(t, err)
+			return
+		}
+		b, err := utilv1.MarshalJSONToBytes(&srv1.GetSchemaRegistryClusterReply{
+			Cluster: &srv1.SchemaRegistryCluster{
+				Id:       id,
+				Name:     "account schema-registry",
+				Endpoint: "SASL_SSL://sr-endpoint",
 			},
 		})
 		require.NoError(t, err)
