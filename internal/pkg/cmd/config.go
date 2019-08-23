@@ -39,11 +39,7 @@ func (c *ConfigHelper) SchemaRegistry(resourceID, environment string, ctx contex
 	if err != nil {
 		return nil, err
 	}
-	if len(existingClusters) > 0 {
-		return existingClusters[0], nil
-	} else {
-		return nil, errors.Errorf("schema registry not found")
-	}
+	return existingClusters[0], nil
 }
 
 func (c *ConfigHelper) SchemaRegistryURL(requestContext context.Context) (string, error) {
