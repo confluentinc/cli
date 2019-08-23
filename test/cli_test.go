@@ -526,14 +526,6 @@ func init() {
 		},
 		UserId: 25,
 	}
-	KEY_STORE[104] = &authv1.ApiKey{
-		Key:    "MYKEY20",
-		Secret: "MYSECRET20",
-		LogicalClusters: []*authv1.ApiKey_Cluster{
-			{Id: "lsrc-1"},
-		},
-		UserId: 25,
-	}
 }
 
 func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
@@ -623,12 +615,6 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		require.NoError(t, err)
 	})
 	router.HandleFunc("/api/schema_registries/", func(w http.ResponseWriter, r *http.Request) {
-		//require.NotEmpty(t, r.URL.Query().Get("account_id"))
-		//parts := strings.Split(r.URL.Path, "/")
-		//id := parts[len(parts)-1]
-		//
-		//srCluster, _ := req.SchemaRegistryCluster()
-		//srCluster.SrCredentials = &config.APIKeyPair{Key: "MYKEY20", Secret: "MYSECRET20"}
 		srCluster := &srv1.SchemaRegistryCluster{
 			Id:        "lsrc-1",
 			AccountId: "25",
