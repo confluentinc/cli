@@ -25,7 +25,7 @@ func NewVersion(binary, name, version, commit, buildDate, buildHost string) *Ver
 		Commit:    commit,
 		BuildDate: buildDate,
 		BuildHost: buildHost,
-		UserAgent: fmt.Sprintf("Confluent/1.0 %s/%s (%s/%s)", binary, version, runtime.GOOS, runtime.GOARCH),
+		UserAgent: fmt.Sprintf("%s/%s (CLI)", binary, version),
 	}
 }
 
