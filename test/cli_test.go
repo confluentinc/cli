@@ -203,7 +203,7 @@ func (s *CLITestSuite) Test_Ccloud_Errors() {
 	t.Run("expired token", func(tt *testing.T) {
 		loginURL := serveErrors(tt)
 		env := []string{"XX_CCLOUD_EMAIL=expired@user.com", "XX_CCLOUD_PASSWORD=pass1"}
-		output := runCommand(tt, "ccloud", env, "login --url "+loginURL, 1)
+		output := runCommand(tt, "ccloud", env, "login --url "+loginURL, 0)
 		require.Equal(tt, "Logged in as expired@user.com\nUsing environment a-595 (\"default\")\n", output)
 
 		output = runCommand(t, "ccloud", []string{}, "kafka cluster list", 1)
@@ -213,7 +213,7 @@ func (s *CLITestSuite) Test_Ccloud_Errors() {
 	t.Run("malformed token", func(tt *testing.T) {
 		loginURL := serveErrors(tt)
 		env := []string{"XX_CCLOUD_EMAIL=malformed@user.com", "XX_CCLOUD_PASSWORD=pass1"}
-		output := runCommand(tt, "ccloud", env, "login --url "+loginURL, 1)
+		output := runCommand(tt, "ccloud", env, "login --url "+loginURL, 0)
 		require.Equal(tt, "Logged in as malformed@user.com\nUsing environment a-595 (\"default\")\n", output)
 
 		output = runCommand(t, "ccloud", []string{}, "kafka cluster list", 1)
@@ -223,7 +223,7 @@ func (s *CLITestSuite) Test_Ccloud_Errors() {
 	t.Run("invalid jwt", func(tt *testing.T) {
 		loginURL := serveErrors(tt)
 		env := []string{"XX_CCLOUD_EMAIL=invalid@user.com", "XX_CCLOUD_PASSWORD=pass1"}
-		output := runCommand(tt, "ccloud", env, "login --url "+loginURL, 1)
+		output := runCommand(tt, "ccloud", env, "login --url "+loginURL, 0)
 		require.Equal(tt, "Logged in as invalid@user.com\nUsing environment a-595 (\"default\")\n", output)
 
 		output = runCommand(t, "ccloud", []string{}, "kafka cluster list", 1)
@@ -400,7 +400,7 @@ func runCommand(t *testing.T, binaryName string, env []string, args string, want
 			require.Failf(t, "unexpected error", "command returned err: %s", err)
 		}
 	} else {
-		require.Equal(t, 0, wantErrCode)
+		require.Equal(t, wantErrCode, 0)
 	}
 	return string(output)
 }
