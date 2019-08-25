@@ -23,7 +23,7 @@ func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.Kafka, c
 		Command: &cobra.Command{
 			Use:               "kafka",
 			Short:             "Manage Apache Kafka.",
-			//PersistentPreRunE: prerunner.Authenticated(),
+			PersistentPreRunE: prerunner.Authenticated(),
 		},
 		config:    config,
 		client:    client,

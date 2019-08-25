@@ -88,7 +88,6 @@ func (c *ConfigHelper) KafkaClusterConfig(clusterID, environment string) (*confi
 	if !found || cluster.ID == "" || cluster.Name == "" || cluster.Bootstrap == "" || cluster.APIEndpoint == "" {
 		// Let's fetch the cluster details
 		req := &kafkav1.KafkaCluster{AccountId: environment, Id: clusterID}
-		fmt.Println("KafkaClusterConfig", req)
 		kc, err := c.Client.Kafka.Describe(context.Background(), req)
 		if err != nil {
 			if err != ccloud.ErrNotFound {

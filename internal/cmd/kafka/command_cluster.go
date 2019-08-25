@@ -126,7 +126,6 @@ func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
-	fmt.Println("CREATE", cmd, args)
 	cloud, err := cmd.Flags().GetString("cloud")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -148,7 +147,6 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		// TODO: remove this once it's no longer required (MCM-130)
 		Storage:         500,
 	}
-	fmt.Println("CFG ", cfg)
 	cluster, err := c.client.Create(context.Background(), cfg)
 	if err != nil {
 		// TODO: don't swallow validation errors (reportedly separately)
