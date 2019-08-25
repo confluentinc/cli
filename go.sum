@@ -77,12 +77,16 @@ github.com/confluentinc/ccloud-sdk-go v0.0.7 h1:Jd0DCHJHZRZl/CT+rhXJxtJvSuXwOLMu
 github.com/confluentinc/ccloud-sdk-go v0.0.7/go.mod h1:RZsyKqVROhZ6UFX4WasP6SKpG9yduHfN4DVjntK0Ji8=
 github.com/confluentinc/ccloud-sdk-go v0.0.8-0.20190805024857-5613bbaa771b h1:KsXv3t9ENO9IXZnEtmZKIlDzRMBogLoyn/XvNb7GE58=
 github.com/confluentinc/ccloud-sdk-go v0.0.8-0.20190805024857-5613bbaa771b/go.mod h1:0w7YhmrCtyriBdG2rjjCbDioRcBeX/3VQAXbWubtFM4=
+github.com/confluentinc/ccloud-sdk-go v0.0.10 h1:axAMt4XBzhQ14AP0UlMzKoxzTPUDEj+LL9hvYvXCBSk=
+github.com/confluentinc/ccloud-sdk-go v0.0.10/go.mod h1:i8KTRwhx2El9M9PHhMr4O+SjqRCKkOD497D46iymlV8=
 github.com/confluentinc/ccloudapis v0.0.0-20190614011354-aae16fc9c75c/go.mod h1:RGupQo6tb6J+1BnSqqueADkoC8b/F60+Ci3FMB3wDFo=
 github.com/confluentinc/ccloudapis v0.0.0-20190614011354-f1cd913 h1:0uG1WbZL3DmuiaHEBqq9XitI4UDq4QKkSXpW3Mg7QL8=
 github.com/confluentinc/ccloudapis v0.0.0-20190614011354-f1cd913/go.mod h1:RGupQo6tb6J+1BnSqqueADkoC8b/F60+Ci3FMB3wDFo=
 github.com/confluentinc/ccloudapis v0.0.0-20190802001453-9d2b40c45d9f/go.mod h1:GFtO4obMaNb4iRYrRYw0BiK3Ac+rVO/toNbX96DAbRs=
 github.com/confluentinc/ccloudapis v0.0.0-20190813215538-49a287a86b64 h1:8NwqYqv2JS28UgkA2moA4W8J4I1UATFJkAET0Th8gVU=
 github.com/confluentinc/ccloudapis v0.0.0-20190813215538-49a287a86b64/go.mod h1:GFtO4obMaNb4iRYrRYw0BiK3Ac+rVO/toNbX96DAbRs=
+github.com/confluentinc/ccloudapis v0.0.0-20190822180106-1f1a16f58a50 h1:wTee5yNUVYVOMGx8ogB3LBiraMv2seqJTaEJqYB8EtE=
+github.com/confluentinc/ccloudapis v0.0.0-20190822180106-1f1a16f58a50/go.mod h1:GFtO4obMaNb4iRYrRYw0BiK3Ac+rVO/toNbX96DAbRs=
 github.com/confluentinc/go-editor v0.4.0 h1:5hMjKsKmIOmlu3Yyz8zDq66Qpdin8HSmRaMhqhxRf5Y=
 github.com/confluentinc/go-editor v0.4.0/go.mod h1:sW1NzJdowffHQzy4iSbfY/ykRFMDE69I8EaT33Ebh7Y=
 github.com/confluentinc/go-printer v0.10.0 h1:JLJOeSdJL6A0YxAK24GSuoC52sPQP/chowAapSAwoBM=
@@ -530,6 +534,8 @@ github.com/stretchr/testify v1.2.1/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXf
 github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
 github.com/stretchr/testify v1.3.0 h1:TivCn/peBQ7UY8ooIcPgZFpTNSz0Q2U6UrFlUfqbe0Q=
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
+github.com/stretchr/testify v1.4.0 h1:2E4SXV/wtOkTonXsotYi4li6zVWxYlZuYNCXe9XRJyk=
+github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81PSLYec5m4=
 github.com/tidwall/pretty v0.0.0-20190325153808-1166b9ac2b65 h1:rQ229MBgvW68s1/g6f1/63TgYwYxfF4E+bi/KC19P8g=
 github.com/tidwall/pretty v0.0.0-20190325153808-1166b9ac2b65/go.mod h1:XNkn88O1ChpSDQmQeStsy+sBenx6DDtFZJxhVysOjyk=
 github.com/timakin/bodyclose v0.0.0-20190407043127-4a873e97b2bb h1:lI9ufgFfvuqRctP9Ny8lDDLbSWCMxBPletcSqrnyFYM=

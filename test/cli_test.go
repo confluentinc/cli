@@ -22,6 +22,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/confluentinc/ccloud-sdk-go"
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
 	corev1 "github.com/confluentinc/ccloudapis/core/v1"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
@@ -104,6 +105,55 @@ func (s *CLITestSuite) Test_Confluent_Help() {
 	}
 }
 
+func (s *CLITestSuite) Test_Ccloud_Help() {
+	tests := []CLITest{
+		{name: "no args", fixture: "help-flag.golden"},
+		{args: "help", fixture: "help.golden"},
+		{args: "--help", fixture: "help-flag.golden"},
+		{args: "version", fixture: "version.golden"},
+	}
+	for _, tt := range tests {
+		kafkaAPIURL := serveKafkaAPI(s.T()).URL
+		s.runCcloudTest(tt, serve(s.T(), kafkaAPIURL).URL, kafkaAPIURL)
+	}
+}
+
+func assertUserAgent(t *testing.T, expected string) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		require.Regexp(t, expected, r.Header.Get("User-Agent"))
+	}
+}
+
+func (s *CLITestSuite) Test_UserAgent() {
+	t := s.T()
+
+	checkUserAgent := func(t *testing.T, expected string) string {
+		kafkaApiRouter := http.NewServeMux()
+		kafkaApiRouter.HandleFunc("/", assertUserAgent(t, expected))
+		kafkaApiServer := httptest.NewServer(kafkaApiRouter)
+		cloudRouter := http.NewServeMux()
+		cloudRouter.HandleFunc("/api/sessions", compose(assertUserAgent(t, expected), handleLogin(t)))
+		cloudRouter.HandleFunc("/api/me", compose(assertUserAgent(t, expected), handleMe(t)))
+		cloudRouter.HandleFunc("/api/check_email/", compose(assertUserAgent(t, expected), handleCheckEmail(t)))
+		cloudRouter.HandleFunc("/api/clusters/", compose(assertUserAgent(t, expected), handleKafkaClusterList(t, kafkaApiServer.URL)))
+		return httptest.NewServer(cloudRouter).URL
+	}
+
+	serverURL := checkUserAgent(t, fmt.Sprintf("Confluent-Cloud-CLI/v(?:[0-9]\\.?){3}([^ ]*) \\(https://confluent.cloud; support@confluent.io\\) "+
+		"ccloud-sdk-go/%s \\(%s/%s; go[^ ]*\\)", ccloud.SDKVersion, runtime.GOOS, runtime.GOARCH))
+	env := []string{"XX_CCLOUD_EMAIL=valid@user.com", "XX_CCLOUD_PASSWORD=pass1"}
+
+	t.Run("ccloud login", func(tt *testing.T) {
+		_ = runCommand(tt, "ccloud", env, "login --url "+serverURL, 0)
+	})
+	t.Run("ccloud cluster list", func(tt *testing.T) {
+		_ = runCommand(tt, "ccloud", env, "kafka cluster list", 0)
+	})
+	t.Run("ccloud topic list", func(tt *testing.T) {
+		_ = runCommand(tt, "ccloud", env, "kafka topic list --cluster lkc-abc123", 0)
+	})
+}
+
 func (s *CLITestSuite) Test_Ccloud_Errors() {
 	t := s.T()
 	type errorer interface {
@@ -121,53 +171,9 @@ func (s *CLITestSuite) Test_Ccloud_Errors() {
 			req.NoError(err)
 		}
 		router := http.NewServeMux()
-		router.HandleFunc("/api/sessions", func(w http.ResponseWriter, r *http.Request) {
-			b, err := ioutil.ReadAll(r.Body)
-			req.NoError(err)
-			// TODO: mark AuthenticateRequest as not internal so its in CCloudAPIs
-			// https://github.com/confluentinc/cc-structs/blob/ce0ea5a6670d21a4b5c4f4f6ebd3d30b44cbb9f1/kafka/flow/v1/flow.proto#L41
-			auth := &struct {
-				Email    string
-				Password string
-			}{}
-			err = json.Unmarshal(b, auth)
-			req.NoError(err)
-			switch auth.Email {
-			case "incorrect@user.com":
-				w.WriteHeader(http.StatusForbidden)
-			case "expired@user.com":
-				http.SetCookie(w, &http.Cookie{Name: "auth_token", Value: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1MzAxMjQ4NTcsImV4cCI6MTUzMDAzODQ1NywiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSJ9.Y2ui08GPxxuV9edXUBq-JKr1VPpMSnhjSFySczCby7Y"})
-			case "malformed@user.com":
-				http.SetCookie(w, &http.Cookie{Name: "auth_token", Value: "malformed"})
-			case "invalid@user.com":
-				http.SetCookie(w, &http.Cookie{Name: "auth_token", Value: "invalid"})
-			default:
-				http.SetCookie(w, &http.Cookie{Name: "auth_token", Value: "good"})
-			}
-		})
-		router.HandleFunc("/api/check_email/", func(w http.ResponseWriter, r *http.Request) {
-			b, err := utilv1.MarshalJSONToBytes(&orgv1.GetUserReply{
-				User: &orgv1.User{
-					Email: strings.Replace(r.URL.String(), "/api/check_email/", "", 1),
-				},
-			})
-			req.NoError(err)
-			_, err = io.WriteString(w, string(b))
-			req.NoError(err)
-		})
-		router.HandleFunc("/api/me", func(w http.ResponseWriter, r *http.Request) {
-			b, err := utilv1.MarshalJSONToBytes(&orgv1.GetUserReply{
-				User: &orgv1.User{
-					Id:        23,
-					Email:     "cody@confluent.io",
-					FirstName: "Cody",
-				},
-				Accounts: []*orgv1.Account{{Id: "a-595", Name: "default"}},
-			})
-			req.NoError(err)
-			_, err = io.WriteString(w, string(b))
-			req.NoError(err)
-		})
+		router.HandleFunc("/api/sessions", handleLogin(t))
+		router.HandleFunc("/api/me", handleMe(t))
+		router.HandleFunc("/api/check_email/", handleCheckEmail(t))
 		router.HandleFunc("/api/clusters", func(w http.ResponseWriter, r *http.Request) {
 			switch r.Header.Get("Authorization") {
 			// TODO: these assume the upstream doesn't change its error responses. Fragile, fragile, fragile. :(
@@ -197,7 +203,7 @@ func (s *CLITestSuite) Test_Ccloud_Errors() {
 	t.Run("expired token", func(tt *testing.T) {
 		loginURL := serveErrors(tt)
 		env := []string{"XX_CCLOUD_EMAIL=expired@user.com", "XX_CCLOUD_PASSWORD=pass1"}
-		output := runCommand(tt, "ccloud", env, "login --url "+loginURL, 1)
+		output := runCommand(tt, "ccloud", env, "login --url "+loginURL, 0)
 		require.Equal(tt, "Logged in as expired@user.com\nUsing environment a-595 (\"default\")\n", output)
 
 		output = runCommand(t, "ccloud", []string{}, "kafka cluster list", 1)
@@ -207,7 +213,7 @@ func (s *CLITestSuite) Test_Ccloud_Errors() {
 	t.Run("malformed token", func(tt *testing.T) {
 		loginURL := serveErrors(tt)
 		env := []string{"XX_CCLOUD_EMAIL=malformed@user.com", "XX_CCLOUD_PASSWORD=pass1"}
-		output := runCommand(tt, "ccloud", env, "login --url "+loginURL, 1)
+		output := runCommand(tt, "ccloud", env, "login --url "+loginURL, 0)
 		require.Equal(tt, "Logged in as malformed@user.com\nUsing environment a-595 (\"default\")\n", output)
 
 		output = runCommand(t, "ccloud", []string{}, "kafka cluster list", 1)
@@ -217,25 +223,12 @@ func (s *CLITestSuite) Test_Ccloud_Errors() {
 	t.Run("invalid jwt", func(tt *testing.T) {
 		loginURL := serveErrors(tt)
 		env := []string{"XX_CCLOUD_EMAIL=invalid@user.com", "XX_CCLOUD_PASSWORD=pass1"}
-		output := runCommand(tt, "ccloud", env, "login --url "+loginURL, 1)
+		output := runCommand(tt, "ccloud", env, "login --url "+loginURL, 0)
 		require.Equal(tt, "Logged in as invalid@user.com\nUsing environment a-595 (\"default\")\n", output)
 
 		output = runCommand(t, "ccloud", []string{}, "kafka cluster list", 1)
 		require.Equal(tt, "Error: Your auth token has been corrupted. Please login again.\n", output)
 	})
-}
-
-func (s *CLITestSuite) Test_Ccloud_Help() {
-	tests := []CLITest{
-		{name: "no args", fixture: "help-flag.golden"},
-		{args: "help", fixture: "help.golden"},
-		{args: "--help", fixture: "help-flag.golden"},
-		{args: "version", fixture: "version.golden"},
-	}
-	for _, tt := range tests {
-		kafkaAPIURL := serveKafkaAPI(s.T()).URL
-		s.runCcloudTest(tt, serve(s.T(), kafkaAPIURL).URL, kafkaAPIURL)
-	}
 }
 
 func (s *CLITestSuite) Test_Ccloud_Login_UseKafka_AuthKafka_Errors() {
@@ -406,6 +399,8 @@ func runCommand(t *testing.T, binaryName string, env []string, args string, want
 		} else {
 			require.Failf(t, "unexpected error", "command returned err: %s", err)
 		}
+	} else {
+		require.Equal(t, wantErrCode, 0)
 	}
 	return string(output)
 }
@@ -524,39 +519,10 @@ func init() {
 }
 
 func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
-	req := require.New(t)
 	router := http.NewServeMux()
-	router.HandleFunc("/api/sessions", func(w http.ResponseWriter, r *http.Request) {
-		validToken := "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1NjE2NjA4NTcsImV4cCI6MjUzMzg2MDM4NDU3LCJhdWQiOiJ3d3cuZXhhbXBsZS5jb20iLCJzdWIiOiJqcm9ja2V0QGV4YW1wbGUuY29tIn0.G6IgrFm5i0mN7Lz9tkZQ2tZvuZ2U7HKnvxMuZAooPmE"
-		http.SetCookie(w, &http.Cookie{Name: "auth_token", Value: validToken})
-	})
-	router.HandleFunc("/api/check_email/", func(w http.ResponseWriter, r *http.Request) {
-		email := strings.Replace(r.URL.String(), "/api/check_email/", "", 1)
-		reply := &orgv1.GetUserReply{}
-		switch email {
-		case "cody@confluent.io":
-			reply.User = &orgv1.User{
-				Email: "cody@confluent.io",
-			}
-		}
-		b, err := utilv1.MarshalJSONToBytes(reply)
-		req.NoError(err)
-		_, err = io.WriteString(w, string(b))
-		req.NoError(err)
-	})
-	router.HandleFunc("/api/me", func(w http.ResponseWriter, r *http.Request) {
-		b, err := utilv1.MarshalJSONToBytes(&orgv1.GetUserReply{
-			User: &orgv1.User{
-				Id:        23,
-				Email:     "cody@confluent.io",
-				FirstName: "Cody",
-			},
-			Accounts: []*orgv1.Account{{Id: "a-595", Name: "default"}},
-		})
-		req.NoError(err)
-		_, err = io.WriteString(w, string(b))
-		req.NoError(err)
-	})
+	router.HandleFunc("/api/sessions", handleLogin(t))
+	router.HandleFunc("/api/check_email/", handleCheckEmail(t))
+	router.HandleFunc("/api/me", handleMe(t))
 	router.HandleFunc("/api/api_keys", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
 			req := &authv1.CreateApiKeyRequest{}
@@ -588,7 +554,89 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 			require.NoError(t, err)
 		}
 	})
-	router.HandleFunc("/api/clusters/", func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc("/api/clusters/", handleKafkaClusterList(t, kafkaAPIURL))
+	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		_, err := io.WriteString(w, `{"error": {"message": "unexpected call to `+r.URL.Path+`"}}`)
+		require.NoError(t, err)
+	})
+	return httptest.NewServer(router)
+}
+
+func serveKafkaAPI(t *testing.T) *httptest.Server {
+	mux := http.NewServeMux()
+	// TODO: no idea how this "topic already exists" API request or response actually looks
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(400)
+		_, err := io.WriteString(w, `{}`)
+		require.NoError(t, err)
+	})
+	return httptest.NewServer(mux)
+}
+
+func handleLogin(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		req := require.New(t)
+		b, err := ioutil.ReadAll(r.Body)
+		req.NoError(err)
+		// TODO: mark AuthenticateRequest as not internal so its in CCloudAPIs
+		// https://github.com/confluentinc/cc-structs/blob/ce0ea5a6670d21a4b5c4f4f6ebd3d30b44cbb9f1/kafka/flow/v1/flow.proto#L41
+		auth := &struct {
+			Email    string
+			Password string
+		}{}
+		err = json.Unmarshal(b, auth)
+		req.NoError(err)
+		switch auth.Email {
+		case "incorrect@user.com":
+			w.WriteHeader(http.StatusForbidden)
+		case "expired@user.com":
+			http.SetCookie(w, &http.Cookie{Name: "auth_token", Value: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1MzAxMjQ4NTcsImV4cCI6MTUzMDAzODQ1NywiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSJ9.Y2ui08GPxxuV9edXUBq-JKr1VPpMSnhjSFySczCby7Y"})
+		case "malformed@user.com":
+			http.SetCookie(w, &http.Cookie{Name: "auth_token", Value: "malformed"})
+		case "invalid@user.com":
+			http.SetCookie(w, &http.Cookie{Name: "auth_token", Value: "invalid"})
+		default:
+			http.SetCookie(w, &http.Cookie{Name: "auth_token", Value: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1NjE2NjA4NTcsImV4cCI6MjUzMzg2MDM4NDU3LCJhdWQiOiJ3d3cuZXhhbXBsZS5jb20iLCJzdWIiOiJqcm9ja2V0QGV4YW1wbGUuY29tIn0.G6IgrFm5i0mN7Lz9tkZQ2tZvuZ2U7HKnvxMuZAooPmE"})
+		}
+	}
+}
+
+func handleMe(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		b, err := utilv1.MarshalJSONToBytes(&orgv1.GetUserReply{
+			User: &orgv1.User{
+				Id:        23,
+				Email:     "cody@confluent.io",
+				FirstName: "Cody",
+			},
+			Accounts: []*orgv1.Account{{Id: "a-595", Name: "default"}},
+		})
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(b))
+		require.NoError(t, err)
+	}
+}
+
+func handleCheckEmail(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		req := require.New(t)
+		email := strings.Replace(r.URL.String(), "/api/check_email/", "", 1)
+		reply := &orgv1.GetUserReply{}
+		switch email {
+		case "cody@confluent.io":
+			reply.User = &orgv1.User{
+				Email: "cody@confluent.io",
+			}
+		}
+		b, err := utilv1.MarshalJSONToBytes(reply)
+		req.NoError(err)
+		_, err = io.WriteString(w, string(b))
+		req.NoError(err)
+	}
+}
+
+func handleKafkaClusterList(t *testing.T, kafkaAPIURL string) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		require.NotEmpty(t, r.URL.Query().Get("account_id"))
 		parts := strings.Split(r.URL.Path, "/")
 		id := parts[len(parts)-1]
@@ -608,21 +656,13 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(b))
 		require.NoError(t, err)
-	})
-	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		_, err := io.WriteString(w, `{"error": {"message": "unexpected call to `+r.URL.Path+`"}}`)
-		require.NoError(t, err)
-	})
-	return httptest.NewServer(router)
+	}
 }
 
-func serveKafkaAPI(t *testing.T) *httptest.Server {
-	mux := http.NewServeMux()
-	// TODO: no idea how this "topic already exists" API request or response actually looks
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(400)
-		_, err := io.WriteString(w, `{}`)
-		require.NoError(t, err)
-	})
-	return httptest.NewServer(mux)
+func compose(funcs ...func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		for _, f := range funcs {
+			f(w, r)
+		}
+	}
 }
