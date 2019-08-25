@@ -17,7 +17,7 @@ type Version struct {
 	UserAgent string
 }
 
-func NewVersion(binary, name, version, commit, buildDate, buildHost string) *Version {
+func NewVersion(binary, name, support, version, commit, buildDate, buildHost string) *Version {
 	return &Version{
 		Binary:    binary,
 		Name:      name,
@@ -25,7 +25,7 @@ func NewVersion(binary, name, version, commit, buildDate, buildHost string) *Ver
 		Commit:    commit,
 		BuildDate: buildDate,
 		BuildHost: buildHost,
-		UserAgent: fmt.Sprintf("%s/%s (CLI)", binary, version),
+		UserAgent: fmt.Sprintf("%s/%s (%s)", strings.ReplaceAll(name, " ", "-"), version, support),
 	}
 }
 

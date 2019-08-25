@@ -108,7 +108,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	cli.AddCommand(completion.NewCompletionCmd(cli, cliName))
 	cli.AddCommand(update.New(cliName, cfg, ver, prompt, updateClient))
 
-	cli.AddCommand(auth.New(prerunner, cfg, logger, mdsClient)...)
+	cli.AddCommand(auth.New(prerunner, cfg, logger, mdsClient, ver.UserAgent)...)
 
 	if cliName == "ccloud" {
 		cli.AddCommand(ps1.NewPromptCmd(cfg, &pps1.Prompt{Config: cfg}, logger))

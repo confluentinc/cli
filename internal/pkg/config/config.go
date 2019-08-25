@@ -151,13 +151,21 @@ func (c *Config) Save() error {
 	return nil
 }
 
-// Binary returns the display name for the CLI
+// Name returns the display name for the CLI
 func (c *Config) Name() string {
 	name := "Confluent CLI"
 	if c.CLIName == "ccloud" {
 		name = "Confluent Cloud CLI"
 	}
 	return name
+}
+
+func (c *Config) Support() string {
+	support := "https://confluent.io; support@confluent.io"
+	if c.CLIName == "ccloud" {
+		support = "https://confluent.cloud; support@confluent.io"
+	}
+	return support
 }
 
 // APIName returns the display name of the remote API
