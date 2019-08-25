@@ -20,7 +20,7 @@ var (
 func main() {
 	emptyStr := func(filename string) string { return "" }
 	sphinxRef := func(name, ref string) string { return fmt.Sprintf(":ref:`%s`", ref) }
-	confluent, err := cmd.NewConfluentCommand(cliName, &config.Config{}, &version.Version{}, log.New())
+	confluent, err := cmd.NewConfluentCommand(cliName, &config.Config{CLIName: cliName}, &version.Version{}, log.New())
 	if err != nil {
 		panic(err)
 	}

@@ -64,7 +64,7 @@ To download a tarball for your OS and architecture:
     VERSION=v0.95.0 # or latest
     OS=darwin
     ARCH=amd64
-    FILE=ccloud_v${VERSION#v}_${OS}_${ARCH}.tar.gz
+    FILE=ccloud_${VERSION}_${OS}_${ARCH}.tar.gz
     curl -s https://s3-us-west-2.amazonaws.com/confluent.cloud/ccloud-cli/archives/${VERSION#v}/${FILE} -o ${FILE}
 
 To install the CLI:
@@ -77,8 +77,8 @@ To install the CLI:
 ```
 $ make deps
 $ make build
-$ dist/ccloud/$(go env GOOS)_$(go env GOARCH)/ccloud -h # for cloud CLI
-$ dist/confluent/$(go env GOOS)_$(go env GOARCH)/confluent -h # for on-prem Confluent CLI
+$ dist/ccloud/ccloud_$(go env GOOS)_$(go env GOARCH)/ccloud -h # for cloud CLI
+$ dist/confluent/confluent_$(go env GOOS)_$(go env GOARCH)/confluent -h # for on-prem Confluent CLI
 ```
 
 ## Developing
@@ -119,6 +119,17 @@ Things under `internal/cmd` are commands, things under `internal/pkg` are packag
 When you add a new command or resource, assuming its already in the SDK, you generally just need to create
 * `internal/cmd/<command>/<command>.go` (and test)
 * `internal/pkg/sdk/<resource>/<resource>.go` (and test)
+
+### Build Other Platforms
+
+If you have a need to build a binary for a platform that is not the current one, use the following to target a different `.goreleaser-*` file matching the destined platform.
+
+    make build-go GORELEASER_SUFFIX=-linux.yml   # build linux
+    make build-go GORELEASER_SUFFIX=-mac.yml     # build mac
+    make build-go GORELEASER_SUFFIX=-windows.yml # build windows
+
+### URLS
+Use the `login` command with the `--url` option to point to a different development environment
 
 ## Installers
 

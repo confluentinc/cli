@@ -285,8 +285,8 @@ var Topics = []struct {
 	spec *kafkav1.TopicSpecification
 }{
 	{
-		args: []string{"test_topic", "--config", "a=b", "--partitions", strconv.Itoa(1), "--replication-factor", strconv.Itoa(2)},
-		spec: &kafkav1.TopicSpecification{Name: "test_topic", ReplicationFactor: 2, NumPartitions: 1, Configs: map[string]string{"a": "b"}},
+		args: []string{"test_topic", "--config", "a=b", "--partitions", strconv.Itoa(1)},
+		spec: &kafkav1.TopicSpecification{Name: "test_topic", ReplicationFactor: 3, NumPartitions: 1, Configs: map[string]string{"a": "b"}},
 	},
 }
 

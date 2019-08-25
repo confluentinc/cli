@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/confluentinc/properties"
 	"github.com/jonboulle/clockwork"
-	"github.com/magiconair/properties"
 
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
@@ -453,11 +453,6 @@ func (c *PasswordProtectionSuite) UpdateEncryptedPasswords(configFilePath string
 		return err
 	}
 
-	// Add a delimiter key at the end of the file to retain the comments in the config file.
-	err = AppendDelimiter(configFilePath)
-	if err != nil {
-		return err
-	}
 	configProps, err := LoadPropertiesFile(configFilePath)
 	configProps.DisableExpansion = true
 
@@ -684,11 +679,6 @@ func (c *PasswordProtectionSuite) encryptConfigValues(matchProps *properties.Pro
 		return fmt.Errorf("failed to unwrap the data key due to invalid master key or corrupted data key.")
 	}
 
-	// Add a delimiter key at the end of the file to retain the last comment in the config file.
-	err = AppendDelimiter(configFilePath)
-	if err != nil {
-		return err
-	}
 	configProps, err := LoadPropertiesFile(configFilePath)
 	if err != nil {
 		return err
@@ -728,12 +718,6 @@ func (c *PasswordProtectionSuite) encryptConfigValues(matchProps *properties.Pro
 	}
 
 	err = WritePropertiesFile(configFilePath, configProps, true)
-	if err != nil {
-		return err
-	}
-
-	// Remove the Delimiter
-	err = RemoveDelimiter(configFilePath)
 	if err != nil {
 		return err
 	}

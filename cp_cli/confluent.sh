@@ -1015,8 +1015,9 @@ validate_os_version() {
 validate_java_version() {
     local target_service=${1}
 
-    local warning_message="WARNING: Java version 1.8 or 1.11 is recommended.
-See https://docs.confluent.io/current/installation/versions-interoperability.html"
+    local warning_message="ERROR: The Confluent CLI requires Java version 1.8 or 1.11. 
+See https://docs.confluent.io/current/installation/versions-interoperability.html . 
+If you have multiple versions of Java installed, you may need to set JAVA_HOME to the version you want Confluent to use."
 
     # The first segment of the version number, which is '1' for releases before Java 9
     # it then becomes '9', '10', ...
@@ -2041,7 +2042,7 @@ Examples:
     confluent local log connect
         Opens the connect log using 'less'.
 
-    confluent local log kafka -f
+    confluent local log kafka -- -f
         Tails the kafka log and waits to print additional output until the log command is interrupted.
 
 EOF
@@ -2061,7 +2062,7 @@ EOF
 
 load_usage() {
     cat <<EOF
-Usage: ${command_name} load [<connector-name> [-d <connector-config-file>]]
+Usage: ${command_name} load [<connector-name> [-- -d <connector-config-file>]]
 
 Description:
     Load a bundled connector with a predefined name or custom connector with a given configuration.
@@ -2083,7 +2084,7 @@ EOF
 
 config_usage() {
     cat <<EOF
-Usage: ${command_name} config <connector-name> [ -d <connector-config-file> ]
+Usage: ${command_name} config <connector-name> [-- -d <connector-config-file>]
 
 Description:
     Get or set a connector's configuration properties.
@@ -2103,11 +2104,11 @@ Examples:
     confluent local config wikipedia-file-source
         Prints the current configuration of a custom connector with name 'wikipedia-file-source'
 
-    confluent local config wikipedia-file-source -d ./wikipedia-file-source.json
+    confluent local config wikipedia-file-source -- -d ./wikipedia-file-source.json
         Configures a connector named 'wikipedia-file-source' by passing its configuration properties in
         JSON format.
 
-    confluent local config wikipedia-file-source -d ./wikipedia-file-source.properties
+    confluent local config wikipedia-file-source -- -d ./wikipedia-file-source.properties
         Configures a connector named 'wikipedia-file-source' by passing its configuration properties as
         java properties.
 

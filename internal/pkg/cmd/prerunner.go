@@ -3,7 +3,9 @@ package cmd
 import (
 	"github.com/jonboulle/clockwork"
 	"github.com/spf13/cobra"
+	"gopkg.in/square/go-jose.v2/jwt"
 
+	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -50,22 +52,22 @@ func (r *PreRun) Authenticated() func(cmd *cobra.Command, args []string) error {
 		if err := r.Config.CheckLogin(); err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
-		//if r.Config.AuthToken != "" {
-		//	// Validate token (not expired)
-		//	var claims map[string]interface{}
-		//	token, err := jwt.ParseSigned(r.Config.AuthToken)
-		//	if err != nil {
-		//		return errors.HandleCommon(&ccloud.InvalidTokenError{}, cmd)
-		//	}
-		//	if err := token.UnsafeClaimsWithoutVerification(&claims); err != nil {
-		//		return errors.HandleCommon(err, cmd)
-		//	}
-		//	if exp, ok := claims["exp"].(float64); ok {
-		//		if float64(r.Clock.Now().Unix()) > exp {
-		//			return errors.HandleCommon(&ccloud.ExpiredTokenError{}, cmd)
-		//		}
-		//	}
-		//}
+		if r.Config.AuthToken != "" {
+			// Validate token (not expired)
+			var claims map[string]interface{}
+			token, err := jwt.ParseSigned(r.Config.AuthToken)
+			if err != nil {
+				return errors.HandleCommon(&ccloud.InvalidTokenError{}, cmd)
+			}
+			if err := token.UnsafeClaimsWithoutVerification(&claims); err != nil {
+				return errors.HandleCommon(err, cmd)
+			}
+			if exp, ok := claims["exp"].(float64); ok {
+				if float64(r.Clock.Now().Unix()) > exp {
+					return errors.HandleCommon(&ccloud.ExpiredTokenError{}, cmd)
+				}
+			}
+		}
 		return nil
 	}
 }
@@ -92,7 +94,10 @@ func (r *PreRun) AuthenticatedAPIKey() func(cmd *cobra.Command, args []string) e
 func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, name string, currentVersion string) error {
 	updateAvailable, _, err := r.UpdateClient.CheckForUpdates(name, currentVersion, false)
 	if err != nil {
-		return err
+		// This is a convenience helper to check-for-updates before arbitrary commands. Since the CLI supports running
+		// in internet-less environments (e.g., local or on-prem deploys), swallow the error and log a warning.
+		r.Logger.Warn(err)
+		return nil
 	}
 	if updateAvailable {
 		msg := "Updates are available for %s. To install them, please run:\n$ %s update\n\n"

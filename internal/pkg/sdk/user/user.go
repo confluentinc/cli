@@ -50,3 +50,8 @@ func (c *User) GetServiceAccounts(ctx context.Context) ([]*orgv1.User, error) {
 	c.Logger.Log("msg", "user.GetServiceAccounts()")
 	return c.Client.User.GetServiceAccounts(ctx)
 }
+
+func (c *User) CheckEmail(ctx context.Context, user *orgv1.User) (*orgv1.User, error) {
+	c.Logger.Log("msg", "user.CheckEmail()")
+	return c.Client.User.CheckEmail(ctx, user)
+}

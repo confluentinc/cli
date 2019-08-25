@@ -28,7 +28,7 @@ generate-go:
 .PHONY: deps
 deps:
 	@GO111MODULE=on go get github.com/goreleaser/goreleaser@v0.106.0
-	@GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@de1d1ad903cdfdfc577ecb08d5027576e70ed2f0
+	@GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.17.1
 	@GO111MODULE=on go get github.com/mitchellh/golicense@v0.1.1
 	@GO111MODULE=on go get github.com/golang/mock/mockgen@v1.2.0
 	@GO111MODULE=on go get github.com/kevinburke/go-bindata/...@v3.13.0
@@ -64,9 +64,21 @@ ifeq (run-ccloud,$(firstword $(MAKECMDGOALS)))
   $(eval $(RUN_ARGS):;@:)
 endif
 
+# If the first argument is "run-confluent"...
+ifeq (run-confluent,$(firstword $(MAKECMDGOALS)))
+  # use the rest as arguments for "run-confluent"
+  RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+  # ...and turn them into do-nothing targets
+  $(eval $(RUN_ARGS):;@:)
+endif
+
 .PHONY: run-ccloud
 run-ccloud:
 	 @go run -ldflags '-X main.cliName=ccloud' cmd/confluent/main.go $(RUN_ARGS)
+
+.PHONY: run-confluent
+run-confluent:
+	 @go run -ldflags '-X main.cliName=confluent' cmd/confluent/main.go $(RUN_ARGS)
 
 #
 # END DEVELOPMENT HELPERS
@@ -89,7 +101,7 @@ build-confluent:
 bindata: internal/cmd/local/bindata.go
 
 internal/cmd/local/bindata.go: cp_cli/
-	@go-bindata -pkg local -o internal/cmd/local/bindata.go cp_cli/
+	@go-bindata -pkg local -o internal/cmd/local/bindata.go cp_cli/ assets/
 
 .PHONY: release
 release: get-release-image commit-release tag-release
@@ -126,7 +138,7 @@ dist: download-licenses
 				fi; \
 				[ "$${os}" = "windows" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
 				rm -rf /tmp/$${binary} && mkdir /tmp/$${binary} ; \
-				cp LICENSE /tmp/${binary} && cp -r legal/$${binary} /tmp/$${binary}/legal ; \
+				cp LICENSE /tmp/$${binary} && cp -r legal/$${binary} /tmp/$${binary}/legal ; \
 				cp dist/$${binary}/$${os}_$${arch}/$${binexe} /tmp/$${binary} ; \
 				suffix="" ; \
 				if [ "$${os}" = "windows" ] ; then \

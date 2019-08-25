@@ -213,77 +213,55 @@ func RequireNamedArgument(defConfig NamedArgumentConfig, overrides map[string]Na
 	}
 }
 
+func isCapitalized(word string) bool {
+	return word[0] >= 'A' && word[0] <= 'Z'
+}
+
+// Separate for testability
+func requireNotTitleCaseHelper(fieldValue string, properNouns []string, field string, fullCommand string) *multierror.Error {
+	if fieldValue[len(fieldValue)-1] == '.' {
+		fieldValue = fieldValue[0 : len(fieldValue)-1]
+	}
+	var issues *multierror.Error
+
+	for _, properNoun := range properNouns {
+		fieldValue = strings.ReplaceAll(fieldValue, properNoun, "")
+	}
+	words := strings.Split(fieldValue, " ")
+	for i := 0; i < len(words); i++ {
+		word := strings.TrimRight(alnum.ReplaceAllString(words[i], ""), " ") // Remove any punctuation before comparison
+		if word == "" {
+			continue
+		}
+		if i == 0 {
+			if isCapitalized(word) {
+				continue
+			} else {
+				issue := fmt.Errorf("should capitalize %s on %s - %s",
+					normalizeDesc(field), fullCommand, fieldValue)
+				issues = multierror.Append(issues, issue)
+			}
+		}
+		if !isCapitalized(word) {
+			continue
+		}
+		// Starting a new sentence
+		if i > 0 && words[i-1][len(words[i-1])-1] == '.' {
+			continue
+		}
+		issue := fmt.Errorf("don't title case %s on %s - %s",
+			normalizeDesc(field), fullCommand, fieldValue)
+		issues = multierror.Append(issues, issue)
+	}
+	return issues
+}
+
 // RequireNotTitleCase checks that a field is Not Title Casing Everything.
 // You may pass a list of proper nouns that should always be capitalized, however.
 func RequireNotTitleCase(field string, properNouns []string) Rule {
-	// TODO: this is an awful IsTitleCase heuristic
-	// index properNouns by the first word for easy search; value is the list of all individual words in properNoun
-	// since multiple phrases can start with same word, we have an []string for each phrase (hence [][]string)
-	index := map[string][][]string{}
-	for _, noun := range properNouns {
-		parts := strings.Split(noun, " ")
-		// we can index multiple phrases starting with the same noun
-		if _, ok := index[parts[0]]; ok {
-			index[parts[0]] = append(index[parts[0]], parts)
-		} else {
-			index[parts[0]] = [][]string{parts}
-		}
-	}
 	return func(cmd *cobra.Command) error {
 		fieldValue := getValueByName(cmd, field)
-		if fieldValue[len(fieldValue)-1] == '.' {
-			fieldValue = fieldValue[0 : len(fieldValue)-1]
-		}
-		var issues *multierror.Error
-		words := strings.Split(fieldValue, " ")
-		for i := 0; i < len(words); i++ {
-			word := strings.TrimRight(alnum.ReplaceAllString(words[i], " "), " ") // Remove any punctuation before comparison
-			if word != "" && word[0] >= 'A' && word[0] <= 'Z' {
-				// We have to start our check/loop at i=0 in case the command starts with a multi-word proper noun
-				// But we don't consider capitalizing the first word of the sentence (i=0) to be title case.
-				// Likewise, if this word is starting a new sentence (i>0 && last words ends with '.'), it's ok.
-				var isTitleCase bool
-				if i == 0 || (i > 0 && words[i-1][len(words[i-1])-1] == '.') {
-					isTitleCase = false
-				} else {
-					isTitleCase = true
-				}
-				if _, ok := index[word]; ok {
-					// Check if index is a single-word proper noun; if so, allow it.
-					if len(index[word]) == 1 {
-						isTitleCase = false
-					} else {
-						// Check if index is a multi-word proper noun; if all words in the phrase match, allow it.
-						parts := strings.Split(word, " ")
-						if phrases, ok := index[parts[0]]; ok {
-							// For each set of proper nouns starting with the current word...
-							for _, wp := range phrases {
-								// ...check if the next words in the command match the proper noun phrase
-								allMatch := true
-								for j := 0; j < len(wp); j++ {
-									if words[i+j] != wp[j] {
-										allMatch = false
-										break
-									}
-								}
-								// Hurray! All words in the word phrase matched the next words in the command
-								if allMatch {
-									isTitleCase = false
-									i += len(wp) // skip any remaining words in the phrase; we've already OK'd them
-									break        // we don't need to check anymore phrases
-								}
-							}
-						}
-					}
-				}
-				if isTitleCase {
-					issue := fmt.Errorf("don't title case %s on %s - %s",
-						normalizeDesc(field), FullCommand(cmd), fieldValue)
-					issues = multierror.Append(issues, issue)
-				}
-			}
-		}
-		return issues
+		return requireNotTitleCaseHelper(fieldValue, properNouns, field, FullCommand(cmd))
 	}
 }
 

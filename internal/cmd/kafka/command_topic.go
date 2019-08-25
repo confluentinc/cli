@@ -76,7 +76,6 @@ Create a topic named 'my_topic' with default options.
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().Uint32("partitions", 6, "Number of topic partitions.")
-	cmd.Flags().Uint32("replication-factor", 3, "Replication factor.")
 	cmd.Flags().StringSlice("config", nil, "A comma-separated list of topic configuration ('key=value') overrides for the topic being created.")
 	cmd.Flags().Bool("dry-run", false, "Run the command without committing changes to Kafka.")
 	cmd.Flags().SortFlags = false
@@ -207,10 +206,8 @@ func (c *topicCommand) create(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	topic.Spec.ReplicationFactor, err = cmd.Flags().GetUint32("replication-factor")
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
+	const defaultReplicationFactor = 3
+	topic.Spec.ReplicationFactor = defaultReplicationFactor
 
 	topic.Validate, err = cmd.Flags().GetBool("dry-run")
 	if err != nil {
@@ -347,7 +344,7 @@ func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	pcmd.Println(cmd, "Starting Kafka Producer. ^C to exit")
+	pcmd.Println(cmd, "Starting Kafka Producer. ^C or ^D to exit")
 
 	producer, err := NewSaramaProducer(cluster)
 	if err != nil {
@@ -358,10 +355,15 @@ func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {
 	scanner := bufio.NewScanner(os.Stdin)
 	input := make(chan string, 1)
 
-	// Avoid blocking in for loop so ^C can exit immediately.
+	// Avoid blocking in for loop so ^C or ^D can exit immediately.
 	scan := func() {
-		scanner.Scan()
-		input <- scanner.Text()
+		hasNext := scanner.Scan()
+		if !hasNext && scanner.Err() == nil {
+			// Reached EOF
+			close(input)
+		} else {
+			input <- scanner.Text()
+		}
 	}
 	// Prime reader
 	scan()
@@ -374,21 +376,18 @@ func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {
 		close(input)
 	}()
 
-	key := ""
+	var key sarama.Encoder
 	for data := range input {
 		data = strings.TrimSpace(data)
-		if data == "" {
-			continue
-		}
 
 		record := strings.SplitN(data, delim, 2)
 
-		value := record[len(record)-1]
+		value := sarama.StringEncoder(record[len(record)-1])
 		if len(record) == 2 {
-			key = record[0]
+			key = sarama.StringEncoder(record[0])
 		}
 
-		msg := &sarama.ProducerMessage{Topic: topic, Key: sarama.StringEncoder(key), Value: sarama.StringEncoder(value)}
+		msg := &sarama.ProducerMessage{Topic: topic, Key: key, Value: value}
 
 		_, offset, err := producer.SendMessage(msg)
 		if err != nil {
@@ -396,7 +395,7 @@ func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {
 		}
 
 		// Reset key prior to reuse
-		key = ""
+		key = nil
 		go scan()
 	}
 

@@ -2,36 +2,56 @@ package local
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
 
+	"github.com/atrox/homedir"
 	"github.com/golang/mock/gomock"
-	"github.com/mitchellh/go-homedir"
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/mock"
 	cliMock "github.com/confluentinc/cli/mock"
-	"github.com/confluentinc/cli/mock/local"
+	mock_local "github.com/confluentinc/cli/mock/local"
 )
 
+var testEnvironmentVariables = map[string]string{
+	"CONFLUENT_CURRENT": "/path/to/confluent/workdir",
+	"TMPDIR":            "/var/folders/some/junk",
+	"JAVA_HOME":         "/path/to/java",
+	"HOME":              "/path/to/home",
+	"PATH":              "/path1:/path2",
+	"TERM":              "xterm-256color",
+}
+var oldEnvironmentVariables = map[string]string{}
+
+func prepareTestEnvironmentVariables() {
+	for k, v := range testEnvironmentVariables {
+		oldEnvironmentVariables[k] = os.Getenv(k)
+		_ = os.Setenv(k, v)
+	}
+}
+
+func verifyTestEnvironmentVariables(shellRunner *mock_local.MockShellRunner) {
+	for k, v := range testEnvironmentVariables {
+		shellRunner.EXPECT().Export(k, v)
+	}
+	shellRunner.EXPECT().Export("CONFLUENT_HOME", "blah")
+}
+
+func restoreOldEnvironmentVaribles() {
+	for k, v := range oldEnvironmentVariables {
+		_ = os.Setenv(k, v)
+	}
+}
+
 func TestLocal(t *testing.T) {
-	oldCurrent := os.Getenv("CONFLUENT_CURRENT")
-	_ = os.Setenv("CONFLUENT_CURRENT", "/path/to/confluent/workdir")
-	defer func() { _ = os.Setenv("CONFLUENT_CURRENT", oldCurrent) }()
-
-	oldTmp := os.Getenv("TMPDIR")
-	_ = os.Setenv("TMPDIR", "/var/folders/some/junk")
-	defer func() { _ = os.Setenv("TMPDIR", oldTmp) }()
-
-	oldJavaHome := os.Getenv("JAVA_HOME")
-	_ = os.Setenv("JAVA_HOME", "/path/to/java")
-	defer func() { _ = os.Setenv("JAVA_HOME", oldJavaHome) }()
-
-	oldHome := os.Getenv("HOME")
-	_ = os.Setenv("HOME", "/path/to/home")
-	defer func() { _ = os.Setenv("HOME", oldHome) }()
+	prepareTestEnvironmentVariables()
+	defer restoreOldEnvironmentVaribles()
 
 	req := require.New(t)
 	ctrl := gomock.NewController(t)
@@ -39,34 +59,17 @@ func TestLocal(t *testing.T) {
 
 	shellRunner := mock_local.NewMockShellRunner(ctrl)
 	shellRunner.EXPECT().Init(os.Stdout, os.Stderr)
-	shellRunner.EXPECT().Export("HOME", "/path/to/home")
-	shellRunner.EXPECT().Export("JAVA_HOME", "/path/to/java")
-	shellRunner.EXPECT().Export("CONFLUENT_CURRENT", "/path/to/confluent/workdir")
-	shellRunner.EXPECT().Export("CONFLUENT_HOME", "blah")
-	shellRunner.EXPECT().Export("TMPDIR", "/var/folders/some/junk")
+	verifyTestEnvironmentVariables(shellRunner)
 	shellRunner.EXPECT().Source("cp_cli/confluent.sh", gomock.Any())
 	shellRunner.EXPECT().Run("main", gomock.Eq([]string{"local", "help"})).Return(0, nil)
-	localCmd := New(&cliMock.Commander{}, shellRunner, &mock.FileSystem{})
+	localCmd := New(&cobra.Command{}, &cliMock.Commander{}, shellRunner, log.New(), &mock.FileSystem{})
 	_, err := cmd.ExecuteCommand(localCmd, "local", "--path", "blah", "help")
 	req.NoError(err)
 }
 
 func TestLocalErrorDuringSource(t *testing.T) {
-	oldCurrent := os.Getenv("CONFLUENT_CURRENT")
-	_ = os.Setenv("CONFLUENT_CURRENT", "/path/to/confluent/workdir")
-	defer func() { _ = os.Setenv("CONFLUENT_CURRENT", oldCurrent) }()
-
-	oldTmp := os.Getenv("TMPDIR")
-	_ = os.Setenv("TMPDIR", "/var/folders/some/junk")
-	defer func() { _ = os.Setenv("TMPDIR", oldTmp) }()
-
-	oldJavaHome := os.Getenv("JAVA_HOME")
-	_ = os.Setenv("JAVA_HOME", "/path/to/java")
-	defer func() { _ = os.Setenv("JAVA_HOME", oldJavaHome) }()
-
-	oldHome := os.Getenv("HOME")
-	_ = os.Setenv("HOME", "/path/to/home")
-	defer func() { _ = os.Setenv("HOME", oldHome) }()
+	prepareTestEnvironmentVariables()
+	defer restoreOldEnvironmentVaribles()
 
 	req := require.New(t)
 	ctrl := gomock.NewController(t)
@@ -74,15 +77,69 @@ func TestLocalErrorDuringSource(t *testing.T) {
 
 	shellRunner := mock_local.NewMockShellRunner(ctrl)
 	shellRunner.EXPECT().Init(os.Stdout, os.Stderr)
-	shellRunner.EXPECT().Export("HOME", "/path/to/home")
-	shellRunner.EXPECT().Export("JAVA_HOME", "/path/to/java")
-	shellRunner.EXPECT().Export("CONFLUENT_CURRENT", "/path/to/confluent/workdir")
-	shellRunner.EXPECT().Export("CONFLUENT_HOME", "blah")
-	shellRunner.EXPECT().Export("TMPDIR", "/var/folders/some/junk")
+	verifyTestEnvironmentVariables(shellRunner)
 	shellRunner.EXPECT().Source("cp_cli/confluent.sh", gomock.Any()).Return(errors.New("oh no"))
-	localCmd := New(&cliMock.Commander{}, shellRunner, &mock.FileSystem{})
+	localCmd := New(&cobra.Command{}, &cliMock.Commander{}, shellRunner, log.New(), &mock.FileSystem{})
 	_, err := cmd.ExecuteCommand(localCmd, "local", "--path", "blah", "help")
 	req.Error(err)
+}
+
+func TestLocalCommandSuggestions(t *testing.T) {
+	prepareTestEnvironmentVariables()
+	defer restoreOldEnvironmentVaribles()
+
+	req := require.New(t)
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	shellRunner := mock_local.NewMockShellRunner(ctrl)
+	root := &cobra.Command{Use: "confluent"}
+	root.AddCommand(New(root, &cliMock.Commander{}, shellRunner, log.New(), &mock.FileSystem{}))
+
+	out := executeErrorOrOut(root, "start")
+	req.Equal(`Error: unknown command "start" for "confluent"
+
+Did you mean this?
+        local start
+
+Run 'confluent --help' for usage.
+`, out)
+
+	out = executeErrorOrOut(root, "stop")
+	req.Equal(`Error: unknown command "stop" for "confluent"
+
+Did you mean this?
+        local stop
+
+Run 'confluent --help' for usage.
+`, out)
+
+	out = executeErrorOrOut(root, "help", "start")
+	req.Equal(`Error: unknown command "start" for "confluent"
+
+Did you mean this?
+        local start
+
+Run 'confluent --help' for usage.
+`, out)
+
+	out = executeErrorOrOut(root, "start", "-h")
+	req.Equal(`Error: unknown command "start" for "confluent"
+
+Did you mean this?
+        local start
+
+Run 'confluent --help' for usage.
+`, out)
+}
+
+func executeErrorOrOut(root *cobra.Command, args ...string) string {
+	out, err := cmd.ExecuteCommand(root, args...)
+	if err != nil {
+		// we do this to simulate how Cobra prints errors
+		out = fmt.Sprintf("Error: %s\n", err.Error())
+	}
+	return out
 }
 
 func TestDetermineConfluentInstallDir(t *testing.T) {
@@ -118,10 +175,31 @@ func TestDetermineConfluentInstallDir(t *testing.T) {
 			wantErr:   false,
 		},
 		{
+			name:      "unversioned directory found in ./ and versioned directory found in /opt",
+			dirExists: map[string][]string{"./confluent*": {"./confluent"}, "/opt/confluent*": {"/opt/confluent-5.2.2"}},
+			wantDir:   "./confluent",
+			wantFound: true,
+			wantErr:   false,
+		},
+		{
 			name:      "unversioned directory found in /usr/local and versioned directory found in ~/Downloads",
 			dirExists: map[string][]string{"/usr/local/confluent*": {"/usr/local/confluent"}, "~/Downloads/confluent*": {"~/Downloads/confluent-4.1.0"}},
 			wantDir:   "/usr/local/confluent",
 			wantFound: true,
+			wantErr:   false,
+		},
+		{
+			name:      "broken install found in /opt without a bin dir",
+			dirExists: map[string][]string{"/opt/confluent*": {"/opt/confluent-5.2.2"}},
+			fileExists: map[string][]string{
+				"/opt/confluent-5.2.2/logs": {
+					"old.log",
+				},
+				"/opt/confluent-5.2.2/bin": {
+					"NOT_EXIST", // magic token to say the dir doesn't exist, error out
+				},
+			},
+			wantFound: false,
 			wantErr:   false,
 		},
 		{
@@ -261,15 +339,29 @@ func TestDetermineConfluentInstallDir(t *testing.T) {
 			wantFound: true,
 			wantErr:   false,
 		},
+		{
+			name:      "nightly SNAPSHOT version found in /opt",
+			dirExists: map[string][]string{"/opt/confluent*": {"/opt/confluent-5.2.2-SNAPSHOT"}},
+			wantDir:   "/opt/confluent-5.2.2-SNAPSHOT",
+			wantFound: true,
+			wantErr:   false,
+		},
+		{
+			name:      "multiple nightly SNAPSHOT versions found, first in /opt, second in /usr/local",
+			dirExists: map[string][]string{"/opt/confluent*": {"/opt/confluent-5.2.2-SNAPSHOT"}, "/usr/local/confluent*": {"/usr/local/confluent-5.3.0-SNAPSHOT"}},
+			wantDir:   "/opt/confluent-5.2.2-SNAPSHOT",
+			wantFound: true,
+			wantErr:   false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			fs := &mock.FileSystem{
 				GlobFunc: func(pattern string) ([]string, error) {
 					var matches []string
-					// we can't just do tt.dirExists[pattern]; pattern has expanded ~ but dirExists doesn't
+					// we can't just do tt.dirExists[pattern]; pattern has expanded ~ and been cleaned but dirExists hasn't
 					for p, dir := range tt.dirExists {
-						abs, err := homedir.Expand(p)
+						abs, err := homedir.Expand(filepath.Clean(p))
 						if err != nil {
 							return nil, err
 						}
@@ -302,6 +394,8 @@ func TestDetermineConfluentInstallDir(t *testing.T) {
 					}
 					return nil, os.ErrNotExist
 				},
+				// if fileExists not set or a particular fileExists[dirname] not set, that means all files present
+				// if fileExists[dirname] is set and first file is magic NOT_EXISTS, that means the dir doesn't exist
 				ReadDirFunc: func(dirname string) ([]os.FileInfo, error) {
 					if tt.fileExists == nil {
 						tt.fileExists = map[string][]string{}
@@ -314,6 +408,10 @@ func TestDetermineConfluentInstallDir(t *testing.T) {
 						}
 						tt.fileExists[dirname] = append(tt.fileExists[dirname], filepath.Join(d, validCPInstallEtcCanary))
 						tt.fileExists[dirname] = append(tt.fileExists[dirname], validCPInstallEtcCanary)
+					}
+					// magic token to say the dir doesn't exist, error out
+					if len(tt.fileExists[dirname]) > 0 && tt.fileExists[dirname][0] == "NOT_EXIST" {
+						return nil, os.ErrNotExist
 					}
 					infos := make([]os.FileInfo, 0, len(tt.fileExists[dirname]))
 					for _, f := range tt.fileExists[dirname] {
