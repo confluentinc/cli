@@ -201,7 +201,7 @@ func (s *CLITestSuite) Test_Ccloud_Errors() {
 		output := runCommand(tt, "ccloud", env, "login --url "+loginURL, 1)
 		require.Equal(tt, "Logged in as expired@user.com\nUsing environment a-595 (\"default\")\n", output)
 
-		output = runCommand(t, "ccloud", []string{}, "kafka cluster list", 1)
+		output = runCommand(tt, "ccloud", []string{}, "kafka cluster list", 1)
 		require.Equal(tt, "Error: Your session has expired. Please login again.\n", output)
 	})
 
@@ -211,7 +211,7 @@ func (s *CLITestSuite) Test_Ccloud_Errors() {
 		output := runCommand(tt, "ccloud", env, "login --url "+loginURL, 1)
 		require.Equal(tt, "Logged in as malformed@user.com\nUsing environment a-595 (\"default\")\n", output)
 
-		output = runCommand(t, "ccloud", []string{}, "kafka cluster list", 1)
+		output = runCommand(tt, "ccloud", []string{}, "kafka cluster list", 1)
 		require.Equal(tt, "Error: Your auth token has been corrupted. Please login again.\n", output)
 	})
 
@@ -221,7 +221,7 @@ func (s *CLITestSuite) Test_Ccloud_Errors() {
 		output := runCommand(tt, "ccloud", env, "login --url "+loginURL, 1)
 		require.Equal(tt, "Logged in as invalid@user.com\nUsing environment a-595 (\"default\")\n", output)
 
-		output = runCommand(t, "ccloud", []string{}, "kafka cluster list", 1)
+		output = runCommand(tt, "ccloud", []string{}, "kafka cluster list", 1)
 		require.Equal(tt, "Error: Your auth token has been corrupted. Please login again.\n", output)
 	})
 }
@@ -311,25 +311,25 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint stri
 			}
 		}
 
-		//if tt.useKafka != "" {
-		//	output := runCommand(t, "ccloud", []string{}, "kafka cluster use "+tt.useKafka, 0)
-		//	if *debug {
-		//		fmt.Println(output)
-		//	}
-		//}
+		if tt.useKafka != "" {
+			output := runCommand(t, "ccloud", []string{}, "kafka cluster use "+tt.useKafka, 0)
+			if *debug {
+				fmt.Println(output)
+			}
+		}
 
-		//if tt.authKafka != "" {
-		//	output := runCommand(t, "ccloud", []string{}, "api-key create --cluster "+tt.useKafka, 0)
-		//	if *debug {
-		//		fmt.Println(output)
-		//	}
-		//	// HACK: we don't have scriptable output yet so we parse it from the table
-		//	key := strings.TrimSpace(strings.Split(strings.Split(output, "\n")[2], "|")[2])
-		//	output = runCommand(t, "ccloud", []string{}, fmt.Sprintf("api-key use %s --cluster %s", key, tt.useKafka), 0)
-		//	if *debug {
-		//		fmt.Println(output)
-		//	}
-		//}
+		if tt.authKafka != "" {
+			output := runCommand(t, "ccloud", []string{}, "api-key create --cluster "+tt.useKafka, 0)
+			if *debug {
+				fmt.Println(output)
+			}
+			// HACK: we don't have scriptable output yet so we parse it from the table
+			key := strings.TrimSpace(strings.Split(strings.Split(output, "\n")[2], "|")[2])
+			output = runCommand(t, "ccloud", []string{}, fmt.Sprintf("api-key use %s --cluster %s", key, tt.useKafka), 0)
+			if *debug {
+				fmt.Println(output)
+			}
+		}
 
 		output := runCommand(t, "ccloud", tt.env, tt.args, tt.wantErrCode)
 		if *debug {
@@ -402,7 +402,7 @@ func runCommand(t *testing.T, binaryName string, env []string, args string, want
 				require.Failf(t, "unexpected error",
 					"exit %d: %s\n%s", exitError.ExitCode(), args, string(output))
 			} else {
-				require.Equal(t, wantErrCode, exitError.ExitCode())
+				require.Equal(t, wantErrCode, exitError.ExitCode(), string(output))
 			}
 		} else {
 			require.Failf(t, "unexpected error", "command returned err: %s", err)
@@ -591,7 +591,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 	})
 	router.HandleFunc("/api/clusters/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
-			req.NotEmpty(r.URL.Query().Get("account_id"))
+			require.NotEmpty(t, r.URL.Query().Get("account_id"))
 		}
 		parts := strings.Split(r.URL.Path, "/")
 		id := parts[len(parts)-1]
