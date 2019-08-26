@@ -5,9 +5,10 @@ func (s *CLITestSuite) TestKafkaCommands() {
 	tests := []CLITest{
 		{args: "kafka cluster --help", fixture: "kafka-cluster-help.golden"},
 		{args: "kafka cluster create", fixture: "kafka1.golden", wantErrCode: 1},
-		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1", useKafka: "bob", fixture: "kafka2.golden", wantErrCode: 1},
+		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1", fixture: "kafka2.golden", wantErrCode: 0},
 		{args: "kafka cluster delete", fixture: "kafka3.golden", wantErrCode: 1},
 		{args: "kafka cluster delete lkc-abc123", fixture: "kafka4.golden", wantErrCode: 1},
+		{args: "kafka cluster delete lkc-def973", fixture: "kafka5.golden", wantErrCode: 0},
 	}
 	resetConfiguration(s.T(), "ccloud")
 	for _, tt := range tests {

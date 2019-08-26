@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"os"
 	"os/exec"
 	"path"
@@ -348,8 +347,8 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint stri
 			require.Regexp(t, expected, actual)
 			return
 		} else if strings.HasPrefix(tt.args, "kafka cluster create") {
-			re := regexp.MustCompile("http://127.0.0.1:[0-9]+")
-			actual = re.ReplaceAllString(actual, "http://127.0.0.1:12345")
+			re1 := regexp.MustCompile("http://127.0.0.1:[0-9]+")
+			actual = re1.ReplaceAllString(actual, "http://127.0.0.1:12345")
 		}
 
 		if !reflect.DeepEqual(actual, expected) {
@@ -593,10 +592,26 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 			require.NoError(t, err)
 		}
 	})
+	router.HandleFunc("/api/clusters", func(w http.ResponseWriter, r *http.Request) {
+		b, err := utilv1.MarshalJSONToBytes(&kafkav1.GetKafkaClusterReply{
+			Cluster: &kafkav1.KafkaCluster{
+				Id:              "lkc-def963",
+				Name:            "kafka-cluster",
+				NetworkIngress:  100,
+				NetworkEgress:   100,
+				Storage:         500,
+				ServiceProvider: "aws",
+				Region:          "us-west-2",
+				Endpoint:        "SASL_SSL://kafka-endpoint",
+				ApiEndpoint:     kafkaAPIURL,
+			},
+		})
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(b))
+		require.NoError(t, err)
+	})
 	router.HandleFunc("/api/clusters/", func(w http.ResponseWriter, r *http.Request) {
-		//if r.Method == "GET" {
-		//	require.NotEmpty(t, r.URL.Query().Get("account_id"))
-		//}
+		//require.NotEmpty(t, r.URL.Query().Get("account_id"))
 		parts := strings.Split(r.URL.Path, "/")
 		id := parts[len(parts)-1]
 		if id == "lkc-unknown" {
@@ -604,18 +619,18 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 			require.NoError(t, err)
 			return
 		}
-		// Replace dynamic Kafka API port with static 12345 to match fixtures
-		kaURL, err := url.Parse(kafkaAPIURL)
-		req.NoError(err)
-		//host := strings.Split(kaURL.Host, ":")[0]
-		//kaURL.Host = fmt.Sprintf("%s:%s", host, "12345")
 		// Now return the KafkaCluster with updated ApiEndpoint
 		b, err := utilv1.MarshalJSONToBytes(&kafkav1.GetKafkaClusterReply{
 			Cluster: &kafkav1.KafkaCluster{
-				Id:          id,
-				Name:        "kafka-cluster",
-				Endpoint:    "SASL_SSL://kafka-endpoint",
-				ApiEndpoint: kaURL.String(),
+				Id:              id,
+				Name:            "kafka-cluster",
+				NetworkIngress:  100,
+				NetworkEgress:   100,
+				Storage:         500,
+				ServiceProvider: "aws",
+				Region:          "us-west-2",
+				Endpoint:        "SASL_SSL://kafka-endpoint",
+				ApiEndpoint:     kafkaAPIURL,
 			},
 		})
 		require.NoError(t, err)
