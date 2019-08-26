@@ -73,7 +73,9 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		return nil, err
 	}
 
-	client := ccloud.NewClientWithJWT(context.Background(), cfg.AuthToken, cfg.AuthURL, cfg.Logger)
+	client := ccloud.NewClientWithJWT(context.Background(), cfg.AuthToken, &ccloud.Params{
+		BaseURL: cfg.AuthURL, Logger: cfg.Logger, UserAgent: ver.UserAgent,
+	})
 
 	ch := &pcmd.ConfigHelper{Config: cfg, Client: client, Version: ver}
 	fs := &io.RealFileSystem{}
@@ -106,7 +108,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	cli.AddCommand(completion.NewCompletionCmd(cli, cliName))
 	cli.AddCommand(update.New(cliName, cfg, ver, prompt, updateClient))
 
-	cli.AddCommand(auth.New(prerunner, cfg, logger, mdsClient)...)
+	cli.AddCommand(auth.New(prerunner, cfg, logger, mdsClient, ver.UserAgent)...)
 
 	if cliName == "ccloud" {
 		cli.AddCommand(ps1.NewPromptCmd(cfg, &pps1.Prompt{Config: cfg}, logger))

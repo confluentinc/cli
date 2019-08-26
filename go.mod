@@ -15,8 +15,8 @@ require (
 	github.com/aws/aws-sdk-go v1.15.64
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
-	github.com/confluentinc/ccloud-sdk-go v0.0.8-0.20190805024857-5613bbaa771b
-	github.com/confluentinc/ccloudapis v0.0.0-20190813215538-49a287a86b64
+	github.com/confluentinc/ccloud-sdk-go v0.0.10
+	github.com/confluentinc/ccloudapis v0.0.0-20190822180106-1f1a16f58a50
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-printer v0.10.0
 	github.com/confluentinc/mds-sdk-go v0.0.0-20190610045202-137cf78b1f6a
@@ -88,10 +88,9 @@ require (
 	github.com/spf13/pflag v1.0.3
 	github.com/spf13/viper v1.4.0
 	github.com/stretchr/objx v0.2.0 // indirect
-	github.com/stretchr/testify v1.3.0
+	github.com/stretchr/testify v1.4.0
 	github.com/tidwall/pretty v0.0.0-20190325153808-1166b9ac2b65
 	github.com/timakin/bodyclose v0.0.0-20190721030226-87058b9bfcec // indirect
-	github.com/ugorji/go v1.1.7 // indirect
 	go.opencensus.io v0.22.0 // indirect
 	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4
 	golang.org/x/mobile v0.0.0-20190814143026-e8b3e6111d02 // indirect
