@@ -12,7 +12,6 @@ strategy:
 pool:
   vmImage: $(imageName)
 
-
 steps:
 - task: GoTool@0
   inputs:
@@ -26,6 +25,7 @@ steps:
 
 - script: |
     git config --global url."git@github.com:".insteadOf "https://github.com/"
+    mkdir ~/.ssh
     sudo mv $(idrsa.secureFilePath) ~/.ssh/
     sudo chmod 400 ~/.ssh/id_rsa
 
