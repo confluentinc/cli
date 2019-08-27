@@ -35,6 +35,10 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 		{args: "api-key list", fixture: "apikey6.golden"},
 		{args: "api-key list --resource lksqlc-ksql1", fixture: "apikey10.golden"},
 
+		// create api key for schema registry cluster
+		{args: "api-key create --resource lsrc-1", fixture: "apikey20.golden"}, // MYKEY7
+		{args: "api-key list --resource lsrc-1", fixture: "apikey21.golden"},
+
 		// use an api key for active kafka cluster
 		{args: "api-key use MYKEY4", fixture: "empty.golden"},
 		{args: "api-key list", fixture: "apikey11.golden"},
@@ -62,10 +66,6 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 		{args: "api-key store UIAPIKEY102 UIAPISECRET102 --resource lksqlc-ksql1", fixture: "empty.golden"},
 		{args: "api-key list", fixture: "apikey11.golden"},
 		{args: "api-key list --resource lksqlc-ksql1", fixture: "apikey14.golden"},
-
-		// create api key for schema registry cluster
-		{args: "api-key create --resource lsrc-1", fixture: "apikey20.golden"}, // MYKEY20
-		{args: "api-key list --resource lsrc-1", fixture: "apikey21.golden"},
 
 		// store: error handling
 		{name: "error if storing unknown api key", args: "api-key store UNKNOWN SECRET", fixture: "apikey15.golden"},

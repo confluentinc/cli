@@ -134,12 +134,12 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	_, accId, clusterId, currentKey, err := c.resolveResourceID(cmd, args)
 	//Return resource not found errors
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, cmd)
 	}
 
 	apiKeys, err = c.client.List(context.Background(), &authv1.ApiKey{AccountId: accId})
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, cmd)
 	}
 
 	for _, apiKey := range apiKeys {
