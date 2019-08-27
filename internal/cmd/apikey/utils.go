@@ -2,7 +2,6 @@ package apikey
 
 import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/spf13/cobra"
 	"strings"
 )
@@ -17,7 +16,7 @@ func (c *command) resolveResourceID(cmd *cobra.Command, args []string) (resource
 		src, err := pcmd.GetSchemaRegistry(cmd, c.ch)
 		resourceType = "schema-registry"
 		if err != nil {
-			return "", "", "", "", errors.HandleCommon(errors.Wrap(err, "Schema Registry doesn't exist"), cmd)
+			return "", "", "", "", err
 		}
 		clusterInContext, _ := c.config.SchemaRegistryCluster()
 		if clusterInContext == nil || clusterInContext.SrCredentials == nil {
@@ -25,13 +24,14 @@ func (c *command) resolveResourceID(cmd *cobra.Command, args []string) (resource
 		} else {
 			currentKey = clusterInContext.SrCredentials.Key
 		}
-		return "schema-registry", src.AccountId, src.Id, currentKey, nil
+		return resourceType, src.AccountId, src.Id, currentKey, nil
 
 	} else {
 		kcc, err := pcmd.GetKafkaClusterConfig(cmd, c.ch, "resource")
+		resourceType="kafka"
 		if err != nil {
-			return "", "", "", "", errors.HandleCommon(err, cmd)
+			return "", "", "", "", err
 		}
-		return "kafka", c.config.Auth.Account.Id, kcc.ID, kcc.APIKey, nil
+		return resourceType, c.config.Auth.Account.Id, kcc.ID, kcc.APIKey, nil
 	}
 }
