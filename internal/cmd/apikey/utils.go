@@ -28,7 +28,7 @@ func (c *command) resolveResourceID(cmd *cobra.Command, args []string) (resource
 
 	} else {
 		kcc, err := pcmd.GetKafkaClusterConfig(cmd, c.ch, "resource")
-		resourceType="kafka"
+		resourceType = "kafka"
 		if err != nil {
 			return "", "", "", "", err
 		}

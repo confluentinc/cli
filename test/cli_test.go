@@ -22,6 +22,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/confluentinc/ccloud-sdk-go"
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
 	corev1 "github.com/confluentinc/ccloudapis/core/v1"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
@@ -559,6 +560,20 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		_, err := io.WriteString(w, `{"error": {"message": "unexpected call to `+r.URL.Path+`"}}`)
 		require.NoError(t, err)
 	})
+	router.HandleFunc("/api/schema_registries/", func(w http.ResponseWriter, r *http.Request) {
+		srCluster := &srv1.SchemaRegistryCluster{
+			Id:        "lsrc-1",
+			AccountId: "23",
+			Name:      "account schema-registry",
+			Endpoint:  "SASL_SSL://sr-endpoint",
+		}
+		b, err := utilv1.MarshalJSONToBytes(&srv1.GetSchemaRegistryClustersReply{
+			Clusters: []*srv1.SchemaRegistryCluster{srCluster},
+		})
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(b))
+		require.NoError(t, err)
+	})
 	return httptest.NewServer(router)
 }
 
@@ -652,20 +667,6 @@ func handleKafkaClusterList(t *testing.T, kafkaAPIURL string) func(w http.Respon
 				Endpoint:    "SASL_SSL://kafka-endpoint",
 				ApiEndpoint: kafkaAPIURL,
 			},
-		})
-		require.NoError(t, err)
-		_, err = io.WriteString(w, string(b))
-		require.NoError(t, err)
-	})
-	router.HandleFunc("/api/schema_registries/", func(w http.ResponseWriter, r *http.Request) {
-		srCluster := &srv1.SchemaRegistryCluster{
-			Id:        "lsrc-1",
-			AccountId: "23",
-			Name:      "account schema-registry",
-			Endpoint:  "SASL_SSL://sr-endpoint",
-		}
-		b, err := utilv1.MarshalJSONToBytes(&srv1.GetSchemaRegistryClustersReply{
-			Clusters: []*srv1.SchemaRegistryCluster{srCluster},
 		})
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(b))
