@@ -12,6 +12,7 @@ strategy:
 pool:
   vmImage: $(imageName)
 
+
 steps:
 - task: GoTool@0
   inputs:
