@@ -1,11 +1,13 @@
 strategy:
   matrix:
-    linux:
-      imageName: 'ubuntu-16.04'
     mac:
       imageName: 'macOS-10.14'
-    windows:
-      imageName: 'windows-2019'
+          #    linux:
+          #      imageName: 'ubuntu-16.04'
+          #    mac:
+          #      imageName: 'macOS-10.14'
+          #    windows:
+          #      imageName: 'windows-2019'
 
 pool:
   vmImage: $(imageName)
@@ -14,6 +16,17 @@ steps:
 - task: GoTool@0
   inputs:
     version: '1.12'
+
+- task: DownloadSecureFile@1
+  name: idrsa
+  displayName: 'Download id_rsa'
+  inputs:
+    secureFile: 'id_rsa'
+
+- script: |
+    git config --global url."git@github.com:".insteadOf "https://github.com/"
+    sudo mv $(idrsa.secureFilePath) ~/.ssh/
+    sudo chmod 400 ~/.ssh/id_rsa
 
 # Linux
 #- bash: |
