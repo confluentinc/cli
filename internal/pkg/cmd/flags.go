@@ -64,5 +64,13 @@ func GetSchemaRegistry(cmd *cobra.Command, ch *ConfigHelper) (*srv1.SchemaRegist
 	if err != nil {
 		return nil, err
 	}
-	return ch.SchemaRegistry(resourceID, environment, ctx)
+	cluster, err := ch.Client.SchemaRegistry.GetSchemaRegistryCluster(
+		ctx, &srv1.SchemaRegistryCluster{
+			Id:        resourceID,
+			AccountId: environment,
+		})
+	if err != nil {
+		return nil, err
+	}
+	return cluster, nil
 }

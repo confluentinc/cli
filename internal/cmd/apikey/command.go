@@ -36,10 +36,10 @@ type command struct {
 }
 
 var (
-	listFields    = []string{"Key", "UserId", "Description"}
-	listLabels    = []string{"Key", "Owner", "Description"}
-	createFields  = []string{"Key", "Secret"}
-	createRenames = map[string]string{"Key": "API Key"}
+	listFields        = []string{"Key", "UserId", "Description"}
+	listLabels        = []string{"Key", "Owner", "Description"}
+	createFields      = []string{"Key", "Secret"}
+	createRenames     = map[string]string{"Key": "API Key"}
 )
 
 // New returns the Cobra command for API Key.
@@ -234,7 +234,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	if resourceType == "kafka" {
+	if resourceType == kafkaResourceType {
 		if err := c.keystore.StoreAPIKey(userKey, clusterId, environment); err != nil {
 			return errors.HandleCommon(errors.Wrapf(err, "Unable to store API key locally."), cmd)
 		}

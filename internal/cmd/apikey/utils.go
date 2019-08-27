@@ -1,9 +1,17 @@
 package apikey
 
 import (
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/spf13/cobra"
 	"strings"
+
+	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+)
+
+var (
+	kafkaResourceType = "kafka"
+	srResourceType    = "schema-registry"
 )
 
 func (c *command) resolveResourceID(cmd *cobra.Command, args []string) (resourceType string, accId string, clusterId string, currentKey string, err error) {
@@ -14,9 +22,11 @@ func (c *command) resolveResourceID(cmd *cobra.Command, args []string) (resource
 	// If resource is schema registry
 	if strings.HasPrefix(resource, "lsrc-") {
 		src, err := pcmd.GetSchemaRegistry(cmd, c.ch)
-		resourceType = "schema-registry"
 		if err != nil {
 			return "", "", "", "", err
+		}
+		if src == nil {
+			return "", "", "", "", errors.ErrNoSrEnabled
 		}
 		clusterInContext, _ := c.config.SchemaRegistryCluster()
 		if clusterInContext == nil || clusterInContext.SrCredentials == nil {
@@ -24,14 +34,13 @@ func (c *command) resolveResourceID(cmd *cobra.Command, args []string) (resource
 		} else {
 			currentKey = clusterInContext.SrCredentials.Key
 		}
-		return resourceType, src.AccountId, src.Id, currentKey, nil
+		return srResourceType, src.AccountId, src.Id, currentKey, nil
 
 	} else {
 		kcc, err := pcmd.GetKafkaClusterConfig(cmd, c.ch, "resource")
-		resourceType = "kafka"
 		if err != nil {
 			return "", "", "", "", err
 		}
-		return resourceType, c.config.Auth.Account.Id, kcc.ID, kcc.APIKey, nil
+		return kafkaResourceType, c.config.Auth.Account.Id, kcc.ID, kcc.APIKey, nil
 	}
 }

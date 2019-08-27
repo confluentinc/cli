@@ -567,8 +567,8 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 			Name:      "account schema-registry",
 			Endpoint:  "SASL_SSL://sr-endpoint",
 		}
-		b, err := utilv1.MarshalJSONToBytes(&srv1.GetSchemaRegistryClustersReply{
-			Clusters: []*srv1.SchemaRegistryCluster{srCluster},
+		b, err := utilv1.MarshalJSONToBytes(&srv1.GetSchemaRegistryClusterReply{
+			Cluster: srCluster,
 		})
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(b))

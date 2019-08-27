@@ -29,18 +29,6 @@ func (c *ConfigHelper) KafkaCluster(clusterID, environment string) (*kafkav1.Kaf
 	}
 	return &kafkav1.KafkaCluster{AccountId: c.Config.Auth.Account.Id, Id: kafka.ID, ApiEndpoint: kafka.APIEndpoint}, nil
 }
-func (c *ConfigHelper) SchemaRegistry(resourceID, environment string, ctx context.Context) (*srv1.SchemaRegistryCluster, error) {
-	existingClusters, err := c.Client.SchemaRegistry.GetSchemaRegistryClusters(
-		ctx,
-		&srv1.SchemaRegistryCluster{
-			Id:        resourceID,
-			AccountId: environment,
-		})
-	if err != nil {
-		return nil, err
-	}
-	return existingClusters[0], nil
-}
 
 func (c *ConfigHelper) SchemaRegistryURL(requestContext context.Context) (string, error) {
 	srCluster, err := c.Config.SchemaRegistryCluster()
@@ -50,7 +38,6 @@ func (c *ConfigHelper) SchemaRegistryURL(requestContext context.Context) (string
 	if srCluster.SchemaRegistryEndpoint != "" {
 		return srCluster.SchemaRegistryEndpoint, nil
 	}
-
 	// Didn't find it -- ask the mothership
 	// TODO Using the plural "clusters" command for now until we can fix API compat for singular command
 	existingClusters, err := c.Client.SchemaRegistry.GetSchemaRegistryClusters(

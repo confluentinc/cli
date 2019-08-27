@@ -92,7 +92,7 @@ func (suite *APITestSuite) SetupTest() {
 			return suite.srCluster, nil
 		},
 		GetSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *srv1.SchemaRegistryCluster) (*srv1.SchemaRegistryCluster, error) {
-			return nil, nil
+			return suite.srCluster, nil
 		},
 		GetSchemaRegistryClustersFunc: func(arg0 context.Context, arg1 *srv1.SchemaRegistryCluster) (clusters []*srv1.SchemaRegistryCluster, e error) {
 			return []*srv1.SchemaRegistryCluster{suite.srCluster}, nil
