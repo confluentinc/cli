@@ -216,7 +216,7 @@ func NewMockClient(logger *log.Logger) *ccloud.Client {
 
 	cluster.ApiEndpoint = server.URL
 
-	client := ccloud.NewClient(server.URL, server.Client(), logger)
+	client := ccloud.NewClient(&ccloud.Params{BaseURL: server.URL, HttpClient: server.Client(), Logger: logger})
 
 	return client
 }
