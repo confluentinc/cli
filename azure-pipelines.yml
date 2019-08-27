@@ -1,19 +1,43 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
-
-trigger:
-- master
+strategy:
+  matrix:
+    linux:
+      imageName: 'ubuntu-16.04'
+    mac:
+      imageName: 'macOS-10.14'
+    windows:
+      imageName: 'windows-2019'
 
 pool:
-  vmImage: 'ubuntu-latest'
+  vmImage: $(imageName)
 
 steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+- task: GoTool@0
+  inputs:
+    version: '1.12'
+
+# Linux
+#- bash: |
+#    export GOBIN='$(GOPATH)/bin'
+#    export GOROOT='/usr/local/go1.12'
+#    export GOPATH='$(system.defaultWorkingDirectory)/gopath'
+#    export modulePath='$(GOPATH)/src/github.com/$(build.repository.name)'
+#  condition: eq( variables['Agent.OS'], 'Linux' )
+#  displayName: Get IP on Linux
+## macOS
+#- bash: |
+#    export IPADDR=$(ifconfig | grep 'en0' -A3 | tail -n1 | awk '{print $2}')
+#    echo "##vso[task.setvariable variable=IP_ADDR]$IPADDR"
+#  condition: eq( variables['Agent.OS'], 'Darwin' )
+#  displayName: Get IP on macOS
+## Windows
+#- powershell: |
+#    Set-Variable -Name IPADDR -Value ((Get-NetIPAddress | ?{ $_.AddressFamily -eq "IPv4" -and !($_.IPAddress -match "169") -and !($_.IPaddress -match "127") } | Select-Object -First 1).IPAddress)
+#    Write-Host "##vso[task.setvariable variable=IP_ADDR]$IPADDR"
+#  condition: eq( variables['Agent.OS'], 'Windows_NT' )
+#  displayName: Get IP on Windows
 
 - script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+    make deps
+
+- script: |
+    make build-ccloud
