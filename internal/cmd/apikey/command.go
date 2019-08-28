@@ -165,9 +165,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 			}
 		}
 	}
-
 	printer.RenderCollectionTable(data, listLabels)
-
 	return nil
 }
 
@@ -239,7 +237,6 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 			return errors.HandleCommon(errors.Wrapf(err, "Unable to store API key locally."), cmd)
 		}
 	}
-
 	return nil
 }
 
@@ -261,7 +258,6 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-
 	return c.keystore.DeleteAPIKey(apiKey)
 }
 
@@ -300,7 +296,6 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	if err := c.keystore.StoreAPIKey(&authv1.ApiKey{Key: key, Secret: secret}, kcc.ID, environment); err != nil {
 		return errors.HandleCommon(errors.Wrapf(err, "Unable to store the API key locally."), cmd)
 	}
-
 	return nil
 }
 
