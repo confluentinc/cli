@@ -33,7 +33,7 @@ func NewSchemaCommand(config *config.Config, ch *pcmd.ConfigHelper, srClient *sr
 
 func (c *schemaCommand) init() {
 	cmd := &cobra.Command{
-		Use:   "create --subject <subject> --schema schema-file",
+		Use:   "create --subject <subject> --schema <schema-file>",
 		Short: "Create a schema.",
 		Example: `
 Register a new schema
