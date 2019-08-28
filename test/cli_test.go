@@ -136,7 +136,7 @@ func (s *CLITestSuite) Test_UserAgent() {
 		cloudRouter.HandleFunc("/api/sessions", compose(assertUserAgent(t, expected), handleLogin(t)))
 		cloudRouter.HandleFunc("/api/me", compose(assertUserAgent(t, expected), handleMe(t)))
 		cloudRouter.HandleFunc("/api/check_email/", compose(assertUserAgent(t, expected), handleCheckEmail(t)))
-		cloudRouter.HandleFunc("/api/clusters/", compose(assertUserAgent(t, expected), handleKafkaClusterList(t, kafkaApiServer.URL)))
+		cloudRouter.HandleFunc("/api/clusters/", compose(assertUserAgent(t, expected), handleKafkaClusterGetListDelete(t, kafkaApiServer.URL)))
 		return httptest.NewServer(cloudRouter).URL
 	}
 
@@ -558,7 +558,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 			require.NoError(t, err)
 		}
 	})
-	router.HandleFunc("/api/clusters/", handleKafkaClusterList(t, kafkaAPIURL))
+	router.HandleFunc("/api/clusters/", handleKafkaClusterGetListDelete(t, kafkaAPIURL))
 	router.HandleFunc("/api/clusters", handleKafkaClusterCreate(t, kafkaAPIURL))
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		_, err := io.WriteString(w, `{"error": {"message": "unexpected call to `+r.URL.Path+`"}}`)
@@ -640,14 +640,18 @@ func handleCheckEmail(t *testing.T) func(w http.ResponseWriter, r *http.Request)
 	}
 }
 
-func handleKafkaClusterList(t *testing.T, kafkaAPIURL string) func(w http.ResponseWriter, r *http.Request) {
+func handleKafkaClusterGetListDelete(t *testing.T, kafkaAPIURL string) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		require.NotEmpty(t, r.URL.Query().Get("account_id"))
+		//require.NotEmpty(t, r.URL.Query().Get("account_id"))
 		parts := strings.Split(r.URL.Path, "/")
 		id := parts[len(parts)-1]
 		if id == "lkc-unknown" {
 			_, err := io.WriteString(w, `{"error":{"code":404,"message":"resource not found","nested_errors":{},"details":[],"stack":null},"cluster":null}`)
 			require.NoError(t, err)
+			return
+		}
+		if r.Method == "DELETE" {
+			w.WriteHeader(http.StatusNoContent)
 			return
 		}
 		// Now return the KafkaCluster with updated ApiEndpoint

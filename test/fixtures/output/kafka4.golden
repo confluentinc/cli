@@ -1,1 +1,4 @@
-The Kafka cluster lkc-abc123 has been deleted.
+Error: 1 error occurred:
+	* error deleting kafka cluster: resource not found
+
+
