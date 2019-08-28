@@ -23,13 +23,17 @@ steps:
   inputs:
     secureFile: 'id_rsa'
 
+- task: DownloadSecureFile@1
+  name: netrc
+  displayName: 'Download netrc'
+  inputs:
+    secureFile: 'netrc'
+
 - script: |
-    git config --global url."git@github.com:".insteadOf "https://github.com/"
-    git config --global core.sshCommand 'ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
+    mv $(netrc.secureFilePath) ~/.netrc
     mkdir ~/.ssh
     sudo mv $(idrsa.secureFilePath) ~/.ssh/
     sudo chmod 400 ~/.ssh/id_rsa
-    echo "Host *\n\tStrictHostKeyChecking no" >> ~/.ssh/config
 
 # Linux
 #- bash: |
