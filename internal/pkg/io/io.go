@@ -1,4 +1,5 @@
-//go:generate mocker --prefix "" --dst ../mock/filesystem.go --pkg mock --selfpkg github.com/confluentinc/cli io.go FileSystem
+//go:generate go run github.com/travisjeffery/mocker/cmd/mocker --prefix "" --dst ../mock/filesystem.go --pkg mock io.go FileSystem
+
 package io
 
 import (
