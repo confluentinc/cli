@@ -3,6 +3,7 @@ package kafka
 import (
 	"fmt"
 	"io"
+	"net/url"
 	"strings"
 
 	"github.com/Shopify/sarama"
@@ -12,7 +13,11 @@ import (
 
 // NewSaramaConsumer returns a sarama.ConsumerGroup configured for the CLI config
 func NewSaramaConsumer(group string, kafka *config.KafkaClusterConfig, beginning bool) (sarama.ConsumerGroup, error) {
-	client, err := sarama.NewClient(strings.Split(kafka.Bootstrap, ","), saramaConf(kafka, beginning))
+	conf, err := saramaConf(kafka, beginning)
+	if err != nil {
+		return nil, err
+	}
+	client, err := sarama.NewClient(strings.Split(kafka.Bootstrap, ","), conf)
 	if err != nil {
 		return nil, err
 	}
@@ -21,7 +26,11 @@ func NewSaramaConsumer(group string, kafka *config.KafkaClusterConfig, beginning
 
 // NewSaramaProducer returns a sarama.ClusterProducer configured for the CLI config
 func NewSaramaProducer(kafka *config.KafkaClusterConfig) (sarama.SyncProducer, error) {
-	return sarama.NewSyncProducer(strings.Split(kafka.Bootstrap, ","), saramaConf(kafka, false))
+	conf, err := saramaConf(kafka, false)
+	if err != nil {
+		return nil, err
+	}
+	return sarama.NewSyncProducer(strings.Split(kafka.Bootstrap, ","), conf)
 }
 
 // GroupHandler instances are used to handle individual topic-partition claims.
@@ -51,10 +60,15 @@ func (h *GroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sara
 }
 
 // saramaConf converts KafkaClusterConfig to sarama.Config
-func saramaConf(kafka *config.KafkaClusterConfig, beginning bool) *sarama.Config {
+func saramaConf(kafka *config.KafkaClusterConfig, beginning bool) (*sarama.Config, error) {
+	endpoint, err := url.Parse(kafka.APIEndpoint)
+	if err != nil {
+		return nil, err
+	}
 	saramaConf := sarama.NewConfig()
 	saramaConf.Version = sarama.V1_1_0_0
 	saramaConf.Net.TLS.Enable = true
+	saramaConf.Net.TLS.Config.ServerName = endpoint.Hostname()
 	saramaConf.Net.SASL.Enable = true
 	saramaConf.Net.SASL.User = kafka.APIKey
 	saramaConf.Net.SASL.Password = kafka.APIKeys[kafka.APIKey].Secret
@@ -68,5 +82,5 @@ func saramaConf(kafka *config.KafkaClusterConfig, beginning bool) *sarama.Config
 		saramaConf.Consumer.Offsets.Initial = sarama.OffsetNewest
 	}
 
-	return saramaConf
+	return saramaConf, nil
 }

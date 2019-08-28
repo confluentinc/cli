@@ -59,13 +59,11 @@ func (c *clusterCommand) init() {
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	}
-	createCmd.Flags().String("cloud", "", "Cloud provider (e.g. 'aws' or 'gcp')")
-	createCmd.Flags().String("region", "", "Cloud region for cluster (e.g. 'us-west-2')")
-	createCmd.Flags().Bool("multizone", false, "Use multiple zones for high availability")
+	createCmd.Flags().String("cloud", "", "Cloud provider (e.g. 'aws' or 'gcp').")
+	createCmd.Flags().String("region", "", "Cloud region for cluster (e.g. 'us-west-2').")
 	check(createCmd.MarkFlagRequired("cloud"))
 	check(createCmd.MarkFlagRequired("region"))
 	createCmd.Flags().SortFlags = false
-	createCmd.Hidden = true
 	c.AddCommand(createCmd)
 
 	c.AddCommand(&cobra.Command{
@@ -90,7 +88,6 @@ func (c *clusterCommand) init() {
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
 	}
-	deleteCmd.Hidden = true
 	c.AddCommand(deleteCmd)
 	c.AddCommand(&cobra.Command{
 		Use:   "use <id>",
@@ -129,10 +126,6 @@ func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
-	if true {
-		return errors.ErrNotImplemented
-	}
-
 	cloud, err := cmd.Flags().GetString("cloud")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -141,24 +134,18 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	multizone, err := cmd.Flags().GetBool("multizone")
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
 	environment, err := pcmd.GetEnvironment(cmd, c.config)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
-	}
-	durability := kafkav1.Durability_LOW
-	if multizone {
-		durability = kafkav1.Durability_HIGH
 	}
 	cfg := &kafkav1.KafkaClusterConfig{
 		AccountId:       environment,
 		Name:            args[0],
 		ServiceProvider: cloud,
 		Region:          region,
-		Durability:      durability,
+		Durability:      kafkav1.Durability_LOW,
+		// TODO: remove this once it's no longer required (MCM-130)
+		Storage:         500,
 	}
 	cluster, err := c.client.Create(context.Background(), cfg)
 	if err != nil {
@@ -187,12 +174,7 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
-	if true {
-		return errors.ErrNotImplemented
-	}
-
 	environment, err := pcmd.GetEnvironment(cmd, c.config)
-
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
