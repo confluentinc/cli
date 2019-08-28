@@ -77,7 +77,7 @@ func (s *AuthServer) GenerateCodes() error {
 func (s *AuthServer) initializeInternalVariables(authURL string) {
 	// Auth configs change for Confluent internal development usage...
 	env := "prod"
-	if strings.Contains(authURL, "devel.cpdev.cloud") {
+	if strings.Contains(authURL, "devel.cpdev.cloud") || strings.Contains(authURL, "priv.cpdev.cloud") {
 		env = "devel"
 	}
 	if strings.Contains(authURL, "stag.cpdev.cloud") {
