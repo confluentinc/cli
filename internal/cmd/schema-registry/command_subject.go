@@ -21,7 +21,7 @@ func NewSubjectCommand(config *config.Config, ch *pcmd.ConfigHelper, srClient *s
 	subjectCmd := &subjectCommand{
 		Command: &cobra.Command{
 			Use:   "subject",
-			Short: "List subjects",
+			Short: "List subjects.",
 		},
 		config:   config,
 		ch:       ch,
@@ -35,7 +35,7 @@ func (c *subjectCommand) init() {
 
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List subjects",
+		Short: "List subjects.",
 		Example: `
 Retrieve all subjects available in a Schema Registry
 
