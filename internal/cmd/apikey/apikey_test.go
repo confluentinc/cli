@@ -134,7 +134,6 @@ func (suite *APITestSuite) SetupTest() {
 			return []*authv1.ApiKey{apiValue}, nil
 		},
 	}
-
 }
 
 func (suite *APITestSuite) newCMD() *cobra.Command {
