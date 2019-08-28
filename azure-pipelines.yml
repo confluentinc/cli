@@ -9,6 +9,7 @@ strategy:
           #    windows:
           #      imageName: 'windows-2019'
 
+
 pool:
   vmImage: $(imageName)
 
