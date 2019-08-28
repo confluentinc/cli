@@ -9,7 +9,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
-var (
+const (
 	kafkaResourceType = "kafka"
 	srResourceType    = "schema-registry"
 )

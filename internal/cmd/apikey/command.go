@@ -36,10 +36,10 @@ type command struct {
 }
 
 var (
-	listFields        = []string{"Key", "UserId", "Description"}
-	listLabels        = []string{"Key", "Owner", "Description"}
-	createFields      = []string{"Key", "Secret"}
-	createRenames     = map[string]string{"Key": "API Key"}
+	listFields    = []string{"Key", "UserId", "Description"}
+	listLabels    = []string{"Key", "Owner", "Description"}
+	createFields  = []string{"Key", "Secret"}
+	createRenames = map[string]string{"Key": "API Key"}
 )
 
 // New returns the Cobra command for API Key.

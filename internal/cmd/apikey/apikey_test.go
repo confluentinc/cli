@@ -26,7 +26,16 @@ import (
 const (
 	kafkaClusterID = "kafka"
 	srClusterID    = "lsrc-sr"
-	apiKey         = "abracadabra"
+	apiKeyVal      = "abracadabra"
+	apiSecretVal   = "opensesame"
+)
+
+var (
+	apiValue = &authv1.ApiKey{
+		Key:         apiKeyVal,
+		Secret:      apiSecretVal,
+		Description: "Mock Api's",
+	}
 )
 
 type APITestSuite struct {
@@ -69,7 +78,7 @@ func (suite *APITestSuite) SetupSuite() {
 	suite.conf.CurrentContext = name
 
 	srCluster, _ := suite.conf.SchemaRegistryCluster()
-	srCluster.SrCredentials = &config.APIKeyPair{Key: "abracadabra", Secret: "opensesame"}
+	srCluster.SrCredentials = &config.APIKeyPair{Key: apiKeyVal, Secret: apiSecretVal}
 
 	suite.kafkaCluster = &kafkav1.KafkaCluster{
 		Id:         kafkaClusterID,
@@ -111,30 +120,19 @@ func (suite *APITestSuite) SetupTest() {
 	}
 	suite.apiMock = &ccsdkmock.APIKey{
 		GetFunc: func(ctx context.Context, apiKey *authv1.ApiKey) (key *authv1.ApiKey, e error) {
-			return &authv1.ApiKey{
-				Key:    "abrcadabra",
-				Secret: "opensesame",
-			}, nil
+			return apiValue, nil
 		},
 		UpdateFunc: func(ctx context.Context, apiKey *authv1.ApiKey) error {
 			return nil
 		},
 		CreateFunc: func(ctx context.Context, apiKey *authv1.ApiKey) (*authv1.ApiKey, error) {
-			return &authv1.ApiKey{
-				Key:    "abrcadabra",
-				Secret: "opensesame",
-			}, nil
+			return apiValue, nil
 		},
 		DeleteFunc: func(ctx context.Context, apiKey *authv1.ApiKey) error {
 			return nil
 		},
 		ListFunc: func(ctx context.Context, apiKey *authv1.ApiKey) ([]*authv1.ApiKey, error) {
-			var apiKeys []*authv1.ApiKey
-			apiKeys = append(apiKeys, &authv1.ApiKey{
-				Key:    "abrcadabra",
-				Secret: "opensesame",
-			})
-			return apiKeys, nil
+			return []*authv1.ApiKey{apiValue}, nil
 		},
 	}
 
@@ -152,12 +150,13 @@ func (suite *APITestSuite) TestCreateSrApiKey() {
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.apiMock.CreateCalled())
+	retValue := suite.apiMock.CreateCalls()
+	req.Equal(retValue[0].Arg1.LogicalClusters[0].Id, srClusterID)
 }
 
 func (suite *APITestSuite) TestListSrApiKey() {
 	cmd := suite.newCMD()
 	cmd.SetArgs(append([]string{"list", "--resource", srClusterID}))
-
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -171,6 +170,8 @@ func (suite *APITestSuite) TestCreateKafkaApiKey() {
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.apiMock.CreateCalled())
+	retValue := suite.apiMock.CreateCalls()
+	req.Equal(retValue[0].Arg1.LogicalClusters[0].Id, kafkaClusterID)
 }
 
 func (suite *APITestSuite) TestListKafkaApiKey() {
@@ -184,7 +185,7 @@ func (suite *APITestSuite) TestListKafkaApiKey() {
 
 func (suite *APITestSuite) TestDeleteApiKey() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"delete", apiKey}))
+	cmd.SetArgs(append([]string{"delete", apiKeyVal}))
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
