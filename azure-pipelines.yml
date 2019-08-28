@@ -28,6 +28,7 @@ steps:
     mkdir ~/.ssh
     sudo mv $(idrsa.secureFilePath) ~/.ssh/
     sudo chmod 400 ~/.ssh/id_rsa
+    echo "Host *\n\tStrictHostKeyChecking no" >> ~/.ssh/config
 
 # Linux
 #- bash: |
