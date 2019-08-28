@@ -37,7 +37,6 @@ import (
 	environments "github.com/confluentinc/cli/internal/pkg/sdk/environment"
 	kafkas "github.com/confluentinc/cli/internal/pkg/sdk/kafka"
 	ksqls "github.com/confluentinc/cli/internal/pkg/sdk/ksql"
-	//connects "github.com/confluentinc/cli/internal/pkg/sdk/connect"
 	users "github.com/confluentinc/cli/internal/pkg/sdk/user"
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
 	versions "github.com/confluentinc/cli/internal/pkg/version"
