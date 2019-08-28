@@ -38,6 +38,7 @@ func (c *ConfigHelper) SchemaRegistryURL(requestContext context.Context) (string
 	if srCluster.SchemaRegistryEndpoint != "" {
 		return srCluster.SchemaRegistryEndpoint, nil
 	}
+
 	// Didn't find it -- ask the mothership
 	// TODO Using the plural "clusters" command for now until we can fix API compat for singular command
 	existingClusters, err := c.Client.SchemaRegistry.GetSchemaRegistryClusters(

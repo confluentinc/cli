@@ -15,7 +15,7 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 
 	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
 	tests := []CLITest{
-		{args: "api-key create --resource bob", login: "default", fixture: "apikey1.golden"}, // MYKEY3
+		{args: "api-key create --cluster bob", login: "default", fixture: "apikey1.golden"}, // MYKEY3
 		{args: "api-key list", useKafka: "bob", fixture: "apikey2.golden"},
 		{args: "api-key list", useKafka: "abc", fixture: "apikey3.golden"},
 
@@ -26,46 +26,42 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 		{args: "api-key list", fixture: "apikey6.golden"},
 
 		// create api key for other kafka cluster
-		{args: "api-key create --description my-other-app --resource lkc-other1", fixture: "apikey7.golden"}, // MYKEY5
+		{args: "api-key create --description my-other-app --cluster lkc-other1", fixture: "apikey7.golden"}, // MYKEY5
 		{args: "api-key list", fixture: "apikey6.golden"},
-		{args: "api-key list --resource lkc-other1", fixture: "apikey8.golden"},
+		{args: "api-key list --cluster lkc-other1", fixture: "apikey8.golden"},
 
 		// create api key for non-kafka cluster
-		{args: "api-key create --description my-ksql-app --resource lksqlc-ksql1", fixture: "apikey9.golden"}, // MYKEY6
+		{args: "api-key create --description my-ksql-app --cluster lksqlc-ksql1", fixture: "apikey9.golden"}, // MYKEY6
 		{args: "api-key list", fixture: "apikey6.golden"},
-		{args: "api-key list --resource lksqlc-ksql1", fixture: "apikey10.golden"},
-
-		// create api key for schema registry cluster
-		{args: "api-key create --resource lsrc-1", fixture: "apikey20.golden"}, // MYKEY7
-		{args: "api-key list --resource lsrc-1", fixture: "apikey21.golden"},
+		{args: "api-key list --cluster lksqlc-ksql1", fixture: "apikey10.golden"},
 
 		// use an api key for active kafka cluster
 		{args: "api-key use MYKEY4", fixture: "empty.golden"},
 		{args: "api-key list", fixture: "apikey11.golden"},
 
 		// use an api key for other kafka cluster
-		{args: "api-key use MYKEY5 --resource lkc-other1", fixture: "empty.golden"},
+		{args: "api-key use MYKEY5 --cluster lkc-other1", fixture: "empty.golden"},
 		{args: "api-key list", fixture: "apikey11.golden"},
-		{args: "api-key list --resource lkc-other1", fixture: "apikey12.golden"},
+		{args: "api-key list --cluster lkc-other1", fixture: "apikey12.golden"},
 
 		// use an api key for non-kafka cluster
-		{args: "api-key use MYKEY6 --resource lksqlc-ksql1", fixture: "empty.golden"},
+		{args: "api-key use MYKEY6 --cluster lksqlc-ksql1", fixture: "empty.golden"},
 		{args: "api-key list", fixture: "apikey11.golden"},
-		{args: "api-key list --resource lksqlc-ksql1", fixture: "apikey13.golden"},
+		{args: "api-key list --cluster lksqlc-ksql1", fixture: "apikey13.golden"},
 
 		// store an api-key for active kafka cluster
 		{args: "api-key store UIAPIKEY100 UIAPISECRET100", fixture: "empty.golden"},
 		{args: "api-key list", fixture: "apikey11.golden"},
 
 		// store an api-key for other kafka cluster
-		{args: "api-key store UIAPIKEY101 UIAPISECRET101 --resource lkc-other1", fixture: "empty.golden"},
+		{args: "api-key store UIAPIKEY101 UIAPISECRET101 --cluster lkc-other1", fixture: "empty.golden"},
 		{args: "api-key list", fixture: "apikey11.golden"},
-		{args: "api-key list --resource lkc-other1", fixture: "apikey12.golden"},
+		{args: "api-key list --cluster lkc-other1", fixture: "apikey12.golden"},
 
 		// store an api-key for non-kafka cluster
-		{args: "api-key store UIAPIKEY102 UIAPISECRET102 --resource lksqlc-ksql1", fixture: "empty.golden"},
+		{args: "api-key store UIAPIKEY102 UIAPISECRET102 --cluster lksqlc-ksql1", fixture: "empty.golden"},
 		{args: "api-key list", fixture: "apikey11.golden"},
-		{args: "api-key list --resource lksqlc-ksql1", fixture: "apikey14.golden"},
+		{args: "api-key list --cluster lksqlc-ksql1", fixture: "apikey14.golden"},
 
 		// store: error handling
 		{name: "error if storing unknown api key", args: "api-key store UNKNOWN SECRET", fixture: "apikey15.golden"},
