@@ -558,6 +558,14 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 			require.NoError(t, err)
 		}
 	})
+	router.HandleFunc("/api/accounts", func(w http.ResponseWriter, r *http.Request) {
+		b, err := utilv1.MarshalJSONToBytes(&orgv1.ListAccountsReply{Accounts: []*orgv1.Account{
+			{Id: "a-595", Name: "default"}, {Id: "not-595", Name: "other"},
+		}})
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(b))
+		require.NoError(t, err)
+	})
 	router.HandleFunc("/api/clusters/", handleKafkaClusterGetListDelete(t, kafkaAPIURL))
 	router.HandleFunc("/api/clusters", handleKafkaClusterCreate(t, kafkaAPIURL))
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -642,7 +650,6 @@ func handleCheckEmail(t *testing.T) func(w http.ResponseWriter, r *http.Request)
 
 func handleKafkaClusterGetListDelete(t *testing.T, kafkaAPIURL string) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		//require.NotEmpty(t, r.URL.Query().Get("account_id"))
 		parts := strings.Split(r.URL.Path, "/")
 		id := parts[len(parts)-1]
 		if id == "lkc-unknown" {
@@ -653,6 +660,9 @@ func handleKafkaClusterGetListDelete(t *testing.T, kafkaAPIURL string) func(w ht
 		if r.Method == "DELETE" {
 			w.WriteHeader(http.StatusNoContent)
 			return
+		} else {
+			// this is in the body of delete requests
+			require.NotEmpty(t, r.URL.Query().Get("account_id"))
 		}
 		// Now return the KafkaCluster with updated ApiEndpoint
 		b, err := utilv1.MarshalJSONToBytes(&kafkav1.GetKafkaClusterReply{

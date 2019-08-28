@@ -4,6 +4,7 @@ func (s *CLITestSuite) TestKafkaCommands() {
 	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
 	tests := []CLITest{
 		{args: "kafka cluster --help", fixture: "kafka-cluster-help.golden"},
+		{args: "environment use a-595", fixture: "kafka0.golden", wantErrCode: 0},
 		{args: "kafka cluster create", fixture: "kafka1.golden", wantErrCode: 1},
 		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1", fixture: "kafka2.golden", wantErrCode: 0},
 		{args: "kafka cluster delete", fixture: "kafka3.golden", wantErrCode: 1},

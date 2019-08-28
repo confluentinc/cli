@@ -175,7 +175,6 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	environment, err := pcmd.GetEnvironment(cmd, c.config)
-
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
