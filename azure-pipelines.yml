@@ -1,0 +1,69 @@
+strategy:
+  matrix:
+    mac:
+      imageName: 'macOS-10.14'
+          #    linux:
+          #      imageName: 'ubuntu-16.04'
+          #    mac:
+          #      imageName: 'macOS-10.14'
+          #    windows:
+          #      imageName: 'windows-2019'
+
+
+pool:
+  vmImage: $(imageName)
+
+steps:
+- task: GoTool@0
+  inputs:
+    version: '1.12'
+
+- task: DownloadSecureFile@1
+  name: idrsa
+  displayName: 'Download id_rsa'
+  inputs:
+    secureFile: 'id_rsa'
+
+- task: DownloadSecureFile@1
+  name: netrc
+  displayName: 'Download netrc'
+  inputs:
+    secureFile: 'netrc'
+
+- script: |
+    echo '##vso[task.prependpath]$(GOBIN)'
+    echo '##vso[task.prependpath]$(GOROOT)/bin'
+  displayName: 'Set up the Go workspace'
+
+- script: |
+    mv $(netrc.secureFilePath) ~/.netrc
+    mkdir ~/.ssh
+    sudo mv $(idrsa.secureFilePath) ~/.ssh/
+    sudo chmod 400 ~/.ssh/id_rsa
+
+# Linux
+#- bash: |
+#    export GOBIN='$(GOPATH)/bin'
+#    export GOROOT='/usr/local/go1.12'
+#    export GOPATH='$(system.defaultWorkingDirectory)/gopath'
+#    export modulePath='$(GOPATH)/src/github.com/$(build.repository.name)'
+#  condition: eq( variables['Agent.OS'], 'Linux' )
+#  displayName: Get IP on Linux
+## macOS
+#- bash: |
+#    export IPADDR=$(ifconfig | grep 'en0' -A3 | tail -n1 | awk '{print $2}')
+#    echo "##vso[task.setvariable variable=IP_ADDR]$IPADDR"
+#  condition: eq( variables['Agent.OS'], 'Darwin' )
+#  displayName: Get IP on macOS
+## Windows
+#- powershell: |
+#    Set-Variable -Name IPADDR -Value ((Get-NetIPAddress | ?{ $_.AddressFamily -eq "IPv4" -and !($_.IPAddress -match "169") -and !($_.IPaddress -match "127") } | Select-Object -First 1).IPAddress)
+#    Write-Host "##vso[task.setvariable variable=IP_ADDR]$IPADDR"
+#  condition: eq( variables['Agent.OS'], 'Windows_NT' )
+#  displayName: Get IP on Windows
+
+- script: |
+    make deps
+
+- script: |
+    make build-ccloud
