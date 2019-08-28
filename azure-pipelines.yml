@@ -31,6 +31,11 @@ steps:
     secureFile: 'netrc'
 
 - script: |
+    echo '##vso[task.prependpath]$(GOBIN)'
+    echo '##vso[task.prependpath]$(GOROOT)/bin'
+  displayName: 'Set up the Go workspace'
+
+- script: |
     mv $(netrc.secureFilePath) ~/.netrc
     mkdir ~/.ssh
     sudo mv $(idrsa.secureFilePath) ~/.ssh/
