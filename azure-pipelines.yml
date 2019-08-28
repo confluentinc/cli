@@ -70,7 +70,9 @@ steps:
     echo $GOPATH
     echo $GOROOT
     ls ${GOPATH}/bin
-    ls ${GOROOT/bin
+    ls ${GOPATH}
+    ls ${GOROOT}/bin
+    ls ${GOROOT}
     make deps
 
 - script: |
