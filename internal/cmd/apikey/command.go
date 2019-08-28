@@ -131,13 +131,13 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	var apiKeys []*authv1.ApiKey
 	var data [][]string
 
-	_, accId, clusterId, currentKey, err := c.resolveResourceID(cmd, args)
+	resourceType, accId, clusterId, currentKey, err := c.resolveResourceID(cmd, args)
 	//Return resource not found errors
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	apiKeys, err = c.client.List(context.Background(), &authv1.ApiKey{AccountId: accId})
+	apiKeys, err = c.client.List(context.Background(), &authv1.ApiKey{AccountId: accId, LogicalClusters: []*authv1.ApiKey_Cluster{{Id: clusterId, Type: resourceType}}})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -253,6 +253,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 
 	key := &authv1.ApiKey{
 		Id:        userKey.Id,
+		Key:       apiKey,
 		AccountId: c.config.Auth.Account.Id,
 	}
 

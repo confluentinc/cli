@@ -24,8 +24,8 @@ import (
 )
 
 const (
-	kafkaClusterID = "kafka"
-	srClusterID    = "lsrc-sr"
+	kafkaClusterID = "lkc-12345"
+	srClusterID    = "lsrc-12345"
 	apiKeyVal      = "abracadabra"
 	apiSecretVal   = "opensesame"
 )
@@ -69,10 +69,9 @@ func (suite *APITestSuite) SetupSuite() {
 	}
 
 	suite.conf.Contexts[name] = &config.Context{
-		Platform:      name,
-		Credential:    name,
-		Kafka:         kafkaClusterID,
-		KafkaClusters: map[string]*config.KafkaClusterConfig{kafkaClusterID: {}},
+		Platform:   name,
+		Credential: name,
+		Kafka:      kafkaClusterID,
 	}
 
 	suite.conf.CurrentContext = name
@@ -100,10 +99,10 @@ func (suite *APITestSuite) SetupTest() {
 		CreateSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *srv1.SchemaRegistryClusterConfig) (*srv1.SchemaRegistryCluster, error) {
 			return suite.srCluster, nil
 		},
-		GetSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *srv1.SchemaRegistryCluster) (*srv1.SchemaRegistryCluster, error) {
+		GetSchemaRegistryClusterFunc: func(ctx context.Context, cluster *srv1.SchemaRegistryCluster) (*srv1.SchemaRegistryCluster, error) {
 			return suite.srCluster, nil
 		},
-		GetSchemaRegistryClustersFunc: func(arg0 context.Context, arg1 *srv1.SchemaRegistryCluster) (clusters []*srv1.SchemaRegistryCluster, e error) {
+		GetSchemaRegistryClustersFunc: func(ctx context.Context, cluster *srv1.SchemaRegistryCluster) (clusters []*srv1.SchemaRegistryCluster, e error) {
 			return []*srv1.SchemaRegistryCluster{suite.srCluster}, nil
 		},
 	}
@@ -139,7 +138,7 @@ func (suite *APITestSuite) SetupTest() {
 }
 
 func (suite *APITestSuite) newCMD() *cobra.Command {
-	cmd := New(&cliMock.Commander{}, suite.conf, suite.apiMock, &pcmd.ConfigHelper{Config: suite.conf, Client: &ccloud.Client{Kafka: suite.kafkaMock, SchemaRegistry: suite.srMothershipMock}}, suite.keystore)
+	cmd := New(&cliMock.Commander{}, suite.conf, suite.apiMock, &pcmd.ConfigHelper{Config: suite.conf, Client: &ccloud.Client{Kafka: suite.kafkaMock, SchemaRegistry: suite.srMothershipMock, APIKey: suite.apiMock}}, suite.keystore)
 	return cmd
 }
 
@@ -150,17 +149,8 @@ func (suite *APITestSuite) TestCreateSrApiKey() {
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.apiMock.CreateCalled())
-	retValue := suite.apiMock.CreateCalls()
-	req.Equal(retValue[0].Arg1.LogicalClusters[0].Id, srClusterID)
-}
-
-func (suite *APITestSuite) TestListSrApiKey() {
-	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"list", "--resource", srClusterID}))
-	err := cmd.Execute()
-	req := require.New(suite.T())
-	req.Nil(err)
-	req.True(suite.apiMock.ListCalled())
+	retValue := suite.apiMock.CreateCalls()[0].Arg1
+	req.Equal(retValue.LogicalClusters[0].Id, srClusterID)
 }
 
 func (suite *APITestSuite) TestCreateKafkaApiKey() {
@@ -170,17 +160,8 @@ func (suite *APITestSuite) TestCreateKafkaApiKey() {
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.apiMock.CreateCalled())
-	retValue := suite.apiMock.CreateCalls()
-	req.Equal(retValue[0].Arg1.LogicalClusters[0].Id, kafkaClusterID)
-}
-
-func (suite *APITestSuite) TestListKafkaApiKey() {
-	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"list", "--resource", kafkaClusterID}))
-	err := cmd.Execute()
-	req := require.New(suite.T())
-	req.Nil(err)
-	req.True(suite.apiMock.ListCalled())
+	retValue := suite.apiMock.CreateCalls()[0].Arg1
+	req.Equal(retValue.LogicalClusters[0].Id, kafkaClusterID)
 }
 
 func (suite *APITestSuite) TestDeleteApiKey() {
@@ -190,6 +171,30 @@ func (suite *APITestSuite) TestDeleteApiKey() {
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.apiMock.DeleteCalled())
+	retValue := suite.apiMock.DeleteCalls()[0].Arg1
+	req.Equal(retValue.Key, apiKeyVal)
+}
+
+func (suite *APITestSuite) TestListSrApiKey() {
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"list", "--resource", srClusterID}))
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	req.True(suite.apiMock.ListCalled())
+	retValue := suite.apiMock.ListCalls()[0].Arg1
+	req.Equal(retValue.LogicalClusters[0].Id, srClusterID)
+}
+
+func (suite *APITestSuite) TestListKafkaApiKey() {
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"list", "--resource", kafkaClusterID}))
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	req.True(suite.apiMock.ListCalled())
+	retValue := suite.apiMock.ListCalls()[0].Arg1
+	req.Equal(retValue.LogicalClusters[0].Id, kafkaClusterID)
 }
 
 func TestApiTestSuite(t *testing.T) {
