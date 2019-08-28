@@ -69,11 +69,17 @@ steps:
     ls
     echo $GOPATH
     echo $GOROOT
+    mkdir -p ${GOPATH}/bin
+    ls ${GOPATH}/bin
+    ls ${GOPATH}
+    mkdir -p ${GOROOT}/bin
+    ls ${GOROOT}/bin
+    ls ${GOROOT}
+    make deps
     ls ${GOPATH}/bin
     ls ${GOPATH}
     ls ${GOROOT}/bin
     ls ${GOROOT}
-    make deps
 
 - script: |
     make build-ccloud
