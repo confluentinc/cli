@@ -1,10 +1,4 @@
-Error: not implemented
-Usage:
-  ccloud kafka cluster delete <id> [flags]
+Error: 1 error occurred:
+	* error deleting kafka cluster: resource not found
 
-Flags:
-  -h, --help   help for delete
-
-Global Flags:
-  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
 
