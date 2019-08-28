@@ -77,7 +77,7 @@ var rules = []linter.Rule{
 		linter.ExcludeCommandContains("iam rolebinding"),
 		// skip secret commands
 		linter.ExcludeCommandContains("secret"),
-		linter.ExcludeCommandContains("schema-registry enable"),
+		linter.ExcludeCommandContains("schema-registry"),
 	),
 	// TODO: ensuring --cluster is optional DOES NOT actually ensure that the cluster context is used
 	linter.Filter(linter.RequireFlag("cluster", true), nonClusterScopedCommands...),
