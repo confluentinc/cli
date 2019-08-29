@@ -29,7 +29,7 @@ var (
 	}
 	vocabWords = []string{
 		"ccloud", "kafka", "api", "acl", "url", "config", "multizone", "transactional", "ksql", "decrypt", "iam", "rolebinding",
-		"geo", "subject", "version", "schema",
+		"geo",
 	}
 	utilityCommands = []string{
 		"login", "logout", "version", "completion <shell>", "prompt", "update",
@@ -64,7 +64,7 @@ var rules = []linter.Rule{
 		),
 		linter.OnlyLeafCommands, linter.ExcludeCommand(utilityCommands...),
 		// skip resource container commands
-		linter.ExcludeUse("list", "auth", "describe", "enable"),
+		linter.ExcludeUse("list", "auth"),
 		// skip ACLs which don't have an identity (value objects rather than entities)
 		linter.ExcludeCommandContains("kafka acl"),
 		// skip api-key create since you don't get to choose a name for API keys
@@ -77,10 +77,8 @@ var rules = []linter.Rule{
 		linter.ExcludeCommandContains("iam rolebinding"),
 		// skip secret commands
 		linter.ExcludeCommandContains("secret"),
-		// skip following schema-registry commands which do not use names/ID's
-		linter.ExcludeCommandContains("schema-registry compatibility"),
-		linter.ExcludeCommandContains("schema-registry schema"),
-		linter.ExcludeCommandContains("schema-registry mode"),
+		// skip schema-registry commands which do not use names/ID's
+		linter.ExcludeCommandContains("schema-registry"),
 	),
 	// TODO: ensuring --cluster is optional DOES NOT actually ensure that the cluster context is used
 	linter.Filter(linter.RequireFlag("cluster", true), nonClusterScopedCommands...),
