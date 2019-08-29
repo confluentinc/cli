@@ -1,7 +1,9 @@
 package kafka
 
 import (
+	"fmt"
 	"github.com/spf13/cobra"
+	"os"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 
@@ -35,7 +37,14 @@ func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.Kafka, c
 }
 
 func (c *command) init() {
-	c.AddCommand(NewClusterCommand(c.config, c.client, c.ch))
+	credType, err := c.config.CredentialType()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 	c.AddCommand(NewTopicCommand(c.prerunner, c.config, c.client, c.ch))
-	c.AddCommand(NewACLCommand(c.config, c.client, c.ch))
+	if credType == config.Username {
+		c.AddCommand(NewClusterCommand(c.config, c.client, c.ch))
+		c.AddCommand(NewACLCommand(c.config, c.client, c.ch))
+	}
 }

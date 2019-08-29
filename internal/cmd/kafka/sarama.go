@@ -2,12 +2,11 @@ package kafka
 
 import (
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"io"
 	"strings"
 
 	"github.com/Shopify/sarama"
-
-	"github.com/confluentinc/cli/internal/pkg/config"
 )
 
 // NewSaramaConsumer returns a sarama.ConsumerGroup configured for the CLI config

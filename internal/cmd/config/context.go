@@ -92,8 +92,12 @@ func (c *contextCommand) list(cmd *cobra.Command, args []string) error {
 }
 
 func (c *contextCommand) use(cmd *cobra.Command, args []string) error {
-	c.config.CurrentContext = args[0]
-	return c.config.Save()
+	name := args[0]
+	err := c.config.SetContext(name)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	return nil
 }
 
 func (c *contextCommand) current(cmd *cobra.Command, args []string) error {

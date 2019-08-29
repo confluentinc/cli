@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"context"
+	initcontext "github.com/confluentinc/cli/internal/cmd/init-context"
+	"github.com/confluentinc/cli/internal/cmd/kafka"
 	"github.com/confluentinc/cli/internal/cmd/schema-registry"
 	"os"
 
@@ -18,7 +20,6 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/config"
 	"github.com/confluentinc/cli/internal/cmd/environment"
 	"github.com/confluentinc/cli/internal/cmd/iam"
-	"github.com/confluentinc/cli/internal/cmd/kafka"
 	"github.com/confluentinc/cli/internal/cmd/ksql"
 	"github.com/confluentinc/cli/internal/cmd/local"
 	ps1 "github.com/confluentinc/cli/internal/cmd/prompt"
@@ -55,7 +56,6 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	cli.SetHelpFunc(func(cmd *cobra.Command, args []string) {
 		_ = help.ResolveReST(cmd.HelpTemplate(), cmd)
 	})
-
 	if cliName == "ccloud" {
 		cli.Short = "Confluent Cloud CLI."
 		cli.Long = "Manage your Confluent Cloud."
@@ -107,17 +107,23 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	cli.AddCommand(update.New(cliName, cfg, ver, prompt, updateClient))
 
 	cli.AddCommand(auth.New(prerunner, cfg, logger, mdsClient)...)
-
 	if cliName == "ccloud" {
-		cli.AddCommand(ps1.NewPromptCmd(cfg, &pps1.Prompt{Config: cfg}, logger))
-
 		kafkaClient := kafkas.New(client, logger)
+		cli.AddCommand(kafka.New(prerunner, cfg, kafkaClient, ch))
+		cli.AddCommand(initcontext.New(prerunner, cfg, prompt))
+		credType, err := cfg.CredentialType()
+		if err != nil {
+			return nil, err
+		}
+		if credType == configs.APIKey {
+			return cli, nil
+		}
+		cli.AddCommand(ps1.NewPromptCmd(cfg, &pps1.Prompt{Config: cfg}, logger))
 		userClient := users.New(client, logger)
 		ks := &keystore.ConfigKeyStore{Config: cfg, Helper: ch}
 		cli.AddCommand(environment.New(prerunner, cfg, environments.New(client, logger), cliName))
 		cli.AddCommand(service_account.New(prerunner, cfg, userClient))
 		cli.AddCommand(apikey.New(prerunner, cfg, apikeys.New(client, logger), ch, ks))
-		cli.AddCommand(kafka.New(prerunner, cfg, kafkaClient, ch))
 
 		// Schema Registry
 		// If srClient is nil, the function will look it up after prerunner verifies authentication. Exposed so tests can pass mocks
@@ -128,7 +134,6 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		conn = ksql.New(prerunner, cfg, ksqls.New(client, logger), kafkaClient, userClient, ch)
 		conn.Hidden = true // The ksql feature isn't finished yet, so let's hide it
 		cli.AddCommand(conn)
-
 		//conn = connect.New(prerunner, cfg, connects.New(client, logger))
 		//conn.Hidden = true // The connect feature isn't finished yet, so let's hide it
 		//cli.AddCommand(conn)
@@ -146,6 +151,5 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		resolver := &pcmd.FlagResolverImpl{Prompt: prompt, Out: os.Stdout}
 		cli.AddCommand(secret.New(prerunner, cfg, prompt, resolver, secrets.NewPasswordProtectionPlugin(logger)))
 	}
-
 	return cli, nil
 }

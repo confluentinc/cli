@@ -295,7 +295,6 @@ func TestListTopics(t *testing.T) {
 	for _, topic := range Topics {
 		cmd := NewCMD(expect)
 		cmd.SetArgs([]string{"topic", "list"})
-
 		go func() {
 			expect <- &kafkav1.Topic{Spec: &kafkav1.TopicSpecification{Name: topic.spec.Name}}
 		}()
