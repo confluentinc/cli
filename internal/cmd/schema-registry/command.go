@@ -62,7 +62,7 @@ func (c *command) init() {
 	}
 	createCmd.Flags().String("cloud", "", "Cloud provider (e.g. 'aws', 'azure', or 'gcp').")
 	_ = createCmd.MarkFlagRequired("cloud")
-	createCmd.Flags().String("geo", "", "Either 'us', 'eu', or 'apac' (only applies to Enterprise accounts).")
+	createCmd.Flags().String("geo", "", "Either 'us', 'eu', or 'apac'.")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 	describeCmd := &cobra.Command{
