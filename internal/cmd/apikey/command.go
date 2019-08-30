@@ -3,16 +3,18 @@ package apikey
 import (
 	"context"
 	"fmt"
-	"github.com/spf13/cobra"
 	"os"
+
+	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
+	"github.com/confluentinc/go-printer"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/keystore"
-	"github.com/confluentinc/go-printer"
 )
 
 const longDescription = `Use this command to register an API secret created by another
@@ -66,17 +68,17 @@ func (c *command) init() {
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	}
-	listCmd.Flags().String("resource", "", "The resource ID.")
+	listCmd.Flags().String("cluster", "", "The cluster ID.")
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
 	createCmd := &cobra.Command{
 		Use:   "create",
-		Short: "Create API keys for a given resource.",
+		Short: "Create API keys for users or service accounts.",
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
 	}
-	createCmd.Flags().String("resource", "", "The resource ID.")
+	createCmd.Flags().String("cluster", "", "The cluster ID.")
 	createCmd.Flags().Int32("service-account-id", 0, "Service account ID. If not specified, the API key will have full access on the cluster.")
 	createCmd.Flags().String("description", "", "Description of API key.")
 	createCmd.Flags().SortFlags = false
@@ -106,7 +108,7 @@ func (c *command) init() {
 		RunE:  c.store,
 		Args:  cobra.ExactArgs(2),
 	}
-	storeCmd.Flags().String("resource", "", "The resource ID.")
+	storeCmd.Flags().String("cluster", "", "The cluster ID.")
 	storeCmd.Flags().BoolP("force", "f", false, "Force overwrite existing secret for this key.")
 	storeCmd.Flags().SortFlags = false
 	c.AddCommand(storeCmd)
@@ -117,45 +119,43 @@ func (c *command) init() {
 		RunE:  c.use,
 		Args:  cobra.ExactArgs(1),
 	}
-	useCmd.Flags().String("resource", "", "The resource ID.")
+	useCmd.Flags().String("cluster", "", "The cluster ID.")
 	useCmd.Flags().SortFlags = false
 	c.AddCommand(useCmd)
 }
 
 func (c *command) list(cmd *cobra.Command, args []string) error {
+	kcc, err := pcmd.GetKafkaClusterConfig(cmd, c.ch)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	apiKeys, err := c.client.List(context.Background(), &authv1.ApiKey{AccountId: c.config.Auth.Account.Id})
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
 	type keyDisplay struct {
 		Key         string
 		Description string
 		UserId      int32
 	}
-	var apiKeys []*authv1.ApiKey
+
 	var data [][]string
-
-	resourceType, accId, clusterId, currentKey, err := c.resolveResourceID(cmd, args)
-	//Return resource not found errors
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
-	apiKeys, err = c.client.List(context.Background(), &authv1.ApiKey{AccountId: accId, LogicalClusters: []*authv1.ApiKey_Cluster{{Id: clusterId, Type: resourceType}}})
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
 	for _, apiKey := range apiKeys {
 		// ignore keys owned by Confluent-internal user (healthcheck, etc)
 		if apiKey.UserId == 0 {
 			continue
 		}
 
-		if apiKey.Key == currentKey {
+		if apiKey.Key == kcc.APIKey {
 			apiKey.Key = fmt.Sprintf("* %s", apiKey.Key)
 		} else {
 			apiKey.Key = fmt.Sprintf("  %s", apiKey.Key)
 		}
 
 		for _, c := range apiKey.LogicalClusters {
-			if c.Id == clusterId {
+			if c.Id == kcc.ID {
 				data = append(data, printer.ToRow(&keyDisplay{
 					Key:         apiKey.Key,
 					Description: apiKey.Description,
@@ -165,6 +165,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 			}
 		}
 	}
+
 	printer.RenderCollectionTable(data, listLabels)
 	return nil
 }
@@ -194,8 +195,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) create(cmd *cobra.Command, args []string) error {
-
-	resourceType, accId, clusterId, _, err := c.resolveResourceID(cmd, args)
+	kcc, err := pcmd.GetKafkaClusterConfig(cmd, c.ch)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -218,8 +218,8 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	key := &authv1.ApiKey{
 		UserId:          userId,
 		Description:     description,
-		AccountId:       accId,
-		LogicalClusters: []*authv1.ApiKey_Cluster{{Id: clusterId, Type: resourceType}},
+		AccountId:       c.config.Auth.Account.Id,
+		LogicalClusters: []*authv1.ApiKey_Cluster{{Id: kcc.ID}},
 	}
 
 	userKey, err := c.client.Create(context.Background(), key)
@@ -232,11 +232,11 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	if resourceType == kafkaResourceType {
-		if err := c.keystore.StoreAPIKey(userKey, clusterId, environment); err != nil {
-			return errors.HandleCommon(errors.Wrapf(err, "Unable to store API key locally."), cmd)
-		}
+
+	if err := c.keystore.StoreAPIKey(userKey, kcc.ID, environment); err != nil {
+		return errors.HandleCommon(errors.Wrapf(err, "Unable to store API key locally."), cmd)
 	}
+
 	return nil
 }
 
@@ -250,7 +250,6 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 
 	key := &authv1.ApiKey{
 		Id:        userKey.Id,
-		Key:       apiKey,
 		AccountId: c.config.Auth.Account.Id,
 	}
 
@@ -258,6 +257,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
+
 	return c.keystore.DeleteAPIKey(apiKey)
 }
 
@@ -265,7 +265,7 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	key := args[0]
 	secret := args[1]
 
-	kcc, err := pcmd.GetKafkaClusterConfig(cmd, c.ch, "resource")
+	kcc, err := pcmd.GetKafkaClusterConfig(cmd, c.ch)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -296,13 +296,14 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	if err := c.keystore.StoreAPIKey(&authv1.ApiKey{Key: key, Secret: secret}, kcc.ID, environment); err != nil {
 		return errors.HandleCommon(errors.Wrapf(err, "Unable to store the API key locally."), cmd)
 	}
+
 	return nil
 }
 
 func (c *command) use(cmd *cobra.Command, args []string) error {
 	apiKey := args[0]
 
-	cluster, err := pcmd.GetKafkaCluster(cmd, c.ch, "resource")
+	cluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
