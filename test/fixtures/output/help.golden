@@ -8,6 +8,7 @@ Available Commands:
   completion      Print shell completion code.
   environment     Manage and select ccloud environments.
   help            Help about any command
+  init            Initialize a context.
   kafka           Manage Apache Kafka.
   login           Log in to Confluent Cloud.
   logout          Logout of Confluent Cloud.
