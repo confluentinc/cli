@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/go-editor"
-	mds "github.com/confluentinc/mds-sdk-go"
+	"github.com/confluentinc/mds-sdk-go"
 )
 
 var messages = map[error]string{
@@ -54,6 +54,9 @@ func HandleCommon(err error, cmd *cobra.Command) error {
 		cmd.SilenceUsage = true
 		return fmt.Errorf("no API key selected for %s, please select an api-key first (e.g., with `api-key use`)", e.ClusterID)
 	case *UnconfiguredAPISecretError:
+		cmd.SilenceUsage = true
+		return err
+	case *UnspecifiedCredentialError:
 		cmd.SilenceUsage = true
 		return err
 	// TODO: ErrEditing is declared incorrectly as "type ErrEditing error"

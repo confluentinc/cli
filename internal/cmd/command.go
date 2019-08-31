@@ -5,6 +5,7 @@ import (
 	initcontext "github.com/confluentinc/cli/internal/cmd/init-context"
 	"github.com/confluentinc/cli/internal/cmd/kafka"
 	"github.com/confluentinc/cli/internal/cmd/schema-registry"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"os"
 
 	"github.com/DABH/go-basher"
@@ -112,7 +113,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		cli.AddCommand(kafka.New(prerunner, cfg, kafkaClient, ch))
 		cli.AddCommand(initcontext.New(prerunner, cfg, prompt))
 		credType, err := cfg.CredentialType()
-		if err != nil {
+		if _, ok := err.(*errors.UnspecifiedCredentialError); ok {
 			return nil, err
 		}
 		if credType == configs.APIKey {

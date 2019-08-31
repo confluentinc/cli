@@ -46,11 +46,6 @@ func NewTopicCommand(prerunner pcmd.PreRunner, config *config.Config, client ccl
 }
 
 func (c *topicCommand) init() {
-	credType, err := c.config.CredentialType()
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
 	cmd := &cobra.Command{
 		Use:               "produce <topic>",
 		Short:             "Produce messages to a Kafka topic.",
@@ -81,7 +76,8 @@ Consume items from the 'my_topic' topic and press 'Ctrl + C' to exit.
 	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
-	if credType == config.APIKey {
+	credType, err := c.config.CredentialType()
+	if err != errors.ErrNoContext && credType == config.APIKey {
 		return
 	}
 	cmd = &cobra.Command{

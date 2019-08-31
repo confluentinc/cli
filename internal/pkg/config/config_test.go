@@ -217,6 +217,7 @@ func TestConfig_AddContext(t *testing.T) {
 				Platforms:   map[string]*Platform{platform.String(): platform},
 				Credentials: map[string]*Credential{credential.String(): credential},
 				Contexts: map[string]*Context{contextName: {
+					Name:                   contextName,
 					Platform:               platform.String(),
 					Credential:             credential.String(),
 					KafkaClusters:          map[string]*KafkaClusterConfig{},
@@ -273,7 +274,7 @@ func TestCredential_String(t *testing.T) {
 		name       string
 		credential *Credential
 		want       string
-		wantPanic bool
+		wantPanic  bool
 	}{
 		{
 			name: "API Key credential stringify",
@@ -282,7 +283,7 @@ func TestCredential_String(t *testing.T) {
 				APIKeyPair:     keyPair,
 				Username:       username,
 			},
-			want: "api-key-lock",
+			want:      "api-key-lock",
 			wantPanic: false,
 		},
 		{
@@ -292,7 +293,7 @@ func TestCredential_String(t *testing.T) {
 				APIKeyPair:     keyPair,
 				Username:       username,
 			},
-			want: "username-me",
+			want:      "username-me",
 			wantPanic: false,
 		},
 		{
@@ -401,10 +402,11 @@ func TestConfig_CredentialType(t *testing.T) {
 		CurrentContext string
 	}
 	tests := []struct {
-		name    string
-		fields  fields
-		want    CredentialType
-		wantErr bool
+		name     string
+		fields   fields
+		want     CredentialType
+		wantErr  bool
+		wantExit bool
 	}{
 		{
 			name: "succeed getting CredentialType from existing credential",

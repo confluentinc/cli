@@ -110,10 +110,33 @@ func (c *Config) Save() error {
 	return nil
 }
 
-func newContext(platform *Platform, credential *Credential,
+func (c *Config) DeleteContext(name string) error {
+	_, err := c.FindContext(name)
+	if err != nil {
+		return err
+	}
+	delete(c.Contexts, name)
+	if c.CurrentContext == name {
+		c.CurrentContext = ""
+	}
+	return nil
+}
+
+// Convenience function that finds a context by name,
+// and returns a formatted error if not found.
+func (c *Config) FindContext(name string) (*Context, error) {
+	context, ok := c.Contexts[name]
+	if !ok {
+		return nil, fmt.Errorf("context \"%s\" does not exist", name)
+	}
+	return context, nil
+}
+
+func newContext(name string, platform *Platform, credential *Credential,
 	kafkaClusters map[string]*KafkaClusterConfig, kafka string,
 	schemaRegistryClusters map[string]*SchemaRegistryCluster) *Context {
 	return &Context{
+		Name:                   name,
 		Platform:               platform.String(),
 		Credential:             credential.String(),
 		KafkaClusters:          kafkaClusters,
@@ -128,7 +151,7 @@ func (c *Config) AddContext(name string, platform *Platform, credential *Credent
 	if _, ok := c.Contexts[name]; ok {
 		return fmt.Errorf("context \"%s\" already exists", name)
 	}
-	context := newContext(platform, credential, kafkaClusters, kafka,
+	context := newContext(name, platform, credential, kafkaClusters, kafka,
 		schemaRegistryClusters)
 	// Update config maps.
 	c.Contexts[name] = context
@@ -138,8 +161,9 @@ func (c *Config) AddContext(name string, platform *Platform, credential *Credent
 }
 
 func (c *Config) SetContext(name string) error {
-	if _, ok := c.Contexts[name]; !ok {
-		return fmt.Errorf("context \"%s\" does not exist", name)
+	_, err := c.FindContext(name)
+	if err != nil {
+		return err
 	}
 	c.CurrentContext = name
 	return c.Save()
@@ -169,14 +193,21 @@ func (c *Config) Context() (*Context, error) {
 	if c.CurrentContext == "" {
 		return nil, errors.ErrNoContext
 	}
-	return c.Contexts[c.CurrentContext], nil
+	context, err := c.FindContext(c.CurrentContext)
+	if err != nil {
+		return nil, err
+	}
+	return context, nil
 }
 
 func (p *Platform) String() string {
 	return p.Server
 }
 
-// Return the CredentialType of the current Context.
+// Return the credential type of the current Context.
+// Returns ErrNoContext if there's no current context,
+// Returns UnspecifiedCredentialError if there is a current context with no credentials,
+// informing the user the config file has been corrupted.
 func (c *Config) CredentialType() (CredentialType, error) {
 	context, err := c.Context()
 	if err != nil {
@@ -185,7 +216,8 @@ func (c *Config) CredentialType() (CredentialType, error) {
 	if cred, ok := c.Credentials[context.Credential]; ok {
 		return cred.CredentialType, nil
 	}
-	return -1, fmt.Errorf("credential not set for context \"%s\"", c.CurrentContext)
+	err = &errors.UnspecifiedCredentialError{ContextName: c.CurrentContext}
+	return -1, err
 }
 
 func (c *Config) SchemaRegistryCluster() (*SchemaRegistryCluster, error) {

@@ -29,10 +29,10 @@ var (
 	}
 	vocabWords = []string{
 		"ccloud", "kafka", "api", "acl", "url", "config", "multizone", "transactional", "ksql", "decrypt", "iam", "rolebinding",
-		"geo",
+		"geo", "auth", "init",
 	}
 	utilityCommands = []string{
-		"login", "logout", "version", "completion <shell>", "prompt", "update",
+		"login", "logout", "version", "completion <shell>", "prompt", "update", "init <context-name>",
 	}
 	nonClusterScopedCommands = []linter.RuleFilter{
 		linter.OnlyLeafCommands, linter.ExcludeCommand(utilityCommands...),

@@ -44,6 +44,15 @@ func (e *UnspecifiedAPIKeyError) Error() string {
 	return e.ClusterID
 }
 
+type UnspecifiedCredentialError struct {
+	ContextName string
+}
+
+func (e *UnspecifiedCredentialError) Error() string {
+	return fmt.Sprintf("context \"%s\" has corrupted credentials. To fix, please remove the config file, "+
+		"and run `login` or `init`", e.ContextName)
+}
+
 // UnconfiguredAPISecretError means the user needs to store the API secret locally
 type UnconfiguredAPISecretError struct {
 	APIKey    string

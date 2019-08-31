@@ -1,5 +1,9 @@
 package config
 
+import (
+	"fmt"
+)
+
 // APIKeyPair holds an API Key and Secret.
 type APIKeyPair struct {
 	Key    string `json:"api_key" hcl:"api_key"`
@@ -24,6 +28,7 @@ type SchemaRegistryCluster struct {
 
 // Context represents a specific CLI context.
 type Context struct {
+	Name       string
 	Platform   string `json:"platform" hcl:"platform"`
 	Credential string `json:"credentials" hcl:"credentials"`
 	// KafkaClusters store connection info for interacting directly with Kafka (e.g., consume/produce, etc)
@@ -33,4 +38,12 @@ type Context struct {
 	Kafka string `json:"kafka_cluster" hcl:"kafka_cluster"`
 	// SR map keyed by environment-id
 	SchemaRegistryClusters map[string]*SchemaRegistryCluster `json:"schema_registry_cluster" hcl:"schema_registry_cluster"`
+}
+
+func (c *Context) SetActiveCluster(clusterId string) error {
+	if _, ok := c.KafkaClusters[clusterId]; !ok {
+		return fmt.Errorf("cluster \"%s\" does not exist in context \"%s\"", clusterId, c.Name)
+	}
+	c.Kafka = clusterId
+	return nil
 }

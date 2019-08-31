@@ -26,6 +26,9 @@ func GetKafkaClusterConfig(cmd *cobra.Command, ch *ConfigHelper) (*config.KafkaC
 		return nil, err
 	}
 	credType, err := ch.Config.CredentialType()
+	if err != nil {
+		return nil, err
+	}
 	switch credType {
 	case config.APIKey:
 		return ch.Config.KafkaClusterConfig()

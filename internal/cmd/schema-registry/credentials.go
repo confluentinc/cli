@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	config "github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"os"

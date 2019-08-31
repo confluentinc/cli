@@ -120,18 +120,25 @@ func (c *contextCommand) set(cmd *cobra.Command, args []string) error {
 	}
 
 	if cmd.Flags().Changed("kafka-cluster") {
-		k, err := cmd.Flags().GetString("kafka-cluster")
+		clusterId, err := cmd.Flags().GetString("kafka-cluster")
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
-		context.Kafka = k
+		err = context.SetActiveCluster(clusterId)
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
 	}
 
 	return c.config.Save()
 }
 
 func (c *contextCommand) delete(cmd *cobra.Command, args []string) error {
-	delete(c.config.Contexts, args[0])
+	contextName := args[0]
+	err := c.config.DeleteContext(contextName)
+	if err != nil {
+		return err
+	}
 	return c.config.Save()
 }
 
@@ -141,13 +148,8 @@ func (c *contextCommand) delete(cmd *cobra.Command, args []string) error {
 
 func (c *contextCommand) context(args []string) (*config.Context, error) {
 	if len(args) == 1 {
-		context, ok := c.config.Contexts[args[0]]
-		if !ok {
-			context = &config.Context{}
-			c.config.Contexts[args[0]] = context
-			return context, nil
-		}
-		return context, nil
+		contextName := args[0]
+		return c.config.FindContext(contextName)
 	}
 	return c.config.Context()
 }
