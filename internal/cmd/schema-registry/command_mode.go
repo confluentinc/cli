@@ -8,40 +8,40 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type updateCommand struct {
+type modeCommand struct {
 	*cobra.Command
 	config   *config.Config
 	ch       *pcmd.ConfigHelper
 	srClient *srsdk.APIClient
 }
 
-// NewUpdateCommand returns the Cobra command for Schema Registry update.
-func NewUpdateCommand(config *config.Config, ch *pcmd.ConfigHelper, srClient *srsdk.APIClient) *cobra.Command {
-	updateCmd := &updateCommand{
+// NewModeCommand returns the Cobra command for Schema Registry mode.
+func NewModeCommand(config *config.Config, ch *pcmd.ConfigHelper, srClient *srsdk.APIClient) *cobra.Command {
+	modeCmd := &modeCommand{
 		Command: &cobra.Command{
-			Use:   "update",
-			Short: "Update Schema Registry update.",
+			Use:   "mode",
+			Short: "Update Schema Registry mode.",
 		},
 		config:   config,
 		ch:       ch,
 		srClient: srClient,
 	}
-	updateCmd.init()
-	return updateCmd.Command
+	modeCmd.init()
+	return modeCmd.Command
 }
 
-func (c *updateCommand) init() {
+func (c *modeCommand) init() {
 
 	// Update
 	cmd := &cobra.Command{
-		Use:   "update <update> [--subject <subject>]",
-		Short: "Update update for Schema Registry.",
+		Use:   "update <mode> [--subject <subject>]",
+		Short: "Update mode for Schema Registry.",
 		Example: `
-Update  or Subject level update of schema registry.
+Update Top level mode or Subject level mode of schema registry.
 
 ::
-		ccloud schema-registry update READWRITE
-		ccloud schema-registry update update --subject subjectname READWRITE
+		ccloud schema-registry mode update READWRITE
+		ccloud schema-registry mode update --subject subjectname READWRITE
 `,
 		RunE: c.update,
 		Args: cobra.ExactArgs(1),
@@ -51,7 +51,7 @@ Update  or Subject level update of schema registry.
 	c.AddCommand(cmd)
 }
 
-func (c *updateCommand) update(cmd *cobra.Command, args []string) error {
+func (c *modeCommand) update(cmd *cobra.Command, args []string) error {
 
 	subject, err := cmd.Flags().GetString("subject")
 	if err != nil {
@@ -64,17 +64,17 @@ func (c *updateCommand) update(cmd *cobra.Command, args []string) error {
 
 	if subject == "" {
 
-		modeUpdate, _, err := srClient.DefaultApi.UpdateTopLevelMode(ctx, srsdk.ModeUpdateRequest{Mode: args[0]})
+		updatedMode, _, err := srClient.DefaultApi.UpdateTopLevelMode(ctx, srsdk.ModeUpdateRequest{Mode: args[0]})
 		if err != nil {
 			return err
 		}
-		fmt.Println("Successfully updated Top Level update: " + modeUpdate.Mode)
+		fmt.Println("Successfully updated Top Level Mode: " + updatedMode.Mode)
 	} else {
-		modeUpdate, _, err := srClient.DefaultApi.UpdateMode(ctx, subject, srsdk.ModeUpdateRequest{Mode: args[0]})
+		updatedMode, _, err := srClient.DefaultApi.UpdateMode(ctx, subject, srsdk.ModeUpdateRequest{Mode: args[0]})
 		if err != nil {
 			return err
 		}
-		fmt.Println("Successfully updated Subject level update: " + modeUpdate.Mode)
+		fmt.Println("Successfully updated Subject level Mode: " + updatedMode.Mode)
 	}
 
 	return nil

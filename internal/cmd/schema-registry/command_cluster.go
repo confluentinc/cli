@@ -2,6 +2,7 @@ package schema_registry
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -74,7 +75,17 @@ func (c *clusterCommand) init() {
 		Args:    cobra.NoArgs,
 	}
 	c.AddCommand(describeCmd)
-	
+	updateCmd := &cobra.Command{
+		Use:     "update",
+		Short:   `Update an instance of Schema Registry.`,
+		Example: `ccloud schema-registry cluster update`,
+		RunE:    c.update,
+		Args:    cobra.NoArgs,
+	}
+	updateCmd.Flags().String("compatibility", "", "Can be BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, or NONE.")
+	updateCmd.Flags().String("mode", "", "Can be READWRITE, READ, OR WRITE.")
+	updateCmd.Flags().SortFlags = false
+	c.AddCommand(updateCmd)
 }
 
 func (c *clusterCommand) enable(cmd *cobra.Command, args []string) error {
@@ -186,5 +197,53 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 		Mode:            mode,
 	}
 	_ = printer.RenderTableOut(data, fields, renames, os.Stdout)
+	return nil
+}
+func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
+	compat, err := cmd.Flags().GetString("compatibility")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	if compat != "" {
+		return c.updateCompatibility(cmd, args)
+	}
+
+	mode, err := cmd.Flags().GetString("mode")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	if mode != "" {
+		return c.updateMode(cmd, args)
+	}
+	return errors.New("flag string not set")
+}
+func (c *clusterCommand) updateCompatibility(cmd *cobra.Command, args []string) error {
+	srClient, ctx, err := GetApiClient(c.srClient, c.ch)
+	if err != nil {
+		return err
+	}
+
+	updateReq := srsdk.ConfigUpdateRequest{Compatibility: args[0]}
+
+	_, _, err = srClient.DefaultApi.UpdateTopLevelConfig(ctx, updateReq)
+	if err != nil {
+		return err
+	}
+	fmt.Println("Successfully updated")
+	return nil
+}
+
+func (c *clusterCommand) updateMode(cmd *cobra.Command, args []string) error {
+
+	srClient, ctx, err := GetApiClient(c.srClient, c.ch)
+	if err != nil {
+		return err
+	}
+
+	modeUpdate, _, err := srClient.DefaultApi.UpdateTopLevelMode(ctx, srsdk.ModeUpdateRequest{Mode: args[0]})
+	if err != nil {
+		return err
+	}
+	fmt.Println("Successfully updated Top Level update: " + modeUpdate.Mode)
 	return nil
 }
