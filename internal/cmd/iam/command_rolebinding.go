@@ -223,40 +223,22 @@ func (c *rolebindingCommand) list(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	var roleNamesWithMultiplicity []string
-	var resourcePatterns []mds.ResourcePattern
-	roleNames := []string{role}
-	if role == "*" {
-		roleNames, _, err = c.client.UserAndRoleMgmtApi.ScopedPrincipalRolenames(c.ctx, principal, mds.Scope{Clusters: *scopeClusters})
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-	}
-
-	for _, r := range roleNames {
-		// This only gets resource-scoped bindings...
-		rps, _, err := c.client.UserAndRoleMgmtApi.GetRoleResourcesForPrincipal(c.ctx, principal, r, mds.Scope{Clusters: *scopeClusters})
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-		// ...so manually append cluster-scoped bindings when needed
-		if len(rps) == 0 && isClusterScopedRole(r) {
-			rps = append(rps, mds.ResourcePattern{
-				ResourceType: "Cluster",
-				Name:         "",
-				PatternType:  "",
-			})
-		}
-		resourcePatterns = append(resourcePatterns, rps...)
-		for range rps {
-			roleNamesWithMultiplicity = append(roleNamesWithMultiplicity, r)
-		}
+	principalsRolesResourcePatterns, _, err := c.client.RoleBindingSummariesApi.LookupResourcesForPrincipal(c.ctx, principal, mds.Scope{Clusters: *scopeClusters})
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
 	}
 
 	var data [][]string
-	for i, pattern := range resourcePatterns {
-		data = append(data, append([]string{roleNamesWithMultiplicity[i]}, printer.ToRow(&pattern, resourcePatternListFields)...))
+	for _, rolesResourcePatterns := range principalsRolesResourcePatterns {
+		for roleName, resourcePatterns := range rolesResourcePatterns {
+			if role == "*" || roleName == role {
+				for _, resourcePattern := range resourcePatterns {
+					data = append(data, append([]string{roleName}, printer.ToRow(&resourcePattern, resourcePatternListFields)...))
+				}
+			}
+		}
 	}
+
 	printer.RenderCollectionTable(data, resourcePatternListLabels)
 
 	return nil
@@ -327,9 +309,9 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, args []string) error {
 
 	var resp *http.Response
 	if options.resource != "" {
-		resp, err = c.client.UserAndRoleMgmtApi.AddRoleResourcesForPrincipal(c.ctx, options.principal, options.role, options.resourcesRequest)
+		resp, err = c.client.RoleBindingCRUDApi.AddRoleResourcesForPrincipal(c.ctx, options.principal, options.role, options.resourcesRequest)
 	} else {
-		resp, err = c.client.UserAndRoleMgmtApi.AddRoleForPrincipal(c.ctx, options.principal, options.role, mds.Scope{Clusters: options.scopeClusters})
+		resp, err = c.client.RoleBindingCRUDApi.AddRoleForPrincipal(c.ctx, options.principal, options.role, mds.Scope{Clusters: options.scopeClusters})
 	}
 
 	if err != nil {
@@ -351,9 +333,9 @@ func (c *rolebindingCommand) delete(cmd *cobra.Command, args []string) error {
 
 	var resp *http.Response
 	if options.resource != "" {
-		resp, err = c.client.UserAndRoleMgmtApi.RemoveRoleResourcesForPrincipal(c.ctx, options.principal, options.role, options.resourcesRequest)
+		resp, err = c.client.RoleBindingCRUDApi.RemoveRoleResourcesForPrincipal(c.ctx, options.principal, options.role, options.resourcesRequest)
 	} else {
-		resp, err = c.client.UserAndRoleMgmtApi.DeleteRoleForPrincipal(c.ctx, options.principal, options.role, mds.Scope{Clusters: options.scopeClusters})
+		resp, err = c.client.RoleBindingCRUDApi.DeleteRoleForPrincipal(c.ctx, options.principal, options.role, mds.Scope{Clusters: options.scopeClusters})
 	}
 
 	if err != nil {
@@ -371,21 +353,4 @@ func check(err error) {
 	if err != nil {
 		panic(err)
 	}
-}
-
-// TODO please move this to a backend route
-func isClusterScopedRole(role string) bool {
-	clusterScopedRoles := []string{
-		"SystemAdmin",
-		"ClusterAdmin",
-		"SecurityAdmin",
-		"UserAdmin",
-		"Operator",
-	}
-	for _, r := range clusterScopedRoles {
-		if r == role {
-			return true
-		}
-	}
-	return false
 }
