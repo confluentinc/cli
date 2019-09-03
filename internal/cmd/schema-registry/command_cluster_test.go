@@ -3,24 +3,25 @@ package schema_registry
 import (
 	"context"
 	"fmt"
-	ccsdkmock "github.com/confluentinc/ccloud-sdk-go/mock"
-	metricsv1 "github.com/confluentinc/ccloudapis/metrics/v1"
-	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
-	cmd2 "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/log"
-	srMock "github.com/confluentinc/schema-registry-sdk-go/mock"
 	"github.com/stretchr/testify/require"
+	nethttp "net/http"
 	"testing"
 
-	"github.com/confluentinc/ccloud-sdk-go/mock"
-	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
-	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
-	"github.com/confluentinc/cli/internal/pkg/config"
-	cliMock "github.com/confluentinc/cli/mock"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/suite"
-	net_http "net/http"
+
+	"github.com/confluentinc/ccloud-sdk-go/mock"
+	ccsdkmock "github.com/confluentinc/ccloud-sdk-go/mock"
+	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
+	metricsv1 "github.com/confluentinc/ccloudapis/metrics/v1"
+	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
+	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
+	cmd2 "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/log"
+	cliMock "github.com/confluentinc/cli/mock"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+	srMock "github.com/confluentinc/schema-registry-sdk-go/mock"
 )
 
 const (
@@ -76,10 +77,10 @@ func (suite *ClusterTestSuite) SetupSuite() {
 	}
 	suite.srClientMock = &srsdk.APIClient{
 		DefaultApi: &srMock.DefaultApi{
-			GetTopLevelConfigFunc: func(ctx context.Context) (srsdk.Config, *net_http.Response, error) {
+			GetTopLevelConfigFunc: func(ctx context.Context) (srsdk.Config, *nethttp.Response, error) {
 				return srsdk.Config{CompatibilityLevel: "FULL"}, nil, nil
 			},
-			GetTopLevelModeFunc: func(ctx context.Context) (srsdk.ModeGetResponse, *net_http.Response, error) {
+			GetTopLevelModeFunc: func(ctx context.Context) (srsdk.ModeGetResponse, *nethttp.Response, error) {
 				return srsdk.ModeGetResponse{}, nil, nil
 			},
 		},
