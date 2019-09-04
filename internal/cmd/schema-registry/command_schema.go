@@ -2,12 +2,14 @@ package schema_registry
 
 import (
 	"fmt"
+	"io/ioutil"
+	"strconv"
+
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-	"github.com/spf13/cobra"
-	"io/ioutil"
-	"strconv"
 )
 
 type schemaCommand struct {
@@ -33,7 +35,7 @@ func NewSchemaCommand(config *config.Config, ch *pcmd.ConfigHelper, srClient *sr
 
 func (c *schemaCommand) init() {
 	cmd := &cobra.Command{
-		Use:   "create --subject <subject> --schema schema-file",
+		Use:   "create --subject <subject> --schema <schema-file>",
 		Short: "Create a schema.",
 		Example: `
 Register a new schema
@@ -104,22 +106,6 @@ Describe the schema by subject and version
 	cmd.Flags().StringP("version", "V", "", "Version of the schema. Can be a specific version or 'latest'.")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
-
-	cmd = &cobra.Command{
-		Use:   "list --subject <subject>",
-		Short: "List all versions of a subject.",
-		Example: `
-Get a list of versions registered under the specified subject.
-
-::
-
-		ccloud schema-registry schema list --subject payments`,
-		RunE: c.list,
-		Args: cobra.NoArgs,
-	}
-	RequireSubjectFlag(cmd)
-	cmd.Flags().SortFlags = false
-	c.AddCommand(cmd)
 }
 
 func (c *schemaCommand) create(cmd *cobra.Command, args []string) error {
@@ -147,25 +133,6 @@ func (c *schemaCommand) create(cmd *cobra.Command, args []string) error {
 	fmt.Printf("Successfully registered schema with ID: %v", response.Id)
 	return nil
 
-}
-
-func (c *schemaCommand) list(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(c.srClient, c.ch)
-	if err != nil {
-		return err
-	}
-	subject, err := cmd.Flags().GetString("subject")
-	if err != nil {
-		return err
-	}
-	versions, _, err := srClient.DefaultApi.ListVersions(ctx, subject)
-
-	if err != nil {
-		return err
-	}
-	PrintVersions(versions)
-
-	return nil
 }
 
 func (c *schemaCommand) delete(cmd *cobra.Command, args []string) error {
