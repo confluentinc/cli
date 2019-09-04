@@ -144,8 +144,8 @@ func (suite *ClusterTestSuite) TestUpdateCompatibility() {
 	req.Nil(err)
 	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
 	req.True(apiMock.UpdateTopLevelConfigCalled())
-	retVal := apiMock.UpdateTopLevelConfigCalls()
-	req.Equal(retVal[0].Body.Compatibility, "BACKWARD")
+	retVal := apiMock.UpdateTopLevelConfigCalls()[0]
+	req.Equal(retVal.Body.Compatibility, "BACKWARD")
 }
 
 func (suite *ClusterTestSuite) TestUpdateMode() {
@@ -156,8 +156,8 @@ func (suite *ClusterTestSuite) TestUpdateMode() {
 	req.Nil(err)
 	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
 	req.True(apiMock.UpdateTopLevelModeCalled())
-	retVal := apiMock.UpdateTopLevelModeCalls()
-	req.Equal(retVal[0].Body.Mode, "READWRITE")
+	retVal := apiMock.UpdateTopLevelModeCalls()[0]
+	req.Equal(retVal.Body.Mode, "READWRITE")
 }
 
 func (suite *ClusterTestSuite) TestUpdateNoArgs() {
