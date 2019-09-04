@@ -2,6 +2,7 @@ package iam
 
 import (
 	"net/http"
+	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -20,6 +21,15 @@ import (
 var (
 	resourcePatternListFields = []string{"ResourceType", "Name", "PatternType"}
 	resourcePatternListLabels = []string{"Role", "ResourceType", "Name", "PatternType"}
+
+	//TODO: please move this to a backend route
+	clusterScopedRoles        = map[string]bool{
+		"SystemAdmin":   true,
+		"ClusterAdmin":  true,
+		"SecurityAdmin": true,
+		"UserAdmin":     true,
+		"Operator":      true,
+	}
 )
 
 type rolebindingOptions struct {
@@ -235,9 +245,22 @@ func (c *rolebindingCommand) list(cmd *cobra.Command, args []string) error {
 				for _, resourcePattern := range resourcePatterns {
 					data = append(data, append([]string{roleName}, printer.ToRow(&resourcePattern, resourcePatternListFields)...))
 				}
+				if len(resourcePatterns) == 0 && clusterScopedRoles[roleName] {
+					data = append(data, []string{roleName, "Cluster", "", ""})
+				}
 			}
 		}
 	}
+
+	// Stable output values
+	sort.Slice(data, func(i, j int) bool {
+		for x := range data[i] {
+			if data[i][x] != data[j][x] {
+				return data[i][x] < data[j][x]
+			}
+		}
+		return false
+	})
 
 	printer.RenderCollectionTable(data, resourcePatternListLabels)
 

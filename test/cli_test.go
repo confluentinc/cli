@@ -559,24 +559,14 @@ func serveMds(t *testing.T, mdsURL string) *httptest.Server {
 		_, err = io.WriteString(w, string(b))
 		req.NoError(err)
 	})
-	router.HandleFunc("/security/1.0/principals/User:frodo/roleNames", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/json")
-		_, err := io.WriteString(w, "[\"DeveloperWrite\"]")
-		req.NoError(err)
-	})
-	router.HandleFunc("/security/1.0/principals/User:frodo/roles/DeveloperWrite/resources", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/json")
-		_, err := io.WriteString(w, "[]")
-		req.NoError(err)
-	})
-	router.HandleFunc("/security/1.0/principals/Group:frodo-group/roles/DeveloperWrite/resources", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/json")
-		_, err := io.WriteString(w, "[{\"resourceType\":\"Topic\",\"name\":\"test-\",\"patternType\":\"PREFIXED\"}]")
-		req.NoError(err)
-	})
 	router.HandleFunc("/security/1.0/lookup/principal/User:frodo/resources", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/json")
-		_, err := io.WriteString(w, "{\"Group:frodo-group\":{\"DeveloperWrite\":[{\"resourceType\":\"Topic\",\"name\":\"test-\",\"patternType\":\"PREFIXED\"}]}}")
+		_, err := io.WriteString(w, `{
+			"Group:frodo-group":{
+				"DeveloperWrite":[
+					{"resourceType":"Topic","name":"test-","patternType":"PREFIXED"}]},
+			"User:frodo":{
+				"SecurityAdmin":[]}}`)
 		req.NoError(err)
 	})
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
