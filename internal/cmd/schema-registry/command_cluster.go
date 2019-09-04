@@ -222,9 +222,8 @@ func (c *clusterCommand) updateCompatibility(cmd *cobra.Command, args []string) 
 	if err != nil {
 		return err
 	}
-
-	updateReq := srsdk.ConfigUpdateRequest{Compatibility: args[0]}
-
+	compat, _ := cmd.Flags().GetString("compatibility")
+	updateReq := srsdk.ConfigUpdateRequest{Compatibility: compat}
 	_, _, err = srClient.DefaultApi.UpdateTopLevelConfig(ctx, updateReq)
 	if err != nil {
 		return err
@@ -239,11 +238,11 @@ func (c *clusterCommand) updateMode(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-
-	modeUpdate, _, err := srClient.DefaultApi.UpdateTopLevelMode(ctx, srsdk.ModeUpdateRequest{Mode: args[0]})
+	mode, _ := cmd.Flags().GetString("mode")
+	modeUpdate, _, err := srClient.DefaultApi.UpdateTopLevelMode(ctx, srsdk.ModeUpdateRequest{Mode: mode})
 	if err != nil {
 		return err
 	}
-	fmt.Println("Successfully updated Top Level update: " + modeUpdate.Mode)
+	fmt.Println("Successfully updated Top Level mode: " + modeUpdate.Mode)
 	return nil
 }

@@ -83,6 +83,12 @@ func (suite *ClusterTestSuite) SetupSuite() {
 			GetTopLevelModeFunc: func(ctx context.Context) (srsdk.ModeGetResponse, *nethttp.Response, error) {
 				return srsdk.ModeGetResponse{}, nil, nil
 			},
+			UpdateTopLevelModeFunc: func(ctx context.Context, body srsdk.ModeUpdateRequest) (request srsdk.ModeUpdateRequest, response *nethttp.Response, e error) {
+				return srsdk.ModeUpdateRequest{Mode: body.Mode}, nil, nil
+			},
+			UpdateTopLevelConfigFunc: func(ctx context.Context, body srsdk.ConfigUpdateRequest) (request srsdk.ConfigUpdateRequest, response *nethttp.Response, e error) {
+				return srsdk.ConfigUpdateRequest{Compatibility: body.Compatibility}, nil, nil
+			},
 		},
 	}
 	suite.metrics = &ccsdkmock.Metrics{
@@ -112,7 +118,7 @@ func (suite *ClusterTestSuite) newCMD() *cobra.Command {
 
 func (suite *ClusterTestSuite) TestCreateSR() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"cluster enable", "--cloud", "aws", "--geo", "us"}))
+	cmd.SetArgs(append([]string{"cluster", "enable", "--cloud", "aws", "--geo", "us"}))
 
 	err := cmd.Execute()
 	req := require.New(suite.T())
@@ -122,12 +128,44 @@ func (suite *ClusterTestSuite) TestCreateSR() {
 
 func (suite *ClusterTestSuite) TestDescribeSR() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"cluster describe"}))
+	cmd.SetArgs(append([]string{"cluster", "describe"}))
 
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.srMock.GetSchemaRegistryClustersCalled())
+}
+
+func (suite *ClusterTestSuite) TestUpdateCompatibility() {
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"cluster", "update", "--compatibility", "BACKWARD"}))
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
+	req.True(apiMock.UpdateTopLevelConfigCalled())
+	retVal := apiMock.UpdateTopLevelConfigCalls()
+	req.Equal(retVal[0].Body.Compatibility, "BACKWARD")
+}
+
+func (suite *ClusterTestSuite) TestUpdateMode() {
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"cluster", "update", "--mode", "READWRITE"}))
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
+	req.True(apiMock.UpdateTopLevelModeCalled())
+	retVal := apiMock.UpdateTopLevelModeCalls()
+	req.Equal(retVal[0].Body.Mode, "READWRITE")
+}
+
+func (suite *ClusterTestSuite) TestUpdateNoArgs() {
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"cluster", "update"}))
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Error(err, "flag string not set")
 }
 
 func TestClusterTestSuite(t *testing.T) {
