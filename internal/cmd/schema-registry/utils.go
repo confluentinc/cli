@@ -2,11 +2,16 @@ package schema_registry
 
 import (
 	"context"
+	"github.com/confluentinc/ccloud-sdk-go"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"strings"
+
+	"github.com/spf13/cobra"
+
+	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/go-printer"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-	"github.com/spf13/cobra"
-	"strings"
 )
 
 const (
@@ -41,16 +46,26 @@ func RequireSubjectFlag(cmd *cobra.Command) {
 }
 
 func getServiceProviderFromUrl(url string) string {
-
 	if url == "" {
 		return ""
 	}
 	//Endpoint url is of the form https://psrc-<id>.<location>.<service-provider>.<devel/stag/prod/env>.cpdev.cloud
 	stringSlice := strings.Split(url, ".")
 	if len(stringSlice) != 6 {
-
 		return ""
 	}
-
 	return strings.Trim(stringSlice[2], ".")
+}
+
+func GetSchemaRegistryByAccountId(ccClient ccloud.SchemaRegistry, ctx context.Context, accountId string) (*srv1.SchemaRegistryCluster, error) {
+	existingClusters, err := ccClient.GetSchemaRegistryClusters(ctx, &srv1.SchemaRegistryCluster{
+		AccountId: accountId,
+	})
+	if err != nil {
+		return nil, err
+	}
+	if len(existingClusters) > 0 {
+		return existingClusters[0], nil
+	}
+	return nil, errors.ErrNoSrEnabled
 }
