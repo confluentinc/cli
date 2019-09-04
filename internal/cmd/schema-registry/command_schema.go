@@ -132,7 +132,6 @@ func (c *schemaCommand) create(cmd *cobra.Command, args []string) error {
 	}
 	fmt.Printf("Successfully registered schema with ID: %v", response.Id)
 	return nil
-
 }
 
 func (c *schemaCommand) delete(cmd *cobra.Command, args []string) error {
