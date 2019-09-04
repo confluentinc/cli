@@ -133,8 +133,8 @@ func (suite *SubjectTestSuite) TestSubjectUpdateMode() {
 	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
 	req.False(apiMock.UpdateTopLevelModeCalled())
 	req.True(apiMock.UpdateModeCalled())
-	retVal := apiMock.UpdateModeCalls()
-	req.Equal(retVal[0].Subject, subjectName)
+	retVal := apiMock.UpdateModeCalls()[0]
+	req.Equal(retVal.Subject, subjectName)
 }
 
 func (suite *SubjectTestSuite) TestSubjectUpdateCompatibility() {
@@ -145,8 +145,8 @@ func (suite *SubjectTestSuite) TestSubjectUpdateCompatibility() {
 	req.Nil(err)
 	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
 	req.True(apiMock.UpdateSubjectLevelConfigCalled())
-	retVal := apiMock.UpdateSubjectLevelConfigCalls()
-	req.Equal(retVal[0].Subject, subjectName)
+	retVal := apiMock.UpdateSubjectLevelConfigCalls()[0]
+	req.Equal(retVal.Subject, subjectName)
 }
 
 func (suite *SubjectTestSuite) TestSubjectUpdateNoArgs() {
@@ -165,8 +165,8 @@ func (suite *SubjectTestSuite) TestSubjectDescribe() {
 	req.Nil(err)
 	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
 	req.True(apiMock.ListVersionsCalled())
-	retVal := apiMock.ListVersionsCalls()
-	req.Equal(retVal[0].Subject, subjectName)
+	retVal := apiMock.ListVersionsCalls()[0]
+	req.Equal(retVal.Subject, subjectName)
 }
 
 func TestSubjectSuite(t *testing.T) {
