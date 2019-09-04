@@ -92,12 +92,6 @@ func (suite *SubjectTestSuite) SetupTest() {
 			ListFunc: func(ctx context.Context) ([]string, *net_http.Response, error) {
 				return []string{"subject 1", "subject 2"}, nil, nil
 			},
-			//GetSubjectLevelConfigFunc: func(ctx context.Context, subject string) (i srsdk.Config, response *net_http.Response, e error) {
-			//	return srsdk.Config{CompatibilityLevel: "BACKWARD"}, nil, nil
-			//},
-			//GetModeFunc: func(ctx context.Context, subject string) (response srsdk.ModeGetResponse, response2 *net_http.Response, e error) {
-			//	return srsdk.ModeGetResponse{Mode: "READWRITE"}, nil, nil
-			//},
 			ListVersionsFunc: func(ctx context.Context, subject string) (int32s []int32, response *net_http.Response, e error) {
 				return []int32{1234, 4567}, nil, nil
 			},
