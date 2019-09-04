@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/confluentinc/mds-sdk-go"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -101,7 +102,23 @@ func (s *CLITestSuite) Test_Confluent_Help() {
 		{args: "version", fixture: "confluent-version.golden"},
 	}
 	for _, tt := range tests {
-		s.runConfluentTest(tt)
+		kafkaAPIURL := serveKafkaAPI(s.T()).URL
+		s.runConfluentTest(tt, serveMds(s.T(), kafkaAPIURL).URL)
+	}
+}
+
+func (s *CLITestSuite) Test_Confluent_Iam() {
+	tests := []CLITest{
+		{
+			name:      "confluent iam rolebinding list (grouped user)",
+			args:      "iam rolebinding list --principal User:frodo --kafka-cluster-id CID",
+			fixture:   "confluent-iam-rolebinding-list-grouped-user.golden",
+			login:     "default",
+		},
+	}
+	for _, tt := range tests {
+		kafkaAPIURL := serveKafkaAPI(s.T()).URL
+		s.runConfluentTest(tt, serveMds(s.T(), kafkaAPIURL).URL)
 	}
 }
 
@@ -350,7 +367,7 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint stri
 	})
 }
 
-func (s *CLITestSuite) runConfluentTest(tt CLITest) {
+func (s *CLITestSuite) runConfluentTest(tt CLITest, loginURL string) {
 	if tt.name == "" {
 		tt.name = tt.args
 	}
@@ -361,6 +378,15 @@ func (s *CLITestSuite) runConfluentTest(tt CLITest) {
 		if !tt.workflow {
 			resetConfiguration(t, "confluent")
 		}
+
+		if tt.login == "default" {
+			env := []string{"XX_CONFLUENT_USERNAME=fake@user.com", "XX_CONFLUENT_PASSWORD=pass1"}
+			output := runCommand(t, "confluent", env, "login --url "+loginURL, 0)
+			if *debug {
+				fmt.Println(output)
+			}
+		}
+
 		output := runCommand(t, "confluent", []string{}, tt.args, tt.wantErrCode)
 
 		if *update && tt.args != "version" {
@@ -516,6 +542,38 @@ func init() {
 		},
 		UserId: 25,
 	}
+}
+
+func serveMds(t *testing.T, mdsURL string) *httptest.Server {
+	req := require.New(t)
+	router := http.NewServeMux()
+	router.HandleFunc("/security/1.0/authenticate", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/json")
+		reply := &mds.AuthenticationResponse{
+			AuthToken:"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1NjE2NjA4NTcsImV4cCI6MjUzMzg2MDM4NDU3LCJhdWQiOiJ3d3cuZXhhbXBsZS5jb20iLCJzdWIiOiJqcm9ja2V0QGV4YW1wbGUuY29tIn0.G6IgrFm5i0mN7Lz9tkZQ2tZvuZ2U7HKnvxMuZAooPmE",
+			TokenType:"dunno",
+			ExpiresIn:9999999999,
+		}
+		b, err := json.Marshal(&reply)
+		req.NoError(err)
+		_, err = io.WriteString(w, string(b))
+		req.NoError(err)
+	})
+	router.HandleFunc("/security/1.0/lookup/principal/User:frodo/resources", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/json")
+		_, err := io.WriteString(w, `{
+			"Group:frodo-group":{
+				"DeveloperWrite":[
+					{"resourceType":"Topic","name":"test-","patternType":"PREFIXED"}]},
+			"User:frodo":{
+				"SecurityAdmin":[]}}`)
+		req.NoError(err)
+	})
+	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		_, err := io.WriteString(w, `{"error": {"message": "unexpected call to `+r.URL.Path+`"}}`)
+		require.NoError(t, err)
+	})
+	return httptest.NewServer(router)
 }
 
 func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
