@@ -111,10 +111,10 @@ func (s *CLITestSuite) Test_Confluent_Help() {
 func (s *CLITestSuite) Test_Confluent_Iam() {
 	tests := []CLITest{
 		{
-			name:      "confluent iam rolebinding list (grouped user)",
-			args:      "iam rolebinding list --principal User:frodo --kafka-cluster-id CID",
-			fixture:   "confluent-iam-rolebinding-list-grouped-user.golden",
-			login:     "default",
+			name:    "confluent iam rolebinding list (grouped user)",
+			args:    "iam rolebinding list --principal User:frodo --kafka-cluster-id CID",
+			fixture: "confluent-iam-rolebinding-list-grouped-user.golden",
+			login:   "default",
 		},
 	}
 	for _, tt := range tests {
@@ -551,9 +551,9 @@ func serveMds(t *testing.T, mdsURL string) *httptest.Server {
 	router.HandleFunc("/security/1.0/authenticate", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/json")
 		reply := &mds.AuthenticationResponse{
-			AuthToken:"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1NjE2NjA4NTcsImV4cCI6MjUzMzg2MDM4NDU3LCJhdWQiOiJ3d3cuZXhhbXBsZS5jb20iLCJzdWIiOiJqcm9ja2V0QGV4YW1wbGUuY29tIn0.G6IgrFm5i0mN7Lz9tkZQ2tZvuZ2U7HKnvxMuZAooPmE",
-			TokenType:"dunno",
-			ExpiresIn:9999999999,
+			AuthToken: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1NjE2NjA4NTcsImV4cCI6MjUzMzg2MDM4NDU3LCJhdWQiOiJ3d3cuZXhhbXBsZS5jb20iLCJzdWIiOiJqcm9ja2V0QGV4YW1wbGUuY29tIn0.G6IgrFm5i0mN7Lz9tkZQ2tZvuZ2U7HKnvxMuZAooPmE",
+			TokenType: "dunno",
+			ExpiresIn: 9999999999,
 		}
 		b, err := json.Marshal(&reply)
 		req.NoError(err)
