@@ -76,11 +76,15 @@ func (c *clusterCommand) init() {
 	}
 	c.AddCommand(describeCmd)
 	updateCmd := &cobra.Command{
-		Use:     "update",
-		Short:   `Update an instance of Schema Registry.`,
-		Example: `ccloud schema-registry cluster update`,
-		RunE:    c.update,
-		Args:    cobra.NoArgs,
+		Use:   "update",
+		Short: `Update global mode or compatibility of Schema Registry.`,
+		Example: `Update top level compatibility or mode of schema registry.
+
+::
+		ccloud schema-registry cluster update <subjectname> --compatibility=BACKWARD
+		ccloud schema-registry cluster update <subjectname> --mode=READWRITE`,
+		RunE: c.update,
+		Args: cobra.NoArgs,
 	}
 	updateCmd.Flags().String("compatibility", "", "Can be BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, or NONE.")
 	updateCmd.Flags().String("mode", "", "Can be READWRITE, READ, OR WRITE.")
@@ -222,9 +226,8 @@ func (c *clusterCommand) updateCompatibility(cmd *cobra.Command, args []string) 
 	if err != nil {
 		return err
 	}
-
-	updateReq := srsdk.ConfigUpdateRequest{Compatibility: args[0]}
-
+	compat, _ := cmd.Flags().GetString("compatibility")
+	updateReq := srsdk.ConfigUpdateRequest{Compatibility: compat}
 	_, _, err = srClient.DefaultApi.UpdateTopLevelConfig(ctx, updateReq)
 	if err != nil {
 		return err
@@ -239,11 +242,11 @@ func (c *clusterCommand) updateMode(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-
-	modeUpdate, _, err := srClient.DefaultApi.UpdateTopLevelMode(ctx, srsdk.ModeUpdateRequest{Mode: args[0]})
+	mode, _ := cmd.Flags().GetString("mode")
+	modeUpdate, _, err := srClient.DefaultApi.UpdateTopLevelMode(ctx, srsdk.ModeUpdateRequest{Mode: mode})
 	if err != nil {
 		return err
 	}
-	fmt.Println("Successfully updated Top Level update: " + modeUpdate.Mode)
+	fmt.Println("Successfully updated Top Level mode: " + modeUpdate.Mode)
 	return nil
 }
