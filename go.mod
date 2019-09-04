@@ -8,8 +8,6 @@ require (
 	github.com/Shopify/sarama v1.20.1
 	github.com/Shopify/toxiproxy v2.1.3+incompatible // indirect
 	github.com/alcortesm/tgz v0.0.0-20161220082320-9c5fe88206d7 // indirect
-	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
-	github.com/alecthomas/units v0.0.0-20190717042225-c3de453c63f4 // indirect
 	github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239 // indirect
 	github.com/antihax/optional v0.0.0-20180407024304-ca021399b1a6 // indirect
 	github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da
