@@ -1,0 +1,4 @@
+Key: XVZ3AIEDJF3I65K5
+Secret: koTcehQ79IGDIzXYB2FYeBD4h6ztz8Lpybtmkq585cfMA8ucpJzdBnriz9HimDvK
+
+Bootstrap: pkc-43n10.us-central1.gcp.confluent.cloud:9092
