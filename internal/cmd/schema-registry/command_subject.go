@@ -57,8 +57,8 @@ Retrieve all subjects available in a Schema Registry
 Update subject level compatibility or mode of schema registry.
 
 ::
-		ccloud schema-registry subject update subjectname --compatibility=BACKWARD
-		ccloud schema-registry subject update subjectname --mode=READWRITE
+		ccloud schema-registry subject update <subjectname> --compatibility=BACKWARD
+		ccloud schema-registry subject update <subjectname> --mode=READWRITE
 `,
 		RunE: c.update,
 		Args: cobra.ExactArgs(1),
@@ -76,7 +76,7 @@ Update subject level compatibility or mode of schema registry.
 Retrieve all versions registered under a given subject and its compatibility level.
 
 ::
-		ccloud schema-registry subject describe subjectname
+		ccloud schema-registry subject describe <subjectname>
 `,
 		RunE: c.describe,
 		Args: cobra.ExactArgs(1),

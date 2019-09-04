@@ -76,11 +76,15 @@ func (c *clusterCommand) init() {
 	}
 	c.AddCommand(describeCmd)
 	updateCmd := &cobra.Command{
-		Use:     "update",
-		Short:   `Update an instance of Schema Registry.`,
-		Example: `ccloud schema-registry cluster update`,
-		RunE:    c.update,
-		Args:    cobra.NoArgs,
+		Use:   "update",
+		Short: `Update global mode or compatibility of Schema Registry.`,
+		Example: `Update top level compatibility or mode of schema registry.
+
+::
+		ccloud schema-registry cluster update <subjectname> --compatibility=BACKWARD
+		ccloud schema-registry cluster update <subjectname> --mode=READWRITE`,
+		RunE: c.update,
+		Args: cobra.NoArgs,
 	}
 	updateCmd.Flags().String("compatibility", "", "Can be BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, or NONE.")
 	updateCmd.Flags().String("mode", "", "Can be READWRITE, READ, OR WRITE.")
