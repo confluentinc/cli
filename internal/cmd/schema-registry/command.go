@@ -37,8 +37,6 @@ func New(prerunner pcmd.PreRunner, config *config.Config, ccloudClient ccsdk.Sch
 
 func (c *command) init() {
 	c.AddCommand(NewClusterCommand(c.config, c.ccClient, c.ch, c.srClient, c.metricClient))
-	c.AddCommand(NewModeCommand(c.config, c.ch, c.srClient))
 	c.AddCommand(NewSubjectCommand(c.config, c.ch, c.srClient))
 	c.AddCommand(NewSchemaCommand(c.config, c.ch, c.srClient))
-	c.AddCommand(NewCompatibilityCommand(c.config, c.ch, c.srClient))
 }
