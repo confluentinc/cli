@@ -4,12 +4,13 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"github.com/Shopify/sarama"
-	"github.com/google/uuid"
-	"github.com/spf13/cobra"
 	"os"
 	"os/signal"
 	"strings"
+
+	"github.com/Shopify/sarama"
+	"github.com/google/uuid"
+	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
