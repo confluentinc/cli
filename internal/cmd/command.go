@@ -37,7 +37,6 @@ import (
 	environments "github.com/confluentinc/cli/internal/pkg/sdk/environment"
 	kafkas "github.com/confluentinc/cli/internal/pkg/sdk/kafka"
 	ksqls "github.com/confluentinc/cli/internal/pkg/sdk/ksql"
-	//connects "github.com/confluentinc/cli/internal/pkg/sdk/connect"
 	users "github.com/confluentinc/cli/internal/pkg/sdk/user"
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
 	versions "github.com/confluentinc/cli/internal/pkg/version"
@@ -124,7 +123,6 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		// Schema Registry
 		// If srClient is nil, the function will look it up after prerunner verifies authentication. Exposed so tests can pass mocks
 		sr := schema_registry.New(prerunner, cfg, client.SchemaRegistry, ch, nil, client.Metrics)
-		sr.Hidden = true
 		cli.AddCommand(sr)
 
 		conn = ksql.New(prerunner, cfg, ksqls.New(client, logger), kafkaClient, userClient, ch)

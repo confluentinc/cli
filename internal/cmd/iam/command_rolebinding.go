@@ -23,7 +23,7 @@ var (
 	resourcePatternListLabels = []string{"Role", "ResourceType", "Name", "PatternType"}
 
 	//TODO: please move this to a backend route
-	clusterScopedRoles        = map[string]bool{
+	clusterScopedRoles = map[string]bool{
 		"SystemAdmin":   true,
 		"ClusterAdmin":  true,
 		"SecurityAdmin": true,

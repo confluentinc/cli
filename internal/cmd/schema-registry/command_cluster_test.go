@@ -3,24 +3,25 @@ package schema_registry
 import (
 	"context"
 	"fmt"
-	ccsdkmock "github.com/confluentinc/ccloud-sdk-go/mock"
-	metricsv1 "github.com/confluentinc/ccloudapis/metrics/v1"
-	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
-	cmd2 "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/log"
-	srMock "github.com/confluentinc/schema-registry-sdk-go/mock"
 	"github.com/stretchr/testify/require"
+	nethttp "net/http"
 	"testing"
 
-	"github.com/confluentinc/ccloud-sdk-go/mock"
-	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
-	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
-	"github.com/confluentinc/cli/internal/pkg/config"
-	cliMock "github.com/confluentinc/cli/mock"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/suite"
-	net_http "net/http"
+
+	"github.com/confluentinc/ccloud-sdk-go/mock"
+	ccsdkmock "github.com/confluentinc/ccloud-sdk-go/mock"
+	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
+	metricsv1 "github.com/confluentinc/ccloudapis/metrics/v1"
+	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
+	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
+	cmd2 "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/log"
+	cliMock "github.com/confluentinc/cli/mock"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+	srMock "github.com/confluentinc/schema-registry-sdk-go/mock"
 )
 
 const (
@@ -28,7 +29,7 @@ const (
 	srClusterID    = "sr"
 )
 
-type SRTestSuite struct {
+type ClusterTestSuite struct {
 	suite.Suite
 	conf         *config.Config
 	kafkaCluster *kafkav1.KafkaCluster
@@ -38,7 +39,7 @@ type SRTestSuite struct {
 	metrics      *ccsdkmock.Metrics
 }
 
-func (suite *SRTestSuite) SetupSuite() {
+func (suite *ClusterTestSuite) SetupSuite() {
 	suite.conf = config.New()
 	suite.conf.Logger = log.New()
 	suite.conf.AuthURL = "http://test"
@@ -76,11 +77,17 @@ func (suite *SRTestSuite) SetupSuite() {
 	}
 	suite.srClientMock = &srsdk.APIClient{
 		DefaultApi: &srMock.DefaultApi{
-			GetTopLevelConfigFunc: func(ctx context.Context) (srsdk.Config, *net_http.Response, error) {
+			GetTopLevelConfigFunc: func(ctx context.Context) (srsdk.Config, *nethttp.Response, error) {
 				return srsdk.Config{CompatibilityLevel: "FULL"}, nil, nil
 			},
-			GetTopLevelModeFunc: func(ctx context.Context) (srsdk.ModeGetResponse, *net_http.Response, error) {
+			GetTopLevelModeFunc: func(ctx context.Context) (srsdk.ModeGetResponse, *nethttp.Response, error) {
 				return srsdk.ModeGetResponse{}, nil, nil
+			},
+			UpdateTopLevelModeFunc: func(ctx context.Context, body srsdk.ModeUpdateRequest) (request srsdk.ModeUpdateRequest, response *nethttp.Response, e error) {
+				return srsdk.ModeUpdateRequest{Mode: body.Mode}, nil, nil
+			},
+			UpdateTopLevelConfigFunc: func(ctx context.Context, body srsdk.ConfigUpdateRequest) (request srsdk.ConfigUpdateRequest, response *nethttp.Response, e error) {
+				return srsdk.ConfigUpdateRequest{Compatibility: body.Compatibility}, nil, nil
 			},
 		},
 	}
@@ -93,7 +100,7 @@ func (suite *SRTestSuite) SetupSuite() {
 	}
 }
 
-func (suite *SRTestSuite) SetupTest() {
+func (suite *ClusterTestSuite) SetupTest() {
 	suite.srMock = &mock.SchemaRegistry{
 		CreateSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *srv1.SchemaRegistryClusterConfig) (*srv1.SchemaRegistryCluster, error) {
 			return suite.srCluster, nil
@@ -104,14 +111,14 @@ func (suite *SRTestSuite) SetupTest() {
 	}
 }
 
-func (suite *SRTestSuite) newCMD() *cobra.Command {
+func (suite *ClusterTestSuite) newCMD() *cobra.Command {
 	cmd := New(&cliMock.Commander{}, suite.conf, suite.srMock, &cmd2.ConfigHelper{}, suite.srClientMock, suite.metrics)
 	return cmd
 }
 
-func (suite *SRTestSuite) TestCreateSR() {
+func (suite *ClusterTestSuite) TestCreateSR() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"enable", "--cloud", "aws"}))
+	cmd.SetArgs(append([]string{"cluster", "enable", "--cloud", "aws", "--geo", "us"}))
 
 	err := cmd.Execute()
 	req := require.New(suite.T())
@@ -119,9 +126,9 @@ func (suite *SRTestSuite) TestCreateSR() {
 	req.True(suite.srMock.CreateSchemaRegistryClusterCalled())
 }
 
-func (suite *SRTestSuite) TestDescribeSR() {
+func (suite *ClusterTestSuite) TestDescribeSR() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"describe"}))
+	cmd.SetArgs(append([]string{"cluster", "describe"}))
 
 	err := cmd.Execute()
 	req := require.New(suite.T())
@@ -129,6 +136,38 @@ func (suite *SRTestSuite) TestDescribeSR() {
 	req.True(suite.srMock.GetSchemaRegistryClustersCalled())
 }
 
-func TestSrTestSuite(t *testing.T) {
-	suite.Run(t, new(SRTestSuite))
+func (suite *ClusterTestSuite) TestUpdateCompatibility() {
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"cluster", "update", "--compatibility", "BACKWARD"}))
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
+	req.True(apiMock.UpdateTopLevelConfigCalled())
+	retVal := apiMock.UpdateTopLevelConfigCalls()[0]
+	req.Equal(retVal.Body.Compatibility, "BACKWARD")
+}
+
+func (suite *ClusterTestSuite) TestUpdateMode() {
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"cluster", "update", "--mode", "READWRITE"}))
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
+	req.True(apiMock.UpdateTopLevelModeCalled())
+	retVal := apiMock.UpdateTopLevelModeCalls()[0]
+	req.Equal(retVal.Body.Mode, "READWRITE")
+}
+
+func (suite *ClusterTestSuite) TestUpdateNoArgs() {
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"cluster", "update"}))
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Error(err, "flag string not set")
+}
+
+func TestClusterTestSuite(t *testing.T) {
+	suite.Run(t, new(ClusterTestSuite))
 }
