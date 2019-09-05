@@ -353,6 +353,7 @@ func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {
 	// Line reader for producer input.
 	scanner := bufio.NewScanner(os.Stdin)
 	// Kafka's messageMaxBytes.
+	// https://github.com/confluentinc/cc-spec-kafka/blob/9f0af828d20e9339aeab6991f32d8355eb3f0776/plugins/kafka/kafka.go#L43.
 	const maxScanTokenSize = 1024*1024*2 + 12
 	scanner.Buffer(nil, maxScanTokenSize)
 	input := make(chan string, 1)
