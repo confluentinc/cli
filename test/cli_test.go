@@ -28,6 +28,7 @@ import (
 	corev1 "github.com/confluentinc/ccloudapis/core/v1"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
+	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
 	utilv1 "github.com/confluentinc/ccloudapis/util/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
@@ -110,10 +111,10 @@ func (s *CLITestSuite) Test_Confluent_Help() {
 func (s *CLITestSuite) Test_Confluent_Iam() {
 	tests := []CLITest{
 		{
-			name:      "confluent iam rolebinding list (grouped user)",
-			args:      "iam rolebinding list --principal User:frodo --kafka-cluster-id CID",
-			fixture:   "confluent-iam-rolebinding-list-grouped-user.golden",
-			login:     "default",
+			name:    "confluent iam rolebinding list (grouped user)",
+			args:    "iam rolebinding list --principal User:frodo --kafka-cluster-id CID",
+			fixture: "confluent-iam-rolebinding-list-grouped-user.golden",
+			login:   "default",
 		},
 	}
 	for _, tt := range tests {
@@ -328,13 +329,13 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint stri
 		}
 
 		if tt.authKafka != "" {
-			output := runCommand(t, "ccloud", []string{}, "api-key create --cluster "+tt.useKafka, 0)
+			output := runCommand(t, "ccloud", []string{}, "api-key create --resource "+tt.useKafka, 0)
 			if *debug {
 				fmt.Println(output)
 			}
 			// HACK: we don't have scriptable output yet so we parse it from the table
 			key := strings.TrimSpace(strings.Split(strings.Split(output, "\n")[2], "|")[2])
-			output = runCommand(t, "ccloud", []string{}, fmt.Sprintf("api-key use %s --cluster %s", key, tt.useKafka), 0)
+			output = runCommand(t, "ccloud", []string{}, fmt.Sprintf("api-key use %s --resource %s", key, tt.useKafka), 0)
 			if *debug {
 				fmt.Println(output)
 			}
@@ -550,9 +551,9 @@ func serveMds(t *testing.T, mdsURL string) *httptest.Server {
 	router.HandleFunc("/security/1.0/authenticate", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/json")
 		reply := &mds.AuthenticationResponse{
-			AuthToken:"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1NjE2NjA4NTcsImV4cCI6MjUzMzg2MDM4NDU3LCJhdWQiOiJ3d3cuZXhhbXBsZS5jb20iLCJzdWIiOiJqcm9ja2V0QGV4YW1wbGUuY29tIn0.G6IgrFm5i0mN7Lz9tkZQ2tZvuZ2U7HKnvxMuZAooPmE",
-			TokenType:"dunno",
-			ExpiresIn:9999999999,
+			AuthToken: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1NjE2NjA4NTcsImV4cCI6MjUzMzg2MDM4NDU3LCJhdWQiOiJ3d3cuZXhhbXBsZS5jb20iLCJzdWIiOiJqcm9ja2V0QGV4YW1wbGUuY29tIn0.G6IgrFm5i0mN7Lz9tkZQ2tZvuZ2U7HKnvxMuZAooPmE",
+			TokenType: "dunno",
+			ExpiresIn: 9999999999,
 		}
 		b, err := json.Marshal(&reply)
 		req.NoError(err)
@@ -615,6 +616,20 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 	router.HandleFunc("/api/clusters/", handleKafkaClusterList(t, kafkaAPIURL))
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		_, err := io.WriteString(w, `{"error": {"message": "unexpected call to `+r.URL.Path+`"}}`)
+		require.NoError(t, err)
+	})
+	router.HandleFunc("/api/schema_registries/", func(w http.ResponseWriter, r *http.Request) {
+		srCluster := &srv1.SchemaRegistryCluster{
+			Id:        "lsrc-1",
+			AccountId: "23",
+			Name:      "account schema-registry",
+			Endpoint:  "SASL_SSL://sr-endpoint",
+		}
+		b, err := utilv1.MarshalJSONToBytes(&srv1.GetSchemaRegistryClusterReply{
+			Cluster: srCluster,
+		})
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(b))
 		require.NoError(t, err)
 	})
 	return httptest.NewServer(router)
