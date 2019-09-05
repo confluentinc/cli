@@ -351,22 +351,28 @@ func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	// Line reader for producer input
+	// Line reader for producer input.
 	scanner := bufio.NewScanner(os.Stdin)
+	// CCloud Kafka messageMaxBytes:
+	// https://github.com/confluentinc/cc-spec-kafka/blob/9f0af828d20e9339aeab6991f32d8355eb3f0776/plugins/kafka/kafka.go#L43.
+	const maxScanTokenSize = 1024*1024*2 + 12
+	scanner.Buffer(nil, maxScanTokenSize)
 	input := make(chan string, 1)
-
 	// Avoid blocking in for loop so ^C or ^D can exit immediately.
+	var scanErr error
 	scan := func() {
 		hasNext := scanner.Scan()
-		if !hasNext && scanner.Err() == nil {
-			// Reached EOF
+		if !hasNext {
+			// Actual error.
+			if scanner.Err() != nil {
+				scanErr = scanner.Err()
+			}
+			// Otherwise just EOF.
 			close(input)
 		} else {
 			input <- scanner.Text()
 		}
 	}
-	// Prime reader
-	scan()
 
 	// Trap SIGINT to trigger a shutdown.
 	signals := make(chan os.Signal, 1)
@@ -375,20 +381,19 @@ func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {
 		<-signals
 		close(input)
 	}()
+	// Prime reader
+	scan()
 
 	var key sarama.Encoder
 	for data := range input {
 		data = strings.TrimSpace(data)
 
 		record := strings.SplitN(data, delim, 2)
-
 		value := sarama.StringEncoder(record[len(record)-1])
 		if len(record) == 2 {
 			key = sarama.StringEncoder(record[0])
 		}
-
 		msg := &sarama.ProducerMessage{Topic: topic, Key: key, Value: value}
-
 		_, offset, err := producer.SendMessage(msg)
 		if err != nil {
 			pcmd.Printf(cmd, "Failed to produce offset %d: %s\n", offset, err)
@@ -398,7 +403,9 @@ func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {
 		key = nil
 		go scan()
 	}
-
+	if scanErr != nil {
+		return errors.HandleCommon(scanErr, cmd)
+	}
 	return errors.HandleCommon(producer.Close(), cmd)
 }
 
