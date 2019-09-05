@@ -1,0 +1,4 @@
+       Role      | ResourceType | Name  | PatternType  
++----------------+--------------+-------+-------------+
+  DeveloperWrite | Topic        | test- | PREFIXED     
+  SecurityAdmin  | Cluster      |       |              
