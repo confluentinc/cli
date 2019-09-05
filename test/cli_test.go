@@ -666,7 +666,7 @@ func serveMds(t *testing.T, mdsURL string) *httptest.Server {
                        "Group:ringBearers":{
                                "DeveloperWrite":[
                                        {"resourceType":"Topic","name":"ring-","patternType":"PREFIXED"}]},
-                       "User:sam":{
+                       "User:frodo":{
                                "SecurityAdmin": []}}`,
 		"/security/1.0/lookup/principal/Group:hobbits/resources": `{
                        "Group:hobbits":{
