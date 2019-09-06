@@ -16,6 +16,7 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
 	tests := []CLITest{
 		{args: "api-key create --cluster bob", login: "default", fixture: "apikey1.golden"}, // MYKEY3
+		{args: "api-key list --all-clusters", fixture: "apikey20.golden"},
 		{args: "api-key list", useKafka: "bob", fixture: "apikey2.golden"},
 		{args: "api-key list", useKafka: "abc", fixture: "apikey3.golden"},
 
@@ -24,6 +25,9 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 		{args: "api-key list", fixture: "apikey4.golden"},
 		{args: "api-key create --description my-cool-app", fixture: "apikey5.golden"}, // MYKEY4
 		{args: "api-key list", fixture: "apikey6.golden"},
+		{args: "api-key list --all-clusters", fixture: "apikey21.golden"},
+		{args: "api-key list --service-account-id 23", fixture: "apikey22.golden"},
+		{args: "api-key list --service-account-id 25 --all-clusters", fixture: "apikey23.golden"},
 
 		// create api key for other kafka cluster
 		{args: "api-key create --description my-other-app --cluster lkc-other1", fixture: "apikey7.golden"}, // MYKEY5
