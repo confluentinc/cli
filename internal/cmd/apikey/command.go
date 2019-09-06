@@ -69,6 +69,8 @@ func (c *command) init() {
 		Args:  cobra.NoArgs,
 	}
 	listCmd.Flags().String("cluster", "", "The cluster ID.")
+	listCmd.Flags().Int32("service-account-id", 0, "Service account ID. Only the API keys that belong to the service account will be listed.")
+	listCmd.Flags().Bool("all-clusters", false, "Allowing api keys from all clusters to be listed, even when an active kafka cluster is set.")
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
