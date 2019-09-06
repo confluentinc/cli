@@ -125,12 +125,27 @@ func (c *command) init() {
 }
 
 func (c *command) list(cmd *cobra.Command, args []string) error {
-	kcc, err := pcmd.GetKafkaClusterConfig(cmd, c.ch)
+	allClusters, err := cmd.Flags().GetBool("all-clusters")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	var kcc *config.KafkaClusterConfig
+	var logicalClusters []*authv1.ApiKey_Cluster
+	// Only when all-clusters not specified is when we need to filter by cluster id
+	if !allClusters {
+		kcc, err = pcmd.GetKafkaClusterConfig(cmd, c.ch)
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+		logicalClusters = []*authv1.ApiKey_Cluster{{Id: kcc.ID, Type: "kafka"}}
+	}
+
+	userId, err := cmd.Flags().GetInt32("service-account-id")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	apiKeys, err := c.client.List(context.Background(), &authv1.ApiKey{AccountId: c.config.Auth.Account.Id})
+	apiKeys, err := c.client.List(context.Background(), &authv1.ApiKey{AccountId: c.config.Auth.Account.Id, LogicalClusters: logicalClusters, UserId: userId})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -148,12 +163,13 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 			continue
 		}
 
-		if apiKey.Key == kcc.APIKey {
+		// if all-clusters then no need to specify which API key is in-use
+		if !allClusters && apiKey.Key == kcc.APIKey {
 			apiKey.Key = fmt.Sprintf("* %s", apiKey.Key)
 		} else {
 			apiKey.Key = fmt.Sprintf("  %s", apiKey.Key)
 		}
-
+		// logical clusters passed in API not currently used to filter yet, can remove the for loop after changing SDK
 		for _, c := range apiKey.LogicalClusters {
 			if c.Id == kcc.ID {
 				data = append(data, printer.ToRow(&keyDisplay{
