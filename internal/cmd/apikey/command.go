@@ -173,7 +173,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		}
 		// logical clusters passed in API not currently used to filter yet, can remove the for loop after changing SDK
 		for _, c := range apiKey.LogicalClusters {
-			if c.Id == kcc.ID {
+			if allClusters || c.Id == kcc.ID {
 				data = append(data, printer.ToRow(&keyDisplay{
 					Key:         apiKey.Key,
 					Description: apiKey.Description,
