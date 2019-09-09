@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/confluentinc/mds-sdk-go"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"os/exec"
 	"path"
@@ -18,6 +18,8 @@ import (
 	"sort"
 	"strings"
 	"testing"
+
+	"github.com/confluentinc/mds-sdk-go"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
@@ -626,16 +628,16 @@ func serveMds(t *testing.T, mdsURL string) *httptest.Server {
 	router.HandleFunc("/security/1.0/authenticate", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/json")
 		reply := &mds.AuthenticationResponse{
-			AuthToken:"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1NjE2NjA4NTcsImV4cCI6MjUzMzg2MDM4NDU3LCJhdWQiOiJ3d3cuZXhhbXBsZS5jb20iLCJzdWIiOiJqcm9ja2V0QGV4YW1wbGUuY29tIn0.G6IgrFm5i0mN7Lz9tkZQ2tZvuZ2U7HKnvxMuZAooPmE",
-			TokenType:"dunno",
-			ExpiresIn:9999999999,
+			AuthToken: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1NjE2NjA4NTcsImV4cCI6MjUzMzg2MDM4NDU3LCJhdWQiOiJ3d3cuZXhhbXBsZS5jb20iLCJzdWIiOiJqcm9ja2V0QGV4YW1wbGUuY29tIn0.G6IgrFm5i0mN7Lz9tkZQ2tZvuZ2U7HKnvxMuZAooPmE",
+			TokenType: "dunno",
+			ExpiresIn: 9999999999,
 		}
 		b, err := json.Marshal(&reply)
 		req.NoError(err)
 		_, err = io.WriteString(w, string(b))
 		req.NoError(err)
 	})
-	routesAndReplies := map[string]string {
+	routesAndReplies := map[string]string{
 		"/security/1.0/principals/User:frodo/groups": `[
                        "hobbits",
                        "ringBearers"]`,
@@ -643,15 +645,15 @@ func serveMds(t *testing.T, mdsURL string) *httptest.Server {
                        "DeveloperRead",
                        "DeveloperWrite",
                        "SecurityAdmin"]`,
-		"/security/1.0/principals/User:frodo/roles/DeveloperRead/resources": `[]`,
+		"/security/1.0/principals/User:frodo/roles/DeveloperRead/resources":  `[]`,
 		"/security/1.0/principals/User:frodo/roles/DeveloperWrite/resources": `[]`,
-		"/security/1.0/principals/User:frodo/roles/SecurityAdmin/resources": `[]`,
+		"/security/1.0/principals/User:frodo/roles/SecurityAdmin/resources":  `[]`,
 		"/security/1.0/principals/Group:hobbits/roles/DeveloperRead/resources": `[
                        {"resourceType":"Topic","name":"drink","patternType":"LITERAL"},
                        {"resourceType":"Topic","name":"food","patternType":"LITERAL"}]`,
 		"/security/1.0/principals/Group:hobbits/roles/DeveloperWrite/resources": `[
                        {"resourceType":"Topic","name":"shire-","patternType":"PREFIXED"}]`,
-		"/security/1.0/principals/Group:hobbits/roles/SecurityAdmin/resources": `[]`,
+		"/security/1.0/principals/Group:hobbits/roles/SecurityAdmin/resources":     `[]`,
 		"/security/1.0/principals/Group:ringBearers/roles/DeveloperRead/resources": `[]`,
 		"/security/1.0/principals/Group:ringBearers/roles/DeveloperWrite/resources": `[
                        {"resourceType":"Topic","name":"ring-","patternType":"PREFIXED"}]`,
@@ -675,12 +677,12 @@ func serveMds(t *testing.T, mdsURL string) *httptest.Server {
                                "DeveloperRead":[
                                        {"resourceType":"Topic","name":"drink","patternType":"LITERAL"},
                                        {"resourceType":"Topic","name":"food","patternType":"LITERAL"}]}}`,
-		"/security/1.0/lookup/role/DeveloperRead": `["Group:hobbits"]`,
-		"/security/1.0/lookup/role/DeveloperWrite": `["Group:hobbits","Group:ringBearers"]`,
-		"/security/1.0/lookup/role/SecurityAdmin": `["User:frodo"]`,
-		"/security/1.0/lookup/role/SystemAdmin": `[]`,
-		"/security/1.0/lookup/role/DeveloperRead/resource/Topic/name/food": `["Group:hobbits"]`,
-		"/security/1.0/lookup/role/DeveloperRead/resource/Topic/name/shire-parties": `[]`,
+		"/security/1.0/lookup/role/DeveloperRead":                                    `["Group:hobbits"]`,
+		"/security/1.0/lookup/role/DeveloperWrite":                                   `["Group:hobbits","Group:ringBearers"]`,
+		"/security/1.0/lookup/role/SecurityAdmin":                                    `["User:frodo"]`,
+		"/security/1.0/lookup/role/SystemAdmin":                                      `[]`,
+		"/security/1.0/lookup/role/DeveloperRead/resource/Topic/name/food":           `["Group:hobbits"]`,
+		"/security/1.0/lookup/role/DeveloperRead/resource/Topic/name/shire-parties":  `[]`,
 		"/security/1.0/lookup/role/DeveloperWrite/resource/Topic/name/shire-parties": `["Group:hobbits"]`,
 		"/security/1.0/roles/DeveloperRead": `{
                        "name":"DeveloperRead",
@@ -757,10 +759,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 			require.NoError(t, err)
 		} else if r.Method == "GET" {
 			require.NotEmpty(t, r.URL.Query().Get("account_id"))
-			var apiKeys []*authv1.ApiKey
-			for _, a := range KEY_STORE {
-				apiKeys = append(apiKeys, a)
-			}
+			apiKeys := apiKeysFilter(r.URL)
 			// Return sorted data or the test output will not be stable
 			sort.Sort(ApiKeyList(apiKeys))
 			b, err := utilv1.MarshalJSONToBytes(&authv1.GetApiKeysReply{ApiKeys: apiKeys})
@@ -775,6 +774,32 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		require.NoError(t, err)
 	})
 	return httptest.NewServer(router)
+}
+
+func apiKeysFilter(url *url.URL) []*authv1.ApiKey {
+	var apiKeys []*authv1.ApiKey
+	q := url.Query()
+	uid := q.Get("UserId")
+	clusterIds := q["cluster_id"]
+
+	for _, a := range KEY_STORE {
+		uidFilter := (uid == "0") || (uid == fmt.Sprintf("%v", a.UserId))
+		clusterFilter := (len(clusterIds) == 0) || func(clusterIds []string) bool {
+			for _, c := range a.LogicalClusters {
+				for _, clusterId := range clusterIds {
+					if c.Id == clusterId {
+						return true
+					}
+				}
+			}
+			return false
+		}(clusterIds)
+
+		if uidFilter && clusterFilter {
+			apiKeys = append(apiKeys, a)
+		}
+	}
+	return apiKeys
 }
 
 func serveKafkaAPI(t *testing.T) *httptest.Server {
