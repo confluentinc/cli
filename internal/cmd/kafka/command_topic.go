@@ -4,10 +4,11 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"github.com/google/uuid"
 	"os"
 	"os/signal"
 	"strings"
+
+	"github.com/google/uuid"
 
 	"github.com/Shopify/sarama"
 	"github.com/spf13/cobra"

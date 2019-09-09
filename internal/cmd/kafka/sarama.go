@@ -2,9 +2,10 @@ package kafka
 
 import (
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/config"
 	"io"
 	"strings"
+
+	"github.com/confluentinc/cli/internal/pkg/config"
 
 	"github.com/Shopify/sarama"
 )

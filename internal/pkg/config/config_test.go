@@ -1,14 +1,19 @@
 package config
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/log"
-	"github.com/confluentinc/cli/internal/pkg/metric"
-	"github.com/stretchr/testify/assert"
+	"errors"
 	"io/ioutil"
 	"os"
 	"reflect"
 	"strings"
 	"testing"
+
+	v1 "github.com/confluentinc/ccloudapis/org/v1"
+	"github.com/stretchr/testify/assert"
+
+	cerrors "github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/metric"
 )
 
 func TestConfig_Load(t *testing.T) {
@@ -175,7 +180,7 @@ func TestConfig_getFilename(t *testing.T) {
 }
 
 func TestConfig_AddContext(t *testing.T) {
-	platform := &Platform{Server: "fake-server.com"}
+	platform := &Platform{Server: "https://fake-server.com"}
 	credential := &Credential{
 		APIKeyPair: &APIKeyPair{
 			Key: "lock",
@@ -383,6 +388,9 @@ func TestConfig_SetContext(t *testing.T) {
 			if err := c.SetContext(tt.args.name); (err != nil) != tt.wantErr {
 				t.Errorf("SetContext() error = %v, wantErr %v", err, tt.wantErr)
 			}
+			if !tt.wantErr {
+				assert.Equal(t, tt.args.name, c.CurrentContext)
+			}
 		})
 	}
 }
@@ -547,6 +555,468 @@ func TestConfig_CheckLogin(t *testing.T) {
 			}
 			if err := c.CheckLogin(); (err != nil) != tt.wantErr {
 				t.Errorf("CheckLogin() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestConfig_FindContext(t *testing.T) {
+	type fields struct {
+		Contexts map[string]*Context
+	}
+	type args struct {
+		name string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *Context
+		wantErr bool
+	}{
+		{name: "success finding existing context",
+			fields:  fields{Contexts: map[string]*Context{"test-context": {Name: "test-context"}}},
+			args:    args{name: "test-context"},
+			want:    &Context{Name: "test-context"},
+			wantErr: false,
+		},
+		{name: "error finding nonexistent context",
+			fields:  fields{Contexts: map[string]*Context{}},
+			args:    args{name: "test-context"},
+			want:    nil,
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Config{
+				Contexts: tt.fields.Contexts,
+			}
+			got, err := c.FindContext(tt.args.name)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("FindContext() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("FindContext() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestConfig_DeleteContext(t *testing.T) {
+	const contextName = "test-context"
+	type fields struct {
+		Contexts       map[string]*Context
+		CurrentContext string
+	}
+	type args struct {
+		name string
+	}
+	tests := []struct {
+		name       string
+		fields     fields
+		args       args
+		wantErr    bool
+		wantConfig *Config
+	}{
+		{name: "success deleting existing current context",
+			fields: fields{
+				Contexts:       map[string]*Context{contextName: {Name: contextName}},
+				CurrentContext: contextName,
+			},
+			args:    args{name: contextName},
+			wantErr: false,
+			wantConfig: &Config{
+				Contexts:       map[string]*Context{},
+				CurrentContext: "",
+			},
+		},
+		{name: "success deleting existing context",
+			fields: fields{Contexts: map[string]*Context{
+				contextName:     {Name: contextName,},
+				"other-context": {Name: "other-context"},
+			},
+				CurrentContext: "other-context",
+			},
+			args:    args{name: contextName},
+			wantErr: false,
+			wantConfig: &Config{
+				Contexts:       map[string]*Context{"other-context": {Name: "other-context",}},
+				CurrentContext: "other-context",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Config{
+				Contexts:       tt.fields.Contexts,
+				CurrentContext: tt.fields.CurrentContext,
+			}
+			if err := c.DeleteContext(tt.args.name); (err != nil) != tt.wantErr {
+				t.Errorf("DeleteContext() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if !tt.wantErr {
+				assert.Equal(t, tt.wantConfig, c)
+			}
+		})
+	}
+}
+
+func TestConfig_KafkaClusterConfig(t *testing.T) {
+	type fields struct {
+		Contexts       map[string]*Context
+		CurrentContext string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		want    *KafkaClusterConfig
+		wantErr bool
+		err     error
+	}{
+		{
+			name: "success getting Kafka cluster config",
+			fields: fields{
+				Contexts: map[string]*Context{"test-context": {
+					Name: "test-context",
+					KafkaClusters: map[string]*KafkaClusterConfig{"k-id": {
+						ID:   "k-id",
+						Name: "k-cluster",
+					}},
+					Kafka: "k-id",
+				}},
+				CurrentContext: "test-context",
+			},
+			want: &KafkaClusterConfig{
+				ID:   "k-id",
+				Name: "k-cluster",
+			},
+			wantErr: false,
+		},
+		{
+			name: "error getting Kafka cluster config with no current context",
+			fields: fields{
+				Contexts: map[string]*Context{"test-context": {
+					Name: "test-context",
+					KafkaClusters: map[string]*KafkaClusterConfig{"k-id": {
+						ID:   "k-id",
+						Name: "k-cluster",
+					}},
+					Kafka: "",
+				}},
+				CurrentContext: "",
+			},
+			wantErr: true,
+		},
+		{
+			name: "success getting Kafka cluster config when it is not set",
+			fields: fields{
+				Contexts: map[string]*Context{"test-context": {
+					Name: "test-context",
+					KafkaClusters: map[string]*KafkaClusterConfig{"k-id": {
+						ID:   "k-id",
+						Name: "k-cluster",
+					}},
+					Kafka: "",
+				}},
+				CurrentContext: "test-context",
+			},
+			want:    nil,
+			wantErr: false,
+		},
+		{
+			name: "error getting set but nonexistent Kafka cluster config",
+			fields: fields{
+				Contexts: map[string]*Context{"test-context": {
+					Name:  "test-context",
+					Kafka: "nonexistent-cluster",
+				}},
+				CurrentContext: "test-context",
+			},
+			wantErr: true,
+			err: errors.New("the configuration of context \"test-context\" has been corrupted. " +
+				"To fix, please remove the config file, and run `login` or `init`"),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Config{
+				Contexts:       tt.fields.Contexts,
+				CurrentContext: tt.fields.CurrentContext,
+			}
+			got, err := c.KafkaClusterConfig()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("KafkaClusterConfig() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("KafkaClusterConfig() got = %v, want %v", got, tt.want)
+			}
+			if tt.err != nil {
+				assert.Equal(t, tt.err, err)
+			}
+		})
+	}
+}
+
+func TestConfig_CheckHasAPIKey(t *testing.T) {
+	type fields struct {
+		Contexts       map[string]*Context
+		CurrentContext string
+	}
+	type args struct {
+		clusterID string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+		err     interface{}
+	}{
+		{
+			name: "success checking existing active API key",
+			fields: fields{
+				Contexts: map[string]*Context{"test-context": {
+					Name: "test-context",
+					KafkaClusters: map[string]*KafkaClusterConfig{"k-id": {
+						ID:   "k-id",
+						Name: "k-cluster",
+						APIKeys: map[string]*APIKeyPair{"yek": {
+							Key:    "yek",
+							Secret: "shhh",
+						}},
+						APIKey: "yek",
+					}},
+				}},
+				CurrentContext: "test-context",
+			},
+			args:    args{clusterID: "k-id"},
+			wantErr: false,
+		},
+		{
+			name: "error checking API key with no active key",
+			fields: fields{
+				Contexts: map[string]*Context{"test-context": {
+					Name: "test-context",
+					KafkaClusters: map[string]*KafkaClusterConfig{"k-id": {
+						ID:   "k-id",
+						Name: "k-cluster",
+						APIKeys: map[string]*APIKeyPair{"yek": {
+							Key:    "yek",
+							Secret: "shhh",
+						}},
+						APIKey: "",
+					}},
+				}},
+				CurrentContext: "test-context",
+			},
+			args:    args{clusterID: "k-id"},
+			wantErr: true,
+			err:     &cerrors.UnspecifiedAPIKeyError{ClusterID: "k-id"},
+		},
+		{
+			name: "error checking API key with no active context",
+			fields: fields{
+				Contexts: map[string]*Context{"test-context": {
+					Name: "test-context",
+				}},
+				CurrentContext: "",
+			},
+			args:    args{clusterID: "k-id"},
+			wantErr: true,
+			err:     cerrors.ErrNoContext,
+		},
+		{
+			name: "error checking API key with no matching cluster",
+			fields: fields{
+				Contexts: map[string]*Context{"test-context": {
+					Name: "test-context",
+				}},
+				CurrentContext: "test-context",
+			},
+			args:    args{clusterID: "k-id"},
+			wantErr: true,
+			err:     errors.New("unknown kafka cluster: k-id"),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Config{
+				Contexts:       tt.fields.Contexts,
+				CurrentContext: tt.fields.CurrentContext,
+			}
+			err := c.CheckHasAPIKey(tt.args.clusterID)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("CheckHasAPIKey() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if tt.err != nil {
+				assert.Equal(t, tt.err, err)
+			}
+		})
+	}
+}
+
+func TestConfig_SchemaRegistryCluster(t *testing.T) {
+	type fields struct {
+		Auth           *AuthConfig
+		Contexts       map[string]*Context
+		CurrentContext string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		want    *SchemaRegistryCluster
+		wantErr bool
+		err     error
+	}{
+		{
+			name: "success getting existing schema registry cluster",
+			fields: fields{
+				Auth: &AuthConfig{
+					Account: &v1.Account{
+						Id: "test-acct-id",
+					},
+				},
+				Contexts: map[string]*Context{"test-context": {
+					Name: "test-context",
+					SchemaRegistryClusters: map[string]*SchemaRegistryCluster{"test-acct-id": {
+						SchemaRegistryEndpoint: "test-sr",
+					},
+					},
+				}},
+				CurrentContext: "test-context",
+			},
+			want: &SchemaRegistryCluster{
+				SchemaRegistryEndpoint: "test-sr",
+			},
+			wantErr: false,
+		},
+		{
+			name: "success getting nonexistent schema registry cluster without current context",
+			fields: fields{
+				Auth: &AuthConfig{
+					Account: &v1.Account{
+						Id: "test-acct-id",
+					},
+				},
+				Contexts: map[string]*Context{"test-context": {
+					Name: "test-context",
+					SchemaRegistryClusters: map[string]*SchemaRegistryCluster{"another-acct": {
+						SchemaRegistryEndpoint: "test-sr",
+					},
+					},
+				}},
+				CurrentContext: "test-context",
+			},
+			want:    &SchemaRegistryCluster{},
+			wantErr: false,
+		},
+		{
+			name: "error getting schema registry cluster without current context",
+			fields: fields{
+				Contexts: map[string]*Context{"test-context": {
+					Name: "test-context",
+				}},
+				CurrentContext: "",
+			},
+			wantErr: true,
+			err:     cerrors.ErrNoContext,
+		},
+		{
+			name: "error getting schema registry cluster when not logged in",
+			fields: fields{
+				Contexts: map[string]*Context{"test-context": {
+					Name: "test-context",
+				}},
+				CurrentContext: "test-context",
+			},
+			wantErr: true,
+			err:     cerrors.ErrNotLoggedIn,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Config{
+				Auth:           tt.fields.Auth,
+				Contexts:       tt.fields.Contexts,
+				CurrentContext: tt.fields.CurrentContext,
+			}
+			got, err := c.SchemaRegistryCluster()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("SchemaRegistryCluster() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("SchemaRegistryCluster() got = %v, want %v", got, tt.want)
+			}
+			if tt.err != nil {
+				assert.Equal(t, tt.err, err)
+			}
+		})
+	}
+}
+
+func TestConfig_Context(t *testing.T) {
+	type fields struct {
+		Contexts       map[string]*Context
+		CurrentContext string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		want    *Context
+		wantErr bool
+		err     error
+	}{
+		{
+			name: "success getting current context",
+			fields: fields{
+				Contexts: map[string]*Context{"test-context": {
+					Name: "test-context",
+				}},
+				CurrentContext: "test-context",
+			},
+			want: &Context{
+				Name: "test-context",
+			},
+			wantErr: false,
+		},
+		{
+			name: "error getting current context when not set",
+			fields: fields{
+				Contexts: map[string]*Context{},
+			},
+			wantErr: true,
+			err:     cerrors.ErrNoContext,
+		},
+		{
+			name: "error getting current context with corrupted config",
+			fields: fields{
+				Contexts:       map[string]*Context{},
+				CurrentContext: "test-context",
+			},
+			wantErr: true,
+			err:     errors.New("context \"test-context\" does not exist"),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Config{
+				Contexts:       tt.fields.Contexts,
+				CurrentContext: tt.fields.CurrentContext,
+			}
+			got, err := c.Context()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Context() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Context() got = %v, want %v", got, tt.want)
+			}
+			if tt.err != nil {
+				assert.Equal(t, tt.err, err)
 			}
 		})
 	}

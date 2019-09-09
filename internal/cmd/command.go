@@ -2,10 +2,6 @@ package cmd
 
 import (
 	"context"
-	initcontext "github.com/confluentinc/cli/internal/cmd/init-context"
-	"github.com/confluentinc/cli/internal/cmd/kafka"
-	"github.com/confluentinc/cli/internal/cmd/schema-registry"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"os"
 
 	"github.com/DABH/go-basher"
@@ -21,15 +17,19 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/config"
 	"github.com/confluentinc/cli/internal/cmd/environment"
 	"github.com/confluentinc/cli/internal/cmd/iam"
+	initcontext "github.com/confluentinc/cli/internal/cmd/init-context"
+	"github.com/confluentinc/cli/internal/cmd/kafka"
 	"github.com/confluentinc/cli/internal/cmd/ksql"
 	"github.com/confluentinc/cli/internal/cmd/local"
 	ps1 "github.com/confluentinc/cli/internal/cmd/prompt"
+	"github.com/confluentinc/cli/internal/cmd/schema-registry"
 	"github.com/confluentinc/cli/internal/cmd/secret"
 	"github.com/confluentinc/cli/internal/cmd/service-account"
 	"github.com/confluentinc/cli/internal/cmd/update"
 	"github.com/confluentinc/cli/internal/cmd/version"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	configs "github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/help"
 	"github.com/confluentinc/cli/internal/pkg/io"
 	"github.com/confluentinc/cli/internal/pkg/keystore"
@@ -108,10 +108,15 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	cli.AddCommand(update.New(cliName, cfg, ver, prompt, updateClient))
 
 	cli.AddCommand(auth.New(prerunner, cfg, logger, mdsClient)...)
+	resolver := &pcmd.FlagResolverImpl{Prompt: prompt, Out: os.Stdout}
 	if cliName == "ccloud" {
 		kafkaClient := kafkas.New(client, logger)
-		cli.AddCommand(kafka.New(prerunner, cfg, kafkaClient, ch))
-		cli.AddCommand(initcontext.New(prerunner, cfg, prompt))
+		cmd, err := kafka.New(prerunner, cfg, kafkaClient, ch)
+		if err != nil {
+			return nil, err
+		}
+		cli.AddCommand(cmd)
+		cli.AddCommand(initcontext.New(prerunner, cfg, prompt, resolver))
 		credType, err := cfg.CredentialType()
 		if _, ok := err.(*errors.UnspecifiedCredentialError); ok {
 			return nil, err
@@ -135,6 +140,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		conn = ksql.New(prerunner, cfg, ksqls.New(client, logger), kafkaClient, userClient, ch)
 		conn.Hidden = true // The ksql feature isn't finished yet, so let's hide it
 		cli.AddCommand(conn)
+
 		//conn = connect.New(prerunner, cfg, connects.New(client, logger))
 		//conn.Hidden = true // The connect feature isn't finished yet, so let's hide it
 		//cli.AddCommand(conn)
@@ -149,7 +155,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		}
 		shellRunner := &local.BashShellRunner{BasherContext: bash}
 		cli.AddCommand(local.New(cli, prerunner, shellRunner, logger, fs))
-		resolver := &pcmd.FlagResolverImpl{Prompt: prompt, Out: os.Stdout}
+		
 		cli.AddCommand(secret.New(prerunner, cfg, prompt, resolver, secrets.NewPasswordProtectionPlugin(logger)))
 	}
 	return cli, nil

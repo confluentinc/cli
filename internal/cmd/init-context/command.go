@@ -1,25 +1,25 @@
 package init
 
 import (
-	"fmt"
+	"strings"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/spf13/cobra"
-	"io/ioutil"
-	"strings"
 )
 
 type command struct {
 	*cobra.Command
-	Config *config.Config
-	prompt pcmd.Prompt
+	config   *config.Config
+	prompt   pcmd.Prompt
+	resolver pcmd.FlagResolver
 }
 
 // TODO: Make long description better.
 const longDescription = "Initialize and set a current context."
 
-func New(prerunner pcmd.PreRunner, config *config.Config, prompt pcmd.Prompt) *cobra.Command {
+func New(prerunner pcmd.PreRunner, config *config.Config, prompt pcmd.Prompt, resolver pcmd.FlagResolver) *cobra.Command {
 	cmd := &command{
 		&cobra.Command{
 			Use:               "init <context-name>",
@@ -30,6 +30,7 @@ func New(prerunner pcmd.PreRunner, config *config.Config, prompt pcmd.Prompt) *c
 		},
 		config,
 		prompt,
+		resolver,
 	}
 	cmd.init()
 	return cmd.Command
@@ -44,24 +45,11 @@ func (c *command) init() {
 	c.RunE = c.initContext
 }
 
-func (c *command) promptForNonemptyString(msg string) (string, error) {
-	pcmd.Print(c.Command, fmt.Sprintf("%s: ", msg))
-	val, err := c.prompt.ReadString('\n')
-	if err != nil {
-		return "", err
-	}
-	val = strings.TrimSpace(val)
-	if len(val) == 0 {
-		return "", fmt.Errorf("%s cannot be empty", msg)
-	}
-	return val, nil
-}
-
 func (c *command) initContext(cmd *cobra.Command, args []string) error {
 	contextName := args[0]
 	kafkaAuth, err := c.Flags().GetBool("kafka-auth")
 	if err != nil {
-		return errors.HandleCommon(err, c.Command)
+		return errors.HandleCommon(err, cmd)
 	}
 	if !kafkaAuth {
 		return errors.HandleCommon(errors.New("only kafka-auth is currently supported"), cmd)
@@ -70,51 +58,35 @@ func (c *command) initContext(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
+	bootstrapURL, err = c.resolver.ValueFrom(bootstrapURL, "Bootstrap URL: ", false)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	bootstrapURL = strings.TrimSpace(bootstrapURL)
 	apiKey, err := c.Flags().GetString("api-key")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	apiSecretFilename, err := c.Flags().GetString("api-secret")
+	apiKey, err = c.resolver.ValueFrom(apiKey, "API Key: ", false)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	if len(bootstrapURL) == 0 {
-		bootstrapURL, err = c.promptForNonemptyString("Bootstrap URL")
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
+	apiKey = strings.TrimSpace(apiKey)
+	apiSecret, err := c.Flags().GetString("api-secret")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
 	}
-	if len(apiKey) == 0 {
-		apiKey, err = c.promptForNonemptyString("API key")
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
+	apiSecret, err = c.resolver.ValueFrom(apiSecret, "API Secret: ", true)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
 	}
-	var apiSecret string
-	if len(apiSecretFilename) == 0 {
-		apiSecret, err = c.promptForNonemptyString("API secret")
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-	} else {
-		// Read API secret from file.
-		apiSecretFilename = apiSecretFilename[1:]
-		apiSecretBytes, err := ioutil.ReadFile(apiSecretFilename)
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-		apiSecret = string(apiSecretBytes)
-		if len(apiSecret) == 0 {
-			return fmt.Errorf("%s cannot be empty", "API secret")
-		}
-		apiSecret = strings.TrimSpace(apiSecret)
-	}
+	apiSecret = strings.TrimSpace(apiSecret)
 	err = c.addContext(contextName, bootstrapURL, apiKey, apiSecret)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 	// Set current context.
-	err = c.Config.SetContext(contextName)
+	err = c.config.SetContext(contextName)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -122,8 +94,6 @@ func (c *command) initContext(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) addContext(name string, bootstrapURL string, apiKey string, apiSecret string) error {
-	const anonClusterId = "anonymous-id"
-	const anonClusterName = "anonymous-cluster"
 	apiKeyPair := &config.APIKeyPair{
 		Key:    apiKey,
 		Secret: apiSecret,
@@ -132,8 +102,8 @@ func (c *command) addContext(name string, bootstrapURL string, apiKey string, ap
 		apiKey: apiKeyPair,
 	}
 	kafkaClusterCfg := &config.KafkaClusterConfig{
-		ID:          anonClusterId,
-		Name:        anonClusterName,
+		ID:          "anonymous-id",
+		Name:        "anonymous-cluster",
 		Bootstrap:   bootstrapURL,
 		APIEndpoint: "",
 		APIKeys:     apiKeys,
@@ -150,6 +120,6 @@ func (c *command) addContext(name string, bootstrapURL string, apiKey string, ap
 		APIKeyPair:     apiKeyPair,
 		CredentialType: config.APIKey,
 	}
-	return c.Config.AddContext(name, platform, credential, kafkaClusters,
+	return c.config.AddContext(name, platform, credential, kafkaClusters,
 		kafkaClusterCfg.ID, nil)
 }

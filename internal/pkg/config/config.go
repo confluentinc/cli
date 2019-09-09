@@ -27,11 +27,6 @@ type AuthConfig struct {
 	Accounts []*v1.Account `json:"accounts" hcl:"accounts"`
 }
 
-// Platform represents a Confluent Platform deployment
-type Platform struct {
-	Server string `json:"server" hcl:"server"`
-}
-
 // Config represents the CLI configuration.
 type Config struct {
 	CLIName        string                 `json:"-" hcl:"-"`
@@ -110,6 +105,7 @@ func (c *Config) Save() error {
 	return nil
 }
 
+// Deletes the specified context, and returns an error if it's not found. 
 func (c *Config) DeleteContext(name string) error {
 	_, err := c.FindContext(name)
 	if err != nil {
@@ -200,11 +196,7 @@ func (c *Config) Context() (*Context, error) {
 	return context, nil
 }
 
-func (p *Platform) String() string {
-	return p.Server
-}
-
-// Return the credential type of the current Context.
+// Returns the credential type of the current Context.
 // Returns ErrNoContext if there's no current context,
 // Returns UnspecifiedCredentialError if there is a current context with no credentials,
 // informing the user the config file has been corrupted.
@@ -220,6 +212,9 @@ func (c *Config) CredentialType() (CredentialType, error) {
 	return -1, err
 }
 
+// Returns the SchemaRegistryCluster for the current Context,
+// or an empty SchemaRegistryCluster if there is none set, 
+// or error if no context exists/if the user is not logged in. 
 func (c *Config) SchemaRegistryCluster() (*SchemaRegistryCluster, error) {
 	context, err := c.Context()
 	if err != nil {
@@ -238,7 +233,7 @@ func (c *Config) SchemaRegistryCluster() (*SchemaRegistryCluster, error) {
 	return context.SchemaRegistryClusters[c.Auth.Account.Id], nil
 }
 
-// KafkaClusterConfig returns the KafkaClusterConfig for the current Context
+// Returns the KafkaClusterConfig for the current Context
 // or nil if there is none set.
 func (c *Config) KafkaClusterConfig() (*KafkaClusterConfig, error) {
 	context, err := c.Context()
@@ -248,9 +243,15 @@ func (c *Config) KafkaClusterConfig() (*KafkaClusterConfig, error) {
 	kafka := context.Kafka
 	if kafka == "" {
 		return nil, nil
-	} else {
-		return context.KafkaClusters[kafka], nil
 	}
+	kcc, ok := context.KafkaClusters[kafka]
+	if !ok {
+		errMsg := "the configuration of context \"%s\" has been corrupted. " +
+			"To fix, please remove the config file, and run `login` or `init`"
+		err := fmt.Errorf(errMsg, context.Name)
+		return nil, err
+	}
+	return kcc, nil
 }
 
 // CheckLogin returns an error if the user is not logged in
@@ -271,6 +272,8 @@ func (c *Config) CheckLogin() error {
 	return nil
 }
 
+// Returns nil if the specified cluster exists in the current context
+// and has an active API key, error otherwise.
 func (c *Config) CheckHasAPIKey(clusterID string) error {
 	context, err := c.Context()
 	if err != nil {

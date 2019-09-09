@@ -137,7 +137,7 @@ func (c *contextCommand) delete(cmd *cobra.Command, args []string) error {
 	contextName := args[0]
 	err := c.config.DeleteContext(contextName)
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, cmd)
 	}
 	return c.config.Save()
 }
