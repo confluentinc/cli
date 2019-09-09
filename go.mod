@@ -7,6 +7,8 @@ require (
 	github.com/Shopify/sarama v1.20.1
 	github.com/Shopify/toxiproxy v2.1.3+incompatible // indirect
 	github.com/alcortesm/tgz v0.0.0-20161220082320-9c5fe88206d7 // indirect
+	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
+	github.com/alecthomas/units v0.0.0-20190717042225-c3de453c63f4 // indirect
 	github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239 // indirect
 	github.com/antihax/optional v0.0.0-20180407024304-ca021399b1a6 // indirect
 	github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da
@@ -15,7 +17,7 @@ require (
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
 	github.com/confluentinc/ccloud-sdk-go v0.0.11
-	github.com/confluentinc/ccloudapis v0.0.0-20190822180106-1f1a16f58a50
+	github.com/confluentinc/ccloudapis v0.0.0-20190905010457-36bc6dde05b4
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-printer v0.10.0
 	github.com/confluentinc/mds-sdk-go v0.0.0-20190903192325-bd836904cf5a
@@ -33,7 +35,7 @@ require (
 	github.com/go-critic/go-critic v0.3.4 // indirect
 	github.com/gobuffalo/flect v0.1.3
 	github.com/gogo/protobuf v1.2.1
-	github.com/golang/mock v1.3.1
+	github.com/golang/mock v1.2.0
 	github.com/golang/protobuf v1.3.2
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/golangci/errcheck v0.0.0-20181223084120-ef45e06d44b6 // indirect
@@ -85,7 +87,6 @@ require (
 	github.com/stretchr/testify v1.4.0
 	github.com/tidwall/pretty v0.0.0-20190325153808-1166b9ac2b65
 	github.com/timakin/bodyclose v0.0.0-20190721030226-87058b9bfcec // indirect
-	github.com/travisjeffery/mocker v1.1.1-0.20190810020704-1ec879a36d65
 	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4
 	golang.org/x/exp v0.0.0-20190731235908-ec7cb31e5a56 // indirect
 	golang.org/x/net v0.0.0-20190813141303-74dc4d7220e7 // indirect
@@ -101,6 +102,7 @@ require (
 )
 
 replace (
+	github.com/confluentinc/ccloud-sdk-go v0.0.11 => github.com/confluentinc/ccloud-sdk-go v0.0.12-0.20190909222525-d428db29132f
 	github.com/havoc-io/gopass => github.com/havoc-io/gopass v0.0.0-20161007065903-6331a34a3f3b
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20171026124306-e509bb64fe11
 	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20170925234155-019ae5ada31d

@@ -778,9 +778,24 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 
 func apiKeysFilter(url *url.URL) []*authv1.ApiKey {
 	var apiKeys []*authv1.ApiKey
-	uid := url.Query().Get("UserId")
+	q := url.Query()
+	uid := q.Get("UserId")
+	clusterIds := q["cluster_id"]
+
 	for _, a := range KEY_STORE {
-		if (uid == "0") || (uid == fmt.Sprintf("%v", a.UserId)) {
+		uidFilter := (uid == "0") || (uid == fmt.Sprintf("%v", a.UserId))
+		clusterFilter := (len(clusterIds) == 0) || func(clusterIds []string) bool {
+			for _, c := range a.LogicalClusters {
+				for _, clusterId := range clusterIds {
+					if c.Id == clusterId {
+						return true
+					}
+				}
+			}
+			return false
+		}(clusterIds)
+
+		if uidFilter && clusterFilter {
 			apiKeys = append(apiKeys, a)
 		}
 	}

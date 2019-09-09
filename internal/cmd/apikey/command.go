@@ -171,17 +171,11 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		} else {
 			apiKey.Key = fmt.Sprintf("  %s", apiKey.Key)
 		}
-		// logical clusters passed in API not currently used to filter yet, can remove the for loop after changing SDK
-		for _, c := range apiKey.LogicalClusters {
-			if allClusters || c.Id == kcc.ID {
-				data = append(data, printer.ToRow(&keyDisplay{
-					Key:         apiKey.Key,
-					Description: apiKey.Description,
-					UserId:      apiKey.UserId,
-				}, listFields))
-				break
-			}
-		}
+		data = append(data, printer.ToRow(&keyDisplay{
+			Key:         apiKey.Key,
+			Description: apiKey.Description,
+			UserId:      apiKey.UserId,
+		}, listFields))
 	}
 
 	printer.RenderCollectionTable(data, listLabels)
