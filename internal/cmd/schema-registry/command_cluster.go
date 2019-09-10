@@ -2,7 +2,6 @@ package schema_registry
 
 import (
 	"context"
-	"fmt"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"os"
 	"strconv"
@@ -41,7 +40,7 @@ type clusterCommand struct {
 	metricClient ccsdk.Metrics
 	srClient     *srsdk.APIClient
 	ch           *pcmd.ConfigHelper
-	logger *log.Logger
+	logger       *log.Logger
 }
 
 func NewClusterCommand(config *config.Config, ccloudClient ccsdk.SchemaRegistry, ch *pcmd.ConfigHelper, srClient *srsdk.APIClient, metricClient ccsdk.Metrics, logger *log.Logger) *cobra.Command {
@@ -55,7 +54,7 @@ func NewClusterCommand(config *config.Config, ccloudClient ccsdk.SchemaRegistry,
 		ch:           ch,
 		srClient:     srClient,
 		metricClient: metricClient,
-		logger:logger,
+		logger:       logger,
 	}
 	clusterCmd.init()
 	return clusterCmd.Command
@@ -101,8 +100,6 @@ func (c *clusterCommand) init() {
 }
 
 func (c *clusterCommand) enable(cmd *cobra.Command, args []string) error {
-	fields := []string{"ID", "URL"}
-	var data describeDisplay
 	ctx := context.Background()
 
 	// Collect the parameters
@@ -140,17 +137,10 @@ func (c *clusterCommand) enable(cmd *cobra.Command, args []string) error {
 		if getExistingErr != nil {
 			return errors.HandleCommon(err, cmd)
 		}
-		data = describeDisplay{
-			ID:  cluster.Id,
-			URL: cluster.Endpoint,
-		}
+		_ = printer.RenderTableOut(cluster, []string{"Id", "Endpoint"}, map[string]string{"ID": "Cluster ID", "URL": "Endpoint URL"}, os.Stdout)
 	} else {
-		data = describeDisplay{
-			ID:  newCluster.Id,
-			URL: newCluster.Endpoint,
-		}
+		_ = printer.RenderTableOut(newCluster, []string{"Id", "Endpoint"}, map[string]string{"ID": "Cluster ID", "URL": "Endpoint URL"}, os.Stdout)
 	}
-	_ = printer.RenderTableOut(&data, fields, renames, os.Stdout)
 	return nil
 }
 
@@ -192,7 +182,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	compatibilityResponse, _, err := srClient.DefaultApi.GetTopLevelConfig(ctx)
 	if err != nil {
 		compatibility = ""
-		c.logger.Warn( "Could not retrieve Schema Registry Compatibility")
+		c.logger.Warn("Could not retrieve Schema Registry Compatibility")
 	} else {
 		compatibility = compatibilityResponse.CompatibilityLevel
 	}
@@ -200,7 +190,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	ModeResponse, _, err := srClient.DefaultApi.GetTopLevelMode(ctx)
 	if err != nil {
 		mode = ""
-		c.logger.Warn( "Could not retrieve Schema Registry Mode")
+		c.logger.Warn("Could not retrieve Schema Registry Mode")
 	} else {
 		mode = ModeResponse.Mode
 	}
@@ -247,7 +237,7 @@ func (c *clusterCommand) updateCompatibility(cmd *cobra.Command, args []string) 
 	if err != nil {
 		return err
 	}
-	fmt.Println("Successfully updated")
+	pcmd.Println(cmd, "Successfully updated")
 	return nil
 }
 
@@ -262,6 +252,6 @@ func (c *clusterCommand) updateMode(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("Successfully updated Top Level mode: " + modeUpdate.Mode)
+	pcmd.Printf(cmd, "Successfully updated Top Level mode: %s", modeUpdate.Mode)
 	return nil
 }

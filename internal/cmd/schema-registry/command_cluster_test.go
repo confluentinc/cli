@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/stretchr/testify/require"
-	nethttp "net/http"
+	"net/http"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -37,7 +37,7 @@ type ClusterTestSuite struct {
 	srMock       *mock.SchemaRegistry
 	srClientMock *srsdk.APIClient
 	metrics      *ccsdkmock.Metrics
-	logger 		*log.Logger
+	logger       *log.Logger
 }
 
 func (suite *ClusterTestSuite) SetupSuite() {
@@ -78,16 +78,16 @@ func (suite *ClusterTestSuite) SetupSuite() {
 	}
 	suite.srClientMock = &srsdk.APIClient{
 		DefaultApi: &srMock.DefaultApi{
-			GetTopLevelConfigFunc: func(ctx context.Context) (srsdk.Config, *nethttp.Response, error) {
+			GetTopLevelConfigFunc: func(ctx context.Context) (srsdk.Config, *http.Response, error) {
 				return srsdk.Config{CompatibilityLevel: "FULL"}, nil, nil
 			},
-			GetTopLevelModeFunc: func(ctx context.Context) (srsdk.ModeGetResponse, *nethttp.Response, error) {
+			GetTopLevelModeFunc: func(ctx context.Context) (srsdk.ModeGetResponse, *http.Response, error) {
 				return srsdk.ModeGetResponse{}, nil, nil
 			},
-			UpdateTopLevelModeFunc: func(ctx context.Context, body srsdk.ModeUpdateRequest) (request srsdk.ModeUpdateRequest, response *nethttp.Response, e error) {
+			UpdateTopLevelModeFunc: func(ctx context.Context, body srsdk.ModeUpdateRequest) (request srsdk.ModeUpdateRequest, response *http.Response, e error) {
 				return srsdk.ModeUpdateRequest{Mode: body.Mode}, nil, nil
 			},
-			UpdateTopLevelConfigFunc: func(ctx context.Context, body srsdk.ConfigUpdateRequest) (request srsdk.ConfigUpdateRequest, response *nethttp.Response, e error) {
+			UpdateTopLevelConfigFunc: func(ctx context.Context, body srsdk.ConfigUpdateRequest) (request srsdk.ConfigUpdateRequest, response *http.Response, e error) {
 				return srsdk.ConfigUpdateRequest{Compatibility: body.Compatibility}, nil, nil
 			},
 		},

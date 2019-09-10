@@ -17,7 +17,7 @@ type command struct {
 	metricClient ccsdk.Metrics
 	srClient     *srsdk.APIClient
 	ch           *pcmd.ConfigHelper
-	logger *log.Logger
+	logger       *log.Logger
 }
 
 func New(prerunner pcmd.PreRunner, config *config.Config, ccloudClient ccsdk.SchemaRegistry, ch *pcmd.ConfigHelper, srClient *srsdk.APIClient, metricClient ccsdk.Metrics, logger *log.Logger) *cobra.Command {
@@ -32,7 +32,7 @@ func New(prerunner pcmd.PreRunner, config *config.Config, ccloudClient ccsdk.Sch
 		ch:           ch,
 		srClient:     srClient,
 		metricClient: metricClient,
-		logger:logger,
+		logger:       logger,
 	}
 	cmd.init()
 	return cmd.Command
