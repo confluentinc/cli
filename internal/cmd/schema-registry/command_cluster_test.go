@@ -37,6 +37,7 @@ type ClusterTestSuite struct {
 	srMock       *mock.SchemaRegistry
 	srClientMock *srsdk.APIClient
 	metrics      *ccsdkmock.Metrics
+	logger 		*log.Logger
 }
 
 func (suite *ClusterTestSuite) SetupSuite() {
@@ -112,7 +113,7 @@ func (suite *ClusterTestSuite) SetupTest() {
 }
 
 func (suite *ClusterTestSuite) newCMD() *cobra.Command {
-	cmd := New(&cliMock.Commander{}, suite.conf, suite.srMock, &cmd2.ConfigHelper{}, suite.srClientMock, suite.metrics)
+	cmd := New(&cliMock.Commander{}, suite.conf, suite.srMock, &cmd2.ConfigHelper{}, suite.srClientMock, suite.metrics, suite.logger)
 	return cmd
 }
 

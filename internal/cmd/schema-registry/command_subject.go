@@ -113,7 +113,7 @@ func (c *subjectCommand) updateCompatibility(cmd *cobra.Command, args []string) 
 	if err != nil {
 		return err
 	}
-	pcmd.Println(cmd,"Successfully updated")
+	pcmd.Println(cmd, "Successfully updated")
 	return nil
 }
 
@@ -130,7 +130,7 @@ func (c *subjectCommand) updateMode(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	pcmd.Println(cmd,"Successfully updated Subject level Mode: " + updatedMode.Mode)
+	pcmd.Println(cmd, "Successfully updated Subject level Mode: "+updatedMode.Mode)
 	return nil
 }
 
@@ -157,7 +157,7 @@ func (c *subjectCommand) list(cmd *cobra.Command, args []string) error {
 		}
 		printer.RenderCollectionTable(data, listLabels)
 	} else {
-		pcmd.Println(cmd,"No subjects")
+		pcmd.Println(cmd, "No subjects")
 	}
 	return nil
 }

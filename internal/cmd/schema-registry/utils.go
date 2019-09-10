@@ -60,7 +60,7 @@ func getServiceProviderFromUrl(url string) string {
 func GetSchemaRegistryByAccountId(ctx context.Context, ccClient ccloud.SchemaRegistry, accountId string) (*srv1.SchemaRegistryCluster, error) {
 	existingClusters, err := ccClient.GetSchemaRegistryClusters(ctx, &srv1.SchemaRegistryCluster{
 		AccountId: accountId,
-		Name: "account schema-registry",
+		Name:      "account schema-registry",
 	})
 	if err != nil {
 		return nil, err

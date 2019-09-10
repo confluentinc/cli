@@ -3,6 +3,7 @@ package schema_registry
 import (
 	"context"
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"os"
 	"strconv"
 	"strings"
@@ -28,7 +29,8 @@ type describeDisplay struct {
 	Mode            string
 	ServiceProvider string
 }
-var(
+
+var (
 	renames = map[string]string{"ID": "Cluster ID", "URL": "Endpoint URL", "Used": "Used Schemas", "Available": "Available Schemas", "Compatibility": "Global Compatibility", "ServiceProvider": "Service Provider"}
 )
 
@@ -39,9 +41,10 @@ type clusterCommand struct {
 	metricClient ccsdk.Metrics
 	srClient     *srsdk.APIClient
 	ch           *pcmd.ConfigHelper
+	logger *log.Logger
 }
 
-func NewClusterCommand(config *config.Config, ccloudClient ccsdk.SchemaRegistry, ch *pcmd.ConfigHelper, srClient *srsdk.APIClient, metricClient ccsdk.Metrics) *cobra.Command {
+func NewClusterCommand(config *config.Config, ccloudClient ccsdk.SchemaRegistry, ch *pcmd.ConfigHelper, srClient *srsdk.APIClient, metricClient ccsdk.Metrics, logger *log.Logger) *cobra.Command {
 	clusterCmd := &clusterCommand{
 		Command: &cobra.Command{
 			Use:   "cluster",
@@ -52,6 +55,7 @@ func NewClusterCommand(config *config.Config, ccloudClient ccsdk.SchemaRegistry,
 		ch:           ch,
 		srClient:     srClient,
 		metricClient: metricClient,
+		logger:logger,
 	}
 	clusterCmd.init()
 	return clusterCmd.Command
@@ -137,13 +141,13 @@ func (c *clusterCommand) enable(cmd *cobra.Command, args []string) error {
 			return errors.HandleCommon(err, cmd)
 		}
 		data = describeDisplay{
-			ID:              cluster.Id,
-			URL:             cluster.Endpoint,
+			ID:  cluster.Id,
+			URL: cluster.Endpoint,
 		}
 	} else {
 		data = describeDisplay{
-			ID:              newCluster.Id,
-			URL:             newCluster.Endpoint,
+			ID:  newCluster.Id,
+			URL: newCluster.Endpoint,
 		}
 	}
 	_ = printer.RenderTableOut(&data, fields, renames, os.Stdout)
@@ -177,7 +181,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	// Get Schema usage metrics
 	metrics, err := c.metricClient.SchemaRegistryMetrics(ctx, cluster.Id)
 	if err != nil {
-		pcmd.ErrPrint(cmd,"Could not retrieve Schema Registry Schema Metrics")
+		c.logger.Warn("Could not retrieve Schema Registry Metrics")
 		numSchemas = ""
 		availableSchemas = ""
 	} else {
@@ -188,7 +192,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	compatibilityResponse, _, err := srClient.DefaultApi.GetTopLevelConfig(ctx)
 	if err != nil {
 		compatibility = ""
-		pcmd.ErrPrint(cmd,"Could not retrieve Schema Registry Compatibility")
+		c.logger.Warn( "Could not retrieve Schema Registry Compatibility")
 	} else {
 		compatibility = compatibilityResponse.CompatibilityLevel
 	}
@@ -196,7 +200,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	ModeResponse, _, err := srClient.DefaultApi.GetTopLevelMode(ctx)
 	if err != nil {
 		mode = ""
-		pcmd.ErrPrint(cmd,"Could not retrieve Schema Registry Mode")
+		c.logger.Warn( "Could not retrieve Schema Registry Mode")
 	} else {
 		mode = ModeResponse.Mode
 	}
