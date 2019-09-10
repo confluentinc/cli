@@ -1,8 +1,6 @@
 package schema_registry
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -24,7 +22,7 @@ func NewSubjectCommand(config *config.Config, ch *pcmd.ConfigHelper, srClient *s
 	subjectCmd := &subjectCommand{
 		Command: &cobra.Command{
 			Use:   "subject",
-			Short: "List subjects.",
+			Short: "Manage Schema Registry subjects.",
 		},
 		config:   config,
 		ch:       ch,
@@ -43,7 +41,7 @@ func (c *subjectCommand) init() {
 Retrieve all subjects available in a Schema Registry
 
 ::
-		ccloud schema-registry subject list
+		config.CLIName schema-registry subject list
 `,
 		RunE: c.list,
 		Args: cobra.NoArgs,
@@ -57,8 +55,8 @@ Retrieve all subjects available in a Schema Registry
 Update subject level compatibility or mode of schema registry.
 
 ::
-		ccloud schema-registry subject update <subjectname> --compatibility=BACKWARD
-		ccloud schema-registry subject update <subjectname> --mode=READWRITE
+		config.CLIName schema-registry subject update <subjectname> --compatibility=BACKWARD
+		config.CLIName schema-registry subject update <subjectname> --mode=READWRITE
 `,
 		RunE: c.update,
 		Args: cobra.ExactArgs(1),
@@ -76,7 +74,7 @@ Update subject level compatibility or mode of schema registry.
 Retrieve all versions registered under a given subject and its compatibility level.
 
 ::
-		ccloud schema-registry subject describe <subjectname>
+		config.CLIName schema-registry subject describe <subjectname>
 `,
 		RunE: c.describe,
 		Args: cobra.ExactArgs(1),
@@ -99,7 +97,7 @@ func (c *subjectCommand) update(cmd *cobra.Command, args []string) error {
 	if mode != "" {
 		return c.updateMode(cmd, args)
 	}
-	return errors.New("flag string not set")
+	return errors.New("flag --compatibility or --mode is required.")
 }
 func (c *subjectCommand) updateCompatibility(cmd *cobra.Command, args []string) error {
 	srClient, ctx, err := GetApiClient(c.srClient, c.ch)
@@ -115,7 +113,7 @@ func (c *subjectCommand) updateCompatibility(cmd *cobra.Command, args []string) 
 	if err != nil {
 		return err
 	}
-	fmt.Println("Successfully updated")
+	pcmd.Println(cmd,"Successfully updated")
 	return nil
 }
 
@@ -132,7 +130,7 @@ func (c *subjectCommand) updateMode(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("Successfully updated Subject level Mode: " + updatedMode.Mode)
+	pcmd.Println(cmd,"Successfully updated Subject level Mode: " + updatedMode.Mode)
 	return nil
 }
 
@@ -159,7 +157,7 @@ func (c *subjectCommand) list(cmd *cobra.Command, args []string) error {
 		}
 		printer.RenderCollectionTable(data, listLabels)
 	} else {
-		fmt.Println("No subjects")
+		pcmd.Println(cmd,"No subjects")
 	}
 	return nil
 }

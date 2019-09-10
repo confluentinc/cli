@@ -1,0 +1,17 @@
+Manage Schema Registry schemas.
+
+Usage:
+  ccloud schema-registry schema [command]
+
+Available Commands:
+  create      Create a schema.
+  delete      Delete one or more schemas.
+  describe    Get schema either by schema-id, or by subject/version.
+
+Flags:
+  -h, --help   help for schema
+
+Global Flags:
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "ccloud schema-registry schema [command] --help" for more information about a command.

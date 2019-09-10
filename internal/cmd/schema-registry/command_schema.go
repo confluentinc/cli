@@ -42,7 +42,7 @@ Register a new schema
 
 ::
 
-		ccloud schema-registry schema create --subject payments --schema schemafilepath
+		config.CLIName schema-registry schema create --subject payments --schema schemafilepath
 
 where schemafilepath may include these contents:
 {
@@ -73,7 +73,7 @@ Delete one or more topics. This command should only be used in extreme circumsta
 
 ::
 
-		ccloud schema-registry schema delete --subject payments --version latest`,
+		config.CLIName schema-registry schema delete --subject payments --version latest`,
 		RunE: c.delete,
 		Args: cobra.NoArgs,
 	}
@@ -91,13 +91,13 @@ Describe the schema string by schema ID
 
 ::
 
-		ccloud schema-registry describe 1337
+		config.CLIName schema-registry describe 1337
 
 Describe the schema by subject and version
 
 ::
 
-		ccloud schema-registry describe --subject payments --version latest
+		config.CLIName schema-registry describe --subject payments --version latest
 `,
 		RunE: c.describe,
 		Args: cobra.MaximumNArgs(1),
@@ -130,7 +130,7 @@ func (c *schemaCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Successfully registered schema with ID: %v", response.Id)
+	pcmd.Printf(cmd,"Successfully registered schema with ID: %v", response.Id)
 	return nil
 }
 

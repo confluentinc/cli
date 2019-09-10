@@ -3,7 +3,7 @@ package schema_registry
 import (
 	"context"
 	"fmt"
-	net_http "net/http"
+	"net/http"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -89,16 +89,16 @@ func (suite *SubjectTestSuite) SetupTest() {
 
 	suite.srClientMock = &srsdk.APIClient{
 		DefaultApi: &srMock.DefaultApi{
-			ListFunc: func(ctx context.Context) ([]string, *net_http.Response, error) {
+			ListFunc: func(ctx context.Context) ([]string, *http.Response, error) {
 				return []string{"subject 1", "subject 2"}, nil, nil
 			},
-			ListVersionsFunc: func(ctx context.Context, subject string) (int32s []int32, response *net_http.Response, e error) {
+			ListVersionsFunc: func(ctx context.Context, subject string) (int32s []int32, response *http.Response, e error) {
 				return []int32{1234, 4567}, nil, nil
 			},
-			UpdateSubjectLevelConfigFunc: func(ctx context.Context, subject string, body srsdk.ConfigUpdateRequest) (request srsdk.ConfigUpdateRequest, response *net_http.Response, e error) {
+			UpdateSubjectLevelConfigFunc: func(ctx context.Context, subject string, body srsdk.ConfigUpdateRequest) (request srsdk.ConfigUpdateRequest, response *http.Response, e error) {
 				return srsdk.ConfigUpdateRequest{Compatibility: body.Compatibility}, nil, nil
 			},
-			UpdateModeFunc: func(ctx context.Context, subject string, body srsdk.ModeUpdateRequest) (request srsdk.ModeUpdateRequest, response *net_http.Response, e error) {
+			UpdateModeFunc: func(ctx context.Context, subject string, body srsdk.ModeUpdateRequest) (request srsdk.ModeUpdateRequest, response *http.Response, e error) {
 				return srsdk.ModeUpdateRequest{Mode: body.Mode}, nil, nil
 			},
 		},

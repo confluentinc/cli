@@ -24,7 +24,7 @@ import (
 const (
 	versionString = "12345"
 	versionInt32  = int32(12345)
-	Id            = int32(123)
+	id            = int32(123)
 )
 
 type SchemaTestSuite struct {
@@ -96,10 +96,10 @@ func (suite *SchemaTestSuite) SetupTest() {
 				return srsdk.Schema{Schema: "Potatoes", Version: versionInt32}, nil, nil
 			},
 			DeleteSchemaVersionFunc: func(ctx context.Context, subject, version string) (i int32, response *net_http.Response, e error) {
-				return Id, nil, nil
+				return id, nil, nil
 			},
 			DeleteSubjectFunc: func(ctx context.Context, subject string) (int32s []int32, response *net_http.Response, e error) {
-				return []int32{Id}, nil, nil
+				return []int32{id}, nil, nil
 			},
 		},
 	}
@@ -123,7 +123,7 @@ func (suite *SchemaTestSuite) TestDescribeById() {
 	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
 	req.True(apiMock.GetSchemaCalled())
 	retVal := apiMock.GetSchemaCalls()[0]
-	req.Equal(retVal.Id, Id)
+	req.Equal(retVal.Id, id)
 }
 
 func (suite *SchemaTestSuite) TestDeleteAllSchemas() {
