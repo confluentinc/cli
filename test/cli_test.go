@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"os/exec"
 	"path"
@@ -542,10 +543,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 			require.NoError(t, err)
 		} else if r.Method == "GET" {
 			require.NotEmpty(t, r.URL.Query().Get("account_id"))
-			var apiKeys []*authv1.ApiKey
-			for _, a := range KEY_STORE {
-				apiKeys = append(apiKeys, a)
-			}
+			apiKeys := apiKeysFilter(r.URL)
 			// Return sorted data or the test output will not be stable
 			sort.Sort(ApiKeyList(apiKeys))
 			b, err := utilv1.MarshalJSONToBytes(&authv1.GetApiKeysReply{ApiKeys: apiKeys})
@@ -560,6 +558,32 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		require.NoError(t, err)
 	})
 	return httptest.NewServer(router)
+}
+
+func apiKeysFilter(url *url.URL) []*authv1.ApiKey {
+	var apiKeys []*authv1.ApiKey
+	q := url.Query()
+	uid := q.Get("UserId")
+	clusterIds := q["cluster_id"]
+
+	for _, a := range KEY_STORE {
+		uidFilter := (uid == "0") || (uid == fmt.Sprintf("%v", a.UserId))
+		clusterFilter := (len(clusterIds) == 0) || func(clusterIds []string) bool {
+			for _, c := range a.LogicalClusters {
+				for _, clusterId := range clusterIds {
+					if c.Id == clusterId {
+						return true
+					}
+				}
+			}
+			return false
+		}(clusterIds)
+
+		if uidFilter && clusterFilter {
+			apiKeys = append(apiKeys, a)
+		}
+	}
+	return apiKeys
 }
 
 func serveKafkaAPI(t *testing.T) *httptest.Server {
