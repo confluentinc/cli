@@ -8,7 +8,7 @@ This is the v2 Confluent *Cloud CLI*. It also serves as the backbone for the Con
 In particular, the repository also contains all of the code for the on-prem "*Confluent CLI*", which is also built
 as part of the repo's build process.
 
- * [Install](#install)
+  * [Install](#install)
     + [One Liner](#one-liner)
       - [Install Dir](#install-dir)
       - [Install Version](#install-version)
@@ -23,6 +23,17 @@ as part of the repo's build process.
     + [Documentation](#documentation)
   * [Testing](#testing)
     + [Integration Tests](#integration-tests)
+  * [Adding a New Command to the CLI](#adding-a-new-command-to-the-cli)
+    + [Command Overview](#command-overview)
+    + [Creating the command file](#creating-the-command-file)
+      - [`New` Function](#new-function)
+      - [`init` Function](#init-function)
+      - [`echoContext` Function](#echocontext-function)
+    + [Registering the Command](#registering-the-command)
+    + [Making the Linter Happy](#making-the-linter-happy)
+    + [Building](#building)
+    + [Integration Testing](#integration-testing)
+    + [Opening a PR!](#opening-a-pr)
 
 ## Install
 
@@ -221,3 +232,133 @@ You can skip rebuilding the CLI if it already exists in `dist` with
 You can mix and match these flags. To update the golden files without rebuilding, and log verbosely
 
     make test TEST_ARGS="./test/... -update -no-rebuild -v"
+
+
+## Adding a New Command to the CLI
+
+### Command Overview
+We'll be implementing a `ccloud echo-context <num-times>` command that outputs the current context of the CLI a specified number of times. For example, `ccloud echo-context 3` might output:
+```
+my-context
+my-context
+my-context
+```
+
+Formally, a context is a named tuple of credentials, platform/server URL, and other config parameters. Different contexts allow one user to work with different credentials and on different platforms, effectively serving as a form of simple RBAC.
+
+### Creating the command file
+
+Like all commands, this command will reside in `internal/cmd`. We'll create a `echo-context` directory, and we'll add the code below in a file called `command.go` file.
+
+```go
+package echo_context
+
+import (
+	"strconv"
+
+	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+)
+
+type command struct {
+	*cobra.Command
+	config *config.Config
+}
+
+func New(config *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
+	cmd := &command{
+		Command: &cobra.Command{
+			Use:     "echo-context <num-times>",
+			Short:   "Echo the current context a specified number of times.",
+			PreRunE: prerunner.Anonymous(),
+		},
+		config: config,
+	}
+	cmd.init()
+	return cmd.Command
+}
+
+func (c *command) init() {
+	c.Args = cobra.ExactArgs(1)
+	c.RunE = c.echoContext
+}
+
+func (c *command) echoContext(cmd *cobra.Command, args []string) error {
+	numTimes, err := strconv.Atoi(args[0])
+	if err != nil {
+		return err
+	}
+	name := c.config.CurrentContext
+	if name == "" {
+		return errors.ErrNoContext
+	}
+	for i := 0; i < numTimes; i++ {
+		pcmd.Println(cmd, name)
+	}
+	return nil
+}
+
+```
+
+#### `New` Function
+For our command, the constructor needs to have take a `Config` and `PreRunner` struct as parameters. `Config` describes the configuration of the CLI, and is parsed from a file located by default at `~/.ccloud/config.json`. `PreRunner` provides a convenient interface for running authentication functions prior to executing the actual command.
+
+We create the actual Cobra command, specifying the syntax with `Use`, a short description with `Short`, and the "pre-run" `Anonymous()` function (since no auth is needed) with `PreRunE`. Then we initialize the command using `init`, a convention used in the CLI codebase.
+
+#### `init` Function
+Here, we simply specify the number of arguments our command needs, and the function that will be executed when our command is run.
+
+#### `echoContext` Function
+This function parses the `<num-times>` arg, retrieves the context, and either prints its name to the console, or returns an error if there's no context set.
+
+
+### Registering the Command
+We must register our newly created command with the top level command located at `internal/cmd/command.go`. Since this is a `ccloud` command we register it under the `if cliName == "ccloud" {...}` branch, with `cli.AddCommand(echo_context.New(cfg, prerunner))`.
+
+### Making the Linter Happy
+If we run `make lint`, which will run the linter, we'll see that it complains about certain rules being broken. This is easily fixed. Simply add the `Use` message (`echo-context <num-times>`) to the `utilityCommands` array in `cmd/lint/main.go`. Now we're ready to build the CLI binary, and run our new command!
+
+
+### Building
+We can either run `make build`, or `make build-ccloud`, since we're only using the `ccloud` binary, in this case. After this, we can run our command, and see that it (hopefully) works!
+
+### Integration Testing
+There's not much code here to unit test, so we'll skip right to integration testing. We'll create a file named `echo_context_test.go` under the `test` directory, and add the following code:
+
+```go
+package test
+
+func (s *CLITestSuite) TestEchoContextCommands() {
+	kafkaAPIURL := serveKafkaAPI(s.T()).URL
+	loginURL := serve(s.T(), kafkaAPIURL).URL
+
+	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
+	tests := []CLITest{
+		{name: "error if echoing with no current context", args: "echo-context 3",
+			fixture: "echocontext1.golden"},
+		{args: "config context set my-context --kafka-cluster bob", fixture: "empty.golden"},
+		{args: "config context use my-context", fixture: "empty.golden"},
+		{name: "succeed if echoing set context", args: "echo-context 3", fixture: "echocontext2.golden"},
+	}
+	resetConfiguration(s.T(), "ccloud")
+	for _, tt := range tests {
+		if tt.name == "" {
+			tt.name = tt.args
+		}
+		tt.workflow = true
+		s.runCcloudTest(tt, loginURL, kafkaAPIURL)
+	}
+}
+```
+
+We'll also need to add the new golden files, `echocontext1.golden` and `echocontext2.golden`, to `test/fixtures/output`. After running the command manually to ensure the output is correct, the content for the golden files can either be:
+
+1. Copied directly from the shell
+2. Generated automatically by running `make test TEST_ARGS="./test/... -update"`, which runs all integration tests and updates all golden files to match their output. This is a risky command to run, as it essentially passes all integration tests, but is convenient to use if you can't get tests to pass from manual copying due to some hidden spaces. In addition to auto-filling the `echocontext` golden files, this command will update the `help` command test outputs to reflect the added command.
+
+### Opening a PR!
+
+That's it! As you can see, the process of adding a new command is pretty straightforward. After you're able to successfully build the CLI with `make build`, and all unit and integration tests pass with `make test`, you can open a PR!
