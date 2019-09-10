@@ -1,4 +1,0 @@
-    Principal   |     Role      | ResourceType | Name  | PatternType  
-+---------------+---------------+--------------+-------+-------------+
-  Group:hobbits | DeveloperRead | Topic        | drink | LITERAL      
-  Group:hobbits | DeveloperRead | Topic        | food  | LITERAL      
