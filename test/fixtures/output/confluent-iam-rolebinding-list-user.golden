@@ -1,7 +1,0 @@
-      Principal     |      Role      | ResourceType |  Name  | PatternType  
-+-------------------+----------------+--------------+--------+-------------+
-  Group:hobbits     | DeveloperRead  | Topic        | drink  | LITERAL      
-  Group:hobbits     | DeveloperRead  | Topic        | food   | LITERAL      
-  Group:hobbits     | DeveloperWrite | Topic        | shire- | PREFIXED     
-  Group:ringBearers | DeveloperWrite | Topic        | ring-  | PREFIXED     
-  User:frodo        | SecurityAdmin  | Cluster      |        |              
