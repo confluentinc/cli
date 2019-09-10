@@ -85,6 +85,8 @@ github.com/confluentinc/ccloud-sdk-go v0.0.10 h1:axAMt4XBzhQ14AP0UlMzKoxzTPUDEj+
 github.com/confluentinc/ccloud-sdk-go v0.0.10/go.mod h1:i8KTRwhx2El9M9PHhMr4O+SjqRCKkOD497D46iymlV8=
 github.com/confluentinc/ccloud-sdk-go v0.0.11 h1:iy5eUf3LJXFbSQWiZm7xYHlWL2BsaEsN9fITGDhMq9E=
 github.com/confluentinc/ccloud-sdk-go v0.0.11/go.mod h1:i8KTRwhx2El9M9PHhMr4O+SjqRCKkOD497D46iymlV8=
+github.com/confluentinc/ccloud-sdk-go v0.0.12 h1:wUQ4rwhUFBORH+7Pmf5kH3eRWY9wRZxQBveTFM47F8o=
+github.com/confluentinc/ccloud-sdk-go v0.0.12/go.mod h1:Hp16YLjZjIipEYoAZc+MrTJG91fdhCTPZD99e9tWVE8=
 github.com/confluentinc/ccloudapis v0.0.0-20190614011354-aae16fc9c75c/go.mod h1:RGupQo6tb6J+1BnSqqueADkoC8b/F60+Ci3FMB3wDFo=
 github.com/confluentinc/ccloudapis v0.0.0-20190614011354-f1cd913 h1:0uG1WbZL3DmuiaHEBqq9XitI4UDq4QKkSXpW3Mg7QL8=
 github.com/confluentinc/ccloudapis v0.0.0-20190614011354-f1cd913/go.mod h1:RGupQo6tb6J+1BnSqqueADkoC8b/F60+Ci3FMB3wDFo=
@@ -93,6 +95,8 @@ github.com/confluentinc/ccloudapis v0.0.0-20190813215538-49a287a86b64 h1:8NwqYqv
 github.com/confluentinc/ccloudapis v0.0.0-20190813215538-49a287a86b64/go.mod h1:GFtO4obMaNb4iRYrRYw0BiK3Ac+rVO/toNbX96DAbRs=
 github.com/confluentinc/ccloudapis v0.0.0-20190822180106-1f1a16f58a50 h1:wTee5yNUVYVOMGx8ogB3LBiraMv2seqJTaEJqYB8EtE=
 github.com/confluentinc/ccloudapis v0.0.0-20190822180106-1f1a16f58a50/go.mod h1:GFtO4obMaNb4iRYrRYw0BiK3Ac+rVO/toNbX96DAbRs=
+github.com/confluentinc/ccloudapis v0.0.0-20190905010457-36bc6dde05b4 h1:wJGAHtYH2ge6Xyn7d8ZYFJnhBiaYf+E2RskOf3QiZrs=
+github.com/confluentinc/ccloudapis v0.0.0-20190905010457-36bc6dde05b4/go.mod h1:GFtO4obMaNb4iRYrRYw0BiK3Ac+rVO/toNbX96DAbRs=
 github.com/confluentinc/go-editor v0.4.0 h1:5hMjKsKmIOmlu3Yyz8zDq66Qpdin8HSmRaMhqhxRf5Y=
 github.com/confluentinc/go-editor v0.4.0/go.mod h1:sW1NzJdowffHQzy4iSbfY/ykRFMDE69I8EaT33Ebh7Y=
 github.com/confluentinc/go-printer v0.10.0 h1:JLJOeSdJL6A0YxAK24GSuoC52sPQP/chowAapSAwoBM=
@@ -335,6 +339,8 @@ github.com/hashicorp/hcl2 v0.0.0-20181111172936-0467c0c38ca2 h1:uNBHbPmzVQJHlOPw
 github.com/hashicorp/hcl2 v0.0.0-20181111172936-0467c0c38ca2/go.mod h1:4nBvwJRETsbpa0LQ7FbXXVFmo0Crvhya1Dmpbm7cVow=
 github.com/havoc-io/gopass v0.0.0-20161007065903-6331a34a3f3b h1:CfiF+4KNCTMoALmyLDkhfKAbgNsixKceR9RPRyLCUYg=
 github.com/havoc-io/gopass v0.0.0-20161007065903-6331a34a3f3b/go.mod h1:f9gPqQgJ3af7YNppznMOqzxsLZ79DbHmZ6/lef+LlPY=
+github.com/havoc-io/gopass v0.0.0-20170602182606-9a121bec1ae7 h1:ugvine+ipOFuvsbQRR8A9JmPHxNnw2Y3N0tZ5fPKLVo=
+github.com/havoc-io/gopass v0.0.0-20170602182606-9a121bec1ae7/go.mod h1:f9gPqQgJ3af7YNppznMOqzxsLZ79DbHmZ6/lef+LlPY=
 github.com/hhatto/gorst v0.0.0-20181029133204-ca9f730cac5b h1:Jdu2tbAxkRouSILp2EbposIb8h4gO+2QuZEn3d9sKAc=
 github.com/hhatto/gorst v0.0.0-20181029133204-ca9f730cac5b/go.mod h1:HmaZGXHdSwQh1jnUlBGN2BeEYOHACLVGzYOXCbsLvxY=
 github.com/hpcloud/tail v1.0.0 h1:nfCOvKYfkgYP8hkirhJocXT2+zOD8yUNjXaWfTlyFKI=

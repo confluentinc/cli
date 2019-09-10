@@ -70,7 +70,7 @@ func (c *command) init() {
 	}
 	listCmd.Flags().String("cluster", "", "The cluster ID.")
 	listCmd.Flags().Int32("service-account-id", 0, "Service account ID. Only the API keys that belong to the service account will be listed.")
-	listCmd.Flags().Bool("all-clusters", false, "Allowing api keys from all clusters to be listed, even when an active kafka cluster is set.")
+	listCmd.Flags().Bool("all-clusters", false, "Allowing API keys from all clusters to be listed, even when an active kafka cluster is set.")
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
@@ -137,7 +137,11 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	if !allClusters {
 		kcc, err = pcmd.GetKafkaClusterConfig(cmd, c.ch)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			if err == errors.ErrNoKafkaContext {
+				return fmt.Errorf("You must either specify cluster in use or pass --all-clusters.")
+			} else {
+				return errors.HandleCommon(err, cmd)
+			}
 		}
 		logicalClusters = []*authv1.ApiKey_Cluster{{Id: kcc.ID, Type: "kafka"}}
 	}
