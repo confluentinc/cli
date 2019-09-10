@@ -1,7 +1,6 @@
 package iam
 
 import (
-	"fmt"
 	"net/http"
 	"sort"
 	"strings"
@@ -21,7 +20,7 @@ import (
 
 var (
 	resourcePatternListFields = []string{"ResourceType", "Name", "PatternType"}
-	resourcePatternListLabels = []string{"Principal", "Role", "ResourceType", "Name", "PatternType"}
+	resourcePatternListLabels = []string{"Role", "ResourceType", "Name", "PatternType"}
 
 	//TODO: please move this to a backend route
 	clusterScopedRoles        = map[string]bool{
@@ -72,19 +71,18 @@ func (c *rolebindingCommand) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List role bindings.",
-		Long:  "List the role bindings for a particular principal and/or role, and a particular scope.",
+		Long:  "List the role bindings for a particular principal and scope.",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	}
 	listCmd.Flags().String("principal", "", "Principal whose rolebindings should be listed.")
-	listCmd.Flags().String("role", "", "List rolebindings under a specific role given to a principal. Or if no principal is specified, list principals with the role.")
-	listCmd.Flags().String("resource", "", "If specified with a role and no principals, list principals with rolebindings to the role for this qualified resource.")
+	listCmd.Flags().String("role", "", "List rolebindings under a specific role given to a principal.")
 	listCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for scope of rolebinding listings.")
 	listCmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for scope of rolebinding listings.")
 	listCmd.Flags().String("ksql-cluster-id", "", "KSQL cluster ID for scope of rolebinding listings.")
 	listCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for scope of rolebinding listings.")
 	listCmd.Flags().SortFlags = false
-
+	check(listCmd.MarkFlagRequired("principal"))
 	c.AddCommand(listCmd)
 
 	createCmd := &cobra.Command{
@@ -212,18 +210,13 @@ func (c *rolebindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mds.Sco
 }
 
 func (c *rolebindingCommand) list(cmd *cobra.Command, args []string) error {
-	if cmd.Flags().Changed("principal") {
-		return c.listPrincipalResources(cmd)
-	} else if cmd.Flags().Changed("role") {
-		return c.listRolePrincipals(cmd)
-	}
-	return fmt.Errorf("required: either principal or role is required")
-}
-
-func (c *rolebindingCommand) listPrincipalResources(cmd *cobra.Command) error {
-	scopeClusters, err := c.parseAndValidateScope(cmd)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
+	role := "*"
+	if cmd.Flags().Changed("role") {
+		r, err := cmd.Flags().GetString("role")
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+		role = r
 	}
 
 	principal, err := cmd.Flags().GetString("principal")
@@ -235,13 +228,9 @@ func (c *rolebindingCommand) listPrincipalResources(cmd *cobra.Command) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	role := "*"
-	if cmd.Flags().Changed("role") {
-		r, err := cmd.Flags().GetString("role")
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-		role = r
+	scopeClusters, err := c.parseAndValidateScope(cmd)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
 	}
 
 	principalsRolesResourcePatterns, _, err := c.client.RoleBindingSummariesApi.LookupResourcesForPrincipal(c.ctx, principal, mds.Scope{Clusters: *scopeClusters})
@@ -250,14 +239,14 @@ func (c *rolebindingCommand) listPrincipalResources(cmd *cobra.Command) error {
 	}
 
 	var data [][]string
-	for principalName, rolesResourcePatterns := range principalsRolesResourcePatterns {
+	for _, rolesResourcePatterns := range principalsRolesResourcePatterns {
 		for roleName, resourcePatterns := range rolesResourcePatterns {
 			if role == "*" || roleName == role {
 				for _, resourcePattern := range resourcePatterns {
-					data = append(data, append([]string{principalName, roleName}, printer.ToRow(&resourcePattern, resourcePatternListFields)...))
+					data = append(data, append([]string{roleName}, printer.ToRow(&resourcePattern, resourcePatternListFields)...))
 				}
 				if len(resourcePatterns) == 0 && clusterScopedRoles[roleName] {
-					data = append(data, []string{principalName, roleName, "Cluster", "", ""})
+					data = append(data, []string{roleName, "Cluster", "", ""})
 				}
 			}
 		}
@@ -274,52 +263,6 @@ func (c *rolebindingCommand) listPrincipalResources(cmd *cobra.Command) error {
 	})
 
 	printer.RenderCollectionTable(data, resourcePatternListLabels)
-
-	return nil
-}
-
-func (c *rolebindingCommand) listRolePrincipals(cmd *cobra.Command) error {
-	scopeClusters, err := c.parseAndValidateScope(cmd)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
-	role, err := cmd.Flags().GetString("role")
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
-	var principals []string
-	if cmd.Flags().Changed("resource") {
-		r, err := cmd.Flags().GetString("resource")
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-		resource, err := c.parseAndValidateResourcePattern(r, false)
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-		err = c.validateRoleAndResourceType(role, resource.ResourceType)
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-		principals, _, err = c.client.RoleBindingSummariesApi.LookupPrincipalsWithRoleOnResource(c.ctx, role, resource.ResourceType, resource.Name, mds.Scope{Clusters: *scopeClusters})
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-	} else {
-		principals, _, err = c.client.RoleBindingSummariesApi.LookupPrincipalsWithRole(c.ctx, role, mds.Scope{Clusters: *scopeClusters})
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-	}
-
-	sort.Strings(principals)
-	var data [][]string
-	for _, principal := range principals {
-		data = append(data, []string{principal})
-	}
-	printer.RenderCollectionTable(data, []string{"Principal"})
 
 	return nil
 }
@@ -371,13 +314,13 @@ func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOption
 	}
 
 	return &rolebindingOptions{
-		role,
-		resource,
-		prefix,
-		principal,
-		*scopeClusters,
-		resourcesRequest,
-	},
+			role,
+			resource,
+			prefix,
+			principal,
+			*scopeClusters,
+			resourcesRequest,
+		},
 		nil
 }
 
