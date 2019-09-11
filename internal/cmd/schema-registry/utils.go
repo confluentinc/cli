@@ -70,3 +70,7 @@ func GetSchemaRegistryByAccountId(ctx context.Context, ccClient ccloud.SchemaReg
 	}
 	return nil, errors.ErrNoSrEnabled
 }
+
+func FormatDescription(description string, cliName string) string {
+	return strings.ReplaceAll(description, "{{.CLIName}}", cliName)
+}

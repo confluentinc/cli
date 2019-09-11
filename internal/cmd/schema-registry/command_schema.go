@@ -37,12 +37,12 @@ func (c *schemaCommand) init() {
 	cmd := &cobra.Command{
 		Use:   "create --subject <subject> --schema <schema-file>",
 		Short: "Create a schema.",
-		Example: `
+		Example: FormatDescription(`
 Register a new schema
 
 ::
 
-		config.CLIName schema-registry schema create --subject payments --schema schemafilepath
+		{{.CLIName}} schema-registry schema create --subject payments --schema schemafilepath
 
 where schemafilepath may include these contents:
 {
@@ -55,7 +55,7 @@ where schemafilepath may include these contents:
    ]
 }
 
-`,
+`, c.config.CLIName),
 		RunE: c.create,
 		Args: cobra.NoArgs,
 	}
@@ -68,12 +68,12 @@ where schemafilepath may include these contents:
 	cmd = &cobra.Command{
 		Use:   "delete --subject <subject> --version <version>",
 		Short: "Delete one or more schemas.",
-		Example: `
+		Example: FormatDescription(`
 Delete one or more topics. This command should only be used in extreme circumstances.
 
 ::
 
-		config.CLIName schema-registry schema delete --subject payments --version latest`,
+		{{.CLIName}} schema-registry schema delete --subject payments --version latest`, c.config.CLIName),
 		RunE: c.delete,
 		Args: cobra.NoArgs,
 	}
@@ -86,19 +86,19 @@ Delete one or more topics. This command should only be used in extreme circumsta
 	cmd = &cobra.Command{
 		Use:   "describe <schema-id> [--subject <subject>] [--version <version]",
 		Short: "Get schema either by schema-id, or by subject/version.",
-		Example: `
+		Example: FormatDescription(`
 Describe the schema string by schema ID
 
 ::
 
-		config.CLIName schema-registry describe 1337
+		{{.CLIName}} schema-registry describe 1337
 
 Describe the schema by subject and version
 
 ::
 
-		config.CLIName schema-registry describe --subject payments --version latest
-`,
+		{{.CLIName}} schema-registry describe --subject payments --version latest
+`, c.config.CLIName),
 		RunE: c.describe,
 		Args: cobra.MaximumNArgs(1),
 	}

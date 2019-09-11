@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"github.com/confluentinc/cli/internal/cmd/schema-registry"
 	"os"
 
 	"github.com/DABH/go-basher"
@@ -22,6 +21,7 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/ksql"
 	"github.com/confluentinc/cli/internal/cmd/local"
 	ps1 "github.com/confluentinc/cli/internal/cmd/prompt"
+	"github.com/confluentinc/cli/internal/cmd/schema-registry"
 	"github.com/confluentinc/cli/internal/cmd/secret"
 	"github.com/confluentinc/cli/internal/cmd/service-account"
 	"github.com/confluentinc/cli/internal/cmd/update"

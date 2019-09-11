@@ -37,12 +37,12 @@ func (c *subjectCommand) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List subjects.",
-		Example: `
+		Example: FormatDescription(`
 Retrieve all subjects available in a Schema Registry
 
 ::
 		config.CLIName schema-registry subject list
-`,
+`, c.config.CLIName),
 		RunE: c.list,
 		Args: cobra.NoArgs,
 	}
@@ -51,13 +51,13 @@ Retrieve all subjects available in a Schema Registry
 	updateCmd := &cobra.Command{
 		Use:   "update <subjectname> [--compatibility <compatibility>] [--mode <mode>] ",
 		Short: "Update subject compatibility or mode.",
-		Example: `
+		Example: FormatDescription(`
 Update subject level compatibility or mode of schema registry.
 
 ::
 		config.CLIName schema-registry subject update <subjectname> --compatibility=BACKWARD
 		config.CLIName schema-registry subject update <subjectname> --mode=READWRITE
-`,
+`, c.config.CLIName),
 		RunE: c.update,
 		Args: cobra.ExactArgs(1),
 	}
@@ -70,12 +70,12 @@ Update subject level compatibility or mode of schema registry.
 	describeCmd := &cobra.Command{
 		Use:   "describe <subjectname>",
 		Short: "Describe subject versions and compatibility.",
-		Example: `
+		Example: FormatDescription(`
 Retrieve all versions registered under a given subject and its compatibility level.
 
 ::
 		config.CLIName schema-registry subject describe <subjectname>
-`,
+`, c.config.CLIName),
 		RunE: c.describe,
 		Args: cobra.ExactArgs(1),
 	}

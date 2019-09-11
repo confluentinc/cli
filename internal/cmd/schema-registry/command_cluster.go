@@ -2,7 +2,6 @@ package schema_registry
 
 import (
 	"context"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	"os"
 	"strconv"
 	"strings"
@@ -14,6 +13,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/go-printer"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 )
@@ -64,7 +64,7 @@ func (c *clusterCommand) init() {
 	createCmd := &cobra.Command{
 		Use:     "enable",
 		Short:   `Enable Schema Registry for this environment.`,
-		Example: `config.CLIName schema-registry cluster enable --cloud gcp --geo us`,
+		Example: FormatDescription(`{{.CLIName}} schema-registry cluster enable --cloud gcp --geo us`, c.config.CLIName),
 		RunE:    c.enable,
 		Args:    cobra.NoArgs,
 	}
@@ -77,7 +77,7 @@ func (c *clusterCommand) init() {
 	describeCmd := &cobra.Command{
 		Use:     "describe",
 		Short:   `Describe the Schema Registry cluster for this environment.`,
-		Example: `config.CLIName schema-registry cluster describe`,
+		Example: FormatDescription(`{{.CLIName}} schema-registry cluster describe`, c.config.CLIName),
 		RunE:    c.describe,
 		Args:    cobra.NoArgs,
 	}
@@ -85,11 +85,11 @@ func (c *clusterCommand) init() {
 	updateCmd := &cobra.Command{
 		Use:   "update",
 		Short: `Update global mode or compatibility of Schema Registry.`,
-		Example: `Update top level compatibility or mode of schema registry.
+		Example: FormatDescription(`Update top level compatibility or mode of schema registry.
 
 ::
-		config.CLIName schema-registry cluster update <subjectname> --compatibility=BACKWARD
-		config.CLIName schema-registry cluster update <subjectname> --mode=READWRITE`,
+		{{.CLIName}} schema-registry cluster update <subjectname> --compatibility=BACKWARD
+		{{.CLIName}} schema-registry cluster update <subjectname> --mode=READWRITE`, c.config.CLIName),
 		RunE: c.update,
 		Args: cobra.NoArgs,
 	}
