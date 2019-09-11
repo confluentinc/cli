@@ -8,6 +8,22 @@ This is the v2 Confluent *Cloud CLI*. It also serves as the backbone for the Con
 In particular, the repository also contains all of the code for the on-prem "*Confluent CLI*", which is also built
 as part of the repo's build process.
 
+ * [Install](#install)
+    + [One Liner](#one-liner)
+      - [Install Dir](#install-dir)
+      - [Install Version](#install-version)
+    + [Binary Tarball from S3](#binary-tarball-from-s3)
+    + [Building From Source](#building-from-source)
+  * [Developing](#developing)
+    + [Go Version](#go-version)
+    + [File Layout](#file-layout)
+    + [Build Other Platforms](#build-other-platforms)
+    + [URLS](#urls)
+  * [Installers](#installers)
+    + [Documentation](#documentation)
+  * [Testing](#testing)
+    + [Integration Tests](#integration-tests)
+
 ## Install
 
 The CLI has pre-built binaries for macOS, Linux, and Windows, on both i386 and x86_64 architectures.

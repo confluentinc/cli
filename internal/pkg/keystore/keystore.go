@@ -1,4 +1,4 @@
-//go:generate mocker --prefix "" --dst ../mock/keystore.go --pkg mock --selfpkg github.com/confluentinc/cli keystore.go KeyStore
+//go:generate go run github.com/travisjeffery/mocker/cmd/mocker --prefix "" --dst ../mock/keystore.go --pkg mock keystore.go KeyStore
 package keystore
 
 import (

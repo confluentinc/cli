@@ -1,5 +1,5 @@
-//go:generate mocker --prefix "" --dst ../mock/s3api.go --pkg mock --selfpkg github.com/aws/aws-sdk-go/service/s3/s3iface $GOPATH/src/github.com/aws/aws-sdk-go/service/s3/s3iface/interface.go S3API
-//go:generate mocker --prefix "" --dst ../mock/Downloader.go --pkg mock --selfpkg github.com/confluentinc/cli private.go Downloader
+//go:generate sh -c "go run github.com/travisjeffery/mocker/cmd/mocker --prefix \"\" --dst ../mock/s3api.go --pkg mock \"$(go list -f '{{ .Dir }}' -m github.com/aws/aws-sdk-go)/service/s3/s3iface/interface.go\" S3API"
+//go:generate go run github.com/travisjeffery/mocker/cmd/mocker --prefix "" --dst ../mock/Downloader.go --pkg mock private.go Downloader
 package s3
 
 import (

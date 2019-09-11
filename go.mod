@@ -36,7 +36,7 @@ require (
 	github.com/go-critic/go-critic v0.3.4 // indirect
 	github.com/gobuffalo/flect v0.1.3
 	github.com/gogo/protobuf v1.2.1
-	github.com/golang/mock v1.2.0
+	github.com/golang/mock v1.3.1
 	github.com/golang/protobuf v1.3.2
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/golangci/errcheck v0.0.0-20181223084120-ef45e06d44b6 // indirect
@@ -83,7 +83,7 @@ require (
 	github.com/shurcooL/go v0.0.0-20190704215121-7189cc372560 // indirect
 	github.com/sirupsen/logrus v1.4.2 // indirect
 	github.com/spf13/afero v1.2.2 // indirect
-	github.com/spf13/cobra v0.0.5
+	github.com/spf13/cobra v0.0.6-0.20190805155617-b80588d523ec
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.3
 	github.com/spf13/viper v1.4.0
@@ -91,6 +91,7 @@ require (
 	github.com/stretchr/testify v1.4.0
 	github.com/tidwall/pretty v0.0.0-20190325153808-1166b9ac2b65
 	github.com/timakin/bodyclose v0.0.0-20190721030226-87058b9bfcec // indirect
+	github.com/travisjeffery/mocker v1.1.1-0.20190810020704-1ec879a36d65 // indirect
 	go.opencensus.io v0.22.0 // indirect
 	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4
 	golang.org/x/mobile v0.0.0-20190814143026-e8b3e6111d02 // indirect
