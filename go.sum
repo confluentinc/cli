@@ -86,6 +86,10 @@ github.com/confluentinc/ccloud-sdk-go v0.0.10/go.mod h1:i8KTRwhx2El9M9PHhMr4O+Sj
 github.com/confluentinc/ccloud-sdk-go v0.0.11 h1:iy5eUf3LJXFbSQWiZm7xYHlWL2BsaEsN9fITGDhMq9E=
 github.com/confluentinc/ccloud-sdk-go v0.0.11/go.mod h1:i8KTRwhx2El9M9PHhMr4O+SjqRCKkOD497D46iymlV8=
 github.com/confluentinc/ccloudapis v0.0.0-20190614011354-aae16fc9c75c/go.mod h1:RGupQo6tb6J+1BnSqqueADkoC8b/F60+Ci3FMB3wDFo=
+github.com/confluentinc/ccloudapis v0.0.0-20190623041722-9cae0f4c848d h1:Ukmdkqu9sYkuWF8wsFztbygxEUGQGAtRasJ9UydPrBc=
+github.com/confluentinc/ccloudapis v0.0.0-20190623041722-9cae0f4c848d/go.mod h1:RGupQo6tb6J+1BnSqqueADkoC8b/F60+Ci3FMB3wDFo=
+github.com/confluentinc/ccloudapis v0.0.0-20190628232638-10144ab4d3a3 h1:HyyegnXMP5JE1HR49CvW5YjtxRCAULcuxSTYNGDHo0s=
+github.com/confluentinc/ccloudapis v0.0.0-20190628232638-10144ab4d3a3/go.mod h1:x51Nsnx99FXjyZfdKlFeYlhhCv1CW7jo8hmtQnzPfv8=
 github.com/confluentinc/ccloudapis v0.0.0-20190614011354-f1cd913 h1:0uG1WbZL3DmuiaHEBqq9XitI4UDq4QKkSXpW3Mg7QL8=
 github.com/confluentinc/ccloudapis v0.0.0-20190614011354-f1cd913/go.mod h1:RGupQo6tb6J+1BnSqqueADkoC8b/F60+Ci3FMB3wDFo=
 github.com/confluentinc/ccloudapis v0.0.0-20190802001453-9d2b40c45d9f/go.mod h1:GFtO4obMaNb4iRYrRYw0BiK3Ac+rVO/toNbX96DAbRs=
