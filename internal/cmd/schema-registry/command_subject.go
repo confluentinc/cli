@@ -1,12 +1,13 @@
 package schema_registry
 
 import (
-	"fmt"
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/go-printer"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-	"github.com/spf13/cobra"
 )
 
 type subjectCommand struct {
@@ -21,7 +22,7 @@ func NewSubjectCommand(config *config.Config, ch *pcmd.ConfigHelper, srClient *s
 	subjectCmd := &subjectCommand{
 		Command: &cobra.Command{
 			Use:   "subject",
-			Short: "List subjects",
+			Short: "Manage Schema Registry subjects.",
 		},
 		config:   config,
 		ch:       ch,
@@ -33,19 +34,104 @@ func NewSubjectCommand(config *config.Config, ch *pcmd.ConfigHelper, srClient *s
 
 func (c *subjectCommand) init() {
 
-	cmd := &cobra.Command{
+	listCmd := &cobra.Command{
 		Use:   "list",
-		Short: "List subjects",
-		Example: `
+		Short: "List subjects.",
+		Example: FormatDescription(`
 Retrieve all subjects available in a Schema Registry
 
 ::
-		ccloud schema-registry subject list
-`,
+		config.CLIName schema-registry subject list
+`, c.config.CLIName),
 		RunE: c.list,
 		Args: cobra.NoArgs,
 	}
-	c.AddCommand(cmd)
+	c.AddCommand(listCmd)
+	// Update
+	updateCmd := &cobra.Command{
+		Use:   "update <subjectname> [--compatibility <compatibility>] [--mode <mode>] ",
+		Short: "Update subject compatibility or mode.",
+		Example: FormatDescription(`
+Update subject level compatibility or mode of schema registry.
+
+::
+		config.CLIName schema-registry subject update <subjectname> --compatibility=BACKWARD
+		config.CLIName schema-registry subject update <subjectname> --mode=READWRITE
+`, c.config.CLIName),
+		RunE: c.update,
+		Args: cobra.ExactArgs(1),
+	}
+	updateCmd.Flags().String("compatibility", "", "Can be BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, or NONE.")
+	updateCmd.Flags().String("mode", "", "Can be READWRITE, READ, OR WRITE.")
+	updateCmd.Flags().SortFlags = false
+	c.AddCommand(updateCmd)
+
+	// Describe
+	describeCmd := &cobra.Command{
+		Use:   "describe <subjectname>",
+		Short: "Describe subject versions and compatibility.",
+		Example: FormatDescription(`
+Retrieve all versions registered under a given subject and its compatibility level.
+
+::
+		config.CLIName schema-registry subject describe <subjectname>
+`, c.config.CLIName),
+		RunE: c.describe,
+		Args: cobra.ExactArgs(1),
+	}
+	c.AddCommand(describeCmd)
+}
+
+func (c *subjectCommand) update(cmd *cobra.Command, args []string) error {
+	compat, err := cmd.Flags().GetString("compatibility")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	if compat != "" {
+		return c.updateCompatibility(cmd, args)
+	}
+	mode, err := cmd.Flags().GetString("mode")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	if mode != "" {
+		return c.updateMode(cmd, args)
+	}
+	return errors.New("flag --compatibility or --mode is required.")
+}
+func (c *subjectCommand) updateCompatibility(cmd *cobra.Command, args []string) error {
+	srClient, ctx, err := GetApiClient(c.srClient, c.ch)
+	if err != nil {
+		return err
+	}
+	compat, err := cmd.Flags().GetString("compatibility")
+	if err != nil {
+		return err
+	}
+	updateReq := srsdk.ConfigUpdateRequest{Compatibility: compat}
+	_, _, err = srClient.DefaultApi.UpdateSubjectLevelConfig(ctx, args[0], updateReq)
+	if err != nil {
+		return err
+	}
+	pcmd.Println(cmd, "Successfully updated")
+	return nil
+}
+
+func (c *subjectCommand) updateMode(cmd *cobra.Command, args []string) error {
+	mode, err := cmd.Flags().GetString("mode")
+	if err != nil {
+		return err
+	}
+	srClient, ctx, err := GetApiClient(c.srClient, c.ch)
+	if err != nil {
+		return err
+	}
+	updatedMode, _, err := srClient.DefaultApi.UpdateMode(ctx, args[0], srsdk.ModeUpdateRequest{Mode: mode})
+	if err != nil {
+		return err
+	}
+	pcmd.Println(cmd, "Successfully updated Subject level Mode: "+updatedMode.Mode)
+	return nil
 }
 
 func (c *subjectCommand) list(cmd *cobra.Command, args []string) error {
@@ -71,7 +157,20 @@ func (c *subjectCommand) list(cmd *cobra.Command, args []string) error {
 		}
 		printer.RenderCollectionTable(data, listLabels)
 	} else {
-		fmt.Println("No subjects")
+		pcmd.Println(cmd, "No subjects")
 	}
+	return nil
+}
+
+func (c *subjectCommand) describe(cmd *cobra.Command, args []string) error {
+	srClient, ctx, err := GetApiClient(c.srClient, c.ch)
+	if err != nil {
+		return err
+	}
+	versions, _, err := srClient.DefaultApi.ListVersions(ctx, args[0])
+	if err != nil {
+		return err
+	}
+	PrintVersions(versions)
 	return nil
 }
