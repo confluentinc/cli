@@ -32,11 +32,22 @@ func GetKafkaClusterConfig(cmd *cobra.Command, ch *ConfigHelper, flag ...string)
 	if err != nil {
 		return nil, err
 	}
-	environment, err := GetEnvironment(cmd, ch.Config)
+	credType, err := ch.Config.CredentialType()
 	if err != nil {
 		return nil, err
 	}
-	return ch.KafkaClusterConfig(clusterID, environment)
+	switch credType {
+	case config.APIKey:
+		return ch.Config.KafkaClusterConfig()
+	case config.Username:
+		fallthrough
+	default:
+		environment, err := GetEnvironment(cmd, ch.Config)
+		if err != nil {
+			return nil, err
+		}
+		return ch.KafkaClusterConfig(clusterID, environment)
+	}
 }
 
 func GetEnvironment(cmd *cobra.Command, cfg *config.Config) (string, error) {

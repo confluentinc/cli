@@ -8,8 +8,9 @@ import (
 	"os/signal"
 	"strings"
 
-	"github.com/Shopify/sarama"
 	"github.com/google/uuid"
+
+	"github.com/Shopify/sarama"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go"
@@ -30,7 +31,7 @@ type topicCommand struct {
 }
 
 // NewTopicCommand returns the Cobra command for Kafka topic.
-func NewTopicCommand(prerunner pcmd.PreRunner, config *config.Config, client ccloud.Kafka, ch *pcmd.ConfigHelper) *cobra.Command {
+func NewTopicCommand(prerunner pcmd.PreRunner, config *config.Config, client ccloud.Kafka, ch *pcmd.ConfigHelper) (*cobra.Command, error) {
 	cmd := &topicCommand{
 		Command: &cobra.Command{
 			Use:   "topic",
@@ -41,12 +42,53 @@ func NewTopicCommand(prerunner pcmd.PreRunner, config *config.Config, client ccl
 		ch:        ch,
 		prerunner: prerunner,
 	}
-	cmd.init()
-	return cmd.Command
+	err := cmd.init()
+	if err != nil {
+		return nil, err
+	}
+	return cmd.Command, nil
 }
 
-func (c *topicCommand) init() {
+func (c *topicCommand) init() error {
 	cmd := &cobra.Command{
+		Use:               "produce <topic>",
+		Short:             "Produce messages to a Kafka topic.",
+		RunE:              c.produce,
+		Args:              cobra.ExactArgs(1),
+		PersistentPreRunE: c.prerunner.HasAPIKey(),
+	}
+	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	cmd.Flags().String("delimiter", ":", "The key/value delimiter.")
+	cmd.Flags().SortFlags = false
+	c.AddCommand(cmd)
+
+	cmd = &cobra.Command{
+		Use:   "consume <topic>",
+		Short: "Consume messages from a Kafka topic.",
+		Example: `
+Consume items from the 'my_topic' topic and press 'Ctrl + C' to exit.
+
+::
+
+	ccloud kafka topic consume -b my_topic`,
+		RunE:              c.consume,
+		Args:              cobra.ExactArgs(1),
+		PersistentPreRunE: c.prerunner.HasAPIKey(),
+	}
+	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	cmd.Flags().String("group", fmt.Sprintf("confluent_cli_consumer_%s", uuid.New()), "Consumer group ID.")
+	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
+	cmd.Flags().SortFlags = false
+	c.AddCommand(cmd)
+	credType, err := c.config.CredentialType()
+	if err == nil && credType == config.APIKey {
+		return nil
+	}
+	// Propagate errors other than ErrNoContext.
+	if err != nil && err != errors.ErrNoContext {
+		return err
+	}
+	cmd = &cobra.Command{
 		Use:   "list",
 		Short: "List Kafka topics.",
 		Example: `
@@ -132,38 +174,7 @@ Delete the topics 'my_topic' and 'my_topic_avro'. Use this command carefully as 
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
-
-	cmd = &cobra.Command{
-		Use:               "produce <topic>",
-		Short:             "Produce messages to a Kafka topic.",
-		RunE:              c.produce,
-		Args:              cobra.ExactArgs(1),
-		PersistentPreRunE: c.prerunner.AuthenticatedAPIKey(),
-	}
-	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	cmd.Flags().String("delimiter", ":", "The key/value delimiter.")
-	cmd.Flags().SortFlags = false
-	c.AddCommand(cmd)
-
-	cmd = &cobra.Command{
-		Use:   "consume <topic>",
-		Short: "Consume messages from a Kafka topic.",
-		Example: `
-Consume items from the 'my_topic' topic and press 'Ctrl + C' to exit.
-
-::
-
-	ccloud kafka topic consume -b my_topic`,
-		RunE:              c.consume,
-		Args:              cobra.ExactArgs(1),
-		PersistentPreRunE: c.prerunner.AuthenticatedAPIKey(),
-	}
-	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	cmd.Flags().String("group", fmt.Sprintf("confluent_cli_consumer_%s", uuid.New()), "Consumer group ID.")
-	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
-	cmd.Flags().SortFlags = false
-	c.AddCommand(cmd)
-
+	return nil
 }
 
 func (c *topicCommand) list(cmd *cobra.Command, args []string) error {

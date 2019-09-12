@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/go-editor"
-	mds "github.com/confluentinc/mds-sdk-go"
+	"github.com/confluentinc/mds-sdk-go"
 )
 
 var messages = map[error]string{
@@ -49,13 +49,17 @@ func HandleCommon(err error, cmd *cobra.Command) error {
 	switch e := err.(type) {
 	case *UnspecifiedKafkaClusterError:
 		cmd.SilenceUsage = true
-		return fmt.Errorf("no auth found for Kafka %s, please run `ccloud kafka cluster auth` first", err.Error())
+		return fmt.Errorf("no auth found for Kafka %s, please run `ccloud kafka cluster auth` first", e.KafkaClusterID)
 	case *UnspecifiedAPIKeyError:
 		cmd.SilenceUsage = true
 		return fmt.Errorf("no API key selected for %s, please select an api-key first (e.g., with `api-key use`)", e.ClusterID)
 	case *UnconfiguredAPISecretError:
 		cmd.SilenceUsage = true
 		return err
+	case *UnspecifiedCredentialError:
+		cmd.SilenceUsage = true
+		return fmt.Errorf("context \"%s\" has corrupted credentials. To fix, please remove the config file, "+
+			"and run `login` or `init`", e.ContextName)
 	// TODO: ErrEditing is declared incorrectly as "type ErrEditing error"
 	//  That doesn't work for type switches, so put last otherwise everything will hit this case
 	case editor.ErrEditing:
