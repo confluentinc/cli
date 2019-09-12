@@ -1,0 +1,46 @@
+package apikey
+
+import (
+	"strings"
+
+	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+)
+
+const (
+	kafkaResourceType = "kafka"
+	srResourceType    = "schema-registry"
+)
+
+func (c *command) resolveResourceID(cmd *cobra.Command, args []string) (resourceType string, accId string, clusterId string, currentKey string, err error) {
+	resource, err := cmd.Flags().GetString("resource")
+	if err != nil {
+		return "", "", "", "", err
+	}
+	// If resource is schema registry
+	if strings.HasPrefix(resource, "lsrc-") {
+		src, err := pcmd.GetSchemaRegistry(cmd, c.ch)
+		if err != nil {
+			return "", "", "", "", err
+		}
+		if src == nil {
+			return "", "", "", "", errors.ErrNoSrEnabled
+		}
+		clusterInContext, _ := c.config.SchemaRegistryCluster()
+		if clusterInContext == nil || clusterInContext.SrCredentials == nil {
+			currentKey = ""
+		} else {
+			currentKey = clusterInContext.SrCredentials.Key
+		}
+		return srResourceType, src.AccountId, src.Id, currentKey, nil
+
+	} else {
+		kcc, err := pcmd.GetKafkaClusterConfig(cmd, c.ch, "resource")
+		if err != nil {
+			return "", "", "", "", err
+		}
+		return kafkaResourceType, c.config.Auth.Account.Id, kcc.ID, kcc.APIKey, nil
+	}
+}
