@@ -43,7 +43,7 @@ func main() {
 		}
 	}
 
-	version := cliVersion.NewVersion(cfg.CLIName, cfg.Name(), version, commit, date, host)
+	version := cliVersion.NewVersion(cfg.CLIName, cfg.Name(), cfg.Support(), version, commit, date, host)
 
 	cli, err := cmd.NewConfluentCommand(cliName, cfg, version, logger)
 	if err != nil {

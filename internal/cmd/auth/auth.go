@@ -32,12 +32,12 @@ type commands struct {
 }
 
 // New returns a list of auth-related Cobra commands.
-func New(prerunner pcmd.PreRunner, config *config.Config, logger *log.Logger, mdsClient *mds.APIClient) []*cobra.Command {
+func New(prerunner pcmd.PreRunner, config *config.Config, logger *log.Logger, mdsClient *mds.APIClient, userAgent string) []*cobra.Command {
 	var defaultAnonHTTPClientFactory = func(baseURL string, logger *log.Logger) *ccloud.Client {
-		return ccloud.NewClient(baseURL, ccloud.BaseClient, logger)
+		return ccloud.NewClient(&ccloud.Params{BaseURL: baseURL, HttpClient: ccloud.BaseClient, Logger: logger, UserAgent: userAgent})
 	}
 	var defaultJwtHTTPClientFactory = func(ctx context.Context, jwt string, baseURL string, logger *log.Logger) *ccloud.Client {
-		return ccloud.NewClientWithJWT(ctx, jwt, baseURL, logger)
+		return ccloud.NewClientWithJWT(ctx, jwt, &ccloud.Params{BaseURL: baseURL, Logger: logger, UserAgent: userAgent})
 	}
 	return newCommands(prerunner, config, logger, mdsClient, pcmd.NewPrompt(os.Stdin),
 		defaultAnonHTTPClientFactory, defaultJwtHTTPClientFactory,

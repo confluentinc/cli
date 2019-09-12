@@ -8,6 +8,8 @@ require (
 	github.com/Shopify/sarama v1.20.1
 	github.com/Shopify/toxiproxy v2.1.3+incompatible // indirect
 	github.com/alcortesm/tgz v0.0.0-20161220082320-9c5fe88206d7 // indirect
+	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
+	github.com/alecthomas/units v0.0.0-20190717042225-c3de453c63f4 // indirect
 	github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239 // indirect
 	github.com/antihax/optional v0.0.0-20180407024304-ca021399b1a6 // indirect
 	github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da
@@ -15,8 +17,8 @@ require (
 	github.com/aws/aws-sdk-go v1.15.64
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
-	github.com/confluentinc/ccloud-sdk-go v0.0.8-0.20190805024857-5613bbaa771b
-	github.com/confluentinc/ccloudapis v0.0.0-20190813215538-49a287a86b64
+	github.com/confluentinc/ccloud-sdk-go v0.0.12
+	github.com/confluentinc/ccloudapis v0.0.0-20190905010457-36bc6dde05b4
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-printer v0.10.0
 	github.com/confluentinc/mds-sdk-go v0.0.0-20190610045202-137cf78b1f6a
@@ -83,15 +85,14 @@ require (
 	github.com/shurcooL/go v0.0.0-20190704215121-7189cc372560 // indirect
 	github.com/sirupsen/logrus v1.4.2 // indirect
 	github.com/spf13/afero v1.2.2 // indirect
-	github.com/spf13/cobra v0.0.5
+	github.com/spf13/cobra v0.0.6-0.20190805155617-b80588d523ec
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.3
 	github.com/spf13/viper v1.4.0
 	github.com/stretchr/objx v0.2.0 // indirect
-	github.com/stretchr/testify v1.3.0
+	github.com/stretchr/testify v1.4.0
 	github.com/tidwall/pretty v0.0.0-20190325153808-1166b9ac2b65
 	github.com/timakin/bodyclose v0.0.0-20190721030226-87058b9bfcec // indirect
-	github.com/ugorji/go v1.1.7 // indirect
 	go.opencensus.io v0.22.0 // indirect
 	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4
 	golang.org/x/mobile v0.0.0-20190814143026-e8b3e6111d02 // indirect

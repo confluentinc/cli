@@ -39,7 +39,6 @@ import (
 	environments "github.com/confluentinc/cli/internal/pkg/sdk/environment"
 	kafkas "github.com/confluentinc/cli/internal/pkg/sdk/kafka"
 	ksqls "github.com/confluentinc/cli/internal/pkg/sdk/ksql"
-	//connects "github.com/confluentinc/cli/internal/pkg/sdk/connect"
 	users "github.com/confluentinc/cli/internal/pkg/sdk/user"
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
 	versions "github.com/confluentinc/cli/internal/pkg/version"
@@ -74,7 +73,9 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		return nil, err
 	}
 
-	client := ccloud.NewClientWithJWT(context.Background(), cfg.AuthToken, cfg.AuthURL, cfg.Logger)
+	client := ccloud.NewClientWithJWT(context.Background(), cfg.AuthToken, &ccloud.Params{
+		BaseURL: cfg.AuthURL, Logger: cfg.Logger, UserAgent: ver.UserAgent,
+	})
 
 	ch := &pcmd.ConfigHelper{Config: cfg, Client: client, Version: ver}
 	fs := &io.RealFileSystem{}
@@ -106,9 +107,10 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 
 	cli.AddCommand(completion.NewCompletionCmd(cli, cliName))
 	cli.AddCommand(update.New(cliName, cfg, ver, prompt, updateClient))
-
-	cli.AddCommand(auth.New(prerunner, cfg, logger, mdsClient)...)
-	resolver := &pcmd.FlagResolverImpl{Prompt: prompt, Out: os.Stdout}
+  cli.AddCommand(auth.New(prerunner, cfg, logger, mdsClient, ver.UserAgent)...)
+  
+  resolver := &pcmd.FlagResolverImpl{Prompt: prompt, Out: os.Stdout}
+  
 	if cliName == "ccloud" {
 		kafkaClient := kafkas.New(client, logger)
 		cmd, err := kafka.New(prerunner, cfg, kafkaClient, ch)
@@ -133,8 +135,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 
 		// Schema Registry
 		// If srClient is nil, the function will look it up after prerunner verifies authentication. Exposed so tests can pass mocks
-		sr := schema_registry.New(prerunner, cfg, client.SchemaRegistry, ch, nil, client.Metrics)
-		sr.Hidden = true
+		sr := schema_registry.New(prerunner, cfg, client.SchemaRegistry, ch, nil, client.Metrics, logger)
 		cli.AddCommand(sr)
 
 		conn = ksql.New(prerunner, cfg, ksqls.New(client, logger), kafkaClient, userClient, ch)
