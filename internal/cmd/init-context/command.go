@@ -3,10 +3,11 @@ package init
 import (
 	"strings"
 
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/spf13/cobra"
 )
 
 type command struct {
@@ -37,12 +38,26 @@ func New(prerunner pcmd.PreRunner, config *config.Config, prompt pcmd.Prompt, re
 }
 
 func (c *command) init() {
-	c.Flags().Bool("kafka-auth", false, "Interactively initialize with bootstrap url, API key, and API secret.")
+	c.Flags().Bool("kafka-auth", false, "Initialize with bootstrap url, API key, and API secret. " +
+		"Can be done interactively, with flags, or both.")
 	c.Flags().String("bootstrap", "", "Bootstrap URL.")
 	c.Flags().String("api-key", "", "API key.")
 	c.Flags().String("api-secret", "", "API secret file, starting with '@'.")
 	c.Flags().SortFlags = false
 	c.RunE = c.initContext
+}
+
+func (c *command) parseStringFlag(name string, prompt string, secure bool) (string, error) {
+	str, err := c.Flags().GetString(name)
+	if err != nil {
+		return "", err
+	}
+	val, err := c.resolver.ValueFrom(str, prompt, secure)
+	if err != nil {
+		return "", err
+	}
+	val = strings.TrimSpace(val)
+	return val, nil
 }
 
 func (c *command) initContext(cmd *cobra.Command, args []string) error {
@@ -51,44 +66,22 @@ func (c *command) initContext(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
+	eh := new(errors.Handler)
 	if !kafkaAuth {
 		return errors.HandleCommon(errors.New("only kafka-auth is currently supported"), cmd)
 	}
-	bootstrapURL, err := c.Flags().GetString("bootstrap")
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
+	bootstrapURL := eh.HandleString(c.parseStringFlag("bootstrap", "Bootstrap URL: ", false))
+	apiKey := eh.HandleString(c.parseStringFlag("api-key", "API Key: ", false))
+	apiSecret := eh.HandleString(c.parseStringFlag("api-secret", "API Secret: ", true))
+	if eh.Err != nil {
+		return errors.HandleCommon(eh.Err, cmd)
 	}
-	bootstrapURL, err = c.resolver.ValueFrom(bootstrapURL, "Bootstrap URL: ", false)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	bootstrapURL = strings.TrimSpace(bootstrapURL)
-	apiKey, err := c.Flags().GetString("api-key")
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	apiKey, err = c.resolver.ValueFrom(apiKey, "API Key: ", false)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	apiKey = strings.TrimSpace(apiKey)
-	apiSecret, err := c.Flags().GetString("api-secret")
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	apiSecret, err = c.resolver.ValueFrom(apiSecret, "API Secret: ", true)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	apiSecret = strings.TrimSpace(apiSecret)
-	err = c.addContext(contextName, bootstrapURL, apiKey, apiSecret)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
+	eh.Err = nil
+	eh.Handle(c.addContext(contextName, bootstrapURL, apiKey, apiSecret))
 	// Set current context.
-	err = c.config.SetContext(contextName)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
+	eh.Handle(c.config.SetContext(contextName))
+	if eh.Err != nil {
+		return errors.HandleCommon(eh.Err, cmd)
 	}
 	return nil
 }

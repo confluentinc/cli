@@ -667,13 +667,14 @@ func TestConfig_KafkaClusterConfig(t *testing.T) {
 	type fields struct {
 		Contexts       map[string]*Context
 		CurrentContext string
+		Filename       string
 	}
 	tests := []struct {
-		name    string
-		fields  fields
-		want    *KafkaClusterConfig
-		wantErr bool
-		err     error
+		name      string
+		fields    fields
+		want      *KafkaClusterConfig
+		wantErr   bool
+		err error
 	}{
 		{
 			name: "success getting Kafka cluster config",
@@ -732,11 +733,13 @@ func TestConfig_KafkaClusterConfig(t *testing.T) {
 					Name:  "test-context",
 					Kafka: "nonexistent-cluster",
 				}},
+				Filename: "/tmp/TestConfig_KafkaClusterConfig.json",
 				CurrentContext: "test-context",
 			},
 			wantErr: true,
 			err: errors.New("the configuration of context \"test-context\" has been corrupted. " +
-				"To fix, please remove the config file, and run `login` or `init`"),
+				"To fix, please remove the config file located at /tmp/TestConfig_KafkaClusterConfig.json," +
+				" and run `login` or `init`"),
 		},
 	}
 	for _, tt := range tests {
@@ -744,6 +747,7 @@ func TestConfig_KafkaClusterConfig(t *testing.T) {
 			c := &Config{
 				Contexts:       tt.fields.Contexts,
 				CurrentContext: tt.fields.CurrentContext,
+				Filename:       tt.fields.Filename,
 			}
 			got, err := c.KafkaClusterConfig()
 			if (err != nil) != tt.wantErr {

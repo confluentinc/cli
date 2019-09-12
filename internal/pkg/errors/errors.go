@@ -49,8 +49,7 @@ type UnspecifiedCredentialError struct {
 }
 
 func (e *UnspecifiedCredentialError) Error() string {
-	return fmt.Sprintf("context \"%s\" has corrupted credentials. To fix, please remove the config file, "+
-		"and run `login` or `init`", e.ContextName)
+	return e.ContextName
 }
 
 // UnconfiguredAPISecretError means the user needs to store the API secret locally
@@ -81,4 +80,26 @@ func Errorf(fmt string, args ...interface{}) error {
 
 func Cause(err error) error {
 	return errors.Cause(err)
+}
+
+type Handler struct {
+	Err error
+}
+
+func (h *Handler) HandleString(s string, e error) string {
+	if h.Err != nil {
+		return ""
+	}
+	h.Err = e
+	if h.Err != nil {
+		return ""
+	}
+	return s
+}
+
+func (h *Handler) Handle(err error) {
+	if h.Err != nil {
+		return
+	}
+	h.Err = err
 }

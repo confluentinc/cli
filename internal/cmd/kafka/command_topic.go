@@ -31,7 +31,7 @@ type topicCommand struct {
 }
 
 // NewTopicCommand returns the Cobra command for Kafka topic.
-func NewTopicCommand(prerunner pcmd.PreRunner, config *config.Config, client ccloud.Kafka, ch *pcmd.ConfigHelper) *cobra.Command {
+func NewTopicCommand(prerunner pcmd.PreRunner, config *config.Config, client ccloud.Kafka, ch *pcmd.ConfigHelper) (*cobra.Command, error) {
 	cmd := &topicCommand{
 		Command: &cobra.Command{
 			Use:   "topic",
@@ -42,11 +42,14 @@ func NewTopicCommand(prerunner pcmd.PreRunner, config *config.Config, client ccl
 		ch:        ch,
 		prerunner: prerunner,
 	}
-	cmd.init()
-	return cmd.Command
+	err := cmd.init()
+	if err != nil {
+		return nil, err
+	}
+	return cmd.Command, nil
 }
 
-func (c *topicCommand) init() {
+func (c *topicCommand) init() error {
 	cmd := &cobra.Command{
 		Use:               "produce <topic>",
 		Short:             "Produce messages to a Kafka topic.",
@@ -78,8 +81,12 @@ Consume items from the 'my_topic' topic and press 'Ctrl + C' to exit.
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 	credType, err := c.config.CredentialType()
-	if err != errors.ErrNoContext && credType == config.APIKey {
-		return
+	if err == nil && credType == config.APIKey {
+		return nil
+	}
+	// Propagate errors other than ErrNoContext.
+	if err != nil && err != errors.ErrNoContext {
+		return err
 	}
 	cmd = &cobra.Command{
 		Use:   "list",
@@ -167,6 +174,7 @@ Delete the topics 'my_topic' and 'my_topic_avro'. Use this command carefully as 
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
+	return nil
 }
 
 func (c *topicCommand) list(cmd *cobra.Command, args []string) error {
