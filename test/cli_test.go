@@ -16,6 +16,7 @@ import (
 	"reflect"
 	"runtime"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -567,7 +568,7 @@ func apiKeysFilter(url *url.URL) []*authv1.ApiKey {
 	clusterIds := q["cluster_id"]
 
 	for _, a := range KEY_STORE {
-		uidFilter := (uid == "0") || (uid == fmt.Sprintf("%v", a.UserId))
+		uidFilter := (uid == "0") || (uid == strconv.Itoa(int(a.UserId)))
 		clusterFilter := (len(clusterIds) == 0) || func(clusterIds []string) bool {
 			for _, c := range a.LogicalClusters {
 				for _, clusterId := range clusterIds {

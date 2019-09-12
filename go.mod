@@ -111,3 +111,9 @@ require (
 	mvdan.cc/unparam v0.0.0-20190720180237-d51796306d8f // indirect
 	sourcegraph.com/sqs/pbtypes v1.0.0 // indirect
 )
+
+replace (
+	github.com/havoc-io/gopass => github.com/havoc-io/gopass v0.0.0-20161007065903-6331a34a3f3b
+	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20171026124306-e509bb64fe11
+	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20170925234155-019ae5ada31d
+)
