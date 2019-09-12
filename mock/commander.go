@@ -22,7 +22,7 @@ func (c *Commander) Authenticated() func(cmd *cobra.Command, args []string) erro
 	}
 }
 
-func (c *Commander) AuthenticatedAPIKey() func(cmd *cobra.Command, args []string) error {
+func (c *Commander) HasAPIKey() func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		return nil
 	}

@@ -5,13 +5,15 @@ func (s *CLITestSuite) TestContextCommands() {
 	tests := []CLITest{
 		{args: "config context current", fixture: "context1.golden"},
 		{args: "config context list", fixture: "context2.golden"},
-		{args: "config context set my-context --kafka-cluster bob", fixture: "context3.golden"},
-		{args: "config context list", fixture: "context4.golden"},
-		{args: "config context get my-context", fixture: "context5.golden"},
-		{args: "config context get other-context", fixture: "context6.golden"},
-		{args: "config context list", fixture: "context7.golden"},
-		{args: "config context use my-context", fixture: "context8.golden"},
-		{args: "config context current", fixture: "context9.golden"},
+		{args: "init my-context --kafka-auth --bootstrap boot-test.com --api-key hi --api-secret @test/fixtures/input/apisecret1.txt", fixture: "context3.golden"},
+		{args: "config context set my-context --kafka-cluster anonymous-id", fixture: "context4.golden"},
+		{args: "config context list", fixture: "context5.golden"},
+		{args: "config context get my-context", fixture: "context6.golden"},
+		{args: "config context get other-context", fixture: "context7.golden", wantErrCode: 1},
+		{args: "init other-context --kafka-auth --bootstrap boot-test.com --api-key hi --api-secret @test/fixtures/input/apisecret1.txt", fixture: "context8.golden"},
+		{args: "config context list", fixture: "context9.golden"},
+		{args: "config context use my-context", fixture: "context10.golden"},
+		{args: "config context current", fixture: "context11.golden"},
 	}
 	resetConfiguration(s.T(), "ccloud")
 	for _, tt := range tests {

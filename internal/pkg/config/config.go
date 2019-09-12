@@ -27,52 +27,6 @@ type AuthConfig struct {
 	Accounts []*v1.Account `json:"accounts" hcl:"accounts"`
 }
 
-// APIKeyPair holds an API Key and Secret.
-type APIKeyPair struct {
-	Key    string `json:"api_key" hcl:"api_key"`
-	Secret string `json:"api_secret" hcl:"api_secret"`
-}
-
-// KafkaClusterConfig represents a connection to a Kafka cluster.
-type KafkaClusterConfig struct {
-	ID          string                 `json:"id" hcl:"id"`
-	Name        string                 `json:"name" hcl:"name"`
-	Bootstrap   string                 `json:"bootstrap_servers" hcl:"bootstrap_servers"`
-	APIEndpoint string                 `json:"api_endpoint,omitempty" hcl:"api_endpoint"`
-	APIKeys     map[string]*APIKeyPair `json:"api_keys" hcl:"api_keys"`
-	// APIKey is your active api key for this cluster and references a key in the APIKeys map
-	APIKey string `json:"api_key,omitempty" hcl:"api_key"`
-}
-
-// Platform represents a Confluent Platform deployment
-type Platform struct {
-	Server string `json:"server" hcl:"server"`
-}
-
-// Credential represent an authentication mechanism for a Platform
-type Credential struct {
-	Username string
-	Password string
-}
-
-type SchemaRegistryCluster struct {
-	SchemaRegistryEndpoint string      `json:"schema_registry_endpoint" hcl:"schema_registry_endpoint"`
-	SrCredentials          *APIKeyPair `json:"schema_registry_credentials" hcl:"schema_registry_credentials"`
-}
-
-// Context represents a specific CLI context.
-type Context struct {
-	Platform   string `json:"platform" hcl:"platform"`
-	Credential string `json:"credentials" hcl:"credentials"`
-	// KafkaClusters store connection info for interacting directly with Kafka (e.g., consume/produce, etc)
-	// N.B. These may later be exposed in the CLI to directly register kafkas (outside a Control Plane)
-	KafkaClusters map[string]*KafkaClusterConfig `json:"kafka_clusters" hcl:"kafka_clusters"`
-	// Kafka is your active Kafka cluster and references a key in the KafkaClusters map
-	Kafka string `json:"kafka_cluster" hcl:"kafka_cluster"`
-	// SR map keyed by environment-id
-	SchemaRegistryClusters map[string]*SchemaRegistryCluster `json:"schema_registry_cluster" hcl:"schema_registry_cluster"`
-}
-
 // Config represents the CLI configuration.
 type Config struct {
 	CLIName        string                 `json:"-" hcl:"-"`
@@ -151,6 +105,66 @@ func (c *Config) Save() error {
 	return nil
 }
 
+// DeleteContext deletes the specified context, and returns an error if it's not found.
+func (c *Config) DeleteContext(name string) error {
+	_, err := c.FindContext(name)
+	if err != nil {
+		return err
+	}
+	delete(c.Contexts, name)
+	if c.CurrentContext == name {
+		c.CurrentContext = ""
+	}
+	return nil
+}
+
+// FindContext finds a context by name,
+// and returns a formatted error if not found.
+func (c *Config) FindContext(name string) (*Context, error) {
+	context, ok := c.Contexts[name]
+	if !ok {
+		return nil, fmt.Errorf("context \"%s\" does not exist", name)
+	}
+	return context, nil
+}
+
+func newContext(name string, platform *Platform, credential *Credential,
+	kafkaClusters map[string]*KafkaClusterConfig, kafka string,
+	schemaRegistryClusters map[string]*SchemaRegistryCluster) *Context {
+	return &Context{
+		Name:                   name,
+		Platform:               platform.String(),
+		Credential:             credential.String(),
+		KafkaClusters:          kafkaClusters,
+		Kafka:                  kafka,
+		SchemaRegistryClusters: schemaRegistryClusters,
+	}
+}
+
+func (c *Config) AddContext(name string, platform *Platform, credential *Credential,
+	kafkaClusters map[string]*KafkaClusterConfig, kafka string,
+	schemaRegistryClusters map[string]*SchemaRegistryCluster) error {
+	if _, ok := c.Contexts[name]; ok {
+		return fmt.Errorf("context \"%s\" already exists", name)
+	}
+	context := newContext(name, platform, credential, kafkaClusters, kafka,
+		schemaRegistryClusters)
+	// Update config maps.
+	c.Contexts[name] = context
+	c.Credentials[context.Credential] = credential
+	c.Platforms[context.Platform] = platform
+	return c.Save()
+}
+
+func (c *Config) SetContext(name string) error {
+	_, err := c.FindContext(name)
+	if err != nil {
+		return err
+	}
+	c.CurrentContext = name
+	return c.Save()
+}
+
 // Name returns the display name for the CLI
 func (c *Config) Name() string {
 	name := "Confluent CLI"
@@ -183,9 +197,32 @@ func (c *Config) Context() (*Context, error) {
 	if c.CurrentContext == "" {
 		return nil, errors.ErrNoContext
 	}
-	return c.Contexts[c.CurrentContext], nil
+	context, err := c.FindContext(c.CurrentContext)
+	if err != nil {
+		return nil, err
+	}
+	return context, nil
 }
 
+// CredentialType returns the credential type of the current Context.
+// It returns ErrNoContext if there's no current context,
+// or UnspecifiedCredentialError if there is a current context with no credentials,
+// informing the user the config file has been corrupted.
+func (c *Config) CredentialType() (CredentialType, error) {
+	context, err := c.Context()
+	if err != nil {
+		return -1, err
+	}
+	if cred, ok := c.Credentials[context.Credential]; ok {
+		return cred.CredentialType, nil
+	}
+	err = &errors.UnspecifiedCredentialError{ContextName: c.CurrentContext}
+	return -1, err
+}
+
+// SchemaRegistryCluster returns the SchemaRegistryCluster for the current Context,
+// or an empty SchemaRegistryCluster if there is none set, 
+// or an error if no context exists/if the user is not logged in.
 func (c *Config) SchemaRegistryCluster() (*SchemaRegistryCluster, error) {
 	context, err := c.Context()
 	if err != nil {
@@ -204,7 +241,7 @@ func (c *Config) SchemaRegistryCluster() (*SchemaRegistryCluster, error) {
 	return context.SchemaRegistryClusters[c.Auth.Account.Id], nil
 }
 
-// KafkaClusterConfig returns the KafkaClusterConfig for the current Context
+// KafkaClusterConfig returns the KafkaClusterConfig for the current Context.
 // or nil if there is none set.
 func (c *Config) KafkaClusterConfig() (*KafkaClusterConfig, error) {
 	context, err := c.Context()
@@ -214,30 +251,53 @@ func (c *Config) KafkaClusterConfig() (*KafkaClusterConfig, error) {
 	kafka := context.Kafka
 	if kafka == "" {
 		return nil, nil
-	} else {
-		return context.KafkaClusters[kafka], nil
 	}
+	kcc, ok := context.KafkaClusters[kafka]
+	if !ok {
+		configPath, err := c.getFilename()
+		if err != nil {
+			err = fmt.Errorf("an error resolving the config filepath at %s has occurred. " +
+				"Please try moving the file to a different location", c.Filename)
+			return nil, err
+		}
+		errMsg := "the configuration of context \"%s\" has been corrupted. " +
+			"To fix, please remove the config file located at %s, and run `login` or `init`"
+		err = fmt.Errorf(errMsg, context.Name, configPath)
+		return nil, err
+	}
+	return kcc, nil
 }
 
-// CheckLogin returns an error if the user is not logged in.
+// CheckLogin returns an error if the user is not logged in
+// with a username and password.
 func (c *Config) CheckLogin() error {
-	if c.AuthToken == "" && (c.Auth == nil || c.Auth.Account == nil || c.Auth.Account.Id == "") {
+	credType, err := c.CredentialType()
+	if err != nil {
+		return err
+	}
+	switch credType {
+	case Username:
+		if c.AuthToken == "" && (c.Auth == nil || c.Auth.Account == nil || c.Auth.Account.Id == "") {
+			return errors.ErrNotLoggedIn
+		}
+	case APIKey:
 		return errors.ErrNotLoggedIn
 	}
 	return nil
 }
 
+// CheckHasAPIKey returns nil if the specified cluster exists in the current context
+// and has an active API key, error otherwise.
 func (c *Config) CheckHasAPIKey(clusterID string) error {
-	cfg, err := c.Context()
+	context, err := c.Context()
 	if err != nil {
 		return err
 	}
 
-	cluster, found := cfg.KafkaClusters[clusterID]
+	cluster, found := context.KafkaClusters[clusterID]
 	if !found {
 		return fmt.Errorf("unknown kafka cluster: %s", clusterID)
 	}
-
 	if cluster.APIKey == "" {
 		return &errors.UnspecifiedAPIKeyError{ClusterID: clusterID}
 	}
