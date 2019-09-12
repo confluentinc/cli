@@ -26,11 +26,10 @@ as part of the repo's build process.
   * [Adding a New Command to the CLI](#adding-a-new-command-to-the-cli)
     + [Command Overview](#command-overview)
     + [Creating the command file](#creating-the-command-file)
-      - [`New` Function](#new-function)
+      - [`New[Command]` Function](#newcommand-function)
       - [`init` Function](#init-function)
-      - [`echoContext` Function](#echocontext-function)
+      - [Main (Work) Function](#main-work-function)
     + [Registering the Command](#registering-the-command)
-    + [Making the Linter Happy](#making-the-linter-happy)
     + [Building](#building)
     + [Integration Testing](#integration-testing)
     + [Opening a PR!](#opening-a-pr)
@@ -237,21 +236,23 @@ You can mix and match these flags. To update the golden files without rebuilding
 ## Adding a New Command to the CLI
 
 ### Command Overview
-We'll be implementing a `ccloud echo-context <num-times>` command that outputs the current context of the CLI a specified number of times. For example, `ccloud echo-context 3` might output:
-```
-my-context
-my-context
-my-context
-```
+Commands in the CLI follow the following syntax:
 
-Formally, a context is a named tuple of credentials, platform/server URL, and other config parameters. Different contexts allow one user to work with different credentials and on different platforms, effectively serving as a form of simple RBAC.
+`ccloud/confluent <resource> [subresource] <standard-verb> [args]`
+
+We'll be implementing a `ccloud config file show <num-times>` command that outputs the config file of the CLI a specified number of times. For example, `ccloud config file 3` might output:
+```
+~/.ccloud/config.json
+~/.ccloud/config.json
+~/.ccloud/config.json
+```
 
 ### Creating the command file
 
-Like all commands, this command will reside in `internal/cmd`. We'll create a `echo-context` directory, and we'll add the code below in a file called `command.go` file.
+Like all commands, this command will reside in `internal/cmd`. The directory name of the command should match the top-level resource, `config`, in this case. That directory already exists, but we'll need to create a file under the `config` directory, whose name matches the subresource of the command (in this case, `file.go`). We'll add the following code to it:
 
 ```go
-package echo_context
+package config
 
 import (
 	"strconv"
@@ -263,17 +264,16 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
-type command struct {
+type fileCommand struct {
 	*cobra.Command
 	config *config.Config
 }
 
-func New(config *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
-	cmd := &command{
+func NewFileCommand(config *config.Config) *cobra.Command {
+	cmd := &fileCommand{
 		Command: &cobra.Command{
-			Use:     "echo-context <num-times>",
-			Short:   "Echo the current context a specified number of times.",
-			PreRunE: prerunner.Anonymous(),
+			Use:   "file",
+			Short: "Manage the config file.",
 		},
 		config: config,
 	}
@@ -281,67 +281,64 @@ func New(config *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	return cmd.Command
 }
 
-func (c *command) init() {
-	c.Args = cobra.ExactArgs(1)
-	c.RunE = c.echoContext
+func (c *fileCommand) init() {
+	showCmd := &cobra.Command{
+		Use:   "show <num-times>",
+		Short: "Show the config file a specified number of times.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  c.show,
+	}
+	c.AddCommand(showCmd)
 }
 
-func (c *command) echoContext(cmd *cobra.Command, args []string) error {
+func (c *fileCommand) show(cmd *cobra.Command, args []string) error {
 	numTimes, err := strconv.Atoi(args[0])
 	if err != nil {
 		return err
 	}
-	name := c.config.CurrentContext
-	if name == "" {
-		return errors.ErrNoContext
+	filename := c.config.Filename
+	if filename == "" {
+		return errors.New("No config file exists!")
 	}
 	for i := 0; i < numTimes; i++ {
-		pcmd.Println(cmd, name)
+		pcmd.Println(cmd, filename)
 	}
 	return nil
 }
-
 ```
 
-#### `New` Function
-For our command, the constructor needs to have take a `Config` and `PreRunner` struct as parameters. `Config` describes the configuration of the CLI, and is parsed from a file located by default at `~/.ccloud/config.json`. `PreRunner` provides a convenient interface for running authentication functions prior to executing the actual command.
+#### `New[Command]` Function
+Here, we create the actual Cobra top-level command `file`, specifying the syntax with `Use`, and a short description with `Short`. Then we initialize the command using `init`, a convention used in the CLI codebase. Since the CLI commands often require additional parameters, we use a wrapper around Cobra commands, in this case named `fileCommand`.
 
-We create the actual Cobra command, specifying the syntax with `Use`, a short description with `Short`, and the "pre-run" `Anonymous()` function (since no auth is needed) with `PreRunE`. Then we initialize the command using `init`, a convention used in the CLI codebase.
+For our command, the constructor needs to take a `Config` struct as a parameter. `Config` describes the configuration of the CLI, and is parsed from a file located by default at `~/.ccloud/config.json` for `ccloud` commands, and at `~/.confluent/config.json` for `confluent` commands.
+
+
 
 #### `init` Function
-Here, we simply specify the number of arguments our command needs, and the function that will be executed when our command is run.
+Here, we add the subcommands, in this case just `show`. We specify the usage messages, number of arguments our command needs, and the function that will be executed when our command is run.
 
-#### `echoContext` Function
-This function parses the `<num-times>` arg, retrieves the context, and either prints its name to the console, or returns an error if there's no context set.
+#### Main (Work) Function
+This function is named after the verb component of the command, `show`. It does the "heavy" lifting by parsing the `<num-times>` arg, retrieving the filename, and either printing its name to the console, or returning an error if there's no filename set.
 
 
 ### Registering the Command
-We must register our newly created command with the top level command located at `internal/cmd/command.go`. Since this is a `ccloud` command we register it under the `if cliName == "ccloud" {...}` branch, with `cli.AddCommand(echo_context.New(cfg, prerunner))`.
+We must register our newly created command with the top-level `config` command located at `internal/cmd/config/comman.go`. We add it to the `config` command with `c.AddCommand(NewFileCommand(c.config))`.
 
-### Making the Linter Happy
-If we run `make lint`, which will run the linter, we'll see that it complains about certain rules being broken. This is easily fixed. Simply add the `Use` message (`echo-context <num-times>`) to the `utilityCommands` array in `cmd/lint/main.go`. Now we're ready to build the CLI binary, and run our new command!
-
+With an entirely new command, we would also need to register it with the base top-level command (`ccloud` and/or `confluent`) located at `internal/cmd/command.go`, using the same `AddCommand` syntax. Since the `config` is already registered, we can skip this step.
 
 ### Building
-We can either run `make build`, or `make build-ccloud`, since we're only using the `ccloud` binary, in this case. After this, we can run our command, and see that it (hopefully) works!
+To build both binaries, we run `make build`. After this, we can run our command, and see that it (hopefully) works!
 
 ### Integration Testing
-There's not much code here to unit test, so we'll skip right to integration testing. We'll create a file named `echo_context_test.go` under the `test` directory, and add the following code:
+There's not much code here to unit test, so we'll skip right to integration testing. We'll create a file named `file_test.go` under the `test` directory, and add the following code to it:
 
 ```go
 package test
 
-func (s *CLITestSuite) TestEchoContextCommands() {
-	kafkaAPIURL := serveKafkaAPI(s.T()).URL
-	loginURL := serve(s.T(), kafkaAPIURL).URL
-
+func (s *CLITestSuite) TestFileCommands() {
 	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
 	tests := []CLITest{
-		{name: "error if echoing with no current context", args: "echo-context 3",
-			fixture: "echocontext1.golden"},
-		{args: "config context set my-context --kafka-cluster bob", fixture: "empty.golden"},
-		{args: "config context use my-context", fixture: "empty.golden"},
-		{name: "succeed if echoing set context", args: "echo-context 3", fixture: "echocontext2.golden"},
+		{name: "succeed if showing existing config file", args: "config file show 3", fixture: "file1.golden"},
 	}
 	resetConfiguration(s.T(), "ccloud")
 	for _, tt := range tests {
@@ -349,15 +346,16 @@ func (s *CLITestSuite) TestEchoContextCommands() {
 			tt.name = tt.args
 		}
 		tt.workflow = true
-		s.runCcloudTest(tt, loginURL, kafkaAPIURL)
+		kafkaAPIURL := serveKafkaAPI(s.T()).URL
+		s.runCcloudTest(tt, serve(s.T(), kafkaAPIURL).URL, kafkaAPIURL)
 	}
 }
 ```
 
-We'll also need to add the new golden files, `echocontext1.golden` and `echocontext2.golden`, to `test/fixtures/output`. After running the command manually to ensure the output is correct, the content for the golden files can either be:
+We'll also need to add the new golden file, `file1.golden`, to `test/fixtures/output`. After running the command manually to ensure the output is correct, the content for the golden file can either be:
 
 1. Copied directly from the shell
-2. Generated automatically by running `make test TEST_ARGS="./test/... -update"`, which runs all integration tests and updates all golden files to match their output. This is a risky command to run, as it essentially passes all integration tests, but is convenient to use if you can't get tests to pass from manual copying due to some hidden spaces. In addition to auto-filling the `echocontext` golden files, this command will update the `help` command test outputs to reflect the added command.
+2. Generated automatically by running `make test TEST_ARGS="./test/... -update"`, which runs all integration tests and updates all golden files to match their output. This is a risky command to run, as it essentially passes all integration tests, but is convenient to use if you can't get tests to pass from manual copying due to some hidden spaces. In addition to auto-filling the `file` golden file, this command will update the `help` command test outputs to reflect the added command.
 
 ### Opening a PR!
 
