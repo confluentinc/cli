@@ -30,7 +30,10 @@ type describeDisplay struct {
 }
 
 var (
-	renames = map[string]string{"ID": "Cluster ID", "URL": "Endpoint URL", "Used": "Used Schemas", "Available": "Available Schemas", "Compatibility": "Global Compatibility", "ServiceProvider": "Service Provider"}
+	describeLabels  = []string{"Name", "ID", "URL", "Used", "Available", "Compatibility", "Mode", "ServiceProvider"}
+	describeRenames = map[string]string{"ID": "Cluster ID", "URL": "Endpoint URL", "Used": "Used Schemas", "Available": "Available Schemas", "Compatibility": "Global Compatibility", "ServiceProvider": "Service Provider"}
+	enableLabels    = []string{"Id", "Endpoint"}
+	enableRenames   = map[string]string{"ID": "Cluster ID", "URL": "Endpoint URL"}
 )
 
 type clusterCommand struct {
@@ -101,7 +104,6 @@ func (c *clusterCommand) init() {
 
 func (c *clusterCommand) enable(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
-
 	// Collect the parameters
 	accountId, err := pcmd.GetEnvironment(cmd, c.config)
 	if err != nil {
@@ -137,9 +139,9 @@ func (c *clusterCommand) enable(cmd *cobra.Command, args []string) error {
 		if getExistingErr != nil {
 			return errors.HandleCommon(err, cmd)
 		}
-		_ = printer.RenderTableOut(cluster, []string{"Id", "Endpoint"}, map[string]string{"ID": "Cluster ID", "URL": "Endpoint URL"}, os.Stdout)
+		_ = printer.RenderTableOut(cluster, enableLabels, enableRenames, os.Stdout)
 	} else {
-		_ = printer.RenderTableOut(newCluster, []string{"Id", "Endpoint"}, map[string]string{"ID": "Cluster ID", "URL": "Endpoint URL"}, os.Stdout)
+		_ = printer.RenderTableOut(newCluster, enableLabels, enableRenames, os.Stdout)
 	}
 	return nil
 }
@@ -151,7 +153,6 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	var numSchemas string
 	var availableSchemas string
 	ctx := context.Background()
-	fields := []string{"Name", "ID", "URL", "Used", "Available", "Compatibility", "Mode", "ServiceProvider"}
 
 	// Collect the parameters
 	accountId, err := pcmd.GetEnvironment(cmd, c.config)
@@ -205,7 +206,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 		Compatibility:   compatibility,
 		Mode:            mode,
 	}
-	_ = printer.RenderTableOut(data, fields, renames, os.Stdout)
+	_ = printer.RenderTableOut(data, describeLabels, describeRenames, os.Stdout)
 	return nil
 }
 func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
