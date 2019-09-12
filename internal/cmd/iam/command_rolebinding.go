@@ -1,9 +1,9 @@
 package iam
 
 import (
+	"context"
 	"net/http"
 	"strings"
-	"context"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -12,7 +12,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/go-printer"
-	 "github.com/confluentinc/mds-sdk-go"
+	"github.com/confluentinc/mds-sdk-go"
 )
 
 var (
@@ -307,13 +307,13 @@ func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOption
 	}
 
 	return &rolebindingOptions{
-		role,
-		resource,
-		prefix,
-		principal,
-		*scopeClusters,
-		resourcesRequest,
-	},
+			role,
+			resource,
+			prefix,
+			principal,
+			*scopeClusters,
+			resourcesRequest,
+		},
 		nil
 }
 

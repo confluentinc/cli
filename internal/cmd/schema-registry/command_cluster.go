@@ -241,7 +241,7 @@ func (c *clusterCommand) updateCompatibility(cmd *cobra.Command, args []string) 
 	if err != nil {
 		return err
 	}
-	pcmd.Println(cmd, "Successfully updated")
+	pcmd.Printf(cmd, "Successfully updated Top Level compatibilty: %s \n", updateReq.Compatibility)
 	return nil
 }
 
@@ -259,6 +259,6 @@ func (c *clusterCommand) updateMode(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	pcmd.Printf(cmd, "Successfully updated Top Level mode: %s", modeUpdate.Mode)
+	pcmd.Printf(cmd, "Successfully updated Top Level mode: %s \n", modeUpdate.Mode)
 	return nil
 }
