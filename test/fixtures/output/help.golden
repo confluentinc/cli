@@ -12,6 +12,7 @@ Available Commands:
   login           Log in to Confluent Cloud.
   logout          Logout of Confluent Cloud.
   prompt          Print ccloud CLI context for your terminal prompt.
+  schema-registry Manage Schema Registry.
   service-account Manage service accounts.
   update          Update the ccloud CLI.
   version         Print the ccloud CLI version.
