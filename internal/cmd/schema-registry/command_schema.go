@@ -130,7 +130,7 @@ func (c *schemaCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	pcmd.Printf(cmd, "Successfully registered schema with ID: %v", response.Id)
+	pcmd.Printf(cmd, "Successfully registered schema with ID: %v \n", response.Id)
 	return nil
 }
 
