@@ -3,6 +3,13 @@ package schema_registry
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"testing"
+
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+
 	"github.com/confluentinc/ccloud-sdk-go/mock"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
@@ -14,11 +21,10 @@ import (
 	cliMock "github.com/confluentinc/cli/mock"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	srMock "github.com/confluentinc/schema-registry-sdk-go/mock"
-	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
-	net_http "net/http"
-	"testing"
+)
+
+const (
+	subjectName = "Subject"
 )
 
 type SubjectTestSuite struct {
@@ -83,8 +89,17 @@ func (suite *SubjectTestSuite) SetupTest() {
 
 	suite.srClientMock = &srsdk.APIClient{
 		DefaultApi: &srMock.DefaultApi{
-			ListFunc: func(ctx context.Context) ([]string, *net_http.Response, error) {
+			ListFunc: func(ctx context.Context) ([]string, *http.Response, error) {
 				return []string{"subject 1", "subject 2"}, nil, nil
+			},
+			ListVersionsFunc: func(ctx context.Context, subject string) (int32s []int32, response *http.Response, e error) {
+				return []int32{1234, 4567}, nil, nil
+			},
+			UpdateSubjectLevelConfigFunc: func(ctx context.Context, subject string, body srsdk.ConfigUpdateRequest) (request srsdk.ConfigUpdateRequest, response *http.Response, e error) {
+				return srsdk.ConfigUpdateRequest{Compatibility: body.Compatibility}, nil, nil
+			},
+			UpdateModeFunc: func(ctx context.Context, subject string, body srsdk.ModeUpdateRequest) (request srsdk.ModeUpdateRequest, response *http.Response, e error) {
+				return srsdk.ModeUpdateRequest{Mode: body.Mode}, nil, nil
 			},
 		},
 	}
@@ -95,11 +110,11 @@ func (suite *SubjectTestSuite) newCMD() *cobra.Command {
 		Auth: &config.AuthConfig{Account: &orgv1.Account{Id: "777"}},
 	},
 		Version: &version.Version{},
-	}, suite.srClientMock, nil)
+	}, suite.srClientMock, nil, nil)
 	return cmd
 }
 
-func (suite *SubjectTestSuite) TestSubjectUpdate() {
+func (suite *SubjectTestSuite) TestSubjectList() {
 	cmd := suite.newCMD()
 	cmd.SetArgs(append([]string{"subject", "list"}))
 	err := cmd.Execute()
@@ -107,6 +122,51 @@ func (suite *SubjectTestSuite) TestSubjectUpdate() {
 	req.Nil(err)
 	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
 	req.True(apiMock.ListCalled())
+}
+
+func (suite *SubjectTestSuite) TestSubjectUpdateMode() {
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"subject", "update", subjectName, "--mode", "READWRITE"}))
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
+	req.False(apiMock.UpdateTopLevelModeCalled())
+	req.True(apiMock.UpdateModeCalled())
+	retVal := apiMock.UpdateModeCalls()[0]
+	req.Equal(retVal.Subject, subjectName)
+}
+
+func (suite *SubjectTestSuite) TestSubjectUpdateCompatibility() {
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"subject", "update", subjectName, "--compatibility", "BACKWARD"}))
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
+	req.True(apiMock.UpdateSubjectLevelConfigCalled())
+	retVal := apiMock.UpdateSubjectLevelConfigCalls()[0]
+	req.Equal(retVal.Subject, subjectName)
+}
+
+func (suite *SubjectTestSuite) TestSubjectUpdateNoArgs() {
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"subject", "update", subjectName}))
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Error(err, "Error: flag string not set")
+}
+
+func (suite *SubjectTestSuite) TestSubjectDescribe() {
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"subject", "describe", subjectName}))
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
+	req.True(apiMock.ListVersionsCalled())
+	retVal := apiMock.ListVersionsCalls()[0]
+	req.Equal(retVal.Subject, subjectName)
 }
 
 func TestSubjectSuite(t *testing.T) {
