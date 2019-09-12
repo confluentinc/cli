@@ -21,6 +21,12 @@ import (
 	"testing"
 )
 
+const (
+	versionString = "12345"
+	versionInt32  = int32(12345)
+	id            = int32(123)
+)
+
 type SchemaTestSuite struct {
 	suite.Suite
 	conf             *config.Config
@@ -86,6 +92,15 @@ func (suite *SchemaTestSuite) SetupTest() {
 			GetSchemaFunc: func(ctx context.Context, id int32) (srsdk.SchemaString, *net_http.Response, error) {
 				return srsdk.SchemaString{Schema: "Potatoes"}, nil, nil
 			},
+			GetSchemaByVersionFunc: func(ctx context.Context, subject, version string) (schema srsdk.Schema, response *net_http.Response, e error) {
+				return srsdk.Schema{Schema: "Potatoes", Version: versionInt32}, nil, nil
+			},
+			DeleteSchemaVersionFunc: func(ctx context.Context, subject, version string) (i int32, response *net_http.Response, e error) {
+				return id, nil, nil
+			},
+			DeleteSubjectFunc: func(ctx context.Context, subject string) (int32s []int32, response *net_http.Response, e error) {
+				return []int32{id}, nil, nil
+			},
 		},
 	}
 }
@@ -95,19 +110,58 @@ func (suite *SchemaTestSuite) newCMD() *cobra.Command {
 		Auth: &config.AuthConfig{Account: &orgv1.Account{Id: "777"}},
 	},
 		Version: &version.Version{},
-	}, suite.srClientMock, nil)
+	}, suite.srClientMock, nil, nil)
 	return cmd
 }
 
 func (suite *SchemaTestSuite) TestDescribeById() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"schema", "describe", "1337"}))
-
+	cmd.SetArgs(append([]string{"schema", "describe", "123"}))
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
 	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
 	req.True(apiMock.GetSchemaCalled())
+	retVal := apiMock.GetSchemaCalls()[0]
+	req.Equal(retVal.Id, id)
+}
+
+func (suite *SchemaTestSuite) TestDeleteAllSchemas() {
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"schema", "delete", "--subject", subjectName, "--version", "all"}))
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
+	req.True(apiMock.DeleteSubjectCalled())
+	retVal := apiMock.DeleteSubjectCalls()[0]
+	req.Equal(retVal.Subject, subjectName)
+}
+
+func (suite *SchemaTestSuite) TestDeleteSchemaVersion() {
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"schema", "delete", "--subject", subjectName, "--version", versionString}))
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
+	req.True(apiMock.DeleteSchemaVersionCalled())
+	retVal := apiMock.DeleteSchemaVersionCalls()[0]
+	req.Equal(retVal.Subject, subjectName)
+	req.Equal(retVal.Version, "12345")
+}
+
+func (suite *SchemaTestSuite) TestDescribeBySubject() {
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"schema", "describe", "--subject", subjectName, "--version", versionString}))
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
+	req.True(apiMock.GetSchemaByVersionCalled())
+	retVal := apiMock.GetSchemaByVersionCalls()[0]
+	req.Equal(retVal.Subject, subjectName)
+	req.Equal(retVal.Version, versionString)
 }
 
 func TestSchemaSuite(t *testing.T) {
