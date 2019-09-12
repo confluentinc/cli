@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	v1 "github.com/confluentinc/ccloudapis/org/v1"
+	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	"github.com/stretchr/testify/assert"
 
 	cerrors "github.com/confluentinc/cli/internal/pkg/errors"
@@ -620,7 +620,7 @@ func TestConfig_DeleteContext(t *testing.T) {
 		wantErr    bool
 		wantConfig *Config
 	}{
-		{name: "success deleting existing current context",
+		{name: "succeed deleting existing current context",
 			fields: fields{
 				Contexts:       map[string]*Context{contextName: {Name: contextName}},
 				CurrentContext: contextName,
@@ -632,7 +632,7 @@ func TestConfig_DeleteContext(t *testing.T) {
 				CurrentContext: "",
 			},
 		},
-		{name: "success deleting existing context",
+		{name: "succeed deleting existing context",
 			fields: fields{Contexts: map[string]*Context{
 				contextName:     {Name: contextName,},
 				"other-context": {Name: "other-context"},
@@ -670,14 +670,14 @@ func TestConfig_KafkaClusterConfig(t *testing.T) {
 		Filename       string
 	}
 	tests := []struct {
-		name      string
-		fields    fields
-		want      *KafkaClusterConfig
-		wantErr   bool
-		err error
+		name    string
+		fields  fields
+		want    *KafkaClusterConfig
+		wantErr bool
+		err     error
 	}{
 		{
-			name: "success getting Kafka cluster config",
+			name: "succeed getting Kafka cluster config",
 			fields: fields{
 				Contexts: map[string]*Context{"test-context": {
 					Name: "test-context",
@@ -711,7 +711,7 @@ func TestConfig_KafkaClusterConfig(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "success getting Kafka cluster config when it is not set",
+			name: "succeed getting Kafka cluster config when it is not set",
 			fields: fields{
 				Contexts: map[string]*Context{"test-context": {
 					Name: "test-context",
@@ -733,13 +733,27 @@ func TestConfig_KafkaClusterConfig(t *testing.T) {
 					Name:  "test-context",
 					Kafka: "nonexistent-cluster",
 				}},
-				Filename: "/tmp/TestConfig_KafkaClusterConfig.json",
+				Filename:       "/tmp/TestConfig_KafkaClusterConfig.json",
 				CurrentContext: "test-context",
 			},
 			wantErr: true,
 			err: errors.New("the configuration of context \"test-context\" has been corrupted. " +
 				"To fix, please remove the config file located at /tmp/TestConfig_KafkaClusterConfig.json," +
 				" and run `login` or `init`"),
+		},
+		{
+			name: "error getting set but nonexistent Kafka cluster config in config with bad filepath",
+			fields: fields{
+				Contexts: map[string]*Context{"test-context": {
+					Name:  "test-context",
+					Kafka: "nonexistent-cluster",
+				}},
+				Filename:       "~badfilepath",
+				CurrentContext: "test-context",
+			},
+			wantErr: true,
+			err: errors.New("an error resolving the config filepath at ~badfilepath has occurred. " +
+				"Please try moving the file to a different location"),
 		},
 	}
 	for _, tt := range tests {
@@ -780,7 +794,7 @@ func TestConfig_CheckHasAPIKey(t *testing.T) {
 		err     interface{}
 	}{
 		{
-			name: "success checking existing active API key",
+			name: "succeed checking existing active API key",
 			fields: fields{
 				Contexts: map[string]*Context{"test-context": {
 					Name: "test-context",
@@ -876,10 +890,10 @@ func TestConfig_SchemaRegistryCluster(t *testing.T) {
 		err     error
 	}{
 		{
-			name: "success getting existing schema registry cluster",
+			name: "succeed getting existing schema registry cluster",
 			fields: fields{
 				Auth: &AuthConfig{
-					Account: &v1.Account{
+					Account: &orgv1.Account{
 						Id: "test-acct-id",
 					},
 				},
@@ -898,10 +912,10 @@ func TestConfig_SchemaRegistryCluster(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "success getting nonexistent schema registry cluster without current context",
+			name: "succeed getting nonexistent schema registry cluster without current context",
 			fields: fields{
 				Auth: &AuthConfig{
-					Account: &v1.Account{
+					Account: &orgv1.Account{
 						Id: "test-acct-id",
 					},
 				},
@@ -975,7 +989,7 @@ func TestConfig_Context(t *testing.T) {
 		err     error
 	}{
 		{
-			name: "success getting current context",
+			name: "succeed getting current context",
 			fields: fields{
 				Contexts: map[string]*Context{"test-context": {
 					Name: "test-context",

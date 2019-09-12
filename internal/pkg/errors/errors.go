@@ -83,23 +83,29 @@ func Cause(err error) error {
 }
 
 type Handler struct {
-	Err error
+	err error
 }
 
 func (h *Handler) HandleString(s string, e error) string {
-	if h.Err != nil {
+	if h.err != nil {
 		return ""
 	}
-	h.Err = e
-	if h.Err != nil {
+	h.err = e
+	if h.err != nil {
 		return ""
 	}
 	return s
 }
 
 func (h *Handler) Handle(err error) {
-	if h.Err != nil {
+	if h.err != nil {
 		return
 	}
-	h.Err = err
+	h.err = err
+}
+
+func (h *Handler) Reset() error {
+	err := h.err
+	h.err = nil
+	return err
 }

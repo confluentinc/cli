@@ -248,6 +248,8 @@ func (c *Config) KafkaClusterConfig() (*KafkaClusterConfig, error) {
 	if !ok {
 		configPath, err := c.getFilename()
 		if err != nil {
+			err = fmt.Errorf("an error resolving the config filepath at %s has occurred. " +
+				"Please try moving the file to a different location", c.Filename)
 			return nil, err
 		}
 		errMsg := "the configuration of context \"%s\" has been corrupted. " +

@@ -1,6 +1,7 @@
 package init
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -38,7 +39,7 @@ func New(prerunner pcmd.PreRunner, config *config.Config, prompt pcmd.Prompt, re
 }
 
 func (c *command) init() {
-	c.Flags().Bool("kafka-auth", false, "Initialize with bootstrap url, API key, and API secret. " +
+	c.Flags().Bool("kafka-auth", false, "Initialize with bootstrap url, API key, and API secret. "+
 		"Can be done interactively, with flags, or both.")
 	c.Flags().String("bootstrap", "", "Bootstrap URL.")
 	c.Flags().String("api-key", "", "API key.")
@@ -47,7 +48,7 @@ func (c *command) init() {
 	c.RunE = c.initContext
 }
 
-func (c *command) parseStringFlag(name string, prompt string, secure bool) (string, error) {
+func (c *command) parseStringFlag(name string, prompt string, secure bool, displayName string) (string, error) {
 	str, err := c.Flags().GetString(name)
 	if err != nil {
 		return "", err
@@ -57,6 +58,9 @@ func (c *command) parseStringFlag(name string, prompt string, secure bool) (stri
 		return "", err
 	}
 	val = strings.TrimSpace(val)
+	if len(val) == 0 {
+		return "", fmt.Errorf("%s cannot be empty", displayName)
+	}
 	return val, nil
 }
 
@@ -70,18 +74,20 @@ func (c *command) initContext(cmd *cobra.Command, args []string) error {
 	if !kafkaAuth {
 		return errors.HandleCommon(errors.New("only kafka-auth is currently supported"), cmd)
 	}
-	bootstrapURL := eh.HandleString(c.parseStringFlag("bootstrap", "Bootstrap URL: ", false))
-	apiKey := eh.HandleString(c.parseStringFlag("api-key", "API Key: ", false))
-	apiSecret := eh.HandleString(c.parseStringFlag("api-secret", "API Secret: ", true))
-	if eh.Err != nil {
-		return errors.HandleCommon(eh.Err, cmd)
+	bootstrapURL := eh.HandleString(c.parseStringFlag("bootstrap", "Bootstrap URL: ", false,
+		"Bootstrap URL"))
+	apiKey := eh.HandleString(c.parseStringFlag("api-key", "API Key: ", false,
+		"API key"))
+	apiSecret := eh.HandleString(c.parseStringFlag("api-secret", "API Secret: ", true,
+		"API secret"))
+	if err := eh.Reset(); err != nil {
+		return errors.HandleCommon(err, cmd)
 	}
-	eh.Err = nil
 	eh.Handle(c.addContext(contextName, bootstrapURL, apiKey, apiSecret))
 	// Set current context.
 	eh.Handle(c.config.SetContext(contextName))
-	if eh.Err != nil {
-		return errors.HandleCommon(eh.Err, cmd)
+	if err := eh.Reset(); err != nil {
+		return errors.HandleCommon(err, cmd)
 	}
 	return nil
 }
