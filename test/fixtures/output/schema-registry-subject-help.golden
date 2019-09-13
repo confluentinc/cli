@@ -1,0 +1,17 @@
+Manage Schema Registry subjects.
+
+Usage:
+  ccloud schema-registry subject [command]
+
+Available Commands:
+  describe    Describe subject versions and compatibility.
+  list        List subjects.
+  update      Update subject compatibility or mode.
+
+Flags:
+  -h, --help   help for subject
+
+Global Flags:
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "ccloud schema-registry subject [command] --help" for more information about a command.

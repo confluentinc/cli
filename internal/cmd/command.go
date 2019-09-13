@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"github.com/confluentinc/cli/internal/cmd/schema-registry"
 	"os"
 
 	"github.com/DABH/go-basher"
@@ -18,16 +17,19 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/config"
 	"github.com/confluentinc/cli/internal/cmd/environment"
 	"github.com/confluentinc/cli/internal/cmd/iam"
+	initcontext "github.com/confluentinc/cli/internal/cmd/init-context"
 	"github.com/confluentinc/cli/internal/cmd/kafka"
 	"github.com/confluentinc/cli/internal/cmd/ksql"
 	"github.com/confluentinc/cli/internal/cmd/local"
 	ps1 "github.com/confluentinc/cli/internal/cmd/prompt"
+	"github.com/confluentinc/cli/internal/cmd/schema-registry"
 	"github.com/confluentinc/cli/internal/cmd/secret"
 	"github.com/confluentinc/cli/internal/cmd/service-account"
 	"github.com/confluentinc/cli/internal/cmd/update"
 	"github.com/confluentinc/cli/internal/cmd/version"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	configs "github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/help"
 	"github.com/confluentinc/cli/internal/pkg/io"
 	"github.com/confluentinc/cli/internal/pkg/keystore"
@@ -37,7 +39,6 @@ import (
 	environments "github.com/confluentinc/cli/internal/pkg/sdk/environment"
 	kafkas "github.com/confluentinc/cli/internal/pkg/sdk/kafka"
 	ksqls "github.com/confluentinc/cli/internal/pkg/sdk/ksql"
-	//connects "github.com/confluentinc/cli/internal/pkg/sdk/connect"
 	users "github.com/confluentinc/cli/internal/pkg/sdk/user"
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
 	versions "github.com/confluentinc/cli/internal/pkg/version"
@@ -55,7 +56,6 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	cli.SetHelpFunc(func(cmd *cobra.Command, args []string) {
 		_ = help.ResolveReST(cmd.HelpTemplate(), cmd)
 	})
-
 	if cliName == "ccloud" {
 		cli.Short = "Confluent Cloud CLI."
 		cli.Long = "Manage your Confluent Cloud."
@@ -107,24 +107,35 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 
 	cli.AddCommand(completion.NewCompletionCmd(cli, cliName))
 	cli.AddCommand(update.New(cliName, cfg, ver, prompt, updateClient))
-
-	cli.AddCommand(auth.New(prerunner, cfg, logger, mdsClient, ver.UserAgent)...)
-
+  cli.AddCommand(auth.New(prerunner, cfg, logger, mdsClient, ver.UserAgent)...)
+  
+  resolver := &pcmd.FlagResolverImpl{Prompt: prompt, Out: os.Stdout}
+  
 	if cliName == "ccloud" {
-		cli.AddCommand(ps1.NewPromptCmd(cfg, &pps1.Prompt{Config: cfg}, logger))
-
 		kafkaClient := kafkas.New(client, logger)
+		cmd, err := kafka.New(prerunner, cfg, kafkaClient, ch)
+		if err != nil {
+			return nil, err
+		}
+		cli.AddCommand(cmd)
+		cli.AddCommand(initcontext.New(prerunner, cfg, prompt, resolver))
+		credType, err := cfg.CredentialType()
+		if _, ok := err.(*errors.UnspecifiedCredentialError); ok {
+			return nil, err
+		}
+		if credType == configs.APIKey {
+			return cli, nil
+		}
+		cli.AddCommand(ps1.NewPromptCmd(cfg, &pps1.Prompt{Config: cfg}, logger))
 		userClient := users.New(client, logger)
 		ks := &keystore.ConfigKeyStore{Config: cfg, Helper: ch}
 		cli.AddCommand(environment.New(prerunner, cfg, environments.New(client, logger), cliName))
 		cli.AddCommand(service_account.New(prerunner, cfg, userClient))
 		cli.AddCommand(apikey.New(prerunner, cfg, apikeys.New(client, logger), ch, ks))
-		cli.AddCommand(kafka.New(prerunner, cfg, kafkaClient, ch))
 
 		// Schema Registry
 		// If srClient is nil, the function will look it up after prerunner verifies authentication. Exposed so tests can pass mocks
-		sr := schema_registry.New(prerunner, cfg, client.SchemaRegistry, ch, nil, client.Metrics)
-		sr.Hidden = true
+		sr := schema_registry.New(prerunner, cfg, client.SchemaRegistry, ch, nil, client.Metrics, logger)
 		cli.AddCommand(sr)
 
 		conn = ksql.New(prerunner, cfg, ksqls.New(client, logger), kafkaClient, userClient, ch)
@@ -145,9 +156,8 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		}
 		shellRunner := &local.BashShellRunner{BasherContext: bash}
 		cli.AddCommand(local.New(cli, prerunner, shellRunner, logger, fs))
-		resolver := &pcmd.FlagResolverImpl{Prompt: prompt, Out: os.Stdout}
+		
 		cli.AddCommand(secret.New(prerunner, cfg, prompt, resolver, secrets.NewPasswordProtectionPlugin(logger)))
 	}
-
 	return cli, nil
 }

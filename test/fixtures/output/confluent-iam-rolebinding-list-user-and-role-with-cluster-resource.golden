@@ -1,3 +1,0 @@
-  Principal  |     Role      | ResourceType | Name | PatternType  
-+------------+---------------+--------------+------+-------------+
-  User:frodo | SecurityAdmin | Cluster      |      |              

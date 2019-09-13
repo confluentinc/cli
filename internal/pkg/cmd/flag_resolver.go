@@ -35,7 +35,10 @@ func (r *FlagResolverImpl) ValueFrom(source string, prompt string, secure bool) 
 			return "", ErrUnexpectedStdinPipe
 		}
 
-		fmt.Fprintf(r.Out, prompt)
+		_, err = fmt.Fprintf(r.Out, prompt)
+		if err != nil {
+			return "", err
+		}
 		if secure {
 			valueByte, err := r.Prompt.ReadPassword()
 			if err != nil {
@@ -45,7 +48,10 @@ func (r *FlagResolverImpl) ValueFrom(source string, prompt string, secure bool) 
 		} else {
 			value, err = r.Prompt.ReadString('\n')
 		}
-		fmt.Fprintf(r.Out, "\n")
+		_, err = fmt.Fprintf(r.Out, "\n")
+		if err != nil {
+			return "", err
+		}
 		return value, err
 	}
 

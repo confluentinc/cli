@@ -5,9 +5,9 @@ import (
 	"io"
 	"strings"
 
-	"github.com/Shopify/sarama"
-
 	"github.com/confluentinc/cli/internal/pkg/config"
+
+	"github.com/Shopify/sarama"
 )
 
 // NewSaramaConsumer returns a sarama.ConsumerGroup configured for the CLI config
