@@ -3,11 +3,12 @@ package iam
 import (
 	"context"
 	"fmt"
+	"io"
+	"github.com/confluentinc/go-printer"
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 	"os"
 
-	acl_util "github.com/confluentinc/cli/internal/pkg/acl"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -91,7 +92,7 @@ func (c *aclCommand) init() {
 }
 
 func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
-	acl := parseMds(cmd)
+	acl := parse(cmd)
 
 	bindings, _, err := c.client.KafkaACLManagementApi.SearchAclBinding(c.ctx, convertToAclFilterRequest(acl.CreateAclRequest))
 
@@ -99,12 +100,12 @@ func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	acl_util.PrintMdsAcls(bindings, os.Stdout)
+	PrintAcls(bindings, os.Stdout)
 	return nil
 }
 
 func (c *aclCommand) create(cmd *cobra.Command, args []string) error {
-	acl := validateAclAdd(parseMds(cmd))
+	acl := validateAclAdd(parse(cmd))
 
 	if acl.errors != nil {
 		return errors.HandleCommon(acl.errors, cmd)
@@ -116,7 +117,7 @@ func (c *aclCommand) create(cmd *cobra.Command, args []string) error {
 }
 
 func (c *aclCommand) delete(cmd *cobra.Command, args []string) error {
-	acl := parseMds(cmd)
+	acl := parse(cmd)
 
 	if acl.errors != nil {
 		return errors.HandleCommon(acl.errors, cmd)
@@ -128,7 +129,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	acl_util.PrintMdsAcls(bindings, os.Stdout)
+	PrintAcls(bindings, os.Stdout)
 	return nil
 }
 
@@ -196,3 +197,31 @@ func convertToAclFilterRequest(request *mds.CreateAclRequest) mds.AclFilterReque
 		},
 	}
 }
+
+func PrintAcls(bindingsObj []mds.AclBinding, writer io.Writer) {
+	var bindings [][]string
+	for _, binding := range bindingsObj {
+
+		record := &struct {
+			Principal        string
+			Permission       mds.AclPermissionType
+			Operation        mds.AclOperation
+			Host			 string
+			Resource         mds.AclResourceType
+			Name             string
+			Type             mds.PatternType
+		}{
+			binding.Entry.Principal,
+			binding.Entry.PermissionType,
+			binding.Entry.Operation,
+			binding.Entry.Host,
+			binding.Pattern.ResourceType,
+			binding.Pattern.Name,
+			binding.Pattern.PatternType,
+		}
+		bindings = append(bindings, printer.ToRow(record,
+			[]string{"Principal", "Permission", "Operation", "Host", "Resource", "Name", "Type"}))
+	}
+	printer.RenderCollectionTableOut(bindings, []string{"Principal", "Permission", "Operation", "Host", "Resource", "Name", "Type"}, writer)
+}
+
