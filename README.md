@@ -8,7 +8,7 @@ This is the v2 Confluent *Cloud CLI*. It also serves as the backbone for the Con
 In particular, the repository also contains all of the code for the on-prem "*Confluent CLI*", which is also built
 as part of the repo's build process.
 
- * [Install](#install)
+  * [Install](#install)
     + [One Liner](#one-liner)
       - [Install Dir](#install-dir)
       - [Install Version](#install-version)
@@ -23,6 +23,16 @@ as part of the repo's build process.
     + [Documentation](#documentation)
   * [Testing](#testing)
     + [Integration Tests](#integration-tests)
+  * [Adding a New Command to the CLI](#adding-a-new-command-to-the-cli)
+    + [Command Overview](#command-overview)
+    + [Creating the command file](#creating-the-command-file)
+      - [`New[Command]` Function](#newcommand-function)
+      - [`init` Function](#init-function)
+      - [Main (Work) Function](#main-work-function)
+    + [Registering the Command](#registering-the-command)
+    + [Building](#building)
+    + [Integration Testing](#integration-testing)
+    + [Opening a PR!](#opening-a-pr)
 
 ## Install
 
@@ -221,3 +231,132 @@ You can skip rebuilding the CLI if it already exists in `dist` with
 You can mix and match these flags. To update the golden files without rebuilding, and log verbosely
 
     make test TEST_ARGS="./test/... -update -no-rebuild -v"
+
+
+## Adding a New Command to the CLI
+
+### Command Overview
+Commands in the CLI follow the following syntax:
+
+`ccloud/confluent <resource> [subresource] <standard-verb> [args]`
+
+We'll be implementing a `ccloud config file show <num-times>` command that outputs the config file of the CLI a specified number of times. For example, `ccloud config file 3` might output:
+```
+~/.ccloud/config.json
+~/.ccloud/config.json
+~/.ccloud/config.json
+```
+
+### Creating the command file
+
+Like all commands, this command will reside in `internal/cmd`. The directory name of the command should match the top-level resource, `config`, in this case. That directory already exists, but we'll need to create a file under the `config` directory, whose name matches the subresource of the command (in this case, `file.go`). We'll add the following code to it:
+
+```go
+package config
+
+import (
+	"strconv"
+
+	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+)
+
+type fileCommand struct {
+	*cobra.Command
+	config *config.Config
+}
+
+func NewFileCommand(config *config.Config) *cobra.Command {
+	cmd := &fileCommand{
+		Command: &cobra.Command{
+			Use:   "file",
+			Short: "Manage the config file.",
+		},
+		config: config,
+	}
+	cmd.init()
+	return cmd.Command
+}
+
+func (c *fileCommand) init() {
+	showCmd := &cobra.Command{
+		Use:   "show <num-times>",
+		Short: "Show the config file a specified number of times.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  c.show,
+	}
+	c.AddCommand(showCmd)
+}
+
+func (c *fileCommand) show(cmd *cobra.Command, args []string) error {
+	numTimes, err := strconv.Atoi(args[0])
+	if err != nil {
+		return err
+	}
+	filename := c.config.Filename
+	if filename == "" {
+		return errors.New("No config file exists!")
+	}
+	for i := 0; i < numTimes; i++ {
+		pcmd.Println(cmd, filename)
+	}
+	return nil
+}
+```
+
+#### `New[Command]` Function
+Here, we create the actual Cobra top-level command `file`, specifying the syntax with `Use`, and a short description with `Short`. Then we initialize the command using `init`, a convention used in the CLI codebase. Since the CLI commands often require additional parameters, we use a wrapper around Cobra commands, in this case named `fileCommand`.
+
+For our command, the constructor needs to take a `Config` struct as a parameter. `Config` describes the configuration of the CLI, and is parsed from a file located by default at `~/.ccloud/config.json` for `ccloud` commands, and at `~/.confluent/config.json` for `confluent` commands.
+
+
+
+#### `init` Function
+Here, we add the subcommands, in this case just `show`. We specify the usage messages, number of arguments our command needs, and the function that will be executed when our command is run.
+
+#### Main (Work) Function
+This function is named after the verb component of the command, `show`. It does the "heavy" lifting by parsing the `<num-times>` arg, retrieving the filename, and either printing its name to the console, or returning an error if there's no filename set.
+
+
+### Registering the Command
+We must register our newly created command with the top-level `config` command located at `internal/cmd/config/comman.go`. We add it to the `config` command with `c.AddCommand(NewFileCommand(c.config))`.
+
+With an entirely new command, we would also need to register it with the base top-level command (`ccloud` and/or `confluent`) located at `internal/cmd/command.go`, using the same `AddCommand` syntax. Since the `config` is already registered, we can skip this step.
+
+### Building
+To build both binaries, we run `make build`. After this, we can run our command, and see that it (hopefully) works!
+
+### Integration Testing
+There's not much code here to unit test, so we'll skip right to integration testing. We'll create a file named `file_test.go` under the `test` directory, and add the following code to it:
+
+```go
+package test
+
+func (s *CLITestSuite) TestFileCommands() {
+	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
+	tests := []CLITest{
+		{name: "succeed if showing existing config file", args: "config file show 3", fixture: "file1.golden"},
+	}
+	resetConfiguration(s.T(), "ccloud")
+	for _, tt := range tests {
+		if tt.name == "" {
+			tt.name = tt.args
+		}
+		tt.workflow = true
+		kafkaAPIURL := serveKafkaAPI(s.T()).URL
+		s.runCcloudTest(tt, serve(s.T(), kafkaAPIURL).URL, kafkaAPIURL)
+	}
+}
+```
+
+We'll also need to add the new golden file, `file1.golden`, to `test/fixtures/output`. After running the command manually to ensure the output is correct, the content for the golden file can either be:
+
+1. Copied directly from the shell
+2. Generated automatically by running `make test TEST_ARGS="./test/... -update"`, which runs all integration tests and updates all golden files to match their output. This is a risky command to run, as it essentially passes all integration tests, but is convenient to use if you can't get tests to pass from manual copying due to some hidden spaces. In addition to auto-filling the `file` golden file, this command will update the `help` command test outputs to reflect the added command.
+
+### Opening a PR!
+
+That's it! As you can see, the process of adding a new command is pretty straightforward. After you're able to successfully build the CLI with `make build`, and all unit and integration tests pass with `make test`, you can open a PR!
