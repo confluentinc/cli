@@ -77,7 +77,7 @@ the --prefix option was also passed.`)
 }
 
 // parse returns ACLConfiguration from the contents of cmd
-func parseMds(cmd *cobra.Command) *ACLConfiguration {
+func parse(cmd *cobra.Command) *ACLConfiguration {
 	aclConfiguration := &ACLConfiguration{
 		CreateAclRequest: &mds.CreateAclRequest{
 			Scope: mds.KafkaScope{
@@ -91,21 +91,21 @@ func parseMds(cmd *cobra.Command) *ACLConfiguration {
 			},
 		},
 	}
-	cmd.Flags().Visit(mdsFromArgs(aclConfiguration))
+	cmd.Flags().Visit(fromArgs(aclConfiguration))
 	return aclConfiguration
 }
 
 // fromArgs maps command flag values to the appropriate ACLConfiguration field
-func mdsFromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
+func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 	return func(flag *pflag.Flag) {
 		v := flag.Value.String()
 		switch n := flag.Name; n {
 		case "consumer-group":
-			setMdsResourcePattern(conf, "GROUP", v)
+			setResourcePattern(conf, "GROUP", v)
 		case "cluster-scope":
 			// The only valid name for a cluster is kafka-cluster
 			// https://github.com/confluentinc/cc-kafka/blob/88823c6016ea2e306340938994d9e122abf3c6c0/core/src/main/scala/kafka/security/auth/Resource.scala#L24
-			setMdsResourcePattern(conf, "cluster", "kafka-cluster")
+			setResourcePattern(conf, "cluster", "kafka-cluster")
 		case "kafka-cluster-id":
 			conf.Scope.Clusters.KafkaCluster = v
 		case "topic":
@@ -113,7 +113,7 @@ func mdsFromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 		case "delegation-token":
 			fallthrough
 		case "transactional-id":
-			setMdsResourcePattern(conf, n, v)
+			setResourcePattern(conf, n, v)
 		case "allow":
 			conf.AclBinding.Entry.PermissionType = mds.ACL_PERMISSION_TYPE_ALLOW
 		case "deny":
@@ -150,7 +150,7 @@ func mdsFromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 	}
 }
 
-func setMdsResourcePattern(conf *ACLConfiguration, n string, v string) {
+func setResourcePattern(conf *ACLConfiguration, n string, v string) {
 	if conf.AclBinding.Pattern.ResourceType != "" {
 		// A resourceType has already been set with a previous flag
 		conf.errors = multierror.Append(conf.errors, fmt.Errorf("exactly one of %v must be set",
