@@ -8,31 +8,37 @@ This is the v2 Confluent *Cloud CLI*. It also serves as the backbone for the Con
 In particular, the repository also contains all of the code for the on-prem "*Confluent CLI*", which is also built
 as part of the repo's build process.
 
-  * [Install](#install)
-    + [One Liner](#one-liner)
-      - [Install Dir](#install-dir)
-      - [Install Version](#install-version)
-    + [Binary Tarball from S3](#binary-tarball-from-s3)
-    + [Building From Source](#building-from-source)
-  * [Developing](#developing)
-    + [Go Version](#go-version)
-    + [File Layout](#file-layout)
-    + [Build Other Platforms](#build-other-platforms)
-    + [URLS](#urls)
-  * [Installers](#installers)
-    + [Documentation](#documentation)
-  * [Testing](#testing)
-    + [Integration Tests](#integration-tests)
-  * [Adding a New Command to the CLI](#adding-a-new-command-to-the-cli)
-    + [Command Overview](#command-overview)
-    + [Creating the command file](#creating-the-command-file)
-      - [`New[Command]` Function](#newcommand-function)
-      - [`init` Function](#init-function)
-      - [Main (Work) Function](#main-work-function)
-    + [Registering the Command](#registering-the-command)
-    + [Building](#building)
-    + [Integration Testing](#integration-testing)
-    + [Opening a PR!](#opening-a-pr)
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [Install](#install)
+  - [One Liner](#one-liner)
+    - [Install Dir](#install-dir)
+    - [Install Version](#install-version)
+  - [Binary Tarball from S3](#binary-tarball-from-s3)
+  - [Building From Source](#building-from-source)
+- [Developing](#developing)
+  - [Go Version](#go-version)
+  - [File Layout](#file-layout)
+  - [Build Other Platforms](#build-other-platforms)
+  - [URLS](#urls)
+- [Installers](#installers)
+  - [Documentation](#documentation)
+- [Testing](#testing)
+  - [Integration Tests](#integration-tests)
+- [Adding a New Command to the CLI](#adding-a-new-command-to-the-cli)
+  - [Command Overview](#command-overview)
+  - [Creating the command file](#creating-the-command-file)
+    - [`New[Command]` Function](#newcommand-function)
+    - [`init` Function](#init-function)
+    - [Main (Work) Function](#main-work-function)
+  - [Registering the Command](#registering-the-command)
+  - [Building](#building)
+  - [Integration Testing](#integration-testing)
+  - [Opening a PR!](#opening-a-pr)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Install
 
