@@ -181,8 +181,10 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 		a.config.Auth.Account = a.config.Auth.Accounts[0]
 	}
 
-	a.createOrUpdateContext(a.config.Auth)
-
+	err = a.addContextIfAbsent(a.config.Auth.User.Email)
+	if err != nil {
+		return err
+	}
 	err = a.config.Save()
 	if err != nil {
 		return errors.Wrap(err, "Unable to save user authentication.")
@@ -216,7 +218,10 @@ func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.Wrap(err, "Unable to save user authentication.")
 	}
-
+	err = a.addContextIfAbsent(email)
+	if err != nil {
+		return err
+	}
 	pcmd.Println(cmd, "Logged in as", email)
 
 	return err
@@ -286,27 +291,27 @@ func (a *commands) credentials(cmd *cobra.Command, userField string, cloudClient
 	return email, password, nil
 }
 
-func (a *commands) createOrUpdateContext(user *config.AuthConfig) {
-	name := fmt.Sprintf("login-%s-%s", user.User.Email, a.config.AuthURL)
-	if _, ok := a.config.Platforms[name]; !ok {
-		a.config.Platforms[name] = &config.Platform{
-			Server: a.config.AuthURL,
-		}
+func (a *commands) addContextIfAbsent(username string) error {
+	name := fmt.Sprintf("login-%s-%s", username, a.config.AuthURL)
+	if _, ok := a.config.Contexts[name]; ok {
+		return nil
 	}
-	if _, ok := a.config.Credentials[name]; !ok {
-		a.config.Credentials[name] = &config.Credential{
-			Username: user.User.Email,
-			// don't save password if they entered it interactively
-		}
+	platform := &config.Platform{
+		Server: a.config.AuthURL,
 	}
-	if _, ok := a.config.Contexts[name]; !ok {
-		a.config.Contexts[name] = &config.Context{
-			Platform:      name,
-			Credential:    name,
-			KafkaClusters: map[string]*config.KafkaClusterConfig{},
-		}
+	credential := &config.Credential{
+		Username: username,
+		// don't save password if they entered it interactively.
 	}
-	a.config.CurrentContext = name
+	err := a.config.AddContext(name, platform, credential, map[string]*config.KafkaClusterConfig{}, "", nil)
+	if err != nil {
+		return err
+	}
+	err = a.config.SetContext(name)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func check(err error) {
