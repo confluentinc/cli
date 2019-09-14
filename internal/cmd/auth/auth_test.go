@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"testing"
@@ -11,7 +12,7 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go"
 	sdkMock "github.com/confluentinc/ccloud-sdk-go/mock"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
-	mds "github.com/confluentinc/mds-sdk-go"
+	"github.com/confluentinc/mds-sdk-go"
 	mdsMock "github.com/confluentinc/mds-sdk-go/mock"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -115,18 +116,17 @@ func TestLoginSuccess(t *testing.T) {
 		req.Contains(output, "Logged in as cody@confluent.io")
 
 		req.Equal("y0ur.jwt.T0kEn", cfg.AuthToken)
+		contextName := fmt.Sprintf("login-cody@confluent.io-%s", cfg.AuthURL)
+		req.Contains(cfg.Platforms, cfg.AuthURL)
+		req.Equal(cfg.AuthURL, cfg.Platforms[cfg.AuthURL].Server)
+		req.Contains(cfg.Credentials, "username-cody@confluent.io")
+		req.Equal("cody@confluent.io", cfg.Credentials["username-cody@confluent.io"].Username)
+		req.Contains(cfg.Contexts, contextName)
+		req.Equal(cfg.AuthURL, cfg.Contexts[contextName].Platform)
+		req.Equal("username-cody@confluent.io", cfg.Contexts[contextName].Credential)
 		if s.cliName == "ccloud" {
 			// MDS doesn't set some things like cfg.Auth.User since e.g. an MDS user != an orgv1 (ccloud) User
 			req.Equal(&orgv1.User{Id: 23, Email: "cody@confluent.io", FirstName: "Cody"}, cfg.Auth.User)
-
-			name := "login-cody@confluent.io-https://confluent.cloud"
-			req.Contains(cfg.Platforms, name)
-			req.Equal("https://confluent.cloud", cfg.Platforms[name].Server)
-			req.Contains(cfg.Credentials, name)
-			req.Equal("cody@confluent.io", cfg.Credentials[name].Username)
-			req.Contains(cfg.Contexts, name)
-			req.Equal(name, cfg.Contexts[name].Platform)
-			req.Equal(name, cfg.Contexts[name].Credential)
 		} else {
 			req.Equal("http://localhost:8090", cfg.AuthURL)
 		}
