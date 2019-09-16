@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net/http"
+	"os"
+
 	"github.com/confluentinc/go-printer"
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
-	"os"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
@@ -94,9 +96,13 @@ func (c *aclCommand) init() {
 func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
 	acl := parse(cmd)
 
-	bindings, _, err := c.client.KafkaACLManagementApi.SearchAclBinding(c.ctx, convertToAclFilterRequest(acl.CreateAclRequest))
+	bindings, response, err := c.client.KafkaACLManagementApi.SearchAclBinding(c.ctx, convertToAclFilterRequest(acl.CreateAclRequest))
 
 	if err != nil {
+		if response != nil && response.StatusCode == http.StatusNotFound {
+			cmd.SilenceUsage = true
+			return fmt.Errorf("Unable to list ACLs (%s). Ensure that you're running against MDS with CP 5.4+.", err.Error())
+		}
 		return errors.HandleCommon(err, cmd)
 	}
 
@@ -111,7 +117,12 @@ func (c *aclCommand) create(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(acl.errors, cmd)
 	}
 
-	_, err := c.client.KafkaACLManagementApi.AddAclBinding(c.ctx, *acl.CreateAclRequest)
+	response, err := c.client.KafkaACLManagementApi.AddAclBinding(c.ctx, *acl.CreateAclRequest)
+
+	if err != nil && response != nil && response.StatusCode == http.StatusNotFound {
+		cmd.SilenceUsage = true
+		return fmt.Errorf("Unable to add ACLs (%s). Ensure that you're running against MDS with CP 5.4+.", err.Error())
+	}
 
 	return errors.HandleCommon(err, cmd)
 }
@@ -123,9 +134,13 @@ func (c *aclCommand) delete(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(acl.errors, cmd)
 	}
 
-	bindings, _, err := c.client.KafkaACLManagementApi.RemoveAclBindings(c.ctx, convertToAclFilterRequest(acl.CreateAclRequest))
+	bindings, response, err := c.client.KafkaACLManagementApi.RemoveAclBindings(c.ctx, convertToAclFilterRequest(acl.CreateAclRequest))
 
 	if err != nil {
+		if response != nil && response.StatusCode == http.StatusNotFound {
+			cmd.SilenceUsage = true
+			return fmt.Errorf("Unable to delete ACLs (%s). Ensure that you're running against MDS with CP 5.4+.", err.Error())
+		}
 		return errors.HandleCommon(err, cmd)
 	}
 
