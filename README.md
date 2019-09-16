@@ -180,7 +180,19 @@ The major modifications include
 * updated version/tag handling of the `v` prefix; its expected in GitHub and inconsistently used in S3
 * updated the usage message, logging, and file comments a bit
 
-### Documentation
+## Documentation
+
+### README
+
+To re-generate the Table of Contents in this README, you'll need to install npm.
+You can get this by installing [nodejs](https://nodejs.org/en/) directly or by using
+[nvm](https://github.com/nvm-sh/nvm) for multi-node version support (like goenv).
+
+Then run this to update the Table of Contents:
+
+    $ make doctool
+
+### Reference Docs
 
 The CLI command [reference docs](https://docs.confluent.io/current/cloud/cli/command-reference/index.html)
 are programmatically generated from the Cobra commands in this repo.
