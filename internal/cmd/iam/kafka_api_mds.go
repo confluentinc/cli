@@ -59,8 +59,11 @@ func listAclFlags() *pflag.FlagSet {
 func aclFlags() *pflag.FlagSet {
 
 	flgSet := pflag.NewFlagSet("acl-config", pflag.ExitOnError)
-	flgSet.Bool("allow", false, "Set the ACL to grant access.")
-	flgSet.Bool("deny", false, "Set the ACL to restrict access to resource.")
+	flgSet.String("kafka-cluster-id", "", "Kafka cluster ID for scope of acl commands.")
+	flgSet.Bool("allow", false, "ACL permission to allow access.")
+	flgSet.Bool("deny", false, "ACL permission to restrict access to resource.")
+	flgSet.String("principal", "", "Principal for this operation with User: or Group: prefix.")
+	flgSet.String( "host", "*", "Set host for access.")
 	flgSet.String("operation", "", fmt.Sprintf("Set ACL Operation to: (%s).",
 		convertToFlags(mds.ACL_OPERATION_ALL, mds.ACL_OPERATION_READ, mds.ACL_OPERATION_WRITE,
 			mds.ACL_OPERATION_CREATE, mds.ACL_OPERATION_DELETE, mds.ACL_OPERATION_ALTER,
@@ -69,15 +72,13 @@ func aclFlags() *pflag.FlagSet {
 			mds.ACL_OPERATION_IDEMPOTENT_WRITE)))
 	flgSet.Bool("cluster-scope", false, `Set the cluster resource. With this option the ACL grants
 access to the provided operations on the Kafka cluster itself.`)
-	flgSet.String("principal", "", "Principal for this operation with User: or Group: prefix.")
-	flgSet.String( "host", "*", "Set host for access.")
-	flgSet.String("kafka-cluster-id", "", "Kafka cluster ID for scope of acl listings.")
 	flgSet.String("consumer-group", "", "Set the Consumer Group resource.")
-	flgSet.Bool("prefix", false, "Set to match all resource names prefixed with this value.")
+	flgSet.String("transactional-id", "", "Set the TransactionalID resource.")
 	flgSet.String("topic", "", `Set the topic resource. With this option the ACL grants the provided
 operations on the topics that start with that prefix, depending on whether
 the --prefix option was also passed.`)
-	flgSet.String("transactional-id", "", "Set the TransactionalID resource.")
+	flgSet.Bool("prefix", false, "Set to match all resource names prefixed with this value.")
+	flgSet.SortFlags = false
 	return flgSet
 }
 
