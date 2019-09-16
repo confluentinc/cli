@@ -285,3 +285,8 @@ mock/local/shell_runner_mock.go:
 
 .PHONY: test
 test: bindata mocks lint coverage
+
+.PHONY: doctoc
+doctoc:
+	npx doctoc README.md
+
