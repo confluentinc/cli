@@ -41,6 +41,11 @@ func addAclFlags() *pflag.FlagSet {
 
 func deleteAclFlags() *pflag.FlagSet {
 	flgSet := aclFlags()
+	// MDS delete apis allow principal/operation/host to be skipped, but we deliberately
+	// want cli delete to only work on 1 acl at a time.
+	_ = cobra.MarkFlagRequired(flgSet, "principal")
+	_ = cobra.MarkFlagRequired(flgSet, "operation")
+	_ = cobra.MarkFlagRequired(flgSet, "host")
 	_ = cobra.MarkFlagRequired(flgSet, "kafka-cluster-id")
 	return flgSet
 }
