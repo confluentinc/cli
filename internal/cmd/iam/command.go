@@ -8,7 +8,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/version"
-	mds "github.com/confluentinc/mds-sdk-go"
+	"github.com/confluentinc/mds-sdk-go"
 )
 
 type command struct {
