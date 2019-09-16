@@ -187,7 +187,7 @@ The major modifications include
 ### README
 
 To re-generate the Table of Contents in this README, you'll need to install nodejs.
-You can get install a specific version [directly](https://nodejs.org/en/) or use
+You can install a specific version [directly](https://nodejs.org/en/) or use
 [nvm](https://github.com/nvm-sh/nvm) for multi-node version support (like goenv).
 
 Then run this to update the Table of Contents:
