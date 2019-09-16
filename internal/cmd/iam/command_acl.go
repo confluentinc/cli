@@ -27,7 +27,7 @@ func NewACLCommand(config *config.Config, ch *pcmd.ConfigHelper, client *mds.API
 	cmd := &aclCommand{
 		Command: &cobra.Command{
 			Use:   "acl",
-			Short: `Manage Kafka ACLs.`,
+			Short: `Manage Kafka ACLs (5.4+ only).`,
 		},
 		config: config,
 		client: client,
@@ -100,12 +100,12 @@ func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	PrintAcls(bindings, os.Stdout)
+	PrintAcls(acl.Scope.Clusters.KafkaCluster, bindings, os.Stdout)
 	return nil
 }
 
 func (c *aclCommand) create(cmd *cobra.Command, args []string) error {
-	acl := validateAclAdd(parse(cmd))
+	acl := validateAclAddDelete(parse(cmd))
 
 	if acl.errors != nil {
 		return errors.HandleCommon(acl.errors, cmd)
@@ -129,12 +129,15 @@ func (c *aclCommand) delete(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	PrintAcls(bindings, os.Stdout)
+	PrintAcls(acl.Scope.Clusters.KafkaCluster, bindings, os.Stdout)
 	return nil
 }
 
-// validateAclAdd ensures the minimum requirements for acl add is met
-func validateAclAdd(aclConfiguration *ACLConfiguration) *ACLConfiguration {
+// validateAclAddDelete ensures the minimum requirements for acl add/delete is met
+func validateAclAddDelete(aclConfiguration *ACLConfiguration) *ACLConfiguration {
+	// delete is deliberately less powerful in the cli than in the API to prevent accidental
+	// deletion of too many acls at once. Expectation is that multi delete will be done via
+	// repeated invocation of the cli by external scripts.
 	if aclConfiguration.AclBinding.Entry.PermissionType == "" {
 		aclConfiguration.errors = multierror.Append(aclConfiguration.errors, fmt.Errorf("--allow or --deny must be set when adding or deleting an ACL"))
 	}
@@ -198,11 +201,12 @@ func convertToAclFilterRequest(request *mds.CreateAclRequest) mds.AclFilterReque
 	}
 }
 
-func PrintAcls(bindingsObj []mds.AclBinding, writer io.Writer) {
+func PrintAcls(kafkaClusterId string, bindingsObj []mds.AclBinding, writer io.Writer) {
 	var bindings [][]string
 	for _, binding := range bindingsObj {
 
 		record := &struct {
+			KafkaClusterId	 string
 			Principal        string
 			Permission       mds.AclPermissionType
 			Operation        mds.AclOperation
@@ -211,6 +215,7 @@ func PrintAcls(bindingsObj []mds.AclBinding, writer io.Writer) {
 			Name             string
 			Type             mds.PatternType
 		}{
+			kafkaClusterId,
 			binding.Entry.Principal,
 			binding.Entry.PermissionType,
 			binding.Entry.Operation,
@@ -220,8 +225,8 @@ func PrintAcls(bindingsObj []mds.AclBinding, writer io.Writer) {
 			binding.Pattern.PatternType,
 		}
 		bindings = append(bindings, printer.ToRow(record,
-			[]string{"Principal", "Permission", "Operation", "Host", "Resource", "Name", "Type"}))
+			[]string{"KafkaClusterId", "Principal", "Permission", "Operation", "Host", "Resource", "Name", "Type"}))
 	}
-	printer.RenderCollectionTableOut(bindings, []string{"Principal", "Permission", "Operation", "Host", "Resource", "Name", "Type"}, writer)
+	printer.RenderCollectionTableOut(bindings, []string{"KafkaClusterId", "Principal", "Permission", "Operation", "Host", "Resource", "Name", "Type"}, writer)
 }
 

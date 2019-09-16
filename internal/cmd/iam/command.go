@@ -1,6 +1,8 @@
 package iam
 
 import (
+	"os"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -37,5 +39,8 @@ func New(prerunner pcmd.PreRunner, config *config.Config, ch *pcmd.ConfigHelper,
 func (c *command) init() {
 	c.AddCommand(NewRoleCommand(c.config, c.client))
 	c.AddCommand(NewRolebindingCommand(c.config, c.ch, c.client))
-	c.AddCommand(NewACLCommand(c.config, c.ch, c.client))
+	if os.Getenv("XX_FLAG_CENTRALIZED_ACL_ENABLE") != "" {
+		// TODO: Remove the feature flag if statement once 5.4 is released
+		c.AddCommand(NewACLCommand(c.config, c.ch, c.client))
+	}
 }
