@@ -24,7 +24,9 @@ as part of the repo's build process.
   - [Build Other Platforms](#build-other-platforms)
   - [URLS](#urls)
 - [Installers](#installers)
-  - [Documentation](#documentation)
+- [Documentation](#documentation)
+  - [README](#readme)
+  - [Reference Docs](#reference-docs)
 - [Testing](#testing)
   - [Integration Tests](#integration-tests)
 - [Adding a New Command to the CLI](#adding-a-new-command-to-the-cli)
@@ -190,7 +192,7 @@ You can get this by installing [nodejs](https://nodejs.org/en/) directly or by u
 
 Then run this to update the Table of Contents:
 
-    $ make doctool
+    $ make doctoc
 
 ### Reference Docs
 
