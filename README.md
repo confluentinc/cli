@@ -8,31 +8,39 @@ This is the v2 Confluent *Cloud CLI*. It also serves as the backbone for the Con
 In particular, the repository also contains all of the code for the on-prem "*Confluent CLI*", which is also built
 as part of the repo's build process.
 
-  * [Install](#install)
-    + [One Liner](#one-liner)
-      - [Install Dir](#install-dir)
-      - [Install Version](#install-version)
-    + [Binary Tarball from S3](#binary-tarball-from-s3)
-    + [Building From Source](#building-from-source)
-  * [Developing](#developing)
-    + [Go Version](#go-version)
-    + [File Layout](#file-layout)
-    + [Build Other Platforms](#build-other-platforms)
-    + [URLS](#urls)
-  * [Installers](#installers)
-    + [Documentation](#documentation)
-  * [Testing](#testing)
-    + [Integration Tests](#integration-tests)
-  * [Adding a New Command to the CLI](#adding-a-new-command-to-the-cli)
-    + [Command Overview](#command-overview)
-    + [Creating the command file](#creating-the-command-file)
-      - [`New[Command]` Function](#newcommand-function)
-      - [`init` Function](#init-function)
-      - [Main (Work) Function](#main-work-function)
-    + [Registering the Command](#registering-the-command)
-    + [Building](#building)
-    + [Integration Testing](#integration-testing)
-    + [Opening a PR!](#opening-a-pr)
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [Install](#install)
+  - [One Liner](#one-liner)
+    - [Install Dir](#install-dir)
+    - [Install Version](#install-version)
+  - [Binary Tarball from S3](#binary-tarball-from-s3)
+  - [Building From Source](#building-from-source)
+- [Developing](#developing)
+  - [Go Version](#go-version)
+  - [File Layout](#file-layout)
+  - [Build Other Platforms](#build-other-platforms)
+  - [URLS](#urls)
+- [Installers](#installers)
+- [Documentation](#documentation)
+  - [README](#readme)
+  - [Reference Docs](#reference-docs)
+- [Testing](#testing)
+  - [Integration Tests](#integration-tests)
+- [Adding a New Command to the CLI](#adding-a-new-command-to-the-cli)
+  - [Command Overview](#command-overview)
+  - [Creating the command file](#creating-the-command-file)
+    - [`New[Command]` Function](#newcommand-function)
+    - [`init` Function](#init-function)
+    - [Main (Work) Function](#main-work-function)
+  - [Registering the Command](#registering-the-command)
+  - [Building](#building)
+  - [Integration Testing](#integration-testing)
+  - [Opening a PR!](#opening-a-pr)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Install
 
@@ -174,7 +182,19 @@ The major modifications include
 * updated version/tag handling of the `v` prefix; its expected in GitHub and inconsistently used in S3
 * updated the usage message, logging, and file comments a bit
 
-### Documentation
+## Documentation
+
+### README
+
+To re-generate the Table of Contents in this README, you'll need to install nodejs.
+You can install a specific version [directly](https://nodejs.org/en/) or use
+[nvm](https://github.com/nvm-sh/nvm) for multi-node version support (like goenv).
+
+Then run this to update the Table of Contents:
+
+    $ make doctoc
+
+### Reference Docs
 
 The CLI command [reference docs](https://docs.confluent.io/current/cloud/cli/command-reference/index.html)
 are programmatically generated from the Cobra commands in this repo.
