@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/mds-sdk-go"
@@ -24,7 +23,7 @@ type aclCommand struct {
 }
 
 // NewACLCommand returns the Cobra command for ACLs.
-func NewACLCommand(config *config.Config, ch *pcmd.ConfigHelper, client *mds.APIClient) *cobra.Command {
+func NewACLCommand(config *config.Config, client *mds.APIClient) *cobra.Command {
 	cmd := &aclCommand{
 		Command: &cobra.Command{
 			Use:   "acl",
