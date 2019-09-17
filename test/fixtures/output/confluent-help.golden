@@ -6,7 +6,7 @@ Usage:
 Available Commands:
   completion  Print shell completion code.
   help        Help about any command
-  iam         Manage RBAC and IAM permissions.
+  iam         Manage RBAC, ACL and IAM permissions.
   local       Manage a local Confluent Platform development environment.
   login       Log in to Confluent Platform (required for RBAC).
   logout      Logout of Confluent Platform.
