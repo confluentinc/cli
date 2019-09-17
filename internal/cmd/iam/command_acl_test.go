@@ -8,7 +8,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
@@ -206,10 +205,15 @@ func (suite *AclTestSuite) newMockIamCmd(expect chan interface{}) *cobra.Command
 	return New(&cliMock.Commander{}, suite.conf, mdsClient)
 }
 
+func TestAclTestSuite(t *testing.T) {
+	suite.Run(t, new(AclTestSuite))
+}
+
 func (suite *AclTestSuite) TestMdsCreateACL() {
 	expect := make(chan interface{})
 	for _, mdsResourcePattern := range mdsResourcePatterns {
-		args := append([]string{"acl", "create", "--kafka-cluster-id", "testcluster"}, mdsResourcePattern.args...)
+		args := append([]string{"acl", "create", "--kafka-cluster-id", "testcluster"},
+					mdsResourcePattern.args...)
 		for _, mdsAclEntry := range mdsAclEntries {
 			cmd := suite.newMockIamCmd(expect)
 			cmd.SetArgs(append(args, mdsAclEntry.args...))
@@ -225,53 +229,68 @@ func (suite *AclTestSuite) TestMdsCreateACL() {
 				}
 			}()
 
-			err := cmd.Execute()
-			req := require.New(suite.T())
-			req.Nil(err)
+			_ = cmd.Execute()
 		}
 	}
 }
 
-func TestAclTestSuite(t *testing.T) {
-	suite.Run(t, new(AclTestSuite))
+func (suite *AclTestSuite) TestMdsDeleteACL() {
+	expect := make(chan interface{})
+	for _, mdsResourcePattern := range mdsResourcePatterns {
+		args := append([]string{"acl", "delete", "--kafka-cluster-id", "testcluster", "--host", "*"},
+					mdsResourcePattern.args...)
+		for _, mdsAclEntry := range mdsAclEntries {
+			cmd := suite.newMockIamCmd(expect)
+			cmd.SetArgs(append(args, mdsAclEntry.args...))
+
+			go func() {
+				expect <- convertToAclFilterRequest(
+					&mds.CreateAclRequest {
+						Scope: mds.KafkaScope {
+							Clusters: mds.KafkaScopeClusters{
+								KafkaCluster: "testcluster",
+							},
+						},
+						AclBinding: mds.AclBinding{
+							Pattern: mdsResourcePattern.pattern,
+							Entry: mdsAclEntry.entry,
+						},
+					},
+				)
+			}()
+
+			_ = cmd.Execute()
+		}
+	}
+}
+
+func (suite *AclTestSuite) TestMdsListACL() {
+	expect := make(chan interface{})
+	for _, mdsResourcePattern := range mdsResourcePatterns {
+		cmd := suite.newMockIamCmd(expect)
+		cmd.SetArgs(append([]string{"acl", "list", "--kafka-cluster-id", "testcluster"}, mdsResourcePattern.args...))
+
+		go func() {
+			expect <- convertToAclFilterRequest(
+				&mds.CreateAclRequest {
+					Scope: mds.KafkaScope {
+						Clusters: mds.KafkaScopeClusters{
+							KafkaCluster: "testcluster",
+						},
+					},
+					AclBinding: mds.AclBinding{
+						Pattern: mdsResourcePattern.pattern,
+						Entry: mds.AccessControlEntry{},
+					},
+				},
+			)
+		}()
+
+		_ = cmd.Execute()
+	}
 }
 
 /*
-func TestMdsDeleteACL(t *testing.T) {
-	expect := make(chan interface{})
-	for _, resource := range mdsResourcePatterns {
-		args := append([]string{"acl", "delete"}, resource.args...)
-		for _, entry := range mdsAclEntries {
-			cmd := NewMdsCMD(expect)
-			cmd.SetArgs(append(args, entry.args...))
-
-			go func() {
-				expect <- convertToAclFilterRequest(&mds.AclBinding{Pattern: resource.pattern, Entry: entry.entry})
-			}()
-
-			if err := cmd.Execute(); err != nil {
-				t.Errorf("error: %s", err)
-			}
-		}
-	}
-}
-
-func TestMdsListResourceACL(t *testing.T) {
-	expect := make(chan interface{})
-	for _, resource := range mdsResourcePatterns {
-		cmd := NewMdsCMD(expect)
-		cmd.SetArgs(append([]string{"acl", "list"}, resource.args...))
-
-		go func() {
-			expect <- convertToAclFilterRequest(&kafkav1.ACLBinding{Pattern: resource.pattern, Entry: &mds.AccessControlEntry{}})
-		}()
-
-		if err := cmd.Execute(); err != nil {
-			t.Errorf("error: %s", err)
-		}
-	}
-}
-
 func TestMdsListPrincipalACL(t *testing.T) {
 	expect := make(chan interface{})
 	for _, entry := range mdsAclEntries {
