@@ -67,6 +67,7 @@ var rules = []linter.Rule{
 		linter.ExcludeUse("list", "auth"),
 		// skip ACLs which don't have an identity (value objects rather than entities)
 		linter.ExcludeCommandContains("kafka acl"),
+		linter.ExcludeCommandContains("iam acl"),
 		// skip api-key create since you don't get to choose a name for API keys
 		linter.ExcludeCommandContains("api-key create"),
 		// skip local which delegates to bash commands
