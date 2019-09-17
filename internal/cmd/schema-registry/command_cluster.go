@@ -166,7 +166,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	// Retrieve SR compatibility and Mode if API key is set up in user's config.json file
-	if srHasAPIKey(c.config) == true {
+	if srHasAPIKey(c.config) {
 		srClient, ctx, err = GetApiClient(c.srClient, c.ch)
 		if err != nil {
 			return err
@@ -180,12 +180,12 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 			compatibility = compatibilityResponse.CompatibilityLevel
 		}
 		// Get SR Mode
-		ModeResponse, _, err := srClient.DefaultApi.GetTopLevelMode(ctx)
+		modeResponse, _, err := srClient.DefaultApi.GetTopLevelMode(ctx)
 		if err != nil {
 			mode = ""
 			c.logger.Warn("Could not retrieve Schema Registry Mode")
 		} else {
-			mode = ModeResponse.Mode
+			mode = modeResponse.Mode
 		}
 	} else {
 		srClient = nil
