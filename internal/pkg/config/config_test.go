@@ -634,7 +634,7 @@ func TestConfig_DeleteContext(t *testing.T) {
 		},
 		{name: "succeed deleting existing context",
 			fields: fields{Contexts: map[string]*Context{
-				contextName:     {Name: contextName,},
+				contextName:     {Name: contextName},
 				"other-context": {Name: "other-context"},
 			},
 				CurrentContext: "other-context",
@@ -642,7 +642,7 @@ func TestConfig_DeleteContext(t *testing.T) {
 			args:    args{name: contextName},
 			wantErr: false,
 			wantConfig: &Config{
-				Contexts:       map[string]*Context{"other-context": {Name: "other-context",}},
+				Contexts:       map[string]*Context{"other-context": {Name: "other-context"}},
 				CurrentContext: "other-context",
 			},
 		},
