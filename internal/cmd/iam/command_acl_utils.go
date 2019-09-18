@@ -184,14 +184,14 @@ func convertToFlags(operations ...interface{}) string {
 	var ops []string
 
 	for _, v := range operations {
-		if v == "GROUP" {
+		if v == mds.ACL_RESOURCE_TYPE_GROUP {
 			v = "consumer-group"
 		}
-		if v == "CLUSTER" {
+		if v == mds.ACL_RESOURCE_TYPE_CLUSTER {
 			v = "cluster-scope"
 		}
 		s := fmt.Sprintf("%v", v)
-		strings.Replace(s, "_", "-", -1)
+		s = strings.Replace(s, "_", "-", -1)
 		ops = append(ops, strings.ToLower(s))
 	}
 

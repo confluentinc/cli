@@ -10,18 +10,15 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/update"
 	cliMock "github.com/confluentinc/cli/mock"
 	"github.com/confluentinc/mds-sdk-go"
 	"github.com/confluentinc/mds-sdk-go/mock"
 )
-
-type AclTestSuite struct {
-	suite.Suite
-	conf *config.Config
-	kafkaApi *mock.KafkaACLManagementApi
-}
 
 /*************** TEST command_acl ***************/
 var mdsResourcePatterns = []struct {
@@ -75,105 +72,112 @@ var mdsAclEntries = []struct {
 	entry mds.AccessControlEntry
 }{
 	{
-		args: []string{"--allow", "--principal", "User:Bob", "--operation", "read"},
+		args: []string{"--allow", "--principal", "User:42", "--operation", "read"},
 		entry: mds.AccessControlEntry{PermissionType: mds.ACL_PERMISSION_TYPE_ALLOW,
-			Principal: "User:Bob", Operation: mds.ACL_OPERATION_READ, Host: "*"},
+			Principal: "User:42", Operation: mds.ACL_OPERATION_READ, Host: "*"},
 	},
 	{
-		args: []string{"--deny", "--principal", "User:Bob", "--operation", "read"},
+		args: []string{"--deny", "--principal", "User:42", "--operation", "read"},
 		entry: mds.AccessControlEntry{PermissionType: mds.ACL_PERMISSION_TYPE_DENY,
-			Principal: "User:Bob", Operation: mds.ACL_OPERATION_READ, Host: "*"},
+			Principal: "User:42", Operation: mds.ACL_OPERATION_READ, Host: "*"},
 	},
 	{
-		args: []string{"--allow", "--principal", "User:Bob", "--operation", "write"},
+		args: []string{"--allow", "--principal", "User:42", "--operation", "write"},
 		entry: mds.AccessControlEntry{PermissionType: mds.ACL_PERMISSION_TYPE_ALLOW,
-			Principal: "User:Bob", Operation: mds.ACL_OPERATION_WRITE, Host: "*"},
+			Principal: "User:42", Operation: mds.ACL_OPERATION_WRITE, Host: "*"},
 	},
 	{
-		args: []string{"--deny", "--principal", "User:Bob", "--operation", "write"},
+		args: []string{"--deny", "--principal", "User:42", "--operation", "write"},
 		entry: mds.AccessControlEntry{PermissionType: mds.ACL_PERMISSION_TYPE_DENY,
-			Principal: "User:Bob", Operation: mds.ACL_OPERATION_WRITE, Host: "*"},
+			Principal: "User:42", Operation: mds.ACL_OPERATION_WRITE, Host: "*"},
 	},
 	{
-		args: []string{"--allow", "--principal", "User:Bob", "--operation", "create"},
+		args: []string{"--allow", "--principal", "User:42", "--operation", "create"},
 		entry: mds.AccessControlEntry{PermissionType: mds.ACL_PERMISSION_TYPE_ALLOW,
-			Principal: "User:Bob", Operation: mds.ACL_OPERATION_CREATE, Host: "*"},
+			Principal: "User:42", Operation: mds.ACL_OPERATION_CREATE, Host: "*"},
 	},
 	{
-		args: []string{"--deny", "--principal", "User:Bob", "--operation", "create"},
+		args: []string{"--deny", "--principal", "User:42", "--operation", "create"},
 		entry: mds.AccessControlEntry{PermissionType: mds.ACL_PERMISSION_TYPE_DENY,
-			Principal: "User:Bob", Operation: mds.ACL_OPERATION_CREATE, Host: "*"},
+			Principal: "User:42", Operation: mds.ACL_OPERATION_CREATE, Host: "*"},
 	},
 	{
-		args: []string{"--allow", "--principal", "User:Bob", "--operation", "delete"},
+		args: []string{"--allow", "--principal", "User:42", "--operation", "delete"},
 		entry: mds.AccessControlEntry{PermissionType: mds.ACL_PERMISSION_TYPE_ALLOW,
-			Principal: "User:Bob", Operation: mds.ACL_OPERATION_DELETE, Host: "*"},
+			Principal: "User:42", Operation: mds.ACL_OPERATION_DELETE, Host: "*"},
 	},
 	{
-		args: []string{"--deny", "--principal", "User:Bob", "--operation", "delete"},
+		args: []string{"--deny", "--principal", "User:42", "--operation", "delete"},
 		entry: mds.AccessControlEntry{PermissionType: mds.ACL_PERMISSION_TYPE_DENY,
-			Principal: "User:Bob", Operation: mds.ACL_OPERATION_DELETE, Host: "*"},
+			Principal: "User:42", Operation: mds.ACL_OPERATION_DELETE, Host: "*"},
 	},
 	{
-		args: []string{"--allow", "--principal", "User:Bob", "--operation", "alter"},
+		args: []string{"--allow", "--principal", "User:42", "--operation", "alter"},
 		entry: mds.AccessControlEntry{PermissionType: mds.ACL_PERMISSION_TYPE_ALLOW,
-			Principal: "User:Bob", Operation: mds.ACL_OPERATION_ALTER, Host: "*"},
+			Principal: "User:42", Operation: mds.ACL_OPERATION_ALTER, Host: "*"},
 	},
 	{
-		args: []string{"--deny", "--principal", "User:Bob", "--operation", "alter"},
+		args: []string{"--deny", "--principal", "User:42", "--operation", "alter"},
 		entry: mds.AccessControlEntry{PermissionType: mds.ACL_PERMISSION_TYPE_DENY,
-			Principal: "User:Bob", Operation: mds.ACL_OPERATION_ALTER, Host: "*"},
+			Principal: "User:42", Operation: mds.ACL_OPERATION_ALTER, Host: "*"},
 	},
 	{
-		args: []string{"--allow", "--principal", "User:Bob", "--operation", "describe"},
+		args: []string{"--allow", "--principal", "User:42", "--operation", "describe"},
 		entry: mds.AccessControlEntry{PermissionType: mds.ACL_PERMISSION_TYPE_ALLOW,
-			Principal: "User:Bob", Operation: mds.ACL_OPERATION_DESCRIBE, Host: "*"},
+			Principal: "User:42", Operation: mds.ACL_OPERATION_DESCRIBE, Host: "*"},
 	},
 	{
-		args: []string{"--deny", "--principal", "User:Bob", "--operation", "describe"},
+		args: []string{"--deny", "--principal", "User:42", "--operation", "describe"},
 		entry: mds.AccessControlEntry{PermissionType: mds.ACL_PERMISSION_TYPE_DENY,
-			Principal: "User:Bob", Operation: mds.ACL_OPERATION_DESCRIBE, Host: "*"},
+			Principal: "User:42", Operation: mds.ACL_OPERATION_DESCRIBE, Host: "*"},
 	},
 	{
-		args: []string{"--allow", "--principal", "User:Bob", "--operation", "cluster-action"},
+		args: []string{"--allow", "--principal", "User:42", "--operation", "cluster-action"},
 		entry: mds.AccessControlEntry{PermissionType: mds.ACL_PERMISSION_TYPE_ALLOW,
-			Principal: "User:Bob", Operation: mds.ACL_OPERATION_CLUSTER_ACTION, Host: "*"},
+			Principal: "User:42", Operation: mds.ACL_OPERATION_CLUSTER_ACTION, Host: "*"},
 	},
 	{
-		args: []string{"--deny", "--principal", "User:Bob", "--operation", "cluster-action"},
+		args: []string{"--deny", "--principal", "User:42", "--operation", "cluster-action"},
 		entry: mds.AccessControlEntry{PermissionType: mds.ACL_PERMISSION_TYPE_DENY,
-			Principal: "User:Bob", Operation: mds.ACL_OPERATION_CLUSTER_ACTION, Host: "*"},
+			Principal: "User:42", Operation: mds.ACL_OPERATION_CLUSTER_ACTION, Host: "*"},
 	},
 	{
-		args: []string{"--allow", "--principal", "User:Bob", "--operation", "describe-configs"},
+		args: []string{"--allow", "--principal", "User:42", "--operation", "describe-configs"},
 		entry: mds.AccessControlEntry{PermissionType: mds.ACL_PERMISSION_TYPE_ALLOW,
-			Principal: "User:Bob", Operation: mds.ACL_OPERATION_DESCRIBE_CONFIGS, Host: "*"},
+			Principal: "User:42", Operation: mds.ACL_OPERATION_DESCRIBE_CONFIGS, Host: "*"},
 	},
 	{
-		args: []string{"--deny", "--principal", "User:Bob", "--operation", "describe-configs"},
+		args: []string{"--deny", "--principal", "User:42", "--operation", "describe-configs"},
 		entry: mds.AccessControlEntry{PermissionType: mds.ACL_PERMISSION_TYPE_DENY,
-			Principal: "User:Bob", Operation: mds.ACL_OPERATION_DESCRIBE_CONFIGS, Host: "*"},
+			Principal: "User:42", Operation: mds.ACL_OPERATION_DESCRIBE_CONFIGS, Host: "*"},
 	},
 	{
-		args: []string{"--allow", "--principal", "User:Bob", "--operation", "alter-configs"},
+		args: []string{"--allow", "--principal", "User:42", "--operation", "alter-configs"},
 		entry: mds.AccessControlEntry{PermissionType: mds.ACL_PERMISSION_TYPE_ALLOW,
-			Principal: "User:Bob", Operation: mds.ACL_OPERATION_ALTER_CONFIGS, Host: "*"},
+			Principal: "User:42", Operation: mds.ACL_OPERATION_ALTER_CONFIGS, Host: "*"},
 	},
 	{
-		args: []string{"--deny", "--principal", "User:Bob", "--operation", "alter-configs"},
+		args: []string{"--deny", "--principal", "User:42", "--operation", "alter-configs"},
 		entry: mds.AccessControlEntry{PermissionType: mds.ACL_PERMISSION_TYPE_DENY,
-			Principal: "User:Bob", Operation: mds.ACL_OPERATION_ALTER_CONFIGS, Host: "*"},
+			Principal: "User:42", Operation: mds.ACL_OPERATION_ALTER_CONFIGS, Host: "*"},
 	},
 	{
-		args: []string{"--allow", "--principal", "User:Bob", "--operation", "idempotent-write"},
+		args: []string{"--allow", "--principal", "User:42", "--operation", "idempotent-write"},
 		entry: mds.AccessControlEntry{PermissionType: mds.ACL_PERMISSION_TYPE_ALLOW,
-			Principal: "User:Bob", Operation: mds.ACL_OPERATION_IDEMPOTENT_WRITE, Host: "*"},
+			Principal: "User:42", Operation: mds.ACL_OPERATION_IDEMPOTENT_WRITE, Host: "*"},
 	},
 	{
-		args: []string{"--deny", "--principal", "User:Bob", "--operation", "idempotent-write"},
+		args: []string{"--deny", "--principal", "User:42", "--operation", "idempotent-write"},
 		entry: mds.AccessControlEntry{PermissionType: mds.ACL_PERMISSION_TYPE_DENY,
-			Principal: "User:Bob", Operation: mds.ACL_OPERATION_IDEMPOTENT_WRITE, Host: "*"},
+			Principal: "User:42", Operation: mds.ACL_OPERATION_IDEMPOTENT_WRITE, Host: "*"},
 	},
+}
+
+type AclTestSuite struct {
+	suite.Suite
+	conf      *config.Config
+	kafkaApi  *mock.KafkaACLManagementApi
+	preRunner pcmd.PreRunner
 }
 
 func (suite *AclTestSuite) SetupSuite() {
@@ -185,24 +189,28 @@ func (suite *AclTestSuite) SetupSuite() {
 	suite.conf.AuthToken = "T0k3n"
 }
 
-func (suite *AclTestSuite) newMockIamCmd(expect chan interface{}) *cobra.Command {
+func (suite *AclTestSuite) SetupTest() {
+	suite.preRunner = &cliMock.Commander{}
+}
+
+func (suite *AclTestSuite) newMockIamCmd(expect chan interface{}, message string) *cobra.Command {
 	suite.kafkaApi = &mock.KafkaACLManagementApi{
 		AddAclBindingFunc:  func(ctx context.Context, createAclRequest mds.CreateAclRequest) (*net_http.Response, error) {
-			assert.Equal(suite.T(), createAclRequest, <-expect, "")
+			assert.Equal(suite.T(), createAclRequest, <-expect, message)
 			return nil, nil
 		},
 		RemoveAclBindingsFunc: func(ctx context.Context, aclFilterRequest mds.AclFilterRequest) ([]mds.AclBinding, *net_http.Response, error){
-			assert.Equal(suite.T(), aclFilterRequest, <-expect, "")
+			assert.Equal(suite.T(), aclFilterRequest, <-expect, message)
 			return nil, nil, nil
 		},
 		SearchAclBindingFunc: func(ctx context.Context, aclFilterRequest mds.AclFilterRequest) ([]mds.AclBinding, *net_http.Response, error){
-			assert.Equal(suite.T(), aclFilterRequest, <-expect, "")
+			assert.Equal(suite.T(), aclFilterRequest, <-expect, message)
 			return nil, nil, nil
 		},
 	}
 	mdsClient := mds.NewAPIClient(mds.NewConfiguration())
 	mdsClient.KafkaACLManagementApi = suite.kafkaApi
-	return New(&cliMock.Commander{}, suite.conf, mdsClient)
+	return New(suite.preRunner, suite.conf, mdsClient)
 }
 
 func TestAclTestSuite(t *testing.T) {
@@ -215,7 +223,7 @@ func (suite *AclTestSuite) TestMdsCreateACL() {
 		args := append([]string{"acl", "create", "--kafka-cluster-id", "testcluster"},
 					mdsResourcePattern.args...)
 		for _, mdsAclEntry := range mdsAclEntries {
-			cmd := suite.newMockIamCmd(expect)
+			cmd := suite.newMockIamCmd(expect, "")
 			cmd.SetArgs(append(args, mdsAclEntry.args...))
 
 			go func() {
@@ -229,7 +237,8 @@ func (suite *AclTestSuite) TestMdsCreateACL() {
 				}
 			}()
 
-			_ = cmd.Execute()
+			err := cmd.Execute()
+			assert.Nil(suite.T(), err)
 		}
 	}
 }
@@ -240,7 +249,7 @@ func (suite *AclTestSuite) TestMdsDeleteACL() {
 		args := append([]string{"acl", "delete", "--kafka-cluster-id", "testcluster", "--host", "*"},
 					mdsResourcePattern.args...)
 		for _, mdsAclEntry := range mdsAclEntries {
-			cmd := suite.newMockIamCmd(expect)
+			cmd := suite.newMockIamCmd(expect, "")
 			cmd.SetArgs(append(args, mdsAclEntry.args...))
 
 			go func() {
@@ -259,7 +268,8 @@ func (suite *AclTestSuite) TestMdsDeleteACL() {
 				)
 			}()
 
-			_ = cmd.Execute()
+			err := cmd.Execute()
+			assert.Nil(suite.T(), err)
 		}
 	}
 }
@@ -267,7 +277,7 @@ func (suite *AclTestSuite) TestMdsDeleteACL() {
 func (suite *AclTestSuite) TestMdsListACL() {
 	expect := make(chan interface{})
 	for _, mdsResourcePattern := range mdsResourcePatterns {
-		cmd := suite.newMockIamCmd(expect)
+		cmd := suite.newMockIamCmd(expect, "")
 		cmd.SetArgs(append([]string{"acl", "list", "--kafka-cluster-id", "testcluster"}, mdsResourcePattern.args...))
 
 		go func() {
@@ -286,121 +296,167 @@ func (suite *AclTestSuite) TestMdsListACL() {
 			)
 		}()
 
-		_ = cmd.Execute()
+		err := cmd.Execute()
+		assert.Nil(suite.T(), err)
 	}
 }
 
-/*
-func TestMdsListPrincipalACL(t *testing.T) {
+func (suite *AclTestSuite) TestMdsListPrincipalACL() {
 	expect := make(chan interface{})
-	for _, entry := range mdsAclEntries {
-		cmd := NewMdsCMD(expect)
-		cmd.SetArgs(append([]string{"acl", "list", "--service-account-id"}, strings.TrimPrefix(entry.entry.Principal, "User:")))
+	for _, mdsAclEntry := range mdsAclEntries {
+		cmd := suite.newMockIamCmd(expect, "")
+		cmd.SetArgs(append([]string{"acl", "list", "--kafka-cluster-id", "testcluster", "--principal"}, mdsAclEntry.entry.Principal))
 
 		go func() {
-			expect <- convertToAclFilterRequest(&kafkav1.ACLBinding{Entry: &mds.AccessControlEntry{Principal: entry.entry.Principal}})
+			expect <- convertToAclFilterRequest(
+				&mds.CreateAclRequest {
+					Scope: mds.KafkaScope {
+						Clusters: mds.KafkaScopeClusters{
+							KafkaCluster: "testcluster",
+						},
+					},
+					AclBinding: mds.AclBinding{
+						Entry: mds.AccessControlEntry{
+							Principal: mdsAclEntry.entry.Principal,
+						},
+					},
+				},
+				)
 		}()
 
-		if err := cmd.Execute(); err != nil {
-			t.Errorf("error: %s", err)
-		}
+		err := cmd.Execute()
+		assert.Nil(suite.T(), err)
 	}
 }
 
-func TestMdsListResourcePrincipalFilterACL(t *testing.T) {
+func (suite *AclTestSuite) TestMdsListPrincipalFilterACL() {
 	expect := make(chan interface{})
-	for _, resource := range mdsResourcePatterns {
-		args := append([]string{"acl", "list"}, resource.args...)
-		for _, entry := range mdsAclEntries {
-			cmd := NewMdsCMD(expect)
-			cmd.SetArgs(append(args, "--service-account-id", strings.TrimPrefix(entry.entry.Principal, "User:")))
+	for _, mdsResourcePattern := range mdsResourcePatterns {
+		args := append([]string{"acl", "list", "--kafka-cluster-id", "testcluster"}, mdsResourcePattern.args...)
+		for _, mdsAclEntry := range mdsAclEntries {
+			cmd := suite.newMockIamCmd(expect, "")
+			cmd.SetArgs(append(args, "--principal", mdsAclEntry.entry.Principal))
 
 			go func() {
-				expect <- convertToAclFilterRequest(&kafkav1.ACLBinding{Pattern: resource.pattern, Entry: entry.entry})
-			}()
+				expect <- convertToAclFilterRequest(
+					&mds.CreateAclRequest {
+						Scope: mds.KafkaScope {
+							Clusters: mds.KafkaScopeClusters{
+								KafkaCluster: "testcluster",
+							},
+						},
+						AclBinding: mds.AclBinding{
+							Pattern: mdsResourcePattern.pattern,
+							Entry: mds.AccessControlEntry{
+								Principal: mdsAclEntry.entry.Principal,
+							},
+						},
+					},
+				)			}()
 
-			if err := cmd.Execute(); err != nil {
-				t.Errorf("error: %s", err)
-			}
+			err := cmd.Execute()
+			assert.Nil(suite.T(), err)
 		}
 	}
 }
 
-func TestMdsMultipleResourceACL(t *testing.T) {
+func (suite *AclTestSuite) TestMdsMultipleResourceACL() {
 	expect := "exactly one of cluster-scope, consumer-group, topic, transactional-id must be set"
-	args := []string{"acl", "create", "--allow", "--operation", "read", "--principal", "User:Bob",
+	args := []string{"acl", "create", "--kafka-cluster-id", "testcluster",
+		"--allow", "--operation", "read", "--principal", "User:42",
 		"--topic", "resource1", "--consumer-group", "resource2"}
 
-	cmd := NewMdsCMD(nil)
+	cmd := suite.newMockIamCmd(nil, "")
 	cmd.SetArgs(args)
 
 	err := cmd.Execute()
-	if !strings.Contains(err.Error(), expect) {
-		t.Errorf("expected: %s got: %s", expect, err.Error())
-	}
+	assert.NotNil(suite.T(), err)
+	assert.Contains(suite.T(), err.Error(), expect)
 }
 
-func TestMdsDefaults(t *testing.T) {
+func (suite *AclTestSuite) TestMdsDefaults() {
 	expect := make(chan interface{})
-	cmd := NewMdsCMD(expect)
-	cmd.SetArgs([]string{"acl", "create", "--allow", "--principal", "User:Bob",
+	cmd := suite.newMockIamCmd(expect,"Topic PatternType was not set to default value of PatternTypes_LITERAL")
+	cmd.SetArgs([]string{"acl", "create", "--kafka-cluster-id", "testcluster",
+		"--allow", "--principal", "User:42",
 		"--operation", "read", "--topic", "dan"})
 	go func() {
-		expect <- &kafkav1.ACLBinding{
-			Pattern: &kafkav1.ResourcePatternConfig{ResourceType: kafkav1.ResourceTypes_TOPIC, Name: "dan",
-				PatternType: kafkav1.PatternTypes_LITERAL},
-			Entry: &mds.AccessControlEntry{Host: "*", Principal: "User:Bob",
-				Operation: mds.ACL_OPERATION_READ, PermissionType: mds.ACL_PERMISSION_TYPE_ALLOW},
+		expect <- mds.CreateAclRequest {
+			Scope: mds.KafkaScope {
+				Clusters: mds.KafkaScopeClusters{
+					KafkaCluster: "testcluster",
+				},
+			},
+			AclBinding: mds.AclBinding{
+				Pattern: mds.KafkaResourcePattern {
+					ResourceType: mds.ACL_RESOURCE_TYPE_TOPIC,
+					Name: "dan",
+					PatternType: mds.PATTERN_TYPE_LITERAL,
+				},
+				Entry: mds.AccessControlEntry{
+					Principal: "User:42",
+					PermissionType: mds.ACL_PERMISSION_TYPE_ALLOW,
+					Operation: mds.ACL_OPERATION_READ,
+					Host: "*",
+				},
+			},
 		}
 	}()
 
-	if err := cmd.Execute(); err != nil {
-		t.Errorf("Topic PatternType was not set to default value of PatternTypes_LITERAL")
-	}
+	err := cmd.Execute()
+	assert.Nil(suite.T(), err)
 
-	cmd = NewMdsCMD(expect)
-	cmd.SetArgs([]string{"acl", "create", "--cluster-scope", "--allow", "--principal", "User:Bob",
+	cmd = suite.newMockIamCmd(expect,"Cluster PatternType was not set to default value of PatternTypes_LITERAL")
+	cmd.SetArgs([]string{"acl", "create", "--kafka-cluster-id", "testcluster",
+		"--cluster-scope", "--allow", "--principal", "User:42",
 		"--operation", "read"})
 
 	go func() {
-		expect <- &kafkav1.ACLBinding{
-			Pattern: &kafkav1.ResourcePatternConfig{ResourceType: kafkav1.ResourceTypes_CLUSTER, Name: "kafka-cluster",
-				PatternType: kafkav1.PatternTypes_LITERAL},
-			Entry: &mds.AccessControlEntry{Host: "*", Principal: "User:Bob",
-				Operation: mds.ACL_OPERATION_READ, PermissionType: mds.ACL_PERMISSION_TYPE_ALLOW},
+		expect <- mds.CreateAclRequest {
+			Scope: mds.KafkaScope {
+				Clusters: mds.KafkaScopeClusters{
+					KafkaCluster: "testcluster",
+				},
+			},
+			AclBinding: mds.AclBinding{
+				Pattern: mds.KafkaResourcePattern {
+					ResourceType: mds.ACL_RESOURCE_TYPE_CLUSTER,
+					Name: "kafka-cluster",
+					PatternType: mds.PATTERN_TYPE_LITERAL,
+				},
+				Entry: mds.AccessControlEntry{
+					Principal: "User:42",
+					PermissionType: mds.ACL_PERMISSION_TYPE_ALLOW,
+					Operation: mds.ACL_OPERATION_READ,
+					Host: "*",
+				},
+			},
 		}
 	}()
 
-	if err := cmd.Execute(); err != nil {
-		t.Errorf("Cluster PatternType was not set to default value of PatternTypes_LITERAL")
-	}
+	err = cmd.Execute()
+	assert.Nil(suite.T(), err)
 }
 
-// TODO: do this for all commands/subcommands... and for all common error messages
-func Test_HandleError_NotLoggedIn(t *testing.T) {
-	kafka := &mock.Kafka{
-		ListFunc: func(ctx context.Context, cluster *kafkav1.KafkaCluster) ([]*kafkav1.KafkaCluster, error) {
-			return nil, errors.ErrNotLoggedIn
-		},
+func (suite *AclTestSuite) TestMdsHandleErrorNotLoggedIn() {
+	// Use the real auth preRunner
+	suite.preRunner = &pcmd.PreRun{
+		Logger: log.New(),
+		Config: suite.conf,
+		UpdateClient: update.NewClient(&update.ClientParams{CheckInterval: 0}),
 	}
-	cmd := kafka2.New(&cliMock.Commander{}, kafka2.conf, kafka, &pcmd.ConfigHelper{Config: kafka2.conf, Client: &ccloud.Client{Kafka: kafka}})
-	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
-	cmd.SetArgs(append([]string{"cluster", "list"}))
-	buf := new(bytes.Buffer)
-	cmd.SetOutput(buf)
+	expect := make(chan interface{})
 
-	err := cmd.Execute()
-	want := "You must login to run that command."
-	if err.Error() != want {
-		t.Errorf("unexpected output, got %s, want %s", err, want)
-	}
-}
-
-func NewMdsCMD(expect chan interface{}) *cobra.Command {
-	kafka := cliMock.NewKafkaMock(expect)
-	cmd := kafka2.NewMdsCommand(&cliMock.Commander{}, kafka2.conf, kafka, &pcmd.ConfigHelper{Config: kafka2.conf, Client: &ccloud.Client{Kafka: kafka}})
+	cmd := suite.newMockIamCmd(expect, "")
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 
-	return cmd
+	for _, aclCmd := range []string { "list", "create", "delete" } {
+		cmd.SetArgs([]string{"acl", aclCmd, "--kafka-cluster-id", "testcluster"})
+		go func() {
+			expect <- nil
+		}()
+		err := cmd.Execute()
+		assert.NotNil(suite.T(), err)
+		assert.Contains(suite.T(), err.Error(), errors.HandleCommon(errors.ErrNotLoggedIn, cmd).Error())
+	}
 }
-*/
