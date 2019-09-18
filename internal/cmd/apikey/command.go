@@ -37,8 +37,8 @@ type command struct {
 }
 
 var (
-	listFields    = []string{"Key", "UserId", "Description"}
-	listLabels    = []string{"Key", "Owner", "Description"}
+	listFields    = []string{"Key", "UserId", "Description", "ClusterId", "ResourceType"}
+	listLabels    = []string{"Key", "Owner", "Description", "Cluster-Id", "Resource-Type"}
 	createFields  = []string{"Key", "Secret"}
 	createRenames = map[string]string{"Key": "API Key"}
 )
@@ -125,9 +125,11 @@ func (c *command) init() {
 
 func (c *command) list(cmd *cobra.Command, args []string) error {
 	type keyDisplay struct {
-		Key         string
-		Description string
-		UserId      int32
+		Key          string
+		Description  string
+		UserId       int32
+		ClusterId    string
+		ResourceType string
 	}
 	var apiKeys []*authv1.ApiKey
 	var data [][]string
@@ -158,9 +160,11 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		for _, c := range apiKey.LogicalClusters {
 			if c.Id == clusterId {
 				data = append(data, printer.ToRow(&keyDisplay{
-					Key:         apiKey.Key,
-					Description: apiKey.Description,
-					UserId:      apiKey.UserId,
+					Key:          apiKey.Key,
+					Description:  apiKey.Description,
+					UserId:       apiKey.UserId,
+					ClusterId:    clusterId,
+					ResourceType: resourceType,
 				}, listFields))
 				break
 			}
