@@ -119,7 +119,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	if err := c.client.UpdateBinary(c.cliName, latestVersion, oldBin); err != nil {
 		return err
 	}
-	pcmd.Printf(cmd, "Update your autocomplete scripts as instructed by: %s help completion", c.config.CLIName)
+	pcmd.Printf(cmd, "Update your autocomplete scripts as instructed by: %s help completion\n", c.config.CLIName)
 
 	return nil
 }

@@ -1,10 +1,3 @@
-       Key      | Owner | Description  
-+---------------+-------+-------------+
-    MYKEY1      |    12 |              
-    MYKEY2      |    18 |              
-    MYKEY3      |    23 |              
-    MYKEY4      |    23 | my-cool-app  
-    UIAPIKEY100 |    25 |              
-    UIAPIKEY101 |    25 |              
-    UIAPIKEY102 |    25 |              
-    UIAPIKEY103 |    25 |              
+    Key    | Owner | Description  
++----------+-------+-------------+
+    MYKEY7 |    23 |              
