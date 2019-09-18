@@ -1,9 +1,10 @@
 package schema_registry
 
 import (
+	"testing"
+
 	"github.com/confluentinc/ccloudapis/org/v1"
 	"github.com/confluentinc/cli/internal/pkg/config"
-	"testing"
 )
 
 func TestSrHasApiKey(t *testing.T) {
