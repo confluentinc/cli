@@ -68,6 +68,8 @@ func (c *command) init() {
 		Args:  cobra.NoArgs,
 	}
 	listCmd.Flags().String("resource", "", "The resource ID.")
+	listCmd.Flags().Int32("service-account-id", 0, "Show only API keys belonging to the given service account ID.")
+	listCmd.Flags().Bool("all-clusters", false, "Show API keys belonging to all clusters in the active environment.")
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
@@ -129,16 +131,35 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		Description string
 		UserId      int32
 	}
-	var apiKeys []*authv1.ApiKey
-	var data [][]string
+	allClusters, err := cmd.Flags().GetBool("all-clusters")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	var currentApiKey string
+	var logicalClusters []*authv1.ApiKey_Cluster
+	// Only when all-clusters not specified is when we need to filter by resource id
+	if !allClusters {
+		resourceType, _, clusterId, currentKey, err := c.resolveResourceID(cmd, args)
+		if err != nil {
+			if err == errors.ErrNoKafkaContext {
+				return fmt.Errorf("You must either specify resource to use or pass --all-clusters.")
+			} else {
+				return errors.HandleCommon(err, cmd)
+			}
+		}
+		logicalClusters = []*authv1.ApiKey_Cluster{{Id: clusterId, Type: resourceType}}
+		currentApiKey = currentKey
+	}
 
-	resourceType, accId, clusterId, currentKey, err := c.resolveResourceID(cmd, args)
-	//Return resource not found errors
+	userId, err := cmd.Flags().GetInt32("service-account-id")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	apiKeys, err = c.client.List(context.Background(), &authv1.ApiKey{AccountId: accId, LogicalClusters: []*authv1.ApiKey_Cluster{{Id: clusterId, Type: resourceType}}})
+	var apiKeys []*authv1.ApiKey
+	var data [][]string
+
+	apiKeys, err = c.client.List(context.Background(), &authv1.ApiKey{AccountId: c.config.Auth.Account.Id, LogicalClusters: logicalClusters, UserId: userId})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -149,22 +170,17 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 			continue
 		}
 
-		if apiKey.Key == currentKey {
+		// if all-clusters then no need to specify which API key is in-use
+		if !allClusters && apiKey.Key == currentApiKey {
 			apiKey.Key = fmt.Sprintf("* %s", apiKey.Key)
 		} else {
 			apiKey.Key = fmt.Sprintf("  %s", apiKey.Key)
 		}
-
-		for _, c := range apiKey.LogicalClusters {
-			if c.Id == clusterId {
-				data = append(data, printer.ToRow(&keyDisplay{
-					Key:         apiKey.Key,
-					Description: apiKey.Description,
-					UserId:      apiKey.UserId,
-				}, listFields))
-				break
-			}
-		}
+		data = append(data, printer.ToRow(&keyDisplay{
+			Key:         apiKey.Key,
+			Description: apiKey.Description,
+			UserId:      apiKey.UserId,
+		}, listFields))
 	}
 	printer.RenderCollectionTable(data, listLabels)
 	return nil
