@@ -176,7 +176,7 @@ var mdsAclEntries = []struct {
 type AclTestSuite struct {
 	suite.Suite
 	conf      *config.Config
-	kafkaApi  *mock.KafkaACLManagementApi
+	kafkaApi  mds.KafkaACLManagementApi
 	preRunner pcmd.PreRunner
 }
 
