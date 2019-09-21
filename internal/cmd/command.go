@@ -107,10 +107,10 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 
 	cli.AddCommand(completion.NewCompletionCmd(cli, cliName))
 	cli.AddCommand(update.New(cliName, cfg, ver, prompt, updateClient))
-  cli.AddCommand(auth.New(prerunner, cfg, logger, mdsClient, ver.UserAgent)...)
-  
-  resolver := &pcmd.FlagResolverImpl{Prompt: prompt, Out: os.Stdout}
-  
+	cli.AddCommand(auth.New(prerunner, cfg, logger, mdsClient, ver.UserAgent)...)
+
+	resolver := &pcmd.FlagResolverImpl{Prompt: prompt, Out: os.Stdout}
+
 	if cliName == "ccloud" {
 		kafkaClient := kafkas.New(client, logger)
 		cmd, err := kafka.New(prerunner, cfg, kafkaClient, ch)
@@ -156,7 +156,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		}
 		shellRunner := &local.BashShellRunner{BasherContext: bash}
 		cli.AddCommand(local.New(cli, prerunner, shellRunner, logger, fs))
-		
+
 		cli.AddCommand(secret.New(prerunner, cfg, prompt, resolver, secrets.NewPasswordProtectionPlugin(logger)))
 	}
 	return cli, nil
