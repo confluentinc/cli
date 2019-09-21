@@ -876,6 +876,51 @@ func TestConfig_CheckHasAPIKey(t *testing.T) {
 	}
 }
 
+func TestConfig_CheckSchemaRegistryHasAPIKey(t *testing.T) {
+	type fields struct {
+		Auth           *AuthConfig
+		Contexts       map[string]*Context
+		CurrentContext string
+	}
+	tests := []struct {
+		name      string
+		fields    fields
+		returnVal bool
+	}{
+		{
+			name: "Check for empty Schema Registry API Key credentials",
+			fields: fields{
+				CurrentContext: "test-context",
+				Auth:           &AuthConfig{Account: &orgv1.Account{Id: "me"}},
+				Contexts: map[string]*Context{"test-context": {
+					Name: "test-context",
+					SchemaRegistryClusters: map[string]*SchemaRegistryCluster{
+						"me": {
+							SrCredentials: &APIKeyPair{
+								Key:    "",
+								Secret: "",
+							},
+						},
+					},
+				},
+				}},
+			returnVal: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Config{
+				Contexts:       tt.fields.Contexts,
+				CurrentContext: tt.fields.CurrentContext,
+			}
+			returnVal := c.CheckSchemaRegistryHasAPIKey()
+			if returnVal != tt.returnVal {
+				t.Errorf("CheckHasAPIKey() returnVal = %v, wantedReturnVal %v", returnVal, tt.returnVal)
+			}
+		})
+	}
+}
+
 func TestConfig_SchemaRegistryCluster(t *testing.T) {
 	type fields struct {
 		Auth           *AuthConfig
