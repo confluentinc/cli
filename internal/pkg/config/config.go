@@ -304,6 +304,17 @@ func (c *Config) CheckHasAPIKey(clusterID string) error {
 	return nil
 }
 
+func (c *Config) CheckSchemaRegistryHasAPIKey() bool {
+	srCluster, err := c.SchemaRegistryCluster()
+	if err != nil {
+		return false
+	}
+	if srCluster.SrCredentials == nil || len(srCluster.SrCredentials.Key) == 0 || len(srCluster.SrCredentials.Secret) == 0 {
+		return false
+	}
+	return true
+}
+
 func (c *Config) getFilename() (string, error) {
 	if c.Filename == "" {
 		c.Filename = fmt.Sprintf(defaultConfigFileFmt, c.CLIName)

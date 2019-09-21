@@ -9,7 +9,6 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go"
 	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/go-printer"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
@@ -74,15 +73,4 @@ func GetSchemaRegistryByAccountId(ctx context.Context, ccClient ccloud.SchemaReg
 
 func FormatDescription(description string, cliName string) string {
 	return strings.ReplaceAll(description, "{{.CLIName}}", cliName)
-}
-
-func srHasAPIKey(config *config.Config) bool {
-	srCluster, err := config.SchemaRegistryCluster()
-	if err != nil {
-		return false
-	}
-	if srCluster.SrCredentials == nil || len(srCluster.SrCredentials.Key) == 0 || len(srCluster.SrCredentials.Secret) == 0 {
-		return false
-	}
-	return true
 }
