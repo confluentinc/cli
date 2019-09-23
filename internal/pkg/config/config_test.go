@@ -883,9 +883,9 @@ func TestConfig_CheckSchemaRegistryHasAPIKey(t *testing.T) {
 		CurrentContext string
 	}
 	tests := []struct {
-		name      string
-		fields    fields
-		returnVal bool
+		name   string
+		fields fields
+		want   bool
 	}{
 		{
 			name: "Check for empty Schema Registry API Key credentials",
@@ -904,7 +904,7 @@ func TestConfig_CheckSchemaRegistryHasAPIKey(t *testing.T) {
 					},
 				},
 				}},
-			returnVal: false,
+			want: false,
 		},
 	}
 	for _, tt := range tests {
@@ -914,8 +914,8 @@ func TestConfig_CheckSchemaRegistryHasAPIKey(t *testing.T) {
 				CurrentContext: tt.fields.CurrentContext,
 			}
 			returnVal := c.CheckSchemaRegistryHasAPIKey()
-			if returnVal != tt.returnVal {
-				t.Errorf("CheckHasAPIKey() returnVal = %v, wantedReturnVal %v", returnVal, tt.returnVal)
+			if returnVal != tt.want {
+				t.Errorf("CheckHasAPIKey() returnVal = %v, wantedReturnVal %v", returnVal, tt.want)
 			}
 		})
 	}
