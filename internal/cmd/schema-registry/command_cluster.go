@@ -166,7 +166,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	//Retrieve SR compatibility and Mode if API key is set up in user's config.json file
-	if c.ch.Config.CheckSchemaRegistryHasAPIKey() {
+	if c.config.CheckSchemaRegistryHasAPIKey() {
 		srClient, ctx, err = GetApiClient(c.srClient, c.ch)
 		if err != nil {
 			return err
