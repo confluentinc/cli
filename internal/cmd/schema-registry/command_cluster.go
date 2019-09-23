@@ -152,6 +152,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	var mode string
 	var numSchemas string
 	var availableSchemas string
+	var srClient *srsdk.APIClient
 	ctx := context.Background()
 
 	// Collect the parameters
@@ -164,9 +165,32 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	srClient, ctx, err := GetApiClient(c.srClient, c.ch)
-	if err != nil {
-		return err
+	//Retrieve SR compatibility and Mode if API key is set up in user's config.json file
+	if c.config.CheckSchemaRegistryHasAPIKey() {
+		srClient, ctx, err = GetApiClient(c.srClient, c.ch)
+		if err != nil {
+			return err
+		}
+		// Get SR compatibility
+		compatibilityResponse, _, err := srClient.DefaultApi.GetTopLevelConfig(ctx)
+		if err != nil {
+			compatibility = ""
+			c.logger.Warn("Could not retrieve Schema Registry Compatibility")
+		} else {
+			compatibility = compatibilityResponse.CompatibilityLevel
+		}
+		// Get SR Mode
+		modeResponse, _, err := srClient.DefaultApi.GetTopLevelMode(ctx)
+		if err != nil {
+			mode = ""
+			c.logger.Warn("Could not retrieve Schema Registry Mode")
+		} else {
+			mode = modeResponse.Mode
+		}
+	} else {
+		srClient = nil
+		compatibility = "<Requires API Key>"
+		mode = "<Requires API Key>"
 	}
 
 	// Get Schema usage metrics
@@ -179,22 +203,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 		numSchemas = strconv.Itoa(int(metrics.NumSchemas))
 		availableSchemas = strconv.Itoa(int(cluster.MaxSchemas) - int(metrics.NumSchemas))
 	}
-	// Get SR compatibility
-	compatibilityResponse, _, err := srClient.DefaultApi.GetTopLevelConfig(ctx)
-	if err != nil {
-		compatibility = ""
-		c.logger.Warn("Could not retrieve Schema Registry Compatibility")
-	} else {
-		compatibility = compatibilityResponse.CompatibilityLevel
-	}
-	// Get SR Mode
-	ModeResponse, _, err := srClient.DefaultApi.GetTopLevelMode(ctx)
-	if err != nil {
-		mode = ""
-		c.logger.Warn("Could not retrieve Schema Registry Mode")
-	} else {
-		mode = ModeResponse.Mode
-	}
+
 	serviceProvider := getServiceProviderFromUrl(cluster.Endpoint)
 	data := &describeDisplay{
 		Name:            cluster.Name,
