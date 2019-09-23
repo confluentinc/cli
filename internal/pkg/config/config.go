@@ -309,7 +309,7 @@ func (c *Config) CheckSchemaRegistryHasAPIKey() bool {
 	if err != nil {
 		return false
 	}
-	return srCluster.SrCredentials == nil || len(srCluster.SrCredentials.Key) == 0 || len(srCluster.SrCredentials.Secret) == 0
+	return !(srCluster.SrCredentials == nil || len(srCluster.SrCredentials.Key) == 0 || len(srCluster.SrCredentials.Secret) == 0)
 }
 
 func (c *Config) getFilename() (string, error) {
