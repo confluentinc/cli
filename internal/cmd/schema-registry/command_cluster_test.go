@@ -58,7 +58,6 @@ func (suite *ClusterTestSuite) SetupSuite() {
 	suite.conf.Credentials[name] = &config.Credential{
 		Username: user.User.Email,
 	}
-
 	suite.conf.Contexts[name] = &config.Context{
 		Platform:      name,
 		Credential:    name,

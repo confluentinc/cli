@@ -221,7 +221,7 @@ func (c *Config) CredentialType() (CredentialType, error) {
 }
 
 // SchemaRegistryCluster returns the SchemaRegistryCluster for the current Context,
-// or an empty SchemaRegistryCluster if there is none set, 
+// or an empty SchemaRegistryCluster if there is none set,
 // or an error if no context exists/if the user is not logged in.
 func (c *Config) SchemaRegistryCluster() (*SchemaRegistryCluster, error) {
 	context, err := c.Context()
@@ -256,7 +256,7 @@ func (c *Config) KafkaClusterConfig() (*KafkaClusterConfig, error) {
 	if !ok {
 		configPath, err := c.getFilename()
 		if err != nil {
-			err = fmt.Errorf("an error resolving the config filepath at %s has occurred. " +
+			err = fmt.Errorf("an error resolving the config filepath at %s has occurred. "+
 				"Please try moving the file to a different location", c.Filename)
 			return nil, err
 		}
@@ -302,6 +302,14 @@ func (c *Config) CheckHasAPIKey(clusterID string) error {
 		return &errors.UnspecifiedAPIKeyError{ClusterID: clusterID}
 	}
 	return nil
+}
+
+func (c *Config) CheckSchemaRegistryHasAPIKey() bool {
+	srCluster, err := c.SchemaRegistryCluster()
+	if err != nil {
+		return false
+	}
+	return srCluster.SrCredentials == nil || len(srCluster.SrCredentials.Key) == 0 || len(srCluster.SrCredentials.Secret) == 0
 }
 
 func (c *Config) getFilename() (string, error) {

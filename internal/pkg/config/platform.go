@@ -8,4 +8,3 @@ type Platform struct {
 func (p *Platform) String() string {
 	return p.Server
 }
-
