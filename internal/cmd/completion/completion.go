@@ -16,9 +16,9 @@ Install Bash completions on macOS:
 
 ::
 
-  # Enable Bash completions using homebrew
+  # Install Bash completions using homebrew
   brew install bash-completion
-  # Add the following line to your ~/.bash_profile:
+  # Enable Bash completions by sourcing them from your bash profile
   echo '[[ -r "$(brew --prefix)/etc/profile.d/bash_completion.sh" ]] && . "$(brew --prefix)/etc/profile.d/bash_completion.sh"' >> ~/.bash_profile
   # Set the {{.CLIName}} completion code for Bash to a file that's sourced on login
   {{.CLIName}} completion bash > $(brew --prefix)/etc/bash_completion.d/{{.CLIName}}
