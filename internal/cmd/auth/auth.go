@@ -2,7 +2,11 @@ package auth
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"os"
 	"strings"
 
@@ -23,6 +27,7 @@ import (
 type commands struct {
 	Commands  []*cobra.Command
 	config    *config.Config
+	mdsConfig *mds.Configuration
 	mdsClient *mds.APIClient
 	Logger    *log.Logger
 	// for testing
@@ -32,25 +37,26 @@ type commands struct {
 }
 
 // New returns a list of auth-related Cobra commands.
-func New(prerunner pcmd.PreRunner, config *config.Config, logger *log.Logger, mdsClient *mds.APIClient, userAgent string) []*cobra.Command {
+func New(prerunner pcmd.PreRunner, config *config.Config, logger *log.Logger, mdsConfig *mds.Configuration, userAgent string) []*cobra.Command {
 	var defaultAnonHTTPClientFactory = func(baseURL string, logger *log.Logger) *ccloud.Client {
 		return ccloud.NewClient(&ccloud.Params{BaseURL: baseURL, HttpClient: ccloud.BaseClient, Logger: logger, UserAgent: userAgent})
 	}
 	var defaultJwtHTTPClientFactory = func(ctx context.Context, jwt string, baseURL string, logger *log.Logger) *ccloud.Client {
 		return ccloud.NewClientWithJWT(ctx, jwt, &ccloud.Params{BaseURL: baseURL, Logger: logger, UserAgent: userAgent})
 	}
-	return newCommands(prerunner, config, logger, mdsClient, pcmd.NewPrompt(os.Stdin),
+	return newCommands(prerunner, config, logger, mdsConfig, pcmd.NewPrompt(os.Stdin),
 		defaultAnonHTTPClientFactory, defaultJwtHTTPClientFactory,
 	).Commands
 }
 
-func newCommands(prerunner pcmd.PreRunner, config *config.Config, log *log.Logger, mdsClient *mds.APIClient, prompt pcmd.Prompt,
+func newCommands(prerunner pcmd.PreRunner, config *config.Config, log *log.Logger, mdsConfig *mds.Configuration, prompt pcmd.Prompt,
 	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *ccloud.Client,
 	jwtHTTPClientFactory func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *ccloud.Client,
 ) *commands {
 	cmd := &commands{
 		config:                config,
-		mdsClient:             mdsClient,
+		mdsConfig:             mdsConfig,
+		mdsClient:             mds.NewAPIClient(mdsConfig),
 		Logger:                log,
 		prompt:                prompt,
 		anonHTTPClientFactory: anonHTTPClientFactory,
@@ -73,6 +79,7 @@ func (a *commands) init(prerunner pcmd.PreRunner) {
 	} else {
 		loginCmd.RunE = a.loginMDS
 		loginCmd.Flags().String("url", "", "Metadata service URL.")
+		loginCmd.Flags().String("caCertPath", "", "Self-signed certificate in PEM format.")
 		loginCmd.Short = strings.Replace(loginCmd.Short, ".", " (required for RBAC).", -1)
 		loginCmd.Long = strings.Replace(loginCmd.Long, ".", " (required for RBAC).", -1)
 		check(loginCmd.MarkFlagRequired("url")) // because https://confluent.cloud isn't an MDS endpoint
@@ -128,7 +135,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 			return errors.HandleCommon(err, cmd)
 		}
 
-		// Exchange authorization code for OAuth token from SSO orovider
+		// Exchange authorization code for OAuth token from SSO provider
 		err := server.GetOAuthToken()
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
@@ -201,6 +208,20 @@ func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	a.config.AuthURL = url
+
+	if cmd.Flags().Changed("caCertPath") {
+		caCertPath, err := cmd.Flags().GetString("caCertPath")
+		if err != nil {
+			return err
+		}
+		a.config.CaCertPath = caCertPath
+		// override previously configured httpclient if a new cert path was specified
+		a.mdsConfig.HTTPClient, err = SelfSignedCertClient(caCertPath)
+		if err != nil {
+			return err
+		}
+		a.mdsClient = mds.NewAPIClient(a.mdsConfig)
+	}
 	a.mdsClient.ChangeBasePath(a.config.AuthURL)
 	email, password, err := a.credentials(cmd, "Username", nil)
 	if err != nil {
@@ -297,7 +318,8 @@ func (a *commands) addContextIfAbsent(username string) error {
 		return nil
 	}
 	platform := &config.Platform{
-		Server: a.config.AuthURL,
+		Server:     a.config.AuthURL,
+		CaCertPath: a.config.CaCertPath,
 	}
 	credential := &config.Credential{
 		Username: username,
@@ -312,6 +334,34 @@ func (a *commands) addContextIfAbsent(username string) error {
 		return err
 	}
 	return nil
+}
+
+
+func SelfSignedCertClient(caCertPath string) (*http.Client, error){
+	certPool, _ := x509.SystemCertPool()
+	if certPool == nil {
+		certPool = x509.NewCertPool()
+	}
+
+	if caCertPath == "" {
+		return nil, nil
+	}
+	certs, err := ioutil.ReadFile(caCertPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to append %q to RootCAs: %v", caCertPath, err)
+	}
+
+	// Append new cert to the system pool
+	if ok := certPool.AppendCertsFromPEM(certs); !ok {
+		return nil, fmt.Errorf("no certs appended, using system certs only")
+	}
+
+	// Trust the updated cert pool in our client
+	tlsClientConfig := &tls.Config{RootCAs: certPool}
+	transport := &http.Transport{TLSClientConfig: tlsClientConfig}
+	client := &http.Client{Transport: transport}
+
+	return client, nil
 }
 
 func check(err error) {
