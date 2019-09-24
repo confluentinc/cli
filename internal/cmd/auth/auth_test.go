@@ -227,10 +227,10 @@ func newAuthCommand(prompt pcmd.Prompt, auth *sdkMock.Auth, user *sdkMock.User, 
 	cfg := config.New()
 	cfg.Logger = log.New()
 	cfg.CLIName = cliName
-	var mdsClient *mds.APIClient
+	mdsConfig := mds.NewConfiguration()
+	commands := newCommands(&cliMock.Commander{}, cfg, log.New(), mdsConfig, prompt, mockAnonHTTPClientFactory, mockJwtHTTPClientFactory)
 	if cliName == "confluent" {
-		mdsConfig := mds.NewConfiguration()
-		mdsClient = mds.NewAPIClient(mdsConfig)
+		mdsClient := commands.mdsClient
 		mdsClient.TokensAuthenticationApi = &mdsMock.TokensAuthenticationApi{
 			GetTokenFunc: func(ctx context.Context, xSPECIALRYANHEADER string) (mds.AuthenticationResponse, *http.Response, error) {
 				return mds.AuthenticationResponse{
@@ -241,7 +241,6 @@ func newAuthCommand(prompt pcmd.Prompt, auth *sdkMock.Auth, user *sdkMock.User, 
 			},
 		}
 	}
-	commands := newCommands(&cliMock.Commander{}, cfg, log.New(), mdsClient, prompt, mockAnonHTTPClientFactory, mockJwtHTTPClientFactory)
 	for _, c := range commands.Commands {
 		c.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	}
