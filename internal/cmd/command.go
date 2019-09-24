@@ -2,6 +2,11 @@ package cmd
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
+	"fmt"
+	"io/ioutil"
+	"net/http"
 	"os"
 
 	"github.com/DABH/go-basher"
@@ -95,7 +100,10 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	mdsConfig := mds.NewConfiguration()
 	mdsConfig.BasePath = cfg.AuthURL
 	mdsConfig.UserAgent = ver.UserAgent
-
+	mdsConfig.HTTPClient, err = selfSignedCertClient()
+	if err != nil {
+		return nil, err
+	}
 	mdsClient := mds.NewAPIClient(mdsConfig)
 
 	cli.Version = ver.Version
@@ -160,4 +168,35 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		cli.AddCommand(secret.New(prerunner, cfg, prompt, resolver, secrets.NewPasswordProtectionPlugin(logger)))
 	}
 	return cli, nil
+}
+
+func selfSignedCertClient() (*http.Client, error){
+	rootCAs, _ := x509.SystemCertPool()
+	if rootCAs == nil {
+		rootCAs = x509.NewCertPool()
+	}
+
+	// Read in the cert file
+	localCertFile := os.Getenv("XX_PATH_TO_LOCAL_CERT")
+	if localCertFile == "" {
+		return nil, nil
+	}
+	certs, err := ioutil.ReadFile(localCertFile)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to append %q to RootCAs: %v", localCertFile, err)
+	}
+
+	// Append our cert to the system pool
+	if ok := rootCAs.AppendCertsFromPEM(certs); !ok {
+		return nil, fmt.Errorf("No certs appended, using system certs only")
+	}
+
+	// Trust the augmented cert pool in our client
+	conf := &tls.Config{
+		RootCAs:            rootCAs,
+	}
+	tr := &http.Transport{TLSClientConfig: conf}
+	client := &http.Client{Transport: tr}
+
+	return client, nil
 }
