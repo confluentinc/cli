@@ -83,6 +83,8 @@ github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 h1:sIWhdehnHPCWoZeM
 github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2/go.mod h1:HNotNNYHefttEUajcmByCW4bWNBiYd7s5mNZWzB62r0=
 github.com/confluentinc/ccloud-sdk-go v0.0.11 h1:iy5eUf3LJXFbSQWiZm7xYHlWL2BsaEsN9fITGDhMq9E=
 github.com/confluentinc/ccloud-sdk-go v0.0.11/go.mod h1:i8KTRwhx2El9M9PHhMr4O+SjqRCKkOD497D46iymlV8=
+github.com/confluentinc/ccloud-sdk-go v0.0.12-0.20190920000640-1a40dc8dbdbd h1:m5T3o0idwuTDJMEXaopqBPLlrz8nW972B+exzVq2iXU=
+github.com/confluentinc/ccloud-sdk-go v0.0.12-0.20190920000640-1a40dc8dbdbd/go.mod h1:Hp16YLjZjIipEYoAZc+MrTJG91fdhCTPZD99e9tWVE8=
 github.com/confluentinc/ccloud-sdk-go v0.0.12 h1:wUQ4rwhUFBORH+7Pmf5kH3eRWY9wRZxQBveTFM47F8o=
 github.com/confluentinc/ccloud-sdk-go v0.0.12/go.mod h1:Hp16YLjZjIipEYoAZc+MrTJG91fdhCTPZD99e9tWVE8=
 github.com/confluentinc/ccloudapis v0.0.0-20190822180106-1f1a16f58a50 h1:wTee5yNUVYVOMGx8ogB3LBiraMv2seqJTaEJqYB8EtE=
@@ -95,6 +97,7 @@ github.com/confluentinc/go-editor v0.4.0 h1:5hMjKsKmIOmlu3Yyz8zDq66Qpdin8HSmRaMh
 github.com/confluentinc/go-editor v0.4.0/go.mod h1:sW1NzJdowffHQzy4iSbfY/ykRFMDE69I8EaT33Ebh7Y=
 github.com/confluentinc/go-printer v0.10.0 h1:JLJOeSdJL6A0YxAK24GSuoC52sPQP/chowAapSAwoBM=
 github.com/confluentinc/go-printer v0.10.0/go.mod h1:bOK/pPNm4ao7bZIcRnGPGca1B64nW+lApFXHZEZ0PcM=
+github.com/confluentinc/mds-sdk-go v0.0.0-20190610045202-137cf78b1f6a h1:1rhv9IcTT1xA7wO7ES4CJIK+PhuIqnFfZ2zcwoWAf3g=
 github.com/confluentinc/mds-sdk-go v0.0.0-20190610045202-137cf78b1f6a/go.mod h1:ouhJcNrAtQCtywN7BHDkpnl2Aaf7lDD157IzFDNVRao=
 github.com/confluentinc/mds-sdk-go v0.0.0-20190903192325-bd836904cf5a h1:s/H5Y1bu09jSgCTHaJGrxAu4x7MBiv2vxoE4BCtiR/k=
 github.com/confluentinc/mds-sdk-go v0.0.0-20190903192325-bd836904cf5a/go.mod h1:FzRb4kXvSQ598O/zEHfP2tXLZ64QLuHPUu/LzejcaOw=
@@ -208,6 +211,7 @@ github.com/golang/groupcache v0.0.0-20190129154638-5b532d6fd5ef/go.mod h1:cIg4er
 github.com/golang/groupcache v0.0.0-20190702054246-869f871628b6/go.mod h1:cIg4eruTrX1D+g88fzRXU5OdNfaM+9IcxsU14FzY7Hc=
 github.com/golang/mock v1.0.0/go.mod h1:oTYuIxOrZwtPieC+H1uAHpcLFnEyAGVDL/k47Jfbm0A=
 github.com/golang/mock v1.1.1/go.mod h1:oTYuIxOrZwtPieC+H1uAHpcLFnEyAGVDL/k47Jfbm0A=
+github.com/golang/mock v1.2.0 h1:28o5sBqPkBsMGnC6b4MvE2TzSr5/AT4c/1fLqVGIwlk=
 github.com/golang/mock v1.2.0/go.mod h1:oTYuIxOrZwtPieC+H1uAHpcLFnEyAGVDL/k47Jfbm0A=
 github.com/golang/mock v1.3.1 h1:qGJ6qTW+x6xX/my+8YUVl4WNpX9B7+/l2tRsHGZ7f2s=
 github.com/golang/mock v1.3.1/go.mod h1:sBzyDLLjw3U8JLTeZvSv8jJB+tU5PVekmnlKIyFUx0Y=

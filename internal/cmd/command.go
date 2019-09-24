@@ -22,9 +22,9 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/ksql"
 	"github.com/confluentinc/cli/internal/cmd/local"
 	ps1 "github.com/confluentinc/cli/internal/cmd/prompt"
-	"github.com/confluentinc/cli/internal/cmd/schema-registry"
+	schema_registry "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	"github.com/confluentinc/cli/internal/cmd/secret"
-	"github.com/confluentinc/cli/internal/cmd/service-account"
+	service_account "github.com/confluentinc/cli/internal/cmd/service-account"
 	"github.com/confluentinc/cli/internal/cmd/update"
 	"github.com/confluentinc/cli/internal/cmd/version"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -36,7 +36,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 	pps1 "github.com/confluentinc/cli/internal/pkg/ps1"
 	apikeys "github.com/confluentinc/cli/internal/pkg/sdk/apikey"
-	environments "github.com/confluentinc/cli/internal/pkg/sdk/environment"
 	kafkas "github.com/confluentinc/cli/internal/pkg/sdk/kafka"
 	ksqls "github.com/confluentinc/cli/internal/pkg/sdk/ksql"
 	users "github.com/confluentinc/cli/internal/pkg/sdk/user"
@@ -107,10 +106,10 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 
 	cli.AddCommand(completion.NewCompletionCmd(cli, cliName))
 	cli.AddCommand(update.New(cliName, cfg, ver, prompt, updateClient))
-  cli.AddCommand(auth.New(prerunner, cfg, logger, mdsClient, ver.UserAgent)...)
-  
-  resolver := &pcmd.FlagResolverImpl{Prompt: prompt, Out: os.Stdout}
-  
+	cli.AddCommand(auth.New(prerunner, cfg, logger, mdsClient, ver.UserAgent)...)
+
+	resolver := &pcmd.FlagResolverImpl{Prompt: prompt, Out: os.Stdout}
+
 	if cliName == "ccloud" {
 		kafkaClient := kafkas.New(client, logger)
 		cmd, err := kafka.New(prerunner, cfg, kafkaClient, ch)
@@ -129,7 +128,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		cli.AddCommand(ps1.NewPromptCmd(cfg, &pps1.Prompt{Config: cfg}, logger))
 		userClient := users.New(client, logger)
 		ks := &keystore.ConfigKeyStore{Config: cfg, Helper: ch}
-		cli.AddCommand(environment.New(prerunner, cfg, environments.New(client, logger), cliName))
+		cli.AddCommand(environment.New(prerunner, cfg, client.Account, cliName))
 		cli.AddCommand(service_account.New(prerunner, cfg, userClient))
 		cli.AddCommand(apikey.New(prerunner, cfg, apikeys.New(client, logger), ch, ks))
 
@@ -156,7 +155,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		}
 		shellRunner := &local.BashShellRunner{BasherContext: bash}
 		cli.AddCommand(local.New(cli, prerunner, shellRunner, logger, fs))
-		
+
 		cli.AddCommand(secret.New(prerunner, cfg, prompt, resolver, secrets.NewPasswordProtectionPlugin(logger)))
 	}
 	return cli, nil
