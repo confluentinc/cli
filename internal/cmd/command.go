@@ -95,10 +95,9 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	mdsConfig := mds.NewConfiguration()
 	mdsConfig.BasePath = cfg.AuthURL
 	mdsConfig.UserAgent = ver.UserAgent
-	mdsConfig.HTTPClient, err = auth.SelfSignedCertClient(cfg.CaCertPath)
-	if err != nil {
-		return nil, err
-	}
+	// Explicitly ignore this error and use default http client. Any certificate error will get logged
+	// when the api call occurs with a message to update the cert by logging in again
+	mdsConfig.HTTPClient, _ = auth.SelfSignedCertClient(cfg.CaCertPath)
 	mdsClient := mds.NewAPIClient(mdsConfig)
 
 	cli.Version = ver.Version
@@ -110,10 +109,10 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 
 	cli.AddCommand(completion.NewCompletionCmd(cli, cliName))
 	cli.AddCommand(update.New(cliName, cfg, ver, prompt, updateClient))
-  	cli.AddCommand(auth.New(prerunner, cfg, logger, mdsConfig, ver.UserAgent)...)
+	cli.AddCommand(auth.New(prerunner, cfg, logger, mdsConfig, ver.UserAgent)...)
 
-  	resolver := &pcmd.FlagResolverImpl{Prompt: prompt, Out: os.Stdout}
-  
+	resolver := &pcmd.FlagResolverImpl{Prompt: prompt, Out: os.Stdout}
+
 	if cliName == "ccloud" {
 		kafkaClient := kafkas.New(client, logger)
 		cmd, err := kafka.New(prerunner, cfg, kafkaClient, ch)

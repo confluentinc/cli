@@ -206,11 +206,12 @@ func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	a.config.AuthURL = url
-	caCertPath, err := cmd.Flags().GetString("caCertPath")
-	if err != nil {
-		return err
-	}
-	if caCertPath != "" {
+
+	if cmd.Flags().Changed("caCertPath") {
+		caCertPath, err := cmd.Flags().GetString("caCertPath")
+		if err != nil {
+			return err
+		}
 		a.config.CaCertPath = caCertPath
 		// override previously configured httpclient if a new cert path was specified
 		a.mdsConfig.HTTPClient, err = SelfSignedCertClient(caCertPath)
