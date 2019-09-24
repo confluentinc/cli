@@ -9,11 +9,10 @@ import (
 	"testing"
 
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
-	"github.com/stretchr/testify/assert"
-
 	cerrors "github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/metric"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestConfig_Load(t *testing.T) {
@@ -888,18 +887,32 @@ func TestConfig_CheckSchemaRegistryHasAPIKey(t *testing.T) {
 		want   bool
 	}{
 		{
-			name: "Check for empty Schema Registry API Key credentials",
+			name: "Check for valid credentials in config",
 			fields: fields{
-				CurrentContext: "test-context",
-				Auth:           &AuthConfig{Account: &orgv1.Account{Id: "me"}},
-				Contexts: map[string]*Context{"test-context": {
-					Name: "test-context",
+				CurrentContext: "ctx",
+				Auth:           &AuthConfig{Account: &orgv1.Account{Id: "me"}, User: new(orgv1.User)},
+				Contexts: map[string]*Context{"ctx": {
 					SchemaRegistryClusters: map[string]*SchemaRegistryCluster{
 						"me": {
 							SrCredentials: &APIKeyPair{
-								Key:    "",
-								Secret: "",
+								Key:    "Abra",
+								Secret: "cadabra",
 							},
+						},
+					},
+				},
+				}},
+			want: true,
+		},
+		{
+			name: "Check for empty Schema Registry API Key credentials",
+			fields: fields{
+				CurrentContext: "ctx",
+				Auth:           &AuthConfig{Account: &orgv1.Account{Id: "me"}},
+				Contexts: map[string]*Context{"ctx": {
+					SchemaRegistryClusters: map[string]*SchemaRegistryCluster{
+						"me": {
+							SrCredentials: nil,
 						},
 					},
 				},
@@ -911,11 +924,12 @@ func TestConfig_CheckSchemaRegistryHasAPIKey(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &Config{
 				Contexts:       tt.fields.Contexts,
+				Auth:           tt.fields.Auth,
 				CurrentContext: tt.fields.CurrentContext,
 			}
 			returnVal := c.CheckSchemaRegistryHasAPIKey()
 			if returnVal != tt.want {
-				t.Errorf("CheckHasAPIKey() returnVal = %v, wantedReturnVal %v", returnVal, tt.want)
+				t.Errorf("CheckSchemaRegistryHasAPIKey() %s returnVal = %v, wantedReturnVal %v", tt.name, returnVal, tt.want)
 			}
 		})
 	}
