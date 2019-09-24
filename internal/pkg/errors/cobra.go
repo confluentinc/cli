@@ -1,7 +1,9 @@
 package errors
 
 import (
+	"crypto/x509"
 	"fmt"
+	"net/url"
 	"reflect"
 
 	"github.com/confluentinc/ccloud-sdk-go"
@@ -34,6 +36,13 @@ func HandleCommon(err error, cmd *cobra.Command) error {
 	if oerr, ok := err.(mds.GenericOpenAPIError); ok {
 		cmd.SilenceUsage = true
 		return fmt.Errorf(oerr.Error() + ": " + string(oerr.Body()))
+	}
+
+	if urlErr, ok := err.(*url.Error); ok {
+		if certErr, ok := urlErr.Err.(x509.CertificateInvalidError); ok {
+			cmd.SilenceUsage = true
+			return fmt.Errorf("%s. Check the system keystore or login again with the --caCertPath option to add custom certs", certErr.Error())
+		}
 	}
 
 	// Intercept errors to prevent usage from being printed.
