@@ -55,14 +55,28 @@ func New() *Logger {
 
 // NewWithParams creates and configures a new Logger.
 func NewWithParams(params *Params) *Logger {
+	return newLogger(params, hclog.New(&hclog.LoggerOptions{
+		Output:     params.Output,
+		JSONFormat: params.JSON,
+		Level:      parseLevel(params.Level),
+	}))
+}
+
+func newLogger(params *Params, logger hclog.Logger) *Logger {
 	return &Logger{
 		params: params,
-		l: hclog.New(&hclog.LoggerOptions{
-			Output:     params.Output,
-			JSONFormat: params.JSON,
-			Level:      parseLevel(params.Level),
-		}),
+		l:      logger,
 	}
+}
+
+func (l *Logger) With(args ...interface{}) *Logger {
+	logger := l.l.With(args...)
+	return newLogger(l.params, logger)
+}
+
+func (l *Logger) Named(name string) *Logger {
+	logger := l.l.Named(name)
+	return newLogger(l.params, logger)
 }
 
 func (l *Logger) Trace(args ...interface{}) {
@@ -78,12 +92,14 @@ func (l *Logger) Tracef(format string, args ...interface{}) {
 }
 
 func (l *Logger) Debug(args ...interface{}) {
+	fmt.Printf("Debug %#v\n", args)
 	if l.l.IsDebug() {
 		l.l.Debug(fmt.Sprint(args...))
 	}
 }
 
 func (l *Logger) Debugf(format string, args ...interface{}) {
+	fmt.Printf("Debugf %#v %#v\n", format, args)
 	if l.l.IsDebug() {
 		l.l.Debug(fmt.Sprintf(format, args...))
 	}
