@@ -29,12 +29,13 @@ var (
 type roleCommand struct {
 	*cobra.Command
 	config *config.Config
+	cliCtx *config.Context
 	client *mds.APIClient
 	ctx    context.Context
 }
 
 // NewRoleCommand returns the sub-command object for interacting with RBAC roles.
-func NewRoleCommand(config *config.Config, client *mds.APIClient) *cobra.Command {
+func NewRoleCommand(config *config.Config, cliCtx *config.Context, client *mds.APIClient) *cobra.Command {
 	cmd := &roleCommand{
 		Command: &cobra.Command{
 			Use:   "role",
@@ -42,8 +43,9 @@ func NewRoleCommand(config *config.Config, client *mds.APIClient) *cobra.Command
 			Long:  "Manage Role Based Access (RBAC) and Identity and Access Management (IAM) roles.",
 		},
 		config: config,
+		cliCtx: cliCtx,
 		client: client,
-		ctx:    context.WithValue(context.Background(), mds.ContextAccessToken, config.AuthToken),
+		ctx:    context.WithValue(context.Background(), mds.ContextAccessToken, cliCtx.State.AuthToken),
 	}
 
 	cmd.init()

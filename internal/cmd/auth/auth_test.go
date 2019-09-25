@@ -57,10 +57,12 @@ func TestCredentialsOverride(t *testing.T) {
 	output, err := pcmd.ExecuteCommand(cmds.Commands[0])
 	req.NoError(err)
 	req.Contains(output, "Logged in as test-email")
-
-	req.Equal("y0ur.jwt.T0kEn", cfg.AuthToken)
-	req.Equal(&orgv1.User{Id: 23, Email: "test-email", FirstName: "Cody"}, cfg.Auth.User)
-
+	ctx := cfg.Context()
+	req.NotNil(ctx)
+	
+	req.Equal("y0ur.jwt.T0kEn", ctx.State.AuthToken)
+	req.Equal(&orgv1.User{Id: 23, Email: "test-email", FirstName: "Cody"}, ctx.State.Auth.User)
+	
 	os.Setenv("XX_CCLOUD_EMAIL", currentEmail)
 	os.Setenv("XX_CCLOUD_PASSWORD", currentPassword)
 }
@@ -110,25 +112,26 @@ func TestLoginSuccess(t *testing.T) {
 	for _, s := range suite {
 		// Login to the CLI control plane
 		cmds, cfg := newAuthCommand(prompt, auth, user, s.cliName, req)
-
+		
 		output, err := pcmd.ExecuteCommand(cmds.Commands[0], s.args...)
 		req.NoError(err)
 		req.Contains(output, "Logged in as cody@confluent.io")
-
-		req.Equal("y0ur.jwt.T0kEn", cfg.AuthToken)
-		contextName := fmt.Sprintf("login-cody@confluent.io-%s", cfg.AuthURL)
-		req.Contains(cfg.Platforms, cfg.AuthURL)
-		req.Equal(cfg.AuthURL, cfg.Platforms[cfg.AuthURL].Server)
+		ctx := cfg.Context()
+		req.NotNil(ctx)
+		req.Equal("y0ur.jwt.T0kEn", ctx.State.AuthToken)
+		contextName := fmt.Sprintf("login-cody@confluent.io-%s", ctx.Platform.Server)
+		req.Contains(cfg.Platforms, ctx.Platform)
+		req.Equal(ctx.Platform, cfg.Platforms[ctx.PlatformName])
 		req.Contains(cfg.Credentials, "username-cody@confluent.io")
 		req.Equal("cody@confluent.io", cfg.Credentials["username-cody@confluent.io"].Username)
 		req.Contains(cfg.Contexts, contextName)
-		req.Equal(cfg.AuthURL, cfg.Contexts[contextName].Platform)
+		req.Equal(ctx.Platform, cfg.Contexts[contextName].Platform)
 		req.Equal("username-cody@confluent.io", cfg.Contexts[contextName].Credential)
 		if s.cliName == "ccloud" {
 			// MDS doesn't set some things like cfg.Auth.User since e.g. an MDS user != an orgv1 (ccloud) User
-			req.Equal(&orgv1.User{Id: 23, Email: "cody@confluent.io", FirstName: "Cody"}, cfg.Auth.User)
+			req.Equal(&orgv1.User{Id: 23, Email: "cody@confluent.io", FirstName: "Cody"}, ctx.State.Auth.User)
 		} else {
-			req.Equal("http://localhost:8090", cfg.AuthURL)
+			req.Equal("http://localhost:8090", ctx.Platform.Server)
 		}
 	}
 }
@@ -176,11 +179,24 @@ func TestLogout(t *testing.T) {
 	prompt := prompt("cody@confluent.io", "iamrobin")
 	auth := &sdkMock.Auth{}
 	cmds, cfg := newAuthCommand(prompt, auth, nil, "ccloud", req)
-
-	cfg.AuthToken = "some.token.here"
-	cfg.Auth = &config.AuthConfig{User: &orgv1.User{Id: 23}}
+	platform := &config.Platform{
+		Name:   "michael-scott",
+		Server: "https://fake-confluent-plat.com",
+	}
+	credential := &config.Credential{
+		Name:           "whatever",
+		Username:       "franz",
+		Password:       "kafka",
+		CredentialType: 0,
+	}
+	state := &config.ContextState{
+		Auth:      &config.AuthConfig{User: &orgv1.User{Id: 23}},
+		AuthToken: "some.token.here",
+	}
+	req.NoError(cfg.AddCredential(credential))
+	req.NoError(cfg.AddPlatform(platform))
+	req.NoError(cfg.AddContext("koolbeanz", "michael-scott", "whatever", nil, "", nil, state))
 	req.NoError(cfg.Save())
-
 	output, err := pcmd.ExecuteCommand(cmds.Commands[1])
 	req.NoError(err)
 	req.Contains(output, "You are now logged out")
@@ -188,8 +204,8 @@ func TestLogout(t *testing.T) {
 	cfg = config.New()
 	cfg.CLIName = "ccloud"
 	req.NoError(cfg.Load())
-	req.Empty(cfg.AuthToken)
-	req.Empty(cfg.Auth)
+	req.Empty(state.AuthToken)
+	req.Empty(state.Auth)
 }
 
 func Test_credentials_NoSpacesAroundEmail_ShouldSupportSpacesAtBeginOrEnd(t *testing.T) {

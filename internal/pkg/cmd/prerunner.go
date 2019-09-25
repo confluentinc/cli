@@ -49,23 +49,22 @@ func (r *PreRun) Authenticated() func(cmd *cobra.Command, args []string) error {
 		if err := r.Anonymous()(cmd, args); err != nil {
 			return err
 		}
-		if err := r.Config.CheckLogin(); err != nil {
+		state, err := r.Config.AuthenticatedState()
+		if err != nil {
+			return err
+		}
+		// Validate token (not expired)
+		var claims map[string]interface{}
+		token, err := jwt.ParseSigned(state.AuthToken)
+		if err != nil {
+			return errors.HandleCommon(&ccloud.InvalidTokenError{}, cmd)
+		}
+		if err := token.UnsafeClaimsWithoutVerification(&claims); err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
-		if r.Config.AuthToken != "" {
-			// Validate token (not expired)
-			var claims map[string]interface{}
-			token, err := jwt.ParseSigned(r.Config.AuthToken)
-			if err != nil {
-				return errors.HandleCommon(&ccloud.InvalidTokenError{}, cmd)
-			}
-			if err := token.UnsafeClaimsWithoutVerification(&claims); err != nil {
-				return errors.HandleCommon(err, cmd)
-			}
-			if exp, ok := claims["exp"].(float64); ok {
-				if float64(r.Clock.Now().Unix()) > exp {
-					return errors.HandleCommon(&ccloud.ExpiredTokenError{}, cmd)
-				}
+		if exp, ok := claims["exp"].(float64); ok {
+			if float64(r.Clock.Now().Unix()) > exp {
+				return errors.HandleCommon(&ccloud.ExpiredTokenError{}, cmd)
 			}
 		}
 		return nil
@@ -75,9 +74,9 @@ func (r *PreRun) Authenticated() func(cmd *cobra.Command, args []string) error {
 // HasAPIKey provides PreRun operations for commands that require an API key.
 func (r *PreRun) HasAPIKey() func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		context, err := r.Config.Context()
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
+		context := r.Config.Context()
+		if context == nil {
+			return errors.HandleCommon(errors.ErrNoContext, cmd)
 		}
 		clusterId := context.Kafka
 		return errors.HandleCommon(r.Config.CheckHasAPIKey(clusterId), cmd)

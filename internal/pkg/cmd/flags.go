@@ -7,6 +7,7 @@ import (
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
 	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 func GetKafkaCluster(cmd *cobra.Command, ch *ConfigHelper, flag ...string) (*kafkav1.KafkaCluster, error) {
@@ -32,13 +33,14 @@ func GetKafkaClusterConfig(cmd *cobra.Command, ch *ConfigHelper, flag ...string)
 	if err != nil {
 		return nil, err
 	}
-	credType, err := ch.Config.CredentialType()
-	if err != nil {
-		return nil, err
+	ctx := ch.Config.Context()
+	if ctx == nil {
+		return nil, errors.ErrNoContext
 	}
+	credType := ctx.Credential.CredentialType
 	switch credType {
 	case config.APIKey:
-		return ch.Config.KafkaClusterConfig()
+		return ctx.ActiveKafkaCluster(), nil
 	case config.Username:
 		fallthrough
 	default:
@@ -60,7 +62,11 @@ func GetEnvironment(cmd *cobra.Command, cfg *config.Config) (string, error) {
 		}
 	}
 	if environment == "" {
-		environment = cfg.Auth.Account.Id
+		state, err := cfg.AuthenticatedState()
+		if err != nil {
+			return "", err
+		}
+		environment = state.Auth.Account.Id
 	}
 	return environment, nil
 }

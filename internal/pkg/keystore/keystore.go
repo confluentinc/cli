@@ -6,6 +6,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 type KeyStore interface {
@@ -43,11 +44,11 @@ func (c *ConfigKeyStore) StoreAPIKey(key *authv1.ApiKey, clusterID, environment 
 }
 
 func (c *ConfigKeyStore) DeleteAPIKey(key string) error {
-	cfg, err := c.Config.Context()
-	if err != nil {
-		return err
+	context := c.Config.Context()
+	if context == nil {
+		return errors.ErrNoContext
 	}
-	for _, cluster := range cfg.KafkaClusters {
+	for _, cluster := range context.KafkaClusters {
 		for apiKey := range cluster.APIKeys {
 			if apiKey == key {
 				delete(cluster.APIKeys, apiKey)

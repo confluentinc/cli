@@ -25,13 +25,27 @@ import (
 type topicCommand struct {
 	*cobra.Command
 	config    *config.Config
+	context *config.Context
 	client    ccloud.Kafka
 	ch        *pcmd.ConfigHelper
 	prerunner pcmd.PreRunner
 }
 
+type AuthenticatedCommand interface{
+	Cmd() *cobra.Command
+	Context() *config.Context
+}
+
+func (c *topicCommand) Cmd() *cobra.Command {
+	return c.Command
+}
+
+func (c *topicCommand) Context() *config.Context {
+	
+}
+
 // NewTopicCommand returns the Cobra command for Kafka topic.
-func NewTopicCommand(prerunner pcmd.PreRunner, config *config.Config, client ccloud.Kafka, ch *pcmd.ConfigHelper) (*cobra.Command, error) {
+func NewTopicCommand(prerunner pcmd.PreRunner, config *config.Config, context *config.Context, client ccloud.Kafka, ch *pcmd.ConfigHelper) (*cobra.Command, error) {
 	cmd := &topicCommand{
 		Command: &cobra.Command{
 			Use:   "topic",

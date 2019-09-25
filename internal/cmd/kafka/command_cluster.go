@@ -111,9 +111,9 @@ func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	currCtx, err := c.config.Context()
-	if err != nil && err != errors.ErrNoContext {
-		return err
+	currCtx := c.config.Context()
+	if currCtx == nil {
+		return errors.HandleCommon(errors.ErrNoContext, cmd)
 	}
 	var data [][]string
 	for _, cluster := range clusters {
@@ -209,9 +209,9 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 func (c *clusterCommand) use(cmd *cobra.Command, args []string) error {
 	clusterID := args[0]
 
-	cfg, err := c.config.Context()
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
+	cfg := c.config.Context()
+	if cfg == nil {
+		return errors.HandleCommon(errors.ErrNoContext, cmd)
 	}
 
 	// This ensures that the clusterID actually exists or throws an error

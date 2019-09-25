@@ -3,12 +3,14 @@ package schema_registry
 import (
 	"context"
 	"fmt"
+	"os"
+	"strings"
+
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-	"os"
-	"strings"
 )
 
 func getSrCredentials() (key string, secret string, err error) {
@@ -61,8 +63,9 @@ func SchemaRegistryClient(ch *pcmd.ConfigHelper) (client *srsdk.APIClient, ctx c
 	}
 
 	srConfig := srsdk.NewConfiguration()
-	if ch.Config.Auth == nil {
-		return nil, nil, errors.Errorf("user must be authenticated to use Schema Registry")
+	err = ch.Config.CheckLogin()
+	if err != nil {
+		return nil, nil, err
 	}
 	srConfig.BasePath, err = ch.SchemaRegistryURL(ctx)
 	if err != nil {

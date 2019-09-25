@@ -53,6 +53,22 @@ func (e *UnspecifiedCredentialError) Error() string {
 	return e.ContextName
 }
 
+type UnspecifiedPlatformError struct {
+	ContextName string
+}
+
+func (e *UnspecifiedPlatformError) Error() string {
+	return e.ContextName
+}
+
+type CorruptedContextError struct {
+	 ContextName string
+}
+
+func (e *CorruptedContextError) Error() string {
+	return e.ContextName
+}
+
 // UnconfiguredAPISecretError means the user needs to store the API secret locally
 type UnconfiguredAPISecretError struct {
 	APIKey    string
@@ -102,7 +118,6 @@ func (h *Handler) Handle(err error) {
 	if h.err != nil {
 		return
 	}
-	h.err = err
 }
 
 func (h *Handler) Reset() error {

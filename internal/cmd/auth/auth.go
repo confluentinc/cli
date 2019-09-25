@@ -96,9 +96,8 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	a.config.AuthURL = url
 
-	client := a.anonHTTPClientFactory(a.config.AuthURL, a.config.Logger)
+	client := a.anonHTTPClientFactory(url, a.config.Logger)
 	email, password, err := a.credentials(cmd, "Email", client)
 	if err != nil {
 		return err
@@ -117,7 +116,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	if userSSO != nil && userSSO.Sso != nil && userSSO.Sso.Enabled && userSSO.Sso.Auth0ConnectionName != "" {
 		// Be conservative: only bother trying to launch server if we have to
 		server := &auth_server.AuthServer{}
-		err = server.Start(a.config.AuthURL)
+		err = server.Start(url)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
@@ -145,9 +144,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	a.config.AuthToken = token
-
-	client = a.jwtHTTPClientFactory(context.Background(), a.config.AuthToken, a.config.AuthURL, a.config.Logger)
+	client = a.jwtHTTPClientFactory(context.Background(), token, url, a.config.Logger)
 	user, err := client.Auth.User(context.Background())
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -156,32 +153,38 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	if len(user.Accounts) == 0 {
 		return errors.HandleCommon(errors.New("No environments found for authenticated user!"), cmd)
 	}
-
+	username := user.User.Email
+	name := genContextName(username, url)
+	ctx, err := a.config.FindContext(name)
+	state := new(config.ContextState)
+	if err == nil {
+		state = ctx.State
+	}
 	// If no auth config exists, initialize it
-	if a.config.Auth == nil {
-		a.config.Auth = &config.AuthConfig{}
+	if state.Auth == nil {
+		state.Auth = &config.AuthConfig{}
 	}
 
 	// Always overwrite the user and list of accounts when logging in -- but don't necessarily
 	// overwrite `Account` (current/active environment) since we want that to be remembered
 	// between CLI sessions.
-	a.config.Auth.User = user.User
-	a.config.Auth.Accounts = user.Accounts
+	state.Auth.User = user.User
+	state.Auth.Accounts = user.Accounts
 
 	// Default to 0th environment if no suitable environment is already configured
 	hasGoodEnv := false
-	if a.config.Auth.Account != nil {
-		for _, acc := range a.config.Auth.Accounts {
-			if acc.Id == a.config.Auth.Account.Id {
+	if state.Auth.Account != nil {
+		for _, acc := range state.Auth.Accounts {
+			if acc.Id == state.Auth.Account.Id {
 				hasGoodEnv = true
 			}
 		}
 	}
 	if !hasGoodEnv {
-		a.config.Auth.Account = a.config.Auth.Accounts[0]
+		state.Auth.Account = state.Auth.Accounts[0]
 	}
 
-	err = a.addContextIfAbsent(a.config.Auth.User.Email)
+	err = a.addContextIfAbsent(state.Auth.User.Email, url, state)
 	if err != nil {
 		return err
 	}
@@ -190,8 +193,8 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "Unable to save user authentication.")
 	}
 	pcmd.Println(cmd, "Logged in as", email)
-	pcmd.Print(cmd, "Using environment ", a.config.Auth.Account.Id,
-		" (\"", a.config.Auth.Account.Name, "\")\n")
+	pcmd.Print(cmd, "Using environment ", state.Auth.Account.Id,
+		" (\"", state.Auth.Account.Name, "\")\n")
 	return err
 }
 
@@ -200,8 +203,7 @@ func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	a.config.AuthURL = url
-	a.mdsClient.ChangeBasePath(a.config.AuthURL)
+	a.mdsClient.ChangeBasePath(url)
 	email, password, err := a.credentials(cmd, "Username", nil)
 	if err != nil {
 		return err
@@ -212,24 +214,30 @@ func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	a.config.AuthToken = resp.AuthToken
-
+	state := &config.ContextState{
+		Auth:      nil,
+		AuthToken: resp.AuthToken,
+	}
+	err = a.addContextIfAbsent(email, url, state)
+	if err != nil {
+		return err
+	}
 	err = a.config.Save()
 	if err != nil {
 		return errors.Wrap(err, "Unable to save user authentication.")
 	}
-	err = a.addContextIfAbsent(email)
-	if err != nil {
-		return err
-	}
 	pcmd.Println(cmd, "Logged in as", email)
-
 	return err
 }
 
 func (a *commands) logout(cmd *cobra.Command, args []string) error {
-	a.config.AuthToken = ""
-	a.config.Auth = nil
+	ctx := a.config.Context()
+	if ctx == nil {
+		return nil
+	}
+	state := ctx.State
+	state.AuthToken = ""
+	state.Auth = nil
 	err := a.config.Save()
 	if err != nil {
 		return errors.Wrap(err, "Unable to delete user auth")
@@ -291,19 +299,30 @@ func (a *commands) credentials(cmd *cobra.Command, userField string, cloudClient
 	return email, password, nil
 }
 
-func (a *commands) addContextIfAbsent(username string) error {
-	name := fmt.Sprintf("login-%s-%s", username, a.config.AuthURL)
+func (a *commands) addContextIfAbsent(username string, url string, state *config.ContextState) error {
+	name := genContextName(username, url)
 	if _, ok := a.config.Contexts[name]; ok {
 		return nil
 	}
 	platform := &config.Platform{
-		Server: a.config.AuthURL,
+		Name:   name,
+		Server: url,
 	}
 	credential := &config.Credential{
+		Name:     name,
 		Username: username,
 		// don't save password if they entered it interactively.
 	}
-	err := a.config.AddContext(name, platform, credential, map[string]*config.KafkaClusterConfig{}, "", nil)
+	err := a.config.AddPlatform(platform)
+	if err != nil {
+		return err
+	}
+	err = a.config.AddCredential(credential)
+	if err != nil {
+		return err
+	}
+	err = a.config.AddContext(name, platform.Name, credential.Name, map[string]*config.KafkaClusterConfig{},
+		"", nil, state)
 	if err != nil {
 		return err
 	}
@@ -312,6 +331,10 @@ func (a *commands) addContextIfAbsent(username string) error {
 		return err
 	}
 	return nil
+}
+
+func genContextName(username string, url string) string {
+	return fmt.Sprintf("login-%s-%s", username, url)
 }
 
 func check(err error) {

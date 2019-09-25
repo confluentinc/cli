@@ -3,21 +3,23 @@ package iam
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/mds-sdk-go"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/version"
-	mds "github.com/confluentinc/mds-sdk-go"
 )
 
 type command struct {
 	*cobra.Command
-	config *config.Config
-	ch     *pcmd.ConfigHelper
-	client *mds.APIClient
+	config  *config.Config
+	context *config.Context
+	ch      *pcmd.ConfigHelper
+	client  *mds.APIClient
 }
 
 // New returns the default command object for interacting with RBAC.
-func New(prerunner pcmd.PreRunner, config *config.Config, ch *pcmd.ConfigHelper, version *version.Version, client *mds.APIClient) *cobra.Command {
+func New(prerunner pcmd.PreRunner, config *config.Config, context *config.Context, ch *pcmd.ConfigHelper, version *version.Version, client *mds.APIClient) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:               "iam",
@@ -25,9 +27,10 @@ func New(prerunner pcmd.PreRunner, config *config.Config, ch *pcmd.ConfigHelper,
 			Long:              "Manage Role Based Access (RBAC) and Identity and Access Management (IAM) permissions.",
 			PersistentPreRunE: prerunner.Authenticated(),
 		},
-		config: config,
-		ch:     ch,
-		client: client,
+		config:  config,
+		context: context,
+		ch:      ch,
+		client:  client,
 	}
 
 	cmd.init()
@@ -35,6 +38,6 @@ func New(prerunner pcmd.PreRunner, config *config.Config, ch *pcmd.ConfigHelper,
 }
 
 func (c *command) init() {
-	c.AddCommand(NewRoleCommand(c.config, c.client))
-	c.AddCommand(NewRolebindingCommand(c.config, c.ch, c.client))
+	c.AddCommand(NewRoleCommand(c.config, c.context, c.client))
+	c.AddCommand(NewRolebindingCommand(c.config, c.context, c.ch, c.client))
 }

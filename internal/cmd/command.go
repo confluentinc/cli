@@ -28,8 +28,7 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/update"
 	"github.com/confluentinc/cli/internal/cmd/version"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	configs "github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/cli/internal/pkg/errors"
+	pconfig "github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/help"
 	"github.com/confluentinc/cli/internal/pkg/io"
 	"github.com/confluentinc/cli/internal/pkg/keystore"
@@ -44,7 +43,7 @@ import (
 	versions "github.com/confluentinc/cli/internal/pkg/version"
 )
 
-func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Version, logger *log.Logger) (*cobra.Command, error) {
+func NewConfluentCommand(cliName string, cfg *pconfig.Config, ver *versions.Version, logger *log.Logger) (*cobra.Command, error) {
 	cli := &cobra.Command{
 		Use:               cliName,
 		Version:           ver.Version,
@@ -72,9 +71,18 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	if err != nil {
 		return nil, err
 	}
-
-	client := ccloud.NewClientWithJWT(context.Background(), cfg.AuthToken, &ccloud.Params{
-		BaseURL: cfg.AuthURL, Logger: cfg.Logger, UserAgent: ver.UserAgent,
+	currCtx := cfg.Context()
+	var state *pconfig.ContextState
+	var authURL string
+	if currCtx != nil {
+		state = currCtx.State
+		authURL = currCtx.Platform.Server
+	} else {
+		state = new(pconfig.ContextState)
+		authURL = ""
+	}
+	client := ccloud.NewClientWithJWT(context.Background(), state.AuthToken, &ccloud.Params{
+		BaseURL: authURL, Logger: cfg.Logger, UserAgent: ver.UserAgent,
 	})
 
 	ch := &pcmd.ConfigHelper{Config: cfg, Client: client, Version: ver}
@@ -93,7 +101,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	cli.PersistentPreRunE = prerunner.Anonymous()
 
 	mdsConfig := mds.NewConfiguration()
-	mdsConfig.BasePath = cfg.AuthURL
+	mdsConfig.BasePath = authURL
 	mdsConfig.UserAgent = ver.UserAgent
 
 	mdsClient := mds.NewAPIClient(mdsConfig)
@@ -107,10 +115,10 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 
 	cli.AddCommand(completion.NewCompletionCmd(cli, cliName))
 	cli.AddCommand(update.New(cliName, cfg, ver, prompt, updateClient))
-  cli.AddCommand(auth.New(prerunner, cfg, logger, mdsClient, ver.UserAgent)...)
-  
-  resolver := &pcmd.FlagResolverImpl{Prompt: prompt, Out: os.Stdout}
-  
+	cli.AddCommand(auth.New(prerunner, cfg, logger, mdsClient, ver.UserAgent)...)
+
+	resolver := &pcmd.FlagResolverImpl{Prompt: prompt, Out: os.Stdout}
+
 	if cliName == "ccloud" {
 		kafkaClient := kafkas.New(client, logger)
 		cmd, err := kafka.New(prerunner, cfg, kafkaClient, ch)
@@ -119,11 +127,14 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		}
 		cli.AddCommand(cmd)
 		cli.AddCommand(initcontext.New(prerunner, cfg, prompt, resolver))
-		credType, err := cfg.CredentialType()
-		if _, ok := err.(*errors.UnspecifiedCredentialError); ok {
-			return nil, err
-		}
-		if credType == configs.APIKey {
+		//credType, err := cfg.CredentialType()
+		//if _, ok := err.(*errors.UnspecifiedCredentialError); ok {
+		//	return nil, err
+		//}
+		//if credType == pconfig.APIKey {
+		//	return cli, nil
+		//}
+		if currCtx != nil && currCtx.Credential.CredentialType == pconfig.APIKey {
 			return cli, nil
 		}
 		cli.AddCommand(ps1.NewPromptCmd(cfg, &pps1.Prompt{Config: cfg}, logger))
@@ -156,7 +167,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		}
 		shellRunner := &local.BashShellRunner{BasherContext: bash}
 		cli.AddCommand(local.New(cli, prerunner, shellRunner, logger, fs))
-		
+
 		cli.AddCommand(secret.New(prerunner, cfg, prompt, resolver, secrets.NewPasswordProtectionPlugin(logger)))
 	}
 	return cli, nil

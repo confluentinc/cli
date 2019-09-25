@@ -37,17 +37,18 @@ func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.Kafka, c
 	return cmd.Command, nil
 }
 
-func (c *command) init() error {
+func (c *command) init() {
 	topicCmd, err := NewTopicCommand(c.prerunner, c.config, c.client, c.ch)
 	if err != nil {
 		return err
 	}
 	c.AddCommand(topicCmd)
-	credType, err := c.config.CredentialType()
-	if err != nil && err != errors.ErrNoContext {
-		return err
+	context := c.config.Context()
+	if context == nil {
+		return errors.ErrNoContext
 	}
-	if err == nil && credType == config.APIKey {
+	credType := c.config.Credentials[context.Name].CredentialType
+	if credType == config.APIKey {
 		return nil
 	}
 	c.AddCommand(NewClusterCommand(c.config, c.client, c.ch))

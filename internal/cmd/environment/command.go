@@ -17,8 +17,9 @@ import (
 
 type command struct {
 	*cobra.Command
-	config *config.Config
-	client ccloud.Account
+	config  *config.Config
+	context *config.Context
+	client  ccloud.Account
 }
 
 var (
@@ -27,15 +28,16 @@ var (
 )
 
 // New returns the Cobra command for `environment`.
-func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.Account, cliName string) *cobra.Command {
+func New(prerunner pcmd.PreRunner, config *config.Config, context *config.Context, client ccloud.Account, cliName string) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:               "environment",
 			Short:             fmt.Sprintf("Manage and select %s environments.", cliName),
 			PersistentPreRunE: prerunner.Authenticated(),
 		},
-		config: config,
-		client: client,
+		config:  config,
+		context: context,
+		client:  client,
 	}
 	cmd.init()
 	return cmd.Command
@@ -87,20 +89,20 @@ func (c *command) refreshEnvList(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-
-	c.config.Auth.Accounts = environments
+	state := c.context.State
+	state.Auth.Accounts = environments
 
 	// If current env has gone away, reset active env to 0th env
 	hasGoodEnv := false
-	if c.config.Auth.Account != nil {
-		for _, acc := range c.config.Auth.Accounts {
-			if acc.Id == c.config.Auth.Account.Id {
+	if state.Auth.Account != nil {
+		for _, acc := range state.Auth.Accounts {
+			if acc.Id == state.Auth.Account.Id {
 				hasGoodEnv = true
 			}
 		}
 	}
 	if !hasGoodEnv {
-		c.config.Auth.Account = c.config.Auth.Accounts[0]
+		state.Auth.Account = state.Auth.Accounts[0]
 	}
 
 	err = c.config.Save()
@@ -116,10 +118,10 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-
+	state := c.context.State
 	var data [][]string
 	for _, environment := range environments {
-		if environment.Id == c.config.Auth.Account.Id {
+		if environment.Id == state.Auth.Account.Id {
 			environment.Id = fmt.Sprintf("* %s", environment.Id)
 		} else {
 			environment.Id = fmt.Sprintf("  %s", environment.Id)
@@ -137,10 +139,10 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-
-	for _, acc := range c.config.Auth.Accounts {
+	state := c.context.State
+	for _, acc := range state.Auth.Accounts {
 		if acc.Id == id {
-			c.config.Auth.Account = acc
+			state.Auth.Account = acc
 			err := c.config.Save()
 			if err != nil {
 				return errors.HandleCommon(errors.New("couldn't switch to new environment: couldn't save config."), cmd)
@@ -155,38 +157,32 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 
 func (c *command) create(cmd *cobra.Command, args []string) error {
 	name := args[0]
-
-	_, err := c.client.Create(context.Background(), &orgv1.Account{Name: name, OrganizationId: c.config.Auth.Account.OrganizationId})
-
+	state := c.context.State
+	_, err := c.client.Create(context.Background(), &orgv1.Account{Name: name, OrganizationId: state.Auth.Account.OrganizationId})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-
 	return nil
 }
 
 func (c *command) update(cmd *cobra.Command, args []string) error {
 	id := args[0]
 	newName := cmd.Flag("name").Value.String()
-
-	err := c.client.Update(context.Background(), &orgv1.Account{Id: id, Name: newName, OrganizationId: c.config.Auth.Account.OrganizationId})
-
+	state := c.context.State
+	err := c.client.Update(context.Background(), &orgv1.Account{Id: id, Name: newName, OrganizationId: state.Auth.Account.OrganizationId})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-
 	return nil
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
 	id := args[0]
-
-	err := c.client.Delete(context.Background(), &orgv1.Account{Id: id, OrganizationId: c.config.Auth.Account.OrganizationId})
-
+	state := c.context.State
+	err := c.client.Delete(context.Background(), &orgv1.Account{Id: id, OrganizationId: state.Auth.Account.OrganizationId})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-
 	return nil
 }
 

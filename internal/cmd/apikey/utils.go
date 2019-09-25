@@ -41,6 +41,10 @@ func (c *command) resolveResourceID(cmd *cobra.Command, args []string) (resource
 		if err != nil {
 			return "", "", "", "", err
 		}
-		return kafkaResourceType, c.config.Auth.Account.Id, kcc.ID, kcc.APIKey, nil
+		state, err := c.config.AuthenticatedState()
+		if err != nil {
+			return "", "", "", "", err
+		}
+		return kafkaResourceType, state.Auth.Account.Id, kcc.ID, kcc.APIKey, nil
 	}
 }

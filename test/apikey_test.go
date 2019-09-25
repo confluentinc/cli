@@ -78,8 +78,8 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 					Logger:  logger,
 				})
 				require.NoError(t, cfg.Load())
-				ctx, err := cfg.Context()
-				require.NoError(t, err)
+				ctx := cfg.Context()
+				require.NotNil(t, ctx)
 				kcc := ctx.KafkaClusters["lkc-cool1"]
 				pair := kcc.APIKeys["UIAPIKEY100"]
 				require.NotNil(t, pair)

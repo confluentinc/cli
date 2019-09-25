@@ -135,11 +135,14 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	if err := requireLen(description, descriptionLength, "description"); err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-
+	state, err := c.config.AuthenticatedState()
+	if err != nil {
+		return err
+	}
 	user := &orgv1.User{
 		ServiceName:        name,
 		ServiceDescription: description,
-		OrganizationId:     c.config.Auth.User.OrganizationId,
+		OrganizationId:     state.Auth.User.OrganizationId,
 		ServiceAccount:     true,
 	}
 

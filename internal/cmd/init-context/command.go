@@ -43,7 +43,7 @@ func (c *command) init() {
 		"Can be done interactively, with flags, or both.")
 	c.Flags().String("bootstrap", "", "Bootstrap URL.")
 	c.Flags().String("api-key", "", "API key.")
-	c.Flags().String("api-secret", "", "API secret. Can be specified as plaintext, " +
+	c.Flags().String("api-secret", "", "API secret. Can be specified as plaintext, "+
 		"as a file, starting with '@', or as stdin, starting with '-'.")
 	c.Flags().SortFlags = false
 	c.RunE = c.initContext
@@ -113,6 +113,8 @@ func (c *command) addContext(name string, bootstrapURL string, apiKey string, ap
 		kafkaClusterCfg.ID: kafkaClusterCfg,
 	}
 	platform := &config.Platform{Server: bootstrapURL}
+	// Inject credential and platforms name for now, until users can provide custom names.
+	platformName := platform.Server
 	// Hardcoded for now, since username/password isn't implemented yet.
 	credential := &config.Credential{
 		Username:       "",
@@ -120,6 +122,23 @@ func (c *command) addContext(name string, bootstrapURL string, apiKey string, ap
 		APIKeyPair:     apiKeyPair,
 		CredentialType: config.APIKey,
 	}
-	return c.config.AddContext(name, platform, credential, kafkaClusters,
-		kafkaClusterCfg.ID, nil)
+	var credentialName string
+	switch credential.CredentialType {
+	case config.Username:
+		credentialName = fmt.Sprintf("%s-%s", &credential.CredentialType, credential.Username)
+	case config.APIKey:
+		credentialName = fmt.Sprintf("%s-%s", &credential.CredentialType, credential.APIKeyPair.Key)
+	default:
+		return fmt.Errorf("credential type %d unknown", credential.CredentialType)
+	}
+	err := c.config.AddCredential(credential)
+	if err != nil {
+		return err
+	}
+	err = c.config.AddPlatform(platform)
+	if err != nil {
+		return err
+	}
+	return c.config.AddContext(name, platformName, credentialName, kafkaClusters,
+		kafkaClusterCfg.ID, nil, new(config.ContextState))
 }

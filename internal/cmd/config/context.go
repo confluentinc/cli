@@ -84,7 +84,7 @@ func (c *contextCommand) list(cmd *cobra.Command, args []string) error {
 		if c.config.CurrentContext == name {
 			current = "*"
 		}
-		r := &row{current, name, context.Platform, context.Credential}
+		r := &row{current, name, context.PlatformName, context.CredentialName}
 		data = append(data, printer.ToRow(r, []string{"Current", "Name", "Platform", "Credential"}))
 	}
 	printer.RenderCollectionTableOut(data, []string{"Current", "Name", "Platform", "Credential"}, cmd.OutOrStdout())
@@ -147,9 +147,19 @@ func (c *contextCommand) delete(cmd *cobra.Command, args []string) error {
 //
 
 func (c *contextCommand) context(args []string) (*config.Context, error) {
+	var context *config.Context
+	var err error
 	if len(args) == 1 {
 		contextName := args[0]
-		return c.config.FindContext(contextName)
+		context, err = c.config.FindContext(contextName)
+	} else {
+		context := c.config.Context()
+		if context == nil {
+			err = errors.ErrNoContext
+		}
 	}
-	return c.config.Context()
+	if err != nil {
+		return nil, errors.HandleCommon(err, c.Command)
+	}
+	return context, nil
 }
