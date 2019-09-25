@@ -84,11 +84,12 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 				},
 			}
 
-			root := &cobra.Command{}
+			root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
 			root.Flags().CountP("verbose", "v", "Increase verbosity")
 
 			args := strings.Split(tt.fields.Command, " ")
 			_, err := pcmd.ExecuteCommand(root, args...)
+			require.NoError(t, err)
 
 			err = r.Anonymous()(root, args)
 			require.NoError(t, err)
@@ -120,11 +121,12 @@ func TestPreRun_HasAPIKey(t *testing.T) {
 		},
 	}
 
-	root := &cobra.Command{}
+	root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
 	root.Flags().CountP("verbose", "v", "Increase verbosity")
 
 	args := strings.Split("help", " ")
 	_, err := pcmd.ExecuteCommand(root, args...)
+	require.NoError(t, err)
 
 	err = r.Anonymous()(root, args)
 	require.NoError(t, err)
@@ -133,4 +135,3 @@ func TestPreRun_HasAPIKey(t *testing.T) {
 		t.Errorf("PreRun.HasAPIKey() didn't call the Anonymous() helper to set logging level and updates")
 	}
 }
-
