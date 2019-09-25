@@ -1,6 +1,8 @@
 package log
 
-import "github.com/spf13/cobra"
+import (
+	"github.com/spf13/cobra"
+)
 
 func SetLoggingVerbosity(cmd *cobra.Command, logger *Logger) error {
 	verbosity, err := cmd.Flags().GetCount("verbose")
