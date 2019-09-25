@@ -28,6 +28,7 @@ type commands struct {
 	Commands  []*cobra.Command
 	config    *config.Config
 	mdsConfig *mds.Configuration
+	mdsClient *mds.APIClient
 	Logger    *log.Logger
 	// for testing
 	prompt                pcmd.Prompt
@@ -55,6 +56,7 @@ func newCommands(prerunner pcmd.PreRunner, config *config.Config, log *log.Logge
 	cmd := &commands{
 		config:                config,
 		mdsConfig:             mdsConfig,
+		mdsClient:             mds.NewAPIClient(mdsConfig),
 		Logger:                log,
 		prompt:                prompt,
 		anonHTTPClientFactory: anonHTTPClientFactory,
@@ -77,7 +79,7 @@ func (a *commands) init(prerunner pcmd.PreRunner) {
 	} else {
 		loginCmd.RunE = a.loginMDS
 		loginCmd.Flags().String("url", "", "Metadata service URL.")
-		loginCmd.Flags().String("caCertPath", "", "Self-signed certificate in PEM format")
+		loginCmd.Flags().String("caCertPath", "", "Self-signed certificate in PEM format.")
 		loginCmd.Short = strings.Replace(loginCmd.Short, ".", " (required for RBAC).", -1)
 		loginCmd.Long = strings.Replace(loginCmd.Long, ".", " (required for RBAC).", -1)
 		check(loginCmd.MarkFlagRequired("url")) // because https://confluent.cloud isn't an MDS endpoint
@@ -218,16 +220,16 @@ func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
+		a.mdsClient = mds.NewAPIClient(a.mdsConfig)
 	}
-	mdsClient := mds.NewAPIClient(a.mdsConfig)
-	mdsClient.ChangeBasePath(a.config.AuthURL)
+	a.mdsClient.ChangeBasePath(a.config.AuthURL)
 	email, password, err := a.credentials(cmd, "Username", nil)
 	if err != nil {
 		return err
 	}
 
 	basicContext := context.WithValue(context.Background(), mds.ContextBasicAuth, mds.BasicAuth{UserName: email, Password: password})
-	resp, _, err := mdsClient.TokensAuthenticationApi.GetToken(basicContext, "")
+	resp, _, err := a.mdsClient.TokensAuthenticationApi.GetToken(basicContext, "")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
