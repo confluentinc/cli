@@ -1,7 +1,6 @@
 package kafka
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"strings"
@@ -103,6 +102,6 @@ func (l *logAdapter) Printf(format string, a ...interface{}) {
 
 func (l *logAdapter) log(msg string) {
 	// This is how hclog.StandardLogger works as well; it fixes the unnecessary extra newlines
-	msg = string(bytes.TrimRight([]byte(msg), " \t\n"))
+	msg = string(strings.TrimRight(msg, " \t\n"))
 	l.logger.Log("msg", msg)
 }

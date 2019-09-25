@@ -69,11 +69,6 @@ func newLogger(params *Params, logger hclog.Logger) *Logger {
 	}
 }
 
-func (l *Logger) With(args ...interface{}) *Logger {
-	logger := l.l.With(args...)
-	return newLogger(l.params, logger)
-}
-
 func (l *Logger) Named(name string) *Logger {
 	logger := l.l.Named(name)
 	return newLogger(l.params, logger)
@@ -92,14 +87,12 @@ func (l *Logger) Tracef(format string, args ...interface{}) {
 }
 
 func (l *Logger) Debug(args ...interface{}) {
-	fmt.Printf("Debug %#v\n", args)
 	if l.l.IsDebug() {
 		l.l.Debug(fmt.Sprint(args...))
 	}
 }
 
 func (l *Logger) Debugf(format string, args ...interface{}) {
-	fmt.Printf("Debugf %#v %#v\n", format, args)
 	if l.l.IsDebug() {
 		l.l.Debug(fmt.Sprintf(format, args...))
 	}
