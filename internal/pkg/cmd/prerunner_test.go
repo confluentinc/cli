@@ -102,7 +102,7 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 	}
 }
 
-func TestPreRun_HasAPIKey(t *testing.T) {
+func TestPreRun_HasAPIKey_SetupLoggingAndCheckForUpdates(t *testing.T) {
 	cfg := &config.Config{}
 	require.NoError(t, cfg.Load())
 
