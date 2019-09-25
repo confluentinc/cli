@@ -217,7 +217,7 @@ func (c *rolebindingCommand) list(cmd *cobra.Command, args []string) error {
 	} else if cmd.Flags().Changed("role") {
 		return c.listRolePrincipals(cmd)
 	}
-	return fmt.Errorf("required: either principal or role is required")
+	return errors.HandleCommon(fmt.Errorf("required: either principal or role is required"), cmd)
 }
 
 func (c *rolebindingCommand) listPrincipalResources(cmd *cobra.Command) error {
@@ -244,9 +244,12 @@ func (c *rolebindingCommand) listPrincipalResources(cmd *cobra.Command) error {
 		role = r
 	}
 
-	principalsRolesResourcePatterns, response, err := c.client.RoleBindingSummariesApi.LookupResourcesForPrincipal(c.ctx, principal, mds.Scope{Clusters: *scopeClusters})
+	principalsRolesResourcePatterns, response, err := c.client.RoleBindingSummariesApi.LookupResourcesForPrincipal(
+		c.ctx,
+		principal,
+		mds.Scope{Clusters: *scopeClusters})
 	if err != nil {
-		if response.StatusCode == 404 {
+		if response.StatusCode == http.StatusNotFound {
 			return c.listPrincipalResourcesV1(cmd, scopeClusters, principal, role)
 		}
 		return errors.HandleCommon(err, cmd)
@@ -285,7 +288,10 @@ func (c *rolebindingCommand) listPrincipalResourcesV1(cmd *cobra.Command, scopeC
 	var err error
 	roleNames := []string{role}
 	if role == "*" {
-		roleNames, _, err = c.client.RoleBindingCRUDApi.ScopedPrincipalRolenames(c.ctx, principal, mds.Scope{Clusters: *scopeClusters})
+		roleNames, _, err = c.client.RoleBindingCRUDApi.ScopedPrincipalRolenames(
+			c.ctx,
+			principal,
+			mds.Scope{Clusters: *scopeClusters})
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
@@ -293,7 +299,11 @@ func (c *rolebindingCommand) listPrincipalResourcesV1(cmd *cobra.Command, scopeC
 
 	var data [][]string
 	for _, roleName := range roleNames {
-		rps, _, err := c.client.RoleBindingCRUDApi.GetRoleResourcesForPrincipal(c.ctx, principal, roleName, mds.Scope{Clusters: *scopeClusters})
+		rps, _, err := c.client.RoleBindingCRUDApi.GetRoleResourcesForPrincipal(
+			c.ctx,
+			principal,
+			roleName,
+			mds.Scope{Clusters: *scopeClusters})
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
@@ -334,12 +344,20 @@ func (c *rolebindingCommand) listRolePrincipals(cmd *cobra.Command) error {
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
-		principals, _, err = c.client.RoleBindingSummariesApi.LookupPrincipalsWithRoleOnResource(c.ctx, role, resource.ResourceType, resource.Name, mds.Scope{Clusters: *scopeClusters})
+		principals, _, err = c.client.RoleBindingSummariesApi.LookupPrincipalsWithRoleOnResource(
+			c.ctx,
+			role,
+			resource.ResourceType,
+			resource.Name,
+			mds.Scope{Clusters: *scopeClusters})
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
 	} else {
-		principals, _, err = c.client.RoleBindingSummariesApi.LookupPrincipalsWithRole(c.ctx, role, mds.Scope{Clusters: *scopeClusters})
+		principals, _, err = c.client.RoleBindingSummariesApi.LookupPrincipalsWithRole(
+			c.ctx,
+			role,
+			mds.Scope{Clusters: *scopeClusters})
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
@@ -420,9 +438,17 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, args []string) error {
 
 	var resp *http.Response
 	if options.resource != "" {
-		resp, err = c.client.RoleBindingCRUDApi.AddRoleResourcesForPrincipal(c.ctx, options.principal, options.role, options.resourcesRequest)
+		resp, err = c.client.RoleBindingCRUDApi.AddRoleResourcesForPrincipal(
+			c.ctx,
+			options.principal,
+			options.role,
+			options.resourcesRequest)
 	} else {
-		resp, err = c.client.RoleBindingCRUDApi.AddRoleForPrincipal(c.ctx, options.principal, options.role, mds.Scope{Clusters: options.scopeClusters})
+		resp, err = c.client.RoleBindingCRUDApi.AddRoleForPrincipal(
+			c.ctx,
+			options.principal,
+			options.role,
+			mds.Scope{Clusters: options.scopeClusters})
 	}
 
 	if err != nil {
@@ -444,9 +470,17 @@ func (c *rolebindingCommand) delete(cmd *cobra.Command, args []string) error {
 
 	var resp *http.Response
 	if options.resource != "" {
-		resp, err = c.client.RoleBindingCRUDApi.RemoveRoleResourcesForPrincipal(c.ctx, options.principal, options.role, options.resourcesRequest)
+		resp, err = c.client.RoleBindingCRUDApi.RemoveRoleResourcesForPrincipal(
+			c.ctx,
+			options.principal,
+			options.role,
+			options.resourcesRequest)
 	} else {
-		resp, err = c.client.RoleBindingCRUDApi.DeleteRoleForPrincipal(c.ctx, options.principal, options.role, mds.Scope{Clusters: options.scopeClusters})
+		resp, err = c.client.RoleBindingCRUDApi.DeleteRoleForPrincipal(
+			c.ctx,
+			options.principal,
+			options.role,
+			mds.Scope{Clusters: options.scopeClusters})
 	}
 
 	if err != nil {
