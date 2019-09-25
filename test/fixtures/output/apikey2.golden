@@ -1,4 +1,4 @@
-    Key    | Owner | Description | Cluster-Id | Resource-Type  
-+----------+-------+-------------+------------+---------------+
-    MYKEY1 |    12 |             | bob        | kafka          
-    MYKEY3 |    23 |             | bob        | kafka          
+    Key    | Owner | Description | Resource Type | Resource ID  
++----------+-------+-------------+---------------+-------------+
+    MYKEY1 |    12 |             | kafka         | bob          
+    MYKEY3 |    23 |             | kafka         | bob          

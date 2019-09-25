@@ -37,8 +37,8 @@ type command struct {
 }
 
 var (
-	listFields    = []string{"Key", "UserId", "Description", "ClusterId", "ResourceType"}
-	listLabels    = []string{"Key", "Owner", "Description", "Cluster-Id", "Resource-Type"}
+	listFields    = []string{"Key", "UserId", "Description", "ResourceType", "ResourceId"}
+	listLabels    = []string{"Key", "Owner", "Description", "Resource Type", "Resource ID"}
 	createFields  = []string{"Key", "Secret"}
 	createRenames = map[string]string{"Key": "API Key"}
 )
@@ -128,19 +128,19 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		Key          string
 		Description  string
 		UserId       int32
-		ClusterId    string
 		ResourceType string
+		ResourceId   string
 	}
 	var apiKeys []*authv1.ApiKey
 	var data [][]string
 
-	resourceType, accId, clusterId, currentKey, err := c.resolveResourceID(cmd, args)
+	resourceType, accId, resourceId, currentKey, err := c.resolveResourceID(cmd, args)
 	//Return resource not found errors
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	apiKeys, err = c.client.List(context.Background(), &authv1.ApiKey{AccountId: accId, LogicalClusters: []*authv1.ApiKey_Cluster{{Id: clusterId, Type: resourceType}}})
+	apiKeys, err = c.client.List(context.Background(), &authv1.ApiKey{AccountId: accId, LogicalClusters: []*authv1.ApiKey_Cluster{{Id: resourceId, Type: resourceType}}})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -158,13 +158,13 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		}
 
 		for _, c := range apiKey.LogicalClusters {
-			if c.Id == clusterId {
+			if c.Id == resourceId {
 				data = append(data, printer.ToRow(&keyDisplay{
 					Key:          apiKey.Key,
 					Description:  apiKey.Description,
 					UserId:       apiKey.UserId,
-					ClusterId:    clusterId,
 					ResourceType: resourceType,
+					ResourceId:   resourceId,
 				}, listFields))
 				break
 			}
