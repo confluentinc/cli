@@ -14,7 +14,8 @@ type Version struct {
 	Commit    string
 	BuildDate string
 	BuildHost string
-	UserAgent string
+	UserAgent string // http
+	ClientID  string // kafka
 }
 
 func NewVersion(binary, name, support, version, commit, buildDate, buildHost string) *Version {
@@ -26,6 +27,7 @@ func NewVersion(binary, name, support, version, commit, buildDate, buildHost str
 		BuildDate: buildDate,
 		BuildHost: buildHost,
 		UserAgent: fmt.Sprintf("%s/%s (%s)", strings.ReplaceAll(name, " ", "-"), version, support),
+		ClientID:  fmt.Sprintf("%s_%s", strings.ReplaceAll(name, " ", "-"), version),
 	}
 }
 

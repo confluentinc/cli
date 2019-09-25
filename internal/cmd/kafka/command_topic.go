@@ -20,6 +20,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 type topicCommand struct {
@@ -28,10 +29,12 @@ type topicCommand struct {
 	client    ccloud.Kafka
 	ch        *pcmd.ConfigHelper
 	prerunner pcmd.PreRunner
+	logger    *log.Logger
+	clientID  string
 }
 
 // NewTopicCommand returns the Cobra command for Kafka topic.
-func NewTopicCommand(prerunner pcmd.PreRunner, config *config.Config, client ccloud.Kafka, ch *pcmd.ConfigHelper) (*cobra.Command, error) {
+func NewTopicCommand(prerunner pcmd.PreRunner, config *config.Config, logger *log.Logger, clientID string, client ccloud.Kafka, ch *pcmd.ConfigHelper) (*cobra.Command, error) {
 	cmd := &topicCommand{
 		Command: &cobra.Command{
 			Use:   "topic",
@@ -41,6 +44,8 @@ func NewTopicCommand(prerunner pcmd.PreRunner, config *config.Config, client ccl
 		client:    client,
 		ch:        ch,
 		prerunner: prerunner,
+		logger:    logger,
+		clientID:  clientID,
 	}
 	err := cmd.init()
 	if err != nil {
@@ -357,7 +362,8 @@ func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {
 
 	pcmd.Println(cmd, "Starting Kafka Producer. ^C or ^D to exit")
 
-	producer, err := NewSaramaProducer(cluster)
+	InitSarama(c.logger)
+	producer, err := NewSaramaProducer(cluster, c.clientID)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -437,7 +443,8 @@ func (c *topicCommand) consume(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	consumer, err := NewSaramaConsumer(group, cluster, beginning)
+	InitSarama(c.logger)
+	consumer, err := NewSaramaConsumer(group, cluster, c.clientID, beginning)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
