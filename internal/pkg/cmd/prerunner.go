@@ -75,6 +75,9 @@ func (r *PreRun) Authenticated() func(cmd *cobra.Command, args []string) error {
 // HasAPIKey provides PreRun operations for commands that require an API key.
 func (r *PreRun) HasAPIKey() func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
+		if err := r.Anonymous()(cmd, args); err != nil {
+			return err
+		}
 		context, err := r.Config.Context()
 		if err != nil {
 			return errors.HandleCommon(err, cmd)

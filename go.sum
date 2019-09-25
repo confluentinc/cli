@@ -552,6 +552,7 @@ github.com/timakin/bodyclose v0.0.0-20190407043127-4a873e97b2bb/go.mod h1:Qimiff
 github.com/timakin/bodyclose v0.0.0-20190721030226-87058b9bfcec h1:AmoEvWAO3nDx1MEcMzPh+GzOOIA5Znpv6++c7bePPY0=
 github.com/timakin/bodyclose v0.0.0-20190721030226-87058b9bfcec/go.mod h1:Qimiffbc6q9tBWlVV6x0P9sat/ao1xEkREYPPj9hphk=
 github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=
+github.com/travisjeffery/mocker v1.1.0 h1:Gx8BRwWoIfTuKqYKu7f4Dhp9MBj8U0m77LqFaVglsH8=
 github.com/travisjeffery/mocker v1.1.0/go.mod h1:ezREEUpF+NpAhAcbduW0dLT4GIkNCZwdcsz0tsaTSCU=
 github.com/travisjeffery/mocker v1.1.1-0.20190810020704-1ec879a36d65 h1:JiKyoJla3TFJHH13IfJsso48gVrd4KbuFXqFMqtT9lw=
 github.com/travisjeffery/mocker v1.1.1-0.20190810020704-1ec879a36d65/go.mod h1:ezREEUpF+NpAhAcbduW0dLT4GIkNCZwdcsz0tsaTSCU=

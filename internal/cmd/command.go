@@ -113,7 +113,8 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 
 	if cliName == "ccloud" {
 		kafkaClient := kafkas.New(client, logger)
-		cmd, err := kafka.New(prerunner, cfg, kafkaClient, ch)
+		// TODO: should this be With("component", "kafka")? Standardize with other apps, but text looks better with name
+		cmd, err := kafka.New(prerunner, cfg, logger.Named("kafka"), ver.ClientID, kafkaClient, ch)
 		if err != nil {
 			return nil, err
 		}
