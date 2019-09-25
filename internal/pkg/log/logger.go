@@ -150,6 +150,10 @@ func (l *Logger) SetLevel(level Level) {
 	l.l.SetLevel(parseLevel(level))
 }
 
+func (l *Logger) GetLevel() Level {
+	return l.params.Level
+}
+
 func parseLevel(level Level) hclog.Level {
 	switch level {
 	case ERROR:
