@@ -783,7 +783,7 @@ func TestConfig_Context(t *testing.T) {
 			}
 			got := c.Context()
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Context() got = %v, want %v", got, tt.want)
+				t.Errorf("CfgContext() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

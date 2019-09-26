@@ -160,6 +160,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	if err == nil {
 		state = ctx.State
 	}
+	state.AuthToken = token
 	// If no auth config exists, initialize it
 	if state.Auth == nil {
 		state.Auth = &config.AuthConfig{}

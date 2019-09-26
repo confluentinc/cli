@@ -6,7 +6,6 @@ import (
 	"text/template"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/template-color"
 )
 
@@ -97,10 +96,10 @@ var (
 	// For documentation of supported tokens, see internal/cmd/prompt/command.go
 	formatData = func(cfg *config.Config) (interface{}, error) {
 		context := cfg.Context()
-		if context == nil {
-			return "", errors.ErrNoContext
+		var kcc *config.KafkaClusterConfig
+		if context != nil {
+			kcc = context.KafkaClusters[context.Kafka]
 		}
-		kcc := context.KafkaClusters[context.Kafka]
 		kafkaClusterID := "(none)"
 		kafkaClusterName := "(none)"
 		kafkaAPIKey := "(none)"
@@ -118,8 +117,11 @@ var (
 				kafkaAPIKey = kcc.APIKey
 			}
 		}
-		state := context.State
-		if state.Auth != nil {
+		var state *config.ContextState
+		if context != nil {
+			state = context.State
+		}
+		if state != nil && state.Auth != nil {
 			if state.Auth.Account != nil {
 				if state.Auth.Account.Id != "" {
 					accountID = state.Auth.Account.Id

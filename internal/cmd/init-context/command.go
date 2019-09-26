@@ -84,13 +84,12 @@ func (c *command) initContext(cmd *cobra.Command, args []string) error {
 	if err := eh.Reset(); err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	eh.Handle(c.addContext(contextName, bootstrapURL, apiKey, apiSecret))
-	// Set current context.
-	eh.Handle(c.config.SetContext(contextName))
-	if err := eh.Reset(); err != nil {
+	err = c.addContext(contextName, bootstrapURL, apiKey, apiSecret)
+	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	return nil
+	// Set current context.
+	return c.config.SetContext(contextName)
 }
 
 func (c *command) addContext(name string, bootstrapURL string, apiKey string, apiSecret string) error {
@@ -114,7 +113,7 @@ func (c *command) addContext(name string, bootstrapURL string, apiKey string, ap
 	}
 	platform := &config.Platform{Server: bootstrapURL}
 	// Inject credential and platforms name for now, until users can provide custom names.
-	platformName := platform.Server
+	platform.Name = platform.Server
 	// Hardcoded for now, since username/password isn't implemented yet.
 	credential := &config.Credential{
 		Username:       "",
@@ -122,12 +121,11 @@ func (c *command) addContext(name string, bootstrapURL string, apiKey string, ap
 		APIKeyPair:     apiKeyPair,
 		CredentialType: config.APIKey,
 	}
-	var credentialName string
 	switch credential.CredentialType {
 	case config.Username:
-		credentialName = fmt.Sprintf("%s-%s", &credential.CredentialType, credential.Username)
+		credential.Name = fmt.Sprintf("%s-%s", &credential.CredentialType, credential.Username)
 	case config.APIKey:
-		credentialName = fmt.Sprintf("%s-%s", &credential.CredentialType, credential.APIKeyPair.Key)
+		credential.Name = fmt.Sprintf("%s-%s", &credential.CredentialType, credential.APIKeyPair.Key)
 	default:
 		return fmt.Errorf("credential type %d unknown", credential.CredentialType)
 	}
@@ -139,6 +137,6 @@ func (c *command) addContext(name string, bootstrapURL string, apiKey string, ap
 	if err != nil {
 		return err
 	}
-	return c.config.AddContext(name, platformName, credentialName, kafkaClusters,
+	return c.config.AddContext(name, platform.Name, credential.Name, kafkaClusters,
 		kafkaClusterCfg.ID, nil, new(config.ContextState))
 }

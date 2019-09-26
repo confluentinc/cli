@@ -12,14 +12,14 @@ import (
 
 type command struct {
 	*cobra.Command
-	config  *config.Config
-	context *config.Context
-	ch      *pcmd.ConfigHelper
-	client  *mds.APIClient
+	config *config.Config
+	ch     *pcmd.ConfigHelper
+	client *mds.APIClient
 }
 
 // New returns the default command object for interacting with RBAC.
-func New(prerunner pcmd.PreRunner, config *config.Config, context *config.Context, ch *pcmd.ConfigHelper, version *version.Version, client *mds.APIClient) *cobra.Command {
+func New(prerunner pcmd.PreRunner, config *config.Config, ch *pcmd.ConfigHelper,
+	version *version.Version, client *mds.APIClient) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:               "iam",
@@ -27,10 +27,9 @@ func New(prerunner pcmd.PreRunner, config *config.Config, context *config.Contex
 			Long:              "Manage Role Based Access (RBAC) and Identity and Access Management (IAM) permissions.",
 			PersistentPreRunE: prerunner.Authenticated(),
 		},
-		config:  config,
-		context: context,
-		ch:      ch,
-		client:  client,
+		config: config,
+		ch:     ch,
+		client: client,
 	}
 
 	cmd.init()
@@ -38,6 +37,6 @@ func New(prerunner pcmd.PreRunner, config *config.Config, context *config.Contex
 }
 
 func (c *command) init() {
-	c.AddCommand(NewRoleCommand(c.config, c.context, c.client))
-	c.AddCommand(NewRolebindingCommand(c.config, c.context, c.ch, c.client))
+	c.AddCommand(NewRoleCommand(c.config, c.client))
+	c.AddCommand(NewRolebindingCommand(c.config, c.ch, c.client))
 }

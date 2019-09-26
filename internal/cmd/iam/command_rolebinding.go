@@ -33,29 +33,30 @@ type rolebindingOptions struct {
 type rolebindingCommand struct {
 	*cobra.Command
 	config *config.Config
-	cliCtx *config.Context
 	ch     *pcmd.ConfigHelper
 	client *mds.APIClient
 	ctx    context.Context
 }
 
 // NewRolebindingCommand returns the sub-command object for interacting with RBAC rolebindings.
-func NewRolebindingCommand(config *config.Config, cliCtx *config.Context, ch *pcmd.ConfigHelper, client *mds.APIClient) *cobra.Command {
-	cmd := &rolebindingCommand{
+func NewRolebindingCommand(cfg *config.Config, ch *pcmd.ConfigHelper, client *mds.APIClient) *cobra.Command {
+	roleBindingCmd := &rolebindingCommand{
 		Command: &cobra.Command{
 			Use:   "rolebinding",
 			Short: "Manage RBAC and IAM role bindings.",
 			Long:  "Manage Role Based Access (RBAC) and Identity and Access Management (IAM) role bindings.",
 		},
-		config: config,
-		cliCtx: cliCtx,
+		config: cfg,
 		ch:     ch,
 		client: client,
-		ctx:    context.WithValue(context.Background(), mds.ContextAccessToken, cliCtx.State.AuthToken),
 	}
-
-	cmd.init()
-	return cmd.Command
+	state, err := cfg.AuthenticatedState()
+	if err != nil {
+		state = new(config.ContextState)
+	}
+	roleBindingCmd.ctx = context.WithValue(context.Background(), mds.ContextAccessToken, state.AuthToken)
+	roleBindingCmd.init()
+	return roleBindingCmd.Command
 }
 
 func (c *rolebindingCommand) init() {

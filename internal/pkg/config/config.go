@@ -80,6 +80,15 @@ func (c *Config) Load() error {
 	if err != nil {
 		return errors.Wrapf(err, "unable to parse config file: %s", filename)
 	}
+	for _, context := range c.Contexts {
+		context.State = c.ContextStates[context.Name]
+		context.Credential = c.Credentials[context.CredentialName]
+		context.Platform = c.Platforms[context.PlatformName]
+	}
+	err = c.Validate()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -188,8 +197,6 @@ func (c *Config) AddContext(name string, platformName string, credentialName str
 	context := newContext(name, platform, credential, kafkaClusters, kafka,
 		schemaRegistryClusters, state)
 	c.Contexts[name] = context
-	c.Credentials[credentialName] = credential
-	c.Platforms[platformName] = platform
 	c.ContextStates[name] = state
 	err := c.Validate()
 	if err != nil {
@@ -256,7 +263,7 @@ func (c *Config) APIName() string {
 	return name
 }
 
-// Context returns the current Context, or nil if there's no context set.
+// CfgContext returns the current CfgContext, or nil if there's no context set.
 func (c *Config) Context() *Context {
 	return c.Contexts[c.CurrentContext]
 }
@@ -281,7 +288,7 @@ func (c *Config) CheckLogin() error {
 	}
 }
 
-// SchemaRegistryCluster returns the SchemaRegistryCluster for the current Context,
+// SchemaRegistryCluster returns the SchemaRegistryCluster for the current CfgContext,
 // or an empty SchemaRegistryCluster if there is none set,
 // or an error if no context exists/if the user is not logged in.
 func (c *Config) SchemaRegistryCluster() (*SchemaRegistryCluster, error) {

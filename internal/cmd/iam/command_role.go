@@ -1,22 +1,22 @@
 package iam
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
 	"os"
+	"strings"
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 	"github.com/tidwall/pretty"
 
+	"github.com/confluentinc/go-printer"
+	"github.com/confluentinc/mds-sdk-go"
+
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/go-printer"
-	mds "github.com/confluentinc/mds-sdk-go"
-
-	"context"
-	"encoding/json"
-	"fmt"
-	"net/http"
-	"strings"
 )
 
 var (
@@ -29,27 +29,28 @@ var (
 type roleCommand struct {
 	*cobra.Command
 	config *config.Config
-	cliCtx *config.Context
 	client *mds.APIClient
 	ctx    context.Context
 }
 
 // NewRoleCommand returns the sub-command object for interacting with RBAC roles.
-func NewRoleCommand(config *config.Config, cliCtx *config.Context, client *mds.APIClient) *cobra.Command {
-	cmd := &roleCommand{
+func NewRoleCommand(cfg *config.Config, client *mds.APIClient) *cobra.Command {
+	roleCmd := &roleCommand{
 		Command: &cobra.Command{
 			Use:   "role",
 			Short: "Manage RBAC and IAM roles.",
 			Long:  "Manage Role Based Access (RBAC) and Identity and Access Management (IAM) roles.",
 		},
-		config: config,
-		cliCtx: cliCtx,
+		config: cfg,
 		client: client,
-		ctx:    context.WithValue(context.Background(), mds.ContextAccessToken, cliCtx.State.AuthToken),
 	}
-
-	cmd.init()
-	return cmd.Command
+	state, err := cfg.AuthenticatedState()
+	if err != nil {
+		state = new(config.ContextState) 
+	}
+	roleCmd.ctx = context.WithValue(context.Background(), mds.ContextAccessToken, state.AuthToken)
+	roleCmd.init()
+	return roleCmd.Command
 }
 
 func (c *roleCommand) init() {

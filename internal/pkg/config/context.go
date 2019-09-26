@@ -33,9 +33,9 @@ type ContextState struct {
 	AuthToken string      `json:"auth_token" hcl:"auth_token"`
 }
 
-// Context represents a specific CLI context.
+// CfgContext represents a specific CLI context.
 type Context struct {
-	Name           string      `json:"-" hcl:"-"`
+	Name           string      `json:"name" hcl:"name"`
 	Platform       *Platform   `json:"-" hcl:"-"`
 	PlatformName   string      `json:"platform" hcl:"platform"`
 	Credential     *Credential `json:"-" hcl:"-"`
@@ -166,7 +166,7 @@ func (c *Context) KafkaClusterConfig() *KafkaClusterConfig {
 	return c.KafkaClusters[kafka]
 }
 
-// SchemaRegistryCluster returns the SchemaRegistryCluster of the Context,
+// SchemaRegistryCluster returns the SchemaRegistryCluster of the CfgContext,
 // or an empty SchemaRegistryCluster if there is none set, 
 // or an ErrNotLoggedIn if the user is not logged in.
 func (c *Context) schemaRegistryCluster() (*SchemaRegistryCluster, error) {

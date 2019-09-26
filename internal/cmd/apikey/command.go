@@ -30,12 +30,11 @@ work. For example, the Kafka topic consume and produce commands require an API s
 
 type command struct {
 	*cobra.Command
-	config   *config.Config
-	context  *config.Context
-	client   ccloud.APIKey
-	ch       *pcmd.ConfigHelper
-	keystore keystore.KeyStore
-	state    *config.ContextState
+	config    *config.Config
+	client    ccloud.APIKey
+	ch        *pcmd.ConfigHelper
+	keystore  keystore.KeyStore
+	prerunner pcmd.PreRunner
 }
 
 var (
@@ -46,7 +45,7 @@ var (
 )
 
 // New returns the Cobra command for API Key.
-func New(prerunner pcmd.PreRunner, config *config.Config, context *config.Context,
+func New(prerunner pcmd.PreRunner, config *config.Config,
 	client ccloud.APIKey, ch *pcmd.ConfigHelper, keystore keystore.KeyStore) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
@@ -54,11 +53,11 @@ func New(prerunner pcmd.PreRunner, config *config.Config, context *config.Contex
 			Short:             "Manage the API keys.",
 			PersistentPreRunE: prerunner.Authenticated(),
 		},
-		config:   config,
-		context:  context,
-		client:   client,
-		ch:       ch,
-		keystore: keystore,
+		config:    config,
+		client:    client,
+		ch:        ch,
+		keystore:  keystore,
+		prerunner: prerunner,
 	}
 	cmd.init()
 	return cmd.Command
@@ -176,7 +175,8 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 
 func (c *command) update(cmd *cobra.Command, args []string) error {
 	apiKey := args[0]
-	key, err := c.client.Get(context.Background(), &authv1.ApiKey{Key: apiKey, AccountId: c.context.State.Auth.Account.Id})
+	state := c.prerunner.Context().State
+	key, err := c.client.Get(context.Background(), &authv1.ApiKey{Key: apiKey, AccountId: state.Auth.Account.Id})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -246,16 +246,15 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
 	apiKey := args[0]
-
-
-	userKey, err := c.client.Get(context.Background(), &authv1.ApiKey{Key: apiKey, AccountId: c.context.State.Auth.Account.Id})
+	state := c.prerunner.Context().State
+	userKey, err := c.client.Get(context.Background(), &authv1.ApiKey{Key: apiKey, AccountId: state.Auth.Account.Id})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 	key := &authv1.ApiKey{
 		Id:        userKey.Id,
 		Key:       apiKey,
-		AccountId: c.context.State.Auth.Account.Id,
+		AccountId: state.Auth.Account.Id,
 	}
 
 	err = c.client.Delete(context.Background(), key)
@@ -285,7 +284,8 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	// Check if API key exists server-side
-	_, err = c.client.Get(context.Background(), &authv1.ApiKey{Key: key, AccountId: c.context.State.Auth.Account.Id})
+	state := c.prerunner.Context().State
+	_, err = c.client.Get(context.Background(), &authv1.ApiKey{Key: key, AccountId: state.Auth.Account.Id})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}

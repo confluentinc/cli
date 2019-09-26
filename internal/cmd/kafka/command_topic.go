@@ -25,27 +25,13 @@ import (
 type topicCommand struct {
 	*cobra.Command
 	config    *config.Config
-	context *config.Context
 	client    ccloud.Kafka
 	ch        *pcmd.ConfigHelper
 	prerunner pcmd.PreRunner
 }
 
-type AuthenticatedCommand interface{
-	Cmd() *cobra.Command
-	Context() *config.Context
-}
-
-func (c *topicCommand) Cmd() *cobra.Command {
-	return c.Command
-}
-
-func (c *topicCommand) Context() *config.Context {
-	
-}
-
 // NewTopicCommand returns the Cobra command for Kafka topic.
-func NewTopicCommand(prerunner pcmd.PreRunner, config *config.Config, context *config.Context, client ccloud.Kafka, ch *pcmd.ConfigHelper) (*cobra.Command, error) {
+func NewTopicCommand(prerunner pcmd.PreRunner, config *config.Config, client ccloud.Kafka, ch *pcmd.ConfigHelper) *cobra.Command {
 	cmd := &topicCommand{
 		Command: &cobra.Command{
 			Use:   "topic",
@@ -56,14 +42,11 @@ func NewTopicCommand(prerunner pcmd.PreRunner, config *config.Config, context *c
 		ch:        ch,
 		prerunner: prerunner,
 	}
-	err := cmd.init()
-	if err != nil {
-		return nil, err
-	}
-	return cmd.Command, nil
+	cmd.init()
+	return cmd.Command
 }
 
-func (c *topicCommand) init() error {
+func (c *topicCommand) init() {
 	cmd := &cobra.Command{
 		Use:               "produce <topic>",
 		Short:             "Produce messages to a Kafka topic.",
@@ -94,13 +77,9 @@ Consume items from the 'my_topic' topic and press 'Ctrl + C' to exit.
 	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
-	credType, err := c.config.CredentialType()
-	if err == nil && credType == config.APIKey {
-		return nil
-	}
-	// Propagate errors other than ErrNoContext.
-	if err != nil && err != errors.ErrNoContext {
-		return err
+	ctx := c.config.Context()
+	if ctx == nil || ctx.Credential.CredentialType == config.APIKey {
+		return
 	}
 	cmd = &cobra.Command{
 		Use:   "list",
@@ -188,7 +167,7 @@ Delete the topics 'my_topic' and 'my_topic_avro'. Use this command carefully as 
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
-	return nil
+	return
 }
 
 func (c *topicCommand) list(cmd *cobra.Command, args []string) error {

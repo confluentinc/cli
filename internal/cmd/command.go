@@ -121,19 +121,9 @@ func NewConfluentCommand(cliName string, cfg *pconfig.Config, ver *versions.Vers
 
 	if cliName == "ccloud" {
 		kafkaClient := kafkas.New(client, logger)
-		cmd, err := kafka.New(prerunner, cfg, kafkaClient, ch)
-		if err != nil {
-			return nil, err
-		}
+		cmd := kafka.New(prerunner, cfg, kafkaClient, ch)
 		cli.AddCommand(cmd)
 		cli.AddCommand(initcontext.New(prerunner, cfg, prompt, resolver))
-		//credType, err := cfg.CredentialType()
-		//if _, ok := err.(*errors.UnspecifiedCredentialError); ok {
-		//	return nil, err
-		//}
-		//if credType == pconfig.APIKey {
-		//	return cli, nil
-		//}
 		if currCtx != nil && currCtx.Credential.CredentialType == pconfig.APIKey {
 			return cli, nil
 		}

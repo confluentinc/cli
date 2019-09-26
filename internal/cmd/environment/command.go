@@ -17,9 +17,9 @@ import (
 
 type command struct {
 	*cobra.Command
-	config  *config.Config
-	context *config.Context
-	client  ccloud.Account
+	config    *config.Config
+	client    ccloud.Account
+	prerunner pcmd.PreRunner
 }
 
 var (
@@ -28,16 +28,16 @@ var (
 )
 
 // New returns the Cobra command for `environment`.
-func New(prerunner pcmd.PreRunner, config *config.Config, context *config.Context, client ccloud.Account, cliName string) *cobra.Command {
+func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.Account, cliName string) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:               "environment",
 			Short:             fmt.Sprintf("Manage and select %s environments.", cliName),
 			PersistentPreRunE: prerunner.Authenticated(),
 		},
-		config:  config,
-		context: context,
-		client:  client,
+		config:    config,
+		client:    client,
+		prerunner: prerunner,
 	}
 	cmd.init()
 	return cmd.Command
@@ -89,7 +89,7 @@ func (c *command) refreshEnvList(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	state := c.context.State
+	state := c.prerunner.Context().State
 	state.Auth.Accounts = environments
 
 	// If current env has gone away, reset active env to 0th env
@@ -118,7 +118,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	state := c.context.State
+	state := c.prerunner.Context().State
 	var data [][]string
 	for _, environment := range environments {
 		if environment.Id == state.Auth.Account.Id {
@@ -139,7 +139,7 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	state := c.context.State
+	state := c.prerunner.Context().State
 	for _, acc := range state.Auth.Accounts {
 		if acc.Id == id {
 			state.Auth.Account = acc
@@ -157,7 +157,7 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 
 func (c *command) create(cmd *cobra.Command, args []string) error {
 	name := args[0]
-	state := c.context.State
+	state := c.prerunner.Context().State
 	_, err := c.client.Create(context.Background(), &orgv1.Account{Name: name, OrganizationId: state.Auth.Account.OrganizationId})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -168,7 +168,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 func (c *command) update(cmd *cobra.Command, args []string) error {
 	id := args[0]
 	newName := cmd.Flag("name").Value.String()
-	state := c.context.State
+	state := c.prerunner.Context().State
 	err := c.client.Update(context.Background(), &orgv1.Account{Id: id, Name: newName, OrganizationId: state.Auth.Account.OrganizationId})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -178,7 +178,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
 	id := args[0]
-	state := c.context.State
+	state := c.prerunner.Context().State
 	err := c.client.Delete(context.Background(), &orgv1.Account{Id: id, OrganizationId: state.Auth.Account.OrganizationId})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)

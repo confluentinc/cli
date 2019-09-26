@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/jonboulle/clockwork"
 	"github.com/spf13/cobra"
@@ -17,6 +19,7 @@ type PreRunner interface {
 	Anonymous() func(cmd *cobra.Command, args []string) error
 	Authenticated() func(cmd *cobra.Command, args []string) error
 	HasAPIKey() func(cmd *cobra.Command, args []string) error
+	Context() *config.Context
 }
 
 // PreRun is the standard PreRunner implementation
@@ -28,6 +31,7 @@ type PreRun struct {
 	Config       *config.Config
 	ConfigHelper *ConfigHelper
 	Clock        clockwork.Clock
+	context   *config.Context
 }
 
 // Anonymous provides PreRun operations for commands that may be run without a logged-in user
@@ -50,6 +54,7 @@ func (r *PreRun) Authenticated() func(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		state, err := r.Config.AuthenticatedState()
+		fmt.Println(state)
 		if err != nil {
 			return err
 		}
@@ -67,6 +72,10 @@ func (r *PreRun) Authenticated() func(cmd *cobra.Command, args []string) error {
 				return errors.HandleCommon(&ccloud.ExpiredTokenError{}, cmd)
 			}
 		}
+		r.context = r.Config.Context()
+		if r.context == nil {
+			return errors.ErrNoContext
+		}
 		return nil
 	}
 }
@@ -79,8 +88,20 @@ func (r *PreRun) HasAPIKey() func(cmd *cobra.Command, args []string) error {
 			return errors.HandleCommon(errors.ErrNoContext, cmd)
 		}
 		clusterId := context.Kafka
-		return errors.HandleCommon(r.Config.CheckHasAPIKey(clusterId), cmd)
+		err := r.Config.CheckHasAPIKey(clusterId)
+		if err != nil {
+			return err
+		}
+		r.context = context
+		return nil
 	}
+}
+
+func (r *PreRun) Context() *config.Context {
+	if r.context == nil {
+		panic("prerunner context must before being retrieved")
+	}
+	return r.context
 }
 
 // notifyIfUpdateAvailable prints a message if an update is available

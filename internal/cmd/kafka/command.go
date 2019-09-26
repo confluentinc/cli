@@ -6,7 +6,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 type command struct {
@@ -18,7 +17,7 @@ type command struct {
 }
 
 // New returns the default command object for interacting with Kafka.
-func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.Kafka, ch *pcmd.ConfigHelper) (*cobra.Command, error) {
+func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.Kafka, ch *pcmd.ConfigHelper) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:               "kafka",
@@ -30,28 +29,16 @@ func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.Kafka, c
 		ch:        ch,
 		prerunner: prerunner,
 	}
-	err := cmd.init()
-	if err != nil {
-		return nil, err
-	}
-	return cmd.Command, nil
+	cmd.init()
+	return cmd.Command
 }
 
 func (c *command) init() {
-	topicCmd, err := NewTopicCommand(c.prerunner, c.config, c.client, c.ch)
-	if err != nil {
-		return err
-	}
-	c.AddCommand(topicCmd)
+	c.AddCommand(NewTopicCommand(c.prerunner, c.config, c.client, c.ch))
 	context := c.config.Context()
-	if context == nil {
-		return errors.ErrNoContext
-	}
-	credType := c.config.Credentials[context.Name].CredentialType
-	if credType == config.APIKey {
-		return nil
+	if context == nil || context.Credential.CredentialType == config.APIKey {
+		return
 	}
 	c.AddCommand(NewClusterCommand(c.config, c.client, c.ch))
 	c.AddCommand(NewACLCommand(c.config, c.client, c.ch))
-	return nil
 }
