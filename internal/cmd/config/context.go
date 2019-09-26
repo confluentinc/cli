@@ -1,6 +1,8 @@
 package config
 
 import (
+	"sort"
+
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/go-printer"
@@ -78,12 +80,18 @@ func (c *contextCommand) list(cmd *cobra.Command, args []string) error {
 		Platform   string
 		Credential string
 	}
+	var contextNames []string
+	for name := range c.config.Contexts {
+		contextNames = append(contextNames, name)
+	}
+	sort.Strings(contextNames)
 	var data [][]string
-	for name, context := range c.config.Contexts {
+	for _, name := range contextNames {
 		current := ""
 		if c.config.CurrentContext == name {
 			current = "*"
 		}
+		context := c.config.Contexts[name]
 		r := &row{current, name, context.Platform, context.Credential}
 		data = append(data, printer.ToRow(r, []string{"Current", "Name", "Platform", "Credential"}))
 	}
