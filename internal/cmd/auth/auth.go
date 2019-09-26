@@ -27,7 +27,6 @@ import (
 type commands struct {
 	Commands  []*cobra.Command
 	config    *config.Config
-	mdsConfig *mds.Configuration
 	mdsClient *mds.APIClient
 	Logger    *log.Logger
 	// for testing
@@ -37,26 +36,25 @@ type commands struct {
 }
 
 // New returns a list of auth-related Cobra commands.
-func New(prerunner pcmd.PreRunner, config *config.Config, logger *log.Logger, mdsConfig *mds.Configuration, userAgent string) []*cobra.Command {
+func New(prerunner pcmd.PreRunner, config *config.Config, logger *log.Logger, mdsClient *mds.APIClient, userAgent string) []*cobra.Command {
 	var defaultAnonHTTPClientFactory = func(baseURL string, logger *log.Logger) *ccloud.Client {
 		return ccloud.NewClient(&ccloud.Params{BaseURL: baseURL, HttpClient: ccloud.BaseClient, Logger: logger, UserAgent: userAgent})
 	}
 	var defaultJwtHTTPClientFactory = func(ctx context.Context, jwt string, baseURL string, logger *log.Logger) *ccloud.Client {
 		return ccloud.NewClientWithJWT(ctx, jwt, &ccloud.Params{BaseURL: baseURL, Logger: logger, UserAgent: userAgent})
 	}
-	return newCommands(prerunner, config, logger, mdsConfig, pcmd.NewPrompt(os.Stdin),
+	return newCommands(prerunner, config, logger, mdsClient, pcmd.NewPrompt(os.Stdin),
 		defaultAnonHTTPClientFactory, defaultJwtHTTPClientFactory,
 	).Commands
 }
 
-func newCommands(prerunner pcmd.PreRunner, config *config.Config, log *log.Logger, mdsConfig *mds.Configuration, prompt pcmd.Prompt,
+func newCommands(prerunner pcmd.PreRunner, config *config.Config, log *log.Logger, mdsClient *mds.APIClient, prompt pcmd.Prompt,
 	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *ccloud.Client,
 	jwtHTTPClientFactory func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *ccloud.Client,
 ) *commands {
 	cmd := &commands{
 		config:                config,
-		mdsConfig:             mdsConfig,
-		mdsClient:             mds.NewAPIClient(mdsConfig),
+		mdsClient:             mdsClient,
 		Logger:                log,
 		prompt:                prompt,
 		anonHTTPClientFactory: anonHTTPClientFactory,
@@ -216,11 +214,10 @@ func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
 		}
 		a.config.CaCertPath = caCertPath
 		// override previously configured httpclient if a new cert path was specified
-		a.mdsConfig.HTTPClient, err = SelfSignedCertClient(caCertPath)
+		a.mdsClient.GetConfig().HTTPClient, err = SelfSignedCertClient(caCertPath)
 		if err != nil {
 			return err
 		}
-		a.mdsClient = mds.NewAPIClient(a.mdsConfig)
 	}
 	a.mdsClient.ChangeBasePath(a.config.AuthURL)
 	email, password, err := a.credentials(cmd, "Username", nil)
