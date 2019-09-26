@@ -44,16 +44,19 @@ Register a new schema
 
 		{{.CLIName}} schema-registry schema create --subject payments --schema schemafilepath
 
-where schemafilepath may include these contents:
-{
-   "type" : "record",
-   "namespace" : "Example",
-   "name" : "Employee",
-   "fields" : [
-      { "name" : "Name" , "type" : "string" },
-      { "name" : "Age" , "type" : "int" }
-   ]
-}
+Where schemafilepath may include these contents:
+
+::
+
+	{
+	   "type" : "record",
+	   "namespace" : "Example",
+	   "name" : "Employee",
+	   "fields" : [
+		  { "name" : "Name" , "type" : "string" },
+		  { "name" : "Age" , "type" : "int" }
+	   ]
+	}
 
 `, c.config.CLIName),
 		RunE: c.create,
