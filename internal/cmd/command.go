@@ -97,7 +97,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	mdsConfig.UserAgent = ver.UserAgent
 	// Explicitly ignore this error and use default http client. Any certificate error will get logged
 	// when the api call occurs with a message to update the cert by logging in again
-	mdsConfig.HTTPClient, _ = auth.SelfSignedCertClient(cfg.CaCertPath)
+	mdsConfig.HTTPClient, _ = auth.SelfSignedCertClient(cfg.CaCertPath, nil)
 	mdsClient := mds.NewAPIClient(mdsConfig)
 
 	cli.Version = ver.Version

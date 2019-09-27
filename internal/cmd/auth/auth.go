@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -25,10 +26,12 @@ import (
 )
 
 type commands struct {
-	Commands  []*cobra.Command
-	config    *config.Config
-	mdsClient *mds.APIClient
-	Logger    *log.Logger
+	Commands   []*cobra.Command
+	config     *config.Config
+	mdsClient  *mds.APIClient
+	Logger     *log.Logger
+	// @VisibleForTesting, defaults to the OS filesystem
+	certReader io.Reader
 	// for testing
 	prompt                pcmd.Prompt
 	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *ccloud.Client
@@ -214,7 +217,7 @@ func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
 		}
 		a.config.CaCertPath = caCertPath
 		// override previously configured httpclient if a new cert path was specified
-		a.mdsClient.GetConfig().HTTPClient, err = SelfSignedCertClient(caCertPath)
+		a.mdsClient.GetConfig().HTTPClient, err = SelfSignedCertClient(caCertPath, a.certReader)
 		if err != nil {
 			return err
 		}
@@ -334,18 +337,23 @@ func (a *commands) addContextIfAbsent(username string) error {
 }
 
 
-func SelfSignedCertClient(caCertPath string) (*http.Client, error){
+func SelfSignedCertClient(caCertPath string, certReader io.Reader) (*http.Client, error){
 	certPool, _ := x509.SystemCertPool()
 	if certPool == nil {
 		certPool = x509.NewCertPool()
 	}
 
-	if caCertPath == "" {
-		return nil, nil
+	if certReader == nil {
+		file, err := os.Open(caCertPath)
+		if err != nil {
+			return nil, err
+		}
+		defer file.Close()
+		certReader = file
 	}
-	certs, err := ioutil.ReadFile(caCertPath)
+	certs, err := ioutil.ReadAll(certReader)
 	if err != nil {
-		return nil, fmt.Errorf("failed to append %q to RootCAs: %v", caCertPath, err)
+		return nil, fmt.Errorf("failed to read certificate from %q: %v", caCertPath, err)
 	}
 
 	// Append new cert to the system pool
