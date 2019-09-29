@@ -112,6 +112,7 @@ require (
 )
 
 replace (
+	github.com/confluentinc/ccloud-sdk-go => github.com/confluentinc/ccloud-sdk-go v0.0.13-0.20190929223118-7fa20c973507
 	github.com/havoc-io/gopass => github.com/havoc-io/gopass v0.0.0-20161007065903-6331a34a3f3b
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20171026124306-e509bb64fe11
 	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20170925234155-019ae5ada31d
