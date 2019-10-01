@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"sort"
+
+	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/go-printer"
-	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
@@ -30,7 +32,8 @@ type ClusterMetadata struct {
 }
 
 type Scope struct {
-	// Path defines the scope hierarchy, where each Path element is a key in the Clusters map
+	// Path defines the "outer scope" which isn't used yet. The hierarchy
+	// isn't represented in the Scope object in practice today
 	Path []string `json:"path"`
 	// Clusters defines all the key-value pairs needed to uniquely identify a scope
 	Clusters map[string]string `json:"clusters"`
@@ -49,6 +52,16 @@ func NewMetadataService(client *http.Client, userAgent string, logger *log.Logge
 		logger:    logger,
 	}
 }
+
+type Element struct {
+	Type   string
+	ID string
+}
+
+var (
+	describeFields = []string{"Type", "ID"}
+	describeLabels = []string{"Type", "ID"}
+)
 
 type command struct {
 	*cobra.Command
@@ -108,16 +121,6 @@ func (c *command) init() {
 	c.AddCommand(describeCmd)
 }
 
-type Tuple struct {
-	Key   string
-	Value string
-}
-
-var (
-	listFields = []string{"Key", "Value"}
-	listLabels = []string{"Key", "Value"}
-)
-
 func (c *command) describe(cmd *cobra.Command, args []string) error {
 	url, err := cmd.Flags().GetString("url")
 	if err != nil {
@@ -128,14 +131,18 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	fmt.Println(meta)
 
-	var data [][]string
-	for _, element := range meta.Scope.Path {
-		id := meta.Scope.Clusters[element]
-		data = append(data, printer.ToRow(&Tuple{Key: element, Value: id}, listFields))
+	var types []string
+	for name := range meta.Scope.Clusters {
+		types = append(types, name)
 	}
-	printer.RenderCollectionTable(data, listLabels)
+	sort.Strings(types) // since we don't have hierarchy info, just display in alphabetical order
+	var data [][]string
+	for _, name := range types {
+		id := meta.Scope.Clusters[name]
+		data = append(data, printer.ToRow(&Element{Type: name, ID: id}, describeFields))
+	}
+	printer.RenderCollectionTable(data, describeLabels)
 
 	return nil
 }

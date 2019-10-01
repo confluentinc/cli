@@ -1,3 +1,4 @@
-&{crn://md01.example.com/kafka=kafkaCluster1/connect=connectClusterA 0xc00000ef20}
-  Key | Value  
-+-----+-------+
+       Type       |       ID         
++-----------------+-----------------+
+  connect-cluster | connectClusterA  
+  kafka-cluster   | kafkaCluster1    
