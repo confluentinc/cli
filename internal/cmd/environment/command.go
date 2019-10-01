@@ -167,9 +167,12 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 
 func (c *command) update(cmd *cobra.Command, args []string) error {
 	id := args[0]
-	newName := cmd.Flag("name").Value.String()
+	newName, err := cmd.Flags().GetString("name")
+	if err != nil {
+		return err
+	}
 
-	err := c.client.Update(context.Background(), &orgv1.Account{Id: id, Name: newName, OrganizationId: c.config.Auth.Account.OrganizationId})
+	err = c.client.Update(context.Background(), &orgv1.Account{Id: id, Name: newName, OrganizationId: c.config.Auth.Account.OrganizationId})
 
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
