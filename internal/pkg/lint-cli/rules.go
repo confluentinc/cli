@@ -400,6 +400,21 @@ func RequireFlagNameLength(minLength, maxLength int) FlagRule {
 	}
 }
 
+// SetDifference returns s1 - s2
+func SetDifferenceIgnoresCase(s1 []string, s2 []string) []string {
+	s2set := make(map[string]interface{})
+	for _, v := range s2 {
+		s2set[strings.ToLower(v)] = struct{}{}
+	}
+	var diff []string
+	for _, v := range s1 {
+		if _, inS2 := s2set[strings.ToLower(v)]; !inS2 {
+			diff = append(diff, v)
+		}
+	}
+	return diff
+}
+
 func getValueByName(obj interface{}, name string) string {
 	return reflect.Indirect(reflect.ValueOf(obj)).FieldByName(name).String()
 }

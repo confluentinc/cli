@@ -23,6 +23,8 @@ var (
 
 	vocab *gospell.GoSpell
 
+	cliNames = []string{"confluent", "ccloud"}
+
 	properNouns = []string{
 		"Apache", "Kafka", "CLI", "API", "ACL", "ACLs", "Confluent Cloud", "Confluent Platform", "Confluent", "RBAC", "IAM", "Schema Registry",
 		"Enterprise",
@@ -81,6 +83,8 @@ var rules = []linter.Rule{
 		linter.ExcludeCommandContains("secret"),
 		// skip schema-registry commands which do not use names/ID's
 		linter.ExcludeCommandContains("schema-registry"),
+		// skip cluster describe as it takes a URL as a flag instead of a resource identity
+		linter.ExcludeCommandContains("cluster describe"),
 	),
 	// TODO: ensuring --cluster is optional DOES NOT actually ensure that the cluster context is used
 	linter.Filter(linter.RequireFlag("cluster", true), nonClusterScopedCommands...),
@@ -100,10 +104,10 @@ var rules = []linter.Rule{
 	),
 	linter.RequireStartWithCapital("Short"),
 	linter.RequireEndWithPunctuation("Short", false),
-	linter.RequireCapitalizeProperNouns("Short", properNouns),
+	linter.RequireCapitalizeProperNouns("Short", linter.SetDifferenceIgnoresCase(properNouns, cliNames)),
 	linter.RequireStartWithCapital("Long"),
 	linter.RequireEndWithPunctuation("Long", true),
-	linter.RequireCapitalizeProperNouns("Long", properNouns),
+	linter.RequireCapitalizeProperNouns("Long", linter.SetDifferenceIgnoresCase(properNouns, cliNames)),
 	linter.Filter(linter.RequireNotTitleCase("Short", properNouns),
 		linter.ExcludeCommandContains("secret")),
 	linter.RequireRealWords("Use", '-'),
@@ -142,15 +146,16 @@ func main() {
 	}
 
 	var issues *multierror.Error
-	cliName := "fake" // we use a fake CLI name to avoid "should capitalize Confluent" errors
-	cli, err := cmd.NewConfluentCommand(cliName, &config.Config{CLIName: cliName}, &version.Version{Binary: cliName}, log.New())
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	err = l.Lint(cli)
-	if err != nil {
-		issues = multierror.Append(issues, err)
+	for _, cliName := range cliNames {
+		cli, err := cmd.NewConfluentCommand(cliName, &config.Config{CLIName: cliName}, &version.Version{Binary: cliName}, log.New())
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		err = l.Lint(cli)
+		if err != nil {
+			issues = multierror.Append(issues, err)
+		}
 	}
 	if issues.ErrorOrNil() != nil {
 		fmt.Println(issues)
