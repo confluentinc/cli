@@ -24,7 +24,7 @@ var (
 	vocab *gospell.GoSpell
 
 	properNouns = []string{
-		"Apache", "Kafka", "CLI", "API", "ACL", "ACLs", "Confluent Cloud", "Confluent Platform", "RBAC", "IAM", "Schema Registry",
+		"Apache", "Kafka", "CLI", "API", "ACL", "ACLs", "Confluent Cloud", "Confluent Platform", "Confluent", "RBAC", "IAM", "Schema Registry",
 		"Enterprise",
 	}
 	vocabWords = []string{
@@ -45,6 +45,8 @@ var (
 		// this doesn't need a --cluster
 		linter.ExcludeCommandContains("secret"),
 		linter.ExcludeCommandContains("schema-registry"),
+		// this is obviously cluster-scoped but isn't used for cloud where --cluster is used
+		linter.ExcludeCommandContains("cluster describe"),
 	}
 	resourceScopedCommands = []linter.RuleFilter{
 		linter.IncludeCommandContains("api-key use", "api-key create", "api-key list", "api-key store"),
@@ -144,16 +146,15 @@ func main() {
 	}
 
 	var issues *multierror.Error
-	for _, cliName := range []string{"confluent", "ccloud"} {
-		cli, err := cmd.NewConfluentCommand(cliName, &config.Config{CLIName: cliName}, &version.Version{Binary: cliName}, log.New())
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-		err = l.Lint(cli)
-		if err != nil {
-			issues = multierror.Append(issues, err)
-		}
+	cliName := "fake" // we use a fake CLI name to avoid "should capitalize Confluent" errors
+	cli, err := cmd.NewConfluentCommand(cliName, &config.Config{CLIName: cliName}, &version.Version{Binary: cliName}, log.New())
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	err = l.Lint(cli)
+	if err != nil {
+		issues = multierror.Append(issues, err)
 	}
 	if issues.ErrorOrNil() != nil {
 		fmt.Println(issues)
