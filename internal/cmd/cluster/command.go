@@ -142,6 +142,8 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		id := meta.Scope.Clusters[name]
 		data = append(data, printer.ToRow(&Element{Type: name, ID: id}, describeFields))
 	}
+
+	pcmd.Printf(cmd, "%s\n\nScope:\n", meta.ID)
 	printer.RenderCollectionTable(data, describeLabels)
 
 	return nil
