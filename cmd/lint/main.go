@@ -97,10 +97,6 @@ var rules = []linter.Rule{
 	linter.Filter(
 		linter.RequireLengthBetween("Short", 13, 60),
 		linter.ExcludeCommandContains("secret"),
-		// skip ACLs as they have a really long suffix/disclaimer that they're CCE only
-		linter.ExcludeCommandContains("kafka acl"),
-		// skip service-accounts as they have a really long suffix/disclaimer that they're CCE only
-		linter.ExcludeCommandContains("service-account"),
 	),
 	linter.RequireStartWithCapital("Short"),
 	linter.RequireEndWithPunctuation("Short", false),
