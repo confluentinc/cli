@@ -143,7 +143,10 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		data = append(data, printer.ToRow(&Element{Type: name, ID: id}, describeFields))
 	}
 
-	pcmd.Printf(cmd, "%s\n\nScope:\n", meta.ID)
+	if meta.ID != "" {
+		pcmd.Printf(cmd, "%s\n\n", meta.ID)
+	}
+	pcmd.Println(cmd, "Scope:")
 	printer.RenderCollectionTable(data, describeLabels)
 
 	return nil
