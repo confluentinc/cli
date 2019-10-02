@@ -3,7 +3,6 @@ package ksql
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -19,12 +18,10 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/acl"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
 const (
-	kafkaClusterID    = "lkc-12345"
 	ksqlClusterID     = "lksqlc-12345"
 	outputTopicPrefix = "pksqlc-abcde"
 	serviceAcctID     = int32(123)
@@ -79,44 +76,12 @@ func (suite *KSQLTestSuite) SetupSuite() {
 }
 
 func (suite *KSQLTestSuite) initConf() {
-	suite.conf = config.New()
-	suite.conf.Logger = log.New()
-	suite.conf.AuthURL = "http://test"
-	suite.conf.Auth = &config.AuthConfig{
-		User:    new(orgv1.User),
-		Account: &orgv1.Account{Id: "testAccount"},
-	}
-	user := suite.conf.Auth
-	name := fmt.Sprintf("login-%s-%s", user.User.Email, suite.conf.AuthURL)
-
-	suite.conf.Platforms[name] = &config.Platform{
-		Server: suite.conf.AuthURL,
-	}
-
-	suite.conf.Credentials[name] = &config.Credential{
-		Username: user.User.Email,
-	}
-
-	suite.conf.Contexts[name] = &config.Context{
-		Platform:      name,
-		Credential:    name,
-		Kafka:         kafkaClusterID,
-		KafkaClusters: map[string]*config.KafkaClusterConfig{kafkaClusterID: {}},
-	}
-
-	suite.conf.CurrentContext = name
-
-	suite.kafkaCluster = &kafkav1.KafkaCluster{
-		Id:         kafkaClusterID,
-		Enterprise: true,
-	}
-
+	suite.conf = config.AuthenticatedConfigMock()
 	suite.ksqlCluster = &v1.KSQLCluster{
 		Id:                ksqlClusterID,
-		KafkaClusterId:    kafkaClusterID,
+		KafkaClusterId:    suite.conf.Context().Kafka,
 		OutputTopicPrefix: outputTopicPrefix,
 	}
-
 	suite.serviceAcct = &orgv1.User{
 		ServiceAccount: true,
 		ServiceName:    "KSQL." + ksqlClusterID,
@@ -170,7 +135,7 @@ func (suite *KSQLTestSuite) TestShouldAlsoConfigureForPro() {
 	cmd := suite.newCMD()
 	cmd.SetArgs(append([]string{"app", "configure-acls", ksqlClusterID}))
 	suite.kafkac.DescribeFunc = func(ctx context.Context, cluster *kafkav1.KafkaCluster) (cluster2 *kafkav1.KafkaCluster, e error) {
-		return &kafkav1.KafkaCluster{Id: kafkaClusterID, Enterprise: false}, nil
+		return &kafkav1.KafkaCluster{Id: suite.conf.Context().Kafka, Enterprise: false}, nil
 	}
 
 	err := cmd.Execute()

@@ -138,5 +138,5 @@ func (c *command) addContext(name string, bootstrapURL string, apiKey string, ap
 		return err
 	}
 	return c.config.AddContext(name, platform.Name, credential.Name, kafkaClusters,
-		kafkaClusterCfg.ID, nil, new(config.ContextState))
+		kafkaClusterCfg.ID, nil, nil)
 }

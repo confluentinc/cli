@@ -15,7 +15,7 @@ func ExecuteCommand(root *cobra.Command, args ...string) (output string, err err
 // ExecuteCommandC runs the root command with the given args, and returns the executed command and the output string or an error.
 func ExecuteCommandC(root *cobra.Command, args ...string) (c *cobra.Command, output string, err error) {
 	buf := new(bytes.Buffer)
-	root.SetOutput(buf)
+	root.SetOut(buf)
 	root.SetArgs(args)
 
 	c, err = root.ExecuteC()

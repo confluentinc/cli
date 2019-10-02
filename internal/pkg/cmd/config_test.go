@@ -2,32 +2,20 @@ package cmd
 
 import (
 	"context"
+	"testing"
+
 	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/confluentinc/ccloud-sdk-go/mock"
-	"github.com/confluentinc/ccloudapis/org/v1"
 	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
-	"github.com/confluentinc/cli/internal/pkg/config"
-	"testing"
-)
 
-const (
-	currentContext = "current_ctx"
+	"github.com/confluentinc/cli/internal/pkg/config"
 )
 
 func getConfig(endpoint string) config.Config {
-	return config.Config{
-		CurrentContext: currentContext,
-		Contexts: map[string]*config.Context{
-			currentContext: {
-				SchemaRegistryClusters: map[string]*config.SchemaRegistryCluster{
-					"env": {
-						SchemaRegistryEndpoint: endpoint,
-					},
-				},
-			},
-		},
-		Auth: &config.AuthConfig{Account: &v1.Account{Id: "env"}},
-	}
+	conf := config.AuthenticatedConfigMock()
+	srCluster, _ := conf.SchemaRegistryCluster()
+	srCluster.SchemaRegistryEndpoint = endpoint
+	return *conf
 }
 
 func getClient() *ccloud.Client {

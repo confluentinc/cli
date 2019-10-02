@@ -2,7 +2,6 @@ package apikey
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -13,8 +12,8 @@ import (
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go/mock"
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
-	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/keystore"
@@ -24,7 +23,6 @@ import (
 )
 
 const (
-	kafkaClusterID = "lkc-12345"
 	srClusterID    = "lsrc-12345"
 	apiKeyVal      = "abracadabra"
 	apiSecretVal   = "opensesame"
@@ -52,35 +50,14 @@ type APITestSuite struct {
 func (suite *APITestSuite) SetupSuite() {
 	suite.conf = config.New()
 	suite.conf.Logger = log.New()
-	suite.conf.AuthURL = "http://test"
-	suite.conf.Auth = &config.AuthConfig{
-		User:    new(orgv1.User),
-		Account: &orgv1.Account{Id: "testAccount"},
-	}
-	user := suite.conf.Auth
-	name := fmt.Sprintf("login-%s-%s", user.User.Email, suite.conf.AuthURL)
-
-	suite.conf.Platforms[name] = &config.Platform{
-		Server: suite.conf.AuthURL,
-	}
-
-	suite.conf.Credentials[name] = &config.Credential{
-		Username: user.User.Email,
-	}
-
-	suite.conf.Contexts[name] = &config.Context{
-		Platform:   name,
-		Credential: name,
-		Kafka:      kafkaClusterID,
-	}
-
-	suite.conf.CurrentContext = name
-
+	suite.conf = config.AuthenticatedConfigMock()
 	srCluster, _ := suite.conf.SchemaRegistryCluster()
 	srCluster.SrCredentials = &config.APIKeyPair{Key: apiKeyVal, Secret: apiSecretVal}
-
+	cluster := suite.conf.Context().ActiveKafkaCluster()
 	suite.kafkaCluster = &kafkav1.KafkaCluster{
-		Id:         kafkaClusterID,
+		Id:         cluster.ID,
+		Name:       cluster.Name,
+		Endpoint:   cluster.APIEndpoint,
 		Enterprise: true,
 	}
 	suite.srCluster = &srv1.SchemaRegistryCluster{
@@ -154,13 +131,14 @@ func (suite *APITestSuite) TestCreateSrApiKey() {
 
 func (suite *APITestSuite) TestCreateKafkaApiKey() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"create", "--resource", kafkaClusterID}))
+	cluster := suite.conf.Context().ActiveKafkaCluster()
+	cmd.SetArgs(append([]string{"create", "--resource", cluster.ID}))
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.apiMock.CreateCalled())
 	retValue := suite.apiMock.CreateCalls()[0].Arg1
-	req.Equal(retValue.LogicalClusters[0].Id, kafkaClusterID)
+	req.Equal(retValue.LogicalClusters[0].Id, cluster.ID)
 }
 
 func (suite *APITestSuite) TestDeleteApiKey() {
@@ -187,13 +165,14 @@ func (suite *APITestSuite) TestListSrApiKey() {
 
 func (suite *APITestSuite) TestListKafkaApiKey() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"list", "--resource", kafkaClusterID}))
+	cluster := suite.conf.Context().ActiveKafkaCluster()
+	cmd.SetArgs(append([]string{"list", "--resource", cluster.ID}))
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.apiMock.ListCalled())
 	retValue := suite.apiMock.ListCalls()[0].Arg1
-	req.Equal(retValue.LogicalClusters[0].Id, kafkaClusterID)
+	req.Equal(retValue.LogicalClusters[0].Id, cluster.ID)
 }
 
 func TestApiTestSuite(t *testing.T) {

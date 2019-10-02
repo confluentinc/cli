@@ -121,6 +121,7 @@ func (c *Config) Validate() error {
 	// Validate that current context exists.
 	if c.CurrentContext != "" {
 		if _, ok := c.Contexts[c.CurrentContext]; !ok {
+			c.Logger.Trace("current context does not exist")
 			return errors.Errorf("the current context does not exist.")
 		}
 	}
@@ -131,12 +132,15 @@ func (c *Config) Validate() error {
 	for _, context := range c.Contexts {
 		err := context.Validate()
 		if err != nil {
+			c.Logger.Trace("context validation error")
 			return err
 		}
 		if _, ok := c.Credentials[context.CredentialName]; !ok || context.CredentialName == "" {
+			c.Logger.Trace("unspecified credential error")
 			return &errors.UnspecifiedCredentialError{ContextName: context.Name}
 		}
 		if _, ok := c.Platforms[context.PlatformName]; !ok || context.PlatformName == "" {
+			c.Logger.Trace("unspecified platform error")
 			return &errors.UnspecifiedPlatformError{ContextName: context.Name}
 		}
 		if _, ok := c.ContextStates[context.Name]; !ok {
@@ -147,6 +151,7 @@ func (c *Config) Validate() error {
 	// Validate that all context states are mapped to an existing context.
 	for contextName, _ := range c.ContextStates {
 		if _, ok := c.Contexts[contextName]; !ok {
+			c.Logger.Trace("context state mapped to nonexistent context")
 			return c.corruptedConfigError()
 		}
 	}
@@ -190,17 +195,19 @@ func (c *Config) AddContext(name string, platformName string, credentialName str
 	if !ok {
 		return fmt.Errorf("platform \"%s\" not found", platformName)
 	}
-	// Update config maps.
-	if state == nil {
-		return fmt.Errorf("context state cannot be nil")
-	}
-	context := newContext(name, platform, credential, kafkaClusters, kafka,
+	context, err := newContext(name, platform, credential, kafkaClusters, kafka,
 		schemaRegistryClusters, state)
-	c.Contexts[name] = context
-	c.ContextStates[name] = state
-	err := c.Validate()
 	if err != nil {
 		return err
+	}
+	c.Contexts[name] = context
+	c.ContextStates[name] = context.State
+	err = c.Validate()
+	if err != nil {
+		return err
+	}
+	if c.CurrentContext == "" {
+		c.CurrentContext = context.Name
 	}
 	return c.Save()
 }
@@ -351,7 +358,7 @@ func (c *Config) corruptedContextError(contextName string) error {
 	if err != nil {
 		return err
 	}
-	errMsg := "the configuration of context \"%s\" has been corrupted. " +
+	errMsg := "the configuration of context '%s' has been corrupted. " +
 		"To fix, please remove the config file located at %s, and run `login` or `init`"
 	err = fmt.Errorf(errMsg, contextName, configPath)
 	return err

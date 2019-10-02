@@ -100,6 +100,9 @@ func TestLoginSuccess(t *testing.T) {
 	}{
 		{
 			cliName: "ccloud",
+			args: []string{
+				
+			},
 		},
 		{
 			cliName: "confluent",
@@ -112,7 +115,6 @@ func TestLoginSuccess(t *testing.T) {
 	for _, s := range suite {
 		// Login to the CLI control plane
 		cmds, cfg := newAuthCommand(prompt, auth, user, s.cliName, req)
-		
 		output, err := pcmd.ExecuteCommand(cmds.Commands[0], s.args...)
 		req.NoError(err)
 		req.Contains(output, "Logged in as cody@confluent.io")
@@ -120,13 +122,13 @@ func TestLoginSuccess(t *testing.T) {
 		req.NotNil(ctx)
 		req.Equal("y0ur.jwt.T0kEn", ctx.State.AuthToken)
 		contextName := fmt.Sprintf("login-cody@confluent.io-%s", ctx.Platform.Server)
-		req.Contains(cfg.Platforms, ctx.Platform)
+		req.Contains(cfg.Platforms, contextName)
 		req.Equal(ctx.Platform, cfg.Platforms[ctx.PlatformName])
-		req.Contains(cfg.Credentials, "username-cody@confluent.io")
-		req.Equal("cody@confluent.io", cfg.Credentials["username-cody@confluent.io"].Username)
+		req.Contains(cfg.Credentials, contextName)
+		req.Equal("cody@confluent.io", cfg.Credentials[contextName].Username)
 		req.Contains(cfg.Contexts, contextName)
 		req.Equal(ctx.Platform, cfg.Contexts[contextName].Platform)
-		req.Equal("username-cody@confluent.io", cfg.Contexts[contextName].Credential)
+		req.Equal(ctx.Credential, cfg.Contexts[contextName].Credential)
 		if s.cliName == "ccloud" {
 			// MDS doesn't set some things like cfg.Auth.User since e.g. an MDS user != an orgv1 (ccloud) User
 			req.Equal(&orgv1.User{Id: 23, Email: "cody@confluent.io", FirstName: "Cody"}, ctx.State.Auth.User)
@@ -197,10 +199,9 @@ func TestLogout(t *testing.T) {
 	req.NoError(cfg.AddPlatform(platform))
 	req.NoError(cfg.AddContext("koolbeanz", "michael-scott", "whatever", nil, "", nil, state))
 	req.NoError(cfg.Save())
-	output, err := pcmd.ExecuteCommand(cmds.Commands[1])
+	output, err := pcmd.ExecuteCommand(cmds.Commands[1], []string{}...)
 	req.NoError(err)
 	req.Contains(output, "You are now logged out")
-
 	cfg = config.New()
 	cfg.CLIName = "ccloud"
 	req.NoError(cfg.Load())

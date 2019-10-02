@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/jonboulle/clockwork"
 	"github.com/spf13/cobra"
@@ -54,7 +52,6 @@ func (r *PreRun) Authenticated() func(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		state, err := r.Config.AuthenticatedState()
-		fmt.Println(state)
 		if err != nil {
 			return err
 		}

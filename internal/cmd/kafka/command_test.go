@@ -3,7 +3,6 @@ package kafka
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"strconv"
 	"strings"
 	"testing"
@@ -11,13 +10,11 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/confluentinc/ccloud-sdk-go/mock"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
-	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
@@ -422,7 +419,7 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 			return nil, errors.ErrNotLoggedIn
 		},
 	}
-	cmd, _ := New(&cliMock.Commander{}, conf, kafka, &pcmd.ConfigHelper{Config: conf, Client: &ccloud.Client{Kafka: kafka}})
+	cmd := New(&cliMock.Commander{}, conf, kafka, &pcmd.ConfigHelper{Config: conf, Client: &ccloud.Client{Kafka: kafka}})
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	cmd.SetArgs(append([]string{"cluster", "list"}))
 	buf := new(bytes.Buffer)
@@ -438,43 +435,12 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 /*************** TEST setup/helpers ***************/
 func NewCMD(expect chan interface{}) *cobra.Command {
 	kafka := cliMock.NewKafkaMock(expect)
-	cmd, _ := New(&cliMock.Commander{}, conf, kafka, &pcmd.ConfigHelper{Config: conf, Client: &ccloud.Client{Kafka: kafka}})
+	cmd := New(&cliMock.Commander{}, conf, kafka, &pcmd.ConfigHelper{Config: conf, Client: &ccloud.Client{Kafka: kafka}})
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 
 	return cmd
 }
 
 func init() {
-	conf = config.New()
-	conf.Logger = log.New()
-	conf.AuthURL = "http://test"
-	conf.Auth = &config.AuthConfig{
-		User:    new(orgv1.User),
-		Account: &orgv1.Account{Id: "testAccount"},
-	}
-	initContext(conf)
-}
-
-// initContext mimics logging in with a configured context
-// TODO: create auth mock
-func initContext(cfg *config.Config) {
-	user := cfg.Auth
-	name := fmt.Sprintf("login-%s-%s", user.User.Email, cfg.AuthURL)
-
-	cfg.Platforms[name] = &config.Platform{
-		Server: cfg.AuthURL,
-	}
-
-	cfg.Credentials[name] = &config.Credential{
-		Username: user.User.Email,
-	}
-
-	cfg.Contexts[name] = &config.Context{
-		Platform:      name,
-		Credential:    name,
-		KafkaClusters: map[string]*config.KafkaClusterConfig{name: {}},
-		Kafka:         name,
-	}
-
-	cfg.CurrentContext = name
+	conf = config.AuthenticatedConfigMock()
 }
