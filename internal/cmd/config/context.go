@@ -81,7 +81,7 @@ func (c *contextCommand) list(cmd *cobra.Command, args []string) error {
 		Credential string
 	}
 	var data [][]string
-	contextNames := make([]string, len(c.config.Contexts))
+	contextNames := make([]string, 0)
 	for name, _ := range c.config.Contexts {
 		contextNames = append(contextNames, name)
 	}
