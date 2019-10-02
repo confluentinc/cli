@@ -314,11 +314,11 @@ func (a *commands) addContextIfAbsent(username string, url string, state *config
 		Username: username,
 		// don't save password if they entered it interactively.
 	}
-	err := a.config.AddPlatform(platform)
+	err := a.config.SavePlatform(platform)
 	if err != nil {
 		return err
 	}
-	err = a.config.AddCredential(credential)
+	err = a.config.SaveCredential(credential)
 	if err != nil {
 		return err
 	}

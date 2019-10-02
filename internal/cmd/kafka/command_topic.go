@@ -78,7 +78,7 @@ Consume items from the 'my_topic' topic and press 'Ctrl + C' to exit.
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 	ctx := c.config.Context()
-	if ctx == nil || ctx.Credential.CredentialType == config.APIKey {
+	if ctx != nil && ctx.Credential.CredentialType == config.APIKey {
 		return
 	}
 	cmd = &cobra.Command{

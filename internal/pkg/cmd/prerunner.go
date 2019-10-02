@@ -49,11 +49,11 @@ func (r *PreRun) Anonymous() func(cmd *cobra.Command, args []string) error {
 func (r *PreRun) Authenticated() func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		if err := r.Anonymous()(cmd, args); err != nil {
-			return err
+			return errors.HandleCommon(err, cmd)
 		}
 		state, err := r.Config.AuthenticatedState()
 		if err != nil {
-			return err
+			return errors.HandleCommon(err, cmd)
 		}
 		// Validate token (not expired)
 		var claims map[string]interface{}
@@ -71,7 +71,7 @@ func (r *PreRun) Authenticated() func(cmd *cobra.Command, args []string) error {
 		}
 		r.context = r.Config.Context()
 		if r.context == nil {
-			return errors.ErrNoContext
+			return errors.HandleCommon(errors.ErrNoContext, cmd)
 		}
 		return nil
 	}
@@ -87,7 +87,7 @@ func (r *PreRun) HasAPIKey() func(cmd *cobra.Command, args []string) error {
 		clusterId := context.Kafka
 		err := r.Config.CheckHasAPIKey(clusterId)
 		if err != nil {
-			return err
+			return errors.HandleCommon(err, cmd)
 		}
 		r.context = context
 		return nil

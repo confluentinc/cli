@@ -129,11 +129,11 @@ func (c *command) addContext(name string, bootstrapURL string, apiKey string, ap
 	default:
 		return fmt.Errorf("credential type %d unknown", credential.CredentialType)
 	}
-	err := c.config.AddCredential(credential)
+	err := c.config.SaveCredential(credential)
 	if err != nil {
 		return err
 	}
-	err = c.config.AddPlatform(platform)
+	err = c.config.SavePlatform(platform)
 	if err != nil {
 		return err
 	}

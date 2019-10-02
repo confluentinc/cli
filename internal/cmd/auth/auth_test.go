@@ -195,8 +195,8 @@ func TestLogout(t *testing.T) {
 		Auth:      &config.AuthConfig{User: &orgv1.User{Id: 23}},
 		AuthToken: "some.token.here",
 	}
-	req.NoError(cfg.AddCredential(credential))
-	req.NoError(cfg.AddPlatform(platform))
+	req.NoError(cfg.SaveCredential(credential))
+	req.NoError(cfg.SavePlatform(platform))
 	req.NoError(cfg.AddContext("koolbeanz", "michael-scott", "whatever", nil, "", nil, state))
 	req.NoError(cfg.Save())
 	output, err := pcmd.ExecuteCommand(cmds.Commands[1], []string{}...)

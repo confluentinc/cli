@@ -230,26 +230,20 @@ func (c *Config) Name() string {
 	return name
 }
 
-func (c *Config) AddCredential(credential *Credential) error {
+func (c *Config) SaveCredential(credential *Credential) error {
 	if credential.Name == "" {
 		return fmt.Errorf("credential must have a name")
 	}
-	if _, ok := c.Credentials[credential.Name]; ok {
-		return fmt.Errorf("credential \"%s\" already exists", credential.Name)
-	}
 	c.Credentials[credential.Name] = credential
-	return nil
+	return c.Save()
 }
 
-func (c *Config) AddPlatform(platform *Platform) error {
+func (c *Config) SavePlatform(platform *Platform) error {
 	if platform.Name == "" {
 		return fmt.Errorf("platform must have a name")
 	}
-	if _, ok := c.Platforms[platform.Name]; ok {
-		return fmt.Errorf("platform \"%s\" already exists", platform.Name)
-	}
 	c.Platforms[platform.Name] = platform
-	return nil
+	return c.Save()
 }
 
 func (c *Config) Support() string {

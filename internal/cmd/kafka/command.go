@@ -36,7 +36,7 @@ func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.Kafka, c
 func (c *command) init() {
 	c.AddCommand(NewTopicCommand(c.prerunner, c.config, c.client, c.ch))
 	context := c.config.Context()
-	if context == nil || context.Credential.CredentialType == config.APIKey {
+	if context != nil && context.Credential.CredentialType == config.APIKey {
 		return
 	}
 	c.AddCommand(NewClusterCommand(c.config, c.client, c.ch))

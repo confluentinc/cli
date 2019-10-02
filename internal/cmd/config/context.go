@@ -1,6 +1,8 @@
 package config
 
 import (
+	"sort"
+
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/go-printer"
@@ -79,7 +81,13 @@ func (c *contextCommand) list(cmd *cobra.Command, args []string) error {
 		Credential string
 	}
 	var data [][]string
-	for name, context := range c.config.Contexts {
+	contextNames := make([]string, len(c.config.Contexts))
+	for name, _ := range c.config.Contexts {
+		contextNames = append(contextNames, name)
+	}
+	sort.Strings(contextNames)
+	for _, name := range contextNames {
+		context := c.config.Contexts[name]
 		current := ""
 		if c.config.CurrentContext == name {
 			current = "*"
