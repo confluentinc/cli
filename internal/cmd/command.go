@@ -147,9 +147,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		//conn.Hidden = true // The connect feature isn't finished yet, so let's hide it
 		//cli.AddCommand(conn)
 	} else if cliName == "confluent" {
-		ch := &pcmd.ConfigHelper{Config: cfg, Client: client}
-
-		cli.AddCommand(iam.New(prerunner, cfg, ch, ver, mdsClient))
+		cli.AddCommand(iam.New(prerunner, cfg, mdsClient))
 
 		bash, err := basher.NewContext("/bin/bash", false)
 		if err != nil {
