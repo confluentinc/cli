@@ -23,8 +23,10 @@ var (
 
 	vocab *gospell.GoSpell
 
+	cliNames = []string{"confluent", "ccloud"}
+
 	properNouns = []string{
-		"Apache", "Kafka", "CLI", "API", "ACL", "ACLs", "Confluent Cloud", "Confluent Platform", "RBAC", "IAM", "Schema Registry",
+		"Apache", "Kafka", "CLI", "API", "ACL", "ACLs", "Confluent Cloud", "Confluent Platform", "Confluent", "RBAC", "IAM", "Schema Registry",
 		"Enterprise",
 	}
 	vocabWords = []string{
@@ -45,6 +47,8 @@ var (
 		// this doesn't need a --cluster
 		linter.ExcludeCommandContains("secret"),
 		linter.ExcludeCommandContains("schema-registry"),
+		// this is obviously cluster-scoped but isn't used for cloud where --cluster is used
+		linter.ExcludeCommandContains("cluster describe"),
 	}
 	resourceScopedCommands = []linter.RuleFilter{
 		linter.IncludeCommandContains("api-key use", "api-key create", "api-key list", "api-key store"),
@@ -80,6 +84,8 @@ var rules = []linter.Rule{
 		linter.ExcludeCommandContains("secret"),
 		// skip schema-registry commands which do not use names/ID's
 		linter.ExcludeCommandContains("schema-registry"),
+		// skip cluster describe as it takes a URL as a flag instead of a resource identity
+		linter.ExcludeCommandContains("cluster describe"),
 	),
 	// TODO: ensuring --cluster is optional DOES NOT actually ensure that the cluster context is used
 	linter.Filter(linter.RequireFlag("cluster", true), nonClusterScopedCommands...),
@@ -96,17 +102,13 @@ var rules = []linter.Rule{
 	linter.Filter(
 		linter.RequireLengthBetween("Short", 13, 60),
 		linter.ExcludeCommandContains("secret"),
-		// skip ACLs as they have a really long suffix/disclaimer that they're CCE only
-		linter.ExcludeCommandContains("kafka acl"),
-		// skip service-accounts as they have a really long suffix/disclaimer that they're CCE only
-		linter.ExcludeCommandContains("service-account"),
 	),
 	linter.RequireStartWithCapital("Short"),
 	linter.RequireEndWithPunctuation("Short", false),
-	linter.RequireCapitalizeProperNouns("Short", properNouns),
+	linter.RequireCapitalizeProperNouns("Short", linter.SetDifferenceIgnoresCase(properNouns, cliNames)),
 	linter.RequireStartWithCapital("Long"),
 	linter.RequireEndWithPunctuation("Long", true),
-	linter.RequireCapitalizeProperNouns("Long", properNouns),
+	linter.RequireCapitalizeProperNouns("Long", linter.SetDifferenceIgnoresCase(properNouns, cliNames)),
 	linter.Filter(linter.RequireNotTitleCase("Short", properNouns),
 		linter.ExcludeCommandContains("secret")),
 	linter.RequireRealWords("Use", '-'),
@@ -145,7 +147,7 @@ func main() {
 	}
 
 	var issues *multierror.Error
-	for _, cliName := range []string{"confluent", "ccloud"} {
+	for _, cliName := range cliNames {
 		cli, err := cmd.NewConfluentCommand(cliName, &config.Config{CLIName: cliName}, &version.Version{Binary: cliName}, log.New())
 		if err != nil {
 			fmt.Println(err)
