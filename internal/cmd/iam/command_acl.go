@@ -86,7 +86,6 @@ func (c *aclCommand) init() {
 		Args:  cobra.NoArgs,
 	}
 	cmd.Flags().AddFlagSet(listAclFlags())
-	cmd.Flags().Int("service-account-id", 0, "Service account ID.")
 	cmd.Flags().SortFlags = false
 
 	c.AddCommand(cmd)
@@ -98,11 +97,7 @@ func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
 	bindings, response, err := c.client.KafkaACLManagementApi.SearchAclBinding(c.ctx, convertToAclFilterRequest(acl.CreateAclRequest))
 
 	if err != nil {
-		if response != nil && response.StatusCode == http.StatusNotFound {
-			cmd.SilenceUsage = true
-			return fmt.Errorf("Unable to list ACLs (%s). Ensure that you're running against MDS with CP 5.4+.", err.Error())
-		}
-		return errors.HandleCommon(err, cmd)
+		return c.handleAclError(cmd, err, response)
 	}
 
 	PrintAcls(acl.Scope.Clusters.KafkaCluster, bindings, os.Stdout)
@@ -118,12 +113,11 @@ func (c *aclCommand) create(cmd *cobra.Command, args []string) error {
 
 	response, err := c.client.KafkaACLManagementApi.AddAclBinding(c.ctx, *acl.CreateAclRequest)
 
-	if err != nil && response != nil && response.StatusCode == http.StatusNotFound {
-		cmd.SilenceUsage = true
-		return fmt.Errorf("Unable to add ACLs (%s). Ensure that you're running against MDS with CP 5.4+.", err.Error())
+	if err != nil {
+		return c.handleAclError(cmd, err, response)
 	}
 
-	return errors.HandleCommon(err, cmd)
+	return nil
 }
 
 func (c *aclCommand) delete(cmd *cobra.Command, args []string) error {
@@ -136,15 +130,19 @@ func (c *aclCommand) delete(cmd *cobra.Command, args []string) error {
 	bindings, response, err := c.client.KafkaACLManagementApi.RemoveAclBindings(c.ctx, convertToAclFilterRequest(acl.CreateAclRequest))
 
 	if err != nil {
-		if response != nil && response.StatusCode == http.StatusNotFound {
-			cmd.SilenceUsage = true
-			return fmt.Errorf("Unable to delete ACLs (%s). Ensure that you're running against MDS with CP 5.4+.", err.Error())
-		}
-		return errors.HandleCommon(err, cmd)
+		return c.handleAclError(cmd, err, response)
 	}
 
 	PrintAcls(acl.Scope.Clusters.KafkaCluster, bindings, os.Stdout)
 	return nil
+}
+
+func (c *aclCommand) handleAclError(cmd *cobra.Command, err error, response *http.Response) error {
+	if response != nil && response.StatusCode == http.StatusNotFound {
+		cmd.SilenceUsage = true
+		return fmt.Errorf("Unable to %s ACLs (%s). Ensure that you're running against MDS with CP 5.4+.", cmd.Name(), err.Error())
+	}
+	return errors.HandleCommon(err, cmd)
 }
 
 // validateAclAddDelete ensures the minimum requirements for acl add/delete is met
@@ -217,6 +215,7 @@ func convertToAclFilterRequest(request *mds.CreateAclRequest) mds.AclFilterReque
 
 func PrintAcls(kafkaClusterId string, bindingsObj []mds.AclBinding, writer io.Writer) {
 	var bindings [][]string
+	var fields = []string{"KafkaClusterId", "Principal", "Permission", "Operation", "Host", "Resource", "Name", "Type"}
 	for _, binding := range bindingsObj {
 
 		record := &struct {
@@ -238,9 +237,8 @@ func PrintAcls(kafkaClusterId string, bindingsObj []mds.AclBinding, writer io.Wr
 			binding.Pattern.Name,
 			binding.Pattern.PatternType,
 		}
-		bindings = append(bindings, printer.ToRow(record,
-			[]string{"KafkaClusterId", "Principal", "Permission", "Operation", "Host", "Resource", "Name", "Type"}))
+		bindings = append(bindings, printer.ToRow(record, fields))
 	}
-	printer.RenderCollectionTableOut(bindings, []string{"KafkaClusterId", "Principal", "Permission", "Operation", "Host", "Resource", "Name", "Type"}, writer)
+	printer.RenderCollectionTableOut(bindings, fields, writer)
 }
 
