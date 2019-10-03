@@ -60,11 +60,6 @@ var mdsResourcePatterns = []struct {
 		pattern: mds.KafkaResourcePattern{ResourceType: mds.ACL_RESOURCE_TYPE_TRANSACTIONAL_ID, Name: "test-transactional-id",
 			PatternType: mds.PATTERN_TYPE_PREFIXED},
 	},
-	{
-		args: []string{"--prefix", "--topic", "test-topic"},
-		pattern: mds.KafkaResourcePattern{ResourceType: mds.ACL_RESOURCE_TYPE_TOPIC, Name: "test-topic",
-			PatternType: mds.PATTERN_TYPE_PREFIXED},
-	},
 }
 
 var mdsAclEntries = []struct {
@@ -187,6 +182,10 @@ func (suite *AclTestSuite) SetupSuite() {
 	suite.conf.Logger = log.New()
 	suite.conf.AuthURL = "http://test"
 	suite.conf.AuthToken = "T0k3n"
+}
+
+func (suite *AclTestSuite) TearDownSuite() {
+	_ = os.Setenv("XX_FLAG_CENTRALIZED_ACL_ENABLE", "false")
 }
 
 func (suite *AclTestSuite) SetupTest() {
