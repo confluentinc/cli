@@ -223,7 +223,7 @@ fmt:
 
 .PHONY: release-ci
 release-ci:
-ifdef $(SEMAPHORE_GIT_PR_BRANCH)
+ifneq ($(SEMAPHORE_GIT_PR_BRANCH),)
 	true
 else ifeq ($(SEMAPHORE_GIT_BRANCH),master)
 	make release
