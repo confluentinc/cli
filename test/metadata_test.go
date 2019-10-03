@@ -15,7 +15,7 @@ import (
 
 func (s *CLITestSuite) TestClusterMetadata() {
 	// everything
-	metadataURL1 := serveMetadata(&cluster.ClusterMetadata{
+	metadataURL1 := serveMetadata(&cluster.ScopedId{
 		ID: "crn://md01.example.com/kafka=kafkaCluster1/connect=connectClusterA",
 		Scope: &cluster.Scope{
 			Path: []string{"This", "Is", "Ignored"},
@@ -24,7 +24,7 @@ func (s *CLITestSuite) TestClusterMetadata() {
 	}, s.T()).URL
 
 	// no id
-	metadataURL2 := serveMetadata(&cluster.ClusterMetadata{
+	metadataURL2 := serveMetadata(&cluster.ScopedId{
 		ID: "",
 		Scope: &cluster.Scope{
 			Path: []string{},
@@ -33,7 +33,7 @@ func (s *CLITestSuite) TestClusterMetadata() {
 	}, s.T()).URL
 
 	// just kafka
-	metadataURL3 := serveMetadata(&cluster.ClusterMetadata{
+	metadataURL3 := serveMetadata(&cluster.ScopedId{
 		ID: "crn://md01.example.com/kafka=kafkaCluster1/connect=connectClusterA",
 		Scope: &cluster.Scope{
 			Path: []string{},
@@ -55,7 +55,7 @@ func (s *CLITestSuite) TestClusterMetadata() {
 	}
 }
 
-func serveMetadata(meta *cluster.ClusterMetadata, t *testing.T) *httptest.Server {
+func serveMetadata(meta *cluster.ScopedId, t *testing.T) *httptest.Server {
 	router := http.NewServeMux()
 	router.HandleFunc("/v1/metadata/id", func(w http.ResponseWriter, r *http.Request) {
 		b, err := json.Marshal(meta)

@@ -18,15 +18,11 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
-// Metadata service allows introspecting details from a Confluent cluster.
-// This is different from MDS but I can't think of a better name. Please help! The endpoint is even /v1/metadata/id !
-// This doesn't really belong in ccloud-sdk-go or mds-sdk-go. Where does it belong? :(
-// Maybe the Scope object belongs in github.com/confluentinc/crn?
 type Metadata interface {
-	DescribeCluster(ctx context.Context, url string) (*ClusterMetadata, error)
+	DescribeCluster(ctx context.Context, url string) (*ScopedId, error)
 }
 
-type ClusterMetadata struct {
+type ScopedId struct {
 	ID    string `json:"id"`
 	Scope *Scope `json:"scope"`
 }
@@ -39,14 +35,16 @@ type Scope struct {
 	Clusters map[string]string `json:"clusters"`
 }
 
-type MetadataService struct {
+// ScopedIdService allows introspecting details from a Confluent cluster.
+// This is for querying the endpoint each CP service exposes at /v1/metadata/id.
+type ScopedIdService struct {
 	client    *http.Client
 	userAgent string
 	logger    *log.Logger
 }
 
-func NewMetadataService(client *http.Client, userAgent string, logger *log.Logger) *MetadataService {
-	return &MetadataService{
+func NewMetadataService(client *http.Client, userAgent string, logger *log.Logger) *ScopedIdService {
+	return &ScopedIdService{
 		client:    client,
 		userAgent: userAgent,
 		logger:    logger,
@@ -69,7 +67,7 @@ type command struct {
 	client Metadata
 }
 
-func (s *MetadataService) DescribeCluster(ctx context.Context, url string) (*ClusterMetadata, error) {
+func (s *ScopedIdService) DescribeCluster(ctx context.Context, url string) (*ScopedId, error) {
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/v1/metadata/id", url), nil)
 	if err != nil {
 		return nil, err
@@ -88,7 +86,7 @@ func (s *MetadataService) DescribeCluster(ctx context.Context, url string) (*Clu
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("unable to fetch cluster metadata: %s - %s", resp.Status, body)
 	}
-	meta := &ClusterMetadata{}
+	meta := &ScopedId{}
 	err = json.Unmarshal(body, meta)
 	return meta, err
 }

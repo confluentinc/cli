@@ -400,16 +400,17 @@ func RequireFlagNameLength(minLength, maxLength int) FlagRule {
 	}
 }
 
-// SetDifference returns s1 - s2
-func SetDifferenceIgnoresCase(s1 []string, s2 []string) []string {
-	s2set := make(map[string]interface{})
-	for _, v := range s2 {
-		s2set[strings.ToLower(v)] = struct{}{}
+// SetDifference returns set1 - set2
+func SetDifferenceIgnoresCase(set1 []string, set2 []string) []string {
+	// make a hash set from set2 for efficient searches
+	hashSet2 := make(map[string]interface{})
+	for _, elem := range set2 {
+		hashSet2[strings.ToLower(elem)] = struct{}{}
 	}
 	var diff []string
-	for _, v := range s1 {
-		if _, inS2 := s2set[strings.ToLower(v)]; !inS2 {
-			diff = append(diff, v)
+	for _, elem := range set1 {
+		if _, inSet2 := hashSet2[strings.ToLower(elem)]; !inSet2 {
+			diff = append(diff, elem)
 		}
 	}
 	return diff
