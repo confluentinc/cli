@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"net/http"
 	"os"
 
 	"github.com/DABH/go-basher"
@@ -13,6 +14,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/cmd/apikey"
 	"github.com/confluentinc/cli/internal/cmd/auth"
+	"github.com/confluentinc/cli/internal/cmd/cluster"
 	"github.com/confluentinc/cli/internal/cmd/completion"
 	"github.com/confluentinc/cli/internal/cmd/config"
 	"github.com/confluentinc/cli/internal/cmd/environment"
@@ -148,6 +150,9 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		//cli.AddCommand(conn)
 	} else if cliName == "confluent" {
 		cli.AddCommand(iam.New(prerunner, cfg, mdsClient))
+
+		metaClient := cluster.NewScopedIdService(&http.Client{}, ver.UserAgent, logger)
+		cli.AddCommand(cluster.New(prerunner, cfg, metaClient))
 
 		bash, err := basher.NewContext("/bin/bash", false)
 		if err != nil {

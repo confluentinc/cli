@@ -4,6 +4,7 @@ Usage:
   confluent [command]
 
 Available Commands:
+  cluster     Retrieve metadata about Confluent clusters.
   completion  Print shell completion code.
   help        Help about any command
   iam         Manage RBAC, ACL and IAM permissions.
