@@ -1,4 +1,4 @@
-       Key      | Owner | Description   
-+---------------+-------+--------------+
-    MYKEY5      |    23 | my-other-app  
-    UIAPIKEY101 |    25 |               
+       Key      | Owner | Description  | Resource Type | Resource ID  
++---------------+-------+--------------+---------------+-------------+
+    MYKEY5      |    23 | my-other-app | kafka         | lkc-other1   
+    UIAPIKEY101 |    25 |              | kafka         | lkc-other1   

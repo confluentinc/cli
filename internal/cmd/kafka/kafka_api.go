@@ -35,7 +35,7 @@ func aclEntryFlags() *pflag.FlagSet {
 	flgSet.Bool("deny", false, "Set the ACL to restrict access to resource.")
 	//flgSet.String( "host", "*", "Set Kafka principal host. Note: Not supported on CCLOUD.")
 	flgSet.Int("service-account-id", 0, "The service account ID.")
-	flgSet.String("operation", "", fmt.Sprintf("Set ACL Operation to: [%s].",
+	flgSet.String("operation", "", fmt.Sprintf("Set ACL Operation to: (%s).",
 		listEnum(kafkav1.ACLOperations_ACLOperation_name, []string{"ANY", "UNKNOWN"})))
 	// An error is only returned if the flag name is not present.
 	// We know the flag name is present so its safe to ignore this.
