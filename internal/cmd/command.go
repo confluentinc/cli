@@ -153,7 +153,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 
 		cli.AddCommand(iam.New(prerunner, cfg, ch, ver, mdsClient))
 
-		metaClient := cluster.NewMetadataService(&http.Client{}, ver.UserAgent, logger)
+		metaClient := cluster.NewScopedIdService(&http.Client{}, ver.UserAgent, logger)
 		cli.AddCommand(cluster.New(prerunner, cfg, metaClient))
 
 		bash, err := basher.NewContext("/bin/bash", false)

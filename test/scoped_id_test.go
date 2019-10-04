@@ -13,9 +13,9 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/cluster"
 )
 
-func (s *CLITestSuite) TestClusterMetadata() {
+func (s *CLITestSuite) TestClusterScopedId() {
 	// everything
-	metadataURL1 := serveMetadata(&cluster.ScopedId{
+	cpIdURL1 := serveClusterScopedId(&cluster.ScopedId{
 		ID: "crn://md01.example.com/kafka=kafkaCluster1/connect=connectClusterA",
 		Scope: &cluster.Scope{
 			Path: []string{"This", "Is", "Ignored"},
@@ -24,7 +24,7 @@ func (s *CLITestSuite) TestClusterMetadata() {
 	}, s.T()).URL
 
 	// no id
-	metadataURL2 := serveMetadata(&cluster.ScopedId{
+	cpIdURL2 := serveClusterScopedId(&cluster.ScopedId{
 		ID: "",
 		Scope: &cluster.Scope{
 			Path: []string{},
@@ -33,7 +33,7 @@ func (s *CLITestSuite) TestClusterMetadata() {
 	}, s.T()).URL
 
 	// just kafka
-	metadataURL3 := serveMetadata(&cluster.ScopedId{
+	cpIdURL3 := serveClusterScopedId(&cluster.ScopedId{
 		ID: "crn://md01.example.com/kafka=kafkaCluster1/connect=connectClusterA",
 		Scope: &cluster.Scope{
 			Path: []string{},
@@ -41,21 +41,21 @@ func (s *CLITestSuite) TestClusterMetadata() {
 		},
 	}, s.T()).URL
 
-	// old versions of CP without the metadata endpoint respond with 401
-	metadataURL4 := serveMetadataError().URL
+	// old versions of CP without the cluster metadata id endpoint respond with 401
+	cpIdURL4 := serveClusterScopedIdError().URL
 
 	tests := []CLITest{
-		{args: fmt.Sprintf("cluster describe --url %s", metadataURL1), fixture: "metadata1.golden"},
-		{args: fmt.Sprintf("cluster describe --url %s", metadataURL2), fixture: "metadata2.golden"},
-		{args: fmt.Sprintf("cluster describe --url %s", metadataURL3), fixture: "metadata3.golden"},
-		{args: fmt.Sprintf("cluster describe --url %s", metadataURL4), fixture: "metadata4.golden", wantErrCode: 1},
+		{args: fmt.Sprintf("cluster describe --url %s", cpIdURL1), fixture: "scoped_id1.golden"},
+		{args: fmt.Sprintf("cluster describe --url %s", cpIdURL2), fixture: "scoped_id2.golden"},
+		{args: fmt.Sprintf("cluster describe --url %s", cpIdURL3), fixture: "scoped_id3.golden"},
+		{args: fmt.Sprintf("cluster describe --url %s", cpIdURL4), fixture: "scoped_id4.golden", wantErrCode: 1},
 	}
 	for _, tt := range tests {
 		s.runConfluentTest(tt)
 	}
 }
 
-func serveMetadata(meta *cluster.ScopedId, t *testing.T) *httptest.Server {
+func serveClusterScopedId(meta *cluster.ScopedId, t *testing.T) *httptest.Server {
 	router := http.NewServeMux()
 	router.HandleFunc("/v1/metadata/id", func(w http.ResponseWriter, r *http.Request) {
 		b, err := json.Marshal(meta)
@@ -67,7 +67,7 @@ func serveMetadata(meta *cluster.ScopedId, t *testing.T) *httptest.Server {
 	return httptest.NewServer(router)
 }
 
-func serveMetadataError() *httptest.Server {
+func serveClusterScopedIdError() *httptest.Server {
 	router := http.NewServeMux()
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header()["WWW-Authenticate"] = []string{"Bearer realm=\"\""}

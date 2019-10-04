@@ -43,7 +43,7 @@ type ScopedIdService struct {
 	logger    *log.Logger
 }
 
-func NewMetadataService(client *http.Client, userAgent string, logger *log.Logger) *ScopedIdService {
+func NewScopedIdService(client *http.Client, userAgent string, logger *log.Logger) *ScopedIdService {
 	return &ScopedIdService{
 		client:    client,
 		userAgent: userAgent,
