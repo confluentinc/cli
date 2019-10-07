@@ -92,9 +92,12 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	mdsConfig := mds.NewConfiguration()
 	mdsConfig.BasePath = cfg.AuthURL
 	mdsConfig.UserAgent = ver.UserAgent
-	// Explicitly ignore this error and use default http client. Any certificate error will get logged
-	// when the api call occurs with a message to update the cert by logging in again
-	mdsConfig.HTTPClient, _ = auth.SelfSignedCertClient(cfg.CaCertPath, nil)
+	if cfg.Platforms[cfg.AuthURL] != nil {
+		mdsConfig.HTTPClient, err = auth.SelfSignedCertClient(cfg.Platforms[cfg.AuthURL].CaCertPath, nil)
+		if err != nil {
+			logger.Warnf("Unable to load certificate. %s. Resulting SSL errors will be fixed by logging in again with the --caCertPath flag.", err.Error())
+		}
+	}
 	mdsClient := mds.NewAPIClient(mdsConfig)
 
 	cli.Version = ver.Version
