@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -215,12 +216,22 @@ func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		a.config.CaCertPath = caCertPath
-		// override previously configured httpclient if a new cert path was specified
-		a.mdsClient.GetConfig().HTTPClient, err = SelfSignedCertClient(caCertPath, a.certReader)
-		if err != nil {
-			return err
+		if caCertPath == "" {
+			// revert to default client regardless of previously configured client
+			a.mdsClient.GetConfig().HTTPClient = http.DefaultClient
+		} else {
+			caCertPath, err = filepath.Abs(caCertPath)
+			if err != nil {
+				return err
+			}
+			// override previously configured httpclient if a new cert path was specified
+			a.mdsClient.GetConfig().HTTPClient, err = SelfSignedCertClient(caCertPath, a.certReader)
+			if err != nil {
+				return err
+			}
+			a.Logger.Debugf("Successfully loaded certificate from %s", caCertPath)
 		}
+		a.config.CaCertPath = caCertPath
 	}
 	a.mdsClient.ChangeBasePath(a.config.AuthURL)
 	email, password, err := a.credentials(cmd, "Username", nil)
@@ -338,6 +349,9 @@ func (a *commands) addContextIfAbsent(username string) error {
 
 
 func SelfSignedCertClient(caCertPath string, certReader io.Reader) (*http.Client, error){
+	if caCertPath == "" {
+		return nil, nil
+	}
 	certPool, _ := x509.SystemCertPool()
 	if certPool == nil {
 		certPool = x509.NewCertPool()
