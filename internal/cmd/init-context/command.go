@@ -89,7 +89,11 @@ func (c *command) initContext(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	// Set current context.
-	return c.config.SetContext(contextName)
+	err = c.config.SetContext(contextName)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	return nil
 }
 
 func (c *command) addContext(name string, bootstrapURL string, apiKey string, apiSecret string) error {

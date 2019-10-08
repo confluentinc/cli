@@ -33,17 +33,21 @@ var (
 const nameLength = 32
 const descriptionLength = 128
 
+func (c *command) SetContext(context *config.Context) {
+
+}
+
 // New returns the Cobra command for service accounts.
 func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.User) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
-			Use:               "service-account",
-			Short:             `Manage service accounts.`,
-			PersistentPreRunE: prerunner.Authenticated(),
+			Use:   "service-account",
+			Short: `Manage service accounts.`,
 		},
 		config: config,
 		client: client,
 	}
+	cmd.PersistentPreRunE = prerunner.Authenticated(cmd)
 	cmd.init()
 	return cmd.Command
 }

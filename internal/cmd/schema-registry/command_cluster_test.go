@@ -5,9 +5,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/confluentinc/ccloud-sdk-go/mock"
@@ -25,7 +24,7 @@ import (
 )
 
 const (
-	srClusterID    = "sr"
+	srClusterID = "sr"
 )
 
 type ClusterTestSuite struct {
@@ -40,32 +39,6 @@ type ClusterTestSuite struct {
 }
 
 func (suite *ClusterTestSuite) SetupSuite() {
-	//suite.conf = config.New()
-	//suite.conf.Logger = log.New()
-	//suite.conf.AuthURL = "http://test"
-	//suite.conf.Auth = &config.AuthConfig{
-	//	User:    new(orgv1.User),
-	//	Account: &orgv1.Account{Id: "testAccount"},
-	//}
-	//user := suite.conf.Auth
-	//name := fmt.Sprintf("login-%s-%s", user.User.Email, suite.conf.AuthURL)
-	//
-	//suite.conf.Platforms[name] = &config.Platform{
-	//	Server: suite.conf.AuthURL,
-	//}
-	//
-	//suite.conf.Credentials[name] = &config.Credential{
-	//	Username: user.User.Email,
-	//}
-	//
-	//suite.conf.Contexts[name] = &config.Context{
-	//	Platform:      name,
-	//	Credential:    name,
-	//	Kafka:         kafkaClusterID,
-	//	KafkaClusters: map[string]*config.KafkaClusterConfig{kafkaClusterID: {}},
-	//}
-	//
-	//suite.conf.CurrentContext = name
 	suite.conf = config.AuthenticatedConfigMock()
 	cluster := suite.conf.Context().ActiveKafkaCluster()
 	suite.kafkaCluster = &kafkav1.KafkaCluster{

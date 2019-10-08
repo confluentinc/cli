@@ -20,12 +20,15 @@ type command struct {
 	logger       *log.Logger
 }
 
+func (c *command) SetContext(context *config.Context) {
+	
+}
+
 func New(prerunner pcmd.PreRunner, config *config.Config, ccloudClient ccsdk.SchemaRegistry, ch *pcmd.ConfigHelper, srClient *srsdk.APIClient, metricClient ccsdk.Metrics, logger *log.Logger) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:               "schema-registry",
 			Short:             `Manage Schema Registry.`,
-			PersistentPreRunE: prerunner.Authenticated(),
 		},
 		config:       config,
 		ccClient:     ccloudClient,
@@ -34,6 +37,7 @@ func New(prerunner pcmd.PreRunner, config *config.Config, ccloudClient ccsdk.Sch
 		metricClient: metricClient,
 		logger:       logger,
 	}
+	cmd.PersistentPreRunE = prerunner.Authenticated(cmd)
 	cmd.init()
 	return cmd.Command
 }

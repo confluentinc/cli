@@ -131,14 +131,13 @@ func (suite *APITestSuite) TestCreateSrApiKey() {
 
 func (suite *APITestSuite) TestCreateKafkaApiKey() {
 	cmd := suite.newCMD()
-	cluster := suite.conf.Context().ActiveKafkaCluster()
-	cmd.SetArgs(append([]string{"create", "--resource", cluster.ID}))
+	cmd.SetArgs(append([]string{"create", "--resource", suite.kafkaCluster.Id}))
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.apiMock.CreateCalled())
 	retValue := suite.apiMock.CreateCalls()[0].Arg1
-	req.Equal(retValue.LogicalClusters[0].Id, cluster.ID)
+	req.Equal(retValue.LogicalClusters[0].Id, suite.kafkaCluster.Id)
 }
 
 func (suite *APITestSuite) TestDeleteApiKey() {
@@ -165,14 +164,13 @@ func (suite *APITestSuite) TestListSrApiKey() {
 
 func (suite *APITestSuite) TestListKafkaApiKey() {
 	cmd := suite.newCMD()
-	cluster := suite.conf.Context().ActiveKafkaCluster()
-	cmd.SetArgs(append([]string{"list", "--resource", cluster.ID}))
+	cmd.SetArgs(append([]string{"list", "--resource", suite.kafkaCluster.Id}))
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.apiMock.ListCalled())
 	retValue := suite.apiMock.ListCalls()[0].Arg1
-	req.Equal(retValue.LogicalClusters[0].Id, cluster.ID)
+	req.Equal(retValue.LogicalClusters[0].Id, suite.kafkaCluster.Id)
 }
 
 func TestApiTestSuite(t *testing.T) {

@@ -68,7 +68,7 @@ func (c *sinkCommand) init() {
 	createCmd.Flags().StringP("config", "f", "", "Connector configuration file")
 	check(createCmd.MarkFlagRequired("config"))
 	defaultKafkaCluster := ""
-	if ctx, _ := c.config.CfgContext(); ctx != nil {
+	if ctx, _ := c.config.Context(); ctx != nil {
 		defaultKafkaCluster = ctx.Kafka
 	}
 	createCmd.Flags().StringP("kafka-cluster", "k", defaultKafkaCluster, "Kafka cluster ID")

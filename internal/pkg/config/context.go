@@ -33,7 +33,7 @@ type ContextState struct {
 	AuthToken string      `json:"auth_token" hcl:"auth_token"`
 }
 
-// CfgContext represents a specific CLI context.
+// Context represents a specific CLI context.
 type Context struct {
 	Name           string      `json:"name" hcl:"name"`
 	Platform       *Platform   `json:"-" hcl:"-"`
@@ -47,7 +47,7 @@ type Context struct {
 	// Kafka is your active Kafka cluster and references a key in the KafkaClusters map
 	Kafka string `json:"kafka_cluster" hcl:"kafka_cluster"`
 	// SR map keyed by environment-id.
-	SchemaRegistryClusters map[string]*SchemaRegistryCluster `json:"schema_registry_cluster" hcl:"schema_registry_cluster"`
+	SchemaRegistryClusters map[string]*SchemaRegistryCluster `json:"schema_registry_clusters" hcl:"schema_registry_clusters"`
 	State                  *ContextState                     `json:"-" hcl:"-"`
 }
 
@@ -86,21 +86,20 @@ func (c *Context) validateKafkaClusterConfig(cluster *KafkaClusterConfig) error 
 	//if cluster.APIEndpoint == "" {
 	//	return fmt.Errorf("cluster '%s' under context '%s' has no %s", cluster.Name, c.Name, "API endpoint")
 	//}
-	//if cluster.APIKey == "" {
-	//	return &errors.UnspecifiedAPIKeyError{ClusterID: cluster.ID}
-	//}
 	if _, ok := cluster.APIKeys[cluster.APIKey]; cluster.APIKey != "" && !ok {
-		return fmt.Errorf("current API key of cluster '%s' under context '%s' does not exist",
+		return fmt.Errorf("current API key of cluster '%s' under context '%s' does not exist. " +
+			"Please specify a valid API key",
 			cluster.Name, c.Name)
 	}
 	for _, pair := range cluster.APIKeys {
 		if pair.Key == "" {
-			return fmt.Errorf("an API key of a key pair of cluster '%s' under context '%s' does not exist",
+			return fmt.Errorf("an API key of a key pair of cluster '%s' under context '%s' is missing. "+
+				"Please add an API key",
 				cluster.Name, c.Name)
 		}
 		if pair.Secret == "" {
-			return fmt.Errorf("an API secret of a key pair of cluster '%s' under context '%s' does not exist",
-				cluster.Name, c.Name)
+			return fmt.Errorf("the API secret of key '%s' of cluster '%s' under context '%s' is missing. "+
+				"Please add an API secret", pair.Key, cluster.Name, c.Name)
 		}
 	}
 	return nil
@@ -184,7 +183,7 @@ func (c *Context) KafkaClusterConfig() *KafkaClusterConfig {
 	return c.KafkaClusters[kafka]
 }
 
-// SchemaRegistryCluster returns the SchemaRegistryCluster of the CfgContext,
+// SchemaRegistryCluster returns the SchemaRegistryCluster of the Context,
 // or an empty SchemaRegistryCluster if there is none set, 
 // or an ErrNotLoggedIn if the user is not logged in.
 func (c *Context) schemaRegistryCluster() (*SchemaRegistryCluster, error) {

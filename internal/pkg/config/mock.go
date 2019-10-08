@@ -68,9 +68,6 @@ func AuthenticatedConfigMock() *Config {
 		},
 		State: state,
 	}
-	if err := ctx.Validate(); err != nil {
-		panic(err)
-	}
 	conf.Contexts[ctx.Name] = ctx
 	conf.CurrentContext = ctx.Name
 	if err := conf.Validate(); err != nil {

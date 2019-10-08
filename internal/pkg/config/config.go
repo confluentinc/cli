@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 
 	"github.com/atrox/homedir"
-
 	v1 "github.com/confluentinc/ccloudapis/org/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -264,7 +263,7 @@ func (c *Config) APIName() string {
 	return name
 }
 
-// CfgContext returns the current CfgContext, or nil if there's no context set.
+// Context returns the current Context, or nil if there's no context set.
 func (c *Config) Context() *Context {
 	return c.Contexts[c.CurrentContext]
 }
@@ -277,19 +276,7 @@ func (c *Config) AuthenticatedState() (*ContextState, error) {
 	return context.authenticatedState()
 }
 
-func (c *Config) CheckLogin() error {
-	context := c.Context()
-	if context == nil {
-		return errors.ErrNoContext
-	}
-	if context.hasLogin() {
-		return nil
-	} else {
-		return errors.ErrNotLoggedIn
-	}
-}
-
-// SchemaRegistryCluster returns the SchemaRegistryCluster for the current CfgContext,
+// SchemaRegistryCluster returns the SchemaRegistryCluster for the current Context,
 // or an empty SchemaRegistryCluster if there is none set,
 // or an error if no context exists/if the user is not logged in.
 func (c *Config) SchemaRegistryCluster() (*SchemaRegistryCluster, error) {

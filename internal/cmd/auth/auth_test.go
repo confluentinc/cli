@@ -116,8 +116,10 @@ func TestLoginSuccess(t *testing.T) {
 		// Login to the CLI control plane
 		cmds, cfg := newAuthCommand(prompt, auth, user, s.cliName, req)
 		output, err := pcmd.ExecuteCommand(cmds.Commands[0], s.args...)
+		
 		req.NoError(err)
 		req.Contains(output, "Logged in as cody@confluent.io")
+		
 		ctx := cfg.Context()
 		req.NotNil(ctx)
 		req.Equal("y0ur.jwt.T0kEn", ctx.State.AuthToken)

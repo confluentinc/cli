@@ -28,6 +28,11 @@ type topicCommand struct {
 	client    ccloud.Kafka
 	ch        *pcmd.ConfigHelper
 	prerunner pcmd.PreRunner
+	context   *config.Context
+}
+
+func (c *topicCommand) SetContext(context *config.Context) {
+	c.context = context
 }
 
 // NewTopicCommand returns the Cobra command for Kafka topic.
@@ -48,12 +53,12 @@ func NewTopicCommand(prerunner pcmd.PreRunner, config *config.Config, client ccl
 
 func (c *topicCommand) init() {
 	cmd := &cobra.Command{
-		Use:               "produce <topic>",
-		Short:             "Produce messages to a Kafka topic.",
-		RunE:              c.produce,
-		Args:              cobra.ExactArgs(1),
-		PersistentPreRunE: c.prerunner.HasAPIKey(),
+		Use:   "produce <topic>",
+		Short: "Produce messages to a Kafka topic.",
+		RunE:  c.produce,
+		Args:  cobra.ExactArgs(1),
 	}
+	cmd.PersistentPreRunE = c.prerunner.HasAPIKey(c)
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().String("delimiter", ":", "The key/value delimiter.")
 	cmd.Flags().SortFlags = false
@@ -68,10 +73,10 @@ Consume items from the 'my_topic' topic and press 'Ctrl + C' to exit.
 ::
 
 	ccloud kafka topic consume -b my_topic`,
-		RunE:              c.consume,
-		Args:              cobra.ExactArgs(1),
-		PersistentPreRunE: c.prerunner.HasAPIKey(),
+		RunE: c.consume,
+		Args: cobra.ExactArgs(1),
 	}
+	cmd.PersistentPreRunE = c.prerunner.HasAPIKey(c)
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().String("group", fmt.Sprintf("confluent_cli_consumer_%s", uuid.New()), "Consumer group ID.")
 	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
@@ -93,6 +98,7 @@ List all topics.
 		RunE: c.list,
 		Args: cobra.NoArgs,
 	}
+	cmd.PersistentPreRunE = c.prerunner.Authenticated(c)
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
@@ -109,6 +115,7 @@ Create a topic named 'my_topic' with default options.
 		RunE: c.create,
 		Args: cobra.ExactArgs(1),
 	}
+	cmd.PersistentPreRunE = c.prerunner.Authenticated(c)
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().Uint32("partitions", 6, "Number of topic partitions.")
 	cmd.Flags().StringSlice("config", nil, "A comma-separated list of topic configuration ('key=value') overrides for the topic being created.")
@@ -129,6 +136,7 @@ Describe the 'my_topic' topic.
 		RunE: c.describe,
 		Args: cobra.ExactArgs(1),
 	}
+	cmd.PersistentPreRunE = c.prerunner.Authenticated(c)
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
@@ -145,6 +153,7 @@ Modify the 'my_topic' topic to have a retention period of days ('259200000' mill
 		RunE: c.update,
 		Args: cobra.ExactArgs(1),
 	}
+	cmd.PersistentPreRunE = c.prerunner.Authenticated(c)
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().StringSlice("config", nil, "A comma-separated list of topic configuration ('key=value') overrides for the topic being created.")
 	cmd.Flags().Bool("dry-run", false, "Execute request without committing changes to Kafka.")
@@ -164,10 +173,10 @@ Delete the topics 'my_topic' and 'my_topic_avro'. Use this command carefully as 
 		RunE: c.delete,
 		Args: cobra.ExactArgs(1),
 	}
+	cmd.PersistentPreRunE = c.prerunner.Authenticated(c)
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
-	return
 }
 
 func (c *topicCommand) list(cmd *cobra.Command, args []string) error {

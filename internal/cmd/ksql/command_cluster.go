@@ -34,7 +34,11 @@ type clusterCommand struct {
 	kafkaClient ccloud.Kafka
 	userClient  ccloud.User
 	ch          *pcmd.ConfigHelper
-	prerunner   pcmd.PreRunner
+	ctx         *config.Context
+}
+
+func (c *clusterCommand) SetContext(ctx *config.Context) {
+	c.ctx = ctx
 }
 
 // NewClusterCommand returns the Cobra clusterCommand for Ksql Cluster.
@@ -50,8 +54,8 @@ func NewClusterCommand(config *config.Config, client ccloud.KSQL, kafkaClient cc
 		kafkaClient: kafkaClient,
 		userClient:  userClient,
 		ch:          ch,
-		prerunner:   prerunner,
 	}
+	cmd.PersistentPreRunE = prerunner.Authenticated(cmd)
 	cmd.init()
 	return cmd.Command
 }
@@ -104,7 +108,7 @@ func (c *clusterCommand) init() {
 }
 
 func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
-	state := c.prerunner.Context().State
+	state := c.ctx.State
 	req := &ksqlv1.KSQLCluster{AccountId: state.Auth.Account.Id}
 	clusters, err := c.client.List(context.Background(), req)
 	if err != nil {
@@ -131,7 +135,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	state := c.prerunner.Context().State
+	state := c.ctx.State
 	cfg := &ksqlv1.KSQLClusterConfig{
 		AccountId:      state.Auth.Account.Id,
 		Name:           args[0],
@@ -147,7 +151,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
-	state := c.prerunner.Context().State
+	state := c.ctx.State
 	req := &ksqlv1.KSQLCluster{AccountId: state.Auth.Account.Id, Id: args[0]}
 	cluster, err := c.client.Describe(context.Background(), req)
 	if err != nil {
@@ -157,7 +161,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
-	state := c.prerunner.Context().State
+	state := c.ctx.State
 	req := &ksqlv1.KSQLCluster{AccountId: state.Auth.Account.Id, Id: args[0]}
 	err := c.client.Delete(context.Background(), req)
 	if err != nil {
@@ -262,7 +266,7 @@ func (c *clusterCommand) configureACLs(cmd *cobra.Command, args []string) error 
 		return errors.HandleCommon(err, cmd)
 	}
 	// Ensure the KSQL cluster talks to the current Kafka Cluster
-	state := c.prerunner.Context().State
+	state := c.ctx.State
 	req := &ksqlv1.KSQLCluster{AccountId: state.Auth.Account.Id, Id: args[0]}
 	cluster, err := c.client.Describe(context.Background(), req)
 	if err != nil {

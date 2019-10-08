@@ -7,7 +7,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/config"
 )
 
-type Commander struct{}
+type Commander struct {
+}
 
 var _ cmd.PreRunner = (*Commander)(nil)
 
@@ -17,18 +18,16 @@ func (c *Commander) Anonymous() func(cmd *cobra.Command, args []string) error {
 	}
 }
 
-func (c *Commander) Authenticated() func(cmd *cobra.Command, args []string) error {
+func (c *Commander) Authenticated(carrier cmd.ContextCarrier) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
+		carrier.SetContext(config.AuthenticatedConfigMock().Context())
 		return nil
 	}
 }
 
-func (c *Commander) HasAPIKey() func(cmd *cobra.Command, args []string) error {
+func (c *Commander) HasAPIKey(carrier cmd.ContextCarrier) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
+		carrier.SetContext(config.AuthenticatedConfigMock().Context())
 		return nil
 	}
-}
-
-func (c *Commander) Context() *config.Context {
-	return config.AuthenticatedConfigMock().Context()
 }

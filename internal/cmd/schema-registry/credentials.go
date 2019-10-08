@@ -63,7 +63,7 @@ func SchemaRegistryClient(ch *pcmd.ConfigHelper) (client *srsdk.APIClient, ctx c
 	}
 
 	srConfig := srsdk.NewConfiguration()
-	err = ch.Config.CheckLogin()
+	_, err = ch.Config.AuthenticatedState()
 	if err != nil {
 		return nil, nil, err
 	}

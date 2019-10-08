@@ -75,7 +75,7 @@ func TestConfig_Load(t *testing.T) {
 					"\"CredentialType\":1}},\"contexts\":{\"my-context\":{\"name\":\"my-context\",\"platform\":\"http://test\"," +
 					"\"credentials\":\"api-key-abc-key-123\",\"kafka_clusters\":{\"anonymous-id\":{\"id\":\"anonymous-id\",\"name\":\"anonymous-cluster\"," +
 					"\"bootstrap_servers\":\"http://test\",\"api_keys\":{\"abc-key-123\":{\"api_key\":\"abc-key-123\",\"api_secret\":\"def-secret-456\"}}," +
-					"\"api_key\":\"abc-key-123\"}},\"kafka_cluster\":\"anonymous-id\",\"schema_registry_cluster\":{}}},\"context_states\":{\"my-context\":{" +
+					"\"api_key\":\"abc-key-123\"}},\"kafka_cluster\":\"anonymous-id\",\"schema_registry_clusters\":{}}},\"context_states\":{\"my-context\":{" +
 					"\"auth\":null,\"auth_token\":\"\"}},\"current_context\":\"my-context\"}",
 			},
 			want: &Config{
@@ -446,7 +446,7 @@ func TestConfig_SetContext(t *testing.T) {
 	}
 }
 
-func TestConfig_CheckLogin(t *testing.T) {
+func TestConfig_AuthenticatedState(t *testing.T) {
 	type fields struct {
 		CLIName        string
 		MetricSink     metric.Sink
@@ -461,9 +461,10 @@ func TestConfig_CheckLogin(t *testing.T) {
 		name    string
 		fields  fields
 		wantErr bool
+		want    *ContextState
 	}{
 		{
-			name: "succeed checking login of user with auth token",
+			name: "succeed checking authenticated state of user with auth token",
 			fields: fields{
 				Credentials: map[string]*Credential{"current-cred": {
 					CredentialType: Username,
@@ -485,9 +486,19 @@ func TestConfig_CheckLogin(t *testing.T) {
 				}},
 				CurrentContext: "current-context",
 			},
+			wantErr: false,
+			want: &ContextState{
+				Auth: &AuthConfig{
+					Account: &orgv1.Account{
+						Id: "abc123",
+					},
+					Accounts: nil,
+				},
+				AuthToken: "nekot",
+			},
 		},
 		{
-			name: "error when checking login of user without auth token with username creds",
+			name: "error when authenticated state of user without auth token with username creds",
 			fields: fields{
 				Credentials: map[string]*Credential{"current-cred": {
 					CredentialType: Username,
@@ -503,7 +514,7 @@ func TestConfig_CheckLogin(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "error when checking login of user with API key creds",
+			name: "error when checking authenticated state of user with API key creds",
 			fields: fields{
 				Credentials: map[string]*Credential{"current-cred": {
 					CredentialType: APIKey,
@@ -531,8 +542,12 @@ func TestConfig_CheckLogin(t *testing.T) {
 				Contexts:       tt.fields.Contexts,
 				CurrentContext: tt.fields.CurrentContext,
 			}
-			if err := c.CheckLogin(); (err != nil) != tt.wantErr {
-				t.Errorf("CheckLogin() error = %v, wantErr %v", err, tt.wantErr)
+			got, err := c.AuthenticatedState()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("AuthenticatedState() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if !reflect.DeepEqual(got, c.Context().State) {
+				t.Errorf("AuthenticatedState() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -804,7 +819,7 @@ func TestConfig_SchemaRegistryCluster(t *testing.T) {
 		{
 			name: "error getting schema registry cluster without current context",
 			fields: fields{
-				Contexts: map[string]*Context{},
+				Contexts:       map[string]*Context{},
 				CurrentContext: "",
 			},
 			wantErr: true,
@@ -899,7 +914,7 @@ func TestConfig_Context(t *testing.T) {
 			}
 			got := c.Context()
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("CfgContext() got = %v, want %v", got, tt.want)
+				t.Errorf("Context() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

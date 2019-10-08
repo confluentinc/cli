@@ -12,5 +12,5 @@ kafka_clusters:
     name: anonymous-cluster
 name: my-context
 platform: boot-test.com
-schema_registry_cluster: {}
+schema_registry_clusters: {}
 

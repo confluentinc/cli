@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/spf13/cobra"
+
 	"github.com/confluentinc/ccloud-sdk-go"
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
 	"github.com/confluentinc/go-printer"
-	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
@@ -34,7 +35,7 @@ type command struct {
 	client    ccloud.APIKey
 	ch        *pcmd.ConfigHelper
 	keystore  keystore.KeyStore
-	prerunner pcmd.PreRunner
+	context *config.Context
 }
 
 var (
@@ -44,6 +45,10 @@ var (
 	createRenames = map[string]string{"Key": "API Key"}
 )
 
+func (c *command) SetContext(context *config.Context) {
+	c.context = context
+}
+
 // New returns the Cobra command for API Key.
 func New(prerunner pcmd.PreRunner, config *config.Config,
 	client ccloud.APIKey, ch *pcmd.ConfigHelper, keystore keystore.KeyStore) *cobra.Command {
@@ -51,14 +56,13 @@ func New(prerunner pcmd.PreRunner, config *config.Config,
 		Command: &cobra.Command{
 			Use:               "api-key",
 			Short:             "Manage the API keys.",
-			PersistentPreRunE: prerunner.Authenticated(),
 		},
 		config:    config,
 		client:    client,
 		ch:        ch,
 		keystore:  keystore,
-		prerunner: prerunner,
 	}
+	cmd.PersistentPreRunE = prerunner.Authenticated(cmd)
 	cmd.init()
 	return cmd.Command
 }
@@ -175,7 +179,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 
 func (c *command) update(cmd *cobra.Command, args []string) error {
 	apiKey := args[0]
-	state := c.prerunner.Context().State
+	state := c.context.State
 	key, err := c.client.Get(context.Background(), &authv1.ApiKey{Key: apiKey, AccountId: state.Auth.Account.Id})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -238,7 +242,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	}
 	if resourceType == kafkaResourceType {
 		if err := c.keystore.StoreAPIKey(userKey, clusterId, environment); err != nil {
-			return errors.HandleCommon(errors.Wrapf(err, "Unable to store API key locally."), cmd)
+			return errors.HandleCommon(errors.Wrapf(err, "unable to store API key locally"), cmd)
 		}
 	}
 	return nil
@@ -246,7 +250,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
 	apiKey := args[0]
-	state := c.prerunner.Context().State
+	state := c.context.State
 	userKey, err := c.client.Get(context.Background(), &authv1.ApiKey{Key: apiKey, AccountId: state.Auth.Account.Id})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -284,7 +288,7 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	// Check if API key exists server-side
-	state := c.prerunner.Context().State
+	state := c.context.State
 	_, err = c.client.Get(context.Background(), &authv1.ApiKey{Key: key, AccountId: state.Auth.Account.Id})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -298,7 +302,7 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := c.keystore.StoreAPIKey(&authv1.ApiKey{Key: key, Secret: secret}, kcc.ID, environment); err != nil {
-		return errors.HandleCommon(errors.Wrapf(err, "Unable to store the API key locally."), cmd)
+		return errors.HandleCommon(errors.Wrapf(err, "unable to store the API key locally"), cmd)
 	}
 	return nil
 }

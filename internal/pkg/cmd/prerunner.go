@@ -12,12 +12,15 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/update"
 )
 
+type ContextCarrier interface {
+	SetContext(context *config.Context)
+}
+
 // PreRun is a helper class for automatically setting up Cobra PersistentPreRun commands
 type PreRunner interface {
 	Anonymous() func(cmd *cobra.Command, args []string) error
-	Authenticated() func(cmd *cobra.Command, args []string) error
-	HasAPIKey() func(cmd *cobra.Command, args []string) error
-	Context() *config.Context
+	Authenticated(carrier ContextCarrier) func(cmd *cobra.Command, args []string) error
+	HasAPIKey(carrier ContextCarrier) func(cmd *cobra.Command, args []string) error
 }
 
 // PreRun is the standard PreRunner implementation
@@ -29,7 +32,6 @@ type PreRun struct {
 	Config       *config.Config
 	ConfigHelper *ConfigHelper
 	Clock        clockwork.Clock
-	context   *config.Context
 }
 
 // Anonymous provides PreRun operations for commands that may be run without a logged-in user
@@ -46,7 +48,7 @@ func (r *PreRun) Anonymous() func(cmd *cobra.Command, args []string) error {
 }
 
 // Authenticated provides PreRun operations for commands that require a logged-in user
-func (r *PreRun) Authenticated() func(cmd *cobra.Command, args []string) error {
+func (r *PreRun) Authenticated(holder ContextCarrier) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		if err := r.Anonymous()(cmd, args); err != nil {
 			return errors.HandleCommon(err, cmd)
@@ -59,26 +61,27 @@ func (r *PreRun) Authenticated() func(cmd *cobra.Command, args []string) error {
 		var claims map[string]interface{}
 		token, err := jwt.ParseSigned(state.AuthToken)
 		if err != nil {
-			return errors.HandleCommon(&ccloud.InvalidTokenError{}, cmd)
+			return errors.HandleCommon(new(ccloud.InvalidTokenError), cmd)
 		}
 		if err := token.UnsafeClaimsWithoutVerification(&claims); err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
 		if exp, ok := claims["exp"].(float64); ok {
 			if float64(r.Clock.Now().Unix()) > exp {
-				return errors.HandleCommon(&ccloud.ExpiredTokenError{}, cmd)
+				return errors.HandleCommon(new(ccloud.ExpiredTokenError), cmd)
 			}
 		}
-		r.context = r.Config.Context()
-		if r.context == nil {
+		context := r.Config.Context()
+		if context == nil {
 			return errors.HandleCommon(errors.ErrNoContext, cmd)
 		}
+		holder.SetContext(context)
 		return nil
 	}
 }
 
 // HasAPIKey provides PreRun operations for commands that require an API key.
-func (r *PreRun) HasAPIKey() func(cmd *cobra.Command, args []string) error {
+func (r *PreRun) HasAPIKey(carrier ContextCarrier) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		context := r.Config.Context()
 		if context == nil {
@@ -89,16 +92,9 @@ func (r *PreRun) HasAPIKey() func(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
-		r.context = context
+		carrier.SetContext(context)
 		return nil
 	}
-}
-
-func (r *PreRun) Context() *config.Context {
-	if r.context == nil {
-		panic("prerunner context must before being retrieved")
-	}
-	return r.context
 }
 
 // notifyIfUpdateAvailable prints a message if an update is available

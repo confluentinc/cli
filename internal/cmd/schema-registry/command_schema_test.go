@@ -2,7 +2,7 @@ package schema_registry
 
 import (
 	"context"
-	net_http "net/http"
+	"net/http"
 	"testing"
 
 	"github.com/confluentinc/ccloud-sdk-go/mock"
@@ -36,32 +36,6 @@ type SchemaTestSuite struct {
 }
 
 func (suite *SchemaTestSuite) SetupSuite() {
-	//suite.conf = config.New()
-	//suite.conf.Logger = log.New()
-	//suite.conf.AuthURL = "http://test"
-	//suite.conf.Auth = &config.AuthConfig{
-	//	User:    new(orgv1.User),
-	//	Account: &orgv1.Account{Id: "testAccount"},
-	//}
-	//user := suite.conf.Auth
-	//name := fmt.Sprintf("login-%s-%s", user.User.Email, suite.conf.AuthURL)
-	//
-	//suite.conf.Platforms[name] = &config.Platform{
-	//	Server: suite.conf.AuthURL,
-	//}
-	//
-	//suite.conf.Credentials[name] = &config.Credential{
-	//	Username: user.User.Email,
-	//}
-	//
-	//suite.conf.Contexts[name] = &config.Context{
-	//	Platform:      name,
-	//	Credential:    name,
-	//	Kafka:         kafkaClusterID,
-	//	KafkaClusters: map[string]*config.KafkaClusterConfig{kafkaClusterID: {}},
-	//}
-	//
-	//suite.conf.CurrentContext = name
 	suite.conf = config.AuthenticatedConfigMock()
 	srCluster, _ := suite.conf.SchemaRegistryCluster()
 	srCluster.SrCredentials = &config.APIKeyPair{Key: "key", Secret: "secret"}
@@ -90,16 +64,16 @@ func (suite *SchemaTestSuite) SetupTest() {
 
 	suite.srClientMock = &srsdk.APIClient{
 		DefaultApi: &srMock.DefaultApi{
-			GetSchemaFunc: func(ctx context.Context, id int32) (srsdk.SchemaString, *net_http.Response, error) {
+			GetSchemaFunc: func(ctx context.Context, id int32) (srsdk.SchemaString, *http.Response, error) {
 				return srsdk.SchemaString{Schema: "Potatoes"}, nil, nil
 			},
-			GetSchemaByVersionFunc: func(ctx context.Context, subject, version string) (schema srsdk.Schema, response *net_http.Response, e error) {
+			GetSchemaByVersionFunc: func(ctx context.Context, subject, version string) (schema srsdk.Schema, response *http.Response, e error) {
 				return srsdk.Schema{Schema: "Potatoes", Version: versionInt32}, nil, nil
 			},
-			DeleteSchemaVersionFunc: func(ctx context.Context, subject, version string) (i int32, response *net_http.Response, e error) {
+			DeleteSchemaVersionFunc: func(ctx context.Context, subject, version string) (i int32, response *http.Response, e error) {
 				return id, nil, nil
 			},
-			DeleteSubjectFunc: func(ctx context.Context, subject string) (int32s []int32, response *net_http.Response, e error) {
+			DeleteSubjectFunc: func(ctx context.Context, subject string) (int32s []int32, response *http.Response, e error) {
 				return []int32{id}, nil, nil
 			},
 		},

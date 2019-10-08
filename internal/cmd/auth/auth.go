@@ -155,10 +155,12 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	}
 	username := user.User.Email
 	name := genContextName(username, url)
+	var state *config.ContextState
 	ctx, err := a.config.FindContext(name)
-	state := new(config.ContextState)
 	if err == nil {
 		state = ctx.State
+	} else {
+		state = new(config.ContextState)
 	}
 	state.AuthToken = token
 	// If no auth config exists, initialize it
@@ -191,7 +193,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	}
 	err = a.config.Save()
 	if err != nil {
-		return errors.Wrap(err, "Unable to save user authentication.")
+		return errors.Wrap(err, "unable to save user authentication")
 	}
 	pcmd.Println(cmd, "Logged in as", email)
 	pcmd.Print(cmd, "Using environment ", state.Auth.Account.Id,
@@ -225,7 +227,7 @@ func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
 	}
 	err = a.config.Save()
 	if err != nil {
-		return errors.Wrap(err, "Unable to save user authentication.")
+		return errors.Wrap(err, "unable to save user authentication")
 	}
 	pcmd.Println(cmd, "Logged in as", email)
 	return err
@@ -241,7 +243,7 @@ func (a *commands) logout(cmd *cobra.Command, args []string) error {
 	state.Auth = nil
 	err := a.config.Save()
 	if err != nil {
-		return errors.Wrap(err, "Unable to delete user auth")
+		return errors.Wrap(err, "unable to delete user auth")
 	}
 	pcmd.Println(cmd, "You are now logged out")
 	return nil
