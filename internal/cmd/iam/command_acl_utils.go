@@ -128,6 +128,8 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 			conf.AclBinding.Pattern.PatternType = mds.PATTERN_TYPE_PREFIXED
 		case "principal":
 			conf.AclBinding.Entry.Principal = v
+		case "host":
+			conf.AclBinding.Entry.Host = v
 		case "operation":
 			v = strings.ToUpper(v)
 			v = strings.Replace(v, "-", "_", -1)
