@@ -243,7 +243,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 	cert, err := x509.ParseCertificate(ca_b)
 	req.Nil(err, "Couldn't reparse certificate")
 	expectedSubject := cert.RawSubject
-	mdsClient.TokensAuthenticationApi = mdsMock.TokensAuthenticationApi{
+	mdsClient.TokensAuthenticationApi = &mdsMock.TokensAuthenticationApi{
 		GetTokenFunc: func(ctx context.Context, xSPECIALRYANHEADER string) (mds.AuthenticationResponse, *http.Response, error) {
 			req.NotEqual(http.DefaultClient, mdsClient)
 			transport, ok := mdsClient.GetConfig().HTTPClient.Transport.(*http.Transport)
