@@ -72,12 +72,12 @@ var mdsAclEntries = []struct {
 			Principal: "User:42", Operation: mds.ACL_OPERATION_READ, Host: "*"},
 	},
 	{
-		args: []string{"--deny", "--principal", "User:42", "--operation", "read"},
+		args: []string{"--deny", "--principal", "User:42", "--host", "testhost", "--operation", "read"},
 		entry: mds.AccessControlEntry{PermissionType: mds.ACL_PERMISSION_TYPE_DENY,
-			Principal: "User:42", Operation: mds.ACL_OPERATION_READ, Host: "*"},
+			Principal: "User:42", Operation: mds.ACL_OPERATION_READ, Host: "testhost"},
 	},
 	{
-		args: []string{"--allow", "--principal", "User:42", "--operation", "write"},
+		args: []string{"--allow", "--principal", "User:42", "--host", "*", "--operation", "write"},
 		entry: mds.AccessControlEntry{PermissionType: mds.ACL_PERMISSION_TYPE_ALLOW,
 			Principal: "User:42", Operation: mds.ACL_OPERATION_WRITE, Host: "*"},
 	},
