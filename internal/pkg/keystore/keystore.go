@@ -17,7 +17,6 @@ type KeyStore interface {
 
 type ConfigKeyStore struct {
 	Config *config.Config
-	Helper *cmd.ConfigHelper
 }
 
 func (c *ConfigKeyStore) HasAPIKey(key string, clusterID, environment string) (bool, error) {

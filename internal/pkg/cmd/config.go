@@ -1,161 +1,25 @@
 package cmd
 
 import (
-	"context"
-	"fmt"
-	"strings"
-
-	"github.com/confluentinc/ccloud-sdk-go"
-	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
-	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
-type ConfigHelper struct {
-	Config *config.Config
-	Client *ccloud.Client
-	*version.Version
-}
-
-// KafkaCluster returns the current kafka cluster context
-func (c *ConfigHelper) KafkaCluster(clusterID, environment string) (*kafkav1.KafkaCluster, error) {
-	kafka, err := c.KafkaClusterConfig(clusterID, environment)
-	if err != nil {
-		return nil, err
-	}
-	state, err := c.Config.AuthenticatedState()
-	if err != nil {
-		return nil, err
-	}
-	return &kafkav1.KafkaCluster{AccountId: state.Auth.Account.Id, Id: kafka.ID, ApiEndpoint: kafka.APIEndpoint}, nil
-}
-
-func (c *ConfigHelper) SchemaRegistryURL(requestContext context.Context) (string, error) {
-	ctx := c.Config.Context()
-	if ctx == nil {
-		return "", errors.ErrNoContext
-	}
-	srCluster, err := c.Config.SchemaRegistryCluster()
-	if err != nil {
-		return "", err
-	}
-	if srCluster.SchemaRegistryEndpoint != "" {
-		return srCluster.SchemaRegistryEndpoint, nil
-	}
-	// Didn't find it -- ask the mothership
-	// TODO Using the plural "clusters" command for now until we can fix API compat for singular command
-	existingClusters, err := c.Client.SchemaRegistry.GetSchemaRegistryClusters(
-		requestContext,
-		&srv1.SchemaRegistryCluster{
-			AccountId: ctx.State.Auth.Account.Id,
-		})
-	if err != nil {
-		return "", errors.New("failed to retrieve Schema Registry data from Cloud")
-	}
-	var existingCluster *srv1.SchemaRegistryCluster
-	if len(existingClusters) > 0 {
-		existingCluster = existingClusters[0]
-	} else {
-		return "", errors.New("no Schema Registry instances found in this environment")
-	}
-	if existingCluster == nil {
-		return "", errors.Errorf("schema registry not found")
-	}
-	endpoint := existingCluster.Endpoint
-	srCluster.SchemaRegistryEndpoint = endpoint
-	err = c.Config.Save()
-	if err != nil {
-		return "", err
-	}
-	return endpoint, nil
-}
-
-// KafkaClusterConfig returns the overridden or current KafkaClusterConfig
-func (c *ConfigHelper) KafkaClusterConfig(clusterID, environment string) (*config.KafkaClusterConfig, error) {
-	ctx := c.Config.Context()
+// KafkaCluster creates an KafkaV1 struct from the Kafka cluster of the current context.
+func KafkaCluster(cfg *config.Config) (*kafkav1.KafkaCluster, error) {
+	ctx := cfg.Context()
 	if ctx == nil {
 		return nil, errors.ErrNoContext
 	}
-
-	if clusterID == "" {
-		if ctx.Kafka == "" {
-			return nil, errors.ErrNoKafkaContext
-		}
-		clusterID = ctx.Kafka
+	kcc, err := ctx.ActiveKafkaCluster()
+	if err != nil {
+		return nil, err
 	}
-
-	if ctx.KafkaClusters == nil {
-		ctx.KafkaClusters = map[string]*config.KafkaClusterConfig{}
+	state, err := cfg.AuthenticatedState()
+	if err != nil {
+		return nil, err
 	}
-	cluster, found := ctx.KafkaClusters[clusterID]
-	if !found || cluster.ID == "" || cluster.Name == "" || cluster.Bootstrap == "" || cluster.APIEndpoint == "" {
-		// Let's fetch the cluster details
-		req := &kafkav1.KafkaCluster{AccountId: environment, Id: clusterID}
-		kc, err := c.Client.Kafka.Describe(context.Background(), req)
-		if err != nil {
-			if err != ccloud.ErrNotFound {
-				return nil, err
-			}
-			return nil, &errors.UnspecifiedKafkaClusterError{KafkaClusterID: clusterID}
-		}
-		cluster = &config.KafkaClusterConfig{
-			ID:          clusterID,
-			Name:        kc.Name,
-			Bootstrap:   strings.TrimPrefix(kc.Endpoint, "SASL_SSL://"),
-			APIEndpoint: kc.ApiEndpoint,
-			APIKeys:     make(map[string]*config.APIKeyPair),
-		}
-
-		// Then save it locally for reuse
-		ctx.KafkaClusters[clusterID] = cluster
-		err = c.Config.Save()
-		if err != nil {
-			return nil, err
-		}
-	}
-	return cluster, nil
-}
-
-func (c *ConfigHelper) UseAPIKey(apiKey, clusterID string) error {
-	ctx := c.Config.Context()
-	if ctx == nil {
-		return errors.ErrNoContext
-	}
-	cluster, found := ctx.KafkaClusters[clusterID]
-	if !found {
-		return fmt.Errorf("unknown kafka cluster: %s", clusterID)
-	}
-	_, found = cluster.APIKeys[apiKey]
-	if !found {
-		state, err := c.Config.AuthenticatedState()
-		if err != nil {
-			return err
-		}
-		// check if this is API key exists server-side
-		key, err := c.Client.APIKey.Get(context.Background(), &authv1.ApiKey{AccountId: state.Auth.Account.Id, Key: apiKey})
-		if err != nil {
-			return err
-		}
-		// check if the key is for the right cluster
-		found := false
-		for _, c := range key.LogicalClusters {
-			if c.Id == clusterID {
-				found = true
-				break
-			}
-		}
-		// this means the requested api-key belongs to a different cluster
-		if !found {
-			return fmt.Errorf("invalid api-key %s for cluster %s", apiKey, clusterID)
-		}
-		// this means the requested api-key exists, but we just don't have the secret saved locally
-		return &errors.UnconfiguredAPISecretError{APIKey: apiKey, ClusterID: clusterID}
-	}
-
-	cluster.APIKey = apiKey
-	return c.Config.Save()
+	return &kafkav1.KafkaCluster{AccountId: state.Auth.Account.Id, Id: kcc.ID, ApiEndpoint: kcc.APIEndpoint}, nil
 }

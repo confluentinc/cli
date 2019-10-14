@@ -2,13 +2,15 @@ package secret
 
 import (
 	"fmt"
+	"os"
+
+	"github.com/confluentinc/go-printer"
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/secret"
-	"github.com/confluentinc/go-printer"
-	"github.com/spf13/cobra"
-	"os"
 )
 
 type secureFileCommand struct {

@@ -56,29 +56,33 @@ func srContext(cfg *config.Config) (context.Context, error) {
 	}), nil
 }
 
-func SchemaRegistryClient(ch *pcmd.ConfigHelper) (client *srsdk.APIClient, ctx context.Context, err error) {
-	ctx, err = srContext(ch.Config)
+func SchemaRegistryClient(cfg *config.Config) (client *srsdk.APIClient, ctx context.Context, err error) {
+	ctx, err = srContext(cfg)
 	if err != nil {
 		return nil, nil, err
 	}
-
 	srConfig := srsdk.NewConfiguration()
-	_, err = ch.Config.AuthenticatedState()
+	state, err := cfg.AuthenticatedState()
 	if err != nil {
 		return nil, nil, err
 	}
-	srConfig.BasePath, err = ch.SchemaRegistryURL(ctx)
-	if err != nil {
-		return nil, nil, err
+	currCtx := cfg.Context()
+	if srCluster, ok := currCtx.SchemaRegistryClusters[state.Auth.Account.Id]; ok {
+		srConfig.BasePath = srCluster.SchemaRegistryEndpoint
+	} else {
+		ctxClient := config.NewContextClient(currCtx, nil)
+		srCluster, err := ctxClient.FetchSchemaRegistryByAccountId(state.Auth.Account.Id, ctx)
+		if err != nil {
+			return nil, nil, err
+		}
+		srConfig.BasePath = srCluster.Endpoint
 	}
-	srConfig.UserAgent = ch.Version.UserAgent
-
+	srConfig.UserAgent = currCtx.Version.UserAgent
 	// Validate before returning
 	client = srsdk.NewAPIClient(srConfig)
 	_, _, err = client.DefaultApi.Get(ctx)
 	if err != nil {
 		return nil, nil, errors.Errorf("Failed to validate Schema Registry API Key and Secret")
 	}
-
 	return client, ctx, nil
 }

@@ -59,10 +59,10 @@ func TestCredentialsOverride(t *testing.T) {
 	req.Contains(output, "Logged in as test-email")
 	ctx := cfg.Context()
 	req.NotNil(ctx)
-	
+
 	req.Equal("y0ur.jwt.T0kEn", ctx.State.AuthToken)
 	req.Equal(&orgv1.User{Id: 23, Email: "test-email", FirstName: "Cody"}, ctx.State.Auth.User)
-	
+
 	os.Setenv("XX_CCLOUD_EMAIL", currentEmail)
 	os.Setenv("XX_CCLOUD_PASSWORD", currentPassword)
 }
@@ -101,7 +101,7 @@ func TestLoginSuccess(t *testing.T) {
 		{
 			cliName: "ccloud",
 			args: []string{
-				
+
 			},
 		},
 		{
@@ -116,10 +116,10 @@ func TestLoginSuccess(t *testing.T) {
 		// Login to the CLI control plane
 		cmds, cfg := newAuthCommand(prompt, auth, user, s.cliName, req)
 		output, err := pcmd.ExecuteCommand(cmds.Commands[0], s.args...)
-		
+
 		req.NoError(err)
 		req.Contains(output, "Logged in as cody@confluent.io")
-		
+
 		ctx := cfg.Context()
 		req.NotNil(ctx)
 		req.Equal("y0ur.jwt.T0kEn", ctx.State.AuthToken)

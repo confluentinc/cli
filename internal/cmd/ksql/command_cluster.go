@@ -33,29 +33,23 @@ type clusterCommand struct {
 	client      ccloud.KSQL
 	kafkaClient ccloud.Kafka
 	userClient  ccloud.User
-	ch          *pcmd.ConfigHelper
 	ctx         *config.Context
-}
-
-func (c *clusterCommand) SetContext(ctx *config.Context) {
-	c.ctx = ctx
 }
 
 // NewClusterCommand returns the Cobra clusterCommand for Ksql Cluster.
 func NewClusterCommand(config *config.Config, client ccloud.KSQL, kafkaClient ccloud.Kafka, userClient ccloud.User,
-	ch *pcmd.ConfigHelper, prerunner pcmd.PreRunner) *cobra.Command {
+	prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &clusterCommand{
 		Command: &cobra.Command{
-			Use:   "app",
-			Short: "Manage KSQL apps.",
+			Use:               "app",
+			Short:             "Manage KSQL apps.",
+			PersistentPreRunE: prerunner.Authenticated(config),
 		},
 		config:      config,
 		client:      client,
 		kafkaClient: kafkaClient,
 		userClient:  userClient,
-		ch:          ch,
 	}
-	cmd.PersistentPreRunE = prerunner.Authenticated(cmd)
 	cmd.init()
 	return cmd.Command
 }
@@ -123,7 +117,7 @@ func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
-	kafkaCluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
+	kafkaCluster, err := pcmd.KafkaCluster(c.config)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -261,7 +255,7 @@ func (c *clusterCommand) configureACLs(cmd *cobra.Command, args []string) error 
 	ctx := context.Background()
 
 	// Get the Kafka Cluster
-	kafkaCluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
+	kafkaCluster, err := pcmd.KafkaCluster(c.config)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}

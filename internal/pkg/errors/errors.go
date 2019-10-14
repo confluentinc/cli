@@ -62,7 +62,7 @@ func (e *UnspecifiedPlatformError) Error() string {
 }
 
 type CorruptedContextError struct {
-	 ContextName string
+	ContextName string
 }
 
 func (e *CorruptedContextError) Error() string {

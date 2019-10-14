@@ -23,9 +23,9 @@ import (
 )
 
 const (
-	srClusterID    = "lsrc-12345"
-	apiKeyVal      = "abracadabra"
-	apiSecretVal   = "opensesame"
+	srClusterID  = "lsrc-12345"
+	apiKeyVal    = "abracadabra"
+	apiSecretVal = "opensesame"
 )
 
 var (
@@ -114,7 +114,7 @@ func (suite *APITestSuite) SetupTest() {
 }
 
 func (suite *APITestSuite) newCMD() *cobra.Command {
-	cmd := New(&cliMock.Commander{}, suite.conf, suite.apiMock, &pcmd.ConfigHelper{Config: suite.conf, Client: &ccloud.Client{Kafka: suite.kafkaMock, SchemaRegistry: suite.srMothershipMock, APIKey: suite.apiMock}}, suite.keystore)
+	cmd := New(&cliMock.Commander{}, suite.conf, suite.apiMock, &pcmd.ContextResolver{Config: suite.conf, Client: &ccloud.Client{Kafka: suite.kafkaMock, SchemaRegistry: suite.srMothershipMock, APIKey: suite.apiMock}}, suite.keystore)
 	return cmd
 }
 

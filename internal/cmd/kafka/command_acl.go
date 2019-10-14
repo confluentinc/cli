@@ -5,11 +5,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/hashicorp/go-multierror"
-	"github.com/spf13/cobra"
-
 	"github.com/confluentinc/ccloud-sdk-go"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
+	"github.com/hashicorp/go-multierror"
+	"github.com/spf13/cobra"
 
 	acl_util "github.com/confluentinc/cli/internal/pkg/acl"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -21,11 +20,10 @@ type aclCommand struct {
 	*cobra.Command
 	config *config.Config
 	client ccloud.Kafka
-	ch     *pcmd.ConfigHelper
 }
 
 // NewACLCommand returns the Cobra command for Kafka ACL.
-func NewACLCommand(config *config.Config, client ccloud.Kafka, ch *pcmd.ConfigHelper) *cobra.Command {
+func NewACLCommand(config *config.Config, client ccloud.Kafka) *cobra.Command {
 	cmd := &aclCommand{
 		Command: &cobra.Command{
 			Use:   "acl",
@@ -33,7 +31,6 @@ func NewACLCommand(config *config.Config, client ccloud.Kafka, ch *pcmd.ConfigHe
 		},
 		config: config,
 		client: client,
-		ch:     ch,
 	}
 
 	cmd.init()
@@ -95,11 +92,10 @@ func (c *aclCommand) init() {
 func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
 	acl := parse(cmd)
 
-	cluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
+	cluster, err := pcmd.KafkaCluster(c.config)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-
 	resp, err := c.client.ListACL(context.Background(), cluster, convertToFilter(acl.ACLBinding))
 
 	if err != nil {
@@ -113,7 +109,7 @@ func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
 func (c *aclCommand) create(cmd *cobra.Command, args []string) error {
 	acl := validateAddDelete(parse(cmd))
 
-	cluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
+	cluster, err := pcmd.KafkaCluster(c.config)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -133,8 +129,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, args []string) error {
 	if acl.errors != nil {
 		return errors.HandleCommon(acl.errors, cmd)
 	}
-
-	cluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
+	cluster, err := pcmd.KafkaCluster(c.config)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}

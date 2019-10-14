@@ -3,7 +3,11 @@ package config
 import (
 	"fmt"
 
+	"github.com/confluentinc/ccloud-sdk-go"
+
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
 // APIKeyPair holds an API Key and Secret.
@@ -45,16 +49,22 @@ type Context struct {
 	// Mapped by cluster id.
 	KafkaClusters map[string]*KafkaClusterConfig `json:"kafka_clusters" hcl:"kafka_clusters"`
 	// Kafka is your active Kafka cluster and references a key in the KafkaClusters map
-	Kafka string `json:"kafka_cluster" hcl:"kafka_cluster"`
+	Kafka                string `json:"kafka_cluster" hcl:"kafka_cluster"`
+	UserSpecifiedCluster string `json:"-" hcl:"-"`
 	// SR map keyed by environment-id.
 	SchemaRegistryClusters map[string]*SchemaRegistryCluster `json:"schema_registry_clusters" hcl:"schema_registry_clusters"`
 	State                  *ContextState                     `json:"-" hcl:"-"`
+	Logger                 *log.Logger                       `json:"-" hcl:"-"`
+	Resolver               *contextResolver                  `json:"-" hcl:"-"`
+	Version                *version.Version                  `json:"-" hcl:"-"`
+	Client                 *ccloud.Client                    `json:"-" hcl:"-"`
 }
 
 func newContext(name string, platform *Platform, credential *Credential,
 	kafkaClusters map[string]*KafkaClusterConfig, kafka string,
-	schemaRegistryClusters map[string]*SchemaRegistryCluster, state *ContextState) (*Context, error) {
-	context := &Context{
+	schemaRegistryClusters map[string]*SchemaRegistryCluster, state *ContextState,
+	client *ccloud.Client) (*Context, error) {
+	ctx := &Context{
 		Name:                   name,
 		Platform:               platform,
 		PlatformName:           platform.Name,
@@ -64,30 +74,35 @@ func newContext(name string, platform *Platform, credential *Credential,
 		Kafka:                  kafka,
 		SchemaRegistryClusters: schemaRegistryClusters,
 		State:                  state,
+		Client:                 client,
 	}
-	err := context.Validate()
+	resolver := NewResolver(ctx, client)
+	ctx.Resolver = resolver
+	err := ctx.Validate()
 	if err != nil {
 		return nil, err
 	}
-	return context, nil
+	return ctx, nil
 }
+
+// TODO: Save contexts after resolution.
 
 func (c *Context) validateKafkaClusterConfig(cluster *KafkaClusterConfig) error {
 	if cluster.ID == "" {
 		return fmt.Errorf("cluster under context '%s' has no %s", c.Name, "id")
 	}
-	if cluster.Name == "" {
-		return fmt.Errorf("cluster under context '%s' has no %s", c.Name, "name")
-	}
-	if cluster.Bootstrap == "" {
-		return fmt.Errorf("cluster '%s' under context '%s' has no %s",
-			cluster.Name, c.Name, "bootstrap")
-	}
+	//if cluster.Name == "" {
+	//	return fmt.Errorf("cluster under context '%s' has no %s", c.Name, "name")
+	//}
+	//if cluster.Bootstrap == "" {
+	//	return fmt.Errorf("cluster '%s' under context '%s' has no %s",
+	//		cluster.Name, c.Name, "bootstrap")
+	//}
 	//if cluster.APIEndpoint == "" {
 	//	return fmt.Errorf("cluster '%s' under context '%s' has no %s", cluster.Name, c.Name, "API endpoint")
 	//}
 	if _, ok := cluster.APIKeys[cluster.APIKey]; cluster.APIKey != "" && !ok {
-		return fmt.Errorf("current API key of cluster '%s' under context '%s' does not exist. " +
+		return fmt.Errorf("current API key of cluster '%s' under context '%s' does not exist. "+
 			"Please specify a valid API key",
 			cluster.Name, c.Name)
 	}
@@ -105,12 +120,16 @@ func (c *Context) validateKafkaClusterConfig(cluster *KafkaClusterConfig) error 
 	return nil
 }
 
-func (c *Context) validateSRCluster(cluster *SchemaRegistryCluster) error {
+func (c *Context) validateSRCluster(cluster *SchemaRegistryCluster, accountId string) error {
 	// envId validation?
 	//srErrFmt := "SR cluster under context '%s' has no %s"
-	//if cluster.SchemaRegistryEndpoint == "" {
-	//	return fmt.Errorf(srErrFmt, c.Name, "endpoint")
-	//}
+	if cluster.SchemaRegistryEndpoint == "" {
+		resolvedCluster, err := c.Resolver.ResolveSchemaRegistryByAccountId(accountId)
+		if err != nil {
+			return err
+		}
+		c.SchemaRegistryClusters[accountId] = resolvedCluster
+	}
 	//if cluster.SrCredentials == nil {
 	//	return fmt.Errorf(srErrFmt, c.Name, "credentials")
 	//}
@@ -151,7 +170,7 @@ func (c *Context) Validate() error {
 			c.SchemaRegistryClusters[envId] = new(SchemaRegistryCluster)
 		}
 	}
-	state, err := c.authenticatedState()
+	state, err := c.AuthenticatedState()
 	if err == nil {
 		accId := state.Auth.Account.Id
 		if _, ok := c.SchemaRegistryClusters[accId]; !ok {
@@ -164,38 +183,75 @@ func (c *Context) Validate() error {
 			return err
 		}
 	}
+	for accountId, cluster := range c.SchemaRegistryClusters {
+		err := c.validateSRCluster(cluster, accountId)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
-func (c *Context) SetActiveCluster(clusterId string) error {
-	if _, ok := c.KafkaClusters[clusterId]; !ok {
+func (c *Context) SetActiveKafkaCluster(clusterId string) error {
+	cluster, err := c.FindKafkaCluster(clusterId)
+	if err != nil {
+		return err
+	}
+	if _, ok := c.KafkaClusters[cluster.ID]; !ok {
 		return fmt.Errorf("cluster '%s' does not exist in context '%s'", clusterId, c.Name)
 	}
 	c.Kafka = clusterId
 	return nil
 }
 
-func (c *Context) KafkaClusterConfig() *KafkaClusterConfig {
-	kafka := c.Kafka
-	if kafka == "" {
-		return nil
-	}
-	return c.KafkaClusters[kafka]
-}
-
 // SchemaRegistryCluster returns the SchemaRegistryCluster of the Context,
 // or an empty SchemaRegistryCluster if there is none set, 
 // or an ErrNotLoggedIn if the user is not logged in.
 func (c *Context) schemaRegistryCluster() (*SchemaRegistryCluster, error) {
-	state, err := c.authenticatedState()
+	state, err := c.AuthenticatedState()
 	if err != nil {
 		return nil, err
 	}
 	return c.SchemaRegistryClusters[state.Auth.Account.Id], nil
 }
 
-func (c *Context) ActiveKafkaCluster() *KafkaClusterConfig {
-	return c.KafkaClusters[c.Kafka]
+func (c *Context) ActiveKafkaCluster() (*KafkaClusterConfig, error) {
+	var clusterId string
+	if c.UserSpecifiedCluster != "" {
+		clusterId = c.UserSpecifiedCluster
+	} else {
+		clusterId = c.Kafka
+	}
+	cluster, err := c.FindKafkaCluster(clusterId)
+	if err != nil {
+		return nil, err
+	}
+	return cluster, nil
+}
+
+func (c *Context) FindKafkaCluster(clusterId string) (*KafkaClusterConfig, error) {
+	if _, ok := c.KafkaClusters[clusterId]; !ok {
+		// Fetch cluster details.
+		cluster, err := c.Resolver.ResolveCluster(clusterId)
+		if err != nil {
+			return nil, err
+		}
+		c.KafkaClusters[clusterId] = cluster
+	}
+	return c.KafkaClusters[clusterId], nil
+}
+
+func (c *Context) UseAPIKey(apiKey string, clusterId string) error {
+	kcc, err := c.FindKafkaCluster(clusterId)
+	if err != nil {
+		return err
+	}
+	if _, ok := kcc.APIKeys[apiKey]; !ok {
+		// Fetch API key error.
+		return NewContextClient(c, nil).FetchAPIKeyError(apiKey, clusterId)
+	}
+	kcc.APIKey = apiKey
+	return nil
 }
 
 func (c *Context) hasLogin() bool {
@@ -212,7 +268,7 @@ func (c *Context) hasLogin() bool {
 	}
 }
 
-func (c *Context) authenticatedState() (*ContextState, error) {
+func (c *Context) AuthenticatedState() (*ContextState, error) {
 	if !c.hasLogin() {
 		return nil, errors.ErrNotLoggedIn
 	}

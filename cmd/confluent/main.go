@@ -11,7 +11,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/metric"
-	cliVersion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 var (
@@ -37,15 +36,13 @@ func main() {
 			MetricSink: metricSink,
 			Logger:     logger,
 		})
-		err := cfg.Load()
+		err := cfg.Load(version, commit, date, host)
 		if err != nil {
 			logger.Errorf("unable to load config: %v", err)
 		}
 	}
 
-	version := cliVersion.NewVersion(cfg.CLIName, cfg.Name(), cfg.Support(), version, commit, date, host)
-
-	cli, err := cmd.NewConfluentCommand(cliName, cfg, version, logger)
+	cli, err := cmd.NewConfluentCommand(cliName, cfg, logger)
 	if err != nil {
 		if cli == nil {
 			fmt.Fprintln(os.Stderr, err)

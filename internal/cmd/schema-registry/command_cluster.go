@@ -10,12 +10,13 @@ import (
 
 	ccsdk "github.com/confluentinc/ccloud-sdk-go"
 	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
+	"github.com/confluentinc/go-printer"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
-	"github.com/confluentinc/go-printer"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 )
 
 type describeDisplay struct {
@@ -42,11 +43,10 @@ type clusterCommand struct {
 	ccClient     ccsdk.SchemaRegistry
 	metricClient ccsdk.Metrics
 	srClient     *srsdk.APIClient
-	ch           *pcmd.ConfigHelper
 	logger       *log.Logger
 }
 
-func NewClusterCommand(config *config.Config, ccloudClient ccsdk.SchemaRegistry, ch *pcmd.ConfigHelper, srClient *srsdk.APIClient, metricClient ccsdk.Metrics, logger *log.Logger) *cobra.Command {
+func NewClusterCommand(config *config.Config, ccloudClient ccsdk.SchemaRegistry, srClient *srsdk.APIClient, metricClient ccsdk.Metrics, logger *log.Logger) *cobra.Command {
 	clusterCmd := &clusterCommand{
 		Command: &cobra.Command{
 			Use:   "cluster",
@@ -54,7 +54,6 @@ func NewClusterCommand(config *config.Config, ccloudClient ccsdk.SchemaRegistry,
 		},
 		config:       config,
 		ccClient:     ccloudClient,
-		ch:           ch,
 		srClient:     srClient,
 		metricClient: metricClient,
 		logger:       logger,
@@ -105,10 +104,11 @@ func (c *clusterCommand) init() {
 func (c *clusterCommand) enable(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
 	// Collect the parameters
-	accountId, err := pcmd.GetEnvironment(cmd, c.config)
+	state, err := c.config.AuthenticatedState()
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
+	accountId := state.Auth.Account.Id
 	serviceProvider, err := cmd.Flags().GetString("cloud")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -155,18 +155,18 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
 
 	// Collect the parameters
-	accountId, err := pcmd.GetEnvironment(cmd, c.config)
+	state, err := c.config.AuthenticatedState()
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	cluster, err := GetSchemaRegistryByAccountId(ctx, c.ccClient, accountId)
+	cluster, err := GetSchemaRegistryByAccountId(ctx, c.ccClient, state.Auth.Account.Id)
 
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 	srClient, ctx, err := GetApiClient(c.srClient, c.ch)
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, cmd)
 	}
 
 	// Get Schema usage metrics

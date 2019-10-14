@@ -13,7 +13,6 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/ccloud-sdk-go"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	"github.com/confluentinc/go-printer"
 
@@ -25,26 +24,17 @@ import (
 type topicCommand struct {
 	*cobra.Command
 	config    *config.Config
-	client    ccloud.Kafka
-	ch        *pcmd.ConfigHelper
 	prerunner pcmd.PreRunner
-	context   *config.Context
-}
-
-func (c *topicCommand) SetContext(context *config.Context) {
-	c.context = context
 }
 
 // NewTopicCommand returns the Cobra command for Kafka topic.
-func NewTopicCommand(prerunner pcmd.PreRunner, config *config.Config, client ccloud.Kafka, ch *pcmd.ConfigHelper) *cobra.Command {
+func NewTopicCommand(prerunner pcmd.PreRunner, config *config.Config) *cobra.Command {
 	cmd := &topicCommand{
 		Command: &cobra.Command{
 			Use:   "topic",
 			Short: "Manage Kafka topics.",
 		},
 		config:    config,
-		client:    client,
-		ch:        ch,
 		prerunner: prerunner,
 	}
 	cmd.init()
@@ -53,12 +43,12 @@ func NewTopicCommand(prerunner pcmd.PreRunner, config *config.Config, client ccl
 
 func (c *topicCommand) init() {
 	cmd := &cobra.Command{
-		Use:   "produce <topic>",
-		Short: "Produce messages to a Kafka topic.",
-		RunE:  c.produce,
-		Args:  cobra.ExactArgs(1),
+		Use:               "produce <topic>",
+		Short:             "Produce messages to a Kafka topic.",
+		RunE:              c.produce,
+		Args:              cobra.ExactArgs(1),
+		PersistentPreRunE: c.prerunner.HasAPIKey(c.config),
 	}
-	cmd.PersistentPreRunE = c.prerunner.HasAPIKey(c)
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().String("delimiter", ":", "The key/value delimiter.")
 	cmd.Flags().SortFlags = false
@@ -73,10 +63,10 @@ Consume items from the 'my_topic' topic and press 'Ctrl + C' to exit.
 ::
 
 	ccloud kafka topic consume -b my_topic`,
-		RunE: c.consume,
-		Args: cobra.ExactArgs(1),
+		RunE:              c.consume,
+		Args:              cobra.ExactArgs(1),
+		PersistentPreRunE: c.prerunner.HasAPIKey(c.config),
 	}
-	cmd.PersistentPreRunE = c.prerunner.HasAPIKey(c)
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().String("group", fmt.Sprintf("confluent_cli_consumer_%s", uuid.New()), "Consumer group ID.")
 	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
@@ -95,10 +85,10 @@ List all topics.
 ::
 
         ccloud kafka topic list`,
-		RunE: c.list,
-		Args: cobra.NoArgs,
+		RunE:              c.list,
+		Args:              cobra.NoArgs,
+		PersistentPreRunE: c.prerunner.Authenticated(c.config),
 	}
-	cmd.PersistentPreRunE = c.prerunner.Authenticated(c)
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
@@ -112,10 +102,10 @@ Create a topic named 'my_topic' with default options.
 ::
 
    ccloud kafka topic create my_topic`,
-		RunE: c.create,
-		Args: cobra.ExactArgs(1),
+		RunE:              c.create,
+		Args:              cobra.ExactArgs(1),
+		PersistentPreRunE: c.prerunner.Authenticated(c.config),
 	}
-	cmd.PersistentPreRunE = c.prerunner.Authenticated(c)
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().Uint32("partitions", 6, "Number of topic partitions.")
 	cmd.Flags().StringSlice("config", nil, "A comma-separated list of topic configuration ('key=value') overrides for the topic being created.")
@@ -133,10 +123,10 @@ Describe the 'my_topic' topic.
 
 
        ccloud kafka topic describe my_topic`,
-		RunE: c.describe,
-		Args: cobra.ExactArgs(1),
+		RunE:              c.describe,
+		Args:              cobra.ExactArgs(1),
+		PersistentPreRunE: c.prerunner.Authenticated(c.config),
 	}
-	cmd.PersistentPreRunE = c.prerunner.Authenticated(c)
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
@@ -150,10 +140,10 @@ Modify the 'my_topic' topic to have a retention period of days ('259200000' mill
 ::
 
     ccloud kafka topic update my_topic --config="retention.ms=259200000"		`,
-		RunE: c.update,
-		Args: cobra.ExactArgs(1),
+		RunE:              c.update,
+		Args:              cobra.ExactArgs(1),
+		PersistentPreRunE: c.prerunner.Authenticated(c.config),
 	}
-	cmd.PersistentPreRunE = c.prerunner.Authenticated(c)
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().StringSlice("config", nil, "A comma-separated list of topic configuration ('key=value') overrides for the topic being created.")
 	cmd.Flags().Bool("dry-run", false, "Execute request without committing changes to Kafka.")
@@ -170,22 +160,25 @@ Delete the topics 'my_topic' and 'my_topic_avro'. Use this command carefully as 
 
         ccloud kafka topic delete my_topic
         ccloud kafka topic delete my_topic_avro		`,
-		RunE: c.delete,
-		Args: cobra.ExactArgs(1),
+		RunE:              c.delete,
+		Args:              cobra.ExactArgs(1),
+		PersistentPreRunE: c.prerunner.Authenticated(c.config),
 	}
-	cmd.PersistentPreRunE = c.prerunner.Authenticated(c)
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 }
 
 func (c *topicCommand) list(cmd *cobra.Command, args []string) error {
-	cluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
+	cluster, err := pcmd.KafkaCluster(c.config)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-
-	resp, err := c.client.ListTopics(context.Background(), cluster)
+	ctx := c.config.Context()
+	if ctx == nil {
+		return errors.ErrNoContext
+	}
+	resp, err := ctx.Client.Kafka.ListTopics(context.Background(), cluster)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -201,7 +194,7 @@ func (c *topicCommand) list(cmd *cobra.Command, args []string) error {
 }
 
 func (c *topicCommand) create(cmd *cobra.Command, args []string) error {
-	cluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
+	cluster, err := pcmd.KafkaCluster(c.config)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -235,21 +228,27 @@ func (c *topicCommand) create(cmd *cobra.Command, args []string) error {
 	if topic.Spec.Configs, err = toMap(configs); err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-
-	err = c.client.CreateTopic(context.Background(), cluster, topic)
+	ctx := c.config.Context()
+	if ctx == nil {
+		return errors.ErrNoContext
+	}
+	err = ctx.Client.Kafka.CreateTopic(context.Background(), cluster, topic)
 
 	return errors.HandleCommon(err, cmd)
 }
 
 func (c *topicCommand) describe(cmd *cobra.Command, args []string) error {
-	cluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
+	cluster, err := pcmd.KafkaCluster(c.config)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 
 	topic := &kafkav1.TopicSpecification{Name: args[0]}
-
-	resp, err := c.client.DescribeTopic(context.Background(), cluster, &kafkav1.Topic{Spec: topic, Validate: false})
+	ctx := c.config.Context()
+	if ctx == nil {
+		return errors.ErrNoContext
+	}
+	resp, err := ctx.Client.Kafka.DescribeTopic(context.Background(), cluster, &kafkav1.Topic{Spec: topic, Validate: false})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -306,7 +305,7 @@ func (c *topicCommand) describe(cmd *cobra.Command, args []string) error {
 }
 
 func (c *topicCommand) update(cmd *cobra.Command, args []string) error {
-	cluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
+	cluster, err := pcmd.KafkaCluster(c.config)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -326,28 +325,38 @@ func (c *topicCommand) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-
-	err = c.client.UpdateTopic(context.Background(), cluster, &kafkav1.Topic{Spec: topic, Validate: validate})
+	ctx := c.config.Context()
+	if ctx == nil {
+		return errors.ErrNoContext
+	}
+	err = ctx.Client.Kafka.UpdateTopic(context.Background(), cluster, &kafkav1.Topic{Spec: topic, Validate: validate})
 
 	return errors.HandleCommon(err, cmd)
 }
 
 func (c *topicCommand) delete(cmd *cobra.Command, args []string) error {
-	cluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
+	cluster, err := pcmd.KafkaCluster(c.config)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 
+	ctx := c.config.Context()
+	if ctx == nil {
+		return errors.ErrNoContext
+	}
 	topic := &kafkav1.TopicSpecification{Name: args[0]}
-	err = c.client.DeleteTopic(context.Background(), cluster, &kafkav1.Topic{Spec: topic, Validate: false})
+	err = ctx.Client.Kafka.DeleteTopic(context.Background(), cluster, &kafkav1.Topic{Spec: topic, Validate: false})
 
 	return errors.HandleCommon(err, cmd)
 }
 
 func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {
 	topic := args[0]
-
-	cluster, err := pcmd.GetKafkaClusterConfig(cmd, c.ch)
+	ctx := c.config.Context()
+	if ctx == nil {
+		return errors.HandleCommon(errors.ErrNoContext, cmd)
+	}
+	cluster, err := ctx.ActiveKafkaCluster()
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -428,12 +437,14 @@ func (c *topicCommand) consume(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-
-	cluster, err := pcmd.GetKafkaClusterConfig(cmd, c.ch)
+	ctx := c.config.Context()
+	if ctx == nil {
+		return errors.HandleCommon(errors.ErrNoContext, cmd)
+	}
+	cluster, err := ctx.ActiveKafkaCluster()
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-
 	group, err := cmd.Flags().GetString("group")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)

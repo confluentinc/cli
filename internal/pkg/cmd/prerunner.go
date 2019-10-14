@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/jonboulle/clockwork"
 	"github.com/spf13/cobra"
@@ -12,15 +14,11 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/update"
 )
 
-type ContextCarrier interface {
-	SetContext(context *config.Context)
-}
-
 // PreRun is a helper class for automatically setting up Cobra PersistentPreRun commands
 type PreRunner interface {
 	Anonymous() func(cmd *cobra.Command, args []string) error
-	Authenticated(carrier ContextCarrier) func(cmd *cobra.Command, args []string) error
-	HasAPIKey(carrier ContextCarrier) func(cmd *cobra.Command, args []string) error
+	Authenticated(cfg *config.Config) func(cmd *cobra.Command, args []string) error
+	HasAPIKey(cfg *config.Config) func(cmd *cobra.Command, args []string) error
 }
 
 // PreRun is the standard PreRunner implementation
@@ -29,9 +27,8 @@ type PreRun struct {
 	CLIName      string
 	Version      string
 	Logger       *log.Logger
-	Config       *config.Config
-	ConfigHelper *ConfigHelper
 	Clock        clockwork.Clock
+	FlagResolver FlagResolver
 }
 
 // Anonymous provides PreRun operations for commands that may be run without a logged-in user
@@ -48,12 +45,21 @@ func (r *PreRun) Anonymous() func(cmd *cobra.Command, args []string) error {
 }
 
 // Authenticated provides PreRun operations for commands that require a logged-in user
-func (r *PreRun) Authenticated(holder ContextCarrier) func(cmd *cobra.Command, args []string) error {
+func (r *PreRun) Authenticated(cfg *config.Config) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		if err := r.Anonymous()(cmd, args); err != nil {
+		err := r.Anonymous()(cmd, args)
+		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
-		state, err := r.Config.AuthenticatedState()
+		err = r.FlagResolver.ResolveFlags(cmd, cfg)
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+		context := cfg.Context()
+		if context == nil {
+			return errors.HandleCommon(errors.ErrNoContext, cmd)
+		}
+		state, err := context.AuthenticatedState()
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
@@ -71,28 +77,33 @@ func (r *PreRun) Authenticated(holder ContextCarrier) func(cmd *cobra.Command, a
 				return errors.HandleCommon(new(ccloud.ExpiredTokenError), cmd)
 			}
 		}
-		context := r.Config.Context()
-		if context == nil {
-			return errors.HandleCommon(errors.ErrNoContext, cmd)
-		}
-		holder.SetContext(context)
 		return nil
 	}
 }
 
 // HasAPIKey provides PreRun operations for commands that require an API key.
-func (r *PreRun) HasAPIKey(carrier ContextCarrier) func(cmd *cobra.Command, args []string) error {
+func (r *PreRun) HasAPIKey(cfg *config.Config) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		context := r.Config.Context()
+		err := r.Anonymous()(cmd, args)
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+		err = r.FlagResolver.ResolveFlags(cmd, cfg)
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+		context := cfg.Context()
 		if context == nil {
 			return errors.HandleCommon(errors.ErrNoContext, cmd)
 		}
 		clusterId := context.Kafka
-		err := r.Config.CheckHasAPIKey(clusterId)
-		if err != nil {
+		if clusterId == "" {
+			return errors.HandleCommon(fmt.Errorf("context '%s' has no active Kafka cluster", context.Name), cmd)
+		}
+		if context.KafkaClusters[clusterId].APIKey == "" {
+			err = &errors.UnspecifiedAPIKeyError{ClusterID: clusterId}
 			return errors.HandleCommon(err, cmd)
 		}
-		carrier.SetContext(context)
 		return nil
 	}
 }

@@ -8,7 +8,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/ccloud-sdk-go"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	"github.com/confluentinc/go-printer"
 
@@ -20,7 +19,6 @@ import (
 type command struct {
 	*cobra.Command
 	config *config.Config
-	client ccloud.User
 }
 
 var (
@@ -33,21 +31,16 @@ var (
 const nameLength = 32
 const descriptionLength = 128
 
-func (c *command) SetContext(context *config.Context) {
-
-}
-
 // New returns the Cobra command for service accounts.
-func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.User) *cobra.Command {
+func New(prerunner pcmd.PreRunner, config *config.Config) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
-			Use:   "service-account",
-			Short: `Manage service accounts.`,
+			Use:               "service-account",
+			Short:             `Manage service accounts.`,
+			PersistentPreRunE: prerunner.Authenticated(config),
 		},
 		config: config,
-		client: client,
 	}
-	cmd.PersistentPreRunE = prerunner.Authenticated(cmd)
 	cmd.init()
 	return cmd.Command
 }
@@ -149,8 +142,11 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		OrganizationId:     state.Auth.User.OrganizationId,
 		ServiceAccount:     true,
 	}
-
-	user, err = c.client.CreateServiceAccount(context.Background(), user)
+	ctx := c.config.Context()
+	if ctx == nil {
+		return errors.ErrNoContext
+	}
+	user, err = ctx.Client.User.CreateServiceAccount(context.Background(), user)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}

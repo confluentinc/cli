@@ -32,7 +32,7 @@ func TestSchemaRegistryURL(t *testing.T) {
 	// Found locally
 	cfg := getConfig("localhost")
 	client := getClient()
-	ch := ConfigHelper{
+	ch := ContextResolver{
 		Config: &cfg,
 		Client: client,
 	}
@@ -43,7 +43,7 @@ func TestSchemaRegistryURL(t *testing.T) {
 
 	// Not found locally
 	cfg = getConfig("")
-	ch = ConfigHelper{
+	ch = ContextResolver{
 		Config: &cfg,
 		Client: client,
 	}

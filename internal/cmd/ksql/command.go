@@ -15,21 +15,18 @@ type command struct {
 	client      ccloud.KSQL
 	kafkaClient ccloud.Kafka
 	userClient  ccloud.User
-	ch          *pcmd.ConfigHelper
+	ch          *pcmd.ContextResolver
 	prerunner   pcmd.PreRunner
-}
-
-func (c *command) SetContext(context *config.Context) {
-
 }
 
 // New returns the default command object for interacting with KSQL.
 func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.KSQL,
-	kafkaClient ccloud.Kafka, userClient ccloud.User, ch *pcmd.ConfigHelper) *cobra.Command {
+	kafkaClient ccloud.Kafka, userClient ccloud.User, ch *pcmd.ContextResolver) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
-			Use:   "ksql",
-			Short: "Manage KSQL.",
+			Use:               "ksql",
+			Short:             "Manage KSQL.",
+			PersistentPreRunE: prerunner.Authenticated(),
 		},
 		config:      config,
 		client:      client,
@@ -38,7 +35,6 @@ func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.KSQL,
 		ch:          ch,
 		prerunner:   prerunner,
 	}
-	cmd.PersistentPreRunE = prerunner.Authenticated(cmd)
 	cmd.init()
 	return cmd.Command
 }

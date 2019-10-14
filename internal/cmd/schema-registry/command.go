@@ -1,13 +1,15 @@
 package schema_registry
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/pkg/log"
+
 	ccsdk "github.com/confluentinc/ccloud-sdk-go"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 )
 
 type command struct {
@@ -16,19 +18,16 @@ type command struct {
 	ccClient     ccsdk.SchemaRegistry
 	metricClient ccsdk.Metrics
 	srClient     *srsdk.APIClient
-	ch           *pcmd.ConfigHelper
+	ch           *pcmd.ContextResolver
 	logger       *log.Logger
 }
 
-func (c *command) SetContext(context *config.Context) {
-	
-}
-
-func New(prerunner pcmd.PreRunner, config *config.Config, ccloudClient ccsdk.SchemaRegistry, ch *pcmd.ConfigHelper, srClient *srsdk.APIClient, metricClient ccsdk.Metrics, logger *log.Logger) *cobra.Command {
+func New(prerunner pcmd.PreRunner, config *config.Config, ccloudClient ccsdk.SchemaRegistry, ch *pcmd.ContextResolver, srClient *srsdk.APIClient, metricClient ccsdk.Metrics, logger *log.Logger) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:               "schema-registry",
 			Short:             `Manage Schema Registry.`,
+			PersistentPreRunE: prerunner.Authenticated(),
 		},
 		config:       config,
 		ccClient:     ccloudClient,
@@ -37,7 +36,6 @@ func New(prerunner pcmd.PreRunner, config *config.Config, ccloudClient ccsdk.Sch
 		metricClient: metricClient,
 		logger:       logger,
 	}
-	cmd.PersistentPreRunE = prerunner.Authenticated(cmd)
 	cmd.init()
 	return cmd.Command
 }

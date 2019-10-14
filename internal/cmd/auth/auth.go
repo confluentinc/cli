@@ -201,10 +201,28 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	return err
 }
 
+func (a *commands) createMDSConfig() *mds.Configuration {
+	mdsConfig := mds.NewConfiguration()
+	ctx := a.config.Context()
+	if ctx != nil {
+		mdsConfig.BasePath = ctx.Platform.Server
+		mdsConfig.UserAgent = ctx.Version.UserAgent
+	}
+	return mdsConfig
+}
+
+func (a *commands) setMDSClient() {
+	mdsConfig := a.createMDSConfig()
+	a.mdsClient = mds.NewAPIClient(mdsConfig)
+}
+
 func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
 	url, err := cmd.Flags().GetString("url")
 	if err != nil {
 		return err
+	}
+	if a.mdsClient == nil {
+		a.setMDSClient()
 	}
 	a.mdsClient.ChangeBasePath(url)
 	email, password, err := a.credentials(cmd, "Username", nil)

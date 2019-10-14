@@ -132,7 +132,7 @@ func (c *contextCommand) set(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
-		err = context.SetActiveCluster(clusterId)
+		err = context.SetActiveKafkaCluster(clusterId)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}

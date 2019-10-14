@@ -1,7 +1,6 @@
 package config
 
 import (
-	"errors"
 	"io/ioutil"
 	"os"
 	"reflect"
@@ -651,104 +650,6 @@ func TestConfig_DeleteContext(t *testing.T) {
 			}
 			if !tt.wantErr {
 				assert.Equal(t, tt.wantConfig, c)
-			}
-		})
-	}
-}
-
-func TestConfig_CheckHasAPIKey(t *testing.T) {
-	type fields struct {
-		Contexts       map[string]*Context
-		CurrentContext string
-	}
-	type args struct {
-		clusterID string
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
-		err     interface{}
-	}{
-		{
-			name: "succeed checking existing active API key",
-			fields: fields{
-				Contexts: map[string]*Context{"test-context": {
-					Name: "test-context",
-					KafkaClusters: map[string]*KafkaClusterConfig{"k-id": {
-						ID:   "k-id",
-						Name: "k-cluster",
-						APIKeys: map[string]*APIKeyPair{"yek": {
-							Key:    "yek",
-							Secret: "shhh",
-						}},
-						APIKey: "yek",
-					}},
-				}},
-				CurrentContext: "test-context",
-			},
-			args:    args{clusterID: "k-id"},
-			wantErr: false,
-		},
-		{
-			name: "error checking API key with no active key",
-			fields: fields{
-				Contexts: map[string]*Context{"test-context": {
-					Name: "test-context",
-					KafkaClusters: map[string]*KafkaClusterConfig{"k-id": {
-						ID:   "k-id",
-						Name: "k-cluster",
-						APIKeys: map[string]*APIKeyPair{"yek": {
-							Key:    "yek",
-							Secret: "shhh",
-						}},
-						APIKey: "",
-					}},
-				}},
-				CurrentContext: "test-context",
-			},
-			args:    args{clusterID: "k-id"},
-			wantErr: true,
-			err:     &cerrors.UnspecifiedAPIKeyError{ClusterID: "k-id"},
-		},
-		{
-			name: "error checking API key with no active context",
-			fields: fields{
-				Contexts: map[string]*Context{"test-context": {
-					Name: "test-context",
-				}},
-				CurrentContext: "",
-			},
-			args:    args{clusterID: "k-id"},
-			wantErr: true,
-			err:     cerrors.ErrNoContext,
-		},
-		{
-			name: "error checking API key with no matching cluster",
-			fields: fields{
-				Contexts: map[string]*Context{"test-context": {
-					Name: "test-context",
-				}},
-				CurrentContext: "test-context",
-			},
-			args:    args{clusterID: "k-id"},
-			wantErr: true,
-			err:     errors.New("unknown kafka cluster: k-id"),
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			c := &Config{
-				Contexts:       tt.fields.Contexts,
-				CurrentContext: tt.fields.CurrentContext,
-			}
-			err := c.CheckHasAPIKey(tt.args.clusterID)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("CheckHasAPIKey() error = %v, wantErr %v", err, tt.wantErr)
-			}
-			if tt.err != nil {
-				assert.Equal(t, tt.err, err)
 			}
 		})
 	}

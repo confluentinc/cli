@@ -27,17 +27,11 @@ type clusterCommand struct {
 	*cobra.Command
 	config    *config.Config
 	client    ccloud.Kafka
-	ch        *pcmd.ConfigHelper
-	context   *config.Context
 	prerunner pcmd.PreRunner
 }
 
-func (c *clusterCommand) SetContext(context *config.Context) {
-	c.context = context
-}
-
 // NewClusterCommand returns the Cobra command for Kafka cluster.
-func NewClusterCommand(prerunner pcmd.PreRunner, config *config.Config, client ccloud.Kafka, ch *pcmd.ConfigHelper) *cobra.Command {
+func NewClusterCommand(prerunner pcmd.PreRunner, config *config.Config, client ccloud.Kafka) *cobra.Command {
 	cmd := &clusterCommand{
 		Command: &cobra.Command{
 			Use:   "cluster",
@@ -45,7 +39,6 @@ func NewClusterCommand(prerunner pcmd.PreRunner, config *config.Config, client c
 		},
 		config:    config,
 		client:    client,
-		ch:        ch,
 		prerunner: prerunner,
 	}
 	cmd.init()
@@ -54,20 +47,20 @@ func NewClusterCommand(prerunner pcmd.PreRunner, config *config.Config, client c
 
 func (c *clusterCommand) init() {
 	listCmd := &cobra.Command{
-		Use:   "list",
-		Short: "List Kafka clusters.",
-		RunE:  c.list,
-		Args:  cobra.NoArgs,
+		Use:               "list",
+		Short:             "List Kafka clusters.",
+		RunE:              c.list,
+		Args:              cobra.NoArgs,
+		PersistentPreRunE: c.prerunner.Authenticated(c.config),
 	}
-	listCmd.PersistentPreRunE = c.prerunner.Authenticated(c)
 	c.AddCommand(listCmd)
 	createCmd := &cobra.Command{
-		Use:   "create <name>",
-		Short: "Create a Kafka cluster.",
-		RunE:  c.create,
-		Args:  cobra.ExactArgs(1),
+		Use:               "create <name>",
+		Short:             "Create a Kafka cluster.",
+		RunE:              c.create,
+		Args:              cobra.ExactArgs(1),
+		PersistentPreRunE: c.prerunner.Authenticated(c.config),
 	}
-	createCmd.PersistentPreRunE = c.prerunner.Authenticated(c)
 	createCmd.Flags().String("cloud", "", "Cloud provider (e.g. 'aws' or 'gcp')")
 	createCmd.Flags().String("region", "", "Cloud region for cluster (e.g. 'us-west-2')")
 	createCmd.Flags().Bool("multizone", false, "Use multiple zones for high availability")
@@ -78,57 +71,60 @@ func (c *clusterCommand) init() {
 	c.AddCommand(createCmd)
 
 	describeCmd := &cobra.Command{
-		Use:   "describe <id>",
-		Short: "Describe a Kafka cluster.",
-		RunE:  c.describe,
-		Args:  cobra.ExactArgs(1),
+		Use:               "describe <id>",
+		Short:             "Describe a Kafka cluster.",
+		RunE:              c.describe,
+		Args:              cobra.ExactArgs(1),
+		PersistentPreRunE: c.prerunner.Authenticated(c.config),
 	}
-	describeCmd.PersistentPreRunE = c.prerunner.Authenticated(c)
 	c.AddCommand(describeCmd)
 
 	updateCmd := &cobra.Command{
-		Use:   "update <id>",
-		Short: "Update a Kafka cluster.",
-		RunE:  c.update,
-		Args:  cobra.ExactArgs(1),
+		Use:               "update <id>",
+		Short:             "Update a Kafka cluster.",
+		RunE:              c.update,
+		Args:              cobra.ExactArgs(1),
+		PersistentPreRunE: c.prerunner.Authenticated(c.config),
 	}
 	updateCmd.Hidden = true
-	updateCmd.PersistentPreRunE = c.prerunner.Authenticated(c)
 	c.AddCommand(updateCmd)
 
 	deleteCmd := &cobra.Command{
-		Use:   "delete <id>",
-		Short: "Delete a Kafka cluster.",
-		RunE:  c.delete,
-		Args:  cobra.ExactArgs(1),
+		Use:               "delete <id>",
+		Short:             "Delete a Kafka cluster.",
+		RunE:              c.delete,
+		Args:              cobra.ExactArgs(1),
+		PersistentPreRunE: c.prerunner.Authenticated(c.config),
 	}
-	deleteCmd.PersistentPreRunE = c.prerunner.Authenticated(c)
 	deleteCmd.Hidden = true
 	c.AddCommand(deleteCmd)
 	useCmd := &cobra.Command{
-		Use:   "use <id>",
-		Short: "Make the Kafka cluster active for use in other commands.",
-		RunE:  c.use,
-		Args:  cobra.ExactArgs(1),
+		Use:               "use <id>",
+		Short:             "Make the Kafka cluster active for use in other commands.",
+		RunE:              c.use,
+		Args:              cobra.ExactArgs(1),
+		PersistentPreRunE: c.prerunner.Authenticated(c.config),
 	}
-	useCmd.PersistentPreRunE = c.prerunner.Authenticated(c)
 	c.AddCommand(useCmd)
 }
 
 func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
-	environment, err := pcmd.GetEnvironment(cmd, c.config)
+	state, err := c.config.AuthenticatedState()
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-
-	req := &kafkav1.KafkaCluster{AccountId: environment}
+	req := &kafkav1.KafkaCluster{AccountId: state.Auth.Account.Id}
 	clusters, err := c.client.List(context.Background(), req)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 	var data [][]string
+	ctx := c.config.Context()
+	if ctx == nil {
+		return errors.ErrNoContext
+	}
 	for _, cluster := range clusters {
-		if cluster.Id == c.context.Kafka {
+		if cluster.Id == ctx.Kafka {
 			cluster.Id = fmt.Sprintf("* %s", cluster.Id)
 		} else {
 			cluster.Id = fmt.Sprintf("  %s", cluster.Id)
@@ -156,16 +152,16 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	environment, err := pcmd.GetEnvironment(cmd, c.config)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
 	durability := kafkav1.Durability_LOW
 	if multizone {
 		durability = kafkav1.Durability_HIGH
 	}
+	state, err := c.config.AuthenticatedState()
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
 	cfg := &kafkav1.KafkaClusterConfig{
-		AccountId:       environment,
+		AccountId:       state.Auth.Account.Id,
 		Name:            args[0],
 		ServiceProvider: cloud,
 		Region:          region,
@@ -180,12 +176,11 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
-	environment, err := pcmd.GetEnvironment(cmd, c.config)
+	state, err := c.config.AuthenticatedState()
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-
-	req := &kafkav1.KafkaCluster{AccountId: environment, Id: args[0]}
+	req := &kafkav1.KafkaCluster{AccountId: state.Auth.Account.Id, Id: args[0]}
 	cluster, err := c.client.Describe(context.Background(), req)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -201,14 +196,12 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	if true {
 		return errors.ErrNotImplemented
 	}
-
-	environment, err := pcmd.GetEnvironment(cmd, c.config)
-
+	state, err := c.config.AuthenticatedState()
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	req := &kafkav1.KafkaCluster{AccountId: environment, Id: args[0]}
+	req := &kafkav1.KafkaCluster{AccountId: state.Auth.Account.Id, Id: args[0]}
 	err = c.client.Delete(context.Background(), req)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -219,17 +212,19 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 
 func (c *clusterCommand) use(cmd *cobra.Command, args []string) error {
 	clusterID := args[0]
-	
-	// This ensures that the clusterID actually exists or throws an error
-	environment, err := pcmd.GetEnvironment(cmd, c.ch.Config)
+
+	ctx := c.config.Context()
+	if ctx == nil {
+		return errors.HandleCommon(errors.ErrNoContext, cmd)
+	}
+	_, err := ctx.FindKafkaCluster(clusterID)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	_, err = c.ch.KafkaClusterConfig(clusterID, environment)
+	err = ctx.SetActiveKafkaCluster(clusterID)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
-	c.context.Kafka = clusterID
 	return c.config.Save()
 }
 

@@ -1,14 +1,12 @@
 package cmd
 
 import (
-	"context"
 	"os"
 
 	"github.com/DABH/go-basher"
 	"github.com/jonboulle/clockwork"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/confluentinc/mds-sdk-go"
 
 	"github.com/confluentinc/cli/internal/cmd/apikey"
@@ -40,10 +38,10 @@ import (
 	ksqls "github.com/confluentinc/cli/internal/pkg/sdk/ksql"
 	users "github.com/confluentinc/cli/internal/pkg/sdk/user"
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
-	versions "github.com/confluentinc/cli/internal/pkg/version"
 )
 
-func NewConfluentCommand(cliName string, cfg *pconfig.Config, ver *versions.Version, logger *log.Logger) (*cobra.Command, error) {
+func NewConfluentCommand(cliName string, cfg *pconfig.Config, logger *log.Logger) (*cobra.Command, error) {
+	ver := cfg.Version
 	cli := &cobra.Command{
 		Use:               cliName,
 		Version:           ver.Version,
@@ -72,39 +70,20 @@ func NewConfluentCommand(cliName string, cfg *pconfig.Config, ver *versions.Vers
 		return nil, err
 	}
 	currCtx := cfg.Context()
-	var state *pconfig.ContextState
-	var authURL string
-	if currCtx != nil {
-		state = currCtx.State
-		authURL = currCtx.Platform.Server
-	} else {
-		state = new(pconfig.ContextState)
-		authURL = ""
-	}
-	client := ccloud.NewClientWithJWT(context.Background(), state.AuthToken, &ccloud.Params{
-		BaseURL: authURL, Logger: cfg.Logger, UserAgent: ver.UserAgent,
-	})
 
-	ch := &pcmd.ConfigHelper{Config: cfg, Client: client, Version: ver}
 	fs := &io.RealFileSystem{}
 
+	resolver := &pcmd.FlagResolverImpl{Prompt: prompt, Out: os.Stdout}
 	prerunner := &pcmd.PreRun{
 		UpdateClient: updateClient,
 		CLIName:      cliName,
-		Version:      ver.Version,
 		Logger:       logger,
-		Config:       cfg,
-		ConfigHelper: ch,
 		Clock:        clockwork.NewRealClock(),
+		FlagResolver: resolver,
 	}
 
 	cli.PersistentPreRunE = prerunner.Anonymous()
 
-	mdsConfig := mds.NewConfiguration()
-	mdsConfig.BasePath = authURL
-	mdsConfig.UserAgent = ver.UserAgent
-
-	mdsClient := mds.NewAPIClient(mdsConfig)
 
 	cli.Version = ver.Version
 	cli.AddCommand(version.NewVersionCmd(prerunner, ver))
@@ -115,13 +94,10 @@ func NewConfluentCommand(cliName string, cfg *pconfig.Config, ver *versions.Vers
 
 	cli.AddCommand(completion.NewCompletionCmd(cli, cliName))
 	cli.AddCommand(update.New(cliName, cfg, ver, prompt, updateClient))
-	cli.AddCommand(auth.New(prerunner, cfg, logger, mdsClient, ver.UserAgent)...)
-
-	resolver := &pcmd.FlagResolverImpl{Prompt: prompt, Out: os.Stdout}
+	cli.AddCommand(auth.New(prerunner, cfg, logger, nil, ver.UserAgent)...)
 
 	if cliName == "ccloud" {
-		kafkaClient := kafkas.New(client, logger)
-		cmd := kafka.New(prerunner, cfg, kafkaClient, ch)
+		cmd := kafka.New(prerunner, cfg)
 		cli.AddCommand(cmd)
 		cli.AddCommand(initcontext.New(prerunner, cfg, prompt, resolver))
 		if currCtx != nil && currCtx.Credential.CredentialType == pconfig.APIKey {
@@ -129,7 +105,7 @@ func NewConfluentCommand(cliName string, cfg *pconfig.Config, ver *versions.Vers
 		}
 		cli.AddCommand(ps1.NewPromptCmd(cfg, &pps1.Prompt{Config: cfg}, logger))
 		userClient := users.New(client, logger)
-		ks := &keystore.ConfigKeyStore{Config: cfg, Helper: ch}
+		ks := &keystore.ConfigKeyStore{Config: cfg}
 		cli.AddCommand(environment.New(prerunner, cfg, environments.New(client, logger), cliName))
 		cli.AddCommand(service_account.New(prerunner, cfg, userClient))
 		cli.AddCommand(apikey.New(prerunner, cfg, apikeys.New(client, logger), ch, ks))
@@ -147,9 +123,8 @@ func NewConfluentCommand(cliName string, cfg *pconfig.Config, ver *versions.Vers
 		//conn.Hidden = true // The connect feature isn't finished yet, so let's hide it
 		//cli.AddCommand(conn)
 	} else if cliName == "confluent" {
-		ch := &pcmd.ConfigHelper{Config: cfg, Client: client}
 
-		cli.AddCommand(iam.New(prerunner, cfg, ch, ver, mdsClient))
+		cli.AddCommand(iam.New(prerunner, cfg, ver, mdsClient))
 
 		bash, err := basher.NewContext("/bin/bash", false)
 		if err != nil {

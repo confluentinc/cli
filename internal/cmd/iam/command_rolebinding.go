@@ -11,7 +11,6 @@ import (
 	"github.com/confluentinc/go-printer"
 	"github.com/confluentinc/mds-sdk-go"
 
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
@@ -32,23 +31,18 @@ type rolebindingOptions struct {
 
 type rolebindingCommand struct {
 	*cobra.Command
-	config *config.Config
-	ch     *pcmd.ConfigHelper
 	client *mds.APIClient
 	ctx    context.Context
 }
 
 // NewRolebindingCommand returns the sub-command object for interacting with RBAC rolebindings.
-func NewRolebindingCommand(cfg *config.Config, ch *pcmd.ConfigHelper, client *mds.APIClient) *cobra.Command {
+func NewRolebindingCommand(cfg *config.Config) *cobra.Command {
 	roleBindingCmd := &rolebindingCommand{
 		Command: &cobra.Command{
 			Use:   "rolebinding",
 			Short: "Manage RBAC and IAM role bindings.",
 			Long:  "Manage Role Based Access (RBAC) and Identity and Access Management (IAM) role bindings.",
 		},
-		config: cfg,
-		ch:     ch,
-		client: client,
 	}
 	state, err := cfg.AuthenticatedState()
 	if err != nil {

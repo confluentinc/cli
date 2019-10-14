@@ -46,7 +46,7 @@ func NewRoleCommand(cfg *config.Config, client *mds.APIClient) *cobra.Command {
 	}
 	state, err := cfg.AuthenticatedState()
 	if err != nil {
-		state = new(config.ContextState) 
+		state = new(config.ContextState)
 	}
 	roleCmd.ctx = context.WithValue(context.Background(), mds.ContextAccessToken, state.AuthToken)
 	roleCmd.init()

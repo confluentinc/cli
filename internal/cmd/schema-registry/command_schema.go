@@ -7,19 +7,20 @@ import (
 
 	"github.com/spf13/cobra"
 
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 )
 
 type schemaCommand struct {
 	*cobra.Command
 	config   *config.Config
-	ch       *pcmd.ConfigHelper
+	ch       *pcmd.ContextResolver
 	srClient *srsdk.APIClient
 }
 
-func NewSchemaCommand(config *config.Config, ch *pcmd.ConfigHelper, srClient *srsdk.APIClient) *cobra.Command {
+func NewSchemaCommand(config *config.Config, ch *pcmd.ContextResolver, srClient *srsdk.APIClient) *cobra.Command {
 	schemaCmd := &schemaCommand{
 		Command: &cobra.Command{
 			Use:   "schema",

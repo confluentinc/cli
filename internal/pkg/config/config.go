@@ -8,11 +8,13 @@ import (
 	"path/filepath"
 
 	"github.com/atrox/homedir"
+	"github.com/confluentinc/ccloud-sdk-go"
 	v1 "github.com/confluentinc/ccloudapis/org/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/metric"
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 const (
@@ -28,15 +30,17 @@ type AuthConfig struct {
 
 // Config represents the CLI configuration.
 type Config struct {
-	CLIName        string                   `json:"-" hcl:"-"`
-	MetricSink     metric.Sink              `json:"-" hcl:"-"`
-	Logger         *log.Logger              `json:"-" hcl:"-"`
-	Filename       string                   `json:"-" hcl:"-"`
-	Platforms      map[string]*Platform     `json:"platforms" hcl:"platforms"`
-	Credentials    map[string]*Credential   `json:"credentials" hcl:"credentials"`
-	Contexts       map[string]*Context      `json:"contexts" hcl:"contexts"`
-	ContextStates  map[string]*ContextState `json:"context_states" hcl:"context_states"`
-	CurrentContext string                   `json:"current_context" hcl:"current_context"`
+	CLIName              string                   `json:"-" hcl:"-"`
+	MetricSink           metric.Sink              `json:"-" hcl:"-"`
+	Logger               *log.Logger              `json:"-" hcl:"-"`
+	Version              *pversion.Version        `json:"-" hcl:"-"`
+	Filename             string                   `json:"-" hcl:"-"`
+	Platforms            map[string]*Platform     `json:"platforms" hcl:"platforms"`
+	Credentials          map[string]*Credential   `json:"credentials" hcl:"credentials"`
+	Contexts             map[string]*Context      `json:"contexts" hcl:"contexts"`
+	ContextStates        map[string]*ContextState `json:"context_states" hcl:"context_states"`
+	CurrentContext       string                   `json:"current_context" hcl:"current_context"`
+	UserSpecifiedContext string                   `json:"-" hcl:"-"`
 }
 
 // New initializes a new Config object
@@ -59,7 +63,7 @@ func New(config ...*Config) *Config {
 }
 
 // Load reads the CLI config from disk.
-func (c *Config) Load() error {
+func (c *Config) Load(version, commit, date, host string) error {
 	filename, err := c.getFilename()
 	if err != nil {
 		return err
@@ -79,10 +83,13 @@ func (c *Config) Load() error {
 	if err != nil {
 		return errors.Wrapf(err, "unable to parse config file: %s", filename)
 	}
+	ver := pversion.NewVersion(c.CLIName, c.Name(), c.Support(), version, commit, date, host)
 	for _, context := range c.Contexts {
 		context.State = c.ContextStates[context.Name]
 		context.Credential = c.Credentials[context.CredentialName]
 		context.Platform = c.Platforms[context.PlatformName]
+		context.Version = ver
+		context.Logger = c.Logger
 	}
 	err = c.Validate()
 	if err != nil {
@@ -148,7 +155,7 @@ func (c *Config) Validate() error {
 
 	}
 	// Validate that all context states are mapped to an existing context.
-	for contextName, _ := range c.ContextStates {
+	for contextName := range c.ContextStates {
 		if _, ok := c.Contexts[contextName]; !ok {
 			c.Logger.Trace("context state mapped to nonexistent context")
 			return c.corruptedConfigError()
@@ -182,7 +189,7 @@ func (c *Config) FindContext(name string) (*Context, error) {
 
 func (c *Config) AddContext(name string, platformName string, credentialName string,
 	kafkaClusters map[string]*KafkaClusterConfig, kafka string,
-	schemaRegistryClusters map[string]*SchemaRegistryCluster, state *ContextState) error {
+	schemaRegistryClusters map[string]*SchemaRegistryCluster, state *ContextState, client *ccloud.Client) error {
 	if _, ok := c.Contexts[name]; ok {
 		return fmt.Errorf("context \"%s\" already exists", name)
 	}
@@ -195,7 +202,7 @@ func (c *Config) AddContext(name string, platformName string, credentialName str
 		return fmt.Errorf("platform \"%s\" not found", platformName)
 	}
 	context, err := newContext(name, platform, credential, kafkaClusters, kafka,
-		schemaRegistryClusters, state)
+		schemaRegistryClusters, state, client)
 	if err != nil {
 		return err
 	}
@@ -263,8 +270,12 @@ func (c *Config) APIName() string {
 	return name
 }
 
-// Context returns the current Context, or nil if there's no context set.
+// Context returns the user specified context if it exists, 
+// the current Context, or nil if there's no context set.
 func (c *Config) Context() *Context {
+	if c.UserSpecifiedContext != "" {
+		return c.Contexts[c.UserSpecifiedContext]
+	}
 	return c.Contexts[c.CurrentContext]
 }
 
@@ -273,7 +284,7 @@ func (c *Config) AuthenticatedState() (*ContextState, error) {
 	if context == nil {
 		return nil, errors.ErrNoContext
 	}
-	return context.authenticatedState()
+	return context.AuthenticatedState()
 }
 
 // SchemaRegistryCluster returns the SchemaRegistryCluster for the current Context,
@@ -285,23 +296,6 @@ func (c *Config) SchemaRegistryCluster() (*SchemaRegistryCluster, error) {
 		return nil, errors.ErrNoContext
 	}
 	return context.schemaRegistryCluster()
-}
-
-// CheckHasAPIKey returns nil if the specified cluster exists in the current context
-// and has an active API key, error otherwise.
-func (c *Config) CheckHasAPIKey(clusterID string) error {
-	context := c.Context()
-	if context == nil {
-		return errors.ErrNoContext
-	}
-	cluster, found := context.KafkaClusters[clusterID]
-	if !found {
-		return fmt.Errorf("unknown kafka cluster: %s", clusterID)
-	}
-	if cluster.APIKey == "" {
-		return &errors.UnspecifiedAPIKeyError{ClusterID: clusterID}
-	}
-	return nil
 }
 
 func (c *Config) getFilename() (string, error) {

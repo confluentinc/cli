@@ -3,22 +3,23 @@ package schema_registry
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/go-printer"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/go-printer"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 )
 
 type subjectCommand struct {
 	*cobra.Command
 	config   *config.Config
-	ch       *pcmd.ConfigHelper
+	ch       *pcmd.ContextResolver
 	srClient *srsdk.APIClient
 }
 
 // NewSubjectCommand returns the Cobra command for Schema Registry subject list
-func NewSubjectCommand(config *config.Config, ch *pcmd.ConfigHelper, srClient *srsdk.APIClient) *cobra.Command {
+func NewSubjectCommand(config *config.Config, ch *pcmd.ContextResolver, srClient *srsdk.APIClient) *cobra.Command {
 	subjectCmd := &subjectCommand{
 		Command: &cobra.Command{
 			Use:   "subject",
