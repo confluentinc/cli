@@ -57,6 +57,7 @@ require (
 	github.com/hashicorp/go-version v1.1.0
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
 	github.com/havoc-io/gopass v0.0.0-20170602182606-9a121bec1ae7
+	github.com/iancoleman/strcase v0.0.0-20190422225806-e506e3ef7365
 	github.com/jonboulle/clockwork v0.1.0
 	github.com/kevinburke/go-bindata v3.13.0+incompatible
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
