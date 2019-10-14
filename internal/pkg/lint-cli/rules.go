@@ -10,6 +10,7 @@ import (
 	"github.com/client9/gospell"
 	"github.com/gobuffalo/flect"
 	"github.com/hashicorp/go-multierror"
+	"github.com/iancoleman/strcase"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -36,8 +37,8 @@ func RequireRealWords(field string, delimiter rune) Rule {
 		bareCmd := strings.Split(fieldValue, " ")[0] // TODO should we check all parts?
 		for _, w := range strings.Split(bareCmd, string(delimiter)) {
 			if ok := vocab.Spell(w); !ok {
-				issue := fmt.Errorf("%s should consist of delimited real english words for %s on %s",
-					normalizeDesc(field), bareCmd, FullCommand(cmd))
+				issue := fmt.Errorf("%s should consist of delimited real english words for %s on %s - unknown %s",
+					normalizeDesc(field), bareCmd, FullCommand(cmd), w)
 				issues = multierror.Append(issues, issue)
 			}
 		}
@@ -328,13 +329,15 @@ func RequireFlagSort(sort bool) Rule {
 // RequireFlagRealWords checks that a flag uses delimited-real-words, not --smushcaseflags
 func RequireFlagRealWords(delim rune) FlagRule {
 	return func(flag *pflag.Flag, cmd *cobra.Command) error {
+		var issues *multierror.Error
 		for _, w := range strings.Split(flag.Name, string(delim)) {
 			if ok := vocab.Spell(w); !ok {
-				return fmt.Errorf("flag name should consist of delimited real english words for %s on %s",
-					flag.Name, FullCommand(cmd))
+				issue := fmt.Errorf("flag name should consist of delimited real english words for %s on %s - unknown %s",
+					flag.Name, FullCommand(cmd), w)
+				issues = multierror.Append(issues, issue)
 			}
 		}
-		return nil
+		return issues.ErrorOrNil()
 	}
 }
 
@@ -368,17 +371,24 @@ func RequireFlagCharacters(delim rune) FlagRule {
 	}
 }
 
-// RequireFlagEndWithPunctuation checks that a flag description ends with a period
-func RequireFlagEndWithPunctuation(flag *pflag.Flag, cmd *cobra.Command) error {
-	if flag.Usage[len(flag.Usage)-1] != '.' {
+// RequireFlagUsageEndWithPunctuation checks that a flag description ends with a period
+func RequireFlagUsageEndWithPunctuation(flag *pflag.Flag, cmd *cobra.Command) error {
+	if len(flag.Usage) > 0 && flag.Usage[len(flag.Usage)-1] != '.' {
 		return fmt.Errorf("flag usage doesn't end with punctuation for %s on %s", flag.Name, FullCommand(cmd))
 	}
 	return nil
 }
 
-// RequireFlagStartWithCapital checks that a flag description starts with a capital letter
-func RequireFlagStartWithCapital(flag *pflag.Flag, cmd *cobra.Command) error {
-	if flag.Usage[0] < 'A' || flag.Usage[0] > 'Z' {
+func RequireFlagUsageMessage(flag *pflag.Flag, cmd *cobra.Command) error {
+	if len(flag.Usage) == 0 {
+		return fmt.Errorf("flag must provide help message for %s on %s", flag.Name, FullCommand(cmd))
+	}
+	return nil
+}
+
+// RequireFlagUsageStartWithCapital checks that a flag description starts with a capital letter
+func RequireFlagUsageStartWithCapital(flag *pflag.Flag, cmd *cobra.Command) error {
+	if len(flag.Usage) > 0 && (flag.Usage[0] < 'A' || flag.Usage[0] > 'Z') {
 		return fmt.Errorf("flag usage should start with a capital for %s on %s", flag.Name, FullCommand(cmd))
 	}
 	return nil
@@ -398,6 +408,28 @@ func RequireFlagNameLength(minLength, maxLength int) FlagRule {
 		}
 		return issues
 	}
+}
+
+// RequireFlagKebabCase checks that a flag is kebab-case
+func RequireFlagKebabCase(flag *pflag.Flag, cmd *cobra.Command) error {
+	flagKebab := strcase.ToKebab(flag.Name)
+	if flagKebab != flag.Name {
+		return fmt.Errorf("flag name must be kebab-case: %s should be %s on %s", flag.Name, flagKebab, FullCommand(cmd))
+	}
+	return nil
+}
+
+func RequireFlagUsageRealWords(flag *pflag.Flag, cmd *cobra.Command) error {
+	var issues *multierror.Error
+	usage := strings.TrimRight(alnum.ReplaceAllString(flag.Usage, " "), " ") // Remove any punctuation before checking spelling
+	for _, w := range strings.Split(usage, " ") {
+		if ok := vocab.Spell(w); !ok {
+			issue := fmt.Errorf("flag usage should consist of delimited real english words for %s on %s - unknown '%s' in '%s'",
+				flag.Name, FullCommand(cmd), w, usage)
+			issues = multierror.Append(issues, issue)
+		}
+	}
+	return issues.ErrorOrNil()
 }
 
 // SetDifference returns set1 - set2

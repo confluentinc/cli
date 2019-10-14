@@ -43,7 +43,7 @@ func (c *command) init() {
 		"Can be done interactively, with flags, or both.")
 	c.Flags().String("bootstrap", "", "Bootstrap URL.")
 	c.Flags().String("api-key", "", "API key.")
-	c.Flags().String("api-secret", "", "API secret. Can be specified as plaintext, "+
+	c.Flags().String("api-secret", "", "API secret. Can be specified as plain text, "+
 		"as a file, starting with '@', or as stdin, starting with '-'.")
 	c.Flags().SortFlags = false
 	c.RunE = c.initContext
