@@ -1,8 +1,10 @@
 package auditlog
 
 import (
+	"bytes"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/go-editor"
 	"github.com/confluentinc/mds-sdk-go"
 	"github.com/spf13/cobra"
 	"io/ioutil"
@@ -10,7 +12,6 @@ import (
 
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 )
 
@@ -45,17 +46,27 @@ func (c *configCommand) init() {
 		RunE:  c.describe,
 		Args:  cobra.NoArgs,
 	}
-	describeCmd.Flags().String("use", "", "Select an option (\"current\" or \"configured\") to resolve a configuration discrepancy/conflict.")
 	c.AddCommand(describeCmd)
 
 	updateCmd := &cobra.Command{
 		Use:   "update",
-		Short: "Accepts an audit log configuration spec JSON object and submits it to the API as an update.",
+		Short: "Submits audit-log config spec object to the API.",
+		Long:  "Submits an audit-log configuration specification JSON object to the API.",
 		RunE:  c.update,
 		Args:  cobra.NoArgs,
 	}
-	updateCmd.Flags().String("file", "", "A local file path, read as input. Otherwise the command will read from STDIN.")
+	updateCmd.Flags().String("file", "", "A local file path, read as input. Otherwise the command will read from standard in.")
+	updateCmd.Flags().Bool("force", false, "Tries to update even with concurrent modifications.")
+	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
+
+	editCmd := &cobra.Command{
+		Use:   "edit",
+		Short: "Edit the audit-log config spec object interactively.",
+		RunE:  c.edit,
+		Args:  cobra.NoArgs,
+	}
+	c.AddCommand(editCmd)
 }
 
 func (c *configCommand) describe(cmd *cobra.Command, args []string) error {
@@ -63,42 +74,12 @@ func (c *configCommand) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	result := &spec
-
-	if cmd.Flags().Changed("use") {
-		use, err := cmd.Flags().GetString("use")
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-		var conflictResolution *mds.AuditLogConfigConflictResolution
-		if spec.Metadata.Errors != nil && len(spec.Metadata.Errors) > 0 {
-			for _, metadataErr := range spec.Metadata.Errors {
-				if match, ok := metadataErr.Conflict[use]; ok {
-					conflictResolution = &match
-					break
-				}
-			}
-		}
-		if conflictResolution == nil {
-			err := fmt.Errorf("you asked to --use=\"%s\", but there was no such resolution available", use)
-			return errors.HandleCommon(err, cmd)
-		}
-		result, err = merge(&spec, conflictResolution)
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-	}
-
-	err = json.NewEncoder(c.OutOrStdout()).Encode(*result)
-	if err != nil {
+	enc := json.NewEncoder(c.OutOrStdout())
+	enc.SetIndent("", "  ")
+	if err = enc.Encode(spec); err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 	return nil
-}
-
-func merge(spec *mds.AuditLogConfigSpec, resolution *mds.AuditLogConfigConflictResolution) (*mds.AuditLogConfigSpec, error) {
-	//TODO: implement this method
-	return spec, nil
 }
 
 func (c *configCommand) update(cmd *cobra.Command, args []string) error {
@@ -120,26 +101,85 @@ func (c *configCommand) update(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	spec := mds.AuditLogConfigSpec{}
-	err = json.Unmarshal(data, &spec)
+	fileSpec := mds.AuditLogConfigSpec{}
+	err = json.Unmarshal(data, &fileSpec)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
+	putSpec := &fileSpec
 
-	result, r, err := c.client.AuditLogConfigurationApi.PutConfig(c.ctx, spec)
+	if cmd.Flags().Changed("force") {
+		force, err := cmd.Flags().GetBool("force")
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+		if force {
+			gotSpec, _, err := c.client.AuditLogConfigurationApi.GetConfig(c.ctx)
+			if err != nil {
+				return errors.HandleCommon(err, cmd)
+			}
+			putSpec = &mds.AuditLogConfigSpec{
+				Destinations:       fileSpec.Destinations,
+				ExcludedPrincipals: fileSpec.ExcludedPrincipals,
+				DefaultTopics:      fileSpec.DefaultTopics,
+				Routes:             fileSpec.Routes,
+				Metadata: mds.AuditLogConfigMetadata{
+					ResourceVersion: gotSpec.Metadata.ResourceVersion,
+				},
+			}
+		}
+	}
+
+	enc := json.NewEncoder(c.OutOrStdout())
+	enc.SetIndent("", "  ")
+	result, r, err := c.client.AuditLogConfigurationApi.PutConfig(c.ctx, *putSpec)
 	if err != nil {
-		if r.StatusCode == http.StatusConflict {
-			err2 := json.NewEncoder(c.OutOrStdout()).Encode(result)
-			if err2 != nil {
-				return errors.HandleCommon(err2, cmd)
-				//Ignore it, I guess?
+		if r != nil && r.StatusCode == http.StatusConflict {
+			if apiError, ok := err.(mds.GenericOpenAPIError); ok {
+				if err2 := enc.Encode(apiError.Model()); err2 != nil {
+					// Ignore it, I guess
+				}
 			}
 		}
 		return errors.HandleCommon(err, cmd)
 	}
+	if err = enc.Encode(result); err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	return nil
+}
 
-	err = json.NewEncoder(c.OutOrStdout()).Encode(result)
+func (c *configCommand) edit(cmd *cobra.Command, args []string) error {
+	gotSpec, _, err := c.client.AuditLogConfigurationApi.GetConfig(c.ctx)
 	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	gotSpecBytes, err := json.MarshalIndent(gotSpec, "", "  ")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	edit := editor.NewEditor()
+	edited, path, err := edit.LaunchTempFile("audit-log", bytes.NewBuffer(gotSpecBytes))
+	defer os.Remove(path)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	putSpec := mds.AuditLogConfigSpec{}
+	if err = json.Unmarshal(edited, &putSpec); err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	enc := json.NewEncoder(c.OutOrStdout())
+	enc.SetIndent("", "  ")
+	result, r, err := c.client.AuditLogConfigurationApi.PutConfig(c.ctx, putSpec)
+	if err != nil {
+		if r.StatusCode == http.StatusConflict {
+			if err2 := enc.Encode(result); err2 != nil {
+				// Ignore it, I guess
+			}
+		}
+		return errors.HandleCommon(err, cmd)
+	}
+	if err = enc.Encode(result); err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 	return nil

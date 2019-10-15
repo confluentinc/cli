@@ -38,16 +38,20 @@ func NewRouteCommand(config *config.Config, client *mds.APIClient) *cobra.Comman
 func (c *routeCommand) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
-		Short: "List the routes that could match the queried resource or its sub-resources.",
+		Short: "List routes that match the resource or its sub-resources.",
+		Long:  "List the routes that could match the queried resource or its sub-resources.",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	}
-	listCmd.Flags().String("resource", "", "The confluent resource name (CRN) that is the subject of the query.")
+	listCmd.Flags().StringP("resource", "r", "", "The confluent resource name that is the subject of the query.")
+	check(listCmd.MarkFlagRequired("resource"))
+	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
 	lookupCmd := &cobra.Command{
 		Use:   "lookup <crn>",
-		Short: "Returns the single route that describes how audit log messages regarding this CRN would be routed, with all defaults populated.",
+		Short: "Returns the matching audit-log route rule.",
+		Long:  "Returns the single route that describes how audit log messages regarding this CRN would be routed, with all defaults populated.",
 		RunE:  c.lookup,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -56,8 +60,8 @@ func (c *routeCommand) init() {
 
 func (c *routeCommand) list(cmd *cobra.Command, args []string) error {
 	var opts *mds.ListRoutesOpts
-	if c.Flags().Changed("resource") {
-		resource, err := c.Flags().GetString("resource")
+	if cmd.Flags().Changed("resource") {
+		resource, err := cmd.Flags().GetString("resource")
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
@@ -69,8 +73,9 @@ func (c *routeCommand) list(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	err = json.NewEncoder(c.OutOrStdout()).Encode(result)
-	if err != nil {
+	enc := json.NewEncoder(c.OutOrStdout())
+	enc.SetIndent("", "  ")
+	if err = enc.Encode(result); err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 	return nil
@@ -83,9 +88,16 @@ func (c *routeCommand) lookup(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	err = json.NewEncoder(c.OutOrStdout()).Encode(result)
-	if err != nil {
+	enc := json.NewEncoder(c.OutOrStdout())
+	enc.SetIndent("", "  ")
+	if err = enc.Encode(result); err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 	return nil
+}
+
+func check(err error) {
+	if err != nil {
+		panic(err)
+	}
 }

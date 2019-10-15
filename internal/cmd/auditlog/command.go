@@ -18,7 +18,7 @@ type command struct {
 func New(prerunner pcmd.PreRunner, config *config.Config, client *mds.APIClient) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
-			Use:               "auditlog",
+			Use:               "audit-log",
 			Short:             "Manage audit log configuration.",
 			Long:              "Manage which auditable events are logged, and where the events are sent.",
 			PersistentPreRunE: prerunner.Authenticated(),

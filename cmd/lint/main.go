@@ -55,6 +55,7 @@ var (
 		linter.ExcludeCommandContains("schema-registry"),
 		// this is obviously cluster-scoped but isn't used for cloud where --cluster is used
 		linter.ExcludeCommandContains("cluster describe"),
+		linter.ExcludeCommandContains("audit-log"),
 	}
 	resourceScopedCommands = []linter.RuleFilter{
 		linter.IncludeCommandContains("api-key use", "api-key create", "api-key list", "api-key store"),
@@ -92,6 +93,7 @@ var rules = []linter.Rule{
 		linter.ExcludeCommandContains("schema-registry"),
 		// skip cluster describe as it takes a URL as a flag instead of a resource identity
 		linter.ExcludeCommandContains("cluster describe"),
+		linter.ExcludeCommandContains("audit-log"),
 	),
 	// TODO: ensuring --cluster is optional DOES NOT actually ensure that the cluster context is used
 	linter.Filter(linter.RequireFlag("cluster", true), nonClusterScopedCommands...),
