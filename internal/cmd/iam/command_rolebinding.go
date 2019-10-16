@@ -283,7 +283,7 @@ func (c *rolebindingCommand) listPrincipalResourcesV1(cmd *cobra.Command, scopeC
 	var err error
 	roleNames := []string{role}
 	if role == "*" {
-		roleNames, _, err = c.client.RoleBindingCRUDApi.ScopedPrincipalRolenames(
+		roleNames, _, err = c.client.RoleBindingSummariesApi.ScopedPrincipalRolenames(
 			c.ctx,
 			principal,
 			mds.Scope{Clusters: *scopeClusters})

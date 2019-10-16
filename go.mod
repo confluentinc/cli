@@ -20,7 +20,7 @@ require (
 	github.com/confluentinc/ccloudapis v0.0.0-20190905010457-36bc6dde05b4
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-printer v0.10.0
-	github.com/confluentinc/mds-sdk-go v0.0.0-20191002204243-76c2da92d6be
+	github.com/confluentinc/mds-sdk-go v0.0.0-20191015231442-c29a09dbc1e9
 	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787
 	github.com/confluentinc/schema-registry-sdk-go v0.0.7
 	github.com/dghubble/sling v1.3.0 // indirect
