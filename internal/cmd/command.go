@@ -109,8 +109,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	resolver := &pcmd.FlagResolverImpl{Prompt: prompt, Out: os.Stdout}
 
 	if cliName == "ccloud" {
-		kafkaClient := client.Kafka
-		cmd, err := kafka.New(prerunner, cfg, kafkaClient, ch)
+		cmd, err := kafka.New(prerunner, cfg, logger.Named("kafka"), ver.ClientID, client.Kafka, ch)
 		if err != nil {
 			return nil, err
 		}
@@ -134,7 +133,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		sr := schema_registry.New(prerunner, cfg, client.SchemaRegistry, ch, nil, client.Metrics, logger)
 		cli.AddCommand(sr)
 
-		conn = ksql.New(prerunner, cfg, client.KSQL, kafkaClient, client.User, ch)
+		conn = ksql.New(prerunner, cfg, client.KSQL, client.Kafka, client.User, ch)
 		conn.Hidden = true // The ksql feature isn't finished yet, so let's hide it
 		cli.AddCommand(conn)
 
