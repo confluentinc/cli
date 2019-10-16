@@ -1,3 +1,3 @@
-    Key    | Owner | Description  
-+----------+-------+-------------+
-    MYKEY7 |    23 |              
+    Key    | Owner | Description |  Resource Type  | Resource ID  
++----------+-------+-------------+-----------------+-------------+
+    MYKEY7 |    23 |             | schema-registry | lsrc-1       
