@@ -67,10 +67,13 @@ github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df/go.mod h1:X4IDm8zK
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
 github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 h1:sIWhdehnHPCWoZeMVBRvb6+/73GxXKCHo9PhhWe9UcY=
 github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2/go.mod h1:HNotNNYHefttEUajcmByCW4bWNBiYd7s5mNZWzB62r0=
-github.com/confluentinc/ccloud-sdk-go v0.0.12 h1:wUQ4rwhUFBORH+7Pmf5kH3eRWY9wRZxQBveTFM47F8o=
-github.com/confluentinc/ccloud-sdk-go v0.0.12/go.mod h1:Hp16YLjZjIipEYoAZc+MrTJG91fdhCTPZD99e9tWVE8=
+github.com/confluentinc/ccloud-sdk-go v0.0.14 h1:MJ6GNFV23E+TOJM+xZGfkpwl0sFpNPHegUgNBksEtio=
+github.com/confluentinc/ccloud-sdk-go v0.0.14/go.mod h1:0A8K17qVhg73BYsnL1lk+lDUNZhkHyhWLYzK7cA0A9o=
+github.com/confluentinc/ccloudapis v0.0.0-20190822180106-1f1a16f58a50/go.mod h1:GFtO4obMaNb4iRYrRYw0BiK3Ac+rVO/toNbX96DAbRs=
 github.com/confluentinc/ccloudapis v0.0.0-20190905010457-36bc6dde05b4 h1:wJGAHtYH2ge6Xyn7d8ZYFJnhBiaYf+E2RskOf3QiZrs=
 github.com/confluentinc/ccloudapis v0.0.0-20190905010457-36bc6dde05b4/go.mod h1:GFtO4obMaNb4iRYrRYw0BiK3Ac+rVO/toNbX96DAbRs=
+github.com/confluentinc/ccloudapis v0.0.0-20191009151547-b75ab14e577d h1:OmoyRui04osNEqKgwfx42a35PRnSgqkJ70E8cAShn7U=
+github.com/confluentinc/ccloudapis v0.0.0-20191009151547-b75ab14e577d/go.mod h1:GFtO4obMaNb4iRYrRYw0BiK3Ac+rVO/toNbX96DAbRs=
 github.com/confluentinc/go-editor v0.4.0 h1:5hMjKsKmIOmlu3Yyz8zDq66Qpdin8HSmRaMhqhxRf5Y=
 github.com/confluentinc/go-editor v0.4.0/go.mod h1:sW1NzJdowffHQzy4iSbfY/ykRFMDE69I8EaT33Ebh7Y=
 github.com/confluentinc/go-printer v0.10.0 h1:JLJOeSdJL6A0YxAK24GSuoC52sPQP/chowAapSAwoBM=

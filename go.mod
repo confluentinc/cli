@@ -16,8 +16,8 @@ require (
 	github.com/aws/aws-sdk-go v1.15.64
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
-	github.com/confluentinc/ccloud-sdk-go v0.0.12
-	github.com/confluentinc/ccloudapis v0.0.0-20190905010457-36bc6dde05b4
+	github.com/confluentinc/ccloud-sdk-go v0.0.14
+	github.com/confluentinc/ccloudapis v0.0.0-20191009151547-b75ab14e577d
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-printer v0.10.0
 	github.com/confluentinc/mds-sdk-go v0.0.0-20191002204243-76c2da92d6be
