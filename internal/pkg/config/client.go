@@ -10,16 +10,17 @@ import (
 	v1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/sdk"
 )
 
 type contextClient struct {
-	*ccloud.Client
+	*sdk.Client
 	Context *Context
 }
 
 // NewContextClient returns a new contextClient, with the specified context, 
 // and an injected CCLoud client, or a dynamically generated client if passed a nil client. 
-func NewContextClient(ctx *Context, client *ccloud.Client) *contextClient {
+func NewContextClient(ctx *Context, client *sdk.Client) *contextClient {
 	baseURL := ctx.Platform.Server
 	state, err := ctx.AuthenticatedState()
 	var authToken string
@@ -27,9 +28,10 @@ func NewContextClient(ctx *Context, client *ccloud.Client) *contextClient {
 		authToken = state.AuthToken
 	}
 	if client == nil {
-		client = ccloud.NewClientWithJWT(context.Background(), authToken, &ccloud.Params{
+		baseClient := ccloud.NewClientWithJWT(context.Background(), authToken, &ccloud.Params{
 			BaseURL: baseURL, Logger: ctx.Logger, UserAgent: ctx.Version.UserAgent,
 		})
+		client = sdk.NewClient(baseClient, ctx.Logger)
 	}
 	return &contextClient{
 		Client:  client,
@@ -42,7 +44,6 @@ func (c *contextClient) FetchCluster(clusterId string) (*kafkav1.KafkaCluster, e
 	if err != nil {
 		return nil, err
 	}
-	// Let's fetch the cluster details
 	req := &kafkav1.KafkaCluster{AccountId: state.Auth.Account.Id, Id: clusterId}
 	kc, err := c.Client.Kafka.Describe(context.Background(), req)
 	if err != nil {

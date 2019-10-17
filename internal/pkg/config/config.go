@@ -8,12 +8,12 @@ import (
 	"path/filepath"
 
 	"github.com/atrox/homedir"
-	"github.com/confluentinc/ccloud-sdk-go"
 	v1 "github.com/confluentinc/ccloudapis/org/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/metric"
+	"github.com/confluentinc/cli/internal/pkg/sdk"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -63,7 +63,7 @@ func New(config ...*Config) *Config {
 }
 
 // Load reads the CLI config from disk.
-func (c *Config) Load(version, commit, date, host string) error {
+func (c *Config) Load(version, commit, date, host string, client *sdk.Client) error {
 	filename, err := c.getFilename()
 	if err != nil {
 		return err
@@ -90,8 +90,11 @@ func (c *Config) Load(version, commit, date, host string) error {
 		context.Platform = c.Platforms[context.PlatformName]
 		context.Version = ver
 		context.Logger = c.Logger
+		context.Client = client
+		context.Config = c
 	}
-	err = c.Validate()
+	c.Version = ver
+	err = c.validate()
 	if err != nil {
 		return err
 	}
@@ -100,7 +103,7 @@ func (c *Config) Load(version, commit, date, host string) error {
 
 // Save writes the CLI config to disk.
 func (c *Config) Save() error {
-	err := c.Validate()
+	err := c.validate()
 	if err != nil {
 		return err
 	}
@@ -123,7 +126,7 @@ func (c *Config) Save() error {
 	return nil
 }
 
-func (c *Config) Validate() error {
+func (c *Config) validate() error {
 	// Validate that current context exists.
 	if c.CurrentContext != "" {
 		if _, ok := c.Contexts[c.CurrentContext]; !ok {
@@ -136,7 +139,7 @@ func (c *Config) Validate() error {
 	// 2. Has no hanging references between the context and the config.
 	// 3. Is mapped by name correctly in the config.
 	for _, context := range c.Contexts {
-		err := context.Validate()
+		err := context.validate()
 		if err != nil {
 			c.Logger.Trace("context validation error")
 			return err
@@ -161,6 +164,7 @@ func (c *Config) Validate() error {
 			return c.corruptedConfigError()
 		}
 	}
+	
 	return nil
 }
 
@@ -189,7 +193,7 @@ func (c *Config) FindContext(name string) (*Context, error) {
 
 func (c *Config) AddContext(name string, platformName string, credentialName string,
 	kafkaClusters map[string]*KafkaClusterConfig, kafka string,
-	schemaRegistryClusters map[string]*SchemaRegistryCluster, state *ContextState, client *ccloud.Client) error {
+	schemaRegistryClusters map[string]*SchemaRegistryCluster, state *ContextState, baseClient *sdk.Client) error {
 	if _, ok := c.Contexts[name]; ok {
 		return fmt.Errorf("context \"%s\" already exists", name)
 	}
@@ -202,13 +206,13 @@ func (c *Config) AddContext(name string, platformName string, credentialName str
 		return fmt.Errorf("platform \"%s\" not found", platformName)
 	}
 	context, err := newContext(name, platform, credential, kafkaClusters, kafka,
-		schemaRegistryClusters, state, client)
+		schemaRegistryClusters, state, baseClient, c)
 	if err != nil {
 		return err
 	}
 	c.Contexts[name] = context
 	c.ContextStates[name] = context.State
-	err = c.Validate()
+	err = c.validate()
 	if err != nil {
 		return err
 	}

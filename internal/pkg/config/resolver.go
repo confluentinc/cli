@@ -4,18 +4,16 @@ import (
 	"context"
 	"strings"
 
-	"github.com/confluentinc/ccloud-sdk-go"
+	"github.com/confluentinc/cli/internal/pkg/sdk"
 )
 
 type contextResolver struct {
-	context *Context
 	client  *contextClient
 }
 
-func NewResolver(context *Context, client *ccloud.Client) *contextResolver {
+func NewResolver(context *Context, client *sdk.Client) *contextResolver {
 	ctxClient := NewContextClient(context, client)
 	return &contextResolver{
-		context: context,
 		client:  ctxClient,
 	}
 }
@@ -41,6 +39,7 @@ func (c *contextResolver) ResolveSchemaRegistryByAccountId(accountId string) (*S
 		return nil, err
 	}
 	cluster := &SchemaRegistryCluster{
+		Id:                     srCluster.Id,
 		SchemaRegistryEndpoint: srCluster.Endpoint,
 		SrCredentials:          nil, // For now.
 	}
