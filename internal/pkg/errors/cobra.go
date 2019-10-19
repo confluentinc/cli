@@ -41,7 +41,7 @@ func HandleCommon(err error, cmd *cobra.Command) error {
 	if urlErr, ok := err.(*url.Error); ok {
 		if certErr, ok := urlErr.Err.(x509.CertificateInvalidError); ok {
 			cmd.SilenceUsage = true
-			return fmt.Errorf("%s. Check the system keystore or login again with the --caCertPath option to add custom certs", certErr.Error())
+			return fmt.Errorf("%s. Check the system keystore or login again with the --ca-cert-path option to add custom certs", certErr.Error())
 		}
 	}
 

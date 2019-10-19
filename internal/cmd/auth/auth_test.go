@@ -234,14 +234,14 @@ func Test_SelfSignedCerts(t *testing.T) {
 		Subject: pkix.Name{ Organization:  []string{"testorg"} },
 	}
 	priv, err := rsa.GenerateKey(rand.Reader, 512)
-	req.Nil(err, "Couldn't generate private key")
+	req.NoError(err, "Couldn't generate private key")
 	ca_b, err := x509.CreateCertificate(rand.Reader, ca, ca, &priv.PublicKey, priv)
-	req.Nil(err, "Couldn't generate certificate from private key")
+	req.NoError(err, "Couldn't generate certificate from private key")
 	pemBytes := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: ca_b})
 	cmds.certReader = bytes.NewReader(pemBytes)
 
 	cert, err := x509.ParseCertificate(ca_b)
-	req.Nil(err, "Couldn't reparse certificate")
+	req.NoError(err, "Couldn't reparse certificate")
 	expectedSubject := cert.RawSubject
 	mdsClient.TokensAuthenticationApi = &mdsMock.TokensAuthenticationApi{
 		GetTokenFunc: func(ctx context.Context, xSPECIALRYANHEADER string) (mds.AuthenticationResponse, *http.Response, error) {
@@ -264,8 +264,8 @@ func Test_SelfSignedCerts(t *testing.T) {
 			}, nil, nil
 		},
 	}
-	_, err = pcmd.ExecuteCommand(cmds.Commands[0], "--url=http://localhost:8090", "--caCertPath=testcert.pem")
-	req.Nil(err)
+	_, err = pcmd.ExecuteCommand(cmds.Commands[0], "--url=http://localhost:8090", "--ca-cert-path=testcert.pem")
+	req.NoError(err)
 }
 
 func prompt(username, password string) *cliMock.Prompt {

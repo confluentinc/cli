@@ -32,7 +32,7 @@ var (
 	vocabWords = []string{
 		"ccloud", "kafka", "api", "url", "config", "configs", "multizone", "transactional", "ksql", "KSQL", "stdin",
 		// security
-		"iam", "acl", "ACL", "rolebinding", "rolebindings", "auth", "init", "decrypt", "READWRITE",
+		"iam", "acl", "ACL", "rolebinding", "rolebindings", "PEM", "auth", "init", "decrypt", "READWRITE",
 		"txt", // this is because @file.txt -> file txt
 		// clouds
 		"aws", "gcp",
@@ -129,7 +129,8 @@ var flagRules = []linter.FlagRule{
 	linter.RequireFlagKebabCase,
 	linter.RequireFlagCharacters('-'),
 	linter.FlagFilter(linter.RequireFlagDelimiter('-', 1),
-		linter.ExcludeFlag("service-account-id", "kafka-cluster-id", "connect-cluster-id", "schema-registry-cluster-id", "ksql-cluster-id", "local-secrets-file", "remote-secrets-file")),
+		linter.ExcludeFlag("service-account-id", "kafka-cluster-id", "connect-cluster-id", "schema-registry-cluster-id",
+			"ksql-cluster-id", "local-secrets-file", "remote-secrets-file", "ca-cert-path")),
 	linter.RequireFlagRealWords('-'),
 	linter.RequireFlagUsageRealWords,
 }
