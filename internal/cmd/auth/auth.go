@@ -81,7 +81,7 @@ func (a *commands) init(prerunner pcmd.PreRunner) {
 	} else {
 		loginCmd.RunE = a.loginMDS
 		loginCmd.Flags().String("url", "", "Metadata service URL.")
-		loginCmd.Flags().String("caCertPath", "", "Self-signed certificate in PEM format.")
+		loginCmd.Flags().String("ca-cert-path", "", "Self-signed certificate in PEM format.")
 		loginCmd.Short = strings.Replace(loginCmd.Short, ".", " (required for RBAC).", -1)
 		loginCmd.Long = strings.Replace(loginCmd.Long, ".", " (required for RBAC).", -1)
 		check(loginCmd.MarkFlagRequired("url")) // because https://confluent.cloud isn't an MDS endpoint
@@ -207,14 +207,14 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
 	url, err := cmd.Flags().GetString("url")
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, cmd)
 	}
 	a.config.AuthURL = url
 
-	if cmd.Flags().Changed("caCertPath") {
-		caCertPath, err := cmd.Flags().GetString("caCertPath")
+	if cmd.Flags().Changed("ca-cert-path") {
+		caCertPath, err := cmd.Flags().GetString("ca-cert-path")
 		if err != nil {
-			return err
+			return errors.HandleCommon(err, cmd)
 		}
 		if caCertPath == "" {
 			// revert to default client regardless of previously configured client
@@ -222,12 +222,12 @@ func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
 		} else {
 			caCertPath, err = filepath.Abs(caCertPath)
 			if err != nil {
-				return err
+				return errors.HandleCommon(err, cmd)
 			}
 			// override previously configured httpclient if a new cert path was specified
 			a.mdsClient.GetConfig().HTTPClient, err = SelfSignedCertClient(caCertPath, a.certReader)
 			if err != nil {
-				return err
+				return errors.HandleCommon(err, cmd)
 			}
 			a.Logger.Debugf("Successfully loaded certificate from %s", caCertPath)
 		}
@@ -236,7 +236,7 @@ func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
 	a.mdsClient.ChangeBasePath(a.config.AuthURL)
 	email, password, err := a.credentials(cmd, "Username", nil)
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, cmd)
 	}
 
 	basicContext := context.WithValue(context.Background(), mds.ContextBasicAuth, mds.BasicAuth{UserName: email, Password: password})
@@ -252,11 +252,11 @@ func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
 	}
 	err = a.addContextIfAbsent(email)
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, cmd)
 	}
 	pcmd.Println(cmd, "Logged in as", email)
 
-	return err
+	return errors.HandleCommon(err, cmd)
 }
 
 func (a *commands) logout(cmd *cobra.Command, args []string) error {
