@@ -2,8 +2,14 @@ package auth
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -21,10 +27,12 @@ import (
 )
 
 type commands struct {
-	Commands  []*cobra.Command
-	config    *config.Config
-	mdsClient *mds.APIClient
-	Logger    *log.Logger
+	Commands   []*cobra.Command
+	config     *config.Config
+	mdsClient  *mds.APIClient
+	Logger     *log.Logger
+	// @VisibleForTesting, defaults to the OS filesystem
+	certReader io.Reader
 	// for testing
 	prompt                pcmd.Prompt
 	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *ccloud.Client
@@ -73,6 +81,7 @@ func (a *commands) init(prerunner pcmd.PreRunner) {
 	} else {
 		loginCmd.RunE = a.loginMDS
 		loginCmd.Flags().String("url", "", "Metadata service URL.")
+		loginCmd.Flags().String("ca-cert-path", "", "Self-signed certificate in PEM format.")
 		loginCmd.Short = strings.Replace(loginCmd.Short, ".", " (required for RBAC).", -1)
 		loginCmd.Long = strings.Replace(loginCmd.Long, ".", " (required for RBAC).", -1)
 		check(loginCmd.MarkFlagRequired("url")) // because https://confluent.cloud isn't an MDS endpoint
@@ -128,7 +137,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 			return errors.HandleCommon(err, cmd)
 		}
 
-		// Exchange authorization code for OAuth token from SSO orovider
+		// Exchange authorization code for OAuth token from SSO provider
 		err := server.GetOAuthToken()
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
@@ -198,13 +207,45 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
 	url, err := cmd.Flags().GetString("url")
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, cmd)
 	}
 	a.config.AuthURL = url
+
+	if cmd.Flags().Changed("ca-cert-path") {
+		caCertPath, err := cmd.Flags().GetString("ca-cert-path")
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+		if caCertPath == "" {
+			// revert to default client regardless of previously configured client
+			a.mdsClient.GetConfig().HTTPClient = DefaultClient()
+		} else {
+			// override previously configured httpclient if a new cert path was specified
+			if a.certReader == nil {
+				// if a certReader wasn't already set, eg. for testing, then create one now
+				caCertPath, err = filepath.Abs(caCertPath)
+				if err != nil {
+					return errors.HandleCommon(err, cmd)
+				}
+				caCertFile, err := os.Open(caCertPath)
+				if err != nil {
+					return errors.HandleCommon(err, cmd)
+				}
+				defer caCertFile.Close()
+				a.certReader = caCertFile
+			}
+			a.mdsClient.GetConfig().HTTPClient, err = SelfSignedCertClient(a.certReader)
+			if err != nil {
+				return errors.HandleCommon(err, cmd)
+			}
+			a.Logger.Debugf("Successfully loaded certificate from %s", caCertPath)
+		}
+		a.config.CaCertPath = caCertPath
+	}
 	a.mdsClient.ChangeBasePath(a.config.AuthURL)
 	email, password, err := a.credentials(cmd, "Username", nil)
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, cmd)
 	}
 
 	basicContext := context.WithValue(context.Background(), mds.ContextBasicAuth, mds.BasicAuth{UserName: email, Password: password})
@@ -220,11 +261,11 @@ func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
 	}
 	err = a.addContextIfAbsent(email)
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, cmd)
 	}
 	pcmd.Println(cmd, "Logged in as", email)
 
-	return err
+	return errors.HandleCommon(err, cmd)
 }
 
 func (a *commands) logout(cmd *cobra.Command, args []string) error {
@@ -297,7 +338,8 @@ func (a *commands) addContextIfAbsent(username string) error {
 		return nil
 	}
 	platform := &config.Platform{
-		Server: a.config.AuthURL,
+		Server:     a.config.AuthURL,
+		CaCertPath: a.config.CaCertPath,
 	}
 	credential := &config.Credential{
 		Username: username,
@@ -312,6 +354,38 @@ func (a *commands) addContextIfAbsent(username string) error {
 		return err
 	}
 	return nil
+}
+
+func SelfSignedCertClient(certReader io.Reader) (*http.Client, error){
+	certPool, _ := x509.SystemCertPool()
+	if certPool == nil {
+		certPool = x509.NewCertPool()
+	}
+
+	if certReader == nil {
+		return nil, fmt.Errorf("no reader specified for reading custom certificates")
+	}
+	certs, err := ioutil.ReadAll(certReader)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read certificate: %v", err)
+	}
+
+	// Append new cert to the system pool
+	if ok := certPool.AppendCertsFromPEM(certs); !ok {
+		return nil, fmt.Errorf("no certs appended, using system certs only")
+	}
+
+	// Trust the updated cert pool in our client
+	tlsClientConfig := &tls.Config{RootCAs: certPool}
+	transport := &http.Transport{TLSClientConfig: tlsClientConfig}
+	client := DefaultClient()
+	client.Transport = transport
+
+	return client, nil
+}
+
+func DefaultClient() *http.Client {
+	return http.DefaultClient
 }
 
 func check(err error) {
