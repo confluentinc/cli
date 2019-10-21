@@ -218,14 +218,23 @@ func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
 		}
 		if caCertPath == "" {
 			// revert to default client regardless of previously configured client
-			a.mdsClient.GetConfig().HTTPClient = http.DefaultClient
+			a.mdsClient.GetConfig().HTTPClient = DefaultClient()
 		} else {
-			caCertPath, err = filepath.Abs(caCertPath)
-			if err != nil {
-				return errors.HandleCommon(err, cmd)
-			}
 			// override previously configured httpclient if a new cert path was specified
-			a.mdsClient.GetConfig().HTTPClient, err = SelfSignedCertClient(caCertPath, a.certReader)
+			if a.certReader == nil {
+				// if a certReader wasn't already set, eg. for testing, then create one now
+				caCertPath, err = filepath.Abs(caCertPath)
+				if err != nil {
+					return errors.HandleCommon(err, cmd)
+				}
+				caCertFile, err := os.Open(caCertPath)
+				if err != nil {
+					return errors.HandleCommon(err, cmd)
+				}
+				defer caCertFile.Close()
+				a.certReader = caCertFile
+			}
+			a.mdsClient.GetConfig().HTTPClient, err = SelfSignedCertClient(a.certReader)
 			if err != nil {
 				return errors.HandleCommon(err, cmd)
 			}
@@ -347,27 +356,18 @@ func (a *commands) addContextIfAbsent(username string) error {
 	return nil
 }
 
-
-func SelfSignedCertClient(caCertPath string, certReader io.Reader) (*http.Client, error){
-	if caCertPath == "" {
-		return nil, nil
-	}
+func SelfSignedCertClient(certReader io.Reader) (*http.Client, error){
 	certPool, _ := x509.SystemCertPool()
 	if certPool == nil {
 		certPool = x509.NewCertPool()
 	}
 
 	if certReader == nil {
-		file, err := os.Open(caCertPath)
-		if err != nil {
-			return nil, err
-		}
-		defer file.Close()
-		certReader = file
+		return nil, fmt.Errorf("no reader specified for reading custom certificates")
 	}
 	certs, err := ioutil.ReadAll(certReader)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read certificate from %q: %v", caCertPath, err)
+		return nil, fmt.Errorf("failed to read certificate: %v", err)
 	}
 
 	// Append new cert to the system pool
@@ -378,9 +378,14 @@ func SelfSignedCertClient(caCertPath string, certReader io.Reader) (*http.Client
 	// Trust the updated cert pool in our client
 	tlsClientConfig := &tls.Config{RootCAs: certPool}
 	transport := &http.Transport{TLSClientConfig: tlsClientConfig}
-	client := &http.Client{Transport: transport}
+	client := DefaultClient()
+	client.Transport = transport
 
 	return client, nil
+}
+
+func DefaultClient() *http.Client {
+	return http.DefaultClient
 }
 
 func check(err error) {

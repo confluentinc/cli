@@ -93,9 +93,22 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	mdsConfig.BasePath = cfg.AuthURL
 	mdsConfig.UserAgent = ver.UserAgent
 	if cfg.Platforms[cfg.AuthURL] != nil {
-		mdsConfig.HTTPClient, err = auth.SelfSignedCertClient(cfg.Platforms[cfg.AuthURL].CaCertPath, nil)
-		if err != nil {
-			logger.Warnf("Unable to load certificate. %s. Resulting SSL errors will be fixed by logging in again with the --ca-cert-path flag.", err.Error())
+		caCertPath := cfg.Platforms[cfg.AuthURL].CaCertPath
+		if caCertPath != "" {
+			// Try to load certs. On failure, warn, but don't error out because this may be an auth command, so there may
+			// be a --ca-cert-path flag on the cmd line that'll fix whatever issue there is with the cert file in the config
+			caCertFile, err := os.Open(caCertPath)
+			if err == nil {
+				defer caCertFile.Close()
+				mdsConfig.HTTPClient, err = auth.SelfSignedCertClient(caCertFile)
+				if err != nil {
+					logger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
+					mdsConfig.HTTPClient = auth.DefaultClient()
+				}
+			} else {
+				logger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
+				mdsConfig.HTTPClient = auth.DefaultClient()
+			}
 		}
 	}
 	mdsClient := mds.NewAPIClient(mdsConfig)
