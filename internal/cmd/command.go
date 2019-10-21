@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"github.com/confluentinc/cli/internal/cmd/auditlog"
 	"net/http"
 	"os"
 
@@ -154,6 +155,8 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		cli.AddCommand(local.New(cli, prerunner, shellRunner, logger, fs))
 
 		cli.AddCommand(secret.New(prerunner, cfg, prompt, resolver, secrets.NewPasswordProtectionPlugin(logger)))
+
+		cli.AddCommand(auditlog.New(prerunner, cfg, mdsClient))
 	}
 	return cli, nil
 }

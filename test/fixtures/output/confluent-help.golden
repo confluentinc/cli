@@ -4,6 +4,7 @@ Usage:
   confluent [command]
 
 Available Commands:
+  audit-log   Manage audit log configuration.
   cluster     Retrieve metadata about Confluent clusters.
   completion  Print shell completion code.
   help        Help about any command
