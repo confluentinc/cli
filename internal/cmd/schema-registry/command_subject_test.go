@@ -15,9 +15,7 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	srMock "github.com/confluentinc/schema-registry-sdk-go/mock"
 
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/cli/internal/pkg/version"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
@@ -39,7 +37,10 @@ func (suite *SubjectTestSuite) SetupSuite() {
 	srCluster, _ := suite.conf.SchemaRegistryCluster()
 	srCluster.SrCredentials = &config.APIKeyPair{Key: "key", Secret: "secret"}
 
-	cluster := suite.conf.Context().ActiveKafkaCluster()
+	cluster, err := suite.conf.Context().ActiveKafkaCluster()
+	if err != nil {
+		panic(err)
+	}
 	suite.kafkaCluster = &kafkav1.KafkaCluster{
 		Id:         cluster.ID,
 		Name:       cluster.Name,
@@ -80,10 +81,7 @@ func (suite *SubjectTestSuite) SetupTest() {
 }
 
 func (suite *SubjectTestSuite) newCMD() *cobra.Command {
-	cmd := New(&cliMock.Commander{}, suite.conf, suite.srMothershipMock, &pcmd.ContextResolver{
-		Config:  config.AuthenticatedConfigMock(),
-		Version: &version.Version{},
-	}, suite.srClientMock, nil, nil)
+	cmd := New(cliMock.NewPreRunnerMock(), suite.conf, suite.srClientMock, suite.conf.Logger)
 	return cmd
 }
 

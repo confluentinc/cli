@@ -6,25 +6,22 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/ccloud-sdk-go"
-	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
 	"github.com/confluentinc/go-printer"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/config"
 )
 
 const (
 	SubjectUsage = "Subject of the schema."
 )
 
-func GetApiClient(srClient *srsdk.APIClient, ch *pcmd.ContextResolver) (*srsdk.APIClient, context.Context, error) {
+func GetApiClient(srClient *srsdk.APIClient, cfg *config.Config) (*srsdk.APIClient, context.Context, error) {
 	if srClient != nil {
 		// Tests/mocks
 		return srClient, nil, nil
 	}
-	client, ctx, err := SchemaRegistryClient(ch)
+	client, ctx, err := SchemaRegistryClient(cfg)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -56,20 +53,6 @@ func getServiceProviderFromUrl(url string) string {
 		return ""
 	}
 	return strings.Trim(stringSlice[2], ".")
-}
-
-func GetSchemaRegistryByAccountId(ctx context.Context, ccClient ccloud.SchemaRegistry, accountId string) (*srv1.SchemaRegistryCluster, error) {
-	existingClusters, err := ccClient.GetSchemaRegistryClusters(ctx, &srv1.SchemaRegistryCluster{
-		AccountId: accountId,
-		Name:      "account schema-registry",
-	})
-	if err != nil {
-		return nil, err
-	}
-	if len(existingClusters) > 0 {
-		return existingClusters[0], nil
-	}
-	return nil, errors.ErrNoSrEnabled
 }
 
 func FormatDescription(description string, cliName string) string {

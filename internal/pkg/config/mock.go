@@ -3,12 +3,10 @@ package config
 import (
 	"fmt"
 
-	"github.com/confluentinc/ccloud-sdk-go"
-	"github.com/confluentinc/ccloud-sdk-go/mock"
 	"github.com/confluentinc/ccloudapis/org/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/log"
-	"github.com/confluentinc/cli/internal/pkg/sdk"
+	mock2 "github.com/confluentinc/cli/internal/pkg/mock"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -40,19 +38,6 @@ func AuthenticatedConfigMock() *Config {
 		AuthToken: "some.token.here",
 	}
 	conf.Credentials[credential.Name] = credential
-	baseClient := &ccloud.Client{
-		Params:         nil,
-		Auth:           &mock.Auth{},
-		Account:        &mock.Account{},
-		Kafka:          &mock.Kafka{},
-		SchemaRegistry: &mock.SchemaRegistry{},
-		Connect:        &mock.Connect{},
-		User:           &mock.User{},
-		APIKey:         &mock.APIKey{},
-		KSQL:           &mock.MockKSQL{},
-		Metrics:        &mock.Metrics{},
-	}
-	client := sdk.NewClient(baseClient, conf.Logger)
 	kafkaClusters := map[string]*KafkaClusterConfig{
 		"lkc-0000": {
 			ID:          "lkc-0000",
@@ -78,7 +63,7 @@ func AuthenticatedConfigMock() *Config {
 			},
 		},
 	}
-	ctx, err := newContext("test-context", platform, credential, kafkaClusters, "lkc-0000", srClusters, state, client, conf)
+	ctx, err := newContext("test-context", platform, credential, kafkaClusters, "lkc-0000", srClusters, state, mock2.NewEmptyClientMock(conf.Logger), conf)
 	if err != nil {
 		panic(err)
 	}

@@ -27,7 +27,7 @@ func New(prerunner pcmd.PreRunner, config *config.Config, prompt pcmd.Prompt, re
 			Use:               "init <context-name>",
 			Short:             "Initialize a context.",
 			Long:              longDescription,
-			PersistentPreRunE: prerunner.Anonymous(),
+			PersistentPreRunE: prerunner.Anonymous(config),
 			Args:              cobra.ExactArgs(1),
 		},
 		config,
@@ -142,5 +142,5 @@ func (c *command) addContext(name string, bootstrapURL string, apiKey string, ap
 		return err
 	}
 	return c.config.AddContext(name, platform.Name, credential.Name, kafkaClusters,
-		kafkaClusterCfg.ID, nil, nil)
+		kafkaClusterCfg.ID, nil, nil, nil)
 }

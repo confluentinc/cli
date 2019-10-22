@@ -1,7 +1,10 @@
 package config
 
 import (
+	"context"
 	"fmt"
+
+	"github.com/confluentinc/ccloud-sdk-go"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -49,8 +52,8 @@ type Context struct {
 	// Mapped by cluster id.
 	KafkaClusters map[string]*KafkaClusterConfig `json:"kafka_clusters" hcl:"kafka_clusters"`
 	// Kafka is your active Kafka cluster and references a key in the KafkaClusters map
-	Kafka                string `json:"kafka_cluster" hcl:"kafka_cluster"`
-	UserSpecifiedCluster string `json:"-" hcl:"-"`
+	Kafka                     string `json:"kafka_cluster" hcl:"kafka_cluster"`
+	UserSpecifiedKafkaCluster string `json:"-" hcl:"-"`
 	// SR map keyed by environment-id.
 	SchemaRegistryClusters           map[string]*SchemaRegistryCluster `json:"schema_registry_clusters" hcl:"schema_registry_clusters"`
 	UserSpecifiedSchemaRegistryEnvId string                            `json:"-" hcl:"-"`
@@ -77,17 +80,33 @@ func newContext(name string, platform *Platform, credential *Credential,
 		SchemaRegistryClusters: schemaRegistryClusters,
 		State:                  state,
 		Client:                 client,
-		Logger:                 client.Logger,
+		Logger:                 config.Logger,
 		Version:                config.Version,
 		Config:                 config,
 	}
-	resolver := NewResolver(ctx, client)
-	ctx.Resolver = resolver
 	err := ctx.validate()
 	if err != nil {
 		return nil, err
 	}
+	// If client isn't injected, create one.
+	if ctx.Client == nil {
+		ctx.Client = ctx.defaultClient()
+	}
+	ctx.Resolver = NewResolver(ctx)
 	return ctx, nil
+}
+
+func (c *Context) defaultClient() *sdk.Client {
+	baseURL := c.Platform.Server
+	state, err := c.AuthenticatedState()
+	var authToken string
+	if err == nil {
+		authToken = state.AuthToken
+	}
+	baseClient := ccloud.NewClientWithJWT(context.Background(), authToken, &ccloud.Params{
+		BaseURL: baseURL, Logger: c.Logger, UserAgent: c.Version.UserAgent,
+	})
+	return sdk.NewClient(baseClient, c.Logger)
 }
 
 // TODO: Save contexts after resolution.
@@ -137,8 +156,11 @@ func (c *Context) validateSRCluster(cluster *SchemaRegistryCluster, accountId st
 }
 
 func (c *Context) validate() error {
+	if c.Client == nil {
+		c.Client = 	c.defaultClient()
+	}
 	if c.Resolver == nil {
-		c.Resolver = NewResolver(c, c.Client)
+		c.Resolver = NewResolver(c)
 	}
 	if c.Name == "" {
 		return errors.New("context has no name")
@@ -190,15 +212,21 @@ func (c *Context) validate() error {
 }
 
 func (c *Context) SetActiveKafkaCluster(clusterId string) error {
-	cluster, err := c.FindKafkaCluster(clusterId)
+	_, err := c.FindKafkaCluster(clusterId)
 	if err != nil {
 		return err
 	}
-	if _, ok := c.KafkaClusters[cluster.ID]; !ok {
-		return fmt.Errorf("cluster '%s' does not exist in context '%s'", clusterId, c.Name)
-	}
 	c.Kafka = clusterId
-	return c.Config.Save()
+	return c.Save()
+}
+
+func (c *Context) SetUserSpecifiedKafkaCluster(clusterId string) error {
+	_, err := c.FindKafkaCluster(clusterId)
+	if err != nil {
+		return err
+	}
+	c.UserSpecifiedKafkaCluster = clusterId
+	return nil
 }
 
 // SchemaRegistryCluster returns the SchemaRegistryCluster of the Context,
@@ -221,7 +249,7 @@ func (c *Context) schemaRegistryCluster() (*SchemaRegistryCluster, error) {
 		}
 		cluster = resolvedCluster
 		c.SchemaRegistryClusters[accountId] = cluster
-		err = c.Config.Save()
+		err = c.Save()
 		if err != nil {
 			return nil, err
 		}
@@ -231,8 +259,8 @@ func (c *Context) schemaRegistryCluster() (*SchemaRegistryCluster, error) {
 
 func (c *Context) ActiveKafkaCluster() (*KafkaClusterConfig, error) {
 	var clusterId string
-	if c.UserSpecifiedCluster != "" {
-		clusterId = c.UserSpecifiedCluster
+	if c.UserSpecifiedKafkaCluster != "" {
+		clusterId = c.UserSpecifiedKafkaCluster
 	} else {
 		clusterId = c.Kafka
 	}
@@ -251,7 +279,7 @@ func (c *Context) FindKafkaCluster(clusterId string) (*KafkaClusterConfig, error
 			return nil, err
 		}
 		c.KafkaClusters[clusterId] = cluster
-		err = c.Config.Save()
+		err = c.Save()
 		if err != nil {
 			return nil, err
 		}
@@ -269,6 +297,10 @@ func (c *Context) UseAPIKey(apiKey string, clusterId string) error {
 		return c.Resolver.client.FetchAPIKeyError(apiKey, clusterId)
 	}
 	kcc.APIKey = apiKey
+	return c.Save()
+}
+
+func (c *Context) Save() error {
 	return c.Config.Save()
 }
 

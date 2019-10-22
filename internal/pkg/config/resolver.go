@@ -3,16 +3,14 @@ package config
 import (
 	"context"
 	"strings"
-
-	"github.com/confluentinc/cli/internal/pkg/sdk"
 )
 
 type contextResolver struct {
 	client  *contextClient
 }
 
-func NewResolver(context *Context, client *sdk.Client) *contextResolver {
-	ctxClient := NewContextClient(context, client)
+func NewResolver(ctx *Context) *contextResolver {
+	ctxClient := NewContextClient(ctx)
 	return &contextResolver{
 		client:  ctxClient,
 	}
@@ -34,7 +32,7 @@ func (c *contextResolver) ResolveCluster(clusterId string) (*KafkaClusterConfig,
 }
 
 func (c *contextResolver) ResolveSchemaRegistryByAccountId(accountId string) (*SchemaRegistryCluster, error) {
-	srCluster, err := c.client.FetchSchemaRegistryByAccountId(accountId, context.Background())
+	srCluster, err := c.client.FetchSchemaRegistryByAccountId(context.Background(), accountId)
 	if err != nil {
 		return nil, err
 	}

@@ -8,7 +8,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	ccsdk "github.com/confluentinc/ccloud-sdk-go"
 	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
 	"github.com/confluentinc/go-printer"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
@@ -39,24 +38,20 @@ var (
 
 type clusterCommand struct {
 	*cobra.Command
-	config       *config.Config
-	ccClient     ccsdk.SchemaRegistry
-	metricClient ccsdk.Metrics
-	srClient     *srsdk.APIClient
-	logger       *log.Logger
+	config   *config.Config
+	logger   *log.Logger
+	srClient *srsdk.APIClient
 }
 
-func NewClusterCommand(config *config.Config, ccloudClient ccsdk.SchemaRegistry, srClient *srsdk.APIClient, metricClient ccsdk.Metrics, logger *log.Logger) *cobra.Command {
+func NewClusterCommand(config *config.Config, srClient *srsdk.APIClient, logger *log.Logger) *cobra.Command {
 	clusterCmd := &clusterCommand{
 		Command: &cobra.Command{
 			Use:   "cluster",
 			Short: "Manage Schema Registry cluster.",
 		},
-		config:       config,
-		ccClient:     ccloudClient,
-		srClient:     srClient,
-		metricClient: metricClient,
-		logger:       logger,
+		config:   config,
+		srClient: srClient,
+		logger:   logger,
 	}
 	clusterCmd.init()
 	return clusterCmd.Command
@@ -131,12 +126,15 @@ func (c *clusterCommand) enable(cmd *cobra.Command, args []string) error {
 		// this hardcoded string constant
 		Name: "account schema-registry",
 	}
-
-	newCluster, err := c.ccClient.CreateSchemaRegistryCluster(ctx, clusterConfig)
+	currContext := c.config.Context()
+	if currContext == nil {
+		return errors.ErrNoContext
+	}
+	newCluster, err := currContext.Client.SchemaRegistry.CreateSchemaRegistryCluster(ctx, clusterConfig)
 	if err != nil {
 		// If it already exists, return the existing one
-		cluster, getExistingErr := GetSchemaRegistryByAccountId(ctx, c.ccClient, accountId)
-		if getExistingErr != nil {
+		cluster, err := c.config.SchemaRegistryCluster()
+		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
 		_ = printer.RenderTableOut(cluster, enableLabels, enableRenames, os.Stdout)
@@ -147,11 +145,11 @@ func (c *clusterCommand) enable(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
-
 	var compatibility string
 	var mode string
 	var numSchemas string
 	var availableSchemas string
+	var srClient *srsdk.APIClient
 	ctx := context.Background()
 
 	// Collect the parameters
@@ -159,42 +157,53 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	cluster, err := GetSchemaRegistryByAccountId(ctx, c.ccClient, state.Auth.Account.Id)
-
+	currCtx := c.config.Context()
+	ctxClient := config.NewContextClient(currCtx)
+	cluster, err := ctxClient.FetchSchemaRegistryByAccountId(ctx, state.Auth.Account.Id)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	srClient, ctx, err := GetApiClient(c.srClient, c.ch)
+	srCluster, err := c.config.SchemaRegistryCluster()
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
+	if srCluster != nil && srCluster.SrCredentials.Key != "" {
+		srClient, ctx, err = GetApiClient(c.srClient, c.config)
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+		// Get Schema usage metrics
+		metrics, err := currCtx.Client.Metrics.SchemaRegistryMetrics(ctx, cluster.Id)
+		if err != nil {
+			c.logger.Warn("Could not retrieve Schema Registry Metrics")
+			numSchemas = ""
+			availableSchemas = ""
+		} else {
+			numSchemas = strconv.Itoa(int(metrics.NumSchemas))
+			availableSchemas = strconv.Itoa(int(cluster.MaxSchemas) - int(metrics.NumSchemas))
+		}
+		// Get SR compatibility
+		compatibilityResponse, _, err := srClient.DefaultApi.GetTopLevelConfig(ctx)
+		if err != nil {
+			compatibility = ""
+			c.logger.Warn("Could not retrieve Schema Registry Compatibility")
+		} else {
+			compatibility = compatibilityResponse.CompatibilityLevel
+		}
+		// Get SR Mode
+		ModeResponse, _, err := srClient.DefaultApi.GetTopLevelMode(ctx)
+		if err != nil {
+			mode = ""
+			c.logger.Warn("Could not retrieve Schema Registry Mode")
+		} else {
+			mode = ModeResponse.Mode
+		}
+	} else {
+		srClient = nil
+		compatibility = "<Requires API Key>"
+		mode = "<Requires API Key>"
+	}
 
-	// Get Schema usage metrics
-	metrics, err := c.metricClient.SchemaRegistryMetrics(ctx, cluster.Id)
-	if err != nil {
-		c.logger.Warn("Could not retrieve Schema Registry Metrics")
-		numSchemas = ""
-		availableSchemas = ""
-	} else {
-		numSchemas = strconv.Itoa(int(metrics.NumSchemas))
-		availableSchemas = strconv.Itoa(int(cluster.MaxSchemas) - int(metrics.NumSchemas))
-	}
-	// Get SR compatibility
-	compatibilityResponse, _, err := srClient.DefaultApi.GetTopLevelConfig(ctx)
-	if err != nil {
-		compatibility = ""
-		c.logger.Warn("Could not retrieve Schema Registry Compatibility")
-	} else {
-		compatibility = compatibilityResponse.CompatibilityLevel
-	}
-	// Get SR Mode
-	ModeResponse, _, err := srClient.DefaultApi.GetTopLevelMode(ctx)
-	if err != nil {
-		mode = ""
-		c.logger.Warn("Could not retrieve Schema Registry Mode")
-	} else {
-		mode = ModeResponse.Mode
-	}
 	serviceProvider := getServiceProviderFromUrl(cluster.Endpoint)
 	data := &describeDisplay{
 		Name:            cluster.Name,
@@ -228,7 +237,7 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 	return errors.New("flag --compatibility or --mode is required.")
 }
 func (c *clusterCommand) updateCompatibility(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(c.srClient, c.ch)
+	srClient, ctx, err := GetApiClient(c.srClient, c.config)
 	if err != nil {
 		return err
 	}
@@ -247,7 +256,7 @@ func (c *clusterCommand) updateCompatibility(cmd *cobra.Command, args []string) 
 
 func (c *clusterCommand) updateMode(cmd *cobra.Command, args []string) error {
 
-	srClient, ctx, err := GetApiClient(c.srClient, c.ch)
+	srClient, ctx, err := GetApiClient(c.srClient, c.config)
 	if err != nil {
 		return err
 	}

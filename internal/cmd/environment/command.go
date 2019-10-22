@@ -6,7 +6,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/ccloud-sdk-go"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	"github.com/confluentinc/go-printer"
 
@@ -18,7 +17,6 @@ import (
 type command struct {
 	*cobra.Command
 	config *config.Config
-	client ccloud.Account
 }
 
 var (
@@ -27,15 +25,14 @@ var (
 )
 
 // New returns the Cobra command for `environment`.
-func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.Account, cliName string) *cobra.Command {
+func New(prerunner pcmd.PreRunner, config *config.Config, cliName string) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:               "environment",
 			Short:             fmt.Sprintf("Manage and select %s environments.", cliName),
-			PersistentPreRunE: prerunner.Authenticated(),
+			PersistentPreRunE: prerunner.Authenticated(config),
 		},
 		config: config,
-		client: client,
 	}
 	cmd.init()
 	return cmd.Command
@@ -83,7 +80,11 @@ func (c *command) init() {
 }
 
 func (c *command) refreshEnvList(cmd *cobra.Command) error {
-	environments, err := c.client.List(context.Background(), &orgv1.Account{})
+	ctx := c.config.Context()
+	if ctx == nil {
+		return errors.ErrNoContext
+	}
+	environments, err := ctx.Client.Account.List(context.Background(), &orgv1.Account{})
 	if err != nil {
 		return err
 	}
@@ -115,7 +116,11 @@ func (c *command) refreshEnvList(cmd *cobra.Command) error {
 }
 
 func (c *command) list(cmd *cobra.Command, args []string) error {
-	environments, err := c.client.List(context.Background(), &orgv1.Account{})
+	ctx := c.config.Context()
+	if ctx == nil {
+		return errors.ErrNoContext
+	}
+	environments, err := ctx.Client.Account.List(context.Background(), &orgv1.Account{})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -168,7 +173,8 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	_, err = c.client.Create(context.Background(), &orgv1.Account{Name: name, OrganizationId: state.Auth.Account.OrganizationId})
+	ctx := c.config.Context()
+	_, err = ctx.Client.Account.Create(context.Background(), &orgv1.Account{Name: name, OrganizationId: state.Auth.Account.OrganizationId})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -182,7 +188,8 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	err = c.client.Update(context.Background(), &orgv1.Account{Id: id, Name: newName, OrganizationId: state.Auth.Account.OrganizationId})
+	ctx := c.config.Context()
+	err = ctx.Client.Account.Update(context.Background(), &orgv1.Account{Id: id, Name: newName, OrganizationId: state.Auth.Account.OrganizationId})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -195,7 +202,8 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	err = c.client.Delete(context.Background(), &orgv1.Account{Id: id, OrganizationId: state.Auth.Account.OrganizationId})
+	ctx := c.config.Context()
+	err = ctx.Client.Account.Delete(context.Background(), &orgv1.Account{Id: id, OrganizationId: state.Auth.Account.OrganizationId})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}

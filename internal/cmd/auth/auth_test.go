@@ -18,6 +18,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/version"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
@@ -182,31 +183,12 @@ func TestLogout(t *testing.T) {
 
 	prompt := prompt("cody@confluent.io", "iamrobin")
 	auth := &sdkMock.Auth{}
-	cmds, cfg := newAuthCommand(prompt, auth, nil, "ccloud", req)
-	platform := &config.Platform{
-		Name:   "michael-scott",
-		Server: "https://fake-confluent-plat.com",
-	}
-	credential := &config.Credential{
-		Name:           "whatever",
-		Username:       "franz",
-		Password:       "kafka",
-		CredentialType: 0,
-	}
-	state := &config.ContextState{
-		Auth:      &config.AuthConfig{User: &orgv1.User{Id: 23}},
-		AuthToken: "some.token.here",
-	}
-	req.NoError(cfg.SaveCredential(credential))
-	req.NoError(cfg.SavePlatform(platform))
-	req.NoError(cfg.AddContext("koolbeanz", "michael-scott", "whatever", nil, "", nil, state))
-	req.NoError(cfg.Save())
-	output, err := pcmd.ExecuteCommand(cmds.Commands[1], []string{}...)
+	cmds, _ := newAuthCommand(prompt, auth, nil, "ccloud", req)
+	cmds.config = config.AuthenticatedConfigMock()
+	output, err := pcmd.ExecuteCommand(cmds.Commands[1])
 	req.NoError(err)
 	req.Contains(output, "You are now logged out")
-	cfg = config.New()
-	cfg.CLIName = "ccloud"
-	req.NoError(cfg.Load())
+	state := cmds.config.Context().State
 	req.Empty(state.AuthToken)
 	req.Empty(state.Auth)
 }
@@ -243,9 +225,11 @@ func newAuthCommand(prompt pcmd.Prompt, auth *sdkMock.Auth, user *sdkMock.User, 
 	var mockJwtHTTPClientFactory = func(ctx context.Context, jwt, baseURL string, logger *log.Logger) *ccloud.Client {
 		return &ccloud.Client{Auth: auth, User: user}
 	}
-	cfg := config.New()
-	cfg.Logger = log.New()
-	cfg.CLIName = cliName
+	cfg := config.New(&config.Config{
+		Logger:  nil,
+		Version: version.NewVersion("", "", "", "", "", "", ""),
+		CLIName: cliName,
+	})
 	var mdsClient *mds.APIClient
 	if cliName == "confluent" {
 		mdsConfig := mds.NewConfiguration()
@@ -260,7 +244,7 @@ func newAuthCommand(prompt pcmd.Prompt, auth *sdkMock.Auth, user *sdkMock.User, 
 			},
 		}
 	}
-	commands := newCommands(&cliMock.Commander{}, cfg, log.New(), mdsClient, prompt, mockAnonHTTPClientFactory, mockJwtHTTPClientFactory)
+	commands := newCommands(cliMock.NewPreRunnerMock(), cfg, log.New(), mdsClient, prompt, mockAnonHTTPClientFactory, mockJwtHTTPClientFactory)
 	for _, c := range commands.Commands {
 		c.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	}

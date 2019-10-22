@@ -145,7 +145,12 @@ func main() {
 
 	var issues *multierror.Error
 	for _, cliName := range []string{"confluent", "ccloud"} {
-		cli, err := cmd.NewConfluentCommand(cliName, &config.Config{CLIName: cliName}, &version.Version{Binary: cliName}, log.New())
+		cfg := config.New(&config.Config{
+			CLIName: cliName,
+			Logger:  log.New(),
+			Version: version.NewVersion("", "", "", "", "", "", ""),
+		})
+		cli, err := cmd.NewConfluentCommand(cliName, cfg, cfg.Logger)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)

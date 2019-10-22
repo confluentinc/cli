@@ -12,23 +12,27 @@ import (
 )
 
 type Client struct {
-	BaseClient *ccloud.Client
-	Logger     *log.Logger
-	APIKey     ccloud.APIKey
-	Account    ccloud.Account
-	Kafka      ccloud.Kafka
-	KSQL       ccloud.KSQL
-	User       ccloud.User
+	BaseClient     *ccloud.Client
+	Logger         *log.Logger
+	APIKey         ccloud.APIKey
+	Account        ccloud.Account
+	Kafka          ccloud.Kafka
+	KSQL           ccloud.KSQL
+	User           ccloud.User
+	SchemaRegistry ccloud.SchemaRegistry
+	Metrics        ccloud.Metrics
 }
 
 func NewClient(baseClient *ccloud.Client, logger *log.Logger) *Client {
 	return &Client{
-		BaseClient: baseClient,
-		Logger:     logger,
-		APIKey:     &apikey.APIKey{Client: baseClient, Logger: logger},
-		Account:    &environment.Environment{Client: baseClient, Logger: logger},
-		Kafka:      &kafka.Kafka{Client: baseClient, Logger: logger},
-		KSQL:       &ksql.KSQL{Client: baseClient, Logger: logger},
-		User:       &user.User{Client: baseClient, Logger: logger},
+		BaseClient:     baseClient,
+		Logger:         logger,
+		APIKey:         &apikey.APIKey{Client: baseClient, Logger: logger},
+		Account:        &environment.Environment{Client: baseClient, Logger: logger},
+		Kafka:          &kafka.Kafka{Client: baseClient, Logger: logger},
+		KSQL:           &ksql.KSQL{Client: baseClient, Logger: logger},
+		User:           &user.User{Client: baseClient, Logger: logger},
+		SchemaRegistry: baseClient.SchemaRegistry,
+		Metrics:        baseClient.Metrics,
 	}
 }

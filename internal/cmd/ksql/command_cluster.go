@@ -8,7 +8,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/ccloud-sdk-go"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	ksqlv1 "github.com/confluentinc/ccloudapis/ksql/v1"
 	"github.com/confluentinc/go-printer"
@@ -29,26 +28,18 @@ var (
 
 type clusterCommand struct {
 	*cobra.Command
-	config      *config.Config
-	client      ccloud.KSQL
-	kafkaClient ccloud.Kafka
-	userClient  ccloud.User
-	ctx         *config.Context
+	config *config.Config
 }
 
 // NewClusterCommand returns the Cobra clusterCommand for Ksql Cluster.
-func NewClusterCommand(config *config.Config, client ccloud.KSQL, kafkaClient ccloud.Kafka, userClient ccloud.User,
-	prerunner pcmd.PreRunner) *cobra.Command {
+func NewClusterCommand(config *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &clusterCommand{
 		Command: &cobra.Command{
 			Use:               "app",
 			Short:             "Manage KSQL apps.",
 			PersistentPreRunE: prerunner.Authenticated(config),
 		},
-		config:      config,
-		client:      client,
-		kafkaClient: kafkaClient,
-		userClient:  userClient,
+		config: config,
 	}
 	cmd.init()
 	return cmd.Command
@@ -102,9 +93,13 @@ func (c *clusterCommand) init() {
 }
 
 func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
-	state := c.ctx.State
+	state, err := c.config.AuthenticatedState()
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
 	req := &ksqlv1.KSQLCluster{AccountId: state.Auth.Account.Id}
-	clusters, err := c.client.List(context.Background(), req)
+	ctx := c.config.Context()
+	clusters, err := ctx.Client.KSQL.List(context.Background(), req)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -129,7 +124,10 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	state := c.ctx.State
+	state, err := c.config.AuthenticatedState()
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
 	cfg := &ksqlv1.KSQLClusterConfig{
 		AccountId:      state.Auth.Account.Id,
 		Name:           args[0],
@@ -137,7 +135,8 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		Storage:        storage,
 		KafkaClusterId: kafkaCluster.Id,
 	}
-	cluster, err := c.client.Create(context.Background(), cfg)
+	ctx := c.config.Context()
+	cluster, err := ctx.Client.KSQL.Create(context.Background(), cfg)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -145,9 +144,13 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
-	state := c.ctx.State
+	state, err := c.config.AuthenticatedState()
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
 	req := &ksqlv1.KSQLCluster{AccountId: state.Auth.Account.Id, Id: args[0]}
-	cluster, err := c.client.Describe(context.Background(), req)
+	ctx := c.config.Context()
+	cluster, err := ctx.Client.KSQL.Describe(context.Background(), req)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -155,9 +158,13 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
-	state := c.ctx.State
+	state, err := c.config.AuthenticatedState()
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
 	req := &ksqlv1.KSQLCluster{AccountId: state.Auth.Account.Id, Id: args[0]}
-	err := c.client.Delete(context.Background(), req)
+	ctx := c.config.Context()
+	err = ctx.Client.KSQL.Delete(context.Background(), req)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -198,7 +205,7 @@ func (c *clusterCommand) createClusterAcl(operation kafkav1.ACLOperations_ACLOpe
 }
 
 func (c *clusterCommand) buildACLBindings(serviceAccountId string, cluster *ksqlv1.KSQLCluster, topics []string) []*kafkav1.ACLBinding {
-	bindings := []*kafkav1.ACLBinding{}
+	var bindings []*kafkav1.ACLBinding
 	for _, op := range []kafkav1.ACLOperations_ACLOperation{
 		kafkav1.ACLOperations_DESCRIBE,
 		kafkav1.ACLOperations_DESCRIBE_CONFIGS,
@@ -239,7 +246,11 @@ func (c *clusterCommand) buildACLBindings(serviceAccountId string, cluster *ksql
 }
 
 func (c *clusterCommand) getServiceAccount(cluster *ksqlv1.KSQLCluster) (string, error) {
-	users, err := c.userClient.GetServiceAccounts(context.Background())
+	ctx := c.config.Context()
+	if ctx == nil {
+		return "", errors.ErrNoContext
+	}
+	users, err := ctx.Client.User.GetServiceAccounts(context.Background())
 	if err != nil {
 		return "", err
 	}
@@ -260,9 +271,13 @@ func (c *clusterCommand) configureACLs(cmd *cobra.Command, args []string) error 
 		return errors.HandleCommon(err, cmd)
 	}
 	// Ensure the KSQL cluster talks to the current Kafka Cluster
-	state := c.ctx.State
+	state, err := c.config.AuthenticatedState()
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
 	req := &ksqlv1.KSQLCluster{AccountId: state.Auth.Account.Id, Id: args[0]}
-	cluster, err := c.client.Describe(context.Background(), req)
+	currContext := c.config.Context()
+	cluster, err := currContext.Client.KSQL.Describe(context.Background(), req)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -281,7 +296,7 @@ func (c *clusterCommand) configureACLs(cmd *cobra.Command, args []string) error 
 		acl.PrintAcls(bindings, cmd.OutOrStderr())
 		return nil
 	}
-	err = c.kafkaClient.CreateACL(ctx, kafkaCluster, bindings)
+	err = currContext.Client.Kafka.CreateACL(ctx, kafkaCluster, bindings)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}

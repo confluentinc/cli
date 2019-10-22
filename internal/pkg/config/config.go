@@ -51,8 +51,8 @@ func New(config ...*Config) *Config {
 	} else {
 		c = config[0]
 	}
+	// HACK: this is a workaround while we're building multiple binaries off one codebase
 	if c.CLIName == "" {
-		// HACK: this is a workaround while we're building multiple binaries off one codebase
 		c.CLIName = "confluent"
 	}
 	c.Platforms = map[string]*Platform{}
@@ -63,15 +63,17 @@ func New(config ...*Config) *Config {
 }
 
 // Load reads the CLI config from disk.
+// Save a default version if none exists yet.
 func (c *Config) Load(version, commit, date, host string, client *sdk.Client) error {
 	filename, err := c.getFilename()
 	if err != nil {
 		return err
 	}
+	ver := pversion.NewVersion(c.CLIName, c.Name(), c.Support(), version, commit, date, host)
+	c.Version = ver
 	input, err := ioutil.ReadFile(filename)
 	if err != nil {
 		if os.IsNotExist(err) {
-			// Save a default version if none exists yet.
 			if err := c.Save(); err != nil {
 				return errors.Wrapf(err, "unable to create config: %v", err)
 			}
@@ -83,7 +85,6 @@ func (c *Config) Load(version, commit, date, host string, client *sdk.Client) er
 	if err != nil {
 		return errors.Wrapf(err, "unable to parse config file: %s", filename)
 	}
-	ver := pversion.NewVersion(c.CLIName, c.Name(), c.Support(), version, commit, date, host)
 	for _, context := range c.Contexts {
 		context.State = c.ContextStates[context.Name]
 		context.Credential = c.Credentials[context.CredentialName]
@@ -93,7 +94,6 @@ func (c *Config) Load(version, commit, date, host string, client *sdk.Client) er
 		context.Client = client
 		context.Config = c
 	}
-	c.Version = ver
 	err = c.validate()
 	if err != nil {
 		return err

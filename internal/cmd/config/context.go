@@ -82,7 +82,7 @@ func (c *contextCommand) list(cmd *cobra.Command, args []string) error {
 	}
 	var data [][]string
 	var contextNames []string
-	for name, _ := range c.config.Contexts {
+	for name := range c.config.Contexts {
 		contextNames = append(contextNames, name)
 	}
 	sort.Strings(contextNames)
@@ -126,19 +126,14 @@ func (c *contextCommand) set(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-
 	if cmd.Flags().Changed("kafka-cluster") {
 		clusterId, err := cmd.Flags().GetString("kafka-cluster")
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
-		err = context.SetActiveKafkaCluster(clusterId)
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
+		return context.SetActiveKafkaCluster(clusterId)
 	}
-
-	return c.config.Save()
+	return nil
 }
 
 func (c *contextCommand) delete(cmd *cobra.Command, args []string) error {

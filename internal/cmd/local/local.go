@@ -63,7 +63,7 @@ func New(rootCmd *cobra.Command, prerunner pcmd.PreRunner, shell ShellRunner, lo
 			Short:             "Manage a local Confluent Platform development environment.",
 			Long:              longDescription,
 			Args:              cobra.ArbitraryArgs,
-			PersistentPreRunE: prerunner.Anonymous(),
+			PersistentPreRunE: prerunner.Anonymous(nil),
 		},
 		shell: shell,
 		log:   log,

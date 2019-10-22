@@ -295,7 +295,7 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint stri
 		if !tt.workflow {
 			resetConfiguration(t, "ccloud")
 		}
-
+		
 		if tt.login == "default" {
 			env := []string{"XX_CCLOUD_EMAIL=fake@user.com", "XX_CCLOUD_PASSWORD=pass1"}
 			output := runCommand(t, "ccloud", env, "login --url "+loginURL, 0)
@@ -383,9 +383,9 @@ func (s *CLITestSuite) runConfluentTest(tt CLITest) {
 }
 
 func runCommand(t *testing.T, binaryName string, env []string, args string, wantErrCode int) string {
-	path := binaryPath(t, binaryName)
-	_, _ = fmt.Println(path, args)
-	cmd := exec.Command(path, strings.Split(args, " ")...)
+	bPath := binaryPath(t, binaryName)
+	_, _ = fmt.Println(bPath, args)
+	cmd := exec.Command(bPath, strings.Split(args, " ")...)
 	cmd.Env = append(os.Environ(), env...)
 	output, err := cmd.CombinedOutput()
 	if err != nil {

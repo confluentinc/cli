@@ -1,7 +1,6 @@
 package kafka
 
 import (
-	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"

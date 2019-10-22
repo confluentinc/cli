@@ -174,8 +174,11 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		Id:                 id,
 		ServiceDescription: description,
 	}
-
-	err = c.client.UpdateServiceAccount(context.Background(), user)
+	ctx := c.config.Context()
+	if ctx == nil {
+		return errors.ErrNoContext
+	}
+	err = ctx.Client.User.UpdateServiceAccount(context.Background(), user)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -192,8 +195,11 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	user := &orgv1.User{
 		Id: id,
 	}
-
-	err = c.client.DeleteServiceAccount(context.Background(), user)
+	ctx := c.config.Context()
+	if ctx == nil {
+		return errors.ErrNoContext
+	}
+	err = ctx.Client.User.DeleteServiceAccount(context.Background(), user)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -201,7 +207,11 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) list(cmd *cobra.Command, args []string) error {
-	users, err := c.client.GetServiceAccounts(context.Background())
+	ctx := c.config.Context()
+	if ctx == nil {
+		return errors.ErrNoContext
+	}
+	users, err := ctx.Client.User.GetServiceAccounts(context.Background())
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/confluentinc/ccloud-sdk-go"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
@@ -19,20 +18,17 @@ import (
 type aclCommand struct {
 	*cobra.Command
 	config *config.Config
-	client ccloud.Kafka
 }
 
 // NewACLCommand returns the Cobra command for Kafka ACL.
-func NewACLCommand(config *config.Config, client ccloud.Kafka) *cobra.Command {
+func NewACLCommand(config *config.Config) *cobra.Command {
 	cmd := &aclCommand{
 		Command: &cobra.Command{
 			Use:   "acl",
 			Short: `Manage Kafka ACLs.`,
 		},
 		config: config,
-		client: client,
 	}
-
 	cmd.init()
 	return cmd.Command
 }
@@ -96,7 +92,8 @@ func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	resp, err := c.client.ListACL(context.Background(), cluster, convertToFilter(acl.ACLBinding))
+	ctx := c.config.Context()
+	resp, err := ctx.Client.Kafka.ListACL(context.Background(), cluster, convertToFilter(acl.ACLBinding))
 
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -117,8 +114,8 @@ func (c *aclCommand) create(cmd *cobra.Command, args []string) error {
 	if acl.errors != nil {
 		return errors.HandleCommon(acl.errors, cmd)
 	}
-
-	err = c.client.CreateACL(context.Background(), cluster, []*kafkav1.ACLBinding{acl.ACLBinding})
+	ctx := c.config.Context()
+	err = ctx.Client.Kafka.CreateACL(context.Background(), cluster, []*kafkav1.ACLBinding{acl.ACLBinding})
 
 	return errors.HandleCommon(err, cmd)
 }
@@ -133,8 +130,8 @@ func (c *aclCommand) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-
-	err = c.client.DeleteACL(context.Background(), cluster, convertToFilter(acl.ACLBinding))
+	ctx := c.config.Context()
+	err = ctx.Client.Kafka.DeleteACL(context.Background(), cluster, convertToFilter(acl.ACLBinding))
 
 	return errors.HandleCommon(err, cmd)
 }

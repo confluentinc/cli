@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -16,11 +17,6 @@ var (
 	ErrUnexpectedStdinPipe = fmt.Errorf("unexpected stdin pipe")
 	ErrNoValueSpecified    = fmt.Errorf("no value specified")
 	ErrNoPipe              = fmt.Errorf("no pipe")
-)
-
-const (
-	kafkaResourceType = "kafka"
-	srResourceType    = "schema-registry"
 )
 
 // FlagResolver reads indirect flag values such as "-" for stdin pipe or "@file.txt" @ prefix
@@ -98,17 +94,17 @@ func (r *FlagResolverImpl) ValueFrom(source string, prompt string, secure bool) 
 func (r *FlagResolverImpl) ResolveFlags(cmd *cobra.Command, cfg *config.Config) error {
 	err := resolveContextFlag(cmd, cfg)
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, cmd)
 	}
 	err = resolveClusterFlag(cmd, cfg)
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, cmd)
 	}
 	err = resolveEnvironmentFlag(cmd, cfg)
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, cmd)
 	}
-	return nil
+	return resolveResourceId(cmd, cfg)
 }
 
 func resolveContextFlag(cmd *cobra.Command, cfg *config.Config) error {
@@ -132,14 +128,14 @@ func resolveClusterFlag(cmd *cobra.Command, cfg *config.Config) error {
 		if err != nil {
 			return err
 		}
-		context := cfg.Context()
-		if context == nil {
+		ctx := cfg.Context()
+		if ctx == nil {
 			return errors.ErrNoContext
 		}
-		if _, ok := context.KafkaClusters[clusterId]; !ok {
-			return fmt.Errorf("kafka cluster '%s' does not exist under context '%s'", clusterId, context.Name)
+		if _, err := ctx.FindKafkaCluster(clusterId); err != nil {
+			return fmt.Errorf("kafka cluster '%s' does not exist under context '%s'", clusterId, ctx.Name)
 		}
-		context.UserSpecifiedCluster = clusterId
+		ctx.UserSpecifiedKafkaCluster = clusterId
 	}
 	return nil
 }
@@ -150,55 +146,66 @@ func resolveEnvironmentFlag(cmd *cobra.Command, cfg *config.Config) error {
 		if err != nil {
 			return err
 		}
-		context := cfg.Context()
-		if context == nil {
+		ctx := cfg.Context()
+		if ctx == nil {
 			return errors.ErrNoContext
 		}
-		for _, account := range context.State.Auth.Accounts {
+		for _, account := range ctx.State.Auth.Accounts {
 			if account.Id == environment {
-				context.State.Auth.Account = account
+				ctx.State.Auth.Account = account
 				return nil
 			}
 		}
-		return fmt.Errorf("environment with id '%s' not found in context '%s'", environment, context.Name)
+		err = fmt.Errorf("environment with id '%s' not found in context '%s'", environment, ctx.Name)
+		return err
 	}
 	return nil
 }
 
-func resolveResourceID(cmd *cobra.Command, cfg *config.Config) (resourceType string, accId string,
-	clusterId string, currentKey string, err error) {
-	resource, err := cmd.Flags().GetString("resource")
+func resolveResourceId(cmd *cobra.Command, cfg *config.Config) error {
+	const resourceFlag = "resource"
+	if !cmd.Flags().Changed(resourceFlag) {
+		return nil
+	}
+	resource, err := cmd.Flags().GetString(resourceFlag)
 	if err != nil {
-		return "", "", "", "", err
+		return err
+	}
+	ctx := cfg.Context()
+	if ctx == nil {
+		return errors.New("must have an existing context to use --resource flag")
 	}
 	// Resource is schema registry.
 	if strings.HasPrefix(resource, "lsrc-") {
-		// TODO: Set SR cluster in resource.
-		
-		//src, err := pcmd.GetSchemaRegistry(cmd, c.ch)
-		//if err != nil {
-		//	return "", "", "", "", err
-		//}
-		//if src == nil {
-		//	return "", "", "", "", errors.ErrNoSrEnabled
-		//}
-		////clusterInContext, _ := c.config.SchemaRegistryCluster()
-		//if clusterInContext == nil || clusterInContext.SrCredentials == nil {
-		//	currentKey = ""
-		//} else {
-		//	currentKey = clusterInContext.SrCredentials.Key
-		//}
-		//return srResourceType, src.AccountId, src.Id, currentKey, nil
+		for envId, srCluster := range ctx.SchemaRegistryClusters {
+			if srCluster.Id == resource {
+				ctx.UserSpecifiedSchemaRegistryEnvId = envId
+			}
+		}
+		if ctx.UserSpecifiedSchemaRegistryEnvId == "" {
+			// Query API by resource ID and env ID.
+			state, err := ctx.AuthenticatedState()
+			if err != nil {
+				return err
+			}
+			accountId := state.Auth.Account.Id
+			ctxClient := config.NewContextClient(ctx)
+			srCluster, err := ctxClient.FetchSchemaRegistryById(context.Background(), resource, accountId)
+			if err != nil {
+				return err
+			}
+			cluster := &config.SchemaRegistryCluster{
+				Id:                     srCluster.Id,
+				SchemaRegistryEndpoint: srCluster.Endpoint,
+				SrCredentials:          nil, // For now.
+			}
+			ctx.SchemaRegistryClusters[accountId] = cluster
+			ctx.UserSpecifiedSchemaRegistryEnvId = accountId
+			return ctx.Save()
+		}
 	} else {
 		// Resource is Kafka cluster.
-		kcc, err := pcmd.GetKafkaClusterConfig(cmd, c.ch, "resource")
-		if err != nil {
-			return "", "", "", "", err
-		}
-		state, err := c.config.AuthenticatedState()
-		if err != nil {
-			return "", "", "", "", err
-		}
-		return kafkaResourceType, state.Auth.Account.Id, kcc.ID, kcc.APIKey, nil
+		return ctx.SetUserSpecifiedKafkaCluster(resource)
 	}
+	return nil
 }

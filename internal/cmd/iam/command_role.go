@@ -69,7 +69,21 @@ func (c *roleCommand) init() {
 	})
 }
 
+func (c *roleCommand) addMDSClient() {
+	mdsConfig := mds.NewConfiguration()
+	ctx := c.config.Context()
+	if ctx != nil {
+		mdsConfig.BasePath = ctx.Platform.Server
+		mdsConfig.UserAgent = ctx.Version.UserAgent
+	}
+	c.client = mds.NewAPIClient(mdsConfig)
+}
+
 func (c *roleCommand) list(cmd *cobra.Command, args []string) error {
+	if c.client == nil {
+		c.addMDSClient()
+	}
+
 	roles, _, err := c.client.RoleDefinitionsApi.Roles(c.ctx)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -103,6 +117,9 @@ func (c *roleCommand) list(cmd *cobra.Command, args []string) error {
 
 func (c *roleCommand) describe(cmd *cobra.Command, args []string) error {
 	role := args[0]
+	if c.client == nil {
+		c.addMDSClient()
+	}
 
 	details, r, err := c.client.RoleDefinitionsApi.RoleDetail(c.ctx, role)
 	if err != nil {

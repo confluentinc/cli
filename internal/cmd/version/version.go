@@ -12,7 +12,7 @@ func NewVersionCmd(prerunner pcmd.PreRunner, version *version.Version) *cobra.Co
 	return &cobra.Command{
 		Use:               "version",
 		Short:             "Print the " + version.Binary + " CLI version.",
-		PersistentPreRunE: prerunner.Anonymous(),
+		PersistentPreRunE: prerunner.Anonymous(nil),
 		Run: func(cmd *cobra.Command, args []string) {
 			pcmd.Println(cmd, version)
 		},

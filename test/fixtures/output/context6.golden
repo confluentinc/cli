@@ -1,4 +1,4 @@
-credentials: api-key-hi
+credential: api-key-hi
 kafka_cluster: anonymous-id
 kafka_clusters:
   anonymous-id:

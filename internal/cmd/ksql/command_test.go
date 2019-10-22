@@ -9,14 +9,12 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/confluentinc/ccloud-sdk-go/mock"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	v1 "github.com/confluentinc/ccloudapis/ksql/v1"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/acl"
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	cliMock "github.com/confluentinc/cli/mock"
 )
@@ -72,10 +70,6 @@ type KSQLTestSuite struct {
 }
 
 func (suite *KSQLTestSuite) SetupSuite() {
-	suite.initConf()
-}
-
-func (suite *KSQLTestSuite) initConf() {
 	suite.conf = config.AuthenticatedConfigMock()
 	suite.ksqlCluster = &v1.KSQLCluster{
 		Id:                ksqlClusterID,
@@ -90,6 +84,7 @@ func (suite *KSQLTestSuite) initConf() {
 }
 
 func (suite *KSQLTestSuite) SetupTest() {
+	client := suite.conf.Context().Client
 	suite.kafkac = &mock.Kafka{
 		DescribeFunc: func(ctx context.Context, cluster *kafkav1.KafkaCluster) (*kafkav1.KafkaCluster, error) {
 			return suite.kafkaCluster, nil
@@ -108,10 +103,13 @@ func (suite *KSQLTestSuite) SetupTest() {
 			return []*orgv1.User{suite.serviceAcct}, nil
 		},
 	}
+	client.Kafka = suite.kafkac
+	client.KSQL = suite.ksqlc
+	client.User = suite.userc
 }
 
 func (suite *KSQLTestSuite) newCMD() *cobra.Command {
-	cmd := New(&cliMock.Commander{}, suite.conf, suite.ksqlc, suite.kafkac, suite.userc, &pcmd.ContextResolver{Config: suite.conf, Client: &ccloud.Client{Kafka: suite.kafkac}})
+	cmd := New(cliMock.NewPreRunnerMock(), suite.conf)
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	return cmd
 }
@@ -153,7 +151,7 @@ func (suite *KSQLTestSuite) TestShouldNotConfigureOnDryRun() {
 	cmd := suite.newCMD()
 	cmd.SetArgs(append([]string{"app", "configure-acls", "--dry-run", ksqlClusterID}))
 	buf := new(bytes.Buffer)
-	cmd.SetOutput(buf)
+	cmd.SetOut(buf)
 
 	err := cmd.Execute()
 

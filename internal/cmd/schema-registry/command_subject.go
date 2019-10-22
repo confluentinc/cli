@@ -14,19 +14,17 @@ import (
 type subjectCommand struct {
 	*cobra.Command
 	config   *config.Config
-	ch       *pcmd.ContextResolver
 	srClient *srsdk.APIClient
 }
 
 // NewSubjectCommand returns the Cobra command for Schema Registry subject list
-func NewSubjectCommand(config *config.Config, ch *pcmd.ContextResolver, srClient *srsdk.APIClient) *cobra.Command {
+func NewSubjectCommand(config *config.Config, srClient *srsdk.APIClient) *cobra.Command {
 	subjectCmd := &subjectCommand{
 		Command: &cobra.Command{
 			Use:   "subject",
 			Short: "Manage Schema Registry subjects.",
 		},
 		config:   config,
-		ch:       ch,
 		srClient: srClient,
 	}
 	subjectCmd.init()
@@ -101,7 +99,7 @@ func (c *subjectCommand) update(cmd *cobra.Command, args []string) error {
 	return errors.New("flag --compatibility or --mode is required.")
 }
 func (c *subjectCommand) updateCompatibility(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(c.srClient, c.ch)
+	srClient, ctx, err := GetApiClient(c.srClient, c.config)
 	if err != nil {
 		return err
 	}
@@ -123,7 +121,7 @@ func (c *subjectCommand) updateMode(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	srClient, ctx, err := GetApiClient(c.srClient, c.ch)
+	srClient, ctx, err := GetApiClient(c.srClient, c.config)
 	if err != nil {
 		return err
 	}
@@ -141,7 +139,7 @@ func (c *subjectCommand) list(cmd *cobra.Command, args []string) error {
 	type listDisplay struct {
 		Subject string
 	}
-	srClient, ctx, err := GetApiClient(c.srClient, c.ch)
+	srClient, ctx, err := GetApiClient(c.srClient, c.config)
 	if err != nil {
 
 		return err
@@ -164,7 +162,7 @@ func (c *subjectCommand) list(cmd *cobra.Command, args []string) error {
 }
 
 func (c *subjectCommand) describe(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(c.srClient, c.ch)
+	srClient, ctx, err := GetApiClient(c.srClient, c.config)
 	if err != nil {
 		return err
 	}

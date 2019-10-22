@@ -13,24 +13,22 @@ import (
 // KeyStore is a mock of KeyStore interface
 type KeyStore struct {
 	lockHasAPIKey sync.Mutex
-	HasAPIKeyFunc func(key, clusterID, environment string) (bool, error)
+	HasAPIKeyFunc func(key, clusterId string) (bool, error)
 
 	lockStoreAPIKey sync.Mutex
-	StoreAPIKeyFunc func(key *github_com_confluentinc_ccloudapis_auth_v1.ApiKey, clusterID, environment string) error
+	StoreAPIKeyFunc func(key *github_com_confluentinc_ccloudapis_auth_v1.ApiKey, clusterId string) error
 
 	lockDeleteAPIKey sync.Mutex
 	DeleteAPIKeyFunc func(key string) error
 
 	calls struct {
 		HasAPIKey []struct {
-			Key         string
-			ClusterID   string
-			Environment string
+			Key       string
+			ClusterId string
 		}
 		StoreAPIKey []struct {
-			Key         *github_com_confluentinc_ccloudapis_auth_v1.ApiKey
-			ClusterID   string
-			Environment string
+			Key       *github_com_confluentinc_ccloudapis_auth_v1.ApiKey
+			ClusterId string
 		}
 		DeleteAPIKey []struct {
 			Key string
@@ -39,7 +37,7 @@ type KeyStore struct {
 }
 
 // HasAPIKey mocks base method by wrapping the associated func.
-func (m *KeyStore) HasAPIKey(key, clusterID, environment string) (bool, error) {
+func (m *KeyStore) HasAPIKey(key, clusterId string) (bool, error) {
 	m.lockHasAPIKey.Lock()
 	defer m.lockHasAPIKey.Unlock()
 
@@ -48,18 +46,16 @@ func (m *KeyStore) HasAPIKey(key, clusterID, environment string) (bool, error) {
 	}
 
 	call := struct {
-		Key         string
-		ClusterID   string
-		Environment string
+		Key       string
+		ClusterId string
 	}{
-		Key:         key,
-		ClusterID:   clusterID,
-		Environment: environment,
+		Key:       key,
+		ClusterId: clusterId,
 	}
 
 	m.calls.HasAPIKey = append(m.calls.HasAPIKey, call)
 
-	return m.HasAPIKeyFunc(key, clusterID, environment)
+	return m.HasAPIKeyFunc(key, clusterId)
 }
 
 // HasAPIKeyCalled returns true if HasAPIKey was called at least once.
@@ -72,9 +68,8 @@ func (m *KeyStore) HasAPIKeyCalled() bool {
 
 // HasAPIKeyCalls returns the calls made to HasAPIKey.
 func (m *KeyStore) HasAPIKeyCalls() []struct {
-	Key         string
-	ClusterID   string
-	Environment string
+	Key       string
+	ClusterId string
 } {
 	m.lockHasAPIKey.Lock()
 	defer m.lockHasAPIKey.Unlock()
@@ -83,7 +78,7 @@ func (m *KeyStore) HasAPIKeyCalls() []struct {
 }
 
 // StoreAPIKey mocks base method by wrapping the associated func.
-func (m *KeyStore) StoreAPIKey(key *github_com_confluentinc_ccloudapis_auth_v1.ApiKey, clusterID, environment string) error {
+func (m *KeyStore) StoreAPIKey(key *github_com_confluentinc_ccloudapis_auth_v1.ApiKey, clusterId string) error {
 	m.lockStoreAPIKey.Lock()
 	defer m.lockStoreAPIKey.Unlock()
 
@@ -92,18 +87,16 @@ func (m *KeyStore) StoreAPIKey(key *github_com_confluentinc_ccloudapis_auth_v1.A
 	}
 
 	call := struct {
-		Key         *github_com_confluentinc_ccloudapis_auth_v1.ApiKey
-		ClusterID   string
-		Environment string
+		Key       *github_com_confluentinc_ccloudapis_auth_v1.ApiKey
+		ClusterId string
 	}{
-		Key:         key,
-		ClusterID:   clusterID,
-		Environment: environment,
+		Key:       key,
+		ClusterId: clusterId,
 	}
 
 	m.calls.StoreAPIKey = append(m.calls.StoreAPIKey, call)
 
-	return m.StoreAPIKeyFunc(key, clusterID, environment)
+	return m.StoreAPIKeyFunc(key, clusterId)
 }
 
 // StoreAPIKeyCalled returns true if StoreAPIKey was called at least once.
@@ -116,9 +109,8 @@ func (m *KeyStore) StoreAPIKeyCalled() bool {
 
 // StoreAPIKeyCalls returns the calls made to StoreAPIKey.
 func (m *KeyStore) StoreAPIKeyCalls() []struct {
-	Key         *github_com_confluentinc_ccloudapis_auth_v1.ApiKey
-	ClusterID   string
-	Environment string
+	Key       *github_com_confluentinc_ccloudapis_auth_v1.ApiKey
+	ClusterId string
 } {
 	m.lockStoreAPIKey.Lock()
 	defer m.lockStoreAPIKey.Unlock()

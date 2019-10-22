@@ -101,7 +101,7 @@ func TestConfig_Load(t *testing.T) {
 		Version: ver,
 		Logger:  log.New(),
 	}
-	statefulContext.Resolver = NewResolver(statefulContext, statefulContext.Client)
+	statefulContext.Resolver = NewResolver(statefulContext)
 	statelessContext := &Context{
 		Name:           "my-context",
 		Platform:       platform,
@@ -130,7 +130,7 @@ func TestConfig_Load(t *testing.T) {
 		Logger:                 log.New(),
 		Version:                ver,
 	}
-	statelessContext.Resolver = NewResolver(statelessContext, statelessContext.Client)
+	statelessContext.Resolver = NewResolver(statelessContext)
 	type args struct {
 		contents string
 	}
@@ -176,7 +176,18 @@ func TestConfig_Load(t *testing.T) {
 		{
 			name: "succeed loading config with state from file",
 			args: &args{
-				contents: "{\"platforms\":{\"http://test\":{\"Name\":\"http://test\",\"server\":\"http://test\"}},\"credentials\":{\"username-test-user\":{\"Name\":\"username-test-user\",\"Username\":\"test-user\",\"Password\":\"\",\"APIKeyPair\":null,\"CredentialType\":0}},\"contexts\":{\"my-context\":{\"name\":\"my-context\",\"platform\":\"http://test\",\"credential\":\"username-test-user\",\"kafka_clusters\":{\"anonymous-id\":{\"id\":\"anonymous-id\",\"name\":\"anonymous-cluster\",\"bootstrap_servers\":\"http://test\",\"api_keys\":{\"abc-key-123\":{\"api_key\":\"abc-key-123\",\"api_secret\":\"\"}},\"api_key\":\"abc-key-123\"}},\"kafka_cluster\":\"anonymous-id\",\"schema_registry_clusters\":{\"acc-123\":{\"id\":\"lsrc-123\",\"schema_registry_endpoint\":\"http://some-lsrc-endpoint\",\"schema_registry_credentials\":null}}}},\"context_states\":{\"my-context\":{\"auth\":{\"user\":{\"id\":123,\"email\":\"test-user@email\"},\"account\":{\"id\":\"acc-123\",\"name\":\"test-env\"},\"accounts\":[{\"id\":\"acc-123\",\"name\":\"test-env\"}]},\"auth_token\":\"abc123\"}},\"current_context\":\"my-context\"}",
+				contents: "{\"platforms\":{\"http://test\":{\"Name\":\"http://test\",\"server\":\"http://test\"}}," +
+					"\"credentials\":{\"username-test-user\":{\"Name\":\"username-test-user\",\"Username\":\"test-user\"," +
+					"\"Password\":\"\",\"APIKeyPair\":null,\"CredentialType\":0}},\"contexts\":{\"my-context\":{\"name\":\"" +
+					"my-context\",\"platform\":\"http://test\",\"credential\":\"username-test-user\",\"kafka_clusters\":{\"" +
+					"anonymous-id\":{\"id\":\"anonymous-id\",\"name\":\"anonymous-cluster\",\"bootstrap_servers\"" +
+					":\"http://test\",\"api_keys\":{\"abc-key-123\":{\"api_key\":\"abc-key-123\",\"api_secret\":\"\"}}," +
+					"\"api_key\":\"abc-key-123\"}},\"kafka_cluster\":\"anonymous-id\",\"schema_registry_clusters\":{\"" +
+					"acc-123\":{\"id\":\"lsrc-123\",\"schema_registry_endpoint\":\"http://some-lsrc-endpoint\",\"" +
+					"schema_registry_credentials\":null}}}},\"context_states\":{\"my-context\":{\"auth\":{\"user\"" +
+					":{\"id\":123,\"email\":\"test-user@email\"},\"account\":{\"id\":\"acc-123\",\"name\":\"test-env\"" +
+					"},\"accounts\":[{\"id\":\"acc-123\",\"name\":\"test-env\"}]},\"auth_token\":\"abc123\"}},\"" +
+					"current_context\":\"my-context\"}",
 			},
 			want: &Config{
 				CLIName: "confluent",
@@ -200,22 +211,10 @@ func TestConfig_Load(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		/*
-			CLIName              string                   `json:"-" hcl:"-"`
-			MetricSink           metric.Sink              `json:"-" hcl:"-"`
-			Logger               *log.Logger              `json:"-" hcl:"-"`
-			Version              *pversion.Version        `json:"-" hcl:"-"`
-			Filename             string                   `json:"-" hcl:"-"`
-			Platforms            map[string]*Platform     `json:"platforms" hcl:"platforms"`
-			Credentials          map[string]*Credential   `json:"credentials" hcl:"credentials"`
-			Contexts             map[string]*Context      `json:"contexts" hcl:"contexts"`
-			ContextStates        map[string]*ContextState `json:"context_states" hcl:"context_states"`
-			CurrentContext       string                   `json:"current_context" hcl:"current_context"`
-			UserSpecifiedContext string                   `json:"-" hcl:"-"`
-		*/
 		t.Run(tt.name, func(t *testing.T) {
-			c := New()
-			c.Logger = log.New()
+			c := New(&Config{
+				Logger: log.New(),
+			})
 			c.Filename = tt.file
 			for _, context := range tt.want.Contexts {
 				context.Config = tt.want
@@ -230,70 +229,221 @@ func TestConfig_Load(t *testing.T) {
 			c.Filename = "" // only for testing
 			fmt.Println(tt.args.contents)
 			if !t.Failed() && !reflect.DeepEqual(c, tt.want) {
-				//t.Errorf("Config.Load() = %+v, want %+v", c, tt.want)
-				t.Errorf("Config.Load() = %+v, \nwant %+v", c.Context(),
-					tt.want.Context())
+				t.Errorf("Config.Load() = %+v, want %+v", c, tt.want)
 			}
 			os.Remove(tt.file)
 		})
 	}
 }
 
-//func TestConfig_Save(t *testing.T) {
-//	type args struct {
-//		url   string
-//		token string
-//	}
-//	tests := []struct {
-//		name    string
-//		args    *args
-//		want    string
-//		wantErr bool
-//		file    string
-//	}{
-//		{
-//			name: "save auth token to file",
-//			args: &args{
-//				token: "abc123",
-//			},
-//			want: "\"auth_token\": \"abc123\"",
-//			file: "/tmp/TestConfig_Save.json",
-//		},
-//		{
-//			name: "save auth url to file",
-//			args: &args{
-//				url: "https://stag.cpdev.cloud",
-//			},
-//			want: "\"auth_url\": \"https://stag.cpdev.cloud\"",
-//			file: "/tmp/TestConfig_Save.json",
-//		},
-//		{
-//			name: "create parent config dirs",
-//			args: &args{
-//				token: "abc123",
-//			},
-//			want: "\"auth_token\": \"abc123\"",
-//			file: "/tmp/xyz987/TestConfig_Save.json",
-//		},
-//	}
-//	for _, tt := range tests {
-//		t.Run(tt.name, func(t *testing.T) {
-//			c := &Config{Filename: tt.file, AuthToken: tt.args.token, AuthURL: tt.args.url}
-//			if err := c.Save(); (err != nil) != tt.wantErr {
-//				t.Errorf("Config.Save() error = %v, wantErr %v", err, tt.wantErr)
-//			}
-//			got, _ := ioutil.ReadFile(tt.file)
-//			if !strings.Contains(string(got), tt.want) {
-//				t.Errorf("Config.Save() = %v, want contains %v", string(got), tt.want)
-//			}
-//			fd, _ := os.Stat(tt.file)
-//			if fd.Mode() != 0600 {
-//				t.Errorf("Config.Save() file should only be readable by user")
-//			}
-//			os.RemoveAll("/tmp/xyz987")
-//		})
-//	}
-//}
+func TestConfig_Save(t *testing.T) {
+	platform := &Platform{
+		Name:   "http://test",
+		Server: "http://test",
+	}
+	apiCredential := &Credential{
+		Name:     "api-key-abc-key-123",
+		Username: "",
+		Password: "",
+		APIKeyPair: &APIKeyPair{
+			Key:    "abc-key-123",
+			Secret: "def-secret-456",
+		},
+		CredentialType: 1,
+	}
+	loginCredential := &Credential{
+		Name:           "username-test-user",
+		Username:       "test-user",
+		Password:       "",
+		APIKeyPair:     nil,
+		CredentialType: 0,
+	}
+	state := &ContextState{
+		Auth: &AuthConfig{
+			User: &orgv1.User{
+				Id:    123,
+				Email: "test-user@email",
+			},
+			Account: &orgv1.Account{
+				Id:   "acc-123",
+				Name: "test-env",
+			},
+			Accounts: []*orgv1.Account{
+				{
+					Id:   "acc-123",
+					Name: "test-env",
+				},
+			},
+		},
+		AuthToken: "abc123",
+	}
+	ver := &version.Version{
+		Binary:    "confluent",
+		Name:      "Confluent CLI",
+		Version:   "",
+		Commit:    "",
+		BuildDate: "",
+		BuildHost: "",
+		UserAgent: "Confluent-CLI/ (https://confluent.io; support@confluent.io)",
+	}
+	client := AuthenticatedConfigMock().Context().Client
+	statefulContext := &Context{
+		Name:           "my-context",
+		Platform:       platform,
+		PlatformName:   platform.Name,
+		Credential:     loginCredential,
+		CredentialName: loginCredential.Name,
+		KafkaClusters: map[string]*KafkaClusterConfig{
+			"anonymous-id": {
+				ID:          "anonymous-id",
+				Name:        "anonymous-cluster",
+				Bootstrap:   "http://test",
+				APIEndpoint: "",
+				APIKeys: map[string]*APIKeyPair{
+					"abc-key-123": {
+						Key: "abc-key-123",
+					},
+				},
+				APIKey: "abc-key-123",
+			},
+		},
+		Kafka: "anonymous-id",
+		SchemaRegistryClusters: map[string]*SchemaRegistryCluster{
+			"acc-123": {
+				Id:                     "lsrc-123",
+				SchemaRegistryEndpoint: "http://some-lsrc-endpoint",
+				SrCredentials:          nil,
+			},
+		},
+		State:   state,
+		Client:  client,
+		Version: ver,
+		Logger:  log.New(),
+	}
+	statefulContext.Resolver = NewResolver(statefulContext)
+	statelessContext := &Context{
+		Name:           "my-context",
+		Platform:       platform,
+		PlatformName:   platform.Name,
+		Credential:     apiCredential,
+		CredentialName: apiCredential.Name,
+		KafkaClusters: map[string]*KafkaClusterConfig{
+			"anonymous-id": {
+				ID:          "anonymous-id",
+				Name:        "anonymous-cluster",
+				Bootstrap:   "http://test",
+				APIEndpoint: "",
+				APIKeys: map[string]*APIKeyPair{
+					"abc-key-123": {
+						Key:    "abc-key-123",
+						Secret: "def-secret-456",
+					},
+				},
+				APIKey: "abc-key-123",
+			},
+		},
+		Kafka:                  "anonymous-id",
+		SchemaRegistryClusters: map[string]*SchemaRegistryCluster{},
+		State:                  &ContextState{},
+		Client:                 client,
+		Logger:                 log.New(),
+		Version:                ver,
+	}
+	statelessContext.Resolver = NewResolver(statelessContext)
+	tests := []struct {
+		name    string
+		config  *Config
+		want    string
+		wantErr bool
+		file    string
+	}{
+		{
+			name: "save config with state to file",
+			config: &Config{
+				CLIName: "confluent",
+				Platforms: map[string]*Platform{
+					platform.Name: platform,
+				},
+				Credentials: map[string]*Credential{
+					apiCredential.Name: apiCredential,
+				},
+				Contexts: map[string]*Context{
+					"my-context": statelessContext,
+				},
+				ContextStates: map[string]*ContextState{
+					"my-context": {},
+				},
+				CurrentContext: "my-context",
+				Version:        ver,
+				Logger:         log.New(),
+			},
+			want: "{\"platforms\":{\"http://test\":{\"Name\":\"http://test\",\"server\":\"http://test\"}}," +
+				"\"credentials\":{\"api-key-abc-key-123\":{\"Name\":\"api-key-abc-key-123\",\"Username\":\"\"," +
+				"\"Password\":\"\",\"APIKeyPair\":{\"api_key\":\"abc-key-123\",\"api_secret\":\"def-secret-456\"}," +
+				"\"CredentialType\":1}},\"contexts\":{\"my-context\":{\"name\":\"my-context\",\"platform\":\"http://test\"," +
+				"\"credential\":\"api-key-abc-key-123\",\"kafka_clusters\":{\"anonymous-id\":{\"id\":\"anonymous-id\",\"name\":\"anonymous-cluster\"," +
+				"\"bootstrap_servers\":\"http://test\",\"api_keys\":{\"abc-key-123\":{\"api_key\":\"abc-key-123\",\"api_secret\":\"def-secret-456\"}}," +
+				"\"api_key\":\"abc-key-123\"}},\"kafka_cluster\":\"anonymous-id\",\"schema_registry_clusters\":{}}},\"context_states\":{\"my-context\":{" +
+				"\"auth\":null,\"auth_token\":\"\"}},\"current_context\":\"my-context\"}",
+			file: "/tmp/TestConfig_Save.json",
+		},
+		{
+			name: "save stateless config to file",
+			config: &Config{
+				CLIName: "confluent",
+				Platforms: map[string]*Platform{
+					platform.Name: platform,
+				},
+				Credentials: map[string]*Credential{
+					apiCredential.Name: apiCredential,
+				},
+				Contexts: map[string]*Context{
+					"my-context": statelessContext,
+				},
+				ContextStates: map[string]*ContextState{
+					"my-context": {},
+				},
+				CurrentContext: "my-context",
+				Version:        ver,
+				Logger:         log.New(),
+			},
+			want: "{\"platforms\":{\"http://test\":{\"Name\":\"http://test\",\"server\":\"http://test\"}}," +
+				"\"credentials\":{\"api-key-abc-key-123\":{\"Name\":\"api-key-abc-key-123\",\"Username\":\"\"," +
+				"\"Password\":\"\",\"APIKeyPair\":{\"api_key\":\"abc-key-123\",\"api_secret\":\"def-secret-456\"}," +
+				"\"CredentialType\":1}},\"contexts\":{\"my-context\":{\"name\":\"my-context\",\"platform\":\"http://test\"," +
+				"\"credential\":\"api-key-abc-key-123\",\"kafka_clusters\":{\"anonymous-id\":{\"id\":\"anonymous-id\",\"name\":\"anonymous-cluster\"," +
+				"\"bootstrap_servers\":\"http://test\",\"api_keys\":{\"abc-key-123\":{\"api_key\":\"abc-key-123\",\"api_secret\":\"def-secret-456\"}}," +
+				"\"api_key\":\"abc-key-123\"}},\"kafka_cluster\":\"anonymous-id\",\"schema_registry_clusters\":{}}},\"context_states\":{\"my-context\":{" +
+				"\"auth\":null,\"auth_token\":\"\"}},\"current_context\":\"my-context\"}",
+			file: "/tmp/TestConfig_Save.json",
+		},
+		//{
+		//	name: "create parent config dirs",
+		//	args: &args{
+		//		token: "abc123",
+		//	},
+		//	want: "\"auth_token\": \"abc123\"",
+		//	file: "/tmp/xyz987/TestConfig_Save.json",
+		//},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.config.Filename = tt.file
+			if err := tt.config.Save(); (err != nil) != tt.wantErr {
+				t.Errorf("Config.Save() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			got, _ := ioutil.ReadFile(tt.file)
+			if string(got) == tt.want {
+				t.Errorf("Config.Save() = %v, want contains %v", string(got), tt.want)
+			}
+			fd, _ := os.Stat(tt.file)
+			if fd.Mode() != 0600 {
+				t.Errorf("Config.Save() file should only be readable by user")
+			}
+			os.RemoveAll("/tmp/xyz987")
+		})
+	}
+}
 
 func TestConfig_getFilename(t *testing.T) {
 	type fields struct {
@@ -343,22 +493,6 @@ func TestConfig_getFilename(t *testing.T) {
 }
 
 func TestConfig_AddContext(t *testing.T) {
-	//platform := &Platform{
-	//	Name:   "https://fake-server.com",
-	//	Server: "https://fake-server.com",
-	//}
-	//credential := &Credential{
-	//	Name: "api-key-lock",
-	//	APIKeyPair: &APIKeyPair{
-	//		Key:    "lock",
-	//		Secret: "shhh",
-	//	},
-	//	CredentialType: APIKey,
-	//}
-	//contextName := "test-context"
-	//state := &ContextState{
-	//	AuthToken: "abc123",
-	//}
 	filename := "/tmp/TestConfig_AddContext.json"
 	conf := AuthenticatedConfigMock()
 	conf.Filename = filename
@@ -702,20 +836,20 @@ func TestConfig_SchemaRegistryCluster(t *testing.T) {
 		err     error
 	}{
 		{
-			name: "succeed getting existing schema registry cluster",
-			config: conf,
-			want: srCluster,
+			name:    "succeed getting existing schema registry cluster",
+			config:  conf,
+			want:    srCluster,
 			wantErr: false,
 		},
 		{
-			name: "error getting schema registry cluster without current context",
-			config: New(),
+			name:    "error getting schema registry cluster without current context",
+			config:  New(),
 			wantErr: true,
 			err:     cerrors.ErrNoContext,
 		},
 		{
-			name: "error getting schema registry cluster when not logged in",
-			config: noAuthConf,
+			name:    "error getting schema registry cluster when not logged in",
+			config:  noAuthConf,
 			wantErr: true,
 			err:     cerrors.ErrNotLoggedIn,
 		},

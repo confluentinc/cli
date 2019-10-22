@@ -16,18 +16,16 @@ import (
 type schemaCommand struct {
 	*cobra.Command
 	config   *config.Config
-	ch       *pcmd.ContextResolver
 	srClient *srsdk.APIClient
 }
 
-func NewSchemaCommand(config *config.Config, ch *pcmd.ContextResolver, srClient *srsdk.APIClient) *cobra.Command {
+func NewSchemaCommand(config *config.Config, srClient *srsdk.APIClient) *cobra.Command {
 	schemaCmd := &schemaCommand{
 		Command: &cobra.Command{
 			Use:   "schema",
 			Short: "Manage Schema Registry schemas.",
 		},
 		config:   config,
-		ch:       ch,
 		srClient: srClient,
 	}
 	schemaCmd.init()
@@ -110,7 +108,7 @@ Describe the schema by subject and version
 }
 
 func (c *schemaCommand) create(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(c.srClient, c.ch)
+	srClient, ctx, err := GetApiClient(c.srClient, c.config)
 	if err != nil {
 		return err
 	}
@@ -136,7 +134,7 @@ func (c *schemaCommand) create(cmd *cobra.Command, args []string) error {
 }
 
 func (c *schemaCommand) delete(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(c.srClient, c.ch)
+	srClient, ctx, err := GetApiClient(c.srClient, c.config)
 	if err != nil {
 		return err
 	}
@@ -176,7 +174,7 @@ func (c *schemaCommand) describe(cmd *cobra.Command, args []string) error {
 }
 
 func (c *schemaCommand) describeById(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(c.srClient, c.ch)
+	srClient, ctx, err := GetApiClient(c.srClient, c.config)
 	if err != nil {
 		return err
 	}
@@ -193,7 +191,7 @@ func (c *schemaCommand) describeById(cmd *cobra.Command, args []string) error {
 }
 
 func (c *schemaCommand) describeBySubject(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(c.srClient, c.ch)
+	srClient, ctx, err := GetApiClient(c.srClient, c.config)
 	if err != nil {
 		return err
 	}

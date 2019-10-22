@@ -10,58 +10,43 @@ import (
 	v1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/sdk"
 )
 
 type contextClient struct {
-	*sdk.Client
-	Context *Context
+	context *Context
 }
 
-// NewContextClient returns a new contextClient, with the specified context, 
+// NewContextClient returns a new contextClient, with the specified context and its client. 
 // and an injected CCLoud client, or a dynamically generated client if passed a nil client. 
-func NewContextClient(ctx *Context, client *sdk.Client) *contextClient {
-	baseURL := ctx.Platform.Server
-	state, err := ctx.AuthenticatedState()
-	var authToken string
-	if err == nil {
-		authToken = state.AuthToken
-	}
-	if client == nil {
-		baseClient := ccloud.NewClientWithJWT(context.Background(), authToken, &ccloud.Params{
-			BaseURL: baseURL, Logger: ctx.Logger, UserAgent: ctx.Version.UserAgent,
-		})
-		client = sdk.NewClient(baseClient, ctx.Logger)
-	}
+func NewContextClient(ctx *Context) *contextClient {
 	return &contextClient{
-		Client:  client,
-		Context: ctx,
+		context: ctx,
 	}
 }
 
 func (c *contextClient) FetchCluster(clusterId string) (*kafkav1.KafkaCluster, error) {
-	state, err := c.Context.AuthenticatedState()
+	state, err := c.context.AuthenticatedState()
 	if err != nil {
 		return nil, err
 	}
 	req := &kafkav1.KafkaCluster{AccountId: state.Auth.Account.Id, Id: clusterId}
-	kc, err := c.Client.Kafka.Describe(context.Background(), req)
+	kc, err := c.context.Client.Kafka.Describe(context.Background(), req)
 	if err != nil {
 		if err != ccloud.ErrNotFound {
 			return nil, err
 		}
-		return nil, &errors.UnspecifiedKafkaClusterError{KafkaClusterID: clusterId}
+		return nil, errors.ErrNoKafkaContext
 	}
 	return kc, nil
 }
 
 func (c *contextClient) FetchAPIKeyError(apiKey, clusterID string) error {
-	state, err := c.Context.AuthenticatedState()
+	state, err := c.context.AuthenticatedState()
 	if err != nil {
 		return err
 	}
 	// check if this is API key exists server-side
-	key, err := c.APIKey.Get(context.Background(), &authv1.ApiKey{AccountId: state.Auth.Account.Id, Key: apiKey})
+	key, err := c.context.Client.APIKey.Get(context.Background(), &authv1.ApiKey{AccountId: state.Auth.Account.Id, Key: apiKey})
 	if err != nil {
 		return err
 	}
@@ -81,8 +66,8 @@ func (c *contextClient) FetchAPIKeyError(apiKey, clusterID string) error {
 	return &errors.UnconfiguredAPISecretError{APIKey: apiKey, ClusterID: clusterID}
 }
 
-func (c *contextClient) FetchSchemaRegistryByAccountId(accountId string, context context.Context) (*v1.SchemaRegistryCluster, error) {
-	existingClusters, err := c.SchemaRegistry.GetSchemaRegistryClusters(context, &v1.SchemaRegistryCluster{
+func (c *contextClient) FetchSchemaRegistryByAccountId(context context.Context, accountId string) (*v1.SchemaRegistryCluster, error) {
+	existingClusters, err := c.context.Client.SchemaRegistry.GetSchemaRegistryClusters(context, &v1.SchemaRegistryCluster{
 		AccountId: accountId,
 		Name:      "account schema-registry",
 	})
@@ -93,4 +78,22 @@ func (c *contextClient) FetchSchemaRegistryByAccountId(accountId string, context
 		return existingClusters[0], nil
 	}
 	return nil, errors.ErrNoSrEnabled
+}
+
+func (c *contextClient) FetchSchemaRegistryById(context context.Context, id string, accountId string) (*v1.SchemaRegistryCluster, error) {
+	existingCluster, err := c.context.Client.SchemaRegistry.GetSchemaRegistryCluster(context, &v1.SchemaRegistryCluster{
+		Id:        id,
+		AccountId: accountId,
+	})
+	if err != nil {
+		return nil, err
+	}
+	//if len(existingClusters) > 0 {
+	//	return existingClusters[0], nil
+	//}
+	if existingCluster == nil {
+		return nil, errors.ErrNoSrEnabled
+	} else {
+		return existingCluster, nil
+	}
 }

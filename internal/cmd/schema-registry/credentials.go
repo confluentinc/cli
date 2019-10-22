@@ -70,15 +70,15 @@ func SchemaRegistryClient(cfg *config.Config) (client *srsdk.APIClient, ctx cont
 	if srCluster, ok := currCtx.SchemaRegistryClusters[state.Auth.Account.Id]; ok {
 		srConfig.BasePath = srCluster.SchemaRegistryEndpoint
 	} else {
-		ctxClient := config.NewContextClient(currCtx, nil)
-		srCluster, err := ctxClient.FetchSchemaRegistryByAccountId(state.Auth.Account.Id, ctx)
+		ctxClient := config.NewContextClient(currCtx)
+		srCluster, err := ctxClient.FetchSchemaRegistryByAccountId(ctx, state.Auth.Account.Id)
 		if err != nil {
 			return nil, nil, err
 		}
 		srConfig.BasePath = srCluster.Endpoint
 	}
 	srConfig.UserAgent = currCtx.Version.UserAgent
-	// Validate before returning
+	// Validate before returning.
 	client = srsdk.NewAPIClient(srConfig)
 	_, _, err = client.DefaultApi.Get(ctx)
 	if err != nil {

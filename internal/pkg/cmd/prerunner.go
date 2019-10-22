@@ -16,7 +16,7 @@ import (
 
 // PreRun is a helper class for automatically setting up Cobra PersistentPreRun commands
 type PreRunner interface {
-	Anonymous() func(cmd *cobra.Command, args []string) error
+	Anonymous(cfg *config.Config) func(cmd *cobra.Command, args []string) error
 	Authenticated(cfg *config.Config) func(cmd *cobra.Command, args []string) error
 	HasAPIKey(cfg *config.Config) func(cmd *cobra.Command, args []string) error
 }
@@ -32,12 +32,15 @@ type PreRun struct {
 }
 
 // Anonymous provides PreRun operations for commands that may be run without a logged-in user
-func (r *PreRun) Anonymous() func(cmd *cobra.Command, args []string) error {
+func (r *PreRun) Anonymous(cfg *config.Config) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		if err := log.SetLoggingVerbosity(cmd, r.Logger); err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
 		if err := r.notifyIfUpdateAvailable(cmd, r.CLIName, r.Version); err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+		if err := r.FlagResolver.ResolveFlags(cmd, cfg); err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
 		return nil
@@ -47,11 +50,7 @@ func (r *PreRun) Anonymous() func(cmd *cobra.Command, args []string) error {
 // Authenticated provides PreRun operations for commands that require a logged-in user
 func (r *PreRun) Authenticated(cfg *config.Config) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		err := r.Anonymous()(cmd, args)
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-		err = r.FlagResolver.ResolveFlags(cmd, cfg)
+		err := r.Anonymous(cfg)(cmd, args)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
@@ -84,11 +83,7 @@ func (r *PreRun) Authenticated(cfg *config.Config) func(cmd *cobra.Command, args
 // HasAPIKey provides PreRun operations for commands that require an API key.
 func (r *PreRun) HasAPIKey(cfg *config.Config) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		err := r.Anonymous()(cmd, args)
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-		err = r.FlagResolver.ResolveFlags(cmd, cfg)
+		err := r.Anonymous(cfg)(cmd, args)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}

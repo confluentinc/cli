@@ -14,9 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/cli/internal/pkg/version"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
@@ -28,19 +26,29 @@ const (
 
 type SchemaTestSuite struct {
 	suite.Suite
-	conf             *config.Config
-	kafkaCluster     *kafkav1.KafkaCluster
-	srCluster        *srv1.SchemaRegistryCluster
-	srMothershipMock *mock.SchemaRegistry
-	srClientMock     *srsdk.APIClient
+	conf         *config.Config
+	kafkaCluster *kafkav1.KafkaCluster
+	srCluster    *srv1.SchemaRegistryCluster
+	srClientMock *srsdk.APIClient
 }
 
 func (suite *SchemaTestSuite) SetupSuite() {
 	suite.conf = config.AuthenticatedConfigMock()
+	suite.conf.Context().Client.SchemaRegistry = &mock.SchemaRegistry{
+		CreateSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *srv1.SchemaRegistryClusterConfig) (*srv1.SchemaRegistryCluster, error) {
+			return suite.srCluster, nil
+		},
+		GetSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *srv1.SchemaRegistryCluster) (*srv1.SchemaRegistryCluster, error) {
+			return nil, nil
+		},
+	}
 	srCluster, _ := suite.conf.SchemaRegistryCluster()
 	srCluster.SrCredentials = &config.APIKeyPair{Key: "key", Secret: "secret"}
 
-	cluster := suite.conf.Context().ActiveKafkaCluster()
+	cluster, err := suite.conf.Context().ActiveKafkaCluster()
+	if err != nil {
+		panic(err)
+	}
 	suite.kafkaCluster = &kafkav1.KafkaCluster{
 		Id:         cluster.ID,
 		Name:       cluster.Name,
@@ -53,15 +61,6 @@ func (suite *SchemaTestSuite) SetupSuite() {
 }
 
 func (suite *SchemaTestSuite) SetupTest() {
-	suite.srMothershipMock = &mock.SchemaRegistry{
-		CreateSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *srv1.SchemaRegistryClusterConfig) (*srv1.SchemaRegistryCluster, error) {
-			return suite.srCluster, nil
-		},
-		GetSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *srv1.SchemaRegistryCluster) (*srv1.SchemaRegistryCluster, error) {
-			return nil, nil
-		},
-	}
-
 	suite.srClientMock = &srsdk.APIClient{
 		DefaultApi: &srMock.DefaultApi{
 			GetSchemaFunc: func(ctx context.Context, id int32) (srsdk.SchemaString, *http.Response, error) {
@@ -81,10 +80,7 @@ func (suite *SchemaTestSuite) SetupTest() {
 }
 
 func (suite *SchemaTestSuite) newCMD() *cobra.Command {
-	cmd := New(&cliMock.Commander{}, suite.conf, suite.srMothershipMock, &pcmd.ContextResolver{
-		Config:  config.AuthenticatedConfigMock(),
-		Version: &version.Version{},
-	}, suite.srClientMock, nil, nil)
+	cmd := New(cliMock.NewPreRunnerMock(), suite.conf, suite.srClientMock, suite.conf.Logger)
 	return cmd
 }
 

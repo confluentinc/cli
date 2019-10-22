@@ -8,6 +8,9 @@ import (
 
 // ExecuteCommand runs the root command with the given args, and returns the output string or an error.
 func ExecuteCommand(root *cobra.Command, args ...string) (output string, err error) {
+	if args == nil {
+		args = []string{}
+	}
 	_, output, err = ExecuteCommandC(root, args...)
 	return output, err
 }
