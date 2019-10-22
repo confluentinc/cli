@@ -114,7 +114,7 @@ func (c *contextCommand) current(cmd *cobra.Command, args []string) error {
 }
 
 func (c *contextCommand) get(cmd *cobra.Command, args []string) error {
-	context, err := c.context(args)
+	context, err := c.context(cmd, args)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -122,7 +122,7 @@ func (c *contextCommand) get(cmd *cobra.Command, args []string) error {
 }
 
 func (c *contextCommand) set(cmd *cobra.Command, args []string) error {
-	context, err := c.context(args)
+	context, err := c.context(cmd, args)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -149,7 +149,7 @@ func (c *contextCommand) delete(cmd *cobra.Command, args []string) error {
 // HELPERS
 //
 
-func (c *contextCommand) context(args []string) (*config.Context, error) {
+func (c *contextCommand) context(cmd *cobra.Command, args []string) (*config.Context, error) {
 	var context *config.Context
 	var err error
 	if len(args) == 1 {
@@ -162,7 +162,7 @@ func (c *contextCommand) context(args []string) (*config.Context, error) {
 		}
 	}
 	if err != nil {
-		return nil, errors.HandleCommon(err, c.Command)
+		return nil, errors.HandleCommon(err, cmd)
 	}
 	return context, nil
 }
