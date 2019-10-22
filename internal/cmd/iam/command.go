@@ -1,13 +1,12 @@
 package iam
 
 import (
-	"os"
-
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/mds-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/mds-sdk-go"
 )
 
 type command struct {
@@ -36,8 +35,5 @@ func New(prerunner pcmd.PreRunner, config *config.Config, client *mds.APIClient)
 func (c *command) init() {
 	c.AddCommand(NewRoleCommand(c.config, c.client))
 	c.AddCommand(NewRolebindingCommand(c.config, c.client))
-	if os.Getenv("XX_FLAG_CENTRALIZED_ACL_ENABLE") != "" {
-		// TODO: Remove this feature flag if statement once 5.4 is released
-		c.AddCommand(NewACLCommand(c.config, c.client))
-	}
+	c.AddCommand(NewACLCommand(c.config, c.client))
 }
