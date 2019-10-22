@@ -176,7 +176,6 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	// between CLI sessions.
 	a.config.Auth.User = user.User
 	a.config.Auth.Accounts = user.Accounts
-
 	// Default to 0th environment if no suitable environment is already configured
 	hasGoodEnv := false
 	if a.config.Auth.Account != nil {
@@ -190,7 +189,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 		a.config.Auth.Account = a.config.Auth.Accounts[0]
 	}
 
-	err = a.addContextIfAbsent(a.config.Auth.User.Email)
+	err = a.addContextIfAbsent(a.config.Auth.User.Email, "")
 	if err != nil {
 		return err
 	}
@@ -210,9 +209,9 @@ func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	a.config.AuthURL = url
-
+	caCertPath := ""
 	if cmd.Flags().Changed("ca-cert-path") {
-		caCertPath, err := cmd.Flags().GetString("ca-cert-path")
+		caCertPath, err = cmd.Flags().GetString("ca-cert-path")
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
@@ -240,7 +239,6 @@ func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
 			}
 			a.Logger.Debugf("Successfully loaded certificate from %s", caCertPath)
 		}
-		a.config.CaCertPath = caCertPath
 	}
 	a.mdsClient.ChangeBasePath(a.config.AuthURL)
 	email, password, err := a.credentials(cmd, "Username", nil)
@@ -259,7 +257,7 @@ func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.Wrap(err, "Unable to save user authentication.")
 	}
-	err = a.addContextIfAbsent(email)
+	err = a.addContextIfAbsent(email, caCertPath)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -332,14 +330,14 @@ func (a *commands) credentials(cmd *cobra.Command, userField string, cloudClient
 	return email, password, nil
 }
 
-func (a *commands) addContextIfAbsent(username string) error {
+func (a *commands) addContextIfAbsent(username string, caCertPath string) error {
 	name := fmt.Sprintf("login-%s-%s", username, a.config.AuthURL)
 	if _, ok := a.config.Contexts[name]; ok {
 		return nil
 	}
 	platform := &config.Platform{
 		Server:     a.config.AuthURL,
-		CaCertPath: a.config.CaCertPath,
+		CaCertPath: caCertPath,
 	}
 	credential := &config.Credential{
 		Username: username,

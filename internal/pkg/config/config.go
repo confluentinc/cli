@@ -35,7 +35,6 @@ type Config struct {
 	Filename           string                 `json:"-"`
 	DisableUpdateCheck bool                   `json:"disable_update_check"`
 	AuthURL            string                 `json:"auth_url"`
-	CaCertPath         string                 `json:"ca_cert_path,omitempty"`
 	AuthToken          string                 `json:"auth_token"`
 	Auth               *AuthConfig            `json:"auth"`
 	Platforms          map[string]*Platform   `json:"platforms"`
