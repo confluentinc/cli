@@ -12,6 +12,7 @@ import (
 const (
 	kafkaResourceType = "kafka"
 	srResourceType    = "schema-registry"
+	ksqlResourceType  = "ksql"
 )
 
 func (c *command) resolveResourceID(cmd *cobra.Command, args []string) (resourceType string, accId string, clusterId string, currentKey string, err error) {
@@ -35,6 +36,16 @@ func (c *command) resolveResourceID(cmd *cobra.Command, args []string) (resource
 			currentKey = clusterInContext.SrCredentials.Key
 		}
 		return srResourceType, src.AccountId, src.Id, currentKey, nil
+
+	} else if strings.HasPrefix(resource, "lksqlc-") {
+		ksql, err := pcmd.GetKsql(cmd, c.ch)
+		if err != nil {
+			return "", "", "", "", err
+		}
+		if ksql == nil {
+			return "", "", "", "", errors.ErrNoKsql
+		}
+		return ksqlResourceType, ksql.AccountId, ksql.Id, "", nil
 
 	} else {
 		kcc, err := pcmd.GetKafkaClusterConfig(cmd, c.ch, "resource")
