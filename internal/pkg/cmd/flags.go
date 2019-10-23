@@ -6,6 +6,7 @@ import (
 
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
+	ksqlv1 "github.com/confluentinc/ccloudapis/ksql/v1"
 	"github.com/confluentinc/cli/internal/pkg/config"
 )
 
@@ -79,6 +80,23 @@ func GetSchemaRegistry(cmd *cobra.Command, ch *ConfigHelper) (*srv1.SchemaRegist
 		ctx, &srv1.SchemaRegistryCluster{
 			Id:        resourceID,
 			AccountId: environment,
+		})
+	if err != nil {
+		return nil, err
+	}
+	return cluster, nil
+}
+
+func GetKsql(cmd *cobra.Command, ch *ConfigHelper) (*ksqlv1.KSQLCluster, error) {
+	ctx := context.Background()
+	resourceID, err := cmd.Flags().GetString("resource")
+	if err != nil {
+		return nil, err
+	}
+	cluster, err := ch.Client.KSQL.Describe(
+		ctx, &ksqlv1.KSQLCluster{
+			Id:        resourceID,
+			AccountId: ch.Config.Auth.Account.Id,
 		})
 	if err != nil {
 		return nil, err
