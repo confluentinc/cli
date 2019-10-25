@@ -9,8 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pkg/browser"
-
 	"github.com/confluentinc/cli/internal/cmd/local"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
@@ -32,7 +30,8 @@ func NewServer(state *authState) *authServer {
 
 // Start begins the server including attempting to bind the desired TCP port
 func (s *authServer) StartServer() error {
-	http.HandleFunc("/cli_callback", s.CallbackHandler)
+	mux := http.NewServeMux()
+	mux.HandleFunc("/cli_callback", s.CallbackHandler)
 
 	listener, err := net.ListenTCP("tcp4", &net.TCPAddr{IP: net.IPv4(127, 0, 0, 1), Port: 26635}) // confl
 
@@ -41,7 +40,7 @@ func (s *authServer) StartServer() error {
 	}
 
 	s.wg = &sync.WaitGroup{}
-	s.server = &http.Server{}
+	s.server = &http.Server{Handler: mux}
 
 	s.wg.Add(1)
 	go func() {
@@ -58,15 +57,10 @@ func (s *authServer) StartServer() error {
 }
 
 // GetAuthorizationCode takes the code verifier/challenge and gets an authorization code from the SSO provider
-func (s *authServer) GetAuthorizationCode(ssoProviderConnectionName string) error {
-	err := browser.OpenURL(s.State.GetAuthorizationCodeUrl(ssoProviderConnectionName))
-	if err != nil {
-		return errors.Wrap(err, "unable to open web browser for authorization")
-	}
-
+func (s *authServer) AwaitAuthorizationCode(timeout time.Duration) error {
 	// Wait until flow is finished / callback is called (or timeout...)
 	go func() {
-		time.Sleep(30 * time.Second)
+		time.Sleep(timeout)
 		s.bgErr = errors.New("timed out while waiting for browser authentication to occur; please try logging in again")
 		s.server.Close()
 		s.wg.Done()
