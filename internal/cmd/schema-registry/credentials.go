@@ -5,7 +5,6 @@ import (
 	"fmt"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
-	configPkg "github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"os"
@@ -30,8 +29,8 @@ func getSrCredentials() (key string, secret string, err error) {
 	return key, secret, nil
 }
 
-func srContext(config *config.Config) (context.Context, error) {
-	srCluster, err := config.SchemaRegistryCluster()
+func srContext(cfg *config.Config) (context.Context, error) {
+	srCluster, err := cfg.SchemaRegistryCluster()
 	if err != nil {
 		return nil, err
 	}
@@ -40,11 +39,11 @@ func srContext(config *config.Config) (context.Context, error) {
 		if err != nil {
 			return nil, err
 		}
-		srCluster.SrCredentials = &configPkg.APIKeyPair{
+		srCluster.SrCredentials = &config.APIKeyPair{
 			Key:    key,
 			Secret: secret,
 		}
-		err = config.Save()
+		err = cfg.Save()
 		if err != nil {
 			return nil, err
 		}

@@ -19,6 +19,7 @@ func (s *CLITestSuite) TestLocalHelpCommands() {
 		if tt.name == "" {
 			tt.name = tt.args
 		}
-		s.runConfluentTest(tt)
+		kafkaAPIURL := serveKafkaAPI(s.T()).URL
+		s.runConfluentTest(tt, serveMds(s.T(), kafkaAPIURL).URL)
 	}
 }

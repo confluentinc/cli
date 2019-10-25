@@ -6,14 +6,20 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/Shopify/sarama"
-
 	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/log"
+
+	"github.com/Shopify/sarama"
 )
 
+// This is a nasty side effect of Sarama using a global logger
+func InitSarama(logger *log.Logger) {
+	sarama.Logger = newLogAdapter(logger)
+}
+
 // NewSaramaConsumer returns a sarama.ConsumerGroup configured for the CLI config
-func NewSaramaConsumer(group string, kafka *config.KafkaClusterConfig, beginning bool) (sarama.ConsumerGroup, error) {
-	conf, err := saramaConf(kafka, beginning)
+func NewSaramaConsumer(group string, kafka *config.KafkaClusterConfig, clientID string, beginning bool) (sarama.ConsumerGroup, error) {
+	conf, err := saramaConf(kafka, clientID, beginning)
 	if err != nil {
 		return nil, err
 	}
@@ -25,8 +31,8 @@ func NewSaramaConsumer(group string, kafka *config.KafkaClusterConfig, beginning
 }
 
 // NewSaramaProducer returns a sarama.ClusterProducer configured for the CLI config
-func NewSaramaProducer(kafka *config.KafkaClusterConfig) (sarama.SyncProducer, error) {
-	conf, err := saramaConf(kafka, false)
+func NewSaramaProducer(kafka *config.KafkaClusterConfig, clientID string) (sarama.SyncProducer, error) {
+	conf, err := saramaConf(kafka, clientID, false)
 	if err != nil {
 		return nil, err
 	}
@@ -60,12 +66,13 @@ func (h *GroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sara
 }
 
 // saramaConf converts KafkaClusterConfig to sarama.Config
-func saramaConf(kafka *config.KafkaClusterConfig, beginning bool) (*sarama.Config, error) {
+func saramaConf(kafka *config.KafkaClusterConfig, clientID string, beginning bool) (*sarama.Config, error) {
 	endpoint, err := url.Parse(kafka.APIEndpoint)
 	if err != nil {
 		return nil, err
 	}
 	saramaConf := sarama.NewConfig()
+	saramaConf.ClientID = clientID
 	saramaConf.Version = sarama.V1_1_0_0
 	saramaConf.Net.TLS.Enable = true
 	saramaConf.Net.TLS.Config.ServerName = endpoint.Hostname()
@@ -83,4 +90,32 @@ func saramaConf(kafka *config.KafkaClusterConfig, beginning bool) (*sarama.Confi
 	}
 
 	return saramaConf, nil
+}
+
+// Just logs all Sarama logs at the debug level
+// We don't use hclog.StandardLogger() because that prints at INFO level
+type logAdapter struct {
+	logger *log.Logger
+}
+
+func newLogAdapter(logger *log.Logger) *logAdapter {
+	return &logAdapter{logger: logger}
+}
+
+func (l *logAdapter) Print(a ...interface{}) {
+	l.log(fmt.Sprint(a...))
+}
+
+func (l *logAdapter) Println(a ...interface{}) {
+	l.log(fmt.Sprint(a...))
+}
+
+func (l *logAdapter) Printf(format string, a ...interface{}) {
+	l.log(fmt.Sprintf(format, a...))
+}
+
+func (l *logAdapter) log(msg string) {
+	// This is how hclog.StandardLogger works as well; it fixes the unnecessary extra newlines
+	msg = string(strings.TrimRight(msg, " \t\n"))
+	l.logger.Log("msg", msg)
 }

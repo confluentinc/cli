@@ -4,7 +4,7 @@ GIT_REMOTE_NAME ?= origin
 MASTER_BRANCH   ?= master
 RELEASE_BRANCH  ?= master
 
-DOCS_BRANCH     ?= 5.2.1-post
+DOCS_BRANCH     ?= 5.3.1-post
 
 include ./semver.mk
 
@@ -223,7 +223,9 @@ fmt:
 
 .PHONY: release-ci
 release-ci:
-ifeq ($(SEMAPHORE_GIT_BRANCH),master)
+ifneq ($(SEMAPHORE_GIT_PR_BRANCH),)
+	true
+else ifeq ($(SEMAPHORE_GIT_BRANCH),master)
 	make release
 else
 	true
@@ -285,3 +287,8 @@ mock/local/shell_runner_mock.go:
 
 .PHONY: test
 test: bindata mocks lint coverage
+
+.PHONY: doctoc
+doctoc:
+	npx doctoc README.md
+

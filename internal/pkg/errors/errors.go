@@ -24,6 +24,7 @@ var (
 	ErrNotLoggedIn    = fmt.Errorf("not logged in")
 	ErrNoContext      = fmt.Errorf("context not set")
 	ErrNoKafkaContext = fmt.Errorf("kafka not set")
+	ErrNoSrEnabled    = fmt.Errorf("schema registry not enabled")
 )
 
 // UnspecifiedKafkaClusterError means the user needs to specify a kafka cluster
@@ -42,6 +43,14 @@ type UnspecifiedAPIKeyError struct {
 
 func (e *UnspecifiedAPIKeyError) Error() string {
 	return e.ClusterID
+}
+
+type UnspecifiedCredentialError struct {
+	ContextName string
+}
+
+func (e *UnspecifiedCredentialError) Error() string {
+	return e.ContextName
 }
 
 // UnconfiguredAPISecretError means the user needs to store the API secret locally
@@ -72,4 +81,32 @@ func Errorf(fmt string, args ...interface{}) error {
 
 func Cause(err error) error {
 	return errors.Cause(err)
+}
+
+type Handler struct {
+	err error
+}
+
+func (h *Handler) HandleString(s string, e error) string {
+	if h.err != nil {
+		return ""
+	}
+	h.err = e
+	if h.err != nil {
+		return ""
+	}
+	return s
+}
+
+func (h *Handler) Handle(err error) {
+	if h.err != nil {
+		return
+	}
+	h.err = err
+}
+
+func (h *Handler) Reset() error {
+	err := h.err
+	h.err = nil
+	return err
 }

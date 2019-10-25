@@ -8,8 +8,9 @@ import (
 	"os/signal"
 	"strings"
 
-	"github.com/Shopify/sarama"
 	"github.com/google/uuid"
+
+	"github.com/Shopify/sarama"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go"
@@ -19,6 +20,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 type topicCommand struct {
@@ -27,10 +29,12 @@ type topicCommand struct {
 	client    ccloud.Kafka
 	ch        *pcmd.ConfigHelper
 	prerunner pcmd.PreRunner
+	logger    *log.Logger
+	clientID  string
 }
 
 // NewTopicCommand returns the Cobra command for Kafka topic.
-func NewTopicCommand(prerunner pcmd.PreRunner, config *config.Config, client ccloud.Kafka, ch *pcmd.ConfigHelper) *cobra.Command {
+func NewTopicCommand(prerunner pcmd.PreRunner, config *config.Config, logger *log.Logger, clientID string, client ccloud.Kafka, ch *pcmd.ConfigHelper) (*cobra.Command, error) {
 	cmd := &topicCommand{
 		Command: &cobra.Command{
 			Use:   "topic",
@@ -40,13 +44,56 @@ func NewTopicCommand(prerunner pcmd.PreRunner, config *config.Config, client ccl
 		client:    client,
 		ch:        ch,
 		prerunner: prerunner,
+		logger:    logger,
+		clientID:  clientID,
 	}
-	cmd.init()
-	return cmd.Command
+	err := cmd.init()
+	if err != nil {
+		return nil, err
+	}
+	return cmd.Command, nil
 }
 
-func (c *topicCommand) init() {
+func (c *topicCommand) init() error {
 	cmd := &cobra.Command{
+		Use:               "produce <topic>",
+		Short:             "Produce messages to a Kafka topic.",
+		RunE:              c.produce,
+		Args:              cobra.ExactArgs(1),
+		PersistentPreRunE: c.prerunner.HasAPIKey(),
+	}
+	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	cmd.Flags().String("delimiter", ":", "The key/value delimiter.")
+	cmd.Flags().SortFlags = false
+	c.AddCommand(cmd)
+
+	cmd = &cobra.Command{
+		Use:   "consume <topic>",
+		Short: "Consume messages from a Kafka topic.",
+		Example: `
+Consume items from the 'my_topic' topic and press 'Ctrl + C' to exit.
+
+::
+
+	ccloud kafka topic consume -b my_topic`,
+		RunE:              c.consume,
+		Args:              cobra.ExactArgs(1),
+		PersistentPreRunE: c.prerunner.HasAPIKey(),
+	}
+	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	cmd.Flags().String("group", fmt.Sprintf("confluent_cli_consumer_%s", uuid.New()), "Consumer group ID.")
+	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
+	cmd.Flags().SortFlags = false
+	c.AddCommand(cmd)
+	credType, err := c.config.CredentialType()
+	if err == nil && credType == config.APIKey {
+		return nil
+	}
+	// Propagate errors other than ErrNoContext.
+	if err != nil && err != errors.ErrNoContext {
+		return err
+	}
+	cmd = &cobra.Command{
 		Use:   "list",
 		Short: "List Kafka topics.",
 		Example: `
@@ -132,38 +179,7 @@ Delete the topics 'my_topic' and 'my_topic_avro'. Use this command carefully as 
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
-
-	cmd = &cobra.Command{
-		Use:               "produce <topic>",
-		Short:             "Produce messages to a Kafka topic.",
-		RunE:              c.produce,
-		Args:              cobra.ExactArgs(1),
-		PersistentPreRunE: c.prerunner.AuthenticatedAPIKey(),
-	}
-	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	cmd.Flags().String("delimiter", ":", "The key/value delimiter.")
-	cmd.Flags().SortFlags = false
-	c.AddCommand(cmd)
-
-	cmd = &cobra.Command{
-		Use:   "consume <topic>",
-		Short: "Consume messages from a Kafka topic.",
-		Example: `
-Consume items from the 'my_topic' topic and press 'Ctrl + C' to exit.
-
-::
-
-	ccloud kafka topic consume -b my_topic`,
-		RunE:              c.consume,
-		Args:              cobra.ExactArgs(1),
-		PersistentPreRunE: c.prerunner.AuthenticatedAPIKey(),
-	}
-	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	cmd.Flags().String("group", fmt.Sprintf("confluent_cli_consumer_%s", uuid.New()), "Consumer group ID.")
-	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
-	cmd.Flags().SortFlags = false
-	c.AddCommand(cmd)
-
+	return nil
 }
 
 func (c *topicCommand) list(cmd *cobra.Command, args []string) error {
@@ -346,27 +362,34 @@ func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {
 
 	pcmd.Println(cmd, "Starting Kafka Producer. ^C or ^D to exit")
 
-	producer, err := NewSaramaProducer(cluster)
+	InitSarama(c.logger)
+	producer, err := NewSaramaProducer(cluster, c.clientID)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	// Line reader for producer input
+	// Line reader for producer input.
 	scanner := bufio.NewScanner(os.Stdin)
+	// CCloud Kafka messageMaxBytes:
+	// https://github.com/confluentinc/cc-spec-kafka/blob/9f0af828d20e9339aeab6991f32d8355eb3f0776/plugins/kafka/kafka.go#L43.
+	const maxScanTokenSize = 1024*1024*2 + 12
+	scanner.Buffer(nil, maxScanTokenSize)
 	input := make(chan string, 1)
-
 	// Avoid blocking in for loop so ^C or ^D can exit immediately.
+	var scanErr error
 	scan := func() {
 		hasNext := scanner.Scan()
-		if !hasNext && scanner.Err() == nil {
-			// Reached EOF
+		if !hasNext {
+			// Actual error.
+			if scanner.Err() != nil {
+				scanErr = scanner.Err()
+			}
+			// Otherwise just EOF.
 			close(input)
 		} else {
 			input <- scanner.Text()
 		}
 	}
-	// Prime reader
-	scan()
 
 	// Trap SIGINT to trigger a shutdown.
 	signals := make(chan os.Signal, 1)
@@ -375,20 +398,19 @@ func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {
 		<-signals
 		close(input)
 	}()
+	// Prime reader
+	scan()
 
 	var key sarama.Encoder
 	for data := range input {
 		data = strings.TrimSpace(data)
 
 		record := strings.SplitN(data, delim, 2)
-
 		value := sarama.StringEncoder(record[len(record)-1])
 		if len(record) == 2 {
 			key = sarama.StringEncoder(record[0])
 		}
-
 		msg := &sarama.ProducerMessage{Topic: topic, Key: key, Value: value}
-
 		_, offset, err := producer.SendMessage(msg)
 		if err != nil {
 			pcmd.Printf(cmd, "Failed to produce offset %d: %s\n", offset, err)
@@ -398,7 +420,9 @@ func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {
 		key = nil
 		go scan()
 	}
-
+	if scanErr != nil {
+		return errors.HandleCommon(scanErr, cmd)
+	}
 	return errors.HandleCommon(producer.Close(), cmd)
 }
 
@@ -419,7 +443,8 @@ func (c *topicCommand) consume(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	consumer, err := NewSaramaConsumer(group, cluster, beginning)
+	InitSarama(c.logger)
+	consumer, err := NewSaramaConsumer(group, cluster, c.clientID, beginning)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
