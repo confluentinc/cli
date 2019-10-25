@@ -2,15 +2,190 @@ package sso
 
 import (
 	"github.com/confluentinc/cli/internal/pkg/config"
-	"testing"
 	"github.com/stretchr/testify/require"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
 )
 
-func TestState(t *testing.T) {
-	config := &config.Config{AuthURL: "https://devel.cpdev.cloud"}
-	state, err := NewState(config)
+
+
+func TestNewStateDev(t *testing.T) {
+	configDevel := &config.Config{AuthURL: "https://devel.cpdev.cloud"}
+	state, err := NewState(configDevel)
 	require.NoError(t, err)
-	require.Equal(t, state.SSOProviderDomain, "login.confluent-dev.io")
+	// randomly generated
+	require.True(t, len(state.CodeVerifier) > 10)
+	require.True(t, len(state.CodeChallenge) > 10)
+	require.True(t, len(state.SSOProviderState) > 10)
+	// make sure we didn't so something dumb generating the hashes
+	require.True(t,
+		(state.CodeVerifier != state.CodeChallenge) &&
+			(state.CodeVerifier != state.SSOProviderState) &&
+			(state.CodeChallenge != state.SSOProviderState))
+	// dev configs
+	require.Equal(t, state.SSOProviderHost, "https://login.confluent-dev.io")
+	require.Equal(t, state.SSOProviderClientID, "XKlqgOEo39iyonTl3Yv3IHWIXGKDP3fA")
+	require.Equal(t, state.SSOProviderCallbackUrl, "http://127.0.0.1:26635/cli_callback")
+	require.Equal(t, state.SSOProviderIdentifier, "https://confluent-dev.auth0.com/api/v2/")
+	require.Empty(t, state.SSOProviderAuthenticationCode)
+	require.Empty(t, state.SSOProviderIDToken)
 
+	// check stag configs
+	configStag := &config.Config{AuthURL: "https://stag.cpdev.cloud"}
+	stateStag, err := NewState(configStag)
+	require.NoError(t, err)
+	// configs for devel and staging are the same
+	require.Equal(t, state.SSOProviderHost, stateStag.SSOProviderHost)
+	require.Equal(t, state.SSOProviderClientID, stateStag.SSOProviderClientID)
+	require.Equal(t, state.SSOProviderCallbackUrl, stateStag.SSOProviderCallbackUrl)
+	require.Equal(t, state.SSOProviderIdentifier, stateStag.SSOProviderIdentifier)
+	require.Empty(t, stateStag.SSOProviderAuthenticationCode)
+	require.Empty(t, stateStag.SSOProviderIDToken)
+}
 
+func TestNewStateDevNoBrowser(t *testing.T) {
+	configDevel := &config.Config{AuthURL: "https://devel.cpdev.cloud", NoBrowser: true}
+	state, err := NewState(configDevel)
+	require.NoError(t, err)
+	// randomly generated
+	require.True(t, len(state.CodeVerifier) > 10)
+	require.True(t, len(state.CodeChallenge) > 10)
+	require.True(t, len(state.SSOProviderState) > 10)
+	// make sure we didn't so something dumb generating the hashes
+	require.True(t,
+		(state.CodeVerifier != state.CodeChallenge) &&
+			(state.CodeVerifier != state.SSOProviderState) &&
+			(state.CodeChallenge != state.SSOProviderState))
+
+	// dev configs
+	require.Equal(t, state.SSOProviderHost, "https://login.confluent-dev.io")
+	require.Equal(t, state.SSOProviderClientID, "XKlqgOEo39iyonTl3Yv3IHWIXGKDP3fA")
+	require.Equal(t, state.SSOProviderCallbackUrl, "https://login.confluent-dev.io/cli_callback")
+	require.Equal(t, state.SSOProviderIdentifier, "https://confluent-dev.auth0.com/api/v2/")
+	require.Empty(t, state.SSOProviderAuthenticationCode)
+	require.Empty(t, state.SSOProviderIDToken)
+
+	// check stag configs
+	configStag := &config.Config{AuthURL: "https://stag.cpdev.cloud", NoBrowser: true}
+	stateStag, err := NewState(configStag)
+	require.NoError(t, err)
+	// configs for devel and staging are the same
+	require.Equal(t, state.SSOProviderHost, stateStag.SSOProviderHost)
+	require.Equal(t, state.SSOProviderClientID, stateStag.SSOProviderClientID)
+	require.Equal(t, state.SSOProviderCallbackUrl, stateStag.SSOProviderCallbackUrl)
+	require.Equal(t, state.SSOProviderIdentifier, stateStag.SSOProviderIdentifier)
+	require.Empty(t, stateStag.SSOProviderAuthenticationCode)
+	require.Empty(t, stateStag.SSOProviderIDToken)
+}
+
+func TestNewStateProd(t *testing.T) {
+	configProd := &config.Config{AuthURL: "https://confluent.cloud"}
+	state, err := NewState(configProd)
+	require.NoError(t, err)
+	// randomly generated
+	require.True(t, len(state.CodeVerifier) > 10)
+	require.True(t, len(state.CodeChallenge) > 10)
+	require.True(t, len(state.SSOProviderState) > 10)
+	// make sure we didn't so something dumb generating the hashes
+	require.True(t,
+		(state.CodeVerifier != state.CodeChallenge) &&
+			(state.CodeVerifier != state.SSOProviderState) &&
+			(state.CodeChallenge != state.SSOProviderState))
+	require.Equal(t, state.SSOProviderHost, "https://login.confluent.io")
+	require.Equal(t, state.SSOProviderClientID, "hPbGZM8G55HSaUsaaieiiAprnJaEc9rH")
+	require.Equal(t, state.SSOProviderCallbackUrl, "http://127.0.0.1:26635/cli_callback")
+	require.Equal(t, state.SSOProviderIdentifier, "https://confluent.auth0.com/api/v2/")
+	require.Empty(t, state.SSOProviderAuthenticationCode)
+	require.Empty(t, state.SSOProviderIDToken)
+}
+
+func TestNewStateProdNoBrowser(t *testing.T) {
+	configProd := &config.Config{AuthURL: "https://confluent.cloud", NoBrowser: true}
+	state, err := NewState(configProd)
+	require.NoError(t, err)
+	// randomly generated
+	require.True(t, len(state.CodeVerifier) > 10)
+	require.True(t, len(state.CodeChallenge) > 10)
+	require.True(t, len(state.SSOProviderState) > 10)
+	// make sure we didn't so something dumb generating the hashes
+	require.True(t,
+		(state.CodeVerifier != state.CodeChallenge) &&
+			(state.CodeVerifier != state.SSOProviderState) &&
+			(state.CodeChallenge != state.SSOProviderState))
+
+	require.Equal(t, state.SSOProviderHost, "https://login.confluent.io")
+	require.Equal(t, state.SSOProviderClientID, "hPbGZM8G55HSaUsaaieiiAprnJaEc9rH")
+	require.Equal(t, state.SSOProviderCallbackUrl, "https://login.confluent.io/cli_callback")
+	require.Equal(t, state.SSOProviderIdentifier, "https://confluent.auth0.com/api/v2/")
+	require.Empty(t, state.SSOProviderAuthenticationCode)
+	require.Empty(t, state.SSOProviderIDToken)
+}
+
+func TestGetAuthorizationUrl(t *testing.T) {
+	configDevel := &config.Config{AuthURL: "https://devel.cpdev.cloud"}
+	state, _ := NewState(configDevel)
+
+	// test get auth code url
+	authCodeUrlDevel := state.GetAuthorizationCodeUrl("foo")
+	expectedUri := "/authorize?" +
+		"response_type=code" +
+		"&code_challenge=" + state.CodeChallenge +
+		"&code_challenge_method=S256" +
+		"&client_id=" + state.SSOProviderClientID +
+		"&redirect_uri=" + state.SSOProviderCallbackUrl +
+		"&scope=email%20openid" +
+		"&audience=" + state.SSOProviderIdentifier +
+		"&state=" + state.SSOProviderState +
+		"&connection=foo"
+	expectedUrl := state.SSOProviderHost + expectedUri
+	require.Equal(t, authCodeUrlDevel, expectedUrl)
+
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		// Test request parameters
+		require.Equal(t, req.URL.String(), expectedUri)
+		// Send response to be tested
+		_, e := rw.Write([]byte(`OK`))
+		require.NoError(t, e)
+	}))
+	defer server.Close()
+	require.NotEmpty(t, server.URL)
+}
+
+func TestGetOAuthToken(t *testing.T) {
+	configDevel := &config.Config{AuthURL: "https://devel.cpdev.cloud"}
+	state, _ := NewState(configDevel)
+
+	expectedUri := "/oauth/token"
+	expectedPayload := "grant_type=authorization_code" +
+		"&client_id=" + state.SSOProviderClientID +
+		"&code_verifier=" + state.CodeVerifier +
+		"&code=" + state.SSOProviderAuthenticationCode +
+		"&redirect_uri=" + state.SSOProviderCallbackUrl
+
+	mockIDToken := "foobar"
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		// Test request parameters
+		require.Equal(t, req.URL.String(), expectedUri)
+		body, err := ioutil.ReadAll(req.Body)
+		require.NoError(t, err)
+		require.True(t, len(body) > 0)
+		require.Equal(t, expectedPayload, string(body))
+
+		// mock response
+		_, err = rw.Write([]byte(`{"id_token": "` + mockIDToken + `"}`))
+		require.NoError(t, err)
+	}))
+	defer server.Close()
+	serverPort := strings.Split(server.URL, ":")[2]
+
+	// mock auth0 endpoint with local test server
+	state.SSOProviderHost = "http://127.0.0.1:" + serverPort
+
+	err := state.GetOAuthToken()
+	require.NoError(t, err)
+
+	require.Equal(t, mockIDToken, state.SSOProviderIDToken)
 }
