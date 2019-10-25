@@ -111,8 +111,8 @@ To install the CLI:
 ```
 $ make deps
 $ make build
-$ dist/ccloud/ccloud$(go env GOOS)_$(go env GOARCH)/ccloud -h # for cloud CLI
-$ dist/confluent/confluent$(go env GOOS)_$(go env GOARCH)/confluent -h # for on-prem Confluent CLI
+$ dist/ccloud/$(go env GOOS)_$(go env GOARCH)/ccloud -h # for cloud CLI
+$ dist/confluent/$(go env GOOS)_$(go env GOARCH)/confluent -h # for on-prem Confluent CLI
 ```
 
 ## Developing

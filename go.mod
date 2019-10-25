@@ -1,7 +1,6 @@
 module github.com/confluentinc/cli
 
 require (
-	cloud.google.com/go v0.38.0
 	github.com/DABH/go-basher v0.0.0-20190504042026-365648708a90
 	github.com/DataDog/zstd v1.3.5 // indirect
 	github.com/OpenPeeDeeP/depguard v1.0.0 // indirect
@@ -24,7 +23,6 @@ require (
 	github.com/confluentinc/mds-sdk-go v0.0.0-20191015231442-c29a09dbc1e9
 	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787
 	github.com/confluentinc/schema-registry-sdk-go v0.0.7
-	github.com/coreos/etcd v3.3.10+incompatible
 	github.com/dghubble/sling v1.3.0 // indirect
 	github.com/dgryski/go-metro v0.0.0-20180109044635-280f6062b5bc // indirect
 	github.com/dgryski/go-spooky v0.0.0-20170606183049-ed3d087f40e2 // indirect
@@ -90,7 +88,7 @@ require (
 	github.com/stretchr/testify v1.4.0
 	github.com/tidwall/pretty v0.0.0-20190325153808-1166b9ac2b65
 	github.com/timakin/bodyclose v0.0.0-20190721030226-87058b9bfcec // indirect
-	go.opencensus.io v0.22.1 // indirect
+	go.opencensus.io v0.22.0 // indirect
 	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4
 	golang.org/x/exp v0.0.0-20190731235908-ec7cb31e5a56 // indirect
 	golang.org/x/net v0.0.0-20190813141303-74dc4d7220e7 // indirect
@@ -98,7 +96,6 @@ require (
 	golang.org/x/sys v0.0.0-20190813064441-fde4db37ae7a // indirect
 	golang.org/x/tools v0.0.0-20190814171936-5b18234b3ae0 // indirect
 	gonum.org/v1/netlib v0.0.0-20190331212654-76723241ea4e // indirect
-	google.golang.org/api v0.11.0 // indirect
 	google.golang.org/appengine v1.6.1 // indirect
 	gopkg.in/square/go-jose.v2 v2.3.1
 	gopkg.in/src-d/go-git-fixtures.v3 v3.5.0 // indirect
