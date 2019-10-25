@@ -9,9 +9,11 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"github.com/pkg/browser"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -87,7 +89,7 @@ func (a *commands) init(prerunner pcmd.PreRunner) {
 		loginCmd.Long = strings.Replace(loginCmd.Long, ".", " (required for RBAC).", -1)
 		check(loginCmd.MarkFlagRequired("url")) // because https://confluent.cloud isn't an MDS endpoint
 	}
-	loginCmd.Flags().Bool("no-browser", false, "Do not open browser when authenticating via SSO")
+	loginCmd.Flags().Bool("no-browser", false, "Do not open browser when authenticating via Single Sign-On.")
 	loginCmd.Flags().SortFlags = false
 	loginCmd.PersistentPreRunE = prerunner.Anonymous()
 	logoutCmd := &cobra.Command{
@@ -172,7 +174,12 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 			}
 
 			// Get authorization code for making subsequent token request
-			err = server.GetAuthorizationCode(userSSO.Sso.Auth0ConnectionName)
+			err := browser.OpenURL(state.GetAuthorizationCodeUrl(userSSO.Sso.Auth0ConnectionName))
+			if err != nil {
+				return errors.Wrap(err, "unable to open web browser for authorization")
+			}
+
+			err = server.AwaitAuthorizationCode(30 * time.Second)
 			if err != nil {
 				return errors.HandleCommon(err, cmd)
 			}
