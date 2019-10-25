@@ -1,13 +1,12 @@
-Error: not implemented
-Usage:
-  ccloud kafka cluster create <name> [flags]
-
-Flags:
-      --cloud string    Cloud provider (e.g. 'aws' or 'gcp')
-      --region string   Cloud region for cluster (e.g. 'us-west-2')
-      --multizone       Use multiple zones for high availability
-  -h, --help            help for create
-
-Global Flags:
-  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
-
++-------------+---------------------------+
+| Id          | lkc-def963                |
+| Name        | kafka-cluster             |
+| Ingress     |                       100 |
+| Egress      |                       100 |
+| Storage     |                       500 |
+| Provider    | aws                       |
+| Region      | us-west-2                 |
+| Status      | PROVISIONING              |
+| Endpoint    | SASL_SSL://kafka-endpoint |
+| ApiEndpoint | http://127.0.0.1:12345    |
++-------------+---------------------------+

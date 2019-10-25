@@ -14,6 +14,7 @@ import (
 	"path"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"runtime"
 	"sort"
 	"strings"
@@ -229,7 +230,7 @@ func (s *CLITestSuite) Test_UserAgent() {
 		cloudRouter.HandleFunc("/api/sessions", compose(assertUserAgent(t, expected), handleLogin(t)))
 		cloudRouter.HandleFunc("/api/me", compose(assertUserAgent(t, expected), handleMe(t)))
 		cloudRouter.HandleFunc("/api/check_email/", compose(assertUserAgent(t, expected), handleCheckEmail(t)))
-		cloudRouter.HandleFunc("/api/clusters/", compose(assertUserAgent(t, expected), handleKafkaClusterList(t, kafkaApiServer.URL)))
+		cloudRouter.HandleFunc("/api/clusters/", compose(assertUserAgent(t, expected), handleKafkaClusterGetListDelete(t, kafkaApiServer.URL)))
 		return httptest.NewServer(cloudRouter).URL
 	}
 
@@ -300,7 +301,7 @@ func (s *CLITestSuite) Test_Ccloud_Errors() {
 		output := runCommand(tt, "ccloud", env, "login --url "+loginURL, 0)
 		require.Equal(tt, "Logged in as expired@user.com\nUsing environment a-595 (\"default\")\n", output)
 
-		output = runCommand(t, "ccloud", []string{}, "kafka cluster list", 1)
+		output = runCommand(tt, "ccloud", []string{}, "kafka cluster list", 1)
 		require.Equal(tt, "Error: Your session has expired. Please login again.\n", output)
 	})
 
@@ -310,7 +311,7 @@ func (s *CLITestSuite) Test_Ccloud_Errors() {
 		output := runCommand(tt, "ccloud", env, "login --url "+loginURL, 0)
 		require.Equal(tt, "Logged in as malformed@user.com\nUsing environment a-595 (\"default\")\n", output)
 
-		output = runCommand(t, "ccloud", []string{}, "kafka cluster list", 1)
+		output = runCommand(tt, "ccloud", []string{}, "kafka cluster list", 1)
 		require.Equal(tt, "Error: Your auth token has been corrupted. Please login again.\n", output)
 	})
 
@@ -320,7 +321,7 @@ func (s *CLITestSuite) Test_Ccloud_Errors() {
 		output := runCommand(tt, "ccloud", env, "login --url "+loginURL, 0)
 		require.Equal(tt, "Logged in as invalid@user.com\nUsing environment a-595 (\"default\")\n", output)
 
-		output = runCommand(t, "ccloud", []string{}, "kafka cluster list", 1)
+		output = runCommand(tt, "ccloud", []string{}, "kafka cluster list", 1)
 		require.Equal(tt, "Error: Your auth token has been corrupted. Please login again.\n", output)
 	})
 }
@@ -423,6 +424,10 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint stri
 		}
 
 		if *update && tt.args != "version" {
+			if strings.HasPrefix(tt.args, "kafka cluster create") {
+				re := regexp.MustCompile("https?://127.0.0.1:[0-9]+")
+				output = re.ReplaceAllString(output, "http://127.0.0.1:12345")
+			}
 			writeFixture(t, tt.fixture, output)
 		}
 
@@ -432,6 +437,10 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint stri
 		if tt.args == "version" {
 			require.Regexp(t, expected, actual)
 			return
+		} else if strings.HasPrefix(tt.args, "kafka cluster create") {
+			fmt.Println(tt.args, actual)
+			re := regexp.MustCompile("https?://127.0.0.1:[0-9]+")
+			actual = re.ReplaceAllString(actual, "http://127.0.0.1:12345")
 		}
 
 		if !reflect.DeepEqual(actual, expected) {
@@ -497,7 +506,7 @@ func runCommand(t *testing.T, binaryName string, env []string, args string, want
 				require.Failf(t, "unexpected error",
 					"exit %d: %s\n%s", exitError.ExitCode(), args, string(output))
 			} else {
-				require.Equal(t, wantErrCode, exitError.ExitCode())
+				require.Equal(t, wantErrCode, exitError.ExitCode(), string(output))
 			}
 		} else {
 			require.Failf(t, "unexpected error", "command returned err: %s", err)
@@ -770,7 +779,16 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 			require.NoError(t, err)
 		}
 	})
-	router.HandleFunc("/api/clusters/", handleKafkaClusterList(t, kafkaAPIURL))
+	router.HandleFunc("/api/accounts", func(w http.ResponseWriter, r *http.Request) {
+		b, err := utilv1.MarshalJSONToBytes(&orgv1.ListAccountsReply{Accounts: []*orgv1.Account{
+			{Id: "a-595", Name: "default"}, {Id: "not-595", Name: "other"},
+		}})
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(b))
+		require.NoError(t, err)
+	})
+	router.HandleFunc("/api/clusters/", handleKafkaClusterGetListDelete(t, kafkaAPIURL))
+	router.HandleFunc("/api/clusters", handleKafkaClusterCreate(t, kafkaAPIURL))
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		_, err := io.WriteString(w, `{"error": {"message": "unexpected call to `+r.URL.Path+`"}}`)
 		require.NoError(t, err)
@@ -865,9 +883,8 @@ func handleCheckEmail(t *testing.T) func(w http.ResponseWriter, r *http.Request)
 	}
 }
 
-func handleKafkaClusterList(t *testing.T, kafkaAPIURL string) func(w http.ResponseWriter, r *http.Request) {
+func handleKafkaClusterGetListDelete(t *testing.T, kafkaAPIURL string) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		require.NotEmpty(t, r.URL.Query().Get("account_id"))
 		parts := strings.Split(r.URL.Path, "/")
 		id := parts[len(parts)-1]
 		if id == "lkc-unknown" {
@@ -875,12 +892,46 @@ func handleKafkaClusterList(t *testing.T, kafkaAPIURL string) func(w http.Respon
 			require.NoError(t, err)
 			return
 		}
+		if r.Method == "DELETE" {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		} else {
+			// this is in the body of delete requests
+			require.NotEmpty(t, r.URL.Query().Get("account_id"))
+		}
+		// Now return the KafkaCluster with updated ApiEndpoint
 		b, err := utilv1.MarshalJSONToBytes(&kafkav1.GetKafkaClusterReply{
 			Cluster: &kafkav1.KafkaCluster{
-				Id:          id,
-				Name:        "kafka-cluster",
-				Endpoint:    "SASL_SSL://kafka-endpoint",
-				ApiEndpoint: kafkaAPIURL,
+				Id:              id,
+				Name:            "kafka-cluster",
+				NetworkIngress:  100,
+				NetworkEgress:   100,
+				Storage:         500,
+				ServiceProvider: "aws",
+				Region:          "us-west-2",
+				Endpoint:        "SASL_SSL://kafka-endpoint",
+				ApiEndpoint:     kafkaAPIURL,
+			},
+		})
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(b))
+		require.NoError(t, err)
+	}
+}
+
+func handleKafkaClusterCreate(t *testing.T, kafkaAPIURL string) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		b, err := utilv1.MarshalJSONToBytes(&kafkav1.GetKafkaClusterReply{
+			Cluster: &kafkav1.KafkaCluster{
+				Id:              "lkc-def963",
+				Name:            "kafka-cluster",
+				NetworkIngress:  100,
+				NetworkEgress:   100,
+				Storage:         500,
+				ServiceProvider: "aws",
+				Region:          "us-west-2",
+				Endpoint:        "SASL_SSL://kafka-endpoint",
+				ApiEndpoint:     kafkaAPIURL,
 			},
 		})
 		require.NoError(t, err)
