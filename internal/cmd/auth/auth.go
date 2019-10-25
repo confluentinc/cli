@@ -151,7 +151,10 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 			fmt.Printf("%s", url)
 			fmt.Println()
 			fmt.Println()
-			fmt.Printf("After authenticating in your browser, paste the code here: \n")
+			fmt.Println("After authenticating in your browser, paste the code here:")
+
+			// wait for the user to paste the code
+			// the code should come in the format {state}/{auth0_auth_code}
 			scanner := bufio.NewScanner(os.Stdin)
 			scanner.Scan()
 			input := scanner.Text()
