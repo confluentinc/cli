@@ -1,21 +1,24 @@
 package auth
 
 import (
+	"bufio"
 	"context"
 	"fmt"
+	"github.com/pkg/browser"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 
-	auth_server "github.com/confluentinc/cli/internal/pkg/auth-server"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	sso "github.com/confluentinc/cli/internal/pkg/sso"
 
 	"github.com/confluentinc/mds-sdk-go"
 )
@@ -77,6 +80,7 @@ func (a *commands) init(prerunner pcmd.PreRunner) {
 		loginCmd.Long = strings.Replace(loginCmd.Long, ".", " (required for RBAC).", -1)
 		check(loginCmd.MarkFlagRequired("url")) // because https://confluent.cloud isn't an MDS endpoint
 	}
+	loginCmd.Flags().Bool("no-browser", false, "Do not open browser when authenticating via Single Sign-On.")
 	loginCmd.Flags().SortFlags = false
 	loginCmd.PersistentPreRunE = prerunner.Anonymous()
 	logoutCmd := &cobra.Command{
@@ -98,6 +102,12 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	}
 	a.config.AuthURL = url
 
+	noBrowser, err := cmd.Flags().GetBool("no-browser")
+	if err != nil {
+		return err
+	}
+	a.config.NoBrowser = noBrowser
+
 	client := a.anonHTTPClientFactory(a.config.AuthURL, a.config.Logger)
 	email, password, err := a.credentials(cmd, "Email", client)
 	if err != nil {
@@ -115,26 +125,64 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	token := ""
 
 	if userSSO != nil && userSSO.Sso != nil && userSSO.Sso.Enabled && userSSO.Sso.Auth0ConnectionName != "" {
-		// Be conservative: only bother trying to launch server if we have to
-		server := &auth_server.AuthServer{}
-		err = server.Start(a.config.AuthURL)
+		// the user must authenticate via SSO
+		state, err := sso.NewState(a.config)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
 
-		// Get authorization code for making subsequent token request
-		err = server.GetAuthorizationCode(userSSO.Sso.Auth0ConnectionName)
+		// Check if the --no-browser flag was passed in
+		if a.config.NoBrowser {
+			// no browser flag does not need to launch the server
+			// it prints the url and has the User copy this into their browser instead
+			url := state.GetAuthorizationCodeUrl(userSSO.Sso.Auth0ConnectionName)
+			fmt.Println("Navigate to the following link in your browser to authenticate:")
+			fmt.Printf("%s", url)
+			fmt.Println()
+			fmt.Println()
+			fmt.Println("After authenticating in your browser, paste the code here:")
+
+			// wait for the user to paste the code
+			// the code should come in the format {state}/{auth0_auth_code}
+			scanner := bufio.NewScanner(os.Stdin)
+			scanner.Scan()
+			input := scanner.Text()
+			split := strings.SplitAfterN(input, "/", 2)
+			if len(split) < 2 {
+				return errors.New("Pasted input had invalid format")
+			}
+			auth0State := strings.Replace(split[0], "/", "", 1)
+			if !(auth0State == state.SSOProviderState) {
+				return errors.New("authentication code either did not contain a state parameter or the state parameter was invalid; login will fail")
+			}
+
+			state.SSOProviderAuthenticationCode = split[1]
+		} else {
+			server := sso.NewServer(state)
+			err = server.StartServer()
+			if err != nil {
+				return errors.HandleCommon(err, cmd)
+			}
+
+			// Get authorization code for making subsequent token request
+			err := browser.OpenURL(state.GetAuthorizationCodeUrl(userSSO.Sso.Auth0ConnectionName))
+			if err != nil {
+				return errors.Wrap(err, "unable to open web browser for authorization")
+			}
+
+			err = server.AwaitAuthorizationCode(30 * time.Second)
+			if err != nil {
+				return errors.HandleCommon(err, cmd)
+			}
+		}
+
+		// Exchange authorization code for OAuth token from SSO provider
+		err = state.GetOAuthToken()
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
 
-		// Exchange authorization code for OAuth token from SSO orovider
-		err := server.GetOAuthToken()
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-
-		token, err = client.Auth.Login(context.Background(), server.SSOProviderIDToken, "", "")
+		token, err = client.Auth.Login(context.Background(), state.SSOProviderIDToken, "", "")
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
