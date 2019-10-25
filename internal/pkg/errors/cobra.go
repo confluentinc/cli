@@ -18,6 +18,7 @@ var messages = map[error]string{
 	ErrNotLoggedIn:    "You must login to run that command.",
 	ErrNotImplemented: "Sorry, this functionality is not yet available in the CLI.",
 	ErrNoKafkaContext: "You must pass --cluster or set an active kafka in your context with 'kafka cluster use'",
+	ErrNoKSQL:		   "Could not find KSQL cluster with Resource ID specified.",
 }
 
 var typeMessages = map[reflect.Type]string{
