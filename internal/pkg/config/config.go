@@ -37,6 +37,7 @@ type Config struct {
 	DisableUpdateCheck bool                   `json:"disable_update_check"`
 	DisableUpdates     bool                   `json:"disable_updates"`
 	AuthURL            string                 `json:"auth_url"`
+	NoBrowser          bool                   `json:"no_browser" hcl:"no_browser"`
 	AuthToken          string                 `json:"auth_token"`
 	Auth               *AuthConfig            `json:"auth"`
 	Platforms          map[string]*Platform   `json:"platforms"`
