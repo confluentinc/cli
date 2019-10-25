@@ -39,7 +39,7 @@ func New(prerunner pcmd.PreRunner, config *config.Config, prompt pcmd.Prompt, re
 }
 
 func (c *command) init() {
-	c.Flags().Bool("kafka-sso", false, "Initialize with bootstrap url, API key, and API secret. "+
+	c.Flags().Bool("kafka-auth", false, "Initialize with bootstrap url, API key, and API secret. "+
 		"Can be done interactively, with flags, or both.")
 	c.Flags().String("bootstrap", "", "Bootstrap URL.")
 	c.Flags().String("api-key", "", "API key.")
