@@ -38,7 +38,7 @@ func (c *command) resolveResourceID(cmd *cobra.Command, args []string) (resource
 		return srResourceType, src.AccountId, src.Id, currentKey, nil
 
 	} else if strings.HasPrefix(resource, "lksqlc-") {
-		ksql, err := pcmd.GetKsql(cmd, c.ch)
+		ksql, err := pcmd.GetKSQL(cmd, c.ch)
 		if err != nil {
 			return "", "", "", "", err
 		}
@@ -46,7 +46,6 @@ func (c *command) resolveResourceID(cmd *cobra.Command, args []string) (resource
 			return "", "", "", "", errors.ErrNoKsql
 		}
 		return ksqlResourceType, ksql.AccountId, ksql.Id, "", nil
-
 	} else {
 		kcc, err := pcmd.GetKafkaClusterConfig(cmd, c.ch, "resource")
 		if err != nil {
