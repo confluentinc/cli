@@ -1,13 +1,12 @@
-+--------------+---------------------------+
-| Id           | lkc-def963                |
-| Name         | kafka-cluster             |
-| Ingress      |                       100 |
-| Egress       |                       100 |
-| Storage      |                       500 |
-| Provider     | aws                       |
-| Region       | us-west-2                 |
-| Status       | PROVISIONING              |
-| Endpoint     | SASL_SSL://kafka-endpoint |
-| ApiEndpoint  | http://127.0.0.1:12345    |
-| PricePerHour |                         0 |
-+--------------+---------------------------+
++-------------+---------------------------+
+| Id          | lkc-def963                |
+| Name        | kafka-cluster             |
+| Ingress     |                       100 |
+| Egress      |                       100 |
+| Storage     |                       500 |
+| Provider    | aws                       |
+| Region      | us-west-2                 |
+| Status      | PROVISIONING              |
+| Endpoint    | SASL_SSL://kafka-endpoint |
+| ApiEndpoint | http://127.0.0.1:12345    |
++-------------+---------------------------+

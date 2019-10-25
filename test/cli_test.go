@@ -424,6 +424,10 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint stri
 		}
 
 		if *update && tt.args != "version" {
+			if strings.HasPrefix(tt.args, "kafka cluster create") {
+				re := regexp.MustCompile("https?://127.0.0.1:[0-9]+")
+				output = re.ReplaceAllString(output, "http://127.0.0.1:12345")
+			}
 			writeFixture(t, tt.fixture, output)
 		}
 
@@ -434,7 +438,8 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint stri
 			require.Regexp(t, expected, actual)
 			return
 		} else if strings.HasPrefix(tt.args, "kafka cluster create") {
-			re := regexp.MustCompile("http://127.0.0.1:[0-9]+")
+			fmt.Println(tt.args, actual)
+			re := regexp.MustCompile("https?://127.0.0.1:[0-9]+")
 			actual = re.ReplaceAllString(actual, "http://127.0.0.1:12345")
 		}
 
