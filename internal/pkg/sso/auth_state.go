@@ -18,8 +18,8 @@ var (
 	ssoProviderClientID             = "hPbGZM8G55HSaUsaaieiiAprnJaEc9rH"
 	ssoProviderClientIDDevel        = "XKlqgOEo39iyonTl3Yv3IHWIXGKDP3fA"
 	ssoProviderCallbackLocalURL     = "http://127.0.0.1:26635/cli_callback"
-	ssoProviderCallbackCCloudURL    = "http://"+ssoProviderDomain+"/cli_callback" // used in the --no-browser sso flow
-	ssoProviderCallbackCCloudDevURL = "http://"+ssoProviderDomainDevel+"/cli_callback"
+	ssoProviderCallbackCCloudURL    = "https://" + ssoProviderDomain + "/cli_callback" // used in the --no-browser sso flow
+	ssoProviderCallbackCCloudDevURL = "https://" + ssoProviderDomainDevel + "/cli_callback"
 	ssoProviderIdentifier           = "https://confluent.auth0.com/api/v2/"
 	ssoProviderIdentifierDevel      = "https://confluent-dev.auth0.com/api/v2/"
 )
@@ -34,10 +34,9 @@ type authState struct {
 	SSOProviderAuthenticationCode string
 	SSOProviderIDToken            string
 	SSOProviderState              string
-	SSOProviderDomain             string
+	SSOProviderHost               string
 	SSOProviderClientID           string
 	SSOProviderCallbackUrl        string
-	SSOProviderCallbackCCloud     string
 	SSOProviderIdentifier         string
 }
 
@@ -54,13 +53,13 @@ func NewState(config *config.Config) (*authState, error) {
 	}
 
 	state := &authState{}
-	err := state.GenerateCodes()
+	err := state.generateCodes()
 	if err != nil {
 		return nil, err
 	}
 
 	if env == "devel" || env == "stag" {
-		state.SSOProviderDomain = ssoProviderDomainDevel
+		state.SSOProviderHost = "https://" + ssoProviderDomainDevel
 		state.SSOProviderClientID = ssoProviderClientIDDevel
 		state.SSOProviderIdentifier = ssoProviderIdentifierDevel
 
@@ -70,7 +69,7 @@ func NewState(config *config.Config) (*authState, error) {
 			state.SSOProviderCallbackUrl = ssoProviderCallbackLocalURL
 		}
 	} else {
-		state.SSOProviderDomain = ssoProviderDomain
+		state.SSOProviderHost = "https://" + ssoProviderDomain
 		state.SSOProviderClientID = ssoProviderClientID
 		state.SSOProviderIdentifier = ssoProviderIdentifier
 
@@ -83,8 +82,8 @@ func NewState(config *config.Config) (*authState, error) {
 	return state, nil
 }
 
-// GenerateCodes makes code variables for use with the Authorization Code + PKCE flow
-func (s *authState) GenerateCodes() error {
+// generateCodes makes code variables for use with the Authorization Code + PKCE flow
+func (s *authState) generateCodes() error {
 	randomBytes := make([]byte, 32)
 
 	_, err := rand.Read(randomBytes)
@@ -113,7 +112,7 @@ func (s *authState) GenerateCodes() error {
 
 // GetOAuthToken exchanges the obtained authorization code for an auth0/ID token from the SSO provider
 func (s *authState) GetOAuthToken() error {
-	url := "https://" + s.SSOProviderDomain + "/oauth/token"
+	url := s.SSOProviderHost + "/oauth/token"
 	payload := strings.NewReader("grant_type=authorization_code" +
 		"&client_id=" + s.SSOProviderClientID +
 		"&code_verifier=" + s.CodeVerifier +
@@ -149,7 +148,7 @@ func (s *authState) GetOAuthToken() error {
 }
 
 func (s *authState) GetAuthorizationCodeUrl(ssoProviderConnectionName string) string {
-	url := "https://" + s.SSOProviderDomain + "/authorize?" +
+	url := s.SSOProviderHost + "/authorize?" +
 		"response_type=code" +
 		"&code_challenge=" + s.CodeChallenge +
 		"&code_challenge_method=S256" +
@@ -164,4 +163,3 @@ func (s *authState) GetAuthorizationCodeUrl(ssoProviderConnectionName string) st
 
 	return url
 }
-
