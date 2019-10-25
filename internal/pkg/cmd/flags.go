@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"github.com/spf13/cobra"
 
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
@@ -56,6 +57,7 @@ func GetEnvironment(cmd *cobra.Command, cfg *config.Config) (string, error) {
 	if cmd.Flags().Lookup("environment") != nil {
 		var err error
 		environment, err = cmd.Flags().GetString("environment")
+		fmt.Println(environment)
 		if err != nil {
 			return "", err
 		}
@@ -87,16 +89,20 @@ func GetSchemaRegistry(cmd *cobra.Command, ch *ConfigHelper) (*srv1.SchemaRegist
 	return cluster, nil
 }
 
-func GetKsql(cmd *cobra.Command, ch *ConfigHelper) (*ksqlv1.KSQLCluster, error) {
+func GetKSQL(cmd *cobra.Command, ch *ConfigHelper) (*ksqlv1.KSQLCluster, error) {
 	ctx := context.Background()
 	resourceID, err := cmd.Flags().GetString("resource")
+	if err != nil {
+		return nil, err
+	}
+	environment, err := GetEnvironment(cmd, ch.Config)
 	if err != nil {
 		return nil, err
 	}
 	cluster, err := ch.Client.KSQL.Describe(
 		ctx, &ksqlv1.KSQLCluster{
 			Id:        resourceID,
-			AccountId: ch.Config.Auth.Account.Id,
+			AccountId: environment,
 		})
 	if err != nil {
 		return nil, err
