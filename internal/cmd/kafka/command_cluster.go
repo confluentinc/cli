@@ -145,7 +145,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		Region:          region,
 		Durability:      kafkav1.Durability_LOW,
 		// TODO: remove this once it's no longer required (MCM-130)
-		Storage:         500,
+		Storage:         5000,
 	}
 	cluster, err := c.client.Create(context.Background(), cfg)
 	if err != nil {
