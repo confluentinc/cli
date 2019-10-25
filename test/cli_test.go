@@ -921,15 +921,19 @@ func handleKafkaClusterGetListDelete(t *testing.T, kafkaAPIURL string) func(w ht
 
 func handleKafkaClusterCreate(t *testing.T, kafkaAPIURL string) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		req := &kafkav1.CreateKafkaClusterRequest{}
+		err := utilv1.UnmarshalJSON(r.Body, req)
+		require.NoError(t, err)
 		b, err := utilv1.MarshalJSONToBytes(&kafkav1.GetKafkaClusterReply{
 			Cluster: &kafkav1.KafkaCluster{
 				Id:              "lkc-def963",
-				Name:            "kafka-cluster",
+				AccountId:       req.Config.AccountId,
+				Name:            req.Config.Name,
 				NetworkIngress:  100,
 				NetworkEgress:   100,
-				Storage:         500,
-				ServiceProvider: "aws",
-				Region:          "us-west-2",
+				Storage:         req.Config.Storage,
+				ServiceProvider: req.Config.ServiceProvider,
+				Region:          req.Config.Region,
 				Endpoint:        "SASL_SSL://kafka-endpoint",
 				ApiEndpoint:     kafkaAPIURL,
 			},
