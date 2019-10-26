@@ -66,6 +66,7 @@ require (
 	github.com/mattn/go-isatty v0.0.8
 	github.com/mattn/go-runewidth v0.0.3 // indirect
 	github.com/mitchellh/golicense v0.1.1
+	github.com/mutagen-io/gopass v0.0.0-20170602182606-9a121bec1ae7
 	github.com/nbutton23/zxcvbn-go v0.0.0-20180912185939-ae427f1e4c1d // indirect
 	github.com/neurosnap/sentences v1.0.6 // indirect
 	github.com/olekukonko/tablewriter v0.0.0-20180912035003-be2c049b30cc
@@ -88,7 +89,6 @@ require (
 	github.com/stretchr/testify v1.4.0
 	github.com/tidwall/pretty v0.0.0-20190325153808-1166b9ac2b65
 	github.com/timakin/bodyclose v0.0.0-20190721030226-87058b9bfcec // indirect
-	go.opencensus.io v0.22.0 // indirect
 	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4
 	golang.org/x/exp v0.0.0-20190731235908-ec7cb31e5a56 // indirect
 	golang.org/x/net v0.0.0-20190813141303-74dc4d7220e7 // indirect
@@ -104,7 +104,7 @@ require (
 )
 
 replace (
-	github.com/havoc-io/gopass => github.com/havoc-io/gopass v0.0.0-20161007065903-6331a34a3f3b
+	github.com/mutagen-io/gopass => github.com/mutagen-io/gopass v0.0.0-20161007065903-6331a34a3f3b
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20171026124306-e509bb64fe11
 	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20170925234155-019ae5ada31d
 )
