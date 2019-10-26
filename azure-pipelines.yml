@@ -1,7 +1,7 @@
 strategy:
   matrix:
     linux:
-      imageName: 'ubuntu-16.04'
+      imageName: 'ubuntu-18.04'
           #    linux:
           #      imageName: 'ubuntu-16.04'
           #    mac:
