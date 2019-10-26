@@ -45,8 +45,7 @@ steps:
   displayName: 'Put secrets in their right places'
 
 - script: |
-    curl -Ls https://github.com/github/hub/releases/download/v2.11.1/hub-linux-amd64-2.11.1.tgz
-    sudo tar -xvz -C /usr/bin --strip-components=2 hub-linux-amd64-2.11.1/bin/hub
+    curl -Ls https://github.com/github/hub/releases/download/v2.11.1/hub-linux-amd64-2.11.1.tgz | sudo tar -xvz -C /usr/bin --strip-components=2 hub-linux-amd64-2.11.1/bin/hub
     sudo chmod 755 /usr/bin/hub
   displayName: 'Install hub'
 
