@@ -1,1 +1,4 @@
-Error: error describing kafka cluster: resource not found
+Error: 1 error occurred:
+	* error describing kafka cluster: resource not found
+
+

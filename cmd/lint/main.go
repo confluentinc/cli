@@ -30,8 +30,14 @@ var (
 		"Enterprise",
 	}
 	vocabWords = []string{
-		"ccloud", "kafka", "api", "acl", "url", "config", "multizone", "transactional", "ksql", "decrypt", "iam", "rolebinding",
-		"geo", "auth", "init",
+		"ccloud", "kafka", "api", "url", "config", "configs", "multizone", "transactional", "ksql", "KSQL", "stdin",
+		// security
+		"iam", "acl", "ACL", "rolebinding", "rolebindings", "auth", "init", "decrypt", "READWRITE",
+		"txt", // this is because @file.txt -> file txt
+		// clouds
+		"aws", "gcp",
+		// geos
+		"geo", "us", "eu", "apac",
 	}
 	utilityCommands = []string{
 		"login", "logout", "version", "completion <shell>", "prompt", "update", "init <context-name>",
@@ -117,12 +123,15 @@ var rules = []linter.Rule{
 var flagRules = []linter.FlagRule{
 	linter.FlagFilter(linter.RequireFlagNameLength(2, 16),
 		linter.ExcludeFlag("service-account-id", "connect-cluster-id", "schema-registry-cluster-id", "local-secrets-file", "remote-secrets-file")),
-	linter.RequireFlagStartWithCapital,
-	linter.RequireFlagEndWithPunctuation,
+	linter.RequireFlagUsageMessage,
+	linter.RequireFlagUsageStartWithCapital,
+	linter.RequireFlagUsageEndWithPunctuation,
+	linter.RequireFlagKebabCase,
 	linter.RequireFlagCharacters('-'),
 	linter.FlagFilter(linter.RequireFlagDelimiter('-', 1),
 		linter.ExcludeFlag("service-account-id", "kafka-cluster-id", "connect-cluster-id", "schema-registry-cluster-id", "ksql-cluster-id", "local-secrets-file", "remote-secrets-file")),
 	linter.RequireFlagRealWords('-'),
+	linter.RequireFlagUsageRealWords,
 }
 
 func main() {

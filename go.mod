@@ -14,11 +14,11 @@ require (
 	github.com/aws/aws-sdk-go v1.15.64
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
-	github.com/confluentinc/ccloud-sdk-go v0.0.12
+	github.com/confluentinc/ccloud-sdk-go v0.0.14
 	github.com/confluentinc/ccloudapis v0.0.0-20191009151547-b75ab14e577d
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-printer v0.10.0
-	github.com/confluentinc/mds-sdk-go v0.0.0-20191002204243-76c2da92d6be
+	github.com/confluentinc/mds-sdk-go v0.0.0-20191015231442-c29a09dbc1e9
 	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787
 	github.com/confluentinc/schema-registry-sdk-go v0.0.7
 	github.com/dghubble/sling v1.3.0 // indirect
@@ -55,6 +55,7 @@ require (
 	github.com/hashicorp/go-version v1.1.0
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
 	github.com/havoc-io/gopass v0.0.0-20170602182606-9a121bec1ae7
+	github.com/iancoleman/strcase v0.0.0-20190422225806-e506e3ef7365
 	github.com/jonboulle/clockwork v0.1.0
 	github.com/kevinburke/go-bindata v3.13.0+incompatible
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
