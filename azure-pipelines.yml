@@ -64,13 +64,13 @@ steps:
     make deps
   displayName: 'make deps'
 
-- script: |
-    make build-ccloud
-  displayName: 'make build-ccloud'
-
-- script: |
-    make build-confluent
-  displayName: 'make build-confluent'
+#- script: |
+#    make build-ccloud
+#  displayName: 'make build-ccloud'
+#
+#- script: |
+#    make build-confluent
+#  displayName: 'make build-confluent'
 
 - script: |
     make test
