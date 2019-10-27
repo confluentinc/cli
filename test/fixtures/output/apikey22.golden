@@ -1,3 +1,3 @@
-    Key    | Owner | Description  
-+----------+-------+-------------+
-    MYKEY4 |    23 | my-cool-app  
+    Key    | Owner | Description |  Resource Type  | Resource ID
++----------+-------+-------------+-----------------+-------------+
+    MYKEY4 |    23 | my-cool-app |                 |  lkc-cool1

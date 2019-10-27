@@ -584,7 +584,7 @@ func init() {
 		Key:    "MYKEY1",
 		Secret: "MYSECRET1",
 		LogicalClusters: []*authv1.ApiKey_Cluster{
-			{Id: "bob"},
+			{Id: "bob", Type: "kafka"},
 		},
 		UserId: 12,
 	}
@@ -593,7 +593,7 @@ func init() {
 		Key:    "MYKEY2",
 		Secret: "MYSECRET2",
 		LogicalClusters: []*authv1.ApiKey_Cluster{
-			{Id: "abc"},
+			{Id: "abc", Type: "kafka"},
 		},
 		UserId: 18,
 	}
@@ -602,7 +602,7 @@ func init() {
 		Key:    "UIAPIKEY100",
 		Secret: "UIAPISECRET100",
 		LogicalClusters: []*authv1.ApiKey_Cluster{
-			{Id: "lkc-cool1"},
+			{Id: "lkc-cool1", Type: "kafka"},
 		},
 		UserId: 25,
 	}
@@ -610,7 +610,7 @@ func init() {
 		Key:    "UIAPIKEY101",
 		Secret: "UIAPISECRET101",
 		LogicalClusters: []*authv1.ApiKey_Cluster{
-			{Id: "lkc-other1"},
+			{Id: "lkc-other1", Type: "kafka"},
 		},
 		UserId: 25,
 	}
@@ -618,7 +618,7 @@ func init() {
 		Key:    "UIAPIKEY102",
 		Secret: "UIAPISECRET102",
 		LogicalClusters: []*authv1.ApiKey_Cluster{
-			{Id: "lksqlc-ksql1"},
+			{Id: "lksqlc-ksql1", Type: "kafka"},
 		},
 		UserId: 25,
 	}
@@ -626,7 +626,7 @@ func init() {
 		Key:    "UIAPIKEY103",
 		Secret: "UIAPISECRET103",
 		LogicalClusters: []*authv1.ApiKey_Cluster{
-			{Id: "lkc-cool1"},
+			{Id: "lkc-cool1", Type: "kafka"},
 		},
 		UserId: 25,
 	}

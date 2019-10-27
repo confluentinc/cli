@@ -69,7 +69,7 @@ func (c *command) init() {
 	}
 	listCmd.Flags().String("resource", "", "The resource ID.")
 	listCmd.Flags().Int32("service-account-id", 0, "Show only API keys belonging to the given service account ID.")
-	listCmd.Flags().Bool("all-clusters", false, "Show API keys belonging to all clusters in the active environment.")
+	listCmd.Flags().Bool("all-resources", false, "Show API keys belonging to all clusters in the active environment.")
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
@@ -133,18 +133,18 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		ResourceType string
 		ResourceId   string
 	}
-	allClusters, err := cmd.Flags().GetBool("all-clusters")
+	allResources, err := cmd.Flags().GetBool("all-resources")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 	var currentApiKey string
 	var logicalClusters []*authv1.ApiKey_Cluster
-	// Only when all-clusters not specified is when we need to filter by resource id
-	if !allClusters {
+	// Only when all-resources not specified is when we need to filter by resource id
+	if !allResources {
 		resourceType, _, clusterId, currentKey, err := c.resolveResourceID(cmd, args)
 		if err != nil {
 			if err == errors.ErrNoKafkaContext {
-				return fmt.Errorf("You must either specify resource to use or pass --all-clusters.")
+				return fmt.Errorf("You must either specify resource to use or pass --all-resources.")
 			} else {
 				return errors.HandleCommon(err, cmd)
 			}
@@ -172,17 +172,22 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 			continue
 		}
 
-		// if all-clusters then no need to specify which API key is in-use
-		if !allClusters && apiKey.Key == currentApiKey {
+		// if all-resources then no need to specify which API key is in-use
+		if !allResources && apiKey.Key == currentApiKey {
 			apiKey.Key = fmt.Sprintf("* %s", apiKey.Key)
 		} else {
 			apiKey.Key = fmt.Sprintf("  %s", apiKey.Key)
 		}
-		data = append(data, printer.ToRow(&keyDisplay{
-			Key:         apiKey.Key,
-			Description: apiKey.Description,
-			UserId:      apiKey.UserId,
-		}, listFields))
+		for _, lc := range apiKey.LogicalClusters {
+			data = append(data, printer.ToRow(&keyDisplay{
+				Key:          apiKey.Key,
+				Description:  apiKey.Description,
+				UserId:       apiKey.UserId,
+				ResourceType: lc.Type,
+				ResourceId:   lc.Id,
+			}, listFields))
+		}
+
 	}
 	printer.RenderCollectionTable(data, listLabels)
 	return nil
