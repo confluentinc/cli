@@ -82,14 +82,16 @@ steps:
 #  displayName: 'make build-confluent'
 
 - script: |
-    go version
-    echo $(pwd)
-    ls
-    echo "$(GOPATH)/src/github.com/$(build.repository.name)"
-    echo "GOPATH = ${GOPATH}"
-    echo "GOROOT = ${GOROOT}"
-    GO111MODULE=on golangci-lint run >>out.txt 2>&1 || true
-    cat out.txt | awk '{gsub(/\\n/,"\n")}1'
+    make test
+    #go version
+    #echo $(pwd)
+    #ls
+    #echo "$(GOPATH)/src/github.com/$(build.repository.name)"
+    #echo "GOPATH = ${GOPATH}"
+    #echo "GOROOT = ${GOROOT}"
+    #GO111MODULE=on golangci-lint run >>out.txt 2>&1 || true
+    #cat out.txt | awk '{gsub(/\\n/,"\n")}1'
+    #make test
   displayName: 'make test'
 
 #- script: |
