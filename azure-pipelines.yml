@@ -1,0 +1,84 @@
+strategy:
+  matrix:
+    linux:
+      imageName: 'ubuntu-18.04'
+          #    linux:
+          #      imageName: 'ubuntu-16.04'
+          #    mac:
+          #      imageName: 'macOS-10.14'
+          #    windows:
+          #      imageName: 'windows-2019'
+
+pool:
+  vmImage: $(imageName)
+
+steps:
+- script: |
+    wget "https://storage.googleapis.com/golang/go1.12.5.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.12.5.tar.gz"
+    tar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.12.5.tar.gz"
+  displayName: 'Install Go 1.12.5'
+
+# Linux
+- bash: |
+    echo "##vso[task.setvariable variable=GOROOT]$(Agent.BuildDirectory)/go"
+    echo "##vso[task.setvariable variable=GOPATH]$(Agent.BuildDirectory)/gopath"
+    echo "##vso[task.setvariable variable=GOBIN]$(Agent.BuildDirectory)/go/bin"
+    echo "##vso[task.setvariable variable=modulePath]$(Agent.BuildDirectory)/go/src/github.com/$(build.repository.name)"
+    #  condition: eq( variables['Agent.OS'], 'Linux' )
+  displayName: Properly configure our custom Go environment
+
+- task: DownloadSecureFile@1
+  name: idrsa
+  displayName: 'Securely download id_rsa from Azure vault'
+  inputs:
+    secureFile: 'id_rsa'
+
+- task: DownloadSecureFile@1
+  name: netrc
+  displayName: 'Securely download netrc from Azure vault'
+  inputs:
+    secureFile: 'netrc'
+
+- script: |
+    echo '##vso[task.prependpath]$(GOROOT)/bin'
+    echo '##vso[task.prependpath]$(GOPATH)/bin'
+  displayName: 'Set up the Go workspace'
+
+- script: |
+    mv $(netrc.secureFilePath) ~/.netrc
+    mkdir ~/.ssh
+    sudo mv $(idrsa.secureFilePath) ~/.ssh/
+    sudo chmod 400 ~/.ssh/id_rsa
+  displayName: 'Put secrets in their right places'
+
+- script: |
+    curl -Ls https://github.com/github/hub/releases/download/v2.11.1/hub-linux-amd64-2.11.1.tgz | sudo tar -xvz -C /usr/bin --strip-components=2 hub-linux-amd64-2.11.1/bin/hub
+    sudo chmod 755 /usr/bin/hub
+  displayName: 'Install hub'
+
+- script: |
+    mkdir -p ${GOPATH}/bin
+    mkdir -p ${GOROOT}/bin
+    make deps
+  displayName: 'make deps'
+
+# make test will build the CLI as part of its work
+# (for integration tests), so no need to run build
+# make targets separately
+- script: |
+    make test
+  displayName: 'make test'
+
+- script: |
+    make lint-licenses
+  displayName: 'make lint-licenses'
+
+- script: |
+    bash <(curl -s https://codecov.io/bash)
+  displayName: 'Generate Codecov report'
+
+- script: |
+    git checkout go.*
+  displayName: 'Reset go.* just in case'
+
+# Do not release yet while Semaphore is still running!
