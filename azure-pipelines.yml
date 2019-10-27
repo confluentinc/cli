@@ -75,7 +75,7 @@ steps:
 - script: |
     echo "GOPATH = ${GOPATH}"
     echo "GOROOT = ${GOROOT}"
-    GO111MODULE=on golangci-lint run > out.txt || true
+    GO111MODULE=on golangci-lint run >>out.txt 2>&1 || true
     cat out.txt | awk '{gsub(/\\n/,"\n")}1'
   displayName: 'make test'
 
