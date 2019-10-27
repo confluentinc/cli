@@ -68,4 +68,5 @@ func TestAddCommands_ShownInHelpUsage_Confluent(t *testing.T) {
 	req.Contains(output, "help")
 	req.Contains(output, "version")
 	req.Contains(output, "completion")
+	req.Contains(output, "iam")
 }

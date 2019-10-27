@@ -1,10 +1,11 @@
 package cmd
 
 import (
-	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/jonboulle/clockwork"
 	"github.com/spf13/cobra"
 	"gopkg.in/square/go-jose.v2/jwt"
+
+	"github.com/confluentinc/ccloud-sdk-go"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -75,6 +76,9 @@ func (r *PreRun) Authenticated() func(cmd *cobra.Command, args []string) error {
 // HasAPIKey provides PreRun operations for commands that require an API key.
 func (r *PreRun) HasAPIKey() func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
+		if err := r.Anonymous()(cmd, args); err != nil {
+			return err
+		}
 		context, err := r.Config.Context()
 		if err != nil {
 			return errors.HandleCommon(err, cmd)

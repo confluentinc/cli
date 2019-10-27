@@ -1,3 +1,4 @@
+//go:generate go run github.com/travisjeffery/mocker/cmd/mocker --prefix "" --dst mock/client.go --pkg mock --selfpkg github.com/confluentinc/cli client.go Client
 package update
 
 import (

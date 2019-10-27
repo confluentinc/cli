@@ -37,8 +37,8 @@ type command struct {
 }
 
 var (
-	listFields    = []string{"Key", "UserId", "Description"}
-	listLabels    = []string{"Key", "Owner", "Description"}
+	listFields    = []string{"Key", "UserId", "Description", "ResourceType", "ResourceId"}
+	listLabels    = []string{"Key", "Owner", "Description", "Resource Type", "Resource ID"}
 	createFields  = []string{"Key", "Secret"}
 	createRenames = map[string]string{"Key": "API Key"}
 )
@@ -127,9 +127,11 @@ func (c *command) init() {
 
 func (c *command) list(cmd *cobra.Command, args []string) error {
 	type keyDisplay struct {
-		Key         string
-		Description string
-		UserId      int32
+		Key          string
+		Description  string
+		UserId       int32
+		ResourceType string
+		ResourceId   string
 	}
 	allClusters, err := cmd.Flags().GetBool("all-clusters")
 	if err != nil {

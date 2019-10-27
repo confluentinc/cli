@@ -9,11 +9,10 @@ import (
 	"testing"
 
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
-	"github.com/stretchr/testify/assert"
-
 	cerrors "github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/metric"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestConfig_Load(t *testing.T) {
@@ -634,7 +633,7 @@ func TestConfig_DeleteContext(t *testing.T) {
 		},
 		{name: "succeed deleting existing context",
 			fields: fields{Contexts: map[string]*Context{
-				contextName:     {Name: contextName,},
+				contextName:     {Name: contextName},
 				"other-context": {Name: "other-context"},
 			},
 				CurrentContext: "other-context",
@@ -642,7 +641,7 @@ func TestConfig_DeleteContext(t *testing.T) {
 			args:    args{name: contextName},
 			wantErr: false,
 			wantConfig: &Config{
-				Contexts:       map[string]*Context{"other-context": {Name: "other-context",}},
+				Contexts:       map[string]*Context{"other-context": {Name: "other-context"}},
 				CurrentContext: "other-context",
 			},
 		},
@@ -871,6 +870,66 @@ func TestConfig_CheckHasAPIKey(t *testing.T) {
 			}
 			if tt.err != nil {
 				assert.Equal(t, tt.err, err)
+			}
+		})
+	}
+}
+
+func TestConfig_CheckSchemaRegistryHasAPIKey(t *testing.T) {
+	type fields struct {
+		Auth           *AuthConfig
+		Contexts       map[string]*Context
+		CurrentContext string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   bool
+	}{
+		{
+			name: "Check for valid credentials in config",
+			fields: fields{
+				CurrentContext: "ctx",
+				Auth:           &AuthConfig{Account: &orgv1.Account{Id: "me"}, User: new(orgv1.User)},
+				Contexts: map[string]*Context{"ctx": {
+					SchemaRegistryClusters: map[string]*SchemaRegistryCluster{
+						"me": {
+							SrCredentials: &APIKeyPair{
+								Key:    "Abra",
+								Secret: "cadabra",
+							},
+						},
+					},
+				},
+				}},
+			want: true,
+		},
+		{
+			name: "Check for empty Schema Registry API Key credentials",
+			fields: fields{
+				CurrentContext: "ctx",
+				Auth:           &AuthConfig{Account: &orgv1.Account{Id: "me"}},
+				Contexts: map[string]*Context{"ctx": {
+					SchemaRegistryClusters: map[string]*SchemaRegistryCluster{
+						"me": {
+							SrCredentials: nil,
+						},
+					},
+				},
+				}},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Config{
+				Contexts:       tt.fields.Contexts,
+				Auth:           tt.fields.Auth,
+				CurrentContext: tt.fields.CurrentContext,
+			}
+			returnVal := c.CheckSchemaRegistryHasAPIKey()
+			if returnVal != tt.want {
+				t.Errorf("CheckSchemaRegistryHasAPIKey() %s returnVal = %v, wantedReturnVal %v", tt.name, returnVal, tt.want)
 			}
 		})
 	}

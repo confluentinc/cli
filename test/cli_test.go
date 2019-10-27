@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/confluentinc/mds-sdk-go"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -14,6 +15,7 @@ import (
 	"path"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"runtime"
 	"sort"
 	"strconv"
@@ -104,7 +106,99 @@ func (s *CLITestSuite) Test_Confluent_Help() {
 		{args: "version", fixture: "confluent-version.golden"},
 	}
 	for _, tt := range tests {
-		s.runConfluentTest(tt)
+		kafkaAPIURL := serveKafkaAPI(s.T()).URL
+		s.runConfluentTest(tt, serveMds(s.T(), kafkaAPIURL).URL)
+	}
+}
+
+func (s *CLITestSuite) Test_Confluent_Iam_Rolebinding_List() {
+	tests := []CLITest{
+		{
+			name:        "confluent iam rolebinding list, no principal nor role",
+			args:        "iam rolebinding list --kafka-cluster-id CID",
+			fixture:     "confluent-iam-rolebinding-list-no-principal-nor-role.golden",
+			login:       "default",
+			wantErrCode: 1,
+		},
+		{
+			args:    "iam rolebinding list --kafka-cluster-id CID --principal User:frodo",
+			fixture: "confluent-iam-rolebinding-list-user.golden",
+			login:   "default",
+		},
+		{
+			args:    "iam rolebinding list --kafka-cluster-id CID --principal User:frodo --role DeveloperRead",
+			fixture: "confluent-iam-rolebinding-list-user-and-role-with-multiple-resources-from-one-group.golden",
+			login:   "default",
+		},
+		{
+			args:    "iam rolebinding list --kafka-cluster-id CID --principal User:frodo --role DeveloperWrite",
+			fixture: "confluent-iam-rolebinding-list-user-and-role-with-resources-from-multiple-groups.golden",
+			login:   "default",
+		},
+		{
+			args:    "iam rolebinding list --kafka-cluster-id CID --principal User:frodo --role SecurityAdmin",
+			fixture: "confluent-iam-rolebinding-list-user-and-role-with-cluster-resource.golden",
+			login:   "default",
+		},
+		{
+			args:    "iam rolebinding list --kafka-cluster-id CID --principal User:frodo --role SystemAdmin",
+			fixture: "confluent-iam-rolebinding-list-user-and-role-with-no-matches.golden",
+			login:   "default",
+		},
+		{
+			args:    "iam rolebinding list --kafka-cluster-id CID --principal Group:hobbits --role DeveloperRead",
+			fixture: "confluent-iam-rolebinding-list-group-and-role-with-multiple-resources.golden",
+			login:   "default",
+		},
+		{
+			args:    "iam rolebinding list --kafka-cluster-id CID --principal Group:hobbits --role DeveloperWrite",
+			fixture: "confluent-iam-rolebinding-list-group-and-role-with-one-resource.golden",
+			login:   "default",
+		},
+		{
+			args:    "iam rolebinding list --kafka-cluster-id CID --principal Group:hobbits --role SecurityAdmin",
+			fixture: "confluent-iam-rolebinding-list-group-and-role-with-no-matches.golden",
+			login:   "default",
+		},
+		{
+			args:    "iam rolebinding list --kafka-cluster-id CID --role DeveloperRead",
+			fixture: "confluent-iam-rolebinding-list-role-with-multiple-bindings-to-one-group.golden",
+			login:   "default",
+		},
+		{
+			args:    "iam rolebinding list --kafka-cluster-id CID --role DeveloperWrite",
+			fixture: "confluent-iam-rolebinding-list-role-with-bindings-to-multiple-groups.golden",
+			login:   "default",
+		},
+		{
+			args:    "iam rolebinding list --kafka-cluster-id CID --role SecurityAdmin",
+			fixture: "confluent-iam-rolebinding-list-role-on-cluster-bound-to-user.golden",
+			login:   "default",
+		},
+		{
+			args:    "iam rolebinding list --kafka-cluster-id CID --role SystemAdmin",
+			fixture: "confluent-iam-rolebinding-list-role-with-no-matches.golden",
+			login:   "default",
+		},
+		{
+			args:    "iam rolebinding list --kafka-cluster-id CID --role DeveloperRead --resource Topic:food",
+			fixture: "confluent-iam-rolebinding-list-role-and-resource-with-exact-match.golden",
+			login:   "default",
+		},
+		{
+			args:    "iam rolebinding list --kafka-cluster-id CID --role DeveloperRead --resource Topic:shire-parties",
+			fixture: "confluent-iam-rolebinding-list-role-and-resource-with-no-match.golden",
+			login:   "default",
+		},
+		{
+			args:    "iam rolebinding list --kafka-cluster-id CID --role DeveloperWrite --resource Topic:shire-parties",
+			fixture: "confluent-iam-rolebinding-list-role-and-resource-with-prefix-match.golden",
+			login:   "default",
+		},
+	}
+	for _, tt := range tests {
+		kafkaAPIURL := serveKafkaAPI(s.T()).URL
+		s.runConfluentTest(tt, serveMds(s.T(), kafkaAPIURL).URL)
 	}
 }
 
@@ -138,7 +232,7 @@ func (s *CLITestSuite) Test_UserAgent() {
 		cloudRouter.HandleFunc("/api/sessions", compose(assertUserAgent(t, expected), handleLogin(t)))
 		cloudRouter.HandleFunc("/api/me", compose(assertUserAgent(t, expected), handleMe(t)))
 		cloudRouter.HandleFunc("/api/check_email/", compose(assertUserAgent(t, expected), handleCheckEmail(t)))
-		cloudRouter.HandleFunc("/api/clusters/", compose(assertUserAgent(t, expected), handleKafkaClusterList(t, kafkaApiServer.URL)))
+		cloudRouter.HandleFunc("/api/clusters/", compose(assertUserAgent(t, expected), handleKafkaClusterGetListDelete(t, kafkaApiServer.URL)))
 		return httptest.NewServer(cloudRouter).URL
 	}
 
@@ -209,7 +303,7 @@ func (s *CLITestSuite) Test_Ccloud_Errors() {
 		output := runCommand(tt, "ccloud", env, "login --url "+loginURL, 0)
 		require.Equal(tt, "Logged in as expired@user.com\nUsing environment a-595 (\"default\")\n", output)
 
-		output = runCommand(t, "ccloud", []string{}, "kafka cluster list", 1)
+		output = runCommand(tt, "ccloud", []string{}, "kafka cluster list", 1)
 		require.Equal(tt, "Error: Your session has expired. Please login again.\n", output)
 	})
 
@@ -219,7 +313,7 @@ func (s *CLITestSuite) Test_Ccloud_Errors() {
 		output := runCommand(tt, "ccloud", env, "login --url "+loginURL, 0)
 		require.Equal(tt, "Logged in as malformed@user.com\nUsing environment a-595 (\"default\")\n", output)
 
-		output = runCommand(t, "ccloud", []string{}, "kafka cluster list", 1)
+		output = runCommand(tt, "ccloud", []string{}, "kafka cluster list", 1)
 		require.Equal(tt, "Error: Your auth token has been corrupted. Please login again.\n", output)
 	})
 
@@ -229,7 +323,7 @@ func (s *CLITestSuite) Test_Ccloud_Errors() {
 		output := runCommand(tt, "ccloud", env, "login --url "+loginURL, 0)
 		require.Equal(tt, "Logged in as invalid@user.com\nUsing environment a-595 (\"default\")\n", output)
 
-		output = runCommand(t, "ccloud", []string{}, "kafka cluster list", 1)
+		output = runCommand(tt, "ccloud", []string{}, "kafka cluster list", 1)
 		require.Equal(tt, "Error: Your auth token has been corrupted. Please login again.\n", output)
 	})
 }
@@ -332,6 +426,10 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint stri
 		}
 
 		if *update && tt.args != "version" {
+			if strings.HasPrefix(tt.args, "kafka cluster create") {
+				re := regexp.MustCompile("https?://127.0.0.1:[0-9]+")
+				output = re.ReplaceAllString(output, "http://127.0.0.1:12345")
+			}
 			writeFixture(t, tt.fixture, output)
 		}
 
@@ -341,6 +439,10 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint stri
 		if tt.args == "version" {
 			require.Regexp(t, expected, actual)
 			return
+		} else if strings.HasPrefix(tt.args, "kafka cluster create") {
+			fmt.Println(tt.args, actual)
+			re := regexp.MustCompile("https?://127.0.0.1:[0-9]+")
+			actual = re.ReplaceAllString(actual, "http://127.0.0.1:12345")
 		}
 
 		if !reflect.DeepEqual(actual, expected) {
@@ -353,7 +455,7 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint stri
 	})
 }
 
-func (s *CLITestSuite) runConfluentTest(tt CLITest) {
+func (s *CLITestSuite) runConfluentTest(tt CLITest, loginURL string) {
 	if tt.name == "" {
 		tt.name = tt.args
 	}
@@ -364,6 +466,15 @@ func (s *CLITestSuite) runConfluentTest(tt CLITest) {
 		if !tt.workflow {
 			resetConfiguration(t, "confluent")
 		}
+
+		if tt.login == "default" {
+			env := []string{"XX_CONFLUENT_USERNAME=fake@user.com", "XX_CONFLUENT_PASSWORD=pass1"}
+			output := runCommand(t, "confluent", env, "login --url "+loginURL, 0)
+			if *debug {
+				fmt.Println(output)
+			}
+		}
+
 		output := runCommand(t, "confluent", []string{}, tt.args, tt.wantErrCode)
 
 		if *update && tt.args != "version" {
@@ -397,7 +508,7 @@ func runCommand(t *testing.T, binaryName string, env []string, args string, want
 				require.Failf(t, "unexpected error",
 					"exit %d: %s\n%s", exitError.ExitCode(), args, string(output))
 			} else {
-				require.Equal(t, wantErrCode, exitError.ExitCode())
+				require.Equal(t, wantErrCode, exitError.ExitCode(), string(output))
 			}
 		} else {
 			require.Failf(t, "unexpected error", "command returned err: %s", err)
@@ -521,6 +632,119 @@ func init() {
 	}
 }
 
+func serveMds(t *testing.T, mdsURL string) *httptest.Server {
+	req := require.New(t)
+	router := http.NewServeMux()
+	router.HandleFunc("/security/1.0/authenticate", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/json")
+		reply := &mds.AuthenticationResponse{
+			AuthToken:"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1NjE2NjA4NTcsImV4cCI6MjUzMzg2MDM4NDU3LCJhdWQiOiJ3d3cuZXhhbXBsZS5jb20iLCJzdWIiOiJqcm9ja2V0QGV4YW1wbGUuY29tIn0.G6IgrFm5i0mN7Lz9tkZQ2tZvuZ2U7HKnvxMuZAooPmE",
+			TokenType:"dunno",
+			ExpiresIn:9999999999,
+		}
+		b, err := json.Marshal(&reply)
+		req.NoError(err)
+		_, err = io.WriteString(w, string(b))
+		req.NoError(err)
+	})
+	routesAndReplies := map[string]string {
+		"/security/1.0/principals/User:frodo/groups": `[
+                       "hobbits",
+                       "ringBearers"]`,
+		"/security/1.0/principals/User:frodo/roleNames": `[
+                       "DeveloperRead",
+                       "DeveloperWrite",
+                       "SecurityAdmin"]`,
+		"/security/1.0/principals/User:frodo/roles/DeveloperRead/resources": `[]`,
+		"/security/1.0/principals/User:frodo/roles/DeveloperWrite/resources": `[]`,
+		"/security/1.0/principals/User:frodo/roles/SecurityAdmin/resources": `[]`,
+		"/security/1.0/principals/Group:hobbits/roles/DeveloperRead/resources": `[
+                       {"resourceType":"Topic","name":"drink","patternType":"LITERAL"},
+                       {"resourceType":"Topic","name":"food","patternType":"LITERAL"}]`,
+		"/security/1.0/principals/Group:hobbits/roles/DeveloperWrite/resources": `[
+                       {"resourceType":"Topic","name":"shire-","patternType":"PREFIXED"}]`,
+		"/security/1.0/principals/Group:hobbits/roles/SecurityAdmin/resources": `[]`,
+		"/security/1.0/principals/Group:ringBearers/roles/DeveloperRead/resources": `[]`,
+		"/security/1.0/principals/Group:ringBearers/roles/DeveloperWrite/resources": `[
+                       {"resourceType":"Topic","name":"ring-","patternType":"PREFIXED"}]`,
+		"/security/1.0/principals/Group:ringBearers/roles/SecurityAdmin/resources": `[]`,
+		"/security/1.0/lookup/principal/User:frodo/resources": `{
+                       "Group:hobbits":{
+                               "DeveloperWrite":[
+                                       {"resourceType":"Topic","name":"shire-","patternType":"PREFIXED"}],
+                               "DeveloperRead":[
+                                       {"resourceType":"Topic","name":"drink","patternType":"LITERAL"},
+                                       {"resourceType":"Topic","name":"food","patternType":"LITERAL"}]},
+                       "Group:ringBearers":{
+                               "DeveloperWrite":[
+                                       {"resourceType":"Topic","name":"ring-","patternType":"PREFIXED"}]},
+                       "User:frodo":{
+                               "SecurityAdmin": []}}`,
+		"/security/1.0/lookup/principal/Group:hobbits/resources": `{
+                       "Group:hobbits":{
+                               "DeveloperWrite":[
+                                       {"resourceType":"Topic","name":"shire-","patternType":"PREFIXED"}],
+                               "DeveloperRead":[
+                                       {"resourceType":"Topic","name":"drink","patternType":"LITERAL"},
+                                       {"resourceType":"Topic","name":"food","patternType":"LITERAL"}]}}`,
+		"/security/1.0/lookup/role/DeveloperRead": `["Group:hobbits"]`,
+		"/security/1.0/lookup/role/DeveloperWrite": `["Group:hobbits","Group:ringBearers"]`,
+		"/security/1.0/lookup/role/SecurityAdmin": `["User:frodo"]`,
+		"/security/1.0/lookup/role/SystemAdmin": `[]`,
+		"/security/1.0/lookup/role/DeveloperRead/resource/Topic/name/food": `["Group:hobbits"]`,
+		"/security/1.0/lookup/role/DeveloperRead/resource/Topic/name/shire-parties": `[]`,
+		"/security/1.0/lookup/role/DeveloperWrite/resource/Topic/name/shire-parties": `["Group:hobbits"]`,
+		"/security/1.0/roles/DeveloperRead": `{
+                       "name":"DeveloperRead",
+                       "accessPolicy":{
+                               "scopeType":"Resource",
+                               "allowedOperations":[
+                                       {"resourceType":"Cluster","operations":[]},
+                                       {"resourceType":"TransactionalId","operations":["Describe"]},
+                                       {"resourceType":"Group","operations":["Read","Describe"]},
+                                       {"resourceType":"Subject","operations":["Read","ReadCompatibility"]},
+                                       {"resourceType":"Connector","operations":["ReadStatus","ReadConfig"]},
+                                       {"resourceType":"Topic","operations":["Read","Describe"]}]}}`,
+		"/security/1.0/roles/DeveloperWrite": `{
+                       "name":"DeveloperWrite",
+                       "accessPolicy":{
+                               "scopeType":"Resource",
+                               "allowedOperations":[
+                                       {"resourceType":"Subject","operations":["Write"]},
+                                       {"resourceType":"Group","operations":[]},
+                                       {"resourceType":"Topic","operations":["Write","Describe"]},
+                                       {"resourceType":"Cluster","operations":["IdempotentWrite"]},
+                                       {"resourceType":"KsqlCluster","operations":["Contribute"]},
+                                       {"resourceType":"Connector","operations":["ReadStatus","Configure"]},
+                                       {"resourceType":"TransactionalId","operations":["Write","Describe"]}]}}`,
+		"/security/1.0/roles/SecurityAdmin": `{
+                       "name":"SecurityAdmin",
+                       "accessPolicy":{
+                               "scopeType":"Cluster",
+                               "allowedOperations":[
+                                       {"resourceType":"All","operations":["DescribeAccess"]}]}}`,
+		"/security/1.0/roles/SystemAdmin": `{
+                       "name":"SystemAdmin",
+                       "accessPolicy":{
+                               "scopeType":"Cluster",
+                               "allowedOperations":[
+                                       {"resourceType":"All","operations":["All"]}]}}`,
+	}
+	for route, reply := range routesAndReplies {
+		s := reply
+		router.HandleFunc(route, func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "text/json")
+			_, err := io.WriteString(w, s)
+			req.NoError(err)
+		})
+	}
+	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		_, err := io.WriteString(w, `{"error": {"message": "unexpected call to `+r.URL.Path+`"}}`)
+		require.NoError(t, err)
+	})
+	return httptest.NewServer(router)
+}
+
 func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 	router := http.NewServeMux()
 	router.HandleFunc("/api/sessions", handleLogin(t))
@@ -554,7 +778,16 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 			require.NoError(t, err)
 		}
 	})
-	router.HandleFunc("/api/clusters/", handleKafkaClusterList(t, kafkaAPIURL))
+	router.HandleFunc("/api/accounts", func(w http.ResponseWriter, r *http.Request) {
+		b, err := utilv1.MarshalJSONToBytes(&orgv1.ListAccountsReply{Accounts: []*orgv1.Account{
+			{Id: "a-595", Name: "default"}, {Id: "not-595", Name: "other"},
+		}})
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(b))
+		require.NoError(t, err)
+	})
+	router.HandleFunc("/api/clusters/", handleKafkaClusterGetListDelete(t, kafkaAPIURL))
+	router.HandleFunc("/api/clusters", handleKafkaClusterCreate(t, kafkaAPIURL))
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		_, err := io.WriteString(w, `{"error": {"message": "unexpected call to `+r.URL.Path+`"}}`)
 		require.NoError(t, err)
@@ -675,9 +908,8 @@ func handleCheckEmail(t *testing.T) func(w http.ResponseWriter, r *http.Request)
 	}
 }
 
-func handleKafkaClusterList(t *testing.T, kafkaAPIURL string) func(w http.ResponseWriter, r *http.Request) {
+func handleKafkaClusterGetListDelete(t *testing.T, kafkaAPIURL string) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		require.NotEmpty(t, r.URL.Query().Get("account_id"))
 		parts := strings.Split(r.URL.Path, "/")
 		id := parts[len(parts)-1]
 		if id == "lkc-unknown" {
@@ -685,12 +917,50 @@ func handleKafkaClusterList(t *testing.T, kafkaAPIURL string) func(w http.Respon
 			require.NoError(t, err)
 			return
 		}
+		if r.Method == "DELETE" {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		} else {
+			// this is in the body of delete requests
+			require.NotEmpty(t, r.URL.Query().Get("account_id"))
+		}
+		// Now return the KafkaCluster with updated ApiEndpoint
 		b, err := utilv1.MarshalJSONToBytes(&kafkav1.GetKafkaClusterReply{
 			Cluster: &kafkav1.KafkaCluster{
-				Id:          id,
-				Name:        "kafka-cluster",
-				Endpoint:    "SASL_SSL://kafka-endpoint",
-				ApiEndpoint: kafkaAPIURL,
+				Id:              id,
+				Name:            "kafka-cluster",
+				NetworkIngress:  100,
+				NetworkEgress:   100,
+				Storage:         500,
+				ServiceProvider: "aws",
+				Region:          "us-west-2",
+				Endpoint:        "SASL_SSL://kafka-endpoint",
+				ApiEndpoint:     kafkaAPIURL,
+			},
+		})
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(b))
+		require.NoError(t, err)
+	}
+}
+
+func handleKafkaClusterCreate(t *testing.T, kafkaAPIURL string) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		req := &kafkav1.CreateKafkaClusterRequest{}
+		err := utilv1.UnmarshalJSON(r.Body, req)
+		require.NoError(t, err)
+		b, err := utilv1.MarshalJSONToBytes(&kafkav1.GetKafkaClusterReply{
+			Cluster: &kafkav1.KafkaCluster{
+				Id:              "lkc-def963",
+				AccountId:       req.Config.AccountId,
+				Name:            req.Config.Name,
+				NetworkIngress:  100,
+				NetworkEgress:   100,
+				Storage:         req.Config.Storage,
+				ServiceProvider: req.Config.ServiceProvider,
+				Region:          req.Config.Region,
+				Endpoint:        "SASL_SSL://kafka-endpoint",
+				ApiEndpoint:     kafkaAPIURL,
 			},
 		})
 		require.NoError(t, err)
