@@ -74,6 +74,7 @@ steps:
 
 - script: |
     go version
+    echo $(pwd)
     echo "GOPATH = ${GOPATH}"
     echo "GOROOT = ${GOROOT}"
     GO111MODULE=on golangci-lint run >>out.txt 2>&1 || true
