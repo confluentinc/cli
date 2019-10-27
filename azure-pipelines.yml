@@ -12,13 +12,6 @@ strategy:
 pool:
   vmImage: $(imageName)
 
-#variables:
-#  GOPATH: '$(Agent.BuildDirectory)/gopath' # Go workspace path
-#  GOROOT: '$(Agent.BuildDirectory)/go' # Go installation path
-#  GOBIN:  '$(GOPATH)/bin' # Go binaries path
-#  modulePath: '$(GOPATH)/src/github.com/$(build.repository.name)' # Path to the module's code
-#  #GOPATH: '$(system.defaultWorkingDirectory)/gopath'
-
 steps:
 - script: |
     wget "https://storage.googleapis.com/golang/go1.12.5.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.12.5.tar.gz"
@@ -69,25 +62,11 @@ steps:
     make deps
   displayName: 'make deps'
 
-#- script: |
-#    make build-ccloud
-#  displayName: 'make build-ccloud'
-#
-#- script: |
-#    make build-confluent
-#  displayName: 'make build-confluent'
-
+# make test will build the CLI as part of its work
+# (for integration tests), so no need to run build
+# make targets separately
 - script: |
     make test
-    #go version
-    #echo $(pwd)
-    #ls
-    #echo "$(GOPATH)/src/github.com/$(build.repository.name)"
-    #echo "GOPATH = ${GOPATH}"
-    #echo "GOROOT = ${GOROOT}"
-    #GO111MODULE=on golangci-lint run >>out.txt 2>&1 || true
-    #cat out.txt | awk '{gsub(/\\n/,"\n")}1'
-    #make test
   displayName: 'make test'
 
 - script: |
