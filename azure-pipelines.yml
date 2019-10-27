@@ -25,6 +25,15 @@ steps:
     tar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.12.5.tar.gz"
   displayName: 'Install Go 1.12.5'
 
+# Linux
+- bash: |
+    export GOBIN='$(GOPATH)/bin'
+    export GOROOT='$(Agent.BuildDirectory)/go'
+    export GOPATH='$(Agent.BuildDirectory)/gopath'
+    export modulePath='$(GOPATH)/src/github.com/$(build.repository.name)'
+    #  condition: eq( variables['Agent.OS'], 'Linux' )
+  displayName: Properly configure our custom Go environment
+
 - task: DownloadSecureFile@1
   name: idrsa
   displayName: 'Securely download id_rsa from Azure vault'
@@ -53,15 +62,6 @@ steps:
     curl -Ls https://github.com/github/hub/releases/download/v2.11.1/hub-linux-amd64-2.11.1.tgz | sudo tar -xvz -C /usr/bin --strip-components=2 hub-linux-amd64-2.11.1/bin/hub
     sudo chmod 755 /usr/bin/hub
   displayName: 'Install hub'
-
-# Linux
-- bash: |
-    export GOBIN='$(GOPATH)/bin'
-    export GOROOT='$(Agent.BuildDirectory)/go'
-    export GOPATH='$(Agent.BuildDirectory)/gopath'
-    export modulePath='$(GOPATH)/src/github.com/$(build.repository.name)'
-    #  condition: eq( variables['Agent.OS'], 'Linux' )
-  displayName: Properly configure our custom Go environment
 
 - script: |
     mkdir -p ${GOPATH}/bin
