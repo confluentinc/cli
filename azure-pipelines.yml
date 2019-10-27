@@ -49,14 +49,14 @@ steps:
 #    sudo chmod 755 /usr/bin/hub
 #  displayName: 'Install hub'
 
-## Linux
-#- bash: |
-#    export GOBIN='$(GOPATH)/bin'
-#    export GOROOT='/usr/local/go1.12'
-#    export GOPATH='$(system.defaultWorkingDirectory)/gopath'
-#    export modulePath='$(GOPATH)/src/github.com/$(build.repository.name)'
-#  condition: eq( variables['Agent.OS'], 'Linux' )
-#  displayName: Get IP on Linux
+# Linux
+- bash: |
+    export GOBIN='$(GOPATH)/bin'
+    export GOROOT='/usr/local/go1.12'
+    export GOPATH='$(system.defaultWorkingDirectory)/gopath'
+    export modulePath='$(GOPATH)/src/github.com/$(build.repository.name)'
+    #  condition: eq( variables['Agent.OS'], 'Linux' )
+  displayName: Mess with go stuff
 
 - script: |
     mkdir -p ${GOPATH}/bin
@@ -75,6 +75,8 @@ steps:
 - script: |
     go version
     echo $(pwd)
+    ls
+    echo "$(GOPATH)/src/github.com/$(build.repository.name)"
     echo "GOPATH = ${GOPATH}"
     echo "GOROOT = ${GOROOT}"
     GO111MODULE=on golangci-lint run >>out.txt 2>&1 || true
