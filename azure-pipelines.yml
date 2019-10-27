@@ -13,12 +13,21 @@ pool:
   vmImage: $(imageName)
 
 variables:
-  GOPATH: '$(system.defaultWorkingDirectory)/gopath'
+  GOPATH: '$(Agent.BuildDirectory)/gopath' # Go workspace path
+  GOROOT: '$(Agent.BuildDirectory)/go' # Go installation path
+  GOBIN:  '$(GOPATH)/bin' # Go binaries path
+  modulePath: '$(GOPATH)/src/github.com/$(build.repository.name)' # Path to the module's code
+  #GOPATH: '$(system.defaultWorkingDirectory)/gopath'
 
 steps:
-- task: GoTool@0
-  inputs:
-    version: '1.12.5'
+- script: |
+    wget "https://storage.googleapis.com/golang/go1.12.5.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.12.5.tar.gz"
+    tar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.12.5.tar.gz"
+  displayName: 'Install Go 1.12.5'
+
+#- task: GoTool@0
+#  inputs:
+#    version: '1.12.5'
 
 - task: DownloadSecureFile@1
   name: idrsa
@@ -52,8 +61,8 @@ steps:
 # Linux
 - bash: |
     export GOBIN='$(GOPATH)/bin'
-    export GOROOT='/usr/local/go1.12'
-    export GOPATH='$(system.defaultWorkingDirectory)/gopath'
+    export GOROOT='$(Agent.BuildDirectory)/go'
+    export GOPATH='$(Agent.BuildDirectory)/gopath'
     export modulePath='$(GOPATH)/src/github.com/$(build.repository.name)'
     #  condition: eq( variables['Agent.OS'], 'Linux' )
   displayName: Mess with go stuff
