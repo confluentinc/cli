@@ -73,6 +73,7 @@ steps:
 #  displayName: 'make build-confluent'
 
 - script: |
+    golangci-lint run
     make test
   displayName: 'make test'
 
