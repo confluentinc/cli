@@ -12,22 +12,18 @@ strategy:
 pool:
   vmImage: $(imageName)
 
-variables:
-  GOPATH: '$(Agent.BuildDirectory)/gopath' # Go workspace path
-  GOROOT: '$(Agent.BuildDirectory)/go' # Go installation path
-  GOBIN:  '$(GOPATH)/bin' # Go binaries path
-  modulePath: '$(GOPATH)/src/github.com/$(build.repository.name)' # Path to the module's code
-  #GOPATH: '$(system.defaultWorkingDirectory)/gopath'
+#variables:
+#  GOPATH: '$(Agent.BuildDirectory)/gopath' # Go workspace path
+#  GOROOT: '$(Agent.BuildDirectory)/go' # Go installation path
+#  GOBIN:  '$(GOPATH)/bin' # Go binaries path
+#  modulePath: '$(GOPATH)/src/github.com/$(build.repository.name)' # Path to the module's code
+#  #GOPATH: '$(system.defaultWorkingDirectory)/gopath'
 
 steps:
 - script: |
     wget "https://storage.googleapis.com/golang/go1.12.5.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.12.5.tar.gz"
     tar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.12.5.tar.gz"
   displayName: 'Install Go 1.12.5'
-
-#- task: GoTool@0
-#  inputs:
-#    version: '1.12.5'
 
 - task: DownloadSecureFile@1
   name: idrsa
@@ -53,10 +49,10 @@ steps:
     sudo chmod 400 ~/.ssh/id_rsa
   displayName: 'Put secrets in their right places'
 
-#- script: |
-#    curl -Ls https://github.com/github/hub/releases/download/v2.11.1/hub-linux-amd64-2.11.1.tgz | sudo tar -xvz -C /usr/bin --strip-components=2 hub-linux-amd64-2.11.1/bin/hub
-#    sudo chmod 755 /usr/bin/hub
-#  displayName: 'Install hub'
+- script: |
+    curl -Ls https://github.com/github/hub/releases/download/v2.11.1/hub-linux-amd64-2.11.1.tgz | sudo tar -xvz -C /usr/bin --strip-components=2 hub-linux-amd64-2.11.1/bin/hub
+    sudo chmod 755 /usr/bin/hub
+  displayName: 'Install hub'
 
 # Linux
 - bash: |
@@ -65,7 +61,7 @@ steps:
     export GOPATH='$(Agent.BuildDirectory)/gopath'
     export modulePath='$(GOPATH)/src/github.com/$(build.repository.name)'
     #  condition: eq( variables['Agent.OS'], 'Linux' )
-  displayName: Mess with go stuff
+  displayName: Properly configure our custom Go environment
 
 - script: |
     mkdir -p ${GOPATH}/bin
@@ -94,16 +90,16 @@ steps:
     #make test
   displayName: 'make test'
 
-#- script: |
-#    make lint-licenses
-#  displayName: 'make lint-licenses'
-#
-#- script: |
-#    bash <(curl -s https://codecov.io/bash)
-#  displayName: 'Generate Codecov report'
-#
-#- script: |
-#    git checkout go.*
-#  displayName: 'Reset go.* just in case'
+- script: |
+    make lint-licenses
+  displayName: 'make lint-licenses'
+
+- script: |
+    bash <(curl -s https://codecov.io/bash)
+  displayName: 'Generate Codecov report'
+
+- script: |
+    git checkout go.*
+  displayName: 'Reset go.* just in case'
 
 # Do not release yet while Semaphore is still running!
