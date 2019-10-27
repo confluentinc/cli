@@ -5,7 +5,6 @@ run:
 linters:
   disable:
     - megacheck # doesn't work due to tools.go
-    - unused # https://github.com/golangci/golangci-lint/issues/824
 
 linters-settings:
   errcheck:
