@@ -73,8 +73,10 @@ steps:
 #  displayName: 'make build-confluent'
 
 - script: |
-    golangci-lint run
-    make test
+    echo "GOPATH = ${GOPATH}"
+    echo "GOROOT = ${GOROOT}"
+    GO111MODULE=on golangci-lint run > out.txt || true
+    cat out.txt
   displayName: 'make test'
 
 - script: |
