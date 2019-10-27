@@ -44,10 +44,10 @@ steps:
     sudo chmod 400 ~/.ssh/id_rsa
   displayName: 'Put secrets in their right places'
 
-- script: |
-    curl -Ls https://github.com/github/hub/releases/download/v2.11.1/hub-linux-amd64-2.11.1.tgz | sudo tar -xvz -C /usr/bin --strip-components=2 hub-linux-amd64-2.11.1/bin/hub
-    sudo chmod 755 /usr/bin/hub
-  displayName: 'Install hub'
+#- script: |
+#    curl -Ls https://github.com/github/hub/releases/download/v2.11.1/hub-linux-amd64-2.11.1.tgz | sudo tar -xvz -C /usr/bin --strip-components=2 hub-linux-amd64-2.11.1/bin/hub
+#    sudo chmod 755 /usr/bin/hub
+#  displayName: 'Install hub'
 
 ## Linux
 #- bash: |
@@ -73,22 +73,23 @@ steps:
 #  displayName: 'make build-confluent'
 
 - script: |
+    go version
     echo "GOPATH = ${GOPATH}"
     echo "GOROOT = ${GOROOT}"
     GO111MODULE=on golangci-lint run >>out.txt 2>&1 || true
     cat out.txt | awk '{gsub(/\\n/,"\n")}1'
   displayName: 'make test'
 
-- script: |
-    make lint-licenses
-  displayName: 'make lint-licenses'
-
-- script: |
-    bash <(curl -s https://codecov.io/bash)
-  displayName: 'Generate Codecov report'
-
-- script: |
-    git checkout go.*
-  displayName: 'Reset go.* just in case'
+#- script: |
+#    make lint-licenses
+#  displayName: 'make lint-licenses'
+#
+#- script: |
+#    bash <(curl -s https://codecov.io/bash)
+#  displayName: 'Generate Codecov report'
+#
+#- script: |
+#    git checkout go.*
+#  displayName: 'Reset go.* just in case'
 
 # Do not release yet while Semaphore is still running!
