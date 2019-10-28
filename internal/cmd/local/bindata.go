@@ -22,7 +22,7 @@ import (
 func bindataRead(data []byte, name string) ([]byte, error) {
 	gz, err := gzip.NewReader(bytes.NewBuffer(data))
 	if err != nil {
-		return nil, fmt.Errorf("Read %q: %v", name, err)
+		return nil, fmt.Errorf("read %q: %v", name, err)
 	}
 
 	var buf bytes.Buffer
@@ -30,7 +30,7 @@ func bindataRead(data []byte, name string) ([]byte, error) {
 	clErr := gz.Close()
 
 	if err != nil {
-		return nil, fmt.Errorf("Read %q: %v", name, err)
+		return nil, fmt.Errorf("read %q: %v", name, err)
 	}
 	if clErr != nil {
 		return nil, err
@@ -86,7 +86,7 @@ func cp_cliConfluentPatch() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "cp_cli/confluent.patch", size: 4731, mode: os.FileMode(420), modTime: time.Unix(1562628108, 0)}
+	info := bindataFileInfo{name: "cp_cli/confluent.patch", size: 4731, mode: os.FileMode(0644), modTime: time.Unix(1570660889, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x2c, 0x9f, 0x94, 0x72, 0x55, 0x7c, 0xaf, 0xb0, 0xee, 0x22, 0x4, 0x46, 0xc9, 0x12, 0x31, 0x1a, 0xa6, 0xeb, 0xfc, 0xf7, 0xa, 0xe6, 0xc9, 0xae, 0x43, 0x71, 0xdd, 0x39, 0x9d, 0x77, 0xf4, 0x66}}
 	return a, nil
 }
@@ -106,7 +106,7 @@ func cp_cliConfluentSh() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "cp_cli/confluent.sh", size: 67447, mode: os.FileMode(493), modTime: time.Unix(1564540718, 0)}
+	info := bindataFileInfo{name: "cp_cli/confluent.sh", size: 67447, mode: os.FileMode(0755), modTime: time.Unix(1570660889, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x2c, 0xa5, 0x97, 0x94, 0xaa, 0xd4, 0xc7, 0xed, 0xf6, 0x6e, 0x29, 0xb3, 0x9d, 0x11, 0x7b, 0x38, 0x5b, 0xcc, 0xdb, 0x9d, 0x7b, 0xd8, 0x79, 0xfb, 0xcf, 0x84, 0x3a, 0xb8, 0x2f, 0x93, 0x3d, 0x64}}
 	return a, nil
 }
@@ -126,7 +126,7 @@ func assetsSso_callbackHtml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "assets/sso_callback.html", size: 1125, mode: os.FileMode(420), modTime: time.Unix(1565973824, 0)}
+	info := bindataFileInfo{name: "assets/sso_callback.html", size: 1125, mode: os.FileMode(0644), modTime: time.Unix(1570660889, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0xe1, 0xe8, 0x53, 0xb4, 0x83, 0x2a, 0x23, 0x59, 0xeb, 0xf2, 0xda, 0xc6, 0x3c, 0x6a, 0x4d, 0xe, 0x38, 0x8b, 0x3d, 0x9d, 0x3b, 0x2b, 0x16, 0x6, 0x40, 0xe, 0xe, 0x59, 0xb5, 0x71, 0xe2, 0x7a}}
 	return a, nil
 }
@@ -222,10 +222,8 @@ func AssetNames() []string {
 
 // _bindata is a table, holding each asset generator, mapped to its name.
 var _bindata = map[string]func() (*asset, error){
-	"cp_cli/confluent.patch": cp_cliConfluentPatch,
-
-	"cp_cli/confluent.sh": cp_cliConfluentSh,
-
+	"cp_cli/confluent.patch":   cp_cliConfluentPatch,
+	"cp_cli/confluent.sh":      cp_cliConfluentSh,
 	"assets/sso_callback.html": assetsSso_callbackHtml,
 }
 
@@ -270,12 +268,12 @@ type bintree struct {
 }
 
 var _bintree = &bintree{nil, map[string]*bintree{
-	"assets": {nil, map[string]*bintree{
-		"sso_callback.html": {assetsSso_callbackHtml, map[string]*bintree{}},
+	"assets": &bintree{nil, map[string]*bintree{
+		"sso_callback.html": &bintree{assetsSso_callbackHtml, map[string]*bintree{}},
 	}},
-	"cp_cli": {nil, map[string]*bintree{
-		"confluent.patch": {cp_cliConfluentPatch, map[string]*bintree{}},
-		"confluent.sh":    {cp_cliConfluentSh, map[string]*bintree{}},
+	"cp_cli": &bintree{nil, map[string]*bintree{
+		"confluent.patch": &bintree{cp_cliConfluentPatch, map[string]*bintree{}},
+		"confluent.sh":    &bintree{cp_cliConfluentSh, map[string]*bintree{}},
 	}},
 }}
 
