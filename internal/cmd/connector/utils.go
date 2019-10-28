@@ -5,11 +5,11 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"github.com/spf13/cobra"
 	"github.com/ghodss/yaml"
+	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	connectv1 "github.com/confluentinc/ccloudapis/connect/v1"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 func FormatDescription(description string, cliName string) string {
@@ -23,7 +23,7 @@ func getConfig(cmd *cobra.Command) (map[string]string, error) {
 		return nil, errors.Wrap(err, "error reading --config as string")
 	}
 	options := connectv1.Connector{}.UserConfigs
-	if strings.HasPrefix(filename,"@") {
+	if strings.HasPrefix(filename, "@") {
 		yamlFile, err := ioutil.ReadFile(filename)
 		if err != nil {
 			return nil, errors.Wrapf(err, "unable to read config file %s", filename)
@@ -42,10 +42,9 @@ func getConfig(cmd *cobra.Command) (map[string]string, error) {
 
 func (c *command) describeFromId(cmd *cobra.Command, connectorID string) (*connectv1.Connector, error) {
 
-	connector,err := c.client.Describe(context.Background(), &connectv1.Connector{Id: connectorID, AccountId: c.config.Auth.Account.Id} )
-	if err!=nil {
+	connector, err := c.client.Describe(context.Background(), &connectv1.Connector{Id: connectorID, AccountId: c.config.Auth.Account.Id})
+	if err != nil {
 		return nil, err
 	}
-	return connector,nil
+	return connector, nil
 }
-

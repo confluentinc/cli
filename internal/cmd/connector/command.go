@@ -2,59 +2,57 @@ package connector
 
 import (
 	"context"
-	"github.com/confluentinc/go-printer"
-	"github.com/spf13/cobra"
+	"fmt"
 	"os"
+
+	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	connectv1 "github.com/confluentinc/ccloudapis/connect/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/go-printer"
 )
 
 type command struct {
 	*cobra.Command
-	config      *config.Config
-	client      ccloud.Connect
-	userClient  ccloud.User
-	ch          *pcmd.ConfigHelper
+	config     *config.Config
+	client     ccloud.Connect
+	userClient ccloud.User
+	ch         *pcmd.ConfigHelper
 }
 
 type describeDisplay struct {
-	Name            string
-	ID              string
-	Status          string
-	Used            string
-	Available       string
-	Compatibility   string
-	Mode            string
-	ServiceProvider string
+	Name      string
+	ID        string
+	Status    string
+	Used      string
+	Available string
+	Tasks     string
 }
 
 var (
-	describeLabels  = []string{"Name", "ID", "Status", "Tasks", "Available", "Used", "Remaining"}
+	describeLabels  = []string{"Name", "ID", "Status", "Tasks", "Available", "Used"}
 	describeRenames = map[string]string{}
-	listFields = []string{"Id", "Name", "Status","KafkaClusterId", "StatusMessage"}
+	listFields      = []string{"Id", "Name", "Status", "KafkaClusterId", "StatusMessage"}
 )
 
-// New returns the default command object for interacting with KSQL.
-func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.Connect, userClient ccloud.User, ch *pcmd.ConfigHelper) *cobra.Command {
+// New returns the default command object for interacting with Connect.
+func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.Connect, ch *pcmd.ConfigHelper) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:               "connector",
 			Short:             "Manage Kafka Connect.",
 			PersistentPreRunE: prerunner.Authenticated(),
 		},
-		config:      config,
-		client:      client,
-		userClient:  userClient,
-		ch:          ch,
+		config: config,
+		client: client,
+		ch:     ch,
 	}
 	cmd.init()
 	return cmd.Command
 }
-
 
 func (c *command) init() {
 	c.AddCommand(&cobra.Command{
@@ -70,14 +68,14 @@ func (c *command) init() {
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	})
-	//
-	//createCmd:= &cobra.Command{
-	//	Use:   "create --config <config>",
-	//	Short: "Create connector in the current Kafka cluster context.",
-	//	RunE:  c.create,
-	//	Args:  cobra.ExactArgs(1),
-	//}
-	//c.AddCommand(createCmd)
+
+	createCmd := &cobra.Command{
+		Use:   "create --config <config>",
+		Short: "Create connector in the current Kafka cluster context.",
+		RunE:  c.create,
+		Args:  cobra.ExactArgs(1),
+	}
+	c.AddCommand(createCmd)
 	deleteCmd := &cobra.Command{
 		Use:   "delete --connector-id <connector-id>",
 		Short: "Delete connector in the current Kafka cluster context.",
@@ -136,20 +134,19 @@ func (c *command) init() {
 	//c.AddCommand(NewTaskCommand(c.config, c.client, c.ch , c.logger))
 }
 
-
-
 func (c *command) list(cmd *cobra.Command, args []string) error {
 
 	kafkaCluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	connectors,err := c.client.List(context.Background(), &connectv1.Connector{AccountId: c.config.Auth.Account.Id})
+	connectors, err := c.client.List(context.Background(), &connectv1.Connector{AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 	var data [][]string
 	for _, connector := range connectors {
+		fmt.Print("found not in cluster")
 		if connector.KafkaClusterId == kafkaCluster.Id {
 			data = append(data, printer.ToRow(connector, listFields))
 		}
@@ -172,10 +169,10 @@ func (c *command) describeById(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	if len(args)==0 {
+	if len(args) == 0 {
 		return errors.New("Connector ID must be passed")
 	}
-	connector, err := c.describeFromId(cmd,args[0])
+	connector, err := c.describeFromId(cmd, args[0])
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -184,42 +181,44 @@ func (c *command) describeById(cmd *cobra.Command, args []string) error {
 	}
 
 	data := &describeDisplay{
-		Name:            connector.Name,
-		ID:              connector.Id,
-		Status:          connector.Status.String(),
+		Name:   connector.Name,
+		ID:     connector.Id,
+		Status: connector.Status.String(),
 	}
 	_ = printer.RenderTableOut(data, describeLabels, describeRenames, os.Stdout)
 	return nil
 }
-//
-//func (c *command) create(cmd *cobra.Command, args []string) error {
-//   userConfigs, err :=getConfig(cmd)
-//	if err != nil {
-//		return errors.HandleCommon(err, cmd)
-//	}
-//
-//	connector, err := c.client.Create(context.Background(), &connectv1.ConnectorConfig{UserConfigs: userConfigs, AccountId: c.config.Auth.Account.Id})
-//
-//	if err != nil {
-//		return errors.HandleCommon(err, cmd)
-//	}
-//	fmt.Print("connect")
-//
-//	return nil
-//}
-//
-//func (c *command) update(cmd *cobra.Command, args []string) error {
-//	id := args[0]
-//	newName := cmd.Flag("name").Value.String()
-//
-//	err := c.client.Update(context.Background(), &orgv1.Account{Id: id, Name: newName, OrganizationId: c.config.Auth.Account.OrganizationId})
-//
-//	if err != nil {
-//		return errors.HandleCommon(err, cmd)
-//	}
-//
-//	return nil
-//}
+
+func (c *command) create(cmd *cobra.Command, args []string) error {
+	userConfigs, err := getConfig(cmd)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	connector, err := c.client.Create(context.Background(), &connectv1.ConnectorConfig{UserConfigs: userConfigs, AccountId: c.config.Auth.Account.Id})
+
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	fmt.Print("Created connector" + connector.Id + " " + connector.Name)
+	return nil
+}
+
+func (c *command) update(cmd *cobra.Command, args []string) error {
+	userConfigs, err := getConfig(cmd)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	connector, err := c.client.Update(context.Background(), &connectv1.Connector{UserConfigs: userConfigs, AccountId: c.config.Auth.Account.Id})
+
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	fmt.Print("Updated connector" + connector.Id + " " + connector.Name)
+	return nil
+}
+
 //
 //func (c *command) status(cmd *cobra.Command, args []string) error {
 //	id := args[0]
@@ -238,10 +237,10 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	if len(args)==0 {
+	if len(args) == 0 {
 		return errors.New("Connector ID must be passed")
 	}
-	connector, err := c.describeFromId(cmd,args[0])
+	connector, err := c.describeFromId(cmd, args[0])
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -252,6 +251,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
+	pcmd.Println(cmd, "Successfully deleted connector")
 	return nil
 }
 
@@ -260,10 +260,10 @@ func (c *command) pause(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	if len(args)==0 {
+	if len(args) == 0 {
 		return errors.New("Connector ID must be passed")
 	}
-	connector, err := c.describeFromId(cmd,args[0])
+	connector, err := c.describeFromId(cmd, args[0])
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -274,6 +274,7 @@ func (c *command) pause(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
+	pcmd.Println(cmd, "Successfully paused connector")
 	return nil
 }
 
@@ -282,10 +283,10 @@ func (c *command) resume(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	if len(args)==0 {
+	if len(args) == 0 {
 		return errors.New("Connector ID must be passed")
 	}
-	connector, err := c.describeFromId(cmd,args[0])
+	connector, err := c.describeFromId(cmd, args[0])
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -297,9 +298,9 @@ func (c *command) resume(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
+	pcmd.Println(cmd, "Successfully resumed connector")
 	return nil
 }
-
 
 //func (c *command) restart(cmd *cobra.Command, args []string) error {
 //
@@ -318,12 +319,11 @@ func (c *command) resume(cmd *cobra.Command, args []string) error {
 //	return nil
 //}
 
-
-func (c* command) describeAll(cmd *cobra.Command, args []string) error {
+func (c *command) describeAll(cmd *cobra.Command, args []string) error {
 
 	// Get the Kafka Cluster
 	kafkaCluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
-	if err!=nil {
+	if err != nil {
 		return err
 	}
 	_, connectorsExpandedMap, err := c.client.ListByKafkaClusterId(context.Background(), &connectv1.Connector{AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id}, "info")
@@ -334,8 +334,7 @@ func (c* command) describeAll(cmd *cobra.Command, args []string) error {
 	var data [][]string
 	for _, connector := range connectorsExpandedMap {
 		data = append(data, printer.ToRow(&describeDisplay{
-			ID:     connector.Id.Id,
-
+			ID: connector.Id.Id,
 		}, listFields))
 	}
 	printer.RenderCollectionTable(data, listFields)
