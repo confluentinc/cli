@@ -3,7 +3,6 @@ package kafka
 import (
 	"fmt"
 	"io"
-	"net/url"
 	"strings"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
@@ -67,15 +66,10 @@ func (h *GroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sara
 
 // saramaConf converts KafkaClusterConfig to sarama.Config
 func saramaConf(kafka *config.KafkaClusterConfig, clientID string, beginning bool) (*sarama.Config, error) {
-	endpoint, err := url.Parse(kafka.APIEndpoint)
-	if err != nil {
-		return nil, err
-	}
 	saramaConf := sarama.NewConfig()
 	saramaConf.ClientID = clientID
 	saramaConf.Version = sarama.V1_1_0_0
 	saramaConf.Net.TLS.Enable = true
-	saramaConf.Net.TLS.Config.ServerName = endpoint.Hostname()
 	saramaConf.Net.SASL.Enable = true
 	saramaConf.Net.SASL.User = kafka.APIKey
 	saramaConf.Net.SASL.Password = kafka.APIKeys[kafka.APIKey].Secret
