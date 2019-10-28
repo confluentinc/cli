@@ -43,7 +43,7 @@ type authState struct {
 // InitState generates various auth0 related codes and hashes
 // and tweaks certain variables for internal development and testing of the CLI's
 // auth0 server / SSO integration.
-func NewState(config *config.Config) (*authState, error) {
+func newState(config *config.Config) (*authState, error) {
 	env := "prod"
 	if strings.Contains(config.AuthURL, "devel.cpdev.cloud") || strings.Contains(config.AuthURL, "priv.cpdev.cloud") {
 		env = "devel"
@@ -111,7 +111,7 @@ func (s *authState) generateCodes() error {
 }
 
 // GetOAuthToken exchanges the obtained authorization code for an auth0/ID token from the SSO provider
-func (s *authState) GetOAuthToken() error {
+func (s *authState) getOAuthToken() error {
 	url := s.SSOProviderHost + "/oauth/token"
 	payload := strings.NewReader("grant_type=authorization_code" +
 		"&client_id=" + s.SSOProviderClientID +
@@ -147,7 +147,7 @@ func (s *authState) GetOAuthToken() error {
 	return nil
 }
 
-func (s *authState) GetAuthorizationCodeUrl(ssoProviderConnectionName string) string {
+func (s *authState) getAuthorizationCodeUrl(ssoProviderConnectionName string) string {
 	url := s.SSOProviderHost + "/authorize?" +
 		"response_type=code" +
 		"&code_challenge=" + s.CodeChallenge +
