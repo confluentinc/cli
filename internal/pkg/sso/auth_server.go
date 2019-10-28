@@ -24,14 +24,14 @@ type authServer struct {
 	State 						  *authState
 }
 
-func NewServer(state *authState) *authServer {
+func newServer(state *authState) *authServer {
 	return &authServer{State: state}
 }
 
 // Start begins the server including attempting to bind the desired TCP port
-func (s *authServer) StartServer() error {
+func (s *authServer) startServer() error {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/cli_callback", s.CallbackHandler)
+	mux.HandleFunc("/cli_callback", s.callbackHandler)
 
 	listener, err := net.ListenTCP("tcp4", &net.TCPAddr{IP: net.IPv4(127, 0, 0, 1), Port: 26635}) // confl
 
@@ -57,7 +57,7 @@ func (s *authServer) StartServer() error {
 }
 
 // GetAuthorizationCode takes the code verifier/challenge and gets an authorization code from the SSO provider
-func (s *authServer) AwaitAuthorizationCode(timeout time.Duration) error {
+func (s *authServer) awaitAuthorizationCode(timeout time.Duration) error {
 	// Wait until flow is finished / callback is called (or timeout...)
 	go func() {
 		time.Sleep(timeout)
@@ -78,7 +78,7 @@ func (s *authServer) AwaitAuthorizationCode(timeout time.Duration) error {
 }
 
 // CallbackHandler serves the route /callback
-func (s *authServer) CallbackHandler(rw http.ResponseWriter, request *http.Request) {
+func (s *authServer) callbackHandler(rw http.ResponseWriter, request *http.Request) {
 	states, ok := request.URL.Query()["state"]
 	if !(ok && states[0] == s.State.SSOProviderState) {
 		s.bgErr = errors.New("authentication callback URL either did not contain a state parameter in query string, or the state parameter was invalid; login will fail")
