@@ -10,24 +10,24 @@ import (
 
 func TestServerTimeout(t *testing.T) {
 	configDevel := &config.Config{AuthURL: "https://devel.cpdev.cloud"}
-	state, err := NewState(configDevel)
+	state, err := newState(configDevel)
 	require.NoError(t, err)
-	server := NewServer(state)
+	server := newServer(state)
 
-	require.NoError(t, server.StartServer())
+	require.NoError(t, server.startServer())
 
-	err = server.AwaitAuthorizationCode(1 * time.Second)
+	err = server.awaitAuthorizationCode(1 * time.Second)
 	require.Error(t, err)
 	require.Equal(t, err.Error(), "timed out while waiting for browser authentication to occur; please try logging in again")
 }
 
 func TestCallback(t *testing.T) {
 	configDevel := &config.Config{AuthURL: "https://devel.cpdev.cloud"}
-	state, err := NewState(configDevel)
+	state, err := newState(configDevel)
 	require.NoError(t, err)
-	server := NewServer(state)
+	server := newServer(state)
 
-	require.NoError(t, server.StartServer())
+	require.NoError(t, server.startServer())
 
 	state.SSOProviderCallbackUrl = "http://127.0.0.1:26635/cli_callback"
 	url := state.SSOProviderCallbackUrl
@@ -47,9 +47,9 @@ func TestCallback(t *testing.T) {
 	go func() {
 		// trigger the callback function after waiting a sec
 		time.Sleep(500)
-		ch <- true
+		close(ch)
 	}()
-	authCodeError := server.AwaitAuthorizationCode(3 * time.Second)
+	authCodeError := server.awaitAuthorizationCode(3 * time.Second)
 	require.NoError(t, authCodeError)
 	require.Equal(t, state.SSOProviderAuthenticationCode, "uhlU7Fvq5NwLwBwk")
 }
