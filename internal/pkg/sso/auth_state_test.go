@@ -14,7 +14,7 @@ import (
 
 func TestNewStateDev(t *testing.T) {
 	configDevel := &config.Config{AuthURL: "https://devel.cpdev.cloud"}
-	state, err := NewState(configDevel)
+	state, err := newState(configDevel)
 	require.NoError(t, err)
 	// randomly generated
 	require.True(t, len(state.CodeVerifier) > 10)
@@ -35,7 +35,7 @@ func TestNewStateDev(t *testing.T) {
 
 	// check stag configs
 	configStag := &config.Config{AuthURL: "https://stag.cpdev.cloud"}
-	stateStag, err := NewState(configStag)
+	stateStag, err := newState(configStag)
 	require.NoError(t, err)
 	// configs for devel and staging are the same
 	require.Equal(t, state.SSOProviderHost, stateStag.SSOProviderHost)
@@ -48,7 +48,7 @@ func TestNewStateDev(t *testing.T) {
 
 func TestNewStateDevNoBrowser(t *testing.T) {
 	configDevel := &config.Config{AuthURL: "https://devel.cpdev.cloud", NoBrowser: true}
-	state, err := NewState(configDevel)
+	state, err := newState(configDevel)
 	require.NoError(t, err)
 	// randomly generated
 	require.True(t, len(state.CodeVerifier) > 10)
@@ -70,7 +70,7 @@ func TestNewStateDevNoBrowser(t *testing.T) {
 
 	// check stag configs
 	configStag := &config.Config{AuthURL: "https://stag.cpdev.cloud", NoBrowser: true}
-	stateStag, err := NewState(configStag)
+	stateStag, err := newState(configStag)
 	require.NoError(t, err)
 	// configs for devel and staging are the same
 	require.Equal(t, state.SSOProviderHost, stateStag.SSOProviderHost)
@@ -83,7 +83,7 @@ func TestNewStateDevNoBrowser(t *testing.T) {
 
 func TestNewStateProd(t *testing.T) {
 	configProd := &config.Config{AuthURL: "https://confluent.cloud"}
-	state, err := NewState(configProd)
+	state, err := newState(configProd)
 	require.NoError(t, err)
 	// randomly generated
 	require.True(t, len(state.CodeVerifier) > 10)
@@ -104,7 +104,7 @@ func TestNewStateProd(t *testing.T) {
 
 func TestNewStateProdNoBrowser(t *testing.T) {
 	configProd := &config.Config{AuthURL: "https://confluent.cloud", NoBrowser: true}
-	state, err := NewState(configProd)
+	state, err := newState(configProd)
 	require.NoError(t, err)
 	// randomly generated
 	require.True(t, len(state.CodeVerifier) > 10)
@@ -126,10 +126,10 @@ func TestNewStateProdNoBrowser(t *testing.T) {
 
 func TestGetAuthorizationUrl(t *testing.T) {
 	configDevel := &config.Config{AuthURL: "https://devel.cpdev.cloud"}
-	state, _ := NewState(configDevel)
+	state, _ := newState(configDevel)
 
 	// test get auth code url
-	authCodeUrlDevel := state.GetAuthorizationCodeUrl("foo")
+	authCodeUrlDevel := state.getAuthorizationCodeUrl("foo")
 	expectedUri := "/authorize?" +
 		"response_type=code" +
 		"&code_challenge=" + state.CodeChallenge +
@@ -156,7 +156,7 @@ func TestGetAuthorizationUrl(t *testing.T) {
 
 func TestGetOAuthToken(t *testing.T) {
 	configDevel := &config.Config{AuthURL: "https://devel.cpdev.cloud"}
-	state, _ := NewState(configDevel)
+	state, _ := newState(configDevel)
 
 	expectedUri := "/oauth/token"
 	expectedPayload := "grant_type=authorization_code" +
@@ -184,7 +184,7 @@ func TestGetOAuthToken(t *testing.T) {
 	// mock auth0 endpoint with local test server
 	state.SSOProviderHost = "http://127.0.0.1:" + serverPort
 
-	err := state.GetOAuthToken()
+	err := state.getOAuthToken()
 	require.NoError(t, err)
 
 	require.Equal(t, mockIDToken, state.SSOProviderIDToken)
