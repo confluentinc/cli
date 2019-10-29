@@ -8,7 +8,7 @@ DOCS_BRANCH     ?= 5.3.1-post
 
 include ./semver.mk
 
-REF := $(shell [ -d .git ] && git rev-parse --short HEAD || echo "none")
+REF := $(shell [ -d .git ] && git rev-parse HEAD || echo "none")
 DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 HOSTNAME := $(shell id -u -n)@$(shell hostname)
 RESOLVED_PATH=github.com/confluentinc/cli/cmd/confluent
