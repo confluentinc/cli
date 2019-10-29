@@ -15,17 +15,16 @@ func GetKafkaCluster(cmd *cobra.Command, ch *ConfigHelper, flag ...string) (*kaf
 		flag = []string{"cluster"}
 	}
 	clusterID, err := cmd.Flags().GetString(flag[0])
-	//if cmd.Flags().Lookup(flag[0]) != nil {
+	// Do a lookup instead if cmd.Flags().Lookup(flag[0]) != nil {
 	//	var err error
-	//	environment, err = cmd.Flags().GetString("environment")
+	//	environment, err = cmd.Flags().GetString(flag[0])
 	//	if err != nil {
 	//		return "", err
 	//	}
 	//}
-	//if environment == "" {
-	//	environment = cfg.Auth.Account.Id
+	//if cluster == "" {
+	//
 	//}
-
 	environment, err := GetEnvironment(cmd, ch.Config)
 	if err != nil {
 		return nil, err

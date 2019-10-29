@@ -59,6 +59,7 @@ func (suite *ConnectTestSuite) SetupSuite() {
 		Platform:   name,
 		Credential: name,
 		Kafka:      kafkaClusterID,
+		KafkaClusters: map[string]*config.KafkaClusterConfig{kafkaClusterID: {}},
 	}
 
 	suite.conf.CurrentContext = name
