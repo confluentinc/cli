@@ -34,10 +34,10 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 		{args: "api-key list", fixture: "apikey6.golden"},
 		{args: "api-key list --resource lkc-other1", fixture: "apikey8.golden"},
 
-		// create api key for non-kafka cluster
-		{args: "api-key create --description my-ksql-app --resource lksqlc-ksql1", fixture: "apikey9.golden"}, // MYKEY6
+		// create api key for schema registry cluster
+		{args: "api-key create --description my-sr --resource lsrc-abc123", fixture: "apikey9.golden"}, // MYKEY6
 		{args: "api-key list", fixture: "apikey6.golden"},
-		{args: "api-key list --resource lksqlc-ksql1", fixture: "apikey10.golden"},
+		{args: "api-key list --resource lsrc-abc123", fixture: "apikey10.golden"},
 
 		// create api key for schema registry cluster
 		{args: "api-key create --resource lsrc-1", fixture: "apikey20.golden"}, // MYKEY7
@@ -52,11 +52,6 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 		{args: "api-key list", fixture: "apikey11.golden"},
 		{args: "api-key list --resource lkc-other1", fixture: "apikey12.golden"},
 
-		// use an api key for non-kafka cluster
-		{args: "api-key use MYKEY6 --resource lksqlc-ksql1", fixture: "empty.golden"},
-		{args: "api-key list", fixture: "apikey11.golden"},
-		{args: "api-key list --resource lksqlc-ksql1", fixture: "apikey13.golden"},
-
 		// store an api-key for active kafka cluster
 		{args: "api-key store UIAPIKEY100 UIAPISECRET100", fixture: "empty.golden"},
 		{args: "api-key list", fixture: "apikey11.golden"},
@@ -66,10 +61,10 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 		{args: "api-key list", fixture: "apikey11.golden"},
 		{args: "api-key list --resource lkc-other1", fixture: "apikey12.golden"},
 
-		// store an api-key for non-kafka cluster
-		{args: "api-key store UIAPIKEY102 UIAPISECRET102 --resource lksqlc-ksql1", fixture: "empty.golden"},
+		// store an api-key for schema registry cluster
+		{args: "api-key store UIAPIKEY102 UIAPISECRET102 --resource lsrc-abc123", fixture: "empty.golden"},
 		{args: "api-key list", fixture: "apikey11.golden"},
-		{args: "api-key list --resource lksqlc-ksql1", fixture: "apikey14.golden"},
+		{args: "api-key list --resource lsrc-abc123", fixture: "apikey14.golden"},
 
 		// store: error handling
 		{name: "error if storing unknown api key", args: "api-key store UNKNOWN SECRET", fixture: "apikey15.golden"},

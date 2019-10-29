@@ -618,7 +618,7 @@ func init() {
 		Key:    "UIAPIKEY102",
 		Secret: "UIAPISECRET102",
 		LogicalClusters: []*authv1.ApiKey_Cluster{
-			{Id: "lksqlc-ksql1", Type: "kafka"},
+			{Id: "lsrc-abc123", Type: "schema-registry"},
 		},
 		UserId: 25,
 	}
@@ -793,9 +793,12 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		require.NoError(t, err)
 	})
 	router.HandleFunc("/api/schema_registries/", func(w http.ResponseWriter, r *http.Request) {
+		q := r.URL.Query()
+		id := q.Get("Id")
+		accountId := q.Get("account_id")
 		srCluster := &srv1.SchemaRegistryCluster{
-			Id:        "lsrc-1",
-			AccountId: "23",
+			Id:        id,
+			AccountId: accountId,
 			Name:      "account schema-registry",
 			Endpoint:  "SASL_SSL://sr-endpoint",
 		}
