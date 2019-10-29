@@ -97,6 +97,19 @@ build-ccloud:
 build-confluent:
 	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --snapshot --rm-dist -f .goreleaser-confluent$(GORELEASER_SUFFIX)
 
+.PHONY: build-integ
+build-integ:
+	make build-integ-ccloud
+	make build-integ-confluent
+
+.PHONY: build-integ-ccloud
+build-integ-ccloud:
+	@GO111MODULE=on go test ./cmd/confluent -ldflags '-X github.com/confluentinc/cli/cmd/confluent.cliName=ccloud' -tags testrunmain --coverpkg=./... -c -o ccloud_test
+
+.PHONY: build-integ-confluent
+build-integ-confluent:
+	@GO111MODULE=on go test ./cmd/confluent -ldflags '-X github.com/confluentinc/cli/cmd/confluent.cliName=confluent' -tags testrunmain -coverpkg=./... -c -o confluent_test
+
 .PHONY: bindata
 bindata: internal/cmd/local/bindata.go
 
@@ -264,11 +277,15 @@ lint-licenses: build
 		echo ; \
 	done
 
+.PHONY: test-rm
+test-rm:
+	rm cover*.out
+
 .PHONY: coverage
 coverage:
       ifdef CI
 	@echo "" > coverage.txt
-	@for d in $$(go list ./... | grep -v vendor); do \
+	@for d in $$(go list ./... | grep -v vendor | grep -v test); do \
 	  GO111MODULE=on go test -v -race -coverprofile=profile.out -covermode=atomic $$d || exit 2; \
 	  if [ -f profile.out ]; then \
 	    cat profile.out >> coverage.txt; \
@@ -278,6 +295,10 @@ coverage:
       else
 	@GO111MODULE=on go test -race -cover $(TEST_ARGS) $$(go list ./... | grep -v vendor)
       endif
+	GO111MODULE=on go test ./... -run=TestCLI || { rm cover*.out; exit 1; }
+	echo "mode: set" > integ_cover.txt
+	grep -h -v "mode: set" cover*.out >> integ_cover.txt
+	rm cover*.out
 
 .PHONY: mocks
 mocks: mock/local/shell_runner_mock.go
