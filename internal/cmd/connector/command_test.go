@@ -97,10 +97,9 @@ func (suite *ConnectTestSuite) SetupTest() {
 			return suite.connector, nil
 		},
 		DescribeFunc: func(arg0 context.Context, arg1 *v1.Connector) (connector *v1.Connector, e error) {
-			return suite.connector,nil
+			return suite.connector, nil
 
 		},
-
 	}
 
 }

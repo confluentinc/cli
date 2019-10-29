@@ -35,7 +35,7 @@ type describeDisplay struct {
 var (
 	describeLabels  = []string{"Name", "ID", "Status", "Tasks", "Available", "Used"}
 	describeRenames = map[string]string{}
-	listFields      = []string{"Id", "Name", "Status", "KafkaClusterId", "StatusMessage"}
+	listFields      = []string{"Id", "Name", "Status"}
 )
 
 // New returns the default command object for interacting with Connect.
@@ -73,8 +73,11 @@ func (c *command) init() {
 		Use:   "create --config <config>",
 		Short: "Create connector in the current Kafka cluster context.",
 		RunE:  c.create,
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.NoArgs,
 	}
+	createCmd.Flags().String("config", "", "YAML connector config file")
+	check(createCmd.MarkFlagRequired("config"))
+	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 	deleteCmd := &cobra.Command{
 		Use:   "delete --connector-id <connector-id>",
@@ -83,17 +86,16 @@ func (c *command) init() {
 		Args:  cobra.ExactArgs(1),
 	}
 	c.AddCommand(deleteCmd)
-	//updateCmd := &cobra.Command{
-	//	Use:   "update --connector-id <connector-id> --config <config>",
-	//	Short: "Update connector in the current Kafka cluster context.",
-	//	RunE:  c.update,
-	//	Args:  cobra.ExactArgs(2),
-	//}
-	//updateCmd.Flags().String("name", "", "New name for Confluent Cloud environment.")
-	//check(updateCmd.MarkFlagRequired("name"))
-	//updateCmd.Flags().SortFlags = false
-	//c.AddCommand(updateCmd)
-	//
+	updateCmd := &cobra.Command{
+		Use:   "update <connector-id> --config <config>",
+		Short: "Update connector in the current Kafka cluster context.",
+		RunE:  c.update,
+		Args:  cobra.ExactArgs(1),
+	}
+	updateCmd.Flags().String("config", "", "YAML connector config file")
+	check(updateCmd.MarkFlagRequired("config"))
+	updateCmd.Flags().SortFlags = false
+	c.AddCommand(updateCmd)
 
 	//
 	//getCmd := &cobra.Command{
@@ -190,12 +192,16 @@ func (c *command) describeById(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) create(cmd *cobra.Command, args []string) error {
+	kafkaCluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
 	userConfigs, err := getConfig(cmd)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	connector, err := c.client.Create(context.Background(), &connectv1.ConnectorConfig{UserConfigs: userConfigs, AccountId: c.config.Auth.Account.Id})
+	connector, err := c.client.Create(context.Background(), &connectv1.ConnectorConfig{UserConfigs: userConfigs, AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id})
 
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -209,8 +215,18 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-
-	connector, err := c.client.Update(context.Background(), &connectv1.Connector{UserConfigs: userConfigs, AccountId: c.config.Auth.Account.Id})
+	kafkaCluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	connect, err := c.describeFromId(cmd, args[0])
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	if connect.KafkaClusterId != kafkaCluster.Id {
+		return errors.New("Not found in Kafka cluster context")
+	}
+	connector, err := c.client.Update(context.Background(), &connectv1.Connector{UserConfigs: userConfigs, AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id})
 
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -326,7 +342,7 @@ func (c *command) describeAll(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	_, connectorsExpandedMap, err := c.client.ListByKafkaClusterId(context.Background(), &connectv1.Connector{AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id}, "info")
+	connectors, connectorsExpandedMap, err := c.client.ListByKafkaClusterId(context.Background(), &connectv1.Connector{AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id}, "status")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -337,13 +353,14 @@ func (c *command) describeAll(cmd *cobra.Command, args []string) error {
 			ID: connector.Id.Id,
 		}, listFields))
 	}
+	fmt.Print(len(connectors))
 	printer.RenderCollectionTable(data, listFields)
 	return nil
 
 }
 
-//func check(err error) {
-//	if err != nil {
-//		panic(err)
-//	}
-//}
+func check(err error) {
+	if err != nil {
+		panic(err)
+	}
+}

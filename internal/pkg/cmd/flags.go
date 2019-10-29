@@ -15,8 +15,17 @@ func GetKafkaCluster(cmd *cobra.Command, ch *ConfigHelper, flag ...string) (*kaf
 		flag = []string{"cluster"}
 	}
 	clusterID, err := cmd.Flags().GetString(flag[0])
-	// Does not require an error check here, because calling ch.KafkaCluster with an empty clusterID, makes use of
-	// the Kafka cluster in context i.e. ctx.Kafka
+	//if cmd.Flags().Lookup(flag[0]) != nil {
+	//	var err error
+	//	environment, err = cmd.Flags().GetString("environment")
+	//	if err != nil {
+	//		return "", err
+	//	}
+	//}
+	//if environment == "" {
+	//	environment = cfg.Auth.Account.Id
+	//}
+
 	environment, err := GetEnvironment(cmd, ch.Config)
 	if err != nil {
 		return nil, err
