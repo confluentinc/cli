@@ -9,8 +9,9 @@ DOCS_BRANCH     ?= 5.3.1-post
 include ./semver.mk
 
 REF := $(shell [ -d .git ] && git rev-parse --short HEAD || echo "none")
-DATE := $(shell date -u)
+DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 HOSTNAME := $(shell id -u -n)@$(shell hostname)
+RESOLVED_PATH=github.com/confluentinc/cli/cmd/confluent
 
 .PHONY: clean
 clean:
@@ -104,11 +105,11 @@ build-integ:
 
 .PHONY: build-integ-ccloud
 build-integ-ccloud:
-	@GO111MODULE=on go test ./cmd/confluent -ldflags '-X github.com/confluentinc/cli/cmd/confluent.cliName=ccloud' -tags testrunmain --coverpkg=./... -c -o ccloud_test
+	@GO111MODULE=on go test ./cmd/confluent -ldflags="-s -w -X $(RESOLVED_PATH).cliName=ccloud -X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) -X $(RESOLVED_PATH).version=$(VERSION)" -tags testrunmain -coverpkg=./... -c -o ccloud_test
 
 .PHONY: build-integ-confluent
 build-integ-confluent:
-	@GO111MODULE=on go test ./cmd/confluent -ldflags '-X github.com/confluentinc/cli/cmd/confluent.cliName=confluent' -tags testrunmain -coverpkg=./... -c -o confluent_test
+	@GO111MODULE=on go test ./cmd/confluent -ldflags="-s -w -X $(RESOLVED_PATH).cliName=confluent -X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) -X $(RESOLVED_PATH).version=$(VERSION)" -tags testrunmain -coverpkg=./... -c -o confluent_test
 
 .PHONY: bindata
 bindata: internal/cmd/local/bindata.go
