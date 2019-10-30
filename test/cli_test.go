@@ -13,7 +13,6 @@ import (
 	"path"
 	"path/filepath"
 	"reflect"
-	"regexp"
 	"runtime"
 	"sort"
 	"strings"
@@ -39,13 +38,15 @@ import (
 var (
 	//noRebuild = flag.Bool("no-rebuild", false, "skip rebuilding CLI if it already exists")
 	update  = flag.Bool("update", false, "update golden files")
-	debug   = flag.Bool("debug", false, "enable verbose output")
+	debug   = flag.Bool("debug", true, "enable verbose output")
 	testNum = 0
+	cover   bool
 )
 
 const (
 	confluentTestBin = "confluent_test"
 	ccloudTestBin    = "ccloud_test"
+	endOfInputDivider = "END_OF_TEST_OUTPUT"
 )
 
 // CLITest represents a test configuration
@@ -80,6 +81,11 @@ type CLITestSuite struct {
 // TestCLI runs the CLI integration test suite.
 func TestCLI(t *testing.T) {
 	suite.Run(t, new(CLITestSuite))
+}
+
+func init() {
+	collectCoverage := os.Getenv("INTEG_COVER")
+	cover = collectCoverage == "on"
 }
 
 // SetupSuite builds the CLI binary to test
@@ -478,8 +484,12 @@ func (s *CLITestSuite) runConfluentTest(tt CLITest, loginURL string) {
 }
 
 func runCommand(t *testing.T, binaryName string, env []string, args string, wantErrCode int) string {
-	args = fmt.Sprintf("-test.run=TestRunMain -test.coverprofile=cover%d.out %s", testNum, args)
-	testNum++
+	if cover {
+		args = fmt.Sprintf("-test.run=TestRunMain -test.coverprofile=cover%d.out %s", testNum, args)
+		testNum++
+	} else {
+		args = fmt.Sprintf("-test.run=TestRunMain %s", args)
+	}
 	path := binaryPath(t, binaryName)
 	_, _ = fmt.Println(path, args)
 	cmd := exec.Command(path, strings.Split(args, " ")...)
@@ -539,21 +549,15 @@ func fixturePath(t *testing.T, fixture string) string {
 func binaryPath(t *testing.T, binaryName string) string {
 	dir, err := os.Getwd()
 	require.NoError(t, err)
-	if binaryName == confluentTestBin || binaryName == ccloudTestBin {
-		return path.Join(dir, binaryName)
-	} else {
-		return path.Join(dir, "dist", binaryName, runtime.GOOS+"_"+runtime.GOARCH, binaryName)
-	}
+	return path.Join(dir, binaryName)
 }
 
 func parseCommandOutput(output string) string {
-	re := regexp.MustCompile(`--- FAIL: TestRunMain \(.*\)\n`)
-	if strings.Contains(output, re.FindString(output)) {
-		output = strings.Replace(output, re.FindString(output), "", 1)
-	} else if strings.Contains(output, "PASS") {
-		output = strings.Replace(output, "PASS", "", 1)
+	loc := strings.Index(output, endOfInputDivider)
+	if loc == -1 {
+		panic("Integration test divider is missing")
 	}
-	return output
+	return output[:loc]
 }
 
 var KEY_STORE = map[int32]*authv1.ApiKey{}

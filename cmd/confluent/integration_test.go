@@ -4,8 +4,9 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
-	"strings"
+	"regexp"
 	"testing"
 )
 
@@ -16,22 +17,24 @@ func init() {
 	flag.Parse()
 }
 
+func printDivider() {
+	fmt.Println("END_OF_TEST_OUTPUT")
+}
+
 func TestRunMain(t *testing.T) {
 	isIntegTest = true
-	offset := 0
-	if isIntegTest {
-		for i, arg := range os.Args {
-			if strings.Contains(arg, "-test.coverprofile") || strings.Contains(arg, "-test.run") {
-				if i+1 < len(os.Args) {
-					offset = i
-				}
-			}
+	parsedArgs := []string{}
+	re := regexp.MustCompile(`^-test\..+`)
+	for _, arg := range os.Args {
+		if !re.MatchString(arg) {
+			parsedArgs = append(parsedArgs, arg)
 		}
 	}
-	os.Args = append([]string{os.Args[0]}, os.Args[offset+1:]...)
+	os.Args = parsedArgs
 	main()
 	var err error
-	os.Stdout, err = os.Open(os.DevNull)
+	printDivider()
+	//os.Stdout, err = os.Open(os.DevNull)
 	if err != nil {
 		panic(err)
 	}

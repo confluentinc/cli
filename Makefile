@@ -105,11 +105,11 @@ build-integ:
 
 .PHONY: build-integ-ccloud
 build-integ-ccloud:
-	@GO111MODULE=on go test ./cmd/confluent -ldflags="-s -w -X $(RESOLVED_PATH).cliName=ccloud -X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) -X $(RESOLVED_PATH).version=$(VERSION)" -tags testrunmain -coverpkg=./... -c -o ccloud_test
+	@GO111MODULE=on go test ./cmd/confluent -ldflags="-s -w -X $(RESOLVED_PATH).cliName=ccloud -X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) -X $(RESOLVED_PATH).version=$(VERSION)" -tags testrunmain -coverpkg=./... -c -o ccloud_test -race
 
 .PHONY: build-integ-confluent
 build-integ-confluent:
-	@GO111MODULE=on go test ./cmd/confluent -ldflags="-s -w -X $(RESOLVED_PATH).cliName=confluent -X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) -X $(RESOLVED_PATH).version=$(VERSION)" -tags testrunmain -coverpkg=./... -c -o confluent_test
+	@GO111MODULE=on go test ./cmd/confluent -ldflags="-s -w -X $(RESOLVED_PATH).cliName=confluent -X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) -X $(RESOLVED_PATH).version=$(VERSION)" -tags testrunmain -coverpkg=./... -c -o confluent_test -race
 
 .PHONY: bindata
 bindata: internal/cmd/local/bindata.go
@@ -285,21 +285,30 @@ test-rm:
 .PHONY: coverage
 coverage:
       ifdef CI
-	@echo "" > coverage.txt
+	# Run unit tests with coverage.
+	@echo "mode: atomic" > unit_coverage.txt
 	@for d in $$(go list ./... | grep -v vendor | grep -v test); do \
-	  GO111MODULE=on go test -v -race -coverprofile=profile.out -covermode=atomic $$d || exit 2; \
+	  GO111MODULE=on go test -v -race -coverprofile=profile.out -coverpkg=./... $$d || exit 2; \
 	  if [ -f profile.out ]; then \
-	    cat profile.out >> coverage.txt; \
+	  grep -v "mode: atomic" profile.out >> unit_coverage.txt; \
 	    rm profile.out; \
 	  fi; \
 	done
+	# Run integration tests with coverage.
+	@GO111MODULE=on INTEG_COVER=on go test ./... -race -run=TestCLI || { rm cover*.out; exit 1; }
+	@echo "mode: set" > integ_coverage.txt
+	@grep -h -v "mode: set" cover*.out >> integ_coverage.txt
+	@rm cover*.out
+	# Merge unit and integration coverages. (HACK mode: set for now)
+	@echo "mode: set" > merged_coverage.txt
+	@grep -h -v "mode: atomic" unit_coverage.txt >> merged_coverage.txt
+	@grep -h -v "mode: set" integ_coverage.txt >> merged_coverage.txt
       else
-	@GO111MODULE=on go test -race -cover $(TEST_ARGS) $$(go list ./... | grep -v vendor)
+	# Run unit tests.
+	@GO111MODULE=on go test -race -coverpkg=./... $(TEST_ARGS) $$(go list ./... | grep -v vendor | grep -v test)
+	# Run integration tests.
+	GO111MODULE=on go test ./... -run=TestCLI
       endif
-	GO111MODULE=on go test ./... -run=TestCLI || { rm cover*.out; exit 1; }
-	echo "mode: set" > integ_cover.txt
-	grep -h -v "mode: set" cover*.out >> integ_cover.txt
-	rm cover*.out
 
 .PHONY: mocks
 mocks: mock/local/shell_runner_mock.go
