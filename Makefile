@@ -296,13 +296,13 @@ coverage:
 	done
 	# Run integration tests with coverage.
 	@GO111MODULE=on INTEG_COVER=on go test ./... -race -run=TestCLI || { rm cover*.out; exit 1; }
-	@echo "mode: set" > integ_coverage.txt
-	@grep -h -v "mode: set" cover*.out >> integ_coverage.txt
-	@rm cover*.out
+	@echo "mode: atomic" > integ_coverage.txt
+	@grep -h -v "mode: atomic" cover*.out >> integ_coverage.txt
+	rm cover*.out
 	# Merge unit and integration coverages. (HACK mode: set for now)
-	@echo "mode: set" > merged_coverage.txt
+	@echo "mode: atomic" > merged_coverage.txt
 	@grep -h -v "mode: atomic" unit_coverage.txt >> merged_coverage.txt
-	@grep -h -v "mode: set" integ_coverage.txt >> merged_coverage.txt
+	@grep -h -v "mode: atomic" integ_coverage.txt >> merged_coverage.txt
       else
 	# Run unit tests.
 	@GO111MODULE=on go test -race -coverpkg=./... $(TEST_ARGS) $$(go list ./... | grep -v vendor | grep -v test)
