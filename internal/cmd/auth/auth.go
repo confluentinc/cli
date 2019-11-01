@@ -3,19 +3,18 @@ package auth
 import (
 	"context"
 	"fmt"
+	"github.com/spf13/cobra"
 	"os"
 	"strings"
-
-	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 
-	auth_server "github.com/confluentinc/cli/internal/pkg/auth-server"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	sso "github.com/confluentinc/cli/internal/pkg/sso"
 
 	"github.com/confluentinc/mds-sdk-go"
 )
@@ -77,6 +76,7 @@ func (a *commands) init(prerunner pcmd.PreRunner) {
 		loginCmd.Long = strings.Replace(loginCmd.Long, ".", " (required for RBAC).", -1)
 		check(loginCmd.MarkFlagRequired("url")) // because https://confluent.cloud isn't an MDS endpoint
 	}
+	loginCmd.Flags().Bool("no-browser", false, "Do not open browser when authenticating via Single Sign-On.")
 	loginCmd.Flags().SortFlags = false
 	loginCmd.PersistentPreRunE = prerunner.Anonymous()
 	logoutCmd := &cobra.Command{
@@ -98,15 +98,19 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	}
 	a.config.AuthURL = url
 
+	noBrowser, err := cmd.Flags().GetBool("no-browser")
+	if err != nil {
+		return err
+	}
+	a.config.NoBrowser = noBrowser
+
 	client := a.anonHTTPClientFactory(a.config.AuthURL, a.config.Logger)
 	email, password, err := a.credentials(cmd, "Email", client)
 	if err != nil {
 		return err
 	}
 
-	// Check if user has an enterprise SSO connection enabled.  If so we need to start
-	// a background HTTP server to support the authorization code flow with PKCE
-	// described at https://auth0.com/docs/flows/guides/auth-code-pkce/call-api-auth-code-pkce
+	// Check if user has an enterprise SSO connection enabled.
 	userSSO, err := client.User.CheckEmail(context.Background(), &orgv1.User{Email: email})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -115,26 +119,12 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	token := ""
 
 	if userSSO != nil && userSSO.Sso != nil && userSSO.Sso.Enabled && userSSO.Sso.Auth0ConnectionName != "" {
-		// Be conservative: only bother trying to launch server if we have to
-		server := &auth_server.AuthServer{}
-		err = server.Start(a.config.AuthURL)
+		idToken, err := sso.Login(a.config, userSSO.Sso.Auth0ConnectionName)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
 
-		// Get authorization code for making subsequent token request
-		err = server.GetAuthorizationCode(userSSO.Sso.Auth0ConnectionName)
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-
-		// Exchange authorization code for OAuth token from SSO orovider
-		err := server.GetOAuthToken()
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-
-		token, err = client.Auth.Login(context.Background(), server.SSOProviderIDToken, "", "")
+		token, err = client.Auth.Login(context.Background(), idToken, "", "")
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}

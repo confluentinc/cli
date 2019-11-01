@@ -34,6 +34,7 @@ type Config struct {
 	Logger         *log.Logger            `json:"-" hcl:"-"`
 	Filename       string                 `json:"-" hcl:"-"`
 	AuthURL        string                 `json:"auth_url" hcl:"auth_url"`
+	NoBrowser      bool                   `json:"no_browser" hcl:"no_browser"`
 	AuthToken      string                 `json:"auth_token" hcl:"auth_token"`
 	Auth           *AuthConfig            `json:"auth" hcl:"auth"`
 	Platforms      map[string]*Platform   `json:"platforms" hcl:"platforms"`
