@@ -1,7 +1,6 @@
 package connector
 
 import (
-	"context"
 	"fmt"
 	"io/ioutil"
 	"strings"
@@ -25,12 +24,12 @@ func getConfig(cmd *cobra.Command) (map[string]string, error) {
 	}
 	options := connectv1.Connector{}.UserConfigs
 	//if strings.HasPrefix(filename, "@") {
-		yamlFile, err := ioutil.ReadFile(filename)
-		if err != nil {
-			return nil, errors.Wrapf(err, "unable to read config file %s", filename)
-		}
-		fmt.Print(yamlFile)
-		err = yaml.Unmarshal(yamlFile, options)
+	yamlFile, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return nil, errors.Wrapf(err, "unable to read config file %s", filename)
+	}
+	fmt.Print(yamlFile)
+	err = yaml.Unmarshal(yamlFile, options)
 	//} else {
 	//	err = yaml.Unmarshal([]byte(filename), options)
 	//}
@@ -39,13 +38,4 @@ func getConfig(cmd *cobra.Command) (map[string]string, error) {
 		return nil, errors.Wrapf(err, "unable to parse config %s", filename)
 	}
 	return options, nil
-}
-
-func (c *command) describeFromId(cmd *cobra.Command, connectorID string) (*connectv1.Connector, error) {
-
-	connector, err := c.client.Describe(context.Background(), &connectv1.Connector{Id: connectorID, AccountId: c.config.Auth.Account.Id})
-	if err != nil {
-		return nil, err
-	}
-	return connector, nil
 }

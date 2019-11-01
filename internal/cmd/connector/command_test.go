@@ -56,9 +56,9 @@ func (suite *ConnectTestSuite) SetupSuite() {
 	}
 
 	suite.conf.Contexts[name] = &config.Context{
-		Platform:   name,
-		Credential: name,
-		Kafka:      kafkaClusterID,
+		Platform:      name,
+		Credential:    name,
+		Kafka:         kafkaClusterID,
 		KafkaClusters: map[string]*config.KafkaClusterConfig{kafkaClusterID: {}},
 	}
 
@@ -138,6 +138,28 @@ func (suite *ConnectTestSuite) TestResumeConnector() {
 func (suite *ConnectTestSuite) TestDeleteConnector() {
 	cmd := suite.newCMD()
 	cmd.SetArgs(append([]string{"delete", connectorID}))
+
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	retVal := suite.connectMock.DeleteCalls()[0]
+	req.Equal(retVal.Arg1.Id, connectorID)
+}
+
+func (suite *ConnectTestSuite) TestListConnectors() {
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"list"}))
+
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	retVal := suite.connectMock.ListCalls()[0]
+	req.Equal(retVal.Arg1.Id, connectorID)
+}
+
+func (suite *ConnectTestSuite) TestDescribeConnectors() {
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"describe", connectorID}))
 
 	err := cmd.Execute()
 	req := require.New(suite.T())

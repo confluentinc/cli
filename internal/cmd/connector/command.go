@@ -2,7 +2,6 @@ package connector
 
 import (
 	"context"
-	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -24,18 +23,16 @@ type command struct {
 }
 
 type describeDisplay struct {
-	Name      string
-	ID        string
-	Status    string
-	Used      string
-	Available string
-	Tasks     string
+	Name     string
+	ID       string
+	Status   string
+	MaxTasks string
+	Type     string
 }
 
 var (
-	describeLabels  = []string{"Name", "ID", "Status", "Tasks", "Available", "Used"}
 	describeRenames = map[string]string{}
-	listFields      = []string{"Id", "Name", "Status"}
+	listFields      = []string{"ID", "Name", "Status", "Type"}
 )
 
 // New returns the default command object for interacting with Connect.
@@ -80,7 +77,7 @@ func (c *command) init() {
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 	deleteCmd := &cobra.Command{
-		Use:   "delete --connector-id <connector-id>",
+		Use:   "delete <connector-id>",
 		Short: "Delete connector in the current Kafka cluster context.",
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
@@ -97,18 +94,8 @@ func (c *command) init() {
 	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
 
-	//
-	//getCmd := &cobra.Command{
-	//	Use:   "status",
-	//	Short: "Get status of a connector.",
-	//	RunE:  c.status,
-	//	Args:  cobra.ExactArgs(1),
-	//}
-	//getCmd.Flags().StringP("output", "o", "", "Output format")
-	//c.AddCommand(getCmd)
-	//
 	pauseCmd := &cobra.Command{
-		Use:   "pause",
+		Use:   "pause <connector-id>",
 		Short: "Pause a connector.",
 		RunE:  c.pause,
 		Args:  cobra.ExactArgs(1),
@@ -117,7 +104,7 @@ func (c *command) init() {
 	c.AddCommand(pauseCmd)
 
 	resumeCmd := &cobra.Command{
-		Use:   "resume",
+		Use:   "resume <connector-id>",
 		Short: "Resume a connector.",
 		RunE:  c.resume,
 		Args:  cobra.ExactArgs(1),
@@ -126,7 +113,7 @@ func (c *command) init() {
 	c.AddCommand(resumeCmd)
 
 	restartCmd := &cobra.Command{
-		Use:   "restart",
+		Use:   "restart <connector-id>",
 		Short: "Restart a connector.",
 		RunE:  c.restart,
 		Args:  cobra.ExactArgs(1),
@@ -141,29 +128,26 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	connectors, err := c.client.List(context.Background(), &connectv1.Connector{AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id})
+	connectors, err := c.client.ListWithExpansions(context.Background(), &connectv1.Connector{AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id}, "status,info,id")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
+
 	var data [][]string
-	for _, connector := range connectors {
-		if connector.KafkaClusterId == kafkaCluster.Id {
-			data = append(data, printer.ToRow(connector, listFields))
+	for name, connector := range connectors {
+		connector := &describeDisplay{
+			Name:   name,
+			ID:     connector.Id.Id,
+			Status: connector.Status.Connector.State,
+			Type:   connector.Info.Type,
 		}
+		data = append(data, printer.ToRow(connector, listFields))
 	}
 	printer.RenderCollectionTable(data, listFields)
 	return nil
 }
 
 func (c *command) describe(cmd *cobra.Command, args []string) error {
-	if len(args) > 0 {
-		return c.describeById(cmd, args)
-	} else {
-		return c.describeAll(cmd, args)
-	}
-}
-
-func (c *command) describeById(cmd *cobra.Command, args []string) error {
 
 	kafkaCluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
 	if err != nil {
@@ -172,20 +156,49 @@ func (c *command) describeById(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return errors.New("Connector ID must be passed")
 	}
-	connector, err := c.describeFromId(cmd, args[0])
+	connector, err := c.client.GetByID(context.Background(), &connectv1.Connector{AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id, Id: args[0]})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	if connector.KafkaClusterId != kafkaCluster.Id {
-		return errors.New("Not found in Kafka cluster context")
-	}
-
+	pcmd.Println(cmd, "Connector Details\n")
 	data := &describeDisplay{
-		Name:   connector.Name,
-		ID:     connector.Id,
-		Status: connector.Status.String(),
+		Name:   connector.Status.Name,
+		ID:     connector.Id.Id,
+		Status: connector.Status.Connector.State,
+		Type:   connector.Info.Type,
 	}
-	_ = printer.RenderTableOut(data, describeLabels, describeRenames, os.Stdout)
+	_ = printer.RenderTableOut(data, listFields, describeRenames, os.Stdout)
+
+	pcmd.Println(cmd, "\n\nTask Level Details\n")
+	var tasks [][]string
+	titleRow := []string{"TaskID", "State"}
+	for _, task := range connector.Status.Tasks {
+
+		record := &struct {
+			TaskID int32
+			State  string
+		}{
+			task.Id,
+			task.State,
+		}
+		tasks = append(tasks, printer.ToRow(record, titleRow))
+	}
+	printer.RenderCollectionTable(tasks, titleRow)
+	pcmd.Println(cmd, "\n\nConfiguration Details\n\n")
+	var configs [][]string
+	titleRow = []string{"ConfigName", "ConfigValue"}
+	for name, value := range connector.Info.Config {
+
+		record := &struct {
+			ConfigName  string
+			ConfigValue string
+		}{
+			name,
+			value,
+		}
+		configs = append(configs, printer.ToRow(record, titleRow))
+	}
+	printer.RenderCollectionTable(configs, titleRow)
 	return nil
 }
 
@@ -198,13 +211,11 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-
-	connector, err := c.client.Create(context.Background(), &connectv1.ConnectorConfig{UserConfigs: userConfigs, AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id})
-
+	connector, err := c.client.CreateOrUpdate(context.Background(), &connectv1.ConnectorConfig{UserConfigs: userConfigs, AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	fmt.Print("Created connector" + connector.Id + " " + connector.Name)
+	pcmd.Println(cmd, "Created connector"+connector.Id+" "+connector.Name)
 	return nil
 }
 
@@ -217,35 +228,19 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	connect, err := c.describeFromId(cmd, args[0])
+	// Resolve Connector Name from ID
+	connector, err := c.client.GetByID(context.Background(), &connectv1.Connector{AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id, Id: args[0]})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	if connect.KafkaClusterId != kafkaCluster.Id {
-		return errors.New("Not found in Kafka cluster context")
-	}
-	connector, err := c.client.Update(context.Background(), &connectv1.Connector{UserConfigs: userConfigs, AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id})
-
+	connectorUpdated, err := c.client.CreateOrUpdate(context.Background(), &connectv1.ConnectorConfig{UserConfigs: userConfigs, AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id, Name: connector.Info.Name})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	fmt.Print("Updated connector" + connector.Id + " " + connector.Name)
+	pcmd.Println(cmd, "Updated connector"+connectorUpdated.Id+" "+connectorUpdated.Name)
 	return nil
 }
 
-//
-//func (c *command) status(cmd *cobra.Command, args []string) error {
-//	id := args[0]
-//
-//	err := c.client.Get(context.Background(), &orgv1.Account{Id: id, Name: newName, OrganizationId: c.config.Auth.Account.OrganizationId})
-//
-//	if err != nil {
-//		return errors.HandleCommon(err, cmd)
-//	}
-//
-//	return nil
-//}
-//
 func (c *command) delete(cmd *cobra.Command, args []string) error {
 	kafkaCluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
 	if err != nil {
@@ -254,14 +249,11 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return errors.New("Connector ID must be passed")
 	}
-	connector, err := c.describeFromId(cmd, args[0])
+	connector, err := c.client.GetByID(context.Background(), &connectv1.Connector{AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id, Id: args[0]})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	if connector.KafkaClusterId != kafkaCluster.Id {
-		return errors.New("Not found in Kafka cluster context")
-	}
-	err = c.client.Delete(context.Background(), &connectv1.Connector{Name: connector.Name, AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id})
+	err = c.client.Delete(context.Background(), &connectv1.Connector{Name: connector.Info.Name, AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -277,14 +269,11 @@ func (c *command) pause(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return errors.New("Connector ID must be passed")
 	}
-	connector, err := c.client.Describe(context.Background(), &connectv1.Connector{Id: args[0], AccountId: c.config.Auth.Account.Id})
+	connector, err := c.client.GetByID(context.Background(), &connectv1.Connector{AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id, Id: args[0]})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	if connector.KafkaClusterId != kafkaCluster.Id {
-		return errors.New("Not found in Kafka cluster context")
-	}
-	err = c.client.Pause(context.Background(), &connectv1.Connector{Name: connector.Name, AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id})
+	err = c.client.Pause(context.Background(), &connectv1.Connector{Name: connector.Info.Name, AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -300,15 +289,11 @@ func (c *command) resume(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return errors.New("Connector ID must be passed")
 	}
-	connector, err := c.describeFromId(cmd, args[0])
+	connector, err := c.client.GetByID(context.Background(), &connectv1.Connector{AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id, Id: args[0]})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	if connector.KafkaClusterId != kafkaCluster.Id {
-		return errors.New("Not found in Kafka cluster context")
-	}
-
-	err = c.client.Resume(context.Background(), &connectv1.Connector{Name: connector.Name, AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id})
+	err = c.client.Resume(context.Background(), &connectv1.Connector{Name: connector.Info.Name, AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -325,47 +310,16 @@ func (c *command) restart(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return errors.New("Connector ID must be passed")
 	}
-	connector, err := c.describeFromId(cmd, args[0])
+	connector, err := c.client.GetByID(context.Background(), &connectv1.Connector{AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id, Id: args[0]})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	if connector.KafkaClusterId != kafkaCluster.Id {
-		return errors.New("Not found in Kafka cluster context")
-	}
-	// Pause and then Resume
-	err = c.client.Pause(context.Background(), &connectv1.Connector{Name: connector.Name, AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id})
+	err = c.client.Restart(context.Background(), &connectv1.Connector{Name: connector.Info.Name, AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	err = c.client.Resume(context.Background(), &connectv1.Connector{Name: connector.Name, AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id})
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	pcmd.Println(cmd, "Successfully resumed connector")
+	pcmd.Println(cmd, "Successfully restarted connector")
 	return nil
-}
-
-func (c *command) describeAll(cmd *cobra.Command, args []string) error {
-
-	// Get the Kafka Cluster
-	kafkaCluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
-	if err != nil {
-		return err
-	}
-	connectors, _, err := c.client.ListByKafkaClusterId(context.Background(), &connectv1.Connector{AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id}, "info")
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	var data [][]string
-	for _, connector := range connectors {
-		data = append(data, printer.ToRow(&describeDisplay{
-			ID: connector.Name,
-		}, listFields))
-	}
-	fmt.Print(len(connectors))
-	printer.RenderCollectionTable(data, listFields)
-	return nil
-
 }
 
 func check(err error) {
