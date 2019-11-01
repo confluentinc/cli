@@ -40,6 +40,7 @@ type Config struct {
 	Credentials    map[string]*Credential `json:"credentials" hcl:"credentials"`
 	Contexts       map[string]*Context    `json:"contexts" hcl:"contexts"`
 	CurrentContext string                 `json:"current_context" hcl:"current_context"`
+	AnonymousId    string
 }
 
 // New initializes a new Config object
