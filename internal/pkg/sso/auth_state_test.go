@@ -63,7 +63,7 @@ func TestNewStateDevNoBrowser(t *testing.T) {
 	// dev configs
 	require.Equal(t, state.SSOProviderHost, "https://login.confluent-dev.io")
 	require.Equal(t, state.SSOProviderClientID, "XKlqgOEo39iyonTl3Yv3IHWIXGKDP3fA")
-	require.Equal(t, state.SSOProviderCallbackUrl, "https://login.confluent-dev.io/cli_callback")
+	require.Equal(t, state.SSOProviderCallbackUrl, "https://devel.cpdev.cloud/cli_callback")
 	require.Equal(t, state.SSOProviderIdentifier, "https://confluent-dev.auth0.com/api/v2/")
 	require.Empty(t, state.SSOProviderAuthenticationCode)
 	require.Empty(t, state.SSOProviderIDToken)
@@ -118,7 +118,7 @@ func TestNewStateProdNoBrowser(t *testing.T) {
 
 	require.Equal(t, state.SSOProviderHost, "https://login.confluent.io")
 	require.Equal(t, state.SSOProviderClientID, "hPbGZM8G55HSaUsaaieiiAprnJaEc9rH")
-	require.Equal(t, state.SSOProviderCallbackUrl, "https://login.confluent.io/cli_callback")
+	require.Equal(t, state.SSOProviderCallbackUrl, "https://confluent.cloud/cli_callback")
 	require.Equal(t, state.SSOProviderIdentifier, "https://confluent.auth0.com/api/v2/")
 	require.Empty(t, state.SSOProviderAuthenticationCode)
 	require.Empty(t, state.SSOProviderIDToken)
