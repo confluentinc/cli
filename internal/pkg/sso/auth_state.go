@@ -18,8 +18,8 @@ var (
 	ssoProviderClientID             = "hPbGZM8G55HSaUsaaieiiAprnJaEc9rH"
 	ssoProviderClientIDDevel        = "XKlqgOEo39iyonTl3Yv3IHWIXGKDP3fA"
 	ssoProviderCallbackLocalURL     = "http://127.0.0.1:26635/cli_callback"
-	ssoProviderCallbackCCloudURL    = "https://" + ssoProviderDomain + "/cli_callback" // used in the --no-browser sso flow
-	ssoProviderCallbackCCloudDevURL = "https://" + ssoProviderDomainDevel + "/cli_callback"
+	ssoProviderCallbackCCloudURL    = "https://confluent.cloud/cli_callback" // used in the --no-browser sso flow
+	ssoProviderCallbackCCloudDevURL = "https://devel.cpdev.cloud/cli_callback"
 	ssoProviderIdentifier           = "https://confluent.auth0.com/api/v2/"
 	ssoProviderIdentifierDevel      = "https://confluent-dev.auth0.com/api/v2/"
 )
