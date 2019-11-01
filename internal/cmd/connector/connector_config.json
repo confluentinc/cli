@@ -1,0 +1,15 @@
+{
+  "name": "s3-sink-connector",
+  "aws.access.key.id": "****************",
+  "aws.secret.access.key": "****************",
+  "data.format": "AVRO",
+  "kafka.api.key": "****************",
+  "kafka.api.secret": "****************",
+  "kafka.endpoint": "SASL_SSL://pkc-438qm.us-east-1.aws.confluent.cloud:9092",
+  "s3.bucket.name": "confluent-s3-new",
+  "s3.region": "us-east-1",
+  "schema.registry.url": "https://psrc-l7y22.us-east-2.aws.confluent.cloud",
+  "tasks.max": "1",
+  "time.interval": "HOURLY",
+  "topics": "pageviews"
+}

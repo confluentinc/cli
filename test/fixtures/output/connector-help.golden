@@ -1,0 +1,22 @@
+Manage Kafka Connect.
+
+Usage:
+  ccloud connector [command]
+
+Available Commands:
+  create      Create connector in the current Kafka cluster context.
+  delete      Delete connector in the current Kafka cluster context.
+  describe    Describe connectors in current Kafka cluster context.
+  list        List connectors in current Kafka cluster context.
+  pause       Pause a connector.
+  restart     Restart a connector.
+  resume      Resume a connector.
+  update      Update connector in the current Kafka cluster context.
+
+Flags:
+  -h, --help   help for connector
+
+Global Flags:
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "ccloud connector [command] --help" for more information about a command.

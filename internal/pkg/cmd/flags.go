@@ -14,17 +14,14 @@ func GetKafkaCluster(cmd *cobra.Command, ch *ConfigHelper, flag ...string) (*kaf
 	if len(flag) == 0 {
 		flag = []string{"cluster"}
 	}
-	clusterID, err := cmd.Flags().GetString(flag[0])
-	// Do a lookup instead if cmd.Flags().Lookup(flag[0]) != nil {
-	//	var err error
-	//	environment, err = cmd.Flags().GetString(flag[0])
-	//	if err != nil {
-	//		return "", err
-	//	}
-	//}
-	//if cluster == "" {
-	//
-	//}
+	clusterID := ""
+	if cmd.Flags().Lookup(flag[0]) != nil {
+		var err error
+		clusterID, err = cmd.Flags().GetString(flag[0])
+		if err != nil {
+			return nil, err
+		}
+	}
 	environment, err := GetEnvironment(cmd, ch.Config)
 	if err != nil {
 		return nil, err

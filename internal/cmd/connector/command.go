@@ -16,18 +16,16 @@ import (
 
 type command struct {
 	*cobra.Command
-	config     *config.Config
-	client     ccloud.Connect
-	userClient ccloud.User
-	ch         *pcmd.ConfigHelper
+	config *config.Config
+	client ccloud.Connect
+	ch     *pcmd.ConfigHelper
 }
 
 type describeDisplay struct {
-	Name     string
-	ID       string
-	Status   string
-	MaxTasks string
-	Type     string
+	Name   string
+	ID     string
+	Status string
+	Type   string
 }
 
 var (
@@ -160,7 +158,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	pcmd.Println(cmd, "Connector Details\n")
+	pcmd.Println(cmd, "Connector Details")
 	data := &describeDisplay{
 		Name:   connector.Status.Name,
 		ID:     connector.Id.Id,
@@ -169,7 +167,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	}
 	_ = printer.RenderTableOut(data, listFields, describeRenames, os.Stdout)
 
-	pcmd.Println(cmd, "\n\nTask Level Details\n")
+	pcmd.Println(cmd, "\n\nTask Level Details")
 	var tasks [][]string
 	titleRow := []string{"TaskID", "State"}
 	for _, task := range connector.Status.Tasks {
@@ -184,7 +182,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		tasks = append(tasks, printer.ToRow(record, titleRow))
 	}
 	printer.RenderCollectionTable(tasks, titleRow)
-	pcmd.Println(cmd, "\n\nConfiguration Details\n\n")
+	pcmd.Println(cmd, "\n\nConfiguration Details")
 	var configs [][]string
 	titleRow = []string{"ConfigName", "ConfigValue"}
 	for name, value := range connector.Info.Config {
@@ -215,7 +213,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	pcmd.Println(cmd, "Created connector"+connector.Id+" "+connector.Name)
+	pcmd.Println(cmd, "Created connector ID: "+connector.Id+" Name: "+connector.Name)
 	return nil
 }
 

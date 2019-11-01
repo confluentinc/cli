@@ -16,34 +16,33 @@ import (
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	cmd2 "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
 const (
 	kafkaClusterID = "kafka"
 	connectorID    = "lcc-123"
+	connectorName  = "myTestConnector"
 )
 
 type ConnectTestSuite struct {
 	suite.Suite
-	conf         *config.Config
-	kafkaCluster *kafkav1.KafkaCluster
-	logger       *log.Logger
-	client       ccloud.Connect
-	connector    *v1.Connector
-	connectMock  *ccsdkmock.Connect
-	kafkaMock    *ccsdkmock.Kafka
+	conf               *config.Config
+	kafkaCluster       *kafkav1.KafkaCluster
+	connector          *v1.Connector
+	connectMock        *ccsdkmock.Connect
+	kafkaMock          *ccsdkmock.Kafka
+	connectorExpansion *v1.ConnectorExpansion
 }
 
 func (suite *ConnectTestSuite) SetupSuite() {
 	suite.conf = config.New()
-	suite.conf.Logger = log.New()
 	suite.conf.AuthURL = "http://test"
 	suite.conf.Auth = &config.AuthConfig{
 		User:    new(orgv1.User),
 		Account: &orgv1.Account{Id: "testAccount"},
 	}
+	suite.conf.AuthToken = "AuthToken"
 	user := suite.conf.Auth
 	name := fmt.Sprintf("login-%s-%s", user.User.Email, suite.conf.AuthURL)
 
@@ -54,7 +53,6 @@ func (suite *ConnectTestSuite) SetupSuite() {
 	suite.conf.Credentials[name] = &config.Credential{
 		Username: user.User.Email,
 	}
-
 	suite.conf.Contexts[name] = &config.Context{
 		Platform:      name,
 		Credential:    name,
@@ -66,9 +64,29 @@ func (suite *ConnectTestSuite) SetupSuite() {
 
 	suite.kafkaCluster = &kafkav1.KafkaCluster{
 		Id:         kafkaClusterID,
+		Name:       "KafkaMock",
+		AccountId:  "testAccount",
 		Enterprise: true,
 	}
-	suite.connector = &v1.Connector{Name: "myTestConnector", Id: connectorID, KafkaClusterId: kafkaClusterID, AccountId: "testAccount"}
+	suite.connector = &v1.Connector{
+		Name:           connectorName,
+		Id:             connectorID,
+		KafkaClusterId: kafkaClusterID,
+		AccountId:      "testAccount",
+		Status:         v1.Connector_RUNNING,
+		UserConfigs:    map[string]string{},
+	}
+
+	suite.connectorExpansion = &v1.ConnectorExpansion{
+		Id: &v1.ConnectorId{Id: connectorID},
+		Info: &v1.ConnectorInfo{
+			Name:   connectorName,
+			Type:   "Sink",
+			Config: map[string]string{},
+		},
+		Status: &v1.ConnectorStateInfo{Name: connectorName, Connector: &v1.ConnectorState{State: "Running"},
+			Tasks: []*v1.TaskState{{Id: 1, State: "Running"}},
+		}}
 
 }
 
@@ -79,7 +97,7 @@ func (suite *ConnectTestSuite) SetupTest() {
 		},
 	}
 	suite.connectMock = &ccsdkmock.Connect{
-		CreateFunc: func(arg0 context.Context, arg1 *v1.ConnectorConfig) (connector *v1.Connector, e error) {
+		CreateOrUpdateFunc: func(arg0 context.Context, arg1 *v1.ConnectorConfig) (connector *v1.Connector, e error) {
 			return suite.connector, nil
 		},
 		PauseFunc: func(arg0 context.Context, arg1 *v1.Connector) error {
@@ -91,81 +109,98 @@ func (suite *ConnectTestSuite) SetupTest() {
 		DeleteFunc: func(arg0 context.Context, arg1 *v1.Connector) error {
 			return nil
 		},
-		ListFunc: func(arg0 context.Context, arg1 *v1.Connector) (connectors []*v1.Connector, e error) {
-			return []*v1.Connector{suite.connector}, nil
+		ListWithExpansionsFunc: func(arg0 context.Context, arg1 *v1.Connector, arg2 string) (expansions map[string]*v1.ConnectorExpansion, e error) {
+			return map[string]*v1.ConnectorExpansion{connectorID: suite.connectorExpansion}, nil
 		},
-		UpdateFunc: func(arg0 context.Context, arg1 *v1.Connector) (connector *v1.Connector, e error) {
-			return suite.connector, nil
+		GetByIDFunc: func(arg0 context.Context, arg1 *v1.Connector) (expansion *v1.ConnectorExpansion, e error) {
+			return suite.connectorExpansion, nil
 		},
-		DescribeFunc: func(arg0 context.Context, arg1 *v1.Connector) (connector *v1.Connector, e error) {
-			return suite.connector, nil
-
+		GetPluginsFunc: func(arg0 context.Context, arg1 *v1.Connector, arg2 string) (infos []*v1.ConnectorPluginInfo, expansions map[string]*v1.ConnectorPluginExpansion, e error) {
+			return []*v1.ConnectorPluginInfo{}, map[string]*v1.ConnectorPluginExpansion{}, nil
 		},
 	}
 
 }
 
 func (suite *ConnectTestSuite) newCMD() *cobra.Command {
-	cmd := New(&cliMock.Commander{}, suite.conf, suite.client, &cmd2.ConfigHelper{Config: suite.conf, Client: &ccloud.Client{Connect: suite.connectMock, Kafka: suite.kafkaMock}})
+	cmd := New(&cliMock.Commander{}, suite.conf, suite.connectMock, &cmd2.ConfigHelper{Config: suite.conf, Client: &ccloud.Client{Connect: suite.connectMock, Kafka: suite.kafkaMock}})
 	return cmd
 }
 
 func (suite *ConnectTestSuite) TestPauseConnector() {
 	cmd := suite.newCMD()
 	cmd.SetArgs(append([]string{"pause", connectorID}))
-
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
-
 	req.True(suite.connectMock.PauseCalled())
 	retVal := suite.connectMock.PauseCalls()[0]
-	req.Equal(retVal.Arg1.Id, connectorID)
+	req.Equal(retVal.Arg1.KafkaClusterId, kafkaClusterID)
 }
 
 func (suite *ConnectTestSuite) TestResumeConnector() {
 	cmd := suite.newCMD()
 	cmd.SetArgs(append([]string{"resume", connectorID}))
-
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.connectMock.ResumeCalled())
 	retVal := suite.connectMock.ResumeCalls()[0]
-	req.Equal(retVal.Arg1.Id, connectorID)
+	req.Equal(retVal.Arg1.KafkaClusterId, kafkaClusterID)
 }
 
 func (suite *ConnectTestSuite) TestDeleteConnector() {
 	cmd := suite.newCMD()
 	cmd.SetArgs(append([]string{"delete", connectorID}))
-
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
 	retVal := suite.connectMock.DeleteCalls()[0]
-	req.Equal(retVal.Arg1.Id, connectorID)
+	req.Equal(retVal.Arg1.KafkaClusterId, kafkaClusterID)
 }
 
 func (suite *ConnectTestSuite) TestListConnectors() {
 	cmd := suite.newCMD()
 	cmd.SetArgs(append([]string{"list"}))
-
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
-	retVal := suite.connectMock.ListCalls()[0]
-	req.Equal(retVal.Arg1.Id, connectorID)
+	req.True(suite.connectMock.ListWithExpansionsCalled())
+	retVal := suite.connectMock.ListWithExpansionsCalls()[0]
+	req.Equal(retVal.Arg1.KafkaClusterId, kafkaClusterID)
 }
 
-func (suite *ConnectTestSuite) TestDescribeConnectors() {
+func (suite *ConnectTestSuite) TestDescribeConnector() {
 	cmd := suite.newCMD()
 	cmd.SetArgs(append([]string{"describe", connectorID}))
-
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
-	retVal := suite.connectMock.DeleteCalls()[0]
-	req.Equal(retVal.Arg1.Id, connectorID)
+	req.True(suite.connectMock.GetByIDCalled())
+	retVal := suite.connectMock.GetByIDCalls()[0]
+	req.Equal(retVal.Arg1.KafkaClusterId, kafkaClusterID)
+}
+
+func (suite *ConnectTestSuite) TestCreateConnector() {
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"create", "--config", "connector_config.json"}))
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	req.True(suite.connectMock.CreateOrUpdateCalled())
+	retVal := suite.connectMock.CreateOrUpdateCalls()[0]
+	req.Equal(retVal.Arg1.KafkaClusterId, kafkaClusterID)
+}
+
+func (suite *ConnectTestSuite) TestUpdateConnector() {
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"update", connectorID, "--config", "connector_config.json"}))
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	req.True(suite.connectMock.CreateOrUpdateCalled())
+	retVal := suite.connectMock.CreateOrUpdateCalls()[0]
+	req.Equal(retVal.Arg1.KafkaClusterId, kafkaClusterID)
 }
 
 func TestConnectTestSuite(t *testing.T) {
