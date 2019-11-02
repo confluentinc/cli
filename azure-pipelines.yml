@@ -71,8 +71,8 @@ steps:
   displayName: 'Install hub (Linux)'
 
 - script: |
-    curl -Ls https://github.com/github/hub/releases/download/v2.11.1/hub-darwin-amd64-2.11.1.tgz | sudo gtar -xvz -C /usr/bin --strip-components=2 hub-darwin-amd64-2.11.1/bin/hub
-    sudo chmod 755 /usr/bin/hub
+    curl -Ls https://github.com/github/hub/releases/download/v2.11.1/hub-darwin-amd64-2.11.1.tgz | sudo gtar -xvz -C /usr/local/bin --strip-components=2 hub-darwin-amd64-2.11.1/bin/hub
+    sudo chmod 755 /usr/local/bin/hub
   condition: eq( variables['Agent.OS'], 'Darwin' )
   displayName: 'Install hub (Darwin)'
 
