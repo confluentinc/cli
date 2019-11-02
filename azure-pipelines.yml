@@ -1,5 +1,7 @@
 strategy:
   matrix:
+    mac:
+      imageName: 'macOS-10.14'
     linux:
       imageName: 'ubuntu-18.04'
           #    linux:
@@ -8,8 +10,6 @@ strategy:
           #      imageName: 'macOS-10.14'
           #    windows:
           #      imageName: 'windows-2019'
-    mac:
-      imageName: 'macOS-10.14'
 
 pool:
   vmImage: $(imageName)
@@ -22,8 +22,13 @@ steps:
   displayName: 'Install Go 1.12.5 (Linux)'
 
 - script: |
+    brew install gnu-tar
+  condition: eq( variables['Agent.OS'], 'Darwin' )
+  displayName: 'Install gnu-tar (Darwin)'
+
+- script: |
     wget "https://storage.googleapis.com/golang/go1.12.5.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.12.5.tar.gz"
-    tar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.12.5.tar.gz"
+    gtar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.12.5.tar.gz"
   condition: eq( variables['Agent.OS'], 'Darwin' )
   displayName: 'Install Go 1.12.5 (Darwin)'
 
@@ -66,7 +71,7 @@ steps:
   displayName: 'Install hub (Linux)'
 
 - script: |
-    curl -Ls https://github.com/github/hub/releases/download/v2.11.1/hub-darwin-amd64-2.11.1.tgz | sudo tar -xvz -C /usr/bin --strip-components=2 hub-darwin-amd64-2.11.1/bin/hub
+    curl -Ls https://github.com/github/hub/releases/download/v2.11.1/hub-darwin-amd64-2.11.1.tgz | sudo gtar -xvz -C /usr/bin --strip-components=2 hub-darwin-amd64-2.11.1/bin/hub
     sudo chmod 755 /usr/bin/hub
   condition: eq( variables['Agent.OS'], 'Darwin' )
   displayName: 'Install hub (Darwin)'
