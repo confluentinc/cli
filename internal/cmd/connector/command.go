@@ -50,74 +50,138 @@ func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.Connect,
 }
 
 func (c *command) init() {
-	c.AddCommand(&cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "describe",
-		Short: "Describe connectors in current Kafka cluster context.",
-		RunE:  c.describe,
-		Args:  cobra.MaximumNArgs(1),
-	})
+		Short: "Describe a connector.",
+		Example: FormatDescription(`
+Describe connector and task level details of a connector in the current or specified Kafka cluster context.
 
-	c.AddCommand(&cobra.Command{
+::
+
+        {{.CLIName}} connector describe <connector-id>
+        {{.CLIName}} connector describe <connector-id> --cluster <cluster-id>		`, c.config.CLIName),
+		RunE: c.describe,
+		Args: cobra.MaximumNArgs(2),
+	}
+	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	cmd.Flags().SortFlags = false
+	c.AddCommand(cmd)
+
+	cmd = &cobra.Command{
 		Use:   "list",
-		Short: "List connectors in current Kafka cluster context.",
-		RunE:  c.list,
-		Args:  cobra.NoArgs,
-	})
+		Short: "List connectors.",
+		Example: FormatDescription(`
+List connectors in the current or specified Kafka cluster context.
 
-	createCmd := &cobra.Command{
-		Use:   "create --config <config>",
-		Short: "Create connector in the current Kafka cluster context.",
-		RunE:  c.create,
-		Args:  cobra.NoArgs,
+::
+
+        {{.CLIName}} connector list
+        {{.CLIName}} connector list --cluster <cluster-id>		`, c.config.CLIName),
+		RunE: c.list,
+		Args: cobra.MaximumNArgs(1),
 	}
-	createCmd.Flags().String("config", "", "YAML connector config file")
-	check(createCmd.MarkFlagRequired("config"))
-	createCmd.Flags().SortFlags = false
-	c.AddCommand(createCmd)
-	deleteCmd := &cobra.Command{
+	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	cmd.Flags().SortFlags = false
+	c.AddCommand(cmd)
+
+	cmd = &cobra.Command{
+		Use:   "create",
+		Short: "Create a connector.",
+		Example: FormatDescription(`
+Create connector in the current or specified Kafka cluster context.
+
+::
+
+        {{.CLIName}} connector create --config <file>
+        {{.CLIName}} connector create --cluster <cluster-id> --config <file>		`, c.config.CLIName),
+		RunE: c.create,
+		Args: cobra.MaximumNArgs(2),
+	}
+	cmd.Flags().String("config", "", "JSON connector config file")
+	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	check(cmd.MarkFlagRequired("config"))
+	cmd.Flags().SortFlags = false
+	c.AddCommand(cmd)
+
+	cmd = &cobra.Command{
 		Use:   "delete <connector-id>",
-		Short: "Delete connector in the current Kafka cluster context.",
-		RunE:  c.delete,
-		Args:  cobra.ExactArgs(1),
+		Short: "Delete a connector.",
+		Example: FormatDescription(`
+Delete connector in the current or specified Kafka cluster context.
+
+::
+
+        {{.CLIName}} connector delete <connector-id>
+        {{.CLIName}} connector delete <connector-id> --cluster <cluster-id>	`, c.config.CLIName),
+		RunE: c.delete,
+		Args: cobra.MaximumNArgs(2),
 	}
-	c.AddCommand(deleteCmd)
-	updateCmd := &cobra.Command{
-		Use:   "update <connector-id> --config <config>",
-		Short: "Update connector in the current Kafka cluster context.",
+	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	cmd.Flags().SortFlags = false
+	c.AddCommand(cmd)
+
+	cmd = &cobra.Command{
+		Use:   "update <connector-id>",
+		Short: "Update connector configuration.",
 		RunE:  c.update,
 		Args:  cobra.ExactArgs(1),
 	}
-	updateCmd.Flags().String("config", "", "YAML connector config file")
-	check(updateCmd.MarkFlagRequired("config"))
-	updateCmd.Flags().SortFlags = false
-	c.AddCommand(updateCmd)
+	cmd.Flags().String("config", "", "JSON connector config file")
+	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	check(cmd.MarkFlagRequired("config"))
+	cmd.Flags().SortFlags = false
+	c.AddCommand(cmd)
 
-	pauseCmd := &cobra.Command{
+	cmd = &cobra.Command{
 		Use:   "pause <connector-id>",
 		Short: "Pause a connector.",
-		RunE:  c.pause,
-		Args:  cobra.ExactArgs(1),
-	}
-	pauseCmd.Flags().StringP("output", "o", "", "Output format")
-	c.AddCommand(pauseCmd)
+		Example: FormatDescription(`
+Pause connector in the current or specified Kafka cluster context.
 
-	resumeCmd := &cobra.Command{
+::
+
+        {{.CLIName}} connector pause <connector-id>
+        {{.CLIName}} connector pause <connector-id> --cluster <cluster-id>	`, c.config.CLIName),
+		RunE: c.pause,
+		Args: cobra.MaximumNArgs(2),
+	}
+	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	cmd.Flags().SortFlags = false
+	c.AddCommand(cmd)
+
+	cmd = &cobra.Command{
 		Use:   "resume <connector-id>",
 		Short: "Resume a connector.",
-		RunE:  c.resume,
-		Args:  cobra.ExactArgs(1),
-	}
-	resumeCmd.Flags().StringP("output", "o", "", "Output format")
-	c.AddCommand(resumeCmd)
+		Example: FormatDescription(`
+Resume connector in the current or specified Kafka cluster context.
 
-	restartCmd := &cobra.Command{
+::
+
+        {{.CLIName}} connector resume <connector-id>
+        {{.CLIName}} connector resume <connector-id> --cluster <cluster-id>	`, c.config.CLIName),
+		RunE: c.resume,
+		Args: cobra.MaximumNArgs(2),
+	}
+	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	cmd.Flags().SortFlags = false
+	c.AddCommand(cmd)
+
+	cmd = &cobra.Command{
 		Use:   "restart <connector-id>",
 		Short: "Restart a connector.",
-		RunE:  c.restart,
-		Args:  cobra.ExactArgs(1),
+		Example: FormatDescription(`
+Restart connector in the current or specified Kafka cluster context.
+
+::
+
+        {{.CLIName}} connector restart <connector-id>
+        {{.CLIName}} connector restart <connector-id> --cluster <cluster-id>	`, c.config.CLIName),
+		RunE: c.restart,
+		Args: cobra.MaximumNArgs(2),
 	}
-	restartCmd.Flags().StringP("output", "o", "", "Output format")
-	c.AddCommand(restartCmd)
+	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	cmd.Flags().SortFlags = false
+	c.AddCommand(cmd)
 }
 
 func (c *command) list(cmd *cobra.Command, args []string) error {
@@ -169,12 +233,12 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 
 	pcmd.Println(cmd, "\n\nTask Level Details")
 	var tasks [][]string
-	titleRow := []string{"TaskID", "State"}
+	titleRow := []string{"Task_ID", "State"}
 	for _, task := range connector.Status.Tasks {
 
 		record := &struct {
-			TaskID int32
-			State  string
+			Task_ID int32
+			State   string
 		}{
 			task.Id,
 			task.State,
@@ -184,12 +248,12 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	printer.RenderCollectionTable(tasks, titleRow)
 	pcmd.Println(cmd, "\n\nConfiguration Details")
 	var configs [][]string
-	titleRow = []string{"ConfigName", "ConfigValue"}
+	titleRow = []string{"Configuration", "Value"}
 	for name, value := range connector.Info.Config {
 
 		record := &struct {
-			ConfigName  string
-			ConfigValue string
+			Configuration string
+			Value         string
 		}{
 			name,
 			value,

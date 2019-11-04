@@ -11,5 +11,6 @@
   "schema.registry.url": "https://psrc-l7y22.us-east-2.aws.confluent.cloud",
   "tasks.max": "1",
   "time.interval": "HOURLY",
-  "topics": "pageviews"
+  "topics": "pageviews",
+  "connector.class": "AzureBlobSink"
 }
