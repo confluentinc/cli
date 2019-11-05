@@ -1,9 +1,9 @@
-#!/bin/sh
+#!/bin/bash
 set -e
 
 # This script is designed to live in a Confluent Platform tarball distribution.
 # It depends on the CLI binaries for different OS/ARCH combinations living at
-#   ./cli/${OS}_${ARCH}/confluent
+#   ../libexec/cli/${OS}_${ARCH}/confluent
 #
 
 is_supported_platform() {
@@ -179,7 +179,7 @@ BINARY=confluent
 OS=$(uname_os)
 ARCH=$(uname_arch)
 PREFIX="${OWNER}/${REPO}"
-EXE_PATH="./cli"
+EXE_PATH="${BASH_SOURCE%/*}/../libexec/cli"
 PLATFORM="${OS}/${ARCH}"
 
 # use in logging routines
