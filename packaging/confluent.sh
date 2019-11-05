@@ -47,7 +47,7 @@ check_executable() {
     # optional logging goes here
     true
   else
-    log_crit "executable $EXECUTABLE does not exists.  Make sure this script is up-to-date and file request at https://github.com/${PREFIX}/issues/new"
+    log_crit "executable $EXECUTABLE does not exist.  Make sure this script is up-to-date and file request at https://github.com/${PREFIX}/issues/new"
     exit 1
   fi
 }
@@ -178,15 +178,14 @@ REPO="cli"
 BINARY=confluent
 OS=$(uname_os)
 ARCH=$(uname_arch)
-PREFIX="$OWNER/$REPO"
+PREFIX="${OWNER}/${REPO}"
 EXE_PATH="./cli"
+PLATFORM="${OS}/${ARCH}"
 
 # use in logging routines
 log_prefix() {
-	echo "$PREFIX"
+	echo "${PREFIX}"
 }
-PLATFORM="${OS}/${ARCH}"
-EXECUTABLE="${EXE_PATH}/${OS}_${ARCH}/${BINARY}"
 
 uname_os_check
 uname_arch_check
@@ -194,6 +193,11 @@ uname_arch_check
 check_platform
 
 adjust_os
+
+EXECUTABLE="${EXE_PATH}/${OS}_${ARCH}/${BINARY}"
+if [[ "$OS" = "windows" ]]; then
+  EXECUTABLE="${EXECUTABLE}.exe"
+fi
 
 check_executable
 
