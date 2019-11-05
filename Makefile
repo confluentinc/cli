@@ -278,14 +278,10 @@ lint-licenses: build
 		echo ; \
 	done
 
-.PHONY: test-rm
-test-rm:
-	rm cover*.out
-
 .PHONY: coverage
 coverage:
       ifdef CI
-	# Run unit tests with coverage.
+	@# Run unit tests with coverage.
 	@echo "mode: atomic" > unit_coverage.txt
 	@for d in $$(go list ./... | grep -v vendor | grep -v test); do \
 	  GO111MODULE=on go test -v -race -coverprofile=profile.out -coverpkg=./... $$d || exit 2; \
@@ -294,20 +290,19 @@ coverage:
 	    rm profile.out; \
 	  fi; \
 	done
-	# Run integration tests with coverage.
+	@# Run integration tests with coverage.
 	@GO111MODULE=on INTEG_COVER=on go test ./... -race -run=TestCLI || { rm cover*.out; exit 1; }
 	@echo "mode: atomic" > integ_coverage.txt
 	@grep -h -v "mode: atomic" cover*.out >> integ_coverage.txt
 	rm cover*.out
-	# Merge unit and integration coverages. (HACK mode: set for now)
 	@echo "mode: atomic" > merged_coverage.txt
 	@grep -h -v "mode: atomic" unit_coverage.txt >> merged_coverage.txt
 	@grep -h -v "mode: atomic" integ_coverage.txt >> merged_coverage.txt
       else
-	# Run unit tests.
+	@# Run unit tests.
 	@GO111MODULE=on go test -race -coverpkg=./... $(TEST_ARGS) $$(go list ./... | grep -v vendor | grep -v test)
-	# Run integration tests.
-	GO111MODULE=on go test ./... -run=TestCLI
+	@# Run integration tests.
+	@GO111MODULE=on go test ./... -run=TestCLI
       endif
 
 .PHONY: mocks
