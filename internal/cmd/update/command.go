@@ -3,6 +3,8 @@ package update
 import (
 	"fmt"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -37,8 +39,18 @@ func NewClient(cliName string, logger *log.Logger) (update.Client, error) {
 		S3ObjectKey: objectKey,
 		Logger:      logger,
 	})
+	disableCheck := false
+	envVarName := fmt.Sprintf("%s_CLI_UPDATE_CHECK_DISABLE", strings.ToUpper(cliName))
+	envVarValue, ok := os.LookupEnv(envVarName)
+	if ok {
+		disableCheck, err = strconv.ParseBool(envVarValue)
+		if err != nil {
+			return nil, errors.Wrapf(err, "unable to parse environment variable '%s' as bool", envVarName)
+		}
+	}
 	return update.NewClient(&update.ClientParams{
 		Repository:    repo,
+		DisableCheck:  disableCheck,
 		CheckFile:     fmt.Sprintf(CheckFileFmt, cliName),
 		CheckInterval: CheckInterval,
 		Logger:        logger,

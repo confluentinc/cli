@@ -241,6 +241,62 @@ func TestCheckForUpdates(t *testing.T) {
 			wantLatestVersion:   "v1.2.3",
 			wantErr:             false,
 		},
+		{
+			name: "should not check if disabled",
+			client: NewClient(&ClientParams{
+				Repository: &updateMock.Repository{
+					GetAvailableVersionsFunc: func(name string) (version.Collection, error) {
+						require.Fail(t, "Shouldn't be called")
+						return nil, errors.New("whoops")
+					},
+				},
+				Logger: log.New(),
+				DisableCheck: true,
+			}),
+			args: args{
+				name:           "my-cli",
+				currentVersion: "v1.2.3",
+			},
+			wantUpdateAvailable: false,
+			wantLatestVersion:   "v1.2.3",
+			wantErr:             false,
+		},
+		{
+			name: "checks - error",
+			client: NewClient(&ClientParams{
+				Repository: &updateMock.Repository{
+					GetAvailableVersionsFunc: func(name string) (version.Collection, error) {
+						return nil, errors.New("whoops")
+					},
+				},
+				Logger: log.New(),
+			}),
+			args: args{
+				name:           "my-cli",
+				currentVersion: "v1.2.3",
+			},
+			wantUpdateAvailable: false,
+			wantLatestVersion:   "v1.2.3",
+			wantErr:             true,
+		},
+		{
+			name: "checks - success",
+			client: NewClient(&ClientParams{
+				Repository: &updateMock.Repository{
+					GetAvailableVersionsFunc: func(name string) (version.Collection, error) {
+						return version.Collection{version.Must(version.NewVersion("v1.2.4"))}, nil
+					},
+				},
+				Logger: log.New(),
+			}),
+			args: args{
+				name:           "my-cli",
+				currentVersion: "v1.2.3",
+			},
+			wantUpdateAvailable: true,
+			wantLatestVersion:   "v1.2.4",
+			wantErr:             false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
