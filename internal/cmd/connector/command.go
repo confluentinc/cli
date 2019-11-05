@@ -8,10 +8,11 @@ import (
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	connectv1 "github.com/confluentinc/ccloudapis/connect/v1"
+	"github.com/confluentinc/go-printer"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/go-printer"
 )
 
 type command struct {
@@ -165,23 +166,6 @@ Resume connector in the current or specified Kafka cluster context.
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
-
-	cmd = &cobra.Command{
-		Use:   "restart <connector-id>",
-		Short: "Restart a connector.",
-		Example: FormatDescription(`
-Restart connector in the current or specified Kafka cluster context.
-
-::
-
-        {{.CLIName}} connector restart <connector-id>
-        {{.CLIName}} connector restart <connector-id> --cluster <cluster-id>	`, c.config.CLIName),
-		RunE: c.restart,
-		Args: cobra.MaximumNArgs(2),
-	}
-	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	cmd.Flags().SortFlags = false
-	c.AddCommand(cmd)
 }
 
 func (c *command) list(cmd *cobra.Command, args []string) error {
@@ -273,7 +257,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	connector, err := c.client.CreateOrUpdate(context.Background(), &connectv1.ConnectorConfig{UserConfigs: userConfigs, AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id})
+	connector, err := c.client.CreateOrUpdate(context.Background(), &connectv1.ConnectorConfig{UserConfigs: *userConfigs, AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id, Name: (*userConfigs)["name"]})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -295,11 +279,11 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	connectorUpdated, err := c.client.CreateOrUpdate(context.Background(), &connectv1.ConnectorConfig{UserConfigs: userConfigs, AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id, Name: connector.Info.Name})
+	connectorUpdated, err := c.client.CreateOrUpdate(context.Background(), &connectv1.ConnectorConfig{UserConfigs: *userConfigs, AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id, Name: connector.Info.Name})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	pcmd.Println(cmd, "Updated connector"+connectorUpdated.Id+" "+connectorUpdated.Name)
+	pcmd.Println(cmd, "Updated connector "+connectorUpdated.Id+" "+connectorUpdated.Name)
 	return nil
 }
 
@@ -360,27 +344,6 @@ func (c *command) resume(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	pcmd.Println(cmd, "Successfully resumed connector")
-	return nil
-}
-
-func (c *command) restart(cmd *cobra.Command, args []string) error {
-
-	kafkaCluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	if len(args) == 0 {
-		return errors.New("Connector ID must be passed")
-	}
-	connector, err := c.client.GetByID(context.Background(), &connectv1.Connector{AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id, Id: args[0]})
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	err = c.client.Restart(context.Background(), &connectv1.Connector{Name: connector.Info.Name, AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id})
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	pcmd.Println(cmd, "Successfully restarted connector")
 	return nil
 }
 
