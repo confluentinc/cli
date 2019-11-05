@@ -18,7 +18,11 @@ func InitSarama(logger *log.Logger) {
 
 // NewSaramaConsumer returns a sarama.ConsumerGroup configured for the CLI config
 func NewSaramaConsumer(group string, kafka *config.KafkaClusterConfig, clientID string, beginning bool) (sarama.ConsumerGroup, error) {
-	client, err := sarama.NewClient(strings.Split(kafka.Bootstrap, ","), saramaConf(kafka, clientID, beginning))
+	conf, err := saramaConf(kafka, clientID, beginning)
+	if err != nil {
+		return nil, err
+	}
+	client, err := sarama.NewClient(strings.Split(kafka.Bootstrap, ","), conf)
 	if err != nil {
 		return nil, err
 	}
@@ -27,7 +31,11 @@ func NewSaramaConsumer(group string, kafka *config.KafkaClusterConfig, clientID 
 
 // NewSaramaProducer returns a sarama.ClusterProducer configured for the CLI config
 func NewSaramaProducer(kafka *config.KafkaClusterConfig, clientID string) (sarama.SyncProducer, error) {
-	return sarama.NewSyncProducer(strings.Split(kafka.Bootstrap, ","), saramaConf(kafka, clientID, false))
+	conf, err := saramaConf(kafka, clientID, false)
+	if err != nil {
+		return nil, err
+	}
+	return sarama.NewSyncProducer(strings.Split(kafka.Bootstrap, ","), conf)
 }
 
 // GroupHandler instances are used to handle individual topic-partition claims.
@@ -57,7 +65,7 @@ func (h *GroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sara
 }
 
 // saramaConf converts KafkaClusterConfig to sarama.Config
-func saramaConf(kafka *config.KafkaClusterConfig, clientID string, beginning bool) *sarama.Config {
+func saramaConf(kafka *config.KafkaClusterConfig, clientID string, beginning bool) (*sarama.Config, error) {
 	saramaConf := sarama.NewConfig()
 	saramaConf.ClientID = clientID
 	saramaConf.Version = sarama.V1_1_0_0
@@ -75,7 +83,7 @@ func saramaConf(kafka *config.KafkaClusterConfig, clientID string, beginning boo
 		saramaConf.Consumer.Offsets.Initial = sarama.OffsetNewest
 	}
 
-	return saramaConf
+	return saramaConf, nil
 }
 
 // Just logs all Sarama logs at the debug level

@@ -24,9 +24,9 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/ksql"
 	"github.com/confluentinc/cli/internal/cmd/local"
 	ps1 "github.com/confluentinc/cli/internal/cmd/prompt"
-	"github.com/confluentinc/cli/internal/cmd/schema-registry"
+	schema_registry "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	"github.com/confluentinc/cli/internal/cmd/secret"
-	"github.com/confluentinc/cli/internal/cmd/service-account"
+	service_account "github.com/confluentinc/cli/internal/cmd/service-account"
 	"github.com/confluentinc/cli/internal/cmd/update"
 	"github.com/confluentinc/cli/internal/cmd/version"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -37,11 +37,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/keystore"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	pps1 "github.com/confluentinc/cli/internal/pkg/ps1"
-	apikeys "github.com/confluentinc/cli/internal/pkg/sdk/apikey"
-	environments "github.com/confluentinc/cli/internal/pkg/sdk/environment"
-	kafkas "github.com/confluentinc/cli/internal/pkg/sdk/kafka"
-	ksqls "github.com/confluentinc/cli/internal/pkg/sdk/ksql"
-	users "github.com/confluentinc/cli/internal/pkg/sdk/user"
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
 	versions "github.com/confluentinc/cli/internal/pkg/version"
 )
@@ -114,9 +109,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	resolver := &pcmd.FlagResolverImpl{Prompt: prompt, Out: os.Stdout}
 
 	if cliName == "ccloud" {
-		kafkaClient := kafkas.New(client, logger)
-		// TODO: should this be With("component", "kafka")? Standardize with other apps, but text looks better with name
-		cmd, err := kafka.New(prerunner, cfg, logger.Named("kafka"), ver.ClientID, kafkaClient, ch)
+		cmd, err := kafka.New(prerunner, cfg, logger.Named("kafka"), ver.ClientID, client.Kafka, ch)
 		if err != nil {
 			return nil, err
 		}
@@ -130,18 +123,17 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 			return cli, nil
 		}
 		cli.AddCommand(ps1.NewPromptCmd(cfg, &pps1.Prompt{Config: cfg}, logger))
-		userClient := users.New(client, logger)
 		ks := &keystore.ConfigKeyStore{Config: cfg, Helper: ch}
-		cli.AddCommand(environment.New(prerunner, cfg, environments.New(client, logger), cliName))
-		cli.AddCommand(service_account.New(prerunner, cfg, userClient))
-		cli.AddCommand(apikey.New(prerunner, cfg, apikeys.New(client, logger), ch, ks))
+		cli.AddCommand(environment.New(prerunner, cfg, client.Account, cliName))
+		cli.AddCommand(service_account.New(prerunner, cfg, client.User))
+		cli.AddCommand(apikey.New(prerunner, cfg, client.APIKey, ch, ks))
 
 		// Schema Registry
 		// If srClient is nil, the function will look it up after prerunner verifies authentication. Exposed so tests can pass mocks
 		sr := schema_registry.New(prerunner, cfg, client.SchemaRegistry, ch, nil, client.Metrics, logger)
 		cli.AddCommand(sr)
 
-		conn = ksql.New(prerunner, cfg, ksqls.New(client, logger), kafkaClient, userClient, ch)
+		conn = ksql.New(prerunner, cfg, client.KSQL, client.Kafka, client.User, ch)
 		conn.Hidden = true // The ksql feature isn't finished yet, so let's hide it
 		cli.AddCommand(conn)
 
