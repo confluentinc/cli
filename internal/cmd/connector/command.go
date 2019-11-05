@@ -98,9 +98,9 @@ Create connector in the current or specified Kafka cluster context.
 		RunE: c.create,
 		Args: cobra.MaximumNArgs(2),
 	}
-	cmd.Flags().String("config", "", "JSON connector config file")
+	cmd.Flags().String("config", "", "JSON connector config file.")
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	check(cmd.MarkFlagRequired("config"))
+	panicOnError(cmd.MarkFlagRequired("config"))
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
@@ -127,9 +127,9 @@ Delete connector in the current or specified Kafka cluster context.
 		RunE:  c.update,
 		Args:  cobra.ExactArgs(1),
 	}
-	cmd.Flags().String("config", "", "JSON connector config file")
+	cmd.Flags().String("config", "", "JSON connector config file.")
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	check(cmd.MarkFlagRequired("config"))
+	panicOnError(cmd.MarkFlagRequired("config"))
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
@@ -347,7 +347,7 @@ func (c *command) resume(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func check(err error) {
+func panicOnError(err error) {
 	if err != nil {
 		panic(err)
 	}

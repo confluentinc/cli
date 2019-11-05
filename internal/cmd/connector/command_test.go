@@ -14,9 +14,10 @@ import (
 	v1 "github.com/confluentinc/ccloudapis/connect/v1"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
+	cliMock "github.com/confluentinc/cli/mock"
+
 	cmd2 "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
-	cliMock "github.com/confluentinc/cli/mock"
 )
 
 const (
