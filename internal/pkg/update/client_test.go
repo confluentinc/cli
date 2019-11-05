@@ -39,6 +39,23 @@ func TestNewClient(t *testing.T) {
 				fs:           &pio.RealFileSystem{},
 			},
 		},
+		{
+			name: "should set provided values",
+			params: &ClientParams{
+				CheckInterval: 48 * time.Hour,
+				OS:            "duckduckgoos",
+				DisableCheck:  true,
+			},
+			want: &client{
+				ClientParams: &ClientParams{
+					CheckInterval: 48 * time.Hour,
+					OS:            "duckduckgoos",
+					DisableCheck:  true,
+				},
+				clock: clockwork.NewRealClock(),
+				fs:    &pio.RealFileSystem{},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -250,7 +267,7 @@ func TestCheckForUpdates(t *testing.T) {
 						return nil, errors.New("whoops")
 					},
 				},
-				Logger: log.New(),
+				Logger:       log.New(),
 				DisableCheck: true,
 			}),
 			args: args{

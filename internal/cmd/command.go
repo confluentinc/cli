@@ -65,7 +65,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 
 	prompt := pcmd.NewPrompt(os.Stdin)
 
-	updateClient, err := update.NewClient(cliName, logger)
+	updateClient, err := update.NewClient(cliName, cfg.DisableUpdateCheck, logger)
 	if err != nil {
 		return nil, err
 	}
