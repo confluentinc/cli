@@ -22,24 +22,25 @@ const (
 
 // AuthConfig represents an authenticated user.
 type AuthConfig struct {
-	User     *v1.User      `json:"user" hcl:"user"`
-	Account  *v1.Account   `json:"account" hcl:"account"`
-	Accounts []*v1.Account `json:"accounts" hcl:"accounts"`
+	User     *v1.User      `json:"user"`
+	Account  *v1.Account   `json:"account"`
+	Accounts []*v1.Account `json:"accounts"`
 }
 
 // Config represents the CLI configuration.
 type Config struct {
-	CLIName        string                 `json:"-" hcl:"-"`
-	MetricSink     metric.Sink            `json:"-" hcl:"-"`
-	Logger         *log.Logger            `json:"-" hcl:"-"`
-	Filename       string                 `json:"-" hcl:"-"`
-	AuthURL        string                 `json:"auth_url" hcl:"auth_url"`
-	AuthToken      string                 `json:"auth_token" hcl:"auth_token"`
-	Auth           *AuthConfig            `json:"auth" hcl:"auth"`
-	Platforms      map[string]*Platform   `json:"platforms" hcl:"platforms"`
-	Credentials    map[string]*Credential `json:"credentials" hcl:"credentials"`
-	Contexts       map[string]*Context    `json:"contexts" hcl:"contexts"`
-	CurrentContext string                 `json:"current_context" hcl:"current_context"`
+	CLIName            string                 `json:"-"`
+	MetricSink         metric.Sink            `json:"-"`
+	Logger             *log.Logger            `json:"-"`
+	Filename           string                 `json:"-"`
+	DisableUpdateCheck bool                   `json:"disable_update_check"`
+	AuthURL            string                 `json:"auth_url"`
+	AuthToken          string                 `json:"auth_token"`
+	Auth               *AuthConfig            `json:"auth"`
+	Platforms          map[string]*Platform   `json:"platforms"`
+	Credentials        map[string]*Credential `json:"credentials"`
+	Contexts           map[string]*Context    `json:"contexts"`
+	CurrentContext     string                 `json:"current_context"`
 }
 
 // New initializes a new Config object
