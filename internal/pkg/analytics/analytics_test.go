@@ -37,14 +37,14 @@ var (
 
 type AnalyticsTestSuite struct {
 	suite.Suite
-	config      *config.Config
-	auth     *config.AuthConfig
+	config *config.Config
+	auth   *config.AuthConfig
 }
 
 func (suite *AnalyticsTestSuite) SetupSuite() {
 	suite.config = &config.Config{
 		CLIName: ccloudCliName,
-		Auth:  nil,
+		Auth:    nil,
 	}
 	suite.createAuth()
 	suite.createContexts()
@@ -115,8 +115,6 @@ func (suite *AnalyticsTestSuite) logOut() {
 func (suite *AnalyticsTestSuite) apiKeyCredContext() {
 	suite.config.CurrentContext = apiKeyContext
 }
-
-
 
 func (suite *AnalyticsTestSuite) TestSuccessWithFlagAndArgs() {
 	// assume user already logged in
@@ -199,7 +197,6 @@ func (suite *AnalyticsTestSuite) TestLogin() {
 			req.True(ok)
 			suite.checkIdentify(identify)
 		}
-
 	}
 }
 
@@ -307,7 +304,7 @@ func (suite *AnalyticsTestSuite) TestHideSecretForApiStore() {
 		Use: "ccloud",
 	}
 	apiCmd := &cobra.Command{
-		Use:    "api-key",
+		Use: "api-key",
 	}
 	storeCmd := &cobra.Command{
 		Use:    "store",
