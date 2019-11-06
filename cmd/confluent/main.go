@@ -23,7 +23,7 @@ var (
 	date    = ""
 	host    = ""
 	cliName = "confluent"
-	segmentKey = "waLqtpvaj5o0YKOQGi7gOgav9gIi9oCJ"
+	segmentKey = "KDsYPLPBNVB1IPJIN5oqrXnxQT9iKezo"
 )
 
 func main() {
