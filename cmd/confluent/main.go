@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/spf13/viper"
+	segment "github.com/segmentio/analytics-go"
 
 	"github.com/confluentinc/cli/internal/cmd"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
@@ -22,6 +23,7 @@ var (
 	date    = ""
 	host    = ""
 	cliName = "confluent"
+	segmentKey = "waLqtpvaj5o0YKOQGi7gOgav9gIi9oCJ"
 )
 
 func main() {
@@ -46,37 +48,21 @@ func main() {
 
 	version := cliVersion.NewVersion(cfg.CLIName, cfg.Name(), cfg.Support(), version, commit, date, host)
 
-	analyticsObject := analytics.NewAnalyticsObject(cfg)
-	cli, err := cmd.NewConfluentCommand(cliName, cfg, version, logger)
+	segmentClient := segment.New(segmentKey)
+	analyticsClient := analytics.NewAnalyticsClient(cfg, segmentClient)
+
+	cli, err := cmd.NewConfluentCommand(cliName, cfg, version, logger, analyticsClient)
 	if err != nil {
 		if cli == nil {
 			fmt.Fprintln(os.Stderr, err)
 		} else {
-			pcmd.ErrPrintln(cli, err)
+			pcmd.ErrPrintln(cli.Command, err)
 		}
 		os.Exit(1)
-	}
-
-	analyticsError := analyticsObject.InitializePreRuns(cli)
-	if analyticsError != nil {
-		logger.Debug("segment analytics set up failed: %s\n", analyticsError.Error())
 	}
 
 	err = cli.Execute()
 	if err != nil {
-		if analyticsError == nil {
-			analyticsError = analyticsObject.FlushCommandFailed(err)
-			if analyticsError != nil {
-				logger.Debug("segment analytics flushing failed: %s\n", analyticsError.Error())
-			}
-		}
 		os.Exit(1)
-	}
-
-	if analyticsError == nil {
-		analyticsError = analyticsObject.FlushCommandSucceeded()
-		if analyticsError != nil {
-			logger.Debug("segment analytics flushing failed: %s\n", analyticsError.Error())
-		}
 	}
 }

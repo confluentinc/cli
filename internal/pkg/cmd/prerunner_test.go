@@ -1,6 +1,7 @@
 package cmd_test
 
 import (
+	"github.com/confluentinc/cli/internal/pkg/analytics"
 	"reflect"
 	"strings"
 	"testing"
@@ -82,6 +83,7 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 						return false, "", nil
 					},
 				},
+				Analytics: analytics.NewDummyAnalyticsClient(),
 			}
 
 			root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
@@ -119,6 +121,7 @@ func TestPreRun_HasAPIKey_SetupLoggingAndCheckForUpdates(t *testing.T) {
 				return false, "", nil
 			},
 		},
+		Analytics: analytics.NewDummyAnalyticsClient(),
 	}
 
 	root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}

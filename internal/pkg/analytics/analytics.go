@@ -1,14 +1,12 @@
 package analytics
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/joeshaw/iso8601"
-	"github.com/segmentio/analytics-go"
+	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
@@ -18,92 +16,88 @@ import (
 var (
 	secretFlags = []string{"flag1", "flag2"}
 	secretCommands = map[string][]int{"ccloud api-key store": {1}} // security concern IF there is a change then we could accidentally be sending secret value to segment
-	secretValueString = "<secret_value>"
+	SecretValueString = "<secret_value>"
+	malformedCmdEventName = "Malformed Command Error"
+
+	FlagsPropertiesKey      = "flags"
+	ArgsPropertiesKey       = "args"
+	OrgIdPropertiesKey      = "organization_id"
+	EmailPropertiesKey      = "email"
+	ErrorMsgPropertiesKey   = "error_message"
+	StartTimePropertiesKey  = "start_time"
+	FinishTimePropertiesKey = "finish_time"
+	SucceededPropertiesKey  = "succeeded"
 )
 
-type Object struct {
-	client     analytics.Client
-	config     *config.Config
-	cmdCalled  string
-	properties analytics.Properties
-	userId     string
+type Client struct {
+	client      segment.Client
+	config      *config.Config
+
+	// cache data until we flush events to segment (when each cmd call finishes)
+	cmdCalled   string
+	properties  segment.Properties
+	userId      string
+	anonymousId string
 }
 
-func NewAnalyticsObject(cfg *config.Config) *Object {
-	obj := &Object{
-		client: analytics.New("waLqtpvaj5o0YKOQGi7gOgav9gIi9oCJ"),
-		config: cfg,
-		properties: make(analytics.Properties),
+func NewAnalyticsClient(cfg *config.Config, segmentClient segment.Client) *Client {
+	client := &Client{
+		client:     segmentClient,
+		config:     cfg,
+		properties: make(segment.Properties),
 	}
 	if cfg.AnonymousId == "" {
 		cfg.AnonymousId = uuid.New().String()
 	}
-	return obj
+	client.anonymousId = cfg.AnonymousId
+	return client
 }
 
-func (a *Object) InitializePreRuns(cmd *cobra.Command) error {
-	if !cmd.HasSubCommands() {
-		if cmd.PreRun == nil {
-			cmd.PreRun = a.PreRun()
-		} else {
-			return fmt.Errorf("pre run already existed") // preventing preRun collisions
-		}
-		return nil
-	}
-	for _, childCmd := range cmd.Commands() {
-		err := a.InitializePreRuns(childCmd)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (a *Object) PreRun() func(cmd *cobra.Command, args []string) {
-	return func(cmd *cobra.Command, args []string) {
-		a.cmdCalled = cmd.CommandPath()
-		a.addArgsProperties(cmd, args)
-		a.addFlagProperties(cmd)
-		a.properties.Set("start_time", iso8601.New(time.Now()))
-	}
-}
-
-func (a *Object) FlushCommandSucceeded() error {
+func (a *Client) TrackCommand(cmd *cobra.Command, args []string) {
+	a.cmdCalled = cmd.CommandPath()
+	a.addArgsProperties(cmd, args)
+	a.addFlagProperties(cmd)
+	a.properties.Set(StartTimePropertiesKey, time.Now())
 	a.setUserInfo()
-	a.properties.Set("succeeded", true)
-	a.properties.Set("finish_time", iso8601.New(time.Now()))
-	if err := a.sendPage(); err != nil {
-		return err
-	}
-	// reset anonymous id
-	if strings.Contains(a.cmdCalled, a.config.CLIName + " logout") {
-		a.config.AnonymousId = ""
-	}
-	// identify the user with the anonymous id if login called
-	if a.userId != "" && strings.Contains(a.cmdCalled, a.config.CLIName + " login") {
+}
+
+func (a *Client) FlushCommandSucceeded() error {
+	// for login user info can only be obtained after login succeeded
+	if strings.Contains(a.cmdCalled, a.config.CLIName + " login") {
+		a.setUserInfo()
 		if err := a.identify(); err != nil {
 			return err
 		}
 	}
+	a.properties.Set(SucceededPropertiesKey, true)
+	a.properties.Set(FinishTimePropertiesKey, time.Now())
+	if err := a.sendPage(); err != nil {
+		return err
+	}
+	if strings.Contains(a.cmdCalled, a.config.CLIName + " logout") {
+		a.config.AnonymousId = ""
+		if err := a.config.Save(); err != nil {
+			return err
+		}
+	}
 	return a.client.Close()
 }
 
-func (a *Object) FlushCommandFailed(e error) error {
-	a.setUserInfo()
+func (a *Client) FlushCommandFailed(e error) error {
 	if a.cmdCalled == "" {
 		return a.malformedCommandError(e)
 	}
-	a.properties.Set("succeeded", false)
-	a.properties.Set("error_message", e.Error())
+	a.properties.Set(SucceededPropertiesKey, false)
+	a.properties.Set(ErrorMsgPropertiesKey, e.Error())
 	if err := a.sendPage(); err != nil {
 		return err
 	}
 	return a.client.Close()
 }
 
-func (a *Object) sendPage() error {
-	page := analytics.Page{
-		AnonymousId:  a.config.AnonymousId,
+func (a *Client) sendPage() error {
+	page := segment.Page{
+		AnonymousId:  a.anonymousId,
 		Name:         a.cmdCalled,
 		Properties:   a.properties,
 	}
@@ -113,20 +107,20 @@ func (a *Object) sendPage() error {
 	return a.client.Enqueue(page)
 }
 
-func (a *Object) identify() error {
-	identify := analytics.Identify{
-		AnonymousId:  a.config.AnonymousId,
+func (a *Client) identify() error {
+	identify := segment.Identify{
+		AnonymousId:  a.anonymousId,
 		UserId:       a.userId,
 	}
 	return a.client.Enqueue(identify)
 }
 
-func (a *Object) malformedCommandError(e error) error {
-	properties := make(analytics.Properties)
-	properties.Set("error_message", e.Error())
-	track := analytics.Track{
-		AnonymousId: a.config.AnonymousId,
-		Event:       "Malformed Command Error",
+func (a *Client) malformedCommandError(e error) error {
+	properties := make(segment.Properties)
+	properties.Set(ErrorMsgPropertiesKey, e.Error())
+	track := segment.Track{
+		AnonymousId: a.anonymousId,
+		Event:       malformedCmdEventName,
 		Properties:  properties,
 	}
 	if a.userId != "" {
@@ -139,39 +133,39 @@ func (a *Object) malformedCommandError(e error) error {
 	return a.client.Close()
 }
 
-func (a *Object) addFlagProperties(cmd *cobra.Command) {
+func (a *Client) addFlagProperties(cmd *cobra.Command) {
 	flags := make(map[string]string)
 	cmd.Flags().Visit(func(f *pflag.Flag){
 		if contains(secretFlags, f.Name) {
-			flags[f.Name] = secretValueString
+			flags[f.Name] = SecretValueString
 		} else {
 			flags[f.Name] = f.Value.String()
 		}
 	})
-	a.properties.Set("flags", flags)
+	a.properties.Set(FlagsPropertiesKey, flags)
 }
 
-func  (a *Object) addArgsProperties(cmd *cobra.Command, args []string) {
+func  (a *Client) addArgsProperties(cmd *cobra.Command, args []string) {
 	argsCopy := make([]string, len(args))
 	if len(args) > 0 {
 		if ids, ok := secretCommands[cmd.CommandPath()]; ok {
 			copy(argsCopy, args)
 			for _, i := range ids {
-				argsCopy[i] = secretValueString
+				argsCopy[i] = SecretValueString
 			}
 		} else {
 			copy(argsCopy, args)
 		}
 	}
-	a.properties.Set("args", argsCopy)
+	a.properties.Set(ArgsPropertiesKey, argsCopy)
 }
 
-func (a *Object) setUserInfo() {
+func (a *Client) setUserInfo() {
 	if a.config.CLIName == "ccloud" {
 		cloudUserId, organizationId, email := a.getCloudUserInfo()
 		if cloudUserId != "" {
-			a.properties.Set("organization_id", organizationId)
-			a.properties.Set("email", email)
+			a.properties.Set(OrgIdPropertiesKey, organizationId)
+			a.properties.Set(EmailPropertiesKey, email)
 		}
 		a.userId = cloudUserId
 	} else {
@@ -179,7 +173,7 @@ func (a *Object) setUserInfo() {
 	}
 }
 
-func (a *Object) getCloudUserInfo() (userId string, organizationId string, email string) {
+func (a *Client) getCloudUserInfo() (userId string, organizationId string, email string) {
 	if err := a.config.CheckLogin(); err != nil {
 		return "", "", ""
 	}
@@ -190,7 +184,7 @@ func (a *Object) getCloudUserInfo() (userId string, organizationId string, email
 	return userId, organizationId, email
 }
 
-func (a *Object) getCPUsername() string {
+func (a *Client) getCPUsername() string {
 	if err := a.config.CheckLogin(); err != nil {
 		return ""
 	}

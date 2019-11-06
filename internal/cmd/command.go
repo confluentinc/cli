@@ -29,6 +29,7 @@ import (
 	service_account "github.com/confluentinc/cli/internal/cmd/service-account"
 	"github.com/confluentinc/cli/internal/cmd/update"
 	"github.com/confluentinc/cli/internal/cmd/version"
+	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	configs "github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -41,7 +42,13 @@ import (
 	versions "github.com/confluentinc/cli/internal/pkg/version"
 )
 
-func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Version, logger *log.Logger) (*cobra.Command, error) {
+type Command struct {
+	*cobra.Command
+	Analytics *analytics.Client
+	Logger    *log.Logger
+}
+
+func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Version, logger *log.Logger, analytics *analytics.Client) (*Command, error) {
 	cli := &cobra.Command{
 		Use:               cliName,
 		Version:           ver.Version,
@@ -85,6 +92,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		Config:       cfg,
 		ConfigHelper: ch,
 		Clock:        clockwork.NewRealClock(),
+		Analytics:    analytics,
 	}
 
 	cli.PersistentPreRunE = prerunner.Anonymous()
@@ -120,7 +128,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 			return nil, err
 		}
 		if credType == configs.APIKey {
-			return cli, nil
+			return &Command{Command: cli, Analytics: analytics, Logger: logger}, nil
 		}
 		cli.AddCommand(ps1.NewPromptCmd(cfg, &pps1.Prompt{Config: cfg}, logger))
 		ks := &keystore.ConfigKeyStore{Config: cfg, Helper: ch}
@@ -155,5 +163,22 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 
 		cli.AddCommand(secret.New(prerunner, cfg, prompt, resolver, secrets.NewPasswordProtectionPlugin(logger)))
 	}
-	return cli, nil
+	return &Command{Command: cli, Analytics: analytics, Logger: logger}, nil
+}
+
+func (c *Command) Execute() error {
+	// analytics stuff here too if you need
+	err := c.Command.Execute()
+	if err != nil {
+		analyticsError := c.Analytics.FlushCommandFailed(err)
+		if analyticsError != nil {
+			c.Logger.Debugf("segment analytics flushing failed: %s\n", analyticsError.Error())
+		}
+		return err
+	}
+	analyticsError := c.Analytics.FlushCommandSucceeded()
+	if analyticsError != nil {
+		c.Logger.Debugf("segment analytics flushing failed: %s\n", analyticsError.Error())
+	}
+	return nil
 }

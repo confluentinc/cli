@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -443,6 +444,7 @@ func (suite *AclTestSuite) TestMdsHandleErrorNotLoggedIn() {
 		Logger: log.New(),
 		Config: suite.conf,
 		UpdateClient: update.NewClient(&update.ClientParams{CheckInterval: 0}),
+		Analytics:    analytics.NewDummyAnalyticsClient(),
 	}
 	expect := make(chan interface{})
 
