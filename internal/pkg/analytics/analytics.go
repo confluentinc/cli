@@ -14,8 +14,8 @@ import (
 )
 
 var (
-	secretFlags = []string{"flag1", "flag2"}
-	secretCommands = map[string][]int{"ccloud api-key store": {1}} // security concern IF there is a change then we could accidentally be sending secret value to segment
+	secretFlags = []string{"placeholder"}
+	secretCommands = map[string][]int{"ccloud api-key store": {1}}
 	SecretValueString = "<secret_value>"
 	malformedCmdEventName = "Malformed Command Error"
 
