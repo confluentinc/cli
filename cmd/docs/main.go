@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	"path"
 
 	"github.com/confluentinc/cli/internal/cmd"
+	"github.com/confluentinc/cli/internal/pkg/analytics"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/doc"
 	"github.com/confluentinc/cli/internal/pkg/log"

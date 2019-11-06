@@ -2,17 +2,17 @@ package analytics_test
 
 import (
 	"fmt"
+	"strconv"
+	"testing"
 
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"strconv"
-	"testing"
 
 	v1 "github.com/confluentinc/ccloudapis/org/v1"
 	"github.com/confluentinc/cli/internal/cmd"
+	"github.com/confluentinc/cli/internal/pkg/analytics"
 	"github.com/confluentinc/cli/internal/pkg/config"
 )
 
