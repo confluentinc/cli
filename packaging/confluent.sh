@@ -47,8 +47,13 @@ check_executable() {
     # optional logging goes here
     true
   else
-    log_crit "executable $EXECUTABLE does not exist.  Make sure this script is up-to-date and file request at https://github.com/${PREFIX}/issues/new"
+    log_crit "executable $EXECUTABLE does not exist.  Make sure this script is up-to-date and resides at bin/confluent in the Confluent Platform release directory."
     exit 1
+  fi
+}
+init_config() {
+  if [[ ! -f "${HOME}/.confluent/config.json" ]] ; then
+    echo '{"disable_update_check": "true"}' > "${HOME}/.confluent/config.json"
   fi
 }
 
@@ -200,6 +205,7 @@ if [[ "$OS" = "windows" ]]; then
 fi
 
 check_executable
+init_config
 
 # call the underlying executable
 ${EXECUTABLE} $@
