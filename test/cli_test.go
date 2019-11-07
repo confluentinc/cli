@@ -13,13 +13,13 @@ import (
 	"path"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"runtime"
 	"sort"
 	"strings"
 	"testing"
 
 	"github.com/confluentinc/mds-sdk-go"
-
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -33,20 +33,27 @@ import (
 	utilv1 "github.com/confluentinc/ccloudapis/util/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 var (
 	//noRebuild = flag.Bool("no-rebuild", false, "skip rebuilding CLI if it already exists")
-	update  = flag.Bool("update", false, "update golden files")
-	debug   = flag.Bool("debug", true, "enable verbose output")
-	testNum = 0
-	cover   bool
+	update           = flag.Bool("update", false, "update golden files")
+	debug            = flag.Bool("debug", true, "enable verbose output")
+	testNum          = 0
+	cover            = false
+	ccloudTestBin    = ccloudTestBinNormal
+	confluentTestBin = confluentTestBinNormal
 )
 
 const (
-	confluentTestBin = "confluent_test"
-	ccloudTestBin    = "ccloud_test"
-	endOfInputDivider = "END_OF_TEST_OUTPUT"
+	confluentTestBinNormal = "confluent_test"
+	ccloudTestBinNormal    = "ccloud_test"
+	ccloudTestBinRace      = "ccloud_test_race"
+	confluentTestBinRace   = "confluent_test_race"
+	endOfInputDivider      = "END_OF_TEST_OUTPUT"
+	tempCoverageFmt        = "temp_coverage%d.out"
+	mergedCoverageFilename = "integ_coverage.txt"
 )
 
 // CLITest represents a test configuration
@@ -86,6 +93,11 @@ func TestCLI(t *testing.T) {
 func init() {
 	collectCoverage := os.Getenv("INTEG_COVER")
 	cover = collectCoverage == "on"
+	ciEnv := os.Getenv("CI")
+	if ciEnv == "on" {
+		ccloudTestBin = ccloudTestBinRace
+		confluentTestBin = confluentTestBinRace
+	}
 }
 
 // SetupSuite builds the CLI binary to test
@@ -95,6 +107,48 @@ func (s *CLITestSuite) SetupSuite() {
 	// dumb but effective
 	err := os.Chdir("..")
 	req.NoError(err)
+}
+
+func (s *CLITestSuite) TearDownSuite() {
+	if !cover {
+		return
+	}
+	// Merge coverage profiles.
+	var mergedProfile string
+	if confluentTestBin == confluentTestBinRace {
+		mergedProfile = "mode: atomic"
+	} else {
+		mergedProfile = "mode: set"
+	}
+	cleanUp := func() {
+		for i := 0; i < testNum; i++ {
+			filename := fmt.Sprintf(tempCoverageFmt, i)
+			err := os.Remove(filename)
+			// Log error but continue.
+			if err != nil {
+				s.T().Log(err)
+			}
+		}
+	}
+	defer cleanUp()
+	for i := 0; i < testNum; i++ {
+		filename := fmt.Sprintf(tempCoverageFmt, i)
+		buf, err := ioutil.ReadFile(filename)
+		if err != nil {
+			s.FailNow(errors.Wrap(err, "error merging coverage profiles").Error())
+		}
+		profile := string(buf)
+		re := regexp.MustCompile(`^mode: (set|count|atomic)`)
+		loc := re.FindStringIndex(profile)
+		if loc == nil {
+			s.FailNow("Coverage mode is missing from coverage profiles")
+		}
+		mergedProfile += profile[loc[1]+1:]
+	}
+	err := ioutil.WriteFile(mergedCoverageFilename, []byte(mergedProfile), 0666)
+	if err != nil {
+		s.FailNow(errors.Wrap(err, "error merging coverage profiles").Error())
+	}
 }
 
 func (s *CLITestSuite) Test_Confluent_Help() {
@@ -386,6 +440,7 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint stri
 	if strings.HasPrefix(tt.name, "error") {
 		tt.wantErrCode = 1
 	}
+
 	s.T().Run(tt.name, func(t *testing.T) {
 		if !tt.workflow {
 			resetConfiguration(t, "ccloud")
@@ -485,14 +540,14 @@ func (s *CLITestSuite) runConfluentTest(tt CLITest, loginURL string) {
 
 func runCommand(t *testing.T, binaryName string, env []string, args string, wantErrCode int) string {
 	if cover {
-		args = fmt.Sprintf("-test.run=TestRunMain -test.coverprofile=cover%d.out %s", testNum, args)
+		args = fmt.Sprintf("-test.run=TestRunMain -test.coverprofile="+tempCoverageFmt+" %s", testNum, args)
 		testNum++
 	} else {
 		args = fmt.Sprintf("-test.run=TestRunMain %s", args)
 	}
-	path := binaryPath(t, binaryName)
-	_, _ = fmt.Println(path, args)
-	cmd := exec.Command(path, strings.Split(args, " ")...)
+	binPath := binaryPath(t, binaryName)
+	_, _ = fmt.Println(binPath, args)
+	cmd := exec.Command(binPath, strings.Split(args, " ")...)
 	cmd.Env = append(os.Environ(), env...)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -553,11 +608,12 @@ func binaryPath(t *testing.T, binaryName string) string {
 }
 
 func parseCommandOutput(output string) string {
-	loc := strings.Index(output, endOfInputDivider)
-	if loc == -1 {
+	divIndex := strings.Index(output, endOfInputDivider)
+	if divIndex == -1 {
 		panic("Integration test divider is missing")
 	}
-	return output[:loc]
+	cmdOutput := output[:divIndex]
+	return cmdOutput
 }
 
 var KEY_STORE = map[int32]*authv1.ApiKey{}

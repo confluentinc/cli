@@ -6,7 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"regexp"
+	"strings"
 	"testing"
 )
 
@@ -24,9 +24,8 @@ func printDivider() {
 func TestRunMain(t *testing.T) {
 	isIntegTest = true
 	parsedArgs := []string{}
-	re := regexp.MustCompile(`^-test\..+`)
 	for _, arg := range os.Args {
-		if !re.MatchString(arg) {
+		if !strings.HasPrefix(arg, "-test.") {
 			parsedArgs = append(parsedArgs, arg)
 		}
 	}

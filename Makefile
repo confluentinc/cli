@@ -98,6 +98,11 @@ build-ccloud:
 build-confluent:
 	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --snapshot --rm-dist -f .goreleaser-confluent$(GORELEASER_SUFFIX)
 
+.PHONY: build-integ-all
+build-integ-all:
+	make build-integ
+	make build-integ-race
+
 .PHONY: build-integ
 build-integ:
 	make build-integ-ccloud
@@ -105,11 +110,32 @@ build-integ:
 
 .PHONY: build-integ-ccloud
 build-integ-ccloud:
-	@GO111MODULE=on go test ./cmd/confluent -ldflags="-s -w -X $(RESOLVED_PATH).cliName=ccloud -X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) -X $(RESOLVED_PATH).version=$(VERSION)" -tags testrunmain -coverpkg=./... -c -o ccloud_test -race
+	GO111MODULE=on go test ./cmd/confluent -ldflags="-s -w -X $(RESOLVED_PATH).cliName=ccloud \
+	-X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) \
+	-X $(RESOLVED_PATH).version=$(VERSION)" -tags testrunmain -coverpkg=./... -c -o ccloud_test
 
 .PHONY: build-integ-confluent
 build-integ-confluent:
-	@GO111MODULE=on go test ./cmd/confluent -ldflags="-s -w -X $(RESOLVED_PATH).cliName=confluent -X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) -X $(RESOLVED_PATH).version=$(VERSION)" -tags testrunmain -coverpkg=./... -c -o confluent_test -race
+	GO111MODULE=on go test ./cmd/confluent -ldflags="-s -w -X $(RESOLVED_PATH).cliName=confluent \
+		    -X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) \
+		    -X $(RESOLVED_PATH).version=$(VERSION)" -tags testrunmain -coverpkg=./... -c -o confluent_test
+
+.PHONY: build-integ-race
+build-integ-race:
+	make build-integ-ccloud-race
+	make build-integ-confluent-race
+
+.PHONY: build-integ-ccloud-race
+build-integ-ccloud-race:
+	GO111MODULE=on go test ./cmd/confluent -ldflags="-s -w -X $(RESOLVED_PATH).cliName=ccloud \
+	-X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) \
+	-X $(RESOLVED_PATH).version=$(VERSION)" -tags testrunmain -coverpkg=./... -c -o ccloud_test_race -race
+
+.PHONY: build-integ-confluent-race
+build-integ-confluent-race:
+	GO111MODULE=on go test ./cmd/confluent -ldflags="-s -w -X $(RESOLVED_PATH).cliName=confluent \
+		    -X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) \
+		    -X $(RESOLVED_PATH).version=$(VERSION)" -tags testrunmain -coverpkg=./... -c -o confluent_test_race -race
 
 .PHONY: bindata
 bindata: internal/cmd/local/bindata.go
@@ -291,10 +317,7 @@ coverage:
 	  fi; \
 	done
 	@# Run integration tests with coverage.
-	@GO111MODULE=on INTEG_COVER=on go test ./... -race -run=TestCLI || { rm cover*.out; exit 1; }
-	@echo "mode: atomic" > integ_coverage.txt
-	@grep -h -v "mode: atomic" cover*.out >> integ_coverage.txt
-	rm cover*.out
+	@GO111MODULE=on INTEG_COVER=on go test -v ./... -run=TestCLI
 	@echo "mode: atomic" > merged_coverage.txt
 	@grep -h -v "mode: atomic" unit_coverage.txt >> merged_coverage.txt
 	@grep -h -v "mode: atomic" integ_coverage.txt >> merged_coverage.txt
@@ -302,7 +325,7 @@ coverage:
 	@# Run unit tests.
 	@GO111MODULE=on go test -race -coverpkg=./... $(TEST_ARGS) $$(go list ./... | grep -v vendor | grep -v test)
 	@# Run integration tests.
-	@GO111MODULE=on go test ./... -run=TestCLI
+	@GO111MODULE=on go test ./... -v -run=TestCLI
       endif
 
 .PHONY: mocks
