@@ -33,7 +33,6 @@ func TestRunMain(t *testing.T) {
 	main()
 	var err error
 	printDivider()
-	//os.Stdout, err = os.Open(os.DevNull)
 	if err != nil {
 		panic(err)
 	}
