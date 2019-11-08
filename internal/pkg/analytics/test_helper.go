@@ -20,5 +20,5 @@ return nil
 }
 
 func NewDummyAnalyticsClient() *Client {
-	return NewAnalyticsClient(&config.Config{}, &MockSegmentClient{})
+	return NewAnalyticsClient(&config.Config{}, "", &MockSegmentClient{})
 }

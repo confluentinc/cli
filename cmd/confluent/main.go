@@ -49,7 +49,7 @@ func main() {
 	version := cliVersion.NewVersion(cfg.CLIName, cfg.Name(), cfg.Support(), version, commit, date, host)
 
 	segmentClient := segment.New(segmentKey)
-	analyticsClient := analytics.NewAnalyticsClient(cfg, segmentClient)
+	analyticsClient := analytics.NewAnalyticsClient(cfg, version.Version, segmentClient)
 
 	cli, err := cmd.NewConfluentCommand(cliName, cfg, version, logger, analyticsClient)
 	if err != nil {

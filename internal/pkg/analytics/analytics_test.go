@@ -33,6 +33,8 @@ var (
 	arg1 = "arg1"
 	arg2 = "arg2"
 	errorMessage = "error message"
+
+	version = "1.1.1.1.1.1"
 )
 
 type AnalyticsTestSuite struct {
@@ -124,7 +126,7 @@ func (suite *AnalyticsTestSuite) TestSuccessWithFlagAndArgs() {
 	l := make([]segment.Message, 0)
 	out := &l
 	mockClient := &analytics.MockSegmentClient{Out: out}
-	analyticsClient := analytics.NewAnalyticsClient(suite.config, mockClient)
+	analyticsClient := analytics.NewAnalyticsClient(suite.config, version, mockClient)
 	cobraCmd := &cobra.Command{
 		Run:    func(cmd *cobra.Command, args []string) {},
 		PreRun: analyticsClient.TrackCommand,
@@ -163,7 +165,7 @@ func (suite *AnalyticsTestSuite) TestLogin() {
 	l := make([]segment.Message, 0)
 	out := &l
 	mockClient := &analytics.MockSegmentClient{Out: out}
-	analyticsClient := analytics.NewAnalyticsClient(suite.config, mockClient)
+	analyticsClient := analytics.NewAnalyticsClient(suite.config, version, mockClient)
 	req := require.New(suite.T())
 
 	suite.setLoginConfig()
@@ -208,7 +210,7 @@ func (suite *AnalyticsTestSuite) TestUserNotLoggedIn() {
 	l := make([]segment.Message, 0)
 	out := &l
 	mockClient := &analytics.MockSegmentClient{Out: out}
-	analyticsClient := analytics.NewAnalyticsClient(suite.config, mockClient)
+	analyticsClient := analytics.NewAnalyticsClient(suite.config, version, mockClient)
 	cobraCmd := &cobra.Command{
 		Run:    func(cmd *cobra.Command, args []string) {},
 		PreRun: analyticsClient.TrackCommand,
@@ -237,7 +239,7 @@ func (suite *AnalyticsTestSuite) TestInternalError() {
 	l := make([]segment.Message, 0)
 	out := &l
 	mockClient := &analytics.MockSegmentClient{Out: out}
-	analyticsClient := analytics.NewAnalyticsClient(suite.config, mockClient)
+	analyticsClient := analytics.NewAnalyticsClient(suite.config, version, mockClient)
 	cobraCmd := &cobra.Command{
 		Use:    "command",
 		RunE:   func(cmd *cobra.Command, args []string) error {
@@ -266,7 +268,7 @@ func (suite *AnalyticsTestSuite) TestMalformedCommand() {
 	l := make([]segment.Message, 0)
 	out := &l
 	mockClient := &analytics.MockSegmentClient{Out: out}
-	analyticsClient := analytics.NewAnalyticsClient(suite.config, mockClient)
+	analyticsClient := analytics.NewAnalyticsClient(suite.config, version, mockClient)
 	rootCmd := &cobra.Command{
 		Use: suite.config.CLIName,
 	}
@@ -299,7 +301,7 @@ func (suite *AnalyticsTestSuite) TestHideSecretForApiStore() {
 	l := make([]segment.Message, 0)
 	out := &l
 	mockClient := &analytics.MockSegmentClient{Out: out}
-	analyticsClient := analytics.NewAnalyticsClient(suite.config, mockClient)
+	analyticsClient := analytics.NewAnalyticsClient(suite.config, version, mockClient)
 	rootCmd := &cobra.Command{
 		Use: "ccloud",
 	}

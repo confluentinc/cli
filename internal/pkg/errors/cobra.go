@@ -20,7 +20,7 @@ var messages = map[error]string{
 	ErrNoKafkaContext: "You must pass --cluster or set an active kafka in your context with 'kafka cluster use'",
 }
 
-var typeMessages = map[reflect.Type]string{
+var TypeMessages = map[reflect.Type]string{
 	reflect.TypeOf(&ccloud.InvalidLoginError{}): "You have entered an incorrect username or password. Please try again.",
 	reflect.TypeOf(&ccloud.ExpiredTokenError{}): "Your session has expired. Please login again.",
 	reflect.TypeOf(&ccloud.InvalidTokenError{}): "Your auth token has been corrupted. Please login again.",
@@ -53,7 +53,7 @@ func HandleCommon(err error, cmd *cobra.Command) error {
 		cmd.SilenceUsage = true
 		return fmt.Errorf(msg)
 	}
-	if msg, ok := typeMessages[reflect.TypeOf(err)]; ok {
+	if msg, ok := TypeMessages[reflect.TypeOf(err)]; ok {
 		cmd.SilenceUsage = true
 		return fmt.Errorf(msg)
 	}
