@@ -44,6 +44,7 @@ var (
 	cover            = false
 	ccloudTestBin    = ccloudTestBinNormal
 	confluentTestBin = confluentTestBinNormal
+	tmpArgsFile      *os.File
 )
 
 const (
@@ -52,7 +53,7 @@ const (
 	ccloudTestBinRace      = "ccloud_test_race"
 	confluentTestBinRace   = "confluent_test_race"
 	endOfInputDivider      = "END_OF_TEST_OUTPUT"
-	tempCoverageFmt        = "temp_coverage%d.out"
+	tmpCoverageFmt         = "temp_coverage%d.out"
 	mergedCoverageFilename = "integ_coverage.txt"
 )
 
@@ -98,6 +99,11 @@ func init() {
 		ccloudTestBin = ccloudTestBinRace
 		confluentTestBin = confluentTestBinRace
 	}
+	var err error
+	tmpArgsFile, err = ioutil.TempFile("", "integ_args")
+	if err != nil {
+		panic(errors.Wrap(err, "could not create temporary args file"))
+	}
 }
 
 // SetupSuite builds the CLI binary to test
@@ -122,7 +128,7 @@ func (s *CLITestSuite) TearDownSuite() {
 	}
 	cleanUp := func() {
 		for i := 0; i < testNum; i++ {
-			filename := fmt.Sprintf(tempCoverageFmt, i)
+			filename := fmt.Sprintf(tmpCoverageFmt, i)
 			err := os.Remove(filename)
 			// Log error but continue.
 			if err != nil {
@@ -132,7 +138,7 @@ func (s *CLITestSuite) TearDownSuite() {
 	}
 	defer cleanUp()
 	for i := 0; i < testNum; i++ {
-		filename := fmt.Sprintf(tempCoverageFmt, i)
+		filename := fmt.Sprintf(tmpCoverageFmt, i)
 		buf, err := ioutil.ReadFile(filename)
 		if err != nil {
 			s.FailNow(errors.Wrap(err, "error merging coverage profiles").Error())
@@ -538,12 +544,33 @@ func (s *CLITestSuite) runConfluentTest(tt CLITest, loginURL string) {
 	})
 }
 
+func writeArgs(args string) error {
+	err := tmpArgsFile.Truncate(0)
+	if err != nil {
+		return err
+	}
+	_, err = tmpArgsFile.Seek(0, 0)
+	if err != nil {
+		return err
+	}
+	args = strings.ReplaceAll(args, " ", "\n")
+	_, err = tmpArgsFile.WriteAt([]byte(args), 0)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func runCommand(t *testing.T, binaryName string, env []string, args string, wantErrCode int) string {
+	err := writeArgs(args)
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "error writing to args file"))
+	}
 	if cover {
-		args = fmt.Sprintf("-test.run=TestRunMain -test.coverprofile="+tempCoverageFmt+" %s", testNum, args)
+		args = fmt.Sprintf("-test.run=TestRunMain -test.coverprofile="+tmpCoverageFmt+" -args-file=%s", testNum, tmpArgsFile.Name())
 		testNum++
 	} else {
-		args = fmt.Sprintf("-test.run=TestRunMain %s", args)
+		args = fmt.Sprintf("-test.run=TestRunMain -args-file=%s", tmpArgsFile.Name())
 	}
 	binPath := binaryPath(t, binaryName)
 	_, _ = fmt.Println(binPath, args)
