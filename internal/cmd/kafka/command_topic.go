@@ -9,14 +9,12 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-
-	"github.com/Shopify/sarama"
 	"github.com/spf13/cobra"
+	ckafka "github.com/confluentinc/confluent-kafka-go-dev/kafka"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	"github.com/confluentinc/go-printer"
-
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -362,8 +360,7 @@ func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {
 
 	pcmd.Println(cmd, "Starting Kafka Producer. ^C or ^D to exit")
 
-	InitSarama(c.logger)
-	producer, err := NewSaramaProducer(cluster, c.clientID)
+	producer, err := NewProducer(cluster, c.clientID)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -401,29 +398,36 @@ func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {
 	// Prime reader
 	scan()
 
-	var key sarama.Encoder
+	var key, value string
 	for data := range input {
 		data = strings.TrimSpace(data)
 
 		record := strings.SplitN(data, delim, 2)
-		value := sarama.StringEncoder(record[len(record)-1])
+		value = record[len(record)-1]
 		if len(record) == 2 {
-			key = sarama.StringEncoder(record[0])
+			key = record[0]
 		}
-		msg := &sarama.ProducerMessage{Topic: topic, Key: key, Value: value}
-		_, offset, err := producer.SendMessage(msg)
+		msg := &ckafka.Message{
+			TopicPartition: ckafka.TopicPartition{Topic: &topic},
+			Key:            []byte(key),
+			Value:          []byte(value),
+		}
+		//msg := &sarama.ProducerMessage{Topic: topic, Key: key, Value: value}
+		err := producer.Produce(msg, nil)
 		if err != nil {
-			pcmd.Printf(cmd, "Failed to produce offset %d: %s\n", offset, err)
+			pcmd.Printf(cmd, "Failed to produce: %s\n", err)
 		}
-
-		// Reset key prior to reuse
-		key = nil
+		//if err != nil {
+		//	pcmd.Printf(cmd, "Failed to produce offset %d: %s\n", offset, err)
+		//}
+		key = ""
 		go scan()
 	}
 	if scanErr != nil {
 		return errors.HandleCommon(scanErr, cmd)
 	}
-	return errors.HandleCommon(producer.Close(), cmd)
+	producer.Close()
+	return nil
 }
 
 func (c *topicCommand) consume(cmd *cobra.Command, args []string) error {
@@ -442,32 +446,45 @@ func (c *topicCommand) consume(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-
-	InitSarama(c.logger)
-	consumer, err := NewSaramaConsumer(group, cluster, c.clientID, beginning)
+	consumer, err := NewConsumer(group, cluster, c.clientID, beginning)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	// Trap SIGINT to trigger a shutdown.
-	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, os.Interrupt)
-	go func() {
-		<-signals
-		pcmd.Println(cmd, "Stopping Consumer.")
-		consumer.Close()
-	}()
-
-	go func() {
-		for err := range consumer.Errors() {
-			pcmd.Println(cmd, "ERROR", err)
-		}
-	}()
-
 	pcmd.Println(cmd, "Starting Kafka Consumer. ^C to exit")
 
-	err = consumer.Consume(context.Background(), []string{topic}, &GroupHandler{Out: cmd.OutOrStdout()})
+	err = consumer.Subscribe(topic, nil)
 
+	run := true
+	sigchan := make(chan os.Signal, 1)
+
+	for run == true {
+		select {
+		case sig := <-sigchan:
+			fmt.Printf("Caught signal %v: terminating\n", sig)
+			run = false
+		default:
+			ev := consumer.Poll(100)
+			if ev == nil {
+				continue
+			}
+
+			switch e := ev.(type) {
+			case *ckafka.Message:
+				fmt.Println(string(e.Value))
+				if e.Headers != nil {
+					fmt.Printf("%% Headers: %v\n", e.Headers)
+				}
+			case ckafka.Error:
+				fmt.Fprintf(os.Stderr, "%% Error: %v: %v\n", e.Code(), e)
+				if e.Code() == ckafka.ErrAllBrokersDown {
+					run = false
+				}
+			//default:
+			//	fmt.Printf("Ignored %v\n", e)
+			}
+		}
+	}
 	return errors.HandleCommon(err, cmd)
 }
 
