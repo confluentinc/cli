@@ -9,11 +9,9 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"os/exec"
 	"path"
 	"path/filepath"
 	"reflect"
-	"regexp"
 	"runtime"
 	"sort"
 	"strings"
@@ -33,18 +31,17 @@ import (
 	utilv1 "github.com/confluentinc/ccloudapis/util/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/test-integ"
 )
 
 var (
 	//noRebuild = flag.Bool("no-rebuild", false, "skip rebuilding CLI if it already exists")
 	update           = flag.Bool("update", false, "update golden files")
 	debug            = flag.Bool("debug", true, "enable verbose output")
-	testNum          = 0
 	cover            = false
 	ccloudTestBin    = ccloudTestBinNormal
 	confluentTestBin = confluentTestBinNormal
-	tmpArgsFile      *os.File
+	covCollector     *test_integ.CoverageCollector
 )
 
 const (
@@ -52,8 +49,6 @@ const (
 	ccloudTestBinNormal    = "ccloud_test"
 	ccloudTestBinRace      = "ccloud_test_race"
 	confluentTestBinRace   = "confluent_test_race"
-	endOfInputDivider      = "END_OF_TEST_OUTPUT"
-	tmpCoverageFmt         = "temp_coverage%d.out"
 	mergedCoverageFilename = "integ_coverage.txt"
 )
 
@@ -99,15 +94,16 @@ func init() {
 		ccloudTestBin = ccloudTestBinRace
 		confluentTestBin = confluentTestBinRace
 	}
-	var err error
-	tmpArgsFile, err = ioutil.TempFile("", "integ_args")
-	if err != nil {
-		panic(errors.Wrap(err, "could not create temporary args file"))
-	}
 }
 
 // SetupSuite builds the CLI binary to test
 func (s *CLITestSuite) SetupSuite() {
+	covCollector = &test_integ.CoverageCollector{
+		T:                      s.T(),
+		MergedCoverageFilename: mergedCoverageFilename,
+	}
+	covCollector.MergedCoverageFilename = mergedCoverageFilename
+	covCollector.Setup()
 	req := require.New(s.T())
 
 	// dumb but effective
@@ -116,45 +112,16 @@ func (s *CLITestSuite) SetupSuite() {
 }
 
 func (s *CLITestSuite) TearDownSuite() {
-	if !cover {
-		return
-	}
 	// Merge coverage profiles.
-	var mergedProfile string
-	if confluentTestBin == confluentTestBinRace {
-		mergedProfile = "mode: atomic"
-	} else {
-		mergedProfile = "mode: set"
-	}
-	cleanUp := func() {
-		for i := 0; i < testNum; i++ {
-			filename := fmt.Sprintf(tmpCoverageFmt, i)
-			err := os.Remove(filename)
-			// Log error but continue.
-			if err != nil {
-				s.T().Log(err)
-			}
+	var header string
+	if cover {
+		if confluentTestBin == confluentTestBinRace {
+			header = "mode: atomic"
+		} else {
+			header = "mode: set"
 		}
 	}
-	defer cleanUp()
-	for i := 0; i < testNum; i++ {
-		filename := fmt.Sprintf(tmpCoverageFmt, i)
-		buf, err := ioutil.ReadFile(filename)
-		if err != nil {
-			s.FailNow(errors.Wrap(err, "error merging coverage profiles").Error())
-		}
-		profile := string(buf)
-		re := regexp.MustCompile(`^mode: (set|count|atomic)`)
-		loc := re.FindStringIndex(profile)
-		if loc == nil {
-			s.FailNow("Coverage mode is missing from coverage profiles")
-		}
-		mergedProfile += profile[loc[1]+1:]
-	}
-	err := ioutil.WriteFile(mergedCoverageFilename, []byte(mergedProfile), 0666)
-	if err != nil {
-		s.FailNow(errors.Wrap(err, "error merging coverage profiles").Error())
-	}
+	covCollector.TearDown(header)
 }
 
 func (s *CLITestSuite) Test_Confluent_Help() {
@@ -544,55 +511,8 @@ func (s *CLITestSuite) runConfluentTest(tt CLITest, loginURL string) {
 	})
 }
 
-func writeArgs(args string) error {
-	err := tmpArgsFile.Truncate(0)
-	if err != nil {
-		return err
-	}
-	_, err = tmpArgsFile.Seek(0, 0)
-	if err != nil {
-		return err
-	}
-	args = strings.ReplaceAll(args, " ", "\n")
-	_, err = tmpArgsFile.WriteAt([]byte(args), 0)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func runCommand(t *testing.T, binaryName string, env []string, args string, wantErrCode int) string {
-	err := writeArgs(args)
-	if err != nil {
-		t.Fatal(errors.Wrap(err, "error writing to args file"))
-	}
-	if cover {
-		args = fmt.Sprintf("-test.run=TestRunMain -test.coverprofile="+tmpCoverageFmt+" -args-file=%s", testNum, tmpArgsFile.Name())
-		testNum++
-	} else {
-		args = fmt.Sprintf("-test.run=TestRunMain -args-file=%s", tmpArgsFile.Name())
-	}
-	binPath := binaryPath(t, binaryName)
-	_, _ = fmt.Println(binPath, args)
-	cmd := exec.Command(binPath, strings.Split(args, " ")...)
-	cmd.Env = append(os.Environ(), env...)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		// This exit code testing requires 1.12 - https://stackoverflow.com/a/55055100/337735
-		if exitError, ok := err.(*exec.ExitError); ok {
-			if wantErrCode == 0 {
-				require.Failf(t, "unexpected error",
-					"exit %d: %s\n%s", exitError.ExitCode(), args, string(output))
-			} else {
-				require.Equal(t, wantErrCode, exitError.ExitCode())
-			}
-		} else {
-			require.Failf(t, "unexpected error", "command returned err: %s", err)
-		}
-	} else {
-		require.Equal(t, wantErrCode, 0)
-	}
-	return parseCommandOutput(string(output))
+	return covCollector.RunCommand(t, binaryPath(t, binaryName), env, args, wantErrCode, cover)
 }
 
 func resetConfiguration(t *testing.T, cliName string) {
@@ -632,15 +552,6 @@ func binaryPath(t *testing.T, binaryName string) string {
 	dir, err := os.Getwd()
 	require.NoError(t, err)
 	return path.Join(dir, binaryName)
-}
-
-func parseCommandOutput(output string) string {
-	divIndex := strings.Index(output, endOfInputDivider)
-	if divIndex == -1 {
-		panic("Integration test divider is missing")
-	}
-	cmdOutput := output[:divIndex]
-	return cmdOutput
 }
 
 var KEY_STORE = map[int32]*authv1.ApiKey{}

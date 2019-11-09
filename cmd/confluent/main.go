@@ -11,6 +11,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/metric"
+	"github.com/confluentinc/cli/internal/pkg/test-integ"
 	cliVersion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -21,7 +22,6 @@ var (
 	date        = ""
 	host        = ""
 	cliName     = "confluent"
-	exitCode    = 0
 	isIntegTest = false
 )
 
@@ -58,7 +58,7 @@ func main() {
 		if !isIntegTest {
 			os.Exit(1)
 		} else {
-			exitCode = 1
+			test_integ.ExitCode = 1
 		}
 	}
 }
