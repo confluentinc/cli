@@ -19,7 +19,7 @@ const (
 	count             = "count"
 	atomic            = "atomic"
 	tmpArgsFilePrefix = "integ_args"
-	tmpCoverageFmt    = "temp_coverage"
+	tmpCoveragePrefix = "temp_coverage"
 )
 
 type CoverageCollector struct {
@@ -65,7 +65,7 @@ func (c *CoverageCollector) RunCommand(t *testing.T, binPath string, env []strin
 	c.writeArgs(t, args)
 	// TODO: Make "TestRunMain" dynamic.
 	if cover {
-		f, err := ioutil.TempFile("", tmpCoverageFmt)
+		f, err := ioutil.TempFile("", tmpCoveragePrefix)
 		require.NoError(t, err)
 		c.tmpCoverageFilenames = append(c.tmpCoverageFilenames, f.Name())
 		args = fmt.Sprintf("-test.run=TestRunMain -test.coverprofile=%s -args-file=%s", f.Name(), c.tmpArgsFile.Name())
