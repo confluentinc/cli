@@ -102,7 +102,6 @@ func (s *CLITestSuite) SetupSuite() {
 		T:                      s.T(),
 		MergedCoverageFilename: mergedCoverageFilename,
 	}
-	covCollector.MergedCoverageFilename = mergedCoverageFilename
 	covCollector.Setup()
 	req := require.New(s.T())
 
@@ -113,15 +112,7 @@ func (s *CLITestSuite) SetupSuite() {
 
 func (s *CLITestSuite) TearDownSuite() {
 	// Merge coverage profiles.
-	var header string
-	if cover {
-		if confluentTestBin == confluentTestBinRace {
-			header = "mode: atomic"
-		} else {
-			header = "mode: set"
-		}
-	}
-	covCollector.TearDown(header)
+	covCollector.TearDown()
 }
 
 func (s *CLITestSuite) Test_Confluent_Help() {

@@ -55,14 +55,22 @@ func RunTest(t *testing.T, f func()) {
 	}
 	if len(argsFilename) > 0 {
 		customArgs, err := parseCustomArgs()
-		parsedArgs = append(parsedArgs, customArgs...)
 		if err != nil {
 			t.Fatal(err)
 		}
+		parsedArgs = append(parsedArgs, customArgs...)
 	}
+	// Capture stdout. Then format into json?:
+	// {output: "blah", "coverMode": "set"}<divider><testOutput>
+	// OR output <output><divider><coverMode><testOutput>.
 	os.Args = parsedArgs
 	f()
 	printDivider()
+	coverMode := testing.CoverMode()
+	if coverMode == "" {
+		coverMode = "none"
+	}
+	fmt.Println(coverMode)
 	if ExitCode == 1 {
 		t.FailNow()
 	}

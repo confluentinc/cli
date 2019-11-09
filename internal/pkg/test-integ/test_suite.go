@@ -15,50 +15,45 @@ import (
 )
 
 const (
-	tmpCoverageFmt = "temp_coverage%d.out"
+	set               = "set"
+	count             = "count"
+	atomic            = "atomic"
+	tmpArgsFilePrefix = "integ_args"
+	tmpCoverageFmt    = "temp_coverage"
 )
 
 type CoverageCollector struct {
 	T                      *testing.T
+	MergedCoverageFilename string
 	testNum                int
 	tmpArgsFile            *os.File
-	MergedCoverageFilename string
+	coverMode              string
+	tmpCoverageFilenames   []string
 }
 
 func (c *CoverageCollector) Setup() {
 	var err error
-	c.tmpArgsFile, err = ioutil.TempFile("", "integ_args")
+	c.tmpArgsFile, err = ioutil.TempFile("", tmpArgsFilePrefix)
 	require.NoError(c.T, errors.Wrap(err, "could not create temporary args file"))
 	require.NotEmpty(c.T, c.MergedCoverageFilename, "must specify merged coverage profile filename")
 }
 
-func (c *CoverageCollector) TearDown(header string) {
+func (c *CoverageCollector) TearDown() {
 	if c.testNum == 0 {
 		return
 	}
 	// Merge coverage profiles.
+	header := fmt.Sprintf("mode: %s", c.coverMode)
 	mergedProfile := header
-	cleanUp := func() {
-		for i := 0; i < c.testNum; i++ {
-			filename := fmt.Sprintf(tmpCoverageFmt, i)
-			err := os.Remove(filename)
-			// Log error but continue.
-			if err != nil {
-				c.T.Log(err)
-			}
-		}
-	}
-	defer cleanUp()
-	for i := 0; i < c.testNum; i++ {
-		filename := fmt.Sprintf(tmpCoverageFmt, i)
+	for _, filename := range c.tmpCoverageFilenames {
 		buf, err := ioutil.ReadFile(filename)
-		require.NoError(c.T, errors.Wrap(err, "error merging coverage profiles"))
+		require.NoError(c.T, errors.Wrap(err, "error reading temp coverage profiles"))
 		profile := string(buf)
 		pattern := fmt.Sprintf("^%s", header)
 		re := regexp.MustCompile(pattern)
 		loc := re.FindStringIndex(profile)
 		if loc == nil {
-			c.T.Fatal("Coverage mode is missing from coverage profiles")
+			c.T.Fatal("coverage mode is missing from coverage profiles")
 		}
 		mergedProfile += profile[loc[1]+1:]
 	}
@@ -68,9 +63,12 @@ func (c *CoverageCollector) TearDown(header string) {
 
 func (c *CoverageCollector) RunCommand(t *testing.T, binPath string, env []string, args string, wantErrCode int, cover bool) string {
 	c.writeArgs(t, args)
+	// TODO: Make "TestRunMain" dynamic.
 	if cover {
-		args = fmt.Sprintf("-test.run=TestRunMain -test.coverprofile="+tmpCoverageFmt+" -args-file=%s", c.testNum, c.tmpArgsFile.Name())
-		c.testNum++
+		f, err := ioutil.TempFile("", tmpCoverageFmt)
+		require.NoError(t, err)
+		c.tmpCoverageFilenames = append(c.tmpCoverageFilenames, f.Name())
+		args = fmt.Sprintf("-test.run=TestRunMain -test.coverprofile=%s -args-file=%s", f.Name(), c.tmpArgsFile.Name())
 	} else {
 		args = fmt.Sprintf("-test.run=TestRunMain -args-file=%s", c.tmpArgsFile.Name())
 	}
@@ -79,7 +77,7 @@ func (c *CoverageCollector) RunCommand(t *testing.T, binPath string, env []strin
 	cmd.Env = append(os.Environ(), env...)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		// This exit code testing requires 1.12 - https://stackoverflow.com/a/55055100/337735
+		// This exit code testing requires 1.12 - https://stackoverflow.com/a/55055100/337735.
 		if exitError, ok := err.(*exec.ExitError); ok {
 			if wantErrCode == 0 {
 				require.Failf(t, "unexpected error",
@@ -93,7 +91,20 @@ func (c *CoverageCollector) RunCommand(t *testing.T, binPath string, env []strin
 	} else {
 		require.Equal(t, wantErrCode, 0)
 	}
-	return parseCommandOutput(string(output))
+	cmdOutput, coverMode := parseCommandOutput(string(output))
+	if cover {
+		if c.coverMode == "" {
+			c.coverMode = coverMode
+		}
+		require.NotEmpty(t, c.coverMode)
+		// https://github.com/wadey/gocovmerge/blob/b5bfa59ec0adc420475f97f89b58045c721d761c/gocovmerge.go#L18	
+		require.Equal(t, c.coverMode, coverMode, "cannot merge profiles with different modes")
+		if c.coverMode != set && c.coverMode != count && c.coverMode != atomic {
+			require.FailNow(c.T, "cover mode must be set, count, or atomic")
+		}
+		c.testNum++
+	}
+	return cmdOutput
 }
 
 func (c *CoverageCollector) writeArgs(t *testing.T, args string) {
@@ -106,11 +117,15 @@ func (c *CoverageCollector) writeArgs(t *testing.T, args string) {
 	require.NoError(t, err)
 }
 
-func parseCommandOutput(output string) string {
+func parseCommandOutput(output string) (cmdOutput string, coverMode string) {
 	divIndex := strings.Index(output, endOfInputDivider)
 	if divIndex == -1 {
 		panic("Integration test divider is missing")
 	}
-	cmdOutput := output[:divIndex]
-	return cmdOutput
+	cmdOutput = output[:divIndex]
+	tail := output[divIndex+len(endOfInputDivider):]
+	// Trim extra newline after cmd output.
+	tail = strings.TrimPrefix(tail, "\n")
+	coverMode = tail[:strings.Index(tail, "\n")]
+	return cmdOutput, coverMode
 }
