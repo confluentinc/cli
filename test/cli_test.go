@@ -99,7 +99,6 @@ func init() {
 // SetupSuite builds the CLI binary to test
 func (s *CLITestSuite) SetupSuite() {
 	covCollector = &test_integ.CoverageCollector{
-		T:                      s.T(),
 		MergedCoverageFilename: mergedCoverageFilename,
 	}
 	covCollector.Setup()
@@ -503,7 +502,15 @@ func (s *CLITestSuite) runConfluentTest(tt CLITest, loginURL string) {
 }
 
 func runCommand(t *testing.T, binaryName string, env []string, args string, wantErrCode int) string {
-	return covCollector.RunCommand(t, binaryPath(t, binaryName), env, args, wantErrCode, cover)
+	//return covCollector.RunCommand(t, binaryPath(t, binaryName), "TestRunMain", env, args, wantErrCode, cover)
+	output, exitCode, err := covCollector.RunCommand(binaryPath(t, binaryName), "TestRunMain", env, args, cover)
+	if err != nil && wantErrCode == 0 {
+		// This exit code testing requires 1.12 - https://stackoverflow.com/a/55055100/337735.
+		require.Failf(t, "unexpected error",
+			"exit %d: %s\n%s", exitCode, args, output)
+	}
+	require.Equal(t, wantErrCode, exitCode)
+	return output
 }
 
 func resetConfiguration(t *testing.T, cliName string) {

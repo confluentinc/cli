@@ -7,6 +7,8 @@ import (
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/bouk/monkey"
 )
 
 var (
@@ -39,14 +41,23 @@ func parseCustomArgs() ([]string, error) {
 }
 
 func printDivider() {
-	fmt.Println("END_OF_TEST_OUTPUT")
+	fmt.Println(endOfInputDivider)
 }
 
-var (
-	ExitCode int
-)
+func printCoverMode() {
+	coverMode := testing.CoverMode()
+	if coverMode == "" {
+		coverMode = "none"
+	}
+	fmt.Println(coverMode)
+}
 
 func RunTest(t *testing.T, f func()) {
+	exitTest := func(code int) {
+		t.Fail()
+	}
+	guard := monkey.Patch(os.Exit, exitTest)
+	defer guard.Unpatch()
 	var parsedArgs []string
 	for _, arg := range os.Args {
 		if !strings.HasPrefix(arg, "-test.") && !strings.HasPrefix(arg, "-args-file") {
@@ -66,12 +77,5 @@ func RunTest(t *testing.T, f func()) {
 	os.Args = parsedArgs
 	f()
 	printDivider()
-	coverMode := testing.CoverMode()
-	if coverMode == "" {
-		coverMode = "none"
-	}
-	fmt.Println(coverMode)
-	if ExitCode == 1 {
-		t.FailNow()
-	}
+	printCoverMode()
 }

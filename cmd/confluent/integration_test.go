@@ -9,6 +9,5 @@ import (
 )
 
 func TestRunMain(t *testing.T) {
-	isIntegTest = true
 	test_integ.RunTest(t, main)
 }

@@ -11,18 +11,16 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/metric"
-	"github.com/confluentinc/cli/internal/pkg/test-integ"
 	cliVersion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 var (
 	// Injected from linker flags like `go build -ldflags "-X main.version=$VERSION" -X ...`
-	version     = "v0.0.0"
-	commit      = ""
-	date        = ""
-	host        = ""
-	cliName     = "confluent"
-	isIntegTest = false
+	version = "v0.0.0"
+	commit  = ""
+	date    = ""
+	host    = ""
+	cliName = "confluent"
 )
 
 func main() {
@@ -55,10 +53,6 @@ func main() {
 	}
 	err = cli.Execute()
 	if err != nil {
-		if !isIntegTest {
-			os.Exit(1)
-		} else {
-			test_integ.ExitCode = 1
-		}
+		os.Exit(1)
 	}
 }
