@@ -414,7 +414,10 @@ func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {
 			Key:            []byte(key),
 			Value:          []byte(value),
 		}
-		_ = producer.Produce(msg, deliveryChan)
+		err := producer.Produce(msg, deliveryChan)
+		if err != nil {
+			fmt.Printf("Produce failture: %s\n", err)
+		}
 		e := <-deliveryChan
 		m := e.(*ckafka.Message)
 		if m.TopicPartition.Error != nil {
