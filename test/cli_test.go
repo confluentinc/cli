@@ -444,7 +444,7 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint stri
 			writeFixture(t, tt.fixture, output)
 		}
 
-		actual := string(output)
+		actual := output
 		expected := loadFixture(t, tt.fixture)
 
 		if tt.args == "version" {
@@ -487,7 +487,7 @@ func (s *CLITestSuite) runConfluentTest(tt CLITest, loginURL string) {
 			writeFixture(t, tt.fixture, output)
 		}
 
-		actual := string(output)
+		actual := output
 		expected := loadFixture(t, tt.fixture)
 
 		if tt.args == "version" {
@@ -505,7 +505,6 @@ func runCommand(t *testing.T, binaryName string, env []string, args string, want
 	//return covCollector.RunCommand(t, binaryPath(t, binaryName), "TestRunMain", env, args, wantErrCode, cover)
 	output, exitCode, err := covCollector.RunCommand(binaryPath(t, binaryName), "TestRunMain", env, args, cover)
 	if err != nil && wantErrCode == 0 {
-		// This exit code testing requires 1.12 - https://stackoverflow.com/a/55055100/337735.
 		require.Failf(t, "unexpected error",
 			"exit %d: %s\n%s", exitCode, args, output)
 	}
@@ -533,7 +532,6 @@ func loadFixture(t *testing.T, fixture string) string {
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	return string(content)
 }
 
