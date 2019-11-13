@@ -879,6 +879,7 @@ config_service() {
         if [ -f "$REST_EXTENSION_JAR"]; then
           export CLASSPATH=${confluent_home}/share/java/kafka-connect-replicator/replicator-rest-extension-5.4.0-SNAPSHOT.jar
           printf '\n%s\n' 'rest.extension.classes=io.confluent.connect.replicator.monitoring.ReplicatorMonitoringExtension' >> "${service_dir}/${service}.properties"
+        fi
     fi
 
     # Set ksql-server data dir. TODO: refactor when config_service supports general handling of key-value pairs
