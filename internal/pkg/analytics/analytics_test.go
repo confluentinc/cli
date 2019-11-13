@@ -2,8 +2,10 @@ package analytics_test
 
 import (
 	"fmt"
+	"github.com/jonboulle/clockwork"
 	"strconv"
 	"testing"
+	"time"
 
 	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/cobra"
@@ -18,23 +20,25 @@ import (
 
 var (
 	userNameContext = "login-tester@confluent.io"
-	userNameCred = "username-tester@confluent.io"
-	apiKeyContext = "api-key-context"
-	apiKeyCred = "api-key-ABCD1234"
-	apiKey = "ABCD1234"
-	apiSecret = "abcdABCD"
-	userId = int32(123)
-	organizationId = int32(321)
-	userEmail = "tester@confluent.io"
+	userNameCred    = "username-tester@confluent.io"
+	apiKeyContext   = "api-key-context"
+	apiKeyCred      = "api-key-ABCD1234"
+	apiKey          = "ABCD1234"
+	apiSecret       = "abcdABCD"
+	userId          = int32(123)
+	organizationId  = int32(321)
+	userEmail       = "tester@confluent.io"
 
 	ccloudCliName = "ccloud"
-	flagName = "flag"
-	flagArg = "flagArg"
-	arg1 = "arg1"
-	arg2 = "arg2"
-	errorMessage = "error message"
+	flagName      = "flag"
+	flagArg       = "flagArg"
+	arg1          = "arg1"
+	arg2          = "arg2"
+	errorMessage  = "error message"
 
 	version = "1.1.1.1.1.1"
+
+	testTime = time.Date(1999, time.December, 31, 23, 59, 59, 0, time.UTC)
 )
 
 type AnalyticsTestSuite struct {
@@ -66,7 +70,7 @@ func (suite *AnalyticsTestSuite) createAuth() {
 		OrganizationId: organizationId,
 	}
 	auth := &config.AuthConfig{
-		User: user,
+		User:    user,
 		Account: account,
 	}
 	suite.auth = auth
@@ -75,8 +79,8 @@ func (suite *AnalyticsTestSuite) createAuth() {
 func (suite *AnalyticsTestSuite) createContexts() {
 	contexts := make(map[string]*config.Context)
 	apiContext := config.Context{
-		Name:                   apiKeyContext,
-		Credential:             apiKeyCred,
+		Name:       apiKeyContext,
+		Credential: apiKeyCred,
 	}
 	userContext := config.Context{
 		Name:       userNameContext,
@@ -90,15 +94,15 @@ func (suite *AnalyticsTestSuite) createContexts() {
 func (suite *AnalyticsTestSuite) createCredentials() {
 	credentials := make(map[string]*config.Credential)
 	apiCred := config.Credential{
-		APIKeyPair:     &config.APIKeyPair{
+		APIKeyPair: &config.APIKeyPair{
 			Key:    apiKey,
 			Secret: apiSecret,
 		},
-		CredentialType: 1,
+		CredentialType: config.APIKey,
 	}
 	userCred := config.Credential{
 		Username:       "tester@confluent.io",
-		CredentialType: 0,
+		CredentialType: config.Username,
 	}
 	credentials[apiKeyCred] = &apiCred
 	credentials[userNameCred] = &userCred
@@ -125,8 +129,7 @@ func (suite *AnalyticsTestSuite) TestSuccessWithFlagAndArgs() {
 	req := require.New(suite.T())
 	l := make([]segment.Message, 0)
 	out := &l
-	mockClient := &analytics.MockSegmentClient{Out: out}
-	analyticsClient := analytics.NewAnalyticsClient(suite.config, version, mockClient)
+	analyticsClient := suite.getAnalyticsClient(out)
 	cobraCmd := &cobra.Command{
 		Run:    func(cmd *cobra.Command, args []string) {},
 		PreRun: analyticsClient.TrackCommand,
@@ -138,7 +141,7 @@ func (suite *AnalyticsTestSuite) TestSuccessWithFlagAndArgs() {
 		Analytics: analyticsClient,
 	}
 	err := command.Execute()
-	req.Nil(err)
+	req.NoError(err)
 	req.Equal(1, len(*out))
 	page, ok := (*out)[0].(segment.Page)
 	req.True(ok)
@@ -164,8 +167,7 @@ func (suite *AnalyticsTestSuite) TestSuccessWithFlagAndArgs() {
 func (suite *AnalyticsTestSuite) TestLogin() {
 	l := make([]segment.Message, 0)
 	out := &l
-	mockClient := &analytics.MockSegmentClient{Out: out}
-	analyticsClient := analytics.NewAnalyticsClient(suite.config, version, mockClient)
+	analyticsClient := suite.getAnalyticsClient(out)
 	req := require.New(suite.T())
 
 	suite.setLoginConfig()
@@ -184,9 +186,9 @@ func (suite *AnalyticsTestSuite) TestLogin() {
 	}
 	rootCmd.SetArgs([]string{"login"})
 	err := command.Execute()
-	req.Nil(err)
+	req.NoError(err)
 	req.Equal(2, len(*out))
-	for _,msg := range *out {
+	for _, msg := range *out {
 		switch msg.(type) {
 		case segment.Page:
 			page, ok := msg.(segment.Page)
@@ -209,8 +211,7 @@ func (suite *AnalyticsTestSuite) TestUserNotLoggedIn() {
 	req := require.New(suite.T())
 	l := make([]segment.Message, 0)
 	out := &l
-	mockClient := &analytics.MockSegmentClient{Out: out}
-	analyticsClient := analytics.NewAnalyticsClient(suite.config, version, mockClient)
+	analyticsClient := suite.getAnalyticsClient(out)
 	cobraCmd := &cobra.Command{
 		Run:    func(cmd *cobra.Command, args []string) {},
 		PreRun: analyticsClient.TrackCommand,
@@ -220,7 +221,7 @@ func (suite *AnalyticsTestSuite) TestUserNotLoggedIn() {
 		Analytics: analyticsClient,
 	}
 	err := command.Execute()
-	req.Nil(err)
+	req.NoError(err)
 
 	req.Equal(1, len(*out))
 	page, ok := (*out)[0].(segment.Page)
@@ -238,11 +239,10 @@ func (suite *AnalyticsTestSuite) TestInternalError() {
 	req := require.New(suite.T())
 	l := make([]segment.Message, 0)
 	out := &l
-	mockClient := &analytics.MockSegmentClient{Out: out}
-	analyticsClient := analytics.NewAnalyticsClient(suite.config, version, mockClient)
+	analyticsClient := suite.getAnalyticsClient(out)
 	cobraCmd := &cobra.Command{
-		Use:    "command",
-		RunE:   func(cmd *cobra.Command, args []string) error {
+		Use: "command",
+		RunE: func(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf(errorMessage)
 		},
 		PreRun: analyticsClient.TrackCommand,
@@ -267,8 +267,7 @@ func (suite *AnalyticsTestSuite) TestMalformedCommand() {
 	req := require.New(suite.T())
 	l := make([]segment.Message, 0)
 	out := &l
-	mockClient := &analytics.MockSegmentClient{Out: out}
-	analyticsClient := analytics.NewAnalyticsClient(suite.config, version, mockClient)
+	analyticsClient := suite.getAnalyticsClient(out)
 	rootCmd := &cobra.Command{
 		Use: suite.config.CLIName,
 	}
@@ -300,8 +299,7 @@ func (suite *AnalyticsTestSuite) TestHideSecretForApiStore() {
 	req := require.New(suite.T())
 	l := make([]segment.Message, 0)
 	out := &l
-	mockClient := &analytics.MockSegmentClient{Out: out}
-	analyticsClient := analytics.NewAnalyticsClient(suite.config, version, mockClient)
+	analyticsClient := suite.getAnalyticsClient(out)
 	rootCmd := &cobra.Command{
 		Use: "ccloud",
 	}
@@ -321,7 +319,7 @@ func (suite *AnalyticsTestSuite) TestHideSecretForApiStore() {
 	}
 	rootCmd.SetArgs([]string{"api-key", "store", apiKey, apiSecret})
 	err := command.Execute()
-	req.Nil(err)
+	req.NoError(err)
 
 	req.Equal(1, len(*out))
 	page, ok := (*out)[0].(segment.Page)
@@ -338,12 +336,18 @@ func (suite *AnalyticsTestSuite) TestHideSecretForApiStore() {
 	req.Equal(analytics.SecretValueString, args[1])
 }
 
+func (suite *AnalyticsTestSuite) getAnalyticsClient(out *[]segment.Message) *analytics.Client {
+	mockClient := &analytics.MockSegmentClient{Out: out}
+	analyticsClient := analytics.NewAnalyticsClient(suite.config.CLIName, suite.config, version, mockClient, clockwork.NewFakeClockAt(testTime))
+	return analyticsClient
+}
 
 func (suite *AnalyticsTestSuite) checkPageBasic(page segment.Page) {
 	req := require.New(suite.T())
 	req.NotEqual("", page.AnonymousId)
-	_, ok := page.Properties[analytics.StartTimePropertiesKey]
+	startTime, ok := page.Properties[analytics.StartTimePropertiesKey]
 	req.True(ok)
+	req.Equal(testTime, startTime)
 	_, ok = page.Properties[analytics.ArgsPropertiesKey]
 	req.True(ok)
 	_, ok = page.Properties[analytics.FlagsPropertiesKey]
@@ -392,8 +396,9 @@ func (suite *AnalyticsTestSuite) checkPageSuccess(page segment.Page) {
 	succeeded, ok := page.Properties[analytics.SucceededPropertiesKey]
 	req.True(ok)
 	req.True(succeeded.(bool))
-	_, ok = page.Properties[analytics.FinishTimePropertiesKey]
+	finishTime, ok := page.Properties[analytics.FinishTimePropertiesKey]
 	req.True(ok)
+	req.Equal(testTime, finishTime)
 }
 
 func (suite *AnalyticsTestSuite) checkIdentify(identify segment.Identify) {

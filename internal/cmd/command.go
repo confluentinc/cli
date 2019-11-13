@@ -45,7 +45,7 @@ import (
 type Command struct {
 	*cobra.Command
 	Analytics *analytics.Client
-	Logger    *log.Logger
+	logger    *log.Logger
 }
 
 func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Version, logger *log.Logger, analytics *analytics.Client) (*Command, error) {
@@ -128,7 +128,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 			return nil, err
 		}
 		if credType == configs.APIKey {
-			return &Command{Command: cli, Analytics: analytics, Logger: logger}, nil
+			return &Command{Command: cli, Analytics: analytics, logger: logger}, nil
 		}
 		cli.AddCommand(ps1.NewPromptCmd(cfg, &pps1.Prompt{Config: cfg}, logger))
 		ks := &keystore.ConfigKeyStore{Config: cfg, Helper: ch}
@@ -163,7 +163,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 
 		cli.AddCommand(secret.New(prerunner, cfg, prompt, resolver, secrets.NewPasswordProtectionPlugin(logger)))
 	}
-	return &Command{Command: cli, Analytics: analytics, Logger: logger}, nil
+	return &Command{Command: cli, Analytics: analytics, logger: logger}, nil
 }
 
 func (c *Command) Execute() error {
@@ -172,13 +172,13 @@ func (c *Command) Execute() error {
 	if err != nil {
 		analyticsError := c.Analytics.FlushCommandFailed(err)
 		if analyticsError != nil {
-			c.Logger.Debugf("segment analytics flushing failed: %s\n", analyticsError.Error())
+			c.logger.Debugf("segment analytics flushing failed: %s\n", analyticsError.Error())
 		}
 		return err
 	}
 	analyticsError := c.Analytics.FlushCommandSucceeded()
 	if analyticsError != nil {
-		c.Logger.Debugf("segment analytics flushing failed: %s\n", analyticsError.Error())
+		c.logger.Debugf("segment analytics flushing failed: %s\n", analyticsError.Error())
 	}
 	return nil
 }

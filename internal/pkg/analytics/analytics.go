@@ -1,16 +1,14 @@
 package analytics
 
 import (
-	"fmt"
-	"reflect"
-	"strconv"
-	"strings"
-	"time"
-
 	"github.com/google/uuid"
+	"github.com/jonboulle/clockwork"
 	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"reflect"
+	"strconv"
+	"strings"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/confluentinc/cli/internal/pkg/config"
@@ -18,10 +16,10 @@ import (
 )
 
 var (
-	secretCommandFlags    = map[string][]string{
-		"ccloud init": {"api-secret"},
+	secretCommandFlags = map[string][]string{
+		"ccloud init":                   {"api-secret"},
 		"confluent master-key generate": {"passphrase", "local-secrets-file"},
-		"confluent file rotate": {"passphrase", "passphrase-new"},
+		"confluent file rotate":         {"passphrase", "passphrase-new"},
 	}
 	secretCommandArgs     = map[string][]int{"ccloud api-key store": {1}}
 	SecretValueString     = "<secret_value>"
@@ -48,8 +46,10 @@ var (
 )
 
 type Client struct {
-	client      segment.Client
-	config      *config.Config
+	cliName string
+	client  segment.Client
+	config  *config.Config
+	clock   clockwork.Clock
 
 	// cache data until we flush events to segment (when each cmd call finishes)
 	cmdCalled   string
@@ -59,12 +59,14 @@ type Client struct {
 	cliVersion  string
 }
 
-func NewAnalyticsClient(cfg *config.Config, version string, segmentClient segment.Client) *Client {
+func NewAnalyticsClient(cliName string, cfg *config.Config, version string, segmentClient segment.Client, clock clockwork.Clock) *Client {
 	client := &Client{
+		cliName:    cliName,
 		client:     segmentClient,
 		config:     cfg,
 		properties: make(segment.Properties),
-		cliVersion:    version,
+		cliVersion: version,
+		clock:      clock,
 	}
 	if cfg.AnonymousId == "" {
 		cfg.AnonymousId = uuid.New().String()
@@ -77,25 +79,25 @@ func (a *Client) TrackCommand(cmd *cobra.Command, args []string) {
 	a.cmdCalled = cmd.CommandPath()
 	a.addArgsProperties(cmd, args)
 	a.addFlagProperties(cmd)
-	a.properties.Set(StartTimePropertiesKey, time.Now())
+	a.properties.Set(StartTimePropertiesKey, a.clock.Now())
 	a.properties.Set(VersionPropertiesKey, a.cliVersion)
 	a.setUserInfo()
 }
 
 func (a *Client) FlushCommandSucceeded() error {
 	// for login user info can only be obtained after login succeeded
-	if strings.Contains(a.cmdCalled, a.config.CLIName + " login") {
+	if strings.Contains(a.cmdCalled, a.config.CLIName+" login") {
 		a.setUserInfo()
 		if err := a.identify(); err != nil {
 			return err
 		}
 	}
 	a.properties.Set(SucceededPropertiesKey, true)
-	a.properties.Set(FinishTimePropertiesKey, time.Now())
+	a.properties.Set(FinishTimePropertiesKey, a.clock.Now())
 	if err := a.sendPage(); err != nil {
 		return err
 	}
-	if strings.Contains(a.cmdCalled, a.config.CLIName + " logout") {
+	if strings.Contains(a.cmdCalled, a.config.CLIName+" logout") {
 		if err := a.resetAnonymousId(); err != nil {
 			return err
 		}
@@ -107,7 +109,7 @@ func (a *Client) FlushCommandFailed(e error) error {
 	if a.cmdCalled == "" {
 		return a.malformedCommandError(e)
 	}
-	if e.Error() == tokenExpiredErrorMessage{
+	if e.Error() == tokenExpiredErrorMessage {
 		if err := a.resetAnonymousId(); err != nil {
 			return err
 		}
@@ -122,9 +124,9 @@ func (a *Client) FlushCommandFailed(e error) error {
 
 func (a *Client) sendPage() error {
 	page := segment.Page{
-		AnonymousId:  a.anonymousId,
-		Name:         a.cmdCalled,
-		Properties:   a.properties,
+		AnonymousId: a.anonymousId,
+		Name:        a.cmdCalled,
+		Properties:  a.properties,
 	}
 	if a.userId != "" {
 		page.UserId = a.userId
@@ -139,8 +141,8 @@ func (a *Client) sendPage() error {
 
 func (a *Client) identify() error {
 	identify := segment.Identify{
-		AnonymousId:  a.anonymousId,
-		UserId:       a.userId,
+		AnonymousId: a.anonymousId,
+		UserId:      a.userId,
 	}
 	traits := segment.Traits{}
 	traits.Set(VersionPropertiesKey, a.cliVersion)
@@ -169,7 +171,7 @@ func (a *Client) malformedCommandError(e error) error {
 
 func (a *Client) addFlagProperties(cmd *cobra.Command) {
 	flags := make(map[string]string)
-	cmd.Flags().Visit(func(f *pflag.Flag){
+	cmd.Flags().Visit(func(f *pflag.Flag) {
 		if flagNames, ok := secretCommandFlags[cmd.CommandPath()]; ok {
 			for _, flagName := range flagNames {
 				if f.Name == flagName {
@@ -185,23 +187,19 @@ func (a *Client) addFlagProperties(cmd *cobra.Command) {
 	a.properties.Set(FlagsPropertiesKey, flags)
 }
 
-func  (a *Client) addArgsProperties(cmd *cobra.Command, args []string) {
+func (a *Client) addArgsProperties(cmd *cobra.Command, args []string) {
 	argsCopy := make([]string, len(args))
-	if len(args) > 0 {
-		if ids, ok := secretCommandArgs[cmd.CommandPath()]; ok {
-			copy(argsCopy, args)
-			for _, i := range ids {
-				argsCopy[i] = SecretValueString
-			}
-		} else {
-			copy(argsCopy, args)
+	copy(argsCopy, args)
+	if ids, ok := secretCommandArgs[cmd.CommandPath()]; ok {
+		for _, i := range ids {
+			argsCopy[i] = SecretValueString
 		}
 	}
 	a.properties.Set(ArgsPropertiesKey, argsCopy)
 }
 
 func (a *Client) setUserInfo() {
-	if a.config.CLIName == "ccloud" {
+	if a.cliName == "ccloud" {
 		cloudUserId, organizationId, email := a.getCloudUserInfo()
 		if cloudUserId != "" {
 			a.properties.Set(OrgIdPropertiesKey, organizationId)
@@ -217,7 +215,6 @@ func (a *Client) getCloudUserInfo() (userId string, organizationId string, email
 	if err := a.config.CheckLogin(); err != nil {
 		return "", "", ""
 	}
-	fmt.Println("HA IM LOGGED IN")
 	user := a.config.Auth.User
 	userId = strconv.Itoa(int(user.Id))
 	organizationId = strconv.Itoa(int(user.OrganizationId))

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/jonboulle/clockwork"
 	"os"
 
 	segment "github.com/segmentio/analytics-go"
@@ -18,11 +19,11 @@ import (
 
 var (
 	// Injected from linker flags like `go build -ldflags "-X main.version=$VERSION" -X ...`
-	version = "v0.0.0"
-	commit  = ""
-	date    = ""
-	host    = ""
-	cliName = "confluent"
+	version    = "v0.0.0"
+	commit     = ""
+	date       = ""
+	host       = ""
+	cliName    = "confluent"
 	segmentKey = "KDsYPLPBNVB1IPJIN5oqrXnxQT9iKezo"
 )
 
@@ -49,7 +50,7 @@ func main() {
 	version := cliVersion.NewVersion(cfg.CLIName, cfg.Name(), cfg.Support(), version, commit, date, host)
 
 	segmentClient := segment.New(segmentKey)
-	analyticsClient := analytics.NewAnalyticsClient(cfg, version.Version, segmentClient)
+	analyticsClient := analytics.NewAnalyticsClient(cfg.CLIName, cfg, version.Version, segmentClient, clockwork.NewRealClock())
 
 	cli, err := cmd.NewConfluentCommand(cliName, cfg, version, logger, analyticsClient)
 	if err != nil {
