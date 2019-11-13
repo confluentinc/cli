@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+	"syscall"
 
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
@@ -399,6 +400,7 @@ func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {
 	scan()
 
 	var key, value string
+	deliveryChan := make(chan ckafka.Event)
 	for data := range input {
 		data = strings.TrimSpace(data)
 
@@ -408,18 +410,16 @@ func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {
 			key = record[0]
 		}
 		msg := &ckafka.Message{
-			TopicPartition: ckafka.TopicPartition{Topic: &topic},
+			TopicPartition: ckafka.TopicPartition{Topic: &topic, Partition: ckafka.PartitionAny},
 			Key:            []byte(key),
 			Value:          []byte(value),
 		}
-		//msg := &sarama.ProducerMessage{Topic: topic, Key: key, Value: value}
-		err := producer.Produce(msg, nil)
-		if err != nil {
-			pcmd.Printf(cmd, "Failed to produce: %s\n", err)
+		_ = producer.Produce(msg, deliveryChan)
+		e := <-deliveryChan
+		m := e.(*ckafka.Message)
+		if m.TopicPartition.Error != nil {
+			fmt.Printf("Failed to produce at offset %v: %v\n", m.TopicPartition.Offset, m.TopicPartition.Error)
 		}
-		//if err != nil {
-		//	pcmd.Printf(cmd, "Failed to produce offset %d: %s\n", offset, err)
-		//}
 		key = ""
 		go scan()
 	}
@@ -457,6 +457,7 @@ func (c *topicCommand) consume(cmd *cobra.Command, args []string) error {
 
 	run := true
 	sigchan := make(chan os.Signal, 1)
+	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
 
 	for run == true {
 		select {
