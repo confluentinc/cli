@@ -502,7 +502,6 @@ func (s *CLITestSuite) runConfluentTest(tt CLITest, loginURL string) {
 }
 
 func runCommand(t *testing.T, binaryName string, env []string, args string, wantErrCode int) string {
-	//return covCollector.RunCommand(t, binaryPath(t, binaryName), "TestRunMain", env, args, wantErrCode, cover)
 	output, exitCode, err := covCollector.RunCommand(binaryPath(t, binaryName), "TestRunMain", env, args, cover)
 	if err != nil && wantErrCode == 0 {
 		require.Failf(t, "unexpected error",
