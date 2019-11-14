@@ -98,8 +98,8 @@ func (suite *ConnectTestSuite) SetupTest() {
 		},
 	}
 	suite.connectMock = &ccsdkmock.Connect{
-		CreateOrUpdateFunc: func(arg0 context.Context, arg1 *v1.ConnectorConfig) (connector *v1.Connector, e error) {
-			return suite.connector, nil
+		CreateFunc: func(arg0 context.Context, arg1 *v1.ConnectorConfig) (connector *v1.ConnectorInfo, e error) {
+			return nil, nil
 		},
 		PauseFunc: func(arg0 context.Context, arg1 *v1.Connector) error {
 			return nil
@@ -113,11 +113,8 @@ func (suite *ConnectTestSuite) SetupTest() {
 		ListWithExpansionsFunc: func(arg0 context.Context, arg1 *v1.Connector, arg2 string) (expansions map[string]*v1.ConnectorExpansion, e error) {
 			return map[string]*v1.ConnectorExpansion{connectorID: suite.connectorExpansion}, nil
 		},
-		GetByIDFunc: func(arg0 context.Context, arg1 *v1.Connector) (expansion *v1.ConnectorExpansion, e error) {
+		GetExpansionByIDFunc: func(arg0 context.Context, arg1 *v1.Connector) (expansion *v1.ConnectorExpansion, e error) {
 			return suite.connectorExpansion, nil
-		},
-		GetPluginsFunc: func(arg0 context.Context, arg1 *v1.Connector, arg2 string) (infos []*v1.ConnectorPluginInfo, expansions map[string]*v1.ConnectorPluginExpansion, e error) {
-			return []*v1.ConnectorPluginInfo{}, map[string]*v1.ConnectorPluginExpansion{}, nil
 		},
 	}
 
@@ -177,8 +174,8 @@ func (suite *ConnectTestSuite) TestDescribeConnector() {
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
-	req.True(suite.connectMock.GetByIDCalled())
-	retVal := suite.connectMock.GetByIDCalls()[0]
+	req.True(suite.connectMock.GetExpansionByIDCalled())
+	retVal := suite.connectMock.GetExpansionByIDCalls()[0]
 	req.Equal(retVal.Arg1.KafkaClusterId, kafkaClusterID)
 }
 
@@ -188,8 +185,8 @@ func (suite *ConnectTestSuite) TestCreateConnector() {
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
-	req.True(suite.connectMock.CreateOrUpdateCalled())
-	retVal := suite.connectMock.CreateOrUpdateCalls()[0]
+	req.True(suite.connectMock.CreateCalled())
+	retVal := suite.connectMock.CreateCalls()[0]
 	req.Equal(retVal.Arg1.KafkaClusterId, kafkaClusterID)
 }
 
@@ -199,8 +196,8 @@ func (suite *ConnectTestSuite) TestUpdateConnector() {
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
-	req.True(suite.connectMock.CreateOrUpdateCalled())
-	retVal := suite.connectMock.CreateOrUpdateCalls()[0]
+	req.True(suite.connectMock.UpdateCalled())
+	retVal := suite.connectMock.UpdateCalls()[0]
 	req.Equal(retVal.Arg1.KafkaClusterId, kafkaClusterID)
 }
 

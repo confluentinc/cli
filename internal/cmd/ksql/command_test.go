@@ -223,7 +223,7 @@ func (suite *KSQLTestSuite) TestCreateKSQL() {
 
 func (suite *KSQLTestSuite) TestDescribeKSQL() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"app", "describe", ksqlClusterID,}))
+	cmd.SetArgs(append([]string{"app", "describe", ksqlClusterID}))
 
 	err := cmd.Execute()
 	req := require.New(suite.T())
@@ -233,7 +233,7 @@ func (suite *KSQLTestSuite) TestDescribeKSQL() {
 
 func (suite *KSQLTestSuite) TestListKSQL() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"app", "list",}))
+	cmd.SetArgs(append([]string{"app", "list"}))
 
 	err := cmd.Execute()
 	req := require.New(suite.T())
@@ -243,7 +243,7 @@ func (suite *KSQLTestSuite) TestListKSQL() {
 
 func (suite *KSQLTestSuite) TestDeleteKSQL() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"app", "delete", ksqlClusterID,}))
+	cmd.SetArgs(append([]string{"app", "delete", ksqlClusterID}))
 
 	err := cmd.Execute()
 	req := require.New(suite.T())

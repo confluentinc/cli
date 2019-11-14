@@ -213,7 +213,6 @@ func Test_credentials_NoSpacesAroundEmail_ShouldSupportSpacesAtBeginOrEnd(t *tes
 	req.Equal(" iamrobin ", pass)
 }
 
-
 func Test_SelfSignedCerts(t *testing.T) {
 	req := require.New(t)
 	mdsConfig := mds.NewConfiguration()
@@ -231,7 +230,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 	// Create a test certificate to be read in by the command
 	ca := &x509.Certificate{
 		SerialNumber: big.NewInt(1234),
-		Subject: pkix.Name{ Organization:  []string{"testorg"} },
+		Subject:      pkix.Name{Organization: []string{"testorg"}},
 	}
 	priv, err := rsa.GenerateKey(rand.Reader, 512)
 	req.NoError(err, "Couldn't generate private key")

@@ -25,12 +25,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogo/protobuf/proto"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
-
 	"github.com/confluentinc/ccloud-sdk-go"
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
+	connectv1 "github.com/confluentinc/ccloudapis/connect/v1"
 	corev1 "github.com/confluentinc/ccloudapis/core/v1"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	ksqlv1 "github.com/confluentinc/ccloudapis/ksql/v1"
@@ -38,6 +35,9 @@ import (
 	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
 	utilv1 "github.com/confluentinc/ccloudapis/util/v1"
 	"github.com/confluentinc/mds-sdk-go"
+	"github.com/gogo/protobuf/proto"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/test-integ"
@@ -644,13 +644,13 @@ func (s *CLITestSuite) validateTestOutput(tt CLITest, t *testing.T, output strin
 	if *update && !tt.regex && tt.fixture != "" {
 		writeFixture(t, tt.fixture, output)
 	}
-  actual := normalizeNewLines(string(output))
+	actual := normalizeNewLines(string(output))
 	if tt.contains != "" {
 		require.Contains(t, actual, tt.contains)
 	} else if tt.notContains != "" {
 		require.NotContains(t, actual, tt.notContains)
 	} else if tt.fixture != "" {
-    expected := normalizeNewLines(loadFixture(t, tt.fixture))
+		expected := normalizeNewLines(loadFixture(t, tt.fixture))
 
 		if tt.regex {
 			require.Regexp(t, expected, actual)
@@ -965,6 +965,16 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		_, err = io.WriteString(w, string(b))
 		require.NoError(t, err)
 	})
+	router.HandleFunc("/api/accounts/{account_id}/clusters/{cluster_id}/connectors", func(w http.ResponseWriter, r *http.Request) {
+		connector := &connectv1.ConnectorInfo{
+			Name:        "connect-id",
+			Type:        "source",
+		}
+		reply, err := utilv1.MarshalJSONToBytes(connector)
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(reply))
+		require.NoError(t, err)
+	})
 	router.HandleFunc("/api/ksqls", handleKSQLCreateList(t))
 	router.HandleFunc("/api/ksqls/lksqlc-ksql1/", func(w http.ResponseWriter, r *http.Request) {
 		ksqlCluster := &ksqlv1.KSQLCluster{
@@ -1164,6 +1174,44 @@ func handleKafkaClusterCreate(t *testing.T, kafkaAPIURL string) func(w http.Resp
 }
 
 func handleKSQLCreateList(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ksqlCluster1 := &ksqlv1.KSQLCluster{
+			Id:                "lksqlc-ksql5",
+			AccountId:         "25",
+			KafkaClusterId:    "lkc-qwert",
+			OutputTopicPrefix: "pksqlc-abcde",
+			Name:              "account ksql",
+			Storage:           101,
+			Endpoint:          "SASL_SSL://ksql-endpoint",
+		}
+		ksqlCluster2 := &ksqlv1.KSQLCluster{
+			Id:                "lksqlc-woooo",
+			AccountId:         "25",
+			KafkaClusterId:    "lkc-zxcvb",
+			OutputTopicPrefix: "pksqlc-ghjkl",
+			Name:              "kay cee queue elle",
+			Storage:           123,
+			Endpoint:          "SASL_SSL://ksql-endpoint",
+		}
+		if r.Method == "POST" {
+			reply, err := utilv1.MarshalJSONToBytes(&ksqlv1.GetKSQLClusterReply{
+				Cluster: ksqlCluster1,
+			})
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(reply))
+			require.NoError(t, err)
+		} else if r.Method == "GET" {
+			listReply, err := utilv1.MarshalJSONToBytes(&ksqlv1.GetKSQLClustersReply{
+				Clusters: []*ksqlv1.KSQLCluster{ksqlCluster1, ksqlCluster2},
+			})
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(listReply))
+			require.NoError(t, err)
+		}
+	}
+}
+
+func handleConnectCreateList(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ksqlCluster1 := &ksqlv1.KSQLCluster{
 			Id:                "lksqlc-ksql5",

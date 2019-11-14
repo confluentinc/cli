@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"github.com/confluentinc/cli/internal/cmd/connector"
+	connector_catalog "github.com/confluentinc/cli/internal/cmd/connector-catalog"
 	"net/http"
 	"os"
 	"runtime"
@@ -173,6 +174,9 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		connector_commands := connector.New(prerunner, cfg, client.Connect, ch)
 		connector_commands.Hidden = true
 		cli.AddCommand(connector_commands)
+		connector_catalog_commands := connector_catalog.New(prerunner, cfg, client.Connect, ch)
+		connector_catalog_commands.Hidden = true
+		cli.AddCommand(connector_catalog_commands)
 	} else if cliName == "confluent" {
 		cli.AddCommand(iam.New(prerunner, cfg, mdsClient))
 

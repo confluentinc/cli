@@ -54,7 +54,7 @@ func (c *CoverageCollector) Setup() {
 }
 
 // TearDown merges the coverage profiles collecting from repeated runs of RunBinary.
-// It must be called at the teardown stage of the test suite, otherwise no merged coverage profile will be created. 
+// It must be called at the teardown stage of the test suite, otherwise no merged coverage profile will be created.
 func (c *CoverageCollector) TearDown() {
 	if c.testNum == 0 {
 		return
@@ -81,7 +81,7 @@ func (c *CoverageCollector) TearDown() {
 	}
 }
 
-// RunBinary runs the instrumented binary at binPath with env environment variables, executing only the test with mainTestName with the specified args.  
+// RunBinary runs the instrumented binary at binPath with env environment variables, executing only the test with mainTestName with the specified args.
 func (c *CoverageCollector) RunBinary(binPath string, mainTestName string, env []string, args []string) (output string, exitCode int, err error) {
 	if !c.setupFinished {
 		log.Fatal("Setup() must be called before RunBinary can be executed")

@@ -60,7 +60,7 @@ func printMetadata(metadata *testMetadata) {
 // 4. endOfMetadataMarker
 // It then exits with an exit code of 0.
 //
-// Otherwise, if an unexpected error is encountered during execution, 
+// Otherwise, if an unexpected error is encountered during execution,
 // RunTest prints an error, possibly some additional output, and then exits with an exit code of 1.
 func RunTest(t *testing.T, f func()) {
 	if !flag.Parsed() {
