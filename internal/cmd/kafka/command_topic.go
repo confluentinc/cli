@@ -416,7 +416,7 @@ func (c *topicCommand) produce(cmd *cobra.Command, args []string) error {
 		}
 		err := producer.Produce(msg, deliveryChan)
 		if err != nil {
-			fmt.Printf("Produce failture: %s\n", err)
+			fmt.Printf("Produce failure: %s\n", err)
 		}
 		e := <-deliveryChan
 		m := e.(*ckafka.Message)
@@ -481,11 +481,6 @@ func (c *topicCommand) consume(cmd *cobra.Command, args []string) error {
 				}
 			case ckafka.Error:
 				fmt.Fprintf(os.Stderr, "%% Error: %v: %v\n", e.Code(), e)
-				if e.Code() == ckafka.ErrAllBrokersDown {
-					run = false
-				}
-			default:
-				fmt.Printf("Ignored %v\n", e)
 			}
 		}
 	}
