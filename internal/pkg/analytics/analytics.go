@@ -81,17 +81,17 @@ func (a *Client) TrackCommand(cmd *cobra.Command, args []string) {
 	a.addFlagProperties(cmd)
 	a.properties.Set(StartTimePropertiesKey, a.clock.Now())
 	a.properties.Set(VersionPropertiesKey, a.cliVersion)
-	a.setUserInfo()
 }
 
 func (a *Client) FlushCommandSucceeded() error {
 	// for login user info can only be obtained after login succeeded
-	if strings.Contains(a.cmdCalled, a.config.CLIName+" login") {
-		a.setUserInfo()
-		if err := a.identify(); err != nil {
-			return err
-		}
-	}
+	//if strings.Contains(a.cmdCalled, a.config.CLIName+" login") {
+	//	a.setUserInfo()
+	//	if err := a.identify(); err != nil {
+	//		return err
+	//	}
+	//}
+	a.setUserInfo()
 	a.properties.Set(SucceededPropertiesKey, true)
 	a.properties.Set(FinishTimePropertiesKey, a.clock.Now())
 	if err := a.sendPage(); err != nil {
@@ -106,6 +106,7 @@ func (a *Client) FlushCommandSucceeded() error {
 }
 
 func (a *Client) FlushCommandFailed(e error) error {
+	a.setUserInfo()
 	if a.cmdCalled == "" {
 		return a.malformedCommandError(e)
 	}
