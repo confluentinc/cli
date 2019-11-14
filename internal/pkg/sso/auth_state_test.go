@@ -72,13 +72,25 @@ func TestNewStateDevNoBrowser(t *testing.T) {
 	configStag := &config.Config{AuthURL: "https://stag.cpdev.cloud", NoBrowser: true}
 	stateStag, err := newState(configStag)
 	require.NoError(t, err)
-	// configs for devel and staging are the same
+	// configs for devel and staging are the same except the callback url
 	require.Equal(t, state.SSOProviderHost, stateStag.SSOProviderHost)
 	require.Equal(t, state.SSOProviderClientID, stateStag.SSOProviderClientID)
-	require.Equal(t, state.SSOProviderCallbackUrl, stateStag.SSOProviderCallbackUrl)
+	require.Equal(t, "https://stag.cpdev.cloud/cli_callback", stateStag.SSOProviderCallbackUrl)
 	require.Equal(t, state.SSOProviderIdentifier, stateStag.SSOProviderIdentifier)
 	require.Empty(t, stateStag.SSOProviderAuthenticationCode)
 	require.Empty(t, stateStag.SSOProviderIDToken)
+
+	// check cpd configs
+	configCpd := &config.Config{AuthURL: "https://aware-monkfish.gcp.priv.cpdev.cloud", NoBrowser: true}
+	stateCpd, err := newState(configCpd)
+	require.NoError(t, err)
+	// configs for cpd and devel are the same except the callback url
+	require.Equal(t, state.SSOProviderHost, stateCpd.SSOProviderHost)
+	require.Equal(t, state.SSOProviderClientID, stateCpd.SSOProviderClientID)
+	require.Equal(t, "https://aware-monkfish.gcp.priv.cpdev.cloud/cli_callback", stateCpd.SSOProviderCallbackUrl)
+	require.Equal(t, state.SSOProviderIdentifier, stateCpd.SSOProviderIdentifier)
+	require.Empty(t, stateCpd.SSOProviderAuthenticationCode)
+	require.Empty(t, stateCpd.SSOProviderIDToken)
 }
 
 func TestNewStateProd(t *testing.T) {
