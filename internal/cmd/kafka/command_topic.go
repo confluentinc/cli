@@ -484,8 +484,8 @@ func (c *topicCommand) consume(cmd *cobra.Command, args []string) error {
 				if e.Code() == ckafka.ErrAllBrokersDown {
 					run = false
 				}
-			//default:
-			//	fmt.Printf("Ignored %v\n", e)
+			default:
+				fmt.Printf("Ignored %v\n", e)
 			}
 		}
 	}
