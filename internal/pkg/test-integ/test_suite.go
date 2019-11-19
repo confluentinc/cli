@@ -71,23 +71,24 @@ func (c *CoverageCollector) TearDown() {
 	}
 }
 
-func (c *CoverageCollector) RunCommand(binPath string, mainTestName string, env []string, args string, cover bool) (output string, exitCode int, err error) {
+func (c *CoverageCollector) RunBinary(binPath string, mainTestName string, env []string, args []string, cover bool) (output string, exitCode int, err error) {
 	err = c.writeArgs(args)
 	if err != nil {
 		log.Fatal(err)
 	}
+	var binArgs string
 	if cover {
 		f, err := ioutil.TempFile("", tmpCoverageFilePrefix)
 		if err != nil {
 			log.Fatal(err)
 		}
 		c.tmpCoverageFilenames = append(c.tmpCoverageFilenames, f.Name())
-		args = fmt.Sprintf("-test.run=%s -test.coverprofile=%s -args-file=%s", mainTestName, f.Name(), c.tmpArgsFile.Name())
+		binArgs = fmt.Sprintf("-test.run=%s -test.coverprofile=%s -args-file=%s", mainTestName, f.Name(), c.tmpArgsFile.Name())
 	} else {
-		args = fmt.Sprintf("-test.run=%s -args-file=%s", mainTestName, c.tmpArgsFile.Name())
+		binArgs = fmt.Sprintf("-test.run=%s -args-file=%s", mainTestName, c.tmpArgsFile.Name())
 	}
 	_, _ = fmt.Println(binPath, args)
-	cmd := exec.Command(binPath, strings.Split(args, " ")...)
+	cmd := exec.Command(binPath, strings.Split(binArgs, " ")...)
 	cmd.Env = append(os.Environ(), env...)
 	combinedOutput, err := cmd.CombinedOutput()
 	if err != nil {
@@ -120,7 +121,7 @@ func (c *CoverageCollector) RunCommand(binPath string, mainTestName string, env 
 	return cmdOutput, exitCode, err
 }
 
-func (c *CoverageCollector) writeArgs(args string) error {
+func (c *CoverageCollector) writeArgs(args []string) error {
 	err := c.tmpArgsFile.Truncate(0)
 	if err != nil {
 		return err
@@ -129,8 +130,8 @@ func (c *CoverageCollector) writeArgs(args string) error {
 	if err != nil {
 		return err
 	}
-	args = strings.ReplaceAll(args, " ", "\n")
-	_, err = c.tmpArgsFile.WriteAt([]byte(args), 0)
+	argStr := strings.Join(args, "\n")
+	_, err = c.tmpArgsFile.WriteAt([]byte(argStr), 0)
 	if err != nil {
 		return err
 	}
