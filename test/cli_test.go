@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"reflect"
@@ -35,7 +36,7 @@ import (
 )
 
 var (
-	//noRebuild = flag.Bool("no-rebuild", false, "skip rebuilding CLI if it already exists")
+	noRebuild        = flag.Bool("no-rebuild", false, "skip rebuilding CLI if it already exists")
 	update           = flag.Bool("update", false, "update golden files")
 	debug            = flag.Bool("debug", true, "enable verbose output")
 	cover            = false
@@ -98,15 +99,29 @@ func init() {
 
 // SetupSuite builds the CLI binary to test
 func (s *CLITestSuite) SetupSuite() {
-	covCollector = &test_integ.CoverageCollector{
-		MergedCoverageFilename: mergedCoverageFilename,
-	}
+	covCollector = test_integ.NewCoverageCollector(mergedCoverageFilename)
 	covCollector.Setup()
 	req := require.New(s.T())
 
 	// dumb but effective
 	err := os.Chdir("..")
 	req.NoError(err)
+	for _, binary := range []string{ccloudTestBin, confluentTestBin} {
+		if _, err = os.Stat(binaryPath(s.T(), binary)); os.IsNotExist(err) || !*noRebuild {
+			var makeArgs string
+			if ccloudTestBin == ccloudTestBinRace {
+				makeArgs = "build-integ-race"
+			} else {
+				makeArgs = "build-integ-nonrace"
+			}
+			makeCmd := exec.Command("make", makeArgs)
+			output, err := makeCmd.CombinedOutput()
+			if err != nil {
+				s.T().Log(string(output))
+				req.NoError(err)
+			}
+		}
+	}
 }
 
 func (s *CLITestSuite) TearDownSuite() {

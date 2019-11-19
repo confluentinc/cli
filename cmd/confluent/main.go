@@ -27,21 +27,23 @@ func main() {
 	viper.AutomaticEnv()
 
 	logger := log.New()
-	metricSink := metric.NewSink()
-	var cfg *config.Config
-	{
-		cfg = config.New(&config.Config{
-			CLIName:    cliName,
-			MetricSink: metricSink,
-			Logger:     logger,
-		})
-		err := cfg.Load()
-		if err != nil {
-			logger.Errorf("unable to load config: %v", err)
-		}
-	}
-	version := cliVersion.NewVersion(cfg.CLIName, cfg.Name(), cfg.Support(), version, commit, date, host)
 
+	metricSink := metric.NewSink()
+
+	var cfg *config.Config
+
+	cfg = config.New(&config.Config{
+		CLIName:    cliName,
+		MetricSink: metricSink,
+		Logger:     logger,
+	})
+	err := cfg.Load()
+	if err != nil {
+		logger.Errorf("unable to load config: %v", err)
+	}
+
+	version := cliVersion.NewVersion(cfg.CLIName, cfg.Name(), cfg.Support(), version, commit, date, host)
+	
 	cli, err := cmd.NewConfluentCommand(cliName, cfg, version, logger)
 	if err != nil {
 		if cli == nil {

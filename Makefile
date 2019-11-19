@@ -98,24 +98,24 @@ build-ccloud:
 build-confluent:
 	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --snapshot --rm-dist -f .goreleaser-confluent$(GORELEASER_SUFFIX)
 
-.PHONY: build-integ-all
-build-integ-all:
-	make build-integ
-	make build-integ-race
-
 .PHONY: build-integ
 build-integ:
-	make build-integ-ccloud
-	make build-integ-confluent
+	make build-integ-nonrace
+	make build-integ-race
 
-.PHONY: build-integ-ccloud
-build-integ-ccloud:
+.PHONY: build-integ-nonrace
+build-integ-nonrace:
+	make build-integ-ccloud-nonrace
+	make build-integ-confluent-nonrace
+
+.PHONY: build-integ-ccloud-nonrace
+build-integ-ccloud-nonrace:
 	GO111MODULE=on go test ./cmd/confluent -ldflags="-s -w -X $(RESOLVED_PATH).cliName=ccloud \
 	-X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) \
 	-X $(RESOLVED_PATH).version=$(VERSION)" -tags testrunmain -coverpkg=./... -c -o ccloud_test
 
-.PHONY: build-integ-confluent
-build-integ-confluent:
+.PHONY: build-integ-confluent-nonrace
+build-integ-confluent-nonrace:
 	GO111MODULE=on go test ./cmd/confluent -ldflags="-s -w -X $(RESOLVED_PATH).cliName=confluent \
 		    -X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) \
 		    -X $(RESOLVED_PATH).version=$(VERSION)" -tags testrunmain -coverpkg=./... -c -o confluent_test

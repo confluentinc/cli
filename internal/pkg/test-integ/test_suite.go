@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"regexp"
 	"strings"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -28,6 +27,12 @@ type CoverageCollector struct {
 	tmpCoverageFilenames   []string
 }
 
+func NewCoverageCollector(mergedCoverageFilename string) *CoverageCollector {
+	return &CoverageCollector{
+		MergedCoverageFilename: mergedCoverageFilename,
+	}
+}
+
 func (c *CoverageCollector) Setup() {
 	var err error
 	c.tmpArgsFile, err = ioutil.TempFile("", tmpArgsFilePrefix)
@@ -45,22 +50,22 @@ func (c *CoverageCollector) TearDown() {
 	}
 	// Merge coverage profiles.
 	header := fmt.Sprintf("mode: %s", c.coverMode)
-	mergedProfile := header
+	var parsedProfiles []string
 	for _, filename := range c.tmpCoverageFilenames {
 		buf, err := ioutil.ReadFile(filename)
 		if err != nil {
 			log.Fatal(errors.Wrap(err, "error reading temp coverage profiles"))
 		}
 		profile := string(buf)
-		pattern := fmt.Sprintf("^%s", header)
-		re := regexp.MustCompile(pattern)
-		loc := re.FindStringIndex(profile)
-		if loc == nil {
+		loc := strings.Index(profile, header)
+		if loc == -1 {
 			log.Fatal("coverage mode is missing from coverage profiles")
 		}
-		mergedProfile += profile[loc[1]+1:]
+		parsedProfile := strings.TrimSpace(profile[loc+len(header):])
+		parsedProfiles = append(parsedProfiles, parsedProfile)
 	}
-	err := ioutil.WriteFile(c.MergedCoverageFilename, []byte(mergedProfile), 0666)
+	mergedProfile := fmt.Sprintf("%s\n%s", header, strings.Join(parsedProfiles, "\n"))
+	err := ioutil.WriteFile(c.MergedCoverageFilename, []byte(mergedProfile), 0600)
 	if err != nil {
 		log.Fatal(errors.Wrap(err, "error merging coverage profiles"))
 	}
