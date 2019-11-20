@@ -2,8 +2,14 @@ package auth
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -21,10 +27,12 @@ import (
 )
 
 type commands struct {
-	Commands  []*cobra.Command
-	config    *config.Config
-	mdsClient *mds.APIClient
-	Logger    *log.Logger
+	Commands   []*cobra.Command
+	config     *config.Config
+	mdsClient  *mds.APIClient
+	Logger     *log.Logger
+	// @VisibleForTesting, defaults to the OS filesystem
+	certReader io.Reader
 	// for testing
 	prompt                pcmd.Prompt
 	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *ccloud.Client
@@ -73,6 +81,7 @@ func (a *commands) init(prerunner pcmd.PreRunner) {
 	} else {
 		loginCmd.RunE = a.loginMDS
 		loginCmd.Flags().String("url", "", "Metadata service URL.")
+		loginCmd.Flags().String("ca-cert-path", "", "Self-signed certificate in PEM format.")
 		loginCmd.Short = strings.Replace(loginCmd.Short, ".", " (required for RBAC).", -1)
 		loginCmd.Long = strings.Replace(loginCmd.Long, ".", " (required for RBAC).", -1)
 		check(loginCmd.MarkFlagRequired("url")) // because https://confluent.cloud isn't an MDS endpoint
@@ -128,7 +137,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 			return errors.HandleCommon(err, cmd)
 		}
 
-		// Exchange authorization code for OAuth token from SSO orovider
+		// Exchange authorization code for OAuth token from SSO provider
 		err := server.GetOAuthToken()
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
@@ -167,7 +176,6 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	// between CLI sessions.
 	a.config.Auth.User = user.User
 	a.config.Auth.Accounts = user.Accounts
-
 	// Default to 0th environment if no suitable environment is already configured
 	hasGoodEnv := false
 	if a.config.Auth.Account != nil {
@@ -181,7 +189,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 		a.config.Auth.Account = a.config.Auth.Accounts[0]
 	}
 
-	err = a.addContextIfAbsent(a.config.Auth.User.Email)
+	err = a.addContextIfAbsent(a.config.Auth.User.Email, "")
 	if err != nil {
 		return err
 	}
@@ -198,13 +206,44 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
 	url, err := cmd.Flags().GetString("url")
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, cmd)
 	}
 	a.config.AuthURL = url
+	caCertPath := ""
+	if cmd.Flags().Changed("ca-cert-path") {
+		caCertPath, err = cmd.Flags().GetString("ca-cert-path")
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+		if caCertPath == "" {
+			// revert to default client regardless of previously configured client
+			a.mdsClient.GetConfig().HTTPClient = DefaultClient()
+		} else {
+			// override previously configured httpclient if a new cert path was specified
+			if a.certReader == nil {
+				// if a certReader wasn't already set, eg. for testing, then create one now
+				caCertPath, err = filepath.Abs(caCertPath)
+				if err != nil {
+					return errors.HandleCommon(err, cmd)
+				}
+				caCertFile, err := os.Open(caCertPath)
+				if err != nil {
+					return errors.HandleCommon(err, cmd)
+				}
+				defer caCertFile.Close()
+				a.certReader = caCertFile
+			}
+			a.mdsClient.GetConfig().HTTPClient, err = SelfSignedCertClient(a.certReader, a.Logger)
+			if err != nil {
+				return errors.HandleCommon(err, cmd)
+			}
+			a.Logger.Debugf("Successfully loaded certificate from %s", caCertPath)
+		}
+	}
 	a.mdsClient.ChangeBasePath(a.config.AuthURL)
 	email, password, err := a.credentials(cmd, "Username", nil)
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, cmd)
 	}
 
 	basicContext := context.WithValue(context.Background(), mds.ContextBasicAuth, mds.BasicAuth{UserName: email, Password: password})
@@ -218,13 +257,13 @@ func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.Wrap(err, "Unable to save user authentication.")
 	}
-	err = a.addContextIfAbsent(email)
+	err = a.addContextIfAbsent(email, caCertPath)
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, cmd)
 	}
 	pcmd.Println(cmd, "Logged in as", email)
 
-	return err
+	return errors.HandleCommon(err, cmd)
 }
 
 func (a *commands) logout(cmd *cobra.Command, args []string) error {
@@ -291,13 +330,14 @@ func (a *commands) credentials(cmd *cobra.Command, userField string, cloudClient
 	return email, password, nil
 }
 
-func (a *commands) addContextIfAbsent(username string) error {
+func (a *commands) addContextIfAbsent(username string, caCertPath string) error {
 	name := fmt.Sprintf("login-%s-%s", username, a.config.AuthURL)
 	if _, ok := a.config.Contexts[name]; ok {
 		return nil
 	}
 	platform := &config.Platform{
-		Server: a.config.AuthURL,
+		Server:     a.config.AuthURL,
+		CaCertPath: caCertPath,
 	}
 	credential := &config.Credential{
 		Username: username,
@@ -312,6 +352,41 @@ func (a *commands) addContextIfAbsent(username string) error {
 		return err
 	}
 	return nil
+}
+
+func SelfSignedCertClient(certReader io.Reader, logger *log.Logger) (*http.Client, error){
+	certPool, err := x509.SystemCertPool()
+	if err != nil {
+		logger.Warnf("Unable to load system certificates. Continuing with custom certificates only.")
+	}
+	if certPool == nil {
+		certPool = x509.NewCertPool()
+	}
+
+	if certReader == nil {
+		return nil, fmt.Errorf("no reader specified for reading custom certificates")
+	}
+	certs, err := ioutil.ReadAll(certReader)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read certificate: %v", err)
+	}
+
+	// Append new cert to the system pool
+	if ok := certPool.AppendCertsFromPEM(certs); !ok {
+		return nil, fmt.Errorf("no certs appended, using system certs only")
+	}
+
+	// Trust the updated cert pool in our client
+	tlsClientConfig := &tls.Config{RootCAs: certPool}
+	transport := &http.Transport{TLSClientConfig: tlsClientConfig}
+	client := DefaultClient()
+	client.Transport = transport
+
+	return client, nil
+}
+
+func DefaultClient() *http.Client {
+	return http.DefaultClient
 }
 
 func check(err error) {

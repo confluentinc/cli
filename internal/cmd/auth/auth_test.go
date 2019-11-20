@@ -1,8 +1,15 @@
 package auth
 
 import (
+	"bytes"
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/pem"
 	"fmt"
+	"math/big"
 	"net/http"
 	"os"
 	"testing"
@@ -12,6 +19,7 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go"
 	sdkMock "github.com/confluentinc/ccloud-sdk-go/mock"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
+
 	"github.com/confluentinc/mds-sdk-go"
 	mdsMock "github.com/confluentinc/mds-sdk-go/mock"
 
@@ -203,6 +211,61 @@ func Test_credentials_NoSpacesAroundEmail_ShouldSupportSpacesAtBeginOrEnd(t *tes
 	req.NoError(err)
 	req.Equal("cody@confluent.io", user)
 	req.Equal(" iamrobin ", pass)
+}
+
+
+func Test_SelfSignedCerts(t *testing.T) {
+	req := require.New(t)
+	mdsConfig := mds.NewConfiguration()
+	mdsClient := mds.NewAPIClient(mdsConfig)
+	cfg := config.New()
+	cfg.Logger = log.New()
+	cfg.CLIName = "confluent"
+	prompt := prompt("cody@confluent.io", "iambatman")
+	cmds := newCommands(&cliMock.Commander{}, cfg, log.New(), mdsClient, prompt, nil, nil)
+
+	for _, c := range cmds.Commands {
+		c.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
+	}
+
+	// Create a test certificate to be read in by the command
+	ca := &x509.Certificate{
+		SerialNumber: big.NewInt(1234),
+		Subject: pkix.Name{ Organization:  []string{"testorg"} },
+	}
+	priv, err := rsa.GenerateKey(rand.Reader, 512)
+	req.NoError(err, "Couldn't generate private key")
+	ca_b, err := x509.CreateCertificate(rand.Reader, ca, ca, &priv.PublicKey, priv)
+	req.NoError(err, "Couldn't generate certificate from private key")
+	pemBytes := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: ca_b})
+	cmds.certReader = bytes.NewReader(pemBytes)
+
+	cert, err := x509.ParseCertificate(ca_b)
+	req.NoError(err, "Couldn't reparse certificate")
+	expectedSubject := cert.RawSubject
+	mdsClient.TokensAuthenticationApi = &mdsMock.TokensAuthenticationApi{
+		GetTokenFunc: func(ctx context.Context, xSPECIALRYANHEADER string) (mds.AuthenticationResponse, *http.Response, error) {
+			req.NotEqual(http.DefaultClient, mdsClient)
+			transport, ok := mdsClient.GetConfig().HTTPClient.Transport.(*http.Transport)
+			req.True(ok)
+			req.NotEqual(http.DefaultTransport, transport)
+			found := false
+			for _, actualSubject := range transport.TLSClientConfig.RootCAs.Subjects() {
+				if bytes.Equal(expectedSubject, actualSubject) {
+					found = true
+					break
+				}
+			}
+			req.True(found, "Certificate not found in client.")
+			return mds.AuthenticationResponse{
+				AuthToken: "y0ur.jwt.T0kEn",
+				TokenType: "JWT",
+				ExpiresIn: 100,
+			}, nil, nil
+		},
+	}
+	_, err = pcmd.ExecuteCommand(cmds.Commands[0], "--url=http://localhost:8090", "--ca-cert-path=testcert.pem")
+	req.NoError(err)
 }
 
 func prompt(username, password string) *cliMock.Prompt {

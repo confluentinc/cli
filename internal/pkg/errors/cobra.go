@@ -1,7 +1,9 @@
 package errors
 
 import (
+	"crypto/x509"
 	"fmt"
+	"net/url"
 	"reflect"
 
 	"github.com/hashicorp/go-multierror"
@@ -47,6 +49,13 @@ func HandleCommon(err error, cmd *cobra.Command) error {
 		}
 		cmd.SilenceUsage = true
 		return result
+	}
+
+	if urlErr, ok := err.(*url.Error); ok {
+		if certErr, ok := urlErr.Err.(x509.CertificateInvalidError); ok {
+			cmd.SilenceUsage = true
+			return fmt.Errorf("%s. Check the system keystore or login again with the --ca-cert-path option to add custom certs", certErr.Error())
+		}
 	}
 
 	// Intercept errors to prevent usage from being printed.
