@@ -29,12 +29,13 @@ var (
 	organizationId  = int32(321)
 	userEmail       = "tester@confluent.io"
 
-	ccloudCliName = "ccloud"
+	ccloudName    = "ccloud"
 	flagName      = "flag"
 	flagArg       = "flagArg"
 	arg1          = "arg1"
 	arg2          = "arg2"
 	errorMessage  = "error message"
+	unknownCmd    = "unknown"
 
 	version = "1.1.1.1.1.1"
 
@@ -43,21 +44,233 @@ var (
 
 type AnalyticsTestSuite struct {
 	suite.Suite
-	config *config.Config
-	auth   *config.AuthConfig
+	config          *config.Config
+	auth            *config.AuthConfig
+	analyticsClient analytics.Client
 }
 
 func (suite *AnalyticsTestSuite) SetupSuite() {
-	suite.config = &config.Config{
-		CLIName: ccloudCliName,
-		Auth:    nil,
-	}
+	suite.config = config.New()
+	suite.config.CLIName = ccloudName
 	suite.createAuth()
 	suite.createContexts()
 	suite.createCredentials()
-
 }
 
+func (suite *AnalyticsTestSuite) SetupTest() {
+	mockClient := analytics.NewMockSegmentClient()
+	suite.analyticsClient = analytics.NewAnalyticsClient(suite.config.CLIName, suite.config, version, mockClient, clockwork.NewFakeClockAt(testTime))
+}
+
+func (suite *AnalyticsTestSuite) TestSuccessWithFlagAndArgs() {
+	// assume user already logged in
+	suite.setLoginConfig()
+
+	req := require.New(suite.T())
+	cobraCmd := &cobra.Command{
+		Run:    func(cmd *cobra.Command, args []string) {},
+		PreRun: suite.analyticsClient.TrackCommand,
+	}
+	cobraCmd.Flags().String(flagName, "", "")
+	cobraCmd.SetArgs([]string{arg1, arg2, "--" + flagName + "=" + flagArg})
+	command := cmd.Command{
+		Command:   cobraCmd,
+		Analytics: suite.analyticsClient,
+	}
+	err := command.Execute()
+	req.NoError(err)
+
+	out := suite.getOutput()
+	req.Equal(1, len(out))
+	page, ok := out[0].(segment.Page)
+	req.True(ok)
+
+	suite.checkPageBasic(page)
+	suite.checkPageLoggedIn(page)
+	suite.checkPageSuccess(page)
+
+	flags, ok := (page.Properties[analytics.FlagsPropertiesKey]).(map[string]string)
+	req.True(ok)
+	req.Equal(1, len(flags))
+	flagVal, ok := flags[flagName]
+	req.True(ok)
+	req.Equal(flagArg, flagVal)
+
+	args, ok := (page.Properties[analytics.ArgsPropertiesKey]).([]string)
+	req.True(ok)
+	req.Equal(2, len(args))
+	req.Equal(arg1, args[0])
+	req.Equal(arg2, args[1])
+}
+
+func (suite *AnalyticsTestSuite) TestLogin() {
+	req := require.New(suite.T())
+
+	// make sure user is logged out
+	suite.logOut()
+	rootCmd := &cobra.Command{
+		Use: suite.config.CLIName,
+	}
+	loginCmd := &cobra.Command{
+		Use:    "login",
+		Run:    func(cmd *cobra.Command, args []string) {
+			suite.setLoginConfig()
+		},
+		PreRun: suite.analyticsClient.TrackCommand,
+	}
+	rootCmd.AddCommand(loginCmd)
+	command := cmd.Command{
+		Command:   rootCmd,
+		Analytics: suite.analyticsClient,
+	}
+	rootCmd.SetArgs([]string{"login"})
+	err := command.Execute()
+	req.NoError(err)
+
+	out := suite.getOutput()
+	req.Equal(2, len(out))
+	for _, msg := range out {
+		switch msg.(type) {
+		case segment.Page:
+			page, ok := msg.(segment.Page)
+			req.True(ok)
+			suite.checkPageSuccess(page)
+			suite.checkPageBasic(page)
+			suite.checkPageLoggedIn(page)
+		case segment.Identify:
+			identify, ok := msg.(segment.Identify)
+			req.True(ok)
+			suite.checkIdentify(identify)
+		}
+	}
+}
+
+func (suite *AnalyticsTestSuite) TestUserNotLoggedIn() {
+	// make sure user is logged out
+	suite.logOut()
+
+	req := require.New(suite.T())
+	cobraCmd := &cobra.Command{
+		Run:    func(cmd *cobra.Command, args []string) {},
+		PreRun: suite.analyticsClient.TrackCommand,
+	}
+	command := cmd.Command{
+		Command:   cobraCmd,
+		Analytics: suite.analyticsClient,
+	}
+	err := command.Execute()
+	req.NoError(err)
+
+	out := suite.getOutput()
+	req.Equal(1, len(out))
+	page, ok := out[0].(segment.Page)
+	req.True(ok)
+
+	suite.checkPageBasic(page)
+	suite.checkPageNotLoggedIn(page)
+	suite.checkPageSuccess(page)
+}
+
+func (suite *AnalyticsTestSuite) TestInternalError() {
+	// assume user is logged in
+	suite.setLoginConfig()
+
+	req := require.New(suite.T())
+	cobraCmd := &cobra.Command{
+		Use: "command",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return fmt.Errorf(errorMessage)
+		},
+		PreRun: suite.analyticsClient.TrackCommand,
+	}
+	command := cmd.Command{
+		Command:   cobraCmd,
+		Analytics: suite.analyticsClient,
+	}
+	err := command.Execute()
+	req.NotNil(err)
+
+	out := suite.getOutput()
+	req.Equal(1, len(out))
+	page, ok := out[0].(segment.Page)
+	req.True(ok)
+
+	suite.checkPageBasic(page)
+	suite.checkPageLoggedIn(page)
+	suite.checkPageError(page)
+}
+
+func (suite *AnalyticsTestSuite) TestMalformedCommand() {
+	req := require.New(suite.T())
+	rootCmd := &cobra.Command{
+		Use: suite.config.CLIName,
+	}
+	randomCmd := &cobra.Command{
+		Use:    "random",
+		Run:    func(cmd *cobra.Command, args []string) {},
+		PreRun: suite.analyticsClient.TrackCommand,
+	}
+	rootCmd.AddCommand(randomCmd)
+	command := cmd.Command{
+		Command:   rootCmd,
+		Analytics: suite.analyticsClient,
+	}
+	rootCmd.SetArgs([]string{unknownCmd})
+	err := command.Execute()
+	req.NotNil(err)
+
+	out := suite.getOutput()
+	req.Equal(1, len(out))
+	track, ok := out[0].(segment.Track)
+	req.True(ok)
+
+	suite.checkMalformedCommandTrack(track)
+}
+
+func (suite *AnalyticsTestSuite) TestHideSecretForApiStore() {
+	// login the user
+	suite.setLoginConfig()
+
+	req := require.New(suite.T())
+	rootCmd := &cobra.Command{
+		Use: "ccloud",
+	}
+	apiCmd := &cobra.Command{
+		Use: "api-key",
+	}
+	storeCmd := &cobra.Command{
+		Use:    "store",
+		Run:    func(cmd *cobra.Command, args []string) {},
+		PreRun: suite.analyticsClient.TrackCommand,
+	}
+	apiCmd.AddCommand(storeCmd)
+	rootCmd.AddCommand(apiCmd)
+	command := cmd.Command{
+		Command:   rootCmd,
+		Analytics: suite.analyticsClient,
+	}
+	rootCmd.SetArgs([]string{"api-key", "store", apiKey, apiSecret})
+	err := command.Execute()
+	req.NoError(err)
+
+	out := suite.getOutput()
+	req.Equal(1, len(out))
+	page, ok := out[0].(segment.Page)
+	req.True(ok)
+
+	suite.checkPageBasic(page)
+	suite.checkPageLoggedIn(page)
+	suite.checkPageSuccess(page)
+
+	args, ok := (page.Properties[analytics.ArgsPropertiesKey]).([]string)
+	req.True(ok)
+	req.Equal(2, len(args))
+	req.Equal(apiKey, args[0])
+	req.Equal(analytics.SecretValueString, args[1])
+}
+
+
+// --------------------------- setup helper functions -------------------------------
 func (suite *AnalyticsTestSuite) createAuth() {
 	user := &v1.User{
 		Id:             userId,
@@ -109,6 +322,7 @@ func (suite *AnalyticsTestSuite) createCredentials() {
 	suite.config.Credentials = credentials
 }
 
+// --------------------------- login, logout, context switching helpers -------------------------------
 func (suite *AnalyticsTestSuite) setLoginConfig() {
 	suite.config.Auth = suite.auth
 	suite.config.CurrentContext = userNameContext
@@ -122,232 +336,16 @@ func (suite *AnalyticsTestSuite) apiKeyCredContext() {
 	suite.config.CurrentContext = apiKeyContext
 }
 
-func (suite *AnalyticsTestSuite) TestSuccessWithFlagAndArgs() {
-	// assume user already logged in
-	suite.setLoginConfig()
-
-	req := require.New(suite.T())
-	l := make([]segment.Message, 0)
-	out := &l
-	analyticsClient := suite.getAnalyticsClient(out)
-	cobraCmd := &cobra.Command{
-		Run:    func(cmd *cobra.Command, args []string) {},
-		PreRun: analyticsClient.TrackCommand,
-	}
-	cobraCmd.Flags().String(flagName, "", "")
-	cobraCmd.SetArgs([]string{arg1, arg2, "--" + flagName + "=" + flagArg})
-	command := cmd.Command{
-		Command:   cobraCmd,
-		Analytics: analyticsClient,
-	}
-	err := command.Execute()
-	req.NoError(err)
-	req.Equal(1, len(*out))
-	page, ok := (*out)[0].(segment.Page)
-	req.True(ok)
-
-	suite.checkPageBasic(page)
-	suite.checkPageLoggedIn(page)
-	suite.checkPageSuccess(page)
-
-	flags, ok := (page.Properties[analytics.FlagsPropertiesKey]).(map[string]string)
-	req.True(ok)
-	req.Equal(1, len(flags))
-	flagVal, ok := flags[flagName]
-	req.True(ok)
-	req.Equal(flagArg, flagVal)
-
-	args, ok := (page.Properties[analytics.ArgsPropertiesKey]).([]string)
-	req.True(ok)
-	req.Equal(2, len(args))
-	req.Equal(arg1, args[0])
-	req.Equal(arg2, args[1])
-}
-
-func (suite *AnalyticsTestSuite) TestLogin() {
-	l := make([]segment.Message, 0)
-	out := &l
-	analyticsClient := suite.getAnalyticsClient(out)
-	req := require.New(suite.T())
-
-	suite.setLoginConfig()
-	rootCmd := &cobra.Command{
-		Use: suite.config.CLIName,
-	}
-	loginCmd := &cobra.Command{
-		Use:    "login",
-		Run:    func(cmd *cobra.Command, args []string) {},
-		PreRun: analyticsClient.TrackCommand,
-	}
-	rootCmd.AddCommand(loginCmd)
-	command := cmd.Command{
-		Command:   rootCmd,
-		Analytics: analyticsClient,
-	}
-	rootCmd.SetArgs([]string{"login"})
-	err := command.Execute()
-	req.NoError(err)
-	req.Equal(2, len(*out))
-	for _, msg := range *out {
-		switch msg.(type) {
-		case segment.Page:
-			page, ok := msg.(segment.Page)
-			req.True(ok)
-			suite.checkPageSuccess(page)
-			suite.checkPageBasic(page)
-			suite.checkPageLoggedIn(page)
-		case segment.Identify:
-			identify, ok := msg.(segment.Identify)
-			req.True(ok)
-			suite.checkIdentify(identify)
-		}
-	}
-}
-
-func (suite *AnalyticsTestSuite) TestUserNotLoggedIn() {
-	// make sure user is logged out
-	suite.logOut()
-
-	req := require.New(suite.T())
-	l := make([]segment.Message, 0)
-	out := &l
-	analyticsClient := suite.getAnalyticsClient(out)
-	cobraCmd := &cobra.Command{
-		Run:    func(cmd *cobra.Command, args []string) {},
-		PreRun: analyticsClient.TrackCommand,
-	}
-	command := cmd.Command{
-		Command:   cobraCmd,
-		Analytics: analyticsClient,
-	}
-	err := command.Execute()
-	req.NoError(err)
-
-	req.Equal(1, len(*out))
-	page, ok := (*out)[0].(segment.Page)
-	req.True(ok)
-
-	suite.checkPageBasic(page)
-	suite.checkPageNotLoggedIn(page)
-	suite.checkPageSuccess(page)
-}
-
-func (suite *AnalyticsTestSuite) TestInternalError() {
-	// assume user is logged in
-	suite.setLoginConfig()
-
-	req := require.New(suite.T())
-	l := make([]segment.Message, 0)
-	out := &l
-	analyticsClient := suite.getAnalyticsClient(out)
-	cobraCmd := &cobra.Command{
-		Use: "command",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return fmt.Errorf(errorMessage)
-		},
-		PreRun: analyticsClient.TrackCommand,
-	}
-	command := cmd.Command{
-		Command:   cobraCmd,
-		Analytics: analyticsClient,
-	}
-	err := command.Execute()
-	req.NotNil(err)
-
-	req.Equal(1, len(*out))
-	page, ok := (*out)[0].(segment.Page)
-	req.True(ok)
-
-	suite.checkPageBasic(page)
-	suite.checkPageLoggedIn(page)
-	suite.checkPageError(page)
-}
-
-func (suite *AnalyticsTestSuite) TestMalformedCommand() {
-	req := require.New(suite.T())
-	l := make([]segment.Message, 0)
-	out := &l
-	analyticsClient := suite.getAnalyticsClient(out)
-	rootCmd := &cobra.Command{
-		Use: suite.config.CLIName,
-	}
-	randomCmd := &cobra.Command{
-		Use:    "random",
-		Run:    func(cmd *cobra.Command, args []string) {},
-		PreRun: analyticsClient.TrackCommand,
-	}
-	rootCmd.AddCommand(randomCmd)
-	command := cmd.Command{
-		Command:   rootCmd,
-		Analytics: analyticsClient,
-	}
-	rootCmd.SetArgs([]string{"notrandom"})
-	err := command.Execute()
-	req.NotNil(err)
-
-	req.Equal(1, len(*out))
-	track, ok := (*out)[0].(segment.Track)
-	req.True(ok)
-
-	suite.checkMalformedCommandTrack(track)
-}
-
-func (suite *AnalyticsTestSuite) TestHideSecretForApiStore() {
-	// login the user
-	suite.setLoginConfig()
-
-	req := require.New(suite.T())
-	l := make([]segment.Message, 0)
-	out := &l
-	analyticsClient := suite.getAnalyticsClient(out)
-	rootCmd := &cobra.Command{
-		Use: "ccloud",
-	}
-	apiCmd := &cobra.Command{
-		Use: "api-key",
-	}
-	storeCmd := &cobra.Command{
-		Use:    "store",
-		Run:    func(cmd *cobra.Command, args []string) {},
-		PreRun: analyticsClient.TrackCommand,
-	}
-	apiCmd.AddCommand(storeCmd)
-	rootCmd.AddCommand(apiCmd)
-	command := cmd.Command{
-		Command:   rootCmd,
-		Analytics: analyticsClient,
-	}
-	rootCmd.SetArgs([]string{"api-key", "store", apiKey, apiSecret})
-	err := command.Execute()
-	req.NoError(err)
-
-	req.Equal(1, len(*out))
-	page, ok := (*out)[0].(segment.Page)
-	req.True(ok)
-
-	suite.checkPageBasic(page)
-	suite.checkPageLoggedIn(page)
-	suite.checkPageSuccess(page)
-
-	args, ok := (page.Properties[analytics.ArgsPropertiesKey]).([]string)
-	req.True(ok)
-	req.Equal(2, len(args))
-	req.Equal(apiKey, args[0])
-	req.Equal(analytics.SecretValueString, args[1])
-}
-
-func (suite *AnalyticsTestSuite) getAnalyticsClient(out *[]segment.Message) *analytics.Client {
-	mockClient := &analytics.MockSegmentClient{Out: out}
-	analyticsClient := analytics.NewAnalyticsClient(suite.config.CLIName, suite.config, version, mockClient, clockwork.NewFakeClockAt(testTime))
-	return analyticsClient
-}
-
+// --------------------------- Check helpers -------------------------------
 func (suite *AnalyticsTestSuite) checkPageBasic(page segment.Page) {
 	req := require.New(suite.T())
 	req.NotEqual("", page.AnonymousId)
 	startTime, ok := page.Properties[analytics.StartTimePropertiesKey]
 	req.True(ok)
 	req.Equal(testTime, startTime)
+	finishTime, ok := page.Properties[analytics.FinishTimePropertiesKey]
+	req.True(ok)
+	req.Equal(testTime, finishTime)
 	_, ok = page.Properties[analytics.ArgsPropertiesKey]
 	req.True(ok)
 	_, ok = page.Properties[analytics.FlagsPropertiesKey]
@@ -385,8 +383,6 @@ func (suite *AnalyticsTestSuite) checkPageError(page segment.Page) {
 	succeeded, ok := page.Properties[analytics.SucceededPropertiesKey]
 	req.True(ok)
 	req.False(succeeded.(bool))
-	_, ok = page.Properties[analytics.FinishTimePropertiesKey]
-	req.False(ok)
 }
 
 func (suite *AnalyticsTestSuite) checkPageSuccess(page segment.Page) {
@@ -396,9 +392,6 @@ func (suite *AnalyticsTestSuite) checkPageSuccess(page segment.Page) {
 	succeeded, ok := page.Properties[analytics.SucceededPropertiesKey]
 	req.True(ok)
 	req.True(succeeded.(bool))
-	finishTime, ok := page.Properties[analytics.FinishTimePropertiesKey]
-	req.True(ok)
-	req.Equal(testTime, finishTime)
 }
 
 func (suite *AnalyticsTestSuite) checkIdentify(identify segment.Identify) {
@@ -409,8 +402,16 @@ func (suite *AnalyticsTestSuite) checkIdentify(identify segment.Identify) {
 
 func (suite *AnalyticsTestSuite) checkMalformedCommandTrack(track segment.Track) {
 	req := require.New(suite.T())
-	_, ok := track.Properties[analytics.ErrorMsgPropertiesKey]
+	errMsg, ok := track.Properties[analytics.ErrorMsgPropertiesKey]
 	req.True(ok)
+	req.Equal(fmt.Sprintf("unknown command \"%s\" for \"%s\"", unknownCmd, ccloudName), errMsg)
+}
+
+// -------------------------- other helpers ----------------------
+func (suite *AnalyticsTestSuite) getOutput() []segment.Message {
+	clientObj := suite.analyticsClient.(*analytics.ClientObj)
+	mockClient := clientObj.Client.(*analytics.MockSegmentClient)
+	return mockClient.Out
 }
 
 func TestAnalyticsTestSuite(t *testing.T) {

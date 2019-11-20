@@ -44,11 +44,11 @@ import (
 
 type Command struct {
 	*cobra.Command
-	Analytics *analytics.Client
+	Analytics analytics.Client
 	logger    *log.Logger
 }
 
-func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Version, logger *log.Logger, analytics *analytics.Client) (*Command, error) {
+func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Version, logger *log.Logger, analytics analytics.Client) (*Command, error) {
 	cli := &cobra.Command{
 		Use:               cliName,
 		Version:           ver.Version,

@@ -1,18 +1,15 @@
+//go:generate go run github.com/travisjeffery/mocker/cmd/mocker --prefix "" --dst mock/analytics.go --pkg mock --selfpkg github.com/confluentinc/cli analytics.go Client
 package analytics
 
 import (
-	"github.com/google/uuid"
 	"github.com/jonboulle/clockwork"
 	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"reflect"
 	"strconv"
 	"strings"
 
-	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 var (
@@ -41,136 +38,137 @@ var (
 
 	apiKeyCred   = "apikey"
 	userNameCred = "username"
-
-	tokenExpiredErrorMessage = errors.TypeMessages[reflect.TypeOf(&ccloud.ExpiredTokenError{})]
 )
 
-type Client struct {
+type Client interface {
+	TrackCommand(cmd *cobra.Command, args []string)
+	FlushCommandSucceeded() error
+	FlushCommandFailed(e error) error
+}
+
+type ClientObj struct {
 	cliName string
-	client  segment.Client
+	Client  segment.Client
 	config  *config.Config
 	clock   clockwork.Clock
 
 	// cache data until we flush events to segment (when each cmd call finishes)
 	cmdCalled   string
 	properties  segment.Properties
-	userId      string
-	anonymousId string
+	user        userInfo
 	cliVersion  string
 }
 
-func NewAnalyticsClient(cliName string, cfg *config.Config, version string, segmentClient segment.Client, clock clockwork.Clock) *Client {
-	client := &Client{
+type userInfo struct {
+	credential     string
+	id             string
+	email          string
+	organizationId string
+	apiKey         string
+}
+
+func NewAnalyticsClient(cliName string, cfg *config.Config, version string, segmentClient segment.Client, clock clockwork.Clock) *ClientObj {
+	client := &ClientObj{
 		cliName:    cliName,
-		client:     segmentClient,
+		Client:     segmentClient,
 		config:     cfg,
 		properties: make(segment.Properties),
 		cliVersion: version,
 		clock:      clock,
 	}
-	if cfg.AnonymousId == "" {
-		cfg.AnonymousId = uuid.New().String()
-	}
-	client.anonymousId = cfg.AnonymousId
 	return client
 }
 
-func (a *Client) TrackCommand(cmd *cobra.Command, args []string) {
+func (a *ClientObj) TrackCommand(cmd *cobra.Command, args []string) {
 	a.cmdCalled = cmd.CommandPath()
 	a.addArgsProperties(cmd, args)
 	a.addFlagProperties(cmd)
 	a.properties.Set(StartTimePropertiesKey, a.clock.Now())
 	a.properties.Set(VersionPropertiesKey, a.cliVersion)
+	a.user = a.getUser()
 }
 
-func (a *Client) FlushCommandSucceeded() error {
-	// for login user info can only be obtained after login succeeded
-	//if strings.Contains(a.cmdCalled, a.config.CLIName+" login") {
-	//	a.setUserInfo()
-	//	if err := a.identify(); err != nil {
-	//		return err
-	//	}
-	//}
-	a.setUserInfo()
+func (a *ClientObj) FlushCommandSucceeded() error {
+	defer a.Client.Close()
+	err := a.loginHandler()
+	if err != nil {
+		return err
+	}
 	a.properties.Set(SucceededPropertiesKey, true)
 	a.properties.Set(FinishTimePropertiesKey, a.clock.Now())
 	if err := a.sendPage(); err != nil {
 		return err
 	}
-	if strings.Contains(a.cmdCalled, a.config.CLIName+" logout") {
-		if err := a.resetAnonymousId(); err != nil {
+	if strings.Contains(a.cmdCalled, a.config.CLIName + " logout") {
+		if err := a.config.ResetAnonymousId(); err != nil {
 			return err
 		}
 	}
-	return a.client.Close()
+	return nil
 }
 
-func (a *Client) FlushCommandFailed(e error) error {
-	a.setUserInfo()
+func (a *ClientObj) FlushCommandFailed(e error) error {
+	defer a.Client.Close()
 	if a.cmdCalled == "" {
 		return a.malformedCommandError(e)
 	}
-	if e.Error() == tokenExpiredErrorMessage {
-		if err := a.resetAnonymousId(); err != nil {
-			return err
-		}
-	}
 	a.properties.Set(SucceededPropertiesKey, false)
+	a.properties.Set(FinishTimePropertiesKey, a.clock.Now())
 	a.properties.Set(ErrorMsgPropertiesKey, e.Error())
 	if err := a.sendPage(); err != nil {
 		return err
 	}
-	return a.client.Close()
+	return nil
 }
 
-func (a *Client) sendPage() error {
+// Helper Functions
+
+func (a *ClientObj) sendPage() error {
 	page := segment.Page{
-		AnonymousId: a.anonymousId,
+		AnonymousId: a.config.AnonymousId,
 		Name:        a.cmdCalled,
 		Properties:  a.properties,
+		UserId:      a.user.id,
 	}
-	if a.userId != "" {
-		page.UserId = a.userId
-	}
-	cred := a.getCredentialType()
-	a.properties.Set(CredentialPropertiesKey, cred)
-	if cred == apiKeyCred {
-		a.properties.Set(ApiKeyPropertiesKey, a.getCredApiKey())
-	}
-	return a.client.Enqueue(page)
+	a.addUserProperties()
+	return a.Client.Enqueue(page)
 }
 
-func (a *Client) identify() error {
+func (a *ClientObj) identify() error {
 	identify := segment.Identify{
-		AnonymousId: a.anonymousId,
-		UserId:      a.userId,
+		AnonymousId: a.config.AnonymousId,
+		UserId:      a.user.id,
 	}
 	traits := segment.Traits{}
 	traits.Set(VersionPropertiesKey, a.cliVersion)
 	traits.Set(CliNameTraitsKey, a.config.CLIName)
+	traits.Set(CredentialPropertiesKey, a.user.credential)
+	if a.user.credential == apiKeyCred {
+		traits.Set(ApiKeyPropertiesKey, a.user.apiKey)
+	}
 	identify.Traits = traits
-	return a.client.Enqueue(identify)
+	return a.Client.Enqueue(identify)
 }
 
-func (a *Client) malformedCommandError(e error) error {
-	properties := make(segment.Properties)
-	properties.Set(ErrorMsgPropertiesKey, e.Error())
+func (a *ClientObj) malformedCommandError(e error) error {
+	defer a.Client.Close()
+	a.user = a.getUser()
+	a.properties.Set(ErrorMsgPropertiesKey, e.Error())
 	track := segment.Track{
-		AnonymousId: a.anonymousId,
+		AnonymousId: a.config.AnonymousId,
 		Event:       malformedCmdEventName,
-		Properties:  properties,
+		Properties:  a.properties,
+		UserId:      a.user.id,
 	}
-	if a.userId != "" {
-		track.UserId = a.userId
-	}
-	err := a.client.Enqueue(track)
+	a.addUserProperties()
+	err := a.Client.Enqueue(track)
 	if err != nil {
 		return err
 	}
-	return a.client.Close()
+	return nil
 }
 
-func (a *Client) addFlagProperties(cmd *cobra.Command) {
+func (a *ClientObj) addFlagProperties(cmd *cobra.Command) {
 	flags := make(map[string]string)
 	cmd.Flags().Visit(func(f *pflag.Flag) {
 		if flagNames, ok := secretCommandFlags[cmd.CommandPath()]; ok {
@@ -188,7 +186,7 @@ func (a *Client) addFlagProperties(cmd *cobra.Command) {
 	a.properties.Set(FlagsPropertiesKey, flags)
 }
 
-func (a *Client) addArgsProperties(cmd *cobra.Command, args []string) {
+func (a *ClientObj) addArgsProperties(cmd *cobra.Command, args []string) {
 	argsCopy := make([]string, len(args))
 	copy(argsCopy, args)
 	if ids, ok := secretCommandArgs[cmd.CommandPath()]; ok {
@@ -199,20 +197,38 @@ func (a *Client) addArgsProperties(cmd *cobra.Command, args []string) {
 	a.properties.Set(ArgsPropertiesKey, argsCopy)
 }
 
-func (a *Client) setUserInfo() {
-	if a.cliName == "ccloud" {
-		cloudUserId, organizationId, email := a.getCloudUserInfo()
-		if cloudUserId != "" {
-			a.properties.Set(OrgIdPropertiesKey, organizationId)
-			a.properties.Set(EmailPropertiesKey, email)
-		}
-		a.userId = cloudUserId
-	} else {
-		a.userId = a.getCPUsername()
+func (a *ClientObj) addUserProperties() {
+	a.properties.Set(CredentialPropertiesKey, a.user.credential)
+	if a.user.organizationId != "" {
+		a.properties.Set(OrgIdPropertiesKey, a.user.organizationId)
+		a.properties.Set(EmailPropertiesKey, a.user.email)
+	}
+	if a.user.credential == apiKeyCred {
+		a.properties.Set(ApiKeyPropertiesKey, a.user.apiKey)
 	}
 }
 
-func (a *Client) getCloudUserInfo() (userId string, organizationId string, email string) {
+func (a *ClientObj) getUser() userInfo {
+	var user userInfo
+	user.credential = a.getCredentialType()
+	if user.credential == "none" {
+		return user
+	}
+	if user.credential == apiKeyCred {
+		user.apiKey = a.getCredApiKey()
+	}
+	if a.cliName == "ccloud" {
+		userId, organizationId, email := a.getCloudUserInfo()
+		user.id = userId
+		user.organizationId = organizationId
+		user.email = email
+	} else {
+		user.id = a.getCPUsername()
+	}
+	return user
+}
+
+func (a *ClientObj) getCloudUserInfo() (userId string, organizationId string, email string) {
 	if err := a.config.CheckLogin(); err != nil {
 		return "", "", ""
 	}
@@ -223,7 +239,7 @@ func (a *Client) getCloudUserInfo() (userId string, organizationId string, email
 	return userId, organizationId, email
 }
 
-func (a *Client) getCPUsername() string {
+func (a *ClientObj) getCPUsername() string {
 	if err := a.config.CheckLogin(); err != nil {
 		return ""
 	}
@@ -232,7 +248,7 @@ func (a *Client) getCPUsername() string {
 	return cred.Username
 }
 
-func (a *Client) getCredentialType() string {
+func (a *ClientObj) getCredentialType() string {
 	credType, err := a.config.CredentialType()
 	if err != nil {
 		return "none"
@@ -248,7 +264,7 @@ func (a *Client) getCredentialType() string {
 	return "none"
 }
 
-func (a *Client) getCredApiKey() string {
+func (a *ClientObj) getCredApiKey() string {
 	context, err := a.config.Context()
 	if err != nil {
 		return ""
@@ -259,10 +275,41 @@ func (a *Client) getCredApiKey() string {
 	return ""
 }
 
-func (a *Client) resetAnonymousId() error {
-	a.config.AnonymousId = ""
-	if err := a.config.Save(); err != nil {
-		return err
+func (a *ClientObj) loginHandler() error {
+	// do nothing for non login commands
+	if !(strings.Contains(a.cmdCalled, a.config.CLIName + " login") ||
+	     strings.Contains(a.cmdCalled, "ccloud init") ||
+		 strings.Contains(a.cmdCalled, "ccloud config context use")) {
+		return nil
+	}
+	prevUser := a.user
+	a.user = a.getUser()
+	// previous not logged in need to identify but no need for anonymous id reset
+	if prevUser.credential == "none" {
+		return a.identify()
+	}
+
+	if a.isSwitchAccountLogin(prevUser) {
+		if err := a.config.ResetAnonymousId(); err != nil {
+			return err
+		}
+		return a.identify()
 	}
 	return nil
+}
+
+func (a *ClientObj) isSwitchAccountLogin(prevUser userInfo) bool {
+	if prevUser.credential != a.user.credential {
+		return true
+	}
+	if a.user.credential == userNameCred {
+		if prevUser.id != a.user.id {
+			return true
+		}
+	} else if a.user.credential == apiKeyCred {
+		if a.user.apiKey != a.user.apiKey {
+			return true
+		}
+	}
+	return false
 }
