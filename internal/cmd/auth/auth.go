@@ -233,7 +233,7 @@ func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
 				defer caCertFile.Close()
 				a.certReader = caCertFile
 			}
-			a.mdsClient.GetConfig().HTTPClient, err = SelfSignedCertClient(a.certReader)
+			a.mdsClient.GetConfig().HTTPClient, err = SelfSignedCertClient(a.certReader, a.Logger)
 			if err != nil {
 				return errors.HandleCommon(err, cmd)
 			}
@@ -354,8 +354,11 @@ func (a *commands) addContextIfAbsent(username string, caCertPath string) error 
 	return nil
 }
 
-func SelfSignedCertClient(certReader io.Reader) (*http.Client, error){
-	certPool, _ := x509.SystemCertPool()
+func SelfSignedCertClient(certReader io.Reader, logger *log.Logger) (*http.Client, error){
+	certPool, err := x509.SystemCertPool()
+	if err != nil {
+		logger.Warnf("Unable to load system certificates. Continuing with custom certificates only.")
+	}
 	if certPool == nil {
 		certPool = x509.NewCertPool()
 	}

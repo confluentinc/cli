@@ -247,8 +247,8 @@ func Test_SelfSignedCerts(t *testing.T) {
 		GetTokenFunc: func(ctx context.Context, xSPECIALRYANHEADER string) (mds.AuthenticationResponse, *http.Response, error) {
 			req.NotEqual(http.DefaultClient, mdsClient)
 			transport, ok := mdsClient.GetConfig().HTTPClient.Transport.(*http.Transport)
-			req.NotEqual(http.DefaultTransport, transport)
 			req.True(ok)
+			req.NotEqual(http.DefaultTransport, transport)
 			found := false
 			for _, actualSubject := range transport.TLSClientConfig.RootCAs.Subjects() {
 				if bytes.Equal(expectedSubject, actualSubject) {

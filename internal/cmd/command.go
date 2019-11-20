@@ -100,7 +100,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 			caCertFile, err := os.Open(caCertPath)
 			if err == nil {
 				defer caCertFile.Close()
-				mdsConfig.HTTPClient, err = auth.SelfSignedCertClient(caCertFile)
+				mdsConfig.HTTPClient, err = auth.SelfSignedCertClient(caCertFile, logger)
 				if err != nil {
 					logger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
 					mdsConfig.HTTPClient = auth.DefaultClient()

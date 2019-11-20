@@ -49,7 +49,7 @@ Install Zsh completions:
   autoload -U compinit && compinit
 
 Add the autoload command in your ` + "``~/.zshrc``" + ` to enable completions for new terminals. If
-you encounter error messages about insecure files, you can resolve by running the chown
+you encounter error messages about insecure files, you can resolve by running the ` + "``chown``" + `
 command to change the ` + "``_{{.CLIName}}``" + ` file to the same ` + "``user:group``" + ` as the other files in
 ` + "``${fpath[1]}/``" + `.
 
