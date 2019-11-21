@@ -15,6 +15,7 @@ import (
 	v1 "github.com/confluentinc/ccloudapis/org/v1"
 	"github.com/confluentinc/cli/internal/cmd"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
+	"github.com/confluentinc/cli/internal/pkg/analytics/mock"
 	"github.com/confluentinc/cli/internal/pkg/config"
 )
 
@@ -28,6 +29,11 @@ var (
 	userId          = int32(123)
 	organizationId  = int32(321)
 	userEmail       = "tester@confluent.io"
+
+	otherUserId     = int32(111)
+	otherUserEmail  = "other@confluent.io"
+	otherUserContext    = "login-other@confluent.io"
+	otherUserCred   = "username-other@confluent.io"
 
 	ccloudName    = "ccloud"
 	flagName      = "flag"
@@ -46,7 +52,11 @@ type AnalyticsTestSuite struct {
 	suite.Suite
 	config          *config.Config
 	auth            *config.AuthConfig
+	authOther       *config.AuthConfig
+
 	analyticsClient analytics.Client
+	mockClient      *mock.SegmentClient
+	output          *[]segment.Message
 }
 
 func (suite *AnalyticsTestSuite) SetupSuite() {
@@ -58,13 +68,22 @@ func (suite *AnalyticsTestSuite) SetupSuite() {
 }
 
 func (suite *AnalyticsTestSuite) SetupTest() {
-	mockClient := analytics.NewMockSegmentClient()
-	suite.analyticsClient = analytics.NewAnalyticsClient(suite.config.CLIName, suite.config, version, mockClient, clockwork.NewFakeClockAt(testTime))
+	//mockClient := analytics.NewMockSegmentClient()
+	out := make([]segment.Message, 0)
+	suite.output = &out
+	suite.mockClient = &mock.SegmentClient{
+		EnqueueFunc: func(m segment.Message) error {
+			*suite.output = append(*suite.output, m)
+			return nil
+		},
+		CloseFunc: func() error {return nil},
+	}
+	suite.analyticsClient = analytics.NewAnalyticsClient(suite.config.CLIName, suite.config, version, suite.mockClient, clockwork.NewFakeClockAt(testTime))
 }
 
 func (suite *AnalyticsTestSuite) TestSuccessWithFlagAndArgs() {
 	// assume user already logged in
-	suite.setLoginConfig()
+	suite.loginUser()
 
 	req := require.New(suite.T())
 	cobraCmd := &cobra.Command{
@@ -79,8 +98,9 @@ func (suite *AnalyticsTestSuite) TestSuccessWithFlagAndArgs() {
 	}
 	err := command.Execute()
 	req.NoError(err)
+	req.True(suite.mockClient.CloseCalled())
 
-	out := suite.getOutput()
+	out := *suite.output
 	req.Equal(1, len(out))
 	page, ok := out[0].(segment.Page)
 	req.True(ok)
@@ -114,7 +134,7 @@ func (suite *AnalyticsTestSuite) TestLogin() {
 	loginCmd := &cobra.Command{
 		Use:    "login",
 		Run:    func(cmd *cobra.Command, args []string) {
-			suite.setLoginConfig()
+			suite.loginUser()
 		},
 		PreRun: suite.analyticsClient.TrackCommand,
 	}
@@ -126,8 +146,9 @@ func (suite *AnalyticsTestSuite) TestLogin() {
 	rootCmd.SetArgs([]string{"login"})
 	err := command.Execute()
 	req.NoError(err)
+	req.True(suite.mockClient.CloseCalled())
 
-	out := suite.getOutput()
+	out := *suite.output
 	req.Equal(2, len(out))
 	for _, msg := range out {
 		switch msg.(type) {
@@ -145,6 +166,80 @@ func (suite *AnalyticsTestSuite) TestLogin() {
 	}
 }
 
+func (suite *AnalyticsTestSuite) TestAnonymousIdReset() {
+	req := require.New(suite.T())
+
+	// make sure user is logged out
+	suite.logOut()
+	rootCmd := &cobra.Command{
+		Use: suite.config.CLIName,
+	}
+	loginCmd := &cobra.Command{
+		Use:    "login",
+		PreRun: suite.analyticsClient.TrackCommand,
+	}
+
+	loginUserCmd := &cobra.Command{
+		Use:    "user",
+		Run:    func(cmd *cobra.Command, args []string) {
+			suite.loginUser()
+		},
+		PreRun: suite.analyticsClient.TrackCommand,
+	}
+	loginCmd.AddCommand(loginUserCmd)
+
+	loginOtherCmd := &cobra.Command{
+		Use:    "other",
+		Run:    func(cmd *cobra.Command, args []string) {
+			suite.loginOtherUser()
+		},
+		PreRun: suite.analyticsClient.TrackCommand,
+	}
+	loginCmd.AddCommand(loginOtherCmd)
+
+	rootCmd.AddCommand(loginCmd)
+	command := cmd.Command{
+		Command:   rootCmd,
+		Analytics: suite.analyticsClient,
+	}
+	rootCmd.SetArgs([]string{"login", "user"})
+	err := command.Execute()
+	req.NoError(err)
+	req.True(suite.mockClient.CloseCalled())
+
+	out := *suite.output
+	req.Equal(2, len(out))
+	var firstAnonId string
+	for _, msg := range out {
+		switch msg.(type) {
+		case segment.Page:
+			page, ok := msg.(segment.Page)
+			req.True(ok)
+			firstAnonId = page.AnonymousId
+		}
+	}
+
+	*suite.output = make([]segment.Message, 0)
+	rootCmd.SetArgs([]string{"login", "other"})
+	err = command.Execute()
+	req.NoError(err)
+	req.True(suite.mockClient.CloseCalled())
+
+	out = *suite.output
+	req.Equal(2, len(out))
+	var secondAnonId string
+	for _, msg := range out {
+		switch msg.(type) {
+		case segment.Page:
+			page, ok := msg.(segment.Page)
+			req.True(ok)
+			secondAnonId = page.AnonymousId
+		}
+	}
+
+	req.NotEqual(firstAnonId, secondAnonId)
+}
+
 func (suite *AnalyticsTestSuite) TestUserNotLoggedIn() {
 	// make sure user is logged out
 	suite.logOut()
@@ -160,8 +255,9 @@ func (suite *AnalyticsTestSuite) TestUserNotLoggedIn() {
 	}
 	err := command.Execute()
 	req.NoError(err)
+	req.True(suite.mockClient.CloseCalled())
 
-	out := suite.getOutput()
+	out := *suite.output
 	req.Equal(1, len(out))
 	page, ok := out[0].(segment.Page)
 	req.True(ok)
@@ -173,7 +269,7 @@ func (suite *AnalyticsTestSuite) TestUserNotLoggedIn() {
 
 func (suite *AnalyticsTestSuite) TestInternalError() {
 	// assume user is logged in
-	suite.setLoginConfig()
+	suite.loginUser()
 
 	req := require.New(suite.T())
 	cobraCmd := &cobra.Command{
@@ -189,8 +285,9 @@ func (suite *AnalyticsTestSuite) TestInternalError() {
 	}
 	err := command.Execute()
 	req.NotNil(err)
+	req.True(suite.mockClient.CloseCalled())
 
-	out := suite.getOutput()
+	out := *suite.output
 	req.Equal(1, len(out))
 	page, ok := out[0].(segment.Page)
 	req.True(ok)
@@ -218,8 +315,9 @@ func (suite *AnalyticsTestSuite) TestMalformedCommand() {
 	rootCmd.SetArgs([]string{unknownCmd})
 	err := command.Execute()
 	req.NotNil(err)
+	req.True(suite.mockClient.CloseCalled())
 
-	out := suite.getOutput()
+	out := *suite.output
 	req.Equal(1, len(out))
 	track, ok := out[0].(segment.Track)
 	req.True(ok)
@@ -229,7 +327,7 @@ func (suite *AnalyticsTestSuite) TestMalformedCommand() {
 
 func (suite *AnalyticsTestSuite) TestHideSecretForApiStore() {
 	// login the user
-	suite.setLoginConfig()
+	suite.loginUser()
 
 	req := require.New(suite.T())
 	rootCmd := &cobra.Command{
@@ -252,8 +350,9 @@ func (suite *AnalyticsTestSuite) TestHideSecretForApiStore() {
 	rootCmd.SetArgs([]string{"api-key", "store", apiKey, apiSecret})
 	err := command.Execute()
 	req.NoError(err)
+	req.True(suite.mockClient.CloseCalled())
 
-	out := suite.getOutput()
+	out := *suite.output
 	req.Equal(1, len(out))
 	page, ok := out[0].(segment.Page)
 	req.True(ok)
@@ -287,45 +386,71 @@ func (suite *AnalyticsTestSuite) createAuth() {
 		Account: account,
 	}
 	suite.auth = auth
+
+	otherUser := &v1.User{
+		Id:             otherUserId,
+		Email:          userEmail,
+		OrganizationId: organizationId,
+	}
+	authOther := &config.AuthConfig{
+		User:    otherUser,
+		Account: account,
+	}
+	suite.authOther = authOther
 }
 
 func (suite *AnalyticsTestSuite) createContexts() {
 	contexts := make(map[string]*config.Context)
-	apiContext := config.Context{
+	apiContext := &config.Context{
 		Name:       apiKeyContext,
 		Credential: apiKeyCred,
 	}
-	userContext := config.Context{
+	userContext := &config.Context{
 		Name:       userNameContext,
 		Credential: userNameCred,
 	}
-	contexts[apiKeyContext] = &apiContext
-	contexts[userNameContext] = &userContext
+	otherContext := &config.Context{
+		Name:       otherUserContext,
+		Credential: otherUserCred,
+	}
+	contexts[apiKeyContext] = apiContext
+	contexts[userNameContext] = userContext
+	contexts[otherUserContext] = otherContext
 	suite.config.Contexts = contexts
 }
 
 func (suite *AnalyticsTestSuite) createCredentials() {
 	credentials := make(map[string]*config.Credential)
-	apiCred := config.Credential{
+	apiCred := &config.Credential{
 		APIKeyPair: &config.APIKeyPair{
 			Key:    apiKey,
 			Secret: apiSecret,
 		},
 		CredentialType: config.APIKey,
 	}
-	userCred := config.Credential{
-		Username:       "tester@confluent.io",
+	userCred := &config.Credential{
+		Username:       userEmail,
 		CredentialType: config.Username,
 	}
-	credentials[apiKeyCred] = &apiCred
-	credentials[userNameCred] = &userCred
+	otherCred := &config.Credential{
+		Username:       otherUserEmail,
+		CredentialType: config.Username,
+	}
+	credentials[apiKeyCred] = apiCred
+	credentials[userNameCred] = userCred
+	credentials[otherUserCred] = otherCred
 	suite.config.Credentials = credentials
 }
 
 // --------------------------- login, logout, context switching helpers -------------------------------
-func (suite *AnalyticsTestSuite) setLoginConfig() {
+func (suite *AnalyticsTestSuite) loginUser() {
 	suite.config.Auth = suite.auth
 	suite.config.CurrentContext = userNameContext
+}
+
+func (suite *AnalyticsTestSuite) loginOtherUser() {
+	suite.config.Auth = suite.authOther
+	suite.config.CurrentContext = otherUserContext
 }
 
 func (suite *AnalyticsTestSuite) logOut() {
@@ -333,6 +458,7 @@ func (suite *AnalyticsTestSuite) logOut() {
 }
 
 func (suite *AnalyticsTestSuite) apiKeyCredContext() {
+	suite.config.Auth = nil
 	suite.config.CurrentContext = apiKeyContext
 }
 
@@ -405,13 +531,6 @@ func (suite *AnalyticsTestSuite) checkMalformedCommandTrack(track segment.Track)
 	errMsg, ok := track.Properties[analytics.ErrorMsgPropertiesKey]
 	req.True(ok)
 	req.Equal(fmt.Sprintf("unknown command \"%s\" for \"%s\"", unknownCmd, ccloudName), errMsg)
-}
-
-// -------------------------- other helpers ----------------------
-func (suite *AnalyticsTestSuite) getOutput() []segment.Message {
-	clientObj := suite.analyticsClient.(*analytics.ClientObj)
-	mockClient := clientObj.Client.(*analytics.MockSegmentClient)
-	return mockClient.Out
 }
 
 func TestAnalyticsTestSuite(t *testing.T) {

@@ -289,7 +289,7 @@ func (a *ClientObj) loginHandler() error {
 		return a.identify()
 	}
 
-	if a.isSwitchAccountLogin(prevUser) {
+	if a.isSwitchUserLogin(prevUser) {
 		if err := a.config.ResetAnonymousId(); err != nil {
 			return err
 		}
@@ -298,7 +298,7 @@ func (a *ClientObj) loginHandler() error {
 	return nil
 }
 
-func (a *ClientObj) isSwitchAccountLogin(prevUser userInfo) bool {
+func (a *ClientObj) isSwitchUserLogin(prevUser userInfo) bool {
 	if prevUser.credential != a.user.credential {
 		return true
 	}
