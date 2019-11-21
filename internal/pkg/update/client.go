@@ -41,6 +41,8 @@ type ClientParams struct {
 	Repository Repository
 	Out        pio.File
 	Logger     *log.Logger
+	// Optional, if you want to disable checking for updates
+	DisableCheck bool
 	// Optional, if you wish to rate limit your update checks. The parent directories must exist.
 	CheckFile string
 	// Optional, defaults to checking once every 24h
@@ -65,6 +67,9 @@ func NewClient(params *ClientParams) *client {
 
 // CheckForUpdates checks for new versions in the repo
 func (c *client) CheckForUpdates(name string, currentVersion string, forceCheck bool) (updateAvailable bool, latestVersion string, err error) {
+	if c.DisableCheck {
+		return false, currentVersion, nil
+	}
 	shouldCheck, err := c.readCheckFile()
 	if err != nil {
 		return false, currentVersion, err

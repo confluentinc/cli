@@ -222,10 +222,8 @@ func AssetNames() []string {
 
 // _bindata is a table, holding each asset generator, mapped to its name.
 var _bindata = map[string]func() (*asset, error){
-	"cp_cli/confluent.patch": cp_cliConfluentPatch,
-
-	"cp_cli/confluent.sh": cp_cliConfluentSh,
-
+	"cp_cli/confluent.patch":   cp_cliConfluentPatch,
+	"cp_cli/confluent.sh":      cp_cliConfluentSh,
 	"assets/sso_callback.html": assetsSso_callbackHtml,
 }
 
@@ -270,12 +268,12 @@ type bintree struct {
 }
 
 var _bintree = &bintree{nil, map[string]*bintree{
-	"assets": {nil, map[string]*bintree{
-		"sso_callback.html": {assetsSso_callbackHtml, map[string]*bintree{}},
+	"assets": &bintree{nil, map[string]*bintree{
+		"sso_callback.html": &bintree{assetsSso_callbackHtml, map[string]*bintree{}},
 	}},
-	"cp_cli": {nil, map[string]*bintree{
-		"confluent.patch": {cp_cliConfluentPatch, map[string]*bintree{}},
-		"confluent.sh":    {cp_cliConfluentSh, map[string]*bintree{}},
+	"cp_cli": &bintree{nil, map[string]*bintree{
+		"confluent.patch": &bintree{cp_cliConfluentPatch, map[string]*bintree{}},
+		"confluent.sh":    &bintree{cp_cliConfluentSh, map[string]*bintree{}},
 	}},
 }}
 

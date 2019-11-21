@@ -25,6 +25,7 @@ var (
 	ErrNoContext      = fmt.Errorf("context not set")
 	ErrNoKafkaContext = fmt.Errorf("kafka not set")
 	ErrNoSrEnabled    = fmt.Errorf("schema registry not enabled")
+	ErrNoKSQL    	  = fmt.Errorf("no KSQL found")
 )
 
 // UnspecifiedKafkaClusterError means the user needs to specify a kafka cluster

@@ -1,5 +1,7 @@
 strategy:
   matrix:
+    mac:
+      imageName: 'macOS-10.14'
     linux:
       imageName: 'ubuntu-18.04'
           #    linux:
@@ -16,7 +18,19 @@ steps:
 - script: |
     wget "https://storage.googleapis.com/golang/go1.12.5.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.12.5.tar.gz"
     tar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.12.5.tar.gz"
-  displayName: 'Install Go 1.12.5'
+  condition: eq( variables['Agent.OS'], 'Linux' )
+  displayName: 'Install Go 1.12.5 (Linux)'
+
+- script: |
+    brew install gnu-tar
+  condition: eq( variables['Agent.OS'], 'Darwin' )
+  displayName: 'Install gnu-tar (Darwin)'
+
+- script: |
+    wget "https://storage.googleapis.com/golang/go1.12.5.darwin-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.12.5.tar.gz"
+    gtar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.12.5.tar.gz"
+  condition: eq( variables['Agent.OS'], 'Darwin' )
+  displayName: 'Install Go 1.12.5 (Darwin)'
 
 # Linux
 - bash: |
@@ -24,7 +38,6 @@ steps:
     echo "##vso[task.setvariable variable=GOPATH]$(Agent.BuildDirectory)/gopath"
     echo "##vso[task.setvariable variable=GOBIN]$(Agent.BuildDirectory)/go/bin"
     echo "##vso[task.setvariable variable=modulePath]$(Agent.BuildDirectory)/go/src/github.com/$(build.repository.name)"
-    #  condition: eq( variables['Agent.OS'], 'Linux' )
   displayName: Properly configure our custom Go environment
 
 - task: DownloadSecureFile@1
@@ -54,7 +67,14 @@ steps:
 - script: |
     curl -Ls https://github.com/github/hub/releases/download/v2.11.1/hub-linux-amd64-2.11.1.tgz | sudo tar -xvz -C /usr/bin --strip-components=2 hub-linux-amd64-2.11.1/bin/hub
     sudo chmod 755 /usr/bin/hub
-  displayName: 'Install hub'
+  condition: eq( variables['Agent.OS'], 'Linux' )
+  displayName: 'Install hub (Linux)'
+
+- script: |
+    curl -Ls https://github.com/github/hub/releases/download/v2.11.1/hub-darwin-amd64-2.11.1.tgz | sudo gtar -xvz -C /usr/local/bin --strip-components=2 hub-darwin-amd64-2.11.1/bin/hub
+    sudo chmod 755 /usr/local/bin/hub
+  condition: eq( variables['Agent.OS'], 'Darwin' )
+  displayName: 'Install hub (Darwin)'
 
 - script: |
     mkdir -p ${GOPATH}/bin

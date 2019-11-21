@@ -28,6 +28,7 @@ import (
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
 	corev1 "github.com/confluentinc/ccloudapis/core/v1"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
+	ksqlv1 "github.com/confluentinc/ccloudapis/ksql/v1"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
 	utilv1 "github.com/confluentinc/ccloudapis/util/v1"
@@ -801,6 +802,20 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 			Endpoint:  "SASL_SSL://sr-endpoint",
 		}
 		b, err := utilv1.MarshalJSONToBytes(&srv1.GetSchemaRegistryClusterReply{
+			Cluster: srCluster,
+		})
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(b))
+		require.NoError(t, err)
+	})
+	router.HandleFunc("/api/ksqls/", func(w http.ResponseWriter, r *http.Request) {
+		srCluster := &ksqlv1.KSQLCluster{
+			Id:        "lksqlc-ksql1",
+			AccountId: "25",
+			Name:      "account ksql",
+			Endpoint:  "SASL_SSL://ksql-endpoint",
+		}
+		b, err := utilv1.MarshalJSONToBytes(&ksqlv1.GetKSQLClusterReply{
 			Cluster: srCluster,
 		})
 		require.NoError(t, err)
