@@ -7,6 +7,7 @@ import (
 
 	"github.com/confluentinc/ccloud-sdk-go"
 
+	"github.com/confluentinc/cli/internal/pkg/analytics"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -29,6 +30,7 @@ type PreRun struct {
 	Config       *config.Config
 	ConfigHelper *ConfigHelper
 	Clock        clockwork.Clock
+	Analytics    analytics.Client
 }
 
 // Anonymous provides PreRun operations for commands that may be run without a logged-in user
@@ -40,6 +42,7 @@ func (r *PreRun) Anonymous() func(cmd *cobra.Command, args []string) error {
 		if err := r.notifyIfUpdateAvailable(cmd, r.CLIName, r.Version); err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
+		r.Analytics.TrackCommand(cmd, args)
 		return nil
 	}
 }
