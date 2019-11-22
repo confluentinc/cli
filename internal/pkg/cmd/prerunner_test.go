@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
+	mockAnalytics "github.com/confluentinc/cli/internal/pkg/analytics/mock"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -82,6 +83,7 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 						return false, "", nil
 					},
 				},
+				Analytics: mockAnalytics.NewDummyAnalyticsMock(),
 			}
 
 			root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
@@ -119,6 +121,7 @@ func TestPreRun_HasAPIKey_SetupLoggingAndCheckForUpdates(t *testing.T) {
 				return false, "", nil
 			},
 		},
+		Analytics: mockAnalytics.NewDummyAnalyticsMock(),
 	}
 
 	root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
@@ -134,4 +137,35 @@ func TestPreRun_HasAPIKey_SetupLoggingAndCheckForUpdates(t *testing.T) {
 	if !calledAnonymous {
 		t.Errorf("PreRun.HasAPIKey() didn't call the Anonymous() helper to set logging level and updates")
 	}
+}
+
+func TestPreRun_CallsAnalyticsTrackCommand(t *testing.T) {
+	cfg := &config.Config{}
+	require.NoError(t, cfg.Load())
+
+	ver := version.NewVersion("ccloud", "Confluent Cloud CLI", "https://confluent.cloud; support@confluent.io", "1.2.3", "abc1234", "01/23/45", "CI")
+	analyticsClient := mockAnalytics.NewDummyAnalyticsMock()
+
+	r := &pcmd.PreRun{
+		Version: ver.Version,
+		Logger:  log.New(),
+		Config:  cfg,
+		UpdateClient: &mock.Client{
+			CheckForUpdatesFunc: func(n, v string, f bool) (bool, string, error) {
+				return false, "", nil
+			},
+		},
+		Analytics: analyticsClient,
+	}
+
+	root := &cobra.Command{
+		Run: func(cmd *cobra.Command, args []string) {},
+		PreRunE: r.Anonymous(),
+	}
+	root.Flags().CountP("verbose", "v", "Increase verbosity")
+
+	_, err := pcmd.ExecuteCommand(root)
+	require.NoError(t, err)
+
+	require.True(t, analyticsClient.TrackCommandCalled())
 }

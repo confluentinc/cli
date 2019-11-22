@@ -37,6 +37,7 @@ func TestConfig_Load(t *testing.T) {
 				Platforms:   map[string]*Platform{},
 				Credentials: map[string]*Credential{},
 				Contexts:    map[string]*Context{},
+				Analytics:   &AnalyticsConfig{},
 			},
 			file: "/tmp/TestConfig_Load.json",
 		},
@@ -51,6 +52,7 @@ func TestConfig_Load(t *testing.T) {
 				Platforms:   map[string]*Platform{},
 				Credentials: map[string]*Credential{},
 				Contexts:    map[string]*Context{},
+				Analytics:   &AnalyticsConfig{},
 			},
 			file: "/tmp/TestConfig_Load.json",
 		},
@@ -67,6 +69,8 @@ func TestConfig_Load(t *testing.T) {
 				t.Errorf("Config.Load() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			c.Filename = "" // only for testing
+			// get around automatically assigned anonymous id
+			tt.want.Analytics.AnonymousId = c.Analytics.AnonymousId
 			if !reflect.DeepEqual(c, tt.want) {
 				t.Errorf("Config.Load() = %v, want %v", c, tt.want)
 			}

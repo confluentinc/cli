@@ -2,6 +2,7 @@ package init
 
 import (
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/analytics"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -27,7 +28,15 @@ func New(prerunner pcmd.PreRunner, config *config.Config, prompt pcmd.Prompt, re
 			Use:               "init <context-name>",
 			Short:             "Initialize a context.",
 			Long:              longDescription,
-			PersistentPreRunE: prerunner.Anonymous(),
+			PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+				preRunObj, ok := prerunner.(*pcmd.PreRun)
+				// not ok only if mock prerunner object used
+				if !ok {
+					return prerunner.Anonymous()(cmd, args)
+				}
+				preRunObj.Analytics.SetCommandType(analytics.Init)
+				return prerunner.Anonymous()(cmd, args)
+			},
 			Args:              cobra.ExactArgs(1),
 		},
 		config,
