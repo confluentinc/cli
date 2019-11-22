@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/analytics"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -87,7 +88,7 @@ func (a *commands) init(prerunner pcmd.PreRunner) {
 		check(loginCmd.MarkFlagRequired("url")) // because https://confluent.cloud isn't an MDS endpoint
 	}
 	loginCmd.Flags().SortFlags = false
-	loginCmd.PersistentPreRunE = prerunner.Anonymous()
+	loginCmd.PersistentPreRunE = analyticsPreRunCover(analytics.Login, prerunner)
 	logoutCmd := &cobra.Command{
 		Use:   "logout",
 		Short: fmt.Sprintf("Logout of %s.", a.config.APIName()),
@@ -96,7 +97,7 @@ func (a *commands) init(prerunner pcmd.PreRunner) {
 		RunE: a.logout,
 		Args: cobra.NoArgs,
 	}
-	logoutCmd.PersistentPreRunE = prerunner.Anonymous()
+	logoutCmd.PersistentPreRunE = analyticsPreRunCover(analytics.Logout, prerunner)
 	a.Commands = []*cobra.Command{loginCmd, logoutCmd}
 }
 
@@ -392,5 +393,17 @@ func DefaultClient() *http.Client {
 func check(err error) {
 	if err != nil {
 		panic(err)
+	}
+}
+
+func analyticsPreRunCover(commandType analytics.CommandType, prerunner pcmd.PreRunner) func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		preRunObj, ok := prerunner.(*pcmd.PreRun)
+		// the only case where this is not ok is when we use prerunner mock instead
+		if !ok {
+			return prerunner.Anonymous()(cmd, args)
+		}
+		preRunObj.Analytics.SetCommandType(commandType)
+		return prerunner.Anonymous()(cmd, args)
 	}
 }

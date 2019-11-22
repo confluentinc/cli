@@ -7,6 +7,7 @@ import (
 
 	"github.com/confluentinc/ccloud-sdk-go"
 
+	"github.com/confluentinc/cli/internal/pkg/analytics"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -29,6 +30,7 @@ type PreRun struct {
 	Config       *config.Config
 	ConfigHelper *ConfigHelper
 	Clock        clockwork.Clock
+	Analytics    analytics.Client
 }
 
 // Anonymous provides PreRun operations for commands that may be run without a logged-in user
@@ -39,6 +41,18 @@ func (r *PreRun) Anonymous() func(cmd *cobra.Command, args []string) error {
 		}
 		if err := r.notifyIfUpdateAvailable(cmd, r.CLIName, r.Version); err != nil {
 			return errors.HandleCommon(err, cmd)
+		}
+
+		err := r.validateAuthTokenExpiry(cmd)
+		switch err.(type) {
+		case *ccloud.ExpiredTokenError:
+			err = r.Analytics.TrackCommand(cmd, args, true)
+		default:
+			err = r.Analytics.TrackCommand(cmd, args, false)
+		}
+		if err != nil {
+			r.Logger.Debugf("Analytics track command error: ", err)
+			return err
 		}
 		return nil
 	}
@@ -54,19 +68,8 @@ func (r *PreRun) Authenticated() func(cmd *cobra.Command, args []string) error {
 			return errors.HandleCommon(err, cmd)
 		}
 		if r.Config.AuthToken != "" {
-			// Validate token (not expired)
-			var claims map[string]interface{}
-			token, err := jwt.ParseSigned(r.Config.AuthToken)
-			if err != nil {
-				return errors.HandleCommon(&ccloud.InvalidTokenError{}, cmd)
-			}
-			if err := token.UnsafeClaimsWithoutVerification(&claims); err != nil {
+			if err := r.validateAuthTokenExpiry(cmd); err != nil {
 				return errors.HandleCommon(err, cmd)
-			}
-			if exp, ok := claims["exp"].(float64); ok {
-				if float64(r.Clock.Now().Unix()) > exp {
-					return errors.HandleCommon(&ccloud.ExpiredTokenError{}, cmd)
-				}
 			}
 		}
 		return nil
@@ -100,6 +103,24 @@ func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, name string, curren
 	if updateAvailable {
 		msg := "Updates are available for %s. To install them, please run:\n$ %s update\n\n"
 		ErrPrintf(cmd, msg, name, name)
+	}
+	return nil
+}
+
+
+func (r *PreRun) validateAuthTokenExpiry(cmd *cobra.Command) error {
+	var claims map[string]interface{}
+	token, err := jwt.ParseSigned(r.Config.AuthToken)
+	if err != nil {
+		return &ccloud.InvalidTokenError{}
+	}
+	if err := token.UnsafeClaimsWithoutVerification(&claims); err != nil {
+		return err
+	}
+	if exp, ok := claims["exp"].(float64); ok {
+		if float64(r.Clock.Now().Unix()) > exp {
+			return &ccloud.ExpiredTokenError{}
+		}
 	}
 	return nil
 }

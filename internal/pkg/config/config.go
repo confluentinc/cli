@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/atrox/homedir"
+	"github.com/google/uuid"
 
 	v1 "github.com/confluentinc/ccloudapis/org/v1"
 
@@ -27,6 +28,12 @@ type AuthConfig struct {
 	Accounts []*v1.Account `json:"accounts"`
 }
 
+// struct storing information needed for sending analytics data to segment
+type AnalyticsConfig struct {
+	AnonymousId          string
+	SessionTimedOutCount int
+}
+
 // Config represents the CLI configuration.
 type Config struct {
 	CLIName            string                 `json:"-"`
@@ -41,6 +48,7 @@ type Config struct {
 	Credentials        map[string]*Credential `json:"credentials"`
 	Contexts           map[string]*Context    `json:"contexts"`
 	CurrentContext     string                 `json:"current_context"`
+	Analytics          *AnalyticsConfig
 }
 
 // New initializes a new Config object
@@ -58,6 +66,10 @@ func New(config ...*Config) *Config {
 	c.Platforms = map[string]*Platform{}
 	c.Credentials = map[string]*Credential{}
 	c.Contexts = map[string]*Context{}
+	c.Analytics = &AnalyticsConfig{
+		AnonymousId:          uuid.New().String(),
+		SessionTimedOutCount: 0,
+	}
 	return c
 }
 
@@ -311,6 +323,16 @@ func (c *Config) CheckSchemaRegistryHasAPIKey() bool {
 		return false
 	}
 	return !(srCluster.SrCredentials == nil || len(srCluster.SrCredentials.Key) == 0 || len(srCluster.SrCredentials.Secret) == 0)
+}
+
+func (c *Config) ResetAnalyticsAnonymousId() error{
+	c.Analytics.AnonymousId = uuid.New().String()
+	return c.Save()
+}
+
+func (c *Config) SetAnalyticsSessionTimedOutCount(count int) error {
+	c.Analytics.SessionTimedOutCount = count
+	return c.Save()
 }
 
 func (c *Config) getFilename() (string, error) {
