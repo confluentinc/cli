@@ -27,12 +27,12 @@ var (
 
 	properNouns = []string{
 		"Apache", "Kafka", "CLI", "API", "ACL", "ACLs", "Confluent Cloud", "Confluent Platform", "Confluent", "RBAC", "IAM", "Schema Registry",
-		"Enterprise",
+		"Enterprise", "KSQL",
 	}
 	vocabWords = []string{
 		"ccloud", "kafka", "api", "url", "config", "configs", "multizone", "transactional", "ksql", "KSQL", "stdin",
 		// security
-		"iam", "acl", "ACL", "rolebinding", "rolebindings", "PEM", "auth", "init", "decrypt", "READWRITE",
+		"iam", "acl", "acls", "ACL", "rolebinding", "rolebindings", "PEM", "auth", "init", "decrypt", "READWRITE",
 		"txt", // this is because @file.txt -> file txt
 		// clouds
 		"aws", "gcp",
@@ -53,6 +53,7 @@ var (
 		// this doesn't need a --cluster
 		linter.ExcludeCommandContains("secret"),
 		linter.ExcludeCommandContains("schema-registry"),
+		linter.ExcludeCommandContains("ksql"),
 		// this is obviously cluster-scoped but isn't used for cloud where --cluster is used
 		linter.ExcludeCommandContains("cluster describe"),
 	}
@@ -90,6 +91,8 @@ var rules = []linter.Rule{
 		linter.ExcludeCommandContains("secret"),
 		// skip schema-registry commands which do not use names/ID's
 		linter.ExcludeCommandContains("schema-registry"),
+		// skip ksql configure-acls command as it can take any number of topic arguments
+		linter.ExcludeCommandContains("ksql app configure-acls"),
 		// skip cluster describe as it takes a URL as a flag instead of a resource identity
 		linter.ExcludeCommandContains("cluster describe"),
 	),
