@@ -137,6 +137,15 @@ func (suite *KSQLTestSuite) SetupTest() {
 		DescribeFunc: func(arg0 context.Context, arg1 *v1.KSQLCluster) (*v1.KSQLCluster, error) {
 			return suite.ksqlCluster, nil
 		},
+		CreateFunc: func(arg0 context.Context, arg1 *v1.KSQLClusterConfig) (*v1.KSQLCluster, error) {
+			return suite.ksqlCluster, nil
+		},
+		ListFunc: func(arg0 context.Context, arg1 *v1.KSQLCluster) ([]*v1.KSQLCluster, error) {
+			return []*v1.KSQLCluster{suite.ksqlCluster}, nil
+		},
+		DeleteFunc: func(arg0 context.Context, arg1 *v1.KSQLCluster) error {
+			return nil
+		},
 	}
 	suite.userc = &mock.User{
 		GetServiceAccountsFunc: func(arg0 context.Context) (users []*orgv1.User, e error) {
@@ -196,6 +205,46 @@ func (suite *KSQLTestSuite) TestShouldNotConfigureOnDryRun() {
 	req.Nil(err)
 	req.False(suite.kafkac.CreateACLCalled())
 	req.Equal(expectedACLs, buf.String())
+}
+
+func (suite *KSQLTestSuite) TestCreateKSQL() {
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"app", "create", ksqlClusterID, "--storage", "5"}))
+
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	req.True(suite.ksqlc.CreateCalled())
+}
+
+func (suite *KSQLTestSuite) TestDescribeKSQL() {
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"app", "describe", ksqlClusterID,}))
+
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	req.True(suite.ksqlc.DescribeCalled())
+}
+
+func (suite *KSQLTestSuite) TestListKSQL() {
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"app", "list",}))
+
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	req.True(suite.ksqlc.ListCalled())
+}
+
+func (suite *KSQLTestSuite) TestDeleteKSQL() {
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"app", "delete", ksqlClusterID,}))
+
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	req.True(suite.ksqlc.DeleteCalled())
 }
 
 func TestKsqlTestSuite(t *testing.T) {
