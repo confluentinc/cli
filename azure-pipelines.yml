@@ -94,7 +94,7 @@ steps:
   displayName: 'Put secrets in their right places (non-Windows)'
 
 - script: |
-    mv $(netrc.secureFilePath) %USERPROFILE%\.netrc
+    mv $(netrc.secureFilePath) %USERPROFILE%\_netrc
     mkdir %USERPROFILE%\.ssh
     mv $(idrsa.secureFilePath) %USERPROFILE%\.ssh\
   condition: eq( variables['Agent.OS'], 'Windows_NT' )
