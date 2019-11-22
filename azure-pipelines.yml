@@ -97,7 +97,6 @@ steps:
     mv $(netrc.secureFilePath) %USERPROFILE%\.netrc
     mkdir %USERPROFILE%\.ssh
     mv $(idrsa.secureFilePath) %USERPROFILE%\.ssh\
-    #sudo chmod 400 %USERPROFILE%\.ssh\id_rsa
   condition: eq( variables['Agent.OS'], 'Windows_NT' )
   displayName: 'Put secrets in their right places (Windows)'
 
