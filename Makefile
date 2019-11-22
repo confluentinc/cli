@@ -100,7 +100,7 @@ build-confluent:
 .PHONY: bindata
 bindata: internal/cmd/local/bindata.go
 
-internal/cmd/local/bindata.go: cp_cli/
+internal/cmd/local/bindata.go: cp_cli/ assets/
 	@go-bindata -pkg local -o internal/cmd/local/bindata.go cp_cli/ assets/
 
 .PHONY: release
