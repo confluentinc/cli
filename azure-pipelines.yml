@@ -80,8 +80,8 @@ steps:
 - script: |
     echo '##vso[task.prependpath]$(GOROOT)\bin'
     echo '##vso[task.prependpath]$(GOPATH)\bin'
-    mkdir -p ${GOPATH}\bin
-    mkdir -p ${GOROOT}\bin
+    mkdir ${GOPATH}\bin
+    mkdir ${GOROOT}\bin
   condition: eq( variables['Agent.OS'], 'Windows' )
   displayName: 'Set up the Go workspace (Windows)'
 
