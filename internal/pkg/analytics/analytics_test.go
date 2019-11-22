@@ -56,7 +56,7 @@ type AnalyticsTestSuite struct {
 
 	analyticsClient analytics.Client
 	mockClient      *mock.SegmentClient
-	output          *[]segment.Message
+	output          []segment.Message
 }
 
 func (suite *AnalyticsTestSuite) SetupSuite() {
@@ -68,12 +68,10 @@ func (suite *AnalyticsTestSuite) SetupSuite() {
 }
 
 func (suite *AnalyticsTestSuite) SetupTest() {
-	//mockClient := analytics.NewMockSegmentClient()
-	out := make([]segment.Message, 0)
-	suite.output = &out
+	suite.output = make([]segment.Message, 0)
 	suite.mockClient = &mock.SegmentClient{
 		EnqueueFunc: func(m segment.Message) error {
-			*suite.output = append(*suite.output, m)
+			suite.output = append(suite.output, m)
 			return nil
 		},
 		CloseFunc: func() error {return nil},
@@ -88,7 +86,7 @@ func (suite *AnalyticsTestSuite) TestSuccessWithFlagAndArgs() {
 	req := require.New(suite.T())
 	cobraCmd := &cobra.Command{
 		Run:    func(cmd *cobra.Command, args []string) {},
-		PreRun: suite.analyticsClient.TrackCommand,
+		PreRunE: suite.preRunFunc(false),
 	}
 	cobraCmd.Flags().String(flagName, "", "")
 	cobraCmd.SetArgs([]string{arg1, arg2, "--" + flagName + "=" + flagArg})
@@ -98,11 +96,9 @@ func (suite *AnalyticsTestSuite) TestSuccessWithFlagAndArgs() {
 	}
 	err := command.Execute()
 	req.NoError(err)
-	req.True(suite.mockClient.CloseCalled())
 
-	out := *suite.output
-	req.Equal(1, len(out))
-	page, ok := out[0].(segment.Page)
+	req.Equal(1, len(suite.output))
+	page, ok := suite.output[0].(segment.Page)
 	req.True(ok)
 
 	suite.checkPageBasic(page)
@@ -134,9 +130,10 @@ func (suite *AnalyticsTestSuite) TestLogin() {
 	loginCmd := &cobra.Command{
 		Use:    "login",
 		Run:    func(cmd *cobra.Command, args []string) {
+			suite.analyticsClient.SetCommandType(analytics.Login)
 			suite.loginUser()
 		},
-		PreRun: suite.analyticsClient.TrackCommand,
+		PreRunE: suite.preRunFunc(false),
 	}
 	rootCmd.AddCommand(loginCmd)
 	command := cmd.Command{
@@ -146,11 +143,9 @@ func (suite *AnalyticsTestSuite) TestLogin() {
 	rootCmd.SetArgs([]string{"login"})
 	err := command.Execute()
 	req.NoError(err)
-	req.True(suite.mockClient.CloseCalled())
 
-	out := *suite.output
-	req.Equal(2, len(out))
-	for _, msg := range out {
+	req.Equal(2, len(suite.output))
+	for _, msg := range suite.output {
 		switch msg.(type) {
 		case segment.Page:
 			page, ok := msg.(segment.Page)
@@ -176,24 +171,26 @@ func (suite *AnalyticsTestSuite) TestAnonymousIdReset() {
 	}
 	loginCmd := &cobra.Command{
 		Use:    "login",
-		PreRun: suite.analyticsClient.TrackCommand,
+		PreRunE: suite.preRunFunc(false),
 	}
 
 	loginUserCmd := &cobra.Command{
 		Use:    "user",
 		Run:    func(cmd *cobra.Command, args []string) {
+			suite.analyticsClient.SetCommandType(analytics.Login)
 			suite.loginUser()
 		},
-		PreRun: suite.analyticsClient.TrackCommand,
+		PreRunE: suite.preRunFunc(false),
 	}
 	loginCmd.AddCommand(loginUserCmd)
 
 	loginOtherCmd := &cobra.Command{
 		Use:    "other",
 		Run:    func(cmd *cobra.Command, args []string) {
+			suite.analyticsClient.SetCommandType(analytics.Login)
 			suite.loginOtherUser()
 		},
-		PreRun: suite.analyticsClient.TrackCommand,
+		PreRunE: suite.preRunFunc(false),
 	}
 	loginCmd.AddCommand(loginOtherCmd)
 
@@ -205,12 +202,10 @@ func (suite *AnalyticsTestSuite) TestAnonymousIdReset() {
 	rootCmd.SetArgs([]string{"login", "user"})
 	err := command.Execute()
 	req.NoError(err)
-	req.True(suite.mockClient.CloseCalled())
 
-	out := *suite.output
-	req.Equal(2, len(out))
+	req.Equal(2, len(suite.output))
 	var firstAnonId string
-	for _, msg := range out {
+	for _, msg := range suite.output {
 		switch msg.(type) {
 		case segment.Page:
 			page, ok := msg.(segment.Page)
@@ -219,19 +214,16 @@ func (suite *AnalyticsTestSuite) TestAnonymousIdReset() {
 		}
 	}
 
-	*suite.output = make([]segment.Message, 0)
 	rootCmd.SetArgs([]string{"login", "other"})
 	err = command.Execute()
 	req.NoError(err)
-	req.True(suite.mockClient.CloseCalled())
 
-	out = *suite.output
-	req.Equal(2, len(out))
+	req.Equal(4, len(suite.output))
 	var secondAnonId string
-	for _, msg := range out {
-		switch msg.(type) {
+	for i := 2; i < 4; i++ {
+		switch suite.output[i].(type) {
 		case segment.Page:
-			page, ok := msg.(segment.Page)
+			page, ok := suite.output[i].(segment.Page)
 			req.True(ok)
 			secondAnonId = page.AnonymousId
 		}
@@ -247,7 +239,7 @@ func (suite *AnalyticsTestSuite) TestUserNotLoggedIn() {
 	req := require.New(suite.T())
 	cobraCmd := &cobra.Command{
 		Run:    func(cmd *cobra.Command, args []string) {},
-		PreRun: suite.analyticsClient.TrackCommand,
+		PreRunE: suite.preRunFunc(false),
 	}
 	command := cmd.Command{
 		Command:   cobraCmd,
@@ -255,11 +247,9 @@ func (suite *AnalyticsTestSuite) TestUserNotLoggedIn() {
 	}
 	err := command.Execute()
 	req.NoError(err)
-	req.True(suite.mockClient.CloseCalled())
 
-	out := *suite.output
-	req.Equal(1, len(out))
-	page, ok := out[0].(segment.Page)
+	req.Equal(1, len(suite.output))
+	page, ok := suite.output[0].(segment.Page)
 	req.True(ok)
 
 	suite.checkPageBasic(page)
@@ -267,7 +257,34 @@ func (suite *AnalyticsTestSuite) TestUserNotLoggedIn() {
 	suite.checkPageSuccess(page)
 }
 
-func (suite *AnalyticsTestSuite) TestInternalError() {
+func (suite *AnalyticsTestSuite) TestSessionTimeOut() {
+	req := require.New(suite.T())
+	suite.loginUser()
+	prevAnonId := suite.config.Analytics.AnonymousId
+	req.Equal(0, suite.config.Analytics.SessionTimedOutCount)
+	cobraCmd := &cobra.Command{
+		Run:    func(cmd *cobra.Command, args []string) {},
+		PreRunE: suite.preRunFunc(true),
+	}
+	command := cmd.Command{
+		Command:   cobraCmd,
+		Analytics: suite.analyticsClient,
+	}
+	err := command.Execute()
+	req.NoError(err)
+
+	req.Equal(1, len(suite.output))
+	page, ok := suite.output[0].(segment.Page)
+	req.True(ok)
+
+	suite.checkPageBasic(page)
+	suite.checkPageNotLoggedIn(page)
+	suite.checkPageSuccess(page)
+	req.NotEqual(prevAnonId, suite.config.Analytics.AnonymousId)
+	req.Equal(1, suite.config.Analytics.SessionTimedOutCount)
+}
+
+func (suite *AnalyticsTestSuite) TestErrorReturnedByCommand() {
 	// assume user is logged in
 	suite.loginUser()
 
@@ -277,7 +294,7 @@ func (suite *AnalyticsTestSuite) TestInternalError() {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf(errorMessage)
 		},
-		PreRun: suite.analyticsClient.TrackCommand,
+		PreRunE: suite.preRunFunc(false),
 	}
 	command := cmd.Command{
 		Command:   cobraCmd,
@@ -285,11 +302,9 @@ func (suite *AnalyticsTestSuite) TestInternalError() {
 	}
 	err := command.Execute()
 	req.NotNil(err)
-	req.True(suite.mockClient.CloseCalled())
 
-	out := *suite.output
-	req.Equal(1, len(out))
-	page, ok := out[0].(segment.Page)
+	req.Equal(1, len(suite.output))
+	page, ok := suite.output[0].(segment.Page)
 	req.True(ok)
 
 	suite.checkPageBasic(page)
@@ -305,7 +320,7 @@ func (suite *AnalyticsTestSuite) TestMalformedCommand() {
 	randomCmd := &cobra.Command{
 		Use:    "random",
 		Run:    func(cmd *cobra.Command, args []string) {},
-		PreRun: suite.analyticsClient.TrackCommand,
+		PreRunE: suite.preRunFunc(false),
 	}
 	rootCmd.AddCommand(randomCmd)
 	command := cmd.Command{
@@ -315,11 +330,9 @@ func (suite *AnalyticsTestSuite) TestMalformedCommand() {
 	rootCmd.SetArgs([]string{unknownCmd})
 	err := command.Execute()
 	req.NotNil(err)
-	req.True(suite.mockClient.CloseCalled())
 
-	out := *suite.output
-	req.Equal(1, len(out))
-	track, ok := out[0].(segment.Track)
+	req.Equal(1, len(suite.output))
+	track, ok := suite.output[0].(segment.Track)
 	req.True(ok)
 
 	suite.checkMalformedCommandTrack(track)
@@ -339,7 +352,7 @@ func (suite *AnalyticsTestSuite) TestHideSecretForApiStore() {
 	storeCmd := &cobra.Command{
 		Use:    "store",
 		Run:    func(cmd *cobra.Command, args []string) {},
-		PreRun: suite.analyticsClient.TrackCommand,
+		PreRunE: suite.preRunFunc(false),
 	}
 	apiCmd.AddCommand(storeCmd)
 	rootCmd.AddCommand(apiCmd)
@@ -350,11 +363,9 @@ func (suite *AnalyticsTestSuite) TestHideSecretForApiStore() {
 	rootCmd.SetArgs([]string{"api-key", "store", apiKey, apiSecret})
 	err := command.Execute()
 	req.NoError(err)
-	req.True(suite.mockClient.CloseCalled())
 
-	out := *suite.output
-	req.Equal(1, len(out))
-	page, ok := out[0].(segment.Page)
+	req.Equal(1, len(suite.output))
+	page, ok := suite.output[0].(segment.Page)
 	req.True(ok)
 
 	suite.checkPageBasic(page)
@@ -531,6 +542,13 @@ func (suite *AnalyticsTestSuite) checkMalformedCommandTrack(track segment.Track)
 	errMsg, ok := track.Properties[analytics.ErrorMsgPropertiesKey]
 	req.True(ok)
 	req.Equal(fmt.Sprintf("unknown command \"%s\" for \"%s\"", unknownCmd, ccloudName), errMsg)
+}
+
+// ------------------------- PreRun --------------------------
+func (suite *AnalyticsTestSuite) preRunFunc(sessionTimedOut bool) func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		return suite.analyticsClient.TrackCommand(cmd, args, sessionTimedOut)
+	}
 }
 
 func TestAnalyticsTestSuite(t *testing.T) {

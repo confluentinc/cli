@@ -49,7 +49,12 @@ func main() {
 
 	version := cliVersion.NewVersion(cfg.CLIName, cfg.Name(), cfg.Support(), version, commit, date, host)
 
-	segmentClient := segment.New(segmentKey)
+	segmentClient, err := segment.NewWithConfig(segmentKey, segment.Config{BatchSize: 1})
+	if err != nil {
+		logger.Debugf("segment client config initialization failed: %s\n", err)
+		segmentClient = segment.New(segmentKey)
+	}
+
 	analyticsClient := analytics.NewAnalyticsClient(cfg.CLIName, cfg, version.Version, segmentClient, clockwork.NewRealClock())
 
 	cli, err := cmd.NewConfluentCommand(cliName, cfg, version, logger, analyticsClient)
@@ -65,5 +70,9 @@ func main() {
 	err = cli.Execute()
 	if err != nil {
 		os.Exit(1)
+	}
+	err = analyticsClient.Close()
+	if err != nil {
+		logger.Debug(err)
 	}
 }

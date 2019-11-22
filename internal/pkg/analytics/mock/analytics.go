@@ -7,13 +7,14 @@ package mock
 import (
 	sync "sync"
 
+	github_com_confluentinc_cli_internal_pkg_analytics "github.com/confluentinc/cli/internal/pkg/analytics"
 	github_com_spf13_cobra "github.com/spf13/cobra"
 )
 
 // Client is a mock of Client interface
 type Client struct {
 	lockTrackCommand sync.Mutex
-	TrackCommandFunc func(cmd *github_com_spf13_cobra.Command, args []string)
+	TrackCommandFunc func(cmd *github_com_spf13_cobra.Command, args []string, sessionTimedOut bool) error
 
 	lockFlushCommandSucceeded sync.Mutex
 	FlushCommandSucceededFunc func() error
@@ -21,21 +22,33 @@ type Client struct {
 	lockFlushCommandFailed sync.Mutex
 	FlushCommandFailedFunc func(e error) error
 
+	lockSetCommandType sync.Mutex
+	SetCommandTypeFunc func(commandType github_com_confluentinc_cli_internal_pkg_analytics.CommandType)
+
+	lockClose sync.Mutex
+	CloseFunc func() error
+
 	calls struct {
 		TrackCommand []struct {
-			Cmd  *github_com_spf13_cobra.Command
-			Args []string
+			Cmd             *github_com_spf13_cobra.Command
+			Args            []string
+			SessionTimedOut bool
 		}
 		FlushCommandSucceeded []struct {
 		}
 		FlushCommandFailed []struct {
 			E error
 		}
+		SetCommandType []struct {
+			CommandType github_com_confluentinc_cli_internal_pkg_analytics.CommandType
+		}
+		Close []struct {
+		}
 	}
 }
 
 // TrackCommand mocks base method by wrapping the associated func.
-func (m *Client) TrackCommand(cmd *github_com_spf13_cobra.Command, args []string) {
+func (m *Client) TrackCommand(cmd *github_com_spf13_cobra.Command, args []string, sessionTimedOut bool) error {
 	m.lockTrackCommand.Lock()
 	defer m.lockTrackCommand.Unlock()
 
@@ -44,16 +57,18 @@ func (m *Client) TrackCommand(cmd *github_com_spf13_cobra.Command, args []string
 	}
 
 	call := struct {
-		Cmd  *github_com_spf13_cobra.Command
-		Args []string
+		Cmd             *github_com_spf13_cobra.Command
+		Args            []string
+		SessionTimedOut bool
 	}{
-		Cmd:  cmd,
-		Args: args,
+		Cmd:             cmd,
+		Args:            args,
+		SessionTimedOut: sessionTimedOut,
 	}
 
 	m.calls.TrackCommand = append(m.calls.TrackCommand, call)
 
-	m.TrackCommandFunc(cmd, args)
+	return m.TrackCommandFunc(cmd, args, sessionTimedOut)
 }
 
 // TrackCommandCalled returns true if TrackCommand was called at least once.
@@ -66,8 +81,9 @@ func (m *Client) TrackCommandCalled() bool {
 
 // TrackCommandCalls returns the calls made to TrackCommand.
 func (m *Client) TrackCommandCalls() []struct {
-	Cmd  *github_com_spf13_cobra.Command
-	Args []string
+	Cmd             *github_com_spf13_cobra.Command
+	Args            []string
+	SessionTimedOut bool
 } {
 	m.lockTrackCommand.Lock()
 	defer m.lockTrackCommand.Unlock()
@@ -147,6 +163,78 @@ func (m *Client) FlushCommandFailedCalls() []struct {
 	return m.calls.FlushCommandFailed
 }
 
+// SetCommandType mocks base method by wrapping the associated func.
+func (m *Client) SetCommandType(commandType github_com_confluentinc_cli_internal_pkg_analytics.CommandType) {
+	m.lockSetCommandType.Lock()
+	defer m.lockSetCommandType.Unlock()
+
+	if m.SetCommandTypeFunc == nil {
+		panic("mocker: Client.SetCommandTypeFunc is nil but Client.SetCommandType was called.")
+	}
+
+	call := struct {
+		CommandType github_com_confluentinc_cli_internal_pkg_analytics.CommandType
+	}{
+		CommandType: commandType,
+	}
+
+	m.calls.SetCommandType = append(m.calls.SetCommandType, call)
+
+	m.SetCommandTypeFunc(commandType)
+}
+
+// SetCommandTypeCalled returns true if SetCommandType was called at least once.
+func (m *Client) SetCommandTypeCalled() bool {
+	m.lockSetCommandType.Lock()
+	defer m.lockSetCommandType.Unlock()
+
+	return len(m.calls.SetCommandType) > 0
+}
+
+// SetCommandTypeCalls returns the calls made to SetCommandType.
+func (m *Client) SetCommandTypeCalls() []struct {
+	CommandType github_com_confluentinc_cli_internal_pkg_analytics.CommandType
+} {
+	m.lockSetCommandType.Lock()
+	defer m.lockSetCommandType.Unlock()
+
+	return m.calls.SetCommandType
+}
+
+// Close mocks base method by wrapping the associated func.
+func (m *Client) Close() error {
+	m.lockClose.Lock()
+	defer m.lockClose.Unlock()
+
+	if m.CloseFunc == nil {
+		panic("mocker: Client.CloseFunc is nil but Client.Close was called.")
+	}
+
+	call := struct {
+	}{}
+
+	m.calls.Close = append(m.calls.Close, call)
+
+	return m.CloseFunc()
+}
+
+// CloseCalled returns true if Close was called at least once.
+func (m *Client) CloseCalled() bool {
+	m.lockClose.Lock()
+	defer m.lockClose.Unlock()
+
+	return len(m.calls.Close) > 0
+}
+
+// CloseCalls returns the calls made to Close.
+func (m *Client) CloseCalls() []struct {
+} {
+	m.lockClose.Lock()
+	defer m.lockClose.Unlock()
+
+	return m.calls.Close
+}
+
 // Reset resets the calls made to the mocked methods.
 func (m *Client) Reset() {
 	m.lockTrackCommand.Lock()
@@ -158,4 +246,10 @@ func (m *Client) Reset() {
 	m.lockFlushCommandFailed.Lock()
 	m.calls.FlushCommandFailed = nil
 	m.lockFlushCommandFailed.Unlock()
+	m.lockSetCommandType.Lock()
+	m.calls.SetCommandType = nil
+	m.lockSetCommandType.Unlock()
+	m.lockClose.Lock()
+	m.calls.Close = nil
+	m.lockClose.Unlock()
 }

@@ -12,6 +12,15 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/config"
 )
 
+type CommandType int
+const (
+	Other CommandType = iota
+	Login
+	Init
+	ContextUse
+	Logout
+)
+
 var (
 	secretCommandFlags = map[string][]string{
 		"ccloud init":                   {"api-secret"},
@@ -31,19 +40,21 @@ var (
 	StartTimePropertiesKey  = "start_time"
 	FinishTimePropertiesKey = "finish_time"
 	SucceededPropertiesKey  = "succeeded"
-	CredentialPropertiesKey = "credential"
+	CredentialPropertiesKey = "credentialType"
 	ApiKeyPropertiesKey     = "apikey"
 	VersionPropertiesKey    = "version"
 	CliNameTraitsKey        = "cli_name"
 
-	apiKeyCred   = "apikey"
-	userNameCred = "username"
+	apiKeyCredType   = "apikey"
+	userNameCredType = "username"
 )
 
 type Client interface {
-	TrackCommand(cmd *cobra.Command, args []string)
+	TrackCommand(cmd *cobra.Command, args []string, sessionTimedOut bool) error
 	FlushCommandSucceeded() error
 	FlushCommandFailed(e error) error
+	SetCommandType(commandType CommandType)
+	Close() error
 }
 
 type ClientObj struct {
@@ -57,10 +68,11 @@ type ClientObj struct {
 	properties  segment.Properties
 	user        userInfo
 	cliVersion  string
+	commandType CommandType
 }
 
 type userInfo struct {
-	credential     string
+	credentialType string
 	id             string
 	email          string
 	organizationId string
@@ -69,27 +81,46 @@ type userInfo struct {
 
 func NewAnalyticsClient(cliName string, cfg *config.Config, version string, segmentClient segment.Client, clock clockwork.Clock) *ClientObj {
 	client := &ClientObj{
-		cliName:    cliName,
-		Client:     segmentClient,
-		config:     cfg,
-		properties: make(segment.Properties),
-		cliVersion: version,
-		clock:      clock,
+		cliName:     cliName,
+		Client:      segmentClient,
+		config:      cfg,
+		properties:  make(segment.Properties),
+		cliVersion:  version,
+		clock:       clock,
+		commandType: Other,
 	}
 	return client
 }
 
-func (a *ClientObj) TrackCommand(cmd *cobra.Command, args []string) {
+func (a *ClientObj) TrackCommand(cmd *cobra.Command, args []string, sessionTimedOut bool) error {
 	a.cmdCalled = cmd.CommandPath()
 	a.addArgsProperties(cmd, args)
 	a.addFlagProperties(cmd)
 	a.properties.Set(StartTimePropertiesKey, a.clock.Now())
 	a.properties.Set(VersionPropertiesKey, a.cliVersion)
-	a.user = a.getUser()
+	if sessionTimedOut {
+		a.user = userInfo{}
+		if a.config.Analytics.SessionTimedOutCount == 0 {
+			err := a.config.ResetAnalyticsAnonymousId()
+			if err != nil {
+				return err
+			}
+		}
+		err := a.config.SetAnalyticsSessionTimedOutCount(a.config.Analytics.SessionTimedOutCount + 1)
+		if err != nil {
+			return err
+		}
+	} else {
+		a.user = a.getUser()
+		err := a.config.SetAnalyticsSessionTimedOutCount(0)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (a *ClientObj) FlushCommandSucceeded() error {
-	defer a.Client.Close()
 	err := a.loginHandler()
 	if err != nil {
 		return err
@@ -99,8 +130,8 @@ func (a *ClientObj) FlushCommandSucceeded() error {
 	if err := a.sendPage(); err != nil {
 		return err
 	}
-	if strings.Contains(a.cmdCalled, a.config.CLIName + " logout") {
-		if err := a.config.ResetAnonymousId(); err != nil {
+	if a.commandType == Logout && a.user.credentialType != "" {
+		if err := a.config.ResetAnalyticsAnonymousId(); err != nil {
 			return err
 		}
 	}
@@ -108,7 +139,6 @@ func (a *ClientObj) FlushCommandSucceeded() error {
 }
 
 func (a *ClientObj) FlushCommandFailed(e error) error {
-	defer a.Client.Close()
 	if a.cmdCalled == "" {
 		return a.malformedCommandError(e)
 	}
@@ -121,11 +151,19 @@ func (a *ClientObj) FlushCommandFailed(e error) error {
 	return nil
 }
 
+func (a *ClientObj) SetCommandType(commandType CommandType) {
+	a.commandType = commandType
+}
+
+func (a *ClientObj) Close() error {
+	return a.Client.Close()
+}
+
 // Helper Functions
 
 func (a *ClientObj) sendPage() error {
 	page := segment.Page{
-		AnonymousId: a.config.AnonymousId,
+		AnonymousId: a.config.Analytics.AnonymousId,
 		Name:        a.cmdCalled,
 		Properties:  a.properties,
 		UserId:      a.user.id,
@@ -136,14 +174,14 @@ func (a *ClientObj) sendPage() error {
 
 func (a *ClientObj) identify() error {
 	identify := segment.Identify{
-		AnonymousId: a.config.AnonymousId,
+		AnonymousId: a.config.Analytics.AnonymousId,
 		UserId:      a.user.id,
 	}
 	traits := segment.Traits{}
 	traits.Set(VersionPropertiesKey, a.cliVersion)
 	traits.Set(CliNameTraitsKey, a.config.CLIName)
-	traits.Set(CredentialPropertiesKey, a.user.credential)
-	if a.user.credential == apiKeyCred {
+	traits.Set(CredentialPropertiesKey, a.user.credentialType)
+	if a.user.credentialType == apiKeyCredType {
 		traits.Set(ApiKeyPropertiesKey, a.user.apiKey)
 	}
 	identify.Traits = traits
@@ -151,21 +189,16 @@ func (a *ClientObj) identify() error {
 }
 
 func (a *ClientObj) malformedCommandError(e error) error {
-	defer a.Client.Close()
 	a.user = a.getUser()
 	a.properties.Set(ErrorMsgPropertiesKey, e.Error())
 	track := segment.Track{
-		AnonymousId: a.config.AnonymousId,
+		AnonymousId: a.config.Analytics.AnonymousId,
 		Event:       malformedCmdEventName,
 		Properties:  a.properties,
 		UserId:      a.user.id,
 	}
 	a.addUserProperties()
-	err := a.Client.Enqueue(track)
-	if err != nil {
-		return err
-	}
-	return nil
+	return a.Client.Enqueue(track)
 }
 
 func (a *ClientObj) addFlagProperties(cmd *cobra.Command) {
@@ -198,23 +231,23 @@ func (a *ClientObj) addArgsProperties(cmd *cobra.Command, args []string) {
 }
 
 func (a *ClientObj) addUserProperties() {
-	a.properties.Set(CredentialPropertiesKey, a.user.credential)
+	a.properties.Set(CredentialPropertiesKey, a.user.credentialType)
 	if a.user.organizationId != "" {
 		a.properties.Set(OrgIdPropertiesKey, a.user.organizationId)
 		a.properties.Set(EmailPropertiesKey, a.user.email)
 	}
-	if a.user.credential == apiKeyCred {
+	if a.user.credentialType == apiKeyCredType {
 		a.properties.Set(ApiKeyPropertiesKey, a.user.apiKey)
 	}
 }
 
 func (a *ClientObj) getUser() userInfo {
 	var user userInfo
-	user.credential = a.getCredentialType()
-	if user.credential == "none" {
+	user.credentialType = a.getCredentialType()
+	if user.credentialType == "" {
 		return user
 	}
-	if user.credential == apiKeyCred {
+	if user.credentialType == apiKeyCredType {
 		user.apiKey = a.getCredApiKey()
 	}
 	if a.cliName == "ccloud" {
@@ -251,17 +284,17 @@ func (a *ClientObj) getCPUsername() string {
 func (a *ClientObj) getCredentialType() string {
 	credType, err := a.config.CredentialType()
 	if err != nil {
-		return "none"
+		return ""
 	}
 	switch credType {
 	case config.Username:
 		if a.config.CheckLogin() == nil {
-			return userNameCred
+			return userNameCredType
 		}
 	case config.APIKey:
-		return apiKeyCred
+		return apiKeyCredType
 	}
-	return "none"
+	return ""
 }
 
 func (a *ClientObj) getCredApiKey() string {
@@ -277,20 +310,20 @@ func (a *ClientObj) getCredApiKey() string {
 
 func (a *ClientObj) loginHandler() error {
 	// do nothing for non login commands
-	if !(strings.Contains(a.cmdCalled, a.config.CLIName + " login") ||
-	     strings.Contains(a.cmdCalled, "ccloud init") ||
+	if !(a.commandType == Login ||
+	     a.commandType == Init ||
 		 strings.Contains(a.cmdCalled, "ccloud config context use")) {
 		return nil
 	}
 	prevUser := a.user
 	a.user = a.getUser()
 	// previous not logged in need to identify but no need for anonymous id reset
-	if prevUser.credential == "none" {
+	if prevUser.credentialType == "" {
 		return a.identify()
 	}
 
 	if a.isSwitchUserLogin(prevUser) {
-		if err := a.config.ResetAnonymousId(); err != nil {
+		if err := a.config.ResetAnalyticsAnonymousId(); err != nil {
 			return err
 		}
 		return a.identify()
@@ -299,14 +332,14 @@ func (a *ClientObj) loginHandler() error {
 }
 
 func (a *ClientObj) isSwitchUserLogin(prevUser userInfo) bool {
-	if prevUser.credential != a.user.credential {
+	if prevUser.credentialType != a.user.credentialType {
 		return true
 	}
-	if a.user.credential == userNameCred {
+	if a.user.credentialType == userNameCredType {
 		if prevUser.id != a.user.id {
 			return true
 		}
-	} else if a.user.credential == apiKeyCred {
+	} else if a.user.credentialType == apiKeyCredType {
 		if a.user.apiKey != a.user.apiKey {
 			return true
 		}

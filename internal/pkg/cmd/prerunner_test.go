@@ -1,7 +1,6 @@
 package cmd_test
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	"reflect"
 	"strings"
 	"testing"
@@ -84,7 +83,7 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 						return false, "", nil
 					},
 				},
-				Analytics: analytics.NewDummyAnalyticsClient(),
+				Analytics: mockAnalytics.NewDummyAnalyticsMock(),
 			}
 
 			root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
@@ -122,7 +121,7 @@ func TestPreRun_HasAPIKey_SetupLoggingAndCheckForUpdates(t *testing.T) {
 				return false, "", nil
 			},
 		},
-		Analytics: analytics.NewDummyAnalyticsClient(),
+		Analytics: mockAnalytics.NewDummyAnalyticsMock(),
 	}
 
 	root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
@@ -145,9 +144,7 @@ func TestPreRun_CallsAnalyticsTrackCommand(t *testing.T) {
 	require.NoError(t, cfg.Load())
 
 	ver := version.NewVersion("ccloud", "Confluent Cloud CLI", "https://confluent.cloud; support@confluent.io", "1.2.3", "abc1234", "01/23/45", "CI")
-	analyticsClient := &mockAnalytics.Client{
-		TrackCommandFunc: func(cmd *cobra.Command, args []string) {},
-	}
+	analyticsClient := mockAnalytics.NewDummyAnalyticsMock()
 
 	r := &pcmd.PreRun{
 		Version: ver.Version,

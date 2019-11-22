@@ -5,7 +5,7 @@ import (
 	"path"
 
 	"github.com/confluentinc/cli/internal/cmd"
-	"github.com/confluentinc/cli/internal/pkg/analytics"
+	mockAnalytics "github.com/confluentinc/cli/internal/pkg/analytics/mock"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/doc"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -21,7 +21,7 @@ var (
 func main() {
 	emptyStr := func(filename string) string { return "" }
 	sphinxRef := func(name, ref string) string { return fmt.Sprintf(":ref:`%s`", ref) }
-	confluent, err := cmd.NewConfluentCommand(cliName, &config.Config{CLIName: cliName}, &version.Version{}, log.New(), analytics.NewDummyAnalyticsClient())
+	confluent, err := cmd.NewConfluentCommand(cliName, &config.Config{CLIName: cliName}, &version.Version{}, log.New(), mockAnalytics.NewDummyAnalyticsMock())
 	if err != nil {
 		panic(err)
 	}
