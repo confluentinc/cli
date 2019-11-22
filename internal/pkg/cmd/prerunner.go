@@ -51,7 +51,7 @@ func (r *PreRun) Anonymous() func(cmd *cobra.Command, args []string) error {
 			err = r.Analytics.TrackCommand(cmd, args, false)
 		}
 		if err != nil {
-			r.Logger.Debugf("Analytics track command error: ", err)
+			r.Logger.Debugf("Analytics track command error: %s", err.Error())
 			return err
 		}
 		return nil
