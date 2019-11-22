@@ -35,8 +35,8 @@ steps:
   displayName: 'Install Go 1.12.5 (Darwin)'
 
 - powershell: |
-    wget "https://storage.googleapis.com/golang/go1.12.5.windows-amd64.zip" -OutFile "$(Agent.BuildDirectory)\go1.12.5.zip"
-    Expand-Archive -Path $(Agent.BuildDirectory)/go1.12.5.zip -DestinationPath $(Agent.BuildDirectory)
+    Invoke-WebRequest -Uri "https://storage.googleapis.com/golang/go1.12.5.windows-amd64.zip" -OutFile "$(Agent.BuildDirectory)\go1.12.5.zip" -Verbose
+    Expand-Archive -Path $(Agent.BuildDirectory)/go1.12.5.zip -DestinationPath $(Agent.BuildDirectory) -Verbose
   condition: eq( variables['Agent.OS'], 'Windows_NT' )
   displayName: 'Install Go 1.12.5 (Windows)'
 
