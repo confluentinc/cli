@@ -37,7 +37,7 @@ steps:
 - powershell: |
     wget "https://storage.googleapis.com/golang/go1.12.5.windows-amd64.zip" --output-document "$(Agent.BuildDirectory)\go1.12.5.zip"
     Expand-Archive -Path $(Agent.BuildDirectory)/go1.12.5.zip -DestinationPath $(Agent.BuildDirectory)
-  condition: eq( variables['Agent.OS'], 'Windows' )
+  condition: eq( variables['Agent.OS'], 'Windows_NT' )
   displayName: 'Install Go 1.12.5 (Windows)'
 
 # Linux
@@ -46,7 +46,7 @@ steps:
     echo "##vso[task.setvariable variable=GOPATH]$(Agent.BuildDirectory)/gopath"
     echo "##vso[task.setvariable variable=GOBIN]$(Agent.BuildDirectory)/go/bin"
     echo "##vso[task.setvariable variable=modulePath]$(Agent.BuildDirectory)/go/src/github.com/$(build.repository.name)"
-  condition: ne( variables['Agent.OS'], 'Windows' )
+  condition: ne( variables['Agent.OS'], 'Windows_NT' )
   displayName: Properly configure our custom Go environment (Mac/Linux)
 
 - bash: |
@@ -54,7 +54,7 @@ steps:
     echo "##vso[task.setvariable variable=GOPATH]$(Agent.BuildDirectory)\gopath"
     echo "##vso[task.setvariable variable=GOBIN]$(Agent.BuildDirectory)\go\bin"
     echo "##vso[task.setvariable variable=modulePath]$(Agent.BuildDirectory)\go\src\github.com\$(build.repository.name)"
-  condition: eq( variables['Agent.OS'], 'Windows' )
+  condition: eq( variables['Agent.OS'], 'Windows_NT' )
   displayName: Properly configure our custom Go environment (Windows)
 
 - task: DownloadSecureFile@1
@@ -74,7 +74,7 @@ steps:
     echo '##vso[task.prependpath]$(GOPATH)/bin'
     mkdir -p ${GOPATH}\bin
     mkdir -p ${GOROOT}\bin
-  condition: ne( variables['Agent.OS'], 'Windows' )
+  condition: ne( variables['Agent.OS'], 'Windows_NT' )
   displayName: 'Set up the Go workspace (non-Windows)'
 
 - script: |
@@ -82,7 +82,7 @@ steps:
     echo '##vso[task.prependpath]$(GOPATH)\bin'
     mkdir ${GOPATH}\bin
     mkdir ${GOROOT}\bin
-  condition: eq( variables['Agent.OS'], 'Windows' )
+  condition: eq( variables['Agent.OS'], 'Windows_NT' )
   displayName: 'Set up the Go workspace (Windows)'
 
 - script: |
@@ -90,7 +90,7 @@ steps:
     mkdir ~/.ssh
     sudo mv $(idrsa.secureFilePath) ~/.ssh/
     sudo chmod 400 ~/.ssh/id_rsa
-  condition: ne( variables['Agent.OS'], 'Windows' )
+  condition: ne( variables['Agent.OS'], 'Windows_NT' )
   displayName: 'Put secrets in their right places (non-Windows)'
 
 - script: |
@@ -98,7 +98,7 @@ steps:
     mkdir %USERPROFILE%\.ssh
     mv $(idrsa.secureFilePath) %USERPROFILE%\.ssh\
     #sudo chmod 400 %USERPROFILE%\.ssh\id_rsa
-  condition: eq( variables['Agent.OS'], 'Windows' )
+  condition: eq( variables['Agent.OS'], 'Windows_NT' )
   displayName: 'Put secrets in their right places (Windows)'
 
 - script: |
