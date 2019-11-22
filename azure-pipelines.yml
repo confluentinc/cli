@@ -36,7 +36,7 @@ steps:
 
 - powershell: |
     Invoke-WebRequest -Uri "https://storage.googleapis.com/golang/go1.12.5.windows-amd64.zip" -OutFile "$(Agent.BuildDirectory)\go1.12.5.zip" -Verbose
-    Expand-Archive -Path $(Agent.BuildDirectory)/go1.12.5.zip -DestinationPath $(Agent.BuildDirectory)
+    & ${env:ProgramFiles}\7-Zip\7z.exe x $(Agent.BuildDirectory/go1.12.5.zip) "-o$(Agent.BuildDirectory)" -y
   condition: eq( variables['Agent.OS'], 'Windows_NT' )
   displayName: 'Install Go 1.12.5 (Windows)'
 
