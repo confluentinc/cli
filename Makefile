@@ -28,7 +28,7 @@ generate-go:
 .PHONY: deps
 deps:
 	@GO111MODULE=on go get github.com/goreleaser/goreleaser@v0.106.0
-	@GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.17.1
+	@GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.21.0
 	@GO111MODULE=on go get github.com/mitchellh/golicense@v0.1.1
 	@GO111MODULE=on go get github.com/golang/mock/mockgen@v1.2.0
 	@GO111MODULE=on go get github.com/kevinburke/go-bindata/...@v3.13.0
@@ -246,7 +246,7 @@ lint-cli: cmd/lint/en_US.aff cmd/lint/en_US.dic
 
 .PHONY: lint-go
 lint-go:
-	@GO111MODULE=on golangci-lint run
+	@GO111MODULE=on golangci-lint run --timeout=10m
 
 .PHONY: lint
 lint: lint-go lint-cli lint-installers
