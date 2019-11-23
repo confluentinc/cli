@@ -63,41 +63,41 @@ func (c *clusterCommand) init() {
 	})
 
 	createCmd := &cobra.Command{
-		Use:   "create NAME",
-		Short: "Create a KSQL app",
+		Use:   "create <name>",
+		Short: "Create a KSQL app.",
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	}
-	createCmd.Flags().String("cluster", "", "Kafka cluster ID")
-	check(createCmd.MarkFlagRequired("cluster"))
-	createCmd.Flags().Int32("storage", 50, "Amount of data storage available in GB")
+	createCmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	createCmd.Flags().Int32("servers", 1, "Number of servers in the cluster.")
+	createCmd.Flags().Int32("storage", 50, "Amount of data storage available in GB.")
 	check(createCmd.MarkFlagRequired("storage"))
-	createCmd.Flags().Int32("servers", 1, "Number of servers in the cluster")
+	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
 	c.AddCommand(&cobra.Command{
-		Use:   "describe ID",
+		Use:   "describe <id>",
 		Short: "Describe a KSQL app.",
 		RunE:  c.describe,
 		Args:  cobra.ExactArgs(1),
 	})
 
 	c.AddCommand(&cobra.Command{
-		Use:   "delete ID",
+		Use:   "delete <id>",
 		Short: "Delete a KSQL app.",
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
 	})
 
 	aclsCmd := &cobra.Command{
-		Use:   "configure-acls ID TOPICS...",
+		Use:   "configure-acls <id> TOPICS...",
 		Short: "Configure ACLs for a KSQL cluster.",
 		RunE:  c.configureACLs,
 		Args:  cobra.MinimumNArgs(1),
 	}
-	aclsCmd.Flags().String("cluster", "", "Kafka cluster ID")
-	check(createCmd.MarkFlagRequired("cluster"))
-	aclsCmd.Flags().BoolVar(&aclsDryRun, "dry-run", false, "If specified, print the ACLs that will be set and exit")
+	aclsCmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	aclsCmd.Flags().BoolVar(&aclsDryRun, "dry-run", false, "If specified, print the ACLs that will be set and exit.")
+	aclsCmd.Flags().SortFlags = false
 	c.AddCommand(aclsCmd)
 }
 

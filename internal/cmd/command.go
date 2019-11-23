@@ -151,9 +151,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		sr := schema_registry.New(prerunner, cfg, client.SchemaRegistry, ch, nil, client.Metrics, logger)
 		cli.AddCommand(sr)
 
-		conn = ksql.New(prerunner, cfg, client.KSQL, client.Kafka, client.User, ch)
-		conn.Hidden = true // The ksql feature isn't finished yet, so let's hide it
-		cli.AddCommand(conn)
+		cli.AddCommand(ksql.New(prerunner, cfg, client.KSQL, client.Kafka, client.User, ch))
 
 		//conn = connect.New(prerunner, cfg, connects.New(client, logger))
 		//conn.Hidden = true // The connect feature isn't finished yet, so let's hide it
