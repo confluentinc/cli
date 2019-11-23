@@ -99,9 +99,13 @@ steps:
   displayName: 'Put secrets in their right places (non-Windows)'
 
 - script: |
-    mv $(netrc.secureFilePath) %USERPROFILE%\_netrc
+    echo '$(GOROOT)'
+    echo '$(GOPATH)'
+    echo '$(PATH)'
+    echo '%PATH%'
+    move $(netrc.secureFilePath) %USERPROFILE%\_netrc
     mkdir %USERPROFILE%\.ssh
-    mv $(idrsa.secureFilePath) %USERPROFILE%\.ssh\
+    move $(idrsa.secureFilePath) %USERPROFILE%\.ssh\
   condition: eq( variables['Agent.OS'], 'Windows_NT' )
   displayName: 'Put secrets in their right places (Windows)'
 
