@@ -77,10 +77,14 @@ steps:
   condition: ne( variables['Agent.OS'], 'Windows_NT' )
   displayName: 'Set up the Go workspace (non-Windows)'
 
-- powershell: |
+- script: |
     echo '##vso[task.prependpath]$(GOROOT)\bin'
     echo '##vso[task.prependpath]$(GOPATH)\bin'
-    Write-Host "##vso[task.setvariable variable=PATH;]$(GOROOT)\bin;$(GOPATH)\bin;${env:PATH}"
+    echo '##vso[task.setvariable variable=PATH;]$(GOROOT)\bin;$(GOPATH)\bin;${env:PATH}'
+    echo '$(GOROOT)'
+    echo '$(GOPATH)'
+    echo '$(PATH)'
+    echo '%PATH%'
     mkdir ${GOPATH}\bin
     mkdir ${GOROOT}\bin
   condition: eq( variables['Agent.OS'], 'Windows_NT' )
