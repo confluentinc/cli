@@ -28,12 +28,6 @@ type AuthConfig struct {
 	Accounts []*v1.Account `json:"accounts"`
 }
 
-// struct storing information needed for sending analytics data to segment
-type AnalyticsConfig struct {
-	AnonymousId          string
-	SessionTimedOutCount int
-}
-
 // Config represents the CLI configuration.
 type Config struct {
 	CLIName            string                 `json:"-"`
@@ -48,7 +42,7 @@ type Config struct {
 	Credentials        map[string]*Credential `json:"credentials"`
 	Contexts           map[string]*Context    `json:"contexts"`
 	CurrentContext     string                 `json:"current_context"`
-	Analytics          *AnalyticsConfig
+	AnonymousId        string
 }
 
 // New initializes a new Config object
@@ -66,10 +60,7 @@ func New(config ...*Config) *Config {
 	c.Platforms = map[string]*Platform{}
 	c.Credentials = map[string]*Credential{}
 	c.Contexts = map[string]*Context{}
-	c.Analytics = &AnalyticsConfig{
-		AnonymousId:          uuid.New().String(),
-		SessionTimedOutCount: 0,
-	}
+	c.AnonymousId = uuid.New().String()
 	return c
 }
 
@@ -325,14 +316,19 @@ func (c *Config) CheckSchemaRegistryHasAPIKey() bool {
 	return !(srCluster.SrCredentials == nil || len(srCluster.SrCredentials.Key) == 0 || len(srCluster.SrCredentials.Secret) == 0)
 }
 
-func (c *Config) ResetAnalyticsAnonymousId() error{
-	c.Analytics.AnonymousId = uuid.New().String()
+func (c *Config) ResetAnonymousId() error{
+	c.AnonymousId = uuid.New().String()
 	return c.Save()
 }
 
-func (c *Config) SetAnalyticsSessionTimedOutCount(count int) error {
-	c.Analytics.SessionTimedOutCount = count
-	return c.Save()
+func (c *Config) DeleteUserAuth() error {
+	c.AuthToken = ""
+	c.Auth = nil
+	err := c.Save()
+	if err != nil {
+		return errors.Wrap(err, "Unable to delete user auth")
+	}
+	return nil
 }
 
 func (c *Config) getFilename() (string, error) {

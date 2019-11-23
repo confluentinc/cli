@@ -130,7 +130,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 
 	cli.AddCommand(completion.NewCompletionCmd(cli, cliName))
 	cli.AddCommand(update.New(cliName, cfg, ver, prompt, updateClient))
-	cli.AddCommand(auth.New(prerunner, cfg, logger, mdsClient, ver.UserAgent)...)
+	cli.AddCommand(auth.New(prerunner, cfg, logger, mdsClient, ver.UserAgent, analytics)...)
 
 	resolver := &pcmd.FlagResolverImpl{Prompt: prompt, Out: os.Stdout}
 
@@ -140,7 +140,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 			return nil, err
 		}
 		cli.AddCommand(cmd)
-		cli.AddCommand(initcontext.New(prerunner, cfg, prompt, resolver))
+		cli.AddCommand(initcontext.New(prerunner, cfg, prompt, resolver, analytics))
 		credType, err := cfg.CredentialType()
 		if _, ok := err.(*errors.UnspecifiedCredentialError); ok {
 			return nil, err

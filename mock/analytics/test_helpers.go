@@ -1,4 +1,4 @@
-package mock
+package analytics
 
 import (
 	"github.com/confluentinc/cli/internal/pkg/analytics"
@@ -7,7 +7,7 @@ import (
 
 func NewDummyAnalyticsMock() *Client {
 	return &Client{
-		TrackCommandFunc: func(cmd *cobra.Command, args []string, sessionTimedOut bool) error {return nil},
+		TrackCommandFunc: func(cmd *cobra.Command, args []string) {},
 		FlushCommandFailedFunc: func(e error) error {return nil},
 		FlushCommandSucceededFunc: func() error {return nil},
 		SetCommandTypeFunc: func(commandType analytics.CommandType) {},

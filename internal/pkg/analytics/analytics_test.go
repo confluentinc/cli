@@ -15,8 +15,8 @@ import (
 	v1 "github.com/confluentinc/ccloudapis/org/v1"
 	"github.com/confluentinc/cli/internal/cmd"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
-	"github.com/confluentinc/cli/internal/pkg/analytics/mock"
 	"github.com/confluentinc/cli/internal/pkg/config"
+	mock "github.com/confluentinc/cli/mock/analytics"
 )
 
 var (
@@ -86,7 +86,7 @@ func (suite *AnalyticsTestSuite) TestSuccessWithFlagAndArgs() {
 	req := require.New(suite.T())
 	cobraCmd := &cobra.Command{
 		Run:    func(cmd *cobra.Command, args []string) {},
-		PreRunE: suite.preRunFunc(false),
+		PreRun: suite.preRunFunc(),
 	}
 	cobraCmd.Flags().String(flagName, "", "")
 	cobraCmd.SetArgs([]string{arg1, arg2, "--" + flagName + "=" + flagArg})
@@ -133,7 +133,7 @@ func (suite *AnalyticsTestSuite) TestLogin() {
 			suite.analyticsClient.SetCommandType(analytics.Login)
 			suite.loginUser()
 		},
-		PreRunE: suite.preRunFunc(false),
+		PreRun: suite.preRunFunc(),
 	}
 	rootCmd.AddCommand(loginCmd)
 	command := cmd.Command{
@@ -171,7 +171,7 @@ func (suite *AnalyticsTestSuite) TestAnonymousIdReset() {
 	}
 	loginCmd := &cobra.Command{
 		Use:    "login",
-		PreRunE: suite.preRunFunc(false),
+		PreRun: suite.preRunFunc(),
 	}
 
 	loginUserCmd := &cobra.Command{
@@ -180,7 +180,7 @@ func (suite *AnalyticsTestSuite) TestAnonymousIdReset() {
 			suite.analyticsClient.SetCommandType(analytics.Login)
 			suite.loginUser()
 		},
-		PreRunE: suite.preRunFunc(false),
+		PreRun: suite.preRunFunc(),
 	}
 	loginCmd.AddCommand(loginUserCmd)
 
@@ -190,7 +190,7 @@ func (suite *AnalyticsTestSuite) TestAnonymousIdReset() {
 			suite.analyticsClient.SetCommandType(analytics.Login)
 			suite.loginOtherUser()
 		},
-		PreRunE: suite.preRunFunc(false),
+		PreRun: suite.preRunFunc(),
 	}
 	loginCmd.AddCommand(loginOtherCmd)
 
@@ -239,7 +239,7 @@ func (suite *AnalyticsTestSuite) TestUserNotLoggedIn() {
 	req := require.New(suite.T())
 	cobraCmd := &cobra.Command{
 		Run:    func(cmd *cobra.Command, args []string) {},
-		PreRunE: suite.preRunFunc(false),
+		PreRun: suite.preRunFunc(),
 	}
 	command := cmd.Command{
 		Command:   cobraCmd,
@@ -257,14 +257,18 @@ func (suite *AnalyticsTestSuite) TestUserNotLoggedIn() {
 	suite.checkPageSuccess(page)
 }
 
-func (suite *AnalyticsTestSuite) TestSessionTimeOut() {
+func (suite *AnalyticsTestSuite) TestSessionTimedOut() {
 	req := require.New(suite.T())
 	suite.loginUser()
-	prevAnonId := suite.config.Analytics.AnonymousId
-	req.Equal(0, suite.config.Analytics.SessionTimedOutCount)
+	prevAnonId := suite.config.AnonymousId
 	cobraCmd := &cobra.Command{
 		Run:    func(cmd *cobra.Command, args []string) {},
-		PreRunE: suite.preRunFunc(true),
+		PreRun: func(cmd *cobra.Command, args []string) {
+			err := suite.analyticsClient.SessionTimedOut()
+			req.NoError(err)
+			suite.logOut()
+			suite.preRunFunc()(cmd, args)
+		},
 	}
 	command := cmd.Command{
 		Command:   cobraCmd,
@@ -280,8 +284,7 @@ func (suite *AnalyticsTestSuite) TestSessionTimeOut() {
 	suite.checkPageBasic(page)
 	suite.checkPageNotLoggedIn(page)
 	suite.checkPageSuccess(page)
-	req.NotEqual(prevAnonId, suite.config.Analytics.AnonymousId)
-	req.Equal(1, suite.config.Analytics.SessionTimedOutCount)
+	req.NotEqual(prevAnonId, suite.config.AnonymousId)
 }
 
 func (suite *AnalyticsTestSuite) TestErrorReturnedByCommand() {
@@ -294,7 +297,7 @@ func (suite *AnalyticsTestSuite) TestErrorReturnedByCommand() {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf(errorMessage)
 		},
-		PreRunE: suite.preRunFunc(false),
+		PreRun: suite.preRunFunc(),
 	}
 	command := cmd.Command{
 		Command:   cobraCmd,
@@ -320,7 +323,7 @@ func (suite *AnalyticsTestSuite) TestMalformedCommand() {
 	randomCmd := &cobra.Command{
 		Use:    "random",
 		Run:    func(cmd *cobra.Command, args []string) {},
-		PreRunE: suite.preRunFunc(false),
+		PreRun: suite.preRunFunc(),
 	}
 	rootCmd.AddCommand(randomCmd)
 	command := cmd.Command{
@@ -352,7 +355,7 @@ func (suite *AnalyticsTestSuite) TestHideSecretForApiStore() {
 	storeCmd := &cobra.Command{
 		Use:    "store",
 		Run:    func(cmd *cobra.Command, args []string) {},
-		PreRunE: suite.preRunFunc(false),
+		PreRun: suite.preRunFunc(),
 	}
 	apiCmd.AddCommand(storeCmd)
 	rootCmd.AddCommand(apiCmd)
@@ -465,6 +468,7 @@ func (suite *AnalyticsTestSuite) loginOtherUser() {
 }
 
 func (suite *AnalyticsTestSuite) logOut() {
+	suite.config.AuthToken = ""
 	suite.config.Auth = nil
 }
 
@@ -545,9 +549,9 @@ func (suite *AnalyticsTestSuite) checkMalformedCommandTrack(track segment.Track)
 }
 
 // ------------------------- PreRun --------------------------
-func (suite *AnalyticsTestSuite) preRunFunc(sessionTimedOut bool) func(cmd *cobra.Command, args []string) error {
-	return func(cmd *cobra.Command, args []string) error {
-		return suite.analyticsClient.TrackCommand(cmd, args, sessionTimedOut)
+func (suite *AnalyticsTestSuite) preRunFunc() func(cmd *cobra.Command, args []string) {
+	return func(cmd *cobra.Command, args []string) {
+		suite.analyticsClient.TrackCommand(cmd, args)
 	}
 }
 

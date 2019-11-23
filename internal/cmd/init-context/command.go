@@ -22,19 +22,14 @@ type command struct {
 // TODO: Make long description better.
 const longDescription = "Initialize and set a current context."
 
-func New(prerunner pcmd.PreRunner, config *config.Config, prompt pcmd.Prompt, resolver pcmd.FlagResolver) *cobra.Command {
+func New(prerunner pcmd.PreRunner, config *config.Config, prompt pcmd.Prompt, resolver pcmd.FlagResolver, analyticsClient analytics.Client) *cobra.Command {
 	cmd := &command{
 		&cobra.Command{
 			Use:               "init <context-name>",
 			Short:             "Initialize a context.",
 			Long:              longDescription,
 			PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-				preRunObj, ok := prerunner.(*pcmd.PreRun)
-				// not ok only if mock prerunner object used
-				if !ok {
-					return prerunner.Anonymous()(cmd, args)
-				}
-				preRunObj.Analytics.SetCommandType(analytics.Init)
+				analyticsClient.SetCommandType(analytics.Init)
 				return prerunner.Anonymous()(cmd, args)
 			},
 			Args:              cobra.ExactArgs(1),

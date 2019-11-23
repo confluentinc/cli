@@ -1,4 +1,4 @@
-//go:generate go run github.com/travisjeffery/mocker/cmd/mocker --prefix "" --dst mock/analytics.go --pkg mock --selfpkg github.com/confluentinc/cli analytics.go Client
+//go:generate go run github.com/travisjeffery/mocker/cmd/mocker --prefix "" --dst ../../../mock/analytics/analytics.go --pkg analytics --selfpkg github.com/confluentinc/cli analytics.go Client
 package analytics
 
 import (
@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 type CommandType int
@@ -50,10 +51,11 @@ var (
 )
 
 type Client interface {
-	TrackCommand(cmd *cobra.Command, args []string, sessionTimedOut bool) error
+	TrackCommand(cmd *cobra.Command, args []string)
 	FlushCommandSucceeded() error
 	FlushCommandFailed(e error) error
 	SetCommandType(commandType CommandType)
+	SessionTimedOut() error
 	Close() error
 }
 
@@ -92,30 +94,21 @@ func NewAnalyticsClient(cliName string, cfg *config.Config, version string, segm
 	return client
 }
 
-func (a *ClientObj) TrackCommand(cmd *cobra.Command, args []string, sessionTimedOut bool) error {
+func (a *ClientObj) TrackCommand(cmd *cobra.Command, args []string) {
 	a.cmdCalled = cmd.CommandPath()
 	a.addArgsProperties(cmd, args)
 	a.addFlagProperties(cmd)
 	a.properties.Set(StartTimePropertiesKey, a.clock.Now())
 	a.properties.Set(VersionPropertiesKey, a.cliVersion)
-	if sessionTimedOut {
-		a.user = userInfo{}
-		if a.config.Analytics.SessionTimedOutCount == 0 {
-			err := a.config.ResetAnalyticsAnonymousId()
-			if err != nil {
-				return err
-			}
-		}
-		err := a.config.SetAnalyticsSessionTimedOutCount(a.config.Analytics.SessionTimedOutCount + 1)
-		if err != nil {
-			return err
-		}
-	} else {
-		a.user = a.getUser()
-		err := a.config.SetAnalyticsSessionTimedOutCount(0)
-		if err != nil {
-			return err
-		}
+	a.user = a.getUser()
+}
+
+func (a *ClientObj) SessionTimedOut() error {
+	// just in case; redundant if config.DeleteUserAuth called before TrackCommand in prerunner.Anonymous()
+	a.user = userInfo{}
+	err := a.config.ResetAnonymousId()
+	if err != nil {
+		return errors.Wrap(err, "Unable to reset anonymous id")
 	}
 	return nil
 }
@@ -130,8 +123,10 @@ func (a *ClientObj) FlushCommandSucceeded() error {
 	if err := a.sendPage(); err != nil {
 		return err
 	}
-	if a.commandType == Logout && a.user.credentialType != "" {
-		if err := a.config.ResetAnalyticsAnonymousId(); err != nil {
+	// only reset anonymous id if logout from a username credential
+	// preventing logouts that have no effects from resetting anonymous id
+	if a.commandType == Logout && a.user.credentialType == userNameCredType {
+		if err := a.config.ResetAnonymousId(); err != nil {
 			return err
 		}
 	}
@@ -163,7 +158,7 @@ func (a *ClientObj) Close() error {
 
 func (a *ClientObj) sendPage() error {
 	page := segment.Page{
-		AnonymousId: a.config.Analytics.AnonymousId,
+		AnonymousId: a.config.AnonymousId,
 		Name:        a.cmdCalled,
 		Properties:  a.properties,
 		UserId:      a.user.id,
@@ -174,7 +169,7 @@ func (a *ClientObj) sendPage() error {
 
 func (a *ClientObj) identify() error {
 	identify := segment.Identify{
-		AnonymousId: a.config.Analytics.AnonymousId,
+		AnonymousId: a.config.AnonymousId,
 		UserId:      a.user.id,
 	}
 	traits := segment.Traits{}
@@ -192,7 +187,7 @@ func (a *ClientObj) malformedCommandError(e error) error {
 	a.user = a.getUser()
 	a.properties.Set(ErrorMsgPropertiesKey, e.Error())
 	track := segment.Track{
-		AnonymousId: a.config.Analytics.AnonymousId,
+		AnonymousId: a.config.AnonymousId,
 		Event:       malformedCmdEventName,
 		Properties:  a.properties,
 		UserId:      a.user.id,
@@ -323,7 +318,7 @@ func (a *ClientObj) loginHandler() error {
 	}
 
 	if a.isSwitchUserLogin(prevUser) {
-		if err := a.config.ResetAnalyticsAnonymousId(); err != nil {
+		if err := a.config.ResetAnonymousId(); err != nil {
 			return err
 		}
 		return a.identify()

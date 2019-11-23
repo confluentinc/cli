@@ -2,7 +2,7 @@
 // github.com/travisjeffery/mocker
 // Source: test_helper.go
 
-package mock
+package analytics
 
 import (
 	sync "sync"

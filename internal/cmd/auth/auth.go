@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -18,6 +17,7 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 
+	"github.com/confluentinc/cli/internal/pkg/analytics"
 	auth_server "github.com/confluentinc/cli/internal/pkg/auth-server"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
@@ -28,10 +28,11 @@ import (
 )
 
 type commands struct {
-	Commands   []*cobra.Command
-	config     *config.Config
-	mdsClient  *mds.APIClient
-	Logger     *log.Logger
+	Commands             []*cobra.Command
+	config               *config.Config
+	mdsClient            *mds.APIClient
+	Logger               *log.Logger
+	analyticsClient      analytics.Client
 	// @VisibleForTesting, defaults to the OS filesystem
 	certReader io.Reader
 	// for testing
@@ -41,7 +42,7 @@ type commands struct {
 }
 
 // New returns a list of auth-related Cobra commands.
-func New(prerunner pcmd.PreRunner, config *config.Config, logger *log.Logger, mdsClient *mds.APIClient, userAgent string) []*cobra.Command {
+func New(prerunner pcmd.PreRunner, config *config.Config, logger *log.Logger, mdsClient *mds.APIClient, userAgent string, analyticsClient analytics.Client) []*cobra.Command {
 	var defaultAnonHTTPClientFactory = func(baseURL string, logger *log.Logger) *ccloud.Client {
 		return ccloud.NewClient(&ccloud.Params{BaseURL: baseURL, HttpClient: ccloud.BaseClient, Logger: logger, UserAgent: userAgent})
 	}
@@ -49,13 +50,14 @@ func New(prerunner pcmd.PreRunner, config *config.Config, logger *log.Logger, md
 		return ccloud.NewClientWithJWT(ctx, jwt, &ccloud.Params{BaseURL: baseURL, Logger: logger, UserAgent: userAgent})
 	}
 	return newCommands(prerunner, config, logger, mdsClient, pcmd.NewPrompt(os.Stdin),
-		defaultAnonHTTPClientFactory, defaultJwtHTTPClientFactory,
+		defaultAnonHTTPClientFactory, defaultJwtHTTPClientFactory, analyticsClient,
 	).Commands
 }
 
 func newCommands(prerunner pcmd.PreRunner, config *config.Config, log *log.Logger, mdsClient *mds.APIClient, prompt pcmd.Prompt,
 	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *ccloud.Client,
 	jwtHTTPClientFactory func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *ccloud.Client,
+	analyticsClient analytics.Client,
 ) *commands {
 	cmd := &commands{
 		config:                config,
@@ -64,6 +66,7 @@ func newCommands(prerunner pcmd.PreRunner, config *config.Config, log *log.Logge
 		prompt:                prompt,
 		anonHTTPClientFactory: anonHTTPClientFactory,
 		jwtHTTPClientFactory:  jwtHTTPClientFactory,
+		analyticsClient:       analyticsClient,
 	}
 	cmd.init(prerunner)
 	return cmd
@@ -88,7 +91,7 @@ func (a *commands) init(prerunner pcmd.PreRunner) {
 		check(loginCmd.MarkFlagRequired("url")) // because https://confluent.cloud isn't an MDS endpoint
 	}
 	loginCmd.Flags().SortFlags = false
-	loginCmd.PersistentPreRunE = analyticsPreRunCover(analytics.Login, prerunner)
+	loginCmd.PersistentPreRunE = a.analyticsPreRunCover(analytics.Login, prerunner)
 	logoutCmd := &cobra.Command{
 		Use:   "logout",
 		Short: fmt.Sprintf("Logout of %s.", a.config.APIName()),
@@ -97,7 +100,7 @@ func (a *commands) init(prerunner pcmd.PreRunner) {
 		RunE: a.logout,
 		Args: cobra.NoArgs,
 	}
-	logoutCmd.PersistentPreRunE = analyticsPreRunCover(analytics.Logout, prerunner)
+	logoutCmd.PersistentPreRunE = a.analyticsPreRunCover(analytics.Logout, prerunner)
 	a.Commands = []*cobra.Command{loginCmd, logoutCmd}
 }
 
@@ -268,11 +271,9 @@ func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
 }
 
 func (a *commands) logout(cmd *cobra.Command, args []string) error {
-	a.config.AuthToken = ""
-	a.config.Auth = nil
-	err := a.config.Save()
+	err := a.config.DeleteUserAuth()
 	if err != nil {
-		return errors.Wrap(err, "Unable to delete user auth")
+		return err
 	}
 	pcmd.Println(cmd, "You are now logged out")
 	return nil
@@ -355,6 +356,13 @@ func (a *commands) addContextIfAbsent(username string, caCertPath string) error 
 	return nil
 }
 
+func (a *commands) analyticsPreRunCover(commandType analytics.CommandType, prerunner pcmd.PreRunner) func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		a.analyticsClient.SetCommandType(commandType)
+		return prerunner.Anonymous()(cmd, args)
+	}
+}
+
 func SelfSignedCertClient(certReader io.Reader, logger *log.Logger) (*http.Client, error){
 	certPool, err := x509.SystemCertPool()
 	if err != nil {
@@ -396,14 +404,4 @@ func check(err error) {
 	}
 }
 
-func analyticsPreRunCover(commandType analytics.CommandType, prerunner pcmd.PreRunner) func(cmd *cobra.Command, args []string) error {
-	return func(cmd *cobra.Command, args []string) error {
-		preRunObj, ok := prerunner.(*pcmd.PreRun)
-		// the only case where this is not ok is when we use prerunner mock instead
-		if !ok {
-			return prerunner.Anonymous()(cmd, args)
-		}
-		preRunObj.Analytics.SetCommandType(commandType)
-		return prerunner.Anonymous()(cmd, args)
-	}
-}
+

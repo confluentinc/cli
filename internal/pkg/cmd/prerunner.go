@@ -31,6 +31,8 @@ type PreRun struct {
 	ConfigHelper *ConfigHelper
 	Clock        clockwork.Clock
 	Analytics    analytics.Client
+
+	//
 }
 
 // Anonymous provides PreRun operations for commands that may be run without a logged-in user
@@ -43,17 +45,20 @@ func (r *PreRun) Anonymous() func(cmd *cobra.Command, args []string) error {
 			return errors.HandleCommon(err, cmd)
 		}
 
-		err := r.validateAuthTokenExpiry(cmd)
+		err := r.validateAuthToken(cmd)
 		switch err.(type) {
 		case *ccloud.ExpiredTokenError:
-			err = r.Analytics.TrackCommand(cmd, args, true)
-		default:
-			err = r.Analytics.TrackCommand(cmd, args, false)
+			err := r.Config.DeleteUserAuth()
+			if err != nil {
+				return err
+			}
+			Println(cmd, "Your token has expired. You are now logged out.")
+			analyticsError := r.Analytics.SessionTimedOut()
+			if analyticsError != nil {
+				r.Logger.Debug(analyticsError.Error())
+			}
 		}
-		if err != nil {
-			r.Logger.Debugf("Analytics track command error: %s", err.Error())
-			return err
-		}
+		r.Analytics.TrackCommand(cmd, args)
 		return nil
 	}
 }
@@ -68,7 +73,7 @@ func (r *PreRun) Authenticated() func(cmd *cobra.Command, args []string) error {
 			return errors.HandleCommon(err, cmd)
 		}
 		if r.Config.AuthToken != "" {
-			if err := r.validateAuthTokenExpiry(cmd); err != nil {
+			if err := r.validateAuthToken(cmd); err != nil {
 				return errors.HandleCommon(err, cmd)
 			}
 		}
@@ -108,7 +113,7 @@ func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, name string, curren
 }
 
 
-func (r *PreRun) validateAuthTokenExpiry(cmd *cobra.Command) error {
+func (r *PreRun) validateAuthToken(cmd *cobra.Command) error {
 	var claims map[string]interface{}
 	token, err := jwt.ParseSigned(r.Config.AuthToken)
 	if err != nil {

@@ -10,13 +10,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
-	mockAnalytics "github.com/confluentinc/cli/internal/pkg/analytics/mock"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/update"
 	cliMock "github.com/confluentinc/cli/mock"
+	analyticsMock "github.com/confluentinc/cli/mock/analytics"
 	"github.com/confluentinc/mds-sdk-go"
 	"github.com/confluentinc/mds-sdk-go/mock"
 )
@@ -445,7 +445,7 @@ func (suite *AclTestSuite) TestMdsHandleErrorNotLoggedIn() {
 		Logger:       log.New(),
 		Config:       suite.conf,
 		UpdateClient: update.NewClient(&update.ClientParams{CheckInterval: 0}),
-		Analytics:    mockAnalytics.NewDummyAnalyticsMock(),
+		Analytics:    analyticsMock.NewDummyAnalyticsMock(),
 	}
 	expect := make(chan interface{})
 

@@ -2,7 +2,7 @@
 // github.com/travisjeffery/mocker
 // Source: analytics.go
 
-package mock
+package analytics
 
 import (
 	sync "sync"
@@ -14,7 +14,7 @@ import (
 // Client is a mock of Client interface
 type Client struct {
 	lockTrackCommand sync.Mutex
-	TrackCommandFunc func(cmd *github_com_spf13_cobra.Command, args []string, sessionTimedOut bool) error
+	TrackCommandFunc func(cmd *github_com_spf13_cobra.Command, args []string)
 
 	lockFlushCommandSucceeded sync.Mutex
 	FlushCommandSucceededFunc func() error
@@ -25,14 +25,16 @@ type Client struct {
 	lockSetCommandType sync.Mutex
 	SetCommandTypeFunc func(commandType github_com_confluentinc_cli_internal_pkg_analytics.CommandType)
 
+	lockSessionTimedOut sync.Mutex
+	SessionTimedOutFunc func() error
+
 	lockClose sync.Mutex
 	CloseFunc func() error
 
 	calls struct {
 		TrackCommand []struct {
-			Cmd             *github_com_spf13_cobra.Command
-			Args            []string
-			SessionTimedOut bool
+			Cmd  *github_com_spf13_cobra.Command
+			Args []string
 		}
 		FlushCommandSucceeded []struct {
 		}
@@ -42,13 +44,15 @@ type Client struct {
 		SetCommandType []struct {
 			CommandType github_com_confluentinc_cli_internal_pkg_analytics.CommandType
 		}
+		SessionTimedOut []struct {
+		}
 		Close []struct {
 		}
 	}
 }
 
 // TrackCommand mocks base method by wrapping the associated func.
-func (m *Client) TrackCommand(cmd *github_com_spf13_cobra.Command, args []string, sessionTimedOut bool) error {
+func (m *Client) TrackCommand(cmd *github_com_spf13_cobra.Command, args []string) {
 	m.lockTrackCommand.Lock()
 	defer m.lockTrackCommand.Unlock()
 
@@ -57,18 +61,16 @@ func (m *Client) TrackCommand(cmd *github_com_spf13_cobra.Command, args []string
 	}
 
 	call := struct {
-		Cmd             *github_com_spf13_cobra.Command
-		Args            []string
-		SessionTimedOut bool
+		Cmd  *github_com_spf13_cobra.Command
+		Args []string
 	}{
-		Cmd:             cmd,
-		Args:            args,
-		SessionTimedOut: sessionTimedOut,
+		Cmd:  cmd,
+		Args: args,
 	}
 
 	m.calls.TrackCommand = append(m.calls.TrackCommand, call)
 
-	return m.TrackCommandFunc(cmd, args, sessionTimedOut)
+	m.TrackCommandFunc(cmd, args)
 }
 
 // TrackCommandCalled returns true if TrackCommand was called at least once.
@@ -81,9 +83,8 @@ func (m *Client) TrackCommandCalled() bool {
 
 // TrackCommandCalls returns the calls made to TrackCommand.
 func (m *Client) TrackCommandCalls() []struct {
-	Cmd             *github_com_spf13_cobra.Command
-	Args            []string
-	SessionTimedOut bool
+	Cmd  *github_com_spf13_cobra.Command
+	Args []string
 } {
 	m.lockTrackCommand.Lock()
 	defer m.lockTrackCommand.Unlock()
@@ -201,6 +202,40 @@ func (m *Client) SetCommandTypeCalls() []struct {
 	return m.calls.SetCommandType
 }
 
+// SessionTimedOut mocks base method by wrapping the associated func.
+func (m *Client) SessionTimedOut() error {
+	m.lockSessionTimedOut.Lock()
+	defer m.lockSessionTimedOut.Unlock()
+
+	if m.SessionTimedOutFunc == nil {
+		panic("mocker: Client.SessionTimedOutFunc is nil but Client.SessionTimedOut was called.")
+	}
+
+	call := struct {
+	}{}
+
+	m.calls.SessionTimedOut = append(m.calls.SessionTimedOut, call)
+
+	return m.SessionTimedOutFunc()
+}
+
+// SessionTimedOutCalled returns true if SessionTimedOut was called at least once.
+func (m *Client) SessionTimedOutCalled() bool {
+	m.lockSessionTimedOut.Lock()
+	defer m.lockSessionTimedOut.Unlock()
+
+	return len(m.calls.SessionTimedOut) > 0
+}
+
+// SessionTimedOutCalls returns the calls made to SessionTimedOut.
+func (m *Client) SessionTimedOutCalls() []struct {
+} {
+	m.lockSessionTimedOut.Lock()
+	defer m.lockSessionTimedOut.Unlock()
+
+	return m.calls.SessionTimedOut
+}
+
 // Close mocks base method by wrapping the associated func.
 func (m *Client) Close() error {
 	m.lockClose.Lock()
@@ -249,6 +284,9 @@ func (m *Client) Reset() {
 	m.lockSetCommandType.Lock()
 	m.calls.SetCommandType = nil
 	m.lockSetCommandType.Unlock()
+	m.lockSessionTimedOut.Lock()
+	m.calls.SessionTimedOut = nil
+	m.lockSessionTimedOut.Unlock()
 	m.lockClose.Lock()
 	m.calls.Close = nil
 	m.lockClose.Unlock()

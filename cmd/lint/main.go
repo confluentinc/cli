@@ -10,11 +10,11 @@ import (
 	"github.com/hashicorp/go-multierror"
 
 	"github.com/confluentinc/cli/internal/cmd"
-	mockAnalytics "github.com/confluentinc/cli/internal/pkg/analytics/mock"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	linter "github.com/confluentinc/cli/internal/pkg/lint-cli"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/version"
+	mock "github.com/confluentinc/cli/mock/analytics"
 )
 
 var (
@@ -159,7 +159,7 @@ func main() {
 
 	var issues *multierror.Error
 	for _, cliName := range cliNames {
-		cli, err := cmd.NewConfluentCommand(cliName, &config.Config{CLIName: cliName}, &version.Version{Binary: cliName}, log.New(), mockAnalytics.NewDummyAnalyticsMock())
+		cli, err := cmd.NewConfluentCommand(cliName, &config.Config{CLIName: cliName}, &version.Version{Binary: cliName}, log.New(), mock.NewDummyAnalyticsMock())
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
