@@ -434,7 +434,7 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint stri
 		}
 
 		actual := normalizeNewLines(string(output))
-		expected := loadFixture(t, tt.fixture)
+		expected := normalizeNewLines(loadFixture(t, tt.fixture))
 
 		if tt.args == "version" {
 			require.Regexp(t, expected, actual)
@@ -484,7 +484,7 @@ func (s *CLITestSuite) runConfluentTest(tt CLITest, loginURL string) {
 		}
 
 		actual := normalizeNewLines(string(output))
-		expected := loadFixture(t, tt.fixture)
+		expected := normalizeNewLines(loadFixture(t, tt.fixture))
 
 		if tt.args == "version" {
 			require.Regexp(t, expected, actual)
