@@ -39,7 +39,7 @@ var (
 	StartTimePropertiesKey  = "start_time"
 	FinishTimePropertiesKey = "finish_time"
 	SucceededPropertiesKey  = "succeeded"
-	CredentialPropertiesKey = "credentialType"
+	CredentialPropertiesKey = "credential_type"
 	ApiKeyPropertiesKey     = "apikey"
 	VersionPropertiesKey    = "version"
 	CliNameTraitsKey        = "cli_name"

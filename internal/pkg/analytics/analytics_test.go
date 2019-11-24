@@ -130,10 +130,12 @@ func (suite *AnalyticsTestSuite) TestLogin() {
 	loginCmd := &cobra.Command{
 		Use:    "login",
 		Run:    func(cmd *cobra.Command, args []string) {
-			suite.analyticsClient.SetCommandType(analytics.Login)
 			suite.loginUser()
 		},
-		PreRun: suite.preRunFunc(),
+		PreRun: func(cmd *cobra.Command, args []string) {
+			suite.analyticsClient.SetCommandType(analytics.Login)
+			suite.preRunFunc()(cmd, args)
+		},
 	}
 	rootCmd.AddCommand(loginCmd)
 	command := cmd.Command{
@@ -161,7 +163,7 @@ func (suite *AnalyticsTestSuite) TestLogin() {
 	}
 }
 
-func (suite *AnalyticsTestSuite) TestAnonymousIdReset() {
+func (suite *AnalyticsTestSuite) TestAnonymousIdResetOnLogin() {
 	req := require.New(suite.T())
 
 	// make sure user is logged out
@@ -177,20 +179,24 @@ func (suite *AnalyticsTestSuite) TestAnonymousIdReset() {
 	loginUserCmd := &cobra.Command{
 		Use:    "user",
 		Run:    func(cmd *cobra.Command, args []string) {
-			suite.analyticsClient.SetCommandType(analytics.Login)
 			suite.loginUser()
 		},
-		PreRun: suite.preRunFunc(),
+		PreRun: func(cmd *cobra.Command, args []string) {
+			suite.analyticsClient.SetCommandType(analytics.Login)
+			suite.preRunFunc()(cmd, args)
+		},
 	}
 	loginCmd.AddCommand(loginUserCmd)
 
 	loginOtherCmd := &cobra.Command{
 		Use:    "other",
 		Run:    func(cmd *cobra.Command, args []string) {
-			suite.analyticsClient.SetCommandType(analytics.Login)
 			suite.loginOtherUser()
 		},
-		PreRun: suite.preRunFunc(),
+		PreRun: func(cmd *cobra.Command, args []string) {
+			suite.analyticsClient.SetCommandType(analytics.Login)
+			suite.preRunFunc()(cmd, args)
+		},
 	}
 	loginCmd.AddCommand(loginOtherCmd)
 
@@ -224,6 +230,46 @@ func (suite *AnalyticsTestSuite) TestAnonymousIdReset() {
 		switch suite.output[i].(type) {
 		case segment.Page:
 			page, ok := suite.output[i].(segment.Page)
+			req.True(ok)
+			secondAnonId = page.AnonymousId
+		}
+	}
+
+	req.NotEqual(firstAnonId, secondAnonId)
+}
+
+func (suite *AnalyticsTestSuite) TestAnonymousIdResetOnContextSwitch() {
+	req := require.New(suite.T())
+
+	// make sure user is logged out
+	suite.loginUser()
+
+	firstAnonId := suite.config.AnonymousId
+
+	contextUseCmd := &cobra.Command{
+		Run:    func(cmd *cobra.Command, args []string) {
+			suite.apiKeyCredContext()
+		},
+		PreRun: func(cmd *cobra.Command, args []string) {
+			suite.analyticsClient.SetCommandType(analytics.ContextUse)
+			suite.preRunFunc()(cmd, args)
+		},
+	}
+
+	command := cmd.Command{
+		Command:   contextUseCmd,
+		Analytics: suite.analyticsClient,
+	}
+
+	err := command.Execute()
+	req.NoError(err)
+
+	req.Equal(2, len(suite.output))
+	var secondAnonId string
+	for _, msg := range suite.output {
+		switch msg.(type) {
+		case segment.Page:
+			page, ok := msg.(segment.Page)
 			req.True(ok)
 			secondAnonId = page.AnonymousId
 		}
