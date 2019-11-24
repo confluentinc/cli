@@ -446,7 +446,9 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint stri
 		}
 
 		if !reflect.DeepEqual(actual, expected) {
-			t.Fatalf("actual = %s, expected = %s", []byte(actual), []byte(expected))
+			fmt.Println([]byte(actual))
+			fmt.Println([]byte(expected))
+			t.Fatalf("actual = %s, expected = %s", actual, expected)
 		}
 
 		if tt.wantFunc != nil {
@@ -490,7 +492,9 @@ func (s *CLITestSuite) runConfluentTest(tt CLITest, loginURL string) {
 		}
 
 		if !reflect.DeepEqual(actual, expected) {
-			t.Fatalf("actual = %s, expected = %s", []byte(actual), []byte(expected))
+			fmt.Println([]byte(actual))
+			fmt.Println([]byte(expected))
+			t.Fatalf("actual = %s, expected = %s", actual, expected)
 		}
 	})
 }
