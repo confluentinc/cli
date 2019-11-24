@@ -2,15 +2,13 @@
 package analytics
 
 import (
+	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/jonboulle/clockwork"
 	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"strconv"
-	"strings"
-
-	"github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 type CommandType int
@@ -114,9 +112,11 @@ func (a *ClientObj) SessionTimedOut() error {
 }
 
 func (a *ClientObj) FlushCommandSucceeded() error {
-	err := a.loginHandler()
-	if err != nil {
-		return err
+	if a.commandType == Login || a.commandType == Init || a.commandType == ContextUse {
+		err := a.loginHandler()
+		if err != nil {
+			return err
+		}
 	}
 	a.properties.Set(SucceededPropertiesKey, true)
 	a.properties.Set(FinishTimePropertiesKey, a.clock.Now())
@@ -304,15 +304,9 @@ func (a *ClientObj) getCredApiKey() string {
 }
 
 func (a *ClientObj) loginHandler() error {
-	// do nothing for non login commands
-	if !(a.commandType == Login ||
-	     a.commandType == Init ||
-		 strings.Contains(a.cmdCalled, "ccloud config context use")) {
-		return nil
-	}
 	prevUser := a.user
 	a.user = a.getUser()
-	// previous not logged in need to identify but no need for anonymous id reset
+	// prevUser not logged in, need to identify but no anonymous id reset
 	if prevUser.credentialType == "" {
 		return a.identify()
 	}

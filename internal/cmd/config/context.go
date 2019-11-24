@@ -7,6 +7,7 @@ import (
 
 	"github.com/confluentinc/go-printer"
 
+	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -14,17 +15,19 @@ import (
 
 type contextCommand struct {
 	*cobra.Command
-	config *config.Config
+	config    *config.Config
+	analytics analytics.Client
 }
 
 // NewContext returns the Cobra contextCommand for `config context`.
-func NewContext(config *config.Config) *cobra.Command {
+func NewContext(config *config.Config, analytics analytics.Client) *cobra.Command {
 	cmd := &contextCommand{
 		Command: &cobra.Command{
 			Use:   "context",
 			Short: "Manage config contexts.",
 		},
-		config: config,
+		config:    config,
+		analytics: analytics,
 	}
 	cmd.init()
 	return cmd.Command
@@ -42,6 +45,10 @@ func (c *contextCommand) init() {
 		Short: "Use a config context.",
 		RunE:  c.use,
 		Args:  cobra.ExactArgs(1),
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			c.analytics.SetCommandType(analytics.ContextUse)
+			return c.PersistentPreRunE(cmd, args)
+		},
 	})
 	c.AddCommand(&cobra.Command{
 		Use:   "current",
