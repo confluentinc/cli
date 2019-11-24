@@ -1,0 +1,12 @@
+Configure ACLs for a KSQL cluster.
+
+Usage:
+  ccloud ksql app configure-acls <id> TOPICS... [flags]
+
+Flags:
+      --cluster string   Kafka cluster ID.
+      --dry-run          If specified, print the ACLs that will be set and exit.
+  -h, --help             help for configure-acls
+
+Global Flags:
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

@@ -1,0 +1,10 @@
+Describe a KSQL app.
+
+Usage:
+  ccloud ksql app describe <id> [flags]
+
+Flags:
+  -h, --help   help for describe
+
+Global Flags:
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
