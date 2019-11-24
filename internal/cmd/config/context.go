@@ -16,17 +16,19 @@ import (
 type contextCommand struct {
 	*cobra.Command
 	config    *config.Config
+	prerunner pcmd.PreRunner
 	analytics analytics.Client
 }
 
 // NewContext returns the Cobra contextCommand for `config context`.
-func NewContext(config *config.Config, analytics analytics.Client) *cobra.Command {
+func NewContext(config *config.Config, prerunner pcmd.PreRunner, analytics analytics.Client) *cobra.Command {
 	cmd := &contextCommand{
 		Command: &cobra.Command{
 			Use:   "context",
 			Short: "Manage config contexts.",
 		},
 		config:    config,
+		prerunner: prerunner,
 		analytics: analytics,
 	}
 	cmd.init()
@@ -47,7 +49,7 @@ func (c *contextCommand) init() {
 		Args:  cobra.ExactArgs(1),
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			c.analytics.SetCommandType(analytics.ContextUse)
-			return c.PersistentPreRunE(cmd, args)
+			return c.prerunner.Anonymous()(cmd, args)
 		},
 	})
 	c.AddCommand(&cobra.Command{
