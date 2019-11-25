@@ -99,8 +99,7 @@ func init() {
 
 // SetupSuite builds the CLI binary to test
 func (s *CLITestSuite) SetupSuite() {
-	covCollector = test_integ.NewCoverageCollector(mergedCoverageFilename)
-	covCollector.Setup()
+	covCollector = test_integ.NewCoverageCollector(mergedCoverageFilename, cover)
 	req := require.New(s.T())
 
 	// dumb but effective
@@ -126,7 +125,7 @@ func (s *CLITestSuite) SetupSuite() {
 
 func (s *CLITestSuite) TearDownSuite() {
 	// Merge coverage profiles.
-	covCollector.TearDown()
+	covCollector.MergeCoverageProfiles()
 }
 
 func (s *CLITestSuite) Test_Confluent_Help() {
@@ -517,7 +516,7 @@ func (s *CLITestSuite) runConfluentTest(tt CLITest, loginURL string) {
 }
 
 func runCommand(t *testing.T, binaryName string, env []string, args string, wantErrCode int) string {
-	output, exitCode, err := covCollector.RunBinary(binaryPath(t, binaryName), "TestRunMain", env, strings.Split(args, " "), cover)
+	output, exitCode, err := covCollector.RunBinary(binaryPath(t, binaryName), "TestRunMain", env, strings.Split(args, " "))
 	if err != nil && wantErrCode == 0 {
 		require.Failf(t, "unexpected error",
 			"exit %d: %s\n%s", exitCode, args, output)

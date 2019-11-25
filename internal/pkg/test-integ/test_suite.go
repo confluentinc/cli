@@ -21,34 +21,39 @@ const (
 
 type CoverageCollector struct {
 	MergedCoverageFilename string
+	CollectCoverage        bool
 	testNum                int
 	tmpArgsFile            *os.File
 	coverMode              string
 	tmpCoverageFilenames   []string
 }
 
-func NewCoverageCollector(mergedCoverageFilename string) *CoverageCollector {
-	return &CoverageCollector{
+// NewCoverageCollector initializes a CoverageCollector with the specified
+// merged coverage filename. collectCoverage can be set to true to collect coverage,
+// or set to false to skip coverage collection. This is provided in order to enable reuse of CoverageCollector
+// for tests where coverage measurement is not needed.
+func NewCoverageCollector(mergedCoverageFilename string, collectCoverage bool) *CoverageCollector {
+	collector := &CoverageCollector{
 		MergedCoverageFilename: mergedCoverageFilename,
+		CollectCoverage:        collectCoverage,
 	}
-}
-
-func (c *CoverageCollector) Setup() {
+	if collector.MergedCoverageFilename == "" {
+		log.Fatal("merged coverage profile filename cannot be empty")
+	}
 	var err error
-	c.tmpArgsFile, err = ioutil.TempFile("", tmpArgsFilePrefix)
+	collector.tmpArgsFile, err = ioutil.TempFile("", tmpArgsFilePrefix)
 	if err != nil {
 		log.Fatal(errors.Wrap(err, "could not create temporary args file"))
 	}
-	if c.MergedCoverageFilename == "" {
-		log.Fatal("must specify merged coverage profile filename")
-	}
+	return collector
 }
 
-func (c *CoverageCollector) TearDown() {
+// MergeCoverageProfiles merges the coverage profiles collecting from repeated runs of RunBinary.
+// It must be called at the teardown stage of the test suite, otherwise no merged coverage profile will be created. 
+func (c *CoverageCollector) MergeCoverageProfiles() {
 	if c.testNum == 0 {
 		return
 	}
-	// Merge coverage profiles.
 	header := fmt.Sprintf("mode: %s", c.coverMode)
 	var parsedProfiles []string
 	for _, filename := range c.tmpCoverageFilenames {
@@ -71,13 +76,14 @@ func (c *CoverageCollector) TearDown() {
 	}
 }
 
-func (c *CoverageCollector) RunBinary(binPath string, mainTestName string, env []string, args []string, cover bool) (output string, exitCode int, err error) {
+// RunBinary runs the instrumented binary at binPath with env environment variables, executing only the test with mainTestName with the specified args.  
+func (c *CoverageCollector) RunBinary(binPath string, mainTestName string, env []string, args []string) (output string, exitCode int, err error) {
 	err = c.writeArgs(args)
 	if err != nil {
 		log.Fatal(err)
 	}
 	var binArgs string
-	if cover {
+	if c.CollectCoverage {
 		f, err := ioutil.TempFile("", tmpCoverageFilePrefix)
 		if err != nil {
 			log.Fatal(err)
@@ -102,7 +108,7 @@ func (c *CoverageCollector) RunBinary(binPath string, mainTestName string, env [
 		exitCode = 0
 	}
 	cmdOutput, coverMode := parseCommandOutput(string(combinedOutput))
-	if cover {
+	if c.CollectCoverage {
 		if c.coverMode == "" {
 			c.coverMode = coverMode
 		}
