@@ -303,7 +303,7 @@ func (s *CLITestSuite) Test_Ccloud_Errors() {
 		require.Equal(tt, "Logged in as expired@user.com\nUsing environment a-595 (\"default\")\n", output)
 
 		output = runCommand(tt, "ccloud", []string{}, "kafka cluster list", 1)
-		require.Equal(tt, "Error: Your session has expired. Please login again.\n", output)
+		require.Equal(tt, "Your token has expired. You are now logged out.\nError: You must login to run that command.\n", output)
 	})
 
 	t.Run("malformed token", func(tt *testing.T) {
@@ -637,16 +637,16 @@ func serveMds(t *testing.T, mdsURL string) *httptest.Server {
 	router.HandleFunc("/security/1.0/authenticate", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/json")
 		reply := &mds.AuthenticationResponse{
-			AuthToken:"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1NjE2NjA4NTcsImV4cCI6MjUzMzg2MDM4NDU3LCJhdWQiOiJ3d3cuZXhhbXBsZS5jb20iLCJzdWIiOiJqcm9ja2V0QGV4YW1wbGUuY29tIn0.G6IgrFm5i0mN7Lz9tkZQ2tZvuZ2U7HKnvxMuZAooPmE",
-			TokenType:"dunno",
-			ExpiresIn:9999999999,
+			AuthToken: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1NjE2NjA4NTcsImV4cCI6MjUzMzg2MDM4NDU3LCJhdWQiOiJ3d3cuZXhhbXBsZS5jb20iLCJzdWIiOiJqcm9ja2V0QGV4YW1wbGUuY29tIn0.G6IgrFm5i0mN7Lz9tkZQ2tZvuZ2U7HKnvxMuZAooPmE",
+			TokenType: "dunno",
+			ExpiresIn: 9999999999,
 		}
 		b, err := json.Marshal(&reply)
 		req.NoError(err)
 		_, err = io.WriteString(w, string(b))
 		req.NoError(err)
 	})
-	routesAndReplies := map[string]string {
+	routesAndReplies := map[string]string{
 		"/security/1.0/principals/User:frodo/groups": `[
                        "hobbits",
                        "ringBearers"]`,
@@ -654,15 +654,15 @@ func serveMds(t *testing.T, mdsURL string) *httptest.Server {
                        "DeveloperRead",
                        "DeveloperWrite",
                        "SecurityAdmin"]`,
-		"/security/1.0/principals/User:frodo/roles/DeveloperRead/resources": `[]`,
+		"/security/1.0/principals/User:frodo/roles/DeveloperRead/resources":  `[]`,
 		"/security/1.0/principals/User:frodo/roles/DeveloperWrite/resources": `[]`,
-		"/security/1.0/principals/User:frodo/roles/SecurityAdmin/resources": `[]`,
+		"/security/1.0/principals/User:frodo/roles/SecurityAdmin/resources":  `[]`,
 		"/security/1.0/principals/Group:hobbits/roles/DeveloperRead/resources": `[
                        {"resourceType":"Topic","name":"drink","patternType":"LITERAL"},
                        {"resourceType":"Topic","name":"food","patternType":"LITERAL"}]`,
 		"/security/1.0/principals/Group:hobbits/roles/DeveloperWrite/resources": `[
                        {"resourceType":"Topic","name":"shire-","patternType":"PREFIXED"}]`,
-		"/security/1.0/principals/Group:hobbits/roles/SecurityAdmin/resources": `[]`,
+		"/security/1.0/principals/Group:hobbits/roles/SecurityAdmin/resources":     `[]`,
 		"/security/1.0/principals/Group:ringBearers/roles/DeveloperRead/resources": `[]`,
 		"/security/1.0/principals/Group:ringBearers/roles/DeveloperWrite/resources": `[
                        {"resourceType":"Topic","name":"ring-","patternType":"PREFIXED"}]`,
@@ -686,12 +686,12 @@ func serveMds(t *testing.T, mdsURL string) *httptest.Server {
                                "DeveloperRead":[
                                        {"resourceType":"Topic","name":"drink","patternType":"LITERAL"},
                                        {"resourceType":"Topic","name":"food","patternType":"LITERAL"}]}}`,
-		"/security/1.0/lookup/role/DeveloperRead": `["Group:hobbits"]`,
-		"/security/1.0/lookup/role/DeveloperWrite": `["Group:hobbits","Group:ringBearers"]`,
-		"/security/1.0/lookup/role/SecurityAdmin": `["User:frodo"]`,
-		"/security/1.0/lookup/role/SystemAdmin": `[]`,
-		"/security/1.0/lookup/role/DeveloperRead/resource/Topic/name/food": `["Group:hobbits"]`,
-		"/security/1.0/lookup/role/DeveloperRead/resource/Topic/name/shire-parties": `[]`,
+		"/security/1.0/lookup/role/DeveloperRead":                                    `["Group:hobbits"]`,
+		"/security/1.0/lookup/role/DeveloperWrite":                                   `["Group:hobbits","Group:ringBearers"]`,
+		"/security/1.0/lookup/role/SecurityAdmin":                                    `["User:frodo"]`,
+		"/security/1.0/lookup/role/SystemAdmin":                                      `[]`,
+		"/security/1.0/lookup/role/DeveloperRead/resource/Topic/name/food":           `["Group:hobbits"]`,
+		"/security/1.0/lookup/role/DeveloperRead/resource/Topic/name/shire-parties":  `[]`,
 		"/security/1.0/lookup/role/DeveloperWrite/resource/Topic/name/shire-parties": `["Group:hobbits"]`,
 		"/security/1.0/roles/DeveloperRead": `{
                        "name":"DeveloperRead",

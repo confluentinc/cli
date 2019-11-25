@@ -2,6 +2,7 @@ package init
 
 import (
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/analytics"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -21,13 +22,16 @@ type command struct {
 // TODO: Make long description better.
 const longDescription = "Initialize and set a current context."
 
-func New(prerunner pcmd.PreRunner, config *config.Config, prompt pcmd.Prompt, resolver pcmd.FlagResolver) *cobra.Command {
+func New(prerunner pcmd.PreRunner, config *config.Config, prompt pcmd.Prompt, resolver pcmd.FlagResolver, analyticsClient analytics.Client) *cobra.Command {
 	cmd := &command{
 		&cobra.Command{
 			Use:               "init <context-name>",
 			Short:             "Initialize a context.",
 			Long:              longDescription,
-			PersistentPreRunE: prerunner.Anonymous(),
+			PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+				analyticsClient.SetCommandType(analytics.Init)
+				return prerunner.Anonymous()(cmd, args)
+			},
 			Args:              cobra.ExactArgs(1),
 		},
 		config,
