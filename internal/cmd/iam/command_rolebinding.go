@@ -21,7 +21,7 @@ var (
 	resourcePatternListLabels = []string{"Principal", "Role", "ResourceType", "Name", "PatternType"}
 
 	//TODO: please move this to a backend route
-	clusterScopedRoles        = map[string]bool{
+	clusterScopedRoles = map[string]bool{
 		"SystemAdmin":   true,
 		"ClusterAdmin":  true,
 		"SecurityAdmin": true,
@@ -415,13 +415,13 @@ func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOption
 	}
 
 	return &rolebindingOptions{
-		role,
-		resource,
-		prefix,
-		principal,
-		*scopeClusters,
-		resourcesRequest,
-	},
+			role,
+			resource,
+			prefix,
+			principal,
+			*scopeClusters,
+			resourcesRequest,
+		},
 		nil
 }
 
