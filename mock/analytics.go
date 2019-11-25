@@ -16,11 +16,11 @@ type AnalyticsClient struct {
 	lockTrackCommand sync.Mutex
 	TrackCommandFunc func(cmd *github_com_spf13_cobra.Command, args []string)
 
-	lockFlushCommandSucceeded sync.Mutex
-	FlushCommandSucceededFunc func() error
+	lockSendCommandSucceeded sync.Mutex
+	SendCommandSucceededFunc func() error
 
-	lockFlushCommandFailed sync.Mutex
-	FlushCommandFailedFunc func(e error) error
+	lockSendCommandFailed sync.Mutex
+	SendCommandFailedFunc func(e error) error
 
 	lockSetCommandType sync.Mutex
 	SetCommandTypeFunc func(commandType github_com_confluentinc_cli_internal_pkg_analytics.CommandType)
@@ -36,9 +36,9 @@ type AnalyticsClient struct {
 			Cmd  *github_com_spf13_cobra.Command
 			Args []string
 		}
-		FlushCommandSucceeded []struct {
+		SendCommandSucceeded []struct {
 		}
-		FlushCommandFailed []struct {
+		SendCommandFailed []struct {
 			E error
 		}
 		SetCommandType []struct {
@@ -92,47 +92,47 @@ func (m *AnalyticsClient) TrackCommandCalls() []struct {
 	return m.calls.TrackCommand
 }
 
-// FlushCommandSucceeded mocks base method by wrapping the associated func.
-func (m *AnalyticsClient) FlushCommandSucceeded() error {
-	m.lockFlushCommandSucceeded.Lock()
-	defer m.lockFlushCommandSucceeded.Unlock()
+// SendCommandSucceeded mocks base method by wrapping the associated func.
+func (m *AnalyticsClient) SendCommandSucceeded() error {
+	m.lockSendCommandSucceeded.Lock()
+	defer m.lockSendCommandSucceeded.Unlock()
 
-	if m.FlushCommandSucceededFunc == nil {
-		panic("mocker: AnalyticsClient.FlushCommandSucceededFunc is nil but AnalyticsClient.FlushCommandSucceeded was called.")
+	if m.SendCommandSucceededFunc == nil {
+		panic("mocker: AnalyticsClient.SendCommandSucceededFunc is nil but AnalyticsClient.SendCommandSucceeded was called.")
 	}
 
 	call := struct {
 	}{}
 
-	m.calls.FlushCommandSucceeded = append(m.calls.FlushCommandSucceeded, call)
+	m.calls.SendCommandSucceeded = append(m.calls.SendCommandSucceeded, call)
 
-	return m.FlushCommandSucceededFunc()
+	return m.SendCommandSucceededFunc()
 }
 
-// FlushCommandSucceededCalled returns true if FlushCommandSucceeded was called at least once.
-func (m *AnalyticsClient) FlushCommandSucceededCalled() bool {
-	m.lockFlushCommandSucceeded.Lock()
-	defer m.lockFlushCommandSucceeded.Unlock()
+// SendCommandSucceededCalled returns true if SendCommandSucceeded was called at least once.
+func (m *AnalyticsClient) SendCommandSucceededCalled() bool {
+	m.lockSendCommandSucceeded.Lock()
+	defer m.lockSendCommandSucceeded.Unlock()
 
-	return len(m.calls.FlushCommandSucceeded) > 0
+	return len(m.calls.SendCommandSucceeded) > 0
 }
 
-// FlushCommandSucceededCalls returns the calls made to FlushCommandSucceeded.
-func (m *AnalyticsClient) FlushCommandSucceededCalls() []struct {
+// SendCommandSucceededCalls returns the calls made to SendCommandSucceeded.
+func (m *AnalyticsClient) SendCommandSucceededCalls() []struct {
 } {
-	m.lockFlushCommandSucceeded.Lock()
-	defer m.lockFlushCommandSucceeded.Unlock()
+	m.lockSendCommandSucceeded.Lock()
+	defer m.lockSendCommandSucceeded.Unlock()
 
-	return m.calls.FlushCommandSucceeded
+	return m.calls.SendCommandSucceeded
 }
 
-// FlushCommandFailed mocks base method by wrapping the associated func.
-func (m *AnalyticsClient) FlushCommandFailed(e error) error {
-	m.lockFlushCommandFailed.Lock()
-	defer m.lockFlushCommandFailed.Unlock()
+// SendCommandFailed mocks base method by wrapping the associated func.
+func (m *AnalyticsClient) SendCommandFailed(e error) error {
+	m.lockSendCommandFailed.Lock()
+	defer m.lockSendCommandFailed.Unlock()
 
-	if m.FlushCommandFailedFunc == nil {
-		panic("mocker: AnalyticsClient.FlushCommandFailedFunc is nil but AnalyticsClient.FlushCommandFailed was called.")
+	if m.SendCommandFailedFunc == nil {
+		panic("mocker: AnalyticsClient.SendCommandFailedFunc is nil but AnalyticsClient.SendCommandFailed was called.")
 	}
 
 	call := struct {
@@ -141,27 +141,27 @@ func (m *AnalyticsClient) FlushCommandFailed(e error) error {
 		E: e,
 	}
 
-	m.calls.FlushCommandFailed = append(m.calls.FlushCommandFailed, call)
+	m.calls.SendCommandFailed = append(m.calls.SendCommandFailed, call)
 
-	return m.FlushCommandFailedFunc(e)
+	return m.SendCommandFailedFunc(e)
 }
 
-// FlushCommandFailedCalled returns true if FlushCommandFailed was called at least once.
-func (m *AnalyticsClient) FlushCommandFailedCalled() bool {
-	m.lockFlushCommandFailed.Lock()
-	defer m.lockFlushCommandFailed.Unlock()
+// SendCommandFailedCalled returns true if SendCommandFailed was called at least once.
+func (m *AnalyticsClient) SendCommandFailedCalled() bool {
+	m.lockSendCommandFailed.Lock()
+	defer m.lockSendCommandFailed.Unlock()
 
-	return len(m.calls.FlushCommandFailed) > 0
+	return len(m.calls.SendCommandFailed) > 0
 }
 
-// FlushCommandFailedCalls returns the calls made to FlushCommandFailed.
-func (m *AnalyticsClient) FlushCommandFailedCalls() []struct {
+// SendCommandFailedCalls returns the calls made to SendCommandFailed.
+func (m *AnalyticsClient) SendCommandFailedCalls() []struct {
 	E error
 } {
-	m.lockFlushCommandFailed.Lock()
-	defer m.lockFlushCommandFailed.Unlock()
+	m.lockSendCommandFailed.Lock()
+	defer m.lockSendCommandFailed.Unlock()
 
-	return m.calls.FlushCommandFailed
+	return m.calls.SendCommandFailed
 }
 
 // SetCommandType mocks base method by wrapping the associated func.
@@ -275,12 +275,12 @@ func (m *AnalyticsClient) Reset() {
 	m.lockTrackCommand.Lock()
 	m.calls.TrackCommand = nil
 	m.lockTrackCommand.Unlock()
-	m.lockFlushCommandSucceeded.Lock()
-	m.calls.FlushCommandSucceeded = nil
-	m.lockFlushCommandSucceeded.Unlock()
-	m.lockFlushCommandFailed.Lock()
-	m.calls.FlushCommandFailed = nil
-	m.lockFlushCommandFailed.Unlock()
+	m.lockSendCommandSucceeded.Lock()
+	m.calls.SendCommandSucceeded = nil
+	m.lockSendCommandSucceeded.Unlock()
+	m.lockSendCommandFailed.Lock()
+	m.calls.SendCommandFailed = nil
+	m.lockSendCommandFailed.Unlock()
 	m.lockSetCommandType.Lock()
 	m.calls.SetCommandType = nil
 	m.lockSetCommandType.Unlock()

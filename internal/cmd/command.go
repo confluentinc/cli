@@ -186,13 +186,13 @@ func (c *Command) Execute() error {
 	// analytics stuff here too if you need
 	err := c.Command.Execute()
 	if err != nil {
-		analyticsError := c.Analytics.FlushCommandFailed(err)
+		analyticsError := c.Analytics.SendCommandFailed(err)
 		if analyticsError != nil {
 			c.logger.Debugf("segment analytics flushing failed: %s\n", analyticsError.Error())
 		}
 		return err
 	}
-	analyticsError := c.Analytics.FlushCommandSucceeded()
+	analyticsError := c.Analytics.SendCommandSucceeded()
 	if analyticsError != nil {
 		c.logger.Debugf("segment analytics flushing failed: %s\n", analyticsError.Error())
 	}

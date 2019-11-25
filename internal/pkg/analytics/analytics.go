@@ -49,8 +49,8 @@ var (
 
 type Client interface {
 	TrackCommand(cmd *cobra.Command, args []string)
-	FlushCommandSucceeded() error
-	FlushCommandFailed(e error) error
+	SendCommandSucceeded() error
+	SendCommandFailed(e error) error
 	SetCommandType(commandType CommandType)
 	SessionTimedOut() error
 	Close() error
@@ -110,7 +110,7 @@ func (a *ClientObj) SessionTimedOut() error {
 	return nil
 }
 
-func (a *ClientObj) FlushCommandSucceeded() error {
+func (a *ClientObj) SendCommandSucceeded() error {
 	if a.commandType == Login || a.commandType == Init || a.commandType == ContextUse {
 		err := a.loginHandler()
 		if err != nil {
@@ -132,7 +132,7 @@ func (a *ClientObj) FlushCommandSucceeded() error {
 	return nil
 }
 
-func (a *ClientObj) FlushCommandFailed(e error) error {
+func (a *ClientObj) SendCommandFailed(e error) error {
 	if a.cmdCalled == "" {
 		return a.malformedCommandError(e)
 	}
