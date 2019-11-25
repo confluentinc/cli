@@ -3,7 +3,7 @@ package test
 import "runtime"
 
 func (s *CLITestSuite) TestLocalHelpCommands() {
-	tests := []CLITest{}
+	var tests []CLITest
 	if runtime.GOOS == "windows" {
 		tests = []CLITest{
 			// These should all be equivalent
