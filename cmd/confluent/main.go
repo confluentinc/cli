@@ -2,11 +2,14 @@ package main
 
 import (
 	"fmt"
+	"github.com/jonboulle/clockwork"
 	"os"
 
+	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/viper"
 
 	"github.com/confluentinc/cli/internal/cmd"
+	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -16,11 +19,12 @@ import (
 
 var (
 	// Injected from linker flags like `go build -ldflags "-X main.version=$VERSION" -X ...`
-	version = "v0.0.0"
-	commit  = ""
-	date    = ""
-	host    = ""
-	cliName = "confluent"
+	version    = "v0.0.0"
+	commit     = ""
+	date       = ""
+	host       = ""
+	cliName    = "confluent"
+	segmentKey = "KDsYPLPBNVB1IPJIN5oqrXnxQT9iKezo"
 )
 
 func main() {
@@ -45,18 +49,29 @@ func main() {
 
 	version := cliVersion.NewVersion(cfg.CLIName, cfg.Name(), cfg.Support(), version, commit, date, host)
 
-	cli, err := cmd.NewConfluentCommand(cliName, cfg, version, logger)
+	segmentClient := segment.New(segmentKey)
+
+	analyticsClient := analytics.NewAnalyticsClient(cfg.CLIName, cfg, version.Version, segmentClient, clockwork.NewRealClock())
+
+	cli, err := cmd.NewConfluentCommand(cliName, cfg, version, logger, analyticsClient)
 	if err != nil {
 		if cli == nil {
 			fmt.Fprintln(os.Stderr, err)
 		} else {
-			pcmd.ErrPrintln(cli, err)
+			pcmd.ErrPrintln(cli.Command, err)
 		}
 		os.Exit(1)
 	}
 
 	err = cli.Execute()
+
+	closeErr := analyticsClient.Close()
+	if closeErr != nil {
+		logger.Debug(closeErr)
+	}
+
 	if err != nil {
 		os.Exit(1)
 	}
+
 }
