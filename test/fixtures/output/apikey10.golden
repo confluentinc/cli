@@ -1,4 +1,4 @@
        Key      | Owner | Description | Resource Type | Resource ID   
 +---------------+-------+-------------+---------------+--------------+
-    MYKEY6      |    23 | my-ksql-app | kafka         | lksqlc-ksql1  
-    UIAPIKEY102 |    25 |             | kafka         | lksqlc-ksql1  
+    MYKEY6      |    23 | my-ksql-app | ksql          | lksqlc-ksql1  
+    UIAPIKEY102 |    25 |             | ksql          | lksqlc-ksql1  

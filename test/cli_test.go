@@ -13,6 +13,7 @@ import (
 	"path"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"runtime"
 	"sort"
 	"strings"
@@ -27,6 +28,7 @@ import (
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
 	corev1 "github.com/confluentinc/ccloudapis/core/v1"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
+	ksqlv1 "github.com/confluentinc/ccloudapis/ksql/v1"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
 	utilv1 "github.com/confluentinc/ccloudapis/util/v1"
@@ -262,7 +264,7 @@ func (s *CLITestSuite) Test_UserAgent() {
 		cloudRouter.HandleFunc("/api/sessions", compose(assertUserAgent(t, expected), handleLogin(t)))
 		cloudRouter.HandleFunc("/api/me", compose(assertUserAgent(t, expected), handleMe(t)))
 		cloudRouter.HandleFunc("/api/check_email/", compose(assertUserAgent(t, expected), handleCheckEmail(t)))
-		cloudRouter.HandleFunc("/api/clusters/", compose(assertUserAgent(t, expected), handleKafkaClusterList(t, kafkaApiServer.URL)))
+		cloudRouter.HandleFunc("/api/clusters/", compose(assertUserAgent(t, expected), handleKafkaClusterGetListDelete(t, kafkaApiServer.URL)))
 		return httptest.NewServer(cloudRouter).URL
 	}
 
@@ -455,6 +457,10 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint stri
 		}
 
 		if *update && tt.args != "version" {
+			if strings.HasPrefix(tt.args, "kafka cluster create") {
+				re := regexp.MustCompile("https?://127.0.0.1:[0-9]+")
+				output = re.ReplaceAllString(output, "http://127.0.0.1:12345")
+			}
 			writeFixture(t, tt.fixture, output)
 		}
 
@@ -464,6 +470,10 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint stri
 		if tt.args == "version" {
 			require.Regexp(t, expected, actual)
 			return
+		} else if strings.HasPrefix(tt.args, "kafka cluster create") {
+			fmt.Println(tt.args, actual)
+			re := regexp.MustCompile("https?://127.0.0.1:[0-9]+")
+			actual = re.ReplaceAllString(actual, "http://127.0.0.1:12345")
 		}
 
 		if !reflect.DeepEqual(actual, expected) {
@@ -785,7 +795,16 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 			require.NoError(t, err)
 		}
 	})
-	router.HandleFunc("/api/clusters/", handleKafkaClusterList(t, kafkaAPIURL))
+	router.HandleFunc("/api/accounts", func(w http.ResponseWriter, r *http.Request) {
+		b, err := utilv1.MarshalJSONToBytes(&orgv1.ListAccountsReply{Accounts: []*orgv1.Account{
+			{Id: "a-595", Name: "default"}, {Id: "not-595", Name: "other"},
+		}})
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(b))
+		require.NoError(t, err)
+	})
+	router.HandleFunc("/api/clusters/", handleKafkaClusterGetListDelete(t, kafkaAPIURL))
+	router.HandleFunc("/api/clusters", handleKafkaClusterCreate(t, kafkaAPIURL))
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		_, err := io.WriteString(w, `{"error": {"message": "unexpected call to `+r.URL.Path+`"}}`)
 		require.NoError(t, err)
@@ -798,6 +817,20 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 			Endpoint:  "SASL_SSL://sr-endpoint",
 		}
 		b, err := utilv1.MarshalJSONToBytes(&srv1.GetSchemaRegistryClusterReply{
+			Cluster: srCluster,
+		})
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(b))
+		require.NoError(t, err)
+	})
+	router.HandleFunc("/api/ksqls/", func(w http.ResponseWriter, r *http.Request) {
+		srCluster := &ksqlv1.KSQLCluster{
+			Id:        "lksqlc-ksql1",
+			AccountId: "25",
+			Name:      "account ksql",
+			Endpoint:  "SASL_SSL://ksql-endpoint",
+		}
+		b, err := utilv1.MarshalJSONToBytes(&ksqlv1.GetKSQLClusterReply{
 			Cluster: srCluster,
 		})
 		require.NoError(t, err)
@@ -880,9 +913,8 @@ func handleCheckEmail(t *testing.T) func(w http.ResponseWriter, r *http.Request)
 	}
 }
 
-func handleKafkaClusterList(t *testing.T, kafkaAPIURL string) func(w http.ResponseWriter, r *http.Request) {
+func handleKafkaClusterGetListDelete(t *testing.T, kafkaAPIURL string) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		require.NotEmpty(t, r.URL.Query().Get("account_id"))
 		parts := strings.Split(r.URL.Path, "/")
 		id := parts[len(parts)-1]
 		if id == "lkc-unknown" {
@@ -890,12 +922,50 @@ func handleKafkaClusterList(t *testing.T, kafkaAPIURL string) func(w http.Respon
 			require.NoError(t, err)
 			return
 		}
+		if r.Method == "DELETE" {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		} else {
+			// this is in the body of delete requests
+			require.NotEmpty(t, r.URL.Query().Get("account_id"))
+		}
+		// Now return the KafkaCluster with updated ApiEndpoint
 		b, err := utilv1.MarshalJSONToBytes(&kafkav1.GetKafkaClusterReply{
 			Cluster: &kafkav1.KafkaCluster{
-				Id:          id,
-				Name:        "kafka-cluster",
-				Endpoint:    "SASL_SSL://kafka-endpoint",
-				ApiEndpoint: kafkaAPIURL,
+				Id:              id,
+				Name:            "kafka-cluster",
+				NetworkIngress:  100,
+				NetworkEgress:   100,
+				Storage:         500,
+				ServiceProvider: "aws",
+				Region:          "us-west-2",
+				Endpoint:        "SASL_SSL://kafka-endpoint",
+				ApiEndpoint:     kafkaAPIURL,
+			},
+		})
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(b))
+		require.NoError(t, err)
+	}
+}
+
+func handleKafkaClusterCreate(t *testing.T, kafkaAPIURL string) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		req := &kafkav1.CreateKafkaClusterRequest{}
+		err := utilv1.UnmarshalJSON(r.Body, req)
+		require.NoError(t, err)
+		b, err := utilv1.MarshalJSONToBytes(&kafkav1.GetKafkaClusterReply{
+			Cluster: &kafkav1.KafkaCluster{
+				Id:              "lkc-def963",
+				AccountId:       req.Config.AccountId,
+				Name:            req.Config.Name,
+				NetworkIngress:  100,
+				NetworkEgress:   100,
+				Storage:         req.Config.Storage,
+				ServiceProvider: req.Config.ServiceProvider,
+				Region:          req.Config.Region,
+				Endpoint:        "SASL_SSL://kafka-endpoint",
+				ApiEndpoint:     kafkaAPIURL,
 			},
 		})
 		require.NoError(t, err)

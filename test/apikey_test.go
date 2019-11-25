@@ -48,11 +48,6 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 		{args: "api-key list", fixture: "apikey11.golden"},
 		{args: "api-key list --resource lkc-other1", fixture: "apikey12.golden"},
 
-		// use an api key for non-kafka cluster
-		{args: "api-key use MYKEY6 --resource lksqlc-ksql1", fixture: "empty.golden"},
-		{args: "api-key list", fixture: "apikey11.golden"},
-		{args: "api-key list --resource lksqlc-ksql1", fixture: "apikey13.golden"},
-
 		// store an api-key for active kafka cluster
 		{args: "api-key store UIAPIKEY100 UIAPISECRET100", fixture: "empty.golden"},
 		{args: "api-key list", fixture: "apikey11.golden"},
@@ -61,11 +56,6 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 		{args: "api-key store UIAPIKEY101 UIAPISECRET101 --resource lkc-other1", fixture: "empty.golden"},
 		{args: "api-key list", fixture: "apikey11.golden"},
 		{args: "api-key list --resource lkc-other1", fixture: "apikey12.golden"},
-
-		// store an api-key for non-kafka cluster
-		{args: "api-key store UIAPIKEY102 UIAPISECRET102 --resource lksqlc-ksql1", fixture: "empty.golden"},
-		{args: "api-key list", fixture: "apikey11.golden"},
-		{args: "api-key list --resource lksqlc-ksql1", fixture: "apikey14.golden"},
 
 		// store: error handling
 		{name: "error if storing unknown api key", args: "api-key store UNKNOWN SECRET", fixture: "apikey15.golden"},

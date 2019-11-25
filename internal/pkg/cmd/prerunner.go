@@ -1,10 +1,11 @@
 package cmd
 
 import (
-	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/jonboulle/clockwork"
 	"github.com/spf13/cobra"
 	"gopkg.in/square/go-jose.v2/jwt"
+
+	"github.com/confluentinc/ccloud-sdk-go"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"

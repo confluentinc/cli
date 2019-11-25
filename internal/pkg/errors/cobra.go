@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/confluentinc/ccloud-sdk-go"
+	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/ccloud-sdk-go"
+	corev1 "github.com/confluentinc/ccloudapis/core/v1"
 	"github.com/confluentinc/go-editor"
 	"github.com/confluentinc/mds-sdk-go"
 )
@@ -16,6 +18,7 @@ var messages = map[error]string{
 	ErrNotLoggedIn:    "You must login to run that command.",
 	ErrNotImplemented: "Sorry, this functionality is not yet available in the CLI.",
 	ErrNoKafkaContext: "You must pass --cluster or set an active kafka in your context with 'kafka cluster use'",
+	ErrNoKSQL:		   "Could not find KSQL cluster with Resource ID specified.",
 }
 
 var typeMessages = map[reflect.Type]string{
@@ -34,6 +37,16 @@ func HandleCommon(err error, cmd *cobra.Command) error {
 	if oerr, ok := err.(mds.GenericOpenAPIError); ok {
 		cmd.SilenceUsage = true
 		return fmt.Errorf(oerr.Error() + ": " + string(oerr.Body()))
+	}
+
+	if e, ok := err.(*corev1.Error); ok {
+		var result error
+		result = multierror.Append(result, e)
+		for name, msg := range e.GetNestedErrors() {
+			result = multierror.Append(result, fmt.Errorf("%s: %s", name, msg))
+		}
+		cmd.SilenceUsage = true
+		return result
 	}
 
 	// Intercept errors to prevent usage from being printed.
