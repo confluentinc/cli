@@ -68,11 +68,14 @@ func main() {
 	}
 
 	err = cli.Execute()
+
+	closeErr := analyticsClient.Close()
+	if closeErr != nil {
+		logger.Debug(closeErr)
+	}
+
 	if err != nil {
 		os.Exit(1)
 	}
-	err = analyticsClient.Close()
-	if err != nil {
-		logger.Debug(err)
-	}
+
 }
