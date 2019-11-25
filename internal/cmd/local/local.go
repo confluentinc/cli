@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strings"
 
@@ -57,6 +58,21 @@ type command struct {
 
 // New returns the Cobra command for `local`.
 func New(rootCmd *cobra.Command, prerunner pcmd.PreRunner, shell ShellRunner, log *log.Logger, fs io.FileSystem) *cobra.Command {
+	if runtime.GOOS == "windows" {
+		localCmd := &command{
+			Command: &cobra.Command{
+				Use:               "local",
+				Short:             "Manage a local Confluent Platform development environment (not available on Windows).",
+				Args:              cobra.ArbitraryArgs,
+				PersistentPreRunE: prerunner.Anonymous(),
+			},
+		}
+		localCmd.Command.RunE = localCmd.runWindows
+		localCmd.Flags().String("path", "", "Path to Confluent Platform install directory.")
+		localCmd.Flags().SortFlags = false
+		return localCmd.Command
+	}
+
 	localCmd := &command{
 		Command: &cobra.Command{
 			Use:               "local",
@@ -120,6 +136,11 @@ func (c *command) run(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
+	return nil
+}
+
+func (c *command) runWindows(cmd *cobra.Command, args []string) error {
+	fmt.Println("`confluent local` commands are not available on Windows at this time.")
 	return nil
 }
 

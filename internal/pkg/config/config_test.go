@@ -125,10 +125,10 @@ func TestConfig_Save(t *testing.T) {
 				t.Errorf("Config.Save() = %v, want contains %v", string(got), tt.want)
 			}
 			fd, _ := os.Stat(tt.file)
-			if fd.Mode() != 0600 {
+			if runtime.GOOS != "windows" && fd.Mode() != 0600 {
 				t.Errorf("Config.Save() file should only be readable by user")
 			}
-			os.RemoveAll("/tmp/xyz987")
+			os.Remove(testConfigFile.Name())
 		})
 	}
 }
@@ -148,19 +148,19 @@ func TestConfig_getFilename(t *testing.T) {
 			fields: fields{
 				CLIName: "ccloud",
 			},
-			want: os.Getenv("HOME") + "/.ccloud/config.json",
+			want: filepath.FromSlash(os.Getenv("HOME") + "/.ccloud/config.json"),
 		},
 		{
 			name: "config file for confluent binary",
 			fields: fields{
 				CLIName: "confluent",
 			},
-			want: os.Getenv("HOME") + "/.confluent/config.json",
+			want: filepath.FromSlash(os.Getenv("HOME") + "/.confluent/config.json"),
 		},
 		{
 			name:   "should default to ~/.confluent if CLIName isn't provided",
 			fields: fields{},
-			want:   os.Getenv("HOME") + "/.confluent/config.json",
+			want:   filepath.FromSlash(os.Getenv("HOME") + "/.confluent/config.json"),
 		},
 	}
 	for _, tt := range tests {
@@ -189,7 +189,8 @@ func TestConfig_AddContext(t *testing.T) {
 		CredentialType: APIKey,
 	}
 	contextName := "test-context"
-	filename := "/tmp/TestConfig_AddContext.json"
+	tempContextFile, _ := ioutil.TempFile("", "TestConfig_AddContext.json")
+	filename := tempContextFile.Name()
 	tests := []struct {
 		name                   string
 		config                 *Config
