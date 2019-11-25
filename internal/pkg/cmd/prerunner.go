@@ -50,7 +50,7 @@ func (r *PreRun) Anonymous() func(cmd *cobra.Command, args []string) error {
 			if err != nil {
 				return err
 			}
-			Println(cmd, "Your token has expired. You are now logged out.")
+			ErrPrintln(cmd, "Your token has expired. You are now logged out.")
 			analyticsError := r.Analytics.SessionTimedOut()
 			if analyticsError != nil {
 				r.Logger.Debug(analyticsError.Error())

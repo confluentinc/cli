@@ -1,4 +1,4 @@
-//go:generate go run github.com/travisjeffery/mocker/cmd/mocker --prefix "" --dst ../../../mock/analytics/analytics.go --pkg analytics --selfpkg github.com/confluentinc/cli analytics.go Client
+//go:generate go run github.com/travisjeffery/mocker/cmd/mocker --prefix "Analytics" --dst ../../../mock/analytics.go --pkg mock --selfpkg github.com/confluentinc/cli analytics.go Client
 package analytics
 
 import (

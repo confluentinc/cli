@@ -13,7 +13,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/update/mock"
 	"github.com/confluentinc/cli/internal/pkg/version"
-	analyticsMock "github.com/confluentinc/cli/mock/analytics"
+	cliMock "github.com/confluentinc/cli/mock"
 )
 
 func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
@@ -83,7 +83,7 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 						return false, "", nil
 					},
 				},
-				Analytics: analyticsMock.NewDummyAnalyticsMock(),
+				Analytics: cliMock.NewDummyAnalyticsMock(),
 			}
 
 			root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
@@ -121,7 +121,7 @@ func TestPreRun_HasAPIKey_SetupLoggingAndCheckForUpdates(t *testing.T) {
 				return false, "", nil
 			},
 		},
-		Analytics: analyticsMock.NewDummyAnalyticsMock(),
+		Analytics: cliMock.NewDummyAnalyticsMock(),
 	}
 
 	root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
@@ -144,7 +144,7 @@ func TestPreRun_CallsAnalyticsTrackCommand(t *testing.T) {
 	require.NoError(t, cfg.Load())
 
 	ver := version.NewVersion("ccloud", "Confluent Cloud CLI", "https://confluent.cloud; support@confluent.io", "1.2.3", "abc1234", "01/23/45", "CI")
-	analyticsClient := analyticsMock.NewDummyAnalyticsMock()
+	analyticsClient := cliMock.NewDummyAnalyticsMock()
 
 	r := &pcmd.PreRun{
 		Version: ver.Version,

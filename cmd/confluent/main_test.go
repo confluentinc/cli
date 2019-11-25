@@ -10,7 +10,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	cliVersion "github.com/confluentinc/cli/internal/pkg/version"
-	mock "github.com/confluentinc/cli/mock/analytics"
+	"github.com/confluentinc/cli/mock"
 )
 
 func TestAddCommands_ShownInHelpUsage_CCloud(t *testing.T) {

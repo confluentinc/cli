@@ -49,11 +49,7 @@ func main() {
 
 	version := cliVersion.NewVersion(cfg.CLIName, cfg.Name(), cfg.Support(), version, commit, date, host)
 
-	segmentClient, err := segment.NewWithConfig(segmentKey, segment.Config{BatchSize: 1})
-	if err != nil {
-		logger.Debugf("segment client config initialization failed: %s\n", err)
-		segmentClient = segment.New(segmentKey)
-	}
+	segmentClient := segment.New(segmentKey)
 
 	analyticsClient := analytics.NewAnalyticsClient(cfg.CLIName, cfg, version.Version, segmentClient, clockwork.NewRealClock())
 

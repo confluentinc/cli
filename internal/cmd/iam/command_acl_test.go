@@ -16,7 +16,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/update"
 	cliMock "github.com/confluentinc/cli/mock"
-	analyticsMock "github.com/confluentinc/cli/mock/analytics"
 	"github.com/confluentinc/mds-sdk-go"
 	"github.com/confluentinc/mds-sdk-go/mock"
 )
@@ -445,7 +444,7 @@ func (suite *AclTestSuite) TestMdsHandleErrorNotLoggedIn() {
 		Logger:       log.New(),
 		Config:       suite.conf,
 		UpdateClient: update.NewClient(&update.ClientParams{CheckInterval: 0}),
-		Analytics:    analyticsMock.NewDummyAnalyticsMock(),
+		Analytics:    cliMock.NewDummyAnalyticsMock(),
 	}
 	expect := make(chan interface{})
 

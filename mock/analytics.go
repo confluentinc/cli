@@ -2,7 +2,7 @@
 // github.com/travisjeffery/mocker
 // Source: analytics.go
 
-package analytics
+package mock
 
 import (
 	sync "sync"
@@ -11,8 +11,8 @@ import (
 	github_com_spf13_cobra "github.com/spf13/cobra"
 )
 
-// Client is a mock of Client interface
-type Client struct {
+// AnalyticsClient is a mock of Client interface
+type AnalyticsClient struct {
 	lockTrackCommand sync.Mutex
 	TrackCommandFunc func(cmd *github_com_spf13_cobra.Command, args []string)
 
@@ -52,12 +52,12 @@ type Client struct {
 }
 
 // TrackCommand mocks base method by wrapping the associated func.
-func (m *Client) TrackCommand(cmd *github_com_spf13_cobra.Command, args []string) {
+func (m *AnalyticsClient) TrackCommand(cmd *github_com_spf13_cobra.Command, args []string) {
 	m.lockTrackCommand.Lock()
 	defer m.lockTrackCommand.Unlock()
 
 	if m.TrackCommandFunc == nil {
-		panic("mocker: Client.TrackCommandFunc is nil but Client.TrackCommand was called.")
+		panic("mocker: AnalyticsClient.TrackCommandFunc is nil but AnalyticsClient.TrackCommand was called.")
 	}
 
 	call := struct {
@@ -74,7 +74,7 @@ func (m *Client) TrackCommand(cmd *github_com_spf13_cobra.Command, args []string
 }
 
 // TrackCommandCalled returns true if TrackCommand was called at least once.
-func (m *Client) TrackCommandCalled() bool {
+func (m *AnalyticsClient) TrackCommandCalled() bool {
 	m.lockTrackCommand.Lock()
 	defer m.lockTrackCommand.Unlock()
 
@@ -82,7 +82,7 @@ func (m *Client) TrackCommandCalled() bool {
 }
 
 // TrackCommandCalls returns the calls made to TrackCommand.
-func (m *Client) TrackCommandCalls() []struct {
+func (m *AnalyticsClient) TrackCommandCalls() []struct {
 	Cmd  *github_com_spf13_cobra.Command
 	Args []string
 } {
@@ -93,12 +93,12 @@ func (m *Client) TrackCommandCalls() []struct {
 }
 
 // FlushCommandSucceeded mocks base method by wrapping the associated func.
-func (m *Client) FlushCommandSucceeded() error {
+func (m *AnalyticsClient) FlushCommandSucceeded() error {
 	m.lockFlushCommandSucceeded.Lock()
 	defer m.lockFlushCommandSucceeded.Unlock()
 
 	if m.FlushCommandSucceededFunc == nil {
-		panic("mocker: Client.FlushCommandSucceededFunc is nil but Client.FlushCommandSucceeded was called.")
+		panic("mocker: AnalyticsClient.FlushCommandSucceededFunc is nil but AnalyticsClient.FlushCommandSucceeded was called.")
 	}
 
 	call := struct {
@@ -110,7 +110,7 @@ func (m *Client) FlushCommandSucceeded() error {
 }
 
 // FlushCommandSucceededCalled returns true if FlushCommandSucceeded was called at least once.
-func (m *Client) FlushCommandSucceededCalled() bool {
+func (m *AnalyticsClient) FlushCommandSucceededCalled() bool {
 	m.lockFlushCommandSucceeded.Lock()
 	defer m.lockFlushCommandSucceeded.Unlock()
 
@@ -118,7 +118,7 @@ func (m *Client) FlushCommandSucceededCalled() bool {
 }
 
 // FlushCommandSucceededCalls returns the calls made to FlushCommandSucceeded.
-func (m *Client) FlushCommandSucceededCalls() []struct {
+func (m *AnalyticsClient) FlushCommandSucceededCalls() []struct {
 } {
 	m.lockFlushCommandSucceeded.Lock()
 	defer m.lockFlushCommandSucceeded.Unlock()
@@ -127,12 +127,12 @@ func (m *Client) FlushCommandSucceededCalls() []struct {
 }
 
 // FlushCommandFailed mocks base method by wrapping the associated func.
-func (m *Client) FlushCommandFailed(e error) error {
+func (m *AnalyticsClient) FlushCommandFailed(e error) error {
 	m.lockFlushCommandFailed.Lock()
 	defer m.lockFlushCommandFailed.Unlock()
 
 	if m.FlushCommandFailedFunc == nil {
-		panic("mocker: Client.FlushCommandFailedFunc is nil but Client.FlushCommandFailed was called.")
+		panic("mocker: AnalyticsClient.FlushCommandFailedFunc is nil but AnalyticsClient.FlushCommandFailed was called.")
 	}
 
 	call := struct {
@@ -147,7 +147,7 @@ func (m *Client) FlushCommandFailed(e error) error {
 }
 
 // FlushCommandFailedCalled returns true if FlushCommandFailed was called at least once.
-func (m *Client) FlushCommandFailedCalled() bool {
+func (m *AnalyticsClient) FlushCommandFailedCalled() bool {
 	m.lockFlushCommandFailed.Lock()
 	defer m.lockFlushCommandFailed.Unlock()
 
@@ -155,7 +155,7 @@ func (m *Client) FlushCommandFailedCalled() bool {
 }
 
 // FlushCommandFailedCalls returns the calls made to FlushCommandFailed.
-func (m *Client) FlushCommandFailedCalls() []struct {
+func (m *AnalyticsClient) FlushCommandFailedCalls() []struct {
 	E error
 } {
 	m.lockFlushCommandFailed.Lock()
@@ -165,12 +165,12 @@ func (m *Client) FlushCommandFailedCalls() []struct {
 }
 
 // SetCommandType mocks base method by wrapping the associated func.
-func (m *Client) SetCommandType(commandType github_com_confluentinc_cli_internal_pkg_analytics.CommandType) {
+func (m *AnalyticsClient) SetCommandType(commandType github_com_confluentinc_cli_internal_pkg_analytics.CommandType) {
 	m.lockSetCommandType.Lock()
 	defer m.lockSetCommandType.Unlock()
 
 	if m.SetCommandTypeFunc == nil {
-		panic("mocker: Client.SetCommandTypeFunc is nil but Client.SetCommandType was called.")
+		panic("mocker: AnalyticsClient.SetCommandTypeFunc is nil but AnalyticsClient.SetCommandType was called.")
 	}
 
 	call := struct {
@@ -185,7 +185,7 @@ func (m *Client) SetCommandType(commandType github_com_confluentinc_cli_internal
 }
 
 // SetCommandTypeCalled returns true if SetCommandType was called at least once.
-func (m *Client) SetCommandTypeCalled() bool {
+func (m *AnalyticsClient) SetCommandTypeCalled() bool {
 	m.lockSetCommandType.Lock()
 	defer m.lockSetCommandType.Unlock()
 
@@ -193,7 +193,7 @@ func (m *Client) SetCommandTypeCalled() bool {
 }
 
 // SetCommandTypeCalls returns the calls made to SetCommandType.
-func (m *Client) SetCommandTypeCalls() []struct {
+func (m *AnalyticsClient) SetCommandTypeCalls() []struct {
 	CommandType github_com_confluentinc_cli_internal_pkg_analytics.CommandType
 } {
 	m.lockSetCommandType.Lock()
@@ -203,12 +203,12 @@ func (m *Client) SetCommandTypeCalls() []struct {
 }
 
 // SessionTimedOut mocks base method by wrapping the associated func.
-func (m *Client) SessionTimedOut() error {
+func (m *AnalyticsClient) SessionTimedOut() error {
 	m.lockSessionTimedOut.Lock()
 	defer m.lockSessionTimedOut.Unlock()
 
 	if m.SessionTimedOutFunc == nil {
-		panic("mocker: Client.SessionTimedOutFunc is nil but Client.SessionTimedOut was called.")
+		panic("mocker: AnalyticsClient.SessionTimedOutFunc is nil but AnalyticsClient.SessionTimedOut was called.")
 	}
 
 	call := struct {
@@ -220,7 +220,7 @@ func (m *Client) SessionTimedOut() error {
 }
 
 // SessionTimedOutCalled returns true if SessionTimedOut was called at least once.
-func (m *Client) SessionTimedOutCalled() bool {
+func (m *AnalyticsClient) SessionTimedOutCalled() bool {
 	m.lockSessionTimedOut.Lock()
 	defer m.lockSessionTimedOut.Unlock()
 
@@ -228,7 +228,7 @@ func (m *Client) SessionTimedOutCalled() bool {
 }
 
 // SessionTimedOutCalls returns the calls made to SessionTimedOut.
-func (m *Client) SessionTimedOutCalls() []struct {
+func (m *AnalyticsClient) SessionTimedOutCalls() []struct {
 } {
 	m.lockSessionTimedOut.Lock()
 	defer m.lockSessionTimedOut.Unlock()
@@ -237,12 +237,12 @@ func (m *Client) SessionTimedOutCalls() []struct {
 }
 
 // Close mocks base method by wrapping the associated func.
-func (m *Client) Close() error {
+func (m *AnalyticsClient) Close() error {
 	m.lockClose.Lock()
 	defer m.lockClose.Unlock()
 
 	if m.CloseFunc == nil {
-		panic("mocker: Client.CloseFunc is nil but Client.Close was called.")
+		panic("mocker: AnalyticsClient.CloseFunc is nil but AnalyticsClient.Close was called.")
 	}
 
 	call := struct {
@@ -254,7 +254,7 @@ func (m *Client) Close() error {
 }
 
 // CloseCalled returns true if Close was called at least once.
-func (m *Client) CloseCalled() bool {
+func (m *AnalyticsClient) CloseCalled() bool {
 	m.lockClose.Lock()
 	defer m.lockClose.Unlock()
 
@@ -262,7 +262,7 @@ func (m *Client) CloseCalled() bool {
 }
 
 // CloseCalls returns the calls made to Close.
-func (m *Client) CloseCalls() []struct {
+func (m *AnalyticsClient) CloseCalls() []struct {
 } {
 	m.lockClose.Lock()
 	defer m.lockClose.Unlock()
@@ -271,7 +271,7 @@ func (m *Client) CloseCalls() []struct {
 }
 
 // Reset resets the calls made to the mocked methods.
-func (m *Client) Reset() {
+func (m *AnalyticsClient) Reset() {
 	m.lockTrackCommand.Lock()
 	m.calls.TrackCommand = nil
 	m.lockTrackCommand.Unlock()

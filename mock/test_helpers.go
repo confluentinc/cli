@@ -1,12 +1,13 @@
-package analytics
+package mock
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/cli/internal/pkg/analytics"
 )
 
-func NewDummyAnalyticsMock() *Client {
-	return &Client{
+func NewDummyAnalyticsMock() *AnalyticsClient {
+	return &AnalyticsClient{
 		TrackCommandFunc: func(cmd *cobra.Command, args []string) {},
 		FlushCommandFailedFunc: func(e error) error {return nil},
 		FlushCommandSucceededFunc: func() error {return nil},

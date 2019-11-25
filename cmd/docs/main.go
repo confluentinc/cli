@@ -9,7 +9,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/doc"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/version"
-	mock "github.com/confluentinc/cli/mock/analytics"
+	"github.com/confluentinc/cli/mock"
 )
 
 var (

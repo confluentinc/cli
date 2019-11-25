@@ -9,7 +9,6 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
-	"github.com/confluentinc/cli/mock/analytics"
 	"math/big"
 	"net/http"
 	"os"
@@ -223,7 +222,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 	cfg.Logger = log.New()
 	cfg.CLIName = "confluent"
 	prompt := prompt("cody@confluent.io", "iambatman")
-	cmds := newCommands(&cliMock.Commander{}, cfg, log.New(), mdsClient, prompt, nil, nil, analytics.NewDummyAnalyticsMock())
+	cmds := newCommands(&cliMock.Commander{}, cfg, log.New(), mdsClient, prompt, nil, nil, cliMock.NewDummyAnalyticsMock())
 
 	for _, c := range cmds.Commands {
 		c.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
@@ -305,7 +304,7 @@ func newAuthCommand(prompt pcmd.Prompt, auth *sdkMock.Auth, user *sdkMock.User, 
 			},
 		}
 	}
-	commands := newCommands(&cliMock.Commander{}, cfg, log.New(), mdsClient, prompt, mockAnonHTTPClientFactory, mockJwtHTTPClientFactory, analytics.NewDummyAnalyticsMock())
+	commands := newCommands(&cliMock.Commander{}, cfg, log.New(), mdsClient, prompt, mockAnonHTTPClientFactory, mockJwtHTTPClientFactory, cliMock.NewDummyAnalyticsMock())
 	for _, c := range commands.Commands {
 		c.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	}

@@ -16,7 +16,7 @@ import (
 	"github.com/confluentinc/cli/internal/cmd"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	"github.com/confluentinc/cli/internal/pkg/config"
-	mock "github.com/confluentinc/cli/mock/analytics"
+	"github.com/confluentinc/cli/mock"
 )
 
 var (

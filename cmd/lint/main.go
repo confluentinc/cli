@@ -14,7 +14,7 @@ import (
 	linter "github.com/confluentinc/cli/internal/pkg/lint-cli"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/version"
-	mock "github.com/confluentinc/cli/mock/analytics"
+	"github.com/confluentinc/cli/mock"
 )
 
 var (
