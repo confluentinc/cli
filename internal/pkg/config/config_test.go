@@ -16,6 +16,7 @@ import (
 )
 
 func TestConfig_Load(t *testing.T) {
+	testConfigFile, _ := ioutil.TempFile("", "TestConfig_Load.json")
 	type args struct {
 		contents string
 	}
@@ -38,7 +39,7 @@ func TestConfig_Load(t *testing.T) {
 				Credentials: map[string]*Credential{},
 				Contexts:    map[string]*Context{},
 			},
-			file: "/tmp/TestConfig_Load.json",
+			file: testConfigFile.Name(),
 		},
 		{
 			name: "should load auth url from file",
@@ -52,7 +53,7 @@ func TestConfig_Load(t *testing.T) {
 				Credentials: map[string]*Credential{},
 				Contexts:    map[string]*Context{},
 			},
-			file: "/tmp/TestConfig_Load.json",
+			file: testConfigFile.Name(),
 		},
 	}
 	for _, tt := range tests {
@@ -76,6 +77,7 @@ func TestConfig_Load(t *testing.T) {
 }
 
 func TestConfig_Save(t *testing.T) {
+	testConfigFile, _ := ioutil.TempFile("", "TestConfig_Save.json")
 	type args struct {
 		url   string
 		token string
@@ -93,7 +95,7 @@ func TestConfig_Save(t *testing.T) {
 				token: "abc123",
 			},
 			want: "\"auth_token\": \"abc123\"",
-			file: "/tmp/TestConfig_Save.json",
+			file: testConfigFile.Name(),
 		},
 		{
 			name: "save auth url to file",
@@ -101,7 +103,7 @@ func TestConfig_Save(t *testing.T) {
 				url: "https://stag.cpdev.cloud",
 			},
 			want: "\"auth_url\": \"https://stag.cpdev.cloud\"",
-			file: "/tmp/TestConfig_Save.json",
+			file: testConfigFile.Name(),
 		},
 		{
 			name: "create parent config dirs",
@@ -109,7 +111,7 @@ func TestConfig_Save(t *testing.T) {
 				token: "abc123",
 			},
 			want: "\"auth_token\": \"abc123\"",
-			file: "/tmp/xyz987/TestConfig_Save.json",
+			file: testConfigFile.Name(),
 		},
 	}
 	for _, tt := range tests {
