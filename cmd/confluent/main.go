@@ -31,20 +31,19 @@ func main() {
 	metricSink := metric.NewSink()
 
 	var cfg *config.Config
-	{
-		cfg = config.New(&config.Config{
-			CLIName:    cliName,
-			MetricSink: metricSink,
-			Logger:     logger,
-		})
-		err := cfg.Load()
-		if err != nil {
-			logger.Errorf("unable to load config: %v", err)
-		}
+
+	cfg = config.New(&config.Config{
+		CLIName:    cliName,
+		MetricSink: metricSink,
+		Logger:     logger,
+	})
+	err := cfg.Load()
+	if err != nil {
+		logger.Errorf("unable to load config: %v", err)
 	}
 
 	version := cliVersion.NewVersion(cfg.CLIName, cfg.Name(), cfg.Support(), version, commit, date, host)
-
+	
 	cli, err := cmd.NewConfluentCommand(cliName, cfg, version, logger)
 	if err != nil {
 		if cli == nil {
@@ -54,7 +53,6 @@ func main() {
 		}
 		os.Exit(1)
 	}
-
 	err = cli.Execute()
 	if err != nil {
 		os.Exit(1)

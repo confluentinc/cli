@@ -1,7 +1,7 @@
 module github.com/confluentinc/cli
 
 require (
-	github.com/DABH/go-basher v0.0.0-20190504042026-365648708a90
+	github.com/DABH/go-basher v0.0.0-20191104233559-daa7fee9545c
 	github.com/DataDog/zstd v1.3.5 // indirect
 	github.com/Shopify/sarama v1.20.1
 	github.com/Shopify/toxiproxy v2.1.3+incompatible // indirect
@@ -13,6 +13,7 @@ require (
 	github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da
 	github.com/atrox/homedir v1.0.0
 	github.com/aws/aws-sdk-go v1.15.64
+	github.com/bouk/monkey v1.0.1
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
 	github.com/confluentinc/ccloud-sdk-go v0.0.14
@@ -52,7 +53,7 @@ require (
 	github.com/havoc-io/gopass v0.0.0-20170602182606-9a121bec1ae7
 	github.com/iancoleman/strcase v0.0.0-20190422225806-e506e3ef7365
 	github.com/jonboulle/clockwork v0.1.0
-	github.com/kevinburke/go-bindata v3.13.0+incompatible
+	github.com/kevinburke/go-bindata v3.16.0+incompatible
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/lithammer/dedent v1.1.0
 	github.com/mattn/go-isatty v0.0.8
