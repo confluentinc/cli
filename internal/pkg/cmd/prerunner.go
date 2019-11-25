@@ -31,8 +31,6 @@ type PreRun struct {
 	ConfigHelper *ConfigHelper
 	Clock        clockwork.Clock
 	Analytics    analytics.Client
-
-	//
 }
 
 // Anonymous provides PreRun operations for commands that may be run without a logged-in user

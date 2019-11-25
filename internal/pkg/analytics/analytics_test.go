@@ -241,7 +241,7 @@ func (suite *AnalyticsTestSuite) TestAnonymousIdResetOnLogin() {
 func (suite *AnalyticsTestSuite) TestAnonymousIdResetOnContextSwitch() {
 	req := require.New(suite.T())
 
-	// make sure user is logged out
+	// log in with username cred
 	suite.loginUser()
 
 	firstAnonId := suite.config.AnonymousId

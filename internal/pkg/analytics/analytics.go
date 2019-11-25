@@ -2,13 +2,15 @@
 package analytics
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/cli/internal/pkg/errors"
+	"strconv"
+
 	"github.com/jonboulle/clockwork"
 	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"strconv"
+
+	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 type CommandType int
