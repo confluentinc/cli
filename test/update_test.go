@@ -31,14 +31,14 @@ func (s *CLITestSuite) Test_Update() {
 	require.NoError(s.T(), err)
 
 	tests := []CLITest{
-		{args: "version", fixture: "update1.golden"},
+		{args: "version", fixture: "update1.golden", regex: true},
 		{args: "--help", fixture: "update2.golden"},
 		{name: "HACK: disable update checks"},
-		{args: "version", fixture: "update3.golden"},
-		{args: "--help", fixture: "update4.golden"},
+		{args: "version", fixture: "update3.golden", regex: true},
+		{args: "--help", contains: "Update the confluent CLI."},
 		{name: "HACK: enabled checks, disable updates"},
-		{args: "version", fixture: "update5.golden"},
-		{args: "--help", fixture: "update6.golden"},
+		{args: "version", notContains: "Update the confluent CLI."},
+		{args: "--help", fixture: "update4.golden"},
 	}
 	for _, tt := range tests {
 		tt.workflow = true

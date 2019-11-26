@@ -12,7 +12,6 @@ Available Commands:
   login       Log in to Confluent Platform (required for RBAC).
   logout      Logout of Confluent Platform.
   secret      Manage secrets for Confluent Platform.
-  update      Update the confluent CLI.
   version     Print the confluent CLI version.
 
 Flags:
