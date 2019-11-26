@@ -53,7 +53,7 @@ check_executable() {
 }
 init_config() {
   if [[ ! -f "${HOME}/.confluent/config.json" ]] ; then
-    echo '{"disable_update_check": "true"}' > "${HOME}/.confluent/config.json"
+    echo '{"disable_updates": true}' > "${HOME}/.confluent/config.json"
   fi
 }
 

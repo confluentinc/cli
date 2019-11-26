@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/confluentinc/mds-sdk-go"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -19,6 +18,8 @@ import (
 	"sort"
 	"strings"
 	"testing"
+
+	"github.com/confluentinc/mds-sdk-go"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
@@ -59,6 +60,12 @@ type CLITest struct {
 	authKafka string
 	// Name of a golden output fixture containing expected output
 	fixture string
+	// True iff fixture represents a regex
+	regex bool
+	// Fixed string to check if output contains
+	contains string
+	// Fixed string to check that output does not contain
+	notContains string
 	// Expected exit code (e.g., 0 for success or 1 for failure)
 	wantErrCode int
 	// If true, don't reset the config/state between tests to enable testing CLI workflows
@@ -102,7 +109,7 @@ func (s *CLITestSuite) Test_Confluent_Help() {
 		{name: "no args", fixture: "confluent-help-flag.golden", wantErrCode: 1},
 		{args: "help", fixture: "confluent-help.golden"},
 		{args: "--help", fixture: "confluent-help-flag.golden"},
-		{args: "version", fixture: "confluent-version.golden"},
+		{args: "version", fixture: "confluent-version.golden", regex: true},
 	}
 	for _, tt := range tests {
 		kafkaAPIURL := serveKafkaAPI(s.T()).URL
@@ -206,7 +213,7 @@ func (s *CLITestSuite) Test_Ccloud_Help() {
 		{name: "no args", fixture: "help-flag.golden", wantErrCode: 1},
 		{args: "help", fixture: "help.golden"},
 		{args: "--help", fixture: "help-flag.golden"},
-		{args: "version", fixture: "version.golden"},
+		{args: "version", fixture: "version.golden", regex: true},
 	}
 	for _, tt := range tests {
 		kafkaAPIURL := serveKafkaAPI(s.T()).URL
@@ -424,33 +431,12 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint stri
 			fmt.Println(output)
 		}
 
-		if *update && tt.args != "version" {
-			if strings.HasPrefix(tt.args, "kafka cluster create") {
-				re := regexp.MustCompile("https?://127.0.0.1:[0-9]+")
-				output = re.ReplaceAllString(output, "http://127.0.0.1:12345")
-			}
-			writeFixture(t, tt.fixture, output)
-		}
-
-		actual := string(output)
-		expected := loadFixture(t, tt.fixture)
-
-		if tt.args == "version" {
-			require.Regexp(t, expected, actual)
-			return
-		} else if strings.HasPrefix(tt.args, "kafka cluster create") {
-			fmt.Println(tt.args, actual)
+		if strings.HasPrefix(tt.args, "kafka cluster create") {
 			re := regexp.MustCompile("https?://127.0.0.1:[0-9]+")
-			actual = re.ReplaceAllString(actual, "http://127.0.0.1:12345")
+			output = re.ReplaceAllString(output, "http://127.0.0.1:12345")
 		}
 
-		if !reflect.DeepEqual(actual, expected) {
-			t.Fatalf("actual = %s, expected = %s", actual, expected)
-		}
-
-		if tt.wantFunc != nil {
-			tt.wantFunc(t)
-		}
+		s.validateTestOutput(tt, t, output)
 	})
 }
 
@@ -476,22 +462,31 @@ func (s *CLITestSuite) runConfluentTest(tt CLITest, loginURL string) {
 
 		output := runCommand(t, "confluent", []string{}, tt.args, tt.wantErrCode)
 
-		if *update && tt.args != "version" {
-			writeFixture(t, tt.fixture, output)
-		}
+		s.validateTestOutput(tt, t, output)
+	})
+}
 
-		actual := string(output)
+func (s *CLITestSuite) validateTestOutput(tt CLITest, t *testing.T, output string) {
+	if *update && !tt.regex && tt.fixture != "" {
+		writeFixture(t, tt.fixture, output)
+	}
+	actual := string(output)
+	if tt.contains != "" {
+		require.Contains(t, actual, tt.contains)
+	} else if tt.notContains != "" {
+		require.NotContains(t, actual, tt.notContains)
+	} else if tt.fixture != "" {
 		expected := loadFixture(t, tt.fixture)
 
-		if tt.args == "version" {
+		if tt.regex {
 			require.Regexp(t, expected, actual)
-			return
-		}
-
-		if !reflect.DeepEqual(actual, expected) {
+		} else if !reflect.DeepEqual(actual, expected) {
 			t.Fatalf("actual = %s, expected = %s", actual, expected)
 		}
-	})
+	}
+	if tt.wantFunc != nil {
+		tt.wantFunc(t)
+	}
 }
 
 func runCommand(t *testing.T, binaryName string, env []string, args string, wantErrCode int) string {
@@ -637,16 +632,16 @@ func serveMds(t *testing.T, mdsURL string) *httptest.Server {
 	router.HandleFunc("/security/1.0/authenticate", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/json")
 		reply := &mds.AuthenticationResponse{
-			AuthToken:"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1NjE2NjA4NTcsImV4cCI6MjUzMzg2MDM4NDU3LCJhdWQiOiJ3d3cuZXhhbXBsZS5jb20iLCJzdWIiOiJqcm9ja2V0QGV4YW1wbGUuY29tIn0.G6IgrFm5i0mN7Lz9tkZQ2tZvuZ2U7HKnvxMuZAooPmE",
-			TokenType:"dunno",
-			ExpiresIn:9999999999,
+			AuthToken: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1NjE2NjA4NTcsImV4cCI6MjUzMzg2MDM4NDU3LCJhdWQiOiJ3d3cuZXhhbXBsZS5jb20iLCJzdWIiOiJqcm9ja2V0QGV4YW1wbGUuY29tIn0.G6IgrFm5i0mN7Lz9tkZQ2tZvuZ2U7HKnvxMuZAooPmE",
+			TokenType: "dunno",
+			ExpiresIn: 9999999999,
 		}
 		b, err := json.Marshal(&reply)
 		req.NoError(err)
 		_, err = io.WriteString(w, string(b))
 		req.NoError(err)
 	})
-	routesAndReplies := map[string]string {
+	routesAndReplies := map[string]string{
 		"/security/1.0/principals/User:frodo/groups": `[
                        "hobbits",
                        "ringBearers"]`,
@@ -654,15 +649,15 @@ func serveMds(t *testing.T, mdsURL string) *httptest.Server {
                        "DeveloperRead",
                        "DeveloperWrite",
                        "SecurityAdmin"]`,
-		"/security/1.0/principals/User:frodo/roles/DeveloperRead/resources": `[]`,
+		"/security/1.0/principals/User:frodo/roles/DeveloperRead/resources":  `[]`,
 		"/security/1.0/principals/User:frodo/roles/DeveloperWrite/resources": `[]`,
-		"/security/1.0/principals/User:frodo/roles/SecurityAdmin/resources": `[]`,
+		"/security/1.0/principals/User:frodo/roles/SecurityAdmin/resources":  `[]`,
 		"/security/1.0/principals/Group:hobbits/roles/DeveloperRead/resources": `[
                        {"resourceType":"Topic","name":"drink","patternType":"LITERAL"},
                        {"resourceType":"Topic","name":"food","patternType":"LITERAL"}]`,
 		"/security/1.0/principals/Group:hobbits/roles/DeveloperWrite/resources": `[
                        {"resourceType":"Topic","name":"shire-","patternType":"PREFIXED"}]`,
-		"/security/1.0/principals/Group:hobbits/roles/SecurityAdmin/resources": `[]`,
+		"/security/1.0/principals/Group:hobbits/roles/SecurityAdmin/resources":     `[]`,
 		"/security/1.0/principals/Group:ringBearers/roles/DeveloperRead/resources": `[]`,
 		"/security/1.0/principals/Group:ringBearers/roles/DeveloperWrite/resources": `[
                        {"resourceType":"Topic","name":"ring-","patternType":"PREFIXED"}]`,
@@ -686,12 +681,12 @@ func serveMds(t *testing.T, mdsURL string) *httptest.Server {
                                "DeveloperRead":[
                                        {"resourceType":"Topic","name":"drink","patternType":"LITERAL"},
                                        {"resourceType":"Topic","name":"food","patternType":"LITERAL"}]}}`,
-		"/security/1.0/lookup/role/DeveloperRead": `["Group:hobbits"]`,
-		"/security/1.0/lookup/role/DeveloperWrite": `["Group:hobbits","Group:ringBearers"]`,
-		"/security/1.0/lookup/role/SecurityAdmin": `["User:frodo"]`,
-		"/security/1.0/lookup/role/SystemAdmin": `[]`,
-		"/security/1.0/lookup/role/DeveloperRead/resource/Topic/name/food": `["Group:hobbits"]`,
-		"/security/1.0/lookup/role/DeveloperRead/resource/Topic/name/shire-parties": `[]`,
+		"/security/1.0/lookup/role/DeveloperRead":                                    `["Group:hobbits"]`,
+		"/security/1.0/lookup/role/DeveloperWrite":                                   `["Group:hobbits","Group:ringBearers"]`,
+		"/security/1.0/lookup/role/SecurityAdmin":                                    `["User:frodo"]`,
+		"/security/1.0/lookup/role/SystemAdmin":                                      `[]`,
+		"/security/1.0/lookup/role/DeveloperRead/resource/Topic/name/food":           `["Group:hobbits"]`,
+		"/security/1.0/lookup/role/DeveloperRead/resource/Topic/name/shire-parties":  `[]`,
 		"/security/1.0/lookup/role/DeveloperWrite/resource/Topic/name/shire-parties": `["Group:hobbits"]`,
 		"/security/1.0/roles/DeveloperRead": `{
                        "name":"DeveloperRead",
