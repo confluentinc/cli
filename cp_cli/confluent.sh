@@ -345,7 +345,7 @@ is_confluent_platform() {
 }
 
 get_version() {
-    local confluent_platform_prefix="${confluent_home}/share/java/kafka-connect-replicator/kafka-connect-replicator-"
+    local confluent_platform_prefix="${confluent_home}/share/java/kafka-connect-replicator/*connect-replicator-"
     local ccs_prefix="${confluent_home}/share/java/confluent-common/common-config-"
     local kafka_prefix="${confluent_home}/share/java/kafka/kafka-clients-"
     local zookeeper_prefix="${confluent_home}/share/java/kafka/zookeeper-"

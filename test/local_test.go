@@ -1,5 +1,14 @@
 package test
 
+import (
+	"fmt"
+	"io/ioutil"
+	"os"
+	"strings"
+
+	"github.com/stretchr/testify/require"
+)
+
 func (s *CLITestSuite) TestLocalHelpCommands() {
 	tests := []CLITest{
 		// These should all be equivalent
@@ -22,4 +31,75 @@ func (s *CLITestSuite) TestLocalHelpCommands() {
 		kafkaAPIURL := serveKafkaAPI(s.T()).URL
 		s.runConfluentTest(tt, serveMds(s.T(), kafkaAPIURL).URL)
 	}
+}
+
+func (s *CLITestSuite) TestLocalVersion() {
+	tests := []CLITest{
+		{name: "5.3.1 community",  args: "local --path %s version", fixture: "local-version1.golden"},
+		{name: "5.3.1 enterprise", args: "local --path %s version", fixture: "local-version2.golden"},
+		{name: "5.4.0 community",  args: "local --path %s version", fixture: "local-version3.golden"},
+		{name: "5.4.0 enterprise", args: "local --path %s version", fixture: "local-version4.golden"},
+	}
+	resetConfiguration(s.T(), "confluent")
+	for _, tt := range tests {
+		parts := strings.Split(tt.name, " ")
+		version := parts[0]
+		enterprise := parts[1] == "enterprise"
+		path, err := makeFakeCPLocalInstall(version, enterprise)
+		require.NoError(s.T(), err)
+		//noinspection GoDeferInLoop
+		defer os.RemoveAll(path) // clean up
+		tt.args = fmt.Sprintf(tt.args, path)
+		kafkaAPIURL := serveKafkaAPI(s.T()).URL
+		s.runConfluentTest(tt, serveMds(s.T(), kafkaAPIURL).URL)
+	}
+}
+
+func makeFakeCPLocalInstall(version string, enterprise bool) (string, error) {
+	path, err := ioutil.TempDir("", "confluent-"+version)
+	if err != nil {
+		return "", err
+	}
+
+	// setup to pass "validate" step
+	srConf := fmt.Sprintf("%s/etc/schema-registry/", path)
+	err = os.MkdirAll(srConf, os.ModePerm)
+	if err != nil {
+		return "", err
+	}
+	err = ioutil.WriteFile(fmt.Sprintf("%s/connect-avro-distributed.properties", srConf), []byte(""), os.ModePerm)
+	if err != nil {
+		return "", err
+	}
+
+	// setup for version detection to correctly decide if its "Confluent Platform" or "Confluent Community Software"
+	if enterprise {
+		var filename string
+		if version == "5.3.1" {
+			filename = "kafka-connect-replicator-5.3.1.jar"
+		} else {
+			filename = "connect-replicator-5.4.0.jar"
+		}
+		replicatorDir := fmt.Sprintf("%s/share/java/kafka-connect-replicator/", path)
+		err = os.MkdirAll(replicatorDir, os.ModePerm)
+		if err != nil {
+			return "", err
+		}
+		err = ioutil.WriteFile(fmt.Sprintf("%s/%s", replicatorDir, filename), []byte(""), os.ModePerm)
+		if err != nil {
+			return "", err
+		}
+	} else {
+		filename := fmt.Sprintf("common-config-%s.jar", version)
+		commonDir := fmt.Sprintf("%s/share/java/confluent-common/", path)
+		err = os.MkdirAll(commonDir, os.ModePerm)
+		if err != nil {
+			return "", err
+		}
+		err = ioutil.WriteFile(fmt.Sprintf("%s/%s", commonDir, filename), []byte(""), os.ModePerm)
+		if err != nil {
+			return "", err
+		}
+	}
+	return path, nil
 }
