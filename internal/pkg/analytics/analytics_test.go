@@ -1,12 +1,20 @@
 package analytics_test
 
+// NOTE: All cobra commands must hae Use field (name of the command) so that in
+// analytics cmdCalled is not "", and CatchHelpCalls knows that prerun is already run,
+// so it will skip help flag catching.
+// This prevents confusion in help flags catching because "make test" has flags like
+// -test.testlogfile=/var/folders/n4/c3r14cc15zn9xfylw_gpdkh00000gp/T/go-build070382070/b377/testlog.txt
+// which contains the "-" shorthand flag symbol, and can also contain an "h".
+
 import (
 	"fmt"
-	"github.com/jonboulle/clockwork"
+	"os"
 	"strconv"
 	"testing"
 	"time"
 
+	"github.com/jonboulle/clockwork"
 	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
@@ -57,6 +65,8 @@ type AnalyticsTestSuite struct {
 	analyticsClient analytics.Client
 	mockClient      *mock.SegmentClient
 	output          []segment.Message
+
+	originalOSArgs  []string
 }
 
 func (suite *AnalyticsTestSuite) SetupSuite() {
@@ -68,6 +78,7 @@ func (suite *AnalyticsTestSuite) SetupSuite() {
 }
 
 func (suite *AnalyticsTestSuite) SetupTest() {
+	suite.originalOSArgs = os.Args
 	suite.output = make([]segment.Message, 0)
 	suite.mockClient = &mock.SegmentClient{
 		EnqueueFunc: func(m segment.Message) error {
@@ -79,17 +90,48 @@ func (suite *AnalyticsTestSuite) SetupTest() {
 	suite.analyticsClient = analytics.NewAnalyticsClient(suite.config.CLIName, suite.config, version, suite.mockClient, clockwork.NewFakeClockAt(testTime))
 }
 
+func (suite *AnalyticsTestSuite) TearDownTest() {
+	os.Args = suite.originalOSArgs
+}
+
+func (suite *AnalyticsTestSuite) TestHelpCall() {
+	// assume user already logged in
+	suite.loginUser()
+
+	req := require.New(suite.T())
+	cobraCmd := &cobra.Command{
+		Use:    suite.config.CLIName,
+		Run:    func(cmd *cobra.Command, args []string) {},
+	}
+	os.Args = []string {"ccloud", "--help"}
+	command := cmd.Command{
+		Command:   cobraCmd,
+		Analytics: suite.analyticsClient,
+	}
+	err := command.Execute()
+	req.NoError(err)
+
+	req.Equal(1, len(suite.output))
+	page, ok := suite.output[0].(segment.Page)
+	req.True(ok)
+
+	suite.checkPageBasic(page)
+	suite.checkPageLoggedIn(page)
+	suite.checkPageSuccess(page)
+}
+
 func (suite *AnalyticsTestSuite) TestSuccessWithFlagAndArgs() {
 	// assume user already logged in
 	suite.loginUser()
 
 	req := require.New(suite.T())
 	cobraCmd := &cobra.Command{
+		Use:    suite.config.CLIName,
 		Run:    func(cmd *cobra.Command, args []string) {},
 		PreRun: suite.preRunFunc(),
 	}
 	cobraCmd.Flags().String(flagName, "", "")
-	cobraCmd.SetArgs([]string{arg1, arg2, "--" + flagName + "=" + flagArg})
+	cobraCmd.SetArgs([]string{arg1, arg2, "--" + flagName, flagArg})
 	command := cmd.Command{
 		Command:   cobraCmd,
 		Analytics: suite.analyticsClient,
@@ -111,6 +153,106 @@ func (suite *AnalyticsTestSuite) TestSuccessWithFlagAndArgs() {
 	flagVal, ok := flags[flagName]
 	req.True(ok)
 	req.Equal(flagArg, flagVal)
+
+	args, ok := (page.Properties[analytics.ArgsPropertiesKey]).([]string)
+	req.True(ok)
+	req.Equal(2, len(args))
+	req.Equal(arg1, args[0])
+	req.Equal(arg2, args[1])
+}
+
+func (suite *AnalyticsTestSuite) TestHelpWithFlagAndArgs() {
+
+	// assume user already logged in
+	suite.loginUser()
+
+	req := require.New(suite.T())
+	cobraCmd := &cobra.Command{
+		Use:    suite.config.CLIName,
+		Run:    func(cmd *cobra.Command, args []string) {},
+		PreRun: suite.preRunFunc(),
+	}
+	cobraCmd.Flags().String(flagName, "", "")
+	os.Args = []string {suite.config.CLIName, arg1, arg2, "--" + flagName, flagArg, "-h"}
+	command := cmd.Command{
+		Command:   cobraCmd,
+		Analytics: suite.analyticsClient,
+	}
+	err := command.Execute()
+	req.NoError(err)
+
+	req.Equal(1, len(suite.output))
+	page, ok := suite.output[0].(segment.Page)
+	req.True(ok)
+
+	suite.checkPageBasic(page)
+	suite.checkPageLoggedIn(page)
+	suite.checkPageSuccess(page)
+
+	flags, ok := (page.Properties[analytics.FlagsPropertiesKey]).(map[string]string)
+	req.True(ok)
+	req.Equal(2, len(flags))
+	flagVal, ok := flags[flagName]
+	req.True(ok)
+	req.Equal(flagArg, flagVal)
+	req.Equal(flags["help"], "true")
+
+	args, ok := (page.Properties[analytics.ArgsPropertiesKey]).([]string)
+	req.True(ok)
+	req.Equal(2, len(args))
+	req.Equal(arg1, args[0])
+	req.Equal(arg2, args[1])
+}
+
+func (suite *AnalyticsTestSuite) TestHelpWithFlagAndArgsSwapOrder() {
+	req := require.New(suite.T())
+
+	// make sure user is logged out
+	suite.loginUser()
+	rootCmd := &cobra.Command{
+		Use: suite.config.CLIName,
+	}
+	loginCmd := &cobra.Command{
+		Use:    "login",
+		PreRun: suite.preRunFunc(),
+	}
+
+	loginUserCmd := &cobra.Command{
+		Use:    "user",
+		Run:    func(cmd *cobra.Command, args []string) {
+			suite.loginUser()
+		},
+		PreRun: func(cmd *cobra.Command, args []string) {
+			suite.preRunFunc()(cmd, args)
+		},
+	}
+	loginUserCmd.Flags().String(flagName, "", "")
+	loginCmd.AddCommand(loginUserCmd)
+
+	rootCmd.AddCommand(loginCmd)
+	command := cmd.Command{
+		Command:   rootCmd,
+		Analytics: suite.analyticsClient,
+	}
+	os.Args = []string{suite.config.CLIName, "login", "--" + flagName, flagArg, "user", arg1, arg2, "--help"}
+	err := command.Execute()
+	req.NoError(err)
+
+	req.Equal(1, len(suite.output))
+	page, ok := suite.output[0].(segment.Page)
+	req.True(ok)
+
+	suite.checkPageBasic(page)
+	suite.checkPageLoggedIn(page)
+	suite.checkPageSuccess(page)
+
+	flags, ok := (page.Properties[analytics.FlagsPropertiesKey]).(map[string]string)
+	req.True(ok)
+	req.Equal(2, len(flags))
+	flagVal, ok := flags[flagName]
+	req.True(ok)
+	req.Equal(flagArg, flagVal)
+	req.Equal(flags["help"], "true")
 
 	args, ok := (page.Properties[analytics.ArgsPropertiesKey]).([]string)
 	req.True(ok)
@@ -247,6 +389,7 @@ func (suite *AnalyticsTestSuite) TestAnonymousIdResetOnContextSwitch() {
 	firstAnonId := suite.config.AnonymousId
 
 	contextUseCmd := &cobra.Command{
+		Use:    suite.config.CLIName,
 		Run:    func(cmd *cobra.Command, args []string) {
 			suite.apiKeyCredContext()
 		},
@@ -284,6 +427,7 @@ func (suite *AnalyticsTestSuite) TestUserNotLoggedIn() {
 
 	req := require.New(suite.T())
 	cobraCmd := &cobra.Command{
+		Use:    suite.config.CLIName,
 		Run:    func(cmd *cobra.Command, args []string) {},
 		PreRun: suite.preRunFunc(),
 	}
@@ -308,6 +452,7 @@ func (suite *AnalyticsTestSuite) TestSessionTimedOut() {
 	suite.loginUser()
 	prevAnonId := suite.config.AnonymousId
 	cobraCmd := &cobra.Command{
+		Use:    suite.config.CLIName,
 		Run:    func(cmd *cobra.Command, args []string) {},
 		PreRun: func(cmd *cobra.Command, args []string) {
 			err := suite.analyticsClient.SessionTimedOut()

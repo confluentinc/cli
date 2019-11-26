@@ -2,7 +2,9 @@
 package analytics
 
 import (
+	"os"
 	"strconv"
+	"strings"
 
 	"github.com/jonboulle/clockwork"
 	segment "github.com/segmentio/analytics-go"
@@ -48,7 +50,9 @@ var (
 )
 
 type Client interface {
+	SetStartTime()
 	TrackCommand(cmd *cobra.Command, args []string)
+	CatchHelpCall(rootCmd *cobra.Command)
 	SendCommandSucceeded() error
 	SendCommandFailed(e error) error
 	SetCommandType(commandType CommandType)
@@ -91,11 +95,15 @@ func NewAnalyticsClient(cliName string, cfg *config.Config, version string, segm
 	return client
 }
 
+// not in prerun because help calls do not trigger prerun
+func (a *ClientObj) SetStartTime() {
+	a.properties.Set(StartTimePropertiesKey, a.clock.Now())
+}
+
 func (a *ClientObj) TrackCommand(cmd *cobra.Command, args []string) {
 	a.cmdCalled = cmd.CommandPath()
 	a.addArgsProperties(cmd, args)
 	a.addFlagProperties(cmd)
-	a.properties.Set(StartTimePropertiesKey, a.clock.Now())
 	a.properties.Set(VersionPropertiesKey, a.cliVersion)
 	a.user = a.getUser()
 }
@@ -108,6 +116,23 @@ func (a *ClientObj) SessionTimedOut() error {
 		return errors.Wrap(err, "Unable to reset anonymous id")
 	}
 	return nil
+}
+
+// When help flag is used cobra does not trigger prerun or postrun
+func (a *ClientObj) CatchHelpCall(rootCmd *cobra.Command) {
+	// non-help calls would already have triggered preruns
+	if a.cmdCalled != "" {
+		return
+	}
+	cmd, flags, err := rootCmd.Find(os.Args[1:])
+	if err != nil {
+		return
+	}
+	for _, flag := range flags {
+		if isHelpFlag(flag) {
+			a.TrackCommand(cmd, cmd.Flags().Args())
+		}
+	}
 }
 
 func (a *ClientObj) SendCommandSucceeded() error {
@@ -133,12 +158,12 @@ func (a *ClientObj) SendCommandSucceeded() error {
 }
 
 func (a *ClientObj) SendCommandFailed(e error) error {
-	if a.cmdCalled == "" {
-		return a.malformedCommandError(e)
-	}
 	a.properties.Set(SucceededPropertiesKey, false)
 	a.properties.Set(FinishTimePropertiesKey, a.clock.Now())
 	a.properties.Set(ErrorMsgPropertiesKey, e.Error())
+	if a.cmdCalled == "" {
+		return a.malformedCommandError(e)
+	}
 	if err := a.sendPage(); err != nil {
 		return err
 	}
@@ -184,7 +209,6 @@ func (a *ClientObj) identify() error {
 
 func (a *ClientObj) malformedCommandError(e error) error {
 	a.user = a.getUser()
-	a.properties.Set(ErrorMsgPropertiesKey, e.Error())
 	track := segment.Track{
 		AnonymousId: a.config.AnonymousId,
 		Event:       malformedCmdEventName,
@@ -331,6 +355,15 @@ func (a *ClientObj) isSwitchUserLogin(prevUser userInfo) bool {
 		if a.user.apiKey != a.user.apiKey {
 			return true
 		}
+	}
+	return false
+}
+
+func isHelpFlag(flag string) bool {
+	if strings.Contains(flag, "--") {
+		return flag == "--help"
+	} else if strings.Contains(flag, "-") {
+		return strings.Contains(flag, "h")
 	}
 	return false
 }

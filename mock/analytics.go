@@ -13,8 +13,14 @@ import (
 
 // AnalyticsClient is a mock of Client interface
 type AnalyticsClient struct {
+	lockSetStartTime sync.Mutex
+	SetStartTimeFunc func()
+
 	lockTrackCommand sync.Mutex
 	TrackCommandFunc func(cmd *github_com_spf13_cobra.Command, args []string)
+
+	lockCatchHelpCall sync.Mutex
+	CatchHelpCallFunc func(rootCmd *github_com_spf13_cobra.Command)
 
 	lockSendCommandSucceeded sync.Mutex
 	SendCommandSucceededFunc func() error
@@ -32,9 +38,14 @@ type AnalyticsClient struct {
 	CloseFunc func() error
 
 	calls struct {
+		SetStartTime []struct {
+		}
 		TrackCommand []struct {
 			Cmd  *github_com_spf13_cobra.Command
 			Args []string
+		}
+		CatchHelpCall []struct {
+			RootCmd *github_com_spf13_cobra.Command
 		}
 		SendCommandSucceeded []struct {
 		}
@@ -49,6 +60,40 @@ type AnalyticsClient struct {
 		Close []struct {
 		}
 	}
+}
+
+// SetStartTime mocks base method by wrapping the associated func.
+func (m *AnalyticsClient) SetStartTime() {
+	m.lockSetStartTime.Lock()
+	defer m.lockSetStartTime.Unlock()
+
+	if m.SetStartTimeFunc == nil {
+		panic("mocker: AnalyticsClient.SetStartTimeFunc is nil but AnalyticsClient.SetStartTime was called.")
+	}
+
+	call := struct {
+	}{}
+
+	m.calls.SetStartTime = append(m.calls.SetStartTime, call)
+
+	m.SetStartTimeFunc()
+}
+
+// SetStartTimeCalled returns true if SetStartTime was called at least once.
+func (m *AnalyticsClient) SetStartTimeCalled() bool {
+	m.lockSetStartTime.Lock()
+	defer m.lockSetStartTime.Unlock()
+
+	return len(m.calls.SetStartTime) > 0
+}
+
+// SetStartTimeCalls returns the calls made to SetStartTime.
+func (m *AnalyticsClient) SetStartTimeCalls() []struct {
+} {
+	m.lockSetStartTime.Lock()
+	defer m.lockSetStartTime.Unlock()
+
+	return m.calls.SetStartTime
 }
 
 // TrackCommand mocks base method by wrapping the associated func.
@@ -90,6 +135,44 @@ func (m *AnalyticsClient) TrackCommandCalls() []struct {
 	defer m.lockTrackCommand.Unlock()
 
 	return m.calls.TrackCommand
+}
+
+// CatchHelpCall mocks base method by wrapping the associated func.
+func (m *AnalyticsClient) CatchHelpCall(rootCmd *github_com_spf13_cobra.Command) {
+	m.lockCatchHelpCall.Lock()
+	defer m.lockCatchHelpCall.Unlock()
+
+	if m.CatchHelpCallFunc == nil {
+		panic("mocker: AnalyticsClient.CatchHelpCallFunc is nil but AnalyticsClient.CatchHelpCall was called.")
+	}
+
+	call := struct {
+		RootCmd *github_com_spf13_cobra.Command
+	}{
+		RootCmd: rootCmd,
+	}
+
+	m.calls.CatchHelpCall = append(m.calls.CatchHelpCall, call)
+
+	m.CatchHelpCallFunc(rootCmd)
+}
+
+// CatchHelpCallCalled returns true if CatchHelpCall was called at least once.
+func (m *AnalyticsClient) CatchHelpCallCalled() bool {
+	m.lockCatchHelpCall.Lock()
+	defer m.lockCatchHelpCall.Unlock()
+
+	return len(m.calls.CatchHelpCall) > 0
+}
+
+// CatchHelpCallCalls returns the calls made to CatchHelpCall.
+func (m *AnalyticsClient) CatchHelpCallCalls() []struct {
+	RootCmd *github_com_spf13_cobra.Command
+} {
+	m.lockCatchHelpCall.Lock()
+	defer m.lockCatchHelpCall.Unlock()
+
+	return m.calls.CatchHelpCall
 }
 
 // SendCommandSucceeded mocks base method by wrapping the associated func.
@@ -272,9 +355,15 @@ func (m *AnalyticsClient) CloseCalls() []struct {
 
 // Reset resets the calls made to the mocked methods.
 func (m *AnalyticsClient) Reset() {
+	m.lockSetStartTime.Lock()
+	m.calls.SetStartTime = nil
+	m.lockSetStartTime.Unlock()
 	m.lockTrackCommand.Lock()
 	m.calls.TrackCommand = nil
 	m.lockTrackCommand.Unlock()
+	m.lockCatchHelpCall.Lock()
+	m.calls.CatchHelpCall = nil
+	m.lockCatchHelpCall.Unlock()
 	m.lockSendCommandSucceeded.Lock()
 	m.calls.SendCommandSucceeded = nil
 	m.lockSendCommandSucceeded.Unlock()

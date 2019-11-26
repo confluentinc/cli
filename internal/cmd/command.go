@@ -183,7 +183,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 }
 
 func (c *Command) Execute() error {
-	// analytics stuff here too if you need
+	c.Analytics.SetStartTime()
 	err := c.Command.Execute()
 	if err != nil {
 		analyticsError := c.Analytics.SendCommandFailed(err)
@@ -192,6 +192,7 @@ func (c *Command) Execute() error {
 		}
 		return err
 	}
+	c.Analytics.CatchHelpCall(c.Command)
 	analyticsError := c.Analytics.SendCommandSucceeded()
 	if analyticsError != nil {
 		c.logger.Debugf("segment analytics flushing failed: %s\n", analyticsError.Error())
