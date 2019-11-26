@@ -1,9 +1,11 @@
 package test_integ
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"strings"
 	"testing"
@@ -13,10 +15,12 @@ import (
 
 var (
 	argsFilename string
+	guard        *monkey.PatchGuard
 )
 
 const (
-	endOfInputDivider = "END_OF_TEST_OUTPUT"
+	startOfMetadataMarker = "START_OF_METADATA"
+	endOfMetadataMarker   = "END_OF_METADATA"
 )
 
 func init() {
@@ -40,23 +44,34 @@ func parseCustomArgs() ([]string, error) {
 	return parsedCustomArgs, nil
 }
 
-func printDivider() {
-	fmt.Println(endOfInputDivider)
+type testMetadata struct {
+	CoverMode string `json:"cover_mode"`
+	ExitCode  int    `json:"exit_code"`
 }
 
-func printCoverMode() {
-	coverMode := testing.CoverMode()
-	if coverMode == "" {
-		coverMode = "none"
+func printMetadata(metadata *testMetadata) {
+	fmt.Println(startOfMetadataMarker)
+	b, err := json.Marshal(metadata)
+	if err != nil {
+		exitWithError(err)
 	}
-	fmt.Println(coverMode)
+	fmt.Println(string(b))
+	fmt.Println(endOfMetadataMarker)
+}
+
+func exitWithError(err error) {
+	guard.Unpatch()
+	log.Fatal(err)
 }
 
 func RunTest(t *testing.T, f func()) {
+	metadata := new(testMetadata)
+	defer printMetadata(metadata)
 	exitTest := func(code int) {
-		t.Fail()
+		metadata.ExitCode = code
+		return
 	}
-	guard := monkey.Patch(os.Exit, exitTest)
+	guard = monkey.Patch(os.Exit, exitTest)
 	defer guard.Unpatch()
 	var parsedArgs []string
 	for _, arg := range os.Args {
@@ -67,15 +82,11 @@ func RunTest(t *testing.T, f func()) {
 	if len(argsFilename) > 0 {
 		customArgs, err := parseCustomArgs()
 		if err != nil {
-			t.Fatal(err)
+			exitWithError(err)
 		}
 		parsedArgs = append(parsedArgs, customArgs...)
 	}
-	// Capture stdout. Then format into json?:
-	// {output: "blah", "coverMode": "set"}<divider><testOutput>
-	// OR output <output><divider><coverMode><testOutput>.
 	os.Args = parsedArgs
 	f()
-	printDivider()
-	printCoverMode()
+	metadata.CoverMode = testing.CoverMode()
 }

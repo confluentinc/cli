@@ -1,6 +1,7 @@
 package test_integ
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -100,14 +101,15 @@ func (c *CoverageCollector) RunBinary(binPath string, mainTestName string, env [
 	if err != nil {
 		// This exit code testing requires 1.12 - https://stackoverflow.com/a/55055100/337735.
 		if exitError, ok := err.(*exec.ExitError); ok {
-			exitCode = exitError.ExitCode()
+			binExitCode := exitError.ExitCode()
+			if binExitCode != 0 {
+				log.Fatal(errors.Wrap(err, string(combinedOutput)))
+			}
 		} else {
 			log.Fatal("error retrieving command exit code")
 		}
-	} else {
-		exitCode = 0
 	}
-	cmdOutput, coverMode := parseCommandOutput(string(combinedOutput))
+	cmdOutput, coverMode, exitCode := parseCommandOutput(string(combinedOutput))
 	if c.CollectCoverage {
 		if c.coverMode == "" {
 			c.coverMode = coverMode
@@ -144,15 +146,23 @@ func (c *CoverageCollector) writeArgs(args []string) error {
 	return err
 }
 
-func parseCommandOutput(output string) (cmdOutput string, coverMode string) {
-	divIndex := strings.Index(output, endOfInputDivider)
-	if divIndex == -1 {
-		panic("Integration test divider is missing")
+func parseCommandOutput(output string) (cmdOutput string, coverMode string, exitCode int) {
+	startIndex := strings.Index(output, startOfMetadataMarker)
+	if startIndex == -1 {
+		panic("Metadata start marker is missing")
 	}
-	cmdOutput = output[:divIndex]
-	tail := output[divIndex+len(endOfInputDivider):]
+	endIndex := strings.Index(output, endOfMetadataMarker)
+	if endIndex == -1 {
+		panic("Metadata end marker is missing")
+	}
+	cmdOutput = output[:startIndex]
+	tail := output[startIndex+len(startOfMetadataMarker) : endIndex]
 	// Trim extra newline after cmd output.
-	tail = strings.TrimPrefix(tail, "\n")
-	coverMode = tail[:strings.Index(tail, "\n")]
-	return cmdOutput, coverMode
+	metadataStr := strings.TrimSpace(tail)
+	var metadata testMetadata
+	err := json.Unmarshal([]byte(metadataStr), &metadata)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return cmdOutput, metadata.CoverMode, metadata.ExitCode
 }
