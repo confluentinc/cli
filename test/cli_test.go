@@ -436,10 +436,6 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint stri
 			output = re.ReplaceAllString(output, "http://127.0.0.1:12345")
 		}
 
-		if *update && !tt.regex {
-			writeFixture(t, tt.fixture, output)
-		}
-
 		s.validateTestOutput(tt, t, output)
 	})
 }
