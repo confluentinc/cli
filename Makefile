@@ -319,7 +319,7 @@ coverage:
 	@# Run unit tests.
 	@GO111MODULE=on go test -race -coverpkg=./... $(TEST_ARGS) $$(go list ./... | grep -v vendor | grep -v test)
 	@# Run integration tests.
-	@sudo GO111MODULE=on go test ./... -v -run=TestCLI
+	@GO111MODULE=on go test ./... -v -run=TestCLI
       endif
 
 .PHONY: mocks

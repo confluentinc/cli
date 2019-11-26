@@ -64,12 +64,21 @@ func exitWithError(err error) {
 	log.Fatal(err)
 }
 
+// RunTest runs function f (usually main), with arguments specified by the flag "args-file", a file of newline-separated args.
+// When f runs to completion (success or failure), RunTest prints (newline-separated):
+// 1. f's output,
+// 2. startOfMetadataMarker
+// 3. a testMetadata struct
+// 4. endOfMetadataMarker
+// It then exits with an exit code of 0.
+//
+// Otherwise, if an unexpected error is encountered during execution, 
+// RunTest prints an error, possibly some additional output, and then exits with an exit code of 1.
 func RunTest(t *testing.T, f func()) {
 	metadata := new(testMetadata)
 	defer printMetadata(metadata)
 	exitTest := func(code int) {
 		metadata.ExitCode = code
-		return
 	}
 	guard = monkey.Patch(os.Exit, exitTest)
 	defer guard.Unpatch()

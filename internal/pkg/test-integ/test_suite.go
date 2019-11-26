@@ -27,6 +27,7 @@ type CoverageCollector struct {
 	tmpArgsFile            *os.File
 	coverMode              string
 	tmpCoverageFilenames   []string
+	setupFinished          bool
 }
 
 // NewCoverageCollector initializes a CoverageCollector with the specified
@@ -34,24 +35,27 @@ type CoverageCollector struct {
 // or set to false to skip coverage collection. This is provided in order to enable reuse of CoverageCollector
 // for tests where coverage measurement is not needed.
 func NewCoverageCollector(mergedCoverageFilename string, collectCoverage bool) *CoverageCollector {
-	collector := &CoverageCollector{
+	return &CoverageCollector{
 		MergedCoverageFilename: mergedCoverageFilename,
 		CollectCoverage:        collectCoverage,
 	}
-	if collector.MergedCoverageFilename == "" {
+}
+
+func (c *CoverageCollector) Setup() {
+	if c.MergedCoverageFilename == "" {
 		log.Fatal("merged coverage profile filename cannot be empty")
 	}
 	var err error
-	collector.tmpArgsFile, err = ioutil.TempFile("", tmpArgsFilePrefix)
+	c.tmpArgsFile, err = ioutil.TempFile("", tmpArgsFilePrefix)
 	if err != nil {
 		log.Fatal(errors.Wrap(err, "could not create temporary args file"))
 	}
-	return collector
+	c.setupFinished = true
 }
 
-// MergeCoverageProfiles merges the coverage profiles collecting from repeated runs of RunBinary.
+// TearDown merges the coverage profiles collecting from repeated runs of RunBinary.
 // It must be called at the teardown stage of the test suite, otherwise no merged coverage profile will be created. 
-func (c *CoverageCollector) MergeCoverageProfiles() {
+func (c *CoverageCollector) TearDown() {
 	if c.testNum == 0 {
 		return
 	}
@@ -79,6 +83,9 @@ func (c *CoverageCollector) MergeCoverageProfiles() {
 
 // RunBinary runs the instrumented binary at binPath with env environment variables, executing only the test with mainTestName with the specified args.  
 func (c *CoverageCollector) RunBinary(binPath string, mainTestName string, env []string, args []string) (output string, exitCode int, err error) {
+	if !c.setupFinished {
+		log.Fatal("Setup() must be called before RunBinary can be executed")
+	}
 	err = c.writeArgs(args)
 	if err != nil {
 		log.Fatal(err)

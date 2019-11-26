@@ -102,6 +102,7 @@ func init() {
 // SetupSuite builds the CLI binary to test
 func (s *CLITestSuite) SetupSuite() {
 	covCollector = test_integ.NewCoverageCollector(mergedCoverageFilename, cover)
+	covCollector.Setup()
 	req := require.New(s.T())
 
 	// dumb but effective
@@ -127,7 +128,7 @@ func (s *CLITestSuite) SetupSuite() {
 
 func (s *CLITestSuite) TearDownSuite() {
 	// Merge coverage profiles.
-	covCollector.MergeCoverageProfiles()
+	covCollector.TearDown()
 }
 
 func (s *CLITestSuite) Test_Confluent_Help() {
