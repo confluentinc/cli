@@ -118,7 +118,7 @@ func (a *ClientObj) SessionTimedOut() error {
 	return nil
 }
 
-// When help flag is used cobra does not trigger prerun or postrun
+// Cobra does not trigger prerun and postrun when help flag is true
 func (a *ClientObj) CatchHelpCall(rootCmd *cobra.Command) {
 	// non-help calls would already have triggered preruns
 	if a.cmdCalled != "" {
