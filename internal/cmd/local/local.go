@@ -32,7 +32,8 @@ DO NOT use these commands to setup or manage Confluent Platform in production.
 
 var (
 	commonInstallDirs = []string{
-		"./confluent*",
+		".",
+		"/usr/",
 		"/opt/confluent*",
 		"/usr/local/confluent*",
 		"~/confluent*",

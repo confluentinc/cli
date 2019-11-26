@@ -223,10 +223,8 @@ func AssetNames() []string {
 
 // _bindata is a table, holding each asset generator, mapped to its name.
 var _bindata = map[string]func() (*asset, error){
-	"cp_cli/confluent.patch": cp_cliConfluentPatch,
-
-	"cp_cli/confluent.sh": cp_cliConfluentSh,
-
+	"cp_cli/confluent.patch":   cp_cliConfluentPatch,
+	"cp_cli/confluent.sh":      cp_cliConfluentSh,
 	"assets/sso_callback.html": assetsSso_callbackHtml,
 }
 
