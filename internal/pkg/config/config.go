@@ -34,6 +34,7 @@ type Config struct {
 	Logger             *log.Logger            `json:"-"`
 	Filename           string                 `json:"-"`
 	DisableUpdateCheck bool                   `json:"disable_update_check"`
+	DisableUpdates     bool                   `json:"disable_updates"`
 	AuthURL            string                 `json:"auth_url"`
 	AuthToken          string                 `json:"auth_token"`
 	Auth               *AuthConfig            `json:"auth"`

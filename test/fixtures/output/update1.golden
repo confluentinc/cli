@@ -1,0 +1,6 @@
+Updates are available for confluent. To install them, please run:
+\$ confluent update
+
+confluent - Confluent CLI
+
+Version:     v.*
