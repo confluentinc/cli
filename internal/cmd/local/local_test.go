@@ -176,8 +176,8 @@ func TestDetermineConfluentInstallDir(t *testing.T) {
 		},
 		{
 			name:      "unversioned directory found in ./ and versioned directory found in /opt",
-			dirExists: map[string][]string{"./confluent*": {"./confluent"}, "/opt/confluent*": {"/opt/confluent-5.2.2"}},
-			wantDir:   "./confluent",
+			dirExists: map[string][]string{".": {"."}, "/opt/confluent*": {"/opt/confluent-5.2.2"}},
+			wantDir:   ".",
 			wantFound: true,
 			wantErr:   false,
 		},
