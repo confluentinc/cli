@@ -1,0 +1,9 @@
++--------------+--------------------------+
+| Id           | lksqlc-12345             |
+| Name         | account ksql             |
+| Topic Prefix | pksqlc-zxcvb             |
+| Kafka        | lkc-abcde                |
+| Storage      |                      130 |
+| Endpoint     | SASL_SSL://ksql-endpoint |
+| Status       | PROVISIONING             |
++--------------+--------------------------+
