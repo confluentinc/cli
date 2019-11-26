@@ -44,7 +44,7 @@ var (
 	FinishTimePropertiesKey = "finish_time"
 	SucceededPropertiesKey  = "succeeded"
 	CredentialPropertiesKey = "credential_type"
-	ApiKeyPropertiesKey     = "apikey"
+	ApiKeyPropertiesKey     = "api-key"
 	VersionPropertiesKey    = "version"
 	CliNameTraitsKey        = "cli_name"
 )
