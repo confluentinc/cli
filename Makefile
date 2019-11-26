@@ -9,8 +9,9 @@ DOCS_BRANCH     ?= 5.3.1-post
 include ./semver.mk
 
 REF := $(shell [ -d .git ] && git rev-parse --short HEAD || echo "none")
-DATE := $(shell date -u)
+DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 HOSTNAME := $(shell id -u -n)@$(shell hostname)
+RESOLVED_PATH=github.com/confluentinc/cli/cmd/confluent
 
 .PHONY: clean
 clean:
@@ -96,6 +97,45 @@ build-ccloud:
 .PHONY: build-confluent
 build-confluent:
 	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --snapshot --rm-dist -f .goreleaser-confluent$(GORELEASER_SUFFIX)
+
+.PHONY: build-integ
+build-integ:
+	make build-integ-nonrace
+	make build-integ-race
+
+.PHONY: build-integ-nonrace
+build-integ-nonrace:
+	make build-integ-ccloud-nonrace
+	make build-integ-confluent-nonrace
+
+.PHONY: build-integ-ccloud-nonrace
+build-integ-ccloud-nonrace:
+	GO111MODULE=on go test ./cmd/confluent -ldflags="-s -w -X $(RESOLVED_PATH).cliName=ccloud \
+	-X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) \
+	-X $(RESOLVED_PATH).version=$(VERSION)" -tags testrunmain -coverpkg=./... -c -o ccloud_test
+
+.PHONY: build-integ-confluent-nonrace
+build-integ-confluent-nonrace:
+	GO111MODULE=on go test ./cmd/confluent -ldflags="-s -w -X $(RESOLVED_PATH).cliName=confluent \
+		    -X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) \
+		    -X $(RESOLVED_PATH).version=$(VERSION)" -tags testrunmain -coverpkg=./... -c -o confluent_test
+
+.PHONY: build-integ-race
+build-integ-race:
+	make build-integ-ccloud-race
+	make build-integ-confluent-race
+
+.PHONY: build-integ-ccloud-race
+build-integ-ccloud-race:
+	GO111MODULE=on go test ./cmd/confluent -ldflags="-s -w -X $(RESOLVED_PATH).cliName=ccloud \
+	-X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) \
+	-X $(RESOLVED_PATH).version=$(VERSION)" -tags testrunmain -coverpkg=./... -c -o ccloud_test_race -race
+
+.PHONY: build-integ-confluent-race
+build-integ-confluent-race:
+	GO111MODULE=on go test ./cmd/confluent -ldflags="-s -w -X $(RESOLVED_PATH).cliName=confluent \
+		    -X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) \
+		    -X $(RESOLVED_PATH).version=$(VERSION)" -tags testrunmain -coverpkg=./... -c -o confluent_test_race -race
 
 .PHONY: bindata
 bindata: internal/cmd/local/bindata.go
@@ -267,16 +307,19 @@ lint-licenses: build
 .PHONY: coverage
 coverage:
       ifdef CI
-	@echo "" > coverage.txt
-	@for d in $$(go list ./... | grep -v vendor); do \
-	  GO111MODULE=on go test -v -race -coverprofile=profile.out -covermode=atomic $$d || exit 2; \
-	  if [ -f profile.out ]; then \
-	    cat profile.out >> coverage.txt; \
-	    rm profile.out; \
-	  fi; \
-	done
+	@# Run unit tests with coverage.
+	@GO111MODULE=on go test -v -race -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') \
+		-coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test)
+	@# Run integration tests with coverage.
+	@GO111MODULE=on INTEG_COVER=on go test -v ./... -run=TestCLI
+	@echo "mode: atomic" > coverage.txt
+	@grep -h -v "mode: atomic" unit_coverage.txt >> coverage.txt
+	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
       else
-	@GO111MODULE=on go test -race -cover $(TEST_ARGS) $$(go list ./... | grep -v vendor)
+	@# Run unit tests.
+	@GO111MODULE=on go test -race -coverpkg=./... $(TEST_ARGS) $$(go list ./... | grep -v vendor | grep -v test)
+	@# Run integration tests.
+	@GO111MODULE=on go test ./... -v -run=TestCLI
       endif
 
 .PHONY: mocks
