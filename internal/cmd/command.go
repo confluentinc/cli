@@ -121,7 +121,9 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	cli.AddCommand(conn)
 
 	cli.AddCommand(completion.NewCompletionCmd(cli, cliName))
-	cli.AddCommand(update.New(cliName, cfg, ver, prompt, updateClient))
+	if !cfg.DisableUpdates {
+		cli.AddCommand(update.New(cliName, cfg, ver, prompt, updateClient))
+	}
 	cli.AddCommand(auth.New(prerunner, cfg, logger, mdsClient, ver.UserAgent)...)
 
 	resolver := &pcmd.FlagResolverImpl{Prompt: prompt, Out: os.Stdout}
