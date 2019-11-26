@@ -32,13 +32,13 @@ func (s *CLITestSuite) Test_Update() {
 
 	tests := []CLITest{
 		{args: "version", fixture: "update1.golden", regex: true},
-		{args: "--help", fixture: "update2.golden"},
+		{args: "--help", contains: "Update the confluent CLI."},
 		{name: "HACK: disable update checks"},
-		{args: "version", fixture: "update3.golden", regex: true},
+		{args: "version", fixture: "update2.golden", regex: true},
 		{args: "--help", contains: "Update the confluent CLI."},
 		{name: "HACK: enabled checks, disable updates"},
-		{args: "version", notContains: "Update the confluent CLI."},
-		{args: "--help", fixture: "update4.golden"},
+		{args: "version", fixture: "update2.golden", regex: true},
+		{args: "--help", notContains: "Update the confluent CLI."},
 	}
 	for _, tt := range tests {
 		tt.workflow = true

@@ -467,7 +467,7 @@ func (s *CLITestSuite) runConfluentTest(tt CLITest, loginURL string) {
 }
 
 func (s *CLITestSuite) validateTestOutput(tt CLITest, t *testing.T, output string) {
-	if *update && !tt.regex {
+	if *update && !tt.regex && tt.fixture != "" {
 		writeFixture(t, tt.fixture, output)
 	}
 	actual := string(output)
