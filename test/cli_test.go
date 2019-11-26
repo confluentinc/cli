@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/confluentinc/mds-sdk-go"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -20,6 +19,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/confluentinc/mds-sdk-go"
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -34,13 +34,25 @@ import (
 	utilv1 "github.com/confluentinc/ccloudapis/util/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/test-integ"
 )
 
 var (
-	binaryName = "ccloud"
-	noRebuild  = flag.Bool("no-rebuild", false, "skip rebuilding CLI if it already exists")
-	update     = flag.Bool("update", false, "update golden files")
-	debug      = flag.Bool("debug", false, "enable verbose output")
+	noRebuild        = flag.Bool("no-rebuild", false, "skip rebuilding CLI if it already exists")
+	update           = flag.Bool("update", false, "update golden files")
+	debug            = flag.Bool("debug", true, "enable verbose output")
+	cover            = false
+	ccloudTestBin    = ccloudTestBinNormal
+	confluentTestBin = confluentTestBinNormal
+	covCollector     *test_integ.CoverageCollector
+)
+
+const (
+	confluentTestBinNormal = "confluent_test"
+	ccloudTestBinNormal    = "ccloud_test"
+	ccloudTestBinRace      = "ccloud_test_race"
+	confluentTestBinRace   = "confluent_test_race"
+	mergedCoverageFilename = "integ_coverage.txt"
 )
 
 // CLITest represents a test configuration
@@ -77,17 +89,34 @@ func TestCLI(t *testing.T) {
 	suite.Run(t, new(CLITestSuite))
 }
 
+func init() {
+	collectCoverage := os.Getenv("INTEG_COVER")
+	cover = collectCoverage == "on"
+	ciEnv := os.Getenv("CI")
+	if ciEnv == "on" {
+		ccloudTestBin = ccloudTestBinRace
+		confluentTestBin = confluentTestBinRace
+	}
+}
+
 // SetupSuite builds the CLI binary to test
 func (s *CLITestSuite) SetupSuite() {
+	covCollector = test_integ.NewCoverageCollector(mergedCoverageFilename, cover)
+	covCollector.Setup()
 	req := require.New(s.T())
 
 	// dumb but effective
 	err := os.Chdir("..")
 	req.NoError(err)
-
-	for _, binary := range []string{"ccloud", "confluent"} {
+	for _, binary := range []string{ccloudTestBin, confluentTestBin} {
 		if _, err = os.Stat(binaryPath(s.T(), binary)); os.IsNotExist(err) || !*noRebuild {
-			makeCmd := exec.Command("make", "build")
+			var makeArgs string
+			if ccloudTestBin == ccloudTestBinRace {
+				makeArgs = "build-integ-race"
+			} else {
+				makeArgs = "build-integ-nonrace"
+			}
+			makeCmd := exec.Command("make", makeArgs)
 			output, err := makeCmd.CombinedOutput()
 			if err != nil {
 				s.T().Log(string(output))
@@ -95,6 +124,11 @@ func (s *CLITestSuite) SetupSuite() {
 			}
 		}
 	}
+}
+
+func (s *CLITestSuite) TearDownSuite() {
+	// Merge coverage profiles.
+	covCollector.TearDown()
 }
 
 func (s *CLITestSuite) Test_Confluent_Help() {
@@ -240,13 +274,13 @@ func (s *CLITestSuite) Test_UserAgent() {
 	env := []string{"XX_CCLOUD_EMAIL=valid@user.com", "XX_CCLOUD_PASSWORD=pass1"}
 
 	t.Run("ccloud login", func(tt *testing.T) {
-		_ = runCommand(tt, "ccloud", env, "login --url "+serverURL, 0)
+		_ = runCommand(tt, ccloudTestBin, env, "login --url "+serverURL, 0)
 	})
 	t.Run("ccloud cluster list", func(tt *testing.T) {
-		_ = runCommand(tt, "ccloud", env, "kafka cluster list", 0)
+		_ = runCommand(tt, ccloudTestBin, env, "kafka cluster list", 0)
 	})
 	t.Run("ccloud topic list", func(tt *testing.T) {
-		_ = runCommand(tt, "ccloud", env, "kafka topic list --cluster lkc-abc123", 0)
+		_ = runCommand(tt, ccloudTestBin, env, "kafka topic list --cluster lkc-abc123", 0)
 	})
 }
 
@@ -292,37 +326,37 @@ func (s *CLITestSuite) Test_Ccloud_Errors() {
 	t.Run("invalid user or pass", func(tt *testing.T) {
 		loginURL := serveErrors(tt)
 		env := []string{"XX_CCLOUD_EMAIL=incorrect@user.com", "XX_CCLOUD_PASSWORD=pass1"}
-		output := runCommand(tt, "ccloud", env, "login --url "+loginURL, 1)
+		output := runCommand(tt, ccloudTestBin, env, "login --url "+loginURL, 1)
 		require.Equal(tt, "Error: You have entered an incorrect username or password. Please try again.\n", output)
 	})
 
 	t.Run("expired token", func(tt *testing.T) {
 		loginURL := serveErrors(tt)
 		env := []string{"XX_CCLOUD_EMAIL=expired@user.com", "XX_CCLOUD_PASSWORD=pass1"}
-		output := runCommand(tt, "ccloud", env, "login --url "+loginURL, 0)
+		output := runCommand(tt, ccloudTestBin, env, "login --url "+loginURL, 0)
 		require.Equal(tt, "Logged in as expired@user.com\nUsing environment a-595 (\"default\")\n", output)
 
-		output = runCommand(tt, "ccloud", []string{}, "kafka cluster list", 1)
+		output = runCommand(t, ccloudTestBin, []string{}, "kafka cluster list", 1)
 		require.Equal(tt, "Error: Your session has expired. Please login again.\n", output)
 	})
 
 	t.Run("malformed token", func(tt *testing.T) {
 		loginURL := serveErrors(tt)
 		env := []string{"XX_CCLOUD_EMAIL=malformed@user.com", "XX_CCLOUD_PASSWORD=pass1"}
-		output := runCommand(tt, "ccloud", env, "login --url "+loginURL, 0)
+		output := runCommand(tt, ccloudTestBin, env, "login --url "+loginURL, 0)
 		require.Equal(tt, "Logged in as malformed@user.com\nUsing environment a-595 (\"default\")\n", output)
 
-		output = runCommand(tt, "ccloud", []string{}, "kafka cluster list", 1)
+		output = runCommand(t, ccloudTestBin, []string{}, "kafka cluster list", 1)
 		require.Equal(tt, "Error: Your auth token has been corrupted. Please login again.\n", output)
 	})
 
 	t.Run("invalid jwt", func(tt *testing.T) {
 		loginURL := serveErrors(tt)
 		env := []string{"XX_CCLOUD_EMAIL=invalid@user.com", "XX_CCLOUD_PASSWORD=pass1"}
-		output := runCommand(tt, "ccloud", env, "login --url "+loginURL, 0)
+		output := runCommand(tt, ccloudTestBin, env, "login --url "+loginURL, 0)
 		require.Equal(tt, "Logged in as invalid@user.com\nUsing environment a-595 (\"default\")\n", output)
 
-		output = runCommand(tt, "ccloud", []string{}, "kafka cluster list", 1)
+		output = runCommand(t, ccloudTestBin, []string{}, "kafka cluster list", 1)
 		require.Equal(tt, "Error: Your auth token has been corrupted. Please login again.\n", output)
 	})
 }
@@ -386,40 +420,39 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint stri
 	if strings.HasPrefix(tt.name, "error") {
 		tt.wantErrCode = 1
 	}
+
 	s.T().Run(tt.name, func(t *testing.T) {
 		if !tt.workflow {
 			resetConfiguration(t, "ccloud")
 		}
-
 		if tt.login == "default" {
 			env := []string{"XX_CCLOUD_EMAIL=fake@user.com", "XX_CCLOUD_PASSWORD=pass1"}
-			output := runCommand(t, "ccloud", env, "login --url "+loginURL, 0)
+			output := runCommand(t, ccloudTestBin, env, "login --url "+loginURL, 0)
 			if *debug {
 				fmt.Println(output)
 			}
 		}
 
 		if tt.useKafka != "" {
-			output := runCommand(t, "ccloud", []string{}, "kafka cluster use "+tt.useKafka, 0)
+			output := runCommand(t, ccloudTestBin, []string{}, "kafka cluster use "+tt.useKafka, 0)
 			if *debug {
 				fmt.Println(output)
 			}
 		}
 
 		if tt.authKafka != "" {
-			output := runCommand(t, "ccloud", []string{}, "api-key create --resource "+tt.useKafka, 0)
+			output := runCommand(t, ccloudTestBin, []string{}, "api-key create --resource "+tt.useKafka, 0)
 			if *debug {
 				fmt.Println(output)
 			}
 			// HACK: we don't have scriptable output yet so we parse it from the table
 			key := strings.TrimSpace(strings.Split(strings.Split(output, "\n")[2], "|")[2])
-			output = runCommand(t, "ccloud", []string{}, fmt.Sprintf("api-key use %s --resource %s", key, tt.useKafka), 0)
+			output = runCommand(t, ccloudTestBin, []string{}, fmt.Sprintf("api-key use %s --resource %s", key, tt.useKafka), 0)
 			if *debug {
 				fmt.Println(output)
 			}
 		}
-
-		output := runCommand(t, "ccloud", tt.env, tt.args, tt.wantErrCode)
+		output := runCommand(t, ccloudTestBin, tt.env, tt.args, tt.wantErrCode)
 		if *debug {
 			fmt.Println(output)
 		}
@@ -432,7 +465,7 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint stri
 			writeFixture(t, tt.fixture, output)
 		}
 
-		actual := string(output)
+		actual := output
 		expected := loadFixture(t, tt.fixture)
 
 		if tt.args == "version" {
@@ -447,7 +480,6 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint stri
 		if !reflect.DeepEqual(actual, expected) {
 			t.Fatalf("actual = %s, expected = %s", actual, expected)
 		}
-
 		if tt.wantFunc != nil {
 			tt.wantFunc(t)
 		}
@@ -468,19 +500,19 @@ func (s *CLITestSuite) runConfluentTest(tt CLITest, loginURL string) {
 
 		if tt.login == "default" {
 			env := []string{"XX_CONFLUENT_USERNAME=fake@user.com", "XX_CONFLUENT_PASSWORD=pass1"}
-			output := runCommand(t, "confluent", env, "login --url "+loginURL, 0)
+			output := runCommand(t, confluentTestBin, env, "login --url "+loginURL, 0)
 			if *debug {
 				fmt.Println(output)
 			}
 		}
 
-		output := runCommand(t, "confluent", []string{}, tt.args, tt.wantErrCode)
+		output := runCommand(t, confluentTestBin, []string{}, tt.args, tt.wantErrCode)
 
 		if *update && tt.args != "version" {
 			writeFixture(t, tt.fixture, output)
 		}
 
-		actual := string(output)
+		actual := output
 		expected := loadFixture(t, tt.fixture)
 
 		if tt.args == "version" {
@@ -495,27 +527,13 @@ func (s *CLITestSuite) runConfluentTest(tt CLITest, loginURL string) {
 }
 
 func runCommand(t *testing.T, binaryName string, env []string, args string, wantErrCode int) string {
-	path := binaryPath(t, binaryName)
-	_, _ = fmt.Println(path, args)
-	cmd := exec.Command(path, strings.Split(args, " ")...)
-	cmd.Env = append(os.Environ(), env...)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		// This exit code testing requires 1.12 - https://stackoverflow.com/a/55055100/337735
-		if exitError, ok := err.(*exec.ExitError); ok {
-			if wantErrCode == 0 {
-				require.Failf(t, "unexpected error",
-					"exit %d: %s\n%s", exitError.ExitCode(), args, string(output))
-			} else {
-				require.Equal(t, wantErrCode, exitError.ExitCode(), string(output))
-			}
-		} else {
-			require.Failf(t, "unexpected error", "command returned err: %s", err)
-		}
-	} else {
-		require.Equal(t, wantErrCode, 0)
+	output, exitCode, err := covCollector.RunBinary(binaryPath(t, binaryName), "TestRunMain", env, strings.Split(args, " "))
+	if err != nil && wantErrCode == 0 {
+		require.Failf(t, "unexpected error",
+			"exit %d: %s\n%s", exitCode, args, output)
 	}
-	return string(output)
+	require.Equal(t, wantErrCode, exitCode)
+	return output
 }
 
 func resetConfiguration(t *testing.T, cliName string) {
@@ -538,7 +556,6 @@ func loadFixture(t *testing.T, fixture string) string {
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	return string(content)
 }
 
@@ -554,8 +571,7 @@ func fixturePath(t *testing.T, fixture string) string {
 func binaryPath(t *testing.T, binaryName string) string {
 	dir, err := os.Getwd()
 	require.NoError(t, err)
-
-	return path.Join(dir, "dist", binaryName, runtime.GOOS+"_"+runtime.GOARCH, binaryName)
+	return path.Join(dir, binaryName)
 }
 
 var KEY_STORE = map[int32]*authv1.ApiKey{}
@@ -637,16 +653,16 @@ func serveMds(t *testing.T, mdsURL string) *httptest.Server {
 	router.HandleFunc("/security/1.0/authenticate", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/json")
 		reply := &mds.AuthenticationResponse{
-			AuthToken:"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1NjE2NjA4NTcsImV4cCI6MjUzMzg2MDM4NDU3LCJhdWQiOiJ3d3cuZXhhbXBsZS5jb20iLCJzdWIiOiJqcm9ja2V0QGV4YW1wbGUuY29tIn0.G6IgrFm5i0mN7Lz9tkZQ2tZvuZ2U7HKnvxMuZAooPmE",
-			TokenType:"dunno",
-			ExpiresIn:9999999999,
+			AuthToken: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1NjE2NjA4NTcsImV4cCI6MjUzMzg2MDM4NDU3LCJhdWQiOiJ3d3cuZXhhbXBsZS5jb20iLCJzdWIiOiJqcm9ja2V0QGV4YW1wbGUuY29tIn0.G6IgrFm5i0mN7Lz9tkZQ2tZvuZ2U7HKnvxMuZAooPmE",
+			TokenType: "dunno",
+			ExpiresIn: 9999999999,
 		}
 		b, err := json.Marshal(&reply)
 		req.NoError(err)
 		_, err = io.WriteString(w, string(b))
 		req.NoError(err)
 	})
-	routesAndReplies := map[string]string {
+	routesAndReplies := map[string]string{
 		"/security/1.0/principals/User:frodo/groups": `[
                        "hobbits",
                        "ringBearers"]`,
@@ -654,15 +670,15 @@ func serveMds(t *testing.T, mdsURL string) *httptest.Server {
                        "DeveloperRead",
                        "DeveloperWrite",
                        "SecurityAdmin"]`,
-		"/security/1.0/principals/User:frodo/roles/DeveloperRead/resources": `[]`,
+		"/security/1.0/principals/User:frodo/roles/DeveloperRead/resources":  `[]`,
 		"/security/1.0/principals/User:frodo/roles/DeveloperWrite/resources": `[]`,
-		"/security/1.0/principals/User:frodo/roles/SecurityAdmin/resources": `[]`,
+		"/security/1.0/principals/User:frodo/roles/SecurityAdmin/resources":  `[]`,
 		"/security/1.0/principals/Group:hobbits/roles/DeveloperRead/resources": `[
                        {"resourceType":"Topic","name":"drink","patternType":"LITERAL"},
                        {"resourceType":"Topic","name":"food","patternType":"LITERAL"}]`,
 		"/security/1.0/principals/Group:hobbits/roles/DeveloperWrite/resources": `[
                        {"resourceType":"Topic","name":"shire-","patternType":"PREFIXED"}]`,
-		"/security/1.0/principals/Group:hobbits/roles/SecurityAdmin/resources": `[]`,
+		"/security/1.0/principals/Group:hobbits/roles/SecurityAdmin/resources":     `[]`,
 		"/security/1.0/principals/Group:ringBearers/roles/DeveloperRead/resources": `[]`,
 		"/security/1.0/principals/Group:ringBearers/roles/DeveloperWrite/resources": `[
                        {"resourceType":"Topic","name":"ring-","patternType":"PREFIXED"}]`,
@@ -686,12 +702,12 @@ func serveMds(t *testing.T, mdsURL string) *httptest.Server {
                                "DeveloperRead":[
                                        {"resourceType":"Topic","name":"drink","patternType":"LITERAL"},
                                        {"resourceType":"Topic","name":"food","patternType":"LITERAL"}]}}`,
-		"/security/1.0/lookup/role/DeveloperRead": `["Group:hobbits"]`,
-		"/security/1.0/lookup/role/DeveloperWrite": `["Group:hobbits","Group:ringBearers"]`,
-		"/security/1.0/lookup/role/SecurityAdmin": `["User:frodo"]`,
-		"/security/1.0/lookup/role/SystemAdmin": `[]`,
-		"/security/1.0/lookup/role/DeveloperRead/resource/Topic/name/food": `["Group:hobbits"]`,
-		"/security/1.0/lookup/role/DeveloperRead/resource/Topic/name/shire-parties": `[]`,
+		"/security/1.0/lookup/role/DeveloperRead":                                    `["Group:hobbits"]`,
+		"/security/1.0/lookup/role/DeveloperWrite":                                   `["Group:hobbits","Group:ringBearers"]`,
+		"/security/1.0/lookup/role/SecurityAdmin":                                    `["User:frodo"]`,
+		"/security/1.0/lookup/role/SystemAdmin":                                      `[]`,
+		"/security/1.0/lookup/role/DeveloperRead/resource/Topic/name/food":           `["Group:hobbits"]`,
+		"/security/1.0/lookup/role/DeveloperRead/resource/Topic/name/shire-parties":  `[]`,
 		"/security/1.0/lookup/role/DeveloperWrite/resource/Topic/name/shire-parties": `["Group:hobbits"]`,
 		"/security/1.0/roles/DeveloperRead": `{
                        "name":"DeveloperRead",
