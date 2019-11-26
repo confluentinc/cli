@@ -353,6 +353,13 @@ func TestDetermineConfluentInstallDir(t *testing.T) {
 			wantFound: true,
 			wantErr:   false,
 		},
+		{
+			name:      "package-based installation (deb, rpm) following the Linux Filesystem Hierarchy",
+			dirExists: map[string][]string{"/usr/": {"/usr"}},
+			wantDir:   "/usr",
+			wantFound: true,
+			wantErr:   false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
