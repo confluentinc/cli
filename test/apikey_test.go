@@ -64,7 +64,7 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 			wantFunc: func(t *testing.T) {
 				logger := log.New()
 				cfg := config.New(&config.Config{
-					CLIName: binaryName,
+					CLIName: "ccloud",
 					Logger:  logger,
 				})
 				require.NoError(t, cfg.Load())
