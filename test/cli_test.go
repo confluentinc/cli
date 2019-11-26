@@ -824,18 +824,39 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		_, err = io.WriteString(w, string(b))
 		require.NoError(t, err)
 	})
-	router.HandleFunc("/api/ksqls/", func(w http.ResponseWriter, r *http.Request) {
-		srCluster := &ksqlv1.KSQLCluster{
-			Id:        "lksqlc-ksql1",
-			AccountId: "25",
-			Name:      "account ksql",
-			Endpoint:  "SASL_SSL://ksql-endpoint",
+	router.HandleFunc("/api/ksqls", handleKSQLCreateList(t))
+	router.HandleFunc("/api/ksqls/lksqlc-ksql1/", func(w http.ResponseWriter, r *http.Request) {
+		ksqlCluster := &ksqlv1.KSQLCluster{
+			Id:                 "lksqlc-ksql1",
+			AccountId:          "25",
+			KafkaClusterId:     "lkc-12345",
+			OutputTopicPrefix:  "pksqlc-abcde",
+			Name:           	"account ksql",
+			Storage:        	101,
+			Endpoint:       	"SASL_SSL://ksql-endpoint",
 		}
-		b, err := utilv1.MarshalJSONToBytes(&ksqlv1.GetKSQLClusterReply{
-			Cluster: srCluster,
+		reply, err := utilv1.MarshalJSONToBytes(&ksqlv1.GetKSQLClusterReply{
+			Cluster: ksqlCluster,
 		})
 		require.NoError(t, err)
-		_, err = io.WriteString(w, string(b))
+		_, err = io.WriteString(w, string(reply))
+		require.NoError(t, err)
+	})
+	router.HandleFunc("/api/ksqls/lksqlc-12345", func(w http.ResponseWriter, r *http.Request) {
+		ksqlCluster := &ksqlv1.KSQLCluster{
+			Id:                 "lksqlc-12345",
+			AccountId:          "25",
+			KafkaClusterId:     "lkc-abcde",
+			OutputTopicPrefix:  "pksqlc-zxcvb",
+			Name:           	"account ksql",
+			Storage:        	130,
+			Endpoint:       	"SASL_SSL://ksql-endpoint",
+		}
+		reply, err := utilv1.MarshalJSONToBytes(&ksqlv1.GetKSQLClusterReply{
+			Cluster: ksqlCluster,
+		})
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(reply))
 		require.NoError(t, err)
 	})
 	return httptest.NewServer(router)
@@ -972,6 +993,44 @@ func handleKafkaClusterCreate(t *testing.T, kafkaAPIURL string) func(w http.Resp
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(b))
 		require.NoError(t, err)
+	}
+}
+
+func handleKSQLCreateList(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ksqlCluster1 := &ksqlv1.KSQLCluster{
+			Id:                "lksqlc-ksql5",
+			AccountId:         "25",
+			KafkaClusterId:    "lkc-qwert",
+			OutputTopicPrefix: "pksqlc-abcde",
+			Name:              "account ksql",
+			Storage:           101,
+			Endpoint:          "SASL_SSL://ksql-endpoint",
+		}
+		ksqlCluster2 := &ksqlv1.KSQLCluster{
+			Id:                "lksqlc-woooo",
+			AccountId:         "25",
+			KafkaClusterId:    "lkc-zxcvb",
+			OutputTopicPrefix: "pksqlc-ghjkl",
+			Name:              "kay cee queue elle",
+			Storage:           123,
+			Endpoint:          "SASL_SSL://ksql-endpoint",
+		}
+		if r.Method == "POST" {
+			reply, err := utilv1.MarshalJSONToBytes(&ksqlv1.GetKSQLClusterReply{
+				Cluster: ksqlCluster1,
+			})
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(reply))
+			require.NoError(t, err)
+		} else if r.Method == "GET" {
+			listReply, err := utilv1.MarshalJSONToBytes(&ksqlv1.GetKSQLClustersReply{
+				Clusters: []*ksqlv1.KSQLCluster{ksqlCluster1, ksqlCluster2,},
+			})
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(listReply))
+			require.NoError(t, err)
+		}
 	}
 }
 
