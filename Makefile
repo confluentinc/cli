@@ -308,10 +308,10 @@ lint-licenses: build
 coverage:
       ifdef CI
 	@# Run unit tests with coverage.
-	@GO111MODULE=on go test -v -race -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') \
+	GO111MODULE=on go test -v -p 1 -race -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') \
 		-coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test)
 	@# Run integration tests with coverage.
-	@GO111MODULE=on INTEG_COVER=on go test -v ./... -run=TestCLI
+	GO111MODULE=on INTEG_COVER=on go test -v -p 1 ./... -run=TestCLI
 	@echo "mode: atomic" > coverage.txt
 	@grep -h -v "mode: atomic" unit_coverage.txt >> coverage.txt
 	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
