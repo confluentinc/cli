@@ -18,6 +18,17 @@ func (s *CLITestSuite) Test_Update() {
 	err = os.RemoveAll(path) // RemoveAll so we don't return an error if file doesn't exist
 	require.NoError(s.T(), err)
 
+	f, err := os.Open(path)
+	if err != nil {
+		// If does not exist, then no need to sync.
+		if !os.IsNotExist(err) {
+			require.NoError(s.T(), err)
+		}
+	} else {
+		err := f.Sync()
+		require.NoError(s.T(), err)
+	}
+
 	// Be nice and restore the config when we're done
 	oldConfig, err := ioutil.ReadFile(configFile)
 	require.NoError(s.T(), err)
