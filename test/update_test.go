@@ -15,17 +15,8 @@ func (s *CLITestSuite) Test_Update() {
 	// Remove the cache file so we'll see the update prompt
 	path, err := homedir.Expand("~/.confluent/update_check")
 	require.NoError(s.T(), err)
-	err = os.RemoveAll(path) // RemoveAll so we don't return an error if file doesn't exist
-	require.NoError(s.T(), err)
-
-	f, err := os.Open(path)
-	if err != nil {
-		// If does not exist, then no need to sync.
-		if !os.IsNotExist(err) {
-			require.NoError(s.T(), err)
-		}
-	} else {
-		err := f.Sync()
+	err = os.Remove(path) // RemoveAll so we don't return an error if file doesn't exist
+	if !os.IsNotExist(err) {
 		require.NoError(s.T(), err)
 	}
 
