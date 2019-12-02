@@ -26,40 +26,43 @@ import (
 const (
 	kafkaClusterID    = "lkc-12345"
 	ksqlClusterID     = "lksqlc-12345"
+	physicalClusterID = "pksqlc-zxcvb"
 	outputTopicPrefix = "pksqlc-abcde"
 	serviceAcctID     = int32(123)
-	expectedACLs      = `  ServiceAccountId | Permission |    Operation     | Resource |             Name             |   Type    
-+------------------+------------+------------------+----------+------------------------------+----------+
-  User:123         | ALLOW      | DESCRIBE         | CLUSTER  | kafka-cluster                | LITERAL   
-  User:123         | ALLOW      | DESCRIBE_CONFIGS | CLUSTER  | kafka-cluster                | LITERAL   
-  User:123         | ALLOW      | CREATE           | TOPIC    | pksqlc-abcde                 | PREFIXED  
-  User:123         | ALLOW      | CREATE           | TOPIC    | _confluent-ksql-pksqlc-abcde | PREFIXED  
-  User:123         | ALLOW      | CREATE           | GROUP    | _confluent-ksql-pksqlc-abcde | PREFIXED  
-  User:123         | ALLOW      | DESCRIBE         | TOPIC    | pksqlc-abcde                 | PREFIXED  
-  User:123         | ALLOW      | DESCRIBE         | TOPIC    | _confluent-ksql-pksqlc-abcde | PREFIXED  
-  User:123         | ALLOW      | DESCRIBE         | GROUP    | _confluent-ksql-pksqlc-abcde | PREFIXED  
-  User:123         | ALLOW      | ALTER            | TOPIC    | pksqlc-abcde                 | PREFIXED  
-  User:123         | ALLOW      | ALTER            | TOPIC    | _confluent-ksql-pksqlc-abcde | PREFIXED  
-  User:123         | ALLOW      | ALTER            | GROUP    | _confluent-ksql-pksqlc-abcde | PREFIXED  
-  User:123         | ALLOW      | DESCRIBE_CONFIGS | TOPIC    | pksqlc-abcde                 | PREFIXED  
-  User:123         | ALLOW      | DESCRIBE_CONFIGS | TOPIC    | _confluent-ksql-pksqlc-abcde | PREFIXED  
-  User:123         | ALLOW      | DESCRIBE_CONFIGS | GROUP    | _confluent-ksql-pksqlc-abcde | PREFIXED  
-  User:123         | ALLOW      | ALTER_CONFIGS    | TOPIC    | pksqlc-abcde                 | PREFIXED  
-  User:123         | ALLOW      | ALTER_CONFIGS    | TOPIC    | _confluent-ksql-pksqlc-abcde | PREFIXED  
-  User:123         | ALLOW      | ALTER_CONFIGS    | GROUP    | _confluent-ksql-pksqlc-abcde | PREFIXED  
-  User:123         | ALLOW      | READ             | TOPIC    | pksqlc-abcde                 | PREFIXED  
-  User:123         | ALLOW      | READ             | TOPIC    | _confluent-ksql-pksqlc-abcde | PREFIXED  
-  User:123         | ALLOW      | READ             | GROUP    | _confluent-ksql-pksqlc-abcde | PREFIXED  
-  User:123         | ALLOW      | WRITE            | TOPIC    | pksqlc-abcde                 | PREFIXED  
-  User:123         | ALLOW      | WRITE            | TOPIC    | _confluent-ksql-pksqlc-abcde | PREFIXED  
-  User:123         | ALLOW      | WRITE            | GROUP    | _confluent-ksql-pksqlc-abcde | PREFIXED  
-  User:123         | ALLOW      | DELETE           | TOPIC    | pksqlc-abcde                 | PREFIXED  
-  User:123         | ALLOW      | DELETE           | TOPIC    | _confluent-ksql-pksqlc-abcde | PREFIXED  
-  User:123         | ALLOW      | DELETE           | GROUP    | _confluent-ksql-pksqlc-abcde | PREFIXED  
-  User:123         | ALLOW      | DESCRIBE         | TOPIC    | *                            | LITERAL   
-  User:123         | ALLOW      | DESCRIBE         | GROUP    | *                            | LITERAL   
-  User:123         | ALLOW      | DESCRIBE_CONFIGS | TOPIC    | *                            | LITERAL   
-  User:123         | ALLOW      | DESCRIBE_CONFIGS | GROUP    | *                            | LITERAL   
+	expectedACLs      = `  ServiceAccountId | Permission |    Operation     |     Resource     |             Name             |   Type    
++------------------+------------+------------------+------------------+------------------------------+----------+
+  User:123         | ALLOW      | DESCRIBE         | CLUSTER          | kafka-cluster                | LITERAL   
+  User:123         | ALLOW      | DESCRIBE_CONFIGS | CLUSTER          | kafka-cluster                | LITERAL   
+  User:123         | ALLOW      | CREATE           | TOPIC            | pksqlc-abcde                 | PREFIXED  
+  User:123         | ALLOW      | CREATE           | TOPIC            | _confluent-ksql-pksqlc-abcde | PREFIXED  
+  User:123         | ALLOW      | CREATE           | GROUP            | _confluent-ksql-pksqlc-abcde | PREFIXED  
+  User:123         | ALLOW      | DESCRIBE         | TOPIC            | pksqlc-abcde                 | PREFIXED  
+  User:123         | ALLOW      | DESCRIBE         | TOPIC            | _confluent-ksql-pksqlc-abcde | PREFIXED  
+  User:123         | ALLOW      | DESCRIBE         | GROUP            | _confluent-ksql-pksqlc-abcde | PREFIXED  
+  User:123         | ALLOW      | ALTER            | TOPIC            | pksqlc-abcde                 | PREFIXED  
+  User:123         | ALLOW      | ALTER            | TOPIC            | _confluent-ksql-pksqlc-abcde | PREFIXED  
+  User:123         | ALLOW      | ALTER            | GROUP            | _confluent-ksql-pksqlc-abcde | PREFIXED  
+  User:123         | ALLOW      | DESCRIBE_CONFIGS | TOPIC            | pksqlc-abcde                 | PREFIXED  
+  User:123         | ALLOW      | DESCRIBE_CONFIGS | TOPIC            | _confluent-ksql-pksqlc-abcde | PREFIXED  
+  User:123         | ALLOW      | DESCRIBE_CONFIGS | GROUP            | _confluent-ksql-pksqlc-abcde | PREFIXED  
+  User:123         | ALLOW      | ALTER_CONFIGS    | TOPIC            | pksqlc-abcde                 | PREFIXED  
+  User:123         | ALLOW      | ALTER_CONFIGS    | TOPIC            | _confluent-ksql-pksqlc-abcde | PREFIXED  
+  User:123         | ALLOW      | ALTER_CONFIGS    | GROUP            | _confluent-ksql-pksqlc-abcde | PREFIXED  
+  User:123         | ALLOW      | READ             | TOPIC            | pksqlc-abcde                 | PREFIXED  
+  User:123         | ALLOW      | READ             | TOPIC            | _confluent-ksql-pksqlc-abcde | PREFIXED  
+  User:123         | ALLOW      | READ             | GROUP            | _confluent-ksql-pksqlc-abcde | PREFIXED  
+  User:123         | ALLOW      | WRITE            | TOPIC            | pksqlc-abcde                 | PREFIXED  
+  User:123         | ALLOW      | WRITE            | TOPIC            | _confluent-ksql-pksqlc-abcde | PREFIXED  
+  User:123         | ALLOW      | WRITE            | GROUP            | _confluent-ksql-pksqlc-abcde | PREFIXED  
+  User:123         | ALLOW      | DELETE           | TOPIC            | pksqlc-abcde                 | PREFIXED  
+  User:123         | ALLOW      | DELETE           | TOPIC            | _confluent-ksql-pksqlc-abcde | PREFIXED  
+  User:123         | ALLOW      | DELETE           | GROUP            | _confluent-ksql-pksqlc-abcde | PREFIXED  
+  User:123         | ALLOW      | DESCRIBE         | TOPIC            | *                            | LITERAL   
+  User:123         | ALLOW      | DESCRIBE         | GROUP            | *                            | LITERAL   
+  User:123         | ALLOW      | DESCRIBE_CONFIGS | TOPIC            | *                            | LITERAL   
+  User:123         | ALLOW      | DESCRIBE_CONFIGS | GROUP            | *                            | LITERAL   
+  User:123         | ALLOW      | DESCRIBE         | TRANSACTIONAL_ID | pksqlc-zxcvb                 | LITERAL   
+  User:123         | ALLOW      | WRITE            | TRANSACTIONAL_ID | pksqlc-zxcvb                 | LITERAL   
 `
 )
 
@@ -114,6 +117,7 @@ func (suite *KSQLTestSuite) initConf() {
 	suite.ksqlCluster = &v1.KSQLCluster{
 		Id:                ksqlClusterID,
 		KafkaClusterId:    kafkaClusterID,
+		PhysicalClusterId: physicalClusterID,
 		OutputTopicPrefix: outputTopicPrefix,
 	}
 

@@ -231,6 +231,13 @@ func (c *clusterCommand) buildACLBindings(serviceAccountId string, cluster *ksql
 			bindings = append(bindings, c.createAcl(t, kafkav1.PatternTypes_LITERAL, op, kafkav1.ResourceTypes_TOPIC, serviceAccountId))
 		}
 	}
+	// for transactional produces to command topic
+	for _, op := range []kafkav1.ACLOperations_ACLOperation{
+		kafkav1.ACLOperations_DESCRIBE,
+		kafkav1.ACLOperations_WRITE,
+	} {
+		bindings = append(bindings, c.createAcl(cluster.PhysicalClusterId, kafkav1.PatternTypes_LITERAL, op, kafkav1.ResourceTypes_TRANSACTIONAL_ID, serviceAccountId))
+	}
 	return bindings
 }
 

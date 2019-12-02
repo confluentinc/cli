@@ -189,7 +189,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 		a.config.Auth.Account = a.config.Auth.Accounts[0]
 	}
 
-	err = a.addContextIfAbsent(a.config.Auth.User.Email, "")
+	err = a.setContextAndAddContextIfAbsent(a.config.Auth.User.Email, "")
 	if err != nil {
 		return err
 	}
@@ -257,7 +257,7 @@ func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.Wrap(err, "Unable to save user authentication.")
 	}
-	err = a.addContextIfAbsent(email, caCertPath)
+	err = a.setContextAndAddContextIfAbsent(email, caCertPath)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -330,9 +330,13 @@ func (a *commands) credentials(cmd *cobra.Command, userField string, cloudClient
 	return email, password, nil
 }
 
-func (a *commands) addContextIfAbsent(username string, caCertPath string) error {
+func (a *commands) setContextAndAddContextIfAbsent(username string, caCertPath string) error {
 	name := fmt.Sprintf("login-%s-%s", username, a.config.AuthURL)
 	if _, ok := a.config.Contexts[name]; ok {
+		err := a.config.SetContext(name)
+		if err != nil {
+			return err
+		}
 		return nil
 	}
 	platform := &config.Platform{

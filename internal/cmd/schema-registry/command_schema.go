@@ -94,13 +94,13 @@ Describe the schema string by schema ID
 
 ::
 
-		{{.CLIName}} schema-registry describe 1337
+		{{.CLIName}} schema-registry schema describe 1337
 
 Describe the schema by subject and version
 
 ::
 
-		{{.CLIName}} schema-registry describe --subject payments --version latest
+		{{.CLIName}} schema-registry schema describe --subject payments --version latest
 `, c.config.CLIName),
 		RunE: c.describe,
 		Args: cobra.MaximumNArgs(1),
