@@ -252,7 +252,7 @@ func TestConfig_AddContext(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := tt.config.AddContext(tt.contextName, tt.platform, tt.credential, tt.kafkaClusters, tt.kafka, tt.schemaRegistryClusters)
+			err := tt.config.AddContext(tt.contextName, tt.platform, tt.credential, nil, tt.kafkaClusters, tt.kafka, tt.schemaRegistryClusters)
 			if tt.wantErr {
 				assert.Error(t, err)
 				return
