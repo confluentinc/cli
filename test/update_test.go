@@ -3,6 +3,7 @@ package test
 import (
 	"io/ioutil"
 	"os"
+	"time"
 
 	"github.com/atrox/homedir"
 	"github.com/stretchr/testify/require"
@@ -15,10 +16,8 @@ func (s *CLITestSuite) Test_Update() {
 	// Remove the cache file so we'll see the update prompt
 	path, err := homedir.Expand("~/.confluent/update_check")
 	require.NoError(s.T(), err)
-	err = os.Remove(path) // RemoveAll so we don't return an error if file doesn't exist
-	if !os.IsNotExist(err) {
-		require.NoError(s.T(), err)
-	}
+	err = os.RemoveAll(path) // RemoveAll so we don't return an error if file doesn't exist
+	require.NoError(s.T(), err)
 
 	// Be nice and restore the config when we're done
 	oldConfig, err := ioutil.ReadFile(configFile)
@@ -31,6 +30,10 @@ func (s *CLITestSuite) Test_Update() {
 	// Reset the config to a known empty state
 	err = ioutil.WriteFile(configFile, []byte(`{}`), 600)
 	require.NoError(s.T(), err)
+
+	// HACK: Some race condition with deleting the update_check before we actually run "version".
+	// Sigh... I tried to force an fsync, I tried Remove instead of RemoveAll, nothing
+	time.Sleep(1*time.Second)
 
 	tests := []CLITest{
 		{args: "version", fixture: "update1.golden", regex: true},
