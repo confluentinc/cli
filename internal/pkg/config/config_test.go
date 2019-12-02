@@ -54,6 +54,21 @@ func TestConfig_Load(t *testing.T) {
 			},
 			file: "/tmp/TestConfig_Load.json",
 		},
+		{
+			name: "should load disable update checks and disable updates",
+			args: &args{
+				contents: "{\"disable_update_check\": true, \"disable_updates\": true}",
+			},
+			want: &Config{
+				CLIName:            "confluent",
+				DisableUpdates:     true,
+				DisableUpdateCheck: true,
+				Platforms:          map[string]*Platform{},
+				Credentials:        map[string]*Credential{},
+				Contexts:           map[string]*Context{},
+			},
+			file: "/tmp/TestConfig_Load.json",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
