@@ -20,7 +20,6 @@ func getConfig(cmd *cobra.Command) (*map[string]string, error) {
 		return nil, errors.Wrap(err, "error reading --config as string")
 	}
 	var options map[string]string
-	//if strings.HasPrefix(filename, "@") {
 	yamlFile, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to read config file %s", filename)

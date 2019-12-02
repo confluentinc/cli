@@ -200,7 +200,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	if len(args) == 0 {
-		return errors.New("Connector ID must be passed")
+		return errors.HandleCommon(errors.ErrNoConnectorId, cmd)
 	}
 	connector, err := c.client.GetByID(context.Background(), &connectv1.Connector{AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id, Id: args[0]})
 	if err != nil {
@@ -261,7 +261,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	pcmd.Println(cmd, "Created connector ID: "+connector.Id+" Name: "+connector.Name)
+	pcmd.Printf(cmd, "Created connector ID: %s Name: %s \n", connector.Id, connector.Name)
 	return nil
 }
 
@@ -274,6 +274,9 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
+	if len(args) == 0 {
+		return errors.HandleCommon(errors.ErrNoConnectorId, cmd)
+	}
 	// Resolve Connector Name from ID
 	connector, err := c.client.GetByID(context.Background(), &connectv1.Connector{AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id, Id: args[0]})
 	if err != nil {
@@ -283,7 +286,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	pcmd.Println(cmd, "Updated connector "+connectorUpdated.Id+" "+connectorUpdated.Name)
+	pcmd.Printf(cmd, "Updated connector ID: %s Name: %s \n", connectorUpdated.Id, connectorUpdated.Name)
 	return nil
 }
 
@@ -293,7 +296,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	if len(args) == 0 {
-		return errors.New("Connector ID must be passed")
+		return errors.HandleCommon(errors.ErrNoConnectorId, cmd)
 	}
 	connector, err := c.client.GetByID(context.Background(), &connectv1.Connector{AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id, Id: args[0]})
 	if err != nil {
@@ -313,7 +316,7 @@ func (c *command) pause(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	if len(args) == 0 {
-		return errors.New("Connector ID must be passed")
+		return errors.HandleCommon(errors.ErrNoConnectorId, cmd)
 	}
 	connector, err := c.client.GetByID(context.Background(), &connectv1.Connector{AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id, Id: args[0]})
 	if err != nil {
@@ -333,7 +336,7 @@ func (c *command) resume(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	if len(args) == 0 {
-		return errors.New("Connector ID must be passed")
+		return errors.HandleCommon(errors.ErrNoConnectorId, cmd)
 	}
 	connector, err := c.client.GetByID(context.Background(), &connectv1.Connector{AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id, Id: args[0]})
 	if err != nil {
