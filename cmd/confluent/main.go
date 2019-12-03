@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/jonboulle/clockwork"
 	"os"
 
+	"github.com/jonboulle/clockwork"
 	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/viper"
 
@@ -49,7 +49,9 @@ func main() {
 
 	version := cliVersion.NewVersion(cfg.CLIName, cfg.Name(), cfg.Support(), version, commit, date, host)
 
-	segmentClient := segment.New(segmentKey)
+	segmentClient, _ := segment.NewWithConfig(segmentKey, segment.Config{
+		Logger:  analytics.NewLogger(logger),
+	})
 
 	analyticsClient := analytics.NewAnalyticsClient(cfg.CLIName, cfg, version.Version, segmentClient, clockwork.NewRealClock())
 
@@ -69,7 +71,6 @@ func main() {
 	if closeErr != nil {
 		logger.Debug(closeErr)
 	}
-
 	if err != nil {
 		os.Exit(1)
 	}

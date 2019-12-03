@@ -13,6 +13,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 type CommandType int
@@ -48,6 +49,23 @@ var (
 	VersionPropertiesKey    = "version"
 	CliNameTraitsKey        = "cli_name"
 )
+
+// Logger struct that implements Segment's logger and redirects segments error log to debug log
+type Logger struct {
+	logger *log.Logger
+}
+
+func NewLogger(logger *log.Logger) *Logger {
+	return &Logger{logger: logger}
+}
+
+func (l *Logger) Logf(format string, args ...interface{}) {
+	l.logger.Debugf(format, args ...)
+}
+
+func (l *Logger) Errorf(format string, args ...interface{}) {
+	l.logger.Debugf(format, args ...)
+}
 
 type Client interface {
 	SetStartTime()

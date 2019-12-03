@@ -188,14 +188,14 @@ func (c *Command) Execute() error {
 	if err != nil {
 		analyticsError := c.Analytics.SendCommandFailed(err)
 		if analyticsError != nil {
-			c.logger.Debugf("segment analytics flushing failed: %s\n", analyticsError.Error())
+			c.logger.Debugf("segment analytics sending event failed: %s\n", analyticsError.Error())
 		}
 		return err
 	}
 	c.Analytics.CatchHelpCall(c.Command)
 	analyticsError := c.Analytics.SendCommandSucceeded()
 	if analyticsError != nil {
-		c.logger.Debugf("segment analytics flushing failed: %s\n", analyticsError.Error())
+		c.logger.Debugf("segment analytics sending event failed: %s\n", analyticsError.Error())
 	}
 	return nil
 }
