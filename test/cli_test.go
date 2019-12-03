@@ -19,7 +19,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/confluentinc/mds-sdk-go"
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -32,6 +31,7 @@ import (
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
 	utilv1 "github.com/confluentinc/ccloudapis/util/v1"
+	"github.com/confluentinc/mds-sdk-go"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/test-integ"
@@ -71,6 +71,12 @@ type CLITest struct {
 	authKafka string
 	// Name of a golden output fixture containing expected output
 	fixture string
+	// True iff fixture represents a regex
+	regex bool
+	// Fixed string to check if output contains
+	contains string
+	// Fixed string to check that output does not contain
+	notContains string
 	// Expected exit code (e.g., 0 for success or 1 for failure)
 	wantErrCode int
 	// If true, don't reset the config/state between tests to enable testing CLI workflows
@@ -136,7 +142,7 @@ func (s *CLITestSuite) Test_Confluent_Help() {
 		{name: "no args", fixture: "confluent-help-flag.golden", wantErrCode: 1},
 		{args: "help", fixture: "confluent-help.golden"},
 		{args: "--help", fixture: "confluent-help-flag.golden"},
-		{args: "version", fixture: "confluent-version.golden"},
+		{args: "version", fixture: "confluent-version.golden", regex: true},
 	}
 	for _, tt := range tests {
 		kafkaAPIURL := serveKafkaAPI(s.T()).URL
@@ -240,7 +246,7 @@ func (s *CLITestSuite) Test_Ccloud_Help() {
 		{name: "no args", fixture: "help-flag.golden", wantErrCode: 1},
 		{args: "help", fixture: "help.golden"},
 		{args: "--help", fixture: "help-flag.golden"},
-		{args: "version", fixture: "version.golden"},
+		{args: "version", fixture: "version.golden", regex: true},
 	}
 	for _, tt := range tests {
 		kafkaAPIURL := serveKafkaAPI(s.T()).URL
@@ -457,32 +463,12 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint stri
 			fmt.Println(output)
 		}
 
-		if *update && tt.args != "version" {
-			if strings.HasPrefix(tt.args, "kafka cluster create") {
-				re := regexp.MustCompile("https?://127.0.0.1:[0-9]+")
-				output = re.ReplaceAllString(output, "http://127.0.0.1:12345")
-			}
-			writeFixture(t, tt.fixture, output)
-		}
-
-		actual := output
-		expected := loadFixture(t, tt.fixture)
-
-		if tt.args == "version" {
-			require.Regexp(t, expected, actual)
-			return
-		} else if strings.HasPrefix(tt.args, "kafka cluster create") {
-			fmt.Println(tt.args, actual)
+		if strings.HasPrefix(tt.args, "kafka cluster create") {
 			re := regexp.MustCompile("https?://127.0.0.1:[0-9]+")
-			actual = re.ReplaceAllString(actual, "http://127.0.0.1:12345")
+			output = re.ReplaceAllString(output, "http://127.0.0.1:12345")
 		}
 
-		if !reflect.DeepEqual(actual, expected) {
-			t.Fatalf("actual = %s, expected = %s", actual, expected)
-		}
-		if tt.wantFunc != nil {
-			tt.wantFunc(t)
-		}
+		s.validateTestOutput(tt, t, output)
 	})
 }
 
@@ -508,22 +494,31 @@ func (s *CLITestSuite) runConfluentTest(tt CLITest, loginURL string) {
 
 		output := runCommand(t, confluentTestBin, []string{}, tt.args, tt.wantErrCode)
 
-		if *update && tt.args != "version" {
-			writeFixture(t, tt.fixture, output)
-		}
+		s.validateTestOutput(tt, t, output)
+	})
+}
 
-		actual := output
+func (s *CLITestSuite) validateTestOutput(tt CLITest, t *testing.T, output string) {
+	if *update && !tt.regex && tt.fixture != "" {
+		writeFixture(t, tt.fixture, output)
+	}
+	actual := string(output)
+	if tt.contains != "" {
+		require.Contains(t, actual, tt.contains)
+	} else if tt.notContains != "" {
+		require.NotContains(t, actual, tt.notContains)
+	} else if tt.fixture != "" {
 		expected := loadFixture(t, tt.fixture)
 
-		if tt.args == "version" {
+		if tt.regex {
 			require.Regexp(t, expected, actual)
-			return
-		}
-
-		if !reflect.DeepEqual(actual, expected) {
+		} else if !reflect.DeepEqual(actual, expected) {
 			t.Fatalf("actual = %s, expected = %s", actual, expected)
 		}
-	})
+	}
+	if tt.wantFunc != nil {
+		tt.wantFunc(t)
+	}
 }
 
 func runCommand(t *testing.T, binaryName string, env []string, args string, wantErrCode int) string {
