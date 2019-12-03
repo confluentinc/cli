@@ -3,7 +3,6 @@ package test
 import (
 	"io/ioutil"
 	"os"
-	"time"
 
 	"github.com/atrox/homedir"
 	"github.com/stretchr/testify/require"
@@ -30,10 +29,6 @@ func (s *CLITestSuite) Test_Update() {
 	// Reset the config to a known empty state
 	err = ioutil.WriteFile(configFile, []byte(`{}`), 600)
 	require.NoError(s.T(), err)
-
-	// HACK: Some race condition with deleting the update_check before we actually run "version".
-	// Sigh... I tried to force an fsync, I tried Remove instead of RemoveAll, nothing
-	time.Sleep(1*time.Second)
 
 	tests := []CLITest{
 		{args: "version", fixture: "update1.golden", regex: true},

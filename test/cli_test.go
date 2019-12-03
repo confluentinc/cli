@@ -463,7 +463,6 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint stri
 			fmt.Println(output)
 		}
 
-
 		if strings.HasPrefix(tt.args, "kafka cluster create") {
 			re := regexp.MustCompile("https?://127.0.0.1:[0-9]+")
 			output = re.ReplaceAllString(output, "http://127.0.0.1:12345")
@@ -509,7 +508,7 @@ func (s *CLITestSuite) validateTestOutput(tt CLITest, t *testing.T, output strin
 	} else if tt.notContains != "" {
 		require.NotContains(t, actual, tt.notContains)
 	} else if tt.fixture != "" {
-    expected := loadFixture(t, tt.fixture)
+		expected := loadFixture(t, tt.fixture)
 
 		if tt.regex {
 			require.Regexp(t, expected, actual)
