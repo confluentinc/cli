@@ -131,12 +131,13 @@ func (c *Config) FindContext(name string) (*Context, error) {
 }
 
 func newContext(name string, platform *Platform, credential *Credential,
-	kafkaClusters map[string]*KafkaClusterConfig, kafka string,
+	auth *AuthConfig, kafkaClusters map[string]*KafkaClusterConfig, kafka string,
 	schemaRegistryClusters map[string]*SchemaRegistryCluster) *Context {
 	return &Context{
 		Name:                   name,
 		Platform:               platform.String(),
 		Credential:             credential.String(),
+		Auth:                   auth,
 		KafkaClusters:          kafkaClusters,
 		Kafka:                  kafka,
 		SchemaRegistryClusters: schemaRegistryClusters,
@@ -144,12 +145,12 @@ func newContext(name string, platform *Platform, credential *Credential,
 }
 
 func (c *Config) AddContext(name string, platform *Platform, credential *Credential,
-	kafkaClusters map[string]*KafkaClusterConfig, kafka string,
+	auth *AuthConfig, kafkaClusters map[string]*KafkaClusterConfig, kafka string,
 	schemaRegistryClusters map[string]*SchemaRegistryCluster) error {
 	if _, ok := c.Contexts[name]; ok {
 		return fmt.Errorf("context \"%s\" already exists", name)
 	}
-	context := newContext(name, platform, credential, kafkaClusters, kafka,
+	context := newContext(name, platform, credential, auth, kafkaClusters, kafka,
 		schemaRegistryClusters)
 	// Update config maps.
 	c.Contexts[name] = context
@@ -159,11 +160,12 @@ func (c *Config) AddContext(name string, platform *Platform, credential *Credent
 }
 
 func (c *Config) SetContext(name string) error {
-	_, err := c.FindContext(name)
+	ctx, err := c.FindContext(name)
 	if err != nil {
 		return err
 	}
 	c.CurrentContext = name
+	c.Auth = ctx.Auth
 	return c.Save()
 }
 
