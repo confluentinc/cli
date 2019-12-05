@@ -642,14 +642,6 @@ func init() {
 		},
 		UserId: 25,
 	}
-	KEY_STORE[104] = &authv1.ApiKey{
-		Key:    "UIAPIKEY104",
-		Secret: "UIAPISECRET104",
-		LogicalClusters: []*authv1.ApiKey_Cluster{
-			{Id: "lsrc-abc123", Type: "schema-registry"},
-		},
-		UserId: 25,
-	}
 }
 
 func serveMds(t *testing.T, mdsURL string) *httptest.Server {
@@ -780,7 +772,11 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 			apiKey.Id = int32(KEY_INDEX)
 			apiKey.Key = fmt.Sprintf("MYKEY%d", KEY_INDEX)
 			apiKey.Secret = fmt.Sprintf("MYSECRET%d", KEY_INDEX)
-			apiKey.UserId = 23
+			if req.ApiKey.UserId == 0 {
+				apiKey.UserId = 23
+			} else {
+				apiKey.UserId = req.ApiKey.UserId
+			}
 			KEY_INDEX++
 			KEY_STORE[apiKey.Id] = apiKey
 			b, err := utilv1.MarshalJSONToBytes(&authv1.CreateApiKeyReply{ApiKey: apiKey})

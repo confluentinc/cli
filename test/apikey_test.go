@@ -29,7 +29,7 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 		{args: "api-key list --resource lkc-cool1", fixture: "apikey6.golden"},
 		{args: "api-key list --resource lkc-other1", fixture: "apikey8.golden"},
 
-		// create api key for non-kafka cluster
+		// create api key for ksql cluster
 		{args: "api-key create --description my-ksql-app --resource lksqlc-ksql1", fixture: "apikey9.golden"}, // MYKEY6
 		{args: "api-key list --resource lkc-cool1", fixture: "apikey6.golden"},
 		{args: "api-key list --resource lksqlc-ksql1", fixture: "apikey10.golden"},
@@ -55,6 +55,24 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 		{args: "api-key store UIAPIKEY101 UIAPISECRET101 --resource lkc-other1", fixture: "empty.golden"},
 		{args: "api-key list --resource lkc-cool1", fixture: "apikey11.golden"},
 		{args: "api-key list --resource lkc-other1", fixture: "apikey12.golden"},
+
+		// store an api-key for ksql cluster
+		{args: "api-key store UIAPIKEY103 UIAPISECRET103 --resource lksqlc-ksql1", fixture: "empty.golden"},
+		{args: "api-key list --resource lksqlc-ksql1", fixture: "apikey10.golden"},
+
+		// list all api-keys
+		{args: "api-key list", fixture: "apikey22.golden"},
+
+		// list api-keys belonging to currently logged in user
+		{args: "api-key list --current-user", fixture: "apikey23.golden"},
+
+		// create api-key for a service account
+		{args: "api-key create --resource lkc-cool1 --service-account-id 99", fixture: "apikey24.golden"},
+		{args: "api-key list --current-user", fixture: "apikey23.golden"},
+		{args: "api-key list", fixture: "apikey25.golden"},
+		{args: "api-key list --service-account-id 99", fixture: "apikey26.golden"},
+		{args: "api-key list --resource lkc-cool1", fixture: "apikey27.golden"},
+		{args: "api-key list --resource lkc-cool1 --service-account-id 99", fixture: "apikey26.golden"},
 
 		// store: error handling
 		{name: "error if storing unknown api key", args: "api-key store UNKNOWN SECRET --resource lkc-cool1", fixture: "apikey15.golden"},
