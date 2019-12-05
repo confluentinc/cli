@@ -16,8 +16,8 @@ const (
 )
 
 func (c *command) resolveResourceID(cmd *cobra.Command, args []string) (resourceType string, accId string, clusterId string, currentKey string, err error) {
-	resource, err := cmd.Flags().GetString("resource")
-	if err != nil {
+	resource, err := cmd.Flags().GetString(resourceFlagName)
+	if resource == "" || err != nil {
 		return "", "", "", "", err
 	}
 	// If resource is schema registry
@@ -47,7 +47,7 @@ func (c *command) resolveResourceID(cmd *cobra.Command, args []string) (resource
 		}
 		return ksqlResourceType, ksql.AccountId, ksql.Id, "", nil
 	} else {
-		kcc, err := pcmd.GetKafkaClusterConfig(cmd, c.ch, "resource")
+		kcc, err := pcmd.GetKafkaClusterConfig(cmd, c.ch, resourceFlagName)
 		if err != nil {
 			return "", "", "", "", err
 		}
