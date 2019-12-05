@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/spf13/viper"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/metric"
+	"github.com/confluentinc/cli/internal/pkg/test-integ"
 	cliVersion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -21,9 +23,14 @@ var (
 	date    = ""
 	host    = ""
 	cliName = "confluent"
+	isTest  = "false"
 )
 
 func main() {
+	isTest, err := strconv.ParseBool(isTest)
+	if err != nil {
+		panic(err)
+	}
 	viper.AutomaticEnv()
 
 	logger := log.New()
@@ -37,13 +44,13 @@ func main() {
 		MetricSink: metricSink,
 		Logger:     logger,
 	})
-	err := cfg.Load()
+	err = cfg.Load()
 	if err != nil {
 		logger.Errorf("unable to load config: %v", err)
 	}
 
 	version := cliVersion.NewVersion(cfg.CLIName, cfg.Name(), cfg.Support(), version, commit, date, host)
-	
+
 	cli, err := cmd.NewConfluentCommand(cliName, cfg, version, logger)
 	if err != nil {
 		if cli == nil {
@@ -51,10 +58,18 @@ func main() {
 		} else {
 			pcmd.ErrPrintln(cli, err)
 		}
-		os.Exit(1)
+		if isTest {
+			test_integ.ExitCode = 1
+		} else {
+			os.Exit(1)
+		}
 	}
 	err = cli.Execute()
 	if err != nil {
-		os.Exit(1)
+		if isTest {
+			test_integ.ExitCode = 1
+		} else {
+			os.Exit(1)
+		}
 	}
 }

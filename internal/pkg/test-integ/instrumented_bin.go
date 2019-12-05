@@ -9,13 +9,11 @@ import (
 	"os"
 	"strings"
 	"testing"
-
-	"github.com/bouk/monkey"
 )
 
 var (
 	argsFilename string
-	guard        *monkey.PatchGuard
+	ExitCode     = 0
 )
 
 const (
@@ -53,15 +51,10 @@ func printMetadata(metadata *testMetadata) {
 	fmt.Println(startOfMetadataMarker)
 	b, err := json.Marshal(metadata)
 	if err != nil {
-		exitWithError(err)
+		log.Fatal(err)
 	}
 	fmt.Println(string(b))
 	fmt.Println(endOfMetadataMarker)
-}
-
-func exitWithError(err error) {
-	guard.Unpatch()
-	log.Fatal(err)
 }
 
 // RunTest runs function f (usually main), with arguments specified by the flag "args-file", a file of newline-separated args.
@@ -77,11 +70,6 @@ func exitWithError(err error) {
 func RunTest(t *testing.T, f func()) {
 	metadata := new(testMetadata)
 	defer printMetadata(metadata)
-	exitTest := func(code int) {
-		metadata.ExitCode = code
-	}
-	guard = monkey.Patch(os.Exit, exitTest)
-	defer guard.Unpatch()
 	var parsedArgs []string
 	for _, arg := range os.Args {
 		if !strings.HasPrefix(arg, "-test.") && !strings.HasPrefix(arg, "-args-file") {
@@ -91,11 +79,12 @@ func RunTest(t *testing.T, f func()) {
 	if len(argsFilename) > 0 {
 		customArgs, err := parseCustomArgs()
 		if err != nil {
-			exitWithError(err)
+			log.Fatal(err)
 		}
 		parsedArgs = append(parsedArgs, customArgs...)
 	}
 	os.Args = parsedArgs
 	f()
 	metadata.CoverMode = testing.CoverMode()
+	metadata.ExitCode = ExitCode
 }
