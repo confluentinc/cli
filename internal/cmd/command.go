@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"os"
+	"runtime"
 
 	"github.com/DABH/go-basher"
 	"github.com/jonboulle/clockwork"
