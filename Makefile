@@ -110,9 +110,11 @@ build-integ-nonrace:
 
 .PHONY: build-integ-ccloud-nonrace
 build-integ-ccloud-nonrace:
+	binary="ccloud_test" ; \
+	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
 	GO111MODULE=on go test ./cmd/confluent -ldflags="-s -w -X $(RESOLVED_PATH).cliName=ccloud \
 	-X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) \
-	-X $(RESOLVED_PATH).version=$(VERSION)" -tags testrunmain -coverpkg=./... -c -o ccloud_test
+	-X $(RESOLVED_PATH).version=$(VERSION)" -tags testrunmain -coverpkg=./... -c -o $${binexe}
 
 .PHONY: build-integ-confluent-nonrace
 build-integ-confluent-nonrace:
