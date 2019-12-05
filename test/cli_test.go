@@ -136,11 +136,21 @@ func (s *CLITestSuite) TearDownSuite() {
 }
 
 func (s *CLITestSuite) Test_Confluent_Help() {
-	tests := []CLITest{
-		{name: "no args", fixture: "confluent-help-flag.golden", wantErrCode: 1},
-		{args: "help", fixture: "confluent-help.golden"},
-		{args: "--help", fixture: "confluent-help-flag.golden"},
-		{args: "version", fixture: "confluent-version.golden"},
+	var tests []CLITest
+	if runtime.GOOS == "windows" {
+		tests = []CLITest{
+			{name: "no args", fixture: "confluent-help-flag-windows.golden", wantErrCode: 1},
+			{args: "help", fixture: "confluent-help-windows.golden"},
+			{args: "--help", fixture: "confluent-help-flag-windows.golden"},
+			{args: "version", fixture: "confluent-version.golden"},
+		}
+	} else {
+		tests = []CLITest{
+			{name: "no args", fixture: "confluent-help-flag.golden", wantErrCode: 1},
+			{args: "help", fixture: "confluent-help.golden"},
+			{args: "--help", fixture: "confluent-help-flag.golden"},
+			{args: "version", fixture: "confluent-version.golden"},
+		}
 	}
 	for _, tt := range tests {
 		kafkaAPIURL := serveKafkaAPI(s.T()).URL
