@@ -124,6 +124,11 @@ func (c *command) run(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+func (c *command) runWindows(cmd *cobra.Command, args []string) error {
+	fmt.Println("`confluent local` commands are not available on Windows at this time.")
+	return nil
+}
+
 // versionedDirectory is a type that implements the sort.Interface interface
 // so that versions can be sorted and the original directory path returned.
 type versionedDirectory struct {
