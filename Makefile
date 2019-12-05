@@ -118,9 +118,11 @@ build-integ-ccloud-nonrace:
 
 .PHONY: build-integ-confluent-nonrace
 build-integ-confluent-nonrace:
+	binary="confluent_test" ; \
+	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
 	GO111MODULE=on go test ./cmd/confluent -ldflags="-s -w -X $(RESOLVED_PATH).cliName=confluent \
 		    -X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) \
-		    -X $(RESOLVED_PATH).version=$(VERSION)" -tags testrunmain -coverpkg=./... -c -o confluent_test
+		    -X $(RESOLVED_PATH).version=$(VERSION)" -tags testrunmain -coverpkg=./... -c -o $${binexe}
 
 .PHONY: build-integ-race
 build-integ-race:
@@ -129,15 +131,19 @@ build-integ-race:
 
 .PHONY: build-integ-ccloud-race
 build-integ-ccloud-race:
+	binary="ccloud_test_race" ; \
+	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
 	GO111MODULE=on go test ./cmd/confluent -ldflags="-s -w -X $(RESOLVED_PATH).cliName=ccloud \
 	-X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) \
-	-X $(RESOLVED_PATH).version=$(VERSION)" -tags testrunmain -coverpkg=./... -c -o ccloud_test_race -race
+	-X $(RESOLVED_PATH).version=$(VERSION)" -tags testrunmain -coverpkg=./... -c -o $${binexe} -race
 
 .PHONY: build-integ-confluent-race
 build-integ-confluent-race:
+	binary="confluent_test_race" ; \
+	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
 	GO111MODULE=on go test ./cmd/confluent -ldflags="-s -w -X $(RESOLVED_PATH).cliName=confluent \
 		    -X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) \
-		    -X $(RESOLVED_PATH).version=$(VERSION)" -tags testrunmain -coverpkg=./... -c -o confluent_test_race -race
+		    -X $(RESOLVED_PATH).version=$(VERSION)" -tags testrunmain -coverpkg=./... -c -o $${binexe} -race
 
 .PHONY: bindata
 bindata: internal/cmd/local/bindata.go

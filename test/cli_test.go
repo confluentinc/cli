@@ -97,6 +97,10 @@ func init() {
 		ccloudTestBin = ccloudTestBinRace
 		confluentTestBin = confluentTestBinRace
 	}
+	if runtime.GOOS == "windows" {
+		ccloudTestBin = ccloudTestBin + ".exe"
+		confluentTestBin = confluentTestBin + ".exe"
+	}
 }
 
 // SetupSuite builds the CLI binary to test
