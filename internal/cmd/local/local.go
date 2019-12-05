@@ -59,21 +59,6 @@ type command struct {
 
 // New returns the Cobra command for `local`.
 func New(rootCmd *cobra.Command, prerunner pcmd.PreRunner, shell ShellRunner, log *log.Logger, fs io.FileSystem) *cobra.Command {
-	if runtime.GOOS == "windows" {
-		localCmd := &command{
-			Command: &cobra.Command{
-				Use:               "local",
-				Short:             "Manage a local Confluent Platform development environment (not available on Windows).",
-				Args:              cobra.ArbitraryArgs,
-				PersistentPreRunE: prerunner.Anonymous(),
-			},
-		}
-		localCmd.Command.RunE = localCmd.runWindows
-		localCmd.Flags().String("path", "", "Path to Confluent Platform install directory.")
-		localCmd.Flags().SortFlags = false
-		return localCmd.Command
-	}
-
 	localCmd := &command{
 		Command: &cobra.Command{
 			Use:               "local",
