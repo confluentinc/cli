@@ -57,6 +57,21 @@ func TestConfig_Load(t *testing.T) {
 			},
 			file: testConfigFile.Name(),
 		},
+		{
+			name: "should load disable update checks and disable updates",
+			args: &args{
+				contents: "{\"disable_update_check\": true, \"disable_updates\": true}",
+			},
+			want: &Config{
+				CLIName:            "confluent",
+				DisableUpdates:     true,
+				DisableUpdateCheck: true,
+				Platforms:          map[string]*Platform{},
+				Credentials:        map[string]*Credential{},
+				Contexts:           map[string]*Context{},
+			},
+			file: "/tmp/TestConfig_Load.json",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -257,7 +272,7 @@ func TestConfig_AddContext(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := tt.config.AddContext(tt.contextName, tt.platform, tt.credential, tt.kafkaClusters, tt.kafka, tt.schemaRegistryClusters)
+			err := tt.config.AddContext(tt.contextName, tt.platform, tt.credential, nil, tt.kafkaClusters, tt.kafka, tt.schemaRegistryClusters)
 			if tt.wantErr {
 				assert.Error(t, err)
 				return
@@ -348,8 +363,13 @@ func TestConfig_SetContext(t *testing.T) {
 		Contexts       map[string]*Context
 		CurrentContext string
 	}
+
+	user1 := int32(1)
+	user2 := int32(2)
+
 	type args struct {
-		name string
+		name   string
+		userId int32
 	}
 	tests := []struct {
 		name    string
@@ -360,9 +380,22 @@ func TestConfig_SetContext(t *testing.T) {
 		{
 			name: "succeed setting valid context",
 			fields: fields{
-				Contexts: map[string]*Context{"some-context": {}},
+				Contexts: map[string]*Context{
+					"some-context": {
+						Auth:      &AuthConfig{
+							User: &orgv1.User{
+								Id: user2,
+							},
+						},
+					},
+				},
+				Auth:     &AuthConfig{
+					User: &orgv1.User{
+						Id: user1,
+					},
+				},
 			},
-			args:    args{name: "some-context"},
+			args:    args{name: "some-context", userId: user2},
 			wantErr: false,
 		},
 		{
@@ -394,6 +427,7 @@ func TestConfig_SetContext(t *testing.T) {
 			}
 			if !tt.wantErr {
 				assert.Equal(t, tt.args.name, c.CurrentContext)
+				assert.Equal(t, tt.args.userId, c.Auth.User.Id)
 			}
 		})
 	}

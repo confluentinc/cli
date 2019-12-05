@@ -120,6 +120,6 @@ func (c *command) addContext(name string, bootstrapURL string, apiKey string, ap
 		APIKeyPair:     apiKeyPair,
 		CredentialType: config.APIKey,
 	}
-	return c.config.AddContext(name, platform, credential, kafkaClusters,
+	return c.config.AddContext(name, platform, credential, nil, kafkaClusters,
 		kafkaClusterCfg.ID, nil)
 }

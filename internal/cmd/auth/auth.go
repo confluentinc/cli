@@ -347,7 +347,7 @@ func (a *commands) setContextAndAddContextIfAbsent(username string, caCertPath s
 		Username: username,
 		// don't save password if they entered it interactively.
 	}
-	err := a.config.AddContext(name, platform, credential, map[string]*config.KafkaClusterConfig{}, "", nil)
+	err := a.config.AddContext(name, platform, credential, a.config.Auth, map[string]*config.KafkaClusterConfig{}, "", nil)
 	if err != nil {
 		return err
 	}
