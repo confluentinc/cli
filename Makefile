@@ -140,7 +140,7 @@ build-integ-confluent-race:
 .PHONY: bindata
 bindata: internal/cmd/local/bindata.go
 
-internal/cmd/local/bindata.go: cp_cli/ assets/
+internal/cmd/local/bindata.go: cp_cli/
 	@go-bindata -pkg local -o internal/cmd/local/bindata.go cp_cli/ assets/
 
 .PHONY: release
@@ -311,10 +311,10 @@ coverage:
 	@GO111MODULE=on go test -v -race -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') \
 		-coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test)
 	@# Run integration tests with coverage.
-	@GO111MODULE=on INTEG_COVER=on go test -v ./... -run=TestCLI
+	@sudo CI=on GO111MODULE=on INTEG_COVER=on go test -v ./... -run=TestCLI
 	@echo "mode: atomic" > coverage.txt
 	@grep -h -v "mode: atomic" unit_coverage.txt >> coverage.txt
-	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
+	@sudo grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
       else
 	@# Run unit tests.
 	@GO111MODULE=on go test -race -coverpkg=./... $(TEST_ARGS) $$(go list ./... | grep -v vendor | grep -v test)
