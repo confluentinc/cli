@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"os"
+	"runtime"
 
 	"github.com/DABH/go-basher"
 	"github.com/jonboulle/clockwork"
@@ -164,12 +165,14 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		metaClient := cluster.NewScopedIdService(&http.Client{}, ver.UserAgent, logger)
 		cli.AddCommand(cluster.New(prerunner, cfg, metaClient))
 
-		bash, err := basher.NewContext("/bin/bash", false)
-		if err != nil {
-			return nil, err
+		if runtime.GOOS != "windows" {
+			bash, err := basher.NewContext("/bin/bash", false)
+			if err != nil {
+				return nil, err
+			}
+			shellRunner := &local.BashShellRunner{BasherContext: bash}
+			cli.AddCommand(local.New(cli, prerunner, shellRunner, logger, fs))
 		}
-		shellRunner := &local.BashShellRunner{BasherContext: bash}
-		cli.AddCommand(local.New(cli, prerunner, shellRunner, logger, fs))
 
 		cli.AddCommand(secret.New(prerunner, cfg, prompt, resolver, secrets.NewPasswordProtectionPlugin(logger)))
 	}

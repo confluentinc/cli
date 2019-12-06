@@ -103,6 +103,10 @@ func init() {
 		ccloudTestBin = ccloudTestBinRace
 		confluentTestBin = confluentTestBinRace
 	}
+	if runtime.GOOS == "windows" {
+		ccloudTestBin = ccloudTestBin + ".exe"
+		confluentTestBin = confluentTestBin + ".exe"
+	}
 }
 
 // SetupSuite builds the CLI binary to test
@@ -138,11 +142,21 @@ func (s *CLITestSuite) TearDownSuite() {
 }
 
 func (s *CLITestSuite) Test_Confluent_Help() {
-	tests := []CLITest{
-		{name: "no args", fixture: "confluent-help-flag.golden", wantErrCode: 1},
-		{args: "help", fixture: "confluent-help.golden"},
-		{args: "--help", fixture: "confluent-help-flag.golden"},
-		{args: "version", fixture: "confluent-version.golden", regex: true},
+	var tests []CLITest
+	if runtime.GOOS == "windows" {
+		tests = []CLITest{
+			{name: "no args", fixture: "confluent-help-flag-windows.golden", wantErrCode: 1},
+			{args: "help", fixture: "confluent-help-windows.golden"},
+			{args: "--help", fixture: "confluent-help-flag-windows.golden"},
+			{args: "version", fixture: "confluent-version.golden", regex: true},
+		}
+	} else {
+		tests = []CLITest{
+			{name: "no args", fixture: "confluent-help-flag.golden", wantErrCode: 1},
+			{args: "help", fixture: "confluent-help.golden"},
+			{args: "--help", fixture: "confluent-help-flag.golden"},
+			{args: "version", fixture: "confluent-version.golden", regex: true},
+		}
 	}
 	for _, tt := range tests {
 		kafkaAPIURL := serveKafkaAPI(s.T()).URL
@@ -502,13 +516,13 @@ func (s *CLITestSuite) validateTestOutput(tt CLITest, t *testing.T, output strin
 	if *update && !tt.regex && tt.fixture != "" {
 		writeFixture(t, tt.fixture, output)
 	}
-	actual := string(output)
+  actual := normalizeNewLines(string(output))
 	if tt.contains != "" {
 		require.Contains(t, actual, tt.contains)
 	} else if tt.notContains != "" {
 		require.NotContains(t, actual, tt.notContains)
 	} else if tt.fixture != "" {
-		expected := loadFixture(t, tt.fixture)
+    expected := normalizeNewLines(loadFixture(t, tt.fixture))
 
 		if tt.regex {
 			require.Regexp(t, expected, actual)
@@ -822,13 +836,13 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 	router.HandleFunc("/api/ksqls", handleKSQLCreateList(t))
 	router.HandleFunc("/api/ksqls/lksqlc-ksql1/", func(w http.ResponseWriter, r *http.Request) {
 		ksqlCluster := &ksqlv1.KSQLCluster{
-			Id:                 "lksqlc-ksql1",
-			AccountId:          "25",
-			KafkaClusterId:     "lkc-12345",
-			OutputTopicPrefix:  "pksqlc-abcde",
-			Name:           	"account ksql",
-			Storage:        	101,
-			Endpoint:       	"SASL_SSL://ksql-endpoint",
+			Id:                "lksqlc-ksql1",
+			AccountId:         "25",
+			KafkaClusterId:    "lkc-12345",
+			OutputTopicPrefix: "pksqlc-abcde",
+			Name:              "account ksql",
+			Storage:           101,
+			Endpoint:          "SASL_SSL://ksql-endpoint",
 		}
 		reply, err := utilv1.MarshalJSONToBytes(&ksqlv1.GetKSQLClusterReply{
 			Cluster: ksqlCluster,
@@ -839,13 +853,13 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 	})
 	router.HandleFunc("/api/ksqls/lksqlc-12345", func(w http.ResponseWriter, r *http.Request) {
 		ksqlCluster := &ksqlv1.KSQLCluster{
-			Id:                 "lksqlc-12345",
-			AccountId:          "25",
-			KafkaClusterId:     "lkc-abcde",
-			OutputTopicPrefix:  "pksqlc-zxcvb",
-			Name:           	"account ksql",
-			Storage:        	130,
-			Endpoint:       	"SASL_SSL://ksql-endpoint",
+			Id:                "lksqlc-12345",
+			AccountId:         "25",
+			KafkaClusterId:    "lkc-abcde",
+			OutputTopicPrefix: "pksqlc-zxcvb",
+			Name:              "account ksql",
+			Storage:           130,
+			Endpoint:          "SASL_SSL://ksql-endpoint",
 		}
 		reply, err := utilv1.MarshalJSONToBytes(&ksqlv1.GetKSQLClusterReply{
 			Cluster: ksqlCluster,
@@ -1020,7 +1034,7 @@ func handleKSQLCreateList(t *testing.T) func(w http.ResponseWriter, r *http.Requ
 			require.NoError(t, err)
 		} else if r.Method == "GET" {
 			listReply, err := utilv1.MarshalJSONToBytes(&ksqlv1.GetKSQLClustersReply{
-				Clusters: []*ksqlv1.KSQLCluster{ksqlCluster1, ksqlCluster2,},
+				Clusters: []*ksqlv1.KSQLCluster{ksqlCluster1, ksqlCluster2},
 			})
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(listReply))
