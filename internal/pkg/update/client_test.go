@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/user"
+	"path/filepath"
 	"reflect"
 	"runtime"
 	"strings"
@@ -67,14 +68,14 @@ func TestNewClient(t *testing.T) {
 }
 
 func TestCheckForUpdates(t *testing.T) {
-	tmpCheckFile1, err := ioutil.TempFile("", "cli-test1-*")
+	tmpCheckFile1, err := ioutil.TempFile("", "cli-test1-")
 	require.NoError(t, err)
 	defer os.Remove(tmpCheckFile1.Name())
 
 	// we don't need to cross compile for tests
 	u, err := user.Current()
 	require.NoError(t, err)
-	tmpCheckFile2Handle, err := ioutil.TempFile(u.HomeDir, "cli-test2-*")
+	tmpCheckFile2Handle, err := ioutil.TempFile(u.HomeDir, "cli-test2-")
 	// replace the user homedir with ~ to test expansion by our own code
 	tmpCheckFile2 := strings.Replace(tmpCheckFile2Handle.Name(), u.HomeDir, "~", 1)
 	defer os.Remove(tmpCheckFile2Handle.Name())
@@ -335,10 +336,10 @@ func TestCheckForUpdates(t *testing.T) {
 func TestCheckForUpdates_BehaviorOverTime(t *testing.T) {
 	req := require.New(t)
 
-	tmpDir, err := ioutil.TempDir("", "cli-test3-*")
+	tmpDir, err := ioutil.TempDir("", "cli-test3-")
 	req.NoError(err)
 	defer os.RemoveAll(tmpDir)
-	checkFile := fmt.Sprintf("%s/new-check-file", tmpDir)
+	checkFile := filepath.FromSlash(fmt.Sprintf("%s/new-check-file", tmpDir))
 
 	repo := &updateMock.Repository{
 		GetAvailableVersionsFunc: func(name string) (version.Collection, error) {
@@ -435,16 +436,16 @@ func TestUpdateBinary(t *testing.T) {
 
 	binName := "fake_cli"
 
-	installDir, err := ioutil.TempDir("", "cli-test4-*")
+	installDir, err := ioutil.TempDir("", "cli-test4-")
 	require.NoError(t, err)
 	defer os.Remove(installDir)
-	installedBin := fmt.Sprintf("%s/%s", installDir, binName)
+	installedBin := filepath.FromSlash(fmt.Sprintf("%s/%s", installDir, binName))
 	_ = ioutil.WriteFile(installedBin, []byte("old version"), os.ModePerm)
 
-	downloadDir, err := ioutil.TempDir("", "cli-test5-*")
+	downloadDir, err := ioutil.TempDir("", "cli-test5-")
 	require.NoError(t, err)
 	defer os.Remove(downloadDir)
-	downloadedBin := fmt.Sprintf("%s/%s", downloadDir, binName)
+	downloadedBin := filepath.FromSlash(fmt.Sprintf("%s/%s", downloadDir, binName))
 	_ = ioutil.WriteFile(downloadedBin, []byte("new version"), os.ModePerm)
 
 	clock := clockwork.NewFakeClockAt(time.Now())
