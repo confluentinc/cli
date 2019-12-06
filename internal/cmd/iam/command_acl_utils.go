@@ -63,7 +63,7 @@ func aclFlags() *pflag.FlagSet {
 	flgSet.Bool("allow", false, "ACL permission to allow access.")
 	flgSet.Bool("deny", false, "ACL permission to restrict access to resource.")
 	flgSet.String("principal", "", "Principal for this operation with User: or Group: prefix.")
-	flgSet.String( "host", "*", "Set host for access.")
+	flgSet.String("host", "*", "Set host for access.")
 	flgSet.String("operation", "", fmt.Sprintf("Set ACL Operation to: (%s).",
 		convertToFlags(mds.ACL_OPERATION_ALL, mds.ACL_OPERATION_READ, mds.ACL_OPERATION_WRITE,
 			mds.ACL_OPERATION_CREATE, mds.ACL_OPERATION_DELETE, mds.ACL_OPERATION_ALTER,
@@ -153,7 +153,7 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 				conf.AclBinding.Entry.Operation = op.(mds.AclOperation)
 				break
 			}
-			conf.errors = multierror.Append(conf.errors, fmt.Errorf("Invalid operation value: " + v))
+			conf.errors = multierror.Append(conf.errors, fmt.Errorf("Invalid operation value: "+v))
 		}
 	}
 }

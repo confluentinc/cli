@@ -29,6 +29,7 @@ import (
 	service_account "github.com/confluentinc/cli/internal/cmd/service-account"
 	"github.com/confluentinc/cli/internal/cmd/update"
 	"github.com/confluentinc/cli/internal/cmd/version"
+	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	configs "github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -41,7 +42,13 @@ import (
 	versions "github.com/confluentinc/cli/internal/pkg/version"
 )
 
-func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Version, logger *log.Logger) (*cobra.Command, error) {
+type Command struct {
+	*cobra.Command
+	Analytics analytics.Client
+	logger    *log.Logger
+}
+
+func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Version, logger *log.Logger, analytics analytics.Client) (*Command, error) {
 	cli := &cobra.Command{
 		Use:               cliName,
 		Version:           ver.Version,
@@ -85,6 +92,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		Config:       cfg,
 		ConfigHelper: ch,
 		Clock:        clockwork.NewRealClock(),
+		Analytics:    analytics,
 	}
 
 	cli.PersistentPreRunE = prerunner.Anonymous()
@@ -116,15 +124,16 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	cli.Version = ver.Version
 	cli.AddCommand(version.NewVersionCmd(prerunner, ver))
 
-	conn := config.New(cfg)
+	conn := config.New(cfg, prerunner, analytics)
 	conn.Hidden = true // The config/context feature isn't finished yet, so let's hide it
 	cli.AddCommand(conn)
 
 	cli.AddCommand(completion.NewCompletionCmd(cli, cliName))
+
 	if !cfg.DisableUpdates {
 		cli.AddCommand(update.New(cliName, cfg, ver, prompt, updateClient))
 	}
-	cli.AddCommand(auth.New(prerunner, cfg, logger, mdsClient, ver.UserAgent)...)
+	cli.AddCommand(auth.New(prerunner, cfg, logger, mdsClient, ver.UserAgent, analytics)...)
 
 	resolver := &pcmd.FlagResolverImpl{Prompt: prompt, Out: os.Stdout}
 
@@ -134,13 +143,13 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 			return nil, err
 		}
 		cli.AddCommand(cmd)
-		cli.AddCommand(initcontext.New(prerunner, cfg, prompt, resolver))
+		cli.AddCommand(initcontext.New(prerunner, cfg, prompt, resolver, analytics))
 		credType, err := cfg.CredentialType()
 		if _, ok := err.(*errors.UnspecifiedCredentialError); ok {
 			return nil, err
 		}
 		if credType == configs.APIKey {
-			return cli, nil
+			return &Command{Command: cli, Analytics: analytics, logger: logger}, nil
 		}
 		cli.AddCommand(ps1.NewPromptCmd(cfg, &pps1.Prompt{Config: cfg}, logger))
 		ks := &keystore.ConfigKeyStore{Config: cfg, Helper: ch}
@@ -173,5 +182,23 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 
 		cli.AddCommand(secret.New(prerunner, cfg, prompt, resolver, secrets.NewPasswordProtectionPlugin(logger)))
 	}
-	return cli, nil
+	return &Command{Command: cli, Analytics: analytics, logger: logger}, nil
+}
+
+func (c *Command) Execute() error {
+	c.Analytics.SetStartTime()
+	err := c.Command.Execute()
+	if err != nil {
+		analyticsError := c.Analytics.SendCommandFailed(err)
+		if analyticsError != nil {
+			c.logger.Debugf("segment analytics sending event failed: %s\n", analyticsError.Error())
+		}
+		return err
+	}
+	c.Analytics.CatchHelpCall(c.Command)
+	analyticsError := c.Analytics.SendCommandSucceeded()
+	if analyticsError != nil {
+		c.logger.Debugf("segment analytics sending event failed: %s\n", analyticsError.Error())
+	}
+	return nil
 }
