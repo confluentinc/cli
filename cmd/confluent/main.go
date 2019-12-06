@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/jonboulle/clockwork"
 	segment "github.com/segmentio/analytics-go"
@@ -14,6 +15,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/metric"
+	"github.com/confluentinc/cli/internal/pkg/test-integ"
 	cliVersion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -25,9 +27,14 @@ var (
 	host       = ""
 	cliName    = "confluent"
 	segmentKey = "KDsYPLPBNVB1IPJIN5oqrXnxQT9iKezo"
+	isTest  = "false"
 )
 
 func main() {
+	isTest, err := strconv.ParseBool(isTest)
+	if err != nil {
+		panic(err)
+	}
 	viper.AutomaticEnv()
 
 	logger := log.New()
@@ -35,16 +42,15 @@ func main() {
 	metricSink := metric.NewSink()
 
 	var cfg *config.Config
-	{
-		cfg = config.New(&config.Config{
-			CLIName:    cliName,
-			MetricSink: metricSink,
-			Logger:     logger,
-		})
-		err := cfg.Load()
-		if err != nil {
-			logger.Errorf("unable to load config: %v", err)
-		}
+
+	cfg = config.New(&config.Config{
+		CLIName:    cliName,
+		MetricSink: metricSink,
+		Logger:     logger,
+	})
+	err = cfg.Load()
+	if err != nil {
+		logger.Errorf("unable to load config: %v", err)
 	}
 
 	version := cliVersion.NewVersion(cfg.CLIName, cfg.Name(), cfg.Support(), version, commit, date, host)
@@ -62,9 +68,12 @@ func main() {
 		} else {
 			pcmd.ErrPrintln(cli.Command, err)
 		}
-		os.Exit(1)
+		if isTest {
+			test_integ.ExitCode = 1
+		} else {
+			os.Exit(1)
+		}
 	}
-
 	err = cli.Execute()
 
 	closeErr := analyticsClient.Close()
@@ -72,7 +81,11 @@ func main() {
 		logger.Debug(closeErr)
 	}
 	if err != nil {
-		os.Exit(1)
+		if isTest {
+			test_integ.ExitCode = 1
+		} else {
+			os.Exit(1)
+		}
 	}
 
 }

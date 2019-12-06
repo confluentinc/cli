@@ -72,7 +72,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 
 	prompt := pcmd.NewPrompt(os.Stdin)
 
-	updateClient, err := update.NewClient(cliName, cfg.DisableUpdateCheck, logger)
+	updateClient, err := update.NewClient(cliName, cfg.DisableUpdateCheck || cfg.DisableUpdates, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +129,10 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	cli.AddCommand(conn)
 
 	cli.AddCommand(completion.NewCompletionCmd(cli, cliName))
-	cli.AddCommand(update.New(cliName, cfg, ver, prompt, updateClient))
+
+	if !cfg.DisableUpdates {
+		cli.AddCommand(update.New(cliName, cfg, ver, prompt, updateClient))
+	}
 	cli.AddCommand(auth.New(prerunner, cfg, logger, mdsClient, ver.UserAgent, analytics)...)
 
 	resolver := &pcmd.FlagResolverImpl{Prompt: prompt, Out: os.Stdout}

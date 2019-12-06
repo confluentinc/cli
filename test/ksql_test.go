@@ -11,6 +11,11 @@ func (s *CLITestSuite) TestKSQLCommands() {
 		{args: "ksql app delete --help", fixture: "ksql-app-delete-help.golden"},
 		{args: "ksql app describe --help", fixture: "ksql-app-describe-help.golden"},
 		{args: "ksql app list --help", fixture: "ksql-app-list-help.golden"},
+
+		{args: "ksql app create test_ksql --storage 101 --cluster lkc-12345", fixture: "ksql-app-create-result.golden"},
+		{args: "ksql app describe lksqlc-12345", fixture: "ksql-app-describe-result.golden"},
+		{args: "ksql app list", fixture: "ksql-app-list-result.golden"},
+		{args: "ksql app delete lksqlc-12345", fixture: "ksql-app-delete-result.golden"},
 	}
 	resetConfiguration(s.T(), "ccloud")
 	for _, tt := range tests {

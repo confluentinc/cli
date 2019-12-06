@@ -1,7 +1,7 @@
 module github.com/confluentinc/cli
 
 require (
-	github.com/DABH/go-basher v0.0.0-20190504042026-365648708a90
+	github.com/DABH/go-basher v0.0.0-20191104233559-daa7fee9545c
 	github.com/DataDog/zstd v1.3.5 // indirect
 	github.com/Shopify/sarama v1.20.1
 	github.com/Shopify/toxiproxy v2.1.3+incompatible // indirect
@@ -13,10 +13,11 @@ require (
 	github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da
 	github.com/atrox/homedir v1.0.0
 	github.com/aws/aws-sdk-go v1.15.64
+	github.com/bouk/monkey v1.0.1
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
-	github.com/confluentinc/ccloud-sdk-go v0.0.14
-	github.com/confluentinc/ccloudapis v0.0.0-20191009151547-b75ab14e577d
+	github.com/confluentinc/ccloud-sdk-go v0.0.15
+	github.com/confluentinc/ccloudapis v0.0.0-20191126011405-b267ed1523bc
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-printer v0.10.0
 	github.com/confluentinc/mds-sdk-go v0.0.0-20191015231442-c29a09dbc1e9
