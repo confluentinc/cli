@@ -540,8 +540,7 @@ func (s *CLITestSuite) ssoAuthenticateViaBrowser(authUrl string) string {
 	// chromedp waits until it finds the element on the page. If there's some error and the element
 	// does not load correctly, this will wait forever and the test will time out
 	// There's not a good workaround for this, but to debug, it's helpful to disable headless mode (commented above)
-	// TODO update this with the element's unique id once the PR is merged in frontend vault
-	err = chromedp.Run(taskCtx, chromedp.Text(`//div[@class="UniversalLogin__CodeBox-sc-10srvam-3 feAcoO"]`, &token))
+	err = chromedp.Run(taskCtx, chromedp.Text(`//div[@id="token"]`, &token))
 	s.NoError(err)
 	fmt.Println("Successfully logged in and retrieved auth token")
 	return token
