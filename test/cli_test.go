@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"os/exec"
 	"path"
@@ -16,6 +17,7 @@ import (
 	"regexp"
 	"runtime"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -594,7 +596,7 @@ func init() {
 		Key:    "MYKEY1",
 		Secret: "MYSECRET1",
 		LogicalClusters: []*authv1.ApiKey_Cluster{
-			{Id: "bob"},
+			{Id: "bob", Type: "kafka"},
 		},
 		UserId: 12,
 	}
@@ -603,7 +605,7 @@ func init() {
 		Key:    "MYKEY2",
 		Secret: "MYSECRET2",
 		LogicalClusters: []*authv1.ApiKey_Cluster{
-			{Id: "abc"},
+			{Id: "abc", Type: "kafka"},
 		},
 		UserId: 18,
 	}
@@ -612,7 +614,7 @@ func init() {
 		Key:    "UIAPIKEY100",
 		Secret: "UIAPISECRET100",
 		LogicalClusters: []*authv1.ApiKey_Cluster{
-			{Id: "lkc-cool1"},
+			{Id: "lkc-cool1", Type: "kafka"},
 		},
 		UserId: 25,
 	}
@@ -620,7 +622,7 @@ func init() {
 		Key:    "UIAPIKEY101",
 		Secret: "UIAPISECRET101",
 		LogicalClusters: []*authv1.ApiKey_Cluster{
-			{Id: "lkc-other1"},
+			{Id: "lkc-other1", Type: "kafka"},
 		},
 		UserId: 25,
 	}
@@ -628,7 +630,7 @@ func init() {
 		Key:    "UIAPIKEY102",
 		Secret: "UIAPISECRET102",
 		LogicalClusters: []*authv1.ApiKey_Cluster{
-			{Id: "lksqlc-ksql1"},
+			{Id: "lksqlc-ksql1", Type: "ksql"},
 		},
 		UserId: 25,
 	}
@@ -636,7 +638,7 @@ func init() {
 		Key:    "UIAPIKEY103",
 		Secret: "UIAPISECRET103",
 		LogicalClusters: []*authv1.ApiKey_Cluster{
-			{Id: "lkc-cool1"},
+			{Id: "lkc-cool1", Type: "kafka"},
 		},
 		UserId: 25,
 	}
@@ -770,7 +772,11 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 			apiKey.Id = int32(KEY_INDEX)
 			apiKey.Key = fmt.Sprintf("MYKEY%d", KEY_INDEX)
 			apiKey.Secret = fmt.Sprintf("MYSECRET%d", KEY_INDEX)
-			apiKey.UserId = 23
+			if req.ApiKey.UserId == 0 {
+				apiKey.UserId = 23
+			} else {
+				apiKey.UserId = req.ApiKey.UserId
+			}
 			KEY_INDEX++
 			KEY_STORE[apiKey.Id] = apiKey
 			b, err := utilv1.MarshalJSONToBytes(&authv1.CreateApiKeyReply{ApiKey: apiKey})
@@ -779,10 +785,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 			require.NoError(t, err)
 		} else if r.Method == "GET" {
 			require.NotEmpty(t, r.URL.Query().Get("account_id"))
-			var apiKeys []*authv1.ApiKey
-			for _, a := range KEY_STORE {
-				apiKeys = append(apiKeys, a)
-			}
+			apiKeys := apiKeysFilter(r.URL)
 			// Return sorted data or the test output will not be stable
 			sort.Sort(ApiKeyList(apiKeys))
 			b, err := utilv1.MarshalJSONToBytes(&authv1.GetApiKeysReply{ApiKeys: apiKeys})
@@ -806,9 +809,12 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		require.NoError(t, err)
 	})
 	router.HandleFunc("/api/schema_registries/", func(w http.ResponseWriter, r *http.Request) {
+		q := r.URL.Query()
+		id := q.Get("Id")
+		accountId := q.Get("account_id")
 		srCluster := &srv1.SchemaRegistryCluster{
-			Id:        "lsrc-1",
-			AccountId: "23",
+			Id:        id,
+			AccountId: accountId,
 			Name:      "account schema-registry",
 			Endpoint:  "SASL_SSL://sr-endpoint",
 		}
@@ -855,6 +861,32 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		require.NoError(t, err)
 	})
 	return httptest.NewServer(router)
+}
+
+func apiKeysFilter(url *url.URL) []*authv1.ApiKey {
+	var apiKeys []*authv1.ApiKey
+	q := url.Query()
+	uid := q.Get("user_id")
+	clusterIds := q["cluster_id"]
+
+	for _, a := range KEY_STORE {
+		uidFilter := (uid == "0") || (uid == strconv.Itoa(int(a.UserId)))
+		clusterFilter := (len(clusterIds) == 0) || func(clusterIds []string) bool {
+			for _, c := range a.LogicalClusters {
+				for _, clusterId := range clusterIds {
+					if c.Id == clusterId {
+						return true
+					}
+				}
+			}
+			return false
+		}(clusterIds)
+
+		if uidFilter && clusterFilter {
+			apiKeys = append(apiKeys, a)
+		}
+	}
+	return apiKeys
 }
 
 func serveKafkaAPI(t *testing.T) *httptest.Server {

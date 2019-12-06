@@ -58,7 +58,7 @@ var (
 		linter.ExcludeCommandContains("cluster describe"),
 	}
 	resourceScopedCommands = []linter.RuleFilter{
-		linter.IncludeCommandContains("api-key use", "api-key create", "api-key list", "api-key store"),
+		linter.IncludeCommandContains("api-key use", "api-key create", "api-key store"),
 	}
 )
 
@@ -101,9 +101,11 @@ var rules = []linter.Rule{
 	linter.Filter(linter.RequireFlagType("cluster", "string"), nonClusterScopedCommands...),
 	linter.Filter(linter.RequireFlagDescription("cluster", "Kafka cluster ID."),
 		append(nonClusterScopedCommands, linter.ExcludeParentUse("api-key"))...),
-	linter.Filter(linter.RequireFlag("resource", true), resourceScopedCommands...),
+	linter.Filter(linter.RequireFlag("resource", false), resourceScopedCommands...),
+	linter.Filter(linter.RequireFlag("resource", true), linter.IncludeCommandContains("api-key list")),
 	linter.Filter(linter.RequireFlagType("resource", "string"), resourceScopedCommands...),
-	linter.Filter(linter.RequireFlagDescription("resource", "The resource ID."),
+	linter.Filter(linter.RequireFlagType("resource", "string"), linter.IncludeCommandContains("api-key list")),
+	linter.Filter(linter.RequireFlagDescription("resource", "REQUIRED: The resource ID."),
 		append(resourceScopedCommands)...),
 	linter.RequireFlagSort(false),
 	linter.RequireLowerCase("Use"),
