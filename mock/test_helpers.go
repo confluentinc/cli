@@ -15,5 +15,6 @@ func NewDummyAnalyticsMock() *AnalyticsClient {
 		SendCommandSucceededFunc: func() error {return nil},
 		SetCommandTypeFunc: func(commandType analytics.CommandType) {},
 		SessionTimedOutFunc: func() error {return nil},
+		CloseFunc: func() error {return nil},
 	}
 }

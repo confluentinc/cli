@@ -17,6 +17,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/metric"
 	"github.com/confluentinc/cli/internal/pkg/test-integ"
 	cliVersion "github.com/confluentinc/cli/internal/pkg/version"
+	"github.com/confluentinc/cli/mock"
 )
 
 var (
@@ -55,11 +56,16 @@ func main() {
 
 	version := cliVersion.NewVersion(cfg.CLIName, cfg.Name(), cfg.Support(), version, commit, date, host)
 
-	segmentClient, _ := segment.NewWithConfig(segmentKey, segment.Config{
-		Logger:  analytics.NewLogger(logger),
-	})
+	var analyticsClient analytics.Client
+	if !isTest {
+		segmentClient, _ := segment.NewWithConfig(segmentKey, segment.Config{
+			Logger:  analytics.NewLogger(logger),
+		})
 
-	analyticsClient := analytics.NewAnalyticsClient(cfg.CLIName, cfg, version.Version, segmentClient, clockwork.NewRealClock())
+		analyticsClient = analytics.NewAnalyticsClient(cfg.CLIName, cfg, version.Version, segmentClient, clockwork.NewRealClock())
+	} else {
+		analyticsClient = mock.NewDummyAnalyticsMock()
+	}
 
 	cli, err := cmd.NewConfluentCommand(cliName, cfg, version, logger, analyticsClient)
 	if err != nil {
