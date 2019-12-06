@@ -311,15 +311,15 @@ coverage:
 	@GO111MODULE=on go test -v -race -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') \
 		-coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test)
 	@# Run integration tests with coverage.
-	@GO111MODULE=on INTEG_COVER=on go test -v ./... -run=TestCLI
+	@GO111MODULE=on INTEG_COVER=on go test -v $$(go list ./... | grep cli/test) $(TEST_ARGS)
 	@echo "mode: atomic" > coverage.txt
 	@grep -h -v "mode: atomic" unit_coverage.txt >> coverage.txt
 	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
       else
 	@# Run unit tests.
-	@GO111MODULE=on go test -race -coverpkg=./... $(TEST_ARGS) $$(go list ./... | grep -v vendor | grep -v test)
+	@GO111MODULE=on go test -race -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test)
 	@# Run integration tests.
-	@GO111MODULE=on go test ./... -v -run=TestCLI
+	@GO111MODULE=on go test -v -race $$(go list ./... | grep cli/test) $(TEST_ARGS)
       endif
 
 .PHONY: mocks

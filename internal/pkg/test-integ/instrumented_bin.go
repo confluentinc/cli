@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	argsFilename string
+	argsFilename = flag.String("args-file", "", "custom args file, newline separated")
 	ExitCode     = 0
 )
 
@@ -21,13 +21,8 @@ const (
 	endOfMetadataMarker   = "END_OF_METADATA"
 )
 
-func init() {
-	flag.StringVar(&argsFilename, "args-file", "", "custom args file, newline separated")
-	flag.Parse()
-}
-
 func parseCustomArgs() ([]string, error) {
-	buf, err := ioutil.ReadFile(argsFilename)
+	buf, err := ioutil.ReadFile(*argsFilename)
 	if err != nil {
 		return nil, err
 	}
@@ -68,6 +63,9 @@ func printMetadata(metadata *testMetadata) {
 // Otherwise, if an unexpected error is encountered during execution, 
 // RunTest prints an error, possibly some additional output, and then exits with an exit code of 1.
 func RunTest(t *testing.T, f func()) {
+	if !flag.Parsed() {
+		flag.Parse()
+	}
 	metadata := new(testMetadata)
 	defer printMetadata(metadata)
 	var parsedArgs []string
@@ -76,7 +74,7 @@ func RunTest(t *testing.T, f func()) {
 			parsedArgs = append(parsedArgs, arg)
 		}
 	}
-	if len(argsFilename) > 0 {
+	if len(*argsFilename) > 0 {
 		customArgs, err := parseCustomArgs()
 		if err != nil {
 			log.Fatal(err)
