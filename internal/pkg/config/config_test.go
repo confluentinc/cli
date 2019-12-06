@@ -70,7 +70,7 @@ func TestConfig_Load(t *testing.T) {
 				Credentials:        map[string]*Credential{},
 				Contexts:           map[string]*Context{},
 			},
-			file: "/tmp/TestConfig_Load.json",
+			file: testConfigFile.Name(),
 		},
 	}
 	for _, tt := range tests {
@@ -382,14 +382,14 @@ func TestConfig_SetContext(t *testing.T) {
 			fields: fields{
 				Contexts: map[string]*Context{
 					"some-context": {
-						Auth:      &AuthConfig{
+						Auth: &AuthConfig{
 							User: &orgv1.User{
 								Id: user2,
 							},
 						},
 					},
 				},
-				Auth:     &AuthConfig{
+				Auth: &AuthConfig{
 					User: &orgv1.User{
 						Id: user1,
 					},
