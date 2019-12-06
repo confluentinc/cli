@@ -272,7 +272,7 @@ func TestConfig_AddContext(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := tt.config.AddContext(tt.contextName, tt.platform, tt.credential, nil, tt.kafkaClusters, tt.kafka, tt.schemaRegistryClusters)
+			err := tt.config.AddContext(tt.contextName, tt.platform, tt.credential, tt.kafkaClusters, tt.kafka, tt.schemaRegistryClusters)
 			if tt.wantErr {
 				assert.Error(t, err)
 				return
@@ -363,13 +363,8 @@ func TestConfig_SetContext(t *testing.T) {
 		Contexts       map[string]*Context
 		CurrentContext string
 	}
-
-	user1 := int32(1)
-	user2 := int32(2)
-
 	type args struct {
-		name   string
-		userId int32
+		name string
 	}
 	tests := []struct {
 		name    string
@@ -380,22 +375,9 @@ func TestConfig_SetContext(t *testing.T) {
 		{
 			name: "succeed setting valid context",
 			fields: fields{
-				Contexts: map[string]*Context{
-					"some-context": {
-						Auth: &AuthConfig{
-							User: &orgv1.User{
-								Id: user2,
-							},
-						},
-					},
-				},
-				Auth: &AuthConfig{
-					User: &orgv1.User{
-						Id: user1,
-					},
-				},
+				Contexts: map[string]*Context{"some-context": {}},
 			},
-			args:    args{name: "some-context", userId: user2},
+			args:    args{name: "some-context"},
 			wantErr: false,
 		},
 		{
@@ -427,7 +409,6 @@ func TestConfig_SetContext(t *testing.T) {
 			}
 			if !tt.wantErr {
 				assert.Equal(t, tt.args.name, c.CurrentContext)
-				assert.Equal(t, tt.args.userId, c.Auth.User.Id)
 			}
 		})
 	}
