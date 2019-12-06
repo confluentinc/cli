@@ -105,7 +105,7 @@ var rules = []linter.Rule{
 	linter.Filter(linter.RequireFlag("resource", true), linter.IncludeCommandContains("api-key list")),
 	linter.Filter(linter.RequireFlagType("resource", "string"), resourceScopedCommands...),
 	linter.Filter(linter.RequireFlagType("resource", "string"), linter.IncludeCommandContains("api-key list")),
-	linter.Filter(linter.RequireFlagDescription("resource", "The resource ID."),
+	linter.Filter(linter.RequireFlagDescription("resource", "REQUIRED: The resource ID."),
 		append(resourceScopedCommands)...),
 	linter.RequireFlagSort(false),
 	linter.RequireLowerCase("Use"),

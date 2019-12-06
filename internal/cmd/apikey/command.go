@@ -68,7 +68,7 @@ func (c *command) init() {
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	}
-	listCmd.Flags().String(resourceFlagName, "", "The resource ID.")
+	listCmd.Flags().String(resourceFlagName, "", "The resource ID to filter by.")
 	listCmd.Flags().Bool("current-user", false, "Show only API keys belonging to current user.")
 	listCmd.Flags().Int32("service-account-id", 0, "The service account ID to filter by.")
 	listCmd.Flags().SortFlags = false
@@ -80,7 +80,7 @@ func (c *command) init() {
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
 	}
-	createCmd.Flags().String(resourceFlagName, "", "The resource ID.")
+	createCmd.Flags().String(resourceFlagName, "", "REQUIRED: The resource ID.")
 	createCmd.Flags().Int32("service-account-id", 0, "Service account ID. If not specified, the API key will have full access on the cluster.")
 	createCmd.Flags().String("description", "", "Description of API key.")
 	createCmd.Flags().SortFlags = false
@@ -113,7 +113,7 @@ func (c *command) init() {
 		RunE:  c.store,
 		Args:  cobra.ExactArgs(2),
 	}
-	storeCmd.Flags().String(resourceFlagName, "", "The resource ID.")
+	storeCmd.Flags().String(resourceFlagName, "", "REQUIRED: The resource ID.")
 	storeCmd.Flags().BoolP("force", "f", false, "Force overwrite existing secret for this key.")
 	storeCmd.Flags().SortFlags = false
 	if err := storeCmd.MarkFlagRequired(resourceFlagName); err != nil {
@@ -127,7 +127,7 @@ func (c *command) init() {
 		RunE:  c.use,
 		Args:  cobra.ExactArgs(1),
 	}
-	useCmd.Flags().String(resourceFlagName, "", "The resource ID.")
+	useCmd.Flags().String(resourceFlagName, "", "REQUIRED: The resource ID.")
 	useCmd.Flags().SortFlags = false
 	if err := useCmd.MarkFlagRequired(resourceFlagName); err != nil {
 		panic(err)
