@@ -1,9 +1,12 @@
 package test
 
 import (
+	"bufio"
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/chromedp/chromedp"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -18,6 +21,7 @@ import (
 	"sort"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
@@ -38,13 +42,20 @@ import (
 )
 
 var (
-	noRebuild        = flag.Bool("no-rebuild", false, "skip rebuilding CLI if it already exists")
-	update           = flag.Bool("update", false, "update golden files")
-	debug            = flag.Bool("debug", true, "enable verbose output")
-	cover            = false
-	ccloudTestBin    = ccloudTestBinNormal
-	confluentTestBin = confluentTestBinNormal
-	covCollector     *test_integ.CoverageCollector
+	noRebuild             = flag.Bool("no-rebuild", false, "skip rebuilding CLI if it already exists")
+	update                = flag.Bool("update", false, "update golden files")
+	debug                 = flag.Bool("debug", true, "enable verbose output")
+	skipSsoBrowserTests   = flag.Bool("skip-sso-browser-tests", false, "If flag is preset, run the tests that require a web browser.")
+	ssoTestEmail          = *flag.String("sso-test-user-email", "ziru+paas-integ-sso@confluent.io", "The email of an sso enabled test user.")
+	ssoTestPassword       = *flag.String("sso-test-user-password", "aWLw9eG+F", "The password for the sso enabled test user.")
+	// this connection is preconfigured in Auth0 to hit a test Okta account
+	ssoTestConnectionName = *flag.String("sso-test-connection-name", "confluent-dev", "The Auth0 SSO connection name.")
+	// browser tests by default against devel
+	ssoTestLoginUrl       = *flag.String("sso-test-login-url", "https://devel.cpdev.cloud", "The login url to use for the sso browser test.")
+	cover                 = false
+	ccloudTestBin         = ccloudTestBinNormal
+	confluentTestBin      = confluentTestBinNormal
+	covCollector *test_integ.CoverageCollector
 )
 
 const (
@@ -431,6 +442,122 @@ func (s *CLITestSuite) Test_Ccloud_Login_UseKafka_AuthKafka_Errors() {
 		kafkaAPIURL := serveKafkaAPI(s.T()).URL
 		s.runCcloudTest(tt, serve(s.T(), kafkaAPIURL).URL, kafkaAPIURL)
 	}
+}
+
+func (s *CLITestSuite) Test_SSO_Login() {
+	t := s.T()
+	if *skipSsoBrowserTests {
+		t.Skip()
+	}
+
+	resetConfiguration(s.T(), "ccloud")
+
+	env := []string{"XX_CCLOUD_EMAIL="+ ssoTestEmail}
+	cmd := exec.Command(binaryPath(t, ccloudTestBin), []string{"login", "--url", ssoTestLoginUrl, "--no-browser"}...)
+	cmd.Env = append(os.Environ(), env...)
+
+	cliStdOut, err := cmd.StdoutPipe()
+	s.NoError(err)
+	cliStdIn, err := cmd.StdinPipe()
+	s.NoError(err)
+
+	scanner := bufio.NewScanner(cliStdOut)
+	go func() {
+		var url string
+		for scanner.Scan() {
+			txt := scanner.Text()
+			fmt.Println("CLI output | "+txt)
+			if url == "" {
+				url = parseSsoAuthUrlFromOutput([]byte(txt))
+			}
+			if strings.Contains(txt, "paste the code here") {
+				break
+			}
+		}
+
+		if url == "" {
+			s.Fail("CLI did not output auth URL")
+		} else {
+			token := s.ssoAuthenticateViaBrowser(url)
+			_, e := cliStdIn.Write([]byte(token))
+			s.NoError(e)
+			e = cliStdIn.Close()
+			s.NoError(e)
+
+			scanner.Scan()
+			s.Equal(scanner.Text(), "Logged in as "+ssoTestEmail)
+		}
+	}()
+
+	err = cmd.Start()
+	s.NoError(err)
+
+	done := make(chan error)
+	go func() { done <- cmd.Wait() }()
+
+	timeout := time.After(20 * time.Second)
+
+	select {
+	case <-timeout:
+		s.Fail("Timed out. The CLI may have printed out something unexpected or something went awry in the okta browser auth flow.")
+	case err := <-done:
+		// the output from the cmd.Wait(). Should not have an error status
+		s.NoError(err)
+	}
+}
+
+func parseSsoAuthUrlFromOutput(output []byte) string {
+	regex, err := regexp.Compile(`.*([\S]*connection=`+ ssoTestConnectionName +`).*`)
+	if err != nil {
+		panic("Error compiling regex")
+	}
+	groups := regex.FindSubmatch(output)
+	if groups == nil || len(groups) < 2 {
+		return ""
+	}
+	authUrl := string(groups[0])
+	return authUrl
+}
+
+func (s *CLITestSuite) ssoAuthenticateViaBrowser(authUrl string) string {
+	opts := append(chromedp.DefaultExecAllocatorOptions[:],
+		// uncomment to disable headless mode and see the actual browser
+		//chromedp.Flag("headless", false),
+	)
+	allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
+	defer cancel()
+	taskCtx, cancel := chromedp.NewContext(allocCtx)
+	defer cancel()
+	// ensure that the browser process is started
+	if err := chromedp.Run(taskCtx); err != nil {
+		s.NoError(err)
+	}
+	// navigate to authUrl
+	fmt.Println("Navigating to authUrl...")
+	err := chromedp.Run(taskCtx, chromedp.Navigate(authUrl))
+	s.NoError(err)
+	fmt.Println("Inputing credentials to Okta...")
+	err = chromedp.Run(taskCtx, chromedp.WaitVisible(`//input[@name="username"]`))
+	s.NoError(err)
+	err = chromedp.Run(taskCtx, chromedp.SendKeys(`//input[@id="okta-signin-username"]`, ssoTestEmail))
+	s.NoError(err)
+	err = chromedp.Run(taskCtx, chromedp.SendKeys(`//input[@id="okta-signin-password"]`, ssoTestPassword))
+	s.NoError(err)
+	fmt.Println("Submitting login request to Okta..")
+	err = chromedp.Run(taskCtx, chromedp.Click(`//input[@id="okta-signin-submit"]`))
+	s.NoError(err)
+	fmt.Println("Waiting for CCloud to load...")
+	err = chromedp.Run(taskCtx, chromedp.WaitVisible(`//div[@id="cc-root"]`))
+	s.NoError(err)
+	fmt.Println("CCloud is loaded, grabbing auth token...")
+	var token string
+	// chromedp waits until it finds the element on the page. If there's some error and the element
+	// does not load correctly, this will wait forever and the test will time out
+	// There's not a good workaround for this, but to debug, it's helpful to disable headless mode (commented above)
+	err = chromedp.Run(taskCtx, chromedp.Text(`//div[@id="token"]`, &token))
+	s.NoError(err)
+	fmt.Println("Successfully logged in and retrieved auth token")
+	return token
 }
 
 func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint string) {
