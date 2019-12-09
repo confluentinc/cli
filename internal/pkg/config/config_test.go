@@ -4,7 +4,9 @@ import (
 	"errors"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"reflect"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -16,6 +18,7 @@ import (
 )
 
 func TestConfig_Load(t *testing.T) {
+	testConfigFile, _ := ioutil.TempFile("", "TestConfig_Load.json")
 	type args struct {
 		contents string
 	}
@@ -38,7 +41,7 @@ func TestConfig_Load(t *testing.T) {
 				Credentials: map[string]*Credential{},
 				Contexts:    map[string]*Context{},
 			},
-			file: "/tmp/TestConfig_Load.json",
+			file: testConfigFile.Name(),
 		},
 		{
 			name: "should load auth url from file",
@@ -52,7 +55,7 @@ func TestConfig_Load(t *testing.T) {
 				Credentials: map[string]*Credential{},
 				Contexts:    map[string]*Context{},
 			},
-			file: "/tmp/TestConfig_Load.json",
+			file: testConfigFile.Name(),
 		},
 		{
 			name: "should load disable update checks and disable updates",
@@ -67,7 +70,7 @@ func TestConfig_Load(t *testing.T) {
 				Credentials:        map[string]*Credential{},
 				Contexts:           map[string]*Context{},
 			},
-			file: "/tmp/TestConfig_Load.json",
+			file: testConfigFile.Name(),
 		},
 	}
 	for _, tt := range tests {
@@ -91,6 +94,7 @@ func TestConfig_Load(t *testing.T) {
 }
 
 func TestConfig_Save(t *testing.T) {
+	testConfigFile, _ := ioutil.TempFile("", "TestConfig_Save.json")
 	type args struct {
 		url   string
 		token string
@@ -108,7 +112,7 @@ func TestConfig_Save(t *testing.T) {
 				token: "abc123",
 			},
 			want: "\"auth_token\": \"abc123\"",
-			file: "/tmp/TestConfig_Save.json",
+			file: testConfigFile.Name(),
 		},
 		{
 			name: "save auth url to file",
@@ -116,7 +120,7 @@ func TestConfig_Save(t *testing.T) {
 				url: "https://stag.cpdev.cloud",
 			},
 			want: "\"auth_url\": \"https://stag.cpdev.cloud\"",
-			file: "/tmp/TestConfig_Save.json",
+			file: testConfigFile.Name(),
 		},
 		{
 			name: "create parent config dirs",
@@ -124,7 +128,7 @@ func TestConfig_Save(t *testing.T) {
 				token: "abc123",
 			},
 			want: "\"auth_token\": \"abc123\"",
-			file: "/tmp/xyz987/TestConfig_Save.json",
+			file: testConfigFile.Name(),
 		},
 	}
 	for _, tt := range tests {
@@ -138,10 +142,10 @@ func TestConfig_Save(t *testing.T) {
 				t.Errorf("Config.Save() = %v, want contains %v", string(got), tt.want)
 			}
 			fd, _ := os.Stat(tt.file)
-			if fd.Mode() != 0600 {
+			if runtime.GOOS != "windows" && fd.Mode() != 0600 {
 				t.Errorf("Config.Save() file should only be readable by user")
 			}
-			os.RemoveAll("/tmp/xyz987")
+			os.Remove(testConfigFile.Name())
 		})
 	}
 }
@@ -161,19 +165,19 @@ func TestConfig_getFilename(t *testing.T) {
 			fields: fields{
 				CLIName: "ccloud",
 			},
-			want: os.Getenv("HOME") + "/.ccloud/config.json",
+			want: filepath.FromSlash(os.Getenv("HOME") + "/.ccloud/config.json"),
 		},
 		{
 			name: "config file for confluent binary",
 			fields: fields{
 				CLIName: "confluent",
 			},
-			want: os.Getenv("HOME") + "/.confluent/config.json",
+			want: filepath.FromSlash(os.Getenv("HOME") + "/.confluent/config.json"),
 		},
 		{
 			name:   "should default to ~/.confluent if CLIName isn't provided",
 			fields: fields{},
-			want:   os.Getenv("HOME") + "/.confluent/config.json",
+			want:   filepath.FromSlash(os.Getenv("HOME") + "/.confluent/config.json"),
 		},
 	}
 	for _, tt := range tests {
@@ -202,7 +206,8 @@ func TestConfig_AddContext(t *testing.T) {
 		CredentialType: APIKey,
 	}
 	contextName := "test-context"
-	filename := "/tmp/TestConfig_AddContext.json"
+	tempContextFile, _ := ioutil.TempFile("", "TestConfig_AddContext.json")
+	filename := tempContextFile.Name()
 	tests := []struct {
 		name                   string
 		config                 *Config

@@ -1,3 +1,5 @@
+// +build !windows
+
 package test
 
 import (
@@ -10,7 +12,8 @@ import (
 )
 
 func (s *CLITestSuite) TestLocalHelpCommands() {
-	tests := []CLITest{
+	var tests []CLITest
+	tests = []CLITest{
 		// These should all be equivalent
 		{args: "local", fixture: "local-help1.golden"},
 		{args: "help local", fixture: "local-help1.golden"},
@@ -35,9 +38,9 @@ func (s *CLITestSuite) TestLocalHelpCommands() {
 
 func (s *CLITestSuite) TestLocalVersion() {
 	tests := []CLITest{
-		{name: "5.3.1 community",  args: "local --path %s version", fixture: "local-version1.golden"},
+		{name: "5.3.1 community", args: "local --path %s version", fixture: "local-version1.golden"},
 		{name: "5.3.1 enterprise", args: "local --path %s version", fixture: "local-version2.golden"},
-		{name: "5.4.0 community",  args: "local --path %s version", fixture: "local-version3.golden"},
+		{name: "5.4.0 community", args: "local --path %s version", fixture: "local-version3.golden"},
 		{name: "5.4.0 enterprise", args: "local --path %s version", fixture: "local-version4.golden"},
 	}
 	resetConfiguration(s.T(), "confluent")
