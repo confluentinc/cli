@@ -1,4 +1,3 @@
-Auth: null
 Name: my-context
 credentials: api-key-hi
 kafka_cluster: anonymous-id

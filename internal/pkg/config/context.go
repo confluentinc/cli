@@ -31,7 +31,6 @@ type Context struct {
 	Name       string
 	Platform   string `json:"platform" hcl:"platform"`
 	Credential string `json:"credentials" hcl:"credentials"`
-	Auth       *AuthConfig
 	// KafkaClusters store connection info for interacting directly with Kafka (e.g., consume/produce, etc)
 	// N.B. These may later be exposed in the CLI to directly register kafkas (outside a Control Plane)
 	KafkaClusters map[string]*KafkaClusterConfig `json:"kafka_clusters" hcl:"kafka_clusters"`
