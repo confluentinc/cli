@@ -1,6 +1,8 @@
 package apikey
 
 import (
+	"github.com/confluentinc/ccloud-sdk-go"
+
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
@@ -10,7 +12,7 @@ const (
 	srResourceType    = "schema-registry"
 )
 
-func resolveResourceId(cfg *config.Config) (resourceType string, accId string, clusterId string, currentKey string, err error) {
+func resolveResourceId(cfg *config.Config, client *ccloud.Client) (resourceType string, accId string, clusterId string, currentKey string, err error) {
 	resolutionError := func(err error) (string, string, string, string, error) {
 		return "", "", "", "", err
 	}
@@ -21,7 +23,7 @@ func resolveResourceId(cfg *config.Config) (resourceType string, accId string, c
 	}
 	if ctx.UserSpecifiedSchemaRegistryEnvId != "" {
 		resourceType = srResourceType
-		cluster, err := cfg.SchemaRegistryCluster()
+		cluster, err := cfg.SchemaRegistryCluster(client)
 		if err != nil {
 			return resolutionError(err)
 		}
@@ -34,7 +36,7 @@ func resolveResourceId(cfg *config.Config) (resourceType string, accId string, c
 		}
 	} else {
 		resourceType = kafkaResourceType
-		cluster, err := ctx.ActiveKafkaCluster()
+		cluster, err := ctx.ActiveKafkaCluster(client)
 		if err != nil {
 			return resolutionError(err)
 		}

@@ -21,9 +21,8 @@ import (
 )
 
 type commands struct {
-	Commands  []*cobra.Command
+	Commands  []*pcmd.CLICommand
 	config    *config.Config
-	mdsClient *mds.APIClient
 	Logger    *log.Logger
 	// for testing
 	prompt                pcmd.Prompt
@@ -31,26 +30,34 @@ type commands struct {
 	jwtHTTPClientFactory  func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *ccloud.Client
 }
 
+var (
+	LoginIndex = 0
+)
+
 // New returns a list of auth-related Cobra commands.
-func New(prerunner pcmd.PreRunner, config *config.Config, logger *log.Logger, mdsClient *mds.APIClient, userAgent string) []*cobra.Command {
+func New(prerunner pcmd.PreRunner, config *config.Config, logger *log.Logger, userAgent string) []*cobra.Command {
 	var defaultAnonHTTPClientFactory = func(baseURL string, logger *log.Logger) *ccloud.Client {
 		return ccloud.NewClient(&ccloud.Params{BaseURL: baseURL, HttpClient: ccloud.BaseClient, Logger: logger, UserAgent: userAgent})
 	}
 	var defaultJwtHTTPClientFactory = func(ctx context.Context, jwt string, baseURL string, logger *log.Logger) *ccloud.Client {
 		return ccloud.NewClientWithJWT(ctx, jwt, &ccloud.Params{BaseURL: baseURL, Logger: logger, UserAgent: userAgent})
 	}
-	return newCommands(prerunner, config, logger, mdsClient, pcmd.NewPrompt(os.Stdin),
+	cmds := newCommands(prerunner, config, logger, pcmd.NewPrompt(os.Stdin),
 		defaultAnonHTTPClientFactory, defaultJwtHTTPClientFactory,
-	).Commands
+	)
+	var cobraCmds []*cobra.Command
+	for _, cmd := range cmds.Commands {
+		cobraCmds = append(cobraCmds, cmd.Command)
+	}
+	return cobraCmds
 }
 
-func newCommands(prerunner pcmd.PreRunner, config *config.Config, log *log.Logger, mdsClient *mds.APIClient, prompt pcmd.Prompt,
+func newCommands(prerunner pcmd.PreRunner, config *config.Config, log *log.Logger, prompt pcmd.Prompt,
 	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *ccloud.Client,
 	jwtHTTPClientFactory func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *ccloud.Client,
 ) *commands {
 	cmd := &commands{
 		config:                config,
-		mdsClient:             mdsClient,
 		Logger:                log,
 		prompt:                prompt,
 		anonHTTPClientFactory: anonHTTPClientFactory,
@@ -78,7 +85,7 @@ func (a *commands) init(prerunner pcmd.PreRunner) {
 		check(loginCmd.MarkFlagRequired("url")) // because https://confluent.cloud isn't an MDS endpoint
 	}
 	loginCmd.Flags().SortFlags = false
-	loginCmd.PersistentPreRunE = prerunner.Anonymous(a.config)
+	cliLoginCmd := pcmd.NewAnonymousCLICommand(loginCmd, a.config, prerunner)
 	logoutCmd := &cobra.Command{
 		Use:   "logout",
 		Short: fmt.Sprintf("Logout of %s.", a.config.APIName()),
@@ -87,8 +94,8 @@ func (a *commands) init(prerunner pcmd.PreRunner) {
 		RunE: a.logout,
 		Args: cobra.NoArgs,
 	}
-	logoutCmd.PersistentPreRunE = prerunner.Anonymous(a.config)
-	a.Commands = []*cobra.Command{loginCmd, logoutCmd}
+	cliLogoutCmd := pcmd.NewAnonymousCLICommand(logoutCmd, a.config, prerunner)
+	a.Commands = []*pcmd.CLICommand{cliLoginCmd, cliLogoutCmd}
 }
 
 func (a *commands) login(cmd *cobra.Command, args []string) error {
@@ -201,32 +208,20 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	return err
 }
 
-func (a *commands) addMDSClient() {
-	mdsConfig := mds.NewConfiguration()
-	ctx := a.config.Context()
-	if ctx != nil {
-		mdsConfig.BasePath = ctx.Platform.Server
-		mdsConfig.UserAgent = ctx.Version.UserAgent
-	}
-	a.mdsClient = mds.NewAPIClient(mdsConfig)
-}
-
 func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
 	url, err := cmd.Flags().GetString("url")
 	if err != nil {
 		return err
 	}
-	if a.mdsClient == nil {
-		a.addMDSClient()
-	}
-	a.mdsClient.ChangeBasePath(url)
+	mdsClient := a.Commands[LoginIndex].MDSClient
+	mdsClient.ChangeBasePath(url)
 	email, password, err := a.credentials(cmd, "Username", nil)
 	if err != nil {
 		return err
 	}
 
 	basicContext := context.WithValue(context.Background(), mds.ContextBasicAuth, mds.BasicAuth{UserName: email, Password: password})
-	resp, _, err := a.mdsClient.TokensAuthenticationApi.GetToken(basicContext, "")
+	resp, _, err := mdsClient.TokensAuthenticationApi.GetToken(basicContext, "")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -338,7 +333,7 @@ func (a *commands) addContextIfAbsent(username string, url string, state *config
 		return err
 	}
 	err = a.config.AddContext(name, platform.Name, credential.Name, map[string]*config.KafkaClusterConfig{},
-		"", nil, state, nil)
+		"", nil, state)
 	if err != nil {
 		return err
 	}

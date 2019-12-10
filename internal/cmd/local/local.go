@@ -63,7 +63,7 @@ func New(rootCmd *cobra.Command, prerunner pcmd.PreRunner, shell ShellRunner, lo
 			Short:             "Manage a local Confluent Platform development environment.",
 			Long:              longDescription,
 			Args:              cobra.ArbitraryArgs,
-			PersistentPreRunE: prerunner.Anonymous(nil),
+			PersistentPreRunE: prerunner.Anonymous(nil, nil),
 		},
 		shell: shell,
 		log:   log,
@@ -74,7 +74,6 @@ func New(rootCmd *cobra.Command, prerunner pcmd.PreRunner, shell ShellRunner, lo
 	localCmd.Flags().SortFlags = false
 	// This is used for "confluent help local foo" and "confluent local foo --help"
 	localCmd.Command.SetHelpFunc(localCmd.help)
-
 	// Explicit suggestions since we can't use cobra's "SuggestFor" for bash commands
 	for _, cmd := range []string{"start", "stop"} {
 		rootCmd.AddCommand(localCommandError(cmd))
@@ -102,7 +101,7 @@ func (c *command) parsePath(cmd *cobra.Command, args []string) (string, error) {
 					return "", err
 				}
 			} else if len(args) != 0 { // don't error if no args specified, we'll just show usage
-				return "", fmt.Errorf("Pass --path /path/to/confluent flag or set environment variable CONFLUENT_HOME")
+				return "", fmt.Errorf("pass --path /path/to/confluent flag or set environment variable CONFLUENT_HOME")
 			}
 		}
 	}

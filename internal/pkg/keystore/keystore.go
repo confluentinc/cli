@@ -2,6 +2,7 @@
 package keystore
 
 import (
+	ccloud "github.com/confluentinc/ccloud-sdk-go"
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
@@ -9,8 +10,8 @@ import (
 )
 
 type KeyStore interface {
-	HasAPIKey(key string, clusterId string) (bool, error)
-	StoreAPIKey(key *authv1.ApiKey, clusterId string) error
+	HasAPIKey(key string, clusterId string, client *ccloud.Client) (bool, error)
+	StoreAPIKey(key *authv1.ApiKey, clusterId string, client *ccloud.Client) error
 	DeleteAPIKey(key string) error
 }
 
@@ -18,12 +19,12 @@ type ConfigKeyStore struct {
 	Config *config.Config
 }
 
-func (c *ConfigKeyStore) HasAPIKey(key string, clusterId string) (bool, error) {
+func (c *ConfigKeyStore) HasAPIKey(key string, clusterId string, client *ccloud.Client) (bool, error) {
 	ctx := c.Config.Context()
 	if ctx == nil {
 		return false, nil
 	}
-	kcc, err := ctx.FindKafkaCluster(clusterId)
+	kcc, err := ctx.FindKafkaCluster(clusterId, client)
 	if err != nil {
 		return false, err
 	}
@@ -32,12 +33,12 @@ func (c *ConfigKeyStore) HasAPIKey(key string, clusterId string) (bool, error) {
 }
 
 // StoreAPIKey creates a new API key pair in the local key store for later usage
-func (c *ConfigKeyStore) StoreAPIKey(key *authv1.ApiKey, clusterId string) error {
+func (c *ConfigKeyStore) StoreAPIKey(key *authv1.ApiKey, clusterId string, client *ccloud.Client) error {
 	ctx := c.Config.Context()
 	if ctx == nil {
 		return errors.ErrNoContext
 	}
-	kcc, err := ctx.FindKafkaCluster(clusterId)
+	kcc, err := ctx.FindKafkaCluster(clusterId, client)
 	if err != nil {
 		return err
 	}

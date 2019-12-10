@@ -36,9 +36,10 @@ func main() {
 			MetricSink: metricSink,
 			Logger:     logger,
 		})
-		err := cfg.Load(version, commit, date, host, nil)
+		err := cfg.Load(version, commit, date, host)
 		if err != nil {
 			logger.Errorf("unable to load config: %v", err)
+			os.Exit(1)
 		}
 	}
 

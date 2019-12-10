@@ -55,7 +55,7 @@ func TestCredentialsOverride(t *testing.T) {
 	}
 	cmds, cfg := newAuthCommand(prompt, auth, user, "ccloud", req)
 
-	output, err := pcmd.ExecuteCommand(cmds.Commands[0])
+	output, err := pcmd.ExecuteCommand(cmds.Commands[0].Command)
 	req.NoError(err)
 	req.Contains(output, "Logged in as test-email")
 	ctx := cfg.Context()
@@ -116,7 +116,7 @@ func TestLoginSuccess(t *testing.T) {
 	for _, s := range suite {
 		// Login to the CLI control plane
 		cmds, cfg := newAuthCommand(prompt, auth, user, s.cliName, req)
-		output, err := pcmd.ExecuteCommand(cmds.Commands[0], s.args...)
+		output, err := pcmd.ExecuteCommand(cmds.Commands[LoginIndex].Command, s.args...)
 
 		req.NoError(err)
 		req.Contains(output, "Logged in as cody@confluent.io")
@@ -159,7 +159,7 @@ func TestLoginFail(t *testing.T) {
 	}
 	cmds, _ := newAuthCommand(prompt, auth, user, "ccloud", req)
 
-	_, err := pcmd.ExecuteCommand(cmds.Commands[0])
+	_, err := pcmd.ExecuteCommand(cmds.Commands[0].Command)
 	req.Contains(err.Error(), "You have entered an incorrect username or password.")
 }
 
@@ -174,7 +174,7 @@ func TestURLRequiredWithMDS(t *testing.T) {
 	}
 	cmds, _ := newAuthCommand(prompt, auth, nil, "confluent", req)
 
-	_, err := pcmd.ExecuteCommand(cmds.Commands[0])
+	_, err := pcmd.ExecuteCommand(cmds.Commands[0].Command)
 	req.Contains(err.Error(), "required flag(s) \"url\" not set")
 }
 
@@ -185,7 +185,7 @@ func TestLogout(t *testing.T) {
 	auth := &sdkMock.Auth{}
 	cmds, _ := newAuthCommand(prompt, auth, nil, "ccloud", req)
 	cmds.config = config.AuthenticatedConfigMock()
-	output, err := pcmd.ExecuteCommand(cmds.Commands[1])
+	output, err := pcmd.ExecuteCommand(cmds.Commands[1].Command)
 	req.NoError(err)
 	req.Contains(output, "You are now logged out")
 	state := cmds.config.Context().State
@@ -200,7 +200,7 @@ func Test_credentials_NoSpacesAroundEmail_ShouldSupportSpacesAtBeginOrEnd(t *tes
 	auth := &sdkMock.Auth{}
 	cmds, _ := newAuthCommand(prompt, auth, nil, "ccloud", req)
 
-	user, pass, err := cmds.credentials(cmds.Commands[0], "Email", nil)
+	user, pass, err := cmds.credentials(cmds.Commands[0].Command, "Email", nil)
 	req.NoError(err)
 	req.Equal("cody@confluent.io", user)
 	req.Equal(" iamrobin ", pass)
@@ -244,7 +244,7 @@ func newAuthCommand(prompt pcmd.Prompt, auth *sdkMock.Auth, user *sdkMock.User, 
 			},
 		}
 	}
-	commands := newCommands(cliMock.NewPreRunnerMock(), cfg, log.New(), mdsClient, prompt, mockAnonHTTPClientFactory, mockJwtHTTPClientFactory)
+	commands := newCommands(cliMock.NewPreRunnerMock(mockAnonHTTPClientFactory("https://confluent.cloud", nil), mdsClient), cfg, log.New(), prompt, mockAnonHTTPClientFactory, mockJwtHTTPClientFactory)
 	for _, c := range commands.Commands {
 		c.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	}

@@ -3,14 +3,16 @@ package config
 import (
 	"context"
 	"strings"
+
+	"github.com/confluentinc/ccloud-sdk-go"
 )
 
 type contextResolver struct {
 	client  *contextClient
 }
 
-func NewResolver(ctx *Context) *contextResolver {
-	ctxClient := NewContextClient(ctx)
+func NewResolver(ctx *Context, client *ccloud.Client) *contextResolver {
+	ctxClient := NewContextClient(ctx, client)
 	return &contextResolver{
 		client:  ctxClient,
 	}

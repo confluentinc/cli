@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/confluentinc/ccloud-sdk-go"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -31,8 +32,8 @@ func getSrCredentials() (key string, secret string, err error) {
 	return key, secret, nil
 }
 
-func srContext(cfg *config.Config) (context.Context, error) {
-	srCluster, err := cfg.SchemaRegistryCluster()
+func srContext(cfg *config.Config, client *ccloud.Client) (context.Context, error) {
+	srCluster, err := cfg.SchemaRegistryCluster(client)
 	if err != nil {
 		return nil, err
 	}
@@ -56,8 +57,8 @@ func srContext(cfg *config.Config) (context.Context, error) {
 	}), nil
 }
 
-func SchemaRegistryClient(cfg *config.Config) (client *srsdk.APIClient, ctx context.Context, err error) {
-	ctx, err = srContext(cfg)
+func SchemaRegistryClient(cfg *config.Config, client *ccloud.Client) (srClient *srsdk.APIClient, ctx context.Context, err error) {
+	ctx, err = srContext(cfg, client)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -70,7 +71,7 @@ func SchemaRegistryClient(cfg *config.Config) (client *srsdk.APIClient, ctx cont
 	if srCluster, ok := currCtx.SchemaRegistryClusters[state.Auth.Account.Id]; ok {
 		srConfig.BasePath = srCluster.SchemaRegistryEndpoint
 	} else {
-		ctxClient := config.NewContextClient(currCtx)
+		ctxClient := config.NewContextClient(currCtx, client)
 		srCluster, err := ctxClient.FetchSchemaRegistryByAccountId(ctx, state.Auth.Account.Id)
 		if err != nil {
 			return nil, nil, err
@@ -79,10 +80,10 @@ func SchemaRegistryClient(cfg *config.Config) (client *srsdk.APIClient, ctx cont
 	}
 	srConfig.UserAgent = currCtx.Version.UserAgent
 	// Validate before returning.
-	client = srsdk.NewAPIClient(srConfig)
-	_, _, err = client.DefaultApi.Get(ctx)
+	srClient = srsdk.NewAPIClient(srConfig)
+	_, _, err = srClient.DefaultApi.Get(ctx)
 	if err != nil {
 		return nil, nil, errors.Errorf("Failed to validate Schema Registry API Key and Secret")
 	}
-	return client, ctx, nil
+	return srClient, ctx, nil
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/go-printer"
@@ -16,16 +17,16 @@ const (
 	SubjectUsage = "Subject of the schema."
 )
 
-func GetApiClient(srClient *srsdk.APIClient, cfg *config.Config) (*srsdk.APIClient, context.Context, error) {
+func GetApiClient(srClient *srsdk.APIClient, cfg *config.Config, client *ccloud.Client) (*srsdk.APIClient, context.Context, error) {
 	if srClient != nil {
 		// Tests/mocks
 		return srClient, nil, nil
 	}
-	client, ctx, err := SchemaRegistryClient(cfg)
+	srClient, ctx, err := SchemaRegistryClient(cfg, client)
 	if err != nil {
 		return nil, nil, err
 	}
-	return client, ctx, nil
+	return srClient, ctx, nil
 }
 
 func PrintVersions(versions []int32) {

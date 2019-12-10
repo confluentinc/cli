@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/confluentinc/ccloud-sdk-go/mock"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go/mock"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
@@ -18,6 +19,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	mock2 "github.com/confluentinc/cli/internal/pkg/mock"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
@@ -38,7 +40,7 @@ type ClusterTestSuite struct {
 
 func (suite *ClusterTestSuite) SetupSuite() {
 	suite.conf = config.AuthenticatedConfigMock()
-	cluster, err := suite.conf.Context().ActiveKafkaCluster()
+	cluster, err := suite.conf.Context().ActiveKafkaCluster(mock2.NewClientMock())
 	require.NoError(suite.T(), err)
 	suite.kafkaCluster = &kafkav1.KafkaCluster{
 		Id:         cluster.ID,
@@ -68,7 +70,6 @@ func (suite *ClusterTestSuite) SetupSuite() {
 }
 
 func (suite *ClusterTestSuite) SetupTest() {
-	client := suite.conf.Context().Client
 	suite.srMock = &mock.SchemaRegistry{
 		CreateSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *srv1.SchemaRegistryClusterConfig) (*srv1.SchemaRegistryCluster, error) {
 			return suite.srCluster, nil
@@ -84,12 +85,14 @@ func (suite *ClusterTestSuite) SetupTest() {
 			}, nil
 		},
 	}
-	client.SchemaRegistry = suite.srMock
-	client.Metrics = suite.metrics
 }
 
 func (suite *ClusterTestSuite) newCMD() *cobra.Command {
-	cmd := New(cliMock.NewPreRunnerMock(), suite.conf, suite.srClientMock, suite.logger)
+	client := &ccloud.Client{
+		SchemaRegistry: suite.srMock,
+		Metrics:        suite.metrics,
+	}
+	cmd := New(cliMock.NewPreRunnerMock(client, nil), suite.conf, suite.srClientMock, suite.logger)
 	return cmd
 }
 

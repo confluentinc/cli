@@ -15,6 +15,7 @@ import (
 	"github.com/confluentinc/go-printer"
 	"github.com/confluentinc/mds-sdk-go"
 
+	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
@@ -27,22 +28,21 @@ var (
 )
 
 type roleCommand struct {
-	*cobra.Command
-	config *config.Config
-	client *mds.APIClient
+	*cmd.CLICommand
 	ctx    context.Context
 }
 
 // NewRoleCommand returns the sub-command object for interacting with RBAC roles.
-func NewRoleCommand(cfg *config.Config, client *mds.APIClient) *cobra.Command {
-	roleCmd := &roleCommand{
-		Command: &cobra.Command{
+func NewRoleCommand(cfg *config.Config, prerunner cmd.PreRunner) *cobra.Command {
+	cliCmd := cmd.NewAuthenticatedCLICommand(
+		&cobra.Command{
 			Use:   "role",
 			Short: "Manage RBAC and IAM roles.",
 			Long:  "Manage Role Based Access (RBAC) and Identity and Access Management (IAM) roles.",
 		},
-		config: cfg,
-		client: client,
+		cfg, prerunner)
+	roleCmd := &roleCommand{
+		CLICommand: cliCmd,
 	}
 	state, err := cfg.AuthenticatedState()
 	if err != nil {
@@ -69,22 +69,9 @@ func (c *roleCommand) init() {
 	})
 }
 
-func (c *roleCommand) addMDSClient() {
-	mdsConfig := mds.NewConfiguration()
-	ctx := c.config.Context()
-	if ctx != nil {
-		mdsConfig.BasePath = ctx.Platform.Server
-		mdsConfig.UserAgent = ctx.Version.UserAgent
-	}
-	c.client = mds.NewAPIClient(mdsConfig)
-}
 
 func (c *roleCommand) list(cmd *cobra.Command, args []string) error {
-	if c.client == nil {
-		c.addMDSClient()
-	}
-
-	roles, _, err := c.client.RoleDefinitionsApi.Roles(c.ctx)
+	roles, _, err := c.MDSClient.RoleDefinitionsApi.Roles(c.ctx)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -117,14 +104,11 @@ func (c *roleCommand) list(cmd *cobra.Command, args []string) error {
 
 func (c *roleCommand) describe(cmd *cobra.Command, args []string) error {
 	role := args[0]
-	if c.client == nil {
-		c.addMDSClient()
-	}
 
-	details, r, err := c.client.RoleDefinitionsApi.RoleDetail(c.ctx, role)
+	details, r, err := c.MDSClient.RoleDefinitionsApi.RoleDetail(c.ctx, role)
 	if err != nil {
 		if r.StatusCode == http.StatusNoContent {
-			availableRoleNames, _, err := c.client.RoleDefinitionsApi.Rolenames(c.ctx)
+			availableRoleNames, _, err := c.MDSClient.RoleDefinitionsApi.Rolenames(c.ctx)
 			if err != nil {
 				return errors.HandleCommon(err, cmd)
 			}

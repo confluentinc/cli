@@ -5,6 +5,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -84,7 +85,6 @@ func (suite *KSQLTestSuite) SetupSuite() {
 }
 
 func (suite *KSQLTestSuite) SetupTest() {
-	client := suite.conf.Context().Client
 	suite.kafkac = &mock.Kafka{
 		DescribeFunc: func(ctx context.Context, cluster *kafkav1.KafkaCluster) (*kafkav1.KafkaCluster, error) {
 			return suite.kafkaCluster, nil
@@ -103,13 +103,15 @@ func (suite *KSQLTestSuite) SetupTest() {
 			return []*orgv1.User{suite.serviceAcct}, nil
 		},
 	}
-	client.Kafka = suite.kafkac
-	client.KSQL = suite.ksqlc
-	client.User = suite.userc
 }
 
 func (suite *KSQLTestSuite) newCMD() *cobra.Command {
-	cmd := New(cliMock.NewPreRunnerMock(), suite.conf)
+	client := &ccloud.Client{
+		Kafka: suite.kafkac,
+		User:  suite.userc,
+		KSQL:  suite.ksqlc,
+	}
+	cmd := New(cliMock.NewPreRunnerMock(client, nil), suite.conf)
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	return cmd
 }

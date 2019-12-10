@@ -3,13 +3,12 @@ package mock
 import (
 	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/confluentinc/ccloud-sdk-go/mock"
-
-	"github.com/confluentinc/cli/internal/pkg/log"
-	"github.com/confluentinc/cli/internal/pkg/sdk"
+	"github.com/confluentinc/mds-sdk-go"
+	mdsmock "github.com/confluentinc/mds-sdk-go/mock"
 )
 
-func NewEmptyClientMock(logger *log.Logger) *sdk.Client {
-	baseClient := &ccloud.Client{
+func NewClientMock() *ccloud.Client {
+	return &ccloud.Client{
 		Params:         nil,
 		Auth:           &mock.Auth{},
 		Account:        &mock.Account{},
@@ -21,5 +20,14 @@ func NewEmptyClientMock(logger *log.Logger) *sdk.Client {
 		KSQL:           &mock.MockKSQL{},
 		Metrics:        &mock.Metrics{},
 	}
-	return sdk.NewClient(baseClient, logger)
+}
+
+func NewMDSClientMock() *mds.APIClient {
+	return &mds.APIClient{
+		AuthorizationApi:        mdsmock.AuthorizationApi{},
+		ClusterVisibilityApi:    mdsmock.ClusterVisibilityApi{},
+		RoleDefinitionsApi:      mdsmock.RoleDefinitionsApi{},
+		TokensAuthenticationApi: mdsmock.TokensAuthenticationApi{},
+		UserAndRoleMgmtApi:      mdsmock.UserAndRoleMgmtApi{},
+	}
 }

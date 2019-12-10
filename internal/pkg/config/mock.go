@@ -6,7 +6,6 @@ import (
 	"github.com/confluentinc/ccloudapis/org/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/log"
-	mock2 "github.com/confluentinc/cli/internal/pkg/mock"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -63,7 +62,7 @@ func AuthenticatedConfigMock() *Config {
 			},
 		},
 	}
-	ctx, err := newContext("test-context", platform, credential, kafkaClusters, "lkc-0000", srClusters, state, mock2.NewEmptyClientMock(conf.Logger), conf)
+	ctx, err := newContext("test-context", platform, credential, kafkaClusters, "lkc-0000", srClusters, state, conf)
 	if err != nil {
 		panic(err)
 	}

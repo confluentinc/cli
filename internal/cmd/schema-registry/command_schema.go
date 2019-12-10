@@ -14,19 +14,20 @@ import (
 )
 
 type schemaCommand struct {
-	*cobra.Command
-	config   *config.Config
+	*pcmd.CLICommand
 	srClient *srsdk.APIClient
 }
 
-func NewSchemaCommand(config *config.Config, srClient *srsdk.APIClient) *cobra.Command {
-	schemaCmd := &schemaCommand{
-		Command: &cobra.Command{
+func NewSchemaCommand(config *config.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
+	cliCmd := pcmd.NewAuthenticatedCLICommand(
+		&cobra.Command{
 			Use:   "schema",
 			Short: "Manage Schema Registry schemas.",
 		},
-		config:   config,
-		srClient: srClient,
+		config, prerunner)
+	schemaCmd := &schemaCommand{
+		CLICommand: cliCmd,
+		srClient:   srClient,
 	}
 	schemaCmd.init()
 	return schemaCmd.Command
@@ -54,7 +55,7 @@ where schemafilepath may include these contents:
    ]
 }
 
-`, c.config.CLIName),
+`, c.Config.CLIName),
 		RunE: c.create,
 		Args: cobra.NoArgs,
 	}
@@ -72,7 +73,7 @@ Delete one or more topics. This command should only be used in extreme circumsta
 
 ::
 
-		{{.CLIName}} schema-registry schema delete --subject payments --version latest`, c.config.CLIName),
+		{{.CLIName}} schema-registry schema delete --subject payments --version latest`, c.Config.CLIName),
 		RunE: c.delete,
 		Args: cobra.NoArgs,
 	}
@@ -97,7 +98,7 @@ Describe the schema by subject and version
 ::
 
 		{{.CLIName}} schema-registry describe --subject payments --version latest
-`, c.config.CLIName),
+`, c.Config.CLIName),
 		RunE: c.describe,
 		Args: cobra.MaximumNArgs(1),
 	}
@@ -108,7 +109,7 @@ Describe the schema by subject and version
 }
 
 func (c *schemaCommand) create(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(c.srClient, c.config)
+	srClient, ctx, err := GetApiClient(c.srClient, c.Config, c.Client)
 	if err != nil {
 		return err
 	}
@@ -134,7 +135,7 @@ func (c *schemaCommand) create(cmd *cobra.Command, args []string) error {
 }
 
 func (c *schemaCommand) delete(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(c.srClient, c.config)
+	srClient, ctx, err := GetApiClient(c.srClient, c.Config, c.Client)
 	if err != nil {
 		return err
 	}
@@ -174,7 +175,7 @@ func (c *schemaCommand) describe(cmd *cobra.Command, args []string) error {
 }
 
 func (c *schemaCommand) describeById(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(c.srClient, c.config)
+	srClient, ctx, err := GetApiClient(c.srClient, c.Config, c.Client)
 	if err != nil {
 		return err
 	}
@@ -191,7 +192,7 @@ func (c *schemaCommand) describeById(cmd *cobra.Command, args []string) error {
 }
 
 func (c *schemaCommand) describeBySubject(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(c.srClient, c.config)
+	srClient, ctx, err := GetApiClient(c.srClient, c.Config, c.Client)
 	if err != nil {
 		return err
 	}

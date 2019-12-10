@@ -8,12 +8,12 @@ import (
 	"path/filepath"
 
 	"github.com/atrox/homedir"
+	"github.com/confluentinc/ccloud-sdk-go"
 	v1 "github.com/confluentinc/ccloudapis/org/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/metric"
-	"github.com/confluentinc/cli/internal/pkg/sdk"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -64,7 +64,7 @@ func New(config ...*Config) *Config {
 
 // Load reads the CLI config from disk.
 // Save a default version if none exists yet.
-func (c *Config) Load(version, commit, date, host string, client *sdk.Client) error {
+func (c *Config) Load(version, commit, date, host string) error {
 	filename, err := c.getFilename()
 	if err != nil {
 		return err
@@ -86,12 +86,21 @@ func (c *Config) Load(version, commit, date, host string, client *sdk.Client) er
 		return errors.Wrapf(err, "unable to parse config file: %s", filename)
 	}
 	for _, context := range c.Contexts {
+		// Some "pre-validation"
+		if context.Name == "" {
+			return errors.New("one of the existing contexts has no name")
+		}
+		if context.CredentialName == "" {
+			return &errors.UnspecifiedCredentialError{ContextName: context.Name}
+		}
+		if context.PlatformName == "" {
+			return &errors.UnspecifiedPlatformError{ContextName: context.Name}
+		}
 		context.State = c.ContextStates[context.Name]
 		context.Credential = c.Credentials[context.CredentialName]
 		context.Platform = c.Platforms[context.PlatformName]
 		context.Version = ver
 		context.Logger = c.Logger
-		context.Client = client
 		context.Config = c
 	}
 	err = c.validate()
@@ -155,6 +164,10 @@ func (c *Config) validate() error {
 		if _, ok := c.ContextStates[context.Name]; !ok {
 			c.ContextStates[context.Name] = new(ContextState)
 		}
+		if *c.ContextStates[context.Name] != *context.State {
+			c.Logger.Trace(fmt.Sprintf("state of context %s in config does not match actual state of context", context.Name))
+			return c.corruptedConfigError()
+		}
 
 	}
 	// Validate that all context states are mapped to an existing context.
@@ -164,7 +177,7 @@ func (c *Config) validate() error {
 			return c.corruptedConfigError()
 		}
 	}
-	
+
 	return nil
 }
 
@@ -193,7 +206,7 @@ func (c *Config) FindContext(name string) (*Context, error) {
 
 func (c *Config) AddContext(name string, platformName string, credentialName string,
 	kafkaClusters map[string]*KafkaClusterConfig, kafka string,
-	schemaRegistryClusters map[string]*SchemaRegistryCluster, state *ContextState, baseClient *sdk.Client) error {
+	schemaRegistryClusters map[string]*SchemaRegistryCluster, state *ContextState) error {
 	if _, ok := c.Contexts[name]; ok {
 		return fmt.Errorf("context \"%s\" already exists", name)
 	}
@@ -206,7 +219,7 @@ func (c *Config) AddContext(name string, platformName string, credentialName str
 		return fmt.Errorf("platform \"%s\" not found", platformName)
 	}
 	context, err := newContext(name, platform, credential, kafkaClusters, kafka,
-		schemaRegistryClusters, state, baseClient, c)
+		schemaRegistryClusters, state, c)
 	if err != nil {
 		return err
 	}
@@ -294,12 +307,12 @@ func (c *Config) AuthenticatedState() (*ContextState, error) {
 // SchemaRegistryCluster returns the SchemaRegistryCluster for the current Context,
 // or an empty SchemaRegistryCluster if there is none set,
 // or an error if no context exists/if the user is not logged in.
-func (c *Config) SchemaRegistryCluster() (*SchemaRegistryCluster, error) {
+func (c *Config) SchemaRegistryCluster(client *ccloud.Client) (*SchemaRegistryCluster, error) {
 	context := c.Context()
 	if context == nil {
 		return nil, errors.ErrNoContext
 	}
-	return context.schemaRegistryCluster()
+	return context.schemaRegistryCluster(client)
 }
 
 func (c *Config) getFilename() (string, error) {

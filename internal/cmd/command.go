@@ -75,18 +75,18 @@ func NewConfluentCommand(cliName string, cfg *pconfig.Config, logger *log.Logger
 		FlagResolver: resolver,
 	}
 
-	cli.PersistentPreRunE = prerunner.Anonymous(cfg)
+	cli.PersistentPreRunE = prerunner.Anonymous(cfg, nil)
 
 	cli.Version = ver.Version
 	cli.AddCommand(version.NewVersionCmd(prerunner, ver))
 
-	conn := config.New(cfg)
+	conn := config.New(cfg, prerunner)
 	conn.Hidden = true // The config/context feature isn't finished yet, so let's hide it
 	cli.AddCommand(conn)
 
 	cli.AddCommand(completion.NewCompletionCmd(cli, cliName))
 	cli.AddCommand(update.New(cliName, cfg, ver, prompt, updateClient))
-	cli.AddCommand(auth.New(prerunner, cfg, logger, nil, ver.UserAgent)...)
+	cli.AddCommand(auth.New(prerunner, cfg, logger, ver.UserAgent)...)
 
 	if cliName == "ccloud" {
 		cmd := kafka.New(prerunner, cfg)

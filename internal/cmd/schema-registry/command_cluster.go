@@ -37,21 +37,22 @@ var (
 )
 
 type clusterCommand struct {
-	*cobra.Command
-	config   *config.Config
+	*pcmd.CLICommand
 	logger   *log.Logger
 	srClient *srsdk.APIClient
 }
 
-func NewClusterCommand(config *config.Config, srClient *srsdk.APIClient, logger *log.Logger) *cobra.Command {
-	clusterCmd := &clusterCommand{
-		Command: &cobra.Command{
+func NewClusterCommand(config *config.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient, logger *log.Logger) *cobra.Command {
+	cliCmd := pcmd.NewAuthenticatedCLICommand(
+		&cobra.Command{
 			Use:   "cluster",
 			Short: "Manage Schema Registry cluster.",
 		},
-		config:   config,
-		srClient: srClient,
-		logger:   logger,
+		config, prerunner)
+	clusterCmd := &clusterCommand{
+		CLICommand: cliCmd,
+		srClient:   srClient,
+		logger:     logger,
 	}
 	clusterCmd.init()
 	return clusterCmd.Command
@@ -61,7 +62,7 @@ func (c *clusterCommand) init() {
 	createCmd := &cobra.Command{
 		Use:     "enable",
 		Short:   `Enable Schema Registry for this environment.`,
-		Example: FormatDescription(`{{.CLIName}} schema-registry cluster enable --cloud gcp --geo us`, c.config.CLIName),
+		Example: FormatDescription(`{{.CLIName}} schema-registry cluster enable --cloud gcp --geo us`, c.Config.CLIName),
 		RunE:    c.enable,
 		Args:    cobra.NoArgs,
 	}
@@ -74,7 +75,7 @@ func (c *clusterCommand) init() {
 	describeCmd := &cobra.Command{
 		Use:     "describe",
 		Short:   `Describe the Schema Registry cluster for this environment.`,
-		Example: FormatDescription(`{{.CLIName}} schema-registry cluster describe`, c.config.CLIName),
+		Example: FormatDescription(`{{.CLIName}} schema-registry cluster describe`, c.Config.CLIName),
 		RunE:    c.describe,
 		Args:    cobra.NoArgs,
 	}
@@ -86,7 +87,7 @@ func (c *clusterCommand) init() {
 
 ::
 		{{.CLIName}} schema-registry cluster update <subjectname> --compatibility=BACKWARD
-		{{.CLIName}} schema-registry cluster update <subjectname> --mode=READWRITE`, c.config.CLIName),
+		{{.CLIName}} schema-registry cluster update <subjectname> --mode=READWRITE`, c.Config.CLIName),
 		RunE: c.update,
 		Args: cobra.NoArgs,
 	}
@@ -99,7 +100,7 @@ func (c *clusterCommand) init() {
 func (c *clusterCommand) enable(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
 	// Collect the parameters
-	state, err := c.config.AuthenticatedState()
+	state, err := c.Config.AuthenticatedState()
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -126,14 +127,14 @@ func (c *clusterCommand) enable(cmd *cobra.Command, args []string) error {
 		// this hardcoded string constant
 		Name: "account schema-registry",
 	}
-	currContext := c.config.Context()
+	currContext := c.Config.Context()
 	if currContext == nil {
 		return errors.ErrNoContext
 	}
-	newCluster, err := currContext.Client.SchemaRegistry.CreateSchemaRegistryCluster(ctx, clusterConfig)
+	newCluster, err := c.Client.SchemaRegistry.CreateSchemaRegistryCluster(ctx, clusterConfig)
 	if err != nil {
 		// If it already exists, return the existing one
-		cluster, err := c.config.SchemaRegistryCluster()
+		cluster, err := c.Config.SchemaRegistryCluster(c.Client)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
@@ -153,27 +154,27 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
 
 	// Collect the parameters
-	state, err := c.config.AuthenticatedState()
+	state, err := c.Config.AuthenticatedState()
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	currCtx := c.config.Context()
-	ctxClient := config.NewContextClient(currCtx)
+	currCtx := c.Config.Context()
+	ctxClient := config.NewContextClient(currCtx, c.Client)
 	cluster, err := ctxClient.FetchSchemaRegistryByAccountId(ctx, state.Auth.Account.Id)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	srCluster, err := c.config.SchemaRegistryCluster()
+	srCluster, err := c.Config.SchemaRegistryCluster(c.Client)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 	if srCluster != nil && srCluster.SrCredentials.Key != "" {
-		srClient, ctx, err = GetApiClient(c.srClient, c.config)
+		srClient, ctx, err = GetApiClient(c.srClient, c.Config, c.Client)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
 		// Get Schema usage metrics
-		metrics, err := currCtx.Client.Metrics.SchemaRegistryMetrics(ctx, cluster.Id)
+		metrics, err := c.Client.Metrics.SchemaRegistryMetrics(ctx, cluster.Id)
 		if err != nil {
 			c.logger.Warn("Could not retrieve Schema Registry Metrics")
 			numSchemas = ""
@@ -237,7 +238,7 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 	return errors.New("flag --compatibility or --mode is required.")
 }
 func (c *clusterCommand) updateCompatibility(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(c.srClient, c.config)
+	srClient, ctx, err := GetApiClient(c.srClient, c.Config, c.Client)
 	if err != nil {
 		return err
 	}
@@ -256,7 +257,7 @@ func (c *clusterCommand) updateCompatibility(cmd *cobra.Command, args []string) 
 
 func (c *clusterCommand) updateMode(cmd *cobra.Command, args []string) error {
 
-	srClient, ctx, err := GetApiClient(c.srClient, c.config)
+	srClient, ctx, err := GetApiClient(c.srClient, c.Config, c.Client)
 	if err != nil {
 		return err
 	}

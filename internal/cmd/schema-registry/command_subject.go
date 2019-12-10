@@ -12,20 +12,21 @@ import (
 )
 
 type subjectCommand struct {
-	*cobra.Command
-	config   *config.Config
+	*pcmd.CLICommand
 	srClient *srsdk.APIClient
 }
 
 // NewSubjectCommand returns the Cobra command for Schema Registry subject list
-func NewSubjectCommand(config *config.Config, srClient *srsdk.APIClient) *cobra.Command {
-	subjectCmd := &subjectCommand{
-		Command: &cobra.Command{
+func NewSubjectCommand(config *config.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
+	cliCmd := pcmd.NewAuthenticatedCLICommand(
+		&cobra.Command{
 			Use:   "subject",
 			Short: "Manage Schema Registry subjects.",
 		},
-		config:   config,
-		srClient: srClient,
+		config, prerunner)
+	subjectCmd := &subjectCommand{
+		CLICommand: cliCmd,
+		srClient:   srClient,
 	}
 	subjectCmd.init()
 	return subjectCmd.Command
@@ -41,7 +42,7 @@ Retrieve all subjects available in a Schema Registry
 
 ::
 		config.CLIName schema-registry subject list
-`, c.config.CLIName),
+`, c.Config.CLIName),
 		RunE: c.list,
 		Args: cobra.NoArgs,
 	}
@@ -56,7 +57,7 @@ Update subject level compatibility or mode of schema registry.
 ::
 		config.CLIName schema-registry subject update <subjectname> --compatibility=BACKWARD
 		config.CLIName schema-registry subject update <subjectname> --mode=READWRITE
-`, c.config.CLIName),
+`, c.Config.CLIName),
 		RunE: c.update,
 		Args: cobra.ExactArgs(1),
 	}
@@ -74,7 +75,7 @@ Retrieve all versions registered under a given subject and its compatibility lev
 
 ::
 		config.CLIName schema-registry subject describe <subjectname>
-`, c.config.CLIName),
+`, c.Config.CLIName),
 		RunE: c.describe,
 		Args: cobra.ExactArgs(1),
 	}
@@ -99,7 +100,7 @@ func (c *subjectCommand) update(cmd *cobra.Command, args []string) error {
 	return errors.New("flag --compatibility or --mode is required.")
 }
 func (c *subjectCommand) updateCompatibility(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(c.srClient, c.config)
+	srClient, ctx, err := GetApiClient(c.srClient, c.Config, c.Client)
 	if err != nil {
 		return err
 	}
@@ -121,7 +122,7 @@ func (c *subjectCommand) updateMode(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	srClient, ctx, err := GetApiClient(c.srClient, c.config)
+	srClient, ctx, err := GetApiClient(c.srClient, c.Config, c.Client)
 	if err != nil {
 		return err
 	}
@@ -139,7 +140,7 @@ func (c *subjectCommand) list(cmd *cobra.Command, args []string) error {
 	type listDisplay struct {
 		Subject string
 	}
-	srClient, ctx, err := GetApiClient(c.srClient, c.config)
+	srClient, ctx, err := GetApiClient(c.srClient, c.Config, c.Client)
 	if err != nil {
 
 		return err
@@ -162,7 +163,7 @@ func (c *subjectCommand) list(cmd *cobra.Command, args []string) error {
 }
 
 func (c *subjectCommand) describe(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(c.srClient, c.config)
+	srClient, ctx, err := GetApiClient(c.srClient, c.Config, c.Client)
 	if err != nil {
 		return err
 	}

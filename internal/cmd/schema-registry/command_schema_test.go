@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/confluentinc/ccloud-sdk-go/mock"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
@@ -15,6 +16,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
+	pmock "github.com/confluentinc/cli/internal/pkg/mock"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
@@ -30,11 +32,12 @@ type SchemaTestSuite struct {
 	kafkaCluster *kafkav1.KafkaCluster
 	srCluster    *srv1.SchemaRegistryCluster
 	srClientMock *srsdk.APIClient
+	srMothershipMock *mock.SchemaRegistry
 }
 
 func (suite *SchemaTestSuite) SetupSuite() {
 	suite.conf = config.AuthenticatedConfigMock()
-	suite.conf.Context().Client.SchemaRegistry = &mock.SchemaRegistry{
+	suite.srMothershipMock = &mock.SchemaRegistry{
 		CreateSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *srv1.SchemaRegistryClusterConfig) (*srv1.SchemaRegistryCluster, error) {
 			return suite.srCluster, nil
 		},
@@ -42,10 +45,10 @@ func (suite *SchemaTestSuite) SetupSuite() {
 			return nil, nil
 		},
 	}
-	srCluster, _ := suite.conf.SchemaRegistryCluster()
+	srCluster, _ := suite.conf.SchemaRegistryCluster(pmock.NewClientMock())
 	srCluster.SrCredentials = &config.APIKeyPair{Key: "key", Secret: "secret"}
 
-	cluster, err := suite.conf.Context().ActiveKafkaCluster()
+	cluster, err := suite.conf.Context().ActiveKafkaCluster(pmock.NewClientMock())
 	if err != nil {
 		panic(err)
 	}
@@ -80,7 +83,10 @@ func (suite *SchemaTestSuite) SetupTest() {
 }
 
 func (suite *SchemaTestSuite) newCMD() *cobra.Command {
-	cmd := New(cliMock.NewPreRunnerMock(), suite.conf, suite.srClientMock, suite.conf.Logger)
+	client := &ccloud.Client{
+		SchemaRegistry: suite.srMothershipMock,
+	}
+	cmd := New(cliMock.NewPreRunnerMock(client, nil), suite.conf, suite.srClientMock, suite.conf.Logger)
 	return cmd
 }
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -29,7 +30,7 @@ var (
 	apiValue = &authv1.ApiKey{
 		Key:         apiKeyVal,
 		Secret:      apiSecretVal,
-		Description: "Mock Api's",
+		Description: "Mock Apis",
 	}
 )
 
@@ -47,10 +48,10 @@ type APITestSuite struct {
 //Require
 func (suite *APITestSuite) SetupTest() {
 	suite.conf = config.AuthenticatedConfigMock()
-	srCluster, _ := suite.conf.SchemaRegistryCluster()
+	srCluster, _ := suite.conf.SchemaRegistryCluster(mock.NewClientMock())
 	srCluster.SrCredentials = &config.APIKeyPair{Key: apiKeyVal, Secret: apiSecretVal}
 	ctx := suite.conf.Context()
-	cluster, err := ctx.ActiveKafkaCluster()
+	cluster, err := ctx.ActiveKafkaCluster(mock.NewClientMock())
 	if err != nil {
 		panic(err)
 	}
@@ -68,7 +69,6 @@ func (suite *APITestSuite) SetupTest() {
 			return suite.kafkaCluster, nil
 		},
 	}
-	ctx.Client.Kafka = suite.kafkaMock
 	suite.srMothershipMock = &ccsdkmock.SchemaRegistry{
 		CreateSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *srv1.SchemaRegistryClusterConfig) (*srv1.SchemaRegistryCluster, error) {
 			return suite.srCluster, nil
@@ -80,7 +80,6 @@ func (suite *APITestSuite) SetupTest() {
 			return []*srv1.SchemaRegistryCluster{suite.srCluster}, nil
 		},
 	}
-	ctx.Client.SchemaRegistry = suite.srMothershipMock
 	suite.apiMock = &ccsdkmock.APIKey{
 		GetFunc: func(ctx context.Context, apiKey *authv1.ApiKey) (key *authv1.ApiKey, e error) {
 			return apiValue, nil
@@ -98,12 +97,11 @@ func (suite *APITestSuite) SetupTest() {
 			return []*authv1.ApiKey{apiValue}, nil
 		},
 	}
-	ctx.Client.APIKey = suite.apiMock
 	suite.keystore = &mock.KeyStore{
-		HasAPIKeyFunc: func(key, clusterId string) (bool, error) {
+		HasAPIKeyFunc: func(key, clusterId string, client *ccloud.Client) (bool, error) {
 			return true, nil
 		},
-		StoreAPIKeyFunc: func(key *authv1.ApiKey, clusterId string) error {
+		StoreAPIKeyFunc: func(key *authv1.ApiKey, clusterId string, client *ccloud.Client) error {
 			return nil
 		},
 		DeleteAPIKeyFunc: func(key string) error {
@@ -113,7 +111,18 @@ func (suite *APITestSuite) SetupTest() {
 }
 
 func (suite *APITestSuite) newCMD() *cobra.Command {
-	cmd := New(cliMock.NewPreRunnerMock(), suite.conf, suite.keystore)
+	client := &ccloud.Client{
+		Auth:           &ccsdkmock.Auth{},
+		Account:        &ccsdkmock.Account{},
+		Kafka:          suite.kafkaMock,
+		SchemaRegistry: suite.srMothershipMock,
+		Connect:        &ccsdkmock.Connect{},
+		User:           &ccsdkmock.User{},
+		APIKey:         suite.apiMock,
+		KSQL:           &ccsdkmock.MockKSQL{},
+		Metrics:        &ccsdkmock.Metrics{},
+	}
+	cmd := New(cliMock.NewPreRunnerMock(client, nil), suite.conf, suite.keystore)
 	return cmd
 }
 

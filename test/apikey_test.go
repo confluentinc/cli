@@ -7,7 +7,6 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/log"
-	"github.com/confluentinc/cli/internal/pkg/mock"
 )
 
 func (s *CLITestSuite) TestAPIKeyCommands() {
@@ -30,44 +29,44 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 		{args: "api-key create --description my-other-app --resource lkc-other1", fixture: "apikey7.golden"}, // MYKEY5
 		{args: "api-key list", fixture: "apikey6.golden"},
 		{args: "api-key list --resource lkc-other1", fixture: "apikey8.golden"},
-		
+
 		// create api key for non-kafka cluster
 		{args: "api-key create --description my-ksql-app --resource lksqlc-ksql1", fixture: "apikey9.golden"}, // MYKEY6
 		{args: "api-key list", fixture: "apikey6.golden"},
 		{args: "api-key list --resource lksqlc-ksql1", fixture: "apikey10.golden"},
-		
+
 		// create api key for schema registry cluster
 		{args: "api-key create --resource lsrc-1", fixture: "apikey20.golden"}, // MYKEY7
 		{args: "api-key list --resource lsrc-1", fixture: "apikey21.golden"},
-		
+
 		// use an api key for active kafka cluster
 		{args: "api-key use MYKEY4", fixture: "empty.golden"},
 		{args: "api-key list", fixture: "apikey11.golden"},
-		
+
 		// use an api key for other kafka cluster
 		{args: "api-key use MYKEY5 --resource lkc-other1", fixture: "empty.golden"},
 		{args: "api-key list", fixture: "apikey11.golden"},
 		{args: "api-key list --resource lkc-other1", fixture: "apikey12.golden"},
-		
+
 		// use an api key for non-kafka cluster
 		{args: "api-key use MYKEY6 --resource lksqlc-ksql1", fixture: "empty.golden"},
 		{args: "api-key list", fixture: "apikey11.golden"},
 		{args: "api-key list --resource lksqlc-ksql1", fixture: "apikey13.golden"},
-		
+
 		// store an api-key for active kafka cluster
 		{args: "api-key store UIAPIKEY100 UIAPISECRET100", fixture: "empty.golden"},
 		{args: "api-key list", fixture: "apikey11.golden"},
-		
+
 		// store an api-key for other kafka cluster
 		{args: "api-key store UIAPIKEY101 UIAPISECRET101 --resource lkc-other1", fixture: "empty.golden"},
 		{args: "api-key list", fixture: "apikey11.golden"},
 		{args: "api-key list --resource lkc-other1", fixture: "apikey12.golden"},
-		
+
 		// store an api-key for non-kafka cluster
 		{args: "api-key store UIAPIKEY102 UIAPISECRET102 --resource lksqlc-ksql1", fixture: "empty.golden"},
 		{args: "api-key list", fixture: "apikey11.golden"},
 		{args: "api-key list --resource lksqlc-ksql1", fixture: "apikey14.golden"},
-		
+
 		// store: error handling
 		{name: "error if storing unknown api key", args: "api-key store UNKNOWN SECRET", fixture: "apikey15.golden"},
 		{name: "error if storing api key with existing secret", args: "api-key store UIAPIKEY100 NEWSECRET", fixture: "apikey16.golden"},
@@ -78,16 +77,16 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 					CLIName: binaryName,
 					Logger:  logger,
 				})
-				require.NoError(t, cfg.Load("", "", "", "", mock.NewEmptyClientMock(cfg.Logger)))
+				require.NoError(t, cfg.Load("", "", "", ""))
 				ctx := cfg.Context()
 				require.NotNil(t, ctx)
 				kcc := ctx.KafkaClusters["lkc-cool1"]
 				pair := kcc.APIKeys["UIAPIKEY100"]
 				require.NotNil(t, pair)
 				require.Equal(t, "NEWSECRET", pair.Secret)
-		
+
 			}},
-		
+
 		// use: error handling
 		{name: "error if using non-existent api-key", args: "api-key use UNKNOWN", fixture: "apikey17.golden"},
 		{name: "error if using api-key for wrong cluster", args: "api-key use MYKEY2", fixture: "apikey18.golden"},

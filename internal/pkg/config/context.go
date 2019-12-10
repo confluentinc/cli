@@ -1,14 +1,12 @@
 package config
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
-	"github.com/confluentinc/cli/internal/pkg/sdk"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -59,16 +57,13 @@ type Context struct {
 	UserSpecifiedSchemaRegistryEnvId string                            `json:"-" hcl:"-"`
 	State                            *ContextState                     `json:"-" hcl:"-"`
 	Logger                           *log.Logger                       `json:"-" hcl:"-"`
-	Resolver                         *contextResolver                  `json:"-" hcl:"-"`
-	Client                           *sdk.Client                       `json:"-" hcl:"-"`
 	Version                          *version.Version                  `json:"-" hcl:"-"`
 	Config                           *Config                           `json:"-" hcl:"-"`
 }
 
 func newContext(name string, platform *Platform, credential *Credential,
 	kafkaClusters map[string]*KafkaClusterConfig, kafka string,
-	schemaRegistryClusters map[string]*SchemaRegistryCluster, state *ContextState,
-	client *sdk.Client, config *Config) (*Context, error) {
+	schemaRegistryClusters map[string]*SchemaRegistryCluster, state *ContextState, config *Config) (*Context, error) {
 	ctx := &Context{
 		Name:                   name,
 		Platform:               platform,
@@ -79,7 +74,6 @@ func newContext(name string, platform *Platform, credential *Credential,
 		Kafka:                  kafka,
 		SchemaRegistryClusters: schemaRegistryClusters,
 		State:                  state,
-		Client:                 client,
 		Logger:                 config.Logger,
 		Version:                config.Version,
 		Config:                 config,
@@ -88,25 +82,7 @@ func newContext(name string, platform *Platform, credential *Credential,
 	if err != nil {
 		return nil, err
 	}
-	// If client isn't injected, create one.
-	if ctx.Client == nil {
-		ctx.Client = ctx.defaultClient()
-	}
-	ctx.Resolver = NewResolver(ctx)
 	return ctx, nil
-}
-
-func (c *Context) defaultClient() *sdk.Client {
-	baseURL := c.Platform.Server
-	state, err := c.AuthenticatedState()
-	var authToken string
-	if err == nil {
-		authToken = state.AuthToken
-	}
-	baseClient := ccloud.NewClientWithJWT(context.Background(), authToken, &ccloud.Params{
-		BaseURL: baseURL, Logger: c.Logger, UserAgent: c.Version.UserAgent,
-	})
-	return sdk.NewClient(baseClient, c.Logger)
 }
 
 // TODO: Save contexts after resolution.
@@ -156,14 +132,8 @@ func (c *Context) validateSRCluster(cluster *SchemaRegistryCluster, accountId st
 }
 
 func (c *Context) validate() error {
-	if c.Client == nil {
-		c.Client = 	c.defaultClient()
-	}
-	if c.Resolver == nil {
-		c.Resolver = NewResolver(c)
-	}
 	if c.Name == "" {
-		return errors.New("context has no name")
+		return errors.New("one of the existing contexts has no name")
 	}
 	if c.CredentialName == "" {
 		return &errors.UnspecifiedCredentialError{ContextName: c.Name}
@@ -211,8 +181,8 @@ func (c *Context) validate() error {
 	return nil
 }
 
-func (c *Context) SetActiveKafkaCluster(clusterId string) error {
-	_, err := c.FindKafkaCluster(clusterId)
+func (c *Context) SetActiveKafkaCluster(clusterId string, client *ccloud.Client) error {
+	_, err := c.FindKafkaCluster(clusterId, client)
 	if err != nil {
 		return err
 	}
@@ -220,8 +190,8 @@ func (c *Context) SetActiveKafkaCluster(clusterId string) error {
 	return c.Save()
 }
 
-func (c *Context) SetUserSpecifiedKafkaCluster(clusterId string) error {
-	_, err := c.FindKafkaCluster(clusterId)
+func (c *Context) SetUserSpecifiedKafkaCluster(clusterId string, client *ccloud.Client) error {
+	_, err := c.FindKafkaCluster(clusterId, client)
 	if err != nil {
 		return err
 	}
@@ -232,7 +202,7 @@ func (c *Context) SetUserSpecifiedKafkaCluster(clusterId string) error {
 // SchemaRegistryCluster returns the SchemaRegistryCluster of the Context,
 // or an empty SchemaRegistryCluster if there is none set, 
 // or an ErrNotLoggedIn if the user is not logged in.
-func (c *Context) schemaRegistryCluster() (*SchemaRegistryCluster, error) {
+func (c *Context) schemaRegistryCluster(client *ccloud.Client) (*SchemaRegistryCluster, error) {
 	state, err := c.AuthenticatedState()
 	if err != nil {
 		return nil, err
@@ -243,7 +213,8 @@ func (c *Context) schemaRegistryCluster() (*SchemaRegistryCluster, error) {
 		return nil, nil
 	}
 	if cluster.SchemaRegistryEndpoint == "" || cluster.Id == "" {
-		resolvedCluster, err := c.Resolver.ResolveSchemaRegistryByAccountId(accountId)
+		resolver := NewResolver(c, client)
+		resolvedCluster, err := resolver.ResolveSchemaRegistryByAccountId(accountId)
 		if err != nil {
 			return nil, err
 		}
@@ -257,24 +228,28 @@ func (c *Context) schemaRegistryCluster() (*SchemaRegistryCluster, error) {
 	return cluster, nil
 }
 
-func (c *Context) ActiveKafkaCluster() (*KafkaClusterConfig, error) {
+func (c *Context) ActiveKafkaCluster(client *ccloud.Client) (*KafkaClusterConfig, error) {
 	var clusterId string
 	if c.UserSpecifiedKafkaCluster != "" {
 		clusterId = c.UserSpecifiedKafkaCluster
 	} else {
 		clusterId = c.Kafka
 	}
-	cluster, err := c.FindKafkaCluster(clusterId)
+	cluster, err := c.FindKafkaCluster(clusterId, client)
 	if err != nil {
 		return nil, err
 	}
 	return cluster, nil
 }
 
-func (c *Context) FindKafkaCluster(clusterId string) (*KafkaClusterConfig, error) {
+func (c *Context) FindKafkaCluster(clusterId string, client *ccloud.Client) (*KafkaClusterConfig, error) {
 	if _, ok := c.KafkaClusters[clusterId]; !ok {
+		if client == nil {
+			return nil, errors.ErrNoKafkaContext
+		}
 		// Resolve cluster details.
-		cluster, err := c.Resolver.ResolveCluster(clusterId)
+		resolver := NewResolver(c, client)
+		cluster, err := resolver.ResolveCluster(clusterId)
 		if err != nil {
 			return nil, err
 		}
@@ -287,14 +262,15 @@ func (c *Context) FindKafkaCluster(clusterId string) (*KafkaClusterConfig, error
 	return c.KafkaClusters[clusterId], nil
 }
 
-func (c *Context) UseAPIKey(apiKey string, clusterId string) error {
-	kcc, err := c.FindKafkaCluster(clusterId)
+func (c *Context) UseAPIKey(apiKey string, clusterId string, client *ccloud.Client) error {
+	kcc, err := c.FindKafkaCluster(clusterId, client)
 	if err != nil {
 		return err
 	}
 	if _, ok := kcc.APIKeys[apiKey]; !ok {
 		// Fetch API key error.
-		return c.Resolver.client.FetchAPIKeyError(apiKey, clusterId)
+		ctxClient := NewContextClient(c, client)
+		return ctxClient.FetchAPIKeyError(apiKey, clusterId)
 	}
 	kcc.APIKey = apiKey
 	return c.Save()

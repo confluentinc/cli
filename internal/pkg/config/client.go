@@ -14,13 +14,14 @@ import (
 
 type contextClient struct {
 	context *Context
+	client  *ccloud.Client
 }
 
-// NewContextClient returns a new contextClient, with the specified context and its client. 
-// and an injected CCLoud client, or a dynamically generated client if passed a nil client. 
-func NewContextClient(ctx *Context) *contextClient {
+// NewContextClient returns a new contextClient, with the specified context and a client.
+func NewContextClient(ctx *Context, client *ccloud.Client) *contextClient {
 	return &contextClient{
 		context: ctx,
+		client:  client,
 	}
 }
 
@@ -30,7 +31,7 @@ func (c *contextClient) FetchCluster(clusterId string) (*kafkav1.KafkaCluster, e
 		return nil, err
 	}
 	req := &kafkav1.KafkaCluster{AccountId: state.Auth.Account.Id, Id: clusterId}
-	kc, err := c.context.Client.Kafka.Describe(context.Background(), req)
+	kc, err := c.client.Kafka.Describe(context.Background(), req)
 	if err != nil {
 		if err != ccloud.ErrNotFound {
 			return nil, err
@@ -46,7 +47,7 @@ func (c *contextClient) FetchAPIKeyError(apiKey, clusterID string) error {
 		return err
 	}
 	// check if this is API key exists server-side
-	key, err := c.context.Client.APIKey.Get(context.Background(), &authv1.ApiKey{AccountId: state.Auth.Account.Id, Key: apiKey})
+	key, err := c.client.APIKey.Get(context.Background(), &authv1.ApiKey{AccountId: state.Auth.Account.Id, Key: apiKey})
 	if err != nil {
 		return err
 	}
@@ -67,7 +68,7 @@ func (c *contextClient) FetchAPIKeyError(apiKey, clusterID string) error {
 }
 
 func (c *contextClient) FetchSchemaRegistryByAccountId(context context.Context, accountId string) (*v1.SchemaRegistryCluster, error) {
-	existingClusters, err := c.context.Client.SchemaRegistry.GetSchemaRegistryClusters(context, &v1.SchemaRegistryCluster{
+	existingClusters, err := c.client.SchemaRegistry.GetSchemaRegistryClusters(context, &v1.SchemaRegistryCluster{
 		AccountId: accountId,
 		Name:      "account schema-registry",
 	})
@@ -81,7 +82,7 @@ func (c *contextClient) FetchSchemaRegistryByAccountId(context context.Context, 
 }
 
 func (c *contextClient) FetchSchemaRegistryById(context context.Context, id string, accountId string) (*v1.SchemaRegistryCluster, error) {
-	existingCluster, err := c.context.Client.SchemaRegistry.GetSchemaRegistryCluster(context, &v1.SchemaRegistryCluster{
+	existingCluster, err := c.client.SchemaRegistry.GetSchemaRegistryCluster(context, &v1.SchemaRegistryCluster{
 		Id:        id,
 		AccountId: accountId,
 	})

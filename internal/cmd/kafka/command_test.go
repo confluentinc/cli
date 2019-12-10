@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/confluentinc/ccloud-sdk-go/mock"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	"github.com/spf13/cobra"
@@ -417,8 +418,8 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 			return nil, errors.ErrNotLoggedIn
 		},
 	}
-	conf.Context().Client.Kafka = kafka
-	cmd := New(cliMock.NewPreRunnerMock(), conf)
+	client := &ccloud.Client{Kafka: kafka}
+	cmd := New(cliMock.NewPreRunnerMock(client, nil), conf)
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	cmd.SetArgs(append([]string{"cluster", "list"}))
 	buf := new(bytes.Buffer)
@@ -433,8 +434,8 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 
 /*************** TEST setup/helpers ***************/
 func NewCMD(expect chan interface{}) *cobra.Command {
-	conf.Context().Client.Kafka = cliMock.NewKafkaMock(expect)
-	cmd := New(cliMock.NewPreRunnerMock(), conf)
+	client := &ccloud.Client{Kafka: cliMock.NewKafkaMock(expect)}
+	cmd := New(cliMock.NewPreRunnerMock(client, nil), conf)
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 
 	return cmd

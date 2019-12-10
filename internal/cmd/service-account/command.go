@@ -17,8 +17,7 @@ import (
 )
 
 type command struct {
-	*cobra.Command
-	config *config.Config
+	*pcmd.CLICommand
 }
 
 var (
@@ -33,13 +32,14 @@ const descriptionLength = 128
 
 // New returns the Cobra command for service accounts.
 func New(prerunner pcmd.PreRunner, config *config.Config) *cobra.Command {
-	cmd := &command{
-		Command: &cobra.Command{
-			Use:               "service-account",
-			Short:             `Manage service accounts.`,
-			PersistentPreRunE: prerunner.Authenticated(config),
+	cliCmd := pcmd.NewAuthenticatedCLICommand(
+		&cobra.Command{
+			Use:   "service-account",
+			Short: `Manage service accounts.`,
 		},
-		config: config,
+		config, prerunner)
+	cmd := &command{
+		CLICommand: cliCmd,
 	}
 	cmd.init()
 	return cmd.Command
@@ -132,7 +132,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	if err := requireLen(description, descriptionLength, "description"); err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	state, err := c.config.AuthenticatedState()
+	state, err := c.Config.AuthenticatedState()
 	if err != nil {
 		return err
 	}
@@ -142,11 +142,11 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		OrganizationId:     state.Auth.User.OrganizationId,
 		ServiceAccount:     true,
 	}
-	ctx := c.config.Context()
+	ctx := c.Config.Context()
 	if ctx == nil {
 		return errors.ErrNoContext
 	}
-	user, err = ctx.Client.User.CreateServiceAccount(context.Background(), user)
+	user, err = c.Client.User.CreateServiceAccount(context.Background(), user)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -174,11 +174,11 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		Id:                 id,
 		ServiceDescription: description,
 	}
-	ctx := c.config.Context()
+	ctx := c.Config.Context()
 	if ctx == nil {
 		return errors.ErrNoContext
 	}
-	err = ctx.Client.User.UpdateServiceAccount(context.Background(), user)
+	err = c.Client.User.UpdateServiceAccount(context.Background(), user)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -195,11 +195,11 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	user := &orgv1.User{
 		Id: id,
 	}
-	ctx := c.config.Context()
+	ctx := c.Config.Context()
 	if ctx == nil {
 		return errors.ErrNoContext
 	}
-	err = ctx.Client.User.DeleteServiceAccount(context.Background(), user)
+	err = c.Client.User.DeleteServiceAccount(context.Background(), user)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -207,11 +207,11 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) list(cmd *cobra.Command, args []string) error {
-	ctx := c.config.Context()
+	ctx := c.Config.Context()
 	if ctx == nil {
 		return errors.ErrNoContext
 	}
-	users, err := ctx.Client.User.GetServiceAccounts(context.Background())
+	users, err := c.Client.User.GetServiceAccounts(context.Background())
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}

@@ -12,29 +12,31 @@ import (
 )
 
 type command struct {
-	*cobra.Command
-	config   *config.Config
-	logger   *log.Logger
-	srClient *srsdk.APIClient
+	*pcmd.CLICommand
+	logger    *log.Logger
+	srClient  *srsdk.APIClient
+	prerunner pcmd.PreRunner
 }
 
 func New(prerunner pcmd.PreRunner, config *config.Config, srClient *srsdk.APIClient, logger *log.Logger) *cobra.Command {
-	cmd := &command{
-		Command: &cobra.Command{
-			Use:               "schema-registry",
-			Short:             `Manage Schema Registry.`,
-			PersistentPreRunE: prerunner.Authenticated(config),
+	cliCmd := pcmd.NewAuthenticatedCLICommand(
+		&cobra.Command{
+			Use:   "schema-registry",
+			Short: `Manage Schema Registry.`,
 		},
-		config:   config,
-		srClient: srClient,
-		logger:   logger,
+		config, prerunner)
+	cmd := &command{
+		CLICommand: cliCmd,
+		srClient:   srClient,
+		logger:     logger,
+		prerunner:  prerunner,
 	}
 	cmd.init()
 	return cmd.Command
 }
 
 func (c *command) init() {
-	c.AddCommand(NewClusterCommand(c.config, c.srClient, c.logger))
-	c.AddCommand(NewSubjectCommand(c.config, c.srClient))
-	c.AddCommand(NewSchemaCommand(c.config, c.srClient))
+	c.AddCommand(NewClusterCommand(c.Config, c.prerunner, c.srClient, c.logger))
+	c.AddCommand(NewSubjectCommand(c.Config, c.prerunner, c.srClient))
+	c.AddCommand(NewSchemaCommand(c.Config, c.prerunner, c.srClient))
 }

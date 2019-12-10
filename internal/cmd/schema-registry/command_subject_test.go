@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -16,6 +17,7 @@ import (
 	srMock "github.com/confluentinc/schema-registry-sdk-go/mock"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
+	pmock "github.com/confluentinc/cli/internal/pkg/mock"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
@@ -34,10 +36,10 @@ type SubjectTestSuite struct {
 
 func (suite *SubjectTestSuite) SetupSuite() {
 	suite.conf = config.AuthenticatedConfigMock()
-	srCluster, _ := suite.conf.SchemaRegistryCluster()
+	srCluster, _ := suite.conf.SchemaRegistryCluster(pmock.NewClientMock())
 	srCluster.SrCredentials = &config.APIKeyPair{Key: "key", Secret: "secret"}
 
-	cluster, err := suite.conf.Context().ActiveKafkaCluster()
+	cluster, err := suite.conf.Context().ActiveKafkaCluster(pmock.NewClientMock())
 	if err != nil {
 		panic(err)
 	}
@@ -81,7 +83,10 @@ func (suite *SubjectTestSuite) SetupTest() {
 }
 
 func (suite *SubjectTestSuite) newCMD() *cobra.Command {
-	cmd := New(cliMock.NewPreRunnerMock(), suite.conf, suite.srClientMock, suite.conf.Logger)
+	client := &ccloud.Client{
+		SchemaRegistry: suite.srMothershipMock,
+	}
+	cmd := New(cliMock.NewPreRunnerMock(client, nil), suite.conf, suite.srClientMock, suite.conf.Logger)
 	return cmd
 }
 

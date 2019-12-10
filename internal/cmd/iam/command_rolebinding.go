@@ -11,6 +11,7 @@ import (
 	"github.com/confluentinc/go-printer"
 	"github.com/confluentinc/mds-sdk-go"
 
+	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
@@ -30,25 +31,19 @@ type rolebindingOptions struct {
 }
 
 type rolebindingCommand struct {
-	*cobra.Command
-	client *mds.APIClient
-	ctx    context.Context
+	*cmd.CLICommand
 }
 
 // NewRolebindingCommand returns the sub-command object for interacting with RBAC rolebindings.
-func NewRolebindingCommand(cfg *config.Config) *cobra.Command {
-	roleBindingCmd := &rolebindingCommand{
-		Command: &cobra.Command{
+func NewRolebindingCommand(cfg *config.Config, prerunner cmd.PreRunner) *cobra.Command {
+	cliCmd := cmd.NewAuthenticatedCLICommand(
+		&cobra.Command{
 			Use:   "rolebinding",
 			Short: "Manage RBAC and IAM role bindings.",
 			Long:  "Manage Role Based Access (RBAC) and Identity and Access Management (IAM) role bindings.",
 		},
-	}
-	state, err := cfg.AuthenticatedState()
-	if err != nil {
-		state = new(config.ContextState)
-	}
-	roleBindingCmd.ctx = context.WithValue(context.Background(), mds.ContextAccessToken, state.AuthToken)
+		cfg, prerunner)
+	roleBindingCmd := &rolebindingCommand{CLICommand: cliCmd}
 	roleBindingCmd.init()
 	return roleBindingCmd.Command
 }
@@ -137,7 +132,11 @@ func (c *rolebindingCommand) parseAndValidateResourcePattern(typename string, pr
 }
 
 func (c *rolebindingCommand) validateRoleAndResourceType(roleName string, resourceType string) error {
-	role, _, err := c.client.RoleDefinitionsApi.RoleDetail(c.ctx, roleName)
+	ctx, err := c.createContext()
+	if err != nil {
+		return err
+	}
+	role, _, err := c.MDSClient.RoleDefinitionsApi.RoleDetail(ctx, roleName)
 	if err != nil {
 		return errors.Wrapf(err, "Failed to look up role %s. Was an invalid role name specified?", roleName)
 	}
@@ -222,8 +221,12 @@ func (c *rolebindingCommand) list(cmd *cobra.Command, args []string) error {
 	var roleNamesWithMultiplicity []string
 	var resourcePatterns []mds.ResourcePattern
 	roleNames := []string{role}
+	ctx, err := c.createContext()
+	if err != nil {
+		return err
+	}
 	if role == "*" {
-		roleNames, _, err = c.client.UserAndRoleMgmtApi.ScopedPrincipalRolenames(c.ctx, principal, mds.Scope{Clusters: *scopeClusters})
+		roleNames, _, err = c.MDSClient.UserAndRoleMgmtApi.ScopedPrincipalRolenames(ctx, principal, mds.Scope{Clusters: *scopeClusters})
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
@@ -231,7 +234,7 @@ func (c *rolebindingCommand) list(cmd *cobra.Command, args []string) error {
 
 	for _, r := range roleNames {
 		// This only gets resource-scoped bindings...
-		rps, _, err := c.client.UserAndRoleMgmtApi.GetRoleResourcesForPrincipal(c.ctx, principal, r, mds.Scope{Clusters: *scopeClusters})
+		rps, _, err := c.MDSClient.UserAndRoleMgmtApi.GetRoleResourcesForPrincipal(ctx, principal, r, mds.Scope{Clusters: *scopeClusters})
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
@@ -322,10 +325,14 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, args []string) error {
 	}
 
 	var resp *http.Response
+	ctx, err := c.createContext()
+	if err != nil {
+		return err
+	}
 	if options.resource != "" {
-		resp, err = c.client.UserAndRoleMgmtApi.AddRoleResourcesForPrincipal(c.ctx, options.principal, options.role, options.resourcesRequest)
+		resp, err = c.MDSClient.UserAndRoleMgmtApi.AddRoleResourcesForPrincipal(ctx, options.principal, options.role, options.resourcesRequest)
 	} else {
-		resp, err = c.client.UserAndRoleMgmtApi.AddRoleForPrincipal(c.ctx, options.principal, options.role, mds.Scope{Clusters: options.scopeClusters})
+		resp, err = c.MDSClient.UserAndRoleMgmtApi.AddRoleForPrincipal(ctx, options.principal, options.role, mds.Scope{Clusters: options.scopeClusters})
 	}
 
 	if err != nil {
@@ -345,11 +352,15 @@ func (c *rolebindingCommand) delete(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
+	ctx, err := c.createContext()
+	if err != nil {
+		return err
+	}
 	var resp *http.Response
 	if options.resource != "" {
-		resp, err = c.client.UserAndRoleMgmtApi.RemoveRoleResourcesForPrincipal(c.ctx, options.principal, options.role, options.resourcesRequest)
+		resp, err = c.MDSClient.UserAndRoleMgmtApi.RemoveRoleResourcesForPrincipal(ctx, options.principal, options.role, options.resourcesRequest)
 	} else {
-		resp, err = c.client.UserAndRoleMgmtApi.DeleteRoleForPrincipal(c.ctx, options.principal, options.role, mds.Scope{Clusters: options.scopeClusters})
+		resp, err = c.MDSClient.UserAndRoleMgmtApi.DeleteRoleForPrincipal(ctx, options.principal, options.role, mds.Scope{Clusters: options.scopeClusters})
 	}
 
 	if err != nil {
@@ -384,4 +395,12 @@ func isClusterScopedRole(role string) bool {
 		}
 	}
 	return false
+}
+
+func (c *rolebindingCommand) createContext() (context.Context, error) {
+	state, err := c.Config.AuthenticatedState()
+	if err != nil {
+		return nil, err
+	}
+	return context.WithValue(context.Background(), mds.ContextAccessToken, state.AuthToken), nil
 }

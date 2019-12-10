@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"strings"
 
+	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
@@ -22,7 +23,8 @@ var (
 // FlagResolver reads indirect flag values such as "-" for stdin pipe or "@file.txt" @ prefix
 type FlagResolver interface {
 	ValueFrom(source string, prompt string, secure bool) (string, error)
-	ResolveFlags(cmd *cobra.Command, cfg *config.Config) error
+	ResolveContextFlag(cmd *cobra.Command, cfg *config.Config) error
+	ResolveFlags(cmd *cobra.Command, cfg *config.Config, client *ccloud.Client) error
 }
 
 type FlagResolverImpl struct {
@@ -91,23 +93,19 @@ func (r *FlagResolverImpl) ValueFrom(source string, prompt string, secure bool) 
 	return source, nil
 }
 
-func (r *FlagResolverImpl) ResolveFlags(cmd *cobra.Command, cfg *config.Config) error {
-	err := resolveContextFlag(cmd, cfg)
+func (r *FlagResolverImpl) ResolveFlags(cmd *cobra.Command, cfg *config.Config, client *ccloud.Client) error {
+	err := resolveEnvironmentFlag(cmd, cfg)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	err = resolveClusterFlag(cmd, cfg)
+	err = resolveClusterFlag(cmd, cfg, client)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	err = resolveEnvironmentFlag(cmd, cfg)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	return resolveResourceId(cmd, cfg)
+	return resolveResourceId(cmd, cfg, client)
 }
 
-func resolveContextFlag(cmd *cobra.Command, cfg *config.Config) error {
+func (r *FlagResolverImpl) ResolveContextFlag(cmd *cobra.Command, cfg *config.Config) error {
 	if cmd.Flags().Changed("context") {
 		name, err := cmd.Flags().GetString("context")
 		if err != nil {
@@ -122,7 +120,7 @@ func resolveContextFlag(cmd *cobra.Command, cfg *config.Config) error {
 	return nil
 }
 
-func resolveClusterFlag(cmd *cobra.Command, cfg *config.Config) error {
+func resolveClusterFlag(cmd *cobra.Command, cfg *config.Config, client *ccloud.Client) error {
 	if cmd.Flags().Changed("cluster") {
 		clusterId, err := cmd.Flags().GetString("cluster")
 		if err != nil {
@@ -132,7 +130,7 @@ func resolveClusterFlag(cmd *cobra.Command, cfg *config.Config) error {
 		if ctx == nil {
 			return errors.ErrNoContext
 		}
-		if _, err := ctx.FindKafkaCluster(clusterId); err != nil {
+		if _, err := ctx.FindKafkaCluster(clusterId, client); err != nil {
 			return fmt.Errorf("kafka cluster '%s' does not exist under context '%s'", clusterId, ctx.Name)
 		}
 		ctx.UserSpecifiedKafkaCluster = clusterId
@@ -162,12 +160,12 @@ func resolveEnvironmentFlag(cmd *cobra.Command, cfg *config.Config) error {
 	return nil
 }
 
-func resolveResourceId(cmd *cobra.Command, cfg *config.Config) error {
+func resolveResourceId(cmd *cobra.Command, cfg *config.Config, client *ccloud.Client) error {
 	const resourceFlag = "resource"
 	if !cmd.Flags().Changed(resourceFlag) {
 		return nil
 	}
-	resource, err := cmd.Flags().GetString(resourceFlag)
+	resourceId, err := cmd.Flags().GetString(resourceFlag)
 	if err != nil {
 		return err
 	}
@@ -176,9 +174,9 @@ func resolveResourceId(cmd *cobra.Command, cfg *config.Config) error {
 		return errors.New("must have an existing context to use --resource flag")
 	}
 	// Resource is schema registry.
-	if strings.HasPrefix(resource, "lsrc-") {
+	if strings.HasPrefix(resourceId, "lsrc-") {
 		for envId, srCluster := range ctx.SchemaRegistryClusters {
-			if srCluster.Id == resource {
+			if srCluster.Id == resourceId {
 				ctx.UserSpecifiedSchemaRegistryEnvId = envId
 			}
 		}
@@ -189,8 +187,8 @@ func resolveResourceId(cmd *cobra.Command, cfg *config.Config) error {
 				return err
 			}
 			accountId := state.Auth.Account.Id
-			ctxClient := config.NewContextClient(ctx)
-			srCluster, err := ctxClient.FetchSchemaRegistryById(context.Background(), resource, accountId)
+			ctxClient := config.NewContextClient(ctx, client)
+			srCluster, err := ctxClient.FetchSchemaRegistryById(context.Background(), resourceId, accountId)
 			if err != nil {
 				return err
 			}
@@ -205,7 +203,7 @@ func resolveResourceId(cmd *cobra.Command, cfg *config.Config) error {
 		}
 	} else {
 		// Resource is Kafka cluster.
-		return ctx.SetUserSpecifiedKafkaCluster(resource)
+		return ctx.SetUserSpecifiedKafkaCluster(resourceId, client)
 	}
 	return nil
 }
