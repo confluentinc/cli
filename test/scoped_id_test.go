@@ -18,7 +18,7 @@ func (s *CLITestSuite) TestClusterScopedId() {
 	cpIdURL1 := serveClusterScopedId(&cluster.ScopedId{
 		ID: "crn://md01.example.com/kafka=kafkaCluster1/connect=connectClusterA",
 		Scope: &cluster.Scope{
-			Path: []string{"This", "Is", "Ignored"},
+			Path:     []string{"This", "Is", "Ignored"},
 			Clusters: map[string]string{"kafka-cluster": "kafkaCluster1", "connect-cluster": "connectClusterA"},
 		},
 	}, s.T()).URL
@@ -27,7 +27,7 @@ func (s *CLITestSuite) TestClusterScopedId() {
 	cpIdURL2 := serveClusterScopedId(&cluster.ScopedId{
 		ID: "",
 		Scope: &cluster.Scope{
-			Path: []string{},
+			Path:     []string{},
 			Clusters: map[string]string{"kafka-cluster": "kafkaCluster1", "connect-cluster": "connectClusterA"},
 		},
 	}, s.T()).URL
@@ -36,7 +36,7 @@ func (s *CLITestSuite) TestClusterScopedId() {
 	cpIdURL3 := serveClusterScopedId(&cluster.ScopedId{
 		ID: "crn://md01.example.com/kafka=kafkaCluster1/connect=connectClusterA",
 		Scope: &cluster.Scope{
-			Path: []string{},
+			Path:     []string{},
 			Clusters: map[string]string{"kafka-cluster": "kafkaCluster1"},
 		},
 	}, s.T()).URL

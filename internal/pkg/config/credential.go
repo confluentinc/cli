@@ -18,9 +18,9 @@ const (
 	APIKey
 )
 
-func (c *CredentialType) String() string {
+func (c CredentialType) String() string {
 	credTypes := [...]string{"username", "api-key"}
-	return credTypes[*c]
+	return credTypes[c]
 }
 
 func (c *Credential) String() string {
