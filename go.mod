@@ -7,6 +7,8 @@ require (
 	github.com/Shopify/sarama v1.20.1
 	github.com/Shopify/toxiproxy v2.1.3+incompatible // indirect
 	github.com/alcortesm/tgz v0.0.0-20161220082320-9c5fe88206d7 // indirect
+	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
+	github.com/alecthomas/units v0.0.0-20190717042225-c3de453c63f4 // indirect
 	github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239 // indirect
 	github.com/antihax/optional v0.0.0-20180407024304-ca021399b1a6 // indirect
 	github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da
@@ -33,7 +35,7 @@ require (
 	github.com/gliderlabs/ssh v0.1.4 // indirect
 	github.com/gobuffalo/flect v0.1.3
 	github.com/gogo/protobuf v1.2.1
-	github.com/golang/mock v1.3.1
+	github.com/golang/mock v1.2.0
 	github.com/golang/protobuf v1.3.2
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/golangci/gocyclo v0.0.0-20180528144436-0a533e8fa43d // indirect
@@ -51,6 +53,7 @@ require (
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
 	github.com/havoc-io/gopass v0.0.0-20170602182606-9a121bec1ae7
 	github.com/iancoleman/strcase v0.0.0-20190422225806-e506e3ef7365
+	github.com/joeshaw/iso8601 v0.0.0-20140327141645-861d1ce636d0
 	github.com/jonboulle/clockwork v0.1.0
 	github.com/kevinburke/go-bindata v3.13.0+incompatible
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
@@ -66,6 +69,8 @@ require (
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4
 	github.com/pkg/errors v0.8.1
 	github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a // indirect
+	github.com/segmentio/analytics-go v3.1.0+incompatible
+	github.com/segmentio/backo-go v0.0.0-20160424052352-204274ad699c // indirect
 	github.com/shurcooL/go v0.0.0-20190704215121-7189cc372560 // indirect
 	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
 	github.com/spf13/afero v1.2.2 // indirect
@@ -75,7 +80,7 @@ require (
 	github.com/spf13/viper v1.4.0
 	github.com/stretchr/testify v1.4.0
 	github.com/tidwall/pretty v0.0.0-20190325153808-1166b9ac2b65
-	github.com/travisjeffery/mocker v1.1.0
+	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c // indirect
 	golang.org/x/crypto v0.0.0-20190923035154-9ee001bba392
 	golang.org/x/exp v0.0.0-20190731235908-ec7cb31e5a56 // indirect
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45

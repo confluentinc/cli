@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/atrox/homedir"
+	"github.com/google/uuid"
 
 	v1 "github.com/confluentinc/ccloudapis/org/v1"
 
@@ -42,6 +43,7 @@ type Config struct {
 	Credentials        map[string]*Credential `json:"credentials"`
 	Contexts           map[string]*Context    `json:"contexts"`
 	CurrentContext     string                 `json:"current_context"`
+	AnonymousId        string
 }
 
 // New initializes a new Config object
@@ -59,6 +61,7 @@ func New(config ...*Config) *Config {
 	c.Platforms = map[string]*Platform{}
 	c.Credentials = map[string]*Credential{}
 	c.Contexts = map[string]*Context{}
+	c.AnonymousId = uuid.New().String()
 	return c
 }
 
@@ -312,6 +315,21 @@ func (c *Config) CheckSchemaRegistryHasAPIKey() bool {
 		return false
 	}
 	return !(srCluster.SrCredentials == nil || len(srCluster.SrCredentials.Key) == 0 || len(srCluster.SrCredentials.Secret) == 0)
+}
+
+func (c *Config) ResetAnonymousId() error{
+	c.AnonymousId = uuid.New().String()
+	return c.Save()
+}
+
+func (c *Config) DeleteUserAuth() error {
+	c.AuthToken = ""
+	c.Auth = nil
+	err := c.Save()
+	if err != nil {
+		return errors.Wrap(err, "Unable to delete user auth")
+	}
+	return nil
 }
 
 func (c *Config) getFilename() (string, error) {
