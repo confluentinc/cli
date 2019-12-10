@@ -1,15 +1,11 @@
 strategy:
   matrix:
+    windows:
+      imageName: 'windows-2019'
     mac:
       imageName: 'macOS-10.14'
     linux:
       imageName: 'ubuntu-18.04'
-          #    linux:
-          #      imageName: 'ubuntu-16.04'
-          #    mac:
-          #      imageName: 'macOS-10.14'
-          #    windows:
-          #      imageName: 'windows-2019'
 
 pool:
   vmImage: $(imageName)
@@ -32,13 +28,28 @@ steps:
   condition: eq( variables['Agent.OS'], 'Darwin' )
   displayName: 'Install Go 1.12.5 (Darwin)'
 
+- powershell: |
+    Invoke-WebRequest -Uri "https://storage.googleapis.com/golang/go1.12.5.windows-amd64.zip" -OutFile "$(Agent.BuildDirectory)\go1.12.5.zip" -Verbose
+    & ${env:ProgramFiles}\7-Zip\7z.exe x $(Agent.BuildDirectory)/go1.12.5.zip "-o$(Agent.BuildDirectory)" -y
+  condition: eq( variables['Agent.OS'], 'Windows_NT' )
+  displayName: 'Install Go 1.12.5 (Windows)'
+
 # Linux
 - bash: |
     echo "##vso[task.setvariable variable=GOROOT]$(Agent.BuildDirectory)/go"
     echo "##vso[task.setvariable variable=GOPATH]$(Agent.BuildDirectory)/gopath"
     echo "##vso[task.setvariable variable=GOBIN]$(Agent.BuildDirectory)/go/bin"
     echo "##vso[task.setvariable variable=modulePath]$(Agent.BuildDirectory)/go/src/github.com/$(build.repository.name)"
-  displayName: Properly configure our custom Go environment
+  condition: ne( variables['Agent.OS'], 'Windows_NT' )
+  displayName: Properly configure our custom Go environment (Mac/Linux)
+
+- bash: |
+    echo "##vso[task.setvariable variable=GOROOT]$(Agent.BuildDirectory)\go"
+    echo "##vso[task.setvariable variable=GOPATH]$(Agent.BuildDirectory)\gopath"
+    echo "##vso[task.setvariable variable=GOBIN]$(Agent.BuildDirectory)\go\bin"
+    echo "##vso[task.setvariable variable=modulePath]$(Agent.BuildDirectory)\go\src\github.com\$(build.repository.name)"
+  condition: eq( variables['Agent.OS'], 'Windows_NT' )
+  displayName: Properly configure our custom Go environment (Windows)
 
 - task: DownloadSecureFile@1
   name: idrsa
@@ -55,14 +66,42 @@ steps:
 - script: |
     echo '##vso[task.prependpath]$(GOROOT)/bin'
     echo '##vso[task.prependpath]$(GOPATH)/bin'
-  displayName: 'Set up the Go workspace'
+    mkdir -p ${GOPATH}\bin
+    mkdir -p ${GOROOT}\bin
+  condition: ne( variables['Agent.OS'], 'Windows_NT' )
+  displayName: 'Set up the Go workspace (non-Windows)'
+
+- script: |
+    echo '##vso[task.prependpath]$(GOROOT)\bin'
+    echo '##vso[task.prependpath]$(GOPATH)\bin'
+    echo '##vso[task.setvariable variable=PATH;]$(GOROOT)\bin;$(GOPATH)\bin;$(PATH)'
+    echo '$(GOROOT)'
+    echo '$(GOPATH)'
+    echo '$(PATH)'
+    echo '%PATH%'
+    mkdir ${GOPATH}\bin
+    mkdir ${GOROOT}\bin
+  condition: eq( variables['Agent.OS'], 'Windows_NT' )
+  displayName: 'Set up the Go workspace (Windows)'
 
 - script: |
     mv $(netrc.secureFilePath) ~/.netrc
     mkdir ~/.ssh
     sudo mv $(idrsa.secureFilePath) ~/.ssh/
     sudo chmod 400 ~/.ssh/id_rsa
-  displayName: 'Put secrets in their right places'
+  condition: ne( variables['Agent.OS'], 'Windows_NT' )
+  displayName: 'Put secrets in their right places (non-Windows)'
+
+- script: |
+    echo '$(GOROOT)'
+    echo '$(GOPATH)'
+    echo '$(PATH)'
+    echo '%PATH%'
+    move $(netrc.secureFilePath) %USERPROFILE%\_netrc
+    mkdir %USERPROFILE%\.ssh
+    move $(idrsa.secureFilePath) %USERPROFILE%\.ssh\
+  condition: eq( variables['Agent.OS'], 'Windows_NT' )
+  displayName: 'Put secrets in their right places (Windows)'
 
 - script: |
     curl -Ls https://github.com/github/hub/releases/download/v2.11.1/hub-linux-amd64-2.11.1.tgz | sudo tar -xvz -C /usr/bin --strip-components=2 hub-linux-amd64-2.11.1/bin/hub
@@ -77,8 +116,6 @@ steps:
   displayName: 'Install hub (Darwin)'
 
 - script: |
-    mkdir -p ${GOPATH}/bin
-    mkdir -p ${GOROOT}/bin
     make deps
   displayName: 'make deps'
 
@@ -95,7 +132,8 @@ steps:
 
 - script: |
     bash <(curl -s https://codecov.io/bash)
-  displayName: 'Generate Codecov report'
+  condition: eq( variables['Agent.OS'], 'Linux' )
+  displayName: 'Generate Codecov report (only run on Linux)'
 
 - script: |
     git checkout go.*
