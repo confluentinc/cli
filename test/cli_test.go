@@ -486,7 +486,7 @@ func (s *CLITestSuite) Test_SSO_Login() {
 			s.NoError(e)
 
 			scanner.Scan()
-			s.Equal(scanner.Text(), "Logged in as "+ssoTestEmail)
+			s.Equal("Logged in as "+ssoTestEmail, scanner.Text())
 		}
 	}()
 
