@@ -2,7 +2,6 @@
 package analytics
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -142,9 +141,7 @@ func (a *ClientObj) CatchHelpCall(rootCmd *cobra.Command, args []string) {
 	if a.cmdCalled != "" {
 		return
 	}
-	fmt.Println("ARGS: ", args)
 	cmd, flags, err := rootCmd.Find(args)
-	fmt.Println("FLAGS: ", flags)
 	if err != nil {
 		return
 	}
@@ -157,7 +154,6 @@ func (a *ClientObj) CatchHelpCall(rootCmd *cobra.Command, args []string) {
 }
 
 func (a *ClientObj) SendCommandSucceeded() error {
-	fmt.Println("TYPE: ", a.cmdCalled)
 	if a.commandType == Login || a.commandType == Init || a.commandType == ContextUse {
 		err := a.loginHandler()
 		if err != nil {
@@ -256,7 +252,6 @@ func (a *ClientObj) addFlagProperties(cmd *cobra.Command) {
 			flags[f.Name] = f.Value.String()
 		}
 	})
-	fmt.Println("FLAGSSSS: ", flags)
 	a.properties.Set(FlagsPropertiesKey, flags)
 }
 
