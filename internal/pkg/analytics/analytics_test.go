@@ -1,6 +1,6 @@
 package analytics_test
 
-// NOTE: All cobra commands must hae Use field (name of the command) so that in
+// NOTE: All cobra commands must have Use field (name of the command) so that in
 // analytics cmdCalled is not "", and CatchHelpCalls knows that prerun is already run,
 // so it will skip help flag catching.
 // This prevents confusion in help flags catching because "make test" has flags like

@@ -67,6 +67,13 @@ func main() {
 		analyticsClient = mock.NewDummyAnalyticsMock()
 	}
 
+	defer func() {
+		err := analyticsClient.Close()
+		if err != nil {
+			logger.Debug(err)
+		}
+	}()
+
 	cli, err := cmd.NewConfluentCommand(cliName, cfg, version, logger, analyticsClient)
 	if err != nil {
 		if cli == nil {
@@ -81,11 +88,6 @@ func main() {
 		}
 	}
 	err = cli.Execute()
-
-	closeErr := analyticsClient.Close()
-	if closeErr != nil {
-		logger.Debug(closeErr)
-	}
 	if err != nil {
 		if isTest {
 			test_integ.ExitCode = 1

@@ -20,7 +20,7 @@ type AnalyticsClient struct {
 	TrackCommandFunc func(cmd *github_com_spf13_cobra.Command, args []string)
 
 	lockCatchHelpCall sync.Mutex
-	CatchHelpCallFunc func(rootCmd *github_com_spf13_cobra.Command)
+	CatchHelpCallFunc func(rootCmd *github_com_spf13_cobra.Command, args []string)
 
 	lockSendCommandSucceeded sync.Mutex
 	SendCommandSucceededFunc func() error
@@ -46,6 +46,7 @@ type AnalyticsClient struct {
 		}
 		CatchHelpCall []struct {
 			RootCmd *github_com_spf13_cobra.Command
+			Args    []string
 		}
 		SendCommandSucceeded []struct {
 		}
@@ -138,7 +139,7 @@ func (m *AnalyticsClient) TrackCommandCalls() []struct {
 }
 
 // CatchHelpCall mocks base method by wrapping the associated func.
-func (m *AnalyticsClient) CatchHelpCall(rootCmd *github_com_spf13_cobra.Command) {
+func (m *AnalyticsClient) CatchHelpCall(rootCmd *github_com_spf13_cobra.Command, args []string) {
 	m.lockCatchHelpCall.Lock()
 	defer m.lockCatchHelpCall.Unlock()
 
@@ -148,13 +149,15 @@ func (m *AnalyticsClient) CatchHelpCall(rootCmd *github_com_spf13_cobra.Command)
 
 	call := struct {
 		RootCmd *github_com_spf13_cobra.Command
+		Args    []string
 	}{
 		RootCmd: rootCmd,
+		Args:    args,
 	}
 
 	m.calls.CatchHelpCall = append(m.calls.CatchHelpCall, call)
 
-	m.CatchHelpCallFunc(rootCmd)
+	m.CatchHelpCallFunc(rootCmd, args)
 }
 
 // CatchHelpCallCalled returns true if CatchHelpCall was called at least once.
@@ -168,6 +171,7 @@ func (m *AnalyticsClient) CatchHelpCallCalled() bool {
 // CatchHelpCallCalls returns the calls made to CatchHelpCall.
 func (m *AnalyticsClient) CatchHelpCallCalls() []struct {
 	RootCmd *github_com_spf13_cobra.Command
+	Args    []string
 } {
 	m.lockCatchHelpCall.Lock()
 	defer m.lockCatchHelpCall.Unlock()

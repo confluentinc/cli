@@ -2,7 +2,7 @@
 package analytics
 
 import (
-	"os"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -70,7 +70,7 @@ func (l *Logger) Errorf(format string, args ...interface{}) {
 type Client interface {
 	SetStartTime()
 	TrackCommand(cmd *cobra.Command, args []string)
-	CatchHelpCall(rootCmd *cobra.Command)
+	CatchHelpCall(rootCmd *cobra.Command, args []string)
 	SendCommandSucceeded() error
 	SendCommandFailed(e error) error
 	SetCommandType(commandType CommandType)
@@ -137,23 +137,27 @@ func (a *ClientObj) SessionTimedOut() error {
 }
 
 // Cobra does not trigger prerun and postrun when help flag is true
-func (a *ClientObj) CatchHelpCall(rootCmd *cobra.Command) {
+func (a *ClientObj) CatchHelpCall(rootCmd *cobra.Command, args []string) {
 	// non-help calls would already have triggered preruns
 	if a.cmdCalled != "" {
 		return
 	}
-	cmd, flags, err := rootCmd.Find(os.Args[1:])
+	fmt.Println("ARGS: ", args)
+	cmd, flags, err := rootCmd.Find(args)
+	fmt.Println("FLAGS: ", flags)
 	if err != nil {
 		return
 	}
 	for _, flag := range flags {
 		if isHelpFlag(flag) {
 			a.TrackCommand(cmd, cmd.Flags().Args())
+			break
 		}
 	}
 }
 
 func (a *ClientObj) SendCommandSucceeded() error {
+	fmt.Println("TYPE: ", a.cmdCalled)
 	if a.commandType == Login || a.commandType == Init || a.commandType == ContextUse {
 		err := a.loginHandler()
 		if err != nil {
@@ -252,6 +256,7 @@ func (a *ClientObj) addFlagProperties(cmd *cobra.Command) {
 			flags[f.Name] = f.Value.String()
 		}
 	})
+	fmt.Println("FLAGSSSS: ", flags)
 	a.properties.Set(FlagsPropertiesKey, flags)
 }
 

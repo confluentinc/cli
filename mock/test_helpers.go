@@ -10,7 +10,7 @@ func NewDummyAnalyticsMock() *AnalyticsClient {
 	return &AnalyticsClient{
 		SetStartTimeFunc: func() {},
 		TrackCommandFunc: func(cmd *cobra.Command, args []string) {},
-		CatchHelpCallFunc: func(rootCmd *cobra.Command) {},
+		CatchHelpCallFunc: func(cmd *cobra.Command, args []string) {},
 		SendCommandFailedFunc: func(e error) error {return nil},
 		SendCommandSucceededFunc: func() error {return nil},
 		SetCommandTypeFunc: func(commandType analytics.CommandType) {},
