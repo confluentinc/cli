@@ -23,6 +23,8 @@ steps:
   displayName: 'Install gnu-tar (Darwin)'
 
 - script: |
+#   Fixes checksum errors when downloading chrome
+    HOMEBREW_CASK_OPTS=--no-quarantine
     brew cask install google-chrome
   condition: eq( variables['Agent.OS'], 'Darwin' )
   displayName: 'Install chrome (Darwin)'
