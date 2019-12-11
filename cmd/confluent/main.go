@@ -57,7 +57,7 @@ func main() {
 	version := cliVersion.NewVersion(cfg.CLIName, cfg.Name(), cfg.Support(), version, commit, date, host)
 
 	var analyticsClient analytics.Client
-	if !isTest {
+	if !isTest && cfg.CLIName == "ccloud" {
 		segmentClient, _ := segment.NewWithConfig(segmentKey, segment.Config{
 			Logger:  analytics.NewLogger(logger),
 		})
@@ -92,6 +92,10 @@ func main() {
 		if isTest {
 			test_integ.ExitCode = 1
 		} else {
+			err := analyticsClient.Close()
+			if err != nil {
+				logger.Debug(err)
+			}
 			os.Exit(1)
 		}
 	}
