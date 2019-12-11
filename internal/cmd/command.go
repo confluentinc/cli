@@ -188,8 +188,9 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	return &Command{Command: cli, Analytics: analytics, logger: logger}, nil
 }
 
-func (c *Command) Execute() error {
+func (c *Command) Execute(args []string) error {
 	c.Analytics.SetStartTime()
+	c.Command.SetArgs(args)
 	err := c.Command.Execute()
 	if err != nil {
 		analyticsError := c.Analytics.SendCommandFailed(err)
@@ -198,7 +199,7 @@ func (c *Command) Execute() error {
 		}
 		return err
 	}
-	c.Analytics.CatchHelpCall(c.Command, os.Args[1:])
+	c.Analytics.CatchHelpCall(c.Command, args[1:])
 	analyticsError := c.Analytics.SendCommandSucceeded()
 	if analyticsError != nil {
 		c.logger.Debugf("segment analytics sending event failed: %s\n", analyticsError.Error())
