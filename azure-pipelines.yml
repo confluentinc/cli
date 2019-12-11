@@ -23,11 +23,12 @@ steps:
   displayName: 'Install gnu-tar (Darwin)'
 
 - script: |
-#   Fixes checksum errors when downloading chrome
-    HOMEBREW_CASK_OPTS=--no-quarantine
     brew cask install google-chrome
   condition: eq( variables['Agent.OS'], 'Darwin' )
   displayName: 'Install chrome (Darwin)'
+  variables:
+    # Fixes checksum errors when downloading chrome
+    homebrew_cask_opts: '--no-quarantine'
 
 - script: |
     wget "https://storage.googleapis.com/golang/go1.12.5.darwin-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.12.5.tar.gz"
