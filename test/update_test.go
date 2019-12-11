@@ -9,6 +9,8 @@ import (
 )
 
 func (s *CLITestSuite) Test_Update() {
+	s.T().Skip("Skipping this test until its less flaky")
+
 	configFile, err := homedir.Expand("~/.confluent/config.json")
 	require.NoError(s.T(), err)
 

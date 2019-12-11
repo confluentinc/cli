@@ -3,12 +3,14 @@ package iam
 import (
 	"context"
 	net_http "net/http"
-	"os"
 	"testing"
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/confluentinc/mds-sdk-go"
+	"github.com/confluentinc/mds-sdk-go/mock"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
@@ -16,8 +18,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/update"
 	cliMock "github.com/confluentinc/cli/mock"
-	"github.com/confluentinc/mds-sdk-go"
-	"github.com/confluentinc/mds-sdk-go/mock"
 )
 
 /*************** TEST command_acl ***************/
@@ -176,16 +176,11 @@ type AclTestSuite struct {
 }
 
 func (suite *AclTestSuite) SetupSuite() {
-	_ = os.Setenv("XX_FLAG_CENTRALIZED_ACL_ENABLE", "true")
 	suite.conf = config.New()
 	suite.conf.CLIName = "confluent"
 	suite.conf.Logger = log.New()
 	suite.conf.AuthURL = "http://test"
 	suite.conf.AuthToken = "T0k3n"
-}
-
-func (suite *AclTestSuite) TearDownSuite() {
-	_ = os.Setenv("XX_FLAG_CENTRALIZED_ACL_ENABLE", "false")
 }
 
 func (suite *AclTestSuite) SetupTest() {
