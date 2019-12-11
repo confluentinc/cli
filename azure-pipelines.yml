@@ -23,7 +23,6 @@ steps:
   displayName: 'Install gnu-tar (Darwin)'
 
 - script: |
-    brew install brew-cask
     brew cask install google-chrome
   condition: eq( variables['Agent.OS'], 'Darwin' )
   displayName: 'Install chrome (Darwin)'
