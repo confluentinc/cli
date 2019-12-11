@@ -5,24 +5,29 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/jonboulle/clockwork"
+	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/viper"
 
 	"github.com/confluentinc/cli/internal/cmd"
+	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/metric"
 	"github.com/confluentinc/cli/internal/pkg/test-integ"
 	cliVersion "github.com/confluentinc/cli/internal/pkg/version"
+	"github.com/confluentinc/cli/mock"
 )
 
 var (
 	// Injected from linker flags like `go build -ldflags "-X main.version=$VERSION" -X ...`
-	version = "v0.0.0"
-	commit  = ""
-	date    = ""
-	host    = ""
-	cliName = "confluent"
+	version    = "v0.0.0"
+	commit     = ""
+	date       = ""
+	host       = ""
+	cliName    = "confluent"
+	segmentKey = "KDsYPLPBNVB1IPJIN5oqrXnxQT9iKezo"
 	isTest  = "false"
 )
 
@@ -51,25 +56,48 @@ func main() {
 
 	version := cliVersion.NewVersion(cfg.CLIName, cfg.Name(), cfg.Support(), version, commit, date, host)
 
-	cli, err := cmd.NewConfluentCommand(cliName, cfg, version, logger)
+	var analyticsClient analytics.Client
+	if !isTest && cfg.CLIName == "ccloud" {
+		segmentClient, _ := segment.NewWithConfig(segmentKey, segment.Config{
+			Logger:  analytics.NewLogger(logger),
+		})
+
+		analyticsClient = analytics.NewAnalyticsClient(cfg.CLIName, cfg, version.Version, segmentClient, clockwork.NewRealClock())
+	} else {
+		analyticsClient = mock.NewDummyAnalyticsMock()
+	}
+
+	cli, err := cmd.NewConfluentCommand(cliName, cfg, version, logger, analyticsClient)
 	if err != nil {
 		if cli == nil {
 			fmt.Fprintln(os.Stderr, err)
 		} else {
-			pcmd.ErrPrintln(cli, err)
+			pcmd.ErrPrintln(cli.Command, err)
 		}
 		if isTest {
 			test_integ.ExitCode = 1
 		} else {
-			os.Exit(1)
+			exit(1, analyticsClient, logger)
 		}
 	}
-	err = cli.Execute()
+	err = cli.Execute(os.Args[1:])
 	if err != nil {
 		if isTest {
 			test_integ.ExitCode = 1
 		} else {
-			os.Exit(1)
+			exit(1, analyticsClient, logger)
 		}
 	}
+	exit(0, analyticsClient, logger)
+}
+
+func exit(exitCode int, analytics analytics.Client, logger *log.Logger) {
+	err := analytics.Close()
+	if err != nil {
+		logger.Debug(err)
+	}
+	if exitCode == 1 {
+		os.Exit(exitCode)
+	}
+	// no os.Exit(0) because it will shutdown integration test
 }

@@ -195,10 +195,10 @@ func convertToAclFilterRequest(request *mds.CreateAclRequest) mds.AclFilterReque
 		}
 	}
 
-	return mds.AclFilterRequest {
+	return mds.AclFilterRequest{
 		Scope: request.Scope,
-		AclBindingFilter: mds.AclBindingFilter {
-			EntryFilter:   mds.AccessControlEntryFilter{
+		AclBindingFilter: mds.AclBindingFilter{
+			EntryFilter: mds.AccessControlEntryFilter{
 				Host:           request.AclBinding.Entry.Host,
 				Operation:      request.AclBinding.Entry.Operation,
 				PermissionType: request.AclBinding.Entry.PermissionType,
@@ -219,14 +219,14 @@ func PrintAcls(kafkaClusterId string, bindingsObj []mds.AclBinding, writer io.Wr
 	for _, binding := range bindingsObj {
 
 		record := &struct {
-			KafkaClusterId	 string
-			Principal        string
-			Permission       mds.AclPermissionType
-			Operation        mds.AclOperation
-			Host			 string
-			Resource         mds.AclResourceType
-			Name             string
-			Type             mds.PatternType
+			KafkaClusterId string
+			Principal      string
+			Permission     mds.AclPermissionType
+			Operation      mds.AclOperation
+			Host           string
+			Resource       mds.AclResourceType
+			Name           string
+			Type           mds.PatternType
 		}{
 			kafkaClusterId,
 			binding.Entry.Principal,
@@ -241,4 +241,3 @@ func PrintAcls(kafkaClusterId string, bindingsObj []mds.AclBinding, writer io.Wr
 	}
 	printer.RenderCollectionTableOut(bindings, fields, writer)
 }
-
