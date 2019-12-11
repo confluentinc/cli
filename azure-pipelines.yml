@@ -23,6 +23,11 @@ steps:
   displayName: 'Install gnu-tar (Darwin)'
 
 - script: |
+    brew cask install google-chrome
+  condition: eq( variables['Agent.OS'], 'Darwin' )
+  displayName: 'Install chrome (Darwin)'
+
+- script: |
     wget "https://storage.googleapis.com/golang/go1.12.5.darwin-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.12.5.tar.gz"
     gtar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.12.5.tar.gz"
   condition: eq( variables['Agent.OS'], 'Darwin' )
