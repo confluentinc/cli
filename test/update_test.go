@@ -9,6 +9,10 @@ import (
 )
 
 func (s *CLITestSuite) Test_Update() {
+	if os.Getenv("CI") != "" {
+		s.T().Skip("Skipping testing in CI environment until its less flaky")
+	}
+
 	configFile, err := homedir.Expand("~/.confluent/config.json")
 	require.NoError(s.T(), err)
 
