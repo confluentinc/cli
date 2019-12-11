@@ -52,8 +52,8 @@ func NewScopedIdService(client *http.Client, userAgent string, logger *log.Logge
 }
 
 type Element struct {
-	Type   string
-	ID string
+	Type string
+	ID   string
 }
 
 var (
