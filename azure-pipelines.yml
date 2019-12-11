@@ -27,6 +27,8 @@ steps:
   displayName: 'Install gnu-tar (Darwin)'
 
 - script: |
+    echo $HOMEBREW_CASK_OPTS
+    brew update
     brew cask install google-chrome
   condition: eq( variables['Agent.OS'], 'Darwin' )
   displayName: 'Install chrome (Darwin)'
