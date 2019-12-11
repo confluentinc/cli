@@ -80,7 +80,7 @@ func main() {
 			exit(1, analyticsClient, logger)
 		}
 	}
-	err = cli.Execute(os.Args)
+	err = cli.Execute(os.Args[1:])
 	if err != nil {
 		if isTest {
 			test_integ.ExitCode = 1

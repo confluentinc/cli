@@ -199,7 +199,7 @@ func (c *Command) Execute(args []string) error {
 		}
 		return err
 	}
-	c.Analytics.CatchHelpCall(c.Command, args[1:])
+	c.Analytics.CatchHelpCall(c.Command, args)
 	analyticsError := c.Analytics.SendCommandSucceeded()
 	if analyticsError != nil {
 		c.logger.Debugf("segment analytics sending event failed: %s\n", analyticsError.Error())
