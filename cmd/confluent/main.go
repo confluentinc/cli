@@ -96,5 +96,8 @@ func exit(exitCode int, analytics analytics.Client, logger *log.Logger) {
 	if err != nil {
 		logger.Debug(err)
 	}
-	os.Exit(exitCode)
+	if exitCode == 1 {
+		os.Exit(exitCode)
+	}
+	// no os.Exit(0) because it will shutdown integration test
 }
