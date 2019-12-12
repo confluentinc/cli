@@ -1,11 +1,11 @@
 package cmd_test
 
 import (
-	"github.com/jonboulle/clockwork"
 	"reflect"
 	"strings"
 	"testing"
 
+	"github.com/jonboulle/clockwork"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
