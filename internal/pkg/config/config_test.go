@@ -85,6 +85,8 @@ func TestConfig_Load(t *testing.T) {
 				t.Errorf("Config.Load() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			c.Filename = "" // only for testing
+			// get around automatically assigned anonymous id
+			tt.want.AnonymousId = c.AnonymousId
 			if !reflect.DeepEqual(c, tt.want) {
 				t.Errorf("Config.Load() = %v, want %v", c, tt.want)
 			}

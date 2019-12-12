@@ -14,6 +14,7 @@ import (
 	linter "github.com/confluentinc/cli/internal/pkg/lint-cli"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/version"
+	"github.com/confluentinc/cli/mock"
 )
 
 var (
@@ -163,12 +164,12 @@ func main() {
 
 	var issues *multierror.Error
 	for _, cliName := range cliNames {
-		cli, err := cmd.NewConfluentCommand(cliName, &config.Config{CLIName: cliName}, &version.Version{Binary: cliName}, log.New())
+		cli, err := cmd.NewConfluentCommand(cliName, &config.Config{CLIName: cliName}, &version.Version{Binary: cliName}, log.New(), mock.NewDummyAnalyticsMock())
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		err = l.Lint(cli)
+		err = l.Lint(cli.Command)
 		if err != nil {
 			issues = multierror.Append(issues, err)
 		}
