@@ -45,6 +45,7 @@ import (
 
 type Command struct {
 	*cobra.Command
+	// @VisibleForTesting
 	Analytics analytics.Client
 	logger    *log.Logger
 }

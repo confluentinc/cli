@@ -288,7 +288,9 @@ func (suite *AnalyticsTestSuite) TestLogin() {
 		case segment.Identify:
 			identify, ok := msg.(segment.Identify)
 			req.True(ok)
-			suite.checkIdentify(identify)
+			suite.checkIdentify(identify, strconv.Itoa(int(userId)))
+		default:
+			suite.T().Error("Must be either Page or Identify event.")
 		}
 	}
 }
@@ -346,6 +348,12 @@ func (suite *AnalyticsTestSuite) TestAnonymousIdResetOnLogin() {
 			page, ok := msg.(segment.Page)
 			req.True(ok)
 			firstAnonId = page.AnonymousId
+		case segment.Identify:
+			identify, ok := msg.(segment.Identify)
+			req.True(ok)
+			suite.checkIdentify(identify, strconv.Itoa(int(userId)))
+		default:
+			suite.T().Error("Must be Page or Identify event.")
 		}
 	}
 
@@ -360,6 +368,12 @@ func (suite *AnalyticsTestSuite) TestAnonymousIdResetOnLogin() {
 			page, ok := suite.output[i].(segment.Page)
 			req.True(ok)
 			secondAnonId = page.AnonymousId
+		case segment.Identify:
+			identify, ok := suite.output[i].(segment.Identify)
+			req.True(ok)
+			suite.checkIdentify(identify, strconv.Itoa(int(otherUserId)))
+		default:
+			suite.T().Error("Must be Page or Identify event.")
 		}
 	}
 
@@ -401,6 +415,12 @@ func (suite *AnalyticsTestSuite) TestAnonymousIdResetOnContextSwitch() {
 			page, ok := msg.(segment.Page)
 			req.True(ok)
 			secondAnonId = page.AnonymousId
+		case segment.Identify:
+			identify, ok := msg.(segment.Identify)
+			req.True(ok)
+			suite.checkIdentify(identify, "")
+		default:
+			suite.T().Error("Must be Page or Identify event.")
 		}
 	}
 
@@ -710,9 +730,9 @@ func (suite *AnalyticsTestSuite) checkPageSuccess(page segment.Page) {
 	req.True(succeeded.(bool))
 }
 
-func (suite *AnalyticsTestSuite) checkIdentify(identify segment.Identify) {
+func (suite *AnalyticsTestSuite) checkIdentify(identify segment.Identify, expectedUserId string) {
 	req := require.New(suite.T())
-	req.Equal(strconv.Itoa(int(userId)), identify.UserId)
+	req.Equal(expectedUserId, identify.UserId)
 	req.NotEqual("", identify.AnonymousId)
 }
 

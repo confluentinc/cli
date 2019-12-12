@@ -35,6 +35,7 @@ var (
 	malformedCmdEventName = "Malformed Command Error"
 
 	// these are exported to avoid import cycle with test (test is in package analytics_test)
+	// @VisibleForTesting
 	FlagsPropertiesKey      = "flags"
 	ArgsPropertiesKey       = "args"
 	OrgIdPropertiesKey      = "organization_id"
@@ -63,7 +64,7 @@ func (l *Logger) Logf(format string, args ...interface{}) {
 }
 
 func (l *Logger) Errorf(format string, args ...interface{}) {
-	l.logger.Debugf(format, args ...)
+	l.logger.Debugf("[Segment Error] " + format, args ...)
 }
 
 type Client interface {
@@ -79,7 +80,7 @@ type Client interface {
 
 type ClientObj struct {
 	cliName string
-	Client  segment.Client
+	client  segment.Client
 	config  *config.Config
 	clock   clockwork.Clock
 
@@ -102,7 +103,7 @@ type userInfo struct {
 func NewAnalyticsClient(cliName string, cfg *config.Config, version string, segmentClient segment.Client, clock clockwork.Clock) *ClientObj {
 	client := &ClientObj{
 		cliName:     cliName,
-		Client:      segmentClient,
+		client:      segmentClient,
 		config:      cfg,
 		properties:  make(segment.Properties),
 		cliVersion:  version,
@@ -193,7 +194,7 @@ func (a *ClientObj) SetCommandType(commandType CommandType) {
 }
 
 func (a *ClientObj) Close() error {
-	return a.Client.Close()
+	return a.client.Close()
 }
 
 // Helper Functions
@@ -206,7 +207,7 @@ func (a *ClientObj) sendPage() error {
 		UserId:      a.user.id,
 	}
 	a.addUserProperties()
-	return a.Client.Enqueue(page)
+	return a.client.Enqueue(page)
 }
 
 func (a *ClientObj) identify() error {
@@ -222,7 +223,7 @@ func (a *ClientObj) identify() error {
 		traits.Set(ApiKeyPropertiesKey, a.user.apiKey)
 	}
 	identify.Traits = traits
-	return a.Client.Enqueue(identify)
+	return a.client.Enqueue(identify)
 }
 
 func (a *ClientObj) malformedCommandError(e error) error {
@@ -234,7 +235,7 @@ func (a *ClientObj) malformedCommandError(e error) error {
 		UserId:      a.user.id,
 	}
 	a.addUserProperties()
-	return a.Client.Enqueue(track)
+	return a.client.Enqueue(track)
 }
 
 func (a *ClientObj) addFlagProperties(cmd *cobra.Command) {
@@ -268,7 +269,7 @@ func (a *ClientObj) addArgsProperties(cmd *cobra.Command, args []string) {
 
 func (a *ClientObj) addUserProperties() {
 	a.properties.Set(CredentialPropertiesKey, a.user.credentialType)
-	if a.user.organizationId != "" {
+	if a.config.CLIName == "ccloud" && a.user.credentialType == config.Username.String() {
 		a.properties.Set(OrgIdPropertiesKey, a.user.organizationId)
 		a.properties.Set(EmailPropertiesKey, a.user.email)
 	}
@@ -280,6 +281,7 @@ func (a *ClientObj) addUserProperties() {
 func (a *ClientObj) getUser() userInfo {
 	var user userInfo
 	user.credentialType = a.getCredentialType()
+	// If the user is not logged in
 	if user.credentialType == "" {
 		return user
 	}
@@ -297,7 +299,7 @@ func (a *ClientObj) getUser() userInfo {
 	return user
 }
 
-func (a *ClientObj) getCloudUserInfo() (userId string, organizationId string, email string) {
+func (a *ClientObj) getCloudUserInfo() (userId, organizationId, email string) {
 	if err := a.config.CheckLogin(); err != nil {
 		return "", "", ""
 	}
@@ -378,9 +380,9 @@ func (a *ClientObj) isSwitchUserLogin(prevUser userInfo) bool {
 }
 
 func isHelpFlag(flag string) bool {
-	if strings.Contains(flag, "--") {
+	if strings.HasPrefix(flag, "--") {
 		return flag == "--help"
-	} else if strings.Contains(flag, "-") {
+	} else if strings.HasPrefix(flag, "-") {
 		return strings.Contains(flag, "h")
 	}
 	return false
