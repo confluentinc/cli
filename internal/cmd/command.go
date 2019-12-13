@@ -118,7 +118,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	cli.Version = ver.Version
 	cli.AddCommand(version.NewVersionCmd(prerunner, ver))
 
-	cli.AddCommand(quit.QuitCmd(prerunner, cfg))
+	cli.AddCommand(quit.NewQuitCmd(prerunner, cfg))
 
 	conn := config.New(cfg)
 	conn.Hidden = true // The config/context feature isn't finished yet, so let's hide it
