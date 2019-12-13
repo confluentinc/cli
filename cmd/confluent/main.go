@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/spf13/viper"
+	cprompt "github.com/stromland/cobra-prompt"
 
 	"github.com/confluentinc/cli/internal/cmd"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -31,6 +32,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
 	viper.AutomaticEnv()
 
 	logger := log.New()
@@ -64,7 +66,15 @@ func main() {
 			os.Exit(1)
 		}
 	}
-	err = cli.Execute()
+
+	prompt := &cprompt.CobraPrompt{
+		RootCmd:                cli,
+		GoPromptOptions:        nil,
+		DynamicSuggestionsFunc: nil,
+		ResetFlagsFlag:         false,
+	}
+	prompt.Run()
+
 	if err != nil {
 		if isTest {
 			test_integ.ExitCode = 1
