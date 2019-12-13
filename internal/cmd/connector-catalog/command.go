@@ -111,7 +111,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	_, err = c.client.Validate(context.Background(), &connectv1.ConnectorConfig{UserConfigs: map[string]string{"connector.class": "AzureBlobSink"}, AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id, Plugin: args[0]})
+	_, err = c.client.Validate(context.Background(), &connectv1.ConnectorConfig{UserConfigs: map[string]string{"connector.class": args[0]}, AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id, Plugin: args[0]})
 
 	pcmd.Println(cmd, "Following are the required configs: \nconnector.class \n"+err.Error())
 	return nil

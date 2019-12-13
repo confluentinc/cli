@@ -1,0 +1,33 @@
+Connector Details
++--------+--------------+
+| ID     | lcc-mzg02    |
+| Name   | pub          |
+| Status | PROVISIONING |
+| Type   | source       |
++--------+--------------+
+
+
+Task Level Details
+  Task_ID | State
++---------+-------+
+
+
+Configuration Details
+         Configuration         |                            Value
++------------------------------+-------------------------------------------------------------+
+  gcp.pubsub.credentials.json  | ****************
+  gcp.pubsub.subscription.id   | cloud-sub
+  gcp.pubsub.project.id        | connect-205118
+  gcp.pubsub.topic.id          | cloud-connect
+  kafka.api.key                | ****************
+  kafka.api.secret             | ****************
+  kafka.region                 | centralus
+  cloud.environment            | devel
+  connector.class              | PubSubSource
+  gcp.pubsub.max.retry.time    |                                                           5
+  name                         | pub
+  schema.registry.url          | https://psrc-9k355.us-west-2.aws.devel.cpdev.cloud
+  kafka.endpoint               | SASL_SSL://pkc-zmqy3.centralus.azure.devel.cpdev.cloud:9092
+  gcp.pubsub.message.max.count |                                                        1000
+  kafka.topic                  | apples
+  tasks.max                    |                                                           1

@@ -5,6 +5,8 @@ func (s *CLITestSuite) TestConnectCommands() {
 	tests := []CLITest{
 		// Show what commands are available
 		{args: "connector --help", fixture: "connector-help.golden"},
+		{args: "connector-catalog --help", fixture: "connector-catalog-help.golden"},
+		{args: "connector create --cluster lkc-123 --config file", fixture: "connector-update.golden"},
 	}
 	resetConfiguration(s.T(), "ccloud")
 	for _, tt := range tests {

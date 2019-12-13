@@ -24,17 +24,17 @@ func getConfig(cmd *cobra.Command) (*map[string]string, error) {
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to read config file %s", filename)
 	}
+	if len(yamlFile) == 0 {
+		return nil, errors.Wrap(errors.ErrEmptyConfigFile, "empty file")
+	}
 	err = yaml.Unmarshal(yamlFile, &options)
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to parse config %s", filename)
 	}
-	if len(options) == 0 {
-		return nil, errors.Wrapf(err, "empty config file %s", filename)
-	}
 	_, nameExists := options["name"]
 	_, classExists := options["connector.class"]
 	if !nameExists || !classExists {
-		return nil, errors.Wrapf(err, "%s does not contain required properties name and connector.class", filename)
+		return nil, errors.Wrapf(errors.ErrEmptyConfigFile, "name and connector.class are required")
 	}
 	return &options, nil
 }

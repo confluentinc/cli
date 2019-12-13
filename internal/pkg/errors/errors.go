@@ -20,14 +20,15 @@ import (
  */
 
 var (
-	ErrNotImplemented = fmt.Errorf("not implemented")
-	ErrNotLoggedIn    = fmt.Errorf("not logged in")
-	ErrNoContext      = fmt.Errorf("context not set")
-	ErrNoKafkaContext = fmt.Errorf("kafka not set")
-	ErrNoSrEnabled    = fmt.Errorf("schema registry not enabled")
-	ErrNoKSQL         = fmt.Errorf("no KSQL found")
-	ErrNoConnectorId  = fmt.Errorf("connector id not passed")
-	ErrNoPluginName   = fmt.Errorf("plugin name must be passed")
+	ErrNotImplemented  = fmt.Errorf("not implemented")
+	ErrNotLoggedIn     = fmt.Errorf("not logged in")
+	ErrNoContext       = fmt.Errorf("context not set")
+	ErrNoKafkaContext  = fmt.Errorf("kafka not set")
+	ErrNoSrEnabled     = fmt.Errorf("schema registry not enabled")
+	ErrNoKSQL          = fmt.Errorf("no KSQL found")
+	ErrNoConnectorId   = fmt.Errorf("connector id not passed")
+	ErrEmptyConfigFile = fmt.Errorf("config file did not have required parameters")
+	ErrNoPluginName    = fmt.Errorf("plugin name must be passed")
 )
 
 // UnspecifiedKafkaClusterError means the user needs to specify a kafka cluster

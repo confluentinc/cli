@@ -31,6 +31,7 @@ type ConnectTestSuite struct {
 	conf               *config.Config
 	kafkaCluster       *kafkav1.KafkaCluster
 	connector          *v1.Connector
+	connectorInfo      *v1.ConnectorInfo
 	connectMock        *ccsdkmock.Connect
 	kafkaMock          *ccsdkmock.Kafka
 	connectorExpansion *v1.ConnectorExpansion
@@ -78,6 +79,11 @@ func (suite *ConnectTestSuite) SetupSuite() {
 		UserConfigs:    map[string]string{},
 	}
 
+	suite.connectorInfo = &v1.ConnectorInfo{
+		Name: connectorName,
+		Type: "source",
+	}
+
 	suite.connectorExpansion = &v1.ConnectorExpansion{
 		Id: &v1.ConnectorId{Id: connectorID},
 		Info: &v1.ConnectorInfo{
@@ -99,7 +105,10 @@ func (suite *ConnectTestSuite) SetupTest() {
 	}
 	suite.connectMock = &ccsdkmock.Connect{
 		CreateFunc: func(arg0 context.Context, arg1 *v1.ConnectorConfig) (connector *v1.ConnectorInfo, e error) {
-			return nil, nil
+			return suite.connectorInfo, nil
+		},
+		UpdateFunc: func(arg0 context.Context, arg1 *v1.ConnectorConfig) (info *v1.ConnectorInfo, e error) {
+			return suite.connectorInfo, nil
 		},
 		PauseFunc: func(arg0 context.Context, arg1 *v1.Connector) error {
 			return nil
@@ -115,6 +124,9 @@ func (suite *ConnectTestSuite) SetupTest() {
 		},
 		GetExpansionByIDFunc: func(arg0 context.Context, arg1 *v1.Connector) (expansion *v1.ConnectorExpansion, e error) {
 			return suite.connectorExpansion, nil
+		},
+		GetFunc: func(arg0 context.Context, arg1 *v1.Connector) (connector *v1.Connector, e error) {
+			return suite.connector, nil
 		},
 	}
 
@@ -181,7 +193,7 @@ func (suite *ConnectTestSuite) TestDescribeConnector() {
 
 func (suite *ConnectTestSuite) TestCreateConnector() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"create", "--config", "connector_config.json"}))
+	cmd.SetArgs(append([]string{"create", "--config", "../../../test/fixtures/input/connector-config.yaml"}))
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -192,7 +204,7 @@ func (suite *ConnectTestSuite) TestCreateConnector() {
 
 func (suite *ConnectTestSuite) TestUpdateConnector() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"update", connectorID, "--config", "connector_config.json"}))
+	cmd.SetArgs(append([]string{"update", connectorID, "--config", "../../../test/fixtures/input/connector-config.yaml"}))
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)

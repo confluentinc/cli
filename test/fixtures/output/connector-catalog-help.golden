@@ -1,0 +1,16 @@
+Catalog of connectors and their configurations.
+
+Usage:
+  ccloud connector-catalog [command]
+
+Available Commands:
+  describe    Describe a connector plugin type.
+  list        List connectors.
+
+Flags:
+  -h, --help   help for connector-catalog
+
+Global Flags:
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "ccloud connector-catalog [command] --help" for more information about a command.

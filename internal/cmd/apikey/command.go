@@ -37,10 +37,10 @@ type command struct {
 }
 
 var (
-	listFields    = []string{"Key", "UserId", "Description", "ResourceType", "ResourceId"}
-	listLabels    = []string{"Key", "Owner", "Description", "Resource Type", "Resource ID"}
-	createFields  = []string{"Key", "Secret"}
-	createRenames = map[string]string{"Key": "API Key"}
+	listFields       = []string{"Key", "UserId", "Description", "ResourceType", "ResourceId"}
+	listLabels       = []string{"Key", "Owner", "Description", "Resource Type", "Resource ID"}
+	createFields     = []string{"Key", "Secret"}
+	createRenames    = map[string]string{"Key": "API Key"}
 	resourceFlagName = "resource"
 )
 

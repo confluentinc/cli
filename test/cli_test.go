@@ -967,8 +967,8 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 	})
 	router.HandleFunc("/api/accounts/{account_id}/clusters/{cluster_id}/connectors", func(w http.ResponseWriter, r *http.Request) {
 		connector := &connectv1.ConnectorInfo{
-			Name:        "connect-id",
-			Type:        "source",
+			Name: "connect-id",
+			Type: "source",
 		}
 		reply, err := utilv1.MarshalJSONToBytes(connector)
 		require.NoError(t, err)
@@ -1174,44 +1174,6 @@ func handleKafkaClusterCreate(t *testing.T, kafkaAPIURL string) func(w http.Resp
 }
 
 func handleKSQLCreateList(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		ksqlCluster1 := &ksqlv1.KSQLCluster{
-			Id:                "lksqlc-ksql5",
-			AccountId:         "25",
-			KafkaClusterId:    "lkc-qwert",
-			OutputTopicPrefix: "pksqlc-abcde",
-			Name:              "account ksql",
-			Storage:           101,
-			Endpoint:          "SASL_SSL://ksql-endpoint",
-		}
-		ksqlCluster2 := &ksqlv1.KSQLCluster{
-			Id:                "lksqlc-woooo",
-			AccountId:         "25",
-			KafkaClusterId:    "lkc-zxcvb",
-			OutputTopicPrefix: "pksqlc-ghjkl",
-			Name:              "kay cee queue elle",
-			Storage:           123,
-			Endpoint:          "SASL_SSL://ksql-endpoint",
-		}
-		if r.Method == "POST" {
-			reply, err := utilv1.MarshalJSONToBytes(&ksqlv1.GetKSQLClusterReply{
-				Cluster: ksqlCluster1,
-			})
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(reply))
-			require.NoError(t, err)
-		} else if r.Method == "GET" {
-			listReply, err := utilv1.MarshalJSONToBytes(&ksqlv1.GetKSQLClustersReply{
-				Clusters: []*ksqlv1.KSQLCluster{ksqlCluster1, ksqlCluster2},
-			})
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(listReply))
-			require.NoError(t, err)
-		}
-	}
-}
-
-func handleConnectCreateList(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ksqlCluster1 := &ksqlv1.KSQLCluster{
 			Id:                "lksqlc-ksql5",

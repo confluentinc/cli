@@ -3,6 +3,7 @@ package connector_catalog
 import (
 	"context"
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -87,7 +88,7 @@ func (suite *CatalogTestSuite) SetupTest() {
 	}
 	suite.connectMock = &ccsdkmock.Connect{
 		ValidateFunc: func(arg0 context.Context, arg1 *v1.ConnectorConfig) (connector *v1.ConfigInfos, e error) {
-			return nil, nil
+			return nil, errors.New("config.name")
 		},
 		GetPluginsFunc: func(arg0 context.Context, arg1 *v1.Connector, arg2 string) (infos []*v1.ConnectorPluginInfo, e error) {
 			return nil, nil
@@ -119,7 +120,7 @@ func (suite *CatalogTestSuite) TestCatalogDescribeConnector() {
 	req.Nil(err)
 	req.True(suite.connectMock.ValidateCalled())
 	retVal := suite.connectMock.ValidateCalls()[0]
-	req.Equal(retVal.Arg1.KafkaClusterId, kafkaClusterID)
+	req.Equal(retVal.Arg1.Plugin, pluginType)
 }
 
 func TestCatalogTestSuite(t *testing.T) {
