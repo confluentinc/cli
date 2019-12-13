@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"github.com/confluentinc/cli/internal/cmd/quit"
 	"net/http"
 	"os"
 	"runtime"
@@ -116,6 +117,8 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 
 	cli.Version = ver.Version
 	cli.AddCommand(version.NewVersionCmd(prerunner, ver))
+
+	cli.AddCommand(quit.QuitCmd(prerunner, cfg))
 
 	conn := config.New(cfg)
 	conn.Hidden = true // The config/context feature isn't finished yet, so let's hide it
