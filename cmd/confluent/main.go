@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/spf13/viper"
-	cprompt "github.com/stromland/cobra-prompt"
 
 	"github.com/confluentinc/cli/internal/cmd"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -23,7 +22,7 @@ var (
 	commit  = ""
 	date    = ""
 	host    = ""
-	cliName = "confluent"
+	cliName = "ccloud"
 	isTest  = "false"
 )
 
@@ -53,7 +52,14 @@ func main() {
 
 	version := cliVersion.NewVersion(cfg.CLIName, cfg.Name(), cfg.Support(), version, commit, date, host)
 
-	cli, err := cmd.NewConfluentCommand(cliName, cfg, version, logger)
+	//completer := &pcmd.Completer{
+	//	//SuggestionsByCommand: map[string][]prompt2.Suggest{"hi": {{
+	//	//	Text:        "hi",
+	//	//	Description: "there",
+	//	//}}},
+	//}
+	completer := pcmd.NewCompleter()
+	cli, err := cmd.NewConfluentCommand(cliName, cfg, version, logger, completer)
 	if err != nil {
 		if cli == nil {
 			fmt.Fprintln(os.Stderr, err)
@@ -67,12 +73,13 @@ func main() {
 		}
 	}
 
-	prompt := &cprompt.CobraPrompt{
+	prompt := &pcmd.CobraPrompt{
 		RootCmd:                cli,
 		GoPromptOptions:        nil,
 		DynamicSuggestionsFunc: nil,
 		ResetFlagsFlag:         false,
 	}
+	prompt.DynamicSuggestionsFunc = completer.Complete
 	prompt.Run()
 
 	if err != nil {

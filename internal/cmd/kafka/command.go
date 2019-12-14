@@ -19,10 +19,11 @@ type command struct {
 	prerunner pcmd.PreRunner
 	logger    *log.Logger
 	clientID  string
+	completer *pcmd.Completer
 }
 
 // New returns the default command object for interacting with Kafka.
-func New(prerunner pcmd.PreRunner, config *config.Config, logger *log.Logger, clientID string, client ccloud.Kafka, ch *pcmd.ConfigHelper) (*cobra.Command, error) {
+func New(prerunner pcmd.PreRunner, config *config.Config, logger *log.Logger, clientID string, client ccloud.Kafka, ch *pcmd.ConfigHelper, completer *pcmd.Completer) (*cobra.Command, error) {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:               "kafka",
@@ -35,6 +36,7 @@ func New(prerunner pcmd.PreRunner, config *config.Config, logger *log.Logger, cl
 		prerunner: prerunner,
 		logger:    logger,
 		clientID:  clientID,
+		completer: completer,
 	}
 	err := cmd.init()
 	if err != nil {
@@ -56,7 +58,7 @@ func (c *command) init() error {
 	if err == nil && credType == config.APIKey {
 		return nil
 	}
-	c.AddCommand(NewClusterCommand(c.config, c.client, c.ch))
+	c.AddCommand(NewClusterCommand(c.config, c.client, c.ch, c.completer))
 	c.AddCommand(NewACLCommand(c.config, c.client, c.ch))
 	return nil
 }

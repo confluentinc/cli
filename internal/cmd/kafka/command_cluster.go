@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/c-bata/go-prompt"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go"
@@ -25,21 +26,23 @@ var (
 
 type clusterCommand struct {
 	*cobra.Command
-	config *config.Config
-	client ccloud.Kafka
-	ch     *pcmd.ConfigHelper
+	config    *config.Config
+	client    ccloud.Kafka
+	ch        *pcmd.ConfigHelper
+	completer *pcmd.Completer
 }
 
 // NewClusterCommand returns the Cobra command for Kafka cluster.
-func NewClusterCommand(config *config.Config, client ccloud.Kafka, ch *pcmd.ConfigHelper) *cobra.Command {
+func NewClusterCommand(config *config.Config, client ccloud.Kafka, ch *pcmd.ConfigHelper, completer *pcmd.Completer) *cobra.Command {
 	cmd := &clusterCommand{
 		Command: &cobra.Command{
 			Use:   "cluster",
 			Short: "Manage Kafka clusters.",
 		},
-		config: config,
-		client: client,
-		ch:     ch,
+		config:    config,
+		client:    client,
+		ch:        ch,
+		completer: completer,
 	}
 	cmd.init()
 	return cmd.Command
@@ -66,11 +69,22 @@ func (c *clusterCommand) init() {
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
-	c.AddCommand(&cobra.Command{
+	describeCmd := &cobra.Command{
 		Use:   "describe <id>",
 		Short: "Describe a Kafka cluster.",
 		RunE:  c.describe,
 		Args:  cobra.ExactArgs(1),
+	}
+	c.AddCommand(describeCmd)
+	describeCmd.Annotations = make(map[string]string)
+	describeCmd.Annotations[pcmd.CALLBACK_ANNOTATION] = "describe"
+	c.completer.AddSuggestionFunction(describeCmd, func() []prompt.Suggest {
+		return []prompt.Suggest{
+			{
+				Text:        "hello",
+				Description: "world",
+			},
+		}
 	})
 
 	updateCmd := &cobra.Command{
@@ -145,7 +159,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		Region:          region,
 		Durability:      kafkav1.Durability_LOW,
 		// TODO: remove this once it's no longer required (MCM-130)
-		Storage:         5000,
+		Storage: 5000,
 	}
 	cluster, err := c.client.Create(context.Background(), cfg)
 	if err != nil {

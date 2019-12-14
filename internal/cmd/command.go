@@ -2,17 +2,15 @@ package cmd
 
 import (
 	"context"
-	"github.com/confluentinc/cli/internal/cmd/quit"
 	"net/http"
 	"os"
 	"runtime"
 
 	"github.com/DABH/go-basher"
-	"github.com/jonboulle/clockwork"
-	"github.com/spf13/cobra"
-
 	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/confluentinc/mds-sdk-go"
+	"github.com/jonboulle/clockwork"
+	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/cmd/apikey"
 	"github.com/confluentinc/cli/internal/cmd/auth"
@@ -43,7 +41,7 @@ import (
 	versions "github.com/confluentinc/cli/internal/pkg/version"
 )
 
-func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Version, logger *log.Logger) (*cobra.Command, error) {
+func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Version, logger *log.Logger, completer *pcmd.Completer) (*cobra.Command, error) {
 	cli := &cobra.Command{
 		Use:               cliName,
 		Version:           ver.Version,
@@ -118,7 +116,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	cli.Version = ver.Version
 	cli.AddCommand(version.NewVersionCmd(prerunner, ver))
 
-	cli.AddCommand(quit.QuitCmd(prerunner, cfg))
+	//cli.AddCommand(quit.QuitCmd(prerunner, cfg))
 
 	conn := config.New(cfg)
 	conn.Hidden = true // The config/context feature isn't finished yet, so let's hide it
@@ -133,7 +131,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	resolver := &pcmd.FlagResolverImpl{Prompt: prompt, Out: os.Stdout}
 
 	if cliName == "ccloud" {
-		cmd, err := kafka.New(prerunner, cfg, logger.Named("kafka"), ver.ClientID, client.Kafka, ch)
+		cmd, err := kafka.New(prerunner, cfg, logger.Named("kafka"), ver.ClientID, client.Kafka, ch, completer)
 		if err != nil {
 			return nil, err
 		}
