@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -57,11 +58,14 @@ func (co CobraPrompt) prepare() {
 func findSuggestions(co CobraPrompt, d prompt.Document) []prompt.Suggest {
 	command := co.RootCmd
 	args := strings.Fields(d.CurrentLine())
-
-	if found, _, err := command.Find(args); err == nil {
-		command = found
+	var foundArgs []string
+	if len(foundArgs) > 0 {
+		fmt.Println(foundArgs)
 	}
-
+	if found, cmdArgs, err := command.Find(args); err == nil {
+		command = found
+		foundArgs = cmdArgs
+	}
 	var suggestions []prompt.Suggest
 	resetFlags, _ := command.Flags().GetBool("flags-no-reset")
 	addFlags := func(flag *pflag.Flag) {
@@ -93,6 +97,12 @@ func findSuggestions(co CobraPrompt, d prompt.Document) []prompt.Suggest {
 	if co.DynamicSuggestionsFunc != nil && annotation != "" {
 		suggestions = append(suggestions, co.DynamicSuggestionsFunc(annotation, d)...)
 	}
-	//return suggestions
+	if len(foundArgs) > 0 {
+		for _, suggestion := range suggestions {
+			if foundArgs[0] == suggestion.Text {
+				return []prompt.Suggest{}
+			}
+		}
+	}
 	return prompt.FilterHasPrefix(suggestions, d.GetWordBeforeCursor(), true)
 }
