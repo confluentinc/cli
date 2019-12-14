@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/atrox/homedir"
+	"github.com/confluentinc/ccloud-sdk-go"
 	v1 "github.com/confluentinc/ccloudapis/org/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -43,6 +44,7 @@ type Config struct {
 	Contexts           map[string]*Context    `json:"contexts"`
 	CurrentContext     string                 `json:"current_context"`
 	Version            *version.Version
+	Client             *ccloud.Client
 }
 
 // New initializes a new Config object

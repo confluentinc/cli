@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/c-bata/go-prompt"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go"
@@ -78,15 +77,7 @@ func (c *clusterCommand) init() {
 	c.AddCommand(describeCmd)
 	describeCmd.Annotations = make(map[string]string)
 	describeCmd.Annotations[pcmd.CALLBACK_ANNOTATION] = "describe"
-	c.completer.AddSuggestionFunction(describeCmd, func() []prompt.Suggest {
-		return []prompt.Suggest{
-			{
-				Text:        "hello",
-				Description: "world",
-			},
-		}
-	})
-
+	
 	updateCmd := &cobra.Command{
 		Use:   "update <id>",
 		Short: "Update a Kafka cluster.",
@@ -118,7 +109,7 @@ func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 	}
 
 	req := &kafkav1.KafkaCluster{AccountId: environment}
-	clusters, err := c.client.List(context.Background(), req)
+	clusters, err := c.config.Client.Kafka.List(context.Background(), req)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -161,7 +152,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		// TODO: remove this once it's no longer required (MCM-130)
 		Storage: 5000,
 	}
-	cluster, err := c.client.Create(context.Background(), cfg)
+	cluster, err := c.config.Client.Kafka.Create(context.Background(), cfg)
 	if err != nil {
 		// TODO: don't swallow validation errors (reportedly separately)
 		return errors.HandleCommon(err, cmd)
@@ -176,7 +167,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	req := &kafkav1.KafkaCluster{AccountId: environment, Id: args[0]}
-	cluster, err := c.client.Describe(context.Background(), req)
+	cluster, err := c.config.Client.Kafka.Describe(context.Background(), req)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -194,7 +185,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	req := &kafkav1.KafkaCluster{AccountId: environment, Id: args[0]}
-	err = c.client.Delete(context.Background(), req)
+	err = c.config.Client.Kafka.Delete(context.Background(), req)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}

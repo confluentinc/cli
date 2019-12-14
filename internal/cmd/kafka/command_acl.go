@@ -100,7 +100,7 @@ func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	resp, err := c.client.ListACL(context.Background(), cluster, convertToFilter(acl.ACLBinding))
+	resp, err := c.config.Client.Kafka.ListACL(context.Background(), cluster, convertToFilter(acl.ACLBinding))
 
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -122,7 +122,7 @@ func (c *aclCommand) create(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(acl.errors, cmd)
 	}
 
-	err = c.client.CreateACL(context.Background(), cluster, []*kafkav1.ACLBinding{acl.ACLBinding})
+	err = c.config.Client.Kafka.CreateACL(context.Background(), cluster, []*kafkav1.ACLBinding{acl.ACLBinding})
 
 	return errors.HandleCommon(err, cmd)
 }
@@ -139,7 +139,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	err = c.client.DeleteACL(context.Background(), cluster, convertToFilter(acl.ACLBinding))
+	err = c.config.Client.Kafka.DeleteACL(context.Background(), cluster, convertToFilter(acl.ACLBinding))
 
 	return errors.HandleCommon(err, cmd)
 }

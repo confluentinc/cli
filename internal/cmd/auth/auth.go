@@ -17,20 +17,20 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 
+	"github.com/confluentinc/mds-sdk-go"
+
 	auth_server "github.com/confluentinc/cli/internal/pkg/auth-server"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
-
-	"github.com/confluentinc/mds-sdk-go"
 )
 
 type commands struct {
-	Commands   []*cobra.Command
-	config     *config.Config
-	mdsClient  *mds.APIClient
-	Logger     *log.Logger
+	Commands  []*cobra.Command
+	config    *config.Config
+	mdsClient *mds.APIClient
+	Logger    *log.Logger
 	// @VisibleForTesting, defaults to the OS filesystem
 	certReader io.Reader
 	// for testing
@@ -200,6 +200,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	pcmd.Println(cmd, "Logged in as", email)
 	pcmd.Print(cmd, "Using environment ", a.config.Auth.Account.Id,
 		" (\"", a.config.Auth.Account.Name, "\")\n")
+	a.updateClient()
 	return err
 }
 
@@ -262,7 +263,7 @@ func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	pcmd.Println(cmd, "Logged in as", email)
-
+	a.updateClient()
 	return errors.HandleCommon(err, cmd)
 }
 
@@ -358,7 +359,7 @@ func (a *commands) setContextAndAddContextIfAbsent(username string, caCertPath s
 	return nil
 }
 
-func SelfSignedCertClient(certReader io.Reader, logger *log.Logger) (*http.Client, error){
+func SelfSignedCertClient(certReader io.Reader, logger *log.Logger) (*http.Client, error) {
 	certPool, err := x509.SystemCertPool()
 	if err != nil {
 		logger.Warnf("Unable to load system certificates. Continuing with custom certificates only.")
@@ -397,4 +398,10 @@ func check(err error) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func (a *commands) updateClient() {
+	a.config.Client = ccloud.NewClientWithJWT(context.Background(), a.config.AuthToken, &ccloud.Params{
+		BaseURL: a.config.AuthURL, Logger: a.config.Logger, UserAgent: a.config.Version.UserAgent,
+	})
 }

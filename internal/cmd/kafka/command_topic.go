@@ -188,7 +188,7 @@ func (c *topicCommand) list(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	resp, err := c.client.ListTopics(context.Background(), cluster)
+	resp, err := c.config.Client.Kafka.ListTopics(context.Background(), cluster)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -239,7 +239,7 @@ func (c *topicCommand) create(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	err = c.client.CreateTopic(context.Background(), cluster, topic)
+	err = c.config.Client.Kafka.CreateTopic(context.Background(), cluster, topic)
 
 	return errors.HandleCommon(err, cmd)
 }
@@ -252,7 +252,7 @@ func (c *topicCommand) describe(cmd *cobra.Command, args []string) error {
 
 	topic := &kafkav1.TopicSpecification{Name: args[0]}
 
-	resp, err := c.client.DescribeTopic(context.Background(), cluster, &kafkav1.Topic{Spec: topic, Validate: false})
+	resp, err := c.config.Client.Kafka.DescribeTopic(context.Background(), cluster, &kafkav1.Topic{Spec: topic, Validate: false})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -330,7 +330,7 @@ func (c *topicCommand) update(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	err = c.client.UpdateTopic(context.Background(), cluster, &kafkav1.Topic{Spec: topic, Validate: validate})
+	err = c.config.Client.Kafka.UpdateTopic(context.Background(), cluster, &kafkav1.Topic{Spec: topic, Validate: validate})
 
 	return errors.HandleCommon(err, cmd)
 }
@@ -342,7 +342,7 @@ func (c *topicCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	topic := &kafkav1.TopicSpecification{Name: args[0]}
-	err = c.client.DeleteTopic(context.Background(), cluster, &kafkav1.Topic{Spec: topic, Validate: false})
+	err = c.config.Client.Kafka.DeleteTopic(context.Background(), cluster, &kafkav1.Topic{Spec: topic, Validate: false})
 
 	return errors.HandleCommon(err, cmd)
 }
