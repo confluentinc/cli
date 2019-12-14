@@ -51,13 +51,7 @@ func main() {
 	}
 
 	version := cliVersion.NewVersion(cfg.CLIName, cfg.Name(), cfg.Support(), version, commit, date, host)
-
-	//completer := &pcmd.Completer{
-	//	//SuggestionsByCommand: map[string][]prompt2.Suggest{"hi": {{
-	//	//	Text:        "hi",
-	//	//	Description: "there",
-	//	//}}},
-	//}
+	
 	completer := pcmd.NewCompleter()
 	cli, err := cmd.NewConfluentCommand(cliName, cfg, version, logger, completer)
 	if err != nil {
