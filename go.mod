@@ -13,6 +13,7 @@ require (
 	github.com/atrox/homedir v1.0.0
 	github.com/aws/aws-sdk-go v1.15.64
 	github.com/bouk/monkey v1.0.1
+	github.com/c-bata/go-prompt v0.2.3 // indirect
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
 	github.com/confluentinc/ccloud-sdk-go v0.0.15
@@ -65,6 +66,7 @@ require (
 	github.com/pierrec/lz4 v2.0.5+incompatible // indirect
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4
 	github.com/pkg/errors v0.8.1
+	github.com/pkg/term v0.0.0-20190109203006-aa71e9d9e942 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a // indirect
 	github.com/shurcooL/go v0.0.0-20190704215121-7189cc372560 // indirect
 	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
@@ -74,6 +76,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.4.0
 	github.com/stretchr/testify v1.4.0
+	github.com/stromland/cobra-prompt v0.0.0-20181123224253-940a0a2bd0d3 // indirect
 	github.com/tidwall/pretty v0.0.0-20190325153808-1166b9ac2b65
 	github.com/travisjeffery/mocker v1.1.0
 	golang.org/x/crypto v0.0.0-20190923035154-9ee001bba392

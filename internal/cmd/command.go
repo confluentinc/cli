@@ -24,6 +24,7 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/ksql"
 	"github.com/confluentinc/cli/internal/cmd/local"
 	ps1 "github.com/confluentinc/cli/internal/cmd/prompt"
+	"github.com/confluentinc/cli/internal/cmd/quit"
 	schema_registry "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	"github.com/confluentinc/cli/internal/cmd/secret"
 	service_account "github.com/confluentinc/cli/internal/cmd/service-account"
@@ -116,7 +117,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	cli.Version = ver.Version
 	cli.AddCommand(version.NewVersionCmd(prerunner, ver))
 
-	//cli.AddCommand(quit.QuitCmd(prerunner, cfg))
+	cli.AddCommand(quit.NewQuitCmd(prerunner, cfg))
 
 	conn := config.New(cfg)
 	conn.Hidden = true // The config/context feature isn't finished yet, so let's hide it

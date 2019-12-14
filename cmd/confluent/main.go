@@ -5,6 +5,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/c-bata/go-prompt"
 	"github.com/spf13/viper"
 
 	"github.com/confluentinc/cli/internal/cmd"
@@ -22,7 +23,7 @@ var (
 	commit  = ""
 	date    = ""
 	host    = ""
-	cliName = "ccloud"
+	cliName = "confluent"
 	isTest  = "false"
 )
 
@@ -51,7 +52,7 @@ func main() {
 	}
 
 	version := cliVersion.NewVersion(cfg.CLIName, cfg.Name(), cfg.Support(), version, commit, date, host)
-	
+
 	completer := pcmd.NewCompleter()
 	cli, err := cmd.NewConfluentCommand(cliName, cfg, version, logger, completer)
 	if err != nil {
@@ -67,14 +68,34 @@ func main() {
 		}
 	}
 
-	prompt := &pcmd.CobraPrompt{
+	// Black is actually White and vice versa
+	var goPromptOpts []prompt.Option
+	goPromptOpts = append(
+		goPromptOpts,
+		prompt.OptionPrefix(" "+cfg.CLIName+"> "),
+		prompt.OptionShowCompletionAtStart(),
+		prompt.OptionPrefixTextColor(prompt.Blue),
+		prompt.OptionPreviewSuggestionTextColor(prompt.Purple),
+		prompt.OptionSuggestionBGColor(prompt.LightGray),
+		prompt.OptionSuggestionTextColor(prompt.White),
+		prompt.OptionSelectedSuggestionBGColor(prompt.DarkBlue),
+		prompt.OptionSelectedSuggestionTextColor(prompt.Black),
+		prompt.OptionDescriptionBGColor(prompt.DarkGray),
+		prompt.OptionDescriptionTextColor(prompt.Black),
+		prompt.OptionSelectedDescriptionBGColor(prompt.Blue),
+		prompt.OptionSelectedDescriptionTextColor(prompt.White),
+		prompt.OptionScrollbarBGColor(prompt.Blue),
+		prompt.OptionScrollbarThumbColor(prompt.DarkBlue),
+	)
+
+	cliPrompt := &pcmd.CobraPrompt{
 		RootCmd:                cli,
-		GoPromptOptions:        nil,
+		GoPromptOptions:        goPromptOpts,
 		DynamicSuggestionsFunc: nil,
 		ResetFlagsFlag:         false,
 	}
-	prompt.DynamicSuggestionsFunc = completer.Complete
-	prompt.Run()
+	cliPrompt.DynamicSuggestionsFunc = completer.Complete
+	cliPrompt.Run()
 
 	if err != nil {
 		if isTest {
