@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"runtime"
@@ -178,6 +179,13 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		}
 
 		cli.AddCommand(secret.New(prerunner, cfg, prompt, resolver, secrets.NewPasswordProtectionPlugin(logger)))
+	}
+	err = prerunner.Authenticated()(cli, []string{})
+	fmt.Printf("Starting %s shell...\n", cliName)
+	if err != nil {
+		fmt.Println("WARNING❗❗❗ You are currently not authenticated. Please log in to use full features.")
+	} else {
+		fmt.Println("Started shell with authenticated user.")
 	}
 	return cli, nil
 }

@@ -72,7 +72,7 @@ func main() {
 	var goPromptOpts []prompt.Option
 	goPromptOpts = append(
 		goPromptOpts,
-		prompt.OptionPrefix(" "+cfg.CLIName+"> "),
+		prompt.OptionPrefix(cfg.CLIName+" 🔥 "),
 		prompt.OptionShowCompletionAtStart(),
 		prompt.OptionPrefixTextColor(prompt.Blue),
 		prompt.OptionPreviewSuggestionTextColor(prompt.Purple),
