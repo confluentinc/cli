@@ -44,7 +44,7 @@ type Config struct {
 	Contexts           map[string]*Context    `json:"contexts"`
 	CurrentContext     string                 `json:"current_context"`
 	Version            *version.Version
-	Client             *ccloud.Client
+	Client             *ccloud.Client		  `json:"-"`
 }
 
 // New initializes a new Config object

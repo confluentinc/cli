@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/c-bata/go-prompt"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go"
@@ -29,10 +30,11 @@ type clusterCommand struct {
 	client    ccloud.Kafka
 	ch        *pcmd.ConfigHelper
 	completer *pcmd.Completer
+	prerunner pcmd.PreRunner
 }
 
 // NewClusterCommand returns the Cobra command for Kafka cluster.
-func NewClusterCommand(config *config.Config, client ccloud.Kafka, ch *pcmd.ConfigHelper, completer *pcmd.Completer) *cobra.Command {
+func NewClusterCommand(config *config.Config, client ccloud.Kafka, ch *pcmd.ConfigHelper, completer *pcmd.Completer, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &clusterCommand{
 		Command: &cobra.Command{
 			Use:   "cluster",
@@ -42,6 +44,7 @@ func NewClusterCommand(config *config.Config, client ccloud.Kafka, ch *pcmd.Conf
 		client:    client,
 		ch:        ch,
 		completer: completer,
+		prerunner: prerunner,
 	}
 	cmd.init()
 	return cmd.Command
@@ -74,10 +77,8 @@ func (c *clusterCommand) init() {
 		RunE:  c.describe,
 		Args:  cobra.ExactArgs(1),
 	}
-	c.AddCommand(describeCmd)
-	describeCmd.Annotations = make(map[string]string)
-	describeCmd.Annotations[pcmd.CALLBACK_ANNOTATION] = "describe"
-	
+	c.addCmdWithSuggests(describeCmd, "cluster-describe")
+
 	updateCmd := &cobra.Command{
 		Use:   "update <id>",
 		Short: "Update a Kafka cluster.",
@@ -85,7 +86,7 @@ func (c *clusterCommand) init() {
 		Args:  cobra.ExactArgs(1),
 	}
 	updateCmd.Hidden = true
-	c.AddCommand(updateCmd)
+	c.addCmdWithSuggests(updateCmd, "cluster-update")
 
 	deleteCmd := &cobra.Command{
 		Use:   "delete <id>",
@@ -93,26 +94,19 @@ func (c *clusterCommand) init() {
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
 	}
-	c.AddCommand(deleteCmd)
-	c.AddCommand(&cobra.Command{
+	c.addCmdWithSuggests(deleteCmd, "cluster-delete")
+
+	useCmd := &cobra.Command{
 		Use:   "use <id>",
 		Short: "Make the Kafka cluster active for use in other commands.",
 		RunE:  c.use,
 		Args:  cobra.ExactArgs(1),
-	})
+	}
+	c.addCmdWithSuggests(useCmd, "use")
 }
 
 func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
-	environment, err := pcmd.GetEnvironment(cmd, c.config)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
-	req := &kafkav1.KafkaCluster{AccountId: environment}
-	clusters, err := c.config.Client.Kafka.List(context.Background(), req)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
+	clusters, err := c.fetchClusters(cmd)
 	currCtx, err := c.config.Context()
 	if err != nil && err != errors.ErrNoContext {
 		return err
@@ -219,4 +213,53 @@ func check(err error) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func (c *clusterCommand) fetchClusters(cmd *cobra.Command) ([]*kafkav1.KafkaCluster, error) {
+	environment, err := pcmd.GetEnvironment(cmd, c.config)
+	if err != nil {
+		return []*kafkav1.KafkaCluster{}, errors.HandleCommon(err, cmd)
+	}
+
+	req := &kafkav1.KafkaCluster{AccountId: environment}
+	clusters, err := c.config.Client.Kafka.List(context.Background(), req)
+	if err != nil {
+		return []*kafkav1.KafkaCluster{}, errors.HandleCommon(err, cmd)
+	}
+	_, err = c.config.Context()
+	if err != nil && err != errors.ErrNoContext {
+		return []*kafkav1.KafkaCluster{}, errors.HandleCommon(err, cmd)
+	}
+
+	return clusters, nil
+}
+
+func (c *clusterCommand) suggestClusters(cmd *cobra.Command ) func() []prompt.Suggest {
+	return func() []prompt.Suggest {
+		if err := c.prerunner.Authenticated()(cmd, []string{}); err != nil {
+			return []prompt.Suggest{
+				{
+					Text:        " ",
+					Description: "You are currently not authenticated. Please login.",
+				},
+			}
+		}
+
+		var suggests []prompt.Suggest
+		clusters, _ := c.fetchClusters(cmd)
+		for _, cluster := range clusters {
+			suggests = append(suggests, prompt.Suggest{
+				Text:        cluster.Id,
+				Description: cluster.Name,
+			})
+		}
+		return suggests
+	}
+}
+
+func (c *clusterCommand) addCmdWithSuggests(cmd *cobra.Command, callback string) {
+	cmd.Annotations = make(map[string]string)
+	cmd.Annotations[pcmd.CALLBACK_ANNOTATION] = callback
+	c.completer.AddSuggestionFunction(cmd, c.suggestClusters(cmd))
+	c.AddCommand(cmd)
 }

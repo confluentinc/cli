@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"strings"
 
+	"github.com/c-bata/go-prompt"
 	"github.com/google/uuid"
 
 	"github.com/Shopify/sarama"
@@ -31,10 +32,11 @@ type topicCommand struct {
 	prerunner pcmd.PreRunner
 	logger    *log.Logger
 	clientID  string
+	completer *pcmd.Completer
 }
 
 // NewTopicCommand returns the Cobra command for Kafka topic.
-func NewTopicCommand(prerunner pcmd.PreRunner, config *config.Config, logger *log.Logger, clientID string, client ccloud.Kafka, ch *pcmd.ConfigHelper) (*cobra.Command, error) {
+func NewTopicCommand(prerunner pcmd.PreRunner, config *config.Config, logger *log.Logger, clientID string, client ccloud.Kafka, ch *pcmd.ConfigHelper, completer *pcmd.Completer) (*cobra.Command, error) {
 	cmd := &topicCommand{
 		Command: &cobra.Command{
 			Use:   "topic",
@@ -46,6 +48,7 @@ func NewTopicCommand(prerunner pcmd.PreRunner, config *config.Config, logger *lo
 		prerunner: prerunner,
 		logger:    logger,
 		clientID:  clientID,
+		completer: completer,
 	}
 	err := cmd.init()
 	if err != nil {
@@ -55,6 +58,7 @@ func NewTopicCommand(prerunner pcmd.PreRunner, config *config.Config, logger *lo
 }
 
 func (c *topicCommand) init() error {
+	//TODO: add suggestions for flags
 	cmd := &cobra.Command{
 		Use:               "produce <topic>",
 		Short:             "Produce messages to a Kafka topic.",
@@ -65,7 +69,7 @@ func (c *topicCommand) init() error {
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().String("delimiter", ":", "The key/value delimiter.")
 	cmd.Flags().SortFlags = false
-	c.AddCommand(cmd)
+	c.addCmdWithSuggests(cmd, "topic-produce")
 
 	cmd = &cobra.Command{
 		Use:   "consume <topic>",
@@ -84,7 +88,8 @@ Consume items from the 'my_topic' topic and press 'Ctrl + C' to exit.
 	cmd.Flags().String("group", fmt.Sprintf("confluent_cli_consumer_%s", uuid.New()), "Consumer group ID.")
 	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
 	cmd.Flags().SortFlags = false
-	c.AddCommand(cmd)
+	c.addCmdWithSuggests(cmd, "topic-consume")
+
 	credType, err := c.config.CredentialType()
 	if err == nil && credType == config.APIKey {
 		return nil
@@ -143,7 +148,7 @@ Describe the 'my_topic' topic.
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().SortFlags = false
-	c.AddCommand(cmd)
+	c.addCmdWithSuggests(cmd, "topic-describe")
 
 	cmd = &cobra.Command{
 		Use:   "update <topic>",
@@ -178,19 +183,14 @@ Delete the topics 'my_topic' and 'my_topic_avro'. Use this command carefully as 
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().SortFlags = false
-	c.AddCommand(cmd)
+	c.addCmdWithSuggests(cmd, "topic-delete")
 	return nil
 }
 
 func (c *topicCommand) list(cmd *cobra.Command, args []string) error {
-	cluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
+	resp, err := c.fetchTopics(cmd);
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
-	resp, err := c.config.Client.Kafka.ListTopics(context.Background(), cluster)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	var topics [][]string
@@ -481,4 +481,47 @@ func toMap(configs []string) (map[string]string, error) {
 		configMap[pair[0]] = pair[1]
 	}
 	return configMap, nil
+}
+
+func (c *topicCommand) fetchTopics(cmd *cobra.Command) ([]*kafkav1.TopicDescription, error) {
+	cluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
+	if err != nil {
+		return []*kafkav1.TopicDescription{}, errors.HandleCommon(err, cmd)
+	}
+
+	resp, err := c.config.Client.Kafka.ListTopics(context.Background(), cluster)
+	if err != nil {
+		return []*kafkav1.TopicDescription{}, errors.HandleCommon(err, cmd)
+	}
+
+	return resp, nil
+}
+
+func(c *topicCommand) suggestTopics(cmd *cobra.Command) func() []prompt.Suggest {
+	return func() []prompt.Suggest {
+		if err := c.prerunner.Authenticated()(cmd, []string{}); err != nil {
+			return []prompt.Suggest{
+				{
+					Text:        " ",
+					Description: "You are currently not authenticated. Please login.",
+				},
+			}
+		}
+
+		var suggests []prompt.Suggest
+		topics, _ := c.fetchTopics(cmd)
+		for _, topic := range topics {
+			suggests = append(suggests, prompt.Suggest{
+				Text:        topic.Name,
+			})
+		}
+		return suggests
+	}
+}
+
+func (c *topicCommand) addCmdWithSuggests(cmd *cobra.Command, callback string) {
+	cmd.Annotations = make(map[string]string)
+	cmd.Annotations[pcmd.CALLBACK_ANNOTATION] = callback
+	c.completer.AddSuggestionFunction(cmd, c.suggestTopics(cmd))
+	c.AddCommand(cmd)
 }

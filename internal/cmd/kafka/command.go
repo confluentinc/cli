@@ -45,7 +45,7 @@ func New(prerunner pcmd.PreRunner, config *config.Config, logger *log.Logger, cl
 }
 
 func (c *command) init() error {
-	topicCmd, err := NewTopicCommand(c.prerunner, c.config, c.logger, c.clientID, c.client, c.ch)
+	topicCmd, err := NewTopicCommand(c.prerunner, c.config, c.logger, c.clientID, c.client, c.ch, c.completer)
 	if err != nil {
 		return err
 	}
@@ -57,7 +57,7 @@ func (c *command) init() error {
 	if err == nil && credType == config.APIKey {
 		return nil
 	}
-	c.AddCommand(NewClusterCommand(c.config, c.client, c.ch, c.completer))
+	c.AddCommand(NewClusterCommand(c.config, c.client, c.ch, c.completer, c.prerunner))
 	c.AddCommand(NewACLCommand(c.config, c.client, c.ch))
 	return nil
 }

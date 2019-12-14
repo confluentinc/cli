@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"strings"
-
 	"github.com/c-bata/go-prompt"
 	"github.com/spf13/cobra"
 )
@@ -24,6 +22,6 @@ func (c *Completer) Complete(annotation string, d prompt.Document) []prompt.Sugg
 }
 
 func (c *Completer) AddSuggestionFunction(cmd *cobra.Command, sFunc func() []prompt.Suggest) {
-	key := strings.Split(cmd.Use, " ")[0]
+	key := cmd.Annotations[CALLBACK_ANNOTATION]
 	c.SuggestionFunctionsByCommand[key] = sFunc
 }

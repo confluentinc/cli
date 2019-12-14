@@ -91,10 +91,9 @@ func main() {
 	cliPrompt := &pcmd.CobraPrompt{
 		RootCmd:                cli,
 		GoPromptOptions:        goPromptOpts,
-		DynamicSuggestionsFunc: nil,
+		DynamicSuggestionsFunc: completer.Complete,
 		ResetFlagsFlag:         false,
 	}
-	cliPrompt.DynamicSuggestionsFunc = completer.Complete
 	cliPrompt.Run()
 
 	if err != nil {
