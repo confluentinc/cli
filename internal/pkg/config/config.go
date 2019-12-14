@@ -8,12 +8,12 @@ import (
 	"path/filepath"
 
 	"github.com/atrox/homedir"
-
 	v1 "github.com/confluentinc/ccloudapis/org/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/metric"
+	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
 const (
@@ -42,6 +42,7 @@ type Config struct {
 	Credentials        map[string]*Credential `json:"credentials"`
 	Contexts           map[string]*Context    `json:"contexts"`
 	CurrentContext     string                 `json:"current_context"`
+	Version            *version.Version
 }
 
 // New initializes a new Config object

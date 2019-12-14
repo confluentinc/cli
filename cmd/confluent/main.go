@@ -52,7 +52,7 @@ func main() {
 	}
 
 	version := cliVersion.NewVersion(cfg.CLIName, cfg.Name(), cfg.Support(), version, commit, date, host)
-
+	cfg.Version = version
 	completer := pcmd.NewCompleter()
 	cli, err := cmd.NewConfluentCommand(cliName, cfg, version, logger, completer)
 	if err != nil {
