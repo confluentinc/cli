@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 	"strings"
 
@@ -59,9 +58,6 @@ func findSuggestions(co CobraPrompt, d prompt.Document) []prompt.Suggest {
 	command := co.RootCmd
 	args := strings.Fields(d.CurrentLine())
 	var foundArgs []string
-	if len(foundArgs) > 0 {
-		fmt.Println(foundArgs)
-	}
 	if found, cmdArgs, err := command.Find(args); err == nil {
 		command = found
 		foundArgs = cmdArgs
