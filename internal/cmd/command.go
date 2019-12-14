@@ -74,6 +74,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	client := ccloud.NewClientWithJWT(context.Background(), cfg.AuthToken, &ccloud.Params{
 		BaseURL: cfg.AuthURL, Logger: cfg.Logger, UserAgent: ver.UserAgent,
 	})
+	cfg.Client = client
 
 	ch := &pcmd.ConfigHelper{Config: cfg, Client: client, Version: ver}
 	fs := &io.RealFileSystem{}
