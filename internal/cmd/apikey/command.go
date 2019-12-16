@@ -124,9 +124,6 @@ func (c *command) init() {
 	storeCmd.Flags().String(resourceFlagName, "", "REQUIRED: The resource ID.")
 	storeCmd.Flags().BoolP("force", "f", false, "Force overwrite existing secret for this key.")
 	storeCmd.Flags().SortFlags = false
-	if err := storeCmd.MarkFlagRequired(resourceFlagName); err != nil {
-		panic(err)
-	}
 	c.AddCommand(storeCmd)
 
 	useCmd := &cobra.Command{
