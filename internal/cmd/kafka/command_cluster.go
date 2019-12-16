@@ -24,6 +24,10 @@ var (
 	describeRenames = map[string]string{"NetworkIngress": "Ingress", "NetworkEgress": "Egress", "ServiceProvider": "Provider"}
 )
 
+const (
+	clusterAnnotation = "cluster"
+)
+
 type clusterCommand struct {
 	*cobra.Command
 	config    *config.Config
@@ -102,7 +106,7 @@ func (c *clusterCommand) init() {
 		RunE:  c.use,
 		Args:  cobra.ExactArgs(1),
 	}
-	c.addCmdWithSuggests(useCmd, "use")
+	c.addCmdWithSuggests(useCmd, "cluster-use")
 }
 
 func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
@@ -234,7 +238,7 @@ func (c *clusterCommand) fetchClusters(cmd *cobra.Command) ([]*kafkav1.KafkaClus
 	return clusters, nil
 }
 
-func (c *clusterCommand) suggestClusters(cmd *cobra.Command ) func() []prompt.Suggest {
+func (c *clusterCommand) suggestClusters(cmd *cobra.Command) func() []prompt.Suggest {
 	return func() []prompt.Suggest {
 		if err := c.prerunner.Authenticated()(cmd, []string{}); err != nil {
 			return []prompt.Suggest{
@@ -259,7 +263,7 @@ func (c *clusterCommand) suggestClusters(cmd *cobra.Command ) func() []prompt.Su
 
 func (c *clusterCommand) addCmdWithSuggests(cmd *cobra.Command, callback string) {
 	cmd.Annotations = make(map[string]string)
-	cmd.Annotations[pcmd.CALLBACK_ANNOTATION] = callback
+	cmd.Annotations[pcmd.CALLBACK_ANNOTATION] = clusterAnnotation
 	c.completer.AddSuggestionFunction(cmd, c.suggestClusters(cmd))
 	c.AddCommand(cmd)
 }

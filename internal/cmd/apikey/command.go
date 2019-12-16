@@ -48,6 +48,10 @@ var (
 	resourceFlagName = "resource"
 )
 
+const (
+	apiKeyAnnotation = "apikey"
+)
+
 // New returns the Cobra command for API Key.
 func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.APIKey, ch *pcmd.ConfigHelper,
 	keystore keystore.KeyStore, completer *pcmd.Completer) *cobra.Command {
@@ -402,7 +406,7 @@ func (c *command) fetchAPIKeys(cmd *cobra.Command, args []string) ([]*authv1.Api
 
 func (c *command) addCmdWithSuggests(cmd *cobra.Command, callback string) {
 	cmd.Annotations = make(map[string]string)
-	cmd.Annotations[pcmd.CALLBACK_ANNOTATION] = callback
+	cmd.Annotations[pcmd.CALLBACK_ANNOTATION] = apiKeyAnnotation
 	c.completer.AddSuggestionFunction(cmd, c.suggestAPIKeys(cmd))
 	c.AddCommand(cmd)
 }

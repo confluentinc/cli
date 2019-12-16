@@ -67,14 +67,15 @@ func main() {
 			os.Exit(1)
 		}
 	}
-
+	
+	go completer.UpdateAllSuggestions()
 	livePrefixFunc := func() (prefix string, useLivePrefix bool) {
 		err = prerunner.Authenticated()(cli, []string{})
 		if err != nil {
 			return cfg.CLIName + " ❌ > ", true
 			//🔒
 		} else {
-			return cfg.CLIName+ " ✅ > ", true
+			return cfg.CLIName + " ✅ > ", true
 			//🔓
 		}
 	}
