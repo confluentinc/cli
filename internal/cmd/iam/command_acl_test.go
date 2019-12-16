@@ -3,12 +3,14 @@ package iam
 import (
 	"context"
 	net_http "net/http"
-	"os"
 	"testing"
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/confluentinc/mds-sdk-go"
+	"github.com/confluentinc/mds-sdk-go/mock"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
@@ -16,8 +18,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/update"
 	cliMock "github.com/confluentinc/cli/mock"
-	"github.com/confluentinc/mds-sdk-go"
-	"github.com/confluentinc/mds-sdk-go/mock"
 )
 
 /*************** TEST command_acl ***************/
@@ -176,16 +176,11 @@ type AclTestSuite struct {
 }
 
 func (suite *AclTestSuite) SetupSuite() {
-	_ = os.Setenv("XX_FLAG_CENTRALIZED_ACL_ENABLE", "true")
 	suite.conf = config.New()
 	suite.conf.CLIName = "confluent"
 	suite.conf.Logger = log.New()
 	suite.conf.AuthURL = "http://test"
 	suite.conf.AuthToken = "T0k3n"
-}
-
-func (suite *AclTestSuite) TearDownSuite() {
-	_ = os.Setenv("XX_FLAG_CENTRALIZED_ACL_ENABLE", "false")
 }
 
 func (suite *AclTestSuite) SetupTest() {
@@ -194,15 +189,15 @@ func (suite *AclTestSuite) SetupTest() {
 
 func (suite *AclTestSuite) newMockIamCmd(expect chan interface{}, message string) *cobra.Command {
 	suite.kafkaApi = &mock.KafkaACLManagementApi{
-		AddAclBindingFunc:  func(ctx context.Context, createAclRequest mds.CreateAclRequest) (*net_http.Response, error) {
+		AddAclBindingFunc: func(ctx context.Context, createAclRequest mds.CreateAclRequest) (*net_http.Response, error) {
 			assert.Equal(suite.T(), createAclRequest, <-expect, message)
 			return nil, nil
 		},
-		RemoveAclBindingsFunc: func(ctx context.Context, aclFilterRequest mds.AclFilterRequest) ([]mds.AclBinding, *net_http.Response, error){
+		RemoveAclBindingsFunc: func(ctx context.Context, aclFilterRequest mds.AclFilterRequest) ([]mds.AclBinding, *net_http.Response, error) {
 			assert.Equal(suite.T(), aclFilterRequest, <-expect, message)
 			return nil, nil, nil
 		},
-		SearchAclBindingFunc: func(ctx context.Context, aclFilterRequest mds.AclFilterRequest) ([]mds.AclBinding, *net_http.Response, error){
+		SearchAclBindingFunc: func(ctx context.Context, aclFilterRequest mds.AclFilterRequest) ([]mds.AclBinding, *net_http.Response, error) {
 			assert.Equal(suite.T(), aclFilterRequest, <-expect, message)
 			return nil, nil, nil
 		},
@@ -220,14 +215,14 @@ func (suite *AclTestSuite) TestMdsCreateACL() {
 	expect := make(chan interface{})
 	for _, mdsResourcePattern := range mdsResourcePatterns {
 		args := append([]string{"acl", "create", "--kafka-cluster-id", "testcluster"},
-					mdsResourcePattern.args...)
+			mdsResourcePattern.args...)
 		for _, mdsAclEntry := range mdsAclEntries {
 			cmd := suite.newMockIamCmd(expect, "")
 			cmd.SetArgs(append(args, mdsAclEntry.args...))
 
 			go func() {
-				expect <- mds.CreateAclRequest {
-					Scope: mds.KafkaScope {
+				expect <- mds.CreateAclRequest{
+					Scope: mds.KafkaScope{
 						Clusters: mds.KafkaScopeClusters{
 							KafkaCluster: "testcluster",
 						},
@@ -246,22 +241,22 @@ func (suite *AclTestSuite) TestMdsDeleteACL() {
 	expect := make(chan interface{})
 	for _, mdsResourcePattern := range mdsResourcePatterns {
 		args := append([]string{"acl", "delete", "--kafka-cluster-id", "testcluster", "--host", "*"},
-					mdsResourcePattern.args...)
+			mdsResourcePattern.args...)
 		for _, mdsAclEntry := range mdsAclEntries {
 			cmd := suite.newMockIamCmd(expect, "")
 			cmd.SetArgs(append(args, mdsAclEntry.args...))
 
 			go func() {
 				expect <- convertToAclFilterRequest(
-					&mds.CreateAclRequest {
-						Scope: mds.KafkaScope {
+					&mds.CreateAclRequest{
+						Scope: mds.KafkaScope{
 							Clusters: mds.KafkaScopeClusters{
 								KafkaCluster: "testcluster",
 							},
 						},
 						AclBinding: mds.AclBinding{
 							Pattern: mdsResourcePattern.pattern,
-							Entry: mdsAclEntry.entry,
+							Entry:   mdsAclEntry.entry,
 						},
 					},
 				)
@@ -281,15 +276,15 @@ func (suite *AclTestSuite) TestMdsListACL() {
 
 		go func() {
 			expect <- convertToAclFilterRequest(
-				&mds.CreateAclRequest {
-					Scope: mds.KafkaScope {
+				&mds.CreateAclRequest{
+					Scope: mds.KafkaScope{
 						Clusters: mds.KafkaScopeClusters{
 							KafkaCluster: "testcluster",
 						},
 					},
 					AclBinding: mds.AclBinding{
 						Pattern: mdsResourcePattern.pattern,
-						Entry: mds.AccessControlEntry{},
+						Entry:   mds.AccessControlEntry{},
 					},
 				},
 			)
@@ -308,8 +303,8 @@ func (suite *AclTestSuite) TestMdsListPrincipalACL() {
 
 		go func() {
 			expect <- convertToAclFilterRequest(
-				&mds.CreateAclRequest {
-					Scope: mds.KafkaScope {
+				&mds.CreateAclRequest{
+					Scope: mds.KafkaScope{
 						Clusters: mds.KafkaScopeClusters{
 							KafkaCluster: "testcluster",
 						},
@@ -320,7 +315,7 @@ func (suite *AclTestSuite) TestMdsListPrincipalACL() {
 						},
 					},
 				},
-				)
+			)
 		}()
 
 		err := cmd.Execute()
@@ -338,8 +333,8 @@ func (suite *AclTestSuite) TestMdsListPrincipalFilterACL() {
 
 			go func() {
 				expect <- convertToAclFilterRequest(
-					&mds.CreateAclRequest {
-						Scope: mds.KafkaScope {
+					&mds.CreateAclRequest{
+						Scope: mds.KafkaScope{
 							Clusters: mds.KafkaScopeClusters{
 								KafkaCluster: "testcluster",
 							},
@@ -351,7 +346,8 @@ func (suite *AclTestSuite) TestMdsListPrincipalFilterACL() {
 							},
 						},
 					},
-				)			}()
+				)
+			}()
 
 			err := cmd.Execute()
 			assert.Nil(suite.T(), err)
@@ -375,28 +371,28 @@ func (suite *AclTestSuite) TestMdsMultipleResourceACL() {
 
 func (suite *AclTestSuite) TestMdsDefaults() {
 	expect := make(chan interface{})
-	cmd := suite.newMockIamCmd(expect,"Topic PatternType was not set to default value of PatternTypes_LITERAL")
+	cmd := suite.newMockIamCmd(expect, "Topic PatternType was not set to default value of PatternTypes_LITERAL")
 	cmd.SetArgs([]string{"acl", "create", "--kafka-cluster-id", "testcluster",
 		"--allow", "--principal", "User:42",
 		"--operation", "read", "--topic", "dan"})
 	go func() {
-		expect <- mds.CreateAclRequest {
-			Scope: mds.KafkaScope {
+		expect <- mds.CreateAclRequest{
+			Scope: mds.KafkaScope{
 				Clusters: mds.KafkaScopeClusters{
 					KafkaCluster: "testcluster",
 				},
 			},
 			AclBinding: mds.AclBinding{
-				Pattern: mds.KafkaResourcePattern {
+				Pattern: mds.KafkaResourcePattern{
 					ResourceType: mds.ACL_RESOURCE_TYPE_TOPIC,
-					Name: "dan",
-					PatternType: mds.PATTERN_TYPE_LITERAL,
+					Name:         "dan",
+					PatternType:  mds.PATTERN_TYPE_LITERAL,
 				},
 				Entry: mds.AccessControlEntry{
-					Principal: "User:42",
+					Principal:      "User:42",
 					PermissionType: mds.ACL_PERMISSION_TYPE_ALLOW,
-					Operation: mds.ACL_OPERATION_READ,
-					Host: "*",
+					Operation:      mds.ACL_OPERATION_READ,
+					Host:           "*",
 				},
 			},
 		}
@@ -405,29 +401,29 @@ func (suite *AclTestSuite) TestMdsDefaults() {
 	err := cmd.Execute()
 	assert.Nil(suite.T(), err)
 
-	cmd = suite.newMockIamCmd(expect,"Cluster PatternType was not set to default value of PatternTypes_LITERAL")
+	cmd = suite.newMockIamCmd(expect, "Cluster PatternType was not set to default value of PatternTypes_LITERAL")
 	cmd.SetArgs([]string{"acl", "create", "--kafka-cluster-id", "testcluster",
 		"--cluster-scope", "--allow", "--principal", "User:42",
 		"--operation", "read"})
 
 	go func() {
-		expect <- mds.CreateAclRequest {
-			Scope: mds.KafkaScope {
+		expect <- mds.CreateAclRequest{
+			Scope: mds.KafkaScope{
 				Clusters: mds.KafkaScopeClusters{
 					KafkaCluster: "testcluster",
 				},
 			},
 			AclBinding: mds.AclBinding{
-				Pattern: mds.KafkaResourcePattern {
+				Pattern: mds.KafkaResourcePattern{
 					ResourceType: mds.ACL_RESOURCE_TYPE_CLUSTER,
-					Name: "kafka-cluster",
-					PatternType: mds.PATTERN_TYPE_LITERAL,
+					Name:         "kafka-cluster",
+					PatternType:  mds.PATTERN_TYPE_LITERAL,
 				},
 				Entry: mds.AccessControlEntry{
-					Principal: "User:42",
+					Principal:      "User:42",
 					PermissionType: mds.ACL_PERMISSION_TYPE_ALLOW,
-					Operation: mds.ACL_OPERATION_READ,
-					Host: "*",
+					Operation:      mds.ACL_OPERATION_READ,
+					Host:           "*",
 				},
 			},
 		}
@@ -440,16 +436,17 @@ func (suite *AclTestSuite) TestMdsDefaults() {
 func (suite *AclTestSuite) TestMdsHandleErrorNotLoggedIn() {
 	// Use the real auth preRunner
 	suite.preRunner = &pcmd.PreRun{
-		Logger: log.New(),
-		Config: suite.conf,
+		Logger:       log.New(),
+		Config:       suite.conf,
 		UpdateClient: update.NewClient(&update.ClientParams{CheckInterval: 0}),
+		Analytics:    cliMock.NewDummyAnalyticsMock(),
 	}
 	expect := make(chan interface{})
 
 	cmd := suite.newMockIamCmd(expect, "")
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 
-	for _, aclCmd := range []string { "list", "create", "delete" } {
+	for _, aclCmd := range []string{"list", "create", "delete"} {
 		cmd.SetArgs([]string{"acl", aclCmd, "--kafka-cluster-id", "testcluster"})
 		go func() {
 			expect <- nil

@@ -14,6 +14,7 @@ import (
 	linter "github.com/confluentinc/cli/internal/pkg/lint-cli"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/version"
+	"github.com/confluentinc/cli/mock"
 )
 
 var (
@@ -58,7 +59,7 @@ var (
 		linter.ExcludeCommandContains("cluster describe"),
 	}
 	resourceScopedCommands = []linter.RuleFilter{
-		linter.IncludeCommandContains("api-key use", "api-key create", "api-key list", "api-key store"),
+		linter.IncludeCommandContains("api-key use", "api-key create", "api-key store"),
 	}
 )
 
@@ -101,9 +102,11 @@ var rules = []linter.Rule{
 	linter.Filter(linter.RequireFlagType("cluster", "string"), nonClusterScopedCommands...),
 	linter.Filter(linter.RequireFlagDescription("cluster", "Kafka cluster ID."),
 		append(nonClusterScopedCommands, linter.ExcludeParentUse("api-key"))...),
-	linter.Filter(linter.RequireFlag("resource", true), resourceScopedCommands...),
+	linter.Filter(linter.RequireFlag("resource", false), resourceScopedCommands...),
+	linter.Filter(linter.RequireFlag("resource", true), linter.IncludeCommandContains("api-key list")),
 	linter.Filter(linter.RequireFlagType("resource", "string"), resourceScopedCommands...),
-	linter.Filter(linter.RequireFlagDescription("resource", "The resource ID."),
+	linter.Filter(linter.RequireFlagType("resource", "string"), linter.IncludeCommandContains("api-key list")),
+	linter.Filter(linter.RequireFlagDescription("resource", "REQUIRED: The resource ID."),
 		append(resourceScopedCommands)...),
 	linter.RequireFlagSort(false),
 	linter.RequireLowerCase("Use"),
@@ -161,12 +164,12 @@ func main() {
 
 	var issues *multierror.Error
 	for _, cliName := range cliNames {
-		cli, err := cmd.NewConfluentCommand(cliName, &config.Config{CLIName: cliName}, &version.Version{Binary: cliName}, log.New())
+		cli, err := cmd.NewConfluentCommand(cliName, &config.Config{CLIName: cliName}, &version.Version{Binary: cliName}, log.New(), mock.NewDummyAnalyticsMock())
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		err = l.Lint(cli)
+		err = l.Lint(cli.Command)
 		if err != nil {
 			issues = multierror.Append(issues, err)
 		}

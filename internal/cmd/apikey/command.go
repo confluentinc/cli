@@ -9,12 +9,11 @@ import (
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
-	"github.com/confluentinc/go-printer"
-
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/keystore"
+	"github.com/confluentinc/go-printer"
 )
 
 const longDescription = `Use this command to register an API secret created by another
@@ -42,6 +41,7 @@ var (
 	listLabels    = []string{"Key", "Owner", "Description", "Resource Type", "Resource ID"}
 	createFields  = []string{"Key", "Secret"}
 	createRenames = map[string]string{"Key": "API Key"}
+	resourceFlagName = "resource"
 )
 
 // New returns the Cobra command for API Key.
@@ -68,7 +68,9 @@ func (c *command) init() {
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	}
-	listCmd.Flags().String("resource", "", "The resource ID.")
+	listCmd.Flags().String(resourceFlagName, "", "The resource ID to filter by.")
+	listCmd.Flags().Bool("current-user", false, "Show only API keys belonging to current user.")
+	listCmd.Flags().Int32("service-account-id", 0, "The service account ID to filter by.")
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
@@ -78,10 +80,13 @@ func (c *command) init() {
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
 	}
-	createCmd.Flags().String("resource", "", "The resource ID.")
+	createCmd.Flags().String(resourceFlagName, "", "REQUIRED: The resource ID.")
 	createCmd.Flags().Int32("service-account-id", 0, "Service account ID. If not specified, the API key will have full access on the cluster.")
 	createCmd.Flags().String("description", "", "Description of API key.")
 	createCmd.Flags().SortFlags = false
+	if err := createCmd.MarkFlagRequired(resourceFlagName); err != nil {
+		panic(err)
+	}
 	c.AddCommand(createCmd)
 
 	updateCmd := &cobra.Command{
@@ -108,9 +113,12 @@ func (c *command) init() {
 		RunE:  c.store,
 		Args:  cobra.ExactArgs(2),
 	}
-	storeCmd.Flags().String("resource", "", "The resource ID.")
+	storeCmd.Flags().String(resourceFlagName, "", "REQUIRED: The resource ID.")
 	storeCmd.Flags().BoolP("force", "f", false, "Force overwrite existing secret for this key.")
 	storeCmd.Flags().SortFlags = false
+	if err := storeCmd.MarkFlagRequired(resourceFlagName); err != nil {
+		panic(err)
+	}
 	c.AddCommand(storeCmd)
 
 	useCmd := &cobra.Command{
@@ -119,8 +127,11 @@ func (c *command) init() {
 		RunE:  c.use,
 		Args:  cobra.ExactArgs(1),
 	}
-	useCmd.Flags().String("resource", "", "The resource ID.")
+	useCmd.Flags().String(resourceFlagName, "", "REQUIRED: The resource ID.")
 	useCmd.Flags().SortFlags = false
+	if err := useCmd.MarkFlagRequired(resourceFlagName); err != nil {
+		panic(err)
+	}
 	c.AddCommand(useCmd)
 }
 
@@ -135,13 +146,34 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	var apiKeys []*authv1.ApiKey
 	var data [][]string
 
-	resourceType, accId, resourceId, currentKey, err := c.resolveResourceID(cmd, args)
+	resourceType, _, resourceId, currentKey, err := c.resolveResourceID(cmd, args)
 	//Return resource not found errors
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	apiKeys, err = c.client.List(context.Background(), &authv1.ApiKey{AccountId: accId, LogicalClusters: []*authv1.ApiKey_Cluster{{Id: resourceId, Type: resourceType}}})
+	var logicalClusters []*authv1.ApiKey_Cluster
+	if resourceId != "" {
+		logicalClusters = []*authv1.ApiKey_Cluster{{Id: resourceId, Type: resourceType}}
+	}
+
+	userId, err := cmd.Flags().GetInt32("service-account-id")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	currentUser, err := cmd.Flags().GetBool("current-user")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	if currentUser {
+		if userId != 0 {
+			return errors.Errorf("Cannot use both service-account-id and current-user flags at the same time.")
+		}
+		userId = c.config.Auth.User.Id
+	}
+
+	apiKeys, err = c.client.List(context.Background(), &authv1.ApiKey{AccountId: c.config.Auth.Account.Id, LogicalClusters: logicalClusters, UserId: userId})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -152,23 +184,21 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 			continue
 		}
 
-		if apiKey.Key == currentKey {
+		// resourceId != "" added to be explicit that when no resourceId is specified we will not have "*"
+		if resourceId != "" && apiKey.Key == currentKey {
 			apiKey.Key = fmt.Sprintf("* %s", apiKey.Key)
 		} else {
 			apiKey.Key = fmt.Sprintf("  %s", apiKey.Key)
 		}
 
-		for _, c := range apiKey.LogicalClusters {
-			if c.Id == resourceId {
-				data = append(data, printer.ToRow(&keyDisplay{
-					Key:          apiKey.Key,
-					Description:  apiKey.Description,
-					UserId:       apiKey.UserId,
-					ResourceType: resourceType,
-					ResourceId:   resourceId,
-				}, listFields))
-				break
-			}
+		for _, lc := range apiKey.LogicalClusters {
+			data = append(data, printer.ToRow(&keyDisplay{
+				Key:          apiKey.Key,
+				Description:  apiKey.Description,
+				UserId:       apiKey.UserId,
+				ResourceType: lc.Type,
+				ResourceId:   lc.Id,
+			}, listFields))
 		}
 	}
 	printer.RenderCollectionTable(data, listLabels)
