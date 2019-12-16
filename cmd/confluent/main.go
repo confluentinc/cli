@@ -67,18 +67,29 @@ func main() {
 			os.Exit(1)
 		}
 	}
+	go completer.UpdateAllSuggestions()
 
+	cliPrompt := &pcmd.CobraPrompt{
+		RootCmd:                cli,
+		DynamicSuggestionsFunc: completer.Complete,
+		ResetFlagsFlag:         false,
+		CLIName:                cfg.CLIName,
+	}
 	livePrefixFunc := func() (prefix string, useLivePrefix bool) {
 		err = prerunner.Authenticated()(cli, []string{})
 		if err != nil {
-			return cfg.CLIName + " ❌ > ", true
+			prefix = cfg.CLIName + " ❌"
 			//🔒
 		} else {
-			return cfg.CLIName+ " ✅ > ", true
+			prefix = cfg.CLIName + " ✅"
 			//🔓
 		}
+		if cliPrompt.FuzzyFind {
+			prefix += "  🔍"
+		}
+		prefix += " > "
+		return prefix, true
 	}
-
 	// Black is actually White and vice versa
 	var goPromptOpts []prompt.Option
 	goPromptOpts = append(
@@ -98,14 +109,14 @@ func main() {
 		prompt.OptionScrollbarBGColor(prompt.Blue),
 		prompt.OptionScrollbarThumbColor(prompt.DarkBlue),
 		prompt.OptionLivePrefix(livePrefixFunc),
+		prompt.OptionAddKeyBind(prompt.KeyBind{
+			Key: prompt.ControlF,
+			Fn: func(buffer *prompt.Buffer) {
+				cliPrompt.FuzzyFind = !cliPrompt.FuzzyFind
+			},
+		}),
 	)
-
-	cliPrompt := &pcmd.CobraPrompt{
-		RootCmd:                cli,
-		GoPromptOptions:        goPromptOpts,
-		DynamicSuggestionsFunc: completer.Complete,
-		ResetFlagsFlag:         false,
-	}
+	cliPrompt.GoPromptOptions = goPromptOpts
 	cliPrompt.Run()
 
 	if err != nil {

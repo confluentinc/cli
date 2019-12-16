@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"sync"
 	"time"
 
 	"github.com/c-bata/go-prompt"
@@ -8,47 +9,59 @@ import (
 )
 
 const (
-	maxCacheAge = 3 * time.Second
+	maxCacheAge = 10 * time.Second
 )
 
 type Completer struct {
-	SuggestionFunctionsByCommand map[string]func() []prompt.Suggest
-	cachedSuggestionsByCommand   map[string][]prompt.Suggest
-	lastFetchTimeByCommand       map[string]time.Time
+	SuggestionFunctionsByCommand *sync.Map //map[string]func() []prompt.Suggest
+	cachedSuggestionsByCommand   *sync.Map //map[string][]prompt.Suggest
+	lastFetchTimeByCommand       *sync.Map //map[string]time.Time
 }
 
 func NewCompleter() *Completer {
 	c := &Completer{
-		SuggestionFunctionsByCommand: map[string]func() []prompt.Suggest{},
-		cachedSuggestionsByCommand:   map[string][]prompt.Suggest{},
-		lastFetchTimeByCommand:       map[string]time.Time{},
+		SuggestionFunctionsByCommand: new(sync.Map),
+		cachedSuggestionsByCommand:   new(sync.Map),
+		lastFetchTimeByCommand:       new(sync.Map),
 	}
 	go c.runSuggestions()
 	return c
 }
 
 func (c *Completer) Complete(annotation string, d prompt.Document) []prompt.Suggest {
-	sFunc := c.SuggestionFunctionsByCommand[annotation]
-	if sFunc != nil {
-		return c.cachedSuggestionsByCommand[annotation]
+	cachedSuggestions, ok := c.cachedSuggestionsByCommand.Load(annotation)
+	if !ok {
+		return []prompt.Suggest{}
 	}
-	return nil
+	if suggestions, ok := cachedSuggestions.([]prompt.Suggest); ok {
+		return suggestions
+	} else {
+		return []prompt.Suggest{}
+	}
 }
 
 func (c *Completer) AddSuggestionFunction(cmd *cobra.Command, sFunc func() []prompt.Suggest) {
-	key := cmd.Annotations[CALLBACK_ANNOTATION]
-	c.SuggestionFunctionsByCommand[key] = sFunc
+	annotation := cmd.Annotations[CallbackAnnotation]
+	c.SuggestionFunctionsByCommand.Store(annotation, sFunc)
 }
 
 func (c *Completer) runSuggestions() {
 	for range time.Tick(maxCacheAge) {
-		c.updateAllSuggestions()
+		c.UpdateAllSuggestions()
 	}
 }
 
-func (c *Completer) updateAllSuggestions() {
-	for annotation, sFunc := range c.SuggestionFunctionsByCommand {
-		c.lastFetchTimeByCommand[annotation] = time.Now()
-		c.cachedSuggestionsByCommand[annotation] = sFunc()
-	}
+func (c *Completer) UpdateAllSuggestions() {
+	c.SuggestionFunctionsByCommand.Range(func(key, sFunc interface{}) bool {
+		annotation := key.(string)                        // Will panic if not string.
+		suggestionFunc := sFunc.(func() []prompt.Suggest) // Will also cause panic if not the correct type.
+		c.updateSuggestion(annotation, suggestionFunc)
+		return true
+	})
+}
+
+func (c *Completer) updateSuggestion(annotation string, suggestionFunc func() []prompt.Suggest) {
+	c.lastFetchTimeByCommand.Store(annotation, time.Now())
+	suggestions := suggestionFunc()
+	c.cachedSuggestionsByCommand.Store(annotation, suggestions)
 }

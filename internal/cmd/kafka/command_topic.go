@@ -35,6 +35,10 @@ type topicCommand struct {
 	completer *pcmd.Completer
 }
 
+const (
+	topicAnnotation = "topic"
+)
+
 // NewTopicCommand returns the Cobra command for Kafka topic.
 func NewTopicCommand(prerunner pcmd.PreRunner, config *config.Config, logger *log.Logger, clientID string, client ccloud.Kafka, ch *pcmd.ConfigHelper, completer *pcmd.Completer) (*cobra.Command, error) {
 	cmd := &topicCommand{
@@ -497,7 +501,7 @@ func (c *topicCommand) fetchTopics(cmd *cobra.Command) ([]*kafkav1.TopicDescript
 	return resp, nil
 }
 
-func(c *topicCommand) suggestTopics(cmd *cobra.Command) func() []prompt.Suggest {
+func (c *topicCommand) suggestTopics(cmd *cobra.Command) func() []prompt.Suggest {
 	return func() []prompt.Suggest {
 		if err := c.prerunner.Authenticated()(cmd, []string{}); err != nil {
 			return []prompt.Suggest{
@@ -512,7 +516,7 @@ func(c *topicCommand) suggestTopics(cmd *cobra.Command) func() []prompt.Suggest 
 		topics, _ := c.fetchTopics(cmd)
 		for _, topic := range topics {
 			suggests = append(suggests, prompt.Suggest{
-				Text:        topic.Name,
+				Text: topic.Name,
 			})
 		}
 		return suggests
@@ -521,7 +525,7 @@ func(c *topicCommand) suggestTopics(cmd *cobra.Command) func() []prompt.Suggest 
 
 func (c *topicCommand) addCmdWithSuggests(cmd *cobra.Command, callback string) {
 	cmd.Annotations = make(map[string]string)
-	cmd.Annotations[pcmd.CALLBACK_ANNOTATION] = callback
+	cmd.Annotations[pcmd.CallbackAnnotation] = topicAnnotation
 	c.completer.AddSuggestionFunction(cmd, c.suggestTopics(cmd))
 	c.AddCommand(cmd)
 }
