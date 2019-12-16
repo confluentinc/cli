@@ -43,7 +43,7 @@ import (
 	versions "github.com/confluentinc/cli/internal/pkg/version"
 )
 
-func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Version, logger *log.Logger, completer *pcmd.Completer) (*cobra.Command, error) {
+func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Version, logger *log.Logger, completer *pcmd.Completer) (*cobra.Command, pcmd.PreRunner, error) {
 	cli := &cobra.Command{
 		Use:               cliName,
 		Version:           ver.Version,
@@ -69,7 +69,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 
 	updateClient, err := update.NewClient(cliName, cfg.DisableUpdateCheck || cfg.DisableUpdates, logger)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	client := ccloud.NewClientWithJWT(context.Background(), cfg.AuthToken, &ccloud.Params{
@@ -136,22 +136,22 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 	if cliName == "ccloud" {
 		cmd, err := kafka.New(prerunner, cfg, logger.Named("kafka"), ver.ClientID, client.Kafka, ch, completer)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		cli.AddCommand(cmd)
 		cli.AddCommand(initcontext.New(prerunner, cfg, prompt, resolver))
 		credType, err := cfg.CredentialType()
 		if _, ok := err.(*errors.UnspecifiedCredentialError); ok {
-			return nil, err
+			return nil, nil, err
 		}
 		if credType == configs.APIKey {
-			return cli, nil
+			return cli, prerunner, nil
 		}
 		cli.AddCommand(ps1.NewPromptCmd(cfg, &pps1.Prompt{Config: cfg}, logger))
 		ks := &keystore.ConfigKeyStore{Config: cfg, Helper: ch}
 		cli.AddCommand(environment.New(prerunner, cfg, client.Account, cliName))
 		cli.AddCommand(service_account.New(prerunner, cfg, client.User))
-		cli.AddCommand(apikey.New(prerunner, cfg, client.APIKey, ch, ks))
+		cli.AddCommand(apikey.New(prerunner, cfg, client.APIKey, ch, ks, completer))
 
 		// Schema Registry
 		// If srClient is nil, the function will look it up after prerunner verifies authentication. Exposed so tests can pass mocks
@@ -172,7 +172,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		if runtime.GOOS != "windows" {
 			bash, err := basher.NewContext("/bin/bash", false)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 			shellRunner := &local.BashShellRunner{BasherContext: bash}
 			cli.AddCommand(local.New(cli, prerunner, shellRunner, logger, fs))
@@ -181,11 +181,12 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		cli.AddCommand(secret.New(prerunner, cfg, prompt, resolver, secrets.NewPasswordProtectionPlugin(logger)))
 	}
 	err = prerunner.Authenticated()(cli, []string{})
-	fmt.Printf("Starting %s shell...\n", cliName)
 	if err != nil {
-		fmt.Println("WARNING❗❗❗ You are currently not authenticated. Please log in to use full features.")
+		fmt.Println("No authenticated user detected 🙁. To use full features, please log in.")
 	} else {
-		fmt.Println("Started shell with authenticated user.")
+		if cfg.Auth != nil && cfg.Auth.User != nil && cfg.Auth.User.FirstName != "" {
+			fmt.Printf("Welcome back, %s! 😀\n", cfg.Auth.User.FirstName)
+		}
 	}
-	return cli, nil
+	return cli, prerunner, nil
 }

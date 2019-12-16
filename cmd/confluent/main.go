@@ -54,7 +54,7 @@ func main() {
 	version := cliVersion.NewVersion(cfg.CLIName, cfg.Name(), cfg.Support(), version, commit, date, host)
 	cfg.Version = version
 	completer := pcmd.NewCompleter()
-	cli, err := cmd.NewConfluentCommand(cliName, cfg, version, logger, completer)
+	cli, prerunner, err := cmd.NewConfluentCommand(cliName, cfg, version, logger, completer)
 	if err != nil {
 		if cli == nil {
 			fmt.Fprintln(os.Stderr, err)
@@ -65,6 +65,17 @@ func main() {
 			test_integ.ExitCode = 1
 		} else {
 			os.Exit(1)
+		}
+	}
+
+	livePrefixFunc := func() (prefix string, useLivePrefix bool) {
+		err = prerunner.Authenticated()(cli, []string{})
+		if err != nil {
+			return cfg.CLIName + " ❌ > ", true
+			//🔒
+		} else {
+			return cfg.CLIName+ " ✅ > ", true
+			//🔓
 		}
 	}
 
@@ -86,6 +97,7 @@ func main() {
 		prompt.OptionSelectedDescriptionTextColor(prompt.White),
 		prompt.OptionScrollbarBGColor(prompt.Blue),
 		prompt.OptionScrollbarThumbColor(prompt.DarkBlue),
+		prompt.OptionLivePrefix(livePrefixFunc),
 	)
 
 	cliPrompt := &pcmd.CobraPrompt{

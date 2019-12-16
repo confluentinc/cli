@@ -5,15 +5,17 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/c-bata/go-prompt"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
+	"github.com/confluentinc/go-printer"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/keystore"
-	"github.com/confluentinc/go-printer"
 )
 
 const longDescription = `Use this command to register an API secret created by another
@@ -30,32 +32,37 @@ work. For example, the Kafka topic consume and produce commands require an API s
 
 type command struct {
 	*cobra.Command
-	config   *config.Config
-	client   ccloud.APIKey
-	ch       *pcmd.ConfigHelper
-	keystore keystore.KeyStore
+	config    *config.Config
+	client    ccloud.APIKey
+	ch        *pcmd.ConfigHelper
+	keystore  keystore.KeyStore
+	completer *pcmd.Completer
+	prerunner pcmd.PreRunner
 }
 
 var (
-	listFields    = []string{"Key", "UserId", "Description", "ResourceType", "ResourceId"}
-	listLabels    = []string{"Key", "Owner", "Description", "Resource Type", "Resource ID"}
-	createFields  = []string{"Key", "Secret"}
-	createRenames = map[string]string{"Key": "API Key"}
+	listFields       = []string{"Key", "UserId", "Description", "ResourceType", "ResourceId"}
+	listLabels       = []string{"Key", "Owner", "Description", "Resource Type", "Resource ID"}
+	createFields     = []string{"Key", "Secret"}
+	createRenames    = map[string]string{"Key": "API Key"}
 	resourceFlagName = "resource"
 )
 
 // New returns the Cobra command for API Key.
-func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.APIKey, ch *pcmd.ConfigHelper, keystore keystore.KeyStore) *cobra.Command {
+func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.APIKey, ch *pcmd.ConfigHelper,
+	keystore keystore.KeyStore, completer *pcmd.Completer) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:               "api-key",
 			Short:             "Manage the API keys.",
 			PersistentPreRunE: prerunner.Authenticated(),
 		},
-		config:   config,
-		client:   client,
-		ch:       ch,
-		keystore: keystore,
+		config:    config,
+		client:    client,
+		ch:        ch,
+		keystore:  keystore,
+		completer: completer,
+		prerunner: prerunner,
 	}
 	cmd.init()
 	return cmd.Command
@@ -97,14 +104,15 @@ func (c *command) init() {
 	}
 	updateCmd.Flags().String("description", "", "Description of the API key.")
 	updateCmd.Flags().SortFlags = false
-	c.AddCommand(updateCmd)
+	c.addCmdWithSuggests(updateCmd, "apikey-update")
 
-	c.AddCommand(&cobra.Command{
+	deleteCmd := &cobra.Command{
 		Use:   "delete <apikey>",
 		Short: "Delete API keys.",
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
-	})
+	}
+	c.addCmdWithSuggests(deleteCmd, "apikey-delete")
 
 	storeCmd := &cobra.Command{
 		Use:   "store <apikey> <secret>",
@@ -127,12 +135,13 @@ func (c *command) init() {
 		RunE:  c.use,
 		Args:  cobra.ExactArgs(1),
 	}
+
 	useCmd.Flags().String(resourceFlagName, "", "REQUIRED: The resource ID.")
 	useCmd.Flags().SortFlags = false
 	if err := useCmd.MarkFlagRequired(resourceFlagName); err != nil {
 		panic(err)
 	}
-	c.AddCommand(useCmd)
+	c.addCmdWithSuggests(useCmd, "apikey-use")
 }
 
 func (c *command) list(cmd *cobra.Command, args []string) error {
@@ -173,7 +182,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		userId = c.config.Auth.User.Id
 	}
 
-	apiKeys, err = c.client.List(context.Background(), &authv1.ApiKey{AccountId: c.config.Auth.Account.Id, LogicalClusters: logicalClusters, UserId: userId})
+	apiKeys, err = c.config.Client.APIKey.List(context.Background(), &authv1.ApiKey{AccountId: c.config.Auth.Account.Id, LogicalClusters: logicalClusters, UserId: userId})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -208,7 +217,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 func (c *command) update(cmd *cobra.Command, args []string) error {
 	apiKey := args[0]
 
-	key, err := c.client.Get(context.Background(), &authv1.ApiKey{Key: apiKey, AccountId: c.config.Auth.Account.Id})
+	key, err := c.config.Client.APIKey.Get(context.Background(), &authv1.ApiKey{Key: apiKey, AccountId: c.config.Auth.Account.Id})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -222,7 +231,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		key.Description = description
 	}
 
-	err = c.client.Update(context.Background(), key)
+	err = c.config.Client.APIKey.Update(context.Background(), key)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -258,7 +267,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		LogicalClusters: []*authv1.ApiKey_Cluster{{Id: clusterId, Type: resourceType}},
 	}
 
-	userKey, err := c.client.Create(context.Background(), key)
+	userKey, err := c.config.Client.APIKey.Create(context.Background(), key)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -279,7 +288,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 func (c *command) delete(cmd *cobra.Command, args []string) error {
 	apiKey := args[0]
 
-	userKey, err := c.client.Get(context.Background(), &authv1.ApiKey{Key: apiKey, AccountId: c.config.Auth.Account.Id})
+	userKey, err := c.config.Client.APIKey.Get(context.Background(), &authv1.ApiKey{Key: apiKey, AccountId: c.config.Auth.Account.Id})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -290,7 +299,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		AccountId: c.config.Auth.Account.Id,
 	}
 
-	err = c.client.Delete(context.Background(), key)
+	err = c.config.Client.APIKey.Delete(context.Background(), key)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -318,7 +327,7 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	}
 
 	// Check if API key exists server-side
-	_, err = c.client.Get(context.Background(), &authv1.ApiKey{Key: key, AccountId: c.config.Auth.Account.Id})
+	_, err = c.config.Client.APIKey.Get(context.Background(), &authv1.ApiKey{Key: key, AccountId: c.config.Auth.Account.Id})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -350,4 +359,50 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	return nil
+}
+
+func (c *command) suggestAPIKeys(cmd *cobra.Command) func() []prompt.Suggest {
+	return func() []prompt.Suggest {
+		if err := c.prerunner.Authenticated()(cmd, []string{}); err != nil {
+			return []prompt.Suggest{
+				{
+					Text:        " ",
+					Description: "You are currently not authenticated. Please login.",
+				},
+			}
+		}
+		var suggests []prompt.Suggest
+		apiKeys, err := c.fetchAPIKeys(cmd, []string{})
+		if err != nil {
+			return suggests
+		}
+		for _, key := range apiKeys {
+			suggests = append(suggests, prompt.Suggest{
+				Text: key.Key,
+				//Description: key.Description,
+			})
+		}
+		return suggests
+	}
+}
+
+func (c *command) fetchAPIKeys(cmd *cobra.Command, args []string) ([]*authv1.ApiKey, error) {
+	apiKeys, err := c.config.Client.APIKey.List(context.Background(), &authv1.ApiKey{AccountId: c.config.Auth.Account.Id, LogicalClusters: nil, UserId: c.config.Auth.User.Id})
+	if err != nil {
+		return nil, errors.HandleCommon(err, cmd)
+	}
+	var userApiKeys []*authv1.ApiKey
+	for _, key := range apiKeys {
+		if key.Id != 0 {
+			userApiKeys = append(userApiKeys, key)
+		}
+	}
+	return userApiKeys, nil
+}
+
+func (c *command) addCmdWithSuggests(cmd *cobra.Command, callback string) {
+	cmd.Annotations = make(map[string]string)
+	cmd.Annotations[pcmd.CALLBACK_ANNOTATION] = callback
+	c.completer.AddSuggestionFunction(cmd, c.suggestAPIKeys(cmd))
+	c.AddCommand(cmd)
 }

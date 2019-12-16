@@ -42,9 +42,13 @@ func (c *Completer) AddSuggestionFunction(cmd *cobra.Command, sFunc func() []pro
 
 func (c *Completer) runSuggestions() {
 	for range time.Tick(maxCacheAge) {
-		for annotation, sFunc := range c.SuggestionFunctionsByCommand {
-			c.lastFetchTimeByCommand[annotation] = time.Now()
-			c.cachedSuggestionsByCommand[annotation] = sFunc()
-		}
+		c.updateAllSuggestions()
+	}
+}
+
+func (c *Completer) updateAllSuggestions() {
+	for annotation, sFunc := range c.SuggestionFunctionsByCommand {
+		c.lastFetchTimeByCommand[annotation] = time.Now()
+		c.cachedSuggestionsByCommand[annotation] = sFunc()
 	}
 }
