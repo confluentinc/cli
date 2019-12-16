@@ -525,7 +525,7 @@ func (c *topicCommand) suggestTopics(cmd *cobra.Command) func() []prompt.Suggest
 
 func (c *topicCommand) addCmdWithSuggests(cmd *cobra.Command, callback string) {
 	cmd.Annotations = make(map[string]string)
-	cmd.Annotations[pcmd.CALLBACK_ANNOTATION] = topicAnnotation
+	cmd.Annotations[pcmd.CallbackAnnotation] = topicAnnotation
 	c.completer.AddSuggestionFunction(cmd, c.suggestTopics(cmd))
 	c.AddCommand(cmd)
 }

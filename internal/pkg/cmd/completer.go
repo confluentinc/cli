@@ -41,7 +41,7 @@ func (c *Completer) Complete(annotation string, d prompt.Document) []prompt.Sugg
 }
 
 func (c *Completer) AddSuggestionFunction(cmd *cobra.Command, sFunc func() []prompt.Suggest) {
-	annotation := cmd.Annotations[CALLBACK_ANNOTATION]
+	annotation := cmd.Annotations[CallbackAnnotation]
 	c.SuggestionFunctionsByCommand.Store(annotation, sFunc)
 }
 

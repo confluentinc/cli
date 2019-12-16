@@ -10,7 +10,7 @@ import (
 )
 
 // CALLBACK_ANNOTATION
-const CALLBACK_ANNOTATION = "cobra-prompt"
+const CallbackAnnotation = "cobra-prompt"
 
 // CobraPrompt requires RootCmd to run
 type CobraPrompt struct {
@@ -27,11 +27,13 @@ type CobraPrompt struct {
 
 	// ResetFlagsFlag will add a new persistent flag to RootCmd. This flags can be used to turn off flags value reset
 	ResetFlagsFlag bool
+	FuzzyFind bool
+	CLIName string
 }
 
 // Run will automatically generate suggestions for all cobra commands and flags defined by RootCmd
 // and execute the selected commands. Run will also reset all given flags by default, see ResetFlagsFlag
-func (co CobraPrompt) Run() {
+func (co *CobraPrompt) Run() {
 	co.prepare()
 	p := prompt.New(
 		func(in string) {
@@ -40,21 +42,34 @@ func (co CobraPrompt) Run() {
 			co.RootCmd.Execute()
 		},
 		func(d prompt.Document) []prompt.Suggest {
-			return findSuggestions(co, d)
+			return co.findSuggestions(d)
 		},
 		co.GoPromptOptions...,
 	)
 	p.Run()
 }
 
-func (co CobraPrompt) prepare() {
+func (co *CobraPrompt) prepare() {
 	if co.ResetFlagsFlag {
 		co.RootCmd.PersistentFlags().BoolP("flags-no-reset", "",
 			false, "Flags will no longer reset to default value")
 	}
 }
 
-func findSuggestions(co CobraPrompt, d prompt.Document) []prompt.Suggest {
+func (co *CobraPrompt) findSuggestions(d prompt.Document) []prompt.Suggest {
+	if co.FuzzyFind {
+		matches := findMatchingCommands(d.CurrentLine(), co.RootCmd, []*cobra.Command{})
+		var suggestions []prompt.Suggest
+		for _, m := range matches {
+			cmdPath := strings.TrimPrefix(m.CommandPath(), co.CLIName)
+			suggestion := prompt.Suggest{
+				Text:        cmdPath,
+				Description: m.Short,
+			}
+			suggestions = append(suggestions, suggestion)
+		}
+		return suggestions
+	}
 	command := co.RootCmd
 	args := strings.Fields(d.CurrentLine())
 	var foundArgs []string
@@ -89,7 +104,7 @@ func findSuggestions(co CobraPrompt, d prompt.Document) []prompt.Suggest {
 		}
 	}
 
-	annotation := command.Annotations[CALLBACK_ANNOTATION]
+	annotation := command.Annotations[CallbackAnnotation]
 	if co.DynamicSuggestionsFunc != nil && annotation != "" {
 		suggestions = append(suggestions, co.DynamicSuggestionsFunc(annotation, d)...)
 	}
@@ -101,4 +116,14 @@ func findSuggestions(co CobraPrompt, d prompt.Document) []prompt.Suggest {
 		}
 	}
 	return prompt.FilterHasPrefix(suggestions, d.GetWordBeforeCursor(), true)
+}
+
+func findMatchingCommands(input string, rootCmd *cobra.Command, matches []*cobra.Command) []*cobra.Command {
+	for _, command := range rootCmd.Commands() {
+		if strings.Contains(command.Use, input) {
+			matches = append(matches, command)
+		}
+		matches = findMatchingCommands(input, command, matches)
+	}
+	return matches
 }

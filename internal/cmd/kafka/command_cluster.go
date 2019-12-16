@@ -263,7 +263,7 @@ func (c *clusterCommand) suggestClusters(cmd *cobra.Command) func() []prompt.Sug
 
 func (c *clusterCommand) addCmdWithSuggests(cmd *cobra.Command, callback string) {
 	cmd.Annotations = make(map[string]string)
-	cmd.Annotations[pcmd.CALLBACK_ANNOTATION] = clusterAnnotation
+	cmd.Annotations[pcmd.CallbackAnnotation] = clusterAnnotation
 	c.completer.AddSuggestionFunction(cmd, c.suggestClusters(cmd))
 	c.AddCommand(cmd)
 }

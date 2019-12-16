@@ -406,7 +406,7 @@ func (c *command) fetchAPIKeys(cmd *cobra.Command, args []string) ([]*authv1.Api
 
 func (c *command) addCmdWithSuggests(cmd *cobra.Command, callback string) {
 	cmd.Annotations = make(map[string]string)
-	cmd.Annotations[pcmd.CALLBACK_ANNOTATION] = apiKeyAnnotation
+	cmd.Annotations[pcmd.CallbackAnnotation] = apiKeyAnnotation
 	c.completer.AddSuggestionFunction(cmd, c.suggestAPIKeys(cmd))
 	c.AddCommand(cmd)
 }
