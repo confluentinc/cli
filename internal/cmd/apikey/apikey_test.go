@@ -3,6 +3,7 @@ package apikey
 import (
 	"context"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -137,7 +138,9 @@ func (suite *APITestSuite) SetupTest() {
 }
 
 func (suite *APITestSuite) newCMD() *cobra.Command {
-	cmd := New(&cliMock.Commander{}, suite.conf, suite.apiMock, &pcmd.ConfigHelper{Config: suite.conf, Client: &ccloud.Client{Kafka: suite.kafkaMock, SchemaRegistry: suite.srMothershipMock, APIKey: suite.apiMock}}, suite.keystore)
+	prompt := pcmd.NewPrompt(os.Stdin)
+	resolver := &pcmd.FlagResolverImpl{Prompt: prompt, Out: os.Stdout}
+	cmd := New(&cliMock.Commander{}, suite.conf, suite.apiMock, &pcmd.ConfigHelper{Config: suite.conf, Client: &ccloud.Client{Kafka: suite.kafkaMock, SchemaRegistry: suite.srMothershipMock, APIKey: suite.apiMock}}, suite.keystore, resolver)
 	return cmd
 }
 

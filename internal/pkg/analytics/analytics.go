@@ -30,7 +30,8 @@ var (
 		"confluent master-key generate": {"passphrase", "local-secrets-file"},
 		"confluent file rotate":         {"passphrase", "passphrase-new"},
 	}
-	secretCommandArgs     = map[string][]int{"ccloud api-key store": {1}}
+	// map command string to secret handler func
+	secretCommandArgs     = map[string]func([]string)[]string{"ccloud api-key store": apiSecretSecretHandler}
 	SecretValueString     = "<secret_value>"
 	malformedCmdEventName = "Malformed Command Error"
 
@@ -257,14 +258,11 @@ func (a *ClientObj) addFlagProperties(cmd *cobra.Command) {
 }
 
 func (a *ClientObj) addArgsProperties(cmd *cobra.Command, args []string) {
-	argsCopy := make([]string, len(args))
-	copy(argsCopy, args)
-	if ids, ok := secretCommandArgs[cmd.CommandPath()]; ok {
-		for _, i := range ids {
-			argsCopy[i] = SecretValueString
-		}
+	argsLog := args
+	if secretHandler, ok := secretCommandArgs[cmd.CommandPath()]; ok {
+		argsLog = secretHandler(args)
 	}
-	a.properties.Set(ArgsPropertiesKey, argsCopy)
+	a.properties.Set(ArgsPropertiesKey, argsLog)
 }
 
 func (a *ClientObj) addUserProperties() {
@@ -386,4 +384,18 @@ func isHelpFlag(flag string) bool {
 		return strings.Contains(flag, "h")
 	}
 	return false
+}
+
+// For user who is used to older version where api secret is passed as the argument
+func apiSecretSecretHandler(args []string) []string {
+	if len(args) < 2 {
+		return args
+	}
+	if !(args[1] == "-" || strings.HasPrefix(args[1], "@")) {
+		argsCopy := make([]string, len(args))
+		copy(argsCopy, args)
+		argsCopy[1] = SecretValueString
+		return argsCopy
+	}
+	return args
 }

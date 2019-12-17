@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -30,10 +31,11 @@ work. For example, the Kafka topic consume and produce commands require an API s
 
 type command struct {
 	*cobra.Command
-	config   *config.Config
-	client   ccloud.APIKey
-	ch       *pcmd.ConfigHelper
-	keystore keystore.KeyStore
+	config       *config.Config
+	client       ccloud.APIKey
+	ch           *pcmd.ConfigHelper
+	keystore     keystore.KeyStore
+	flagResolver pcmd.FlagResolver
 }
 
 var (
@@ -45,17 +47,18 @@ var (
 )
 
 // New returns the Cobra command for API Key.
-func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.APIKey, ch *pcmd.ConfigHelper, keystore keystore.KeyStore) *cobra.Command {
+func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.APIKey, ch *pcmd.ConfigHelper, keystore keystore.KeyStore, flagResolver pcmd.FlagResolver) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:               "api-key",
 			Short:             "Manage the API keys.",
 			PersistentPreRunE: prerunner.Authenticated(),
 		},
-		config:   config,
-		client:   client,
-		ch:       ch,
-		keystore: keystore,
+		config:       config,
+		client:       client,
+		ch:           ch,
+		keystore:     keystore,
+		flagResolver: flagResolver,
 	}
 	cmd.init()
 	return cmd.Command
@@ -111,7 +114,7 @@ func (c *command) init() {
 		Short: `Store an API key/secret locally to use in the CLI.`,
 		Long:  longDescription,
 		RunE:  c.store,
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.MaximumNArgs(2),
 	}
 	storeCmd.Flags().String(resourceFlagName, "", "REQUIRED: The resource ID.")
 	storeCmd.Flags().BoolP("force", "f", false, "Force overwrite existing secret for this key.")
@@ -299,12 +302,33 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) store(cmd *cobra.Command, args []string) error {
-	key := args[0]
-	secret := args[1]
-
 	kcc, err := pcmd.GetKafkaClusterConfig(cmd, c.ch, "resource")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
+	}
+
+	var key string
+	secretSource, secretPrompt := "", "Secret: "
+	if len(args) == 0 {
+		var err error
+		key, err = c.parseFlagResolverPromptValue("", "Key: ", false)
+		if err != nil {
+			return err
+		}
+	} else {
+		key = args[0]
+		if len(args) == 2 {
+			if !(args[1] == "-" || strings.HasPrefix(args[1], "@")) {
+				return errors.Errorf(`Invalid second argument. Please specify "-", or "@<FILE_NAME>", or nothing and be prompted for api secret.`)
+			}
+			secretSource = args[1]
+			secretPrompt = ""
+		}
+	}
+
+	secret, err := c.parseFlagResolverPromptValue(secretSource, secretPrompt, true)
+	if err != nil {
+		return err
 	}
 
 	environment, err := pcmd.GetEnvironment(cmd, c.config)
@@ -350,4 +374,12 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	return nil
+}
+
+func (c *command) parseFlagResolverPromptValue(source, prompt string, secure bool) (string, error) {
+	val, err := c.flagResolver.ValueFrom(source, prompt, secure)
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(val), nil
 }

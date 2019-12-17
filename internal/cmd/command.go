@@ -157,7 +157,7 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		ks := &keystore.ConfigKeyStore{Config: cfg, Helper: ch}
 		cli.AddCommand(environment.New(prerunner, cfg, client.Account, cliName))
 		cli.AddCommand(service_account.New(prerunner, cfg, client.User))
-		cli.AddCommand(apikey.New(prerunner, cfg, client.APIKey, ch, ks))
+		cli.AddCommand(apikey.New(prerunner, cfg, client.APIKey, ch, ks, resolver))
 
 		// Schema Registry
 		// If srClient is nil, the function will look it up after prerunner verifies authentication. Exposed so tests can pass mocks
