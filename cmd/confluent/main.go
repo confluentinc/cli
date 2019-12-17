@@ -5,6 +5,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/confluentinc/bincover"
 	"github.com/jonboulle/clockwork"
 	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/viper"
@@ -15,7 +16,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/metric"
-	"github.com/confluentinc/cli/internal/pkg/test-integ"
 	cliVersion "github.com/confluentinc/cli/internal/pkg/version"
 	"github.com/confluentinc/cli/mock"
 )
@@ -75,7 +75,7 @@ func main() {
 			pcmd.ErrPrintln(cli.Command, err)
 		}
 		if isTest {
-			test_integ.ExitCode = 1
+			bincover.ExitCode = 1
 		} else {
 			exit(1, analyticsClient, logger)
 		}
@@ -83,7 +83,7 @@ func main() {
 	err = cli.Execute(os.Args[1:])
 	if err != nil {
 		if isTest {
-			test_integ.ExitCode = 1
+			bincover.ExitCode = 1
 		} else {
 			exit(1, analyticsClient, logger)
 		}
