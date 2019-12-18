@@ -16,7 +16,7 @@ require (
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
-	github.com/confluentinc/ccloud-sdk-go v0.0.16-0.20191218175142-5ac11b1430a7
+	github.com/confluentinc/ccloud-sdk-go v0.0.16-0.20191218180920-9c4d70b9ca92
 	github.com/confluentinc/ccloudapis v0.0.0-20191126011405-b267ed1523bc
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-printer v0.10.0
@@ -92,7 +92,6 @@ require (
 )
 
 replace (
-	github.com/confluentinc/ccloud-sdk-go => ../ccloud-sdk-go
 	github.com/mutagen-io/gopass => github.com/mutagen-io/gopass v0.0.0-20161007065903-6331a34a3f3b
 	github.com/shurcooL/sanitized_anchor_name => github.com/shurcooL/sanitized_anchor_name v1.0.0
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20171026124306-e509bb64fe11
