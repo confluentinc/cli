@@ -169,7 +169,6 @@ Resume connector in the current or specified Kafka cluster context.
 }
 
 func (c *command) list(cmd *cobra.Command, args []string) error {
-
 	kafkaCluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -193,7 +192,6 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) describe(cmd *cobra.Command, args []string) error {
-
 	kafkaCluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -218,7 +216,6 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	var tasks [][]string
 	titleRow := []string{"Task_ID", "State"}
 	for _, task := range connector.Status.Tasks {
-
 		record := &struct {
 			Task_ID int32
 			State   string
@@ -233,7 +230,6 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	var configs [][]string
 	titleRow = []string{"Configuration", "Value"}
 	for name, value := range connector.Info.Config {
-
 		record := &struct {
 			Configuration string
 			Value         string

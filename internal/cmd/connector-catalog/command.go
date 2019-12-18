@@ -82,7 +82,6 @@ List connectors in the current or specified Kafka cluster context.
 }
 
 func (c *command) list(cmd *cobra.Command, args []string) error {
-
 	kafkaCluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -104,7 +103,6 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) describe(cmd *cobra.Command, args []string) error {
-
 	kafkaCluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -112,14 +110,20 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return errors.HandleCommon(errors.ErrNoPluginName, cmd)
 	}
-	_, err = c.client.Validate(context.Background(), &connectv1.ConnectorConfig{UserConfigs: map[string]string{"connector.class": args[0]}, AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id, Plugin: args[0]}, false)
+	_, err = c.client.Validate(context.Background(),
+		&connectv1.ConnectorConfig{
+			UserConfigs: map[string]string{"connector.class": args[0]},
+			AccountId: c.config.Auth.Account.Id,
+			KafkaClusterId: kafkaCluster.Id,
+			Plugin: args[0]},
+			false)
 
 	if err != nil {
 		pcmd.Println(cmd, "Following are the required configs: \nconnector.class \n"+err.Error())
 		return nil
 	}
 
-	return errors.ErrInvalidCloud
+	return errors.HandleCommon(errors.ErrInvalidCloud, cmd)
 }
 
 func FormatDescription(description string, cliName string) string {
