@@ -1,0 +1,18 @@
+Connector Details
++--------+--------------+
+| ID     | lcc-123      |
+| Name   | az-connector |
+| Status | Running      |
+| Type   | Sink         |
++--------+--------------+
+
+
+Task Level Details
+  Task_ID |  State   
++---------+---------+
+        1 | Running  
+
+
+Configuration Details
+  Configuration | Value  
++---------------+-------+

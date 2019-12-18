@@ -1,3 +1,3 @@
-     ID     | Name |    Status    |  Type
-+-----------+------+--------------+--------+
-  lcc-mzg02 | abc  | PROVISIONING | source
+    ID    |  Name   | Status  | Type  
++---------+---------+---------+------+
+  lcc-123 | lcc-123 | Running | Sink  
