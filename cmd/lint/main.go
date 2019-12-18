@@ -85,6 +85,8 @@ var rules = []linter.Rule{
 		linter.ExcludeCommandContains("iam acl"),
 		// skip api-key create since you don't get to choose a name for API keys
 		linter.ExcludeCommandContains("api-key create"),
+		// skip connector create since you don't get to choose id for connector
+		linter.ExcludeCommandContains("connector create"),
 		// skip local which delegates to bash commands
 		linter.ExcludeCommandContains("local"),
 		// skip for api-key store command since KEY is not last argument
@@ -99,6 +101,8 @@ var rules = []linter.Rule{
 		linter.ExcludeCommandContains("ksql app configure-acls"),
 		// skip cluster describe as it takes a URL as a flag instead of a resource identity
 		linter.ExcludeCommandContains("cluster describe"),
+		// skip connector-catalog describe as it connector plugin name
+		linter.ExcludeCommandContains("connector-catalog describe"),
 	),
 	// TODO: ensuring --cluster is optional DOES NOT actually ensure that the cluster context is used
 	linter.Filter(linter.RequireFlag("cluster", true), nonClusterScopedCommands...),

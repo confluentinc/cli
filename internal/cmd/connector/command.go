@@ -52,15 +52,15 @@ func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.Connect,
 
 func (c *command) init() {
 	cmd := &cobra.Command{
-		Use:   "describe",
+		Use:   "describe <id>",
 		Short: "Describe a connector.",
 		Example: FormatDescription(`
 Describe connector and task level details of a connector in the current or specified Kafka cluster context.
 
 ::
 
-        {{.CLIName}} connector describe <connector-id>
-        {{.CLIName}} connector describe <connector-id> --cluster <cluster-id>		`, c.config.CLIName),
+        {{.CLIName}} connector describe <id>
+        {{.CLIName}} connector describe <id> --cluster <cluster-id>		`, c.config.CLIName),
 		RunE: c.describe,
 		Args: cobra.ExactArgs(1),
 	}
@@ -105,15 +105,15 @@ Create connector in the current or specified Kafka cluster context.
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
-		Use:   "delete <connector-id>",
+		Use:   "delete <id>",
 		Short: "Delete a connector.",
 		Example: FormatDescription(`
 Delete connector in the current or specified Kafka cluster context.
 
 ::
 
-        {{.CLIName}} connector delete <connector-id>
-        {{.CLIName}} connector delete <connector-id> --cluster <cluster-id>	`, c.config.CLIName),
+        {{.CLIName}} connector delete <id>
+        {{.CLIName}} connector delete <id> --cluster <cluster-id>	`, c.config.CLIName),
 		RunE: c.delete,
 		Args: cobra.ExactArgs(1),
 	}
@@ -122,7 +122,7 @@ Delete connector in the current or specified Kafka cluster context.
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
-		Use:   "update <connector-id>",
+		Use:   "update <id>",
 		Short: "Update connector configuration.",
 		RunE:  c.update,
 		Args:  cobra.ExactArgs(1),
@@ -134,7 +134,7 @@ Delete connector in the current or specified Kafka cluster context.
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
-		Use:   "pause <connector-id>",
+		Use:   "pause <id>",
 		Short: "Pause a connector.",
 		Example: FormatDescription(`
 Pause connector in the current or specified Kafka cluster context.
@@ -151,15 +151,15 @@ Pause connector in the current or specified Kafka cluster context.
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
-		Use:   "resume <connector-id>",
+		Use:   "resume <id>",
 		Short: "Resume a connector.",
 		Example: FormatDescription(`
 Resume connector in the current or specified Kafka cluster context.
 
 ::
 
-        {{.CLIName}} connector resume <connector-id>
-        {{.CLIName}} connector resume <connector-id> --cluster <cluster-id>	`, c.config.CLIName),
+        {{.CLIName}} connector resume <id>
+        {{.CLIName}} connector resume <id> --cluster <cluster-id>	`, c.config.CLIName),
 		RunE: c.resume,
 		Args: cobra.ExactArgs(1),
 	}

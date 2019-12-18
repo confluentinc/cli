@@ -172,10 +172,8 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		//conn.Hidden = true // The connect feature isn't finished yet, so let's hide it
 		//cli.AddCommand(conn)
 		connectorCommands := connector.New(prerunner, cfg, client.Connect, ch)
-		connectorCommands.Hidden = true
 		cli.AddCommand(connectorCommands)
 		connectorCatalogCommands := connector_catalog.New(prerunner, cfg, client.Connect, ch)
-		connectorCatalogCommands.Hidden = true
 		cli.AddCommand(connectorCatalogCommands)
 	} else if cliName == "confluent" {
 		cli.AddCommand(iam.New(prerunner, cfg, mdsClient))

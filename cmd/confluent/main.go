@@ -28,7 +28,7 @@ var (
 	host       = ""
 	cliName    = "confluent"
 	segmentKey = "KDsYPLPBNVB1IPJIN5oqrXnxQT9iKezo"
-	isTest  = "false"
+	isTest     = "false"
 )
 
 func main() {
@@ -59,7 +59,7 @@ func main() {
 	var analyticsClient analytics.Client
 	if !isTest && cfg.CLIName == "ccloud" {
 		segmentClient, _ := segment.NewWithConfig(segmentKey, segment.Config{
-			Logger:  analytics.NewLogger(logger),
+			Logger: analytics.NewLogger(logger),
 		})
 
 		analyticsClient = analytics.NewAnalyticsClient(cfg.CLIName, cfg, version.Version, segmentClient, clockwork.NewRealClock())

@@ -840,7 +840,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		_, err = io.WriteString(w, string(b))
 		require.NoError(t, err)
 	})
-	router.HandleFunc("/api/accounts/a-595/clusters/lkc-123/connectors/az-connector/",func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc("/api/accounts/a-595/clusters/lkc-123/connectors/az-connector/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 		return
 	})
@@ -1102,12 +1102,12 @@ func handleConnect(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 		} else if r.Method == "POST" {
 			var request connectv1.ConnectorInfo
 			err := utilv1.UnmarshalJSON(r.Body, &request)
-			require.NoError(t,err)
+			require.NoError(t, err)
 			vars := mux.Vars(r)
 			connector1 := &connectv1.Connector{
-				Name: request.Name,
+				Name:           request.Name,
 				KafkaClusterId: vars["cluster"],
-				AccountId: vars["account_id"],
+				AccountId:      vars["account_id"],
 				UserConfigs:    request.Config,
 				Plugin:         request.Config["connector.class"],
 			}
@@ -1124,23 +1124,15 @@ func handleConnectPlugins(t *testing.T) func(w http.ResponseWriter, r *http.Requ
 		if r.Method == "GET" {
 			connectorPlugin1 := &connectv1.ConnectorPluginInfo{
 				Class: "AzureBlobSink",
-				Type: "Sink",
-				}
-		connectorPlugin2 := &connectv1.ConnectorPluginInfo{
-			Class: "GcsSink",
-			Type: "Sink",
-		}
-		listReply, err := json.Marshal([]*connectv1.ConnectorPluginInfo{connectorPlugin1, connectorPlugin2})
-		require.NoError(t, err)
-		_, err = io.WriteString(w, string(listReply))
-		require.NoError(t, err)
-	} else if r.Method == "PUT" {
-			errorMessage := &corev1.Error{
-				Message: "Config required: connector.name",
+				Type:  "Sink",
 			}
-			reply, err := utilv1.MarshalJSONToBytes(errorMessage)
+			connectorPlugin2 := &connectv1.ConnectorPluginInfo{
+				Class: "GcsSink",
+				Type:  "Sink",
+			}
+			listReply, err := json.Marshal([]*connectv1.ConnectorPluginInfo{connectorPlugin1, connectorPlugin2})
 			require.NoError(t, err)
-			_, err = io.WriteString(w, string(reply))
+			_, err = io.WriteString(w, string(listReply))
 			require.NoError(t, err)
 		}
 	}

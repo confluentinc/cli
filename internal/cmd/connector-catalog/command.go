@@ -49,7 +49,7 @@ func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.Connect,
 
 func (c *command) init() {
 	cmd := &cobra.Command{
-		Use:   "describe",
+		Use:   "describe <connector-type>",
 		Short: "Describe a connector plugin type.",
 		Example: FormatDescription(`
 Describe required connector configuration parameters for a specific connector plugin.
@@ -112,7 +112,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return errors.HandleCommon(errors.ErrNoPluginName, cmd)
 	}
-	_, err = c.client.Validate(context.Background(), &connectv1.ConnectorConfig{UserConfigs: map[string]string{"connector.class": args[0]}, AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id, Plugin:args[0]}, false)
+	_, err = c.client.Validate(context.Background(), &connectv1.ConnectorConfig{UserConfigs: map[string]string{"connector.class": args[0]}, AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id, Plugin: args[0]}, false)
 
 	if err != nil {
 		pcmd.Println(cmd, "Following are the required configs: \nconnector.class \n"+err.Error())
