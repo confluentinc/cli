@@ -1,7 +1,6 @@
 module github.com/confluentinc/cli
 
 require (
-	bou.ke/monkey v1.0.1 // indirect
 	github.com/DABH/go-basher v0.0.0-20191104233559-daa7fee9545c
 	github.com/DataDog/zstd v1.3.5 // indirect
 	github.com/Shopify/sarama v1.20.1
@@ -14,11 +13,10 @@ require (
 	github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da
 	github.com/atrox/homedir v1.0.0
 	github.com/aws/aws-sdk-go v1.15.64
-	github.com/bouk/monkey v1.0.1
-	github.com/chromedp/chromedp v0.5.1
+	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
-	github.com/confluentinc/ccloud-sdk-go v0.0.15
+	github.com/confluentinc/ccloud-sdk-go v0.0.16-0.20191218175142-5ac11b1430a7
 	github.com/confluentinc/ccloudapis v0.0.0-20191126011405-b267ed1523bc
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-printer v0.10.0
@@ -33,6 +31,7 @@ require (
 	github.com/eapache/queue v1.1.0 // indirect
 	github.com/fatih/color v1.7.0
 	github.com/flynn/go-shlex v0.0.0-20150515145356-3f9db97f8568 // indirect
+	github.com/ghodss/yaml v1.0.0
 	github.com/gliderlabs/ssh v0.1.4 // indirect
 	github.com/gobuffalo/flect v0.1.3
 	github.com/gogo/protobuf v1.2.1
@@ -46,6 +45,7 @@ require (
 	github.com/google/go-github/v25 v25.0.2
 	github.com/google/uuid v1.1.0
 	github.com/goreleaser/goreleaser v0.106.0
+	github.com/gorilla/mux v1.7.3
 	github.com/gostaticanalysis/analysisutil v0.0.2 // indirect
 	github.com/hashicorp/go-hclog v0.0.0-20180910232447-e45cbeb79f04
 	github.com/hashicorp/go-immutable-radix v1.0.0 // indirect
@@ -54,7 +54,6 @@ require (
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
 	github.com/havoc-io/gopass v0.0.0-20170602182606-9a121bec1ae7
 	github.com/iancoleman/strcase v0.0.0-20190422225806-e506e3ef7365
-	github.com/joeshaw/iso8601 v0.0.0-20140327141645-861d1ce636d0
 	github.com/jonboulle/clockwork v0.1.0
 	github.com/kevinburke/go-bindata v3.13.0+incompatible
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
@@ -82,14 +81,9 @@ require (
 	github.com/stretchr/testify v1.4.0
 	github.com/tidwall/pretty v0.0.0-20190325153808-1166b9ac2b65
 	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c // indirect
-	golang.org/x/crypto v0.0.0-20191206172530-e9b2fee46413
+	golang.org/x/crypto v0.0.0-20190923035154-9ee001bba392
 	golang.org/x/exp v0.0.0-20190731235908-ec7cb31e5a56 // indirect
-	golang.org/x/net v0.0.0-20191209160850-c0dbc17a3553 // indirect
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
-	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e // indirect
-	golang.org/x/sys v0.0.0-20191210023423-ac6580df4449 // indirect
-	golang.org/x/tools v0.0.0-20191217144153-01c78d57fd55 // indirect
-	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543 // indirect
 	gonum.org/v1/netlib v0.0.0-20190331212654-76723241ea4e // indirect
 	google.golang.org/appengine v1.6.1 // indirect
 	gopkg.in/square/go-jose.v2 v2.3.1
@@ -98,6 +92,7 @@ require (
 )
 
 replace (
+	github.com/confluentinc/ccloud-sdk-go => ../ccloud-sdk-go
 	github.com/mutagen-io/gopass => github.com/mutagen-io/gopass v0.0.0-20161007065903-6331a34a3f3b
 	github.com/shurcooL/sanitized_anchor_name => github.com/shurcooL/sanitized_anchor_name v1.0.0
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20171026124306-e509bb64fe11

@@ -201,7 +201,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return errors.HandleCommon(errors.ErrNoConnectorId, cmd)
 	}
-	connector, err := c.client.GetExpansionByID(context.Background(), &connectv1.Connector{AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id, Id: args[0]})
+	connector, err := c.client.GetExpansionById(context.Background(), &connectv1.Connector{AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id, Id: args[0]})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -260,12 +260,13 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
+	pcmd.Print(cmd, "Created connector "+connector.Name+" ")
 	// Resolve Connector ID from Name of created connector
-	connectorID, err := c.client.Get(context.Background(), &connectv1.Connector{AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id, Name: connector.Name})
+	connectorID, err := c.client.GetExpansionByName(context.Background(), &connectv1.Connector{AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id, Name: connector.Name})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	pcmd.Println(cmd, "Created connector "+connectorID.Id)
+	pcmd.Println(cmd, connectorID.Id.Id)
 	return nil
 }
 
@@ -279,7 +280,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	// Resolve Connector Name from ID
-	connector, err := c.client.GetExpansionByID(context.Background(), &connectv1.Connector{AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id, Id: args[0]})
+	connector, err := c.client.GetExpansionById(context.Background(), &connectv1.Connector{AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id, Id: args[0]})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -299,7 +300,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return errors.HandleCommon(errors.ErrNoConnectorId, cmd)
 	}
-	connector, err := c.client.GetExpansionByID(context.Background(), &connectv1.Connector{AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id, Id: args[0]})
+	connector, err := c.client.GetExpansionById(context.Background(), &connectv1.Connector{AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id, Id: args[0]})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -319,7 +320,7 @@ func (c *command) pause(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return errors.HandleCommon(errors.ErrNoConnectorId, cmd)
 	}
-	connector, err := c.client.GetExpansionByID(context.Background(), &connectv1.Connector{AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id, Id: args[0]})
+	connector, err := c.client.GetExpansionById(context.Background(), &connectv1.Connector{AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id, Id: args[0]})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -339,7 +340,7 @@ func (c *command) resume(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return errors.HandleCommon(errors.ErrNoConnectorId, cmd)
 	}
-	connector, err := c.client.GetExpansionByID(context.Background(), &connectv1.Connector{AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id, Id: args[0]})
+	connector, err := c.client.GetExpansionById(context.Background(), &connectv1.Connector{AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id, Id: args[0]})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}

@@ -60,6 +60,8 @@ Describe required connector configuration parameters for a specific connector pl
 		RunE: c.describe,
 		Args: cobra.ExactArgs(1),
 	}
+	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
@@ -74,6 +76,8 @@ List connectors in the current or specified Kafka cluster context.
 		RunE: c.list,
 		Args: cobra.NoArgs,
 	}
+	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 }
 
@@ -108,13 +112,14 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return errors.HandleCommon(errors.ErrNoPluginName, cmd)
 	}
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	_, err = c.client.Validate(context.Background(), &connectv1.ConnectorConfig{UserConfigs: map[string]string{"connector.class": args[0]}, AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id, Plugin: args[0]})
+	_, err = c.client.Validate(context.Background(), &connectv1.ConnectorConfig{UserConfigs: map[string]string{"connector.class": args[0]}, AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id, Plugin:args[0]}, false)
 
-	pcmd.Println(cmd, "Following are the required configs: \nconnector.class \n"+err.Error())
-	return nil
+	if err != nil {
+		pcmd.Println(cmd, "Following are the required configs: \nconnector.class \n"+err.Error())
+		return nil
+	}
+
+	return errors.ErrInvalidCloud
 }
 
 func FormatDescription(description string, cliName string) string {

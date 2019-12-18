@@ -29,6 +29,7 @@ var (
 	ErrNoConnectorId   = fmt.Errorf("connector id not passed")
 	ErrEmptyConfigFile = fmt.Errorf("config file did not have required parameters")
 	ErrNoPluginName    = fmt.Errorf("plugin name must be passed")
+	ErrInvalidCloud    = fmt.Errorf("error defining plugin on given kafka cluster")
 )
 
 // UnspecifiedKafkaClusterError means the user needs to specify a kafka cluster

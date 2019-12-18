@@ -122,11 +122,14 @@ func (suite *ConnectTestSuite) SetupTest() {
 		ListWithExpansionsFunc: func(arg0 context.Context, arg1 *v1.Connector, arg2 string) (expansions map[string]*v1.ConnectorExpansion, e error) {
 			return map[string]*v1.ConnectorExpansion{connectorID: suite.connectorExpansion}, nil
 		},
-		GetExpansionByIDFunc: func(arg0 context.Context, arg1 *v1.Connector) (expansion *v1.ConnectorExpansion, e error) {
+		GetExpansionByIdFunc: func(arg0 context.Context, arg1 *v1.Connector) (expansion *v1.ConnectorExpansion, e error) {
 			return suite.connectorExpansion, nil
 		},
-		GetFunc: func(arg0 context.Context, arg1 *v1.Connector) (connector *v1.Connector, e error) {
-			return suite.connector, nil
+		GetExpansionByNameFunc: func(ctx context.Context, connector *v1.Connector) (expansion *v1.ConnectorExpansion, e error) {
+			return suite.connectorExpansion, nil
+		},
+		GetFunc: func(arg0 context.Context, arg1 *v1.Connector) (connector *v1.ConnectorInfo, e error) {
+			return suite.connectorInfo, nil
 		},
 	}
 
@@ -186,8 +189,8 @@ func (suite *ConnectTestSuite) TestDescribeConnector() {
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
-	req.True(suite.connectMock.GetExpansionByIDCalled())
-	retVal := suite.connectMock.GetExpansionByIDCalls()[0]
+	req.True(suite.connectMock.GetExpansionByIdCalled())
+	retVal := suite.connectMock.GetExpansionByIdCalls()[0]
 	req.Equal(retVal.Arg1.KafkaClusterId, kafkaClusterID)
 }
 
