@@ -539,6 +539,7 @@ func (s *CLITestSuite) validateTestOutput(tt CLITest, t *testing.T, output strin
 
 func runCommand(t *testing.T, binaryName string, env []string, args string, wantErrCode int) string {
 	output, exitCode, err := covCollector.RunBinary(binaryPath(t, binaryName), "TestRunMain", env, strings.Split(args, " "))
+	fmt.Println(output)
 	if err != nil && wantErrCode == 0 {
 		require.Failf(t, "unexpected error",
 			"exit %d: %s\n%s", exitCode, args, output)
@@ -839,8 +840,41 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		_, err = io.WriteString(w, string(b))
 		require.NoError(t, err)
 	})
-	router.HandleFunc("/api/connectors",handleConnectCreateList(t))
-	router.HandleFunc("/api/accounts/a-595/clusters/lkc-def963/connectors", handleConnectCreateList(t))
+	router.HandleFunc("/api/accounts/a-595/clusters/lkc-123/connectors", handleConnectCreateList(t))
+	router.HandleFunc("/api/accounts/a-595/clusters/lkc-123/connectors?expand", func(w http.ResponseWriter, r *http.Request) {
+
+		connectorExpansion := &connectv1.ConnectorExpansion{
+			Id: &connectv1.ConnectorId{Id: "lcc-123"},
+			Info: &connectv1.ConnectorInfo{
+				Name:   "az-connector",
+				Type:   "Sink",
+				Config: map[string]string{},
+			},
+			Status: &connectv1.ConnectorStateInfo{Name: "az-connector", Connector: &connectv1.ConnectorState{State: "Running"},
+				Tasks: []*connectv1.TaskState{{Id: 1, State: "Running"}},
+			}}
+		listReply, err := json.Marshal(map[string]*connectv1.ConnectorExpansion{"lcc-123": connectorExpansion})
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(listReply))
+		require.NoError(t, err)
+	})
+	router.HandleFunc("/api/accounts/a-595/clusters/lkc-123/az-connector", func(w http.ResponseWriter, r *http.Request) {
+		connectorExpansion := &connectv1.ConnectorExpansion{
+			Id: &connectv1.ConnectorId{Id: "lcc-123"},
+			Info: &connectv1.ConnectorInfo{
+				Name:   "az-connector",
+				Type:   "Sink",
+				Config: map[string]string{},
+			},
+			Status: &connectv1.ConnectorStateInfo{Name: "az-connector", Connector: &connectv1.ConnectorState{State: "Running"},
+				Tasks: []*connectv1.TaskState{{Id: 1, State: "Running"}},
+			}}
+		key, err := json.Marshal("lcc-123")
+		value, err := utilv1.MarshalJSONToBytes(connectorExpansion)
+		require.NoError(t, err)
+		_, err = io.WriteString(w, "{"+string(key)+":"+string(value)+"}")
+		require.NoError(t, err)
+	})
 	router.HandleFunc("/api/ksqls", handleKSQLCreateList(t))
 	router.HandleFunc("/api/ksqls/lksqlc-ksql1/", func(w http.ResponseWriter, r *http.Request) {
 		ksqlCluster := &ksqlv1.KSQLCluster{
@@ -1096,12 +1130,13 @@ func handleConnectCreateList(t *testing.T) func(w http.ResponseWriter, r *http.R
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(reply))
 			require.NoError(t, err)
-		} else if r.Method == "GET" {
-			listReply, err := json.Marshal([]string{connector1.Name})
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(listReply))
-			require.NoError(t, err)
 		}
+		//} else if r.Method == "GET" {
+		//	listReply, err := json.Marshal([]string{connector1.Name})
+		//	require.NoError(t, err)
+		//	_, err = io.WriteString(w, string(listReply))
+		//	require.NoError(t, err)
+		//}
 	}
 }
 

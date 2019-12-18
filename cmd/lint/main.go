@@ -32,7 +32,7 @@ var (
 	}
 	vocabWords = []string{
 		"ccloud", "kafka", "api", "url", "config", "configs", "multizone", "transactional", "ksql", "KSQL", "stdin",
-		"connect", "connect-catalog",
+		"connect", "connect-catalog", "JSON",
 		// security
 		"iam", "acl", "acls", "ACL", "rolebinding", "rolebindings", "PEM", "auth", "init", "decrypt", "READWRITE",
 		"txt", // this is because @file.txt -> file txt
@@ -50,7 +50,7 @@ var (
 		linter.ExcludeCommandContains("iam"),
 		// these all require explicit cluster as id/name args
 		linter.ExcludeCommandContains("kafka cluster"),
-		linter.ExcludeCommandContains("connect"),
+		linter.ExcludeCommandContains("connector"),
 		// this uses --resource instead of --cluster
 		linter.ExcludeCommandContains("api-key"),
 		// this doesn't need a --cluster
