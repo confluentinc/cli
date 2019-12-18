@@ -840,7 +840,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		require.NoError(t, err)
 	})
 	router.HandleFunc("/api/connectors",handleConnectCreateList(t))
-	router.HandleFunc("/api/accounts/{account_id}/clusters/{cluster_id}/connectors", handleConnectCreateList(t))
+	router.HandleFunc("/api/accounts/a-595/clusters/lkc-def963/connectors", handleConnectCreateList(t))
 	router.HandleFunc("/api/ksqls", handleKSQLCreateList(t))
 	router.HandleFunc("/api/ksqls/lksqlc-ksql1/", func(w http.ResponseWriter, r *http.Request) {
 		ksqlCluster := &ksqlv1.KSQLCluster{

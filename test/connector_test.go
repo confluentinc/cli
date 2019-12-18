@@ -6,7 +6,9 @@ func (s *CLITestSuite) TestConnectCommands() {
 		// Show what commands are available
 		{args: "connector --help", fixture: "connector-help.golden"},
 		{args: "connector-catalog --help", fixture: "connector-catalog-help.golden"},
-		{args: "connector create --cluster lkc-123 --config input/connector-config.yaml", fixture: "connector-update.golden"},
+		{args: "environment use a-595", fixture: "kafka0.golden", wantErrCode: 0},
+		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1", fixture: "kafka2.golden", wantErrCode: 0},
+		{args: "connector create --config input/connector-config.yaml", fixture: "connector-update.golden"},
 	}
 	resetConfiguration(s.T(), "ccloud")
 	for _, tt := range tests {
