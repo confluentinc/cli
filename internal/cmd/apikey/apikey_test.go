@@ -18,17 +18,22 @@ import (
 	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/cli/internal/pkg/keystore"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/mock"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
 const (
-	kafkaClusterID = "lkc-12345"
-	srClusterID    = "lsrc-12345"
-	apiKeyVal      = "abracadabra"
-	apiSecretVal   = "opensesame"
+	kafkaClusterID    = "lkc-12345"
+	srClusterID       = "lsrc-12345"
+	apiKeyVal         = "abracadabra"
+	anotherApiKeyVal  = "abba"
+	apiSecretVal      = "opensesame"
+	promptReadString  = "readstring"
+	promptReadPass    = "readpassword"
+	environment       = "testAccount"
+	apiSecretFile     = "./api_secret_test.txt"
+	apiSecretFromFile = "api_secret_test"
 )
 
 var (
@@ -43,11 +48,12 @@ type APITestSuite struct {
 	suite.Suite
 	conf             *config.Config
 	apiMock          *ccsdkmock.APIKey
-	keystore         keystore.KeyStore
+	keystore         *mock.KeyStore
 	kafkaCluster     *kafkav1.KafkaCluster
 	srCluster        *srv1.SchemaRegistryCluster
 	srMothershipMock *ccsdkmock.SchemaRegistry
 	kafkaMock        *ccsdkmock.Kafka
+	isPromptPipe     bool
 }
 
 func (suite *APITestSuite) SetupSuite() {
@@ -56,7 +62,7 @@ func (suite *APITestSuite) SetupSuite() {
 	suite.conf.AuthURL = "http://test"
 	suite.conf.Auth = &config.AuthConfig{
 		User:    new(orgv1.User),
-		Account: &orgv1.Account{Id: "testAccount"},
+		Account: &orgv1.Account{Id: environment},
 	}
 	user := suite.conf.Auth
 	name := fmt.Sprintf("login-%s-%s", user.User.Email, suite.conf.AuthURL)
@@ -83,6 +89,7 @@ func (suite *APITestSuite) SetupSuite() {
 	suite.kafkaCluster = &kafkav1.KafkaCluster{
 		Id:         kafkaClusterID,
 		Enterprise: true,
+		AccountId:  environment,
 	}
 	suite.srCluster = &srv1.SchemaRegistryCluster{
 		Id: srClusterID,
@@ -109,7 +116,7 @@ func (suite *APITestSuite) SetupTest() {
 	}
 	suite.keystore = &mock.KeyStore{
 		HasAPIKeyFunc: func(key, clusterID, environment string) (b bool, e error) {
-			return true, nil
+			return key == apiKeyVal, nil
 		},
 		StoreAPIKeyFunc: func(key *authv1.ApiKey, clusterID, environment string) error {
 			return nil
@@ -138,7 +145,17 @@ func (suite *APITestSuite) SetupTest() {
 }
 
 func (suite *APITestSuite) newCMD() *cobra.Command {
-	prompt := pcmd.NewPrompt(os.Stdin)
+	prompt := &cliMock.Prompt{
+		ReadStringFunc: func(delim byte) (s string, e error) {
+			return promptReadString + "\n", nil
+		},
+		ReadPasswordFunc: func() (bytes []byte, e error) {
+			return []byte(promptReadPass + "\n"), nil
+		},
+		IsPipeFunc: func() (b bool, e error) {
+			return suite.isPromptPipe, nil
+		},
+	}
 	resolver := &pcmd.FlagResolverImpl{Prompt: prompt, Out: os.Stdout}
 	cmd := New(&cliMock.Commander{}, suite.conf, suite.apiMock, &pcmd.ConfigHelper{Config: suite.conf, Client: &ccloud.Client{Kafka: suite.kafkaMock, SchemaRegistry: suite.srMothershipMock, APIKey: suite.apiMock}}, suite.keystore, resolver)
 	return cmd
@@ -197,6 +214,77 @@ func (suite *APITestSuite) TestListKafkaApiKey() {
 	req.True(suite.apiMock.ListCalled())
 	retValue := suite.apiMock.ListCalls()[0].Arg1
 	req.Equal(retValue.LogicalClusters[0].Id, kafkaClusterID)
+}
+
+func (suite *APITestSuite) TestStoreApiKeyForce() {
+	req := require.New(suite.T())
+	suite.isPromptPipe = true
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"store", apiKeyVal, "-", "--resource", kafkaClusterID}))
+	err := cmd.Execute()
+	// refusing to overwrite existing secret
+	req.Error(err)
+
+	cmd.SetArgs(append([]string{"store", apiKeyVal, "-", "--force", "--resource", kafkaClusterID}))
+	err = cmd.Execute()
+	req.NoError(err)
+	req.True(suite.keystore.StoreAPIKeyCalled())
+	args := suite.keystore.StoreAPIKeyCalls()[0]
+	req.Equal(apiKeyVal, args.Key.Key)
+	req.Equal(promptReadString, args.Key.Secret)
+}
+
+func (suite *APITestSuite) TestStoreApiKeyPipe() {
+	req := require.New(suite.T())
+	suite.isPromptPipe = true
+	cmd := suite.newCMD()
+	// no need to force for new api keys
+	cmd.SetArgs(append([]string{"store", anotherApiKeyVal, "-", "--resource", kafkaClusterID}))
+	err := cmd.Execute()
+	req.NoError(err)
+	req.True(suite.keystore.StoreAPIKeyCalled())
+	args := suite.keystore.StoreAPIKeyCalls()[0]
+	req.Equal(anotherApiKeyVal, args.Key.Key)
+	req.Equal(promptReadString, args.Key.Secret)
+}
+
+func (suite *APITestSuite) TestStoreApiKeyPromptUserForSecret() {
+	req := require.New(suite.T())
+	suite.isPromptPipe = false
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"store", anotherApiKeyVal, "--resource", kafkaClusterID}))
+	err := cmd.Execute()
+	req.NoError(err)
+	req.True(suite.keystore.StoreAPIKeyCalled())
+	args := suite.keystore.StoreAPIKeyCalls()[0]
+	req.Equal(anotherApiKeyVal, args.Key.Key)
+	req.Equal(promptReadPass, args.Key.Secret)
+}
+
+func (suite *APITestSuite) TestStoreApiKeyPassSecretByFile() {
+	req := require.New(suite.T())
+	suite.isPromptPipe = false
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"store", anotherApiKeyVal, "@" + apiSecretFile, "--resource", kafkaClusterID}))
+	err := cmd.Execute()
+	req.NoError(err)
+	req.True(suite.keystore.StoreAPIKeyCalled())
+	args := suite.keystore.StoreAPIKeyCalls()[0]
+	req.Equal(anotherApiKeyVal, args.Key.Key)
+	req.Equal(apiSecretFromFile, args.Key.Secret)
+}
+
+func (suite *APITestSuite) TestStoreApiKeyPromptUserForKeyAndSecret() {
+	req := require.New(suite.T())
+	suite.isPromptPipe = false
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"store", "--resource", kafkaClusterID}))
+	err := cmd.Execute()
+	req.NoError(err)
+	req.True(suite.keystore.StoreAPIKeyCalled())
+	args := suite.keystore.StoreAPIKeyCalls()[0]
+	req.Equal(promptReadString, args.Key.Key)
+	req.Equal(promptReadPass, args.Key.Secret)
 }
 
 func TestApiTestSuite(t *testing.T) {

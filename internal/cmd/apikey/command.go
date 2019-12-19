@@ -117,7 +117,7 @@ func (c *command) init() {
 		Args:  cobra.MaximumNArgs(2),
 	}
 	storeCmd.Flags().String(resourceFlagName, "", "REQUIRED: The resource ID.")
-	storeCmd.Flags().BoolP("force", "f", false, "Force overwrite existing secret for this key.")
+	storeCmd.Flags().BoolP("force", "o", false, "Force overwrite existing secret for this key.")
 	storeCmd.Flags().SortFlags = false
 	if err := storeCmd.MarkFlagRequired(resourceFlagName); err != nil {
 		panic(err)
@@ -319,7 +319,7 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 		key = args[0]
 		if len(args) == 2 {
 			if !(args[1] == "-" || strings.HasPrefix(args[1], "@")) {
-				return errors.Errorf(`Invalid second argument. Please specify "-", or "@<FILE_NAME>", or nothing and be prompted for api secret.`)
+				return errors.Errorf(`Invalid second argument. You can specify "-", or "@<FILE_NAME>", or nothing and be prompted for the API secret.`)
 			}
 			secretSource = args[1]
 			secretPrompt = ""

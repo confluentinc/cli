@@ -84,8 +84,6 @@ var rules = []linter.Rule{
 		linter.ExcludeCommandContains("api-key create"),
 		// skip local which delegates to bash commands
 		linter.ExcludeCommandContains("local"),
-		// skip for api-key store command since KEY is not last argument
-		linter.ExcludeCommand("api-key store <apikey> <secret>"),
 		// skip for rolebindings since they don't have names/IDs
 		linter.ExcludeCommandContains("iam rolebinding"),
 		// skip secret commands
