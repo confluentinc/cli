@@ -16,7 +16,7 @@ require (
 	github.com/chromedp/chromedp v0.5.2
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
-	github.com/confluentinc/ccloud-sdk-go v0.0.17-0.20191219212204-127670a03cbf
+	github.com/confluentinc/ccloud-sdk-go v0.0.17-0.20191219230314-29fed143a57a
 	github.com/confluentinc/ccloudapis v0.0.0-20191217233024-d7e5019a1965
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-printer v0.10.0
