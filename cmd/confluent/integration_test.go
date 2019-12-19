@@ -5,9 +5,9 @@ package main
 import (
 	"testing"
 
-	"github.com/confluentinc/cli/internal/pkg/test-integ"
+	"github.com/confluentinc/bincover"
 )
 
 func TestRunMain(t *testing.T) {
-	test_integ.RunTest(t, main)
+	bincover.RunTest(main)
 }
