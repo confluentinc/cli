@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/chromedp/chromedp"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -25,6 +24,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/chromedp/chromedp"
+
+	"github.com/confluentinc/bincover"
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -40,7 +42,6 @@ import (
 	"github.com/confluentinc/mds-sdk-go"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/cli/internal/pkg/test-integ"
 )
 
 var (
@@ -53,11 +54,11 @@ var (
 	// this connection is preconfigured in Auth0 to hit a test Okta account
 	ssoTestConnectionName = *flag.String("sso-test-connection-name", "confluent-dev", "The Auth0 SSO connection name.")
 	// browser tests by default against devel
-	ssoTestLoginUrl       = *flag.String("sso-test-login-url", "https://devel.cpdev.cloud", "The login url to use for the sso browser test.")
-	cover                 = false
-	ccloudTestBin         = ccloudTestBinNormal
-	confluentTestBin      = confluentTestBinNormal
-	covCollector *test_integ.CoverageCollector
+	ssoTestLoginUrl  = *flag.String("sso-test-login-url", "https://devel.cpdev.cloud", "The login url to use for the sso browser test.")
+	cover            = false
+	ccloudTestBin    = ccloudTestBinNormal
+	confluentTestBin = confluentTestBinNormal
+	covCollector     *bincover.CoverageCollector
 )
 
 const (
@@ -124,7 +125,7 @@ func init() {
 
 // SetupSuite builds the CLI binary to test
 func (s *CLITestSuite) SetupSuite() {
-	covCollector = test_integ.NewCoverageCollector(mergedCoverageFilename, cover)
+	covCollector = bincover.NewCoverageCollector(mergedCoverageFilename, cover)
 	covCollector.Setup()
 	req := require.New(s.T())
 
@@ -453,7 +454,7 @@ func (s *CLITestSuite) Test_SSO_Login() {
 
 	resetConfiguration(s.T(), "ccloud")
 
-	env := []string{"XX_CCLOUD_EMAIL="+ ssoTestEmail}
+	env := []string{"XX_CCLOUD_EMAIL=" + ssoTestEmail}
 	cmd := exec.Command(binaryPath(t, ccloudTestBin), []string{"login", "--url", ssoTestLoginUrl, "--no-browser"}...)
 	cmd.Env = append(os.Environ(), env...)
 
@@ -467,7 +468,7 @@ func (s *CLITestSuite) Test_SSO_Login() {
 		var url string
 		for scanner.Scan() {
 			txt := scanner.Text()
-			fmt.Println("CLI output | "+txt)
+			fmt.Println("CLI output | " + txt)
 			if url == "" {
 				url = parseSsoAuthUrlFromOutput([]byte(txt))
 			}
@@ -508,7 +509,7 @@ func (s *CLITestSuite) Test_SSO_Login() {
 }
 
 func parseSsoAuthUrlFromOutput(output []byte) string {
-	regex, err := regexp.Compile(`.*([\S]*connection=`+ ssoTestConnectionName +`).*`)
+	regex, err := regexp.Compile(`.*([\S]*connection=` + ssoTestConnectionName + `).*`)
 	if err != nil {
 		panic("Error compiling regex")
 	}
@@ -644,13 +645,13 @@ func (s *CLITestSuite) validateTestOutput(tt CLITest, t *testing.T, output strin
 	if *update && !tt.regex && tt.fixture != "" {
 		writeFixture(t, tt.fixture, output)
 	}
-  actual := normalizeNewLines(string(output))
+	actual := normalizeNewLines(string(output))
 	if tt.contains != "" {
 		require.Contains(t, actual, tt.contains)
 	} else if tt.notContains != "" {
 		require.NotContains(t, actual, tt.notContains)
 	} else if tt.fixture != "" {
-    expected := normalizeNewLines(loadFixture(t, tt.fixture))
+		expected := normalizeNewLines(loadFixture(t, tt.fixture))
 
 		if tt.regex {
 			require.Regexp(t, expected, actual)
