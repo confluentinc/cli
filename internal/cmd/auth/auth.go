@@ -7,11 +7,13 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"github.com/spf13/cobra"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
@@ -380,12 +382,32 @@ func SelfSignedCertClient(certReader io.Reader, logger *log.Logger) (*http.Clien
 	}
 
 	// Trust the updated cert pool in our client
-	tlsClientConfig := &tls.Config{RootCAs: certPool}
-	transport := &http.Transport{TLSClientConfig: tlsClientConfig}
+	transport := DefaultTransport()
+	transport.TLSClientConfig = &tls.Config{RootCAs: certPool}
 	client := DefaultClient()
 	client.Transport = transport
 
 	return client, nil
+}
+
+func DefaultTransport() *http.Transport {
+	// copied from the current net/http/transport.go dependency version, but it's already
+	// out of date with respect to newer transport versions. For future proofing, this
+	// should be replaced with:
+	//     return http.DefaultTransport.(*http.Transport).Clone()
+	// but only after upgrading to go 1.13, since Clone isn't available until then.
+	return &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+			DualStack: true,
+		}).DialContext,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	}
 }
 
 func DefaultClient() *http.Client {
