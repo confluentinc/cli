@@ -94,7 +94,6 @@ func main() {
 	var goPromptOpts []prompt.Option
 	goPromptOpts = append(
 		goPromptOpts,
-		prompt.OptionPrefix(cfg.CLIName+" 🔥 "),
 		prompt.OptionShowCompletionAtStart(),
 		prompt.OptionPrefixTextColor(prompt.Blue),
 		prompt.OptionPreviewSuggestionTextColor(prompt.Purple),
@@ -109,12 +108,27 @@ func main() {
 		prompt.OptionScrollbarBGColor(prompt.Blue),
 		prompt.OptionScrollbarThumbColor(prompt.DarkBlue),
 		prompt.OptionLivePrefix(livePrefixFunc),
-		prompt.OptionAddKeyBind(prompt.KeyBind{
-			Key: prompt.ControlF,
-			Fn: func(buffer *prompt.Buffer) {
-				cliPrompt.FuzzyFind = !cliPrompt.FuzzyFind
-			},
-		}),
+		prompt.OptionAddKeyBind(
+			prompt.KeyBind{
+				Key: prompt.ControlF,
+				Fn: func(buffer *prompt.Buffer) {
+					cliPrompt.FuzzyFind = !cliPrompt.FuzzyFind
+				},
+			}),
+		prompt.OptionAddASCIICodeBind(
+			[]prompt.ASCIICodeBind{
+				// Previous word (Alt-left arrow).
+				{
+					ASCIICode: []byte{0x1b, 0x62},
+					Fn:        prompt.GoLeftWord,
+				},
+				// Next word (Alt-right arrow).
+				{
+					ASCIICode: []byte{0x1b, 0x66},
+					Fn:        prompt.GoRightWord,
+				},
+			}...
+		),
 	)
 	cliPrompt.GoPromptOptions = goPromptOpts
 	cliPrompt.Run()
