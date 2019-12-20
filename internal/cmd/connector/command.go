@@ -196,9 +196,6 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	if len(args) == 0 {
-		return errors.HandleCommon(errors.ErrNoConnectorId, cmd)
-	}
 	connector, err := c.client.GetExpansionById(context.Background(), &connectv1.Connector{AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id, Id: args[0]})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -256,7 +253,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	pcmd.Print(cmd, "Created connector "+connector.Name+" ")
+	pcmd.Printf(cmd, "Created connector %s ", connector.Name)
 	// Resolve Connector ID from Name of created connector
 	connectorID, err := c.client.GetExpansionByName(context.Background(), &connectv1.Connector{AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id, Name: connector.Name})
 	if err != nil {
@@ -293,9 +290,6 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	if len(args) == 0 {
-		return errors.HandleCommon(errors.ErrNoConnectorId, cmd)
-	}
 	connector, err := c.client.GetExpansionById(context.Background(), &connectv1.Connector{AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id, Id: args[0]})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -313,9 +307,6 @@ func (c *command) pause(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	if len(args) == 0 {
-		return errors.HandleCommon(errors.ErrNoConnectorId, cmd)
-	}
 	connector, err := c.client.GetExpansionById(context.Background(), &connectv1.Connector{AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id, Id: args[0]})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -332,9 +323,6 @@ func (c *command) resume(cmd *cobra.Command, args []string) error {
 	kafkaCluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
-	}
-	if len(args) == 0 {
-		return errors.HandleCommon(errors.ErrNoConnectorId, cmd)
 	}
 	connector, err := c.client.GetExpansionById(context.Background(), &connectv1.Connector{AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id, Id: args[0]})
 	if err != nil {

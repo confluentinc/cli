@@ -66,7 +66,7 @@ Describe required connector configuration parameters for a specific connector pl
 
 	cmd = &cobra.Command{
 		Use:   "list",
-		Short: "List connectors.",
+		Short: "List connector plugin types.",
 		Example: FormatDescription(`
 List connectors in the current or specified Kafka cluster context.
 

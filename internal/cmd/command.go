@@ -165,16 +165,9 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		// If srClient is nil, the function will look it up after prerunner verifies authentication. Exposed so tests can pass mocks
 		sr := schema_registry.New(prerunner, cfg, client.SchemaRegistry, ch, nil, client.Metrics, logger)
 		cli.AddCommand(sr)
-
 		cli.AddCommand(ksql.New(prerunner, cfg, client.KSQL, client.Kafka, client.User, ch))
-
-		//conn = connect.New(prerunner, cfg, connects.New(client, logger))
-		//conn.Hidden = true // The connect feature isn't finished yet, so let's hide it
-		//cli.AddCommand(conn)
-		connectorCommands := connector.New(prerunner, cfg, client.Connect, ch)
-		cli.AddCommand(connectorCommands)
-		connectorCatalogCommands := connector_catalog.New(prerunner, cfg, client.Connect, ch)
-		cli.AddCommand(connectorCatalogCommands)
+		cli.AddCommand(connector.New(prerunner, cfg, client.Connect, ch))
+		cli.AddCommand(connector_catalog.New(prerunner, cfg, client.Connect, ch))
 	} else if cliName == "confluent" {
 		cli.AddCommand(iam.New(prerunner, cfg, mdsClient))
 

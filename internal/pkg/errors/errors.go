@@ -26,7 +26,6 @@ var (
 	ErrNoKafkaContext  = fmt.Errorf("kafka not set")
 	ErrNoSrEnabled     = fmt.Errorf("schema registry not enabled")
 	ErrNoKSQL          = fmt.Errorf("no KSQL found")
-	ErrNoConnectorId   = fmt.Errorf("connector id not passed")
 	ErrEmptyConfigFile = fmt.Errorf("config file did not have required parameters")
 	ErrNoPluginName    = fmt.Errorf("plugin name must be passed")
 	ErrInvalidCloud    = fmt.Errorf("error defining plugin on given kafka cluster")
