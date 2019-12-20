@@ -27,6 +27,13 @@ secrets are irretrievable after creation.
 
 You must have an API secret stored locally for certain CLI commands to
 work. For example, the Kafka topic consume and produce commands require an API secret.
+
+There are five ways to pass the secret:
+1. api-key store <key> <secret>.
+2. api-key store; you will be prompted for both API key and secret.
+3. api-key store <key>; you will be prompted for API secret.
+4. api-key store <key> -; for piping API secret.
+5. api-key store <key> @<filepath>.
 `
 
 type command struct {
@@ -117,7 +124,7 @@ func (c *command) init() {
 		Args:  cobra.MaximumNArgs(2),
 	}
 	storeCmd.Flags().String(resourceFlagName, "", "REQUIRED: The resource ID.")
-	storeCmd.Flags().BoolP("force", "o", false, "Force overwrite existing secret for this key.")
+	storeCmd.Flags().BoolP("force", "f", false, "Force overwrite existing secret for this key.")
 	storeCmd.Flags().SortFlags = false
 	if err := storeCmd.MarkFlagRequired(resourceFlagName); err != nil {
 		panic(err)
@@ -308,27 +315,30 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	}
 
 	var key string
-	secretSource, secretPrompt := "", "Secret: "
 	if len(args) == 0 {
-		var err error
 		key, err = c.parseFlagResolverPromptValue("", "Key: ", false)
 		if err != nil {
 			return err
 		}
 	} else {
 		key = args[0]
-		if len(args) == 2 {
-			if !(args[1] == "-" || strings.HasPrefix(args[1], "@")) {
-				return errors.Errorf(`Invalid second argument. You can specify "-", or "@<FILE_NAME>", or nothing and be prompted for the API secret.`)
-			}
-			secretSource = args[1]
-			secretPrompt = ""
-		}
 	}
 
-	secret, err := c.parseFlagResolverPromptValue(secretSource, secretPrompt, true)
-	if err != nil {
-		return err
+	var secret string
+	if len(args) < 2 {
+		secret, err = c.parseFlagResolverPromptValue("", "Secret: ", true)
+		if err != nil {
+			return err
+		}
+	} else if len(args) == 2 {
+		if args[1] == "-" || strings.HasPrefix(args[1], "@") {
+			secret, err = c.parseFlagResolverPromptValue(args[1], "", true)
+			if err != nil {
+				return err
+			}
+		} else {
+			secret = args[1]
+		}
 	}
 
 	environment, err := pcmd.GetEnvironment(cmd, c.config)

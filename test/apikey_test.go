@@ -57,7 +57,7 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 		{args: "api-key list --resource lkc-other1", fixture: "apikey12.golden"},
 
 		// store an api-key for ksql cluster
-		{args: "api-key store UIAPIKEY103 @test/fixtures/input/UIAPISECRET103.txt --resource lksqlc-ksql1", fixture: "empty.golden"},
+		{args: "api-key store UIAPIKEY103 UIAPISECRET103 --resource lksqlc-ksql1", fixture: "empty.golden"},
 		{args: "api-key list --resource lksqlc-ksql1", fixture: "apikey10.golden"},
 
 		// list all api-keys
@@ -76,8 +76,8 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 
 		// store: error handling
 		{name: "error if storing unknown api key", args: "api-key store UNKNOWN @test/fixtures/input/UIAPISECRET100.txt --resource lkc-cool1", fixture: "apikey15.golden"},
-		{name: "error if storing api key with existing secret", args: "api-key store UIAPIKEY100 @test/fixtures/input/NEWSECRET.txt --resource lkc-cool1", fixture: "apikey16.golden"},
-		{name: "succeed if forced to overwrite existing secret", args: "api-key store -f UIAPIKEY100 @test/fixtures/input/NEWSECRET.txt --resource lkc-cool1", fixture: "empty.golden",
+		{name: "error if storing api key with existing secret", args: "api-key store UIAPIKEY100 NEWSECRET --resource lkc-cool1", fixture: "apikey16.golden"},
+		{name: "succeed if forced to overwrite existing secret", args: "api-key store -f UIAPIKEY100 NEWSECRET --resource lkc-cool1", fixture: "empty.golden",
 			wantFunc: func(t *testing.T) {
 				logger := log.New()
 				cfg := config.New(&config.Config{

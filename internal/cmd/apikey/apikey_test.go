@@ -218,20 +218,21 @@ func (suite *APITestSuite) TestListKafkaApiKey() {
 
 func (suite *APITestSuite) TestStoreApiKeyForce() {
 	req := require.New(suite.T())
-	suite.isPromptPipe = true
+	suite.isPromptPipe = false
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"store", apiKeyVal, "-", "--resource", kafkaClusterID}))
+	cmd.SetArgs(append([]string{"store", apiKeyVal, apiSecretVal, "--resource", kafkaClusterID}))
 	err := cmd.Execute()
 	// refusing to overwrite existing secret
 	req.Error(err)
+	req.False(suite.keystore.StoreAPIKeyCalled())
 
-	cmd.SetArgs(append([]string{"store", apiKeyVal, "-", "--force", "--resource", kafkaClusterID}))
+	cmd.SetArgs(append([]string{"store", apiKeyVal, apiSecretVal, "-f", "--resource", kafkaClusterID}))
 	err = cmd.Execute()
 	req.NoError(err)
 	req.True(suite.keystore.StoreAPIKeyCalled())
 	args := suite.keystore.StoreAPIKeyCalls()[0]
 	req.Equal(apiKeyVal, args.Key.Key)
-	req.Equal(promptReadString, args.Key.Secret)
+	req.Equal(apiSecretVal, args.Key.Secret)
 }
 
 func (suite *APITestSuite) TestStoreApiKeyPipe() {
