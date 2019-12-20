@@ -386,7 +386,6 @@ func isHelpFlag(flag string) bool {
 	return false
 }
 
-// For user who is used to older version where api secret is passed as the argument
 func apiSecretSecretHandler(args []string) []string {
 	if len(args) < 2 {
 		return args
