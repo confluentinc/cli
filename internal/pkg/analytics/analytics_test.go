@@ -537,7 +537,7 @@ func (suite *AnalyticsTestSuite) TestMalformedCommand() {
 	suite.checkMalformedCommandTrack(track)
 }
 
-func (suite *AnalyticsTestSuite) TestHideSecretForApiStore() {
+func (suite *AnalyticsTestSuite) TestApiKeyStoreSecretHandler() {
 	// login the user
 	suite.loginUser()
 
@@ -559,24 +559,33 @@ func (suite *AnalyticsTestSuite) TestHideSecretForApiStore() {
 		Command:   rootCmd,
 		Analytics: suite.analyticsClient,
 	}
-	err := command.Execute([]string{"api-key", "store", apiKey, apiSecret})
-	req.NoError(err)
 
-	req.Equal(1, len(suite.output))
-	page, ok := suite.output[0].(segment.Page)
-	req.True(ok)
+	pipeSymbol := "-"
+	filePathArg := "@/file.txt"
+	secondArgs := []string{apiSecret, pipeSymbol, filePathArg}
+	for _, secondArg := range secondArgs {
+		err := command.Execute([]string{"api-key", "store", apiKey, secondArg})
+		req.NoError(err)
 
-	suite.checkPageBasic(page)
-	suite.checkPageLoggedIn(page)
-	suite.checkPageSuccess(page)
+		req.Equal(1, len(suite.output))
+		page, ok := suite.output[0].(segment.Page)
+		req.True(ok)
+		suite.checkPageBasic(page)
+		suite.checkPageLoggedIn(page)
+		suite.checkPageSuccess(page)
 
-	args, ok := (page.Properties[analytics.ArgsPropertiesKey]).([]string)
-	req.True(ok)
-	req.Equal(2, len(args))
-	req.Equal(apiKey, args[0])
-	req.Equal(analytics.SecretValueString, args[1])
+		args, ok := (page.Properties[analytics.ArgsPropertiesKey]).([]string)
+		req.True(ok)
+		req.Equal(2, len(args))
+		req.Equal(apiKey, args[0])
+		if secondArg == apiSecret {
+			req.Equal(analytics.SecretValueString, args[1])
+		} else {
+			req.Equal(secondArg, args[1])
+		}
+		suite.output = make([]segment.Message, 0)
+	}
 }
-
 
 // --------------------------- setup helper functions -------------------------------
 func (suite *AnalyticsTestSuite) createAuth() {

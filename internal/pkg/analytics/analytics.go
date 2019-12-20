@@ -31,7 +31,7 @@ var (
 		"confluent file rotate":         {"passphrase", "passphrase-new"},
 	}
 	// map command string to secret handler func
-	secretCommandArgs     = map[string]func([]string)[]string{"ccloud api-key store": apiSecretSecretHandler}
+	secretCommandArgs     = map[string]func([]string)[]string{"ccloud api-key store": apiKeyStoreSecretHandler}
 	SecretValueString     = "<secret_value>"
 	malformedCmdEventName = "Malformed Command Error"
 
@@ -386,7 +386,7 @@ func isHelpFlag(flag string) bool {
 	return false
 }
 
-func apiSecretSecretHandler(args []string) []string {
+func apiKeyStoreSecretHandler(args []string) []string {
 	if len(args) < 2 {
 		return args
 	}
