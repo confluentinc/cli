@@ -406,5 +406,5 @@ main() {
 }
 
 if [ "${TEST}" != "true" ]; then
-  main
+  main "$@"
 fi
