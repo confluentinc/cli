@@ -331,13 +331,9 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 			return err
 		}
 	} else if len(args) == 2 {
-		if args[1] == "-" || strings.HasPrefix(args[1], "@") {
-			secret, err = c.parseFlagResolverPromptValue(args[1], "", true)
-			if err != nil {
-				return err
-			}
-		} else {
-			secret = args[1]
+		secret, err = c.parseFlagResolverPromptValue(args[1], "", true)
+		if err != nil {
+			return err
 		}
 	}
 
