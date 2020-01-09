@@ -31,18 +31,18 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 	pps1 "github.com/confluentinc/cli/internal/pkg/ps1"
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
-func NewConfluentCommand(cliName string, cfg *pconfig.Config, logger *log.Logger) (*cobra.Command, error) {
-	ver := cfg.Version
+func NewConfluentCommand(cliName string, cfg *pconfig.Config, logger *log.Logger, ver *pversion.Version) (*cobra.Command, error) {
 	cli := &cobra.Command{
 		Use:               cliName,
 		Version:           ver.Version,
 		DisableAutoGenTag: true,
 	}
-	cli.SetUsageFunc(func(cmd *cobra.Command) error {
-		return help.ResolveReST(cmd.UsageTemplate(), cmd)
-	})
+		cli.SetUsageFunc(func(cmd *cobra.Command) error {
+			return help.ResolveReST(cmd.UsageTemplate(), cmd)
+		})
 	cli.SetHelpFunc(func(cmd *cobra.Command, args []string) {
 		_ = help.ResolveReST(cmd.HelpTemplate(), cmd)
 	})
@@ -73,11 +73,12 @@ func NewConfluentCommand(cliName string, cfg *pconfig.Config, logger *log.Logger
 		Logger:       logger,
 		Clock:        clockwork.NewRealClock(),
 		FlagResolver: resolver,
+		Version:      ver,
 	}
+	cliCmd := pcmd.NewAnonymousCLICommand(cli, cfg, prerunner)
 
-	cli.PersistentPreRunE = prerunner.Anonymous(cfg, nil)
+	cli.PersistentPreRunE = prerunner.Anonymous(cfg, cliCmd)
 
-	cli.Version = ver.Version
 	cli.AddCommand(version.NewVersionCmd(prerunner, ver))
 
 	conn := config.New(cfg, prerunner)
@@ -122,7 +123,7 @@ func NewConfluentCommand(cliName string, cfg *pconfig.Config, logger *log.Logger
 			return nil, err
 		}
 		shellRunner := &local.BashShellRunner{BasherContext: bash}
-		cli.AddCommand(local.New(cli, prerunner, shellRunner, logger, fs))
+		cli.AddCommand(local.New(cli, prerunner, shellRunner, logger, fs, cfg))
 
 		cli.AddCommand(secret.New(prerunner, cfg, prompt, resolver, secrets.NewPasswordProtectionPlugin(logger)))
 	}

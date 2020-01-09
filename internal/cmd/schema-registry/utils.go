@@ -11,18 +11,19 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
 const (
 	SubjectUsage = "Subject of the schema."
 )
 
-func GetApiClient(srClient *srsdk.APIClient, cfg *config.Config, client *ccloud.Client) (*srsdk.APIClient, context.Context, error) {
+func GetApiClient(srClient *srsdk.APIClient, cfg *config.Config, client *ccloud.Client, ver *version.Version) (*srsdk.APIClient, context.Context, error) {
 	if srClient != nil {
 		// Tests/mocks
 		return srClient, nil, nil
 	}
-	srClient, ctx, err := SchemaRegistryClient(cfg, client)
+	srClient, ctx, err := SchemaRegistryClient(cfg, client, ver)
 	if err != nil {
 		return nil, nil, err
 	}

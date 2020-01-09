@@ -14,7 +14,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/metric"
-	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 const (
@@ -33,7 +32,6 @@ type Config struct {
 	CLIName              string                   `json:"-" hcl:"-"`
 	MetricSink           metric.Sink              `json:"-" hcl:"-"`
 	Logger               *log.Logger              `json:"-" hcl:"-"`
-	Version              *pversion.Version        `json:"-" hcl:"-"`
 	Filename             string                   `json:"-" hcl:"-"`
 	Platforms            map[string]*Platform     `json:"platforms" hcl:"platforms"`
 	Credentials          map[string]*Credential   `json:"credentials" hcl:"credentials"`
@@ -69,8 +67,6 @@ func (c *Config) Load(version, commit, date, host string) error {
 	if err != nil {
 		return err
 	}
-	ver := pversion.NewVersion(c.CLIName, c.Name(), c.Support(), version, commit, date, host)
-	c.Version = ver
 	input, err := ioutil.ReadFile(filename)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -99,7 +95,6 @@ func (c *Config) Load(version, commit, date, host string) error {
 		context.State = c.ContextStates[context.Name]
 		context.Credential = c.Credentials[context.CredentialName]
 		context.Platform = c.Platforms[context.PlatformName]
-		context.Version = ver
 		context.Logger = c.Logger
 		context.Config = c
 	}

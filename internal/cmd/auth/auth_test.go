@@ -18,7 +18,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/log"
-	"github.com/confluentinc/cli/internal/pkg/version"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
@@ -227,7 +226,6 @@ func newAuthCommand(prompt pcmd.Prompt, auth *sdkMock.Auth, user *sdkMock.User, 
 	}
 	cfg := config.New(&config.Config{
 		Logger:  nil,
-		Version: version.NewVersion("", "", "", "", "", "", ""),
 		CLIName: cliName,
 	})
 	var mdsClient *mds.APIClient

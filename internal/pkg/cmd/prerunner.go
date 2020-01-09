@@ -14,6 +14,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/update"
+	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
 // PreRun is a helper class for automatically setting up Cobra PersistentPreRun commands
@@ -27,10 +28,10 @@ type PreRunner interface {
 type PreRun struct {
 	UpdateClient update.Client
 	CLIName      string
-	Version      string
 	Logger       *log.Logger
 	Clock        clockwork.Clock
 	FlagResolver FlagResolver
+	Version      *version.Version
 }
 
 type CLICommand struct {
@@ -38,6 +39,7 @@ type CLICommand struct {
 	Client    *ccloud.Client
 	MDSClient *mds.APIClient
 	Config    *config.Config
+	Version   *version.Version
 }
 
 func NewAuthenticatedCLICommand(command *cobra.Command, cfg *config.Config, prerunner PreRunner) *CLICommand {
@@ -71,10 +73,11 @@ func NewCLICommand(command *cobra.Command, cfg *config.Config) *CLICommand {
 // Anonymous provides PreRun operations for commands that may be run without a logged-in user
 func (r *PreRun) Anonymous(cfg *config.Config, command *CLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
+		command.Version = r.Version
 		if err := log.SetLoggingVerbosity(cmd, r.Logger); err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
-		if err := r.notifyIfUpdateAvailable(cmd, r.CLIName, r.Version); err != nil {
+		if err := r.notifyIfUpdateAvailable(cmd, r.CLIName, command.Version.Version); err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
 		if err := r.FlagResolver.ResolveContextFlag(cmd, cfg); err != nil {
@@ -82,7 +85,7 @@ func (r *PreRun) Anonymous(cfg *config.Config, command *CLICommand) func(cmd *co
 		}
 		if command != nil {
 			ctx := cfg.Context()
-			setClients(command, ctx)
+			setClients(command, ctx, command.Version)
 		}
 		return nil
 	}
@@ -95,7 +98,7 @@ func (r *PreRun) Authenticated(cfg *config.Config, command *CLICommand) func(cmd
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
-		setClients(command, ctx)
+		setClients(command, ctx, command.Version)
 		err = r.resolveFlags(cfg, cmd, command)
 		if err != nil {
 			return err
@@ -129,7 +132,7 @@ func (r *PreRun) HasAPIKey(cfg *config.Config, command *CLICommand) func(cmd *co
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
-		setClients(command, ctx)
+		setClients(command, ctx, command.Version)
 		err = r.resolveFlags(cfg, cmd, command)
 		if err != nil {
 			return err
@@ -174,9 +177,9 @@ func (r *PreRun) resolveContext(cfg *config.Config, cmd *cobra.Command, cliCmd *
 	return ctx, nil
 }
 
-func setClients(cliCmd *CLICommand, ctx *config.Context) {
-	cliCmd.Client = createCCloudClient(ctx)
-	cliCmd.MDSClient = createMDSClient(ctx)
+func setClients(cliCmd *CLICommand, ctx *config.Context, ver *version.Version) {
+	cliCmd.Client = createCCloudClient(ctx, ver)
+	cliCmd.MDSClient = createMDSClient(ctx, ver)
 }
 
 func (r *PreRun) resolveFlags(cfg *config.Config, cmd *cobra.Command, cliCmd *CLICommand) error {
@@ -186,7 +189,7 @@ func (r *PreRun) resolveFlags(cfg *config.Config, cmd *cobra.Command, cliCmd *CL
 	return nil
 }
 
-func createCCloudClient(ctx *config.Context) *ccloud.Client {
+func createCCloudClient(ctx *config.Context, ver *version.Version) *ccloud.Client {
 	var baseURL string
 	var authToken string
 	var logger *log.Logger
@@ -198,18 +201,18 @@ func createCCloudClient(ctx *config.Context) *ccloud.Client {
 			authToken = state.AuthToken
 		}
 		logger = ctx.Logger
-		userAgent = ctx.Version.UserAgent
+		userAgent = ver.UserAgent
 	}
 	return ccloud.NewClientWithJWT(context.Background(), authToken, &ccloud.Params{
 		BaseURL: baseURL, Logger: logger, UserAgent: userAgent,
 	})
 }
 
-func createMDSClient(ctx *config.Context) *mds.APIClient {
+func createMDSClient(ctx *config.Context, ver *version.Version) *mds.APIClient {
 	mdsConfig := mds.NewConfiguration()
 	if ctx != nil {
 		mdsConfig.BasePath = ctx.Platform.Server
-		mdsConfig.UserAgent = ctx.Version.UserAgent
+		mdsConfig.UserAgent = ver.UserAgent
 	}
 	return mds.NewAPIClient(mdsConfig)
 }

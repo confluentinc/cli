@@ -6,13 +6,11 @@ import (
 	"github.com/confluentinc/ccloudapis/org/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/log"
-	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
 func AuthenticatedConfigMock() *Config {
 	conf := New()
 	conf.Logger = log.New()
-	conf.Version = version.NewVersion("", "", "", "", "", "", "")
 	auth := &AuthConfig{
 		User: &v1.User{
 			Id:    123,

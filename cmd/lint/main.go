@@ -148,9 +148,9 @@ func main() {
 		cfg := config.New(&config.Config{
 			CLIName: cliName,
 			Logger:  log.New(),
-			Version: version.NewVersion("", "", "", "", "", "", ""),
 		})
-		cli, err := cmd.NewConfluentCommand(cliName, cfg, cfg.Logger)
+		ver := version.NewVersion("", "", "", "", "", "", "")
+		cli, err := cmd.NewConfluentCommand(cliName, cfg, cfg.Logger, ver)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)

@@ -11,6 +11,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/metric"
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 var (
@@ -42,8 +43,8 @@ func main() {
 			os.Exit(1)
 		}
 	}
-
-	cli, err := cmd.NewConfluentCommand(cliName, cfg, logger)
+	version := pversion.NewVersion(cfg.CLIName, cfg.Name(), cfg.Support(), version, commit, date, host)
+	cli, err := cmd.NewConfluentCommand(cliName, cfg, logger, version)
 	if err != nil {
 		if cli == nil {
 			fmt.Fprintln(os.Stderr, err)

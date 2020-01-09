@@ -109,7 +109,7 @@ Describe the schema by subject and version
 }
 
 func (c *schemaCommand) create(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(c.srClient, c.Config, c.Client)
+	srClient, ctx, err := GetApiClient(c.srClient, c.Config, c.Client, c.Version)
 	if err != nil {
 		return err
 	}
@@ -135,7 +135,7 @@ func (c *schemaCommand) create(cmd *cobra.Command, args []string) error {
 }
 
 func (c *schemaCommand) delete(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(c.srClient, c.Config, c.Client)
+	srClient, ctx, err := GetApiClient(c.srClient, c.Config, c.Client, c.Version)
 	if err != nil {
 		return err
 	}
@@ -175,7 +175,7 @@ func (c *schemaCommand) describe(cmd *cobra.Command, args []string) error {
 }
 
 func (c *schemaCommand) describeById(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(c.srClient, c.Config, c.Client)
+	srClient, ctx, err := GetApiClient(c.srClient, c.Config, c.Client, c.Version)
 	if err != nil {
 		return err
 	}
@@ -192,7 +192,7 @@ func (c *schemaCommand) describeById(cmd *cobra.Command, args []string) error {
 }
 
 func (c *schemaCommand) describeBySubject(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(c.srClient, c.Config, c.Client)
+	srClient, ctx, err := GetApiClient(c.srClient, c.Config, c.Client, c.Version)
 	if err != nil {
 		return err
 	}

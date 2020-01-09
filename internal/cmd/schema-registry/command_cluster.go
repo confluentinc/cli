@@ -169,7 +169,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	if srCluster != nil && srCluster.SrCredentials.Key != "" {
-		srClient, ctx, err = GetApiClient(c.srClient, c.Config, c.Client)
+		srClient, ctx, err = GetApiClient(c.srClient, c.Config, c.Client, c.Version)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
@@ -238,7 +238,7 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 	return errors.New("flag --compatibility or --mode is required.")
 }
 func (c *clusterCommand) updateCompatibility(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(c.srClient, c.Config, c.Client)
+	srClient, ctx, err := GetApiClient(c.srClient, c.Config, c.Client, c.Version)
 	if err != nil {
 		return err
 	}
@@ -257,7 +257,7 @@ func (c *clusterCommand) updateCompatibility(cmd *cobra.Command, args []string) 
 
 func (c *clusterCommand) updateMode(cmd *cobra.Command, args []string) error {
 
-	srClient, ctx, err := GetApiClient(c.srClient, c.Config, c.Client)
+	srClient, ctx, err := GetApiClient(c.srClient, c.Config, c.Client, c.Version)
 	if err != nil {
 		return err
 	}

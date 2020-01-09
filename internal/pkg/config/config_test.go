@@ -58,15 +58,6 @@ func TestConfig_Load(t *testing.T) {
 		},
 		AuthToken: "abc123",
 	}
-	ver := &version.Version{
-		Binary:    "confluent",
-		Name:      "Confluent CLI",
-		Version:   "",
-		Commit:    "",
-		BuildDate: "",
-		BuildHost: "",
-		UserAgent: "Confluent-CLI/ (https://confluent.io; support@confluent.io)",
-	}
 	statefulContext := &Context{
 		Name:           "my-context",
 		Platform:       platform,
@@ -96,7 +87,6 @@ func TestConfig_Load(t *testing.T) {
 			},
 		},
 		State:   state,
-		Version: ver,
 		Logger:  log.New(),
 	}
 	statelessContext := &Context{
@@ -124,7 +114,6 @@ func TestConfig_Load(t *testing.T) {
 		SchemaRegistryClusters: map[string]*SchemaRegistryCluster{},
 		State:                  &ContextState{},
 		Logger:                 log.New(),
-		Version:                ver,
 	}
 	type args struct {
 		contents string
@@ -163,7 +152,6 @@ func TestConfig_Load(t *testing.T) {
 					"my-context": {},
 				},
 				CurrentContext: "my-context",
-				Version:        ver,
 				Logger:         log.New(),
 			},
 			file: "/tmp/TestConfig_Load.json",
@@ -199,7 +187,6 @@ func TestConfig_Load(t *testing.T) {
 				ContextStates: map[string]*ContextState{
 					"my-context": state,
 				},
-				Version: ver,
 				Logger:  log.New(),
 			},
 			file: "/tmp/TestConfig_Load.json",
@@ -272,15 +259,6 @@ func TestConfig_Save(t *testing.T) {
 		},
 		AuthToken: "abc123",
 	}
-	ver := &version.Version{
-		Binary:    "confluent",
-		Name:      "Confluent CLI",
-		Version:   "",
-		Commit:    "",
-		BuildDate: "",
-		BuildHost: "",
-		UserAgent: "Confluent-CLI/ (https://confluent.io; support@confluent.io)",
-	}
 	statefulContext := &Context{
 		Name:           "my-context",
 		Platform:       platform,
@@ -310,7 +288,6 @@ func TestConfig_Save(t *testing.T) {
 			},
 		},
 		State:   state,
-		Version: ver,
 		Logger:  log.New(),
 	}
 	statelessContext := &Context{
@@ -338,7 +315,6 @@ func TestConfig_Save(t *testing.T) {
 		SchemaRegistryClusters: map[string]*SchemaRegistryCluster{},
 		State:                  &ContextState{},
 		Logger:                 log.New(),
-		Version:                ver,
 	}
 	tests := []struct {
 		name    string
@@ -365,7 +341,6 @@ func TestConfig_Save(t *testing.T) {
 					"my-context": state,
 				},
 				CurrentContext: "my-context",
-				Version:        ver,
 				Logger:         log.New(),
 			},
 			want: "{\n  \"platforms\": {\n    \"http://test\": {\n      \"name\": \"http://test\",\n      \"server\": \"http://test\"\n    }\n  },\n  \"credentials\": {\n    \"api-key-abc-key-123\": {\n      \"Name\": \"api-key-abc-key-123\",\n      \"Username\": \"\",\n      \"Password\": \"\",\n      \"APIKeyPair\": {\n        \"api_key\": \"abc-key-123\",\n        \"api_secret\": \"def-secret-456\"\n      },\n      \"CredentialType\": 1\n    },\n    \"username-test-user\": {\n      \"Name\": \"username-test-user\",\n      \"Username\": \"test-user\",\n      \"Password\": \"\",\n      \"APIKeyPair\": null,\n      \"CredentialType\": 0\n    }\n  },\n  \"contexts\": {\n    \"my-context\": {\n      \"name\": \"my-context\",\n      \"platform\": \"http://test\",\n      \"credential\": \"username-test-user\",\n      \"kafka_clusters\": {\n        \"anonymous-id\": {\n          \"id\": \"anonymous-id\",\n          \"name\": \"anonymous-cluster\",\n          \"bootstrap_servers\": \"http://test\",\n          \"api_keys\": {\n            \"abc-key-123\": {\n              \"api_key\": \"abc-key-123\",\n              \"api_secret\": \"\"\n            }\n          },\n          \"api_key\": \"abc-key-123\"\n        }\n      },\n      \"kafka_cluster\": \"anonymous-id\",\n      \"schema_registry_clusters\": {\n        \"acc-123\": {\n          \"id\": \"lsrc-123\",\n          \"schema_registry_endpoint\": \"http://some-lsrc-endpoint\",\n          \"schema_registry_credentials\": null\n        }\n      }\n    }\n  },\n  \"context_states\": {\n    \"my-context\": {\n      \"auth\": {\n        \"user\": {\n          \"id\": 123,\n          \"email\": \"test-user@email\"\n        },\n        \"account\": {\n          \"id\": \"acc-123\",\n          \"name\": \"test-env\"\n        },\n        \"accounts\": [\n          {\n            \"id\": \"acc-123\",\n            \"name\": \"test-env\"\n          }\n        ]\n      },\n      \"auth_token\": \"abc123\"\n    }\n  },\n  \"current_context\": \"my-context\"\n}",
@@ -388,7 +363,6 @@ func TestConfig_Save(t *testing.T) {
 					"my-context": {},
 				},
 				CurrentContext: "my-context",
-				Version:        ver,
 				Logger:         log.New(),
 			},
 			want: "{\n  \"platforms\": {\n    \"http://test\": {\n      \"name\": \"http://test\",\n      \"server\": \"http://test\"\n    }\n  },\n  \"credentials\": {\n    \"api-key-abc-key-123\": {\n      \"Name\": \"api-key-abc-key-123\",\n      \"Username\": \"\",\n      \"Password\": \"\",\n      \"APIKeyPair\": {\n        \"api_key\": \"abc-key-123\",\n        \"api_secret\": \"def-secret-456\"\n      },\n      \"CredentialType\": 1\n    }\n  },\n  \"contexts\": {\n    \"my-context\": {\n      \"name\": \"my-context\",\n      \"platform\": \"http://test\",\n      \"credential\": \"api-key-abc-key-123\",\n      \"kafka_clusters\": {\n        \"anonymous-id\": {\n          \"id\": \"anonymous-id\",\n          \"name\": \"anonymous-cluster\",\n          \"bootstrap_servers\": \"http://test\",\n          \"api_keys\": {\n            \"abc-key-123\": {\n              \"api_key\": \"abc-key-123\",\n              \"api_secret\": \"def-secret-456\"\n            }\n          },\n          \"api_key\": \"abc-key-123\"\n        }\n      },\n      \"kafka_cluster\": \"anonymous-id\",\n      \"schema_registry_clusters\": {}\n    }\n  },\n  \"context_states\": {\n    \"my-context\": {\n      \"auth\": null,\n      \"auth_token\": \"\"\n    }\n  },\n  \"current_context\": \"my-context\"\n}",

@@ -7,7 +7,6 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
-	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
 // APIKeyPair holds an API Key and Secret.
@@ -57,7 +56,6 @@ type Context struct {
 	UserSpecifiedSchemaRegistryEnvId string                            `json:"-" hcl:"-"`
 	State                            *ContextState                     `json:"-" hcl:"-"`
 	Logger                           *log.Logger                       `json:"-" hcl:"-"`
-	Version                          *version.Version                  `json:"-" hcl:"-"`
 	Config                           *Config                           `json:"-" hcl:"-"`
 }
 
@@ -75,7 +73,6 @@ func newContext(name string, platform *Platform, credential *Credential,
 		SchemaRegistryClusters: schemaRegistryClusters,
 		State:                  state,
 		Logger:                 config.Logger,
-		Version:                config.Version,
 		Config:                 config,
 	}
 	err := ctx.validate()

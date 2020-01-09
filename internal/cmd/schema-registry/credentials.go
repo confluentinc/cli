@@ -12,6 +12,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
 func getSrCredentials() (key string, secret string, err error) {
@@ -57,7 +58,7 @@ func srContext(cfg *config.Config, client *ccloud.Client) (context.Context, erro
 	}), nil
 }
 
-func SchemaRegistryClient(cfg *config.Config, client *ccloud.Client) (srClient *srsdk.APIClient, ctx context.Context, err error) {
+func SchemaRegistryClient(cfg *config.Config, client *ccloud.Client, ver *version.Version) (srClient *srsdk.APIClient, ctx context.Context, err error) {
 	ctx, err = srContext(cfg, client)
 	if err != nil {
 		return nil, nil, err
@@ -78,7 +79,7 @@ func SchemaRegistryClient(cfg *config.Config, client *ccloud.Client) (srClient *
 		}
 		srConfig.BasePath = srCluster.Endpoint
 	}
-	srConfig.UserAgent = currCtx.Version.UserAgent
+	srConfig.UserAgent = ver.UserAgent
 	// Validate before returning.
 	srClient = srsdk.NewAPIClient(srConfig)
 	_, _, err = srClient.DefaultApi.Get(ctx)

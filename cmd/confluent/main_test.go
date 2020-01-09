@@ -8,6 +8,7 @@ import (
 	"github.com/confluentinc/cli/internal/cmd"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 func TestAddCommands_ShownInHelpUsage_CCloud(t *testing.T) {
@@ -15,7 +16,8 @@ func TestAddCommands_ShownInHelpUsage_CCloud(t *testing.T) {
 
 	cfg := config.AuthenticatedConfigMock()
 	cfg.CLIName = "ccloud"
-	root, err := cmd.NewConfluentCommand("ccloud", cfg, cfg.Logger)
+	ver := pversion.NewVersion("ccloud", "Confluent Cloud CLI", "https://confluent.cloud; support@confluent.io", "1.2.3", "abc1234", "01/23/45", "CI")
+	root, err := cmd.NewConfluentCommand("ccloud", cfg, cfg.Logger, ver)
 	req.NoError(err)
 
 	output, err := pcmd.ExecuteCommand(root, "help")
@@ -36,7 +38,8 @@ func TestAddCommands_ShownInHelpUsage_Confluent(t *testing.T) {
 	req := require.New(t)
 
 	cfg := config.AuthenticatedConfigMock()
-	root, err := cmd.NewConfluentCommand("confluent", cfg, cfg.Logger)
+	ver := pversion.NewVersion("ccloud", "Confluent Cloud CLI", "https://confluent.cloud; support@confluent.io", "1.2.3", "abc1234", "01/23/45", "CI")
+	root, err := cmd.NewConfluentCommand("confluent", cfg, cfg.Logger, ver)
 	req.NoError(err)
 
 	output, err := pcmd.ExecuteCommand(root, "help")

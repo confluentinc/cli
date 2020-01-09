@@ -12,7 +12,7 @@ import (
 )
 
 type command struct {
-	*cobra.Command
+	*pcmd.CLICommand
 	config   *config.Config
 	prompt   pcmd.Prompt
 	resolver pcmd.FlagResolver
@@ -22,17 +22,19 @@ type command struct {
 const longDescription = "Initialize and set a current context."
 
 func New(prerunner pcmd.PreRunner, config *config.Config, prompt pcmd.Prompt, resolver pcmd.FlagResolver) *cobra.Command {
-	cmd := &command{
+	cliCmd := pcmd.NewAnonymousCLICommand(
 		&cobra.Command{
-			Use:               "init <context-name>",
-			Short:             "Initialize a context.",
-			Long:              longDescription,
-			PersistentPreRunE: prerunner.Anonymous(config, nil),
-			Args:              cobra.ExactArgs(1),
+			Use:   "init <context-name>",
+			Short: "Initialize a context.",
+			Long:  longDescription,
+			Args:  cobra.ExactArgs(1),
 		},
-		config,
-		prompt,
-		resolver,
+		config, prerunner)
+	cmd := &command{
+		CLICommand: cliCmd,
+		config:     config,
+		prompt:     prompt,
+		resolver:   resolver,
 	}
 	cmd.init()
 	return cmd.Command

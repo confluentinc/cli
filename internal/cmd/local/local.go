@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/io"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -49,25 +50,27 @@ var (
 )
 
 type command struct {
-	*cobra.Command
+	*pcmd.CLICommand
 	shell ShellRunner
 	log   *log.Logger
 	fs    io.FileSystem
 }
 
 // New returns the Cobra command for `local`.
-func New(rootCmd *cobra.Command, prerunner pcmd.PreRunner, shell ShellRunner, log *log.Logger, fs io.FileSystem) *cobra.Command {
-	localCmd := &command{
-		Command: &cobra.Command{
-			Use:               "local",
-			Short:             "Manage a local Confluent Platform development environment.",
-			Long:              longDescription,
-			Args:              cobra.ArbitraryArgs,
-			PersistentPreRunE: prerunner.Anonymous(nil, nil),
+func New(rootCmd *cobra.Command, prerunner pcmd.PreRunner, shell ShellRunner, log *log.Logger, fs io.FileSystem, cfg *config.Config) *cobra.Command {
+	cliCmd := pcmd.NewAnonymousCLICommand(
+		&cobra.Command{
+			Use:   "local",
+			Short: "Manage a local Confluent Platform development environment.",
+			Long:  longDescription,
+			Args:  cobra.ArbitraryArgs,
 		},
-		shell: shell,
-		log:   log,
-		fs:    fs,
+		cfg, prerunner)
+	localCmd := &command{
+		CLICommand: cliCmd,
+		shell:      shell,
+		log:        log,
+		fs:         fs,
 	}
 	localCmd.Command.RunE = localCmd.run
 	localCmd.Flags().String("path", "", "Path to Confluent Platform install directory.")
@@ -78,7 +81,6 @@ func New(rootCmd *cobra.Command, prerunner pcmd.PreRunner, shell ShellRunner, lo
 	for _, cmd := range []string{"start", "stop"} {
 		rootCmd.AddCommand(localCommandError(cmd))
 	}
-
 	return localCmd.Command
 }
 
