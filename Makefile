@@ -148,7 +148,7 @@ build-integ-confluent-race:
 .PHONY: bindata
 bindata: internal/cmd/local/bindata.go
 
-internal/cmd/local/bindata.go: cp_cli/ assets/
+internal/cmd/local/bindata.go: cp_cli/* assets/*
 	@go-bindata -pkg local -o internal/cmd/local/bindata.go cp_cli/ assets/
 
 .PHONY: release
@@ -336,8 +336,13 @@ mocks: mock/local/shell_runner_mock.go
 mock/local/shell_runner_mock.go:
 	mockgen -source internal/cmd/local/shell_runner.go -destination mock/local/shell_runner_mock.go ShellRunner
 
+.PHONY: test-installers
+test-installers:
+	@echo Running packaging/installer tests
+	@bash test-installers.sh
+
 .PHONY: test
-test: bindata mocks lint coverage
+test: bindata mocks lint coverage test-installers
 
 .PHONY: doctoc
 doctoc:

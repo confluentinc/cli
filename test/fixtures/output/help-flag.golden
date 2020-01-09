@@ -4,20 +4,22 @@ Usage:
   ccloud [command]
 
 Available Commands:
-  api-key         Manage the API keys.
-  completion      Print shell completion code.
-  environment     Manage and select ccloud environments.
-  help            Help about any command
-  init            Initialize a context.
-  kafka           Manage Apache Kafka.
-  ksql            Manage KSQL applications.
-  login           Log in to Confluent Cloud.
-  logout          Logout of Confluent Cloud.
-  prompt          Print ccloud CLI context for your terminal prompt.
-  schema-registry Manage Schema Registry.
-  service-account Manage service accounts.
-  update          Update the ccloud CLI.
-  version         Print the ccloud CLI version.
+  api-key           Manage the API keys.
+  completion        Print shell completion code.
+  connector         Manage Kafka Connect.
+  connector-catalog Catalog of connectors and their configurations.
+  environment       Manage and select ccloud environments.
+  help              Help about any command
+  init              Initialize a context.
+  kafka             Manage Apache Kafka.
+  ksql              Manage KSQL applications.
+  login             Log in to Confluent Cloud.
+  logout            Logout of Confluent Cloud.
+  prompt            Print ccloud CLI context for your terminal prompt.
+  schema-registry   Manage Schema Registry.
+  service-account   Manage service accounts.
+  update            Update the ccloud CLI.
+  version           Print the ccloud CLI version.
 
 Flags:
   -h, --help            help for ccloud

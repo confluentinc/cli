@@ -10,6 +10,10 @@ strategy:
 pool:
   vmImage: $(imageName)
 
+variables:
+  # Fixes checksum errors when downloading chrome
+  homebrew_cask_opts: '--no-quarantine'
+
 steps:
 - script: |
     wget "https://storage.googleapis.com/golang/go1.12.5.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.12.5.tar.gz"
@@ -21,6 +25,13 @@ steps:
     brew install gnu-tar
   condition: eq( variables['Agent.OS'], 'Darwin' )
   displayName: 'Install gnu-tar (Darwin)'
+
+- script: |
+    echo $HOMEBREW_CASK_OPTS
+    brew update
+    brew cask install google-chrome
+  condition: eq( variables['Agent.OS'], 'Darwin' )
+  displayName: 'Install chrome (Darwin)'
 
 - script: |
     wget "https://storage.googleapis.com/golang/go1.12.5.darwin-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.12.5.tar.gz"

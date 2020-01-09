@@ -28,10 +28,11 @@ var (
 
 	properNouns = []string{
 		"Apache", "Kafka", "CLI", "API", "ACL", "ACLs", "Confluent Cloud", "Confluent Platform", "Confluent", "RBAC", "IAM", "Schema Registry",
-		"Enterprise", "KSQL",
+		"Enterprise", "KSQL", "Connect",
 	}
 	vocabWords = []string{
 		"ccloud", "kafka", "api", "url", "config", "configs", "multizone", "transactional", "ksql", "KSQL", "stdin",
+		"connect", "connect-catalog", "JSON",
 		// security
 		"iam", "acl", "acls", "ACL", "rolebinding", "rolebindings", "PEM", "auth", "init", "decrypt", "READWRITE",
 		"txt", // this is because @file.txt -> file txt
@@ -49,12 +50,14 @@ var (
 		linter.ExcludeCommandContains("iam"),
 		// these all require explicit cluster as id/name args
 		linter.ExcludeCommandContains("kafka cluster"),
+		linter.ExcludeCommandContains("connector"),
 		// this uses --resource instead of --cluster
 		linter.ExcludeCommandContains("api-key"),
 		// this doesn't need a --cluster
 		linter.ExcludeCommandContains("secret"),
 		linter.ExcludeCommandContains("schema-registry"),
 		linter.ExcludeCommandContains("ksql"),
+		linter.ExcludeCommandContains("connector-catalog"),
 		// this is obviously cluster-scoped but isn't used for cloud where --cluster is used
 		linter.ExcludeCommandContains("cluster describe"),
 	}
@@ -82,6 +85,8 @@ var rules = []linter.Rule{
 		linter.ExcludeCommandContains("iam acl"),
 		// skip api-key create since you don't get to choose a name for API keys
 		linter.ExcludeCommandContains("api-key create"),
+		// skip connector create since you don't get to choose id for connector
+		linter.ExcludeCommandContains("connector create"),
 		// skip local which delegates to bash commands
 		linter.ExcludeCommandContains("local"),
 		// skip for api-key store command since KEY is not last argument
@@ -96,6 +101,8 @@ var rules = []linter.Rule{
 		linter.ExcludeCommandContains("ksql app configure-acls"),
 		// skip cluster describe as it takes a URL as a flag instead of a resource identity
 		linter.ExcludeCommandContains("cluster describe"),
+		// skip connector-catalog describe as it connector plugin name
+		linter.ExcludeCommandContains("connector-catalog describe"),
 	),
 	// TODO: ensuring --cluster is optional DOES NOT actually ensure that the cluster context is used
 	linter.Filter(linter.RequireFlag("cluster", true), nonClusterScopedCommands...),
