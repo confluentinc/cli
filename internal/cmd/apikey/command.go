@@ -215,7 +215,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	}
 	ctx := c.Config.Context()
 	if ctx == nil {
-		return errors.ErrNoContext
+		return errors.HandleCommon(errors.ErrNoContext, cmd)
 	}
 	userKey, err := c.Client.APIKey.Create(context.Background(), key)
 	if err != nil {

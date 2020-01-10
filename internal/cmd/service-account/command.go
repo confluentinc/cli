@@ -144,7 +144,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	}
 	ctx := c.Config.Context()
 	if ctx == nil {
-		return errors.ErrNoContext
+		return errors.HandleCommon(errors.ErrNoContext, cmd)
 	}
 	user, err = c.Client.User.CreateServiceAccount(context.Background(), user)
 	if err != nil {
@@ -176,7 +176,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 	ctx := c.Config.Context()
 	if ctx == nil {
-		return errors.ErrNoContext
+		return errors.HandleCommon(errors.ErrNoContext, cmd)
 	}
 	err = c.Client.User.UpdateServiceAccount(context.Background(), user)
 	if err != nil {
@@ -197,7 +197,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	}
 	ctx := c.Config.Context()
 	if ctx == nil {
-		return errors.ErrNoContext
+		return errors.HandleCommon(errors.ErrNoContext, cmd)
 	}
 	err = c.Client.User.DeleteServiceAccount(context.Background(), user)
 	if err != nil {
@@ -209,7 +209,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 func (c *command) list(cmd *cobra.Command, args []string) error {
 	ctx := c.Config.Context()
 	if ctx == nil {
-		return errors.ErrNoContext
+		return errors.HandleCommon(errors.ErrNoContext, cmd)
 	}
 	users, err := c.Client.User.GetServiceAccounts(context.Background())
 	if err != nil {

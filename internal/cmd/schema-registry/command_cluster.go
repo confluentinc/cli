@@ -129,7 +129,7 @@ func (c *clusterCommand) enable(cmd *cobra.Command, args []string) error {
 	}
 	currContext := c.Config.Context()
 	if currContext == nil {
-		return errors.ErrNoContext
+		return errors.HandleCommon(errors.ErrNoContext, cmd)
 	}
 	newCluster, err := c.Client.SchemaRegistry.CreateSchemaRegistryCluster(ctx, clusterConfig)
 	if err != nil {

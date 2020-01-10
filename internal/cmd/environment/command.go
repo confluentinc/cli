@@ -79,7 +79,7 @@ func (c *command) init() {
 func (c *command) refreshEnvList(cmd *cobra.Command) error {
 	ctx := c.Config.Context()
 	if ctx == nil {
-		return errors.ErrNoContext
+		return errors.HandleCommon(errors.ErrNoContext, cmd)
 	}
 	environments, err := c.Client.Account.List(context.Background(), &orgv1.Account{})
 	if err != nil {
@@ -115,7 +115,7 @@ func (c *command) refreshEnvList(cmd *cobra.Command) error {
 func (c *command) list(cmd *cobra.Command, args []string) error {
 	ctx := c.Config.Context()
 	if ctx == nil {
-		return errors.ErrNoContext
+		return errors.HandleCommon(errors.ErrNoContext, cmd)
 	}
 	environments, err := c.Client.Account.List(context.Background(), &orgv1.Account{})
 	if err != nil {

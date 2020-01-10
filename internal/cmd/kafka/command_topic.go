@@ -176,7 +176,7 @@ func (c *topicCommand) list(cmd *cobra.Command, args []string) error {
 	}
 	ctx := c.Config.Context()
 	if ctx == nil {
-		return errors.ErrNoContext
+		return errors.HandleCommon(errors.ErrNoContext, cmd)
 	}
 	resp, err := c.Client.Kafka.ListTopics(context.Background(), cluster)
 	if err != nil {
@@ -230,7 +230,7 @@ func (c *topicCommand) create(cmd *cobra.Command, args []string) error {
 	}
 	ctx := c.Config.Context()
 	if ctx == nil {
-		return errors.ErrNoContext
+		return errors.HandleCommon(errors.ErrNoContext, cmd)
 	}
 	err = c.Client.Kafka.CreateTopic(context.Background(), cluster, topic)
 
@@ -246,7 +246,7 @@ func (c *topicCommand) describe(cmd *cobra.Command, args []string) error {
 	topic := &kafkav1.TopicSpecification{Name: args[0]}
 	ctx := c.Config.Context()
 	if ctx == nil {
-		return errors.ErrNoContext
+		return errors.HandleCommon(errors.ErrNoContext, cmd)
 	}
 	resp, err := c.Client.Kafka.DescribeTopic(context.Background(), cluster, &kafkav1.Topic{Spec: topic, Validate: false})
 	if err != nil {
@@ -327,7 +327,7 @@ func (c *topicCommand) update(cmd *cobra.Command, args []string) error {
 	}
 	ctx := c.Config.Context()
 	if ctx == nil {
-		return errors.ErrNoContext
+		return errors.HandleCommon(errors.ErrNoContext, cmd)
 	}
 	err = c.Client.Kafka.UpdateTopic(context.Background(), cluster, &kafkav1.Topic{Spec: topic, Validate: validate})
 
@@ -342,7 +342,7 @@ func (c *topicCommand) delete(cmd *cobra.Command, args []string) error {
 
 	ctx := c.Config.Context()
 	if ctx == nil {
-		return errors.ErrNoContext
+		return errors.HandleCommon(errors.ErrNoContext, cmd)
 	}
 	topic := &kafkav1.TopicSpecification{Name: args[0]}
 	err = c.Client.Kafka.DeleteTopic(context.Background(), cluster, &kafkav1.Topic{Spec: topic, Validate: false})
