@@ -48,6 +48,7 @@ func (c *command) init() {
 		Args:  cobra.NoArgs,
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, "", output.Usage)
+	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
 	c.AddCommand(&cobra.Command{

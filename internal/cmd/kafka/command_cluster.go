@@ -54,6 +54,7 @@ func (c *clusterCommand) init() {
 		Args:  cobra.NoArgs,
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, "", output.Usage)
+	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
 	createCmd := &cobra.Command{
