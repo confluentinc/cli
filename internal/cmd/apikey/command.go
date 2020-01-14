@@ -14,6 +14,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/keystore"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/go-printer"
 )
 
@@ -81,6 +82,7 @@ func (c *command) init() {
 	listCmd.Flags().String(resourceFlagName, "", "The resource ID to filter by.")
 	listCmd.Flags().Bool("current-user", false, "Show only API keys belonging to current user.")
 	listCmd.Flags().Int32("service-account-id", 0, "The service account ID to filter by.")
+	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, "", output.Usage)
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
@@ -154,7 +156,6 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		ResourceId   string
 	}
 	var apiKeys []*authv1.ApiKey
-	var data [][]string
 
 	resourceType, _, resourceId, currentKey, err := c.resolveResourceID(cmd, args)
 	//Return resource not found errors
@@ -188,6 +189,15 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
+	outputOption, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	outputWriter, err := output.NewListOutputWriter(outputOption, listFields, listLabels)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
 	for _, apiKey := range apiKeys {
 		// ignore keys owned by Confluent-internal user (healthcheck, etc)
 		if apiKey.UserId == 0 {
@@ -202,16 +212,19 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		}
 
 		for _, lc := range apiKey.LogicalClusters {
-			data = append(data, printer.ToRow(&keyDisplay{
+			outputWriter.AddElement(&keyDisplay{
 				Key:          apiKey.Key,
 				Description:  apiKey.Description,
 				UserId:       apiKey.UserId,
 				ResourceType: lc.Type,
 				ResourceId:   lc.Id,
-			}, listFields))
+			})
 		}
 	}
-	printer.RenderCollectionTable(data, listLabels)
+	err = outputWriter.Out()
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
 	return nil
 }
 

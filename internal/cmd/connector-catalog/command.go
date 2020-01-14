@@ -8,11 +8,10 @@ import (
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	connectv1 "github.com/confluentinc/ccloudapis/connect/v1"
-	"github.com/confluentinc/go-printer"
-
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 type command struct {
@@ -77,6 +76,7 @@ List connectors in the current or specified Kafka cluster context.
 		Args: cobra.NoArgs,
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, "", output.Usage)
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 }
@@ -90,15 +90,25 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	var data [][]string
+	outputOption, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	outputWriter, err := output.NewListOutputWriter(outputOption, catalogFields, catalogFields)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
 	for _, conn := range connectorInfo {
 		connector := &catalogDisplay{
 			PluginName: conn.Class,
 			Type:       conn.Type,
 		}
-		data = append(data, printer.ToRow(connector, catalogFields))
+		outputWriter.AddElement(connector)
 	}
-	printer.RenderCollectionTable(data, catalogFields)
+	err = outputWriter.Out()
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
 	return nil
 }
 

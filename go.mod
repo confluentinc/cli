@@ -31,6 +31,7 @@ require (
 	github.com/fatih/color v1.7.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/gliderlabs/ssh v0.1.4 // indirect
+	github.com/go-yaml/yaml v2.1.0+incompatible
 	github.com/gobuffalo/flect v0.1.3
 	github.com/gogo/protobuf v1.2.1
 	github.com/golang/mock v1.2.0

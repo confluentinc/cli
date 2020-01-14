@@ -3,18 +3,16 @@ package kafka
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
-
-	acl_util "github.com/confluentinc/cli/internal/pkg/acl"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 type aclCommand struct {
@@ -87,6 +85,7 @@ func (c *aclCommand) init() {
 	}
 	cmd.Flags().AddFlagSet(resourceFlags())
 	cmd.Flags().Int("service-account-id", 0, "Service account ID.")
+	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, "", output.Usage)
 	cmd.Flags().SortFlags = false
 
 	c.AddCommand(cmd)
@@ -105,8 +104,37 @@ func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-
-	acl_util.PrintAcls(resp, os.Stdout)
+	outputOption, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	aclListFields := []string{"ServiceAccountId", "Permission", "Operation", "Resource", "Name", "Type"}
+	outputWriter, err := output.NewListOutputWriter(outputOption, aclListFields, aclListFields)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	for _, binding := range resp {
+		record := &struct {
+			ServiceAccountId string
+			Permission       string
+			Operation        string
+			Resource         string
+			Name             string
+			Type             string
+		}{
+			binding.Entry.Principal,
+			binding.Entry.PermissionType.String(),
+			binding.Entry.Operation.String(),
+			binding.Pattern.ResourceType.String(),
+			binding.Pattern.Name,
+			binding.Pattern.PatternType.String(),
+		}
+		outputWriter.AddElement(record)
+	}
+	err = outputWriter.Out()
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
 	return nil
 }
 

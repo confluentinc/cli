@@ -21,6 +21,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 type topicCommand struct {
@@ -106,6 +107,7 @@ List all topics.
 		Args: cobra.NoArgs,
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, "", output.Usage)
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
@@ -193,12 +195,23 @@ func (c *topicCommand) list(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	var topics [][]string
-	for _, topic := range resp {
-		topics = append(topics, printer.ToRow(topic, []string{"Name"}))
+	outputOption, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	outputWriter, err := output.NewListOutputWriter(outputOption, []string{"Name"}, []string{"Name"})
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
 	}
 
-	printer.RenderCollectionTable(topics, []string{"Name"})
+	for _, topic := range resp {
+		outputWriter.AddElement(topic)
+	}
+
+	err = outputWriter.Out()
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
 
 	return nil
 }
