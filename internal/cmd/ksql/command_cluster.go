@@ -17,6 +17,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 var (
@@ -55,12 +56,15 @@ func NewClusterCommand(config *config.Config, client ccloud.KSQL, kafkaClient cc
 }
 
 func (c *clusterCommand) init() {
-	c.AddCommand(&cobra.Command{
+	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List KSQL apps.",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
-	})
+	}
+	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, "", output.Usage)
+	listCmd.Flags().SortFlags = false
+	c.AddCommand(listCmd)
 
 	createCmd := &cobra.Command{
 		Use:   "create <name>",
@@ -107,11 +111,21 @@ func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	var data [][]string
-	for _, cluster := range clusters {
-		data = append(data, printer.ToRow(cluster, listFields))
+	outputOption, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
 	}
-	printer.RenderCollectionTable(data, listLabels)
+	outputWriter, err := output.NewListOutputWriter(outputOption, listFields, listLabels)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	for _, cluster := range clusters {
+		outputWriter.AddElement(cluster)
+	}
+	err = outputWriter.Out()
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
 	return nil
 }
 

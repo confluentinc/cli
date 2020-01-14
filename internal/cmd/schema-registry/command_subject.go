@@ -6,7 +6,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/go-printer"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 )
 
@@ -46,6 +46,8 @@ Retrieve all subjects available in a Schema Registry
 		RunE: c.list,
 		Args: cobra.NoArgs,
 	}
+	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, "", output.Usage)
+	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 	// Update
 	updateCmd := &cobra.Command{
@@ -136,7 +138,6 @@ func (c *subjectCommand) updateMode(cmd *cobra.Command, args []string) error {
 
 func (c *subjectCommand) list(cmd *cobra.Command, args []string) error {
 	var listLabels = []string{"Subject"}
-	var data [][]string
 	type listDisplay struct {
 		Subject string
 	}
@@ -150,12 +151,23 @@ func (c *subjectCommand) list(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if len(list) > 0 {
-		for _, l := range list {
-			data = append(data, printer.ToRow(&listDisplay{
-				Subject: l,
-			}, listLabels))
+		outputOption, err := cmd.Flags().GetString(output.FlagName)
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
 		}
-		printer.RenderCollectionTable(data, listLabels)
+		outputWriter, err := output.NewListOutputWriter(outputOption, listLabels, listLabels)
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+		for _, l := range list {
+			outputWriter.AddElement(&listDisplay{
+				Subject: l,
+			})
+		}
+		err = outputWriter.Out()
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
 	} else {
 		pcmd.Println(cmd, "No subjects")
 	}

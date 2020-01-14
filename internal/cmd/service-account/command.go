@@ -15,6 +15,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 type command struct {
@@ -49,12 +50,15 @@ func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.User) *c
 }
 
 func (c *command) init() {
-	c.AddCommand(&cobra.Command{
+	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: `List service accounts.`,
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
-	})
+	}
+	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, "", output.Usage)
+	listCmd.Flags().SortFlags = false
+	c.AddCommand(listCmd)
 
 	createCmd := &cobra.Command{
 		Use:   "create <name>",
@@ -203,11 +207,21 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	var data [][]string
+	outputOption, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	outputWriter, err := output.NewListOutputWriter(outputOption, listFields, listLabels)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
 	for _, u := range users {
-		data = append(data, printer.ToRow(u, listFields))
+		outputWriter.AddElement(u)
 	}
 
-	printer.RenderCollectionTable(data, listLabels)
+	err = outputWriter.Out()
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
 	return nil
 }
