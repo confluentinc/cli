@@ -1,16 +1,14 @@
 package iam
 
 import (
-	"os"
-
-	"github.com/olekukonko/tablewriter"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/spf13/cobra"
 	"github.com/tidwall/pretty"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/go-printer"
-	mds "github.com/confluentinc/mds-sdk-go"
+	"github.com/confluentinc/mds-sdk-go"
 
 	"context"
 	"encoding/json"
@@ -51,12 +49,15 @@ func NewRoleCommand(config *config.Config, client *mds.APIClient) *cobra.Command
 }
 
 func (c *roleCommand) init() {
-	c.AddCommand(&cobra.Command{
+	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List the available roles.",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
-	})
+	}
+	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, "", output.Usage)
+	listCmd.Flags().SortFlags = false
+	c.AddCommand(listCmd)
 
 	c.AddCommand(&cobra.Command{
 		Use:   "describe <name>",
@@ -72,8 +73,15 @@ func (c *roleCommand) list(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	tablePrinter := tablewriter.NewWriter(os.Stdout)
-	var data [][]string
+	outputOption, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	outputWriter, err := output.NewListOutputWriter(outputOption, roleListFields, roleListLabels)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
 	for _, role := range roles {
 		marshalled, err := json.Marshal(role.AccessPolicy)
 		if err != nil {
@@ -86,14 +94,13 @@ func (c *roleCommand) list(cmd *cobra.Command, args []string) error {
 			role.Name,
 			string(pretty.Pretty(marshalled)),
 		}
-		data = append(data, printer.ToRow(&prettyRole, roleListFields))
+		outputWriter.AddElement(&prettyRole)
 	}
-	tablePrinter.SetAutoWrapText(false)
-	tablePrinter.SetAutoFormatHeaders(false)
-	tablePrinter.SetHeader(roleListLabels)
-	tablePrinter.AppendBulk(data)
-	tablePrinter.SetBorder(false)
-	tablePrinter.Render()
+
+	err = outputWriter.Out()
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
 
 	return nil
 }
