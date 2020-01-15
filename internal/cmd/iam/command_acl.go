@@ -3,13 +3,10 @@ package iam
 import (
 	"context"
 	"fmt"
-	"io"
-	"net/http"
-	"os"
-
-	"github.com/confluentinc/go-printer"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
+	"net/http"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -86,6 +83,7 @@ func (c *aclCommand) init() {
 		Args:  cobra.NoArgs,
 	}
 	cmd.Flags().AddFlagSet(listAclFlags())
+	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, "", output.Usage)
 	cmd.Flags().SortFlags = false
 
 	c.AddCommand(cmd)
@@ -100,7 +98,14 @@ func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
 		return c.handleAclError(cmd, err, response)
 	}
 
-	PrintAcls(acl.Scope.Clusters.KafkaCluster, bindings, os.Stdout)
+	outputOption, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	err = PrintAcls(acl.Scope.Clusters.KafkaCluster, bindings, outputOption)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
 	return nil
 }
 
@@ -133,7 +138,10 @@ func (c *aclCommand) delete(cmd *cobra.Command, args []string) error {
 		return c.handleAclError(cmd, err, response)
 	}
 
-	PrintAcls(acl.Scope.Clusters.KafkaCluster, bindings, os.Stdout)
+	err = PrintAcls(acl.Scope.Clusters.KafkaCluster, bindings, "")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
 	return nil
 }
 
@@ -213,9 +221,12 @@ func convertToAclFilterRequest(request *mds.CreateAclRequest) mds.AclFilterReque
 	}
 }
 
-func PrintAcls(kafkaClusterId string, bindingsObj []mds.AclBinding, writer io.Writer) {
-	var bindings [][]string
+func PrintAcls(kafkaClusterId string, bindingsObj []mds.AclBinding, outputFormat string) error {
 	var fields = []string{"KafkaClusterId", "Principal", "Permission", "Operation", "Host", "Resource", "Name", "Type"}
+	outputWriter, err := output.NewListOutputWriter(outputFormat, fields, fields)
+	if err != nil {
+		return err
+	}
 	for _, binding := range bindingsObj {
 
 		record := &struct {
@@ -237,7 +248,7 @@ func PrintAcls(kafkaClusterId string, bindingsObj []mds.AclBinding, writer io.Wr
 			binding.Pattern.Name,
 			binding.Pattern.PatternType,
 		}
-		bindings = append(bindings, printer.ToRow(record, fields))
+		outputWriter.AddElement(record)
 	}
-	printer.RenderCollectionTableOut(bindings, fields, writer)
+	return outputWriter.Out()
 }
