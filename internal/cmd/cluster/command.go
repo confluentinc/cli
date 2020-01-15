@@ -142,7 +142,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	if meta.ID != "" {
-		pcmd.Printf(cmd, "%s\n\n", meta.ID)
+		pcmd.Printf(cmd, "Confluent Resource Name: %s\n\n", meta.ID)
 	}
 	pcmd.Println(cmd, "Scope:")
 	printer.RenderCollectionTable(data, describeLabels)
