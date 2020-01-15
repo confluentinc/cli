@@ -125,10 +125,12 @@ func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	for _, cluster := range clusters {
-		if cluster.Id == currCtx.Kafka {
-			cluster.Id = fmt.Sprintf("* %s", cluster.Id)
-		} else {
-			cluster.Id = fmt.Sprintf("  %s", cluster.Id)
+		if outputOption == "" {
+			if cluster.Id == currCtx.Kafka {
+				cluster.Id = fmt.Sprintf("* %s", cluster.Id)
+			} else {
+				cluster.Id = fmt.Sprintf("  %s", cluster.Id)
+			}
 		}
 		outputWriter.AddElement(cluster)
 	}

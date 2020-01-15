@@ -128,10 +128,12 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	for _, environment := range environments {
-		if environment.Id == c.config.Auth.Account.Id {
-			environment.Id = fmt.Sprintf("* %s", environment.Id)
-		} else {
-			environment.Id = fmt.Sprintf("  %s", environment.Id)
+		if outputOption == "" {
+			if environment.Id == c.config.Auth.Account.Id {
+				environment.Id = fmt.Sprintf("* %s", environment.Id)
+			} else {
+				environment.Id = fmt.Sprintf("  %s", environment.Id)
+			}
 		}
 		outputWriter.AddElement(environment)
 	}

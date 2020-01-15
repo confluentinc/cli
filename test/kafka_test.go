@@ -5,6 +5,9 @@ func (s *CLITestSuite) TestKafkaCommands() {
 	tests := []CLITest{
 		{args: "kafka cluster --help", fixture: "kafka-cluster-help.golden"},
 		{args: "environment use a-595", fixture: "kafka0.golden", wantErrCode: 0},
+		{args: "kafka cluster list", fixture: "kafka6.golden", wantErrCode: 0},
+		{args: "kafka cluster list -o json", fixture: "kafka7.golden", wantErrCode: 0},
+		{args: "kafka cluster list -o yaml", fixture: "kafka8.golden", wantErrCode: 0},
 		{args: "kafka cluster create", fixture: "kafka1.golden", wantErrCode: 1},
 		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1", fixture: "kafka2.golden", wantErrCode: 0},
 		{args: "kafka cluster delete", fixture: "kafka3.golden", wantErrCode: 1},

@@ -204,11 +204,13 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 			continue
 		}
 
-		// resourceId != "" added to be explicit that when no resourceId is specified we will not have "*"
-		if resourceId != "" && apiKey.Key == currentKey {
-			apiKey.Key = fmt.Sprintf("* %s", apiKey.Key)
-		} else {
-			apiKey.Key = fmt.Sprintf("  %s", apiKey.Key)
+		if outputOption == "" {
+			// resourceId != "" added to be explicit that when no resourceId is specified we will not have "*"
+			if resourceId != "" && apiKey.Key == currentKey {
+				apiKey.Key = fmt.Sprintf("* %s", apiKey.Key)
+			} else {
+				apiKey.Key = fmt.Sprintf("  %s", apiKey.Key)
+			}
 		}
 
 		for _, lc := range apiKey.LogicalClusters {

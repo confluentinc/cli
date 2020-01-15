@@ -945,7 +945,26 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		require.NoError(t, err)
 	})
 	router.HandleFunc("/api/clusters/", handleKafkaClusterGetListDelete(t, kafkaAPIURL))
-	router.HandleFunc("/api/clusters", handleKafkaClusterCreate(t, kafkaAPIURL))
+	router.HandleFunc("/api/clusters", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "POST" {
+			handleKafkaClusterCreate(t, kafkaAPIURL)(w, r)
+		} else if r.Method == "GET" {
+			cluster := kafkav1.KafkaCluster{
+				Id:                   "lkc-123",
+				Name:                 "abc",
+				Durability:           0,
+				Status:               0,
+				Region:               "us-central1",
+				ServiceProvider:      "gcp",
+			}
+			b, err := utilv1.MarshalJSONToBytes(&kafkav1.GetKafkaClustersReply{
+				Clusters: []*kafkav1.KafkaCluster{&cluster},
+			})
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(b))
+			require.NoError(t, err)
+		}
+	})
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		_, err := io.WriteString(w, `{"error": {"message": "unexpected call to `+r.URL.Path+`"}}`)
 		require.NoError(t, err)

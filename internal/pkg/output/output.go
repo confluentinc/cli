@@ -13,7 +13,7 @@ import (
 const (
 	FlagName = "output"
 	ShortHandFlag = "o"
-	Usage = "Specify output."
+	Usage = "Specify the output format."
 )
 
 type Format int
@@ -24,27 +24,29 @@ const (
 	YAML
 )
 
-func NewListOutputWriter(typeString string, listFields []string, listLabels []string) (ListOutputWriter, error) {
+func NewListOutputWriter(format string, listFields []string, listLabels []string) (ListOutputWriter, error) {
 	if len(listLabels) != len(listFields) {
 		return nil, fmt.Errorf("selected fields and ouput labels length mismatch")
 	}
-	if typeString == JSON.String() {
+	if format == JSON.String() {
 		return &JSONYAMLListWriter{
 			outputFormat: JSON,
 			listFields:   listFields,
 			listLabels:   listLabels,
 		}, nil
-	} else if typeString == YAML.String() {
+	} else if format == YAML.String() {
 		return &JSONYAMLListWriter{
 			outputFormat: YAML,
 			listFields:   listFields,
 			listLabels:   listLabels,
 		}, nil
+	} else if format == "" {
+		return &HumanListWriter{
+			listFields: listFields,
+			listLabels: listLabels,
+		}, nil
 	}
-	return &HumanListWriter{
-		listFields: listFields,
-		listLabels: listLabels,
-	}, nil
+	return nil, fmt.Errorf("invalid output type")
 }
 
 func (o Format) String() string {

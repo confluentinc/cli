@@ -1,0 +1,14 @@
+- Endpoint: SASL_SSL://ksql-endpoint
+  Id: lksqlc-ksql5
+  Kafka: lkc-qwert
+  Name: account ksql
+  Status: PROVISIONING
+  Storage: "101"
+  Topic Prefix: pksqlc-abcde
+- Endpoint: SASL_SSL://ksql-endpoint
+  Id: lksqlc-woooo
+  Kafka: lkc-zxcvb
+  Name: kay cee queue elle
+  Status: PROVISIONING
+  Storage: "123"
+  Topic Prefix: pksqlc-ghjkl

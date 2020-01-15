@@ -8,6 +8,8 @@ func (s *CLITestSuite) TestConnectCommands() {
 		{args: "connector-catalog --help", fixture: "connector-catalog-help.golden"},
 		{args: "connector create --cluster lkc-123 --config test/fixtures/input/connector-config.yaml", fixture: "connector-create.golden", wantErrCode: 0},
 		{args: "connector list --cluster lkc-123", fixture: "connector-list.golden", wantErrCode: 0},
+		{args: "connector list --cluster lkc-123 -o json", fixture: "connector-json-list.golden", wantErrCode: 0},
+		{args: "connector list --cluster lkc-123 -o yaml", fixture: "connector-yaml-list.golden", wantErrCode: 0},
 		{args: "connector describe lcc-123 --cluster lkc-123", fixture: "connector-describe.golden", wantErrCode: 0},
 		{args: "connector pause lcc-123 --cluster lkc-123", fixture: "connector-pause.golden", wantErrCode: 0},
 		{args: "connector resume lcc-123 --cluster lkc-123", fixture: "connector-resume.golden", wantErrCode: 0},
