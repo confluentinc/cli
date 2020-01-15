@@ -18,11 +18,16 @@ const (
 
 type Format int
 
+// Human enum and string form is not used as we assume human list only when -o flag not used
 const (
 	Human Format = iota
 	JSON
 	YAML
 )
+
+func (o Format) String() string {
+	return [...]string{"human", "json", "yaml"}[o]
+}
 
 func NewListOutputWriter(format string, listFields []string, listLabels []string) (ListOutputWriter, error) {
 	if len(listLabels) != len(listFields) {
@@ -47,10 +52,6 @@ func NewListOutputWriter(format string, listFields []string, listLabels []string
 		}, nil
 	}
 	return nil, fmt.Errorf("invalid output type")
-}
-
-func (o Format) String() string {
-	return [...]string{"human", "json", "yaml"}[o]
 }
 
 type ListOutputWriter interface {
