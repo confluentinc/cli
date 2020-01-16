@@ -29,7 +29,7 @@ work. For example, the Kafka topic consume and produce commands require an API s
 `
 
 type command struct {
-	*pcmd.CLICommand
+	*pcmd.AuthenticatedCLICommand
 	keystore keystore.KeyStore
 }
 
@@ -49,8 +49,8 @@ func New(prerunner pcmd.PreRunner, config *config.Config, keystore keystore.KeyS
 		},
 		config, prerunner)
 	cmd := &command{
-		CLICommand: cliCmd,
-		keystore:   keystore,
+		AuthenticatedCLICommand: cliCmd,
+		keystore:                keystore,
 	}
 	cmd.init()
 	return cmd.Command
@@ -119,7 +119,9 @@ func (c *command) init() {
 	c.AddCommand(useCmd)
 }
 
+// TODO: Set KeyStore client.
 func (c *command) list(cmd *cobra.Command, args []string) error {
+	c.setKeyStoreIfNil()
 	type keyDisplay struct {
 		Key         string
 		Description string
@@ -128,7 +130,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	var apiKeys []*authv1.ApiKey
 	var data [][]string
 
-	resourceType, accountId, clusterId, currentKey, err := resolveResourceId(c.Config, c.Client)
+	resourceType, accountId, clusterId, currentKey, err := resolveResourceId(c.AuthenticatedCLICommand, c.AuthenticatedCLICommand.Config.Resolver)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -166,12 +168,9 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) update(cmd *cobra.Command, args []string) error {
+	c.setKeyStoreIfNil()
 	apiKey := args[0]
-	state, err := c.Config.AuthenticatedState()
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	key, err := c.Client.APIKey.Get(context.Background(), &authv1.ApiKey{Key: apiKey, AccountId: state.Auth.Account.Id})
+	key, err := c.Client.APIKey.Get(context.Background(), &authv1.ApiKey{Key: apiKey, AccountId: c.EnvironmentId()})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -193,7 +192,8 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) create(cmd *cobra.Command, args []string) error {
-	resourceType, accId, clusterId, _, err := resolveResourceId(c.Config, c.Client)
+	c.setKeyStoreIfNil()
+	resourceType, accId, clusterId, _, err := resolveResourceId(c.AuthenticatedCLICommand, c.AuthenticatedCLICommand.Config.Resolver)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -213,10 +213,6 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		AccountId:       accId,
 		LogicalClusters: []*authv1.ApiKey_Cluster{{Id: clusterId, Type: resourceType}},
 	}
-	ctx := c.Config.Context()
-	if ctx == nil {
-		return errors.HandleCommon(errors.ErrNoContext, cmd)
-	}
 	userKey, err := c.Client.APIKey.Create(context.Background(), key)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -228,12 +224,8 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	if resourceType == kafkaResourceType {
-		_, err := c.Config.AuthenticatedState()
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-		if err := c.keystore.StoreAPIKey(userKey, clusterId, c.Client); err != nil {
+	if resourceType == pcmd.KafkaResourceType {
+		if err := c.keystore.StoreAPIKey(userKey, clusterId, cmd); err != nil {
 			return errors.HandleCommon(errors.Wrapf(err, "unable to store API key locally"), cmd)
 		}
 	}
@@ -241,19 +233,17 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
+	c.setKeyStoreIfNil()
 	apiKey := args[0]
-	state, err := c.Config.AuthenticatedState()
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	userKey, err := c.Client.APIKey.Get(context.Background(), &authv1.ApiKey{Key: apiKey, AccountId: state.Auth.Account.Id})
+
+	userKey, err := c.Client.APIKey.Get(context.Background(), &authv1.ApiKey{Key: apiKey, AccountId: c.EnvironmentId()})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 	key := &authv1.ApiKey{
 		Id:        userKey.Id,
 		Key:       apiKey,
-		AccountId: state.Auth.Account.Id,
+		AccountId: c.EnvironmentId(),
 	}
 
 	err = c.Client.APIKey.Delete(context.Background(), key)
@@ -261,18 +251,15 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	pcmd.Println(cmd, "API Key successfully deleted.")
-	return c.keystore.DeleteAPIKey(apiKey)
+	return c.keystore.DeleteAPIKey(apiKey, cmd)
 }
 
 func (c *command) store(cmd *cobra.Command, args []string) error {
+	c.setKeyStoreIfNil()
 	key := args[0]
 	secret := args[1]
 
-	ctx := c.Config.Context()
-	if ctx == nil {
-		return errors.HandleCommon(errors.ErrNoContext, cmd)
-	}
-	cluster, err := ctx.ActiveKafkaCluster(c.Client)
+	cluster, err := c.Context.ActiveKafkaCluster(cmd)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -281,43 +268,41 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	// Check if API key exists server-side
-	state, err := c.Config.AuthenticatedState()
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	accountId := state.Auth.Account.Id
-	_, err = c.Client.APIKey.Get(context.Background(), &authv1.ApiKey{Key: key, AccountId: accountId})
+	_, err = c.Client.APIKey.Get(context.Background(), &authv1.ApiKey{Key: key, AccountId: c.EnvironmentId()})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 
 	// API key exists server-side... now check if API key exists locally already
-	if found, err := c.keystore.HasAPIKey(key, cluster.ID, c.Client); err != nil {
+	if found, err := c.keystore.HasAPIKey(key, cluster.ID, cmd); err != nil {
 		return errors.HandleCommon(err, cmd)
 	} else if found && !force {
 		return errors.HandleCommon(errors.Errorf("Refusing to overwrite existing secret for API Key %s", key), cmd)
 	}
 
-	if err := c.keystore.StoreAPIKey(&authv1.ApiKey{Key: key, Secret: secret}, cluster.ID, c.Client); err != nil {
+	if err := c.keystore.StoreAPIKey(&authv1.ApiKey{Key: key, Secret: secret}, cluster.ID, cmd); err != nil {
 		return errors.HandleCommon(errors.Wrapf(err, "unable to store the API key locally"), cmd)
 	}
 	return nil
 }
 
 func (c *command) use(cmd *cobra.Command, args []string) error {
+	c.setKeyStoreIfNil()
 	apiKey := args[0]
-	cluster, err := pcmd.KafkaCluster(c.Config, c.Client)
+	cluster, err := pcmd.KafkaCluster(c.AuthenticatedCLICommand)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	ctx := c.Config.Context()
-	if ctx == nil {
-		return errors.HandleCommon(errors.ErrNoContext, cmd)
-	}
-	err = ctx.UseAPIKey(apiKey, cluster.Id, c.Client)
+	err = c.Context.UseAPIKey(cmd, apiKey, cluster.Id)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 	return nil
+}
+
+func (c *command) setKeyStoreIfNil() {
+	if c.keystore == nil {
+		c.keystore = &keystore.ConfigKeyStore{Config: c.Config}
+	}
 }

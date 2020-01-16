@@ -1,48 +1,28 @@
 package apikey
 
 import (
-	"github.com/confluentinc/ccloud-sdk-go"
-
-	"github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/cli/internal/pkg/errors"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
-const (
-	kafkaResourceType = "kafka"
-	srResourceType    = "schema-registry"
-)
-
-func resolveResourceId(cfg *config.Config, client *ccloud.Client) (resourceType string, accId string, clusterId string, currentKey string, err error) {
-	resolutionError := func(err error) (string, string, string, string, error) {
-		return "", "", "", "", err
-	}
-	ctx := cfg.Context()
-	state, err := ctx.AuthenticatedState()
-	if err != nil {
-		return resolutionError(err)
-	}
-	if ctx.UserSpecifiedSchemaRegistryEnvId != "" {
-		resourceType = srResourceType
-		cluster, err := cfg.SchemaRegistryCluster(client)
+func resolveResourceId(cmd *pcmd.AuthenticatedCLICommand, resolver pcmd.FlagResolver) (resourceType string, accId string, clusterId string, currentKey string, err error) {
+	accId = cmd.EnvironmentId()
+	resourceType, _, err = resolver.ResolveResourceId(cmd.Command)
+	if resourceType == pcmd.SrResourceType {
+		cluster, err := cmd.Context.SchemaRegistryCluster(cmd.Command)
 		if err != nil {
-			return resolutionError(err)
-		}
-		if cluster == nil {
-			return resolutionError(errors.ErrNoSrEnabled)
+			return "", "", "", "", err
 		}
 		clusterId = cluster.Id
 		if cluster.SrCredentials != nil {
 			currentKey = cluster.SrCredentials.Key
 		}
 	} else {
-		resourceType = kafkaResourceType
-		cluster, err := ctx.ActiveKafkaCluster(client)
+		cluster, err := cmd.Context.ActiveKafkaCluster(cmd.Command)
 		if err != nil {
-			return resolutionError(err)
+			return "", "", "", "", err
 		}
 		clusterId = cluster.ID
 		currentKey = cluster.APIKey
 	}
-	return resourceType, state.Auth.Account.Id, clusterId, currentKey, nil
-
+	return resourceType, accId, clusterId, currentKey, nil
 }

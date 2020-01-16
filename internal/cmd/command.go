@@ -27,7 +27,6 @@ import (
 	pconfig "github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/help"
 	"github.com/confluentinc/cli/internal/pkg/io"
-	"github.com/confluentinc/cli/internal/pkg/keystore"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	pps1 "github.com/confluentinc/cli/internal/pkg/ps1"
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
@@ -40,9 +39,9 @@ func NewConfluentCommand(cliName string, cfg *pconfig.Config, logger *log.Logger
 		Version:           ver.Version,
 		DisableAutoGenTag: true,
 	}
-		cli.SetUsageFunc(func(cmd *cobra.Command) error {
-			return help.ResolveReST(cmd.UsageTemplate(), cmd)
-		})
+	cli.SetUsageFunc(func(cmd *cobra.Command) error {
+		return help.ResolveReST(cmd.UsageTemplate(), cmd)
+	})
 	cli.SetHelpFunc(func(cmd *cobra.Command, args []string) {
 		_ = help.ResolveReST(cmd.HelpTemplate(), cmd)
 	})
@@ -77,7 +76,7 @@ func NewConfluentCommand(cliName string, cfg *pconfig.Config, logger *log.Logger
 	}
 	cliCmd := pcmd.NewAnonymousCLICommand(cli, cfg, prerunner)
 
-	cli.PersistentPreRunE = prerunner.Anonymous(cfg, cliCmd)
+	cli.PersistentPreRunE = prerunner.Anonymous(cliCmd)
 
 	cli.AddCommand(version.NewVersionCmd(prerunner, ver))
 
@@ -97,10 +96,9 @@ func NewConfluentCommand(cliName string, cfg *pconfig.Config, logger *log.Logger
 			return cli, nil
 		}
 		cli.AddCommand(ps1.NewPromptCmd(cfg, &pps1.Prompt{Config: cfg}, logger))
-		ks := &keystore.ConfigKeyStore{Config: cfg}
 		cli.AddCommand(environment.New(prerunner, cfg, cliName))
 		cli.AddCommand(service_account.New(prerunner, cfg))
-		cli.AddCommand(apikey.New(prerunner, cfg, ks))
+		cli.AddCommand(apikey.New(prerunner, cfg, nil))
 
 		// Schema Registry
 		// If srClient is nil, the function will look it up after prerunner verifies authentication. Exposed so tests can pass mocks

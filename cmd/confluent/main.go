@@ -20,7 +20,7 @@ var (
 	commit  = ""
 	date    = ""
 	host    = ""
-	cliName = "confluent"
+	cliName = "ccloud"
 )
 
 func main() {
@@ -37,7 +37,7 @@ func main() {
 			MetricSink: metricSink,
 			Logger:     logger,
 		})
-		err := cfg.Load(version, commit, date, host)
+		err := cfg.Load()
 		if err != nil {
 			logger.Errorf("unable to load config: %v", err)
 			os.Exit(1)

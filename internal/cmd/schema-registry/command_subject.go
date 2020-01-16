@@ -12,7 +12,7 @@ import (
 )
 
 type subjectCommand struct {
-	*pcmd.CLICommand
+	*pcmd.AuthenticatedCLICommand
 	srClient *srsdk.APIClient
 }
 
@@ -25,7 +25,7 @@ func NewSubjectCommand(config *config.Config, prerunner pcmd.PreRunner, srClient
 		},
 		config, prerunner)
 	subjectCmd := &subjectCommand{
-		CLICommand: cliCmd,
+		AuthenticatedCLICommand: cliCmd,
 		srClient:   srClient,
 	}
 	subjectCmd.init()
@@ -100,7 +100,7 @@ func (c *subjectCommand) update(cmd *cobra.Command, args []string) error {
 	return errors.New("flag --compatibility or --mode is required.")
 }
 func (c *subjectCommand) updateCompatibility(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(c.srClient, c.Config, c.Client, c.Version)
+	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
 	}
@@ -122,7 +122,7 @@ func (c *subjectCommand) updateMode(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	srClient, ctx, err := GetApiClient(c.srClient, c.Config, c.Client, c.Version)
+	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
 	}
@@ -140,7 +140,7 @@ func (c *subjectCommand) list(cmd *cobra.Command, args []string) error {
 	type listDisplay struct {
 		Subject string
 	}
-	srClient, ctx, err := GetApiClient(c.srClient, c.Config, c.Client, c.Version)
+	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 
 		return err
@@ -163,7 +163,7 @@ func (c *subjectCommand) list(cmd *cobra.Command, args []string) error {
 }
 
 func (c *subjectCommand) describe(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(c.srClient, c.Config, c.Client, c.Version)
+	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
 	}

@@ -14,7 +14,7 @@ import (
 )
 
 type schemaCommand struct {
-	*pcmd.CLICommand
+	*pcmd.AuthenticatedCLICommand
 	srClient *srsdk.APIClient
 }
 
@@ -26,7 +26,7 @@ func NewSchemaCommand(config *config.Config, prerunner pcmd.PreRunner, srClient 
 		},
 		config, prerunner)
 	schemaCmd := &schemaCommand{
-		CLICommand: cliCmd,
+		AuthenticatedCLICommand: cliCmd,
 		srClient:   srClient,
 	}
 	schemaCmd.init()
@@ -109,7 +109,7 @@ Describe the schema by subject and version
 }
 
 func (c *schemaCommand) create(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(c.srClient, c.Config, c.Client, c.Version)
+	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
 	}
@@ -135,7 +135,7 @@ func (c *schemaCommand) create(cmd *cobra.Command, args []string) error {
 }
 
 func (c *schemaCommand) delete(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(c.srClient, c.Config, c.Client, c.Version)
+	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
 	}
@@ -175,7 +175,7 @@ func (c *schemaCommand) describe(cmd *cobra.Command, args []string) error {
 }
 
 func (c *schemaCommand) describeById(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(c.srClient, c.Config, c.Client, c.Version)
+	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
 	}
@@ -192,7 +192,7 @@ func (c *schemaCommand) describeById(cmd *cobra.Command, args []string) error {
 }
 
 func (c *schemaCommand) describeBySubject(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(c.srClient, c.Config, c.Client, c.Version)
+	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
 	}

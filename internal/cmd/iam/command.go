@@ -11,7 +11,7 @@ import (
 )
 
 type command struct {
-	*pcmd.CLICommand
+	*pcmd.AuthenticatedCLICommand
 	prerunner pcmd.PreRunner
 }
 
@@ -26,7 +26,7 @@ func New(prerunner pcmd.PreRunner, config *config.Config,
 		},
 		config, prerunner)
 	cmd := &command{
-		CLICommand: cliCmd,
+		AuthenticatedCLICommand: cliCmd,
 		prerunner:  prerunner,
 	}
 	cmd.init()
@@ -34,6 +34,6 @@ func New(prerunner pcmd.PreRunner, config *config.Config,
 }
 
 func (c *command) init() {
-	c.AddCommand(NewRoleCommand(c.Config, c.prerunner))
-	c.AddCommand(NewRolebindingCommand(c.Config, c.prerunner))
+	c.AddCommand(NewRoleCommand(c.Config.Config, c.prerunner))
+	c.AddCommand(NewRolebindingCommand(c.Config.Config, c.prerunner))
 }

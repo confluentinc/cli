@@ -4,13 +4,12 @@ import (
 	"context"
 	"strings"
 
-	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/go-printer"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
-	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -18,12 +17,12 @@ const (
 	SubjectUsage = "Subject of the schema."
 )
 
-func GetApiClient(srClient *srsdk.APIClient, cfg *config.Config, client *ccloud.Client, ver *version.Version) (*srsdk.APIClient, context.Context, error) {
+func GetApiClient(cmd *cobra.Command, srClient *srsdk.APIClient, cfg *cmd.DynamicConfig, ver *version.Version) (*srsdk.APIClient, context.Context, error) {
 	if srClient != nil {
 		// Tests/mocks
 		return srClient, nil, nil
 	}
-	srClient, ctx, err := SchemaRegistryClient(cfg, client, ver)
+	srClient, ctx, err := SchemaRegistryClient(cmd, cfg, ver)
 	if err != nil {
 		return nil, nil, err
 	}

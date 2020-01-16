@@ -26,7 +26,8 @@ var (
 )
 
 type clusterCommand struct {
-	*pcmd.CLICommand
+	*pcmd.AuthenticatedCLICommand
+	prerunner pcmd.PreRunner
 }
 
 // NewClusterCommand returns the Cobra clusterCommand for Ksql Cluster.
@@ -37,7 +38,8 @@ func NewClusterCommand(config *config.Config, prerunner pcmd.PreRunner) *cobra.C
 			Short: "Manage KSQL apps.",
 		},
 		config, prerunner)
-	cmd := &clusterCommand{CLICommand: cliCmd}
+	cmd := &clusterCommand{AuthenticatedCLICommand: cliCmd}
+	cmd.prerunner = prerunner
 	cmd.init()
 	return cmd.Command
 }
@@ -90,11 +92,7 @@ func (c *clusterCommand) init() {
 }
 
 func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
-	state, err := c.Config.AuthenticatedState()
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	req := &ksqlv1.KSQLCluster{AccountId: state.Auth.Account.Id}
+	req := &ksqlv1.KSQLCluster{AccountId: c.State.Auth.Account.Id}
 	clusters, err := c.Client.KSQL.List(context.Background(), req)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -108,7 +106,7 @@ func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
-	kafkaCluster, err := pcmd.KafkaCluster(c.Config, c.Client)
+	kafkaCluster, err := pcmd.KafkaCluster(c.AuthenticatedCLICommand)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -120,12 +118,8 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	state, err := c.Config.AuthenticatedState()
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
 	cfg := &ksqlv1.KSQLClusterConfig{
-		AccountId:      state.Auth.Account.Id,
+		AccountId:      c.State.Auth.Account.Id,
 		Name:           args[0],
 		Servers:        servers,
 		Storage:        storage,
@@ -139,11 +133,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
-	state, err := c.Config.AuthenticatedState()
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	req := &ksqlv1.KSQLCluster{AccountId: state.Auth.Account.Id, Id: args[0]}
+	req := &ksqlv1.KSQLCluster{AccountId: c.State.Auth.Account.Id, Id: args[0]}
 	cluster, err := c.Client.KSQL.Describe(context.Background(), req)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -152,12 +142,8 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
-	state, err := c.Config.AuthenticatedState()
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	req := &ksqlv1.KSQLCluster{AccountId: state.Auth.Account.Id, Id: args[0]}
-	err = c.Client.KSQL.Delete(context.Background(), req)
+	req := &ksqlv1.KSQLCluster{AccountId: c.State.Auth.Account.Id, Id: args[0]}
+	err := c.Client.KSQL.Delete(context.Background(), req)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -239,10 +225,6 @@ func (c *clusterCommand) buildACLBindings(serviceAccountId string, cluster *ksql
 }
 
 func (c *clusterCommand) getServiceAccount(cluster *ksqlv1.KSQLCluster) (string, error) {
-	ctx := c.Config.Context()
-	if ctx == nil {
-		return "", errors.ErrNoContext
-	}
 	users, err := c.Client.User.GetServiceAccounts(context.Background())
 	if err != nil {
 		return "", err
@@ -259,16 +241,12 @@ func (c *clusterCommand) configureACLs(cmd *cobra.Command, args []string) error 
 	ctx := context.Background()
 
 	// Get the Kafka Cluster
-	kafkaCluster, err := pcmd.KafkaCluster(c.Config, c.Client)
+	kafkaCluster, err := pcmd.KafkaCluster(c.AuthenticatedCLICommand)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 	// Ensure the KSQL cluster talks to the current Kafka Cluster
-	state, err := c.Config.AuthenticatedState()
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	req := &ksqlv1.KSQLCluster{AccountId: state.Auth.Account.Id, Id: args[0]}
+	req := &ksqlv1.KSQLCluster{AccountId: c.State.Auth.Account.Id, Id: args[0]}
 	cluster, err := c.Client.KSQL.Describe(context.Background(), req)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)

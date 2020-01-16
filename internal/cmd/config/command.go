@@ -26,5 +26,5 @@ func New(config *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 }
 
 func (c *command) init() {
-	c.AddCommand(NewContext(c.Config, c.prerunner))
+	c.AddCommand(NewContext(c.Config.Config, c.prerunner))
 }

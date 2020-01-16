@@ -12,7 +12,7 @@ import (
 )
 
 type command struct {
-	*pcmd.CLICommand
+	*pcmd.AuthenticatedCLICommand
 	logger    *log.Logger
 	srClient  *srsdk.APIClient
 	prerunner pcmd.PreRunner
@@ -26,7 +26,7 @@ func New(prerunner pcmd.PreRunner, config *config.Config, srClient *srsdk.APICli
 		},
 		config, prerunner)
 	cmd := &command{
-		CLICommand: cliCmd,
+		AuthenticatedCLICommand: cliCmd,
 		srClient:   srClient,
 		logger:     logger,
 		prerunner:  prerunner,
@@ -36,7 +36,7 @@ func New(prerunner pcmd.PreRunner, config *config.Config, srClient *srsdk.APICli
 }
 
 func (c *command) init() {
-	c.AddCommand(NewClusterCommand(c.Config, c.prerunner, c.srClient, c.logger))
-	c.AddCommand(NewSubjectCommand(c.Config, c.prerunner, c.srClient))
-	c.AddCommand(NewSchemaCommand(c.Config, c.prerunner, c.srClient))
+	c.AddCommand(NewClusterCommand(c.Config.Config, c.prerunner, c.srClient, c.logger))
+	c.AddCommand(NewSubjectCommand(c.Config.Config, c.prerunner, c.srClient))
+	c.AddCommand(NewSchemaCommand(c.Config.Config, c.prerunner, c.srClient))
 }

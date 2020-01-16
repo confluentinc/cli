@@ -8,7 +8,7 @@ import (
 )
 
 type command struct {
-	*pcmd.CLICommand
+	*pcmd.AuthenticatedCLICommand
 	prerunner   pcmd.PreRunner
 }
 
@@ -21,7 +21,7 @@ func New(prerunner pcmd.PreRunner, config *config.Config) *cobra.Command {
 		},
 		config, prerunner)
 	cmd := &command{
-		CLICommand: cliCmd,
+		AuthenticatedCLICommand: cliCmd,
 		prerunner:   prerunner,
 	}
 	cmd.init()
@@ -29,5 +29,5 @@ func New(prerunner pcmd.PreRunner, config *config.Config) *cobra.Command {
 }
 
 func (c *command) init() {
-	c.AddCommand(NewClusterCommand(c.Config, c.prerunner))
+	c.AddCommand(NewClusterCommand(c.Config.Config, c.prerunner))
 }

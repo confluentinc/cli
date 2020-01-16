@@ -2,29 +2,33 @@
 package keystore
 
 import (
-	ccloud "github.com/confluentinc/ccloud-sdk-go"
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
+	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 type KeyStore interface {
-	HasAPIKey(key string, clusterId string, client *ccloud.Client) (bool, error)
-	StoreAPIKey(key *authv1.ApiKey, clusterId string, client *ccloud.Client) error
-	DeleteAPIKey(key string) error
+	HasAPIKey(key string, clusterId string, cmd *cobra.Command) (bool, error)
+	StoreAPIKey(key *authv1.ApiKey, clusterId string, cmd *cobra.Command) error
+	DeleteAPIKey(key string, cmd *cobra.Command) error
 }
 
 type ConfigKeyStore struct {
-	Config *config.Config
+	Config *cmd.DynamicConfig
 }
 
-func (c *ConfigKeyStore) HasAPIKey(key string, clusterId string, client *ccloud.Client) (bool, error) {
-	ctx := c.Config.Context()
+func (c *ConfigKeyStore) HasAPIKey(key string, clusterId string, cmd *cobra.Command) (bool, error) {
+	ctx, err := c.Config.Context(cmd)
+	if err != nil {
+		return false, err
+	}
 	if ctx == nil {
 		return false, nil
 	}
-	kcc, err := ctx.FindKafkaCluster(clusterId, client)
+	kcc, err := ctx.FindKafkaCluster(cmd, clusterId)
 	if err != nil {
 		return false, err
 	}
@@ -33,12 +37,15 @@ func (c *ConfigKeyStore) HasAPIKey(key string, clusterId string, client *ccloud.
 }
 
 // StoreAPIKey creates a new API key pair in the local key store for later usage
-func (c *ConfigKeyStore) StoreAPIKey(key *authv1.ApiKey, clusterId string, client *ccloud.Client) error {
-	ctx := c.Config.Context()
+func (c *ConfigKeyStore) StoreAPIKey(key *authv1.ApiKey, clusterId string, cmd *cobra.Command) error {
+	ctx, err := c.Config.Context(cmd)
+	if err != nil {
+		return err
+	}
 	if ctx == nil {
 		return errors.ErrNoContext
 	}
-	kcc, err := ctx.FindKafkaCluster(clusterId, client)
+	kcc, err := ctx.FindKafkaCluster(cmd, clusterId)
 	if err != nil {
 		return err
 	}
@@ -49,8 +56,11 @@ func (c *ConfigKeyStore) StoreAPIKey(key *authv1.ApiKey, clusterId string, clien
 	return c.Config.Save()
 }
 
-func (c *ConfigKeyStore) DeleteAPIKey(key string) error {
-	context := c.Config.Context()
+func (c *ConfigKeyStore) DeleteAPIKey(key string, cmd *cobra.Command) error {
+	context, err := c.Config.Context(cmd)
+	if err != nil {
+		return err
+	}
 	if context == nil {
 		return errors.ErrNoContext
 	}

@@ -6,8 +6,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/confluentinc/ccloud-sdk-go"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
@@ -33,8 +33,12 @@ func getSrCredentials() (key string, secret string, err error) {
 	return key, secret, nil
 }
 
-func srContext(cfg *config.Config, client *ccloud.Client) (context.Context, error) {
-	srCluster, err := cfg.SchemaRegistryCluster(client)
+func srContext(cfg *pcmd.DynamicConfig, cmd *cobra.Command) (context.Context, error) {
+	ctx, err := cfg.Context(cmd)
+	if err != nil {
+		return nil, err
+	}
+	srCluster, err := ctx.SchemaRegistryCluster(cmd)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +51,7 @@ func srContext(cfg *config.Config, client *ccloud.Client) (context.Context, erro
 			Key:    key,
 			Secret: secret,
 		}
-		err = cfg.Save()
+		err = ctx.Save()
 		if err != nil {
 			return nil, err
 		}
@@ -58,22 +62,25 @@ func srContext(cfg *config.Config, client *ccloud.Client) (context.Context, erro
 	}), nil
 }
 
-func SchemaRegistryClient(cfg *config.Config, client *ccloud.Client, ver *version.Version) (srClient *srsdk.APIClient, ctx context.Context, err error) {
-	ctx, err = srContext(cfg, client)
+func SchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *version.Version) (srClient *srsdk.APIClient, ctx context.Context, err error) {
+	ctx, err = srContext(cfg, cmd)
 	if err != nil {
 		return nil, nil, err
 	}
 	srConfig := srsdk.NewConfiguration()
-	state, err := cfg.AuthenticatedState()
+	currCtx, err := cfg.Context(cmd)
 	if err != nil {
 		return nil, nil, err
 	}
-	currCtx := cfg.Context()
-	if srCluster, ok := currCtx.SchemaRegistryClusters[state.Auth.Account.Id]; ok {
+	envId, err := currCtx.AuthenticatedEnvId(cmd)
+	if err != nil {
+		return nil, nil, err
+	}
+	if srCluster, ok := currCtx.SchemaRegistryClusters[envId]; ok {
 		srConfig.BasePath = srCluster.SchemaRegistryEndpoint
 	} else {
-		ctxClient := config.NewContextClient(currCtx, client)
-		srCluster, err := ctxClient.FetchSchemaRegistryByAccountId(ctx, state.Auth.Account.Id)
+		ctxClient := pcmd.NewContextClient(currCtx)
+		srCluster, err := ctxClient.FetchSchemaRegistryByAccountId(ctx, envId)
 		if err != nil {
 			return nil, nil, err
 		}

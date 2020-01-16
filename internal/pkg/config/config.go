@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 
 	"github.com/atrox/homedir"
-	"github.com/confluentinc/ccloud-sdk-go"
 	v1 "github.com/confluentinc/ccloudapis/org/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -38,7 +37,6 @@ type Config struct {
 	Contexts             map[string]*Context      `json:"contexts" hcl:"contexts"`
 	ContextStates        map[string]*ContextState `json:"context_states" hcl:"context_states"`
 	CurrentContext       string                   `json:"current_context" hcl:"current_context"`
-	UserSpecifiedContext string                   `json:"-" hcl:"-"`
 }
 
 // New initializes a new Config object
@@ -62,7 +60,7 @@ func New(config ...*Config) *Config {
 
 // Load reads the CLI config from disk.
 // Save a default version if none exists yet.
-func (c *Config) Load(version, commit, date, host string) error {
+func (c *Config) Load() error {
 	filename, err := c.getFilename()
 	if err != nil {
 		return err
@@ -285,30 +283,27 @@ func (c *Config) APIName() string {
 // Context returns the user specified context if it exists, 
 // the current Context, or nil if there's no context set.
 func (c *Config) Context() *Context {
-	if c.UserSpecifiedContext != "" {
-		return c.Contexts[c.UserSpecifiedContext]
-	}
 	return c.Contexts[c.CurrentContext]
 }
 
-func (c *Config) AuthenticatedState() (*ContextState, error) {
-	context := c.Context()
-	if context == nil {
-		return nil, errors.ErrNoContext
-	}
-	return context.AuthenticatedState()
-}
-
-// SchemaRegistryCluster returns the SchemaRegistryCluster for the current Context,
-// or an empty SchemaRegistryCluster if there is none set,
-// or an error if no context exists/if the user is not logged in.
-func (c *Config) SchemaRegistryCluster(client *ccloud.Client) (*SchemaRegistryCluster, error) {
-	context := c.Context()
-	if context == nil {
-		return nil, errors.ErrNoContext
-	}
-	return context.schemaRegistryCluster(client)
-}
+//func (c *Config) AuthenticatedState() (*ContextState, error) {
+//	context := c.Context()
+//	if context == nil {
+//		return nil, errors.ErrNoContext
+//	}
+//	return context.AuthenticatedState()
+//}
+//
+//// SchemaRegistryCluster returns the SchemaRegistryCluster for the current Context,
+//// or an empty SchemaRegistryCluster if there is none set,
+//// or an error if no context exists/if the user is not logged in.
+//func (c *Config) SchemaRegistryCluster() (*SchemaRegistryCluster, error) {
+//	context := c.Context()
+//	if context == nil {
+//		return nil, errors.ErrNoContext
+//	}
+//	return context.schemaRegistryCluster()
+//}
 
 func (c *Config) getFilename() (string, error) {
 	if c.Filename == "" {

@@ -16,18 +16,18 @@ import (
 )
 
 type aclCommand struct {
-	*pcmd.CLICommand
+	*pcmd.AuthenticatedCLICommand
 }
 
 // NewACLCommand returns the Cobra command for Kafka ACL.
-func NewACLCommand(config *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func NewACLCommand( prerunner pcmd.PreRunner, config *config.Config) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "acl",
 			Short: `Manage Kafka ACLs.`,
 		},
 		config, prerunner)
-	cmd := &aclCommand{CLICommand: cliCmd}
+	cmd := &aclCommand{AuthenticatedCLICommand: cliCmd}
 	cmd.init()
 	return cmd.Command
 }
@@ -87,7 +87,7 @@ func (c *aclCommand) init() {
 func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
 	acl := parse(cmd)
 
-	cluster, err := pcmd.KafkaCluster(c.Config, c.Client)
+	cluster, err := pcmd.KafkaCluster(c.AuthenticatedCLICommand)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -104,7 +104,7 @@ func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
 func (c *aclCommand) create(cmd *cobra.Command, args []string) error {
 	acl := validateAddDelete(parse(cmd))
 
-	cluster, err := pcmd.KafkaCluster(c.Config, c.Client)
+	cluster, err := pcmd.KafkaCluster(c.AuthenticatedCLICommand)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -123,7 +123,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, args []string) error {
 	if acl.errors != nil {
 		return errors.HandleCommon(acl.errors, cmd)
 	}
-	cluster, err := pcmd.KafkaCluster(c.Config, c.Client)
+	cluster, err := pcmd.KafkaCluster(c.AuthenticatedCLICommand)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}

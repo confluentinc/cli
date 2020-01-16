@@ -77,7 +77,7 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 					CLIName: binaryName,
 					Logger:  logger,
 				})
-				require.NoError(t, cfg.Load("", "", "", ""))
+				require.NoError(t, cfg.Load())
 				ctx := cfg.Context()
 				require.NotNil(t, ctx)
 				kcc := ctx.KafkaClusters["lkc-cool1"]

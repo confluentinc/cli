@@ -28,8 +28,7 @@ var (
 )
 
 type roleCommand struct {
-	*cmd.CLICommand
-	ctx    context.Context
+	*cmd.AuthenticatedCLICommand
 }
 
 // NewRoleCommand returns the sub-command object for interacting with RBAC roles.
@@ -42,15 +41,14 @@ func NewRoleCommand(cfg *config.Config, prerunner cmd.PreRunner) *cobra.Command 
 		},
 		cfg, prerunner)
 	roleCmd := &roleCommand{
-		CLICommand: cliCmd,
+		AuthenticatedCLICommand: cliCmd,
 	}
-	state, err := cfg.AuthenticatedState()
-	if err != nil {
-		state = new(config.ContextState)
-	}
-	roleCmd.ctx = context.WithValue(context.Background(), mds.ContextAccessToken, state.AuthToken)
 	roleCmd.init()
 	return roleCmd.Command
+}
+
+func (c *roleCommand) createContext() context.Context {
+	return context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
 }
 
 func (c *roleCommand) init() {
@@ -71,7 +69,7 @@ func (c *roleCommand) init() {
 
 
 func (c *roleCommand) list(cmd *cobra.Command, args []string) error {
-	roles, _, err := c.MDSClient.RoleDefinitionsApi.Roles(c.ctx)
+	roles, _, err := c.MDSClient.RoleDefinitionsApi.Roles(c.createContext())
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -105,10 +103,10 @@ func (c *roleCommand) list(cmd *cobra.Command, args []string) error {
 func (c *roleCommand) describe(cmd *cobra.Command, args []string) error {
 	role := args[0]
 
-	details, r, err := c.MDSClient.RoleDefinitionsApi.RoleDetail(c.ctx, role)
+	details, r, err := c.MDSClient.RoleDefinitionsApi.RoleDetail(c.createContext(), role)
 	if err != nil {
 		if r.StatusCode == http.StatusNoContent {
-			availableRoleNames, _, err := c.MDSClient.RoleDefinitionsApi.Rolenames(c.ctx)
+			availableRoleNames, _, err := c.MDSClient.RoleDefinitionsApi.Rolenames(c.createContext())
 			if err != nil {
 				return errors.HandleCommon(err, cmd)
 			}

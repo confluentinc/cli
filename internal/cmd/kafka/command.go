@@ -14,7 +14,7 @@ type command struct {
 
 // New returns the default command object for interacting with Kafka.
 func New(prerunner pcmd.PreRunner, config *config.Config) *cobra.Command {
-	cliCmd := pcmd.NewAuthenticatedCLICommand(
+	cliCmd := pcmd.NewCLICommand(
 		&cobra.Command{
 			Use:   "kafka",
 			Short: "Manage Apache Kafka.",
@@ -26,11 +26,11 @@ func New(prerunner pcmd.PreRunner, config *config.Config) *cobra.Command {
 }
 
 func (c *command) init() {
-	c.AddCommand(NewTopicCommand(c.prerunner, c.Config))
-	context := c.Config.Context()
+	c.AddCommand(NewTopicCommand(c.prerunner, c.Config.Config))
+	context := c.Config.Config.Context()
 	if context != nil && context.Credential.CredentialType == config.APIKey { // TODO: Does not work with --context flag.
 		return
 	}
-	c.AddCommand(NewClusterCommand(c.prerunner, c.Config))
-	c.AddCommand(NewACLCommand(c.Config, c.prerunner))
+	c.AddCommand(NewClusterCommand(c.prerunner, c.Config.Config))
+	c.AddCommand(NewACLCommand(c.prerunner, c.Config.Config))
 }

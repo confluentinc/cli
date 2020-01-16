@@ -19,9 +19,9 @@ import (
 
 // PreRun is a helper class for automatically setting up Cobra PersistentPreRun commands
 type PreRunner interface {
-	Anonymous(cfg *config.Config, command *CLICommand) func(cmd *cobra.Command, args []string) error
-	Authenticated(cfg *config.Config, command *CLICommand) func(cmd *cobra.Command, args []string) error
-	HasAPIKey(cfg *config.Config, command *CLICommand) func(cmd *cobra.Command, args []string) error
+	Anonymous(command *CLICommand) func(cmd *cobra.Command, args []string) error
+	Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error
+	HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command, args []string) error
 }
 
 // PreRun is the standard PreRunner implementation
@@ -38,78 +38,116 @@ type CLICommand struct {
 	*cobra.Command
 	Client    *ccloud.Client
 	MDSClient *mds.APIClient
-	Config    *config.Config
+	Config    *DynamicConfig
 	Version   *version.Version
+	prerunner PreRunner
 }
 
-func NewAuthenticatedCLICommand(command *cobra.Command, cfg *config.Config, prerunner PreRunner) *CLICommand {
-	cmd := &CLICommand{Config: cfg}
-	command.PersistentPreRunE = prerunner.Authenticated(cfg, cmd)
+type AuthenticatedCLICommand struct {
+	*CLICommand
+	Context *DynamicContext
+	State   *config.ContextState
+}
+
+type HasAPIKeyCLICommand struct {
+	*CLICommand
+	Context *DynamicContext
+}
+
+func (a *AuthenticatedCLICommand) AuthToken() string {
+	return a.State.AuthToken
+}
+func (a *AuthenticatedCLICommand) EnvironmentId() string {
+	return a.State.Auth.Account.Id
+}
+
+func NewAuthenticatedCLICommand(command *cobra.Command, cfg *config.Config, prerunner PreRunner) *AuthenticatedCLICommand {
+	cmd := &AuthenticatedCLICommand{
+		CLICommand: NewCLICommand(command, cfg, prerunner),
+		Context:    nil,
+		State:      nil,
+	}
+	command.PersistentPreRunE = prerunner.Authenticated(cmd)
 	cmd.Command = command
 	return cmd
 }
 
-func NewHasAPIKeyCLICommand(command *cobra.Command, cfg *config.Config, prerunner PreRunner) *CLICommand {
-	cmd := &CLICommand{Config: cfg}
-	command.PersistentPreRunE = prerunner.HasAPIKey(cfg, cmd)
+func NewHasAPIKeyCLICommand(command *cobra.Command, cfg *config.Config, prerunner PreRunner) *HasAPIKeyCLICommand {
+	cmd := &HasAPIKeyCLICommand{
+		CLICommand: NewCLICommand(command, cfg, prerunner),
+		Context:    nil,
+	}
+	command.PersistentPreRunE = prerunner.HasAPIKey(cmd)
 	cmd.Command = command
 	return cmd
 }
 
 func NewAnonymousCLICommand(command *cobra.Command, cfg *config.Config, prerunner PreRunner) *CLICommand {
-	cmd := &CLICommand{Config: cfg}
-	command.PersistentPreRunE = prerunner.Anonymous(cfg, cmd)
+	cmd := NewCLICommand(command, cfg, prerunner)
+	command.PersistentPreRunE = prerunner.Anonymous(cmd)
 	cmd.Command = command
 	return cmd
 }
 
-func NewCLICommand(command *cobra.Command, cfg *config.Config) *CLICommand {
+func NewCLICommand(command *cobra.Command, cfg *config.Config, prerunner PreRunner) *CLICommand {
 	return &CLICommand{
-		Config:  cfg,
-		Command: command,
+		Config:    NewDynamicConfig(cfg, nil, nil),
+		Command:   command,
+		prerunner: prerunner,
 	}
 }
 
+func (a *AuthenticatedCLICommand) AddCommand(command *cobra.Command) {
+	cmd := NewAuthenticatedCLICommand(command, a.Config.Config, a.prerunner)
+	a.Command.AddCommand(cmd.Command)
+}
+
+func (h *HasAPIKeyCLICommand) AddCommand(command *cobra.Command) {
+	cmd := NewHasAPIKeyCLICommand(command, h.Config.Config, h.prerunner)
+	h.Command.AddCommand(cmd.Command)
+}
+
 // Anonymous provides PreRun operations for commands that may be run without a logged-in user
-func (r *PreRun) Anonymous(cfg *config.Config, command *CLICommand) func(cmd *cobra.Command, args []string) error {
+func (r *PreRun) Anonymous(command *CLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		command.Version = r.Version
+		command.Config.Resolver = r.FlagResolver
 		if err := log.SetLoggingVerbosity(cmd, r.Logger); err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
 		if err := r.notifyIfUpdateAvailable(cmd, r.CLIName, command.Version.Version); err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
-		if err := r.FlagResolver.ResolveContextFlag(cmd, cfg); err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
 		if command != nil {
-			ctx := cfg.Context()
-			setClients(command, ctx, command.Version)
+			err := setClients(command, command.Version)
+			if err != nil {
+				return errors.HandleCommon(err, cmd)
+			}
 		}
 		return nil
 	}
 }
 
 // Authenticated provides PreRun operations for commands that require a logged-in user
-func (r *PreRun) Authenticated(cfg *config.Config, command *CLICommand) func(cmd *cobra.Command, args []string) error {
+func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		ctx, err := r.resolveContext(cfg, cmd, command, args)
+		err := r.Anonymous(command.CLICommand)(cmd, args)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
-		setClients(command, ctx, command.Version)
-		err = r.resolveFlags(cfg, cmd, command)
+		ctx, err := command.Config.Context(cmd)
 		if err != nil {
-			return err
+			return errors.HandleCommon(err, cmd)
+		}
+		command.Context = ctx
+		command.State, err = ctx.AuthenticatedState(cmd)
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
 		}
 		// Validate token (not expired)
-		state, err := ctx.AuthenticatedState()
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
+		authToken := command.AuthToken()
 		var claims map[string]interface{}
-		token, err := jwt.ParseSigned(state.AuthToken)
+		token, err := jwt.ParseSigned(authToken)
 		if err != nil {
 			return errors.HandleCommon(new(ccloud.InvalidTokenError), cmd)
 		}
@@ -126,22 +164,26 @@ func (r *PreRun) Authenticated(cfg *config.Config, command *CLICommand) func(cmd
 }
 
 // HasAPIKey provides PreRun operations for commands that require an API key.
-func (r *PreRun) HasAPIKey(cfg *config.Config, command *CLICommand) func(cmd *cobra.Command, args []string) error {
+func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		ctx, err := r.resolveContext(cfg, cmd, command, args)
+		err := r.Anonymous(command.CLICommand)(cmd, args)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
-		setClients(command, ctx, command.Version)
-		err = r.resolveFlags(cfg, cmd, command)
+		ctx, err := command.Config.Context(cmd)
 		if err != nil {
-			return err
+			return errors.HandleCommon(err, cmd)
 		}
-		clusterId := ctx.Kafka
-		if clusterId == "" {
+		command.Context = ctx
+		cluster, err := ctx.ActiveKafkaCluster(cmd)
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+		clusterId := cluster.ID
+		if cluster.ID == "" {
 			return errors.HandleCommon(fmt.Errorf("context '%s' has no active Kafka cluster", ctx.Name), cmd)
 		}
-		if ctx.KafkaClusters[clusterId].APIKey == "" {
+		if cluster.APIKey == "" {
 			err = &errors.UnspecifiedAPIKeyError{ClusterID: clusterId}
 			return errors.HandleCommon(err, cmd)
 		}
@@ -165,40 +207,28 @@ func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, name string, curren
 	return nil
 }
 
-func (r *PreRun) resolveContext(cfg *config.Config, cmd *cobra.Command, cliCmd *CLICommand, args []string) (*config.Context, error) {
-	err := r.Anonymous(cfg, cliCmd)(cmd, args)
+func setClients(cliCmd *CLICommand, ver *version.Version) error {
+	ctx, err := cliCmd.Config.Context(cliCmd.Command)
 	if err != nil {
-		return nil, errors.HandleCommon(err, cmd)
+		return err
 	}
-	ctx := cfg.Context()
-	if ctx == nil {
-		return nil, errors.HandleCommon(errors.ErrNoContext, cmd)
-	}
-	return ctx, nil
-}
-
-func setClients(cliCmd *CLICommand, ctx *config.Context, ver *version.Version) {
-	cliCmd.Client = createCCloudClient(ctx, ver)
+	ccloudClient := createCCloudClient(ctx, cliCmd.Command, ver)
+	cliCmd.Client = ccloudClient
 	cliCmd.MDSClient = createMDSClient(ctx, ver)
-}
-
-func (r *PreRun) resolveFlags(cfg *config.Config, cmd *cobra.Command, cliCmd *CLICommand) error {
-	if err := r.FlagResolver.ResolveFlags(cmd, cfg, cliCmd.Client); err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
+	cliCmd.Config.Client = ccloudClient
 	return nil
 }
 
-func createCCloudClient(ctx *config.Context, ver *version.Version) *ccloud.Client {
+func createCCloudClient(ctx *DynamicContext, cmd *cobra.Command, ver *version.Version) *ccloud.Client {
 	var baseURL string
 	var authToken string
 	var logger *log.Logger
 	var userAgent string
 	if ctx != nil {
 		baseURL = ctx.Platform.Server
-		state, err := ctx.AuthenticatedState()
+		token, err := ctx.AuthenticatedAuthToken(cmd)
 		if err == nil {
-			authToken = state.AuthToken
+			authToken = token
 		}
 		logger = ctx.Logger
 		userAgent = ver.UserAgent
@@ -208,7 +238,7 @@ func createCCloudClient(ctx *config.Context, ver *version.Version) *ccloud.Clien
 	})
 }
 
-func createMDSClient(ctx *config.Context, ver *version.Version) *mds.APIClient {
+func createMDSClient(ctx *DynamicContext, ver *version.Version) *mds.APIClient {
 	mdsConfig := mds.NewConfiguration()
 	if ctx != nil {
 		mdsConfig.BasePath = ctx.Platform.Server

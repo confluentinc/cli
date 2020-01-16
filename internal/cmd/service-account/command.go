@@ -17,7 +17,7 @@ import (
 )
 
 type command struct {
-	*pcmd.CLICommand
+	*pcmd.AuthenticatedCLICommand
 }
 
 var (
@@ -39,7 +39,7 @@ func New(prerunner pcmd.PreRunner, config *config.Config) *cobra.Command {
 		},
 		config, prerunner)
 	cmd := &command{
-		CLICommand: cliCmd,
+		AuthenticatedCLICommand: cliCmd,
 	}
 	cmd.init()
 	return cmd.Command
@@ -132,19 +132,12 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	if err := requireLen(description, descriptionLength, "description"); err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	state, err := c.Config.AuthenticatedState()
-	if err != nil {
-		return err
-	}
+	
 	user := &orgv1.User{
 		ServiceName:        name,
 		ServiceDescription: description,
-		OrganizationId:     state.Auth.User.OrganizationId,
+		OrganizationId:     c.State.Auth.User.OrganizationId,
 		ServiceAccount:     true,
-	}
-	ctx := c.Config.Context()
-	if ctx == nil {
-		return errors.HandleCommon(errors.ErrNoContext, cmd)
 	}
 	user, err = c.Client.User.CreateServiceAccount(context.Background(), user)
 	if err != nil {
@@ -174,10 +167,6 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		Id:                 id,
 		ServiceDescription: description,
 	}
-	ctx := c.Config.Context()
-	if ctx == nil {
-		return errors.HandleCommon(errors.ErrNoContext, cmd)
-	}
 	err = c.Client.User.UpdateServiceAccount(context.Background(), user)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -195,10 +184,6 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	user := &orgv1.User{
 		Id: id,
 	}
-	ctx := c.Config.Context()
-	if ctx == nil {
-		return errors.HandleCommon(errors.ErrNoContext, cmd)
-	}
 	err = c.Client.User.DeleteServiceAccount(context.Background(), user)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -207,10 +192,6 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) list(cmd *cobra.Command, args []string) error {
-	ctx := c.Config.Context()
-	if ctx == nil {
-		return errors.HandleCommon(errors.ErrNoContext, cmd)
-	}
 	users, err := c.Client.User.GetServiceAccounts(context.Background())
 	if err != nil {
 		return errors.HandleCommon(err, cmd)

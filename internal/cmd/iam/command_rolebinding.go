@@ -31,7 +31,7 @@ type rolebindingOptions struct {
 }
 
 type rolebindingCommand struct {
-	*cmd.CLICommand
+	*cmd.AuthenticatedCLICommand
 }
 
 // NewRolebindingCommand returns the sub-command object for interacting with RBAC rolebindings.
@@ -43,7 +43,7 @@ func NewRolebindingCommand(cfg *config.Config, prerunner cmd.PreRunner) *cobra.C
 			Long:  "Manage Role Based Access (RBAC) and Identity and Access Management (IAM) role bindings.",
 		},
 		cfg, prerunner)
-	roleBindingCmd := &rolebindingCommand{CLICommand: cliCmd}
+	roleBindingCmd := &rolebindingCommand{AuthenticatedCLICommand: cliCmd}
 	roleBindingCmd.init()
 	return roleBindingCmd.Command
 }
@@ -398,9 +398,5 @@ func isClusterScopedRole(role string) bool {
 }
 
 func (c *rolebindingCommand) createContext() (context.Context, error) {
-	state, err := c.Config.AuthenticatedState()
-	if err != nil {
-		return nil, err
-	}
-	return context.WithValue(context.Background(), mds.ContextAccessToken, state.AuthToken), nil
+	return context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken), nil
 }
