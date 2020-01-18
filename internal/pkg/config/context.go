@@ -84,16 +84,6 @@ func (c *Context) validateKafkaClusterConfig(cluster *KafkaClusterConfig) error 
 	if cluster.ID == "" {
 		return fmt.Errorf("cluster under context '%s' has no %s", c.Name, "id")
 	}
-	//if cluster.Name == "" {
-	//	return fmt.Errorf("cluster under context '%s' has no %s", c.Name, "name")
-	//}
-	//if cluster.Bootstrap == "" {
-	//	return fmt.Errorf("cluster '%s' under context '%s' has no %s",
-	//		cluster.Name, c.Name, "bootstrap")
-	//}
-	//if cluster.APIEndpoint == "" {
-	//	return fmt.Errorf("cluster '%s' under context '%s' has no %s", cluster.Name, c.Name, "API endpoint")
-	//}
 	if _, ok := cluster.APIKeys[cluster.APIKey]; cluster.APIKey != "" && !ok {
 		return fmt.Errorf("current API key of cluster '%s' under context '%s' does not exist. "+
 			"Please specify a valid API key",
@@ -106,21 +96,6 @@ func (c *Context) validateKafkaClusterConfig(cluster *KafkaClusterConfig) error 
 				cluster.Name, c.Name)
 		}
 	}
-	return nil
-}
-
-func (c *Context) validateSRCluster(cluster *SchemaRegistryCluster, accountId string) error {
-	// envId validation?
-	//srErrFmt := "SR cluster under context '%s' has no %s"
-	//if cluster.SrCredentials == nil {
-	//	return fmt.Errorf(srErrFmt, c.Name, "credentials")
-	//}
-	//if cluster.SrCredentials.Key == "" {
-	//	return fmt.Errorf(srErrFmt, c.Name, "API key")
-	//}
-	//if cluster.SrCredentials.Secret == "" {
-	//	return fmt.Errorf(srErrFmt, c.Name, "API secret")
-	//}
 	return nil
 }
 
@@ -146,7 +121,6 @@ func (c *Context) validate() error {
 	if c.State == nil {
 		c.State = new(ContextState)
 	}
-	// TODO: envId validation?
 	for envId, sr := range c.SchemaRegistryClusters {
 		if sr == nil {
 			c.SchemaRegistryClusters[envId] = new(SchemaRegistryCluster)
@@ -160,12 +134,6 @@ func (c *Context) validate() error {
 	}
 	for _, cluster := range c.KafkaClusters {
 		err := c.validateKafkaClusterConfig(cluster)
-		if err != nil {
-			return err
-		}
-	}
-	for accountId, cluster := range c.SchemaRegistryClusters {
-		err := c.validateSRCluster(cluster, accountId)
 		if err != nil {
 			return err
 		}

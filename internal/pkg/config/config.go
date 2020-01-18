@@ -28,15 +28,15 @@ type AuthConfig struct {
 
 // Config represents the CLI configuration.
 type Config struct {
-	CLIName              string                   `json:"-" hcl:"-"`
-	MetricSink           metric.Sink              `json:"-" hcl:"-"`
-	Logger               *log.Logger              `json:"-" hcl:"-"`
-	Filename             string                   `json:"-" hcl:"-"`
-	Platforms            map[string]*Platform     `json:"platforms" hcl:"platforms"`
-	Credentials          map[string]*Credential   `json:"credentials" hcl:"credentials"`
-	Contexts             map[string]*Context      `json:"contexts" hcl:"contexts"`
-	ContextStates        map[string]*ContextState `json:"context_states" hcl:"context_states"`
-	CurrentContext       string                   `json:"current_context" hcl:"current_context"`
+	CLIName        string                   `json:"-" hcl:"-"`
+	MetricSink     metric.Sink              `json:"-" hcl:"-"`
+	Logger         *log.Logger              `json:"-" hcl:"-"`
+	Filename       string                   `json:"-" hcl:"-"`
+	Platforms      map[string]*Platform     `json:"platforms" hcl:"platforms"`
+	Credentials    map[string]*Credential   `json:"credentials" hcl:"credentials"`
+	Contexts       map[string]*Context      `json:"contexts" hcl:"contexts"`
+	ContextStates  map[string]*ContextState `json:"context_states" hcl:"context_states"`
+	CurrentContext string                   `json:"current_context" hcl:"current_context"`
 }
 
 // New initializes a new Config object
@@ -285,25 +285,6 @@ func (c *Config) APIName() string {
 func (c *Config) Context() *Context {
 	return c.Contexts[c.CurrentContext]
 }
-
-//func (c *Config) AuthenticatedState() (*ContextState, error) {
-//	context := c.Context()
-//	if context == nil {
-//		return nil, errors.ErrNoContext
-//	}
-//	return context.AuthenticatedState()
-//}
-//
-//// SchemaRegistryCluster returns the SchemaRegistryCluster for the current Context,
-//// or an empty SchemaRegistryCluster if there is none set,
-//// or an error if no context exists/if the user is not logged in.
-//func (c *Config) SchemaRegistryCluster() (*SchemaRegistryCluster, error) {
-//	context := c.Context()
-//	if context == nil {
-//		return nil, errors.ErrNoContext
-//	}
-//	return context.schemaRegistryCluster()
-//}
 
 func (c *Config) getFilename() (string, error) {
 	if c.Filename == "" {
