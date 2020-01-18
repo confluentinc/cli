@@ -25,11 +25,11 @@ func NewContextClient(ctx *DynamicContext) *contextClient {
 }
 
 func (c *contextClient) FetchCluster(cmd *cobra.Command, clusterId string) (*kafkav1.KafkaCluster, error) {
-	state, err := c.context.AuthenticatedState(cmd)
+	envId, err := c.context.AuthenticatedEnvId(cmd)
 	if err != nil {
 		return nil, err
 	}
-	req := &kafkav1.KafkaCluster{AccountId: state.Auth.Account.Id, Id: clusterId}
+	req := &kafkav1.KafkaCluster{AccountId: envId, Id: clusterId}
 	kc, err := c.context.client.Kafka.Describe(context.Background(), req)
 	if err != nil {
 		if err != ccloud.ErrNotFound {
@@ -41,12 +41,12 @@ func (c *contextClient) FetchCluster(cmd *cobra.Command, clusterId string) (*kaf
 }
 
 func (c *contextClient) FetchAPIKeyError(cmd *cobra.Command, apiKey string, clusterID string) error {
-	state, err := c.context.AuthenticatedState(cmd)
+	envId, err := c.context.AuthenticatedEnvId(cmd)
 	if err != nil {
 		return err
 	}
 	// check if this is API key exists server-side
-	key, err := c.context.client.APIKey.Get(context.Background(), &authv1.ApiKey{AccountId: state.Auth.Account.Id, Key: apiKey})
+	key, err := c.context.client.APIKey.Get(context.Background(), &authv1.ApiKey{AccountId: envId, Key: apiKey})
 	if err != nil {
 		return err
 	}
@@ -88,9 +88,6 @@ func (c *contextClient) FetchSchemaRegistryById(context context.Context, id stri
 	if err != nil {
 		return nil, err
 	}
-	//if len(existingClusters) > 0 {
-	//	return existingClusters[0], nil
-	//}
 	if existingCluster == nil {
 		return nil, errors.ErrNoSrEnabled
 	} else {

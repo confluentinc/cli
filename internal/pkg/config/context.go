@@ -128,10 +128,10 @@ func (c *Context) validate() error {
 	if c.Name == "" {
 		return errors.New("one of the existing contexts has no name")
 	}
-	if c.CredentialName == "" {
+	if c.CredentialName == "" || c.Credential == nil {
 		return &errors.UnspecifiedCredentialError{ContextName: c.Name}
 	}
-	if c.PlatformName == "" {
+	if c.PlatformName == "" || c.Platform == nil {
 		return &errors.UnspecifiedPlatformError{ContextName: c.Name}
 	}
 	if _, ok := c.KafkaClusters[c.Kafka]; c.Kafka != "" && !ok {
@@ -173,56 +173,56 @@ func (c *Context) validate() error {
 	return nil
 }
 
-//func (c *Context) SetActiveKafkaCluster(clusterId string) error {
-//	_, err := c.FindKafkaCluster(clusterId)
-//	if err != nil {
-//		return err
-//	}
-//	c.Kafka = clusterId
-//	return c.Save()
-//}
+func (c *Context) SetActiveKafkaCluster(clusterId string) error {
+	_, err := c.FindKafkaCluster(clusterId)
+	if err != nil {
+		return err
+	}
+	c.Kafka = clusterId
+	return c.Save()
+}
 
-//// SchemaRegistryCluster returns the SchemaRegistryCluster of the Context,
-//// or an empty SchemaRegistryCluster if there is none set, 
-//// or an ErrNotLoggedIn if the user is not logged in.
-//func (c *Context) schemaRegistryCluster() (*SchemaRegistryCluster, error) {
-//	envId, err := c.authenticatedEnvId()
-//	if err != nil {
-//		return nil, err
-//	}
-//	if cluster, ok := c.SchemaRegistryClusters[envId]; ok {
-//		if cluster.SchemaRegistryEndpoint == "" || cluster.Id == "" {
-//			return nil, nil
-//		}
-//		return cluster, nil
-//	} else {
-//		return nil, nil
-//	}
-//}
+// SchemaRegistryCluster returns the SchemaRegistryCluster of the Context,
+// or an empty SchemaRegistryCluster if there is none set, 
+// or an ErrNotLoggedIn if the user is not logged in.
+func (c *Context) SchemaRegistryCluster() (*SchemaRegistryCluster, error) {
+	envId, err := c.authenticatedEnvId()
+	if err != nil {
+		return nil, err
+	}
+	if cluster, ok := c.SchemaRegistryClusters[envId]; ok {
+		if cluster.SchemaRegistryEndpoint == "" || cluster.Id == "" {
+			return nil, nil
+		}
+		return cluster, nil
+	} else {
+		return nil, nil
+	}
+}
 
-//func (c *Context) ActiveKafkaCluster() (*KafkaClusterConfig, error) {
-//	cluster, err := c.FindKafkaCluster(c.Kafka)
-//	if err != nil {
-//		return nil, err
-//	}
-//	return cluster, nil
-//}
+func (c *Context) ActiveKafkaCluster() (*KafkaClusterConfig, error) {
+	cluster, err := c.FindKafkaCluster(c.Kafka)
+	if err != nil {
+		return nil, err
+	}
+	return cluster, nil
+}
 
-//func (c *Context) FindKafkaCluster(clusterId string) (*KafkaClusterConfig, error) {
-//	if _, ok := c.KafkaClusters[clusterId]; !ok {
-//		return nil, errors.ErrNoKafkaContext
-//	}
-//	return c.KafkaClusters[clusterId], nil
-//}
+func (c *Context) FindKafkaCluster(clusterId string) (*KafkaClusterConfig, error) {
+	if _, ok := c.KafkaClusters[clusterId]; !ok {
+		return nil, errors.ErrNoKafkaContext
+	}
+	return c.KafkaClusters[clusterId], nil
+}
 
-//func (c *Context) UseAPIKey(apiKey string, clusterId string) error {
-//	kcc, err := c.FindKafkaCluster(clusterId)
-//	if err != nil {
-//		return err
-//	}
-//	kcc.APIKey = apiKey
-//	return c.Save()
-//}
+func (c *Context) UseAPIKey(apiKey string, clusterId string) error {
+	kcc, err := c.FindKafkaCluster(clusterId)
+	if err != nil {
+		return err
+	}
+	kcc.APIKey = apiKey
+	return c.Save()
+}
 
 func (c *Context) Save() error {
 	return c.Config.Save()

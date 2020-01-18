@@ -38,12 +38,12 @@ func NewTopicCommand(prerunner pcmd.PreRunner, config *config.Config) *cobra.Com
 	authenticatedCmd := &authenticatedTopicCommand{
 		AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(command, config, prerunner),
 	}
-	hasAPIKeyCmd.init(prerunner, config)
+	hasAPIKeyCmd.init()
 	authenticatedCmd.init()
 	return command
 }
 
-func (h *hasAPIKeyTopicCommand) init(prerunner pcmd.PreRunner, config *config.Config) {
+func (h *hasAPIKeyTopicCommand) init() {
 	cmd := &cobra.Command{
 		Use:   "produce <topic>",
 		Short: "Produce messages to a Kafka topic.",
@@ -170,7 +170,7 @@ Delete the topics 'my_topic' and 'my_topic_avro'. Use this command carefully as 
 }
 
 func (a *authenticatedTopicCommand) list(cmd *cobra.Command, args []string) error {
-	cluster, err := pcmd.KafkaCluster(a.AuthenticatedCLICommand)
+	cluster, err := pcmd.KafkaCluster(cmd, a.Context, a.EnvironmentId())
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -190,7 +190,7 @@ func (a *authenticatedTopicCommand) list(cmd *cobra.Command, args []string) erro
 }
 
 func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) error {
-	cluster, err := pcmd.KafkaCluster(a.AuthenticatedCLICommand)
+	cluster, err := pcmd.KafkaCluster(cmd, a.Context, a.EnvironmentId())
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -230,7 +230,7 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 }
 
 func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) error {
-	cluster, err := pcmd.KafkaCluster(a.AuthenticatedCLICommand)
+	cluster, err := pcmd.KafkaCluster(cmd, a.Context, a.EnvironmentId())
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -293,7 +293,7 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 }
 
 func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) error {
-	cluster, err := pcmd.KafkaCluster(a.AuthenticatedCLICommand)
+	cluster, err := pcmd.KafkaCluster(cmd, a.Context, a.EnvironmentId())
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -319,7 +319,7 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 }
 
 func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) error {
-	cluster, err := pcmd.KafkaCluster(a.AuthenticatedCLICommand)
+	cluster, err := pcmd.KafkaCluster(cmd, a.Context, a.EnvironmentId())
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}

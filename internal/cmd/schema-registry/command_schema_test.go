@@ -16,7 +16,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
-	pmock "github.com/confluentinc/cli/internal/pkg/mock"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
@@ -45,13 +44,12 @@ func (suite *SchemaTestSuite) SetupSuite() {
 			return nil, nil
 		},
 	}
-	srCluster, _ := suite.conf.SchemaRegistryCluster(pmock.NewClientMock())
+	srCluster, err := suite.conf.Context().SchemaRegistryCluster()
+	require.NoError(suite.T(), err)
 	srCluster.SrCredentials = &config.APIKeyPair{Key: "key", Secret: "secret"}
 
-	cluster, err := suite.conf.Context().ActiveKafkaCluster(pmock.NewClientMock())
-	if err != nil {
-		panic(err)
-	}
+	cluster, err := suite.conf.Context().ActiveKafkaCluster()
+	require.NoError(suite.T(), err)
 	suite.kafkaCluster = &kafkav1.KafkaCluster{
 		Id:         cluster.ID,
 		Name:       cluster.Name,

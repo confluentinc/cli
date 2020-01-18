@@ -52,7 +52,7 @@ func AuthenticatedConfigMock() *Config {
 	}
 	srClusters := map[string]*SchemaRegistryCluster{
 		state.Auth.Account.Id: {
-			Id: "lsrc-test",
+			Id:                     "lsrc-test",
 			SchemaRegistryEndpoint: "https://sr-test",
 			SrCredentials: &APIKeyPair{
 				Key:    "michael",

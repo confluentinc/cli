@@ -1,28 +1,30 @@
 package apikey
 
 import (
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
-func resolveResourceId(cmd *pcmd.AuthenticatedCLICommand, resolver pcmd.FlagResolver) (resourceType string, accId string, clusterId string, currentKey string, err error) {
-	accId = cmd.EnvironmentId()
-	resourceType, _, err = resolver.ResolveResourceId(cmd.Command)
+func (c *command) resolveResourceId(cmd *cobra.Command, resolver pcmd.FlagResolver) (resourceType string, clusterId string, currentKey string, err error) {
+	resourceType, _, err = resolver.ResolveResourceId(cmd)
 	if resourceType == pcmd.SrResourceType {
-		cluster, err := cmd.Context.SchemaRegistryCluster(cmd.Command)
+		cluster, err := c.Context.SchemaRegistryCluster(cmd)
 		if err != nil {
-			return "", "", "", "", err
+			return "", "", "", err
 		}
 		clusterId = cluster.Id
 		if cluster.SrCredentials != nil {
 			currentKey = cluster.SrCredentials.Key
 		}
 	} else {
-		cluster, err := cmd.Context.ActiveKafkaCluster(cmd.Command)
+		resourceType = pcmd.KafkaResourceType
+		cluster, err := c.Context.ActiveKafkaCluster(cmd)
 		if err != nil {
-			return "", "", "", "", err
+			return "", "", "", err
 		}
 		clusterId = cluster.ID
 		currentKey = cluster.APIKey
 	}
-	return resourceType, accId, clusterId, currentKey, nil
+	return resourceType, clusterId, currentKey, nil
 }

@@ -295,7 +295,7 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint stri
 		if !tt.workflow {
 			resetConfiguration(t, "ccloud")
 		}
-		
+
 		if tt.login == "default" {
 			env := []string{"XX_CCLOUD_EMAIL=fake@user.com", "XX_CCLOUD_PASSWORD=pass1"}
 			output := runCommand(t, "ccloud", env, "login --url "+loginURL, 0)
@@ -471,7 +471,7 @@ func init() {
 		Key:    "MYKEY1",
 		Secret: "MYSECRET1",
 		LogicalClusters: []*authv1.ApiKey_Cluster{
-			{Id: "bob"},
+			{Id: "lkc-bob"},
 		},
 		UserId: 12,
 	}
@@ -480,7 +480,7 @@ func init() {
 		Key:    "MYKEY2",
 		Secret: "MYSECRET2",
 		LogicalClusters: []*authv1.ApiKey_Cluster{
-			{Id: "abc"},
+			{Id: "lkc-abc"},
 		},
 		UserId: 18,
 	}

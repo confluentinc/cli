@@ -112,7 +112,7 @@ func (c *contextCommand) current(cmd *cobra.Command, args []string) error {
 }
 
 func (c *contextCommand) get(cmd *cobra.Command, args []string) error {
-	context, err := c.Config.Context(cmd)
+	context, err := c.context(cmd, args)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -120,7 +120,7 @@ func (c *contextCommand) get(cmd *cobra.Command, args []string) error {
 }
 
 func (c *contextCommand) set(cmd *cobra.Command, args []string) error {
-	context, err := c.Config.Context(cmd)
+	context, err := c.context(cmd, args)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -141,4 +141,22 @@ func (c *contextCommand) delete(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	return c.Config.Save()
+}
+
+func (c *contextCommand) context(cmd *cobra.Command, args []string) (*pcmd.DynamicContext, error) {
+	var context *pcmd.DynamicContext
+	var err error
+	if len(args) == 1 {
+		contextName := args[0]
+		context, err = c.Config.FindContext(contextName)
+	} else {
+		context, err = c.Config.Context(cmd)
+		if context == nil {
+			err = errors.ErrNoContext
+		}
+	}
+	if err != nil {
+		return nil, errors.HandleCommon(err, cmd)
+	}
+	return context, nil
 }

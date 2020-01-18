@@ -143,41 +143,13 @@ func (r *FlagResolverImpl) ResolveResourceId(cmd *cobra.Command) (resourceType s
 	if err != nil {
 		return "", "", err
 	}
-	//if ctx == nil {
-	//	return "", "", errors.New("must have an existing context to use --resource flag")
-	//}
-	// Resource is schema registry.
 	if strings.HasPrefix(resourceId, "lsrc-") {
+		// Resource is schema registry.
 		return SrResourceType, resourceId, nil
-		//for envId, srCluster := range ctx.SchemaRegistryClusters {
-		//	if srCluster.Id == resourceId {
-		//		ctx.UserSpecifiedSchemaRegistryEnvId = envId
-		//	}
-		//}
-		//if ctx.UserSpecifiedSchemaRegistryEnvId == "" {
-		//	// Query API by resource ID and env ID.
-		//	state, err := ctx.AuthenticatedState()
-		//	if err != nil {
-		//		return err
-		//	}
-		//	accountId := state.Auth.Account.Id
-		//	ctxClient := config.NewContextClient(ctx, client)
-		//	srCluster, err := ctxClient.FetchSchemaRegistryById(context.Background(), resourceId, accountId)
-		//	if err != nil {
-		//		return err
-		//	}
-		//	cluster := &config.SchemaRegistryCluster{
-		//		Id:                     srCluster.Id,
-		//		SchemaRegistryEndpoint: srCluster.Endpoint,
-		//		SrCredentials:          nil, // For now.
-		//	}
-		//	ctx.SchemaRegistryClusters[accountId] = cluster
-		//	ctx.UserSpecifiedSchemaRegistryEnvId = accountId
-		//	return ctx.Save()
-		//}
-	} else {
+	} else if strings.HasPrefix(resourceId, "lkc-") {
 		// Resource is Kafka cluster.
-		return KafkaResourceType, resourceId, err
-		//return ctx.SetUserSpecifiedKafkaCluster(resourceId, client)
+		return KafkaResourceType, resourceId, nil
+	} else {
+		return KafkaResourceType, resourceId, nil
 	}
 }

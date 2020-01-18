@@ -19,7 +19,6 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/log"
-	mock2 "github.com/confluentinc/cli/internal/pkg/mock"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
@@ -40,7 +39,7 @@ type ClusterTestSuite struct {
 
 func (suite *ClusterTestSuite) SetupSuite() {
 	suite.conf = config.AuthenticatedConfigMock()
-	cluster, err := suite.conf.Context().ActiveKafkaCluster(mock2.NewClientMock())
+	cluster, err := suite.conf.Context().ActiveKafkaCluster()
 	require.NoError(suite.T(), err)
 	suite.kafkaCluster = &kafkav1.KafkaCluster{
 		Id:         cluster.ID,

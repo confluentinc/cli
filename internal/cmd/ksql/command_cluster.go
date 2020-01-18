@@ -106,7 +106,7 @@ func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
-	kafkaCluster, err := pcmd.KafkaCluster(c.AuthenticatedCLICommand)
+	kafkaCluster, err := pcmd.KafkaCluster(cmd, c.Context, c.EnvironmentId())
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -241,7 +241,7 @@ func (c *clusterCommand) configureACLs(cmd *cobra.Command, args []string) error 
 	ctx := context.Background()
 
 	// Get the Kafka Cluster
-	kafkaCluster, err := pcmd.KafkaCluster(c.AuthenticatedCLICommand)
+	kafkaCluster, err := pcmd.KafkaCluster(cmd, c.Context, c.EnvironmentId())
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}

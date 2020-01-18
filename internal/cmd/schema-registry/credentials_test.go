@@ -4,13 +4,15 @@ import (
 	"testing"
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/cli/internal/pkg/mock"
+	"github.com/confluentinc/cli/mock"
 )
 
 func TestSrContextFound(t *testing.T) {
-	ctx, err := srContext(config.AuthenticatedConfigMock(), mock.NewClientMock())
+	cfg := mock.AuthenticatedDynamicConfigMock()
+	cmd := &cobra.Command{}
+	ctx, err := srContext(cfg, cmd)
 	if err != nil || ctx.Value(srsdk.ContextBasicAuth) == nil {
 		t.Fail()
 	}

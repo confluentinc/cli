@@ -98,13 +98,13 @@ func NewCLICommand(command *cobra.Command, cfg *config.Config, prerunner PreRunn
 }
 
 func (a *AuthenticatedCLICommand) AddCommand(command *cobra.Command) {
-	cmd := NewAuthenticatedCLICommand(command, a.Config.Config, a.prerunner)
-	a.Command.AddCommand(cmd.Command)
+	command.PersistentPreRunE = a.prerunner.Authenticated(a)
+	a.Command.AddCommand(command)
 }
 
 func (h *HasAPIKeyCLICommand) AddCommand(command *cobra.Command) {
-	cmd := NewHasAPIKeyCLICommand(command, h.Config.Config, h.prerunner)
-	h.Command.AddCommand(cmd.Command)
+	command.PersistentPreRunE = h.prerunner.HasAPIKey(h)
+	h.Command.AddCommand(command)
 }
 
 // Anonymous provides PreRun operations for commands that may be run without a logged-in user
@@ -138,6 +138,9 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 		ctx, err := command.Config.Context(cmd)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
+		}
+		if ctx == nil {
+			return errors.HandleCommon(errors.ErrNoContext, cmd)
 		}
 		command.Context = ctx
 		command.State, err = ctx.AuthenticatedState(cmd)

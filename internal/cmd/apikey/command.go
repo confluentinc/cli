@@ -119,7 +119,6 @@ func (c *command) init() {
 	c.AddCommand(useCmd)
 }
 
-// TODO: Set KeyStore client.
 func (c *command) list(cmd *cobra.Command, args []string) error {
 	c.setKeyStoreIfNil()
 	type keyDisplay struct {
@@ -130,12 +129,13 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	var apiKeys []*authv1.ApiKey
 	var data [][]string
 
-	resourceType, accountId, clusterId, currentKey, err := resolveResourceId(c.AuthenticatedCLICommand, c.AuthenticatedCLICommand.Config.Resolver)
+	resourceType, clusterId, currentKey, err := c.resolveResourceId(cmd, c.Config.Resolver)
+	//fmt.Printf("%s, %s, %s\n", resourceType, clusterId, currentKey)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 	apiKeys, err = c.Client.APIKey.List(context.Background(),
-		&authv1.ApiKey{AccountId: accountId, LogicalClusters: []*authv1.ApiKey_Cluster{{Id: clusterId, Type: resourceType}}})
+		&authv1.ApiKey{AccountId: c.EnvironmentId(), LogicalClusters: []*authv1.ApiKey_Cluster{{Id: clusterId, Type: resourceType}}})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -193,7 +193,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 
 func (c *command) create(cmd *cobra.Command, args []string) error {
 	c.setKeyStoreIfNil()
-	resourceType, accId, clusterId, _, err := resolveResourceId(c.AuthenticatedCLICommand, c.AuthenticatedCLICommand.Config.Resolver)
+	resourceType, clusterId, _, err := c.resolveResourceId(cmd, c.AuthenticatedCLICommand.Config.Resolver)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -210,7 +210,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	key := &authv1.ApiKey{
 		UserId:          userId,
 		Description:     description,
-		AccountId:       accId,
+		AccountId:       c.EnvironmentId(),
 		LogicalClusters: []*authv1.ApiKey_Cluster{{Id: clusterId, Type: resourceType}},
 	}
 	userKey, err := c.Client.APIKey.Create(context.Background(), key)
@@ -289,7 +289,7 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 func (c *command) use(cmd *cobra.Command, args []string) error {
 	c.setKeyStoreIfNil()
 	apiKey := args[0]
-	cluster, err := pcmd.KafkaCluster(c.AuthenticatedCLICommand)
+	cluster, err := pcmd.KafkaCluster(cmd, c.Context, c.EnvironmentId())
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
