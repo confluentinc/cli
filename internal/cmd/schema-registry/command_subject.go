@@ -1,7 +1,10 @@
 package schema_registry
 
 import (
+	"fmt"
+	"github.com/confluentinc/go-printer"
 	"github.com/spf13/cobra"
+	"os"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
@@ -81,6 +84,8 @@ Retrieve all versions registered under a given subject and its compatibility lev
 		RunE: c.describe,
 		Args: cobra.ExactArgs(1),
 	}
+	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, "", output.Usage)
+	describeCmd.Flags().SortFlags = false
 	c.AddCommand(describeCmd)
 }
 
@@ -183,6 +188,24 @@ func (c *subjectCommand) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	PrintVersions(versions)
+	outputOption, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	type describeStructuredDisplay struct {
+		Version []int32
+	}
+	structuredOutput := &describeStructuredDisplay{Version: versions}
+	fields := []string{"Version"}
+	renames := map[string]string{"Version": "version"}
+	if outputOption == "" {
+		PrintVersions(versions)
+	} else if outputOption == output.JSON.String() {
+		return printer.RenderJSONPBOut(structuredOutput, fields, renames, os.Stdout)
+	} else if outputOption == output.YAML.String() {
+		return printer.RenderYAMLPBOut(structuredOutput, fields, renames, os.Stdout)
+	} else {
+		return fmt.Errorf("invalid output option")
+	}
 	return nil
 }

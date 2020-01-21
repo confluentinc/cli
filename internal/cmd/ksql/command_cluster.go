@@ -24,7 +24,8 @@ var (
 	listFields      = []string{"Id", "Name", "OutputTopicPrefix", "KafkaClusterId", "Storage", "Endpoint", "Status"}
 	listLabels      = []string{"Id", "Name", "Topic Prefix", "Kafka", "Storage", "Endpoint", "Status"}
 	describeFields  = []string{"Id", "Name", "OutputTopicPrefix", "KafkaClusterId", "Storage", "Endpoint", "Status"}
-	describeRenames = map[string]string{"KafkaClusterId": "Kafka", "OutputTopicPrefix": "Topic Prefix"}
+	describeHumanRenames = map[string]string{"KafkaClusterId": "Kafka", "OutputTopicPrefix": "Topic Prefix"}
+	describeStructuredRenames = map[string]string{"KafkaClusterId": "kafka", "OutputTopicPrefix": "topic_prefix"}
 	aclsDryRun      = false
 )
 
@@ -79,12 +80,15 @@ func (c *clusterCommand) init() {
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
-	c.AddCommand(&cobra.Command{
+	describeCmd := &cobra.Command{
 		Use:   "describe <id>",
 		Short: "Describe a KSQL app.",
 		RunE:  c.describe,
 		Args:  cobra.ExactArgs(1),
-	})
+	}
+	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, "", output.Usage)
+	describeCmd.Flags().SortFlags = false
+	c.AddCommand(describeCmd)
 
 	c.AddCommand(&cobra.Command{
 		Use:   "delete <id>",
@@ -153,7 +157,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	return printer.RenderTableOut(cluster, describeFields, describeRenames, os.Stdout)
+	return printer.RenderTableOut(cluster, describeFields, describeHumanRenames, os.Stdout)
 }
 
 func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
@@ -162,7 +166,11 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	return printer.RenderTableOut(cluster, describeFields, describeRenames, os.Stdout)
+	outputOption, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	return printer.RenderOut(cluster, describeFields, describeHumanRenames, describeStructuredRenames, outputOption, os.Stdout)
 }
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {

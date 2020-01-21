@@ -21,7 +21,8 @@ var (
 	listFields      = []string{"Id", "Name", "ServiceProvider", "Region", "Durability", "Status"}
 	listLabels      = []string{"Id", "Name", "Provider", "Region", "Durability", "Status"}
 	describeFields  = []string{"Id", "Name", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "ApiEndpoint"}
-	describeRenames = map[string]string{"NetworkIngress": "Ingress", "NetworkEgress": "Egress", "ServiceProvider": "Provider"}
+	describeHumanRenames = map[string]string{"NetworkIngress": "Ingress", "NetworkEgress": "Egress", "ServiceProvider": "Provider"}
+	describeStructuredRenames = map[string]string{"NetworkIngress": "ingress", "NetworkEgress": "egress", "ServiceProvider": "provider"}
 )
 
 type clusterCommand struct {
@@ -70,12 +71,15 @@ func (c *clusterCommand) init() {
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
-	c.AddCommand(&cobra.Command{
+	describeCmd := &cobra.Command{
 		Use:   "describe <id>",
 		Short: "Describe a Kafka cluster.",
 		RunE:  c.describe,
 		Args:  cobra.ExactArgs(1),
-	})
+	}
+	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, "", output.Usage)
+	describeCmd.Flags().SortFlags = false
+	c.AddCommand(describeCmd)
 
 	updateCmd := &cobra.Command{
 		Use:   "update <id>",
@@ -168,7 +172,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		// TODO: don't swallow validation errors (reportedly separately)
 		return errors.HandleCommon(err, cmd)
 	}
-	return printer.RenderTableOut(cluster, describeFields, describeRenames, os.Stdout)
+	return printer.RenderTableOut(cluster, describeFields, describeHumanRenames, os.Stdout)
 }
 
 func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
@@ -182,7 +186,11 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	return printer.RenderTableOut(cluster, describeFields, describeRenames, os.Stdout)
+	outputOption, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	return printer.RenderOut(cluster, describeFields, describeHumanRenames, describeStructuredRenames, outputOption, os.Stdout)
 }
 
 func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {

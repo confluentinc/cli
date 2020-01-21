@@ -3,7 +3,10 @@ package kafka
 import (
 	"bufio"
 	"context"
+	"encoding/json"
 	"fmt"
+	"github.com/go-yaml/yaml"
+	"github.com/tidwall/pretty"
 	"os"
 	"os/signal"
 	"strings"
@@ -144,6 +147,7 @@ Describe the 'my_topic' topic.
 		Args: cobra.ExactArgs(1),
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, "", output.Usage)
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
@@ -269,56 +273,17 @@ func (c *topicCommand) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-
-	pcmd.Printf(cmd, "Topic: %s PartitionCount: %d ReplicationFactor: %d\n",
-		resp.Name, len(resp.Partitions), len(resp.Partitions[0].Replicas))
-
-	var partitions [][]string
-	titleRow := []string{"Topic", "Partition", "Leader", "Replicas", "ISR"}
-	for _, partition := range resp.Partitions {
-		var replicas []uint32
-		for _, replica := range partition.Replicas {
-			replicas = append(replicas, replica.Id)
-		}
-
-		var isr []uint32
-		for _, replica := range partition.Isr {
-			isr = append(isr, replica.Id)
-		}
-
-		record := &struct {
-			Topic     string
-			Partition uint32
-			Leader    uint32
-			Replicas  []uint32
-			ISR       []uint32
-		}{
-			resp.Name,
-			partition.Partition,
-			partition.Leader.Id,
-			replicas,
-			isr,
-		}
-		partitions = append(partitions, printer.ToRow(record, titleRow))
+	outputOption, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
 	}
-	printer.RenderCollectionTable(partitions, titleRow)
-
-	pcmd.Println(cmd, "\nConfiguration\n ")
-
-	var entries [][]string
-	titleRow = []string{"Name", "Value"}
-	for _, entry := range resp.Config {
-		record := &struct {
-			Name  string
-			Value string
-		}{
-			entry.Name,
-			entry.Value,
-		}
-		entries = append(entries, printer.ToRow(record, titleRow))
+	if outputOption == "" {
+		return printHumanDescribe(cmd, resp)
+	} else if outputOption == output.JSON.String() || outputOption == output.YAML.String() {
+		return printStructuredDescribe(cmd, resp, outputOption)
+	} else {
+		return fmt.Errorf("invalid output option")
 	}
-	printer.RenderCollectionTable(entries, titleRow)
-	return nil
 }
 
 func (c *topicCommand) update(cmd *cobra.Command, args []string) error {
@@ -494,4 +459,120 @@ func toMap(configs []string) (map[string]string, error) {
 		configMap[pair[0]] = pair[1]
 	}
 	return configMap, nil
+}
+
+func printHumanDescribe(cmd *cobra.Command, resp *kafkav1.TopicDescription) error {
+	pcmd.Printf(cmd, "Topic: %s PartitionCount: %d ReplicationFactor: %d\n",
+		resp.Name, len(resp.Partitions), len(resp.Partitions[0].Replicas))
+
+	var partitions [][]string
+	titleRow := []string{"Topic", "Partition", "Leader", "Replicas", "ISR"}
+	for _, partition := range resp.Partitions {
+		var replicas []uint32
+		for _, replica := range partition.Replicas {
+			replicas = append(replicas, replica.Id)
+		}
+
+		var isr []uint32
+		for _, replica := range partition.Isr {
+			isr = append(isr, replica.Id)
+		}
+
+		record := &struct{
+			Topic string
+			Partition uint32
+			Leader uint32
+			Replicas []uint32
+			ISR []uint32
+		}{
+			resp.Name,
+			partition.Partition,
+			partition.Leader.Id,
+			replicas,
+			isr,
+		}
+		partitions = append(partitions, printer.ToRow(record, titleRow))
+	}
+
+	printer.RenderCollectionTable(partitions, titleRow)
+
+	var entries [][]string
+	titleRow = []string{"Name", "Value"}
+	for _, entry := range resp.Config {
+		record := &struct {
+			Name  string
+			Value string
+		}{
+			entry.Name,
+			entry.Value,
+		}
+		entries = append(entries, printer.ToRow(record, titleRow))
+	}
+
+	pcmd.Println(cmd, "\nConfiguration\n ")
+	printer.RenderCollectionTable(entries, titleRow)
+	return nil
+}
+
+func printStructuredDescribe(cmd *cobra.Command, resp *kafkav1.TopicDescription, format string) error {
+	type Partition struct {
+		Topic string `json:"topic" yaml:"topic"`
+		Partition uint32 `json:"partition" yaml:"partition"`
+		Leader uint32 `json:"leader" yaml:"leader"`
+		Replicas []uint32 `json:"replicas" yaml:"replicas"`
+		ISR []uint32 `json:"isr" yaml:"isr"`
+	}
+
+	type StructuredDisplay struct {
+		TopicName string `json:"topic_name" yaml:"topic_name"`
+		PartitionCount int `json:"partition_count" yaml:"partition_count"`
+		ReplicationFactor int `json:"replication_factor" yaml:"replication_factor"`
+		Partitions []Partition `json:"partitions" yaml:"partitions"`
+		Config map[string]string `json:"configuration" yaml:"configuration"`
+	}
+
+	structuredDisplay := &StructuredDisplay{Config: make(map[string]string)}
+	structuredDisplay.TopicName = resp.Name
+	structuredDisplay.PartitionCount = len(resp.Partitions)
+	structuredDisplay.ReplicationFactor = len(resp.Partitions[0].Replicas)
+
+	var partitionList []Partition
+	for _, partition := range resp.Partitions {
+		var replicas []uint32
+		for _, replica := range partition.Replicas {
+			replicas = append(replicas, replica.Id)
+		}
+
+		var isr []uint32
+		for _, replica := range partition.Isr {
+			isr = append(isr, replica.Id)
+		}
+
+		record := Partition{
+			resp.Name,
+			partition.Partition,
+			partition.Leader.Id,
+			replicas,
+			isr,
+		}
+
+		partitionList = append(partitionList, record)
+	}
+	structuredDisplay.Partitions = partitionList
+
+	for _, entry := range resp.Config {
+		name := strings.Join(strings.Split(entry.Name, "."), "_")
+		structuredDisplay.Config[name] = entry.Value
+	}
+
+	if format == output.JSON.String() {
+		out, _ := json.Marshal(structuredDisplay)
+		_, err :=  fmt.Fprintf(os.Stdout, string(pretty.Pretty(out)))
+		return err
+	} else if format == output.YAML.String() {
+		out, _ := yaml.Marshal(structuredDisplay)
+		_, err := fmt.Fprintf(os.Stdout, string(out))
+		return err
+	}
+	return nil
 }
