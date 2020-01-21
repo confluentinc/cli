@@ -36,7 +36,7 @@ type rolebindingCommand struct {
 
 // NewRolebindingCommand returns the sub-command object for interacting with RBAC rolebindings.
 func NewRolebindingCommand(cfg *config.Config, prerunner cmd.PreRunner) *cobra.Command {
-	cliCmd := cmd.NewAuthenticatedCLICommand(
+	cliCmd := cmd.NewAuthenticatedWithMDSCLICommand(
 		&cobra.Command{
 			Use:   "rolebinding",
 			Short: "Manage RBAC and IAM role bindings.",

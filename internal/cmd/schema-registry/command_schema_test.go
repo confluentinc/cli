@@ -44,12 +44,10 @@ func (suite *SchemaTestSuite) SetupSuite() {
 			return nil, nil
 		},
 	}
-	srCluster, err := suite.conf.Context().SchemaRegistryCluster()
-	require.NoError(suite.T(), err)
+	ctx := suite.conf.Context()
+	srCluster := ctx.SchemaRegistryClusters[ctx.State.Auth.Account.Id]
 	srCluster.SrCredentials = &config.APIKeyPair{Key: "key", Secret: "secret"}
-
-	cluster, err := suite.conf.Context().ActiveKafkaCluster()
-	require.NoError(suite.T(), err)
+	cluster := ctx.KafkaClusters[ctx.Kafka]
 	suite.kafkaCluster = &kafkav1.KafkaCluster{
 		Id:         cluster.ID,
 		Name:       cluster.Name,

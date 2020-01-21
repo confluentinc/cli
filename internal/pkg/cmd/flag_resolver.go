@@ -110,9 +110,6 @@ func (r *FlagResolverImpl) ResolveClusterFlag(cmd *cobra.Command) (string, error
 			return "", err
 		}
 		return clusterId, nil
-		//if _, err := ctx.FindKafkaCluster(clusterId, client); err != nil {
-		//	return fmt.Errorf("kafka cluster '%s' does not exist under context '%s'", clusterId, ctx.Name)
-		//}
 	}
 	return "", nil
 }

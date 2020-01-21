@@ -78,8 +78,6 @@ func newContext(name string, platform *Platform, credential *Credential,
 	return ctx, nil
 }
 
-// TODO: Save contexts after resolution.
-
 func (c *Context) validateKafkaClusterConfig(cluster *KafkaClusterConfig) error {
 	if cluster.ID == "" {
 		return fmt.Errorf("cluster under context '%s' has no %s", c.Name, "id")
@@ -121,17 +119,6 @@ func (c *Context) validate() error {
 	if c.State == nil {
 		c.State = new(ContextState)
 	}
-	for envId, sr := range c.SchemaRegistryClusters {
-		if sr == nil {
-			c.SchemaRegistryClusters[envId] = new(SchemaRegistryCluster)
-		}
-	}
-	envId, err := c.authenticatedEnvId()
-	if err == nil {
-		if _, ok := c.SchemaRegistryClusters[envId]; !ok {
-			c.SchemaRegistryClusters[envId] = new(SchemaRegistryCluster)
-		}
-	}
 	for _, cluster := range c.KafkaClusters {
 		err := c.validateKafkaClusterConfig(cluster)
 		if err != nil {
@@ -141,79 +128,18 @@ func (c *Context) validate() error {
 	return nil
 }
 
-func (c *Context) SetActiveKafkaCluster(clusterId string) error {
-	_, err := c.FindKafkaCluster(clusterId)
-	if err != nil {
-		return err
-	}
-	c.Kafka = clusterId
-	return c.Save()
-}
-
-// SchemaRegistryCluster returns the SchemaRegistryCluster of the Context,
-// or an empty SchemaRegistryCluster if there is none set, 
-// or an ErrNotLoggedIn if the user is not logged in.
-func (c *Context) SchemaRegistryCluster() (*SchemaRegistryCluster, error) {
-	envId, err := c.authenticatedEnvId()
-	if err != nil {
-		return nil, err
-	}
-	if cluster, ok := c.SchemaRegistryClusters[envId]; ok {
-		if cluster.SchemaRegistryEndpoint == "" || cluster.Id == "" {
-			return nil, nil
-		}
-		return cluster, nil
-	} else {
-		return nil, nil
-	}
-}
-
-func (c *Context) ActiveKafkaCluster() (*KafkaClusterConfig, error) {
-	cluster, err := c.FindKafkaCluster(c.Kafka)
-	if err != nil {
-		return nil, err
-	}
-	return cluster, nil
-}
-
-func (c *Context) FindKafkaCluster(clusterId string) (*KafkaClusterConfig, error) {
-	if _, ok := c.KafkaClusters[clusterId]; !ok {
-		return nil, errors.ErrNoKafkaContext
-	}
-	return c.KafkaClusters[clusterId], nil
-}
-
-func (c *Context) UseAPIKey(apiKey string, clusterId string) error {
-	kcc, err := c.FindKafkaCluster(clusterId)
-	if err != nil {
-		return err
-	}
-	kcc.APIKey = apiKey
-	return c.Save()
-}
-
 func (c *Context) Save() error {
 	return c.Config.Save()
 }
 
-func (c *Context) hasLogin() bool {
+func (c *Context) HasMDSLogin() bool {
 	credType := c.Credential.CredentialType
 	switch credType {
 	case Username:
-		state := c.State
-		return state != nil && state.AuthToken != "" && state.Auth != nil &&
-			state.Auth.Account != nil && state.Auth.Account.Id != ""
+		return c.State != nil && c.State.AuthToken != ""
 	case APIKey:
 		return false
 	default:
 		panic(fmt.Sprintf("unknown credential type %d in context '%s'", credType, c.Name))
 	}
-}
-
-func (c *Context) authenticatedEnvId() (string, error) {
-	hasLogin := c.hasLogin()
-	if !hasLogin {
-		return "", errors.ErrNotLoggedIn
-	}
-	return c.State.Auth.Account.Id, nil
 }

@@ -161,7 +161,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(errors.New("No environments found for authenticated user!"), cmd)
 	}
 	username := user.User.Email
-	name := genContextName(username, url)
+	name := generateContextName(username, url)
 	var state *config.ContextState
 	ctx, err := a.config.FindContext(name)
 	if err == nil {
@@ -311,16 +311,17 @@ func (a *commands) credentials(cmd *cobra.Command, userField string, cloudClient
 }
 
 func (a *commands) addContextIfAbsent(username string, url string, state *config.ContextState) error {
-	name := genContextName(username, url)
-	if _, ok := a.config.Contexts[name]; ok {
+	ctxName := generateContextName(username, url)
+	if _, ok := a.config.Contexts[ctxName]; ok {
 		return nil
 	}
+	credName := generateCredentialName(username)
 	platform := &config.Platform{
-		Name:   name,
+		Name:   url,
 		Server: url,
 	}
 	credential := &config.Credential{
-		Name:     name,
+		Name:     credName,
 		Username: username,
 		// don't save password if they entered it interactively.
 	}
@@ -332,20 +333,24 @@ func (a *commands) addContextIfAbsent(username string, url string, state *config
 	if err != nil {
 		return err
 	}
-	err = a.config.AddContext(name, platform.Name, credential.Name, map[string]*config.KafkaClusterConfig{},
+	err = a.config.AddContext(ctxName, platform.Name, credential.Name, map[string]*config.KafkaClusterConfig{},
 		"", nil, state)
 	if err != nil {
 		return err
 	}
-	err = a.config.SetContext(name)
+	err = a.config.SetContext(ctxName)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func genContextName(username string, url string) string {
+func generateContextName(username string, url string) string {
 	return fmt.Sprintf("login-%s-%s", username, url)
+}
+
+func generateCredentialName(username string) string {
+	return fmt.Sprintf("username-%s", username)
 }
 
 func check(err error) {

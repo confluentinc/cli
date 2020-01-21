@@ -51,8 +51,8 @@ func NewClusterCommand(config *config.Config, prerunner pcmd.PreRunner, srClient
 		config, prerunner)
 	clusterCmd := &clusterCommand{
 		AuthenticatedCLICommand: cliCmd,
-		srClient:   srClient,
-		logger:     logger,
+		srClient:                srClient,
+		logger:                  logger,
 	}
 	clusterCmd.init()
 	return clusterCmd.Command
@@ -126,8 +126,9 @@ func (c *clusterCommand) enable(cmd *cobra.Command, args []string) error {
 	newCluster, err := c.Client.SchemaRegistry.CreateSchemaRegistryCluster(ctx, clusterConfig)
 	if err != nil {
 		// If it already exists, return the existing one
-		cluster, err := c.Context.SchemaRegistryCluster(cmd)
-		if err != nil {
+		cluster, getExistingErr := c.Context.SchemaRegistryCluster(cmd)
+		if getExistingErr != nil {
+			// Propagate CreateSchemaRegistryCluster error.
 			return errors.HandleCommon(err, cmd)
 		}
 		_ = printer.RenderTableOut(cluster, enableLabels, enableRenames, os.Stdout)

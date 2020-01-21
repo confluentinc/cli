@@ -184,7 +184,7 @@ func (c *clusterCommand) createClusterAcl(operation kafkav1.ACLOperations_ACLOpe
 }
 
 func (c *clusterCommand) buildACLBindings(serviceAccountId string, cluster *ksqlv1.KSQLCluster, topics []string) []*kafkav1.ACLBinding {
-	var bindings []*kafkav1.ACLBinding
+	bindings := make([]*kafkav1.ACLBinding, 0)
 	for _, op := range []kafkav1.ACLOperations_ACLOperation{
 		kafkav1.ACLOperations_DESCRIBE,
 		kafkav1.ACLOperations_DESCRIBE_CONFIGS,

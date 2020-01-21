@@ -33,7 +33,7 @@ type roleCommand struct {
 
 // NewRoleCommand returns the sub-command object for interacting with RBAC roles.
 func NewRoleCommand(cfg *config.Config, prerunner cmd.PreRunner) *cobra.Command {
-	cliCmd := cmd.NewAuthenticatedCLICommand(
+	cliCmd := cmd.NewAuthenticatedWithMDSCLICommand(
 		&cobra.Command{
 			Use:   "role",
 			Short: "Manage RBAC and IAM roles.",
@@ -66,7 +66,6 @@ func (c *roleCommand) init() {
 		Args:  cobra.ExactArgs(1),
 	})
 }
-
 
 func (c *roleCommand) list(cmd *cobra.Command, args []string) error {
 	roles, _, err := c.MDSClient.RoleDefinitionsApi.Roles(c.createContext())

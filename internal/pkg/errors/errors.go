@@ -118,6 +118,7 @@ func (h *Handler) Handle(err error) {
 	if h.err != nil {
 		return
 	}
+	h.err = err
 }
 
 func (h *Handler) Reset() error {

@@ -3,11 +3,8 @@ package iam
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/mds-sdk-go"
-
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
 type command struct {
@@ -16,9 +13,8 @@ type command struct {
 }
 
 // New returns the default command object for interacting with RBAC.
-func New(prerunner pcmd.PreRunner, config *config.Config,
-	version *version.Version, client *mds.APIClient) *cobra.Command {
-	cliCmd := pcmd.NewAuthenticatedCLICommand(
+func New(prerunner pcmd.PreRunner, config *config.Config) *cobra.Command {
+	cliCmd := pcmd.NewAuthenticatedWithMDSCLICommand(
 		&cobra.Command{
 			Use:   "iam",
 			Short: "Manage RBAC and IAM permissions.",

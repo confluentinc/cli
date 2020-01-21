@@ -58,10 +58,12 @@ func HandleCommon(err error, cmd *cobra.Command) error {
 		return err
 	case *UnspecifiedCredentialError:
 		cmd.SilenceUsage = true
+		// TODO: Add more context to credential error messages (add variable error).
 		return fmt.Errorf("context \"%s\" has corrupted credentials. To fix, please remove the config file, "+
 			"and run `login` or `init`", e.ContextName)
 	case *UnspecifiedPlatformError:
 		cmd.SilenceUsage = true
+		// TODO: Add more context to platform error messages (add variable error).
 		return fmt.Errorf("context \"%s\" has a corrupted platform. To fix, please remove the config file, "+
 			"and run `login` or `init`", e.ContextName)
 	// TODO: ErrEditing is declared incorrectly as "type ErrEditing error"

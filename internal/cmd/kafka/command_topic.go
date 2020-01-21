@@ -343,7 +343,6 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	}
 
 	pcmd.Println(cmd, "Starting Kafka Producer. ^C or ^D to exit")
-
 	producer, err := NewSaramaProducer(cluster)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)

@@ -5,6 +5,10 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+
 	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/confluentinc/ccloud-sdk-go/mock"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go/mock"
@@ -13,9 +17,6 @@ import (
 	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	srMock "github.com/confluentinc/schema-registry-sdk-go/mock"
-	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -39,8 +40,8 @@ type ClusterTestSuite struct {
 
 func (suite *ClusterTestSuite) SetupSuite() {
 	suite.conf = config.AuthenticatedConfigMock()
-	cluster, err := suite.conf.Context().ActiveKafkaCluster()
-	require.NoError(suite.T(), err)
+	ctx := suite.conf.Context()
+	cluster := ctx.KafkaClusters[ctx.Kafka]
 	suite.kafkaCluster = &kafkav1.KafkaCluster{
 		Id:         cluster.ID,
 		Name:       cluster.Name,

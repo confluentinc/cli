@@ -92,7 +92,7 @@ func NewConfluentCommand(cliName string, cfg *pconfig.Config, logger *log.Logger
 		cmd := kafka.New(prerunner, cfg)
 		cli.AddCommand(cmd)
 		cli.AddCommand(initcontext.New(prerunner, cfg, prompt, resolver))
-		if currCtx != nil && currCtx.Credential.CredentialType == pconfig.APIKey {
+		if currCtx != nil && currCtx.Credential != nil && currCtx.Credential.CredentialType == pconfig.APIKey {
 			return cli, nil
 		}
 		cli.AddCommand(ps1.NewPromptCmd(cfg, &pps1.Prompt{Config: cfg}, logger))
@@ -114,7 +114,7 @@ func NewConfluentCommand(cliName string, cfg *pconfig.Config, logger *log.Logger
 		//cli.AddCommand(conn)
 	} else if cliName == "confluent" {
 
-		cli.AddCommand(iam.New(prerunner, cfg, ver, nil))
+		cli.AddCommand(iam.New(prerunner, cfg))
 
 		bash, err := basher.NewContext("/bin/bash", false)
 		if err != nil {
@@ -123,7 +123,7 @@ func NewConfluentCommand(cliName string, cfg *pconfig.Config, logger *log.Logger
 		shellRunner := &local.BashShellRunner{BasherContext: bash}
 		cli.AddCommand(local.New(cli, prerunner, shellRunner, logger, fs, cfg))
 
-		cli.AddCommand(secret.New(prerunner, cfg, prompt, resolver, secrets.NewPasswordProtectionPlugin(logger)))
+		cli.AddCommand(secret.New(prompt, resolver, secrets.NewPasswordProtectionPlugin(logger)))
 	}
 	return cli, nil
 }

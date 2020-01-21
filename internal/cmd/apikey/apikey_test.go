@@ -48,13 +48,10 @@ type APITestSuite struct {
 //Require
 func (suite *APITestSuite) SetupTest() {
 	suite.conf = config.AuthenticatedConfigMock()
-	srCluster, _ := suite.conf.SchemaRegistryCluster(mock.NewClientMock())
-	srCluster.SrCredentials = &config.APIKeyPair{Key: apiKeyVal, Secret: apiSecretVal}
 	ctx := suite.conf.Context()
-	cluster, err := ctx.ActiveKafkaCluster(mock.NewClientMock())
-	if err != nil {
-		panic(err)
-	}
+	srCluster := ctx.SchemaRegistryClusters[ctx.State.Auth.Account.Id]
+	srCluster.SrCredentials = &config.APIKeyPair{Key: apiKeyVal, Secret: apiSecretVal}
+	cluster := ctx.KafkaClusters[ctx.Kafka]
 	suite.kafkaCluster = &kafkav1.KafkaCluster{
 		Id:         cluster.ID,
 		Name:       cluster.Name,
@@ -98,13 +95,13 @@ func (suite *APITestSuite) SetupTest() {
 		},
 	}
 	suite.keystore = &mock.KeyStore{
-		HasAPIKeyFunc: func(key, clusterId string, client *ccloud.Client) (bool, error) {
+		HasAPIKeyFunc: func(key, clusterId string, cmd *cobra.Command) (b bool, e error) {
 			return true, nil
 		},
-		StoreAPIKeyFunc: func(key *authv1.ApiKey, clusterId string, client *ccloud.Client) error {
+		StoreAPIKeyFunc: func(key *authv1.ApiKey, clusterId string, cmd *cobra.Command) error {
 			return nil
 		},
-		DeleteAPIKeyFunc: func(key string) error {
+		DeleteAPIKeyFunc: func(key string, cmd *cobra.Command) error {
 			return nil
 		},
 	}

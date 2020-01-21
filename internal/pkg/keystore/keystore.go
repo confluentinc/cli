@@ -26,7 +26,7 @@ func (c *ConfigKeyStore) HasAPIKey(key string, clusterId string, cmd *cobra.Comm
 		return false, err
 	}
 	if ctx == nil {
-		return false, nil
+		return false, errors.ErrNoContext
 	}
 	kcc, err := ctx.FindKafkaCluster(cmd, clusterId)
 	if err != nil {

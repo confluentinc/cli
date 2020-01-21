@@ -137,20 +137,19 @@ func (c *Config) validate() error {
 		}
 	}
 	// Validate that every context:
-	// 1. Has a credential, a platform, and a state. 
-	// 2. Has no hanging references between the context and the config.
-	// 3. Is mapped by name correctly in the config.
+	// 1. Has no hanging references between the context and the config.
+	// 2. Is mapped by name correctly in the config.
 	for _, context := range c.Contexts {
 		err := context.validate()
 		if err != nil {
 			c.Logger.Trace("context validation error")
 			return err
 		}
-		if _, ok := c.Credentials[context.CredentialName]; !ok || context.CredentialName == "" {
+		if _, ok := c.Credentials[context.CredentialName]; !ok {
 			c.Logger.Trace("unspecified credential error")
 			return &errors.UnspecifiedCredentialError{ContextName: context.Name}
 		}
-		if _, ok := c.Platforms[context.PlatformName]; !ok || context.PlatformName == "" {
+		if _, ok := c.Platforms[context.PlatformName]; !ok {
 			c.Logger.Trace("unspecified platform error")
 			return &errors.UnspecifiedPlatformError{ContextName: context.Name}
 		}
@@ -161,7 +160,6 @@ func (c *Config) validate() error {
 			c.Logger.Trace(fmt.Sprintf("state of context %s in config does not match actual state of context", context.Name))
 			return c.corruptedConfigError()
 		}
-
 	}
 	// Validate that all context states are mapped to an existing context.
 	for contextName := range c.ContextStates {

@@ -19,14 +19,14 @@ func AuthenticatedConfigMock() *Config {
 		Account: &v1.Account{Id: "testAccount"},
 	}
 	url := "http://test"
-	name := fmt.Sprintf("login-%s-%s", auth.User.Email, url)
+	credName := fmt.Sprintf("username-%s-%s", auth.User.Email, url)
 	platform := &Platform{
-		Name:   name,
+		Name:   url,
 		Server: url,
 	}
 	conf.Platforms[platform.Name] = platform
 	credential := &Credential{
-		Name:           name,
+		Name:           credName,
 		Username:       auth.User.Email,
 		CredentialType: Username,
 	}
@@ -60,7 +60,8 @@ func AuthenticatedConfigMock() *Config {
 			},
 		},
 	}
-	ctx, err := newContext("test-context", platform, credential, kafkaClusters, "lkc-0000", srClusters, state, conf)
+	ctxName := fmt.Sprintf("login-%s-%s", auth.User.Email, url)
+	ctx, err := newContext(ctxName, platform, credential, kafkaClusters, "lkc-0000", srClusters, state, conf)
 	if err != nil {
 		panic(err)
 	}

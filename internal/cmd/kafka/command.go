@@ -28,7 +28,7 @@ func New(prerunner pcmd.PreRunner, config *config.Config) *cobra.Command {
 func (c *command) init() {
 	c.AddCommand(NewTopicCommand(c.prerunner, c.Config.Config))
 	context := c.Config.Config.Context()
-	if context != nil && context.Credential.CredentialType == config.APIKey { // TODO: Does not work with --context flag.
+	if context != nil && context.Credential.CredentialType == config.APIKey { // TODO: Change to DynamicConfig to handle flags.
 		return
 	}
 	c.AddCommand(NewClusterCommand(c.prerunner, c.Config.Config))
