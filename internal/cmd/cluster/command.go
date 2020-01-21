@@ -6,16 +6,19 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"sort"
 
+	"github.com/go-yaml/yaml"
 	"github.com/spf13/cobra"
-
-	"github.com/confluentinc/go-printer"
+	"github.com/tidwall/pretty"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/go-printer"
 )
 
 type Metadata interface {
@@ -52,8 +55,8 @@ func NewScopedIdService(client *http.Client, userAgent string, logger *log.Logge
 }
 
 type Element struct {
-	Type string
-	ID   string
+	Type string `json:"type" yaml:"type"`
+	ID   string `json:"id" yaml:"id"`
 }
 
 var (
@@ -115,6 +118,7 @@ func (c *command) init() {
 	}
 	describeCmd.Flags().String("url", "", "URL to a Confluent cluster.")
 	check(describeCmd.MarkFlagRequired("url"))
+	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, "", output.Usage)
 	describeCmd.Flags().SortFlags = false
 	c.AddCommand(describeCmd)
 }
@@ -130,6 +134,36 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
+	outputOption, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	return printDescribe(cmd, meta, outputOption)
+}
+
+func check(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
+
+func printDescribe(cmd *cobra.Command, meta *ScopedId, format string) error {
+	if !(format == "" || format == output.YAML.String() || format == output.JSON.String()) {
+		return fmt.Errorf("invalid output option")
+	}
+	type StructuredDisplay struct {
+		Crn   string `json:"crn" yaml:"crn"`
+		Scope []Element `json:"scope" yaml:"scope"`
+	}
+	structuredDisplay := &StructuredDisplay{}
+	if meta.ID != "" {
+		if format == "" {
+			pcmd.Printf(cmd, "Confluent Resource Name: %s\n\n", meta.ID)
+		} else {
+			structuredDisplay.Crn = meta.ID
+		}
+	}
 	var types []string
 	for name := range meta.Scope.Clusters {
 		types = append(types, name)
@@ -138,20 +172,25 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	var data [][]string
 	for _, name := range types {
 		id := meta.Scope.Clusters[name]
-		data = append(data, printer.ToRow(&Element{Type: name, ID: id}, describeFields))
-	}
+		element := Element{Type: name, ID: id}
+		if format == "" {
+			data = append(data, printer.ToRow(&element, describeFields))
+		} else {
+			structuredDisplay.Scope = append(structuredDisplay.Scope, element)
+		}
 
-	if meta.ID != "" {
-		pcmd.Printf(cmd, "Confluent Resource Name: %s\n\n", meta.ID)
 	}
-	pcmd.Println(cmd, "Scope:")
-	printer.RenderCollectionTable(data, describeLabels)
-
+	if format == output.JSON.String() {
+		out, _ := json.Marshal(structuredDisplay)
+		_, err :=  fmt.Fprintf(os.Stdout, string(pretty.Pretty(out)))
+		return err
+	} else if format == output.YAML.String() {
+		out, _ := yaml.Marshal(structuredDisplay)
+		_, err := fmt.Fprintf(os.Stdout, string(out))
+		return err
+	} else {
+		pcmd.Println(cmd, "Scope:")
+		printer.RenderCollectionTable(data, describeLabels)
+	}
 	return nil
-}
-
-func check(err error) {
-	if err != nil {
-		panic(err)
-	}
 }
