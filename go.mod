@@ -69,6 +69,7 @@ require (
 	github.com/mattn/go-isatty v0.0.8
 	github.com/mattn/go-runewidth v0.0.3 // indirect
 	github.com/mitchellh/golicense v0.1.1
+	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/nbutton23/zxcvbn-go v0.0.0-20180912185939-ae427f1e4c1d // indirect
 	github.com/neurosnap/sentences v1.0.6 // indirect
 	github.com/olekukonko/tablewriter v0.0.0-20180912035003-be2c049b30cc
