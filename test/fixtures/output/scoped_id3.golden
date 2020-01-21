@@ -1,4 +1,4 @@
-crn://md01.example.com/kafka=kafkaCluster1/connect=connectClusterA
+Confluent Resource Name: crn://md01.example.com/kafka=kafkaCluster1/connect=connectClusterA
 
 Scope:
       Type      |      ID        
