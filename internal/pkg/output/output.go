@@ -14,13 +14,14 @@ import (
 )
 
 const (
-	humanString   = "human"
-	jsonString    = "json"
-	yamlString    = "yaml"
-	FlagName      = "output"
-	ShortHandFlag = "o"
-	Usage         = `Specify the output format as "human", "json" or "yaml".`
-	DefaultValue  = humanString
+	humanString        = "human"
+	jsonString         = "json"
+	yamlString         = "yaml"
+	FlagName           = "output"
+	ShortHandFlag      = "o"
+	Usage              = `Specify the output format as "human", "json" or "yaml".`
+	DefaultValue       = humanString
+	InvalidFormatError = "invalid output format type"
 )
 
 type Format int
@@ -62,7 +63,7 @@ func NewListOutputWriter(cmd *cobra.Command, listFields []string, listLabels []s
 			listLabels:   listLabels,
 		}, nil
 	}
-	return nil, fmt.Errorf("invalid output type")
+	return nil, fmt.Errorf(InvalidFormatError)
 }
 
 type ListOutputWriter interface {

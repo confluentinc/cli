@@ -118,7 +118,7 @@ func (c *command) init() {
 	}
 	describeCmd.Flags().String("url", "", "URL to a Confluent cluster.")
 	check(describeCmd.MarkFlagRequired("url"))
-	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, "", output.Usage)
+	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	describeCmd.Flags().SortFlags = false
 	c.AddCommand(describeCmd)
 }
@@ -149,8 +149,8 @@ func check(err error) {
 }
 
 func printDescribe(cmd *cobra.Command, meta *ScopedId, format string) error {
-	if !(format == "" || format == output.YAML.String() || format == output.JSON.String()) {
-		return fmt.Errorf("invalid output option")
+	if !(format == output.Human.String() || format == output.YAML.String() || format == output.JSON.String()) {
+		return fmt.Errorf(output.InvalidFormatError)
 	}
 	type StructuredDisplay struct {
 		Crn   string `json:"crn" yaml:"crn"`
@@ -158,7 +158,7 @@ func printDescribe(cmd *cobra.Command, meta *ScopedId, format string) error {
 	}
 	structuredDisplay := &StructuredDisplay{}
 	if meta.ID != "" {
-		if format == "" {
+		if format == output.Human.String() {
 			pcmd.Printf(cmd, "Confluent Resource Name: %s\n\n", meta.ID)
 		} else {
 			structuredDisplay.Crn = meta.ID
@@ -173,7 +173,7 @@ func printDescribe(cmd *cobra.Command, meta *ScopedId, format string) error {
 	for _, name := range types {
 		id := meta.Scope.Clusters[name]
 		element := Element{Type: name, ID: id}
-		if format == "" {
+		if format == output.Human.String() {
 			data = append(data, printer.ToRow(&element, describeFields))
 		} else {
 			structuredDisplay.Scope = append(structuredDisplay.Scope, element)
@@ -188,7 +188,7 @@ func printDescribe(cmd *cobra.Command, meta *ScopedId, format string) error {
 		out, _ := yaml.Marshal(structuredDisplay)
 		_, err := fmt.Fprintf(os.Stdout, string(out))
 		return err
-	} else {
+	} else  {
 		pcmd.Println(cmd, "Scope:")
 		printer.RenderCollectionTable(data, describeLabels)
 	}

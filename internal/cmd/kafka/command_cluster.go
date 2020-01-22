@@ -77,7 +77,7 @@ func (c *clusterCommand) init() {
 		RunE:  c.describe,
 		Args:  cobra.ExactArgs(1),
 	}
-	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, "", output.Usage)
+	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	describeCmd.Flags().SortFlags = false
 	c.AddCommand(describeCmd)
 

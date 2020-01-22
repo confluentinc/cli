@@ -84,7 +84,7 @@ Retrieve all versions registered under a given subject and its compatibility lev
 		RunE: c.describe,
 		Args: cobra.ExactArgs(1),
 	}
-	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, "", output.Usage)
+	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	describeCmd.Flags().SortFlags = false
 	c.AddCommand(describeCmd)
 }
@@ -191,7 +191,7 @@ func (c *subjectCommand) describe(cmd *cobra.Command, args []string) error {
 	structuredOutput := &describeStructuredDisplay{Version: versions}
 	fields := []string{"Version"}
 	renames := map[string]string{"Version": "version"}
-	if outputOption == "" {
+	if outputOption == output.Human.String() {
 		PrintVersions(versions)
 	} else if outputOption == output.JSON.String() {
 		return printer.RenderJSONPBOut(structuredOutput, fields, renames, os.Stdout)

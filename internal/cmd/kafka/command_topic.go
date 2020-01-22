@@ -147,7 +147,7 @@ Describe the 'my_topic' topic.
 		Args: cobra.ExactArgs(1),
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, "", output.Usage)
+	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
@@ -266,12 +266,12 @@ func (c *topicCommand) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	if outputOption == "" {
+	if outputOption == output.Human.String() {
 		return printHumanDescribe(cmd, resp)
 	} else if outputOption == output.JSON.String() || outputOption == output.YAML.String() {
 		return printStructuredDescribe(cmd, resp, outputOption)
 	} else {
-		return fmt.Errorf("invalid output option")
+		return fmt.Errorf(output.InvalidFormatError)
 	}
 }
 
