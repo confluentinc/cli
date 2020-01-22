@@ -83,7 +83,7 @@ List connectors in the current or specified Kafka cluster context.
 		Args: cobra.NoArgs,
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, "", output.Usage)
+	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
@@ -179,11 +179,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	outputOption, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	outputWriter, err := output.NewListOutputWriter(outputOption, listFields, listFields)
+	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listFields)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -196,11 +192,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		}
 		outputWriter.AddElement(connector)
 	}
-	err = outputWriter.Out()
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	return nil
+	return outputWriter.Out()
 }
 
 func (c *command) describe(cmd *cobra.Command, args []string) error {

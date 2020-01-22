@@ -3,6 +3,9 @@ package output
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/spf13/cobra"
+	"github.com/tidwall/pretty"
 	"os"
 	"reflect"
 
@@ -11,25 +14,29 @@ import (
 )
 
 const (
-	FlagName = "output"
-	ShortHandFlag = "o"
-	Usage = "Specify the output format."
+	FlagName          = "output"
+	ShortHandFlag     = "o"
+	Usage             = `Specify the output format.` //(default: "table", "json", "yaml").`  cannot user because linter says "flag usage should consist of delimited real english words"
+	DefaultValue      = "table"
 )
 
 type Format int
 
-// Human enum and string form is not used as we assume human list only when -o flag not used
 const (
-	Human Format = iota
+	Table Format = iota
 	JSON
 	YAML
 )
 
 func (o Format) String() string {
-	return [...]string{"human", "json", "yaml"}[o]
+	return [...]string{"table", "json", "yaml"}[o]
 }
 
-func NewListOutputWriter(format string, listFields []string, listLabels []string) (ListOutputWriter, error) {
+func NewListOutputWriter(cmd *cobra.Command, listFields []string, listLabels []string) (ListOutputWriter, error) {
+	format, err := cmd.Flags().GetString(FlagName)
+	if err != nil {
+		return nil, errors.HandleCommon(err, cmd)
+	}
 	if len(listLabels) != len(listFields) {
 		return nil, fmt.Errorf("selected fields and ouput labels length mismatch")
 	}
@@ -45,10 +52,11 @@ func NewListOutputWriter(format string, listFields []string, listLabels []string
 			listFields:   listFields,
 			listLabels:   listLabels,
 		}, nil
-	} else if format == "" {
-		return &HumanListWriter{
-			listFields: listFields,
-			listLabels: listLabels,
+	} else if format == Table.String() {
+		return &TableListWriter{
+			outputFormat: Table,
+			listFields:   listFields,
+			listLabels:   listLabels,
 		}, nil
 	}
 	return nil, fmt.Errorf("invalid output type")
@@ -56,23 +64,29 @@ func NewListOutputWriter(format string, listFields []string, listLabels []string
 
 type ListOutputWriter interface {
 	AddElement(e interface{})
-	Out() error
+	Out()   error
+	GetOutputFormat() Format
 }
 
-type HumanListWriter struct {
-	data       [][]string
-	listFields []string
-	listLabels []string
+type TableListWriter struct {
+	outputFormat Format
+	data         [][]string
+	listFields   []string
+	listLabels   []string
 }
 
-func (o *HumanListWriter) AddElement(e interface{}) {
+func (o *TableListWriter) AddElement(e interface{}) {
 	o.data = append(o.data, printer.ToRow(e, o.listFields))
 }
 
 
-func (o *HumanListWriter) Out() error {
+func (o *TableListWriter) Out() error {
 	printer.RenderCollectionTable(o.data, o.listLabels)
 	return nil
+}
+
+func (o *TableListWriter) GetOutputFormat() Format {
+	return o.outputFormat
 }
 
 
@@ -99,11 +113,16 @@ func (o *JSONYAMLListWriter) Out() error {
 		outputBytes, err = yaml.Marshal(o.data)
 	} else {
 		outputBytes, err = json.Marshal(o.data)
+		outputBytes = pretty.Pretty(outputBytes)
 	}
 	if err != nil {
 		return err
 	}
 	_, err = fmt.Fprintf(os.Stdout, string(outputBytes))
 	return err
+}
+
+func (o *JSONYAMLListWriter) GetOutputFormat() Format {
+	return o.outputFormat
 }
 

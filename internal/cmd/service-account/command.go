@@ -56,7 +56,7 @@ func (c *command) init() {
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	}
-	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, "", output.Usage)
+	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
@@ -207,21 +207,12 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	outputOption, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	outputWriter, err := output.NewListOutputWriter(outputOption, listFields, listLabels)
+	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listLabels)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 	for _, u := range users {
 		outputWriter.AddElement(u)
 	}
-
-	err = outputWriter.Out()
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	return nil
+	return outputWriter.Out()
 }

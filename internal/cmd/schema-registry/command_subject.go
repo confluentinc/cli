@@ -49,7 +49,7 @@ Retrieve all subjects available in a Schema Registry
 		RunE: c.list,
 		Args: cobra.NoArgs,
 	}
-	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, "", output.Usage)
+	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 	// Update
@@ -156,11 +156,7 @@ func (c *subjectCommand) list(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if len(list) > 0 {
-		outputOption, err := cmd.Flags().GetString(output.FlagName)
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-		outputWriter, err := output.NewListOutputWriter(outputOption, listLabels, listLabels)
+		outputWriter, err := output.NewListOutputWriter(cmd, listLabels, listLabels)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
@@ -169,10 +165,7 @@ func (c *subjectCommand) list(cmd *cobra.Command, args []string) error {
 				Subject: l,
 			})
 		}
-		err = outputWriter.Out()
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
+		return outputWriter.Out()
 	} else {
 		pcmd.Println(cmd, "No subjects")
 	}
