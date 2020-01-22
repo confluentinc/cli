@@ -201,7 +201,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		}
 
 		// Add '*' only in the case where we are printing out tables
-		if outputWriter.GetOutputFormat() == output.Table {
+		if outputWriter.GetOutputFormat() == output.Human {
 			// resourceId != "" added to be explicit that when no resourceId is specified we will not have "*"
 			if resourceId != "" && apiKey.Key == currentKey {
 				apiKey.Key = fmt.Sprintf("* %s", apiKey.Key)

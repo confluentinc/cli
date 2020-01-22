@@ -124,7 +124,8 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	for _, environment := range environments {
-		if outputWriter.GetOutputFormat() == output.Table {
+		// Add '*' only in the case where we are printing out tables
+		if outputWriter.GetOutputFormat() == output.Human {
 			if environment.Id == c.config.Auth.Account.Id {
 				environment.Id = fmt.Sprintf("* %s", environment.Id)
 			} else {

@@ -14,22 +14,25 @@ import (
 )
 
 const (
-	FlagName          = "output"
-	ShortHandFlag     = "o"
-	Usage             = `Specify the output format.` //(default: "table", "json", "yaml").`  cannot user because linter says "flag usage should consist of delimited real english words"
-	DefaultValue      = "table"
+	humanString   = "human"
+	jsonString    = "json"
+	yamlString    = "yaml"
+	FlagName      = "output"
+	ShortHandFlag = "o"
+	Usage         = `Specify the output format as "human", "json" or "yaml".`
+	DefaultValue  = humanString
 )
 
 type Format int
 
 const (
-	Table Format = iota
+	Human Format = iota
 	JSON
 	YAML
 )
 
 func (o Format) String() string {
-	return [...]string{"table", "json", "yaml"}[o]
+	return [...]string{humanString, jsonString, yamlString}[o]
 }
 
 func NewListOutputWriter(cmd *cobra.Command, listFields []string, listLabels []string) (ListOutputWriter, error) {
@@ -52,9 +55,9 @@ func NewListOutputWriter(cmd *cobra.Command, listFields []string, listLabels []s
 			listFields:   listFields,
 			listLabels:   listLabels,
 		}, nil
-	} else if format == Table.String() {
+	} else if format == Human.String() {
 		return &TableListWriter{
-			outputFormat: Table,
+			outputFormat: Human,
 			listFields:   listFields,
 			listLabels:   listLabels,
 		}, nil
