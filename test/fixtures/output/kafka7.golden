@@ -1,1 +1,10 @@
-[{"Durability":"LOW","Id":"lkc-123","Name":"abc","Provider":"gcp","Region":"us-central1","Status":"PROVISIONING"}]
+[
+  {
+    "Durability": "LOW",
+    "Id": "lkc-123",
+    "Name": "abc",
+    "Provider": "gcp",
+    "Region": "us-central1",
+    "Status": "PROVISIONING"
+  }
+]

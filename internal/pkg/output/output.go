@@ -3,6 +3,7 @@ package output
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/tidwall/pretty"
 	"os"
 	"reflect"
 
@@ -99,6 +100,7 @@ func (o *JSONYAMLListWriter) Out() error {
 		outputBytes, err = yaml.Marshal(o.data)
 	} else {
 		outputBytes, err = json.Marshal(o.data)
+		outputBytes = pretty.Pretty(outputBytes)
 	}
 	if err != nil {
 		return err
