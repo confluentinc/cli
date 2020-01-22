@@ -121,7 +121,8 @@ func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	for _, cluster := range clusters {
-		if outputWriter.GetOutputFormat() == output.Table {
+		// Add '*' only in the case where we are printing out tables
+		if outputWriter.GetOutputFormat() == output.Human {
 			if cluster.Id == currCtx.Kafka {
 				cluster.Id = fmt.Sprintf("* %s", cluster.Id)
 			} else {
