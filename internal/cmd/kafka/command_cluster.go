@@ -53,7 +53,7 @@ func (c *clusterCommand) init() {
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	}
-	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, "", output.Usage)
+	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
@@ -116,16 +116,12 @@ func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 	if err != nil && err != errors.ErrNoContext {
 		return err
 	}
-	outputOption, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	outputWriter, err := output.NewListOutputWriter(outputOption, listFields, listLabels)
+	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listLabels)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 	for _, cluster := range clusters {
-		if outputOption == "" {
+		if outputWriter.GetOutputFormat() == output.Table {
 			if cluster.Id == currCtx.Kafka {
 				cluster.Id = fmt.Sprintf("* %s", cluster.Id)
 			} else {
@@ -134,11 +130,7 @@ func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 		}
 		outputWriter.AddElement(cluster)
 	}
-	err = outputWriter.Out()
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	return nil
+	return outputWriter.Out()
 }
 
 func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {

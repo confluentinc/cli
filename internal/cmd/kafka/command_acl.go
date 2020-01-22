@@ -85,7 +85,7 @@ func (c *aclCommand) init() {
 	}
 	cmd.Flags().AddFlagSet(resourceFlags())
 	cmd.Flags().Int("service-account-id", 0, "Service account ID.")
-	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, "", output.Usage)
+	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	cmd.Flags().SortFlags = false
 
 	c.AddCommand(cmd)
@@ -104,12 +104,8 @@ func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	outputOption, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
 	aclListFields := []string{"ServiceAccountId", "Permission", "Operation", "Resource", "Name", "Type"}
-	outputWriter, err := output.NewListOutputWriter(outputOption, aclListFields, aclListFields)
+	outputWriter, err := output.NewListOutputWriter(cmd, aclListFields, aclListFields)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -131,11 +127,7 @@ func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
 		}
 		outputWriter.AddElement(record)
 	}
-	err = outputWriter.Out()
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	return nil
+	return outputWriter.Out()
 }
 
 func (c *aclCommand) create(cmd *cobra.Command, args []string) error {

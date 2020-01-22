@@ -55,7 +55,7 @@ func (c *roleCommand) init() {
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	}
-	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, "", output.Usage)
+	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
@@ -73,11 +73,7 @@ func (c *roleCommand) list(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	outputOption, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	outputWriter, err := output.NewListOutputWriter(outputOption, roleListFields, roleListLabels)
+	outputWriter, err := output.NewListOutputWriter(cmd, roleListFields, roleListLabels)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -97,12 +93,7 @@ func (c *roleCommand) list(cmd *cobra.Command, args []string) error {
 		outputWriter.AddElement(&prettyRole)
 	}
 
-	err = outputWriter.Out()
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
-	return nil
+	return outputWriter.Out()
 }
 
 func (c *roleCommand) describe(cmd *cobra.Command, args []string) error {

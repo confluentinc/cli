@@ -107,7 +107,7 @@ List all topics.
 		Args: cobra.NoArgs,
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, "", output.Usage)
+	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
@@ -195,25 +195,14 @@ func (c *topicCommand) list(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	outputOption, err := cmd.Flags().GetString(output.FlagName)
+	outputWriter, err := output.NewListOutputWriter(cmd, []string{"Name"}, []string{"Name"})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	outputWriter, err := output.NewListOutputWriter(outputOption, []string{"Name"}, []string{"Name"})
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
 	for _, topic := range resp {
 		outputWriter.AddElement(topic)
 	}
-
-	err = outputWriter.Out()
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
-	return nil
+	return outputWriter.Out()
 }
 
 func (c *topicCommand) create(cmd *cobra.Command, args []string) error {

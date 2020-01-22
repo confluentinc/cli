@@ -83,7 +83,7 @@ func (c *aclCommand) init() {
 		Args:  cobra.NoArgs,
 	}
 	cmd.Flags().AddFlagSet(listAclFlags())
-	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, "", output.Usage)
+	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	cmd.Flags().SortFlags = false
 
 	c.AddCommand(cmd)
@@ -97,16 +97,7 @@ func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return c.handleAclError(cmd, err, response)
 	}
-
-	outputOption, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	err = PrintAcls(acl.Scope.Clusters.KafkaCluster, bindings, outputOption)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	return nil
+	return PrintAcls(cmd, acl.Scope.Clusters.KafkaCluster, bindings)
 }
 
 func (c *aclCommand) create(cmd *cobra.Command, args []string) error {
@@ -138,7 +129,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, args []string) error {
 		return c.handleAclError(cmd, err, response)
 	}
 
-	err = PrintAcls(acl.Scope.Clusters.KafkaCluster, bindings, "")
+	err = PrintAcls(cmd, acl.Scope.Clusters.KafkaCluster, bindings)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -221,9 +212,16 @@ func convertToAclFilterRequest(request *mds.CreateAclRequest) mds.AclFilterReque
 	}
 }
 
-func PrintAcls(kafkaClusterId string, bindingsObj []mds.AclBinding, outputFormat string) error {
+func PrintAcls(cmd *cobra.Command, kafkaClusterId string, bindingsObj []mds.AclBinding) error {
 	var fields = []string{"KafkaClusterId", "Principal", "Permission", "Operation", "Host", "Resource", "Name", "Type"}
-	outputWriter, err := output.NewListOutputWriter(outputFormat, fields, fields)
+
+	// delete also uses this function but doesn't have -o flag defined, -o flag is needed NewListOutputWriter
+	_, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	}
+
+	outputWriter, err := output.NewListOutputWriter(cmd, fields, fields)
 	if err != nil {
 		return err
 	}

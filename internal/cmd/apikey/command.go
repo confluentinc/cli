@@ -82,7 +82,7 @@ func (c *command) init() {
 	listCmd.Flags().String(resourceFlagName, "", "The resource ID to filter by.")
 	listCmd.Flags().Bool("current-user", false, "Show only API keys belonging to current user.")
 	listCmd.Flags().Int32("service-account-id", 0, "The service account ID to filter by.")
-	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, "", output.Usage)
+	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
@@ -189,11 +189,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	outputOption, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	outputWriter, err := output.NewListOutputWriter(outputOption, listFields, listLabels)
+	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listLabels)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -204,7 +200,8 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 			continue
 		}
 
-		if outputOption == "" {
+		// Add '*' only in the case where we are printing out tables
+		if outputWriter.GetOutputFormat() == output.Table {
 			// resourceId != "" added to be explicit that when no resourceId is specified we will not have "*"
 			if resourceId != "" && apiKey.Key == currentKey {
 				apiKey.Key = fmt.Sprintf("* %s", apiKey.Key)
@@ -223,11 +220,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 			})
 		}
 	}
-	err = outputWriter.Out()
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	return nil
+	return outputWriter.Out()
 }
 
 func (c *command) update(cmd *cobra.Command, args []string) error {
