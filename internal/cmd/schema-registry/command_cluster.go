@@ -219,11 +219,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 		Compatibility:   compatibility,
 		Mode:            mode,
 	}
-	outputOption, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	return printer.RenderOut(data, describeLabels, describeHumanRenames, describeStructuredRenames, outputOption, os.Stdout)
+	return output.DescribeObject(cmd, data, describeLabels, describeHumanRenames, describeStructuredRenames)
 }
 
 func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {

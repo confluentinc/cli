@@ -1,16 +1,12 @@
 package schema_registry
 
 import (
-	"fmt"
-	"github.com/confluentinc/go-printer"
-	"github.com/spf13/cobra"
-	"os"
-
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+	"github.com/spf13/cobra"
 )
 
 type subjectCommand struct {
@@ -185,20 +181,17 @@ func (c *subjectCommand) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	type describeStructuredDisplay struct {
-		Version []int32
-	}
-	structuredOutput := &describeStructuredDisplay{Version: versions}
-	fields := []string{"Version"}
-	renames := map[string]string{"Version": "version"}
 	if outputOption == output.Human.String() {
 		PrintVersions(versions)
-	} else if outputOption == output.JSON.String() {
-		return printer.RenderJSONPBOut(structuredOutput, fields, renames, os.Stdout)
-	} else if outputOption == output.YAML.String() {
-		return printer.RenderYAMLPBOut(structuredOutput, fields, renames, os.Stdout)
 	} else {
-		return fmt.Errorf("invalid output option")
+		structuredOutput := &struct{
+			Version []int32
+		}{
+			versions,
+		}
+		fields := []string{"Version"}
+		structuredRenames := map[string]string{"Version": "version"}
+		return output.DescribeObject(cmd, structuredOutput, fields, map[string]string{}, structuredRenames)
 	}
 	return nil
 }

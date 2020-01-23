@@ -2,9 +2,11 @@ package output
 
 import (
 	"fmt"
+	"github.com/confluentinc/go-printer"
+	"os"
 
 	"github.com/spf13/cobra"
-	
+
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
@@ -65,5 +67,16 @@ func NewListOutputWriter(cmd *cobra.Command, listFields []string, listLabels []s
 		}, nil
 	}
 	return nil, fmt.Errorf(InvalidFormatError)
+}
+
+func DescribeObject(cmd *cobra.Command, obj interface{}, fields []string, humanRenames, structuredRenames map[string]string) error {
+	format, err := cmd.Flags().GetString(FlagName)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	if !(format == Human.String() || format == JSON.String() || format == YAML.String()) {
+		return fmt.Errorf(InvalidFormatError)
+	}
+	return printer.RenderOut(obj, fields, humanRenames, structuredRenames, format, os.Stdout)
 }
 
