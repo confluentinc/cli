@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	"net/http"
 	"os"
 	"strings"
@@ -14,6 +15,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/go-printer"
 	mds "github.com/confluentinc/mds-sdk-go"
 )
@@ -76,15 +78,23 @@ func (c *roleCommand) list(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	var data [][]string
-	for _, role := range roles {
-		roleDisplay, err := createPrettyRole(role)
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-		data = append(data, printer.ToRow(roleDisplay, roleFields))
+	format, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
 	}
-	outputTable(data)
+	if format == output.Human.String() {
+		var data [][]string
+		for _, role := range roles {
+			roleDisplay, err := createPrettyRole(role)
+			if err != nil {
+				return errors.HandleCommon(err, cmd)
+			}
+			data = append(data, printer.ToRow(roleDisplay, roleFields))
+		}
+		outputTable(data)
+	} else {
+		return output.StructuredOutput(format, roles)
+	}
 	return nil
 }
 

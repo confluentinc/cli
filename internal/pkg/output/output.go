@@ -1,9 +1,13 @@
 package output
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 
+	"github.com/go-yaml/yaml"
 	"github.com/spf13/cobra"
+	"github.com/tidwall/pretty"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
@@ -16,6 +20,10 @@ const (
 	ShortHandFlag = "o"
 	Usage         = `Specify the output format as "human", "json" or "yaml".`
 	DefaultValue  = humanString
+)
+
+var (
+	InvalidFormatError = fmt.Errorf("invalid output format type")
 )
 
 type Format int
@@ -64,6 +72,19 @@ func NewListOutputWriter(cmd *cobra.Command, listFields []string, listLabels []s
 			listLabels:   listLabels,
 		}, nil
 	}
-	return nil, fmt.Errorf("invalid output type")
+	return nil, InvalidFormatError
 }
 
+func StructuredOutput(format string, obj interface{}) error {
+	var b []byte
+	if format == JSON.String() {
+		j, _ := json.Marshal(obj)
+		b = pretty.Pretty(j)
+	} else if format == YAML.String() {
+		b, _ = yaml.Marshal(obj)
+	} else {
+		return InvalidFormatError
+	}
+	_, err := fmt.Fprintf(os.Stdout, string(b))
+	return err
+}
