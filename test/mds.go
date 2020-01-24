@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"sort"
 	"strings"
 	"testing"
 
@@ -14,7 +15,6 @@ import (
 )
 
 var (
-	rbacRoleNames = []string{"DeveloperRead", "DeveloperWrite", "SecurityAdmin", "SystemAdmin"}
 	rbacRoles = map[string]string{
 		"DeveloperRead": `{
                       "name":"DeveloperRead",
@@ -138,9 +138,16 @@ func serveMds(t *testing.T, mdsURL string) *httptest.Server {
 
 func addRoles(routesAndReplies map[string]string) {
 	base := "/security/1.0/roles"
-	allRoles := make([]string, 0, len(rbacRoles))
-	for _, roleName := range rbacRoleNames {
-		routesAndReplies[base + "/" + roleName] = rbacRoles[roleName]
+	var roleNameList []string
+	for roleName, roleInfo := range rbacRoles {
+		routesAndReplies[base + "/" + roleName] = roleInfo
+		roleNameList = append(roleNameList, roleName)
+	}
+
+	sort.Strings(roleNameList)
+	
+	var allRoles []string
+	for _, roleName := range roleNameList {
 		allRoles = append(allRoles, rbacRoles[roleName])
 	}
 	routesAndReplies[base] = "[" + strings.Join(allRoles, ",") + "]"
