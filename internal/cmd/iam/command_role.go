@@ -1,7 +1,12 @@
 package iam
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
 	"os"
+	"strings"
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
@@ -11,12 +16,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/go-printer"
 	mds "github.com/confluentinc/mds-sdk-go"
-
-	"context"
-	"encoding/json"
-	"fmt"
-	"net/http"
-	"strings"
 )
 
 var (

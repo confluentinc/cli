@@ -2,13 +2,15 @@ package test
 
 import (
 	"encoding/json"
-	"github.com/confluentinc/mds-sdk-go"
-	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	"github.com/confluentinc/mds-sdk-go"
 )
 
 var (
