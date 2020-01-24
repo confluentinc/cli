@@ -3,11 +3,11 @@ package output
 import (
 	"encoding/json"
 	"fmt"
-	"os"
-	"reflect"
-
 	"github.com/go-yaml/yaml"
 	"github.com/tidwall/pretty"
+	"os"
+	"reflect"
+	"sort"
 )
 
 type StructuredListWriter struct {
@@ -44,4 +44,16 @@ func (o *StructuredListWriter) Out() error {
 
 func (o *StructuredListWriter) GetOutputFormat() Format {
 	return o.outputFormat
+}
+
+func (o *StructuredListWriter) StableSort() {
+	sort.Slice(o.data, func(i, j int) bool {
+		// use listLabels because map iteration order not guaranteed
+		for _, x := range o.listLabels {
+			if o.data[i][x] != o.data[j][x] {
+				return o.data[i][x] < o.data[j][x]
+			}
+		}
+		return false
+	})
 }

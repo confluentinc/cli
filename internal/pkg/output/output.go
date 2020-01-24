@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	
+
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
@@ -34,6 +34,7 @@ type ListOutputWriter interface {
 	AddElement(e interface{})
 	Out()   error
 	GetOutputFormat() Format
+	StableSort()
 }
 
 func NewListOutputWriter(cmd *cobra.Command, listFields []string, listLabels []string) (ListOutputWriter, error) {
