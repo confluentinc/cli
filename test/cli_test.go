@@ -25,22 +25,20 @@ import (
 	"time"
 
 	"github.com/chromedp/chromedp"
-
-	"github.com/confluentinc/bincover"
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/confluentinc/bincover"
 	"github.com/confluentinc/ccloud-sdk-go"
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
-	corev1 "github.com/confluentinc/ccloudapis/core/v1"
 	connectv1 "github.com/confluentinc/ccloudapis/connect/v1"
+	corev1 "github.com/confluentinc/ccloudapis/core/v1"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	ksqlv1 "github.com/confluentinc/ccloudapis/ksql/v1"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
 	utilv1 "github.com/confluentinc/ccloudapis/util/v1"
-	"github.com/confluentinc/mds-sdk-go"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 )
@@ -172,97 +170,6 @@ func (s *CLITestSuite) Test_Confluent_Help() {
 			{args: "--help", fixture: "confluent-help-flag.golden"},
 			{args: "version", fixture: "confluent-version.golden", regex: true},
 		}
-	}
-	for _, tt := range tests {
-		kafkaAPIURL := serveKafkaAPI(s.T()).URL
-		s.runConfluentTest(tt, serveMds(s.T(), kafkaAPIURL).URL)
-	}
-}
-
-func (s *CLITestSuite) Test_Confluent_Iam_Rolebinding_List() {
-	tests := []CLITest{
-		{
-			name:        "confluent iam rolebinding list, no principal nor role",
-			args:        "iam rolebinding list --kafka-cluster-id CID",
-			fixture:     "confluent-iam-rolebinding-list-no-principal-nor-role.golden",
-			login:       "default",
-			wantErrCode: 1,
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --principal User:frodo",
-			fixture: "confluent-iam-rolebinding-list-user.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --principal User:frodo --role DeveloperRead",
-			fixture: "confluent-iam-rolebinding-list-user-and-role-with-multiple-resources-from-one-group.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --principal User:frodo --role DeveloperWrite",
-			fixture: "confluent-iam-rolebinding-list-user-and-role-with-resources-from-multiple-groups.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --principal User:frodo --role SecurityAdmin",
-			fixture: "confluent-iam-rolebinding-list-user-and-role-with-cluster-resource.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --principal User:frodo --role SystemAdmin",
-			fixture: "confluent-iam-rolebinding-list-user-and-role-with-no-matches.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --principal Group:hobbits --role DeveloperRead",
-			fixture: "confluent-iam-rolebinding-list-group-and-role-with-multiple-resources.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --principal Group:hobbits --role DeveloperWrite",
-			fixture: "confluent-iam-rolebinding-list-group-and-role-with-one-resource.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --principal Group:hobbits --role SecurityAdmin",
-			fixture: "confluent-iam-rolebinding-list-group-and-role-with-no-matches.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --role DeveloperRead",
-			fixture: "confluent-iam-rolebinding-list-role-with-multiple-bindings-to-one-group.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --role DeveloperWrite",
-			fixture: "confluent-iam-rolebinding-list-role-with-bindings-to-multiple-groups.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --role SecurityAdmin",
-			fixture: "confluent-iam-rolebinding-list-role-on-cluster-bound-to-user.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --role SystemAdmin",
-			fixture: "confluent-iam-rolebinding-list-role-with-no-matches.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --role DeveloperRead --resource Topic:food",
-			fixture: "confluent-iam-rolebinding-list-role-and-resource-with-exact-match.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --role DeveloperRead --resource Topic:shire-parties",
-			fixture: "confluent-iam-rolebinding-list-role-and-resource-with-no-match.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --role DeveloperWrite --resource Topic:shire-parties",
-			fixture: "confluent-iam-rolebinding-list-role-and-resource-with-prefix-match.golden",
-			login:   "default",
-		},
 	}
 	for _, tt := range tests {
 		kafkaAPIURL := serveKafkaAPI(s.T()).URL
@@ -784,119 +691,6 @@ func init() {
 		},
 		UserId: 25,
 	}
-}
-
-func serveMds(t *testing.T, mdsURL string) *httptest.Server {
-	req := require.New(t)
-	router := http.NewServeMux()
-	router.HandleFunc("/security/1.0/authenticate", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/json")
-		reply := &mds.AuthenticationResponse{
-			AuthToken: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1NjE2NjA4NTcsImV4cCI6MjUzMzg2MDM4NDU3LCJhdWQiOiJ3d3cuZXhhbXBsZS5jb20iLCJzdWIiOiJqcm9ja2V0QGV4YW1wbGUuY29tIn0.G6IgrFm5i0mN7Lz9tkZQ2tZvuZ2U7HKnvxMuZAooPmE",
-			TokenType: "dunno",
-			ExpiresIn: 9999999999,
-		}
-		b, err := json.Marshal(&reply)
-		req.NoError(err)
-		_, err = io.WriteString(w, string(b))
-		req.NoError(err)
-	})
-	routesAndReplies := map[string]string{
-		"/security/1.0/principals/User:frodo/groups": `[
-                       "hobbits",
-                       "ringBearers"]`,
-		"/security/1.0/principals/User:frodo/roleNames": `[
-                       "DeveloperRead",
-                       "DeveloperWrite",
-                       "SecurityAdmin"]`,
-		"/security/1.0/principals/User:frodo/roles/DeveloperRead/resources":  `[]`,
-		"/security/1.0/principals/User:frodo/roles/DeveloperWrite/resources": `[]`,
-		"/security/1.0/principals/User:frodo/roles/SecurityAdmin/resources":  `[]`,
-		"/security/1.0/principals/Group:hobbits/roles/DeveloperRead/resources": `[
-                       {"resourceType":"Topic","name":"drink","patternType":"LITERAL"},
-                       {"resourceType":"Topic","name":"food","patternType":"LITERAL"}]`,
-		"/security/1.0/principals/Group:hobbits/roles/DeveloperWrite/resources": `[
-                       {"resourceType":"Topic","name":"shire-","patternType":"PREFIXED"}]`,
-		"/security/1.0/principals/Group:hobbits/roles/SecurityAdmin/resources":     `[]`,
-		"/security/1.0/principals/Group:ringBearers/roles/DeveloperRead/resources": `[]`,
-		"/security/1.0/principals/Group:ringBearers/roles/DeveloperWrite/resources": `[
-                       {"resourceType":"Topic","name":"ring-","patternType":"PREFIXED"}]`,
-		"/security/1.0/principals/Group:ringBearers/roles/SecurityAdmin/resources": `[]`,
-		"/security/1.0/lookup/principal/User:frodo/resources": `{
-                       "Group:hobbits":{
-                               "DeveloperWrite":[
-                                       {"resourceType":"Topic","name":"shire-","patternType":"PREFIXED"}],
-                               "DeveloperRead":[
-                                       {"resourceType":"Topic","name":"drink","patternType":"LITERAL"},
-                                       {"resourceType":"Topic","name":"food","patternType":"LITERAL"}]},
-                       "Group:ringBearers":{
-                               "DeveloperWrite":[
-                                       {"resourceType":"Topic","name":"ring-","patternType":"PREFIXED"}]},
-                       "User:frodo":{
-                               "SecurityAdmin": []}}`,
-		"/security/1.0/lookup/principal/Group:hobbits/resources": `{
-                       "Group:hobbits":{
-                               "DeveloperWrite":[
-                                       {"resourceType":"Topic","name":"shire-","patternType":"PREFIXED"}],
-                               "DeveloperRead":[
-                                       {"resourceType":"Topic","name":"drink","patternType":"LITERAL"},
-                                       {"resourceType":"Topic","name":"food","patternType":"LITERAL"}]}}`,
-		"/security/1.0/lookup/role/DeveloperRead":                                    `["Group:hobbits"]`,
-		"/security/1.0/lookup/role/DeveloperWrite":                                   `["Group:hobbits","Group:ringBearers"]`,
-		"/security/1.0/lookup/role/SecurityAdmin":                                    `["User:frodo"]`,
-		"/security/1.0/lookup/role/SystemAdmin":                                      `[]`,
-		"/security/1.0/lookup/role/DeveloperRead/resource/Topic/name/food":           `["Group:hobbits"]`,
-		"/security/1.0/lookup/role/DeveloperRead/resource/Topic/name/shire-parties":  `[]`,
-		"/security/1.0/lookup/role/DeveloperWrite/resource/Topic/name/shire-parties": `["Group:hobbits"]`,
-		"/security/1.0/roles/DeveloperRead": `{
-                       "name":"DeveloperRead",
-                       "accessPolicy":{
-                               "scopeType":"Resource",
-                               "allowedOperations":[
-                                       {"resourceType":"Cluster","operations":[]},
-                                       {"resourceType":"TransactionalId","operations":["Describe"]},
-                                       {"resourceType":"Group","operations":["Read","Describe"]},
-                                       {"resourceType":"Subject","operations":["Read","ReadCompatibility"]},
-                                       {"resourceType":"Connector","operations":["ReadStatus","ReadConfig"]},
-                                       {"resourceType":"Topic","operations":["Read","Describe"]}]}}`,
-		"/security/1.0/roles/DeveloperWrite": `{
-                       "name":"DeveloperWrite",
-                       "accessPolicy":{
-                               "scopeType":"Resource",
-                               "allowedOperations":[
-                                       {"resourceType":"Subject","operations":["Write"]},
-                                       {"resourceType":"Group","operations":[]},
-                                       {"resourceType":"Topic","operations":["Write","Describe"]},
-                                       {"resourceType":"Cluster","operations":["IdempotentWrite"]},
-                                       {"resourceType":"KsqlCluster","operations":["Contribute"]},
-                                       {"resourceType":"Connector","operations":["ReadStatus","Configure"]},
-                                       {"resourceType":"TransactionalId","operations":["Write","Describe"]}]}}`,
-		"/security/1.0/roles/SecurityAdmin": `{
-                       "name":"SecurityAdmin",
-                       "accessPolicy":{
-                               "scopeType":"Cluster",
-                               "allowedOperations":[
-                                       {"resourceType":"All","operations":["DescribeAccess"]}]}}`,
-		"/security/1.0/roles/SystemAdmin": `{
-                       "name":"SystemAdmin",
-                       "accessPolicy":{
-                               "scopeType":"Cluster",
-                               "allowedOperations":[
-                                       {"resourceType":"All","operations":["All"]}]}}`,
-	}
-	for route, reply := range routesAndReplies {
-		s := reply
-		router.HandleFunc(route, func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Content-Type", "text/json")
-			_, err := io.WriteString(w, s)
-			req.NoError(err)
-		})
-	}
-	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		_, err := io.WriteString(w, `{"error": {"message": "unexpected call to `+r.URL.Path+`"}}`)
-		require.NoError(t, err)
-	})
-	return httptest.NewServer(router)
 }
 
 func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {

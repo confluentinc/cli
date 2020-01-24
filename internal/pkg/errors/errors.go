@@ -64,7 +64,7 @@ type UnconfiguredAPISecretError struct {
 }
 
 func (e *UnconfiguredAPISecretError) Error() string {
-	return fmt.Sprintf("please add API secret with 'api-key store %s --cluster %s'", e.APIKey, e.ClusterID)
+	return fmt.Sprintf("please add API secret with 'api-key store %s --resource %s'", e.APIKey, e.ClusterID)
 }
 
 func New(msg string) error {
