@@ -12,6 +12,7 @@ import (
 )
 
 var (
+	rbacRoleNames = []string{"DeveloperRead", "DeveloperWrite", "SecurityAdmin", "SystemAdmin"}
 	rbacRoles = map[string]string{
 		"DeveloperRead": `{
                       "name":"DeveloperRead",
@@ -66,6 +67,7 @@ func serveMds(t *testing.T, mdsURL string) *httptest.Server {
 		_, err = io.WriteString(w, string(b))
 		req.NoError(err)
 	})
+
 	routesAndReplies := map[string]string{
 		"/security/1.0/principals/User:frodo/groups": `[
                        "hobbits",
@@ -115,6 +117,7 @@ func serveMds(t *testing.T, mdsURL string) *httptest.Server {
 		"/security/1.0/lookup/role/DeveloperWrite/resource/Topic/name/shire-parties": `["Group:hobbits"]`,
 	}
 	addRoles(routesAndReplies)
+
 	for route, reply := range routesAndReplies {
 		s := reply
 		router.HandleFunc(route, func(w http.ResponseWriter, r *http.Request) {
@@ -123,6 +126,7 @@ func serveMds(t *testing.T, mdsURL string) *httptest.Server {
 			req.NoError(err)
 		})
 	}
+
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		_, err := io.WriteString(w, `{"error": {"message": "unexpected call to `+r.URL.Path+`"}}`)
 		require.NoError(t, err)
@@ -133,9 +137,9 @@ func serveMds(t *testing.T, mdsURL string) *httptest.Server {
 func addRoles(routesAndReplies map[string]string) {
 	base := "/security/1.0/roles"
 	allRoles := make([]string, 0, len(rbacRoles))
-	for roleName, roleInfo := range rbacRoles {
-		routesAndReplies[base + "/" + roleName] = roleInfo
-		allRoles = append(allRoles, roleInfo)
+	for _, roleName := range rbacRoleNames {
+		routesAndReplies[base + "/" + roleName] = rbacRoles[roleName]
+		allRoles = append(allRoles, rbacRoles[roleName])
 	}
 	routesAndReplies[base] = "[" + strings.Join(allRoles, ",") + "]"
 }
