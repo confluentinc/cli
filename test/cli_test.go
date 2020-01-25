@@ -60,7 +60,7 @@ var (
 	ccloudTestBin    = ccloudTestBinNormal
 	confluentTestBin = confluentTestBinNormal
 	covCollector     *bincover.CoverageCollector
-	environments     =  []*orgv1.Account{{Id: "a-595", Name: "default"}, {Id: "not-595", Name: "other"}}
+	environments     = []*orgv1.Account{{Id: "a-595", Name: "default"}, {Id: "not-595", Name: "other"}}
 )
 
 const (
