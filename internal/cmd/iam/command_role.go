@@ -1,27 +1,27 @@
 package iam
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/output"
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"os"
+	"strings"
+
+	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 	"github.com/tidwall/pretty"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/go-printer"
-	"github.com/confluentinc/mds-sdk-go"
-
-	"context"
-	"encoding/json"
-	"fmt"
-	"net/http"
-	"strings"
+	mds "github.com/confluentinc/mds-sdk-go"
 )
 
 var (
-	roleListFields     = []string{"Name", "AccessPolicy"}
-	roleListLabels     = []string{"Name", "AccessPolicy"}
-	roleDescribeFields = []string{"Name", "AccessPolicy"}
-	roleDescribeLabels = []string{"Name", "AccessPolicy"}
+	roleFields     = []string{"Name", "AccessPolicy"}
+	roleLabels     = []string{"Name", "AccessPolicy"}
 )
 
 type roleCommand struct {
@@ -29,6 +29,11 @@ type roleCommand struct {
 	config *config.Config
 	client *mds.APIClient
 	ctx    context.Context
+}
+
+type prettyRole struct {
+	Name         string
+	AccessPolicy string
 }
 
 // NewRoleCommand returns the sub-command object for interacting with RBAC roles.
@@ -72,33 +77,28 @@ func (c *roleCommand) list(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-
-	outputWriter, err := output.NewListOutputWriter(cmd, roleListFields, roleListLabels)
+	format, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-
-	for _, role := range roles {
-		marshalled, err := json.Marshal(role.AccessPolicy)
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
+	if format == output.Human.String() {
+		var data [][]string
+		for _, role := range roles {
+			roleDisplay, err := createPrettyRole(role)
+			if err != nil {
+				return errors.HandleCommon(err, cmd)
+			}
+			data = append(data, printer.ToRow(roleDisplay, roleFields))
 		}
-		prettyRole := struct {
-			Name         string
-			AccessPolicy string
-		}{
-			role.Name,
-			string(pretty.Pretty(marshalled)),
-		}
-		outputWriter.AddElement(&prettyRole)
+		outputTable(data)
+	} else {
+		return output.StructuredOutput(format, roles)
 	}
-
-	return outputWriter.Out()
+	return nil
 }
 
 func (c *roleCommand) describe(cmd *cobra.Command, args []string) error {
 	role := args[0]
-
 	details, r, err := c.client.RoleDefinitionsApi.RoleDetail(c.ctx, role)
 	if err != nil {
 		if r.StatusCode == http.StatusNoContent {
@@ -115,8 +115,32 @@ func (c *roleCommand) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	var data [][]string
-	data = append(data, printer.ToRow(&details, roleDescribeFields))
-	printer.RenderCollectionTable(data, roleDescribeLabels)
-
+	roleDisplay, err := createPrettyRole(details)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	data = append(data, printer.ToRow(roleDisplay, roleFields))
+	outputTable(data)
 	return nil
+}
+
+func createPrettyRole(role mds.Role)(*prettyRole, error) {
+	marshalled, err := json.Marshal(role.AccessPolicy)
+	if err != nil {
+		return nil, err
+	}
+	return &prettyRole{
+		role.Name,
+		string(pretty.Pretty(marshalled)),
+	}, nil
+}
+
+func outputTable(data [][]string) {
+	tablePrinter := tablewriter.NewWriter(os.Stdout)
+	tablePrinter.SetAutoWrapText(false)
+	tablePrinter.SetAutoFormatHeaders(false)
+	tablePrinter.SetHeader(roleLabels)
+	tablePrinter.AppendBulk(data)
+	tablePrinter.SetBorder(false)
+	tablePrinter.Render()
 }

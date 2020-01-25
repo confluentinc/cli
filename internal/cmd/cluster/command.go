@@ -150,7 +150,7 @@ func check(err error) {
 
 func printDescribe(cmd *cobra.Command, meta *ScopedId, format string) error {
 	if !(format == output.Human.String() || format == output.YAML.String() || format == output.JSON.String()) {
-		return fmt.Errorf(output.InvalidFormatError)
+		return output.InvalidFormatError
 	}
 	type StructuredDisplay struct {
 		Crn   string `json:"crn" yaml:"crn"`

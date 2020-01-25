@@ -1,11 +1,14 @@
 package output
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/confluentinc/go-printer"
 	"os"
 
+	"github.com/go-yaml/yaml"
 	"github.com/spf13/cobra"
+	"github.com/tidwall/pretty"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
@@ -18,7 +21,10 @@ const (
 	ShortHandFlag      = "o"
 	Usage              = `Specify the output format as "human", "json" or "yaml".`
 	DefaultValue       = humanString
-	InvalidFormatError = "invalid output format type"
+)
+
+var (
+	InvalidFormatError = fmt.Errorf("invalid output format type")
 )
 
 type Format int
@@ -37,6 +43,7 @@ type ListOutputWriter interface {
 	AddElement(e interface{})
 	Out()   error
 	GetOutputFormat() Format
+	StableSort()
 }
 
 func NewListOutputWriter(cmd *cobra.Command, listFields []string, listLabels []string) (ListOutputWriter, error) {
@@ -66,7 +73,7 @@ func NewListOutputWriter(cmd *cobra.Command, listFields []string, listLabels []s
 			listLabels:   listLabels,
 		}, nil
 	}
-	return nil, fmt.Errorf(InvalidFormatError)
+	return nil, InvalidFormatError
 }
 
 func DescribeObject(cmd *cobra.Command, obj interface{}, fields []string, humanRenames, structuredRenames map[string]string) error {
@@ -75,8 +82,21 @@ func DescribeObject(cmd *cobra.Command, obj interface{}, fields []string, humanR
 		return errors.HandleCommon(err, cmd)
 	}
 	if !(format == Human.String() || format == JSON.String() || format == YAML.String()) {
-		return fmt.Errorf(InvalidFormatError)
+		return InvalidFormatError
 	}
 	return printer.RenderOut(obj, fields, humanRenames, structuredRenames, format, os.Stdout)
 }
 
+func StructuredOutput(format string, obj interface{}) error {
+	var b []byte
+	if format == JSON.String() {
+		j, _ := json.Marshal(obj)
+		b = pretty.Pretty(j)
+	} else if format == YAML.String() {
+		b, _ = yaml.Marshal(obj)
+	} else {
+		return InvalidFormatError
+	}
+	_, err := fmt.Fprintf(os.Stdout, string(b))
+	return err
+}

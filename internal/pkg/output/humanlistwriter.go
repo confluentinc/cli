@@ -1,6 +1,9 @@
 package output
 
-import "github.com/confluentinc/go-printer"
+import (
+	"github.com/confluentinc/go-printer"
+	"sort"
+)
 
 type HumanListWriter struct {
 	outputFormat Format
@@ -21,4 +24,15 @@ func (o *HumanListWriter) Out() error {
 
 func (o *HumanListWriter) GetOutputFormat() Format {
 	return o.outputFormat
+}
+
+func (o *HumanListWriter) StableSort() {
+	sort.Slice(o.data, func(i, j int) bool {
+		for x := range o.data[i] {
+			if o.data[i][x] != o.data[j][x] {
+				return o.data[i][x] < o.data[j][x]
+			}
+		}
+		return false
+	})
 }

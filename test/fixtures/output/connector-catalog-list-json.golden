@@ -1,0 +1,10 @@
+[
+  {
+    "PluginName": "AzureBlobSink",
+    "Type": "Sink"
+  }, 
+  {
+    "PluginName": "GcsSink",
+    "Type": "Sink"
+  }
+]

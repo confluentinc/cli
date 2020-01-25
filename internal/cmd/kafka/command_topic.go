@@ -271,7 +271,7 @@ func (c *topicCommand) describe(cmd *cobra.Command, args []string) error {
 	} else if outputOption == output.JSON.String() || outputOption == output.YAML.String() {
 		return printStructuredDescribe(cmd, resp, outputOption)
 	} else {
-		return fmt.Errorf(output.InvalidFormatError)
+		return output.InvalidFormatError
 	}
 }
 
