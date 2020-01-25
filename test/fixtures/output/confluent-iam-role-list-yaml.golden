@@ -1,0 +1,66 @@
+- name: DeveloperRead
+  accesspolicy:
+    scopetype: Resource
+    allowedoperations:
+    - resourcetype: Cluster
+      operations: []
+    - resourcetype: TransactionalId
+      operations:
+      - Describe
+    - resourcetype: Group
+      operations:
+      - Read
+      - Describe
+    - resourcetype: Subject
+      operations:
+      - Read
+      - ReadCompatibility
+    - resourcetype: Connector
+      operations:
+      - ReadStatus
+      - ReadConfig
+    - resourcetype: Topic
+      operations:
+      - Read
+      - Describe
+- name: DeveloperWrite
+  accesspolicy:
+    scopetype: Resource
+    allowedoperations:
+    - resourcetype: Subject
+      operations:
+      - Write
+    - resourcetype: Group
+      operations: []
+    - resourcetype: Topic
+      operations:
+      - Write
+      - Describe
+    - resourcetype: Cluster
+      operations:
+      - IdempotentWrite
+    - resourcetype: KsqlCluster
+      operations:
+      - Contribute
+    - resourcetype: Connector
+      operations:
+      - ReadStatus
+      - Configure
+    - resourcetype: TransactionalId
+      operations:
+      - Write
+      - Describe
+- name: SecurityAdmin
+  accesspolicy:
+    scopetype: Cluster
+    allowedoperations:
+    - resourcetype: All
+      operations:
+      - DescribeAccess
+- name: SystemAdmin
+  accesspolicy:
+    scopetype: Cluster
+    allowedoperations:
+    - resourcetype: All
+      operations:
+      - All
