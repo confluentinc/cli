@@ -1,6 +1,6 @@
 package test
 
-func (s *CLITestSuite) testEnvironmentCommands() {
+func (s *CLITestSuite) TestEnvironmentCommands() {
 	kafkaAPIURL := serveKafkaAPI(s.T()).URL
 	loginURL := serve(s.T(), kafkaAPIURL).URL
 	tests := []CLITest{
