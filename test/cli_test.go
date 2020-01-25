@@ -58,6 +58,7 @@ var (
 	ccloudTestBin    = ccloudTestBinNormal
 	confluentTestBin = confluentTestBinNormal
 	covCollector     *bincover.CoverageCollector
+	environments     = []*orgv1.Account{{Id: "a-595", Name: "default"}, {Id: "not-595", Name: "other"}}
 )
 
 const (
@@ -731,9 +732,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		}
 	})
 	router.HandleFunc("/api/accounts", func(w http.ResponseWriter, r *http.Request) {
-		b, err := utilv1.MarshalJSONToBytes(&orgv1.ListAccountsReply{Accounts: []*orgv1.Account{
-			{Id: "a-595", Name: "default"}, {Id: "not-595", Name: "other"},
-		}})
+		b, err := utilv1.MarshalJSONToBytes(&orgv1.ListAccountsReply{Accounts: environments})
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(b))
 		require.NoError(t, err)
@@ -897,7 +896,7 @@ func handleMe(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 				Email:     "cody@confluent.io",
 				FirstName: "Cody",
 			},
-			Accounts: []*orgv1.Account{{Id: "a-595", Name: "default"}},
+			Accounts: environments,
 		})
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(b))
