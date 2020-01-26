@@ -17,33 +17,46 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 type hasAPIKeyTopicCommand struct {
 	*pcmd.HasAPIKeyCLICommand
+	prerunner pcmd.PreRunner
+	logger    *log.Logger
+	clientID  string
 }
 type authenticatedTopicCommand struct {
 	*pcmd.AuthenticatedCLICommand
+	logger   *log.Logger
+	clientID string
 }
 
 // NewTopicCommand returns the Cobra command for Kafka topic.
-func NewTopicCommand(prerunner pcmd.PreRunner, config *config.Config) *cobra.Command {
+func NewTopicCommand(prerunner pcmd.PreRunner, config *config.Config, logger *log.Logger, clientID string) *cobra.Command {
 	command := &cobra.Command{
 		Use:   "topic",
 		Short: "Manage Kafka topics.",
 	}
 	hasAPIKeyCmd := &hasAPIKeyTopicCommand{
 		HasAPIKeyCLICommand: pcmd.NewHasAPIKeyCLICommand(command, config, prerunner),
+		prerunner:           prerunner,
+		logger:              logger,
+		clientID:            clientID,
 	}
 	authenticatedCmd := &authenticatedTopicCommand{
 		AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(command, config, prerunner),
+		logger:                  logger,
+		clientID:                clientID,
 	}
-	hasAPIKeyCmd.init()
 	authenticatedCmd.init()
+	hasAPIKeyCmd.init()
 	return command
 }
 
 func (h *hasAPIKeyTopicCommand) init() {
+	// Hack to overwrite Authenticated prerunner set by authenticatedTopicCmd
+	h.PersistentPreRunE = h.prerunner.HasAPIKey(h.HasAPIKeyCLICommand)
 	cmd := &cobra.Command{
 		Use:   "produce <topic>",
 		Short: "Produce messages to a Kafka topic.",
@@ -71,7 +84,6 @@ Consume items from the 'my_topic' topic and press 'Ctrl + C' to exit.
 	cmd.Flags().String("group", fmt.Sprintf("confluent_cli_consumer_%s", uuid.New()), "Consumer group ID.")
 	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
 	cmd.Flags().SortFlags = false
-	//cliCmd = pcmd.NewHasAPIKeyCLICommand(cmd, config, prerunner)
 	h.AddCommand(cmd)
 }
 
@@ -170,7 +182,7 @@ Delete the topics 'my_topic' and 'my_topic_avro'. Use this command carefully as 
 }
 
 func (a *authenticatedTopicCommand) list(cmd *cobra.Command, args []string) error {
-	cluster, err := pcmd.KafkaCluster(cmd, a.Context, a.EnvironmentId())
+	cluster, err := pcmd.KafkaCluster(cmd, a.Context)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -190,7 +202,7 @@ func (a *authenticatedTopicCommand) list(cmd *cobra.Command, args []string) erro
 }
 
 func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) error {
-	cluster, err := pcmd.KafkaCluster(cmd, a.Context, a.EnvironmentId())
+	cluster, err := pcmd.KafkaCluster(cmd, a.Context)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -230,7 +242,7 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 }
 
 func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) error {
-	cluster, err := pcmd.KafkaCluster(cmd, a.Context, a.EnvironmentId())
+	cluster, err := pcmd.KafkaCluster(cmd, a.Context)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -293,7 +305,7 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 }
 
 func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) error {
-	cluster, err := pcmd.KafkaCluster(cmd, a.Context, a.EnvironmentId())
+	cluster, err := pcmd.KafkaCluster(cmd, a.Context)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -319,7 +331,7 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 }
 
 func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) error {
-	cluster, err := pcmd.KafkaCluster(cmd, a.Context, a.EnvironmentId())
+	cluster, err := pcmd.KafkaCluster(cmd, a.Context)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -343,7 +355,9 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	}
 
 	pcmd.Println(cmd, "Starting Kafka Producer. ^C or ^D to exit")
-	producer, err := NewSaramaProducer(cluster)
+
+	InitSarama(h.logger)
+	producer, err := NewSaramaProducer(cluster, h.clientID)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -421,7 +435,8 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		return errors.HandleCommon(err, cmd)
 	}
 
-	consumer, err := NewSaramaConsumer(group, cluster, beginning)
+	InitSarama(h.logger)
+	consumer, err := NewSaramaConsumer(group, cluster, h.clientID, beginning)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}

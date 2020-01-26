@@ -2,11 +2,11 @@ package config
 
 // Credential represent an authentication mechanism for a Platform
 type Credential struct {
-	Name           string
-	Username       string
-	Password       string
-	APIKeyPair     *APIKeyPair
-	CredentialType CredentialType
+	Name           string         `json:"name"`
+	Username       string         `json:"username"`
+	Password       string         `json:"password"`
+	APIKeyPair     *APIKeyPair    `json:"api_key_pair"`
+	CredentialType CredentialType `json:"credential_type"`
 }
 type CredentialType int
 
@@ -15,7 +15,7 @@ const (
 	APIKey
 )
 
-func (c *CredentialType) String() string {
+func (c CredentialType) String() string {
 	credTypes := [...]string{"username", "api-key"}
-	return credTypes[*c]
+	return credTypes[c]
 }

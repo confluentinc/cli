@@ -9,6 +9,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
+	"github.com/confluentinc/cli/mock"
 )
 
 func TestAddCommands_ShownInHelpUsage_CCloud(t *testing.T) {
@@ -17,10 +18,10 @@ func TestAddCommands_ShownInHelpUsage_CCloud(t *testing.T) {
 	cfg := config.AuthenticatedConfigMock()
 	cfg.CLIName = "ccloud"
 	ver := pversion.NewVersion("ccloud", "Confluent Cloud CLI", "https://confluent.cloud; support@confluent.io", "1.2.3", "abc1234", "01/23/45", "CI")
-	root, err := cmd.NewConfluentCommand("ccloud", cfg, cfg.Logger, ver)
+	root, err := cmd.NewConfluentCommand("ccloud", cfg, cfg.Logger, ver, mock.NewDummyAnalyticsMock())
 	req.NoError(err)
 
-	output, err := pcmd.ExecuteCommand(root, "help")
+	output, err := pcmd.ExecuteCommand(root.Command, "help")
 	req.NoError(err)
 	req.Contains(output, "kafka")
 	//Hidden: req.Contains(output, "ksql")
@@ -39,10 +40,10 @@ func TestAddCommands_ShownInHelpUsage_Confluent(t *testing.T) {
 
 	cfg := config.AuthenticatedConfigMock()
 	ver := pversion.NewVersion("ccloud", "Confluent Cloud CLI", "https://confluent.cloud; support@confluent.io", "1.2.3", "abc1234", "01/23/45", "CI")
-	root, err := cmd.NewConfluentCommand("confluent", cfg, cfg.Logger, ver)
+	root, err := cmd.NewConfluentCommand("confluent", cfg, cfg.Logger, ver, mock.NewDummyAnalyticsMock())
 	req.NoError(err)
 
-	output, err := pcmd.ExecuteCommand(root, "help")
+	output, err := pcmd.ExecuteCommand(root.Command, "help")
 	req.NoError(err)
 	req.NotContains(output, "kafka")
 	req.NotContains(output, "ksql")
@@ -54,4 +55,5 @@ func TestAddCommands_ShownInHelpUsage_Confluent(t *testing.T) {
 	req.Contains(output, "help")
 	req.Contains(output, "version")
 	req.Contains(output, "completion")
+	req.Contains(output, "iam")
 }

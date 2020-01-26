@@ -9,8 +9,9 @@ DOCS_BRANCH     ?= 5.3.1-post
 include ./semver.mk
 
 REF := $(shell [ -d .git ] && git rev-parse --short HEAD || echo "none")
-DATE := $(shell date -u)
+DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 HOSTNAME := $(shell id -u -n)@$(shell hostname)
+RESOLVED_PATH=github.com/confluentinc/cli/cmd/confluent
 
 .PHONY: clean
 clean:
@@ -28,7 +29,7 @@ generate-go:
 .PHONY: deps
 deps:
 	@GO111MODULE=on go get github.com/goreleaser/goreleaser@v0.106.0
-	@GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.17.1
+	@GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.21.0
 	@GO111MODULE=on go get github.com/mitchellh/golicense@v0.1.1
 	@GO111MODULE=on go get github.com/golang/mock/mockgen@v1.2.0
 	@GO111MODULE=on go get github.com/kevinburke/go-bindata/...@v3.13.0
@@ -97,10 +98,57 @@ build-ccloud:
 build-confluent:
 	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --snapshot --rm-dist -f .goreleaser-confluent$(GORELEASER_SUFFIX)
 
+.PHONY: build-integ
+build-integ:
+	make build-integ-nonrace
+	make build-integ-race
+
+.PHONY: build-integ-nonrace
+build-integ-nonrace:
+	make build-integ-ccloud-nonrace
+	make build-integ-confluent-nonrace
+
+.PHONY: build-integ-ccloud-nonrace
+build-integ-ccloud-nonrace:
+	binary="ccloud_test" ; \
+	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
+	GO111MODULE=on go test ./cmd/confluent -ldflags="-s -w -X $(RESOLVED_PATH).cliName=ccloud \
+	-X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) \
+	-X $(RESOLVED_PATH).version=$(VERSION) -X $(RESOLVED_PATH).isTest=true" -tags testrunmain -coverpkg=./... -c -o $${binexe}
+
+.PHONY: build-integ-confluent-nonrace
+build-integ-confluent-nonrace:
+	binary="confluent_test" ; \
+	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
+	GO111MODULE=on go test ./cmd/confluent -ldflags="-s -w -X $(RESOLVED_PATH).cliName=confluent \
+		    -X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) \
+		    -X $(RESOLVED_PATH).version=$(VERSION) -X $(RESOLVED_PATH).isTest=true" -tags testrunmain -coverpkg=./... -c -o $${binexe}
+
+.PHONY: build-integ-race
+build-integ-race:
+	make build-integ-ccloud-race
+	make build-integ-confluent-race
+
+.PHONY: build-integ-ccloud-race
+build-integ-ccloud-race:
+	binary="ccloud_test_race" ; \
+	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
+	GO111MODULE=on go test ./cmd/confluent -ldflags="-s -w -X $(RESOLVED_PATH).cliName=ccloud \
+	-X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) \
+	-X $(RESOLVED_PATH).version=$(VERSION) -X $(RESOLVED_PATH).isTest=true" -tags testrunmain -coverpkg=./... -c -o $${binexe} -race
+
+.PHONY: build-integ-confluent-race
+build-integ-confluent-race:
+	binary="confluent_test_race" ; \
+	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
+	GO111MODULE=on go test ./cmd/confluent -ldflags="-s -w -X $(RESOLVED_PATH).cliName=confluent \
+		    -X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) \
+		    -X $(RESOLVED_PATH).version=$(VERSION) -X $(RESOLVED_PATH).isTest=true" -tags testrunmain -coverpkg=./... -c -o $${binexe} -race
+
 .PHONY: bindata
 bindata: internal/cmd/local/bindata.go
 
-internal/cmd/local/bindata.go: cp_cli/
+internal/cmd/local/bindata.go: cp_cli/* assets/*
 	@go-bindata -pkg local -o internal/cmd/local/bindata.go cp_cli/ assets/
 
 .PHONY: release
@@ -223,7 +271,9 @@ fmt:
 
 .PHONY: release-ci
 release-ci:
-ifeq ($(SEMAPHORE_GIT_BRANCH),master)
+ifneq ($(SEMAPHORE_GIT_PR_BRANCH),)
+	true
+else ifeq ($(SEMAPHORE_GIT_BRANCH),master)
 	make release
 else
 	true
@@ -241,7 +291,7 @@ lint-cli: cmd/lint/en_US.aff cmd/lint/en_US.dic
 
 .PHONY: lint-go
 lint-go:
-	@GO111MODULE=on golangci-lint run
+	@GO111MODULE=on golangci-lint run --timeout=10m
 
 .PHONY: lint
 lint: lint-go lint-cli lint-installers
@@ -265,16 +315,19 @@ lint-licenses: build
 .PHONY: coverage
 coverage:
       ifdef CI
-	@echo "" > coverage.txt
-	@for d in $$(go list ./... | grep -v vendor); do \
-	  GO111MODULE=on go test -v -race -coverprofile=profile.out -covermode=atomic $$d || exit 2; \
-	  if [ -f profile.out ]; then \
-	    cat profile.out >> coverage.txt; \
-	    rm profile.out; \
-	  fi; \
-	done
+	@# Run unit tests with coverage.
+	@GO111MODULE=on go test -v -race -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') \
+		-coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test)
+	@# Run integration tests with coverage.
+	@GO111MODULE=on INTEG_COVER=on go test -v $$(go list ./... | grep cli/test) $(TEST_ARGS)
+	@echo "mode: atomic" > coverage.txt
+	@grep -h -v "mode: atomic" unit_coverage.txt >> coverage.txt
+	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
       else
-	@GO111MODULE=on go test -race -cover $(TEST_ARGS) $$(go list ./... | grep -v vendor)
+	@# Run unit tests.
+	@GO111MODULE=on go test -race -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test)
+	@# Run integration tests.
+	@GO111MODULE=on go test -v -race $$(go list ./... | grep cli/test) $(TEST_ARGS)
       endif
 
 .PHONY: mocks
@@ -283,8 +336,13 @@ mocks: mock/local/shell_runner_mock.go
 mock/local/shell_runner_mock.go:
 	mockgen -source internal/cmd/local/shell_runner.go -destination mock/local/shell_runner_mock.go ShellRunner
 
+.PHONY: test-installers
+test-installers:
+	@echo Running packaging/installer tests
+	@bash test-installers.sh
+
 .PHONY: test
-test: bindata mocks lint coverage
+test: bindata mocks lint coverage test-installers
 
 .PHONY: doctoc
 doctoc:

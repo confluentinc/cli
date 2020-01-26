@@ -34,7 +34,7 @@ func (d *DynamicContext) ActiveKafkaCluster(cmd *cobra.Command) (*config.KafkaCl
 	if err != nil {
 		return nil, err
 	}
-	if resourceType == KafkaResourceType {
+	if resourceType == KafkaResourceType || resourceType == KSQLResourceType {
 		clusterId = resourceId
 	}
 	if clusterId == "" {
@@ -170,7 +170,7 @@ func (d *DynamicContext) SchemaRegistryCluster(cmd *cobra.Command) (*config.Sche
 	return cluster, nil
 }
 
-func (d *DynamicContext) hasLogin(cmd *cobra.Command) (bool, error) {
+func (d *DynamicContext) HasLogin(cmd *cobra.Command) (bool, error) {
 	credType := d.Credential.CredentialType
 	switch credType {
 	case config.Username:
@@ -195,7 +195,7 @@ func (d *DynamicContext) AuthenticatedEnvId(cmd *cobra.Command) (string, error) 
 }
 
 func (d *DynamicContext) AuthenticatedState(cmd *cobra.Command) (*config.ContextState, error) {
-	hasLogin, err := d.hasLogin(cmd)
+	hasLogin, err := d.HasLogin(cmd)
 	if err != nil {
 		return nil, err
 	}
@@ -224,6 +224,14 @@ func (d *DynamicContext) HasAPIKey(cmd *cobra.Command, clusterId string) (bool, 
 		return false, err
 	}
 	return cluster.APIKey != "", nil
+}
+
+func (d *DynamicContext) CheckSchemaRegistryHasAPIKey(cmd *cobra.Command) (bool, error) {
+	srCluster, err := d.SchemaRegistryCluster(cmd)
+	if err != nil {
+		return false, nil
+	}
+	return !(srCluster.SrCredentials == nil || len(srCluster.SrCredentials.Key) == 0 || len(srCluster.SrCredentials.Secret) == 0), nil
 }
 
 func (d *DynamicContext) resolveEnvironmentId(cmd *cobra.Command) (string, error) {

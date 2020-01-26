@@ -100,7 +100,6 @@ func (c *clusterCommand) init() {
 func (c *clusterCommand) enable(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
 	// Collect the parameters
-	accountId := c.State.Auth.Account.Id
 	serviceProvider, err := cmd.Flags().GetString("cloud")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -115,7 +114,7 @@ func (c *clusterCommand) enable(cmd *cobra.Command, args []string) error {
 
 	// Build the SR instance
 	clusterConfig := &srv1.SchemaRegistryClusterConfig{
-		AccountId:       accountId,
+		AccountId:       c.EnvironmentId(),
 		Location:        location,
 		ServiceProvider: serviceProvider,
 		// Name is a special string that everyone expects. Originally, this field was added to support
@@ -148,28 +147,19 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 
 	// Collect the parameters
 	ctxClient := pcmd.NewContextClient(c.Context)
-	cluster, err := ctxClient.FetchSchemaRegistryByAccountId(ctx, c.State.Auth.Account.Id)
+	cluster, err := ctxClient.FetchSchemaRegistryByAccountId(ctx, c.EnvironmentId())
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	srCluster, err := c.Context.SchemaRegistryCluster(cmd)
+	//Retrieve SR compatibility and Mode if API key is set up in user's config.json file
+	srClusterHasAPIKey, err := c.Context.CheckSchemaRegistryHasAPIKey(cmd)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	if srCluster != nil && srCluster.SrCredentials.Key != "" {
+	if srClusterHasAPIKey {
 		srClient, ctx, err = GetApiClient(cmd, c.srClient, c.Config, c.Version)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-		// Get Schema usage metrics
-		metrics, err := c.Client.Metrics.SchemaRegistryMetrics(ctx, cluster.Id)
-		if err != nil {
-			c.logger.Warn("Could not retrieve Schema Registry Metrics")
-			numSchemas = ""
-			availableSchemas = ""
-		} else {
-			numSchemas = strconv.Itoa(int(metrics.NumSchemas))
-			availableSchemas = strconv.Itoa(int(cluster.MaxSchemas) - int(metrics.NumSchemas))
+			return err
 		}
 		// Get SR compatibility
 		compatibilityResponse, _, err := srClient.DefaultApi.GetTopLevelConfig(ctx)
@@ -180,17 +170,28 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 			compatibility = compatibilityResponse.CompatibilityLevel
 		}
 		// Get SR Mode
-		ModeResponse, _, err := srClient.DefaultApi.GetTopLevelMode(ctx)
+		modeResponse, _, err := srClient.DefaultApi.GetTopLevelMode(ctx)
 		if err != nil {
 			mode = ""
 			c.logger.Warn("Could not retrieve Schema Registry Mode")
 		} else {
-			mode = ModeResponse.Mode
+			mode = modeResponse.Mode
 		}
 	} else {
 		srClient = nil
 		compatibility = "<Requires API Key>"
 		mode = "<Requires API Key>"
+	}
+
+	// Get Schema usage metrics
+	metrics, err := c.Client.Metrics.SchemaRegistryMetrics(ctx, cluster.Id)
+	if err != nil {
+		c.logger.Warn("Could not retrieve Schema Registry Metrics")
+		numSchemas = ""
+		availableSchemas = ""
+	} else {
+		numSchemas = strconv.Itoa(int(metrics.NumSchemas))
+		availableSchemas = strconv.Itoa(int(cluster.MaxSchemas) - int(metrics.NumSchemas))
 	}
 
 	serviceProvider := getServiceProviderFromUrl(cluster.Endpoint)

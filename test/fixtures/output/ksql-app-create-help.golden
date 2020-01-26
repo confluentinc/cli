@@ -1,0 +1,13 @@
+Create a KSQL app.
+
+Usage:
+  ccloud ksql app create <name> [flags]
+
+Flags:
+      --cluster string   Kafka cluster ID.
+      --servers int32    Number of servers in the cluster. (default 1)
+      --storage int32    Amount of data storage available in GB. (default 50)
+  -h, --help             help for create
+
+Global Flags:
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

@@ -143,3 +143,28 @@ func (c *Context) HasMDSLogin() bool {
 		panic(fmt.Sprintf("unknown credential type %d in context '%s'", credType, c.Name))
 	}
 }
+
+func (c *Context) hasLogin() bool {
+	credType := c.Credential.CredentialType
+	switch credType {
+	case Username:
+		return c.State != nil && c.State.AuthToken != "" && c.State.Auth != nil && c.State.Auth.Account != nil && c.State.Auth.Account.Id != ""
+	case APIKey:
+		return false
+	default:
+		panic(fmt.Sprintf("unknown credential type %d in context '%s'", credType, c.Name))
+	}
+}
+
+func (c *Context) DeleteUserAuth() error {
+	if c.State == nil {
+		return nil
+	}
+	c.State.AuthToken = ""
+	c.State.Auth = nil
+	err := c.Save()
+	if err != nil {
+		return errors.Wrap(err, "unable to delete user auth")
+	}
+	return nil
+}

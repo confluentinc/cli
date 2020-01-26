@@ -14,6 +14,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
@@ -419,14 +420,14 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 		},
 	}
 	client := &ccloud.Client{Kafka: kafka}
-	cmd := New(cliMock.NewPreRunnerMock(client, nil), conf)
+	cmd := New(cliMock.NewPreRunnerMock(client, nil), conf, log.New(), "test-client")
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	cmd.SetArgs(append([]string{"cluster", "list"}))
 	buf := new(bytes.Buffer)
 	cmd.SetOutput(buf)
 
 	err := cmd.Execute()
-	want := "You must login to run that command."
+	want := "You must log in to run that command."
 	if err.Error() != want {
 		t.Errorf("unexpected output, got %s, want %s", err, want)
 	}
@@ -435,7 +436,7 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 /*************** TEST setup/helpers ***************/
 func NewCMD(expect chan interface{}) *cobra.Command {
 	client := &ccloud.Client{Kafka: cliMock.NewKafkaMock(expect)}
-	cmd := New(cliMock.NewPreRunnerMock(client, nil), conf)
+	cmd := New(cliMock.NewPreRunnerMock(client, nil), conf, log.New(), "test-client")
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 
 	return cmd

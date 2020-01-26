@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 
 	"github.com/atrox/homedir"
+	"github.com/google/uuid"
+
 	v1 "github.com/confluentinc/ccloudapis/org/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -21,22 +23,26 @@ const (
 
 // AuthConfig represents an authenticated user.
 type AuthConfig struct {
-	User     *v1.User      `json:"user" hcl:"user"`
-	Account  *v1.Account   `json:"account" hcl:"account"`
-	Accounts []*v1.Account `json:"accounts" hcl:"accounts"`
+	User     *v1.User      `json:"user"`
+	Account  *v1.Account   `json:"account"`
+	Accounts []*v1.Account `json:"accounts"`
 }
 
 // Config represents the CLI configuration.
 type Config struct {
-	CLIName        string                   `json:"-" hcl:"-"`
-	MetricSink     metric.Sink              `json:"-" hcl:"-"`
-	Logger         *log.Logger              `json:"-" hcl:"-"`
-	Filename       string                   `json:"-" hcl:"-"`
-	Platforms      map[string]*Platform     `json:"platforms" hcl:"platforms"`
-	Credentials    map[string]*Credential   `json:"credentials" hcl:"credentials"`
-	Contexts       map[string]*Context      `json:"contexts" hcl:"contexts"`
-	ContextStates  map[string]*ContextState `json:"context_states" hcl:"context_states"`
-	CurrentContext string                   `json:"current_context" hcl:"current_context"`
+	CLIName            string                   `json:"-"`
+	MetricSink         metric.Sink              `json:"-"`
+	Logger             *log.Logger              `json:"-"`
+	Filename           string                   `json:"-"`
+	DisableUpdateCheck bool                     `json:"disable_update_check"`
+	DisableUpdates     bool                     `json:"disable_updates"`
+	NoBrowser          bool                     `json:"no_browser" hcl:"no_browser"`
+	Platforms          map[string]*Platform     `json:"platforms"`
+	Credentials        map[string]*Credential   `json:"credentials"`
+	Contexts           map[string]*Context      `json:"contexts"`
+	ContextStates      map[string]*ContextState `json:"context_states"`
+	CurrentContext     string                   `json:"current_context"`
+	AnonymousId        string                   `json:"anonymous_id"`
 }
 
 // New initializes a new Config object
@@ -47,14 +53,15 @@ func New(config ...*Config) *Config {
 	} else {
 		c = config[0]
 	}
-	// HACK: this is a workaround while we're building multiple binaries off one codebase
 	if c.CLIName == "" {
+		// HACK: this is a workaround while we're building multiple binaries off one codebase
 		c.CLIName = "confluent"
 	}
 	c.Platforms = map[string]*Platform{}
 	c.Credentials = map[string]*Credential{}
 	c.Contexts = map[string]*Context{}
 	c.ContextStates = map[string]*ContextState{}
+	c.AnonymousId = uuid.New().String()
 	return c
 }
 
@@ -68,6 +75,7 @@ func (c *Config) Load() error {
 	input, err := ioutil.ReadFile(filename)
 	if err != nil {
 		if os.IsNotExist(err) {
+			// Save a default version if none exists yet.
 			if err := c.Save(); err != nil {
 				return errors.Wrapf(err, "unable to create config: %v", err)
 			}
@@ -282,6 +290,19 @@ func (c *Config) APIName() string {
 // the current Context, or nil if there's no context set.
 func (c *Config) Context() *Context {
 	return c.Contexts[c.CurrentContext]
+}
+
+func (c *Config) HasLogin() bool {
+	ctx := c.Context()
+	if ctx == nil {
+		return false
+	}
+	return ctx.hasLogin()
+}
+
+func (c *Config) ResetAnonymousId() error {
+	c.AnonymousId = uuid.New().String()
+	return c.Save()
 }
 
 func (c *Config) getFilename() (string, error) {

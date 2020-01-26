@@ -6,6 +6,7 @@ import (
 	"github.com/confluentinc/go-printer"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -13,17 +14,23 @@ import (
 
 type contextCommand struct {
 	*pcmd.CLICommand
+	prerunner pcmd.PreRunner
+	analytics analytics.Client
 }
 
 // NewContext returns the Cobra contextCommand for `config context`.
-func NewContext(config *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func NewContext(config *config.Config, prerunner pcmd.PreRunner, analytics analytics.Client) *cobra.Command {
 	cliCmd := pcmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "context",
 			Short: "Manage config contexts.",
 		},
 		config, prerunner)
-	cmd := &contextCommand{CLICommand: cliCmd}
+	cmd := &contextCommand{
+		CLICommand: cliCmd,
+		prerunner: prerunner,
+		analytics: analytics,
+	}
 	cmd.init()
 	return cmd.Command
 }
@@ -40,6 +47,10 @@ func (c *contextCommand) init() {
 		Short: "Use a config context.",
 		RunE:  c.use,
 		Args:  cobra.ExactArgs(1),
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			c.analytics.SetCommandType(analytics.ContextUse)
+			return c.prerunner.Anonymous(c.CLICommand)(cmd, args)
+		},
 	})
 	c.AddCommand(&cobra.Command{
 		Use:   "current",
@@ -78,18 +89,18 @@ func (c *contextCommand) list(cmd *cobra.Command, args []string) error {
 		Platform   string
 		Credential string
 	}
-	var data [][]string
 	var contextNames []string
 	for name := range c.Config.Contexts {
 		contextNames = append(contextNames, name)
 	}
 	sort.Strings(contextNames)
+	var data [][]string
 	for _, name := range contextNames {
-		context := c.Config.Contexts[name]
 		current := ""
 		if c.Config.CurrentContext == name {
 			current = "*"
 		}
+		context := c.Config.Contexts[name]
 		r := &row{current, name, context.PlatformName, context.CredentialName}
 		data = append(data, printer.ToRow(r, []string{"Current", "Name", "Platform", "Credential"}))
 	}

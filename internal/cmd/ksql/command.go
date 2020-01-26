@@ -9,7 +9,7 @@ import (
 
 type command struct {
 	*pcmd.AuthenticatedCLICommand
-	prerunner   pcmd.PreRunner
+	prerunner pcmd.PreRunner
 }
 
 // New returns the default command object for interacting with KSQL.
@@ -17,12 +17,12 @@ func New(prerunner pcmd.PreRunner, config *config.Config) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "ksql",
-			Short: "Manage KSQL.",
+			Short: "Manage KSQL applications.",
 		},
 		config, prerunner)
 	cmd := &command{
 		AuthenticatedCLICommand: cliCmd,
-		prerunner:   prerunner,
+		prerunner:               prerunner,
 	}
 	cmd.init()
 	return cmd.Command

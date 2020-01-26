@@ -9,6 +9,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/doc"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/version"
+	"github.com/confluentinc/cli/mock"
 )
 
 var (
@@ -20,12 +21,12 @@ var (
 func main() {
 	emptyStr := func(filename string) string { return "" }
 	sphinxRef := func(name, ref string) string { return fmt.Sprintf(":ref:`%s`", ref) }
-	
-	confluent, err := cmd.NewConfluentCommand(cliName, &config.Config{CLIName: cliName}, log.New(), &version.Version{})
+
+	confluent, err := cmd.NewConfluentCommand(cliName, &config.Config{CLIName: cliName}, log.New(), &version.Version{}, mock.NewDummyAnalyticsMock())
 	if err != nil {
 		panic(err)
 	}
-	err = doc.GenReSTTreeCustom(confluent, path.Join(".", "docs", cliName), emptyStr, sphinxRef)
+	err = doc.GenReSTTreeCustom(confluent.Command, path.Join(".", "docs", cliName), emptyStr, sphinxRef)
 	if err != nil {
 		panic(err)
 	}
@@ -40,7 +41,7 @@ The available |ccloud| CLI commands are documented here.
 
 `
 	}
-	err = doc.GenReSTIndex(confluent, path.Join(".", "docs", cliName, "index.rst"), indexHeader, sphinxRef)
+	err = doc.GenReSTIndex(confluent.Command, path.Join(".", "docs", cliName, "index.rst"), indexHeader, sphinxRef)
 	if err != nil {
 		panic(err)
 	}

@@ -34,7 +34,7 @@ var (
 	noticeFiles = []string{"NOTICE", "NOTICES", "NOTICE.txt", "NOTICES.txt"}
 	licenseDir  = pflag.StringP("licenses-dir", "l", "./legal/licenses", "Directory in which to write licenses")
 	noticeDir   = pflag.StringP("notices-dir", "n", "./legal/notices", "Directory in which to write notices")
-	configFile  = pflag.StringP("config-file", "f", "", "File from which to read golicense-downloader configuration")
+	configFile  = pflag.String("config-file", "", "File from which to read golicense-downloader configuration")
 )
 
 type Config struct {

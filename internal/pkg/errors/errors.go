@@ -20,11 +20,15 @@ import (
  */
 
 var (
-	ErrNotImplemented = fmt.Errorf("not implemented")
-	ErrNotLoggedIn    = fmt.Errorf("not logged in")
-	ErrNoContext      = fmt.Errorf("context not set")
-	ErrNoKafkaContext = fmt.Errorf("kafka not set")
-	ErrNoSrEnabled    = fmt.Errorf("schema registry not enabled")
+	ErrNotImplemented  = fmt.Errorf("not implemented")
+	ErrNotLoggedIn     = fmt.Errorf("not logged in")
+	ErrNoContext       = fmt.Errorf("context not set")
+	ErrNoKafkaContext  = fmt.Errorf("kafka not set")
+	ErrNoSrEnabled     = fmt.Errorf("schema registry not enabled")
+	ErrNoKSQL          = fmt.Errorf("no KSQL found")
+	ErrEmptyConfigFile = fmt.Errorf("config file did not have required parameters")
+	ErrNoPluginName    = fmt.Errorf("plugin name must be passed")
+	ErrInvalidCloud    = fmt.Errorf("error defining plugin on given kafka cluster")
 )
 
 // UnspecifiedKafkaClusterError means the user needs to specify a kafka cluster
@@ -76,7 +80,7 @@ type UnconfiguredAPISecretError struct {
 }
 
 func (e *UnconfiguredAPISecretError) Error() string {
-	return fmt.Sprintf("please add API secret with 'api-key store %s --cluster %s'", e.APIKey, e.ClusterID)
+	return fmt.Sprintf("please add API secret with 'api-key store %s --resource %s'", e.APIKey, e.ClusterID)
 }
 
 func New(msg string) error {

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"os"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/confluentinc/mds-sdk-go"
@@ -9,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"gopkg.in/square/go-jose.v2/jwt"
 
+	"github.com/confluentinc/cli/internal/pkg/analytics"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -30,14 +32,13 @@ type PreRun struct {
 	CLIName      string
 	Logger       *log.Logger
 	Clock        clockwork.Clock
+	Analytics    analytics.Client
 	FlagResolver FlagResolver
 	Version      *version.Version
 }
 
 type CLICommand struct {
 	*cobra.Command
-	Client    *ccloud.Client
-	MDSClient *mds.APIClient
 	Config    *DynamicConfig
 	Version   *version.Version
 	prerunner PreRunner
@@ -45,8 +46,10 @@ type CLICommand struct {
 
 type AuthenticatedCLICommand struct {
 	*CLICommand
-	Context *DynamicContext
-	State   *config.ContextState
+	Client    *ccloud.Client
+	MDSClient *mds.APIClient
+	Context   *DynamicContext
+	State     *config.ContextState
 }
 
 type HasAPIKeyCLICommand struct {
@@ -109,12 +112,12 @@ func NewCLICommand(command *cobra.Command, cfg *config.Config, prerunner PreRunn
 }
 
 func (a *AuthenticatedCLICommand) AddCommand(command *cobra.Command) {
-	command.PersistentPreRunE = a.prerunner.Authenticated(a)
+	command.PersistentPreRunE = a.PersistentPreRunE
 	a.Command.AddCommand(command)
 }
 
 func (h *HasAPIKeyCLICommand) AddCommand(command *cobra.Command) {
-	command.PersistentPreRunE = h.prerunner.HasAPIKey(h)
+	command.PersistentPreRunE = h.PersistentPreRunE
 	h.Command.AddCommand(command)
 }
 
@@ -129,12 +132,24 @@ func (r *PreRun) Anonymous(command *CLICommand) func(cmd *cobra.Command, args []
 		if err := r.notifyIfUpdateAvailable(cmd, r.CLIName, command.Version.Version); err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
-		if command != nil {
-			err := setClients(command, command.Version)
+		ctx, err := command.Config.Context(cmd)
+		if err != nil {
+			return err
+		}
+		err = r.validateToken(cmd, ctx)
+		switch err.(type) {
+		case *ccloud.ExpiredTokenError:
+			err := ctx.DeleteUserAuth()
 			if err != nil {
-				return errors.HandleCommon(err, cmd)
+				return err
+			}
+			ErrPrintln(cmd, "Your token has expired. You are now logged out.")
+			analyticsError := r.Analytics.SessionTimedOut()
+			if analyticsError != nil {
+				r.Logger.Debug(analyticsError.Error())
 			}
 		}
+		r.Analytics.TrackCommand(cmd, args)
 		return nil
 	}
 }
@@ -143,6 +158,10 @@ func (r *PreRun) Anonymous(command *CLICommand) func(cmd *cobra.Command, args []
 func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		err := r.Anonymous(command.CLICommand)(cmd, args)
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+		err = r.setClients(command)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
@@ -158,9 +177,7 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
-		// Validate token (not expired)
-		authToken := command.AuthToken()
-		return r.validateToken(cmd, authToken)
+		return r.validateToken(cmd, ctx)
 	}
 }
 
@@ -171,6 +188,10 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
+		err = r.setClients(command)
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
 		ctx, err := command.Config.Context(cmd)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
@@ -178,14 +199,12 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd
 		if ctx == nil {
 			return errors.HandleCommon(errors.ErrNoContext, cmd)
 		}
-		command.Context = ctx
 		if !ctx.HasMDSLogin() {
 			return errors.HandleCommon(errors.ErrNotLoggedIn, cmd)
 		}
+		command.Context = ctx
 		command.State = ctx.State
-		// Validate token (not expired)
-		authToken := command.AuthToken()
-		return r.validateToken(cmd, authToken)
+		return r.validateToken(cmd, ctx)
 	}
 }
 
@@ -199,6 +218,9 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 		ctx, err := command.Config.Context(cmd)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
+		}
+		if ctx == nil {
+			return errors.HandleCommon(errors.ErrNoContext, cmd)
 		}
 		command.Context = ctx
 		hasAPIKey, err := ctx.HasAPIKey(cmd, ctx.Kafka)
@@ -229,22 +251,22 @@ func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, name string, curren
 	return nil
 }
 
-func setClients(cliCmd *CLICommand, ver *version.Version) error {
+func (r *PreRun) setClients(cliCmd *AuthenticatedCLICommand) error {
 	ctx, err := cliCmd.Config.Context(cliCmd.Command)
 	if err != nil {
 		return err
 	}
-	ccloudClient, err := createCCloudClient(ctx, cliCmd.Command, ver)
+	ccloudClient, err := r.createCCloudClient(ctx, cliCmd.Command, cliCmd.Version)
 	if err != nil {
 		return err
 	}
 	cliCmd.Client = ccloudClient
-	cliCmd.MDSClient = createMDSClient(ctx, ver)
+	cliCmd.MDSClient = r.createMDSClient(ctx, cliCmd.Version)
 	cliCmd.Config.Client = ccloudClient
 	return nil
 }
 
-func createCCloudClient(ctx *DynamicContext, cmd *cobra.Command, ver *version.Version) (*ccloud.Client, error) {
+func (r *PreRun) createCCloudClient(ctx *DynamicContext, cmd *cobra.Command, ver *version.Version) (*ccloud.Client, error) {
 	var baseURL string
 	var authToken string
 	var logger *log.Logger
@@ -266,17 +288,41 @@ func createCCloudClient(ctx *DynamicContext, cmd *cobra.Command, ver *version.Ve
 	}), nil
 }
 
-func createMDSClient(ctx *DynamicContext, ver *version.Version) *mds.APIClient {
+func (r *PreRun) createMDSClient(ctx *DynamicContext, ver *version.Version) *mds.APIClient {
 	mdsConfig := mds.NewConfiguration()
-	if ctx != nil {
-		mdsConfig.BasePath = ctx.Platform.Server
-		mdsConfig.UserAgent = ver.UserAgent
+	if ctx == nil {
+		return mds.NewAPIClient(mdsConfig)
+	}
+	mdsConfig.BasePath = ctx.Platform.Server
+	mdsConfig.UserAgent = ver.UserAgent
+	if ctx.Platform.CaCertPath == "" {
+		return mds.NewAPIClient(mdsConfig)
+	}
+	caCertPath := ctx.Platform.CaCertPath
+	// Try to load certs. On failure, warn, but don't error out because this may be an auth command, so there may
+	// be a --ca-cert-path flag on the cmd line that'll fix whatever issue there is with the cert file in the config
+	caCertFile, err := os.Open(caCertPath)
+	if err == nil {
+		defer caCertFile.Close()
+		mdsConfig.HTTPClient, err = SelfSignedCertClient(caCertFile, r.Logger)
+		if err != nil {
+			r.Logger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
+			mdsConfig.HTTPClient = DefaultClient()
+		}
+	} else {
+		r.Logger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
+		mdsConfig.HTTPClient = DefaultClient()
+
 	}
 	return mds.NewAPIClient(mdsConfig)
 }
 
-func (r *PreRun) validateToken(cmd *cobra.Command, authToken string) error {
+func (r *PreRun) validateToken(cmd *cobra.Command, ctx *DynamicContext) error {
 	// Validate token (not expired)
+	var authToken string
+	if ctx != nil {
+		authToken = ctx.State.AuthToken
+	}
 	var claims map[string]interface{}
 	token, err := jwt.ParseSigned(authToken)
 	if err != nil {

@@ -17,7 +17,7 @@ import (
 var (
 	listFields      = []string{"Id", "Name", "ServiceProvider", "Region", "Durability", "Status"}
 	listLabels      = []string{"Id", "Name", "Provider", "Region", "Durability", "Status"}
-	describeFields  = []string{"Id", "Name", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "ApiEndpoint", "PricePerHour"}
+	describeFields  = []string{"Id", "Name", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "ApiEndpoint"}
 	describeRenames = map[string]string{"NetworkIngress": "Ingress", "NetworkEgress": "Egress", "ServiceProvider": "Provider"}
 )
 
@@ -43,35 +43,32 @@ func NewClusterCommand(prerunner pcmd.PreRunner, config *config.Config) *cobra.C
 }
 
 func (c *clusterCommand) init() {
-	listCmd := &cobra.Command{
+	c.AddCommand(&cobra.Command{
 		Use:   "list",
 		Short: "List Kafka clusters.",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
-	}
-	c.AddCommand(listCmd)
+	})
+
 	createCmd := &cobra.Command{
 		Use:   "create <name>",
 		Short: "Create a Kafka cluster.",
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	}
-	createCmd.Flags().String("cloud", "", "Cloud provider (e.g. 'aws' or 'gcp')")
-	createCmd.Flags().String("region", "", "Cloud region for cluster (e.g. 'us-west-2')")
-	createCmd.Flags().Bool("multizone", false, "Use multiple zones for high availability")
+	createCmd.Flags().String("cloud", "", "Cloud provider (e.g. 'aws' or 'gcp').")
+	createCmd.Flags().String("region", "", "Cloud region for cluster (e.g. 'us-west-2').")
 	check(createCmd.MarkFlagRequired("cloud"))
 	check(createCmd.MarkFlagRequired("region"))
 	createCmd.Flags().SortFlags = false
-	createCmd.Hidden = true
 	c.AddCommand(createCmd)
 
-	describeCmd := &cobra.Command{
+	c.AddCommand(&cobra.Command{
 		Use:   "describe <id>",
 		Short: "Describe a Kafka cluster.",
 		RunE:  c.describe,
 		Args:  cobra.ExactArgs(1),
-	}
-	c.AddCommand(describeCmd)
+	})
 
 	updateCmd := &cobra.Command{
 		Use:   "update <id>",
@@ -88,19 +85,17 @@ func (c *clusterCommand) init() {
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
 	}
-	deleteCmd.Hidden = true
 	c.AddCommand(deleteCmd)
-	useCmd := &cobra.Command{
+	c.AddCommand(&cobra.Command{
 		Use:   "use <id>",
 		Short: "Make the Kafka cluster active for use in other commands.",
 		RunE:  c.use,
 		Args:  cobra.ExactArgs(1),
-	}
-	c.AddCommand(useCmd)
+	})
 }
 
 func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
-	req := &kafkav1.KafkaCluster{AccountId: c.State.Auth.Account.Id}
+	req := &kafkav1.KafkaCluster{AccountId: c.EnvironmentId()}
 	clusters, err := c.Client.Kafka.List(context.Background(), req)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -119,10 +114,6 @@ func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
-	if true {
-		return errors.ErrNotImplemented
-	}
-
 	cloud, err := cmd.Flags().GetString("cloud")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -131,20 +122,14 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	multizone, err := cmd.Flags().GetBool("multizone")
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	durability := kafkav1.Durability_LOW
-	if multizone {
-		durability = kafkav1.Durability_HIGH
-	}
 	cfg := &kafkav1.KafkaClusterConfig{
-		AccountId:       c.State.Auth.Account.Id,
+		AccountId:       c.EnvironmentId(),
 		Name:            args[0],
 		ServiceProvider: cloud,
 		Region:          region,
-		Durability:      durability,
+		Durability:      kafkav1.Durability_LOW,
+		// TODO: remove this once it's no longer required (MCM-130)
+		Storage: 5000,
 	}
 	cluster, err := c.Client.Kafka.Create(context.Background(), cfg)
 	if err != nil {
@@ -155,7 +140,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
-	req := &kafkav1.KafkaCluster{AccountId: c.State.Auth.Account.Id, Id: args[0]}
+	req := &kafkav1.KafkaCluster{AccountId: c.EnvironmentId(), Id: args[0]}
 	cluster, err := c.Client.Kafka.Describe(context.Background(), req)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -168,11 +153,7 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
-	if true {
-		return errors.ErrNotImplemented
-	}
-	
-	req := &kafkav1.KafkaCluster{AccountId: c.State.Auth.Account.Id, Id: args[0]}
+	req := &kafkav1.KafkaCluster{AccountId: c.EnvironmentId(), Id: args[0]}
 	err := c.Client.Kafka.Delete(context.Background(), req)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)

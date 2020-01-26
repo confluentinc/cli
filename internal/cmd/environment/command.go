@@ -87,7 +87,7 @@ func (c *command) refreshEnvList(cmd *cobra.Command) error {
 	hasGoodEnv := false
 	if c.State.Auth.Account != nil {
 		for _, acc := range c.State.Auth.Accounts {
-			if acc.Id == c.State.Auth.Account.Id {
+			if acc.Id == c.EnvironmentId() {
 				hasGoodEnv = true
 			}
 		}
@@ -111,7 +111,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	}
 	var data [][]string
 	for _, environment := range environments {
-		if environment.Id == c.State.Auth.Account.Id {
+		if environment.Id == c.EnvironmentId() {
 			environment.Id = fmt.Sprintf("* %s", environment.Id)
 		} else {
 			environment.Id = fmt.Sprintf("  %s", environment.Id)
@@ -146,7 +146,7 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 
 func (c *command) create(cmd *cobra.Command, args []string) error {
 	name := args[0]
-	
+
 	_, err := c.Client.Account.Create(context.Background(), &orgv1.Account{Name: name, OrganizationId: c.State.Auth.Account.OrganizationId})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -156,9 +156,14 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 
 func (c *command) update(cmd *cobra.Command, args []string) error {
 	id := args[0]
-	
-	newName := cmd.Flag("name").Value.String()
-	err := c.Client.Account.Update(context.Background(), &orgv1.Account{Id: id, Name: newName, OrganizationId: c.State.Auth.Account.OrganizationId})
+
+	newName, err := cmd.Flags().GetString("name")
+	if err != nil {
+		return err
+	}
+
+	err = c.Client.Account.Update(context.Background(), &orgv1.Account{Id: id, Name: newName, OrganizationId: c.State.Auth.Account.OrganizationId})
+
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -167,7 +172,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
 	id := args[0]
-	
+
 	err := c.Client.Account.Delete(context.Background(), &orgv1.Account{Id: id, OrganizationId: c.State.Auth.Account.OrganizationId})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)

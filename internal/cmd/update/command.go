@@ -25,7 +25,7 @@ const (
 )
 
 // NewClient returns a new update.Client configured for the CLI
-func NewClient(cliName string, logger *log.Logger) (update.Client, error) {
+func NewClient(cliName string, disableUpdateCheck bool, logger *log.Logger) (update.Client, error) {
 	objectKey, err := s3.NewPrefixedKey(fmt.Sprintf(S3BinPrefix, cliName), "_", true)
 	if err != nil {
 		return nil, err
@@ -39,6 +39,7 @@ func NewClient(cliName string, logger *log.Logger) (update.Client, error) {
 	})
 	return update.NewClient(&update.ClientParams{
 		Repository:    repo,
+		DisableCheck:  disableUpdateCheck,
 		CheckFile:     fmt.Sprintf(CheckFileFmt, cliName),
 		CheckInterval: CheckInterval,
 		Logger:        logger,

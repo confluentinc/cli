@@ -1,6 +1,6 @@
 # Confluent Cloud CLI
 
-[![Build Status](https://semaphoreci.com/api/v1/projects/accef4bb-d1db-491f-b22e-0d438211c888/1992525/shields_badge.svg)](https://semaphoreci.com/confluent/cli)
+[![Build Status](https://dev.azure.com/confluentinc/cli/_apis/build/status/confluentinc.cli?branchName=master)](https://dev.azure.com/confluentinc/cli/_build/latest?definitionId=1&branchName=master)
 ![Release](release.svg)
 [![codecov](https://codecov.io/gh/confluentinc/cli/branch/master/graph/badge.svg?token=67t1cdciLU)](https://codecov.io/gh/confluentinc/cli)
 

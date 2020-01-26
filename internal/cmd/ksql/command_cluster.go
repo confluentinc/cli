@@ -53,46 +53,46 @@ func (c *clusterCommand) init() {
 	})
 
 	createCmd := &cobra.Command{
-		Use:   "create NAME",
-		Short: "Create a KSQL app",
+		Use:   "create <name>",
+		Short: "Create a KSQL app.",
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	}
-	createCmd.Flags().String("cluster", "", "Kafka cluster ID")
-	check(createCmd.MarkFlagRequired("cluster"))
-	createCmd.Flags().Int32("storage", 50, "Amount of data storage available in GB")
+	createCmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	createCmd.Flags().Int32("servers", 1, "Number of servers in the cluster.")
+	createCmd.Flags().Int32("storage", 50, "Amount of data storage available in GB.")
 	check(createCmd.MarkFlagRequired("storage"))
-	createCmd.Flags().Int32("servers", 1, "Number of servers in the cluster")
+	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
 	c.AddCommand(&cobra.Command{
-		Use:   "describe ID",
+		Use:   "describe <id>",
 		Short: "Describe a KSQL app.",
 		RunE:  c.describe,
 		Args:  cobra.ExactArgs(1),
 	})
 
 	c.AddCommand(&cobra.Command{
-		Use:   "delete ID",
+		Use:   "delete <id>",
 		Short: "Delete a KSQL app.",
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
 	})
 
 	aclsCmd := &cobra.Command{
-		Use:   "configure-acls ID TOPICS...",
+		Use:   "configure-acls <id> TOPICS...",
 		Short: "Configure ACLs for a KSQL cluster.",
 		RunE:  c.configureACLs,
 		Args:  cobra.MinimumNArgs(1),
 	}
-	aclsCmd.Flags().String("cluster", "", "Kafka cluster ID")
-	check(createCmd.MarkFlagRequired("cluster"))
-	aclsCmd.Flags().BoolVar(&aclsDryRun, "dry-run", false, "If specified, print the ACLs that will be set and exit")
+	aclsCmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	aclsCmd.Flags().BoolVar(&aclsDryRun, "dry-run", false, "If specified, print the ACLs that will be set and exit.")
+	aclsCmd.Flags().SortFlags = false
 	c.AddCommand(aclsCmd)
 }
 
 func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
-	req := &ksqlv1.KSQLCluster{AccountId: c.State.Auth.Account.Id}
+	req := &ksqlv1.KSQLCluster{AccountId: c.EnvironmentId()}
 	clusters, err := c.Client.KSQL.List(context.Background(), req)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -106,7 +106,7 @@ func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
-	kafkaCluster, err := pcmd.KafkaCluster(cmd, c.Context, c.EnvironmentId())
+	kafkaCluster, err := pcmd.KafkaCluster(cmd, c.Context)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -119,7 +119,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	cfg := &ksqlv1.KSQLClusterConfig{
-		AccountId:      c.State.Auth.Account.Id,
+		AccountId:      c.EnvironmentId(),
 		Name:           args[0],
 		Servers:        servers,
 		Storage:        storage,
@@ -133,7 +133,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
-	req := &ksqlv1.KSQLCluster{AccountId: c.State.Auth.Account.Id, Id: args[0]}
+	req := &ksqlv1.KSQLCluster{AccountId: c.EnvironmentId(), Id: args[0]}
 	cluster, err := c.Client.KSQL.Describe(context.Background(), req)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -142,7 +142,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
-	req := &ksqlv1.KSQLCluster{AccountId: c.State.Auth.Account.Id, Id: args[0]}
+	req := &ksqlv1.KSQLCluster{AccountId: c.EnvironmentId(), Id: args[0]}
 	err := c.Client.KSQL.Delete(context.Background(), req)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -221,6 +221,13 @@ func (c *clusterCommand) buildACLBindings(serviceAccountId string, cluster *ksql
 			bindings = append(bindings, c.createAcl(t, kafkav1.PatternTypes_LITERAL, op, kafkav1.ResourceTypes_TOPIC, serviceAccountId))
 		}
 	}
+	// for transactional produces to command topic
+	for _, op := range []kafkav1.ACLOperations_ACLOperation{
+		kafkav1.ACLOperations_DESCRIBE,
+		kafkav1.ACLOperations_WRITE,
+	} {
+		bindings = append(bindings, c.createAcl(cluster.PhysicalClusterId, kafkav1.PatternTypes_LITERAL, op, kafkav1.ResourceTypes_TRANSACTIONAL_ID, serviceAccountId))
+	}
 	return bindings
 }
 
@@ -241,12 +248,12 @@ func (c *clusterCommand) configureACLs(cmd *cobra.Command, args []string) error 
 	ctx := context.Background()
 
 	// Get the Kafka Cluster
-	kafkaCluster, err := pcmd.KafkaCluster(cmd, c.Context, c.EnvironmentId())
+	kafkaCluster, err := pcmd.KafkaCluster(cmd, c.Context)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 	// Ensure the KSQL cluster talks to the current Kafka Cluster
-	req := &ksqlv1.KSQLCluster{AccountId: c.State.Auth.Account.Id, Id: args[0]}
+	req := &ksqlv1.KSQLCluster{AccountId: c.EnvironmentId(), Id: args[0]}
 	cluster, err := c.Client.KSQL.Describe(context.Background(), req)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)

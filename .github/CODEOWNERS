@@ -2,4 +2,7 @@
 
 # These owners will be the default owners for everything in
 # the repo.
-*       @confluentinc/cli
+*                            @confluentinc/cli
+
+# Add docs team to commands where docs are managed
+internal/cmd/**/command*.go  @confluentinc/docs

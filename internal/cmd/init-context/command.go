@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -13,7 +14,6 @@ import (
 
 type command struct {
 	*pcmd.CLICommand
-	config   *config.Config
 	prompt   pcmd.Prompt
 	resolver pcmd.FlagResolver
 }
@@ -21,18 +21,20 @@ type command struct {
 // TODO: Make long description better.
 const longDescription = "Initialize and set a current context."
 
-func New(prerunner pcmd.PreRunner, config *config.Config, prompt pcmd.Prompt, resolver pcmd.FlagResolver) *cobra.Command {
-	cliCmd := pcmd.NewAnonymousCLICommand(
-		&cobra.Command{
-			Use:   "init <context-name>",
-			Short: "Initialize a context.",
-			Long:  longDescription,
-			Args:  cobra.ExactArgs(1),
-		},
-		config, prerunner)
+func New(prerunner pcmd.PreRunner, config *config.Config, prompt pcmd.Prompt, resolver pcmd.FlagResolver, analyticsClient analytics.Client) *cobra.Command {
+	cobraCmd := &cobra.Command{
+		Use:   "init <context-name>",
+		Short: "Initialize a context.",
+		Long:  longDescription,
+		Args:  cobra.ExactArgs(1),
+	}
+	cliCmd := pcmd.NewAnonymousCLICommand(cobraCmd, config, prerunner)
+	cobraCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		analyticsClient.SetCommandType(analytics.Init)
+		return prerunner.Anonymous(cliCmd)(cmd, args)
+	}
 	cmd := &command{
 		CLICommand: cliCmd,
-		config:     config,
 		prompt:     prompt,
 		resolver:   resolver,
 	}
@@ -91,7 +93,7 @@ func (c *command) initContext(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	// Set current context.
-	err = c.config.SetContext(contextName)
+	err = c.Config.SetContext(contextName)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -135,14 +137,14 @@ func (c *command) addContext(name string, bootstrapURL string, apiKey string, ap
 	default:
 		return fmt.Errorf("credential type %d unknown", credential.CredentialType)
 	}
-	err := c.config.SaveCredential(credential)
+	err := c.Config.SaveCredential(credential)
 	if err != nil {
 		return err
 	}
-	err = c.config.SavePlatform(platform)
+	err = c.Config.SavePlatform(platform)
 	if err != nil {
 		return err
 	}
-	return c.config.AddContext(name, platform.Name, credential.Name, kafkaClusters,
+	return c.Config.AddContext(name, platform.Name, credential.Name, kafkaClusters,
 		kafkaClusterCfg.ID, nil, nil)
 }

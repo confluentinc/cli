@@ -36,7 +36,6 @@ func NewPreRunnerMock(client *ccloud.Client, mdsClient *mds.APIClient) cmd.PreRu
 func (c *Commander) Anonymous(command *cmd.CLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		if command != nil {
-			c.setClient(command)
 			command.Version = c.Version
 			command.Config.Resolver = c.FlagResolver
 		}
@@ -47,13 +46,22 @@ func (c *Commander) Anonymous(command *cmd.CLICommand) func(cmd *cobra.Command, 
 func (c *Commander) Authenticated(command *cmd.AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		err := c.Anonymous(command.CLICommand)(cmd, args)
-		panicIfErr(err)
-		c.setClient(command.CLICommand)
+		if err != nil {
+			return err
+		}
+		c.setClient(command)
 		ctx, err := command.Config.Context(cmd)
-		panicIfErr(err)
+		if err != nil {
+			return err
+		}
+		if ctx == nil {
+			return errors.HandleCommon(errors.ErrNoContext, cmd)
+		}
 		command.Context = ctx
 		command.State, err = ctx.AuthenticatedState(cmd)
-		panicIfErr(err)
+		if err == nil {
+			return errors.HandleCommon(err, cmd)
+		}
 		return nil
 	}
 }
@@ -61,13 +69,20 @@ func (c *Commander) Authenticated(command *cmd.AuthenticatedCLICommand) func(cmd
 func (c *Commander) AuthenticatedWithMDS(command *cmd.AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		err := c.Anonymous(command.CLICommand)(cmd, args)
-		panicIfErr(err)
-		c.setClient(command.CLICommand)
+		if err != nil {
+			return err
+		}
+		c.setClient(command)
 		ctx, err := command.Config.Context(cmd)
-		panicIfErr(err)
+		if err != nil {
+			return err
+		}
+		if ctx == nil {
+			return errors.HandleCommon(errors.ErrNoContext, cmd)
+		}
 		command.Context = ctx
 		if !ctx.HasMDSLogin() {
-			panic(errors.ErrNotLoggedIn)
+			return errors.HandleCommon(errors.ErrNotLoggedIn, cmd)
 		}
 		command.State = ctx.State
 		return nil
@@ -77,22 +92,22 @@ func (c *Commander) AuthenticatedWithMDS(command *cmd.AuthenticatedCLICommand) f
 func (c *Commander) HasAPIKey(command *cmd.HasAPIKeyCLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		err := c.Anonymous(command.CLICommand)(cmd, args)
-		panicIfErr(err)
-		c.setClient(command.CLICommand)
+		if err != nil {
+			return err
+		}
 		ctx, err := command.Config.Context(cmd)
-		panicIfErr(err)
+		if err != nil {
+			return err
+		}
+		if ctx == nil {
+			return errors.HandleCommon(errors.ErrNoContext, cmd)
+		}
 		command.Context = ctx
 		return nil
 	}
 }
 
-func panicIfErr(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
-
-func (c *Commander) setClient(command *cmd.CLICommand) {
+func (c *Commander) setClient(command *cmd.AuthenticatedCLICommand) {
 	command.Client = c.Client
 	command.MDSClient = c.MDSClient
 	command.Config.Client = c.Client

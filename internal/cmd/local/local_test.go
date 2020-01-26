@@ -1,3 +1,5 @@
+// +build darwin linux
+
 package local
 
 import (
@@ -177,8 +179,8 @@ func TestDetermineConfluentInstallDir(t *testing.T) {
 		},
 		{
 			name:      "unversioned directory found in ./ and versioned directory found in /opt",
-			dirExists: map[string][]string{"./confluent*": {"./confluent"}, "/opt/confluent*": {"/opt/confluent-5.2.2"}},
-			wantDir:   "./confluent",
+			dirExists: map[string][]string{".": {"."}, "/opt/confluent*": {"/opt/confluent-5.2.2"}},
+			wantDir:   ".",
 			wantFound: true,
 			wantErr:   false,
 		},
@@ -351,6 +353,13 @@ func TestDetermineConfluentInstallDir(t *testing.T) {
 			name:      "multiple nightly SNAPSHOT versions found, first in /opt, second in /usr/local",
 			dirExists: map[string][]string{"/opt/confluent*": {"/opt/confluent-5.2.2-SNAPSHOT"}, "/usr/local/confluent*": {"/usr/local/confluent-5.3.0-SNAPSHOT"}},
 			wantDir:   "/opt/confluent-5.2.2-SNAPSHOT",
+			wantFound: true,
+			wantErr:   false,
+		},
+		{
+			name:      "package-based installation (deb, rpm) following the Linux Filesystem Hierarchy",
+			dirExists: map[string][]string{"/usr/": {"/usr"}},
+			wantDir:   "/usr",
 			wantFound: true,
 			wantErr:   false,
 		},

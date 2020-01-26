@@ -1,0 +1,5 @@
+Scope:
+       Type       |       ID         
++-----------------+-----------------+
+  connect-cluster | connectClusterA  
+  kafka-cluster   | kafkaCluster1    

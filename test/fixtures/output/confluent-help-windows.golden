@@ -1,0 +1,21 @@
+Manage your Confluent Platform.
+
+Usage:
+  confluent [command]
+
+Available Commands:
+  cluster     Retrieve metadata about Confluent clusters.
+  completion  Print shell completion code.
+  help        Help about any command
+  iam         Manage RBAC, ACL and IAM permissions.
+  login       Log in to Confluent Platform (required for RBAC).
+  logout      Logout of Confluent Platform.
+  secret      Manage secrets for Confluent Platform.
+  update      Update the confluent CLI.
+  version     Print the confluent CLI version.
+
+Flags:
+  -h, --help            help for confluent
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent [command] --help" for more information about a command.
