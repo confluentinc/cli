@@ -20,7 +20,7 @@ as part of the repo's build process.
   - [Building From Source](#building-from-source)
 - [Developing](#developing)
   - [Go Version](#go-version)
-  - [Mac Setup Notes](#mac-setup)
+  - [Mac Setup Notes](#mac-setup-notes)
   - [File Layout](#file-layout)
   - [Build Other Platforms](#build-other-platforms)
   - [URLS](#urls)
