@@ -4,7 +4,7 @@ GIT_REMOTE_NAME ?= origin
 MASTER_BRANCH   ?= master
 RELEASE_BRANCH  ?= master
 
-DOCS_BRANCH     ?= 5.3.1-post
+DOCS_BRANCH     ?= 5.4.0-post
 
 include ./semver.mk
 
@@ -169,7 +169,7 @@ download-licenses:
 	@# we'd like to use golicense -plain but the exit code is always 0 then so CI won't actually fail on illegal licenses
 	@for binary in ccloud confluent; do \
 		echo Downloading third-party licenses for $${binary} binary ; \
-		GITHUB_TOKEN=$(token) golicense .golicense.hcl ./dist/$${binary}/$(shell go env GOOS)_$(shell go env GOARCH)/$${binary} | GITHUB_TOKEN=$(token) go run cmd/golicense-downloader/main.go -f .golicense-downloader.json -l legal/$${binary}/licenses -n legal/$${binary}/notices ; \
+		GITHUB_TOKEN=$(token) golicense .golicense.hcl ./dist/$${binary}/$(shell go env GOOS)_$(shell go env GOARCH)/$${binary} | GITHUB_TOKEN=$(token) go run cmd/golicense-downloader/main.go -F .golicense-downloader.json -l legal/$${binary}/licenses -n legal/$${binary}/notices ; \
 		[ -z "$$(ls -A legal/$${binary}/licenses)" ] && rmdir legal/$${binary}/licenses ; \
 		[ -z "$$(ls -A legal/$${binary}/notices)" ] && rmdir legal/$${binary}/notices ; \
 	done
@@ -235,7 +235,7 @@ publish-docs: docs
 		cd - || exit 1; \
 		make publish-docs-internal BASE_DIR=$${TMP_DIR} CLI_NAME=ccloud || exit 1; \
 		cd $${TMP_DIR} || exit 1; \
-		sed -i 's/default "confluent_cli_consumer_[^"]*"/default "confluent_cli_consumer_<uuid>"/' cloud/cli/command-reference/ccloud_kafka_topic_consume.rst || exit 1; \
+		sed -i '' 's/default "confluent_cli_consumer_[^"]*"/default "confluent_cli_consumer_<uuid>"/' cloud/cli/command-reference/ccloud_kafka_topic_consume.rst || exit 1; \
 		git add . || exit 1; \
 		git diff --cached --exit-code >/dev/null && echo "nothing to update for docs" && exit 0; \
 		git commit -m "chore: updating CLI docs for $(VERSION)" || exit 1; \

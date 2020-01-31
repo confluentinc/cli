@@ -194,6 +194,9 @@ func (d *DynamicContext) AuthenticatedEnvId(cmd *cobra.Command) (string, error) 
 	return state.Auth.Account.Id, nil
 }
 
+// AuthenticatedState returns the context's state if authenticated, and an error otherwise.
+// A view of the state is returned, rather than a pointer to the actual state. Changing the state
+// should be done by accessing the state field directly.
 func (d *DynamicContext) AuthenticatedState(cmd *cobra.Command) (*config.ContextState, error) {
 	hasLogin, err := d.HasLogin(cmd)
 	if err != nil {

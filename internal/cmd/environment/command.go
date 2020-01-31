@@ -131,7 +131,7 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 	}
 	for _, acc := range c.State.Auth.Accounts {
 		if acc.Id == id {
-			c.State.Auth.Account = acc
+			c.Context.State.Auth.Account = acc
 			err := c.Config.Save()
 			if err != nil {
 				return errors.HandleCommon(errors.New("couldn't switch to new environment: couldn't save config."), cmd)

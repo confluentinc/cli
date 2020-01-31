@@ -1,0 +1,31 @@
+      Name      |                   AccessPolicy                     
++---------------+---------------------------------------------------+
+  DeveloperRead | {                                                  
+                |   "scopeType": "Resource",                         
+                |   "allowedOperations": [                           
+                |     {                                              
+                |       "resourceType": "Cluster"                    
+                |     },                                             
+                |     {                                              
+                |       "resourceType": "TransactionalId",           
+                |       "operations": ["Describe"]                   
+                |     },                                             
+                |     {                                              
+                |       "resourceType": "Group",                     
+                |       "operations": ["Read", "Describe"]           
+                |     },                                             
+                |     {                                              
+                |       "resourceType": "Subject",                   
+                |       "operations": ["Read", "ReadCompatibility"]  
+                |     },                                             
+                |     {                                              
+                |       "resourceType": "Connector",                 
+                |       "operations": ["ReadStatus", "ReadConfig"]   
+                |     },                                             
+                |     {                                              
+                |       "resourceType": "Topic",                     
+                |       "operations": ["Read", "Describe"]           
+                |     }                                              
+                |   ]                                                
+                | }                                                  
+                |                                                    
