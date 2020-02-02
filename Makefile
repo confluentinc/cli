@@ -153,7 +153,9 @@ internal/cmd/local/bindata.go: cp_cli/* assets/*
 
 .PHONY: authenticate
 authenticate:
-	caasenv prod
+	# If you setup your laptop following https://github.com/confluentinc/cc-documentation/blob/master/Operations/Laptop%20Setup.md
+	# then assuming caas.sh lives here should be fine
+	source ~/git/go/src/github.com/confluentinc/cc-dotfiles/caas.sh && caasenv prod
 
 .PHONY: release
 release: authenticate get-release-image commit-release tag-release
