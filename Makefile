@@ -151,8 +151,11 @@ bindata: internal/cmd/local/bindata.go
 internal/cmd/local/bindata.go: cp_cli/* assets/*
 	@go-bindata -pkg local -o internal/cmd/local/bindata.go cp_cli/ assets/
 
+.PHONE: authenticate
+	caasenv prod
+
 .PHONY: release
-release: get-release-image commit-release tag-release
+release: authenticate get-release-image commit-release tag-release
 	@GO111MODULE=on make gorelease
 	@GO111MODULE=on VERSION=$(VERSION) make publish
 	@GO111MODULE=on VERSION=$(VERSION) make publish-docs
