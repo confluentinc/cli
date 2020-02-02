@@ -163,6 +163,7 @@ release: authenticate get-release-image commit-release tag-release
 	git checkout go.sum
 	@GO111MODULE=on VERSION=$(VERSION) make publish
 	@GO111MODULE=on VERSION=$(VERSION) make publish-docs
+	git checkout go.sum
 
 .PHONY: fakerelease
 fakerelease: get-release-image commit-release tag-release
