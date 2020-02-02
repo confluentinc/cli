@@ -162,6 +162,7 @@ release: authenticate get-release-image commit-release tag-release
 	@GO111MODULE=on make gorelease
 	@GO111MODULE=on VERSION=$(VERSION) make publish
 	@GO111MODULE=on VERSION=$(VERSION) make publish-docs
+	git checkout go.sum
 
 .PHONY: fakerelease
 fakerelease: get-release-image commit-release tag-release
@@ -231,8 +232,10 @@ dist: download-licenses
 
 .PHONY: publish
 publish: sign dist
+	# Note: gorelease target publishes unsigned binaries to the binaries folder in the bucket, we have to overwrite them here after signing
 	@for binary in ccloud confluent; do \
 		source ~/git/go/src/github.com/confluentinc/cc-dotfiles/caas.sh && caasenv prod && \
+		aws s3 cp dist/$${binary}/darwin_amd64/$${binary} s3://confluent.cloud/$${binary}-cli/binaries/$(VERSION:v%=%)/ ; \\
 		aws s3 cp dist/$${binary}/ s3://confluent.cloud/$${binary}-cli/archives/$(VERSION:v%=%)/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --include "*_checksums.txt" --exclude "*_latest_*" --acl public-read ; \
 		aws s3 cp dist/$${binary}/ s3://confluent.cloud/$${binary}-cli/archives/latest/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --include "*_checksums.txt" --exclude "*_$(VERSION)_*" --acl public-read ; \
 	done
