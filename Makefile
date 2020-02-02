@@ -157,14 +157,21 @@ release: get-release-image commit-release tag-release
 	@GO111MODULE=on VERSION=$(VERSION) make publish
 	@GO111MODULE=on VERSION=$(VERSION) make publish-docs
 
+.PHONY: fakerelease
 fakerelease: get-release-image commit-release tag-release
-	@GO111MODULE=on make gorelease
+	@GO111MODULE=on make fakegorelease
 
 .PHONY: gorelease
 gorelease:
 	@GO111MODULE=off go get -u github.com/inconshreveable/mousetrap # dep from cobra -- incompatible with go mod
 	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --rm-dist -f .goreleaser-ccloud.yml
 	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --rm-dist -f .goreleaser-confluent.yml
+
+.PHONY: fakegorelease
+gorelease:
+	@GO111MODULE=off go get -u github.com/inconshreveable/mousetrap # dep from cobra -- incompatible with go mod
+	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --rm-dist -f .goreleaser-ccloud-fake.yml
+	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --rm-dist -f .goreleaser-confluent-fake.yml
 
 .PHONY: download-licenses
 download-licenses:
