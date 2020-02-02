@@ -231,8 +231,8 @@ dist: download-licenses
 	done
 
 .PHONY: publish
+## Note: gorelease target publishes unsigned binaries to the binaries folder in the bucket, we have to overwrite them here after signing
 publish: sign dist
-	# Note: gorelease target publishes unsigned binaries to the binaries folder in the bucket, we have to overwrite them here after signing
 	@for binary in ccloud confluent; do \
 		source ~/git/go/src/github.com/confluentinc/cc-dotfiles/caas.sh && caasenv prod && \
 		aws s3 cp dist/$${binary}/darwin_amd64/$${binary} s3://confluent.cloud/$${binary}-cli/binaries/$(VERSION:v%=%)/ ; \\
