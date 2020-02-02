@@ -2,8 +2,6 @@ source = ["./dist/confluent/darwin_amd64/confluent"]
 bundle_id = "io.confluent.cli.confluent"
 
 apple_id {
-  username = "david.hyde@confluent.io"
-  password = "@env:AC_PASSWORD"
 }
 
 sign {

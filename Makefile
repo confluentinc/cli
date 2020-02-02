@@ -173,6 +173,13 @@ fakegorelease:
 	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --rm-dist -f .goreleaser-ccloud-fake.yml
 	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --rm-dist -f .goreleaser-confluent-fake.yml
 
+.PHONY: sign
+sign:
+	@GO111MODULE=on gon gon_ccloud.hcl
+	@GO111MODULE=on gon gon_confluent.hcl
+	rm dist/ccloud/darwin_amd64/ccloud_signed.zip || true
+	rm dist/confluent/darwin_amd64/confluent_signed.zip || true
+
 .PHONY: download-licenses
 download-licenses:
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
@@ -217,7 +224,7 @@ dist: download-licenses
 	done
 
 .PHONY: publish
-publish: dist
+publish: sign dist
 	@for binary in ccloud confluent; do \
 		aws s3 cp dist/$${binary}/ s3://confluent.cloud/$${binary}-cli/archives/$(VERSION:v%=%)/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --include "*_checksums.txt" --exclude "*_latest_*" --acl public-read ; \
 		aws s3 cp dist/$${binary}/ s3://confluent.cloud/$${binary}-cli/archives/latest/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --include "*_checksums.txt" --exclude "*_$(VERSION)_*" --acl public-read ; \
