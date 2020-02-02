@@ -157,6 +157,9 @@ release: get-release-image commit-release tag-release
 	@GO111MODULE=on VERSION=$(VERSION) make publish
 	@GO111MODULE=on VERSION=$(VERSION) make publish-docs
 
+fakerelease: get-release-image commit-release tag-release
+	@GO111MODULE=on make gorelease
+
 .PHONY: gorelease
 gorelease:
 	@GO111MODULE=off go get -u github.com/inconshreveable/mousetrap # dep from cobra -- incompatible with go mod
