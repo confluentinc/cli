@@ -240,7 +240,7 @@ publish: sign dist
 .PHONY: publish-installers
 ## Publish install scripts to S3. You MUST re-run this if/when you update any install script.
 publish-installers:
-    source ~/git/go/src/github.com/confluentinc/cc-dotfiles/caas.sh && caasenv prod && \
+	source ~/git/go/src/github.com/confluentinc/cc-dotfiles/caas.sh && caasenv prod && \
 	aws s3 cp install-ccloud.sh s3://confluent.cloud/ccloud-cli/install.sh --acl public-read && \
 	aws s3 cp install-confluent.sh s3://confluent.cloud/confluent-cli/install.sh --acl public-read
 
