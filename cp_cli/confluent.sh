@@ -881,7 +881,18 @@ config_service() {
         if [ -f ${confluent_home}/share/java/kafka-connect-replicator/replicator-rest-extension-* ]; then
           REST_EXTENSION_JAR=$(find ${confluent_home}/share/java/kafka-connect-replicator/replicator-rest-extension-*)
           export CLASSPATH=$CLASSPATH:$REST_EXTENSION_JAR
-          printf '\n%s\n' 'rest.extension.classes=io.confluent.connect.replicator.monitoring.ReplicatorMonitoringExtension' >> "${service_dir}/${service}.properties"
+          REST_EXTENSION_KEY="rest.extension.classes"
+          REST_EXTENSION_REPLICATOR_VALUE="io.confluent.connect.replicator.monitoring.ReplicatorMonitoringExtension"
+          existing_line=$(grep "$KEY" ${service_dir}/${service}.properties)
+          # if rest.extension.classes doesn't exist in the file, add a new rest extension config with the Replicator monitoring extension at the end of the properties file
+          if [ -z $existing_line ]; then
+            printf '\n%s\n' 'rest.extension.classes=io.confluent.connect.replicator.monitoring.ReplicatorMonitoringExtension' >> "${service_dir}/${service}.properties"
+          # if rest.extension.classes does exist, then append the Replicator monitoring extension to the existing rest extension classes
+          else
+            newline="$existing_line,$REST_EXTENSION_REPLICATOR_VALUE"
+            sed_expr="s/$REST_EXTENSION_KEY.*/$newline/"
+            sed -i '' $sed_expr ${service_dir}/${service}.properties
+          fi
         fi
     fi
 
