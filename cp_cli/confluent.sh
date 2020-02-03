@@ -891,7 +891,15 @@ config_service() {
             printf '\n%s\n' "$REST_EXTENSION_KEY=$REST_EXTENSION_REPLICATOR_VALUE" >> "${service_dir}/${service}.properties"
           # if rest.extension.classes does exist, then append the Replicator monitoring extension to the existing rest extension classes
           else
-            rest_extension_line="$existing_line,$REST_EXTENSION_REPLICATOR_VALUE"
+            if [[ $existing_line == *\\* ]] # case where there is a multiline config, check if a slash exists in the string
+            then
+              # only look at the first line of the multi line config and remove the ending slash
+              modified_line=$(sed 's/\\//g' <<< "$existing_line")
+              # append the rest extension value at the end and add a comma and an ending slash
+              rest_extension_line="$modified_line$REST_EXTENSION_REPLICATOR_VALUE,  \\\\"
+            else # case where it is a single line config
+              rest_extension_line="$existing_line,$REST_EXTENSION_REPLICATOR_VALUE"
+            fi
             sed_expr="s/$REST_EXTENSION_KEY.*/$rest_extension_line/"
             sed -i '' "$sed_expr" ${service_dir}/${service}.properties
             if [ $? -ne 0 ]; then
