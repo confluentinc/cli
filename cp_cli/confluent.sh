@@ -881,7 +881,7 @@ config_service() {
         if [ -f ${confluent_home}/share/java/kafka-connect-replicator/replicator-rest-extension-* ]; then
           REST_EXTENSION_JAR=$(find ${confluent_home}/share/java/kafka-connect-replicator/replicator-rest-extension-*)
           export CLASSPATH=$CLASSPATH:$REST_EXTENSION_JAR
-          REST_EXTENSION_KEY="^rest\.extension\.classes="
+          REST_EXTENSION_KEY="^[[:blank:]]*rest\.extension\.classes[[:blank:]]*="
           REST_EXTENSION_REPLICATOR_VALUE="io.confluent.connect.replicator.monitoring.ReplicatorMonitoringExtension"
           existing_line=$(grep "$REST_EXTENSION_KEY" ${service_dir}/${service}.properties)
           # if rest.extension.classes doesn't exist in the file, add a new rest extension config with the Replicator monitoring extension at the end of the properties file
@@ -894,7 +894,7 @@ config_service() {
             rest_extension_line="$existing_line,$REST_EXTENSION_REPLICATOR_VALUE"
             sed_expr="s/$REST_EXTENSION_KEY.*/$rest_extension_line/"
             sed -i '' "$sed_expr" ${service_dir}/${service}.properties
-            if [ $?l -ne 0 ]; then
+            if [ $? -ne 0 ]; then
               echo "Was not able to add Replicator monitoring extension to list of rest.extension.classes! Is this config defined more than once?"
             fi
           fi
