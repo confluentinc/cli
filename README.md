@@ -198,6 +198,15 @@ uploaded binaries/archives (just remove the corresponding version folders).
 You could also remove an accidentally-published tag on GitHub, but this isn't
 essential.
 
+Note: you can verify whether a macOS binary is signed and notarized correctly
+by running `spctl -a -vvv -t install <binary name>`.  If all is good, you
+should see output like
+```
+dist/ccloud/darwin_amd64/ccloud: accepted
+source=Notarized Developer ID
+origin=Developer ID Application: Confluent, Inc. (RTSX8FNWR2)
+```
+
 ## Installers
 
 This repo contains installers for [install-ccloud.sh](./install-ccloud.sh) and
