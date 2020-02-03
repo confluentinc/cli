@@ -881,17 +881,22 @@ config_service() {
         if [ -f ${confluent_home}/share/java/kafka-connect-replicator/replicator-rest-extension-* ]; then
           REST_EXTENSION_JAR=$(find ${confluent_home}/share/java/kafka-connect-replicator/replicator-rest-extension-*)
           export CLASSPATH=$CLASSPATH:$REST_EXTENSION_JAR
-          REST_EXTENSION_KEY="rest.extension.classes"
+          REST_EXTENSION_KEY="^rest\.extension\.classes="
           REST_EXTENSION_REPLICATOR_VALUE="io.confluent.connect.replicator.monitoring.ReplicatorMonitoringExtension"
           existing_line=$(grep "$REST_EXTENSION_KEY" ${service_dir}/${service}.properties)
           # if rest.extension.classes doesn't exist in the file, add a new rest extension config with the Replicator monitoring extension at the end of the properties file
           if [ -z $existing_line ]; then
-            printf '\n%s\n' 'rest.extension.classes=io.confluent.connect.replicator.monitoring.ReplicatorMonitoringExtension' >> "${service_dir}/${service}.properties"
+            # changing the key to be an exact literal of rest.extension.classes
+            REST_EXTENSION_KEY="rest.extension.classes"
+            printf '\n%s\n' "$REST_EXTENSION_KEY=$REST_EXTENSION_REPLICATOR_VALUE" >> "${service_dir}/${service}.properties"
           # if rest.extension.classes does exist, then append the Replicator monitoring extension to the existing rest extension classes
           else
-            newline="$existing_line,$REST_EXTENSION_REPLICATOR_VALUE"
-            sed_expr="s/$REST_EXTENSION_KEY.*/$newline/"
-            sed -i '' $sed_expr ${service_dir}/${service}.properties
+            rest_extension_line="$existing_line,$REST_EXTENSION_REPLICATOR_VALUE"
+            sed_expr="s/$REST_EXTENSION_KEY.*/$rest_extension_line/"
+            sed -i '' "$sed_expr" ${service_dir}/${service}.properties
+            if [ $?l -ne 0 ]; then
+              echo "Was not able to add Replicator monitoring extension to list of rest.extension.classes! Is this config defined more than once?"
+            fi
           fi
         fi
     fi
