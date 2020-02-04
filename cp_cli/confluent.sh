@@ -877,7 +877,7 @@ inject_configs() {
     # if config doesn't exist in the file, add the config with the value at the end of the properties file
     if [[ -z $existing_line ]]
     then
-      # changing the key to be an exact literal of the key
+      # using the literal key here to add the new config to the properties file
       printf '\n%s\n' "$LITERAL_KEY=$VALUE" >> "$FILE"
     # if config does exist, then append the value to the end of existing config entry
     else
