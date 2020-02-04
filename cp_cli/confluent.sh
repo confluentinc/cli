@@ -850,11 +850,11 @@ config_already_exists() {
   KEY="${1}"
   VALUE="${2}"
   FILE="${3}"
-  sed "/$KEY/"',/[^\\]$/!d; /[^\\]$/q; s/\\$//' "$FILE" |
-  tr -d '\n' |
-  sed -e 's/^.*=[[:blank:]]*//' -e 's/[[:blank:]]*,[[:blank:]]*/,/g' |
-  tr ',' '\n' |
-  grep -q "$VALUE"
+  $(sed "/$KEY/"',/[^\\]$/!d; /[^\\]$/q; s/\\$//' "$FILE" |
+    tr -d '\n' |
+    sed -e 's/^.*=[[:blank:]]*//' -e 's/[[:blank:]]*,[[:blank:]]*/,/g' |
+    tr ',' '\n' |
+    grep -q "$VALUE")
 }
 
 inject_configs() {
