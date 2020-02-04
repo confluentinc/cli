@@ -34,7 +34,7 @@ var (
 	noticeFiles = []string{"NOTICE", "NOTICES", "NOTICE.txt", "NOTICES.txt"}
 	licenseDir  = pflag.StringP("licenses-dir", "l", "./legal/licenses", "Directory in which to write licenses")
 	noticeDir   = pflag.StringP("notices-dir", "n", "./legal/notices", "Directory in which to write notices")
-	configFile  = pflag.String("config-file", "", "File from which to read golicense-downloader configuration")
+	configFile  = pflag.StringP("config-file", "F", "", "File from which to read golicense-downloader configuration")
 )
 
 type Config struct {
@@ -207,7 +207,10 @@ func (g *LicenseDownloader) ParseLicense(text string) (*License, error) {
 	}
 
 	parts := strings.Split(dep, "/")
-	if len(parts) != 3 {
+
+	if len(parts) > 3 {
+		fmt.Printf("Possible sub-package referenced by go.sum, with github url: %s ; make sure the parent package is in go.sum\n", dep)
+	} else if len(parts) < 3 {
 		return nil, fmt.Errorf("invalid github url: %s", dep)
 	}
 	owner, repo := parts[1], parts[2]
