@@ -846,6 +846,59 @@ start_service() {
     is_running "${service}"
 }
 
+check_if_config_already_exists() {
+  KEY="${1}"
+  VALUE="${2}"
+  FILE="${3}"
+  expected_config="$KEY[[:blank:]]*$VALUE[[:blank:]]*"
+  actual_config=$(grep "$expected_config" $FILE)
+  if ! [[ -z $actual_config ]]
+  then
+    return 0
+  else
+    return 1
+  fi
+}
+
+inject_configs() {
+  # regex version of config key
+  KEY="${1}"
+  # value of config
+  VALUE="${2}"
+  # properties file to put config into
+  FILE="${3}"
+  # literal version of config key
+  LITERAL_KEY="${4}"
+  check_if_config_already_exists $KEY $VALUE $FILE
+  return_value=$?
+  if [ "$return_value" == 1 ]
+  then
+    existing_line=$(grep "$KEY" $FILE)
+    # if config doesn't exist in the file, add the config with the value at the end of the properties file
+    if [[ -z $existing_line ]]
+    then
+      # changing the key to be an exact literal of the key
+      printf '\n%s\n' "$LITERAL_KEY=$VALUE" >> "$FILE"
+    # if config does exist, then append the value to the end of existing config entry
+    else
+      if [[ $existing_line == *\\ ]] # case where there is a multiline config, check if a slash exists at the end of the string
+      then
+        # only look at the first line of the multi line config and remove the ending slash
+        modified_line=$(sed 's/\\$//' <<< "$existing_line")
+        # append the config value at the end and add a comma and an ending slash
+        new_config_line="$modified_line$VALUE,  \\\\"
+      else # case where it is a single line config
+        new_config_line="$existing_line,$VALUE"
+      fi
+      sed_expr="s/$KEY.*/$new_config_line/"
+      sed -i '' "$sed_expr" $FILE
+      if [ $? -ne 0 ]; then
+        echo "Was not able to add $VALUE to the list of config $KEY! Is this config defined more than once?"
+      fi
+    fi
+  fi
+}
+
 # The first 3 args seem unavoidable right now. 4th is optional
 # TODO: refactor to pass property pairs as a map.
 config_service() {
@@ -881,31 +934,9 @@ config_service() {
         if [ -f ${confluent_home}/share/java/kafka-connect-replicator/replicator-rest-extension-* ]; then
           REST_EXTENSION_JAR=$(find ${confluent_home}/share/java/kafka-connect-replicator/replicator-rest-extension-*)
           export CLASSPATH=$CLASSPATH:$REST_EXTENSION_JAR
-          REST_EXTENSION_KEY="^[[:blank:]]*rest\.extension\.classes[[:blank:]]*="
-          REST_EXTENSION_REPLICATOR_VALUE="io.confluent.connect.replicator.monitoring.ReplicatorMonitoringExtension"
-          existing_line=$(grep "$REST_EXTENSION_KEY" ${service_dir}/${service}.properties)
-          # if rest.extension.classes doesn't exist in the file, add a new rest extension config with the Replicator monitoring extension at the end of the properties file
-          if [ -z $existing_line ]; then
-            # changing the key to be an exact literal of rest.extension.classes
-            REST_EXTENSION_KEY="rest.extension.classes"
-            printf '\n%s\n' "$REST_EXTENSION_KEY=$REST_EXTENSION_REPLICATOR_VALUE" >> "${service_dir}/${service}.properties"
-          # if rest.extension.classes does exist, then append the Replicator monitoring extension to the existing rest extension classes
-          else
-            if [[ $existing_line == *\\ ]] # case where there is a multiline config, check if a slash exists in the string
-            then
-              # only look at the first line of the multi line config and remove the ending slash
-              modified_line=$(sed 's/\\$//' <<< "$existing_line")
-              # append the rest extension value at the end and add a comma and an ending slash
-              rest_extension_line="$modified_line$REST_EXTENSION_REPLICATOR_VALUE,  \\\\"
-            else # case where it is a single line config
-              rest_extension_line="$existing_line,$REST_EXTENSION_REPLICATOR_VALUE"
-            fi
-            sed_expr="s/$REST_EXTENSION_KEY.*/$rest_extension_line/"
-            sed -i '' "$sed_expr" ${service_dir}/${service}.properties
-            if [ $? -ne 0 ]; then
-              echo "Was not able to add Replicator monitoring extension to list of rest.extension.classes! Is this config defined more than once?"
-            fi
-          fi
+          REPLICATOR_REST_EXTENSION_KEY="^[[:blank:]]*rest\.extension\.classes[[:blank:]]*="
+          REPLICATOR_REST_EXTENSION_VALUE="io.confluent.connect.replicator.monitoring.ReplicatorMonitoringExtension"
+          inject_configs $REPLICATOR_REST_EXTENSION_KEY $REPLICATOR_REST_EXTENSION_VALUE "${service_dir}/${service}.properties" "rest.extension.classes"
         fi
     fi
 
