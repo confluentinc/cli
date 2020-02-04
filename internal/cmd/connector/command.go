@@ -31,8 +31,9 @@ type describeDisplay struct {
 }
 
 var (
-	describeRenames = map[string]string{}
-	listFields      = []string{"ID", "Name", "Status", "Type"}
+	describeRenames      = map[string]string{}
+	listFields           = []string{"ID", "Name", "Status", "Type"}
+	listStructuredLabels = []string{"id", "name", "status", "type"}
 )
 
 // New returns the default command object for interacting with Connect.
@@ -179,7 +180,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listFields)
+	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listFields, listStructuredLabels)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}

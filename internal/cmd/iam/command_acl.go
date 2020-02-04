@@ -214,6 +214,7 @@ func convertToAclFilterRequest(request *mds.CreateAclRequest) mds.AclFilterReque
 
 func PrintAcls(cmd *cobra.Command, kafkaClusterId string, bindingsObj []mds.AclBinding) error {
 	var fields = []string{"KafkaClusterId", "Principal", "Permission", "Operation", "Host", "Resource", "Name", "Type"}
+	var structuredRenames = []string{"kafka_cluster_id", "principal", "permission", "operation", "host", "resource", "name", "type"}
 
 	// delete also uses this function but doesn't have -o flag defined, -o flag is needed NewListOutputWriter
 	_, err := cmd.Flags().GetString(output.FlagName)
@@ -221,7 +222,7 @@ func PrintAcls(cmd *cobra.Command, kafkaClusterId string, bindingsObj []mds.AclB
 		cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, fields, fields)
+	outputWriter, err := output.NewListOutputWriter(cmd, fields, fields, structuredRenames)
 	if err != nil {
 		return err
 	}

@@ -22,7 +22,8 @@ import (
 
 var (
 	listFields      = []string{"Id", "Name", "OutputTopicPrefix", "KafkaClusterId", "Storage", "Endpoint", "Status"}
-	listLabels      = []string{"Id", "Name", "Topic Prefix", "Kafka", "Storage", "Endpoint", "Status"}
+	listHumanLabels = []string{"Id", "Name", "Topic Prefix", "Kafka", "Storage", "Endpoint", "Status"}
+	listStructuredLabels = []string{"id", "name", "topic_prefix", "kafka", "storage", "endpoint", "status"}
 	describeFields  = []string{"Id", "Name", "OutputTopicPrefix", "KafkaClusterId", "Storage", "Endpoint", "Status"}
 	describeRenames = map[string]string{"KafkaClusterId": "Kafka", "OutputTopicPrefix": "Topic Prefix"}
 	aclsDryRun      = false
@@ -111,7 +112,7 @@ func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listLabels)
+	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}

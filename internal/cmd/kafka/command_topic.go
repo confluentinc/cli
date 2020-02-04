@@ -195,7 +195,7 @@ func (c *topicCommand) list(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, []string{"Name"}, []string{"Name"})
+	outputWriter, err := output.NewListOutputWriter(cmd, []string{"Name"}, []string{"Name"}, []string{"name"})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}

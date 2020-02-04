@@ -19,7 +19,8 @@ import (
 
 var (
 	listFields      = []string{"Id", "Name", "ServiceProvider", "Region", "Durability", "Status"}
-	listLabels      = []string{"Id", "Name", "Provider", "Region", "Durability", "Status"}
+	listHumanLabels      = []string{"Id", "Name", "Provider", "Region", "Durability", "Status"}
+	listStructuredLabels      = []string{"id", "name", "provider", "region", "durability", "status"}
 	describeFields  = []string{"Id", "Name", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "ApiEndpoint"}
 	describeRenames = map[string]string{"NetworkIngress": "Ingress", "NetworkEgress": "Egress", "ServiceProvider": "Provider"}
 )
@@ -116,7 +117,7 @@ func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 	if err != nil && err != errors.ErrNoContext {
 		return err
 	}
-	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listLabels)
+	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}

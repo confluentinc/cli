@@ -105,7 +105,8 @@ func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	aclListFields := []string{"ServiceAccountId", "Permission", "Operation", "Resource", "Name", "Type"}
-	outputWriter, err := output.NewListOutputWriter(cmd, aclListFields, aclListFields)
+	aclListStructuredRenames := []string{"service_account_id", "permission", "operation", "resource", "name", "type"}
+	outputWriter, err := output.NewListOutputWriter(cmd, aclListFields, aclListFields, aclListStructuredRenames)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}

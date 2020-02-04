@@ -21,8 +21,9 @@ type command struct {
 }
 
 var (
-	listFields = []string{"Id", "Name"}
-	listLabels = []string{"Id", "Name"}
+	listFields           = []string{"Id", "Name"}
+	listHumanLabels      = []string{"Id", "Name"}
+	listStructuredLabels = []string{"id", "name"}
 )
 
 // New returns the Cobra command for `environment`.
@@ -119,7 +120,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listLabels)
+	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}

@@ -45,31 +45,28 @@ type ListOutputWriter interface {
 	StableSort()
 }
 
-func NewListOutputWriter(cmd *cobra.Command, listFields []string, listLabels []string) (ListOutputWriter, error) {
+func NewListOutputWriter(cmd *cobra.Command, listFields []string, humanLabels []string, structuredLabels []string) (ListOutputWriter, error) {
 	format, err := cmd.Flags().GetString(FlagName)
 	if err != nil {
 		return nil, errors.HandleCommon(err, cmd)
-	}
-	if len(listLabels) != len(listFields) {
-		return nil, fmt.Errorf("selected fields and ouput labels length mismatch")
 	}
 	if format == JSON.String() {
 		return &StructuredListWriter{
 			outputFormat: JSON,
 			listFields:   listFields,
-			listLabels:   listLabels,
+			listLabels:   structuredLabels,
 		}, nil
 	} else if format == YAML.String() {
 		return &StructuredListWriter{
 			outputFormat: YAML,
 			listFields:   listFields,
-			listLabels:   listLabels,
+			listLabels:   structuredLabels,
 		}, nil
 	} else if format == Human.String() {
 		return &HumanListWriter{
 			outputFormat: Human,
 			listFields:   listFields,
-			listLabels:   listLabels,
+			listLabels:   humanLabels,
 		}, nil
 	}
 	return nil, InvalidFormatError

@@ -47,11 +47,12 @@ type command struct {
 }
 
 var (
-	listFields       = []string{"Key", "UserId", "Description", "ResourceType", "ResourceId"}
-	listLabels       = []string{"Key", "Owner", "Description", "Resource Type", "Resource ID"}
-	createFields     = []string{"Key", "Secret"}
-	createRenames    = map[string]string{"Key": "API Key"}
-	resourceFlagName = "resource"
+	listFields           = []string{"Key", "UserId", "Description", "ResourceType", "ResourceId"}
+	listHumanLabels      = []string{"Key", "Owner", "Description", "Resource Type", "Resource ID"}
+	listStructuredLabels = []string{"key", "owner", "description", "resource_type", "resource_id"}
+	createFields         = []string{"Key", "Secret"}
+	createRenames        = map[string]string{"Key": "API Key"}
+	resourceFlagName     = "resource"
 )
 
 // New returns the Cobra command for API Key.
@@ -189,7 +190,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listLabels)
+	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}

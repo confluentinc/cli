@@ -27,7 +27,8 @@ type catalogDisplay struct {
 }
 
 var (
-	catalogFields = []string{"PluginName", "Type"}
+	catalogFields          = []string{"PluginName", "Type"}
+	catalogStructureLabels = []string{"plugin_name", "type"}
 )
 
 // New returns the default command object for interacting with Connect.
@@ -90,7 +91,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	outputWriter, err := output.NewListOutputWriter(cmd, catalogFields, catalogFields)
+	outputWriter, err := output.NewListOutputWriter(cmd, catalogFields, catalogFields, catalogStructureLabels)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}

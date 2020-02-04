@@ -137,7 +137,6 @@ func (c *subjectCommand) updateMode(cmd *cobra.Command, args []string) error {
 }
 
 func (c *subjectCommand) list(cmd *cobra.Command, args []string) error {
-	var listLabels = []string{"Subject"}
 	type listDisplay struct {
 		Subject string
 	}
@@ -151,7 +150,7 @@ func (c *subjectCommand) list(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if len(list) > 0 {
-		outputWriter, err := output.NewListOutputWriter(cmd, listLabels, listLabels)
+		outputWriter, err := output.NewListOutputWriter(cmd, []string{"Subject"}, []string{"Subject"}, []string{"subject"})
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}

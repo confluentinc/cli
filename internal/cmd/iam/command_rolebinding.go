@@ -18,8 +18,9 @@ import (
 )
 
 var (
-	resourcePatternListFields = []string{"Principal", "Role", "ResourceType", "Name", "PatternType"}
-	resourcePatternListLabels = []string{"Principal", "Role", "ResourceType", "Name", "PatternType"}
+	resourcePatternListFields           = []string{"Principal", "Role", "ResourceType", "Name", "PatternType"}
+	resourcePatternHumanListLabels      = []string{"Principal", "Role", "ResourceType", "Name", "PatternType"}
+	resourcePatternStructuredListLabels = []string{"principal", "role", "resource_type", "name", "patternType"}
 
 	//TODO: please move this to a backend route
 	clusterScopedRoles = map[string]bool{
@@ -260,7 +261,7 @@ func (c *rolebindingCommand) listPrincipalResources(cmd *cobra.Command) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, resourcePatternListFields, resourcePatternListLabels)
+	outputWriter, err := output.NewListOutputWriter(cmd, resourcePatternListFields, resourcePatternHumanListLabels, resourcePatternStructuredListLabels)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -309,11 +310,8 @@ func (c *rolebindingCommand) listPrincipalResourcesV1(cmd *cobra.Command, scopeC
 			return errors.HandleCommon(err, cmd)
 		}
 	}
-	listV1Fields := []string{"Role", "ResourceType", "Name", "PatternType"}
-	outputWriter, err := output.NewListOutputWriter(cmd, listV1Fields, listV1Fields)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
+
+	var data [][]string
 	for _, roleName := range roleNames {
 		rps, _, err := c.client.RoleBindingCRUDApi.GetRoleResourcesForPrincipal(
 			c.ctx,
@@ -324,24 +322,15 @@ func (c *rolebindingCommand) listPrincipalResourcesV1(cmd *cobra.Command, scopeC
 			return errors.HandleCommon(err, cmd)
 		}
 		for _, pattern := range rps {
-			outputWriter.AddElement(&listDisplay{
-				Role:         roleName,
-				ResourceType: pattern.ResourceType,
-				Name:         pattern.Name,
-				PatternType:  pattern.PatternType,
-			})
+			data = append(data, []string{roleName, pattern.ResourceType, pattern.Name, pattern.PatternType})
 		}
 		if len(rps) == 0 && clusterScopedRoles[roleName] {
-			outputWriter.AddElement(&listDisplay{
-				Role:         roleName,
-				ResourceType: "Cluster",
-				Name:         "",
-				PatternType:  "",
-			})
+			data = append(data, []string{roleName, "Cluster", "", ""})
 		}
 	}
 
-	return outputWriter.Out()
+	printer.RenderCollectionTable(data, []string{"Role", "ResourceType", "Name", "PatternType"})
+	return nil
 }
 
 func (c *rolebindingCommand) listRolePrincipals(cmd *cobra.Command) error {
@@ -389,7 +378,7 @@ func (c *rolebindingCommand) listRolePrincipals(cmd *cobra.Command) error {
 	}
 
 	sort.Strings(principals)
-	outputWriter, err := output.NewListOutputWriter(cmd, []string{"Principal"}, []string{"Principal"})
+	outputWriter, err := output.NewListOutputWriter(cmd, []string{"Principal"}, []string{"Principal"}, []string{"principal"})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
