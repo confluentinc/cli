@@ -440,12 +440,24 @@ func (s *CLITestSuite) ssoAuthenticateViaBrowser(authUrl string) string {
 	taskCtx, cancel := chromedp.NewContext(allocCtx)
 	defer cancel()
 	// ensure that the browser process is started
-	if err := chromedp.Run(taskCtx); err != nil {
-		s.NoError(err)
+	var err error
+	tries := 0
+	for tries < 5 {
+		if err = chromedp.Run(taskCtx); err != nil {
+			fmt.Println("Caught error when starting chrome. Will retry. Error was: "+err.Error())
+			tries += 1
+		} else {
+			fmt.Println("Successfully started chrome")
+			break
+		}
 	}
+	if err != nil {
+		s.NoError(err, fmt.Sprintf("Could not start chrome after %d tries. Error was: %s\n", tries, err))
+	}
+
 	// navigate to authUrl
 	fmt.Println("Navigating to authUrl...")
-	err := chromedp.Run(taskCtx, chromedp.Navigate(authUrl))
+	err = chromedp.Run(taskCtx, chromedp.Navigate(authUrl))
 	s.NoError(err)
 	fmt.Println("Inputing credentials to Okta...")
 	err = chromedp.Run(taskCtx, chromedp.WaitVisible(`//input[@name="username"]`))
