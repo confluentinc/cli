@@ -893,7 +893,7 @@ inject_configs() {
       sed_expr="s/$KEY.*/$new_config_line/"
       sed -i '' "$sed_expr" $FILE
       if [ $? -ne 0 ]; then
-        echo "Was not able to add $VALUE to the list of config $KEY! Is this config defined more than once?"
+        echo "Was not able to add $VALUE to the list of config $LITERAL_KEY! Is this config defined more than once?"
       fi
     fi
   fi
