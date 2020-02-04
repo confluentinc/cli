@@ -129,11 +129,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, args []string) error {
 		return c.handleAclError(cmd, err, response)
 	}
 
-	err = PrintAcls(cmd, acl.Scope.Clusters.KafkaCluster, bindings)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	return nil
+	return PrintAcls(cmd, acl.Scope.Clusters.KafkaCluster, bindings)
 }
 
 func (c *aclCommand) handleAclError(cmd *cobra.Command, err error, response *http.Response) error {

@@ -3,14 +3,29 @@ package acl
 import (
 	"io"
 
+	"github.com/spf13/cobra"
+
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
-	"github.com/confluentinc/go-printer"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func PrintAcls(bindingsObj []*kafkav1.ACLBinding, writer io.Writer) {
-	var bindings [][]string
-	for _, binding := range bindingsObj {
+func PrintAcls(cmd *cobra.Command, bindingsObj []*kafkav1.ACLBinding, writer io.Writer) error {
 
+	// non list commands which do not have -o flags also uses this function, need to set default
+	_, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	}
+
+	aclListFields := []string{"ServiceAccountId", "Permission", "Operation", "Resource", "Name", "Type"}
+	aclListStructuredRenames := []string{"service_account_id", "permission", "operation", "resource", "name", "type"}
+	outputWriter, err := output.NewListOutputCustomizableWriter(cmd, aclListFields, aclListFields, aclListStructuredRenames, writer)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	for _, binding := range bindingsObj {
 		record := &struct {
 			ServiceAccountId string
 			Permission       string
@@ -26,8 +41,7 @@ func PrintAcls(bindingsObj []*kafkav1.ACLBinding, writer io.Writer) {
 			binding.Pattern.Name,
 			binding.Pattern.PatternType.String(),
 		}
-		bindings = append(bindings, printer.ToRow(record,
-			[]string{"ServiceAccountId", "Permission", "Operation", "Resource", "Name", "Type"}))
+		outputWriter.AddElement(record)
 	}
-	printer.RenderCollectionTableOut(bindings, []string{"ServiceAccountId", "Permission", "Operation", "Resource", "Name", "Type"}, writer)
+	return outputWriter.Out()
 }

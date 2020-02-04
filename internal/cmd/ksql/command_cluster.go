@@ -288,8 +288,7 @@ func (c *clusterCommand) configureACLs(cmd *cobra.Command, args []string) error 
 	// Setup ACLs
 	bindings := c.buildACLBindings(serviceAccountId, cluster, args[1:])
 	if aclsDryRun {
-		acl.PrintAcls(bindings, cmd.OutOrStderr())
-		return nil
+		return acl.PrintAcls(cmd, bindings, cmd.OutOrStderr())
 	}
 	err = c.kafkaClient.CreateACL(ctx, kafkaCluster, bindings)
 	if err != nil {

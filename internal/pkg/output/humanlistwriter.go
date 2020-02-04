@@ -2,6 +2,7 @@ package output
 
 import (
 	"github.com/confluentinc/go-printer"
+	"io"
 	"sort"
 )
 
@@ -10,6 +11,7 @@ type HumanListWriter struct {
 	data         [][]string
 	listFields   []string
 	listLabels   []string
+	writer       io.Writer
 }
 
 func (o *HumanListWriter) AddElement(e interface{}) {
@@ -18,7 +20,7 @@ func (o *HumanListWriter) AddElement(e interface{}) {
 
 
 func (o *HumanListWriter) Out() error {
-	printer.RenderCollectionTable(o.data, o.listLabels)
+	printer.RenderCollectionTableOut(o.data, o.listLabels, o.writer)
 	return nil
 }
 

@@ -3,6 +3,7 @@ package output
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/go-yaml/yaml"
@@ -46,6 +47,10 @@ type ListOutputWriter interface {
 }
 
 func NewListOutputWriter(cmd *cobra.Command, listFields []string, humanLabels []string, structuredLabels []string) (ListOutputWriter, error) {
+	return NewListOutputCustomizableWriter(cmd, listFields, humanLabels, structuredLabels, os.Stdout)
+}
+
+func NewListOutputCustomizableWriter(cmd *cobra.Command, listFields []string, humanLabels []string, structuredLabels []string, writer io.Writer) (ListOutputWriter, error) {
 	format, err := cmd.Flags().GetString(FlagName)
 	if err != nil {
 		return nil, errors.HandleCommon(err, cmd)
@@ -55,18 +60,21 @@ func NewListOutputWriter(cmd *cobra.Command, listFields []string, humanLabels []
 			outputFormat: JSON,
 			listFields:   listFields,
 			listLabels:   structuredLabels,
+			writer:       writer,
 		}, nil
 	} else if format == YAML.String() {
 		return &StructuredListWriter{
 			outputFormat: YAML,
 			listFields:   listFields,
 			listLabels:   structuredLabels,
+			writer:       writer,
 		}, nil
 	} else if format == Human.String() {
 		return &HumanListWriter{
 			outputFormat: Human,
 			listFields:   listFields,
 			listLabels:   humanLabels,
+			writer:       writer,
 		}, nil
 	}
 	return nil, InvalidFormatError
