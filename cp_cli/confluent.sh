@@ -853,6 +853,11 @@ config_already_exists() {
   config=$(grep "$KEY" $FILE)
   if [[ $config == *\\ ]]
   then
+    # while it is inefficient to start from the beginning of the file, it's
+    # easier to support the escape character in multi-line property files as
+    # this treats $line as one line until the end of the value for the property,
+    # ignoring escape characters; this makes the logic much easier to check if
+    # the value and key pair exists in the config
     while read line
     do
       key_config=$(grep "$KEY" <<< $line)
