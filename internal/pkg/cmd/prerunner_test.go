@@ -103,7 +103,7 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 
 			root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
 			root.Flags().CountP("verbose", "v", "Increase verbosity")
-			cfg := v1.New()
+			cfg := v1.New(nil)
 			require.NoError(t, cfg.Load())
 			rootCmd := pcmd.NewAnonymousCLICommand(root, cfg, r)
 
@@ -120,7 +120,7 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 }
 
 func TestPreRun_HasAPIKey_SetupLoggingAndCheckForUpdates(t *testing.T) {
-	cfg := v1.New()
+	cfg := v1.New(nil)
 	require.NoError(t, cfg.Load())
 
 	ver := pmock.NewVersionMock()
@@ -155,7 +155,7 @@ func TestPreRun_HasAPIKey_SetupLoggingAndCheckForUpdates(t *testing.T) {
 }
 
 func TestPreRun_CallsAnalyticsTrackCommand(t *testing.T) {
-	cfg := v1.New()
+	cfg := v1.New(nil)
 	require.NoError(t, cfg.Load())
 
 	ver := pmock.NewVersionMock()

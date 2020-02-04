@@ -51,8 +51,7 @@ func main() {
 		MetricSink: metricSink,
 		Logger:     logger,
 	}
-	cfg = v1.New()
-	cfg.SetParams(params)
+	cfg = v1.New(params)
 	cfg, err = load.LoadAndMigrate(cfg)
 	if err != nil {
 		errFmt := "unable to load config: %v\n"

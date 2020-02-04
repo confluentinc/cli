@@ -587,8 +587,7 @@ func runCommand(t *testing.T, binaryName string, env []string, args string, want
 func resetConfiguration(t *testing.T, cliName string) {
 	// HACK: delete your current config to isolate tests cases for non-workflow tests...
 	// probably don't really want to do this or devs will get mad
-	cfg := v1.New()
-	cfg.SetParams(&config.Params{
+	cfg := v1.New(&config.Params{
 		CLIName: cliName,
 	})
 	err := cfg.Save()

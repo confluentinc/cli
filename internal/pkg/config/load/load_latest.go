@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	cfgVersions = []config.Config{new(v0.Config), new(v1.Config)}
+	cfgVersions = []config.Config{v0.New(), v1.New(nil)}
 )
 
 // LoadAndMigrate loads the config file into memory using the latest config
@@ -18,7 +18,7 @@ func LoadAndMigrate(latestCfg *v1.Config) (*v1.Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	// MigrateV0ToV1
+	// Migrate to latest config format.
 	switch cfg.(type) {
 	case *v0.Config:
 		cfgV0 := cfg.(*v0.Config)

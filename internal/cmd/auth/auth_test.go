@@ -219,9 +219,11 @@ func Test_SelfSignedCerts(t *testing.T) {
 	req := require.New(t)
 	mdsConfig := mds.NewConfiguration()
 	mdsClient := mds.NewAPIClient(mdsConfig)
-	cfg := v1.New()
-	cfg.Logger = log.New()
-	cfg.CLIName = "confluent"
+	cfg := v1.New(&config.Params{
+		CLIName:    "confluent",
+		MetricSink: nil,
+		Logger:     log.New(),
+	})
 	prompt := prompt("cody@confluent.io", "iambatman")
 	prerunner := cliMock.NewPreRunnerMock(nil, nil)
 	cmds := newCommands(prerunner, cfg, log.New(), prompt, nil, nil, cliMock.NewDummyAnalyticsMock())
@@ -229,7 +231,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 	for _, c := range cmds.Commands {
 		c.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	}
-	
+
 	// Create a test certificate to be read in by the command
 	ca := &x509.Certificate{
 		SerialNumber: big.NewInt(1234),
@@ -289,12 +291,10 @@ func newAuthCommand(prompt pcmd.Prompt, auth *sdkMock.Auth, user *sdkMock.User, 
 	var mockJwtHTTPClientFactory = func(ctx context.Context, jwt, baseURL string, logger *log.Logger) *ccloud.Client {
 		return &ccloud.Client{Auth: auth, User: user}
 	}
-	cfg := v1.New(&v1.Config{
-		Params: &config.Params{
-			CLIName:    cliName,
-			MetricSink: nil,
-			Logger:     nil,
-		},
+	cfg := v1.New(&config.Params{
+		CLIName:    cliName,
+		MetricSink: nil,
+		Logger:     nil,
 	})
 	var mdsClient *mds.APIClient
 	if cliName == "confluent" {

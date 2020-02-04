@@ -5,12 +5,17 @@ import (
 
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 
+	"github.com/confluentinc/cli/internal/pkg/config"
 	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 func AuthenticatedConfigMock() *Config {
-	conf := New()
+	conf := New(&config.Params{
+		CLIName:    "",
+		MetricSink: nil,
+		Logger:     log.New(),
+	})
 	conf.Logger = log.New()
 	auth := &v0.AuthConfig{
 		User: &orgv1.User{

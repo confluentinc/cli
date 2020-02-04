@@ -26,22 +26,18 @@ type Config struct {
 	DisableUpdateCheck bool                     `json:"disable_update_check"`
 	DisableUpdates     bool                     `json:"disable_updates"`
 	NoBrowser          bool                     `json:"no_browser" hcl:"no_browser"`
-	Platforms          map[string]*Platform     `json:"platforms"`
-	Credentials        map[string]*Credential   `json:"credentials"`
-	Contexts           map[string]*Context      `json:"contexts"`
-	ContextStates      map[string]*ContextState `json:"context_states"`
+	Platforms          map[string]*Platform     `json:"platforms,omitempty"`
+	Credentials        map[string]*Credential   `json:"credentials,omitempty"`
+	Contexts           map[string]*Context      `json:"contexts,omitempty"`
+	ContextStates      map[string]*ContextState `json:"context_states,omitempty"`
 	CurrentContext     string                   `json:"current_context"`
-	AnonymousId        string                   `json:"anonymous_id"`
+	AnonymousId        string                   `json:"anonymous_id,omitempty"`
 }
 
 // New initializes a new Config object
-func New(cfg ...*Config) *Config {
-	var c *Config
-	if cfg == nil {
-		c = &Config{}
-	} else {
-		c = cfg[0]
-	}
+func New(params *config.Params) *Config {
+	c := &Config{}
+	c.SetParams(params)
 	if c.Params == nil {
 		c.Params = &config.Params{}
 	}

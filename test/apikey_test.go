@@ -81,8 +81,7 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 		{name: "succeed if forced to overwrite existing secret", args: "api-key store -f UIAPIKEY100 NEWSECRET --resource lkc-cool1", fixture: "empty.golden",
 			wantFunc: func(t *testing.T) {
 				logger := log.New()
-				cfg := v1.New()
-				cfg.SetParams(&config.Params{
+				cfg := v1.New(&config.Params{
 					CLIName:    "ccloud",
 					MetricSink: nil,
 					Logger:     logger,

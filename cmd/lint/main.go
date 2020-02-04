@@ -172,12 +172,10 @@ func main() {
 
 	var issues *multierror.Error
 	for _, cliName := range cliNames {
-		cfg := v1.New(&v1.Config{
-			Params: &config.Params{
-				CLIName:    cliName,
-				MetricSink: nil,
-				Logger:     log.New(),
-			},
+		cfg := v1.New(&config.Params{
+			CLIName:    cliName,
+			MetricSink: nil,
+			Logger:     log.New(),
 		})
 		cli, err := cmd.NewConfluentCommand(cliName, cfg, cfg.Logger, &version.Version{Binary: cliName}, mock.NewDummyAnalyticsMock())
 		if err != nil {
