@@ -12,13 +12,13 @@ import (
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
-var conf *config.Config
+var conf *v1.Config
 
 /*************** TEST command_acl ***************/
 var resourcePatterns = []struct {
@@ -443,5 +443,5 @@ func NewCMD(expect chan interface{}) *cobra.Command {
 }
 
 func init() {
-	conf = config.AuthenticatedConfigMock()
+	conf = v1.AuthenticatedConfigMock()
 }

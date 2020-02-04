@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -19,6 +19,6 @@ func NewVersionCmd(prerunner pcmd.PreRunner, version *version.Version) *cobra.Co
 			},
 			Args: cobra.NoArgs,
 		},
-		&config.Config{}, prerunner)
+		&v1.Config{}, prerunner)
 	return cliCmd.Command
 }

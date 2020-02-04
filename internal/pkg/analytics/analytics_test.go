@@ -19,11 +19,12 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	v1 "github.com/confluentinc/ccloudapis/org/v1"
+	orgV1 "github.com/confluentinc/ccloudapis/org/v1"
 
 	"github.com/confluentinc/cli/internal/cmd"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
-	"github.com/confluentinc/cli/internal/pkg/config"
+	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
+	"github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/mock"
 )
 
@@ -58,14 +59,14 @@ var (
 
 type AnalyticsTestSuite struct {
 	suite.Suite
-	config          *config.Config
+	config          *v1.Config
 	analyticsClient analytics.Client
 	mockClient      *mock.SegmentClient
 	output          []segment.Message
 }
 
 func (suite *AnalyticsTestSuite) SetupSuite() {
-	suite.config = config.AuthenticatedConfigMock()
+	suite.config = v1.AuthenticatedConfigMock()
 	suite.config.CLIName = ccloudName
 	suite.createContexts()
 	suite.createStates()
@@ -587,47 +588,47 @@ func (suite *AnalyticsTestSuite) TestApiKeyStoreSecretHandler() {
 
 // --------------------------- setup helper functions -------------------------------
 func (suite *AnalyticsTestSuite) createContexts() {
-	platform := &config.Platform{
+	platform := &v1.Platform{
 		Name:       "test-platform",
 		Server:     "test",
 		CaCertPath: "",
 	}
-	apiContext := &config.Context{
+	apiContext := &v1.Context{
 		Name:         apiKeyContext,
 		Platform:     platform,
 		PlatformName: platform.Name,
 	}
-	userContext := &config.Context{
+	userContext := &v1.Context{
 		Name:         userNameContext,
 		Platform:     platform,
 		PlatformName: platform.Name,
 	}
-	otherContext := &config.Context{
+	otherContext := &v1.Context{
 		Name:         otherUserContext,
 		Platform:     platform,
 		PlatformName: platform.Name,
 	}
-	contexts := make(map[string]*config.Context)
+	contexts := make(map[string]*v1.Context)
 	contexts[apiKeyContext] = apiContext
 	contexts[userNameContext] = userContext
 	contexts[otherUserContext] = otherContext
 	suite.config.Contexts = contexts
 
-	platforms := make(map[string]*config.Platform)
+	platforms := make(map[string]*v1.Platform)
 	platforms[platform.Name] = platform
 	suite.config.Platforms = platforms
 }
 
 func (suite *AnalyticsTestSuite) createStates() {
 	contexts := suite.config.Contexts
-	account := &v1.Account{
+	account := &orgV1.Account{
 		Id:             "1",
 		Name:           "env1",
 		OrganizationId: organizationId,
 	}
-	userState := &config.ContextState{
-		Auth: &config.AuthConfig{
-			User: &v1.User{
+	userState := &v1.ContextState{
+		Auth: &v0.AuthConfig{
+			User: &orgV1.User{
 				Id:             userId,
 				Email:          userEmail,
 				OrganizationId: organizationId,
@@ -637,9 +638,9 @@ func (suite *AnalyticsTestSuite) createStates() {
 		AuthToken: "user-token",
 	}
 	contexts[userNameContext].State = userState
-	otherUserState := &config.ContextState{
-		Auth: &config.AuthConfig{
-			User: &v1.User{
+	otherUserState := &v1.ContextState{
+		Auth: &v0.AuthConfig{
+			User: &orgV1.User{
 				Id:             otherUserId,
 				Email:          userEmail,
 				OrganizationId: organizationId,
@@ -649,31 +650,31 @@ func (suite *AnalyticsTestSuite) createStates() {
 		AuthToken: "other-user-token",
 	}
 	contexts[otherUserContext].State = otherUserState
-	contextStates := make(map[string]*config.ContextState)
+	contextStates := make(map[string]*v1.ContextState)
 	contextStates[userNameContext] = contexts[userNameContext].State
 	contextStates[otherUserContext] = contexts[otherUserContext].State
 	suite.config.ContextStates = contextStates
 }
 
 func (suite *AnalyticsTestSuite) createCredentials() {
-	credentials := make(map[string]*config.Credential)
-	apiCred := &config.Credential{
+	credentials := make(map[string]*v1.Credential)
+	apiCred := &v1.Credential{
 		Name: apiKeyCred,
-		APIKeyPair: &config.APIKeyPair{
+		APIKeyPair: &v0.APIKeyPair{
 			Key:    apiKey,
 			Secret: apiSecret,
 		},
-		CredentialType: config.APIKey,
+		CredentialType: v1.APIKey,
 	}
-	userCred := &config.Credential{
+	userCred := &v1.Credential{
 		Name:           userNameCred,
 		Username:       userEmail,
-		CredentialType: config.Username,
+		CredentialType: v1.Username,
 	}
-	otherCred := &config.Credential{
+	otherCred := &v1.Credential{
 		Name:           otherUserCred,
 		Username:       otherUserEmail,
-		CredentialType: config.Username,
+		CredentialType: v1.Username,
 	}
 	contexts := suite.config.Contexts
 	contexts[apiKeyContext].Credential = apiCred

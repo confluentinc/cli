@@ -1,37 +1,22 @@
-package config
+package v1
 
 import (
 	"fmt"
 
+	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
-// APIKeyPair holds an API Key and Secret.
-type APIKeyPair struct {
-	Key    string `json:"api_key" hcl:"api_key"`
-	Secret string `json:"api_secret" hcl:"api_secret"`
-}
-
-// KafkaClusterConfig represents a connection to a Kafka cluster.
-type KafkaClusterConfig struct {
-	ID          string                 `json:"id" hcl:"id"`
-	Name        string                 `json:"name" hcl:"name"`
-	Bootstrap   string                 `json:"bootstrap_servers" hcl:"bootstrap_servers"`
-	APIEndpoint string                 `json:"api_endpoint,omitempty" hcl:"api_endpoint"`
-	APIKeys     map[string]*APIKeyPair `json:"api_keys" hcl:"api_keys"`
-	// APIKey is your active api key for this cluster and references a key in the APIKeys map
-	APIKey string `json:"api_key,omitempty" hcl:"api_key"`
-}
 
 type SchemaRegistryCluster struct {
 	Id                     string      `json:"id" hcl:"id"`
 	SchemaRegistryEndpoint string      `json:"schema_registry_endpoint" hcl:"schema_registry_endpoint"`
-	SrCredentials          *APIKeyPair `json:"schema_registry_credentials" hcl:"schema_registry_credentials"`
+	SrCredentials          *v0.APIKeyPair `json:"schema_registry_credentials" hcl:"schema_registry_credentials"`
 }
 
 type ContextState struct {
-	Auth      *AuthConfig `json:"auth" hcl:"auth"`
+	Auth      *v0.AuthConfig `json:"auth" hcl:"auth"`
 	AuthToken string      `json:"auth_token" hcl:"auth_token"`
 }
 
@@ -45,7 +30,7 @@ type Context struct {
 	// KafkaClusters store connection info for interacting directly with Kafka (e.g., consume/produce, etc)
 	// N.B. These may later be exposed in the CLI to directly register kafkas (outside a Control Plane)
 	// Mapped by cluster id.
-	KafkaClusters map[string]*KafkaClusterConfig `json:"kafka_clusters" hcl:"kafka_clusters"`
+	KafkaClusters map[string]*v0.KafkaClusterConfig `json:"kafka_clusters" hcl:"kafka_clusters"`
 	// Kafka is your active Kafka cluster and references a key in the KafkaClusters map
 	Kafka string `json:"kafka_cluster" hcl:"kafka_cluster"`
 	// SR map keyed by environment-id.
@@ -56,7 +41,7 @@ type Context struct {
 }
 
 func newContext(name string, platform *Platform, credential *Credential,
-	kafkaClusters map[string]*KafkaClusterConfig, kafka string,
+	kafkaClusters map[string]*v0.KafkaClusterConfig, kafka string,
 	schemaRegistryClusters map[string]*SchemaRegistryCluster, state *ContextState, config *Config) (*Context, error) {
 	ctx := &Context{
 		Name:                   name,
@@ -78,7 +63,7 @@ func newContext(name string, platform *Platform, credential *Credential,
 	return ctx, nil
 }
 
-func (c *Context) validateKafkaClusterConfig(cluster *KafkaClusterConfig) error {
+func (c *Context) validateKafkaClusterConfig(cluster *v0.KafkaClusterConfig) error {
 	if cluster.ID == "" {
 		return fmt.Errorf("cluster under context '%s' has no %s", c.Name, "id")
 	}
@@ -114,7 +99,7 @@ func (c *Context) validate() error {
 		c.SchemaRegistryClusters = map[string]*SchemaRegistryCluster{}
 	}
 	if c.KafkaClusters == nil {
-		c.KafkaClusters = map[string]*KafkaClusterConfig{}
+		c.KafkaClusters = map[string]*v0.KafkaClusterConfig{}
 	}
 	if c.State == nil {
 		c.State = new(ContextState)

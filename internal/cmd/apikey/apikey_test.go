@@ -16,7 +16,8 @@ import (
 	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config"
+	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
+	"github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/mock"
 	cliMock "github.com/confluentinc/cli/mock"
 )
@@ -44,7 +45,7 @@ var (
 
 type APITestSuite struct {
 	suite.Suite
-	conf             *config.Config
+	conf             *v1.Config
 	apiMock          *ccsdkmock.APIKey
 	keystore         *mock.KeyStore
 	kafkaCluster     *kafkav1.KafkaCluster
@@ -56,10 +57,10 @@ type APITestSuite struct {
 
 //Require
 func (suite *APITestSuite) SetupTest() {
-	suite.conf = config.AuthenticatedConfigMock()
+	suite.conf = v1.AuthenticatedConfigMock()
 	ctx := suite.conf.Context()
 	srCluster := ctx.SchemaRegistryClusters[ctx.State.Auth.Account.Id]
-	srCluster.SrCredentials = &config.APIKeyPair{Key: apiKeyVal, Secret: apiSecretVal}
+	srCluster.SrCredentials = &v0.APIKeyPair{Key: apiKeyVal, Secret: apiSecretVal}
 	cluster := ctx.KafkaClusters[ctx.Kafka]
 	suite.kafkaCluster = &kafkav1.KafkaCluster{
 		Id:         cluster.ID,

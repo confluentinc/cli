@@ -11,6 +11,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/config/v1"
 	linter "github.com/confluentinc/cli/internal/pkg/lint-cli"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/version"
@@ -171,9 +172,12 @@ func main() {
 
 	var issues *multierror.Error
 	for _, cliName := range cliNames {
-		cfg := config.New(&config.Config{
-			CLIName: cliName,
-			Logger:  log.New(),
+		cfg := v1.New(&v1.Config{
+			Params: &config.Params{
+				CLIName:    cliName,
+				MetricSink: nil,
+				Logger:     log.New(),
+			},
 		})
 		cli, err := cmd.NewConfluentCommand(cliName, cfg, cfg.Logger, &version.Version{Binary: cliName}, mock.NewDummyAnalyticsMock())
 		if err != nil {

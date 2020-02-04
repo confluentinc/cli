@@ -16,7 +16,7 @@ import (
 	"github.com/confluentinc/mds-sdk-go"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
@@ -35,7 +35,7 @@ type prettyRole struct {
 }
 
 // NewRoleCommand returns the sub-command object for interacting with RBAC roles.
-func NewRoleCommand(cfg *config.Config, prerunner cmd.PreRunner) *cobra.Command {
+func NewRoleCommand(cfg *v1.Config, prerunner cmd.PreRunner) *cobra.Command {
 	cliCmd := cmd.NewAuthenticatedWithMDSCLICommand(
 		&cobra.Command{
 			Use:   "role",

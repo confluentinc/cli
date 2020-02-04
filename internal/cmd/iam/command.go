@@ -4,17 +4,17 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/config/v1"
 )
 
 type command struct {
 	*pcmd.AuthenticatedCLICommand
 	prerunner pcmd.PreRunner
-	config    *config.Config
+	config    *v1.Config
 }
 
 // New returns the default command object for interacting with RBAC.
-func New(prerunner pcmd.PreRunner, config *config.Config) *cobra.Command {
+func New(prerunner pcmd.PreRunner, config *v1.Config) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedWithMDSCLICommand(
 		&cobra.Command{
 			Use:   "iam",

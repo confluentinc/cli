@@ -14,6 +14,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/config/load"
+	"github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/metric"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
@@ -26,7 +28,7 @@ var (
 	commit     = ""
 	date       = ""
 	host       = ""
-	cliName    = "ccloud"
+	cliName    = "confluent"
 	segmentKey = "KDsYPLPBNVB1IPJIN5oqrXnxQT9iKezo"
 	isTest     = "false"
 )
@@ -42,16 +44,26 @@ func main() {
 
 	metricSink := metric.NewSink()
 
-	var cfg *config.Config
+	var cfg *v1.Config
 
-	cfg = config.New(&config.Config{
+	params := &config.Params{
 		CLIName:    cliName,
 		MetricSink: metricSink,
 		Logger:     logger,
-	})
-	err = cfg.Load()
+	}
+	cfg = v1.New()
+	cfg.SetParams(params)
+	cfg, err = load.LoadAndMigrate(cfg)
 	if err != nil {
-		logger.Errorf("unable to load config: %v", err)
+		errFmt := "unable to load config: %v\n"
+		logger.Debug(errFmt, err)
+		fmt.Fprintf(os.Stderr, errFmt, err)
+		if isTest {
+			bincover.ExitCode = 1
+			return
+		} else {
+			os.Exit(1)
+		}
 	}
 
 	version := pversion.NewVersion(cfg.CLIName, cfg.Name(), cfg.Support(), version, commit, date, host)
@@ -76,6 +88,7 @@ func main() {
 		}
 		if isTest {
 			bincover.ExitCode = 1
+			return
 		} else {
 			exit(1, analyticsClient, logger)
 		}
@@ -84,6 +97,7 @@ func main() {
 	if err != nil {
 		if isTest {
 			bincover.ExitCode = 1
+			return
 		} else {
 			exit(1, analyticsClient, logger)
 		}

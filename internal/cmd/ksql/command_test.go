@@ -16,7 +16,7 @@ import (
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/acl"
-	"github.com/confluentinc/cli/internal/pkg/config"
+	v12 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
@@ -64,7 +64,7 @@ const (
 
 type KSQLTestSuite struct {
 	suite.Suite
-	conf         *config.Config
+	conf         *v12.Config
 	kafkaCluster *kafkav1.KafkaCluster
 	ksqlCluster  *v1.KSQLCluster
 	serviceAcct  *orgv1.User
@@ -74,7 +74,7 @@ type KSQLTestSuite struct {
 }
 
 func (suite *KSQLTestSuite) SetupSuite() {
-	suite.conf = config.AuthenticatedConfigMock()
+	suite.conf = v12.AuthenticatedConfigMock()
 	suite.ksqlCluster = &v1.KSQLCluster{
 		Id:                ksqlClusterID,
 		KafkaClusterId:    suite.conf.Context().Kafka,

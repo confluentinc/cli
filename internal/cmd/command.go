@@ -30,7 +30,7 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/version"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	pconfig "github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/help"
 	"github.com/confluentinc/cli/internal/pkg/io"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -46,7 +46,7 @@ type Command struct {
 	logger    *log.Logger
 }
 
-func NewConfluentCommand(cliName string, cfg *pconfig.Config, logger *log.Logger, ver *pversion.Version, analytics analytics.Client) (*Command, error) {
+func NewConfluentCommand(cliName string, cfg *v1.Config, logger *log.Logger, ver *pversion.Version, analytics analytics.Client) (*Command, error) {
 	cli := &cobra.Command{
 		Use:               cliName,
 		Version:           ver.Version,
@@ -109,7 +109,7 @@ func NewConfluentCommand(cliName string, cfg *pconfig.Config, logger *log.Logger
 		cmd := kafka.New(prerunner, cfg, logger.Named("kafka"), ver.ClientID)
 		cli.AddCommand(cmd)
 		cli.AddCommand(initcontext.New(prerunner, cfg, prompt, resolver, analytics))
-		if currCtx != nil && currCtx.Credential != nil && currCtx.Credential.CredentialType == pconfig.APIKey {
+		if currCtx != nil && currCtx.Credential != nil && currCtx.Credential.CredentialType == v1.APIKey {
 			return command, nil
 		}
 		cli.AddCommand(ps1.NewPromptCmd(cfg, &pps1.Prompt{Config: cfg}, logger))

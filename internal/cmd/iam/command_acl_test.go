@@ -12,7 +12,7 @@ import (
 	"github.com/confluentinc/mds-sdk-go"
 	"github.com/confluentinc/mds-sdk-go/mock"
 
-	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	mock2 "github.com/confluentinc/cli/mock"
 )
@@ -167,12 +167,12 @@ var mdsAclEntries = []struct {
 
 type AclTestSuite struct {
 	suite.Suite
-	conf     *config.Config
+	conf     *v1.Config
 	kafkaApi mds.KafkaACLManagementApi
 }
 
 func (suite *AclTestSuite) SetupSuite() {
-	suite.conf = config.AuthenticatedConfigMock()
+	suite.conf = v1.AuthenticatedConfigMock()
 	suite.conf.CLIName = "confluent"
 }
 

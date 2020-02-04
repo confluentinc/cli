@@ -6,21 +6,22 @@ import (
 	"strings"
 
 	"github.com/confluentinc/ccloud-sdk-go"
-	v1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
+	srV1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
 	"github.com/mohae/deepcopy"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/config"
+	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 type DynamicContext struct {
-	*config.Context
+	*v1.Context
 	resolver FlagResolver
 	client   *ccloud.Client
 }
 
-func NewDynamicContext(context *config.Context, resolver FlagResolver, client *ccloud.Client) *DynamicContext {
+func NewDynamicContext(context *v1.Context, resolver FlagResolver, client *ccloud.Client) *DynamicContext {
 	return &DynamicContext{
 		Context:  context,
 		resolver: resolver,
@@ -28,7 +29,7 @@ func NewDynamicContext(context *config.Context, resolver FlagResolver, client *c
 	}
 }
 
-func (d *DynamicContext) ActiveKafkaCluster(cmd *cobra.Command) (*config.KafkaClusterConfig, error) {
+func (d *DynamicContext) ActiveKafkaCluster(cmd *cobra.Command) (*v0.KafkaClusterConfig, error) {
 	var clusterId string
 	resourceType, resourceId, err := d.resolver.ResolveResourceId(cmd)
 	if err != nil {
@@ -55,7 +56,7 @@ func (d *DynamicContext) ActiveKafkaCluster(cmd *cobra.Command) (*config.KafkaCl
 	return cluster, nil
 }
 
-func (d *DynamicContext) FindKafkaCluster(cmd *cobra.Command, clusterId string) (*config.KafkaClusterConfig, error) {
+func (d *DynamicContext) FindKafkaCluster(cmd *cobra.Command, clusterId string) (*v0.KafkaClusterConfig, error) {
 	if cluster, ok := d.KafkaClusters[clusterId]; ok {
 		return cluster, nil
 	}
@@ -68,12 +69,12 @@ func (d *DynamicContext) FindKafkaCluster(cmd *cobra.Command, clusterId string) 
 	if err != nil {
 		return nil, err
 	}
-	cluster := &config.KafkaClusterConfig{
+	cluster := &v0.KafkaClusterConfig{
 		ID:          clusterId,
 		Name:        kcc.Name,
 		Bootstrap:   strings.TrimPrefix(kcc.Endpoint, "SASL_SSL://"),
 		APIEndpoint: kcc.ApiEndpoint,
-		APIKeys:     make(map[string]*config.APIKeyPair),
+		APIKeys:     make(map[string]*v0.APIKeyPair),
 	}
 	d.KafkaClusters[clusterId] = cluster
 	err = d.Save()
@@ -108,7 +109,7 @@ func (d *DynamicContext) UseAPIKey(cmd *cobra.Command, apiKey string, clusterId 
 // SchemaRegistryCluster returns the SchemaRegistryCluster of the Context,
 // or an empty SchemaRegistryCluster if there is none set, 
 // or an ErrNotLoggedIn if the user is not logged in.
-func (d *DynamicContext) SchemaRegistryCluster(cmd *cobra.Command) (*config.SchemaRegistryCluster, error) {
+func (d *DynamicContext) SchemaRegistryCluster(cmd *cobra.Command) (*v1.SchemaRegistryCluster, error) {
 	/*
 		1. Get rsrc flag
 		2a. If resourceType is SR
@@ -133,7 +134,7 @@ func (d *DynamicContext) SchemaRegistryCluster(cmd *cobra.Command) (*config.Sche
 		return nil, err
 	}
 	ctxClient := NewContextClient(d)
-	var cluster *config.SchemaRegistryCluster
+	var cluster *v1.SchemaRegistryCluster
 	var clusterChanged bool
 	if resourceType == SrResourceType {
 		for _, srCluster := range d.SchemaRegistryClusters {
@@ -173,13 +174,13 @@ func (d *DynamicContext) SchemaRegistryCluster(cmd *cobra.Command) (*config.Sche
 func (d *DynamicContext) HasLogin(cmd *cobra.Command) (bool, error) {
 	credType := d.Credential.CredentialType
 	switch credType {
-	case config.Username:
+	case v1.Username:
 		_, err := d.resolveEnvironmentId(cmd)
 		if err != nil {
 			return false, err
 		}
 		return d.State.AuthToken != "", nil
-	case config.APIKey:
+	case v1.APIKey:
 		return false, nil
 	default:
 		panic(fmt.Sprintf("unknown credential type %d in context '%s'", credType, d.Name))
@@ -197,7 +198,7 @@ func (d *DynamicContext) AuthenticatedEnvId(cmd *cobra.Command) (string, error) 
 // AuthenticatedState returns the context's state if authenticated, and an error otherwise.
 // A view of the state is returned, rather than a pointer to the actual state. Changing the state
 // should be done by accessing the state field directly.
-func (d *DynamicContext) AuthenticatedState(cmd *cobra.Command) (*config.ContextState, error) {
+func (d *DynamicContext) AuthenticatedState(cmd *cobra.Command) (*v1.ContextState, error) {
 	hasLogin, err := d.HasLogin(cmd)
 	if err != nil {
 		return nil, err
@@ -212,7 +213,7 @@ func (d *DynamicContext) AuthenticatedState(cmd *cobra.Command) (*config.Context
 	if envId == "" {
 		return d.State, nil
 	}
-	state := deepcopy.Copy(d.State).(*config.ContextState)
+	state := deepcopy.Copy(d.State).(*v1.ContextState)
 	for _, account := range d.State.Auth.Accounts {
 		if account.Id == envId {
 			state.Auth.Account = account
@@ -264,12 +265,12 @@ func (d *DynamicContext) resolveEnvironmentId(cmd *cobra.Command) (string, error
 	return "", fmt.Errorf("environment with id '%s' not found in context '%s'", envId, d.Name)
 }
 
-func missingDetails(cluster *config.SchemaRegistryCluster) bool {
+func missingDetails(cluster *v1.SchemaRegistryCluster) bool {
 	return cluster.SchemaRegistryEndpoint == "" || cluster.Id == ""
 }
 
-func makeSRCluster(cluster *v1.SchemaRegistryCluster) *config.SchemaRegistryCluster {
-	return &config.SchemaRegistryCluster{
+func makeSRCluster(cluster *srV1.SchemaRegistryCluster) *v1.SchemaRegistryCluster {
+	return &v1.SchemaRegistryCluster{
 		Id:                     cluster.Id,
 		SchemaRegistryEndpoint: cluster.Endpoint,
 		SrCredentials:          nil, // For now.

@@ -1,22 +1,23 @@
-package config
+package v1
 
 import (
 	"fmt"
 
-	"github.com/confluentinc/ccloudapis/org/v1"
+	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 
+	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 func AuthenticatedConfigMock() *Config {
 	conf := New()
 	conf.Logger = log.New()
-	auth := &AuthConfig{
-		User: &v1.User{
+	auth := &v0.AuthConfig{
+		User: &orgv1.User{
 			Id:    123,
 			Email: "cli-mock-email@confluent.io",
 		},
-		Account: &v1.Account{Id: "testAccount"},
+		Account: &orgv1.Account{Id: "testAccount"},
 	}
 	url := "http://test"
 	credName := fmt.Sprintf("username-%s-%s", auth.User.Email, url)
@@ -35,13 +36,13 @@ func AuthenticatedConfigMock() *Config {
 		AuthToken: "some.token.here",
 	}
 	conf.Credentials[credential.Name] = credential
-	kafkaClusters := map[string]*KafkaClusterConfig{
+	kafkaClusters := map[string]*v0.KafkaClusterConfig{
 		"lkc-0000": {
 			ID:          "lkc-0000",
 			Name:        "toby-flenderson",
 			Bootstrap:   "http://toby-cluster",
 			APIEndpoint: "http://is-the-worst",
-			APIKeys: map[string]*APIKeyPair{
+			APIKeys: map[string]*v0.APIKeyPair{
 				"costa": {
 					Key:    "costa",
 					Secret: "rica",
@@ -54,7 +55,7 @@ func AuthenticatedConfigMock() *Config {
 		state.Auth.Account.Id: {
 			Id:                     "lsrc-test",
 			SchemaRegistryEndpoint: "https://sr-test",
-			SrCredentials: &APIKeyPair{
+			SrCredentials: &v0.APIKeyPair{
 				Key:    "michael",
 				Secret: "scott",
 			},
@@ -68,7 +69,7 @@ func AuthenticatedConfigMock() *Config {
 	conf.ContextStates[ctx.Name] = state
 	conf.Contexts[ctx.Name] = ctx
 	conf.CurrentContext = ctx.Name
-	if err := conf.validate(); err != nil {
+	if err := conf.Validate(); err != nil {
 		panic(err)
 	}
 	return conf

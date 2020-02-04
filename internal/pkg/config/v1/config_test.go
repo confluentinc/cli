@@ -1,4 +1,4 @@
-package config
+package v1
 
 import (
 	"fmt"
@@ -13,6 +13,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/confluentinc/cli/internal/pkg/config"
+	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
 	"github.com/confluentinc/cli/internal/pkg/version"
 
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -27,7 +29,7 @@ func TestConfig_Load(t *testing.T) {
 		Name:     "api-key-abc-key-123",
 		Username: "",
 		Password: "",
-		APIKeyPair: &APIKeyPair{
+		APIKeyPair: &v0.APIKeyPair{
 			Key:    "abc-key-123",
 			Secret: "def-secret-456",
 		},
@@ -41,7 +43,7 @@ func TestConfig_Load(t *testing.T) {
 		CredentialType: 0,
 	}
 	state := &ContextState{
-		Auth: &AuthConfig{
+		Auth: &v0.AuthConfig{
 			User: &orgv1.User{
 				Id:    123,
 				Email: "test-user@email",
@@ -65,13 +67,13 @@ func TestConfig_Load(t *testing.T) {
 		PlatformName:   platform.Name,
 		Credential:     loginCredential,
 		CredentialName: loginCredential.Name,
-		KafkaClusters: map[string]*KafkaClusterConfig{
+		KafkaClusters: map[string]*v0.KafkaClusterConfig{
 			"anonymous-id": {
 				ID:          "anonymous-id",
 				Name:        "anonymous-cluster",
 				Bootstrap:   "http://test",
 				APIEndpoint: "",
-				APIKeys: map[string]*APIKeyPair{
+				APIKeys: map[string]*v0.APIKeyPair{
 					"abc-key-123": {
 						Key: "abc-key-123",
 					},
@@ -96,13 +98,13 @@ func TestConfig_Load(t *testing.T) {
 		PlatformName:   platform.Name,
 		Credential:     apiCredential,
 		CredentialName: apiCredential.Name,
-		KafkaClusters: map[string]*KafkaClusterConfig{
+		KafkaClusters: map[string]*v0.KafkaClusterConfig{
 			"anonymous-id": {
 				ID:          "anonymous-id",
 				Name:        "anonymous-cluster",
 				Bootstrap:   "http://test",
 				APIEndpoint: "",
-				APIKeys: map[string]*APIKeyPair{
+				APIKeys: map[string]*v0.APIKeyPair{
 					"abc-key-123": {
 						Key:    "abc-key-123",
 						Secret: "def-secret-456",
@@ -140,7 +142,11 @@ func TestConfig_Load(t *testing.T) {
 					"\"auth\":null,\"auth_token\":\"\"}},\"current_context\":\"my-context\"}",
 			},
 			want: &Config{
-				CLIName: "confluent",
+				Params: &config.Params{
+					CLIName:    "confluent",
+					MetricSink: nil,
+					Logger:     log.New(),
+				},
 				Platforms: map[string]*Platform{
 					platform.Name: platform,
 				},
@@ -154,7 +160,6 @@ func TestConfig_Load(t *testing.T) {
 					"my-context": {},
 				},
 				CurrentContext: "my-context",
-				Logger:         log.New(),
 			},
 			file: testConfigFile.Name(),
 		},
@@ -175,7 +180,11 @@ func TestConfig_Load(t *testing.T) {
 					"current_context\":\"my-context\"}",
 			},
 			want: &Config{
-				CLIName: "confluent",
+				Params: &config.Params{
+					CLIName:    "confluent",
+					MetricSink: nil,
+					Logger:     log.New(),
+				},
 				Platforms: map[string]*Platform{
 					platform.Name: platform,
 				},
@@ -189,7 +198,6 @@ func TestConfig_Load(t *testing.T) {
 				ContextStates: map[string]*ContextState{
 					"my-context": state,
 				},
-				Logger: log.New(),
 			},
 			file: testConfigFile.Name(),
 		},
@@ -199,14 +207,17 @@ func TestConfig_Load(t *testing.T) {
 				contents: "{\"disable_update_check\": true, \"disable_updates\": true}",
 			},
 			want: &Config{
-				CLIName:            "confluent",
+				Params: &config.Params{
+					CLIName:    "confluent",
+					MetricSink: nil,
+					Logger:     log.New(),
+				},
 				DisableUpdates:     true,
 				DisableUpdateCheck: true,
 				Platforms:          map[string]*Platform{},
 				Credentials:        map[string]*Credential{},
 				Contexts:           map[string]*Context{},
 				ContextStates:      map[string]*ContextState{},
-				Logger:             log.New(),
 			},
 			file: testConfigFile.Name(),
 		},
@@ -214,7 +225,11 @@ func TestConfig_Load(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := New(&Config{
-				Logger: log.New(),
+				Params: &config.Params{
+					CLIName:    "confluent",
+					MetricSink: nil,
+					Logger:     log.New(),
+				},
 			})
 			c.Filename = tt.file
 			for _, context := range tt.want.Contexts {
@@ -249,7 +264,7 @@ func TestConfig_Save(t *testing.T) {
 		Name:     "api-key-abc-key-123",
 		Username: "",
 		Password: "",
-		APIKeyPair: &APIKeyPair{
+		APIKeyPair: &v0.APIKeyPair{
 			Key:    "abc-key-123",
 			Secret: "def-secret-456",
 		},
@@ -263,7 +278,7 @@ func TestConfig_Save(t *testing.T) {
 		CredentialType: 0,
 	}
 	state := &ContextState{
-		Auth: &AuthConfig{
+		Auth: &v0.AuthConfig{
 			User: &orgv1.User{
 				Id:    123,
 				Email: "test-user@email",
@@ -287,13 +302,13 @@ func TestConfig_Save(t *testing.T) {
 		PlatformName:   platform.Name,
 		Credential:     loginCredential,
 		CredentialName: loginCredential.Name,
-		KafkaClusters: map[string]*KafkaClusterConfig{
+		KafkaClusters: map[string]*v0.KafkaClusterConfig{
 			"anonymous-id": {
 				ID:          "anonymous-id",
 				Name:        "anonymous-cluster",
 				Bootstrap:   "http://test",
 				APIEndpoint: "",
-				APIKeys: map[string]*APIKeyPair{
+				APIKeys: map[string]*v0.APIKeyPair{
 					"abc-key-123": {
 						Key: "abc-key-123",
 					},
@@ -318,13 +333,13 @@ func TestConfig_Save(t *testing.T) {
 		PlatformName:   platform.Name,
 		Credential:     apiCredential,
 		CredentialName: apiCredential.Name,
-		KafkaClusters: map[string]*KafkaClusterConfig{
+		KafkaClusters: map[string]*v0.KafkaClusterConfig{
 			"anonymous-id": {
 				ID:          "anonymous-id",
 				Name:        "anonymous-cluster",
 				Bootstrap:   "http://test",
 				APIEndpoint: "",
-				APIKeys: map[string]*APIKeyPair{
+				APIKeys: map[string]*v0.APIKeyPair{
 					"abc-key-123": {
 						Key:    "abc-key-123",
 						Secret: "def-secret-456",
@@ -347,7 +362,11 @@ func TestConfig_Save(t *testing.T) {
 		{
 			name: "save config with state to file",
 			config: &Config{
-				CLIName: "confluent",
+				Params: &config.Params{
+					CLIName:    "confluent",
+					MetricSink: nil,
+					Logger:     log.New(),
+				},
 				Platforms: map[string]*Platform{
 					platform.Name: platform,
 				},
@@ -362,14 +381,17 @@ func TestConfig_Save(t *testing.T) {
 					"my-context": state,
 				},
 				CurrentContext: "my-context",
-				Logger:         log.New(),
 				},
 				want: "{\n  \"disable_update_check\": false,\n  \"disable_updates\": false,\n  \"no_browser\": false,\n  \"platforms\": {\n    \"http://test\": {\n      \"name\": \"http://test\",\n      \"server\": \"http://test\"\n    }\n  },\n  \"credentials\": {\n    \"api-key-abc-key-123\": {\n      \"name\": \"api-key-abc-key-123\",\n      \"username\": \"\",\n      \"password\": \"\",\n      \"api_key_pair\": {\n        \"api_key\": \"abc-key-123\",\n        \"api_secret\": \"def-secret-456\"\n      },\n      \"credential_type\": 1\n    },\n    \"username-test-user\": {\n      \"name\": \"username-test-user\",\n      \"username\": \"test-user\",\n      \"password\": \"\",\n      \"api_key_pair\": null,\n      \"credential_type\": 0\n    }\n  },\n  \"contexts\": {\n    \"my-context\": {\n      \"name\": \"my-context\",\n      \"platform\": \"http://test\",\n      \"credential\": \"username-test-user\",\n      \"kafka_clusters\": {\n        \"anonymous-id\": {\n          \"id\": \"anonymous-id\",\n          \"name\": \"anonymous-cluster\",\n          \"bootstrap_servers\": \"http://test\",\n          \"api_keys\": {\n            \"abc-key-123\": {\n              \"api_key\": \"abc-key-123\",\n              \"api_secret\": \"\"\n            }\n          },\n          \"api_key\": \"abc-key-123\"\n        }\n      },\n      \"kafka_cluster\": \"anonymous-id\",\n      \"schema_registry_clusters\": {\n        \"acc-123\": {\n          \"id\": \"lsrc-123\",\n          \"schema_registry_endpoint\": \"http://some-lsrc-endpoint\",\n          \"schema_registry_credentials\": null\n        }\n      }\n    }\n  },\n  \"context_states\": {\n    \"my-context\": {\n      \"auth\": {\n        \"user\": {\n          \"id\": 123,\n          \"email\": \"test-user@email\"\n        },\n        \"account\": {\n          \"id\": \"acc-123\",\n          \"name\": \"test-env\"\n        },\n        \"accounts\": [\n          {\n            \"id\": \"acc-123\",\n            \"name\": \"test-env\"\n          }\n        ]\n      },\n      \"auth_token\": \"abc123\"\n    }\n  },\n  \"current_context\": \"my-context\",\n  \"anonymous_id\": \"\"\n}",
 			},
 		{
 			name: "save stateless config to file",
 			config: &Config{
-				CLIName: "confluent",
+				Params: &config.Params{
+					CLIName:    "confluent",
+					MetricSink: nil,
+					Logger:     log.New(),
+				},
 				Platforms: map[string]*Platform{
 					platform.Name: platform,
 				},
@@ -383,7 +405,6 @@ func TestConfig_Save(t *testing.T) {
 					"my-context": {},
 				},
 				CurrentContext: "my-context",
-				Logger:         log.New(),
 			},
 			want: "{\n  \"disable_update_check\": false,\n  \"disable_updates\": false,\n  \"no_browser\": false,\n  \"platforms\": {\n    \"http://test\": {\n      \"name\": \"http://test\",\n      \"server\": \"http://test\"\n    }\n  },\n  \"credentials\": {\n    \"api-key-abc-key-123\": {\n      \"name\": \"api-key-abc-key-123\",\n      \"username\": \"\",\n      \"password\": \"\",\n      \"api_key_pair\": {\n        \"api_key\": \"abc-key-123\",\n        \"api_secret\": \"def-secret-456\"\n      },\n      \"credential_type\": 1\n    }\n  },\n  \"contexts\": {\n    \"my-context\": {\n      \"name\": \"my-context\",\n      \"platform\": \"http://test\",\n      \"credential\": \"api-key-abc-key-123\",\n      \"kafka_clusters\": {\n        \"anonymous-id\": {\n          \"id\": \"anonymous-id\",\n          \"name\": \"anonymous-cluster\",\n          \"bootstrap_servers\": \"http://test\",\n          \"api_keys\": {\n            \"abc-key-123\": {\n              \"api_key\": \"abc-key-123\",\n              \"api_secret\": \"def-secret-456\"\n            }\n          },\n          \"api_key\": \"abc-key-123\"\n        }\n      },\n      \"kafka_cluster\": \"anonymous-id\",\n      \"schema_registry_clusters\": {}\n    }\n  },\n  \"context_states\": {\n    \"my-context\": {\n      \"auth\": null,\n      \"auth_token\": \"\"\n    }\n  },\n  \"current_context\": \"my-context\",\n  \"anonymous_id\": \"\"\n}",
 		},
@@ -443,7 +464,11 @@ func TestConfig_getFilename(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := New(&Config{
-				CLIName: tt.fields.CLIName,
+				Params: &config.Params{
+					CLIName:    tt.fields.CLIName,
+					MetricSink: nil,
+					Logger:     log.New(),
+				},
 			})
 			got, err := c.getFilename()
 			if (err != nil) != tt.wantErr {
@@ -474,7 +499,7 @@ func TestConfig_AddContext(t *testing.T) {
 		platformName           string
 		credentialName         string
 		credential             *Credential
-		kafkaClusters          map[string]*KafkaClusterConfig
+		kafkaClusters          map[string]*v0.KafkaClusterConfig
 		kafka                  string
 		schemaRegistryClusters map[string]*SchemaRegistryCluster
 		state                  *ContextState

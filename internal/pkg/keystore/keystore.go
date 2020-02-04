@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config"
+	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
@@ -49,7 +49,7 @@ func (c *ConfigKeyStore) StoreAPIKey(key *authv1.ApiKey, clusterId string, cmd *
 	if err != nil {
 		return err
 	}
-	kcc.APIKeys[key.Key] = &config.APIKeyPair{
+	kcc.APIKeys[key.Key] = &v0.APIKeyPair{
 		Key:    key.Key,
 		Secret: key.Secret,
 	}

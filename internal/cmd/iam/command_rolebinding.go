@@ -13,7 +13,7 @@ import (
 	"github.com/confluentinc/go-printer"
 	"github.com/confluentinc/mds-sdk-go"
 
-	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
@@ -47,7 +47,7 @@ type rolebindingCommand struct {
 }
 
 // NewRolebindingCommand returns the sub-command object for interacting with RBAC rolebindings.
-func NewRolebindingCommand(cfg *config.Config, prerunner cmd.PreRunner) *cobra.Command {
+func NewRolebindingCommand(cfg *v1.Config, prerunner cmd.PreRunner) *cobra.Command {
 	cliCmd := cmd.NewAuthenticatedWithMDSCLICommand(
 		&cobra.Command{
 			Use:   "rolebinding",

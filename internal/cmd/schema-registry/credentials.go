@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config"
+	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
@@ -47,7 +47,7 @@ func srContext(cfg *pcmd.DynamicConfig, cmd *cobra.Command) (context.Context, er
 		if err != nil {
 			return nil, err
 		}
-		srCluster.SrCredentials = &config.APIKeyPair{
+		srCluster.SrCredentials = &v0.APIKeyPair{
 			Key:    key,
 			Secret: secret,
 		}

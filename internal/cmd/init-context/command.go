@@ -8,7 +8,8 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config"
+	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
+	"github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
@@ -21,7 +22,7 @@ type command struct {
 // TODO: Make long description better.
 const longDescription = "Initialize and set a current context."
 
-func New(prerunner pcmd.PreRunner, config *config.Config, prompt pcmd.Prompt, resolver pcmd.FlagResolver, analyticsClient analytics.Client) *cobra.Command {
+func New(prerunner pcmd.PreRunner, config *v1.Config, prompt pcmd.Prompt, resolver pcmd.FlagResolver, analyticsClient analytics.Client) *cobra.Command {
 	cobraCmd := &cobra.Command{
 		Use:   "init <context-name>",
 		Short: "Initialize a context.",
@@ -101,14 +102,14 @@ func (c *command) initContext(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) addContext(name string, bootstrapURL string, apiKey string, apiSecret string) error {
-	apiKeyPair := &config.APIKeyPair{
+	apiKeyPair := &v0.APIKeyPair{
 		Key:    apiKey,
 		Secret: apiSecret,
 	}
-	apiKeys := map[string]*config.APIKeyPair{
+	apiKeys := map[string]*v0.APIKeyPair{
 		apiKey: apiKeyPair,
 	}
-	kafkaClusterCfg := &config.KafkaClusterConfig{
+	kafkaClusterCfg := &v0.KafkaClusterConfig{
 		ID:          "anonymous-id",
 		Name:        "anonymous-cluster",
 		Bootstrap:   bootstrapURL,
@@ -116,23 +117,23 @@ func (c *command) addContext(name string, bootstrapURL string, apiKey string, ap
 		APIKeys:     apiKeys,
 		APIKey:      apiKey,
 	}
-	kafkaClusters := map[string]*config.KafkaClusterConfig{
+	kafkaClusters := map[string]*v0.KafkaClusterConfig{
 		kafkaClusterCfg.ID: kafkaClusterCfg,
 	}
-	platform := &config.Platform{Server: bootstrapURL}
+	platform := &v1.Platform{Server: bootstrapURL}
 	// Inject credential and platforms name for now, until users can provide custom names.
 	platform.Name = strings.TrimPrefix(platform.Server, "https://")
 	// Hardcoded for now, since username/password isn't implemented yet.
-	credential := &config.Credential{
+	credential := &v1.Credential{
 		Username:       "",
 		Password:       "",
 		APIKeyPair:     apiKeyPair,
-		CredentialType: config.APIKey,
+		CredentialType: v1.APIKey,
 	}
 	switch credential.CredentialType {
-	case config.Username:
+	case v1.Username:
 		credential.Name = fmt.Sprintf("%s-%s", &credential.CredentialType, credential.Username)
-	case config.APIKey:
+	case v1.APIKey:
 		credential.Name = fmt.Sprintf("%s-%s", &credential.CredentialType, credential.APIKeyPair.Key)
 	default:
 		return fmt.Errorf("credential type %d unknown", credential.CredentialType)

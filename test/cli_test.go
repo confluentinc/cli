@@ -41,6 +41,7 @@ import (
 	utilv1 "github.com/confluentinc/ccloudapis/util/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/config/v1"
 )
 
 var (
@@ -586,7 +587,10 @@ func runCommand(t *testing.T, binaryName string, env []string, args string, want
 func resetConfiguration(t *testing.T, cliName string) {
 	// HACK: delete your current config to isolate tests cases for non-workflow tests...
 	// probably don't really want to do this or devs will get mad
-	cfg := config.New(&config.Config{CLIName: cliName})
+	cfg := v1.New()
+	cfg.SetParams(&config.Params{
+		CLIName: cliName,
+	})
 	err := cfg.Save()
 	require.NoError(t, err)
 }
