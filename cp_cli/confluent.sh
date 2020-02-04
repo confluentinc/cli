@@ -851,17 +851,17 @@ config_already_exists() {
   VALUE="${2}"
   FILE="${3}"
   sed "/$KEY/"',/[^\\]$/!d; /[^\\]$/q; s/\\$//' "$FILE" |
-  tr -d '\n' |
-  sed -e 's/^.*=[[:blank:]]*//' -e 's/[[:blank:]]*,[[:blank:]]*/,/g' |
-  tr ',' '\n' |
-  grep -q "$VALUE"
+    tr -d '\n' |
+    sed -e 's/^.*=[[:blank:]]*//' -e 's/[[:blank:]]*,[[:blank:]]*/,/g' |
+    tr ',' '\n' |
+    grep -q "$VALUE"
 }
 
 inject_configs() {
   # regex version of config key
-  KEY="${1}"
+  KEY="^[[:blank:]]*${1}[[:blank:]]*="
   # regex version of config value
-  VALUE="${2}"
+  VALUE="^[[:blank:]]*${2}[[:blank:]]*$"
   # properties file to put config into
   FILE="${3}"
   # literal version of config key
@@ -931,8 +931,8 @@ config_service() {
         if [ -f ${confluent_home}/share/java/kafka-connect-replicator/replicator-rest-extension-* ]; then
           REST_EXTENSION_JAR=$(find ${confluent_home}/share/java/kafka-connect-replicator/replicator-rest-extension-*)
           export CLASSPATH=$CLASSPATH:$REST_EXTENSION_JAR
-          REPLICATOR_REST_EXTENSION_KEY="^[[:blank:]]*rest\.extension\.classes[[:blank:]]*="
-          REST_EXTENSION_REPLICATOR_VALUE="^[[:blank:]]*io\.confluent\.connect\.replicator\.monitoring\.ReplicatorMonitoringExtension[[:blank:]]*$"
+          REPLICATOR_REST_EXTENSION_KEY="rest\.extension\.classes"
+          REPLICATOR_REST_EXTENSION_VALUE="io\.confluent\.connect\.replicator\.monitoring\.ReplicatorMonitoringExtension"
           REPLICATOR_REST_EXTENSION_LITERAL_KEY="rest.extension.classes"
           REPLICATOR_REST_EXTENSION_LITERAL_VALUE="io.confluent.connect.replicator.monitoring.ReplicatorMonitoringExtension"
           inject_configs $REPLICATOR_REST_EXTENSION_KEY $REPLICATOR_REST_EXTENSION_VALUE "${service_dir}/${service}.properties" $REPLICATOR_REST_EXTENSION_LITERAL_KEY $REPLICATOR_REST_EXTENSION_LITERAL_VALUE
