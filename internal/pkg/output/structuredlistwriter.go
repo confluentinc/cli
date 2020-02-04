@@ -38,7 +38,15 @@ func (o *StructuredListWriter) Out() error {
 	if err != nil {
 		return err
 	}
-	_, err = fmt.Fprintf(os.Stdout, string(outputBytes))
+	if len(o.data) != 0 {
+		_, err = fmt.Fprintf(os.Stdout, string(outputBytes))
+	} else {
+		if o.outputFormat == JSON {
+			_, err = fmt.Fprintf(os.Stdout, "[]\n")
+		} else {
+			_, err = fmt.Fprintf(os.Stdout, "\n")
+		}
+	}
 	return err
 }
 

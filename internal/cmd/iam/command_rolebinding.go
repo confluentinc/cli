@@ -20,7 +20,7 @@ import (
 var (
 	resourcePatternListFields           = []string{"Principal", "Role", "ResourceType", "Name", "PatternType"}
 	resourcePatternHumanListLabels      = []string{"Principal", "Role", "ResourceType", "Name", "PatternType"}
-	resourcePatternStructuredListLabels = []string{"principal", "role", "resource_type", "name", "patternType"}
+	resourcePatternStructuredListLabels = []string{"principal", "role", "resource_type", "name", "pattern_type"}
 
 	//TODO: please move this to a backend route
 	clusterScopedRoles = map[string]bool{
