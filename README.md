@@ -252,6 +252,15 @@ You can mix and match these flags. To update the golden files without rebuilding
 
     make test TEST_ARGS="./test/... -update -no-rebuild -v"
 
+### Make Test Fails From Mac Max Number of Open Files Limit
+
+The CLI now has so many tests that when running `make test`, the default max number of open files on Mac is exceeded. If you are developing on Mac and run into that issue, then run the following commands:
+```
+echo 'kern.maxfiles=20480' | sudo tee -a /etc/sysctl.conf
+echo -e 'limit maxfiles 8192 20480\nlimit maxproc 1000 2000' | sudo tee -a /etc/launchd.conf
+echo 'ulimit -n 4096' | sudo tee -a /etc/profile
+```
+For more details: https://superuser.com/questions/302754/increase-the-maximum-number-of-open-file-descriptors-in-snow-leopard/514049#514049
 
 ## Adding a New Command to the CLI
 
