@@ -406,7 +406,7 @@ func (s *CLITestSuite) Test_SSO_Login() {
 	done := make(chan error)
 	go func() { done <- cmd.Wait() }()
 
-	timeout := time.After(30 * time.Second)
+	timeout := time.After(60 * time.Second)
 
 	select {
 	case <-timeout:
