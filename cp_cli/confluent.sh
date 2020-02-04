@@ -850,39 +850,20 @@ config_already_exists() {
   KEY="${1}"
   VALUE="${2}"
   FILE="${3}"
-  config=$(grep "$KEY" $FILE)
-  if [[ $config == *\\ ]]
-  then
-    # while it is inefficient to start from the beginning of the file, it's
-    # easier to support the escape character in multi-line property files as
-    # this treats $line as one line until the end of the value for the property,
-    # ignoring escape characters; this makes the logic much easier to check if
-    # the value and key pair exists in the config
-    while read line
-    do
-      key_config=$(grep "$KEY" <<< $line)
-      if ! [[ -z $key_config ]]
-      then
-        value_config=$(grep "$VALUE" <<< $key_config)
-        break
-      fi
-    done < $FILE
-    ! [[ -z $value_config ]]
-  else
-    actual_config=$(grep "$VALUE" <<< $config)
-    ! [[ -z $actual_config ]]
-  fi
+  $(sed "/$KEY/"',/[^\\]$/!d; /[^\\]$/q; s/\\$//' "$FILE" | tr -d '\n' | grep -q "$VALUE")
 }
 
 inject_configs() {
   # regex version of config key
   KEY="${1}"
-  # value of config
+  # regex version of config value
   VALUE="${2}"
   # properties file to put config into
   FILE="${3}"
   # literal version of config key
   LITERAL_KEY="${4}"
+  # literal version of config value
+  LITERAL_VALUE="${5}"
   if config_already_exists $KEY $VALUE $FILE; then
     return
   fi
@@ -890,8 +871,8 @@ inject_configs() {
   # if config doesn't exist in the file, add the config with the value at the end of the properties file
   if [[ -z $existing_line ]]
   then
-    # using the literal key here to add the new config to the properties file
-    printf '\n%s\n' "$LITERAL_KEY=$VALUE" >> "$FILE"
+    # putting new line with literal key and literal value
+    printf '\n%s\n' "$LITERAL_KEY=$LITERAL_VALUE" >> "$FILE"
   # if config does exist, then append the value to the end of existing config entry
   else
     if [[ $existing_line == *\\ ]] # case where there is a multiline config, check if a slash exists at the end of the string
@@ -899,14 +880,14 @@ inject_configs() {
       # only look at the first line of the multi line config and remove the ending slash
       modified_line=$(sed 's/\\$//' <<< "$existing_line")
       # append the config value at the end and add a comma and an ending slash
-      new_config_line="$modified_line$VALUE,  \\\\"
+      new_config_line="$modified_line$LITERAL_VALUE,  \\\\"
     else # case where it is a single line config
-      new_config_line="$existing_line,$VALUE"
+      new_config_line="$existing_line,$LITERAL_VALUE"
     fi
     sed_expr="s/$KEY.*/$new_config_line/"
     sed -i '' "$sed_expr" $FILE
     if [ $? -ne 0 ]; then
-      echo "Was not able to add $VALUE to the list of config $LITERAL_KEY! Is this config defined more than once?"
+      echo "Was not able to add $LITERAL_VALUE to the list of config $LITERAL_KEY! Is this config defined more than once?"
     fi
   fi
 }
@@ -947,8 +928,10 @@ config_service() {
           REST_EXTENSION_JAR=$(find ${confluent_home}/share/java/kafka-connect-replicator/replicator-rest-extension-*)
           export CLASSPATH=$CLASSPATH:$REST_EXTENSION_JAR
           REPLICATOR_REST_EXTENSION_KEY="^[[:blank:]]*rest\.extension\.classes[[:blank:]]*="
-          REPLICATOR_REST_EXTENSION_VALUE="io.confluent.connect.replicator.monitoring.ReplicatorMonitoringExtension"
-          inject_configs $REPLICATOR_REST_EXTENSION_KEY $REPLICATOR_REST_EXTENSION_VALUE "${service_dir}/${service}.properties" "rest.extension.classes"
+          REPLICATOR_REST_EXTENSION_VALUE="[[:blank:]]*io\.confluent\.connect\.replicator\.monitoring\.ReplicatorMonitoringExtension[[:blank:]]*"
+          REPLICATOR_REST_EXTENSION_LITERAL_KEY="rest.extension.classes"
+          REPLICATOR_REST_EXTENSION_LITERAL_VALUE="io.confluent.connect.replicator.monitoring.ReplicatorMonitoringExtension"
+          inject_configs $REPLICATOR_REST_EXTENSION_KEY $REPLICATOR_REST_EXTENSION_VALUE "${service_dir}/${service}.properties" $REPLICATOR_REST_EXTENSION_LITERAL_KEY $REPLICATOR_REST_EXTENSION_LITERAL_VALUE
         fi
     fi
 
