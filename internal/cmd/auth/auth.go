@@ -15,8 +15,8 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
 	"github.com/confluentinc/cli/internal/pkg/config/v1"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/sso"
@@ -25,7 +25,7 @@ import (
 type commands struct {
 	Commands        []*pcmd.CLICommand
 	Logger          *log.Logger
-	config          *v1.Config
+	config          *v2.Config
 	analyticsClient analytics.Client
 	// @VisibleForTesting
 	MDSClient *mds.APIClient
@@ -42,7 +42,7 @@ var (
 )
 
 // New returns a list of auth-related Cobra commands.
-func New(prerunner pcmd.PreRunner, config *v1.Config, logger *log.Logger, userAgent string, analyticsClient analytics.Client) []*cobra.Command {
+func New(prerunner pcmd.PreRunner, config *v2.Config, logger *log.Logger, userAgent string, analyticsClient analytics.Client) []*cobra.Command {
 	var defaultAnonHTTPClientFactory = func(baseURL string, logger *log.Logger) *ccloud.Client {
 		return ccloud.NewClient(&ccloud.Params{BaseURL: baseURL, HttpClient: ccloud.BaseClient, Logger: logger, UserAgent: userAgent})
 	}
@@ -59,7 +59,7 @@ func New(prerunner pcmd.PreRunner, config *v1.Config, logger *log.Logger, userAg
 	return cobraCmds
 }
 
-func newCommands(prerunner pcmd.PreRunner, config *v1.Config, log *log.Logger, prompt pcmd.Prompt,
+func newCommands(prerunner pcmd.PreRunner, config *v2.Config, log *log.Logger, prompt pcmd.Prompt,
 	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *ccloud.Client,
 	jwtHTTPClientFactory func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *ccloud.Client,
 	analyticsClient analytics.Client) *commands {
@@ -164,17 +164,17 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	}
 	username := user.User.Email
 	name := generateContextName(username, url)
-	var state *v1.ContextState
+	var state *v2.ContextState
 	ctx, err := a.config.FindContext(name)
 	if err == nil {
 		state = ctx.State
 	} else {
-		state = new(v1.ContextState)
+		state = new(v2.ContextState)
 	}
 	state.AuthToken = token
 	// If no auth config exists, initialize it
 	if state.Auth == nil {
-		state.Auth = &v0.AuthConfig{}
+		state.Auth = &v1.AuthConfig{}
 	}
 
 	// Always overwrite the user and list of accounts when logging in -- but don't necessarily
@@ -264,7 +264,7 @@ func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	state := &v1.ContextState{
+	state := &v2.ContextState{
 		Auth:      nil,
 		AuthToken: resp.AuthToken,
 	}
@@ -346,18 +346,18 @@ func (a *commands) credentials(cmd *cobra.Command, userField string, cloudClient
 	return email, password, nil
 }
 
-func (a *commands) addContextIfAbsent(username string, url string, state *v1.ContextState, caCertPath string) error {
+func (a *commands) addContextIfAbsent(username string, url string, state *v2.ContextState, caCertPath string) error {
 	ctxName := generateContextName(username, url)
 	if _, ok := a.config.Contexts[ctxName]; ok {
 		return nil
 	}
 	credName := generateCredentialName(username)
-	platform := &v1.Platform{
+	platform := &v2.Platform{
 		Name:       strings.TrimPrefix(url, "https://"),
 		Server:     url,
 		CaCertPath: caCertPath,
 	}
-	credential := &v1.Credential{
+	credential := &v2.Credential{
 		Name:     credName,
 		Username: username,
 		// don't save password if they entered it interactively.
@@ -370,7 +370,7 @@ func (a *commands) addContextIfAbsent(username string, url string, state *v1.Con
 	if err != nil {
 		return err
 	}
-	err = a.config.AddContext(ctxName, platform.Name, credential.Name, map[string]*v0.KafkaClusterConfig{},
+	err = a.config.AddContext(ctxName, platform.Name, credential.Name, map[string]*v1.KafkaClusterConfig{},
 		"", nil, state)
 	if err != nil {
 		return err

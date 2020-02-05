@@ -7,7 +7,7 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config/v1"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
@@ -17,7 +17,7 @@ type subjectCommand struct {
 }
 
 // NewSubjectCommand returns the Cobra command for Schema Registry subject list
-func NewSubjectCommand(config *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
+func NewSubjectCommand(config *v2.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "subject",
@@ -26,7 +26,7 @@ func NewSubjectCommand(config *v1.Config, prerunner pcmd.PreRunner, srClient *sr
 		config, prerunner)
 	subjectCmd := &subjectCommand{
 		AuthenticatedCLICommand: cliCmd,
-		srClient:   srClient,
+		srClient:                srClient,
 	}
 	subjectCmd.init()
 	return subjectCmd.Command

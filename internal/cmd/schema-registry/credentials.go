@@ -87,7 +87,7 @@ func SchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *vers
 		srConfig.BasePath = srCluster.Endpoint
 	}
 	srConfig.UserAgent = ver.UserAgent
-	// Validate before returning.
+	// validate before returning.
 	srClient = srsdk.NewAPIClient(srConfig)
 	_, _, err = srClient.DefaultApi.Get(ctx)
 	if err != nil {

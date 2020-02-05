@@ -11,7 +11,7 @@ import (
 	"gopkg.in/square/go-jose.v2/jwt"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
-	"github.com/confluentinc/cli/internal/pkg/config/v1"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/update"
@@ -49,7 +49,7 @@ type AuthenticatedCLICommand struct {
 	Client    *ccloud.Client
 	MDSClient *mds.APIClient
 	Context   *DynamicContext
-	State     *v1.ContextState
+	State     *v2.ContextState
 }
 
 type HasAPIKeyCLICommand struct {
@@ -64,7 +64,7 @@ func (a *AuthenticatedCLICommand) EnvironmentId() string {
 	return a.State.Auth.Account.Id
 }
 
-func NewAuthenticatedCLICommand(command *cobra.Command, cfg *v1.Config, prerunner PreRunner) *AuthenticatedCLICommand {
+func NewAuthenticatedCLICommand(command *cobra.Command, cfg *v2.Config, prerunner PreRunner) *AuthenticatedCLICommand {
 	cmd := &AuthenticatedCLICommand{
 		CLICommand: NewCLICommand(command, cfg, prerunner),
 		Context:    nil,
@@ -75,7 +75,7 @@ func NewAuthenticatedCLICommand(command *cobra.Command, cfg *v1.Config, prerunne
 	return cmd
 }
 
-func NewAuthenticatedWithMDSCLICommand(command *cobra.Command, cfg *v1.Config, prerunner PreRunner) *AuthenticatedCLICommand {
+func NewAuthenticatedWithMDSCLICommand(command *cobra.Command, cfg *v2.Config, prerunner PreRunner) *AuthenticatedCLICommand {
 	cmd := &AuthenticatedCLICommand{
 		CLICommand: NewCLICommand(command, cfg, prerunner),
 		Context:    nil,
@@ -86,7 +86,7 @@ func NewAuthenticatedWithMDSCLICommand(command *cobra.Command, cfg *v1.Config, p
 	return cmd
 }
 
-func NewHasAPIKeyCLICommand(command *cobra.Command, cfg *v1.Config, prerunner PreRunner) *HasAPIKeyCLICommand {
+func NewHasAPIKeyCLICommand(command *cobra.Command, cfg *v2.Config, prerunner PreRunner) *HasAPIKeyCLICommand {
 	cmd := &HasAPIKeyCLICommand{
 		CLICommand: NewCLICommand(command, cfg, prerunner),
 		Context:    nil,
@@ -96,14 +96,14 @@ func NewHasAPIKeyCLICommand(command *cobra.Command, cfg *v1.Config, prerunner Pr
 	return cmd
 }
 
-func NewAnonymousCLICommand(command *cobra.Command, cfg *v1.Config, prerunner PreRunner) *CLICommand {
+func NewAnonymousCLICommand(command *cobra.Command, cfg *v2.Config, prerunner PreRunner) *CLICommand {
 	cmd := NewCLICommand(command, cfg, prerunner)
 	command.PersistentPreRunE = prerunner.Anonymous(cmd)
 	cmd.Command = command
 	return cmd
 }
 
-func NewCLICommand(command *cobra.Command, cfg *v1.Config, prerunner PreRunner) *CLICommand {
+func NewCLICommand(command *cobra.Command, cfg *v2.Config, prerunner PreRunner) *CLICommand {
 	return &CLICommand{
 		Config:    NewDynamicConfig(cfg, nil, nil),
 		Command:   command,
@@ -318,7 +318,7 @@ func (r *PreRun) createMDSClient(ctx *DynamicContext, ver *version.Version) *mds
 }
 
 func (r *PreRun) validateToken(cmd *cobra.Command, ctx *DynamicContext) error {
-	// Validate token (not expired)
+	// validate token (not expired)
 	var authToken string
 	if ctx != nil {
 		authToken = ctx.State.AuthToken

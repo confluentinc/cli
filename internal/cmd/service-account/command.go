@@ -12,7 +12,7 @@ import (
 	"github.com/confluentinc/go-printer"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config/v1"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
@@ -31,7 +31,7 @@ const nameLength = 32
 const descriptionLength = 128
 
 // New returns the Cobra command for service accounts.
-func New(prerunner pcmd.PreRunner, config *v1.Config) *cobra.Command {
+func New(prerunner pcmd.PreRunner, config *v2.Config) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "service-account",
@@ -132,7 +132,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	if err := requireLen(description, descriptionLength, "description"); err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	
+
 	user := &orgv1.User{
 		ServiceName:        name,
 		ServiceDescription: description,

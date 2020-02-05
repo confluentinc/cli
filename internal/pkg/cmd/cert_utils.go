@@ -64,7 +64,6 @@ func defaultTransport() *http.Transport {
 	}
 }
 
-
 func DefaultClient() *http.Client {
 	return http.DefaultClient
 }

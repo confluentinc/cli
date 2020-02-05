@@ -9,7 +9,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
-	"github.com/confluentinc/cli/internal/pkg/config/v1"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
@@ -22,7 +23,7 @@ type command struct {
 // TODO: Make long description better.
 const longDescription = "Initialize and set a current context."
 
-func New(prerunner pcmd.PreRunner, config *v1.Config, prompt pcmd.Prompt, resolver pcmd.FlagResolver, analyticsClient analytics.Client) *cobra.Command {
+func New(prerunner pcmd.PreRunner, config *v2.Config, prompt pcmd.Prompt, resolver pcmd.FlagResolver, analyticsClient analytics.Client) *cobra.Command {
 	cobraCmd := &cobra.Command{
 		Use:   "init <context-name>",
 		Short: "Initialize a context.",
@@ -109,7 +110,7 @@ func (c *command) addContext(name string, bootstrapURL string, apiKey string, ap
 	apiKeys := map[string]*v0.APIKeyPair{
 		apiKey: apiKeyPair,
 	}
-	kafkaClusterCfg := &v0.KafkaClusterConfig{
+	kafkaClusterCfg := &v1.KafkaClusterConfig{
 		ID:          "anonymous-id",
 		Name:        "anonymous-cluster",
 		Bootstrap:   bootstrapURL,
@@ -117,23 +118,23 @@ func (c *command) addContext(name string, bootstrapURL string, apiKey string, ap
 		APIKeys:     apiKeys,
 		APIKey:      apiKey,
 	}
-	kafkaClusters := map[string]*v0.KafkaClusterConfig{
+	kafkaClusters := map[string]*v1.KafkaClusterConfig{
 		kafkaClusterCfg.ID: kafkaClusterCfg,
 	}
-	platform := &v1.Platform{Server: bootstrapURL}
+	platform := &v2.Platform{Server: bootstrapURL}
 	// Inject credential and platforms name for now, until users can provide custom names.
 	platform.Name = strings.TrimPrefix(platform.Server, "https://")
 	// Hardcoded for now, since username/password isn't implemented yet.
-	credential := &v1.Credential{
+	credential := &v2.Credential{
 		Username:       "",
 		Password:       "",
 		APIKeyPair:     apiKeyPair,
-		CredentialType: v1.APIKey,
+		CredentialType: v2.APIKey,
 	}
 	switch credential.CredentialType {
-	case v1.Username:
+	case v2.Username:
 		credential.Name = fmt.Sprintf("%s-%s", &credential.CredentialType, credential.Username)
-	case v1.APIKey:
+	case v2.APIKey:
 		credential.Name = fmt.Sprintf("%s-%s", &credential.CredentialType, credential.APIKeyPair.Key)
 	default:
 		return fmt.Errorf("credential type %d unknown", credential.CredentialType)

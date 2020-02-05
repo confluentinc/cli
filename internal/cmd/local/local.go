@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config/v1"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/io"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -58,7 +58,7 @@ type command struct {
 }
 
 // New returns the Cobra command for `local`.
-func New(rootCmd *cobra.Command, prerunner pcmd.PreRunner, shell ShellRunner, log *log.Logger, fs io.FileSystem, cfg *v1.Config) *cobra.Command {
+func New(rootCmd *cobra.Command, prerunner pcmd.PreRunner, shell ShellRunner, log *log.Logger, fs io.FileSystem, cfg *v2.Config) *cobra.Command {
 	cliCmd := pcmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "local",
@@ -296,7 +296,7 @@ func (c *command) runBashCommand(path string, command string, args []string) err
 }
 
 func validateConfluentPlatformInstallDir(fs io.FileSystem, dir string) (bool, error) {
-	// Validate home directory exists and is in fact a directory
+	// validate home directory exists and is in fact a directory
 	f, err := fs.Stat(dir)
 	switch {
 	case os.IsNotExist(err):
@@ -307,7 +307,7 @@ func validateConfluentPlatformInstallDir(fs io.FileSystem, dir string) (bool, er
 		return false, nil
 	}
 
-	// Validate bin directory contents
+	// validate bin directory contents
 	filesToCheck := make(map[string]bool, len(validCPInstallBinCanaries))
 	for _, name := range validCPInstallBinCanaries {
 		filesToCheck[filepath.Join(dir, "bin", name)] = false
@@ -332,7 +332,7 @@ func validateConfluentPlatformInstallDir(fs io.FileSystem, dir string) (bool, er
 		}
 	}
 
-	// Validate etc directory contents/location
+	// validate etc directory contents/location
 	f, err = fs.Stat(filepath.Join(dir, validCPInstallEtcCanary))
 	switch {
 	case os.IsNotExist(err):

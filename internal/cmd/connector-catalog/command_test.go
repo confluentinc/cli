@@ -4,18 +4,17 @@ import (
 	"context"
 	"testing"
 
-	v12 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	"github.com/confluentinc/cli/internal/pkg/errors"
-
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go/mock"
-	v1 "github.com/confluentinc/ccloudapis/connect/v1"
+	connectv1 "github.com/confluentinc/ccloudapis/connect/v1"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 
+	"github.com/confluentinc/cli/internal/pkg/config/v2"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
@@ -27,15 +26,15 @@ const (
 
 type CatalogTestSuite struct {
 	suite.Suite
-	conf         *v12.Config
+	conf         *v2.Config
 	kafkaCluster *kafkav1.KafkaCluster
-	connector    *v1.Connector
+	connector    *connectv1.Connector
 	connectMock  *ccsdkmock.Connect
 	kafkaMock    *ccsdkmock.Kafka
 }
 
 func (suite *CatalogTestSuite) SetupSuite() {
-	suite.conf = v12.AuthenticatedConfigMock()
+	suite.conf = v2.AuthenticatedConfigMock()
 	ctx := suite.conf.Context()
 	suite.kafkaCluster = &kafkav1.KafkaCluster{
 		Id:         ctx.KafkaClusters[ctx.Kafka].ID,
@@ -43,12 +42,12 @@ func (suite *CatalogTestSuite) SetupSuite() {
 		AccountId:  "testAccount",
 		Enterprise: true,
 	}
-	suite.connector = &v1.Connector{
+	suite.connector = &connectv1.Connector{
 		Name:           connectorName,
 		Id:             connectorID,
 		KafkaClusterId: suite.kafkaCluster.Id,
 		AccountId:      "testAccount",
-		Status:         v1.Connector_RUNNING,
+		Status:         connectv1.Connector_RUNNING,
 		UserConfigs:    map[string]string{},
 	}
 }
@@ -60,10 +59,10 @@ func (suite *CatalogTestSuite) SetupTest() {
 		},
 	}
 	suite.connectMock = &ccsdkmock.Connect{
-		ValidateFunc: func(arg0 context.Context, arg1 *v1.ConnectorConfig, arg2 bool) (connector *v1.ConfigInfos, e error) {
+		ValidateFunc: func(arg0 context.Context, arg1 *connectv1.ConnectorConfig, arg2 bool) (connector *connectv1.ConfigInfos, e error) {
 			return nil, errors.New("config.name")
 		},
-		GetPluginsFunc: func(arg0 context.Context, arg1 *v1.Connector, arg2 string) (infos []*v1.ConnectorPluginInfo, e error) {
+		GetPluginsFunc: func(arg0 context.Context, arg1 *connectv1.Connector, arg2 string) (infos []*connectv1.ConnectorPluginInfo, e error) {
 			return nil, nil
 		},
 	}

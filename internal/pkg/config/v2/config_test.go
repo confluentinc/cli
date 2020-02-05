@@ -1,4 +1,4 @@
-package v1
+package v2
 
 import (
 	"fmt"
@@ -15,6 +15,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/version"
 
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -43,7 +44,7 @@ func TestConfig_Load(t *testing.T) {
 		CredentialType: 0,
 	}
 	state := &ContextState{
-		Auth: &v0.AuthConfig{
+		Auth: &v1.AuthConfig{
 			User: &orgv1.User{
 				Id:    123,
 				Email: "test-user@email",
@@ -67,7 +68,7 @@ func TestConfig_Load(t *testing.T) {
 		PlatformName:   platform.Name,
 		Credential:     loginCredential,
 		CredentialName: loginCredential.Name,
-		KafkaClusters: map[string]*v0.KafkaClusterConfig{
+		KafkaClusters: map[string]*v1.KafkaClusterConfig{
 			"anonymous-id": {
 				ID:          "anonymous-id",
 				Name:        "anonymous-cluster",
@@ -98,7 +99,7 @@ func TestConfig_Load(t *testing.T) {
 		PlatformName:   platform.Name,
 		Credential:     apiCredential,
 		CredentialName: apiCredential.Name,
-		KafkaClusters: map[string]*v0.KafkaClusterConfig{
+		KafkaClusters: map[string]*v1.KafkaClusterConfig{
 			"anonymous-id": {
 				ID:          "anonymous-id",
 				Name:        "anonymous-cluster",
@@ -276,7 +277,7 @@ func TestConfig_Save(t *testing.T) {
 		CredentialType: 0,
 	}
 	state := &ContextState{
-		Auth: &v0.AuthConfig{
+		Auth: &v1.AuthConfig{
 			User: &orgv1.User{
 				Id:    123,
 				Email: "test-user@email",
@@ -300,7 +301,7 @@ func TestConfig_Save(t *testing.T) {
 		PlatformName:   platform.Name,
 		Credential:     loginCredential,
 		CredentialName: loginCredential.Name,
-		KafkaClusters: map[string]*v0.KafkaClusterConfig{
+		KafkaClusters: map[string]*v1.KafkaClusterConfig{
 			"anonymous-id": {
 				ID:          "anonymous-id",
 				Name:        "anonymous-cluster",
@@ -331,7 +332,7 @@ func TestConfig_Save(t *testing.T) {
 		PlatformName:   platform.Name,
 		Credential:     apiCredential,
 		CredentialName: apiCredential.Name,
-		KafkaClusters: map[string]*v0.KafkaClusterConfig{
+		KafkaClusters: map[string]*v1.KafkaClusterConfig{
 			"anonymous-id": {
 				ID:          "anonymous-id",
 				Name:        "anonymous-cluster",
@@ -494,7 +495,7 @@ func TestConfig_AddContext(t *testing.T) {
 		platformName           string
 		credentialName         string
 		credential             *Credential
-		kafkaClusters          map[string]*v0.KafkaClusterConfig
+		kafkaClusters          map[string]*v1.KafkaClusterConfig
 		kafka                  string
 		schemaRegistryClusters map[string]*SchemaRegistryCluster
 		state                  *ContextState

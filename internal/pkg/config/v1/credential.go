@@ -1,23 +1,26 @@
 package v1
 
-import v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
+import (
+	"fmt"
+
+	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
+)
 
 // Credential represent an authentication mechanism for a Platform
 type Credential struct {
-	Name           string             `json:"name"`
-	Username       string             `json:"username"`
-	Password       string             `json:"password"`
-	APIKeyPair     *v0.APIKeyPair     `json:"api_key_pair"`
-	CredentialType CredentialType `json:"credential_type"`
+	Username       string
+	Password       string
+	APIKeyPair     *v0.APIKeyPair
+	CredentialType CredentialType
 }
-type CredentialType int
 
-const (
-	Username CredentialType = iota
-	APIKey
-)
-
-func (c CredentialType) String() string {
-	credTypes := [...]string{"username", "api-key"}
-	return credTypes[c]
+func (c *Credential) String() string {
+	switch c.CredentialType {
+	case Username:
+		return fmt.Sprintf("%d-%s", c.CredentialType, c.Username)
+	case APIKey:
+		return fmt.Sprintf("%d-%s", c.CredentialType, c.APIKeyPair.Key)
+	default:
+		panic(fmt.Sprintf("Credential type %d unknown.", c.CredentialType))
+	}
 }

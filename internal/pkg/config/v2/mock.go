@@ -1,4 +1,4 @@
-package v1
+package v2
 
 import (
 	"fmt"
@@ -7,6 +7,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
@@ -17,7 +18,7 @@ func AuthenticatedConfigMock() *Config {
 		Logger:     log.New(),
 	})
 	conf.Logger = log.New()
-	auth := &v0.AuthConfig{
+	auth := &v1.AuthConfig{
 		User: &orgv1.User{
 			Id:    123,
 			Email: "cli-mock-email@confluent.io",
@@ -41,7 +42,7 @@ func AuthenticatedConfigMock() *Config {
 		AuthToken: "some.token.here",
 	}
 	conf.Credentials[credential.Name] = credential
-	kafkaClusters := map[string]*v0.KafkaClusterConfig{
+	kafkaClusters := map[string]*v1.KafkaClusterConfig{
 		"lkc-0000": {
 			ID:          "lkc-0000",
 			Name:        "toby-flenderson",

@@ -129,7 +129,7 @@ func (r *FlagResolverImpl) ResolveEnvironmentFlag(cmd *cobra.Command) (string, e
 const (
 	KafkaResourceType = "kafka"
 	SrResourceType    = "schema-registry"
-	KSQLResourceType = "ksql"
+	KSQLResourceType  = "ksql"
 )
 
 func (r *FlagResolverImpl) ResolveResourceId(cmd *cobra.Command) (resourceType string, resourceId string, err error) {
@@ -143,12 +143,12 @@ func (r *FlagResolverImpl) ResolveResourceId(cmd *cobra.Command) (resourceType s
 	}
 	if strings.HasPrefix(resourceId, "lsrc-") {
 		// Resource is schema registry.
-		resourceType =  SrResourceType
+		resourceType = SrResourceType
 	} else if strings.HasPrefix(resourceId, "lksqlc-") {
 		resourceType = KSQLResourceType
 	} else {
 		// Resource is Kafka cluster.
-		resourceType =  KafkaResourceType
+		resourceType = KafkaResourceType
 	}
 	return resourceType, resourceId, nil
 }

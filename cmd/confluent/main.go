@@ -15,7 +15,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/config/load"
-	"github.com/confluentinc/cli/internal/pkg/config/v1"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/metric"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
@@ -28,7 +28,8 @@ var (
 	commit     = ""
 	date       = ""
 	host       = ""
-	cliName    = "confluent"
+	// TODO: REVERT TO CONFLUENT
+	cliName    = "ccloud"
 	segmentKey = "KDsYPLPBNVB1IPJIN5oqrXnxQT9iKezo"
 	isTest     = "false"
 )
@@ -44,14 +45,14 @@ func main() {
 
 	metricSink := metric.NewSink()
 
-	var cfg *v1.Config
+	var cfg *v2.Config
 
 	params := &config.Params{
 		CLIName:    cliName,
 		MetricSink: metricSink,
 		Logger:     logger,
 	}
-	cfg = v1.New(params)
+	cfg = v2.New(params)
 	cfg, err = load.LoadAndMigrate(cfg)
 	if err != nil {
 		errFmt := "unable to load config: %v\n"

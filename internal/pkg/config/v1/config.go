@@ -11,7 +11,6 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
-	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
@@ -22,22 +21,28 @@ const (
 // Config represents the CLI configuration.
 type Config struct {
 	*config.Params     `json:"-"`
-	Filename           string                   `json:"-"`
-	DisableUpdateCheck bool                     `json:"disable_update_check"`
-	DisableUpdates     bool                     `json:"disable_updates"`
-	NoBrowser          bool                     `json:"no_browser" hcl:"no_browser"`
-	Platforms          map[string]*Platform     `json:"platforms,omitempty"`
-	Credentials        map[string]*Credential   `json:"credentials,omitempty"`
-	Contexts           map[string]*Context      `json:"contexts,omitempty"`
-	ContextStates      map[string]*ContextState `json:"context_states,omitempty"`
-	CurrentContext     string                   `json:"current_context"`
-	AnonymousId        string                   `json:"anonymous_id,omitempty"`
+	Filename           string                 `json:"-"`
+	DisableUpdateCheck bool                   `json:"disable_update_check"`
+	DisableUpdates     bool                   `json:"disable_updates"`
+	AuthURL            string                 `json:"auth_url"`
+	NoBrowser          bool                   `json:"no_browser" hcl:"no_browser"`
+	AuthToken          string                 `json:"auth_token"`
+	Auth               *AuthConfig            `json:"auth"`
+	Platforms          map[string]*Platform   `json:"platforms"`
+	Credentials        map[string]*Credential `json:"credentials"`
+	Contexts           map[string]*Context    `json:"contexts"`
+	CurrentContext     string                 `json:"current_context"`
+	AnonymousId        string
 }
 
 // New initializes a new Config object
-func New(params *config.Params) *Config {
-	c := &Config{}
-	c.SetParams(params)
+func New(cfg ...*Config) *Config {
+	var c *Config
+	if cfg == nil {
+		c = &Config{}
+	} else {
+		c = cfg[0]
+	}
 	if c.Params == nil {
 		c.Params = &config.Params{}
 	}
@@ -48,7 +53,6 @@ func New(params *config.Params) *Config {
 	c.Platforms = map[string]*Platform{}
 	c.Credentials = map[string]*Credential{}
 	c.Contexts = map[string]*Context{}
-	c.ContextStates = map[string]*ContextState{}
 	c.AnonymousId = uuid.New().String()
 	return c
 }
@@ -58,7 +62,6 @@ func (c *Config) SetParams(params *config.Params) {
 }
 
 // Load reads the CLI config from disk.
-// Save a default version if none exists yet.
 func (c *Config) Load() error {
 	filename, err := c.getFilename()
 	if err != nil {
@@ -79,36 +82,11 @@ func (c *Config) Load() error {
 	if err != nil {
 		return errors.Wrapf(err, "unable to parse config file: %s", filename)
 	}
-	for _, context := range c.Contexts {
-		// Some "pre-validation"
-		if context.Name == "" {
-			return errors.New("one of the existing contexts has no name")
-		}
-		if context.CredentialName == "" {
-			return &errors.UnspecifiedCredentialError{ContextName: context.Name}
-		}
-		if context.PlatformName == "" {
-			return &errors.UnspecifiedPlatformError{ContextName: context.Name}
-		}
-		context.State = c.ContextStates[context.Name]
-		context.Credential = c.Credentials[context.CredentialName]
-		context.Platform = c.Platforms[context.PlatformName]
-		context.Logger = c.Logger
-		context.Config = c
-	}
-	err = c.Validate()
-	if err != nil {
-		return err
-	}
-	return nil
+	return c.Validate()
 }
 
 // Save writes the CLI config to disk.
 func (c *Config) Save() error {
-	err := c.Validate()
-	if err != nil {
-		return err
-	}
 	cfg, err := json.MarshalIndent(c, "", "  ")
 	if err != nil {
 		return errors.Wrapf(err, "unable to marshal config")
@@ -128,47 +106,14 @@ func (c *Config) Save() error {
 	return nil
 }
 
+// V1 Config does not have validation functionality.
 func (c *Config) Validate() error {
-	// Validate that current context exists.
-	if c.CurrentContext != "" {
-		if _, ok := c.Contexts[c.CurrentContext]; !ok {
-			c.Logger.Trace("current context does not exist")
-			return errors.Errorf("the current context does not exist.")
-		}
-	}
-	// Validate that every context:
-	// 1. Has no hanging references between the context and the config.
-	// 2. Is mapped by name correctly in the config.
+	// Hack to differentiate between v0 and v1 configs retroactively.
 	for _, context := range c.Contexts {
-		err := context.validate()
-		if err != nil {
-			c.Logger.Trace("context validation error")
-			return err
-		}
-		if _, ok := c.Credentials[context.CredentialName]; !ok {
-			c.Logger.Trace("unspecified credential error")
-			return &errors.UnspecifiedCredentialError{ContextName: context.Name}
-		}
-		if _, ok := c.Platforms[context.PlatformName]; !ok {
-			c.Logger.Trace("unspecified platform error")
-			return &errors.UnspecifiedPlatformError{ContextName: context.Name}
-		}
-		if _, ok := c.ContextStates[context.Name]; !ok {
-			c.ContextStates[context.Name] = new(ContextState)
-		}
-		if *c.ContextStates[context.Name] != *context.State {
-			c.Logger.Trace(fmt.Sprintf("state of context %s in config does not match actual state of context", context.Name))
-			return c.corruptedConfigError()
+		if context.Name == "" {
+			return errors.New("context has no name")
 		}
 	}
-	// Validate that all context states are mapped to an existing context.
-	for contextName := range c.ContextStates {
-		if _, ok := c.Contexts[contextName]; !ok {
-			c.Logger.Trace("context state mapped to nonexistent context")
-			return c.corruptedConfigError()
-		}
-	}
-
 	return nil
 }
 
@@ -182,11 +127,11 @@ func (c *Config) DeleteContext(name string) error {
 	if c.CurrentContext == name {
 		c.CurrentContext = ""
 	}
-	delete(c.ContextStates, name)
 	return nil
 }
 
-// FindContext finds a context by name, and returns nil if not found.
+// FindContext finds a context by name,
+// and returns a formatted error if not found.
 func (c *Config) FindContext(name string) (*Context, error) {
 	context, ok := c.Contexts[name]
 	if !ok {
@@ -195,34 +140,31 @@ func (c *Config) FindContext(name string) (*Context, error) {
 	return context, nil
 }
 
-func (c *Config) AddContext(name string, platformName string, credentialName string,
-	kafkaClusters map[string]*v0.KafkaClusterConfig, kafka string,
-	schemaRegistryClusters map[string]*SchemaRegistryCluster, state *ContextState) error {
+func newContext(name string, platform *Platform, credential *Credential,
+	kafkaClusters map[string]*KafkaClusterConfig, kafka string,
+	schemaRegistryClusters map[string]*SchemaRegistryCluster) *Context {
+	return &Context{
+		Name:                   name,
+		Platform:               platform.String(),
+		Credential:             credential.String(),
+		KafkaClusters:          kafkaClusters,
+		Kafka:                  kafka,
+		SchemaRegistryClusters: schemaRegistryClusters,
+	}
+}
+
+func (c *Config) AddContext(name string, platform *Platform, credential *Credential,
+	kafkaClusters map[string]*KafkaClusterConfig, kafka string,
+	schemaRegistryClusters map[string]*SchemaRegistryCluster) error {
 	if _, ok := c.Contexts[name]; ok {
 		return fmt.Errorf("context \"%s\" already exists", name)
 	}
-	credential, ok := c.Credentials[credentialName]
-	if !ok {
-		return fmt.Errorf("credential \"%s\" not found", credentialName)
-	}
-	platform, ok := c.Platforms[platformName]
-	if !ok {
-		return fmt.Errorf("platform \"%s\" not found", platformName)
-	}
-	context, err := newContext(name, platform, credential, kafkaClusters, kafka,
-		schemaRegistryClusters, state, c)
-	if err != nil {
-		return err
-	}
+	context := newContext(name, platform, credential, kafkaClusters, kafka,
+		schemaRegistryClusters)
+	// Update config maps.
 	c.Contexts[name] = context
-	c.ContextStates[name] = context.State
-	err = c.Validate()
-	if err != nil {
-		return err
-	}
-	if c.CurrentContext == "" {
-		c.CurrentContext = context.Name
-	}
+	c.Credentials[context.Credential] = credential
+	c.Platforms[context.Platform] = platform
 	return c.Save()
 }
 
@@ -244,22 +186,6 @@ func (c *Config) Name() string {
 	return name
 }
 
-func (c *Config) SaveCredential(credential *Credential) error {
-	if credential.Name == "" {
-		return fmt.Errorf("credential must have a name")
-	}
-	c.Credentials[credential.Name] = credential
-	return c.Save()
-}
-
-func (c *Config) SavePlatform(platform *Platform) error {
-	if platform.Name == "" {
-		return fmt.Errorf("platform must have a name")
-	}
-	c.Platforms[platform.Name] = platform
-	return c.Save()
-}
-
 func (c *Config) Support() string {
 	support := "https://confluent.io; support@confluent.io"
 	if c.CLIName == "ccloud" {
@@ -278,23 +204,139 @@ func (c *Config) APIName() string {
 	return name
 }
 
-// Context returns the user specified context if it exists, 
-// the current Context, or nil if there's no context set.
-func (c *Config) Context() *Context {
-	return c.Contexts[c.CurrentContext]
+// Context returns the current Context object.
+func (c *Config) Context() (*Context, error) {
+	if c.CurrentContext == "" {
+		return nil, errors.ErrNoContext
+	}
+	context, err := c.FindContext(c.CurrentContext)
+	if err != nil {
+		return nil, err
+	}
+	return context, nil
 }
 
-func (c *Config) HasLogin() bool {
-	ctx := c.Context()
-	if ctx == nil {
+// CredentialType returns the credential type of the current Context.
+// It returns ErrNoContext if there's no current context,
+// or UnspecifiedCredentialError if there is a current context with no credentials,
+// informing the user the config file has been corrupted.
+func (c *Config) CredentialType() (CredentialType, error) {
+	context, err := c.Context()
+	if err != nil {
+		return -1, err
+	}
+	if cred, ok := c.Credentials[context.Credential]; ok {
+		return cred.CredentialType, nil
+	}
+	err = &errors.UnspecifiedCredentialError{ContextName: c.CurrentContext}
+	return -1, err
+}
+
+// SchemaRegistryCluster returns the SchemaRegistryCluster for the current Context,
+// or an empty SchemaRegistryCluster if there is none set,
+// or an error if no context exists/if the user is not logged in.
+func (c *Config) SchemaRegistryCluster() (*SchemaRegistryCluster, error) {
+	context, err := c.Context()
+	if err != nil {
+		return nil, err
+	}
+	if c.Auth == nil || c.Auth.Account == nil {
+		return nil, errors.ErrNotLoggedIn
+	}
+	sr := context.SchemaRegistryClusters[c.Auth.Account.Id]
+	if sr == nil {
+		if context.SchemaRegistryClusters == nil {
+			context.SchemaRegistryClusters = map[string]*SchemaRegistryCluster{}
+		}
+		context.SchemaRegistryClusters[c.Auth.Account.Id] = &SchemaRegistryCluster{}
+	}
+	return context.SchemaRegistryClusters[c.Auth.Account.Id], nil
+}
+
+// KafkaClusterConfig returns the KafkaClusterConfig for the current Context.
+// or nil if there is none set.
+func (c *Config) KafkaClusterConfig() (*KafkaClusterConfig, error) {
+	context, err := c.Context()
+	if err != nil {
+		return nil, err
+	}
+	kafka := context.Kafka
+	if kafka == "" {
+		return nil, nil
+	}
+	kcc, ok := context.KafkaClusters[kafka]
+	if !ok {
+		configPath, err := c.getFilename()
+		if err != nil {
+			err = fmt.Errorf("an error resolving the config filepath at %s has occurred. "+
+				"Please try moving the file to a different location", c.Filename)
+			return nil, err
+		}
+		errMsg := "the configuration of context \"%s\" has been corrupted. " +
+			"To fix, please remove the config file located at %s, and run `login` or `init`"
+		err = fmt.Errorf(errMsg, context.Name, configPath)
+		return nil, err
+	}
+	return kcc, nil
+}
+
+// CheckLogin returns an error if the user is not logged in
+// with a username and password.
+func (c *Config) CheckLogin() error {
+	credType, err := c.CredentialType()
+	if err != nil {
+		return err
+	}
+	switch credType {
+	case Username:
+		if c.AuthToken == "" && (c.Auth == nil || c.Auth.Account == nil || c.Auth.Account.Id == "") {
+			return errors.ErrNotLoggedIn
+		}
+	case APIKey:
+		return errors.ErrNotLoggedIn
+	}
+	return nil
+}
+
+// CheckHasAPIKey returns nil if the specified cluster exists in the current context
+// and has an active API key, error otherwise.
+func (c *Config) CheckHasAPIKey(clusterID string) error {
+	context, err := c.Context()
+	if err != nil {
+		return err
+	}
+
+	cluster, found := context.KafkaClusters[clusterID]
+	if !found {
+		return fmt.Errorf("unknown kafka cluster: %s", clusterID)
+	}
+	if cluster.APIKey == "" {
+		return &errors.UnspecifiedAPIKeyError{ClusterID: clusterID}
+	}
+	return nil
+}
+
+func (c *Config) CheckSchemaRegistryHasAPIKey() bool {
+	srCluster, err := c.SchemaRegistryCluster()
+	if err != nil {
 		return false
 	}
-	return ctx.hasLogin()
+	return !(srCluster.SrCredentials == nil || len(srCluster.SrCredentials.Key) == 0 || len(srCluster.SrCredentials.Secret) == 0)
 }
 
 func (c *Config) ResetAnonymousId() error {
 	c.AnonymousId = uuid.New().String()
 	return c.Save()
+}
+
+func (c *Config) DeleteUserAuth() error {
+	c.AuthToken = ""
+	c.Auth = nil
+	err := c.Save()
+	if err != nil {
+		return errors.Wrap(err, "Unable to delete user auth")
+	}
+	return nil
 }
 
 func (c *Config) getFilename() (string, error) {
@@ -303,37 +345,7 @@ func (c *Config) getFilename() (string, error) {
 	}
 	filename, err := homedir.Expand(c.Filename)
 	if err != nil {
-		c.Logger.Error(err)
-		// Return a more user-friendly error.
-		err = fmt.Errorf("an error resolving the config filepath at %s has occurred. "+
-			"Please try moving the file to a different location", c.Filename)
 		return "", err
 	}
 	return filename, nil
-}
-
-// corruptedConfigError returns an error signaling that the config file has been corrupted,
-// or another error if the config's filepath is unable to be resolved.
-func (c *Config) corruptedConfigError() error {
-	configPath, err := c.getFilename()
-	if err != nil {
-		return err
-	}
-	errMsg := "the config file located at %s has been corrupted. " +
-		"To fix, please remove the config file, and run `login` or `init`"
-	err = fmt.Errorf(errMsg, configPath)
-	return err
-}
-
-// corruptedContextError returns an error signaling that the specified context's,
-// config has been corrupted, or another error if the config's filepath is unable to be resolved.
-func (c *Config) corruptedContextError(contextName string) error {
-	configPath, err := c.getFilename()
-	if err != nil {
-		return err
-	}
-	errMsg := "the configuration of context '%s' has been corrupted. " +
-		"To fix, please remove the config file located at %s, and run `login` or `init`"
-	err = fmt.Errorf(errMsg, contextName, configPath)
-	return err
 }

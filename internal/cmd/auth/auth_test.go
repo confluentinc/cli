@@ -25,7 +25,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/cli/internal/pkg/config/v1"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	cliMock "github.com/confluentinc/cli/mock"
 )
@@ -193,7 +193,7 @@ func TestLogout(t *testing.T) {
 	prompt := prompt("cody@confluent.io", "iamrobin")
 	auth := &sdkMock.Auth{}
 	cmds, _ := newAuthCommand(prompt, auth, nil, "ccloud", req)
-	cmds.config = v1.AuthenticatedConfigMock()
+	cmds.config = v2.AuthenticatedConfigMock()
 	output, err := pcmd.ExecuteCommand(cmds.Commands[1].Command)
 	req.NoError(err)
 	req.Contains(output, "You are now logged out")
@@ -219,7 +219,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 	req := require.New(t)
 	mdsConfig := mds.NewConfiguration()
 	mdsClient := mds.NewAPIClient(mdsConfig)
-	cfg := v1.New(&config.Params{
+	cfg := v2.New(&config.Params{
 		CLIName:    "confluent",
 		MetricSink: nil,
 		Logger:     log.New(),
@@ -283,7 +283,7 @@ func prompt(username, password string) *cliMock.Prompt {
 	}
 }
 
-func newAuthCommand(prompt pcmd.Prompt, auth *sdkMock.Auth, user *sdkMock.User, cliName string, req *require.Assertions) (*commands, *v1.Config) {
+func newAuthCommand(prompt pcmd.Prompt, auth *sdkMock.Auth, user *sdkMock.User, cliName string, req *require.Assertions) (*commands, *v2.Config) {
 	var mockAnonHTTPClientFactory = func(baseURL string, logger *log.Logger) *ccloud.Client {
 		req.Equal("https://confluent.cloud", baseURL)
 		return &ccloud.Client{Auth: auth, User: user}
@@ -291,7 +291,7 @@ func newAuthCommand(prompt pcmd.Prompt, auth *sdkMock.Auth, user *sdkMock.User, 
 	var mockJwtHTTPClientFactory = func(ctx context.Context, jwt, baseURL string, logger *log.Logger) *ccloud.Client {
 		return &ccloud.Client{Auth: auth, User: user}
 	}
-	cfg := v1.New(&config.Params{
+	cfg := v2.New(&config.Params{
 		CLIName:    cliName,
 		MetricSink: nil,
 		Logger:     nil,

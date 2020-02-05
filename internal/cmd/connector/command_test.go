@@ -10,10 +10,10 @@ import (
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go/mock"
-	v1 "github.com/confluentinc/ccloudapis/connect/v1"
+	connectv1 "github.com/confluentinc/ccloudapis/connect/v1"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 
-	v12 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
@@ -24,17 +24,17 @@ const (
 
 type ConnectTestSuite struct {
 	suite.Suite
-	conf               *v12.Config
+	conf               *v2.Config
 	kafkaCluster       *kafkav1.KafkaCluster
-	connector          *v1.Connector
-	connectorInfo      *v1.ConnectorInfo
+	connector          *connectv1.Connector
+	connectorInfo      *connectv1.ConnectorInfo
 	connectMock        *ccsdkmock.Connect
 	kafkaMock          *ccsdkmock.Kafka
-	connectorExpansion *v1.ConnectorExpansion
+	connectorExpansion *connectv1.ConnectorExpansion
 }
 
 func (suite *ConnectTestSuite) SetupSuite() {
-	suite.conf = v12.AuthenticatedConfigMock()
+	suite.conf = v2.AuthenticatedConfigMock()
 	ctx := suite.conf.Context()
 	suite.kafkaCluster = &kafkav1.KafkaCluster{
 		Id:         ctx.KafkaClusters[ctx.Kafka].ID,
@@ -42,29 +42,29 @@ func (suite *ConnectTestSuite) SetupSuite() {
 		AccountId:  "testAccount",
 		Enterprise: true,
 	}
-	suite.connector = &v1.Connector{
+	suite.connector = &connectv1.Connector{
 		Name:           connectorName,
 		Id:             connectorID,
 		KafkaClusterId: suite.kafkaCluster.Id,
 		AccountId:      "testAccount",
-		Status:         v1.Connector_RUNNING,
+		Status:         connectv1.Connector_RUNNING,
 		UserConfigs:    map[string]string{},
 	}
 
-	suite.connectorInfo = &v1.ConnectorInfo{
+	suite.connectorInfo = &connectv1.ConnectorInfo{
 		Name: connectorName,
 		Type: "source",
 	}
 
-	suite.connectorExpansion = &v1.ConnectorExpansion{
-		Id: &v1.ConnectorId{Id: connectorID},
-		Info: &v1.ConnectorInfo{
+	suite.connectorExpansion = &connectv1.ConnectorExpansion{
+		Id: &connectv1.ConnectorId{Id: connectorID},
+		Info: &connectv1.ConnectorInfo{
 			Name:   connectorName,
 			Type:   "Sink",
 			Config: map[string]string{},
 		},
-		Status: &v1.ConnectorStateInfo{Name: connectorName, Connector: &v1.ConnectorState{State: "Running"},
-			Tasks: []*v1.TaskState{{Id: 1, State: "Running"}},
+		Status: &connectv1.ConnectorStateInfo{Name: connectorName, Connector: &connectv1.ConnectorState{State: "Running"},
+			Tasks: []*connectv1.TaskState{{Id: 1, State: "Running"}},
 		}}
 
 }
@@ -76,31 +76,31 @@ func (suite *ConnectTestSuite) SetupTest() {
 		},
 	}
 	suite.connectMock = &ccsdkmock.Connect{
-		CreateFunc: func(arg0 context.Context, arg1 *v1.ConnectorConfig) (connector *v1.ConnectorInfo, e error) {
+		CreateFunc: func(arg0 context.Context, arg1 *connectv1.ConnectorConfig) (connector *connectv1.ConnectorInfo, e error) {
 			return suite.connectorInfo, nil
 		},
-		UpdateFunc: func(arg0 context.Context, arg1 *v1.ConnectorConfig) (info *v1.ConnectorInfo, e error) {
+		UpdateFunc: func(arg0 context.Context, arg1 *connectv1.ConnectorConfig) (info *connectv1.ConnectorInfo, e error) {
 			return suite.connectorInfo, nil
 		},
-		PauseFunc: func(arg0 context.Context, arg1 *v1.Connector) error {
+		PauseFunc: func(arg0 context.Context, arg1 *connectv1.Connector) error {
 			return nil
 		},
-		ResumeFunc: func(arg0 context.Context, arg1 *v1.Connector) error {
+		ResumeFunc: func(arg0 context.Context, arg1 *connectv1.Connector) error {
 			return nil
 		},
-		DeleteFunc: func(arg0 context.Context, arg1 *v1.Connector) error {
+		DeleteFunc: func(arg0 context.Context, arg1 *connectv1.Connector) error {
 			return nil
 		},
-		ListWithExpansionsFunc: func(arg0 context.Context, arg1 *v1.Connector, arg2 string) (expansions map[string]*v1.ConnectorExpansion, e error) {
-			return map[string]*v1.ConnectorExpansion{connectorID: suite.connectorExpansion}, nil
+		ListWithExpansionsFunc: func(arg0 context.Context, arg1 *connectv1.Connector, arg2 string) (expansions map[string]*connectv1.ConnectorExpansion, e error) {
+			return map[string]*connectv1.ConnectorExpansion{connectorID: suite.connectorExpansion}, nil
 		},
-		GetExpansionByIdFunc: func(arg0 context.Context, arg1 *v1.Connector) (expansion *v1.ConnectorExpansion, e error) {
+		GetExpansionByIdFunc: func(arg0 context.Context, arg1 *connectv1.Connector) (expansion *connectv1.ConnectorExpansion, e error) {
 			return suite.connectorExpansion, nil
 		},
-		GetExpansionByNameFunc: func(ctx context.Context, connector *v1.Connector) (expansion *v1.ConnectorExpansion, e error) {
+		GetExpansionByNameFunc: func(ctx context.Context, connector *connectv1.Connector) (expansion *connectv1.ConnectorExpansion, e error) {
 			return suite.connectorExpansion, nil
 		},
-		GetFunc: func(arg0 context.Context, arg1 *v1.Connector) (connector *v1.ConnectorInfo, e error) {
+		GetFunc: func(arg0 context.Context, arg1 *connectv1.Connector) (connector *connectv1.ConnectorInfo, e error) {
 			return suite.connectorInfo, nil
 		},
 	}

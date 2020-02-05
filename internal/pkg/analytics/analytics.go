@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	"github.com/confluentinc/cli/internal/pkg/config/v1"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
@@ -83,7 +83,7 @@ type Client interface {
 type ClientObj struct {
 	cliName string
 	client  segment.Client
-	config  *v1.Config
+	config  *v2.Config
 	clock   clockwork.Clock
 
 	// cache data until we flush events to segment (when each cmd call finishes)
@@ -102,7 +102,7 @@ type userInfo struct {
 	apiKey         string
 }
 
-func NewAnalyticsClient(cliName string, cfg *v1.Config, version string, segmentClient segment.Client, clock clockwork.Clock) *ClientObj {
+func NewAnalyticsClient(cliName string, cfg *v2.Config, version string, segmentClient segment.Client, clock clockwork.Clock) *ClientObj {
 	client := &ClientObj{
 		cliName:     cliName,
 		client:      segmentClient,
@@ -170,7 +170,7 @@ func (a *ClientObj) SendCommandSucceeded() error {
 	}
 	// only reset anonymous id if logout from a username credential
 	// preventing logouts that have no effects from resetting anonymous id
-	if a.commandType == Logout && a.user.credentialType == v1.Username.String() {
+	if a.commandType == Logout && a.user.credentialType == v2.Username.String() {
 		if err := a.config.ResetAnonymousId(); err != nil {
 			return err
 		}
@@ -221,7 +221,7 @@ func (a *ClientObj) identify() error {
 	traits.Set(VersionPropertiesKey, a.cliVersion)
 	traits.Set(CliNameTraitsKey, a.config.CLIName)
 	traits.Set(CredentialPropertiesKey, a.user.credentialType)
-	if a.user.credentialType == v1.APIKey.String() {
+	if a.user.credentialType == v2.APIKey.String() {
 		traits.Set(ApiKeyPropertiesKey, a.user.apiKey)
 	}
 	identify.Traits = traits
@@ -268,11 +268,11 @@ func (a *ClientObj) addArgsProperties(cmd *cobra.Command, args []string) {
 
 func (a *ClientObj) addUserProperties() {
 	a.properties.Set(CredentialPropertiesKey, a.user.credentialType)
-	if a.config.CLIName == "ccloud" && a.user.credentialType == v1.Username.String() {
+	if a.config.CLIName == "ccloud" && a.user.credentialType == v2.Username.String() {
 		a.properties.Set(OrgIdPropertiesKey, a.user.organizationId)
 		a.properties.Set(EmailPropertiesKey, a.user.email)
 	}
-	if a.user.credentialType == v1.APIKey.String() {
+	if a.user.credentialType == v2.APIKey.String() {
 		a.properties.Set(ApiKeyPropertiesKey, a.user.apiKey)
 	}
 }
@@ -284,7 +284,7 @@ func (a *ClientObj) getUser() userInfo {
 	if user.credentialType == "" {
 		return user
 	}
-	if user.credentialType == v1.APIKey.String() {
+	if user.credentialType == v2.APIKey.String() {
 		user.apiKey = a.getCredApiKey()
 	}
 	if a.cliName == "ccloud" {
@@ -323,12 +323,12 @@ func (a *ClientObj) getCredentialType() string {
 		return ""
 	}
 	switch ctx.Credential.CredentialType {
-	case v1.Username:
+	case v2.Username:
 		if a.config.HasLogin() {
-			return v1.Username.String()
+			return v2.Username.String()
 		}
-	case v1.APIKey:
-		return v1.APIKey.String()
+	case v2.APIKey:
+		return v2.APIKey.String()
 	}
 	return ""
 }
@@ -362,11 +362,11 @@ func (a *ClientObj) isSwitchUserLogin(prevUser userInfo) bool {
 	if prevUser.credentialType != a.user.credentialType {
 		return true
 	}
-	if a.user.credentialType == v1.Username.String() {
+	if a.user.credentialType == v2.Username.String() {
 		if prevUser.id != a.user.id {
 			return true
 		}
-	} else if a.user.credentialType == v1.APIKey.String() {
+	} else if a.user.credentialType == v2.APIKey.String() {
 		if a.user.apiKey != a.user.apiKey {
 			return true
 		}

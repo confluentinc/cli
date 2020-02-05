@@ -107,7 +107,6 @@ func (s *CLITestSuite) Test_Confluent_Iam_Role_List() {
 	}
 }
 
-
 func (s *CLITestSuite) Test_Confluent_Iam_Role_Describe() {
 	tests := []CLITest{
 		{

@@ -16,7 +16,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
-	"github.com/confluentinc/cli/internal/pkg/config/v1"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
@@ -28,15 +28,15 @@ const (
 
 type SchemaTestSuite struct {
 	suite.Suite
-	conf         *v1.Config
-	kafkaCluster *kafkav1.KafkaCluster
-	srCluster    *srv1.SchemaRegistryCluster
-	srClientMock *srsdk.APIClient
+	conf             *v2.Config
+	kafkaCluster     *kafkav1.KafkaCluster
+	srCluster        *srv1.SchemaRegistryCluster
+	srClientMock     *srsdk.APIClient
 	srMothershipMock *mock.SchemaRegistry
 }
 
 func (suite *SchemaTestSuite) SetupSuite() {
-	suite.conf = v1.AuthenticatedConfigMock()
+	suite.conf = v2.AuthenticatedConfigMock()
 	suite.srMothershipMock = &mock.SchemaRegistry{
 		CreateSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *srv1.SchemaRegistryClusterConfig) (*srv1.SchemaRegistryCluster, error) {
 			return suite.srCluster, nil

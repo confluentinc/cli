@@ -13,7 +13,7 @@ import (
 	"github.com/confluentinc/go-printer"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config/v1"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
@@ -91,7 +91,7 @@ func (s *ScopedIdService) DescribeCluster(ctx context.Context, url string) (*Sco
 }
 
 // New returns the Cobra command for `cluster`.
-func New(prerunner pcmd.PreRunner, config *v1.Config, client Metadata) *cobra.Command {
+func New(prerunner pcmd.PreRunner, config *v2.Config, client Metadata) *cobra.Command {
 	cmd := &command{
 		CLICommand: pcmd.NewAnonymousCLICommand(&cobra.Command{
 			Use:   "cluster",

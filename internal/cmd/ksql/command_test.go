@@ -5,18 +5,18 @@ import (
 	"context"
 	"testing"
 
-	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/confluentinc/ccloud-sdk-go/mock"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
-	v1 "github.com/confluentinc/ccloudapis/ksql/v1"
+	ksqlv1 "github.com/confluentinc/ccloudapis/ksql/v1"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/acl"
-	v12 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config/v2"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
@@ -64,9 +64,9 @@ const (
 
 type KSQLTestSuite struct {
 	suite.Suite
-	conf         *v12.Config
+	conf         *v2.Config
 	kafkaCluster *kafkav1.KafkaCluster
-	ksqlCluster  *v1.KSQLCluster
+	ksqlCluster  *ksqlv1.KSQLCluster
 	serviceAcct  *orgv1.User
 	ksqlc        *mock.MockKSQL
 	kafkac       *mock.Kafka
@@ -74,8 +74,8 @@ type KSQLTestSuite struct {
 }
 
 func (suite *KSQLTestSuite) SetupSuite() {
-	suite.conf = v12.AuthenticatedConfigMock()
-	suite.ksqlCluster = &v1.KSQLCluster{
+	suite.conf = v2.AuthenticatedConfigMock()
+	suite.ksqlCluster = &ksqlv1.KSQLCluster{
 		Id:                ksqlClusterID,
 		KafkaClusterId:    suite.conf.Context().Kafka,
 		PhysicalClusterId: physicalClusterID,
@@ -98,16 +98,16 @@ func (suite *KSQLTestSuite) SetupTest() {
 		},
 	}
 	suite.ksqlc = &mock.MockKSQL{
-		DescribeFunc: func(arg0 context.Context, arg1 *v1.KSQLCluster) (*v1.KSQLCluster, error) {
+		DescribeFunc: func(arg0 context.Context, arg1 *ksqlv1.KSQLCluster) (*ksqlv1.KSQLCluster, error) {
 			return suite.ksqlCluster, nil
 		},
-		CreateFunc: func(arg0 context.Context, arg1 *v1.KSQLClusterConfig) (*v1.KSQLCluster, error) {
+		CreateFunc: func(arg0 context.Context, arg1 *ksqlv1.KSQLClusterConfig) (*ksqlv1.KSQLCluster, error) {
 			return suite.ksqlCluster, nil
 		},
-		ListFunc: func(arg0 context.Context, arg1 *v1.KSQLCluster) ([]*v1.KSQLCluster, error) {
-			return []*v1.KSQLCluster{suite.ksqlCluster}, nil
+		ListFunc: func(arg0 context.Context, arg1 *ksqlv1.KSQLCluster) ([]*ksqlv1.KSQLCluster, error) {
+			return []*ksqlv1.KSQLCluster{suite.ksqlCluster}, nil
 		},
-		DeleteFunc: func(arg0 context.Context, arg1 *v1.KSQLCluster) error {
+		DeleteFunc: func(arg0 context.Context, arg1 *ksqlv1.KSQLCluster) error {
 			return nil
 		},
 	}

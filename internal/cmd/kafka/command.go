@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config/v1"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
@@ -16,7 +16,7 @@ type command struct {
 }
 
 // New returns the default command object for interacting with Kafka.
-func New(prerunner pcmd.PreRunner, config *v1.Config, logger *log.Logger, clientID string) *cobra.Command {
+func New(prerunner pcmd.PreRunner, config *v2.Config, logger *log.Logger, clientID string) *cobra.Command {
 	cliCmd := pcmd.NewCLICommand(
 		&cobra.Command{
 			Use:   "kafka",
@@ -37,7 +37,7 @@ func New(prerunner pcmd.PreRunner, config *v1.Config, logger *log.Logger, client
 func (c *command) init() {
 	c.AddCommand(NewTopicCommand(c.prerunner, c.Config.Config, c.logger, c.clientID))
 	context := c.Config.Config.Context()
-	if context != nil && context.Credential.CredentialType == v1.APIKey { // TODO: Change to DynamicConfig to handle flags.
+	if context != nil && context.Credential.CredentialType == v2.APIKey { // TODO: Change to DynamicConfig to handle flags.
 		return
 	}
 	c.AddCommand(NewClusterCommand(c.prerunner, c.Config.Config))

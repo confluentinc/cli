@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/cli/internal/pkg/config/v1"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
@@ -81,7 +81,7 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 		{name: "succeed if forced to overwrite existing secret", args: "api-key store -f UIAPIKEY100 NEWSECRET --resource lkc-cool1", fixture: "empty.golden",
 			wantFunc: func(t *testing.T) {
 				logger := log.New()
-				cfg := v1.New(&config.Params{
+				cfg := v2.New(&config.Params{
 					CLIName:    "ccloud",
 					MetricSink: nil,
 					Logger:     logger,
