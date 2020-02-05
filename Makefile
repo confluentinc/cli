@@ -92,11 +92,11 @@ build-go:
 
 .PHONY: build-ccloud
 build-ccloud:
-	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --snapshot --rm-dist -f .goreleaser-ccloud$(GORELEASER_SUFFIX)
+	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --snapshot --rm-dist -f .goreleaser-ccloud$(GORELEASER_SUFFIX)
 
 .PHONY: build-confluent
 build-confluent:
-	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --snapshot --rm-dist -f .goreleaser-confluent$(GORELEASER_SUFFIX)
+	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --snapshot --rm-dist -f .goreleaser-confluent$(GORELEASER_SUFFIX)
 
 .PHONY: build-integ
 build-integ:
@@ -160,8 +160,8 @@ release: get-release-image commit-release tag-release
 .PHONY: gorelease
 gorelease:
 	@GO111MODULE=off go get -u github.com/inconshreveable/mousetrap # dep from cobra -- incompatible with go mod
-	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --rm-dist -f .goreleaser-ccloud.yml
-	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --rm-dist -f .goreleaser-confluent.yml
+	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --rm-dist -f .goreleaser-ccloud.yml
+	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --rm-dist -f .goreleaser-confluent.yml
 
 .PHONY: download-licenses
 download-licenses:
