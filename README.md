@@ -20,6 +20,7 @@ as part of the repo's build process.
   - [Building From Source](#building-from-source)
 - [Developing](#developing)
   - [Go Version](#go-version)
+  - [Mac Setup Notes](#mac-setup-notes)
   - [File Layout](#file-layout)
   - [Build Other Platforms](#build-other-platforms)
   - [URLS](#urls)
@@ -135,6 +136,20 @@ Now clone the repo and update your shell profile:
     echo 'export GOENV_ROOT="$GOPATH/src/github.com/syndbg/goenv"' >> ~/.bash_profile
     echo 'export PATH="$GOENV_ROOT/bin:$PATH"' >> ~/.bash_profile
     echo 'eval "$(goenv init -)"' >> ~/.bash_profile
+
+### Mac Setup Notes
+
+Our integration tests (`make test`) open a lot of files while they are running.
+On MacOS, the default maximum number of open files is 256, which is too small
+(you will see an error like `error retrieving command exit code` or
+`too many open files`).  Thus, if you are setting up your development
+environment on MacOS, run the following three commands *then restart*:
+
+    echo 'kern.maxfiles=20480' | sudo tee -a /etc/sysctl.conf
+    echo -e 'limit maxfiles 8192 20480\nlimit maxproc 1000 2000' | sudo tee -a /etc/launchd.conf
+    echo 'ulimit -n 4096' | sudo tee -a /etc/profile
+
+Remember to restart for these changes to take effect.
 
 ### File Layout
 
