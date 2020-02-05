@@ -28,8 +28,7 @@ var (
 	commit     = ""
 	date       = ""
 	host       = ""
-	// TODO: REVERT TO CONFLUENT
-	cliName    = "ccloud"
+	cliName    = "confluent"
 	segmentKey = "KDsYPLPBNVB1IPJIN5oqrXnxQT9iKezo"
 	isTest     = "false"
 )

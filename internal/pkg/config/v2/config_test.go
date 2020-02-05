@@ -143,10 +143,14 @@ func TestConfig_Load(t *testing.T) {
 					"\"auth\":null,\"auth_token\":\"\"}},\"current_context\":\"my-context\"}",
 			},
 			want: &Config{
-				Params: &config.Params{
-					CLIName:    "confluent",
-					MetricSink: nil,
-					Logger:     log.New(),
+				BaseConfig: &config.BaseConfig{
+					Params: &config.Params{
+						CLIName:    "confluent",
+						MetricSink: nil,
+						Logger:     log.New(),
+					},
+					Filename: testConfigFile.Name(),
+					Ver:      &Version,
 				},
 				Platforms: map[string]*Platform{
 					platform.Name: platform,
@@ -181,10 +185,14 @@ func TestConfig_Load(t *testing.T) {
 					"current_context\":\"my-context\"}",
 			},
 			want: &Config{
-				Params: &config.Params{
-					CLIName:    "confluent",
-					MetricSink: nil,
-					Logger:     log.New(),
+				BaseConfig: &config.BaseConfig{
+					Params: &config.Params{
+						CLIName:    "confluent",
+						MetricSink: nil,
+						Logger:     log.New(),
+					},
+					Filename: testConfigFile.Name(),
+					Ver:      &Version,
 				},
 				Platforms: map[string]*Platform{
 					platform.Name: platform,
@@ -208,10 +216,14 @@ func TestConfig_Load(t *testing.T) {
 				contents: "{\"disable_update_check\": true, \"disable_updates\": true}",
 			},
 			want: &Config{
-				Params: &config.Params{
-					CLIName:    "confluent",
-					MetricSink: nil,
-					Logger:     log.New(),
+				BaseConfig: &config.BaseConfig{
+					Params: &config.Params{
+						CLIName:    "confluent",
+						MetricSink: nil,
+						Logger:     log.New(),
+					},
+					Filename: testConfigFile.Name(),
+					Ver:      &Version,
 				},
 				DisableUpdates:     true,
 				DisableUpdateCheck: true,
@@ -241,12 +253,11 @@ func TestConfig_Load(t *testing.T) {
 			if err := c.Load(); (err != nil) != tt.wantErr {
 				t.Errorf("Config.Load() error = %+v, wantErr %+v", err, tt.wantErr)
 			}
-			c.Filename = "" // only for testing
 			fmt.Println(tt.args.contents)
 			// Get around automatically assigned anonymous id
 			tt.want.AnonymousId = c.AnonymousId
-			if !t.Failed() && !reflect.DeepEqual(c.Context(), tt.want.Context()) {
-				t.Errorf("Config.Load() = %+v, want %+v", c.Context(), tt.want.Context())
+			if !t.Failed() && !reflect.DeepEqual(c, tt.want) {
+				t.Errorf("Config.Load() = %+v, want %+v", c, tt.want)
 			}
 
 			os.Remove(tt.file)
@@ -361,10 +372,14 @@ func TestConfig_Save(t *testing.T) {
 		{
 			name: "save config with state to file",
 			config: &Config{
-				Params: &config.Params{
-					CLIName:    "confluent",
-					MetricSink: nil,
-					Logger:     log.New(),
+				BaseConfig: &config.BaseConfig{
+					Params: &config.Params{
+						CLIName:    "confluent",
+						MetricSink: nil,
+						Logger:     log.New(),
+					},
+					Filename: "",
+					Ver:      &Version,
 				},
 				Platforms: map[string]*Platform{
 					platform.Name: platform,
@@ -381,15 +396,19 @@ func TestConfig_Save(t *testing.T) {
 				},
 				CurrentContext: "my-context",
 			},
-			want: "{\n  \"disable_update_check\": false,\n  \"disable_updates\": false,\n  \"no_browser\": false,\n  \"platforms\": {\n    \"http://test\": {\n      \"name\": \"http://test\",\n      \"server\": \"http://test\"\n    }\n  },\n  \"credentials\": {\n    \"api-key-abc-key-123\": {\n      \"name\": \"api-key-abc-key-123\",\n      \"username\": \"\",\n      \"password\": \"\",\n      \"api_key_pair\": {\n        \"api_key\": \"abc-key-123\",\n        \"api_secret\": \"def-secret-456\"\n      },\n      \"credential_type\": 1\n    },\n    \"username-test-user\": {\n      \"name\": \"username-test-user\",\n      \"username\": \"test-user\",\n      \"password\": \"\",\n      \"api_key_pair\": null,\n      \"credential_type\": 0\n    }\n  },\n  \"contexts\": {\n    \"my-context\": {\n      \"name\": \"my-context\",\n      \"platform\": \"http://test\",\n      \"credential\": \"username-test-user\",\n      \"kafka_clusters\": {\n        \"anonymous-id\": {\n          \"id\": \"anonymous-id\",\n          \"name\": \"anonymous-cluster\",\n          \"bootstrap_servers\": \"http://test\",\n          \"api_keys\": {\n            \"abc-key-123\": {\n              \"api_key\": \"abc-key-123\",\n              \"api_secret\": \"\"\n            }\n          },\n          \"api_key\": \"abc-key-123\"\n        }\n      },\n      \"kafka_cluster\": \"anonymous-id\",\n      \"schema_registry_clusters\": {\n        \"acc-123\": {\n          \"id\": \"lsrc-123\",\n          \"schema_registry_endpoint\": \"http://some-lsrc-endpoint\",\n          \"schema_registry_credentials\": null\n        }\n      }\n    }\n  },\n  \"context_states\": {\n    \"my-context\": {\n      \"auth\": {\n        \"user\": {\n          \"id\": 123,\n          \"email\": \"test-user@email\"\n        },\n        \"account\": {\n          \"id\": \"acc-123\",\n          \"name\": \"test-env\"\n        },\n        \"accounts\": [\n          {\n            \"id\": \"acc-123\",\n            \"name\": \"test-env\"\n          }\n        ]\n      },\n      \"auth_token\": \"abc123\"\n    }\n  },\n  \"current_context\": \"my-context\"\n}",
+			want: "{\n  \"version\": \"2.0.0\",\n  \"disable_update_check\": false,\n  \"disable_updates\": false,\n  \"no_browser\": false,\n  \"platforms\": {\n    \"http://test\": {\n      \"name\": \"http://test\",\n      \"server\": \"http://test\"\n    }\n  },\n  \"credentials\": {\n    \"api-key-abc-key-123\": {\n      \"name\": \"api-key-abc-key-123\",\n      \"username\": \"\",\n      \"password\": \"\",\n      \"api_key_pair\": {\n        \"api_key\": \"abc-key-123\",\n        \"api_secret\": \"def-secret-456\"\n      },\n      \"credential_type\": 1\n    },\n    \"username-test-user\": {\n      \"name\": \"username-test-user\",\n      \"username\": \"test-user\",\n      \"password\": \"\",\n      \"api_key_pair\": null,\n      \"credential_type\": 0\n    }\n  },\n  \"contexts\": {\n    \"my-context\": {\n      \"name\": \"my-context\",\n      \"platform\": \"http://test\",\n      \"credential\": \"username-test-user\",\n      \"kafka_clusters\": {\n        \"anonymous-id\": {\n          \"id\": \"anonymous-id\",\n          \"name\": \"anonymous-cluster\",\n          \"bootstrap_servers\": \"http://test\",\n          \"api_keys\": {\n            \"abc-key-123\": {\n              \"api_key\": \"abc-key-123\",\n              \"api_secret\": \"\"\n            }\n          },\n          \"api_key\": \"abc-key-123\"\n        }\n      },\n      \"kafka_cluster\": \"anonymous-id\",\n      \"schema_registry_clusters\": {\n        \"acc-123\": {\n          \"id\": \"lsrc-123\",\n          \"schema_registry_endpoint\": \"http://some-lsrc-endpoint\",\n          \"schema_registry_credentials\": null\n        }\n      }\n    }\n  },\n  \"context_states\": {\n    \"my-context\": {\n      \"auth\": {\n        \"user\": {\n          \"id\": 123,\n          \"email\": \"test-user@email\"\n        },\n        \"account\": {\n          \"id\": \"acc-123\",\n          \"name\": \"test-env\"\n        },\n        \"accounts\": [\n          {\n            \"id\": \"acc-123\",\n            \"name\": \"test-env\"\n          }\n        ]\n      },\n      \"auth_token\": \"abc123\"\n    }\n  },\n  \"current_context\": \"my-context\"\n}",
 		},
 		{
 			name: "save stateless config to file",
 			config: &Config{
-				Params: &config.Params{
-					CLIName:    "confluent",
-					MetricSink: nil,
-					Logger:     log.New(),
+				BaseConfig: &config.BaseConfig{
+					Params: &config.Params{
+						CLIName:    "confluent",
+						MetricSink: nil,
+						Logger:     log.New(),
+					},
+					Filename: "",
+					Ver:      &Version,
 				},
 				Platforms: map[string]*Platform{
 					platform.Name: platform,
@@ -405,7 +424,7 @@ func TestConfig_Save(t *testing.T) {
 				},
 				CurrentContext: "my-context",
 			},
-			want: "{\n  \"disable_update_check\": false,\n  \"disable_updates\": false,\n  \"no_browser\": false,\n  \"platforms\": {\n    \"http://test\": {\n      \"name\": \"http://test\",\n      \"server\": \"http://test\"\n    }\n  },\n  \"credentials\": {\n    \"api-key-abc-key-123\": {\n      \"name\": \"api-key-abc-key-123\",\n      \"username\": \"\",\n      \"password\": \"\",\n      \"api_key_pair\": {\n        \"api_key\": \"abc-key-123\",\n        \"api_secret\": \"def-secret-456\"\n      },\n      \"credential_type\": 1\n    }\n  },\n  \"contexts\": {\n    \"my-context\": {\n      \"name\": \"my-context\",\n      \"platform\": \"http://test\",\n      \"credential\": \"api-key-abc-key-123\",\n      \"kafka_clusters\": {\n        \"anonymous-id\": {\n          \"id\": \"anonymous-id\",\n          \"name\": \"anonymous-cluster\",\n          \"bootstrap_servers\": \"http://test\",\n          \"api_keys\": {\n            \"abc-key-123\": {\n              \"api_key\": \"abc-key-123\",\n              \"api_secret\": \"def-secret-456\"\n            }\n          },\n          \"api_key\": \"abc-key-123\"\n        }\n      },\n      \"kafka_cluster\": \"anonymous-id\",\n      \"schema_registry_clusters\": {}\n    }\n  },\n  \"context_states\": {\n    \"my-context\": {\n      \"auth\": null,\n      \"auth_token\": \"\"\n    }\n  },\n  \"current_context\": \"my-context\"\n}",
+			want: "{\n  \"version\": \"2.0.0\",\n  \"disable_update_check\": false,\n  \"disable_updates\": false,\n  \"no_browser\": false,\n  \"platforms\": {\n    \"http://test\": {\n      \"name\": \"http://test\",\n      \"server\": \"http://test\"\n    }\n  },\n  \"credentials\": {\n    \"api-key-abc-key-123\": {\n      \"name\": \"api-key-abc-key-123\",\n      \"username\": \"\",\n      \"password\": \"\",\n      \"api_key_pair\": {\n        \"api_key\": \"abc-key-123\",\n        \"api_secret\": \"def-secret-456\"\n      },\n      \"credential_type\": 1\n    }\n  },\n  \"contexts\": {\n    \"my-context\": {\n      \"name\": \"my-context\",\n      \"platform\": \"http://test\",\n      \"credential\": \"api-key-abc-key-123\",\n      \"kafka_clusters\": {\n        \"anonymous-id\": {\n          \"id\": \"anonymous-id\",\n          \"name\": \"anonymous-cluster\",\n          \"bootstrap_servers\": \"http://test\",\n          \"api_keys\": {\n            \"abc-key-123\": {\n              \"api_key\": \"abc-key-123\",\n              \"api_secret\": \"def-secret-456\"\n            }\n          },\n          \"api_key\": \"abc-key-123\"\n        }\n      },\n      \"kafka_cluster\": \"anonymous-id\",\n      \"schema_registry_clusters\": {}\n    }\n  },\n  \"context_states\": {\n    \"my-context\": {\n      \"auth\": null,\n      \"auth_token\": \"\"\n    }\n  },\n  \"current_context\": \"my-context\"\n}",
 		},
 	}
 	for _, tt := range tests {

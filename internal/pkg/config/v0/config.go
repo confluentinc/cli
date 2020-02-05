@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/atrox/homedir"
+	"github.com/blang/semver"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -17,10 +18,13 @@ const (
 	defaultConfigFileFmt = "~/.%s/config.json"
 )
 
+var (
+	Version = semver.MustParse("0.0.0")
+)
+
 // Config represents the CLI configuration.
 type Config struct {
-	*config.Params `json:"-" hcl:"-"`
-	Filename       string                 `json:"-" hcl:"-"`
+	*config.BaseConfig
 	AuthURL        string                 `json:"auth_url" hcl:"auth_url"`
 	AuthToken      string                 `json:"auth_token" hcl:"auth_token"`
 	Auth           *AuthConfig            `json:"auth" hcl:"auth"`
@@ -30,17 +34,11 @@ type Config struct {
 	CurrentContext string                 `json:"current_context" hcl:"current_context"`
 }
 
-// New initializes a new Config object
-func New(cfg ...*Config) *Config {
-	var c *Config
-	if cfg == nil {
-		c = &Config{}
-	} else {
-		c = cfg[0]
-	}
-	if c.Params == nil {
-		c.Params = &config.Params{}
-	}
+// NewBaseConfig initializes a new Config object
+func New(params *config.Params) *Config {
+	c := &Config{}
+	baseCfg := config.NewBaseConfig(params, &Version)
+	c.BaseConfig = baseCfg
 	if c.CLIName == "" {
 		// HACK: this is a workaround while we're building multiple binaries off one codebase
 		c.CLIName = "confluent"
@@ -49,10 +47,6 @@ func New(cfg ...*Config) *Config {
 	c.Credentials = map[string]*Credential{}
 	c.Contexts = map[string]*Context{}
 	return c
-}
-
-func (c *Config) SetParams(params *config.Params) {
-	c.Params = params
 }
 
 // Load reads the CLI config from disk.

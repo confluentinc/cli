@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/atrox/homedir"
+	"github.com/blang/semver"
 	"github.com/google/uuid"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
@@ -19,10 +20,13 @@ const (
 	defaultConfigFileFmt = "~/.%s/config.json"
 )
 
+var (
+	Version = semver.MustParse("2.0.0")
+)
+
 // Config represents the CLI configuration.
 type Config struct {
-	*config.Params     `json:"-"`
-	Filename           string                   `json:"-"`
+	*config.BaseConfig
 	DisableUpdateCheck bool                     `json:"disable_update_check"`
 	DisableUpdates     bool                     `json:"disable_updates"`
 	NoBrowser          bool                     `json:"no_browser" hcl:"no_browser"`
@@ -34,13 +38,11 @@ type Config struct {
 	AnonymousId        string                   `json:"anonymous_id,omitempty"`
 }
 
-// New initializes a new Config object
+// NewBaseConfig initializes a new Config object
 func New(params *config.Params) *Config {
 	c := &Config{}
-	c.SetParams(params)
-	if c.Params == nil {
-		c.Params = &config.Params{}
-	}
+	baseCfg := config.NewBaseConfig(params, &Version)
+	c.BaseConfig = baseCfg
 	if c.CLIName == "" {
 		// HACK: this is a workaround while we're building multiple binaries off one codebase
 		c.CLIName = "confluent"
@@ -51,10 +53,6 @@ func New(params *config.Params) *Config {
 	c.ContextStates = map[string]*ContextState{}
 	c.AnonymousId = uuid.New().String()
 	return c
-}
-
-func (c *Config) SetParams(params *config.Params) {
-	c.Params = params
 }
 
 // Load reads the CLI config from disk.

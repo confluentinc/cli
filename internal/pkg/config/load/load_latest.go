@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	cfgVersions = []config.Config{v0.New(), v1.New(), v2.New(nil)}
+	cfgVersions = []config.Config{v0.New(nil), v1.New(nil), v2.New(nil)}
 )
 
 // LoadAndMigrate loads the config file into memory using the latest config
@@ -20,7 +20,6 @@ func LoadAndMigrate(latestCfg *v2.Config) (*v2.Config, error) {
 		return nil, err
 	}
 	// Migrate to latest config format.
-	// TODO: Add version #.
 	return migrateToLatest(cfg)
 }
 
@@ -65,5 +64,4 @@ func migrateToLatest(cfg config.Config) (*v2.Config, error) {
 	default:
 		panic("unknown config type")
 	}
-
 }

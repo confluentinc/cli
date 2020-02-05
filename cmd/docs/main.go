@@ -25,13 +25,11 @@ func main() {
 	logger := log.New()
 	confluent, err := cmd.NewConfluentCommand(
 		cliName,
-		&v2.Config{
-			Params: &config.Params{
-				CLIName:    cliName,
-				MetricSink: nil,
-				Logger:     logger,
-			},
-		},
+		v2.New(&config.Params{
+			CLIName:    cliName,
+			MetricSink: nil,
+			Logger:     logger,
+		}),
 		logger, &version.Version{}, mock.NewDummyAnalyticsMock())
 	if err != nil {
 		panic(err)

@@ -1,6 +1,7 @@
 package migrations
 
 import (
+	"github.com/confluentinc/cli/internal/pkg/config"
 	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 )
@@ -20,10 +21,13 @@ func MigrateV0ToV1(cfgV0 *v0.Config) (*v1.Config, error) {
 	for name, contextV0 := range cfgV0.Contexts {
 		contextsV1[name] = migrateContextV0ToV1(contextV0, name)
 	}
-
+	baseCfgV1 := &config.BaseConfig{
+		Params:   cfgV0.BaseConfig.Params,
+		Filename: cfgV0.BaseConfig.Filename,
+		Ver:      &v1.Version,
+	}
 	cfgV1 := &v1.Config{
-		Params:             cfgV0.Params,
-		Filename:           cfgV0.Filename,
+		BaseConfig:         baseCfgV1,
 		DisableUpdateCheck: false,
 		DisableUpdates:     false,
 		AuthURL:            cfgV0.AuthURL,
