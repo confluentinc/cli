@@ -1,6 +1,7 @@
 package cmd_test
 
 import (
+	"os"
 	"reflect"
 	"strings"
 	"testing"
@@ -9,17 +10,16 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
-	v1 "github.com/confluentinc/ccloudapis/org/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	pmock "github.com/confluentinc/cli/internal/pkg/mock"
 	"github.com/confluentinc/cli/internal/pkg/update/mock"
-	"github.com/confluentinc/cli/internal/pkg/version"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
 var (
-	expiredAuthTokenForDevCLoud = 	"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJvcmdhbml6YXRpb25JZCI6MT" +
+	expiredAuthTokenForDevCLoud = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJvcmdhbml6YXRpb25JZCI6MT" +
 		"U5NCwidXNlcklkIjoxNTM3MiwiZXhwIjoxNTc0NzIwODgzLCJqdGkiOiJkMzFlYjc2OC0zNzIzLTQ4MTEtYjg3" +
 		"Zi1lMTQ2YTQyYmMyMjciLCJpYXQiOjE1NzQ3MTcyODMsImlzcyI6IkNvbmZsdWVudCIsInN1YiI6IjE1MzcyIn" +
 		"0.r9o6HEaacidXV899sjYDajCfVd_Tczyfk541jzidw8r0TRGz74RxL2UFK0aGyR4tNrJRSOJlYHSEBNMV7" +
@@ -85,31 +85,30 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cfg := &config.Config{}
-			require.NoError(t, cfg.Load())
-
-			ver := version.NewVersion("ccloud", "Confluent Cloud CLI", "https://confluent.cloud; support@confluent.io", "1.2.3", "abc1234", "01/23/45", "CI")
-
+			ver := pmock.NewVersionMock()
 			r := &pcmd.PreRun{
-				Version: ver.Version,
+				Version: ver,
 				Logger:  tt.fields.Logger,
-				Config:  cfg,
 				UpdateClient: &mock.Client{
 					CheckForUpdatesFunc: func(n, v string, f bool) (bool, string, error) {
 						return false, "", nil
 					},
+				},
+				FlagResolver: &pcmd.FlagResolverImpl{
+					Prompt: &pcmd.RealPrompt{},
+					Out:    os.Stdout,
 				},
 				Analytics: cliMock.NewDummyAnalyticsMock(),
 			}
 
 			root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
 			root.Flags().CountP("verbose", "v", "Increase verbosity")
+			cfg := v2.New(nil)
+			require.NoError(t, cfg.Load())
+			rootCmd := pcmd.NewAnonymousCLICommand(root, cfg, r)
 
 			args := strings.Split(tt.fields.Command, " ")
-			_, err := pcmd.ExecuteCommand(root, args...)
-			require.NoError(t, err)
-
-			err = r.Anonymous()(root, args)
+			_, err := pcmd.ExecuteCommand(rootCmd.Command, args...)
 			require.NoError(t, err)
 
 			got := tt.fields.Logger.GetLevel()
@@ -121,33 +120,33 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 }
 
 func TestPreRun_HasAPIKey_SetupLoggingAndCheckForUpdates(t *testing.T) {
-	cfg := &config.Config{}
+	cfg := v2.New(nil)
 	require.NoError(t, cfg.Load())
 
-	ver := version.NewVersion("ccloud", "Confluent Cloud CLI", "https://confluent.cloud; support@confluent.io", "1.2.3", "abc1234", "01/23/45", "CI")
+	ver := pmock.NewVersionMock()
 
 	calledAnonymous := false
 	r := &pcmd.PreRun{
-		Version: ver.Version,
+		Version: ver,
 		Logger:  log.New(),
-		Config:  cfg,
 		UpdateClient: &mock.Client{
 			CheckForUpdatesFunc: func(n, v string, f bool) (bool, string, error) {
 				calledAnonymous = true
 				return false, "", nil
 			},
 		},
+		FlagResolver: &pcmd.FlagResolverImpl{
+			Prompt: &pcmd.RealPrompt{},
+			Out:    os.Stdout,
+		},
 		Analytics: cliMock.NewDummyAnalyticsMock(),
 	}
 
 	root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
 	root.Flags().CountP("verbose", "v", "Increase verbosity")
-
+	rootCmd := pcmd.NewAnonymousCLICommand(root, cfg, r)
 	args := strings.Split("help", " ")
-	_, err := pcmd.ExecuteCommand(root, args...)
-	require.NoError(t, err)
-
-	err = r.Anonymous()(root, args)
+	_, err := pcmd.ExecuteCommand(rootCmd.Command, args...)
 	require.NoError(t, err)
 
 	if !calledAnonymous {
@@ -156,74 +155,72 @@ func TestPreRun_HasAPIKey_SetupLoggingAndCheckForUpdates(t *testing.T) {
 }
 
 func TestPreRun_CallsAnalyticsTrackCommand(t *testing.T) {
-	cfg := &config.Config{}
+	cfg := v2.New(nil)
 	require.NoError(t, cfg.Load())
 
-	ver := version.NewVersion("ccloud", "Confluent Cloud CLI", "https://confluent.cloud; support@confluent.io", "1.2.3", "abc1234", "01/23/45", "CI")
+	ver := pmock.NewVersionMock()
 	analyticsClient := cliMock.NewDummyAnalyticsMock()
 
 	r := &pcmd.PreRun{
-		Version: ver.Version,
+		Version: ver,
 		Logger:  log.New(),
-		Config:  cfg,
 		UpdateClient: &mock.Client{
 			CheckForUpdatesFunc: func(n, v string, f bool) (bool, string, error) {
 				return false, "", nil
 			},
+		},
+		FlagResolver: &pcmd.FlagResolverImpl{
+			Prompt: &pcmd.RealPrompt{},
+			Out:    os.Stdout,
 		},
 		Analytics: analyticsClient,
 	}
 
 	root := &cobra.Command{
 		Run: func(cmd *cobra.Command, args []string) {},
-		PreRunE: r.Anonymous(),
 	}
+	rootCmd := pcmd.NewAnonymousCLICommand(root, cfg, r)
 	root.Flags().CountP("verbose", "v", "Increase verbosity")
 
-	_, err := pcmd.ExecuteCommand(root)
+	_, err := pcmd.ExecuteCommand(rootCmd.Command)
 	require.NoError(t, err)
 
 	require.True(t, analyticsClient.TrackCommandCalled())
 }
 
 func TestPreRun_TokenExpires(t *testing.T) {
-	cfg := &config.Config{}
+	cfg := v2.AuthenticatedConfigMock()
+	cfg.Context().State.AuthToken = expiredAuthTokenForDevCLoud
 
-	cfg.AuthURL = "https://devel.cpdev.cloud"
-	cfg.AuthToken = expiredAuthTokenForDevCLoud
-	// just setting cfg.Auth for now until there is a better and proper way to create a fake logged in user
-	cfg.Auth = &config.AuthConfig{
-		User:     &v1.User{
-			Id:   99,
-		},
-	}
-
-	ver := version.NewVersion("ccloud", "Confluent Cloud CLI", "https://confluent.cloud; support@confluent.io", "1.2.3", "abc1234", "01/23/45", "CI")
+	ver := pmock.NewVersionMock()
 	analyticsClient := cliMock.NewDummyAnalyticsMock()
 
 	r := &pcmd.PreRun{
-		Version: ver.Version,
+		Version: ver,
 		Logger:  log.New(),
-		Config:  cfg,
 		UpdateClient: &mock.Client{
 			CheckForUpdatesFunc: func(n, v string, f bool) (bool, string, error) {
 				return false, "", nil
 			},
 		},
+		FlagResolver: &pcmd.FlagResolverImpl{
+			Prompt: &pcmd.RealPrompt{},
+			Out:    os.Stdout,
+		},
 		Analytics: analyticsClient,
-		Clock: clockwork.NewRealClock(),
+		Clock:     clockwork.NewRealClock(),
 	}
 
 	root := &cobra.Command{
 		Run: func(cmd *cobra.Command, args []string) {},
-		PreRunE: r.Anonymous(),
 	}
+	rootCmd := pcmd.NewAnonymousCLICommand(root, cfg, r)
 	root.Flags().CountP("verbose", "v", "Increase verbosity")
 
-	_, err := pcmd.ExecuteCommand(root)
+	_, err := pcmd.ExecuteCommand(rootCmd.Command)
 	require.NoError(t, err)
 
 	// Check auth is nil for now, until there is a better to create a fake logged in user and check if it's logged out
-	require.Nil(t, cfg.Auth)
+	require.Nil(t, cfg.Context().State.Auth)
 	require.True(t, analyticsClient.SessionTimedOutCalled())
 }

@@ -8,20 +8,17 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/ccloud-sdk-go"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	"github.com/confluentinc/go-printer"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 type command struct {
-	*cobra.Command
-	config *config.Config
-	client ccloud.User
+	*pcmd.AuthenticatedCLICommand
 }
 
 var (
@@ -36,15 +33,15 @@ const nameLength = 32
 const descriptionLength = 128
 
 // New returns the Cobra command for service accounts.
-func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.User) *cobra.Command {
-	cmd := &command{
-		Command: &cobra.Command{
-			Use:               "service-account",
-			Short:             `Manage service accounts.`,
-			PersistentPreRunE: prerunner.Authenticated(),
+func New(prerunner pcmd.PreRunner, config *v2.Config) *cobra.Command {
+	cliCmd := pcmd.NewAuthenticatedCLICommand(
+		&cobra.Command{
+			Use:   "service-account",
+			Short: `Manage service accounts.`,
 		},
-		config: config,
-		client: client,
+		config, prerunner)
+	cmd := &command{
+		AuthenticatedCLICommand: cliCmd,
 	}
 	cmd.init()
 	return cmd.Command
@@ -144,11 +141,10 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	user := &orgv1.User{
 		ServiceName:        name,
 		ServiceDescription: description,
-		OrganizationId:     c.config.Auth.User.OrganizationId,
+		OrganizationId:     c.State.Auth.User.OrganizationId,
 		ServiceAccount:     true,
 	}
-
-	user, err = c.client.CreateServiceAccount(context.Background(), user)
+	user, err = c.Client.User.CreateServiceAccount(context.Background(), user)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -176,8 +172,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		Id:                 id,
 		ServiceDescription: description,
 	}
-
-	err = c.client.UpdateServiceAccount(context.Background(), user)
+	err = c.Client.User.UpdateServiceAccount(context.Background(), user)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -194,8 +189,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	user := &orgv1.User{
 		Id: id,
 	}
-
-	err = c.client.DeleteServiceAccount(context.Background(), user)
+	err = c.Client.User.DeleteServiceAccount(context.Background(), user)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -203,7 +197,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) list(cmd *cobra.Command, args []string) error {
-	users, err := c.client.GetServiceAccounts(context.Background())
+	users, err := c.Client.User.GetServiceAccounts(context.Background())
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}

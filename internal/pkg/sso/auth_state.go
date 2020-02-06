@@ -5,11 +5,11 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
-	"github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"io/ioutil"
 	"net/http"
 	"strings"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 var (
@@ -43,45 +43,45 @@ type authState struct {
 }
 
 // InitState generates various auth0 related codes and hashes
-// and tweaks certain variables for internal development and testing of the CLI's
+// and tweaks certain variables for internal development and testing of the CLIs
 // auth0 server / SSO integration.
-func newState(config *config.Config) (*authState, error) {
+func newState(authURL string, noBrowser bool) (*authState, error) {
 	env := "prod"
-	if strings.Contains(config.AuthURL, "priv.cpdev.cloud") {
+	if strings.Contains(authURL, "priv.cpdev.cloud") {
 		env = "cpd"
 	}
-	if strings.Contains(config.AuthURL, "devel.cpdev.cloud") {
+	if strings.Contains(authURL, "devel.cpdev.cloud") {
 		env = "devel"
 	}
-	if strings.Contains(config.AuthURL, "stag.cpdev.cloud") {
+	if strings.Contains(authURL, "stag.cpdev.cloud") {
 		env = "stag"
 	}
 
 	state := &authState{}
 	switch env {
 	case "cpd":
-    	state.SSOProviderCallbackUrl = config.AuthURL + ssoProviderCallbackEndpoint // callback to the cpd cluster url that was passed in
-		state.SSOProviderHost = "https://" + ssoProviderDomainDevel // only one Auth0 account for cpd, dev and stag
+		state.SSOProviderCallbackUrl = authURL + ssoProviderCallbackEndpoint // callback to the cpd cluster url that was passed in
+		state.SSOProviderHost = "https://" + ssoProviderDomainDevel          // only one Auth0 account for cpd, dev and stag
 		state.SSOProviderClientID = ssoProviderClientIDDevel
 		state.SSOProviderIdentifier = ssoProviderIdentifierDevel
 	case "devel":
-	    state.SSOProviderCallbackUrl = ssoProviderCallbackCCloudDevURL
+		state.SSOProviderCallbackUrl = ssoProviderCallbackCCloudDevURL
 		state.SSOProviderHost = "https://" + ssoProviderDomainDevel
 		state.SSOProviderClientID = ssoProviderClientIDDevel
 		state.SSOProviderIdentifier = ssoProviderIdentifierDevel
 	case "stag":
-	    state.SSOProviderCallbackUrl = ssoProviderCallbackCCloudStagURL
+		state.SSOProviderCallbackUrl = ssoProviderCallbackCCloudStagURL
 		state.SSOProviderHost = "https://" + ssoProviderDomainDevel
 		state.SSOProviderClientID = ssoProviderClientIDDevel
 		state.SSOProviderIdentifier = ssoProviderIdentifierDevel
 	case "prod":
-	    state.SSOProviderCallbackUrl = ssoProviderCallbackCCloudURL
+		state.SSOProviderCallbackUrl = ssoProviderCallbackCCloudURL
 		state.SSOProviderHost = "https://" + ssoProviderDomain
 		state.SSOProviderClientID = ssoProviderClientID
 		state.SSOProviderIdentifier = ssoProviderIdentifier
 	}
 
-	if !config.NoBrowser {
+	if !noBrowser {
 		// if we're not using the no browser flow, the callback will always be localhost regardless of environment
 		state.SSOProviderCallbackUrl = ssoProviderCallbackLocalURL
 	}

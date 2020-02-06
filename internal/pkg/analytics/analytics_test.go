@@ -19,10 +19,13 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	v1 "github.com/confluentinc/ccloudapis/org/v1"
+	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
+
 	"github.com/confluentinc/cli/internal/cmd"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
-	"github.com/confluentinc/cli/internal/pkg/config"
+	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/mock"
 )
 
@@ -37,18 +40,18 @@ var (
 	organizationId  = int32(321)
 	userEmail       = "tester@confluent.io"
 
-	otherUserId     = int32(111)
-	otherUserEmail  = "other@confluent.io"
-	otherUserContext    = "login-other@confluent.io"
-	otherUserCred   = "username-other@confluent.io"
+	otherUserId      = int32(111)
+	otherUserEmail   = "other@confluent.io"
+	otherUserContext = "login-other@confluent.io"
+	otherUserCred    = "username-other@confluent.io"
 
-	ccloudName    = "ccloud"
-	flagName      = "flag"
-	flagArg       = "flagArg"
-	arg1          = "arg1"
-	arg2          = "arg2"
-	errorMessage  = "error message"
-	unknownCmd    = "unknown"
+	ccloudName   = "ccloud"
+	flagName     = "flag"
+	flagArg      = "flagArg"
+	arg1         = "arg1"
+	arg2         = "arg2"
+	errorMessage = "error message"
+	unknownCmd   = "unknown"
 
 	version = "1.1.1.1.1.1"
 
@@ -57,20 +60,17 @@ var (
 
 type AnalyticsTestSuite struct {
 	suite.Suite
-	config          *config.Config
-	auth            *config.AuthConfig
-	authOther       *config.AuthConfig
-
+	config          *v2.Config
 	analyticsClient analytics.Client
 	mockClient      *mock.SegmentClient
 	output          []segment.Message
 }
 
 func (suite *AnalyticsTestSuite) SetupSuite() {
-	suite.config = config.New()
+	suite.config = v2.AuthenticatedConfigMock()
 	suite.config.CLIName = ccloudName
-	suite.createAuth()
 	suite.createContexts()
+	suite.createStates()
 	suite.createCredentials()
 }
 
@@ -81,7 +81,7 @@ func (suite *AnalyticsTestSuite) SetupTest() {
 			suite.output = append(suite.output, m)
 			return nil
 		},
-		CloseFunc: func() error {return nil},
+		CloseFunc: func() error { return nil },
 	}
 	suite.analyticsClient = analytics.NewAnalyticsClient(suite.config.CLIName, suite.config, version, suite.mockClient, clockwork.NewFakeClockAt(testTime))
 }
@@ -92,14 +92,14 @@ func (suite *AnalyticsTestSuite) TestHelpCall() {
 
 	req := require.New(suite.T())
 	cobraCmd := &cobra.Command{
-		Use:    suite.config.CLIName,
-		Run:    func(cmd *cobra.Command, args []string) {},
+		Use: suite.config.CLIName,
+		Run: func(cmd *cobra.Command, args []string) {},
 	}
 	command := cmd.Command{
 		Command:   cobraCmd,
 		Analytics: suite.analyticsClient,
 	}
-	err := command.Execute([]string {"ccloud", "--help"})
+	err := command.Execute([]string{"ccloud", "--help"})
 	req.NoError(err)
 
 	req.Equal(1, len(suite.output))
@@ -168,7 +168,7 @@ func (suite *AnalyticsTestSuite) TestHelpWithFlagAndArgs() {
 		Command:   cobraCmd,
 		Analytics: suite.analyticsClient,
 	}
-	err := command.Execute([]string {arg1, arg2, "--" + flagName, flagArg, "-h"})
+	err := command.Execute([]string{arg1, arg2, "--" + flagName, flagArg, "-h"})
 	req.NoError(err)
 
 	req.Equal(1, len(suite.output))
@@ -208,8 +208,8 @@ func (suite *AnalyticsTestSuite) TestHelpWithFlagAndArgsSwapOrder() {
 	}
 
 	loginUserCmd := &cobra.Command{
-		Use:    "user",
-		Run:    func(cmd *cobra.Command, args []string) {
+		Use: "user",
+		Run: func(cmd *cobra.Command, args []string) {
 			suite.loginUser()
 		},
 		PreRun: func(cmd *cobra.Command, args []string) {
@@ -259,8 +259,8 @@ func (suite *AnalyticsTestSuite) TestLogin() {
 		Use: suite.config.CLIName,
 	}
 	loginCmd := &cobra.Command{
-		Use:    "login",
-		Run:    func(cmd *cobra.Command, args []string) {
+		Use: "login",
+		Run: func(cmd *cobra.Command, args []string) {
 			suite.loginUser()
 		},
 		PreRun: func(cmd *cobra.Command, args []string) {
@@ -309,8 +309,8 @@ func (suite *AnalyticsTestSuite) TestAnonymousIdResetOnLogin() {
 	}
 
 	loginUserCmd := &cobra.Command{
-		Use:    "user",
-		Run:    func(cmd *cobra.Command, args []string) {
+		Use: "user",
+		Run: func(cmd *cobra.Command, args []string) {
 			suite.loginUser()
 		},
 		PreRun: func(cmd *cobra.Command, args []string) {
@@ -321,8 +321,8 @@ func (suite *AnalyticsTestSuite) TestAnonymousIdResetOnLogin() {
 	loginCmd.AddCommand(loginUserCmd)
 
 	loginOtherCmd := &cobra.Command{
-		Use:    "other",
-		Run:    func(cmd *cobra.Command, args []string) {
+		Use: "other",
+		Run: func(cmd *cobra.Command, args []string) {
 			suite.loginOtherUser()
 		},
 		PreRun: func(cmd *cobra.Command, args []string) {
@@ -389,8 +389,8 @@ func (suite *AnalyticsTestSuite) TestAnonymousIdResetOnContextSwitch() {
 	firstAnonId := suite.config.AnonymousId
 
 	contextUseCmd := &cobra.Command{
-		Use:    suite.config.CLIName,
-		Run:    func(cmd *cobra.Command, args []string) {
+		Use: suite.config.CLIName,
+		Run: func(cmd *cobra.Command, args []string) {
 			suite.apiKeyCredContext()
 		},
 		PreRun: func(cmd *cobra.Command, args []string) {
@@ -458,8 +458,8 @@ func (suite *AnalyticsTestSuite) TestSessionTimedOut() {
 	suite.loginUser()
 	prevAnonId := suite.config.AnonymousId
 	cobraCmd := &cobra.Command{
-		Use:    suite.config.CLIName,
-		Run:    func(cmd *cobra.Command, args []string) {},
+		Use: suite.config.CLIName,
+		Run: func(cmd *cobra.Command, args []string) {},
 		PreRun: func(cmd *cobra.Command, args []string) {
 			err := suite.analyticsClient.SessionTimedOut()
 			req.NoError(err)
@@ -588,72 +588,102 @@ func (suite *AnalyticsTestSuite) TestApiKeyStoreSecretHandler() {
 }
 
 // --------------------------- setup helper functions -------------------------------
-func (suite *AnalyticsTestSuite) createAuth() {
-	user := &v1.User{
-		Id:             userId,
-		Email:          userEmail,
-		OrganizationId: organizationId,
-	}
-	account := &v1.Account{
-		Id:             "1",
-		Name:           "env1",
-		OrganizationId: organizationId,
-	}
-	auth := &config.AuthConfig{
-		User:    user,
-		Account: account,
-	}
-	suite.auth = auth
-
-	otherUser := &v1.User{
-		Id:             otherUserId,
-		Email:          userEmail,
-		OrganizationId: organizationId,
-	}
-	authOther := &config.AuthConfig{
-		User:    otherUser,
-		Account: account,
-	}
-	suite.authOther = authOther
-}
-
 func (suite *AnalyticsTestSuite) createContexts() {
-	contexts := make(map[string]*config.Context)
-	apiContext := &config.Context{
-		Name:       apiKeyContext,
-		Credential: apiKeyCred,
+	platform := &v2.Platform{
+		Name:       "test-platform",
+		Server:     "test",
+		CaCertPath: "",
 	}
-	userContext := &config.Context{
-		Name:       userNameContext,
-		Credential: userNameCred,
+	apiContext := &v2.Context{
+		Name:         apiKeyContext,
+		Platform:     platform,
+		PlatformName: platform.Name,
 	}
-	otherContext := &config.Context{
-		Name:       otherUserContext,
-		Credential: otherUserCred,
+	userContext := &v2.Context{
+		Name:         userNameContext,
+		Platform:     platform,
+		PlatformName: platform.Name,
 	}
+	otherContext := &v2.Context{
+		Name:         otherUserContext,
+		Platform:     platform,
+		PlatformName: platform.Name,
+	}
+	contexts := make(map[string]*v2.Context)
 	contexts[apiKeyContext] = apiContext
 	contexts[userNameContext] = userContext
 	contexts[otherUserContext] = otherContext
 	suite.config.Contexts = contexts
+
+	platforms := make(map[string]*v2.Platform)
+	platforms[platform.Name] = platform
+	suite.config.Platforms = platforms
+}
+
+func (suite *AnalyticsTestSuite) createStates() {
+	contexts := suite.config.Contexts
+	account := &orgv1.Account{
+		Id:             "1",
+		Name:           "env1",
+		OrganizationId: organizationId,
+	}
+	userState := &v2.ContextState{
+		Auth: &v1.AuthConfig{
+			User: &orgv1.User{
+				Id:             userId,
+				Email:          userEmail,
+				OrganizationId: organizationId,
+			},
+			Account: account,
+		},
+		AuthToken: "user-token",
+	}
+	contexts[userNameContext].State = userState
+	otherUserState := &v2.ContextState{
+		Auth: &v1.AuthConfig{
+			User: &orgv1.User{
+				Id:             otherUserId,
+				Email:          userEmail,
+				OrganizationId: organizationId,
+			},
+			Account: account,
+		},
+		AuthToken: "other-user-token",
+	}
+	contexts[otherUserContext].State = otherUserState
+	contextStates := make(map[string]*v2.ContextState)
+	contextStates[userNameContext] = contexts[userNameContext].State
+	contextStates[otherUserContext] = contexts[otherUserContext].State
+	suite.config.ContextStates = contextStates
 }
 
 func (suite *AnalyticsTestSuite) createCredentials() {
-	credentials := make(map[string]*config.Credential)
-	apiCred := &config.Credential{
-		APIKeyPair: &config.APIKeyPair{
+	credentials := make(map[string]*v2.Credential)
+	apiCred := &v2.Credential{
+		Name: apiKeyCred,
+		APIKeyPair: &v0.APIKeyPair{
 			Key:    apiKey,
 			Secret: apiSecret,
 		},
-		CredentialType: config.APIKey,
+		CredentialType: v2.APIKey,
 	}
-	userCred := &config.Credential{
+	userCred := &v2.Credential{
+		Name:           userNameCred,
 		Username:       userEmail,
-		CredentialType: config.Username,
+		CredentialType: v2.Username,
 	}
-	otherCred := &config.Credential{
+	otherCred := &v2.Credential{
+		Name:           otherUserCred,
 		Username:       otherUserEmail,
-		CredentialType: config.Username,
+		CredentialType: v2.Username,
 	}
+	contexts := suite.config.Contexts
+	contexts[apiKeyContext].Credential = apiCred
+	contexts[apiKeyContext].CredentialName = apiCred.Name
+	contexts[userNameContext].Credential = userCred
+	contexts[userNameContext].CredentialName = userCred.Name
+	contexts[otherUserContext].Credential = otherCred
+	contexts[otherUserContext].CredentialName = otherCred.Name
 	credentials[apiKeyCred] = apiCred
 	credentials[userNameCred] = userCred
 	credentials[otherUserCred] = otherCred
@@ -662,22 +692,18 @@ func (suite *AnalyticsTestSuite) createCredentials() {
 
 // --------------------------- login, logout, context switching helpers -------------------------------
 func (suite *AnalyticsTestSuite) loginUser() {
-	suite.config.Auth = suite.auth
 	suite.config.CurrentContext = userNameContext
 }
 
 func (suite *AnalyticsTestSuite) loginOtherUser() {
-	suite.config.Auth = suite.authOther
 	suite.config.CurrentContext = otherUserContext
 }
 
 func (suite *AnalyticsTestSuite) logOut() {
-	suite.config.AuthToken = ""
-	suite.config.Auth = nil
+	suite.config.CurrentContext = ""
 }
 
 func (suite *AnalyticsTestSuite) apiKeyCredContext() {
-	suite.config.Auth = nil
 	suite.config.CurrentContext = apiKeyContext
 }
 

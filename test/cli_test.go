@@ -41,15 +41,16 @@ import (
 	utilv1 "github.com/confluentinc/ccloudapis/util/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 )
 
 var (
-	noRebuild             = flag.Bool("no-rebuild", false, "skip rebuilding CLI if it already exists")
-	update                = flag.Bool("update", false, "update golden files")
-	debug                 = flag.Bool("debug", true, "enable verbose output")
-	skipSsoBrowserTests   = flag.Bool("skip-sso-browser-tests", false, "If flag is preset, run the tests that require a web browser.")
-	ssoTestEmail          = *flag.String("sso-test-user-email", "ziru+paas-integ-sso@confluent.io", "The email of an sso enabled test user.")
-	ssoTestPassword       = *flag.String("sso-test-user-password", "aWLw9eG+F", "The password for the sso enabled test user.")
+	noRebuild           = flag.Bool("no-rebuild", false, "skip rebuilding CLI if it already exists")
+	update              = flag.Bool("update", false, "update golden files")
+	debug               = flag.Bool("debug", true, "enable verbose output")
+	skipSsoBrowserTests = flag.Bool("skip-sso-browser-tests", false, "If flag is preset, run the tests that require a web browser.")
+	ssoTestEmail        = *flag.String("sso-test-user-email", "ziru+paas-integ-sso@confluent.io", "The email of an sso enabled test user.")
+	ssoTestPassword     = *flag.String("sso-test-user-password", "aWLw9eG+F", "The password for the sso enabled test user.")
 	// this connection is preconfigured in Auth0 to hit a test Okta account
 	ssoTestConnectionName = *flag.String("sso-test-connection-name", "confluent-dev", "The Auth0 SSO connection name.")
 	// browser tests by default against devel
@@ -279,7 +280,7 @@ func (s *CLITestSuite) Test_Ccloud_Errors() {
 		output := runCommand(tt, ccloudTestBin, env, "login --url "+loginURL, 0)
 		require.Equal(tt, "Logged in as expired@user.com\nUsing environment a-595 (\"default\")\n", output)
 		output = runCommand(tt, ccloudTestBin, []string{}, "kafka cluster list", 1)
-		require.Equal(tt, "Your token has expired. You are now logged out.\nError: You must login to run that command.\n", output)
+		require.Equal(tt, "Your token has expired. You are now logged out.\nError: You must log in to run that command.\n", output)
 	})
 
 	t.Run("malformed token", func(tt *testing.T) {
@@ -406,7 +407,7 @@ func (s *CLITestSuite) Test_SSO_Login() {
 	done := make(chan error)
 	go func() { done <- cmd.Wait() }()
 
-	timeout := time.After(30 * time.Second)
+	timeout := time.After(60 * time.Second)
 
 	select {
 	case <-timeout:
@@ -440,12 +441,24 @@ func (s *CLITestSuite) ssoAuthenticateViaBrowser(authUrl string) string {
 	taskCtx, cancel := chromedp.NewContext(allocCtx)
 	defer cancel()
 	// ensure that the browser process is started
-	if err := chromedp.Run(taskCtx); err != nil {
-		s.NoError(err)
+	var err error
+	tries := 0
+	for tries < 5 {
+		if err = chromedp.Run(taskCtx); err != nil {
+			fmt.Println("Caught error when starting chrome. Will retry. Error was: "+err.Error())
+			tries += 1
+		} else {
+			fmt.Println("Successfully started chrome")
+			break
+		}
 	}
+	if err != nil {
+		s.NoError(err, fmt.Sprintf("Could not start chrome after %d tries. Error was: %s\n", tries, err))
+	}
+
 	// navigate to authUrl
 	fmt.Println("Navigating to authUrl...")
-	err := chromedp.Run(taskCtx, chromedp.Navigate(authUrl))
+	err = chromedp.Run(taskCtx, chromedp.Navigate(authUrl))
 	s.NoError(err)
 	fmt.Println("Inputing credentials to Okta...")
 	err = chromedp.Run(taskCtx, chromedp.WaitVisible(`//input[@name="username"]`))
@@ -579,14 +592,16 @@ func runCommand(t *testing.T, binaryName string, env []string, args string, want
 		require.Failf(t, "unexpected error",
 			"exit %d: %s\n%s", exitCode, args, output)
 	}
-	require.Equal(t, wantErrCode, exitCode)
+	require.Equal(t, wantErrCode, exitCode, output)
 	return output
 }
 
 func resetConfiguration(t *testing.T, cliName string) {
 	// HACK: delete your current config to isolate tests cases for non-workflow tests...
 	// probably don't really want to do this or devs will get mad
-	cfg := config.New(&config.Config{CLIName: cliName})
+	cfg := v2.New(&config.Params{
+		CLIName: cliName,
+	})
 	err := cfg.Save()
 	require.NoError(t, err)
 }
@@ -646,7 +661,7 @@ func init() {
 		Key:    "MYKEY1",
 		Secret: "MYSECRET1",
 		LogicalClusters: []*authv1.ApiKey_Cluster{
-			{Id: "bob", Type: "kafka"},
+			{Id: "lkc-bob", Type: "kafka"},
 		},
 		UserId: 12,
 	}
@@ -655,7 +670,7 @@ func init() {
 		Key:    "MYKEY2",
 		Secret: "MYSECRET2",
 		LogicalClusters: []*authv1.ApiKey_Cluster{
-			{Id: "abc", Type: "kafka"},
+			{Id: "lkc-abc", Type: "kafka"},
 		},
 		UserId: 18,
 	}

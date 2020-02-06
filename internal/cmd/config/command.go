@@ -5,26 +5,29 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 )
 
 type command struct {
-	*cobra.Command
-	config    *config.Config
+	*pcmd.CLICommand
 	prerunner pcmd.PreRunner
 	analytics analytics.Client
+	config    *v2.Config
 }
 
 // New returns the Cobra command for `config`.
-func New(config *config.Config, prerunner pcmd.PreRunner, analytics analytics.Client) *cobra.Command {
-	cmd := &command{
-		Command: &cobra.Command{
+func New(config *v2.Config, prerunner pcmd.PreRunner, analytics analytics.Client) *cobra.Command {
+	cliCmd := pcmd.NewAnonymousCLICommand(
+		&cobra.Command{
 			Use:   "config",
 			Short: "Modify the CLI config files.",
 		},
-		config:    config,
-		prerunner: prerunner,
-		analytics: analytics,
+		config, prerunner)
+	cmd := &command{
+		CLICommand: cliCmd,
+		prerunner:  prerunner,
+		analytics:  analytics,
+		config:     config,
 	}
 	cmd.init()
 	return cmd.Command

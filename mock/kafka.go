@@ -19,7 +19,7 @@ type Kafka struct {
 }
 
 func (m *Kafka) GetTopicDefaults(ctx context.Context, cluster *kafkav1.KafkaCluster) (*kafkav1.TopicSpecification, error) {
-	return &kafkav1.TopicSpecification{},nil
+	return &kafkav1.TopicSpecification{}, nil
 }
 
 func (m *Kafka) GetTopicDefaultConfig(ctx context.Context, cluster *kafkav1.KafkaCluster) (*kafkav1.TopicConfig, error) {

@@ -3,7 +3,6 @@ package ksql
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -13,18 +12,15 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/confluentinc/ccloud-sdk-go/mock"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
-	v1 "github.com/confluentinc/ccloudapis/ksql/v1"
+	ksqlv1 "github.com/confluentinc/ccloudapis/ksql/v1"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/acl"
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/config/v2"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
 const (
-	kafkaClusterID    = "lkc-12345"
 	ksqlClusterID     = "lksqlc-12345"
 	physicalClusterID = "pksqlc-zxcvb"
 	outputTopicPrefix = "pksqlc-abcde"
@@ -68,9 +64,9 @@ const (
 
 type KSQLTestSuite struct {
 	suite.Suite
-	conf         *config.Config
+	conf         *v2.Config
 	kafkaCluster *kafkav1.KafkaCluster
-	ksqlCluster  *v1.KSQLCluster
+	ksqlCluster  *ksqlv1.KSQLCluster
 	serviceAcct  *orgv1.User
 	ksqlc        *mock.MockKSQL
 	kafkac       *mock.Kafka
@@ -78,49 +74,13 @@ type KSQLTestSuite struct {
 }
 
 func (suite *KSQLTestSuite) SetupSuite() {
-	suite.initConf()
-}
-
-func (suite *KSQLTestSuite) initConf() {
-	suite.conf = config.New()
-	suite.conf.Logger = log.New()
-	suite.conf.AuthURL = "http://test"
-	suite.conf.Auth = &config.AuthConfig{
-		User:    new(orgv1.User),
-		Account: &orgv1.Account{Id: "testAccount"},
-	}
-	user := suite.conf.Auth
-	name := fmt.Sprintf("login-%s-%s", user.User.Email, suite.conf.AuthURL)
-
-	suite.conf.Platforms[name] = &config.Platform{
-		Server: suite.conf.AuthURL,
-	}
-
-	suite.conf.Credentials[name] = &config.Credential{
-		Username: user.User.Email,
-	}
-
-	suite.conf.Contexts[name] = &config.Context{
-		Platform:      name,
-		Credential:    name,
-		Kafka:         kafkaClusterID,
-		KafkaClusters: map[string]*config.KafkaClusterConfig{kafkaClusterID: {}},
-	}
-
-	suite.conf.CurrentContext = name
-
-	suite.kafkaCluster = &kafkav1.KafkaCluster{
-		Id:         kafkaClusterID,
-		Enterprise: true,
-	}
-
-	suite.ksqlCluster = &v1.KSQLCluster{
+	suite.conf = v2.AuthenticatedConfigMock()
+	suite.ksqlCluster = &ksqlv1.KSQLCluster{
 		Id:                ksqlClusterID,
-		KafkaClusterId:    kafkaClusterID,
+		KafkaClusterId:    suite.conf.Context().Kafka,
 		PhysicalClusterId: physicalClusterID,
 		OutputTopicPrefix: outputTopicPrefix,
 	}
-
 	suite.serviceAcct = &orgv1.User{
 		ServiceAccount: true,
 		ServiceName:    "KSQL." + ksqlClusterID,
@@ -138,16 +98,16 @@ func (suite *KSQLTestSuite) SetupTest() {
 		},
 	}
 	suite.ksqlc = &mock.MockKSQL{
-		DescribeFunc: func(arg0 context.Context, arg1 *v1.KSQLCluster) (*v1.KSQLCluster, error) {
+		DescribeFunc: func(arg0 context.Context, arg1 *ksqlv1.KSQLCluster) (*ksqlv1.KSQLCluster, error) {
 			return suite.ksqlCluster, nil
 		},
-		CreateFunc: func(arg0 context.Context, arg1 *v1.KSQLClusterConfig) (*v1.KSQLCluster, error) {
+		CreateFunc: func(arg0 context.Context, arg1 *ksqlv1.KSQLClusterConfig) (*ksqlv1.KSQLCluster, error) {
 			return suite.ksqlCluster, nil
 		},
-		ListFunc: func(arg0 context.Context, arg1 *v1.KSQLCluster) ([]*v1.KSQLCluster, error) {
-			return []*v1.KSQLCluster{suite.ksqlCluster}, nil
+		ListFunc: func(arg0 context.Context, arg1 *ksqlv1.KSQLCluster) ([]*ksqlv1.KSQLCluster, error) {
+			return []*ksqlv1.KSQLCluster{suite.ksqlCluster}, nil
 		},
-		DeleteFunc: func(arg0 context.Context, arg1 *v1.KSQLCluster) error {
+		DeleteFunc: func(arg0 context.Context, arg1 *ksqlv1.KSQLCluster) error {
 			return nil
 		},
 	}
@@ -159,7 +119,12 @@ func (suite *KSQLTestSuite) SetupTest() {
 }
 
 func (suite *KSQLTestSuite) newCMD() *cobra.Command {
-	cmd := New(&cliMock.Commander{}, suite.conf, suite.ksqlc, suite.kafkac, suite.userc, &pcmd.ConfigHelper{Config: suite.conf, Client: &ccloud.Client{Kafka: suite.kafkac}})
+	client := &ccloud.Client{
+		Kafka: suite.kafkac,
+		User:  suite.userc,
+		KSQL:  suite.ksqlc,
+	}
+	cmd := New(cliMock.NewPreRunnerMock(client, nil), suite.conf)
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	return cmd
 }
@@ -183,7 +148,7 @@ func (suite *KSQLTestSuite) TestShouldAlsoConfigureForPro() {
 	cmd := suite.newCMD()
 	cmd.SetArgs(append([]string{"app", "configure-acls", ksqlClusterID}))
 	suite.kafkac.DescribeFunc = func(ctx context.Context, cluster *kafkav1.KafkaCluster) (cluster2 *kafkav1.KafkaCluster, e error) {
-		return &kafkav1.KafkaCluster{Id: kafkaClusterID, Enterprise: false}, nil
+		return &kafkav1.KafkaCluster{Id: suite.conf.Context().Kafka, Enterprise: false}, nil
 	}
 
 	err := cmd.Execute()
@@ -201,7 +166,7 @@ func (suite *KSQLTestSuite) TestShouldNotConfigureOnDryRun() {
 	cmd := suite.newCMD()
 	cmd.SetArgs(append([]string{"app", "configure-acls", "--dry-run", ksqlClusterID}))
 	buf := new(bytes.Buffer)
-	cmd.SetOutput(buf)
+	cmd.SetOut(buf)
 
 	err := cmd.Execute()
 

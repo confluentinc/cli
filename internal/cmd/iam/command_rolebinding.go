@@ -10,7 +10,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/cmd"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/go-printer"
@@ -42,10 +43,7 @@ type rolebindingOptions struct {
 }
 
 type rolebindingCommand struct {
-	*cobra.Command
-	config *config.Config
-	client *mds.APIClient
-	ctx    context.Context
+	*cmd.AuthenticatedCLICommand
 }
 
 type listDisplay struct {
@@ -57,20 +55,17 @@ type listDisplay struct {
 }
 
 // NewRolebindingCommand returns the sub-command object for interacting with RBAC rolebindings.
-func NewRolebindingCommand(config *config.Config, client *mds.APIClient) *cobra.Command {
-	cmd := &rolebindingCommand{
-		Command: &cobra.Command{
+func NewRolebindingCommand(cfg *v2.Config, prerunner cmd.PreRunner) *cobra.Command {
+	cliCmd := cmd.NewAuthenticatedWithMDSCLICommand(
+		&cobra.Command{
 			Use:   "rolebinding",
 			Short: "Manage RBAC and IAM role bindings.",
 			Long:  "Manage Role Based Access (RBAC) and Identity and Access Management (IAM) role bindings.",
 		},
-		config: config,
-		client: client,
-		ctx:    context.WithValue(context.Background(), mds.ContextAccessToken, config.AuthToken),
-	}
-
-	cmd.init()
-	return cmd.Command
+		cfg, prerunner)
+	roleBindingCmd := &rolebindingCommand{AuthenticatedCLICommand: cliCmd}
+	roleBindingCmd.init()
+	return roleBindingCmd.Command
 }
 
 func (c *rolebindingCommand) init() {
@@ -159,7 +154,8 @@ func (c *rolebindingCommand) parseAndValidateResourcePattern(typename string, pr
 }
 
 func (c *rolebindingCommand) validateRoleAndResourceType(roleName string, resourceType string) error {
-	role, _, err := c.client.RoleDefinitionsApi.RoleDetail(c.ctx, roleName)
+	ctx := c.createContext()
+	role, _, err := c.MDSClient.RoleDefinitionsApi.RoleDetail(ctx, roleName)
 	if err != nil {
 		return errors.Wrapf(err, "Failed to look up role %s. Was an invalid role name specified?", roleName)
 	}
@@ -249,9 +245,8 @@ func (c *rolebindingCommand) listPrincipalResources(cmd *cobra.Command) error {
 		}
 		role = r
 	}
-
-	principalsRolesResourcePatterns, response, err := c.client.RoleBindingSummariesApi.LookupResourcesForPrincipal(
-		c.ctx,
+	principalsRolesResourcePatterns, response, err := c.MDSClient.RoleBindingSummariesApi.LookupResourcesForPrincipal(
+		c.createContext(),
 		principal,
 		mds.Scope{Clusters: *scopeClusters})
 	if err != nil {
@@ -302,8 +297,8 @@ func (c *rolebindingCommand) listPrincipalResourcesV1(cmd *cobra.Command, scopeC
 	var err error
 	roleNames := []string{role}
 	if role == "*" {
-		roleNames, _, err = c.client.RoleBindingSummariesApi.ScopedPrincipalRolenames(
-			c.ctx,
+		roleNames, _, err = c.MDSClient.RoleBindingSummariesApi.ScopedPrincipalRolenames(
+			c.createContext(),
 			principal,
 			mds.Scope{Clusters: *scopeClusters})
 		if err != nil {
@@ -313,8 +308,8 @@ func (c *rolebindingCommand) listPrincipalResourcesV1(cmd *cobra.Command, scopeC
 
 	var data [][]string
 	for _, roleName := range roleNames {
-		rps, _, err := c.client.RoleBindingCRUDApi.GetRoleResourcesForPrincipal(
-			c.ctx,
+		rps, _, err := c.MDSClient.RoleBindingCRUDApi.GetRoleResourcesForPrincipal(
+			c.createContext(),
 			principal,
 			roleName,
 			mds.Scope{Clusters: *scopeClusters})
@@ -358,8 +353,8 @@ func (c *rolebindingCommand) listRolePrincipals(cmd *cobra.Command) error {
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
-		principals, _, err = c.client.RoleBindingSummariesApi.LookupPrincipalsWithRoleOnResource(
-			c.ctx,
+		principals, _, err = c.MDSClient.RoleBindingSummariesApi.LookupPrincipalsWithRoleOnResource(
+			c.createContext(),
 			role,
 			resource.ResourceType,
 			resource.Name,
@@ -368,8 +363,8 @@ func (c *rolebindingCommand) listRolePrincipals(cmd *cobra.Command) error {
 			return errors.HandleCommon(err, cmd)
 		}
 	} else {
-		principals, _, err = c.client.RoleBindingSummariesApi.LookupPrincipalsWithRole(
-			c.ctx,
+		principals, _, err = c.MDSClient.RoleBindingSummariesApi.LookupPrincipalsWithRole(
+			c.createContext(),
 			role,
 			mds.Scope{Clusters: *scopeClusters})
 		if err != nil {
@@ -440,13 +435,13 @@ func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOption
 	}
 
 	return &rolebindingOptions{
-			role,
-			resource,
-			prefix,
-			principal,
-			*scopeClusters,
-			resourcesRequest,
-		},
+		role,
+		resource,
+		prefix,
+		principal,
+		*scopeClusters,
+		resourcesRequest,
+	},
 		nil
 }
 
@@ -458,14 +453,14 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, args []string) error {
 
 	var resp *http.Response
 	if options.resource != "" {
-		resp, err = c.client.RoleBindingCRUDApi.AddRoleResourcesForPrincipal(
-			c.ctx,
+		resp, err = c.MDSClient.RoleBindingCRUDApi.AddRoleResourcesForPrincipal(
+			c.createContext(),
 			options.principal,
 			options.role,
 			options.resourcesRequest)
 	} else {
-		resp, err = c.client.RoleBindingCRUDApi.AddRoleForPrincipal(
-			c.ctx,
+		resp, err = c.MDSClient.RoleBindingCRUDApi.AddRoleForPrincipal(
+			c.createContext(),
 			options.principal,
 			options.role,
 			mds.Scope{Clusters: options.scopeClusters})
@@ -490,14 +485,14 @@ func (c *rolebindingCommand) delete(cmd *cobra.Command, args []string) error {
 
 	var resp *http.Response
 	if options.resource != "" {
-		resp, err = c.client.RoleBindingCRUDApi.RemoveRoleResourcesForPrincipal(
-			c.ctx,
+		resp, err = c.MDSClient.RoleBindingCRUDApi.RemoveRoleResourcesForPrincipal(
+			c.createContext(),
 			options.principal,
 			options.role,
 			options.resourcesRequest)
 	} else {
-		resp, err = c.client.RoleBindingCRUDApi.DeleteRoleForPrincipal(
-			c.ctx,
+		resp, err = c.MDSClient.RoleBindingCRUDApi.DeleteRoleForPrincipal(
+			c.createContext(),
 			options.principal,
 			options.role,
 			mds.Scope{Clusters: options.scopeClusters})
@@ -518,4 +513,8 @@ func check(err error) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func (c *rolebindingCommand) createContext() context.Context {
+	return context.WithValue(context.Background(), mds.ContextAccessToken, c.AuthToken())
 }
