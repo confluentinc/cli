@@ -35,7 +35,7 @@ func NewSchemaCommand(config *config.Config, ch *pcmd.ConfigHelper, srClient *sr
 
 func (c *schemaCommand) init() {
 	cmd := &cobra.Command{
-		Use:   "create --subject <subject> --schema <schema-file>",
+		Use:   "create --subject <subject> --schema <schema-file> --type <schema-type>",
 		Short: "Create a schema.",
 		Example: FormatDescription(`
 Register a new schema
@@ -65,6 +65,7 @@ Where schemafilepath may include these contents:
 	RequireSubjectFlag(cmd)
 	cmd.Flags().String("schema", "", "The path to the schema file.")
 	_ = cmd.MarkFlagRequired("schema")
+	cmd.Flags().String("type", "T", "The schema type.")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
@@ -124,12 +125,16 @@ func (c *schemaCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	schemaType, err := cmd.Flags().GetString("type")
+	if err != nil {
+		return err
+	}
 
 	schema, err := ioutil.ReadFile(schemaPath)
 	if err != nil {
 		return err
 	}
-	response, _, err := srClient.DefaultApi.Register(ctx, subject, srsdk.RegisterSchemaRequest{Schema: string(schema)})
+	response, _, err := srClient.DefaultApi.Register(ctx, subject, srsdk.RegisterSchemaRequest{Schema: string(schema), SchemaType: schemaType})
 	if err != nil {
 		return err
 	}
