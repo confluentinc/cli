@@ -7,25 +7,18 @@ import (
 
 	"github.com/confluentinc/cli/internal/cmd"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/cli/internal/pkg/log"
-	cliVersion "github.com/confluentinc/cli/internal/pkg/version"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 	"github.com/confluentinc/cli/mock"
 )
 
 func TestAddCommands_ShownInHelpUsage_CCloud(t *testing.T) {
 	req := require.New(t)
 
-	logger := log.New()
-	cfg := config.New(&config.Config{
-		CLIName: "ccloud",
-		Logger:  logger,
-	})
-	req.NoError(cfg.Load())
-
-	version := cliVersion.NewVersion("ccloud", "Confluent Cloud CLI", "https://confluent.cloud; support@confluent.io", "1.2.3", "abc1234", "01/23/45", "CI")
-
-	root, err := cmd.NewConfluentCommand("ccloud", cfg, version, logger, mock.NewDummyAnalyticsMock())
+	cfg := v2.AuthenticatedConfigMock()
+	cfg.CLIName = "ccloud"
+	ver := pversion.NewVersion("ccloud", "Confluent Cloud CLI", "https://confluent.cloud; support@confluent.io", "1.2.3", "abc1234", "01/23/45", "CI")
+	root, err := cmd.NewConfluentCommand("ccloud", cfg, cfg.Logger, ver, mock.NewDummyAnalyticsMock())
 	req.NoError(err)
 
 	output, err := pcmd.ExecuteCommand(root.Command, "help")
@@ -45,16 +38,9 @@ func TestAddCommands_ShownInHelpUsage_CCloud(t *testing.T) {
 func TestAddCommands_ShownInHelpUsage_Confluent(t *testing.T) {
 	req := require.New(t)
 
-	logger := log.New()
-	cfg := config.New(&config.Config{
-		CLIName: "confluent",
-		Logger:  logger,
-	})
-	req.NoError(cfg.Load())
-
-	version := cliVersion.NewVersion("confluent", "Confluent CLI", "https://confluent.io; support@confluent.io", "1.2.3", "abc1234", "01/23/45", "CI")
-
-	root, err := cmd.NewConfluentCommand("confluent", cfg, version, logger, mock.NewDummyAnalyticsMock())
+	cfg := v2.AuthenticatedConfigMock()
+	ver := pversion.NewVersion("ccloud", "Confluent Cloud CLI", "https://confluent.cloud; support@confluent.io", "1.2.3", "abc1234", "01/23/45", "CI")
+	root, err := cmd.NewConfluentCommand("confluent", cfg, cfg.Logger, ver, mock.NewDummyAnalyticsMock())
 	req.NoError(err)
 
 	output, err := pcmd.ExecuteCommand(root.Command, "help")

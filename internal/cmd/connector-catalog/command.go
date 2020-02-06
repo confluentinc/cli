@@ -6,20 +6,16 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/ccloud-sdk-go"
 	connectv1 "github.com/confluentinc/ccloudapis/connect/v1"
 	"github.com/confluentinc/go-printer"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 type command struct {
-	*cobra.Command
-	config *config.Config
-	client ccloud.Connect
-	ch     *pcmd.ConfigHelper
+	*pcmd.AuthenticatedCLICommand
 }
 
 type catalogDisplay struct {
@@ -32,16 +28,12 @@ var (
 )
 
 // New returns the default command object for interacting with Connect.
-func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.Connect, ch *pcmd.ConfigHelper) *cobra.Command {
+func New(prerunner pcmd.PreRunner, config *v2.Config) *cobra.Command {
 	cmd := &command{
-		Command: &cobra.Command{
-			Use:               "connector-catalog",
-			Short:             "Catalog of connectors and their configurations.",
-			PersistentPreRunE: prerunner.Authenticated(),
-		},
-		config: config,
-		client: client,
-		ch:     ch,
+		AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(&cobra.Command{
+			Use:   "connector-catalog",
+			Short: "Catalog of connectors and their configurations.",
+		}, config, prerunner),
 	}
 	cmd.init()
 	return cmd.Command
@@ -56,7 +48,7 @@ Describe required connector configuration parameters for a specific connector pl
 
 ::
 
-        {{.CLIName}} connector-catalog describe <connector-type>`, c.config.CLIName),
+        {{.CLIName}} connector-catalog describe <connector-type>`, c.Config.CLIName),
 		RunE: c.describe,
 		Args: cobra.ExactArgs(1),
 	}
@@ -72,7 +64,7 @@ List connectors in the current or specified Kafka cluster context.
 
 ::
 
-        {{.CLIName}} connector-catalog list`, c.config.CLIName),
+        {{.CLIName}} connector-catalog list`, c.Config.CLIName),
 		RunE: c.list,
 		Args: cobra.NoArgs,
 	}
@@ -82,11 +74,11 @@ List connectors in the current or specified Kafka cluster context.
 }
 
 func (c *command) list(cmd *cobra.Command, args []string) error {
-	kafkaCluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
+	kafkaCluster, err := pcmd.KafkaCluster(cmd, c.Context)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	connectorInfo, err := c.client.GetPlugins(context.Background(), &connectv1.Connector{AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id}, "")
+	connectorInfo, err := c.Client.Connect.GetPlugins(context.Background(), &connectv1.Connector{AccountId: c.EnvironmentId(), KafkaClusterId: kafkaCluster.Id}, "")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -103,20 +95,20 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) describe(cmd *cobra.Command, args []string) error {
-	kafkaCluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
+	kafkaCluster, err := pcmd.KafkaCluster(cmd, c.Context)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 	if len(args) == 0 {
 		return errors.HandleCommon(errors.ErrNoPluginName, cmd)
 	}
-	_, err = c.client.Validate(context.Background(),
+	_, err = c.Client.Connect.Validate(context.Background(),
 		&connectv1.ConnectorConfig{
-			UserConfigs: map[string]string{"connector.class": args[0]},
-			AccountId: c.config.Auth.Account.Id,
+			UserConfigs:    map[string]string{"connector.class": args[0]},
+			AccountId:      c.EnvironmentId(),
 			KafkaClusterId: kafkaCluster.Id,
-			Plugin: args[0]},
-			false)
+			Plugin:         args[0]},
+		false)
 
 	if err != nil {
 		pcmd.Println(cmd, "Following are the required configs: \nconnector.class \n"+err.Error())

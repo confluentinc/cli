@@ -140,17 +140,15 @@ func addRoles(routesAndReplies map[string]string) {
 	base := "/security/1.0/roles"
 	var roleNameList []string
 	for roleName, roleInfo := range rbacRoles {
-		routesAndReplies[base + "/" + roleName] = roleInfo
+		routesAndReplies[base+"/"+roleName] = roleInfo
 		roleNameList = append(roleNameList, roleName)
 	}
 
 	sort.Strings(roleNameList)
-	
+
 	var allRoles []string
 	for _, roleName := range roleNameList {
 		allRoles = append(allRoles, rbacRoles[roleName])
 	}
 	routesAndReplies[base] = "[" + strings.Join(allRoles, ",") + "]"
 }
-
-

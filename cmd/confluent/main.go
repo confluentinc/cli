@@ -14,9 +14,11 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/config/load"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/metric"
-	cliVersion "github.com/confluentinc/cli/internal/pkg/version"
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 	"github.com/confluentinc/cli/mock"
 )
 
@@ -42,19 +44,28 @@ func main() {
 
 	metricSink := metric.NewSink()
 
-	var cfg *config.Config
+	var cfg *v2.Config
 
-	cfg = config.New(&config.Config{
+	params := &config.Params{
 		CLIName:    cliName,
 		MetricSink: metricSink,
 		Logger:     logger,
-	})
-	err = cfg.Load()
+	}
+	cfg = v2.New(params)
+	cfg, err = load.LoadAndMigrate(cfg)
 	if err != nil {
-		logger.Errorf("unable to load config: %v", err)
+		errFmt := "unable to load config: %v\n"
+		logger.Debug(errFmt, err)
+		fmt.Fprintf(os.Stderr, errFmt, err)
+		if isTest {
+			bincover.ExitCode = 1
+			return
+		} else {
+			os.Exit(1)
+		}
 	}
 
-	version := cliVersion.NewVersion(cfg.CLIName, cfg.Name(), cfg.Support(), version, commit, date, host)
+	version := pversion.NewVersion(cfg.CLIName, cfg.Name(), cfg.Support(), version, commit, date, host)
 
 	var analyticsClient analytics.Client
 	if !isTest && cfg.CLIName == "ccloud" {
@@ -67,7 +78,7 @@ func main() {
 		analyticsClient = mock.NewDummyAnalyticsMock()
 	}
 
-	cli, err := cmd.NewConfluentCommand(cliName, cfg, version, logger, analyticsClient)
+	cli, err := cmd.NewConfluentCommand(cliName, cfg, logger, version, analyticsClient)
 	if err != nil {
 		if cli == nil {
 			fmt.Fprintln(os.Stderr, err)
@@ -76,6 +87,7 @@ func main() {
 		}
 		if isTest {
 			bincover.ExitCode = 1
+			return
 		} else {
 			exit(1, analyticsClient, logger)
 		}
@@ -84,6 +96,7 @@ func main() {
 	if err != nil {
 		if isTest {
 			bincover.ExitCode = 1
+			return
 		} else {
 			exit(1, analyticsClient, logger)
 		}

@@ -1,8 +1,8 @@
        Key      | Owner | Description  |  Resource Type  | Resource ID   
 +---------------+-------+--------------+-----------------+--------------+
-    MYKEY1      |    12 |              | kafka           | bob           
-    MYKEY2      |    18 |              | kafka           | abc           
-    MYKEY3      |    23 |              | kafka           | bob           
+    MYKEY1      |    12 |              | kafka           | lkc-bob       
+    MYKEY2      |    18 |              | kafka           | lkc-abc       
+    MYKEY3      |    23 |              | kafka           | lkc-bob       
     MYKEY4      |    23 | my-cool-app  | kafka           | lkc-cool1     
     MYKEY5      |    23 | my-other-app | kafka           | lkc-other1    
     MYKEY6      |    23 | my-ksql-app  | ksql            | lksqlc-ksql1  

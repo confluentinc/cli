@@ -2,38 +2,33 @@ package auth
 
 import (
 	"context"
-	"crypto/tls"
-	"crypto/x509"
 	"fmt"
 	"io"
-	"io/ioutil"
-	"net"
-	"net/http"
-	"github.com/spf13/cobra"
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
+	"github.com/confluentinc/mds-sdk-go"
+	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/config/v1"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
-	sso "github.com/confluentinc/cli/internal/pkg/sso"
-
-	"github.com/confluentinc/mds-sdk-go"
+	"github.com/confluentinc/cli/internal/pkg/sso"
 )
 
 type commands struct {
-	Commands             []*cobra.Command
-	config               *config.Config
-	mdsClient            *mds.APIClient
-	Logger               *log.Logger
-	analyticsClient      analytics.Client
+	Commands        []*pcmd.CLICommand
+	Logger          *log.Logger
+	config          *v2.Config
+	analyticsClient analytics.Client
+	// @VisibleForTesting
+	MDSClient *mds.APIClient
 	// @VisibleForTesting, defaults to the OS filesystem
 	certReader io.Reader
 	// for testing
@@ -42,32 +37,39 @@ type commands struct {
 	jwtHTTPClientFactory  func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *ccloud.Client
 }
 
+var (
+	LoginIndex = 0
+)
+
 // New returns a list of auth-related Cobra commands.
-func New(prerunner pcmd.PreRunner, config *config.Config, logger *log.Logger, mdsClient *mds.APIClient, userAgent string, analyticsClient analytics.Client) []*cobra.Command {
+func New(prerunner pcmd.PreRunner, config *v2.Config, logger *log.Logger, userAgent string, analyticsClient analytics.Client) []*cobra.Command {
 	var defaultAnonHTTPClientFactory = func(baseURL string, logger *log.Logger) *ccloud.Client {
 		return ccloud.NewClient(&ccloud.Params{BaseURL: baseURL, HttpClient: ccloud.BaseClient, Logger: logger, UserAgent: userAgent})
 	}
 	var defaultJwtHTTPClientFactory = func(ctx context.Context, jwt string, baseURL string, logger *log.Logger) *ccloud.Client {
 		return ccloud.NewClientWithJWT(ctx, jwt, &ccloud.Params{BaseURL: baseURL, Logger: logger, UserAgent: userAgent})
 	}
-	return newCommands(prerunner, config, logger, mdsClient, pcmd.NewPrompt(os.Stdin),
+	cmds := newCommands(prerunner, config, logger, pcmd.NewPrompt(os.Stdin),
 		defaultAnonHTTPClientFactory, defaultJwtHTTPClientFactory, analyticsClient,
-	).Commands
+	)
+	var cobraCmds []*cobra.Command
+	for _, cmd := range cmds.Commands {
+		cobraCmds = append(cobraCmds, cmd.Command)
+	}
+	return cobraCmds
 }
 
-func newCommands(prerunner pcmd.PreRunner, config *config.Config, log *log.Logger, mdsClient *mds.APIClient, prompt pcmd.Prompt,
+func newCommands(prerunner pcmd.PreRunner, config *v2.Config, log *log.Logger, prompt pcmd.Prompt,
 	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *ccloud.Client,
 	jwtHTTPClientFactory func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *ccloud.Client,
-	analyticsClient analytics.Client,
-) *commands {
+	analyticsClient analytics.Client) *commands {
 	cmd := &commands{
 		config:                config,
-		mdsClient:             mdsClient,
 		Logger:                log,
 		prompt:                prompt,
+		analyticsClient:       analyticsClient,
 		anonHTTPClientFactory: anonHTTPClientFactory,
 		jwtHTTPClientFactory:  jwtHTTPClientFactory,
-		analyticsClient:       analyticsClient,
 	}
 	cmd.init(prerunner)
 	return cmd
@@ -93,7 +95,8 @@ func (a *commands) init(prerunner pcmd.PreRunner) {
 	}
 	loginCmd.Flags().Bool("no-browser", false, "Do not open browser when authenticating via Single Sign-On.")
 	loginCmd.Flags().SortFlags = false
-	loginCmd.PersistentPreRunE = a.analyticsPreRunCover(analytics.Login, prerunner)
+	cliLoginCmd := pcmd.NewAnonymousCLICommand(loginCmd, a.config, prerunner)
+	loginCmd.PersistentPreRunE = a.analyticsPreRunCover(cliLoginCmd, analytics.Login, prerunner)
 	logoutCmd := &cobra.Command{
 		Use:   "logout",
 		Short: fmt.Sprintf("Logout of %s.", a.config.APIName()),
@@ -102,8 +105,9 @@ func (a *commands) init(prerunner pcmd.PreRunner) {
 		RunE: a.logout,
 		Args: cobra.NoArgs,
 	}
-	logoutCmd.PersistentPreRunE = a.analyticsPreRunCover(analytics.Logout, prerunner)
-	a.Commands = []*cobra.Command{loginCmd, logoutCmd}
+	cliLogoutCmd := pcmd.NewAnonymousCLICommand(logoutCmd, a.config, prerunner)
+	logoutCmd.PersistentPreRunE = a.analyticsPreRunCover(cliLogoutCmd, analytics.Logout, prerunner)
+	a.Commands = []*pcmd.CLICommand{cliLoginCmd, cliLogoutCmd}
 }
 
 func (a *commands) login(cmd *cobra.Command, args []string) error {
@@ -111,7 +115,6 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	a.config.AuthURL = url
 
 	noBrowser, err := cmd.Flags().GetBool("no-browser")
 	if err != nil {
@@ -119,7 +122,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	}
 	a.config.NoBrowser = noBrowser
 
-	client := a.anonHTTPClientFactory(a.config.AuthURL, a.config.Logger)
+	client := a.anonHTTPClientFactory(url, a.config.Logger)
 	email, password, err := a.credentials(cmd, "Email", client)
 	if err != nil {
 		return err
@@ -134,7 +137,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	token := ""
 
 	if userSSO != nil && userSSO.Sso != nil && userSSO.Sso.Enabled && userSSO.Sso.Auth0ConnectionName != "" {
-		idToken, err := sso.Login(a.config, userSSO.Sso.Auth0ConnectionName)
+		idToken, err := sso.Login(url, noBrowser, userSSO.Sso.Auth0ConnectionName)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
@@ -150,9 +153,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	a.config.AuthToken = token
-
-	client = a.jwtHTTPClientFactory(context.Background(), a.config.AuthToken, a.config.AuthURL, a.config.Logger)
+	client = a.jwtHTTPClientFactory(context.Background(), token, url, a.config.Logger)
 	user, err := client.Auth.User(context.Background())
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -161,50 +162,66 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	if len(user.Accounts) == 0 {
 		return errors.HandleCommon(errors.New("No environments found for authenticated user!"), cmd)
 	}
-
+	username := user.User.Email
+	name := generateContextName(username, url)
+	var state *v2.ContextState
+	ctx, err := a.config.FindContext(name)
+	if err == nil {
+		state = ctx.State
+	} else {
+		state = new(v2.ContextState)
+	}
+	state.AuthToken = token
 	// If no auth config exists, initialize it
-	if a.config.Auth == nil {
-		a.config.Auth = &config.AuthConfig{}
+	if state.Auth == nil {
+		state.Auth = &v1.AuthConfig{}
 	}
 
 	// Always overwrite the user and list of accounts when logging in -- but don't necessarily
 	// overwrite `Account` (current/active environment) since we want that to be remembered
 	// between CLI sessions.
-	a.config.Auth.User = user.User
-	a.config.Auth.Accounts = user.Accounts
+	state.Auth.User = user.User
+	state.Auth.Accounts = user.Accounts
+
 	// Default to 0th environment if no suitable environment is already configured
 	hasGoodEnv := false
-	if a.config.Auth.Account != nil {
-		for _, acc := range a.config.Auth.Accounts {
-			if acc.Id == a.config.Auth.Account.Id {
+	if state.Auth.Account != nil {
+		for _, acc := range state.Auth.Accounts {
+			if acc.Id == state.Auth.Account.Id {
 				hasGoodEnv = true
 			}
 		}
 	}
 	if !hasGoodEnv {
-		a.config.Auth.Account = a.config.Auth.Accounts[0]
+		state.Auth.Account = state.Auth.Accounts[0]
 	}
 
-	err = a.setContextAndAddContextIfAbsent(a.config.Auth.User.Email, "")
+	err = a.addContextIfAbsent(state.Auth.User.Email, url, state, "")
 	if err != nil {
 		return err
 	}
 	err = a.config.Save()
 	if err != nil {
-		return errors.Wrap(err, "Unable to save user authentication.")
+		return errors.Wrap(err, "unable to save user authentication")
 	}
 	pcmd.Println(cmd, "Logged in as", email)
-	pcmd.Print(cmd, "Using environment ", a.config.Auth.Account.Id,
-		" (\"", a.config.Auth.Account.Name, "\")\n")
+	pcmd.Print(cmd, "Using environment ", state.Auth.Account.Id,
+		" (\"", state.Auth.Account.Name, "\")\n")
 	return err
 }
 
 func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
+	if a.MDSClient == nil {
+		err := a.setMDSClient(cmd)
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+	}
 	url, err := cmd.Flags().GetString("url")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
-	a.config.AuthURL = url
+	mdsClient := a.MDSClient
 	caCertPath := ""
 	if cmd.Flags().Changed("ca-cert-path") {
 		caCertPath, err = cmd.Flags().GetString("ca-cert-path")
@@ -213,7 +230,7 @@ func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
 		}
 		if caCertPath == "" {
 			// revert to default client regardless of previously configured client
-			a.mdsClient.GetConfig().HTTPClient = DefaultClient()
+			mdsClient.GetConfig().HTTPClient = pcmd.DefaultClient()
 		} else {
 			// override previously configured httpclient if a new cert path was specified
 			if a.certReader == nil {
@@ -229,41 +246,46 @@ func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
 				defer caCertFile.Close()
 				a.certReader = caCertFile
 			}
-			a.mdsClient.GetConfig().HTTPClient, err = SelfSignedCertClient(a.certReader, a.Logger)
+			mdsClient.GetConfig().HTTPClient, err = pcmd.SelfSignedCertClient(a.certReader, a.Logger)
 			if err != nil {
 				return errors.HandleCommon(err, cmd)
 			}
 			a.Logger.Debugf("Successfully loaded certificate from %s", caCertPath)
 		}
 	}
-	a.mdsClient.ChangeBasePath(a.config.AuthURL)
+	mdsClient.ChangeBasePath(url)
 	email, password, err := a.credentials(cmd, "Username", nil)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 
 	basicContext := context.WithValue(context.Background(), mds.ContextBasicAuth, mds.BasicAuth{UserName: email, Password: password})
-	resp, _, err := a.mdsClient.TokensAuthenticationApi.GetToken(basicContext, "")
+	resp, _, err := mdsClient.TokensAuthenticationApi.GetToken(basicContext, "")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	a.config.AuthToken = resp.AuthToken
-
-	err = a.config.Save()
-	if err != nil {
-		return errors.Wrap(err, "Unable to save user authentication.")
+	state := &v2.ContextState{
+		Auth:      nil,
+		AuthToken: resp.AuthToken,
 	}
-	err = a.setContextAndAddContextIfAbsent(email, caCertPath)
+	err = a.addContextIfAbsent(email, url, state, caCertPath)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	pcmd.Println(cmd, "Logged in as", email)
-
-	return errors.HandleCommon(err, cmd)
+	return nil
 }
 
 func (a *commands) logout(cmd *cobra.Command, args []string) error {
-	err := a.config.DeleteUserAuth()
+	ctx := a.config.Context()
+	if ctx == nil {
+		return nil
+	}
+	err := ctx.DeleteUserAuth()
+	if err != nil {
+		return err
+	}
+	err = a.config.Save()
 	if err != nil {
 		return err
 	}
@@ -324,94 +346,85 @@ func (a *commands) credentials(cmd *cobra.Command, userField string, cloudClient
 	return email, password, nil
 }
 
-func (a *commands) setContextAndAddContextIfAbsent(username string, caCertPath string) error {
-	name := fmt.Sprintf("login-%s-%s", username, a.config.AuthURL)
-	if _, ok := a.config.Contexts[name]; ok {
-		err := a.config.SetContext(name)
-		if err != nil {
-			return err
-		}
+func (a *commands) addContextIfAbsent(username string, url string, state *v2.ContextState, caCertPath string) error {
+	ctxName := generateContextName(username, url)
+	if _, ok := a.config.Contexts[ctxName]; ok {
 		return nil
 	}
-	platform := &config.Platform{
-		Server:     a.config.AuthURL,
+	credName := generateCredentialName(username)
+	platform := &v2.Platform{
+		Name:       strings.TrimPrefix(url, "https://"),
+		Server:     url,
 		CaCertPath: caCertPath,
 	}
-	credential := &config.Credential{
+	credential := &v2.Credential{
+		Name:     credName,
 		Username: username,
 		// don't save password if they entered it interactively.
 	}
-	err := a.config.AddContext(name, platform, credential, map[string]*config.KafkaClusterConfig{}, "", nil)
+	err := a.config.SavePlatform(platform)
 	if err != nil {
 		return err
 	}
-	err = a.config.SetContext(name)
+	err = a.config.SaveCredential(credential)
+	if err != nil {
+		return err
+	}
+	err = a.config.AddContext(ctxName, platform.Name, credential.Name, map[string]*v1.KafkaClusterConfig{},
+		"", nil, state)
+	if err != nil {
+		return err
+	}
+	err = a.config.SetContext(ctxName)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (a *commands) analyticsPreRunCover(commandType analytics.CommandType, prerunner pcmd.PreRunner) func(cmd *cobra.Command, args []string) error {
+func (a *commands) analyticsPreRunCover(command *pcmd.CLICommand, commandType analytics.CommandType, prerunner pcmd.PreRunner) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		a.analyticsClient.SetCommandType(commandType)
-		return prerunner.Anonymous()(cmd, args)
+		return prerunner.Anonymous(command)(cmd, args)
 	}
 }
 
-func SelfSignedCertClient(certReader io.Reader, logger *log.Logger) (*http.Client, error){
-	certPool, err := x509.SystemCertPool()
+func generateContextName(username string, url string) string {
+	return fmt.Sprintf("login-%s-%s", username, url)
+}
+
+func generateCredentialName(username string) string {
+	return fmt.Sprintf("username-%s", username)
+}
+
+func (a *commands) setMDSClient(cmd *cobra.Command) error {
+	mdsConfig := mds.NewConfiguration()
+	ctx, err := a.Commands[0].Config.Context(cmd)
 	if err != nil {
-		logger.Warnf("Unable to load system certificates. Continuing with custom certificates only.")
+		return err
 	}
-	if certPool == nil {
-		certPool = x509.NewCertPool()
+	if ctx == nil || ctx.Platform.CaCertPath == "" {
+		a.MDSClient = mds.NewAPIClient(mdsConfig)
+		return nil
 	}
+	caCertPath := ctx.Platform.CaCertPath
+	// Try to load certs. On failure, warn, but don't error out because this may be an auth command, so there may
+	// be a --ca-cert-path flag on the cmd line that'll fix whatever issue there is with the cert file in the config
+	caCertFile, err := os.Open(caCertPath)
+	if err == nil {
+		defer caCertFile.Close()
+		mdsConfig.HTTPClient, err = pcmd.SelfSignedCertClient(caCertFile, a.Logger)
+		if err != nil {
+			a.Logger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
+			mdsConfig.HTTPClient = pcmd.DefaultClient()
+		}
+	} else {
+		a.Logger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
+		mdsConfig.HTTPClient = pcmd.DefaultClient()
 
-	if certReader == nil {
-		return nil, fmt.Errorf("no reader specified for reading custom certificates")
 	}
-	certs, err := ioutil.ReadAll(certReader)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read certificate: %v", err)
-	}
-
-	// Append new cert to the system pool
-	if ok := certPool.AppendCertsFromPEM(certs); !ok {
-		return nil, fmt.Errorf("no certs appended, using system certs only")
-	}
-
-	// Trust the updated cert pool in our client
-	transport := DefaultTransport()
-	transport.TLSClientConfig = &tls.Config{RootCAs: certPool}
-	client := DefaultClient()
-	client.Transport = transport
-
-	return client, nil
-}
-
-func DefaultTransport() *http.Transport {
-	// copied from the current net/http/transport.go dependency version, but it's already
-	// out of date with respect to newer transport versions. For future proofing, this
-	// should be replaced with:
-	//     return http.DefaultTransport.(*http.Transport).Clone()
-	// but only after upgrading to go 1.13, since Clone isn't available until then.
-	return &http.Transport{
-		Proxy: http.ProxyFromEnvironment,
-		DialContext: (&net.Dialer{
-			Timeout:   30 * time.Second,
-			KeepAlive: 30 * time.Second,
-			DualStack: true,
-		}).DialContext,
-		MaxIdleConns:          100,
-		IdleConnTimeout:       90 * time.Second,
-		TLSHandshakeTimeout:   10 * time.Second,
-		ExpectContinueTimeout: 1 * time.Second,
-	}
-}
-
-func DefaultClient() *http.Client {
-	return http.DefaultClient
+	a.MDSClient = mds.NewAPIClient(mdsConfig)
+	return nil
 }
 
 func check(err error) {
@@ -419,5 +432,3 @@ func check(err error) {
 		panic(err)
 	}
 }
-
-

@@ -20,7 +20,7 @@ func TestHandleError(t *testing.T) {
 		{
 			name:    "static message",
 			err:     ErrNotLoggedIn,
-			want:    "You must login to run that command.",
+			want:    "You must log in to run that command.",
 			wantErr: true,
 		},
 		{

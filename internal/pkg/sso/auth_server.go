@@ -18,10 +18,10 @@ authServer is an HTTP server embedded in the CLI to serve callback requests for 
 The server runs in a goroutine / in the background.
 */
 type authServer struct {
-	server                        *http.Server
-	wg                            *sync.WaitGroup
-	bgErr                         error
-	State 						  *authState
+	server *http.Server
+	wg     *sync.WaitGroup
+	bgErr  error
+	State  *authState
 }
 
 func newServer(state *authState) *authServer {
@@ -100,4 +100,3 @@ func (s *authServer) callbackHandler(rw http.ResponseWriter, request *http.Reque
 
 	s.wg.Done()
 }
-

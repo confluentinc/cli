@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"strings"
+
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -15,6 +18,10 @@ var (
 // FlagResolver reads indirect flag values such as "-" for stdin pipe or "@file.txt" @ prefix
 type FlagResolver interface {
 	ValueFrom(source string, prompt string, secure bool) (string, error)
+	ResolveContextFlag(cmd *cobra.Command) (string, error)
+	ResolveClusterFlag(cmd *cobra.Command) (string, error)
+	ResolveEnvironmentFlag(cmd *cobra.Command) (string, error)
+	ResolveResourceId(cmd *cobra.Command) (resourceType string, resourceId string, err error)
 }
 
 type FlagResolverImpl struct {
@@ -81,4 +88,67 @@ func (r *FlagResolverImpl) ValueFrom(source string, prompt string, secure bool) 
 	}
 
 	return source, nil
+}
+
+func (r *FlagResolverImpl) ResolveContextFlag(cmd *cobra.Command) (string, error) {
+	const contextFlag = "context"
+	if cmd.Flags().Changed(contextFlag) {
+		name, err := cmd.Flags().GetString(contextFlag)
+		if err != nil {
+			return "", err
+		}
+		return name, nil
+	}
+	return "", nil
+}
+
+func (r *FlagResolverImpl) ResolveClusterFlag(cmd *cobra.Command) (string, error) {
+	const clusterFlag = "cluster"
+	if cmd.Flags().Changed(clusterFlag) {
+		clusterId, err := cmd.Flags().GetString(clusterFlag)
+		if err != nil {
+			return "", err
+		}
+		return clusterId, nil
+	}
+	return "", nil
+}
+
+func (r *FlagResolverImpl) ResolveEnvironmentFlag(cmd *cobra.Command) (string, error) {
+	const environmentFlag = "environment"
+	if cmd.Flags().Changed(environmentFlag) {
+		environment, err := cmd.Flags().GetString(environmentFlag)
+		if err != nil {
+			return "", err
+		}
+		return environment, err
+	}
+	return "", nil
+}
+
+const (
+	KafkaResourceType = "kafka"
+	SrResourceType    = "schema-registry"
+	KSQLResourceType  = "ksql"
+)
+
+func (r *FlagResolverImpl) ResolveResourceId(cmd *cobra.Command) (resourceType string, resourceId string, err error) {
+	const resourceFlag = "resource"
+	if !cmd.Flags().Changed(resourceFlag) {
+		return "", "", nil
+	}
+	resourceId, err = cmd.Flags().GetString(resourceFlag)
+	if err != nil {
+		return "", "", err
+	}
+	if strings.HasPrefix(resourceId, "lsrc-") {
+		// Resource is schema registry.
+		resourceType = SrResourceType
+	} else if strings.HasPrefix(resourceId, "lksqlc-") {
+		resourceType = KSQLResourceType
+	} else {
+		// Resource is Kafka cluster.
+		resourceType = KafkaResourceType
+	}
+	return resourceType, resourceId, nil
 }

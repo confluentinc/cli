@@ -1,56 +1,48 @@
 package apikey
 
 import (
-	"strings"
+	"context"
 
+	"github.com/confluentinc/ccloud-sdk-go"
+	v1 "github.com/confluentinc/ccloudapis/ksql/v1"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
-const (
-	kafkaResourceType = "kafka"
-	srResourceType    = "schema-registry"
-	ksqlResourceType  = "ksql"
-)
-
-func (c *command) resolveResourceID(cmd *cobra.Command, args []string) (resourceType string, accId string, clusterId string, currentKey string, err error) {
-	resource, err := cmd.Flags().GetString(resourceFlagName)
-	if resource == "" || err != nil {
-		return "", "", "", "", err
+func (c *command) resolveResourceId(cmd *cobra.Command, resolver pcmd.FlagResolver, client *ccloud.Client) (resourceType string, clusterId string, currentKey string, err error) {
+	resourceType, resourceId, err := resolver.ResolveResourceId(cmd)
+	if err != nil || resourceType == "" {
+		return "", "", "", err
 	}
-	// If resource is schema registry
-	if strings.HasPrefix(resource, "lsrc-") {
-		src, err := pcmd.GetSchemaRegistry(cmd, c.ch)
+	if resourceType == pcmd.SrResourceType {
+		cluster, err := c.Context.SchemaRegistryCluster(cmd)
 		if err != nil {
-			return "", "", "", "", err
+			return "", "", "", err
 		}
-		if src == nil {
-			return "", "", "", "", errors.ErrNoSrEnabled
+		clusterId = cluster.Id
+		if cluster.SrCredentials != nil {
+			currentKey = cluster.SrCredentials.Key
 		}
-		clusterInContext, _ := c.config.SchemaRegistryCluster()
-		if clusterInContext == nil || clusterInContext.SrCredentials == nil {
-			currentKey = ""
-		} else {
-			currentKey = clusterInContext.SrCredentials.Key
-		}
-		return srResourceType, src.AccountId, src.Id, currentKey, nil
-
-	} else if strings.HasPrefix(resource, "lksqlc-") {
-		ksql, err := pcmd.GetKSQL(cmd, c.ch)
+	} else if resourceType == pcmd.KSQLResourceType {
+		ctx := context.Background()
+		cluster, err := client.KSQL.Describe(
+			ctx, &v1.KSQLCluster{
+				Id:        resourceId,
+				AccountId: c.EnvironmentId(),
+			})
 		if err != nil {
-			return "", "", "", "", err
+			return "", "", "", err
 		}
-		if ksql == nil {
-			return "", "", "", "", errors.ErrNoKSQL
-		}
-		return ksqlResourceType, ksql.AccountId, ksql.Id, "", nil
+		clusterId = cluster.Id
 	} else {
-		kcc, err := pcmd.GetKafkaClusterConfig(cmd, c.ch, resourceFlagName)
+		// Resource is of KafkaResourceType.
+		cluster, err := c.Context.ActiveKafkaCluster(cmd)
 		if err != nil {
-			return "", "", "", "", err
+			return "", "", "", err
 		}
-		return kafkaResourceType, c.config.Auth.Account.Id, kcc.ID, kcc.APIKey, nil
+		clusterId = cluster.ID
+		currentKey = cluster.APIKey
 	}
+	return resourceType, clusterId, currentKey, nil
 }

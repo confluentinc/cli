@@ -1,34 +1,25 @@
-package config
+package v1
 
 import (
 	"fmt"
+
+	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
 )
 
 // Credential represent an authentication mechanism for a Platform
 type Credential struct {
 	Username       string
 	Password       string
-	APIKeyPair     *APIKeyPair
+	APIKeyPair     *v0.APIKeyPair
 	CredentialType CredentialType
-}
-type CredentialType int
-
-const (
-	Username CredentialType = iota
-	APIKey
-)
-
-func (c CredentialType) String() string {
-	credTypes := [...]string{"username", "api-key"}
-	return credTypes[c]
 }
 
 func (c *Credential) String() string {
 	switch c.CredentialType {
 	case Username:
-		return fmt.Sprintf("%s-%s", &c.CredentialType, c.Username)
+		return fmt.Sprintf("%d-%s", c.CredentialType, c.Username)
 	case APIKey:
-		return fmt.Sprintf("%s-%s", &c.CredentialType, c.APIKeyPair.Key)
+		return fmt.Sprintf("%d-%s", c.CredentialType, c.APIKeyPair.Key)
 	default:
 		panic(fmt.Sprintf("Credential type %d unknown.", c.CredentialType))
 	}

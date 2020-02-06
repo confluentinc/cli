@@ -5,14 +5,12 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/spf13/cobra"
-
-	"github.com/confluentinc/ccloud-sdk-go"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	"github.com/confluentinc/go-printer"
+	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
@@ -24,22 +22,21 @@ var (
 )
 
 type clusterCommand struct {
-	*cobra.Command
-	config *config.Config
-	client ccloud.Kafka
-	ch     *pcmd.ConfigHelper
+	*pcmd.AuthenticatedCLICommand
+	prerunner pcmd.PreRunner
 }
 
 // NewClusterCommand returns the Cobra command for Kafka cluster.
-func NewClusterCommand(config *config.Config, client ccloud.Kafka, ch *pcmd.ConfigHelper) *cobra.Command {
-	cmd := &clusterCommand{
-		Command: &cobra.Command{
+func NewClusterCommand(prerunner pcmd.PreRunner, config *v2.Config) *cobra.Command {
+	cliCmd := pcmd.NewAuthenticatedCLICommand(
+		&cobra.Command{
 			Use:   "cluster",
 			Short: "Manage Kafka clusters.",
 		},
-		config: config,
-		client: client,
-		ch:     ch,
+		config, prerunner)
+	cmd := &clusterCommand{
+		AuthenticatedCLICommand: cliCmd,
+		prerunner:               prerunner,
 	}
 	cmd.init()
 	return cmd.Command
@@ -98,23 +95,14 @@ func (c *clusterCommand) init() {
 }
 
 func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
-	environment, err := pcmd.GetEnvironment(cmd, c.config)
+	req := &kafkav1.KafkaCluster{AccountId: c.EnvironmentId()}
+	clusters, err := c.Client.Kafka.List(context.Background(), req)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
-	}
-
-	req := &kafkav1.KafkaCluster{AccountId: environment}
-	clusters, err := c.client.List(context.Background(), req)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	currCtx, err := c.config.Context()
-	if err != nil && err != errors.ErrNoContext {
-		return err
 	}
 	var data [][]string
 	for _, cluster := range clusters {
-		if cluster.Id == currCtx.Kafka {
+		if cluster.Id == c.Context.Kafka {
 			cluster.Id = fmt.Sprintf("* %s", cluster.Id)
 		} else {
 			cluster.Id = fmt.Sprintf("  %s", cluster.Id)
@@ -134,12 +122,8 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	environment, err := pcmd.GetEnvironment(cmd, c.config)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
 	cfg := &kafkav1.KafkaClusterConfig{
-		AccountId:       environment,
+		AccountId:       c.EnvironmentId(),
 		Name:            args[0],
 		ServiceProvider: cloud,
 		Region:          region,
@@ -147,7 +131,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		// TODO: remove this once it's no longer required (MCM-130)
 		Storage: 5000,
 	}
-	cluster, err := c.client.Create(context.Background(), cfg)
+	cluster, err := c.Client.Kafka.Create(context.Background(), cfg)
 	if err != nil {
 		// TODO: don't swallow validation errors (reportedly separately)
 		return errors.HandleCommon(err, cmd)
@@ -156,13 +140,8 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
-	environment, err := pcmd.GetEnvironment(cmd, c.config)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
-	req := &kafkav1.KafkaCluster{AccountId: environment, Id: args[0]}
-	cluster, err := c.client.Describe(context.Background(), req)
+	req := &kafkav1.KafkaCluster{AccountId: c.EnvironmentId(), Id: args[0]}
+	cluster, err := c.Client.Kafka.Describe(context.Background(), req)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -174,13 +153,8 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
-	environment, err := pcmd.GetEnvironment(cmd, c.config)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
-	req := &kafkav1.KafkaCluster{AccountId: environment, Id: args[0]}
-	err = c.client.Delete(context.Background(), req)
+	req := &kafkav1.KafkaCluster{AccountId: c.EnvironmentId(), Id: args[0]}
+	err := c.Client.Kafka.Delete(context.Background(), req)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -191,23 +165,11 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 func (c *clusterCommand) use(cmd *cobra.Command, args []string) error {
 	clusterID := args[0]
 
-	cfg, err := c.config.Context()
+	_, err := c.Context.FindKafkaCluster(cmd, clusterID)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-
-	// This ensures that the clusterID actually exists or throws an error
-	environment, err := pcmd.GetEnvironment(cmd, c.ch.Config)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	_, err = c.ch.KafkaClusterConfig(clusterID, environment)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
-	cfg.Kafka = clusterID
-	return c.config.Save()
+	return c.Context.SetActiveKafkaCluster(cmd, clusterID)
 }
 
 func check(err error) {

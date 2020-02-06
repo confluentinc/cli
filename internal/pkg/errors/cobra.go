@@ -16,8 +16,8 @@ import (
 )
 
 var messages = map[error]string{
-	ErrNoContext:      "You must login to run that command.",
-	ErrNotLoggedIn:    "You must login to run that command.",
+	ErrNoContext:      "You must log in to run that command.",
+	ErrNotLoggedIn:    "You must log in to run that command.",
 	ErrNotImplemented: "Sorry, this functionality is not yet available in the CLI.",
 	ErrNoKafkaContext: "You must pass --cluster or set an active kafka in your context with 'kafka cluster use'",
 	ErrNoKSQL:         "Could not find KSQL cluster with Resource ID specified.",
@@ -79,7 +79,13 @@ func HandleCommon(err error, cmd *cobra.Command) error {
 		return err
 	case *UnspecifiedCredentialError:
 		cmd.SilenceUsage = true
+		// TODO: Add more context to credential error messages (add variable error).
 		return fmt.Errorf("context \"%s\" has corrupted credentials. To fix, please remove the config file, "+
+			"and run `login` or `init`", e.ContextName)
+	case *UnspecifiedPlatformError:
+		cmd.SilenceUsage = true
+		// TODO: Add more context to platform error messages (add variable error).
+		return fmt.Errorf("context \"%s\" has a corrupted platform. To fix, please remove the config file, "+
 			"and run `login` or `init`", e.ContextName)
 	// TODO: ErrEditing is declared incorrectly as "type ErrEditing error"
 	//  That doesn't work for type switches, so put last otherwise everything will hit this case

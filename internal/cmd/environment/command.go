@@ -4,21 +4,17 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/spf13/cobra"
-
-	"github.com/confluentinc/ccloud-sdk-go"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	"github.com/confluentinc/go-printer"
+	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 type command struct {
-	*cobra.Command
-	config *config.Config
-	client ccloud.Account
+	*pcmd.AuthenticatedCLICommand
 }
 
 var (
@@ -27,16 +23,14 @@ var (
 )
 
 // New returns the Cobra command for `environment`.
-func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.Account, cliName string) *cobra.Command {
-	cmd := &command{
-		Command: &cobra.Command{
-			Use:               "environment",
-			Short:             fmt.Sprintf("Manage and select %s environments.", cliName),
-			PersistentPreRunE: prerunner.Authenticated(),
+func New(prerunner pcmd.PreRunner, config *v2.Config, cliName string) *cobra.Command {
+	cliCmd := pcmd.NewAuthenticatedCLICommand(
+		&cobra.Command{
+			Use:   "environment",
+			Short: fmt.Sprintf("Manage and select %s environments.", cliName),
 		},
-		config: config,
-		client: client,
-	}
+		config, prerunner)
+	cmd := &command{AuthenticatedCLICommand: cliCmd}
 	cmd.init()
 	return cmd.Command
 }
@@ -83,43 +77,41 @@ func (c *command) init() {
 }
 
 func (c *command) refreshEnvList(cmd *cobra.Command) error {
-	environments, err := c.client.List(context.Background(), &orgv1.Account{})
+	environments, err := c.Client.Account.List(context.Background(), &orgv1.Account{})
 	if err != nil {
 		return err
 	}
-
-	c.config.Auth.Accounts = environments
+	c.State.Auth.Accounts = environments
 
 	// If current env has gone away, reset active env to 0th env
 	hasGoodEnv := false
-	if c.config.Auth.Account != nil {
-		for _, acc := range c.config.Auth.Accounts {
-			if acc.Id == c.config.Auth.Account.Id {
+	if c.State.Auth.Account != nil {
+		for _, acc := range c.State.Auth.Accounts {
+			if acc.Id == c.EnvironmentId() {
 				hasGoodEnv = true
 			}
 		}
 	}
 	if !hasGoodEnv {
-		c.config.Auth.Account = c.config.Auth.Accounts[0]
+		c.State.Auth.Account = c.State.Auth.Accounts[0]
 	}
 
-	err = c.config.Save()
+	err = c.Config.Save()
 	if err != nil {
-		return errors.Wrap(err, "Unable to save user auth while refreshing environment list")
+		return errors.Wrap(err, "unable to save user auth while refreshing environment list")
 	}
 
 	return nil
 }
 
 func (c *command) list(cmd *cobra.Command, args []string) error {
-	environments, err := c.client.List(context.Background(), &orgv1.Account{})
+	environments, err := c.Client.Account.List(context.Background(), &orgv1.Account{})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-
 	var data [][]string
 	for _, environment := range environments {
-		if environment.Id == c.config.Auth.Account.Id {
+		if environment.Id == c.EnvironmentId() {
 			environment.Id = fmt.Sprintf("* %s", environment.Id)
 		} else {
 			environment.Id = fmt.Sprintf("  %s", environment.Id)
@@ -137,11 +129,10 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-
-	for _, acc := range c.config.Auth.Accounts {
+	for _, acc := range c.State.Auth.Accounts {
 		if acc.Id == id {
-			c.config.Auth.Account = acc
-			err := c.config.Save()
+			c.Context.State.Auth.Account = acc
+			err := c.Config.Save()
 			if err != nil {
 				return errors.HandleCommon(errors.New("couldn't switch to new environment: couldn't save config."), cmd)
 			}
@@ -156,40 +147,36 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 func (c *command) create(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
-	_, err := c.client.Create(context.Background(), &orgv1.Account{Name: name, OrganizationId: c.config.Auth.Account.OrganizationId})
-
+	_, err := c.Client.Account.Create(context.Background(), &orgv1.Account{Name: name, OrganizationId: c.State.Auth.Account.OrganizationId})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-
 	return nil
 }
 
 func (c *command) update(cmd *cobra.Command, args []string) error {
 	id := args[0]
+
 	newName, err := cmd.Flags().GetString("name")
 	if err != nil {
 		return err
 	}
 
-	err = c.client.Update(context.Background(), &orgv1.Account{Id: id, Name: newName, OrganizationId: c.config.Auth.Account.OrganizationId})
+	err = c.Client.Account.Update(context.Background(), &orgv1.Account{Id: id, Name: newName, OrganizationId: c.State.Auth.Account.OrganizationId})
 
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-
 	return nil
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
 	id := args[0]
 
-	err := c.client.Delete(context.Background(), &orgv1.Account{Id: id, OrganizationId: c.config.Auth.Account.OrganizationId})
-
+	err := c.Client.Account.Delete(context.Background(), &orgv1.Account{Id: id, OrganizationId: c.State.Auth.Account.OrganizationId})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-
 	return nil
 }
 
