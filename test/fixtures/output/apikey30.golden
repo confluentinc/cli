@@ -1,17 +1,17 @@
 - description: ""
   key: MYKEY1
   owner: "12"
-  resource_id: bob
+  resource_id: lkc-bob
   resource_type: kafka
 - description: ""
   key: MYKEY2
   owner: "18"
-  resource_id: abc
+  resource_id: lkc-abc
   resource_type: kafka
 - description: ""
   key: MYKEY3
   owner: "23"
-  resource_id: bob
+  resource_id: lkc-bob
   resource_type: kafka
 - description: ""
   key: UIAPIKEY100
