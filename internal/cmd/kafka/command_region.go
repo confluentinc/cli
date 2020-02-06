@@ -2,12 +2,16 @@ package kafka
 
 import (
 	"context"
-	"fmt"
+	"github.com/confluentinc/go-printer"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+)
+
+var (
+	regionListLabels = []string{"CloudId", "CloudName", "RegiondId", "RegionName"}
 )
 
 
@@ -31,12 +35,14 @@ func NewRegionCommand(prerunner pcmd.PreRunner, config *v2.Config) *cobra.Comman
 }
 
 func (c *regionCommand) init() {
-	c.AddCommand(&cobra.Command{
+	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List cloud provider regions.",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
-	})
+	}
+	listCmd.Flags().String("cloud", "", "The cloud ID to filter by.")
+	c.AddCommand(listCmd)
 }
 
 func (c *regionCommand) list(cmd *cobra.Command, args []string) error {
@@ -44,8 +50,22 @@ func (c *regionCommand) list(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	for _, cloud := range clouds {
-		fmt.Println(cloud.Name)
+	cloudIdFilter, err := cmd.Flags().GetString("cloud")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
 	}
+	var data [][]string
+	for _, cloud := range clouds {
+		for _, region := range cloud.Regions {
+			if cloudIdFilter != "" && cloudIdFilter != cloud.Id {
+				continue
+			}
+			row := []string{cloud.Id, cloud.Name}
+			row = append(row, region.Id)
+			row = append(row, region.Name)
+			data = append(data, row)
+		}
+	}
+	printer.RenderCollectionTable(data, regionListLabels)
 	return nil
 }

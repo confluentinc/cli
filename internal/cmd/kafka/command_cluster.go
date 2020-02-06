@@ -3,6 +3,7 @@ package kafka
 import (
 	"context"
 	"fmt"
+	"github.com/confluentinc/ccloud-sdk-go"
 	"os"
 
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
@@ -56,8 +57,8 @@ func (c *clusterCommand) init() {
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	}
-	createCmd.Flags().String("cloud", "", "Cloud provider (e.g. 'aws' or 'gcp').")
-	createCmd.Flags().String("region", "", "Cloud region for cluster (e.g. 'us-west-2').")
+	createCmd.Flags().String("cloud", "", "Cloud provider ID (e.g. 'aws' or 'gcp').")
+	createCmd.Flags().String("region", "", "Cloud region ID for cluster (e.g. 'us-west-2').")
 	check(createCmd.MarkFlagRequired("cloud"))
 	check(createCmd.MarkFlagRequired("region"))
 	createCmd.Flags().SortFlags = false
@@ -122,6 +123,10 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
+	err = checkCloudAndRegion(cloud, region, c.Client)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
 	cfg := &kafkav1.KafkaClusterConfig{
 		AccountId:       c.EnvironmentId(),
 		Name:            args[0],
@@ -176,4 +181,22 @@ func check(err error) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func checkCloudAndRegion(cloudId string, regionId string, client *ccloud.Client) error {
+	clouds, err := client.EnvironmentMetadata.Get(context.Background())
+	if err != nil {
+		return err
+	}
+	for _, cloud := range clouds {
+		if cloudId == cloud.Id {
+			for _, region := range cloud.Regions {
+				if regionId == region.Id {
+					return nil
+				}
+			}
+			return fmt.Errorf("'%s' region does not exist for '%s', see list of available regions for '%s' with 'kafka region list --cloud %s'", regionId, cloudId, cloudId, cloudId)
+		}
+	}
+	return fmt.Errorf("'%s' cloud provider does not exist, see list of available cloud providers and regions with 'kafka region list'", cloudId)
 }
