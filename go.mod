@@ -20,7 +20,7 @@ require (
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
 	github.com/confluentinc/bincover v0.0.0-20191217221125-80a7bb37ae5e
 	github.com/confluentinc/ccloud-sdk-go v0.0.17-0.20200204202916-c72d79877604
-	github.com/confluentinc/ccloudapis v0.0.0-20191231005805-3deffeae3f72
+	github.com/confluentinc/ccloudapis v0.0.0-20200206033443-1273c6f069cf
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-printer v0.10.0
 	github.com/confluentinc/mds-sdk-go v0.0.0-20191015231442-c29a09dbc1e9
@@ -71,8 +71,8 @@ require (
 	github.com/pierrec/lz4 v2.4.1+incompatible // indirect
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4
 	github.com/pkg/errors v0.8.1
-	github.com/rsc/goversion v1.2.0
 	github.com/rcrowley/go-metrics v0.0.0-20190826022208-cac0b30c2563 // indirect
+	github.com/rsc/goversion v1.2.0
 	github.com/segmentio/analytics-go v3.1.0+incompatible
 	github.com/segmentio/backo-go v0.0.0-20160424052352-204274ad699c // indirect
 	github.com/shurcooL/go v0.0.0-20190704215121-7189cc372560 // indirect
@@ -99,6 +99,7 @@ require (
 )
 
 replace (
+	github.com/confluentinc/ccloud-sdk-go => ../ccloud-sdk-go
 	github.com/mutagen-io/gopass => github.com/mutagen-io/gopass v0.0.0-20161007065903-6331a34a3f3b
 	github.com/shurcooL/sanitized_anchor_name => github.com/shurcooL/sanitized_anchor_name v1.0.0
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20171026124306-e509bb64fe11

@@ -42,4 +42,5 @@ func (c *command) init() {
 	}
 	c.AddCommand(NewClusterCommand(c.prerunner, c.Config.Config))
 	c.AddCommand(NewACLCommand(c.prerunner, c.Config.Config))
+	c.AddCommand(NewRegionCommand(c.prerunner, c.Config.Config))
 }
