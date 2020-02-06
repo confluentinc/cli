@@ -186,7 +186,7 @@ func (c *schemaCommand) describeById(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("unexpected argument: Must be an integer Schema ID")
 	}
-	schemaString, _, err := srClient.DefaultApi.GetSchema(ctx, int32(schema))
+	schemaString, _, err := srClient.DefaultApi.GetSchema(ctx, int32(schema), nil)
 	if err != nil {
 		return err
 	}
@@ -207,7 +207,7 @@ func (c *schemaCommand) describeBySubject(cmd *cobra.Command, args []string) err
 	if err != nil {
 		return err
 	}
-	schemaString, _, err := srClient.DefaultApi.GetSchemaByVersion(ctx, subject, version)
+	schemaString, _, err := srClient.DefaultApi.GetSchemaByVersion(ctx, subject, version, nil)
 	if err != nil {
 		return err
 	}
