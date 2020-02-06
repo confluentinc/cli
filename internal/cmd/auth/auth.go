@@ -349,6 +349,10 @@ func (a *commands) credentials(cmd *cobra.Command, userField string, cloudClient
 func (a *commands) addContextIfAbsent(username string, url string, state *v2.ContextState, caCertPath string) error {
 	ctxName := generateContextName(username, url)
 	if _, ok := a.config.Contexts[ctxName]; ok {
+		err := a.config.SetContext(ctxName)
+		if err != nil {
+			return err
+		}
 		return nil
 	}
 	credName := generateCredentialName(username)
