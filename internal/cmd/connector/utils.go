@@ -4,7 +4,7 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"github.com/ghodss/yaml"
+	"encoding/json"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -20,14 +20,14 @@ func getConfig(cmd *cobra.Command) (*map[string]string, error) {
 		return nil, errors.Wrap(err, "error reading --config as string")
 	}
 	var options map[string]string
-	yamlFile, err := ioutil.ReadFile(filename)
+	jsonFile, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to read config file %s", filename)
 	}
-	if len(yamlFile) == 0 {
+	if len(jsonFile) == 0 {
 		return nil, errors.Wrap(errors.ErrEmptyConfigFile, "empty file")
 	}
-	err = yaml.Unmarshal(yamlFile, &options)
+	err = json.Unmarshal(jsonFile, &options)
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to parse config %s", filename)
 	}

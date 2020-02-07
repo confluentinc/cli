@@ -2,20 +2,27 @@ package connector_catalog
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/ccloud-sdk-go"
 	connectv1 "github.com/confluentinc/ccloudapis/connect/v1"
 	"github.com/confluentinc/go-printer"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 type command struct {
-	*pcmd.AuthenticatedCLICommand
+	*cobra.Command
+	config *config.Config
+	client ccloud.Connect
+	ch     *pcmd.ConfigHelper
 }
 
 type catalogDisplay struct {
@@ -28,12 +35,16 @@ var (
 )
 
 // New returns the default command object for interacting with Connect.
-func New(prerunner pcmd.PreRunner, config *v2.Config) *cobra.Command {
+func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.Connect, ch *pcmd.ConfigHelper) *cobra.Command {
 	cmd := &command{
-		AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(&cobra.Command{
-			Use:   "connector-catalog",
-			Short: "Catalog of connectors and their configurations.",
-		}, config, prerunner),
+		Command: &cobra.Command{
+			Use:               "connector-catalog",
+			Short:             "Catalog of connectors and their configurations.",
+			PersistentPreRunE: prerunner.Authenticated(),
+		},
+		config: config,
+		client: client,
+		ch:     ch,
 	}
 	cmd.init()
 	return cmd.Command
@@ -45,14 +56,16 @@ func (c *command) init() {
 		Short: "Describe a connector plugin type.",
 		Example: FormatDescription(`
 Describe required connector configuration parameters for a specific connector plugin.
-
+With the --file flag, create a sample connector configuration file.
 ::
 
-        {{.CLIName}} connector-catalog describe <connector-type>`, c.Config.CLIName),
+        {{.CLIName}} connector-catalog describe <PluginName>
+        {{.CLIName}} connector-catalog describe <PluginName> --file `, c.config.CLIName),
 		RunE: c.describe,
 		Args: cobra.ExactArgs(1),
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	cmd.Flags().String("file", "", "Connector config file mode.")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
@@ -64,7 +77,7 @@ List connectors in the current or specified Kafka cluster context.
 
 ::
 
-        {{.CLIName}} connector-catalog list`, c.Config.CLIName),
+        {{.CLIName}} connector-catalog list`, c.config.CLIName),
 		RunE: c.list,
 		Args: cobra.NoArgs,
 	}
@@ -74,11 +87,11 @@ List connectors in the current or specified Kafka cluster context.
 }
 
 func (c *command) list(cmd *cobra.Command, args []string) error {
-	kafkaCluster, err := pcmd.KafkaCluster(cmd, c.Context)
+	kafkaCluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	connectorInfo, err := c.Client.Connect.GetPlugins(context.Background(), &connectv1.Connector{AccountId: c.EnvironmentId(), KafkaClusterId: kafkaCluster.Id}, "")
+	connectorInfo, err := c.client.GetPlugins(context.Background(), &connectv1.Connector{AccountId: c.config.Auth.Account.Id, KafkaClusterId: kafkaCluster.Id}, "")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -95,26 +108,52 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) describe(cmd *cobra.Command, args []string) error {
-	kafkaCluster, err := pcmd.KafkaCluster(cmd, c.Context)
+	kafkaCluster, err := pcmd.GetKafkaCluster(cmd, c.ch)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 	if len(args) == 0 {
 		return errors.HandleCommon(errors.ErrNoPluginName, cmd)
 	}
-	_, err = c.Client.Connect.Validate(context.Background(),
+	config := map[string]string{"connector.class": args[0]}
+
+	reply, err := c.client.Validate(context.Background(),
 		&connectv1.ConnectorConfig{
-			UserConfigs:    map[string]string{"connector.class": args[0]},
-			AccountId:      c.EnvironmentId(),
+			UserConfigs: config,
+			AccountId: c.config.Auth.Account.Id,
 			KafkaClusterId: kafkaCluster.Id,
-			Plugin:         args[0]},
-		false)
+			Plugin: args[0]},
+			false)
+	if reply != nil && err != nil {
+		filename, flagErr := cmd.Flags().GetString("file")
+		if filename == "" {
+			pcmd.Println(cmd, "Following are the required configs: \nconnector.class \n"+err.Error())
+			return nil
+		} else {
+			if flagErr != nil {
+				return flagErr
+			}
+			for _, c := range reply.Configs {
+				if len(c.Value.Errors) > 0 {
+					config[c.Value.Name] = fmt.Sprintf("%s ",c.Value.Errors[:])
+				}
+			}
 
-	if err != nil {
-		pcmd.Println(cmd, "Following are the required configs: \nconnector.class \n"+err.Error())
-		return nil
+			jsonConfig, err := json.MarshalIndent(&config, "", "    ")
+			if err != nil {
+				return errors.HandleCommon(err, cmd)
+			}
+
+			jsonFile, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+			if err != nil {
+				return errors.HandleCommon(err, cmd)
+			}
+			jsonFile.Write(jsonConfig)
+
+			pcmd.Println(cmd, "Wrote to provided file: ",filename)
+			return nil
+		}
 	}
-
 	return errors.HandleCommon(errors.ErrInvalidCloud, cmd)
 }
 
