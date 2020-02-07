@@ -19,7 +19,7 @@ type regionCommand struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
-// NewClusterCommand returns the Cobra command for Kafka cluster.
+// NewRegionCommand returns the Cobra command for Kafka region.
 func NewRegionCommand(prerunner pcmd.PreRunner, config *v2.Config) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
