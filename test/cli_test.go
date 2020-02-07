@@ -752,6 +752,8 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		_, err = io.WriteString(w, string(b))
 		require.NoError(t, err)
 	})
+	router.HandleFunc("/api/accounts/a-595", handleEnvironmentGet(t, "a-595"))
+	router.HandleFunc("/api/accounts/not-595", handleEnvironmentGet(t, "not-595"))
 	router.HandleFunc("/api/clusters/", handleKafkaClusterGetListDelete(t, kafkaAPIURL))
 	router.HandleFunc("/api/clusters", handleKafkaClusterCreate(t, kafkaAPIURL))
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -1076,5 +1078,21 @@ func compose(funcs ...func(w http.ResponseWriter, r *http.Request)) func(w http.
 		for _, f := range funcs {
 			f(w, r)
 		}
+	}
+}
+
+func handleEnvironmentGet(t *testing.T, id string) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		for _, env := range environments {
+			if env.Id == id {
+				// env found
+				b, err := utilv1.MarshalJSONToBytes(&orgv1.GetAccountReply{Account: env})
+				require.NoError(t, err)
+				_, err = io.WriteString(w, string(b))
+				require.NoError(t, err)
+			}
+		}
+		// env not found
+		w.WriteHeader(http.StatusNotFound)
 	}
 }

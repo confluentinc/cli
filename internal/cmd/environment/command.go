@@ -125,23 +125,17 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 func (c *command) use(cmd *cobra.Command, args []string) error {
 	id := args[0]
 
-	err := c.refreshEnvList(cmd)
+	acc, err := c.Client.Account.Get(context.Background(), &orgv1.Account{Id: id})
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	for _, acc := range c.State.Auth.Accounts {
-		if acc.Id == id {
-			c.Context.State.Auth.Account = acc
-			err := c.Config.Save()
-			if err != nil {
-				return errors.HandleCommon(errors.New("couldn't switch to new environment: couldn't save config."), cmd)
-			}
-			pcmd.Println(cmd, "Now using", id, "as the default (active) environment.")
-			return nil
-		}
+		return errors.HandleCommon(errors.New("The specified environment ID was not found.  To see available environments, use `ccloud environment list`."), cmd)
 	}
 
-	return errors.HandleCommon(errors.New("The specified environment ID was not found.  To see available environments, use `ccloud environment list`."), cmd)
+	c.Context.State.Auth.Account = acc
+	if err := c.Config.Save(); err != nil {
+		return errors.HandleCommon(errors.New("couldn't switch to new environment: couldn't save config."), cmd)
+	}
+	pcmd.Println(cmd, "Now using", id, "as the default (active) environment.")
+	return nil
 }
 
 func (c *command) create(cmd *cobra.Command, args []string) error {
