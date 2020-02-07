@@ -192,10 +192,14 @@ func checkCloudAndRegion(cloudId string, regionId string, client *ccloud.Client)
 		if cloudId == cloud.Id {
 			for _, region := range cloud.Regions {
 				if regionId == region.Id {
-					return nil
+					if region.IsSchedulable {
+						return nil
+					} else {
+						break
+					}
 				}
 			}
-			return fmt.Errorf("'%s' region does not exist for '%s', see list of available regions for '%s' with 'kafka region list --cloud %s'", regionId, cloudId, cloudId, cloudId)
+			return fmt.Errorf("'%s' is not an available region for '%s', see list of available regions for '%s' with 'kafka region list --cloud %s'", regionId, cloudId, cloudId, cloudId)
 		}
 	}
 	return fmt.Errorf("'%s' cloud provider does not exist, see list of available cloud providers and regions with 'kafka region list'", cloudId)

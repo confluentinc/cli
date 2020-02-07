@@ -1,0 +1,4 @@
+  CloudId |       CloudName       |    RegiondId    |         RegionName           
++---------+-----------------------+-----------------+-----------------------------+
+  gcp     | Google Cloud Platform | asia-southeast1 | asia-southeast1 (Singapore)  
+  gcp     | Google Cloud Platform | asia-east2      | asia-east2 (Hong Kong)       

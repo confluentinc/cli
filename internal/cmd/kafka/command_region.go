@@ -24,7 +24,7 @@ func NewRegionCommand(prerunner pcmd.PreRunner, config *v2.Config) *cobra.Comman
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "region",
-			Short: "Cloud Regions.",
+			Short: "Cloud regions.",
 		},
 		config, prerunner)
 	cmd := &regionCommand{
@@ -42,6 +42,7 @@ func (c *regionCommand) init() {
 		Args:  cobra.NoArgs,
 	}
 	listCmd.Flags().String("cloud", "", "The cloud ID to filter by.")
+	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 }
 
@@ -57,12 +58,11 @@ func (c *regionCommand) list(cmd *cobra.Command, args []string) error {
 	var data [][]string
 	for _, cloud := range clouds {
 		for _, region := range cloud.Regions {
-			if cloudIdFilter != "" && cloudIdFilter != cloud.Id {
+			if !region.IsSchedulable || (cloudIdFilter != "" && cloudIdFilter != cloud.Id) {
 				continue
 			}
 			row := []string{cloud.Id, cloud.Name}
-			row = append(row, region.Id)
-			row = append(row, region.Name)
+			row = append(row, region.Id, region.Name)
 			data = append(data, row)
 		}
 	}

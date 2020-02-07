@@ -59,6 +59,7 @@ var (
 		linter.ExcludeCommandContains("schema-registry"),
 		linter.ExcludeCommandContains("ksql"),
 		linter.ExcludeCommandContains("connector-catalog"),
+		linter.ExcludeCommandContains("kafka region"),
 		// this is obviously cluster-scoped but isn't used for cloud where --cluster is used
 		linter.ExcludeCommandContains("cluster describe"),
 	}
