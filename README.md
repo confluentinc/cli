@@ -178,20 +178,23 @@ with the appropriate permissions; cc @David Hyde, @srini or CLI or Release team
 manager.  You will also need IT to give you the Developer ID Application cert
 and private key (shared via a LastPass secret).  Chris Toney set that up.
 
-2. Edit your bash/zsh profile to export your Apple ID and password via the
+2. Make sure you have `gon` installed and in your PATH.  Get it from
+https://github.com/mitchellh/gon/releases
+
+3. Edit your bash/zsh profile to export your Apple ID and password via the
 `AC_USERNAME` and `AC_PASSWORD` variables.  It is recommended to not write
 your Apple ID password in plaintext in this file; e.g. you can write
 `export AC_PASSWORD=$(echo <your base64-encoded password> | base64 --decode)`.
 
-3. Just in case, e.g. if you did Step 2 for the first time, run
+4. Just in case, e.g. if you did Step 2 for the first time, run
 `source ~/.bash_profile` or the equivalent for your shell/OS.
 
-4. Next run `caasenv prod` (needed to upload files to the CLI S3 buckets).
+5. Next run `caasenv prod` (needed to upload files to the CLI S3 buckets).
 
-5. Next make sure your git status is clean: `git status`.  You should also be
+6. Next make sure your git status is clean: `git status`.  You should also be
 on `master` under normal circumstances.
 
-6. With these steps completed you should be able to run `make release`
+7. With these steps completed you should be able to run `make release`
 successfully.  If you see any errors during the release process, contact
 a CLI team member.  It is possible to use the AWS CLI to remove any mistakenly-
 uploaded binaries/archives (just remove the corresponding version folders).
