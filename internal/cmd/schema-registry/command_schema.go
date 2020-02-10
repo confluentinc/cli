@@ -65,7 +65,7 @@ Where schemafilepath may include these contents:
 	RequireSubjectFlag(cmd)
 	cmd.Flags().String("schema", "", "The path to the schema file.")
 	_ = cmd.MarkFlagRequired("schema")
-	cmd.Flags().String("type", "T", "The schema type.")
+	cmd.Flags().String("type", "", "The schema type.")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
