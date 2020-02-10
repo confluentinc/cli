@@ -7,6 +7,7 @@ func (s *CLITestSuite) TestEnvironmentCommands() {
 		{args: "environment list", fixture: "environment1.golden", wantErrCode: 0},
 		{args: "environment use not-595", fixture: "environment2.golden", wantErrCode: 0},
 		{args: "environment list", fixture: "environment3.golden", wantErrCode: 0},
+		{args: "environment use non-existent-id", fixture: "environment4.golden", wantErrCode: 1},
 	}
 	resetConfiguration(s.T(), "ccloud")
 	for _, tt := range tests {
