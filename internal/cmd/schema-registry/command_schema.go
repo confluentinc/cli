@@ -213,8 +213,7 @@ func (c *schemaCommand) describeById(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	pcmd.Println(cmd, schemaString.Schema)
-	return nil
+	return c.printSchema(cmd, schemaString.Schema, schemaString.SchemaType, schemaString.References)
 }
 
 func (c *schemaCommand) describeBySubject(cmd *cobra.Command, args []string) error {
@@ -234,6 +233,14 @@ func (c *schemaCommand) describeBySubject(cmd *cobra.Command, args []string) err
 	if err != nil {
 		return err
 	}
-	pcmd.Println(cmd, schemaString.Schema)
+	return c.printSchema(cmd, schemaString.Schema, schemaString.SchemaType, schemaString.References)
+}
+
+func (c *schemaCommand) printSchema(cmd *cobra.Command, schema string, sType string, refs []srsdk.SchemaReference) error {
+	if sType != "" {
+		pcmd.Println(cmd, "Type: " + sType)
+	}
+	pcmd.Println(cmd, "Schema: " + schema)
+	pcmd.Printf(cmd, "References: %s\n" , refs)
 	return nil
 }
