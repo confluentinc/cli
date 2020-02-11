@@ -51,6 +51,9 @@ func MigrateV1ToV2(cfgV1 *v1.Config) (*v2.Config, error) {
 }
 
 func migrateContextV1ToV2(contextV1 *v1.Context, platformV2 *v2.Platform, credentialV2 *v2.Credential, cfgV1 *v1.Config, cfgV2 *v2.Config) (*v2.Context, *v2.ContextState) {
+	if contextV1 == nil {
+		return nil, nil
+	}
 	srClustersV1 := make(map[string]*v2.SchemaRegistryCluster)
 	for envId, srClusterV0 := range contextV1.SchemaRegistryClusters {
 		srClustersV1[envId] = migrateSRClusterV1ToV2(srClusterV0)
@@ -76,6 +79,9 @@ func migrateContextV1ToV2(contextV1 *v1.Context, platformV2 *v2.Platform, creden
 }
 
 func migrateSRClusterV1ToV2(srClusterV1 *v1.SchemaRegistryCluster) *v2.SchemaRegistryCluster {
+	if srClusterV1 == nil {
+		return nil
+	}
 	srClusterV2 := &v2.SchemaRegistryCluster{
 		Id:                     "",
 		SchemaRegistryEndpoint: srClusterV1.SchemaRegistryEndpoint,
@@ -84,28 +90,34 @@ func migrateSRClusterV1ToV2(srClusterV1 *v1.SchemaRegistryCluster) *v2.SchemaReg
 	return srClusterV2
 }
 
-func migratePlatformV1ToV2(platformV0 *v1.Platform) *v2.Platform {
-	platformV1 := &v2.Platform{
-		Name:       strings.TrimPrefix(platformV0.Server, "https://"),
-		Server:     platformV0.Server,
-		CaCertPath: platformV0.CaCertPath,
+func migratePlatformV1ToV2(platformV1 *v1.Platform) *v2.Platform {
+	if platformV1 == nil {
+		return nil
 	}
-	return platformV1
+	platformV2 := &v2.Platform{
+		Name:       strings.TrimPrefix(platformV1.Server, "https://"),
+		Server:     platformV1.Server,
+		CaCertPath: platformV1.CaCertPath,
+	}
+	return platformV2
 }
 
-func migrateCredentialV1ToV2(credentialV0 *v1.Credential) *v2.Credential {
-	credentialV1 := &v2.Credential{
-		Name:           credentialV0.String(),
-		Username:       credentialV0.Username,
-		Password:       credentialV0.Password,
-		APIKeyPair:     credentialV0.APIKeyPair,
-		CredentialType: migrateCredentialTypeV1ToV2(credentialV0.CredentialType),
+func migrateCredentialV1ToV2(credentialV1 *v1.Credential) *v2.Credential {
+	if credentialV1 == nil {
+		return nil
 	}
-	return credentialV1
+	credentialV2 := &v2.Credential{
+		Name:           credentialV1.String(),
+		Username:       credentialV1.Username,
+		Password:       credentialV1.Password,
+		APIKeyPair:     credentialV1.APIKeyPair,
+		CredentialType: migrateCredentialTypeV1ToV2(credentialV1.CredentialType),
+	}
+	return credentialV2
 }
 
-func migrateCredentialTypeV1ToV2(credTypeV0 v1.CredentialType) v2.CredentialType {
-	switch credTypeV0 {
+func migrateCredentialTypeV1ToV2(credTypeV1 v1.CredentialType) v2.CredentialType {
+	switch credTypeV1 {
 	case v1.Username:
 		return v2.Username
 	case v1.APIKey:
