@@ -245,8 +245,8 @@ func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, name string, curren
 		return nil
 	}
 	if updateAvailable {
-		msg := "Updates are available for %s from version %s to versiont %s. To install them, please run:\n$ %s update\n\n"
-		ErrPrintf(cmd, msg, name, currentVersion, latestVersion,  name)
+		msg := "Updates are available for %s from (current: %s, latest: %s). To install them, please run:\n$ %s update\n\n"
+		ErrPrintf(cmd, msg, name, currentVersion, latestVersion, name)
 	}
 	return nil
 }
