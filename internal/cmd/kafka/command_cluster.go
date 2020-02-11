@@ -199,8 +199,8 @@ func checkCloudAndRegion(cloudId string, regionId string, client *ccloud.Client)
 					}
 				}
 			}
-			return fmt.Errorf("'%s' is not an available region for '%s', see list of available regions for '%s' with 'kafka region list --cloud %s'", regionId, cloudId, cloudId, cloudId)
+			return fmt.Errorf("'%s' is not an available region for '%s'. You can view a list of available regions for '%s' with 'kafka region list --cloud %s' command.", regionId, cloudId, cloudId, cloudId)
 		}
 	}
-	return fmt.Errorf("'%s' cloud provider does not exist, see list of available cloud providers and regions with 'kafka region list'", cloudId)
+	return fmt.Errorf("'%s' cloud provider does not exist. You can view a list of available cloud providers and regions with the 'kafka region list' command.", cloudId)
 }
