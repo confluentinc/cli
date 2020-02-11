@@ -8,6 +8,7 @@ import (
 	"github.com/confluentinc/bincover"
 	"github.com/jonboulle/clockwork"
 	segment "github.com/segmentio/analytics-go"
+	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"github.com/confluentinc/cli/internal/cmd"
@@ -16,6 +17,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/config/load"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/metric"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
@@ -54,6 +56,8 @@ func main() {
 	cfg = v2.New(params)
 	cfg, err = load.LoadAndMigrate(cfg)
 	if err != nil {
+		stubCmd := &cobra.Command{}
+		err = errors.HandleCommon(err, stubCmd)
 		errFmt := "unable to load config: %v\n"
 		logger.Debug(errFmt, err)
 		fmt.Fprintf(os.Stderr, errFmt, err)
