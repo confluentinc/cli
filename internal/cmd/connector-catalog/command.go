@@ -29,6 +29,7 @@ type catalogDisplay struct {
 var (
 	catalogFields = []string{"PluginName", "Type"}
 )
+
 // New returns the default command object for interacting with Connect.
 func New(prerunner pcmd.PreRunner, config *v2.Config) *cobra.Command {
 	cmd := &command{
@@ -110,10 +111,10 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 
 	reply, err := c.Client.Connect.Validate(context.Background(),
 		&connectv1.ConnectorConfig{
-			UserConfigs: config,
-			AccountId: c.EnvironmentId(),
+			UserConfigs:    config,
+			AccountId:      c.EnvironmentId(),
 			KafkaClusterId: kafkaCluster.Id,
-			Plugin: args[0]})
+			Plugin:         args[0]})
 	if reply != nil && err != nil {
 		filename, flagErr := cmd.Flags().GetString("sample-file")
 		if filename == "" {
@@ -125,7 +126,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 			}
 			for _, c := range reply.Configs {
 				if len(c.Value.Errors) > 0 {
-					config[c.Value.Name] = fmt.Sprintf("%s ",c.Value.Errors[:])
+					config[c.Value.Name] = fmt.Sprintf("%s ", c.Value.Errors[:])
 				}
 			}
 
@@ -138,9 +139,11 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 			if err != nil {
 				return errors.HandleCommon(err, cmd)
 			}
-			jsonFile.Write(jsonConfig)
-
-			pcmd.Println(cmd, "Wrote to file: ",filename)
+			_, err = jsonFile.Write(jsonConfig)
+			if err != nil {
+				return errors.HandleCommon(err, cmd)
+			}
+			pcmd.Println(cmd, "Wrote to file: ", filename)
 			return nil
 		}
 	}
