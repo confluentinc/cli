@@ -238,9 +238,9 @@ func (c *schemaCommand) describeBySubject(cmd *cobra.Command, args []string) err
 
 func (c *schemaCommand) printSchema(cmd *cobra.Command, schema string, sType string, refs []srsdk.SchemaReference) error {
 	if sType != "" {
-		pcmd.Println(cmd, "Type: " + sType)
+		pcmd.Println(cmd, "Type: "+sType)
 	}
-	pcmd.Println(cmd, "Schema: " + schema)
+	pcmd.Println(cmd, "Schema: "+schema)
 	if len(refs) > 0 {
 		pcmd.Println(cmd, "References:")
 		for i := 0; i < len(refs); i++ {
