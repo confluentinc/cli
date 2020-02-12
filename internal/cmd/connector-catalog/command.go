@@ -47,16 +47,16 @@ func (c *command) init() {
 		Short: "Describe a connector plugin type.",
 		Example: FormatDescription(`
 Describe required connector configuration parameters for a specific connector plugin.
-With the --file flag, create a sample connector configuration file.
+With the --sample-file flag, create a sample connector configuration file.
 ::
 
         {{.CLIName}} connector-catalog describe <PluginName>
-        {{.CLIName}} connector-catalog describe <PluginName> --file `, c.Config.CLIName),
+        {{.CLIName}} connector-catalog describe <PluginName> --sample-file <filename>`, c.Config.CLIName),
 		RunE: c.describe,
 		Args: cobra.ExactArgs(1),
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	cmd.Flags().String("file", "", "Connector config file mode.")
+	cmd.Flags().String("sample-file", "", "Connector config file mode.")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
@@ -115,7 +115,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 			KafkaClusterId: kafkaCluster.Id,
 			Plugin: args[0]})
 	if reply != nil && err != nil {
-		filename, flagErr := cmd.Flags().GetString("file")
+		filename, flagErr := cmd.Flags().GetString("sample-file")
 		if filename == "" {
 			pcmd.Println(cmd, "Following are the required configs: \nconnector.class \n"+err.Error())
 			return nil
@@ -140,7 +140,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 			}
 			jsonFile.Write(jsonConfig)
 
-			pcmd.Println(cmd, "Wrote to provided file: ",filename)
+			pcmd.Println(cmd, "Wrote to file: ",filename)
 			return nil
 		}
 	}
