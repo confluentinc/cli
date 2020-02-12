@@ -241,6 +241,11 @@ func (c *schemaCommand) printSchema(cmd *cobra.Command, schema string, sType str
 		pcmd.Println(cmd, "Type: " + sType)
 	}
 	pcmd.Println(cmd, "Schema: " + schema)
-	pcmd.Printf(cmd, "References: %s\n" , refs)
+	if len(refs) > 0 {
+		pcmd.Println(cmd, "References:")
+		for i := 0; i < len(refs); i++ {
+			pcmd.Printf(cmd, "\t%s -> %s %d\n", refs[i].Name, refs[i].Subject, refs[i].Version)
+		}
+	}
 	return nil
 }
