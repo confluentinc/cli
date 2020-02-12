@@ -63,10 +63,10 @@ func (suite *SchemaTestSuite) SetupSuite() {
 func (suite *SchemaTestSuite) SetupTest() {
 	suite.srClientMock = &srsdk.APIClient{
 		DefaultApi: &srMock.DefaultApi{
-			GetSchemaFunc: func(ctx context.Context, id int32) (srsdk.SchemaString, *http.Response, error) {
+			GetSchemaFunc: func(ctx context.Context, id int32, opts *srsdk.GetSchemaOpts) (srsdk.SchemaString, *http.Response, error) {
 				return srsdk.SchemaString{Schema: "Potatoes"}, nil, nil
 			},
-			GetSchemaByVersionFunc: func(ctx context.Context, subject, version string) (schema srsdk.Schema, response *http.Response, e error) {
+			GetSchemaByVersionFunc: func(ctx context.Context, subject, version string, opts *srsdk.GetSchemaByVersionOpts) (schema srsdk.Schema, response *http.Response, e error) {
 				return srsdk.Schema{Schema: "Potatoes", Version: versionInt32}, nil, nil
 			},
 			DeleteSchemaVersionFunc: func(ctx context.Context, subject, version string) (i int32, response *http.Response, e error) {
