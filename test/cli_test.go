@@ -755,7 +755,26 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 	router.HandleFunc("/api/accounts/a-595", handleEnvironmentGet(t, "a-595"))
 	router.HandleFunc("/api/accounts/not-595", handleEnvironmentGet(t, "not-595"))
 	router.HandleFunc("/api/clusters/", handleKafkaClusterGetListDelete(t, kafkaAPIURL))
-	router.HandleFunc("/api/clusters", handleKafkaClusterCreate(t, kafkaAPIURL))
+	router.HandleFunc("/api/clusters", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "POST" {
+			handleKafkaClusterCreate(t, kafkaAPIURL)(w, r)
+		} else if r.Method == "GET" {
+			cluster := kafkav1.KafkaCluster{
+				Id:                   "lkc-123",
+				Name:                 "abc",
+				Durability:           0,
+				Status:               0,
+				Region:               "us-central1",
+				ServiceProvider:      "gcp",
+			}
+			b, err := utilv1.MarshalJSONToBytes(&kafkav1.GetKafkaClustersReply{
+				Clusters: []*kafkav1.KafkaCluster{&cluster},
+			})
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(b))
+			require.NoError(t, err)
+		}
+	})
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		_, err := io.WriteString(w, `{"error": {"message": "unexpected call to `+r.URL.Path+`"}}`)
 		require.NoError(t, err)
@@ -776,6 +795,21 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(b))
 		require.NoError(t, err)
+	})
+	router.HandleFunc("/api/service_accounts", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "GET" {
+			serviceAccount := &orgv1.User{
+				Id:          12345,
+				ServiceName: "service_account",
+				ServiceDescription: "at your service.",
+			}
+			listReply, err := utilv1.MarshalJSONToBytes(&orgv1.GetServiceAccountsReply{
+				Users: []*orgv1.User{serviceAccount},
+			})
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(listReply))
+			require.NoError(t, err)
+		}
 	})
 	router.HandleFunc("/api/accounts/a-595/clusters/lkc-123/connectors/az-connector/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)

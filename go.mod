@@ -37,6 +37,7 @@ require (
 	github.com/frankban/quicktest v1.7.2 // indirect
 	github.com/ghodss/yaml v1.0.0
 	github.com/gliderlabs/ssh v0.1.4 // indirect
+	github.com/go-yaml/yaml v2.1.0+incompatible
 	github.com/gobuffalo/flect v0.1.3
 	github.com/gogo/protobuf v1.2.1
 	github.com/golang/mock v1.2.0

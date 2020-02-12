@@ -13,11 +13,13 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 var (
 	listFields      = []string{"Id", "Name", "ServiceProvider", "Region", "Durability", "Status"}
-	listLabels      = []string{"Id", "Name", "Provider", "Region", "Durability", "Status"}
+	listHumanLabels      = []string{"Id", "Name", "Provider", "Region", "Durability", "Status"}
+	listStructuredLabels      = []string{"id", "name", "provider", "region", "durability", "status"}
 	describeFields  = []string{"Id", "Name", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "ApiEndpoint"}
 	describeRenames = map[string]string{"NetworkIngress": "Ingress", "NetworkEgress": "Egress", "ServiceProvider": "Provider"}
 )
@@ -44,12 +46,15 @@ func NewClusterCommand(prerunner pcmd.PreRunner, config *v2.Config) *cobra.Comma
 }
 
 func (c *clusterCommand) init() {
-	c.AddCommand(&cobra.Command{
+	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List Kafka clusters.",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
-	})
+	}
+	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	listCmd.Flags().SortFlags = false
+	c.AddCommand(listCmd)
 
 	createCmd := &cobra.Command{
 		Use:   "create <name>",
@@ -101,17 +106,22 @@ func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	var data [][]string
-	for _, cluster := range clusters {
-		if cluster.Id == c.Context.Kafka {
-			cluster.Id = fmt.Sprintf("* %s", cluster.Id)
-		} else {
-			cluster.Id = fmt.Sprintf("  %s", cluster.Id)
-		}
-		data = append(data, printer.ToRow(cluster, listFields))
+	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
 	}
-	printer.RenderCollectionTable(data, listLabels)
-	return nil
+	for _, cluster := range clusters {
+		// Add '*' only in the case where we are printing out tables
+		if outputWriter.GetOutputFormat() == output.Human {
+			if cluster.Id == c.Context.Kafka {
+				cluster.Id = fmt.Sprintf("* %s", cluster.Id)
+			} else {
+				cluster.Id = fmt.Sprintf("  %s", cluster.Id)
+			}
+		}
+		outputWriter.AddElement(cluster)
+	}
+	return outputWriter.Out()
 }
 
 func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {

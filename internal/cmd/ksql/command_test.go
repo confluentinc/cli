@@ -140,7 +140,7 @@ func (suite *KSQLTestSuite) TestShouldConfigureACLs() {
 	req.Equal(1, len(suite.kafkac.CreateACLCalls()))
 	bindings := suite.kafkac.CreateACLCalls()[0].Binding
 	buf := new(bytes.Buffer)
-	acl.PrintAcls(bindings, buf)
+	req.NoError(acl.PrintAcls(cmd, bindings, buf))
 	req.Equal(expectedACLs, buf.String())
 }
 
@@ -158,7 +158,7 @@ func (suite *KSQLTestSuite) TestShouldAlsoConfigureForPro() {
 	req.Equal(1, len(suite.kafkac.CreateACLCalls()))
 	bindings := suite.kafkac.CreateACLCalls()[0].Binding
 	buf := new(bytes.Buffer)
-	acl.PrintAcls(bindings, buf)
+	req.NoError(acl.PrintAcls(cmd, bindings, buf))
 	req.Equal(expectedACLs, buf.String())
 }
 

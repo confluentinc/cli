@@ -12,6 +12,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 type command struct {
@@ -26,8 +27,9 @@ type describeDisplay struct {
 }
 
 var (
-	describeRenames = map[string]string{}
-	listFields      = []string{"ID", "Name", "Status", "Type"}
+	describeRenames      = map[string]string{}
+	listFields           = []string{"ID", "Name", "Status", "Type"}
+	listStructuredLabels = []string{"id", "name", "status", "type"}
 )
 
 // New returns the default command object for interacting with Connect.
@@ -75,6 +77,7 @@ List connectors in the current or specified Kafka cluster context.
 		Args: cobra.NoArgs,
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
@@ -170,7 +173,10 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	var data [][]string
+	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listFields, listStructuredLabels)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
 	for name, connector := range connectors {
 		connector := &describeDisplay{
 			Name:   name,
@@ -178,10 +184,9 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 			Status: connector.Status.Connector.State,
 			Type:   connector.Info.Type,
 		}
-		data = append(data, printer.ToRow(connector, listFields))
+		outputWriter.AddElement(connector)
 	}
-	printer.RenderCollectionTable(data, listFields)
-	return nil
+	return outputWriter.Out()
 }
 
 func (c *command) describe(cmd *cobra.Command, args []string) error {

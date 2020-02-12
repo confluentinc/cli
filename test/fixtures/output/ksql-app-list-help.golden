@@ -4,7 +4,8 @@ Usage:
   ccloud ksql app list [flags]
 
 Flags:
-  -h, --help   help for list
+  -o, --output string   Specify the output format as "human", "json" or "yaml". (default "human")
+  -h, --help            help for list
 
 Global Flags:
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

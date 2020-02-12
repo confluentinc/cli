@@ -15,11 +15,13 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 var (
 	listFields      = []string{"Id", "Name", "OutputTopicPrefix", "KafkaClusterId", "Storage", "Endpoint", "Status"}
-	listLabels      = []string{"Id", "Name", "Topic Prefix", "Kafka", "Storage", "Endpoint", "Status"}
+	listHumanLabels = []string{"Id", "Name", "Topic Prefix", "Kafka", "Storage", "Endpoint", "Status"}
+	listStructuredLabels = []string{"id", "name", "topic_prefix", "kafka", "storage", "endpoint", "status"}
 	describeFields  = []string{"Id", "Name", "OutputTopicPrefix", "KafkaClusterId", "Storage", "Endpoint", "Status"}
 	describeRenames = map[string]string{"KafkaClusterId": "Kafka", "OutputTopicPrefix": "Topic Prefix"}
 	aclsDryRun      = false
@@ -45,12 +47,15 @@ func NewClusterCommand(config *v2.Config, prerunner pcmd.PreRunner) *cobra.Comma
 }
 
 func (c *clusterCommand) init() {
-	c.AddCommand(&cobra.Command{
+	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List KSQL apps.",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
-	})
+	}
+	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	listCmd.Flags().SortFlags = false
+	c.AddCommand(listCmd)
 
 	createCmd := &cobra.Command{
 		Use:   "create <name>",
@@ -97,12 +102,14 @@ func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	var data [][]string
-	for _, cluster := range clusters {
-		data = append(data, printer.ToRow(cluster, listFields))
+	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
 	}
-	printer.RenderCollectionTable(data, listLabels)
-	return nil
+	for _, cluster := range clusters {
+		outputWriter.AddElement(cluster)
+	}
+	return outputWriter.Out()
 }
 
 func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
@@ -270,8 +277,7 @@ func (c *clusterCommand) configureACLs(cmd *cobra.Command, args []string) error 
 	// Setup ACLs
 	bindings := c.buildACLBindings(serviceAccountId, cluster, args[1:])
 	if aclsDryRun {
-		acl.PrintAcls(bindings, cmd.OutOrStderr())
-		return nil
+		return acl.PrintAcls(cmd, bindings, cmd.OutOrStderr())
 	}
 	err = c.Client.Kafka.CreateACL(ctx, kafkaCluster, bindings)
 	if err != nil {

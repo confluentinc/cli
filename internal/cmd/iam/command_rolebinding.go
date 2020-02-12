@@ -10,18 +10,18 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	"github.com/confluentinc/go-printer"
-	"github.com/confluentinc/mds-sdk-go"
-
+	"github.com/confluentinc/cli/internal/pkg/cmd"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-
-	"github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/go-printer"
+	"github.com/confluentinc/mds-sdk-go"
 )
 
 var (
-	resourcePatternListFields = []string{"ResourceType", "Name", "PatternType"}
-	resourcePatternListLabels = []string{"Principal", "Role", "ResourceType", "Name", "PatternType"}
+	resourcePatternListFields           = []string{"Principal", "Role", "ResourceType", "Name", "PatternType"}
+	resourcePatternHumanListLabels      = []string{"Principal", "Role", "ResourceType", "Name", "PatternType"}
+	resourcePatternStructuredListLabels = []string{"principal", "role", "resource_type", "name", "pattern_type"}
 
 	//TODO: please move this to a backend route
 	clusterScopedRoles = map[string]bool{
@@ -44,6 +44,14 @@ type rolebindingOptions struct {
 
 type rolebindingCommand struct {
 	*cmd.AuthenticatedCLICommand
+}
+
+type listDisplay struct {
+	Principal    string
+	Role         string
+	ResourceType string
+	Name         string
+	PatternType  string
 }
 
 // NewRolebindingCommand returns the sub-command object for interacting with RBAC rolebindings.
@@ -75,6 +83,7 @@ func (c *rolebindingCommand) init() {
 	listCmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for scope of rolebinding listings.")
 	listCmd.Flags().String("ksql-cluster-id", "", "KSQL cluster ID for scope of rolebinding listings.")
 	listCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for scope of rolebinding listings.")
+	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
 
 	c.AddCommand(listCmd)
@@ -247,33 +256,41 @@ func (c *rolebindingCommand) listPrincipalResources(cmd *cobra.Command) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
+	outputWriter, err := output.NewListOutputWriter(cmd, resourcePatternListFields, resourcePatternHumanListLabels, resourcePatternStructuredListLabels)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
 	var data [][]string
 	for principalName, rolesResourcePatterns := range principalsRolesResourcePatterns {
 		for roleName, resourcePatterns := range rolesResourcePatterns {
 			if role == "*" || roleName == role {
 				for _, resourcePattern := range resourcePatterns {
+					outputWriter.AddElement(&listDisplay{
+						Principal:    principalName,
+						Role:         roleName,
+						ResourceType: resourcePattern.ResourceType,
+						Name:         resourcePattern.Name,
+						PatternType:  resourcePattern.PatternType,
+					})
 					data = append(data, append([]string{principalName, roleName}, printer.ToRow(&resourcePattern, resourcePatternListFields)...))
 				}
 				if len(resourcePatterns) == 0 && clusterScopedRoles[roleName] {
-					data = append(data, []string{principalName, roleName, "Cluster", "", ""})
+					outputWriter.AddElement(&listDisplay{
+						Principal:    principalName,
+						Role:         roleName,
+						ResourceType: "Cluster",
+						Name:         "",
+						PatternType:  "",
+					})
 				}
 			}
 		}
 	}
 
-	// Stable output values
-	sort.Slice(data, func(i, j int) bool {
-		for x := range data[i] {
-			if data[i][x] != data[j][x] {
-				return data[i][x] < data[j][x]
-			}
-		}
-		return false
-	})
+	outputWriter.StableSort()
 
-	printer.RenderCollectionTable(data, resourcePatternListLabels)
-
-	return nil
+	return outputWriter.Out()
 }
 
 func (c *rolebindingCommand) listPrincipalResourcesV1(cmd *cobra.Command, scopeClusters *mds.ScopeClusters, principal string, role string) error {
@@ -356,13 +373,19 @@ func (c *rolebindingCommand) listRolePrincipals(cmd *cobra.Command) error {
 	}
 
 	sort.Strings(principals)
-	var data [][]string
-	for _, principal := range principals {
-		data = append(data, []string{principal})
+	outputWriter, err := output.NewListOutputWriter(cmd, []string{"Principal"}, []string{"Principal"}, []string{"principal"})
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
 	}
-	printer.RenderCollectionTable(data, []string{"Principal"})
-
-	return nil
+	for _, principal := range principals {
+		displayStruct := &struct{
+			Principal string
+		}{
+			Principal: principal,
+		}
+		outputWriter.AddElement(displayStruct)
+	}
+	return outputWriter.Out()
 }
 
 func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOptions, error) {

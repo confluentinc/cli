@@ -20,6 +20,16 @@ func (s *CLITestSuite) Test_Confluent_Iam_Rolebinding_List() {
 			login:   "default",
 		},
 		{
+			args:    "iam rolebinding list --kafka-cluster-id CID --principal User:frodo --role DeveloperRead -o json",
+			fixture: "confluent-iam-rolebinding-list-user-and-role-with-multiple-resources-from-one-group-json.golden",
+			login:   "default",
+		},
+		{
+			args:    "iam rolebinding list --kafka-cluster-id CID --principal User:frodo --role DeveloperRead -o yaml",
+			fixture: "confluent-iam-rolebinding-list-user-and-role-with-multiple-resources-from-one-group-yaml.golden",
+			login:   "default",
+		},
+		{
 			args:    "iam rolebinding list --kafka-cluster-id CID --principal User:frodo --role DeveloperWrite",
 			fixture: "confluent-iam-rolebinding-list-user-and-role-with-resources-from-multiple-groups.golden",
 			login:   "default",
@@ -32,6 +42,16 @@ func (s *CLITestSuite) Test_Confluent_Iam_Rolebinding_List() {
 		{
 			args:    "iam rolebinding list --kafka-cluster-id CID --principal User:frodo --role SystemAdmin",
 			fixture: "confluent-iam-rolebinding-list-user-and-role-with-no-matches.golden",
+			login:   "default",
+		},
+		{
+			args:    "iam rolebinding list --kafka-cluster-id CID --principal User:frodo --role SystemAdmin -o json",
+			fixture: "confluent-iam-rolebinding-list-user-and-role-with-no-matches-json.golden",
+			login:   "default",
+		},
+		{
+			args:    "iam rolebinding list --kafka-cluster-id CID --principal User:frodo --role SystemAdmin -o yaml",
+			fixture: "confluent-iam-rolebinding-list-user-and-role-with-no-matches-yaml.golden",
 			login:   "default",
 		},
 		{
@@ -52,6 +72,16 @@ func (s *CLITestSuite) Test_Confluent_Iam_Rolebinding_List() {
 		{
 			args:    "iam rolebinding list --kafka-cluster-id CID --role DeveloperRead",
 			fixture: "confluent-iam-rolebinding-list-role-with-multiple-bindings-to-one-group.golden",
+			login:   "default",
+		},
+		{
+			args:    "iam rolebinding list --kafka-cluster-id CID --role DeveloperRead -o json",
+			fixture: "confluent-iam-rolebinding-list-role-with-multiple-bindings-to-one-group-json.golden",
+			login:   "default",
+		},
+		{
+			args:    "iam rolebinding list --kafka-cluster-id CID --role DeveloperRead -o yaml",
+			fixture: "confluent-iam-rolebinding-list-role-with-multiple-bindings-to-one-group-yaml.golden",
 			login:   "default",
 		},
 		{
@@ -97,6 +127,20 @@ func (s *CLITestSuite) Test_Confluent_Iam_Role_List() {
 			name:        "confluent iam role list",
 			args:        "iam role list",
 			fixture:     "confluent-iam-role-list.golden",
+			login:       "default",
+			wantErrCode: 0,
+		},
+		{
+			name:        "confluent iam role list json",
+			args:        "iam role list -o json",
+			fixture:     "confluent-iam-role-list-json.golden",
+			login:       "default",
+			wantErrCode: 0,
+		},
+		{
+			name:        "confluent iam role list yaml",
+			args:        "iam role list -o yaml",
+			fixture:     "confluent-iam-role-list-yaml.golden",
 			login:       "default",
 			wantErrCode: 0,
 		},

@@ -33,7 +33,7 @@ var (
 	}
 	vocabWords = []string{
 		"ccloud", "kafka", "api", "url", "config", "configs", "multizone", "transactional", "ksql", "KSQL", "stdin",
-		"connect", "connect-catalog", "JSON", "plaintext",
+		"connect", "connect-catalog", "JSON", "plaintext", "json", "YAML", "yaml",
 		// security
 		"iam", "acl", "acls", "ACL", "rolebinding", "rolebindings", "PEM", "auth", "init", "decrypt", "READWRITE",
 		"txt", // this is because @file.txt -> file txt
