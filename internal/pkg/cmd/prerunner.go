@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"os"
+	"strings"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/confluentinc/mds-sdk-go"
@@ -246,6 +247,9 @@ func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, name string, curren
 	}
 	if updateAvailable {
 		msg := "Updates are available for %s from (current: %s, latest: %s). To install them, please run:\n$ %s update\n\n"
+		if !strings.HasPrefix(latestVersion,"v") {
+			latestVersion = "v" + latestVersion
+		}
 		ErrPrintf(cmd, msg, name, currentVersion, latestVersion, name)
 	}
 	return nil
