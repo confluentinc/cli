@@ -94,10 +94,12 @@ func (c *client) CheckForUpdates(name string, currentVersion string, forceCheck 
 	}
 
 	mostRecentVersion := availableVersions[len(availableVersions)-1]
+	fmt.Println("CUR: ", currentVersion, "LATEST: ",  mostRecentVersion.Original())
 	if currVersion.LessThan(mostRecentVersion) {
+		fmt.Println("curr LESS THAN latest")
 		return true, mostRecentVersion.Original(), nil
 	}
-
+	fmt.Println("curr LESS MORE latest")
 	return false, currentVersion, nil
 }
 
