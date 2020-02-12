@@ -94,11 +94,33 @@ func (c *client) CheckForUpdates(name string, currentVersion string, forceCheck 
 	}
 
 	mostRecentVersion := availableVersions[len(availableVersions)-1]
-	if currVersion.LessThan(mostRecentVersion) {
+	if isLessThanVersion(currVersion, mostRecentVersion) {
 		return true, mostRecentVersion.Original(), nil
 	}
 
 	return false, currentVersion, nil
+}
+
+// SemVer considers x.x.x-yyy to be less (older) than x.x.x
+func isLessThanVersion(curr, latest *version.Version) bool {
+	splitCurList := strings.Split(curr.String(), "-")
+	splitLatestList := strings.Split(latest.String(), "-")
+
+	truncatedCur, _ := version.NewVersion(splitCurList[0])
+	truncatedLatest, _ := version.NewVersion(splitLatestList[0])
+
+	compareNum := truncatedCur.Compare(truncatedLatest)
+	if compareNum < 0 {
+		return true
+	} else if compareNum == 0 {
+		if len(splitCurList) > 1 && len(splitLatestList) == 1 {
+			return false
+		} else if len(splitCurList) == 1 && len(splitLatestList) > 1 {
+			return true
+		}
+		return curr.LessThan(latest)
+	}
+	return false
 }
 
 // PromptToDownload displays an interactive CLI prompt to download the latest version
