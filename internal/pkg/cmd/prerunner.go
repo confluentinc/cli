@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"os"
+	"strings"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/confluentinc/mds-sdk-go"
@@ -237,7 +238,7 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 
 // notifyIfUpdateAvailable prints a message if an update is available
 func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, name string, currentVersion string) error {
-	updateAvailable, _, err := r.UpdateClient.CheckForUpdates(name, currentVersion, false)
+	updateAvailable, latestVersion, err := r.UpdateClient.CheckForUpdates(name, currentVersion, false)
 	if err != nil {
 		// This is a convenience helper to check-for-updates before arbitrary commands. Since the CLI supports running
 		// in internet-less environments (e.g., local or on-prem deploys), swallow the error and log a warning.
@@ -245,8 +246,11 @@ func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, name string, curren
 		return nil
 	}
 	if updateAvailable {
-		msg := "Updates are available for %s. To install them, please run:\n$ %s update\n\n"
-		ErrPrintf(cmd, msg, name, name)
+		msg := "Updates are available for %s from (current: %s, latest: %s). To install them, please run:\n$ %s update\n\n"
+		if !strings.HasPrefix(latestVersion,"v") {
+			latestVersion = "v" + latestVersion
+		}
+		ErrPrintf(cmd, msg, name, currentVersion, latestVersion, name)
 	}
 	return nil
 }
