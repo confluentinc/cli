@@ -12,22 +12,21 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tidwall/pretty"
 
-	"github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/go-printer"
-	mds "github.com/confluentinc/mds-sdk-go"
+	"github.com/confluentinc/mds-sdk-go"
+
+	"github.com/confluentinc/cli/internal/pkg/cmd"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 var (
-	roleFields     = []string{"Name", "AccessPolicy"}
-	roleLabels     = []string{"Name", "AccessPolicy"}
+	roleFields = []string{"Name", "AccessPolicy"}
+	roleLabels = []string{"Name", "AccessPolicy"}
 )
 
 type roleCommand struct {
-	*cobra.Command
-	config *config.Config
-	client *mds.APIClient
-	ctx    context.Context
+	*cmd.AuthenticatedCLICommand
 }
 
 type prettyRole struct {
@@ -36,20 +35,23 @@ type prettyRole struct {
 }
 
 // NewRoleCommand returns the sub-command object for interacting with RBAC roles.
-func NewRoleCommand(config *config.Config, client *mds.APIClient) *cobra.Command {
-	cmd := &roleCommand{
-		Command: &cobra.Command{
+func NewRoleCommand(cfg *v2.Config, prerunner cmd.PreRunner) *cobra.Command {
+	cliCmd := cmd.NewAuthenticatedWithMDSCLICommand(
+		&cobra.Command{
 			Use:   "role",
 			Short: "Manage RBAC and IAM roles.",
 			Long:  "Manage Role Based Access (RBAC) and Identity and Access Management (IAM) roles.",
 		},
-		config: config,
-		client: client,
-		ctx:    context.WithValue(context.Background(), mds.ContextAccessToken, config.AuthToken),
+		cfg, prerunner)
+	roleCmd := &roleCommand{
+		AuthenticatedCLICommand: cliCmd,
 	}
+	roleCmd.init()
+	return roleCmd.Command
+}
 
-	cmd.init()
-	return cmd.Command
+func (c *roleCommand) createContext() context.Context {
+	return context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
 }
 
 func (c *roleCommand) init() {
@@ -69,7 +71,7 @@ func (c *roleCommand) init() {
 }
 
 func (c *roleCommand) list(cmd *cobra.Command, args []string) error {
-	roles, _, err := c.client.RoleDefinitionsApi.Roles(c.ctx)
+	roles, _, err := c.MDSClient.RoleDefinitionsApi.Roles(c.createContext())
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -87,10 +89,11 @@ func (c *roleCommand) list(cmd *cobra.Command, args []string) error {
 
 func (c *roleCommand) describe(cmd *cobra.Command, args []string) error {
 	role := args[0]
-	details, r, err := c.client.RoleDefinitionsApi.RoleDetail(c.ctx, role)
+
+	details, r, err := c.MDSClient.RoleDefinitionsApi.RoleDetail(c.createContext(), role)
 	if err != nil {
 		if r.StatusCode == http.StatusNoContent {
-			availableRoleNames, _, err := c.client.RoleDefinitionsApi.Rolenames(c.ctx)
+			availableRoleNames, _, err := c.MDSClient.RoleDefinitionsApi.Rolenames(c.createContext())
 			if err != nil {
 				return errors.HandleCommon(err, cmd)
 			}
@@ -112,7 +115,7 @@ func (c *roleCommand) describe(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func createPrettyRole(role mds.Role)(*prettyRole, error) {
+func createPrettyRole(role mds.Role) (*prettyRole, error) {
 	marshalled, err := json.Marshal(role.AccessPolicy)
 	if err != nil {
 		return nil, err

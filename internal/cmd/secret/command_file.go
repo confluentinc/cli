@@ -2,31 +2,30 @@ package secret
 
 import (
 	"fmt"
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/secret"
+	"os"
+
 	"github.com/confluentinc/go-printer"
 	"github.com/spf13/cobra"
-	"os"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/secret"
 )
 
 type secureFileCommand struct {
 	*cobra.Command
-	config *config.Config
 	plugin secret.PasswordProtection
 	prompt pcmd.Prompt
 	resolv pcmd.FlagResolver
 }
 
 // NewFileCommand returns the Cobra command for managing encrypted file.
-func NewFileCommand(config *config.Config, prompt pcmd.Prompt, resolv pcmd.FlagResolver, plugin secret.PasswordProtection) *cobra.Command {
+func NewFileCommand(prompt pcmd.Prompt, resolv pcmd.FlagResolver, plugin secret.PasswordProtection) *cobra.Command {
 	cmd := &secureFileCommand{
 		Command: &cobra.Command{
 			Use:   "file",
 			Short: "Secure secrets in a configuration properties file.",
 		},
-		config: config,
 		plugin: plugin,
 		prompt: prompt,
 		resolv: resolv,

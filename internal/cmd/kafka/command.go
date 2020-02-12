@@ -3,60 +3,43 @@ package kafka
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/ccloud-sdk-go"
-
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/cli/internal/pkg/errors"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 type command struct {
-	*cobra.Command
-	config    *config.Config
-	client    ccloud.Kafka
-	ch        *pcmd.ConfigHelper
+	*pcmd.CLICommand
 	prerunner pcmd.PreRunner
 	logger    *log.Logger
 	clientID  string
 }
 
 // New returns the default command object for interacting with Kafka.
-func New(prerunner pcmd.PreRunner, config *config.Config, logger *log.Logger, clientID string, client ccloud.Kafka, ch *pcmd.ConfigHelper) (*cobra.Command, error) {
-	cmd := &command{
-		Command: &cobra.Command{
-			Use:               "kafka",
-			Short:             "Manage Apache Kafka.",
-			PersistentPreRunE: prerunner.Authenticated(),
+func New(prerunner pcmd.PreRunner, config *v2.Config, logger *log.Logger, clientID string) *cobra.Command {
+	cliCmd := pcmd.NewCLICommand(
+		&cobra.Command{
+			Use:   "kafka",
+			Short: "Manage Apache Kafka.",
 		},
-		config:    config,
-		client:    client,
-		ch:        ch,
+		config, prerunner)
+	cmd := &command{
+		CLICommand:
+		cliCmd,
 		prerunner: prerunner,
 		logger:    logger,
 		clientID:  clientID,
 	}
-	err := cmd.init()
-	if err != nil {
-		return nil, err
-	}
-	return cmd.Command, nil
+	cmd.init()
+	return cmd.Command
 }
 
-func (c *command) init() error {
-	topicCmd, err := NewTopicCommand(c.prerunner, c.config, c.logger, c.clientID, c.client, c.ch)
-	if err != nil {
-		return err
+func (c *command) init() {
+	c.AddCommand(NewTopicCommand(c.prerunner, c.Config.Config, c.logger, c.clientID))
+	context := c.Config.Config.Context()
+	if context != nil && context.Credential.CredentialType == v2.APIKey { // TODO: Change to DynamicConfig to handle flags.
+		return
 	}
-	c.AddCommand(topicCmd)
-	credType, err := c.config.CredentialType()
-	if err != nil && err != errors.ErrNoContext {
-		return err
-	}
-	if err == nil && credType == config.APIKey {
-		return nil
-	}
-	c.AddCommand(NewClusterCommand(c.config, c.client, c.ch))
-	c.AddCommand(NewACLCommand(c.config, c.client, c.ch))
-	return nil
+	c.AddCommand(NewClusterCommand(c.prerunner, c.Config.Config))
+	c.AddCommand(NewACLCommand(c.prerunner, c.Config.Config))
 }

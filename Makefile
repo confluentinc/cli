@@ -151,17 +151,42 @@ bindata: internal/cmd/local/bindata.go
 internal/cmd/local/bindata.go: cp_cli/* assets/*
 	@go-bindata -pkg local -o internal/cmd/local/bindata.go cp_cli/ assets/
 
+.PHONY: authenticate
+authenticate:
+	# If you setup your laptop following https://github.com/confluentinc/cc-documentation/blob/master/Operations/Laptop%20Setup.md
+	# then assuming caas.sh lives here should be fine
+	source $$GOPATH/src/github.com/confluentinc/cc-dotfiles/caas.sh && caasenv prod
+
 .PHONY: release
-release: get-release-image commit-release tag-release
+release: authenticate get-release-image commit-release tag-release
 	@GO111MODULE=on make gorelease
+	git checkout go.sum
 	@GO111MODULE=on VERSION=$(VERSION) make publish
 	@GO111MODULE=on VERSION=$(VERSION) make publish-docs
+	git checkout go.sum
+
+.PHONY: fakerelease
+fakerelease: get-release-image commit-release tag-release
+	@GO111MODULE=on make fakegorelease
 
 .PHONY: gorelease
 gorelease:
 	@GO111MODULE=off go get -u github.com/inconshreveable/mousetrap # dep from cobra -- incompatible with go mod
 	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --rm-dist -f .goreleaser-ccloud.yml
 	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --rm-dist -f .goreleaser-confluent.yml
+
+.PHONY: fakegorelease
+fakegorelease:
+	@GO111MODULE=off go get -u github.com/inconshreveable/mousetrap # dep from cobra -- incompatible with go mod
+	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --rm-dist -f .goreleaser-ccloud-fake.yml
+	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --rm-dist -f .goreleaser-confluent-fake.yml
+
+.PHONY: sign
+sign:
+	@GO111MODULE=on gon gon_ccloud.hcl
+	@GO111MODULE=on gon gon_confluent.hcl
+	rm dist/ccloud/darwin_amd64/ccloud_signed.zip || true
+	rm dist/confluent/darwin_amd64/confluent_signed.zip || true
 
 .PHONY: download-licenses
 download-licenses:
@@ -207,8 +232,11 @@ dist: download-licenses
 	done
 
 .PHONY: publish
-publish: dist
+## Note: gorelease target publishes unsigned binaries to the binaries folder in the bucket, we have to overwrite them here after signing
+publish: sign dist
 	@for binary in ccloud confluent; do \
+		source $$GOPATH/src/github.com/confluentinc/cc-dotfiles/caas.sh && caasenv prod && \
+		aws s3 cp dist/$${binary}/darwin_amd64/$${binary} s3://confluent.cloud/$${binary}-cli/binaries/$(VERSION:v%=%)/ ; \
 		aws s3 cp dist/$${binary}/ s3://confluent.cloud/$${binary}-cli/archives/$(VERSION:v%=%)/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --include "*_checksums.txt" --exclude "*_latest_*" --acl public-read ; \
 		aws s3 cp dist/$${binary}/ s3://confluent.cloud/$${binary}-cli/archives/latest/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --include "*_checksums.txt" --exclude "*_$(VERSION)_*" --acl public-read ; \
 	done
@@ -216,7 +244,8 @@ publish: dist
 .PHONY: publish-installers
 ## Publish install scripts to S3. You MUST re-run this if/when you update any install script.
 publish-installers:
-	aws s3 cp install-ccloud.sh s3://confluent.cloud/ccloud-cli/install.sh --acl public-read
+	source $$GOPATH/src/github.com/confluentinc/cc-dotfiles/caas.sh && caasenv prod && \
+	aws s3 cp install-ccloud.sh s3://confluent.cloud/ccloud-cli/install.sh --acl public-read && \
 	aws s3 cp install-confluent.sh s3://confluent.cloud/confluent-cli/install.sh --acl public-read
 
 .PHONY: docs

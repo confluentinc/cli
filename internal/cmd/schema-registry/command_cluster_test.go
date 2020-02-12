@@ -2,36 +2,34 @@ package schema_registry
 
 import (
 	"context"
-	"fmt"
-	"github.com/stretchr/testify/require"
 	"net/http"
 	"testing"
 
 	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/confluentinc/ccloud-sdk-go/mock"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go/mock"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	metricsv1 "github.com/confluentinc/ccloudapis/metrics/v1"
-	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
-	cmd2 "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/cli/internal/pkg/log"
-	cliMock "github.com/confluentinc/cli/mock"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	srMock "github.com/confluentinc/schema-registry-sdk-go/mock"
+
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	"github.com/confluentinc/cli/internal/pkg/log"
+	cliMock "github.com/confluentinc/cli/mock"
 )
 
 const (
-	kafkaClusterID = "kafka"
-	srClusterID    = "sr"
+	srClusterID = "sr"
 )
 
 type ClusterTestSuite struct {
 	suite.Suite
-	conf         *config.Config
+	conf         *v2.Config
 	kafkaCluster *kafkav1.KafkaCluster
 	srCluster    *srv1.SchemaRegistryCluster
 	srMock       *mock.SchemaRegistry
@@ -41,37 +39,15 @@ type ClusterTestSuite struct {
 }
 
 func (suite *ClusterTestSuite) SetupSuite() {
-	suite.conf = config.New()
-	suite.conf.Logger = log.New()
-	suite.conf.AuthURL = "http://test"
-	suite.conf.Auth = &config.AuthConfig{
-		User:    new(orgv1.User),
-		Account: &orgv1.Account{Id: "testAccount"},
-	}
-	user := suite.conf.Auth
-	name := fmt.Sprintf("login-%s-%s", user.User.Email, suite.conf.AuthURL)
-
-	suite.conf.Platforms[name] = &config.Platform{
-		Server: suite.conf.AuthURL,
-	}
-
-	suite.conf.Credentials[name] = &config.Credential{
-		Username: user.User.Email,
-	}
-	suite.conf.Contexts[name] = &config.Context{
-		Platform:      name,
-		Credential:    name,
-		Kafka:         kafkaClusterID,
-		KafkaClusters: map[string]*config.KafkaClusterConfig{kafkaClusterID: {}},
-	}
-
-	suite.conf.CurrentContext = name
-
+	suite.conf = v2.AuthenticatedConfigMock()
+	ctx := suite.conf.Context()
+	cluster := ctx.KafkaClusters[ctx.Kafka]
 	suite.kafkaCluster = &kafkav1.KafkaCluster{
-		Id:         kafkaClusterID,
+		Id:         cluster.ID,
+		Name:       cluster.Name,
+		Endpoint:   cluster.APIEndpoint,
 		Enterprise: true,
 	}
-
 	suite.srCluster = &srv1.SchemaRegistryCluster{
 		Id: srClusterID,
 	}
@@ -91,13 +67,6 @@ func (suite *ClusterTestSuite) SetupSuite() {
 			},
 		},
 	}
-	suite.metrics = &ccsdkmock.Metrics{
-		SchemaRegistryMetricsFunc: func(arg0 context.Context, arg1 string) (*metricsv1.SchemaRegistryMetric, error) {
-			return &metricsv1.SchemaRegistryMetric{
-				NumSchemas: 8,
-			}, nil
-		},
-	}
 }
 
 func (suite *ClusterTestSuite) SetupTest() {
@@ -109,10 +78,21 @@ func (suite *ClusterTestSuite) SetupTest() {
 			return []*srv1.SchemaRegistryCluster{suite.srCluster}, nil
 		},
 	}
+	suite.metrics = &ccsdkmock.Metrics{
+		SchemaRegistryMetricsFunc: func(arg0 context.Context, arg1 string) (*metricsv1.SchemaRegistryMetric, error) {
+			return &metricsv1.SchemaRegistryMetric{
+				NumSchemas: 8,
+			}, nil
+		},
+	}
 }
 
 func (suite *ClusterTestSuite) newCMD() *cobra.Command {
-	cmd := New(&cliMock.Commander{}, suite.conf, suite.srMock, &cmd2.ConfigHelper{}, suite.srClientMock, suite.metrics, suite.logger)
+	client := &ccloud.Client{
+		SchemaRegistry: suite.srMock,
+		Metrics:        suite.metrics,
+	}
+	cmd := New(cliMock.NewPreRunnerMock(client, nil), suite.conf, suite.srClientMock, suite.logger)
 	return cmd
 }
 
@@ -134,6 +114,7 @@ func (suite *ClusterTestSuite) TestDescribeSR() {
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.srMock.GetSchemaRegistryClustersCalled())
+	req.True(suite.metrics.SchemaRegistryMetricsCalled())
 }
 
 func (suite *ClusterTestSuite) TestUpdateCompatibility() {

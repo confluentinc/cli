@@ -5,7 +5,7 @@
 package mock
 
 import (
-	sync "sync"
+	"sync"
 )
 
 // Prompt is a mock of Prompt interface

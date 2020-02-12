@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
@@ -15,9 +16,9 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 
 	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
 	tests := []CLITest{
-		{args: "api-key create --resource bob", login: "default", fixture: "apikey1.golden"}, // MYKEY3
-		{args: "api-key list --resource bob", fixture: "apikey2.golden"},
-		{args: "api-key list --resource abc", fixture: "apikey3.golden"},
+		{args: "api-key create --resource lkc-bob", login: "default", fixture: "apikey1.golden"}, // MYKEY3
+		{args: "api-key list --resource lkc-bob", fixture: "apikey2.golden"},
+		{args: "api-key list --resource lkc-abc", fixture: "apikey3.golden"},
 
 		// create api key for kafka cluster
 		{args: "api-key list --resource lkc-cool1", fixture: "apikey4.golden"},
@@ -80,13 +81,14 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 		{name: "succeed if forced to overwrite existing secret", args: "api-key store -f UIAPIKEY100 NEWSECRET --resource lkc-cool1", fixture: "empty.golden",
 			wantFunc: func(t *testing.T) {
 				logger := log.New()
-				cfg := config.New(&config.Config{
-					CLIName: "ccloud",
-					Logger:  logger,
+				cfg := v2.New(&config.Params{
+					CLIName:    "ccloud",
+					MetricSink: nil,
+					Logger:     logger,
 				})
 				require.NoError(t, cfg.Load())
-				ctx, err := cfg.Context()
-				require.NoError(t, err)
+				ctx := cfg.Context()
+				require.NotNil(t, ctx)
 				kcc := ctx.KafkaClusters["lkc-cool1"]
 				pair := kcc.APIKeys["UIAPIKEY100"]
 				require.NotNil(t, pair)

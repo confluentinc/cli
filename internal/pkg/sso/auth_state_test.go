@@ -1,20 +1,17 @@
 package sso
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
-
-
 func TestNewStateDev(t *testing.T) {
-	configDevel := &config.Config{AuthURL: "https://devel.cpdev.cloud"}
-	state, err := newState(configDevel)
+	state, err := newState("https://devel.cpdev.cloud", false)
 	require.NoError(t, err)
 	// randomly generated
 	require.True(t, len(state.CodeVerifier) > 10)
@@ -34,8 +31,7 @@ func TestNewStateDev(t *testing.T) {
 	require.Empty(t, state.SSOProviderIDToken)
 
 	// check stag configs
-	configStag := &config.Config{AuthURL: "https://stag.cpdev.cloud"}
-	stateStag, err := newState(configStag)
+	stateStag, err := newState("https://stag.cpdev.cloud", false)
 	require.NoError(t, err)
 	// configs for devel and staging are the same
 	require.Equal(t, state.SSOProviderHost, stateStag.SSOProviderHost)
@@ -47,8 +43,7 @@ func TestNewStateDev(t *testing.T) {
 }
 
 func TestNewStateDevNoBrowser(t *testing.T) {
-	configDevel := &config.Config{AuthURL: "https://devel.cpdev.cloud", NoBrowser: true}
-	state, err := newState(configDevel)
+	state, err := newState("https://devel.cpdev.cloud", true)
 	require.NoError(t, err)
 	// randomly generated
 	require.True(t, len(state.CodeVerifier) > 10)
@@ -69,8 +64,7 @@ func TestNewStateDevNoBrowser(t *testing.T) {
 	require.Empty(t, state.SSOProviderIDToken)
 
 	// check stag configs
-	configStag := &config.Config{AuthURL: "https://stag.cpdev.cloud", NoBrowser: true}
-	stateStag, err := newState(configStag)
+	stateStag, err := newState("https://stag.cpdev.cloud", true)
 	require.NoError(t, err)
 	// configs for devel and staging are the same except the callback url
 	require.Equal(t, state.SSOProviderHost, stateStag.SSOProviderHost)
@@ -81,8 +75,7 @@ func TestNewStateDevNoBrowser(t *testing.T) {
 	require.Empty(t, stateStag.SSOProviderIDToken)
 
 	// check cpd configs
-	configCpd := &config.Config{AuthURL: "https://aware-monkfish.gcp.priv.cpdev.cloud", NoBrowser: true}
-	stateCpd, err := newState(configCpd)
+	stateCpd, err := newState("https://aware-monkfish.gcp.priv.cpdev.cloud", true)
 	require.NoError(t, err)
 	// configs for cpd and devel are the same except the callback url
 	require.Equal(t, state.SSOProviderHost, stateCpd.SSOProviderHost)
@@ -94,8 +87,7 @@ func TestNewStateDevNoBrowser(t *testing.T) {
 }
 
 func TestNewStateProd(t *testing.T) {
-	configProd := &config.Config{AuthURL: "https://confluent.cloud"}
-	state, err := newState(configProd)
+	state, err := newState("https://confluent.cloud", false)
 	require.NoError(t, err)
 	// randomly generated
 	require.True(t, len(state.CodeVerifier) > 10)
@@ -115,8 +107,7 @@ func TestNewStateProd(t *testing.T) {
 }
 
 func TestNewStateProdNoBrowser(t *testing.T) {
-	configProd := &config.Config{AuthURL: "https://confluent.cloud", NoBrowser: true}
-	state, err := newState(configProd)
+	state, err := newState("https://confluent.cloud", true)
 	require.NoError(t, err)
 	// randomly generated
 	require.True(t, len(state.CodeVerifier) > 10)
@@ -137,8 +128,7 @@ func TestNewStateProdNoBrowser(t *testing.T) {
 }
 
 func TestGetAuthorizationUrl(t *testing.T) {
-	configDevel := &config.Config{AuthURL: "https://devel.cpdev.cloud"}
-	state, _ := newState(configDevel)
+	state, _ := newState("https://devel.cpdev.cloud", false)
 
 	// test get auth code url
 	authCodeUrlDevel := state.getAuthorizationCodeUrl("foo")
@@ -167,8 +157,7 @@ func TestGetAuthorizationUrl(t *testing.T) {
 }
 
 func TestGetOAuthToken(t *testing.T) {
-	configDevel := &config.Config{AuthURL: "https://devel.cpdev.cloud"}
-	state, _ := newState(configDevel)
+	state, _ := newState("https://devel.cpdev.cloud", false)
 
 	expectedUri := "/oauth/token"
 	expectedPayload := "grant_type=authorization_code" +

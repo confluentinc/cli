@@ -11,36 +11,31 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/mds-sdk-go"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 type aclCommand struct {
-	*cobra.Command
-	config *config.Config
-	client *mds.APIClient
-	ctx    context.Context
+	*pcmd.AuthenticatedCLICommand
 }
 
 // NewACLCommand returns the Cobra command for ACLs.
-func NewACLCommand(config *config.Config, client *mds.APIClient) *cobra.Command {
+func NewACLCommand(config *v2.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &aclCommand{
-		Command: &cobra.Command{
+		AuthenticatedCLICommand: pcmd.NewAuthenticatedWithMDSCLICommand(&cobra.Command{
 			Use:   "acl",
 			Short: `Manage Kafka ACLs (5.4+ only).`,
-		},
-		config: config,
-		client: client,
-		ctx:    context.WithValue(context.Background(), mds.ContextAccessToken, config.AuthToken),
+		}, config, prerunner),
 	}
-
 	cmd.init()
 	return cmd.Command
 }
 
 func (c *aclCommand) init() {
-	cliName := c.config.CLIName
+	cliName := c.Config.CLIName
 
 	cmd := &cobra.Command{
 		Use:   "create",
@@ -94,7 +89,7 @@ func (c *aclCommand) init() {
 func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
 	acl := parse(cmd)
 
-	bindings, response, err := c.client.KafkaACLManagementApi.SearchAclBinding(c.ctx, convertToAclFilterRequest(acl.CreateAclRequest))
+	bindings, response, err := c.MDSClient.KafkaACLManagementApi.SearchAclBinding(c.createContext(), convertToAclFilterRequest(acl.CreateAclRequest))
 
 	if err != nil {
 		return c.handleAclError(cmd, err, response)
@@ -111,7 +106,7 @@ func (c *aclCommand) create(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(acl.errors, cmd)
 	}
 
-	response, err := c.client.KafkaACLManagementApi.AddAclBinding(c.ctx, *acl.CreateAclRequest)
+	response, err := c.MDSClient.KafkaACLManagementApi.AddAclBinding(c.createContext(), *acl.CreateAclRequest)
 
 	if err != nil {
 		return c.handleAclError(cmd, err, response)
@@ -127,7 +122,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(acl.errors, cmd)
 	}
 
-	bindings, response, err := c.client.KafkaACLManagementApi.RemoveAclBindings(c.ctx, convertToAclFilterRequest(acl.CreateAclRequest))
+	bindings, response, err := c.MDSClient.KafkaACLManagementApi.RemoveAclBindings(c.createContext(), convertToAclFilterRequest(acl.CreateAclRequest))
 
 	if err != nil {
 		return c.handleAclError(cmd, err, response)
@@ -240,4 +235,8 @@ func PrintAcls(kafkaClusterId string, bindingsObj []mds.AclBinding, writer io.Wr
 		bindings = append(bindings, printer.ToRow(record, fields))
 	}
 	printer.RenderCollectionTableOut(bindings, fields, writer)
+}
+
+func (c *aclCommand) createContext() context.Context {
+	return context.WithValue(context.Background(), mds.ContextAccessToken, c.AuthToken())
 }

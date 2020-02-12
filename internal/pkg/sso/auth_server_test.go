@@ -1,16 +1,15 @@
 package sso
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/stretchr/testify/require"
 	"net/http"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestServerTimeout(t *testing.T) {
-	configDevel := &config.Config{AuthURL: "https://devel.cpdev.cloud"}
-	state, err := newState(configDevel)
+	state, err := newState("https://devel.cpdev.cloud", false)
 	require.NoError(t, err)
 	server := newServer(state)
 
@@ -22,8 +21,7 @@ func TestServerTimeout(t *testing.T) {
 }
 
 func TestCallback(t *testing.T) {
-	configDevel := &config.Config{AuthURL: "https://devel.cpdev.cloud"}
-	state, err := newState(configDevel)
+	state, err := newState("https://devel.cpdev.cloud", false)
 	require.NoError(t, err)
 	server := newServer(state)
 
@@ -32,11 +30,11 @@ func TestCallback(t *testing.T) {
 	state.SSOProviderCallbackUrl = "http://127.0.0.1:26635/cli_callback"
 	url := state.SSOProviderCallbackUrl
 	mockCode := "uhlU7Fvq5NwLwBwk"
-	mockUri := url + "?code="+mockCode+"&state="+state.SSOProviderState
+	mockUri := url + "?code=" + mockCode + "&state=" + state.SSOProviderState
 
 	ch := make(chan bool)
 	go func() {
-		_ = <- ch
+		_ = <-ch
 		// send mock request to server's callback endpoint
 		req, err := http.NewRequest("GET", mockUri, nil)
 		require.NoError(t, err)

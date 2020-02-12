@@ -1,5 +1,4 @@
-Name: my-context
-credentials: api-key-hi
+credential: api-key-hi
 kafka_cluster: anonymous-id
 kafka_clusters:
   anonymous-id:
@@ -11,6 +10,7 @@ kafka_clusters:
     bootstrap_servers: boot-test.com
     id: anonymous-id
     name: anonymous-cluster
+name: my-context
 platform: boot-test.com
-schema_registry_cluster: null
+schema_registry_clusters: {}
 
