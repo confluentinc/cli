@@ -97,9 +97,7 @@ func (c *client) CheckForUpdates(name string, currentVersion string, forceCheck 
 	if isLessThanVersion(currVersion, mostRecentVersion) {
 		return true, mostRecentVersion.Original(), nil
 	}
-	if currVersion.LessThan(mostRecentVersion) {
-		return true, mostRecentVersion.Original(), nil
-	}
+
 	return false, currentVersion, nil
 }
 

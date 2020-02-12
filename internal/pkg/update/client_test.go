@@ -298,7 +298,7 @@ func TestCheckForUpdates(t *testing.T) {
 			wantErr:             true,
 		},
 		{
-			name: "checks - success",
+			name: "checks - success - update",
 			client: NewClient(&ClientParams{
 				Repository: &updateMock.Repository{
 					GetAvailableVersionsFunc: func(name string) (version.Collection, error) {
@@ -313,6 +313,78 @@ func TestCheckForUpdates(t *testing.T) {
 			},
 			wantUpdateAvailable: true,
 			wantLatestVersion:   "v1.2.4",
+			wantErr:             false,
+		},
+		{
+			name: "checks - success - same version",
+			client: NewClient(&ClientParams{
+				Repository: &updateMock.Repository{
+					GetAvailableVersionsFunc: func(name string) (version.Collection, error) {
+						return version.Collection{version.Must(version.NewVersion("v1.2.4"))}, nil
+					},
+				},
+				Logger: log.New(),
+			}),
+			args: args{
+				name:           "my-cli",
+				currentVersion: "v1.2.4",
+			},
+			wantUpdateAvailable: false,
+			wantLatestVersion:   "v1.2.4",
+			wantErr:             false,
+		},
+		{
+			name: "checks - success - hyphen no update",
+			client: NewClient(&ClientParams{
+				Repository: &updateMock.Repository{
+					GetAvailableVersionsFunc: func(name string) (version.Collection, error) {
+						return version.Collection{version.Must(version.NewVersion("v0.238.0"))}, nil
+					},
+				},
+				Logger: log.New(),
+			}),
+			args: args{
+				name:           "my-cli",
+				currentVersion: "v0.238.0-7-g5060ef4",
+			},
+			wantUpdateAvailable: false,
+			wantLatestVersion:   "v0.238.0-7-g5060ef4",
+			wantErr:             false,
+		},
+		{
+			name: "checks - success - hyphen same version",
+			client: NewClient(&ClientParams{
+				Repository: &updateMock.Repository{
+					GetAvailableVersionsFunc: func(name string) (version.Collection, error) {
+						return version.Collection{version.Must(version.NewVersion("v0.238.0-7-g5060ef4"))}, nil
+					},
+				},
+				Logger: log.New(),
+			}),
+			args: args{
+				name:           "my-cli",
+				currentVersion: "v0.238.0-7-g5060ef4",
+			},
+			wantUpdateAvailable: false,
+			wantLatestVersion:   "v0.238.0-7-g5060ef4",
+			wantErr:             false,
+		},
+		{
+			name: "checks - success - hyphen update",
+			client: NewClient(&ClientParams{
+				Repository: &updateMock.Repository{
+					GetAvailableVersionsFunc: func(name string) (version.Collection, error) {
+						return version.Collection{version.Must(version.NewVersion("v0.238.0-7-g5060ef4"))}, nil
+					},
+				},
+				Logger: log.New(),
+			}),
+			args: args{
+				name:           "my-cli",
+				currentVersion: "v0.238.0",
+			},
+			wantUpdateAvailable: true,
+			wantLatestVersion:   "v0.238.0-7-g5060ef4",
 			wantErr:             false,
 		},
 	}
