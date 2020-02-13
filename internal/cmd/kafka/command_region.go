@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	regionLisFields = []string{"CloudId", "CloudName", "RegionId", "RegionName"}
+	regionListFields = []string{"CloudId", "CloudName", "RegionId", "RegionName"}
 	regionListHumanLabels = []string{"CloudId", "CloudName", "RegionId", "RegionName"}
 	regionListStructuredLabels = []string{"cloud_id", "cloud_name", "region_id", "region_name"}
 )
@@ -59,7 +59,7 @@ func (c *regionCommand) list(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	outputWriter, err := output.NewListOutputWriter(cmd, regionLisFields, regionListHumanLabels, regionListStructuredLabels)
+	outputWriter, err := output.NewListOutputWriter(cmd, regionListFields, regionListHumanLabels, regionListStructuredLabels)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
