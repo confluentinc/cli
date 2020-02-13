@@ -3,10 +3,7 @@ package kafka
 import (
 	"bufio"
 	"context"
-	"encoding/json"
 	"fmt"
-	"github.com/go-yaml/yaml"
-	"github.com/tidwall/pretty"
 	"os"
 	"os/signal"
 	"strings"
@@ -546,14 +543,5 @@ func printStructuredDescribe(cmd *cobra.Command, resp *kafkav1.TopicDescription,
 		structuredDisplay.Config[name] = entry.Value
 	}
 
-	if format == output.JSON.String() {
-		out, _ := json.Marshal(structuredDisplay)
-		_, err :=  fmt.Fprintf(os.Stdout, string(pretty.Pretty(out)))
-		return err
-	} else if format == output.YAML.String() {
-		out, _ := yaml.Marshal(structuredDisplay)
-		_, err := fmt.Fprintf(os.Stdout, string(out))
-		return err
-	}
-	return nil
+	return output.StructuredOutput(format, structuredDisplay)
 }

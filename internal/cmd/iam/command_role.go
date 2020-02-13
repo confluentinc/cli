@@ -116,13 +116,23 @@ func (c *roleCommand) describe(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	var data [][]string
-	roleDisplay, err := createPrettyRole(details)
+	format, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	data = append(data, printer.ToRow(roleDisplay, roleFields))
-	outputTable(data)
+
+	if format == output.Human.String() {
+		var data [][]string
+		roleDisplay, err := createPrettyRole(details)
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+		data = append(data, printer.ToRow(roleDisplay, roleFields))
+		outputTable(data)
+	} else {
+		return output.StructuredOutput(format, details)
+	}
+
 	return nil
 }
 

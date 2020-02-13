@@ -6,12 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"sort"
-
-	"github.com/go-yaml/yaml"
-	"github.com/spf13/cobra"
-	"github.com/tidwall/pretty"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
@@ -19,6 +14,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/go-printer"
+	"github.com/spf13/cobra"
 )
 
 type Metadata interface {
@@ -177,17 +173,11 @@ func printDescribe(cmd *cobra.Command, meta *ScopedId, format string) error {
 		}
 
 	}
-	if format == output.JSON.String() {
-		out, _ := json.Marshal(structuredDisplay)
-		_, err :=  fmt.Fprintf(os.Stdout, string(pretty.Pretty(out)))
-		return err
-	} else if format == output.YAML.String() {
-		out, _ := yaml.Marshal(structuredDisplay)
-		_, err := fmt.Fprintf(os.Stdout, string(out))
-		return err
-	} else  {
+	if format == output.Human.String() {
 		pcmd.Println(cmd, "Scope:")
 		printer.RenderCollectionTable(data, describeLabels)
+	} else {
+		return output.StructuredOutput(format, structuredDisplay)
 	}
 	return nil
 }
