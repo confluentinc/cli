@@ -14,6 +14,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 type command struct {
@@ -21,10 +22,11 @@ type command struct {
 }
 
 var (
-	listFields      = []string{"Id", "ServiceName", "ServiceDescription"}
-	listLabels      = []string{"Id", "Name", "Description"}
-	describeFields  = []string{"Id", "ServiceName", "ServiceDescription"}
-	describeRenames = map[string]string{"ServiceName": "Name", "ServiceDescription": "Description"}
+	listFields                = []string{"Id", "ServiceName", "ServiceDescription"}
+	listHumanLabels           = []string{"Id", "Name", "Description"}
+	listStructuredLabels      = []string{"id", "name", "description"}
+	describeFields            = []string{"Id", "ServiceName", "ServiceDescription"}
+	describeRenames           = map[string]string{"ServiceName": "Name", "ServiceDescription": "Description"}
 )
 
 const nameLength = 32
@@ -46,12 +48,15 @@ func New(prerunner pcmd.PreRunner, config *v2.Config) *cobra.Command {
 }
 
 func (c *command) init() {
-	c.AddCommand(&cobra.Command{
+	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: `List service accounts.`,
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
-	})
+	}
+	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	listCmd.Flags().SortFlags = false
+	c.AddCommand(listCmd)
 
 	createCmd := &cobra.Command{
 		Use:   "create <name>",
@@ -197,11 +202,12 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	var data [][]string
-	for _, u := range users {
-		data = append(data, printer.ToRow(u, listFields))
+	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
 	}
-
-	printer.RenderCollectionTable(data, listLabels)
-	return nil
+	for _, u := range users {
+		outputWriter.AddElement(u)
+	}
+	return outputWriter.Out()
 }

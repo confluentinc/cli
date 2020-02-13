@@ -1,0 +1,1 @@
+Error: 'oops' is not an available region for 'aws'. You can view a list of available regions for 'aws' with 'kafka region list --cloud aws' command.

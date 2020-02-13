@@ -3,6 +3,7 @@ package kafka
 import (
 	"context"
 	"fmt"
+	"github.com/confluentinc/ccloud-sdk-go"
 	"os"
 
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
@@ -12,11 +13,13 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 var (
 	listFields      = []string{"Id", "Name", "ServiceProvider", "Region", "Durability", "Status"}
-	listLabels      = []string{"Id", "Name", "Provider", "Region", "Durability", "Status"}
+	listHumanLabels      = []string{"Id", "Name", "Provider", "Region", "Durability", "Status"}
+	listStructuredLabels      = []string{"id", "name", "provider", "region", "durability", "status"}
 	describeFields  = []string{"Id", "Name", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "ApiEndpoint"}
 	describeRenames = map[string]string{"NetworkIngress": "Ingress", "NetworkEgress": "Egress", "ServiceProvider": "Provider"}
 )
@@ -43,12 +46,15 @@ func NewClusterCommand(prerunner pcmd.PreRunner, config *v2.Config) *cobra.Comma
 }
 
 func (c *clusterCommand) init() {
-	c.AddCommand(&cobra.Command{
+	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List Kafka clusters.",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
-	})
+	}
+	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	listCmd.Flags().SortFlags = false
+	c.AddCommand(listCmd)
 
 	createCmd := &cobra.Command{
 		Use:   "create <name>",
@@ -56,8 +62,8 @@ func (c *clusterCommand) init() {
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	}
-	createCmd.Flags().String("cloud", "", "Cloud provider (e.g. 'aws' or 'gcp').")
-	createCmd.Flags().String("region", "", "Cloud region for cluster (e.g. 'us-west-2').")
+	createCmd.Flags().String("cloud", "", "Cloud provider ID (e.g. 'aws' or 'gcp').")
+	createCmd.Flags().String("region", "", "Cloud region ID for cluster (e.g. 'us-west-2').")
 	check(createCmd.MarkFlagRequired("cloud"))
 	check(createCmd.MarkFlagRequired("region"))
 	createCmd.Flags().SortFlags = false
@@ -100,17 +106,22 @@ func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	var data [][]string
-	for _, cluster := range clusters {
-		if cluster.Id == c.Context.Kafka {
-			cluster.Id = fmt.Sprintf("* %s", cluster.Id)
-		} else {
-			cluster.Id = fmt.Sprintf("  %s", cluster.Id)
-		}
-		data = append(data, printer.ToRow(cluster, listFields))
+	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
 	}
-	printer.RenderCollectionTable(data, listLabels)
-	return nil
+	for _, cluster := range clusters {
+		// Add '*' only in the case where we are printing out tables
+		if outputWriter.GetOutputFormat() == output.Human {
+			if cluster.Id == c.Context.Kafka {
+				cluster.Id = fmt.Sprintf("* %s", cluster.Id)
+			} else {
+				cluster.Id = fmt.Sprintf("  %s", cluster.Id)
+			}
+		}
+		outputWriter.AddElement(cluster)
+	}
+	return outputWriter.Out()
 }
 
 func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
@@ -119,6 +130,10 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	region, err := cmd.Flags().GetString("region")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	err = checkCloudAndRegion(cloud, region, c.Client)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -176,4 +191,26 @@ func check(err error) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func checkCloudAndRegion(cloudId string, regionId string, client *ccloud.Client) error {
+	clouds, err := client.EnvironmentMetadata.Get(context.Background())
+	if err != nil {
+		return err
+	}
+	for _, cloud := range clouds {
+		if cloudId == cloud.Id {
+			for _, region := range cloud.Regions {
+				if regionId == region.Id {
+					if region.IsSchedulable {
+						return nil
+					} else {
+						break
+					}
+				}
+			}
+			return fmt.Errorf("'%s' is not an available region for '%s'. You can view a list of available regions for '%s' with 'kafka region list --cloud %s' command.", regionId, cloudId, cloudId, cloudId)
+		}
+	}
+	return fmt.Errorf("'%s' cloud provider does not exist. You can view a list of available cloud providers and regions with the 'kafka region list' command.", cloudId)
 }

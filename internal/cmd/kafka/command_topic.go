@@ -18,6 +18,7 @@ import (
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 type hasAPIKeyTopicCommand struct {
@@ -106,6 +107,7 @@ List all topics.
 		Args: cobra.NoArgs,
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	cmd.Flags().SortFlags = false
 	a.AddCommand(cmd)
 
@@ -191,14 +193,14 @@ func (a *authenticatedTopicCommand) list(cmd *cobra.Command, args []string) erro
 		return errors.HandleCommon(err, cmd)
 	}
 
-	var topics [][]string
-	for _, topic := range resp {
-		topics = append(topics, printer.ToRow(topic, []string{"Name"}))
+	outputWriter, err := output.NewListOutputWriter(cmd, []string{"Name"}, []string{"Name"}, []string{"name"})
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
 	}
-
-	printer.RenderCollectionTable(topics, []string{"Name"})
-
-	return nil
+	for _, topic := range resp {
+		outputWriter.AddElement(topic)
+	}
+	return outputWriter.Out()
 }
 
 func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) error {

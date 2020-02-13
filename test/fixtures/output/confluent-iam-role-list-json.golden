@@ -1,0 +1,92 @@
+[
+  {
+    "name": "DeveloperRead",
+    "accessPolicy": {
+      "scopeType": "Resource",
+      "allowedOperations": [
+        {
+          "resourceType": "Cluster"
+        }, 
+        {
+          "resourceType": "TransactionalId",
+          "operations": ["Describe"]
+        }, 
+        {
+          "resourceType": "Group",
+          "operations": ["Read", "Describe"]
+        }, 
+        {
+          "resourceType": "Subject",
+          "operations": ["Read", "ReadCompatibility"]
+        }, 
+        {
+          "resourceType": "Connector",
+          "operations": ["ReadStatus", "ReadConfig"]
+        }, 
+        {
+          "resourceType": "Topic",
+          "operations": ["Read", "Describe"]
+        }
+      ]
+    }
+  }, 
+  {
+    "name": "DeveloperWrite",
+    "accessPolicy": {
+      "scopeType": "Resource",
+      "allowedOperations": [
+        {
+          "resourceType": "Subject",
+          "operations": ["Write"]
+        }, 
+        {
+          "resourceType": "Group"
+        }, 
+        {
+          "resourceType": "Topic",
+          "operations": ["Write", "Describe"]
+        }, 
+        {
+          "resourceType": "Cluster",
+          "operations": ["IdempotentWrite"]
+        }, 
+        {
+          "resourceType": "KsqlCluster",
+          "operations": ["Contribute"]
+        }, 
+        {
+          "resourceType": "Connector",
+          "operations": ["ReadStatus", "Configure"]
+        }, 
+        {
+          "resourceType": "TransactionalId",
+          "operations": ["Write", "Describe"]
+        }
+      ]
+    }
+  }, 
+  {
+    "name": "SecurityAdmin",
+    "accessPolicy": {
+      "scopeType": "Cluster",
+      "allowedOperations": [
+        {
+          "resourceType": "All",
+          "operations": ["DescribeAccess"]
+        }
+      ]
+    }
+  }, 
+  {
+    "name": "SystemAdmin",
+    "accessPolicy": {
+      "scopeType": "Cluster",
+      "allowedOperations": [
+        {
+          "resourceType": "All",
+          "operations": ["All"]
+        }
+      ]
+    }
+  }
+]

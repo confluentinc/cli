@@ -3,8 +3,8 @@ Usage:
   ccloud kafka cluster create <name> [flags]
 
 Flags:
-      --cloud string    Cloud provider (e.g. 'aws' or 'gcp').
-      --region string   Cloud region for cluster (e.g. 'us-west-2').
+      --cloud string    Cloud provider ID (e.g. 'aws' or 'gcp').
+      --region string   Cloud region ID for cluster (e.g. 'us-west-2').
   -h, --help            help for create
 
 Global Flags:

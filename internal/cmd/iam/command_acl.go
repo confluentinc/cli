@@ -3,13 +3,10 @@ package iam
 import (
 	"context"
 	"fmt"
-	"io"
-	"net/http"
-	"os"
-
-	"github.com/confluentinc/go-printer"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
+	"net/http"
 
 	"github.com/confluentinc/mds-sdk-go"
 
@@ -81,6 +78,7 @@ func (c *aclCommand) init() {
 		Args:  cobra.NoArgs,
 	}
 	cmd.Flags().AddFlagSet(listAclFlags())
+	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	cmd.Flags().SortFlags = false
 
 	c.AddCommand(cmd)
@@ -94,9 +92,7 @@ func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return c.handleAclError(cmd, err, response)
 	}
-
-	PrintAcls(acl.Scope.Clusters.KafkaCluster, bindings, os.Stdout)
-	return nil
+	return PrintAcls(cmd, acl.Scope.Clusters.KafkaCluster, bindings)
 }
 
 func (c *aclCommand) create(cmd *cobra.Command, args []string) error {
@@ -128,8 +124,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, args []string) error {
 		return c.handleAclError(cmd, err, response)
 	}
 
-	PrintAcls(acl.Scope.Clusters.KafkaCluster, bindings, os.Stdout)
-	return nil
+	return PrintAcls(cmd, acl.Scope.Clusters.KafkaCluster, bindings)
 }
 
 func (c *aclCommand) handleAclError(cmd *cobra.Command, err error, response *http.Response) error {
@@ -208,9 +203,20 @@ func convertToAclFilterRequest(request *mds.CreateAclRequest) mds.AclFilterReque
 	}
 }
 
-func PrintAcls(kafkaClusterId string, bindingsObj []mds.AclBinding, writer io.Writer) {
-	var bindings [][]string
+func PrintAcls(cmd *cobra.Command, kafkaClusterId string, bindingsObj []mds.AclBinding) error {
 	var fields = []string{"KafkaClusterId", "Principal", "Permission", "Operation", "Host", "Resource", "Name", "Type"}
+	var structuredRenames = []string{"kafka_cluster_id", "principal", "permission", "operation", "host", "resource", "name", "type"}
+
+	// delete also uses this function but doesn't have -o flag defined, -o flag is needed NewListOutputWriter
+	_, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	}
+
+	outputWriter, err := output.NewListOutputWriter(cmd, fields, fields, structuredRenames)
+	if err != nil {
+		return err
+	}
 	for _, binding := range bindingsObj {
 
 		record := &struct {
@@ -232,9 +238,9 @@ func PrintAcls(kafkaClusterId string, bindingsObj []mds.AclBinding, writer io.Wr
 			binding.Pattern.Name,
 			binding.Pattern.PatternType,
 		}
-		bindings = append(bindings, printer.ToRow(record, fields))
+		outputWriter.AddElement(record)
 	}
-	printer.RenderCollectionTableOut(bindings, fields, writer)
+	return outputWriter.Out()
 }
 
 func (c *aclCommand) createContext() context.Context {
