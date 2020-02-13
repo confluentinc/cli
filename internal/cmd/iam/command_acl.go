@@ -207,7 +207,6 @@ func PrintAcls(cmd *cobra.Command, kafkaClusterId string, bindingsObj []mds.AclB
 	var fields = []string{"KafkaClusterId", "Principal", "Permission", "Operation", "Host", "Resource", "Name", "Type"}
 	var structuredRenames = []string{"kafka_cluster_id", "principal", "permission", "operation", "host", "resource", "name", "type"}
 
-
 	// delete also uses this function but doesn't have -o flag defined, -o flag is needed NewListOutputWriter
 	_, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
