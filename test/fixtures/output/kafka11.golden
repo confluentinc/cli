@@ -1,2 +1,2 @@
-  CloudId | CloudName | RegiondId | RegionName  
-+---------+-----------+-----------+------------+
+  CloudId | CloudName | RegionId | RegionName  
++---------+-----------+----------+------------+

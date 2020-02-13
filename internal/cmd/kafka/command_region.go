@@ -2,16 +2,19 @@ package kafka
 
 import (
 	"context"
-	"github.com/confluentinc/go-printer"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 var (
-	regionListLabels = []string{"CloudId", "CloudName", "RegiondId", "RegionName"}
+	regionListFields = []string{"CloudId", "CloudName", "RegionId", "RegionName"}
+	regionListHumanLabels = []string{"CloudId", "CloudName", "RegionId", "RegionName"}
+	regionListStructuredLabels = []string{"cloud_id", "cloud_name", "region_id", "region_name"}
 )
 
 
@@ -42,6 +45,7 @@ func (c *regionCommand) init() {
 		Args:  cobra.NoArgs,
 	}
 	listCmd.Flags().String("cloud", "", "The cloud ID to filter by.")
+	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 }
@@ -55,17 +59,28 @@ func (c *regionCommand) list(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	var data [][]string
+	outputWriter, err := output.NewListOutputWriter(cmd, regionListFields, regionListHumanLabels, regionListStructuredLabels)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	type regionStruct struct {
+		CloudId    string
+		CloudName  string
+		RegionId   string
+		RegionName string
+	}
 	for _, cloud := range clouds {
 		for _, region := range cloud.Regions {
 			if !region.IsSchedulable || (cloudIdFilter != "" && cloudIdFilter != cloud.Id) {
 				continue
 			}
-			row := []string{cloud.Id, cloud.Name}
-			row = append(row, region.Id, region.Name)
-			data = append(data, row)
+			outputWriter.AddElement(&regionStruct{
+				CloudId:    cloud.Id,
+				CloudName:  cloud.Name,
+				RegionId:   region.Id,
+				RegionName: region.Name,
+			})
 		}
 	}
-	printer.RenderCollectionTable(data, regionListLabels)
-	return nil
+	return outputWriter.Out()
 }
