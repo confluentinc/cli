@@ -7,27 +7,27 @@ import (
 
 	"github.com/spf13/cobra"
 
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 )
 
 type schemaCommand struct {
-	*cobra.Command
-	config   *config.Config
-	ch       *pcmd.ConfigHelper
+	*pcmd.AuthenticatedCLICommand
 	srClient *srsdk.APIClient
 }
 
-func NewSchemaCommand(config *config.Config, ch *pcmd.ConfigHelper, srClient *srsdk.APIClient) *cobra.Command {
-	schemaCmd := &schemaCommand{
-		Command: &cobra.Command{
+func NewSchemaCommand(config *v2.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
+	cliCmd := pcmd.NewAuthenticatedCLICommand(
+		&cobra.Command{
 			Use:   "schema",
 			Short: "Manage Schema Registry schemas.",
 		},
-		config:   config,
-		ch:       ch,
-		srClient: srClient,
+		config, prerunner)
+	schemaCmd := &schemaCommand{
+		AuthenticatedCLICommand: cliCmd,
+		srClient:                srClient,
 	}
 	schemaCmd.init()
 	return schemaCmd.Command
@@ -58,7 +58,7 @@ Where schemafilepath may include these contents:
 	   ]
 	}
 
-`, c.config.CLIName),
+`, c.Config.CLIName),
 		RunE: c.create,
 		Args: cobra.NoArgs,
 	}
@@ -76,7 +76,7 @@ Delete one or more topics. This command should only be used in extreme circumsta
 
 ::
 
-		{{.CLIName}} schema-registry schema delete --subject payments --version latest`, c.config.CLIName),
+		{{.CLIName}} schema-registry schema delete --subject payments --version latest`, c.Config.CLIName),
 		RunE: c.delete,
 		Args: cobra.NoArgs,
 	}
@@ -100,8 +100,8 @@ Describe the schema by subject and version
 
 ::
 
-		{{.CLIName}} schema-registry schema describe --subject payments --version latest
-`, c.config.CLIName),
+		{{.CLIName}} schema-registry describe --subject payments --version latest
+`, c.Config.CLIName),
 		RunE: c.describe,
 		Args: cobra.MaximumNArgs(1),
 	}
@@ -112,7 +112,7 @@ Describe the schema by subject and version
 }
 
 func (c *schemaCommand) create(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(c.srClient, c.ch)
+	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
 	}
@@ -138,7 +138,7 @@ func (c *schemaCommand) create(cmd *cobra.Command, args []string) error {
 }
 
 func (c *schemaCommand) delete(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(c.srClient, c.ch)
+	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
 	}
@@ -178,7 +178,7 @@ func (c *schemaCommand) describe(cmd *cobra.Command, args []string) error {
 }
 
 func (c *schemaCommand) describeById(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(c.srClient, c.ch)
+	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
 	}
@@ -195,7 +195,7 @@ func (c *schemaCommand) describeById(cmd *cobra.Command, args []string) error {
 }
 
 func (c *schemaCommand) describeBySubject(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(c.srClient, c.ch)
+	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
 	}

@@ -3,21 +3,22 @@ package sso
 import (
 	"bufio"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/pkg/browser"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/pkg/browser"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
-func Login(config *config.Config, auth0ConnectionName string) (idToken string, err error) {
-	state, err := newState(config)
+func Login(authURL string, noBrowser bool, auth0ConnectionName string) (idToken string, err error) {
+	state, err := newState(authURL, noBrowser)
 	if err != nil {
 		return "", err
 	}
 
-	if config.NoBrowser {
+	if noBrowser {
 		// no browser flag does not need to launch the server
 		// it prints the url and has the user copy this into their browser instead
 		url := state.getAuthorizationCodeUrl(auth0ConnectionName)

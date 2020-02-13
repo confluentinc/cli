@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/confluentinc/go-printer"
+	"io"
 	"os"
 
 	"github.com/go-yaml/yaml"
@@ -14,13 +15,13 @@ import (
 )
 
 const (
-	humanString        = "human"
-	jsonString         = "json"
-	yamlString         = "yaml"
-	FlagName           = "output"
-	ShortHandFlag      = "o"
-	Usage              = `Specify the output format as "human", "json" or "yaml".`
-	DefaultValue       = humanString
+	humanString   = "human"
+	jsonString    = "json"
+	yamlString    = "yaml"
+	FlagName      = "output"
+	ShortHandFlag = "o"
+	Usage         = `Specify the output format as "human", "json" or "yaml".`
+	DefaultValue  = humanString
 )
 
 var (
@@ -46,31 +47,35 @@ type ListOutputWriter interface {
 	StableSort()
 }
 
-func NewListOutputWriter(cmd *cobra.Command, listFields []string, listLabels []string) (ListOutputWriter, error) {
+func NewListOutputWriter(cmd *cobra.Command, listFields []string, humanLabels []string, structuredLabels []string) (ListOutputWriter, error) {
+	return NewListOutputCustomizableWriter(cmd, listFields, humanLabels, structuredLabels, os.Stdout)
+}
+
+func NewListOutputCustomizableWriter(cmd *cobra.Command, listFields []string, humanLabels []string, structuredLabels []string, writer io.Writer) (ListOutputWriter, error) {
 	format, err := cmd.Flags().GetString(FlagName)
 	if err != nil {
 		return nil, errors.HandleCommon(err, cmd)
-	}
-	if len(listLabels) != len(listFields) {
-		return nil, fmt.Errorf("selected fields and ouput labels length mismatch")
 	}
 	if format == JSON.String() {
 		return &StructuredListWriter{
 			outputFormat: JSON,
 			listFields:   listFields,
-			listLabels:   listLabels,
+			listLabels:   structuredLabels,
+			writer:       writer,
 		}, nil
 	} else if format == YAML.String() {
 		return &StructuredListWriter{
 			outputFormat: YAML,
 			listFields:   listFields,
-			listLabels:   listLabels,
+			listLabels:   structuredLabels,
+			writer:       writer,
 		}, nil
 	} else if format == Human.String() {
 		return &HumanListWriter{
 			outputFormat: Human,
 			listFields:   listFields,
-			listLabels:   listLabels,
+			listLabels:   humanLabels,
+			writer:       writer,
 		}, nil
 	}
 	return nil, InvalidFormatError

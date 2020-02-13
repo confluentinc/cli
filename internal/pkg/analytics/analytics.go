@@ -10,12 +10,13 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	"github.com/confluentinc/cli/internal/pkg/config"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 type CommandType int
+
 const (
 	Other CommandType = iota
 	Login
@@ -31,7 +32,7 @@ var (
 		"confluent file rotate":         {"passphrase", "passphrase-new"},
 	}
 	// map command string to secret handler func
-	secretCommandArgs     = map[string]func([]string)[]string{"ccloud api-key store": apiKeyStoreSecretHandler}
+	secretCommandArgs     = map[string]func([]string) []string{"ccloud api-key store": apiKeyStoreSecretHandler}
 	SecretValueString     = "<secret_value>"
 	malformedCmdEventName = "Malformed Command Error"
 
@@ -61,11 +62,11 @@ func NewLogger(logger *log.Logger) *Logger {
 }
 
 func (l *Logger) Logf(format string, args ...interface{}) {
-	l.logger.Debugf(format, args ...)
+	l.logger.Debugf(format, args...)
 }
 
 func (l *Logger) Errorf(format string, args ...interface{}) {
-	l.logger.Debugf("[Segment Error] " + format, args ...)
+	l.logger.Debugf("[Segment Error] "+format, args...)
 }
 
 type Client interface {
@@ -82,7 +83,7 @@ type Client interface {
 type ClientObj struct {
 	cliName string
 	client  segment.Client
-	config  *config.Config
+	config  *v2.Config
 	clock   clockwork.Clock
 
 	// cache data until we flush events to segment (when each cmd call finishes)
@@ -101,7 +102,7 @@ type userInfo struct {
 	apiKey         string
 }
 
-func NewAnalyticsClient(cliName string, cfg *config.Config, version string, segmentClient segment.Client, clock clockwork.Clock) *ClientObj {
+func NewAnalyticsClient(cliName string, cfg *v2.Config, version string, segmentClient segment.Client, clock clockwork.Clock) *ClientObj {
 	client := &ClientObj{
 		cliName:     cliName,
 		client:      segmentClient,
@@ -169,7 +170,7 @@ func (a *ClientObj) SendCommandSucceeded() error {
 	}
 	// only reset anonymous id if logout from a username credential
 	// preventing logouts that have no effects from resetting anonymous id
-	if a.commandType == Logout && a.user.credentialType == config.Username.String() {
+	if a.commandType == Logout && a.user.credentialType == v2.Username.String() {
 		if err := a.config.ResetAnonymousId(); err != nil {
 			return err
 		}
@@ -220,7 +221,7 @@ func (a *ClientObj) identify() error {
 	traits.Set(VersionPropertiesKey, a.cliVersion)
 	traits.Set(CliNameTraitsKey, a.config.CLIName)
 	traits.Set(CredentialPropertiesKey, a.user.credentialType)
-	if a.user.credentialType == config.APIKey.String() {
+	if a.user.credentialType == v2.APIKey.String() {
 		traits.Set(ApiKeyPropertiesKey, a.user.apiKey)
 	}
 	identify.Traits = traits
@@ -267,11 +268,11 @@ func (a *ClientObj) addArgsProperties(cmd *cobra.Command, args []string) {
 
 func (a *ClientObj) addUserProperties() {
 	a.properties.Set(CredentialPropertiesKey, a.user.credentialType)
-	if a.config.CLIName == "ccloud" && a.user.credentialType == config.Username.String() {
+	if a.config.CLIName == "ccloud" && a.user.credentialType == v2.Username.String() {
 		a.properties.Set(OrgIdPropertiesKey, a.user.organizationId)
 		a.properties.Set(EmailPropertiesKey, a.user.email)
 	}
-	if a.user.credentialType == config.APIKey.String() {
+	if a.user.credentialType == v2.APIKey.String() {
 		a.properties.Set(ApiKeyPropertiesKey, a.user.apiKey)
 	}
 }
@@ -283,7 +284,7 @@ func (a *ClientObj) getUser() userInfo {
 	if user.credentialType == "" {
 		return user
 	}
-	if user.credentialType == config.APIKey.String() {
+	if user.credentialType == v2.APIKey.String() {
 		user.apiKey = a.getCredApiKey()
 	}
 	if a.cliName == "ccloud" {
@@ -298,10 +299,10 @@ func (a *ClientObj) getUser() userInfo {
 }
 
 func (a *ClientObj) getCloudUserInfo() (userId, organizationId, email string) {
-	if err := a.config.CheckLogin(); err != nil {
+	if !a.config.HasLogin() {
 		return "", "", ""
 	}
-	user := a.config.Auth.User
+	user := a.config.Context().State.Auth.User
 	userId = strconv.Itoa(int(user.Id))
 	organizationId = strconv.Itoa(int(user.OrganizationId))
 	email = user.Email
@@ -309,39 +310,35 @@ func (a *ClientObj) getCloudUserInfo() (userId, organizationId, email string) {
 }
 
 func (a *ClientObj) getCPUsername() string {
-	if err := a.config.CheckLogin(); err != nil {
+	if !a.config.HasLogin() {
 		return ""
 	}
-	ctx := a.config.Contexts[a.config.CurrentContext]
-	cred := a.config.Credentials[ctx.Credential]
-	return cred.Username
+	ctx := a.config.Context()
+	return ctx.Credential.Username
 }
 
 func (a *ClientObj) getCredentialType() string {
-	credType, err := a.config.CredentialType()
-	if err != nil {
+	ctx := a.config.Context()
+	if ctx == nil {
 		return ""
 	}
-	switch credType {
-	case config.Username:
-		if a.config.CheckLogin() == nil {
-			return config.Username.String()
+	switch ctx.Credential.CredentialType {
+	case v2.Username:
+		if a.config.HasLogin() {
+			return v2.Username.String()
 		}
-	case config.APIKey:
-		return config.APIKey.String()
+	case v2.APIKey:
+		return v2.APIKey.String()
 	}
 	return ""
 }
 
 func (a *ClientObj) getCredApiKey() string {
-	context, err := a.config.Context()
-	if err != nil {
+	ctx := a.config.Context()
+	if ctx == nil || ctx.Credential.APIKeyPair == nil {
 		return ""
 	}
-	if cred, ok := a.config.Credentials[context.Credential]; ok {
-		return cred.APIKeyPair.Key
-	}
-	return ""
+	return ctx.Credential.APIKeyPair.Key
 }
 
 func (a *ClientObj) loginHandler() error {
@@ -365,11 +362,11 @@ func (a *ClientObj) isSwitchUserLogin(prevUser userInfo) bool {
 	if prevUser.credentialType != a.user.credentialType {
 		return true
 	}
-	if a.user.credentialType == config.Username.String() {
+	if a.user.credentialType == v2.Username.String() {
 		if prevUser.id != a.user.id {
 			return true
 		}
-	} else if a.user.credentialType == config.APIKey.String() {
+	} else if a.user.credentialType == v2.APIKey.String() {
 		if a.user.apiKey != a.user.apiKey {
 			return true
 		}

@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/ps1"
@@ -108,13 +108,13 @@ You can disable color output by passing the flag '--no-color'.
 
 type promptCommand struct {
 	*cobra.Command
-	config *config.Config
+	config *v2.Config
 	ps1    *ps1.Prompt
 	logger *log.Logger
 }
 
 // NewPromptCmd returns the Cobra command for the PS1 prompt.
-func NewPromptCmd(config *config.Config, ps1 *ps1.Prompt, logger *log.Logger) *cobra.Command {
+func NewPromptCmd(config *v2.Config, ps1 *ps1.Prompt, logger *log.Logger) *cobra.Command {
 	cmd := &promptCommand{
 		config: config,
 		ps1:    ps1,

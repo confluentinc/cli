@@ -1,35 +1,35 @@
-- Description: ""
-  Key: MYKEY1
-  Owner: "12"
-  Resource ID: bob
-  Resource Type: kafka
-- Description: ""
-  Key: MYKEY2
-  Owner: "18"
-  Resource ID: abc
-  Resource Type: kafka
-- Description: ""
-  Key: MYKEY3
-  Owner: "23"
-  Resource ID: bob
-  Resource Type: kafka
-- Description: ""
-  Key: UIAPIKEY100
-  Owner: "25"
-  Resource ID: lkc-cool1
-  Resource Type: kafka
-- Description: ""
-  Key: UIAPIKEY101
-  Owner: "25"
-  Resource ID: lkc-other1
-  Resource Type: kafka
-- Description: ""
-  Key: UIAPIKEY102
-  Owner: "25"
-  Resource ID: lksqlc-ksql1
-  Resource Type: ksql
-- Description: ""
-  Key: UIAPIKEY103
-  Owner: "25"
-  Resource ID: lkc-cool1
-  Resource Type: kafka
+- description: ""
+  key: MYKEY1
+  owner: "12"
+  resource_id: lkc-bob
+  resource_type: kafka
+- description: ""
+  key: MYKEY2
+  owner: "18"
+  resource_id: lkc-abc
+  resource_type: kafka
+- description: ""
+  key: MYKEY3
+  owner: "23"
+  resource_id: lkc-bob
+  resource_type: kafka
+- description: ""
+  key: UIAPIKEY100
+  owner: "25"
+  resource_id: lkc-cool1
+  resource_type: kafka
+- description: ""
+  key: UIAPIKEY101
+  owner: "25"
+  resource_id: lkc-other1
+  resource_type: kafka
+- description: ""
+  key: UIAPIKEY102
+  owner: "25"
+  resource_id: lksqlc-ksql1
+  resource_type: ksql
+- description: ""
+  key: UIAPIKEY103
+  owner: "25"
+  resource_id: lkc-cool1
+  resource_type: kafka

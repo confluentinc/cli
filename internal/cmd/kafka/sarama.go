@@ -5,7 +5,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/confluentinc/cli/internal/pkg/config"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/log"
 
 	"github.com/Shopify/sarama"
@@ -17,7 +17,7 @@ func InitSarama(logger *log.Logger) {
 }
 
 // NewSaramaConsumer returns a sarama.ConsumerGroup configured for the CLI config
-func NewSaramaConsumer(group string, kafka *config.KafkaClusterConfig, clientID string, beginning bool) (sarama.ConsumerGroup, error) {
+func NewSaramaConsumer(group string, kafka *v1.KafkaClusterConfig, clientID string, beginning bool) (sarama.ConsumerGroup, error) {
 	conf, err := saramaConf(kafka, clientID, beginning)
 	if err != nil {
 		return nil, err
@@ -30,7 +30,7 @@ func NewSaramaConsumer(group string, kafka *config.KafkaClusterConfig, clientID 
 }
 
 // NewSaramaProducer returns a sarama.ClusterProducer configured for the CLI config
-func NewSaramaProducer(kafka *config.KafkaClusterConfig, clientID string) (sarama.SyncProducer, error) {
+func NewSaramaProducer(kafka *v1.KafkaClusterConfig, clientID string) (sarama.SyncProducer, error) {
 	conf, err := saramaConf(kafka, clientID, false)
 	if err != nil {
 		return nil, err
@@ -65,7 +65,7 @@ func (h *GroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sara
 }
 
 // saramaConf converts KafkaClusterConfig to sarama.Config
-func saramaConf(kafka *config.KafkaClusterConfig, clientID string, beginning bool) (*sarama.Config, error) {
+func saramaConf(kafka *v1.KafkaClusterConfig, clientID string, beginning bool) (*sarama.Config, error) {
 	saramaConf := sarama.NewConfig()
 	saramaConf.ClientID = clientID
 	saramaConf.Version = sarama.V1_1_0_0

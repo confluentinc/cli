@@ -4,7 +4,7 @@ GIT_REMOTE_NAME ?= origin
 MASTER_BRANCH   ?= master
 RELEASE_BRANCH  ?= master
 
-DOCS_BRANCH     ?= 5.3.1-post
+DOCS_BRANCH     ?= 5.4.0-post
 
 include ./semver.mk
 
@@ -92,11 +92,11 @@ build-go:
 
 .PHONY: build-ccloud
 build-ccloud:
-	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --snapshot --rm-dist -f .goreleaser-ccloud$(GORELEASER_SUFFIX)
+	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --snapshot --rm-dist -f .goreleaser-ccloud$(GORELEASER_SUFFIX)
 
 .PHONY: build-confluent
 build-confluent:
-	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --snapshot --rm-dist -f .goreleaser-confluent$(GORELEASER_SUFFIX)
+	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --snapshot --rm-dist -f .goreleaser-confluent$(GORELEASER_SUFFIX)
 
 .PHONY: build-integ
 build-integ:
@@ -151,17 +151,42 @@ bindata: internal/cmd/local/bindata.go
 internal/cmd/local/bindata.go: cp_cli/* assets/*
 	@go-bindata -pkg local -o internal/cmd/local/bindata.go cp_cli/ assets/
 
+.PHONY: authenticate
+authenticate:
+	# If you setup your laptop following https://github.com/confluentinc/cc-documentation/blob/master/Operations/Laptop%20Setup.md
+	# then assuming caas.sh lives here should be fine
+	source $$GOPATH/src/github.com/confluentinc/cc-dotfiles/caas.sh && caasenv prod
+
 .PHONY: release
-release: get-release-image commit-release tag-release
+release: authenticate get-release-image commit-release tag-release
 	@GO111MODULE=on make gorelease
+	git checkout go.sum
 	@GO111MODULE=on VERSION=$(VERSION) make publish
 	@GO111MODULE=on VERSION=$(VERSION) make publish-docs
+	git checkout go.sum
+
+.PHONY: fakerelease
+fakerelease: get-release-image commit-release tag-release
+	@GO111MODULE=on make fakegorelease
 
 .PHONY: gorelease
 gorelease:
 	@GO111MODULE=off go get -u github.com/inconshreveable/mousetrap # dep from cobra -- incompatible with go mod
-	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --rm-dist -f .goreleaser-ccloud.yml
-	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --rm-dist -f .goreleaser-confluent.yml
+	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --rm-dist -f .goreleaser-ccloud.yml
+	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --rm-dist -f .goreleaser-confluent.yml
+
+.PHONY: fakegorelease
+fakegorelease:
+	@GO111MODULE=off go get -u github.com/inconshreveable/mousetrap # dep from cobra -- incompatible with go mod
+	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --rm-dist -f .goreleaser-ccloud-fake.yml
+	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --rm-dist -f .goreleaser-confluent-fake.yml
+
+.PHONY: sign
+sign:
+	@GO111MODULE=on gon gon_ccloud.hcl
+	@GO111MODULE=on gon gon_confluent.hcl
+	rm dist/ccloud/darwin_amd64/ccloud_signed.zip || true
+	rm dist/confluent/darwin_amd64/confluent_signed.zip || true
 
 .PHONY: download-licenses
 download-licenses:
@@ -169,7 +194,7 @@ download-licenses:
 	@# we'd like to use golicense -plain but the exit code is always 0 then so CI won't actually fail on illegal licenses
 	@for binary in ccloud confluent; do \
 		echo Downloading third-party licenses for $${binary} binary ; \
-		GITHUB_TOKEN=$(token) golicense .golicense.hcl ./dist/$${binary}/$(shell go env GOOS)_$(shell go env GOARCH)/$${binary} | GITHUB_TOKEN=$(token) go run cmd/golicense-downloader/main.go -f .golicense-downloader.json -l legal/$${binary}/licenses -n legal/$${binary}/notices ; \
+		GITHUB_TOKEN=$(token) golicense .golicense.hcl ./dist/$${binary}/$(shell go env GOOS)_$(shell go env GOARCH)/$${binary} | GITHUB_TOKEN=$(token) go run cmd/golicense-downloader/main.go -F .golicense-downloader.json -l legal/$${binary}/licenses -n legal/$${binary}/notices ; \
 		[ -z "$$(ls -A legal/$${binary}/licenses)" ] && rmdir legal/$${binary}/licenses ; \
 		[ -z "$$(ls -A legal/$${binary}/notices)" ] && rmdir legal/$${binary}/notices ; \
 	done
@@ -207,8 +232,11 @@ dist: download-licenses
 	done
 
 .PHONY: publish
-publish: dist
+## Note: gorelease target publishes unsigned binaries to the binaries folder in the bucket, we have to overwrite them here after signing
+publish: sign dist
 	@for binary in ccloud confluent; do \
+		source $$GOPATH/src/github.com/confluentinc/cc-dotfiles/caas.sh && caasenv prod && \
+		aws s3 cp dist/$${binary}/darwin_amd64/$${binary} s3://confluent.cloud/$${binary}-cli/binaries/$(VERSION:v%=%)/ ; \
 		aws s3 cp dist/$${binary}/ s3://confluent.cloud/$${binary}-cli/archives/$(VERSION:v%=%)/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --include "*_checksums.txt" --exclude "*_latest_*" --acl public-read ; \
 		aws s3 cp dist/$${binary}/ s3://confluent.cloud/$${binary}-cli/archives/latest/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --include "*_checksums.txt" --exclude "*_$(VERSION)_*" --acl public-read ; \
 	done
@@ -216,7 +244,8 @@ publish: dist
 .PHONY: publish-installers
 ## Publish install scripts to S3. You MUST re-run this if/when you update any install script.
 publish-installers:
-	aws s3 cp install-ccloud.sh s3://confluent.cloud/ccloud-cli/install.sh --acl public-read
+	source $$GOPATH/src/github.com/confluentinc/cc-dotfiles/caas.sh && caasenv prod && \
+	aws s3 cp install-ccloud.sh s3://confluent.cloud/ccloud-cli/install.sh --acl public-read && \
 	aws s3 cp install-confluent.sh s3://confluent.cloud/confluent-cli/install.sh --acl public-read
 
 .PHONY: docs
@@ -235,7 +264,7 @@ publish-docs: docs
 		cd - || exit 1; \
 		make publish-docs-internal BASE_DIR=$${TMP_DIR} CLI_NAME=ccloud || exit 1; \
 		cd $${TMP_DIR} || exit 1; \
-		sed -i 's/default "confluent_cli_consumer_[^"]*"/default "confluent_cli_consumer_<uuid>"/' cloud/cli/command-reference/ccloud_kafka_topic_consume.rst || exit 1; \
+		sed -i '' 's/default "confluent_cli_consumer_[^"]*"/default "confluent_cli_consumer_<uuid>"/' cloud/cli/command-reference/ccloud_kafka_topic_consume.rst || exit 1; \
 		git add . || exit 1; \
 		git diff --cached --exit-code >/dev/null && echo "nothing to update for docs" && exit 0; \
 		git commit -m "chore: updating CLI docs for $(VERSION)" || exit 1; \

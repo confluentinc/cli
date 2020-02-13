@@ -3,40 +3,31 @@ package ksql
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/ccloud-sdk-go"
-
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 )
 
 type command struct {
-	*cobra.Command
-	config      *config.Config
-	client      ccloud.KSQL
-	kafkaClient ccloud.Kafka
-	userClient  ccloud.User
-	ch          *pcmd.ConfigHelper
+	*pcmd.AuthenticatedCLICommand
+	prerunner pcmd.PreRunner
 }
 
 // New returns the default command object for interacting with KSQL.
-func New(prerunner pcmd.PreRunner, config *config.Config, client ccloud.KSQL,
-	kafkaClient ccloud.Kafka, userClient ccloud.User, ch *pcmd.ConfigHelper) *cobra.Command {
-	cmd := &command{
-		Command: &cobra.Command{
-			Use:               "ksql",
-			Short:             "Manage KSQL applications.",
-			PersistentPreRunE: prerunner.Authenticated(),
+func New(prerunner pcmd.PreRunner, config *v2.Config) *cobra.Command {
+	cliCmd := pcmd.NewAuthenticatedCLICommand(
+		&cobra.Command{
+			Use:   "ksql",
+			Short: "Manage KSQL applications.",
 		},
-		config:      config,
-		client:      client,
-		kafkaClient: kafkaClient,
-		userClient:  userClient,
-		ch:          ch,
+		config, prerunner)
+	cmd := &command{
+		AuthenticatedCLICommand: cliCmd,
+		prerunner:               prerunner,
 	}
 	cmd.init()
 	return cmd.Command
 }
 
 func (c *command) init() {
-	c.AddCommand(NewClusterCommand(c.config, c.client, c.kafkaClient, c.userClient, c.ch))
+	c.AddCommand(NewClusterCommand(c.Config.Config, c.prerunner))
 }

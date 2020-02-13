@@ -3,11 +3,12 @@ package output
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/go-yaml/yaml"
-	"github.com/tidwall/pretty"
-	"os"
+	"io"
 	"reflect"
 	"sort"
+
+	"github.com/go-yaml/yaml"
+	"github.com/tidwall/pretty"
 )
 
 type StructuredListWriter struct {
@@ -15,6 +16,7 @@ type StructuredListWriter struct {
 	data         []map[string]string
 	listFields   []string
 	listLabels   []string
+	writer       io.Writer
 }
 
 func (o *StructuredListWriter) AddElement(e interface{}) {
@@ -38,7 +40,15 @@ func (o *StructuredListWriter) Out() error {
 	if err != nil {
 		return err
 	}
-	_, err = fmt.Fprintf(os.Stdout, string(outputBytes))
+	if len(o.data) != 0 {
+		_, err = fmt.Fprintf(o.writer, string(outputBytes))
+	} else {
+		if o.outputFormat == JSON {
+			_, err = fmt.Fprintf(o.writer, "[]\n")
+		} else {
+			_, err = fmt.Fprintf(o.writer, "\n")
+		}
+	}
 	return err
 }
 

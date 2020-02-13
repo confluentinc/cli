@@ -5,82 +5,101 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/config/v1"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/template-color"
 )
 
 var (
 	// For documentation of supported tokens, see internal/cmd/prompt/command.go
-	formatTokens = map[string]func(config *config.Config) (string, error){
-		"%c": func(config *config.Config) (string, error) {
+	formatTokens = map[string]func(cfg *v2.Config) (string, error){
+		"%c": func(config *v2.Config) (string, error) {
 			context := config.CurrentContext
 			if context == "" {
 				context = "(none)"
 			}
 			return context, nil
 		},
-		"%e": func(config *config.Config) (string, error) {
-			if config.Auth == nil || config.Auth.Account == nil || config.Auth.Account.Id == "" {
+		"%e": func(config *v2.Config) (string, error) {
+			context := config.Context()
+			if context == nil {
+				return "(none)", nil
+			}
+			state := context.State
+			if state.Auth == nil || state.Auth.Account == nil || state.Auth.Account.Id == "" {
 				return "(none)", nil
 			} else {
-				return config.Auth.Account.Id, nil
+				return state.Auth.Account.Id, nil
 			}
 		},
-		"%E": func(config *config.Config) (string, error) {
-			if config.Auth == nil || config.Auth.Account == nil || config.Auth.Account.Name == "" {
+		"%E": func(config *v2.Config) (string, error) {
+			context := config.Context()
+			if context == nil {
+				return "(none)", nil
+			}
+			state := context.State
+			if state.Auth == nil || state.Auth.Account == nil || state.Auth.Account.Name == "" {
 				return "(none)", nil
 			} else {
-				return config.Auth.Account.Name, nil
+				return state.Auth.Account.Name, nil
 			}
 		},
-		"%k": func(config *config.Config) (string, error) {
-			kcc, err := config.KafkaClusterConfig()
-			if err != nil && err != errors.ErrNoContext {
-				return "", err
+		"%k": func(config *v2.Config) (string, error) {
+			context := config.Context()
+			if context == nil {
+				return "(none)", nil
 			}
+			kcc := context.KafkaClusters[context.Kafka]
 			if kcc == nil {
 				return "(none)", nil
 			} else {
 				return kcc.ID, nil
 			}
 		},
-		"%K": func(config *config.Config) (string, error) {
-			kcc, err := config.KafkaClusterConfig()
-			if err != nil && err != errors.ErrNoContext {
-				return "", err
+		"%K": func(config *v2.Config) (string, error) {
+			context := config.Context()
+			if context == nil {
+				return "(none)", nil
 			}
+			kcc := context.KafkaClusters[context.Kafka]
 			if kcc == nil || kcc.Name == "" {
 				return "(none)", nil
 			} else {
 				return kcc.Name, nil
 			}
 		},
-		"%a": func(config *config.Config) (string, error) {
-			kcc, err := config.KafkaClusterConfig()
-			if err != nil && err != errors.ErrNoContext {
-				return "", err
+		"%a": func(config *v2.Config) (string, error) {
+			context := config.Context()
+			if context == nil {
+				return "(none)", nil
 			}
+			kcc := context.KafkaClusters[context.Kafka]
 			if kcc == nil || kcc.APIKey == "" {
 				return "(none)", nil
 			} else {
 				return kcc.APIKey, nil
 			}
 		},
-		"%u": func(config *config.Config) (string, error) {
-			if config.Auth == nil || config.Auth.User == nil || config.Auth.User.Email == "" {
+		"%u": func(config *v2.Config) (string, error) {
+			context := config.Context()
+			if context == nil {
+				return "(none)", nil
+			}
+			state := context.State
+			if state.Auth == nil || state.Auth.User == nil || state.Auth.User.Email == "" {
 				return "(none)", nil
 			} else {
-				return config.Auth.User.Email, nil
+				return state.Auth.User.Email, nil
 			}
 		},
 	}
 
 	// For documentation of supported tokens, see internal/cmd/prompt/command.go
-	formatData = func(config *config.Config) (interface{}, error) {
-		kcc, err := config.KafkaClusterConfig()
-		if err != nil && err != errors.ErrNoContext {
-			return nil, err
+	formatData = func(cfg *v2.Config) (interface{}, error) {
+		context := cfg.Context()
+		var kcc *v1.KafkaClusterConfig
+		if context != nil {
+			kcc = context.KafkaClusters[context.Kafka]
 		}
 		kafkaClusterID := "(none)"
 		kafkaClusterName := "(none)"
@@ -99,24 +118,28 @@ var (
 				kafkaAPIKey = kcc.APIKey
 			}
 		}
-		if config.Auth != nil {
-			if config.Auth.Account != nil {
-				if config.Auth.Account.Id != "" {
-					accountID = config.Auth.Account.Id
+		var state *v2.ContextState
+		if context != nil {
+			state = context.State
+		}
+		if state != nil && state.Auth != nil {
+			if state.Auth.Account != nil {
+				if state.Auth.Account.Id != "" {
+					accountID = state.Auth.Account.Id
 				}
-				if config.Auth.Account.Name != "" {
-					accountName = config.Auth.Account.Name
+				if state.Auth.Account.Name != "" {
+					accountName = state.Auth.Account.Name
 				}
 			}
-			if config.Auth.User != nil {
-				if config.Auth.User.Email != "" {
-					userEmail = config.Auth.User.Email
+			if state.Auth.User != nil {
+				if state.Auth.User.Email != "" {
+					userEmail = state.Auth.User.Email
 				}
 			}
 		}
 		return map[string]interface{}{
-			"CLIName":          config.CLIName,
-			"ContextName":      config.CurrentContext,
+			"CLIName":          cfg.CLIName,
+			"ContextName":      cfg.CurrentContext,
 			"AccountId":        accountID,
 			"AccountName":      accountName,
 			"KafkaClusterId":   kafkaClusterID,
@@ -130,7 +153,7 @@ var (
 // Prompt outputs context about the current CLI config suitable for a PS1 prompt.
 // It allows user configuration by parsing format flags.
 type Prompt struct {
-	Config *config.Config
+	Config *v2.Config
 }
 
 // Get parses the format string and returns the string with all supported tokens replaced with actual values

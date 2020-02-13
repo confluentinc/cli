@@ -1,45 +1,42 @@
 package schema_registry
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/spf13/cobra"
 
-	ccsdk "github.com/confluentinc/ccloud-sdk-go"
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	"github.com/confluentinc/cli/internal/pkg/log"
+
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
 type command struct {
-	*cobra.Command
-	config       *config.Config
-	ccClient     ccsdk.SchemaRegistry
-	metricClient ccsdk.Metrics
-	srClient     *srsdk.APIClient
-	ch           *pcmd.ConfigHelper
-	logger       *log.Logger
+	*pcmd.AuthenticatedCLICommand
+	logger    *log.Logger
+	srClient  *srsdk.APIClient
+	prerunner pcmd.PreRunner
 }
 
-func New(prerunner pcmd.PreRunner, config *config.Config, ccloudClient ccsdk.SchemaRegistry, ch *pcmd.ConfigHelper, srClient *srsdk.APIClient, metricClient ccsdk.Metrics, logger *log.Logger) *cobra.Command {
-	cmd := &command{
-		Command: &cobra.Command{
-			Use:               "schema-registry",
-			Short:             `Manage Schema Registry.`,
-			PersistentPreRunE: prerunner.Authenticated(),
+func New(prerunner pcmd.PreRunner, config *v2.Config, srClient *srsdk.APIClient, logger *log.Logger) *cobra.Command {
+	cliCmd := pcmd.NewAuthenticatedCLICommand(
+		&cobra.Command{
+			Use:   "schema-registry",
+			Short: `Manage Schema Registry.`,
 		},
-		config:       config,
-		ccClient:     ccloudClient,
-		ch:           ch,
-		srClient:     srClient,
-		metricClient: metricClient,
-		logger:       logger,
+		config, prerunner)
+	cmd := &command{
+		AuthenticatedCLICommand: cliCmd,
+		srClient:                srClient,
+		logger:                  logger,
+		prerunner:               prerunner,
 	}
 	cmd.init()
 	return cmd.Command
 }
 
 func (c *command) init() {
-	c.AddCommand(NewClusterCommand(c.config, c.ccClient, c.ch, c.srClient, c.metricClient, c.logger))
-	c.AddCommand(NewSubjectCommand(c.config, c.ch, c.srClient))
-	c.AddCommand(NewSchemaCommand(c.config, c.ch, c.srClient))
+	c.AddCommand(NewClusterCommand(c.Config.Config, c.prerunner, c.srClient, c.logger))
+	c.AddCommand(NewSubjectCommand(c.Config.Config, c.prerunner, c.srClient))
+	c.AddCommand(NewSchemaCommand(c.Config.Config, c.prerunner, c.srClient))
 }

@@ -11,6 +11,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	linter "github.com/confluentinc/cli/internal/pkg/lint-cli"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/version"
@@ -32,7 +33,7 @@ var (
 	}
 	vocabWords = []string{
 		"ccloud", "kafka", "api", "url", "config", "configs", "multizone", "transactional", "ksql", "KSQL", "stdin",
-		"connect", "connect-catalog", "JSON", "json", "YAML", "yaml",
+		"connect", "connect-catalog", "JSON", "plaintext", "json", "YAML", "yaml",
 		// security
 		"iam", "acl", "acls", "ACL", "rolebinding", "rolebindings", "PEM", "auth", "init", "decrypt", "READWRITE",
 		"txt", // this is because @file.txt -> file txt
@@ -44,22 +45,10 @@ var (
 	utilityCommands = []string{
 		"login", "logout", "version", "completion <shell>", "prompt", "update", "init <context-name>",
 	}
-	nonClusterScopedCommands = []linter.RuleFilter{
-		linter.OnlyLeafCommands, linter.ExcludeCommand(utilityCommands...),
-		linter.ExcludeUse("local"), linter.ExcludeParentUse("environment", "service-account"),
-		linter.ExcludeCommandContains("iam"),
-		// these all require explicit cluster as id/name args
-		linter.ExcludeCommandContains("kafka cluster"),
-		linter.ExcludeCommandContains("connector"),
-		// this uses --resource instead of --cluster
-		linter.ExcludeCommandContains("api-key"),
-		// this doesn't need a --cluster
-		linter.ExcludeCommandContains("secret"),
-		linter.ExcludeCommandContains("schema-registry"),
-		linter.ExcludeCommandContains("ksql"),
-		linter.ExcludeCommandContains("connector-catalog"),
-		// this is obviously cluster-scoped but isn't used for cloud where --cluster is used
-		linter.ExcludeCommandContains("cluster describe"),
+	clusterScopedCommands = []linter.RuleFilter{
+		linter.IncludeCommandContains("kafka acl", "kafka topic"),
+		// only on children of kafka topic commands
+		linter.ExcludeCommand("kafka topic"),
 	}
 	resourceScopedCommands = []linter.RuleFilter{
 		linter.IncludeCommandContains("api-key use", "api-key create", "api-key store"),
@@ -105,10 +94,9 @@ var rules = []linter.Rule{
 		linter.ExcludeCommandContains("connector-catalog describe"),
 	),
 	// TODO: ensuring --cluster is optional DOES NOT actually ensure that the cluster context is used
-	linter.Filter(linter.RequireFlag("cluster", true), nonClusterScopedCommands...),
-	linter.Filter(linter.RequireFlagType("cluster", "string"), nonClusterScopedCommands...),
-	linter.Filter(linter.RequireFlagDescription("cluster", "Kafka cluster ID."),
-		append(nonClusterScopedCommands, linter.ExcludeParentUse("api-key"))...),
+	linter.Filter(linter.RequireFlag("cluster", true), clusterScopedCommands...),
+	linter.Filter(linter.RequireFlagType("cluster", "string"), clusterScopedCommands...),
+	linter.Filter(linter.RequireFlagDescription("cluster", "Kafka cluster ID."), clusterScopedCommands...),
 	linter.Filter(linter.RequireFlag("resource", false), resourceScopedCommands...),
 	linter.Filter(linter.RequireFlag("resource", true), linter.IncludeCommandContains("api-key list")),
 	linter.Filter(linter.RequireFlagType("resource", "string"), resourceScopedCommands...),
@@ -171,7 +159,12 @@ func main() {
 
 	var issues *multierror.Error
 	for _, cliName := range cliNames {
-		cli, err := cmd.NewConfluentCommand(cliName, &config.Config{CLIName: cliName}, &version.Version{Binary: cliName}, log.New(), mock.NewDummyAnalyticsMock())
+		cfg := v2.New(&config.Params{
+			CLIName:    cliName,
+			MetricSink: nil,
+			Logger:     log.New(),
+		})
+		cli, err := cmd.NewConfluentCommand(cliName, cfg, cfg.Logger, &version.Version{Binary: cliName}, mock.NewDummyAnalyticsMock())
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)

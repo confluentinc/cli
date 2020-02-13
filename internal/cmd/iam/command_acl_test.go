@@ -12,12 +12,9 @@ import (
 	"github.com/confluentinc/mds-sdk-go"
 	"github.com/confluentinc/mds-sdk-go/mock"
 
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/log"
-	"github.com/confluentinc/cli/internal/pkg/update"
-	cliMock "github.com/confluentinc/cli/mock"
+	mock2 "github.com/confluentinc/cli/mock"
 )
 
 /*************** TEST command_acl ***************/
@@ -170,21 +167,13 @@ var mdsAclEntries = []struct {
 
 type AclTestSuite struct {
 	suite.Suite
-	conf      *config.Config
-	kafkaApi  mds.KafkaACLManagementApi
-	preRunner pcmd.PreRunner
+	conf     *v2.Config
+	kafkaApi mds.KafkaACLManagementApi
 }
 
 func (suite *AclTestSuite) SetupSuite() {
-	suite.conf = config.New()
+	suite.conf = v2.AuthenticatedConfigMock()
 	suite.conf.CLIName = "confluent"
-	suite.conf.Logger = log.New()
-	suite.conf.AuthURL = "http://test"
-	suite.conf.AuthToken = "T0k3n"
-}
-
-func (suite *AclTestSuite) SetupTest() {
-	suite.preRunner = &cliMock.Commander{}
 }
 
 func (suite *AclTestSuite) newMockIamCmd(expect chan interface{}, message string) *cobra.Command {
@@ -204,7 +193,7 @@ func (suite *AclTestSuite) newMockIamCmd(expect chan interface{}, message string
 	}
 	mdsClient := mds.NewAPIClient(mds.NewConfiguration())
 	mdsClient.KafkaACLManagementApi = suite.kafkaApi
-	return New(suite.preRunner, suite.conf, mdsClient)
+	return New(mock2.NewPreRunnerMock(nil, mdsClient), suite.conf)
 }
 
 func TestAclTestSuite(t *testing.T) {
@@ -348,7 +337,6 @@ func (suite *AclTestSuite) TestMdsListPrincipalFilterACL() {
 					},
 				)
 			}()
-
 			err := cmd.Execute()
 			assert.Nil(suite.T(), err)
 		}
@@ -400,8 +388,8 @@ func (suite *AclTestSuite) TestMdsDefaults() {
 
 	err := cmd.Execute()
 	assert.Nil(suite.T(), err)
-
 	cmd = suite.newMockIamCmd(expect, "Cluster PatternType was not set to default value of PatternTypes_LITERAL")
+
 	cmd.SetArgs([]string{"acl", "create", "--kafka-cluster-id", "testcluster",
 		"--cluster-scope", "--allow", "--principal", "User:42",
 		"--operation", "read"})
@@ -434,15 +422,9 @@ func (suite *AclTestSuite) TestMdsDefaults() {
 }
 
 func (suite *AclTestSuite) TestMdsHandleErrorNotLoggedIn() {
-	// Use the real auth preRunner
-	suite.preRunner = &pcmd.PreRun{
-		Logger:       log.New(),
-		Config:       suite.conf,
-		UpdateClient: update.NewClient(&update.ClientParams{CheckInterval: 0}),
-		Analytics:    cliMock.NewDummyAnalyticsMock(),
-	}
 	expect := make(chan interface{})
-
+	oldContext := suite.conf.CurrentContext
+	suite.conf.CurrentContext = ""
 	cmd := suite.newMockIamCmd(expect, "")
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 
@@ -455,4 +437,5 @@ func (suite *AclTestSuite) TestMdsHandleErrorNotLoggedIn() {
 		assert.NotNil(suite.T(), err)
 		assert.Contains(suite.T(), err.Error(), errors.HandleCommon(errors.ErrNotLoggedIn, cmd).Error())
 	}
+	suite.conf.CurrentContext = oldContext
 }

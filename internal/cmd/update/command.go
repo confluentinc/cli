@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/update"
@@ -50,7 +50,7 @@ func NewClient(cliName string, disableUpdateCheck bool, logger *log.Logger) (upd
 type command struct {
 	Command *cobra.Command
 	cliName string
-	config  *config.Config
+	config  *v2.Config
 	version *cliVersion.Version
 	logger  *log.Logger
 	client  update.Client
@@ -59,7 +59,7 @@ type command struct {
 }
 
 // New returns the command for the built-in updater.
-func New(cliName string, config *config.Config, version *cliVersion.Version, prompt pcmd.Prompt,
+func New(cliName string, config *v2.Config, version *cliVersion.Version, prompt pcmd.Prompt,
 	client update.Client) *cobra.Command {
 	cmd := &command{
 		cliName: cliName,
