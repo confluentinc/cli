@@ -4,4 +4,3 @@
   provider: gcp
   region: us-central1
   status: PROVISIONING
-

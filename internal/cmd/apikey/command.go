@@ -189,11 +189,6 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listLabels)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
 	for _, apiKey := range apiKeys {
 		// ignore keys owned by Confluent-internal user (healthcheck, etc)
 		if apiKey.UserId == 0 {

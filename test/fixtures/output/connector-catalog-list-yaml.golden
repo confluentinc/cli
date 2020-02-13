@@ -2,4 +2,3 @@
   type: Sink
 - plugin_name: GcsSink
   type: Sink
-

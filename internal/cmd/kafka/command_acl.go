@@ -3,6 +3,7 @@ package kafka
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
