@@ -1,3 +1,3 @@
-  CloudId |      CloudName      | RegiondId |       RegionName         
+  CloudId |      CloudName      | RegionId  |       RegionName         
 +---------+---------------------+-----------+-------------------------+
   aws     | Amazon Web Services | us-east-1 | us-east-1 (N. Virginia)  

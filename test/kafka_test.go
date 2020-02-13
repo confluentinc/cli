@@ -16,6 +16,8 @@ func (s *CLITestSuite) TestKafkaCommands() {
 		{args: "kafka cluster delete lkc-unknown", fixture: "kafka4.golden", wantErrCode: 1},
 		{args: "kafka cluster delete lkc-def973", fixture: "kafka5.golden", wantErrCode: 0},
 		{args: "kafka region list", fixture: "kafka14.golden", wantErrCode: 0},
+		{args: "kafka region list -o json", fixture: "kafka15.golden", wantErrCode: 0},
+		{args: "kafka region list -o json", fixture: "kafka16.golden", wantErrCode: 0},
 		{args: "kafka region list --cloud gcp", fixture: "kafka9.golden", wantErrCode: 0},
 		{args: "kafka region list --cloud aws", fixture: "kafka10.golden", wantErrCode: 0},
 		{args: "kafka region list --cloud azure", fixture: "kafka11.golden", wantErrCode: 0},
