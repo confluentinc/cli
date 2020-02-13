@@ -22,7 +22,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go v0.0.17
 	github.com/confluentinc/ccloudapis v0.0.0-20200206033443-1273c6f069cf
 	github.com/confluentinc/go-editor v0.4.0
-	github.com/confluentinc/go-printer v0.10.0
+	github.com/confluentinc/go-printer v0.12.0
 	github.com/confluentinc/mds-sdk-go v0.0.0-20191015231442-c29a09dbc1e9
 	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787
 	github.com/confluentinc/schema-registry-sdk-go v0.0.7
