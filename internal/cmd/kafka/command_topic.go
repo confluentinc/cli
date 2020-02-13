@@ -261,10 +261,8 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 	}
 	if outputOption == output.Human.String() {
 		return printHumanDescribe(cmd, resp)
-	} else if outputOption == output.JSON.String() || outputOption == output.YAML.String() {
-		return printStructuredDescribe(cmd, resp, outputOption)
 	} else {
-		return output.InvalidFormatError
+		return printStructuredDescribe(cmd, resp, outputOption)
 	}
 }
 

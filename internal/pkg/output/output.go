@@ -25,7 +25,7 @@ const (
 )
 
 var (
-	InvalidFormatError = fmt.Errorf("invalid output format type")
+	InvalidFormatString = "Invalid output format type '%s'."
 )
 
 type Format int
@@ -78,7 +78,7 @@ func NewListOutputCustomizableWriter(cmd *cobra.Command, listFields []string, hu
 			writer:       writer,
 		}, nil
 	}
-	return nil, InvalidFormatError
+	return nil, fmt.Errorf(InvalidFormatString, format)
 }
 
 func DescribeObject(cmd *cobra.Command, obj interface{}, fields []string, humanRenames, structuredRenames map[string]string) error {
@@ -87,7 +87,7 @@ func DescribeObject(cmd *cobra.Command, obj interface{}, fields []string, humanR
 		return errors.HandleCommon(err, cmd)
 	}
 	if !(format == Human.String() || format == JSON.String() || format == YAML.String()) {
-		return InvalidFormatError
+		return fmt.Errorf(InvalidFormatString, format)
 	}
 	return printer.RenderOut(obj, fields, humanRenames, structuredRenames, format, os.Stdout)
 }
@@ -100,7 +100,7 @@ func StructuredOutput(format string, obj interface{}) error {
 	} else if format == YAML.String() {
 		b, _ = yaml.Marshal(obj)
 	} else {
-		return InvalidFormatError
+		return fmt.Errorf(InvalidFormatString, format)
 	}
 	_, err := fmt.Fprintf(os.Stdout, string(b))
 	return err
