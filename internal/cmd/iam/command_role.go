@@ -65,12 +65,15 @@ func (c *roleCommand) init() {
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
-	c.AddCommand(&cobra.Command{
+	describeCmd := &cobra.Command{
 		Use:   "describe <name>",
 		Short: "Describe the resources and operations allowed for a role.",
 		RunE:  c.describe,
 		Args:  cobra.ExactArgs(1),
-	})
+	}
+	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	describeCmd.Flags().SortFlags = false
+	c.AddCommand(describeCmd)
 }
 
 func (c *roleCommand) list(cmd *cobra.Command, args []string) error {
