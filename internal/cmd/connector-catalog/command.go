@@ -111,8 +111,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 			UserConfigs:    map[string]string{"connector.class": args[0]},
 			AccountId:      c.EnvironmentId(),
 			KafkaClusterId: kafkaCluster.Id,
-			Plugin:         args[0]},
-		false)
+			Plugin:         args[0]})
 
 	if err != nil {
 		outputFormat, flagErr := cmd.Flags().GetString(output.FlagName)

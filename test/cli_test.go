@@ -816,6 +816,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		return
 	})
 	router.HandleFunc("/api/accounts/a-595/clusters/lkc-123/connectors", handleConnect(t))
+	router.HandleFunc("/api/accounts/a-595/clusters/lkc-123/connector-plugins/AzureBlobSink/config/validate", handleConnectorCatalogDescribe(t))
 	router.HandleFunc("/api/accounts/a-595/clusters/lkc-123/connector-plugins", handleConnectPlugins(t))
 	router.HandleFunc("/api/ksqls", handleKSQLCreateList(t))
 	router.HandleFunc("/api/ksqls/lksqlc-ksql1/", func(w http.ResponseWriter, r *http.Request) {
@@ -1161,6 +1162,29 @@ func handleConnectPlugins(t *testing.T) func(w http.ResponseWriter, r *http.Requ
 		}
 	}
 }
+
+func handleConnectorCatalogDescribe(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		configInfos := &connectv1.ConfigInfos{
+			Name:       "",
+			Groups:     nil,
+			ErrorCount: 1,
+			Configs:    []*connectv1.Configs{
+				{
+					Value:  &connectv1.ConfigValue{
+						Name:  "namy",
+						Value: "vvy",
+					},
+				},
+			},
+		}
+		reply, err := json.Marshal(configInfos)
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(reply))
+		require.NoError(t, err)
+	}
+}
+
 func compose(funcs ...func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		for _, f := range funcs {

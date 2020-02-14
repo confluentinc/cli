@@ -18,7 +18,7 @@ func (s *CLITestSuite) TestConnectCommands() {
 		{args: "connector-catalog list --cluster lkc-123", fixture: "connector-catalog-list.golden", wantErrCode: 0},
 		{args: "connector-catalog list --cluster lkc-123 -o json", fixture: "connector-catalog-list-json.golden", wantErrCode: 0},
 		{args: "connector-catalog list --cluster lkc-123 -o yaml", fixture: "connector-catalog-list-yaml.golden", wantErrCode: 0},
-		{args: "connector-catalog describe AzureBlobSink --cluster lkc-123", fixture: "connector-catalog-describe.golden", wantErrCode: 0},
+		{args: "connector-catalog describe AzureBlobSink --cluster lkc-123 -vvvv", fixture: "connector-catalog-describe.golden", wantErrCode: 1},
 		{args: "connector-catalog describe AzureBlobSink --cluster lkc-123 -o json", fixture: "connector-catalog-describe-json.golden", wantErrCode: 0},
 		{args: "connector-catalog describe AzureBlobSink --cluster lkc-123 -o yaml", fixture: "connector-catalog-describe-yaml.golden", wantErrCode: 0},
 	}
