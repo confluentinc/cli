@@ -134,34 +134,6 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		}
 		return nil
 	}
-	//	} else {
-	//		if flagErr != nil {
-	//			return flagErr
-	//		}
-	//		for _, c := range reply.Configs {
-	//			if len(c.Value.Errors) > 0 {
-	//				config[c.Value.Name] = fmt.Sprintf("%s ", c.Value.Errors[0])
-	//			}
-	//		}
-	//
-	//		jsonConfig, err := json.MarshalIndent(&config, "", "    ")
-	//
-	//		if err != nil {
-	//			return errors.HandleCommon(err, cmd)
-	//		}
-	//
-	//		jsonFile, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	//		if err != nil {
-	//			return errors.HandleCommon(err, cmd)
-	//		}
-	//		_, err = jsonFile.Write(jsonConfig)
-	//		if err != nil {
-	//			return errors.HandleCommon(err, cmd)
-	//		}
-	//		pcmd.Println(cmd, "Wrote to file: ", filename)
-	//		return nil
-	//	}
-	//}
 	return errors.HandleCommon(errors.ErrInvalidCloud, cmd)
 }
 
