@@ -2,10 +2,8 @@ package connector_catalog
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
-	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -57,7 +55,7 @@ With the --sample-file flag, create a sample connector configuration file.
 		Args: cobra.ExactArgs(1),
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	cmd.Flags().String("sample-file", "", "Connector config file mode.")
+	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
@@ -119,38 +117,51 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 			KafkaClusterId: kafkaCluster.Id,
 			Plugin:         args[0]})
 	if reply != nil && err != nil {
-		filename, flagErr := cmd.Flags().GetString("sample-file")
-		if filename == "" {
+		outputFormat, flagErr := cmd.Flags().GetString(output.FlagName)
+		if flagErr != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+		if outputFormat == output.Human.String() {
 			pcmd.Println(cmd, "Following are the required configs: \nconnector.class: "+args[0]+"\n"+err.Error())
-			return nil
 		} else {
-			if flagErr != nil {
-				return flagErr
-			}
+
 			for _, c := range reply.Configs {
 				if len(c.Value.Errors) > 0 {
 					config[c.Value.Name] = fmt.Sprintf("%s ", c.Value.Errors[0])
 				}
 			}
-
-			jsonConfig, err := json.MarshalIndent(&config, "", "    ")
-
-			if err != nil {
-				return errors.HandleCommon(err, cmd)
-			}
-
-			jsonFile, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-			if err != nil {
-				return errors.HandleCommon(err, cmd)
-			}
-			_, err = jsonFile.Write(jsonConfig)
-			if err != nil {
-				return errors.HandleCommon(err, cmd)
-			}
-			pcmd.Println(cmd, "Wrote to file: ", filename)
-			return nil
+			return output.StructuredOutput(outputFormat, &config)
 		}
+		return nil
 	}
+	//	} else {
+	//		if flagErr != nil {
+	//			return flagErr
+	//		}
+	//		for _, c := range reply.Configs {
+	//			if len(c.Value.Errors) > 0 {
+	//				config[c.Value.Name] = fmt.Sprintf("%s ", c.Value.Errors[0])
+	//			}
+	//		}
+	//
+	//		jsonConfig, err := json.MarshalIndent(&config, "", "    ")
+	//
+	//		if err != nil {
+	//			return errors.HandleCommon(err, cmd)
+	//		}
+	//
+	//		jsonFile, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	//		if err != nil {
+	//			return errors.HandleCommon(err, cmd)
+	//		}
+	//		_, err = jsonFile.Write(jsonConfig)
+	//		if err != nil {
+	//			return errors.HandleCommon(err, cmd)
+	//		}
+	//		pcmd.Println(cmd, "Wrote to file: ", filename)
+	//		return nil
+	//	}
+	//}
 	return errors.HandleCommon(errors.ErrInvalidCloud, cmd)
 }
 
