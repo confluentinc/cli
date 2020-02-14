@@ -121,7 +121,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	if reply != nil && err != nil {
 		filename, flagErr := cmd.Flags().GetString("sample-file")
 		if filename == "" {
-			pcmd.Println(cmd, "Following are the required configs: \nconnector.class \n"+err.Error())
+			pcmd.Println(cmd, "Following are the required configs: \nconnector.class: "+args[0]+"\n"+err.Error())
 			return nil
 		} else {
 			if flagErr != nil {
@@ -129,11 +129,12 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 			}
 			for _, c := range reply.Configs {
 				if len(c.Value.Errors) > 0 {
-					config[c.Value.Name] = fmt.Sprintf("%s ", c.Value.Errors[:])
+					config[c.Value.Name] = fmt.Sprintf("%s ", c.Value.Errors[0])
 				}
 			}
 
 			jsonConfig, err := json.MarshalIndent(&config, "", "    ")
+
 			if err != nil {
 				return errors.HandleCommon(err, cmd)
 			}
