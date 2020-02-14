@@ -14,6 +14,8 @@ func (s *CLITestSuite) TestKSQLCommands() {
 
 		{args: "ksql app create test_ksql --storage 101 --cluster lkc-12345", fixture: "ksql-app-create-result.golden"},
 		{args: "ksql app describe lksqlc-12345", fixture: "ksql-app-describe-result.golden"},
+		{args: "ksql app describe lksqlc-12345 -o json", fixture: "ksql-app-describe-result-json.golden"},
+		{args: "ksql app describe lksqlc-12345 -o yaml", fixture: "ksql-app-describe-result-yaml.golden"},
 		{args: "ksql app list", fixture: "ksql-app-list-result.golden"},
 		{args: "ksql app list -o json", fixture: "ksql-app-list-result-json.golden"},
 		{args: "ksql app list -o yaml", fixture: "ksql-app-list-result-yaml.golden"},

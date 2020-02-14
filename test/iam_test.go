@@ -160,6 +160,20 @@ func (s *CLITestSuite) Test_Confluent_Iam_Role_Describe() {
 			login:       "default",
 			wantErrCode: 0,
 		},
+		{
+			name:        "confluent iam role describe json",
+			args:        "iam role describe DeveloperRead -o json",
+			fixture:     "confluent-iam-role-describe-json.golden",
+			login:       "default",
+			wantErrCode: 0,
+		},
+		{
+			name:        "confluent iam role describe yaml",
+			args:        "iam role describe DeveloperRead -o yaml",
+			fixture:     "confluent-iam-role-describe-yaml.golden",
+			login:       "default",
+			wantErrCode: 0,
+		},
 	}
 	for _, tt := range tests {
 		kafkaAPIURL := serveKafkaAPI(s.T()).URL

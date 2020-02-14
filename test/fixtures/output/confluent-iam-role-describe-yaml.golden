@@ -1,0 +1,25 @@
+name: DeveloperRead
+accesspolicy:
+  scopetype: Resource
+  allowedoperations:
+  - resourcetype: Cluster
+    operations: []
+  - resourcetype: TransactionalId
+    operations:
+    - Describe
+  - resourcetype: Group
+    operations:
+    - Read
+    - Describe
+  - resourcetype: Subject
+    operations:
+    - Read
+    - ReadCompatibility
+  - resourcetype: Connector
+    operations:
+    - ReadStatus
+    - ReadConfig
+  - resourcetype: Topic
+    operations:
+    - Read
+    - Describe

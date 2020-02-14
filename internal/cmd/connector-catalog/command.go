@@ -53,6 +53,7 @@ Describe required connector configuration parameters for a specific connector pl
 		Args: cobra.ExactArgs(1),
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
@@ -114,7 +115,25 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		false)
 
 	if err != nil {
-		pcmd.Println(cmd, "Following are the required configs: \nconnector.class \n"+err.Error())
+		outputFormat, flagErr := cmd.Flags().GetString(output.FlagName)
+		if flagErr != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+		if outputFormat == output.Human.String() {
+			pcmd.Println(cmd, "Following are the required configs: \nconnector.class \n"+err.Error())
+		} else {
+			displayList := []string{"connector.class"}
+			configList := strings.Split(err.Error(), "\n")
+			for _, s := range configList {
+				s = strings.TrimSpace(s)
+				if len(s) > 0 {
+					displayList = append(displayList, strings.TrimSpace(s))
+				}
+			}
+			return output.StructuredOutput(outputFormat, &struct {
+				Config []string `json:"config" yaml:"config"`
+			}{displayList})
+		}
 		return nil
 	}
 

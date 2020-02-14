@@ -1,0 +1,8 @@
+endpoint: SASL_SSL://ksql-endpoint
+id: lksqlc-12345
+kafka: lkc-abcde
+name: account ksql
+status: PROVISIONING
+storage: 130
+topic_prefix: pksqlc-zxcvb
+
