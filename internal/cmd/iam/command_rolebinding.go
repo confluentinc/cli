@@ -435,13 +435,13 @@ func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOption
 	}
 
 	return &rolebindingOptions{
-		role,
-		resource,
-		prefix,
-		principal,
-		*scopeClusters,
-		resourcesRequest,
-	},
+			role,
+			resource,
+			prefix,
+			principal,
+			*scopeClusters,
+			resourcesRequest,
+		},
 		nil
 }
 
