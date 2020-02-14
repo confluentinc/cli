@@ -816,6 +816,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		return
 	})
 	router.HandleFunc("/api/accounts/a-595/clusters/lkc-123/connectors", handleConnect(t))
+	router.HandleFunc("/api/accounts/a-595/clusters/lkc-123/connector-plugins/GcsSink/config/validate", handleConnectorCatalogDescribe(t))
 	router.HandleFunc("/api/accounts/a-595/clusters/lkc-123/connector-plugins", handleConnectPlugins(t))
 	router.HandleFunc("/api/ksqls", handleKSQLCreateList(t))
 	router.HandleFunc("/api/ksqls/lksqlc-ksql1/", func(w http.ResponseWriter, r *http.Request) {
@@ -1140,6 +1141,70 @@ func handleConnect(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 			_, err = io.WriteString(w, string(reply))
 			require.NoError(t, err)
 		}
+	}
+}
+
+func handleConnectorCatalogDescribe(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		configInfos := &connectv1.ConfigInfos{
+			Name:       "",
+			Groups:     nil,
+			ErrorCount: 1,
+			Configs:    []*connectv1.Configs{
+				{
+					Value:  &connectv1.ConfigValue{
+						Name:  "kafka.api.key",
+						Errors: []string{"\"kafka.api.key\" is required"},
+					},
+				},
+				{
+					Value:  &connectv1.ConfigValue{
+						Name:  "kafka.api.secret",
+						Errors: []string{"\"kafka.api.secret\" is required"},
+					},
+				},
+				{
+					Value:  &connectv1.ConfigValue{
+						Name:  "topics",
+						Errors: []string{"\"topics\" is required"},
+					},
+				},
+				{
+					Value:  &connectv1.ConfigValue{
+						Name:  "data.format",
+						Errors: []string{"\"data.format\" is required", "Value \"null\" doesn't belong to the property's \"data.format\" enum"},
+					},
+				},
+				{
+					Value:  &connectv1.ConfigValue{
+						Name:  "gcs.credentials.config",
+						Errors: []string{"\"gcs.credentials.config\" is required"},
+					},
+				},
+				{
+					Value:  &connectv1.ConfigValue{
+						Name:  "gcs.bucket.name",
+						Errors: []string{"\"gcs.bucket.name\" is required"},
+					},
+				},
+				{
+					Value:  &connectv1.ConfigValue{
+						Name:  "time.interval",
+						Errors: []string{"\"data.format\" is required", "Value \"null\" doesn't belong to the property's \"time.interval\" enum"},
+					},
+				},
+				{
+					Value:  &connectv1.ConfigValue{
+						Name:  "tasks.max",
+						Errors: []string{"\"tasks.max\" is required"},
+					},
+				},
+			},
+		}
+		reply, err := json.Marshal(configInfos)
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(reply))
+		require.NoError(t, err)
 	}
 }
 

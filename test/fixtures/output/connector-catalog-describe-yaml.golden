@@ -1,0 +1,9 @@
+connector.class: GcsSink
+data.format: '"data.format" is required '
+gcs.bucket.name: '"gcs.bucket.name" is required '
+gcs.credentials.config: '"gcs.credentials.config" is required '
+kafka.api.key: '"kafka.api.key" is required '
+kafka.api.secret: '"kafka.api.secret" is required '
+tasks.max: '"tasks.max" is required '
+time.interval: '"data.format" is required '
+topics: '"topics" is required '
