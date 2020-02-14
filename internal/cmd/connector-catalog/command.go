@@ -127,7 +127,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 				return errors.HandleCommon(err, cmd)
 			}
 			if outputFormat == output.Human.String() {
-				pcmd.Println(cmd, "Following are the required configs: \nconnector.class \n"+err.Error())
+				pcmd.Println(cmd, "Following are the required configs: \nconnector.class: "+args[0]+"\n"+err.Error())
 			} else {
 				displayList := []string{"connector.class"}
 				configList := strings.Split(err.Error(), "\n")
@@ -148,11 +148,12 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 			}
 			for _, c := range reply.Configs {
 				if len(c.Value.Errors) > 0 {
-					config[c.Value.Name] = fmt.Sprintf("%s ", c.Value.Errors[:])
+					config[c.Value.Name] = fmt.Sprintf("%s ", c.Value.Errors[0])
 				}
 			}
 
 			jsonConfig, err := json.MarshalIndent(&config, "", "    ")
+
 			if err != nil {
 				return errors.HandleCommon(err, cmd)
 			}
