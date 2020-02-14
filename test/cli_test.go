@@ -1174,6 +1174,7 @@ func handleConnectorCatalogDescribe(t *testing.T) func(w http.ResponseWriter, r 
 					Value:  &connectv1.ConfigValue{
 						Name:  "namy",
 						Value: "vvy",
+						Errors: []string{"bob", "boooobeee"},
 					},
 				},
 			},
