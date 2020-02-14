@@ -3,13 +3,13 @@ package connector_catalog
 import (
 	"context"
 	"fmt"
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"strings"
 
 	"github.com/spf13/cobra"
 
 	connectv1 "github.com/confluentinc/ccloudapis/connect/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -119,7 +119,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	if reply != nil && err != nil {
 		outputFormat, flagErr := cmd.Flags().GetString(output.FlagName)
 		if flagErr != nil {
-			return errors.HandleCommon(err, cmd)
+			return errors.HandleCommon(flagErr, cmd)
 		}
 		if outputFormat == output.Human.String() {
 			pcmd.Println(cmd, "Following are the required configs: \nconnector.class: "+args[0]+"\n"+err.Error())
