@@ -8,5 +8,5 @@
   "endpoint": "SASL_SSL://kafka-endpoint",
   "region": "us-west-2",
   "provider": "aws",
-  "api_endpoint": "http://127.0.0.1:55419"
+  "api_endpoint": "http://127.0.0.1:61016"
 }

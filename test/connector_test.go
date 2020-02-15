@@ -11,6 +11,8 @@ func (s *CLITestSuite) TestConnectCommands() {
 		{args: "connector list --cluster lkc-123 -o json", fixture: "connector-list-json.golden", wantErrCode: 0},
 		{args: "connector list --cluster lkc-123 -o yaml", fixture: "connector-list-yaml.golden", wantErrCode: 0},
 		{args: "connector describe lcc-123 --cluster lkc-123", fixture: "connector-describe.golden", wantErrCode: 0},
+		{args: "connector describe lcc-123 --cluster lkc-123 -o json", fixture: "connector-describe-json.golden", wantErrCode: 0},
+		{args: "connector describe lcc-123 --cluster lkc-123 -o yaml", fixture: "connector-describe-yaml.golden", wantErrCode: 0},
 		{args: "connector pause lcc-123 --cluster lkc-123", fixture: "connector-pause.golden", wantErrCode: 0},
 		{args: "connector resume lcc-123 --cluster lkc-123", fixture: "connector-resume.golden", wantErrCode: 0},
 		{args: "connector delete lcc-123 --cluster lkc-123", fixture: "connector-delete.golden", wantErrCode: 0},

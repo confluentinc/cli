@@ -1,0 +1,9 @@
+connector:
+  name: az-connector
+  id: lcc-123
+  status: Running
+  type: Sink
+task:
+- task_id: 1
+  state: Running
+configs: []

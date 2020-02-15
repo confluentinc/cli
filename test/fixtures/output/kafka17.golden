@@ -8,5 +8,5 @@
 | Region      | us-west-2                 |
 | Status      | PROVISIONING              |
 | Endpoint    | SASL_SSL://kafka-endpoint |
-| ApiEndpoint | http://127.0.0.1:55411    |
+| ApiEndpoint | http://127.0.0.1:61008    |
 +-------------+---------------------------+

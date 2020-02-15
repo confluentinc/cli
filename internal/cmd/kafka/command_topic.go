@@ -537,8 +537,7 @@ func printStructuredDescribe(cmd *cobra.Command, resp *kafkav1.TopicDescription,
 	structuredDisplay.Partitions = partitionList
 
 	for _, entry := range resp.Config {
-		name := strings.Join(strings.Split(entry.Name, "."), "_")
-		structuredDisplay.Config[name] = entry.Value
+		structuredDisplay.Config[entry.Name] = entry.Value
 	}
 
 	return output.StructuredOutput(format, structuredDisplay)
