@@ -1,5 +1,5 @@
 +-------------+---------------------------+
-| Id          | lkc-def973                |
+| Id          | lkc-describe              |
 | Name        | kafka-cluster             |
 | Ingress     |                       100 |
 | Egress      |                       100 |
@@ -8,5 +8,5 @@
 | Region      | us-west-2                 |
 | Status      | PROVISIONING              |
 | Endpoint    | SASL_SSL://kafka-endpoint |
-| ApiEndpoint | http://127.0.0.1:61008    |
+| ApiEndpoint | http://kafka-api-url      |
 +-------------+---------------------------+

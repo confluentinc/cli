@@ -1,7 +1,7 @@
-api_endpoint: http://127.0.0.1:61024
+api_endpoint: http://kafka-api-url
 egress: 100
 endpoint: SASL_SSL://kafka-endpoint
-id: lkc-def973
+id: lkc-describe
 ingress: 100
 name: kafka-cluster
 provider: aws

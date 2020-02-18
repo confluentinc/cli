@@ -14,9 +14,6 @@ func (s *CLITestSuite) TestKafkaCommands() {
 		{args: "kafka cluster create my-failed-cluster --cloud aws --region oops", fixture: "kafka13.golden", wantErrCode: 1},
 		{args: "kafka cluster delete", fixture: "kafka3.golden", wantErrCode: 1},
 		{args: "kafka cluster delete lkc-unknown", fixture: "kafka4.golden", wantErrCode: 1},
-		{args: "kafka cluster describe lkc-def973", fixture: "kafka17.golden", wantErrCode: 0},
-		{args: "kafka cluster describe lkc-def973 -o json", fixture: "kafka18.golden", wantErrCode: 0},
-		{args: "kafka cluster describe lkc-def973 -o yaml", fixture: "kafka19.golden", wantErrCode: 0},
 		{args: "kafka cluster delete lkc-def973", fixture: "kafka5.golden", wantErrCode: 0},
 		{args: "kafka region list", fixture: "kafka14.golden", wantErrCode: 0},
 		{args: "kafka region list -o json", fixture: "kafka15.golden", wantErrCode: 0},
@@ -24,6 +21,9 @@ func (s *CLITestSuite) TestKafkaCommands() {
 		{args: "kafka region list --cloud gcp", fixture: "kafka9.golden", wantErrCode: 0},
 		{args: "kafka region list --cloud aws", fixture: "kafka10.golden", wantErrCode: 0},
 		{args: "kafka region list --cloud azure", fixture: "kafka11.golden", wantErrCode: 0},
+		{args: "kafka cluster describe lkc-describe", fixture: "kafka17.golden", wantErrCode: 0},
+		{args: "kafka cluster describe lkc-describe -o json", fixture: "kafka18.golden", wantErrCode: 0},
+		{args: "kafka cluster describe lkc-describe -o yaml", fixture: "kafka19.golden", wantErrCode: 0},
 	}
 	resetConfiguration(s.T(), "ccloud")
 	for _, tt := range tests {

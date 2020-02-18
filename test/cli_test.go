@@ -209,7 +209,7 @@ func (s *CLITestSuite) Test_UserAgent() {
 		cloudRouter.HandleFunc("/api/sessions", compose(assertUserAgent(t, expected), handleLogin(t)))
 		cloudRouter.HandleFunc("/api/me", compose(assertUserAgent(t, expected), handleMe(t)))
 		cloudRouter.HandleFunc("/api/check_email/", compose(assertUserAgent(t, expected), handleCheckEmail(t)))
-		cloudRouter.HandleFunc("/api/clusters/", compose(assertUserAgent(t, expected), handleKafkaClusterGetListDelete(t, kafkaApiServer.URL)))
+		cloudRouter.HandleFunc("/api/clusters/", compose(assertUserAgent(t, expected), handleKafkaClusterGetListDeleteDescribe(t, kafkaApiServer.URL)))
 		return httptest.NewServer(cloudRouter).URL
 	}
 
@@ -754,7 +754,8 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 	})
 	router.HandleFunc("/api/accounts/a-595", handleEnvironmentGet(t, "a-595"))
 	router.HandleFunc("/api/accounts/not-595", handleEnvironmentGet(t, "not-595"))
-	router.HandleFunc("/api/clusters/", handleKafkaClusterGetListDelete(t, kafkaAPIURL))
+	router.HandleFunc("/api/clusters/lkc-describe", handleKafkaClusterDescribeTest(t, kafkaAPIURL))
+	router.HandleFunc("/api/clusters/", handleKafkaClusterGetListDeleteDescribe(t, kafkaAPIURL))
 	router.HandleFunc("/api/clusters", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
 			handleKafkaClusterCreate(t, kafkaAPIURL)(w, r)
@@ -1009,7 +1010,7 @@ func handleCheckEmail(t *testing.T) func(w http.ResponseWriter, r *http.Request)
 	}
 }
 
-func handleKafkaClusterGetListDelete(t *testing.T, kafkaAPIURL string) func(w http.ResponseWriter, r *http.Request) {
+func handleKafkaClusterGetListDeleteDescribe(t *testing.T, kafkaAPIURL string) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		parts := strings.Split(r.URL.Path, "/")
 		id := parts[len(parts)-1]
@@ -1037,6 +1038,27 @@ func handleKafkaClusterGetListDelete(t *testing.T, kafkaAPIURL string) func(w ht
 				Region:          "us-west-2",
 				Endpoint:        "SASL_SSL://kafka-endpoint",
 				ApiEndpoint:     kafkaAPIURL,
+			},
+		})
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(b))
+		require.NoError(t, err)
+	}
+}
+
+func handleKafkaClusterDescribeTest(t *testing.T, kafkaAPIURL string) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		b, err := utilv1.MarshalJSONToBytes(&kafkav1.GetKafkaClusterReply{
+			Cluster: &kafkav1.KafkaCluster{
+				Id:              "lkc-describe",
+				Name:            "kafka-cluster",
+				NetworkIngress:  100,
+				NetworkEgress:   100,
+				Storage:         500,
+				ServiceProvider: "aws",
+				Region:          "us-west-2",
+				Endpoint:        "SASL_SSL://kafka-endpoint",
+				ApiEndpoint:     "http://kafka-api-url",
 			},
 		})
 		require.NoError(t, err)
