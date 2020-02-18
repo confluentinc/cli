@@ -36,7 +36,7 @@ func NewSchemaCommand(config *v2.Config, prerunner pcmd.PreRunner, srClient *srs
 
 func (c *schemaCommand) init() {
 	cmd := &cobra.Command{
-		Use:   "create --subject <subject> --schema <schema-file> --type <schema-type> --ref <ref-file>",
+		Use:   "create --subject <subject> --schema <schema-file> --type <schema-type> --refs <ref-file>",
 		Short: "Create a schema.",
 		Example: FormatDescription(`
 Register a new schema
@@ -67,7 +67,7 @@ Where schemafilepath may include these contents:
 	cmd.Flags().String("schema", "", "The path to the schema file.")
 	_ = cmd.MarkFlagRequired("schema")
 	cmd.Flags().String("type", "", "The schema type.")
-	cmd.Flags().String("ref", "", "The path to the ref file.")
+	cmd.Flags().String("refs", "", "The path to the references file.")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
@@ -138,7 +138,7 @@ func (c *schemaCommand) create(cmd *cobra.Command, args []string) error {
 	}
 
 	var refs []srsdk.SchemaReference
-	refPath, err := cmd.Flags().GetString("ref")
+	refPath, err := cmd.Flags().GetString("refs")
 	if err != nil {
 		return err
 	} else if refPath != "" {
