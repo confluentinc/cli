@@ -12,12 +12,12 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tidwall/pretty"
 
-	"github.com/confluentinc/go-printer"
-	"github.com/confluentinc/mds-sdk-go"
-
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/go-printer"
+	"github.com/confluentinc/mds-sdk-go"
 )
 
 var (
@@ -55,12 +55,15 @@ func (c *roleCommand) createContext() context.Context {
 }
 
 func (c *roleCommand) init() {
-	c.AddCommand(&cobra.Command{
+	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List the available roles.",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
-	})
+	}
+	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	listCmd.Flags().SortFlags = false
+	c.AddCommand(listCmd)
 
 	c.AddCommand(&cobra.Command{
 		Use:   "describe <name>",
@@ -75,15 +78,23 @@ func (c *roleCommand) list(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	var data [][]string
-	for _, role := range roles {
-		roleDisplay, err := createPrettyRole(role)
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-		data = append(data, printer.ToRow(roleDisplay, roleFields))
+	format, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
 	}
-	outputTable(data)
+	if format == output.Human.String() {
+		var data [][]string
+		for _, role := range roles {
+			roleDisplay, err := createPrettyRole(role)
+			if err != nil {
+				return errors.HandleCommon(err, cmd)
+			}
+			data = append(data, printer.ToRow(roleDisplay, roleFields))
+		}
+		outputTable(data)
+	} else {
+		return output.StructuredOutput(format, roles)
+	}
 	return nil
 }
 

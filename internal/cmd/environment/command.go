@@ -4,13 +4,13 @@ import (
 	"context"
 	"fmt"
 
-	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
-	"github.com/confluentinc/go-printer"
 	"github.com/spf13/cobra"
 
+	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 type command struct {
@@ -18,8 +18,9 @@ type command struct {
 }
 
 var (
-	listFields = []string{"Id", "Name"}
-	listLabels = []string{"Id", "Name"}
+	listFields           = []string{"Id", "Name"}
+	listHumanLabels      = []string{"Id", "Name"}
+	listStructuredLabels = []string{"id", "name"}
 )
 
 // New returns the Cobra command for `environment`.
@@ -36,12 +37,15 @@ func New(prerunner pcmd.PreRunner, config *v2.Config, cliName string) *cobra.Com
 }
 
 func (c *command) init() {
-	c.AddCommand(&cobra.Command{
+	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List Confluent Cloud environments.",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
-	})
+	}
+	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	listCmd.Flags().SortFlags = false
+	c.AddCommand(listCmd)
 
 	c.AddCommand(&cobra.Command{
 		Use:   "use <environment-id>",
@@ -109,17 +113,23 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	var data [][]string
-	for _, environment := range environments {
-		if environment.Id == c.EnvironmentId() {
-			environment.Id = fmt.Sprintf("* %s", environment.Id)
-		} else {
-			environment.Id = fmt.Sprintf("  %s", environment.Id)
-		}
-		data = append(data, printer.ToRow(environment, listFields))
+
+	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
 	}
-	printer.RenderCollectionTable(data, listLabels)
-	return nil
+	for _, environment := range environments {
+		// Add '*' only in the case where we are printing out tables
+		if outputWriter.GetOutputFormat() == output.Human {
+			if environment.Id == c.EnvironmentId() {
+				environment.Id = fmt.Sprintf("* %s", environment.Id)
+			} else {
+				environment.Id = fmt.Sprintf("  %s", environment.Id)
+			}
+		}
+		outputWriter.AddElement(environment)
+	}
+	return outputWriter.Out()
 }
 
 func (c *command) use(cmd *cobra.Command, args []string) error {

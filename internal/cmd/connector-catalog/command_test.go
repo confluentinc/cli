@@ -59,8 +59,8 @@ func (suite *CatalogTestSuite) SetupTest() {
 		},
 	}
 	suite.connectMock = &ccsdkmock.Connect{
-		ValidateFunc: func(arg0 context.Context, arg1 *connectv1.ConnectorConfig, arg2 bool) (connector *connectv1.ConfigInfos, e error) {
-			return nil, errors.New("config.name")
+		ValidateFunc: func(arg0 context.Context, arg1 *connectv1.ConnectorConfig) (connector *connectv1.ConfigInfos, e error) {
+			return &connectv1.ConfigInfos{Configs: []*connectv1.Configs{{Value: &connectv1.ConfigValue{Value: "abc", Errors: []string{"new error"}}}}}, errors.New("config.name")
 		},
 		GetPluginsFunc: func(arg0 context.Context, arg1 *connectv1.Connector, arg2 string) (infos []*connectv1.ConnectorPluginInfo, e error) {
 			return nil, nil

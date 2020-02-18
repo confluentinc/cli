@@ -9,12 +9,12 @@ import (
 	"github.com/spf13/cobra"
 
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
-	"github.com/confluentinc/go-printer"
-
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/keystore"
+	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/go-printer"
 )
 
 const longDescription = `Use this command to register an API secret created by another
@@ -43,11 +43,12 @@ type command struct {
 }
 
 var (
-	listFields       = []string{"Key", "UserId", "Description", "ResourceType", "ResourceId"}
-	listLabels       = []string{"Key", "Owner", "Description", "Resource Type", "Resource ID"}
-	createFields     = []string{"Key", "Secret"}
-	createRenames    = map[string]string{"Key": "API Key"}
-	resourceFlagName = "resource"
+	listFields           = []string{"Key", "UserId", "Description", "ResourceType", "ResourceId"}
+	listHumanLabels      = []string{"Key", "Owner", "Description", "Resource Type", "Resource ID"}
+	listStructuredLabels = []string{"key", "owner", "description", "resource_type", "resource_id"}
+	createFields         = []string{"Key", "Secret"}
+	createRenames        = map[string]string{"Key": "API Key"}
+	resourceFlagName     = "resource"
 )
 
 // New returns the Cobra command for API Key.
@@ -77,6 +78,7 @@ func (c *command) init() {
 	listCmd.Flags().String(resourceFlagName, "", "The resource ID to filter by.")
 	listCmd.Flags().Bool("current-user", false, "Show only API keys belonging to current user.")
 	listCmd.Flags().Int32("service-account-id", 0, "The service account ID to filter by.")
+	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
@@ -151,7 +153,6 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		ResourceId   string
 	}
 	var apiKeys []*authv1.ApiKey
-	var data [][]string
 
 	resourceType, resourceId, currentKey, err := c.resolveResourceId(cmd, c.Config.Resolver, c.Client)
 	if err != nil {
@@ -183,31 +184,38 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
+	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
 	for _, apiKey := range apiKeys {
 		// ignore keys owned by Confluent-internal user (healthcheck, etc)
 		if apiKey.UserId == 0 {
 			continue
 		}
 
-		// resourceId != "" added to be explicit that when no resourceId is specified we will not have "*"
-		if resourceId != "" && apiKey.Key == currentKey {
-			apiKey.Key = fmt.Sprintf("* %s", apiKey.Key)
-		} else {
-			apiKey.Key = fmt.Sprintf("  %s", apiKey.Key)
+		// Add '*' only in the case where we are printing out tables
+		if outputWriter.GetOutputFormat() == output.Human {
+			// resourceId != "" added to be explicit that when no resourceId is specified we will not have "*"
+			if resourceId != "" && apiKey.Key == currentKey {
+				apiKey.Key = fmt.Sprintf("* %s", apiKey.Key)
+			} else {
+				apiKey.Key = fmt.Sprintf("  %s", apiKey.Key)
+			}
 		}
 
 		for _, lc := range apiKey.LogicalClusters {
-			data = append(data, printer.ToRow(&keyDisplay{
+			outputWriter.AddElement(&keyDisplay{
 				Key:          apiKey.Key,
 				Description:  apiKey.Description,
 				UserId:       apiKey.UserId,
 				ResourceType: lc.Type,
 				ResourceId:   lc.Id,
-			}, listFields))
+			})
 		}
 	}
-	printer.RenderCollectionTable(data, listLabels)
-	return nil
+	return outputWriter.Out()
 }
 
 func (c *command) update(cmd *cobra.Command, args []string) error {

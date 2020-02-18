@@ -1,0 +1,1 @@
+Error: 'oops' cloud provider does not exist. You can view a list of available cloud providers and regions with the 'kafka region list' command.

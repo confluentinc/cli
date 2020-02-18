@@ -5,14 +5,15 @@ import (
 	"fmt"
 	"os"
 
-	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
+	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	aclutil "github.com/confluentinc/cli/internal/pkg/acl"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 type aclCommand struct {
@@ -79,6 +80,7 @@ func (c *aclCommand) init() {
 	}
 	cmd.Flags().AddFlagSet(resourceFlags())
 	cmd.Flags().Int("service-account-id", 0, "Service account ID.")
+	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	cmd.Flags().SortFlags = false
 
 	c.AddCommand(cmd)
@@ -96,9 +98,7 @@ func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-
-	aclutil.PrintAcls(resp, os.Stdout)
-	return nil
+	return aclutil.PrintAcls(cmd, resp, os.Stdout)
 }
 
 func (c *aclCommand) create(cmd *cobra.Command, args []string) error {

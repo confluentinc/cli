@@ -15,6 +15,8 @@ func (s *CLITestSuite) TestKSQLCommands() {
 		{args: "ksql app create test_ksql --storage 101 --cluster lkc-12345", fixture: "ksql-app-create-result.golden"},
 		{args: "ksql app describe lksqlc-12345", fixture: "ksql-app-describe-result.golden"},
 		{args: "ksql app list", fixture: "ksql-app-list-result.golden"},
+		{args: "ksql app list -o json", fixture: "ksql-app-list-result-json.golden"},
+		{args: "ksql app list -o yaml", fixture: "ksql-app-list-result-yaml.golden"},
 		{args: "ksql app delete lksqlc-12345", fixture: "ksql-app-delete-result.golden"},
 	}
 	resetConfiguration(s.T(), "ccloud")

@@ -755,7 +755,26 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 	router.HandleFunc("/api/accounts/a-595", handleEnvironmentGet(t, "a-595"))
 	router.HandleFunc("/api/accounts/not-595", handleEnvironmentGet(t, "not-595"))
 	router.HandleFunc("/api/clusters/", handleKafkaClusterGetListDelete(t, kafkaAPIURL))
-	router.HandleFunc("/api/clusters", handleKafkaClusterCreate(t, kafkaAPIURL))
+	router.HandleFunc("/api/clusters", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "POST" {
+			handleKafkaClusterCreate(t, kafkaAPIURL)(w, r)
+		} else if r.Method == "GET" {
+			cluster := kafkav1.KafkaCluster{
+				Id:                   "lkc-123",
+				Name:                 "abc",
+				Durability:           0,
+				Status:               0,
+				Region:               "us-central1",
+				ServiceProvider:      "gcp",
+			}
+			b, err := utilv1.MarshalJSONToBytes(&kafkav1.GetKafkaClustersReply{
+				Clusters: []*kafkav1.KafkaCluster{&cluster},
+			})
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(b))
+			require.NoError(t, err)
+		}
+	})
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		_, err := io.WriteString(w, `{"error": {"message": "unexpected call to `+r.URL.Path+`"}}`)
 		require.NoError(t, err)
@@ -777,11 +796,27 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		_, err = io.WriteString(w, string(b))
 		require.NoError(t, err)
 	})
+	router.HandleFunc("/api/service_accounts", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "GET" {
+			serviceAccount := &orgv1.User{
+				Id:          12345,
+				ServiceName: "service_account",
+				ServiceDescription: "at your service.",
+			}
+			listReply, err := utilv1.MarshalJSONToBytes(&orgv1.GetServiceAccountsReply{
+				Users: []*orgv1.User{serviceAccount},
+			})
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(listReply))
+			require.NoError(t, err)
+		}
+	})
 	router.HandleFunc("/api/accounts/a-595/clusters/lkc-123/connectors/az-connector/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 		return
 	})
 	router.HandleFunc("/api/accounts/a-595/clusters/lkc-123/connectors", handleConnect(t))
+	router.HandleFunc("/api/accounts/a-595/clusters/lkc-123/connector-plugins/GcsSink/config/validate", handleConnectorCatalogDescribe(t))
 	router.HandleFunc("/api/accounts/a-595/clusters/lkc-123/connector-plugins", handleConnectPlugins(t))
 	router.HandleFunc("/api/ksqls", handleKSQLCreateList(t))
 	router.HandleFunc("/api/ksqls/lksqlc-ksql1/", func(w http.ResponseWriter, r *http.Request) {
@@ -813,6 +848,60 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		}
 		reply, err := utilv1.MarshalJSONToBytes(&ksqlv1.GetKSQLClusterReply{
 			Cluster: ksqlCluster,
+		})
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(reply))
+		require.NoError(t, err)
+	})
+	router.HandleFunc("/api/env_metadata", func(w http.ResponseWriter, r *http.Request) {
+		clouds := []*kafkav1.Cloud{
+			{
+				Id: "gcp",
+				Name: "Google Cloud Platform",
+				Regions: []*kafkav1.Region{
+					{
+						Id: "asia-southeast1",
+						Name: "asia-southeast1 (Singapore)",
+						IsSchedulable: true,
+					},
+					{
+						Id : "asia-east2",
+						Name: "asia-east2 (Hong Kong)",
+						IsSchedulable: true,
+					},
+				},
+			},
+			{
+				Id: "aws",
+				Name: "Amazon Web Services",
+				Regions: []*kafkav1.Region{
+					{
+						Id: "ap-northeast-1",
+						Name: "ap-northeast-1 (Tokyo)",
+						IsSchedulable: false,
+					},
+					{
+						Id: "us-east-1",
+						Name: "us-east-1 (N. Virginia)",
+						IsSchedulable: true,
+					},
+				},
+			},
+			{
+				Id: "azure",
+				Name: "Azure",
+				Regions: []*kafkav1.Region{
+					{
+						Id: "southeastasia",
+						Name: "southeastasia (Singapore)",
+						IsSchedulable: false,
+					},
+				},
+			},
+
+		}
+		reply, err := utilv1.MarshalJSONToBytes(&kafkav1.GetEnvironmentMetadataReply{
+			Clouds: clouds,
 		})
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(reply))
@@ -1052,6 +1141,70 @@ func handleConnect(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 			_, err = io.WriteString(w, string(reply))
 			require.NoError(t, err)
 		}
+	}
+}
+
+func handleConnectorCatalogDescribe(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		configInfos := &connectv1.ConfigInfos{
+			Name:       "",
+			Groups:     nil,
+			ErrorCount: 1,
+			Configs:    []*connectv1.Configs{
+				{
+					Value:  &connectv1.ConfigValue{
+						Name:  "kafka.api.key",
+						Errors: []string{"\"kafka.api.key\" is required"},
+					},
+				},
+				{
+					Value:  &connectv1.ConfigValue{
+						Name:  "kafka.api.secret",
+						Errors: []string{"\"kafka.api.secret\" is required"},
+					},
+				},
+				{
+					Value:  &connectv1.ConfigValue{
+						Name:  "topics",
+						Errors: []string{"\"topics\" is required"},
+					},
+				},
+				{
+					Value:  &connectv1.ConfigValue{
+						Name:  "data.format",
+						Errors: []string{"\"data.format\" is required", "Value \"null\" doesn't belong to the property's \"data.format\" enum"},
+					},
+				},
+				{
+					Value:  &connectv1.ConfigValue{
+						Name:  "gcs.credentials.config",
+						Errors: []string{"\"gcs.credentials.config\" is required"},
+					},
+				},
+				{
+					Value:  &connectv1.ConfigValue{
+						Name:  "gcs.bucket.name",
+						Errors: []string{"\"gcs.bucket.name\" is required"},
+					},
+				},
+				{
+					Value:  &connectv1.ConfigValue{
+						Name:  "time.interval",
+						Errors: []string{"\"data.format\" is required", "Value \"null\" doesn't belong to the property's \"time.interval\" enum"},
+					},
+				},
+				{
+					Value:  &connectv1.ConfigValue{
+						Name:  "tasks.max",
+						Errors: []string{"\"tasks.max\" is required"},
+					},
+				},
+			},
+		}
+		reply, err := json.Marshal(configInfos)
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(reply))
+		require.NoError(t, err)
 	}
 }
 
