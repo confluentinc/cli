@@ -5,4 +5,4 @@
 *                            @confluentinc/cli
 
 # Add docs team to commands where docs are managed
-internal/cmd/**/command*.go  @confluentinc/docs
+internal/cmd/**/command*.go  @joel-hamill
