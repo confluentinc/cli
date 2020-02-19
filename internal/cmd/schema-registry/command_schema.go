@@ -1,6 +1,7 @@
 package schema_registry
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"strconv"
@@ -35,7 +36,7 @@ func NewSchemaCommand(config *v2.Config, prerunner pcmd.PreRunner, srClient *srs
 
 func (c *schemaCommand) init() {
 	cmd := &cobra.Command{
-		Use:   "create --subject <subject> --schema <schema-file>",
+		Use:   "create --subject <subject> --schema <schema-file> --type <schema-type> --refs <ref-file>",
 		Short: "Create a schema.",
 		Example: FormatDescription(`
 Register a new schema
@@ -65,6 +66,8 @@ Where schemafilepath may include these contents:
 	RequireSubjectFlag(cmd)
 	cmd.Flags().String("schema", "", "The path to the schema file.")
 	_ = cmd.MarkFlagRequired("schema")
+	cmd.Flags().String("type", "", "The schema type.")
+	cmd.Flags().String("refs", "", "The path to the references file.")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
@@ -124,12 +127,32 @@ func (c *schemaCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	schemaType, err := cmd.Flags().GetString("type")
+	if err != nil {
+		return err
+	}
 
 	schema, err := ioutil.ReadFile(schemaPath)
 	if err != nil {
 		return err
 	}
-	response, _, err := srClient.DefaultApi.Register(ctx, subject, srsdk.RegisterSchemaRequest{Schema: string(schema)})
+
+	var refs []srsdk.SchemaReference
+	refPath, err := cmd.Flags().GetString("refs")
+	if err != nil {
+		return err
+	} else if refPath != "" {
+		refBlob, err := ioutil.ReadFile(refPath)
+		if err != nil {
+			return err
+		}
+		err = json.Unmarshal(refBlob, &refs)
+		if err != nil {
+			return err
+		}
+	}
+
+	response, _, err := srClient.DefaultApi.Register(ctx, subject, srsdk.RegisterSchemaRequest{Schema: string(schema), SchemaType: schemaType, References: refs})
 	if err != nil {
 		return err
 	}
@@ -186,12 +209,11 @@ func (c *schemaCommand) describeById(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("unexpected argument: Must be an integer Schema ID")
 	}
-	schemaString, _, err := srClient.DefaultApi.GetSchema(ctx, int32(schema))
+	schemaString, _, err := srClient.DefaultApi.GetSchema(ctx, int32(schema), nil)
 	if err != nil {
 		return err
 	}
-	pcmd.Println(cmd, schemaString.Schema)
-	return nil
+	return c.printSchema(cmd, schemaString.Schema, schemaString.SchemaType, schemaString.References)
 }
 
 func (c *schemaCommand) describeBySubject(cmd *cobra.Command, args []string) error {
@@ -207,10 +229,23 @@ func (c *schemaCommand) describeBySubject(cmd *cobra.Command, args []string) err
 	if err != nil {
 		return err
 	}
-	schemaString, _, err := srClient.DefaultApi.GetSchemaByVersion(ctx, subject, version)
+	schemaString, _, err := srClient.DefaultApi.GetSchemaByVersion(ctx, subject, version, nil)
 	if err != nil {
 		return err
 	}
-	pcmd.Println(cmd, schemaString.Schema)
+	return c.printSchema(cmd, schemaString.Schema, schemaString.SchemaType, schemaString.References)
+}
+
+func (c *schemaCommand) printSchema(cmd *cobra.Command, schema string, sType string, refs []srsdk.SchemaReference) error {
+	if sType != "" {
+		pcmd.Println(cmd, "Type: "+sType)
+	}
+	pcmd.Println(cmd, "Schema: "+schema)
+	if len(refs) > 0 {
+		pcmd.Println(cmd, "References:")
+		for i := 0; i < len(refs); i++ {
+			pcmd.Printf(cmd, "\t%s -> %s %d\n", refs[i].Name, refs[i].Subject, refs[i].Version)
+		}
+	}
 	return nil
 }
