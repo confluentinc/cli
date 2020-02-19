@@ -260,8 +260,7 @@ func (c *rolebindingCommand) listPrincipalResources(cmd *cobra.Command) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-
-	var data [][]string
+	
 	for principalName, rolesResourcePatterns := range principalsRolesResourcePatterns {
 		for roleName, resourcePatterns := range rolesResourcePatterns {
 			if role == "*" || roleName == role {
@@ -273,7 +272,6 @@ func (c *rolebindingCommand) listPrincipalResources(cmd *cobra.Command) error {
 						Name:         resourcePattern.Name,
 						PatternType:  resourcePattern.PatternType,
 					})
-					data = append(data, append([]string{principalName, roleName}, printer.ToRow(&resourcePattern, resourcePatternListFields)...))
 				}
 				if len(resourcePatterns) == 0 && clusterScopedRoles[roleName] {
 					outputWriter.AddElement(&listDisplay{
