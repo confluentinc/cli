@@ -278,7 +278,7 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 	if outputOption == output.Human.String() {
 		return printHumanDescribe(cmd, resp)
 	} else {
-		return printStructuredDescribe(cmd, resp, outputOption)
+		return printStructuredDescribe(resp, outputOption)
 	}
 }
 
@@ -483,8 +483,7 @@ func printHumanDescribe(cmd *cobra.Command, resp *kafkav1.TopicDescription) erro
 	return nil
 }
 
-func printStructuredDescribe(cmd *cobra.Command, resp *kafkav1.TopicDescription, format string) error {
-
+func printStructuredDescribe(resp *kafkav1.TopicDescription, format string) error {
 	structuredDisplay := &structuredDescribeDisplay{Config: make(map[string]string)}
 	structuredDisplay.TopicName = resp.Name
 	structuredDisplay.PartitionCount = len(resp.Partitions)
