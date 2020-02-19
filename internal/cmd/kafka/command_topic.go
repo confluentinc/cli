@@ -33,6 +33,22 @@ type authenticatedTopicCommand struct {
 	clientID string
 }
 
+type partitionDisplay struct {
+	Topic string `json:"topic" yaml:"topic"`
+	Partition uint32 `json:"partition" yaml:"partition"`
+	Leader uint32 `json:"leader" yaml:"leader"`
+	Replicas []uint32 `json:"replicas" yaml:"replicas"`
+	ISR []uint32 `json:"isr" yaml:"isr"`
+}
+
+type structuredDisplay struct {
+	TopicName string `json:"topic_name" yaml:"topic_name"`
+	PartitionCount int `json:"partition_count" yaml:"partition_count"`
+	ReplicationFactor int `json:"replication_factor" yaml:"replication_factor"`
+	Partitions []partitionDisplay `json:"partitions" yaml:"partitions"`
+	Config map[string]string `json:"configuration" yaml:"configuration"`
+}
+
 // NewTopicCommand returns the Cobra command for Kafka topic.
 func NewTopicCommand(prerunner pcmd.PreRunner, config *v2.Config, logger *log.Logger, clientID string) *cobra.Command {
 	command := &cobra.Command{
@@ -444,30 +460,7 @@ func printHumanDescribe(cmd *cobra.Command, resp *kafkav1.TopicDescription) erro
 	var partitions [][]string
 	titleRow := []string{"Topic", "Partition", "Leader", "Replicas", "ISR"}
 	for _, partition := range resp.Partitions {
-		var replicas []uint32
-		for _, replica := range partition.Replicas {
-			replicas = append(replicas, replica.Id)
-		}
-
-		var isr []uint32
-		for _, replica := range partition.Isr {
-			isr = append(isr, replica.Id)
-		}
-
-		record := &struct{
-			Topic string
-			Partition uint32
-			Leader uint32
-			Replicas []uint32
-			ISR []uint32
-		}{
-			resp.Name,
-			partition.Partition,
-			partition.Leader.Id,
-			replicas,
-			isr,
-		}
-		partitions = append(partitions, printer.ToRow(record, titleRow))
+		partitions = append(partitions, printer.ToRow(getPartitionDisplay(partition, resp.Name), titleRow))
 	}
 
 	printer.RenderCollectionTable(partitions, titleRow)
@@ -491,48 +484,15 @@ func printHumanDescribe(cmd *cobra.Command, resp *kafkav1.TopicDescription) erro
 }
 
 func printStructuredDescribe(cmd *cobra.Command, resp *kafkav1.TopicDescription, format string) error {
-	type Partition struct {
-		Topic string `json:"topic" yaml:"topic"`
-		Partition uint32 `json:"partition" yaml:"partition"`
-		Leader uint32 `json:"leader" yaml:"leader"`
-		Replicas []uint32 `json:"replicas" yaml:"replicas"`
-		ISR []uint32 `json:"isr" yaml:"isr"`
-	}
 
-	type StructuredDisplay struct {
-		TopicName string `json:"topic_name" yaml:"topic_name"`
-		PartitionCount int `json:"partition_count" yaml:"partition_count"`
-		ReplicationFactor int `json:"replication_factor" yaml:"replication_factor"`
-		Partitions []Partition `json:"partitions" yaml:"partitions"`
-		Config map[string]string `json:"configuration" yaml:"configuration"`
-	}
-
-	structuredDisplay := &StructuredDisplay{Config: make(map[string]string)}
+	structuredDisplay := &structuredDisplay{Config: make(map[string]string)}
 	structuredDisplay.TopicName = resp.Name
 	structuredDisplay.PartitionCount = len(resp.Partitions)
 	structuredDisplay.ReplicationFactor = len(resp.Partitions[0].Replicas)
 
-	var partitionList []Partition
+	var partitionList []partitionDisplay
 	for _, partition := range resp.Partitions {
-		var replicas []uint32
-		for _, replica := range partition.Replicas {
-			replicas = append(replicas, replica.Id)
-		}
-
-		var isr []uint32
-		for _, replica := range partition.Isr {
-			isr = append(isr, replica.Id)
-		}
-
-		record := Partition{
-			resp.Name,
-			partition.Partition,
-			partition.Leader.Id,
-			replicas,
-			isr,
-		}
-
-		partitionList = append(partitionList, record)
+		partitionList = append(partitionList, *getPartitionDisplay(partition, resp.Name))
 	}
 	structuredDisplay.Partitions = partitionList
 
@@ -541,4 +501,24 @@ func printStructuredDescribe(cmd *cobra.Command, resp *kafkav1.TopicDescription,
 	}
 
 	return output.StructuredOutput(format, structuredDisplay)
+}
+
+func getPartitionDisplay(partition *kafkav1.TopicPartitionInfo, topicName string) *partitionDisplay {
+	var replicas []uint32
+	for _, replica := range partition.Replicas {
+		replicas = append(replicas, replica.Id)
+	}
+
+	var isr []uint32
+	for _, replica := range partition.Isr {
+		isr = append(isr, replica.Id)
+	}
+
+	return &partitionDisplay{
+		Topic:     topicName,
+		Partition: partition.Partition,
+		Leader:    partition.Leader.Id,
+		Replicas:  replicas,
+		ISR:       isr,
+	}
 }
