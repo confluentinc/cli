@@ -222,7 +222,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	if outputOption == output.Human.String() {
 		return printHumanDescribe(cmd, connector)
 	} else {
-		return printStructuredDescribe(cmd, connector, outputOption)
+		return printStructuredDescribe(connector, outputOption)
 	}
 }
 
@@ -339,7 +339,7 @@ func printHumanDescribe(cmd *cobra.Command, connector *connectv1.ConnectorExpans
 	_ = printer.RenderTableOut(data, listFields, describeRenames, os.Stdout)
 	pcmd.Println(cmd, "\n\nTask Level Details")
 	var tasks [][]string
-	titleRow := []string{"Task_ID", "State"}
+	titleRow := []string{"TaskId", "State"}
 	for _, task := range connector.Status.Tasks {
 		tasks = append(tasks, printer.ToRow(&taskDescribeDisplay{
 			task.Id,
@@ -360,8 +360,7 @@ func printHumanDescribe(cmd *cobra.Command, connector *connectv1.ConnectorExpans
 	return nil
 }
 
-func printStructuredDescribe(cmd *cobra.Command, connector *connectv1.ConnectorExpansion, format string) error {
-
+func printStructuredDescribe(connector *connectv1.ConnectorExpansion, format string) error {
 	structuredDisplay := &structuredDescribeDisplay{
 		Connector: &connectorDescribeDisplay{
 			Name:   connector.Status.Name,
