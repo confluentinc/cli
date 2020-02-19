@@ -8,9 +8,9 @@ Connector Details
 
 
 Task Level Details
-  Task_ID |  State   
-+---------+---------+
-        1 | Running  
+  TaskId |  State   
++--------+---------+
+       1 | Running  
 
 
 Configuration Details
