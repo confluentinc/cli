@@ -25,6 +25,21 @@ type connectorDescribeDisplay struct {
 	Type   string `json:"type" yaml:"type"`
 }
 
+type taskDescribeDisplay struct {
+	TaskId int32 `json:"task_id" yaml:"task_id"`
+	State  string `json:"state" yaml:"state"`
+}
+type configDescribeDisplay struct {
+	Config string `json:"config" yaml:"config"`
+	Value  string `json:"value" yaml:"value"`
+}
+
+type structuredDescribeDisplay struct {
+	Connector *connectorDescribeDisplay `json:"connector" yaml:"connector"`
+	Tasks     []taskDescribeDisplay `json:"tasks" yaml:"task"`
+	Configs   []configDescribeDisplay `json:"configs" yaml:"configs"`
+}
+
 var (
 	describeRenames      = map[string]string{}
 	listFields           = []string{"ID", "Name", "Status", "Type"}
@@ -326,65 +341,45 @@ func printHumanDescribe(cmd *cobra.Command, connector *connectv1.ConnectorExpans
 	var tasks [][]string
 	titleRow := []string{"Task_ID", "State"}
 	for _, task := range connector.Status.Tasks {
-		record := &struct {
-			Task_ID int32
-			State   string
-		}{
+		tasks = append(tasks, printer.ToRow(&taskDescribeDisplay{
 			task.Id,
 			task.State,
-		}
-		tasks = append(tasks, printer.ToRow(record, titleRow))
+		}, titleRow))
 	}
 	printer.RenderCollectionTable(tasks, titleRow)
 	pcmd.Println(cmd, "\n\nConfiguration Details")
 	var configs [][]string
 	titleRow = []string{"Configuration", "Value"}
 	for name, value := range connector.Info.Config {
-		record := &struct {
-			Configuration string
-			Value         string
-		}{
+		configs = append(configs, printer.ToRow(&configDescribeDisplay{
 			name,
 			value,
-		}
-		configs = append(configs, printer.ToRow(record, titleRow))
+		}, titleRow))
 	}
 	printer.RenderCollectionTable(configs, titleRow)
 	return nil
 }
 
 func printStructuredDescribe(cmd *cobra.Command, connector *connectv1.ConnectorExpansion, format string) error {
-	type Task struct {
-		TaskId int32 `json:"task_id" yaml:"task_id"`
-		State  string `json:"state" yaml:"state"`
-	}
-	type Config struct {
-		Config string `json:"config" yaml:"config"`
-		Value  string `json:"value" yaml:"value"`
-	}
-	type StructuredDisplay struct {
-		Connector *connectorDescribeDisplay `json:"connector" yaml:"connector"`
-		Tasks     []Task `json:"tasks" yaml:"task"`
-		Configs   []Config `json:"configs" yaml:"configs"`
-	}
-	structuredDisplay := &StructuredDisplay{
+
+	structuredDisplay := &structuredDescribeDisplay{
 		Connector: &connectorDescribeDisplay{
 			Name:   connector.Status.Name,
 			ID:     connector.Id.Id,
 			Status: connector.Status.Connector.State,
 			Type:   connector.Info.Type,
 		},
-		Tasks:     []Task{},
-		Configs:   []Config{},
+		Tasks:     []taskDescribeDisplay{},
+		Configs:   []configDescribeDisplay{},
 	}
 	for _, task := range connector.Status.Tasks {
-		structuredDisplay.Tasks = append(structuredDisplay.Tasks, Task{
+		structuredDisplay.Tasks = append(structuredDisplay.Tasks, taskDescribeDisplay{
 			TaskId: task.Id,
 			State:  task.State,
 		})
 	}
 	for name, value := range connector.Info.Config {
-		structuredDisplay.Configs = append(structuredDisplay.Configs, Config{
+		structuredDisplay.Configs = append(structuredDisplay.Configs, configDescribeDisplay{
 			Config: name,
 			Value:  value,
 		})

@@ -33,7 +33,7 @@ type authenticatedTopicCommand struct {
 	clientID string
 }
 
-type partitionDisplay struct {
+type partitionDescribeDisplay struct {
 	Topic string `json:"topic" yaml:"topic"`
 	Partition uint32 `json:"partition" yaml:"partition"`
 	Leader uint32 `json:"leader" yaml:"leader"`
@@ -41,12 +41,12 @@ type partitionDisplay struct {
 	ISR []uint32 `json:"isr" yaml:"isr"`
 }
 
-type structuredDisplay struct {
-	TopicName string `json:"topic_name" yaml:"topic_name"`
-	PartitionCount int `json:"partition_count" yaml:"partition_count"`
-	ReplicationFactor int `json:"replication_factor" yaml:"replication_factor"`
-	Partitions []partitionDisplay `json:"partitions" yaml:"partitions"`
-	Config map[string]string `json:"configuration" yaml:"configuration"`
+type structuredDescribeDisplay struct {
+	TopicName string                      `json:"topic_name" yaml:"topic_name"`
+	PartitionCount int                    `json:"partition_count" yaml:"partition_count"`
+	ReplicationFactor int                 `json:"replication_factor" yaml:"replication_factor"`
+	Partitions []partitionDescribeDisplay `json:"partitions" yaml:"partitions"`
+	Config map[string]string              `json:"configuration" yaml:"configuration"`
 }
 
 // NewTopicCommand returns the Cobra command for Kafka topic.
@@ -485,12 +485,12 @@ func printHumanDescribe(cmd *cobra.Command, resp *kafkav1.TopicDescription) erro
 
 func printStructuredDescribe(cmd *cobra.Command, resp *kafkav1.TopicDescription, format string) error {
 
-	structuredDisplay := &structuredDisplay{Config: make(map[string]string)}
+	structuredDisplay := &structuredDescribeDisplay{Config: make(map[string]string)}
 	structuredDisplay.TopicName = resp.Name
 	structuredDisplay.PartitionCount = len(resp.Partitions)
 	structuredDisplay.ReplicationFactor = len(resp.Partitions[0].Replicas)
 
-	var partitionList []partitionDisplay
+	var partitionList []partitionDescribeDisplay
 	for _, partition := range resp.Partitions {
 		partitionList = append(partitionList, *getPartitionDisplay(partition, resp.Name))
 	}
@@ -503,7 +503,7 @@ func printStructuredDescribe(cmd *cobra.Command, resp *kafkav1.TopicDescription,
 	return output.StructuredOutput(format, structuredDisplay)
 }
 
-func getPartitionDisplay(partition *kafkav1.TopicPartitionInfo, topicName string) *partitionDisplay {
+func getPartitionDisplay(partition *kafkav1.TopicPartitionInfo, topicName string) *partitionDescribeDisplay {
 	var replicas []uint32
 	for _, replica := range partition.Replicas {
 		replicas = append(replicas, replica.Id)
@@ -514,7 +514,7 @@ func getPartitionDisplay(partition *kafkav1.TopicPartitionInfo, topicName string
 		isr = append(isr, replica.Id)
 	}
 
-	return &partitionDisplay{
+	return &partitionDescribeDisplay{
 		Topic:     topicName,
 		Partition: partition.Partition,
 		Leader:    partition.Leader.Id,
