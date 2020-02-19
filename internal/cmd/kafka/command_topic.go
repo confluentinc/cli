@@ -46,7 +46,7 @@ type structuredDescribeDisplay struct {
 	PartitionCount int                    `json:"partition_count" yaml:"partition_count"`
 	ReplicationFactor int                 `json:"replication_factor" yaml:"replication_factor"`
 	Partitions []partitionDescribeDisplay `json:"partitions" yaml:"partitions"`
-	Config map[string]string              `json:"configuration" yaml:"configuration"`
+	Config map[string]string              `json:"config" yaml:"config"`
 }
 
 // NewTopicCommand returns the Cobra command for Kafka topic.
