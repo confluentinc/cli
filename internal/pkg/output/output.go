@@ -42,7 +42,7 @@ func (o Format) String() string {
 
 type ListOutputWriter interface {
 	AddElement(e interface{})
-	Out()   error
+	Out() error
 	GetOutputFormat() Format
 	StableSort()
 }

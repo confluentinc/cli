@@ -12,11 +12,10 @@ import (
 )
 
 var (
-	regionListFields = []string{"CloudId", "CloudName", "RegionId", "RegionName"}
-	regionListHumanLabels = []string{"CloudId", "CloudName", "RegionId", "RegionName"}
+	regionListFields           = []string{"CloudId", "CloudName", "RegionId", "RegionName"}
+	regionListHumanLabels      = []string{"CloudId", "CloudName", "RegionId", "RegionName"}
 	regionListStructuredLabels = []string{"cloud_id", "cloud_name", "region_id", "region_name"}
 )
-
 
 type regionCommand struct {
 	*pcmd.AuthenticatedCLICommand

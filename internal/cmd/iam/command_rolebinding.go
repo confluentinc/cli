@@ -260,7 +260,7 @@ func (c *rolebindingCommand) listPrincipalResources(cmd *cobra.Command) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	
+
 	for principalName, rolesResourcePatterns := range principalsRolesResourcePatterns {
 		for roleName, resourcePatterns := range rolesResourcePatterns {
 			if role == "*" || roleName == role {
@@ -376,7 +376,7 @@ func (c *rolebindingCommand) listRolePrincipals(cmd *cobra.Command) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	for _, principal := range principals {
-		displayStruct := &struct{
+		displayStruct := &struct {
 			Principal string
 		}{
 			Principal: principal,

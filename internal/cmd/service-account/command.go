@@ -22,11 +22,11 @@ type command struct {
 }
 
 var (
-	listFields                = []string{"Id", "ServiceName", "ServiceDescription"}
-	listHumanLabels           = []string{"Id", "Name", "Description"}
-	listStructuredLabels      = []string{"id", "name", "description"}
-	describeFields            = []string{"Id", "ServiceName", "ServiceDescription"}
-	describeRenames           = map[string]string{"ServiceName": "Name", "ServiceDescription": "Description"}
+	listFields           = []string{"Id", "ServiceName", "ServiceDescription"}
+	listHumanLabels      = []string{"Id", "Name", "Description"}
+	listStructuredLabels = []string{"id", "name", "description"}
+	describeFields       = []string{"Id", "ServiceName", "ServiceDescription"}
+	describeRenames      = map[string]string{"ServiceName": "Name", "ServiceDescription": "Description"}
 )
 
 const nameLength = 32

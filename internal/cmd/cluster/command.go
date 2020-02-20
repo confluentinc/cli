@@ -143,7 +143,7 @@ func check(err error) {
 
 func printDescribe(cmd *cobra.Command, meta *ScopedId, format string) error {
 	type StructuredDisplay struct {
-		Crn   string `json:"crn" yaml:"crn"`
+		Crn   string    `json:"crn" yaml:"crn"`
 		Scope []Element `json:"scope" yaml:"scope"`
 	}
 	structuredDisplay := &StructuredDisplay{}

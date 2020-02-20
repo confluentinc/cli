@@ -109,9 +109,7 @@ func TestLoginSuccess(t *testing.T) {
 	}{
 		{
 			cliName: "ccloud",
-			args: []string{
-
-			},
+			args:    []string{},
 		},
 		{
 			cliName: "confluent",

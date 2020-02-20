@@ -90,6 +90,8 @@ github.com/confluentinc/go-printer v0.10.0 h1:JLJOeSdJL6A0YxAK24GSuoC52sPQP/chow
 github.com/confluentinc/go-printer v0.10.0/go.mod h1:bOK/pPNm4ao7bZIcRnGPGca1B64nW+lApFXHZEZ0PcM=
 github.com/confluentinc/go-printer v0.12.0 h1:rqC8fKAlp6qXDEiSuQ0utM9L9CAYE4Uu7knjXMLwn5s=
 github.com/confluentinc/go-printer v0.12.0/go.mod h1:bOK/pPNm4ao7bZIcRnGPGca1B64nW+lApFXHZEZ0PcM=
+github.com/confluentinc/go-printer v0.13.0 h1:zgmoYZPQ51xjOPSW4G+QimPcoZEAflCb4UsgvlKA544=
+github.com/confluentinc/go-printer v0.13.0/go.mod h1:bOK/pPNm4ao7bZIcRnGPGca1B64nW+lApFXHZEZ0PcM=
 github.com/confluentinc/mds-sdk-go v0.0.0-20191015231442-c29a09dbc1e9 h1:0zJANjZFKXs3Jcpiv1XKf8pKVxXnw2hyS8VIGuTvNpw=
 github.com/confluentinc/mds-sdk-go v0.0.0-20191015231442-c29a09dbc1e9/go.mod h1:FzRb4kXvSQ598O/zEHfP2tXLZ64QLuHPUu/LzejcaOw=
 github.com/confluentinc/mds-sdk-go v0.0.0-20200110060608-0b51635c4e0a h1:DssLqlwhT+NC21yNXzPKT9w6/H9djkG8jIjcszbclE8=

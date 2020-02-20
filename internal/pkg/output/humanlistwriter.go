@@ -19,7 +19,6 @@ func (o *HumanListWriter) AddElement(e interface{}) {
 	o.data = append(o.data, printer.ToRow(e, o.listFields))
 }
 
-
 func (o *HumanListWriter) Out() error {
 	printer.RenderCollectionTableOut(o.data, o.listLabels, o.writer)
 	return nil

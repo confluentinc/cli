@@ -17,11 +17,11 @@ import (
 )
 
 var (
-	listFields      = []string{"Id", "Name", "ServiceProvider", "Region", "Durability", "Status"}
-	listHumanLabels      = []string{"Id", "Name", "Provider", "Region", "Durability", "Status"}
+	listFields                = []string{"Id", "Name", "ServiceProvider", "Region", "Durability", "Status"}
+	listHumanLabels           = []string{"Id", "Name", "Provider", "Region", "Durability", "Status"}
 	listStructuredLabels      = []string{"id", "name", "provider", "region", "durability", "status"}
-	describeFields  = []string{"Id", "Name", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "ApiEndpoint"}
-	describeHumanRenames = map[string]string{"NetworkIngress": "Ingress", "NetworkEgress": "Egress", "ServiceProvider": "Provider"}
+	describeFields            = []string{"Id", "Name", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "ApiEndpoint"}
+	describeHumanRenames      = map[string]string{"NetworkIngress": "Ingress", "NetworkEgress": "Egress", "ServiceProvider": "Provider"}
 	describeStructuredRenames = map[string]string{"NetworkIngress": "ingress", "NetworkEgress": "egress", "ServiceProvider": "provider"}
 )
 

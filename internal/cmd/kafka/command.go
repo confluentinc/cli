@@ -24,11 +24,10 @@ func New(prerunner pcmd.PreRunner, config *v2.Config, logger *log.Logger, client
 		},
 		config, prerunner)
 	cmd := &command{
-		CLICommand:
-		cliCmd,
-		prerunner: prerunner,
-		logger:    logger,
-		clientID:  clientID,
+		CLICommand: cliCmd,
+		prerunner:  prerunner,
+		logger:     logger,
+		clientID:   clientID,
 	}
 	cmd.init()
 	return cmd.Command

@@ -31,11 +31,11 @@ type describeDisplay struct {
 }
 
 var (
-	describeLabels  = []string{"Name", "ID", "URL", "Used", "Available", "Compatibility", "Mode", "ServiceProvider"}
-	describeHumanRenames = map[string]string{"ID": "Cluster ID", "URL": "Endpoint URL", "Used": "Used Schemas", "Available": "Available Schemas", "Compatibility": "Global Compatibility", "ServiceProvider": "Service Provider"}
+	describeLabels            = []string{"Name", "ID", "URL", "Used", "Available", "Compatibility", "Mode", "ServiceProvider"}
+	describeHumanRenames      = map[string]string{"ID": "Cluster ID", "URL": "Endpoint URL", "Used": "Used Schemas", "Available": "Available Schemas", "Compatibility": "Global Compatibility", "ServiceProvider": "Service Provider"}
 	describeStructuredRenames = map[string]string{"Name": "name", "ID": "cluster_id", "URL": "endpoint_url", "Used": "used_schemas", "Available": "available_schemas", "Compatibility": "global_compatibility", "Mode": "mode", "ServiceProvider": "service_provider"}
-	enableLabels    = []string{"Id", "Endpoint"}
-	enableRenames   = map[string]string{"ID": "Cluster ID", "URL": "Endpoint URL"}
+	enableLabels              = []string{"Id", "Endpoint"}
+	enableRenames             = map[string]string{"ID": "Cluster ID", "URL": "Endpoint URL"}
 )
 
 type clusterCommand struct {
