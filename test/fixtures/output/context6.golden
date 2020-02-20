@@ -13,4 +13,3 @@ kafka_clusters:
 name: my-context
 platform: boot-test.com
 schema_registry_clusters: {}
-
