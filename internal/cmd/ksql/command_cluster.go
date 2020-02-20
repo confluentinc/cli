@@ -3,12 +3,10 @@ package ksql
 import (
 	"context"
 	"fmt"
-	"os"
 	"strconv"
 
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	ksqlv1 "github.com/confluentinc/ccloudapis/ksql/v1"
-	"github.com/confluentinc/go-printer"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/acl"
@@ -67,6 +65,7 @@ func (c *clusterCommand) init() {
 	createCmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	createCmd.Flags().Int32("servers", 1, "Number of servers in the cluster.")
 	createCmd.Flags().Int32("storage", 50, "Amount of data storage available in GB.")
+	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	check(createCmd.MarkFlagRequired("storage"))
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
@@ -140,7 +139,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	return printer.RenderTableOut(cluster, describeFields, describeHumanRenames, os.Stdout)
+	return output.DescribeObject(cmd, cluster, describeFields, describeHumanRenames, describeStructuredRenames)
 }
 
 func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {

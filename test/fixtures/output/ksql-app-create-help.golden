@@ -7,6 +7,7 @@ Flags:
       --cluster string   Kafka cluster ID.
       --servers int32    Number of servers in the cluster. (default 1)
       --storage int32    Amount of data storage available in GB. (default 50)
+  -o, --output string    Specify the output format as "human", "json" or "yaml". (default "human")
   -h, --help             help for create
 
 Global Flags:
