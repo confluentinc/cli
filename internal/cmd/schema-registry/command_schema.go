@@ -12,6 +12,9 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/output"
+
 )
 
 type schemaCommand struct {
@@ -68,6 +71,7 @@ Where schemafilepath may include these contents:
 	_ = cmd.MarkFlagRequired("schema")
 	cmd.Flags().String("type", "", "The schema type.")
 	cmd.Flags().String("refs", "", "The path to the references file.")
+	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
@@ -156,7 +160,17 @@ func (c *schemaCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	pcmd.Printf(cmd, "Successfully registered schema with ID: %v \n", response.Id)
+	outputFormat, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	if outputFormat == output.Human.String() {
+		pcmd.Printf(cmd, "Successfully registered schema with ID: %v \n", response.Id)
+	} else {
+		return output.StructuredOutput(outputFormat, &struct {
+			Id int32 `json:"id" yaml:"id"`
+		}{response.Id})
+	}
 	return nil
 }
 

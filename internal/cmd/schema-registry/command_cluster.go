@@ -2,21 +2,19 @@ package schema_registry
 
 import (
 	"context"
-	"github.com/confluentinc/cli/internal/pkg/output"
-	"os"
 	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
 
 	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
-	"github.com/confluentinc/go-printer"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 type describeDisplay struct {
@@ -35,7 +33,8 @@ var (
 	describeHumanRenames      = map[string]string{"ID": "Cluster ID", "URL": "Endpoint URL", "Used": "Used Schemas", "Available": "Available Schemas", "Compatibility": "Global Compatibility", "ServiceProvider": "Service Provider"}
 	describeStructuredRenames = map[string]string{"Name": "name", "ID": "cluster_id", "URL": "endpoint_url", "Used": "used_schemas", "Available": "available_schemas", "Compatibility": "global_compatibility", "Mode": "mode", "ServiceProvider": "service_provider"}
 	enableLabels              = []string{"Id", "Endpoint"}
-	enableRenames             = map[string]string{"ID": "Cluster ID", "URL": "Endpoint URL"}
+	enableHumanRenames        = map[string]string{"ID": "Cluster ID", "URL": "Endpoint URL"}
+	enableStructuredRenames   = map[string]string{"ID": "cluster_id", "URL": "endpoint_url"}
 )
 
 type clusterCommand struct {
@@ -72,6 +71,7 @@ func (c *clusterCommand) init() {
 	_ = createCmd.MarkFlagRequired("cloud")
 	createCmd.Flags().String("geo", "", "Either 'us', 'eu', or 'apac'.")
 	_ = createCmd.MarkFlagRequired("geo")
+	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 	describeCmd := &cobra.Command{
@@ -134,9 +134,9 @@ func (c *clusterCommand) enable(cmd *cobra.Command, args []string) error {
 			// Propagate CreateSchemaRegistryCluster error.
 			return errors.HandleCommon(err, cmd)
 		}
-		_ = printer.RenderTableOut(cluster, enableLabels, enableRenames, os.Stdout)
+		_ = output.DescribeObject(cmd, cluster, enableLabels, enableHumanRenames, enableStructuredRenames)
 	} else {
-		_ = printer.RenderTableOut(newCluster, enableLabels, enableRenames, os.Stdout)
+		_ = output.DescribeObject(cmd, newCluster, enableLabels, enableHumanRenames, enableStructuredRenames)
 	}
 	return nil
 }
