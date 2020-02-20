@@ -249,10 +249,10 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	if outputFormat == output.Human.String() {
-		pcmd.Printf(cmd, "Created connector %s %s", connector.Name, connectorID.Id.Id)
+		pcmd.Printf(cmd, "Created connector %s %s\n", connector.Name, connectorID.Id.Id)
 	} else {
 		return output.StructuredOutput(outputFormat, &struct {
-			ConnectorName string `json:"connector_name" yaml:"connector_name"`
+			ConnectorName string `json:"name" yaml:"name"`
 			Id            string `json:"id" yaml:"id"`
 		}{
 			ConnectorName: connector.Name,

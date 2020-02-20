@@ -80,6 +80,11 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 		{args: "api-key list --resource lkc-cool1", fixture: "apikey27.golden"},
 		{args: "api-key list --resource lkc-cool1 --service-account-id 99", fixture: "apikey26.golden"},
 
+		// create json yaml output
+		{args: "api-key create --description human-output --resource lkc-other1", fixture: "apikey31.golden"},
+		{args: "api-key create --description json-output --resource lkc-other1 -o json", fixture: "apikey32.golden"},
+		{args: "api-key create --description yaml-output --resource lkc-other1 -o yaml", fixture: "apikey33.golden"},
+
 		// store: error handling
 		{name: "error if storing unknown api key", args: "api-key store UNKNOWN @test/fixtures/input/UIAPISECRET100.txt --resource lkc-cool1", fixture: "apikey15.golden"},
 		{name: "error if storing api key with existing secret", args: "api-key store UIAPIKEY100 NEWSECRET --resource lkc-cool1", fixture: "apikey16.golden"},
