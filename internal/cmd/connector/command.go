@@ -26,7 +26,7 @@ type connectorDescribeDisplay struct {
 }
 
 type taskDescribeDisplay struct {
-	TaskId int32 `json:"task_id" yaml:"task_id"`
+	TaskId int32  `json:"task_id" yaml:"task_id"`
 	State  string `json:"state" yaml:"state"`
 }
 type configDescribeDisplay struct {
@@ -36,8 +36,8 @@ type configDescribeDisplay struct {
 
 type structuredDescribeDisplay struct {
 	Connector *connectorDescribeDisplay `json:"connector" yaml:"connector"`
-	Tasks     []taskDescribeDisplay `json:"tasks" yaml:"task"`
-	Configs   []configDescribeDisplay `json:"configs" yaml:"configs"`
+	Tasks     []taskDescribeDisplay     `json:"tasks" yaml:"task"`
+	Configs   []configDescribeDisplay   `json:"configs" yaml:"configs"`
 }
 
 var (
@@ -214,7 +214,6 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-
 	outputOption, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -368,8 +367,8 @@ func printStructuredDescribe(connector *connectv1.ConnectorExpansion, format str
 			Status: connector.Status.Connector.State,
 			Type:   connector.Info.Type,
 		},
-		Tasks:     []taskDescribeDisplay{},
-		Configs:   []configDescribeDisplay{},
+		Tasks:   []taskDescribeDisplay{},
+		Configs: []configDescribeDisplay{},
 	}
 	for _, task := range connector.Status.Tasks {
 		structuredDisplay.Tasks = append(structuredDisplay.Tasks, taskDescribeDisplay{

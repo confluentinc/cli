@@ -23,7 +23,7 @@ func LoadAndMigrate(latestCfg *v2.Config) (*v2.Config, error) {
 	return migrateToLatest(cfg)
 }
 
-// loadLatestNoErr loads the config file into memory using the latest config version that doesn't result in an error. 
+// loadLatestNoErr loads the config file into memory using the latest config version that doesn't result in an error.
 // If the earliest config version is reached and there's still an error, an error will be returned.
 func loadLatestNoErr(latestCfg *v2.Config, cfgIndex int) (config.Config, error) {
 	cfg := cfgVersions[cfgIndex]

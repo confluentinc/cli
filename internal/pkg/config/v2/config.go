@@ -276,7 +276,7 @@ func (c *Config) APIName() string {
 	return name
 }
 
-// Context returns the user specified context if it exists, 
+// Context returns the user specified context if it exists,
 // the current Context, or nil if there's no context set.
 func (c *Config) Context() *Context {
 	return c.Contexts[c.CurrentContext]

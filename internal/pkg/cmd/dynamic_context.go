@@ -108,7 +108,7 @@ func (d *DynamicContext) UseAPIKey(cmd *cobra.Command, apiKey string, clusterId 
 }
 
 // SchemaRegistryCluster returns the SchemaRegistryCluster of the Context,
-// or an empty SchemaRegistryCluster if there is none set, 
+// or an empty SchemaRegistryCluster if there is none set,
 // or an ErrNotLoggedIn if the user is not logged in.
 func (d *DynamicContext) SchemaRegistryCluster(cmd *cobra.Command) (*v2.SchemaRegistryCluster, error) {
 	/*

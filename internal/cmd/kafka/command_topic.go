@@ -34,19 +34,19 @@ type authenticatedTopicCommand struct {
 }
 
 type partitionDescribeDisplay struct {
-	Topic string `json:"topic" yaml:"topic"`
-	Partition uint32 `json:"partition" yaml:"partition"`
-	Leader uint32 `json:"leader" yaml:"leader"`
-	Replicas []uint32 `json:"replicas" yaml:"replicas"`
-	ISR []uint32 `json:"isr" yaml:"isr"`
+	Topic     string   `json:"topic" yaml:"topic"`
+	Partition uint32   `json:"partition" yaml:"partition"`
+	Leader    uint32   `json:"leader" yaml:"leader"`
+	Replicas  []uint32 `json:"replicas" yaml:"replicas"`
+	ISR       []uint32 `json:"isr" yaml:"isr"`
 }
 
 type structuredDescribeDisplay struct {
-	TopicName string                      `json:"topic_name" yaml:"topic_name"`
-	PartitionCount int                    `json:"partition_count" yaml:"partition_count"`
-	ReplicationFactor int                 `json:"replication_factor" yaml:"replication_factor"`
-	Partitions []partitionDescribeDisplay `json:"partitions" yaml:"partitions"`
-	Config map[string]string              `json:"config" yaml:"config"`
+	TopicName         string                     `json:"topic_name" yaml:"topic_name"`
+	PartitionCount    int                        `json:"partition_count" yaml:"partition_count"`
+	ReplicationFactor int                        `json:"replication_factor" yaml:"replication_factor"`
+	Partitions        []partitionDescribeDisplay `json:"partitions" yaml:"partitions"`
+	Config            map[string]string          `json:"config" yaml:"config"`
 }
 
 // NewTopicCommand returns the Cobra command for Kafka topic.

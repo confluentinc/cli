@@ -182,7 +182,7 @@ func (c *subjectCommand) describe(cmd *cobra.Command, args []string) error {
 	if outputOption == output.Human.String() {
 		PrintVersions(versions)
 	} else {
-		structuredOutput := &struct{
+		structuredOutput := &struct {
 			Version []int32
 		}{
 			versions,

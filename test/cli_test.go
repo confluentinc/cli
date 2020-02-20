@@ -432,10 +432,9 @@ func parseSsoAuthUrlFromOutput(output []byte) string {
 }
 
 func (s *CLITestSuite) ssoAuthenticateViaBrowser(authUrl string) string {
-	opts := append(chromedp.DefaultExecAllocatorOptions[:],
-		// uncomment to disable headless mode and see the actual browser
-		//chromedp.Flag("headless", false),
-	)
+	opts := append(chromedp.DefaultExecAllocatorOptions[:])// uncomment to disable headless mode and see the actual browser
+	//chromedp.Flag("headless", false),
+
 	allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
 	defer cancel()
 	taskCtx, cancel := chromedp.NewContext(allocCtx)
@@ -445,7 +444,7 @@ func (s *CLITestSuite) ssoAuthenticateViaBrowser(authUrl string) string {
 	tries := 0
 	for tries < 5 {
 		if err = chromedp.Run(taskCtx); err != nil {
-			fmt.Println("Caught error when starting chrome. Will retry. Error was: "+err.Error())
+			fmt.Println("Caught error when starting chrome. Will retry. Error was: " + err.Error())
 			tries += 1
 		} else {
 			fmt.Println("Successfully started chrome")
@@ -757,12 +756,12 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 			err := utilv1.UnmarshalJSON(r.Body, req)
 			require.NoError(t, err)
 			account := &orgv1.Account{
-				Id:                   "a-5555",
-				Name:                 req.Account.Name,
-				OrganizationId:       0,
+				Id:             "a-5555",
+				Name:           req.Account.Name,
+				OrganizationId: 0,
 			}
 			b, err := utilv1.MarshalJSONToBytes(&orgv1.CreateAccountReply{
-				Account:              account,
+				Account: account,
 			})
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(b))
@@ -778,12 +777,12 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 			handleKafkaClusterCreate(t, kafkaAPIURL)(w, r)
 		} else if r.Method == "GET" {
 			cluster := kafkav1.KafkaCluster{
-				Id:                   "lkc-123",
-				Name:                 "abc",
-				Durability:           0,
-				Status:               0,
-				Region:               "us-central1",
-				ServiceProvider:      "gcp",
+				Id:              "lkc-123",
+				Name:            "abc",
+				Durability:      0,
+				Status:          0,
+				Region:          "us-central1",
+				ServiceProvider: "gcp",
 			}
 			b, err := utilv1.MarshalJSONToBytes(&kafkav1.GetKafkaClustersReply{
 				Clusters: []*kafkav1.KafkaCluster{&cluster},
@@ -817,8 +816,8 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 	router.HandleFunc("/api/service_accounts", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
 			serviceAccount := &orgv1.User{
-				Id:          12345,
-				ServiceName: "service_account",
+				Id:                 12345,
+				ServiceName:        "service_account",
 				ServiceDescription: "at your service.",
 			}
 			listReply, err := utilv1.MarshalJSONToBytes(&orgv1.GetServiceAccountsReply{
@@ -874,49 +873,48 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 	router.HandleFunc("/api/env_metadata", func(w http.ResponseWriter, r *http.Request) {
 		clouds := []*kafkav1.Cloud{
 			{
-				Id: "gcp",
+				Id:   "gcp",
 				Name: "Google Cloud Platform",
 				Regions: []*kafkav1.Region{
 					{
-						Id: "asia-southeast1",
-						Name: "asia-southeast1 (Singapore)",
+						Id:            "asia-southeast1",
+						Name:          "asia-southeast1 (Singapore)",
 						IsSchedulable: true,
 					},
 					{
-						Id : "asia-east2",
-						Name: "asia-east2 (Hong Kong)",
+						Id:            "asia-east2",
+						Name:          "asia-east2 (Hong Kong)",
 						IsSchedulable: true,
 					},
 				},
 			},
 			{
-				Id: "aws",
+				Id:   "aws",
 				Name: "Amazon Web Services",
 				Regions: []*kafkav1.Region{
 					{
-						Id: "ap-northeast-1",
-						Name: "ap-northeast-1 (Tokyo)",
+						Id:            "ap-northeast-1",
+						Name:          "ap-northeast-1 (Tokyo)",
 						IsSchedulable: false,
 					},
 					{
-						Id: "us-east-1",
-						Name: "us-east-1 (N. Virginia)",
+						Id:            "us-east-1",
+						Name:          "us-east-1 (N. Virginia)",
 						IsSchedulable: true,
 					},
 				},
 			},
 			{
-				Id: "azure",
+				Id:   "azure",
 				Name: "Azure",
 				Regions: []*kafkav1.Region{
 					{
-						Id: "southeastasia",
-						Name: "southeastasia (Singapore)",
+						Id:            "southeastasia",
+						Name:          "southeastasia (Singapore)",
 						IsSchedulable: false,
 					},
 				},
 			},
-
 		}
 		reply, err := utilv1.MarshalJSONToBytes(&kafkav1.GetEnvironmentMetadataReply{
 			Clouds: clouds,
@@ -1189,52 +1187,52 @@ func handleConnectorCatalogDescribe(t *testing.T) func(w http.ResponseWriter, r 
 			Name:       "",
 			Groups:     nil,
 			ErrorCount: 1,
-			Configs:    []*connectv1.Configs{
+			Configs: []*connectv1.Configs{
 				{
-					Value:  &connectv1.ConfigValue{
-						Name:  "kafka.api.key",
+					Value: &connectv1.ConfigValue{
+						Name:   "kafka.api.key",
 						Errors: []string{"\"kafka.api.key\" is required"},
 					},
 				},
 				{
-					Value:  &connectv1.ConfigValue{
-						Name:  "kafka.api.secret",
+					Value: &connectv1.ConfigValue{
+						Name:   "kafka.api.secret",
 						Errors: []string{"\"kafka.api.secret\" is required"},
 					},
 				},
 				{
-					Value:  &connectv1.ConfigValue{
-						Name:  "topics",
+					Value: &connectv1.ConfigValue{
+						Name:   "topics",
 						Errors: []string{"\"topics\" is required"},
 					},
 				},
 				{
-					Value:  &connectv1.ConfigValue{
-						Name:  "data.format",
+					Value: &connectv1.ConfigValue{
+						Name:   "data.format",
 						Errors: []string{"\"data.format\" is required", "Value \"null\" doesn't belong to the property's \"data.format\" enum"},
 					},
 				},
 				{
-					Value:  &connectv1.ConfigValue{
-						Name:  "gcs.credentials.config",
+					Value: &connectv1.ConfigValue{
+						Name:   "gcs.credentials.config",
 						Errors: []string{"\"gcs.credentials.config\" is required"},
 					},
 				},
 				{
-					Value:  &connectv1.ConfigValue{
-						Name:  "gcs.bucket.name",
+					Value: &connectv1.ConfigValue{
+						Name:   "gcs.bucket.name",
 						Errors: []string{"\"gcs.bucket.name\" is required"},
 					},
 				},
 				{
-					Value:  &connectv1.ConfigValue{
-						Name:  "time.interval",
+					Value: &connectv1.ConfigValue{
+						Name:   "time.interval",
 						Errors: []string{"\"data.format\" is required", "Value \"null\" doesn't belong to the property's \"time.interval\" enum"},
 					},
 				},
 				{
-					Value:  &connectv1.ConfigValue{
-						Name:  "tasks.max",
+					Value: &connectv1.ConfigValue{
+						Name:   "tasks.max",
 						Errors: []string{"\"tasks.max\" is required"},
 					},
 				},
