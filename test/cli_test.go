@@ -747,10 +747,27 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		}
 	})
 	router.HandleFunc("/api/accounts", func(w http.ResponseWriter, r *http.Request) {
-		b, err := utilv1.MarshalJSONToBytes(&orgv1.ListAccountsReply{Accounts: environments})
-		require.NoError(t, err)
-		_, err = io.WriteString(w, string(b))
-		require.NoError(t, err)
+		if r.Method == "GET" {
+			b, err := utilv1.MarshalJSONToBytes(&orgv1.ListAccountsReply{Accounts: environments})
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(b))
+			require.NoError(t, err)
+		} else if r.Method == "POST" {
+			req := &orgv1.CreateAccountRequest{}
+			err := utilv1.UnmarshalJSON(r.Body, req)
+			require.NoError(t, err)
+			account := &orgv1.Account{
+				Id:                   "a-5555",
+				Name:                 req.Account.Name,
+				OrganizationId:       0,
+			}
+			b, err := utilv1.MarshalJSONToBytes(&orgv1.CreateAccountReply{
+				Account:              account,
+			})
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(b))
+			require.NoError(t, err)
+		}
 	})
 	router.HandleFunc("/api/accounts/a-595", handleEnvironmentGet(t, "a-595"))
 	router.HandleFunc("/api/accounts/not-595", handleEnvironmentGet(t, "not-595"))

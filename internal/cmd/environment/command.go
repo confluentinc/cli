@@ -21,6 +21,9 @@ var (
 	listFields           = []string{"Id", "Name"}
 	listHumanLabels      = []string{"Id", "Name"}
 	listStructuredLabels = []string{"id", "name"}
+	createFields         = []string{"Name", "Id"}
+	createHumanLabels    = map[string]string{"Name": "Environment Name"}
+	createStructuredLabels = map[string]string{"Name": "name", "Id": "id"}
 )
 
 // New returns the Cobra command for `environment`.
@@ -54,12 +57,15 @@ func (c *command) init() {
 		Args:  cobra.ExactArgs(1),
 	})
 
-	c.AddCommand(&cobra.Command{
+	createCmd := &cobra.Command{
 		Use:   "create <name>",
 		Short: "Create a new Confluent Cloud environment.",
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
-	})
+	}
+	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	createCmd.Flags().SortFlags = false
+	c.AddCommand(createCmd)
 
 	updateCmd := &cobra.Command{
 		Use:   "update <environment-id>",
@@ -151,11 +157,11 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 func (c *command) create(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
-	_, err := c.Client.Account.Create(context.Background(), &orgv1.Account{Name: name, OrganizationId: c.State.Auth.Account.OrganizationId})
+	environment, err := c.Client.Account.Create(context.Background(), &orgv1.Account{Name: name, OrganizationId: c.State.Auth.Account.OrganizationId})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	return nil
+	return output.DescribeObject(cmd, environment, createFields, createHumanLabels, createStructuredLabels)
 }
 
 func (c *command) update(cmd *cobra.Command, args []string) error {
