@@ -3,14 +3,11 @@ package service_account
 import (
 	"context"
 	"fmt"
-	"os"
 	"strconv"
 
 	"github.com/spf13/cobra"
 
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
-	"github.com/confluentinc/go-printer"
-
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -22,11 +19,13 @@ type command struct {
 }
 
 var (
-	listFields           = []string{"Id", "ServiceName", "ServiceDescription"}
-	listHumanLabels      = []string{"Id", "Name", "Description"}
-	listStructuredLabels = []string{"id", "name", "description"}
-	describeFields       = []string{"Id", "ServiceName", "ServiceDescription"}
-	describeRenames      = map[string]string{"ServiceName": "Name", "ServiceDescription": "Description"}
+	listFields                = []string{"Id", "ServiceName", "ServiceDescription"}
+	listHumanLabels           = []string{"Id", "Name", "Description"}
+	listStructuredLabels      = []string{"id", "name", "description"}
+	describeFields            = []string{"Id", "ServiceName", "ServiceDescription"}
+	describeHumanRenames      = map[string]string{"ServiceName": "Name", "ServiceDescription": "Description"}
+	describeStructuredRenames = map[string]string{"ServiceName": "name", "ServiceDescription": "description"}
+
 )
 
 const nameLength = 32
@@ -75,6 +74,7 @@ Create a service account named ` + "``DemoServiceAccount``" + `.
 	}
 	createCmd.Flags().String("description", "", "Description of the service account.")
 	_ = createCmd.MarkFlagRequired("description")
+	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
@@ -148,8 +148,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-
-	return printer.RenderTableOut(user, describeFields, describeRenames, os.Stdout)
+	return output.DescribeObject(cmd, user, describeFields, describeHumanRenames, describeStructuredRenames)
 }
 
 func (c *command) update(cmd *cobra.Command, args []string) error {
