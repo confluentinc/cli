@@ -25,7 +25,6 @@ var (
 	describeFields            = []string{"Id", "ServiceName", "ServiceDescription"}
 	describeHumanRenames      = map[string]string{"ServiceName": "Name", "ServiceDescription": "Description"}
 	describeStructuredRenames = map[string]string{"ServiceName": "name", "ServiceDescription": "description"}
-
 )
 
 const nameLength = 32

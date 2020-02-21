@@ -256,7 +256,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 			Id            string `json:"id" yaml:"id"`
 		}{
 			ConnectorName: connector.Name,
-			Id: connectorID.Id.Id,
+			Id:            connectorID.Id.Id,
 		})
 	}
 	return nil

@@ -41,13 +41,13 @@ type command struct {
 }
 
 var (
-	listFields           = []string{"Key", "UserId", "Description", "ResourceType", "ResourceId"}
-	listHumanLabels      = []string{"Key", "Owner", "Description", "Resource Type", "Resource ID"}
-	listStructuredLabels = []string{"key", "owner", "description", "resource_type", "resource_id"}
-	createFields         = []string{"Key", "Secret"}
-	createHumanRenames   = map[string]string{"Key": "API Key"}
+	listFields              = []string{"Key", "UserId", "Description", "ResourceType", "ResourceId"}
+	listHumanLabels         = []string{"Key", "Owner", "Description", "Resource Type", "Resource ID"}
+	listStructuredLabels    = []string{"key", "owner", "description", "resource_type", "resource_id"}
+	createFields            = []string{"Key", "Secret"}
+	createHumanRenames      = map[string]string{"Key": "API Key"}
 	createStructuredRenames = map[string]string{"Key": "key", "Secret": "secret"}
-	resourceFlagName     = "resource"
+	resourceFlagName        = "resource"
 )
 
 // New returns the Cobra command for API Key.
