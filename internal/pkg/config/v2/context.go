@@ -2,7 +2,6 @@ package v2
 
 import (
 	"fmt"
-
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -56,15 +55,23 @@ func (c *Context) validateKafkaClusterConfig(cluster *v1.KafkaClusterConfig) err
 		return fmt.Errorf("cluster under context '%s' has no %s", c.Name, "id")
 	}
 	if _, ok := cluster.APIKeys[cluster.APIKey]; cluster.APIKey != "" && !ok {
-		return fmt.Errorf("current API key of cluster '%s' under context '%s' does not exist. "+
-			"Please specify a valid API key",
-			cluster.Name, c.Name)
+		cluster.APIKey = ""
+		err := c.Save()
+		if err != nil {
+			return fmt.Errorf("unable to reset invalid active API key")
+		}
 	}
-	for _, pair := range cluster.APIKeys {
+	reset := false
+	for k, pair := range cluster.APIKeys {
 		if pair.Key == "" {
-			return fmt.Errorf("an API key of a key pair of cluster '%s' under context '%s' is missing. "+
-				"Please add an API key",
-				cluster.Name, c.Name)
+			delete(cluster.APIKeys, k)
+			reset = true
+		}
+	}
+	if reset {
+		err := c.Save()
+		if err != nil {
+			return fmt.Errorf("unable to clear invalid API key pairs")
 		}
 	}
 	return nil
