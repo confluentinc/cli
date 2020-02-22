@@ -10,6 +10,9 @@ import (
 	"strings"
 
 	"github.com/confluentinc/properties"
+	"github.com/tidwall/gjson"
+	"github.com/tidwall/pretty"
+	"github.com/tidwall/sjson"
 )
 
 var dataRegex = regexp.MustCompile(DATA_PATTERN)
@@ -38,6 +41,19 @@ func findMatchTrim(original string, re *regexp.Regexp, prefix string, suffix str
 	return substring
 }
 
+func SaveConfiguration(path string, configuration *properties.Properties, addSecureConfig bool) error {
+	switch filepath.Ext(path) {
+	case ".properties":
+		return writePropertiesConfig(path, configuration, addSecureConfig)
+	case ".json":
+		return writeJSONConfig(path, configuration, addSecureConfig)
+	case ".conf":
+		return WriteJAASConfig(path, configuration, UPDATE, addSecureConfig)
+	default:
+		return fmt.Errorf("file format currently not supported")
+	}
+}
+
 func WritePropertiesFile(path string, property *properties.Properties, writeComments bool) error {
 	buf := new(bytes.Buffer)
 	if writeComments {
@@ -53,7 +69,7 @@ func WritePropertiesFile(path string, property *properties.Properties, writeComm
 
 	}
 
-	err := ioutil.WriteFile(path, buf.Bytes(), 0644)
+	err := WriteFile(path, buf.Bytes())
 	return err
 }
 
@@ -70,17 +86,298 @@ func DoesPathExist(path string) bool {
 
 func LoadPropertiesFile(path string) (*properties.Properties, error) {
 	if !DoesPathExist(path) {
-		return nil, fmt.Errorf("Invalid file path.")
+		return nil, fmt.Errorf("invalid file path")
 	}
 	loader := new(properties.Loader)
 	loader.Encoding = properties.UTF8
 	loader.PreserveFormatting = true
+	//property.DisableExpansion = true
 	property, err := loader.LoadFile(path)
 	if err != nil {
 		return nil, err
 	}
 	property.DisableExpansion = true
 	return property, nil
+}
+
+func addSecureConfigProviderProperty(property *properties.Properties, isJson bool) (*properties.Properties, error) {
+	property.DisableExpansion = true
+	configProviders := property.GetString(CONFIG_PROVIDER_KEY, "")
+	if configProviders == "" {
+		configProviders = SECURE_CONFIG_PROVIDER
+	} else if !strings.Contains(configProviders, SECURE_CONFIG_PROVIDER) {
+		configProviders = configProviders + "," + SECURE_CONFIG_PROVIDER
+	}
+	providerKey := CONFIG_PROVIDER_KEY
+	providerClassKey := SECURE_CONFIG_PROVIDER_CLASS_KEY
+
+	if isJson {
+		providerKey = strings.ReplaceAll(providerKey, ".", "\\.")
+		providerClassKey = strings.ReplaceAll(providerClassKey, ".", "\\.")
+	}
+
+	_, _, err := property.Set(providerKey, configProviders)
+	if err != nil {
+		return nil, err
+	}
+	_, _, err = property.Set(providerClassKey, SECURE_CONFIG_PROVIDER_CLASS)
+	if err != nil {
+		return nil, err
+	}
+	return property, nil
+}
+
+func LoadConfiguration(path string, configKeys []string, filter bool) (*properties.Properties, error) {
+	if !DoesPathExist(path) {
+		return nil, fmt.Errorf("invalid file path.")
+	}
+	fileType := filepath.Ext(path)
+	switch fileType {
+	case ".properties":
+		return loadPropertiesConfig(path, configKeys, filter)
+	case ".json":
+		return loadJSONConfig(path, configKeys)
+	case ".conf":
+		return loadJAASConfig(path, configKeys, filter)
+	default:
+		return nil, fmt.Errorf("file type currently not supported")
+	}
+}
+
+func filterProperties(configProps *properties.Properties, configKeys []string) (*properties.Properties, error) {
+	configProps.DisableExpansion = true
+	matchProps := properties.NewProperties()
+	matchProps.DisableExpansion = true
+	if len(configKeys) > 0 {
+		for _, key := range configKeys {
+			key := strings.TrimSpace(key)
+			value, ok := configProps.Get(key)
+			// If key present in config file
+			if ok {
+				_, _, err := matchProps.Set(key, value)
+				if err != nil {
+					return nil, err
+				}
+			} else {
+				return nil, fmt.Errorf("config " + key + " not present in config file.")
+			}
+		}
+	} else {
+		// Filter the properties which have keyword 'password' in the key.
+		matchProps, err := configProps.Filter("(?i).password")
+		if err != nil {
+			return nil, err
+		}
+
+		return matchProps, nil
+	}
+
+	return matchProps, nil
+}
+
+func loadJAASConfig(path string, configKeys []string, filter bool) (*properties.Properties, error) {
+	parser := NewJAASParser()
+	configProps, err := parser.Load(path)
+	if err != nil {
+		return nil, err
+	}
+
+	if filter {
+		return filterProperties(configProps, configKeys)
+	}
+
+	return configProps, nil
+}
+
+func WriteJAASConfig(path string, props *properties.Properties, operation string, addSecureConfig bool) error {
+	parser := NewJAASParser()
+	return parser.Write(path, props, operation, addSecureConfig)
+}
+
+func loadPropertiesConfig(path string, configKeys []string, filter bool) (*properties.Properties, error) {
+	loader := new(properties.Loader)
+	loader.Encoding = properties.UTF8
+	loader.PreserveFormatting = true
+	configProps, err := loader.LoadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	// convert embedded jaas to props
+	configProps = parseJAASProperties(configProps)
+	if filter {
+		return filterProperties(configProps, configKeys)
+	}
+	return configProps, nil
+}
+
+func parseJAASProperties(props *properties.Properties) *properties.Properties {
+	parser := NewJAASParser()
+	matchProps, err := props.Filter("(?i).jaas")
+	matchProps.DisableExpansion = true
+	if err != nil {
+		return props
+	}
+	for key, value := range matchProps.Map() {
+		jaasProps, err := parser.ParseJAASConfigurationEntry(value, key)
+		if err == nil {
+			props.Merge(jaasProps)
+		}
+
+	}
+	return props
+}
+
+func convertPropertiesJAAS(props *properties.Properties, originalConfigs *properties.Properties, op string) *properties.Properties {
+	parser := NewJAASParser()
+	matchProps, err := props.Filter("(?i).jaas")
+	matchProps.DisableExpansion = true
+	if err != nil {
+		return props
+	}
+	pattern := regexp.MustCompile(JAAS_KEY_PATTERN)
+
+	jaasProps := properties.NewProperties()
+	jaasProps.DisableExpansion = true
+	for key, value := range matchProps.Map() {
+		if pattern.MatchString(key) {
+			parentKeys := strings.Split(key, KEY_SEPARATOR)
+			origKey := parentKeys[CLASS_ID]
+			origVal, ok := originalConfigs.Get(origKey)
+			if ok {
+				_, _, err = jaasProps.Set(key, value)
+				if err != nil {
+					return props
+				}
+				_, _, err = parser.JaasOriginalConfigKeys.Set(parentKeys[CLASS_ID]+KEY_SEPARATOR+parentKeys[PARENT_ID], origVal)
+				if err != nil {
+					return props
+				}
+				props.Delete(key)
+			}
+		}
+
+	}
+
+	jaasConf, err := parser.ConvertPropertiesToJAAS(jaasProps, op, true)
+	if err == nil {
+		props.Merge(jaasConf)
+	}
+
+	return props
+}
+
+func LoadJSONFile(path string) (string, error) {
+	jsonFile, err := os.Open(path)
+	// if we os.Open returns an error then handle it
+	if err != nil {
+		return "", err
+	}
+
+	// defer the closing of our jsonFile so that we can parse it later on
+	defer jsonFile.Close()
+
+	// read our opened jsonFile as a byte array.
+	jsonByteArr, err := ioutil.ReadAll(jsonFile)
+	if err != nil {
+		return "", err
+	}
+
+	jsonConfig := string(jsonByteArr)
+	if !gjson.Valid(jsonConfig) {
+		return "", fmt.Errorf("Invalid json format.")
+	}
+
+	return jsonConfig, nil
+}
+
+func loadJSONConfig(path string, configKeys []string) (*properties.Properties, error) {
+	jsonConfig, err := LoadJSONFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	matchProps := properties.NewProperties()
+	for _, key := range configKeys {
+		key := strings.TrimSpace(key)
+
+		// If key present in config file
+		if gjson.Get(jsonConfig, key).Exists() {
+			configValue := gjson.Get(jsonConfig, key)
+			_, _, err = matchProps.Set(key, configValue.String())
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, fmt.Errorf("config " + key + " not present in json configuration file.")
+		}
+	}
+
+	return matchProps, nil
+}
+
+func writePropertiesConfig(path string, configs *properties.Properties, addSecureConfig bool) error {
+	configProps, err := LoadPropertiesFile(path)
+	if err != nil {
+		return err
+	}
+	configProps.DisableExpansion = true
+	//configProps.PreserveFormatting = true
+	configs = convertPropertiesJAAS(configs, configProps, UPDATE)
+
+	for key, value := range configs.Map() {
+		_, _, err = configProps.Set(key, value)
+		if err != nil {
+			return err
+		}
+
+	}
+
+	if addSecureConfig {
+		configProps, err = addSecureConfigProviderProperty(configProps, false)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = WritePropertiesFile(path, configProps, true)
+	return err
+}
+
+func writeJSONConfig(path string, configs *properties.Properties, addSecureConfig bool) error {
+	jsonConfig, err := LoadJSONFile(path)
+	if err != nil {
+		return err
+	}
+
+	if gjson.Get(jsonConfig, CONFIG_PROVIDER_KEY).Exists() {
+		configValue := gjson.Get(jsonConfig, CONFIG_PROVIDER_KEY)
+		_, _, err = configs.Set(CONFIG_PROVIDER_KEY, configValue.String())
+		if err != nil {
+			return err
+		}
+	}
+
+	if addSecureConfig {
+		configs, err = addSecureConfigProviderProperty(configs, true)
+		if err != nil {
+			return err
+		}
+	}
+
+	for key, value := range configs.Map() {
+		jsonConfig, err = sjson.Set(jsonConfig, key, value)
+		if err != nil {
+			return err
+		}
+	}
+
+	result := pretty.Pretty([]byte(jsonConfig))
+	err = WriteFile(path, result)
+	return err
+}
+
+func WriteFile(path string, data []byte) error {
+	return ioutil.WriteFile(path, data, 0644)
 }
 
 func GenerateConfigKey(path string, key string) string {

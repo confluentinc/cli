@@ -4,11 +4,14 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
 	"github.com/confluentinc/properties"
 	"github.com/jonboulle/clockwork"
+	"github.com/tidwall/gjson"
+	"github.com/tidwall/sjson"
 
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
@@ -123,38 +126,19 @@ func (c *PasswordProtectionSuite) EncryptConfigFileSecrets(configFilePath string
 	if !DoesPathExist(configFilePath) {
 		return fmt.Errorf("invalid config file path: %s", configFilePath)
 	}
+	configs := []string{}
 	// Load the configs.
-	configProps, err := LoadPropertiesFile(configFilePath)
-	configProps.DisableExpansion = true
+	if strings.TrimSpace(encryptConfigKeys) != "" {
+		configs = strings.Split(encryptConfigKeys, ",")
+	}
+	configProps, err := LoadConfiguration(configFilePath, configs, true)
 	if err != nil {
 		return err
 	}
+	configProps.DisableExpansion = true
 
-	matchProps := properties.NewProperties()
-	if encryptConfigKeys != "" {
-		configs := strings.Split(encryptConfigKeys, ",")
-		for _, key := range configs {
-			key := strings.TrimSpace(key)
-			value, ok := configProps.Get(key)
-			// If key present in config file
-			if ok {
-				_, _, err = matchProps.Set(key, value)
-				if err != nil {
-					return err
-				}
-			} else {
-				return fmt.Errorf("Key " + key + " not present in config file.")
-			}
-		}
-	} else {
-		// Filter the properties which have keyword 'password' in the key.
-		matchProps, err = configProps.Filter("(?i).password")
-		if err != nil {
-			return err
-		}
-	}
 	// Encrypt the secrets with DEK. Save the encrypted secrets in secure config file.
-	err = c.encryptConfigValues(matchProps, localSecureConfigPath, configFilePath, remoteSecureConfigPath)
+	err = c.encryptConfigValues(configProps, localSecureConfigPath, configFilePath, remoteSecureConfigPath)
 	if err != nil {
 		return err
 	}
@@ -176,7 +160,7 @@ func (c *PasswordProtectionSuite) DecryptConfigFileSecrets(configFilePath string
 		return fmt.Errorf("invalid secrets file path:" + localSecureConfigPath)
 	}
 	// Load the config values.
-	configProps, err := LoadPropertiesFile(configFilePath)
+	configProps, err := LoadConfiguration(configFilePath, nil, false)
 	if err != nil {
 		return err
 	}
@@ -453,24 +437,15 @@ func (c *PasswordProtectionSuite) UpdateEncryptedPasswords(configFilePath string
 		return err
 	}
 
-	configProps, err := LoadPropertiesFile(configFilePath)
-	configProps.DisableExpansion = true
-
-	if err != nil {
-		return err
-	}
-
-	// Verify if key is already present in config file.
-	for key := range newConfigProps.Map() {
-		_, exists := configProps.Get(key)
-		if !exists {
-			return fmt.Errorf("config " + key + " not present in config file.")
-		}
-	}
-
 	if newConfigProps.Len() == 0 {
 		return fmt.Errorf("update failed: empty list of update configs")
 	}
+
+	configProps, err := LoadConfiguration(configFilePath, newConfigProps.Keys(), true)
+	if err != nil {
+		return err
+	}
+	configProps.DisableExpansion = true
 
 	err = c.encryptConfigValues(newConfigProps, localSecureConfigPath, configFilePath, remoteSecureConfigPath)
 
@@ -478,12 +453,6 @@ func (c *PasswordProtectionSuite) UpdateEncryptedPasswords(configFilePath string
 }
 
 func (c *PasswordProtectionSuite) RemoveEncryptedPasswords(configFilePath string, localSecureConfigPath string, removeConfigs string) error {
-	configProps, err := LoadPropertiesFile(configFilePath)
-	configProps.DisableExpansion = true
-	if err != nil {
-		return err
-	}
-
 	secureConfigProps, err := LoadPropertiesFile(localSecureConfigPath)
 	secureConfigProps.DisableExpansion = true
 	if err != nil {
@@ -492,34 +461,78 @@ func (c *PasswordProtectionSuite) RemoveEncryptedPasswords(configFilePath string
 
 	configs := strings.Split(removeConfigs, ",")
 
-	for _, key := range configs {
-		pathKey := GenerateConfigKey(configFilePath, key)
-
-		//Check if config is present
-		_, ok := configProps.Get(key)
-		if !ok {
-			return fmt.Errorf("config " + key + " not present in config file.")
-		}
-
-		// Check if config is removed from secrets files
-		_, ok = secureConfigProps.Get(pathKey)
-		if !ok {
-			return fmt.Errorf("config " + key + " not present in secrets file.")
-		}
-		configProps.Delete(key)
-		secureConfigProps.Delete(pathKey)
+	// Delete the config from Configuration File.
+	fileType := filepath.Ext(configFilePath)
+	switch fileType {
+	case ".properties":
+		err = c.removePropertiesConfig(configFilePath, configs)
+	case ".json":
+		err = c.removeJsonConfig(configFilePath, configs)
+	case ".conf":
+		props := properties.MustLoadString(removeConfigs)
+		err = WriteJAASConfig(configFilePath, props, DELETE, false)
+	default:
+		err = fmt.Errorf("file type " + fileType + " currently not supported")
 	}
-
-	err = WritePropertiesFile(configFilePath, configProps, true)
 	if err != nil {
 		return err
 	}
 
+	// Delete the config from Security File.
+	for _, key := range configs {
+		pathKey := GenerateConfigKey(configFilePath, key)
+
+		// Check if config is removed from secrets files
+		_, ok := secureConfigProps.Get(pathKey)
+		if !ok {
+			return fmt.Errorf("config " + key + " not present in secrets file.")
+		}
+		secureConfigProps.Delete(pathKey)
+	}
 	err = WritePropertiesFile(localSecureConfigPath, secureConfigProps, true)
 	return err
 }
 
 // Helper Functions
+
+func (c *PasswordProtectionSuite) removeJsonConfig(configFilePath string, configs []string) error {
+	jsonConfig, err := LoadJSONFile(configFilePath)
+	if err != nil {
+		return err
+	}
+	for _, key := range configs {
+		key := strings.TrimSpace(key)
+
+		// If key present in config file
+		if gjson.Get(jsonConfig, key).Exists() {
+			jsonConfig, err = sjson.Delete(jsonConfig, key)
+			if err != nil {
+				return err
+			}
+		} else {
+			return fmt.Errorf("config " + key + " not present in json configuration file.")
+		}
+	}
+	return WriteFile(configFilePath, []byte(jsonConfig))
+}
+
+func (c *PasswordProtectionSuite) removePropertiesConfig(configFilePath string, configs []string) error {
+	configProps, err := LoadPropertiesFile(configFilePath)
+	configProps.DisableExpansion = true
+	if err != nil {
+		return err
+	}
+	for _, key := range configs {
+		//Check if config is present
+		_, ok := configProps.Get(key)
+		if !ok {
+			return fmt.Errorf("config " + key + " not present in config file.")
+		}
+		configProps.Delete(key)
+	}
+
+	return WritePropertiesFile(configFilePath, configProps, true)
+}
 
 func (c *PasswordProtectionSuite) wrapDataKey(engine EncryptionEngine, dataKey []byte, masterKey string) (string, error) {
 	wrappedDataKey, iv, err := engine.WrapDataKey(dataKey, masterKey)
@@ -679,10 +692,7 @@ func (c *PasswordProtectionSuite) encryptConfigValues(matchProps *properties.Pro
 		return fmt.Errorf("failed to unwrap the data key due to invalid master key or corrupted data key.")
 	}
 
-	configProps, err := LoadPropertiesFile(configFilePath)
-	if err != nil {
-		return err
-	}
+	configProps := properties.NewProperties()
 	configProps.DisableExpansion = true
 
 	for key, value := range matchProps.Map() {
@@ -712,12 +722,7 @@ func (c *PasswordProtectionSuite) encryptConfigValues(matchProps *properties.Pro
 
 	}
 
-	configProps, err = c.addSecureConfigProviderProperty(configProps)
-	if err != nil {
-		return err
-	}
-
-	err = WritePropertiesFile(configFilePath, configProps, true)
+	err = SaveConfiguration(configFilePath, configProps, true)
 	if err != nil {
 		return err
 	}
