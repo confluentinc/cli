@@ -56,11 +56,11 @@ func (c *Context) validateKafkaClusterConfig(cluster *v1.KafkaClusterConfig) err
 		return fmt.Errorf("cluster under context '%s' has no %s", c.Name, "id")
 	}
 	if _, ok := cluster.APIKeys[cluster.APIKey]; cluster.APIKey != "" && !ok {
-		cluster.APIKey = ""
 		_, _ = fmt.Fprintf(os.Stderr, "Current API key '%s' of cluster '%s' under context under context '%s' is not found.\n" +
 			"Removing current API key setting for the cluster.\n" +
 			"You can re-add the API key with 'ccloud api-key store' and set current API key with 'ccloud api-key use'.",
 			cluster.APIKey, cluster.Name, c.Name)
+		cluster.APIKey = ""
 		err := c.Save()
 		if err != nil {
 			return fmt.Errorf("unable to reset invalid active API key")
