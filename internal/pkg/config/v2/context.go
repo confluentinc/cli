@@ -5,6 +5,7 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"os"
 )
 
 // Context represents a specific CLI context.
@@ -56,6 +57,10 @@ func (c *Context) validateKafkaClusterConfig(cluster *v1.KafkaClusterConfig) err
 	}
 	if _, ok := cluster.APIKeys[cluster.APIKey]; cluster.APIKey != "" && !ok {
 		cluster.APIKey = ""
+		_, _ = fmt.Fprintf(os.Stderr, "Current API key '%s' of cluster '%s' under context under context '%s' is not found.\n" +
+			"Removing current API key setting for the cluster.\n" +
+			"You can re-add the API key with 'ccloud api-key store' and set current API key with 'ccloud api-key use'.",
+			cluster.APIKey, cluster.Name, c.Name)
 		err := c.Save()
 		if err != nil {
 			return fmt.Errorf("unable to reset invalid active API key")
@@ -69,6 +74,10 @@ func (c *Context) validateKafkaClusterConfig(cluster *v1.KafkaClusterConfig) err
 		}
 	}
 	if reset {
+		_, _ = fmt.Fprintf(os.Stderr, "Some API key secret pairs stored for cluster '%s' under context '%s' has missing API keys.\n" +
+			"Deleting the missing API keys.\n" +
+			"You can re-add the API key secret pair with 'ccloud api-key store'",
+			cluster.Name, c.Name)
 		err := c.Save()
 		if err != nil {
 			return fmt.Errorf("unable to clear invalid API key pairs")
