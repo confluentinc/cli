@@ -2,10 +2,11 @@ package v2
 
 import (
 	"fmt"
+	"os"
+
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
-	"os"
 )
 
 // Context represents a specific CLI context.
@@ -75,7 +76,7 @@ func (c *Context) validateKafkaClusterConfig(cluster *v1.KafkaClusterConfig) err
 	}
 	if reset {
 		_, _ = fmt.Fprintf(os.Stderr, "Some API key secret pairs stored for cluster '%s' under context '%s' has missing API keys.\n" +
-			"Deleting the missing API keys.\n" +
+			"Deleting the key secret pairs with missing API keys.\n" +
 			"You can re-add the API key secret pair with 'ccloud api-key store'\n",
 			cluster.Name, c.Name)
 		err := c.Save()
