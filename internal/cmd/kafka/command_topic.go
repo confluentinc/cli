@@ -141,7 +141,7 @@ Create a topic named 'my_topic' with default options.
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().Uint32("partitions", 6, "Number of topic partitions.")
-	cmd.Flags().StringSlice("config", nil, "A comma-separated list of topic.Configuration ('key=value') overrides for the topic being created.")
+	cmd.Flags().StringSlice("config", nil, "A comma-separated list of topic. Configuration ('key=value') overrides for the topic being created.")
 	cmd.Flags().Bool("dry-run", false, "Run the command without committing changes to Kafka.")
 	cmd.Flags().SortFlags = false
 	a.AddCommand(cmd)
@@ -177,7 +177,7 @@ Modify the 'my_topic' topic to have a retention period of days ('259200000' mill
 		Args: cobra.ExactArgs(1),
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	cmd.Flags().StringSlice("config", nil, "A comma-separated list of topic.Configuration ('key=value') overrides for the topic being created.")
+	cmd.Flags().StringSlice("config", nil, "A comma-separated list of topic. Configuration ('key=value') overrides for the topic being created.")
 	cmd.Flags().Bool("dry-run", false, "Execute request without committing changes to Kafka.")
 	cmd.Flags().SortFlags = false
 	a.AddCommand(cmd)
