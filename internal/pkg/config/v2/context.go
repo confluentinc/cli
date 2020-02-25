@@ -2,7 +2,9 @@ package v2
 
 import (
 	"fmt"
+	"github.com/aws/aws-sdk-go/service/medialive"
 	"os"
+	"strings"
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -67,24 +69,56 @@ func (c *Context) validateKafkaClusterConfig(cluster *v1.KafkaClusterConfig) err
 			return fmt.Errorf("unable to reset invalid active API key")
 		}
 	}
-	reset := false
+	return c.validateApiKeysDist(cluster)
+}
+
+func (c *Context) validateApiKeysDist(cluster *v1.KafkaClusterConfig) error {
+	missingKey := false
+	mismatchKey := false
+	missingSecret := false
 	for k, pair := range cluster.APIKeys {
 		if pair.Key == "" {
 			delete(cluster.APIKeys, k)
-			reset = true
+			missingKey = true
+			continue
+		}
+		if k != pair.Key {
+			delete(cluster.APIKeys, k)
+			mismatchKey = true
+			continue
+		}
+		if pair.Secret == "" {
+			delete(cluster.APIKeys, k)
+			missingSecret = true
 		}
 	}
-	if reset {
-		_, _ = fmt.Fprintf(os.Stderr, "Some API key secret pairs stored for cluster '%s' under context '%s' has missing API keys.\n" +
-			"Deleting the key secret pairs with missing API keys.\n" +
-			"You can re-add the API key secret pair with 'ccloud api-key store'\n",
-			cluster.Name, c.Name)
+	if missingKey || mismatchKey || missingSecret {
+
 		err := c.Save()
 		if err != nil {
 			return fmt.Errorf("unable to clear invalid API key pairs")
 		}
 	}
 	return nil
+}
+
+func (c *Context) getApiKeysDictErrorMsgFormat(missingKey, mismatchKey, missingSecret bool, cluster *v1.KafkaClusterConfig) string {
+	var problems []string
+	if missingKey {
+		problems = append(problems, "'API key missing'")
+	}
+	if mismatchKey {
+		problems = append(problems, "'key of the dictionary does not match API key of the pair'")
+	}
+	if missingSecret {
+		problems = append(problems, "'API secret missing'")
+	}
+	problemString := strings.Join(problems, " and ")
+	_, _ = fmt.Fprintf(os.Stderr, "There are malformed API key secret pair entries in the dictionary for cluster '%s' under context '%s'.\n" +
+		"The issues are the following: " + problemString + ".\n" +
+		"Deleting the malformed entries.\n" +
+		"You can re-add the API key secret pair with 'ccloud api-key store'\n",
+		cluster.Name, c.Name)
 }
 
 func (c *Context) validate() error {
