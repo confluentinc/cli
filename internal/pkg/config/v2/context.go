@@ -2,7 +2,6 @@ package v2
 
 import (
 	"fmt"
-	"github.com/aws/aws-sdk-go/service/medialive"
 	"os"
 	"strings"
 
@@ -69,10 +68,10 @@ func (c *Context) validateKafkaClusterConfig(cluster *v1.KafkaClusterConfig) err
 			return fmt.Errorf("unable to reset invalid active API key")
 		}
 	}
-	return c.validateApiKeysDist(cluster)
+	return c.validateApiKeysDict(cluster)
 }
 
-func (c *Context) validateApiKeysDist(cluster *v1.KafkaClusterConfig) error {
+func (c *Context) validateApiKeysDict(cluster *v1.KafkaClusterConfig) error {
 	missingKey := false
 	mismatchKey := false
 	missingSecret := false
@@ -93,7 +92,7 @@ func (c *Context) validateApiKeysDist(cluster *v1.KafkaClusterConfig) error {
 		}
 	}
 	if missingKey || mismatchKey || missingSecret {
-
+		c.printApiKeysDictErrorMessage(missingKey, mismatchKey, missingSecret, cluster)
 		err := c.Save()
 		if err != nil {
 			return fmt.Errorf("unable to clear invalid API key pairs")
@@ -102,7 +101,7 @@ func (c *Context) validateApiKeysDist(cluster *v1.KafkaClusterConfig) error {
 	return nil
 }
 
-func (c *Context) getApiKeysDictErrorMsgFormat(missingKey, mismatchKey, missingSecret bool, cluster *v1.KafkaClusterConfig) string {
+func (c *Context) printApiKeysDictErrorMessage(missingKey, mismatchKey, missingSecret bool, cluster *v1.KafkaClusterConfig) {
 	var problems []string
 	if missingKey {
 		problems = append(problems, "'API key missing'")
@@ -113,7 +112,7 @@ func (c *Context) getApiKeysDictErrorMsgFormat(missingKey, mismatchKey, missingS
 	if missingSecret {
 		problems = append(problems, "'API secret missing'")
 	}
-	problemString := strings.Join(problems, " and ")
+	problemString := strings.Join(problems, ", ")
 	_, _ = fmt.Fprintf(os.Stderr, "There are malformed API key secret pair entries in the dictionary for cluster '%s' under context '%s'.\n" +
 		"The issues are the following: " + problemString + ".\n" +
 		"Deleting the malformed entries.\n" +
