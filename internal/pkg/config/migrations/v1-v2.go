@@ -68,13 +68,12 @@ func migrateContextV1ToV2(contextV1 *v1.Context, platformV2 *v2.Platform, creden
 		PlatformName:           contextV1.Platform,
 		Credential:             credentialV2,
 		CredentialName:         contextV1.Credential,
-		KafkaClusters:          contextV1.KafkaClusters,
-		Kafka:                  contextV1.Kafka,
 		SchemaRegistryClusters: srClustersV1,
 		State:                  state,
 		Logger:                 cfgV1.Logger,
 		Config:                 cfgV2,
 	}
+	contextV2.KafkaClusterContext = v2.NewKafkaClusterContext(contextV2, contextV1.Kafka, contextV1.KafkaClusters)
 	return contextV2, state
 }
 

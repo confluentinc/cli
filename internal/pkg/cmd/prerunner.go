@@ -224,12 +224,12 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 			return errors.HandleCommon(errors.ErrNoContext, cmd)
 		}
 		command.Context = ctx
-		hasAPIKey, err := ctx.HasAPIKey(cmd, ctx.Kafka)
+		hasAPIKey, err := ctx.HasAPIKey(cmd, ctx.KafkaClusterContext.GetActiveKafkaClusterId())
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
 		if !hasAPIKey {
-			err = &errors.UnspecifiedAPIKeyError{ClusterID: ctx.Kafka}
+			err = &errors.UnspecifiedAPIKeyError{ClusterID: ctx.KafkaClusterContext.GetActiveKafkaClusterId()}
 			return errors.HandleCommon(err, cmd)
 		}
 		return nil

@@ -49,7 +49,7 @@ var (
 			if context == nil {
 				return "(none)", nil
 			}
-			kcc := context.KafkaClusters[context.Kafka]
+			kcc := context.KafkaClusterContext.GetActiveKafkaClusterConfig()
 			if kcc == nil {
 				return "(none)", nil
 			} else {
@@ -61,7 +61,7 @@ var (
 			if context == nil {
 				return "(none)", nil
 			}
-			kcc := context.KafkaClusters[context.Kafka]
+			kcc := context.KafkaClusterContext.GetActiveKafkaClusterConfig()
 			if kcc == nil || kcc.Name == "" {
 				return "(none)", nil
 			} else {
@@ -73,7 +73,7 @@ var (
 			if context == nil {
 				return "(none)", nil
 			}
-			kcc := context.KafkaClusters[context.Kafka]
+			kcc := context.KafkaClusterContext.GetActiveKafkaClusterConfig()
 			if kcc == nil || kcc.APIKey == "" {
 				return "(none)", nil
 			} else {
@@ -99,7 +99,7 @@ var (
 		context := cfg.Context()
 		var kcc *v1.KafkaClusterConfig
 		if context != nil {
-			kcc = context.KafkaClusters[context.Kafka]
+			kcc = context.KafkaClusterContext.GetActiveKafkaClusterConfig()
 		}
 		kafkaClusterID := "(none)"
 		kafkaClusterName := "(none)"
