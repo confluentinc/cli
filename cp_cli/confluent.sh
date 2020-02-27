@@ -1641,9 +1641,17 @@ produce_command() {
       bootstrapserver="--broker-list ${_retval}"
     fi
     avro="--value-format avro"
+    json="--value-format json"
+    protobuf="--value-format protobuf"
     if [[ "$command" =~ "$avro" ]]; then
       command=${command//$avro/}
       LOG_DIR=${tmp_dir} ${confluent_home}/bin/kafka-avro-console-producer $bootstrapserver --topic $topicname $command
+    elif [[ "$command" =~ "$json" ]]; then
+      command=${command//$json/}
+      LOG_DIR=${tmp_dir} ${confluent_home}/bin/kafka-json-schema-console-producer $bootstrapserver --topic $topicname $command
+    elif [[ "$command" =~ "$protobuf" ]]; then
+      command=${command//$protobuf/}
+      LOG_DIR=${tmp_dir} ${confluent_home}/bin/kafka-protobuf-console-producer $bootstrapserver --topic $topicname $command
     else
       ${confluent_home}/bin/kafka-console-producer $bootstrapserver --topic $topicname $command
     fi
@@ -1674,9 +1682,17 @@ consume_command() {
       bootstrapserver="--bootstrap-server ${_retval}"
     fi
     avro="--value-format avro"
+    json="--value-format json"
+    protobuf="--value-format protobuf"
     if [[ "$command" =~ "$avro" ]]; then
       command=${command//$avro/}
       LOG_DIR=${tmp_dir} SCHEMA_REGISTRY_LOG4J_LOGGERS="INFO, stdout" ${confluent_home}/bin/kafka-avro-console-consumer $bootstrapserver --topic $topicname $command
+    elif [[ "$command" =~ "$json" ]]; then
+      command=${command//$json/}
+      LOG_DIR=${tmp_dir} SCHEMA_REGISTRY_LOG4J_LOGGERS="INFO, stdout" ${confluent_home}/bin/kafka-json-schema-console-consumer $bootstrapserver --topic $topicname $command
+    elif [[ "$command" =~ "$protobuf" ]]; then
+      command=${command//$protobuf/}
+      LOG_DIR=${tmp_dir} SCHEMA_REGISTRY_LOG4J_LOGGERS="INFO, stdout" ${confluent_home}/bin/kafka-protobuf-console-consumer $bootstrapserver --topic $topicname $command
     else
       ${confluent_home}/bin/kafka-console-consumer $bootstrapserver --topic $topicname $command
     fi
@@ -1815,7 +1831,7 @@ produce_usage() {
     fi
 
     cat <<EOF
-Usage: ${command_name} produce <topicname> -- [--value-format avro --property value.schema=<schema>] [--cloud] [--config <filename>] [other optional args]
+Usage: ${command_name} produce <topicname> -- [--value-format <format> --property value.schema=<schema>] [--cloud] [--config <filename>] [other optional args]
 
 Description:
     Produce to Kafka topic specified by <topicname>.
@@ -1830,8 +1846,8 @@ Description:
     By default, it uses Confluent Cloud configuration file at $HOME/.ccloud/config
     To change the configuration file, set '--config <filename>'
 
-    By default, this command sends non-Avro data.
-    To send Avro data, specify '--value-format avro --property value.schema=<schema>'
+    By default, this command sends non-formatted data.
+    To send formatted data, specify the desired format type and schema. Supported format types are 'avro', 'json' and 'protobuf'.
 
     After typing the command, enter each message on a new line. Press 'ctrl-c' to finish.
 
@@ -1877,8 +1893,8 @@ Description:
     By default, it uses Confluent Cloud configuration file at $HOME/.ccloud/config
     To change the configuration file, set '--config <filename>'
 
-    By default, this command reads non-Avro data.
-    To read Avro data, specify '--value-format avro'
+    By default, this command reads non-formatted data.
+    To read formatted data, specify the format type. Supported format types are 'avro', 'json' and 'protobuf'.
 
 Examples:
     confluent local consume mytopic1
