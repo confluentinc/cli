@@ -1,4 +1,4 @@
-package v2
+package v3
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
@@ -13,39 +14,32 @@ import (
 // Context represents a specific CLI context.
 type Context struct {
 	Name           string      `json:"name" hcl:"name"`
-	Platform       *Platform   `json:"-" hcl:"-"`
+	Platform       *v2.Platform   `json:"-" hcl:"-"`
 	PlatformName   string      `json:"platform" hcl:"platform"`
-	Credential     *Credential `json:"-" hcl:"-"`
+	Credential     *v2.Credential `json:"-" hcl:"-"`
 	CredentialName string      `json:"credential" hcl:"credential"`
-	// KafkaClusters store connection info for interacting directly with Kafka (e.g., consume/produce, etc)
-	// N.B. These may later be exposed in the CLI to directly register kafkas (outside a Control Plane)
-	// Mapped by cluster id.
-	KafkaClusters map[string]*v1.KafkaClusterConfig `json:"kafka_clusters" hcl:"kafka_clusters"`
-	// Kafka is your active Kafka cluster and references a key in the KafkaClusters map
-	Kafka string `json:"kafka_cluster" hcl:"kafka_cluster"`
-	// SR map keyed by environment-id.
-	SchemaRegistryClusters map[string]*SchemaRegistryCluster `json:"schema_registry_clusters" hcl:"schema_registry_clusters"`
-	State                  *ContextState                     `json:"-" hcl:"-"`
+	KafkaClusterContext    *KafkaClusterContext              `json:"kafka_cluster_context" hcl:"kafka_cluster_config"`
+	SchemaRegistryClusters map[string]*v2.SchemaRegistryCluster `json:"schema_registry_clusters" hcl:"schema_registry_clusters"`
+	State                  *v2.ContextState                     `json:"-" hcl:"-"`
 	Logger                 *log.Logger                       `json:"-" hcl:"-"`
 	Config                 *Config                           `json:"-" hcl:"-"`
 }
 
-func newContext(name string, platform *Platform, credential *Credential,
+func newContext(name string, platform *v2.Platform, credential *v2.Credential,
 	kafkaClusters map[string]*v1.KafkaClusterConfig, kafka string,
-	schemaRegistryClusters map[string]*SchemaRegistryCluster, state *ContextState, config *Config) (*Context, error) {
+	schemaRegistryClusters map[string]*v2.SchemaRegistryCluster, state *v2.ContextState, config *Config) (*Context, error) {
 	ctx := &Context{
 		Name:                   name,
 		Platform:               platform,
 		PlatformName:           platform.Name,
 		Credential:             credential,
 		CredentialName:         credential.Name,
-		KafkaClusters:          kafkaClusters,
-		Kafka:                  kafka,
 		SchemaRegistryClusters: schemaRegistryClusters,
 		State:                  state,
 		Logger:                 config.Logger,
 		Config:                 config,
 	}
+	ctx.KafkaClusterContext = NewKafkaClusterContext(ctx, kafka, kafkaClusters)
 	err := ctx.validate()
 	if err != nil {
 		return nil, err
@@ -130,24 +124,13 @@ func (c *Context) validate() error {
 	if c.PlatformName == "" || c.Platform == nil {
 		return &errors.UnspecifiedPlatformError{ContextName: c.Name}
 	}
-	if _, ok := c.KafkaClusters[c.Kafka]; c.Kafka != "" && !ok {
-		return fmt.Errorf("context '%s' has a nonexistent active kafka cluster", c.Name)
-	}
 	if c.SchemaRegistryClusters == nil {
-		c.SchemaRegistryClusters = map[string]*SchemaRegistryCluster{}
-	}
-	if c.KafkaClusters == nil {
-		c.KafkaClusters = map[string]*v1.KafkaClusterConfig{}
+		c.SchemaRegistryClusters = map[string]*v2.SchemaRegistryCluster{}
 	}
 	if c.State == nil {
-		c.State = new(ContextState)
+		c.State = new(v2.ContextState)
 	}
-	for _, cluster := range c.KafkaClusters {
-		err := c.validateKafkaClusterConfig(cluster)
-		if err != nil {
-			return err
-		}
-	}
+	c.KafkaClusterContext.Validate()
 	return nil
 }
 
@@ -158,9 +141,9 @@ func (c *Context) Save() error {
 func (c *Context) HasMDSLogin() bool {
 	credType := c.Credential.CredentialType
 	switch credType {
-	case Username:
+	case v2.Username:
 		return c.State != nil && c.State.AuthToken != ""
-	case APIKey:
+	case v2.APIKey:
 		return false
 	default:
 		panic(fmt.Sprintf("unknown credential type %d in context '%s'", credType, c.Name))
@@ -170,9 +153,9 @@ func (c *Context) HasMDSLogin() bool {
 func (c *Context) hasLogin() bool {
 	credType := c.Credential.CredentialType
 	switch credType {
-	case Username:
+	case v2.Username:
 		return c.State != nil && c.State.AuthToken != "" && c.State.Auth != nil && c.State.Auth.Account != nil && c.State.Auth.Account.Id != ""
-	case APIKey:
+	case v2.APIKey:
 		return false
 	default:
 		panic(fmt.Sprintf("unknown credential type %d in context '%s'", credType, c.Name))
@@ -190,4 +173,12 @@ func (c *Context) DeleteUserAuth() error {
 		return errors.Wrap(err, "unable to delete user auth")
 	}
 	return nil
+}
+
+func (c *Context) GetCurrentEnvironmentId() string {
+	// non environment contexts
+	if c.State.Auth == nil {
+		return ""
+	}
+	return c.State.Auth.Account.Id
 }

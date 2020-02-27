@@ -1,4 +1,4 @@
-package v2
+package v3
 
 import (
 	"encoding/json"
@@ -93,6 +93,7 @@ func (c *Config) Load() error {
 		context.Platform = c.Platforms[context.PlatformName]
 		context.Logger = c.Logger
 		context.Config = c
+		context.KafkaClusterContext.Context = context
 	}
 	err = c.Validate()
 	if err != nil {
