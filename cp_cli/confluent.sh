@@ -1878,7 +1878,7 @@ consume_usage() {
     fi
 
     cat <<EOF
-Usage: ${command_name} consume <topicname> -- [--value-format avro] [--cloud] [--config <filename>] [other optional args]
+Usage: ${command_name} consume <topicname> -- [--value-format <format>] [--cloud] [--config <filename>] [other optional args]
 
 Description:
     Consume from Kafka topic specified by <topicname>.
