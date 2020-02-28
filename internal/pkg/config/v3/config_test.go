@@ -342,10 +342,8 @@ func TestConfig_AddContext(t *testing.T) {
 		name                   string
 		config                 *Config
 		contextName            string
-		platform               *v2.Platform
 		platformName           string
 		credentialName         string
-		credential             *v2.Credential
 		kafkaClusters          map[string]*v1.KafkaClusterConfig
 		kafka                  string
 		schemaRegistryClusters map[string]*v2.SchemaRegistryCluster
