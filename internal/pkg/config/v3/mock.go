@@ -12,9 +12,9 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
-func AuthenticatedConfigMock() *Config {
+func AuthenticatedConfigMock(cliName string) *Config {
 	conf := New(&config.Params{
-		CLIName:    "",
+		CLIName:    cliName,
 		MetricSink: nil,
 		Logger:     log.New(),
 	})
@@ -75,9 +75,18 @@ func AuthenticatedConfigMock() *Config {
 	}
 	conf.ContextStates[ctx.Name] = state
 	conf.Contexts[ctx.Name] = ctx
+	conf.Contexts[ctx.Name].Config = conf
 	conf.CurrentContext = ctx.Name
 	if err := conf.Validate(); err != nil {
 		panic(err)
 	}
 	return conf
+}
+
+func AuthenticatedCloudConfigMock() *Config {
+	return AuthenticatedConfigMock("ccloud")
+}
+
+func AuthenticatedConfluentConfigMock() *Config {
+	return AuthenticatedConfigMock("")
 }

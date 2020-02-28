@@ -9,7 +9,7 @@ import (
 
 	connectv1 "github.com/confluentinc/ccloudapis/connect/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -29,7 +29,7 @@ var (
 )
 
 // New returns the default command object for interacting with Connect.
-func New(prerunner pcmd.PreRunner, config *v2.Config) *cobra.Command {
+func New(prerunner pcmd.PreRunner, config *v3.Config) *cobra.Command {
 	cmd := &command{
 		AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(&cobra.Command{
 			Use:   "connector-catalog",

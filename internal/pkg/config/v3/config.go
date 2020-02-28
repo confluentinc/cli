@@ -3,6 +3,7 @@ package v3
 import (
 	"encoding/json"
 	"fmt"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -21,7 +22,7 @@ const (
 )
 
 var (
-	Version = semver.MustParse("2.0.0")
+	Version = semver.MustParse("3.0.0")
 )
 
 // Config represents the CLI configuration.
@@ -30,10 +31,10 @@ type Config struct {
 	DisableUpdateCheck bool                     `json:"disable_update_check"`
 	DisableUpdates     bool                     `json:"disable_updates"`
 	NoBrowser          bool                     `json:"no_browser" hcl:"no_browser"`
-	Platforms          map[string]*Platform     `json:"platforms,omitempty"`
-	Credentials        map[string]*Credential   `json:"credentials,omitempty"`
+	Platforms          map[string]*v2.Platform     `json:"platforms,omitempty"`
+	Credentials        map[string]*v2.Credential   `json:"credentials,omitempty"`
 	Contexts           map[string]*Context      `json:"contexts,omitempty"`
-	ContextStates      map[string]*ContextState `json:"context_states,omitempty"`
+	ContextStates      map[string]*v2.ContextState `json:"context_states,omitempty"`
 	CurrentContext     string                   `json:"current_context"`
 	AnonymousId        string                   `json:"anonymous_id,omitempty"`
 }
@@ -47,10 +48,10 @@ func New(params *config.Params) *Config {
 		// HACK: this is a workaround while we're building multiple binaries off one codebase
 		c.CLIName = "confluent"
 	}
-	c.Platforms = map[string]*Platform{}
-	c.Credentials = map[string]*Credential{}
+	c.Platforms = map[string]*v2.Platform{}
+	c.Credentials = map[string]*v2.Credential{}
 	c.Contexts = map[string]*Context{}
-	c.ContextStates = map[string]*ContextState{}
+	c.ContextStates = map[string]*v2.ContextState{}
 	c.AnonymousId = uuid.New().String()
 	return c
 }
@@ -153,7 +154,7 @@ func (c *Config) Validate() error {
 			return &errors.UnspecifiedPlatformError{ContextName: context.Name}
 		}
 		if _, ok := c.ContextStates[context.Name]; !ok {
-			c.ContextStates[context.Name] = new(ContextState)
+			c.ContextStates[context.Name] = new(v2.ContextState)
 		}
 		if *c.ContextStates[context.Name] != *context.State {
 			c.Logger.Trace(fmt.Sprintf("state of context %s in config does not match actual state of context", context.Name))
@@ -196,7 +197,7 @@ func (c *Config) FindContext(name string) (*Context, error) {
 
 func (c *Config) AddContext(name string, platformName string, credentialName string,
 	kafkaClusters map[string]*v1.KafkaClusterConfig, kafka string,
-	schemaRegistryClusters map[string]*SchemaRegistryCluster, state *ContextState) error {
+	schemaRegistryClusters map[string]*v2.SchemaRegistryCluster, state *v2.ContextState) error {
 	if _, ok := c.Contexts[name]; ok {
 		return fmt.Errorf("context \"%s\" already exists", name)
 	}
@@ -243,7 +244,7 @@ func (c *Config) Name() string {
 	return name
 }
 
-func (c *Config) SaveCredential(credential *Credential) error {
+func (c *Config) SaveCredential(credential *v2.Credential) error {
 	if credential.Name == "" {
 		return fmt.Errorf("credential must have a name")
 	}
@@ -251,7 +252,7 @@ func (c *Config) SaveCredential(credential *Credential) error {
 	return c.Save()
 }
 
-func (c *Config) SavePlatform(platform *Platform) error {
+func (c *Config) SavePlatform(platform *v2.Platform) error {
 	if platform.Name == "" {
 		return fmt.Errorf("platform must have a name")
 	}

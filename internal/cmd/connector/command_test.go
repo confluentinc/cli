@@ -13,7 +13,7 @@ import (
 	connectv1 "github.com/confluentinc/ccloudapis/connect/v1"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
@@ -24,7 +24,7 @@ const (
 
 type ConnectTestSuite struct {
 	suite.Suite
-	conf               *v2.Config
+	conf               *v3.Config
 	kafkaCluster       *kafkav1.KafkaCluster
 	connector          *connectv1.Connector
 	connectorInfo      *connectv1.ConnectorInfo
@@ -34,10 +34,10 @@ type ConnectTestSuite struct {
 }
 
 func (suite *ConnectTestSuite) SetupSuite() {
-	suite.conf = v2.AuthenticatedConfigMock()
+	suite.conf = v3.AuthenticatedCloudConfigMock()
 	ctx := suite.conf.Context()
 	suite.kafkaCluster = &kafkav1.KafkaCluster{
-		Id:         ctx.KafkaClusters[ctx.Kafka].ID,
+		Id:         ctx.KafkaClusterContext.GetActiveKafkaClusterId(),
 		Name:       "KafkaMock",
 		AccountId:  "testAccount",
 		Enterprise: true,

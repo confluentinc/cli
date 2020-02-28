@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 )
 
 type KafkaClusterContext struct {
@@ -26,10 +27,10 @@ type KafkaEnvContext struct {
 }
 
 func NewKafkaClusterContext(ctx *Context, activeKafka string, kafkaClusters map[string]*v1.KafkaClusterConfig) *KafkaClusterContext {
-	if ctx.Config.CLIName == "ccloud" && ctx.Credential.CredentialType == Username {
+	if ctx.Config.CLIName == "ccloud" && ctx.Credential.CredentialType == v2.Username {
 		return newKafkaClusterEnvironmentContext(activeKafka, kafkaClusters, ctx)
 	} else {
-		return newKafkaClusterNonEnvironmentContext(activeKafka, kafkaClusters)
+		return newKafkaClusterNonEnvironmentContext(activeKafka, kafkaClusters, ctx)
 	}
 
 }
@@ -42,15 +43,17 @@ func newKafkaClusterEnvironmentContext(activeKafka string, kafkaClusters map[str
 	kafkaClusterContext := &KafkaClusterContext{
 		EnvContext:         true,
 		KafkaEnvContexts: map[string]*KafkaEnvContext{ctx.GetCurrentEnvironmentId():kafkaEnvContext},
+		Context:          ctx,
 	}
 	return kafkaClusterContext
 }
 
-func newKafkaClusterNonEnvironmentContext(activeKafka string, kafkaClusters map[string]*v1.KafkaClusterConfig) *KafkaClusterContext {
+func newKafkaClusterNonEnvironmentContext(activeKafka string, kafkaClusters map[string]*v1.KafkaClusterConfig, ctx *Context) *KafkaClusterContext {
 	kafkaClusterContext := &KafkaClusterContext{
 		EnvContext:          false,
 		ActiveKafkaCluster:  activeKafka,
 		KafkaClusterConfigs: kafkaClusters,
+		Context:             ctx,
 	}
 	return kafkaClusterContext
 }

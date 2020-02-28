@@ -9,7 +9,7 @@ import (
 	"sort"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -90,7 +90,7 @@ func (s *ScopedIdService) DescribeCluster(ctx context.Context, url string) (*Sco
 }
 
 // New returns the Cobra command for `cluster`.
-func New(prerunner pcmd.PreRunner, config *v2.Config, client Metadata) *cobra.Command {
+func New(prerunner pcmd.PreRunner, config *v3.Config, client Metadata) *cobra.Command {
 	cmd := &command{
 		CLICommand: pcmd.NewAnonymousCLICommand(&cobra.Command{
 			Use:   "cluster",
