@@ -73,12 +73,12 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 		{args: "api-key list --current-user", fixture: "apikey23.golden"},
 
 		// create api-key for a service account
-		{args: "api-key create --resource lkc-cool1 --service-account-id 99", fixture: "apikey24.golden"},
+		{args: "api-key create --resource lkc-cool1 --service-account 99", fixture: "apikey24.golden"},
 		{args: "api-key list --current-user", fixture: "apikey23.golden"},
 		{args: "api-key list", fixture: "apikey25.golden"},
-		{args: "api-key list --service-account-id 99", fixture: "apikey26.golden"},
+		{args: "api-key list --service-account 99", fixture: "apikey26.golden"},
 		{args: "api-key list --resource lkc-cool1", fixture: "apikey27.golden"},
-		{args: "api-key list --resource lkc-cool1 --service-account-id 99", fixture: "apikey26.golden"},
+		{args: "api-key list --resource lkc-cool1 --service-account 99", fixture: "apikey26.golden"},
 
 		// create json yaml output
 		{args: "api-key create --description human-output --resource lkc-other1", fixture: "apikey31.golden"},
