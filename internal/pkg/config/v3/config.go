@@ -3,7 +3,6 @@ package v3
 import (
 	"encoding/json"
 	"fmt"
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -14,6 +13,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
@@ -59,11 +59,7 @@ func New(params *config.Params) *Config {
 // Load reads the CLI config from disk.
 // Save a default version if none exists yet.
 func (c *Config) Load() error {
-	if c.Ver.Compare(Version) < 0 {
-		return errors.New("Context version not up to date.")
-	} else if c.Ver.Compare(Version) > 0 {
-		return errors.New("Invalid config version.")
-	}
+	currentVersion := Version
 	filename, err := c.getFilename()
 	if err != nil {
 		return err
@@ -80,6 +76,11 @@ func (c *Config) Load() error {
 		return errors.Wrapf(err, "unable to read config file: %s", filename)
 	}
 	err = json.Unmarshal(input, c)
+	if c.Ver.Compare(currentVersion) < 0 {
+		return errors.New(fmt.Sprintf("Config version V%s not up to date with the latest version V%s.", c.Ver, currentVersion))
+	} else if c.Ver.Compare(Version) > 0 {
+		return errors.New(fmt.Sprintf("Invalid config version V%s.", c.Ver))
+	}
 	if err != nil {
 		return errors.Wrapf(err, "unable to parse config file: %s", filename)
 	}
