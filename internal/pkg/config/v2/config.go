@@ -197,8 +197,25 @@ func (c *Config) AddContext(name string, platformName string, credentialName str
 	kafkaClusters map[string]*v1.KafkaClusterConfig, kafka string,
 	schemaRegistryClusters map[string]*SchemaRegistryCluster, state *ContextState) error {
 	if _, ok := c.Contexts[name]; ok {
-		return fmt.Errorf("context \"%s\" already exists", name)
+		return fmt.Errorf("cannot create context \"%s\" because a context with this name already exists", name)
 	}
+
+	return c.BuildAndSaveContext(name, platformName, credentialName, kafkaClusters, kafka, schemaRegistryClusters, state)
+}
+
+func (c *Config) UpdateContext(name string, platformName string, credentialName string,
+	kafkaClusters map[string]*v1.KafkaClusterConfig, kafka string,
+	schemaRegistryClusters map[string]*SchemaRegistryCluster, state *ContextState) error {
+	if _, ok := c.Contexts[name]; !ok {
+		return fmt.Errorf("context \"%s\" does not exist and so cannot be updated", name)
+	}
+
+	return c.BuildAndSaveContext(name, platformName, credentialName, kafkaClusters, kafka, schemaRegistryClusters, state)
+}
+
+func (c *Config) BuildAndSaveContext(name string, platformName string, credentialName string,
+	kafkaClusters map[string]*v1.KafkaClusterConfig, kafka string,
+	schemaRegistryClusters map[string]*SchemaRegistryCluster, state *ContextState) error {
 	credential, ok := c.Credentials[credentialName]
 	if !ok {
 		return fmt.Errorf("credential \"%s\" not found", credentialName)

@@ -27,7 +27,7 @@ func NewRegionCommand(prerunner pcmd.PreRunner, config *v2.Config) *cobra.Comman
 		&cobra.Command{
 			Use:   "region",
 			Short: "Manage Confluent Cloud regions.",
-			Long: "Use this command to manage Confluent Cloud regions.",
+			Long:  "Use this command to manage Confluent Cloud regions.",
 		},
 		config, prerunner)
 	cmd := &regionCommand{

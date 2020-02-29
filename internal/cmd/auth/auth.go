@@ -15,7 +15,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config/v1"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -196,7 +196,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 		state.Auth.Account = state.Auth.Accounts[0]
 	}
 
-	err = a.addContextIfAbsent(state.Auth.User.Email, url, state, "")
+	err = a.addOrUpdateContext(state.Auth.User.Email, url, state, "")
 	if err != nil {
 		return err
 	}
@@ -268,7 +268,7 @@ func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
 		Auth:      nil,
 		AuthToken: resp.AuthToken,
 	}
-	err = a.addContextIfAbsent(email, url, state, caCertPath)
+	err = a.addOrUpdateContext(email, url, state, caCertPath)
 	if err != nil {
 		return err
 	}
@@ -346,15 +346,8 @@ func (a *commands) credentials(cmd *cobra.Command, userField string, cloudClient
 	return email, password, nil
 }
 
-func (a *commands) addContextIfAbsent(username string, url string, state *v2.ContextState, caCertPath string) error {
+func (a *commands) addOrUpdateContext(username string, url string, state *v2.ContextState, caCertPath string) error {
 	ctxName := generateContextName(username, url)
-	if _, ok := a.config.Contexts[ctxName]; ok {
-		err := a.config.SetContext(ctxName)
-		if err != nil {
-			return err
-		}
-		return nil
-	}
 	credName := generateCredentialName(username)
 	platform := &v2.Platform{
 		Name:       strings.TrimPrefix(url, "https://"),
@@ -374,8 +367,13 @@ func (a *commands) addContextIfAbsent(username string, url string, state *v2.Con
 	if err != nil {
 		return err
 	}
-	err = a.config.AddContext(ctxName, platform.Name, credential.Name, map[string]*v1.KafkaClusterConfig{},
-		"", nil, state)
+	if _, ok := a.config.Contexts[ctxName]; ok {
+		err = a.config.UpdateContext(ctxName, platform.Name, credential.Name, map[string]*v1.KafkaClusterConfig{},
+			"", nil, state)
+	} else {
+		err = a.config.AddContext(ctxName, platform.Name, credential.Name, map[string]*v1.KafkaClusterConfig{},
+			"", nil, state)
+	}
 	if err != nil {
 		return err
 	}
