@@ -1,130 +1,56 @@
 package migrations
 
 import (
-	//"github.com/confluentinc/cli/internal/pkg/config"
-	//v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"fmt"
+	"os"
+
+	"github.com/confluentinc/cli/internal/pkg/config/v1"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
-	//"strings"
 )
 
 
 func MigrateV2ToV3(cfgV2 *v2.Config) (*v3.Config, error) {
-	//platformsV1 := make(map[string]*v2.Platform)
-	//for name, platformV0 := range cfgV2.Platforms {
-	//	platformsV1[name] = migratePlatformV2ToV3(platformV0)
-	//}
-	//credentialsV1 := make(map[string]*v2.Credential)
-	//for name, credentialV0 := range cfgV1.Credentials {
-	//	credentialsV1[name] = migrateCredentialV1ToV2(credentialV0)
-	//}
-	//baseCfgV2 := &config.BaseConfig{
-	//	Params:   cfgV1.BaseConfig.Params,
-	//	Filename: cfgV1.BaseConfig.Filename,
-	//	Ver:      &v2.Version,
-	//}
-	//cfgV2 := &v2.Config{
-	//	BaseConfig:         baseCfgV2,
-	//	DisableUpdateCheck: cfgV1.DisableUpdateCheck,
-	//	DisableUpdates:     cfgV1.DisableUpdates,
-	//	NoBrowser:          cfgV1.DisableUpdates,
-	//	Platforms:          platformsV1,
-	//	Credentials:        credentialsV1,
-	//	Contexts:           nil,
-	//	ContextStates:      nil,
-	//	CurrentContext:     cfgV1.CurrentContext,
-	//	AnonymousId:        cfgV1.AnonymousId,
-	//}
-	//contextsV1 := make(map[string]*v2.Context)
-	//contextStates := make(map[string]*v2.ContextState)
-	//for name, contextV0 := range cfgV1.Contexts {
-	//	contextV1, state := migrateContextV1ToV2(contextV0, platformsV1[contextV0.Platform], credentialsV1[contextV0.Credential], cfgV1, cfgV2)
-	//	contextsV1[name] = contextV1
-	//	contextStates[name] = state
-	//}
-	//cfgV2.Contexts = contextsV1
-	//cfgV2.ContextStates = contextStates
-	//err := cfgV2.Validate()
-	//if err != nil {
-	//	return nil, err
-	//}
-	//return cfgV2, nil
-	return &v3.Config{}, nil
+	cfgV3 := &v3.Config{
+		BaseConfig:         cfgV2.BaseConfig,
+		DisableUpdateCheck: cfgV2.DisableUpdateCheck,
+		DisableUpdates:     cfgV2.DisableUpdates,
+		NoBrowser:          cfgV2.NoBrowser,
+		Platforms:          cfgV2.Platforms,
+		Credentials:        cfgV2.Credentials,
+		Contexts:           nil,
+		ContextStates:      cfgV2.ContextStates,
+		CurrentContext:     cfgV2.CurrentContext,
+		AnonymousId:        cfgV2.AnonymousId,
+	}
+	contextsV3 := make(map[string]*v3.Context)
+	for ctxName, ctxV2 := range cfgV2.Contexts {
+		contextsV3[ctxName] = migrateContextV2ToV3(ctxV2, cfgV3)
+	}
+	cfgV3.Contexts = contextsV3
+	return cfgV3, nil
 }
 
-//func migrateContextV2ToV3(contextV2 *v2.Context, platformV2 *v2.Platform, credentialV2 *v2.Credential, cfgV1 *v1.Config, cfgV2 *v2.Config) (*v2.Context, *v2.ContextState) {
-//	if contextV1 == nil {
-//		return nil, nil
-//	}
-//	srClustersV1 := make(map[string]*v2.SchemaRegistryCluster)
-//	for envId, srClusterV0 := range contextV1.SchemaRegistryClusters {
-//		srClustersV1[envId] = migrateSRClusterV1ToV2(srClusterV0)
-//	}
-//	state := &v2.ContextState{
-//		Auth:      cfgV1.Auth,
-//		AuthToken: cfgV1.AuthToken,
-//	}
-//	contextV2 := &v2.Context{
-//		Name:                   contextV1.Name,
-//		Platform:               platformV2,
-//		PlatformName:           contextV1.Platform,
-//		Credential:             credentialV2,
-//		CredentialName:         contextV1.Credential,
-//		KafkaClusters:          contextV1.KafkaClusters,
-//		Kafka:                  contextV1.Kafka,
-//		SchemaRegistryClusters: srClustersV1,
-//		State:                  state,
-//		Logger:                 cfgV1.Logger,
-//		Config:                 cfgV2,
-//	}
-//	return contextV2, state
-//}
-//
-//func migrateSRClusterV1ToV2(srClusterV1 *v1.SchemaRegistryCluster) *v2.SchemaRegistryCluster {
-//	if srClusterV1 == nil {
-//		return nil
-//	}
-//	srClusterV2 := &v2.SchemaRegistryCluster{
-//		Id:                     "",
-//		SchemaRegistryEndpoint: srClusterV1.SchemaRegistryEndpoint,
-//		SrCredentials:          srClusterV1.SrCredentials,
-//	}
-//	return srClusterV2
-//}
-//
-//func migratePlatformV1ToV2(platformV1 *v1.Platform) *v2.Platform {
-//	if platformV1 == nil {
-//		return nil
-//	}
-//	platformV2 := &v2.Platform{
-//		Name:       strings.TrimPrefix(platformV1.Server, "https://"),
-//		Server:     platformV1.Server,
-//		CaCertPath: platformV1.CaCertPath,
-//	}
-//	return platformV2
-//}
-//
-//func migrateCredentialV1ToV2(credentialV1 *v1.Credential) *v2.Credential {
-//	if credentialV1 == nil {
-//		return nil
-//	}
-//	credentialV2 := &v2.Credential{
-//		Name:           credentialV1.String(),
-//		Username:       credentialV1.Username,
-//		Password:       credentialV1.Password,
-//		APIKeyPair:     credentialV1.APIKeyPair,
-//		CredentialType: migrateCredentialTypeV1ToV2(credentialV1.CredentialType),
-//	}
-//	return credentialV2
-//}
-//
-//func migrateCredentialTypeV1ToV2(credTypeV1 v1.CredentialType) v2.CredentialType {
-//	switch credTypeV1 {
-//	case v1.Username:
-//		return v2.Username
-//	case v1.APIKey:
-//		return v2.APIKey
-//	default:
-//		panic("unknown credential type")
-//	}
-//}
+func migrateContextV2ToV3(contextV2 *v2.Context, cfgV3 *v3.Config) *v3.Context {
+	contextV3 := &v3.Context{
+		Name:                   contextV2.Name,
+		Platform:               contextV2.Platform,
+		PlatformName:           contextV2.PlatformName,
+		Credential:             contextV2.Credential,
+		CredentialName:         contextV2.CredentialName,
+		KafkaClusterContext:    nil,
+		SchemaRegistryClusters: contextV2.SchemaRegistryClusters,
+		State:                  contextV2.State,
+		Logger:                 contextV2.Logger,
+		Config:                 cfgV3,
+	}
+	kafka := contextV2.Kafka
+	kafkaClusters := contextV2.KafkaClusters
+	if cfgV3.CLIName == "ccloud" && contextV3.Credential.CredentialType == v2.Username {
+		kafka = ""
+		kafkaClusters = map[string]*v1.KafkaClusterConfig{}
+		_, _ = fmt.Fprint(os.Stderr, "Migrating ccloud username context from V2 to V3: removing active Kafka and kafka cluster information from config.")
+	}
+	contextV3.KafkaClusterContext = v3.NewKafkaClusterContext(contextV3, kafka, kafkaClusters)
+	return contextV3
+}
