@@ -49,7 +49,7 @@ func migrateContextV2ToV3(contextV2 *v2.Context, cfgV3 *v3.Config) *v3.Context {
 	if cfgV3.CLIName == "ccloud" && contextV3.Credential.CredentialType == v2.Username {
 		kafka = ""
 		kafkaClusters = map[string]*v1.KafkaClusterConfig{}
-		_, _ = fmt.Fprint(os.Stderr, "Migrating ccloud username context from V2 to V3: removing active Kafka and kafka cluster information from config.")
+		_, _ = fmt.Fprint(os.Stderr, "Removing active Kafka and kafka cluster information from config as part of username context migration from V2 to V3.\n")
 	}
 	contextV3.KafkaClusterContext = v3.NewKafkaClusterContext(contextV3, kafka, kafkaClusters)
 	return contextV3

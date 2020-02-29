@@ -59,6 +59,11 @@ func New(params *config.Params) *Config {
 // Load reads the CLI config from disk.
 // Save a default version if none exists yet.
 func (c *Config) Load() error {
+	if c.Ver.Compare(Version) < 0 {
+		return errors.New("Context version not up to date.")
+	} else if c.Ver.Compare(Version) > 0 {
+		return errors.New("Invalid config version.")
+	}
 	filename, err := c.getFilename()
 	if err != nil {
 		return err
@@ -94,6 +99,9 @@ func (c *Config) Load() error {
 		context.Platform = c.Platforms[context.PlatformName]
 		context.Logger = c.Logger
 		context.Config = c
+		if context.KafkaClusterContext == nil {
+			return errors.New(fmt.Sprintf("Context '%s' missing KafkaClusterContext", context.Name))
+		}
 		context.KafkaClusterContext.Context = context
 	}
 	err = c.Validate()
