@@ -566,13 +566,13 @@ func (s *CLITestSuite) validateTestOutput(tt CLITest, t *testing.T, output strin
 	if *update && !tt.regex && tt.fixture != "" {
 		writeFixture(t, tt.fixture, output)
 	}
-	actual := normalizeNewLines(string(output))
+	actual := NormalizeNewLines(string(output))
 	if tt.contains != "" {
 		require.Contains(t, actual, tt.contains)
 	} else if tt.notContains != "" {
 		require.NotContains(t, actual, tt.notContains)
 	} else if tt.fixture != "" {
-		expected := normalizeNewLines(loadFixture(t, tt.fixture))
+		expected := NormalizeNewLines(loadFixture(t, tt.fixture))
 
 		if tt.regex {
 			require.Regexp(t, expected, actual)

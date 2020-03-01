@@ -18,6 +18,7 @@ import (
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/version"
+	testUtils "github.com/confluentinc/cli/test"
 )
 
 var (
@@ -267,8 +268,8 @@ func TestConfig_Save(t *testing.T) {
 			}
 			got, _ := ioutil.ReadFile(configFile.Name())
 			want, _ := ioutil.ReadFile(tt.wantFile)
-			if string(got) != string(want) {
-				t.Errorf("Config.Save() = %v\n want = %v", string(got), string(want))
+			if testUtils.NormalizeNewLines(string(got)) != testUtils.NormalizeNewLines(string(want)) {
+				t.Errorf("Config.Save() = %v\n want = %v", testUtils.NormalizeNewLines(string(got)), testUtils.NormalizeNewLines(string(want)))
 			}
 			fd, err := os.Stat(configFile.Name())
 			require.NoError(t, err)
