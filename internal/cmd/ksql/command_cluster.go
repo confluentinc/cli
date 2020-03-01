@@ -269,7 +269,7 @@ func (c *clusterCommand) configureACLs(cmd *cobra.Command, args []string) error 
 		return errors.HandleCommon(err, cmd)
 	}
 	if cluster.KafkaClusterId != kafkaCluster.Id {
-		pcmd.Printf(cmd, "This KSQL cluster is not backed by the current Kafka cluster.")
+		pcmd.ErrPrintf(cmd, "This KSQL cluster is not backed by the current Kafka cluster.")
 	}
 
 	serviceAccountId, err := c.getServiceAccount(cluster)

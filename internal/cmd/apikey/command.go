@@ -275,7 +275,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	}
 
 	if outputFormat == output.Human.String() {
-		pcmd.Println(cmd, "Save the API key and secret. The secret is not retrievable later.")
+		pcmd.ErrPrintln(cmd, "Save the API key and secret. The secret is not retrievable later.")
 	}
 
 	err = output.DescribeObject(cmd, userKey, createFields, createHumanRenames, createStructuredRenames)

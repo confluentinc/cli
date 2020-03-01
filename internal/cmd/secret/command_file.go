@@ -332,7 +332,7 @@ func (c *secureFileCommand) rotate(cmd *cobra.Command, args []string) error {
 			return errors.HandleCommon(err, cmd)
 		}
 
-		pcmd.Println(cmd, "Save the Master Key. It is not retrievable later.")
+		pcmd.ErrPrintln(cmd, "Save the Master Key. It is not retrievable later.")
 		err = printer.RenderTableOut(&struct{ MasterKey string }{MasterKey: masterKey}, []string{"MasterKey"}, map[string]string{"MasterKey": "Master Key"}, os.Stdout)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
