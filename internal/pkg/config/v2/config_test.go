@@ -76,7 +76,7 @@ func TestConfig_Load(t *testing.T) {
 				APIEndpoint: "",
 				APIKeys: map[string]*v0.APIKeyPair{
 					"abc-key-123": {
-						Key: "abc-key-123",
+						Key:    "abc-key-123",
 						Secret: "def-secret-456",
 					},
 				},
@@ -321,7 +321,7 @@ func TestConfig_Save(t *testing.T) {
 				APIEndpoint: "",
 				APIKeys: map[string]*v0.APIKeyPair{
 					"abc-key-123": {
-						Key: "abc-key-123",
+						Key:    "abc-key-123",
 						Secret: "def-secret-456",
 					},
 				},

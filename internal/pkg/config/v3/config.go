@@ -28,15 +28,15 @@ var (
 // Config represents the CLI configuration.
 type Config struct {
 	*config.BaseConfig
-	DisableUpdateCheck bool                     `json:"disable_update_check"`
-	DisableUpdates     bool                     `json:"disable_updates"`
-	NoBrowser          bool                     `json:"no_browser" hcl:"no_browser"`
+	DisableUpdateCheck bool                        `json:"disable_update_check"`
+	DisableUpdates     bool                        `json:"disable_updates"`
+	NoBrowser          bool                        `json:"no_browser" hcl:"no_browser"`
 	Platforms          map[string]*v2.Platform     `json:"platforms,omitempty"`
 	Credentials        map[string]*v2.Credential   `json:"credentials,omitempty"`
-	Contexts           map[string]*Context      `json:"contexts,omitempty"`
+	Contexts           map[string]*Context         `json:"contexts,omitempty"`
 	ContextStates      map[string]*v2.ContextState `json:"context_states,omitempty"`
-	CurrentContext     string                   `json:"current_context"`
-	AnonymousId        string                   `json:"anonymous_id,omitempty"`
+	CurrentContext     string                      `json:"current_context"`
+	AnonymousId        string                      `json:"anonymous_id,omitempty"`
 }
 
 // NewBaseConfig initializes a new Config object

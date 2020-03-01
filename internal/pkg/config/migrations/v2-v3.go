@@ -9,7 +9,6 @@ import (
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 )
 
-
 func MigrateV2ToV3(cfgV2 *v2.Config) (*v3.Config, error) {
 	cfgV3 := &v3.Config{
 		BaseConfig:         cfgV2.BaseConfig,

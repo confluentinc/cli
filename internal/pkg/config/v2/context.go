@@ -58,8 +58,8 @@ func (c *Context) validateKafkaClusterConfig(cluster *v1.KafkaClusterConfig) err
 		return fmt.Errorf("cluster under context '%s' has no %s", c.Name, "id")
 	}
 	if _, ok := cluster.APIKeys[cluster.APIKey]; cluster.APIKey != "" && !ok {
-		_, _ = fmt.Fprintf(os.Stderr, "Current API key '%s' of cluster '%s' under context '%s' is not found.\n" +
-			"Removing current API key setting for the cluster.\n" +
+		_, _ = fmt.Fprintf(os.Stderr, "Current API key '%s' of cluster '%s' under context '%s' is not found.\n"+
+			"Removing current API key setting for the cluster.\n"+
 			"You can re-add the API key with 'ccloud api-key store' and set current API key with 'ccloud api-key use'.\n",
 			cluster.APIKey, cluster.Name, c.Name)
 		cluster.APIKey = ""
@@ -113,9 +113,9 @@ func (c *Context) printApiKeysDictErrorMessage(missingKey, mismatchKey, missingS
 		problems = append(problems, "'API secret missing'")
 	}
 	problemString := strings.Join(problems, ", ")
-	_, _ = fmt.Fprintf(os.Stderr, "There are malformed API key secret pair entries in the dictionary for cluster '%s' under context '%s'.\n" +
-		"The issues are the following: " + problemString + ".\n" +
-		"Deleting the malformed entries.\n" +
+	_, _ = fmt.Fprintf(os.Stderr, "There are malformed API key secret pair entries in the dictionary for cluster '%s' under context '%s'.\n"+
+		"The issues are the following: "+problemString+".\n"+
+		"Deleting the malformed entries.\n"+
 		"You can re-add the API key secret pair with 'ccloud api-key store'\n",
 		cluster.Name, c.Name)
 }

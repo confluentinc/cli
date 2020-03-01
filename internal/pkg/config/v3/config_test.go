@@ -23,19 +23,19 @@ import (
 var (
 	apiKeyString    = "abc-key-123"
 	apiSecretString = "def-secret-456"
-	kafkaClusterID = "anonymous-id"
-	contextName = "my-context"
-	accountID = "acc-123"
+	kafkaClusterID  = "anonymous-id"
+	contextName     = "my-context"
+	accountID       = "acc-123"
 )
 
 type TestConfigs struct {
-	kafkaClusters map[string]*v1.KafkaClusterConfig
-	activeKafka string
-	statefulConfig *Config
+	kafkaClusters   map[string]*v1.KafkaClusterConfig
+	activeKafka     string
+	statefulConfig  *Config
 	statelessConfig *Config
 }
 
-func SetupConfigs() *TestConfigs{
+func SetupConfigs() *TestConfigs {
 	testConfigs := &TestConfigs{}
 	platform := &v2.Platform{
 		Name:   "http://test",
@@ -108,11 +108,11 @@ func SetupConfigs() *TestConfigs{
 		Logger: log.New(),
 	}
 	statelessContext := &Context{
-		Name:           contextName,
-		Platform:       platform,
-		PlatformName:   platform.Name,
-		Credential:     apiCredential,
-		CredentialName: apiCredential.Name,
+		Name:                   contextName,
+		Platform:               platform,
+		PlatformName:           platform.Name,
+		Credential:             apiCredential,
+		CredentialName:         apiCredential.Name,
 		SchemaRegistryClusters: map[string]*v2.SchemaRegistryCluster{},
 		State:                  &v2.ContextState{},
 		Logger:                 log.New(),
@@ -242,19 +242,19 @@ func TestConfig_Load(t *testing.T) {
 func TestConfig_Save(t *testing.T) {
 	testConfigs := SetupConfigs()
 	tests := []struct {
-		name    string
-		config  *Config
-		wantFile    string
-		wantErr bool
+		name     string
+		config   *Config
+		wantFile string
+		wantErr  bool
 	}{
 		{
-			name:   "save config with state to file",
-			config: testConfigs.statefulConfig,
+			name:     "save config with state to file",
+			config:   testConfigs.statefulConfig,
 			wantFile: "test_json/stateful.json",
 		},
 		{
-			name:   "save stateless config to file",
-			config: testConfigs.statelessConfig,
+			name:     "save stateless config to file",
+			config:   testConfigs.statelessConfig,
 			wantFile: "test_json/stateless.json",
 		},
 	}
@@ -379,7 +379,7 @@ func TestConfig_AddContext(t *testing.T) {
 	failAddingExistingContextTest.want = nil
 	failAddingExistingContextTest.wantErr = true
 
-	tests := []testSturct {
+	tests := []testSturct{
 		addValidContextTest,
 		failAddingExistingContextTest,
 	}
@@ -593,4 +593,3 @@ func TestConfig_Context(t *testing.T) {
 		})
 	}
 }
-

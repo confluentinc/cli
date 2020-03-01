@@ -10,9 +10,9 @@ import (
 )
 
 type KafkaClusterContext struct {
-	EnvContext          bool                              `json:"environment_context"`
+	EnvContext bool `json:"environment_context"`
 	// ActiveKafkaCluster is your active Kafka cluster and references a key in the KafkaClusters map
-	ActiveKafkaCluster  string                            `json:"active_kafka,omitempty"`
+	ActiveKafkaCluster string `json:"active_kafka,omitempty"`
 	// KafkaClusterConfigs store connection info for interacting directly with Kafka (e.g., consume/produce, etc)
 	// N.B. These may later be exposed in the CLI to directly register kafkas (outside a Control Plane)
 	// Mapped by cluster id.
@@ -41,8 +41,8 @@ func newKafkaClusterEnvironmentContext(activeKafka string, kafkaClusters map[str
 		KafkaClusterConfigs: kafkaClusters,
 	}
 	kafkaClusterContext := &KafkaClusterContext{
-		EnvContext:         true,
-		KafkaEnvContexts: map[string]*KafkaEnvContext{ctx.GetCurrentEnvironmentId():kafkaEnvContext},
+		EnvContext:       true,
+		KafkaEnvContexts: map[string]*KafkaEnvContext{ctx.GetCurrentEnvironmentId(): kafkaEnvContext},
 		Context:          ctx,
 	}
 	return kafkaClusterContext
@@ -185,8 +185,8 @@ func (k *KafkaClusterContext) validateKafkaClusterConfig(cluster *v1.KafkaCluste
 		panic(fmt.Sprintf("cluster under context '%s' has no id", k.Context.Name))
 	}
 	if _, ok := cluster.APIKeys[cluster.APIKey]; cluster.APIKey != "" && !ok {
-		_, _ = fmt.Fprintf(os.Stderr, "Current API key '%s' of cluster '%s' under context '%s' is not found.\n" +
-			"Removing current API key setting for the cluster.\n" +
+		_, _ = fmt.Fprintf(os.Stderr, "Current API key '%s' of cluster '%s' under context '%s' is not found.\n"+
+			"Removing current API key setting for the cluster.\n"+
 			"You can re-add the API key with 'ccloud api-key store' and set current API key with 'ccloud api-key use'.\n",
 			cluster.APIKey, cluster.ID, k.Context.Name)
 		cluster.APIKey = ""
@@ -239,9 +239,9 @@ func (k *KafkaClusterContext) printApiKeysDictErrorMessage(missingKey, mismatchK
 		problems = append(problems, "'API secret missing'")
 	}
 	problemString := strings.Join(problems, ", ")
-	_, _ = fmt.Fprintf(os.Stderr, "There are malformed API key secret pair entries in the dictionary for cluster '%s' under context '%s'.\n" +
-		"The issues are the following: " + problemString + ".\n" +
-		"Deleting the malformed entries.\n" +
+	_, _ = fmt.Fprintf(os.Stderr, "There are malformed API key secret pair entries in the dictionary for cluster '%s' under context '%s'.\n"+
+		"The issues are the following: "+problemString+".\n"+
+		"Deleting the malformed entries.\n"+
 		"You can re-add the API key secret pair with 'ccloud api-key store'\n",
 		cluster.Name, k.Context.Name)
 }
