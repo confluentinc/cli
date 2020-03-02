@@ -45,12 +45,12 @@ func (c *aclCommand) init() {
 
 ::
 
-	ccloud kafka acl create --allow --service-account-id 1522 --operation READ --consumer-group \
+	ccloud kafka acl create --allow --service-account 1522 --operation READ --consumer-group \
 	java_example_group_1
 
 ::
 
-	ccloud kafka acl create --allow --service-account-id 1522 --operation READ --topic '*'
+	ccloud kafka acl create --allow --service-account 1522 --operation READ --topic '*'
 
 `,
 		RunE: c.create,
@@ -79,7 +79,7 @@ func (c *aclCommand) init() {
 		Args:  cobra.NoArgs,
 	}
 	cmd.Flags().AddFlagSet(resourceFlags())
-	cmd.Flags().Int("service-account-id", 0, "Service account ID.")
+	cmd.Flags().Int("service-account", 0, "Service account ID.")
 	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	cmd.Flags().SortFlags = false
 

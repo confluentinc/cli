@@ -90,7 +90,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "error reading --yes as bool")
 	}
 
-	pcmd.Println(cmd, "Checking for updates...")
+	pcmd.ErrPrintln(cmd, "Checking for updates...")
 	updateAvailable, latestVersion, err := c.client.CheckForUpdates(c.cliName, c.version.Version, true)
 	if err != nil {
 		c.Command.SilenceUsage = true
@@ -120,7 +120,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	if err := c.client.UpdateBinary(c.cliName, latestVersion, oldBin); err != nil {
 		return err
 	}
-	pcmd.Printf(cmd, "Update your autocomplete scripts as instructed by: %s help completion\n", c.config.CLIName)
+	pcmd.ErrPrintf(cmd, "Update your autocomplete scripts as instructed by: %s help completion\n", c.config.CLIName)
 
 	return nil
 }

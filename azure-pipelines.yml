@@ -13,6 +13,7 @@ pool:
 variables:
   # Fixes checksum errors when downloading chrome
   homebrew_cask_opts: '--no-quarantine'
+  CI: true
 
 steps:
 - script: |

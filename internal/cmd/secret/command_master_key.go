@@ -80,7 +80,7 @@ func (c *masterKeyCommand) generate(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	pcmd.Println(cmd, "Save the master key. It cannot be retrieved later.")
+	pcmd.ErrPrintln(cmd, "Save the master key. It cannot be retrieved later.")
 	err = printer.RenderTableOut(&struct{ MasterKey string }{MasterKey: masterKey}, []string{"MasterKey"}, map[string]string{"MasterKey": "Master Key"}, os.Stdout)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
