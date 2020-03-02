@@ -4,12 +4,12 @@ import (
 	"os"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/mock"
 )
 
 func AuthenticatedDynamicConfigMock() *cmd.DynamicConfig {
-	cfg := v2.AuthenticatedConfigMock()
+	cfg := v3.AuthenticatedCloudConfigMock()
 	client := mock.NewClientMock()
 	flagResolverMock := &cmd.FlagResolverImpl{
 		Prompt: &Prompt{},

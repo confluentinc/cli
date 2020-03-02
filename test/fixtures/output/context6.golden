@@ -1,15 +1,17 @@
 credential: api-key-hi
-kafka_cluster: anonymous-id
-kafka_clusters:
-  anonymous-id:
-    api_key: hi
-    api_keys:
-      hi:
-        api_key: hi
-        api_secret: my-secret
-    bootstrap_servers: boot-test.com
-    id: anonymous-id
-    name: anonymous-cluster
+kafka_cluster_context:
+  active_kafka: anonymous-id
+  environment_context: false
+  kafka_cluster_configs:
+    anonymous-id:
+      api_key: hi
+      api_keys:
+        hi:
+          api_key: hi
+          api_secret: my-secret
+      bootstrap_servers: boot-test.com
+      id: anonymous-id
+      name: anonymous-cluster
 name: my-context
 platform: boot-test.com
 schema_registry_clusters: {}

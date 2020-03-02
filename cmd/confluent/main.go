@@ -16,7 +16,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/config/load"
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/metric"
@@ -46,14 +46,14 @@ func main() {
 
 	metricSink := metric.NewSink()
 
-	var cfg *v2.Config
+	var cfg *v3.Config
 
 	params := &config.Params{
 		CLIName:    cliName,
 		MetricSink: metricSink,
 		Logger:     logger,
 	}
-	cfg = v2.New(params)
+	cfg = v3.New(params)
 	cfg, err = load.LoadAndMigrate(cfg)
 	if err != nil {
 		stubCmd := &cobra.Command{}

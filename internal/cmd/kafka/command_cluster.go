@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -31,7 +31,7 @@ type clusterCommand struct {
 }
 
 // NewClusterCommand returns the Cobra command for Kafka cluster.
-func NewClusterCommand(prerunner pcmd.PreRunner, config *v2.Config) *cobra.Command {
+func NewClusterCommand(prerunner pcmd.PreRunner, config *v3.Config) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "cluster",
@@ -117,7 +117,7 @@ func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 	for _, cluster := range clusters {
 		// Add '*' only in the case where we are printing out tables
 		if outputWriter.GetOutputFormat() == output.Human {
-			if cluster.Id == c.Context.Kafka {
+			if cluster.Id == c.Context.KafkaClusterContext.GetActiveKafkaClusterId() {
 				cluster.Id = fmt.Sprintf("* %s", cluster.Id)
 			} else {
 				cluster.Id = fmt.Sprintf("  %s", cluster.Id)

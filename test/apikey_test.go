@@ -6,7 +6,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	"github.com/confluentinc/cli/internal/pkg/config/load"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
@@ -91,15 +92,16 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 		{name: "succeed if forced to overwrite existing secret", args: "api-key store -f UIAPIKEY100 NEWSECRET --resource lkc-cool1", fixture: "empty.golden",
 			wantFunc: func(t *testing.T) {
 				logger := log.New()
-				cfg := v2.New(&config.Params{
+				cfg := v3.New(&config.Params{
 					CLIName:    "ccloud",
 					MetricSink: nil,
 					Logger:     logger,
 				})
-				require.NoError(t, cfg.Load())
+				cfg, err := load.LoadAndMigrate(cfg)
+				require.NoError(t, err)
 				ctx := cfg.Context()
 				require.NotNil(t, ctx)
-				kcc := ctx.KafkaClusters["lkc-cool1"]
+				kcc := ctx.KafkaClusterContext.GetKafkaClusterConfig("lkc-cool1")
 				pair := kcc.APIKeys["UIAPIKEY100"]
 				require.NotNil(t, pair)
 				require.Equal(t, "NEWSECRET", pair.Secret)

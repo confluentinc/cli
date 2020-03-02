@@ -17,6 +17,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/sso"
@@ -25,7 +26,7 @@ import (
 type commands struct {
 	Commands        []*pcmd.CLICommand
 	Logger          *log.Logger
-	config          *v2.Config
+	config          *v3.Config
 	analyticsClient analytics.Client
 	// @VisibleForTesting
 	MDSClient *mds.APIClient
@@ -42,7 +43,7 @@ var (
 )
 
 // New returns a list of auth-related Cobra commands.
-func New(prerunner pcmd.PreRunner, config *v2.Config, logger *log.Logger, userAgent string, analyticsClient analytics.Client) []*cobra.Command {
+func New(prerunner pcmd.PreRunner, config *v3.Config, logger *log.Logger, userAgent string, analyticsClient analytics.Client) []*cobra.Command {
 	var defaultAnonHTTPClientFactory = func(baseURL string, logger *log.Logger) *ccloud.Client {
 		return ccloud.NewClient(&ccloud.Params{BaseURL: baseURL, HttpClient: ccloud.BaseClient, Logger: logger, UserAgent: userAgent})
 	}
@@ -59,7 +60,7 @@ func New(prerunner pcmd.PreRunner, config *v2.Config, logger *log.Logger, userAg
 	return cobraCmds
 }
 
-func newCommands(prerunner pcmd.PreRunner, config *v2.Config, log *log.Logger, prompt pcmd.Prompt,
+func newCommands(prerunner pcmd.PreRunner, config *v3.Config, log *log.Logger, prompt pcmd.Prompt,
 	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *ccloud.Client,
 	jwtHTTPClientFactory func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *ccloud.Client,
 	analyticsClient analytics.Client) *commands {

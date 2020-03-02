@@ -16,7 +16,7 @@ import (
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/acl"
-	"github.com/confluentinc/cli/internal/pkg/config/v2"
+	"github.com/confluentinc/cli/internal/pkg/config/v3"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
@@ -64,7 +64,7 @@ const (
 
 type KSQLTestSuite struct {
 	suite.Suite
-	conf         *v2.Config
+	conf         *v3.Config
 	kafkaCluster *kafkav1.KafkaCluster
 	ksqlCluster  *ksqlv1.KSQLCluster
 	serviceAcct  *orgv1.User
@@ -74,10 +74,10 @@ type KSQLTestSuite struct {
 }
 
 func (suite *KSQLTestSuite) SetupSuite() {
-	suite.conf = v2.AuthenticatedConfigMock()
+	suite.conf = v3.AuthenticatedCloudConfigMock()
 	suite.ksqlCluster = &ksqlv1.KSQLCluster{
 		Id:                ksqlClusterID,
-		KafkaClusterId:    suite.conf.Context().Kafka,
+		KafkaClusterId:    suite.conf.Context().KafkaClusterContext.GetActiveKafkaClusterId(),
 		PhysicalClusterId: physicalClusterID,
 		OutputTopicPrefix: outputTopicPrefix,
 	}
@@ -148,7 +148,7 @@ func (suite *KSQLTestSuite) TestShouldAlsoConfigureForPro() {
 	cmd := suite.newCMD()
 	cmd.SetArgs(append([]string{"app", "configure-acls", ksqlClusterID}))
 	suite.kafkac.DescribeFunc = func(ctx context.Context, cluster *kafkav1.KafkaCluster) (cluster2 *kafkav1.KafkaCluster, e error) {
-		return &kafkav1.KafkaCluster{Id: suite.conf.Context().Kafka, Enterprise: false}, nil
+		return &kafkav1.KafkaCluster{Id: suite.conf.Context().KafkaClusterContext.GetActiveKafkaClusterId(), Enterprise: false}, nil
 	}
 
 	err := cmd.Execute()

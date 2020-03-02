@@ -3,7 +3,7 @@ package schema_registry
 import (
 	"github.com/spf13/cobra"
 
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/log"
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
@@ -18,7 +18,7 @@ type command struct {
 	prerunner pcmd.PreRunner
 }
 
-func New(prerunner pcmd.PreRunner, config *v2.Config, srClient *srsdk.APIClient, logger *log.Logger) *cobra.Command {
+func New(prerunner pcmd.PreRunner, config *v3.Config, srClient *srsdk.APIClient, logger *log.Logger) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "schema-registry",

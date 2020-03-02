@@ -6,7 +6,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/doc"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/version"
@@ -25,7 +25,7 @@ func main() {
 	logger := log.New()
 	confluent, err := cmd.NewConfluentCommand(
 		cliName,
-		v2.New(&config.Params{
+		v3.New(&config.Params{
 			CLIName:    cliName,
 			MetricSink: nil,
 			Logger:     logger,

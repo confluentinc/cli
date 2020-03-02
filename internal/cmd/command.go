@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"net/http"
 	"os"
 	"runtime"
@@ -46,7 +47,7 @@ type Command struct {
 	logger    *log.Logger
 }
 
-func NewConfluentCommand(cliName string, cfg *v2.Config, logger *log.Logger, ver *pversion.Version, analytics analytics.Client) (*Command, error) {
+func NewConfluentCommand(cliName string, cfg *v3.Config, logger *log.Logger, ver *pversion.Version, analytics analytics.Client) (*Command, error) {
 	cli := &cobra.Command{
 		Use:               cliName,
 		Version:           ver.Version,

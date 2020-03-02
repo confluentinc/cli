@@ -11,7 +11,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	"github.com/confluentinc/cli/internal/pkg/config/load"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	pmock "github.com/confluentinc/cli/internal/pkg/mock"
 	"github.com/confluentinc/cli/internal/pkg/update/mock"
@@ -99,16 +100,18 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 					Out:    os.Stdout,
 				},
 				Analytics: cliMock.NewDummyAnalyticsMock(),
+				Clock: clockwork.NewRealClock(),
 			}
 
 			root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
 			root.Flags().CountP("verbose", "v", "Increase verbosity")
-			cfg := v2.New(nil)
-			require.NoError(t, cfg.Load())
+			cfg := v3.New(nil)
+			cfg, err := load.LoadAndMigrate(cfg)
+			require.NoError(t, err)
 			rootCmd := pcmd.NewAnonymousCLICommand(root, cfg, r)
 
 			args := strings.Split(tt.fields.Command, " ")
-			_, err := pcmd.ExecuteCommand(rootCmd.Command, args...)
+			_, err = pcmd.ExecuteCommand(rootCmd.Command, args...)
 			require.NoError(t, err)
 
 			got := tt.fields.Logger.GetLevel()
@@ -120,8 +123,9 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 }
 
 func TestPreRun_HasAPIKey_SetupLoggingAndCheckForUpdates(t *testing.T) {
-	cfg := v2.New(nil)
-	require.NoError(t, cfg.Load())
+	cfg := v3.New(nil)
+	cfg, err := load.LoadAndMigrate(cfg)
+	require.NoError(t, err)
 
 	ver := pmock.NewVersionMock()
 
@@ -140,13 +144,14 @@ func TestPreRun_HasAPIKey_SetupLoggingAndCheckForUpdates(t *testing.T) {
 			Out:    os.Stdout,
 		},
 		Analytics: cliMock.NewDummyAnalyticsMock(),
+		Clock: clockwork.NewRealClock(),
 	}
 
 	root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
 	root.Flags().CountP("verbose", "v", "Increase verbosity")
 	rootCmd := pcmd.NewAnonymousCLICommand(root, cfg, r)
 	args := strings.Split("help", " ")
-	_, err := pcmd.ExecuteCommand(rootCmd.Command, args...)
+	_, err = pcmd.ExecuteCommand(rootCmd.Command, args...)
 	require.NoError(t, err)
 
 	if !calledAnonymous {
@@ -155,8 +160,9 @@ func TestPreRun_HasAPIKey_SetupLoggingAndCheckForUpdates(t *testing.T) {
 }
 
 func TestPreRun_CallsAnalyticsTrackCommand(t *testing.T) {
-	cfg := v2.New(nil)
-	require.NoError(t, cfg.Load())
+	cfg := v3.New(nil)
+	cfg, err := load.LoadAndMigrate(cfg)
+	require.NoError(t, err)
 
 	ver := pmock.NewVersionMock()
 	analyticsClient := cliMock.NewDummyAnalyticsMock()
@@ -174,6 +180,7 @@ func TestPreRun_CallsAnalyticsTrackCommand(t *testing.T) {
 			Out:    os.Stdout,
 		},
 		Analytics: analyticsClient,
+		Clock: clockwork.NewRealClock(),
 	}
 
 	root := &cobra.Command{
@@ -182,14 +189,14 @@ func TestPreRun_CallsAnalyticsTrackCommand(t *testing.T) {
 	rootCmd := pcmd.NewAnonymousCLICommand(root, cfg, r)
 	root.Flags().CountP("verbose", "v", "Increase verbosity")
 
-	_, err := pcmd.ExecuteCommand(rootCmd.Command)
+	_, err = pcmd.ExecuteCommand(rootCmd.Command)
 	require.NoError(t, err)
 
 	require.True(t, analyticsClient.TrackCommandCalled())
 }
 
 func TestPreRun_TokenExpires(t *testing.T) {
-	cfg := v2.AuthenticatedConfigMock()
+	cfg := v3.AuthenticatedCloudConfigMock()
 	cfg.Context().State.AuthToken = expiredAuthTokenForDevCLoud
 
 	ver := pmock.NewVersionMock()

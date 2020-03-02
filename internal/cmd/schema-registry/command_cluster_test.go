@@ -18,7 +18,7 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	srMock "github.com/confluentinc/schema-registry-sdk-go/mock"
 
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	cliMock "github.com/confluentinc/cli/mock"
 )
@@ -29,7 +29,7 @@ const (
 
 type ClusterTestSuite struct {
 	suite.Suite
-	conf         *v2.Config
+	conf         *v3.Config
 	kafkaCluster *kafkav1.KafkaCluster
 	srCluster    *srv1.SchemaRegistryCluster
 	srMock       *mock.SchemaRegistry
@@ -39,9 +39,9 @@ type ClusterTestSuite struct {
 }
 
 func (suite *ClusterTestSuite) SetupSuite() {
-	suite.conf = v2.AuthenticatedConfigMock()
+	suite.conf = v3.AuthenticatedCloudConfigMock()
 	ctx := suite.conf.Context()
-	cluster := ctx.KafkaClusters[ctx.Kafka]
+	cluster := ctx.KafkaClusterContext.GetActiveKafkaClusterConfig()
 	suite.kafkaCluster = &kafkav1.KafkaCluster{
 		Id:         cluster.ID,
 		Name:       cluster.Name,
