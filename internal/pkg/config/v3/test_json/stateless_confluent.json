@@ -1,0 +1,64 @@
+{
+  "version": "3.0.0",
+  "disable_update_check": false,
+  "disable_updates": false,
+  "no_browser": false,
+  "platforms": {
+    "http://test": {
+      "name": "http://test",
+      "server": "http://test"
+    }
+  },
+  "credentials": {
+    "api-key-abc-key-123": {
+      "name": "api-key-abc-key-123",
+      "username": "",
+      "password": "",
+      "api_key_pair": {
+        "api_key": "abc-key-123",
+        "api_secret": "def-secret-456"
+      },
+      "credential_type": 1
+    },
+    "username-test-user": {
+      "name": "username-test-user",
+      "username": "test-user",
+      "password": "",
+      "api_key_pair": null,
+      "credential_type": 0
+    }
+  },
+  "contexts": {
+    "my-context": {
+      "name": "my-context",
+      "platform": "http://test",
+      "credential": "api-key-abc-key-123",
+      "kafka_cluster_context": {
+        "environment_context": false,
+        "active_kafka": "anonymous-id",
+        "kafka_cluster_configs": {
+          "anonymous-id": {
+            "id": "anonymous-id",
+            "name": "anonymous-cluster",
+            "bootstrap_servers": "http://test",
+            "api_keys": {
+              "abc-key-123": {
+                "api_key": "abc-key-123",
+                "api_secret": "def-secret-456"
+              }
+            },
+            "api_key": "abc-key-123"
+          }
+        }
+      },
+      "schema_registry_clusters": {}
+    }
+  },
+  "context_states": {
+    "my-context": {
+      "auth": null,
+      "auth_token": ""
+    }
+  },
+  "current_context": "my-context"
+}

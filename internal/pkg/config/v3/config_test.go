@@ -1,6 +1,7 @@
 package v3
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -29,15 +30,16 @@ var (
 	accountID       = "acc-123"
 )
 
-type TestConfigs struct {
+type TestInputs struct {
 	kafkaClusters   map[string]*v1.KafkaClusterConfig
 	activeKafka     string
 	statefulConfig  *Config
 	statelessConfig *Config
+	account         *orgv1.Account
 }
 
-func SetupConfigs() *TestConfigs {
-	testConfigs := &TestConfigs{}
+func SetupTestInputs(cliName string) *TestInputs {
+	testInputs := &TestInputs{}
 	platform := &v2.Platform{
 		Name:   "http://test",
 		Server: "http://test",
@@ -63,6 +65,7 @@ func SetupConfigs() *TestConfigs {
 		Id:   accountID,
 		Name: "test-env",
 	}
+	testInputs.account = account
 	state := &v2.ContextState{
 		Auth: &v1.AuthConfig{
 			User: &orgv1.User{
@@ -76,7 +79,7 @@ func SetupConfigs() *TestConfigs {
 		},
 		AuthToken: "abc123",
 	}
-	testConfigs.kafkaClusters = map[string]*v1.KafkaClusterConfig{
+	testInputs.kafkaClusters = map[string]*v1.KafkaClusterConfig{
 		kafkaClusterID: {
 			ID:          kafkaClusterID,
 			Name:        "anonymous-cluster",
@@ -91,7 +94,7 @@ func SetupConfigs() *TestConfigs {
 			APIKey: apiKeyString,
 		},
 	}
-	testConfigs.activeKafka = kafkaClusterID
+	testInputs.activeKafka = kafkaClusterID
 	statefulContext := &Context{
 		Name:           contextName,
 		Platform:       platform,
@@ -118,14 +121,14 @@ func SetupConfigs() *TestConfigs {
 		State:                  &v2.ContextState{},
 		Logger:                 log.New(),
 	}
-	testConfigs.statefulConfig = &Config{
+	testInputs.statefulConfig = &Config{
 		BaseConfig: &config.BaseConfig{
 			Params: &config.Params{
-				CLIName:    "confluent",
+				CLIName:    cliName,
 				MetricSink: nil,
 				Logger:     log.New(),
 			},
-			Filename: "test_json/stateful.json",
+			Filename: fmt.Sprintf("test_json/stateful_%s.json", cliName),
 			Ver:      &Version,
 		},
 		Platforms: map[string]*v2.Platform{
@@ -143,14 +146,14 @@ func SetupConfigs() *TestConfigs {
 		},
 		CurrentContext: contextName,
 	}
-	testConfigs.statelessConfig = &Config{
+	testInputs.statelessConfig = &Config{
 		BaseConfig: &config.BaseConfig{
 			Params: &config.Params{
-				CLIName:    "confluent",
+				CLIName:    cliName,
 				MetricSink: nil,
 				Logger:     log.New(),
 			},
-			Filename: "test_json/stateless.json",
+			Filename: fmt.Sprintf("test_json/stateless_%s.json", cliName),
 			Ver:      &Version,
 		},
 		Platforms: map[string]*v2.Platform{
@@ -169,16 +172,18 @@ func SetupConfigs() *TestConfigs {
 		CurrentContext: contextName,
 	}
 
-	statefulContext.Config = testConfigs.statefulConfig
-	statefulContext.KafkaClusterContext = NewKafkaClusterContext(statefulContext, testConfigs.activeKafka, testConfigs.kafkaClusters)
+	statefulContext.Config = testInputs.statefulConfig
+	statefulContext.KafkaClusterContext = NewKafkaClusterContext(statefulContext, testInputs.activeKafka, testInputs.kafkaClusters)
 
-	statelessContext.Config = testConfigs.statelessConfig
-	statelessContext.KafkaClusterContext = NewKafkaClusterContext(statelessContext, testConfigs.activeKafka, testConfigs.kafkaClusters)
-	return testConfigs
+	statelessContext.Config = testInputs.statelessConfig
+	statelessContext.KafkaClusterContext = NewKafkaClusterContext(statelessContext, testInputs.activeKafka, testInputs.kafkaClusters)
+
+	return testInputs
 }
 
 func TestConfig_Load(t *testing.T) {
-	testConfigs := SetupConfigs()
+	testConfigsConfluent := SetupTestInputs("confluent")
+	testConfigsCcloud := SetupTestInputs("ccloud")
 	tests := []struct {
 		name    string
 		want    *Config
@@ -186,14 +191,24 @@ func TestConfig_Load(t *testing.T) {
 		file    string
 	}{
 		{
-			name: "succeed loading stateless config from file",
-			want: testConfigs.statelessConfig,
-			file: "test_json/stateless.json",
+			name: "succeed loading stateless confluent config from file",
+			want: testConfigsConfluent.statelessConfig,
+			file: "test_json/stateless_confluent.json",
 		},
 		{
-			name: "succeed loading config with state from file",
-			want: testConfigs.statefulConfig,
-			file: "test_json/stateful.json",
+			name: "succeed loading confluent config with state from file",
+			want: testConfigsConfluent.statefulConfig,
+			file: "test_json/stateful_confluent.json",
+		},
+		{
+			name: "succeed loading stateless ccloud config from file",
+			want: testConfigsCcloud.statelessConfig,
+			file: "test_json/stateless_ccloud.json",
+		},
+		{
+			name: "succeed loading ccloud config with state from file",
+			want: testConfigsCcloud.statefulConfig,
+			file: "test_json/stateful_ccloud.json",
 		},
 		{
 			name: "should load disable update checks and disable updates",
@@ -220,7 +235,7 @@ func TestConfig_Load(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := New(&config.Params{
-				CLIName:    "confluent",
+				CLIName:    tt.want.CLIName,
 				MetricSink: nil,
 				Logger:     log.New(),
 			})
@@ -241,7 +256,8 @@ func TestConfig_Load(t *testing.T) {
 }
 
 func TestConfig_Save(t *testing.T) {
-	testConfigs := SetupConfigs()
+	testConfigsConfluent := SetupTestInputs("confluent")
+	testConfigsCcloud := SetupTestInputs("ccloud")
 	tests := []struct {
 		name     string
 		config   *Config
@@ -249,14 +265,24 @@ func TestConfig_Save(t *testing.T) {
 		wantErr  bool
 	}{
 		{
-			name:     "save config with state to file",
-			config:   testConfigs.statefulConfig,
-			wantFile: "test_json/stateful.json",
+			name:     "save confluent config with state to file",
+			config:   testConfigsConfluent.statefulConfig,
+			wantFile: "test_json/stateful_confluent.json",
 		},
 		{
-			name:     "save stateless config to file",
-			config:   testConfigs.statelessConfig,
-			wantFile: "test_json/stateless.json",
+			name:     "save stateless confluent config to file",
+			config:   testConfigsConfluent.statelessConfig,
+			wantFile: "test_json/stateless_confluent.json",
+		},
+		{
+			name:     "save ccloud config with state to file",
+			config:   testConfigsCcloud.statefulConfig,
+			wantFile: "test_json/stateful_ccloud.json",
+		},
+		{
+			name:     "save stateless ccloud config to file",
+			config:   testConfigsCcloud.statelessConfig,
+			wantFile: "test_json/stateless_ccloud.json",
 		},
 	}
 	for _, tt := range tests {
@@ -403,9 +429,9 @@ func TestConfig_AddContext(t *testing.T) {
 }
 
 func TestConfig_SetContext(t *testing.T) {
-	config := AuthenticatedCloudConfigMock()
-	contextName := config.Context().Name
-	config.CurrentContext = ""
+	cfg := AuthenticatedCloudConfigMock()
+	contextName := cfg.Context().Name
+	cfg.CurrentContext = ""
 	type fields struct {
 		Config *Config
 	}
@@ -421,7 +447,7 @@ func TestConfig_SetContext(t *testing.T) {
 		{
 			name: "succeed setting valid context",
 			fields: fields{
-				Config: config,
+				Config: cfg,
 			},
 			args:    args{name: contextName},
 			wantErr: false,
@@ -429,7 +455,7 @@ func TestConfig_SetContext(t *testing.T) {
 		{
 			name: "fail setting nonexistent context",
 			fields: fields{
-				Config: config,
+				Config: cfg,
 			},
 			args:    args{name: "some-context"},
 			wantErr: true,
@@ -593,4 +619,64 @@ func TestConfig_Context(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestKafkaClusterContext_SetAndGetActiveKafkaCluster_Env(t *testing.T) {
+	testInputs := SetupTestInputs("ccloud")
+	ctx := testInputs.statefulConfig.Context()
+	// temp file so json files in test_json do not get overwritten
+	configFile, _ := ioutil.TempFile("", "TestConfig_Save.json")
+	ctx.Config.Filename = configFile.Name()
+
+	otherAccountId := "other-abc"
+	otherAccount := &orgv1.Account{
+		Id:   otherAccountId,
+		Name: "other-account",
+	}
+	otherKafkaClusterId := "other-kafka"
+	ctx.State.Auth.Accounts = append(ctx.State.Auth.Accounts, otherAccount)
+	var activeKafka string
+
+	activeKafka = ctx.KafkaClusterContext.GetActiveKafkaClusterId()
+	if activeKafka != testInputs.activeKafka {
+		t.Errorf("GetActiveKafkaClusterId() got %s, want %s.", activeKafka, testInputs.activeKafka)
+	}
+
+	// switch environment
+	ctx.State.Auth.Account = otherAccount
+	ctx.KafkaClusterContext.SetActiveKafkaCluster(otherKafkaClusterId)
+	activeKafka = ctx.KafkaClusterContext.GetActiveKafkaClusterId()
+	if activeKafka != otherKafkaClusterId {
+		t.Errorf("After settting active kafka in new environment, GetActiveKafkaClusterId() got %s, want %s.", activeKafka, testInputs.activeKafka)
+	}
+
+	// switch environment back
+	ctx.State.Auth.Account = testInputs.account
+	activeKafka = ctx.KafkaClusterContext.GetActiveKafkaClusterId()
+	if activeKafka != testInputs.activeKafka {
+		t.Errorf("After switching to back to first environment, GetActiveKafkaClusterId() got %s, want %s.", activeKafka, testInputs.activeKafka)
+	}
+	_ = os.Remove(configFile.Name())
+}
+
+func TestKafkaClusterContext_SetAndGetActiveKafkaCluster_NonEnv(t *testing.T) {
+	testInputs := SetupTestInputs("confluent")
+	ctx := testInputs.statefulConfig.Context()
+	// temp file so json files in test_json do not get overwritten
+	configFile, _ := ioutil.TempFile("", "TestConfig_Save.json")
+	ctx.Config.Filename = configFile.Name()
+	var activeKafka string
+
+	activeKafka = ctx.KafkaClusterContext.GetActiveKafkaClusterId()
+	if activeKafka != testInputs.activeKafka {
+		t.Errorf("GetActiveKafkaClusterId() got %s, want %s.", activeKafka, testInputs.activeKafka)
+	}
+
+	otherKafkaClusterId := "other-kafka"
+	ctx.KafkaClusterContext.SetActiveKafkaCluster(otherKafkaClusterId)
+	activeKafka = ctx.KafkaClusterContext.GetActiveKafkaClusterId()
+	if activeKafka != otherKafkaClusterId {
+		t.Errorf("After settting active kafka, GetActiveKafkaClusterId() got %s, want %s.", activeKafka, testInputs.activeKafka)
+	}
+	_ = os.Remove(configFile.Name())
 }
