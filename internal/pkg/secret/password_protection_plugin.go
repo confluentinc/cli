@@ -22,7 +22,7 @@ import (
 type PasswordProtection interface {
 	CreateMasterKey(passphrase string, localSecureConfigPath string) (string, error)
 	EncryptConfigFileSecrets(configFilePath string, localSecureConfigPath string, remoteSecureConfigPath string, encryptConfigKeys string) error
-	DecryptConfigFileSecrets(configFilePath string, localSecureConfigPath string, outputFilePath string) error
+	DecryptConfigFileSecrets(configFilePath string, localSecureConfigPath string, outputFilePath string, configs string) error
 	AddEncryptedPasswords(configFilePath string, localSecureConfigPath string, remoteSecureConfigPath string, newConfigs string) error
 	UpdateEncryptedPasswords(configFilePath string, localSecureConfigPath string, remoteSecureConfigPath string, newConfigs string) error
 	RemoveEncryptedPasswords(configFilePath string, localSecureConfigPath string, removeConfigs string) error
@@ -149,7 +149,7 @@ func (c *PasswordProtectionSuite) EncryptConfigFileSecrets(configFilePath string
 // This function decrypts all the passwords in configFilePath properties files and stores the decrypted passwords in outputFilePath.
 // It searches for the encrypted secrets by comparing it with the tuple ${providerName:[path:]key}. If encrypted secrets are found it fetches
 // the encrypted value from the file secureConfigPath, decrypts it using the data key and stores the output at outputFilePath.
-func (c *PasswordProtectionSuite) DecryptConfigFileSecrets(configFilePath string, localSecureConfigPath string, outputFilePath string) error {
+func (c *PasswordProtectionSuite) DecryptConfigFileSecrets(configFilePath string, localSecureConfigPath string, outputFilePath string, configs []string) error {
 	// Check if config file path is valid
 	if !DoesPathExist(configFilePath) {
 		return fmt.Errorf("invalid config file path:" + configFilePath)
@@ -160,7 +160,7 @@ func (c *PasswordProtectionSuite) DecryptConfigFileSecrets(configFilePath string
 		return fmt.Errorf("invalid secrets file path:" + localSecureConfigPath)
 	}
 	// Load the config values.
-	configProps, err := LoadConfiguration(configFilePath, nil, false)
+	configProps, err := LoadConfiguration(configFilePath, configs, false)
 	if err != nil {
 		return err
 	}
@@ -463,14 +463,13 @@ func (c *PasswordProtectionSuite) RemoveEncryptedPasswords(configFilePath string
 
 	// Delete the config from Configuration File.
 	fileType := filepath.Ext(configFilePath)
+	isJson := false
 	switch fileType {
 	case ".properties":
 		err = c.removePropertiesConfig(configFilePath, configs)
 	case ".json":
+		isJson = true
 		err = c.removeJsonConfig(configFilePath, configs)
-	case ".conf":
-		props := properties.MustLoadString(removeConfigs)
-		err = WriteJAASConfig(configFilePath, props, DELETE, false)
 	default:
 		err = fmt.Errorf("file type " + fileType + " currently not supported")
 	}
@@ -482,6 +481,9 @@ func (c *PasswordProtectionSuite) RemoveEncryptedPasswords(configFilePath string
 	for _, key := range configs {
 		pathKey := GenerateConfigKey(configFilePath, key)
 
+		if isJson {
+			pathKey = strings.ReplaceAll(pathKey, "\\.", ".")
+		}
 		// Check if config is removed from secrets files
 		_, ok := secureConfigProps.Get(pathKey)
 		if !ok {
@@ -517,7 +519,7 @@ func (c *PasswordProtectionSuite) removeJsonConfig(configFilePath string, config
 }
 
 func (c *PasswordProtectionSuite) removePropertiesConfig(configFilePath string, configs []string) error {
-	configProps, err := LoadPropertiesFile(configFilePath)
+	configProps, err := LoadConfiguration(configFilePath, nil, false)
 	configProps.DisableExpansion = true
 	if err != nil {
 		return err

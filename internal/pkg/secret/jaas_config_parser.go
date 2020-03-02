@@ -3,7 +3,6 @@ package secret
 import (
 	"fmt"
 	"github.com/confluentinc/properties"
-	"io/ioutil"
 	"regexp"
 	"strings"
 	"text/scanner"
@@ -11,18 +10,14 @@ import (
 )
 
 type JAASParserInterface interface {
-	Load(path string) (*properties.Properties, error)
-	Write(props *properties.Properties, op string) error
+	ConvertPropertiesToJAAS(props *properties.Properties, op string) (*properties.Properties, error)
+	SetOriginalConfigKeys(props *properties.Properties)
 }
 
 // Result represents a jaas value that is returned from Parse().
 type JAASParser struct {
-	// Raw is the raw jaas
-	Raw string
 	JaasOriginalConfigKeys *properties.Properties
 	JaasProps              *properties.Properties
-	JaasClassConfig        *properties.Properties
-	Index                  int
 	Path                   string
 	WhitespaceKey          string
 	tokenizer              scanner.Scanner
@@ -32,42 +27,11 @@ func NewJAASParser() *JAASParser {
 	return &JAASParser{
 		JaasOriginalConfigKeys: properties.NewProperties(),
 		JaasProps:              properties.NewProperties(),
-		JaasClassConfig:        properties.NewProperties(),
-		Raw:                    "",
 		WhitespaceKey:          "",
 	}
 }
 
-func (j *JAASParser) Load(path string) (*properties.Properties, error) {
-	jaasFile, err := ioutil.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-	j.Path = path
-	j.Raw = string(jaasFile)
-	j.Raw = strings.TrimSpace(j.Raw)
-	parsedConfigs, origConfig, classConfig, err := j.parseJAASFile(j.Raw)
-	if err != nil {
-		return nil, err
-	}
-
-	j.JaasProps = parsedConfigs
-	j.JaasProps.DisableExpansion = true
-	j.JaasOriginalConfigKeys = origConfig
-	j.JaasOriginalConfigKeys.DisableExpansion = true
-	j.JaasClassConfig = classConfig
-	j.JaasClassConfig.DisableExpansion = true
-	return j.JaasProps, nil
-}
-
-func (j *JAASParser) addSecureConfigProps(config string) string {
-	secureConfigProvider := NEW_LINE + CONFIG_PROVIDER_KEY + j.WhitespaceKey + "=" + j.WhitespaceKey + SECURE_CONFIG_PROVIDER_CLASS_KEY + NEW_LINE +
-
-		SECURE_CONFIG_PROVIDER + j.WhitespaceKey + "=" + j.WhitespaceKey + SECURE_CONFIG_PROVIDER_CLASS
-	return strings.TrimSuffix(config, ";") + secureConfigProvider + ";"
-}
-
-func (j *JAASParser) updateJAASConfig(op string, key string, value string, config string, addSecretsConfig bool) (string, error) {
+func (j *JAASParser) updateJAASConfig(op string, key string, value string, config string) (string, error) {
 	switch op {
 	case DELETE:
 		keyValuePattern := key + JAAS_VALUE_PATTERN
@@ -75,10 +39,18 @@ func (j *JAASParser) updateJAASConfig(op string, key string, value string, confi
 		delete := ""
 		// check if value is in JAAS format
 		if pattern.MatchString(config) {
+			matched := pattern.FindString(config)
+			if matched == "" {
+				return "", fmt.Errorf("configuration" + config + "not present in jaas file")
+			}
 			config = pattern.ReplaceAllString(config, delete)
 		} else {
 			keyValuePattern := key + PASSWORD_PATTERN // check if value is in Secrets format
 			pattern := regexp.MustCompile(keyValuePattern)
+			matched := pattern.FindString(config)
+			if matched == "" {
+				return "", fmt.Errorf("configuration " + key + " not present in jaas file")
+			}
 			config = pattern.ReplaceAllString(config, delete)
 		}
 		break
@@ -92,15 +64,9 @@ func (j *JAASParser) updateJAASConfig(op string, key string, value string, confi
 			if strings.HasSuffix(matched, ";") {
 				config = config + ";"
 			}
-			if addSecretsConfig && !strings.Contains(config, CONFIG_PROVIDER_KEY) {
-				config = j.addSecureConfigProps(config)
-			}
 		} else {
 			add := NEW_LINE + key + j.WhitespaceKey + "=" + j.WhitespaceKey + value
 			config = strings.TrimSuffix(config, ";") + add + ";"
-			if addSecretsConfig && !strings.Contains(config, CONFIG_PROVIDER_KEY) {
-				config = j.addSecureConfigProps(config)
-			}
 		}
 		break
 	default:
@@ -108,48 +74,6 @@ func (j *JAASParser) updateJAASConfig(op string, key string, value string, confi
 	}
 
 	return config, nil
-}
-
-func (j *JAASParser) Write(path string, props *properties.Properties, op string, addSecretsConfig bool) error {
-	if j.Raw == "" {
-		_, err := j.Load(path)
-		if err != nil {
-			return err
-		}
-	}
-	rawCopy := j.Raw
-	for key, value := range props.Map() {
-		keys := strings.Split(key, KEY_SEPARATOR)
-		config, ok := j.JaasOriginalConfigKeys.Get(keys[CLASS_ID] + KEY_SEPARATOR + keys[PARENT_ID])
-		if !ok {
-			return fmt.Errorf("config " + key + " not present in the file")
-		}
-		newConfig, err := j.updateJAASConfig(op, keys[KEY_ID], value, config, addSecretsConfig)
-		if err != nil {
-			return err
-		}
-
-		originalClass, ok := j.JaasClassConfig.Get(keys[CLASS_ID])
-		if !ok {
-			return fmt.Errorf("config " + keys[CLASS_ID] + " not present in the file")
-		}
-		if len(originalClass) == 0 {
-			return fmt.Errorf("invalid file format")
-		}
-		replaceString := strings.Replace(originalClass, config, newConfig, -1)
-		rawCopy = strings.Replace(rawCopy, originalClass, replaceString, -1)
-
-		_, _, err = j.JaasClassConfig.Set(keys[CLASS_ID], replaceString)
-		if err != nil {
-			return err
-		}
-		_, _, err = j.JaasOriginalConfigKeys.Set(keys[CLASS_ID]+KEY_SEPARATOR+keys[PARENT_ID], config)
-		if err != nil {
-			return err
-		}
-	}
-
-	return WriteFile(j.Path, []byte(rawCopy))
 }
 
 func (j *JAASParser) parseConfig(specialChar rune) (string, int, error) {
@@ -235,7 +159,11 @@ func (j *JAASParser) ParseJAASConfigurationEntry(jaasConfig string, key string) 
 	return parsedToken, nil
 }
 
-func (j *JAASParser) ConvertPropertiesToJAAS(props *properties.Properties, op string, addSecretsConfig bool) (*properties.Properties, error) {
+func (j *JAASParser) SetOriginalConfigKeys(props *properties.Properties) {
+	j.JaasOriginalConfigKeys.Merge(props)
+}
+
+func (j *JAASParser) ConvertPropertiesToJAAS(props *properties.Properties, op string) (*properties.Properties, error) {
 	configKey := ""
 	result := properties.NewProperties()
 	result.DisableExpansion = true
@@ -246,7 +174,7 @@ func (j *JAASParser) ConvertPropertiesToJAAS(props *properties.Properties, op st
 		if !ok {
 			return nil, fmt.Errorf("failed to convert properties to JAAS configuration")
 		}
-		jaas, err := j.updateJAASConfig(op, keys[KEY_ID], value, jaas, addSecretsConfig)
+		jaas, err := j.updateJAASConfig(op, keys[KEY_ID], value, jaas)
 		if err != nil {
 			return nil, err
 		}
@@ -314,55 +242,4 @@ func (j *JAASParser) parseConfigurationEntry(prefixKey string) (int, int, *prope
 	endIndex := j.tokenizer.Pos().Offset
 
 	return startIndex, endIndex, parsedConfigs, parentKey, nil
-}
-
-func (j *JAASParser) parseJAASFile(jaasConfig string) (*properties.Properties, *properties.Properties, *properties.Properties, error) {
-
-	jaasConfigOriginalMap := properties.NewProperties()
-	jaasConfigOriginalMap.DisableExpansion = true
-	jaasClassConfigMap := properties.NewProperties()
-	jaasClassConfigMap.DisableExpansion = true
-	parsedConfigs := properties.NewProperties()
-	parsedConfigs.DisableExpansion = true
-
-	j.tokenizer.Init(strings.NewReader(jaasConfig))
-	tokenClass := j.tokenizer.Peek()
-	for tokenClass != scanner.EOF {
-		// Parse Class Name
-		classKey, start, err := j.parseConfig('{')
-		if err != nil {
-			return nil, nil, nil, err
-		}
-		// Parse {
-		if j.tokenizer.Scan() != '{' {
-			return nil, nil, nil, fmt.Errorf("invalid jaas file: '{' is missing")
-		}
-
-		tok := j.tokenizer.Peek()
-		for tok != scanner.EOF && !j.isClosingBracket() {
-			startIndex, endIndex, parsedToken, parentKey, err := j.parseConfigurationEntry(classKey)
-			if err != nil {
-				return nil, nil, nil, err
-			}
-			parsedConfigs.Merge(parsedToken)
-			_, _, err = jaasConfigOriginalMap.Set(classKey+KEY_SEPARATOR+parentKey, jaasConfig[startIndex:endIndex])
-			if err != nil {
-				return nil, nil, nil, err
-			}
-			tok = j.tokenizer.Peek()
-		}
-		if j.tokenizer.TokenText() != "}" {
-			return nil, nil, nil, fmt.Errorf("invalid jaas file: not terminated with '}'")
-		}
-		if j.tokenizer.Scan() != ';' {
-			return nil, nil, nil, fmt.Errorf("invalid jaas file: not terminated with ';'")
-		}
-		end := j.tokenizer.Pos().Offset
-		tokenClass = j.tokenizer.Peek()
-		_, _, err = jaasClassConfigMap.Set(classKey, jaasConfig[start:end])
-		if err != nil {
-			return nil, nil, nil, err
-		}
-	}
-	return parsedConfigs, jaasConfigOriginalMap, jaasClassConfigMap, nil
 }

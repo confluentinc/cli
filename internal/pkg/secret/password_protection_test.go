@@ -308,64 +308,15 @@ config.properties/ssl.keystore.password = ENC[AES/CBC/PKCS5Padding,data:SclgTBDD
 `,
 		},
 		{
-			name: "ValidTestCase: encrypt jaas config file with config param",
+			name: "ValidTestCase: encrypt properties file with jaas entry",
 			args: &args{
 				masterKeyPassphrase: "abc123",
-				contents: `Client {
-   com.sun.security.auth.module.Krb5LoginModule required
-    useKeyTab=false
-    password=pass1234#
-    useTicketCache=true
-    doNotPrompt=true;
-
-   com.sun.security.auth.module.PascalLoginModule required
-    useKeyTab=false
-    password=pass1234#;
-};`,
-				configFilePath:         "/tmp/securePass987/encrypt/config.conf",
-				localSecureConfigPath:  "/tmp/securePass987/encrypt/secureConfig.properties",
-				secureDir:              "/tmp/securePass987/encrypt",
-				remoteSecureConfigPath: "/tmp/securePass987/encrypt/secureConfig.properties",
-				config:                 "Client/com.sun.security.auth.module.Krb5LoginModule/password",
-				setMEK:                 true,
-				createConfig:           true,
-			},
-			wantErr: false,
-			wantConfigFile: `Client {
-   com.sun.security.auth.module.Krb5LoginModule required
-    useKeyTab=false
-    password=${securepass:/tmp/securePass987/encrypt/secureConfig.properties:config.conf/Client/com.sun.security.auth.module.Krb5LoginModule/password}
-    useTicketCache=true
-    doNotPrompt=true
- config.providers=config.providers.securepass.class
- securepass=io.confluent.kafka.security.config.provider.SecurePassConfigProvider;
-
-   com.sun.security.auth.module.PascalLoginModule required
-    useKeyTab=false
-    password=pass1234#;
-};`,
-			wantSecretsFile: `_metadata.master_key.0.salt = de0YQknpvBlnXk0fdmIT2nG2Qnj+0srV8YokdhkgXjA=
-_metadata.symmetric_key.0.created_at = 1984-04-04 00:00:00 +0000 UTC
-_metadata.symmetric_key.0.envvar = CONFLUENT_SECURITY_MASTER_KEY
-_metadata.symmetric_key.0.length = 32
-_metadata.symmetric_key.0.iterations = 1000
-_metadata.symmetric_key.0.salt = 2BEkhLYyr0iZ2wI5xxsbTJHKWul75JcuQu3BnIO4Eyw=
-_metadata.symmetric_key.0.enc = ENC[AES/CBC/PKCS5Padding,data:SlpCTPDO/uyWDOS59hkcS9vTKm2MQ284YQhBM2iFSUXgsDGPBIlYBs4BMeWFt1yn,iv:qDtNy+skN3DKhtHE/XD6yQ==,type:str]
-config.conf/Client/com.sun.security.auth.module.Krb5LoginModule/password = ENC[AES/CBC/PKCS5Padding,data:Pa0eabOmv0xy2MwrVoph8g==,iv:3IhIyRrhQpYzp4vhVdcqqw==,type:str]
-`,
-		},
-		{
-			name: "ValidTestCase: encrypt jaas config file without config param",
-			args: &args{
-				masterKeyPassphrase: "abc123",
-				contents: `Client {
-   com.sun.security.auth.module.Krb5LoginModule required
-    useKeyTab=false
-    password=pass1234#
-    useTicketCache=true
-    doNotPrompt=true;
-};`,
-				configFilePath:         "/tmp/securePass987/encrypt/jaas.conf",
+				contents: `ssl.keystore.location=/usr/ssl
+		ssl.keystore.key=ssl
+		listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required \
+          username="admin" \
+          password="admin-secret";`,
+				configFilePath:         "/tmp/securePass987/encrypt/config.properties",
 				localSecureConfigPath:  "/tmp/securePass987/encrypt/secureConfig.properties",
 				secureDir:              "/tmp/securePass987/encrypt",
 				remoteSecureConfigPath: "/tmp/securePass987/encrypt/secureConfig.properties",
@@ -374,15 +325,12 @@ config.conf/Client/com.sun.security.auth.module.Krb5LoginModule/password = ENC[A
 				createConfig:           true,
 			},
 			wantErr: false,
-			wantConfigFile: `Client {
-   com.sun.security.auth.module.Krb5LoginModule required
-    useKeyTab=false
-    password=${securepass:/tmp/securePass987/encrypt/secureConfig.properties:jaas.conf/Client/com.sun.security.auth.module.Krb5LoginModule/password}
-    useTicketCache=true
-    doNotPrompt=true
- config.providers=config.providers.securepass.class
- securepass=io.confluent.kafka.security.config.provider.SecurePassConfigProvider;
-};`,
+			wantConfigFile: `ssl.keystore.location = /usr/ssl
+ssl.keystore.key = ssl
+listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config = org.apache.kafka.common.security.scram.ScramLoginModule required username="admin" password=${securepass:/tmp/securePass987/encrypt/secureConfig.properties:config.properties/listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config/org.apache.kafka.common.security.scram.ScramLoginModule/password};
+config.providers = securepass
+config.providers.securepass.class = io.confluent.kafka.security.config.provider.SecurePassConfigProvider
+`,
 			wantSecretsFile: `_metadata.master_key.0.salt = de0YQknpvBlnXk0fdmIT2nG2Qnj+0srV8YokdhkgXjA=
 _metadata.symmetric_key.0.created_at = 1984-04-04 00:00:00 +0000 UTC
 _metadata.symmetric_key.0.envvar = CONFLUENT_SECURITY_MASTER_KEY
@@ -390,45 +338,92 @@ _metadata.symmetric_key.0.length = 32
 _metadata.symmetric_key.0.iterations = 1000
 _metadata.symmetric_key.0.salt = 2BEkhLYyr0iZ2wI5xxsbTJHKWul75JcuQu3BnIO4Eyw=
 _metadata.symmetric_key.0.enc = ENC[AES/CBC/PKCS5Padding,data:SlpCTPDO/uyWDOS59hkcS9vTKm2MQ284YQhBM2iFSUXgsDGPBIlYBs4BMeWFt1yn,iv:qDtNy+skN3DKhtHE/XD6yQ==,type:str]
-jaas.conf/Client/com.sun.security.auth.module.Krb5LoginModule/password = ENC[AES/CBC/PKCS5Padding,data:Pa0eabOmv0xy2MwrVoph8g==,iv:3IhIyRrhQpYzp4vhVdcqqw==,type:str]
+config.properties/listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config/org.apache.kafka.common.security.scram.ScramLoginModule/password = ENC[AES/CBC/PKCS5Padding,data:6etDBw0weeD4UQF664szSQ==,iv:3IhIyRrhQpYzp4vhVdcqqw==,type:str]
 `,
 		},
-		/*{
-					name: "ValidTestCase: encrypt properties file with jaas entry",
-					args: &args{
-						masterKeyPassphrase:    "abc123",
-						contents:               `ssl.keystore.password=password
-		ssl.keystore.location=/usr/ssl
-		ssl.keystore.key=ssl
-		listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required \
-		  username="admin" \
-		  password="admin-secret";
-		`,
-						configFilePath:         "/tmp/securePass987/encrypt/config.properties",
-						localSecureConfigPath:  "/tmp/securePass987/encrypt/secureConfig.properties",
-						secureDir:              "/tmp/securePass987/encrypt",
-						remoteSecureConfigPath: "/tmp/securePass987/encrypt/secureConfig.properties",
-						config:                 "",
-						setMEK:                 true,
-						createConfig:           true,
-					},
-					wantErr: false,
-					wantConfigFile: `ssl.keystore.password = ${securepass:/tmp/securePass987/encrypt/secureConfig.properties:config.properties/ssl.keystore.password}
-		ssl.keystore.location = /usr/ssl
-		ssl.keystore.key = ssl
-		config.providers = securepass
-		config.providers.securepass.class = io.confluent.kafka.security.config.provider.SecurePassConfigProvider
-		`,
-					wantSecretsFile: `_metadata.master_key.0.salt = de0YQknpvBlnXk0fdmIT2nG2Qnj+0srV8YokdhkgXjA=
-		_metadata.symmetric_key.0.created_at = 1984-04-04 00:00:00 +0000 UTC
-		_metadata.symmetric_key.0.envvar = CONFLUENT_SECURITY_MASTER_KEY
-		_metadata.symmetric_key.0.length = 32
-		_metadata.symmetric_key.0.iterations = 1000
-		_metadata.symmetric_key.0.salt = 2BEkhLYyr0iZ2wI5xxsbTJHKWul75JcuQu3BnIO4Eyw=
-		_metadata.symmetric_key.0.enc = ENC[AES/CBC/PKCS5Padding,data:SlpCTPDO/uyWDOS59hkcS9vTKm2MQ284YQhBM2iFSUXgsDGPBIlYBs4BMeWFt1yn,iv:qDtNy+skN3DKhtHE/XD6yQ==,type:str]
-		config.properties/ssl.keystore.password = ENC[AES/CBC/PKCS5Padding,data:SclgTBDDeLwccqtsaEmDlA==,iv:3IhIyRrhQpYzp4vhVdcqqw==,type:str]
-		`,
-				},*/
+		{
+			name: "ValidTestCase: encrypt configuration in json file",
+			args: &args{
+				masterKeyPassphrase: "abc123",
+				contents: `{
+"name": "security configuration",
+"credentials": {
+        "ssl.keystore.password": "password",
+        "ssl.keystore.location": "/usr/ssl"
+   }
+}`,
+				configFilePath:         "/tmp/securePass987/encrypt/config.json",
+				localSecureConfigPath:  "/tmp/securePass987/encrypt/secureConfig.properties",
+				secureDir:              "/tmp/securePass987/encrypt",
+				remoteSecureConfigPath: "/tmp/securePass987/encrypt/secureConfig.properties",
+				config:                 "credentials.ssl\\.keystore\\.password",
+				setMEK:                 true,
+				createConfig:           true,
+			},
+			wantErr: false,
+			wantConfigFile: `{
+  "config.providers.securepass.class": "io.confluent.kafka.security.config.provider.SecurePassConfigProvider",
+  "config.providers": "securepass",
+  "name": "security configuration",
+  "credentials": {
+    "ssl.keystore.password": "${securepass:/tmp/securePass987/encrypt/secureConfig.properties:config.json/credentials.ssl\\.keystore\\.password}",
+    "ssl.keystore.location": "/usr/ssl"
+  }
+}
+`,
+			wantSecretsFile: `_metadata.master_key.0.salt = de0YQknpvBlnXk0fdmIT2nG2Qnj+0srV8YokdhkgXjA=
+_metadata.symmetric_key.0.created_at = 1984-04-04 00:00:00 +0000 UTC
+_metadata.symmetric_key.0.envvar = CONFLUENT_SECURITY_MASTER_KEY
+_metadata.symmetric_key.0.length = 32
+_metadata.symmetric_key.0.iterations = 1000
+_metadata.symmetric_key.0.salt = 2BEkhLYyr0iZ2wI5xxsbTJHKWul75JcuQu3BnIO4Eyw=
+_metadata.symmetric_key.0.enc = ENC[AES/CBC/PKCS5Padding,data:SlpCTPDO/uyWDOS59hkcS9vTKm2MQ284YQhBM2iFSUXgsDGPBIlYBs4BMeWFt1yn,iv:qDtNy+skN3DKhtHE/XD6yQ==,type:str]
+config.json/credentials.ssl\.keystore\.password = ENC[AES/CBC/PKCS5Padding,data:SclgTBDDeLwccqtsaEmDlA==,iv:3IhIyRrhQpYzp4vhVdcqqw==,type:str]
+`,
+		},
+		{
+			name: "InvalidTestCase: encrypt invalid configuration in json file",
+			args: &args{
+				masterKeyPassphrase: "abc123",
+				contents: `{
+"name": "security configuration",
+"credentials": {
+        "ssl.keystore.password": "password",
+        "ssl.keystore.location": "/usr/ssl"
+   }
+}`,
+				configFilePath:         "/tmp/securePass987/encrypt/config.json",
+				localSecureConfigPath:  "/tmp/securePass987/encrypt/secureConfig.properties",
+				secureDir:              "/tmp/securePass987/encrypt",
+				remoteSecureConfigPath: "/tmp/securePass987/encrypt/secureConfig.properties",
+				config:                 "credentials.ssl\\.trustore.\\location",
+				setMEK:                 true,
+				createConfig:           true,
+			},
+			wantErr:    true,
+			wantErrMsg: "config credentials.ssl\\.trustore.\\location not present in json configuration file.",
+		},
+		{
+			name: "InvalidTestCase: encrypt configuration in invalid json file",
+			args: &args{
+				masterKeyPassphrase: "abc123",
+				contents: `{
+"name": "security configuration",
+"credentials": {
+        "ssl.keystore.password": "password",
+        "ssl.keystore.location": "/usr/ssl"
+}`,
+				configFilePath:         "/tmp/securePass987/encrypt/config.json",
+				localSecureConfigPath:  "/tmp/securePass987/encrypt/secureConfig.properties",
+				secureDir:              "/tmp/securePass987/encrypt",
+				remoteSecureConfigPath: "/tmp/securePass987/encrypt/secureConfig.properties",
+				config:                 "credentials.ssl\\.trustore.\\location",
+				setMEK:                 true,
+				createConfig:           true,
+			},
+			wantErr:    true,
+			wantErrMsg: "invalid json format",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -657,6 +652,8 @@ config.properties/testPassword = ENC[AES/CBC/PKCS5Padding,data:SclgTBDDeLwccqtsa
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			req := require.New(t)
+			os.Unsetenv(CONFLUENT_KEY_ENVVAR)
+			os.RemoveAll(tt.args.secureDir)
 			plugin, err := setUpDir(tt.args.masterKeyPassphrase, tt.args.secureDir, tt.args.configFilePath, tt.args.localSecureConfigPath, "")
 			req.NoError(err)
 
@@ -671,7 +668,7 @@ config.properties/testPassword = ENC[AES/CBC/PKCS5Padding,data:SclgTBDDeLwccqtsa
 				os.Setenv(CONFLUENT_KEY_ENVVAR, tt.args.newMasterKey)
 			}
 
-			err = plugin.DecryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.outputConfigPath)
+			err = plugin.DecryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.outputConfigPath, nil)
 			checkError(err, tt.wantErr, tt.wantErrMsg, req)
 
 			if !tt.wantErr {
@@ -739,29 +736,47 @@ func TestPasswordProtectionSuite_AddConfigFileSecrets(t *testing.T) {
 			name: "ValidTestCase: Add new config to jaas config file",
 			args: &args{
 				masterKeyPassphrase: "abc123",
-				contents: `Client {
-   com.sun.security.auth.module.Krb5LoginModule required
-    useKeyTab=false
-    useTicketCache=true
-    doNotPrompt=true;
-};`,
-				configFilePath:         "/tmp/securePass987/add/jaas.conf",
+				contents: `test.config.jaas = com.sun.security.auth.module.Krb5LoginModule required \
+    useKeyTab=false \
+    useTicketCache=true \
+    doNotPrompt=true;`,
+				configFilePath:         "/tmp/securePass987/add/embeddedjaas.properties",
 				localSecureConfigPath:  "/tmp/securePass987/add/secureConfig.properties",
 				secureDir:              "/tmp/securePass987/add",
 				remoteSecureConfigPath: "/tmp/securePass987/add/secureConfig.properties",
-				newConfigs:             "Client/com.sun.security.auth.module.Krb5LoginModule/password",
-				validateUsingDecrypt:   false,
+				outputConfigPath:       "/tmp/securePass987/add/output.properties",
+				newConfigs:             "test.config.jaas/com.sun.security.auth.module.Krb5LoginModule/password = testpassword\n",
+				validateUsingDecrypt:   true,
 			},
 			wantErr: false,
-			wantConfigFile: `Client {
-   com.sun.security.auth.module.Krb5LoginModule required
-    useKeyTab=false
-    useTicketCache=true
-    doNotPrompt=true
- password=${securepass:/tmp/securePass987/add/secureConfig.properties:jaas.conf/Client/com.sun.security.auth.module.Krb5LoginModule/password}
- config.providers=config.providers.securepass.class
- securepass=io.confluent.kafka.security.config.provider.SecurePassConfigProvider;
-};`,
+		},
+		{
+			name: "ValidTestCase: Add new config to json file",
+			args: &args{
+				masterKeyPassphrase: "abc123",
+				contents: `{
+"name": "security configuration",
+"credentials": {
+        "ssl.keystore.location": "/usr/ssl"
+   }
+}`,
+				configFilePath:         "/tmp/securePass987/encrypt/config.json",
+				localSecureConfigPath:  "/tmp/securePass987/encrypt/secureConfig.properties",
+				secureDir:              "/tmp/securePass987/encrypt",
+				remoteSecureConfigPath: "/tmp/securePass987/encrypt/secureConfig.properties",
+				newConfigs:             "credentials.password = password",
+			},
+			wantErr: false,
+			wantConfigFile: `{
+  "config.providers.securepass.class": "io.confluent.kafka.security.config.provider.SecurePassConfigProvider",
+  "config.providers": "securepass",
+  "name": "security configuration",
+  "credentials": {
+    "password": "${securepass:/tmp/securePass987/encrypt/secureConfig.properties:config.json/credentials.password}",
+    "ssl.keystore.location": "/usr/ssl"
+  }
+}
+`,
 			wantSecretsFile: `_metadata.master_key.0.salt = de0YQknpvBlnXk0fdmIT2nG2Qnj+0srV8YokdhkgXjA=
 _metadata.symmetric_key.0.created_at = 1984-04-04 00:00:00 +0000 UTC
 _metadata.symmetric_key.0.envvar = CONFLUENT_SECURITY_MASTER_KEY
@@ -769,7 +784,7 @@ _metadata.symmetric_key.0.length = 32
 _metadata.symmetric_key.0.iterations = 1000
 _metadata.symmetric_key.0.salt = 2BEkhLYyr0iZ2wI5xxsbTJHKWul75JcuQu3BnIO4Eyw=
 _metadata.symmetric_key.0.enc = ENC[AES/CBC/PKCS5Padding,data:SlpCTPDO/uyWDOS59hkcS9vTKm2MQ284YQhBM2iFSUXgsDGPBIlYBs4BMeWFt1yn,iv:qDtNy+skN3DKhtHE/XD6yQ==,type:str]
-jaas.conf/Client/com.sun.security.auth.module.Krb5LoginModule/password = ENC[AES/CBC/PKCS5Padding,data:+cVVMG6LWjn9iT0hsN+i1Q==,iv:3IhIyRrhQpYzp4vhVdcqqw==,type:str]
+config.json/credentials.password = ENC[AES/CBC/PKCS5Padding,data:SclgTBDDeLwccqtsaEmDlA==,iv:3IhIyRrhQpYzp4vhVdcqqw==,type:str]
 `,
 		},
 	}
@@ -858,39 +873,21 @@ func TestPasswordProtectionSuite_UpdateConfigFileSecrets(t *testing.T) {
 			name: "ValidTestCase: Update existing config in jaas config file",
 			args: &args{
 				masterKeyPassphrase: "abc123",
-				contents: `Client {
-   com.sun.security.auth.module.Krb5LoginModule required
-    useKeyTab=false
-    password=pass234
-    useTicketCache=true
-    doNotPrompt=true;
-};`,
-				configFilePath:         "/tmp/securePass987/update/jaas.conf",
+				contents: `test.config.jaas = com.sun.security.auth.module.Krb5LoginModule required \
+    useKeyTab=false \
+    password=pass234 \
+    useTicketCache=true \
+    doNotPrompt=true;`,
+				configFilePath:         "/tmp/securePass987/update/embeddedJaas.properties",
 				localSecureConfigPath:  "/tmp/securePass987/update/secureConfig.properties",
 				secureDir:              "/tmp/securePass987/update",
 				remoteSecureConfigPath: "/tmp/securePass987/update/secureConfig.properties",
-				updateConfigs:          "Client/com.sun.security.auth.module.Krb5LoginModule/password = newPassword\n",
-				validateUsingDecrypt:   false,
+				outputConfigPath:       "/tmp/securePass987/update/output.properties",
+				updateConfigs:          "test.config.jaas/com.sun.security.auth.module.Krb5LoginModule/password = newPassword\n",
+				validateUsingDecrypt:   true,
 			},
 			wantErr: false,
-			wantConfigFile: `Client {
-   com.sun.security.auth.module.Krb5LoginModule required
-    useKeyTab=false
-    password=${securepass:/tmp/securePass987/update/secureConfig.properties:jaas.conf/Client/com.sun.security.auth.module.Krb5LoginModule/password}
-    useTicketCache=true
-    doNotPrompt=true
- config.providers=config.providers.securepass.class
- securepass=io.confluent.kafka.security.config.provider.SecurePassConfigProvider;
-};`,
-			wantSecretsFile: `_metadata.master_key.0.salt = de0YQknpvBlnXk0fdmIT2nG2Qnj+0srV8YokdhkgXjA=
-_metadata.symmetric_key.0.created_at = 1984-04-04 00:00:00 +0000 UTC
-_metadata.symmetric_key.0.envvar = CONFLUENT_SECURITY_MASTER_KEY
-_metadata.symmetric_key.0.length = 32
-_metadata.symmetric_key.0.iterations = 1000
-_metadata.symmetric_key.0.salt = 2BEkhLYyr0iZ2wI5xxsbTJHKWul75JcuQu3BnIO4Eyw=
-_metadata.symmetric_key.0.enc = ENC[AES/CBC/PKCS5Padding,data:SlpCTPDO/uyWDOS59hkcS9vTKm2MQ284YQhBM2iFSUXgsDGPBIlYBs4BMeWFt1yn,iv:qDtNy+skN3DKhtHE/XD6yQ==,type:str]
-jaas.conf/Client/com.sun.security.auth.module.Krb5LoginModule/password = ENC[AES/CBC/PKCS5Padding,data:zR9n1nABpW9cSsZx/VekvQ==,iv:3IhIyRrhQpYzp4vhVdcqqw==,type:str]
-`},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -930,6 +927,7 @@ func TestPasswordProtectionSuite_RemoveConfigFileSecrets(t *testing.T) {
 		secureDir              string
 		outputConfigPath       string
 		removeConfigs          string
+		config                 string
 	}
 	tests := []struct {
 		name       string
@@ -948,6 +946,7 @@ func TestPasswordProtectionSuite_RemoveConfigFileSecrets(t *testing.T) {
 				remoteSecureConfigPath: "/tmp/securePass987/remove/secureConfig.properties",
 				outputConfigPath:       "/tmp/securePass987/remove/output.properties",
 				removeConfigs:          "testPassword",
+				config:                 "",
 			},
 			wantErr: false,
 		},
@@ -962,6 +961,7 @@ func TestPasswordProtectionSuite_RemoveConfigFileSecrets(t *testing.T) {
 				remoteSecureConfigPath: "/tmp/securePass987/remove/secureConfig.properties",
 				outputConfigPath:       "/tmp/securePass987/remove/output.properties",
 				removeConfigs:          "ssl.keystore.password",
+				config:                 "",
 			},
 			wantErr:    true,
 			wantErrMsg: "config ssl.keystore.password not present in config file.",
@@ -970,20 +970,79 @@ func TestPasswordProtectionSuite_RemoveConfigFileSecrets(t *testing.T) {
 			name: "ValidTestCase:Remove existing configs from jaas config file",
 			args: &args{
 				masterKeyPassphrase: "abc123",
-				contents: `Client {
-   com.sun.security.auth.module.Krb5LoginModule required
-    useKeyTab=false
-    password=pass234
-    useTicketCache=true
+				contents: `test.config.jaas = com.sun.security.auth.module.Krb5LoginModule required \
+    useKeyTab=false \
+    password=pass234 \
+    useTicketCache=true \
+    password=testPass \
     doNotPrompt=true;
 };`,
-				configFilePath:         "/tmp/securePass987/remove/jaas.conf",
+				configFilePath:         "/tmp/securePass987/remove/embeddedJaas.properties",
 				localSecureConfigPath:  "/tmp/securePass987/remove/secureConfig.properties",
 				secureDir:              "/tmp/securePass987/remove",
 				remoteSecureConfigPath: "/tmp/securePass987/remove/secureConfig.properties",
-				removeConfigs:          "Client/com.sun.security.auth.module.Krb5LoginModule/password",
+				removeConfigs:          "test.config.jaas/com.sun.security.auth.module.Krb5LoginModule/password",
+				config:                 "",
 			},
 			wantErr: false,
+		},
+		{
+			name: "InvalidTestCase:Key not present in jaas config file",
+			args: &args{
+				masterKeyPassphrase: "abc123",
+				contents: `test.config.jaas = com.sun.security.auth.module.Krb5LoginModule required \
+    useKeyTab=false \
+    password=pass234 \
+    useTicketCache=true \
+    doNotPrompt=true;`,
+				configFilePath:         "/tmp/securePass987/remove/embeddedJaas.properties",
+				localSecureConfigPath:  "/tmp/securePass987/remove/secureConfig.properties",
+				secureDir:              "/tmp/securePass987/remove",
+				remoteSecureConfigPath: "/tmp/securePass987/remove/secureConfig.properties",
+				removeConfigs:          "test.config.jaas/com.sun.security.auth.module.Krb5LoginModule/location",
+				config:                 "",
+			},
+			wantErr:    true,
+			wantErrMsg: "config test.config.jaas/com.sun.security.auth.module.Krb5LoginModule/location not present in config file.",
+		},
+		{
+			name: "ValidTestCase:Remove existing configs from json config file",
+			args: &args{
+				masterKeyPassphrase: "abc123",
+				contents: `{
+			"name": "security configuration",
+			"credentials": {
+			"ssl.keystore.location": "/usr/ssl"
+		}
+		}`,
+				configFilePath:         "/tmp/securePass987/remove/configuration.json",
+				localSecureConfigPath:  "/tmp/securePass987/remove/secureConfig.properties",
+				secureDir:              "/tmp/securePass987/remove",
+				remoteSecureConfigPath: "/tmp/securePass987/remove/secureConfig.properties",
+				removeConfigs:          "credentials.ssl\\.keystore\\.location",
+				config:                 "credentials.ssl\\.keystore\\.location",
+			},
+			wantErr: false,
+		},
+		{
+			name: "InvalidTestCase:Key not present in json config file",
+			args: &args{
+				masterKeyPassphrase: "abc123",
+				contents: `{
+			"name": "security configuration",
+			"credentials": {
+			"ssl.keystore.location": "/usr/ssl"
+		}
+		}`,
+				configFilePath:         "/tmp/securePass987/remove/configuration.json",
+				localSecureConfigPath:  "/tmp/securePass987/remove/secureConfig.properties",
+				secureDir:              "/tmp/securePass987/remove",
+				remoteSecureConfigPath: "/tmp/securePass987/remove/secureConfig.properties",
+				removeConfigs:          "credentials/location",
+				config:                 "",
+			},
+			wantErr:    true,
+			wantErrMsg: "config credentials/location not present in json configuration file.",
 		},
 	}
 	for _, tt := range tests {
@@ -996,7 +1055,7 @@ func TestPasswordProtectionSuite_RemoveConfigFileSecrets(t *testing.T) {
 			plugin, err := setUpDir(tt.args.masterKeyPassphrase, tt.args.secureDir, tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.contents)
 			req.NoError(err)
 
-			err = plugin.EncryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.remoteSecureConfigPath, "")
+			err = plugin.EncryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.remoteSecureConfigPath, tt.args.config)
 			req.NoError(err)
 
 			err = plugin.RemoveEncryptedPasswords(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.removeConfigs)
@@ -1380,7 +1439,7 @@ func verifyConfigsRemoved(configFilePath string, localSecureConfigPath string, r
 }
 
 func validateUsingDecryption(configFilePath string, localSecureConfigPath string, outputConfigPath string, origConfigs string, plugin *PasswordProtectionSuite) error {
-	err := plugin.DecryptConfigFileSecrets(configFilePath, localSecureConfigPath, outputConfigPath)
+	err := plugin.DecryptConfigFileSecrets(configFilePath, localSecureConfigPath, outputConfigPath, nil)
 	if err != nil {
 		return fmt.Errorf("failed to decrypt config file")
 	}
