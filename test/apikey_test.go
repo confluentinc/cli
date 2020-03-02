@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/config/load"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
@@ -96,7 +97,8 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 					MetricSink: nil,
 					Logger:     logger,
 				})
-				require.NoError(t, cfg.Load())
+				cfg, err := load.LoadAndMigrate(cfg)
+				require.NoError(t, err)
 				ctx := cfg.Context()
 				require.NotNil(t, ctx)
 				kcc := ctx.KafkaClusterContext.GetKafkaClusterConfig("lkc-cool1")
