@@ -14,7 +14,7 @@ type JAASParserInterface interface {
 	SetOriginalConfigKeys(props *properties.Properties)
 }
 
-// Result represents a jaas value that is returned from Parse().
+// JAASParser represents a jaas value that is returned from Parse().
 type JAASParser struct {
 	JaasOriginalConfigKeys *properties.Properties
 	JaasProps              *properties.Properties
@@ -41,7 +41,7 @@ func (j *JAASParser) updateJAASConfig(op string, key string, value string, confi
 		if pattern.MatchString(config) {
 			matched := pattern.FindString(config)
 			if matched == "" {
-				return "", fmt.Errorf("The configuration" + config + "not present in JAAS file.")
+				return "", fmt.Errorf("The configuration " + config + " not present in JAAS configuration.")
 			}
 			config = pattern.ReplaceAllString(config, delete)
 		} else {
@@ -49,7 +49,7 @@ func (j *JAASParser) updateJAASConfig(op string, key string, value string, confi
 			pattern := regexp.MustCompile(keyValuePattern)
 			matched := pattern.FindString(config)
 			if matched == "" {
-				return "", fmt.Errorf("The configuration " + key + " not present in JAAS file.")
+				return "", fmt.Errorf("The configuration " + key + " not present in JAAS configuration.")
 			}
 			config = pattern.ReplaceAllString(config, delete)
 		}
@@ -70,7 +70,7 @@ func (j *JAASParser) updateJAASConfig(op string, key string, value string, confi
 		}
 		break
 	default:
-		return "", fmt.Errorf("The operation is not supported.")
+		return "", fmt.Errorf("The operation " + op + " is not supported.")
 	}
 
 	return config, nil
@@ -116,7 +116,7 @@ func (j *JAASParser) ignoreBackslash() {
 }
 
 func (j *JAASParser) isClosingBracket() bool {
-	// If its whitespace move ahead
+	// If it's whitespace move ahead
 	tokenizer := j.tokenizer
 	if unicode.IsSpace(tokenizer.Peek()) {
 		tokenizer.Scan()

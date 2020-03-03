@@ -53,7 +53,7 @@ const (
 	CONFLUENT_KEY_ENVVAR = "CONFLUENT_SECURITY_MASTER_KEY"
 )
 
-// JAAS File Const
+// JAAS Configuration Const
 const (
 	JAAS_VALUE_PATTERN      = "\\s*?=\\s*?(?P<value>\\S+)"
 	JAAS_KEY_PATTERN        = "(.*?)/(.*?)/(.*?)"
