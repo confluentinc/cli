@@ -15,6 +15,7 @@ import (
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/io"
+	plocal "github.com/confluentinc/cli/internal/pkg/local"
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
@@ -283,7 +284,7 @@ func (c *command) runBashCommand(path string, command string, args []string) err
 	c.shell.Init(os.Stdout, os.Stderr)
 	c.exportEnvironmentVariables(path)
 
-	err := c.shell.Source("cp_cli/confluent.sh", Asset)
+	err := c.shell.Source("cp_cli/confluent.sh", plocal.Asset)
 	if err != nil {
 		return err
 	}

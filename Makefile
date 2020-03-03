@@ -148,10 +148,10 @@ build-integ-confluent-race:
 		    -X $(RESOLVED_PATH).version=$(VERSION) -X $(RESOLVED_PATH).isTest=true" -tags testrunmain -coverpkg=./... -c -o $${binexe} -race
 
 .PHONY: bindata
-bindata: internal/cmd/local/bindata.go
+bindata: internal/pkg/local/bindata.go
 
-internal/cmd/local/bindata.go: cp_cli/* assets/*
-	@go-bindata -pkg local -o internal/cmd/local/bindata.go cp_cli/ assets/
+internal/pkg/local/bindata.go: cp_cli/* assets/*
+	@go-bindata -pkg local -o internal/pkg/local/bindata.go cp_cli/ assets/
 
 .PHONY: authenticate
 authenticate:
