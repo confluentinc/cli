@@ -59,7 +59,7 @@ listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config/com.sun.security.auth.modu
 `,
 			},
 			wantErr:    true,
-			wantErrMsg: "invalid jaas file: login module control flag not specified",
+			wantErrMsg: "Invalid JAAS configuration: login module control flag is not specified.",
 		},
 		{
 			name: "Invalid: ; field missing in JAAS file",
@@ -71,7 +71,7 @@ listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config/com.sun.security.auth.modu
 `,
 			},
 			wantErr:    true,
-			wantErrMsg: "invalid jaas file: expected a configuration name received ",
+			wantErrMsg: "Invalid JAAS configuration: expected a configuration name but received ",
 		},
 	}
 	for _, tt := range tests {

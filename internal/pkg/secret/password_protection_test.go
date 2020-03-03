@@ -342,7 +342,7 @@ config.properties/listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config/org.apac
 `,
 		},
 		{
-			name: "ValidTestCase: encrypt configuration in json file",
+			name: "ValidTestCase: encrypt configuration in a JSON file",
 			args: &args{
 				masterKeyPassphrase: "abc123",
 				contents: `{
@@ -382,7 +382,7 @@ config.json/credentials.ssl\.keystore\.password = ENC[AES/CBC/PKCS5Padding,data:
 `,
 		},
 		{
-			name: "InvalidTestCase: encrypt invalid configuration in json file",
+			name: "InvalidTestCase: encrypt invalid configuration in a JSON file",
 			args: &args{
 				masterKeyPassphrase: "abc123",
 				contents: `{
@@ -401,10 +401,10 @@ config.json/credentials.ssl\.keystore\.password = ENC[AES/CBC/PKCS5Padding,data:
 				createConfig:           true,
 			},
 			wantErr:    true,
-			wantErrMsg: "config credentials.ssl\\.trustore.\\location not present in json configuration file.",
+			wantErrMsg: "Configuration key credentials.ssl\\.trustore.\\location is not present in JSON configuration file.",
 		},
 		{
-			name: "InvalidTestCase: encrypt configuration in invalid json file",
+			name: "InvalidTestCase: encrypt configuration in invalid a JSON file",
 			args: &args{
 				masterKeyPassphrase: "abc123",
 				contents: `{
@@ -422,7 +422,7 @@ config.json/credentials.ssl\.keystore\.password = ENC[AES/CBC/PKCS5Padding,data:
 				createConfig:           true,
 			},
 			wantErr:    true,
-			wantErrMsg: "invalid json format",
+			wantErrMsg: "Invalid json file format.",
 		},
 	}
 	for _, tt := range tests {
@@ -668,7 +668,7 @@ config.properties/testPassword = ENC[AES/CBC/PKCS5Padding,data:SclgTBDDeLwccqtsa
 				os.Setenv(CONFLUENT_KEY_ENVVAR, tt.args.newMasterKey)
 			}
 
-			err = plugin.DecryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.outputConfigPath, nil)
+			err = plugin.DecryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.outputConfigPath, "")
 			checkError(err, tt.wantErr, tt.wantErrMsg, req)
 
 			if !tt.wantErr {
@@ -733,7 +733,7 @@ func TestPasswordProtectionSuite_AddConfigFileSecrets(t *testing.T) {
 			wantErrMsg: "add failed: empty list of new configs",
 		},
 		{
-			name: "ValidTestCase: Add new config to jaas config file",
+			name: "ValidTestCase: Add new config to JAAS config file",
 			args: &args{
 				masterKeyPassphrase: "abc123",
 				contents: `test.config.jaas = com.sun.security.auth.module.Krb5LoginModule required \
@@ -751,7 +751,7 @@ func TestPasswordProtectionSuite_AddConfigFileSecrets(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "ValidTestCase: Add new config to json file",
+			name: "ValidTestCase: Add new config to JSON file",
 			args: &args{
 				masterKeyPassphrase: "abc123",
 				contents: `{
@@ -867,7 +867,7 @@ func TestPasswordProtectionSuite_UpdateConfigFileSecrets(t *testing.T) {
 				validateUsingDecrypt:   true,
 			},
 			wantErr:    true,
-			wantErrMsg: "config ssl.keystore.password not present in config file.",
+			wantErrMsg: "Configuration key ssl.keystore.password is not present in the configuration file.",
 		},
 		{
 			name: "ValidTestCase: Update existing config in jaas config file",
@@ -964,7 +964,7 @@ func TestPasswordProtectionSuite_RemoveConfigFileSecrets(t *testing.T) {
 				config:                 "",
 			},
 			wantErr:    true,
-			wantErrMsg: "config ssl.keystore.password not present in config file.",
+			wantErrMsg: "Configuration key ssl.keystore.password is not present in the configuration file.",
 		},
 		{
 			name: "ValidTestCase:Remove existing configs from jaas config file",
@@ -1003,7 +1003,7 @@ func TestPasswordProtectionSuite_RemoveConfigFileSecrets(t *testing.T) {
 				config:                 "",
 			},
 			wantErr:    true,
-			wantErrMsg: "config test.config.jaas/com.sun.security.auth.module.Krb5LoginModule/location not present in config file.",
+			wantErrMsg: "Configuration key test.config.jaas/com.sun.security.auth.module.Krb5LoginModule/location is not present in the configuration file.",
 		},
 		{
 			name: "ValidTestCase:Remove existing configs from json config file",
@@ -1042,7 +1042,7 @@ func TestPasswordProtectionSuite_RemoveConfigFileSecrets(t *testing.T) {
 				config:                 "",
 			},
 			wantErr:    true,
-			wantErrMsg: "config credentials/location not present in json configuration file.",
+			wantErrMsg: "Configuration key credentials/location is not present in JSON configuration file.",
 		},
 	}
 	for _, tt := range tests {
@@ -1439,7 +1439,7 @@ func verifyConfigsRemoved(configFilePath string, localSecureConfigPath string, r
 }
 
 func validateUsingDecryption(configFilePath string, localSecureConfigPath string, outputConfigPath string, origConfigs string, plugin *PasswordProtectionSuite) error {
-	err := plugin.DecryptConfigFileSecrets(configFilePath, localSecureConfigPath, outputConfigPath, nil)
+	err := plugin.DecryptConfigFileSecrets(configFilePath, localSecureConfigPath, outputConfigPath, "")
 	if err != nil {
 		return fmt.Errorf("failed to decrypt config file")
 	}

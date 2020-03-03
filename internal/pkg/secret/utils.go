@@ -48,7 +48,7 @@ func SaveConfiguration(path string, configuration *properties.Properties, addSec
 	case ".json":
 		return writeJSONConfig(path, configuration, addSecureConfig)
 	default:
-		return fmt.Errorf("file format currently not supported")
+		return fmt.Errorf("The file format is currently not supported.")
 	}
 }
 
@@ -84,7 +84,7 @@ func DoesPathExist(path string) bool {
 
 func LoadPropertiesFile(path string) (*properties.Properties, error) {
 	if !DoesPathExist(path) {
-		return nil, fmt.Errorf("invalid file path")
+		return nil, fmt.Errorf("Invalid file path.")
 	}
 	loader := new(properties.Loader)
 	loader.Encoding = properties.UTF8
@@ -120,7 +120,7 @@ func addSecureConfigProviderProperty(property *properties.Properties) (*properti
 
 func LoadConfiguration(path string, configKeys []string, filter bool) (*properties.Properties, error) {
 	if !DoesPathExist(path) {
-		return nil, fmt.Errorf("invalid file path")
+		return nil, fmt.Errorf("Invalid file path.")
 	}
 	fileType := filepath.Ext(path)
 	switch fileType {
@@ -129,7 +129,7 @@ func LoadConfiguration(path string, configKeys []string, filter bool) (*properti
 	case ".json":
 		return loadJSONConfig(path, configKeys)
 	default:
-		return nil, fmt.Errorf("file type currently not supported")
+		return nil, fmt.Errorf("The file format is currently not supported.")
 	}
 }
 
@@ -148,7 +148,7 @@ func filterProperties(configProps *properties.Properties, configKeys []string, f
 					return nil, err
 				}
 			} else {
-				return nil, fmt.Errorf("config " + key + " not present in config file.")
+				return nil, fmt.Errorf("Configuration key " + key + " is not present in the configuration file.")
 			}
 		}
 		return matchProps, nil
@@ -258,7 +258,7 @@ func LoadJSONFile(path string) (string, error) {
 
 	jsonConfig := string(jsonByteArr)
 	if !gjson.Valid(jsonConfig) {
-		return "", fmt.Errorf("invalid json format")
+		return "", fmt.Errorf("Invalid json file format.")
 	}
 
 	return jsonConfig, nil
@@ -282,7 +282,7 @@ func loadJSONConfig(path string, configKeys []string) (*properties.Properties, e
 				return nil, err
 			}
 		} else {
-			return nil, fmt.Errorf("config " + key + " not present in json configuration file.")
+			return nil, fmt.Errorf("Configuration key " + key + " is not present in JSON configuration file.")
 		}
 	}
 
