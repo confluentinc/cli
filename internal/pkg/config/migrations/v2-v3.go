@@ -4,14 +4,21 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/config/v1"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+
 )
 
 func MigrateV2ToV3(cfgV2 *v2.Config) (*v3.Config, error) {
+	baseCfgV3 := &config.BaseConfig{
+		Params:   cfgV2.BaseConfig.Params,
+		Filename: cfgV2.BaseConfig.Filename,
+		Ver:      v3.Version,
+	}
 	cfgV3 := &v3.Config{
-		BaseConfig:         cfgV2.BaseConfig,
+		BaseConfig:         baseCfgV3,
 		DisableUpdateCheck: cfgV2.DisableUpdateCheck,
 		DisableUpdates:     cfgV2.DisableUpdates,
 		NoBrowser:          cfgV2.NoBrowser,
@@ -27,6 +34,10 @@ func MigrateV2ToV3(cfgV2 *v2.Config) (*v3.Config, error) {
 		contextsV3[ctxName] = migrateContextV2ToV3(ctxV2, cfgV3)
 	}
 	cfgV3.Contexts = contextsV3
+	_, _ = fmt.Fprintf(os.Stderr, "Migrated config from V2 to V3.\n")
+	if cfgV3.CLIName == "ccloud" {
+		_, _ = fmt.Fprintf(os.Stderr, "Active Kafka setting and Kafka cluster information are removed from username credential contexts.\n")
+	}
 	return cfgV3, nil
 }
 
@@ -48,7 +59,7 @@ func migrateContextV2ToV3(contextV2 *v2.Context, cfgV3 *v3.Config) *v3.Context {
 	if cfgV3.CLIName == "ccloud" && contextV3.Credential.CredentialType == v2.Username {
 		kafka = ""
 		kafkaClusters = map[string]*v1.KafkaClusterConfig{}
-		_, _ = fmt.Fprint(os.Stderr, "Removing active Kafka and kafka cluster information from config as part of username context migration from V2 to V3.\n")
+		contextV3.Logger.Debugf("Removing active Kafka setting and Kafka cluster information from context %s as part of config migration from V2 to V3.\n", contextV3.Name)
 	}
 	contextV3.KafkaClusterContext = v3.NewKafkaClusterContext(contextV3, kafka, kafkaClusters)
 	return contextV3
