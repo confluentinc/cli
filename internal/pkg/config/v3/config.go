@@ -42,7 +42,7 @@ type Config struct {
 // NewBaseConfig initializes a new Config object
 func New(params *config.Params) *Config {
 	c := &Config{}
-	baseCfg := config.NewBaseConfig(params, &Version)
+	baseCfg := config.NewBaseConfig(params, Version)
 	c.BaseConfig = baseCfg
 	if c.CLIName == "" {
 		// HACK: this is a workaround while we're building multiple binaries off one codebase

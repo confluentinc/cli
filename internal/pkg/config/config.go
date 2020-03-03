@@ -12,7 +12,7 @@ type Config interface {
 	Load() error
 	Validate() error
 	SetParams(params *Params)
-	Version() *semver.Version
+	Version() semver.Version
 }
 
 type Params struct {
