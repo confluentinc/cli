@@ -12,6 +12,7 @@ import (
 	"gopkg.in/square/go-jose.v2/jwt"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
+	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -338,6 +339,14 @@ func (r *PreRun) validateToken(cmd *cobra.Command, ctx *DynamicContext) error {
 	}
 	if exp, ok := claims["exp"].(float64); ok {
 		if float64(r.Clock.Now().Unix()) > exp {
+			ctx.Logger.Debug("Token expired.")
+			err := pauth.UpdateAuthToken(ctx.Context, r.Version.UserAgent)
+			if err != nil {
+				ctx.Logger.Debug("Failed to update token with netrc file info.")
+			} else {
+				ctx.Logger.Debug("Token successfully updated with netrc file info.")
+				return nil
+			}
 			return errors.HandleCommon(new(ccloud.ExpiredTokenError), cmd)
 		}
 	}

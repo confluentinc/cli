@@ -14,13 +14,13 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
+	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
-	"github.com/confluentinc/cli/internal/pkg/sso"
 )
 
 type commands struct {
@@ -129,29 +129,9 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Check if user has an enterprise SSO connection enabled.
-	userSSO, err := client.User.CheckEmail(context.Background(), &orgv1.User{Email: email})
+	token, err := pauth.GetAuthToken(client, url, email, password, noBrowser)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
-	}
-
-	token := ""
-
-	if userSSO != nil && userSSO.Sso != nil && userSSO.Sso.Enabled && userSSO.Sso.Auth0ConnectionName != "" {
-		idToken, err := sso.Login(url, noBrowser, userSSO.Sso.Auth0ConnectionName)
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-
-		token, err = client.Auth.Login(context.Background(), idToken, "", "")
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-	} else {
-		token, err = client.Auth.Login(context.Background(), "", email, password)
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
 	}
 
 	client = a.jwtHTTPClientFactory(context.Background(), token, url, a.config.Logger)
