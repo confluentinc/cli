@@ -177,7 +177,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 		state.Auth.Account = state.Auth.Accounts[0]
 	}
 
-	err = a.addOrUpdateContext(state.Auth.User.Email, url, state, "")
+	err = a.addOrUpdateContext(state.Auth.User.Email, password, url, state, "")
 	if err != nil {
 		return err
 	}
@@ -249,7 +249,7 @@ func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
 		Auth:      nil,
 		AuthToken: resp.AuthToken,
 	}
-	err = a.addOrUpdateContext(email, url, state, caCertPath)
+	err = a.addOrUpdateContext(email, url, password, state, caCertPath)
 	if err != nil {
 		return err
 	}
@@ -327,7 +327,7 @@ func (a *commands) credentials(cmd *cobra.Command, userField string, cloudClient
 	return email, password, nil
 }
 
-func (a *commands) addOrUpdateContext(username string, url string, state *v2.ContextState, caCertPath string) error {
+func (a *commands) addOrUpdateContext(username string, password string, url string, state *v2.ContextState, caCertPath string) error {
 	ctxName := generateContextName(username, url)
 	credName := generateCredentialName(username)
 	platform := &v2.Platform{
@@ -362,7 +362,7 @@ func (a *commands) addOrUpdateContext(username string, url string, state *v2.Con
 	if err != nil {
 		return err
 	}
-	return nil
+	return pauth.UpdateNetrc(ctxName, username, password)
 }
 
 func (a *commands) analyticsPreRunCover(command *pcmd.CLICommand, commandType analytics.CommandType, prerunner pcmd.PreRunner) func(cmd *cobra.Command, args []string) error {

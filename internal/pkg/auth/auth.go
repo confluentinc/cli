@@ -2,11 +2,16 @@ package auth
 
 import (
 	"context"
+	"fmt"
+	"github.com/atrox/homedir"
 	"github.com/bgentry/go-netrc/netrc"
 	"github.com/confluentinc/ccloud-sdk-go"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/sso"
+	"io/ioutil"
+	"os"
 )
 
 var (
@@ -14,14 +19,59 @@ var (
 	machinePrefix = "confluent-cli:"
 )
 
-func UpdateNetrc(ctx *v3.Context, username string, password string) {
-	machine, _ := netrc.FindMachine(netrcfile, machinePrefix + ctx.Name)
-	machine.UpdateLogin(username)
-	machine.UpdatePassword(password)
+func UpdateNetrc(ctxName string, username string, password string) error {
+	filename, err := homedir.Expand(netrcfile)
+	if err != nil {
+		err = fmt.Errorf("an error resolving the netrc filepath at %s has occurred. "+
+			"Please try moving the file to a different location", filename)
+		return err
+	}
+	n, err := getOrCreateNetrc(filename)
+	if err != nil {
+		return err
+	}
+	machine := n.FindMachine(machinePrefix + ctxName)
+	if machine == nil {
+		machine = n.NewMachine(machinePrefix + ctxName, username, password, "")
+	} else {
+		machine.UpdateLogin(username)
+		machine.UpdatePassword(password)
+	}
+	netrcBytes, err := n.MarshalText()
+	err = ioutil.WriteFile(filename, netrcBytes, 0600)
+	if err != nil {
+		return errors.Wrapf(err, "unable to write netrc file: %s", filename)
+	}
+	return err
+}
+
+func getOrCreateNetrc(filename string) (*netrc.Netrc, error) {
+	n, err := netrc.ParseFile(filename)
+	if err != nil {
+		if os.IsNotExist(err) {
+			_, err = os.OpenFile(filename, os.O_CREATE, 0600)
+			if err != nil {
+				return nil, errors.Wrapf(err, "unable to create netrc file: %s", filename)
+			}
+			n, err = netrc.ParseFile(filename)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, err
+		}
+	}
+	return n, nil
 }
 
 func getEmailPassword(ctxName string) (string, string, error){
-	machine, err := netrc.FindMachine(netrcfile, machinePrefix + ctxName)
+	filename, err := homedir.Expand(netrcfile)
+	if err != nil {
+		err = fmt.Errorf("an error resolving the netrc filepath at %s has occurred. "+
+			"Please try moving the file to a different location", filename)
+		return "", "", err
+	}
+	machine, err := netrc.FindMachine(filename, machinePrefix + ctxName)
 	if err != nil {
 		return "", "", err
 	}
