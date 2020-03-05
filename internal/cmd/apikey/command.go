@@ -6,15 +6,18 @@ import (
 	"os"
 	"strings"
 
+	"github.com/c-bata/go-prompt"
 	"github.com/spf13/cobra"
 
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
+	"github.com/confluentinc/go-printer"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/completer"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/keystore"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/go-printer"
 )
 
 const longDescription = `Use this command to register an API secret created by another
@@ -52,7 +55,7 @@ var (
 )
 
 // New returns the Cobra command for API Key.
-func New(prerunner pcmd.PreRunner, config *v2.Config, keystore keystore.KeyStore, resolver pcmd.FlagResolver) *cobra.Command {
+func New(prerunner pcmd.PreRunner, config *v2.Config, keystore keystore.KeyStore, resolver pcmd.FlagResolver, completer completer.CommandCompleter) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "api-key",
@@ -65,6 +68,7 @@ func New(prerunner pcmd.PreRunner, config *v2.Config, keystore keystore.KeyStore
 		flagResolver:            resolver,
 	}
 	cmd.init()
+	completer.AddCommand(cmd.Command, cmd.Complete)
 	return cmd.Command
 }
 
@@ -386,4 +390,13 @@ func (c *command) parseFlagResolverPromptValue(source, prompt string, secure boo
 		return "", err
 	}
 	return strings.TrimSpace(val), nil
+}
+
+func (c *command) Complete(d prompt.Document) []prompt.Suggest {
+	return []prompt.Suggest{
+		{
+			Text:        "hi",
+			Description: "there",
+		},
+	}
 }

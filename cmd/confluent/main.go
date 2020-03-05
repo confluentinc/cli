@@ -14,23 +14,26 @@ import (
 	"github.com/confluentinc/cli/internal/cmd"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/completer"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/config/load"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/metric"
+	"github.com/confluentinc/cli/internal/pkg/prompt"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 	"github.com/confluentinc/cli/mock"
 )
 
 var (
 	// Injected from linker flags like `go build -ldflags "-X main.version=$VERSION" -X ...`
-	version    = "v0.0.0"
-	commit     = ""
-	date       = ""
-	host       = ""
-	cliName    = "confluent"
+	version = "v0.0.0"
+	commit  = ""
+	date    = ""
+	host    = ""
+	// TODO: Change back to "confluent"
+	cliName    = "ccloud"
 	segmentKey = "KDsYPLPBNVB1IPJIN5oqrXnxQT9iKezo"
 	isTest     = "false"
 )
@@ -82,7 +85,8 @@ func main() {
 		analyticsClient = mock.NewDummyAnalyticsMock()
 	}
 
-	cli, err := cmd.NewConfluentCommand(cliName, cfg, logger, version, analyticsClient)
+	cmdCompleter := completer.NewCoreCommandCompleter(nil)
+	cli, err := cmd.NewConfluentCommand(cliName, cfg, logger, version, analyticsClient, cmdCompleter)
 	if err != nil {
 		if cli == nil {
 			fmt.Fprintln(os.Stderr, err)
@@ -96,6 +100,11 @@ func main() {
 			exit(1, analyticsClient, logger)
 		}
 	}
+	// Initialize prompt.
+	masterCompleter := completer.NewMasterCompleter(cli.Command, cliName)
+	cliPrompt := prompt.NewCLIPrompt(cli.Command, masterCompleter, cfg, prompt.DefaultPromptOptions()...)
+	cliPrompt.Run()
+
 	err = cli.Execute(os.Args[1:])
 	if err != nil {
 		if isTest {

@@ -30,6 +30,7 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/version"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/completer"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/help"
 	"github.com/confluentinc/cli/internal/pkg/io"
@@ -46,7 +47,7 @@ type Command struct {
 	logger    *log.Logger
 }
 
-func NewConfluentCommand(cliName string, cfg *v2.Config, logger *log.Logger, ver *pversion.Version, analytics analytics.Client) (*Command, error) {
+func NewConfluentCommand(cliName string, cfg *v2.Config, logger *log.Logger, ver *pversion.Version, analytics analytics.Client, completer completer.CommandCompleter) (*Command, error) {
 	cli := &cobra.Command{
 		Use:               cliName,
 		Version:           ver.Version,
@@ -116,7 +117,7 @@ func NewConfluentCommand(cliName string, cfg *v2.Config, logger *log.Logger, ver
 		cli.AddCommand(environment.New(prerunner, cfg, cliName))
 		cli.AddCommand(service_account.New(prerunner, cfg))
 		// Keystore exposed so tests can pass mocks.
-		cli.AddCommand(apikey.New(prerunner, cfg, nil, resolver))
+		cli.AddCommand(apikey.New(prerunner, cfg, nil, resolver, completer))
 
 		// Schema Registry
 		// If srClient is nil, the function will look it up after prerunner verifies authentication. Exposed so tests can pass mocks
