@@ -196,31 +196,24 @@ func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	caCertPath := ""
-	ctx, err := a.Commands[0].Config.Context(cmd)
-	// ctx may be nil during test
-	if ctx == nil || ctx.Context == nil || ctx.Context.Platform == nil {
-		ctx = &pcmd.DynamicContext{
-			Context: &v3.Context{
-				Platform: &v2.Platform{},
-			},
-		}
-	}
+	dynamicContext, err := a.Commands[0].Config.Context(cmd)
 	if err != nil {
 		return err
 	}
-	if cmd.Flags().Changed("ca-cert-path") {
-		caCertPath, err = cmd.Flags().GetString("ca-cert-path")
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-		ctx.Platform.CaCertPath = caCertPath
+	var ctx *v3.Context
+	if dynamicContext != nil {
+		ctx = dynamicContext.Context
 	}
-	mdsClient, err := a.MDSClientManager.GetMDSClient(ctx.Context)
+	flagChanged := cmd.Flags().Changed("ca-cert-path")
+	caCertPath, err := cmd.Flags().GetString("ca-cert-path")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	authToken, err := pauth.GetConfluentAuthToken(mdsClient, url, email, password)
+	mdsClient, err := a.MDSClientManager.GetMDSClient(ctx, caCertPath, flagChanged, url, a.Logger)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	authToken, err := pauth.GetConfluentAuthToken(mdsClient, email, password)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}

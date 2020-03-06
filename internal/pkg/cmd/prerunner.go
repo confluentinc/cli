@@ -339,12 +339,20 @@ func (r *PreRun) validateToken(cmd *cobra.Command, ctx *DynamicContext) error {
 	}
 	if exp, ok := claims["exp"].(float64); ok {
 		if float64(r.Clock.Now().Unix()) > exp {
-			ctx.Logger.Debug("Token expired.")
-			err := pauth.UpdateAuthToken(ctx.Context, r.Version.UserAgent)
-			if err != nil {
-				ctx.Logger.Debug("Failed to update token with netrc file info.")
+			r.Logger.Debug("Token expired.")
+			if ctx == nil {
+				r.Logger.Debug("Failed to update token, nil dynamic context.")
+				return errors.HandleCommon(new(ccloud.ExpiredTokenError), cmd)
+			}
+			if r.CLIName == "ccloud" {
+				err = pauth.UpdateCCloudAuthToken(ctx.Context, r.Version.UserAgent, r.Logger)
 			} else {
-				ctx.Logger.Debug("Token successfully updated with netrc file info.")
+				err = pauth.UpdateConfluentAuthToken(ctx.Context, r.Logger)
+			}
+			if err != nil {
+				r.Logger.Debug("Failed to update token with netrc file info.")
+			} else {
+				r.Logger.Debug("Token successfully updated with netrc file info.")
 				return nil
 			}
 			return errors.HandleCommon(new(ccloud.ExpiredTokenError), cmd)
