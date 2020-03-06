@@ -11,7 +11,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	linter "github.com/confluentinc/cli/internal/pkg/lint-cli"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/version"
@@ -123,14 +123,14 @@ var rules = []linter.Rule{
 
 var flagRules = []linter.FlagRule{
 	linter.FlagFilter(linter.RequireFlagNameLength(2, 16),
-		linter.ExcludeFlag("service-account-id", "connect-cluster-id", "schema-registry-cluster-id", "local-secrets-file", "remote-secrets-file")),
+		linter.ExcludeFlag("service-account", "connect-cluster-id", "schema-registry-cluster-id", "local-secrets-file", "remote-secrets-file")),
 	linter.RequireFlagUsageMessage,
 	linter.RequireFlagUsageStartWithCapital,
 	linter.RequireFlagUsageEndWithPunctuation,
 	linter.RequireFlagKebabCase,
 	linter.RequireFlagCharacters('-'),
 	linter.FlagFilter(linter.RequireFlagDelimiter('-', 1),
-		linter.ExcludeFlag("service-account-id", "kafka-cluster-id", "connect-cluster-id", "schema-registry-cluster-id",
+		linter.ExcludeFlag("service-account", "kafka-cluster-id", "connect-cluster-id", "schema-registry-cluster-id",
 			"ksql-cluster-id", "local-secrets-file", "remote-secrets-file", "ca-cert-path")),
 	linter.RequireFlagRealWords('-'),
 	linter.RequireFlagUsageRealWords,
@@ -159,7 +159,7 @@ func main() {
 
 	var issues *multierror.Error
 	for _, cliName := range cliNames {
-		cfg := v2.New(&config.Params{
+		cfg := v3.New(&config.Params{
 			CLIName:    cliName,
 			MetricSink: nil,
 			Logger:     log.New(),

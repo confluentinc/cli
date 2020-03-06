@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/update"
@@ -50,7 +50,7 @@ func NewClient(cliName string, disableUpdateCheck bool, logger *log.Logger) (upd
 type command struct {
 	Command *cobra.Command
 	cliName string
-	config  *v2.Config
+	config  *v3.Config
 	version *cliVersion.Version
 	logger  *log.Logger
 	client  update.Client
@@ -59,7 +59,7 @@ type command struct {
 }
 
 // New returns the command for the built-in updater.
-func New(cliName string, config *v2.Config, version *cliVersion.Version, prompt pcmd.Prompt,
+func New(cliName string, config *v3.Config, version *cliVersion.Version, prompt pcmd.Prompt,
 	client update.Client) *cobra.Command {
 	cmd := &command{
 		cliName: cliName,
@@ -90,7 +90,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "error reading --yes as bool")
 	}
 
-	pcmd.Println(cmd, "Checking for updates...")
+	pcmd.ErrPrintln(cmd, "Checking for updates...")
 	updateAvailable, latestVersion, err := c.client.CheckForUpdates(c.cliName, c.version.Version, true)
 	if err != nil {
 		c.Command.SilenceUsage = true
@@ -120,7 +120,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	if err := c.client.UpdateBinary(c.cliName, latestVersion, oldBin); err != nil {
 		return err
 	}
-	pcmd.Printf(cmd, "Update your autocomplete scripts as instructed by: %s help completion\n", c.config.CLIName)
+	pcmd.ErrPrintf(cmd, "Update your autocomplete scripts as instructed by: %s help completion\n", c.config.CLIName)
 
 	return nil
 }

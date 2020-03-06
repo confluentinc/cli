@@ -13,16 +13,17 @@ import (
 	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 type DynamicContext struct {
-	*v2.Context
+	*v3.Context
 	resolver FlagResolver
 	client   *ccloud.Client
 }
 
-func NewDynamicContext(context *v2.Context, resolver FlagResolver, client *ccloud.Client) *DynamicContext {
+func NewDynamicContext(context *v3.Context, resolver FlagResolver, client *ccloud.Client) *DynamicContext {
 	return &DynamicContext{
 		Context:  context,
 		resolver: resolver,
@@ -47,7 +48,7 @@ func (d *DynamicContext) ActiveKafkaCluster(cmd *cobra.Command) (*v1.KafkaCluste
 		}
 		if clusterId == "" {
 			// No flags provided, just retrieve the current one specified in the config.
-			clusterId = d.Kafka
+			clusterId = d.KafkaClusterContext.GetActiveKafkaClusterId()
 		}
 	}
 	cluster, err := d.FindKafkaCluster(cmd, clusterId)
@@ -58,7 +59,7 @@ func (d *DynamicContext) ActiveKafkaCluster(cmd *cobra.Command) (*v1.KafkaCluste
 }
 
 func (d *DynamicContext) FindKafkaCluster(cmd *cobra.Command, clusterId string) (*v1.KafkaClusterConfig, error) {
-	if cluster, ok := d.KafkaClusters[clusterId]; ok {
+	if cluster := d.KafkaClusterContext.GetKafkaClusterConfig(clusterId); cluster != nil {
 		return cluster, nil
 	}
 	if d.client == nil {
@@ -77,7 +78,7 @@ func (d *DynamicContext) FindKafkaCluster(cmd *cobra.Command, clusterId string) 
 		APIEndpoint: kcc.ApiEndpoint,
 		APIKeys:     make(map[string]*v0.APIKeyPair),
 	}
-	d.KafkaClusters[clusterId] = cluster
+	d.KafkaClusterContext.AddKafkaClusterConfig(cluster)
 	err = d.Save()
 	if err != nil {
 		return nil, err
@@ -89,7 +90,7 @@ func (d *DynamicContext) SetActiveKafkaCluster(cmd *cobra.Command, clusterId str
 	if _, err := d.FindKafkaCluster(cmd, clusterId); err != nil {
 		return err
 	}
-	d.Kafka = clusterId
+	d.KafkaClusterContext.SetActiveKafkaCluster(clusterId)
 	return d.Save()
 }
 

@@ -1,10 +1,11 @@
 package kafka
 
 import (
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
@@ -16,7 +17,7 @@ type command struct {
 }
 
 // New returns the default command object for interacting with Kafka.
-func New(prerunner pcmd.PreRunner, config *v2.Config, logger *log.Logger, clientID string) *cobra.Command {
+func New(prerunner pcmd.PreRunner, config *v3.Config, logger *log.Logger, clientID string) *cobra.Command {
 	cliCmd := pcmd.NewCLICommand(
 		&cobra.Command{
 			Use:   "kafka",

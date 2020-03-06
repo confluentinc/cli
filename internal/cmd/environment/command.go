@@ -8,7 +8,7 @@ import (
 
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -27,7 +27,7 @@ var (
 )
 
 // New returns the Cobra command for `environment`.
-func New(prerunner pcmd.PreRunner, config *v2.Config, cliName string) *cobra.Command {
+func New(prerunner pcmd.PreRunner, config *v3.Config, cliName string) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "environment",

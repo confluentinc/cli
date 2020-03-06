@@ -11,7 +11,7 @@ import (
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	aclutil "github.com/confluentinc/cli/internal/pkg/acl"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -21,7 +21,7 @@ type aclCommand struct {
 }
 
 // NewACLCommand returns the Cobra command for Kafka ACL.
-func NewACLCommand(prerunner pcmd.PreRunner, config *v2.Config) *cobra.Command {
+func NewACLCommand(prerunner pcmd.PreRunner, config *v3.Config) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "acl",
@@ -45,12 +45,12 @@ func (c *aclCommand) init() {
 
 ::
 
-	ccloud kafka acl create --allow --service-account-id 1522 --operation READ --consumer-group \
+	ccloud kafka acl create --allow --service-account 1522 --operation READ --consumer-group \
 	java_example_group_1
 
 ::
 
-	ccloud kafka acl create --allow --service-account-id 1522 --operation READ --topic '*'
+	ccloud kafka acl create --allow --service-account 1522 --operation READ --topic '*'
 
 `,
 		RunE: c.create,
@@ -79,7 +79,7 @@ func (c *aclCommand) init() {
 		Args:  cobra.NoArgs,
 	}
 	cmd.Flags().AddFlagSet(resourceFlags())
-	cmd.Flags().Int("service-account-id", 0, "Service account ID.")
+	cmd.Flags().Int("service-account", 0, "Service account ID.")
 	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	cmd.Flags().SortFlags = false
 

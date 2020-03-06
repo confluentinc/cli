@@ -26,6 +26,7 @@ import (
 	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/mock"
 )
 
@@ -60,14 +61,14 @@ var (
 
 type AnalyticsTestSuite struct {
 	suite.Suite
-	config          *v2.Config
+	config          *v3.Config
 	analyticsClient analytics.Client
 	mockClient      *mock.SegmentClient
 	output          []segment.Message
 }
 
 func (suite *AnalyticsTestSuite) SetupSuite() {
-	suite.config = v2.AuthenticatedConfigMock()
+	suite.config = v3.AuthenticatedCloudConfigMock()
 	suite.config.CLIName = ccloudName
 	suite.createContexts()
 	suite.createStates()
@@ -594,22 +595,31 @@ func (suite *AnalyticsTestSuite) createContexts() {
 		Server:     "test",
 		CaCertPath: "",
 	}
-	apiContext := &v2.Context{
+	apiContext := &v3.Context{
 		Name:         apiKeyContext,
 		Platform:     platform,
 		PlatformName: platform.Name,
+		KafkaClusterContext: &v3.KafkaClusterContext{
+			EnvContext: true,
+		},
 	}
-	userContext := &v2.Context{
+	userContext := &v3.Context{
 		Name:         userNameContext,
 		Platform:     platform,
 		PlatformName: platform.Name,
+		KafkaClusterContext: &v3.KafkaClusterContext{
+			EnvContext: true,
+		},
 	}
-	otherContext := &v2.Context{
+	otherContext := &v3.Context{
 		Name:         otherUserContext,
 		Platform:     platform,
 		PlatformName: platform.Name,
+		KafkaClusterContext: &v3.KafkaClusterContext{
+			EnvContext: true,
+		},
 	}
-	contexts := make(map[string]*v2.Context)
+	contexts := make(map[string]*v3.Context)
 	contexts[apiKeyContext] = apiContext
 	contexts[userNameContext] = userContext
 	contexts[otherUserContext] = otherContext

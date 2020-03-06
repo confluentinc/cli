@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/mock"
 	cliMock "github.com/confluentinc/cli/mock"
@@ -65,7 +65,7 @@ func TestLocal(t *testing.T) {
 	verifyTestEnvironmentVariables(shellRunner)
 	shellRunner.EXPECT().Source("cp_cli/confluent.sh", gomock.Any())
 	shellRunner.EXPECT().Run("main", gomock.Eq([]string{"local", "help"})).Return(0, nil)
-	localCmd := New(&cobra.Command{}, cliMock.NewPreRunnerMock(nil, nil), shellRunner, log.New(), &mock.FileSystem{}, &v2.Config{})
+	localCmd := New(&cobra.Command{}, cliMock.NewPreRunnerMock(nil, nil), shellRunner, log.New(), &mock.FileSystem{}, &v3.Config{})
 	_, err := cmd.ExecuteCommand(localCmd, "local", "--path", "blah", "help")
 	req.NoError(err)
 }
@@ -82,7 +82,7 @@ func TestLocalErrorDuringSource(t *testing.T) {
 	shellRunner.EXPECT().Init(os.Stdout, os.Stderr)
 	verifyTestEnvironmentVariables(shellRunner)
 	shellRunner.EXPECT().Source("cp_cli/confluent.sh", gomock.Any()).Return(errors.New("oh no"))
-	localCmd := New(&cobra.Command{}, cliMock.NewPreRunnerMock(nil, nil), shellRunner, log.New(), &mock.FileSystem{}, &v2.Config{})
+	localCmd := New(&cobra.Command{}, cliMock.NewPreRunnerMock(nil, nil), shellRunner, log.New(), &mock.FileSystem{}, &v3.Config{})
 	_, err := cmd.ExecuteCommand(localCmd, "local", "--path", "blah", "help")
 	req.Error(err)
 }
@@ -97,7 +97,7 @@ func TestLocalCommandSuggestions(t *testing.T) {
 
 	shellRunner := mock_local.NewMockShellRunner(ctrl)
 	root := &cobra.Command{Use: "confluent"}
-	root.AddCommand(New(root, cliMock.NewPreRunnerMock(nil, nil), shellRunner, log.New(), &mock.FileSystem{}, &v2.Config{}))
+	root.AddCommand(New(root, cliMock.NewPreRunnerMock(nil, nil), shellRunner, log.New(), &mock.FileSystem{}, &v3.Config{}))
 
 	out := executeErrorOrOut(root, "start")
 	req.Equal(`Error: unknown command "start" for "confluent"

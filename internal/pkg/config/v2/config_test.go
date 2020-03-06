@@ -76,7 +76,7 @@ func TestConfig_Load(t *testing.T) {
 				APIEndpoint: "",
 				APIKeys: map[string]*v0.APIKeyPair{
 					"abc-key-123": {
-						Key: "abc-key-123",
+						Key:    "abc-key-123",
 						Secret: "def-secret-456",
 					},
 				},
@@ -151,7 +151,7 @@ func TestConfig_Load(t *testing.T) {
 						Logger:     log.New(),
 					},
 					Filename: testConfigFile.Name(),
-					Ver:      &Version,
+					Ver:      Version,
 				},
 				Platforms: map[string]*Platform{
 					platform.Name: platform,
@@ -193,7 +193,7 @@ func TestConfig_Load(t *testing.T) {
 						Logger:     log.New(),
 					},
 					Filename: testConfigFile.Name(),
-					Ver:      &Version,
+					Ver:      Version,
 				},
 				Platforms: map[string]*Platform{
 					platform.Name: platform,
@@ -224,7 +224,7 @@ func TestConfig_Load(t *testing.T) {
 						Logger:     log.New(),
 					},
 					Filename: testConfigFile.Name(),
-					Ver:      &Version,
+					Ver:      Version,
 				},
 				DisableUpdates:     true,
 				DisableUpdateCheck: true,
@@ -321,7 +321,7 @@ func TestConfig_Save(t *testing.T) {
 				APIEndpoint: "",
 				APIKeys: map[string]*v0.APIKeyPair{
 					"abc-key-123": {
-						Key: "abc-key-123",
+						Key:    "abc-key-123",
 						Secret: "def-secret-456",
 					},
 				},
@@ -381,7 +381,7 @@ func TestConfig_Save(t *testing.T) {
 						Logger:     log.New(),
 					},
 					Filename: "",
-					Ver:      &Version,
+					Ver:      Version,
 				},
 				Platforms: map[string]*Platform{
 					platform.Name: platform,
@@ -410,7 +410,7 @@ func TestConfig_Save(t *testing.T) {
 						Logger:     log.New(),
 					},
 					Filename: "",
-					Ver:      &Version,
+					Ver:      Version,
 				},
 				Platforms: map[string]*Platform{
 					platform.Name: platform,

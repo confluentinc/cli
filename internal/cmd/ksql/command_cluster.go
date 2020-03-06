@@ -11,7 +11,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/acl"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -32,7 +32,7 @@ type clusterCommand struct {
 }
 
 // NewClusterCommand returns the Cobra clusterCommand for Ksql Cluster.
-func NewClusterCommand(config *v2.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func NewClusterCommand(config *v3.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "app",
@@ -269,7 +269,7 @@ func (c *clusterCommand) configureACLs(cmd *cobra.Command, args []string) error 
 		return errors.HandleCommon(err, cmd)
 	}
 	if cluster.KafkaClusterId != kafkaCluster.Id {
-		pcmd.Printf(cmd, "This KSQL cluster is not backed by the current Kafka cluster.")
+		pcmd.ErrPrintf(cmd, "This KSQL cluster is not backed by the current Kafka cluster.")
 	}
 
 	serviceAccountId, err := c.getServiceAccount(cluster)

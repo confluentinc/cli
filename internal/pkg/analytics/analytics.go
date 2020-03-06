@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/pflag"
 
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
@@ -83,7 +84,7 @@ type Client interface {
 type ClientObj struct {
 	cliName string
 	client  segment.Client
-	config  *v2.Config
+	config  *v3.Config
 	clock   clockwork.Clock
 
 	// cache data until we flush events to segment (when each cmd call finishes)
@@ -102,7 +103,7 @@ type userInfo struct {
 	apiKey         string
 }
 
-func NewAnalyticsClient(cliName string, cfg *v2.Config, version string, segmentClient segment.Client, clock clockwork.Clock) *ClientObj {
+func NewAnalyticsClient(cliName string, cfg *v3.Config, version string, segmentClient segment.Client, clock clockwork.Clock) *ClientObj {
 	client := &ClientObj{
 		cliName:     cliName,
 		client:      segmentClient,

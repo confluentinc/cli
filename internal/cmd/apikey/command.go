@@ -9,7 +9,7 @@ import (
 
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/keystore"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -51,7 +51,7 @@ var (
 )
 
 // New returns the Cobra command for API Key.
-func New(prerunner pcmd.PreRunner, config *v2.Config, keystore keystore.KeyStore, resolver pcmd.FlagResolver) *cobra.Command {
+func New(prerunner pcmd.PreRunner, config *v3.Config, keystore keystore.KeyStore, resolver pcmd.FlagResolver) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "api-key",
@@ -76,7 +76,7 @@ func (c *command) init() {
 	}
 	listCmd.Flags().String(resourceFlagName, "", "The resource ID to filter by.")
 	listCmd.Flags().Bool("current-user", false, "Show only API keys belonging to current user.")
-	listCmd.Flags().Int32("service-account-id", 0, "The service account ID to filter by.")
+	listCmd.Flags().Int32("service-account", 0, "The service account ID to filter by.")
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
@@ -88,7 +88,7 @@ func (c *command) init() {
 		Args:  cobra.NoArgs,
 	}
 	createCmd.Flags().String(resourceFlagName, "", "REQUIRED: The resource ID.")
-	createCmd.Flags().Int32("service-account-id", 0, "Service account ID. If not specified, the API key will have full access on the cluster.")
+	createCmd.Flags().Int32("service-account", 0, "Service account ID. If not specified, the API key will have full access on the cluster.")
 	createCmd.Flags().String("description", "", "Description of API key.")
 	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	createCmd.Flags().SortFlags = false
@@ -163,7 +163,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		logicalClusters = []*authv1.ApiKey_Cluster{{Id: resourceId, Type: resourceType}}
 	}
 
-	userId, err := cmd.Flags().GetInt32("service-account-id")
+	userId, err := cmd.Flags().GetInt32("service-account")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -174,7 +174,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	}
 	if currentUser {
 		if userId != 0 {
-			return errors.Errorf("Cannot use both service-account-id and current-user flags at the same time.")
+			return errors.Errorf("Cannot use both service-account and current-user flags at the same time.")
 		}
 		userId = c.State.Auth.User.Id
 	}
@@ -248,7 +248,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	userId, err := cmd.Flags().GetInt32("service-account-id")
+	userId, err := cmd.Flags().GetInt32("service-account")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -275,7 +275,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	}
 
 	if outputFormat == output.Human.String() {
-		pcmd.Println(cmd, "Save the API key and secret. The secret is not retrievable later.")
+		pcmd.ErrPrintln(cmd, "Save the API key and secret. The secret is not retrievable later.")
 	}
 
 	err = output.DescribeObject(cmd, userKey, createFields, createHumanRenames, createStructuredRenames)

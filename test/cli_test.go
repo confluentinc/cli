@@ -41,7 +41,7 @@ import (
 	utilv1 "github.com/confluentinc/ccloudapis/util/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 )
 
 var (
@@ -566,13 +566,13 @@ func (s *CLITestSuite) validateTestOutput(tt CLITest, t *testing.T, output strin
 	if *update && !tt.regex && tt.fixture != "" {
 		writeFixture(t, tt.fixture, output)
 	}
-	actual := normalizeNewLines(string(output))
+	actual := NormalizeNewLines(string(output))
 	if tt.contains != "" {
 		require.Contains(t, actual, tt.contains)
 	} else if tt.notContains != "" {
 		require.NotContains(t, actual, tt.notContains)
 	} else if tt.fixture != "" {
-		expected := normalizeNewLines(loadFixture(t, tt.fixture))
+		expected := NormalizeNewLines(loadFixture(t, tt.fixture))
 
 		if tt.regex {
 			require.Regexp(t, expected, actual)
@@ -598,7 +598,7 @@ func runCommand(t *testing.T, binaryName string, env []string, args string, want
 func resetConfiguration(t *testing.T, cliName string) {
 	// HACK: delete your current config to isolate tests cases for non-workflow tests...
 	// probably don't really want to do this or devs will get mad
-	cfg := v2.New(&config.Params{
+	cfg := v3.New(&config.Params{
 		CLIName: cliName,
 	})
 	err := cfg.Save()

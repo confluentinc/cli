@@ -72,6 +72,9 @@ if a master key has not already been set using the "master-key generate" command
 
 	decryptCmd.Flags().String("output-file", "", "Output file path.")
 	check(decryptCmd.MarkFlagRequired("output-file"))
+
+	decryptCmd.Flags().String("config", "", "List of configuration keys.")
+	check(decryptCmd.MarkFlagRequired("config"))
 	decryptCmd.Flags().SortFlags = false
 	c.AddCommand(decryptCmd)
 
@@ -176,6 +179,11 @@ func (c *secureFileCommand) encrypt(cmd *cobra.Command, args []string) error {
 }
 
 func (c *secureFileCommand) decrypt(cmd *cobra.Command, args []string) error {
+	configs, err := cmd.Flags().GetString("config")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
 	configPath, err := cmd.Flags().GetString("config-file")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -191,7 +199,7 @@ func (c *secureFileCommand) decrypt(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	err = c.plugin.DecryptConfigFileSecrets(configPath, localSecretsPath, outputPath)
+	err = c.plugin.DecryptConfigFileSecrets(configPath, localSecretsPath, outputPath, configs)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -332,7 +340,7 @@ func (c *secureFileCommand) rotate(cmd *cobra.Command, args []string) error {
 			return errors.HandleCommon(err, cmd)
 		}
 
-		pcmd.Println(cmd, "Save the Master Key. It is not retrievable later.")
+		pcmd.ErrPrintln(cmd, "Save the Master Key. It is not retrievable later.")
 		err = printer.RenderTableOut(&struct{ MasterKey string }{MasterKey: masterKey}, []string{"MasterKey"}, map[string]string{"MasterKey": "Master Key"}, os.Stdout)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)

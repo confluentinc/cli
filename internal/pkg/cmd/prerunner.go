@@ -13,6 +13,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/update"
@@ -65,7 +66,7 @@ func (a *AuthenticatedCLICommand) EnvironmentId() string {
 	return a.State.Auth.Account.Id
 }
 
-func NewAuthenticatedCLICommand(command *cobra.Command, cfg *v2.Config, prerunner PreRunner) *AuthenticatedCLICommand {
+func NewAuthenticatedCLICommand(command *cobra.Command, cfg *v3.Config, prerunner PreRunner) *AuthenticatedCLICommand {
 	cmd := &AuthenticatedCLICommand{
 		CLICommand: NewCLICommand(command, cfg, prerunner),
 		Context:    nil,
@@ -76,7 +77,7 @@ func NewAuthenticatedCLICommand(command *cobra.Command, cfg *v2.Config, prerunne
 	return cmd
 }
 
-func NewAuthenticatedWithMDSCLICommand(command *cobra.Command, cfg *v2.Config, prerunner PreRunner) *AuthenticatedCLICommand {
+func NewAuthenticatedWithMDSCLICommand(command *cobra.Command, cfg *v3.Config, prerunner PreRunner) *AuthenticatedCLICommand {
 	cmd := &AuthenticatedCLICommand{
 		CLICommand: NewCLICommand(command, cfg, prerunner),
 		Context:    nil,
@@ -87,7 +88,7 @@ func NewAuthenticatedWithMDSCLICommand(command *cobra.Command, cfg *v2.Config, p
 	return cmd
 }
 
-func NewHasAPIKeyCLICommand(command *cobra.Command, cfg *v2.Config, prerunner PreRunner) *HasAPIKeyCLICommand {
+func NewHasAPIKeyCLICommand(command *cobra.Command, cfg *v3.Config, prerunner PreRunner) *HasAPIKeyCLICommand {
 	cmd := &HasAPIKeyCLICommand{
 		CLICommand: NewCLICommand(command, cfg, prerunner),
 		Context:    nil,
@@ -97,14 +98,14 @@ func NewHasAPIKeyCLICommand(command *cobra.Command, cfg *v2.Config, prerunner Pr
 	return cmd
 }
 
-func NewAnonymousCLICommand(command *cobra.Command, cfg *v2.Config, prerunner PreRunner) *CLICommand {
+func NewAnonymousCLICommand(command *cobra.Command, cfg *v3.Config, prerunner PreRunner) *CLICommand {
 	cmd := NewCLICommand(command, cfg, prerunner)
 	command.PersistentPreRunE = prerunner.Anonymous(cmd)
 	cmd.Command = command
 	return cmd
 }
 
-func NewCLICommand(command *cobra.Command, cfg *v2.Config, prerunner PreRunner) *CLICommand {
+func NewCLICommand(command *cobra.Command, cfg *v3.Config, prerunner PreRunner) *CLICommand {
 	return &CLICommand{
 		Config:    NewDynamicConfig(cfg, nil, nil),
 		Command:   command,
@@ -224,12 +225,12 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 			return errors.HandleCommon(errors.ErrNoContext, cmd)
 		}
 		command.Context = ctx
-		hasAPIKey, err := ctx.HasAPIKey(cmd, ctx.Kafka)
+		hasAPIKey, err := ctx.HasAPIKey(cmd, ctx.KafkaClusterContext.GetActiveKafkaClusterId())
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
 		if !hasAPIKey {
-			err = &errors.UnspecifiedAPIKeyError{ClusterID: ctx.Kafka}
+			err = &errors.UnspecifiedAPIKeyError{ClusterID: ctx.KafkaClusterContext.GetActiveKafkaClusterId()}
 			return errors.HandleCommon(err, cmd)
 		}
 		return nil
