@@ -9,6 +9,7 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
+	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	"math/big"
 	"net/http"
 	"os"
@@ -224,11 +225,6 @@ func Test_SelfSignedCerts(t *testing.T) {
 	})
 	prompt := prompt("cody@confluent.io", "iambatman")
 	prerunner := cliMock.NewPreRunnerMock(nil, nil)
-	cmds := newCommands(prerunner, cfg, log.New(), prompt, nil, nil, cliMock.NewDummyAnalyticsMock())
-	cmds.MDSClient = mdsClient
-	for _, c := range cmds.Commands {
-		c.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
-	}
 
 	// Create a test certificate to be read in by the command
 	ca := &x509.Certificate{
@@ -240,7 +236,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 	ca_b, err := x509.CreateCertificate(rand.Reader, ca, ca, &priv.PublicKey, priv)
 	req.NoError(err, "Couldn't generate certificate from private key")
 	pemBytes := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: ca_b})
-	cmds.certReader = bytes.NewReader(pemBytes)
+	certReader := bytes.NewReader(pemBytes)
 
 	cert, err := x509.ParseCertificate(ca_b)
 	req.NoError(err, "Couldn't reparse certificate")
@@ -265,6 +261,20 @@ func Test_SelfSignedCerts(t *testing.T) {
 				ExpiresIn: 100,
 			}, nil, nil
 		},
+	}
+	logger := log.New()
+	mdsClientManager := &cliMock.MockMDSClientManager{
+		GetMDSClientFunc: func(ctx *v3.Context) (client *mds.APIClient, e error) {
+			mdsClient.GetConfig().HTTPClient, err = pauth.SelfSignedCertClient(certReader, logger)
+			if err != nil {
+				return nil, err
+			}
+			return mdsClient, nil
+		},
+	}
+	cmds := newCommands(prerunner, cfg, log.New(), prompt, nil, nil, mdsClientManager, cliMock.NewDummyAnalyticsMock())
+	for _, c := range cmds.Commands {
+		c.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	}
 	_, err = pcmd.ExecuteCommand(cmds.Commands[0].Command, "--url=http://localhost:8090", "--ca-cert-path=testcert.pem")
 	req.NoError(err)
@@ -308,8 +318,14 @@ func newAuthCommand(prompt pcmd.Prompt, auth *sdkMock.Auth, user *sdkMock.User, 
 			},
 		}
 	}
-	commands := newCommands(cliMock.NewPreRunnerMock(mockAnonHTTPClientFactory("https://confluent.cloud", nil), mdsClient), cfg, log.New(), prompt, mockAnonHTTPClientFactory, mockJwtHTTPClientFactory, cliMock.NewDummyAnalyticsMock())
-	commands.MDSClient = mdsClient
+	mdsClientManager := &cliMock.MockMDSClientManager{
+		GetMDSClientFunc: func(ctx *v3.Context) (client *mds.APIClient, e error) {
+			return mdsClient, nil
+		},
+	}
+	commands := newCommands(cliMock.NewPreRunnerMock(mockAnonHTTPClientFactory("https://confluent.cloud", nil), mdsClient),
+		cfg, log.New(), prompt, mockAnonHTTPClientFactory, mockJwtHTTPClientFactory, mdsClientManager,
+		cliMock.NewDummyAnalyticsMock())
 	for _, c := range commands.Commands {
 		c.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	}

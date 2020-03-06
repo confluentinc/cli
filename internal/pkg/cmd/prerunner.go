@@ -310,14 +310,14 @@ func (r *PreRun) createMDSClient(ctx *DynamicContext, ver *version.Version) *mds
 	caCertFile, err := os.Open(caCertPath)
 	if err == nil {
 		defer caCertFile.Close()
-		mdsConfig.HTTPClient, err = SelfSignedCertClient(caCertFile, r.Logger)
+		mdsConfig.HTTPClient, err = pauth.SelfSignedCertClient(caCertFile, r.Logger)
 		if err != nil {
 			r.Logger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
-			mdsConfig.HTTPClient = DefaultClient()
+			mdsConfig.HTTPClient = pauth.DefaultClient()
 		}
 	} else {
 		r.Logger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
-		mdsConfig.HTTPClient = DefaultClient()
+		mdsConfig.HTTPClient = pauth.DefaultClient()
 
 	}
 	return mds.NewAPIClient(mdsConfig)

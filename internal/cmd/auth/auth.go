@@ -3,14 +3,11 @@ package auth
 import (
 	"context"
 	"fmt"
-	"io"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
-	"github.com/confluentinc/mds-sdk-go"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
@@ -28,11 +25,8 @@ type commands struct {
 	Logger          *log.Logger
 	config          *v3.Config
 	analyticsClient analytics.Client
-	// @VisibleForTesting
-	MDSClient *mds.APIClient
-	// @VisibleForTesting, defaults to the OS filesystem
-	certReader io.Reader
 	// for testing
+	MDSClientManager   	  pauth.MDSClientManager
 	prompt                pcmd.Prompt
 	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *ccloud.Client
 	jwtHTTPClientFactory  func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *ccloud.Client
@@ -51,7 +45,8 @@ func New(prerunner pcmd.PreRunner, config *v3.Config, logger *log.Logger, userAg
 		return ccloud.NewClientWithJWT(ctx, jwt, &ccloud.Params{BaseURL: baseURL, Logger: logger, UserAgent: userAgent})
 	}
 	cmds := newCommands(prerunner, config, logger, pcmd.NewPrompt(os.Stdin),
-		defaultAnonHTTPClientFactory, defaultJwtHTTPClientFactory, analyticsClient,
+		defaultAnonHTTPClientFactory, defaultJwtHTTPClientFactory, &pauth.MDSClientManagerImpl{},
+		analyticsClient,
 	)
 	var cobraCmds []*cobra.Command
 	for _, cmd := range cmds.Commands {
@@ -63,7 +58,7 @@ func New(prerunner pcmd.PreRunner, config *v3.Config, logger *log.Logger, userAg
 func newCommands(prerunner pcmd.PreRunner, config *v3.Config, log *log.Logger, prompt pcmd.Prompt,
 	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *ccloud.Client,
 	jwtHTTPClientFactory func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *ccloud.Client,
-	analyticsClient analytics.Client) *commands {
+	mdsClientManager pauth.MDSClientManager, analyticsClient analytics.Client) *commands {
 	cmd := &commands{
 		config:                config,
 		Logger:                log,
@@ -71,6 +66,7 @@ func newCommands(prerunner pcmd.PreRunner, config *v3.Config, log *log.Logger, p
 		analyticsClient:       analyticsClient,
 		anonHTTPClientFactory: anonHTTPClientFactory,
 		jwtHTTPClientFactory:  jwtHTTPClientFactory,
+		MDSClientManager:      mdsClientManager,
 	}
 	cmd.init(prerunner)
 	return cmd
@@ -129,7 +125,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	token, err := pauth.GetAuthToken(client, url, email, password, noBrowser)
+	token, err := pauth.GetCCloudAuthToken(client, url, email, password, noBrowser)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -177,7 +173,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 		state.Auth.Account = state.Auth.Accounts[0]
 	}
 
-	err = a.addOrUpdateContext(state.Auth.User.Email, password, url, state, "")
+	err = a.addOrUpdateContext(state.Auth.User.Email, url, state, "")
 	if err != nil {
 		return err
 	}
@@ -192,64 +188,47 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 }
 
 func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
-	if a.MDSClient == nil {
-		err := a.setMDSClient(cmd)
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-	}
 	url, err := cmd.Flags().GetString("url")
 	if err != nil {
 		return err
 	}
-	mdsClient := a.MDSClient
+	email, password, err := a.credentials(cmd, "Username", nil)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
 	caCertPath := ""
+	ctx, err := a.Commands[0].Config.Context(cmd)
+	// ctx may be nil during test
+	if ctx == nil || ctx.Context == nil || ctx.Context.Platform == nil {
+		ctx = &pcmd.DynamicContext{
+			Context: &v3.Context{
+				Platform: &v2.Platform{},
+			},
+		}
+	}
+	if err != nil {
+		return err
+	}
 	if cmd.Flags().Changed("ca-cert-path") {
 		caCertPath, err = cmd.Flags().GetString("ca-cert-path")
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
-		if caCertPath == "" {
-			// revert to default client regardless of previously configured client
-			mdsClient.GetConfig().HTTPClient = pcmd.DefaultClient()
-		} else {
-			// override previously configured httpclient if a new cert path was specified
-			if a.certReader == nil {
-				// if a certReader wasn't already set, eg. for testing, then create one now
-				caCertPath, err = filepath.Abs(caCertPath)
-				if err != nil {
-					return errors.HandleCommon(err, cmd)
-				}
-				caCertFile, err := os.Open(caCertPath)
-				if err != nil {
-					return errors.HandleCommon(err, cmd)
-				}
-				defer caCertFile.Close()
-				a.certReader = caCertFile
-			}
-			mdsClient.GetConfig().HTTPClient, err = pcmd.SelfSignedCertClient(a.certReader, a.Logger)
-			if err != nil {
-				return errors.HandleCommon(err, cmd)
-			}
-			a.Logger.Debugf("Successfully loaded certificate from %s", caCertPath)
-		}
+		ctx.Platform.CaCertPath = caCertPath
 	}
-	mdsClient.ChangeBasePath(url)
-	email, password, err := a.credentials(cmd, "Username", nil)
+	mdsClient, err := a.MDSClientManager.GetMDSClient(ctx.Context)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-
-	basicContext := context.WithValue(context.Background(), mds.ContextBasicAuth, mds.BasicAuth{UserName: email, Password: password})
-	resp, _, err := mdsClient.TokensAuthenticationApi.GetToken(basicContext, "")
+	authToken, err := pauth.GetConfluentAuthToken(mdsClient, url, email, password)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 	state := &v2.ContextState{
 		Auth:      nil,
-		AuthToken: resp.AuthToken,
+		AuthToken: authToken,
 	}
-	err = a.addOrUpdateContext(email, url, password, state, caCertPath)
+	err = a.addOrUpdateContext(email, url, state, caCertPath)
 	if err != nil {
 		return err
 	}
@@ -327,7 +306,7 @@ func (a *commands) credentials(cmd *cobra.Command, userField string, cloudClient
 	return email, password, nil
 }
 
-func (a *commands) addOrUpdateContext(username string, password string, url string, state *v2.ContextState, caCertPath string) error {
+func (a *commands) addOrUpdateContext(username string, url string, state *v2.ContextState, caCertPath string) error {
 	ctxName := generateContextName(username, url)
 	credName := generateCredentialName(username)
 	platform := &v2.Platform{
@@ -362,7 +341,7 @@ func (a *commands) addOrUpdateContext(username string, password string, url stri
 	if err != nil {
 		return err
 	}
-	return pauth.UpdateNetrc(ctxName, username, password)
+	return nil
 }
 
 func (a *commands) analyticsPreRunCover(command *pcmd.CLICommand, commandType analytics.CommandType, prerunner pcmd.PreRunner) func(cmd *cobra.Command, args []string) error {
@@ -378,36 +357,6 @@ func generateContextName(username string, url string) string {
 
 func generateCredentialName(username string) string {
 	return fmt.Sprintf("username-%s", username)
-}
-
-func (a *commands) setMDSClient(cmd *cobra.Command) error {
-	mdsConfig := mds.NewConfiguration()
-	ctx, err := a.Commands[0].Config.Context(cmd)
-	if err != nil {
-		return err
-	}
-	if ctx == nil || ctx.Platform.CaCertPath == "" {
-		a.MDSClient = mds.NewAPIClient(mdsConfig)
-		return nil
-	}
-	caCertPath := ctx.Platform.CaCertPath
-	// Try to load certs. On failure, warn, but don't error out because this may be an auth command, so there may
-	// be a --ca-cert-path flag on the cmd line that'll fix whatever issue there is with the cert file in the config
-	caCertFile, err := os.Open(caCertPath)
-	if err == nil {
-		defer caCertFile.Close()
-		mdsConfig.HTTPClient, err = pcmd.SelfSignedCertClient(caCertFile, a.Logger)
-		if err != nil {
-			a.Logger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
-			mdsConfig.HTTPClient = pcmd.DefaultClient()
-		}
-	} else {
-		a.Logger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
-		mdsConfig.HTTPClient = pcmd.DefaultClient()
-
-	}
-	a.MDSClient = mds.NewAPIClient(mdsConfig)
-	return nil
 }
 
 func check(err error) {
