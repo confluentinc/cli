@@ -18,8 +18,8 @@ require (
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
 	github.com/confluentinc/bincover v0.0.0-20191217221125-80a7bb37ae5e
-	github.com/confluentinc/ccloud-sdk-go v0.0.18-0.20200208013542-0296c3e008b7
-	github.com/confluentinc/ccloudapis v0.0.0-20200301042505-97c2e911a9f6
+	github.com/confluentinc/ccloud-sdk-go v0.0.18-0.20200304000901-a66d86dad51e
+	github.com/confluentinc/ccloudapis v0.0.0-20200312024045-d00d89bd83fe
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-printer v0.13.0
 	github.com/confluentinc/mds-sdk-go v0.0.0-20200110060608-0b51635c4e0a
@@ -82,7 +82,9 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.4.0
 	github.com/stretchr/testify v1.4.0
-	github.com/tidwall/pretty v0.0.0-20190325153808-1166b9ac2b65
+	github.com/tidwall/gjson v1.6.0
+	github.com/tidwall/pretty v1.0.0
+	github.com/tidwall/sjson v1.0.4
 	github.com/travisjeffery/mocker v0.0.0-20190115171754-c0d706f8be41
 	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c // indirect
 	golang.org/x/crypto v0.0.0-20200210222208-86ce3cb69678
