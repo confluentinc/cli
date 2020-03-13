@@ -344,6 +344,38 @@ is_confluent_platform() {
     return ${status}
 }
 
+# returns 0 if =, 1 if > and 2 if <
+semver_comp() {
+    if [[ $1 == $2 ]]
+    then
+        return 0
+    fi
+    local IFS=.
+    local i ver1=($1) ver2=($2)
+    # fill empty fields in ver1 with zeros
+    for ((i=${#ver1[@]}; i<${#ver2[@]}; i++))
+    do
+        ver1[i]=0
+    done
+    for ((i=0; i<${#ver1[@]}; i++))
+    do
+        if [[ -z ${ver2[i]} ]]
+        then
+            # fill empty fields in ver2 with zeros
+            ver2[i]=0
+        fi
+        if ((10#${ver1[i]} > 10#${ver2[i]}))
+        then
+            return 1
+        fi
+        if ((10#${ver1[i]} < 10#${ver2[i]}))
+        then
+            return 2
+        fi
+    done
+    return 0
+}
+
 get_version() {
     local confluent_platform_prefix="${confluent_home}/share/java/kafka-connect-replicator/*connect-replicator-"
     local ccs_prefix="${confluent_home}/share/java/confluent-common/common-config-"
@@ -719,7 +751,18 @@ start_ksql-server() {
 config_ksql-server() {
     export_zookeeper
     export_schema-registry
-    config_service "ksql-server" "ksql" "ksql-server"\
+
+    # Override ksql's package after 5.5.x to account for ksql->ksqldb rename
+    # (note that semver_comp returns 2 if confluent_version < 5.5)
+    semver_comp "${confluent_version}" "5.5"
+    local comp=$?
+
+    local package="ksql"
+    if [[ $comp != 2 ]]; then
+      package="ksqldb"
+    fi
+
+    config_service "ksql-server" "${package}" "ksql-server"\
         "kafkastore.connection.url" "localhost:${zk_port}"
     echo "ksql.schema.registry.url=http://localhost:${schema_registry_port}" \
         >> "${service_dir}/${service}.properties"
@@ -727,7 +770,18 @@ config_ksql-server() {
 }
 
 export_ksql-server() {
-    get_service_port "listeners" "${confluent_conf}/ksql/ksql-server.properties"
+    get_version
+    # Override ksql's package after 5.5.x to account for ksql->ksqldb rename
+    # (note that semver_comp returns 2 if confluent_version < 5.5)
+    semver_comp "${confluent_version}" "5.5"
+    local comp=$?
+
+    local package="ksql"
+    if [[ $comp != 2 ]]; then
+      package="ksqldb"
+    fi
+
+    get_service_port "listeners" "${confluent_conf}/${package}/ksql-server.properties"
     if [[ -n "${_retval}" ]]; then
         export ksql_port="${_retval}"
     else
@@ -2313,6 +2367,7 @@ main() {
     requirements
 
     command="${1}"
+
     shift
     case "${command}" in
         help)
@@ -2380,4 +2435,3 @@ main() {
 
     trap shutdown EXIT
 }
-
