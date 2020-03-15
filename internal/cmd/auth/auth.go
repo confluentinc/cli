@@ -125,7 +125,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	token, err := pauth.GetCCloudAuthToken(client, url, email, password, noBrowser)
+	token, refreshToken, err := pauth.GetCCloudAuthToken(client, url, email, password, noBrowser)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -149,6 +149,9 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 		state = new(v2.ContextState)
 	}
 	state.AuthToken = token
+	if refreshToken != "" {
+		state.RefreshToken = refreshToken
+	}
 	// If no auth config exists, initialize it
 	if state.Auth == nil {
 		state.Auth = &v1.AuthConfig{}

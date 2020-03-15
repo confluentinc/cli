@@ -349,10 +349,7 @@ func (r *PreRun) validateToken(cmd *cobra.Command, ctx *DynamicContext) error {
 			} else {
 				err = pauth.UpdateConfluentAuthToken(ctx.Context, r.Logger)
 			}
-			if err != nil {
-				r.Logger.Debug("Failed to update token with netrc file info.")
-			} else {
-				r.Logger.Debug("Token successfully updated with netrc file info.")
+			if err == nil {
 				return nil
 			}
 			return errors.HandleCommon(new(ccloud.ExpiredTokenError), cmd)

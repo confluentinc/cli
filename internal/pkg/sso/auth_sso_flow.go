@@ -12,10 +12,10 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
-func Login(authURL string, noBrowser bool, auth0ConnectionName string) (idToken string, err error) {
+func Login(authURL string, noBrowser bool, auth0ConnectionName string) (idToken string, refreshToken string, err error) {
 	state, err := newState(authURL, noBrowser)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	if noBrowser {
@@ -35,11 +35,11 @@ func Login(authURL string, noBrowser bool, auth0ConnectionName string) (idToken 
 		input := scanner.Text()
 		split := strings.SplitAfterN(input, "/", 2)
 		if len(split) < 2 {
-			return "", errors.New("Pasted input had invalid format")
+			return "", "", errors.New("Pasted input had invalid format")
 		}
 		auth0State := strings.Replace(split[0], "/", "", 1)
 		if !(auth0State == state.SSOProviderState) {
-			return "", errors.New("authentication code either did not contain a state parameter or the state parameter was invalid; login will fail")
+			return "", "", errors.New("authentication code either did not contain a state parameter or the state parameter was invalid; login will fail")
 		}
 
 		state.SSOProviderAuthenticationCode = split[1]
@@ -49,26 +49,75 @@ func Login(authURL string, noBrowser bool, auth0ConnectionName string) (idToken 
 		server := newServer(state)
 		err = server.startServer()
 		if err != nil {
-			return "", err
+			return "", "", err
 		}
 
 		// Get authorization code for making subsequent token request
 		err := browser.OpenURL(state.getAuthorizationCodeUrl(auth0ConnectionName))
 		if err != nil {
-			return "", errors.Wrap(err, "unable to open web browser for authorization")
+			return "", "", errors.Wrap(err, "unable to open web browser for authorization")
 		}
 
 		err = server.awaitAuthorizationCode(30 * time.Second)
 		if err != nil {
-			return "", err
+			return "", "", err
 		}
 	}
 
 	// Exchange authorization code for OAuth token from SSO provider
 	err = state.getOAuthToken()
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	return state.SSOProviderIDToken, nil
+	return state.SSOProviderIDToken, state.SSOProviderRefreshToken, nil
+}
+
+
+//func Login2(authURL string, refreshToken string, auth0ConnectionName string) (idToken string, err error) {
+//	state, err := newState(authURL, false)
+//	if err != nil {
+//		return "", err
+//	}
+//	// we need to start a background HTTP server to support the authorization code flow with PKCE
+//	// described at https://auth0.com/docs/flows/guides/auth-code-pkce/call-api-auth-code-pkce
+//	server := newServer(state)
+//	err = server.startServer()
+//	if err != nil {
+//		return "", err
+//	}
+//
+//	// Get authorization code for making subsequent token request
+//	err = browser.OpenURL(state.getAuthorizationCodeUrl(auth0ConnectionName))
+//	if err != nil {
+//		return "", errors.Wrap(err, "unable to open web browser for authorization")
+//	}
+//
+//	err = server.awaitAuthorizationCode(30 * time.Second)
+//	if err != nil {
+//		return "", err
+//	}
+//	state.SSOProviderRefreshToken = refreshToken
+//
+//	// Exchange authorization code for OAuth token from SSO provider
+//	err = state.refreshOAuthToken()
+//	if err != nil {
+//		return "", err
+//	}
+//
+//	return state.SSOProviderIDToken, nil
+//}
+
+func GetNewIDTokenFromRefreshToken(authURL string, refreshToken string) (idToken string, err error) {
+	state, err := newState(authURL, false)
+	if err != nil {
+		return"", err
+	}
+	state.SSOProviderRefreshToken = refreshToken
+	err = state.refreshOAuthToken()
+	if err != nil {
+		fmt.Println("REFRESH ERROR: ", err)
+		return "", err
+	}
+	return state.SSOProviderIDToken, err
 }
