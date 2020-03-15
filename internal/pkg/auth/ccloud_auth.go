@@ -22,9 +22,9 @@ func GetCCloudAuthToken(client *ccloud.Client, url string, email string, passwor
 		token, refreshToken, err = getSSOToken(client, url, noBrowser, userSSO)
 	} else {
 		token, err = getCredentialsToken(client, email, password)
-		if err != nil {
-			return "", "", err
-		}
+	}
+	if err != nil {
+		return "", "", err
 	}
 	return token, refreshToken, nil
 }
