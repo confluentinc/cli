@@ -7,7 +7,7 @@ import (
 
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/log"
-	mds "github.com/confluentinc/mds-sdk-go"
+	"github.com/confluentinc/mds-sdk-go"
 )
 
 // Made it an interface so that we can inject MDS client for testing through GetMDSClient

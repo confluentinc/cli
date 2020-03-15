@@ -138,7 +138,7 @@ func TestGetAuthorizationUrl(t *testing.T) {
 		"&code_challenge_method=S256" +
 		"&client_id=" + state.SSOProviderClientID +
 		"&redirect_uri=" + state.SSOProviderCallbackUrl +
-		"&scope=email%20openid" +
+		"&scope=email%20openid%20offline_access" +
 		"&audience=" + state.SSOProviderIdentifier +
 		"&state=" + state.SSOProviderState +
 		"&connection=foo"
@@ -186,6 +186,42 @@ func TestGetOAuthToken(t *testing.T) {
 	state.SSOProviderHost = "http://127.0.0.1:" + serverPort
 
 	err := state.getOAuthToken()
+	require.NoError(t, err)
+
+	require.Equal(t, mockIDToken, state.SSOProviderIDToken)
+}
+
+
+func TestRefreshOAuthToken(t *testing.T) {
+	state, _ := newState("https://devel.cpdev.cloud", false)
+	mockRefreshToken := "bar"
+	state.SSOProviderRefreshToken = mockRefreshToken
+	expectedUri := "/oauth/token"
+	expectedPayload := "grant_type=refresh_token" +
+		"&client_id=" + state.SSOProviderClientID +
+		"&refresh_token=" + mockRefreshToken +
+		"&redirect_uri=" + state.SSOProviderCallbackUrl
+
+	mockIDToken := "foobar"
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		// Test request parameters
+		require.Equal(t, req.URL.String(), expectedUri)
+		body, err := ioutil.ReadAll(req.Body)
+		require.NoError(t, err)
+		require.True(t, len(body) > 0)
+		require.Equal(t, expectedPayload, string(body))
+
+		// mock response
+		_, err = rw.Write([]byte(`{"id_token": "` + mockIDToken + `"}`))
+		require.NoError(t, err)
+	}))
+	defer server.Close()
+	serverPort := strings.Split(server.URL, ":")[2]
+
+	// mock auth0 endpoint with local test server
+	state.SSOProviderHost = "http://127.0.0.1:" + serverPort
+
+	err := state.refreshOAuthToken()
 	require.NoError(t, err)
 
 	require.Equal(t, mockIDToken, state.SSOProviderIDToken)
