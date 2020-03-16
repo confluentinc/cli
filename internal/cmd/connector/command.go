@@ -364,14 +364,10 @@ func printHumanDescribe(cmd *cobra.Command, connector *connectv1.ConnectorExpans
 	var configs [][]string
 	titleRow = []string{"Config", "Value"}
 	for name, value := range connector.Info.Config {
-		record := &struct {
-			Name  string
-			Value string
-		}{
+		configs = append(configs, printer.ToRow(&configDescribeDisplay{
 			name,
 			value,
-		}
-		configs = append(configs, printer.ToRow(record, titleRow))
+		}, titleRow))
 	}
 	printer.RenderCollectionTable(configs, titleRow)
 	return nil
