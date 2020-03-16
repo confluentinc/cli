@@ -752,15 +752,7 @@ config_ksql-server() {
     export_zookeeper
     export_schema-registry
 
-    # Override ksql's package after 5.5.x to account for ksql->ksqldb rename
-    # (note that semver_comp returns 2 if confluent_version < 5.5)
-    semver_comp "${confluent_version}" "5.5"
-    local comp=$?
-
-    local package="ksql"
-    if [[ $comp != 2 ]]; then
-      package="ksqldb"
-    fi
+    local package=$(get_ksql_package_name)
 
     config_service "ksql-server" "${package}" "ksql-server"\
         "kafkastore.connection.url" "localhost:${zk_port}"
@@ -770,6 +762,17 @@ config_ksql-server() {
 }
 
 export_ksql-server() {
+    local package=$(get_ksql_package_name)
+
+    get_service_port "listeners" "${confluent_conf}/${package}/ksql-server.properties"
+    if [[ -n "${_retval}" ]]; then
+        export ksql_port="${_retval}"
+    else
+        export ksql_port="8088"
+    fi
+}
+
+get_ksql_package_name() {
     get_version
     # Override ksql's package after 5.5.x to account for ksql->ksqldb rename
     # (note that semver_comp returns 2 if confluent_version < 5.5)
@@ -781,12 +784,7 @@ export_ksql-server() {
       package="ksqldb"
     fi
 
-    get_service_port "listeners" "${confluent_conf}/${package}/ksql-server.properties"
-    if [[ -n "${_retval}" ]]; then
-        export ksql_port="${_retval}"
-    else
-        export ksql_port="8088"
-    fi
+    echo "${package}"
 }
 
 export_log4j_ksql-server() {
