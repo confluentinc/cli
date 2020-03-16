@@ -40,7 +40,7 @@ func UpdateCCloudAuthToken(ctx *v3.Context, userAgent string, logger *log.Logger
 	if userSSO != nil {
 		token, err = refreshSSOToken(client, ctx, url)
 		if err != nil {
-			logger.Debugf("Failed to update auth token using refresh token.")
+			logger.Debugf("Failed to update auth token using refresh token. Error: %s", err)
 			return err
 		}
 		logger.Debug("Token successfully updated with refresh token.")
@@ -52,17 +52,12 @@ func UpdateCCloudAuthToken(ctx *v3.Context, userAgent string, logger *log.Logger
 		}
 		token, err = getCredentialsToken(client, email, password)
 		if err != nil {
-			logger.Debugf("Failed to update auth token using credentials in netrc file.")
+			logger.Debugf("Failed to update auth token using credentials in netrc file. Error: %s", err)
 			return err
 		}
 		logger.Debug("Token successfully updated with netrc file credentials.")
 	}
-
 	return updateContext(ctx, token)
-}
-
-func getCredentialsToken(client *ccloud.Client, email string, password string) (string, error) {
-	return client.Auth.Login(context.Background(), "", email, password)
 }
 
 func getUserSSO(client *ccloud.Client, email string) (*orgv1.User, error) {
@@ -74,6 +69,10 @@ func getUserSSO(client *ccloud.Client, email string) (*orgv1.User, error) {
 		return userSSO, nil
 	}
 	return nil, nil
+}
+
+func getCredentialsToken(client *ccloud.Client, email string, password string) (string, error) {
+	return client.Auth.Login(context.Background(), "", email, password)
 }
 
 func getSSOToken(client *ccloud.Client, url string, noBrowser bool, userSSO *orgv1.User) (string, string, error) {

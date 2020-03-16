@@ -81,7 +81,6 @@ func GetNewIDTokenFromRefreshToken(authURL string, refreshToken string) (idToken
 	state.SSOProviderRefreshToken = refreshToken
 	err = state.refreshOAuthToken()
 	if err != nil {
-		fmt.Println("REFRESH ERROR: ", err)
 		return "", err
 	}
 	return state.SSOProviderIDToken, err

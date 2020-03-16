@@ -12,7 +12,7 @@ import (
 
 var (
 	netrcfile = "~/.netrc"
-	netrcErrorString = "Unable to get email and password from Netrc file: %s"
+	netrcErrorString = "Unable to get credentials from Netrc file: %s"
 )
 
 func getNetrcCredentials(ctxName string) (email string, password string, err error){

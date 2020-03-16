@@ -332,28 +332,35 @@ func (r *PreRun) validateToken(cmd *cobra.Command, ctx *DynamicContext) error {
 	var claims map[string]interface{}
 	token, err := jwt.ParseSigned(authToken)
 	if err != nil {
-		return errors.HandleCommon(new(ccloud.InvalidTokenError), cmd)
+		return r.updateToken(errors.HandleCommon(new(ccloud.InvalidTokenError), cmd), ctx)
 	}
 	if err := token.UnsafeClaimsWithoutVerification(&claims); err != nil {
-		return errors.HandleCommon(err, cmd)
+		return r.updateToken(errors.HandleCommon(err, cmd), ctx)
 	}
-	if exp, ok := claims["exp"].(float64); ok {
-		if float64(r.Clock.Now().Unix()) > exp {
-			r.Logger.Debug("Token expired.")
-			if ctx == nil {
-				r.Logger.Debug("Failed to update token, nil dynamic context.")
-				return errors.HandleCommon(new(ccloud.ExpiredTokenError), cmd)
-			}
-			if r.CLIName == "ccloud" {
-				err = pauth.UpdateCCloudAuthToken(ctx.Context, r.Version.UserAgent, r.Logger)
-			} else {
-				err = pauth.UpdateConfluentAuthToken(ctx.Context, r.Logger)
-			}
-			if err == nil {
-				return nil
-			}
-			return errors.HandleCommon(new(ccloud.ExpiredTokenError), cmd)
-		}
+	exp, ok := claims["exp"].(float64)
+	if !ok {
+		return r.updateToken(errors.New("Malformed JWT claims: no expiration."), ctx)
+	}
+	if float64(r.Clock.Now().Unix()) > exp {
+		r.Logger.Debug("Token expired.")
+		return r.updateToken(errors.HandleCommon(new(ccloud.ExpiredTokenError), cmd), ctx)
 	}
 	return nil
+}
+
+func (r *PreRun) updateToken(tokenError error, ctx *DynamicContext) error {
+	if ctx == nil {
+		r.Logger.Debug("Dynamic context is nil. Cannot attempt to update auth token.")
+		return tokenError
+	}
+	var updateErr error
+	if r.CLIName == "ccloud" {
+		updateErr = pauth.UpdateCCloudAuthToken(ctx.Context, r.Version.UserAgent, r.Logger)
+	} else {
+		updateErr = pauth.UpdateConfluentAuthToken(ctx.Context, r.Logger)
+	}
+	if updateErr == nil {
+		return nil
+	}
+	return tokenError
 }

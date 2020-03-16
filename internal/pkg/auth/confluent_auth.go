@@ -27,7 +27,12 @@ func UpdateConfluentAuthToken(ctx *v3.Context, logger *log.Logger) error {
 	mdsClient, err := mdsClientManager.GetMDSClient(ctx, ctx.Platform.CaCertPath, false, ctx.Platform.Server, logger)
 	token, err := GetConfluentAuthToken(mdsClient, email, password)
 	if err != nil {
+		logger.Debugf("Failed to update auth token. Error: %s", err)
 		return err
 	}
-	return updateContext(ctx, token)
+	err = updateContext(ctx, token)
+	if err == nil {
+		logger.Debugf("Successfully updated auth token.")
+	}
+	return err
 }
