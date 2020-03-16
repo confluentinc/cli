@@ -73,41 +73,6 @@ func Login(authURL string, noBrowser bool, auth0ConnectionName string) (idToken 
 	return state.SSOProviderIDToken, state.SSOProviderRefreshToken, nil
 }
 
-
-//func Login2(authURL string, refreshToken string, auth0ConnectionName string) (idToken string, err error) {
-//	state, err := newState(authURL, false)
-//	if err != nil {
-//		return "", err
-//	}
-//	// we need to start a background HTTP server to support the authorization code flow with PKCE
-//	// described at https://auth0.com/docs/flows/guides/auth-code-pkce/call-api-auth-code-pkce
-//	server := newServer(state)
-//	err = server.startServer()
-//	if err != nil {
-//		return "", err
-//	}
-//
-//	// Get authorization code for making subsequent token request
-//	err = browser.OpenURL(state.getAuthorizationCodeUrl(auth0ConnectionName))
-//	if err != nil {
-//		return "", errors.Wrap(err, "unable to open web browser for authorization")
-//	}
-//
-//	err = server.awaitAuthorizationCode(30 * time.Second)
-//	if err != nil {
-//		return "", err
-//	}
-//	state.SSOProviderRefreshToken = refreshToken
-//
-//	// Exchange authorization code for OAuth token from SSO provider
-//	err = state.refreshOAuthToken()
-//	if err != nil {
-//		return "", err
-//	}
-//
-//	return state.SSOProviderIDToken, nil
-//}
-
 func GetNewIDTokenFromRefreshToken(authURL string, refreshToken string) (idToken string, err error) {
 	state, err := newState(authURL, false)
 	if err != nil {
