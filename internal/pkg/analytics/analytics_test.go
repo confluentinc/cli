@@ -602,6 +602,7 @@ func (suite *AnalyticsTestSuite) createContexts() {
 		KafkaClusterContext: &v3.KafkaClusterContext{
 			EnvContext: true,
 		},
+		Config: suite.config,
 	}
 	userContext := &v3.Context{
 		Name:         userNameContext,
@@ -610,6 +611,7 @@ func (suite *AnalyticsTestSuite) createContexts() {
 		KafkaClusterContext: &v3.KafkaClusterContext{
 			EnvContext: true,
 		},
+		Config: suite.config,
 	}
 	otherContext := &v3.Context{
 		Name:         otherUserContext,
@@ -618,6 +620,7 @@ func (suite *AnalyticsTestSuite) createContexts() {
 		KafkaClusterContext: &v3.KafkaClusterContext{
 			EnvContext: true,
 		},
+		Config: suite.config,
 	}
 	contexts := make(map[string]*v3.Context)
 	contexts[apiKeyContext] = apiContext
