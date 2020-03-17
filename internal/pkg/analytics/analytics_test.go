@@ -604,6 +604,7 @@ func (suite *AnalyticsTestSuite) createContexts() {
 		},
 		Config: suite.config,
 	}
+	apiContext.KafkaClusterContext.Context = apiContext
 	userContext := &v3.Context{
 		Name:         userNameContext,
 		Platform:     platform,
@@ -613,6 +614,7 @@ func (suite *AnalyticsTestSuite) createContexts() {
 		},
 		Config: suite.config,
 	}
+	userContext.KafkaClusterContext.Context = userContext
 	otherContext := &v3.Context{
 		Name:         otherUserContext,
 		Platform:     platform,
@@ -622,6 +624,7 @@ func (suite *AnalyticsTestSuite) createContexts() {
 		},
 		Config: suite.config,
 	}
+	otherContext.KafkaClusterContext.Context = otherContext
 	contexts := make(map[string]*v3.Context)
 	contexts[apiKeyContext] = apiContext
 	contexts[userNameContext] = userContext
