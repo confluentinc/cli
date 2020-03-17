@@ -178,7 +178,7 @@ func (suite *KSQLTestSuite) TestShouldNotConfigureOnDryRun() {
 
 func (suite *KSQLTestSuite) TestCreateKSQL() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"app", "create", ksqlClusterID, "--storage", "5"}))
+	cmd.SetArgs(append([]string{"app", "create", ksqlClusterID}))
 
 	err := cmd.Execute()
 	req := require.New(suite.T())

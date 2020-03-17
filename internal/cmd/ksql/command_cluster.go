@@ -64,9 +64,7 @@ func (c *clusterCommand) init() {
 	}
 	createCmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	createCmd.Flags().Int32("csu", 4, "Number of CSUs to use in the cluster.")
-	createCmd.Flags().Int32("storage", 50, "Amount of data storage available in GB.")
 	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	check(createCmd.MarkFlagRequired("storage"))
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
@@ -120,10 +118,6 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	storage, err := cmd.Flags().GetInt32("storage")
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
 	csus, err := cmd.Flags().GetInt32("csu")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -132,7 +126,6 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		AccountId:      c.EnvironmentId(),
 		Name:           args[0],
 	    TotalNumCsu:    uint32(csus),
-		Storage:        storage,
 		KafkaClusterId: kafkaCluster.Id,
 	}
 	cluster, err := c.Client.KSQL.Create(context.Background(), cfg)
@@ -287,10 +280,4 @@ func (c *clusterCommand) configureACLs(cmd *cobra.Command, args []string) error 
 		return errors.HandleCommon(err, cmd)
 	}
 	return nil
-}
-
-func check(err error) {
-	if err != nil {
-		panic(err)
-	}
 }
