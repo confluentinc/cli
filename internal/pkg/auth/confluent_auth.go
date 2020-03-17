@@ -18,7 +18,8 @@ func GetConfluentAuthToken(mdsClient *mds.APIClient, email string, password stri
 }
 
 func UpdateConfluentAuthToken(ctx *v3.Context, logger *log.Logger) error {
-	email, password, err := getNetrcCredentials(ctx.Name)
+	netrcHandler := netrcHandler{fileName:netrcfile}
+	email, password, err := netrcHandler.getNetrcCredentials(ctx.Name)
 	if err != nil {
 		logger.Debugf(netrcErrorString, err.Error())
 		return err

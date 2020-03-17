@@ -45,7 +45,8 @@ func UpdateCCloudAuthToken(ctx *v3.Context, userAgent string, logger *log.Logger
 		}
 		logger.Debug("Token successfully updated with refresh token.")
 	} else {
-		email, password, err := getNetrcCredentials(ctx.Name)
+		netrcHandler := netrcHandler{fileName:netrcfile}
+		email, password, err := netrcHandler.getNetrcCredentials(ctx.Name)
 		if err != nil {
 			logger.Debugf(netrcErrorString, err.Error())
 			return err
