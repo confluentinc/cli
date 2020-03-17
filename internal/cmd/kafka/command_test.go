@@ -336,13 +336,15 @@ func TestListResourceACL(t *testing.T) {
 func TestListPrincipalACL(t *testing.T) {
 	expect := make(chan interface{})
 	for _, aclEntry := range aclEntries {
+		if len(aclEntry.entries) != 1 {
+			continue
+		}
+		entry := aclEntry.entries[0]
 		cmd := NewCMD(expect)
-		cmd.SetArgs(append([]string{"acl", "list", "--service-account"}, strings.TrimPrefix(aclEntry.entries[0].Principal, "User:")))
+		cmd.SetArgs(append([]string{"acl", "list", "--service-account"}, strings.TrimPrefix(entry.Principal, "User:")))
 
 		go func() {
-			for _, entry := range aclEntry.entries {
-				expect <- convertToFilter(&kafkav1.ACLBinding{Entry: &kafkav1.AccessControlEntryConfig{Principal: entry.Principal}})
-			}
+			expect <- convertToFilter(&kafkav1.ACLBinding{Entry: &kafkav1.AccessControlEntryConfig{Principal: entry.Principal}})
 		}()
 
 		if err := cmd.Execute(); err != nil {
@@ -356,13 +358,15 @@ func TestListResourcePrincipalFilterACL(t *testing.T) {
 	for _, resource := range resourcePatterns {
 		args := append([]string{"acl", "list"}, resource.args...)
 		for _, aclEntry := range aclEntries {
+			if len(aclEntry.entries) != 1 {
+				continue
+			}
+			entry := aclEntry.entries[0]
 			cmd := NewCMD(expect)
-			cmd.SetArgs(append(args, "--service-account", strings.TrimPrefix(aclEntry.entries[0].Principal, "User:")))
+			cmd.SetArgs(append(args, "--service-account", strings.TrimPrefix(entry.Principal, "User:")))
 
 			go func() {
-				for _, entry := range aclEntry.entries {
-					expect <- convertToFilter(&kafkav1.ACLBinding{Pattern: resource.pattern, Entry: entry})
-				}
+				expect <- convertToFilter(&kafkav1.ACLBinding{Pattern: resource.pattern, Entry: entry})
 			}()
 
 			if err := cmd.Execute(); err != nil {
