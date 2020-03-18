@@ -229,6 +229,9 @@ func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	authToken, err := pauth.GetConfluentAuthToken(mdsClient, email, password)
+
+	basicContext := context.WithValue(context.Background(), mds.ContextBasicAuth, mds.BasicAuth{UserName: email, Password: password})
+	resp, _, err := mdsClient.TokensAndAuthenticationApi.GetToken(basicContext)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
