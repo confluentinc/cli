@@ -119,13 +119,14 @@ $ dist/confluent/$(go env GOOS)_$(go env GOARCH)/confluent -h # for on-prem Conf
 
 ## Developing
 
-This repo requires golang 1.12. We recommend you use `goenv` to manage your go versions.
+This repo requires golang 1.13.5. We recommend you use `goenv` to manage your go versions.
 There's a `.go-version` file in this repo with the exact version we use (and test against in CI).
 
 ### Go Version
 
-Fortunately `goenv` supports 1.12 already. Unfortunately this is only in their 2.0 branch which
-is still in beta, meaning that its not in brew yet. So we have to build from source.
+Fortunately `goenv` supports 1.13.5 already. If your `goenv` does not list this as an option,
+you may have to build `goenv`'s `master` branch from source, which you can do with the
+following instructions:
 
 If you already have it via brew, uninstall it first:
 

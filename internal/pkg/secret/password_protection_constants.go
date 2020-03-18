@@ -52,3 +52,21 @@ const (
 const (
 	CONFLUENT_KEY_ENVVAR = "CONFLUENT_SECURITY_MASTER_KEY"
 )
+
+// JAAS Configuration Const
+const (
+	JAAS_VALUE_PATTERN      = "\\s*?=\\s*?(?P<value>\\S+)"
+	JAAS_KEY_PATTERN        = "(.*?)/(.*?)/(.*?)"
+	CONTROL_FLAG_REQUIRED   = "required"
+	CONTROL_FLAG_REQUISITE  = "requisite"
+	CONTROL_FLAG_SUFFICIENT = "sufficient"
+	CONTROL_FLAG_OPTIONAL   = "optional"
+	CLASS_ID                = 0
+	PARENT_ID               = 1
+	KEY_ID                  = 2
+	ADD                     = "add"
+	DELETE                  = "delete"
+	UPDATE                  = "update"
+	NEW_LINE                = "\n "
+	KEY_SEPARATOR           = "/"
+)

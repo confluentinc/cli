@@ -63,7 +63,7 @@ func (c *clusterCommand) init() {
 		Args:  cobra.ExactArgs(1),
 	}
 	createCmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	createCmd.Flags().Int32("servers", 1, "Number of servers in the cluster.")
+	createCmd.Flags().Int32("csu", 4, "Number of CSUs to use in the cluster.")
 	createCmd.Flags().Int32("storage", 50, "Amount of data storage available in GB.")
 	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	check(createCmd.MarkFlagRequired("storage"))
@@ -124,14 +124,14 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	servers, err := cmd.Flags().GetInt32("servers")
+	csus, err := cmd.Flags().GetInt32("csu")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 	cfg := &ksqlv1.KSQLClusterConfig{
 		AccountId:      c.EnvironmentId(),
 		Name:           args[0],
-		Servers:        servers,
+	    TotalNumCsu:    uint32(csus),
 		Storage:        storage,
 		KafkaClusterId: kafkaCluster.Id,
 	}

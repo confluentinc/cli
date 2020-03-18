@@ -307,9 +307,129 @@ _metadata.symmetric_key.0.enc = ENC[AES/CBC/PKCS5Padding,data:SlpCTPDO/uyWDOS59h
 config.properties/ssl.keystore.password = ENC[AES/CBC/PKCS5Padding,data:SclgTBDDeLwccqtsaEmDlA==,iv:3IhIyRrhQpYzp4vhVdcqqw==,type:str]
 `,
 		},
+		{
+			name: "ValidTestCase: encrypt properties file with jaas entry",
+			args: &args{
+				masterKeyPassphrase: "abc123",
+				contents: `ssl.keystore.location=/usr/ssl
+		ssl.keystore.key=ssl
+		listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required \
+          username="admin" \
+          password="admin-secret";`,
+				configFilePath:         "/tmp/securePass987/encrypt/config.properties",
+				localSecureConfigPath:  "/tmp/securePass987/encrypt/secureConfig.properties",
+				secureDir:              "/tmp/securePass987/encrypt",
+				remoteSecureConfigPath: "/tmp/securePass987/encrypt/secureConfig.properties",
+				config:                 "",
+				setMEK:                 true,
+				createConfig:           true,
+			},
+			wantErr: false,
+			wantConfigFile: `ssl.keystore.location = /usr/ssl
+ssl.keystore.key = ssl
+listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config = org.apache.kafka.common.security.scram.ScramLoginModule required username="admin" password=${securepass:/tmp/securePass987/encrypt/secureConfig.properties:config.properties/listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config/org.apache.kafka.common.security.scram.ScramLoginModule/password};
+config.providers = securepass
+config.providers.securepass.class = io.confluent.kafka.security.config.provider.SecurePassConfigProvider
+`,
+			wantSecretsFile: `_metadata.master_key.0.salt = de0YQknpvBlnXk0fdmIT2nG2Qnj+0srV8YokdhkgXjA=
+_metadata.symmetric_key.0.created_at = 1984-04-04 00:00:00 +0000 UTC
+_metadata.symmetric_key.0.envvar = CONFLUENT_SECURITY_MASTER_KEY
+_metadata.symmetric_key.0.length = 32
+_metadata.symmetric_key.0.iterations = 1000
+_metadata.symmetric_key.0.salt = 2BEkhLYyr0iZ2wI5xxsbTJHKWul75JcuQu3BnIO4Eyw=
+_metadata.symmetric_key.0.enc = ENC[AES/CBC/PKCS5Padding,data:SlpCTPDO/uyWDOS59hkcS9vTKm2MQ284YQhBM2iFSUXgsDGPBIlYBs4BMeWFt1yn,iv:qDtNy+skN3DKhtHE/XD6yQ==,type:str]
+config.properties/listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config/org.apache.kafka.common.security.scram.ScramLoginModule/password = ENC[AES/CBC/PKCS5Padding,data:6etDBw0weeD4UQF664szSQ==,iv:3IhIyRrhQpYzp4vhVdcqqw==,type:str]
+`,
+		},
+		{
+			name: "ValidTestCase: encrypt configuration in a JSON file",
+			args: &args{
+				masterKeyPassphrase: "abc123",
+				contents: `{
+"name": "security configuration",
+"credentials": {
+        "ssl.keystore.password": "password",
+        "ssl.keystore.location": "/usr/ssl"
+   }
+}`,
+				configFilePath:         "/tmp/securePass987/encrypt/config.json",
+				localSecureConfigPath:  "/tmp/securePass987/encrypt/secureConfig.properties",
+				secureDir:              "/tmp/securePass987/encrypt",
+				remoteSecureConfigPath: "/tmp/securePass987/encrypt/secureConfig.properties",
+				config:                 "credentials.ssl\\.keystore\\.password",
+				setMEK:                 true,
+				createConfig:           true,
+			},
+			wantErr: false,
+			wantConfigFile: `{
+  "config.providers.securepass.class": "io.confluent.kafka.security.config.provider.SecurePassConfigProvider",
+  "config.providers": "securepass",
+  "name": "security configuration",
+  "credentials": {
+    "ssl.keystore.password": "${securepass:/tmp/securePass987/encrypt/secureConfig.properties:config.json/credentials.ssl\\.keystore\\.password}",
+    "ssl.keystore.location": "/usr/ssl"
+  }
+}
+`,
+			wantSecretsFile: `_metadata.master_key.0.salt = de0YQknpvBlnXk0fdmIT2nG2Qnj+0srV8YokdhkgXjA=
+_metadata.symmetric_key.0.created_at = 1984-04-04 00:00:00 +0000 UTC
+_metadata.symmetric_key.0.envvar = CONFLUENT_SECURITY_MASTER_KEY
+_metadata.symmetric_key.0.length = 32
+_metadata.symmetric_key.0.iterations = 1000
+_metadata.symmetric_key.0.salt = 2BEkhLYyr0iZ2wI5xxsbTJHKWul75JcuQu3BnIO4Eyw=
+_metadata.symmetric_key.0.enc = ENC[AES/CBC/PKCS5Padding,data:SlpCTPDO/uyWDOS59hkcS9vTKm2MQ284YQhBM2iFSUXgsDGPBIlYBs4BMeWFt1yn,iv:qDtNy+skN3DKhtHE/XD6yQ==,type:str]
+config.json/credentials.ssl\.keystore\.password = ENC[AES/CBC/PKCS5Padding,data:SclgTBDDeLwccqtsaEmDlA==,iv:3IhIyRrhQpYzp4vhVdcqqw==,type:str]
+`,
+		},
+		{
+			name: "InvalidTestCase: encrypt invalid configuration in a JSON file",
+			args: &args{
+				masterKeyPassphrase: "abc123",
+				contents: `{
+"name": "security configuration",
+"credentials": {
+        "ssl.keystore.password": "password",
+        "ssl.keystore.location": "/usr/ssl"
+   }
+}`,
+				configFilePath:         "/tmp/securePass987/encrypt/config.json",
+				localSecureConfigPath:  "/tmp/securePass987/encrypt/secureConfig.properties",
+				secureDir:              "/tmp/securePass987/encrypt",
+				remoteSecureConfigPath: "/tmp/securePass987/encrypt/secureConfig.properties",
+				config:                 "credentials.ssl\\.trustore.\\location",
+				setMEK:                 true,
+				createConfig:           true,
+			},
+			wantErr:    true,
+			wantErrMsg: "Configuration key credentials.ssl\\.trustore.\\location is not present in JSON configuration file.",
+		},
+		{
+			name: "InvalidTestCase: encrypt configuration in invalid a JSON file",
+			args: &args{
+				masterKeyPassphrase: "abc123",
+				contents: `{
+"name": "security configuration",
+"credentials": {
+        "ssl.keystore.password": "password",
+        "ssl.keystore.location": "/usr/ssl"
+}`,
+				configFilePath:         "/tmp/securePass987/encrypt/config.json",
+				localSecureConfigPath:  "/tmp/securePass987/encrypt/secureConfig.properties",
+				secureDir:              "/tmp/securePass987/encrypt",
+				remoteSecureConfigPath: "/tmp/securePass987/encrypt/secureConfig.properties",
+				config:                 "credentials.ssl\\.trustore.\\location",
+				setMEK:                 true,
+				createConfig:           true,
+			},
+			wantErr:    true,
+			wantErrMsg: "Invalid json file format.",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// Clean Up
+			os.Unsetenv(CONFLUENT_KEY_ENVVAR)
+			os.RemoveAll(tt.args.secureDir)
 			logger := log.New()
 			req := require.New(t)
 			err := os.MkdirAll(tt.args.secureDir, os.ModePerm)
@@ -532,6 +652,8 @@ config.properties/testPassword = ENC[AES/CBC/PKCS5Padding,data:SclgTBDDeLwccqtsa
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			req := require.New(t)
+			os.Unsetenv(CONFLUENT_KEY_ENVVAR)
+			os.RemoveAll(tt.args.secureDir)
 			plugin, err := setUpDir(tt.args.masterKeyPassphrase, tt.args.secureDir, tt.args.configFilePath, tt.args.localSecureConfigPath, "")
 			req.NoError(err)
 
@@ -546,7 +668,7 @@ config.properties/testPassword = ENC[AES/CBC/PKCS5Padding,data:SclgTBDDeLwccqtsa
 				os.Setenv(CONFLUENT_KEY_ENVVAR, tt.args.newMasterKey)
 			}
 
-			err = plugin.DecryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.outputConfigPath)
+			err = plugin.DecryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.outputConfigPath, "")
 			checkError(err, tt.wantErr, tt.wantErrMsg, req)
 
 			if !tt.wantErr {
@@ -570,12 +692,15 @@ func TestPasswordProtectionSuite_AddConfigFileSecrets(t *testing.T) {
 		secureDir              string
 		newConfigs             string
 		outputConfigPath       string
+		validateUsingDecrypt   bool
 	}
 	tests := []struct {
-		name       string
-		args       *args
-		wantErr    bool
-		wantErrMsg string
+		name            string
+		args            *args
+		wantErr         bool
+		wantErrMsg      string
+		wantConfigFile  string
+		wantSecretsFile string
 	}{
 		{
 			name: "ValidTestCase: Add new configs",
@@ -587,6 +712,7 @@ func TestPasswordProtectionSuite_AddConfigFileSecrets(t *testing.T) {
 				secureDir:              "/tmp/securePass987/add",
 				remoteSecureConfigPath: "/tmp/securePass987/add/secureConfig.properties",
 				outputConfigPath:       "/tmp/securePass987/add/output.properties",
+				validateUsingDecrypt:   true,
 				newConfigs:             "ssl.keystore.password = sslPass\ntruststore.keystore.password = keystorePass\n",
 			},
 			wantErr: false,
@@ -606,20 +732,83 @@ func TestPasswordProtectionSuite_AddConfigFileSecrets(t *testing.T) {
 			wantErr:    true,
 			wantErrMsg: "add failed: empty list of new configs",
 		},
+		{
+			name: "ValidTestCase: Add new config to JAAS config file",
+			args: &args{
+				masterKeyPassphrase: "abc123",
+				contents: `test.config.jaas = com.sun.security.auth.module.Krb5LoginModule required \
+    useKeyTab=false \
+    useTicketCache=true \
+    doNotPrompt=true;`,
+				configFilePath:         "/tmp/securePass987/add/embeddedjaas.properties",
+				localSecureConfigPath:  "/tmp/securePass987/add/secureConfig.properties",
+				secureDir:              "/tmp/securePass987/add",
+				remoteSecureConfigPath: "/tmp/securePass987/add/secureConfig.properties",
+				outputConfigPath:       "/tmp/securePass987/add/output.properties",
+				newConfigs:             "test.config.jaas/com.sun.security.auth.module.Krb5LoginModule/password = testpassword\n",
+				validateUsingDecrypt:   true,
+			},
+			wantErr: false,
+		},
+		{
+			name: "ValidTestCase: Add new config to JSON file",
+			args: &args{
+				masterKeyPassphrase: "abc123",
+				contents: `{
+"name": "security configuration",
+"credentials": {
+        "ssl.keystore.location": "/usr/ssl"
+   }
+}`,
+				configFilePath:         "/tmp/securePass987/encrypt/config.json",
+				localSecureConfigPath:  "/tmp/securePass987/encrypt/secureConfig.properties",
+				secureDir:              "/tmp/securePass987/encrypt",
+				remoteSecureConfigPath: "/tmp/securePass987/encrypt/secureConfig.properties",
+				newConfigs:             "credentials.password = password",
+			},
+			wantErr: false,
+			wantConfigFile: `{
+  "config.providers.securepass.class": "io.confluent.kafka.security.config.provider.SecurePassConfigProvider",
+  "config.providers": "securepass",
+  "name": "security configuration",
+  "credentials": {
+    "password": "${securepass:/tmp/securePass987/encrypt/secureConfig.properties:config.json/credentials.password}",
+    "ssl.keystore.location": "/usr/ssl"
+  }
+}
+`,
+			wantSecretsFile: `_metadata.master_key.0.salt = de0YQknpvBlnXk0fdmIT2nG2Qnj+0srV8YokdhkgXjA=
+_metadata.symmetric_key.0.created_at = 1984-04-04 00:00:00 +0000 UTC
+_metadata.symmetric_key.0.envvar = CONFLUENT_SECURITY_MASTER_KEY
+_metadata.symmetric_key.0.length = 32
+_metadata.symmetric_key.0.iterations = 1000
+_metadata.symmetric_key.0.salt = 2BEkhLYyr0iZ2wI5xxsbTJHKWul75JcuQu3BnIO4Eyw=
+_metadata.symmetric_key.0.enc = ENC[AES/CBC/PKCS5Padding,data:SlpCTPDO/uyWDOS59hkcS9vTKm2MQ284YQhBM2iFSUXgsDGPBIlYBs4BMeWFt1yn,iv:qDtNy+skN3DKhtHE/XD6yQ==,type:str]
+config.json/credentials.password = ENC[AES/CBC/PKCS5Padding,data:SclgTBDDeLwccqtsaEmDlA==,iv:3IhIyRrhQpYzp4vhVdcqqw==,type:str]
+`,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			os.Unsetenv(CONFLUENT_KEY_ENVVAR)
+			os.RemoveAll(tt.args.secureDir)
 			req := require.New(t)
 			// SetUp
+
 			plugin, err := setUpDir(tt.args.masterKeyPassphrase, tt.args.secureDir, tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.contents)
 			req.NoError(err)
 
 			err = plugin.AddEncryptedPasswords(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.remoteSecureConfigPath, tt.args.newConfigs)
 			checkError(err, tt.wantErr, tt.wantErrMsg, req)
 
-			if !tt.wantErr {
+			if !tt.wantErr && tt.args.validateUsingDecrypt {
 				err = validateUsingDecryption(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.outputConfigPath, tt.args.newConfigs, plugin)
 				req.NoError(err)
+			}
+
+			if !tt.wantErr && !tt.args.validateUsingDecrypt {
+				validateFileContents(tt.args.configFilePath, tt.wantConfigFile, req)
+				validateFileContents(tt.args.localSecureConfigPath, tt.wantSecretsFile, req)
 			}
 
 			// Clean Up
@@ -639,12 +828,15 @@ func TestPasswordProtectionSuite_UpdateConfigFileSecrets(t *testing.T) {
 		secureDir              string
 		outputConfigPath       string
 		updateConfigs          string
+		validateUsingDecrypt   bool
 	}
 	tests := []struct {
-		name       string
-		args       *args
-		wantErr    bool
-		wantErrMsg string
+		name            string
+		args            *args
+		wantErr         bool
+		wantErrMsg      string
+		wantConfigFile  string
+		wantSecretsFile string
 	}{
 		{
 			name: "ValidTestCase: Update existing configs",
@@ -657,6 +849,7 @@ func TestPasswordProtectionSuite_UpdateConfigFileSecrets(t *testing.T) {
 				remoteSecureConfigPath: "/tmp/securePass987/update/secureConfig.properties",
 				outputConfigPath:       "/tmp/securePass987/update/output.properties",
 				updateConfigs:          "testPassword = newPassword\n",
+				validateUsingDecrypt:   true,
 			},
 			wantErr: false,
 		},
@@ -671,24 +864,51 @@ func TestPasswordProtectionSuite_UpdateConfigFileSecrets(t *testing.T) {
 				remoteSecureConfigPath: "/tmp/securePass987/update/secureConfig.properties",
 				outputConfigPath:       "/tmp/securePass987/update/output.properties",
 				updateConfigs:          "ssl.keystore.password = newSslPass\ntestPassword = newPassword\n",
+				validateUsingDecrypt:   true,
 			},
 			wantErr:    true,
-			wantErrMsg: "config ssl.keystore.password not present in config file.",
+			wantErrMsg: "Configuration key ssl.keystore.password is not present in the configuration file.",
+		},
+		{
+			name: "ValidTestCase: Update existing config in jaas config file",
+			args: &args{
+				masterKeyPassphrase: "abc123",
+				contents: `test.config.jaas = com.sun.security.auth.module.Krb5LoginModule required \
+    useKeyTab=false \
+    password=pass234 \
+    useTicketCache=true \
+    doNotPrompt=true;`,
+				configFilePath:         "/tmp/securePass987/update/embeddedJaas.properties",
+				localSecureConfigPath:  "/tmp/securePass987/update/secureConfig.properties",
+				secureDir:              "/tmp/securePass987/update",
+				remoteSecureConfigPath: "/tmp/securePass987/update/secureConfig.properties",
+				outputConfigPath:       "/tmp/securePass987/update/output.properties",
+				updateConfigs:          "test.config.jaas/com.sun.security.auth.module.Krb5LoginModule/password = newPassword\n",
+				validateUsingDecrypt:   true,
+			},
+			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			req := require.New(t)
+			// Clean Up
+			os.Unsetenv(CONFLUENT_KEY_ENVVAR)
+			os.RemoveAll(tt.args.secureDir)
 			plugin, err := setUpDir(tt.args.masterKeyPassphrase, tt.args.secureDir, tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.contents)
 			req.NoError(err)
 
 			err = plugin.UpdateEncryptedPasswords(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.remoteSecureConfigPath, tt.args.updateConfigs)
 			checkError(err, tt.wantErr, tt.wantErrMsg, req)
 
-			if !tt.wantErr {
-				// Verify passwords are added
+			if !tt.wantErr && tt.args.validateUsingDecrypt {
 				err = validateUsingDecryption(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.outputConfigPath, tt.args.updateConfigs, plugin)
 				req.NoError(err)
+			}
+
+			if !tt.wantErr && !tt.args.validateUsingDecrypt {
+				validateFileContents(tt.args.configFilePath, tt.wantConfigFile, req)
+				validateFileContents(tt.args.localSecureConfigPath, tt.wantSecretsFile, req)
 			}
 			// Clean Up
 			os.Unsetenv(CONFLUENT_KEY_ENVVAR)
@@ -707,6 +927,7 @@ func TestPasswordProtectionSuite_RemoveConfigFileSecrets(t *testing.T) {
 		secureDir              string
 		outputConfigPath       string
 		removeConfigs          string
+		config                 string
 	}
 	tests := []struct {
 		name       string
@@ -715,7 +936,7 @@ func TestPasswordProtectionSuite_RemoveConfigFileSecrets(t *testing.T) {
 		wantErrMsg string
 	}{
 		{
-			name: "ValidTestCase: Remove existing configs",
+			name: "ValidTestCase: Remove existing configs from properties file",
 			args: &args{
 				masterKeyPassphrase:    "abc123",
 				contents:               "testPassword = password\n",
@@ -725,6 +946,7 @@ func TestPasswordProtectionSuite_RemoveConfigFileSecrets(t *testing.T) {
 				remoteSecureConfigPath: "/tmp/securePass987/remove/secureConfig.properties",
 				outputConfigPath:       "/tmp/securePass987/remove/output.properties",
 				removeConfigs:          "testPassword",
+				config:                 "",
 			},
 			wantErr: false,
 		},
@@ -739,19 +961,101 @@ func TestPasswordProtectionSuite_RemoveConfigFileSecrets(t *testing.T) {
 				remoteSecureConfigPath: "/tmp/securePass987/remove/secureConfig.properties",
 				outputConfigPath:       "/tmp/securePass987/remove/output.properties",
 				removeConfigs:          "ssl.keystore.password",
+				config:                 "",
 			},
 			wantErr:    true,
-			wantErrMsg: "config ssl.keystore.password not present in config file.",
+			wantErrMsg: "Configuration key ssl.keystore.password is not present in the configuration file.",
+		},
+		{
+			name: "ValidTestCase:Remove existing configs from jaas config file",
+			args: &args{
+				masterKeyPassphrase: "abc123",
+				contents: `test.config.jaas = com.sun.security.auth.module.Krb5LoginModule required \
+    useKeyTab=false \
+    password=pass234 \
+    useTicketCache=true \
+    password=testPass \
+    doNotPrompt=true;
+};`,
+				configFilePath:         "/tmp/securePass987/remove/embeddedJaas.properties",
+				localSecureConfigPath:  "/tmp/securePass987/remove/secureConfig.properties",
+				secureDir:              "/tmp/securePass987/remove",
+				remoteSecureConfigPath: "/tmp/securePass987/remove/secureConfig.properties",
+				removeConfigs:          "test.config.jaas/com.sun.security.auth.module.Krb5LoginModule/password",
+				config:                 "",
+			},
+			wantErr: false,
+		},
+		{
+			name: "InvalidTestCase:Key not present in jaas config file",
+			args: &args{
+				masterKeyPassphrase: "abc123",
+				contents: `test.config.jaas = com.sun.security.auth.module.Krb5LoginModule required \
+    useKeyTab=false \
+    password=pass234 \
+    useTicketCache=true \
+    doNotPrompt=true;`,
+				configFilePath:         "/tmp/securePass987/remove/embeddedJaas.properties",
+				localSecureConfigPath:  "/tmp/securePass987/remove/secureConfig.properties",
+				secureDir:              "/tmp/securePass987/remove",
+				remoteSecureConfigPath: "/tmp/securePass987/remove/secureConfig.properties",
+				removeConfigs:          "test.config.jaas/com.sun.security.auth.module.Krb5LoginModule/location",
+				config:                 "",
+			},
+			wantErr:    true,
+			wantErrMsg: "Configuration key test.config.jaas/com.sun.security.auth.module.Krb5LoginModule/location is not present in the configuration file.",
+		},
+		{
+			name: "ValidTestCase:Remove existing configs from json config file",
+			args: &args{
+				masterKeyPassphrase: "abc123",
+				contents: `{
+			"name": "security configuration",
+			"credentials": {
+			"ssl.keystore.location": "/usr/ssl"
+		}
+		}`,
+				configFilePath:         "/tmp/securePass987/remove/configuration.json",
+				localSecureConfigPath:  "/tmp/securePass987/remove/secureConfig.properties",
+				secureDir:              "/tmp/securePass987/remove",
+				remoteSecureConfigPath: "/tmp/securePass987/remove/secureConfig.properties",
+				removeConfigs:          "credentials.ssl\\.keystore\\.location",
+				config:                 "credentials.ssl\\.keystore\\.location",
+			},
+			wantErr: false,
+		},
+		{
+			name: "InvalidTestCase:Key not present in json config file",
+			args: &args{
+				masterKeyPassphrase: "abc123",
+				contents: `{
+			"name": "security configuration",
+			"credentials": {
+			"ssl.keystore.location": "/usr/ssl"
+		}
+		}`,
+				configFilePath:         "/tmp/securePass987/remove/configuration.json",
+				localSecureConfigPath:  "/tmp/securePass987/remove/secureConfig.properties",
+				secureDir:              "/tmp/securePass987/remove",
+				remoteSecureConfigPath: "/tmp/securePass987/remove/secureConfig.properties",
+				removeConfigs:          "credentials/location",
+				config:                 "",
+			},
+			wantErr:    true,
+			wantErrMsg: "Configuration key credentials/location is not present in JSON configuration file.",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			req := require.New(t)
+			// Clean Up
+			os.Unsetenv(CONFLUENT_KEY_ENVVAR)
+			os.RemoveAll(tt.args.secureDir)
 			// SetUp
 			plugin, err := setUpDir(tt.args.masterKeyPassphrase, tt.args.secureDir, tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.contents)
 			req.NoError(err)
 
-			err = plugin.EncryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.remoteSecureConfigPath, "")
+			err = plugin.EncryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.remoteSecureConfigPath, tt.args.config)
 			req.NoError(err)
 
 			err = plugin.RemoveEncryptedPasswords(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.removeConfigs)
@@ -1076,7 +1380,7 @@ func createNewConfigFile(path string, contents string) error {
 func validateFileContents(path string, expectedFileContent string, req *require.Assertions) {
 	readContent, err := ioutil.ReadFile(path)
 	req.NoError(err)
-	req.Equal(string(readContent), expectedFileContent)
+	req.Equal(expectedFileContent, string(readContent))
 }
 
 func generateCorruptedData(cipher string) (string, error) {
@@ -1115,24 +1419,19 @@ func verifyConfigsRemoved(configFilePath string, localSecureConfigPath string, r
 	if err != nil {
 		return err
 	}
-	configProps, err := LoadPropertiesFile(configFilePath)
-	if err != nil {
-		return err
-	}
 	configs := strings.Split(removedConfigs, ",")
+	_, err = LoadConfiguration(configFilePath, configs, true)
+	// Check if config is removed from configs files
+	if err == nil {
+		return fmt.Errorf("failed to remove config from config file")
+	}
 	for _, key := range configs {
 		pathKey := GenerateConfigKey(configFilePath, key)
 
-		// Check if config is removed from configs files
-		_, ok := configProps.Get(key)
-		if ok {
-			return fmt.Errorf("failed to remove config from config file !!!")
-		}
-
 		// Check if config is removed from secrets files
-		_, ok = secretsProps.Get(pathKey)
+		_, ok := secretsProps.Get(pathKey)
 		if ok {
-			return fmt.Errorf("failed to remove config from secrets file !!!")
+			return fmt.Errorf("failed to remove config from secrets file")
 		}
 	}
 
@@ -1140,9 +1439,9 @@ func verifyConfigsRemoved(configFilePath string, localSecureConfigPath string, r
 }
 
 func validateUsingDecryption(configFilePath string, localSecureConfigPath string, outputConfigPath string, origConfigs string, plugin *PasswordProtectionSuite) error {
-	err := plugin.DecryptConfigFileSecrets(configFilePath, localSecureConfigPath, outputConfigPath)
+	err := plugin.DecryptConfigFileSecrets(configFilePath, localSecureConfigPath, outputConfigPath, "")
 	if err != nil {
-		return fmt.Errorf("failed to decrypt config file !!!")
+		return fmt.Errorf("failed to decrypt config file")
 	}
 
 	decryptContent, err := ioutil.ReadFile(outputConfigPath)
@@ -1162,7 +1461,7 @@ func validateUsingDecryption(configFilePath string, localSecureConfigPath string
 	for key, value := range decryptConfigProps.Map() {
 		originalVal, _ := originalConfigProps.Get(key)
 		if value != originalVal {
-			return fmt.Errorf("Configs file is empty !!!")
+			return fmt.Errorf("config file is empty")
 		}
 
 	}
@@ -1173,21 +1472,22 @@ func validateUsingDecryption(configFilePath string, localSecureConfigPath string
 func setUpDir(masterKeyPassphrase string, secureDir string, configFile string, localSecureConfigPath string, contents string) (*PasswordProtectionSuite, error) {
 	err := os.MkdirAll(secureDir, os.ModePerm)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to create password protection directory")
+		return nil, fmt.Errorf("failed to create password protection directory")
 	}
 	logger := log.New()
 	plugin := NewPasswordProtectionPlugin(logger)
 	plugin.RandSource = rand.NewSource(99)
+	plugin.Clock = clockwork.NewFakeClock()
 
 	// Set master key
 	err = createMasterKey(masterKeyPassphrase, localSecureConfigPath, plugin)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to create master key")
+		return nil, fmt.Errorf("failed to create master key")
 	}
 
 	err = createNewConfigFile(configFile, contents)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to create config file")
+		return nil, fmt.Errorf("failed to create config file")
 	}
 
 	return plugin, nil
