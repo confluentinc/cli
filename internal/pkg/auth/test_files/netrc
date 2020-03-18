@@ -1,0 +1,5 @@
+machine existing-context
+        login existing-user
+        password existing-password
+machine no-password-context
+        login existing-user

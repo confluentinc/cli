@@ -18,7 +18,7 @@ func TestNetRCReader(t *testing.T) {
 			name: "Context exist",
 			want: []string{username, password},
 			contextName: "existing-context",
-			file: "test_files/.netrc",
+			file: "test_files/netrc",
 		},
 		{
 			name: "No file error",
@@ -30,13 +30,13 @@ func TestNetRCReader(t *testing.T) {
 			name: "Context doesn't exist",
 			contextName: "non-existing-context",
 			wantErr: true,
-			file: "test_files/.netrc",
+			file: "test_files/netrc",
 		},
 		{
 			name: "Context exist with no password",
 			want: []string{username, ""},
 			contextName: "no-password-context",
-			file: "test_files/.netrc",
+			file: "test_files/netrc",
 		},
 	}
 	for _, tt := range tests {
