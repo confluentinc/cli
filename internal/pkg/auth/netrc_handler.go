@@ -17,7 +17,7 @@ type netrcHandler struct {
 	fileName string
 }
 
-func (n *netrcHandler) getNetrcCredentials(ctxName string) (email string, password string, err error){
+func (n *netrcHandler) getNetrcCredentials(ctxName string) (email string, password string, err error) {
 	filename, err := homedir.Expand(n.fileName)
 	if err != nil {
 		err = fmt.Errorf("an error resolving the Netrc filepath at %s has occurred. ", filename)

@@ -11,9 +11,9 @@ type ConfluentTokenHandler interface {
 	GetAuthToken(mdsClient *mds.APIClient, email string, password string) (string, error)
 }
 
-type ConfluentTokenHandlerImp struct {}
+type ConfluentTokenHandlerImp struct{}
 
-func (c *ConfluentTokenHandlerImp) GetAuthToken(mdsClient *mds.APIClient, email string, password string) (string, error){
+func (c *ConfluentTokenHandlerImp) GetAuthToken(mdsClient *mds.APIClient, email string, password string) (string, error) {
 	basicContext := context.WithValue(context.Background(), mds.ContextBasicAuth, mds.BasicAuth{UserName: email, Password: password})
 	resp, _, err := mdsClient.TokensAuthenticationApi.GetToken(basicContext, "")
 	if err != nil {

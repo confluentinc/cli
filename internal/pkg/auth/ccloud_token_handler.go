@@ -18,7 +18,7 @@ type CCloudTokenHandler interface {
 	RefreshSSOToken(client *ccloud.Client, ctx *v3.Context, url string) (string, error)
 }
 
-type CCloudTokenHandlerImpl struct {}
+type CCloudTokenHandlerImpl struct{}
 
 func (c *CCloudTokenHandlerImpl) GetUserSSO(client *ccloud.Client, email string) (*orgv1.User, error) {
 	userSSO, err := client.User.CheckEmail(context.Background(), &orgv1.User{Email: email})
@@ -59,6 +59,3 @@ func (c *CCloudTokenHandlerImpl) RefreshSSOToken(client *ccloud.Client, ctx *v3.
 	}
 	return token, nil
 }
-
-
-

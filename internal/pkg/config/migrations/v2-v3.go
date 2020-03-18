@@ -8,7 +8,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/config/v1"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
-
 )
 
 func MigrateV2ToV3(cfgV2 *v2.Config) (*v3.Config, error) {

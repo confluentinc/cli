@@ -14,50 +14,50 @@ import (
 )
 
 var (
-	netrcFilePath = "test_files/netrc"
+	netrcFilePath    = "test_files/netrc"
 	netrcContextName = "existing-context"
-	netrcUser = "existing-user"
-	netrcPassword = "existing-password"
-	netrcUser2 = "mock-user"
-	netrcPassword2 = "mock-password"
+	netrcUser        = "existing-user"
+	netrcPassword    = "existing-password"
+	netrcUser2       = "mock-user"
+	netrcPassword2   = "mock-password"
 )
 
 func TestNetRCReader(t *testing.T) {
 	tests := []struct {
-		name    string
-		want    []string
+		name        string
+		want        []string
 		contextName string
-		wantErr bool
-		file    string
+		wantErr     bool
+		file        string
 	}{
 		{
-			name: "Context exist",
-			want: []string{netrcUser, netrcPassword},
+			name:        "Context exist",
+			want:        []string{netrcUser, netrcPassword},
 			contextName: netrcContextName,
-			file: netrcFilePath,
+			file:        netrcFilePath,
 		},
 		{
-			name: "No file error",
+			name:        "No file error",
 			contextName: netrcContextName,
-			wantErr: true,
-			file: "wrong-file",
+			wantErr:     true,
+			file:        "wrong-file",
 		},
 		{
-			name: "Context doesn't exist",
+			name:        "Context doesn't exist",
 			contextName: "non-existing-context",
-			wantErr: true,
-			file: netrcFilePath,
+			wantErr:     true,
+			file:        netrcFilePath,
 		},
 		{
-			name: "Context exist with no password",
-			want: []string{netrcUser, ""},
+			name:        "Context exist with no password",
+			want:        []string{netrcUser, ""},
 			contextName: "no-password-context",
-			file: netrcFilePath,
+			file:        netrcFilePath,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			netrcHandler := netrcHandler{fileName:tt.file}
+			netrcHandler := netrcHandler{fileName: tt.file}
 			var username, password string
 			var err error
 			if username, password, err = netrcHandler.getNetrcCredentials(tt.contextName); (err != nil) != tt.wantErr {
@@ -86,7 +86,7 @@ func TestUpateSSOToken(t *testing.T) {
 	}
 
 	updateTokenHandler := UpdateTokenHandlerImpl{
-		ccloudTokenHandler:    mockCCloud,
+		ccloudTokenHandler: mockCCloud,
 	}
 
 	cfg := v3.AuthenticatedCloudConfigMock()

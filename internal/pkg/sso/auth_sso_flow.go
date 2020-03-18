@@ -76,7 +76,7 @@ func Login(authURL string, noBrowser bool, auth0ConnectionName string) (idToken 
 func GetNewIDTokenFromRefreshToken(authURL string, refreshToken string) (idToken string, err error) {
 	state, err := newState(authURL, false)
 	if err != nil {
-		return"", err
+		return "", err
 	}
 	state.SSOProviderRefreshToken = refreshToken
 	err = state.refreshOAuthToken()

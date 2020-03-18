@@ -125,7 +125,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	cfg := &ksqlv1.KSQLClusterConfig{
 		AccountId:      c.EnvironmentId(),
 		Name:           args[0],
-	    TotalNumCsu:    uint32(csus),
+		TotalNumCsu:    uint32(csus),
 		KafkaClusterId: kafkaCluster.Id,
 	}
 	cluster, err := c.Client.KSQL.Create(context.Background(), cfg)

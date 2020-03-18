@@ -25,7 +25,7 @@ func GetCCloudAuthToken(client *ccloud.Client, url string, email string, passwor
 	return token, refreshToken, nil
 }
 
-func GetConfluentAuthToken(mdsClient *mds.APIClient, email string, password string) (string, error){
+func GetConfluentAuthToken(mdsClient *mds.APIClient, email string, password string) (string, error) {
 	tokenHandler := ConfluentTokenHandlerImp{}
 	return tokenHandler.GetAuthToken(mdsClient, email, password)
 }

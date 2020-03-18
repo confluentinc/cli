@@ -15,11 +15,9 @@ type MDSClientManager interface {
 	GetMDSClient(ctx *v3.Context, caCertPath string, flagChanged bool, url string, logger *log.Logger) (*mds.APIClient, error)
 }
 
+type MDSClientManagerImpl struct{}
 
-type MDSClientManagerImpl struct {}
-
-
-func (m *MDSClientManagerImpl) GetMDSClient(ctx *v3.Context, caCertPath string, flagChanged bool, url string, logger *log.Logger) (*mds.APIClient, error){
+func (m *MDSClientManagerImpl) GetMDSClient(ctx *v3.Context, caCertPath string, flagChanged bool, url string, logger *log.Logger) (*mds.APIClient, error) {
 	mdsClient := initializeMDS(ctx, logger)
 	if flagChanged {
 		if caCertPath == "" {

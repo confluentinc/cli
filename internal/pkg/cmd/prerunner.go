@@ -31,13 +31,13 @@ type PreRunner interface {
 
 // PreRun is the standard PreRunner implementation
 type PreRun struct {
-	UpdateClient update.Client
-	CLIName      string
-	Logger       *log.Logger
-	Clock        clockwork.Clock
-	Analytics    analytics.Client
-	FlagResolver FlagResolver
-	Version      *version.Version
+	UpdateClient       update.Client
+	CLIName            string
+	Logger             *log.Logger
+	Clock              clockwork.Clock
+	Analytics          analytics.Client
+	FlagResolver       FlagResolver
+	Version            *version.Version
 	UpdateTokenHandler pauth.UpdateTokenHandler
 }
 

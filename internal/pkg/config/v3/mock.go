@@ -12,8 +12,8 @@ import (
 )
 
 var (
-	mockEmail = "cli-mock-email@confluent.io"
-	mockURL = "http://test"
+	mockEmail       = "cli-mock-email@confluent.io"
+	mockURL         = "http://test"
 	MockContextName = fmt.Sprintf("login-%s-%s", mockEmail, mockURL)
 )
 

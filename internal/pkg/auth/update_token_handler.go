@@ -31,7 +31,7 @@ func NewUpdateTokenHandler() UpdateTokenHandler {
 	return &UpdateTokenHandlerImpl{
 		ccloudTokenHandler:    &CCloudTokenHandlerImpl{},
 		confluentTokenHandler: &ConfluentTokenHandlerImp{},
-		netrcHandler:          &netrcHandler{fileName:netrcFile},
+		netrcHandler:          &netrcHandler{fileName: netrcFile},
 	}
 }
 

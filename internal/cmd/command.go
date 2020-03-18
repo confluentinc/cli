@@ -82,13 +82,13 @@ func NewConfluentCommand(cliName string, cfg *v3.Config, logger *log.Logger, ver
 
 	resolver := &pcmd.FlagResolverImpl{Prompt: prompt, Out: os.Stdout}
 	prerunner := &pcmd.PreRun{
-		UpdateClient: updateClient,
-		CLIName:      cliName,
-		Logger:       logger,
-		Clock:        clockwork.NewRealClock(),
-		FlagResolver: resolver,
-		Version:      ver,
-		Analytics:    analytics,
+		UpdateClient:       updateClient,
+		CLIName:            cliName,
+		Logger:             logger,
+		Clock:              clockwork.NewRealClock(),
+		FlagResolver:       resolver,
+		Version:            ver,
+		Analytics:          analytics,
 		UpdateTokenHandler: pauth.NewUpdateTokenHandler(),
 	}
 	_ = pcmd.NewAnonymousCLICommand(cli, cfg, prerunner) // Add to correctly set prerunners. TODO: Check if really needed.

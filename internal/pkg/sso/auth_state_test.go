@@ -191,7 +191,6 @@ func TestGetOAuthToken(t *testing.T) {
 	require.Equal(t, mockIDToken, state.SSOProviderIDToken)
 }
 
-
 func TestRefreshOAuthToken(t *testing.T) {
 	state, _ := newState("https://devel.cpdev.cloud", false)
 	mockRefreshToken := "bar"

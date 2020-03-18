@@ -35,7 +35,7 @@ type authState struct {
 	CodeChallenge                 string
 	SSOProviderAuthenticationCode string
 	SSOProviderIDToken            string
-	SSOProviderRefreshToken      string
+	SSOProviderRefreshToken       string
 	SSOProviderState              string
 	SSOProviderHost               string
 	SSOProviderClientID           string

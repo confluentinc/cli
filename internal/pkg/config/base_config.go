@@ -4,7 +4,7 @@ import "github.com/blang/semver"
 
 type BaseConfig struct {
 	*Params  `json:"-"`
-	Filename string          `json:"-"`
+	Filename string         `json:"-"`
 	Ver      semver.Version `json:"version"`
 }
 

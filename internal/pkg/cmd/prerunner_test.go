@@ -100,8 +100,8 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 					Prompt: &pcmd.RealPrompt{},
 					Out:    os.Stdout,
 				},
-				Analytics: cliMock.NewDummyAnalyticsMock(),
-				Clock: clockwork.NewRealClock(),
+				Analytics:          cliMock.NewDummyAnalyticsMock(),
+				Clock:              clockwork.NewRealClock(),
 				UpdateTokenHandler: auth.NewUpdateTokenHandler(),
 			}
 
@@ -145,8 +145,8 @@ func TestPreRun_HasAPIKey_SetupLoggingAndCheckForUpdates(t *testing.T) {
 			Prompt: &pcmd.RealPrompt{},
 			Out:    os.Stdout,
 		},
-		Analytics: cliMock.NewDummyAnalyticsMock(),
-		Clock: clockwork.NewRealClock(),
+		Analytics:          cliMock.NewDummyAnalyticsMock(),
+		Clock:              clockwork.NewRealClock(),
 		UpdateTokenHandler: auth.NewUpdateTokenHandler(),
 	}
 
@@ -182,8 +182,8 @@ func TestPreRun_CallsAnalyticsTrackCommand(t *testing.T) {
 			Prompt: &pcmd.RealPrompt{},
 			Out:    os.Stdout,
 		},
-		Analytics: analyticsClient,
-		Clock: clockwork.NewRealClock(),
+		Analytics:          analyticsClient,
+		Clock:              clockwork.NewRealClock(),
 		UpdateTokenHandler: auth.NewUpdateTokenHandler(),
 	}
 
@@ -218,8 +218,8 @@ func TestPreRun_TokenExpires(t *testing.T) {
 			Prompt: &pcmd.RealPrompt{},
 			Out:    os.Stdout,
 		},
-		Analytics: analyticsClient,
-		Clock:     clockwork.NewRealClock(),
+		Analytics:          analyticsClient,
+		Clock:              clockwork.NewRealClock(),
 		UpdateTokenHandler: auth.NewUpdateTokenHandler(),
 	}
 
@@ -245,43 +245,43 @@ func Test_UpdateToken(t *testing.T) {
 		authToken string
 	}{
 		{
-			name: "ccloud expired token",
-			cliName: "ccloud",
+			name:      "ccloud expired token",
+			cliName:   "ccloud",
 			authToken: expiredAuthTokenForDevCLoud,
 		},
 		{
-			name: "ccloud empty token",
-			cliName: "ccloud",
+			name:      "ccloud empty token",
+			cliName:   "ccloud",
 			authToken: "",
 		},
 		{
-			name: "ccloud invalid token",
-			cliName: "ccloud",
+			name:      "ccloud invalid token",
+			cliName:   "ccloud",
 			authToken: "jajajajaja",
 		},
 		{
-			name: "ccloud jwt with no exp claim",
-			cliName: "ccloud",
+			name:      "ccloud jwt with no exp claim",
+			cliName:   "ccloud",
 			authToken: jwtWithNoExp,
 		},
 		{
-			name: "confluent expired token",
-			cliName: "confluent",
+			name:      "confluent expired token",
+			cliName:   "confluent",
 			authToken: expiredAuthTokenForDevCLoud,
 		},
 		{
-			name: "confluent empty token",
-			cliName: "confluent",
+			name:      "confluent empty token",
+			cliName:   "confluent",
 			authToken: "",
 		},
 		{
-			name: "confluent invalid token",
-			cliName: "confluent",
+			name:      "confluent invalid token",
+			cliName:   "confluent",
 			authToken: "jajajajaja",
 		},
 		{
-			name: "confluent jwt with no exp claim",
-			cliName: "confluent",
+			name:      "confluent jwt with no exp claim",
+			cliName:   "confluent",
 			authToken: jwtWithNoExp,
 		},
 	}
@@ -319,8 +319,8 @@ func Test_UpdateToken(t *testing.T) {
 					Prompt: &pcmd.RealPrompt{},
 					Out:    os.Stdout,
 				},
-				Analytics: cliMock.NewDummyAnalyticsMock(),
-				Clock:     clockwork.NewRealClock(),
+				Analytics:          cliMock.NewDummyAnalyticsMock(),
+				Clock:              clockwork.NewRealClock(),
 				UpdateTokenHandler: updateTokenHandler,
 			}
 
