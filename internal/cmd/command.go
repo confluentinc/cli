@@ -89,7 +89,7 @@ func NewConfluentCommand(cliName string, cfg *v3.Config, logger *log.Logger, ver
 		FlagResolver: resolver,
 		Version:      ver,
 		Analytics:    analytics,
-		UpdateTokenHandler: &pauth.UpdateTokenHandlerImpl{},
+		UpdateTokenHandler: pauth.NewUpdateTokenHandler(),
 	}
 	_ = pcmd.NewAnonymousCLICommand(cli, cfg, prerunner) // Add to correctly set prerunners. TODO: Check if really needed.
 	command := &Command{Command: cli, Analytics: analytics, logger: logger}

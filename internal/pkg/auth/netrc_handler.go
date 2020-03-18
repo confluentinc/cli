@@ -10,7 +10,6 @@ import (
 )
 
 var (
-	netrcfile = "~/.netrc"
 	netrcErrorString = "Unable to get credentials from Netrc file: %s"
 )
 

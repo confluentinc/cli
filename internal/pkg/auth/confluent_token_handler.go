@@ -1,4 +1,4 @@
-//go:generate go run github.com/travisjeffery/mocker/cmd/mocker --dst ../../../mock/confluent_token_handler.go --pkg mock --selfpkg github.com/confluentinc/cli confluent_token_handler.go ConfluentTokenHandler
+//go:generate go run github.com/travisjeffery/mocker/cmd/mocker --dst mock/confluent_token_handler.go --pkg mock --selfpkg github.com/confluentinc/cli confluent_token_handler.go ConfluentTokenHandler
 package auth
 
 import (

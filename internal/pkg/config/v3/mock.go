@@ -2,7 +2,6 @@ package v3
 
 import (
 	"fmt"
-
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
@@ -10,6 +9,12 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/log"
+)
+
+var (
+	mockEmail = "cli-mock-email@confluent.io"
+	mockURL = "http://test"
+	MockContextName = fmt.Sprintf("login-%s-%s", mockEmail, mockURL)
 )
 
 func AuthenticatedConfigMock(cliName string) *Config {
@@ -22,15 +27,14 @@ func AuthenticatedConfigMock(cliName string) *Config {
 	auth := &v1.AuthConfig{
 		User: &orgv1.User{
 			Id:    123,
-			Email: "cli-mock-email@confluent.io",
+			Email: mockEmail,
 		},
 		Account: &orgv1.Account{Id: "testAccount"},
 	}
-	url := "http://test"
-	credName := fmt.Sprintf("username-%s-%s", auth.User.Email, url)
+	credName := fmt.Sprintf("username-%s-%s", auth.User.Email, mockURL)
 	platform := &v2.Platform{
-		Name:   url,
-		Server: url,
+		Name:   mockURL,
+		Server: mockURL,
 	}
 	conf.Platforms[platform.Name] = platform
 	credential := &v2.Credential{
@@ -68,7 +72,7 @@ func AuthenticatedConfigMock(cliName string) *Config {
 			},
 		},
 	}
-	ctxName := fmt.Sprintf("login-%s-%s", auth.User.Email, url)
+	ctxName := MockContextName
 	ctx, err := newContext(ctxName, platform, credential, kafkaClusters, "lkc-0000", srClusters, state, conf)
 	if err != nil {
 		panic(err)

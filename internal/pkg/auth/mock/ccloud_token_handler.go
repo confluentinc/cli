@@ -21,7 +21,7 @@ type MockCCloudTokenHandler struct {
 	GetCredentialsTokenFunc func(client *github_com_confluentinc_ccloud_sdk_go.Client, email, password string) (string, error)
 
 	lockGetSSOToken sync.Mutex
-	GetSSOTokenFunc func(client *github_com_confluentinc_ccloud_sdk_go.Client, url string, noBrowser bool, userSSO *github_com_confluentinc_ccloudapis_org_v1.User)
+	GetSSOTokenFunc func(client *github_com_confluentinc_ccloud_sdk_go.Client, url string, noBrowser bool, userSSO *github_com_confluentinc_ccloudapis_org_v1.User) (string, string, error)
 
 	lockRefreshSSOToken sync.Mutex
 	RefreshSSOTokenFunc func(client *github_com_confluentinc_ccloud_sdk_go.Client, ctx *github_com_confluentinc_cli_internal_pkg_config_v3.Context, url string) (string, error)
@@ -136,7 +136,7 @@ func (m *MockCCloudTokenHandler) GetCredentialsTokenCalls() []struct {
 }
 
 // GetSSOToken mocks base method by wrapping the associated func.
-func (m *MockCCloudTokenHandler) GetSSOToken(client *github_com_confluentinc_ccloud_sdk_go.Client, url string, noBrowser bool, userSSO *github_com_confluentinc_ccloudapis_org_v1.User) {
+func (m *MockCCloudTokenHandler) GetSSOToken(client *github_com_confluentinc_ccloud_sdk_go.Client, url string, noBrowser bool, userSSO *github_com_confluentinc_ccloudapis_org_v1.User) (string, string, error) {
 	m.lockGetSSOToken.Lock()
 	defer m.lockGetSSOToken.Unlock()
 
@@ -158,7 +158,7 @@ func (m *MockCCloudTokenHandler) GetSSOToken(client *github_com_confluentinc_ccl
 
 	m.calls.GetSSOToken = append(m.calls.GetSSOToken, call)
 
-	m.GetSSOTokenFunc(client, url, noBrowser, userSSO)
+	return m.GetSSOTokenFunc(client, url, noBrowser, userSSO)
 }
 
 // GetSSOTokenCalled returns true if GetSSOToken was called at least once.

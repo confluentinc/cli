@@ -3,3 +3,6 @@ machine existing-context
         password existing-password
 machine no-password-context
         login existing-user
+machine login-cli-mock-email@confluent.io-http://test
+        login mock-user
+        password mock-password

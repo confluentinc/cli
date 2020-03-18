@@ -1,4 +1,4 @@
-//go:generate go run github.com/travisjeffery/mocker/cmd/mocker --dst ../../../mock/ccloud_token_handler.go --pkg mock --selfpkg github.com/confluentinc/cli ccloud_token_handler.go CCloudTokenHandler
+//go:generate go run github.com/travisjeffery/mocker/cmd/mocker --dst mock/ccloud_token_handler.go --pkg mock --selfpkg github.com/confluentinc/cli ccloud_token_handler.go CCloudTokenHandler
 package auth
 
 import (
@@ -14,7 +14,7 @@ import (
 type CCloudTokenHandler interface {
 	GetUserSSO(client *ccloud.Client, email string) (*orgv1.User, error)
 	GetCredentialsToken(client *ccloud.Client, email string, password string) (string, error)
-	GetSSOToken(client *ccloud.Client, url string, noBrowser bool, userSSO *orgv1.User)
+	GetSSOToken(client *ccloud.Client, url string, noBrowser bool, userSSO *orgv1.User) (string, string, error)
 	RefreshSSOToken(client *ccloud.Client, ctx *v3.Context, url string) (string, error)
 }
 
