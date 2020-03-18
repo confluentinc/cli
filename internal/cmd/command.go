@@ -30,6 +30,7 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/update"
 	"github.com/confluentinc/cli/internal/cmd/version"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
+	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/help"
@@ -88,6 +89,7 @@ func NewConfluentCommand(cliName string, cfg *v3.Config, logger *log.Logger, ver
 		FlagResolver: resolver,
 		Version:      ver,
 		Analytics:    analytics,
+		UpdateTokenHandler: &pauth.UpdateTokenHandlerImpl{},
 	}
 	_ = pcmd.NewAnonymousCLICommand(cli, cfg, prerunner) // Add to correctly set prerunners. TODO: Check if really needed.
 	command := &Command{Command: cli, Analytics: analytics, logger: logger}

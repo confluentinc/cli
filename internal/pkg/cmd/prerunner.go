@@ -38,6 +38,7 @@ type PreRun struct {
 	Analytics    analytics.Client
 	FlagResolver FlagResolver
 	Version      *version.Version
+	UpdateTokenHandler pauth.UpdateTokenHandler
 }
 
 type CLICommand struct {
@@ -355,9 +356,9 @@ func (r *PreRun) updateToken(tokenError error, ctx *DynamicContext) error {
 	}
 	var updateErr error
 	if r.CLIName == "ccloud" {
-		updateErr = pauth.UpdateCCloudAuthToken(ctx.Context, r.Version.UserAgent, r.Logger)
+		updateErr = r.UpdateTokenHandler.UpdateCCloudAuthToken(ctx.Context, r.Version.UserAgent, r.Logger)
 	} else {
-		updateErr = pauth.UpdateConfluentAuthToken(ctx.Context, r.Logger)
+		updateErr = r.UpdateTokenHandler.UpdateConfluentAuthToken(ctx.Context, r.Logger)
 	}
 	if updateErr == nil {
 		return nil

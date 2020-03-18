@@ -182,3 +182,12 @@ func (c *Context) GetCurrentEnvironmentId() string {
 	}
 	return c.State.Auth.Account.Id
 }
+
+func (c *Context) UpdateAuthToken(token string) error {
+	c.State.AuthToken = token
+	err := c.Save()
+	if err != nil {
+		return err
+	}
+	return nil
+}
