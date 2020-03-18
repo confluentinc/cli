@@ -1,6 +1,7 @@
 package cmd_test
 
 import (
+	"github.com/confluentinc/cli/internal/pkg/auth"
 	"os"
 	"reflect"
 	"strings"
@@ -101,6 +102,7 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 				},
 				Analytics: cliMock.NewDummyAnalyticsMock(),
 				Clock: clockwork.NewRealClock(),
+				UpdateTokenHandler: &auth.UpdateTokenHandlerImpl{},
 			}
 
 			root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
@@ -145,6 +147,7 @@ func TestPreRun_HasAPIKey_SetupLoggingAndCheckForUpdates(t *testing.T) {
 		},
 		Analytics: cliMock.NewDummyAnalyticsMock(),
 		Clock: clockwork.NewRealClock(),
+		UpdateTokenHandler: &auth.UpdateTokenHandlerImpl{},
 	}
 
 	root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
@@ -181,6 +184,7 @@ func TestPreRun_CallsAnalyticsTrackCommand(t *testing.T) {
 		},
 		Analytics: analyticsClient,
 		Clock: clockwork.NewRealClock(),
+		UpdateTokenHandler: &auth.UpdateTokenHandlerImpl{},
 	}
 
 	root := &cobra.Command{
@@ -216,6 +220,7 @@ func TestPreRun_TokenExpires(t *testing.T) {
 		},
 		Analytics: analyticsClient,
 		Clock:     clockwork.NewRealClock(),
+		UpdateTokenHandler: &auth.UpdateTokenHandlerImpl{},
 	}
 
 	root := &cobra.Command{
