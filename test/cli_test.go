@@ -577,7 +577,7 @@ func (s *CLITestSuite) validateTestOutput(tt CLITest, t *testing.T, output strin
 		if tt.regex {
 			require.Regexp(t, expected, actual)
 		} else if !reflect.DeepEqual(actual, expected) {
-			t.Fatalf("actual = %s, expected = %s", actual, expected)
+			t.Fatalf("\n   actual: %s\n expected: %s", actual, expected)
 		}
 	}
 	if tt.wantFunc != nil {
@@ -970,6 +970,9 @@ func apiKeysFilter(url *url.URL) []*authv1.ApiKey {
 
 func serveKafkaAPI(t *testing.T) *httptest.Server {
 	mux := http.NewServeMux()
+	mux.HandleFunc("/2.0/kafka/lkc-acls/acls:search", handleKafkaACLsList(t))
+	mux.HandleFunc("/2.0/kafka/lkc-acls/acls", handleKafkaACLsOperations(t))
+	mux.HandleFunc("/2.0/kafka/lkc-acls/acls/delete", handleKafkaACLsDelete(t))
 	// TODO: no idea how this "topic already exists" API request or response actually looks
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(400)
@@ -1120,6 +1123,34 @@ func handleKafkaClusterCreate(t *testing.T, kafkaAPIURL string) func(w http.Resp
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(b))
 		require.NoError(t, err)
+	}
+}
+
+func handleKafkaACLsList(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		reply, err := utilv1.MarshalJSONToBytes(&kafkav1.ListACLReply{
+			Results: nil,
+			Error: &corev1.KafkaAPIError{
+				Field:   "something",
+				Message: "went wrong.",
+			},
+		})
+
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(reply))
+		require.NoError(t, err)
+	}
+}
+
+func handleKafkaACLsOperations(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		return
+	}
+}
+
+func handleKafkaACLsDelete(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		return
 	}
 }
 

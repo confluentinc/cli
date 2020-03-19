@@ -102,11 +102,12 @@ func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	resp, err := c.Client.Kafka.ListACL(context.Background(), cluster, convertToFilter(acl[0].ACLBinding))
+	resp, err := c.Client.Kafka.ListACLs(context.Background(), cluster, convertToFilter(acl[0].ACLBinding))
 
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
+	fmt.Println("resp", resp)
 	return aclutil.PrintAcls(cmd, resp, os.Stdout)
 }
 

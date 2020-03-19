@@ -80,7 +80,7 @@ func (m *Kafka) UpdateTopic(ctx context.Context, cluster *kafkav1.KafkaCluster, 
 	return assertEquals(topic, <-m.Expect)
 }
 
-func (m *Kafka) ListACL(ctx context.Context, cluster *kafkav1.KafkaCluster, filter *kafkav1.ACLFilter) ([]*kafkav1.ACLBinding, error) {
+func (m *Kafka) ListACLs(ctx context.Context, cluster *kafkav1.KafkaCluster, filter *kafkav1.ACLFilter) ([]*kafkav1.ACLBinding, error) {
 	expect := <-m.Expect
 	if filter.PatternFilter.PatternType == kafkav1.PatternTypes_ANY {
 		expect.(*kafkav1.ACLFilter).PatternFilter.PatternType = kafkav1.PatternTypes_ANY
@@ -96,10 +96,6 @@ func (m *Kafka) ListACL(ctx context.Context, cluster *kafkav1.KafkaCluster, filt
 
 func (m *Kafka) CreateACLs(ctx context.Context, cluster *kafkav1.KafkaCluster, bindings []*kafkav1.ACLBinding) error {
 	return assertEqualBindings(bindings, <-m.Expect)
-}
-
-func (m *Kafka) DeleteACL(ctx context.Context, cluster *kafkav1.KafkaCluster, filter *kafkav1.ACLFilter) error {
-	return assertEquals(filter, <-m.Expect)
 }
 
 func (m *Kafka) DeleteACLs(ctx context.Context, cluster *kafkav1.KafkaCluster, filters []*kafkav1.ACLFilter) error {
