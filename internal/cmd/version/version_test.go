@@ -23,7 +23,6 @@ func TestVersion(t *testing.T) {
 	req.Regexp(`Version: *1.2.3`, output)
 	req.Regexp(`Git Ref: *abc1234`, output)
 	req.Regexp(`Build Date: *Fri Feb 22 20:55:53 UTC 2019`, output)
-	req.Regexp(`Build Host: *CI`, output)
 	req.Regexp(`Development: *false`, output)
 }
 
