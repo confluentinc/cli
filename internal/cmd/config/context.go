@@ -93,7 +93,7 @@ func (c *contextCommand) init() {
 }
 
 func (c *contextCommand) list(cmd *cobra.Command, args []string) error {
-	type rowHuman struct {
+	type row struct {
 		Current    string
 		Name       string
 		Platform   string
@@ -122,7 +122,7 @@ func (c *contextCommand) list(cmd *cobra.Command, args []string) error {
 				current = "true"
 			}
 		}
-		outputWriter.AddElement(&rowHuman{current, name, context.PlatformName, context.CredentialName})
+		outputWriter.AddElement(&row{current, name, context.PlatformName, context.CredentialName})
 	}
 	return outputWriter.Out()
 }
