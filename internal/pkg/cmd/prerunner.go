@@ -225,7 +225,18 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 			return errors.HandleCommon(errors.ErrNoContext, cmd)
 		}
 		command.Context = ctx
-		hasAPIKey, err := ctx.HasAPIKey(cmd, ctx.KafkaClusterContext.GetActiveKafkaClusterId())
+		if r.CLIName == "ccloud" {
+			// if context is authenticated, client is created and used to for find kafkaClusterConfig,
+			ctx.client, err = r.createCCloudClient(ctx, cmd, command.Version)
+			if err != nil && err != errors.ErrNotLoggedIn {
+				return errors.HandleCommon(err, cmd)
+			}
+		}
+		cluster, err := KafkaCluster(cmd, ctx)
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+		hasAPIKey, err := ctx.HasAPIKey(cmd, cluster.Id)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
@@ -279,12 +290,10 @@ func (r *PreRun) createCCloudClient(ctx *DynamicContext, cmd *cobra.Command, ver
 	if ctx != nil {
 		baseURL = ctx.Platform.Server
 		state, err := ctx.AuthenticatedState(cmd)
-		if err != nil && err != errors.ErrNotLoggedIn {
+		if err != nil {
 			return nil, err
 		}
-		if err == nil {
-			authToken = state.AuthToken
-		}
+		authToken = state.AuthToken
 		logger = ctx.Logger
 		userAgent = ver.UserAgent
 	}

@@ -72,6 +72,7 @@ func saramaConf(kafka *v1.KafkaClusterConfig, clientID string, beginning bool) (
 	saramaConf.Net.TLS.Enable = true
 	saramaConf.Net.SASL.Enable = true
 	saramaConf.Net.SASL.User = kafka.APIKey
+	fmt.Println(kafka.APIKeys)
 	saramaConf.Net.SASL.Password = kafka.APIKeys[kafka.APIKey].Secret
 
 	saramaConf.Producer.Return.Successes = true
