@@ -1,9 +1,3 @@
-  ServiceAccountId | Permission | Operation | Resource |     Name     |  Type    
-+------------------+------------+-----------+----------+--------------+---------+
-  User:52428       | ALLOW      | READ      | TOPIC    | hello-worldd | LITERAL  
-  User:52428       | ALLOW      | DESCRIBE  | TOPIC    | hello-worldd | LITERAL  
-  User:52429       | ALLOW      | DESCRIBE  | TOPIC    | hello-worldd | LITERAL  
-  User:52429       | ALLOW      | READ      | TOPIC    | hello-worldd | LITERAL  
-  User:52428       | ALLOW      | READ      | TOPIC    | hello-world  | LITERAL  
-  User:52428       | ALLOW      | DESCRIBE  | TOPIC    | hello-world  | LITERAL
-  
+  ServiceAccountId | Permission | Operation | Resource |    Name    |  Type    
++------------------+------------+-----------+----------+------------+---------+
+                   | ALLOW      | READ      | TOPIC    | test-topic | LITERAL  

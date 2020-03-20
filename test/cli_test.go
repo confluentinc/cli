@@ -577,7 +577,7 @@ func (s *CLITestSuite) validateTestOutput(tt CLITest, t *testing.T, output strin
 		if tt.regex {
 			require.Regexp(t, expected, actual)
 		} else if !reflect.DeepEqual(actual, expected) {
-			t.Fatalf("\n   actual: %s\n expected: %s", actual, expected)
+			t.Fatalf("\n   actual:\n%s\nexpected:\n%s", actual, expected)
 		}
 	}
 	if tt.wantFunc != nil {
@@ -971,7 +971,7 @@ func apiKeysFilter(url *url.URL) []*authv1.ApiKey {
 func serveKafkaAPI(t *testing.T) *httptest.Server {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/2.0/kafka/lkc-acls/acls:search", handleKafkaACLsList(t))
-	mux.HandleFunc("/2.0/kafka/lkc-acls/acls", handleKafkaACLsOperations(t))
+	mux.HandleFunc("/2.0/kafka/lkc-acls/acls", handleKafkaACLsCreate(t))
 	mux.HandleFunc("/2.0/kafka/lkc-acls/acls/delete", handleKafkaACLsDelete(t))
 	// TODO: no idea how this "topic already exists" API request or response actually looks
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -1128,13 +1128,20 @@ func handleKafkaClusterCreate(t *testing.T, kafkaAPIURL string) func(w http.Resp
 
 func handleKafkaACLsList(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		reply, err := utilv1.MarshalJSONToBytes(&kafkav1.ListACLReply{
-			Results: nil,
-			Error: &corev1.KafkaAPIError{
-				Field:   "something",
-				Message: "went wrong.",
+		results := []*kafkav1.ACLBinding{
+			{
+				Pattern: &kafkav1.ResourcePatternConfig{
+					ResourceType: kafkav1.ResourceTypes_TOPIC,
+					Name:         "test-topic",
+					PatternType:  kafkav1.PatternTypes_LITERAL,
+				},
+				Entry: &kafkav1.AccessControlEntryConfig{
+					Operation:      kafkav1.ACLOperations_READ,
+					PermissionType: kafkav1.ACLPermissionTypes_ALLOW,
+				},
 			},
-		})
+		}
+		reply, err := json.Marshal(results)
 
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(reply))
@@ -1142,15 +1149,31 @@ func handleKafkaACLsList(t *testing.T) func(w http.ResponseWriter, r *http.Reque
 	}
 }
 
-func handleKafkaACLsOperations(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func handleKafkaACLsCreate(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		return
+		if r.Method == "POST" {
+			var bindings []*kafkav1.ACLBinding
+			err := json.NewDecoder(r.Body).Decode(&bindings)
+			require.NoError(t, err)
+			require.NotEmpty(t, bindings)
+			for _, binding := range bindings {
+				require.NotEmpty(t, binding.GetPattern())
+				require.NotEmpty(t, binding.GetEntry())
+			}
+		}
 	}
 }
 
 func handleKafkaACLsDelete(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		return
+		var filters []*kafkav1.ACLFilter
+		err := json.NewDecoder(r.Body).Decode(&filters)
+		require.NoError(t, err)
+		require.NotEmpty(t, filters)
+		for _, filter := range filters {
+			require.NotEmpty(t, filter.GetEntryFilter())
+			require.NotEmpty(t, filter.GetPatternFilter())
+		}
 	}
 }
 

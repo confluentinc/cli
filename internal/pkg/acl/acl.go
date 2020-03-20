@@ -1,7 +1,6 @@
 package acl
 
 import (
-	"fmt"
 	"io"
 
 	"github.com/spf13/cobra"
@@ -26,7 +25,6 @@ func PrintAcls(cmd *cobra.Command, bindingsObj []*kafkav1.ACLBinding, writer io.
 		return errors.HandleCommon(err, cmd)
 	}
 
-	fmt.Println("len bindings", len(bindingsObj))
 	for _, binding := range bindingsObj {
 		record := &struct {
 			ServiceAccountId string
