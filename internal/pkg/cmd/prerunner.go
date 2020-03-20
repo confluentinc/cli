@@ -242,7 +242,7 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 			return errors.HandleCommon(err, cmd)
 		}
 		if !hasAPIKey {
-			err = &errors.UnspecifiedAPIKeyError{ClusterID: ctx.KafkaClusterContext.GetActiveKafkaClusterId()}
+			err = &errors.UnspecifiedAPIKeyError{ClusterID: cluster.Id}
 			return errors.HandleCommon(err, cmd)
 		}
 		return nil
