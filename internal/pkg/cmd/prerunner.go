@@ -226,12 +226,13 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 		}
 		command.Context = ctx
 		if r.CLIName == "ccloud" {
-			// if context is authenticated, client is created and used to for find kafkaClusterConfig,
+			// if context is authenticated, client is created and used to for DynamicContext.FindKafkaCluster for finding active cluster
 			ctx.client, err = r.createCCloudClient(ctx, cmd, command.Version)
 			if err != nil && err != errors.ErrNotLoggedIn {
 				return errors.HandleCommon(err, cmd)
 			}
 		}
+		// Get active kafka cluster
 		cluster, err := KafkaCluster(cmd, ctx)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
