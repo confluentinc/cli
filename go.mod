@@ -6,9 +6,8 @@ require (
 	github.com/Shopify/sarama v1.20.1
 	github.com/Shopify/toxiproxy v2.1.3+incompatible // indirect
 	github.com/alcortesm/tgz v0.0.0-20161220082320-9c5fe88206d7 // indirect
-	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
-	github.com/alecthomas/units v0.0.0-20190717042225-c3de453c63f4 // indirect
 	github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239 // indirect
+	github.com/antihax/optional v1.0.0
 	github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da
 	github.com/atrox/homedir v1.0.0
 	github.com/aws/aws-sdk-go v1.15.64
@@ -23,7 +22,7 @@ require (
 	github.com/confluentinc/ccloudapis v0.0.0-20200323172841-c4a51af500ae
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-printer v0.13.0
-	github.com/confluentinc/mds-sdk-go v0.0.0-20200110060608-0b51635c4e0a
+	github.com/confluentinc/mds-sdk-go v0.0.0-00010101000000-000000000000
 	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787
 	github.com/confluentinc/schema-registry-sdk-go v0.0.8
 	github.com/dghubble/sling v1.3.0 // indirect
@@ -86,7 +85,6 @@ require (
 	github.com/tidwall/gjson v1.6.0
 	github.com/tidwall/pretty v1.0.0
 	github.com/tidwall/sjson v1.0.4
-	github.com/travisjeffery/mocker v0.0.0-20190115171754-c0d706f8be41
 	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c // indirect
 	golang.org/x/crypto v0.0.0-20200210222208-86ce3cb69678
 	golang.org/x/exp v0.0.0-20200207192155-f17229e696bd // indirect

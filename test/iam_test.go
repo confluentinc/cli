@@ -116,8 +116,7 @@ func (s *CLITestSuite) Test_Confluent_Iam_Rolebinding_List() {
 		},
 	}
 	for _, tt := range tests {
-		kafkaAPIURL := serveKafkaAPI(s.T()).URL
-		s.runConfluentTest(tt, serveMds(s.T(), kafkaAPIURL).URL)
+		s.runConfluentTest(tt, serveMds(s.T()).URL)
 	}
 }
 
@@ -146,8 +145,7 @@ func (s *CLITestSuite) Test_Confluent_Iam_Role_List() {
 		},
 	}
 	for _, tt := range tests {
-		kafkaAPIURL := serveKafkaAPI(s.T()).URL
-		s.runConfluentTest(tt, serveMds(s.T(), kafkaAPIURL).URL)
+		s.runConfluentTest(tt, serveMds(s.T()).URL)
 	}
 }
 
@@ -176,7 +174,6 @@ func (s *CLITestSuite) Test_Confluent_Iam_Role_Describe() {
 		},
 	}
 	for _, tt := range tests {
-		kafkaAPIURL := serveKafkaAPI(s.T()).URL
-		s.runConfluentTest(tt, serveMds(s.T(), kafkaAPIURL).URL)
+		s.runConfluentTest(tt, serveMds(s.T()).URL)
 	}
 }

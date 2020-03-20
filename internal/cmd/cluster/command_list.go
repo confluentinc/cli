@@ -1,0 +1,138 @@
+package cluster
+
+import (
+	"context"
+	"fmt"
+	"os"
+	"strings"
+
+	"github.com/antihax/optional"
+
+	"github.com/olekukonko/tablewriter"
+	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/cli/internal/pkg/cmd"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/go-printer"
+	"github.com/confluentinc/mds-sdk-go"
+)
+
+const typeFlag = "type"
+
+var (
+	clusterFields = []string{"Name", "Type", "ID", "Hosts"}
+	clusterLabels = []string{"Name", "Type", "ID", "Hosts"}
+)
+
+type listCommand struct {
+	*cmd.AuthenticatedCLICommand
+}
+
+type prettyCluster struct {
+	Name  string
+	Type  string
+	ID    string
+	Hosts string
+}
+
+// NewListCommand returns the sub-command object for listing clusters
+func NewListCommand(cfg *v3.Config, prerunner cmd.PreRunner) *cobra.Command {
+	listCmd := &listCommand{
+		AuthenticatedCLICommand: cmd.NewAuthenticatedWithMDSCLICommand(
+			&cobra.Command{
+				Use:   "list",
+				Short: "List registered clusters.",
+				Long:  "List clusters that are registered with the MDS cluster registry.",
+			},
+			cfg, prerunner),
+	}
+	listCmd.Flags().String(typeFlag, "", "Filter list to this cluster type.")
+	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	listCmd.Flags().SortFlags = false
+	listCmd.RunE = listCmd.list
+	return listCmd.Command
+}
+
+func (c *listCommand) createContext() context.Context {
+	return context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
+}
+
+func (c *listCommand) list(cmd *cobra.Command, args []string) error {
+	var clusterType optional.String
+	t, err := cmd.Flags().GetString(typeFlag)
+	if err == nil {
+		clusterType = optional.NewString(t)
+	}
+	ct := &mds.ClusterRegistryListOpts{
+		ClusterType: clusterType,
+	}
+	clusterInfos, _, err := c.MDSClient.ClusterRegistryApi.ClusterRegistryList(c.createContext(), ct)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	format, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	if format == output.Human.String() {
+		var data [][]string
+		for _, clusterInfo := range clusterInfos {
+			clusterDisplay, err := createPrettyCluster(clusterInfo)
+			if err != nil {
+				return errors.HandleCommon(err, cmd)
+			}
+			data = append(data, printer.ToRow(clusterDisplay, clusterFields))
+		}
+		outputTable(data)
+	} else {
+		return output.StructuredOutput(format, clusterInfos)
+	}
+	return nil
+}
+
+func createPrettyHost(hostInfo mds.HostInfo) (string, error) {
+	if hostInfo.Port > 0 {
+		return fmt.Sprintf("%s:%d", hostInfo.Host, hostInfo.Port), nil
+	}
+	return hostInfo.Host, nil
+}
+
+func createPrettyCluster(clusterInfo mds.ClusterInfo) (*prettyCluster, error) {
+	var t, id string
+	switch {
+	case clusterInfo.Scope.Clusters.ConnectCluster != "":
+		t = "connect-cluster"
+		id = clusterInfo.Scope.Clusters.ConnectCluster
+	case clusterInfo.Scope.Clusters.KsqlCluster != "":
+		t = "ksql-cluster"
+		id = clusterInfo.Scope.Clusters.KsqlCluster
+	case clusterInfo.Scope.Clusters.SchemaRegistryCluster != "":
+		t = "schema-registry-cluster"
+		id = clusterInfo.Scope.Clusters.SchemaRegistryCluster
+	default:
+		t = "kafka-cluster"
+		id = clusterInfo.Scope.Clusters.KafkaCluster
+	}
+	var hosts []string = make([]string, len(clusterInfo.Hosts))
+	for i, hostInfo := range clusterInfo.Hosts {
+		hosts[i], _ = createPrettyHost(hostInfo)
+	}
+	return &prettyCluster{
+		clusterInfo.Name,
+		t,
+		id,
+		strings.Join(hosts, ", "),
+	}, nil
+}
+
+func outputTable(data [][]string) {
+	tablePrinter := tablewriter.NewWriter(os.Stdout)
+	tablePrinter.SetAutoWrapText(false)
+	tablePrinter.SetAutoFormatHeaders(false)
+	tablePrinter.SetHeader(clusterLabels)
+	tablePrinter.AppendBulk(data)
+	tablePrinter.SetBorder(false)
+	tablePrinter.Render()
+}

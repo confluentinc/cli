@@ -54,7 +54,7 @@ var (
 	}
 )
 
-func serveMds(t *testing.T, mdsURL string) *httptest.Server {
+func serveMds(t *testing.T) *httptest.Server {
 	req := require.New(t)
 	router := http.NewServeMux()
 	router.HandleFunc("/security/1.0/authenticate", func(w http.ResponseWriter, r *http.Request) {
@@ -129,8 +129,10 @@ func serveMds(t *testing.T, mdsURL string) *httptest.Server {
 		})
 	}
 
+	router.HandleFunc("/security/1.0/registry/clusters", handleRegistryClusters(t))
+
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		_, err := io.WriteString(w, `{"error": {"message": "unexpected call to `+r.URL.Path+`"}}`)
+		_, err := io.WriteString(w, `{"error": {"message": "unexpected call to mds `+r.URL.Path+`"}}`)
 		require.NoError(t, err)
 	})
 	return httptest.NewServer(router)
@@ -151,4 +153,37 @@ func addRoles(routesAndReplies map[string]string) {
 		allRoles = append(allRoles, rbacRoles[roleName])
 	}
 	routesAndReplies[base] = "[" + strings.Join(allRoles, ",") + "]"
+}
+
+func handleRegistryClusters(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/json")
+		clusterType := r.URL.Query().Get("clusterType")
+		response := `[ {
+		"name": "theMdsConnectCluster",
+		"scope": { "clusters": { "kafka-cluster": "kafka-GUID", "connect-cluster": "connect-name" } },
+		"hosts": [ { "host": "10.5.5.5", "port": 9005 } ]
+	  },{
+		"name": "theMdsKafkaCluster",
+		"scope": { "clusters": { "kafka-cluster": "kafka-GUID" } },
+		"hosts": [ { "host": "10.10.10.10", "port": 8090 },{ "host": "mds.example.com", "port": 8090 } ]
+	  },{
+		"name": "theMdsKSQLCluster",
+		"scope": { "clusters": { "kafka-cluster": "kafka-GUID", "ksql-cluster": "ksql-name" } },
+		"hosts": [ { "host": "10.4.4.4", "port": 9004 } ]
+	  },{
+		"name": "theMdsSchemaRegistryCluster",
+		"scope": { "clusters": { "kafka-cluster": "kafka-GUID", "schema-registry-cluster": "schema-registry-name" } },
+		"hosts": [ { "host": "10.3.3.3", "port": 9003 } ]
+	} ]`
+		if clusterType == "ksql-cluster" {
+			response = `[ {
+		    "name": "theMdsKSQLCluster",
+		    "scope": { "clusters": { "kafka-cluster": "kafka-GUID", "ksql-cluster": "ksql-name" } },
+		    "hosts": [ { "host": "10.4.4.4", "port": 9004 } ]
+		  } ]`
+		}
+		_, err := io.WriteString(w, response)
+		require.NoError(t, err)
+	}
 }
