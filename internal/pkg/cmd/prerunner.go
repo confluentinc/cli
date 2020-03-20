@@ -273,13 +273,16 @@ func (r *PreRun) setClients(cliCmd *AuthenticatedCLICommand) error {
 	if err != nil {
 		return err
 	}
-	ccloudClient, err := r.createCCloudClient(ctx, cliCmd.Command, cliCmd.Version)
-	if err != nil {
-		return err
+	if r.CLIName == "ccloud" {
+		ccloudClient, err := r.createCCloudClient(ctx, cliCmd.Command, cliCmd.Version)
+		if err != nil {
+			return err
+		}
+		cliCmd.Client = ccloudClient
+		cliCmd.Config.Client = ccloudClient
+	} else {
+		cliCmd.MDSClient = r.createMDSClient(ctx, cliCmd.Version)
 	}
-	cliCmd.Client = ccloudClient
-	cliCmd.MDSClient = r.createMDSClient(ctx, cliCmd.Version)
-	cliCmd.Config.Client = ccloudClient
 	return nil
 }
 
