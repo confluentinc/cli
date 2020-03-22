@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -214,6 +215,15 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 				ResourceId:   lc.Id,
 			})
 		}
+		if len(apiKey.LogicalClusters) == 0 {
+			// Cloud key.
+			outputWriter.AddElement(&keyDisplay{
+				Key:          apiKey.Key,
+				Description:  apiKey.Description,
+				UserId:       apiKey.UserId,
+				ResourceType: "cloud",
+			})
+		}
 	}
 	return outputWriter.Out()
 }
@@ -259,10 +269,12 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	}
 
 	key := &authv1.ApiKey{
-		UserId:          userId,
-		Description:     description,
-		AccountId:       c.EnvironmentId(),
-		LogicalClusters: []*authv1.ApiKey_Cluster{{Id: clusterId, Type: resourceType}},
+		UserId:      userId,
+		Description: description,
+		AccountId:   c.EnvironmentId(),
+	}
+	if resourceType != pcmd.CloudResourceType {
+		key.LogicalClusters = []*authv1.ApiKey_Cluster{{Id: clusterId, Type: resourceType}}
 	}
 	userKey, err := c.Client.APIKey.Create(context.Background(), key)
 	if err != nil {
