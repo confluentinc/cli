@@ -195,7 +195,6 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		if apiKey.UserId == 0 {
 			continue
 		}
-
 		// Add '*' only in the case where we are printing out tables
 		if outputWriter.GetOutputFormat() == output.Human {
 			// resourceId != "" added to be explicit that when no resourceId is specified we will not have "*"
@@ -205,6 +204,20 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 				apiKey.Key = fmt.Sprintf("  %s", apiKey.Key)
 			}
 		}
+ 
+		// If resource id is empty then resource was not specified, or cloud was specified.
+		if resourceId == "" && len(apiKey.LogicalClusters) == 0 {
+			// Cloud key.
+			outputWriter.AddElement(&keyDisplay{
+				Key:          apiKey.Key,
+				Description:  apiKey.Description,
+				UserId:       apiKey.UserId,
+				ResourceType: pcmd.CloudResourceType,
+			})
+		}
+		if resourceType == pcmd.CloudResourceType {
+			continue
+		}
 
 		for _, lc := range apiKey.LogicalClusters {
 			outputWriter.AddElement(&keyDisplay{
@@ -213,15 +226,6 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 				UserId:       apiKey.UserId,
 				ResourceType: lc.Type,
 				ResourceId:   lc.Id,
-			})
-		}
-		if len(apiKey.LogicalClusters) == 0 {
-			// Cloud key.
-			outputWriter.AddElement(&keyDisplay{
-				Key:          apiKey.Key,
-				Description:  apiKey.Description,
-				UserId:       apiKey.UserId,
-				ResourceType: "cloud",
 			})
 		}
 	}

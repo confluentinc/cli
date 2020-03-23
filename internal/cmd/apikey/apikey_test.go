@@ -175,6 +175,17 @@ func (suite *APITestSuite) TestCreateKafkaApiKey() {
 	req.Equal(retValue.LogicalClusters[0].Id, suite.kafkaCluster.Id)
 }
 
+func (suite *APITestSuite) TestCreateCloudAPIKey() {
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"create", "--resource", "cloud"}))
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	req.True(suite.apiMock.CreateCalled())
+	retValue := suite.apiMock.CreateCalls()[0].Arg1
+	req.Equal(0, len(retValue.LogicalClusters))
+}
+
 func (suite *APITestSuite) TestDeleteApiKey() {
 	cmd := suite.newCMD()
 	cmd.SetArgs(append([]string{"delete", apiKeyVal}))
@@ -207,6 +218,18 @@ func (suite *APITestSuite) TestListKafkaApiKey() {
 	retValue := suite.apiMock.ListCalls()[0].Arg1
 	req.Equal(retValue.LogicalClusters[0].Id, suite.kafkaCluster.Id)
 }
+
+func (suite *APITestSuite) TestListCloudAPIKey() {
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"list", "--resource", "cloud"}))
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	req.True(suite.apiMock.ListCalled())
+	retValue := suite.apiMock.ListCalls()[0].Arg1
+	req.Equal(0, len(retValue.LogicalClusters))
+}
+
 
 func (suite *APITestSuite) TestStoreApiKeyForce() {
 	req := require.New(suite.T())
