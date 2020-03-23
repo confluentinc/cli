@@ -5,6 +5,7 @@ import (
 	"github.com/confluentinc/mds-sdk-go"
 )
 
+// If user is sso then will return refresh token, but if user is email password login then refresh token is ""
 func GetCCloudAuthToken(client *ccloud.Client, url string, email string, password string, noBrowser bool) (string, string, error) {
 	tokenHandler := CCloudTokenHandlerImpl{}
 	userSSO, err := tokenHandler.GetUserSSO(client, email)

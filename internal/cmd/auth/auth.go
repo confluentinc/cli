@@ -91,6 +91,7 @@ func (a *commands) init(prerunner pcmd.PreRunner) {
 		check(loginCmd.MarkFlagRequired("url")) // because https://confluent.cloud isn't an MDS endpoint
 	}
 	loginCmd.Flags().Bool("no-browser", false, "Do not open browser when authenticating via Single Sign-On.")
+	loginCmd.Flags().Bool("save", false, "Save login credentials or refresh token (in the case of SSO) to local netrc file.")
 	loginCmd.Flags().SortFlags = false
 	cliLoginCmd := pcmd.NewAnonymousCLICommand(loginCmd, a.config, prerunner)
 	loginCmd.PersistentPreRunE = a.analyticsPreRunCover(cliLoginCmd, analytics.Login, prerunner)
@@ -126,6 +127,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	}
 
 	token, refreshToken, err := pauth.GetCCloudAuthToken(client, url, email, password, noBrowser)
+
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -149,9 +151,11 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 		state = new(v2.ContextState)
 	}
 	state.AuthToken = token
-	if refreshToken != "" {
-		state.RefreshToken = refreshToken
-	}
+
+	// TODO: write to netrc file if --save flag is used
+	//if refreshToken != "" {
+	//	state.RefreshToken = refreshToken
+	//}
 	// If no auth config exists, initialize it
 	if state.Auth == nil {
 		state.Auth = &v1.AuthConfig{}
@@ -184,6 +188,23 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.Wrap(err, "unable to save user authentication")
 	}
+
+	saveToNetrc, err := cmd.Flags().GetBool("save")
+	if err != nil {
+		return err
+	}
+	if saveToNetrc {
+		netrcHandler := pauth.NewNetrcHandler()
+		if refreshToken == "" {
+			err = netrcHandler.WriteNetrcCredentials(a.config.Context(), email, password, false)
+		} else {
+			err = netrcHandler.WriteNetrcCredentials(a.config.Context(), email, refreshToken, true)
+		}
+		if err != nil {
+			return err
+		}
+	}
+
 	pcmd.Println(cmd, "Logged in as", email)
 	pcmd.Print(cmd, "Using environment ", state.Auth.Account.Id,
 		" (\"", state.Auth.Account.Name, "\")\n")

@@ -14,15 +14,17 @@ import (
 )
 
 var (
-	netrcFilePath    = "test_files/netrc"
-	netrcContextName = "existing-context"
-	netrcUser        = "existing-user"
-	netrcPassword    = "existing-password"
-	netrcUser2       = "mock-user"
-	netrcPassword2   = "mock-password"
+	netrcFilePath           = "test_files/netrc"
+	netrcContextName        = "existing-context"
+	netrcUser               = "existing-user"
+	netrcPassword           = "existing-password"
+	mockConfigUser          = "mock-user"
+	mockConfigPassword      = "mock-password"
+	refreshTokenContextName = "refresh-token-context"
+	netrcRefreshToken            = "refresh_token"
 )
 
-func TestNetRCReader(t *testing.T) {
+func TestNetRCCredentialReader(t *testing.T) {
 	tests := []struct {
 		name        string
 		want        []string
@@ -73,6 +75,36 @@ func TestNetRCReader(t *testing.T) {
 	}
 }
 
+func TestNetRCGetRefreshTokenReader(t *testing.T) {
+	tests := []struct {
+		name        string
+		want        string
+		contextName string
+		wantErr     bool
+		file        string
+	}{
+		{
+			name:        "Context exist",
+			want:        netrcRefreshToken,
+			contextName: refreshTokenContextName,
+			file:        netrcFilePath,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			netrcHandler := netrcHandler{fileName: tt.file}
+			var refreshToken string
+			var err error
+			if refreshToken, err = netrcHandler.getRefreshToken(tt.contextName); (err != nil) != tt.wantErr {
+				t.Errorf("get error = %+v, wantErr %+v", err, tt.wantErr)
+			}
+			if len(tt.want) != 0 && !t.Failed() && refreshToken != tt.want {
+				t.Errorf("getNetrcCredenials username = %+v, want %+v", refreshToken, tt.want)
+			}
+		})
+	}
+}
+
 func TestUpateSSOToken(t *testing.T) {
 	initialAuthToken := "initial-auth"
 	finalAuthToken := "final-auth"
@@ -80,13 +112,17 @@ func TestUpateSSOToken(t *testing.T) {
 		GetUserSSOFunc: func(client *ccloud.Client, email string) (user *orgv1.User, e error) {
 			return &orgv1.User{}, nil
 		},
-		RefreshSSOTokenFunc: func(client *ccloud.Client, ctx *v3.Context, url string) (s string, e error) {
+		RefreshSSOTokenFunc: func(client *ccloud.Client, refreshToken, url string) (s string, e error) {
+			require.Equal(t, refreshToken, mockConfigPassword)
 			return finalAuthToken, nil
 		},
 	}
 
+	netrcHandler := &netrcHandler{fileName: netrcFilePath}
+
 	updateTokenHandler := UpdateTokenHandlerImpl{
 		ccloudTokenHandler: mockCCloud,
+		netrcHandler:       netrcHandler,
 	}
 
 	cfg := v3.AuthenticatedCloudConfigMock()
@@ -103,7 +139,7 @@ func TestUpateSSOToken(t *testing.T) {
 	require.Equal(t, ctx.State.AuthToken, finalAuthToken)
 }
 
-func TestUpateCloudLoginCredentialsToken(t *testing.T) {
+func TestUpdateCloudLoginCredentialsToken(t *testing.T) {
 	initialAuthToken := "initial-auth"
 	finalAuthToken := "final-auth"
 
@@ -112,8 +148,8 @@ func TestUpateCloudLoginCredentialsToken(t *testing.T) {
 			return nil, nil
 		},
 		GetCredentialsTokenFunc: func(client *ccloud.Client, email, password string) (s string, e error) {
-			require.Equal(t, email, netrcUser2)
-			require.Equal(t, password, netrcPassword2)
+			require.Equal(t, email, mockConfigUser)
+			require.Equal(t, password, mockConfigPassword)
 			return finalAuthToken, nil
 		},
 	}
@@ -143,8 +179,8 @@ func TestUpdateConfluent(t *testing.T) {
 	finalAuthToken := "final-auth"
 	mockConfluentTokenHandler := &authMock.MockConfluentTokenHandler{
 		GetAuthTokenFunc: func(mdsClient *mds.APIClient, email, password string) (s string, e error) {
-			require.Equal(t, email, netrcUser2)
-			require.Equal(t, password, netrcPassword2)
+			require.Equal(t, email, mockConfigUser)
+			require.Equal(t, password, mockConfigPassword)
 			return finalAuthToken, nil
 		},
 	}

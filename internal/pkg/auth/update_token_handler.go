@@ -3,8 +3,6 @@
 package auth
 
 import (
-	"runtime"
-
 	"github.com/confluentinc/ccloud-sdk-go"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -21,17 +19,18 @@ type UpdateTokenHandlerImpl struct {
 	netrcHandler          *netrcHandler
 }
 
+var (
+	failedRefreshTokenMsg = "Failed to update auth token using refresh token. Error: %s"
+	failedNetrcTokenMsg = "Failed to update auth token using credentials in netrc file. Error: %s"
+	successRefreshTokenMsg = "Token successfully updated with refresh token."
+	successNetrcTokenMsg = "Token successfully updated with netrc file credentials."
+)
+
 func NewUpdateTokenHandler() UpdateTokenHandler {
-	var netrcFile string
-	if runtime.GOOS == "windows" {
-		netrcFile = "~/_netrc"
-	} else {
-		netrcFile = "~/.netrc"
-	}
 	return &UpdateTokenHandlerImpl{
 		ccloudTokenHandler:    &CCloudTokenHandlerImpl{},
 		confluentTokenHandler: &ConfluentTokenHandlerImp{},
-		netrcHandler:          &netrcHandler{fileName: netrcFile},
+		netrcHandler:          NewNetrcHandler(),
 	}
 }
 
@@ -44,12 +43,17 @@ func (u *UpdateTokenHandlerImpl) UpdateCCloudAuthToken(ctx *v3.Context, userAgen
 	}
 	var token string
 	if userSSO != nil {
-		token, err = u.ccloudTokenHandler.RefreshSSOToken(client, ctx, url)
+		refreshToken, err := u.netrcHandler.getRefreshToken(ctx.Name)
 		if err != nil {
-			logger.Debugf("Failed to update auth token using refresh token. Error: %s", err)
+			logger.Debugf(failedRefreshTokenMsg, err)
 			return err
 		}
-		logger.Debug("Token successfully updated with refresh token.")
+		token, err = u.ccloudTokenHandler.RefreshSSOToken(client, refreshToken, url)
+		if err != nil {
+			logger.Debugf(failedRefreshTokenMsg, err)
+			return err
+		}
+		logger.Debug(successRefreshTokenMsg)
 	} else {
 		email, password, err := u.netrcHandler.getNetrcCredentials(ctx.Name)
 		if err != nil {
@@ -58,10 +62,10 @@ func (u *UpdateTokenHandlerImpl) UpdateCCloudAuthToken(ctx *v3.Context, userAgen
 		}
 		token, err = u.ccloudTokenHandler.GetCredentialsToken(client, email, password)
 		if err != nil {
-			logger.Debugf("Failed to update auth token using credentials in netrc file. Error: %s", err)
+			logger.Debugf(failedNetrcTokenMsg, err)
 			return err
 		}
-		logger.Debug("Token successfully updated with netrc file credentials.")
+		logger.Debug(successNetrcTokenMsg)
 	}
 	return ctx.UpdateAuthToken(token)
 }
@@ -76,12 +80,12 @@ func (u *UpdateTokenHandlerImpl) UpdateConfluentAuthToken(ctx *v3.Context, logge
 	mdsClient, err := mdsClientManager.GetMDSClient(ctx, ctx.Platform.CaCertPath, false, ctx.Platform.Server, logger)
 	token, err := u.confluentTokenHandler.GetAuthToken(mdsClient, email, password)
 	if err != nil {
-		logger.Debugf("Failed to update auth token. Error: %s", err)
+		logger.Debugf(failedNetrcTokenMsg, err)
 		return err
 	}
 	err = ctx.UpdateAuthToken(token)
 	if err == nil {
-		logger.Debugf("Successfully updated auth token.")
+		logger.Debugf(successNetrcTokenMsg)
 	}
 	return err
 }

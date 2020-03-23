@@ -6,3 +6,6 @@ machine no-password-context
 machine login-cli-mock-email@confluent.io-http://test
         login mock-user
         password mock-password
+machine refresh-token-context
+        login blah
+        password refresh_token
