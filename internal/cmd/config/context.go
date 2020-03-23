@@ -10,6 +10,13 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/output"
+)
+
+var (
+	contextListFields                = []string{"Current", "Name", "Platform", "Credential"}
+	contextListHumanLabels           = []string{"Current", "Name", "Platform", "Credential"}
+	contextListStructuredLabels      = []string{"current", "name", "platform", "credential"}
 )
 
 type contextCommand struct {
@@ -36,12 +43,15 @@ func NewContext(config *v3.Config, prerunner pcmd.PreRunner, analytics analytics
 }
 
 func (c *contextCommand) init() {
-	c.AddCommand(&cobra.Command{
+	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List all config contexts.",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
-	})
+	}
+	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	listCmd.Flags().SortFlags = false
+	c.AddCommand(listCmd)
 	c.AddCommand(&cobra.Command{
 		Use:   "use ID",
 		Short: "Use a config context.",
@@ -94,18 +104,27 @@ func (c *contextCommand) list(cmd *cobra.Command, args []string) error {
 		contextNames = append(contextNames, name)
 	}
 	sort.Strings(contextNames)
-	var data [][]string
-	for _, name := range contextNames {
-		current := ""
-		if c.Config.CurrentContext == name {
-			current = "*"
-		}
-		context := c.Config.Contexts[name]
-		r := &row{current, name, context.PlatformName, context.CredentialName}
-		data = append(data, printer.ToRow(r, []string{"Current", "Name", "Platform", "Credential"}))
+	outputWriter, err := output.NewListOutputWriter(cmd, contextListFields, contextListHumanLabels, contextListStructuredLabels)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
 	}
-	printer.RenderCollectionTableOut(data, []string{"Current", "Name", "Platform", "Credential"}, cmd.OutOrStdout())
-	return nil
+	for _, name := range contextNames {
+		context := c.Config.Contexts[name]
+		current := ""
+		// Add '*' only in the case where we are printing out tables
+		if outputWriter.GetOutputFormat() == output.Human {
+			if c.Config.CurrentContext == name {
+				current = "*"
+			}
+		} else {
+			current = "false"
+			if c.Config.CurrentContext == name {
+				current = "true"
+			}
+		}
+		outputWriter.AddElement(&row{current, name, context.PlatformName, context.CredentialName})
+	}
+	return outputWriter.Out()
 }
 
 func (c *contextCommand) use(cmd *cobra.Command, args []string) error {

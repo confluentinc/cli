@@ -368,9 +368,8 @@ func (a *commands) addOrUpdateContext(username string, url string, state *v2.Con
 	if err != nil {
 		return err
 	}
-	if _, ok := a.config.Contexts[ctxName]; ok {
-		err = a.config.UpdateContext(ctxName, platform.Name, credential.Name, map[string]*v1.KafkaClusterConfig{},
-			"", nil, state)
+	if ctx, ok := a.config.Contexts[ctxName]; ok {
+		ctx.State = state
 	} else {
 		err = a.config.AddContext(ctxName, platform.Name, credential.Name, map[string]*v1.KafkaClusterConfig{},
 			"", nil, state)

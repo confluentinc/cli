@@ -2,6 +2,7 @@ package v3
 
 import (
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/config/v0"
 	"os"
 	"strings"
 
@@ -144,7 +145,21 @@ func (k *KafkaClusterContext) Validate() {
 			k.validateKafkaClusterConfig(kcc)
 		}
 	} else {
-		for _, kafkaEnvContexts := range k.KafkaEnvContexts {
+		if k.KafkaEnvContexts == nil {
+			k.KafkaEnvContexts = map[string]*KafkaEnvContext{}
+			err := k.Context.Save()
+			if err != nil {
+				panic(fmt.Sprintf("Unable to save new KafkaEnvContexts map to config for context '%s'.", k.Context.Name))
+			}
+		}
+		for env, kafkaEnvContexts := range k.KafkaEnvContexts {
+			if kafkaEnvContexts.KafkaClusterConfigs == nil {
+				kafkaEnvContexts.KafkaClusterConfigs = map[string]*v1.KafkaClusterConfig{}
+				err := k.Context.Save()
+				if err != nil {
+					panic(fmt.Sprintf("Unable to save new KafkaClusterConfigs map to config for context '%s', environment '%s'.", k.Context.Name, env))
+				}
+			}
 			for _, kcc := range kafkaEnvContexts.KafkaClusterConfigs {
 				k.validateKafkaClusterConfig(kcc)
 			}
@@ -173,7 +188,7 @@ func (k *KafkaClusterContext) validateActiveKafka() {
 				k.ActiveKafkaCluster = ""
 				err := k.Context.Save()
 				if err != nil {
-					panic(fmt.Sprintf("Unable to reset ActiveKafkaCluster in context '%s' environment '%s'.", k.Context.Name, env))
+					panic(fmt.Sprintf("Unable to reset ActiveKafkaCluster in context '%s', environment '%s'.", k.Context.Name, env))
 				}
 			}
 		}
@@ -183,6 +198,13 @@ func (k *KafkaClusterContext) validateActiveKafka() {
 func (k *KafkaClusterContext) validateKafkaClusterConfig(cluster *v1.KafkaClusterConfig) {
 	if cluster.ID == "" {
 		panic(fmt.Sprintf("cluster under context '%s' has no id", k.Context.Name))
+	}
+	if cluster.APIKeys == nil {
+		cluster.APIKeys = map[string]*v0.APIKeyPair{}
+		err := k.Context.Save()
+		if err != nil {
+			panic(fmt.Sprintf("Unable to save new APIKeys map in context '%s', for cluster '%s'.", k.Context.Name, cluster.ID))
+		}
 	}
 	if _, ok := cluster.APIKeys[cluster.APIKey]; cluster.APIKey != "" && !ok {
 		_, _ = fmt.Fprintf(os.Stderr, "Current API key '%s' of cluster '%s' under context '%s' is not found.\n"+

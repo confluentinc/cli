@@ -225,12 +225,24 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 			return errors.HandleCommon(errors.ErrNoContext, cmd)
 		}
 		command.Context = ctx
-		hasAPIKey, err := ctx.HasAPIKey(cmd, ctx.KafkaClusterContext.GetActiveKafkaClusterId())
+		if r.CLIName == "ccloud" {
+			// if context is authenticated, client is created and used to for DynamicContext.FindKafkaCluster for finding active cluster
+			ctx.client, err = r.createCCloudClient(ctx, cmd, command.Version)
+			if err != nil && err != errors.ErrNotLoggedIn {
+				return errors.HandleCommon(err, cmd)
+			}
+		}
+		// Get active kafka cluster
+		cluster, err := KafkaCluster(cmd, ctx)
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+		hasAPIKey, err := ctx.HasAPIKey(cmd, cluster.Id)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
 		if !hasAPIKey {
-			err = &errors.UnspecifiedAPIKeyError{ClusterID: ctx.KafkaClusterContext.GetActiveKafkaClusterId()}
+			err = &errors.UnspecifiedAPIKeyError{ClusterID: cluster.Id}
 			return errors.HandleCommon(err, cmd)
 		}
 		return nil
@@ -261,13 +273,16 @@ func (r *PreRun) setClients(cliCmd *AuthenticatedCLICommand) error {
 	if err != nil {
 		return err
 	}
-	ccloudClient, err := r.createCCloudClient(ctx, cliCmd.Command, cliCmd.Version)
-	if err != nil {
-		return err
+	if r.CLIName == "ccloud" {
+		ccloudClient, err := r.createCCloudClient(ctx, cliCmd.Command, cliCmd.Version)
+		if err != nil {
+			return err
+		}
+		cliCmd.Client = ccloudClient
+		cliCmd.Config.Client = ccloudClient
+	} else {
+		cliCmd.MDSClient = r.createMDSClient(ctx, cliCmd.Version)
 	}
-	cliCmd.Client = ccloudClient
-	cliCmd.MDSClient = r.createMDSClient(ctx, cliCmd.Version)
-	cliCmd.Config.Client = ccloudClient
 	return nil
 }
 
@@ -279,12 +294,10 @@ func (r *PreRun) createCCloudClient(ctx *DynamicContext, cmd *cobra.Command, ver
 	if ctx != nil {
 		baseURL = ctx.Platform.Server
 		state, err := ctx.AuthenticatedState(cmd)
-		if err != nil && err != errors.ErrNotLoggedIn {
+		if err != nil {
 			return nil, err
 		}
-		if err == nil {
-			authToken = state.AuthToken
-		}
+		authToken = state.AuthToken
 		logger = ctx.Logger
 		userAgent = ver.UserAgent
 	}
