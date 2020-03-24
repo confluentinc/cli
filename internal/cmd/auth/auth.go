@@ -199,6 +199,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
+		pcmd.ErrPrintf(cmd, "Written credentials to file %s\n", netrcHandler.FileName)
 	}
 
 	pcmd.Println(cmd, "Logged in as", email)

@@ -20,7 +20,8 @@ var (
 	ccloudSSORefreshTokenString = "ccloud-sso-refresh-token"
 
 	resolvingFilePathErrMsg = "An error resolving the netrc filepath at %s has occurred. Error: %s"
-	netrcErrorMsg = "Unable to get credentials from Netrc file. Error: %s"
+	netrcGetErrorMsg        = "Unable to get credentials from Netrc file. Error: %s"
+	netrcWriteErrorMsg      = "Unable to write credentials to Netrc file. Error: %s"
 )
 
 type netrcCredentialType int
@@ -43,22 +44,22 @@ func NewNetrcHandler() *netrcHandler {
 	} else {
 		netrcFile = "~/.netrc"
 	}
-	return &netrcHandler{fileName:netrcFile}
+	return &netrcHandler{FileName: netrcFile}
 }
 
 type netrcHandler struct {
-	fileName string
+	FileName string
 }
 
 func (n *netrcHandler) WriteNetrcCredentials(cliName string, isSSO bool, ctxName string, username string, password string) error {
-	filename, err := homedir.Expand(n.fileName)
+	filename, err := homedir.Expand(n.FileName)
 	if err != nil {
 		return fmt.Errorf(resolvingFilePathErrMsg, filename, err)
 	}
 
 	netrcFile, err := getOrCreateNetrc(filename)
 	if err != nil {
-		return err
+		return fmt.Errorf(netrcWriteErrorMsg, err)
 	}
 
 	machineName := getNetrcMachineName(cliName, isSSO, ctxName)
@@ -71,23 +72,26 @@ func (n *netrcHandler) WriteNetrcCredentials(cliName string, isSSO bool, ctxName
 		machine.UpdatePassword(password)
 	}
 	netrcBytes, err := netrcFile.MarshalText()
+	if err != nil {
+		return fmt.Errorf(netrcWriteErrorMsg, err)
+	}
 	err = ioutil.WriteFile(filename, netrcBytes, 0600)
 	if err != nil {
-		return errors.Wrapf(err, "Unable to write to netrc file %s. Error: %s", filename, err)
+		return fmt.Errorf("Unable to write to netrc file %s. Error: %s", filename, err)
 	}
 	return nil
 }
 
 // for username-password credentials the return values are self-explanatory but for sso case the password is the refreshToken
 func (n *netrcHandler) getNetrcCredentials(cliName string, isSSO bool, ctxName string) (username string, password string, err error) {
-	filename, err := homedir.Expand(n.fileName)
+	filename, err := homedir.Expand(n.FileName)
 	if err != nil {
 		return "", "", fmt.Errorf(resolvingFilePathErrMsg, filename, err)
 	}
 	machineName := getNetrcMachineName(cliName, isSSO, ctxName)
 	machine, err := netrc.FindMachine(filename, machineName)
 	if err != nil {
-		return "", "", fmt.Errorf(netrcErrorMsg, err)
+		return "", "", fmt.Errorf(netrcGetErrorMsg, err)
 	}
 	if machine == nil {
 		return "", "", errors.Errorf("Login credential not in netrc file.")
