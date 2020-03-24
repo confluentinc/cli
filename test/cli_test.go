@@ -435,14 +435,15 @@ func (s *CLITestSuite) ssoAuthenticateViaBrowser(authUrl string) string {
 	opts := append(chromedp.DefaultExecAllocatorOptions[:]) // uncomment to disable headless mode and see the actual browser
 	//chromedp.Flag("headless", false),
 
-	allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
-	defer cancel()
-	taskCtx, cancel := chromedp.NewContext(allocCtx)
-	defer cancel()
-	// ensure that the browser process is started
 	var err error
+	var taskCtx context.Context
 	tries := 0
 	for tries < 5 {
+		allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
+		defer cancel()
+		taskCtx, cancel = chromedp.NewContext(allocCtx)
+		defer cancel()
+		// ensure that the browser process is started
 		if err = chromedp.Run(taskCtx); err != nil {
 			fmt.Println("Caught error when starting chrome. Will retry. Error was: " + err.Error())
 			tries += 1

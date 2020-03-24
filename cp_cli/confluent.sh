@@ -404,6 +404,16 @@ get_version() {
     export zookeeper_version="${zookeeper_version%.jar}"
 }
 
+has_json_protobuf_support() {
+    get_version
+    semver_comp "${confluent_version}" "5.5"
+    local comp=$?
+    if [[ $comp != 2 ]]; then
+        return 1
+    fi
+    return 0
+}
+
 set_or_get_current() {
     if [[ -f "${confluent_current_dir}confluent.current" ]]; then
         export confluent_current="$( cat "${confluent_current_dir}confluent.current" )"
@@ -1692,16 +1702,20 @@ produce_command() {
       extract_bootstrapservers_from_properties_file "${file}"
       bootstrapserver="--broker-list ${_retval}"
     fi
+
+    has_json_protobuf_support
+    local jsonpb=$?
+
     avro="--value-format avro"
     json="--value-format json"
     protobuf="--value-format protobuf"
     if [[ "$command" =~ "$avro" ]]; then
       command=${command//$avro/}
       LOG_DIR=${tmp_dir} ${confluent_home}/bin/kafka-avro-console-producer $bootstrapserver --topic $topicname $command
-    elif [[ "$command" =~ "$json" ]]; then
+    elif [[ $jsonpb -eq 1 && "$command" =~ "$json" ]]; then
       command=${command//$json/}
       LOG_DIR=${tmp_dir} ${confluent_home}/bin/kafka-json-schema-console-producer $bootstrapserver --topic $topicname $command
-    elif [[ "$command" =~ "$protobuf" ]]; then
+    elif [[ $jsonpb -eq 1 && "$command" =~ "$protobuf" ]]; then
       command=${command//$protobuf/}
       LOG_DIR=${tmp_dir} ${confluent_home}/bin/kafka-protobuf-console-producer $bootstrapserver --topic $topicname $command
     else
@@ -1733,16 +1747,20 @@ consume_command() {
       extract_bootstrapservers_from_properties_file "${file}"
       bootstrapserver="--bootstrap-server ${_retval}"
     fi
+
+    has_json_protobuf_support
+    local jsonpb=$?
+
     avro="--value-format avro"
     json="--value-format json"
     protobuf="--value-format protobuf"
     if [[ "$command" =~ "$avro" ]]; then
       command=${command//$avro/}
       LOG_DIR=${tmp_dir} SCHEMA_REGISTRY_LOG4J_LOGGERS="INFO, stdout" ${confluent_home}/bin/kafka-avro-console-consumer $bootstrapserver --topic $topicname $command
-    elif [[ "$command" =~ "$json" ]]; then
+    elif [[ $jsonpb -eq 1 && "$command" =~ "$json" ]]; then
       command=${command//$json/}
       LOG_DIR=${tmp_dir} SCHEMA_REGISTRY_LOG4J_LOGGERS="INFO, stdout" ${confluent_home}/bin/kafka-json-schema-console-consumer $bootstrapserver --topic $topicname $command
-    elif [[ "$command" =~ "$protobuf" ]]; then
+    elif [[ $jsonpb -eq 1 && "$command" =~ "$protobuf" ]]; then
       command=${command//$protobuf/}
       LOG_DIR=${tmp_dir} SCHEMA_REGISTRY_LOG4J_LOGGERS="INFO, stdout" ${confluent_home}/bin/kafka-protobuf-console-consumer $bootstrapserver --topic $topicname $command
     else
@@ -1882,6 +1900,14 @@ produce_usage() {
       exit_status=0
     fi
 
+    local supported_formats=""
+    has_json_protobuf_support
+    if [[ $? -eq 1 ]]; then
+        supported_formats="Supported format types are 'avro', 'json' and 'protobuf'."
+    else
+        supported_formats="Currently, only 'avro' is supported."
+    fi
+
     cat <<EOF
 Usage: ${command_name} produce <topicname> -- [--value-format <format> --property value.schema=<schema>] [--cloud] [--config <filename>] [other optional args]
 
@@ -1899,7 +1925,7 @@ Description:
     To change the configuration file, set '--config <filename>'
 
     By default, this command sends non-formatted data.
-    To send formatted data, specify the desired format type and schema. Supported format types are 'avro', 'json' and 'protobuf'.
+    To send formatted data, specify the desired format type and schema. ${supported_formats}
 
     After typing the command, enter each message on a new line. Press 'ctrl-c' to finish.
 
@@ -1929,6 +1955,14 @@ consume_usage() {
       exit_status=0
     fi
 
+    local supported_formats=""
+    has_json_protobuf_support
+    if [[ $? -eq 1 ]]; then
+        supported_formats="Supported format types are 'avro', 'json' and 'protobuf'."
+    else
+        supported_formats="Currently, only 'avro' is supported."
+    fi
+
     cat <<EOF
 Usage: ${command_name} consume <topicname> -- [--value-format <format>] [--cloud] [--config <filename>] [other optional args]
 
@@ -1946,7 +1980,7 @@ Description:
     To change the configuration file, set '--config <filename>'
 
     By default, this command reads non-formatted data.
-    To read formatted data, specify the format type. Supported format types are 'avro', 'json' and 'protobuf'.
+    To read formatted data, specify the format type. ${supported_formats}
 
 Examples:
     confluent local consume mytopic1
