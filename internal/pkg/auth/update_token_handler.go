@@ -43,7 +43,7 @@ func (u *UpdateTokenHandlerImpl) UpdateCCloudAuthToken(ctx *v3.Context, userAgen
 	}
 	var token string
 	if userSSO != nil {
-		refreshToken, err := u.netrcHandler.getRefreshToken(ctx.Name)
+		_, refreshToken, err := u.netrcHandler.getNetrcCredentials("ccloud", true, ctx.Name)
 		if err != nil {
 			logger.Debugf(failedRefreshTokenMsg, err)
 			return err
@@ -55,9 +55,9 @@ func (u *UpdateTokenHandlerImpl) UpdateCCloudAuthToken(ctx *v3.Context, userAgen
 		}
 		logger.Debug(successRefreshTokenMsg)
 	} else {
-		email, password, err := u.netrcHandler.getNetrcCredentials(ctx.Name)
+		email, password, err := u.netrcHandler.getNetrcCredentials(ctx.Config.CLIName, false, ctx.Name)
 		if err != nil {
-			logger.Debugf(netrcErrorString, err.Error())
+			logger.Debugf(netrcErrorMsg, err.Error())
 			return err
 		}
 		token, err = u.ccloudTokenHandler.GetCredentialsToken(client, email, password)
@@ -71,9 +71,9 @@ func (u *UpdateTokenHandlerImpl) UpdateCCloudAuthToken(ctx *v3.Context, userAgen
 }
 
 func (u *UpdateTokenHandlerImpl) UpdateConfluentAuthToken(ctx *v3.Context, logger *log.Logger) error {
-	email, password, err := u.netrcHandler.getNetrcCredentials(ctx.Name)
+	email, password, err := u.netrcHandler.getNetrcCredentials("confluent", false, ctx.Name)
 	if err != nil {
-		logger.Debugf(netrcErrorString, err.Error())
+		logger.Debugf(netrcErrorMsg, err.Error())
 		return err
 	}
 	mdsClientManager := MDSClientManagerImpl{}

@@ -5,55 +5,75 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/mds-sdk-go"
 	"github.com/stretchr/testify/require"
+	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	authMock "github.com/confluentinc/cli/internal/pkg/auth/mock"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	testUtils "github.com/confluentinc/cli/test"
 )
 
 var (
 	netrcFilePath           = "test_files/netrc"
-	netrcContextName        = "existing-context"
-	netrcUser               = "existing-user"
-	netrcPassword           = "existing-password"
+	outputFileMds     = "test_files/output-mds"
+	outputFileCcloudLogin = "test_files/output-ccloud-login"
+	outputFileCcloudSSO = "test_files/output-ccloud-sso"
+	mdsContext        = "mds-context"
+	ccloudLoginContext = "ccloud-login"
+	ccloudSSOContext = "ccloud-sso"
+	netrcUser               = "jamal@jj"
+	netrcPassword           = "12345"
 	mockConfigUser          = "mock-user"
 	mockConfigPassword      = "mock-password"
-	refreshTokenContextName = "refresh-token-context"
-	netrcRefreshToken            = "refresh_token"
 )
 
 func TestNetRCCredentialReader(t *testing.T) {
 	tests := []struct {
 		name        string
 		want        []string
+		cliName     string
+		isSSO       bool
 		contextName string
 		wantErr     bool
 		file        string
 	}{
 		{
-			name:        "Context exist",
+			name:        "mds context",
 			want:        []string{netrcUser, netrcPassword},
-			contextName: netrcContextName,
+			contextName: mdsContext,
+			cliName:     "confluent",
+			file:        netrcFilePath,
+		},
+		{
+			name:        "ccloud login context",
+			want:        []string{netrcUser, netrcPassword},
+			contextName: ccloudLoginContext,
+			cliName:     "ccloud",
+			file:        netrcFilePath,
+		},
+		{
+			name:        "ccloud sso context",
+			want:        []string{netrcUser, netrcPassword},
+			contextName: ccloudSSOContext,
+			cliName:     "ccloud",
+			isSSO:       true,
 			file:        netrcFilePath,
 		},
 		{
 			name:        "No file error",
-			contextName: netrcContextName,
+			contextName: mdsContext,
+			cliName:     "confluent",
 			wantErr:     true,
 			file:        "wrong-file",
 		},
 		{
 			name:        "Context doesn't exist",
 			contextName: "non-existing-context",
+			cliName:     "ccloud",
 			wantErr:     true,
-			file:        netrcFilePath,
-		},
-		{
-			name:        "Context exist with no password",
-			want:        []string{netrcUser, ""},
-			contextName: "no-password-context",
 			file:        netrcFilePath,
 		},
 	}
@@ -62,7 +82,7 @@ func TestNetRCCredentialReader(t *testing.T) {
 			netrcHandler := netrcHandler{fileName: tt.file}
 			var username, password string
 			var err error
-			if username, password, err = netrcHandler.getNetrcCredentials(tt.contextName); (err != nil) != tt.wantErr {
+			if username, password, err = netrcHandler.getNetrcCredentials(tt.cliName, tt.isSSO, tt.contextName); (err != nil) != tt.wantErr {
 				t.Errorf("getNetrcCredentials error = %+v, wantErr %+v", err, tt.wantErr)
 			}
 			if len(tt.want) != 0 && !t.Failed() && username != tt.want[0] {
@@ -75,32 +95,55 @@ func TestNetRCCredentialReader(t *testing.T) {
 	}
 }
 
-func TestNetRCGetRefreshTokenReader(t *testing.T) {
+func TestNetrcWriter(t *testing.T) {
 	tests := []struct {
 		name        string
-		want        string
+		wantFile    string
+		cliName     string
+		isSSO       bool
 		contextName string
 		wantErr     bool
-		file        string
 	}{
 		{
-			name:        "Context exist",
-			want:        netrcRefreshToken,
-			contextName: refreshTokenContextName,
-			file:        netrcFilePath,
+			name:        "mds context",
+			wantFile:    outputFileMds,
+			contextName: mdsContext,
+			cliName:     "confluent",
+		},
+		{
+			name:        "ccloud login context",
+			wantFile:    outputFileCcloudLogin,
+			contextName: ccloudLoginContext,
+			cliName:     "ccloud",
+		},
+		{
+			name:        "ccloud sso context",
+			wantFile:    outputFileCcloudSSO,
+			contextName: ccloudSSOContext,
+			cliName:     "ccloud",
+			isSSO:       true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			netrcHandler := netrcHandler{fileName: tt.file}
-			var refreshToken string
-			var err error
-			if refreshToken, err = netrcHandler.getRefreshToken(tt.contextName); (err != nil) != tt.wantErr {
-				t.Errorf("get error = %+v, wantErr %+v", err, tt.wantErr)
+			tempFile, _ := ioutil.TempFile("", "tempNetrc.json")
+			netrcHandler := netrcHandler{fileName:tempFile.Name()}
+			err := netrcHandler.WriteNetrcCredentials(tt.cliName, tt.isSSO, tt.contextName, netrcUser, netrcPassword)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("WriteNetrcCredentials error = %+v, wantErr %+v", err, tt.wantErr)
 			}
-			if len(tt.want) != 0 && !t.Failed() && refreshToken != tt.want {
-				t.Errorf("getNetrcCredenials username = %+v, want %+v", refreshToken, tt.want)
+			gotBytes, err := ioutil.ReadFile(tempFile.Name())
+			require.NoError(t, err)
+			got := testUtils.NormalizeNewLines(string(gotBytes))
+
+			wantBytes, err := ioutil.ReadFile(tt.wantFile)
+			require.NoError(t, err)
+			want := testUtils.NormalizeNewLines(string(wantBytes))
+
+			if got != want {
+				t.Errorf("WriteNetrcCredentials = \n%s\n want = \n%s\n", got, want)
 			}
+			_ = os.Remove(tempFile.Name())
 		})
 	}
 }

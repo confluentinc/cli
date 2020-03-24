@@ -1,0 +1,3 @@
+machine confluent-cli:ccloud-sso-refresh-token:ccloud-sso
+	login jamal@jj
+	password 12345

@@ -152,11 +152,6 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	}
 	state.AuthToken = token
 
-	// TODO: write to netrc file if --save flag is used
-	//if refreshToken != "" {
-	//	state.RefreshToken = refreshToken
-	//}
-	// If no auth config exists, initialize it
 	if state.Auth == nil {
 		state.Auth = &v1.AuthConfig{}
 	}
@@ -195,10 +190,11 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	}
 	if saveToNetrc {
 		netrcHandler := pauth.NewNetrcHandler()
+		// it is sso only if refresh token is not empty
 		if refreshToken == "" {
-			err = netrcHandler.WriteNetrcCredentials(a.config.Context(), email, password, false)
+			err = netrcHandler.WriteNetrcCredentials(a.config.CLIName, false, a.config.Context().Name, email, password)
 		} else {
-			err = netrcHandler.WriteNetrcCredentials(a.config.Context(), email, refreshToken, true)
+			err = netrcHandler.WriteNetrcCredentials(a.config.CLIName, true, a.config.Context().Name, email, refreshToken)
 		}
 		if err != nil {
 			return err

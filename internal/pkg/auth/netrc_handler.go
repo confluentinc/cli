@@ -2,7 +2,6 @@ package auth
 
 import (
 	"fmt"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"io/ioutil"
 	"os"
 	"runtime"
@@ -18,7 +17,7 @@ var (
 	confluentCliName = "confluent-cli"
 	mdsUsernamePasswordString = "mds-username-password"
 	ccloudUsernamePasswordString = "ccloud-username-password"
-	ccloudSSORefreshTokenString = "ccloud-sso-refreshtoken"
+	ccloudSSORefreshTokenString = "ccloud-sso-refresh-token"
 
 	resolvingFilePathErrMsg = "An error resolving the netrc filepath at %s has occurred. Error: %s"
 	netrcErrorMsg = "Unable to get credentials from Netrc file. Error: %s"
@@ -51,7 +50,7 @@ type netrcHandler struct {
 	fileName string
 }
 
-func (n *netrcHandler) WriteNetrcCredentials(ctx *v3.Context, username string, password string, sso bool) error {
+func (n *netrcHandler) WriteNetrcCredentials(cliName string, isSSO bool, ctxName string, username string, password string) error {
 	filename, err := homedir.Expand(n.fileName)
 	if err != nil {
 		return fmt.Errorf(resolvingFilePathErrMsg, filename, err)
@@ -62,7 +61,7 @@ func (n *netrcHandler) WriteNetrcCredentials(ctx *v3.Context, username string, p
 		return err
 	}
 
-	machineName := getNetrcMachineName(ctx.Config.CLIName, sso, ctx.Name)
+	machineName := getNetrcMachineName(cliName, isSSO, ctxName)
 
 	machine := netrcFile.FindMachine(machineName)
 	if machine == nil {
@@ -79,12 +78,14 @@ func (n *netrcHandler) WriteNetrcCredentials(ctx *v3.Context, username string, p
 	return nil
 }
 
-func (n *netrcHandler) getNetrcCredentials(ctxName string) (username string, password string, err error) {
+// for username-password credentials the return values are self-explanatory but for sso case the password is the refreshToken
+func (n *netrcHandler) getNetrcCredentials(cliName string, isSSO bool, ctxName string) (username string, password string, err error) {
 	filename, err := homedir.Expand(n.fileName)
 	if err != nil {
 		return "", "", fmt.Errorf(resolvingFilePathErrMsg, filename, err)
 	}
-	machine, err := netrc.FindMachine(filename, ctxName)
+	machineName := getNetrcMachineName(cliName, isSSO, ctxName)
+	machine, err := netrc.FindMachine(filename, machineName)
 	if err != nil {
 		return "", "", fmt.Errorf(netrcErrorMsg, err)
 	}
@@ -94,20 +95,12 @@ func (n *netrcHandler) getNetrcCredentials(ctxName string) (username string, pas
 	return machine.Login, machine.Password, nil
 }
 
-func (n *netrcHandler) getRefreshToken(ctxName string) (refreshToken string, err error) {
-	_, refreshToken, err = n.getNetrcCredentials(ctxName)
-	if err != nil {
-		return "", err
-	}
-	return refreshToken, nil
-}
-
-func getNetrcMachineName(cliName string, sso bool, ctxName string) string {
+func getNetrcMachineName(cliName string, isSSO bool, ctxName string) string {
 	var credType netrcCredentialType
 	if cliName == "confluent" {
 		credType = mdsUsernamePassword
 	} else {
-		if sso {
+		if isSSO {
 			credType = ccloudSSORefreshToken
 		} else {
 			credType = ccloudUsernamePassword

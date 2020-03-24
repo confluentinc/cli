@@ -1,0 +1,3 @@
+machine confluent-cli:ccloud-username-password:ccloud-login
+	login jamal@jj
+	password 12345
