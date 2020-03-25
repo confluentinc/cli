@@ -123,7 +123,6 @@ func TestLoginSuccess(t *testing.T) {
 		// Login to the CLI control plane
 		cmds, cfg := newAuthCommand(prompt, auth, user, s.cliName, req)
 		output, err := pcmd.ExecuteCommand(cmds.Commands[LoginIndex].Command, s.args...)
-
 		req.NoError(err)
 		req.Contains(output, "Logged in as cody@confluent.io")
 
@@ -268,6 +267,79 @@ func Test_SelfSignedCerts(t *testing.T) {
 	}
 	_, err = pcmd.ExecuteCommand(cmds.Commands[0].Command, "--url=http://localhost:8090", "--ca-cert-path=testcert.pem")
 	req.NoError(err)
+}
+
+func TestLoginWithExistingContext(t *testing.T) {
+	req := require.New(t)
+
+	prompt := prompt("cody@confluent.io", "iambatman")
+	auth := &sdkMock.Auth{
+		LoginFunc: func(ctx context.Context, idToken string, username string, password string) (string, error) {
+			return "y0ur.jwt.T0kEn", nil
+		},
+		UserFunc: func(ctx context.Context) (*orgv1.GetUserReply, error) {
+			return &orgv1.GetUserReply{
+				User: &orgv1.User{
+					Id:        23,
+					Email:     "cody@confluent.io",
+					FirstName: "Cody",
+				},
+				Accounts: []*orgv1.Account{{Id: "a-595", Name: "Default"}},
+			}, nil
+		},
+	}
+	user := &sdkMock.User{
+		CheckEmailFunc: func(ctx context.Context, user *orgv1.User) (*orgv1.User, error) {
+			return &orgv1.User{
+				Email: "test-email",
+			}, nil
+		},
+	}
+
+	suite := []struct {
+		cliName string
+		args    []string
+	}{
+		{
+			cliName: "ccloud",
+			args:    []string{},
+		},
+		{
+			cliName: "confluent",
+			args: []string{
+				"--url=http://localhost:8090",
+			},
+		},
+	}
+
+	for _, s := range suite {
+		// Login to the CLI control plane
+		cmds, cfg := newAuthCommand(prompt, auth, user, s.cliName, req)
+		output, err := pcmd.ExecuteCommand(cmds.Commands[LoginIndex].Command, s.args...)
+		req.NoError(err)
+		req.Contains(output, "Logged in as cody@confluent.io")
+
+		ctx := cfg.Context()
+		req.NotNil(ctx)
+		req.Equal("y0ur.jwt.T0kEn", ctx.State.AuthToken)
+		contextName := fmt.Sprintf("login-cody@confluent.io-%s", ctx.Platform.Server)
+		credName := fmt.Sprintf("username-%s", ctx.Credential.Username)
+		req.Contains(cfg.Platforms, ctx.Platform.Name)
+		req.Equal(ctx.Platform, cfg.Platforms[ctx.PlatformName])
+		req.Contains(cfg.Credentials, credName)
+		req.Equal("cody@confluent.io", cfg.Credentials[credName].Username)
+		req.Contains(cfg.Contexts, contextName)
+		req.Equal(ctx.Platform, cfg.Contexts[contextName].Platform)
+		req.Equal(ctx.Credential, cfg.Contexts[contextName].Credential)
+		if s.cliName == "ccloud" {
+			// MDS doesn't set some things like cfg.Auth.User since e.g. an MDS user != an orgv1 (ccloud) User
+			req.Equal(&orgv1.User{Id: 23, Email: "cody@confluent.io", FirstName: "Cody"}, ctx.State.Auth.User)
+		} else {
+			req.Equal("http://localhost:8090", ctx.Platform.Server)
+		}
+	}
+
+
 }
 
 func prompt(username, password string) *cliMock.Prompt {
