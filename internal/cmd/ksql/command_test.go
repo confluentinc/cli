@@ -77,7 +77,7 @@ func (suite *KSQLTestSuite) SetupSuite() {
 	suite.conf = v3.AuthenticatedCloudConfigMock()
 	suite.ksqlCluster = &ksqlv1.KSQLCluster{
 		Id:                ksqlClusterID,
-		KafkaClusterId:    suite.conf.Context().KafkaClusterContext.GetActiveKafkaClusterId(),
+		KafkaClusterId:    suite.conf.Context().GetActiveKafkaClusterId(),
 		PhysicalClusterId: physicalClusterID,
 		OutputTopicPrefix: outputTopicPrefix,
 	}
@@ -148,7 +148,7 @@ func (suite *KSQLTestSuite) TestShouldAlsoConfigureForPro() {
 	cmd := suite.newCMD()
 	cmd.SetArgs(append([]string{"app", "configure-acls", ksqlClusterID}))
 	suite.kafkac.DescribeFunc = func(ctx context.Context, cluster *kafkav1.KafkaCluster) (cluster2 *kafkav1.KafkaCluster, e error) {
-		return &kafkav1.KafkaCluster{Id: suite.conf.Context().KafkaClusterContext.GetActiveKafkaClusterId(), Enterprise: false}, nil
+		return &kafkav1.KafkaCluster{Id: suite.conf.Context().GetActiveKafkaClusterId(), Enterprise: false}, nil
 	}
 
 	err := cmd.Execute()

@@ -41,7 +41,7 @@ type ClusterTestSuite struct {
 func (suite *ClusterTestSuite) SetupSuite() {
 	suite.conf = v3.AuthenticatedCloudConfigMock()
 	ctx := suite.conf.Context()
-	cluster := ctx.KafkaClusterContext.GetActiveKafkaClusterConfig()
+	cluster := ctx.GetActiveKafkaClusterConfig()
 	suite.kafkaCluster = &kafkav1.KafkaCluster{
 		Id:         cluster.ID,
 		Name:       cluster.Name,

@@ -117,7 +117,7 @@ func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 	for _, cluster := range clusters {
 		// Add '*' only in the case where we are printing out tables
 		if outputWriter.GetOutputFormat() == output.Human {
-			if cluster.Id == c.Context.KafkaClusterContext.GetActiveKafkaClusterId() {
+			if cluster.Id == c.Context.GetActiveKafkaClusterId() {
 				cluster.Id = fmt.Sprintf("* %s", cluster.Id)
 			} else {
 				cluster.Id = fmt.Sprintf("  %s", cluster.Id)

@@ -59,53 +59,53 @@ func newKafkaClusterNonEnvironmentContext(activeKafka string, kafkaClusters map[
 	return kafkaClusterContext
 }
 
-func (k *KafkaClusterContext) GetActiveKafkaClusterId() string {
+func (k *KafkaClusterContext) getActiveKafkaClusterId() string {
 	if !k.EnvContext {
 		return k.ActiveKafkaCluster
 	}
-	kafkaEnvContext := k.GetCurrentKafkaEnvContext()
+	kafkaEnvContext := k.getCurrentKafkaEnvContext()
 	return kafkaEnvContext.ActiveKafkaCluster
 }
 
-func (k *KafkaClusterContext) GetActiveKafkaClusterConfig() *v1.KafkaClusterConfig {
+func (k *KafkaClusterContext) getActiveKafkaClusterConfig() *v1.KafkaClusterConfig {
 	if !k.EnvContext {
 		return k.KafkaClusterConfigs[k.ActiveKafkaCluster]
 	}
-	kafkaEnvContext := k.GetCurrentKafkaEnvContext()
+	kafkaEnvContext := k.getCurrentKafkaEnvContext()
 	return kafkaEnvContext.KafkaClusterConfigs[kafkaEnvContext.ActiveKafkaCluster]
 }
 
-func (k *KafkaClusterContext) SetActiveKafkaCluster(clusterId string) {
+func (k *KafkaClusterContext) setActiveKafkaCluster(clusterId string) {
 	if !k.EnvContext {
 		k.ActiveKafkaCluster = clusterId
 		return
 	}
-	kafkaEnvContext := k.GetCurrentKafkaEnvContext()
+	kafkaEnvContext := k.getCurrentKafkaEnvContext()
 	kafkaEnvContext.ActiveKafkaCluster = clusterId
 }
 
-func (k *KafkaClusterContext) GetKafkaClusterConfig(clusterId string) *v1.KafkaClusterConfig {
+func (k *KafkaClusterContext) getKafkaClusterConfig(clusterId string) *v1.KafkaClusterConfig {
 	if !k.EnvContext {
 		return k.KafkaClusterConfigs[clusterId]
 	}
-	kafkaEnvContext := k.GetCurrentKafkaEnvContext()
+	kafkaEnvContext := k.getCurrentKafkaEnvContext()
 	return kafkaEnvContext.KafkaClusterConfigs[clusterId]
 }
 
-func (k *KafkaClusterContext) AddKafkaClusterConfig(kcc *v1.KafkaClusterConfig) {
+func (k *KafkaClusterContext) addKafkaClusterConfig(kcc *v1.KafkaClusterConfig) {
 	if !k.EnvContext {
 		k.KafkaClusterConfigs[kcc.ID] = kcc
 	}
-	kafkaEnvContext := k.GetCurrentKafkaEnvContext()
+	kafkaEnvContext := k.getCurrentKafkaEnvContext()
 	kafkaEnvContext.KafkaClusterConfigs[kcc.ID] = kcc
 }
 
-func (k *KafkaClusterContext) DeleteAPIKey(apiKey string) {
+func (k *KafkaClusterContext) deleteAPIKey(apiKey string) {
 	var clusterConfigs map[string]*v1.KafkaClusterConfig
 	if !k.EnvContext {
 		clusterConfigs = k.KafkaClusterConfigs
 	} else {
-		clusterConfigs = k.GetCurrentKafkaEnvContext().KafkaClusterConfigs
+		clusterConfigs = k.getCurrentKafkaEnvContext().KafkaClusterConfigs
 	}
 	for _, kcc := range clusterConfigs {
 		for clusterApiKey := range kcc.APIKeys {
@@ -116,7 +116,7 @@ func (k *KafkaClusterContext) DeleteAPIKey(apiKey string) {
 	}
 }
 
-func (k *KafkaClusterContext) GetCurrentKafkaEnvContext() *KafkaEnvContext {
+func (k *KafkaClusterContext) getCurrentKafkaEnvContext() *KafkaEnvContext {
 	curEnv := k.Context.GetCurrentEnvironmentId()
 	if k.KafkaEnvContexts[curEnv] == nil {
 		k.KafkaEnvContexts[curEnv] = &KafkaEnvContext{

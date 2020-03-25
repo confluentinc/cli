@@ -48,7 +48,7 @@ func (d *DynamicContext) ActiveKafkaCluster(cmd *cobra.Command) (*v1.KafkaCluste
 		}
 		if clusterId == "" {
 			// No flags provided, just retrieve the current one specified in the config.
-			clusterId = d.KafkaClusterContext.GetActiveKafkaClusterId()
+			clusterId = d.GetActiveKafkaClusterId()
 		}
 	}
 	cluster, err := d.FindKafkaCluster(cmd, clusterId)
@@ -59,7 +59,7 @@ func (d *DynamicContext) ActiveKafkaCluster(cmd *cobra.Command) (*v1.KafkaCluste
 }
 
 func (d *DynamicContext) FindKafkaCluster(cmd *cobra.Command, clusterId string) (*v1.KafkaClusterConfig, error) {
-	if cluster := d.KafkaClusterContext.GetKafkaClusterConfig(clusterId); cluster != nil {
+	if cluster := d.GetKafkaClusterConfig(clusterId); cluster != nil {
 		return cluster, nil
 	}
 	if d.client == nil {
@@ -78,7 +78,7 @@ func (d *DynamicContext) FindKafkaCluster(cmd *cobra.Command, clusterId string) 
 		APIEndpoint: kcc.ApiEndpoint,
 		APIKeys:     make(map[string]*v0.APIKeyPair),
 	}
-	d.KafkaClusterContext.AddKafkaClusterConfig(cluster)
+	d.AddKafkaClusterConfig(cluster)
 	err = d.Save()
 	if err != nil {
 		return nil, err
@@ -90,7 +90,7 @@ func (d *DynamicContext) SetActiveKafkaCluster(cmd *cobra.Command, clusterId str
 	if _, err := d.FindKafkaCluster(cmd, clusterId); err != nil {
 		return err
 	}
-	d.KafkaClusterContext.SetActiveKafkaCluster(clusterId)
+	d.Context.SetActiveKafkaCluster(clusterId)
 	return d.Save()
 }
 

@@ -637,22 +637,22 @@ func TestKafkaClusterContext_SetAndGetActiveKafkaCluster_Env(t *testing.T) {
 	ctx.State.Auth.Accounts = append(ctx.State.Auth.Accounts, otherAccount)
 	var activeKafka string
 
-	activeKafka = ctx.KafkaClusterContext.GetActiveKafkaClusterId()
+	activeKafka = ctx.GetActiveKafkaClusterId()
 	if activeKafka != testInputs.activeKafka {
 		t.Errorf("GetActiveKafkaClusterId() got %s, want %s.", activeKafka, testInputs.activeKafka)
 	}
 
 	// switch environment
 	ctx.State.Auth.Account = otherAccount
-	ctx.KafkaClusterContext.SetActiveKafkaCluster(otherKafkaClusterId)
-	activeKafka = ctx.KafkaClusterContext.GetActiveKafkaClusterId()
+	ctx.SetActiveKafkaCluster(otherKafkaClusterId)
+	activeKafka = ctx.GetActiveKafkaClusterId()
 	if activeKafka != otherKafkaClusterId {
 		t.Errorf("After settting active kafka in new environment, GetActiveKafkaClusterId() got %s, want %s.", activeKafka, testInputs.activeKafka)
 	}
 
 	// switch environment back
 	ctx.State.Auth.Account = testInputs.account
-	activeKafka = ctx.KafkaClusterContext.GetActiveKafkaClusterId()
+	activeKafka = ctx.GetActiveKafkaClusterId()
 	if activeKafka != testInputs.activeKafka {
 		t.Errorf("After switching to back to first environment, GetActiveKafkaClusterId() got %s, want %s.", activeKafka, testInputs.activeKafka)
 	}
@@ -667,14 +667,14 @@ func TestKafkaClusterContext_SetAndGetActiveKafkaCluster_NonEnv(t *testing.T) {
 	ctx.Config.Filename = configFile.Name()
 	var activeKafka string
 
-	activeKafka = ctx.KafkaClusterContext.GetActiveKafkaClusterId()
+	activeKafka = ctx.GetActiveKafkaClusterId()
 	if activeKafka != testInputs.activeKafka {
 		t.Errorf("GetActiveKafkaClusterId() got %s, want %s.", activeKafka, testInputs.activeKafka)
 	}
 
 	otherKafkaClusterId := "other-kafka"
-	ctx.KafkaClusterContext.SetActiveKafkaCluster(otherKafkaClusterId)
-	activeKafka = ctx.KafkaClusterContext.GetActiveKafkaClusterId()
+	ctx.SetActiveKafkaCluster(otherKafkaClusterId)
+	activeKafka = ctx.GetActiveKafkaClusterId()
 	if activeKafka != otherKafkaClusterId {
 		t.Errorf("After settting active kafka, GetActiveKafkaClusterId() got %s, want %s.", activeKafka, testInputs.activeKafka)
 	}

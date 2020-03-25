@@ -37,7 +37,7 @@ func (suite *ConnectTestSuite) SetupSuite() {
 	suite.conf = v3.AuthenticatedCloudConfigMock()
 	ctx := suite.conf.Context()
 	suite.kafkaCluster = &kafkav1.KafkaCluster{
-		Id:         ctx.KafkaClusterContext.GetActiveKafkaClusterId(),
+		Id:         ctx.GetActiveKafkaClusterId(),
 		Name:       "KafkaMock",
 		AccountId:  "testAccount",
 		Enterprise: true,

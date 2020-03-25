@@ -64,6 +64,6 @@ func (c *ConfigKeyStore) DeleteAPIKey(key string, cmd *cobra.Command) error {
 	if context == nil {
 		return errors.ErrNoContext
 	}
-	context.KafkaClusterContext.DeleteAPIKey(key)
+	context.DeleteAPIKey(key)
 	return c.Config.Save()
 }

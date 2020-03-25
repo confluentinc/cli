@@ -182,3 +182,31 @@ func (c *Context) GetCurrentEnvironmentId() string {
 	}
 	return c.State.Auth.Account.Id
 }
+
+func (c *Context) GetActiveKafkaClusterId() string {
+	return c.KafkaClusterContext.getActiveKafkaClusterId()
+}
+
+func (c *Context) GetActiveKafkaClusterConfig() *v1.KafkaClusterConfig {
+	return c.KafkaClusterContext.getActiveKafkaClusterConfig()
+}
+
+func (c *Context) SetActiveKafkaCluster(clusterId string) {
+	c.KafkaClusterContext.setActiveKafkaCluster(clusterId)
+}
+
+func (c *Context) GetKafkaClusterConfig(clusterId string) *v1.KafkaClusterConfig {
+	return c.KafkaClusterContext.getKafkaClusterConfig(clusterId)
+}
+
+func (c *Context) AddKafkaClusterConfig(kcc *v1.KafkaClusterConfig) {
+	c.KafkaClusterContext.addKafkaClusterConfig(kcc)
+}
+
+func (c *Context) DeleteAPIKey(apiKey string) {
+	c.KafkaClusterContext.deleteAPIKey(apiKey)
+}
+
+func (c *Context) GetCurrentKafkaEnvContext() *KafkaEnvContext {
+	return c.KafkaClusterContext.getCurrentKafkaEnvContext()
+}

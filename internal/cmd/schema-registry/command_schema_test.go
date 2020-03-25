@@ -48,7 +48,7 @@ func (suite *SchemaTestSuite) SetupSuite() {
 	ctx := suite.conf.Context()
 	srCluster := ctx.SchemaRegistryClusters[ctx.State.Auth.Account.Id]
 	srCluster.SrCredentials = &v0.APIKeyPair{Key: "key", Secret: "secret"}
-	cluster := ctx.KafkaClusterContext.GetActiveKafkaClusterConfig()
+	cluster := ctx.GetActiveKafkaClusterConfig()
 	suite.kafkaCluster = &kafkav1.KafkaCluster{
 		Id:         cluster.ID,
 		Name:       cluster.Name,
