@@ -9,9 +9,12 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
+	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"math/big"
 	"net/http"
 	"os"
+	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -312,34 +315,80 @@ func TestLoginWithExistingContext(t *testing.T) {
 		},
 	}
 
+	activeApiKey := "bo"
+	kafkaCluster := &v1.KafkaClusterConfig{
+			ID:          "lkc-0000",
+			Name:        "bob",
+			Bootstrap:   "http://bobby",
+			APIEndpoint: "http://bobbyboi",
+			APIKeys: map[string]*v0.APIKeyPair{
+				activeApiKey: {
+					Key:    activeApiKey,
+					Secret: "bo",
+				},
+			},
+			APIKey: activeApiKey,
+	}
+
+
 	for _, s := range suite {
 		// Login to the CLI control plane
 		cmds, cfg := newAuthCommand(prompt, auth, user, s.cliName, req)
 		output, err := pcmd.ExecuteCommand(cmds.Commands[LoginIndex].Command, s.args...)
 		req.NoError(err)
 		req.Contains(output, "Logged in as cody@confluent.io")
+		verifyLoggedInState(t, cfg, s.cliName)
 
+		// Set kafka related states for the context
 		ctx := cfg.Context()
-		req.NotNil(ctx)
-		req.Equal("y0ur.jwt.T0kEn", ctx.State.AuthToken)
-		contextName := fmt.Sprintf("login-cody@confluent.io-%s", ctx.Platform.Server)
-		credName := fmt.Sprintf("username-%s", ctx.Credential.Username)
-		req.Contains(cfg.Platforms, ctx.Platform.Name)
-		req.Equal(ctx.Platform, cfg.Platforms[ctx.PlatformName])
-		req.Contains(cfg.Credentials, credName)
-		req.Equal("cody@confluent.io", cfg.Credentials[credName].Username)
-		req.Contains(cfg.Contexts, contextName)
-		req.Equal(ctx.Platform, cfg.Contexts[contextName].Platform)
-		req.Equal(ctx.Credential, cfg.Contexts[contextName].Credential)
 		if s.cliName == "ccloud" {
-			// MDS doesn't set some things like cfg.Auth.User since e.g. an MDS user != an orgv1 (ccloud) User
-			req.Equal(&orgv1.User{Id: 23, Email: "cody@confluent.io", FirstName: "Cody"}, ctx.State.Auth.User)
-		} else {
-			req.Equal("http://localhost:8090", ctx.Platform.Server)
+
 		}
+		ctx.KafkaClusterContext.AddKafkaClusterConfig(kafkaCluster)
+		ctx.KafkaClusterContext.SetActiveKafkaCluster(kafkaCluster.ID)
+
+		output, err = pcmd.ExecuteCommand(cmds.Commands[1].Command)
+		req.NoError(err)
+		req.Contains(output, "You are now logged out")
+		verifyLoggedOutState(t, cfg)
+
+		output, err = pcmd.ExecuteCommand(cmds.Commands[LoginIndex].Command, s.args...)
+		req.NoError(err)
+		req.Contains(output, "Logged in as cody@confluent.io")
+		verifyLoggedInState(t, cfg, s.cliName)
+
+		req.Equal(kafkaCluster.ID, ctx.KafkaClusterContext.GetActiveKafkaClusterId())
+		reflect.DeepEqual(kafkaCluster, ctx.KafkaClusterContext.GetKafkaClusterConfig(kafkaCluster.ID))
 	}
+}
 
+func verifyLoggedInState(t *testing.T, cfg *v3.Config, cliName string) {
+	req := require.New(t)
+	ctx := cfg.Context()
+	req.NotNil(ctx)
+	req.Equal("y0ur.jwt.T0kEn", ctx.State.AuthToken)
+	contextName := fmt.Sprintf("login-cody@confluent.io-%s", ctx.Platform.Server)
+	credName := fmt.Sprintf("username-%s", ctx.Credential.Username)
+	req.Contains(cfg.Platforms, ctx.Platform.Name)
+	req.Equal(ctx.Platform, cfg.Platforms[ctx.PlatformName])
+	req.Contains(cfg.Credentials, credName)
+	req.Equal("cody@confluent.io", cfg.Credentials[credName].Username)
+	req.Contains(cfg.Contexts, contextName)
+	req.Equal(ctx.Platform, cfg.Contexts[contextName].Platform)
+	req.Equal(ctx.Credential, cfg.Contexts[contextName].Credential)
+	if cliName == "ccloud" {
+		// MDS doesn't set some things like cfg.Auth.User since e.g. an MDS user != an orgv1 (ccloud) User
+		req.Equal(&orgv1.User{Id: 23, Email: "cody@confluent.io", FirstName: "Cody"}, ctx.State.Auth.User)
+	} else {
+		req.Equal("http://localhost:8090", ctx.Platform.Server)
+	}
+}
 
+func verifyLoggedOutState(t *testing.T, cfg *v3.Config) {
+	req := require.New(t)
+	state := cfg.Context().State
+	req.Empty(state.AuthToken)
+	req.Empty(state.Auth)
 }
 
 func prompt(username, password string) *cliMock.Prompt {
