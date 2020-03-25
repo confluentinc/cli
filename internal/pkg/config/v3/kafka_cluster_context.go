@@ -95,10 +95,10 @@ func (k *KafkaClusterContext) GetKafkaClusterConfig(clusterId string) *v1.KafkaC
 func (k *KafkaClusterContext) AddKafkaClusterConfig(kcc *v1.KafkaClusterConfig) {
 	if !k.EnvContext {
 		k.KafkaClusterConfigs[kcc.ID] = kcc
-		return
+	} else {
+		kafkaEnvContext := k.GetCurrentKafkaEnvContext()
+		kafkaEnvContext.KafkaClusterConfigs[kcc.ID] = kcc
 	}
-	kafkaEnvContext := k.GetCurrentKafkaEnvContext()
-	kafkaEnvContext.KafkaClusterConfigs[kcc.ID] = kcc
 }
 
 func (k *KafkaClusterContext) DeleteAPIKey(apiKey string) {

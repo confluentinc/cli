@@ -128,25 +128,7 @@ func TestLoginSuccess(t *testing.T) {
 		output, err := pcmd.ExecuteCommand(cmds.Commands[LoginIndex].Command, s.args...)
 		req.NoError(err)
 		req.Contains(output, "Logged in as cody@confluent.io")
-
-		ctx := cfg.Context()
-		req.NotNil(ctx)
-		req.Equal("y0ur.jwt.T0kEn", ctx.State.AuthToken)
-		contextName := fmt.Sprintf("login-cody@confluent.io-%s", ctx.Platform.Server)
-		credName := fmt.Sprintf("username-%s", ctx.Credential.Username)
-		req.Contains(cfg.Platforms, ctx.Platform.Name)
-		req.Equal(ctx.Platform, cfg.Platforms[ctx.PlatformName])
-		req.Contains(cfg.Credentials, credName)
-		req.Equal("cody@confluent.io", cfg.Credentials[credName].Username)
-		req.Contains(cfg.Contexts, contextName)
-		req.Equal(ctx.Platform, cfg.Contexts[contextName].Platform)
-		req.Equal(ctx.Credential, cfg.Contexts[contextName].Credential)
-		if s.cliName == "ccloud" {
-			// MDS doesn't set some things like cfg.Auth.User since e.g. an MDS user != an orgv1 (ccloud) User
-			req.Equal(&orgv1.User{Id: 23, Email: "cody@confluent.io", FirstName: "Cody"}, ctx.State.Auth.User)
-		} else {
-			req.Equal("http://localhost:8090", ctx.Platform.Server)
-		}
+		verifyLoggedInState(t, cfg, s.cliName)
 	}
 }
 
@@ -197,9 +179,7 @@ func TestLogout(t *testing.T) {
 	output, err := pcmd.ExecuteCommand(cmds.Commands[1].Command)
 	req.NoError(err)
 	req.Contains(output, "You are now logged out")
-	state := cmds.config.Context().State
-	req.Empty(state.AuthToken)
-	req.Empty(state.Auth)
+	verifyLoggedOutState(t, cmds.config)
 }
 
 func Test_credentials_NoSpacesAroundEmail_ShouldSupportSpacesAtBeginOrEnd(t *testing.T) {
@@ -332,23 +312,26 @@ func TestLoginWithExistingContext(t *testing.T) {
 
 
 	for _, s := range suite {
-		// Login to the CLI control plane
 		cmds, cfg := newAuthCommand(prompt, auth, user, s.cliName, req)
+
+		// Login to the CLI control plane
 		output, err := pcmd.ExecuteCommand(cmds.Commands[LoginIndex].Command, s.args...)
 		req.NoError(err)
 		req.Contains(output, "Logged in as cody@confluent.io")
 		verifyLoggedInState(t, cfg, s.cliName)
 
-		// Set kafka related states for the context
+		// Set kafka related states for the logged in context
 		ctx := cfg.Context()
 		ctx.KafkaClusterContext.AddKafkaClusterConfig(kafkaCluster)
 		ctx.KafkaClusterContext.SetActiveKafkaCluster(kafkaCluster.ID)
 
+		// Executing logout
 		output, err = pcmd.ExecuteCommand(cmds.Commands[1].Command)
 		req.NoError(err)
 		req.Contains(output, "You are now logged out")
 		verifyLoggedOutState(t, cfg)
 
+		// logging back in the the same context
 		output, err = pcmd.ExecuteCommand(cmds.Commands[LoginIndex].Command, s.args...)
 		req.NoError(err)
 		req.Contains(output, "Logged in as cody@confluent.io")
