@@ -341,9 +341,6 @@ func TestLoginWithExistingContext(t *testing.T) {
 
 		// Set kafka related states for the context
 		ctx := cfg.Context()
-		if s.cliName == "ccloud" {
-
-		}
 		ctx.KafkaClusterContext.AddKafkaClusterConfig(kafkaCluster)
 		ctx.KafkaClusterContext.SetActiveKafkaCluster(kafkaCluster.ID)
 
@@ -357,6 +354,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 		req.Contains(output, "Logged in as cody@confluent.io")
 		verifyLoggedInState(t, cfg, s.cliName)
 
+		// verify that kafka cluster info persists between logging back in again
 		req.Equal(kafkaCluster.ID, ctx.KafkaClusterContext.GetActiveKafkaClusterId())
 		reflect.DeepEqual(kafkaCluster, ctx.KafkaClusterContext.GetKafkaClusterConfig(kafkaCluster.ID))
 	}
