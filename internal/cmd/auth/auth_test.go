@@ -9,8 +9,6 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
-	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"math/big"
 	"net/http"
 	"os"
@@ -28,6 +26,8 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
+	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	cliMock "github.com/confluentinc/cli/mock"
