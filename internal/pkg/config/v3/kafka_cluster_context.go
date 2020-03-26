@@ -113,6 +113,9 @@ func (k *KafkaClusterContext) DeleteAPIKey(apiKey string) {
 			if apiKey == clusterApiKey {
 				delete(kcc.APIKeys, apiKey)
 			}
+			if apiKey == kcc.APIKey {
+				kcc.APIKey = ""
+			}
 		}
 	}
 }
