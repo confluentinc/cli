@@ -2,10 +2,8 @@ package kafka
 
 import (
 	"github.com/confluentinc/cli/internal/pkg/config"
-	ckafka "github.com/confluentinc/confluent-kafka-go-dev/kafka"
+	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 )
-
-
 
 func NewProducer(kafka *config.KafkaClusterConfig, clientID string) (*ckafka.Producer, error) {
 	configMap, err := getProducerConfigMap(kafka, clientID)
@@ -15,7 +13,7 @@ func NewProducer(kafka *config.KafkaClusterConfig, clientID string) (*ckafka.Pro
 	return ckafka.NewProducer(configMap)
 }
 
-// NewSaramaConsumer returns a sarama.ConsumerGroup configured for the CLI config
+// NewConsumer returns a ConsumerGroup configured for the CLI config
 func NewConsumer(group string, kafka *config.KafkaClusterConfig, clientID string, beginning bool) (*ckafka.Consumer, error) {
 	configMap, err := getConsumerConfigMap(group, kafka, clientID, beginning)
 	if err != nil {
