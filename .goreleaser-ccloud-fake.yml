@@ -1,0 +1,42 @@
+project_name: ccloud
+
+dist: dist/ccloud
+
+before:
+  hooks:
+    # to avoid goreleaser error due to `make deps` on CI: git is currently in a dirty state
+    # we should never see go.mod be dirty because we `go build -mod=readonly`, but we can't well control go.sum updates
+    - git checkout go.sum
+    # TODO: [CLI-92] we delete the semaphore cache during release to workaround an issue with semaphore and goreleaser
+    - rm -rf $GOPATH/pkg/mod
+
+# NOTE: This will put all builds into the same ./dist folder.  There is no way to configure goreleaser output directories per-build, only per-project.
+# That means that we should probably not rely on the CI's directory layout for publishing binaries to s3 since cloud and rbac will be intermingled.
+builds:
+  -
+    binary: ccloud
+    main: cmd/confluent/main.go
+    flags:
+      - -mod=readonly
+    ldflags:
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}} -X main.cliName=ccloud
+    gcflags:
+      - -trimpath={{.Env.GOPATH}}
+    asmflags:
+      - -trimpath={{.Env.GOPATH}}
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - 386
+    ignore:
+      - goos: darwin
+        goarch: 386
+release:
+  disable: true
+
+archive:
+  format: binary
+

@@ -1,7 +1,9 @@
 package errors
 
 import (
+	"crypto/x509"
 	"fmt"
+	"net/url"
 	"reflect"
 
 	"github.com/hashicorp/go-multierror"
@@ -14,15 +16,15 @@ import (
 )
 
 var messages = map[error]string{
-	ErrNoContext:      "You must login to run that command.",
-	ErrNotLoggedIn:    "You must login to run that command.",
+	ErrNoContext:      "You must log in to run that command.",
+	ErrNotLoggedIn:    "You must log in to run that command.",
 	ErrNotImplemented: "Sorry, this functionality is not yet available in the CLI.",
 	ErrNoKafkaContext: "You must pass --cluster or set an active kafka in your context with 'kafka cluster use'",
+	ErrNoKSQL:         "Could not find KSQL cluster with Resource ID specified.",
 }
 
 var typeMessages = map[reflect.Type]string{
 	reflect.TypeOf(&ccloud.InvalidLoginError{}): "You have entered an incorrect username or password. Please try again.",
-	reflect.TypeOf(&ccloud.ExpiredTokenError{}): "Your session has expired. Please login again.",
 	reflect.TypeOf(&ccloud.InvalidTokenError{}): "Your auth token has been corrupted. Please login again.",
 }
 
@@ -48,6 +50,13 @@ func HandleCommon(err error, cmd *cobra.Command) error {
 		return result
 	}
 
+	if urlErr, ok := err.(*url.Error); ok {
+		if certErr, ok := urlErr.Err.(x509.CertificateInvalidError); ok {
+			cmd.SilenceUsage = true
+			return fmt.Errorf("%s. Check the system keystore or login again with the --ca-cert-path option to add custom certs", certErr.Error())
+		}
+	}
+
 	// Intercept errors to prevent usage from being printed.
 	if msg, ok := messages[err]; ok {
 		cmd.SilenceUsage = true
@@ -70,7 +79,13 @@ func HandleCommon(err error, cmd *cobra.Command) error {
 		return err
 	case *UnspecifiedCredentialError:
 		cmd.SilenceUsage = true
+		// TODO: Add more context to credential error messages (add variable error).
 		return fmt.Errorf("context \"%s\" has corrupted credentials. To fix, please remove the config file, "+
+			"and run `login` or `init`", e.ContextName)
+	case *UnspecifiedPlatformError:
+		cmd.SilenceUsage = true
+		// TODO: Add more context to platform error messages (add variable error).
+		return fmt.Errorf("context \"%s\" has a corrupted platform. To fix, please remove the config file, "+
 			"and run `login` or `init`", e.ContextName)
 	// TODO: ErrEditing is declared incorrectly as "type ErrEditing error"
 	//  That doesn't work for type switches, so put last otherwise everything will hit this case

@@ -3,44 +3,36 @@ package iam
 import (
 	"context"
 	"fmt"
-	"io"
-	"net/http"
-	"os"
-
-	"github.com/confluentinc/go-printer"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
+	"net/http"
 
-	"github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/mds-sdk-go"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 type aclCommand struct {
-	*cobra.Command
-	config *config.Config
-	client *mds.APIClient
-	ctx    context.Context
+	*pcmd.AuthenticatedCLICommand
 }
 
 // NewACLCommand returns the Cobra command for ACLs.
-func NewACLCommand(config *config.Config, client *mds.APIClient) *cobra.Command {
+func NewACLCommand(config *v3.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &aclCommand{
-		Command: &cobra.Command{
+		AuthenticatedCLICommand: pcmd.NewAuthenticatedWithMDSCLICommand(&cobra.Command{
 			Use:   "acl",
 			Short: `Manage Kafka ACLs (5.4+ only).`,
-		},
-		config: config,
-		client: client,
-		ctx:    context.WithValue(context.Background(), mds.ContextAccessToken, config.AuthToken),
+		}, config, prerunner),
 	}
-
 	cmd.init()
 	return cmd.Command
 }
 
 func (c *aclCommand) init() {
-	cliName := c.config.CLIName
+	cliName := c.Config.CLIName
 
 	cmd := &cobra.Command{
 		Use:   "create",
@@ -86,6 +78,7 @@ func (c *aclCommand) init() {
 		Args:  cobra.NoArgs,
 	}
 	cmd.Flags().AddFlagSet(listAclFlags())
+	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	cmd.Flags().SortFlags = false
 
 	c.AddCommand(cmd)
@@ -94,14 +87,12 @@ func (c *aclCommand) init() {
 func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
 	acl := parse(cmd)
 
-	bindings, response, err := c.client.KafkaACLManagementApi.SearchAclBinding(c.ctx, convertToAclFilterRequest(acl.CreateAclRequest))
+	bindings, response, err := c.MDSClient.KafkaACLManagementApi.SearchAclBinding(c.createContext(), convertToAclFilterRequest(acl.CreateAclRequest))
 
 	if err != nil {
 		return c.handleAclError(cmd, err, response)
 	}
-
-	PrintAcls(acl.Scope.Clusters.KafkaCluster, bindings, os.Stdout)
-	return nil
+	return PrintAcls(cmd, acl.Scope.Clusters.KafkaCluster, bindings)
 }
 
 func (c *aclCommand) create(cmd *cobra.Command, args []string) error {
@@ -111,7 +102,7 @@ func (c *aclCommand) create(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(acl.errors, cmd)
 	}
 
-	response, err := c.client.KafkaACLManagementApi.AddAclBinding(c.ctx, *acl.CreateAclRequest)
+	response, err := c.MDSClient.KafkaACLManagementApi.AddAclBinding(c.createContext(), *acl.CreateAclRequest)
 
 	if err != nil {
 		return c.handleAclError(cmd, err, response)
@@ -127,14 +118,13 @@ func (c *aclCommand) delete(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(acl.errors, cmd)
 	}
 
-	bindings, response, err := c.client.KafkaACLManagementApi.RemoveAclBindings(c.ctx, convertToAclFilterRequest(acl.CreateAclRequest))
+	bindings, response, err := c.MDSClient.KafkaACLManagementApi.RemoveAclBindings(c.createContext(), convertToAclFilterRequest(acl.CreateAclRequest))
 
 	if err != nil {
 		return c.handleAclError(cmd, err, response)
 	}
 
-	PrintAcls(acl.Scope.Clusters.KafkaCluster, bindings, os.Stdout)
-	return nil
+	return PrintAcls(cmd, acl.Scope.Clusters.KafkaCluster, bindings)
 }
 
 func (c *aclCommand) handleAclError(cmd *cobra.Command, err error, response *http.Response) error {
@@ -195,10 +185,10 @@ func convertToAclFilterRequest(request *mds.CreateAclRequest) mds.AclFilterReque
 		}
 	}
 
-	return mds.AclFilterRequest {
+	return mds.AclFilterRequest{
 		Scope: request.Scope,
-		AclBindingFilter: mds.AclBindingFilter {
-			EntryFilter:   mds.AccessControlEntryFilter{
+		AclBindingFilter: mds.AclBindingFilter{
+			EntryFilter: mds.AccessControlEntryFilter{
 				Host:           request.AclBinding.Entry.Host,
 				Operation:      request.AclBinding.Entry.Operation,
 				PermissionType: request.AclBinding.Entry.PermissionType,
@@ -213,20 +203,31 @@ func convertToAclFilterRequest(request *mds.CreateAclRequest) mds.AclFilterReque
 	}
 }
 
-func PrintAcls(kafkaClusterId string, bindingsObj []mds.AclBinding, writer io.Writer) {
-	var bindings [][]string
+func PrintAcls(cmd *cobra.Command, kafkaClusterId string, bindingsObj []mds.AclBinding) error {
 	var fields = []string{"KafkaClusterId", "Principal", "Permission", "Operation", "Host", "Resource", "Name", "Type"}
+	var structuredRenames = []string{"kafka_cluster_id", "principal", "permission", "operation", "host", "resource", "name", "type"}
+
+	// delete also uses this function but doesn't have -o flag defined, -o flag is needed NewListOutputWriter
+	_, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	}
+
+	outputWriter, err := output.NewListOutputWriter(cmd, fields, fields, structuredRenames)
+	if err != nil {
+		return err
+	}
 	for _, binding := range bindingsObj {
 
 		record := &struct {
-			KafkaClusterId	 string
-			Principal        string
-			Permission       mds.AclPermissionType
-			Operation        mds.AclOperation
-			Host			 string
-			Resource         mds.AclResourceType
-			Name             string
-			Type             mds.PatternType
+			KafkaClusterId string
+			Principal      string
+			Permission     mds.AclPermissionType
+			Operation      mds.AclOperation
+			Host           string
+			Resource       mds.AclResourceType
+			Name           string
+			Type           mds.PatternType
 		}{
 			kafkaClusterId,
 			binding.Entry.Principal,
@@ -237,8 +238,11 @@ func PrintAcls(kafkaClusterId string, bindingsObj []mds.AclBinding, writer io.Wr
 			binding.Pattern.Name,
 			binding.Pattern.PatternType,
 		}
-		bindings = append(bindings, printer.ToRow(record, fields))
+		outputWriter.AddElement(record)
 	}
-	printer.RenderCollectionTableOut(bindings, fields, writer)
+	return outputWriter.Out()
 }
 
+func (c *aclCommand) createContext() context.Context {
+	return context.WithValue(context.Background(), mds.ContextAccessToken, c.AuthToken())
+}

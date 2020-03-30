@@ -344,8 +344,40 @@ is_confluent_platform() {
     return ${status}
 }
 
+# returns 0 if =, 1 if > and 2 if <
+semver_comp() {
+    if [[ $1 == $2 ]]
+    then
+        return 0
+    fi
+    local IFS=.
+    local i ver1=($1) ver2=($2)
+    # fill empty fields in ver1 with zeros
+    for ((i=${#ver1[@]}; i<${#ver2[@]}; i++))
+    do
+        ver1[i]=0
+    done
+    for ((i=0; i<${#ver1[@]}; i++))
+    do
+        if [[ -z ${ver2[i]} ]]
+        then
+            # fill empty fields in ver2 with zeros
+            ver2[i]=0
+        fi
+        if ((10#${ver1[i]} > 10#${ver2[i]}))
+        then
+            return 1
+        fi
+        if ((10#${ver1[i]} < 10#${ver2[i]}))
+        then
+            return 2
+        fi
+    done
+    return 0
+}
+
 get_version() {
-    local confluent_platform_prefix="${confluent_home}/share/java/kafka-connect-replicator/kafka-connect-replicator-"
+    local confluent_platform_prefix="${confluent_home}/share/java/kafka-connect-replicator/*connect-replicator-"
     local ccs_prefix="${confluent_home}/share/java/confluent-common/common-config-"
     local kafka_prefix="${confluent_home}/share/java/kafka/kafka-clients-"
     local zookeeper_prefix="${confluent_home}/share/java/kafka/zookeeper-"
@@ -370,6 +402,16 @@ get_version() {
     zookeeper_version="$( ls ${zookeeper_prefix}*.jar 2> /dev/null )"
     zookeeper_version="${zookeeper_version#$zookeeper_prefix}"
     export zookeeper_version="${zookeeper_version%.jar}"
+}
+
+has_json_protobuf_support() {
+    get_version
+    semver_comp "${confluent_version}" "5.5"
+    local comp=$?
+    if [[ $comp != 2 ]]; then
+        return 1
+    fi
+    return 0
 }
 
 set_or_get_current() {
@@ -718,18 +760,41 @@ start_ksql-server() {
 
 config_ksql-server() {
     export_zookeeper
-    config_service "ksql-server" "ksql" "ksql-server"\
+    export_schema-registry
+
+    local package=$(get_ksql_package_name)
+
+    config_service "ksql-server" "${package}" "ksql-server"\
         "kafkastore.connection.url" "localhost:${zk_port}"
+    echo "ksql.schema.registry.url=http://localhost:${schema_registry_port}" \
+        >> "${service_dir}/${service}.properties"
     enable_monitoring_interceptors "ksql-server"
 }
 
 export_ksql-server() {
-    get_service_port "listeners" "${confluent_conf}/ksql/ksql-server.properties"
+    local package=$(get_ksql_package_name)
+
+    get_service_port "listeners" "${confluent_conf}/${package}/ksql-server.properties"
     if [[ -n "${_retval}" ]]; then
         export ksql_port="${_retval}"
     else
         export ksql_port="8088"
     fi
+}
+
+get_ksql_package_name() {
+    get_version
+    # Override ksql's package after 5.5.x to account for ksql->ksqldb rename
+    # (note that semver_comp returns 2 if confluent_version < 5.5)
+    semver_comp "${confluent_version}" "5.5"
+    local comp=$?
+
+    local package="ksql"
+    if [[ $comp != 2 ]]; then
+      package="ksqldb"
+    fi
+
+    echo "${package}"
 }
 
 export_log4j_ksql-server() {
@@ -843,6 +908,56 @@ start_service() {
     is_running "${service}"
 }
 
+config_already_exists() {
+  KEY="${1}"
+  VALUE="${2}"
+  FILE="${3}"
+  $(sed "/$KEY/"',/[^\\]$/!d; /[^\\]$/q; s/\\$//' "$FILE" |
+    tr -d '\n' |
+    sed -e 's/^.*=[[:blank:]]*//' -e 's/[[:blank:]]*,[[:blank:]]*/,/g' |
+    tr ',' '\n' |
+    grep -q "$VALUE")
+}
+
+inject_configs() {
+  # regex version of config key
+  KEY="^[[:blank:]]*${1}[[:blank:]]*="
+  # regex version of config value
+  VALUE="^[[:blank:]]*${2}[[:blank:]]*$"
+  # properties file to put config into
+  FILE="${3}"
+  # literal version of config key
+  LITERAL_KEY="${4}"
+  # literal version of config value
+  LITERAL_VALUE="${5}"
+  if config_already_exists $KEY $VALUE $FILE; then
+    return
+  fi
+  existing_line=$(grep "$KEY" $FILE)
+  # if config doesn't exist in the file, add the config with the value at the end of the properties file
+  if [[ -z $existing_line ]]
+  then
+    # putting new line with literal key and literal value
+    printf '\n%s\n' "$LITERAL_KEY=$LITERAL_VALUE" >> "$FILE"
+  # if config does exist, then append the value to the end of existing config entry
+  else
+    if [[ $existing_line == *\\ ]] # case where there is a multiline config, check if a slash exists at the end of the string
+    then
+      # only look at the first line of the multi line config and remove the ending slash
+      modified_line=$(sed 's/\\$//' <<< "$existing_line")
+      # append the config value at the end and add a comma and an ending slash
+      new_config_line="$modified_line$LITERAL_VALUE,  \\\\"
+    else # case where it is a single line config
+      new_config_line="$existing_line,$LITERAL_VALUE"
+    fi
+    sed_expr="s/$KEY.*/$new_config_line/"
+    sed -i '' "$sed_expr" $FILE
+    if [ $? -ne 0 ]; then
+      echo "Was not able to add $LITERAL_VALUE to the list of config $LITERAL_KEY! Is this config defined more than once?"
+    fi
+  fi
+}
+
 # The first 3 args seem unavoidable right now. 4th is optional
 # TODO: refactor to pass property pairs as a map.
 config_service() {
@@ -875,6 +990,15 @@ config_service() {
         sed "s@^plugin.path=share/java@plugin.path=${confluent_home}/share/java@g" \
             "${service_dir}/${service}.properties" > "${service_dir}/${service}.properties.bak"
         mv -f "${service_dir}/${service}.properties.bak" "${service_dir}/${service}.properties"
+        if [ -f ${confluent_home}/share/java/kafka-connect-replicator/replicator-rest-extension-* ]; then
+          REST_EXTENSION_JAR=$(find ${confluent_home}/share/java/kafka-connect-replicator/replicator-rest-extension-*)
+          export CLASSPATH=$CLASSPATH:$REST_EXTENSION_JAR
+          REPLICATOR_REST_EXTENSION_KEY="rest\.extension\.classes"
+          REPLICATOR_REST_EXTENSION_VALUE="io\.confluent\.connect\.replicator\.monitoring\.ReplicatorMonitoringExtension"
+          REPLICATOR_REST_EXTENSION_LITERAL_KEY="rest.extension.classes"
+          REPLICATOR_REST_EXTENSION_LITERAL_VALUE="io.confluent.connect.replicator.monitoring.ReplicatorMonitoringExtension"
+          inject_configs $REPLICATOR_REST_EXTENSION_KEY $REPLICATOR_REST_EXTENSION_VALUE "${service_dir}/${service}.properties" $REPLICATOR_REST_EXTENSION_LITERAL_KEY $REPLICATOR_REST_EXTENSION_LITERAL_VALUE
+        fi
     fi
 
     # Set ksql-server data dir. TODO: refactor when config_service supports general handling of key-value pairs
@@ -1015,8 +1139,8 @@ validate_os_version() {
 validate_java_version() {
     local target_service=${1}
 
-    local warning_message="ERROR: The Confluent CLI requires Java version 1.8 or 1.11. 
-See https://docs.confluent.io/current/installation/versions-interoperability.html . 
+    local warning_message="ERROR: The Confluent CLI requires Java version 1.8 or 1.11.
+See https://docs.confluent.io/current/installation/versions-interoperability.html .
 If you have multiple versions of Java installed, you may need to set JAVA_HOME to the version you want Confluent to use."
 
     # The first segment of the version number, which is '1' for releases before Java 9
@@ -1578,10 +1702,22 @@ produce_command() {
       extract_bootstrapservers_from_properties_file "${file}"
       bootstrapserver="--broker-list ${_retval}"
     fi
+
+    has_json_protobuf_support
+    local jsonpb=$?
+
     avro="--value-format avro"
+    json="--value-format json"
+    protobuf="--value-format protobuf"
     if [[ "$command" =~ "$avro" ]]; then
       command=${command//$avro/}
       LOG_DIR=${tmp_dir} ${confluent_home}/bin/kafka-avro-console-producer $bootstrapserver --topic $topicname $command
+    elif [[ $jsonpb -eq 1 && "$command" =~ "$json" ]]; then
+      command=${command//$json/}
+      LOG_DIR=${tmp_dir} ${confluent_home}/bin/kafka-json-schema-console-producer $bootstrapserver --topic $topicname $command
+    elif [[ $jsonpb -eq 1 && "$command" =~ "$protobuf" ]]; then
+      command=${command//$protobuf/}
+      LOG_DIR=${tmp_dir} ${confluent_home}/bin/kafka-protobuf-console-producer $bootstrapserver --topic $topicname $command
     else
       ${confluent_home}/bin/kafka-console-producer $bootstrapserver --topic $topicname $command
     fi
@@ -1611,10 +1747,22 @@ consume_command() {
       extract_bootstrapservers_from_properties_file "${file}"
       bootstrapserver="--bootstrap-server ${_retval}"
     fi
+
+    has_json_protobuf_support
+    local jsonpb=$?
+
     avro="--value-format avro"
+    json="--value-format json"
+    protobuf="--value-format protobuf"
     if [[ "$command" =~ "$avro" ]]; then
       command=${command//$avro/}
       LOG_DIR=${tmp_dir} SCHEMA_REGISTRY_LOG4J_LOGGERS="INFO, stdout" ${confluent_home}/bin/kafka-avro-console-consumer $bootstrapserver --topic $topicname $command
+    elif [[ $jsonpb -eq 1 && "$command" =~ "$json" ]]; then
+      command=${command//$json/}
+      LOG_DIR=${tmp_dir} SCHEMA_REGISTRY_LOG4J_LOGGERS="INFO, stdout" ${confluent_home}/bin/kafka-json-schema-console-consumer $bootstrapserver --topic $topicname $command
+    elif [[ $jsonpb -eq 1 && "$command" =~ "$protobuf" ]]; then
+      command=${command//$protobuf/}
+      LOG_DIR=${tmp_dir} SCHEMA_REGISTRY_LOG4J_LOGGERS="INFO, stdout" ${confluent_home}/bin/kafka-protobuf-console-consumer $bootstrapserver --topic $topicname $command
     else
       ${confluent_home}/bin/kafka-console-consumer $bootstrapserver --topic $topicname $command
     fi
@@ -1752,8 +1900,16 @@ produce_usage() {
       exit_status=0
     fi
 
+    local supported_formats=""
+    has_json_protobuf_support
+    if [[ $? -eq 1 ]]; then
+        supported_formats="Supported format types are 'avro', 'json' and 'protobuf'."
+    else
+        supported_formats="Currently, only 'avro' is supported."
+    fi
+
     cat <<EOF
-Usage: ${command_name} produce <topicname> -- [--value-format avro --property value.schema=<schema>] [--cloud] [--config <filename>] [other optional args]
+Usage: ${command_name} produce <topicname> -- [--value-format <format> --property value.schema=<schema>] [--cloud] [--config <filename>] [other optional args]
 
 Description:
     Produce to Kafka topic specified by <topicname>.
@@ -1768,8 +1924,8 @@ Description:
     By default, it uses Confluent Cloud configuration file at $HOME/.ccloud/config
     To change the configuration file, set '--config <filename>'
 
-    By default, this command sends non-Avro data.
-    To send Avro data, specify '--value-format avro --property value.schema=<schema>'
+    By default, this command sends non-formatted data.
+    To send formatted data, specify the desired format type and schema. ${supported_formats}
 
     After typing the command, enter each message on a new line. Press 'ctrl-c' to finish.
 
@@ -1799,8 +1955,16 @@ consume_usage() {
       exit_status=0
     fi
 
+    local supported_formats=""
+    has_json_protobuf_support
+    if [[ $? -eq 1 ]]; then
+        supported_formats="Supported format types are 'avro', 'json' and 'protobuf'."
+    else
+        supported_formats="Currently, only 'avro' is supported."
+    fi
+
     cat <<EOF
-Usage: ${command_name} consume <topicname> -- [--value-format avro] [--cloud] [--config <filename>] [other optional args]
+Usage: ${command_name} consume <topicname> -- [--value-format <format>] [--cloud] [--config <filename>] [other optional args]
 
 Description:
     Consume from Kafka topic specified by <topicname>.
@@ -1815,8 +1979,8 @@ Description:
     By default, it uses Confluent Cloud configuration file at $HOME/.ccloud/config
     To change the configuration file, set '--config <filename>'
 
-    By default, this command reads non-Avro data.
-    To read Avro data, specify '--value-format avro'
+    By default, this command reads non-formatted data.
+    To read formatted data, specify the format type. ${supported_formats}
 
 Examples:
     confluent local consume mytopic1
@@ -2235,6 +2399,7 @@ main() {
     requirements
 
     command="${1}"
+
     shift
     case "${command}" in
         help)
@@ -2302,4 +2467,3 @@ main() {
 
     trap shutdown EXIT
 }
-

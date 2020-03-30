@@ -4,13 +4,14 @@ GIT_REMOTE_NAME ?= origin
 MASTER_BRANCH   ?= master
 RELEASE_BRANCH  ?= master
 
-DOCS_BRANCH     ?= 5.3.1-post
+DOCS_BRANCH     ?= 5.4.0-post
 
 include ./semver.mk
 
 REF := $(shell [ -d .git ] && git rev-parse --short HEAD || echo "none")
-DATE := $(shell date -u)
+DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 HOSTNAME := $(shell id -u -n)@$(shell hostname)
+RESOLVED_PATH=github.com/confluentinc/cli/cmd/confluent
 
 .PHONY: clean
 clean:
@@ -27,11 +28,13 @@ generate-go:
 
 .PHONY: deps
 deps:
-	@GO111MODULE=on go get github.com/goreleaser/goreleaser@v0.106.0
-	@GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.17.1
-	@GO111MODULE=on go get github.com/mitchellh/golicense@v0.1.1
-	@GO111MODULE=on go get github.com/golang/mock/mockgen@v1.2.0
-	@GO111MODULE=on go get github.com/kevinburke/go-bindata/...@v3.13.0
+	export GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc && \
+	export GO111MODULE=on && \
+        go get github.com/goreleaser/goreleaser@v0.106.0 && \
+	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.21.0 && \
+	go get github.com/mitchellh/golicense@v0.1.1 && \
+	go get github.com/golang/mock/mockgen@v1.2.0 && \
+	go get github.com/kevinburke/go-bindata/...@v3.13.0
 
 build: bindata build-go
 
@@ -91,29 +94,101 @@ build-go:
 
 .PHONY: build-ccloud
 build-ccloud:
-	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --snapshot --rm-dist -f .goreleaser-ccloud$(GORELEASER_SUFFIX)
+	@GO111MODULE=on GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --snapshot --rm-dist -f .goreleaser-ccloud$(GORELEASER_SUFFIX)
 
 .PHONY: build-confluent
 build-confluent:
-	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --snapshot --rm-dist -f .goreleaser-confluent$(GORELEASER_SUFFIX)
+	@GO111MODULE=on GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --snapshot --rm-dist -f .goreleaser-confluent$(GORELEASER_SUFFIX)
+
+.PHONY: build-integ
+build-integ:
+	make build-integ-nonrace
+	make build-integ-race
+
+.PHONY: build-integ-nonrace
+build-integ-nonrace:
+	make build-integ-ccloud-nonrace
+	make build-integ-confluent-nonrace
+
+.PHONY: build-integ-ccloud-nonrace
+build-integ-ccloud-nonrace:
+	binary="ccloud_test" ; \
+	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
+	GO111MODULE=on go test ./cmd/confluent -ldflags="-s -w -X $(RESOLVED_PATH).cliName=ccloud \
+	-X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) \
+	-X $(RESOLVED_PATH).version=$(VERSION) -X $(RESOLVED_PATH).isTest=true" -tags testrunmain -coverpkg=./... -c -o $${binexe}
+
+.PHONY: build-integ-confluent-nonrace
+build-integ-confluent-nonrace:
+	binary="confluent_test" ; \
+	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
+	GO111MODULE=on go test ./cmd/confluent -ldflags="-s -w -X $(RESOLVED_PATH).cliName=confluent \
+		    -X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) \
+		    -X $(RESOLVED_PATH).version=$(VERSION) -X $(RESOLVED_PATH).isTest=true" -tags testrunmain -coverpkg=./... -c -o $${binexe}
+
+.PHONY: build-integ-race
+build-integ-race:
+	make build-integ-ccloud-race
+	make build-integ-confluent-race
+
+.PHONY: build-integ-ccloud-race
+build-integ-ccloud-race:
+	binary="ccloud_test_race" ; \
+	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
+	GO111MODULE=on go test ./cmd/confluent -ldflags="-s -w -X $(RESOLVED_PATH).cliName=ccloud \
+	-X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) \
+	-X $(RESOLVED_PATH).version=$(VERSION) -X $(RESOLVED_PATH).isTest=true" -tags testrunmain -coverpkg=./... -c -o $${binexe} -race
+
+.PHONY: build-integ-confluent-race
+build-integ-confluent-race:
+	binary="confluent_test_race" ; \
+	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
+	GO111MODULE=on go test ./cmd/confluent -ldflags="-s -w -X $(RESOLVED_PATH).cliName=confluent \
+		    -X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) \
+		    -X $(RESOLVED_PATH).version=$(VERSION) -X $(RESOLVED_PATH).isTest=true" -tags testrunmain -coverpkg=./... -c -o $${binexe} -race
 
 .PHONY: bindata
 bindata: internal/cmd/local/bindata.go
 
-internal/cmd/local/bindata.go: cp_cli/
+internal/cmd/local/bindata.go: cp_cli/* assets/*
 	@go-bindata -pkg local -o internal/cmd/local/bindata.go cp_cli/ assets/
 
+.PHONY: authenticate
+authenticate:
+	# If you setup your laptop following https://github.com/confluentinc/cc-documentation/blob/master/Operations/Laptop%20Setup.md
+	# then assuming caas.sh lives here should be fine
+	source $$GOPATH/src/github.com/confluentinc/cc-dotfiles/caas.sh && caasenv prod
+
 .PHONY: release
-release: get-release-image commit-release tag-release
+release: authenticate get-release-image commit-release tag-release
 	@GO111MODULE=on make gorelease
+	git checkout go.sum
 	@GO111MODULE=on VERSION=$(VERSION) make publish
 	@GO111MODULE=on VERSION=$(VERSION) make publish-docs
+	git checkout go.sum
+
+.PHONY: fakerelease
+fakerelease: get-release-image commit-release tag-release
+	@GO111MODULE=on make fakegorelease
 
 .PHONY: gorelease
 gorelease:
 	@GO111MODULE=off go get -u github.com/inconshreveable/mousetrap # dep from cobra -- incompatible with go mod
-	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --rm-dist -f .goreleaser-ccloud.yml
-	@GO111MODULE=on VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --rm-dist -f .goreleaser-confluent.yml
+	@GO111MODULE=on GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --rm-dist -f .goreleaser-ccloud.yml
+	@GO111MODULE=on GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --rm-dist -f .goreleaser-confluent.yml
+
+.PHONY: fakegorelease
+fakegorelease:
+	@GO111MODULE=off go get -u github.com/inconshreveable/mousetrap # dep from cobra -- incompatible with go mod
+	@GO111MODULE=on GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --rm-dist -f .goreleaser-ccloud-fake.yml
+	@GO111MODULE=on GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --rm-dist -f .goreleaser-confluent-fake.yml
+
+.PHONY: sign
+sign:
+	@GO111MODULE=on gon gon_ccloud.hcl
+	@GO111MODULE=on gon gon_confluent.hcl
+	rm dist/ccloud/darwin_amd64/ccloud_signed.zip || true
+	rm dist/confluent/darwin_amd64/confluent_signed.zip || true
 
 .PHONY: download-licenses
 download-licenses:
@@ -121,7 +196,7 @@ download-licenses:
 	@# we'd like to use golicense -plain but the exit code is always 0 then so CI won't actually fail on illegal licenses
 	@for binary in ccloud confluent; do \
 		echo Downloading third-party licenses for $${binary} binary ; \
-		GITHUB_TOKEN=$(token) golicense .golicense.hcl ./dist/$${binary}/$(shell go env GOOS)_$(shell go env GOARCH)/$${binary} | GITHUB_TOKEN=$(token) go run cmd/golicense-downloader/main.go -f .golicense-downloader.json -l legal/$${binary}/licenses -n legal/$${binary}/notices ; \
+		GITHUB_TOKEN=$(token) golicense .golicense.hcl ./dist/$${binary}/$(shell go env GOOS)_$(shell go env GOARCH)/$${binary} | GITHUB_TOKEN=$(token) go run cmd/golicense-downloader/main.go -F .golicense-downloader.json -l legal/$${binary}/licenses -n legal/$${binary}/notices ; \
 		[ -z "$$(ls -A legal/$${binary}/licenses)" ] && rmdir legal/$${binary}/licenses ; \
 		[ -z "$$(ls -A legal/$${binary}/notices)" ] && rmdir legal/$${binary}/notices ; \
 	done
@@ -159,8 +234,11 @@ dist: download-licenses
 	done
 
 .PHONY: publish
-publish: dist
+## Note: gorelease target publishes unsigned binaries to the binaries folder in the bucket, we have to overwrite them here after signing
+publish: sign dist
 	@for binary in ccloud confluent; do \
+		source $$GOPATH/src/github.com/confluentinc/cc-dotfiles/caas.sh && caasenv prod && \
+		aws s3 cp dist/$${binary}/darwin_amd64/$${binary} s3://confluent.cloud/$${binary}-cli/binaries/$(VERSION:v%=%)/$${binary}_$(VERSION:v%=%)_darwin_amd64 --acl public-read ; \
 		aws s3 cp dist/$${binary}/ s3://confluent.cloud/$${binary}-cli/archives/$(VERSION:v%=%)/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --include "*_checksums.txt" --exclude "*_latest_*" --acl public-read ; \
 		aws s3 cp dist/$${binary}/ s3://confluent.cloud/$${binary}-cli/archives/latest/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --include "*_checksums.txt" --exclude "*_$(VERSION)_*" --acl public-read ; \
 	done
@@ -168,7 +246,8 @@ publish: dist
 .PHONY: publish-installers
 ## Publish install scripts to S3. You MUST re-run this if/when you update any install script.
 publish-installers:
-	aws s3 cp install-ccloud.sh s3://confluent.cloud/ccloud-cli/install.sh --acl public-read
+	source $$GOPATH/src/github.com/confluentinc/cc-dotfiles/caas.sh && caasenv prod && \
+	aws s3 cp install-ccloud.sh s3://confluent.cloud/ccloud-cli/install.sh --acl public-read && \
 	aws s3 cp install-confluent.sh s3://confluent.cloud/confluent-cli/install.sh --acl public-read
 
 .PHONY: docs
@@ -187,7 +266,7 @@ publish-docs: docs
 		cd - || exit 1; \
 		make publish-docs-internal BASE_DIR=$${TMP_DIR} CLI_NAME=ccloud || exit 1; \
 		cd $${TMP_DIR} || exit 1; \
-		sed -i 's/default "confluent_cli_consumer_[^"]*"/default "confluent_cli_consumer_<uuid>"/' cloud/cli/command-reference/ccloud_kafka_topic_consume.rst || exit 1; \
+		sed -i '' 's/default "confluent_cli_consumer_[^"]*"/default "confluent_cli_consumer_<uuid>"/' cloud/cli/command-reference/ccloud_kafka_topic_consume.rst || exit 1; \
 		git add . || exit 1; \
 		git diff --cached --exit-code >/dev/null && echo "nothing to update for docs" && exit 0; \
 		git commit -m "chore: updating CLI docs for $(VERSION)" || exit 1; \
@@ -243,7 +322,7 @@ lint-cli: cmd/lint/en_US.aff cmd/lint/en_US.dic
 
 .PHONY: lint-go
 lint-go:
-	@GO111MODULE=on golangci-lint run
+	@GO111MODULE=on golangci-lint run --timeout=10m
 
 .PHONY: lint
 lint: lint-go lint-cli lint-installers
@@ -267,16 +346,19 @@ lint-licenses: build
 .PHONY: coverage
 coverage:
       ifdef CI
-	@echo "" > coverage.txt
-	@for d in $$(go list ./... | grep -v vendor); do \
-	  GO111MODULE=on go test -v -race -coverprofile=profile.out -covermode=atomic $$d || exit 2; \
-	  if [ -f profile.out ]; then \
-	    cat profile.out >> coverage.txt; \
-	    rm profile.out; \
-	  fi; \
-	done
+	@# Run unit tests with coverage.
+	@GO111MODULE=on go test -v -race -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') \
+		-coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test)
+	@# Run integration tests with coverage.
+	@GO111MODULE=on INTEG_COVER=on go test -v $$(go list ./... | grep cli/test) $(TEST_ARGS)
+	@echo "mode: atomic" > coverage.txt
+	@grep -h -v "mode: atomic" unit_coverage.txt >> coverage.txt
+	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
       else
-	@GO111MODULE=on go test -race -cover $(TEST_ARGS) $$(go list ./... | grep -v vendor)
+	@# Run unit tests.
+	@GO111MODULE=on go test -race -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test)
+	@# Run integration tests.
+	@GO111MODULE=on go test -v -race $$(go list ./... | grep cli/test) $(TEST_ARGS)
       endif
 
 .PHONY: mocks
@@ -285,8 +367,13 @@ mocks: mock/local/shell_runner_mock.go
 mock/local/shell_runner_mock.go:
 	mockgen -source internal/cmd/local/shell_runner.go -destination mock/local/shell_runner_mock.go ShellRunner
 
+.PHONY: test-installers
+test-installers:
+	@echo Running packaging/installer tests
+	@bash test-installers.sh
+
 .PHONY: test
-test: bindata mocks lint coverage
+test: bindata mocks lint coverage test-installers
 
 .PHONY: doctoc
 doctoc:

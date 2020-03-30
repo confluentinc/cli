@@ -20,13 +20,13 @@ func TestHandleError(t *testing.T) {
 		{
 			name:    "static message",
 			err:     ErrNotLoggedIn,
-			want:    "You must login to run that command.",
+			want:    "You must log in to run that command.",
 			wantErr: true,
 		},
 		{
 			name:        "dynamic message",
 			err:         &UnconfiguredAPISecretError{APIKey: "MYKEY", ClusterID: "lkc-mine"},
-			want:        "please add API secret with 'api-key store MYKEY --cluster lkc-mine'",
+			want:        "please add API secret with 'api-key store MYKEY --resource lkc-mine'",
 			wantErr:     true,
 			wantErrType: "*errors.UnconfiguredAPISecretError",
 		},

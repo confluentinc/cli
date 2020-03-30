@@ -1,14 +1,16 @@
 package test
 
 import (
+	"bufio"
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/confluentinc/mds-sdk-go"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"os/exec"
 	"path"
@@ -17,29 +19,55 @@ import (
 	"regexp"
 	"runtime"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/chromedp/chromedp"
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/confluentinc/bincover"
 	"github.com/confluentinc/ccloud-sdk-go"
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
+	connectv1 "github.com/confluentinc/ccloudapis/connect/v1"
 	corev1 "github.com/confluentinc/ccloudapis/core/v1"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
+	ksqlv1 "github.com/confluentinc/ccloudapis/ksql/v1"
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
 	utilv1 "github.com/confluentinc/ccloudapis/util/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 )
 
 var (
-	binaryName = "ccloud"
-	noRebuild  = flag.Bool("no-rebuild", false, "skip rebuilding CLI if it already exists")
-	update     = flag.Bool("update", false, "update golden files")
-	debug      = flag.Bool("debug", false, "enable verbose output")
+	noRebuild           = flag.Bool("no-rebuild", false, "skip rebuilding CLI if it already exists")
+	update              = flag.Bool("update", false, "update golden files")
+	debug               = flag.Bool("debug", true, "enable verbose output")
+	skipSsoBrowserTests = flag.Bool("skip-sso-browser-tests", false, "If flag is preset, run the tests that require a web browser.")
+	ssoTestEmail        = *flag.String("sso-test-user-email", "ziru+paas-integ-sso@confluent.io", "The email of an sso enabled test user.")
+	ssoTestPassword     = *flag.String("sso-test-user-password", "aWLw9eG+F", "The password for the sso enabled test user.")
+	// this connection is preconfigured in Auth0 to hit a test Okta account
+	ssoTestConnectionName = *flag.String("sso-test-connection-name", "confluent-dev", "The Auth0 SSO connection name.")
+	// browser tests by default against devel
+	ssoTestLoginUrl  = *flag.String("sso-test-login-url", "https://devel.cpdev.cloud", "The login url to use for the sso browser test.")
+	cover            = false
+	ccloudTestBin    = ccloudTestBinNormal
+	confluentTestBin = confluentTestBinNormal
+	covCollector     *bincover.CoverageCollector
+	environments     = []*orgv1.Account{{Id: "a-595", Name: "default"}, {Id: "not-595", Name: "other"}}
+)
+
+const (
+	confluentTestBinNormal = "confluent_test"
+	ccloudTestBinNormal    = "ccloud_test"
+	ccloudTestBinRace      = "ccloud_test_race"
+	confluentTestBinRace   = "confluent_test_race"
+	mergedCoverageFilename = "integ_coverage.txt"
 )
 
 // CLITest represents a test configuration
@@ -58,6 +86,12 @@ type CLITest struct {
 	authKafka string
 	// Name of a golden output fixture containing expected output
 	fixture string
+	// True iff fixture represents a regex
+	regex bool
+	// Fixed string to check if output contains
+	contains string
+	// Fixed string to check that output does not contain
+	notContains string
 	// Expected exit code (e.g., 0 for success or 1 for failure)
 	wantErrCode int
 	// If true, don't reset the config/state between tests to enable testing CLI workflows
@@ -76,17 +110,38 @@ func TestCLI(t *testing.T) {
 	suite.Run(t, new(CLITestSuite))
 }
 
+func init() {
+	collectCoverage := os.Getenv("INTEG_COVER")
+	cover = collectCoverage == "on"
+	ciEnv := os.Getenv("CI")
+	if ciEnv == "on" {
+		ccloudTestBin = ccloudTestBinRace
+		confluentTestBin = confluentTestBinRace
+	}
+	if runtime.GOOS == "windows" {
+		ccloudTestBin = ccloudTestBin + ".exe"
+		confluentTestBin = confluentTestBin + ".exe"
+	}
+}
+
 // SetupSuite builds the CLI binary to test
 func (s *CLITestSuite) SetupSuite() {
+	covCollector = bincover.NewCoverageCollector(mergedCoverageFilename, cover)
+	covCollector.Setup()
 	req := require.New(s.T())
 
 	// dumb but effective
 	err := os.Chdir("..")
 	req.NoError(err)
-
-	for _, binary := range []string{"ccloud", "confluent"} {
+	for _, binary := range []string{ccloudTestBin, confluentTestBin} {
 		if _, err = os.Stat(binaryPath(s.T(), binary)); os.IsNotExist(err) || !*noRebuild {
-			makeCmd := exec.Command("make", "build")
+			var makeArgs string
+			if ccloudTestBin == ccloudTestBinRace {
+				makeArgs = "build-integ-race"
+			} else {
+				makeArgs = "build-integ-nonrace"
+			}
+			makeCmd := exec.Command("make", makeArgs)
 			output, err := makeCmd.CombinedOutput()
 			if err != nil {
 				s.T().Log(string(output))
@@ -96,103 +151,27 @@ func (s *CLITestSuite) SetupSuite() {
 	}
 }
 
-func (s *CLITestSuite) Test_Confluent_Help() {
-	tests := []CLITest{
-		{name: "no args", fixture: "confluent-help-flag.golden", wantErrCode: 1},
-		{args: "help", fixture: "confluent-help.golden"},
-		{args: "--help", fixture: "confluent-help-flag.golden"},
-		{args: "version", fixture: "confluent-version.golden"},
-	}
-	for _, tt := range tests {
-		kafkaAPIURL := serveKafkaAPI(s.T()).URL
-		s.runConfluentTest(tt, serveMds(s.T(), kafkaAPIURL).URL)
-	}
+func (s *CLITestSuite) TearDownSuite() {
+	// Merge coverage profiles.
+	covCollector.TearDown()
 }
 
-func (s *CLITestSuite) Test_Confluent_Iam_Rolebinding_List() {
-	tests := []CLITest{
-		{
-			name:        "confluent iam rolebinding list, no principal nor role",
-			args:        "iam rolebinding list --kafka-cluster-id CID",
-			fixture:     "confluent-iam-rolebinding-list-no-principal-nor-role.golden",
-			login:       "default",
-			wantErrCode: 1,
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --principal User:frodo",
-			fixture: "confluent-iam-rolebinding-list-user.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --principal User:frodo --role DeveloperRead",
-			fixture: "confluent-iam-rolebinding-list-user-and-role-with-multiple-resources-from-one-group.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --principal User:frodo --role DeveloperWrite",
-			fixture: "confluent-iam-rolebinding-list-user-and-role-with-resources-from-multiple-groups.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --principal User:frodo --role SecurityAdmin",
-			fixture: "confluent-iam-rolebinding-list-user-and-role-with-cluster-resource.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --principal User:frodo --role SystemAdmin",
-			fixture: "confluent-iam-rolebinding-list-user-and-role-with-no-matches.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --principal Group:hobbits --role DeveloperRead",
-			fixture: "confluent-iam-rolebinding-list-group-and-role-with-multiple-resources.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --principal Group:hobbits --role DeveloperWrite",
-			fixture: "confluent-iam-rolebinding-list-group-and-role-with-one-resource.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --principal Group:hobbits --role SecurityAdmin",
-			fixture: "confluent-iam-rolebinding-list-group-and-role-with-no-matches.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --role DeveloperRead",
-			fixture: "confluent-iam-rolebinding-list-role-with-multiple-bindings-to-one-group.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --role DeveloperWrite",
-			fixture: "confluent-iam-rolebinding-list-role-with-bindings-to-multiple-groups.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --role SecurityAdmin",
-			fixture: "confluent-iam-rolebinding-list-role-on-cluster-bound-to-user.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --role SystemAdmin",
-			fixture: "confluent-iam-rolebinding-list-role-with-no-matches.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --role DeveloperRead --resource Topic:food",
-			fixture: "confluent-iam-rolebinding-list-role-and-resource-with-exact-match.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --role DeveloperRead --resource Topic:shire-parties",
-			fixture: "confluent-iam-rolebinding-list-role-and-resource-with-no-match.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --role DeveloperWrite --resource Topic:shire-parties",
-			fixture: "confluent-iam-rolebinding-list-role-and-resource-with-prefix-match.golden",
-			login:   "default",
-		},
+func (s *CLITestSuite) Test_Confluent_Help() {
+	var tests []CLITest
+	if runtime.GOOS == "windows" {
+		tests = []CLITest{
+			{name: "no args", fixture: "confluent-help-flag-windows.golden", wantErrCode: 1},
+			{args: "help", fixture: "confluent-help-windows.golden"},
+			{args: "--help", fixture: "confluent-help-flag-windows.golden"},
+			{args: "version", fixture: "confluent-version.golden", regex: true},
+		}
+	} else {
+		tests = []CLITest{
+			{name: "no args", fixture: "confluent-help-flag.golden", wantErrCode: 1},
+			{args: "help", fixture: "confluent-help.golden"},
+			{args: "--help", fixture: "confluent-help-flag.golden"},
+			{args: "version", fixture: "confluent-version.golden", regex: true},
+		}
 	}
 	for _, tt := range tests {
 		kafkaAPIURL := serveKafkaAPI(s.T()).URL
@@ -205,7 +184,7 @@ func (s *CLITestSuite) Test_Ccloud_Help() {
 		{name: "no args", fixture: "help-flag.golden", wantErrCode: 1},
 		{args: "help", fixture: "help.golden"},
 		{args: "--help", fixture: "help-flag.golden"},
-		{args: "version", fixture: "version.golden"},
+		{args: "version", fixture: "version.golden", regex: true},
 	}
 	for _, tt := range tests {
 		kafkaAPIURL := serveKafkaAPI(s.T()).URL
@@ -230,7 +209,7 @@ func (s *CLITestSuite) Test_UserAgent() {
 		cloudRouter.HandleFunc("/api/sessions", compose(assertUserAgent(t, expected), handleLogin(t)))
 		cloudRouter.HandleFunc("/api/me", compose(assertUserAgent(t, expected), handleMe(t)))
 		cloudRouter.HandleFunc("/api/check_email/", compose(assertUserAgent(t, expected), handleCheckEmail(t)))
-		cloudRouter.HandleFunc("/api/clusters/", compose(assertUserAgent(t, expected), handleKafkaClusterGetListDelete(t, kafkaApiServer.URL)))
+		cloudRouter.HandleFunc("/api/clusters/", compose(assertUserAgent(t, expected), handleKafkaClusterGetListDeleteDescribe(t, kafkaApiServer.URL)))
 		return httptest.NewServer(cloudRouter).URL
 	}
 
@@ -239,13 +218,13 @@ func (s *CLITestSuite) Test_UserAgent() {
 	env := []string{"XX_CCLOUD_EMAIL=valid@user.com", "XX_CCLOUD_PASSWORD=pass1"}
 
 	t.Run("ccloud login", func(tt *testing.T) {
-		_ = runCommand(tt, "ccloud", env, "login --url "+serverURL, 0)
+		_ = runCommand(tt, ccloudTestBin, env, "login --url "+serverURL, 0)
 	})
 	t.Run("ccloud cluster list", func(tt *testing.T) {
-		_ = runCommand(tt, "ccloud", env, "kafka cluster list", 0)
+		_ = runCommand(tt, ccloudTestBin, env, "kafka cluster list", 0)
 	})
 	t.Run("ccloud topic list", func(tt *testing.T) {
-		_ = runCommand(tt, "ccloud", env, "kafka topic list --cluster lkc-abc123", 0)
+		_ = runCommand(tt, ccloudTestBin, env, "kafka topic list --cluster lkc-abc123", 0)
 	})
 }
 
@@ -291,37 +270,36 @@ func (s *CLITestSuite) Test_Ccloud_Errors() {
 	t.Run("invalid user or pass", func(tt *testing.T) {
 		loginURL := serveErrors(tt)
 		env := []string{"XX_CCLOUD_EMAIL=incorrect@user.com", "XX_CCLOUD_PASSWORD=pass1"}
-		output := runCommand(tt, "ccloud", env, "login --url "+loginURL, 1)
+		output := runCommand(tt, ccloudTestBin, env, "login --url "+loginURL, 1)
 		require.Equal(tt, "Error: You have entered an incorrect username or password. Please try again.\n", output)
 	})
 
 	t.Run("expired token", func(tt *testing.T) {
 		loginURL := serveErrors(tt)
 		env := []string{"XX_CCLOUD_EMAIL=expired@user.com", "XX_CCLOUD_PASSWORD=pass1"}
-		output := runCommand(tt, "ccloud", env, "login --url "+loginURL, 0)
+		output := runCommand(tt, ccloudTestBin, env, "login --url "+loginURL, 0)
 		require.Equal(tt, "Logged in as expired@user.com\nUsing environment a-595 (\"default\")\n", output)
-
-		output = runCommand(tt, "ccloud", []string{}, "kafka cluster list", 1)
-		require.Equal(tt, "Error: Your session has expired. Please login again.\n", output)
+		output = runCommand(tt, ccloudTestBin, []string{}, "kafka cluster list", 1)
+		require.Equal(tt, "Your token has expired. You are now logged out.\nError: You must log in to run that command.\n", output)
 	})
 
 	t.Run("malformed token", func(tt *testing.T) {
 		loginURL := serveErrors(tt)
 		env := []string{"XX_CCLOUD_EMAIL=malformed@user.com", "XX_CCLOUD_PASSWORD=pass1"}
-		output := runCommand(tt, "ccloud", env, "login --url "+loginURL, 0)
+		output := runCommand(tt, ccloudTestBin, env, "login --url "+loginURL, 0)
 		require.Equal(tt, "Logged in as malformed@user.com\nUsing environment a-595 (\"default\")\n", output)
 
-		output = runCommand(tt, "ccloud", []string{}, "kafka cluster list", 1)
+		output = runCommand(t, ccloudTestBin, []string{}, "kafka cluster list", 1)
 		require.Equal(tt, "Error: Your auth token has been corrupted. Please login again.\n", output)
 	})
 
 	t.Run("invalid jwt", func(tt *testing.T) {
 		loginURL := serveErrors(tt)
 		env := []string{"XX_CCLOUD_EMAIL=invalid@user.com", "XX_CCLOUD_PASSWORD=pass1"}
-		output := runCommand(tt, "ccloud", env, "login --url "+loginURL, 0)
+		output := runCommand(tt, ccloudTestBin, env, "login --url "+loginURL, 0)
 		require.Equal(tt, "Logged in as invalid@user.com\nUsing environment a-595 (\"default\")\n", output)
 
-		output = runCommand(tt, "ccloud", []string{}, "kafka cluster list", 1)
+		output = runCommand(t, ccloudTestBin, []string{}, "kafka cluster list", 1)
 		require.Equal(tt, "Error: Your auth token has been corrupted. Please login again.\n", output)
 	})
 }
@@ -378,6 +356,134 @@ func (s *CLITestSuite) Test_Ccloud_Login_UseKafka_AuthKafka_Errors() {
 	}
 }
 
+func (s *CLITestSuite) Test_SSO_Login() {
+	t := s.T()
+	if *skipSsoBrowserTests {
+		t.Skip()
+	}
+
+	resetConfiguration(s.T(), "ccloud")
+
+	env := []string{"XX_CCLOUD_EMAIL=" + ssoTestEmail}
+	cmd := exec.Command(binaryPath(t, ccloudTestBin), []string{"login", "--url", ssoTestLoginUrl, "--no-browser"}...)
+	cmd.Env = append(os.Environ(), env...)
+
+	cliStdOut, err := cmd.StdoutPipe()
+	s.NoError(err)
+	cliStdIn, err := cmd.StdinPipe()
+	s.NoError(err)
+
+	scanner := bufio.NewScanner(cliStdOut)
+	go func() {
+		var url string
+		for scanner.Scan() {
+			txt := scanner.Text()
+			fmt.Println("CLI output | " + txt)
+			if url == "" {
+				url = parseSsoAuthUrlFromOutput([]byte(txt))
+			}
+			if strings.Contains(txt, "paste the code here") {
+				break
+			}
+		}
+
+		if url == "" {
+			s.Fail("CLI did not output auth URL")
+		} else {
+			token := s.ssoAuthenticateViaBrowser(url)
+			_, e := cliStdIn.Write([]byte(token))
+			s.NoError(e)
+			e = cliStdIn.Close()
+			s.NoError(e)
+
+			scanner.Scan()
+			s.Equal("Logged in as "+ssoTestEmail, scanner.Text())
+		}
+	}()
+
+	err = cmd.Start()
+	s.NoError(err)
+
+	done := make(chan error)
+	go func() { done <- cmd.Wait() }()
+
+	timeout := time.After(60 * time.Second)
+
+	select {
+	case <-timeout:
+		s.Fail("Timed out. The CLI may have printed out something unexpected or something went awry in the okta browser auth flow.")
+	case err := <-done:
+		// the output from the cmd.Wait(). Should not have an error status
+		s.NoError(err)
+	}
+}
+
+func parseSsoAuthUrlFromOutput(output []byte) string {
+	regex, err := regexp.Compile(`.*([\S]*connection=` + ssoTestConnectionName + `).*`)
+	if err != nil {
+		panic("Error compiling regex")
+	}
+	groups := regex.FindSubmatch(output)
+	if groups == nil || len(groups) < 2 {
+		return ""
+	}
+	authUrl := string(groups[0])
+	return authUrl
+}
+
+func (s *CLITestSuite) ssoAuthenticateViaBrowser(authUrl string) string {
+	opts := append(chromedp.DefaultExecAllocatorOptions[:]) // uncomment to disable headless mode and see the actual browser
+	//chromedp.Flag("headless", false),
+
+	var err error
+	var taskCtx context.Context
+	tries := 0
+	for tries < 5 {
+		allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
+		defer cancel()
+		taskCtx, cancel = chromedp.NewContext(allocCtx)
+		defer cancel()
+		// ensure that the browser process is started
+		if err = chromedp.Run(taskCtx); err != nil {
+			fmt.Println("Caught error when starting chrome. Will retry. Error was: " + err.Error())
+			tries += 1
+		} else {
+			fmt.Println("Successfully started chrome")
+			break
+		}
+	}
+	if err != nil {
+		s.NoError(err, fmt.Sprintf("Could not start chrome after %d tries. Error was: %s\n", tries, err))
+	}
+
+	// navigate to authUrl
+	fmt.Println("Navigating to authUrl...")
+	err = chromedp.Run(taskCtx, chromedp.Navigate(authUrl))
+	s.NoError(err)
+	fmt.Println("Inputing credentials to Okta...")
+	err = chromedp.Run(taskCtx, chromedp.WaitVisible(`//input[@name="username"]`))
+	s.NoError(err)
+	err = chromedp.Run(taskCtx, chromedp.SendKeys(`//input[@id="okta-signin-username"]`, ssoTestEmail))
+	s.NoError(err)
+	err = chromedp.Run(taskCtx, chromedp.SendKeys(`//input[@id="okta-signin-password"]`, ssoTestPassword))
+	s.NoError(err)
+	fmt.Println("Submitting login request to Okta..")
+	err = chromedp.Run(taskCtx, chromedp.Click(`//input[@id="okta-signin-submit"]`))
+	s.NoError(err)
+	fmt.Println("Waiting for CCloud to load...")
+	err = chromedp.Run(taskCtx, chromedp.WaitVisible(`//div[@id="cc-root"]`))
+	s.NoError(err)
+	fmt.Println("CCloud is loaded, grabbing auth token...")
+	var token string
+	// chromedp waits until it finds the element on the page. If there's some error and the element
+	// does not load correctly, this will wait forever and the test will time out
+	// There's not a good workaround for this, but to debug, it's helpful to disable headless mode (commented above)
+	err = chromedp.Run(taskCtx, chromedp.Text(`//div[@id="token"]`, &token))
+	s.NoError(err)
+	fmt.Println("Successfully logged in and retrieved auth token")
+	return token
+}
+
 func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint string) {
 	if tt.name == "" {
 		tt.name = tt.args
@@ -385,71 +491,49 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint stri
 	if strings.HasPrefix(tt.name, "error") {
 		tt.wantErrCode = 1
 	}
+
 	s.T().Run(tt.name, func(t *testing.T) {
 		if !tt.workflow {
 			resetConfiguration(t, "ccloud")
 		}
-
 		if tt.login == "default" {
 			env := []string{"XX_CCLOUD_EMAIL=fake@user.com", "XX_CCLOUD_PASSWORD=pass1"}
-			output := runCommand(t, "ccloud", env, "login --url "+loginURL, 0)
+			output := runCommand(t, ccloudTestBin, env, "login --url "+loginURL, 0)
 			if *debug {
 				fmt.Println(output)
 			}
 		}
 
 		if tt.useKafka != "" {
-			output := runCommand(t, "ccloud", []string{}, "kafka cluster use "+tt.useKafka, 0)
+			output := runCommand(t, ccloudTestBin, []string{}, "kafka cluster use "+tt.useKafka, 0)
 			if *debug {
 				fmt.Println(output)
 			}
 		}
 
 		if tt.authKafka != "" {
-			output := runCommand(t, "ccloud", []string{}, "api-key create --resource "+tt.useKafka, 0)
+			output := runCommand(t, ccloudTestBin, []string{}, "api-key create --resource "+tt.useKafka, 0)
 			if *debug {
 				fmt.Println(output)
 			}
 			// HACK: we don't have scriptable output yet so we parse it from the table
 			key := strings.TrimSpace(strings.Split(strings.Split(output, "\n")[2], "|")[2])
-			output = runCommand(t, "ccloud", []string{}, fmt.Sprintf("api-key use %s --resource %s", key, tt.useKafka), 0)
+			output = runCommand(t, ccloudTestBin, []string{}, fmt.Sprintf("api-key use %s --resource %s", key, tt.useKafka), 0)
 			if *debug {
 				fmt.Println(output)
 			}
 		}
-
-		output := runCommand(t, "ccloud", tt.env, tt.args, tt.wantErrCode)
+		output := runCommand(t, ccloudTestBin, tt.env, tt.args, tt.wantErrCode)
 		if *debug {
 			fmt.Println(output)
 		}
 
-		if *update && tt.args != "version" {
-			if strings.HasPrefix(tt.args, "kafka cluster create") {
-				re := regexp.MustCompile("https?://127.0.0.1:[0-9]+")
-				output = re.ReplaceAllString(output, "http://127.0.0.1:12345")
-			}
-			writeFixture(t, tt.fixture, output)
-		}
-
-		actual := string(output)
-		expected := loadFixture(t, tt.fixture)
-
-		if tt.args == "version" {
-			require.Regexp(t, expected, actual)
-			return
-		} else if strings.HasPrefix(tt.args, "kafka cluster create") {
-			fmt.Println(tt.args, actual)
+		if strings.HasPrefix(tt.args, "kafka cluster create") {
 			re := regexp.MustCompile("https?://127.0.0.1:[0-9]+")
-			actual = re.ReplaceAllString(actual, "http://127.0.0.1:12345")
+			output = re.ReplaceAllString(output, "http://127.0.0.1:12345")
 		}
 
-		if !reflect.DeepEqual(actual, expected) {
-			t.Fatalf("actual = %s, expected = %s", actual, expected)
-		}
-
-		if tt.wantFunc != nil {
-			tt.wantFunc(t)
-		}
+		s.validateTestOutput(tt, t, output)
 	})
 }
 
@@ -467,60 +551,57 @@ func (s *CLITestSuite) runConfluentTest(tt CLITest, loginURL string) {
 
 		if tt.login == "default" {
 			env := []string{"XX_CONFLUENT_USERNAME=fake@user.com", "XX_CONFLUENT_PASSWORD=pass1"}
-			output := runCommand(t, "confluent", env, "login --url "+loginURL, 0)
+			output := runCommand(t, confluentTestBin, env, "login --url "+loginURL, 0)
 			if *debug {
 				fmt.Println(output)
 			}
 		}
 
-		output := runCommand(t, "confluent", []string{}, tt.args, tt.wantErrCode)
+		output := runCommand(t, confluentTestBin, []string{}, tt.args, tt.wantErrCode)
 
-		if *update && tt.args != "version" {
-			writeFixture(t, tt.fixture, output)
-		}
-
-		actual := string(output)
-		expected := loadFixture(t, tt.fixture)
-
-		if tt.args == "version" {
-			require.Regexp(t, expected, actual)
-			return
-		}
-
-		if !reflect.DeepEqual(actual, expected) {
-			t.Fatalf("actual = %s, expected = %s", actual, expected)
-		}
+		s.validateTestOutput(tt, t, output)
 	})
 }
 
-func runCommand(t *testing.T, binaryName string, env []string, args string, wantErrCode int) string {
-	path := binaryPath(t, binaryName)
-	_, _ = fmt.Println(path, args)
-	cmd := exec.Command(path, strings.Split(args, " ")...)
-	cmd.Env = append(os.Environ(), env...)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		// This exit code testing requires 1.12 - https://stackoverflow.com/a/55055100/337735
-		if exitError, ok := err.(*exec.ExitError); ok {
-			if wantErrCode == 0 {
-				require.Failf(t, "unexpected error",
-					"exit %d: %s\n%s", exitError.ExitCode(), args, string(output))
-			} else {
-				require.Equal(t, wantErrCode, exitError.ExitCode(), string(output))
-			}
-		} else {
-			require.Failf(t, "unexpected error", "command returned err: %s", err)
-		}
-	} else {
-		require.Equal(t, wantErrCode, 0)
+func (s *CLITestSuite) validateTestOutput(tt CLITest, t *testing.T, output string) {
+	if *update && !tt.regex && tt.fixture != "" {
+		writeFixture(t, tt.fixture, output)
 	}
-	return string(output)
+	actual := NormalizeNewLines(string(output))
+	if tt.contains != "" {
+		require.Contains(t, actual, tt.contains)
+	} else if tt.notContains != "" {
+		require.NotContains(t, actual, tt.notContains)
+	} else if tt.fixture != "" {
+		expected := NormalizeNewLines(loadFixture(t, tt.fixture))
+
+		if tt.regex {
+			require.Regexp(t, expected, actual)
+		} else if !reflect.DeepEqual(actual, expected) {
+			t.Fatalf("actual = %s, expected = %s", actual, expected)
+		}
+	}
+	if tt.wantFunc != nil {
+		tt.wantFunc(t)
+	}
+}
+
+func runCommand(t *testing.T, binaryName string, env []string, args string, wantErrCode int) string {
+	output, exitCode, err := covCollector.RunBinary(binaryPath(t, binaryName), "TestRunMain", env, strings.Split(args, " "))
+	if err != nil && wantErrCode == 0 {
+		require.Failf(t, "unexpected error",
+			"exit %d: %s\n%s", exitCode, args, output)
+	}
+	require.Equal(t, wantErrCode, exitCode, output)
+	return output
 }
 
 func resetConfiguration(t *testing.T, cliName string) {
 	// HACK: delete your current config to isolate tests cases for non-workflow tests...
 	// probably don't really want to do this or devs will get mad
-	cfg := config.New(&config.Config{CLIName: cliName})
+	cfg := v3.New(&config.Params{
+		CLIName: cliName,
+	})
 	err := cfg.Save()
 	require.NoError(t, err)
 }
@@ -537,7 +618,6 @@ func loadFixture(t *testing.T, fixture string) string {
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	return string(content)
 }
 
@@ -553,8 +633,7 @@ func fixturePath(t *testing.T, fixture string) string {
 func binaryPath(t *testing.T, binaryName string) string {
 	dir, err := os.Getwd()
 	require.NoError(t, err)
-
-	return path.Join(dir, "dist", binaryName, runtime.GOOS+"_"+runtime.GOARCH, binaryName)
+	return path.Join(dir, binaryName)
 }
 
 var KEY_STORE = map[int32]*authv1.ApiKey{}
@@ -582,7 +661,7 @@ func init() {
 		Key:    "MYKEY1",
 		Secret: "MYSECRET1",
 		LogicalClusters: []*authv1.ApiKey_Cluster{
-			{Id: "bob"},
+			{Id: "lkc-bob", Type: "kafka"},
 		},
 		UserId: 12,
 	}
@@ -591,7 +670,7 @@ func init() {
 		Key:    "MYKEY2",
 		Secret: "MYSECRET2",
 		LogicalClusters: []*authv1.ApiKey_Cluster{
-			{Id: "abc"},
+			{Id: "lkc-abc", Type: "kafka"},
 		},
 		UserId: 18,
 	}
@@ -600,7 +679,7 @@ func init() {
 		Key:    "UIAPIKEY100",
 		Secret: "UIAPISECRET100",
 		LogicalClusters: []*authv1.ApiKey_Cluster{
-			{Id: "lkc-cool1"},
+			{Id: "lkc-cool1", Type: "kafka"},
 		},
 		UserId: 25,
 	}
@@ -608,7 +687,7 @@ func init() {
 		Key:    "UIAPIKEY101",
 		Secret: "UIAPISECRET101",
 		LogicalClusters: []*authv1.ApiKey_Cluster{
-			{Id: "lkc-other1"},
+			{Id: "lkc-other1", Type: "kafka"},
 		},
 		UserId: 25,
 	}
@@ -616,7 +695,7 @@ func init() {
 		Key:    "UIAPIKEY102",
 		Secret: "UIAPISECRET102",
 		LogicalClusters: []*authv1.ApiKey_Cluster{
-			{Id: "lksqlc-ksql1"},
+			{Id: "lksqlc-ksql1", Type: "ksql"},
 		},
 		UserId: 25,
 	}
@@ -624,123 +703,10 @@ func init() {
 		Key:    "UIAPIKEY103",
 		Secret: "UIAPISECRET103",
 		LogicalClusters: []*authv1.ApiKey_Cluster{
-			{Id: "lkc-cool1"},
+			{Id: "lkc-cool1", Type: "kafka"},
 		},
 		UserId: 25,
 	}
-}
-
-func serveMds(t *testing.T, mdsURL string) *httptest.Server {
-	req := require.New(t)
-	router := http.NewServeMux()
-	router.HandleFunc("/security/1.0/authenticate", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/json")
-		reply := &mds.AuthenticationResponse{
-			AuthToken:"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1NjE2NjA4NTcsImV4cCI6MjUzMzg2MDM4NDU3LCJhdWQiOiJ3d3cuZXhhbXBsZS5jb20iLCJzdWIiOiJqcm9ja2V0QGV4YW1wbGUuY29tIn0.G6IgrFm5i0mN7Lz9tkZQ2tZvuZ2U7HKnvxMuZAooPmE",
-			TokenType:"dunno",
-			ExpiresIn:9999999999,
-		}
-		b, err := json.Marshal(&reply)
-		req.NoError(err)
-		_, err = io.WriteString(w, string(b))
-		req.NoError(err)
-	})
-	routesAndReplies := map[string]string {
-		"/security/1.0/principals/User:frodo/groups": `[
-                       "hobbits",
-                       "ringBearers"]`,
-		"/security/1.0/principals/User:frodo/roleNames": `[
-                       "DeveloperRead",
-                       "DeveloperWrite",
-                       "SecurityAdmin"]`,
-		"/security/1.0/principals/User:frodo/roles/DeveloperRead/resources": `[]`,
-		"/security/1.0/principals/User:frodo/roles/DeveloperWrite/resources": `[]`,
-		"/security/1.0/principals/User:frodo/roles/SecurityAdmin/resources": `[]`,
-		"/security/1.0/principals/Group:hobbits/roles/DeveloperRead/resources": `[
-                       {"resourceType":"Topic","name":"drink","patternType":"LITERAL"},
-                       {"resourceType":"Topic","name":"food","patternType":"LITERAL"}]`,
-		"/security/1.0/principals/Group:hobbits/roles/DeveloperWrite/resources": `[
-                       {"resourceType":"Topic","name":"shire-","patternType":"PREFIXED"}]`,
-		"/security/1.0/principals/Group:hobbits/roles/SecurityAdmin/resources": `[]`,
-		"/security/1.0/principals/Group:ringBearers/roles/DeveloperRead/resources": `[]`,
-		"/security/1.0/principals/Group:ringBearers/roles/DeveloperWrite/resources": `[
-                       {"resourceType":"Topic","name":"ring-","patternType":"PREFIXED"}]`,
-		"/security/1.0/principals/Group:ringBearers/roles/SecurityAdmin/resources": `[]`,
-		"/security/1.0/lookup/principal/User:frodo/resources": `{
-                       "Group:hobbits":{
-                               "DeveloperWrite":[
-                                       {"resourceType":"Topic","name":"shire-","patternType":"PREFIXED"}],
-                               "DeveloperRead":[
-                                       {"resourceType":"Topic","name":"drink","patternType":"LITERAL"},
-                                       {"resourceType":"Topic","name":"food","patternType":"LITERAL"}]},
-                       "Group:ringBearers":{
-                               "DeveloperWrite":[
-                                       {"resourceType":"Topic","name":"ring-","patternType":"PREFIXED"}]},
-                       "User:frodo":{
-                               "SecurityAdmin": []}}`,
-		"/security/1.0/lookup/principal/Group:hobbits/resources": `{
-                       "Group:hobbits":{
-                               "DeveloperWrite":[
-                                       {"resourceType":"Topic","name":"shire-","patternType":"PREFIXED"}],
-                               "DeveloperRead":[
-                                       {"resourceType":"Topic","name":"drink","patternType":"LITERAL"},
-                                       {"resourceType":"Topic","name":"food","patternType":"LITERAL"}]}}`,
-		"/security/1.0/lookup/role/DeveloperRead": `["Group:hobbits"]`,
-		"/security/1.0/lookup/role/DeveloperWrite": `["Group:hobbits","Group:ringBearers"]`,
-		"/security/1.0/lookup/role/SecurityAdmin": `["User:frodo"]`,
-		"/security/1.0/lookup/role/SystemAdmin": `[]`,
-		"/security/1.0/lookup/role/DeveloperRead/resource/Topic/name/food": `["Group:hobbits"]`,
-		"/security/1.0/lookup/role/DeveloperRead/resource/Topic/name/shire-parties": `[]`,
-		"/security/1.0/lookup/role/DeveloperWrite/resource/Topic/name/shire-parties": `["Group:hobbits"]`,
-		"/security/1.0/roles/DeveloperRead": `{
-                       "name":"DeveloperRead",
-                       "accessPolicy":{
-                               "scopeType":"Resource",
-                               "allowedOperations":[
-                                       {"resourceType":"Cluster","operations":[]},
-                                       {"resourceType":"TransactionalId","operations":["Describe"]},
-                                       {"resourceType":"Group","operations":["Read","Describe"]},
-                                       {"resourceType":"Subject","operations":["Read","ReadCompatibility"]},
-                                       {"resourceType":"Connector","operations":["ReadStatus","ReadConfig"]},
-                                       {"resourceType":"Topic","operations":["Read","Describe"]}]}}`,
-		"/security/1.0/roles/DeveloperWrite": `{
-                       "name":"DeveloperWrite",
-                       "accessPolicy":{
-                               "scopeType":"Resource",
-                               "allowedOperations":[
-                                       {"resourceType":"Subject","operations":["Write"]},
-                                       {"resourceType":"Group","operations":[]},
-                                       {"resourceType":"Topic","operations":["Write","Describe"]},
-                                       {"resourceType":"Cluster","operations":["IdempotentWrite"]},
-                                       {"resourceType":"KsqlCluster","operations":["Contribute"]},
-                                       {"resourceType":"Connector","operations":["ReadStatus","Configure"]},
-                                       {"resourceType":"TransactionalId","operations":["Write","Describe"]}]}}`,
-		"/security/1.0/roles/SecurityAdmin": `{
-                       "name":"SecurityAdmin",
-                       "accessPolicy":{
-                               "scopeType":"Cluster",
-                               "allowedOperations":[
-                                       {"resourceType":"All","operations":["DescribeAccess"]}]}}`,
-		"/security/1.0/roles/SystemAdmin": `{
-                       "name":"SystemAdmin",
-                       "accessPolicy":{
-                               "scopeType":"Cluster",
-                               "allowedOperations":[
-                                       {"resourceType":"All","operations":["All"]}]}}`,
-	}
-	for route, reply := range routesAndReplies {
-		s := reply
-		router.HandleFunc(route, func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Content-Type", "text/json")
-			_, err := io.WriteString(w, s)
-			req.NoError(err)
-		})
-	}
-	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		_, err := io.WriteString(w, `{"error": {"message": "unexpected call to `+r.URL.Path+`"}}`)
-		require.NoError(t, err)
-	})
-	return httptest.NewServer(router)
 }
 
 func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
@@ -758,7 +724,11 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 			apiKey.Id = int32(KEY_INDEX)
 			apiKey.Key = fmt.Sprintf("MYKEY%d", KEY_INDEX)
 			apiKey.Secret = fmt.Sprintf("MYSECRET%d", KEY_INDEX)
-			apiKey.UserId = 23
+			if req.ApiKey.UserId == 0 {
+				apiKey.UserId = 23
+			} else {
+				apiKey.UserId = req.ApiKey.UserId
+			}
 			KEY_INDEX++
 			KEY_STORE[apiKey.Id] = apiKey
 			b, err := utilv1.MarshalJSONToBytes(&authv1.CreateApiKeyReply{ApiKey: apiKey})
@@ -767,10 +737,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 			require.NoError(t, err)
 		} else if r.Method == "GET" {
 			require.NotEmpty(t, r.URL.Query().Get("account_id"))
-			var apiKeys []*authv1.ApiKey
-			for _, a := range KEY_STORE {
-				apiKeys = append(apiKeys, a)
-			}
+			apiKeys := apiKeysFilter(r.URL)
 			// Return sorted data or the test output will not be stable
 			sort.Sort(ApiKeyList(apiKeys))
 			b, err := utilv1.MarshalJSONToBytes(&authv1.GetApiKeysReply{ApiKeys: apiKeys})
@@ -780,23 +747,63 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		}
 	})
 	router.HandleFunc("/api/accounts", func(w http.ResponseWriter, r *http.Request) {
-		b, err := utilv1.MarshalJSONToBytes(&orgv1.ListAccountsReply{Accounts: []*orgv1.Account{
-			{Id: "a-595", Name: "default"}, {Id: "not-595", Name: "other"},
-		}})
-		require.NoError(t, err)
-		_, err = io.WriteString(w, string(b))
-		require.NoError(t, err)
+		if r.Method == "GET" {
+			b, err := utilv1.MarshalJSONToBytes(&orgv1.ListAccountsReply{Accounts: environments})
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(b))
+			require.NoError(t, err)
+		} else if r.Method == "POST" {
+			req := &orgv1.CreateAccountRequest{}
+			err := utilv1.UnmarshalJSON(r.Body, req)
+			require.NoError(t, err)
+			account := &orgv1.Account{
+				Id:             "a-5555",
+				Name:           req.Account.Name,
+				OrganizationId: 0,
+			}
+			b, err := utilv1.MarshalJSONToBytes(&orgv1.CreateAccountReply{
+				Account: account,
+			})
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(b))
+			require.NoError(t, err)
+		}
 	})
-	router.HandleFunc("/api/clusters/", handleKafkaClusterGetListDelete(t, kafkaAPIURL))
-	router.HandleFunc("/api/clusters", handleKafkaClusterCreate(t, kafkaAPIURL))
+	router.HandleFunc("/api/accounts/a-595", handleEnvironmentGet(t, "a-595"))
+	router.HandleFunc("/api/accounts/not-595", handleEnvironmentGet(t, "not-595"))
+	router.HandleFunc("/api/clusters/lkc-describe", handleKafkaClusterDescribeTest(t, kafkaAPIURL))
+	router.HandleFunc("/api/clusters/", handleKafkaClusterGetListDeleteDescribe(t, kafkaAPIURL))
+	router.HandleFunc("/api/clusters", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "POST" {
+			handleKafkaClusterCreate(t, kafkaAPIURL)(w, r)
+		} else if r.Method == "GET" {
+			cluster := kafkav1.KafkaCluster{
+				Id:              "lkc-123",
+				Name:            "abc",
+				Durability:      0,
+				Status:          0,
+				Region:          "us-central1",
+				ServiceProvider: "gcp",
+			}
+			b, err := utilv1.MarshalJSONToBytes(&kafkav1.GetKafkaClustersReply{
+				Clusters: []*kafkav1.KafkaCluster{&cluster},
+			})
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(b))
+			require.NoError(t, err)
+		}
+	})
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		_, err := io.WriteString(w, `{"error": {"message": "unexpected call to `+r.URL.Path+`"}}`)
 		require.NoError(t, err)
 	})
 	router.HandleFunc("/api/schema_registries/", func(w http.ResponseWriter, r *http.Request) {
+		q := r.URL.Query()
+		id := q.Get("Id")
+		accountId := q.Get("account_id")
 		srCluster := &srv1.SchemaRegistryCluster{
-			Id:        "lsrc-1",
-			AccountId: "23",
+			Id:        id,
+			AccountId: accountId,
 			Name:      "account schema-registry",
 			Endpoint:  "SASL_SSL://sr-endpoint",
 		}
@@ -807,7 +814,159 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		_, err = io.WriteString(w, string(b))
 		require.NoError(t, err)
 	})
+	router.HandleFunc("/api/service_accounts", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "GET" {
+			serviceAccount := &orgv1.User{
+				Id:                 12345,
+				ServiceName:        "service_account",
+				ServiceDescription: "at your service.",
+			}
+			listReply, err := utilv1.MarshalJSONToBytes(&orgv1.GetServiceAccountsReply{
+				Users: []*orgv1.User{serviceAccount},
+			})
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(listReply))
+			require.NoError(t, err)
+		} else if r.Method == "POST" {
+			req := &orgv1.CreateServiceAccountRequest{}
+			err := utilv1.UnmarshalJSON(r.Body, req)
+			require.NoError(t, err)
+			serviceAccount := &orgv1.User{
+				Id:                 55555,
+				ServiceName:        req.User.ServiceName,
+				ServiceDescription: req.User.ServiceDescription,
+			}
+			createReply, err := utilv1.MarshalJSONToBytes(&orgv1.CreateServiceAccountReply{
+				Error: nil,
+				User:  serviceAccount,
+			})
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(createReply))
+			require.NoError(t, err)
+		}
+	})
+	router.HandleFunc("/api/accounts/a-595/clusters/lkc-123/connectors/az-connector/", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	})
+	router.HandleFunc("/api/accounts/a-595/clusters/lkc-123/connectors", handleConnect(t))
+	router.HandleFunc("/api/accounts/a-595/clusters/lkc-123/connector-plugins/GcsSink/config/validate", handleConnectorCatalogDescribe(t))
+	router.HandleFunc("/api/accounts/a-595/clusters/lkc-123/connector-plugins", handleConnectPlugins(t))
+	router.HandleFunc("/api/ksqls", handleKSQLCreateList(t))
+	router.HandleFunc("/api/ksqls/lksqlc-ksql1/", func(w http.ResponseWriter, r *http.Request) {
+		ksqlCluster := &ksqlv1.KSQLCluster{
+			Id:                "lksqlc-ksql1",
+			AccountId:         "25",
+			KafkaClusterId:    "lkc-12345",
+			OutputTopicPrefix: "pksqlc-abcde",
+			Name:              "account ksql",
+			Storage:           101,
+			Endpoint:          "SASL_SSL://ksql-endpoint",
+		}
+		reply, err := utilv1.MarshalJSONToBytes(&ksqlv1.GetKSQLClusterReply{
+			Cluster: ksqlCluster,
+		})
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(reply))
+		require.NoError(t, err)
+	})
+	router.HandleFunc("/api/ksqls/lksqlc-12345", func(w http.ResponseWriter, r *http.Request) {
+		ksqlCluster := &ksqlv1.KSQLCluster{
+			Id:                "lksqlc-12345",
+			AccountId:         "25",
+			KafkaClusterId:    "lkc-abcde",
+			OutputTopicPrefix: "pksqlc-zxcvb",
+			Name:              "account ksql",
+			Storage:           130,
+			Endpoint:          "SASL_SSL://ksql-endpoint",
+		}
+		reply, err := utilv1.MarshalJSONToBytes(&ksqlv1.GetKSQLClusterReply{
+			Cluster: ksqlCluster,
+		})
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(reply))
+		require.NoError(t, err)
+	})
+	router.HandleFunc("/api/env_metadata", func(w http.ResponseWriter, r *http.Request) {
+		clouds := []*kafkav1.Cloud{
+			{
+				Id:   "gcp",
+				Name: "Google Cloud Platform",
+				Regions: []*kafkav1.Region{
+					{
+						Id:            "asia-southeast1",
+						Name:          "asia-southeast1 (Singapore)",
+						IsSchedulable: true,
+					},
+					{
+						Id:            "asia-east2",
+						Name:          "asia-east2 (Hong Kong)",
+						IsSchedulable: true,
+					},
+				},
+			},
+			{
+				Id:   "aws",
+				Name: "Amazon Web Services",
+				Regions: []*kafkav1.Region{
+					{
+						Id:            "ap-northeast-1",
+						Name:          "ap-northeast-1 (Tokyo)",
+						IsSchedulable: false,
+					},
+					{
+						Id:            "us-east-1",
+						Name:          "us-east-1 (N. Virginia)",
+						IsSchedulable: true,
+					},
+				},
+			},
+			{
+				Id:   "azure",
+				Name: "Azure",
+				Regions: []*kafkav1.Region{
+					{
+						Id:            "southeastasia",
+						Name:          "southeastasia (Singapore)",
+						IsSchedulable: false,
+					},
+				},
+			},
+		}
+		reply, err := utilv1.MarshalJSONToBytes(&kafkav1.GetEnvironmentMetadataReply{
+			Clouds: clouds,
+		})
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(reply))
+		require.NoError(t, err)
+	})
 	return httptest.NewServer(router)
+}
+
+func apiKeysFilter(url *url.URL) []*authv1.ApiKey {
+	var apiKeys []*authv1.ApiKey
+	q := url.Query()
+	uid := q.Get("user_id")
+	clusterIds := q["cluster_id"]
+
+	for _, a := range KEY_STORE {
+		uidFilter := (uid == "0") || (uid == strconv.Itoa(int(a.UserId)))
+		clusterFilter := (len(clusterIds) == 0) || func(clusterIds []string) bool {
+			for _, c := range a.LogicalClusters {
+				for _, clusterId := range clusterIds {
+					if c.Id == clusterId {
+						return true
+					}
+				}
+			}
+			return false
+		}(clusterIds)
+
+		if uidFilter && clusterFilter {
+			apiKeys = append(apiKeys, a)
+		}
+	}
+	return apiKeys
 }
 
 func serveKafkaAPI(t *testing.T) *httptest.Server {
@@ -857,7 +1016,7 @@ func handleMe(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 				Email:     "cody@confluent.io",
 				FirstName: "Cody",
 			},
-			Accounts: []*orgv1.Account{{Id: "a-595", Name: "default"}},
+			Accounts: environments,
 		})
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(b))
@@ -883,7 +1042,7 @@ func handleCheckEmail(t *testing.T) func(w http.ResponseWriter, r *http.Request)
 	}
 }
 
-func handleKafkaClusterGetListDelete(t *testing.T, kafkaAPIURL string) func(w http.ResponseWriter, r *http.Request) {
+func handleKafkaClusterGetListDeleteDescribe(t *testing.T, kafkaAPIURL string) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		parts := strings.Split(r.URL.Path, "/")
 		id := parts[len(parts)-1]
@@ -919,6 +1078,27 @@ func handleKafkaClusterGetListDelete(t *testing.T, kafkaAPIURL string) func(w ht
 	}
 }
 
+func handleKafkaClusterDescribeTest(t *testing.T, kafkaAPIURL string) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		b, err := utilv1.MarshalJSONToBytes(&kafkav1.GetKafkaClusterReply{
+			Cluster: &kafkav1.KafkaCluster{
+				Id:              "lkc-describe",
+				Name:            "kafka-cluster",
+				NetworkIngress:  100,
+				NetworkEgress:   100,
+				Storage:         500,
+				ServiceProvider: "aws",
+				Region:          "us-west-2",
+				Endpoint:        "SASL_SSL://kafka-endpoint",
+				ApiEndpoint:     "http://kafka-api-url",
+			},
+		})
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(b))
+		require.NoError(t, err)
+	}
+}
+
 func handleKafkaClusterCreate(t *testing.T, kafkaAPIURL string) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		req := &kafkav1.CreateKafkaClusterRequest{}
@@ -944,10 +1124,183 @@ func handleKafkaClusterCreate(t *testing.T, kafkaAPIURL string) func(w http.Resp
 	}
 }
 
+func handleKSQLCreateList(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ksqlCluster1 := &ksqlv1.KSQLCluster{
+			Id:                "lksqlc-ksql5",
+			AccountId:         "25",
+			KafkaClusterId:    "lkc-qwert",
+			OutputTopicPrefix: "pksqlc-abcde",
+			Name:              "account ksql",
+			Storage:           101,
+			Endpoint:          "SASL_SSL://ksql-endpoint",
+		}
+		ksqlCluster2 := &ksqlv1.KSQLCluster{
+			Id:                "lksqlc-woooo",
+			AccountId:         "25",
+			KafkaClusterId:    "lkc-zxcvb",
+			OutputTopicPrefix: "pksqlc-ghjkl",
+			Name:              "kay cee queue elle",
+			Storage:           123,
+			Endpoint:          "SASL_SSL://ksql-endpoint",
+		}
+		if r.Method == "POST" {
+			reply, err := utilv1.MarshalJSONToBytes(&ksqlv1.GetKSQLClusterReply{
+				Cluster: ksqlCluster1,
+			})
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(reply))
+			require.NoError(t, err)
+		} else if r.Method == "GET" {
+			listReply, err := utilv1.MarshalJSONToBytes(&ksqlv1.GetKSQLClustersReply{
+				Clusters: []*ksqlv1.KSQLCluster{ksqlCluster1, ksqlCluster2},
+			})
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(listReply))
+			require.NoError(t, err)
+		}
+	}
+}
+
+func handleConnect(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "GET" {
+			connectorExpansion := &connectv1.ConnectorExpansion{
+				Id: &connectv1.ConnectorId{Id: "lcc-123"},
+				Info: &connectv1.ConnectorInfo{
+					Name:   "az-connector",
+					Type:   "Sink",
+					Config: map[string]string{},
+				},
+				Status: &connectv1.ConnectorStateInfo{Name: "az-connector", Connector: &connectv1.ConnectorState{State: "Running"},
+					Tasks: []*connectv1.TaskState{{Id: 1, State: "Running"}},
+				}}
+			listReply, err := json.Marshal(map[string]*connectv1.ConnectorExpansion{"lcc-123": connectorExpansion})
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(listReply))
+			require.NoError(t, err)
+		} else if r.Method == "POST" {
+			var request connectv1.ConnectorInfo
+			err := utilv1.UnmarshalJSON(r.Body, &request)
+			require.NoError(t, err)
+			connector1 := &connectv1.Connector{
+				Name:           request.Name,
+				KafkaClusterId: "lkc-123",
+				AccountId:      "a-595",
+				UserConfigs:    request.Config,
+				Plugin:         request.Config["connector.class"],
+			}
+			reply, err := utilv1.MarshalJSONToBytes(connector1)
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(reply))
+			require.NoError(t, err)
+		}
+	}
+}
+
+func handleConnectorCatalogDescribe(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		configInfos := &connectv1.ConfigInfos{
+			Name:       "",
+			Groups:     nil,
+			ErrorCount: 1,
+			Configs: []*connectv1.Configs{
+				{
+					Value: &connectv1.ConfigValue{
+						Name:   "kafka.api.key",
+						Errors: []string{"\"kafka.api.key\" is required"},
+					},
+				},
+				{
+					Value: &connectv1.ConfigValue{
+						Name:   "kafka.api.secret",
+						Errors: []string{"\"kafka.api.secret\" is required"},
+					},
+				},
+				{
+					Value: &connectv1.ConfigValue{
+						Name:   "topics",
+						Errors: []string{"\"topics\" is required"},
+					},
+				},
+				{
+					Value: &connectv1.ConfigValue{
+						Name:   "data.format",
+						Errors: []string{"\"data.format\" is required", "Value \"null\" doesn't belong to the property's \"data.format\" enum"},
+					},
+				},
+				{
+					Value: &connectv1.ConfigValue{
+						Name:   "gcs.credentials.config",
+						Errors: []string{"\"gcs.credentials.config\" is required"},
+					},
+				},
+				{
+					Value: &connectv1.ConfigValue{
+						Name:   "gcs.bucket.name",
+						Errors: []string{"\"gcs.bucket.name\" is required"},
+					},
+				},
+				{
+					Value: &connectv1.ConfigValue{
+						Name:   "time.interval",
+						Errors: []string{"\"data.format\" is required", "Value \"null\" doesn't belong to the property's \"time.interval\" enum"},
+					},
+				},
+				{
+					Value: &connectv1.ConfigValue{
+						Name:   "tasks.max",
+						Errors: []string{"\"tasks.max\" is required"},
+					},
+				},
+			},
+		}
+		reply, err := json.Marshal(configInfos)
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(reply))
+		require.NoError(t, err)
+	}
+}
+
+func handleConnectPlugins(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "GET" {
+			connectorPlugin1 := &connectv1.ConnectorPluginInfo{
+				Class: "AzureBlobSink",
+				Type:  "Sink",
+			}
+			connectorPlugin2 := &connectv1.ConnectorPluginInfo{
+				Class: "GcsSink",
+				Type:  "Sink",
+			}
+			listReply, err := json.Marshal([]*connectv1.ConnectorPluginInfo{connectorPlugin1, connectorPlugin2})
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(listReply))
+			require.NoError(t, err)
+		}
+	}
+}
+
 func compose(funcs ...func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		for _, f := range funcs {
 			f(w, r)
 		}
+	}
+}
+
+func handleEnvironmentGet(t *testing.T, id string) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		for _, env := range environments {
+			if env.Id == id {
+				// env found
+				b, err := utilv1.MarshalJSONToBytes(&orgv1.GetAccountReply{Account: env})
+				require.NoError(t, err)
+				_, err = io.WriteString(w, string(b))
+				require.NoError(t, err)
+			}
+		}
+		// env not found
+		w.WriteHeader(http.StatusNotFound)
 	}
 }

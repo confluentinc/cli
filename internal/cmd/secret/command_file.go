@@ -2,31 +2,30 @@ package secret
 
 import (
 	"fmt"
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/secret"
+	"os"
+
 	"github.com/confluentinc/go-printer"
 	"github.com/spf13/cobra"
-	"os"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/secret"
 )
 
 type secureFileCommand struct {
 	*cobra.Command
-	config *config.Config
 	plugin secret.PasswordProtection
 	prompt pcmd.Prompt
 	resolv pcmd.FlagResolver
 }
 
 // NewFileCommand returns the Cobra command for managing encrypted file.
-func NewFileCommand(config *config.Config, prompt pcmd.Prompt, resolv pcmd.FlagResolver, plugin secret.PasswordProtection) *cobra.Command {
+func NewFileCommand(prompt pcmd.Prompt, resolv pcmd.FlagResolver, plugin secret.PasswordProtection) *cobra.Command {
 	cmd := &secureFileCommand{
 		Command: &cobra.Command{
 			Use:   "file",
 			Short: "Secure secrets in a configuration properties file.",
 		},
-		config: config,
 		plugin: plugin,
 		prompt: prompt,
 		resolv: resolv,
@@ -73,6 +72,9 @@ if a master key has not already been set using the "master-key generate" command
 
 	decryptCmd.Flags().String("output-file", "", "Output file path.")
 	check(decryptCmd.MarkFlagRequired("output-file"))
+
+	decryptCmd.Flags().String("config", "", "List of configuration keys.")
+	check(decryptCmd.MarkFlagRequired("config"))
 	decryptCmd.Flags().SortFlags = false
 	c.AddCommand(decryptCmd)
 
@@ -177,6 +179,11 @@ func (c *secureFileCommand) encrypt(cmd *cobra.Command, args []string) error {
 }
 
 func (c *secureFileCommand) decrypt(cmd *cobra.Command, args []string) error {
+	configs, err := cmd.Flags().GetString("config")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
 	configPath, err := cmd.Flags().GetString("config-file")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -192,7 +199,7 @@ func (c *secureFileCommand) decrypt(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	err = c.plugin.DecryptConfigFileSecrets(configPath, localSecretsPath, outputPath)
+	err = c.plugin.DecryptConfigFileSecrets(configPath, localSecretsPath, outputPath, configs)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -333,7 +340,7 @@ func (c *secureFileCommand) rotate(cmd *cobra.Command, args []string) error {
 			return errors.HandleCommon(err, cmd)
 		}
 
-		pcmd.Println(cmd, "Save the Master Key. It is not retrievable later.")
+		pcmd.ErrPrintln(cmd, "Save the Master Key. It is not retrievable later.")
 		err = printer.RenderTableOut(&struct{ MasterKey string }{MasterKey: masterKey}, []string{"MasterKey"}, map[string]string{"MasterKey": "Master Key"}, os.Stdout)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)

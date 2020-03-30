@@ -1,0 +1,15 @@
+Manage KSQL applications.
+
+Usage:
+  ccloud ksql [command]
+
+Available Commands:
+  app         Manage KSQL apps.
+
+Flags:
+  -h, --help   help for ksql
+
+Global Flags:
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "ccloud ksql [command] --help" for more information about a command.

@@ -34,12 +34,12 @@ func aclEntryFlags() *pflag.FlagSet {
 	flgSet.Bool("allow", false, "Set the ACL to grant access.")
 	flgSet.Bool("deny", false, "Set the ACL to restrict access to resource.")
 	//flgSet.String( "host", "*", "Set Kafka principal host. Note: Not supported on CCLOUD.")
-	flgSet.Int("service-account-id", 0, "The service account ID.")
+	flgSet.Int("service-account", 0, "The service account ID.")
 	flgSet.String("operation", "", fmt.Sprintf("Set ACL Operation to: (%s).",
 		listEnum(kafkav1.ACLOperations_ACLOperation_name, []string{"ANY", "UNKNOWN"})))
 	// An error is only returned if the flag name is not present.
 	// We know the flag name is present so its safe to ignore this.
-	_ = cobra.MarkFlagRequired(flgSet, "service-account-id")
+	_ = cobra.MarkFlagRequired(flgSet, "service-account")
 	_ = cobra.MarkFlagRequired(flgSet, "operation")
 	return flgSet
 }
@@ -97,7 +97,7 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 			conf.Entry.PermissionType = kafkav1.ACLPermissionTypes_DENY
 		case "prefix":
 			conf.Pattern.PatternType = kafkav1.PatternTypes_PREFIXED
-		case "service-account-id":
+		case "service-account":
 			if v == "0" {
 				conf.Entry.Principal = "User:*"
 				break

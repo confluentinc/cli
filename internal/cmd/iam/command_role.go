@@ -1,110 +1,113 @@
 package iam
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
 	"os"
+	"strings"
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 	"github.com/tidwall/pretty"
 
-	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/cmd"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/go-printer"
-	mds "github.com/confluentinc/mds-sdk-go"
-
-	"context"
-	"encoding/json"
-	"fmt"
-	"net/http"
-	"strings"
+	"github.com/confluentinc/mds-sdk-go"
 )
 
 var (
-	roleListFields     = []string{"Name", "AccessPolicy"}
-	roleListLabels     = []string{"Name", "AccessPolicy"}
-	roleDescribeFields = []string{"Name", "AccessPolicy"}
-	roleDescribeLabels = []string{"Name", "AccessPolicy"}
+	roleFields = []string{"Name", "AccessPolicy"}
+	roleLabels = []string{"Name", "AccessPolicy"}
 )
 
 type roleCommand struct {
-	*cobra.Command
-	config *config.Config
-	client *mds.APIClient
-	ctx    context.Context
+	*cmd.AuthenticatedCLICommand
+}
+
+type prettyRole struct {
+	Name         string
+	AccessPolicy string
 }
 
 // NewRoleCommand returns the sub-command object for interacting with RBAC roles.
-func NewRoleCommand(config *config.Config, client *mds.APIClient) *cobra.Command {
-	cmd := &roleCommand{
-		Command: &cobra.Command{
+func NewRoleCommand(cfg *v3.Config, prerunner cmd.PreRunner) *cobra.Command {
+	cliCmd := cmd.NewAuthenticatedWithMDSCLICommand(
+		&cobra.Command{
 			Use:   "role",
 			Short: "Manage RBAC and IAM roles.",
 			Long:  "Manage Role Based Access (RBAC) and Identity and Access Management (IAM) roles.",
 		},
-		config: config,
-		client: client,
-		ctx:    context.WithValue(context.Background(), mds.ContextAccessToken, config.AuthToken),
+		cfg, prerunner)
+	roleCmd := &roleCommand{
+		AuthenticatedCLICommand: cliCmd,
 	}
+	roleCmd.init()
+	return roleCmd.Command
+}
 
-	cmd.init()
-	return cmd.Command
+func (c *roleCommand) createContext() context.Context {
+	return context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
 }
 
 func (c *roleCommand) init() {
-	c.AddCommand(&cobra.Command{
+	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List the available roles.",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
-	})
+	}
+	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	listCmd.Flags().SortFlags = false
+	c.AddCommand(listCmd)
 
-	c.AddCommand(&cobra.Command{
+	describeCmd := &cobra.Command{
 		Use:   "describe <name>",
 		Short: "Describe the resources and operations allowed for a role.",
 		RunE:  c.describe,
 		Args:  cobra.ExactArgs(1),
-	})
+	}
+	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	describeCmd.Flags().SortFlags = false
+	c.AddCommand(describeCmd)
 }
 
 func (c *roleCommand) list(cmd *cobra.Command, args []string) error {
-	roles, _, err := c.client.RoleDefinitionsApi.Roles(c.ctx)
+	roles, _, err := c.MDSClient.RoleDefinitionsApi.Roles(c.createContext())
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-
-	tablePrinter := tablewriter.NewWriter(os.Stdout)
-	var data [][]string
-	for _, role := range roles {
-		marshalled, err := json.Marshal(role.AccessPolicy)
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-		prettyRole := struct {
-			Name         string
-			AccessPolicy string
-		}{
-			role.Name,
-			string(pretty.Pretty(marshalled)),
-		}
-		data = append(data, printer.ToRow(&prettyRole, roleListFields))
+	format, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
 	}
-	tablePrinter.SetAutoWrapText(false)
-	tablePrinter.SetAutoFormatHeaders(false)
-	tablePrinter.SetHeader(roleListLabels)
-	tablePrinter.AppendBulk(data)
-	tablePrinter.SetBorder(false)
-	tablePrinter.Render()
-
+	if format == output.Human.String() {
+		var data [][]string
+		for _, role := range roles {
+			roleDisplay, err := createPrettyRole(role)
+			if err != nil {
+				return errors.HandleCommon(err, cmd)
+			}
+			data = append(data, printer.ToRow(roleDisplay, roleFields))
+		}
+		outputTable(data)
+	} else {
+		return output.StructuredOutput(format, roles)
+	}
 	return nil
 }
 
 func (c *roleCommand) describe(cmd *cobra.Command, args []string) error {
 	role := args[0]
 
-	details, r, err := c.client.RoleDefinitionsApi.RoleDetail(c.ctx, role)
+	details, r, err := c.MDSClient.RoleDefinitionsApi.RoleDetail(c.createContext(), role)
 	if err != nil {
 		if r.StatusCode == http.StatusNoContent {
-			availableRoleNames, _, err := c.client.RoleDefinitionsApi.Rolenames(c.ctx)
+			availableRoleNames, _, err := c.MDSClient.RoleDefinitionsApi.Rolenames(c.createContext())
 			if err != nil {
 				return errors.HandleCommon(err, cmd)
 			}
@@ -116,9 +119,43 @@ func (c *roleCommand) describe(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	var data [][]string
-	data = append(data, printer.ToRow(&details, roleDescribeFields))
-	printer.RenderCollectionTable(data, roleDescribeLabels)
+	format, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	if format == output.Human.String() {
+		var data [][]string
+		roleDisplay, err := createPrettyRole(details)
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+		data = append(data, printer.ToRow(roleDisplay, roleFields))
+		outputTable(data)
+	} else {
+		return output.StructuredOutput(format, details)
+	}
 
 	return nil
+}
+
+func createPrettyRole(role mds.Role) (*prettyRole, error) {
+	marshalled, err := json.Marshal(role.AccessPolicy)
+	if err != nil {
+		return nil, err
+	}
+	return &prettyRole{
+		role.Name,
+		string(pretty.Pretty(marshalled)),
+	}, nil
+}
+
+func outputTable(data [][]string) {
+	tablePrinter := tablewriter.NewWriter(os.Stdout)
+	tablePrinter.SetAutoWrapText(false)
+	tablePrinter.SetAutoFormatHeaders(false)
+	tablePrinter.SetHeader(roleLabels)
+	tablePrinter.AppendBulk(data)
+	tablePrinter.SetBorder(false)
+	tablePrinter.Render()
 }

@@ -3,7 +3,6 @@ package kafka
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"strconv"
 	"strings"
 	"testing"
@@ -11,17 +10,15 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/confluentinc/ccloud-sdk-go/mock"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
-	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	"github.com/spf13/cobra"
 
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
-var conf *config.Config
+var conf *v3.Config
 
 /*************** TEST command_acl ***************/
 var resourcePatterns = []struct {
@@ -75,102 +72,102 @@ var aclEntries = []struct {
 	entry *kafkav1.AccessControlEntryConfig
 }{
 	{
-		args: []string{"--allow", "--service-account-id", "42", "--operation", "read"},
+		args: []string{"--allow", "--service-account", "42", "--operation", "read"},
 		entry: &kafkav1.AccessControlEntryConfig{PermissionType: kafkav1.ACLPermissionTypes_ALLOW,
 			Principal: "User:42", Operation: kafkav1.ACLOperations_READ, Host: "*"},
 	},
 	{
-		args: []string{"--deny", "--service-account-id", "42", "--operation", "read"},
+		args: []string{"--deny", "--service-account", "42", "--operation", "read"},
 		entry: &kafkav1.AccessControlEntryConfig{PermissionType: kafkav1.ACLPermissionTypes_DENY,
 			Principal: "User:42", Operation: kafkav1.ACLOperations_READ, Host: "*"},
 	},
 	{
-		args: []string{"--allow", "--service-account-id", "42", "--operation", "write"},
+		args: []string{"--allow", "--service-account", "42", "--operation", "write"},
 		entry: &kafkav1.AccessControlEntryConfig{PermissionType: kafkav1.ACLPermissionTypes_ALLOW,
 			Principal: "User:42", Operation: kafkav1.ACLOperations_WRITE, Host: "*"},
 	},
 	{
-		args: []string{"--deny", "--service-account-id", "42", "--operation", "write"},
+		args: []string{"--deny", "--service-account", "42", "--operation", "write"},
 		entry: &kafkav1.AccessControlEntryConfig{PermissionType: kafkav1.ACLPermissionTypes_DENY,
 			Principal: "User:42", Operation: kafkav1.ACLOperations_WRITE, Host: "*"},
 	},
 	{
-		args: []string{"--allow", "--service-account-id", "42", "--operation", "create"},
+		args: []string{"--allow", "--service-account", "42", "--operation", "create"},
 		entry: &kafkav1.AccessControlEntryConfig{PermissionType: kafkav1.ACLPermissionTypes_ALLOW,
 			Principal: "User:42", Operation: kafkav1.ACLOperations_CREATE, Host: "*"},
 	},
 	{
-		args: []string{"--deny", "--service-account-id", "42", "--operation", "create"},
+		args: []string{"--deny", "--service-account", "42", "--operation", "create"},
 		entry: &kafkav1.AccessControlEntryConfig{PermissionType: kafkav1.ACLPermissionTypes_DENY,
 			Principal: "User:42", Operation: kafkav1.ACLOperations_CREATE, Host: "*"},
 	},
 	{
-		args: []string{"--allow", "--service-account-id", "42", "--operation", "delete"},
+		args: []string{"--allow", "--service-account", "42", "--operation", "delete"},
 		entry: &kafkav1.AccessControlEntryConfig{PermissionType: kafkav1.ACLPermissionTypes_ALLOW,
 			Principal: "User:42", Operation: kafkav1.ACLOperations_DELETE, Host: "*"},
 	},
 	{
-		args: []string{"--deny", "--service-account-id", "42", "--operation", "delete"},
+		args: []string{"--deny", "--service-account", "42", "--operation", "delete"},
 		entry: &kafkav1.AccessControlEntryConfig{PermissionType: kafkav1.ACLPermissionTypes_DENY,
 			Principal: "User:42", Operation: kafkav1.ACLOperations_DELETE, Host: "*"},
 	},
 	{
-		args: []string{"--allow", "--service-account-id", "42", "--operation", "alter"},
+		args: []string{"--allow", "--service-account", "42", "--operation", "alter"},
 		entry: &kafkav1.AccessControlEntryConfig{PermissionType: kafkav1.ACLPermissionTypes_ALLOW,
 			Principal: "User:42", Operation: kafkav1.ACLOperations_ALTER, Host: "*"},
 	},
 	{
-		args: []string{"--deny", "--service-account-id", "42", "--operation", "alter"},
+		args: []string{"--deny", "--service-account", "42", "--operation", "alter"},
 		entry: &kafkav1.AccessControlEntryConfig{PermissionType: kafkav1.ACLPermissionTypes_DENY,
 			Principal: "User:42", Operation: kafkav1.ACLOperations_ALTER, Host: "*"},
 	},
 	{
-		args: []string{"--allow", "--service-account-id", "42", "--operation", "describe"},
+		args: []string{"--allow", "--service-account", "42", "--operation", "describe"},
 		entry: &kafkav1.AccessControlEntryConfig{PermissionType: kafkav1.ACLPermissionTypes_ALLOW,
 			Principal: "User:42", Operation: kafkav1.ACLOperations_DESCRIBE, Host: "*"},
 	},
 	{
-		args: []string{"--deny", "--service-account-id", "42", "--operation", "describe"},
+		args: []string{"--deny", "--service-account", "42", "--operation", "describe"},
 		entry: &kafkav1.AccessControlEntryConfig{PermissionType: kafkav1.ACLPermissionTypes_DENY,
 			Principal: "User:42", Operation: kafkav1.ACLOperations_DESCRIBE, Host: "*"},
 	},
 	{
-		args: []string{"--allow", "--service-account-id", "42", "--operation", "cluster-action"},
+		args: []string{"--allow", "--service-account", "42", "--operation", "cluster-action"},
 		entry: &kafkav1.AccessControlEntryConfig{PermissionType: kafkav1.ACLPermissionTypes_ALLOW,
 			Principal: "User:42", Operation: kafkav1.ACLOperations_CLUSTER_ACTION, Host: "*"},
 	},
 	{
-		args: []string{"--deny", "--service-account-id", "42", "--operation", "cluster-action"},
+		args: []string{"--deny", "--service-account", "42", "--operation", "cluster-action"},
 		entry: &kafkav1.AccessControlEntryConfig{PermissionType: kafkav1.ACLPermissionTypes_DENY,
 			Principal: "User:42", Operation: kafkav1.ACLOperations_CLUSTER_ACTION, Host: "*"},
 	},
 	{
-		args: []string{"--allow", "--service-account-id", "42", "--operation", "describe-configs"},
+		args: []string{"--allow", "--service-account", "42", "--operation", "describe-configs"},
 		entry: &kafkav1.AccessControlEntryConfig{PermissionType: kafkav1.ACLPermissionTypes_ALLOW,
 			Principal: "User:42", Operation: kafkav1.ACLOperations_DESCRIBE_CONFIGS, Host: "*"},
 	},
 	{
-		args: []string{"--deny", "--service-account-id", "42", "--operation", "describe-configs"},
+		args: []string{"--deny", "--service-account", "42", "--operation", "describe-configs"},
 		entry: &kafkav1.AccessControlEntryConfig{PermissionType: kafkav1.ACLPermissionTypes_DENY,
 			Principal: "User:42", Operation: kafkav1.ACLOperations_DESCRIBE_CONFIGS, Host: "*"},
 	},
 	{
-		args: []string{"--allow", "--service-account-id", "42", "--operation", "alter-configs"},
+		args: []string{"--allow", "--service-account", "42", "--operation", "alter-configs"},
 		entry: &kafkav1.AccessControlEntryConfig{PermissionType: kafkav1.ACLPermissionTypes_ALLOW,
 			Principal: "User:42", Operation: kafkav1.ACLOperations_ALTER_CONFIGS, Host: "*"},
 	},
 	{
-		args: []string{"--deny", "--service-account-id", "42", "--operation", "alter-configs"},
+		args: []string{"--deny", "--service-account", "42", "--operation", "alter-configs"},
 		entry: &kafkav1.AccessControlEntryConfig{PermissionType: kafkav1.ACLPermissionTypes_DENY,
 			Principal: "User:42", Operation: kafkav1.ACLOperations_ALTER_CONFIGS, Host: "*"},
 	},
 	{
-		args: []string{"--allow", "--service-account-id", "42", "--operation", "idempotent-write"},
+		args: []string{"--allow", "--service-account", "42", "--operation", "idempotent-write"},
 		entry: &kafkav1.AccessControlEntryConfig{PermissionType: kafkav1.ACLPermissionTypes_ALLOW,
 			Principal: "User:42", Operation: kafkav1.ACLOperations_IDEMPOTENT_WRITE, Host: "*"},
 	},
 	{
-		args: []string{"--deny", "--service-account-id", "42", "--operation", "idempotent-write"},
+		args: []string{"--deny", "--service-account", "42", "--operation", "idempotent-write"},
 		entry: &kafkav1.AccessControlEntryConfig{PermissionType: kafkav1.ACLPermissionTypes_DENY,
 			Principal: "User:42", Operation: kafkav1.ACLOperations_IDEMPOTENT_WRITE, Host: "*"},
 	},
@@ -234,7 +231,7 @@ func TestListPrincipalACL(t *testing.T) {
 	expect := make(chan interface{})
 	for _, entry := range aclEntries {
 		cmd := NewCMD(expect)
-		cmd.SetArgs(append([]string{"acl", "list", "--service-account-id"}, strings.TrimPrefix(entry.entry.Principal, "User:")))
+		cmd.SetArgs(append([]string{"acl", "list", "--service-account"}, strings.TrimPrefix(entry.entry.Principal, "User:")))
 
 		go func() {
 			expect <- convertToFilter(&kafkav1.ACLBinding{Entry: &kafkav1.AccessControlEntryConfig{Principal: entry.entry.Principal}})
@@ -252,7 +249,7 @@ func TestListResourcePrincipalFilterACL(t *testing.T) {
 		args := append([]string{"acl", "list"}, resource.args...)
 		for _, entry := range aclEntries {
 			cmd := NewCMD(expect)
-			cmd.SetArgs(append(args, "--service-account-id", strings.TrimPrefix(entry.entry.Principal, "User:")))
+			cmd.SetArgs(append(args, "--service-account", strings.TrimPrefix(entry.entry.Principal, "User:")))
 
 			go func() {
 				expect <- convertToFilter(&kafkav1.ACLBinding{Pattern: resource.pattern, Entry: entry.entry})
@@ -267,7 +264,7 @@ func TestListResourcePrincipalFilterACL(t *testing.T) {
 
 func TestMultipleResourceACL(t *testing.T) {
 	expect := "exactly one of cluster-scope, consumer-group, topic, transactional-id must be set"
-	args := []string{"acl", "create", "--allow", "--operation", "read", "--service-account-id", "42",
+	args := []string{"acl", "create", "--allow", "--operation", "read", "--service-account", "42",
 		"--topic", "resource1", "--consumer-group", "resource2"}
 
 	cmd := NewCMD(nil)
@@ -381,7 +378,7 @@ func TestUpdateTopic(t *testing.T) {
 func TestDefaults(t *testing.T) {
 	expect := make(chan interface{})
 	cmd := NewCMD(expect)
-	cmd.SetArgs([]string{"acl", "create", "--allow", "--service-account-id", "42",
+	cmd.SetArgs([]string{"acl", "create", "--allow", "--service-account", "42",
 		"--operation", "read", "--topic", "dan"})
 	go func() {
 		expect <- &kafkav1.ACLBinding{
@@ -397,7 +394,7 @@ func TestDefaults(t *testing.T) {
 	}
 
 	cmd = NewCMD(expect)
-	cmd.SetArgs([]string{"acl", "create", "--cluster-scope", "--allow", "--service-account-id", "42",
+	cmd.SetArgs([]string{"acl", "create", "--cluster-scope", "--allow", "--service-account", "42",
 		"--operation", "read"})
 
 	go func() {
@@ -422,14 +419,15 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 			return nil, errors.ErrNotLoggedIn
 		},
 	}
-	cmd, _ := New(&cliMock.Commander{}, conf, log.New(), "test-client", kafka, &pcmd.ConfigHelper{Config: conf, Client: &ccloud.Client{Kafka: kafka}})
+	client := &ccloud.Client{Kafka: kafka}
+	cmd := New(cliMock.NewPreRunnerMock(client, nil), conf, log.New(), "test-client")
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	cmd.SetArgs(append([]string{"cluster", "list"}))
 	buf := new(bytes.Buffer)
 	cmd.SetOutput(buf)
 
 	err := cmd.Execute()
-	want := "You must login to run that command."
+	want := "You must log in to run that command."
 	if err.Error() != want {
 		t.Errorf("unexpected output, got %s, want %s", err, want)
 	}
@@ -437,44 +435,13 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 
 /*************** TEST setup/helpers ***************/
 func NewCMD(expect chan interface{}) *cobra.Command {
-	kafka := cliMock.NewKafkaMock(expect)
-	cmd, _ := New(&cliMock.Commander{}, conf, log.New(), "test-client", kafka, &pcmd.ConfigHelper{Config: conf, Client: &ccloud.Client{Kafka: kafka}})
+	client := &ccloud.Client{Kafka: cliMock.NewKafkaMock(expect)}
+	cmd := New(cliMock.NewPreRunnerMock(client, nil), conf, log.New(), "test-client")
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 
 	return cmd
 }
 
 func init() {
-	conf = config.New()
-	conf.Logger = log.New()
-	conf.AuthURL = "http://test"
-	conf.Auth = &config.AuthConfig{
-		User:    new(orgv1.User),
-		Account: &orgv1.Account{Id: "testAccount"},
-	}
-	initContext(conf)
-}
-
-// initContext mimics logging in with a configured context
-// TODO: create auth mock
-func initContext(cfg *config.Config) {
-	user := cfg.Auth
-	name := fmt.Sprintf("login-%s-%s", user.User.Email, cfg.AuthURL)
-
-	cfg.Platforms[name] = &config.Platform{
-		Server: cfg.AuthURL,
-	}
-
-	cfg.Credentials[name] = &config.Credential{
-		Username: user.User.Email,
-	}
-
-	cfg.Contexts[name] = &config.Context{
-		Platform:      name,
-		Credential:    name,
-		KafkaClusters: map[string]*config.KafkaClusterConfig{name: {}},
-		Kafka:         name,
-	}
-
-	cfg.CurrentContext = name
+	conf = v3.AuthenticatedCloudConfigMock()
 }

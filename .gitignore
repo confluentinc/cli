@@ -32,6 +32,10 @@ terraform.d
 .netrc
 
 coverage.txt
+ccloud_test
+confluent_test
+integ_coverage.txt
+unit_coverage.txt
 /ccloud
 *.sw*
 .vscode

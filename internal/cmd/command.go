@@ -1,22 +1,22 @@
 package cmd
 
 import (
-	"context"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"net/http"
 	"os"
+	"runtime"
 
 	"github.com/DABH/go-basher"
 	"github.com/jonboulle/clockwork"
 	"github.com/spf13/cobra"
-
-	"github.com/confluentinc/ccloud-sdk-go"
-	"github.com/confluentinc/mds-sdk-go"
 
 	"github.com/confluentinc/cli/internal/cmd/apikey"
 	"github.com/confluentinc/cli/internal/cmd/auth"
 	"github.com/confluentinc/cli/internal/cmd/cluster"
 	"github.com/confluentinc/cli/internal/cmd/completion"
 	"github.com/confluentinc/cli/internal/cmd/config"
+	"github.com/confluentinc/cli/internal/cmd/connector"
+	connector_catalog "github.com/confluentinc/cli/internal/cmd/connector-catalog"
 	"github.com/confluentinc/cli/internal/cmd/environment"
 	"github.com/confluentinc/cli/internal/cmd/iam"
 	initcontext "github.com/confluentinc/cli/internal/cmd/init-context"
@@ -29,19 +29,25 @@ import (
 	service_account "github.com/confluentinc/cli/internal/cmd/service-account"
 	"github.com/confluentinc/cli/internal/cmd/update"
 	"github.com/confluentinc/cli/internal/cmd/version"
+	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	configs "github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/cli/internal/pkg/errors"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/help"
 	"github.com/confluentinc/cli/internal/pkg/io"
-	"github.com/confluentinc/cli/internal/pkg/keystore"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	pps1 "github.com/confluentinc/cli/internal/pkg/ps1"
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
-	versions "github.com/confluentinc/cli/internal/pkg/version"
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
-func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Version, logger *log.Logger) (*cobra.Command, error) {
+type Command struct {
+	*cobra.Command
+	// @VisibleForTesting
+	Analytics analytics.Client
+	logger    *log.Logger
+}
+
+func NewConfluentCommand(cliName string, cfg *v3.Config, logger *log.Logger, ver *pversion.Version, analytics analytics.Client) (*Command, error) {
 	cli := &cobra.Command{
 		Use:               cliName,
 		Version:           ver.Version,
@@ -65,75 +71,63 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 
 	prompt := pcmd.NewPrompt(os.Stdin)
 
-	updateClient, err := update.NewClient(cliName, cfg.DisableUpdateCheck, logger)
+	updateClient, err := update.NewClient(cliName, cfg.DisableUpdateCheck || cfg.DisableUpdates, logger)
 	if err != nil {
 		return nil, err
 	}
+	currCtx := cfg.Context()
 
-	client := ccloud.NewClientWithJWT(context.Background(), cfg.AuthToken, &ccloud.Params{
-		BaseURL: cfg.AuthURL, Logger: cfg.Logger, UserAgent: ver.UserAgent,
-	})
-
-	ch := &pcmd.ConfigHelper{Config: cfg, Client: client, Version: ver}
 	fs := &io.RealFileSystem{}
 
+	resolver := &pcmd.FlagResolverImpl{Prompt: prompt, Out: os.Stdout}
 	prerunner := &pcmd.PreRun{
 		UpdateClient: updateClient,
 		CLIName:      cliName,
-		Version:      ver.Version,
 		Logger:       logger,
-		Config:       cfg,
-		ConfigHelper: ch,
 		Clock:        clockwork.NewRealClock(),
+		FlagResolver: resolver,
+		Version:      ver,
+		Analytics:    analytics,
 	}
-
-	cli.PersistentPreRunE = prerunner.Anonymous()
-
-	mdsConfig := mds.NewConfiguration()
-	mdsConfig.BasePath = cfg.AuthURL
-	mdsConfig.UserAgent = ver.UserAgent
-
-	mdsClient := mds.NewAPIClient(mdsConfig)
+	_ = pcmd.NewAnonymousCLICommand(cli, cfg, prerunner) // Add to correctly set prerunners. TODO: Check if really needed.
+	command := &Command{Command: cli, Analytics: analytics, logger: logger}
 
 	cli.Version = ver.Version
 	cli.AddCommand(version.NewVersionCmd(prerunner, ver))
 
-	conn := config.New(cfg)
+	conn := config.New(cfg, prerunner, analytics)
 	conn.Hidden = true // The config/context feature isn't finished yet, so let's hide it
 	cli.AddCommand(conn)
 
 	cli.AddCommand(completion.NewCompletionCmd(cli, cliName))
-	cli.AddCommand(update.New(cliName, cfg, ver, prompt, updateClient))
-	cli.AddCommand(auth.New(prerunner, cfg, logger, mdsClient, ver.UserAgent)...)
 
-	resolver := &pcmd.FlagResolverImpl{Prompt: prompt, Out: os.Stdout}
+	if !cfg.DisableUpdates {
+		cli.AddCommand(update.New(cliName, cfg, ver, prompt, updateClient))
+	}
+	cli.AddCommand(auth.New(prerunner, cfg, logger, ver.UserAgent, analytics)...)
 
 	if cliName == "ccloud" {
-		cmd, err := kafka.New(prerunner, cfg, logger.Named("kafka"), ver.ClientID, client.Kafka, ch)
-		if err != nil {
-			return nil, err
-		}
+		cmd := kafka.New(prerunner, cfg, logger.Named("kafka"), ver.ClientID)
 		cli.AddCommand(cmd)
-		cli.AddCommand(initcontext.New(prerunner, cfg, prompt, resolver))
-		credType, err := cfg.CredentialType()
-		if _, ok := err.(*errors.UnspecifiedCredentialError); ok {
-			return nil, err
-		}
-		if credType == configs.APIKey {
-			return cli, nil
+		cli.AddCommand(initcontext.New(prerunner, cfg, prompt, resolver, analytics))
+		if currCtx != nil && currCtx.Credential != nil && currCtx.Credential.CredentialType == v2.APIKey {
+			return command, nil
 		}
 		cli.AddCommand(ps1.NewPromptCmd(cfg, &pps1.Prompt{Config: cfg}, logger))
-		ks := &keystore.ConfigKeyStore{Config: cfg, Helper: ch}
-		cli.AddCommand(environment.New(prerunner, cfg, client.Account, cliName))
-		cli.AddCommand(service_account.New(prerunner, cfg, client.User))
-		cli.AddCommand(apikey.New(prerunner, cfg, client.APIKey, ch, ks))
+		cli.AddCommand(environment.New(prerunner, cfg, cliName))
+		cli.AddCommand(service_account.New(prerunner, cfg))
+		// Keystore exposed so tests can pass mocks.
+		cli.AddCommand(apikey.New(prerunner, cfg, nil, resolver))
 
 		// Schema Registry
 		// If srClient is nil, the function will look it up after prerunner verifies authentication. Exposed so tests can pass mocks
-		sr := schema_registry.New(prerunner, cfg, client.SchemaRegistry, ch, nil, client.Metrics, logger)
+		sr := schema_registry.New(prerunner, cfg, nil, logger)
 		cli.AddCommand(sr)
+		cli.AddCommand(ksql.New(prerunner, cfg))
+		cli.AddCommand(connector.New(prerunner, cfg))
+		cli.AddCommand(connector_catalog.New(prerunner, cfg))
 
-		conn = ksql.New(prerunner, cfg, client.KSQL, client.Kafka, client.User, ch)
+		conn = ksql.New(prerunner, cfg)
 		conn.Hidden = true // The ksql feature isn't finished yet, so let's hide it
 		cli.AddCommand(conn)
 
@@ -141,19 +135,40 @@ func NewConfluentCommand(cliName string, cfg *configs.Config, ver *versions.Vers
 		//conn.Hidden = true // The connect feature isn't finished yet, so let's hide it
 		//cli.AddCommand(conn)
 	} else if cliName == "confluent" {
-		cli.AddCommand(iam.New(prerunner, cfg, mdsClient))
+		cli.AddCommand(iam.New(prerunner, cfg))
 
 		metaClient := cluster.NewScopedIdService(&http.Client{}, ver.UserAgent, logger)
 		cli.AddCommand(cluster.New(prerunner, cfg, metaClient))
 
-		bash, err := basher.NewContext("/bin/bash", false)
-		if err != nil {
-			return nil, err
+		if runtime.GOOS != "windows" {
+			bash, err := basher.NewContext("/bin/bash", false)
+			if err != nil {
+				return nil, err
+			}
+			shellRunner := &local.BashShellRunner{BasherContext: bash}
+			cli.AddCommand(local.New(cli, prerunner, shellRunner, logger, fs, cfg))
 		}
-		shellRunner := &local.BashShellRunner{BasherContext: bash}
-		cli.AddCommand(local.New(cli, prerunner, shellRunner, logger, fs))
 
-		cli.AddCommand(secret.New(prerunner, cfg, prompt, resolver, secrets.NewPasswordProtectionPlugin(logger)))
+		cli.AddCommand(secret.New(prompt, resolver, secrets.NewPasswordProtectionPlugin(logger)))
 	}
-	return cli, nil
+	return command, nil
+}
+
+func (c *Command) Execute(args []string) error {
+	c.Analytics.SetStartTime()
+	c.Command.SetArgs(args)
+	err := c.Command.Execute()
+	if err != nil {
+		analyticsError := c.Analytics.SendCommandFailed(err)
+		if analyticsError != nil {
+			c.logger.Debugf("segment analytics sending event failed: %s\n", analyticsError.Error())
+		}
+		return err
+	}
+	c.Analytics.CatchHelpCall(c.Command, args)
+	analyticsError := c.Analytics.SendCommandSucceeded()
+	if analyticsError != nil {
+		c.logger.Debugf("segment analytics sending event failed: %s\n", analyticsError.Error())
+	}
+	return nil
 }

@@ -10,18 +10,21 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/cmd"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/go-printer"
 	"github.com/confluentinc/mds-sdk-go"
 )
 
 var (
-	resourcePatternListFields = []string{"ResourceType", "Name", "PatternType"}
-	resourcePatternListLabels = []string{"Principal", "Role", "ResourceType", "Name", "PatternType"}
+	resourcePatternListFields           = []string{"Principal", "Role", "ResourceType", "Name", "PatternType"}
+	resourcePatternHumanListLabels      = []string{"Principal", "Role", "ResourceType", "Name", "PatternType"}
+	resourcePatternStructuredListLabels = []string{"principal", "role", "resource_type", "name", "pattern_type"}
 
 	//TODO: please move this to a backend route
-	clusterScopedRoles        = map[string]bool{
+	clusterScopedRoles = map[string]bool{
 		"SystemAdmin":   true,
 		"ClusterAdmin":  true,
 		"SecurityAdmin": true,
@@ -40,27 +43,29 @@ type rolebindingOptions struct {
 }
 
 type rolebindingCommand struct {
-	*cobra.Command
-	config *config.Config
-	client *mds.APIClient
-	ctx    context.Context
+	*cmd.AuthenticatedCLICommand
+}
+
+type listDisplay struct {
+	Principal    string
+	Role         string
+	ResourceType string
+	Name         string
+	PatternType  string
 }
 
 // NewRolebindingCommand returns the sub-command object for interacting with RBAC rolebindings.
-func NewRolebindingCommand(config *config.Config, client *mds.APIClient) *cobra.Command {
-	cmd := &rolebindingCommand{
-		Command: &cobra.Command{
+func NewRolebindingCommand(cfg *v3.Config, prerunner cmd.PreRunner) *cobra.Command {
+	cliCmd := cmd.NewAuthenticatedWithMDSCLICommand(
+		&cobra.Command{
 			Use:   "rolebinding",
 			Short: "Manage RBAC and IAM role bindings.",
 			Long:  "Manage Role Based Access (RBAC) and Identity and Access Management (IAM) role bindings.",
 		},
-		config: config,
-		client: client,
-		ctx:    context.WithValue(context.Background(), mds.ContextAccessToken, config.AuthToken),
-	}
-
-	cmd.init()
-	return cmd.Command
+		cfg, prerunner)
+	roleBindingCmd := &rolebindingCommand{AuthenticatedCLICommand: cliCmd}
+	roleBindingCmd.init()
+	return roleBindingCmd.Command
 }
 
 func (c *rolebindingCommand) init() {
@@ -78,6 +83,7 @@ func (c *rolebindingCommand) init() {
 	listCmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for scope of rolebinding listings.")
 	listCmd.Flags().String("ksql-cluster-id", "", "KSQL cluster ID for scope of rolebinding listings.")
 	listCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for scope of rolebinding listings.")
+	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
 
 	c.AddCommand(listCmd)
@@ -148,7 +154,8 @@ func (c *rolebindingCommand) parseAndValidateResourcePattern(typename string, pr
 }
 
 func (c *rolebindingCommand) validateRoleAndResourceType(roleName string, resourceType string) error {
-	role, _, err := c.client.RoleDefinitionsApi.RoleDetail(c.ctx, roleName)
+	ctx := c.createContext()
+	role, _, err := c.MDSClient.RoleDefinitionsApi.RoleDetail(ctx, roleName)
 	if err != nil {
 		return errors.Wrapf(err, "Failed to look up role %s. Was an invalid role name specified?", roleName)
 	}
@@ -238,9 +245,8 @@ func (c *rolebindingCommand) listPrincipalResources(cmd *cobra.Command) error {
 		}
 		role = r
 	}
-
-	principalsRolesResourcePatterns, response, err := c.client.RoleBindingSummariesApi.LookupResourcesForPrincipal(
-		c.ctx,
+	principalsRolesResourcePatterns, response, err := c.MDSClient.RoleBindingSummariesApi.LookupResourcesForPrincipal(
+		c.createContext(),
 		principal,
 		mds.Scope{Clusters: *scopeClusters})
 	if err != nil {
@@ -250,41 +256,47 @@ func (c *rolebindingCommand) listPrincipalResources(cmd *cobra.Command) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	var data [][]string
+	outputWriter, err := output.NewListOutputWriter(cmd, resourcePatternListFields, resourcePatternHumanListLabels, resourcePatternStructuredListLabels)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
 	for principalName, rolesResourcePatterns := range principalsRolesResourcePatterns {
 		for roleName, resourcePatterns := range rolesResourcePatterns {
 			if role == "*" || roleName == role {
 				for _, resourcePattern := range resourcePatterns {
-					data = append(data, append([]string{principalName, roleName}, printer.ToRow(&resourcePattern, resourcePatternListFields)...))
+					outputWriter.AddElement(&listDisplay{
+						Principal:    principalName,
+						Role:         roleName,
+						ResourceType: resourcePattern.ResourceType,
+						Name:         resourcePattern.Name,
+						PatternType:  resourcePattern.PatternType,
+					})
 				}
 				if len(resourcePatterns) == 0 && clusterScopedRoles[roleName] {
-					data = append(data, []string{principalName, roleName, "Cluster", "", ""})
+					outputWriter.AddElement(&listDisplay{
+						Principal:    principalName,
+						Role:         roleName,
+						ResourceType: "Cluster",
+						Name:         "",
+						PatternType:  "",
+					})
 				}
 			}
 		}
 	}
 
-	// Stable output values
-	sort.Slice(data, func(i, j int) bool {
-		for x := range data[i] {
-			if data[i][x] != data[j][x] {
-				return data[i][x] < data[j][x]
-			}
-		}
-		return false
-	})
+	outputWriter.StableSort()
 
-	printer.RenderCollectionTable(data, resourcePatternListLabels)
-
-	return nil
+	return outputWriter.Out()
 }
 
 func (c *rolebindingCommand) listPrincipalResourcesV1(cmd *cobra.Command, scopeClusters *mds.ScopeClusters, principal string, role string) error {
 	var err error
 	roleNames := []string{role}
 	if role == "*" {
-		roleNames, _, err = c.client.RoleBindingSummariesApi.ScopedPrincipalRolenames(
-			c.ctx,
+		roleNames, _, err = c.MDSClient.RoleBindingSummariesApi.ScopedPrincipalRolenames(
+			c.createContext(),
 			principal,
 			mds.Scope{Clusters: *scopeClusters})
 		if err != nil {
@@ -294,8 +306,8 @@ func (c *rolebindingCommand) listPrincipalResourcesV1(cmd *cobra.Command, scopeC
 
 	var data [][]string
 	for _, roleName := range roleNames {
-		rps, _, err := c.client.RoleBindingCRUDApi.GetRoleResourcesForPrincipal(
-			c.ctx,
+		rps, _, err := c.MDSClient.RoleBindingCRUDApi.GetRoleResourcesForPrincipal(
+			c.createContext(),
 			principal,
 			roleName,
 			mds.Scope{Clusters: *scopeClusters})
@@ -339,8 +351,8 @@ func (c *rolebindingCommand) listRolePrincipals(cmd *cobra.Command) error {
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
-		principals, _, err = c.client.RoleBindingSummariesApi.LookupPrincipalsWithRoleOnResource(
-			c.ctx,
+		principals, _, err = c.MDSClient.RoleBindingSummariesApi.LookupPrincipalsWithRoleOnResource(
+			c.createContext(),
 			role,
 			resource.ResourceType,
 			resource.Name,
@@ -349,8 +361,8 @@ func (c *rolebindingCommand) listRolePrincipals(cmd *cobra.Command) error {
 			return errors.HandleCommon(err, cmd)
 		}
 	} else {
-		principals, _, err = c.client.RoleBindingSummariesApi.LookupPrincipalsWithRole(
-			c.ctx,
+		principals, _, err = c.MDSClient.RoleBindingSummariesApi.LookupPrincipalsWithRole(
+			c.createContext(),
 			role,
 			mds.Scope{Clusters: *scopeClusters})
 		if err != nil {
@@ -359,13 +371,19 @@ func (c *rolebindingCommand) listRolePrincipals(cmd *cobra.Command) error {
 	}
 
 	sort.Strings(principals)
-	var data [][]string
-	for _, principal := range principals {
-		data = append(data, []string{principal})
+	outputWriter, err := output.NewListOutputWriter(cmd, []string{"Principal"}, []string{"Principal"}, []string{"principal"})
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
 	}
-	printer.RenderCollectionTable(data, []string{"Principal"})
-
-	return nil
+	for _, principal := range principals {
+		displayStruct := &struct {
+			Principal string
+		}{
+			Principal: principal,
+		}
+		outputWriter.AddElement(displayStruct)
+	}
+	return outputWriter.Out()
 }
 
 func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOptions, error) {
@@ -415,13 +433,13 @@ func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOption
 	}
 
 	return &rolebindingOptions{
-		role,
-		resource,
-		prefix,
-		principal,
-		*scopeClusters,
-		resourcesRequest,
-	},
+			role,
+			resource,
+			prefix,
+			principal,
+			*scopeClusters,
+			resourcesRequest,
+		},
 		nil
 }
 
@@ -433,14 +451,14 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, args []string) error {
 
 	var resp *http.Response
 	if options.resource != "" {
-		resp, err = c.client.RoleBindingCRUDApi.AddRoleResourcesForPrincipal(
-			c.ctx,
+		resp, err = c.MDSClient.RoleBindingCRUDApi.AddRoleResourcesForPrincipal(
+			c.createContext(),
 			options.principal,
 			options.role,
 			options.resourcesRequest)
 	} else {
-		resp, err = c.client.RoleBindingCRUDApi.AddRoleForPrincipal(
-			c.ctx,
+		resp, err = c.MDSClient.RoleBindingCRUDApi.AddRoleForPrincipal(
+			c.createContext(),
 			options.principal,
 			options.role,
 			mds.Scope{Clusters: options.scopeClusters})
@@ -465,14 +483,14 @@ func (c *rolebindingCommand) delete(cmd *cobra.Command, args []string) error {
 
 	var resp *http.Response
 	if options.resource != "" {
-		resp, err = c.client.RoleBindingCRUDApi.RemoveRoleResourcesForPrincipal(
-			c.ctx,
+		resp, err = c.MDSClient.RoleBindingCRUDApi.RemoveRoleResourcesForPrincipal(
+			c.createContext(),
 			options.principal,
 			options.role,
 			options.resourcesRequest)
 	} else {
-		resp, err = c.client.RoleBindingCRUDApi.DeleteRoleForPrincipal(
-			c.ctx,
+		resp, err = c.MDSClient.RoleBindingCRUDApi.DeleteRoleForPrincipal(
+			c.createContext(),
 			options.principal,
 			options.role,
 			mds.Scope{Clusters: options.scopeClusters})
@@ -493,4 +511,8 @@ func check(err error) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func (c *rolebindingCommand) createContext() context.Context {
+	return context.WithValue(context.Background(), mds.ContextAccessToken, c.AuthToken())
 }

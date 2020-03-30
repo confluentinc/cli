@@ -3,45 +3,64 @@ package config
 import (
 	"sort"
 
+	"github.com/confluentinc/go-printer"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/go-printer"
-
+	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/output"
+)
+
+var (
+	contextListFields                = []string{"Current", "Name", "Platform", "Credential"}
+	contextListHumanLabels           = []string{"Current", "Name", "Platform", "Credential"}
+	contextListStructuredLabels      = []string{"current", "name", "platform", "credential"}
 )
 
 type contextCommand struct {
-	*cobra.Command
-	config *config.Config
+	*pcmd.CLICommand
+	prerunner pcmd.PreRunner
+	analytics analytics.Client
 }
 
 // NewContext returns the Cobra contextCommand for `config context`.
-func NewContext(config *config.Config) *cobra.Command {
-	cmd := &contextCommand{
-		Command: &cobra.Command{
+func NewContext(config *v3.Config, prerunner pcmd.PreRunner, analytics analytics.Client) *cobra.Command {
+	cliCmd := pcmd.NewAnonymousCLICommand(
+		&cobra.Command{
 			Use:   "context",
 			Short: "Manage config contexts.",
 		},
-		config: config,
+		config, prerunner)
+	cmd := &contextCommand{
+		CLICommand: cliCmd,
+		prerunner:  prerunner,
+		analytics:  analytics,
 	}
 	cmd.init()
 	return cmd.Command
 }
 
 func (c *contextCommand) init() {
-	c.AddCommand(&cobra.Command{
+	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List all config contexts.",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
-	})
+	}
+	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	listCmd.Flags().SortFlags = false
+	c.AddCommand(listCmd)
 	c.AddCommand(&cobra.Command{
 		Use:   "use ID",
 		Short: "Use a config context.",
 		RunE:  c.use,
 		Args:  cobra.ExactArgs(1),
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			c.analytics.SetCommandType(analytics.ContextUse)
+			return c.prerunner.Anonymous(c.CLICommand)(cmd, args)
+		},
 	})
 	c.AddCommand(&cobra.Command{
 		Use:   "current",
@@ -81,27 +100,36 @@ func (c *contextCommand) list(cmd *cobra.Command, args []string) error {
 		Credential string
 	}
 	var contextNames []string
-	for name := range c.config.Contexts {
+	for name := range c.Config.Contexts {
 		contextNames = append(contextNames, name)
 	}
 	sort.Strings(contextNames)
-	var data [][]string
-	for _, name := range contextNames {
-		current := ""
-		if c.config.CurrentContext == name {
-			current = "*"
-		}
-		context := c.config.Contexts[name]
-		r := &row{current, name, context.Platform, context.Credential}
-		data = append(data, printer.ToRow(r, []string{"Current", "Name", "Platform", "Credential"}))
+	outputWriter, err := output.NewListOutputWriter(cmd, contextListFields, contextListHumanLabels, contextListStructuredLabels)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
 	}
-	printer.RenderCollectionTableOut(data, []string{"Current", "Name", "Platform", "Credential"}, cmd.OutOrStdout())
-	return nil
+	for _, name := range contextNames {
+		context := c.Config.Contexts[name]
+		current := ""
+		// Add '*' only in the case where we are printing out tables
+		if outputWriter.GetOutputFormat() == output.Human {
+			if c.Config.CurrentContext == name {
+				current = "*"
+			}
+		} else {
+			current = "false"
+			if c.Config.CurrentContext == name {
+				current = "true"
+			}
+		}
+		outputWriter.AddElement(&row{current, name, context.PlatformName, context.CredentialName})
+	}
+	return outputWriter.Out()
 }
 
 func (c *contextCommand) use(cmd *cobra.Command, args []string) error {
 	name := args[0]
-	err := c.config.SetContext(name)
+	err := c.Config.SetContext(name)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -109,12 +137,12 @@ func (c *contextCommand) use(cmd *cobra.Command, args []string) error {
 }
 
 func (c *contextCommand) current(cmd *cobra.Command, args []string) error {
-	pcmd.Println(cmd, c.config.CurrentContext)
+	pcmd.Println(cmd, c.Config.CurrentContext)
 	return nil
 }
 
 func (c *contextCommand) get(cmd *cobra.Command, args []string) error {
-	context, err := c.context(args)
+	context, err := c.context(cmd, args)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -122,42 +150,43 @@ func (c *contextCommand) get(cmd *cobra.Command, args []string) error {
 }
 
 func (c *contextCommand) set(cmd *cobra.Command, args []string) error {
-	context, err := c.context(args)
+	context, err := c.context(cmd, args)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-
 	if cmd.Flags().Changed("kafka-cluster") {
 		clusterId, err := cmd.Flags().GetString("kafka-cluster")
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
-		err = context.SetActiveCluster(clusterId)
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
+		return context.SetActiveKafkaCluster(cmd, clusterId)
 	}
-
-	return c.config.Save()
+	return nil
 }
 
 func (c *contextCommand) delete(cmd *cobra.Command, args []string) error {
 	contextName := args[0]
-	err := c.config.DeleteContext(contextName)
+	err := c.Config.DeleteContext(contextName)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	return c.config.Save()
+	return c.Config.Save()
 }
 
-//
-// HELPERS
-//
-
-func (c *contextCommand) context(args []string) (*config.Context, error) {
+func (c *contextCommand) context(cmd *cobra.Command, args []string) (*pcmd.DynamicContext, error) {
+	var context *pcmd.DynamicContext
+	var err error
 	if len(args) == 1 {
 		contextName := args[0]
-		return c.config.FindContext(contextName)
+		context, err = c.Config.FindContext(contextName)
+	} else {
+		context, err = c.Config.Context(cmd)
+		if context == nil {
+			err = errors.ErrNoContext
+		}
 	}
-	return c.config.Context()
+	if err != nil {
+		return nil, errors.HandleCommon(err, cmd)
+	}
+	return context, nil
 }

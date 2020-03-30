@@ -3,12 +3,16 @@ package schema_registry
 import (
 	"context"
 	"fmt"
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/cli/internal/pkg/errors"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"os"
 	"strings"
+
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
 func getSrCredentials() (key string, secret string, err error) {
@@ -29,8 +33,12 @@ func getSrCredentials() (key string, secret string, err error) {
 	return key, secret, nil
 }
 
-func srContext(cfg *config.Config) (context.Context, error) {
-	srCluster, err := cfg.SchemaRegistryCluster()
+func srContext(cfg *pcmd.DynamicConfig, cmd *cobra.Command) (context.Context, error) {
+	ctx, err := cfg.Context(cmd)
+	if err != nil {
+		return nil, err
+	}
+	srCluster, err := ctx.SchemaRegistryCluster(cmd)
 	if err != nil {
 		return nil, err
 	}
@@ -39,11 +47,11 @@ func srContext(cfg *config.Config) (context.Context, error) {
 		if err != nil {
 			return nil, err
 		}
-		srCluster.SrCredentials = &config.APIKeyPair{
+		srCluster.SrCredentials = &v0.APIKeyPair{
 			Key:    key,
 			Secret: secret,
 		}
-		err = cfg.Save()
+		err = ctx.Save()
 		if err != nil {
 			return nil, err
 		}
@@ -54,28 +62,36 @@ func srContext(cfg *config.Config) (context.Context, error) {
 	}), nil
 }
 
-func SchemaRegistryClient(ch *pcmd.ConfigHelper) (client *srsdk.APIClient, ctx context.Context, err error) {
-	ctx, err = srContext(ch.Config)
+func SchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *version.Version) (srClient *srsdk.APIClient, ctx context.Context, err error) {
+	ctx, err = srContext(cfg, cmd)
 	if err != nil {
 		return nil, nil, err
 	}
-
 	srConfig := srsdk.NewConfiguration()
-	if ch.Config.Auth == nil {
-		return nil, nil, errors.Errorf("user must be authenticated to use Schema Registry")
-	}
-	srConfig.BasePath, err = ch.SchemaRegistryURL(ctx)
+	currCtx, err := cfg.Context(cmd)
 	if err != nil {
 		return nil, nil, err
 	}
-	srConfig.UserAgent = ch.Version.UserAgent
-
-	// Validate before returning
-	client = srsdk.NewAPIClient(srConfig)
-	_, _, err = client.DefaultApi.Get(ctx)
+	envId, err := currCtx.AuthenticatedEnvId(cmd)
+	if err != nil {
+		return nil, nil, err
+	}
+	if srCluster, ok := currCtx.SchemaRegistryClusters[envId]; ok {
+		srConfig.BasePath = srCluster.SchemaRegistryEndpoint
+	} else {
+		ctxClient := pcmd.NewContextClient(currCtx)
+		srCluster, err := ctxClient.FetchSchemaRegistryByAccountId(ctx, envId)
+		if err != nil {
+			return nil, nil, err
+		}
+		srConfig.BasePath = srCluster.Endpoint
+	}
+	srConfig.UserAgent = ver.UserAgent
+	// validate before returning.
+	srClient = srsdk.NewAPIClient(srConfig)
+	_, _, err = srClient.DefaultApi.Get(ctx)
 	if err != nil {
 		return nil, nil, errors.Errorf("Failed to validate Schema Registry API Key and Secret")
 	}
-
-	return client, ctx, nil
+	return srClient, ctx, nil
 }

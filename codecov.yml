@@ -1,0 +1,4 @@
+codecov:
+  token: "78adf005-8825-4dd0-97eb-a723a567da50"
+  bot: "codecov-io"
+  require_ci_to_pass: yes

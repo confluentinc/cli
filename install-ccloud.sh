@@ -56,6 +56,7 @@ execute() {
       binexe="${binexe}.exe"
     fi
     install "${srcdir}/${binexe}" "${BINDIR}/"
+    log_info "NOTICE: see licenses located in ${tmpdir}/${BINARY}"
     log_info "installed ${BINDIR}/${binexe}"
     log_info "please ensure ${BINDIR} is in your PATH"
   done
@@ -81,7 +82,7 @@ check_platform() {
     # optional logging goes here
     true
   else
-    log_crit "platform $PLATFORM is not supported.  Make sure this script is up-to-date and file request at https://github.com/${PREFIX}/issues/new"
+    log_crit "platform $PLATFORM is not supported.  Please contact Confluent support if you believe this is a mistake."
     exit 1
   fi
 }
@@ -198,6 +199,7 @@ uname_os() {
   case "$os" in
     msys*) os="windows" ;;
     mingw*) os="windows" ;;
+    cygwin*) os="windows" ;;
   esac
   echo "$os"
 }
@@ -374,30 +376,35 @@ log_prefix() {
 }
 PLATFORM="${OS}/${ARCH}"
 
-uname_os_check "$OS"
-uname_arch_check "$ARCH"
+main() {
+  uname_os_check
+  uname_arch_check
 
-parse_args "$@"
+  parse_args "$@"
 
-check_platform
+  check_platform
 
-tag_to_version
+  tag_to_version
 
-adjust_format
+  adjust_format
 
-adjust_os
+  adjust_os
 
-if [ ${OS} = "windows" ]; then
-  FORMAT=zip ;
+  if [ ${OS} = "windows" ]; then
+    FORMAT=zip ;
+  fi
+
+  log_info "found version: ${VERSION} for ${TAG}/${OS}/${ARCH}"
+
+  NAME=${BINARY}_${VERSION}_${OS}_${ARCH}
+  TARBALL=${NAME}.${FORMAT}
+  TARBALL_URL=https://s3-us-west-2.amazonaws.com/confluent.cloud/${PROJECT_NAME}/archives/${VERSION#v}/${TARBALL}
+  CHECKSUM=${BINARY}_${VERSION}_checksums.txt
+  CHECKSUM_URL=https://s3-us-west-2.amazonaws.com/confluent.cloud/${PROJECT_NAME}/archives/${VERSION#v}/${CHECKSUM}
+
+  execute
+}
+
+if [ "${TEST}" != "true" ]; then
+  main "$@"
 fi
-
-log_info "found version: ${VERSION} for ${TAG}/${OS}/${ARCH}"
-
-NAME=${BINARY}_${VERSION}_${OS}_${ARCH}
-TARBALL=${NAME}.${FORMAT}
-TARBALL_URL=https://s3-us-west-2.amazonaws.com/confluent.cloud/${PROJECT_NAME}/archives/${VERSION#v}/${TARBALL}
-CHECKSUM=${BINARY}_${VERSION}_checksums.txt
-CHECKSUM_URL=https://s3-us-west-2.amazonaws.com/confluent.cloud/${PROJECT_NAME}/archives/${VERSION#v}/${CHECKSUM}
-
-
-execute

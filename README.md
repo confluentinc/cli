@@ -20,9 +20,11 @@ as part of the repo's build process.
   - [Building From Source](#building-from-source)
 - [Developing](#developing)
   - [Go Version](#go-version)
+  - [Mac Setup Notes](#mac-setup-notes)
   - [File Layout](#file-layout)
   - [Build Other Platforms](#build-other-platforms)
   - [URLS](#urls)
+  - [Releasing a New CLI Version](#releasing-a-new-cli-version)
 - [Installers](#installers)
 - [Documentation](#documentation)
   - [README](#readme)
@@ -117,13 +119,14 @@ $ dist/confluent/$(go env GOOS)_$(go env GOARCH)/confluent -h # for on-prem Conf
 
 ## Developing
 
-This repo requires golang 1.12. We recommend you use `goenv` to manage your go versions.
+This repo requires golang 1.13.5. We recommend you use `goenv` to manage your go versions.
 There's a `.go-version` file in this repo with the exact version we use (and test against in CI).
 
 ### Go Version
 
-Fortunately `goenv` supports 1.12 already. Unfortunately this is only in their 2.0 branch which
-is still in beta, meaning that its not in brew yet. So we have to build from source.
+Fortunately `goenv` supports 1.13.5 already. If your `goenv` does not list this as an option,
+you may have to build `goenv`'s `master` branch from source, which you can do with the
+following instructions:
 
 If you already have it via brew, uninstall it first:
 
@@ -135,6 +138,20 @@ Now clone the repo and update your shell profile:
     echo 'export GOENV_ROOT="$GOPATH/src/github.com/syndbg/goenv"' >> ~/.bash_profile
     echo 'export PATH="$GOENV_ROOT/bin:$PATH"' >> ~/.bash_profile
     echo 'eval "$(goenv init -)"' >> ~/.bash_profile
+
+### Mac Setup Notes
+
+Our integration tests (`make test`) open a lot of files while they are running.
+On MacOS, the default maximum number of open files is 256, which is too small
+(you will see an error like `error retrieving command exit code` or
+`too many open files`).  Thus, if you are setting up your development
+environment on MacOS, run the following three commands *then restart*:
+
+    echo 'kern.maxfiles=20480' | sudo tee -a /etc/sysctl.conf
+    echo -e 'limit maxfiles 8192 20480\nlimit maxproc 1000 2000' | sudo tee -a /etc/launchd.conf
+    echo 'ulimit -n 4096' | sudo tee -a /etc/profile
+
+Remember to restart for these changes to take effect.
 
 ### File Layout
 
@@ -164,6 +181,50 @@ If you have a need to build a binary for a platform that is not the current one,
 
 ### URLS
 Use the `login` command with the `--url` option to point to a different development environment
+
+### Releasing a New CLI Version
+
+0. Note: Due to the requirement of signing the macOS binaries, CLI releases
+can currently only be run from a macOS host.  Binaries for all OS will be
+generated and published from the macOS host.
+
+1. To release a new CLI version, first ensure you have an Apple ID with
+permissions for the Confluent organization.  Chris Toney / IT can set you up
+with the appropriate permissions; cc @David Hyde, @srini or CLI or Release team
+manager.  You will also need IT to give you the Developer ID Application cert
+and private key (shared via a LastPass secret).  Chris Toney set that up.
+
+2. Make sure you have `gon` installed and in your PATH.  Get it from
+https://github.com/mitchellh/gon/releases
+
+3. Edit your bash/zsh profile to export your Apple ID and password via the
+`AC_USERNAME` and `AC_PASSWORD` variables.  It is recommended to not write
+your Apple ID password in plaintext in this file; e.g. you can write
+`export AC_PASSWORD=$(echo <your base64-encoded password> | base64 --decode)`.
+
+4. Just in case, e.g. if you did Step 2 for the first time, run
+`source ~/.bash_profile` or the equivalent for your shell/OS.
+
+5. Next run `caasenv prod` (needed to upload files to the CLI S3 buckets).
+
+6. Next make sure your git status is clean: `git status`.  You should also be
+on `master` under normal circumstances.
+
+7. With these steps completed you should be able to run `make release`
+successfully.  If you see any errors during the release process, contact
+a CLI team member.  It is possible to use the AWS CLI to remove any mistakenly-
+uploaded binaries/archives (just remove the corresponding version folders).
+You could also remove an accidentally-published tag on GitHub, but this isn't
+essential.
+
+Note: you can verify whether a macOS binary is signed and notarized correctly
+by running `spctl -a -vvv -t install <binary name>`.  If all is good, you
+should see output like
+```
+dist/ccloud/darwin_amd64/ccloud: accepted
+source=Notarized Developer ID
+origin=Developer ID Application: Confluent, Inc. (RTSX8FNWR2)
+```
 
 ## Installers
 
@@ -238,20 +299,30 @@ about how to write and configure your own integration tests.
 
 You can run just the integration tests with
 
-    make test TEST_ARGS="./test/... -v"
+    make test TEST_ARGS="-v"
 
 You can update the golden files from the current output with
 
-    make test TEST_ARGS="./test/... -update"
+    make test TEST_ARGS="-update"
 
 You can skip rebuilding the CLI if it already exists in `dist` with
 
-    make test TEST_ARGS="./test/... -no-rebuild"
+    make test TEST_ARGS="-no-rebuild"
 
 You can mix and match these flags. To update the golden files without rebuilding, and log verbosely
 
-    make test TEST_ARGS="./test/... -update -no-rebuild -v"
+    make test TEST_ARGS="-update -no-rebuild -v"
 
+To run a single test case (or all test cases with a prefix)
+
+    # all integration tests
+    make test TEST_ARGS="-run TestCLI"
+
+    # all subtests of this `Test_Confluent_Iam_Rolebinding_List` integration tests
+    make test TEST_ARGS="-run TestCLI/Test_Confluent_Iam_Rolebinding_List"
+
+    # a very specific subset of tests
+    make test TEST_ARGS="-run TestCLI/Test_Confluent_Iam_Rolebinding_List/iam_rolebinding_list_--kafka-cluster-id_CID_--principal_User:frodo"
 
 ## Adding a New Command to the CLI
 

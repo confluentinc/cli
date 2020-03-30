@@ -1,0 +1,3 @@
+    Key    | Owner | Description | Resource Type | Resource ID  
++----------+-------+-------------+---------------+-------------+
+    MYKEY8 |    99 |             | kafka         | lkc-cool1    

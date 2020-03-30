@@ -8,14 +8,13 @@ import (
 	"net/http"
 	"sort"
 
-	"github.com/spf13/cobra"
-
-	"github.com/confluentinc/go-printer"
-
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/go-printer"
+	"github.com/spf13/cobra"
 )
 
 type Metadata interface {
@@ -52,8 +51,8 @@ func NewScopedIdService(client *http.Client, userAgent string, logger *log.Logge
 }
 
 type Element struct {
-	Type   string
-	ID string
+	Type string `json:"type" yaml:"type"`
+	ID   string `json:"id" yaml:"id"`
 }
 
 var (
@@ -62,8 +61,7 @@ var (
 )
 
 type command struct {
-	*cobra.Command
-	config *config.Config
+	*pcmd.CLICommand
 	client Metadata
 }
 
@@ -92,14 +90,12 @@ func (s *ScopedIdService) DescribeCluster(ctx context.Context, url string) (*Sco
 }
 
 // New returns the Cobra command for `cluster`.
-func New(prerunner pcmd.PreRunner, config *config.Config, client Metadata) *cobra.Command {
+func New(prerunner pcmd.PreRunner, config *v3.Config, client Metadata) *cobra.Command {
 	cmd := &command{
-		Command: &cobra.Command{
-			Use:               "cluster",
-			Short:             "Retrieve metadata about Confluent clusters.",
-			PersistentPreRunE: prerunner.Anonymous(),
-		},
-		config: config,
+		CLICommand: pcmd.NewAnonymousCLICommand(&cobra.Command{
+			Use:   "cluster",
+			Short: "Retrieve metadata about Confluent clusters.",
+		}, config, prerunner),
 		client: client,
 	}
 	cmd.init()
@@ -115,6 +111,7 @@ func (c *command) init() {
 	}
 	describeCmd.Flags().String("url", "", "URL to a Confluent cluster.")
 	check(describeCmd.MarkFlagRequired("url"))
+	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	describeCmd.Flags().SortFlags = false
 	c.AddCommand(describeCmd)
 }
@@ -130,6 +127,33 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
+	outputOption, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	return printDescribe(cmd, meta, outputOption)
+}
+
+func check(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
+
+func printDescribe(cmd *cobra.Command, meta *ScopedId, format string) error {
+	type StructuredDisplay struct {
+		Crn   string    `json:"crn" yaml:"crn"`
+		Scope []Element `json:"scope" yaml:"scope"`
+	}
+	structuredDisplay := &StructuredDisplay{}
+	if meta.ID != "" {
+		if format == output.Human.String() {
+			pcmd.Printf(cmd, "Confluent Resource Name: %s\n\n", meta.ID)
+		} else {
+			structuredDisplay.Crn = meta.ID
+		}
+	}
 	var types []string
 	for name := range meta.Scope.Clusters {
 		types = append(types, name)
@@ -138,20 +162,19 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	var data [][]string
 	for _, name := range types {
 		id := meta.Scope.Clusters[name]
-		data = append(data, printer.ToRow(&Element{Type: name, ID: id}, describeFields))
-	}
+		element := Element{Type: name, ID: id}
+		if format == output.Human.String() {
+			data = append(data, printer.ToRow(&element, describeFields))
+		} else {
+			structuredDisplay.Scope = append(structuredDisplay.Scope, element)
+		}
 
-	if meta.ID != "" {
-		pcmd.Printf(cmd, "%s\n\n", meta.ID)
 	}
-	pcmd.Println(cmd, "Scope:")
-	printer.RenderCollectionTable(data, describeLabels)
-
+	if format == output.Human.String() {
+		pcmd.Println(cmd, "Scope:")
+		printer.RenderCollectionTable(data, describeLabels)
+	} else {
+		return output.StructuredOutput(format, structuredDisplay)
+	}
 	return nil
-}
-
-func check(err error) {
-	if err != nil {
-		panic(err)
-	}
 }

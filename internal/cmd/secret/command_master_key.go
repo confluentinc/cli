@@ -8,27 +8,24 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	secureplugin "github.com/confluentinc/cli/internal/pkg/secret"
 )
 
 type masterKeyCommand struct {
 	*cobra.Command
-	config *config.Config
 	prompt pcmd.Prompt
 	resolv pcmd.FlagResolver
 	plugin secureplugin.PasswordProtection
 }
 
 // NewMasterKeyCommand returns the Cobra command for managing master key.
-func NewMasterKeyCommand(config *config.Config, prompt pcmd.Prompt, resolv pcmd.FlagResolver, plugin secureplugin.PasswordProtection) *cobra.Command {
+func NewMasterKeyCommand(prompt pcmd.Prompt, resolv pcmd.FlagResolver, plugin secureplugin.PasswordProtection) *cobra.Command {
 	cmd := &masterKeyCommand{
 		Command: &cobra.Command{
 			Use:   "master-key",
 			Short: "Manage the master key for Confluent Platform.",
 		},
-		config: config,
 		prompt: prompt,
 		resolv: resolv,
 		plugin: plugin,
@@ -83,7 +80,7 @@ func (c *masterKeyCommand) generate(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	pcmd.Println(cmd, "Save the master key. It cannot be retrieved later.")
+	pcmd.ErrPrintln(cmd, "Save the master key. It cannot be retrieved later.")
 	err = printer.RenderTableOut(&struct{ MasterKey string }{MasterKey: masterKey}, []string{"MasterKey"}, map[string]string{"MasterKey": "Master Key"}, os.Stdout)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)

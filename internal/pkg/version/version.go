@@ -42,7 +42,6 @@ func (v *Version) String() string {
 Version:     %s
 Git Ref:     %s
 Build Date:  %s
-Build Host:  %s
 Go Version:  %s (%s/%s)
 Development: %s
 `,
@@ -51,7 +50,6 @@ Development: %s
 		v.Version,
 		v.Commit,
 		v.BuildDate,
-		v.BuildHost,
 		runtime.Version(),
 		runtime.GOOS,
 		runtime.GOARCH,

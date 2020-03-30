@@ -1,0 +1,11 @@
+Following are the required configs: 
+connector.class: GcsSink
+kafka.api.key : ["kafka.api.key" is required] 
+kafka.api.secret : ["kafka.api.secret" is required] 
+topics : ["topics" is required] 
+data.format : ["data.format" is required Value "null" doesn't belong to the property's "data.format" enum] 
+gcs.credentials.config : ["gcs.credentials.config" is required] 
+gcs.bucket.name : ["gcs.bucket.name" is required] 
+time.interval : ["data.format" is required Value "null" doesn't belong to the property's "time.interval" enum] 
+tasks.max : ["tasks.max" is required] 
+

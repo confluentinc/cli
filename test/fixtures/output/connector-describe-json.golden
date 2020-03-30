@@ -1,0 +1,15 @@
+{
+  "connector": {
+    "name": "az-connector",
+    "id": "lcc-123",
+    "status": "Running",
+    "type": "Sink"
+  },
+  "tasks": [
+    {
+      "task_id": 1,
+      "state": "Running"
+    }
+  ],
+  "configs": []
+}

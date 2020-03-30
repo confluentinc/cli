@@ -1,33 +1,36 @@
 package schema_registry
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"strconv"
 
 	"github.com/spf13/cobra"
 
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 type schemaCommand struct {
-	*cobra.Command
-	config   *config.Config
-	ch       *pcmd.ConfigHelper
+	*pcmd.AuthenticatedCLICommand
 	srClient *srsdk.APIClient
 }
 
-func NewSchemaCommand(config *config.Config, ch *pcmd.ConfigHelper, srClient *srsdk.APIClient) *cobra.Command {
-	schemaCmd := &schemaCommand{
-		Command: &cobra.Command{
+func NewSchemaCommand(config *v3.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
+	cliCmd := pcmd.NewAuthenticatedCLICommand(
+		&cobra.Command{
 			Use:   "schema",
 			Short: "Manage Schema Registry schemas.",
 		},
-		config:   config,
-		ch:       ch,
-		srClient: srClient,
+		config, prerunner)
+	schemaCmd := &schemaCommand{
+		AuthenticatedCLICommand: cliCmd,
+		srClient:                srClient,
 	}
 	schemaCmd.init()
 	return schemaCmd.Command
@@ -35,7 +38,7 @@ func NewSchemaCommand(config *config.Config, ch *pcmd.ConfigHelper, srClient *sr
 
 func (c *schemaCommand) init() {
 	cmd := &cobra.Command{
-		Use:   "create --subject <subject> --schema <schema-file>",
+		Use:   "create --subject <subject> --schema <schema-file> --type <schema-type> --refs <ref-file>",
 		Short: "Create a schema.",
 		Example: FormatDescription(`
 Register a new schema
@@ -58,13 +61,16 @@ Where schemafilepath may include these contents:
 	   ]
 	}
 
-`, c.config.CLIName),
+`, c.Config.CLIName),
 		RunE: c.create,
 		Args: cobra.NoArgs,
 	}
 	RequireSubjectFlag(cmd)
 	cmd.Flags().String("schema", "", "The path to the schema file.")
 	_ = cmd.MarkFlagRequired("schema")
+	cmd.Flags().String("type", "", "The schema type.")
+	cmd.Flags().String("refs", "", "The path to the references file.")
+	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
@@ -76,7 +82,7 @@ Delete one or more topics. This command should only be used in extreme circumsta
 
 ::
 
-		{{.CLIName}} schema-registry schema delete --subject payments --version latest`, c.config.CLIName),
+		{{.CLIName}} schema-registry schema delete --subject payments --version latest`, c.Config.CLIName),
 		RunE: c.delete,
 		Args: cobra.NoArgs,
 	}
@@ -94,14 +100,14 @@ Describe the schema string by schema ID
 
 ::
 
-		{{.CLIName}} schema-registry describe 1337
+		{{.CLIName}} schema-registry schema describe 1337
 
 Describe the schema by subject and version
 
 ::
 
 		{{.CLIName}} schema-registry describe --subject payments --version latest
-`, c.config.CLIName),
+`, c.Config.CLIName),
 		RunE: c.describe,
 		Args: cobra.MaximumNArgs(1),
 	}
@@ -112,7 +118,7 @@ Describe the schema by subject and version
 }
 
 func (c *schemaCommand) create(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(c.srClient, c.ch)
+	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
 	}
@@ -124,21 +130,51 @@ func (c *schemaCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	schemaType, err := cmd.Flags().GetString("type")
+	if err != nil {
+		return err
+	}
 
 	schema, err := ioutil.ReadFile(schemaPath)
 	if err != nil {
 		return err
 	}
-	response, _, err := srClient.DefaultApi.Register(ctx, subject, srsdk.RegisterSchemaRequest{Schema: string(schema)})
+
+	var refs []srsdk.SchemaReference
+	refPath, err := cmd.Flags().GetString("refs")
+	if err != nil {
+		return err
+	} else if refPath != "" {
+		refBlob, err := ioutil.ReadFile(refPath)
+		if err != nil {
+			return err
+		}
+		err = json.Unmarshal(refBlob, &refs)
+		if err != nil {
+			return err
+		}
+	}
+
+	response, _, err := srClient.DefaultApi.Register(ctx, subject, srsdk.RegisterSchemaRequest{Schema: string(schema), SchemaType: schemaType, References: refs})
 	if err != nil {
 		return err
 	}
-	pcmd.Printf(cmd, "Successfully registered schema with ID: %v \n", response.Id)
+	outputFormat, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	if outputFormat == output.Human.String() {
+		pcmd.Printf(cmd, "Successfully registered schema with ID: %v \n", response.Id)
+	} else {
+		return output.StructuredOutput(outputFormat, &struct {
+			Id int32 `json:"id" yaml:"id"`
+		}{response.Id})
+	}
 	return nil
 }
 
 func (c *schemaCommand) delete(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(c.srClient, c.ch)
+	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
 	}
@@ -178,7 +214,7 @@ func (c *schemaCommand) describe(cmd *cobra.Command, args []string) error {
 }
 
 func (c *schemaCommand) describeById(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(c.srClient, c.ch)
+	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
 	}
@@ -186,16 +222,15 @@ func (c *schemaCommand) describeById(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("unexpected argument: Must be an integer Schema ID")
 	}
-	schemaString, _, err := srClient.DefaultApi.GetSchema(ctx, int32(schema))
+	schemaString, _, err := srClient.DefaultApi.GetSchema(ctx, int32(schema), nil)
 	if err != nil {
 		return err
 	}
-	pcmd.Println(cmd, schemaString.Schema)
-	return nil
+	return c.printSchema(cmd, schemaString.Schema, schemaString.SchemaType, schemaString.References)
 }
 
 func (c *schemaCommand) describeBySubject(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(c.srClient, c.ch)
+	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
 	}
@@ -207,10 +242,23 @@ func (c *schemaCommand) describeBySubject(cmd *cobra.Command, args []string) err
 	if err != nil {
 		return err
 	}
-	schemaString, _, err := srClient.DefaultApi.GetSchemaByVersion(ctx, subject, version)
+	schemaString, _, err := srClient.DefaultApi.GetSchemaByVersion(ctx, subject, version, nil)
 	if err != nil {
 		return err
 	}
-	pcmd.Println(cmd, schemaString.Schema)
+	return c.printSchema(cmd, schemaString.Schema, schemaString.SchemaType, schemaString.References)
+}
+
+func (c *schemaCommand) printSchema(cmd *cobra.Command, schema string, sType string, refs []srsdk.SchemaReference) error {
+	if sType != "" {
+		pcmd.Println(cmd, "Type: "+sType)
+	}
+	pcmd.Println(cmd, "Schema: "+schema)
+	if len(refs) > 0 {
+		pcmd.Println(cmd, "References:")
+		for i := 0; i < len(refs); i++ {
+			pcmd.Printf(cmd, "\t%s -> %s %d\n", refs[i].Name, refs[i].Subject, refs[i].Version)
+		}
+	}
 	return nil
 }

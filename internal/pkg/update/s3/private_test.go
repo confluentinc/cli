@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 	"time"
@@ -18,7 +19,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	pio "github.com/confluentinc/cli/internal/pkg/io"
 	"github.com/confluentinc/cli/internal/pkg/log"
-	mock "github.com/confluentinc/cli/internal/pkg/mock"
+	"github.com/confluentinc/cli/internal/pkg/mock"
 	updateMock "github.com/confluentinc/cli/internal/pkg/update/mock"
 )
 
@@ -518,7 +519,7 @@ func TestPrivateRepo_DownloadVersion(t *testing.T) {
 				version:     "9.8.7", // TODO: shouldn't this need a v prefix?
 				downloadDir: "backdoor",
 			},
-			wantPath:  "backdoor/foofighter-v9.8.7-darwin-amd64",
+			wantPath:  filepath.FromSlash("backdoor/foofighter-v9.8.7-darwin-amd64"),
 			wantBytes: 23,
 		},
 	}

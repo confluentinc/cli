@@ -4,29 +4,28 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/go-printer"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 )
 
 type subjectCommand struct {
-	*cobra.Command
-	config   *config.Config
-	ch       *pcmd.ConfigHelper
+	*pcmd.AuthenticatedCLICommand
 	srClient *srsdk.APIClient
 }
 
 // NewSubjectCommand returns the Cobra command for Schema Registry subject list
-func NewSubjectCommand(config *config.Config, ch *pcmd.ConfigHelper, srClient *srsdk.APIClient) *cobra.Command {
-	subjectCmd := &subjectCommand{
-		Command: &cobra.Command{
+func NewSubjectCommand(config *v3.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
+	cliCmd := pcmd.NewAuthenticatedCLICommand(
+		&cobra.Command{
 			Use:   "subject",
 			Short: "Manage Schema Registry subjects.",
 		},
-		config:   config,
-		ch:       ch,
-		srClient: srClient,
+		config, prerunner)
+	subjectCmd := &subjectCommand{
+		AuthenticatedCLICommand: cliCmd,
+		srClient:                srClient,
 	}
 	subjectCmd.init()
 	return subjectCmd.Command
@@ -42,10 +41,12 @@ Retrieve all subjects available in a Schema Registry
 
 ::
 		config.CLIName schema-registry subject list
-`, c.config.CLIName),
+`, c.Config.CLIName),
 		RunE: c.list,
 		Args: cobra.NoArgs,
 	}
+	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 	// Update
 	updateCmd := &cobra.Command{
@@ -57,7 +58,7 @@ Update subject level compatibility or mode of schema registry.
 ::
 		config.CLIName schema-registry subject update <subjectname> --compatibility=BACKWARD
 		config.CLIName schema-registry subject update <subjectname> --mode=READWRITE
-`, c.config.CLIName),
+`, c.Config.CLIName),
 		RunE: c.update,
 		Args: cobra.ExactArgs(1),
 	}
@@ -75,10 +76,12 @@ Retrieve all versions registered under a given subject and its compatibility lev
 
 ::
 		config.CLIName schema-registry subject describe <subjectname>
-`, c.config.CLIName),
+`, c.Config.CLIName),
 		RunE: c.describe,
 		Args: cobra.ExactArgs(1),
 	}
+	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	describeCmd.Flags().SortFlags = false
 	c.AddCommand(describeCmd)
 }
 
@@ -100,7 +103,7 @@ func (c *subjectCommand) update(cmd *cobra.Command, args []string) error {
 	return errors.New("flag --compatibility or --mode is required.")
 }
 func (c *subjectCommand) updateCompatibility(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(c.srClient, c.ch)
+	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
 	}
@@ -122,7 +125,7 @@ func (c *subjectCommand) updateMode(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	srClient, ctx, err := GetApiClient(c.srClient, c.ch)
+	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
 	}
@@ -135,12 +138,10 @@ func (c *subjectCommand) updateMode(cmd *cobra.Command, args []string) error {
 }
 
 func (c *subjectCommand) list(cmd *cobra.Command, args []string) error {
-	var listLabels = []string{"Subject"}
-	var data [][]string
 	type listDisplay struct {
 		Subject string
 	}
-	srClient, ctx, err := GetApiClient(c.srClient, c.ch)
+	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 
 		return err
@@ -150,12 +151,16 @@ func (c *subjectCommand) list(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if len(list) > 0 {
-		for _, l := range list {
-			data = append(data, printer.ToRow(&listDisplay{
-				Subject: l,
-			}, listLabels))
+		outputWriter, err := output.NewListOutputWriter(cmd, []string{"Subject"}, []string{"Subject"}, []string{"subject"})
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
 		}
-		printer.RenderCollectionTable(data, listLabels)
+		for _, l := range list {
+			outputWriter.AddElement(&listDisplay{
+				Subject: l,
+			})
+		}
+		return outputWriter.Out()
 	} else {
 		pcmd.Println(cmd, "No subjects")
 	}
@@ -163,7 +168,7 @@ func (c *subjectCommand) list(cmd *cobra.Command, args []string) error {
 }
 
 func (c *subjectCommand) describe(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(c.srClient, c.ch)
+	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
 	}
@@ -171,6 +176,21 @@ func (c *subjectCommand) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	PrintVersions(versions)
+	outputOption, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	if outputOption == output.Human.String() {
+		PrintVersions(versions)
+	} else {
+		structuredOutput := &struct {
+			Version []int32
+		}{
+			versions,
+		}
+		fields := []string{"Version"}
+		structuredRenames := map[string]string{"Version": "version"}
+		return output.DescribeObject(cmd, structuredOutput, fields, map[string]string{}, structuredRenames)
+	}
 	return nil
 }
