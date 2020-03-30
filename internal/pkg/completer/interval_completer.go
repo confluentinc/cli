@@ -1,4 +1,5 @@
 package completer
+
 //
 //import (
 //	"sync"
@@ -14,7 +15,7 @@ package completer
 //
 //type CacheCompleter struct {
 //	Completer
-//	
+//
 //	// map[string][]prompt.Suggest
 //	cachedSuggestionsByCmd *sync.Map
 //

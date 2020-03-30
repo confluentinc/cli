@@ -8,7 +8,7 @@ import (
 )
 
 func TestConditionalWrapper(t *testing.T) {
-	c := CompleterFunc(func(d prompt.Document) []prompt.Suggest{ 
+	c := CompleterFunc(func(d prompt.Document) []prompt.Suggest {
 		fmt.Println("Hello!")
 		return nil
 	})

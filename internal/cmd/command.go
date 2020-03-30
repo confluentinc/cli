@@ -6,7 +6,6 @@ import (
 	"runtime"
 
 	"github.com/DABH/go-basher"
-	"github.com/jonboulle/clockwork"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/cmd/apikey"
@@ -29,6 +28,7 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/update"
 	"github.com/confluentinc/cli/internal/cmd/version"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
+	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/completer"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
@@ -47,7 +47,7 @@ type Command struct {
 	logger    *log.Logger
 }
 
-func NewConfluentCommand(cliName string, cfg *v2.Config, logger *log.Logger, ver *pversion.Version, analytics analytics.Client, completer completer.CommandCompleter) (*Command, error) {
+func NewConfluentCommand(cliName string, cfg *v2.Config, logger *log.Logger, ver *pversion.Version, analytics analytics.Client, validator pauth.TokenValidator, completer completer.CommandCompleter) (*Command, error) {
 	cli := &cobra.Command{
 		Use:               cliName,
 		Version:           ver.Version,
@@ -81,13 +81,13 @@ func NewConfluentCommand(cliName string, cfg *v2.Config, logger *log.Logger, ver
 
 	resolver := &pcmd.FlagResolverImpl{Prompt: prompt, Out: os.Stdout}
 	prerunner := &pcmd.PreRun{
-		UpdateClient: updateClient,
-		CLIName:      cliName,
-		Logger:       logger,
-		Clock:        clockwork.NewRealClock(),
-		FlagResolver: resolver,
-		Version:      ver,
-		Analytics:    analytics,
+		UpdateClient:   updateClient,
+		CLIName:        cliName,
+		Logger:         logger,
+		TokenValidator: validator,
+		FlagResolver:   resolver,
+		Version:        ver,
+		Analytics:      analytics,
 	}
 	_ = pcmd.NewAnonymousCLICommand(cli, cfg, prerunner) // Add to correctly set prerunners. TODO: Check if really needed.
 	command := &Command{Command: cli, Analytics: analytics, logger: logger}

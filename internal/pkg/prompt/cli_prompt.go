@@ -7,6 +7,7 @@ import (
 	gprompt "github.com/c-bata/go-prompt"
 	"github.com/spf13/cobra"
 
+	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	"github.com/confluentinc/cli/internal/pkg/completer"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 )
@@ -17,12 +18,13 @@ const (
 
 type CLIPrompt struct {
 	*gprompt.Prompt
-	RootCmd *cobra.Command
-	completer.Completer
-	Config *v2.Config
+	RootCmd   *cobra.Command
+	Completer completer.Completer
+	Config    *v2.Config
 }
 
-func NewCLIPrompt(rootCmd *cobra.Command, compl completer.Completer, cfg *v2.Config, opts ...gprompt.Option) *CLIPrompt {
+func NewCLIPrompt(rootCmd *cobra.Command, compl completer.Completer, cfg *v2.Config,
+	validator pauth.TokenValidator, opts ...gprompt.Option) *CLIPrompt {
 	cliPrompt := &CLIPrompt{
 		Completer: compl,
 		RootCmd:   rootCmd,
@@ -41,19 +43,21 @@ func NewCLIPrompt(rootCmd *cobra.Command, compl completer.Completer, cfg *v2.Con
 		extraOpts = append(extraOpts, fuzzySearchOpt)
 	}
 	livePrefixFunc := func() (prefix string, useLivePrefix bool) {
-		//ctx, err := cfg.Context(cliPrompt.RootCmd)
-		//if err != nil {
-		//	return "", false
-		//}
-		//hasLogin, err := ctx.HasLogin(cliPrompt.RootCmd)
-		//if err != nil {
-		//	return "", false
-		//}
-		//if !hasLogin {
-		//	prefix = cfg.CLIName + " ✅"
-		//} else {
-		//	prefix = cfg.CLIName + " ❌"
-		//}
+		hasLogin := cliPrompt.Config.HasLogin()
+		var prefixEnding string
+		if hasLogin {
+			ctx := cliPrompt.Config.Context()
+			token := ctx.State.AuthToken
+			err := validator.ValidateToken(token)
+			if err != nil {
+				prefixEnding = "❌"
+			} else {
+				prefixEnding = "✅"
+			}
+		} else {
+			prefixEnding = "❌"
+		}
+		prefix = cliPrompt.Config.CLIName + " " + prefixEnding
 		if masterCompleter, ok := compl.(*completer.MasterCompleter); ok {
 			if masterCompleter.FuzzyComplete {
 				prefix += "  🔍"
@@ -72,7 +76,7 @@ func NewCLIPrompt(rootCmd *cobra.Command, compl completer.Completer, cfg *v2.Con
 			rootCmd.Execute()
 		},
 		func(d gprompt.Document) []gprompt.Suggest {
-			return cliPrompt.Complete(d)
+			return cliPrompt.Completer.Complete(d)
 		},
 		opts...,
 	)
@@ -109,7 +113,7 @@ func DefaultPromptOptions() []gprompt.Option {
 					ASCIICode: []byte{0x1b, 0x66},
 					Fn:        gprompt.GoRightWord,
 				},
-			}...
+			}...,
 		),
 	}
 }

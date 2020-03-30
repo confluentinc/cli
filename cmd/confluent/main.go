@@ -13,6 +13,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/cmd"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
+	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/completer"
 	"github.com/confluentinc/cli/internal/pkg/config"
@@ -85,8 +86,9 @@ func main() {
 		analyticsClient = mock.NewDummyAnalyticsMock()
 	}
 
-	cmdCompleter := completer.NewCoreCommandCompleter(nil)
-	cli, err := cmd.NewConfluentCommand(cliName, cfg, logger, version, analyticsClient, cmdCompleter)
+	validator := &pauth.JWTTokenValidator{Clock: clockwork.NewRealClock()}
+	masterCompleter := completer.NewMasterCompleter(nil, cliName)
+	cli, err := cmd.NewConfluentCommand(cliName, cfg, logger, version, analyticsClient, validator, masterCompleter)
 	if err != nil {
 		if cli == nil {
 			fmt.Fprintln(os.Stderr, err)
@@ -100,9 +102,12 @@ func main() {
 			exit(1, analyticsClient, logger)
 		}
 	}
+	//if err := cli.preAuthenticated(cmd.AuthenticatedCLICommand)(cmd.Command, os.Args[1:]); err != nil {
+	//	fmt.Println("NOT LOGGED IN!")
+	//}
+	masterCompleter.SetRootCmd(cli.Command)
 	// Initialize prompt.
-	masterCompleter := completer.NewMasterCompleter(cli.Command, cliName)
-	cliPrompt := prompt.NewCLIPrompt(cli.Command, masterCompleter, cfg, prompt.DefaultPromptOptions()...)
+	cliPrompt := prompt.NewCLIPrompt(cli.Command, masterCompleter, cfg, validator, prompt.DefaultPromptOptions()...)
 	cliPrompt.Run()
 
 	err = cli.Execute(os.Args[1:])

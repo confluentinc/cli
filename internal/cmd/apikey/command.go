@@ -43,6 +43,7 @@ type command struct {
 	*pcmd.AuthenticatedCLICommand
 	keystore     keystore.KeyStore
 	flagResolver pcmd.FlagResolver
+	compl        completer.CommandCompleter
 }
 
 var (
@@ -66,9 +67,9 @@ func New(prerunner pcmd.PreRunner, config *v2.Config, keystore keystore.KeyStore
 		AuthenticatedCLICommand: cliCmd,
 		keystore:                keystore,
 		flagResolver:            resolver,
+		compl:                   completer,
 	}
 	cmd.init()
-	completer.AddCommand(cmd.Command, cmd.Complete)
 	return cmd.Command
 }
 
@@ -110,13 +111,16 @@ func (c *command) init() {
 	updateCmd.Flags().String("description", "", "Description of the API key.")
 	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
+	c.compl.AddCommand(updateCmd, c.suggestAPIKeys(updateCmd))
 
-	c.AddCommand(&cobra.Command{
+	deleteCmd := &cobra.Command{
 		Use:   "delete <apikey>",
 		Short: "Delete API keys.",
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
-	})
+	}
+	c.AddCommand(deleteCmd)
+	c.compl.AddCommand(deleteCmd, c.suggestAPIKeys(deleteCmd))
 
 	storeCmd := &cobra.Command{
 		Use:   "store <apikey> <secret>",
@@ -132,6 +136,7 @@ func (c *command) init() {
 		panic(err)
 	}
 	c.AddCommand(storeCmd)
+	c.compl.AddCommand(storeCmd, c.suggestAPIKeys(storeCmd))
 
 	useCmd := &cobra.Command{
 		Use:   "use <apikey>",
@@ -145,6 +150,7 @@ func (c *command) init() {
 		panic(err)
 	}
 	c.AddCommand(useCmd)
+	c.compl.AddCommand(useCmd, c.suggestAPIKeys(useCmd))
 }
 
 func (c *command) list(cmd *cobra.Command, args []string) error {
@@ -392,11 +398,42 @@ func (c *command) parseFlagResolverPromptValue(source, prompt string, secure boo
 	return strings.TrimSpace(val), nil
 }
 
-func (c *command) Complete(d prompt.Document) []prompt.Suggest {
-	return []prompt.Suggest{
-		{
-			Text:        "hi",
-			Description: "there",
-		},
+func (c *command) fetchAPIKeys(cmd *cobra.Command, args []string) ([]*authv1.ApiKey, error) {
+	apiKeys, err := c.Client.APIKey.List(
+		context.Background(),
+		&authv1.ApiKey{
+			AccountId:       c.EnvironmentId(),
+			LogicalClusters: nil,
+			UserId:          c.State.Auth.User.Id,
+		})
+	if err != nil {
+		return nil, errors.HandleCommon(err, cmd)
+	}
+	var userApiKeys []*authv1.ApiKey
+	for _, key := range apiKeys {
+		if key.Id != 0 {
+			userApiKeys = append(userApiKeys, key)
+		}
+	}
+	return userApiKeys, nil
+}
+
+func (c *command) suggestAPIKeys(cmd *cobra.Command) completer.CommandCompletionFunc {
+	return func() []prompt.Suggest {
+		if err := c.Prerunner.Authenticated(c.AuthenticatedCLICommand)(cmd, os.Args[1:]); err != nil {
+			return completer.UnauthenticatedSuggestion
+		}
+		var suggests []prompt.Suggest
+		apiKeys, err := c.fetchAPIKeys(cmd, []string{})
+		if err != nil {
+			return suggests
+		}
+		for _, key := range apiKeys {
+			suggests = append(suggests, prompt.Suggest{
+				Text:        key.Key,
+				Description: key.Description,
+			})
+		}
+		return suggests
 	}
 }

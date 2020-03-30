@@ -7,12 +7,10 @@ import (
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/confluentinc/mds-sdk-go"
-	"github.com/jonboulle/clockwork"
 	"github.com/spf13/cobra"
-	"gopkg.in/square/go-jose.v2/jwt"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	"github.com/confluentinc/cli/internal/pkg/auth"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/update"
@@ -29,97 +27,13 @@ type PreRunner interface {
 
 // PreRun is the standard PreRunner implementation
 type PreRun struct {
-	UpdateClient update.Client
-	CLIName      string
-	Logger       *log.Logger
-	Clock        clockwork.Clock
-	Analytics    analytics.Client
-	FlagResolver FlagResolver
-	Version      *version.Version
-}
-
-type CLICommand struct {
-	*cobra.Command
-	Config    *DynamicConfig
-	Version   *version.Version
-	prerunner PreRunner
-}
-
-type AuthenticatedCLICommand struct {
-	*CLICommand
-	Client    *ccloud.Client
-	MDSClient *mds.APIClient
-	Context   *DynamicContext
-	State     *v2.ContextState
-}
-
-type HasAPIKeyCLICommand struct {
-	*CLICommand
-	Context *DynamicContext
-}
-
-func (a *AuthenticatedCLICommand) AuthToken() string {
-	return a.State.AuthToken
-}
-func (a *AuthenticatedCLICommand) EnvironmentId() string {
-	return a.State.Auth.Account.Id
-}
-
-func NewAuthenticatedCLICommand(command *cobra.Command, cfg *v2.Config, prerunner PreRunner) *AuthenticatedCLICommand {
-	cmd := &AuthenticatedCLICommand{
-		CLICommand: NewCLICommand(command, cfg, prerunner),
-		Context:    nil,
-		State:      nil,
-	}
-	command.PersistentPreRunE = prerunner.Authenticated(cmd)
-	cmd.Command = command
-	return cmd
-}
-
-func NewAuthenticatedWithMDSCLICommand(command *cobra.Command, cfg *v2.Config, prerunner PreRunner) *AuthenticatedCLICommand {
-	cmd := &AuthenticatedCLICommand{
-		CLICommand: NewCLICommand(command, cfg, prerunner),
-		Context:    nil,
-		State:      nil,
-	}
-	command.PersistentPreRunE = prerunner.AuthenticatedWithMDS(cmd)
-	cmd.Command = command
-	return cmd
-}
-
-func NewHasAPIKeyCLICommand(command *cobra.Command, cfg *v2.Config, prerunner PreRunner) *HasAPIKeyCLICommand {
-	cmd := &HasAPIKeyCLICommand{
-		CLICommand: NewCLICommand(command, cfg, prerunner),
-		Context:    nil,
-	}
-	command.PersistentPreRunE = prerunner.HasAPIKey(cmd)
-	cmd.Command = command
-	return cmd
-}
-
-func NewAnonymousCLICommand(command *cobra.Command, cfg *v2.Config, prerunner PreRunner) *CLICommand {
-	cmd := NewCLICommand(command, cfg, prerunner)
-	command.PersistentPreRunE = prerunner.Anonymous(cmd)
-	cmd.Command = command
-	return cmd
-}
-
-func NewCLICommand(command *cobra.Command, cfg *v2.Config, prerunner PreRunner) *CLICommand {
-	return &CLICommand{
-		Config:    NewDynamicConfig(cfg, nil, nil),
-		Command:   command,
-		prerunner: prerunner,
-	}
-}
-
-func (a *AuthenticatedCLICommand) AddCommand(command *cobra.Command) {
-	command.PersistentPreRunE = a.PersistentPreRunE
-	a.Command.AddCommand(command)
-}
-
-func (h *HasAPIKeyCLICommand) AddCommand(command *cobra.Command) {
-	command.PersistentPreRunE = h.PersistentPreRunE
-	h.Command.AddCommand(command)
+	UpdateClient   update.Client
+	CLIName        string
+	Logger         *log.Logger
+	TokenValidator auth.TokenValidator
+	Analytics      analytics.Client
+	FlagResolver   FlagResolver
+	Version        *version.Version
 }
 
 // Anonymous provides PreRun operations for commands that may be run without a logged-in user
@@ -322,23 +236,9 @@ func (r *PreRun) createMDSClient(ctx *DynamicContext, ver *version.Version) *mds
 }
 
 func (r *PreRun) validateToken(cmd *cobra.Command, ctx *DynamicContext) error {
-	// validate token (not expired)
 	var authToken string
 	if ctx != nil {
 		authToken = ctx.State.AuthToken
 	}
-	var claims map[string]interface{}
-	token, err := jwt.ParseSigned(authToken)
-	if err != nil {
-		return errors.HandleCommon(new(ccloud.InvalidTokenError), cmd)
-	}
-	if err := token.UnsafeClaimsWithoutVerification(&claims); err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	if exp, ok := claims["exp"].(float64); ok {
-		if float64(r.Clock.Now().Unix()) > exp {
-			return errors.HandleCommon(new(ccloud.ExpiredTokenError), cmd)
-		}
-	}
-	return nil
+	return errors.HandleCommon(r.TokenValidator.ValidateToken(authToken), cmd)
 }

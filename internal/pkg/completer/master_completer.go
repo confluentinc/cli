@@ -8,22 +8,30 @@ import (
 type MasterCompleter struct {
 	*FuzzyCompleter
 	*CoreCompleter
-	*CoreCommandCompleter
+	*BackgroundCommandCompleter
 	FuzzyComplete bool
 }
 
 func NewMasterCompleter(rootCmd *cobra.Command, cliName string) *MasterCompleter {
 	return &MasterCompleter{
-		FuzzyCompleter:       NewFuzzyCompleter(rootCmd, cliName),
-		CoreCompleter:        NewCoreCompleter(rootCmd),
-		CoreCommandCompleter: NewCoreCommandCompleter(rootCmd),
-		FuzzyComplete:        false,
+		FuzzyCompleter:             NewFuzzyCompleter(rootCmd, cliName),
+		CoreCompleter:              NewCoreCompleter(rootCmd),
+		BackgroundCommandCompleter: NewBackgroundCommandCompleter(rootCmd, cliName, DefaultUpdateInterval),
+		FuzzyComplete:              false,
 	}
 }
 
 func (c *MasterCompleter) Complete(d prompt.Document) []prompt.Suggest {
+	coreCompletions := c.CoreCompleter.Complete(d)
 	if c.FuzzyComplete {
 		return c.FuzzyCompleter.Complete(d)
+		return prompt.FilterFuzzy(coreCompletions, d.GetWordBeforeCursor(), true)
 	}
-	return append(c.CoreCompleter.Complete(d), c.CoreCommandCompleter.Complete(d)...)
+	return append(coreCompletions, c.BackgroundCommandCompleter.Complete(d)...)
+}
+
+func (c *MasterCompleter) SetRootCmd(rootCmd *cobra.Command) {
+	c.FuzzyCompleter.RootCmd = rootCmd
+	c.CoreCompleter.RootCmd = rootCmd
+	c.CoreCommandCompleter.RootCmd = rootCmd
 }

@@ -124,7 +124,7 @@ func (d *DynamicContext) SchemaRegistryCluster(cmd *cobra.Command) (*v2.SchemaRe
 			4a. If found
 				5. *Done*
 			4b. Else
-				5. Fetch remotely *Done.
+				5. Fetch remotely *Done*
 	*/
 	resourceType, resourceId, err := d.resolver.ResolveResourceId(cmd)
 	if err != nil {

@@ -7,7 +7,17 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	UnauthenticatedSuggestion = []prompt.Suggest{
+		{
+			Text:        " ",
+			Description: "You are currently not authenticated. Please login.",
+		},
+	}
+)
+
 type CompletionFunc = prompt.Completer
+type CommandCompletionFunc func() []prompt.Suggest
 type CompleterFunc func(d prompt.Document) []prompt.Suggest
 type CompleterWrapper func(Completer) Completer
 
@@ -17,7 +27,7 @@ type Completer interface {
 
 type CommandCompleter interface {
 	Completer
-	AddCommand(cmd *cobra.Command, completionFunc CompletionFunc)
+	AddCommand(cmd *cobra.Command, completionFunc CommandCompletionFunc)
 }
 
 func (f CompleterFunc) Complete(d prompt.Document) []prompt.Suggest {

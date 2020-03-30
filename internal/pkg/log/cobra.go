@@ -5,7 +5,13 @@ import (
 )
 
 func SetLoggingVerbosity(cmd *cobra.Command, logger *Logger) error {
-	verbosity, err := cmd.Flags().GetCount("verbose")
+	var err error
+	var verbosity int
+	if cmd.HasParent() {
+		verbosity, err = cmd.InheritedFlags().GetCount("verbose")
+	} else {
+		verbosity, err = cmd.PersistentFlags().GetCount("verbose")
+	}
 	if err != nil {
 		return err
 	}

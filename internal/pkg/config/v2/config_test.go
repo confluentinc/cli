@@ -473,7 +473,7 @@ func TestConfig_getFilename(t *testing.T) {
 			want: filepath.FromSlash(os.Getenv("HOME") + "/.confluent/config.json"),
 		},
 		{
-			name:   "should default to ~/.confluent if CLIName isn't provided",
+			name:   "should default to ~/.confluent if cliName isn't provided",
 			fields: fields{},
 			want:   filepath.FromSlash(os.Getenv("HOME") + "/.confluent/config.json"),
 		},
@@ -618,7 +618,7 @@ func TestConfig_SetContext(t *testing.T) {
 
 //func TestConfig_AuthenticatedState(t *testing.T) {
 //	type fields struct {
-//		CLIName        string
+//		cliName        string
 //		MetricSink     metric.Sink
 //		Logger         *log.Logger
 //		Filename       string
@@ -703,7 +703,7 @@ func TestConfig_SetContext(t *testing.T) {
 //	for _, tt := range tests {
 //		t.Run(tt.name, func(t *testing.T) {
 //			c := &Config{
-//				CLIName:        tt.fields.CLIName,
+//				cliName:        tt.fields.cliName,
 //				MetricSink:     tt.fields.MetricSink,
 //				Logger:         tt.fields.Logger,
 //				Filename:       tt.fields.Filename,

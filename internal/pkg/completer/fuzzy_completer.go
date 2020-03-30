@@ -9,13 +9,13 @@ import (
 
 type FuzzyCompleter struct {
 	RootCmd *cobra.Command
-	CLIName string
+	cliName string
 }
 
 func NewFuzzyCompleter(rootCmd *cobra.Command, cliName string) *FuzzyCompleter {
 	return &FuzzyCompleter{
 		RootCmd: rootCmd,
-		CLIName: cliName,
+		cliName: cliName,
 	}
 }
 
@@ -23,7 +23,7 @@ func (c *FuzzyCompleter) Complete(d prompt.Document) []prompt.Suggest {
 	matches := findMatchingCommands(d.CurrentLine(), c.RootCmd, []*cobra.Command{})
 	var suggestions []prompt.Suggest
 	for _, m := range matches {
-		cmdPath := strings.TrimPrefix(m.CommandPath(), c.CLIName)
+		cmdPath := strings.TrimPrefix(m.CommandPath(), c.cliName)
 		suggestion := prompt.Suggest{
 			Text:        cmdPath,
 			Description: m.Short,
