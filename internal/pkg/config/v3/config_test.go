@@ -628,12 +628,27 @@ func TestKafkaClusterContext_SetAndGetActiveKafkaCluster_Env(t *testing.T) {
 	configFile, _ := ioutil.TempFile("", "TestConfig_Save.json")
 	ctx.Config.Filename = configFile.Name()
 
+	// Creating another environment with another kafka cluster
 	otherAccountId := "other-abc"
 	otherAccount := &orgv1.Account{
 		Id:   otherAccountId,
 		Name: "other-account",
 	}
 	otherKafkaClusterId := "other-kafka"
+	otherKafkaCluster := &v1.KafkaClusterConfig{
+		ID:          otherKafkaClusterId,
+		Name:        "lit",
+		Bootstrap:   "http://test",
+		APIEndpoint: "",
+		APIKeys: map[string]*v0.APIKeyPair{
+			"akey": {
+				Key:    "akey",
+				Secret: "asecret",
+			},
+		},
+		APIKey: "akey",
+	}
+
 	ctx.State.Auth.Accounts = append(ctx.State.Auth.Accounts, otherAccount)
 	var activeKafka string
 
@@ -641,14 +656,17 @@ func TestKafkaClusterContext_SetAndGetActiveKafkaCluster_Env(t *testing.T) {
 	if activeKafka != testInputs.activeKafka {
 		t.Errorf("GetActiveKafkaClusterId() got %s, want %s.", activeKafka, testInputs.activeKafka)
 	}
+	require.Equal(t, ctx.KafkaClusterContext.GetActiveKafkaClusterConfig().ID, activeKafka)
 
-	// switch environment
+	// switch environment add the kafka cluster, and set it as active cluster
 	ctx.State.Auth.Account = otherAccount
+	ctx.KafkaClusterContext.AddKafkaClusterConfig(otherKafkaCluster)
 	ctx.KafkaClusterContext.SetActiveKafkaCluster(otherKafkaClusterId)
 	activeKafka = ctx.KafkaClusterContext.GetActiveKafkaClusterId()
 	if activeKafka != otherKafkaClusterId {
 		t.Errorf("After settting active kafka in new environment, GetActiveKafkaClusterId() got %s, want %s.", activeKafka, testInputs.activeKafka)
 	}
+	require.Equal(t, ctx.KafkaClusterContext.GetActiveKafkaClusterConfig().ID, activeKafka)
 
 	// switch environment back
 	ctx.State.Auth.Account = testInputs.account
@@ -656,6 +674,7 @@ func TestKafkaClusterContext_SetAndGetActiveKafkaCluster_Env(t *testing.T) {
 	if activeKafka != testInputs.activeKafka {
 		t.Errorf("After switching to back to first environment, GetActiveKafkaClusterId() got %s, want %s.", activeKafka, testInputs.activeKafka)
 	}
+	require.Equal(t, ctx.KafkaClusterContext.GetActiveKafkaClusterConfig().ID, activeKafka)
 	_ = os.Remove(configFile.Name())
 }
 
@@ -665,18 +684,91 @@ func TestKafkaClusterContext_SetAndGetActiveKafkaCluster_NonEnv(t *testing.T) {
 	// temp file so json files in test_json do not get overwritten
 	configFile, _ := ioutil.TempFile("", "TestConfig_Save.json")
 	ctx.Config.Filename = configFile.Name()
-	var activeKafka string
+	otherKafkaClusterId := "other-kafka"
+	otherKafkaCluster := &v1.KafkaClusterConfig{
+		ID:          otherKafkaClusterId,
+		Name:        "lit",
+		Bootstrap:   "http://test",
+		APIEndpoint: "",
+		APIKeys: map[string]*v0.APIKeyPair{
+			"akey": {
+				Key:    "akey",
+				Secret: "asecret",
+			},
+		},
+		APIKey: "akey",
+	}
 
-	activeKafka = ctx.KafkaClusterContext.GetActiveKafkaClusterId()
+	activeKafka := ctx.KafkaClusterContext.GetActiveKafkaClusterId()
 	if activeKafka != testInputs.activeKafka {
 		t.Errorf("GetActiveKafkaClusterId() got %s, want %s.", activeKafka, testInputs.activeKafka)
 	}
+	require.Equal(t, ctx.KafkaClusterContext.GetActiveKafkaClusterConfig().ID, activeKafka)
 
-	otherKafkaClusterId := "other-kafka"
+	// Add another kafka cluster and set it as active cluster
+	ctx.KafkaClusterContext.AddKafkaClusterConfig(otherKafkaCluster)
 	ctx.KafkaClusterContext.SetActiveKafkaCluster(otherKafkaClusterId)
+
 	activeKafka = ctx.KafkaClusterContext.GetActiveKafkaClusterId()
 	if activeKafka != otherKafkaClusterId {
 		t.Errorf("After settting active kafka, GetActiveKafkaClusterId() got %s, want %s.", activeKafka, testInputs.activeKafka)
 	}
+	require.Equal(t, ctx.KafkaClusterContext.GetActiveKafkaClusterConfig().ID, activeKafka)
 	_ = os.Remove(configFile.Name())
+}
+
+func TestKafkaClusterContext_AddAndGetKafkaClusterConfig(t *testing.T) {
+	clusterID := "lkc-abcdefg"
+
+	kcc := &v1.KafkaClusterConfig{
+			ID:          clusterID,
+			Name:        "lit",
+			Bootstrap:   "http://test",
+			APIEndpoint: "",
+			APIKeys: map[string]*v0.APIKeyPair{
+				"akey": {
+					Key:    "akey",
+					Secret: "asecret",
+				},
+			},
+			APIKey: "akey",
+	}
+	for _, cliName := range[]string{"ccloud", "confluent"} {
+		testInputs := SetupTestInputs(cliName)
+		kafkaClusterContext := testInputs.statefulConfig.Context().KafkaClusterContext
+		kafkaClusterContext.AddKafkaClusterConfig(kcc)
+		reflect.DeepEqual(kcc, kafkaClusterContext.GetKafkaClusterConfig(clusterID))
+	}
+}
+
+func TestKafkaClusterContext_DeleteAPIKey(t *testing.T) {
+	clusterID := "lkc-abcdefg"
+	apiKey := "akey"
+	kcc := &v1.KafkaClusterConfig{
+		ID:          clusterID,
+		Name:        "lit",
+		Bootstrap:   "http://test",
+		APIEndpoint: "",
+		APIKeys: map[string]*v0.APIKeyPair{
+			apiKey: {
+				Key:    apiKey,
+				Secret: "asecret",
+			},
+		},
+		APIKey: apiKey,
+	}
+	for _, cliName := range[]string{"ccloud", "confluent"} {
+		testInputs := SetupTestInputs(cliName)
+		kafkaClusterContext := testInputs.statefulConfig.Context().KafkaClusterContext
+		kafkaClusterContext.AddKafkaClusterConfig(kcc)
+
+		kafkaClusterContext.DeleteAPIKey(apiKey)
+		kcc := kafkaClusterContext.GetKafkaClusterConfig(clusterID)
+		if _, ok := kcc.APIKeys[apiKey]; ok {
+			t.Errorf("DeleteAPIKey did not delete the API key.")
+		}
+		if kcc.APIKey != "" {
+			t.Errorf("DeleteAPIKey did not remove deleted active API key.")
+		}
+	}
 }

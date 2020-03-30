@@ -80,7 +80,7 @@ func (m *Kafka) UpdateTopic(ctx context.Context, cluster *kafkav1.KafkaCluster, 
 	return assertEquals(topic, <-m.Expect)
 }
 
-func (m *Kafka) ListACL(ctx context.Context, cluster *kafkav1.KafkaCluster, filter *kafkav1.ACLFilter) ([]*kafkav1.ACLBinding, error) {
+func (m *Kafka) ListACLs(ctx context.Context, cluster *kafkav1.KafkaCluster, filter *kafkav1.ACLFilter) ([]*kafkav1.ACLBinding, error) {
 	expect := <-m.Expect
 	if filter.PatternFilter.PatternType == kafkav1.PatternTypes_ANY {
 		expect.(*kafkav1.ACLFilter).PatternFilter.PatternType = kafkav1.PatternTypes_ANY
@@ -94,12 +94,12 @@ func (m *Kafka) ListACL(ctx context.Context, cluster *kafkav1.KafkaCluster, filt
 	return nil, assertEquals(filter, expect)
 }
 
-func (m *Kafka) CreateACL(ctx context.Context, cluster *kafkav1.KafkaCluster, binding []*kafkav1.ACLBinding) error {
-	return assertEquals(binding[0], <-m.Expect)
+func (m *Kafka) CreateACLs(ctx context.Context, cluster *kafkav1.KafkaCluster, bindings []*kafkav1.ACLBinding) error {
+	return assertEqualBindings(bindings, <-m.Expect)
 }
 
-func (m *Kafka) DeleteACL(ctx context.Context, cluster *kafkav1.KafkaCluster, filter *kafkav1.ACLFilter) error {
-	return assertEquals(filter, <-m.Expect)
+func (m *Kafka) DeleteACLs(ctx context.Context, cluster *kafkav1.KafkaCluster, filters []*kafkav1.ACLFilter) error {
+	return assertEqualFilters(filters, <-m.Expect)
 }
 
 func assertEquals(actual interface{}, expected interface{}) error {
@@ -108,6 +108,32 @@ func assertEquals(actual interface{}, expected interface{}) error {
 
 	if !proto.Equal(actualMessage, expectedMessage) {
 		return fmt.Errorf("actual: %+v\nexpected: %+v", actual, expected)
+	}
+	return nil
+}
+
+func assertEqualBindings(actual []*kafkav1.ACLBinding, expected interface{}) error {
+	exp := expected.([]*kafkav1.ACLBinding)
+	if len(actual) != len(exp) {
+		return fmt.Errorf("Length is not equal. actual: %d, expected: %d", len(actual), len(exp))
+	}
+	for i, actualMessage := range actual {
+		if err := assertEquals(actualMessage, exp[i]); err != nil {
+			return fmt.Errorf("Index %d is not equal. %s", i, err)
+		}
+	}
+	return nil
+}
+
+func assertEqualFilters(actual []*kafkav1.ACLFilter, expected interface{}) error {
+	exp := expected.([]*kafkav1.ACLFilter)
+	if len(actual) != len(exp) {
+		return fmt.Errorf("Length is not equal. actual: %d, expected: %d", len(actual), len(exp))
+	}
+	for i, actualMessage := range actual {
+		if err := assertEquals(actualMessage, exp[i]); err != nil {
+			return fmt.Errorf("Index %d is not equal. %s", i, err)
+		}
 	}
 	return nil
 }

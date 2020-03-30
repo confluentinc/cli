@@ -16,7 +16,7 @@ import (
 	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/acl"
-	"github.com/confluentinc/cli/internal/pkg/config/v3"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
@@ -93,7 +93,7 @@ func (suite *KSQLTestSuite) SetupTest() {
 		DescribeFunc: func(ctx context.Context, cluster *kafkav1.KafkaCluster) (*kafkav1.KafkaCluster, error) {
 			return suite.kafkaCluster, nil
 		},
-		CreateACLFunc: func(ctx context.Context, cluster *kafkav1.KafkaCluster, binding []*kafkav1.ACLBinding) error {
+		CreateACLsFunc: func(ctx context.Context, cluster *kafkav1.KafkaCluster, binding []*kafkav1.ACLBinding) error {
 			return nil
 		},
 	}
@@ -137,8 +137,8 @@ func (suite *KSQLTestSuite) TestShouldConfigureACLs() {
 
 	req := require.New(suite.T())
 	req.Nil(err)
-	req.Equal(1, len(suite.kafkac.CreateACLCalls()))
-	bindings := suite.kafkac.CreateACLCalls()[0].Binding
+	req.Equal(1, len(suite.kafkac.CreateACLsCalls()))
+	bindings := suite.kafkac.CreateACLsCalls()[0].Bindings
 	buf := new(bytes.Buffer)
 	req.NoError(acl.PrintAcls(cmd, bindings, buf))
 	req.Equal(expectedACLs, buf.String())
@@ -155,8 +155,8 @@ func (suite *KSQLTestSuite) TestShouldAlsoConfigureForPro() {
 
 	req := require.New(suite.T())
 	req.Nil(err)
-	req.Equal(1, len(suite.kafkac.CreateACLCalls()))
-	bindings := suite.kafkac.CreateACLCalls()[0].Binding
+	req.Equal(1, len(suite.kafkac.CreateACLsCalls()))
+	bindings := suite.kafkac.CreateACLsCalls()[0].Bindings
 	buf := new(bytes.Buffer)
 	req.NoError(acl.PrintAcls(cmd, bindings, buf))
 	req.Equal(expectedACLs, buf.String())
@@ -172,7 +172,7 @@ func (suite *KSQLTestSuite) TestShouldNotConfigureOnDryRun() {
 
 	req := require.New(suite.T())
 	req.Nil(err)
-	req.False(suite.kafkac.CreateACLCalled())
+	req.False(suite.kafkac.CreateACLsCalled())
 	req.Equal(expectedACLs, buf.String())
 }
 

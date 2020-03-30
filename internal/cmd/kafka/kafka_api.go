@@ -19,6 +19,17 @@ type ACLConfiguration struct {
 	errors error
 }
 
+func NewACLConfig() *ACLConfiguration {
+	return &ACLConfiguration{
+		ACLBinding: &kafkav1.ACLBinding{
+			Entry: &kafkav1.AccessControlEntryConfig{
+				Host: "*",
+			},
+			Pattern: &kafkav1.ResourcePatternConfig{},
+		},
+	}
+}
+
 // aclConfigFlags returns a flag set which can be parsed to create an ACLConfiguration object.
 func aclConfigFlags() *pflag.FlagSet {
 	flgSet := aclEntryFlags()
@@ -35,7 +46,7 @@ func aclEntryFlags() *pflag.FlagSet {
 	flgSet.Bool("deny", false, "Set the ACL to restrict access to resource.")
 	//flgSet.String( "host", "*", "Set Kafka principal host. Note: Not supported on CCLOUD.")
 	flgSet.Int("service-account", 0, "The service account ID.")
-	flgSet.String("operation", "", fmt.Sprintf("Set ACL Operation to: (%s).",
+	flgSet.StringArray("operation", []string{""}, fmt.Sprintf("Set ACL Operations to: (%s).",
 		listEnum(kafkav1.ACLOperations_ACLOperation_name, []string{"ANY", "UNKNOWN"})))
 	// An error is only returned if the flag name is not present.
 	// We know the flag name is present so its safe to ignore this.
@@ -61,17 +72,31 @@ the --prefix option was also passed.`)
 }
 
 // parse returns ACLConfiguration from the contents of cmd
-func parse(cmd *cobra.Command) *ACLConfiguration {
-	aclBinding := &ACLConfiguration{
-		ACLBinding: &kafkav1.ACLBinding{
-			Entry: &kafkav1.AccessControlEntryConfig{
-				Host: "*",
-			},
-			Pattern: &kafkav1.ResourcePatternConfig{},
-		},
+func parse(cmd *cobra.Command) ([]*ACLConfiguration, error) {
+	aclConfigs := []*ACLConfiguration{}
+
+	if cmd.Name() == listCmd.Name() {
+		aclConfig := NewACLConfig()
+		cmd.Flags().Visit(fromArgs(aclConfig))
+		aclConfigs = append(aclConfigs, aclConfig)
+		return aclConfigs, nil
 	}
-	cmd.Flags().Visit(fromArgs(aclBinding))
-	return aclBinding
+
+	operations, err := cmd.Flags().GetStringArray("operation")
+	if err != nil {
+		return nil, err
+	}
+	for _, operation := range operations {
+		aclConfig := NewACLConfig()
+		op, err := getAclOperation(operation)
+		if err != nil {
+			return nil, err
+		}
+		aclConfig.Entry.Operation = op
+		cmd.Flags().Visit(fromArgs(aclConfig))
+		aclConfigs = append(aclConfigs, aclConfig)
+	}
+	return aclConfigs, nil
 }
 
 // fromArgs maps command flag values to the appropriate ACLConfiguration field
@@ -103,14 +128,6 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 				break
 			}
 			conf.Entry.Principal = "User:" + v
-		case "operation":
-			v = strings.ToUpper(v)
-			v = strings.Replace(v, "-", "_", -1)
-			if op, ok := kafkav1.ACLOperations_ACLOperation_value[v]; ok {
-				conf.Entry.Operation = kafkav1.ACLOperations_ACLOperation(op)
-				break
-			}
-			conf.errors = multierror.Append(conf.errors, fmt.Errorf("Invalid operation value: "+v))
 		}
 	}
 }
@@ -156,4 +173,13 @@ OUTER:
 
 	sort.Strings(ops)
 	return strings.Join(ops, ", ")
+}
+
+func getAclOperation(operation string) (kafkav1.ACLOperations_ACLOperation, error) {
+	op := strings.ToUpper(operation)
+	op = strings.Replace(op, "-", "_", -1)
+	if operation, ok := kafkav1.ACLOperations_ACLOperation_value[op]; ok {
+		return kafkav1.ACLOperations_ACLOperation(operation), nil
+	}
+	return kafkav1.ACLOperations_UNKNOWN, fmt.Errorf("Invalid operation value: %s", op)
 }

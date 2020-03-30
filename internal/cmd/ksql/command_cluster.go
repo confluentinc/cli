@@ -275,7 +275,7 @@ func (c *clusterCommand) configureACLs(cmd *cobra.Command, args []string) error 
 	if aclsDryRun {
 		return acl.PrintAcls(cmd, bindings, cmd.OutOrStderr())
 	}
-	err = c.Client.Kafka.CreateACL(ctx, kafkaCluster, bindings)
+	err = c.Client.Kafka.CreateACLs(ctx, kafkaCluster, bindings)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}

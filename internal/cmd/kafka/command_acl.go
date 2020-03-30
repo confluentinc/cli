@@ -16,6 +16,12 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
+var (
+	createCmd *cobra.Command
+	deleteCmd *cobra.Command
+	listCmd   *cobra.Command
+)
+
 type aclCommand struct {
 	*pcmd.AuthenticatedCLICommand
 }
@@ -36,7 +42,7 @@ func NewACLCommand(prerunner pcmd.PreRunner, config *v3.Config) *cobra.Command {
 func (c *aclCommand) init() {
 	c.Command.PersistentFlags().String("cluster", "", "Kafka cluster ID.")
 
-	cmd := &cobra.Command{
+	createCmd = &cobra.Command{
 		Use:   "create",
 		Short: `Create a Kafka ACL.`,
 		Example: `You can only specify one of these flags per command invocation: ` + "``cluster``, ``consumer-group``" + `,
@@ -56,44 +62,47 @@ func (c *aclCommand) init() {
 		RunE: c.create,
 		Args: cobra.NoArgs,
 	}
-	cmd.Flags().AddFlagSet(aclConfigFlags())
-	cmd.Flags().SortFlags = false
+	createCmd.Flags().AddFlagSet(aclConfigFlags())
+	createCmd.Flags().SortFlags = false
 
-	c.AddCommand(cmd)
+	c.AddCommand(createCmd)
 
-	cmd = &cobra.Command{
+	deleteCmd = &cobra.Command{
 		Use:   "delete",
 		Short: `Delete a Kafka ACL.`,
 		RunE:  c.delete,
 		Args:  cobra.NoArgs,
 	}
-	cmd.Flags().AddFlagSet(aclConfigFlags())
-	cmd.Flags().SortFlags = false
+	deleteCmd.Flags().AddFlagSet(aclConfigFlags())
+	deleteCmd.Flags().SortFlags = false
 
-	c.AddCommand(cmd)
+	c.AddCommand(deleteCmd)
 
-	cmd = &cobra.Command{
+	listCmd = &cobra.Command{
 		Use:   "list",
 		Short: `List Kafka ACLs for a resource.`,
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	}
-	cmd.Flags().AddFlagSet(resourceFlags())
-	cmd.Flags().Int("service-account", 0, "Service account ID.")
-	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	cmd.Flags().SortFlags = false
+	listCmd.Flags().AddFlagSet(resourceFlags())
+	listCmd.Flags().Int("service-account", 0, "Service account ID.")
+	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	listCmd.Flags().SortFlags = false
 
-	c.AddCommand(cmd)
+	c.AddCommand(listCmd)
 }
 
 func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
-	acl := parse(cmd)
+	acl, err := parse(cmd)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
 
 	cluster, err := pcmd.KafkaCluster(cmd, c.Context)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	resp, err := c.Client.Kafka.ListACL(context.Background(), cluster, convertToFilter(acl.ACLBinding))
+	resp, err := c.Client.Kafka.ListACLs(context.Background(), cluster, convertToFilter(acl[0].ACLBinding))
 
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -102,38 +111,54 @@ func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
 }
 
 func (c *aclCommand) create(cmd *cobra.Command, args []string) error {
-	acl := validateAddDelete(parse(cmd))
+	acls, err := parse(cmd)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	bindings := []*kafkav1.ACLBinding{}
+	for _, acl := range acls {
+		validateAddDelete(acl)
+		if acl.errors != nil {
+			return errors.HandleCommon(acl.errors, cmd)
+		}
+		bindings = append(bindings, acl.ACLBinding)
+	}
 
 	cluster, err := pcmd.KafkaCluster(cmd, c.Context)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	if acl.errors != nil {
-		return errors.HandleCommon(acl.errors, cmd)
-	}
-	err = c.Client.Kafka.CreateACL(context.Background(), cluster, []*kafkav1.ACLBinding{acl.ACLBinding})
+	err = c.Client.Kafka.CreateACLs(context.Background(), cluster, bindings)
 
 	return errors.HandleCommon(err, cmd)
 }
 
 func (c *aclCommand) delete(cmd *cobra.Command, args []string) error {
-	acl := validateAddDelete(parse(cmd))
-
-	if acl.errors != nil {
-		return errors.HandleCommon(acl.errors, cmd)
+	acls, err := parse(cmd)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
 	}
+	filters := []*kafkav1.ACLFilter{}
+	for _, acl := range acls {
+		validateAddDelete(acl)
+		if acl.errors != nil {
+			return errors.HandleCommon(acl.errors, cmd)
+		}
+		filters = append(filters, convertToFilter(acl.ACLBinding))
+	}
+
 	cluster, err := pcmd.KafkaCluster(cmd, c.Context)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	err = c.Client.Kafka.DeleteACL(context.Background(), cluster, convertToFilter(acl.ACLBinding))
+	err = c.Client.Kafka.DeleteACLs(context.Background(), cluster, filters)
 
 	return errors.HandleCommon(err, cmd)
 }
 
 // validateAddDelete ensures the minimum requirements for acl add and delete are met
-func validateAddDelete(binding *ACLConfiguration) *ACLConfiguration {
+func validateAddDelete(binding *ACLConfiguration) {
 	if binding.Entry.PermissionType == kafkav1.ACLPermissionTypes_UNKNOWN {
 		binding.errors = multierror.Append(binding.errors, fmt.Errorf("--allow or --deny must be set when adding or deleting an ACL"))
 	}
@@ -146,13 +171,12 @@ func validateAddDelete(binding *ACLConfiguration) *ACLConfiguration {
 		binding.errors = multierror.Append(binding.errors, fmt.Errorf("exactly one of %v must be set",
 			listEnum(kafkav1.ResourceTypes_ResourceType_name, []string{"ANY", "UNKNOWN"})))
 	}
-	return binding
 }
 
 // convertToFilter converts a ACLBinding to a KafkaAPIACLFilterRequest
 func convertToFilter(binding *kafkav1.ACLBinding) *kafkav1.ACLFilter {
 	// ACE matching rules
-	// https://github.com/apache/kafka/blob/trunk/clients/src/main/java/org/apache/kafka/common/acl/AccessControlEntryFilter.java#L102-L113	if binding.Entry == nil {
+	// https://github.com/apache/kafka/blob/trunk/clients/src/main/java/org/apache/kafka/common/acl/AccessControlEntryFilter.java#L102-L113
 	if binding.Entry == nil {
 		binding.Entry = new(kafkav1.AccessControlEntryConfig)
 	}

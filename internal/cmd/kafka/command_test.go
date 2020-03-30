@@ -68,121 +68,223 @@ var resourcePatterns = []struct {
 }
 
 var aclEntries = []struct {
-	args  []string
-	entry *kafkav1.AccessControlEntryConfig
+	args    []string
+	entries []*kafkav1.AccessControlEntryConfig
+	err     error
 }{
 	{
 		args: []string{"--allow", "--service-account", "42", "--operation", "read"},
-		entry: &kafkav1.AccessControlEntryConfig{PermissionType: kafkav1.ACLPermissionTypes_ALLOW,
-			Principal: "User:42", Operation: kafkav1.ACLOperations_READ, Host: "*"},
+		entries: []*kafkav1.AccessControlEntryConfig{
+			{
+				PermissionType: kafkav1.ACLPermissionTypes_ALLOW,
+				Principal:      "User:42", Operation: kafkav1.ACLOperations_READ, Host: "*",
+			},
+		},
 	},
 	{
 		args: []string{"--deny", "--service-account", "42", "--operation", "read"},
-		entry: &kafkav1.AccessControlEntryConfig{PermissionType: kafkav1.ACLPermissionTypes_DENY,
-			Principal: "User:42", Operation: kafkav1.ACLOperations_READ, Host: "*"},
+		entries: []*kafkav1.AccessControlEntryConfig{
+			{
+				PermissionType: kafkav1.ACLPermissionTypes_DENY,
+				Principal:      "User:42", Operation: kafkav1.ACLOperations_READ, Host: "*",
+			},
+		},
 	},
 	{
 		args: []string{"--allow", "--service-account", "42", "--operation", "write"},
-		entry: &kafkav1.AccessControlEntryConfig{PermissionType: kafkav1.ACLPermissionTypes_ALLOW,
-			Principal: "User:42", Operation: kafkav1.ACLOperations_WRITE, Host: "*"},
+		entries: []*kafkav1.AccessControlEntryConfig{
+			{
+				PermissionType: kafkav1.ACLPermissionTypes_ALLOW,
+				Principal:      "User:42", Operation: kafkav1.ACLOperations_WRITE, Host: "*",
+			},
+		},
 	},
 	{
 		args: []string{"--deny", "--service-account", "42", "--operation", "write"},
-		entry: &kafkav1.AccessControlEntryConfig{PermissionType: kafkav1.ACLPermissionTypes_DENY,
-			Principal: "User:42", Operation: kafkav1.ACLOperations_WRITE, Host: "*"},
+		entries: []*kafkav1.AccessControlEntryConfig{
+			{
+				PermissionType: kafkav1.ACLPermissionTypes_DENY,
+				Principal:      "User:42", Operation: kafkav1.ACLOperations_WRITE, Host: "*",
+			},
+		},
 	},
 	{
 		args: []string{"--allow", "--service-account", "42", "--operation", "create"},
-		entry: &kafkav1.AccessControlEntryConfig{PermissionType: kafkav1.ACLPermissionTypes_ALLOW,
-			Principal: "User:42", Operation: kafkav1.ACLOperations_CREATE, Host: "*"},
+		entries: []*kafkav1.AccessControlEntryConfig{
+			{
+				PermissionType: kafkav1.ACLPermissionTypes_ALLOW,
+				Principal:      "User:42", Operation: kafkav1.ACLOperations_CREATE, Host: "*",
+			},
+		},
 	},
 	{
 		args: []string{"--deny", "--service-account", "42", "--operation", "create"},
-		entry: &kafkav1.AccessControlEntryConfig{PermissionType: kafkav1.ACLPermissionTypes_DENY,
-			Principal: "User:42", Operation: kafkav1.ACLOperations_CREATE, Host: "*"},
+		entries: []*kafkav1.AccessControlEntryConfig{
+			{
+				PermissionType: kafkav1.ACLPermissionTypes_DENY,
+				Principal:      "User:42", Operation: kafkav1.ACLOperations_CREATE, Host: "*",
+			},
+		},
 	},
 	{
 		args: []string{"--allow", "--service-account", "42", "--operation", "delete"},
-		entry: &kafkav1.AccessControlEntryConfig{PermissionType: kafkav1.ACLPermissionTypes_ALLOW,
-			Principal: "User:42", Operation: kafkav1.ACLOperations_DELETE, Host: "*"},
+		entries: []*kafkav1.AccessControlEntryConfig{
+			{
+				PermissionType: kafkav1.ACLPermissionTypes_ALLOW,
+				Principal:      "User:42", Operation: kafkav1.ACLOperations_DELETE, Host: "*",
+			},
+		},
 	},
 	{
 		args: []string{"--deny", "--service-account", "42", "--operation", "delete"},
-		entry: &kafkav1.AccessControlEntryConfig{PermissionType: kafkav1.ACLPermissionTypes_DENY,
-			Principal: "User:42", Operation: kafkav1.ACLOperations_DELETE, Host: "*"},
+		entries: []*kafkav1.AccessControlEntryConfig{
+			{
+				PermissionType: kafkav1.ACLPermissionTypes_DENY,
+				Principal:      "User:42", Operation: kafkav1.ACLOperations_DELETE, Host: "*",
+			},
+		},
 	},
 	{
 		args: []string{"--allow", "--service-account", "42", "--operation", "alter"},
-		entry: &kafkav1.AccessControlEntryConfig{PermissionType: kafkav1.ACLPermissionTypes_ALLOW,
-			Principal: "User:42", Operation: kafkav1.ACLOperations_ALTER, Host: "*"},
+		entries: []*kafkav1.AccessControlEntryConfig{
+			{
+				PermissionType: kafkav1.ACLPermissionTypes_ALLOW,
+				Principal:      "User:42", Operation: kafkav1.ACLOperations_ALTER, Host: "*",
+			},
+		},
 	},
 	{
 		args: []string{"--deny", "--service-account", "42", "--operation", "alter"},
-		entry: &kafkav1.AccessControlEntryConfig{PermissionType: kafkav1.ACLPermissionTypes_DENY,
-			Principal: "User:42", Operation: kafkav1.ACLOperations_ALTER, Host: "*"},
+		entries: []*kafkav1.AccessControlEntryConfig{
+			{
+				PermissionType: kafkav1.ACLPermissionTypes_DENY,
+				Principal:      "User:42", Operation: kafkav1.ACLOperations_ALTER, Host: "*",
+			},
+		},
 	},
 	{
 		args: []string{"--allow", "--service-account", "42", "--operation", "describe"},
-		entry: &kafkav1.AccessControlEntryConfig{PermissionType: kafkav1.ACLPermissionTypes_ALLOW,
-			Principal: "User:42", Operation: kafkav1.ACLOperations_DESCRIBE, Host: "*"},
+		entries: []*kafkav1.AccessControlEntryConfig{
+			{
+				PermissionType: kafkav1.ACLPermissionTypes_ALLOW,
+				Principal:      "User:42", Operation: kafkav1.ACLOperations_DESCRIBE, Host: "*",
+			},
+		},
 	},
 	{
 		args: []string{"--deny", "--service-account", "42", "--operation", "describe"},
-		entry: &kafkav1.AccessControlEntryConfig{PermissionType: kafkav1.ACLPermissionTypes_DENY,
-			Principal: "User:42", Operation: kafkav1.ACLOperations_DESCRIBE, Host: "*"},
+		entries: []*kafkav1.AccessControlEntryConfig{
+			{
+				PermissionType: kafkav1.ACLPermissionTypes_DENY,
+				Principal:      "User:42", Operation: kafkav1.ACLOperations_DESCRIBE, Host: "*",
+			},
+		},
 	},
 	{
 		args: []string{"--allow", "--service-account", "42", "--operation", "cluster-action"},
-		entry: &kafkav1.AccessControlEntryConfig{PermissionType: kafkav1.ACLPermissionTypes_ALLOW,
-			Principal: "User:42", Operation: kafkav1.ACLOperations_CLUSTER_ACTION, Host: "*"},
+		entries: []*kafkav1.AccessControlEntryConfig{
+			{
+				PermissionType: kafkav1.ACLPermissionTypes_ALLOW,
+				Principal:      "User:42", Operation: kafkav1.ACLOperations_CLUSTER_ACTION, Host: "*",
+			},
+		},
 	},
 	{
 		args: []string{"--deny", "--service-account", "42", "--operation", "cluster-action"},
-		entry: &kafkav1.AccessControlEntryConfig{PermissionType: kafkav1.ACLPermissionTypes_DENY,
-			Principal: "User:42", Operation: kafkav1.ACLOperations_CLUSTER_ACTION, Host: "*"},
+		entries: []*kafkav1.AccessControlEntryConfig{
+			{
+				PermissionType: kafkav1.ACLPermissionTypes_DENY,
+				Principal:      "User:42", Operation: kafkav1.ACLOperations_CLUSTER_ACTION, Host: "*",
+			},
+		},
 	},
 	{
 		args: []string{"--allow", "--service-account", "42", "--operation", "describe-configs"},
-		entry: &kafkav1.AccessControlEntryConfig{PermissionType: kafkav1.ACLPermissionTypes_ALLOW,
-			Principal: "User:42", Operation: kafkav1.ACLOperations_DESCRIBE_CONFIGS, Host: "*"},
+		entries: []*kafkav1.AccessControlEntryConfig{
+			{
+				PermissionType: kafkav1.ACLPermissionTypes_ALLOW,
+				Principal:      "User:42", Operation: kafkav1.ACLOperations_DESCRIBE_CONFIGS, Host: "*",
+			},
+		},
 	},
 	{
 		args: []string{"--deny", "--service-account", "42", "--operation", "describe-configs"},
-		entry: &kafkav1.AccessControlEntryConfig{PermissionType: kafkav1.ACLPermissionTypes_DENY,
-			Principal: "User:42", Operation: kafkav1.ACLOperations_DESCRIBE_CONFIGS, Host: "*"},
+		entries: []*kafkav1.AccessControlEntryConfig{
+			{
+				PermissionType: kafkav1.ACLPermissionTypes_DENY,
+				Principal:      "User:42", Operation: kafkav1.ACLOperations_DESCRIBE_CONFIGS, Host: "*",
+			},
+		},
 	},
 	{
 		args: []string{"--allow", "--service-account", "42", "--operation", "alter-configs"},
-		entry: &kafkav1.AccessControlEntryConfig{PermissionType: kafkav1.ACLPermissionTypes_ALLOW,
-			Principal: "User:42", Operation: kafkav1.ACLOperations_ALTER_CONFIGS, Host: "*"},
+		entries: []*kafkav1.AccessControlEntryConfig{
+			{
+				PermissionType: kafkav1.ACLPermissionTypes_ALLOW,
+				Principal:      "User:42", Operation: kafkav1.ACLOperations_ALTER_CONFIGS, Host: "*",
+			},
+		},
 	},
 	{
 		args: []string{"--deny", "--service-account", "42", "--operation", "alter-configs"},
-		entry: &kafkav1.AccessControlEntryConfig{PermissionType: kafkav1.ACLPermissionTypes_DENY,
-			Principal: "User:42", Operation: kafkav1.ACLOperations_ALTER_CONFIGS, Host: "*"},
+		entries: []*kafkav1.AccessControlEntryConfig{
+			{
+				PermissionType: kafkav1.ACLPermissionTypes_DENY,
+				Principal:      "User:42", Operation: kafkav1.ACLOperations_ALTER_CONFIGS, Host: "*",
+			},
+		},
 	},
 	{
 		args: []string{"--allow", "--service-account", "42", "--operation", "idempotent-write"},
-		entry: &kafkav1.AccessControlEntryConfig{PermissionType: kafkav1.ACLPermissionTypes_ALLOW,
-			Principal: "User:42", Operation: kafkav1.ACLOperations_IDEMPOTENT_WRITE, Host: "*"},
+		entries: []*kafkav1.AccessControlEntryConfig{
+			{
+				PermissionType: kafkav1.ACLPermissionTypes_ALLOW,
+				Principal:      "User:42", Operation: kafkav1.ACLOperations_IDEMPOTENT_WRITE, Host: "*",
+			},
+		},
 	},
 	{
 		args: []string{"--deny", "--service-account", "42", "--operation", "idempotent-write"},
-		entry: &kafkav1.AccessControlEntryConfig{PermissionType: kafkav1.ACLPermissionTypes_DENY,
-			Principal: "User:42", Operation: kafkav1.ACLOperations_IDEMPOTENT_WRITE, Host: "*"},
+		entries: []*kafkav1.AccessControlEntryConfig{
+			{
+				PermissionType: kafkav1.ACLPermissionTypes_DENY,
+				Principal:      "User:42", Operation: kafkav1.ACLOperations_IDEMPOTENT_WRITE, Host: "*",
+			},
+		},
+	},
+	{
+		args: []string{"--deny", "--service-account", "42", "--operation", "alter-configs", "--operation", "idempotent-write", "--operation", "create"},
+		entries: []*kafkav1.AccessControlEntryConfig{
+			{
+				PermissionType: kafkav1.ACLPermissionTypes_DENY,
+				Principal:      "User:42", Operation: kafkav1.ACLOperations_ALTER_CONFIGS, Host: "*",
+			},
+			{
+				PermissionType: kafkav1.ACLPermissionTypes_DENY,
+				Principal:      "User:42", Operation: kafkav1.ACLOperations_IDEMPOTENT_WRITE, Host: "*",
+			},
+			{
+				PermissionType: kafkav1.ACLPermissionTypes_DENY,
+				Principal:      "User:42", Operation: kafkav1.ACLOperations_CREATE, Host: "*",
+			},
+		},
 	},
 }
 
-func TestCreateACL(t *testing.T) {
+func TestCreateACLs(t *testing.T) {
 	expect := make(chan interface{})
 	for _, resource := range resourcePatterns {
 		args := append([]string{"acl", "create"}, resource.args...)
-		for _, entry := range aclEntries {
+		for _, aclEntry := range aclEntries {
 			cmd := NewCMD(expect)
-			cmd.SetArgs(append(args, entry.args...))
+			cmd.SetArgs(append(args, aclEntry.args...))
 
 			go func() {
-				expect <- &kafkav1.ACLBinding{Pattern: resource.pattern, Entry: entry.entry}
+				bindings := []*kafkav1.ACLBinding{}
+				for _, entry := range aclEntry.entries {
+					bindings = append(bindings, &kafkav1.ACLBinding{Pattern: resource.pattern, Entry: entry})
+				}
+				expect <- bindings
 			}()
 
 			if err := cmd.Execute(); err != nil {
@@ -192,16 +294,20 @@ func TestCreateACL(t *testing.T) {
 	}
 }
 
-func TestDeleteACL(t *testing.T) {
+func TestDeleteACLs(t *testing.T) {
 	expect := make(chan interface{})
 	for _, resource := range resourcePatterns {
 		args := append([]string{"acl", "delete"}, resource.args...)
-		for _, entry := range aclEntries {
+		for _, aclEntry := range aclEntries {
 			cmd := NewCMD(expect)
-			cmd.SetArgs(append(args, entry.args...))
+			cmd.SetArgs(append(args, aclEntry.args...))
 
 			go func() {
-				expect <- convertToFilter(&kafkav1.ACLBinding{Pattern: resource.pattern, Entry: entry.entry})
+				filters := []*kafkav1.ACLFilter{}
+				for _, entry := range aclEntry.entries {
+					filters = append(filters, convertToFilter(&kafkav1.ACLBinding{Pattern: resource.pattern, Entry: entry}))
+				}
+				expect <- filters
 			}()
 
 			if err := cmd.Execute(); err != nil {
@@ -229,12 +335,16 @@ func TestListResourceACL(t *testing.T) {
 
 func TestListPrincipalACL(t *testing.T) {
 	expect := make(chan interface{})
-	for _, entry := range aclEntries {
+	for _, aclEntry := range aclEntries {
+		if len(aclEntry.entries) != 1 {
+			continue
+		}
+		entry := aclEntry.entries[0]
 		cmd := NewCMD(expect)
-		cmd.SetArgs(append([]string{"acl", "list", "--service-account"}, strings.TrimPrefix(entry.entry.Principal, "User:")))
+		cmd.SetArgs(append([]string{"acl", "list", "--service-account"}, strings.TrimPrefix(entry.Principal, "User:")))
 
 		go func() {
-			expect <- convertToFilter(&kafkav1.ACLBinding{Entry: &kafkav1.AccessControlEntryConfig{Principal: entry.entry.Principal}})
+			expect <- convertToFilter(&kafkav1.ACLBinding{Entry: &kafkav1.AccessControlEntryConfig{Principal: entry.Principal}})
 		}()
 
 		if err := cmd.Execute(); err != nil {
@@ -247,12 +357,16 @@ func TestListResourcePrincipalFilterACL(t *testing.T) {
 	expect := make(chan interface{})
 	for _, resource := range resourcePatterns {
 		args := append([]string{"acl", "list"}, resource.args...)
-		for _, entry := range aclEntries {
+		for _, aclEntry := range aclEntries {
+			if len(aclEntry.entries) != 1 {
+				continue
+			}
+			entry := aclEntry.entries[0]
 			cmd := NewCMD(expect)
-			cmd.SetArgs(append(args, "--service-account", strings.TrimPrefix(entry.entry.Principal, "User:")))
+			cmd.SetArgs(append(args, "--service-account", strings.TrimPrefix(entry.Principal, "User:")))
 
 			go func() {
-				expect <- convertToFilter(&kafkav1.ACLBinding{Pattern: resource.pattern, Entry: entry.entry})
+				expect <- convertToFilter(&kafkav1.ACLBinding{Pattern: resource.pattern, Entry: entry})
 			}()
 
 			if err := cmd.Execute(); err != nil {
@@ -381,11 +495,13 @@ func TestDefaults(t *testing.T) {
 	cmd.SetArgs([]string{"acl", "create", "--allow", "--service-account", "42",
 		"--operation", "read", "--topic", "dan"})
 	go func() {
-		expect <- &kafkav1.ACLBinding{
-			Pattern: &kafkav1.ResourcePatternConfig{ResourceType: kafkav1.ResourceTypes_TOPIC, Name: "dan",
-				PatternType: kafkav1.PatternTypes_LITERAL},
-			Entry: &kafkav1.AccessControlEntryConfig{Host: "*", Principal: "User:42",
-				Operation: kafkav1.ACLOperations_READ, PermissionType: kafkav1.ACLPermissionTypes_ALLOW},
+		expect <- []*kafkav1.ACLBinding{
+			{
+				Pattern: &kafkav1.ResourcePatternConfig{ResourceType: kafkav1.ResourceTypes_TOPIC, Name: "dan",
+					PatternType: kafkav1.PatternTypes_LITERAL},
+				Entry: &kafkav1.AccessControlEntryConfig{Host: "*", Principal: "User:42",
+					Operation: kafkav1.ACLOperations_READ, PermissionType: kafkav1.ACLPermissionTypes_ALLOW},
+			},
 		}
 	}()
 
@@ -398,11 +514,13 @@ func TestDefaults(t *testing.T) {
 		"--operation", "read"})
 
 	go func() {
-		expect <- &kafkav1.ACLBinding{
-			Pattern: &kafkav1.ResourcePatternConfig{ResourceType: kafkav1.ResourceTypes_CLUSTER, Name: "kafka-cluster",
-				PatternType: kafkav1.PatternTypes_LITERAL},
-			Entry: &kafkav1.AccessControlEntryConfig{Host: "*", Principal: "User:42",
-				Operation: kafkav1.ACLOperations_READ, PermissionType: kafkav1.ACLPermissionTypes_ALLOW},
+		expect <- []*kafkav1.ACLBinding{
+			{
+				Pattern: &kafkav1.ResourcePatternConfig{ResourceType: kafkav1.ResourceTypes_CLUSTER, Name: "kafka-cluster",
+					PatternType: kafkav1.PatternTypes_LITERAL},
+				Entry: &kafkav1.AccessControlEntryConfig{Host: "*", Principal: "User:42",
+					Operation: kafkav1.ACLOperations_READ, PermissionType: kafkav1.ACLPermissionTypes_ALLOW},
+			},
 		}
 	}()
 

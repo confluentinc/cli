@@ -19,8 +19,8 @@ require (
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
 	github.com/confluentinc/bincover v0.0.0-20191217221125-80a7bb37ae5e
-	github.com/confluentinc/ccloud-sdk-go v0.0.18-0.20200304000901-a66d86dad51e
-	github.com/confluentinc/ccloudapis v0.0.0-20200303232627-6121a61ce661
+	github.com/confluentinc/ccloud-sdk-go v0.0.18-0.20200325182439-bd13c3fdeaa0
+	github.com/confluentinc/ccloudapis v0.0.0-20200323172841-c4a51af500ae
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-printer v0.13.0
 	github.com/confluentinc/mds-sdk-go v0.0.0-20200110060608-0b51635c4e0a

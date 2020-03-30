@@ -78,10 +78,10 @@ func (k *KafkaClusterContext) GetActiveKafkaClusterConfig() *v1.KafkaClusterConf
 func (k *KafkaClusterContext) SetActiveKafkaCluster(clusterId string) {
 	if !k.EnvContext {
 		k.ActiveKafkaCluster = clusterId
-		return
+	} else {
+		kafkaEnvContext := k.GetCurrentKafkaEnvContext()
+		kafkaEnvContext.ActiveKafkaCluster = clusterId
 	}
-	kafkaEnvContext := k.GetCurrentKafkaEnvContext()
-	kafkaEnvContext.ActiveKafkaCluster = clusterId
 }
 
 func (k *KafkaClusterContext) GetKafkaClusterConfig(clusterId string) *v1.KafkaClusterConfig {
@@ -95,9 +95,10 @@ func (k *KafkaClusterContext) GetKafkaClusterConfig(clusterId string) *v1.KafkaC
 func (k *KafkaClusterContext) AddKafkaClusterConfig(kcc *v1.KafkaClusterConfig) {
 	if !k.EnvContext {
 		k.KafkaClusterConfigs[kcc.ID] = kcc
+	} else {
+		kafkaEnvContext := k.GetCurrentKafkaEnvContext()
+		kafkaEnvContext.KafkaClusterConfigs[kcc.ID] = kcc
 	}
-	kafkaEnvContext := k.GetCurrentKafkaEnvContext()
-	kafkaEnvContext.KafkaClusterConfigs[kcc.ID] = kcc
 }
 
 func (k *KafkaClusterContext) DeleteAPIKey(apiKey string) {
@@ -111,6 +112,9 @@ func (k *KafkaClusterContext) DeleteAPIKey(apiKey string) {
 		for clusterApiKey := range kcc.APIKeys {
 			if apiKey == clusterApiKey {
 				delete(kcc.APIKeys, apiKey)
+			}
+			if apiKey == kcc.APIKey {
+				kcc.APIKey = ""
 			}
 		}
 	}
