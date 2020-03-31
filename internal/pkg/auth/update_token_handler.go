@@ -16,7 +16,7 @@ type UpdateTokenHandler interface {
 type UpdateTokenHandlerImpl struct {
 	ccloudTokenHandler    CCloudTokenHandler
 	confluentTokenHandler ConfluentTokenHandler
-	netrcHandler          *netrcHandler
+	netrcHandler          *NetrcHandler
 }
 
 var (
@@ -26,11 +26,11 @@ var (
 	successNetrcTokenMsg = "Token successfully updated with netrc file credentials."
 )
 
-func NewUpdateTokenHandler() UpdateTokenHandler {
+func NewUpdateTokenHandler(netrcHandler *NetrcHandler) UpdateTokenHandler {
 	return &UpdateTokenHandlerImpl{
 		ccloudTokenHandler:    &CCloudTokenHandlerImpl{},
 		confluentTokenHandler: &ConfluentTokenHandlerImp{},
-		netrcHandler:          NewNetrcHandler(),
+		netrcHandler:          netrcHandler,
 	}
 }
 

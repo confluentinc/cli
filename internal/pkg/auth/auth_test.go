@@ -79,7 +79,7 @@ func TestNetRCCredentialReader(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			netrcHandler := netrcHandler{FileName: tt.file}
+			netrcHandler := NetrcHandler{FileName: tt.file}
 			var username, password string
 			var err error
 			if username, password, err = netrcHandler.getNetrcCredentials(tt.cliName, tt.isSSO, tt.contextName); (err != nil) != tt.wantErr {
@@ -127,7 +127,7 @@ func TestNetrcWriter(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tempFile, _ := ioutil.TempFile("", "tempNetrc.json")
-			netrcHandler := netrcHandler{FileName: tempFile.Name()}
+			netrcHandler := NetrcHandler{FileName: tempFile.Name()}
 			err := netrcHandler.WriteNetrcCredentials(tt.cliName, tt.isSSO, tt.contextName, netrcUser, netrcPassword)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("WriteNetrcCredentials error = %+v, wantErr %+v", err, tt.wantErr)
@@ -161,7 +161,7 @@ func TestUpateSSOToken(t *testing.T) {
 		},
 	}
 
-	netrcHandler := &netrcHandler{FileName: netrcFilePath}
+	netrcHandler := &NetrcHandler{FileName: netrcFilePath}
 
 	updateTokenHandler := UpdateTokenHandlerImpl{
 		ccloudTokenHandler: mockCCloud,
@@ -196,7 +196,7 @@ func TestUpdateCloudLoginCredentialsToken(t *testing.T) {
 			return finalAuthToken, nil
 		},
 	}
-	netrcHandler := &netrcHandler{FileName: netrcFilePath}
+	netrcHandler := &NetrcHandler{FileName: netrcFilePath}
 
 	updateTokenHandler := UpdateTokenHandlerImpl{
 		ccloudTokenHandler: mockCCloudTokenHandler,
@@ -227,7 +227,7 @@ func TestUpdateConfluent(t *testing.T) {
 			return finalAuthToken, nil
 		},
 	}
-	netrcHandler := &netrcHandler{FileName: netrcFilePath}
+	netrcHandler := &NetrcHandler{FileName: netrcFilePath}
 
 	updateTokenHandler := UpdateTokenHandlerImpl{
 		confluentTokenHandler: mockConfluentTokenHandler,
@@ -257,7 +257,7 @@ func TestFailedCCloudUpdate(t *testing.T) {
 			return "", errors.Errorf("Failed to get auth token")
 		},
 	}
-	netrcHandler := &netrcHandler{FileName: netrcFilePath}
+	netrcHandler := &NetrcHandler{FileName: netrcFilePath}
 
 	updateTokenHandler := UpdateTokenHandlerImpl{
 		ccloudTokenHandler: mockCCloudTokenHandler,
@@ -285,7 +285,7 @@ func TestFailedConfluentUpdate(t *testing.T) {
 			return "", errors.Errorf("Failed to get auth token")
 		},
 	}
-	netrcHandler := &netrcHandler{FileName: netrcFilePath}
+	netrcHandler := &NetrcHandler{FileName: netrcFilePath}
 
 	updateTokenHandler := UpdateTokenHandlerImpl{
 		confluentTokenHandler: mockConfluentTokenHandler,

@@ -5,6 +5,7 @@ import (
 	"path"
 
 	"github.com/confluentinc/cli/internal/cmd"
+	"github.com/confluentinc/cli/internal/pkg/auth"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/doc"
@@ -30,7 +31,9 @@ func main() {
 			MetricSink: nil,
 			Logger:     logger,
 		}),
-		logger, &version.Version{}, mock.NewDummyAnalyticsMock())
+		logger,
+		&version.Version{}, mock.NewDummyAnalyticsMock(),
+		auth.NewNetrcHandler(""))
 	if err != nil {
 		panic(err)
 	}

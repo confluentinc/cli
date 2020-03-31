@@ -30,6 +30,7 @@ type commands struct {
 	prompt                pcmd.Prompt
 	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *ccloud.Client
 	jwtHTTPClientFactory  func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *ccloud.Client
+	netrcHandler    	  *pauth.NetrcHandler
 }
 
 var (
@@ -189,17 +190,16 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if saveToNetrc {
-		netrcHandler := pauth.NewNetrcHandler()
 		// it is sso only if refresh token is not empty
 		if refreshToken == "" {
-			err = netrcHandler.WriteNetrcCredentials(a.config.CLIName, false, a.config.Context().Name, email, password)
+			err = a.netrcHandler.WriteNetrcCredentials(a.config.CLIName, false, a.config.Context().Name, email, password)
 		} else {
-			err = netrcHandler.WriteNetrcCredentials(a.config.CLIName, true, a.config.Context().Name, email, refreshToken)
+			err = a.netrcHandler.WriteNetrcCredentials(a.config.CLIName, true, a.config.Context().Name, email, refreshToken)
 		}
 		if err != nil {
 			return err
 		}
-		pcmd.ErrPrintf(cmd, "Written credentials to file %s\n", netrcHandler.FileName)
+		pcmd.ErrPrintf(cmd, "Written credentials to file %s\n", a.netrcHandler.FileName)
 	}
 
 	pcmd.Println(cmd, "Logged in as", email)

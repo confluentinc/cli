@@ -13,6 +13,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/cmd"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
+	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/config/load"
@@ -82,7 +83,10 @@ func main() {
 		analyticsClient = mock.NewDummyAnalyticsMock()
 	}
 
-	cli, err := cmd.NewConfluentCommand(cliName, cfg, logger, version, analyticsClient)
+	var netrcFile string
+	netrcFile = pauth.GetNetrcFilePath()
+
+	cli, err := cmd.NewConfluentCommand(cliName, cfg, logger, version, analyticsClient, pauth.NewNetrcHandler(netrcFile))
 	if err != nil {
 		if cli == nil {
 			fmt.Fprintln(os.Stderr, err)

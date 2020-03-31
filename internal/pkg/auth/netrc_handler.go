@@ -37,21 +37,23 @@ func (c netrcCredentialType) String() string {
 	return credTypes[c]
 }
 
-func NewNetrcHandler() *netrcHandler {
-	var netrcFile string
+func GetNetrcFilePath() string {
 	if runtime.GOOS == "windows" {
-		netrcFile = "~/_netrc"
+		return "~/_netrc"
 	} else {
-		netrcFile = "~/.netrc"
+		return "~/.netrc"
 	}
-	return &netrcHandler{FileName: netrcFile}
 }
 
-type netrcHandler struct {
+func NewNetrcHandler(netrcFilePath string) *NetrcHandler {
+	return &NetrcHandler{FileName: netrcFilePath}
+}
+
+type NetrcHandler struct {
 	FileName string
 }
 
-func (n *netrcHandler) WriteNetrcCredentials(cliName string, isSSO bool, ctxName string, username string, password string) error {
+func (n *NetrcHandler) WriteNetrcCredentials(cliName string, isSSO bool, ctxName string, username string, password string) error {
 	filename, err := homedir.Expand(n.FileName)
 	if err != nil {
 		return fmt.Errorf(resolvingFilePathErrMsg, filename, err)
@@ -83,7 +85,7 @@ func (n *netrcHandler) WriteNetrcCredentials(cliName string, isSSO bool, ctxName
 }
 
 // for username-password credentials the return values are self-explanatory but for sso case the password is the refreshToken
-func (n *netrcHandler) getNetrcCredentials(cliName string, isSSO bool, ctxName string) (username string, password string, err error) {
+func (n *NetrcHandler) getNetrcCredentials(cliName string, isSSO bool, ctxName string) (username string, password string, err error) {
 	filename, err := homedir.Expand(n.FileName)
 	if err != nil {
 		return "", "", fmt.Errorf(resolvingFilePathErrMsg, filename, err)

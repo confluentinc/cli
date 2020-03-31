@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/cli/internal/cmd"
+	"github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
@@ -18,7 +19,7 @@ func TestAddCommands_ShownInHelpUsage_CCloud(t *testing.T) {
 	cfg := v3.AuthenticatedCloudConfigMock()
 	cfg.CLIName = "ccloud"
 	ver := pversion.NewVersion("ccloud", "Confluent Cloud CLI", "https://confluent.cloud; support@confluent.io", "1.2.3", "abc1234", "01/23/45", "CI")
-	root, err := cmd.NewConfluentCommand("ccloud", cfg, cfg.Logger, ver, mock.NewDummyAnalyticsMock())
+	root, err := cmd.NewConfluentCommand("ccloud", cfg, cfg.Logger, ver, mock.NewDummyAnalyticsMock(), auth.NewNetrcHandler(""))
 	req.NoError(err)
 
 	output, err := pcmd.ExecuteCommand(root.Command, "help")
@@ -40,7 +41,7 @@ func TestAddCommands_ShownInHelpUsage_Confluent(t *testing.T) {
 
 	cfg := v3.AuthenticatedCloudConfigMock()
 	ver := pversion.NewVersion("ccloud", "Confluent Cloud CLI", "https://confluent.cloud; support@confluent.io", "1.2.3", "abc1234", "01/23/45", "CI")
-	root, err := cmd.NewConfluentCommand("confluent", cfg, cfg.Logger, ver, mock.NewDummyAnalyticsMock())
+	root, err := cmd.NewConfluentCommand("confluent", cfg, cfg.Logger, ver, mock.NewDummyAnalyticsMock(), auth.NewNetrcHandler(""))
 	req.NoError(err)
 
 	output, err := pcmd.ExecuteCommand(root.Command, "help")
