@@ -204,8 +204,10 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 				apiKey.Key = fmt.Sprintf("  %s", apiKey.Key)
 			}
 		}
- 
-		// If resource id is empty then resource was not specified, or cloud was specified.
+
+		// If resource id is empty then the resource was not specified, or cloud was specified.
+		// Note that if more resource types are added with no logical clusters, then additional logic
+		// needs to be added here to determine the resource type.
 		if resourceId == "" && len(apiKey.LogicalClusters) == 0 {
 			// Cloud key.
 			outputWriter.AddElement(&keyDisplay{
