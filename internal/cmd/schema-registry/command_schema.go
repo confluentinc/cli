@@ -102,7 +102,7 @@ Describe the schema string by schema ID
 
 		{{.CLIName}} schema-registry schema describe 1337
 
-Describe the schema by subject and version
+Describe the schema by both subject and version
 
 ::
 
@@ -210,18 +210,17 @@ func (c *schemaCommand) preDescribe(cmd *cobra.Command, args []string) error {
 	subject, err := cmd.Flags().GetString("subject")
 	if err != nil {
 		return err
-	} else if len(args) > 0 && subject != "" {
-		return fmt.Errorf("Subject not needed")
-	} else if len(args) == 0 && subject == "" {
-		return fmt.Errorf("Subject is required")
 	}
+	
 	version, err := cmd.Flags().GetString("version")
 	if err != nil {
 		return err
-	} else if len(args) > 0 && version != "" {
-		return fmt.Errorf("Version not needed")
-	} else if len(args) == 0 && version == "" {
-		return fmt.Errorf("Version is required")
+	}
+
+	if len(args) > 0 && (subject != "" || version != "") {
+		return fmt.Errorf("Cannot specify both schema ID and subject/version")
+	} else if len(args) == 0 && (subject == "" || version == "") {
+		return fmt.Errorf("Must specify either schema ID or subject and version")
 	}
 	return nil
 }
