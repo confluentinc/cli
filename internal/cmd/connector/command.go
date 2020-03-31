@@ -254,7 +254,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	if outputFormat == output.Human.String() {
 		pcmd.Printf(cmd, "Created connector %s %s\n", connector.Name, connectorExpansion.Id.Id)
 		if trace != "" {
-			pcmd.Println(cmd, "Error Trace: %s", trace)
+			pcmd.Printf(cmd, "Error Trace: %s\n", trace)
 		}
 	} else {
 		return output.StructuredOutput(outputFormat, &struct {
