@@ -165,7 +165,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	// extracting out the desired fields to get rid of time related fields which cause pb marshaling issues
+	// go-printer has trouble marshaling kafkav1.KafkaCluster struct, creating another struct to fix for now
 	type describeStruct struct {
 		Id string
 		Name string
