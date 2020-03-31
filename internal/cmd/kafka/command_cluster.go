@@ -164,7 +164,32 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	return output.DescribeObject(cmd, cluster, describeFields, describeHumanRenames, describeStructuredRenames)
+	// extracting out the desired fields to get rid of time related fields which cause pb marshaling issues
+	type describeStruct struct {
+		Id string
+		Name string
+		NetworkIngress int32
+		NetworkEgress int32
+		Storage int32
+		ServiceProvider string
+		Region string
+		Status string
+		Endpoint string
+		ApiEndpoint string
+	}
+	describeObject := &describeStruct{
+		Id:              cluster.Id,
+		Name:            cluster.Name,
+		NetworkIngress:  cluster.NetworkIngress,
+		NetworkEgress:   cluster.NetworkEgress,
+		Storage:         cluster.Storage,
+		ServiceProvider: cluster.ServiceProvider,
+		Region:          cluster.Region,
+		Status:          string(cluster.Status),
+		Endpoint:        cluster.Endpoint,
+		ApiEndpoint:     cluster.ApiEndpoint,
+	}
+	return output.DescribeObject(cmd, describeObject, describeFields, describeHumanRenames, describeStructuredRenames)
 }
 
 func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
