@@ -75,7 +75,7 @@ func (c *command) init() {
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	}
-	listCmd.Flags().String(resourceFlagName, "", "The resource ID to filter by. Use \"cloud\" to show only cloud API keys.")
+	listCmd.Flags().String(resourceFlagName, "", "The resource ID to filter by. Use \"cloud\" to show only Cloud API keys.")
 	listCmd.Flags().Bool("current-user", false, "Show only API keys belonging to current user.")
 	listCmd.Flags().Int32("service-account", 0, "The service account ID to filter by.")
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
@@ -88,7 +88,7 @@ func (c *command) init() {
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
 	}
-	createCmd.Flags().String(resourceFlagName, "", "REQUIRED: The resource ID. Use \"cloud\" to create a cloud API key.")
+	createCmd.Flags().String(resourceFlagName, "", "REQUIRED: The resource ID. Use \"cloud\" to create a Cloud API key.")
 	createCmd.Flags().Int32("service-account", 0, "Service account ID. If not specified, the API key will have full access on the cluster.")
 	createCmd.Flags().String("description", "", "Description of API key.")
 	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
@@ -205,7 +205,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 			}
 		}
 
-		// If resource id is empty then the resource was not specified, or cloud was specified.
+		// If resource id is empty then the resource was not specified, or Cloud was specified.
 		// Note that if more resource types are added with no logical clusters, then additional logic
 		// needs to be added here to determine the resource type.
 		if resourceId == "" && len(apiKey.LogicalClusters) == 0 {
@@ -216,8 +216,6 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 				UserId:       apiKey.UserId,
 				ResourceType: pcmd.CloudResourceType,
 			})
-		}
-		if resourceType == pcmd.CloudResourceType {
 			continue
 		}
 
