@@ -7,6 +7,7 @@ import (
 	"os"
 
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
+	utilv1 "github.com/confluentinc/ccloudapis/util/v1"
 	"github.com/confluentinc/go-printer"
 	"github.com/spf13/cobra"
 
@@ -173,7 +174,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 		Storage int32
 		ServiceProvider string
 		Region string
-		Status string
+		Status utilv1.ClusterStatus
 		Endpoint string
 		ApiEndpoint string
 	}
@@ -185,7 +186,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 		Storage:         cluster.Storage,
 		ServiceProvider: cluster.ServiceProvider,
 		Region:          cluster.Region,
-		Status:          string(cluster.Status),
+		Status:          cluster.Status,
 		Endpoint:        cluster.Endpoint,
 		ApiEndpoint:     cluster.ApiEndpoint,
 	}
