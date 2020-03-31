@@ -108,6 +108,7 @@ Describe the schema by subject and version
 
 		{{.CLIName}} schema-registry describe --subject payments --version latest
 `, c.Config.CLIName),
+        PreRunE: c.preDescribe,
 		RunE: c.describe,
 		Args: cobra.MaximumNArgs(1),
 	}
@@ -203,6 +204,26 @@ func (c *schemaCommand) delete(cmd *cobra.Command, args []string) error {
 		PrintVersions([]int32{versionResult})
 		return nil
 	}
+}
+
+func (c *schemaCommand) preDescribe(cmd *cobra.Command, args []string) error {
+	subject, err := cmd.Flags().GetString("subject")
+	if err != nil {
+		return err
+	} else if len(args) > 0 && subject != "" {
+		return fmt.Errorf("Subject not needed")
+	} else if len(args) == 0 && subject == "" {
+		return fmt.Errorf("Subject is required")
+	}
+	version, err := cmd.Flags().GetString("version")
+	if err != nil {
+		return err
+	} else if len(args) > 0 && version != "" {
+		return fmt.Errorf("Version not needed")
+	} else if len(args) == 0 && version == "" {
+		return fmt.Errorf("Version is required")
+	}
+	return nil
 }
 
 func (c *schemaCommand) describe(cmd *cobra.Command, args []string) error {

@@ -124,7 +124,7 @@ func (suite *SchemaTestSuite) TestDeleteSchemaVersion() {
 	req.Equal(retVal.Version, "12345")
 }
 
-func (suite *SchemaTestSuite) TestDescribeBySubject() {
+func (suite *SchemaTestSuite) TestDescribeBySubjectVersion() {
 	cmd := suite.newCMD()
 	cmd.SetArgs(append([]string{"schema", "describe", "--subject", subjectName, "--version", versionString}))
 	err := cmd.Execute()
@@ -135,6 +135,30 @@ func (suite *SchemaTestSuite) TestDescribeBySubject() {
 	retVal := apiMock.GetSchemaByVersionCalls()[0]
 	req.Equal(retVal.Subject, subjectName)
 	req.Equal(retVal.Version, versionString)
+}
+
+func (suite *SchemaTestSuite) TestDescribeByBothSubjectVersionAndId() {
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"schema", "describe", "--subject", subjectName, "--version", versionString, "123"}))
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.NotNil(err)
+}
+
+func (suite *SchemaTestSuite) TestDescribeBySubjectVersionMissingVersion() {
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"schema", "describe", "--subject", subjectName}))
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.NotNil(err)
+}
+
+func (suite *SchemaTestSuite) TestDescribeBySubjectVersionMissingSubject() {
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"schema", "describe", "--version", versionString}))
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.NotNil(err)
 }
 
 func TestSchemaSuite(t *testing.T) {
