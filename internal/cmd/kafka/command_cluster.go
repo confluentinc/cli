@@ -22,7 +22,8 @@ var (
 	listStructuredLabels      = []string{"id", "name", "provider", "region", "durability", "status"}
 	describeFields            = []string{"Id", "Name", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "ApiEndpoint"}
 	describeHumanRenames      = map[string]string{"NetworkIngress": "Ingress", "NetworkEgress": "Egress", "ServiceProvider": "Provider"}
-	describeStructuredRenames = map[string]string{"NetworkIngress": "ingress", "NetworkEgress": "egress", "ServiceProvider": "provider"}
+	describeStructuredRenames = map[string]string{"Id": "id", "Name": "name", "NetworkIngress": "ingress", "NetworkEgress": "egress", "Storage": "storage",
+		"ServiceProvider": "provider", "Region": "region", "Status": "status", "Endpoint": "endpoint", "ApiEndpoint": "api_endpoint"}
 )
 
 type clusterCommand struct {
