@@ -4,10 +4,16 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
+	"testing"
 	"time"
 
 	"github.com/chromedp/chromedp"
@@ -64,6 +70,49 @@ func (s *CLITestSuite) Test_Ccloud_Login_UseKafka_AuthKafka_Errors() {
 		s.runCcloudTest(tt, serve(s.T(), kafkaAPIURL).URL, kafkaAPIURL)
 	}
 }
+
+func serveLogin(t *testing.T) *httptest.Server {
+	router := http.NewServeMux()
+	router.HandleFunc("/api/sessions", handleLogin(t))
+	router.HandleFunc("/api/check_email/", handleCheckEmail(t))
+	router.HandleFunc("/api/me", handleMe(t))
+	return httptest.NewServer(router)
+}
+
+func (s *CLITestSuite) Test_Save_CCloud_Username_Password() {
+	type testSave struct {
+
+	}
+
+	t := s.T()
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatalf("problems recovering caller information")
+	}
+	netrcInput := filepath.Join(filepath.Dir(filename), "fixtures", "input", "netrc")
+	//netrcRegex := `machine\srandom-sacred-machine\r?\n\s+login\srandom-sacred-username\r?\n\s+password random-sacred-password`
+	inBytes, err := ioutil.ReadFile(netrcInput)
+	s.NoError(err)
+
+	err = ioutil.WriteFile("/tmp/netrc", inBytes, 0600)
+	s.NoError(err)
+
+	wantFile := filepath.Join(filepath.Dir(filename), "fixtures", "output", "netrc.golden")
+	s.NoError(err)
+	want, err := ioutil.ReadFile(wantFile)
+	s.NoError(err)
+	//s.Equal(inBytes,got)
+
+	loginURL := serveLogin(t).URL
+	env := []string{"XX_CCLOUD_EMAIL=good@user.com", "XX_CCLOUD_PASSWORD=pass1"}
+	output := runCommand(t, ccloudTestBin, env, "login -vvv --save --url "+loginURL, 1)
+	fmt.Println(output)
+	got, err := ioutil.ReadFile("/tmp/netrc")
+	s.NoError(err)
+	s.NotEqual(want, got)
+}
+
+
 
 func (s *CLITestSuite) Test_SSO_Login() {
 	t := s.T()

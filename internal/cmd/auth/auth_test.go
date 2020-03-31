@@ -253,7 +253,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 			return mdsClient, nil
 		},
 	}
-	cmds := newCommands(prerunner, cfg, log.New(), prompt, nil, nil, mdsClientManager, cliMock.NewDummyAnalyticsMock())
+	cmds := newCommands(prerunner, cfg, log.New(), prompt, nil, nil, mdsClientManager, cliMock.NewDummyAnalyticsMock(), nil)
 	for _, c := range cmds.Commands {
 		c.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	}
@@ -426,7 +426,7 @@ func newAuthCommand(prompt pcmd.Prompt, auth *sdkMock.Auth, user *sdkMock.User, 
 	}
 	commands := newCommands(cliMock.NewPreRunnerMock(mockAnonHTTPClientFactory("https://confluent.cloud", nil), mdsClient),
 		cfg, log.New(), prompt, mockAnonHTTPClientFactory, mockJwtHTTPClientFactory, mdsClientManager,
-		cliMock.NewDummyAnalyticsMock())
+		cliMock.NewDummyAnalyticsMock(), nil)
 	for _, c := range commands.Commands {
 		c.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	}

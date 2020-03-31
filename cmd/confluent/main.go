@@ -84,7 +84,11 @@ func main() {
 	}
 
 	var netrcFile string
-	netrcFile = pauth.GetNetrcFilePath()
+	if isTest {
+		netrcFile = "/tmp/netrc"
+	} else {
+		netrcFile = pauth.GetNetrcFilePath()
+	}
 
 	cli, err := cmd.NewConfluentCommand(cliName, cfg, logger, version, analyticsClient, pauth.NewNetrcHandler(netrcFile))
 	if err != nil {

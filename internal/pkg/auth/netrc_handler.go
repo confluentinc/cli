@@ -54,6 +54,7 @@ type NetrcHandler struct {
 }
 
 func (n *NetrcHandler) WriteNetrcCredentials(cliName string, isSSO bool, ctxName string, username string, password string) error {
+	fmt.Println("N", n)
 	filename, err := homedir.Expand(n.FileName)
 	if err != nil {
 		return fmt.Errorf(resolvingFilePathErrMsg, filename, err)

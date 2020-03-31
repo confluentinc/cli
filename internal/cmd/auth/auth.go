@@ -38,7 +38,7 @@ var (
 )
 
 // New returns a list of auth-related Cobra commands.
-func New(prerunner pcmd.PreRunner, config *v3.Config, logger *log.Logger, userAgent string, analyticsClient analytics.Client) []*cobra.Command {
+func New(prerunner pcmd.PreRunner, config *v3.Config, logger *log.Logger, userAgent string, analyticsClient analytics.Client, netrcHandler *pauth.NetrcHandler) []*cobra.Command {
 	var defaultAnonHTTPClientFactory = func(baseURL string, logger *log.Logger) *ccloud.Client {
 		return ccloud.NewClient(&ccloud.Params{BaseURL: baseURL, HttpClient: ccloud.BaseClient, Logger: logger, UserAgent: userAgent})
 	}
@@ -47,7 +47,7 @@ func New(prerunner pcmd.PreRunner, config *v3.Config, logger *log.Logger, userAg
 	}
 	cmds := newCommands(prerunner, config, logger, pcmd.NewPrompt(os.Stdin),
 		defaultAnonHTTPClientFactory, defaultJwtHTTPClientFactory, &pauth.MDSClientManagerImpl{},
-		analyticsClient,
+		analyticsClient, netrcHandler,
 	)
 	var cobraCmds []*cobra.Command
 	for _, cmd := range cmds.Commands {
@@ -59,7 +59,7 @@ func New(prerunner pcmd.PreRunner, config *v3.Config, logger *log.Logger, userAg
 func newCommands(prerunner pcmd.PreRunner, config *v3.Config, log *log.Logger, prompt pcmd.Prompt,
 	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *ccloud.Client,
 	jwtHTTPClientFactory func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *ccloud.Client,
-	mdsClientManager pauth.MDSClientManager, analyticsClient analytics.Client) *commands {
+	mdsClientManager pauth.MDSClientManager, analyticsClient analytics.Client, netrcHandler *pauth.NetrcHandler) *commands {
 	cmd := &commands{
 		config:                config,
 		Logger:                log,
@@ -68,6 +68,7 @@ func newCommands(prerunner pcmd.PreRunner, config *v3.Config, log *log.Logger, p
 		anonHTTPClientFactory: anonHTTPClientFactory,
 		jwtHTTPClientFactory:  jwtHTTPClientFactory,
 		MDSClientManager:      mdsClientManager,
+		netrcHandler:          netrcHandler,
 	}
 	cmd.init(prerunner)
 	return cmd

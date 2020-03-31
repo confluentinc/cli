@@ -106,7 +106,7 @@ func NewConfluentCommand(cliName string, cfg *v3.Config, logger *log.Logger, ver
 	if !cfg.DisableUpdates {
 		cli.AddCommand(update.New(cliName, cfg, ver, prompt, updateClient))
 	}
-	cli.AddCommand(auth.New(prerunner, cfg, logger, ver.UserAgent, analytics)...)
+	cli.AddCommand(auth.New(prerunner, cfg, logger, ver.UserAgent, analytics, netrcHandler)...)
 
 	if cliName == "ccloud" {
 		cmd := kafka.New(prerunner, cfg, logger.Named("kafka"), ver.ClientID)
