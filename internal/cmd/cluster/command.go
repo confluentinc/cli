@@ -32,9 +32,3 @@ func (c *command) init() {
 	c.AddCommand(NewDescribeCommand(c.config, c.prerunner, c.metaClient))
 	c.AddCommand(NewListCommand(c.config, c.prerunner))
 }
-
-func check(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
