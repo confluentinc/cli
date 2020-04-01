@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"net/http"
 
 	"github.com/antihax/optional"
 
@@ -19,11 +20,18 @@ import (
 	"github.com/confluentinc/mds-sdk-go"
 )
 
-const typeFlag = "type"
+const (
+	typeFlag                      = "type"
+	connectClusterTypeName        = "connect-cluster"
+	kafkaClusterTypeName          = "kafka-cluster"
+	ksqlClusterTypeName           = "ksql-cluster"
+	schemaRegistryClusterTypeName = "schema-registry-cluster"
+)
 
 var (
 	clusterFields = []string{"Name", "Type", "ID", "Hosts"}
 	clusterLabels = []string{"Name", "Type", "ID", "Hosts"}
+	clusterTypeNames = []string{connectClusterTypeName, kafkaClusterTypeName, ksqlClusterTypeName, schemaRegistryClusterTypeName}
 )
 
 type listCommand struct {
@@ -48,7 +56,7 @@ func NewListCommand(cfg *v3.Config, prerunner cmd.PreRunner) *cobra.Command {
 			},
 			cfg, prerunner),
 	}
-	listCmd.Flags().String(typeFlag, "", "Filter list to this cluster type.")
+	listCmd.Flags().String(typeFlag, "", fmt.Sprintf("Filter list to this cluster type (%s).", strings.Join(clusterTypeNames, ", ")))
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
 	listCmd.RunE = listCmd.list
@@ -62,15 +70,25 @@ func (c *listCommand) createContext() context.Context {
 func (c *listCommand) list(cmd *cobra.Command, args []string) error {
 	var clusterType optional.String
 	t, err := cmd.Flags().GetString(typeFlag)
-	if err == nil {
+	if err == nil && t != "" {
+		known := false
+		for _, ctn := range clusterTypeNames {
+			if ctn == t {
+				known = true
+				break
+			}
+		}
+		if !known {
+			return fmt.Errorf("%s should be one of %s", typeFlag, strings.Join(clusterTypeNames, ", "))
+		}
 		clusterType = optional.NewString(t)
 	}
 	ct := &mds.ClusterRegistryListOpts{
 		ClusterType: clusterType,
 	}
-	clusterInfos, _, err := c.MDSClient.ClusterRegistryApi.ClusterRegistryList(c.createContext(), ct)
+	clusterInfos, response, err := c.MDSClient.ClusterRegistryApi.ClusterRegistryList(c.createContext(), ct)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return c.handleClusterError(cmd, err, response)
 	}
 	format, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
@@ -92,6 +110,14 @@ func (c *listCommand) list(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+func (c *listCommand) handleClusterError(cmd *cobra.Command, err error, response *http.Response) error {
+	if response != nil && response.StatusCode == http.StatusNotFound {
+		cmd.SilenceUsage = true
+		return fmt.Errorf("Unable to access Cluster Registry (%s). Ensure that you're running against MDS with CP 5.5+.", err.Error())
+	}
+	return errors.HandleCommon(err, cmd)
+}
+
 func createPrettyHost(hostInfo mds.HostInfo) (string, error) {
 	if hostInfo.Port > 0 {
 		return fmt.Sprintf("%s:%d", hostInfo.Host, hostInfo.Port), nil
@@ -103,19 +129,19 @@ func createPrettyCluster(clusterInfo mds.ClusterInfo) (*prettyCluster, error) {
 	var t, id string
 	switch {
 	case clusterInfo.Scope.Clusters.ConnectCluster != "":
-		t = "connect-cluster"
+		t = connectClusterTypeName
 		id = clusterInfo.Scope.Clusters.ConnectCluster
 	case clusterInfo.Scope.Clusters.KsqlCluster != "":
-		t = "ksql-cluster"
+		t = ksqlClusterTypeName
 		id = clusterInfo.Scope.Clusters.KsqlCluster
 	case clusterInfo.Scope.Clusters.SchemaRegistryCluster != "":
-		t = "schema-registry-cluster"
+		t = schemaRegistryClusterTypeName
 		id = clusterInfo.Scope.Clusters.SchemaRegistryCluster
 	default:
-		t = "kafka-cluster"
+		t = kafkaClusterTypeName
 		id = clusterInfo.Scope.Clusters.KafkaCluster
 	}
-	var hosts []string = make([]string, len(clusterInfo.Hosts))
+	hosts := make([]string, len(clusterInfo.Hosts))
 	for i, hostInfo := range clusterInfo.Hosts {
 		hosts[i], _ = createPrettyHost(hostInfo)
 	}

@@ -13,6 +13,12 @@ func (s *CLITestSuite) Test_Cluster() {
 			login:   "default",
 		},
 		{
+			args:    "cluster list --type unknown",
+			fixture: "confluent-cluster-list-type-unknown.golden",
+			login:   "default",
+			wantErrCode: 1,
+		},
+		{
 			args:    "cluster list -o json",
 			fixture: "confluent-cluster-list-json.golden",
 			login:   "default",
