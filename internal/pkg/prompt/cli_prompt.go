@@ -67,8 +67,9 @@ func NewCLIPrompt(rootCmd *cobra.Command, compl completer.Completer, cfg *v2.Con
 		return prefix, true
 	}
 	livePrefixOpt := gprompt.OptionLivePrefix(livePrefixFunc)
-	extraOpts = append(extraOpts, livePrefixOpt)
-	opts = append(opts, extraOpts...)
+	writer := NewStdoutTrueColorWriter()
+	extraOpts = append(extraOpts, livePrefixOpt, gprompt.OptionWriter(writer))
+	opts = append(extraOpts, opts...)
 	prompt := gprompt.New(
 		func(in string) {
 			promptArgs := strings.Fields(in)
@@ -86,20 +87,29 @@ func NewCLIPrompt(rootCmd *cobra.Command, compl completer.Completer, cfg *v2.Con
 
 func DefaultPromptOptions() []gprompt.Option {
 	// Black is actually White and vice versa
+	const island = 0x38CCED
+	const academy = 0x0074A2
+	const powder = 0xD7EFF6
+	const denim = 0x173361
+	const sky = 0x81CFE2
+	const robinsEgg = 0xB4E1E4
+	const sunrise = 0xF26135
+	const ice = 0xE6F5FB
+
 	return []gprompt.Option{
 		gprompt.OptionShowCompletionAtStart(),
-		gprompt.OptionPrefixTextColor(gprompt.Blue),
-		gprompt.OptionPreviewSuggestionTextColor(gprompt.Purple),
-		gprompt.OptionSuggestionBGColor(gprompt.LightGray),
-		gprompt.OptionSuggestionTextColor(gprompt.Black),
-		gprompt.OptionSelectedSuggestionBGColor(gprompt.DarkBlue),
-		gprompt.OptionSelectedSuggestionTextColor(gprompt.White),
-		gprompt.OptionDescriptionBGColor(gprompt.DarkGray),
-		gprompt.OptionDescriptionTextColor(gprompt.LightGray),
-		gprompt.OptionSelectedDescriptionBGColor(gprompt.Blue),
-		gprompt.OptionSelectedDescriptionTextColor(gprompt.White),
-		gprompt.OptionScrollbarBGColor(gprompt.Blue),
-		gprompt.OptionScrollbarThumbColor(gprompt.DarkBlue),
+		gprompt.OptionPrefixTextColor(powder),
+		gprompt.OptionPreviewSuggestionTextColor(powder),
+		gprompt.OptionSuggestionBGColor(powder),
+		gprompt.OptionSuggestionTextColor(denim),
+		gprompt.OptionSelectedSuggestionBGColor(denim),
+		gprompt.OptionSelectedSuggestionTextColor(powder),
+		gprompt.OptionDescriptionBGColor(denim),
+		gprompt.OptionDescriptionTextColor(powder),
+		gprompt.OptionSelectedDescriptionBGColor(powder),
+		gprompt.OptionSelectedDescriptionTextColor(denim),
+		gprompt.OptionScrollbarBGColor(denim),
+		gprompt.OptionScrollbarThumbColor(powder),
 		gprompt.OptionPrefix(defaultPrefix),
 		gprompt.OptionAddASCIICodeBind(
 			[]gprompt.ASCIICodeBind{
