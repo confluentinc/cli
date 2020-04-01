@@ -74,7 +74,6 @@ if a master key has not already been set using the "master-key generate" command
 	check(decryptCmd.MarkFlagRequired("output-file"))
 
 	decryptCmd.Flags().String("config", "", "List of configuration keys.")
-	check(decryptCmd.MarkFlagRequired("config"))
 	decryptCmd.Flags().SortFlags = false
 	c.AddCommand(decryptCmd)
 

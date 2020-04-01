@@ -22,7 +22,8 @@ var (
 	listStructuredLabels      = []string{"id", "name", "provider", "region", "durability", "status"}
 	describeFields            = []string{"Id", "Name", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "ApiEndpoint"}
 	describeHumanRenames      = map[string]string{"NetworkIngress": "Ingress", "NetworkEgress": "Egress", "ServiceProvider": "Provider"}
-	describeStructuredRenames = map[string]string{"NetworkIngress": "ingress", "NetworkEgress": "egress", "ServiceProvider": "provider"}
+	describeStructuredRenames = map[string]string{"Id": "id", "Name": "name", "NetworkIngress": "ingress", "NetworkEgress": "egress", "Storage": "storage",
+		"ServiceProvider": "provider", "Region": "region", "Status": "status", "Endpoint": "endpoint", "ApiEndpoint": "api_endpoint"}
 )
 
 type clusterCommand struct {
@@ -164,7 +165,32 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	return output.DescribeObject(cmd, cluster, describeFields, describeHumanRenames, describeStructuredRenames)
+	// go-printer has trouble marshaling kafkav1.KafkaCluster struct, creating another struct to fix for now
+	type describeStruct struct {
+		Id string
+		Name string
+		NetworkIngress int32
+		NetworkEgress int32
+		Storage int32
+		ServiceProvider string
+		Region string
+		Status string
+		Endpoint string
+		ApiEndpoint string
+	}
+	describeObject := &describeStruct{
+		Id:              cluster.Id,
+		Name:            cluster.Name,
+		NetworkIngress:  cluster.NetworkIngress,
+		NetworkEgress:   cluster.NetworkEgress,
+		Storage:         cluster.Storage,
+		ServiceProvider: cluster.ServiceProvider,
+		Region:          cluster.Region,
+		Status:          cluster.Status.String(),
+		Endpoint:        cluster.Endpoint,
+		ApiEndpoint:     cluster.ApiEndpoint,
+	}
+	return output.DescribeObject(cmd, describeObject, describeFields, describeHumanRenames, describeStructuredRenames)
 }
 
 func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
