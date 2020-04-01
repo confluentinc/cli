@@ -85,7 +85,7 @@ func NewCLIPrompt(rootCmd *cobra.Command, compl completer.Completer, cfg *v2.Con
 	return cliPrompt
 }
 
-func DefaultPromptOptions() []gprompt.Option {
+func DefaultTrueColorPromptOptions() []gprompt.Option {
 	// Black is actually White and vice versa
 	const island = 0x38CCED
 	const academy = 0x0074A2
@@ -96,8 +96,7 @@ func DefaultPromptOptions() []gprompt.Option {
 	const sunrise = 0xF26135
 	const ice = 0xE6F5FB
 
-	return []gprompt.Option{
-		gprompt.OptionShowCompletionAtStart(),
+	colorOpts := []gprompt.Option{
 		gprompt.OptionPrefixTextColor(powder),
 		gprompt.OptionPreviewSuggestionTextColor(powder),
 		gprompt.OptionSuggestionBGColor(powder),
@@ -110,6 +109,38 @@ func DefaultPromptOptions() []gprompt.Option {
 		gprompt.OptionSelectedDescriptionTextColor(denim),
 		gprompt.OptionScrollbarBGColor(denim),
 		gprompt.OptionScrollbarThumbColor(powder),
+	}
+	writer := NewStdoutTrueColorWriter()
+	colorOpts = append(colorOpts, gprompt.OptionWriter(writer))
+	return append(colorOpts, defaultPromptOptions()...)
+}
+
+func DefaultColor256PromptOptions() []gprompt.Option {
+	const powderSimilar = 152
+	const denimSimilar = 17
+
+	writer := NewStdoutColor256Writer()
+	colorOpts := []gprompt.Option{
+		gprompt.OptionPrefixTextColor(powderSimilar),
+		gprompt.OptionPreviewSuggestionTextColor(powderSimilar),
+		gprompt.OptionSuggestionBGColor(powderSimilar),
+		gprompt.OptionSuggestionTextColor(denimSimilar),
+		gprompt.OptionSelectedSuggestionBGColor(denimSimilar),
+		gprompt.OptionSelectedSuggestionTextColor(powderSimilar),
+		gprompt.OptionDescriptionBGColor(denimSimilar),
+		gprompt.OptionDescriptionTextColor(powderSimilar),
+		gprompt.OptionSelectedDescriptionBGColor(powderSimilar),
+		gprompt.OptionSelectedDescriptionTextColor(denimSimilar),
+		gprompt.OptionScrollbarBGColor(denimSimilar),
+		gprompt.OptionScrollbarThumbColor(powderSimilar),
+	}
+	colorOpts = append(colorOpts, defaultPromptOptions()...)
+	return append(colorOpts, gprompt.OptionWriter(writer)) // Be mindful of order.
+}
+
+func defaultPromptOptions() []gprompt.Option {
+	return []gprompt.Option{
+		gprompt.OptionShowCompletionAtStart(),
 		gprompt.OptionPrefix(defaultPrefix),
 		gprompt.OptionAddASCIICodeBind(
 			[]gprompt.ASCIICodeBind{

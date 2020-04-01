@@ -107,7 +107,7 @@ func main() {
 	//}
 	masterCompleter.SetRootCmd(cli.Command)
 	// Initialize prompt.
-	cliPrompt := prompt.NewCLIPrompt(cli.Command, masterCompleter, cfg, validator, prompt.DefaultPromptOptions()...)
+	cliPrompt := prompt.NewCLIPrompt(cli.Command, masterCompleter, cfg, validator, prompt.DefaultColor256PromptOptions()...)
 	cliPrompt.Run()
 
 	err = cli.Execute(os.Args[1:])

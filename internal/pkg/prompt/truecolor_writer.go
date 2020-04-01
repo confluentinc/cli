@@ -11,6 +11,8 @@ type TrueColorWriter struct {
 	gprompt.ConsoleWriter
 }
 
+// SetColor sets the text color. TrueColorWriter will interpret each color
+// as a color hex code, as specified here: https://en.wikipedia.org/wiki/ANSI_escape_code#24-bit.
 func (w *TrueColorWriter) SetColor(fg, bg gprompt.Color, bold bool) {
 	if bold {
 		w.SetDisplayAttributes(fg, bg, gprompt.DisplayBold)
@@ -25,7 +27,6 @@ func NewStdoutTrueColorWriter() *TrueColorWriter {
 }
 
 // SetDisplayAttributes to set VT100 display attributes.
-// Handle separator bytes. 
 func (w *TrueColorWriter) SetDisplayAttributes(fg, bg gprompt.Color, attrs ...gprompt.DisplayAttribute) {
 	w.WriteRawStr("\x1b[")        // Control sequence introducer.
 	defer w.WriteRaw([]byte{'m'}) // final character
@@ -37,12 +38,12 @@ func (w *TrueColorWriter) SetDisplayAttributes(fg, bg gprompt.Color, attrs ...gp
 	}
 	// Begin writing true color strings.
 	// Foreground.
-	w.WriteRawStr("38;2;") // true color foreground code. 
+	w.WriteRawStr("38;2;") // true color foreground code.
 	r, g, b := hexToRGB(int(fg))
 	w.WriteRawStr(fmt.Sprintf("%d;%d;%d", r, g, b))
 	// Background.
 	w.WriteRaw([]byte{separator})
-	w.WriteRawStr("48;2;") // true color background code. 
+	w.WriteRawStr("48;2;") // true color background code.
 	r, g, b = hexToRGB(int(bg))
 	w.WriteRawStr(fmt.Sprintf("%d;%d;%d", r, g, b))
 	return
