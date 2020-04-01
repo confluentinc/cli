@@ -35,6 +35,8 @@ func (c *command) resolveResourceId(cmd *cobra.Command, resolver pcmd.FlagResolv
 			return "", "", "", err
 		}
 		clusterId = cluster.Id
+	} else if resourceType == pcmd.CloudResourceType {
+		return resourceType, "", "", nil
 	} else {
 		// Resource is of KafkaResourceType.
 		cluster, err := c.Context.ActiveKafkaCluster(cmd)

@@ -130,6 +130,7 @@ const (
 	KafkaResourceType = "kafka"
 	SrResourceType    = "schema-registry"
 	KSQLResourceType  = "ksql"
+	CloudResourceType = "cloud"
 )
 
 func (r *FlagResolverImpl) ResolveResourceId(cmd *cobra.Command) (resourceType string, resourceId string, err error) {
@@ -146,6 +147,9 @@ func (r *FlagResolverImpl) ResolveResourceId(cmd *cobra.Command) (resourceType s
 		resourceType = SrResourceType
 	} else if strings.HasPrefix(resourceId, "lksqlc-") {
 		resourceType = KSQLResourceType
+	} else if resourceId == CloudResourceType {
+		resourceType = CloudResourceType
+		resourceId = ""
 	} else {
 		// Resource is Kafka cluster.
 		resourceType = KafkaResourceType
