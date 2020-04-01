@@ -12,7 +12,8 @@ Description:
     discoverable in the current Confluent Platform deployment.
 
     Given 'connectors' as subcommand, prints a list of connector names that map to predefined
-    connectors. Their configuration files can be found under 'etc/' directory in Confluent Platform.
+    connector configuration files that ship with Confluent Platform. The configuration files
+    are located in the 'etc/' directory in Confluent Platform.
 
 
 Examples:
