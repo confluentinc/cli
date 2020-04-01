@@ -129,7 +129,6 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	}
 
 	token, refreshToken, err := pauth.GetCCloudAuthToken(client, url, email, password, noBrowser)
-
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -246,6 +245,17 @@ func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
 	err = a.addOrUpdateContext(email, url, state, caCertPath)
 	if err != nil {
 		return err
+	}
+	saveToNetrc, err := cmd.Flags().GetBool("save")
+	if err != nil {
+		return err
+	}
+	if saveToNetrc {
+		err = a.netrcHandler.WriteNetrcCredentials(a.config.CLIName, false, a.config.Context().Name, email, password)
+		if err != nil {
+			return err
+		}
+		pcmd.ErrPrintf(cmd, "Written credentials to file %s\n", a.netrcHandler.FileName)
 	}
 	pcmd.Println(cmd, "Logged in as", email)
 	return nil

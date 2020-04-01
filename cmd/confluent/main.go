@@ -85,7 +85,7 @@ func main() {
 
 	var netrcFile string
 	if isTest {
-		netrcFile = "/tmp/netrc"
+		netrcFile = pauth.NetrcTestFile
 	} else {
 		netrcFile = pauth.GetNetrcFilePath()
 	}

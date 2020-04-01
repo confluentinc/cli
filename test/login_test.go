@@ -17,6 +17,14 @@ import (
 	"time"
 
 	"github.com/chromedp/chromedp"
+
+	"github.com/confluentinc/cli/internal/pkg/auth"
+)
+
+var (
+	urlPlaceHolder       = "<URL_PLACEHOLDER>"
+	ccloudLoginOutput    = "Written credentials to file /tmp/netrc_test\nLogged in as good@user.com\nUsing environment a-595 (\"default\")\n"
+	confluentLoginOutput = "Written credentials to file /tmp/netrc_test\nLogged in as good@user.com\n"
 )
 
 func (s *CLITestSuite) Test_Ccloud_Login_UseKafka_AuthKafka_Errors() {
@@ -79,42 +87,127 @@ func serveLogin(t *testing.T) *httptest.Server {
 	return httptest.NewServer(router)
 }
 
-func (s *CLITestSuite) Test_Save_CCloud_Username_Password() {
-	type testSave struct {
-
-	}
-
+func (s *CLITestSuite) Test_Save_Username_Password() {
 	t := s.T()
-	_, filename, _, ok := runtime.Caller(0)
+	type saveTest struct {
+		cliName string
+		want string
+		loginURL string
+	}
+	tests := []saveTest{
+		{
+			"ccloud",
+			"netrc-save-ccloud-username-password.golden",
+			serveLogin(t).URL,
+		},
+		{
+			"confluent",
+			"netrc-save-mds-username-password.golden",
+			serveMds(t, "").URL,
+		},
+	}
+	_, callerFileName, _, ok := runtime.Caller(0)
 	if !ok {
 		t.Fatalf("problems recovering caller information")
 	}
-	netrcInput := filepath.Join(filepath.Dir(filename), "fixtures", "input", "netrc")
-	//netrcRegex := `machine\srandom-sacred-machine\r?\n\s+login\srandom-sacred-username\r?\n\s+password random-sacred-password`
-	inBytes, err := ioutil.ReadFile(netrcInput)
-	s.NoError(err)
+	netrcInput := filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc")
+	for _, tt := range tests {
+		// store existing credentials in netrc to check that they are not corrupted
+		originalNetrc, err := ioutil.ReadFile(netrcInput)
+		s.NoError(err)
+		err = ioutil.WriteFile(auth.NetrcTestFile, originalNetrc, 0600)
+		s.NoError(err)
 
-	err = ioutil.WriteFile("/tmp/netrc", inBytes, 0600)
-	s.NoError(err)
+		// run the login command with --save flag and check output
+		var bin string
+		var expectedOutput string
+		if tt.cliName == "ccloud" {
+			bin = ccloudTestBin
+			expectedOutput = ccloudLoginOutput
+		} else {
+			bin = confluentTestBin
+			expectedOutput = confluentLoginOutput
+		}
+		env := []string{"XX_CCLOUD_EMAIL=good@user.com", "XX_CCLOUD_PASSWORD=pass1"}
+		output := runCommand(t, bin, env, "login --save --url "+tt.loginURL, 0)
+		s.Equal(expectedOutput, output)
 
-	wantFile := filepath.Join(filepath.Dir(filename), "fixtures", "output", "netrc.golden")
-	s.NoError(err)
-	want, err := ioutil.ReadFile(wantFile)
-	s.NoError(err)
-	//s.Equal(inBytes,got)
+		// check netrc file result
+		got, err := ioutil.ReadFile(auth.NetrcTestFile)
+		s.NoError(err)
+		wantFile := filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", tt.want)
+		s.NoError(err)
+		wantBytes, err := ioutil.ReadFile(wantFile)
+		s.NoError(err)
+		want := strings.Replace(string(wantBytes), urlPlaceHolder, tt.loginURL, 1)
+		s.Equal(NormalizeNewLines(want), NormalizeNewLines(string(got)))
+	}
+	_ = os.Remove(auth.NetrcTestFile)
+}
 
-	loginURL := serveLogin(t).URL
-	env := []string{"XX_CCLOUD_EMAIL=good@user.com", "XX_CCLOUD_PASSWORD=pass1"}
-	output := runCommand(t, ccloudTestBin, env, "login -vvv --save --url "+loginURL, 1)
-	fmt.Println(output)
-	got, err := ioutil.ReadFile("/tmp/netrc")
-	s.NoError(err)
-	s.NotEqual(want, got)
+func (s *CLITestSuite) Test_Update_Netrc_Password() {
+	t := s.T()
+	type updateTest struct {
+		input string
+		cliName string
+		want string
+		loginURL string
+	}
+	_, callerFileName, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatalf("problems recovering caller information")
+	}
+	tests := []updateTest{
+		{
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-old-password-ccloud"),
+			"ccloud",
+			"netrc-save-ccloud-username-password.golden",
+			serveLogin(t).URL,
+		},
+		{
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-old-password-mds"),
+			"confluent",
+			"netrc-save-mds-username-password.golden",
+			serveMds(t, "").URL,
+		},
+	}
+	for _, tt := range tests {
+		// store existing credential + the user credential to be updated
+		originalNetrc, err := ioutil.ReadFile(tt.input)
+		s.NoError(err)
+		originalNetrcString := strings.Replace(string(originalNetrc), urlPlaceHolder, tt.loginURL, 1)
+		err = ioutil.WriteFile(auth.NetrcTestFile, []byte(originalNetrcString), 0600)
+		s.NoError(err)
+
+		// run the login command with --save flag and check output
+		var bin string
+		var expectedOutput string
+		if tt.cliName == "ccloud" {
+			bin = ccloudTestBin
+			expectedOutput = ccloudLoginOutput
+		} else {
+			bin = confluentTestBin
+			expectedOutput = confluentLoginOutput
+		}
+		env := []string{"XX_CCLOUD_EMAIL=good@user.com", "XX_CCLOUD_PASSWORD=pass1"}
+		output := runCommand(t, bin, env, "login --save --url "+tt.loginURL, 0)
+		s.Equal(expectedOutput, output)
+
+		// check netrc file result
+		got, err := ioutil.ReadFile(auth.NetrcTestFile)
+		s.NoError(err)
+		wantFile := filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", tt.want)
+		s.NoError(err)
+		wantBytes, err := ioutil.ReadFile(wantFile)
+		s.NoError(err)
+		want := strings.Replace(string(wantBytes), urlPlaceHolder, tt.loginURL, 1)
+		s.Equal(NormalizeNewLines(want), NormalizeNewLines(string(got)))
+	}
+	_ = os.Remove(auth.NetrcTestFile)
 }
 
 
-
-func (s *CLITestSuite) Test_SSO_Login() {
+func (s *CLITestSuite) Test_SSO_Login_And_Save() {
 	t := s.T()
 	if *skipSsoBrowserTests {
 		t.Skip()
@@ -123,7 +216,7 @@ func (s *CLITestSuite) Test_SSO_Login() {
 	resetConfiguration(s.T(), "ccloud")
 
 	env := []string{"XX_CCLOUD_EMAIL=" + ssoTestEmail}
-	cmd := exec.Command(binaryPath(t, ccloudTestBin), []string{"login", "--url", ssoTestLoginUrl, "--no-browser"}...)
+	cmd := exec.Command(binaryPath(t, ccloudTestBin), []string{"login", "--save", "--url", ssoTestLoginUrl, "--no-browser"}...)
 	cmd.Env = append(os.Environ(), env...)
 
 	cliStdOut, err := cmd.StdoutPipe()
@@ -174,6 +267,20 @@ func (s *CLITestSuite) Test_SSO_Login() {
 		// the output from the cmd.Wait(). Should not have an error status
 		s.NoError(err)
 	}
+
+	// Verifying login --save functionality by checking netrc file
+	got, err := ioutil.ReadFile(auth.NetrcTestFile)
+	s.NoError(err)
+	pattern := `machine\sconfluent-cli:ccloud-sso-refresh-token:login-ziru\+paas-integ-sso@confluent.io-https://devel.cpdev.cloud\r?\n\s+login\sziru\+paas-integ-sso@confluent.io\r?\n\s+password\s[\w-]+`
+	match, err := regexp.Match(pattern, got)
+	s.NoError(err)
+	if !match {
+		fmt.Println("Refresh token credential not written to netrc file properly.")
+		want := "machine confluent-cli:ccloud-sso-refresh-token:login-ziru+paas-integ-sso@confluent.io-https://devel.cpdev.cloud\n	login ziru+paas-integ-sso@confluent.io\n	password <refresh_token>"
+		msg := fmt.Sprintf("expected: %s\nactual: %s\n", want, got)
+		s.Fail("sso login command with --save flag failed to properly write refresh token credential.\n" + msg)
+	}
+	_ = os.Remove(auth.NetrcTestFile)
 }
 
 func parseSsoAuthUrlFromOutput(output []byte) string {
