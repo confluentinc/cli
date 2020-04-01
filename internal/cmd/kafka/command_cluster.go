@@ -167,16 +167,16 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	}
 	// go-printer has trouble marshaling kafkav1.KafkaCluster struct, creating another struct to fix for now
 	type describeStruct struct {
-		Id string
-		Name string
-		NetworkIngress int32
-		NetworkEgress int32
-		Storage int32
+		Id              string
+		Name            string
+		NetworkIngress  int32
+		NetworkEgress   int32
+		Storage         int32
 		ServiceProvider string
-		Region string
-		Status string
-		Endpoint string
-		ApiEndpoint string
+		Region          string
+		Status          string
+		Endpoint        string
+		ApiEndpoint     string
 	}
 	describeObject := &describeStruct{
 		Id:              cluster.Id,

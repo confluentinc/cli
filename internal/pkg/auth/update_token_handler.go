@@ -20,10 +20,10 @@ type UpdateTokenHandlerImpl struct {
 }
 
 var (
-	failedRefreshTokenMsg = "Failed to update auth token using refresh token. Error: %s"
-	failedNetrcTokenMsg = "Failed to update auth token using credentials in netrc file. Error: %s"
+	failedRefreshTokenMsg  = "Failed to update auth token using refresh token. Error: %s"
+	failedNetrcTokenMsg    = "Failed to update auth token using credentials in netrc file. Error: %s"
 	successRefreshTokenMsg = "Token successfully updated with refresh token."
-	successNetrcTokenMsg = "Token successfully updated with netrc file credentials."
+	successNetrcTokenMsg   = "Token successfully updated with netrc file credentials."
 )
 
 func NewUpdateTokenHandler(netrcHandler *NetrcHandler) UpdateTokenHandler {

@@ -90,8 +90,8 @@ func serveLogin(t *testing.T) *httptest.Server {
 func (s *CLITestSuite) Test_Save_Username_Password() {
 	t := s.T()
 	type saveTest struct {
-		cliName string
-		want string
+		cliName  string
+		want     string
 		loginURL string
 	}
 	tests := []saveTest{
@@ -148,9 +148,9 @@ func (s *CLITestSuite) Test_Save_Username_Password() {
 func (s *CLITestSuite) Test_Update_Netrc_Password() {
 	t := s.T()
 	type updateTest struct {
-		input string
-		cliName string
-		want string
+		input    string
+		cliName  string
+		want     string
 		loginURL string
 	}
 	_, callerFileName, _, ok := runtime.Caller(0)
@@ -205,7 +205,6 @@ func (s *CLITestSuite) Test_Update_Netrc_Password() {
 	}
 	_ = os.Remove(auth.NetrcTestFile)
 }
-
 
 func (s *CLITestSuite) Test_SSO_Login_And_Save() {
 	t := s.T()

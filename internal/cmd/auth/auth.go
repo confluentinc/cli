@@ -30,7 +30,7 @@ type commands struct {
 	prompt                pcmd.Prompt
 	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *ccloud.Client
 	jwtHTTPClientFactory  func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *ccloud.Client
-	netrcHandler    	  *pauth.NetrcHandler
+	netrcHandler          *pauth.NetrcHandler
 }
 
 var (

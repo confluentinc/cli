@@ -17,10 +17,10 @@ var (
 	// For integration test
 	NetrcTestFile = "/tmp/netrc_test"
 
-	confluentCliName = "confluent-cli"
-	mdsUsernamePasswordString = "mds-username-password"
+	confluentCliName             = "confluent-cli"
+	mdsUsernamePasswordString    = "mds-username-password"
 	ccloudUsernamePasswordString = "ccloud-username-password"
-	ccloudSSORefreshTokenString = "ccloud-sso-refresh-token"
+	ccloudSSORefreshTokenString  = "ccloud-sso-refresh-token"
 
 	resolvingFilePathErrMsg = "An error resolving the netrc filepath at %s has occurred. Error: %s"
 	netrcGetErrorMsg        = "Unable to get credentials from Netrc file. Error: %s"

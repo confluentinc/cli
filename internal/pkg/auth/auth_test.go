@@ -17,17 +17,17 @@ import (
 )
 
 var (
-	netrcFilePath           = "test_files/netrc"
-	outputFileMds     = "test_files/output-mds"
+	netrcFilePath         = "test_files/netrc"
+	outputFileMds         = "test_files/output-mds"
 	outputFileCcloudLogin = "test_files/output-ccloud-login"
-	outputFileCcloudSSO = "test_files/output-ccloud-sso"
-	mdsContext        = "mds-context"
-	ccloudLoginContext = "ccloud-login"
-	ccloudSSOContext = "ccloud-sso"
-	netrcUser               = "jamal@jj"
-	netrcPassword           = "12345"
-	mockConfigUser          = "mock-user"
-	mockConfigPassword      = "mock-password"
+	outputFileCcloudSSO   = "test_files/output-ccloud-sso"
+	mdsContext            = "mds-context"
+	ccloudLoginContext    = "ccloud-login"
+	ccloudSSOContext      = "ccloud-sso"
+	netrcUser             = "jamal@jj"
+	netrcPassword         = "12345"
+	mockConfigUser        = "mock-user"
+	mockConfigPassword    = "mock-password"
 )
 
 func TestNetRCCredentialReader(t *testing.T) {

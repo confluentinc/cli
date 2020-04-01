@@ -721,19 +721,19 @@ func TestKafkaClusterContext_AddAndGetKafkaClusterConfig(t *testing.T) {
 	clusterID := "lkc-abcdefg"
 
 	kcc := &v1.KafkaClusterConfig{
-			ID:          clusterID,
-			Name:        "lit",
-			Bootstrap:   "http://test",
-			APIEndpoint: "",
-			APIKeys: map[string]*v0.APIKeyPair{
-				"akey": {
-					Key:    "akey",
-					Secret: "asecret",
-				},
+		ID:          clusterID,
+		Name:        "lit",
+		Bootstrap:   "http://test",
+		APIEndpoint: "",
+		APIKeys: map[string]*v0.APIKeyPair{
+			"akey": {
+				Key:    "akey",
+				Secret: "asecret",
 			},
-			APIKey: "akey",
+		},
+		APIKey: "akey",
 	}
-	for _, cliName := range[]string{"ccloud", "confluent"} {
+	for _, cliName := range []string{"ccloud", "confluent"} {
 		testInputs := SetupTestInputs(cliName)
 		kafkaClusterContext := testInputs.statefulConfig.Context().KafkaClusterContext
 		kafkaClusterContext.AddKafkaClusterConfig(kcc)
@@ -757,7 +757,7 @@ func TestKafkaClusterContext_DeleteAPIKey(t *testing.T) {
 		},
 		APIKey: apiKey,
 	}
-	for _, cliName := range[]string{"ccloud", "confluent"} {
+	for _, cliName := range []string{"ccloud", "confluent"} {
 		testInputs := SetupTestInputs(cliName)
 		kafkaClusterContext := testInputs.statefulConfig.Context().KafkaClusterContext
 		kafkaClusterContext.AddKafkaClusterConfig(kcc)

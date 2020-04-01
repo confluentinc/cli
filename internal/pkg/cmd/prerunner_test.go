@@ -170,7 +170,6 @@ func TestPreRun_CallsAnalyticsTrackCommand(t *testing.T) {
 	ver := pmock.NewVersionMock()
 	analyticsClient := cliMock.NewDummyAnalyticsMock()
 
-
 	r := &pcmd.PreRun{
 		Version: ver,
 		Logger:  log.New(),

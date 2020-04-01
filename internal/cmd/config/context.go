@@ -14,9 +14,9 @@ import (
 )
 
 var (
-	contextListFields                = []string{"Current", "Name", "Platform", "Credential"}
-	contextListHumanLabels           = []string{"Current", "Name", "Platform", "Credential"}
-	contextListStructuredLabels      = []string{"current", "name", "platform", "credential"}
+	contextListFields           = []string{"Current", "Name", "Platform", "Credential"}
+	contextListHumanLabels      = []string{"Current", "Name", "Platform", "Credential"}
+	contextListStructuredLabels = []string{"current", "name", "platform", "credential"}
 )
 
 type contextCommand struct {
