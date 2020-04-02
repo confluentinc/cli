@@ -23,6 +23,7 @@ type connectorDescribeDisplay struct {
 	ID     string `json:"id" yaml:"id"`
 	Status string `json:"status" yaml:"status"`
 	Type   string `json:"type" yaml:"type"`
+	Trace  string `json:"trace,omitempty" yaml:"trace,omitempty"`
 }
 
 type taskDescribeDisplay struct {
@@ -42,8 +43,8 @@ type structuredDescribeDisplay struct {
 
 var (
 	describeRenames      = map[string]string{}
-	listFields           = []string{"ID", "Name", "Status", "Type"}
-	listStructuredLabels = []string{"id", "name", "status", "type"}
+	listFields           = []string{"ID", "Name", "Status", "Type", "Trace"}
+	listStructuredLabels = []string{"id", "name", "status", "type", "trace"}
 )
 
 // New returns the default command object for interacting with Connect.
@@ -199,6 +200,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 			ID:     connector.Id.Id,
 			Status: connector.Status.Connector.State,
 			Type:   connector.Info.Type,
+			Trace:  connector.Status.Connector.Trace,
 		}
 		outputWriter.AddElement(connector)
 	}
@@ -240,7 +242,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	// Resolve Connector ID from Name of created connector
-	connectorID, err := c.Client.Connect.GetExpansionByName(context.Background(), &connectv1.Connector{AccountId: c.EnvironmentId(), KafkaClusterId: kafkaCluster.Id, Name: connector.Name})
+	connectorExpansion, err := c.Client.Connect.GetExpansionByName(context.Background(), &connectv1.Connector{AccountId: c.EnvironmentId(), KafkaClusterId: kafkaCluster.Id, Name: connector.Name})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -248,15 +250,21 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
+	trace := connectorExpansion.Status.Connector.Trace
 	if outputFormat == output.Human.String() {
-		pcmd.Printf(cmd, "Created connector %s %s\n", connector.Name, connectorID.Id.Id)
+		pcmd.Printf(cmd, "Created connector %s %s\n", connector.Name, connectorExpansion.Id.Id)
+		if trace != "" {
+			pcmd.Printf(cmd, "Error Trace: %s\n", trace)
+		}
 	} else {
 		return output.StructuredOutput(outputFormat, &struct {
 			ConnectorName string `json:"name" yaml:"name"`
 			Id            string `json:"id" yaml:"id"`
+			Trace         string `json:"error_trace,omitempty" yaml:"error_trace,omitempty"`
 		}{
 			ConnectorName: connector.Name,
-			Id:            connectorID.Id.Id,
+			Id:            connectorExpansion.Id.Id,
+			Trace:         trace,
 		})
 	}
 	return nil
@@ -348,6 +356,7 @@ func printHumanDescribe(cmd *cobra.Command, connector *connectv1.ConnectorExpans
 		ID:     connector.Id.Id,
 		Status: connector.Status.Connector.State,
 		Type:   connector.Info.Type,
+		Trace:  connector.Status.Connector.Trace,
 	}
 	_ = printer.RenderTableOut(data, listFields, describeRenames, os.Stdout)
 	pcmd.Println(cmd, "\n\nTask Level Details")
@@ -380,6 +389,7 @@ func printStructuredDescribe(connector *connectv1.ConnectorExpansion, format str
 			ID:     connector.Id.Id,
 			Status: connector.Status.Connector.State,
 			Type:   connector.Info.Type,
+			Trace:  connector.Status.Connector.Trace,
 		},
 		Tasks:   []taskDescribeDisplay{},
 		Configs: []configDescribeDisplay{},

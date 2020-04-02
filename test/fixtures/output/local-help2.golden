@@ -8,11 +8,12 @@ Description:
 
     Without arguments it prints the list of all the available services.
 
-    Given 'plugins' as subcommand, prints all the connector-plugins which are
+    The 'plugins' subcommand prints all the connector-plugins which are
     discoverable in the current Confluent Platform deployment.
 
-    Given 'connectors' as subcommand, prints a list of connector names that map to predefined
-    connectors. Their configuration files can be found under 'etc/' directory in Confluent Platform.
+    The 'connectors' subcommand prints a list of connector names that map to predefined
+    connector configuration files that are included with Confluent Platform. The
+    configuration files are located in the 'etc/' directory in Confluent Platform.
 
 
 Examples:

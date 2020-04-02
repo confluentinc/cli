@@ -4,6 +4,7 @@ Connector Details
 | Name   | az-connector |
 | Status | Running      |
 | Type   | Sink         |
+| Trace  |              |
 +--------+--------------+
 
 
