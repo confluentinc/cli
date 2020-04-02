@@ -52,14 +52,10 @@ func initializeMDS(ctx *v3.Context, logger *log.Logger) *mds.APIClient {
 	if err == nil {
 		defer caCertFile.Close()
 		mdsConfig.HTTPClient, err = SelfSignedCertClient(caCertFile, logger)
-		if err != nil {
-			logger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
-			mdsConfig.HTTPClient = DefaultClient()
-		}
-	} else {
+	}
+	if err != nil {
 		logger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
 		mdsConfig.HTTPClient = DefaultClient()
-
 	}
 	return mds.NewAPIClient(mdsConfig)
 }

@@ -5,6 +5,6 @@ machine dont-touch-this-machine
         login cant-touch-this
         password doo-doo-doo-doo
 
-machine confluent-cli:mds-username-password:mds-context
+machine confluent-cli:ccloud-sso-refresh-token:ccloud-sso
 	login jamal@jj
-	password 12345
+	password take-me-away-babayyyyy

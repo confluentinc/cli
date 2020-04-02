@@ -7,4 +7,4 @@ machine dont-touch-this-machine
 
 machine confluent-cli:mds-username-password:mds-context
 	login jamal@jj
-	password 12345
+	password change-me-pleaseeee

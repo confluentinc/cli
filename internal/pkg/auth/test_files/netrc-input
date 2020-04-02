@@ -4,7 +4,3 @@ machine random-sacred-machine
 machine dont-touch-this-machine
         login cant-touch-this
         password doo-doo-doo-doo
-
-machine confluent-cli:mds-username-password:mds-context
-	login jamal@jj
-	password 12345

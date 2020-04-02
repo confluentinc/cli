@@ -190,16 +190,10 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if saveToNetrc {
-		// it is sso only if refresh token is not empty
-		if refreshToken == "" {
-			err = a.netrcHandler.WriteNetrcCredentials(a.config.CLIName, false, a.config.Context().Name, email, password)
-		} else {
-			err = a.netrcHandler.WriteNetrcCredentials(a.config.CLIName, true, a.config.Context().Name, email, refreshToken)
-		}
+		err = a.saveToNetrc(cmd, email, password, refreshToken)
 		if err != nil {
 			return err
 		}
-		pcmd.ErrPrintf(cmd, "Written credentials to file %s\n", a.netrcHandler.FileName)
 	}
 
 	pcmd.Println(cmd, "Logged in as", email)
@@ -251,11 +245,10 @@ func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if saveToNetrc {
-		err = a.netrcHandler.WriteNetrcCredentials(a.config.CLIName, false, a.config.Context().Name, email, password)
+		err = a.saveToNetrc(cmd, email, password, "")
 		if err != nil {
 			return err
 		}
-		pcmd.ErrPrintf(cmd, "Written credentials to file %s\n", a.netrcHandler.FileName)
 	}
 	pcmd.Println(cmd, "Logged in as", email)
 	return nil
@@ -376,6 +369,21 @@ func (a *commands) analyticsPreRunCover(command *pcmd.CLICommand, commandType an
 	}
 }
 
+func (a *commands) saveToNetrc(cmd *cobra.Command, email, password, refreshToken string) error {
+	// sso if refresh token is empty
+	var err error
+	if refreshToken == "" {
+		err = a.netrcHandler.WriteNetrcCredentials(a.config.CLIName, false, a.config.Context().Name, email, password)
+	} else {
+		err = a.netrcHandler.WriteNetrcCredentials(a.config.CLIName, true, a.config.Context().Name, email, refreshToken)
+	}
+	if err != nil {
+		return err
+	}
+	pcmd.ErrPrintf(cmd, "Written credentials to file %s\n", a.netrcHandler.FileName)
+	return nil
+}
+
 func generateContextName(username string, url string) string {
 	return fmt.Sprintf("login-%s-%s", username, url)
 }
@@ -383,6 +391,8 @@ func generateContextName(username string, url string) string {
 func generateCredentialName(username string) string {
 	return fmt.Sprintf("username-%s", username)
 }
+
+
 
 func check(err error) {
 	if err != nil {
