@@ -392,8 +392,6 @@ func generateCredentialName(username string) string {
 	return fmt.Sprintf("username-%s", username)
 }
 
-
-
 func check(err error) {
 	if err != nil {
 		panic(err)
