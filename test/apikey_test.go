@@ -45,6 +45,10 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 		{args: "api-key create --resource lsrc-1", fixture: "apikey20.golden"}, // MYKEY7
 		{args: "api-key list --resource lsrc-1", fixture: "apikey21.golden"},
 
+		// create cloud api key
+		{args: "api-key create --resource cloud", fixture: "apikey34.golden"}, // MYKEY8
+		{args: "api-key list --resource cloud", fixture: "apikey35.golden"},
+
 		// use an api key for kafka cluster
 		{args: "api-key use MYKEY4 --resource lkc-cool1", fixture: "empty.golden"},
 		{args: "api-key list --resource lkc-cool1", fixture: "apikey11.golden"},

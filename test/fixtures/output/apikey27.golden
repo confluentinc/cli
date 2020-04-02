@@ -1,6 +1,6 @@
        Key      | Owner | Description | Resource Type | Resource ID  
 +---------------+-------+-------------+---------------+-------------+
   * MYKEY4      |    23 | my-cool-app | kafka         | lkc-cool1    
-    MYKEY8      |    99 |             | kafka         | lkc-cool1    
+    MYKEY9      |    99 |             | kafka         | lkc-cool1    
     UIAPIKEY100 |    25 |             | kafka         | lkc-cool1    
     UIAPIKEY103 |    25 |             | kafka         | lkc-cool1    

@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -74,7 +75,7 @@ func (c *command) init() {
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	}
-	listCmd.Flags().String(resourceFlagName, "", "The resource ID to filter by.")
+	listCmd.Flags().String(resourceFlagName, "", "The resource ID to filter by. Use \"cloud\" to show only Cloud API keys.")
 	listCmd.Flags().Bool("current-user", false, "Show only API keys belonging to current user.")
 	listCmd.Flags().Int32("service-account", 0, "The service account ID to filter by.")
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
@@ -87,7 +88,7 @@ func (c *command) init() {
 		RunE:  c.create,
 		Args:  cobra.NoArgs,
 	}
-	createCmd.Flags().String(resourceFlagName, "", "REQUIRED: The resource ID.")
+	createCmd.Flags().String(resourceFlagName, "", "REQUIRED: The resource ID. Use \"cloud\" to create a Cloud API key.")
 	createCmd.Flags().Int32("service-account", 0, "Service account ID. If not specified, the API key will have full access on the cluster.")
 	createCmd.Flags().String("description", "", "Description of API key.")
 	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
@@ -194,7 +195,6 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		if apiKey.UserId == 0 {
 			continue
 		}
-
 		// Add '*' only in the case where we are printing out tables
 		if outputWriter.GetOutputFormat() == output.Human {
 			// resourceId != "" added to be explicit that when no resourceId is specified we will not have "*"
@@ -203,6 +203,23 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 			} else {
 				apiKey.Key = fmt.Sprintf("  %s", apiKey.Key)
 			}
+		}
+
+		// If resource id is empty then the resource was not specified, or Cloud was specified.
+		// Note that if more resource types are added with no logical clusters, then additional logic
+		// needs to be added here to determine the resource type.
+		if resourceId == "" && len(apiKey.LogicalClusters) == 0 {
+			// Cloud key.
+			outputWriter.AddElement(&keyDisplay{
+				Key:          apiKey.Key,
+				Description:  apiKey.Description,
+				UserId:       apiKey.UserId,
+				ResourceType: pcmd.CloudResourceType,
+			})
+		}
+
+		if resourceType == pcmd.CloudResourceType {
+			continue
 		}
 
 		for _, lc := range apiKey.LogicalClusters {
@@ -259,10 +276,12 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	}
 
 	key := &authv1.ApiKey{
-		UserId:          userId,
-		Description:     description,
-		AccountId:       c.EnvironmentId(),
-		LogicalClusters: []*authv1.ApiKey_Cluster{{Id: clusterId, Type: resourceType}},
+		UserId:      userId,
+		Description: description,
+		AccountId:   c.EnvironmentId(),
+	}
+	if resourceType != pcmd.CloudResourceType {
+		key.LogicalClusters = []*authv1.ApiKey_Cluster{{Id: clusterId, Type: resourceType}}
 	}
 	userKey, err := c.Client.APIKey.Create(context.Background(), key)
 	if err != nil {
