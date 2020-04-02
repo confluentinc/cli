@@ -299,10 +299,10 @@ func Test_UpdateToken(t *testing.T) {
 			ver := pmock.NewVersionMock()
 
 			updateTokenHandler := &cliMock.MockUpdateTokenHandler{
-				UpdateCCloudAuthTokenFunc: func(ctx *v3.Context, userAgent string, logger *log.Logger) error {
+				UpdateCCloudAuthTokenUsingNetrcCredentialsFunc: func(ctx *v3.Context, userAgent string, logger *log.Logger) error {
 					return nil
 				},
-				UpdateConfluentAuthTokenFunc: func(ctx *v3.Context, logger *log.Logger) error {
+				UpdateConfluentAuthTokenUsingNetrcCredentialsFunc: func(ctx *v3.Context, logger *log.Logger) error {
 					return nil
 				},
 			}
@@ -333,9 +333,9 @@ func Test_UpdateToken(t *testing.T) {
 			_, err := pcmd.ExecuteCommand(rootCmd.Command)
 			require.NoError(t, err)
 			if tt.cliName == "ccloud" {
-				require.True(t, updateTokenHandler.UpdateCCloudAuthTokenCalled())
+				require.True(t, updateTokenHandler.UpdateCCloudAuthTokenUsingNetrcCredentialsCalled())
 			} else {
-				require.True(t, updateTokenHandler.UpdateConfluentAuthTokenCalled())
+				require.True(t, updateTokenHandler.UpdateConfluentAuthTokenUsingNetrcCredentialsCalled())
 			}
 		})
 	}

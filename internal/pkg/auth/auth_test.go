@@ -209,7 +209,7 @@ func TestUpateSSOToken(t *testing.T) {
 	ctx.State.AuthToken = initialAuthToken
 
 	require.Equal(t, ctx.State.AuthToken, initialAuthToken)
-	err := updateTokenHandler.UpdateCCloudAuthToken(ctx, "userAgent", log.New())
+	err := updateTokenHandler.UpdateCCloudAuthTokenUsingNetrcCredentials(ctx, "userAgent", log.New())
 	require.NoError(t, err)
 
 	require.True(t, mockCCloud.GetUserSSOCalled())
@@ -244,7 +244,7 @@ func TestUpdateCloudLoginCredentialsToken(t *testing.T) {
 	ctx.State.AuthToken = initialAuthToken
 
 	require.Equal(t, ctx.State.AuthToken, initialAuthToken)
-	err := updateTokenHandler.UpdateCCloudAuthToken(ctx, "userAgent", log.New())
+	err := updateTokenHandler.UpdateCCloudAuthTokenUsingNetrcCredentials(ctx, "userAgent", log.New())
 	require.NoError(t, err)
 
 	require.True(t, mockCCloudTokenHandler.GetUserSSOCalled())
@@ -275,7 +275,7 @@ func TestUpdateConfluent(t *testing.T) {
 	ctx.State.AuthToken = initialAuthToken
 
 	require.Equal(t, ctx.State.AuthToken, initialAuthToken)
-	err := updateTokenHandler.UpdateConfluentAuthToken(ctx, log.New())
+	err := updateTokenHandler.UpdateConfluentAuthTokenUsingNetrcCredentials(ctx, log.New())
 	require.NoError(t, err)
 
 	require.True(t, mockConfluentTokenHandler.GetAuthTokenCalled())
@@ -305,7 +305,7 @@ func TestFailedCCloudUpdate(t *testing.T) {
 	ctx.State.AuthToken = initialAuthToken
 
 	require.Equal(t, ctx.State.AuthToken, initialAuthToken)
-	err := updateTokenHandler.UpdateCCloudAuthToken(ctx, "userAgent", log.New())
+	err := updateTokenHandler.UpdateCCloudAuthTokenUsingNetrcCredentials(ctx, "userAgent", log.New())
 	require.Error(t, err)
 
 	require.True(t, mockCCloudTokenHandler.GetUserSSOCalled())
@@ -333,7 +333,7 @@ func TestFailedConfluentUpdate(t *testing.T) {
 	ctx.State.AuthToken = initialAuthToken
 
 	require.Equal(t, ctx.State.AuthToken, initialAuthToken)
-	err := updateTokenHandler.UpdateConfluentAuthToken(ctx, log.New())
+	err := updateTokenHandler.UpdateConfluentAuthTokenUsingNetrcCredentials(ctx, log.New())
 	require.Error(t, err)
 
 	require.True(t, mockConfluentTokenHandler.GetAuthTokenCalled())

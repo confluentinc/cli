@@ -13,32 +13,32 @@ import (
 
 // MockUpdateTokenHandler is a mock of UpdateTokenHandler interface
 type MockUpdateTokenHandler struct {
-	lockUpdateCCloudAuthToken sync.Mutex
-	UpdateCCloudAuthTokenFunc func(ctx *github_com_confluentinc_cli_internal_pkg_config_v3.Context, userAgent string, logger *github_com_confluentinc_cli_internal_pkg_log.Logger) error
+	lockUpdateCCloudAuthTokenUsingNetrcCredentials sync.Mutex
+	UpdateCCloudAuthTokenUsingNetrcCredentialsFunc func(ctx *github_com_confluentinc_cli_internal_pkg_config_v3.Context, userAgent string, logger *github_com_confluentinc_cli_internal_pkg_log.Logger) error
 
-	lockUpdateConfluentAuthToken sync.Mutex
-	UpdateConfluentAuthTokenFunc func(ctx *github_com_confluentinc_cli_internal_pkg_config_v3.Context, logger *github_com_confluentinc_cli_internal_pkg_log.Logger) error
+	lockUpdateConfluentAuthTokenUsingNetrcCredentials sync.Mutex
+	UpdateConfluentAuthTokenUsingNetrcCredentialsFunc func(ctx *github_com_confluentinc_cli_internal_pkg_config_v3.Context, logger *github_com_confluentinc_cli_internal_pkg_log.Logger) error
 
 	calls struct {
-		UpdateCCloudAuthToken []struct {
+		UpdateCCloudAuthTokenUsingNetrcCredentials []struct {
 			Ctx       *github_com_confluentinc_cli_internal_pkg_config_v3.Context
 			UserAgent string
 			Logger    *github_com_confluentinc_cli_internal_pkg_log.Logger
 		}
-		UpdateConfluentAuthToken []struct {
+		UpdateConfluentAuthTokenUsingNetrcCredentials []struct {
 			Ctx    *github_com_confluentinc_cli_internal_pkg_config_v3.Context
 			Logger *github_com_confluentinc_cli_internal_pkg_log.Logger
 		}
 	}
 }
 
-// UpdateCCloudAuthToken mocks base method by wrapping the associated func.
-func (m *MockUpdateTokenHandler) UpdateCCloudAuthToken(ctx *github_com_confluentinc_cli_internal_pkg_config_v3.Context, userAgent string, logger *github_com_confluentinc_cli_internal_pkg_log.Logger) error {
-	m.lockUpdateCCloudAuthToken.Lock()
-	defer m.lockUpdateCCloudAuthToken.Unlock()
+// UpdateCCloudAuthTokenUsingNetrcCredentials mocks base method by wrapping the associated func.
+func (m *MockUpdateTokenHandler) UpdateCCloudAuthTokenUsingNetrcCredentials(ctx *github_com_confluentinc_cli_internal_pkg_config_v3.Context, userAgent string, logger *github_com_confluentinc_cli_internal_pkg_log.Logger) error {
+	m.lockUpdateCCloudAuthTokenUsingNetrcCredentials.Lock()
+	defer m.lockUpdateCCloudAuthTokenUsingNetrcCredentials.Unlock()
 
-	if m.UpdateCCloudAuthTokenFunc == nil {
-		panic("mocker: MockUpdateTokenHandler.UpdateCCloudAuthTokenFunc is nil but MockUpdateTokenHandler.UpdateCCloudAuthToken was called.")
+	if m.UpdateCCloudAuthTokenUsingNetrcCredentialsFunc == nil {
+		panic("mocker: MockUpdateTokenHandler.UpdateCCloudAuthTokenUsingNetrcCredentialsFunc is nil but MockUpdateTokenHandler.UpdateCCloudAuthTokenUsingNetrcCredentials was called.")
 	}
 
 	call := struct {
@@ -51,38 +51,38 @@ func (m *MockUpdateTokenHandler) UpdateCCloudAuthToken(ctx *github_com_confluent
 		Logger:    logger,
 	}
 
-	m.calls.UpdateCCloudAuthToken = append(m.calls.UpdateCCloudAuthToken, call)
+	m.calls.UpdateCCloudAuthTokenUsingNetrcCredentials = append(m.calls.UpdateCCloudAuthTokenUsingNetrcCredentials, call)
 
-	return m.UpdateCCloudAuthTokenFunc(ctx, userAgent, logger)
+	return m.UpdateCCloudAuthTokenUsingNetrcCredentialsFunc(ctx, userAgent, logger)
 }
 
-// UpdateCCloudAuthTokenCalled returns true if UpdateCCloudAuthToken was called at least once.
-func (m *MockUpdateTokenHandler) UpdateCCloudAuthTokenCalled() bool {
-	m.lockUpdateCCloudAuthToken.Lock()
-	defer m.lockUpdateCCloudAuthToken.Unlock()
+// UpdateCCloudAuthTokenUsingNetrcCredentialsCalled returns true if UpdateCCloudAuthTokenUsingNetrcCredentials was called at least once.
+func (m *MockUpdateTokenHandler) UpdateCCloudAuthTokenUsingNetrcCredentialsCalled() bool {
+	m.lockUpdateCCloudAuthTokenUsingNetrcCredentials.Lock()
+	defer m.lockUpdateCCloudAuthTokenUsingNetrcCredentials.Unlock()
 
-	return len(m.calls.UpdateCCloudAuthToken) > 0
+	return len(m.calls.UpdateCCloudAuthTokenUsingNetrcCredentials) > 0
 }
 
-// UpdateCCloudAuthTokenCalls returns the calls made to UpdateCCloudAuthToken.
-func (m *MockUpdateTokenHandler) UpdateCCloudAuthTokenCalls() []struct {
+// UpdateCCloudAuthTokenUsingNetrcCredentialsCalls returns the calls made to UpdateCCloudAuthTokenUsingNetrcCredentials.
+func (m *MockUpdateTokenHandler) UpdateCCloudAuthTokenUsingNetrcCredentialsCalls() []struct {
 	Ctx       *github_com_confluentinc_cli_internal_pkg_config_v3.Context
 	UserAgent string
 	Logger    *github_com_confluentinc_cli_internal_pkg_log.Logger
 } {
-	m.lockUpdateCCloudAuthToken.Lock()
-	defer m.lockUpdateCCloudAuthToken.Unlock()
+	m.lockUpdateCCloudAuthTokenUsingNetrcCredentials.Lock()
+	defer m.lockUpdateCCloudAuthTokenUsingNetrcCredentials.Unlock()
 
-	return m.calls.UpdateCCloudAuthToken
+	return m.calls.UpdateCCloudAuthTokenUsingNetrcCredentials
 }
 
-// UpdateConfluentAuthToken mocks base method by wrapping the associated func.
-func (m *MockUpdateTokenHandler) UpdateConfluentAuthToken(ctx *github_com_confluentinc_cli_internal_pkg_config_v3.Context, logger *github_com_confluentinc_cli_internal_pkg_log.Logger) error {
-	m.lockUpdateConfluentAuthToken.Lock()
-	defer m.lockUpdateConfluentAuthToken.Unlock()
+// UpdateConfluentAuthTokenUsingNetrcCredentials mocks base method by wrapping the associated func.
+func (m *MockUpdateTokenHandler) UpdateConfluentAuthTokenUsingNetrcCredentials(ctx *github_com_confluentinc_cli_internal_pkg_config_v3.Context, logger *github_com_confluentinc_cli_internal_pkg_log.Logger) error {
+	m.lockUpdateConfluentAuthTokenUsingNetrcCredentials.Lock()
+	defer m.lockUpdateConfluentAuthTokenUsingNetrcCredentials.Unlock()
 
-	if m.UpdateConfluentAuthTokenFunc == nil {
-		panic("mocker: MockUpdateTokenHandler.UpdateConfluentAuthTokenFunc is nil but MockUpdateTokenHandler.UpdateConfluentAuthToken was called.")
+	if m.UpdateConfluentAuthTokenUsingNetrcCredentialsFunc == nil {
+		panic("mocker: MockUpdateTokenHandler.UpdateConfluentAuthTokenUsingNetrcCredentialsFunc is nil but MockUpdateTokenHandler.UpdateConfluentAuthTokenUsingNetrcCredentials was called.")
 	}
 
 	call := struct {
@@ -93,36 +93,36 @@ func (m *MockUpdateTokenHandler) UpdateConfluentAuthToken(ctx *github_com_conflu
 		Logger: logger,
 	}
 
-	m.calls.UpdateConfluentAuthToken = append(m.calls.UpdateConfluentAuthToken, call)
+	m.calls.UpdateConfluentAuthTokenUsingNetrcCredentials = append(m.calls.UpdateConfluentAuthTokenUsingNetrcCredentials, call)
 
-	return m.UpdateConfluentAuthTokenFunc(ctx, logger)
+	return m.UpdateConfluentAuthTokenUsingNetrcCredentialsFunc(ctx, logger)
 }
 
-// UpdateConfluentAuthTokenCalled returns true if UpdateConfluentAuthToken was called at least once.
-func (m *MockUpdateTokenHandler) UpdateConfluentAuthTokenCalled() bool {
-	m.lockUpdateConfluentAuthToken.Lock()
-	defer m.lockUpdateConfluentAuthToken.Unlock()
+// UpdateConfluentAuthTokenUsingNetrcCredentialsCalled returns true if UpdateConfluentAuthTokenUsingNetrcCredentials was called at least once.
+func (m *MockUpdateTokenHandler) UpdateConfluentAuthTokenUsingNetrcCredentialsCalled() bool {
+	m.lockUpdateConfluentAuthTokenUsingNetrcCredentials.Lock()
+	defer m.lockUpdateConfluentAuthTokenUsingNetrcCredentials.Unlock()
 
-	return len(m.calls.UpdateConfluentAuthToken) > 0
+	return len(m.calls.UpdateConfluentAuthTokenUsingNetrcCredentials) > 0
 }
 
-// UpdateConfluentAuthTokenCalls returns the calls made to UpdateConfluentAuthToken.
-func (m *MockUpdateTokenHandler) UpdateConfluentAuthTokenCalls() []struct {
+// UpdateConfluentAuthTokenUsingNetrcCredentialsCalls returns the calls made to UpdateConfluentAuthTokenUsingNetrcCredentials.
+func (m *MockUpdateTokenHandler) UpdateConfluentAuthTokenUsingNetrcCredentialsCalls() []struct {
 	Ctx    *github_com_confluentinc_cli_internal_pkg_config_v3.Context
 	Logger *github_com_confluentinc_cli_internal_pkg_log.Logger
 } {
-	m.lockUpdateConfluentAuthToken.Lock()
-	defer m.lockUpdateConfluentAuthToken.Unlock()
+	m.lockUpdateConfluentAuthTokenUsingNetrcCredentials.Lock()
+	defer m.lockUpdateConfluentAuthTokenUsingNetrcCredentials.Unlock()
 
-	return m.calls.UpdateConfluentAuthToken
+	return m.calls.UpdateConfluentAuthTokenUsingNetrcCredentials
 }
 
 // Reset resets the calls made to the mocked methods.
 func (m *MockUpdateTokenHandler) Reset() {
-	m.lockUpdateCCloudAuthToken.Lock()
-	m.calls.UpdateCCloudAuthToken = nil
-	m.lockUpdateCCloudAuthToken.Unlock()
-	m.lockUpdateConfluentAuthToken.Lock()
-	m.calls.UpdateConfluentAuthToken = nil
-	m.lockUpdateConfluentAuthToken.Unlock()
+	m.lockUpdateCCloudAuthTokenUsingNetrcCredentials.Lock()
+	m.calls.UpdateCCloudAuthTokenUsingNetrcCredentials = nil
+	m.lockUpdateCCloudAuthTokenUsingNetrcCredentials.Unlock()
+	m.lockUpdateConfluentAuthTokenUsingNetrcCredentials.Lock()
+	m.calls.UpdateConfluentAuthTokenUsingNetrcCredentials = nil
+	m.lockUpdateConfluentAuthTokenUsingNetrcCredentials.Unlock()
 }

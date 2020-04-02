@@ -369,9 +369,9 @@ func (r *PreRun) updateToken(tokenError error, ctx *DynamicContext) error {
 	}
 	var updateErr error
 	if r.CLIName == "ccloud" {
-		updateErr = r.UpdateTokenHandler.UpdateCCloudAuthToken(ctx.Context, r.Version.UserAgent, r.Logger)
+		updateErr = r.UpdateTokenHandler.UpdateCCloudAuthTokenUsingNetrcCredentials(ctx.Context, r.Version.UserAgent, r.Logger)
 	} else {
-		updateErr = r.UpdateTokenHandler.UpdateConfluentAuthToken(ctx.Context, r.Logger)
+		updateErr = r.UpdateTokenHandler.UpdateConfluentAuthTokenUsingNetrcCredentials(ctx.Context, r.Logger)
 	}
 	if updateErr == nil {
 		return nil

@@ -9,8 +9,8 @@ import (
 )
 
 type UpdateTokenHandler interface {
-	UpdateCCloudAuthToken(ctx *v3.Context, userAgent string, logger *log.Logger) error
-	UpdateConfluentAuthToken(ctx *v3.Context, logger *log.Logger) error
+	UpdateCCloudAuthTokenUsingNetrcCredentials(ctx *v3.Context, userAgent string, logger *log.Logger) error
+	UpdateConfluentAuthTokenUsingNetrcCredentials(ctx *v3.Context, logger *log.Logger) error
 }
 
 type UpdateTokenHandlerImpl struct {
@@ -34,7 +34,7 @@ func NewUpdateTokenHandler(netrcHandler *NetrcHandler) UpdateTokenHandler {
 	}
 }
 
-func (u *UpdateTokenHandlerImpl) UpdateCCloudAuthToken(ctx *v3.Context, userAgent string, logger *log.Logger) error {
+func (u *UpdateTokenHandlerImpl) UpdateCCloudAuthTokenUsingNetrcCredentials(ctx *v3.Context, userAgent string, logger *log.Logger) error {
 	url := ctx.Platform.Server
 	client := ccloud.NewClient(&ccloud.Params{BaseURL: url, HttpClient: ccloud.BaseClient, Logger: logger, UserAgent: userAgent})
 	userSSO, err := u.ccloudTokenHandler.GetUserSSO(client, ctx.Credential.Username)
@@ -70,7 +70,7 @@ func (u *UpdateTokenHandlerImpl) UpdateCCloudAuthToken(ctx *v3.Context, userAgen
 	return ctx.UpdateAuthToken(token)
 }
 
-func (u *UpdateTokenHandlerImpl) UpdateConfluentAuthToken(ctx *v3.Context, logger *log.Logger) error {
+func (u *UpdateTokenHandlerImpl) UpdateConfluentAuthTokenUsingNetrcCredentials(ctx *v3.Context, logger *log.Logger) error {
 	email, password, err := u.netrcHandler.getNetrcCredentials("confluent", false, ctx.Name)
 	if err != nil {
 		logger.Debugf(err.Error())
