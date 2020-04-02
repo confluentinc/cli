@@ -83,14 +83,7 @@ func main() {
 		analyticsClient = mock.NewDummyAnalyticsMock()
 	}
 
-	var netrcFile string
-	if isTest {
-		netrcFile = pauth.NetrcTestFile
-	} else {
-		netrcFile = pauth.GetNetrcFilePath()
-	}
-
-	cli, err := cmd.NewConfluentCommand(cliName, cfg, logger, version, analyticsClient, pauth.NewNetrcHandler(netrcFile))
+	cli, err := cmd.NewConfluentCommand(cliName, cfg, logger, version, analyticsClient, pauth.NewNetrcHandler(pauth.GetNetrcFilePath(isTest)))
 	if err != nil {
 		if cli == nil {
 			fmt.Fprintln(os.Stderr, err)

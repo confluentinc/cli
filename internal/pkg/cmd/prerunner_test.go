@@ -102,7 +102,7 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 				},
 				Analytics:          cliMock.NewDummyAnalyticsMock(),
 				Clock:              clockwork.NewRealClock(),
-				UpdateTokenHandler: auth.NewUpdateTokenHandler(auth.NewNetrcHandler(auth.GetNetrcFilePath())),
+				UpdateTokenHandler: auth.NewUpdateTokenHandler(auth.NewNetrcHandler("")),
 			}
 
 			root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
@@ -147,7 +147,7 @@ func TestPreRun_HasAPIKey_SetupLoggingAndCheckForUpdates(t *testing.T) {
 		},
 		Analytics:          cliMock.NewDummyAnalyticsMock(),
 		Clock:              clockwork.NewRealClock(),
-		UpdateTokenHandler: auth.NewUpdateTokenHandler(auth.NewNetrcHandler(auth.GetNetrcFilePath())),
+		UpdateTokenHandler: auth.NewUpdateTokenHandler(auth.NewNetrcHandler("")),
 	}
 
 	root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
@@ -184,7 +184,7 @@ func TestPreRun_CallsAnalyticsTrackCommand(t *testing.T) {
 		},
 		Analytics:          analyticsClient,
 		Clock:              clockwork.NewRealClock(),
-		UpdateTokenHandler: auth.NewUpdateTokenHandler(auth.NewNetrcHandler(auth.GetNetrcFilePath())),
+		UpdateTokenHandler: auth.NewUpdateTokenHandler(auth.NewNetrcHandler("")),
 	}
 
 	root := &cobra.Command{
@@ -220,7 +220,7 @@ func TestPreRun_TokenExpires(t *testing.T) {
 		},
 		Analytics:          analyticsClient,
 		Clock:              clockwork.NewRealClock(),
-		UpdateTokenHandler: auth.NewUpdateTokenHandler(auth.NewNetrcHandler(auth.GetNetrcFilePath())),
+		UpdateTokenHandler: auth.NewUpdateTokenHandler(auth.NewNetrcHandler("")),
 	}
 
 	root := &cobra.Command{

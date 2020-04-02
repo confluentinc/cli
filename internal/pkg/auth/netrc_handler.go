@@ -15,7 +15,7 @@ import (
 
 var (
 	// For integration test
-	NetrcTestFile = "/tmp/netrc_test"
+	NetrcIntegrationTestFile = "/tmp/netrc_test"
 
 	confluentCliName             = "confluent-cli"
 	mdsUsernamePasswordString    = "mds-username-password"
@@ -40,7 +40,10 @@ func (c netrcCredentialType) String() string {
 	return credTypes[c]
 }
 
-func GetNetrcFilePath() string {
+func GetNetrcFilePath(isIntegrationTest bool) string {
+	if isIntegrationTest {
+		return NetrcIntegrationTestFile
+	}
 	if runtime.GOOS == "windows" {
 		return "~/_netrc"
 	} else {

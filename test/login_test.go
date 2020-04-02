@@ -115,7 +115,7 @@ func (s *CLITestSuite) Test_Save_Username_Password() {
 		// store existing credentials in netrc to check that they are not corrupted
 		originalNetrc, err := ioutil.ReadFile(netrcInput)
 		s.NoError(err)
-		err = ioutil.WriteFile(auth.NetrcTestFile, originalNetrc, 0600)
+		err = ioutil.WriteFile(auth.NetrcIntegrationTestFile, originalNetrc, 0600)
 		s.NoError(err)
 
 		// run the login command with --save flag and check output
@@ -133,7 +133,7 @@ func (s *CLITestSuite) Test_Save_Username_Password() {
 		s.Equal(expectedOutput, output)
 
 		// check netrc file result
-		got, err := ioutil.ReadFile(auth.NetrcTestFile)
+		got, err := ioutil.ReadFile(auth.NetrcIntegrationTestFile)
 		s.NoError(err)
 		wantFile := filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", tt.want)
 		s.NoError(err)
@@ -142,7 +142,7 @@ func (s *CLITestSuite) Test_Save_Username_Password() {
 		want := strings.Replace(string(wantBytes), urlPlaceHolder, tt.loginURL, 1)
 		s.Equal(NormalizeNewLines(want), NormalizeNewLines(string(got)))
 	}
-	_ = os.Remove(auth.NetrcTestFile)
+	_ = os.Remove(auth.NetrcIntegrationTestFile)
 }
 
 func (s *CLITestSuite) Test_Update_Netrc_Password() {
@@ -176,7 +176,7 @@ func (s *CLITestSuite) Test_Update_Netrc_Password() {
 		originalNetrc, err := ioutil.ReadFile(tt.input)
 		s.NoError(err)
 		originalNetrcString := strings.Replace(string(originalNetrc), urlPlaceHolder, tt.loginURL, 1)
-		err = ioutil.WriteFile(auth.NetrcTestFile, []byte(originalNetrcString), 0600)
+		err = ioutil.WriteFile(auth.NetrcIntegrationTestFile, []byte(originalNetrcString), 0600)
 		s.NoError(err)
 
 		// run the login command with --save flag and check output
@@ -194,7 +194,7 @@ func (s *CLITestSuite) Test_Update_Netrc_Password() {
 		s.Equal(expectedOutput, output)
 
 		// check netrc file result
-		got, err := ioutil.ReadFile(auth.NetrcTestFile)
+		got, err := ioutil.ReadFile(auth.NetrcIntegrationTestFile)
 		s.NoError(err)
 		wantFile := filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", tt.want)
 		s.NoError(err)
@@ -203,7 +203,7 @@ func (s *CLITestSuite) Test_Update_Netrc_Password() {
 		want := strings.Replace(string(wantBytes), urlPlaceHolder, tt.loginURL, 1)
 		s.Equal(NormalizeNewLines(want), NormalizeNewLines(string(got)))
 	}
-	_ = os.Remove(auth.NetrcTestFile)
+	_ = os.Remove(auth.NetrcIntegrationTestFile)
 }
 
 func (s *CLITestSuite) Test_SSO_Login_And_Save() {
@@ -268,7 +268,7 @@ func (s *CLITestSuite) Test_SSO_Login_And_Save() {
 	}
 
 	// Verifying login --save functionality by checking netrc file
-	got, err := ioutil.ReadFile(auth.NetrcTestFile)
+	got, err := ioutil.ReadFile(auth.NetrcIntegrationTestFile)
 	s.NoError(err)
 	pattern := `machine\sconfluent-cli:ccloud-sso-refresh-token:login-ziru\+paas-integ-sso@confluent.io-https://devel.cpdev.cloud\r?\n\s+login\sziru\+paas-integ-sso@confluent.io\r?\n\s+password\s[\w-]+`
 	match, err := regexp.Match(pattern, got)
@@ -279,7 +279,7 @@ func (s *CLITestSuite) Test_SSO_Login_And_Save() {
 		msg := fmt.Sprintf("expected: %s\nactual: %s\n", want, got)
 		s.Fail("sso login command with --save flag failed to properly write refresh token credential.\n" + msg)
 	}
-	_ = os.Remove(auth.NetrcTestFile)
+	_ = os.Remove(auth.NetrcIntegrationTestFile)
 }
 
 func parseSsoAuthUrlFromOutput(output []byte) string {
