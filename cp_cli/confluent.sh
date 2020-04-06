@@ -176,6 +176,7 @@ declare -a commands=(
     "destroy"
     "demo"
     "top"
+    "links"
     "log"
     "load"
     "unload"
@@ -1124,6 +1125,92 @@ list_command() {
     fi
 }
 
+links_list_command() {
+    if [[ $# -ne 1 ]]; then
+        echo
+        echo "Error: incorrect number of arguments ($#) !"
+        echo
+        echo "Expected arguments to 'links list':<bootstrap_server>"
+        echo
+        links_usage
+    fi
+
+    local bootstrap_server=${1}
+    echo "Listing links at target cluster [${bootstrap_server}]"
+    echo
+    ${confluent_bin}/kafka-run-class kafka.admin.ClusterLinkCommand --list --bootstrap-server ${bootstrap_server} 2>>/tmp/cl-errors
+
+    exit 0 ## Remove
+}
+
+links_create_command() {
+    if [[ $# -ne 3 ]]; then
+        echo
+        echo "Error: incorrect number of arguments ($#) !"
+        echo
+        echo "Expected arguments to 'links create': <bootstrap_servers> <link_name> <cluster_id> <config>"
+        echo
+        links_usage
+    fi
+
+    local bootstrap_server=${1}
+    local link_name=${2}
+    local cluster_id=${3}
+    local config=${4}
+
+    # Note: for simplicity we skip the `--cluster-id` argument; it will be resolved automatically.
+    echo "Creating a cluster link at target cluster [${bootstrap_server}] called [${link_name}] with config [${config}]"
+    echo
+    ${confluent_bin}/kafka-run-class kafka.admin.ClusterLinkCommand --create --bootstrap-server ${bootstrap_server} --link-name ${link_name} --config=${config} 2>>/tmp/cl-errors
+}
+
+links_delete_command() {
+    if [[ $# -ne 2 ]]; then
+        echo
+        echo "Error: incorrect number of arguments ($#) !"
+        echo
+        echo "Expected arguments to 'links delete': <bootstrap_server> <link_name>"
+        echo
+        links_usage
+    fi
+
+    local bootstrap_server=${1}
+    local link_name=${2}
+
+    echo "Deleting link at target cluster [${bootstrap_server}] called [${link_name}]"
+    echo
+    ${confluent_bin}/kafka-run-class kafka.admin.ClusterLinkCommand --delete --bootstrap-server ${bootstrap_server} --link-name ${link_name} 2>>/tmp/cl-errors
+}
+
+links_sub_commands() {
+    local subcommand="${1}"
+
+    shift
+
+    if [[ "x${subcommand}" = "xhelp" ]]; then
+        links_usage
+    fi
+
+    # Shared validation for links sub-commands
+    if [[ ! -f ${confluent_bin}/kafka-run-class ]]; then
+        die "Confluent Platform installation not found; specify --path or set \$CONFLUENT_HOME"
+    fi
+
+    case "${subcommand}" in
+	    create)
+	        links_create_command "$@";;
+
+	    delete)
+	        links_delete_command "$@";;
+
+	    list)
+	        links_list_command "$@";;
+
+	    *)
+	        die "Unknown 'links' sub-command ${subcommand}"
+    esac
+}
+
 # CLI-84: If using Mac, version must be >= 10.13
 validate_os_version() {
     if [[ "x${platform}" = "xDarwin" ]]; then
@@ -1893,6 +1980,34 @@ version_command() {
     fi
 }
 
+links_usage() {
+    cat <<EOF
+Usage: ${command_name} links [create | delete | list] <target-cluster-bootstrap> [ <link name> ] <options>
+
+Description:
+    Interact with inter-cluster links, that can be used to then "mirror" topics across these links.
+
+    Required option for all subcommands:
+
+    Speciic subcommand options:
+
+      'create'        : <link name> <cluster id> <config>
+      'delete'        : <link name>
+      'list'          : [ <link name> ]
+
+Examples:
+    confluent local links create localhost:9094 mylink1  "source cluster" "bootstrap-servers=localhost:9092"
+
+    confluent local links delete localhost:9094 mylink1
+
+    confluent local links list localhost:9094 mylink1
+
+    confluent local links list localhost:9094
+
+EOF
+    exit 0
+}
+
 produce_usage() {
     local command="${1}"
     local exit_status="${2}"
@@ -2331,6 +2446,7 @@ These are the available commands:
     demo        Run demos provided in GitHub repo https://github.com/confluentinc/examples.
     destroy     Delete the data and logs of the current Confluent run.
     list        List all available services or plugins.
+    links       Create, list, update, delete links to another cluster.
     load        Load a connector.
     log         Read or tail the log of a service.
     produce     Produce data to topics.
@@ -2430,6 +2546,9 @@ main() {
 
         list)
             list_command "$@";;
+
+        links)
+            links_sub_commands "$@";;
 
         load)
             connect_subcommands "${command}" "$@";;
