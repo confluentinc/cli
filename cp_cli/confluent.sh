@@ -1181,6 +1181,24 @@ links_delete_command() {
     ${confluent_bin}/kafka-run-class kafka.admin.ClusterLinkCommand --delete --bootstrap-server ${bootstrap_server} --link-name ${link_name} 2>>/tmp/cl-errors
 }
 
+links_describe_command() {
+    if [[ $# -ne 2 ]]; then
+        echo
+        echo "Error: incorrect number of arguments ($#) !"
+        echo
+        echo "Expected arguments to 'links describe': <bootstrap_server> <link_name>"
+        echo
+        links_usage
+    fi
+
+    local bootstrap_server=${1}
+    local link_name=${2}
+
+    echo "Describing link at target cluster [${bootstrap_server}] called [${link_name}]"
+    echo
+    ${confluent_bin}/kafka-configs --describe --entity-type cluster-links --entity-name ${link_name} --bootstrap-server ${bootstrap_server} 2>>/tmp/cl-errors
+}
+
 links_sub_commands() {
     local subcommand="${1}"
 
@@ -1204,6 +1222,9 @@ links_sub_commands() {
 
 	    list)
 	        links_list_command "$@";;
+
+	    describe)
+	        links_describe_command "$@";;
 
 	    *)
 	        die "Unknown 'links' sub-command ${subcommand}"
@@ -1993,6 +2014,7 @@ Description:
       'create'        : <link name> <cluster id> <config>
       'delete'        : <link name>
       'list'          : [ <link name> ]
+      'describe'      : <link name>
 
 Examples:
     confluent local links create localhost:9094 mylink1  "source cluster" "bootstrap-servers=localhost:9092"
@@ -2002,6 +2024,8 @@ Examples:
     confluent local links list localhost:9094 mylink1
 
     confluent local links list localhost:9094
+
+    confluent local links describe localhost:9094 mylink1
 
 EOF
     exit 0
