@@ -1181,6 +1181,26 @@ links_delete_command() {
     ${confluent_bin}/kafka-run-class kafka.admin.ClusterLinkCommand --delete --bootstrap-server ${bootstrap_server} --link-name ${link_name} 2>>/tmp/cl-errors
 }
 
+links_alter_command() {
+    if [[ $# -ne 3 ]]; then
+        echo
+        echo "Error: incorrect number of arguments ($#) !"
+        echo
+        echo "Expected arguments to 'links alter': <bootstrap_server> <link_name> <config_change>"
+        echo
+        links_usage
+    fi
+
+    local bootstrap_server=${1}
+    local link_name=${2}
+    local config_change=${3}
+
+    # Note: for simplicity, we only do config _modifications_ here, use `kafka-configs --alter ... --delete_config ...` for _removals_.
+    echo "Applying config change [${config_change}] to link at target cluster [${bootstrap_server}] called [${link_name}]"
+    echo
+    ${confluent_bin}/kafka-configs --alter --entity-type cluster-links --entity-name ${link_name} --bootstrap-server ${bootstrap_server} --add-config ${config_change} 2>>/tmp/cl-errors
+}
+
 links_describe_command() {
     if [[ $# -ne 2 ]]; then
         echo
@@ -1225,6 +1245,9 @@ links_sub_commands() {
 
 	    describe)
 	        links_describe_command "$@";;
+
+	    alter)
+	        links_alter_command "$@";;
 
 	    *)
 	        die "Unknown 'links' sub-command ${subcommand}"
@@ -2009,12 +2032,13 @@ Description:
 
     Required option for all subcommands:
 
-    Speciic subcommand options:
+    Specific subcommand options:
 
       'create'        : <link name> <cluster id> <config>
       'delete'        : <link name>
-      'list'          : [ <link name> ]
+      'list'          : (no more arguments)
       'describe'      : <link name>
+      'alter'         : <link name> <config change>
 
 Examples:
     confluent local links create localhost:9094 mylink1  "source cluster" "bootstrap-servers=localhost:9092"
@@ -2026,6 +2050,8 @@ Examples:
     confluent local links list localhost:9094
 
     confluent local links describe localhost:9094 mylink1
+
+    confluent local links alter localhost:9094 mylink1 "connections.max.idle.ms=1200000"
 
 EOF
     exit 0
