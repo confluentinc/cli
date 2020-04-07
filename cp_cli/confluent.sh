@@ -1148,15 +1148,14 @@ links_create_command() {
         echo
         echo "Error: incorrect number of arguments ($#) !"
         echo
-        echo "Expected arguments to 'links create': <bootstrap_servers> <link_name> <cluster_id> <config>"
+        echo "Expected arguments to 'links create': <bootstrap_servers> <link_name> <config>"
         echo
         links_usage
     fi
 
     local bootstrap_server=${1}
     local link_name=${2}
-    local cluster_id=${3}
-    local config=${4}
+    local config=${3}
 
     # Note: for simplicity we skip the `--cluster-id` argument; it will be resolved automatically.
     echo "Creating a cluster link at target cluster [${bootstrap_server}] called [${link_name}] with config [${config}]"
