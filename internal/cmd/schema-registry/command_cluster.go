@@ -2,7 +2,6 @@ package schema_registry
 
 import (
 	"context"
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"strconv"
 	"strings"
 
@@ -12,6 +11,7 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
