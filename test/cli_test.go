@@ -616,6 +616,9 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 	router.HandleFunc("/api/schema_registries/", func(w http.ResponseWriter, r *http.Request) {
 		q := r.URL.Query()
 		id := q.Get("Id")
+		if id == "" {
+			id = "lsrc-1234"
+		}
 		accountId := q.Get("account_id")
 		srCluster := &srv1.SchemaRegistryCluster{
 			Id:        id,

@@ -8,6 +8,9 @@ func (s *CLITestSuite) TestSrCommands() {
 		{args: "schema-registry cluster --help", fixture: "schema-registry-cluster-help.golden"},
 		{args: "schema-registry schema --help", fixture: "schema-registry-schema-help.golden"},
 		{args: "schema-registry subject --help", fixture: "schema-registry-subject-help.golden"},
+		{args: "schema-registry cluster enable --cloud gcp --geo us", fixture: "schema-registry-enable.golden"},
+		{args: "schema-registry cluster enable --cloud gcp --geo us -o json", fixture: "schema-registry-enable-json.golden"},
+		{args: "schema-registry cluster enable --cloud gcp --geo us -o yaml", fixture: "schema-registry-enable-yaml.golden"},
 	}
 	resetConfiguration(s.T(), "ccloud")
 	for _, tt := range tests {
