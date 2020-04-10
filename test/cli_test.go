@@ -707,7 +707,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		require.NoError(t, err)
 	})
 	router.HandleFunc("/api/env_metadata", func(w http.ResponseWriter, r *http.Request) {
-		clouds := []*kafkav1.Cloud{
+		clouds := []*kafkav1.CloudMetadata{
 			{
 				Id:   "gcp",
 				Name: "Google Cloud Platform",
