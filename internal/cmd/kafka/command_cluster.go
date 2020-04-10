@@ -28,6 +28,11 @@ var (
 		"ServiceProvider": "provider", "Region": "region", "Status": "status", "Endpoint": "endpoint", "ApiEndpoint": "api_endpoint"}
 )
 
+const (
+	singleZone = "singlezone"
+	multiZone  = "multizone"
+)
+
 type clusterCommand struct {
 	*pcmd.AuthenticatedCLICommand
 	prerunner pcmd.PreRunner
@@ -70,7 +75,10 @@ func (c *clusterCommand) init() {
 	createCmd.Flags().String("region", "", "Cloud region ID for cluster (e.g. 'us-west-2').")
 	check(createCmd.MarkFlagRequired("cloud"))
 	check(createCmd.MarkFlagRequired("region"))
+	createCmd.Flags().String("durability", "", "Durability of the cluster. Allowed Values: singlezone, multizone.")
+	check(createCmd.MarkFlagRequired("durability"))
 	createCmd.Flags().Bool("dedicated", false, "Create dedicated cluster.")
+	createCmd.Flags().Int("cku", 0, "Confluent Kafka Unit value. Should be passed for dedicated kafka cluster creation with value more than 0.")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
@@ -145,30 +153,66 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
+	durabilityString, err := cmd.Flags().GetString("durability")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	durability, err := stringToDurability(durabilityString)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
 	dedicated, err := cmd.Flags().GetBool("dedicated")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	cfg := &kafkav1.KafkaClusterConfig{
-		AccountId:       c.EnvironmentId(),
-		Name:            args[0],
-		ServiceProvider: cloud,
-		Region:          region,
-		Durability:      kafkav1.Durability_LOW,
-		// TODO: remove this once it's no longer required (MCM-130)
-		Storage: 5000,
-	}
+
+	var cfg *kafkav1.KafkaClusterConfig
 	if dedicated {
-		cfg.Deployment = &kafkav1.Deployment{
-			Sku: productv1.Sku_DEDICATED,
+		cku, err := cmd.Flags().GetInt("cku")
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+		if cku <= 0 {
+			return errors.HandleCommon(errors.New("For dedicated kafka cluster creation, cku should be passed with value greater than 0."), cmd)
+		}
+		cfg = &kafkav1.KafkaClusterConfig{
+			AccountId:       c.EnvironmentId(),
+			Name:            args[0],
+			ServiceProvider: cloud,
+			Region:          region,
+			Durability:      durability,
+			Deployment: &kafkav1.Deployment{
+				Sku: productv1.Sku_DEDICATED,
+			},
+			Cku: int32(cku),
+		}
+	} else {
+		cfg = &kafkav1.KafkaClusterConfig{
+			AccountId:       c.EnvironmentId(),
+			Name:            args[0],
+			ServiceProvider: cloud,
+			Region:          region,
+			Durability:      durability,
+			// TODO: remove this once it's no longer required (MCM-130)
+			Storage: 5000,
 		}
 	}
+
 	cluster, err := c.Client.Kafka.Create(context.Background(), cfg)
 	if err != nil {
 		// TODO: don't swallow validation errors (reportedly separately)
 		return errors.HandleCommon(err, cmd)
 	}
 	return printer.RenderTableOut(cluster, describeFields, describeHumanRenames, os.Stdout)
+}
+
+func stringToDurability(s string) (kafkav1.Durability, error) {
+	if s == singleZone {
+		return kafkav1.Durability_LOW, nil
+	} else if s == multiZone {
+		return kafkav1.Durability_HIGH, nil
+	}
+	return kafkav1.Durability_LOW, errors.New("Only allowed values for durability are: singlezone, multizone.")
 }
 
 func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
