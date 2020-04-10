@@ -5,6 +5,7 @@ Usage:
 Flags:
       --cloud string    Cloud provider ID (e.g. 'aws' or 'gcp').
       --region string   Cloud region ID for cluster (e.g. 'us-west-2').
+      --dedicated       Create dedicated cluster.
   -h, --help            help for create
 
 Global Flags:
