@@ -19,8 +19,8 @@ require (
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
 	github.com/confluentinc/bincover v0.0.0-20191217221125-80a7bb37ae5e
-	github.com/confluentinc/ccloud-sdk-go v0.0.18-0.20200331232827-b1565f98d0a7
-	github.com/confluentinc/ccloudapis v0.0.0-20200323172841-c4a51af500ae
+	github.com/confluentinc/ccloud-sdk-go v0.0.18-0.20200410150929-37c5f02664e7
+	github.com/confluentinc/ccloudapis v0.0.0-20200410070451-11aa764990cb
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-printer v0.13.0
 	github.com/confluentinc/mds-sdk-go v0.0.0-20200110060608-0b51635c4e0a
@@ -40,7 +40,7 @@ require (
 	github.com/gobuffalo/flect v0.1.3
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/mock v1.2.0
-	github.com/golang/protobuf v1.3.3
+	github.com/golang/protobuf v1.3.5
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/golangci/gocyclo v0.0.0-20180528144436-0a533e8fa43d // indirect
 	github.com/golangci/golangci-lint v1.21.0
@@ -60,13 +60,13 @@ require (
 	github.com/jonboulle/clockwork v0.1.0
 	github.com/kevinburke/go-bindata v3.13.0+incompatible
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
-	github.com/kr/pretty v0.2.0 // indirect
 	github.com/lithammer/dedent v1.1.0
 	github.com/mattn/go-isatty v0.0.8
 	github.com/mattn/go-runewidth v0.0.3 // indirect
 	github.com/mitchellh/golicense v0.1.1
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/neurosnap/sentences v1.0.6 // indirect
+	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/olekukonko/tablewriter v0.0.0-20180912035003-be2c049b30cc
 	github.com/pascaldekloe/goe v0.0.0-20180627143212-57f6aae5913c // indirect
 	github.com/pelletier/go-toml v1.4.0 // indirect
@@ -77,30 +77,26 @@ require (
 	github.com/segmentio/analytics-go v3.1.0+incompatible
 	github.com/segmentio/backo-go v0.0.0-20160424052352-204274ad699c // indirect
 	github.com/shurcooL/go v0.0.0-20190704215121-7189cc372560 // indirect
+	github.com/sirupsen/logrus v1.5.0 // indirect
 	github.com/spf13/afero v1.2.2 // indirect
 	github.com/spf13/cobra v0.0.6-0.20190805155617-b80588d523ec
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.4.0
-	github.com/stretchr/testify v1.4.0
+	github.com/stretchr/testify v1.5.1
 	github.com/tidwall/gjson v1.6.0
 	github.com/tidwall/pretty v1.0.0
 	github.com/tidwall/sjson v1.0.4
 	github.com/travisjeffery/mocker v0.0.0-20190115171754-c0d706f8be41
 	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c // indirect
-	golang.org/x/crypto v0.0.0-20200210222208-86ce3cb69678
+	golang.org/x/crypto v0.0.0-20200406173513-056763e48d71
 	golang.org/x/exp v0.0.0-20200207192155-f17229e696bd // indirect
-	golang.org/x/mod v0.2.0 // indirect
-	golang.org/x/net v0.0.0-20200202094626-16171245cfb2 // indirect
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
-	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e // indirect
-	golang.org/x/sys v0.0.0-20200212091648-12a6c2dcc1e4 // indirect
-	golang.org/x/tools v0.0.0-20200212150539-ea181f53ac56 // indirect
+	golang.org/x/sys v0.0.0-20200409092240-59c9f1ba88fa // indirect
 	gonum.org/v1/netlib v0.0.0-20190331212654-76723241ea4e // indirect
-	google.golang.org/appengine v1.6.5
+	google.golang.org/appengine v1.6.5 // indirect
 	gopkg.in/square/go-jose.v2 v2.3.1
 	gopkg.in/src-d/go-git-fixtures.v3 v3.5.0 // indirect
-	gopkg.in/yaml.v2 v2.2.8 // indirect
 )
 
 replace (

@@ -3,10 +3,12 @@ package kafka
 import (
 	"context"
 	"fmt"
-	"github.com/confluentinc/ccloud-sdk-go"
 	"os"
 
+	"github.com/confluentinc/ccloud-sdk-go"
+
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
+	productv1 "github.com/confluentinc/ccloudapis/product/v1"
 	"github.com/confluentinc/go-printer"
 	"github.com/spf13/cobra"
 
@@ -68,6 +70,7 @@ func (c *clusterCommand) init() {
 	createCmd.Flags().String("region", "", "Cloud region ID for cluster (e.g. 'us-west-2').")
 	check(createCmd.MarkFlagRequired("cloud"))
 	check(createCmd.MarkFlagRequired("region"))
+	createCmd.Flags().Bool("dedicated", false, "Create dedicated cluster")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
@@ -142,6 +145,10 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
+	dedicated, err := cmd.Flags().GetBool("dedicated")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
 	cfg := &kafkav1.KafkaClusterConfig{
 		AccountId:       c.EnvironmentId(),
 		Name:            args[0],
@@ -150,6 +157,11 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		Durability:      kafkav1.Durability_LOW,
 		// TODO: remove this once it's no longer required (MCM-130)
 		Storage: 5000,
+	}
+	if dedicated {
+		cfg.Deployment = &kafkav1.Deployment{
+			Sku: productv1.Sku_DEDICATED,
+		}
 	}
 	cluster, err := c.Client.Kafka.Create(context.Background(), cfg)
 	if err != nil {
