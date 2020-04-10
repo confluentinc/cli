@@ -70,7 +70,7 @@ func (c *clusterCommand) init() {
 	createCmd.Flags().String("region", "", "Cloud region ID for cluster (e.g. 'us-west-2').")
 	check(createCmd.MarkFlagRequired("cloud"))
 	check(createCmd.MarkFlagRequired("region"))
-	createCmd.Flags().Bool("dedicated", false, "Create dedicated cluster")
+	createCmd.Flags().Bool("dedicated", false, "Create dedicated cluster.")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
