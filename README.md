@@ -109,6 +109,7 @@ To install the CLI:
     sudo mv ccloud/ccloud /usr/local/bin
 
 ### Building From Source
+Requires [goreleaser](https://goreleaser.com/install/)
 
 ```
 $ make deps
