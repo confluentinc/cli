@@ -103,7 +103,7 @@ func (s *CLITestSuite) Test_Save_Username_Password() {
 		{
 			"confluent",
 			"netrc-save-mds-username-password.golden",
-			serveMds(t, "").URL,
+			serveMds(t).URL,
 		},
 	}
 	_, callerFileName, _, ok := runtime.Caller(0)
@@ -168,7 +168,7 @@ func (s *CLITestSuite) Test_Update_Netrc_Password() {
 			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-old-password-mds"),
 			"confluent",
 			"netrc-save-mds-username-password.golden",
-			serveMds(t, "").URL,
+			serveMds(t).URL,
 		},
 	}
 	for _, tt := range tests {
