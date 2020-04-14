@@ -132,6 +132,14 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
+	// endpoint value filled later, loop until endpoint information is not null (usually just one describe call is enough)
+	for cluster.Endpoint == "" {
+		req := &ksqlv1.KSQLCluster{AccountId: c.EnvironmentId(), Id: cluster.Id}
+		cluster, err = c.Client.KSQL.Describe(context.Background(), req)
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+	}
 	return output.DescribeObject(cmd, cluster, describeFields, describeHumanRenames, describeStructuredRenames)
 }
 
