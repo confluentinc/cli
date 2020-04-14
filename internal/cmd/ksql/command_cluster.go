@@ -143,6 +143,9 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		}
 		count += 1
 	}
+	if cluster.Endpoint == "" {
+		pcmd.ErrPrint(cmd, "Endpoint not yet populated. To obtain the endpoint please use `ccloud ksql app describe`.")
+	}
 	return output.DescribeObject(cmd, cluster, describeFields, describeHumanRenames, describeStructuredRenames)
 }
 
