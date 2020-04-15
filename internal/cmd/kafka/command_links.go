@@ -64,21 +64,35 @@ Create a cluster-link.
 	}
 	createCmd.Flags().String(sourceBootstrapServersFlagName, "", "Bootstrap-servers address for source cluster")
 	c.AddCommand(createCmd)
+
+	deleteCmd := &cobra.Command{
+		Use: "delete <link-name>",
+		Short: "Delete a previously created cluster-link.",
+		Example: `
+Deletes a cluster-link.
+
+::
+
+        ccloud kafka links delete Mylink`,
+		RunE: c.delete,
+		Args: cobra.ExactArgs(1),
+	}
+	c.AddCommand(deleteCmd)
 }
 
 func (c *linksCommand) list(cmd *cobra.Command, args []string) error {
 	cluster, err := pcmd.KafkaCluster(cmd, c.Context)
 	if err != nil {
-		errors.HandleCommon(err, cmd)
+		return errors.HandleCommon(err, cmd)
 	}
 	resp, err := c.Client.Kafka.ListLinks(context.Background(), cluster)
 	if err != nil {
-		errors.HandleCommon(err, cmd)
+		return errors.HandleCommon(err, cmd)
 	}
 
 	outputWriter, err := output.NewListOutputWriter(cmd, []string{"Name"}, []string{"Name"}, []string{"Name"})
 	if err != nil {
-		errors.HandleCommon(err, cmd)
+		return errors.HandleCommon(err, cmd)
 	}
 	for _, link := range resp {
 		outputWriter.AddElement(link)
@@ -89,7 +103,7 @@ func (c *linksCommand) list(cmd *cobra.Command, args []string) error {
 func (c *linksCommand) create(cmd *cobra.Command, args []string) error {
 	cluster, err := pcmd.KafkaCluster(cmd, c.Context)
 	if err != nil {
-		errors.HandleCommon(err, cmd)
+		return errors.HandleCommon(err, cmd)
 	}
 
 	link := &kafkav1.Link{
@@ -98,13 +112,27 @@ func (c *linksCommand) create(cmd *cobra.Command, args []string) error {
 	// Handle multiple options for source-cluster specification here.
 	bootstrapServers, err := cmd.Flags().GetString(sourceBootstrapServersFlagName)
 	if err != nil {
-		errors.HandleCommon(err, cmd)
+		return errors.HandleCommon(err, cmd)
 	}
 	sourceCluster := &kafkav1.LinkSourceCluster{
 		BootstrapServers:     bootstrapServers,
 		Configs:              nil,
 	}
 	err = c.Client.Kafka.CreateLink(context.Background(), cluster, link, sourceCluster)
+
+	return errors.HandleCommon(err, cmd)
+}
+
+func (c *linksCommand) delete(cmd *cobra.Command, args []string) error {
+	cluster, err := pcmd.KafkaCluster(cmd, c.Context)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	link := &kafkav1.Link{
+		Name:                 args[0],
+	}
+	err = c.Client.Kafka.DeleteLink(context.Background(), cluster, link)
 
 	return errors.HandleCommon(err, cmd)
 }
