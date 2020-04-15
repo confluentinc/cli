@@ -113,7 +113,7 @@ func (c *listCommand) list(cmd *cobra.Command, args []string) error {
 func (c *listCommand) handleClusterError(cmd *cobra.Command, err error, response *http.Response) error {
 	if response != nil && response.StatusCode == http.StatusNotFound {
 		cmd.SilenceUsage = true
-		return fmt.Errorf("Unable to access Cluster Registry (%s). Ensure that you're running against MDS with CP 5.5+.", err.Error())
+		return fmt.Errorf("Unable to access Cluster Registry (%s). Ensure that you're running against MDS with CP 6.0+.", err.Error())
 	}
 	return errors.HandleCommon(err, cmd)
 }

@@ -1,6 +1,12 @@
 package test
 
+import (
+	"os"
+)
+
 func (s *CLITestSuite) Test_Cluster() {
+	_ = os.Setenv("XX_FLAG_CLUSTER_REGISTRY_ENABLE", "true")
+
 	tests := []CLITest{
 		{
 			args:    "cluster list",
@@ -32,4 +38,6 @@ func (s *CLITestSuite) Test_Cluster() {
 	for _, tt := range tests {
 		s.runConfluentTest(tt, serveMds(s.T()).URL)
 	}
+
+	_ = os.Setenv("XX_FLAG_CLUSTER_REGISTRY_ENABLE", "false")
 }
