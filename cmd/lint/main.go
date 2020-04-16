@@ -34,7 +34,7 @@ var (
 	}
 	vocabWords = []string{
 		"ccloud", "kafka", "api", "url", "config", "configs", "csu", "multizone", "transactional", "ksql", "KSQL", "stdin",
-		"connect", "connect-catalog", "JSON", "plaintext", "json", "YAML", "yaml", "SSO", "netrc",
+		"connect", "connect-catalog", "JSON", "plaintext", "json", "YAML", "yaml", "SSO", "netrc", "link",
 		// security
 		"iam", "acl", "acls", "ACL", "rolebinding", "rolebindings", "PEM", "auth", "init", "decrypt", "READWRITE",
 		"txt", // this is because @file.txt -> file txt
@@ -64,6 +64,7 @@ var rules = []linter.Rule{
 				"environment": {CreateCommandArg: "<name>", OtherCommandsArg: "<environment-id>"},
 				"role":        {CreateCommandArg: "<name>", OtherCommandsArg: "<name>"},
 				"topic":       {CreateCommandArg: "<topic>", OtherCommandsArg: "<topic>"},
+				"link":        {CreateCommandArg: "<link-name>", OtherCommandsArg: "<link-name>"},
 				"api-key":     {CreateCommandArg: "N/A", OtherCommandsArg: "<apikey>"},
 			},
 		),

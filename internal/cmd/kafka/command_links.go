@@ -23,19 +23,19 @@ type keyValueDisplay struct {
 	Value string
 }
 
-type linksCommand struct {
+type linkCommand struct {
 	*pcmd.AuthenticatedCLICommand
 	prerunner pcmd.PreRunner
 }
 
-func NewLinksCommand(prerunner pcmd.PreRunner, config *v3.Config) *cobra.Command {
+func NewLinkCommand(prerunner pcmd.PreRunner, config *v3.Config) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
-			Use: "links",
-			Short: "Manage inter-cluster links.",
+			Use: "link",
+			Short: "Manage inter-cluster link.",
 		},
 		config, prerunner)
-	cmd := &linksCommand{
+	cmd := &linkCommand{
 		AuthenticatedCLICommand: cliCmd,
 		prerunner:               prerunner,
 	}
@@ -43,16 +43,16 @@ func NewLinksCommand(prerunner pcmd.PreRunner, config *v3.Config) *cobra.Command
 	return cmd.Command
 }
 
-func (c *linksCommand) init() {
+func (c *linkCommand) init() {
 	listCmd := &cobra.Command{
 		Use: "list",
-		Short: "List previously created cluster-links.",
+		Short: "List previously created cluster-link.",
 		Example: `
-List all links.
+List every link.
 
 ::
 
-        ccloud kafka links list`,
+        ccloud kafka link list`,
 		RunE: c.list,
 		Args: cobra.NoArgs}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
@@ -61,14 +61,14 @@ List all links.
 
 	// Note: this is subject to change as we iterate on options for how to specify a source cluster.
 	createCmd := &cobra.Command{
-		Use: "create <name>",
+		Use: "create <link-name>",
 		Short: "Create a new cluster-link.",
 		Example: `
 Create a cluster-link.
 
 ::
 
-        ccloud kafka links create MyLink --source myhost:1234`,
+        ccloud kafka link create MyLink --source myhost:1234`,
 		RunE: c.create,
 		Args: cobra.ExactArgs(1),
 	}
@@ -77,28 +77,28 @@ Create a cluster-link.
 	c.AddCommand(createCmd)
 
 	deleteCmd := &cobra.Command{
-		Use: "delete <name>",
+		Use: "delete <link-name>",
 		Short: "Delete a previously created cluster-link.",
 		Example: `
 Deletes a cluster-link.
 
 ::
 
-        ccloud kafka links delete Mylink`,
+        ccloud kafka link delete Mylink`,
 		RunE: c.delete,
 		Args: cobra.ExactArgs(1),
 	}
 	c.AddCommand(deleteCmd)
 
 	describeCmd := &cobra.Command{
-		Use: "describe <name>",
+		Use: "describe <link-name>",
 		Short: "Describes a previously created cluster-link.",
 		Example: `
 Describes a cluster-link.
 
 ::
 
-        ccloud kafka links describe MyLink`,
+        ccloud kafka link describe MyLink`,
         RunE: c.describe,
         Args: cobra.ExactArgs(1),
 	}
@@ -106,21 +106,21 @@ Describes a cluster-link.
 
 	// Note: this can change as we decide how to present this modification interface (allowing multiple properties, allowing override and delete, etc).
 	alterCmd := &cobra.Command{
-		Use: "alter <name> <k> <v>",
-		Short: "Alters a particular property for a previously created cluster-link.",
+		Use: "alter <link-name>",
+		Short: "Alters a property for a previously created cluster-link.",
 		Example: `
 Alters a property for a cluster-link.
 
 ::
 
-        ccloud kafka links alter MyLink retention.ms 123456890`,
+        ccloud kafka link alter MyLink retention.ms 123456890`,
 		RunE: c.alter,
 		Args: cobra.ExactArgs(3),
 	}
 	c.AddCommand(alterCmd)
 }
 
-func (c *linksCommand) list(cmd *cobra.Command, args []string) error {
+func (c *linkCommand) list(cmd *cobra.Command, args []string) error {
 	cluster, err := pcmd.KafkaCluster(cmd, c.Context)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -140,7 +140,7 @@ func (c *linksCommand) list(cmd *cobra.Command, args []string) error {
 	return outputWriter.Out()
 }
 
-func (c *linksCommand) create(cmd *cobra.Command, args []string) error {
+func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	cluster, err := pcmd.KafkaCluster(cmd, c.Context)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -162,7 +162,7 @@ func (c *linksCommand) create(cmd *cobra.Command, args []string) error {
 	return errors.HandleCommon(err, cmd)
 }
 
-func (c *linksCommand) delete(cmd *cobra.Command, args []string) error {
+func (c *linkCommand) delete(cmd *cobra.Command, args []string) error {
 	cluster, err := pcmd.KafkaCluster(cmd, c.Context)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -175,7 +175,7 @@ func (c *linksCommand) delete(cmd *cobra.Command, args []string) error {
 	return errors.HandleCommon(err, cmd)
 }
 
-func (c *linksCommand) describe(cmd *cobra.Command, args []string) error {
+func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 	cluster, err := pcmd.KafkaCluster(cmd, c.Context)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -203,7 +203,7 @@ func (c *linksCommand) describe(cmd *cobra.Command, args []string) error {
 	return outputWriter.Out()
 }
 
-func (c *linksCommand) alter(cmd *cobra.Command, args []string) error {
+func (c *linkCommand) alter(cmd *cobra.Command, args []string) error {
 	cluster, err := pcmd.KafkaCluster(cmd, c.Context)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
