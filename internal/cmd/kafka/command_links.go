@@ -101,6 +101,21 @@ Describes a cluster-link.
         Args: cobra.ExactArgs(1),
 	}
 	c.AddCommand(describeCmd)
+
+	// Note: this can change as we decide how to present this modification interface (allowing multiple properties, allowing override and delete, etc).
+	alterCmd := &cobra.Command{
+		Use: "alter <link-name> <key> <value>",
+		Short: "Alters a particular property for a previously created cluster-link.",
+		Example: `
+Alters a property for a cluster-link.
+
+::
+
+        ccloud kafka links alter MyLink retention.ms 123456890`,
+		RunE: c.alter,
+		Args: cobra.ExactArgs(3),
+	}
+	c.AddCommand(alterCmd)
 }
 
 func (c *linksCommand) list(cmd *cobra.Command, args []string) error {
@@ -184,4 +199,23 @@ func (c *linksCommand) describe(cmd *cobra.Command, args []string) error {
 		})
 	}
 	return outputWriter.Out()
+}
+
+func (c *linksCommand) alter(cmd *cobra.Command, args []string) error {
+	cluster, err := pcmd.KafkaCluster(cmd, c.Context)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	link := &kafkav1.Link{
+		Name: args[0],
+	}
+	key := args[1]
+	value := args[2]
+	config := &kafkav1.LinkDescription{
+		Properties: map[string]string{key: value},
+	}
+	err = c.Client.Kafka.AlterLink(context.Background(), cluster, link, config)
+
+	return errors.HandleCommon(err, cmd)
 }
