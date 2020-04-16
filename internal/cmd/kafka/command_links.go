@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	sourceBootstrapServersFlagName = "source-bootstrap-servers"
+	sourceBootstrapServersFlagName = "source"
 )
 
 var (
@@ -56,26 +56,28 @@ List all links.
 		RunE: c.list,
 		Args: cobra.NoArgs}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
 	// Note: this is subject to change as we iterate on options for how to specify a source cluster.
 	createCmd := &cobra.Command{
-		Use: "create <link-name> <source-cluster>",
+		Use: "create <name>",
 		Short: "Create a new cluster-link.",
 		Example: `
 Create a cluster-link.
 
 ::
 
-        ccloud kafka links create MyLink --source-bootstrap-servers myhost:1234`,
+        ccloud kafka links create MyLink --source myhost:1234`,
 		RunE: c.create,
 		Args: cobra.ExactArgs(1),
 	}
-	createCmd.Flags().String(sourceBootstrapServersFlagName, "", "Bootstrap-servers address for source cluster")
+	createCmd.Flags().String(sourceBootstrapServersFlagName, "", "Bootstrap-servers address for source cluster.")
+	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
 	deleteCmd := &cobra.Command{
-		Use: "delete <link-name>",
+		Use: "delete <name>",
 		Short: "Delete a previously created cluster-link.",
 		Example: `
 Deletes a cluster-link.
@@ -89,7 +91,7 @@ Deletes a cluster-link.
 	c.AddCommand(deleteCmd)
 
 	describeCmd := &cobra.Command{
-		Use: "describe <link-name>",
+		Use: "describe <name>",
 		Short: "Describes a previously created cluster-link.",
 		Example: `
 Describes a cluster-link.
@@ -104,7 +106,7 @@ Describes a cluster-link.
 
 	// Note: this can change as we decide how to present this modification interface (allowing multiple properties, allowing override and delete, etc).
 	alterCmd := &cobra.Command{
-		Use: "alter <link-name> <key> <value>",
+		Use: "alter <name> <k> <v>",
 		Short: "Alters a particular property for a previously created cluster-link.",
 		Example: `
 Alters a property for a cluster-link.
