@@ -112,6 +112,30 @@ func assertEquals(actual interface{}, expected interface{}) error {
 	return nil
 }
 
+func (m *Kafka) ListLinks(ctx context.Context, cluster *kafkav1.KafkaCluster) ([]*kafkav1.Link, error) {
+	return nil, nil
+}
+
+func (m *Kafka) CreateLink(ctx context.Context, destination *kafkav1.KafkaCluster, link *kafkav1.Link, source *kafkav1.LinkSourceCluster) error {
+	assertEquals(link, <-m.Expect)
+	assertEquals(source, <-m.Expect)
+	return nil
+}
+
+func (m *Kafka) DeleteLink(ctx context.Context, cluster *kafkav1.KafkaCluster, link *kafkav1.Link) error {
+	return assertEquals(link, <-m.Expect)
+}
+
+func (m *Kafka) DescribeLink(ctx context.Context, cluster *kafkav1.KafkaCluster, link *kafkav1.Link) (*kafkav1.LinkDescription, error) {
+	return nil, assertEquals(link, <-m.Expect)
+}
+
+func (m *Kafka) AlterLink(ctx context.Context, cluster *kafkav1.KafkaCluster, link *kafkav1.Link, config *kafkav1.LinkDescription) error {
+	assertEquals(link, <-m.Expect)
+	assertEquals(config, <-m.Expect)
+	return nil
+}
+
 func assertEqualBindings(actual []*kafkav1.ACLBinding, expected interface{}) error {
 	exp := expected.([]*kafkav1.ACLBinding)
 	if len(actual) != len(exp) {
