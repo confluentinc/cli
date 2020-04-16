@@ -490,29 +490,95 @@ func TestUpdateTopic(t *testing.T) {
 }
 
 /*************** TEST command_links ***************/
-var Links = []struct {
+type testLink struct {
 	name string
-}{
+	source string
+	alterkey string
+	altervalue string
+}
+var Links = []testLink{
 	{
 		name: "test_link",
+		source: "myhost:1234",
+		alterkey: "retention.ms",
+		altervalue: "1234567890",
 	},
 }
 
-func TestListLinks(t *testing.T) {
+func linkTestHelper(t *testing.T, argmaker func(testLink) []string, expector func(chan interface{}, testLink)) {
 	expect := make(chan interface{})
 	for _, link := range Links {
 		cmd := NewCMD(expect)
-		cmd.SetArgs([]string{"link", "list"})
-		go func() {
-			expect <- &kafkav1.Link{Name: link.name}
-		}()
+		cmd.SetArgs(argmaker(link))
+
+		go expector(expect, link)
 
 		if err := cmd.Execute(); err != nil {
-			t.Errorf("error: #{err}")
+			t.Errorf("error: %s", err)
 			t.Fail()
 			return
 		}
 	}
+}
+
+func TestListLinks(t *testing.T) {
+	linkTestHelper(
+		t,
+		func(link testLink) []string {
+			return []string{"link", "list"}
+		},
+		func (expect chan interface{}, link testLink) {
+			expect <- &kafkav1.Link{Name: link.name}
+		})
+}
+
+func TestCreateLink(t *testing.T) {
+	linkTestHelper(
+		t,
+		func(link testLink) []string {
+			return []string{"link", "create", link.name, "--source", link.source}
+		},
+		func(expect chan interface{}, link testLink) {
+			expect <- &kafkav1.Link{Name: link.name}
+			expect <- &kafkav1.LinkSourceCluster{
+				BootstrapServers:     link.source,
+				Configs:              nil,
+			}
+		})
+}
+
+func TestDeleteLink(t *testing.T) {
+	linkTestHelper(
+		t,
+		func(link testLink) []string {
+			return []string{"link", "delete", link.name}
+		},
+		func (expect chan interface{}, link testLink) {
+			expect <- &kafkav1.Link{Name: link.name}
+		})
+}
+
+func TestDescribeLink(t *testing.T) {
+	linkTestHelper(
+		t,
+		func(link testLink) []string {
+			return []string{"link", "describe", link.name}
+		},
+		func (expect chan interface{}, link testLink) {
+			expect <- &kafkav1.Link{Name: link.name}
+		})
+}
+
+func TestAlterLink(t *testing.T) {
+	linkTestHelper(
+		t,
+		func(link testLink) []string {
+			return []string{"link", "alter", link.name, "--key", link.alterkey, "--value", link.altervalue}
+		},
+		func (expect chan interface{}, link testLink) {
+			expect <- &kafkav1.Link{Name: link.name}
+			expect <- &kafkav1.LinkDescription{Properties: map[string]string{link.alterkey: link.altervalue}}
+		})
 }
 
 func TestDefaults(t *testing.T) {

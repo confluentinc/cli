@@ -104,6 +104,8 @@ Describes a cluster-link.
         RunE: c.describe,
         Args: cobra.ExactArgs(1),
 	}
+	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	describeCmd.Flags().SortFlags = false
 	c.AddCommand(describeCmd)
 
 	// Note: this can change as we decide how to present this modification interface (allowing multiple properties, allowing override and delete, etc).

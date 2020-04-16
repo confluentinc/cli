@@ -113,7 +113,10 @@ func assertEquals(actual interface{}, expected interface{}) error {
 }
 
 func (m *Kafka) ListLinks(ctx context.Context, cluster *kafkav1.KafkaCluster) ([]*kafkav1.Link, error) {
-	return nil, nil
+	return []*kafkav1.Link{
+		{Name: "link-1"},
+		{Name: "link-2"},
+	}, nil
 }
 
 func (m *Kafka) CreateLink(ctx context.Context, destination *kafkav1.KafkaCluster, link *kafkav1.Link, source *kafkav1.LinkSourceCluster) error {
@@ -127,7 +130,12 @@ func (m *Kafka) DeleteLink(ctx context.Context, cluster *kafkav1.KafkaCluster, l
 }
 
 func (m *Kafka) DescribeLink(ctx context.Context, cluster *kafkav1.KafkaCluster, link *kafkav1.Link) (*kafkav1.LinkDescription, error) {
-	return nil, assertEquals(link, <-m.Expect)
+	return &kafkav1.LinkDescription{
+		Properties:           map[string]string{
+			"Foo": "123",
+			"Bar": "456",
+		},
+	}, assertEquals(link, <-m.Expect)
 }
 
 func (m *Kafka) AlterLink(ctx context.Context, cluster *kafkav1.KafkaCluster, link *kafkav1.Link, config *kafkav1.LinkDescription) error {
