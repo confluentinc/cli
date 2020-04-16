@@ -14,6 +14,15 @@ const (
 	sourceBootstrapServersFlagName = "source-bootstrap-servers"
 )
 
+var (
+	keyValueFields = []string{"Key", "Value"}
+)
+
+type keyValueDisplay struct {
+	Key string
+	Value string
+}
+
 type linksCommand struct {
 	*pcmd.AuthenticatedCLICommand
 	prerunner pcmd.PreRunner
@@ -78,6 +87,20 @@ Deletes a cluster-link.
 		Args: cobra.ExactArgs(1),
 	}
 	c.AddCommand(deleteCmd)
+
+	describeCmd := &cobra.Command{
+		Use: "describe <link-name>",
+		Short: "Describes a previously created cluster-link.",
+		Example: `
+Describes a cluster-link.
+
+::
+
+        ccloud kafka links describe MyLink`,
+        RunE: c.describe,
+        Args: cobra.ExactArgs(1),
+	}
+	c.AddCommand(describeCmd)
 }
 
 func (c *linksCommand) list(cmd *cobra.Command, args []string) error {
@@ -119,7 +142,6 @@ func (c *linksCommand) create(cmd *cobra.Command, args []string) error {
 		Configs:              nil,
 	}
 	err = c.Client.Kafka.CreateLink(context.Background(), cluster, link, sourceCluster)
-
 	return errors.HandleCommon(err, cmd)
 }
 
@@ -133,6 +155,33 @@ func (c *linksCommand) delete(cmd *cobra.Command, args []string) error {
 		Name:                 args[0],
 	}
 	err = c.Client.Kafka.DeleteLink(context.Background(), cluster, link)
-
 	return errors.HandleCommon(err, cmd)
+}
+
+func (c *linksCommand) describe(cmd *cobra.Command, args []string) error {
+	cluster, err := pcmd.KafkaCluster(cmd, c.Context)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	link := &kafkav1.Link{
+		Name: args[0],
+	}
+	resp, err := c.Client.Kafka.DescribeLink(context.Background(), cluster, link)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	outputWriter, err := output.NewListOutputWriter(cmd, keyValueFields, keyValueFields, keyValueFields)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	for k, v := range resp.Properties {
+		outputWriter.AddElement(&keyValueDisplay{
+			Key: k,
+			Value: v,
+		})
+	}
+	return outputWriter.Out()
 }
