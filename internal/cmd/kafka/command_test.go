@@ -489,6 +489,32 @@ func TestUpdateTopic(t *testing.T) {
 	}
 }
 
+/*************** TEST command_links ***************/
+var Links = []struct {
+	name string
+}{
+	{
+		name: "test_link",
+	},
+}
+
+func TestListLinks(t *testing.T) {
+	expect := make(chan interface{})
+	for _, link := range Links {
+		cmd := NewCMD(expect)
+		cmd.SetArgs([]string{"link", "list"})
+		go func() {
+			expect <- &kafkav1.Link{Name: link.name}
+		}()
+
+		if err := cmd.Execute(); err != nil {
+			t.Errorf("error: #{err}")
+			t.Fail()
+			return
+		}
+	}
+}
+
 func TestDefaults(t *testing.T) {
 	expect := make(chan interface{})
 	cmd := NewCMD(expect)
