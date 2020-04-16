@@ -12,6 +12,8 @@ import (
 
 const (
 	sourceBootstrapServersFlagName = "source"
+	propertyKeyFlagName = "key"
+	propertyValueFlagName = "value"
 )
 
 var (
@@ -113,10 +115,13 @@ Alters a property for a cluster-link.
 
 ::
 
-        ccloud kafka link alter MyLink retention.ms 123456890`,
+        ccloud kafka link alter MyLink --key retention.ms --value 123456890`,
 		RunE: c.alter,
-		Args: cobra.ExactArgs(3),
+		Args: cobra.ExactArgs(1),
 	}
+	alterCmd.Flags().String(propertyKeyFlagName, "", "Property key.")
+	alterCmd.Flags().String(propertyValueFlagName, "", "Property value.")
+	alterCmd.Flags().SortFlags = false
 	c.AddCommand(alterCmd)
 }
 
@@ -212,8 +217,14 @@ func (c *linkCommand) alter(cmd *cobra.Command, args []string) error {
 	link := &kafkav1.Link{
 		Name: args[0],
 	}
-	key := args[1]
-	value := args[2]
+	key, err := cmd.Flags().GetString(propertyKeyFlagName)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	value, err := cmd.Flags().GetString(propertyValueFlagName)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
 	config := &kafkav1.LinkDescription{
 		Properties: map[string]string{key: value},
 	}
