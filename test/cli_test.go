@@ -794,7 +794,7 @@ func serveKafkaAPI(t *testing.T) *httptest.Server {
 	mux.HandleFunc("/2.0/kafka/lkc-acls/acls:search", handleKafkaACLsList(t))
 	mux.HandleFunc("/2.0/kafka/lkc-acls/acls", handleKafkaACLsCreate(t))
 	mux.HandleFunc("/2.0/kafka/lkc-acls/acls/delete", handleKafkaACLsDelete(t))
-	mux.HandleFunc("/2.0/kafka/lkc-links/links", handleLinks(t))
+	mux.HandleFunc("/2.0/kafka/lkc-links/links", handleKafkaLinks(t))
 	// TODO: no idea how this "topic already exists" API request or response actually looks
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(400)
@@ -1037,8 +1037,16 @@ func handleKSQLCreateList(t *testing.T) func(w http.ResponseWriter, r *http.Requ
 	}
 }
 
-func handleLinks(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func handleKafkaLinks(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		linkList := []*kafkav1.Link{
+			{Name: "link-1"},
+			{Name: "link-2"},
+		}
+		listReply, err := json.Marshal(linkList)
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(listReply))
+		require.NoError(t, err)
 	}
 }
 
