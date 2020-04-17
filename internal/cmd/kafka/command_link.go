@@ -46,6 +46,8 @@ func NewLinkCommand(prerunner pcmd.PreRunner, config *v3.Config) *cobra.Command 
 }
 
 func (c *linkCommand) init() {
+	c.Command.PersistentFlags().String("cluster", "", "Kafka cluster ID.")
+
 	listCmd := &cobra.Command{
 		Use: "list",
 		Short: "List previously created cluster-link.",

@@ -706,59 +706,60 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		_, err = io.WriteString(w, string(reply))
 		require.NoError(t, err)
 	})
-	router.HandleFunc("/api/env_metadata", func(w http.ResponseWriter, r *http.Request) {
-		clouds := []*kafkav1.Cloud{
-			{
-				Id:   "gcp",
-				Name: "Google Cloud Platform",
-				Regions: []*kafkav1.Region{
-					{
-						Id:            "asia-southeast1",
-						Name:          "asia-southeast1 (Singapore)",
-						IsSchedulable: true,
-					},
-					{
-						Id:            "asia-east2",
-						Name:          "asia-east2 (Hong Kong)",
-						IsSchedulable: true,
-					},
-				},
-			},
-			{
-				Id:   "aws",
-				Name: "Amazon Web Services",
-				Regions: []*kafkav1.Region{
-					{
-						Id:            "ap-northeast-1",
-						Name:          "ap-northeast-1 (Tokyo)",
-						IsSchedulable: false,
-					},
-					{
-						Id:            "us-east-1",
-						Name:          "us-east-1 (N. Virginia)",
-						IsSchedulable: true,
-					},
-				},
-			},
-			{
-				Id:   "azure",
-				Name: "Azure",
-				Regions: []*kafkav1.Region{
-					{
-						Id:            "southeastasia",
-						Name:          "southeastasia (Singapore)",
-						IsSchedulable: false,
-					},
-				},
-			},
-		}
-		reply, err := utilv1.MarshalJSONToBytes(&kafkav1.GetEnvironmentMetadataReply{
-			Clouds: clouds,
-		})
-		require.NoError(t, err)
-		_, err = io.WriteString(w, string(reply))
-		require.NoError(t, err)
-	})
+	// TODO: uncomment!
+	//router.HandleFunc("/api/env_metadata", func(w http.ResponseWriter, r *http.Request) {
+	//	clouds := []*kafkav1.Cloud{
+	//		{
+	//			Id:   "gcp",
+	//			Name: "Google Cloud Platform",
+	//			Regions: []*kafkav1.Region{
+	//				{
+	//					Id:            "asia-southeast1",
+	//					Name:          "asia-southeast1 (Singapore)",
+	//					IsSchedulable: true,
+	//				},
+	//				{
+	//					Id:            "asia-east2",
+	//					Name:          "asia-east2 (Hong Kong)",
+	//					IsSchedulable: true,
+	//				},
+	//			},
+	//		},
+	//		{
+	//			Id:   "aws",
+	//			Name: "Amazon Web Services",
+	//			Regions: []*kafkav1.Region{
+	//				{
+	//					Id:            "ap-northeast-1",
+	//					Name:          "ap-northeast-1 (Tokyo)",
+	//					IsSchedulable: false,
+	//				},
+	//				{
+	//					Id:            "us-east-1",
+	//					Name:          "us-east-1 (N. Virginia)",
+	//					IsSchedulable: true,
+	//				},
+	//			},
+	//		},
+	//		{
+	//			Id:   "azure",
+	//			Name: "Azure",
+	//			Regions: []*kafkav1.Region{
+	//				{
+	//					Id:            "southeastasia",
+	//					Name:          "southeastasia (Singapore)",
+	//					IsSchedulable: false,
+	//				},
+	//			},
+	//		},
+	//	}
+	//	reply, err := utilv1.MarshalJSONToBytes(&kafkav1.GetEnvironmentMetadataReply{
+	//		Clouds: clouds,
+	//	})
+	//	require.NoError(t, err)
+	//	_, err = io.WriteString(w, string(reply))
+	//	require.NoError(t, err)
+	//})
 	return httptest.NewServer(router)
 }
 
@@ -793,6 +794,7 @@ func serveKafkaAPI(t *testing.T) *httptest.Server {
 	mux.HandleFunc("/2.0/kafka/lkc-acls/acls:search", handleKafkaACLsList(t))
 	mux.HandleFunc("/2.0/kafka/lkc-acls/acls", handleKafkaACLsCreate(t))
 	mux.HandleFunc("/2.0/kafka/lkc-acls/acls/delete", handleKafkaACLsDelete(t))
+	mux.HandleFunc("/2.0/kafka/lkc-links/links", handleLinks(t))
 	// TODO: no idea how this "topic already exists" API request or response actually looks
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(400)
@@ -1032,6 +1034,11 @@ func handleKSQLCreateList(t *testing.T) func(w http.ResponseWriter, r *http.Requ
 			_, err = io.WriteString(w, string(listReply))
 			require.NoError(t, err)
 		}
+	}
+}
+
+func handleLinks(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
