@@ -258,7 +258,8 @@ docs:
 
 .PHONY: publish-docs
 publish-docs: docs
-	@TMP_DIR=$$(mktemp -d)/docs || exit 1; \
+	@TMP_BASE=$$(mktemp -d) || exit 1; \
+		TMP_DIR=$${TMP_BASE}/docs || exit 1; \
 		git clone git@github.com:confluentinc/docs.git $${TMP_DIR}; \
 		cd $${TMP_DIR} || exit 1; \
 		git fetch ; \
@@ -271,9 +272,8 @@ publish-docs: docs
 		git diff --cached --exit-code >/dev/null && echo "nothing to update for docs" && exit 0; \
 		git commit -m "chore: updating CLI docs for $(VERSION)" || exit 1; \
 		git push origin cli-$(VERSION) || exit 1; \
-		hub pull-request -b $(DOCS_BRANCH) -m "chore: updating CLI docs for $(VERSION)" || exit 1; \
-		cd - || exit 1; \
-		rm -rf $${TMP_DIR}
+		#hub pull-request -b $(DOCS_BRANCH) -m "chore: updating CLI docs for $(VERSION)" || exit 1;
+		rm -rf $${TMP_BASE}
 #   TODO: we can't enable auto-docs generation for confluent until we migrate go-basher commands into cobra
 #	    make publish-docs-internal BASE_DIR=$${TMP_DIR} CLI_NAME=confluent || exit 1; \
 
@@ -295,6 +295,48 @@ endif
 .PHONY: clean-docs
 clean-docs:
 	rm docs/*/*.rst
+
+
+.PHONY: release-notes
+release-notes:
+	echo $(PREVIOUS_RELEASE_VERSION)
+	echo v$(CLEAN_VERSION)
+	@GO11MODULE=on go run -ldflags '-X main.cliName=ccloud -X main.releaseVersion=$(BUMPED_VERSION) -X main.prevVersion=v$(CLEAN_VERSION)' cmd/release-notes/main.go
+
+# TODO: replace master with DOCS_BRANCH
+# TODO: change the git clone branch to the docs branch
+REPLACE_ME_BRANCH := master
+.PHONY: publish-release-notes
+publish-release-notes: release-notes
+	@TMP_BASE=$$(mktemp -d) || exit 1; \
+		TMP_DIR=$${TMP_BASE}/release-notes; \
+		git clone git@github.com:csreesan/test-release-notes.git $${TMP_DIR}; \
+		cd $${TMP_DIR} || exit 1; \
+		ls; \
+		git fetch ; \
+		git checkout -b cli-$(BUMPED_VERSION) origin/$(REPLACE_ME_BRANCH) || exit 1; \
+		cd - || exit 1; \
+		make publish-release-notes-internal BASE_DIR=$${TMP_DIR} CLI_NAME=ccloud || exit 1; \
+		cd $${TMP_DIR} || exit 1; \
+		git add . || exit 1; \
+		git diff --cached --exit-code > /dev/null && echo "nothing to update" && exit 0; \
+		git commit -m "[WIP] new release notes for $(BUMPED_VERSION)" || exit 1; \
+		git push origin cli-$(BUMPED_VERSION) || exit 1; \
+		hub pull-request -b $(REPLACE_ME_BRANCH) -m "new release notes for $(BUMPED_VERSION)" || exit 1; \
+		rm -rf $${TMP_BASE}; \
+		echo "GOT TO THE END $${TMP_DIR}"
+
+# TODO: make sure to settle where the release notes dir would be
+.PHONY: publish-release-notes-internal
+publish-release-notes-internal:
+ifndef BASE_DIR
+	$(error BASE_DIR is not set)
+endif
+ifeq (ccloud,$(CLI_NAME))
+	$(eval RELEASE_DIR := cloud/cli/release-notes)
+endif
+	rm $(BASE_DIR)/$(RELEASE_DIR)/*.rst
+	cp release-notes/$(CLI_NAME)/*.rst $(BASE_DIR)/$(RELEASE_DIR)
 
 .PHONY: fmt
 fmt:
