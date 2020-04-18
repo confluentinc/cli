@@ -12,8 +12,8 @@ import (
 	github_com_aws_aws_sdk_go_service_s3 "github.com/aws/aws-sdk-go/service/s3"
 )
 
-// MockS3API is a mock of S3API interface
-type MockS3API struct {
+// S3API is a mock of S3API interface
+type S3API struct {
 	lockAbortMultipartUpload sync.Mutex
 	AbortMultipartUploadFunc func(arg0 *github_com_aws_aws_sdk_go_service_s3.AbortMultipartUploadInput) (*github_com_aws_aws_sdk_go_service_s3.AbortMultipartUploadOutput, error)
 
@@ -1915,12 +1915,12 @@ type MockS3API struct {
 }
 
 // AbortMultipartUpload mocks base method by wrapping the associated func.
-func (m *MockS3API) AbortMultipartUpload(arg0 *github_com_aws_aws_sdk_go_service_s3.AbortMultipartUploadInput) (*github_com_aws_aws_sdk_go_service_s3.AbortMultipartUploadOutput, error) {
+func (m *S3API) AbortMultipartUpload(arg0 *github_com_aws_aws_sdk_go_service_s3.AbortMultipartUploadInput) (*github_com_aws_aws_sdk_go_service_s3.AbortMultipartUploadOutput, error) {
 	m.lockAbortMultipartUpload.Lock()
 	defer m.lockAbortMultipartUpload.Unlock()
 
 	if m.AbortMultipartUploadFunc == nil {
-		panic("mocker: MockS3API.AbortMultipartUploadFunc is nil but MockS3API.AbortMultipartUpload was called.")
+		panic("mocker: S3API.AbortMultipartUploadFunc is nil but S3API.AbortMultipartUpload was called.")
 	}
 
 	call := struct {
@@ -1935,7 +1935,7 @@ func (m *MockS3API) AbortMultipartUpload(arg0 *github_com_aws_aws_sdk_go_service
 }
 
 // AbortMultipartUploadCalled returns true if AbortMultipartUpload was called at least once.
-func (m *MockS3API) AbortMultipartUploadCalled() bool {
+func (m *S3API) AbortMultipartUploadCalled() bool {
 	m.lockAbortMultipartUpload.Lock()
 	defer m.lockAbortMultipartUpload.Unlock()
 
@@ -1943,7 +1943,7 @@ func (m *MockS3API) AbortMultipartUploadCalled() bool {
 }
 
 // AbortMultipartUploadCalls returns the calls made to AbortMultipartUpload.
-func (m *MockS3API) AbortMultipartUploadCalls() []struct {
+func (m *S3API) AbortMultipartUploadCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.AbortMultipartUploadInput
 } {
 	m.lockAbortMultipartUpload.Lock()
@@ -1953,12 +1953,12 @@ func (m *MockS3API) AbortMultipartUploadCalls() []struct {
 }
 
 // AbortMultipartUploadWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) AbortMultipartUploadWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.AbortMultipartUploadInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.AbortMultipartUploadOutput, error) {
+func (m *S3API) AbortMultipartUploadWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.AbortMultipartUploadInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.AbortMultipartUploadOutput, error) {
 	m.lockAbortMultipartUploadWithContext.Lock()
 	defer m.lockAbortMultipartUploadWithContext.Unlock()
 
 	if m.AbortMultipartUploadWithContextFunc == nil {
-		panic("mocker: MockS3API.AbortMultipartUploadWithContextFunc is nil but MockS3API.AbortMultipartUploadWithContext was called.")
+		panic("mocker: S3API.AbortMultipartUploadWithContextFunc is nil but S3API.AbortMultipartUploadWithContext was called.")
 	}
 
 	call := struct {
@@ -1977,7 +1977,7 @@ func (m *MockS3API) AbortMultipartUploadWithContext(arg0 github_com_aws_aws_sdk_
 }
 
 // AbortMultipartUploadWithContextCalled returns true if AbortMultipartUploadWithContext was called at least once.
-func (m *MockS3API) AbortMultipartUploadWithContextCalled() bool {
+func (m *S3API) AbortMultipartUploadWithContextCalled() bool {
 	m.lockAbortMultipartUploadWithContext.Lock()
 	defer m.lockAbortMultipartUploadWithContext.Unlock()
 
@@ -1985,7 +1985,7 @@ func (m *MockS3API) AbortMultipartUploadWithContextCalled() bool {
 }
 
 // AbortMultipartUploadWithContextCalls returns the calls made to AbortMultipartUploadWithContext.
-func (m *MockS3API) AbortMultipartUploadWithContextCalls() []struct {
+func (m *S3API) AbortMultipartUploadWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.AbortMultipartUploadInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -1997,12 +1997,12 @@ func (m *MockS3API) AbortMultipartUploadWithContextCalls() []struct {
 }
 
 // AbortMultipartUploadRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) AbortMultipartUploadRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.AbortMultipartUploadInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.AbortMultipartUploadOutput) {
+func (m *S3API) AbortMultipartUploadRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.AbortMultipartUploadInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.AbortMultipartUploadOutput) {
 	m.lockAbortMultipartUploadRequest.Lock()
 	defer m.lockAbortMultipartUploadRequest.Unlock()
 
 	if m.AbortMultipartUploadRequestFunc == nil {
-		panic("mocker: MockS3API.AbortMultipartUploadRequestFunc is nil but MockS3API.AbortMultipartUploadRequest was called.")
+		panic("mocker: S3API.AbortMultipartUploadRequestFunc is nil but S3API.AbortMultipartUploadRequest was called.")
 	}
 
 	call := struct {
@@ -2017,7 +2017,7 @@ func (m *MockS3API) AbortMultipartUploadRequest(arg0 *github_com_aws_aws_sdk_go_
 }
 
 // AbortMultipartUploadRequestCalled returns true if AbortMultipartUploadRequest was called at least once.
-func (m *MockS3API) AbortMultipartUploadRequestCalled() bool {
+func (m *S3API) AbortMultipartUploadRequestCalled() bool {
 	m.lockAbortMultipartUploadRequest.Lock()
 	defer m.lockAbortMultipartUploadRequest.Unlock()
 
@@ -2025,7 +2025,7 @@ func (m *MockS3API) AbortMultipartUploadRequestCalled() bool {
 }
 
 // AbortMultipartUploadRequestCalls returns the calls made to AbortMultipartUploadRequest.
-func (m *MockS3API) AbortMultipartUploadRequestCalls() []struct {
+func (m *S3API) AbortMultipartUploadRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.AbortMultipartUploadInput
 } {
 	m.lockAbortMultipartUploadRequest.Lock()
@@ -2035,12 +2035,12 @@ func (m *MockS3API) AbortMultipartUploadRequestCalls() []struct {
 }
 
 // CompleteMultipartUpload mocks base method by wrapping the associated func.
-func (m *MockS3API) CompleteMultipartUpload(arg0 *github_com_aws_aws_sdk_go_service_s3.CompleteMultipartUploadInput) (*github_com_aws_aws_sdk_go_service_s3.CompleteMultipartUploadOutput, error) {
+func (m *S3API) CompleteMultipartUpload(arg0 *github_com_aws_aws_sdk_go_service_s3.CompleteMultipartUploadInput) (*github_com_aws_aws_sdk_go_service_s3.CompleteMultipartUploadOutput, error) {
 	m.lockCompleteMultipartUpload.Lock()
 	defer m.lockCompleteMultipartUpload.Unlock()
 
 	if m.CompleteMultipartUploadFunc == nil {
-		panic("mocker: MockS3API.CompleteMultipartUploadFunc is nil but MockS3API.CompleteMultipartUpload was called.")
+		panic("mocker: S3API.CompleteMultipartUploadFunc is nil but S3API.CompleteMultipartUpload was called.")
 	}
 
 	call := struct {
@@ -2055,7 +2055,7 @@ func (m *MockS3API) CompleteMultipartUpload(arg0 *github_com_aws_aws_sdk_go_serv
 }
 
 // CompleteMultipartUploadCalled returns true if CompleteMultipartUpload was called at least once.
-func (m *MockS3API) CompleteMultipartUploadCalled() bool {
+func (m *S3API) CompleteMultipartUploadCalled() bool {
 	m.lockCompleteMultipartUpload.Lock()
 	defer m.lockCompleteMultipartUpload.Unlock()
 
@@ -2063,7 +2063,7 @@ func (m *MockS3API) CompleteMultipartUploadCalled() bool {
 }
 
 // CompleteMultipartUploadCalls returns the calls made to CompleteMultipartUpload.
-func (m *MockS3API) CompleteMultipartUploadCalls() []struct {
+func (m *S3API) CompleteMultipartUploadCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.CompleteMultipartUploadInput
 } {
 	m.lockCompleteMultipartUpload.Lock()
@@ -2073,12 +2073,12 @@ func (m *MockS3API) CompleteMultipartUploadCalls() []struct {
 }
 
 // CompleteMultipartUploadWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) CompleteMultipartUploadWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.CompleteMultipartUploadInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.CompleteMultipartUploadOutput, error) {
+func (m *S3API) CompleteMultipartUploadWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.CompleteMultipartUploadInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.CompleteMultipartUploadOutput, error) {
 	m.lockCompleteMultipartUploadWithContext.Lock()
 	defer m.lockCompleteMultipartUploadWithContext.Unlock()
 
 	if m.CompleteMultipartUploadWithContextFunc == nil {
-		panic("mocker: MockS3API.CompleteMultipartUploadWithContextFunc is nil but MockS3API.CompleteMultipartUploadWithContext was called.")
+		panic("mocker: S3API.CompleteMultipartUploadWithContextFunc is nil but S3API.CompleteMultipartUploadWithContext was called.")
 	}
 
 	call := struct {
@@ -2097,7 +2097,7 @@ func (m *MockS3API) CompleteMultipartUploadWithContext(arg0 github_com_aws_aws_s
 }
 
 // CompleteMultipartUploadWithContextCalled returns true if CompleteMultipartUploadWithContext was called at least once.
-func (m *MockS3API) CompleteMultipartUploadWithContextCalled() bool {
+func (m *S3API) CompleteMultipartUploadWithContextCalled() bool {
 	m.lockCompleteMultipartUploadWithContext.Lock()
 	defer m.lockCompleteMultipartUploadWithContext.Unlock()
 
@@ -2105,7 +2105,7 @@ func (m *MockS3API) CompleteMultipartUploadWithContextCalled() bool {
 }
 
 // CompleteMultipartUploadWithContextCalls returns the calls made to CompleteMultipartUploadWithContext.
-func (m *MockS3API) CompleteMultipartUploadWithContextCalls() []struct {
+func (m *S3API) CompleteMultipartUploadWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.CompleteMultipartUploadInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -2117,12 +2117,12 @@ func (m *MockS3API) CompleteMultipartUploadWithContextCalls() []struct {
 }
 
 // CompleteMultipartUploadRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) CompleteMultipartUploadRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.CompleteMultipartUploadInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.CompleteMultipartUploadOutput) {
+func (m *S3API) CompleteMultipartUploadRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.CompleteMultipartUploadInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.CompleteMultipartUploadOutput) {
 	m.lockCompleteMultipartUploadRequest.Lock()
 	defer m.lockCompleteMultipartUploadRequest.Unlock()
 
 	if m.CompleteMultipartUploadRequestFunc == nil {
-		panic("mocker: MockS3API.CompleteMultipartUploadRequestFunc is nil but MockS3API.CompleteMultipartUploadRequest was called.")
+		panic("mocker: S3API.CompleteMultipartUploadRequestFunc is nil but S3API.CompleteMultipartUploadRequest was called.")
 	}
 
 	call := struct {
@@ -2137,7 +2137,7 @@ func (m *MockS3API) CompleteMultipartUploadRequest(arg0 *github_com_aws_aws_sdk_
 }
 
 // CompleteMultipartUploadRequestCalled returns true if CompleteMultipartUploadRequest was called at least once.
-func (m *MockS3API) CompleteMultipartUploadRequestCalled() bool {
+func (m *S3API) CompleteMultipartUploadRequestCalled() bool {
 	m.lockCompleteMultipartUploadRequest.Lock()
 	defer m.lockCompleteMultipartUploadRequest.Unlock()
 
@@ -2145,7 +2145,7 @@ func (m *MockS3API) CompleteMultipartUploadRequestCalled() bool {
 }
 
 // CompleteMultipartUploadRequestCalls returns the calls made to CompleteMultipartUploadRequest.
-func (m *MockS3API) CompleteMultipartUploadRequestCalls() []struct {
+func (m *S3API) CompleteMultipartUploadRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.CompleteMultipartUploadInput
 } {
 	m.lockCompleteMultipartUploadRequest.Lock()
@@ -2155,12 +2155,12 @@ func (m *MockS3API) CompleteMultipartUploadRequestCalls() []struct {
 }
 
 // CopyObject mocks base method by wrapping the associated func.
-func (m *MockS3API) CopyObject(arg0 *github_com_aws_aws_sdk_go_service_s3.CopyObjectInput) (*github_com_aws_aws_sdk_go_service_s3.CopyObjectOutput, error) {
+func (m *S3API) CopyObject(arg0 *github_com_aws_aws_sdk_go_service_s3.CopyObjectInput) (*github_com_aws_aws_sdk_go_service_s3.CopyObjectOutput, error) {
 	m.lockCopyObject.Lock()
 	defer m.lockCopyObject.Unlock()
 
 	if m.CopyObjectFunc == nil {
-		panic("mocker: MockS3API.CopyObjectFunc is nil but MockS3API.CopyObject was called.")
+		panic("mocker: S3API.CopyObjectFunc is nil but S3API.CopyObject was called.")
 	}
 
 	call := struct {
@@ -2175,7 +2175,7 @@ func (m *MockS3API) CopyObject(arg0 *github_com_aws_aws_sdk_go_service_s3.CopyOb
 }
 
 // CopyObjectCalled returns true if CopyObject was called at least once.
-func (m *MockS3API) CopyObjectCalled() bool {
+func (m *S3API) CopyObjectCalled() bool {
 	m.lockCopyObject.Lock()
 	defer m.lockCopyObject.Unlock()
 
@@ -2183,7 +2183,7 @@ func (m *MockS3API) CopyObjectCalled() bool {
 }
 
 // CopyObjectCalls returns the calls made to CopyObject.
-func (m *MockS3API) CopyObjectCalls() []struct {
+func (m *S3API) CopyObjectCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.CopyObjectInput
 } {
 	m.lockCopyObject.Lock()
@@ -2193,12 +2193,12 @@ func (m *MockS3API) CopyObjectCalls() []struct {
 }
 
 // CopyObjectWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) CopyObjectWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.CopyObjectInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.CopyObjectOutput, error) {
+func (m *S3API) CopyObjectWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.CopyObjectInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.CopyObjectOutput, error) {
 	m.lockCopyObjectWithContext.Lock()
 	defer m.lockCopyObjectWithContext.Unlock()
 
 	if m.CopyObjectWithContextFunc == nil {
-		panic("mocker: MockS3API.CopyObjectWithContextFunc is nil but MockS3API.CopyObjectWithContext was called.")
+		panic("mocker: S3API.CopyObjectWithContextFunc is nil but S3API.CopyObjectWithContext was called.")
 	}
 
 	call := struct {
@@ -2217,7 +2217,7 @@ func (m *MockS3API) CopyObjectWithContext(arg0 github_com_aws_aws_sdk_go_aws.Con
 }
 
 // CopyObjectWithContextCalled returns true if CopyObjectWithContext was called at least once.
-func (m *MockS3API) CopyObjectWithContextCalled() bool {
+func (m *S3API) CopyObjectWithContextCalled() bool {
 	m.lockCopyObjectWithContext.Lock()
 	defer m.lockCopyObjectWithContext.Unlock()
 
@@ -2225,7 +2225,7 @@ func (m *MockS3API) CopyObjectWithContextCalled() bool {
 }
 
 // CopyObjectWithContextCalls returns the calls made to CopyObjectWithContext.
-func (m *MockS3API) CopyObjectWithContextCalls() []struct {
+func (m *S3API) CopyObjectWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.CopyObjectInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -2237,12 +2237,12 @@ func (m *MockS3API) CopyObjectWithContextCalls() []struct {
 }
 
 // CopyObjectRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) CopyObjectRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.CopyObjectInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.CopyObjectOutput) {
+func (m *S3API) CopyObjectRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.CopyObjectInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.CopyObjectOutput) {
 	m.lockCopyObjectRequest.Lock()
 	defer m.lockCopyObjectRequest.Unlock()
 
 	if m.CopyObjectRequestFunc == nil {
-		panic("mocker: MockS3API.CopyObjectRequestFunc is nil but MockS3API.CopyObjectRequest was called.")
+		panic("mocker: S3API.CopyObjectRequestFunc is nil but S3API.CopyObjectRequest was called.")
 	}
 
 	call := struct {
@@ -2257,7 +2257,7 @@ func (m *MockS3API) CopyObjectRequest(arg0 *github_com_aws_aws_sdk_go_service_s3
 }
 
 // CopyObjectRequestCalled returns true if CopyObjectRequest was called at least once.
-func (m *MockS3API) CopyObjectRequestCalled() bool {
+func (m *S3API) CopyObjectRequestCalled() bool {
 	m.lockCopyObjectRequest.Lock()
 	defer m.lockCopyObjectRequest.Unlock()
 
@@ -2265,7 +2265,7 @@ func (m *MockS3API) CopyObjectRequestCalled() bool {
 }
 
 // CopyObjectRequestCalls returns the calls made to CopyObjectRequest.
-func (m *MockS3API) CopyObjectRequestCalls() []struct {
+func (m *S3API) CopyObjectRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.CopyObjectInput
 } {
 	m.lockCopyObjectRequest.Lock()
@@ -2275,12 +2275,12 @@ func (m *MockS3API) CopyObjectRequestCalls() []struct {
 }
 
 // CreateBucket mocks base method by wrapping the associated func.
-func (m *MockS3API) CreateBucket(arg0 *github_com_aws_aws_sdk_go_service_s3.CreateBucketInput) (*github_com_aws_aws_sdk_go_service_s3.CreateBucketOutput, error) {
+func (m *S3API) CreateBucket(arg0 *github_com_aws_aws_sdk_go_service_s3.CreateBucketInput) (*github_com_aws_aws_sdk_go_service_s3.CreateBucketOutput, error) {
 	m.lockCreateBucket.Lock()
 	defer m.lockCreateBucket.Unlock()
 
 	if m.CreateBucketFunc == nil {
-		panic("mocker: MockS3API.CreateBucketFunc is nil but MockS3API.CreateBucket was called.")
+		panic("mocker: S3API.CreateBucketFunc is nil but S3API.CreateBucket was called.")
 	}
 
 	call := struct {
@@ -2295,7 +2295,7 @@ func (m *MockS3API) CreateBucket(arg0 *github_com_aws_aws_sdk_go_service_s3.Crea
 }
 
 // CreateBucketCalled returns true if CreateBucket was called at least once.
-func (m *MockS3API) CreateBucketCalled() bool {
+func (m *S3API) CreateBucketCalled() bool {
 	m.lockCreateBucket.Lock()
 	defer m.lockCreateBucket.Unlock()
 
@@ -2303,7 +2303,7 @@ func (m *MockS3API) CreateBucketCalled() bool {
 }
 
 // CreateBucketCalls returns the calls made to CreateBucket.
-func (m *MockS3API) CreateBucketCalls() []struct {
+func (m *S3API) CreateBucketCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.CreateBucketInput
 } {
 	m.lockCreateBucket.Lock()
@@ -2313,12 +2313,12 @@ func (m *MockS3API) CreateBucketCalls() []struct {
 }
 
 // CreateBucketWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) CreateBucketWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.CreateBucketInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.CreateBucketOutput, error) {
+func (m *S3API) CreateBucketWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.CreateBucketInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.CreateBucketOutput, error) {
 	m.lockCreateBucketWithContext.Lock()
 	defer m.lockCreateBucketWithContext.Unlock()
 
 	if m.CreateBucketWithContextFunc == nil {
-		panic("mocker: MockS3API.CreateBucketWithContextFunc is nil but MockS3API.CreateBucketWithContext was called.")
+		panic("mocker: S3API.CreateBucketWithContextFunc is nil but S3API.CreateBucketWithContext was called.")
 	}
 
 	call := struct {
@@ -2337,7 +2337,7 @@ func (m *MockS3API) CreateBucketWithContext(arg0 github_com_aws_aws_sdk_go_aws.C
 }
 
 // CreateBucketWithContextCalled returns true if CreateBucketWithContext was called at least once.
-func (m *MockS3API) CreateBucketWithContextCalled() bool {
+func (m *S3API) CreateBucketWithContextCalled() bool {
 	m.lockCreateBucketWithContext.Lock()
 	defer m.lockCreateBucketWithContext.Unlock()
 
@@ -2345,7 +2345,7 @@ func (m *MockS3API) CreateBucketWithContextCalled() bool {
 }
 
 // CreateBucketWithContextCalls returns the calls made to CreateBucketWithContext.
-func (m *MockS3API) CreateBucketWithContextCalls() []struct {
+func (m *S3API) CreateBucketWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.CreateBucketInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -2357,12 +2357,12 @@ func (m *MockS3API) CreateBucketWithContextCalls() []struct {
 }
 
 // CreateBucketRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) CreateBucketRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.CreateBucketInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.CreateBucketOutput) {
+func (m *S3API) CreateBucketRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.CreateBucketInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.CreateBucketOutput) {
 	m.lockCreateBucketRequest.Lock()
 	defer m.lockCreateBucketRequest.Unlock()
 
 	if m.CreateBucketRequestFunc == nil {
-		panic("mocker: MockS3API.CreateBucketRequestFunc is nil but MockS3API.CreateBucketRequest was called.")
+		panic("mocker: S3API.CreateBucketRequestFunc is nil but S3API.CreateBucketRequest was called.")
 	}
 
 	call := struct {
@@ -2377,7 +2377,7 @@ func (m *MockS3API) CreateBucketRequest(arg0 *github_com_aws_aws_sdk_go_service_
 }
 
 // CreateBucketRequestCalled returns true if CreateBucketRequest was called at least once.
-func (m *MockS3API) CreateBucketRequestCalled() bool {
+func (m *S3API) CreateBucketRequestCalled() bool {
 	m.lockCreateBucketRequest.Lock()
 	defer m.lockCreateBucketRequest.Unlock()
 
@@ -2385,7 +2385,7 @@ func (m *MockS3API) CreateBucketRequestCalled() bool {
 }
 
 // CreateBucketRequestCalls returns the calls made to CreateBucketRequest.
-func (m *MockS3API) CreateBucketRequestCalls() []struct {
+func (m *S3API) CreateBucketRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.CreateBucketInput
 } {
 	m.lockCreateBucketRequest.Lock()
@@ -2395,12 +2395,12 @@ func (m *MockS3API) CreateBucketRequestCalls() []struct {
 }
 
 // CreateMultipartUpload mocks base method by wrapping the associated func.
-func (m *MockS3API) CreateMultipartUpload(arg0 *github_com_aws_aws_sdk_go_service_s3.CreateMultipartUploadInput) (*github_com_aws_aws_sdk_go_service_s3.CreateMultipartUploadOutput, error) {
+func (m *S3API) CreateMultipartUpload(arg0 *github_com_aws_aws_sdk_go_service_s3.CreateMultipartUploadInput) (*github_com_aws_aws_sdk_go_service_s3.CreateMultipartUploadOutput, error) {
 	m.lockCreateMultipartUpload.Lock()
 	defer m.lockCreateMultipartUpload.Unlock()
 
 	if m.CreateMultipartUploadFunc == nil {
-		panic("mocker: MockS3API.CreateMultipartUploadFunc is nil but MockS3API.CreateMultipartUpload was called.")
+		panic("mocker: S3API.CreateMultipartUploadFunc is nil but S3API.CreateMultipartUpload was called.")
 	}
 
 	call := struct {
@@ -2415,7 +2415,7 @@ func (m *MockS3API) CreateMultipartUpload(arg0 *github_com_aws_aws_sdk_go_servic
 }
 
 // CreateMultipartUploadCalled returns true if CreateMultipartUpload was called at least once.
-func (m *MockS3API) CreateMultipartUploadCalled() bool {
+func (m *S3API) CreateMultipartUploadCalled() bool {
 	m.lockCreateMultipartUpload.Lock()
 	defer m.lockCreateMultipartUpload.Unlock()
 
@@ -2423,7 +2423,7 @@ func (m *MockS3API) CreateMultipartUploadCalled() bool {
 }
 
 // CreateMultipartUploadCalls returns the calls made to CreateMultipartUpload.
-func (m *MockS3API) CreateMultipartUploadCalls() []struct {
+func (m *S3API) CreateMultipartUploadCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.CreateMultipartUploadInput
 } {
 	m.lockCreateMultipartUpload.Lock()
@@ -2433,12 +2433,12 @@ func (m *MockS3API) CreateMultipartUploadCalls() []struct {
 }
 
 // CreateMultipartUploadWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) CreateMultipartUploadWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.CreateMultipartUploadInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.CreateMultipartUploadOutput, error) {
+func (m *S3API) CreateMultipartUploadWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.CreateMultipartUploadInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.CreateMultipartUploadOutput, error) {
 	m.lockCreateMultipartUploadWithContext.Lock()
 	defer m.lockCreateMultipartUploadWithContext.Unlock()
 
 	if m.CreateMultipartUploadWithContextFunc == nil {
-		panic("mocker: MockS3API.CreateMultipartUploadWithContextFunc is nil but MockS3API.CreateMultipartUploadWithContext was called.")
+		panic("mocker: S3API.CreateMultipartUploadWithContextFunc is nil but S3API.CreateMultipartUploadWithContext was called.")
 	}
 
 	call := struct {
@@ -2457,7 +2457,7 @@ func (m *MockS3API) CreateMultipartUploadWithContext(arg0 github_com_aws_aws_sdk
 }
 
 // CreateMultipartUploadWithContextCalled returns true if CreateMultipartUploadWithContext was called at least once.
-func (m *MockS3API) CreateMultipartUploadWithContextCalled() bool {
+func (m *S3API) CreateMultipartUploadWithContextCalled() bool {
 	m.lockCreateMultipartUploadWithContext.Lock()
 	defer m.lockCreateMultipartUploadWithContext.Unlock()
 
@@ -2465,7 +2465,7 @@ func (m *MockS3API) CreateMultipartUploadWithContextCalled() bool {
 }
 
 // CreateMultipartUploadWithContextCalls returns the calls made to CreateMultipartUploadWithContext.
-func (m *MockS3API) CreateMultipartUploadWithContextCalls() []struct {
+func (m *S3API) CreateMultipartUploadWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.CreateMultipartUploadInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -2477,12 +2477,12 @@ func (m *MockS3API) CreateMultipartUploadWithContextCalls() []struct {
 }
 
 // CreateMultipartUploadRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) CreateMultipartUploadRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.CreateMultipartUploadInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.CreateMultipartUploadOutput) {
+func (m *S3API) CreateMultipartUploadRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.CreateMultipartUploadInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.CreateMultipartUploadOutput) {
 	m.lockCreateMultipartUploadRequest.Lock()
 	defer m.lockCreateMultipartUploadRequest.Unlock()
 
 	if m.CreateMultipartUploadRequestFunc == nil {
-		panic("mocker: MockS3API.CreateMultipartUploadRequestFunc is nil but MockS3API.CreateMultipartUploadRequest was called.")
+		panic("mocker: S3API.CreateMultipartUploadRequestFunc is nil but S3API.CreateMultipartUploadRequest was called.")
 	}
 
 	call := struct {
@@ -2497,7 +2497,7 @@ func (m *MockS3API) CreateMultipartUploadRequest(arg0 *github_com_aws_aws_sdk_go
 }
 
 // CreateMultipartUploadRequestCalled returns true if CreateMultipartUploadRequest was called at least once.
-func (m *MockS3API) CreateMultipartUploadRequestCalled() bool {
+func (m *S3API) CreateMultipartUploadRequestCalled() bool {
 	m.lockCreateMultipartUploadRequest.Lock()
 	defer m.lockCreateMultipartUploadRequest.Unlock()
 
@@ -2505,7 +2505,7 @@ func (m *MockS3API) CreateMultipartUploadRequestCalled() bool {
 }
 
 // CreateMultipartUploadRequestCalls returns the calls made to CreateMultipartUploadRequest.
-func (m *MockS3API) CreateMultipartUploadRequestCalls() []struct {
+func (m *S3API) CreateMultipartUploadRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.CreateMultipartUploadInput
 } {
 	m.lockCreateMultipartUploadRequest.Lock()
@@ -2515,12 +2515,12 @@ func (m *MockS3API) CreateMultipartUploadRequestCalls() []struct {
 }
 
 // DeleteBucket mocks base method by wrapping the associated func.
-func (m *MockS3API) DeleteBucket(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketInput) (*github_com_aws_aws_sdk_go_service_s3.DeleteBucketOutput, error) {
+func (m *S3API) DeleteBucket(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketInput) (*github_com_aws_aws_sdk_go_service_s3.DeleteBucketOutput, error) {
 	m.lockDeleteBucket.Lock()
 	defer m.lockDeleteBucket.Unlock()
 
 	if m.DeleteBucketFunc == nil {
-		panic("mocker: MockS3API.DeleteBucketFunc is nil but MockS3API.DeleteBucket was called.")
+		panic("mocker: S3API.DeleteBucketFunc is nil but S3API.DeleteBucket was called.")
 	}
 
 	call := struct {
@@ -2535,7 +2535,7 @@ func (m *MockS3API) DeleteBucket(arg0 *github_com_aws_aws_sdk_go_service_s3.Dele
 }
 
 // DeleteBucketCalled returns true if DeleteBucket was called at least once.
-func (m *MockS3API) DeleteBucketCalled() bool {
+func (m *S3API) DeleteBucketCalled() bool {
 	m.lockDeleteBucket.Lock()
 	defer m.lockDeleteBucket.Unlock()
 
@@ -2543,7 +2543,7 @@ func (m *MockS3API) DeleteBucketCalled() bool {
 }
 
 // DeleteBucketCalls returns the calls made to DeleteBucket.
-func (m *MockS3API) DeleteBucketCalls() []struct {
+func (m *S3API) DeleteBucketCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketInput
 } {
 	m.lockDeleteBucket.Lock()
@@ -2553,12 +2553,12 @@ func (m *MockS3API) DeleteBucketCalls() []struct {
 }
 
 // DeleteBucketWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) DeleteBucketWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.DeleteBucketOutput, error) {
+func (m *S3API) DeleteBucketWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.DeleteBucketOutput, error) {
 	m.lockDeleteBucketWithContext.Lock()
 	defer m.lockDeleteBucketWithContext.Unlock()
 
 	if m.DeleteBucketWithContextFunc == nil {
-		panic("mocker: MockS3API.DeleteBucketWithContextFunc is nil but MockS3API.DeleteBucketWithContext was called.")
+		panic("mocker: S3API.DeleteBucketWithContextFunc is nil but S3API.DeleteBucketWithContext was called.")
 	}
 
 	call := struct {
@@ -2577,7 +2577,7 @@ func (m *MockS3API) DeleteBucketWithContext(arg0 github_com_aws_aws_sdk_go_aws.C
 }
 
 // DeleteBucketWithContextCalled returns true if DeleteBucketWithContext was called at least once.
-func (m *MockS3API) DeleteBucketWithContextCalled() bool {
+func (m *S3API) DeleteBucketWithContextCalled() bool {
 	m.lockDeleteBucketWithContext.Lock()
 	defer m.lockDeleteBucketWithContext.Unlock()
 
@@ -2585,7 +2585,7 @@ func (m *MockS3API) DeleteBucketWithContextCalled() bool {
 }
 
 // DeleteBucketWithContextCalls returns the calls made to DeleteBucketWithContext.
-func (m *MockS3API) DeleteBucketWithContextCalls() []struct {
+func (m *S3API) DeleteBucketWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -2597,12 +2597,12 @@ func (m *MockS3API) DeleteBucketWithContextCalls() []struct {
 }
 
 // DeleteBucketRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) DeleteBucketRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.DeleteBucketOutput) {
+func (m *S3API) DeleteBucketRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.DeleteBucketOutput) {
 	m.lockDeleteBucketRequest.Lock()
 	defer m.lockDeleteBucketRequest.Unlock()
 
 	if m.DeleteBucketRequestFunc == nil {
-		panic("mocker: MockS3API.DeleteBucketRequestFunc is nil but MockS3API.DeleteBucketRequest was called.")
+		panic("mocker: S3API.DeleteBucketRequestFunc is nil but S3API.DeleteBucketRequest was called.")
 	}
 
 	call := struct {
@@ -2617,7 +2617,7 @@ func (m *MockS3API) DeleteBucketRequest(arg0 *github_com_aws_aws_sdk_go_service_
 }
 
 // DeleteBucketRequestCalled returns true if DeleteBucketRequest was called at least once.
-func (m *MockS3API) DeleteBucketRequestCalled() bool {
+func (m *S3API) DeleteBucketRequestCalled() bool {
 	m.lockDeleteBucketRequest.Lock()
 	defer m.lockDeleteBucketRequest.Unlock()
 
@@ -2625,7 +2625,7 @@ func (m *MockS3API) DeleteBucketRequestCalled() bool {
 }
 
 // DeleteBucketRequestCalls returns the calls made to DeleteBucketRequest.
-func (m *MockS3API) DeleteBucketRequestCalls() []struct {
+func (m *S3API) DeleteBucketRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketInput
 } {
 	m.lockDeleteBucketRequest.Lock()
@@ -2635,12 +2635,12 @@ func (m *MockS3API) DeleteBucketRequestCalls() []struct {
 }
 
 // DeleteBucketAnalyticsConfiguration mocks base method by wrapping the associated func.
-func (m *MockS3API) DeleteBucketAnalyticsConfiguration(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketAnalyticsConfigurationInput) (*github_com_aws_aws_sdk_go_service_s3.DeleteBucketAnalyticsConfigurationOutput, error) {
+func (m *S3API) DeleteBucketAnalyticsConfiguration(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketAnalyticsConfigurationInput) (*github_com_aws_aws_sdk_go_service_s3.DeleteBucketAnalyticsConfigurationOutput, error) {
 	m.lockDeleteBucketAnalyticsConfiguration.Lock()
 	defer m.lockDeleteBucketAnalyticsConfiguration.Unlock()
 
 	if m.DeleteBucketAnalyticsConfigurationFunc == nil {
-		panic("mocker: MockS3API.DeleteBucketAnalyticsConfigurationFunc is nil but MockS3API.DeleteBucketAnalyticsConfiguration was called.")
+		panic("mocker: S3API.DeleteBucketAnalyticsConfigurationFunc is nil but S3API.DeleteBucketAnalyticsConfiguration was called.")
 	}
 
 	call := struct {
@@ -2655,7 +2655,7 @@ func (m *MockS3API) DeleteBucketAnalyticsConfiguration(arg0 *github_com_aws_aws_
 }
 
 // DeleteBucketAnalyticsConfigurationCalled returns true if DeleteBucketAnalyticsConfiguration was called at least once.
-func (m *MockS3API) DeleteBucketAnalyticsConfigurationCalled() bool {
+func (m *S3API) DeleteBucketAnalyticsConfigurationCalled() bool {
 	m.lockDeleteBucketAnalyticsConfiguration.Lock()
 	defer m.lockDeleteBucketAnalyticsConfiguration.Unlock()
 
@@ -2663,7 +2663,7 @@ func (m *MockS3API) DeleteBucketAnalyticsConfigurationCalled() bool {
 }
 
 // DeleteBucketAnalyticsConfigurationCalls returns the calls made to DeleteBucketAnalyticsConfiguration.
-func (m *MockS3API) DeleteBucketAnalyticsConfigurationCalls() []struct {
+func (m *S3API) DeleteBucketAnalyticsConfigurationCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketAnalyticsConfigurationInput
 } {
 	m.lockDeleteBucketAnalyticsConfiguration.Lock()
@@ -2673,12 +2673,12 @@ func (m *MockS3API) DeleteBucketAnalyticsConfigurationCalls() []struct {
 }
 
 // DeleteBucketAnalyticsConfigurationWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) DeleteBucketAnalyticsConfigurationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketAnalyticsConfigurationInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.DeleteBucketAnalyticsConfigurationOutput, error) {
+func (m *S3API) DeleteBucketAnalyticsConfigurationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketAnalyticsConfigurationInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.DeleteBucketAnalyticsConfigurationOutput, error) {
 	m.lockDeleteBucketAnalyticsConfigurationWithContext.Lock()
 	defer m.lockDeleteBucketAnalyticsConfigurationWithContext.Unlock()
 
 	if m.DeleteBucketAnalyticsConfigurationWithContextFunc == nil {
-		panic("mocker: MockS3API.DeleteBucketAnalyticsConfigurationWithContextFunc is nil but MockS3API.DeleteBucketAnalyticsConfigurationWithContext was called.")
+		panic("mocker: S3API.DeleteBucketAnalyticsConfigurationWithContextFunc is nil but S3API.DeleteBucketAnalyticsConfigurationWithContext was called.")
 	}
 
 	call := struct {
@@ -2697,7 +2697,7 @@ func (m *MockS3API) DeleteBucketAnalyticsConfigurationWithContext(arg0 github_co
 }
 
 // DeleteBucketAnalyticsConfigurationWithContextCalled returns true if DeleteBucketAnalyticsConfigurationWithContext was called at least once.
-func (m *MockS3API) DeleteBucketAnalyticsConfigurationWithContextCalled() bool {
+func (m *S3API) DeleteBucketAnalyticsConfigurationWithContextCalled() bool {
 	m.lockDeleteBucketAnalyticsConfigurationWithContext.Lock()
 	defer m.lockDeleteBucketAnalyticsConfigurationWithContext.Unlock()
 
@@ -2705,7 +2705,7 @@ func (m *MockS3API) DeleteBucketAnalyticsConfigurationWithContextCalled() bool {
 }
 
 // DeleteBucketAnalyticsConfigurationWithContextCalls returns the calls made to DeleteBucketAnalyticsConfigurationWithContext.
-func (m *MockS3API) DeleteBucketAnalyticsConfigurationWithContextCalls() []struct {
+func (m *S3API) DeleteBucketAnalyticsConfigurationWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketAnalyticsConfigurationInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -2717,12 +2717,12 @@ func (m *MockS3API) DeleteBucketAnalyticsConfigurationWithContextCalls() []struc
 }
 
 // DeleteBucketAnalyticsConfigurationRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) DeleteBucketAnalyticsConfigurationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketAnalyticsConfigurationInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.DeleteBucketAnalyticsConfigurationOutput) {
+func (m *S3API) DeleteBucketAnalyticsConfigurationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketAnalyticsConfigurationInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.DeleteBucketAnalyticsConfigurationOutput) {
 	m.lockDeleteBucketAnalyticsConfigurationRequest.Lock()
 	defer m.lockDeleteBucketAnalyticsConfigurationRequest.Unlock()
 
 	if m.DeleteBucketAnalyticsConfigurationRequestFunc == nil {
-		panic("mocker: MockS3API.DeleteBucketAnalyticsConfigurationRequestFunc is nil but MockS3API.DeleteBucketAnalyticsConfigurationRequest was called.")
+		panic("mocker: S3API.DeleteBucketAnalyticsConfigurationRequestFunc is nil but S3API.DeleteBucketAnalyticsConfigurationRequest was called.")
 	}
 
 	call := struct {
@@ -2737,7 +2737,7 @@ func (m *MockS3API) DeleteBucketAnalyticsConfigurationRequest(arg0 *github_com_a
 }
 
 // DeleteBucketAnalyticsConfigurationRequestCalled returns true if DeleteBucketAnalyticsConfigurationRequest was called at least once.
-func (m *MockS3API) DeleteBucketAnalyticsConfigurationRequestCalled() bool {
+func (m *S3API) DeleteBucketAnalyticsConfigurationRequestCalled() bool {
 	m.lockDeleteBucketAnalyticsConfigurationRequest.Lock()
 	defer m.lockDeleteBucketAnalyticsConfigurationRequest.Unlock()
 
@@ -2745,7 +2745,7 @@ func (m *MockS3API) DeleteBucketAnalyticsConfigurationRequestCalled() bool {
 }
 
 // DeleteBucketAnalyticsConfigurationRequestCalls returns the calls made to DeleteBucketAnalyticsConfigurationRequest.
-func (m *MockS3API) DeleteBucketAnalyticsConfigurationRequestCalls() []struct {
+func (m *S3API) DeleteBucketAnalyticsConfigurationRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketAnalyticsConfigurationInput
 } {
 	m.lockDeleteBucketAnalyticsConfigurationRequest.Lock()
@@ -2755,12 +2755,12 @@ func (m *MockS3API) DeleteBucketAnalyticsConfigurationRequestCalls() []struct {
 }
 
 // DeleteBucketCors mocks base method by wrapping the associated func.
-func (m *MockS3API) DeleteBucketCors(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketCorsInput) (*github_com_aws_aws_sdk_go_service_s3.DeleteBucketCorsOutput, error) {
+func (m *S3API) DeleteBucketCors(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketCorsInput) (*github_com_aws_aws_sdk_go_service_s3.DeleteBucketCorsOutput, error) {
 	m.lockDeleteBucketCors.Lock()
 	defer m.lockDeleteBucketCors.Unlock()
 
 	if m.DeleteBucketCorsFunc == nil {
-		panic("mocker: MockS3API.DeleteBucketCorsFunc is nil but MockS3API.DeleteBucketCors was called.")
+		panic("mocker: S3API.DeleteBucketCorsFunc is nil but S3API.DeleteBucketCors was called.")
 	}
 
 	call := struct {
@@ -2775,7 +2775,7 @@ func (m *MockS3API) DeleteBucketCors(arg0 *github_com_aws_aws_sdk_go_service_s3.
 }
 
 // DeleteBucketCorsCalled returns true if DeleteBucketCors was called at least once.
-func (m *MockS3API) DeleteBucketCorsCalled() bool {
+func (m *S3API) DeleteBucketCorsCalled() bool {
 	m.lockDeleteBucketCors.Lock()
 	defer m.lockDeleteBucketCors.Unlock()
 
@@ -2783,7 +2783,7 @@ func (m *MockS3API) DeleteBucketCorsCalled() bool {
 }
 
 // DeleteBucketCorsCalls returns the calls made to DeleteBucketCors.
-func (m *MockS3API) DeleteBucketCorsCalls() []struct {
+func (m *S3API) DeleteBucketCorsCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketCorsInput
 } {
 	m.lockDeleteBucketCors.Lock()
@@ -2793,12 +2793,12 @@ func (m *MockS3API) DeleteBucketCorsCalls() []struct {
 }
 
 // DeleteBucketCorsWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) DeleteBucketCorsWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketCorsInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.DeleteBucketCorsOutput, error) {
+func (m *S3API) DeleteBucketCorsWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketCorsInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.DeleteBucketCorsOutput, error) {
 	m.lockDeleteBucketCorsWithContext.Lock()
 	defer m.lockDeleteBucketCorsWithContext.Unlock()
 
 	if m.DeleteBucketCorsWithContextFunc == nil {
-		panic("mocker: MockS3API.DeleteBucketCorsWithContextFunc is nil but MockS3API.DeleteBucketCorsWithContext was called.")
+		panic("mocker: S3API.DeleteBucketCorsWithContextFunc is nil but S3API.DeleteBucketCorsWithContext was called.")
 	}
 
 	call := struct {
@@ -2817,7 +2817,7 @@ func (m *MockS3API) DeleteBucketCorsWithContext(arg0 github_com_aws_aws_sdk_go_a
 }
 
 // DeleteBucketCorsWithContextCalled returns true if DeleteBucketCorsWithContext was called at least once.
-func (m *MockS3API) DeleteBucketCorsWithContextCalled() bool {
+func (m *S3API) DeleteBucketCorsWithContextCalled() bool {
 	m.lockDeleteBucketCorsWithContext.Lock()
 	defer m.lockDeleteBucketCorsWithContext.Unlock()
 
@@ -2825,7 +2825,7 @@ func (m *MockS3API) DeleteBucketCorsWithContextCalled() bool {
 }
 
 // DeleteBucketCorsWithContextCalls returns the calls made to DeleteBucketCorsWithContext.
-func (m *MockS3API) DeleteBucketCorsWithContextCalls() []struct {
+func (m *S3API) DeleteBucketCorsWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketCorsInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -2837,12 +2837,12 @@ func (m *MockS3API) DeleteBucketCorsWithContextCalls() []struct {
 }
 
 // DeleteBucketCorsRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) DeleteBucketCorsRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketCorsInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.DeleteBucketCorsOutput) {
+func (m *S3API) DeleteBucketCorsRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketCorsInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.DeleteBucketCorsOutput) {
 	m.lockDeleteBucketCorsRequest.Lock()
 	defer m.lockDeleteBucketCorsRequest.Unlock()
 
 	if m.DeleteBucketCorsRequestFunc == nil {
-		panic("mocker: MockS3API.DeleteBucketCorsRequestFunc is nil but MockS3API.DeleteBucketCorsRequest was called.")
+		panic("mocker: S3API.DeleteBucketCorsRequestFunc is nil but S3API.DeleteBucketCorsRequest was called.")
 	}
 
 	call := struct {
@@ -2857,7 +2857,7 @@ func (m *MockS3API) DeleteBucketCorsRequest(arg0 *github_com_aws_aws_sdk_go_serv
 }
 
 // DeleteBucketCorsRequestCalled returns true if DeleteBucketCorsRequest was called at least once.
-func (m *MockS3API) DeleteBucketCorsRequestCalled() bool {
+func (m *S3API) DeleteBucketCorsRequestCalled() bool {
 	m.lockDeleteBucketCorsRequest.Lock()
 	defer m.lockDeleteBucketCorsRequest.Unlock()
 
@@ -2865,7 +2865,7 @@ func (m *MockS3API) DeleteBucketCorsRequestCalled() bool {
 }
 
 // DeleteBucketCorsRequestCalls returns the calls made to DeleteBucketCorsRequest.
-func (m *MockS3API) DeleteBucketCorsRequestCalls() []struct {
+func (m *S3API) DeleteBucketCorsRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketCorsInput
 } {
 	m.lockDeleteBucketCorsRequest.Lock()
@@ -2875,12 +2875,12 @@ func (m *MockS3API) DeleteBucketCorsRequestCalls() []struct {
 }
 
 // DeleteBucketEncryption mocks base method by wrapping the associated func.
-func (m *MockS3API) DeleteBucketEncryption(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketEncryptionInput) (*github_com_aws_aws_sdk_go_service_s3.DeleteBucketEncryptionOutput, error) {
+func (m *S3API) DeleteBucketEncryption(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketEncryptionInput) (*github_com_aws_aws_sdk_go_service_s3.DeleteBucketEncryptionOutput, error) {
 	m.lockDeleteBucketEncryption.Lock()
 	defer m.lockDeleteBucketEncryption.Unlock()
 
 	if m.DeleteBucketEncryptionFunc == nil {
-		panic("mocker: MockS3API.DeleteBucketEncryptionFunc is nil but MockS3API.DeleteBucketEncryption was called.")
+		panic("mocker: S3API.DeleteBucketEncryptionFunc is nil but S3API.DeleteBucketEncryption was called.")
 	}
 
 	call := struct {
@@ -2895,7 +2895,7 @@ func (m *MockS3API) DeleteBucketEncryption(arg0 *github_com_aws_aws_sdk_go_servi
 }
 
 // DeleteBucketEncryptionCalled returns true if DeleteBucketEncryption was called at least once.
-func (m *MockS3API) DeleteBucketEncryptionCalled() bool {
+func (m *S3API) DeleteBucketEncryptionCalled() bool {
 	m.lockDeleteBucketEncryption.Lock()
 	defer m.lockDeleteBucketEncryption.Unlock()
 
@@ -2903,7 +2903,7 @@ func (m *MockS3API) DeleteBucketEncryptionCalled() bool {
 }
 
 // DeleteBucketEncryptionCalls returns the calls made to DeleteBucketEncryption.
-func (m *MockS3API) DeleteBucketEncryptionCalls() []struct {
+func (m *S3API) DeleteBucketEncryptionCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketEncryptionInput
 } {
 	m.lockDeleteBucketEncryption.Lock()
@@ -2913,12 +2913,12 @@ func (m *MockS3API) DeleteBucketEncryptionCalls() []struct {
 }
 
 // DeleteBucketEncryptionWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) DeleteBucketEncryptionWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketEncryptionInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.DeleteBucketEncryptionOutput, error) {
+func (m *S3API) DeleteBucketEncryptionWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketEncryptionInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.DeleteBucketEncryptionOutput, error) {
 	m.lockDeleteBucketEncryptionWithContext.Lock()
 	defer m.lockDeleteBucketEncryptionWithContext.Unlock()
 
 	if m.DeleteBucketEncryptionWithContextFunc == nil {
-		panic("mocker: MockS3API.DeleteBucketEncryptionWithContextFunc is nil but MockS3API.DeleteBucketEncryptionWithContext was called.")
+		panic("mocker: S3API.DeleteBucketEncryptionWithContextFunc is nil but S3API.DeleteBucketEncryptionWithContext was called.")
 	}
 
 	call := struct {
@@ -2937,7 +2937,7 @@ func (m *MockS3API) DeleteBucketEncryptionWithContext(arg0 github_com_aws_aws_sd
 }
 
 // DeleteBucketEncryptionWithContextCalled returns true if DeleteBucketEncryptionWithContext was called at least once.
-func (m *MockS3API) DeleteBucketEncryptionWithContextCalled() bool {
+func (m *S3API) DeleteBucketEncryptionWithContextCalled() bool {
 	m.lockDeleteBucketEncryptionWithContext.Lock()
 	defer m.lockDeleteBucketEncryptionWithContext.Unlock()
 
@@ -2945,7 +2945,7 @@ func (m *MockS3API) DeleteBucketEncryptionWithContextCalled() bool {
 }
 
 // DeleteBucketEncryptionWithContextCalls returns the calls made to DeleteBucketEncryptionWithContext.
-func (m *MockS3API) DeleteBucketEncryptionWithContextCalls() []struct {
+func (m *S3API) DeleteBucketEncryptionWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketEncryptionInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -2957,12 +2957,12 @@ func (m *MockS3API) DeleteBucketEncryptionWithContextCalls() []struct {
 }
 
 // DeleteBucketEncryptionRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) DeleteBucketEncryptionRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketEncryptionInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.DeleteBucketEncryptionOutput) {
+func (m *S3API) DeleteBucketEncryptionRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketEncryptionInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.DeleteBucketEncryptionOutput) {
 	m.lockDeleteBucketEncryptionRequest.Lock()
 	defer m.lockDeleteBucketEncryptionRequest.Unlock()
 
 	if m.DeleteBucketEncryptionRequestFunc == nil {
-		panic("mocker: MockS3API.DeleteBucketEncryptionRequestFunc is nil but MockS3API.DeleteBucketEncryptionRequest was called.")
+		panic("mocker: S3API.DeleteBucketEncryptionRequestFunc is nil but S3API.DeleteBucketEncryptionRequest was called.")
 	}
 
 	call := struct {
@@ -2977,7 +2977,7 @@ func (m *MockS3API) DeleteBucketEncryptionRequest(arg0 *github_com_aws_aws_sdk_g
 }
 
 // DeleteBucketEncryptionRequestCalled returns true if DeleteBucketEncryptionRequest was called at least once.
-func (m *MockS3API) DeleteBucketEncryptionRequestCalled() bool {
+func (m *S3API) DeleteBucketEncryptionRequestCalled() bool {
 	m.lockDeleteBucketEncryptionRequest.Lock()
 	defer m.lockDeleteBucketEncryptionRequest.Unlock()
 
@@ -2985,7 +2985,7 @@ func (m *MockS3API) DeleteBucketEncryptionRequestCalled() bool {
 }
 
 // DeleteBucketEncryptionRequestCalls returns the calls made to DeleteBucketEncryptionRequest.
-func (m *MockS3API) DeleteBucketEncryptionRequestCalls() []struct {
+func (m *S3API) DeleteBucketEncryptionRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketEncryptionInput
 } {
 	m.lockDeleteBucketEncryptionRequest.Lock()
@@ -2995,12 +2995,12 @@ func (m *MockS3API) DeleteBucketEncryptionRequestCalls() []struct {
 }
 
 // DeleteBucketInventoryConfiguration mocks base method by wrapping the associated func.
-func (m *MockS3API) DeleteBucketInventoryConfiguration(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketInventoryConfigurationInput) (*github_com_aws_aws_sdk_go_service_s3.DeleteBucketInventoryConfigurationOutput, error) {
+func (m *S3API) DeleteBucketInventoryConfiguration(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketInventoryConfigurationInput) (*github_com_aws_aws_sdk_go_service_s3.DeleteBucketInventoryConfigurationOutput, error) {
 	m.lockDeleteBucketInventoryConfiguration.Lock()
 	defer m.lockDeleteBucketInventoryConfiguration.Unlock()
 
 	if m.DeleteBucketInventoryConfigurationFunc == nil {
-		panic("mocker: MockS3API.DeleteBucketInventoryConfigurationFunc is nil but MockS3API.DeleteBucketInventoryConfiguration was called.")
+		panic("mocker: S3API.DeleteBucketInventoryConfigurationFunc is nil but S3API.DeleteBucketInventoryConfiguration was called.")
 	}
 
 	call := struct {
@@ -3015,7 +3015,7 @@ func (m *MockS3API) DeleteBucketInventoryConfiguration(arg0 *github_com_aws_aws_
 }
 
 // DeleteBucketInventoryConfigurationCalled returns true if DeleteBucketInventoryConfiguration was called at least once.
-func (m *MockS3API) DeleteBucketInventoryConfigurationCalled() bool {
+func (m *S3API) DeleteBucketInventoryConfigurationCalled() bool {
 	m.lockDeleteBucketInventoryConfiguration.Lock()
 	defer m.lockDeleteBucketInventoryConfiguration.Unlock()
 
@@ -3023,7 +3023,7 @@ func (m *MockS3API) DeleteBucketInventoryConfigurationCalled() bool {
 }
 
 // DeleteBucketInventoryConfigurationCalls returns the calls made to DeleteBucketInventoryConfiguration.
-func (m *MockS3API) DeleteBucketInventoryConfigurationCalls() []struct {
+func (m *S3API) DeleteBucketInventoryConfigurationCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketInventoryConfigurationInput
 } {
 	m.lockDeleteBucketInventoryConfiguration.Lock()
@@ -3033,12 +3033,12 @@ func (m *MockS3API) DeleteBucketInventoryConfigurationCalls() []struct {
 }
 
 // DeleteBucketInventoryConfigurationWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) DeleteBucketInventoryConfigurationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketInventoryConfigurationInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.DeleteBucketInventoryConfigurationOutput, error) {
+func (m *S3API) DeleteBucketInventoryConfigurationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketInventoryConfigurationInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.DeleteBucketInventoryConfigurationOutput, error) {
 	m.lockDeleteBucketInventoryConfigurationWithContext.Lock()
 	defer m.lockDeleteBucketInventoryConfigurationWithContext.Unlock()
 
 	if m.DeleteBucketInventoryConfigurationWithContextFunc == nil {
-		panic("mocker: MockS3API.DeleteBucketInventoryConfigurationWithContextFunc is nil but MockS3API.DeleteBucketInventoryConfigurationWithContext was called.")
+		panic("mocker: S3API.DeleteBucketInventoryConfigurationWithContextFunc is nil but S3API.DeleteBucketInventoryConfigurationWithContext was called.")
 	}
 
 	call := struct {
@@ -3057,7 +3057,7 @@ func (m *MockS3API) DeleteBucketInventoryConfigurationWithContext(arg0 github_co
 }
 
 // DeleteBucketInventoryConfigurationWithContextCalled returns true if DeleteBucketInventoryConfigurationWithContext was called at least once.
-func (m *MockS3API) DeleteBucketInventoryConfigurationWithContextCalled() bool {
+func (m *S3API) DeleteBucketInventoryConfigurationWithContextCalled() bool {
 	m.lockDeleteBucketInventoryConfigurationWithContext.Lock()
 	defer m.lockDeleteBucketInventoryConfigurationWithContext.Unlock()
 
@@ -3065,7 +3065,7 @@ func (m *MockS3API) DeleteBucketInventoryConfigurationWithContextCalled() bool {
 }
 
 // DeleteBucketInventoryConfigurationWithContextCalls returns the calls made to DeleteBucketInventoryConfigurationWithContext.
-func (m *MockS3API) DeleteBucketInventoryConfigurationWithContextCalls() []struct {
+func (m *S3API) DeleteBucketInventoryConfigurationWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketInventoryConfigurationInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -3077,12 +3077,12 @@ func (m *MockS3API) DeleteBucketInventoryConfigurationWithContextCalls() []struc
 }
 
 // DeleteBucketInventoryConfigurationRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) DeleteBucketInventoryConfigurationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketInventoryConfigurationInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.DeleteBucketInventoryConfigurationOutput) {
+func (m *S3API) DeleteBucketInventoryConfigurationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketInventoryConfigurationInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.DeleteBucketInventoryConfigurationOutput) {
 	m.lockDeleteBucketInventoryConfigurationRequest.Lock()
 	defer m.lockDeleteBucketInventoryConfigurationRequest.Unlock()
 
 	if m.DeleteBucketInventoryConfigurationRequestFunc == nil {
-		panic("mocker: MockS3API.DeleteBucketInventoryConfigurationRequestFunc is nil but MockS3API.DeleteBucketInventoryConfigurationRequest was called.")
+		panic("mocker: S3API.DeleteBucketInventoryConfigurationRequestFunc is nil but S3API.DeleteBucketInventoryConfigurationRequest was called.")
 	}
 
 	call := struct {
@@ -3097,7 +3097,7 @@ func (m *MockS3API) DeleteBucketInventoryConfigurationRequest(arg0 *github_com_a
 }
 
 // DeleteBucketInventoryConfigurationRequestCalled returns true if DeleteBucketInventoryConfigurationRequest was called at least once.
-func (m *MockS3API) DeleteBucketInventoryConfigurationRequestCalled() bool {
+func (m *S3API) DeleteBucketInventoryConfigurationRequestCalled() bool {
 	m.lockDeleteBucketInventoryConfigurationRequest.Lock()
 	defer m.lockDeleteBucketInventoryConfigurationRequest.Unlock()
 
@@ -3105,7 +3105,7 @@ func (m *MockS3API) DeleteBucketInventoryConfigurationRequestCalled() bool {
 }
 
 // DeleteBucketInventoryConfigurationRequestCalls returns the calls made to DeleteBucketInventoryConfigurationRequest.
-func (m *MockS3API) DeleteBucketInventoryConfigurationRequestCalls() []struct {
+func (m *S3API) DeleteBucketInventoryConfigurationRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketInventoryConfigurationInput
 } {
 	m.lockDeleteBucketInventoryConfigurationRequest.Lock()
@@ -3115,12 +3115,12 @@ func (m *MockS3API) DeleteBucketInventoryConfigurationRequestCalls() []struct {
 }
 
 // DeleteBucketLifecycle mocks base method by wrapping the associated func.
-func (m *MockS3API) DeleteBucketLifecycle(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketLifecycleInput) (*github_com_aws_aws_sdk_go_service_s3.DeleteBucketLifecycleOutput, error) {
+func (m *S3API) DeleteBucketLifecycle(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketLifecycleInput) (*github_com_aws_aws_sdk_go_service_s3.DeleteBucketLifecycleOutput, error) {
 	m.lockDeleteBucketLifecycle.Lock()
 	defer m.lockDeleteBucketLifecycle.Unlock()
 
 	if m.DeleteBucketLifecycleFunc == nil {
-		panic("mocker: MockS3API.DeleteBucketLifecycleFunc is nil but MockS3API.DeleteBucketLifecycle was called.")
+		panic("mocker: S3API.DeleteBucketLifecycleFunc is nil but S3API.DeleteBucketLifecycle was called.")
 	}
 
 	call := struct {
@@ -3135,7 +3135,7 @@ func (m *MockS3API) DeleteBucketLifecycle(arg0 *github_com_aws_aws_sdk_go_servic
 }
 
 // DeleteBucketLifecycleCalled returns true if DeleteBucketLifecycle was called at least once.
-func (m *MockS3API) DeleteBucketLifecycleCalled() bool {
+func (m *S3API) DeleteBucketLifecycleCalled() bool {
 	m.lockDeleteBucketLifecycle.Lock()
 	defer m.lockDeleteBucketLifecycle.Unlock()
 
@@ -3143,7 +3143,7 @@ func (m *MockS3API) DeleteBucketLifecycleCalled() bool {
 }
 
 // DeleteBucketLifecycleCalls returns the calls made to DeleteBucketLifecycle.
-func (m *MockS3API) DeleteBucketLifecycleCalls() []struct {
+func (m *S3API) DeleteBucketLifecycleCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketLifecycleInput
 } {
 	m.lockDeleteBucketLifecycle.Lock()
@@ -3153,12 +3153,12 @@ func (m *MockS3API) DeleteBucketLifecycleCalls() []struct {
 }
 
 // DeleteBucketLifecycleWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) DeleteBucketLifecycleWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketLifecycleInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.DeleteBucketLifecycleOutput, error) {
+func (m *S3API) DeleteBucketLifecycleWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketLifecycleInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.DeleteBucketLifecycleOutput, error) {
 	m.lockDeleteBucketLifecycleWithContext.Lock()
 	defer m.lockDeleteBucketLifecycleWithContext.Unlock()
 
 	if m.DeleteBucketLifecycleWithContextFunc == nil {
-		panic("mocker: MockS3API.DeleteBucketLifecycleWithContextFunc is nil but MockS3API.DeleteBucketLifecycleWithContext was called.")
+		panic("mocker: S3API.DeleteBucketLifecycleWithContextFunc is nil but S3API.DeleteBucketLifecycleWithContext was called.")
 	}
 
 	call := struct {
@@ -3177,7 +3177,7 @@ func (m *MockS3API) DeleteBucketLifecycleWithContext(arg0 github_com_aws_aws_sdk
 }
 
 // DeleteBucketLifecycleWithContextCalled returns true if DeleteBucketLifecycleWithContext was called at least once.
-func (m *MockS3API) DeleteBucketLifecycleWithContextCalled() bool {
+func (m *S3API) DeleteBucketLifecycleWithContextCalled() bool {
 	m.lockDeleteBucketLifecycleWithContext.Lock()
 	defer m.lockDeleteBucketLifecycleWithContext.Unlock()
 
@@ -3185,7 +3185,7 @@ func (m *MockS3API) DeleteBucketLifecycleWithContextCalled() bool {
 }
 
 // DeleteBucketLifecycleWithContextCalls returns the calls made to DeleteBucketLifecycleWithContext.
-func (m *MockS3API) DeleteBucketLifecycleWithContextCalls() []struct {
+func (m *S3API) DeleteBucketLifecycleWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketLifecycleInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -3197,12 +3197,12 @@ func (m *MockS3API) DeleteBucketLifecycleWithContextCalls() []struct {
 }
 
 // DeleteBucketLifecycleRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) DeleteBucketLifecycleRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketLifecycleInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.DeleteBucketLifecycleOutput) {
+func (m *S3API) DeleteBucketLifecycleRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketLifecycleInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.DeleteBucketLifecycleOutput) {
 	m.lockDeleteBucketLifecycleRequest.Lock()
 	defer m.lockDeleteBucketLifecycleRequest.Unlock()
 
 	if m.DeleteBucketLifecycleRequestFunc == nil {
-		panic("mocker: MockS3API.DeleteBucketLifecycleRequestFunc is nil but MockS3API.DeleteBucketLifecycleRequest was called.")
+		panic("mocker: S3API.DeleteBucketLifecycleRequestFunc is nil but S3API.DeleteBucketLifecycleRequest was called.")
 	}
 
 	call := struct {
@@ -3217,7 +3217,7 @@ func (m *MockS3API) DeleteBucketLifecycleRequest(arg0 *github_com_aws_aws_sdk_go
 }
 
 // DeleteBucketLifecycleRequestCalled returns true if DeleteBucketLifecycleRequest was called at least once.
-func (m *MockS3API) DeleteBucketLifecycleRequestCalled() bool {
+func (m *S3API) DeleteBucketLifecycleRequestCalled() bool {
 	m.lockDeleteBucketLifecycleRequest.Lock()
 	defer m.lockDeleteBucketLifecycleRequest.Unlock()
 
@@ -3225,7 +3225,7 @@ func (m *MockS3API) DeleteBucketLifecycleRequestCalled() bool {
 }
 
 // DeleteBucketLifecycleRequestCalls returns the calls made to DeleteBucketLifecycleRequest.
-func (m *MockS3API) DeleteBucketLifecycleRequestCalls() []struct {
+func (m *S3API) DeleteBucketLifecycleRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketLifecycleInput
 } {
 	m.lockDeleteBucketLifecycleRequest.Lock()
@@ -3235,12 +3235,12 @@ func (m *MockS3API) DeleteBucketLifecycleRequestCalls() []struct {
 }
 
 // DeleteBucketMetricsConfiguration mocks base method by wrapping the associated func.
-func (m *MockS3API) DeleteBucketMetricsConfiguration(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketMetricsConfigurationInput) (*github_com_aws_aws_sdk_go_service_s3.DeleteBucketMetricsConfigurationOutput, error) {
+func (m *S3API) DeleteBucketMetricsConfiguration(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketMetricsConfigurationInput) (*github_com_aws_aws_sdk_go_service_s3.DeleteBucketMetricsConfigurationOutput, error) {
 	m.lockDeleteBucketMetricsConfiguration.Lock()
 	defer m.lockDeleteBucketMetricsConfiguration.Unlock()
 
 	if m.DeleteBucketMetricsConfigurationFunc == nil {
-		panic("mocker: MockS3API.DeleteBucketMetricsConfigurationFunc is nil but MockS3API.DeleteBucketMetricsConfiguration was called.")
+		panic("mocker: S3API.DeleteBucketMetricsConfigurationFunc is nil but S3API.DeleteBucketMetricsConfiguration was called.")
 	}
 
 	call := struct {
@@ -3255,7 +3255,7 @@ func (m *MockS3API) DeleteBucketMetricsConfiguration(arg0 *github_com_aws_aws_sd
 }
 
 // DeleteBucketMetricsConfigurationCalled returns true if DeleteBucketMetricsConfiguration was called at least once.
-func (m *MockS3API) DeleteBucketMetricsConfigurationCalled() bool {
+func (m *S3API) DeleteBucketMetricsConfigurationCalled() bool {
 	m.lockDeleteBucketMetricsConfiguration.Lock()
 	defer m.lockDeleteBucketMetricsConfiguration.Unlock()
 
@@ -3263,7 +3263,7 @@ func (m *MockS3API) DeleteBucketMetricsConfigurationCalled() bool {
 }
 
 // DeleteBucketMetricsConfigurationCalls returns the calls made to DeleteBucketMetricsConfiguration.
-func (m *MockS3API) DeleteBucketMetricsConfigurationCalls() []struct {
+func (m *S3API) DeleteBucketMetricsConfigurationCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketMetricsConfigurationInput
 } {
 	m.lockDeleteBucketMetricsConfiguration.Lock()
@@ -3273,12 +3273,12 @@ func (m *MockS3API) DeleteBucketMetricsConfigurationCalls() []struct {
 }
 
 // DeleteBucketMetricsConfigurationWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) DeleteBucketMetricsConfigurationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketMetricsConfigurationInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.DeleteBucketMetricsConfigurationOutput, error) {
+func (m *S3API) DeleteBucketMetricsConfigurationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketMetricsConfigurationInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.DeleteBucketMetricsConfigurationOutput, error) {
 	m.lockDeleteBucketMetricsConfigurationWithContext.Lock()
 	defer m.lockDeleteBucketMetricsConfigurationWithContext.Unlock()
 
 	if m.DeleteBucketMetricsConfigurationWithContextFunc == nil {
-		panic("mocker: MockS3API.DeleteBucketMetricsConfigurationWithContextFunc is nil but MockS3API.DeleteBucketMetricsConfigurationWithContext was called.")
+		panic("mocker: S3API.DeleteBucketMetricsConfigurationWithContextFunc is nil but S3API.DeleteBucketMetricsConfigurationWithContext was called.")
 	}
 
 	call := struct {
@@ -3297,7 +3297,7 @@ func (m *MockS3API) DeleteBucketMetricsConfigurationWithContext(arg0 github_com_
 }
 
 // DeleteBucketMetricsConfigurationWithContextCalled returns true if DeleteBucketMetricsConfigurationWithContext was called at least once.
-func (m *MockS3API) DeleteBucketMetricsConfigurationWithContextCalled() bool {
+func (m *S3API) DeleteBucketMetricsConfigurationWithContextCalled() bool {
 	m.lockDeleteBucketMetricsConfigurationWithContext.Lock()
 	defer m.lockDeleteBucketMetricsConfigurationWithContext.Unlock()
 
@@ -3305,7 +3305,7 @@ func (m *MockS3API) DeleteBucketMetricsConfigurationWithContextCalled() bool {
 }
 
 // DeleteBucketMetricsConfigurationWithContextCalls returns the calls made to DeleteBucketMetricsConfigurationWithContext.
-func (m *MockS3API) DeleteBucketMetricsConfigurationWithContextCalls() []struct {
+func (m *S3API) DeleteBucketMetricsConfigurationWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketMetricsConfigurationInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -3317,12 +3317,12 @@ func (m *MockS3API) DeleteBucketMetricsConfigurationWithContextCalls() []struct 
 }
 
 // DeleteBucketMetricsConfigurationRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) DeleteBucketMetricsConfigurationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketMetricsConfigurationInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.DeleteBucketMetricsConfigurationOutput) {
+func (m *S3API) DeleteBucketMetricsConfigurationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketMetricsConfigurationInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.DeleteBucketMetricsConfigurationOutput) {
 	m.lockDeleteBucketMetricsConfigurationRequest.Lock()
 	defer m.lockDeleteBucketMetricsConfigurationRequest.Unlock()
 
 	if m.DeleteBucketMetricsConfigurationRequestFunc == nil {
-		panic("mocker: MockS3API.DeleteBucketMetricsConfigurationRequestFunc is nil but MockS3API.DeleteBucketMetricsConfigurationRequest was called.")
+		panic("mocker: S3API.DeleteBucketMetricsConfigurationRequestFunc is nil but S3API.DeleteBucketMetricsConfigurationRequest was called.")
 	}
 
 	call := struct {
@@ -3337,7 +3337,7 @@ func (m *MockS3API) DeleteBucketMetricsConfigurationRequest(arg0 *github_com_aws
 }
 
 // DeleteBucketMetricsConfigurationRequestCalled returns true if DeleteBucketMetricsConfigurationRequest was called at least once.
-func (m *MockS3API) DeleteBucketMetricsConfigurationRequestCalled() bool {
+func (m *S3API) DeleteBucketMetricsConfigurationRequestCalled() bool {
 	m.lockDeleteBucketMetricsConfigurationRequest.Lock()
 	defer m.lockDeleteBucketMetricsConfigurationRequest.Unlock()
 
@@ -3345,7 +3345,7 @@ func (m *MockS3API) DeleteBucketMetricsConfigurationRequestCalled() bool {
 }
 
 // DeleteBucketMetricsConfigurationRequestCalls returns the calls made to DeleteBucketMetricsConfigurationRequest.
-func (m *MockS3API) DeleteBucketMetricsConfigurationRequestCalls() []struct {
+func (m *S3API) DeleteBucketMetricsConfigurationRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketMetricsConfigurationInput
 } {
 	m.lockDeleteBucketMetricsConfigurationRequest.Lock()
@@ -3355,12 +3355,12 @@ func (m *MockS3API) DeleteBucketMetricsConfigurationRequestCalls() []struct {
 }
 
 // DeleteBucketPolicy mocks base method by wrapping the associated func.
-func (m *MockS3API) DeleteBucketPolicy(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketPolicyInput) (*github_com_aws_aws_sdk_go_service_s3.DeleteBucketPolicyOutput, error) {
+func (m *S3API) DeleteBucketPolicy(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketPolicyInput) (*github_com_aws_aws_sdk_go_service_s3.DeleteBucketPolicyOutput, error) {
 	m.lockDeleteBucketPolicy.Lock()
 	defer m.lockDeleteBucketPolicy.Unlock()
 
 	if m.DeleteBucketPolicyFunc == nil {
-		panic("mocker: MockS3API.DeleteBucketPolicyFunc is nil but MockS3API.DeleteBucketPolicy was called.")
+		panic("mocker: S3API.DeleteBucketPolicyFunc is nil but S3API.DeleteBucketPolicy was called.")
 	}
 
 	call := struct {
@@ -3375,7 +3375,7 @@ func (m *MockS3API) DeleteBucketPolicy(arg0 *github_com_aws_aws_sdk_go_service_s
 }
 
 // DeleteBucketPolicyCalled returns true if DeleteBucketPolicy was called at least once.
-func (m *MockS3API) DeleteBucketPolicyCalled() bool {
+func (m *S3API) DeleteBucketPolicyCalled() bool {
 	m.lockDeleteBucketPolicy.Lock()
 	defer m.lockDeleteBucketPolicy.Unlock()
 
@@ -3383,7 +3383,7 @@ func (m *MockS3API) DeleteBucketPolicyCalled() bool {
 }
 
 // DeleteBucketPolicyCalls returns the calls made to DeleteBucketPolicy.
-func (m *MockS3API) DeleteBucketPolicyCalls() []struct {
+func (m *S3API) DeleteBucketPolicyCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketPolicyInput
 } {
 	m.lockDeleteBucketPolicy.Lock()
@@ -3393,12 +3393,12 @@ func (m *MockS3API) DeleteBucketPolicyCalls() []struct {
 }
 
 // DeleteBucketPolicyWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) DeleteBucketPolicyWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketPolicyInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.DeleteBucketPolicyOutput, error) {
+func (m *S3API) DeleteBucketPolicyWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketPolicyInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.DeleteBucketPolicyOutput, error) {
 	m.lockDeleteBucketPolicyWithContext.Lock()
 	defer m.lockDeleteBucketPolicyWithContext.Unlock()
 
 	if m.DeleteBucketPolicyWithContextFunc == nil {
-		panic("mocker: MockS3API.DeleteBucketPolicyWithContextFunc is nil but MockS3API.DeleteBucketPolicyWithContext was called.")
+		panic("mocker: S3API.DeleteBucketPolicyWithContextFunc is nil but S3API.DeleteBucketPolicyWithContext was called.")
 	}
 
 	call := struct {
@@ -3417,7 +3417,7 @@ func (m *MockS3API) DeleteBucketPolicyWithContext(arg0 github_com_aws_aws_sdk_go
 }
 
 // DeleteBucketPolicyWithContextCalled returns true if DeleteBucketPolicyWithContext was called at least once.
-func (m *MockS3API) DeleteBucketPolicyWithContextCalled() bool {
+func (m *S3API) DeleteBucketPolicyWithContextCalled() bool {
 	m.lockDeleteBucketPolicyWithContext.Lock()
 	defer m.lockDeleteBucketPolicyWithContext.Unlock()
 
@@ -3425,7 +3425,7 @@ func (m *MockS3API) DeleteBucketPolicyWithContextCalled() bool {
 }
 
 // DeleteBucketPolicyWithContextCalls returns the calls made to DeleteBucketPolicyWithContext.
-func (m *MockS3API) DeleteBucketPolicyWithContextCalls() []struct {
+func (m *S3API) DeleteBucketPolicyWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketPolicyInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -3437,12 +3437,12 @@ func (m *MockS3API) DeleteBucketPolicyWithContextCalls() []struct {
 }
 
 // DeleteBucketPolicyRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) DeleteBucketPolicyRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketPolicyInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.DeleteBucketPolicyOutput) {
+func (m *S3API) DeleteBucketPolicyRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketPolicyInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.DeleteBucketPolicyOutput) {
 	m.lockDeleteBucketPolicyRequest.Lock()
 	defer m.lockDeleteBucketPolicyRequest.Unlock()
 
 	if m.DeleteBucketPolicyRequestFunc == nil {
-		panic("mocker: MockS3API.DeleteBucketPolicyRequestFunc is nil but MockS3API.DeleteBucketPolicyRequest was called.")
+		panic("mocker: S3API.DeleteBucketPolicyRequestFunc is nil but S3API.DeleteBucketPolicyRequest was called.")
 	}
 
 	call := struct {
@@ -3457,7 +3457,7 @@ func (m *MockS3API) DeleteBucketPolicyRequest(arg0 *github_com_aws_aws_sdk_go_se
 }
 
 // DeleteBucketPolicyRequestCalled returns true if DeleteBucketPolicyRequest was called at least once.
-func (m *MockS3API) DeleteBucketPolicyRequestCalled() bool {
+func (m *S3API) DeleteBucketPolicyRequestCalled() bool {
 	m.lockDeleteBucketPolicyRequest.Lock()
 	defer m.lockDeleteBucketPolicyRequest.Unlock()
 
@@ -3465,7 +3465,7 @@ func (m *MockS3API) DeleteBucketPolicyRequestCalled() bool {
 }
 
 // DeleteBucketPolicyRequestCalls returns the calls made to DeleteBucketPolicyRequest.
-func (m *MockS3API) DeleteBucketPolicyRequestCalls() []struct {
+func (m *S3API) DeleteBucketPolicyRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketPolicyInput
 } {
 	m.lockDeleteBucketPolicyRequest.Lock()
@@ -3475,12 +3475,12 @@ func (m *MockS3API) DeleteBucketPolicyRequestCalls() []struct {
 }
 
 // DeleteBucketReplication mocks base method by wrapping the associated func.
-func (m *MockS3API) DeleteBucketReplication(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketReplicationInput) (*github_com_aws_aws_sdk_go_service_s3.DeleteBucketReplicationOutput, error) {
+func (m *S3API) DeleteBucketReplication(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketReplicationInput) (*github_com_aws_aws_sdk_go_service_s3.DeleteBucketReplicationOutput, error) {
 	m.lockDeleteBucketReplication.Lock()
 	defer m.lockDeleteBucketReplication.Unlock()
 
 	if m.DeleteBucketReplicationFunc == nil {
-		panic("mocker: MockS3API.DeleteBucketReplicationFunc is nil but MockS3API.DeleteBucketReplication was called.")
+		panic("mocker: S3API.DeleteBucketReplicationFunc is nil but S3API.DeleteBucketReplication was called.")
 	}
 
 	call := struct {
@@ -3495,7 +3495,7 @@ func (m *MockS3API) DeleteBucketReplication(arg0 *github_com_aws_aws_sdk_go_serv
 }
 
 // DeleteBucketReplicationCalled returns true if DeleteBucketReplication was called at least once.
-func (m *MockS3API) DeleteBucketReplicationCalled() bool {
+func (m *S3API) DeleteBucketReplicationCalled() bool {
 	m.lockDeleteBucketReplication.Lock()
 	defer m.lockDeleteBucketReplication.Unlock()
 
@@ -3503,7 +3503,7 @@ func (m *MockS3API) DeleteBucketReplicationCalled() bool {
 }
 
 // DeleteBucketReplicationCalls returns the calls made to DeleteBucketReplication.
-func (m *MockS3API) DeleteBucketReplicationCalls() []struct {
+func (m *S3API) DeleteBucketReplicationCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketReplicationInput
 } {
 	m.lockDeleteBucketReplication.Lock()
@@ -3513,12 +3513,12 @@ func (m *MockS3API) DeleteBucketReplicationCalls() []struct {
 }
 
 // DeleteBucketReplicationWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) DeleteBucketReplicationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketReplicationInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.DeleteBucketReplicationOutput, error) {
+func (m *S3API) DeleteBucketReplicationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketReplicationInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.DeleteBucketReplicationOutput, error) {
 	m.lockDeleteBucketReplicationWithContext.Lock()
 	defer m.lockDeleteBucketReplicationWithContext.Unlock()
 
 	if m.DeleteBucketReplicationWithContextFunc == nil {
-		panic("mocker: MockS3API.DeleteBucketReplicationWithContextFunc is nil but MockS3API.DeleteBucketReplicationWithContext was called.")
+		panic("mocker: S3API.DeleteBucketReplicationWithContextFunc is nil but S3API.DeleteBucketReplicationWithContext was called.")
 	}
 
 	call := struct {
@@ -3537,7 +3537,7 @@ func (m *MockS3API) DeleteBucketReplicationWithContext(arg0 github_com_aws_aws_s
 }
 
 // DeleteBucketReplicationWithContextCalled returns true if DeleteBucketReplicationWithContext was called at least once.
-func (m *MockS3API) DeleteBucketReplicationWithContextCalled() bool {
+func (m *S3API) DeleteBucketReplicationWithContextCalled() bool {
 	m.lockDeleteBucketReplicationWithContext.Lock()
 	defer m.lockDeleteBucketReplicationWithContext.Unlock()
 
@@ -3545,7 +3545,7 @@ func (m *MockS3API) DeleteBucketReplicationWithContextCalled() bool {
 }
 
 // DeleteBucketReplicationWithContextCalls returns the calls made to DeleteBucketReplicationWithContext.
-func (m *MockS3API) DeleteBucketReplicationWithContextCalls() []struct {
+func (m *S3API) DeleteBucketReplicationWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketReplicationInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -3557,12 +3557,12 @@ func (m *MockS3API) DeleteBucketReplicationWithContextCalls() []struct {
 }
 
 // DeleteBucketReplicationRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) DeleteBucketReplicationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketReplicationInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.DeleteBucketReplicationOutput) {
+func (m *S3API) DeleteBucketReplicationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketReplicationInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.DeleteBucketReplicationOutput) {
 	m.lockDeleteBucketReplicationRequest.Lock()
 	defer m.lockDeleteBucketReplicationRequest.Unlock()
 
 	if m.DeleteBucketReplicationRequestFunc == nil {
-		panic("mocker: MockS3API.DeleteBucketReplicationRequestFunc is nil but MockS3API.DeleteBucketReplicationRequest was called.")
+		panic("mocker: S3API.DeleteBucketReplicationRequestFunc is nil but S3API.DeleteBucketReplicationRequest was called.")
 	}
 
 	call := struct {
@@ -3577,7 +3577,7 @@ func (m *MockS3API) DeleteBucketReplicationRequest(arg0 *github_com_aws_aws_sdk_
 }
 
 // DeleteBucketReplicationRequestCalled returns true if DeleteBucketReplicationRequest was called at least once.
-func (m *MockS3API) DeleteBucketReplicationRequestCalled() bool {
+func (m *S3API) DeleteBucketReplicationRequestCalled() bool {
 	m.lockDeleteBucketReplicationRequest.Lock()
 	defer m.lockDeleteBucketReplicationRequest.Unlock()
 
@@ -3585,7 +3585,7 @@ func (m *MockS3API) DeleteBucketReplicationRequestCalled() bool {
 }
 
 // DeleteBucketReplicationRequestCalls returns the calls made to DeleteBucketReplicationRequest.
-func (m *MockS3API) DeleteBucketReplicationRequestCalls() []struct {
+func (m *S3API) DeleteBucketReplicationRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketReplicationInput
 } {
 	m.lockDeleteBucketReplicationRequest.Lock()
@@ -3595,12 +3595,12 @@ func (m *MockS3API) DeleteBucketReplicationRequestCalls() []struct {
 }
 
 // DeleteBucketTagging mocks base method by wrapping the associated func.
-func (m *MockS3API) DeleteBucketTagging(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketTaggingInput) (*github_com_aws_aws_sdk_go_service_s3.DeleteBucketTaggingOutput, error) {
+func (m *S3API) DeleteBucketTagging(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketTaggingInput) (*github_com_aws_aws_sdk_go_service_s3.DeleteBucketTaggingOutput, error) {
 	m.lockDeleteBucketTagging.Lock()
 	defer m.lockDeleteBucketTagging.Unlock()
 
 	if m.DeleteBucketTaggingFunc == nil {
-		panic("mocker: MockS3API.DeleteBucketTaggingFunc is nil but MockS3API.DeleteBucketTagging was called.")
+		panic("mocker: S3API.DeleteBucketTaggingFunc is nil but S3API.DeleteBucketTagging was called.")
 	}
 
 	call := struct {
@@ -3615,7 +3615,7 @@ func (m *MockS3API) DeleteBucketTagging(arg0 *github_com_aws_aws_sdk_go_service_
 }
 
 // DeleteBucketTaggingCalled returns true if DeleteBucketTagging was called at least once.
-func (m *MockS3API) DeleteBucketTaggingCalled() bool {
+func (m *S3API) DeleteBucketTaggingCalled() bool {
 	m.lockDeleteBucketTagging.Lock()
 	defer m.lockDeleteBucketTagging.Unlock()
 
@@ -3623,7 +3623,7 @@ func (m *MockS3API) DeleteBucketTaggingCalled() bool {
 }
 
 // DeleteBucketTaggingCalls returns the calls made to DeleteBucketTagging.
-func (m *MockS3API) DeleteBucketTaggingCalls() []struct {
+func (m *S3API) DeleteBucketTaggingCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketTaggingInput
 } {
 	m.lockDeleteBucketTagging.Lock()
@@ -3633,12 +3633,12 @@ func (m *MockS3API) DeleteBucketTaggingCalls() []struct {
 }
 
 // DeleteBucketTaggingWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) DeleteBucketTaggingWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketTaggingInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.DeleteBucketTaggingOutput, error) {
+func (m *S3API) DeleteBucketTaggingWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketTaggingInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.DeleteBucketTaggingOutput, error) {
 	m.lockDeleteBucketTaggingWithContext.Lock()
 	defer m.lockDeleteBucketTaggingWithContext.Unlock()
 
 	if m.DeleteBucketTaggingWithContextFunc == nil {
-		panic("mocker: MockS3API.DeleteBucketTaggingWithContextFunc is nil but MockS3API.DeleteBucketTaggingWithContext was called.")
+		panic("mocker: S3API.DeleteBucketTaggingWithContextFunc is nil but S3API.DeleteBucketTaggingWithContext was called.")
 	}
 
 	call := struct {
@@ -3657,7 +3657,7 @@ func (m *MockS3API) DeleteBucketTaggingWithContext(arg0 github_com_aws_aws_sdk_g
 }
 
 // DeleteBucketTaggingWithContextCalled returns true if DeleteBucketTaggingWithContext was called at least once.
-func (m *MockS3API) DeleteBucketTaggingWithContextCalled() bool {
+func (m *S3API) DeleteBucketTaggingWithContextCalled() bool {
 	m.lockDeleteBucketTaggingWithContext.Lock()
 	defer m.lockDeleteBucketTaggingWithContext.Unlock()
 
@@ -3665,7 +3665,7 @@ func (m *MockS3API) DeleteBucketTaggingWithContextCalled() bool {
 }
 
 // DeleteBucketTaggingWithContextCalls returns the calls made to DeleteBucketTaggingWithContext.
-func (m *MockS3API) DeleteBucketTaggingWithContextCalls() []struct {
+func (m *S3API) DeleteBucketTaggingWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketTaggingInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -3677,12 +3677,12 @@ func (m *MockS3API) DeleteBucketTaggingWithContextCalls() []struct {
 }
 
 // DeleteBucketTaggingRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) DeleteBucketTaggingRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketTaggingInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.DeleteBucketTaggingOutput) {
+func (m *S3API) DeleteBucketTaggingRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketTaggingInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.DeleteBucketTaggingOutput) {
 	m.lockDeleteBucketTaggingRequest.Lock()
 	defer m.lockDeleteBucketTaggingRequest.Unlock()
 
 	if m.DeleteBucketTaggingRequestFunc == nil {
-		panic("mocker: MockS3API.DeleteBucketTaggingRequestFunc is nil but MockS3API.DeleteBucketTaggingRequest was called.")
+		panic("mocker: S3API.DeleteBucketTaggingRequestFunc is nil but S3API.DeleteBucketTaggingRequest was called.")
 	}
 
 	call := struct {
@@ -3697,7 +3697,7 @@ func (m *MockS3API) DeleteBucketTaggingRequest(arg0 *github_com_aws_aws_sdk_go_s
 }
 
 // DeleteBucketTaggingRequestCalled returns true if DeleteBucketTaggingRequest was called at least once.
-func (m *MockS3API) DeleteBucketTaggingRequestCalled() bool {
+func (m *S3API) DeleteBucketTaggingRequestCalled() bool {
 	m.lockDeleteBucketTaggingRequest.Lock()
 	defer m.lockDeleteBucketTaggingRequest.Unlock()
 
@@ -3705,7 +3705,7 @@ func (m *MockS3API) DeleteBucketTaggingRequestCalled() bool {
 }
 
 // DeleteBucketTaggingRequestCalls returns the calls made to DeleteBucketTaggingRequest.
-func (m *MockS3API) DeleteBucketTaggingRequestCalls() []struct {
+func (m *S3API) DeleteBucketTaggingRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketTaggingInput
 } {
 	m.lockDeleteBucketTaggingRequest.Lock()
@@ -3715,12 +3715,12 @@ func (m *MockS3API) DeleteBucketTaggingRequestCalls() []struct {
 }
 
 // DeleteBucketWebsite mocks base method by wrapping the associated func.
-func (m *MockS3API) DeleteBucketWebsite(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketWebsiteInput) (*github_com_aws_aws_sdk_go_service_s3.DeleteBucketWebsiteOutput, error) {
+func (m *S3API) DeleteBucketWebsite(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketWebsiteInput) (*github_com_aws_aws_sdk_go_service_s3.DeleteBucketWebsiteOutput, error) {
 	m.lockDeleteBucketWebsite.Lock()
 	defer m.lockDeleteBucketWebsite.Unlock()
 
 	if m.DeleteBucketWebsiteFunc == nil {
-		panic("mocker: MockS3API.DeleteBucketWebsiteFunc is nil but MockS3API.DeleteBucketWebsite was called.")
+		panic("mocker: S3API.DeleteBucketWebsiteFunc is nil but S3API.DeleteBucketWebsite was called.")
 	}
 
 	call := struct {
@@ -3735,7 +3735,7 @@ func (m *MockS3API) DeleteBucketWebsite(arg0 *github_com_aws_aws_sdk_go_service_
 }
 
 // DeleteBucketWebsiteCalled returns true if DeleteBucketWebsite was called at least once.
-func (m *MockS3API) DeleteBucketWebsiteCalled() bool {
+func (m *S3API) DeleteBucketWebsiteCalled() bool {
 	m.lockDeleteBucketWebsite.Lock()
 	defer m.lockDeleteBucketWebsite.Unlock()
 
@@ -3743,7 +3743,7 @@ func (m *MockS3API) DeleteBucketWebsiteCalled() bool {
 }
 
 // DeleteBucketWebsiteCalls returns the calls made to DeleteBucketWebsite.
-func (m *MockS3API) DeleteBucketWebsiteCalls() []struct {
+func (m *S3API) DeleteBucketWebsiteCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketWebsiteInput
 } {
 	m.lockDeleteBucketWebsite.Lock()
@@ -3753,12 +3753,12 @@ func (m *MockS3API) DeleteBucketWebsiteCalls() []struct {
 }
 
 // DeleteBucketWebsiteWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) DeleteBucketWebsiteWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketWebsiteInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.DeleteBucketWebsiteOutput, error) {
+func (m *S3API) DeleteBucketWebsiteWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketWebsiteInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.DeleteBucketWebsiteOutput, error) {
 	m.lockDeleteBucketWebsiteWithContext.Lock()
 	defer m.lockDeleteBucketWebsiteWithContext.Unlock()
 
 	if m.DeleteBucketWebsiteWithContextFunc == nil {
-		panic("mocker: MockS3API.DeleteBucketWebsiteWithContextFunc is nil but MockS3API.DeleteBucketWebsiteWithContext was called.")
+		panic("mocker: S3API.DeleteBucketWebsiteWithContextFunc is nil but S3API.DeleteBucketWebsiteWithContext was called.")
 	}
 
 	call := struct {
@@ -3777,7 +3777,7 @@ func (m *MockS3API) DeleteBucketWebsiteWithContext(arg0 github_com_aws_aws_sdk_g
 }
 
 // DeleteBucketWebsiteWithContextCalled returns true if DeleteBucketWebsiteWithContext was called at least once.
-func (m *MockS3API) DeleteBucketWebsiteWithContextCalled() bool {
+func (m *S3API) DeleteBucketWebsiteWithContextCalled() bool {
 	m.lockDeleteBucketWebsiteWithContext.Lock()
 	defer m.lockDeleteBucketWebsiteWithContext.Unlock()
 
@@ -3785,7 +3785,7 @@ func (m *MockS3API) DeleteBucketWebsiteWithContextCalled() bool {
 }
 
 // DeleteBucketWebsiteWithContextCalls returns the calls made to DeleteBucketWebsiteWithContext.
-func (m *MockS3API) DeleteBucketWebsiteWithContextCalls() []struct {
+func (m *S3API) DeleteBucketWebsiteWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketWebsiteInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -3797,12 +3797,12 @@ func (m *MockS3API) DeleteBucketWebsiteWithContextCalls() []struct {
 }
 
 // DeleteBucketWebsiteRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) DeleteBucketWebsiteRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketWebsiteInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.DeleteBucketWebsiteOutput) {
+func (m *S3API) DeleteBucketWebsiteRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketWebsiteInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.DeleteBucketWebsiteOutput) {
 	m.lockDeleteBucketWebsiteRequest.Lock()
 	defer m.lockDeleteBucketWebsiteRequest.Unlock()
 
 	if m.DeleteBucketWebsiteRequestFunc == nil {
-		panic("mocker: MockS3API.DeleteBucketWebsiteRequestFunc is nil but MockS3API.DeleteBucketWebsiteRequest was called.")
+		panic("mocker: S3API.DeleteBucketWebsiteRequestFunc is nil but S3API.DeleteBucketWebsiteRequest was called.")
 	}
 
 	call := struct {
@@ -3817,7 +3817,7 @@ func (m *MockS3API) DeleteBucketWebsiteRequest(arg0 *github_com_aws_aws_sdk_go_s
 }
 
 // DeleteBucketWebsiteRequestCalled returns true if DeleteBucketWebsiteRequest was called at least once.
-func (m *MockS3API) DeleteBucketWebsiteRequestCalled() bool {
+func (m *S3API) DeleteBucketWebsiteRequestCalled() bool {
 	m.lockDeleteBucketWebsiteRequest.Lock()
 	defer m.lockDeleteBucketWebsiteRequest.Unlock()
 
@@ -3825,7 +3825,7 @@ func (m *MockS3API) DeleteBucketWebsiteRequestCalled() bool {
 }
 
 // DeleteBucketWebsiteRequestCalls returns the calls made to DeleteBucketWebsiteRequest.
-func (m *MockS3API) DeleteBucketWebsiteRequestCalls() []struct {
+func (m *S3API) DeleteBucketWebsiteRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteBucketWebsiteInput
 } {
 	m.lockDeleteBucketWebsiteRequest.Lock()
@@ -3835,12 +3835,12 @@ func (m *MockS3API) DeleteBucketWebsiteRequestCalls() []struct {
 }
 
 // DeleteObject mocks base method by wrapping the associated func.
-func (m *MockS3API) DeleteObject(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteObjectInput) (*github_com_aws_aws_sdk_go_service_s3.DeleteObjectOutput, error) {
+func (m *S3API) DeleteObject(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteObjectInput) (*github_com_aws_aws_sdk_go_service_s3.DeleteObjectOutput, error) {
 	m.lockDeleteObject.Lock()
 	defer m.lockDeleteObject.Unlock()
 
 	if m.DeleteObjectFunc == nil {
-		panic("mocker: MockS3API.DeleteObjectFunc is nil but MockS3API.DeleteObject was called.")
+		panic("mocker: S3API.DeleteObjectFunc is nil but S3API.DeleteObject was called.")
 	}
 
 	call := struct {
@@ -3855,7 +3855,7 @@ func (m *MockS3API) DeleteObject(arg0 *github_com_aws_aws_sdk_go_service_s3.Dele
 }
 
 // DeleteObjectCalled returns true if DeleteObject was called at least once.
-func (m *MockS3API) DeleteObjectCalled() bool {
+func (m *S3API) DeleteObjectCalled() bool {
 	m.lockDeleteObject.Lock()
 	defer m.lockDeleteObject.Unlock()
 
@@ -3863,7 +3863,7 @@ func (m *MockS3API) DeleteObjectCalled() bool {
 }
 
 // DeleteObjectCalls returns the calls made to DeleteObject.
-func (m *MockS3API) DeleteObjectCalls() []struct {
+func (m *S3API) DeleteObjectCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteObjectInput
 } {
 	m.lockDeleteObject.Lock()
@@ -3873,12 +3873,12 @@ func (m *MockS3API) DeleteObjectCalls() []struct {
 }
 
 // DeleteObjectWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) DeleteObjectWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.DeleteObjectInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.DeleteObjectOutput, error) {
+func (m *S3API) DeleteObjectWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.DeleteObjectInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.DeleteObjectOutput, error) {
 	m.lockDeleteObjectWithContext.Lock()
 	defer m.lockDeleteObjectWithContext.Unlock()
 
 	if m.DeleteObjectWithContextFunc == nil {
-		panic("mocker: MockS3API.DeleteObjectWithContextFunc is nil but MockS3API.DeleteObjectWithContext was called.")
+		panic("mocker: S3API.DeleteObjectWithContextFunc is nil but S3API.DeleteObjectWithContext was called.")
 	}
 
 	call := struct {
@@ -3897,7 +3897,7 @@ func (m *MockS3API) DeleteObjectWithContext(arg0 github_com_aws_aws_sdk_go_aws.C
 }
 
 // DeleteObjectWithContextCalled returns true if DeleteObjectWithContext was called at least once.
-func (m *MockS3API) DeleteObjectWithContextCalled() bool {
+func (m *S3API) DeleteObjectWithContextCalled() bool {
 	m.lockDeleteObjectWithContext.Lock()
 	defer m.lockDeleteObjectWithContext.Unlock()
 
@@ -3905,7 +3905,7 @@ func (m *MockS3API) DeleteObjectWithContextCalled() bool {
 }
 
 // DeleteObjectWithContextCalls returns the calls made to DeleteObjectWithContext.
-func (m *MockS3API) DeleteObjectWithContextCalls() []struct {
+func (m *S3API) DeleteObjectWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.DeleteObjectInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -3917,12 +3917,12 @@ func (m *MockS3API) DeleteObjectWithContextCalls() []struct {
 }
 
 // DeleteObjectRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) DeleteObjectRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteObjectInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.DeleteObjectOutput) {
+func (m *S3API) DeleteObjectRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteObjectInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.DeleteObjectOutput) {
 	m.lockDeleteObjectRequest.Lock()
 	defer m.lockDeleteObjectRequest.Unlock()
 
 	if m.DeleteObjectRequestFunc == nil {
-		panic("mocker: MockS3API.DeleteObjectRequestFunc is nil but MockS3API.DeleteObjectRequest was called.")
+		panic("mocker: S3API.DeleteObjectRequestFunc is nil but S3API.DeleteObjectRequest was called.")
 	}
 
 	call := struct {
@@ -3937,7 +3937,7 @@ func (m *MockS3API) DeleteObjectRequest(arg0 *github_com_aws_aws_sdk_go_service_
 }
 
 // DeleteObjectRequestCalled returns true if DeleteObjectRequest was called at least once.
-func (m *MockS3API) DeleteObjectRequestCalled() bool {
+func (m *S3API) DeleteObjectRequestCalled() bool {
 	m.lockDeleteObjectRequest.Lock()
 	defer m.lockDeleteObjectRequest.Unlock()
 
@@ -3945,7 +3945,7 @@ func (m *MockS3API) DeleteObjectRequestCalled() bool {
 }
 
 // DeleteObjectRequestCalls returns the calls made to DeleteObjectRequest.
-func (m *MockS3API) DeleteObjectRequestCalls() []struct {
+func (m *S3API) DeleteObjectRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteObjectInput
 } {
 	m.lockDeleteObjectRequest.Lock()
@@ -3955,12 +3955,12 @@ func (m *MockS3API) DeleteObjectRequestCalls() []struct {
 }
 
 // DeleteObjectTagging mocks base method by wrapping the associated func.
-func (m *MockS3API) DeleteObjectTagging(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteObjectTaggingInput) (*github_com_aws_aws_sdk_go_service_s3.DeleteObjectTaggingOutput, error) {
+func (m *S3API) DeleteObjectTagging(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteObjectTaggingInput) (*github_com_aws_aws_sdk_go_service_s3.DeleteObjectTaggingOutput, error) {
 	m.lockDeleteObjectTagging.Lock()
 	defer m.lockDeleteObjectTagging.Unlock()
 
 	if m.DeleteObjectTaggingFunc == nil {
-		panic("mocker: MockS3API.DeleteObjectTaggingFunc is nil but MockS3API.DeleteObjectTagging was called.")
+		panic("mocker: S3API.DeleteObjectTaggingFunc is nil but S3API.DeleteObjectTagging was called.")
 	}
 
 	call := struct {
@@ -3975,7 +3975,7 @@ func (m *MockS3API) DeleteObjectTagging(arg0 *github_com_aws_aws_sdk_go_service_
 }
 
 // DeleteObjectTaggingCalled returns true if DeleteObjectTagging was called at least once.
-func (m *MockS3API) DeleteObjectTaggingCalled() bool {
+func (m *S3API) DeleteObjectTaggingCalled() bool {
 	m.lockDeleteObjectTagging.Lock()
 	defer m.lockDeleteObjectTagging.Unlock()
 
@@ -3983,7 +3983,7 @@ func (m *MockS3API) DeleteObjectTaggingCalled() bool {
 }
 
 // DeleteObjectTaggingCalls returns the calls made to DeleteObjectTagging.
-func (m *MockS3API) DeleteObjectTaggingCalls() []struct {
+func (m *S3API) DeleteObjectTaggingCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteObjectTaggingInput
 } {
 	m.lockDeleteObjectTagging.Lock()
@@ -3993,12 +3993,12 @@ func (m *MockS3API) DeleteObjectTaggingCalls() []struct {
 }
 
 // DeleteObjectTaggingWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) DeleteObjectTaggingWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.DeleteObjectTaggingInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.DeleteObjectTaggingOutput, error) {
+func (m *S3API) DeleteObjectTaggingWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.DeleteObjectTaggingInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.DeleteObjectTaggingOutput, error) {
 	m.lockDeleteObjectTaggingWithContext.Lock()
 	defer m.lockDeleteObjectTaggingWithContext.Unlock()
 
 	if m.DeleteObjectTaggingWithContextFunc == nil {
-		panic("mocker: MockS3API.DeleteObjectTaggingWithContextFunc is nil but MockS3API.DeleteObjectTaggingWithContext was called.")
+		panic("mocker: S3API.DeleteObjectTaggingWithContextFunc is nil but S3API.DeleteObjectTaggingWithContext was called.")
 	}
 
 	call := struct {
@@ -4017,7 +4017,7 @@ func (m *MockS3API) DeleteObjectTaggingWithContext(arg0 github_com_aws_aws_sdk_g
 }
 
 // DeleteObjectTaggingWithContextCalled returns true if DeleteObjectTaggingWithContext was called at least once.
-func (m *MockS3API) DeleteObjectTaggingWithContextCalled() bool {
+func (m *S3API) DeleteObjectTaggingWithContextCalled() bool {
 	m.lockDeleteObjectTaggingWithContext.Lock()
 	defer m.lockDeleteObjectTaggingWithContext.Unlock()
 
@@ -4025,7 +4025,7 @@ func (m *MockS3API) DeleteObjectTaggingWithContextCalled() bool {
 }
 
 // DeleteObjectTaggingWithContextCalls returns the calls made to DeleteObjectTaggingWithContext.
-func (m *MockS3API) DeleteObjectTaggingWithContextCalls() []struct {
+func (m *S3API) DeleteObjectTaggingWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.DeleteObjectTaggingInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -4037,12 +4037,12 @@ func (m *MockS3API) DeleteObjectTaggingWithContextCalls() []struct {
 }
 
 // DeleteObjectTaggingRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) DeleteObjectTaggingRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteObjectTaggingInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.DeleteObjectTaggingOutput) {
+func (m *S3API) DeleteObjectTaggingRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteObjectTaggingInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.DeleteObjectTaggingOutput) {
 	m.lockDeleteObjectTaggingRequest.Lock()
 	defer m.lockDeleteObjectTaggingRequest.Unlock()
 
 	if m.DeleteObjectTaggingRequestFunc == nil {
-		panic("mocker: MockS3API.DeleteObjectTaggingRequestFunc is nil but MockS3API.DeleteObjectTaggingRequest was called.")
+		panic("mocker: S3API.DeleteObjectTaggingRequestFunc is nil but S3API.DeleteObjectTaggingRequest was called.")
 	}
 
 	call := struct {
@@ -4057,7 +4057,7 @@ func (m *MockS3API) DeleteObjectTaggingRequest(arg0 *github_com_aws_aws_sdk_go_s
 }
 
 // DeleteObjectTaggingRequestCalled returns true if DeleteObjectTaggingRequest was called at least once.
-func (m *MockS3API) DeleteObjectTaggingRequestCalled() bool {
+func (m *S3API) DeleteObjectTaggingRequestCalled() bool {
 	m.lockDeleteObjectTaggingRequest.Lock()
 	defer m.lockDeleteObjectTaggingRequest.Unlock()
 
@@ -4065,7 +4065,7 @@ func (m *MockS3API) DeleteObjectTaggingRequestCalled() bool {
 }
 
 // DeleteObjectTaggingRequestCalls returns the calls made to DeleteObjectTaggingRequest.
-func (m *MockS3API) DeleteObjectTaggingRequestCalls() []struct {
+func (m *S3API) DeleteObjectTaggingRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteObjectTaggingInput
 } {
 	m.lockDeleteObjectTaggingRequest.Lock()
@@ -4075,12 +4075,12 @@ func (m *MockS3API) DeleteObjectTaggingRequestCalls() []struct {
 }
 
 // DeleteObjects mocks base method by wrapping the associated func.
-func (m *MockS3API) DeleteObjects(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteObjectsInput) (*github_com_aws_aws_sdk_go_service_s3.DeleteObjectsOutput, error) {
+func (m *S3API) DeleteObjects(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteObjectsInput) (*github_com_aws_aws_sdk_go_service_s3.DeleteObjectsOutput, error) {
 	m.lockDeleteObjects.Lock()
 	defer m.lockDeleteObjects.Unlock()
 
 	if m.DeleteObjectsFunc == nil {
-		panic("mocker: MockS3API.DeleteObjectsFunc is nil but MockS3API.DeleteObjects was called.")
+		panic("mocker: S3API.DeleteObjectsFunc is nil but S3API.DeleteObjects was called.")
 	}
 
 	call := struct {
@@ -4095,7 +4095,7 @@ func (m *MockS3API) DeleteObjects(arg0 *github_com_aws_aws_sdk_go_service_s3.Del
 }
 
 // DeleteObjectsCalled returns true if DeleteObjects was called at least once.
-func (m *MockS3API) DeleteObjectsCalled() bool {
+func (m *S3API) DeleteObjectsCalled() bool {
 	m.lockDeleteObjects.Lock()
 	defer m.lockDeleteObjects.Unlock()
 
@@ -4103,7 +4103,7 @@ func (m *MockS3API) DeleteObjectsCalled() bool {
 }
 
 // DeleteObjectsCalls returns the calls made to DeleteObjects.
-func (m *MockS3API) DeleteObjectsCalls() []struct {
+func (m *S3API) DeleteObjectsCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteObjectsInput
 } {
 	m.lockDeleteObjects.Lock()
@@ -4113,12 +4113,12 @@ func (m *MockS3API) DeleteObjectsCalls() []struct {
 }
 
 // DeleteObjectsWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) DeleteObjectsWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.DeleteObjectsInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.DeleteObjectsOutput, error) {
+func (m *S3API) DeleteObjectsWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.DeleteObjectsInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.DeleteObjectsOutput, error) {
 	m.lockDeleteObjectsWithContext.Lock()
 	defer m.lockDeleteObjectsWithContext.Unlock()
 
 	if m.DeleteObjectsWithContextFunc == nil {
-		panic("mocker: MockS3API.DeleteObjectsWithContextFunc is nil but MockS3API.DeleteObjectsWithContext was called.")
+		panic("mocker: S3API.DeleteObjectsWithContextFunc is nil but S3API.DeleteObjectsWithContext was called.")
 	}
 
 	call := struct {
@@ -4137,7 +4137,7 @@ func (m *MockS3API) DeleteObjectsWithContext(arg0 github_com_aws_aws_sdk_go_aws.
 }
 
 // DeleteObjectsWithContextCalled returns true if DeleteObjectsWithContext was called at least once.
-func (m *MockS3API) DeleteObjectsWithContextCalled() bool {
+func (m *S3API) DeleteObjectsWithContextCalled() bool {
 	m.lockDeleteObjectsWithContext.Lock()
 	defer m.lockDeleteObjectsWithContext.Unlock()
 
@@ -4145,7 +4145,7 @@ func (m *MockS3API) DeleteObjectsWithContextCalled() bool {
 }
 
 // DeleteObjectsWithContextCalls returns the calls made to DeleteObjectsWithContext.
-func (m *MockS3API) DeleteObjectsWithContextCalls() []struct {
+func (m *S3API) DeleteObjectsWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.DeleteObjectsInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -4157,12 +4157,12 @@ func (m *MockS3API) DeleteObjectsWithContextCalls() []struct {
 }
 
 // DeleteObjectsRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) DeleteObjectsRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteObjectsInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.DeleteObjectsOutput) {
+func (m *S3API) DeleteObjectsRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteObjectsInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.DeleteObjectsOutput) {
 	m.lockDeleteObjectsRequest.Lock()
 	defer m.lockDeleteObjectsRequest.Unlock()
 
 	if m.DeleteObjectsRequestFunc == nil {
-		panic("mocker: MockS3API.DeleteObjectsRequestFunc is nil but MockS3API.DeleteObjectsRequest was called.")
+		panic("mocker: S3API.DeleteObjectsRequestFunc is nil but S3API.DeleteObjectsRequest was called.")
 	}
 
 	call := struct {
@@ -4177,7 +4177,7 @@ func (m *MockS3API) DeleteObjectsRequest(arg0 *github_com_aws_aws_sdk_go_service
 }
 
 // DeleteObjectsRequestCalled returns true if DeleteObjectsRequest was called at least once.
-func (m *MockS3API) DeleteObjectsRequestCalled() bool {
+func (m *S3API) DeleteObjectsRequestCalled() bool {
 	m.lockDeleteObjectsRequest.Lock()
 	defer m.lockDeleteObjectsRequest.Unlock()
 
@@ -4185,7 +4185,7 @@ func (m *MockS3API) DeleteObjectsRequestCalled() bool {
 }
 
 // DeleteObjectsRequestCalls returns the calls made to DeleteObjectsRequest.
-func (m *MockS3API) DeleteObjectsRequestCalls() []struct {
+func (m *S3API) DeleteObjectsRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.DeleteObjectsInput
 } {
 	m.lockDeleteObjectsRequest.Lock()
@@ -4195,12 +4195,12 @@ func (m *MockS3API) DeleteObjectsRequestCalls() []struct {
 }
 
 // DeletePublicAccessBlock mocks base method by wrapping the associated func.
-func (m *MockS3API) DeletePublicAccessBlock(arg0 *github_com_aws_aws_sdk_go_service_s3.DeletePublicAccessBlockInput) (*github_com_aws_aws_sdk_go_service_s3.DeletePublicAccessBlockOutput, error) {
+func (m *S3API) DeletePublicAccessBlock(arg0 *github_com_aws_aws_sdk_go_service_s3.DeletePublicAccessBlockInput) (*github_com_aws_aws_sdk_go_service_s3.DeletePublicAccessBlockOutput, error) {
 	m.lockDeletePublicAccessBlock.Lock()
 	defer m.lockDeletePublicAccessBlock.Unlock()
 
 	if m.DeletePublicAccessBlockFunc == nil {
-		panic("mocker: MockS3API.DeletePublicAccessBlockFunc is nil but MockS3API.DeletePublicAccessBlock was called.")
+		panic("mocker: S3API.DeletePublicAccessBlockFunc is nil but S3API.DeletePublicAccessBlock was called.")
 	}
 
 	call := struct {
@@ -4215,7 +4215,7 @@ func (m *MockS3API) DeletePublicAccessBlock(arg0 *github_com_aws_aws_sdk_go_serv
 }
 
 // DeletePublicAccessBlockCalled returns true if DeletePublicAccessBlock was called at least once.
-func (m *MockS3API) DeletePublicAccessBlockCalled() bool {
+func (m *S3API) DeletePublicAccessBlockCalled() bool {
 	m.lockDeletePublicAccessBlock.Lock()
 	defer m.lockDeletePublicAccessBlock.Unlock()
 
@@ -4223,7 +4223,7 @@ func (m *MockS3API) DeletePublicAccessBlockCalled() bool {
 }
 
 // DeletePublicAccessBlockCalls returns the calls made to DeletePublicAccessBlock.
-func (m *MockS3API) DeletePublicAccessBlockCalls() []struct {
+func (m *S3API) DeletePublicAccessBlockCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.DeletePublicAccessBlockInput
 } {
 	m.lockDeletePublicAccessBlock.Lock()
@@ -4233,12 +4233,12 @@ func (m *MockS3API) DeletePublicAccessBlockCalls() []struct {
 }
 
 // DeletePublicAccessBlockWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) DeletePublicAccessBlockWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.DeletePublicAccessBlockInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.DeletePublicAccessBlockOutput, error) {
+func (m *S3API) DeletePublicAccessBlockWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.DeletePublicAccessBlockInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.DeletePublicAccessBlockOutput, error) {
 	m.lockDeletePublicAccessBlockWithContext.Lock()
 	defer m.lockDeletePublicAccessBlockWithContext.Unlock()
 
 	if m.DeletePublicAccessBlockWithContextFunc == nil {
-		panic("mocker: MockS3API.DeletePublicAccessBlockWithContextFunc is nil but MockS3API.DeletePublicAccessBlockWithContext was called.")
+		panic("mocker: S3API.DeletePublicAccessBlockWithContextFunc is nil but S3API.DeletePublicAccessBlockWithContext was called.")
 	}
 
 	call := struct {
@@ -4257,7 +4257,7 @@ func (m *MockS3API) DeletePublicAccessBlockWithContext(arg0 github_com_aws_aws_s
 }
 
 // DeletePublicAccessBlockWithContextCalled returns true if DeletePublicAccessBlockWithContext was called at least once.
-func (m *MockS3API) DeletePublicAccessBlockWithContextCalled() bool {
+func (m *S3API) DeletePublicAccessBlockWithContextCalled() bool {
 	m.lockDeletePublicAccessBlockWithContext.Lock()
 	defer m.lockDeletePublicAccessBlockWithContext.Unlock()
 
@@ -4265,7 +4265,7 @@ func (m *MockS3API) DeletePublicAccessBlockWithContextCalled() bool {
 }
 
 // DeletePublicAccessBlockWithContextCalls returns the calls made to DeletePublicAccessBlockWithContext.
-func (m *MockS3API) DeletePublicAccessBlockWithContextCalls() []struct {
+func (m *S3API) DeletePublicAccessBlockWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.DeletePublicAccessBlockInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -4277,12 +4277,12 @@ func (m *MockS3API) DeletePublicAccessBlockWithContextCalls() []struct {
 }
 
 // DeletePublicAccessBlockRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) DeletePublicAccessBlockRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.DeletePublicAccessBlockInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.DeletePublicAccessBlockOutput) {
+func (m *S3API) DeletePublicAccessBlockRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.DeletePublicAccessBlockInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.DeletePublicAccessBlockOutput) {
 	m.lockDeletePublicAccessBlockRequest.Lock()
 	defer m.lockDeletePublicAccessBlockRequest.Unlock()
 
 	if m.DeletePublicAccessBlockRequestFunc == nil {
-		panic("mocker: MockS3API.DeletePublicAccessBlockRequestFunc is nil but MockS3API.DeletePublicAccessBlockRequest was called.")
+		panic("mocker: S3API.DeletePublicAccessBlockRequestFunc is nil but S3API.DeletePublicAccessBlockRequest was called.")
 	}
 
 	call := struct {
@@ -4297,7 +4297,7 @@ func (m *MockS3API) DeletePublicAccessBlockRequest(arg0 *github_com_aws_aws_sdk_
 }
 
 // DeletePublicAccessBlockRequestCalled returns true if DeletePublicAccessBlockRequest was called at least once.
-func (m *MockS3API) DeletePublicAccessBlockRequestCalled() bool {
+func (m *S3API) DeletePublicAccessBlockRequestCalled() bool {
 	m.lockDeletePublicAccessBlockRequest.Lock()
 	defer m.lockDeletePublicAccessBlockRequest.Unlock()
 
@@ -4305,7 +4305,7 @@ func (m *MockS3API) DeletePublicAccessBlockRequestCalled() bool {
 }
 
 // DeletePublicAccessBlockRequestCalls returns the calls made to DeletePublicAccessBlockRequest.
-func (m *MockS3API) DeletePublicAccessBlockRequestCalls() []struct {
+func (m *S3API) DeletePublicAccessBlockRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.DeletePublicAccessBlockInput
 } {
 	m.lockDeletePublicAccessBlockRequest.Lock()
@@ -4315,12 +4315,12 @@ func (m *MockS3API) DeletePublicAccessBlockRequestCalls() []struct {
 }
 
 // GetBucketAccelerateConfiguration mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketAccelerateConfiguration(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketAccelerateConfigurationInput) (*github_com_aws_aws_sdk_go_service_s3.GetBucketAccelerateConfigurationOutput, error) {
+func (m *S3API) GetBucketAccelerateConfiguration(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketAccelerateConfigurationInput) (*github_com_aws_aws_sdk_go_service_s3.GetBucketAccelerateConfigurationOutput, error) {
 	m.lockGetBucketAccelerateConfiguration.Lock()
 	defer m.lockGetBucketAccelerateConfiguration.Unlock()
 
 	if m.GetBucketAccelerateConfigurationFunc == nil {
-		panic("mocker: MockS3API.GetBucketAccelerateConfigurationFunc is nil but MockS3API.GetBucketAccelerateConfiguration was called.")
+		panic("mocker: S3API.GetBucketAccelerateConfigurationFunc is nil but S3API.GetBucketAccelerateConfiguration was called.")
 	}
 
 	call := struct {
@@ -4335,7 +4335,7 @@ func (m *MockS3API) GetBucketAccelerateConfiguration(arg0 *github_com_aws_aws_sd
 }
 
 // GetBucketAccelerateConfigurationCalled returns true if GetBucketAccelerateConfiguration was called at least once.
-func (m *MockS3API) GetBucketAccelerateConfigurationCalled() bool {
+func (m *S3API) GetBucketAccelerateConfigurationCalled() bool {
 	m.lockGetBucketAccelerateConfiguration.Lock()
 	defer m.lockGetBucketAccelerateConfiguration.Unlock()
 
@@ -4343,7 +4343,7 @@ func (m *MockS3API) GetBucketAccelerateConfigurationCalled() bool {
 }
 
 // GetBucketAccelerateConfigurationCalls returns the calls made to GetBucketAccelerateConfiguration.
-func (m *MockS3API) GetBucketAccelerateConfigurationCalls() []struct {
+func (m *S3API) GetBucketAccelerateConfigurationCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketAccelerateConfigurationInput
 } {
 	m.lockGetBucketAccelerateConfiguration.Lock()
@@ -4353,12 +4353,12 @@ func (m *MockS3API) GetBucketAccelerateConfigurationCalls() []struct {
 }
 
 // GetBucketAccelerateConfigurationWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketAccelerateConfigurationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketAccelerateConfigurationInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetBucketAccelerateConfigurationOutput, error) {
+func (m *S3API) GetBucketAccelerateConfigurationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketAccelerateConfigurationInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetBucketAccelerateConfigurationOutput, error) {
 	m.lockGetBucketAccelerateConfigurationWithContext.Lock()
 	defer m.lockGetBucketAccelerateConfigurationWithContext.Unlock()
 
 	if m.GetBucketAccelerateConfigurationWithContextFunc == nil {
-		panic("mocker: MockS3API.GetBucketAccelerateConfigurationWithContextFunc is nil but MockS3API.GetBucketAccelerateConfigurationWithContext was called.")
+		panic("mocker: S3API.GetBucketAccelerateConfigurationWithContextFunc is nil but S3API.GetBucketAccelerateConfigurationWithContext was called.")
 	}
 
 	call := struct {
@@ -4377,7 +4377,7 @@ func (m *MockS3API) GetBucketAccelerateConfigurationWithContext(arg0 github_com_
 }
 
 // GetBucketAccelerateConfigurationWithContextCalled returns true if GetBucketAccelerateConfigurationWithContext was called at least once.
-func (m *MockS3API) GetBucketAccelerateConfigurationWithContextCalled() bool {
+func (m *S3API) GetBucketAccelerateConfigurationWithContextCalled() bool {
 	m.lockGetBucketAccelerateConfigurationWithContext.Lock()
 	defer m.lockGetBucketAccelerateConfigurationWithContext.Unlock()
 
@@ -4385,7 +4385,7 @@ func (m *MockS3API) GetBucketAccelerateConfigurationWithContextCalled() bool {
 }
 
 // GetBucketAccelerateConfigurationWithContextCalls returns the calls made to GetBucketAccelerateConfigurationWithContext.
-func (m *MockS3API) GetBucketAccelerateConfigurationWithContextCalls() []struct {
+func (m *S3API) GetBucketAccelerateConfigurationWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketAccelerateConfigurationInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -4397,12 +4397,12 @@ func (m *MockS3API) GetBucketAccelerateConfigurationWithContextCalls() []struct 
 }
 
 // GetBucketAccelerateConfigurationRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketAccelerateConfigurationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketAccelerateConfigurationInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetBucketAccelerateConfigurationOutput) {
+func (m *S3API) GetBucketAccelerateConfigurationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketAccelerateConfigurationInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetBucketAccelerateConfigurationOutput) {
 	m.lockGetBucketAccelerateConfigurationRequest.Lock()
 	defer m.lockGetBucketAccelerateConfigurationRequest.Unlock()
 
 	if m.GetBucketAccelerateConfigurationRequestFunc == nil {
-		panic("mocker: MockS3API.GetBucketAccelerateConfigurationRequestFunc is nil but MockS3API.GetBucketAccelerateConfigurationRequest was called.")
+		panic("mocker: S3API.GetBucketAccelerateConfigurationRequestFunc is nil but S3API.GetBucketAccelerateConfigurationRequest was called.")
 	}
 
 	call := struct {
@@ -4417,7 +4417,7 @@ func (m *MockS3API) GetBucketAccelerateConfigurationRequest(arg0 *github_com_aws
 }
 
 // GetBucketAccelerateConfigurationRequestCalled returns true if GetBucketAccelerateConfigurationRequest was called at least once.
-func (m *MockS3API) GetBucketAccelerateConfigurationRequestCalled() bool {
+func (m *S3API) GetBucketAccelerateConfigurationRequestCalled() bool {
 	m.lockGetBucketAccelerateConfigurationRequest.Lock()
 	defer m.lockGetBucketAccelerateConfigurationRequest.Unlock()
 
@@ -4425,7 +4425,7 @@ func (m *MockS3API) GetBucketAccelerateConfigurationRequestCalled() bool {
 }
 
 // GetBucketAccelerateConfigurationRequestCalls returns the calls made to GetBucketAccelerateConfigurationRequest.
-func (m *MockS3API) GetBucketAccelerateConfigurationRequestCalls() []struct {
+func (m *S3API) GetBucketAccelerateConfigurationRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketAccelerateConfigurationInput
 } {
 	m.lockGetBucketAccelerateConfigurationRequest.Lock()
@@ -4435,12 +4435,12 @@ func (m *MockS3API) GetBucketAccelerateConfigurationRequestCalls() []struct {
 }
 
 // GetBucketAcl mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketAcl(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketAclInput) (*github_com_aws_aws_sdk_go_service_s3.GetBucketAclOutput, error) {
+func (m *S3API) GetBucketAcl(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketAclInput) (*github_com_aws_aws_sdk_go_service_s3.GetBucketAclOutput, error) {
 	m.lockGetBucketAcl.Lock()
 	defer m.lockGetBucketAcl.Unlock()
 
 	if m.GetBucketAclFunc == nil {
-		panic("mocker: MockS3API.GetBucketAclFunc is nil but MockS3API.GetBucketAcl was called.")
+		panic("mocker: S3API.GetBucketAclFunc is nil but S3API.GetBucketAcl was called.")
 	}
 
 	call := struct {
@@ -4455,7 +4455,7 @@ func (m *MockS3API) GetBucketAcl(arg0 *github_com_aws_aws_sdk_go_service_s3.GetB
 }
 
 // GetBucketAclCalled returns true if GetBucketAcl was called at least once.
-func (m *MockS3API) GetBucketAclCalled() bool {
+func (m *S3API) GetBucketAclCalled() bool {
 	m.lockGetBucketAcl.Lock()
 	defer m.lockGetBucketAcl.Unlock()
 
@@ -4463,7 +4463,7 @@ func (m *MockS3API) GetBucketAclCalled() bool {
 }
 
 // GetBucketAclCalls returns the calls made to GetBucketAcl.
-func (m *MockS3API) GetBucketAclCalls() []struct {
+func (m *S3API) GetBucketAclCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketAclInput
 } {
 	m.lockGetBucketAcl.Lock()
@@ -4473,12 +4473,12 @@ func (m *MockS3API) GetBucketAclCalls() []struct {
 }
 
 // GetBucketAclWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketAclWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketAclInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetBucketAclOutput, error) {
+func (m *S3API) GetBucketAclWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketAclInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetBucketAclOutput, error) {
 	m.lockGetBucketAclWithContext.Lock()
 	defer m.lockGetBucketAclWithContext.Unlock()
 
 	if m.GetBucketAclWithContextFunc == nil {
-		panic("mocker: MockS3API.GetBucketAclWithContextFunc is nil but MockS3API.GetBucketAclWithContext was called.")
+		panic("mocker: S3API.GetBucketAclWithContextFunc is nil but S3API.GetBucketAclWithContext was called.")
 	}
 
 	call := struct {
@@ -4497,7 +4497,7 @@ func (m *MockS3API) GetBucketAclWithContext(arg0 github_com_aws_aws_sdk_go_aws.C
 }
 
 // GetBucketAclWithContextCalled returns true if GetBucketAclWithContext was called at least once.
-func (m *MockS3API) GetBucketAclWithContextCalled() bool {
+func (m *S3API) GetBucketAclWithContextCalled() bool {
 	m.lockGetBucketAclWithContext.Lock()
 	defer m.lockGetBucketAclWithContext.Unlock()
 
@@ -4505,7 +4505,7 @@ func (m *MockS3API) GetBucketAclWithContextCalled() bool {
 }
 
 // GetBucketAclWithContextCalls returns the calls made to GetBucketAclWithContext.
-func (m *MockS3API) GetBucketAclWithContextCalls() []struct {
+func (m *S3API) GetBucketAclWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketAclInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -4517,12 +4517,12 @@ func (m *MockS3API) GetBucketAclWithContextCalls() []struct {
 }
 
 // GetBucketAclRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketAclRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketAclInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetBucketAclOutput) {
+func (m *S3API) GetBucketAclRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketAclInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetBucketAclOutput) {
 	m.lockGetBucketAclRequest.Lock()
 	defer m.lockGetBucketAclRequest.Unlock()
 
 	if m.GetBucketAclRequestFunc == nil {
-		panic("mocker: MockS3API.GetBucketAclRequestFunc is nil but MockS3API.GetBucketAclRequest was called.")
+		panic("mocker: S3API.GetBucketAclRequestFunc is nil but S3API.GetBucketAclRequest was called.")
 	}
 
 	call := struct {
@@ -4537,7 +4537,7 @@ func (m *MockS3API) GetBucketAclRequest(arg0 *github_com_aws_aws_sdk_go_service_
 }
 
 // GetBucketAclRequestCalled returns true if GetBucketAclRequest was called at least once.
-func (m *MockS3API) GetBucketAclRequestCalled() bool {
+func (m *S3API) GetBucketAclRequestCalled() bool {
 	m.lockGetBucketAclRequest.Lock()
 	defer m.lockGetBucketAclRequest.Unlock()
 
@@ -4545,7 +4545,7 @@ func (m *MockS3API) GetBucketAclRequestCalled() bool {
 }
 
 // GetBucketAclRequestCalls returns the calls made to GetBucketAclRequest.
-func (m *MockS3API) GetBucketAclRequestCalls() []struct {
+func (m *S3API) GetBucketAclRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketAclInput
 } {
 	m.lockGetBucketAclRequest.Lock()
@@ -4555,12 +4555,12 @@ func (m *MockS3API) GetBucketAclRequestCalls() []struct {
 }
 
 // GetBucketAnalyticsConfiguration mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketAnalyticsConfiguration(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketAnalyticsConfigurationInput) (*github_com_aws_aws_sdk_go_service_s3.GetBucketAnalyticsConfigurationOutput, error) {
+func (m *S3API) GetBucketAnalyticsConfiguration(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketAnalyticsConfigurationInput) (*github_com_aws_aws_sdk_go_service_s3.GetBucketAnalyticsConfigurationOutput, error) {
 	m.lockGetBucketAnalyticsConfiguration.Lock()
 	defer m.lockGetBucketAnalyticsConfiguration.Unlock()
 
 	if m.GetBucketAnalyticsConfigurationFunc == nil {
-		panic("mocker: MockS3API.GetBucketAnalyticsConfigurationFunc is nil but MockS3API.GetBucketAnalyticsConfiguration was called.")
+		panic("mocker: S3API.GetBucketAnalyticsConfigurationFunc is nil but S3API.GetBucketAnalyticsConfiguration was called.")
 	}
 
 	call := struct {
@@ -4575,7 +4575,7 @@ func (m *MockS3API) GetBucketAnalyticsConfiguration(arg0 *github_com_aws_aws_sdk
 }
 
 // GetBucketAnalyticsConfigurationCalled returns true if GetBucketAnalyticsConfiguration was called at least once.
-func (m *MockS3API) GetBucketAnalyticsConfigurationCalled() bool {
+func (m *S3API) GetBucketAnalyticsConfigurationCalled() bool {
 	m.lockGetBucketAnalyticsConfiguration.Lock()
 	defer m.lockGetBucketAnalyticsConfiguration.Unlock()
 
@@ -4583,7 +4583,7 @@ func (m *MockS3API) GetBucketAnalyticsConfigurationCalled() bool {
 }
 
 // GetBucketAnalyticsConfigurationCalls returns the calls made to GetBucketAnalyticsConfiguration.
-func (m *MockS3API) GetBucketAnalyticsConfigurationCalls() []struct {
+func (m *S3API) GetBucketAnalyticsConfigurationCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketAnalyticsConfigurationInput
 } {
 	m.lockGetBucketAnalyticsConfiguration.Lock()
@@ -4593,12 +4593,12 @@ func (m *MockS3API) GetBucketAnalyticsConfigurationCalls() []struct {
 }
 
 // GetBucketAnalyticsConfigurationWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketAnalyticsConfigurationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketAnalyticsConfigurationInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetBucketAnalyticsConfigurationOutput, error) {
+func (m *S3API) GetBucketAnalyticsConfigurationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketAnalyticsConfigurationInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetBucketAnalyticsConfigurationOutput, error) {
 	m.lockGetBucketAnalyticsConfigurationWithContext.Lock()
 	defer m.lockGetBucketAnalyticsConfigurationWithContext.Unlock()
 
 	if m.GetBucketAnalyticsConfigurationWithContextFunc == nil {
-		panic("mocker: MockS3API.GetBucketAnalyticsConfigurationWithContextFunc is nil but MockS3API.GetBucketAnalyticsConfigurationWithContext was called.")
+		panic("mocker: S3API.GetBucketAnalyticsConfigurationWithContextFunc is nil but S3API.GetBucketAnalyticsConfigurationWithContext was called.")
 	}
 
 	call := struct {
@@ -4617,7 +4617,7 @@ func (m *MockS3API) GetBucketAnalyticsConfigurationWithContext(arg0 github_com_a
 }
 
 // GetBucketAnalyticsConfigurationWithContextCalled returns true if GetBucketAnalyticsConfigurationWithContext was called at least once.
-func (m *MockS3API) GetBucketAnalyticsConfigurationWithContextCalled() bool {
+func (m *S3API) GetBucketAnalyticsConfigurationWithContextCalled() bool {
 	m.lockGetBucketAnalyticsConfigurationWithContext.Lock()
 	defer m.lockGetBucketAnalyticsConfigurationWithContext.Unlock()
 
@@ -4625,7 +4625,7 @@ func (m *MockS3API) GetBucketAnalyticsConfigurationWithContextCalled() bool {
 }
 
 // GetBucketAnalyticsConfigurationWithContextCalls returns the calls made to GetBucketAnalyticsConfigurationWithContext.
-func (m *MockS3API) GetBucketAnalyticsConfigurationWithContextCalls() []struct {
+func (m *S3API) GetBucketAnalyticsConfigurationWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketAnalyticsConfigurationInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -4637,12 +4637,12 @@ func (m *MockS3API) GetBucketAnalyticsConfigurationWithContextCalls() []struct {
 }
 
 // GetBucketAnalyticsConfigurationRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketAnalyticsConfigurationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketAnalyticsConfigurationInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetBucketAnalyticsConfigurationOutput) {
+func (m *S3API) GetBucketAnalyticsConfigurationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketAnalyticsConfigurationInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetBucketAnalyticsConfigurationOutput) {
 	m.lockGetBucketAnalyticsConfigurationRequest.Lock()
 	defer m.lockGetBucketAnalyticsConfigurationRequest.Unlock()
 
 	if m.GetBucketAnalyticsConfigurationRequestFunc == nil {
-		panic("mocker: MockS3API.GetBucketAnalyticsConfigurationRequestFunc is nil but MockS3API.GetBucketAnalyticsConfigurationRequest was called.")
+		panic("mocker: S3API.GetBucketAnalyticsConfigurationRequestFunc is nil but S3API.GetBucketAnalyticsConfigurationRequest was called.")
 	}
 
 	call := struct {
@@ -4657,7 +4657,7 @@ func (m *MockS3API) GetBucketAnalyticsConfigurationRequest(arg0 *github_com_aws_
 }
 
 // GetBucketAnalyticsConfigurationRequestCalled returns true if GetBucketAnalyticsConfigurationRequest was called at least once.
-func (m *MockS3API) GetBucketAnalyticsConfigurationRequestCalled() bool {
+func (m *S3API) GetBucketAnalyticsConfigurationRequestCalled() bool {
 	m.lockGetBucketAnalyticsConfigurationRequest.Lock()
 	defer m.lockGetBucketAnalyticsConfigurationRequest.Unlock()
 
@@ -4665,7 +4665,7 @@ func (m *MockS3API) GetBucketAnalyticsConfigurationRequestCalled() bool {
 }
 
 // GetBucketAnalyticsConfigurationRequestCalls returns the calls made to GetBucketAnalyticsConfigurationRequest.
-func (m *MockS3API) GetBucketAnalyticsConfigurationRequestCalls() []struct {
+func (m *S3API) GetBucketAnalyticsConfigurationRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketAnalyticsConfigurationInput
 } {
 	m.lockGetBucketAnalyticsConfigurationRequest.Lock()
@@ -4675,12 +4675,12 @@ func (m *MockS3API) GetBucketAnalyticsConfigurationRequestCalls() []struct {
 }
 
 // GetBucketCors mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketCors(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketCorsInput) (*github_com_aws_aws_sdk_go_service_s3.GetBucketCorsOutput, error) {
+func (m *S3API) GetBucketCors(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketCorsInput) (*github_com_aws_aws_sdk_go_service_s3.GetBucketCorsOutput, error) {
 	m.lockGetBucketCors.Lock()
 	defer m.lockGetBucketCors.Unlock()
 
 	if m.GetBucketCorsFunc == nil {
-		panic("mocker: MockS3API.GetBucketCorsFunc is nil but MockS3API.GetBucketCors was called.")
+		panic("mocker: S3API.GetBucketCorsFunc is nil but S3API.GetBucketCors was called.")
 	}
 
 	call := struct {
@@ -4695,7 +4695,7 @@ func (m *MockS3API) GetBucketCors(arg0 *github_com_aws_aws_sdk_go_service_s3.Get
 }
 
 // GetBucketCorsCalled returns true if GetBucketCors was called at least once.
-func (m *MockS3API) GetBucketCorsCalled() bool {
+func (m *S3API) GetBucketCorsCalled() bool {
 	m.lockGetBucketCors.Lock()
 	defer m.lockGetBucketCors.Unlock()
 
@@ -4703,7 +4703,7 @@ func (m *MockS3API) GetBucketCorsCalled() bool {
 }
 
 // GetBucketCorsCalls returns the calls made to GetBucketCors.
-func (m *MockS3API) GetBucketCorsCalls() []struct {
+func (m *S3API) GetBucketCorsCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketCorsInput
 } {
 	m.lockGetBucketCors.Lock()
@@ -4713,12 +4713,12 @@ func (m *MockS3API) GetBucketCorsCalls() []struct {
 }
 
 // GetBucketCorsWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketCorsWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketCorsInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetBucketCorsOutput, error) {
+func (m *S3API) GetBucketCorsWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketCorsInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetBucketCorsOutput, error) {
 	m.lockGetBucketCorsWithContext.Lock()
 	defer m.lockGetBucketCorsWithContext.Unlock()
 
 	if m.GetBucketCorsWithContextFunc == nil {
-		panic("mocker: MockS3API.GetBucketCorsWithContextFunc is nil but MockS3API.GetBucketCorsWithContext was called.")
+		panic("mocker: S3API.GetBucketCorsWithContextFunc is nil but S3API.GetBucketCorsWithContext was called.")
 	}
 
 	call := struct {
@@ -4737,7 +4737,7 @@ func (m *MockS3API) GetBucketCorsWithContext(arg0 github_com_aws_aws_sdk_go_aws.
 }
 
 // GetBucketCorsWithContextCalled returns true if GetBucketCorsWithContext was called at least once.
-func (m *MockS3API) GetBucketCorsWithContextCalled() bool {
+func (m *S3API) GetBucketCorsWithContextCalled() bool {
 	m.lockGetBucketCorsWithContext.Lock()
 	defer m.lockGetBucketCorsWithContext.Unlock()
 
@@ -4745,7 +4745,7 @@ func (m *MockS3API) GetBucketCorsWithContextCalled() bool {
 }
 
 // GetBucketCorsWithContextCalls returns the calls made to GetBucketCorsWithContext.
-func (m *MockS3API) GetBucketCorsWithContextCalls() []struct {
+func (m *S3API) GetBucketCorsWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketCorsInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -4757,12 +4757,12 @@ func (m *MockS3API) GetBucketCorsWithContextCalls() []struct {
 }
 
 // GetBucketCorsRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketCorsRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketCorsInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetBucketCorsOutput) {
+func (m *S3API) GetBucketCorsRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketCorsInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetBucketCorsOutput) {
 	m.lockGetBucketCorsRequest.Lock()
 	defer m.lockGetBucketCorsRequest.Unlock()
 
 	if m.GetBucketCorsRequestFunc == nil {
-		panic("mocker: MockS3API.GetBucketCorsRequestFunc is nil but MockS3API.GetBucketCorsRequest was called.")
+		panic("mocker: S3API.GetBucketCorsRequestFunc is nil but S3API.GetBucketCorsRequest was called.")
 	}
 
 	call := struct {
@@ -4777,7 +4777,7 @@ func (m *MockS3API) GetBucketCorsRequest(arg0 *github_com_aws_aws_sdk_go_service
 }
 
 // GetBucketCorsRequestCalled returns true if GetBucketCorsRequest was called at least once.
-func (m *MockS3API) GetBucketCorsRequestCalled() bool {
+func (m *S3API) GetBucketCorsRequestCalled() bool {
 	m.lockGetBucketCorsRequest.Lock()
 	defer m.lockGetBucketCorsRequest.Unlock()
 
@@ -4785,7 +4785,7 @@ func (m *MockS3API) GetBucketCorsRequestCalled() bool {
 }
 
 // GetBucketCorsRequestCalls returns the calls made to GetBucketCorsRequest.
-func (m *MockS3API) GetBucketCorsRequestCalls() []struct {
+func (m *S3API) GetBucketCorsRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketCorsInput
 } {
 	m.lockGetBucketCorsRequest.Lock()
@@ -4795,12 +4795,12 @@ func (m *MockS3API) GetBucketCorsRequestCalls() []struct {
 }
 
 // GetBucketEncryption mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketEncryption(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketEncryptionInput) (*github_com_aws_aws_sdk_go_service_s3.GetBucketEncryptionOutput, error) {
+func (m *S3API) GetBucketEncryption(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketEncryptionInput) (*github_com_aws_aws_sdk_go_service_s3.GetBucketEncryptionOutput, error) {
 	m.lockGetBucketEncryption.Lock()
 	defer m.lockGetBucketEncryption.Unlock()
 
 	if m.GetBucketEncryptionFunc == nil {
-		panic("mocker: MockS3API.GetBucketEncryptionFunc is nil but MockS3API.GetBucketEncryption was called.")
+		panic("mocker: S3API.GetBucketEncryptionFunc is nil but S3API.GetBucketEncryption was called.")
 	}
 
 	call := struct {
@@ -4815,7 +4815,7 @@ func (m *MockS3API) GetBucketEncryption(arg0 *github_com_aws_aws_sdk_go_service_
 }
 
 // GetBucketEncryptionCalled returns true if GetBucketEncryption was called at least once.
-func (m *MockS3API) GetBucketEncryptionCalled() bool {
+func (m *S3API) GetBucketEncryptionCalled() bool {
 	m.lockGetBucketEncryption.Lock()
 	defer m.lockGetBucketEncryption.Unlock()
 
@@ -4823,7 +4823,7 @@ func (m *MockS3API) GetBucketEncryptionCalled() bool {
 }
 
 // GetBucketEncryptionCalls returns the calls made to GetBucketEncryption.
-func (m *MockS3API) GetBucketEncryptionCalls() []struct {
+func (m *S3API) GetBucketEncryptionCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketEncryptionInput
 } {
 	m.lockGetBucketEncryption.Lock()
@@ -4833,12 +4833,12 @@ func (m *MockS3API) GetBucketEncryptionCalls() []struct {
 }
 
 // GetBucketEncryptionWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketEncryptionWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketEncryptionInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetBucketEncryptionOutput, error) {
+func (m *S3API) GetBucketEncryptionWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketEncryptionInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetBucketEncryptionOutput, error) {
 	m.lockGetBucketEncryptionWithContext.Lock()
 	defer m.lockGetBucketEncryptionWithContext.Unlock()
 
 	if m.GetBucketEncryptionWithContextFunc == nil {
-		panic("mocker: MockS3API.GetBucketEncryptionWithContextFunc is nil but MockS3API.GetBucketEncryptionWithContext was called.")
+		panic("mocker: S3API.GetBucketEncryptionWithContextFunc is nil but S3API.GetBucketEncryptionWithContext was called.")
 	}
 
 	call := struct {
@@ -4857,7 +4857,7 @@ func (m *MockS3API) GetBucketEncryptionWithContext(arg0 github_com_aws_aws_sdk_g
 }
 
 // GetBucketEncryptionWithContextCalled returns true if GetBucketEncryptionWithContext was called at least once.
-func (m *MockS3API) GetBucketEncryptionWithContextCalled() bool {
+func (m *S3API) GetBucketEncryptionWithContextCalled() bool {
 	m.lockGetBucketEncryptionWithContext.Lock()
 	defer m.lockGetBucketEncryptionWithContext.Unlock()
 
@@ -4865,7 +4865,7 @@ func (m *MockS3API) GetBucketEncryptionWithContextCalled() bool {
 }
 
 // GetBucketEncryptionWithContextCalls returns the calls made to GetBucketEncryptionWithContext.
-func (m *MockS3API) GetBucketEncryptionWithContextCalls() []struct {
+func (m *S3API) GetBucketEncryptionWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketEncryptionInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -4877,12 +4877,12 @@ func (m *MockS3API) GetBucketEncryptionWithContextCalls() []struct {
 }
 
 // GetBucketEncryptionRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketEncryptionRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketEncryptionInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetBucketEncryptionOutput) {
+func (m *S3API) GetBucketEncryptionRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketEncryptionInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetBucketEncryptionOutput) {
 	m.lockGetBucketEncryptionRequest.Lock()
 	defer m.lockGetBucketEncryptionRequest.Unlock()
 
 	if m.GetBucketEncryptionRequestFunc == nil {
-		panic("mocker: MockS3API.GetBucketEncryptionRequestFunc is nil but MockS3API.GetBucketEncryptionRequest was called.")
+		panic("mocker: S3API.GetBucketEncryptionRequestFunc is nil but S3API.GetBucketEncryptionRequest was called.")
 	}
 
 	call := struct {
@@ -4897,7 +4897,7 @@ func (m *MockS3API) GetBucketEncryptionRequest(arg0 *github_com_aws_aws_sdk_go_s
 }
 
 // GetBucketEncryptionRequestCalled returns true if GetBucketEncryptionRequest was called at least once.
-func (m *MockS3API) GetBucketEncryptionRequestCalled() bool {
+func (m *S3API) GetBucketEncryptionRequestCalled() bool {
 	m.lockGetBucketEncryptionRequest.Lock()
 	defer m.lockGetBucketEncryptionRequest.Unlock()
 
@@ -4905,7 +4905,7 @@ func (m *MockS3API) GetBucketEncryptionRequestCalled() bool {
 }
 
 // GetBucketEncryptionRequestCalls returns the calls made to GetBucketEncryptionRequest.
-func (m *MockS3API) GetBucketEncryptionRequestCalls() []struct {
+func (m *S3API) GetBucketEncryptionRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketEncryptionInput
 } {
 	m.lockGetBucketEncryptionRequest.Lock()
@@ -4915,12 +4915,12 @@ func (m *MockS3API) GetBucketEncryptionRequestCalls() []struct {
 }
 
 // GetBucketInventoryConfiguration mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketInventoryConfiguration(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketInventoryConfigurationInput) (*github_com_aws_aws_sdk_go_service_s3.GetBucketInventoryConfigurationOutput, error) {
+func (m *S3API) GetBucketInventoryConfiguration(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketInventoryConfigurationInput) (*github_com_aws_aws_sdk_go_service_s3.GetBucketInventoryConfigurationOutput, error) {
 	m.lockGetBucketInventoryConfiguration.Lock()
 	defer m.lockGetBucketInventoryConfiguration.Unlock()
 
 	if m.GetBucketInventoryConfigurationFunc == nil {
-		panic("mocker: MockS3API.GetBucketInventoryConfigurationFunc is nil but MockS3API.GetBucketInventoryConfiguration was called.")
+		panic("mocker: S3API.GetBucketInventoryConfigurationFunc is nil but S3API.GetBucketInventoryConfiguration was called.")
 	}
 
 	call := struct {
@@ -4935,7 +4935,7 @@ func (m *MockS3API) GetBucketInventoryConfiguration(arg0 *github_com_aws_aws_sdk
 }
 
 // GetBucketInventoryConfigurationCalled returns true if GetBucketInventoryConfiguration was called at least once.
-func (m *MockS3API) GetBucketInventoryConfigurationCalled() bool {
+func (m *S3API) GetBucketInventoryConfigurationCalled() bool {
 	m.lockGetBucketInventoryConfiguration.Lock()
 	defer m.lockGetBucketInventoryConfiguration.Unlock()
 
@@ -4943,7 +4943,7 @@ func (m *MockS3API) GetBucketInventoryConfigurationCalled() bool {
 }
 
 // GetBucketInventoryConfigurationCalls returns the calls made to GetBucketInventoryConfiguration.
-func (m *MockS3API) GetBucketInventoryConfigurationCalls() []struct {
+func (m *S3API) GetBucketInventoryConfigurationCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketInventoryConfigurationInput
 } {
 	m.lockGetBucketInventoryConfiguration.Lock()
@@ -4953,12 +4953,12 @@ func (m *MockS3API) GetBucketInventoryConfigurationCalls() []struct {
 }
 
 // GetBucketInventoryConfigurationWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketInventoryConfigurationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketInventoryConfigurationInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetBucketInventoryConfigurationOutput, error) {
+func (m *S3API) GetBucketInventoryConfigurationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketInventoryConfigurationInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetBucketInventoryConfigurationOutput, error) {
 	m.lockGetBucketInventoryConfigurationWithContext.Lock()
 	defer m.lockGetBucketInventoryConfigurationWithContext.Unlock()
 
 	if m.GetBucketInventoryConfigurationWithContextFunc == nil {
-		panic("mocker: MockS3API.GetBucketInventoryConfigurationWithContextFunc is nil but MockS3API.GetBucketInventoryConfigurationWithContext was called.")
+		panic("mocker: S3API.GetBucketInventoryConfigurationWithContextFunc is nil but S3API.GetBucketInventoryConfigurationWithContext was called.")
 	}
 
 	call := struct {
@@ -4977,7 +4977,7 @@ func (m *MockS3API) GetBucketInventoryConfigurationWithContext(arg0 github_com_a
 }
 
 // GetBucketInventoryConfigurationWithContextCalled returns true if GetBucketInventoryConfigurationWithContext was called at least once.
-func (m *MockS3API) GetBucketInventoryConfigurationWithContextCalled() bool {
+func (m *S3API) GetBucketInventoryConfigurationWithContextCalled() bool {
 	m.lockGetBucketInventoryConfigurationWithContext.Lock()
 	defer m.lockGetBucketInventoryConfigurationWithContext.Unlock()
 
@@ -4985,7 +4985,7 @@ func (m *MockS3API) GetBucketInventoryConfigurationWithContextCalled() bool {
 }
 
 // GetBucketInventoryConfigurationWithContextCalls returns the calls made to GetBucketInventoryConfigurationWithContext.
-func (m *MockS3API) GetBucketInventoryConfigurationWithContextCalls() []struct {
+func (m *S3API) GetBucketInventoryConfigurationWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketInventoryConfigurationInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -4997,12 +4997,12 @@ func (m *MockS3API) GetBucketInventoryConfigurationWithContextCalls() []struct {
 }
 
 // GetBucketInventoryConfigurationRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketInventoryConfigurationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketInventoryConfigurationInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetBucketInventoryConfigurationOutput) {
+func (m *S3API) GetBucketInventoryConfigurationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketInventoryConfigurationInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetBucketInventoryConfigurationOutput) {
 	m.lockGetBucketInventoryConfigurationRequest.Lock()
 	defer m.lockGetBucketInventoryConfigurationRequest.Unlock()
 
 	if m.GetBucketInventoryConfigurationRequestFunc == nil {
-		panic("mocker: MockS3API.GetBucketInventoryConfigurationRequestFunc is nil but MockS3API.GetBucketInventoryConfigurationRequest was called.")
+		panic("mocker: S3API.GetBucketInventoryConfigurationRequestFunc is nil but S3API.GetBucketInventoryConfigurationRequest was called.")
 	}
 
 	call := struct {
@@ -5017,7 +5017,7 @@ func (m *MockS3API) GetBucketInventoryConfigurationRequest(arg0 *github_com_aws_
 }
 
 // GetBucketInventoryConfigurationRequestCalled returns true if GetBucketInventoryConfigurationRequest was called at least once.
-func (m *MockS3API) GetBucketInventoryConfigurationRequestCalled() bool {
+func (m *S3API) GetBucketInventoryConfigurationRequestCalled() bool {
 	m.lockGetBucketInventoryConfigurationRequest.Lock()
 	defer m.lockGetBucketInventoryConfigurationRequest.Unlock()
 
@@ -5025,7 +5025,7 @@ func (m *MockS3API) GetBucketInventoryConfigurationRequestCalled() bool {
 }
 
 // GetBucketInventoryConfigurationRequestCalls returns the calls made to GetBucketInventoryConfigurationRequest.
-func (m *MockS3API) GetBucketInventoryConfigurationRequestCalls() []struct {
+func (m *S3API) GetBucketInventoryConfigurationRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketInventoryConfigurationInput
 } {
 	m.lockGetBucketInventoryConfigurationRequest.Lock()
@@ -5035,12 +5035,12 @@ func (m *MockS3API) GetBucketInventoryConfigurationRequestCalls() []struct {
 }
 
 // GetBucketLifecycle mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketLifecycle(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketLifecycleInput) (*github_com_aws_aws_sdk_go_service_s3.GetBucketLifecycleOutput, error) {
+func (m *S3API) GetBucketLifecycle(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketLifecycleInput) (*github_com_aws_aws_sdk_go_service_s3.GetBucketLifecycleOutput, error) {
 	m.lockGetBucketLifecycle.Lock()
 	defer m.lockGetBucketLifecycle.Unlock()
 
 	if m.GetBucketLifecycleFunc == nil {
-		panic("mocker: MockS3API.GetBucketLifecycleFunc is nil but MockS3API.GetBucketLifecycle was called.")
+		panic("mocker: S3API.GetBucketLifecycleFunc is nil but S3API.GetBucketLifecycle was called.")
 	}
 
 	call := struct {
@@ -5055,7 +5055,7 @@ func (m *MockS3API) GetBucketLifecycle(arg0 *github_com_aws_aws_sdk_go_service_s
 }
 
 // GetBucketLifecycleCalled returns true if GetBucketLifecycle was called at least once.
-func (m *MockS3API) GetBucketLifecycleCalled() bool {
+func (m *S3API) GetBucketLifecycleCalled() bool {
 	m.lockGetBucketLifecycle.Lock()
 	defer m.lockGetBucketLifecycle.Unlock()
 
@@ -5063,7 +5063,7 @@ func (m *MockS3API) GetBucketLifecycleCalled() bool {
 }
 
 // GetBucketLifecycleCalls returns the calls made to GetBucketLifecycle.
-func (m *MockS3API) GetBucketLifecycleCalls() []struct {
+func (m *S3API) GetBucketLifecycleCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketLifecycleInput
 } {
 	m.lockGetBucketLifecycle.Lock()
@@ -5073,12 +5073,12 @@ func (m *MockS3API) GetBucketLifecycleCalls() []struct {
 }
 
 // GetBucketLifecycleWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketLifecycleWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketLifecycleInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetBucketLifecycleOutput, error) {
+func (m *S3API) GetBucketLifecycleWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketLifecycleInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetBucketLifecycleOutput, error) {
 	m.lockGetBucketLifecycleWithContext.Lock()
 	defer m.lockGetBucketLifecycleWithContext.Unlock()
 
 	if m.GetBucketLifecycleWithContextFunc == nil {
-		panic("mocker: MockS3API.GetBucketLifecycleWithContextFunc is nil but MockS3API.GetBucketLifecycleWithContext was called.")
+		panic("mocker: S3API.GetBucketLifecycleWithContextFunc is nil but S3API.GetBucketLifecycleWithContext was called.")
 	}
 
 	call := struct {
@@ -5097,7 +5097,7 @@ func (m *MockS3API) GetBucketLifecycleWithContext(arg0 github_com_aws_aws_sdk_go
 }
 
 // GetBucketLifecycleWithContextCalled returns true if GetBucketLifecycleWithContext was called at least once.
-func (m *MockS3API) GetBucketLifecycleWithContextCalled() bool {
+func (m *S3API) GetBucketLifecycleWithContextCalled() bool {
 	m.lockGetBucketLifecycleWithContext.Lock()
 	defer m.lockGetBucketLifecycleWithContext.Unlock()
 
@@ -5105,7 +5105,7 @@ func (m *MockS3API) GetBucketLifecycleWithContextCalled() bool {
 }
 
 // GetBucketLifecycleWithContextCalls returns the calls made to GetBucketLifecycleWithContext.
-func (m *MockS3API) GetBucketLifecycleWithContextCalls() []struct {
+func (m *S3API) GetBucketLifecycleWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketLifecycleInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -5117,12 +5117,12 @@ func (m *MockS3API) GetBucketLifecycleWithContextCalls() []struct {
 }
 
 // GetBucketLifecycleRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketLifecycleRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketLifecycleInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetBucketLifecycleOutput) {
+func (m *S3API) GetBucketLifecycleRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketLifecycleInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetBucketLifecycleOutput) {
 	m.lockGetBucketLifecycleRequest.Lock()
 	defer m.lockGetBucketLifecycleRequest.Unlock()
 
 	if m.GetBucketLifecycleRequestFunc == nil {
-		panic("mocker: MockS3API.GetBucketLifecycleRequestFunc is nil but MockS3API.GetBucketLifecycleRequest was called.")
+		panic("mocker: S3API.GetBucketLifecycleRequestFunc is nil but S3API.GetBucketLifecycleRequest was called.")
 	}
 
 	call := struct {
@@ -5137,7 +5137,7 @@ func (m *MockS3API) GetBucketLifecycleRequest(arg0 *github_com_aws_aws_sdk_go_se
 }
 
 // GetBucketLifecycleRequestCalled returns true if GetBucketLifecycleRequest was called at least once.
-func (m *MockS3API) GetBucketLifecycleRequestCalled() bool {
+func (m *S3API) GetBucketLifecycleRequestCalled() bool {
 	m.lockGetBucketLifecycleRequest.Lock()
 	defer m.lockGetBucketLifecycleRequest.Unlock()
 
@@ -5145,7 +5145,7 @@ func (m *MockS3API) GetBucketLifecycleRequestCalled() bool {
 }
 
 // GetBucketLifecycleRequestCalls returns the calls made to GetBucketLifecycleRequest.
-func (m *MockS3API) GetBucketLifecycleRequestCalls() []struct {
+func (m *S3API) GetBucketLifecycleRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketLifecycleInput
 } {
 	m.lockGetBucketLifecycleRequest.Lock()
@@ -5155,12 +5155,12 @@ func (m *MockS3API) GetBucketLifecycleRequestCalls() []struct {
 }
 
 // GetBucketLifecycleConfiguration mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketLifecycleConfiguration(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketLifecycleConfigurationInput) (*github_com_aws_aws_sdk_go_service_s3.GetBucketLifecycleConfigurationOutput, error) {
+func (m *S3API) GetBucketLifecycleConfiguration(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketLifecycleConfigurationInput) (*github_com_aws_aws_sdk_go_service_s3.GetBucketLifecycleConfigurationOutput, error) {
 	m.lockGetBucketLifecycleConfiguration.Lock()
 	defer m.lockGetBucketLifecycleConfiguration.Unlock()
 
 	if m.GetBucketLifecycleConfigurationFunc == nil {
-		panic("mocker: MockS3API.GetBucketLifecycleConfigurationFunc is nil but MockS3API.GetBucketLifecycleConfiguration was called.")
+		panic("mocker: S3API.GetBucketLifecycleConfigurationFunc is nil but S3API.GetBucketLifecycleConfiguration was called.")
 	}
 
 	call := struct {
@@ -5175,7 +5175,7 @@ func (m *MockS3API) GetBucketLifecycleConfiguration(arg0 *github_com_aws_aws_sdk
 }
 
 // GetBucketLifecycleConfigurationCalled returns true if GetBucketLifecycleConfiguration was called at least once.
-func (m *MockS3API) GetBucketLifecycleConfigurationCalled() bool {
+func (m *S3API) GetBucketLifecycleConfigurationCalled() bool {
 	m.lockGetBucketLifecycleConfiguration.Lock()
 	defer m.lockGetBucketLifecycleConfiguration.Unlock()
 
@@ -5183,7 +5183,7 @@ func (m *MockS3API) GetBucketLifecycleConfigurationCalled() bool {
 }
 
 // GetBucketLifecycleConfigurationCalls returns the calls made to GetBucketLifecycleConfiguration.
-func (m *MockS3API) GetBucketLifecycleConfigurationCalls() []struct {
+func (m *S3API) GetBucketLifecycleConfigurationCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketLifecycleConfigurationInput
 } {
 	m.lockGetBucketLifecycleConfiguration.Lock()
@@ -5193,12 +5193,12 @@ func (m *MockS3API) GetBucketLifecycleConfigurationCalls() []struct {
 }
 
 // GetBucketLifecycleConfigurationWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketLifecycleConfigurationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketLifecycleConfigurationInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetBucketLifecycleConfigurationOutput, error) {
+func (m *S3API) GetBucketLifecycleConfigurationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketLifecycleConfigurationInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetBucketLifecycleConfigurationOutput, error) {
 	m.lockGetBucketLifecycleConfigurationWithContext.Lock()
 	defer m.lockGetBucketLifecycleConfigurationWithContext.Unlock()
 
 	if m.GetBucketLifecycleConfigurationWithContextFunc == nil {
-		panic("mocker: MockS3API.GetBucketLifecycleConfigurationWithContextFunc is nil but MockS3API.GetBucketLifecycleConfigurationWithContext was called.")
+		panic("mocker: S3API.GetBucketLifecycleConfigurationWithContextFunc is nil but S3API.GetBucketLifecycleConfigurationWithContext was called.")
 	}
 
 	call := struct {
@@ -5217,7 +5217,7 @@ func (m *MockS3API) GetBucketLifecycleConfigurationWithContext(arg0 github_com_a
 }
 
 // GetBucketLifecycleConfigurationWithContextCalled returns true if GetBucketLifecycleConfigurationWithContext was called at least once.
-func (m *MockS3API) GetBucketLifecycleConfigurationWithContextCalled() bool {
+func (m *S3API) GetBucketLifecycleConfigurationWithContextCalled() bool {
 	m.lockGetBucketLifecycleConfigurationWithContext.Lock()
 	defer m.lockGetBucketLifecycleConfigurationWithContext.Unlock()
 
@@ -5225,7 +5225,7 @@ func (m *MockS3API) GetBucketLifecycleConfigurationWithContextCalled() bool {
 }
 
 // GetBucketLifecycleConfigurationWithContextCalls returns the calls made to GetBucketLifecycleConfigurationWithContext.
-func (m *MockS3API) GetBucketLifecycleConfigurationWithContextCalls() []struct {
+func (m *S3API) GetBucketLifecycleConfigurationWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketLifecycleConfigurationInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -5237,12 +5237,12 @@ func (m *MockS3API) GetBucketLifecycleConfigurationWithContextCalls() []struct {
 }
 
 // GetBucketLifecycleConfigurationRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketLifecycleConfigurationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketLifecycleConfigurationInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetBucketLifecycleConfigurationOutput) {
+func (m *S3API) GetBucketLifecycleConfigurationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketLifecycleConfigurationInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetBucketLifecycleConfigurationOutput) {
 	m.lockGetBucketLifecycleConfigurationRequest.Lock()
 	defer m.lockGetBucketLifecycleConfigurationRequest.Unlock()
 
 	if m.GetBucketLifecycleConfigurationRequestFunc == nil {
-		panic("mocker: MockS3API.GetBucketLifecycleConfigurationRequestFunc is nil but MockS3API.GetBucketLifecycleConfigurationRequest was called.")
+		panic("mocker: S3API.GetBucketLifecycleConfigurationRequestFunc is nil but S3API.GetBucketLifecycleConfigurationRequest was called.")
 	}
 
 	call := struct {
@@ -5257,7 +5257,7 @@ func (m *MockS3API) GetBucketLifecycleConfigurationRequest(arg0 *github_com_aws_
 }
 
 // GetBucketLifecycleConfigurationRequestCalled returns true if GetBucketLifecycleConfigurationRequest was called at least once.
-func (m *MockS3API) GetBucketLifecycleConfigurationRequestCalled() bool {
+func (m *S3API) GetBucketLifecycleConfigurationRequestCalled() bool {
 	m.lockGetBucketLifecycleConfigurationRequest.Lock()
 	defer m.lockGetBucketLifecycleConfigurationRequest.Unlock()
 
@@ -5265,7 +5265,7 @@ func (m *MockS3API) GetBucketLifecycleConfigurationRequestCalled() bool {
 }
 
 // GetBucketLifecycleConfigurationRequestCalls returns the calls made to GetBucketLifecycleConfigurationRequest.
-func (m *MockS3API) GetBucketLifecycleConfigurationRequestCalls() []struct {
+func (m *S3API) GetBucketLifecycleConfigurationRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketLifecycleConfigurationInput
 } {
 	m.lockGetBucketLifecycleConfigurationRequest.Lock()
@@ -5275,12 +5275,12 @@ func (m *MockS3API) GetBucketLifecycleConfigurationRequestCalls() []struct {
 }
 
 // GetBucketLocation mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketLocation(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketLocationInput) (*github_com_aws_aws_sdk_go_service_s3.GetBucketLocationOutput, error) {
+func (m *S3API) GetBucketLocation(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketLocationInput) (*github_com_aws_aws_sdk_go_service_s3.GetBucketLocationOutput, error) {
 	m.lockGetBucketLocation.Lock()
 	defer m.lockGetBucketLocation.Unlock()
 
 	if m.GetBucketLocationFunc == nil {
-		panic("mocker: MockS3API.GetBucketLocationFunc is nil but MockS3API.GetBucketLocation was called.")
+		panic("mocker: S3API.GetBucketLocationFunc is nil but S3API.GetBucketLocation was called.")
 	}
 
 	call := struct {
@@ -5295,7 +5295,7 @@ func (m *MockS3API) GetBucketLocation(arg0 *github_com_aws_aws_sdk_go_service_s3
 }
 
 // GetBucketLocationCalled returns true if GetBucketLocation was called at least once.
-func (m *MockS3API) GetBucketLocationCalled() bool {
+func (m *S3API) GetBucketLocationCalled() bool {
 	m.lockGetBucketLocation.Lock()
 	defer m.lockGetBucketLocation.Unlock()
 
@@ -5303,7 +5303,7 @@ func (m *MockS3API) GetBucketLocationCalled() bool {
 }
 
 // GetBucketLocationCalls returns the calls made to GetBucketLocation.
-func (m *MockS3API) GetBucketLocationCalls() []struct {
+func (m *S3API) GetBucketLocationCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketLocationInput
 } {
 	m.lockGetBucketLocation.Lock()
@@ -5313,12 +5313,12 @@ func (m *MockS3API) GetBucketLocationCalls() []struct {
 }
 
 // GetBucketLocationWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketLocationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketLocationInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetBucketLocationOutput, error) {
+func (m *S3API) GetBucketLocationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketLocationInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetBucketLocationOutput, error) {
 	m.lockGetBucketLocationWithContext.Lock()
 	defer m.lockGetBucketLocationWithContext.Unlock()
 
 	if m.GetBucketLocationWithContextFunc == nil {
-		panic("mocker: MockS3API.GetBucketLocationWithContextFunc is nil but MockS3API.GetBucketLocationWithContext was called.")
+		panic("mocker: S3API.GetBucketLocationWithContextFunc is nil but S3API.GetBucketLocationWithContext was called.")
 	}
 
 	call := struct {
@@ -5337,7 +5337,7 @@ func (m *MockS3API) GetBucketLocationWithContext(arg0 github_com_aws_aws_sdk_go_
 }
 
 // GetBucketLocationWithContextCalled returns true if GetBucketLocationWithContext was called at least once.
-func (m *MockS3API) GetBucketLocationWithContextCalled() bool {
+func (m *S3API) GetBucketLocationWithContextCalled() bool {
 	m.lockGetBucketLocationWithContext.Lock()
 	defer m.lockGetBucketLocationWithContext.Unlock()
 
@@ -5345,7 +5345,7 @@ func (m *MockS3API) GetBucketLocationWithContextCalled() bool {
 }
 
 // GetBucketLocationWithContextCalls returns the calls made to GetBucketLocationWithContext.
-func (m *MockS3API) GetBucketLocationWithContextCalls() []struct {
+func (m *S3API) GetBucketLocationWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketLocationInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -5357,12 +5357,12 @@ func (m *MockS3API) GetBucketLocationWithContextCalls() []struct {
 }
 
 // GetBucketLocationRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketLocationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketLocationInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetBucketLocationOutput) {
+func (m *S3API) GetBucketLocationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketLocationInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetBucketLocationOutput) {
 	m.lockGetBucketLocationRequest.Lock()
 	defer m.lockGetBucketLocationRequest.Unlock()
 
 	if m.GetBucketLocationRequestFunc == nil {
-		panic("mocker: MockS3API.GetBucketLocationRequestFunc is nil but MockS3API.GetBucketLocationRequest was called.")
+		panic("mocker: S3API.GetBucketLocationRequestFunc is nil but S3API.GetBucketLocationRequest was called.")
 	}
 
 	call := struct {
@@ -5377,7 +5377,7 @@ func (m *MockS3API) GetBucketLocationRequest(arg0 *github_com_aws_aws_sdk_go_ser
 }
 
 // GetBucketLocationRequestCalled returns true if GetBucketLocationRequest was called at least once.
-func (m *MockS3API) GetBucketLocationRequestCalled() bool {
+func (m *S3API) GetBucketLocationRequestCalled() bool {
 	m.lockGetBucketLocationRequest.Lock()
 	defer m.lockGetBucketLocationRequest.Unlock()
 
@@ -5385,7 +5385,7 @@ func (m *MockS3API) GetBucketLocationRequestCalled() bool {
 }
 
 // GetBucketLocationRequestCalls returns the calls made to GetBucketLocationRequest.
-func (m *MockS3API) GetBucketLocationRequestCalls() []struct {
+func (m *S3API) GetBucketLocationRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketLocationInput
 } {
 	m.lockGetBucketLocationRequest.Lock()
@@ -5395,12 +5395,12 @@ func (m *MockS3API) GetBucketLocationRequestCalls() []struct {
 }
 
 // GetBucketLogging mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketLogging(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketLoggingInput) (*github_com_aws_aws_sdk_go_service_s3.GetBucketLoggingOutput, error) {
+func (m *S3API) GetBucketLogging(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketLoggingInput) (*github_com_aws_aws_sdk_go_service_s3.GetBucketLoggingOutput, error) {
 	m.lockGetBucketLogging.Lock()
 	defer m.lockGetBucketLogging.Unlock()
 
 	if m.GetBucketLoggingFunc == nil {
-		panic("mocker: MockS3API.GetBucketLoggingFunc is nil but MockS3API.GetBucketLogging was called.")
+		panic("mocker: S3API.GetBucketLoggingFunc is nil but S3API.GetBucketLogging was called.")
 	}
 
 	call := struct {
@@ -5415,7 +5415,7 @@ func (m *MockS3API) GetBucketLogging(arg0 *github_com_aws_aws_sdk_go_service_s3.
 }
 
 // GetBucketLoggingCalled returns true if GetBucketLogging was called at least once.
-func (m *MockS3API) GetBucketLoggingCalled() bool {
+func (m *S3API) GetBucketLoggingCalled() bool {
 	m.lockGetBucketLogging.Lock()
 	defer m.lockGetBucketLogging.Unlock()
 
@@ -5423,7 +5423,7 @@ func (m *MockS3API) GetBucketLoggingCalled() bool {
 }
 
 // GetBucketLoggingCalls returns the calls made to GetBucketLogging.
-func (m *MockS3API) GetBucketLoggingCalls() []struct {
+func (m *S3API) GetBucketLoggingCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketLoggingInput
 } {
 	m.lockGetBucketLogging.Lock()
@@ -5433,12 +5433,12 @@ func (m *MockS3API) GetBucketLoggingCalls() []struct {
 }
 
 // GetBucketLoggingWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketLoggingWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketLoggingInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetBucketLoggingOutput, error) {
+func (m *S3API) GetBucketLoggingWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketLoggingInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetBucketLoggingOutput, error) {
 	m.lockGetBucketLoggingWithContext.Lock()
 	defer m.lockGetBucketLoggingWithContext.Unlock()
 
 	if m.GetBucketLoggingWithContextFunc == nil {
-		panic("mocker: MockS3API.GetBucketLoggingWithContextFunc is nil but MockS3API.GetBucketLoggingWithContext was called.")
+		panic("mocker: S3API.GetBucketLoggingWithContextFunc is nil but S3API.GetBucketLoggingWithContext was called.")
 	}
 
 	call := struct {
@@ -5457,7 +5457,7 @@ func (m *MockS3API) GetBucketLoggingWithContext(arg0 github_com_aws_aws_sdk_go_a
 }
 
 // GetBucketLoggingWithContextCalled returns true if GetBucketLoggingWithContext was called at least once.
-func (m *MockS3API) GetBucketLoggingWithContextCalled() bool {
+func (m *S3API) GetBucketLoggingWithContextCalled() bool {
 	m.lockGetBucketLoggingWithContext.Lock()
 	defer m.lockGetBucketLoggingWithContext.Unlock()
 
@@ -5465,7 +5465,7 @@ func (m *MockS3API) GetBucketLoggingWithContextCalled() bool {
 }
 
 // GetBucketLoggingWithContextCalls returns the calls made to GetBucketLoggingWithContext.
-func (m *MockS3API) GetBucketLoggingWithContextCalls() []struct {
+func (m *S3API) GetBucketLoggingWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketLoggingInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -5477,12 +5477,12 @@ func (m *MockS3API) GetBucketLoggingWithContextCalls() []struct {
 }
 
 // GetBucketLoggingRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketLoggingRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketLoggingInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetBucketLoggingOutput) {
+func (m *S3API) GetBucketLoggingRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketLoggingInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetBucketLoggingOutput) {
 	m.lockGetBucketLoggingRequest.Lock()
 	defer m.lockGetBucketLoggingRequest.Unlock()
 
 	if m.GetBucketLoggingRequestFunc == nil {
-		panic("mocker: MockS3API.GetBucketLoggingRequestFunc is nil but MockS3API.GetBucketLoggingRequest was called.")
+		panic("mocker: S3API.GetBucketLoggingRequestFunc is nil but S3API.GetBucketLoggingRequest was called.")
 	}
 
 	call := struct {
@@ -5497,7 +5497,7 @@ func (m *MockS3API) GetBucketLoggingRequest(arg0 *github_com_aws_aws_sdk_go_serv
 }
 
 // GetBucketLoggingRequestCalled returns true if GetBucketLoggingRequest was called at least once.
-func (m *MockS3API) GetBucketLoggingRequestCalled() bool {
+func (m *S3API) GetBucketLoggingRequestCalled() bool {
 	m.lockGetBucketLoggingRequest.Lock()
 	defer m.lockGetBucketLoggingRequest.Unlock()
 
@@ -5505,7 +5505,7 @@ func (m *MockS3API) GetBucketLoggingRequestCalled() bool {
 }
 
 // GetBucketLoggingRequestCalls returns the calls made to GetBucketLoggingRequest.
-func (m *MockS3API) GetBucketLoggingRequestCalls() []struct {
+func (m *S3API) GetBucketLoggingRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketLoggingInput
 } {
 	m.lockGetBucketLoggingRequest.Lock()
@@ -5515,12 +5515,12 @@ func (m *MockS3API) GetBucketLoggingRequestCalls() []struct {
 }
 
 // GetBucketMetricsConfiguration mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketMetricsConfiguration(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketMetricsConfigurationInput) (*github_com_aws_aws_sdk_go_service_s3.GetBucketMetricsConfigurationOutput, error) {
+func (m *S3API) GetBucketMetricsConfiguration(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketMetricsConfigurationInput) (*github_com_aws_aws_sdk_go_service_s3.GetBucketMetricsConfigurationOutput, error) {
 	m.lockGetBucketMetricsConfiguration.Lock()
 	defer m.lockGetBucketMetricsConfiguration.Unlock()
 
 	if m.GetBucketMetricsConfigurationFunc == nil {
-		panic("mocker: MockS3API.GetBucketMetricsConfigurationFunc is nil but MockS3API.GetBucketMetricsConfiguration was called.")
+		panic("mocker: S3API.GetBucketMetricsConfigurationFunc is nil but S3API.GetBucketMetricsConfiguration was called.")
 	}
 
 	call := struct {
@@ -5535,7 +5535,7 @@ func (m *MockS3API) GetBucketMetricsConfiguration(arg0 *github_com_aws_aws_sdk_g
 }
 
 // GetBucketMetricsConfigurationCalled returns true if GetBucketMetricsConfiguration was called at least once.
-func (m *MockS3API) GetBucketMetricsConfigurationCalled() bool {
+func (m *S3API) GetBucketMetricsConfigurationCalled() bool {
 	m.lockGetBucketMetricsConfiguration.Lock()
 	defer m.lockGetBucketMetricsConfiguration.Unlock()
 
@@ -5543,7 +5543,7 @@ func (m *MockS3API) GetBucketMetricsConfigurationCalled() bool {
 }
 
 // GetBucketMetricsConfigurationCalls returns the calls made to GetBucketMetricsConfiguration.
-func (m *MockS3API) GetBucketMetricsConfigurationCalls() []struct {
+func (m *S3API) GetBucketMetricsConfigurationCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketMetricsConfigurationInput
 } {
 	m.lockGetBucketMetricsConfiguration.Lock()
@@ -5553,12 +5553,12 @@ func (m *MockS3API) GetBucketMetricsConfigurationCalls() []struct {
 }
 
 // GetBucketMetricsConfigurationWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketMetricsConfigurationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketMetricsConfigurationInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetBucketMetricsConfigurationOutput, error) {
+func (m *S3API) GetBucketMetricsConfigurationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketMetricsConfigurationInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetBucketMetricsConfigurationOutput, error) {
 	m.lockGetBucketMetricsConfigurationWithContext.Lock()
 	defer m.lockGetBucketMetricsConfigurationWithContext.Unlock()
 
 	if m.GetBucketMetricsConfigurationWithContextFunc == nil {
-		panic("mocker: MockS3API.GetBucketMetricsConfigurationWithContextFunc is nil but MockS3API.GetBucketMetricsConfigurationWithContext was called.")
+		panic("mocker: S3API.GetBucketMetricsConfigurationWithContextFunc is nil but S3API.GetBucketMetricsConfigurationWithContext was called.")
 	}
 
 	call := struct {
@@ -5577,7 +5577,7 @@ func (m *MockS3API) GetBucketMetricsConfigurationWithContext(arg0 github_com_aws
 }
 
 // GetBucketMetricsConfigurationWithContextCalled returns true if GetBucketMetricsConfigurationWithContext was called at least once.
-func (m *MockS3API) GetBucketMetricsConfigurationWithContextCalled() bool {
+func (m *S3API) GetBucketMetricsConfigurationWithContextCalled() bool {
 	m.lockGetBucketMetricsConfigurationWithContext.Lock()
 	defer m.lockGetBucketMetricsConfigurationWithContext.Unlock()
 
@@ -5585,7 +5585,7 @@ func (m *MockS3API) GetBucketMetricsConfigurationWithContextCalled() bool {
 }
 
 // GetBucketMetricsConfigurationWithContextCalls returns the calls made to GetBucketMetricsConfigurationWithContext.
-func (m *MockS3API) GetBucketMetricsConfigurationWithContextCalls() []struct {
+func (m *S3API) GetBucketMetricsConfigurationWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketMetricsConfigurationInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -5597,12 +5597,12 @@ func (m *MockS3API) GetBucketMetricsConfigurationWithContextCalls() []struct {
 }
 
 // GetBucketMetricsConfigurationRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketMetricsConfigurationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketMetricsConfigurationInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetBucketMetricsConfigurationOutput) {
+func (m *S3API) GetBucketMetricsConfigurationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketMetricsConfigurationInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetBucketMetricsConfigurationOutput) {
 	m.lockGetBucketMetricsConfigurationRequest.Lock()
 	defer m.lockGetBucketMetricsConfigurationRequest.Unlock()
 
 	if m.GetBucketMetricsConfigurationRequestFunc == nil {
-		panic("mocker: MockS3API.GetBucketMetricsConfigurationRequestFunc is nil but MockS3API.GetBucketMetricsConfigurationRequest was called.")
+		panic("mocker: S3API.GetBucketMetricsConfigurationRequestFunc is nil but S3API.GetBucketMetricsConfigurationRequest was called.")
 	}
 
 	call := struct {
@@ -5617,7 +5617,7 @@ func (m *MockS3API) GetBucketMetricsConfigurationRequest(arg0 *github_com_aws_aw
 }
 
 // GetBucketMetricsConfigurationRequestCalled returns true if GetBucketMetricsConfigurationRequest was called at least once.
-func (m *MockS3API) GetBucketMetricsConfigurationRequestCalled() bool {
+func (m *S3API) GetBucketMetricsConfigurationRequestCalled() bool {
 	m.lockGetBucketMetricsConfigurationRequest.Lock()
 	defer m.lockGetBucketMetricsConfigurationRequest.Unlock()
 
@@ -5625,7 +5625,7 @@ func (m *MockS3API) GetBucketMetricsConfigurationRequestCalled() bool {
 }
 
 // GetBucketMetricsConfigurationRequestCalls returns the calls made to GetBucketMetricsConfigurationRequest.
-func (m *MockS3API) GetBucketMetricsConfigurationRequestCalls() []struct {
+func (m *S3API) GetBucketMetricsConfigurationRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketMetricsConfigurationInput
 } {
 	m.lockGetBucketMetricsConfigurationRequest.Lock()
@@ -5635,12 +5635,12 @@ func (m *MockS3API) GetBucketMetricsConfigurationRequestCalls() []struct {
 }
 
 // GetBucketNotification mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketNotification(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketNotificationConfigurationRequest) (*github_com_aws_aws_sdk_go_service_s3.NotificationConfigurationDeprecated, error) {
+func (m *S3API) GetBucketNotification(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketNotificationConfigurationRequest) (*github_com_aws_aws_sdk_go_service_s3.NotificationConfigurationDeprecated, error) {
 	m.lockGetBucketNotification.Lock()
 	defer m.lockGetBucketNotification.Unlock()
 
 	if m.GetBucketNotificationFunc == nil {
-		panic("mocker: MockS3API.GetBucketNotificationFunc is nil but MockS3API.GetBucketNotification was called.")
+		panic("mocker: S3API.GetBucketNotificationFunc is nil but S3API.GetBucketNotification was called.")
 	}
 
 	call := struct {
@@ -5655,7 +5655,7 @@ func (m *MockS3API) GetBucketNotification(arg0 *github_com_aws_aws_sdk_go_servic
 }
 
 // GetBucketNotificationCalled returns true if GetBucketNotification was called at least once.
-func (m *MockS3API) GetBucketNotificationCalled() bool {
+func (m *S3API) GetBucketNotificationCalled() bool {
 	m.lockGetBucketNotification.Lock()
 	defer m.lockGetBucketNotification.Unlock()
 
@@ -5663,7 +5663,7 @@ func (m *MockS3API) GetBucketNotificationCalled() bool {
 }
 
 // GetBucketNotificationCalls returns the calls made to GetBucketNotification.
-func (m *MockS3API) GetBucketNotificationCalls() []struct {
+func (m *S3API) GetBucketNotificationCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketNotificationConfigurationRequest
 } {
 	m.lockGetBucketNotification.Lock()
@@ -5673,12 +5673,12 @@ func (m *MockS3API) GetBucketNotificationCalls() []struct {
 }
 
 // GetBucketNotificationWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketNotificationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketNotificationConfigurationRequest, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.NotificationConfigurationDeprecated, error) {
+func (m *S3API) GetBucketNotificationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketNotificationConfigurationRequest, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.NotificationConfigurationDeprecated, error) {
 	m.lockGetBucketNotificationWithContext.Lock()
 	defer m.lockGetBucketNotificationWithContext.Unlock()
 
 	if m.GetBucketNotificationWithContextFunc == nil {
-		panic("mocker: MockS3API.GetBucketNotificationWithContextFunc is nil but MockS3API.GetBucketNotificationWithContext was called.")
+		panic("mocker: S3API.GetBucketNotificationWithContextFunc is nil but S3API.GetBucketNotificationWithContext was called.")
 	}
 
 	call := struct {
@@ -5697,7 +5697,7 @@ func (m *MockS3API) GetBucketNotificationWithContext(arg0 github_com_aws_aws_sdk
 }
 
 // GetBucketNotificationWithContextCalled returns true if GetBucketNotificationWithContext was called at least once.
-func (m *MockS3API) GetBucketNotificationWithContextCalled() bool {
+func (m *S3API) GetBucketNotificationWithContextCalled() bool {
 	m.lockGetBucketNotificationWithContext.Lock()
 	defer m.lockGetBucketNotificationWithContext.Unlock()
 
@@ -5705,7 +5705,7 @@ func (m *MockS3API) GetBucketNotificationWithContextCalled() bool {
 }
 
 // GetBucketNotificationWithContextCalls returns the calls made to GetBucketNotificationWithContext.
-func (m *MockS3API) GetBucketNotificationWithContextCalls() []struct {
+func (m *S3API) GetBucketNotificationWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketNotificationConfigurationRequest
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -5717,12 +5717,12 @@ func (m *MockS3API) GetBucketNotificationWithContextCalls() []struct {
 }
 
 // GetBucketNotificationRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketNotificationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketNotificationConfigurationRequest) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.NotificationConfigurationDeprecated) {
+func (m *S3API) GetBucketNotificationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketNotificationConfigurationRequest) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.NotificationConfigurationDeprecated) {
 	m.lockGetBucketNotificationRequest.Lock()
 	defer m.lockGetBucketNotificationRequest.Unlock()
 
 	if m.GetBucketNotificationRequestFunc == nil {
-		panic("mocker: MockS3API.GetBucketNotificationRequestFunc is nil but MockS3API.GetBucketNotificationRequest was called.")
+		panic("mocker: S3API.GetBucketNotificationRequestFunc is nil but S3API.GetBucketNotificationRequest was called.")
 	}
 
 	call := struct {
@@ -5737,7 +5737,7 @@ func (m *MockS3API) GetBucketNotificationRequest(arg0 *github_com_aws_aws_sdk_go
 }
 
 // GetBucketNotificationRequestCalled returns true if GetBucketNotificationRequest was called at least once.
-func (m *MockS3API) GetBucketNotificationRequestCalled() bool {
+func (m *S3API) GetBucketNotificationRequestCalled() bool {
 	m.lockGetBucketNotificationRequest.Lock()
 	defer m.lockGetBucketNotificationRequest.Unlock()
 
@@ -5745,7 +5745,7 @@ func (m *MockS3API) GetBucketNotificationRequestCalled() bool {
 }
 
 // GetBucketNotificationRequestCalls returns the calls made to GetBucketNotificationRequest.
-func (m *MockS3API) GetBucketNotificationRequestCalls() []struct {
+func (m *S3API) GetBucketNotificationRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketNotificationConfigurationRequest
 } {
 	m.lockGetBucketNotificationRequest.Lock()
@@ -5755,12 +5755,12 @@ func (m *MockS3API) GetBucketNotificationRequestCalls() []struct {
 }
 
 // GetBucketNotificationConfiguration mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketNotificationConfiguration(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketNotificationConfigurationRequest) (*github_com_aws_aws_sdk_go_service_s3.NotificationConfiguration, error) {
+func (m *S3API) GetBucketNotificationConfiguration(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketNotificationConfigurationRequest) (*github_com_aws_aws_sdk_go_service_s3.NotificationConfiguration, error) {
 	m.lockGetBucketNotificationConfiguration.Lock()
 	defer m.lockGetBucketNotificationConfiguration.Unlock()
 
 	if m.GetBucketNotificationConfigurationFunc == nil {
-		panic("mocker: MockS3API.GetBucketNotificationConfigurationFunc is nil but MockS3API.GetBucketNotificationConfiguration was called.")
+		panic("mocker: S3API.GetBucketNotificationConfigurationFunc is nil but S3API.GetBucketNotificationConfiguration was called.")
 	}
 
 	call := struct {
@@ -5775,7 +5775,7 @@ func (m *MockS3API) GetBucketNotificationConfiguration(arg0 *github_com_aws_aws_
 }
 
 // GetBucketNotificationConfigurationCalled returns true if GetBucketNotificationConfiguration was called at least once.
-func (m *MockS3API) GetBucketNotificationConfigurationCalled() bool {
+func (m *S3API) GetBucketNotificationConfigurationCalled() bool {
 	m.lockGetBucketNotificationConfiguration.Lock()
 	defer m.lockGetBucketNotificationConfiguration.Unlock()
 
@@ -5783,7 +5783,7 @@ func (m *MockS3API) GetBucketNotificationConfigurationCalled() bool {
 }
 
 // GetBucketNotificationConfigurationCalls returns the calls made to GetBucketNotificationConfiguration.
-func (m *MockS3API) GetBucketNotificationConfigurationCalls() []struct {
+func (m *S3API) GetBucketNotificationConfigurationCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketNotificationConfigurationRequest
 } {
 	m.lockGetBucketNotificationConfiguration.Lock()
@@ -5793,12 +5793,12 @@ func (m *MockS3API) GetBucketNotificationConfigurationCalls() []struct {
 }
 
 // GetBucketNotificationConfigurationWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketNotificationConfigurationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketNotificationConfigurationRequest, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.NotificationConfiguration, error) {
+func (m *S3API) GetBucketNotificationConfigurationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketNotificationConfigurationRequest, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.NotificationConfiguration, error) {
 	m.lockGetBucketNotificationConfigurationWithContext.Lock()
 	defer m.lockGetBucketNotificationConfigurationWithContext.Unlock()
 
 	if m.GetBucketNotificationConfigurationWithContextFunc == nil {
-		panic("mocker: MockS3API.GetBucketNotificationConfigurationWithContextFunc is nil but MockS3API.GetBucketNotificationConfigurationWithContext was called.")
+		panic("mocker: S3API.GetBucketNotificationConfigurationWithContextFunc is nil but S3API.GetBucketNotificationConfigurationWithContext was called.")
 	}
 
 	call := struct {
@@ -5817,7 +5817,7 @@ func (m *MockS3API) GetBucketNotificationConfigurationWithContext(arg0 github_co
 }
 
 // GetBucketNotificationConfigurationWithContextCalled returns true if GetBucketNotificationConfigurationWithContext was called at least once.
-func (m *MockS3API) GetBucketNotificationConfigurationWithContextCalled() bool {
+func (m *S3API) GetBucketNotificationConfigurationWithContextCalled() bool {
 	m.lockGetBucketNotificationConfigurationWithContext.Lock()
 	defer m.lockGetBucketNotificationConfigurationWithContext.Unlock()
 
@@ -5825,7 +5825,7 @@ func (m *MockS3API) GetBucketNotificationConfigurationWithContextCalled() bool {
 }
 
 // GetBucketNotificationConfigurationWithContextCalls returns the calls made to GetBucketNotificationConfigurationWithContext.
-func (m *MockS3API) GetBucketNotificationConfigurationWithContextCalls() []struct {
+func (m *S3API) GetBucketNotificationConfigurationWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketNotificationConfigurationRequest
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -5837,12 +5837,12 @@ func (m *MockS3API) GetBucketNotificationConfigurationWithContextCalls() []struc
 }
 
 // GetBucketNotificationConfigurationRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketNotificationConfigurationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketNotificationConfigurationRequest) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.NotificationConfiguration) {
+func (m *S3API) GetBucketNotificationConfigurationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketNotificationConfigurationRequest) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.NotificationConfiguration) {
 	m.lockGetBucketNotificationConfigurationRequest.Lock()
 	defer m.lockGetBucketNotificationConfigurationRequest.Unlock()
 
 	if m.GetBucketNotificationConfigurationRequestFunc == nil {
-		panic("mocker: MockS3API.GetBucketNotificationConfigurationRequestFunc is nil but MockS3API.GetBucketNotificationConfigurationRequest was called.")
+		panic("mocker: S3API.GetBucketNotificationConfigurationRequestFunc is nil but S3API.GetBucketNotificationConfigurationRequest was called.")
 	}
 
 	call := struct {
@@ -5857,7 +5857,7 @@ func (m *MockS3API) GetBucketNotificationConfigurationRequest(arg0 *github_com_a
 }
 
 // GetBucketNotificationConfigurationRequestCalled returns true if GetBucketNotificationConfigurationRequest was called at least once.
-func (m *MockS3API) GetBucketNotificationConfigurationRequestCalled() bool {
+func (m *S3API) GetBucketNotificationConfigurationRequestCalled() bool {
 	m.lockGetBucketNotificationConfigurationRequest.Lock()
 	defer m.lockGetBucketNotificationConfigurationRequest.Unlock()
 
@@ -5865,7 +5865,7 @@ func (m *MockS3API) GetBucketNotificationConfigurationRequestCalled() bool {
 }
 
 // GetBucketNotificationConfigurationRequestCalls returns the calls made to GetBucketNotificationConfigurationRequest.
-func (m *MockS3API) GetBucketNotificationConfigurationRequestCalls() []struct {
+func (m *S3API) GetBucketNotificationConfigurationRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketNotificationConfigurationRequest
 } {
 	m.lockGetBucketNotificationConfigurationRequest.Lock()
@@ -5875,12 +5875,12 @@ func (m *MockS3API) GetBucketNotificationConfigurationRequestCalls() []struct {
 }
 
 // GetBucketPolicy mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketPolicy(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketPolicyInput) (*github_com_aws_aws_sdk_go_service_s3.GetBucketPolicyOutput, error) {
+func (m *S3API) GetBucketPolicy(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketPolicyInput) (*github_com_aws_aws_sdk_go_service_s3.GetBucketPolicyOutput, error) {
 	m.lockGetBucketPolicy.Lock()
 	defer m.lockGetBucketPolicy.Unlock()
 
 	if m.GetBucketPolicyFunc == nil {
-		panic("mocker: MockS3API.GetBucketPolicyFunc is nil but MockS3API.GetBucketPolicy was called.")
+		panic("mocker: S3API.GetBucketPolicyFunc is nil but S3API.GetBucketPolicy was called.")
 	}
 
 	call := struct {
@@ -5895,7 +5895,7 @@ func (m *MockS3API) GetBucketPolicy(arg0 *github_com_aws_aws_sdk_go_service_s3.G
 }
 
 // GetBucketPolicyCalled returns true if GetBucketPolicy was called at least once.
-func (m *MockS3API) GetBucketPolicyCalled() bool {
+func (m *S3API) GetBucketPolicyCalled() bool {
 	m.lockGetBucketPolicy.Lock()
 	defer m.lockGetBucketPolicy.Unlock()
 
@@ -5903,7 +5903,7 @@ func (m *MockS3API) GetBucketPolicyCalled() bool {
 }
 
 // GetBucketPolicyCalls returns the calls made to GetBucketPolicy.
-func (m *MockS3API) GetBucketPolicyCalls() []struct {
+func (m *S3API) GetBucketPolicyCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketPolicyInput
 } {
 	m.lockGetBucketPolicy.Lock()
@@ -5913,12 +5913,12 @@ func (m *MockS3API) GetBucketPolicyCalls() []struct {
 }
 
 // GetBucketPolicyWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketPolicyWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketPolicyInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetBucketPolicyOutput, error) {
+func (m *S3API) GetBucketPolicyWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketPolicyInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetBucketPolicyOutput, error) {
 	m.lockGetBucketPolicyWithContext.Lock()
 	defer m.lockGetBucketPolicyWithContext.Unlock()
 
 	if m.GetBucketPolicyWithContextFunc == nil {
-		panic("mocker: MockS3API.GetBucketPolicyWithContextFunc is nil but MockS3API.GetBucketPolicyWithContext was called.")
+		panic("mocker: S3API.GetBucketPolicyWithContextFunc is nil but S3API.GetBucketPolicyWithContext was called.")
 	}
 
 	call := struct {
@@ -5937,7 +5937,7 @@ func (m *MockS3API) GetBucketPolicyWithContext(arg0 github_com_aws_aws_sdk_go_aw
 }
 
 // GetBucketPolicyWithContextCalled returns true if GetBucketPolicyWithContext was called at least once.
-func (m *MockS3API) GetBucketPolicyWithContextCalled() bool {
+func (m *S3API) GetBucketPolicyWithContextCalled() bool {
 	m.lockGetBucketPolicyWithContext.Lock()
 	defer m.lockGetBucketPolicyWithContext.Unlock()
 
@@ -5945,7 +5945,7 @@ func (m *MockS3API) GetBucketPolicyWithContextCalled() bool {
 }
 
 // GetBucketPolicyWithContextCalls returns the calls made to GetBucketPolicyWithContext.
-func (m *MockS3API) GetBucketPolicyWithContextCalls() []struct {
+func (m *S3API) GetBucketPolicyWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketPolicyInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -5957,12 +5957,12 @@ func (m *MockS3API) GetBucketPolicyWithContextCalls() []struct {
 }
 
 // GetBucketPolicyRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketPolicyRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketPolicyInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetBucketPolicyOutput) {
+func (m *S3API) GetBucketPolicyRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketPolicyInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetBucketPolicyOutput) {
 	m.lockGetBucketPolicyRequest.Lock()
 	defer m.lockGetBucketPolicyRequest.Unlock()
 
 	if m.GetBucketPolicyRequestFunc == nil {
-		panic("mocker: MockS3API.GetBucketPolicyRequestFunc is nil but MockS3API.GetBucketPolicyRequest was called.")
+		panic("mocker: S3API.GetBucketPolicyRequestFunc is nil but S3API.GetBucketPolicyRequest was called.")
 	}
 
 	call := struct {
@@ -5977,7 +5977,7 @@ func (m *MockS3API) GetBucketPolicyRequest(arg0 *github_com_aws_aws_sdk_go_servi
 }
 
 // GetBucketPolicyRequestCalled returns true if GetBucketPolicyRequest was called at least once.
-func (m *MockS3API) GetBucketPolicyRequestCalled() bool {
+func (m *S3API) GetBucketPolicyRequestCalled() bool {
 	m.lockGetBucketPolicyRequest.Lock()
 	defer m.lockGetBucketPolicyRequest.Unlock()
 
@@ -5985,7 +5985,7 @@ func (m *MockS3API) GetBucketPolicyRequestCalled() bool {
 }
 
 // GetBucketPolicyRequestCalls returns the calls made to GetBucketPolicyRequest.
-func (m *MockS3API) GetBucketPolicyRequestCalls() []struct {
+func (m *S3API) GetBucketPolicyRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketPolicyInput
 } {
 	m.lockGetBucketPolicyRequest.Lock()
@@ -5995,12 +5995,12 @@ func (m *MockS3API) GetBucketPolicyRequestCalls() []struct {
 }
 
 // GetBucketPolicyStatus mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketPolicyStatus(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketPolicyStatusInput) (*github_com_aws_aws_sdk_go_service_s3.GetBucketPolicyStatusOutput, error) {
+func (m *S3API) GetBucketPolicyStatus(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketPolicyStatusInput) (*github_com_aws_aws_sdk_go_service_s3.GetBucketPolicyStatusOutput, error) {
 	m.lockGetBucketPolicyStatus.Lock()
 	defer m.lockGetBucketPolicyStatus.Unlock()
 
 	if m.GetBucketPolicyStatusFunc == nil {
-		panic("mocker: MockS3API.GetBucketPolicyStatusFunc is nil but MockS3API.GetBucketPolicyStatus was called.")
+		panic("mocker: S3API.GetBucketPolicyStatusFunc is nil but S3API.GetBucketPolicyStatus was called.")
 	}
 
 	call := struct {
@@ -6015,7 +6015,7 @@ func (m *MockS3API) GetBucketPolicyStatus(arg0 *github_com_aws_aws_sdk_go_servic
 }
 
 // GetBucketPolicyStatusCalled returns true if GetBucketPolicyStatus was called at least once.
-func (m *MockS3API) GetBucketPolicyStatusCalled() bool {
+func (m *S3API) GetBucketPolicyStatusCalled() bool {
 	m.lockGetBucketPolicyStatus.Lock()
 	defer m.lockGetBucketPolicyStatus.Unlock()
 
@@ -6023,7 +6023,7 @@ func (m *MockS3API) GetBucketPolicyStatusCalled() bool {
 }
 
 // GetBucketPolicyStatusCalls returns the calls made to GetBucketPolicyStatus.
-func (m *MockS3API) GetBucketPolicyStatusCalls() []struct {
+func (m *S3API) GetBucketPolicyStatusCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketPolicyStatusInput
 } {
 	m.lockGetBucketPolicyStatus.Lock()
@@ -6033,12 +6033,12 @@ func (m *MockS3API) GetBucketPolicyStatusCalls() []struct {
 }
 
 // GetBucketPolicyStatusWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketPolicyStatusWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketPolicyStatusInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetBucketPolicyStatusOutput, error) {
+func (m *S3API) GetBucketPolicyStatusWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketPolicyStatusInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetBucketPolicyStatusOutput, error) {
 	m.lockGetBucketPolicyStatusWithContext.Lock()
 	defer m.lockGetBucketPolicyStatusWithContext.Unlock()
 
 	if m.GetBucketPolicyStatusWithContextFunc == nil {
-		panic("mocker: MockS3API.GetBucketPolicyStatusWithContextFunc is nil but MockS3API.GetBucketPolicyStatusWithContext was called.")
+		panic("mocker: S3API.GetBucketPolicyStatusWithContextFunc is nil but S3API.GetBucketPolicyStatusWithContext was called.")
 	}
 
 	call := struct {
@@ -6057,7 +6057,7 @@ func (m *MockS3API) GetBucketPolicyStatusWithContext(arg0 github_com_aws_aws_sdk
 }
 
 // GetBucketPolicyStatusWithContextCalled returns true if GetBucketPolicyStatusWithContext was called at least once.
-func (m *MockS3API) GetBucketPolicyStatusWithContextCalled() bool {
+func (m *S3API) GetBucketPolicyStatusWithContextCalled() bool {
 	m.lockGetBucketPolicyStatusWithContext.Lock()
 	defer m.lockGetBucketPolicyStatusWithContext.Unlock()
 
@@ -6065,7 +6065,7 @@ func (m *MockS3API) GetBucketPolicyStatusWithContextCalled() bool {
 }
 
 // GetBucketPolicyStatusWithContextCalls returns the calls made to GetBucketPolicyStatusWithContext.
-func (m *MockS3API) GetBucketPolicyStatusWithContextCalls() []struct {
+func (m *S3API) GetBucketPolicyStatusWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketPolicyStatusInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -6077,12 +6077,12 @@ func (m *MockS3API) GetBucketPolicyStatusWithContextCalls() []struct {
 }
 
 // GetBucketPolicyStatusRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketPolicyStatusRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketPolicyStatusInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetBucketPolicyStatusOutput) {
+func (m *S3API) GetBucketPolicyStatusRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketPolicyStatusInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetBucketPolicyStatusOutput) {
 	m.lockGetBucketPolicyStatusRequest.Lock()
 	defer m.lockGetBucketPolicyStatusRequest.Unlock()
 
 	if m.GetBucketPolicyStatusRequestFunc == nil {
-		panic("mocker: MockS3API.GetBucketPolicyStatusRequestFunc is nil but MockS3API.GetBucketPolicyStatusRequest was called.")
+		panic("mocker: S3API.GetBucketPolicyStatusRequestFunc is nil but S3API.GetBucketPolicyStatusRequest was called.")
 	}
 
 	call := struct {
@@ -6097,7 +6097,7 @@ func (m *MockS3API) GetBucketPolicyStatusRequest(arg0 *github_com_aws_aws_sdk_go
 }
 
 // GetBucketPolicyStatusRequestCalled returns true if GetBucketPolicyStatusRequest was called at least once.
-func (m *MockS3API) GetBucketPolicyStatusRequestCalled() bool {
+func (m *S3API) GetBucketPolicyStatusRequestCalled() bool {
 	m.lockGetBucketPolicyStatusRequest.Lock()
 	defer m.lockGetBucketPolicyStatusRequest.Unlock()
 
@@ -6105,7 +6105,7 @@ func (m *MockS3API) GetBucketPolicyStatusRequestCalled() bool {
 }
 
 // GetBucketPolicyStatusRequestCalls returns the calls made to GetBucketPolicyStatusRequest.
-func (m *MockS3API) GetBucketPolicyStatusRequestCalls() []struct {
+func (m *S3API) GetBucketPolicyStatusRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketPolicyStatusInput
 } {
 	m.lockGetBucketPolicyStatusRequest.Lock()
@@ -6115,12 +6115,12 @@ func (m *MockS3API) GetBucketPolicyStatusRequestCalls() []struct {
 }
 
 // GetBucketReplication mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketReplication(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketReplicationInput) (*github_com_aws_aws_sdk_go_service_s3.GetBucketReplicationOutput, error) {
+func (m *S3API) GetBucketReplication(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketReplicationInput) (*github_com_aws_aws_sdk_go_service_s3.GetBucketReplicationOutput, error) {
 	m.lockGetBucketReplication.Lock()
 	defer m.lockGetBucketReplication.Unlock()
 
 	if m.GetBucketReplicationFunc == nil {
-		panic("mocker: MockS3API.GetBucketReplicationFunc is nil but MockS3API.GetBucketReplication was called.")
+		panic("mocker: S3API.GetBucketReplicationFunc is nil but S3API.GetBucketReplication was called.")
 	}
 
 	call := struct {
@@ -6135,7 +6135,7 @@ func (m *MockS3API) GetBucketReplication(arg0 *github_com_aws_aws_sdk_go_service
 }
 
 // GetBucketReplicationCalled returns true if GetBucketReplication was called at least once.
-func (m *MockS3API) GetBucketReplicationCalled() bool {
+func (m *S3API) GetBucketReplicationCalled() bool {
 	m.lockGetBucketReplication.Lock()
 	defer m.lockGetBucketReplication.Unlock()
 
@@ -6143,7 +6143,7 @@ func (m *MockS3API) GetBucketReplicationCalled() bool {
 }
 
 // GetBucketReplicationCalls returns the calls made to GetBucketReplication.
-func (m *MockS3API) GetBucketReplicationCalls() []struct {
+func (m *S3API) GetBucketReplicationCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketReplicationInput
 } {
 	m.lockGetBucketReplication.Lock()
@@ -6153,12 +6153,12 @@ func (m *MockS3API) GetBucketReplicationCalls() []struct {
 }
 
 // GetBucketReplicationWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketReplicationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketReplicationInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetBucketReplicationOutput, error) {
+func (m *S3API) GetBucketReplicationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketReplicationInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetBucketReplicationOutput, error) {
 	m.lockGetBucketReplicationWithContext.Lock()
 	defer m.lockGetBucketReplicationWithContext.Unlock()
 
 	if m.GetBucketReplicationWithContextFunc == nil {
-		panic("mocker: MockS3API.GetBucketReplicationWithContextFunc is nil but MockS3API.GetBucketReplicationWithContext was called.")
+		panic("mocker: S3API.GetBucketReplicationWithContextFunc is nil but S3API.GetBucketReplicationWithContext was called.")
 	}
 
 	call := struct {
@@ -6177,7 +6177,7 @@ func (m *MockS3API) GetBucketReplicationWithContext(arg0 github_com_aws_aws_sdk_
 }
 
 // GetBucketReplicationWithContextCalled returns true if GetBucketReplicationWithContext was called at least once.
-func (m *MockS3API) GetBucketReplicationWithContextCalled() bool {
+func (m *S3API) GetBucketReplicationWithContextCalled() bool {
 	m.lockGetBucketReplicationWithContext.Lock()
 	defer m.lockGetBucketReplicationWithContext.Unlock()
 
@@ -6185,7 +6185,7 @@ func (m *MockS3API) GetBucketReplicationWithContextCalled() bool {
 }
 
 // GetBucketReplicationWithContextCalls returns the calls made to GetBucketReplicationWithContext.
-func (m *MockS3API) GetBucketReplicationWithContextCalls() []struct {
+func (m *S3API) GetBucketReplicationWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketReplicationInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -6197,12 +6197,12 @@ func (m *MockS3API) GetBucketReplicationWithContextCalls() []struct {
 }
 
 // GetBucketReplicationRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketReplicationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketReplicationInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetBucketReplicationOutput) {
+func (m *S3API) GetBucketReplicationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketReplicationInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetBucketReplicationOutput) {
 	m.lockGetBucketReplicationRequest.Lock()
 	defer m.lockGetBucketReplicationRequest.Unlock()
 
 	if m.GetBucketReplicationRequestFunc == nil {
-		panic("mocker: MockS3API.GetBucketReplicationRequestFunc is nil but MockS3API.GetBucketReplicationRequest was called.")
+		panic("mocker: S3API.GetBucketReplicationRequestFunc is nil but S3API.GetBucketReplicationRequest was called.")
 	}
 
 	call := struct {
@@ -6217,7 +6217,7 @@ func (m *MockS3API) GetBucketReplicationRequest(arg0 *github_com_aws_aws_sdk_go_
 }
 
 // GetBucketReplicationRequestCalled returns true if GetBucketReplicationRequest was called at least once.
-func (m *MockS3API) GetBucketReplicationRequestCalled() bool {
+func (m *S3API) GetBucketReplicationRequestCalled() bool {
 	m.lockGetBucketReplicationRequest.Lock()
 	defer m.lockGetBucketReplicationRequest.Unlock()
 
@@ -6225,7 +6225,7 @@ func (m *MockS3API) GetBucketReplicationRequestCalled() bool {
 }
 
 // GetBucketReplicationRequestCalls returns the calls made to GetBucketReplicationRequest.
-func (m *MockS3API) GetBucketReplicationRequestCalls() []struct {
+func (m *S3API) GetBucketReplicationRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketReplicationInput
 } {
 	m.lockGetBucketReplicationRequest.Lock()
@@ -6235,12 +6235,12 @@ func (m *MockS3API) GetBucketReplicationRequestCalls() []struct {
 }
 
 // GetBucketRequestPayment mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketRequestPayment(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketRequestPaymentInput) (*github_com_aws_aws_sdk_go_service_s3.GetBucketRequestPaymentOutput, error) {
+func (m *S3API) GetBucketRequestPayment(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketRequestPaymentInput) (*github_com_aws_aws_sdk_go_service_s3.GetBucketRequestPaymentOutput, error) {
 	m.lockGetBucketRequestPayment.Lock()
 	defer m.lockGetBucketRequestPayment.Unlock()
 
 	if m.GetBucketRequestPaymentFunc == nil {
-		panic("mocker: MockS3API.GetBucketRequestPaymentFunc is nil but MockS3API.GetBucketRequestPayment was called.")
+		panic("mocker: S3API.GetBucketRequestPaymentFunc is nil but S3API.GetBucketRequestPayment was called.")
 	}
 
 	call := struct {
@@ -6255,7 +6255,7 @@ func (m *MockS3API) GetBucketRequestPayment(arg0 *github_com_aws_aws_sdk_go_serv
 }
 
 // GetBucketRequestPaymentCalled returns true if GetBucketRequestPayment was called at least once.
-func (m *MockS3API) GetBucketRequestPaymentCalled() bool {
+func (m *S3API) GetBucketRequestPaymentCalled() bool {
 	m.lockGetBucketRequestPayment.Lock()
 	defer m.lockGetBucketRequestPayment.Unlock()
 
@@ -6263,7 +6263,7 @@ func (m *MockS3API) GetBucketRequestPaymentCalled() bool {
 }
 
 // GetBucketRequestPaymentCalls returns the calls made to GetBucketRequestPayment.
-func (m *MockS3API) GetBucketRequestPaymentCalls() []struct {
+func (m *S3API) GetBucketRequestPaymentCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketRequestPaymentInput
 } {
 	m.lockGetBucketRequestPayment.Lock()
@@ -6273,12 +6273,12 @@ func (m *MockS3API) GetBucketRequestPaymentCalls() []struct {
 }
 
 // GetBucketRequestPaymentWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketRequestPaymentWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketRequestPaymentInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetBucketRequestPaymentOutput, error) {
+func (m *S3API) GetBucketRequestPaymentWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketRequestPaymentInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetBucketRequestPaymentOutput, error) {
 	m.lockGetBucketRequestPaymentWithContext.Lock()
 	defer m.lockGetBucketRequestPaymentWithContext.Unlock()
 
 	if m.GetBucketRequestPaymentWithContextFunc == nil {
-		panic("mocker: MockS3API.GetBucketRequestPaymentWithContextFunc is nil but MockS3API.GetBucketRequestPaymentWithContext was called.")
+		panic("mocker: S3API.GetBucketRequestPaymentWithContextFunc is nil but S3API.GetBucketRequestPaymentWithContext was called.")
 	}
 
 	call := struct {
@@ -6297,7 +6297,7 @@ func (m *MockS3API) GetBucketRequestPaymentWithContext(arg0 github_com_aws_aws_s
 }
 
 // GetBucketRequestPaymentWithContextCalled returns true if GetBucketRequestPaymentWithContext was called at least once.
-func (m *MockS3API) GetBucketRequestPaymentWithContextCalled() bool {
+func (m *S3API) GetBucketRequestPaymentWithContextCalled() bool {
 	m.lockGetBucketRequestPaymentWithContext.Lock()
 	defer m.lockGetBucketRequestPaymentWithContext.Unlock()
 
@@ -6305,7 +6305,7 @@ func (m *MockS3API) GetBucketRequestPaymentWithContextCalled() bool {
 }
 
 // GetBucketRequestPaymentWithContextCalls returns the calls made to GetBucketRequestPaymentWithContext.
-func (m *MockS3API) GetBucketRequestPaymentWithContextCalls() []struct {
+func (m *S3API) GetBucketRequestPaymentWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketRequestPaymentInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -6317,12 +6317,12 @@ func (m *MockS3API) GetBucketRequestPaymentWithContextCalls() []struct {
 }
 
 // GetBucketRequestPaymentRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketRequestPaymentRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketRequestPaymentInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetBucketRequestPaymentOutput) {
+func (m *S3API) GetBucketRequestPaymentRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketRequestPaymentInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetBucketRequestPaymentOutput) {
 	m.lockGetBucketRequestPaymentRequest.Lock()
 	defer m.lockGetBucketRequestPaymentRequest.Unlock()
 
 	if m.GetBucketRequestPaymentRequestFunc == nil {
-		panic("mocker: MockS3API.GetBucketRequestPaymentRequestFunc is nil but MockS3API.GetBucketRequestPaymentRequest was called.")
+		panic("mocker: S3API.GetBucketRequestPaymentRequestFunc is nil but S3API.GetBucketRequestPaymentRequest was called.")
 	}
 
 	call := struct {
@@ -6337,7 +6337,7 @@ func (m *MockS3API) GetBucketRequestPaymentRequest(arg0 *github_com_aws_aws_sdk_
 }
 
 // GetBucketRequestPaymentRequestCalled returns true if GetBucketRequestPaymentRequest was called at least once.
-func (m *MockS3API) GetBucketRequestPaymentRequestCalled() bool {
+func (m *S3API) GetBucketRequestPaymentRequestCalled() bool {
 	m.lockGetBucketRequestPaymentRequest.Lock()
 	defer m.lockGetBucketRequestPaymentRequest.Unlock()
 
@@ -6345,7 +6345,7 @@ func (m *MockS3API) GetBucketRequestPaymentRequestCalled() bool {
 }
 
 // GetBucketRequestPaymentRequestCalls returns the calls made to GetBucketRequestPaymentRequest.
-func (m *MockS3API) GetBucketRequestPaymentRequestCalls() []struct {
+func (m *S3API) GetBucketRequestPaymentRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketRequestPaymentInput
 } {
 	m.lockGetBucketRequestPaymentRequest.Lock()
@@ -6355,12 +6355,12 @@ func (m *MockS3API) GetBucketRequestPaymentRequestCalls() []struct {
 }
 
 // GetBucketTagging mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketTagging(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketTaggingInput) (*github_com_aws_aws_sdk_go_service_s3.GetBucketTaggingOutput, error) {
+func (m *S3API) GetBucketTagging(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketTaggingInput) (*github_com_aws_aws_sdk_go_service_s3.GetBucketTaggingOutput, error) {
 	m.lockGetBucketTagging.Lock()
 	defer m.lockGetBucketTagging.Unlock()
 
 	if m.GetBucketTaggingFunc == nil {
-		panic("mocker: MockS3API.GetBucketTaggingFunc is nil but MockS3API.GetBucketTagging was called.")
+		panic("mocker: S3API.GetBucketTaggingFunc is nil but S3API.GetBucketTagging was called.")
 	}
 
 	call := struct {
@@ -6375,7 +6375,7 @@ func (m *MockS3API) GetBucketTagging(arg0 *github_com_aws_aws_sdk_go_service_s3.
 }
 
 // GetBucketTaggingCalled returns true if GetBucketTagging was called at least once.
-func (m *MockS3API) GetBucketTaggingCalled() bool {
+func (m *S3API) GetBucketTaggingCalled() bool {
 	m.lockGetBucketTagging.Lock()
 	defer m.lockGetBucketTagging.Unlock()
 
@@ -6383,7 +6383,7 @@ func (m *MockS3API) GetBucketTaggingCalled() bool {
 }
 
 // GetBucketTaggingCalls returns the calls made to GetBucketTagging.
-func (m *MockS3API) GetBucketTaggingCalls() []struct {
+func (m *S3API) GetBucketTaggingCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketTaggingInput
 } {
 	m.lockGetBucketTagging.Lock()
@@ -6393,12 +6393,12 @@ func (m *MockS3API) GetBucketTaggingCalls() []struct {
 }
 
 // GetBucketTaggingWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketTaggingWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketTaggingInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetBucketTaggingOutput, error) {
+func (m *S3API) GetBucketTaggingWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketTaggingInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetBucketTaggingOutput, error) {
 	m.lockGetBucketTaggingWithContext.Lock()
 	defer m.lockGetBucketTaggingWithContext.Unlock()
 
 	if m.GetBucketTaggingWithContextFunc == nil {
-		panic("mocker: MockS3API.GetBucketTaggingWithContextFunc is nil but MockS3API.GetBucketTaggingWithContext was called.")
+		panic("mocker: S3API.GetBucketTaggingWithContextFunc is nil but S3API.GetBucketTaggingWithContext was called.")
 	}
 
 	call := struct {
@@ -6417,7 +6417,7 @@ func (m *MockS3API) GetBucketTaggingWithContext(arg0 github_com_aws_aws_sdk_go_a
 }
 
 // GetBucketTaggingWithContextCalled returns true if GetBucketTaggingWithContext was called at least once.
-func (m *MockS3API) GetBucketTaggingWithContextCalled() bool {
+func (m *S3API) GetBucketTaggingWithContextCalled() bool {
 	m.lockGetBucketTaggingWithContext.Lock()
 	defer m.lockGetBucketTaggingWithContext.Unlock()
 
@@ -6425,7 +6425,7 @@ func (m *MockS3API) GetBucketTaggingWithContextCalled() bool {
 }
 
 // GetBucketTaggingWithContextCalls returns the calls made to GetBucketTaggingWithContext.
-func (m *MockS3API) GetBucketTaggingWithContextCalls() []struct {
+func (m *S3API) GetBucketTaggingWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketTaggingInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -6437,12 +6437,12 @@ func (m *MockS3API) GetBucketTaggingWithContextCalls() []struct {
 }
 
 // GetBucketTaggingRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketTaggingRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketTaggingInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetBucketTaggingOutput) {
+func (m *S3API) GetBucketTaggingRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketTaggingInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetBucketTaggingOutput) {
 	m.lockGetBucketTaggingRequest.Lock()
 	defer m.lockGetBucketTaggingRequest.Unlock()
 
 	if m.GetBucketTaggingRequestFunc == nil {
-		panic("mocker: MockS3API.GetBucketTaggingRequestFunc is nil but MockS3API.GetBucketTaggingRequest was called.")
+		panic("mocker: S3API.GetBucketTaggingRequestFunc is nil but S3API.GetBucketTaggingRequest was called.")
 	}
 
 	call := struct {
@@ -6457,7 +6457,7 @@ func (m *MockS3API) GetBucketTaggingRequest(arg0 *github_com_aws_aws_sdk_go_serv
 }
 
 // GetBucketTaggingRequestCalled returns true if GetBucketTaggingRequest was called at least once.
-func (m *MockS3API) GetBucketTaggingRequestCalled() bool {
+func (m *S3API) GetBucketTaggingRequestCalled() bool {
 	m.lockGetBucketTaggingRequest.Lock()
 	defer m.lockGetBucketTaggingRequest.Unlock()
 
@@ -6465,7 +6465,7 @@ func (m *MockS3API) GetBucketTaggingRequestCalled() bool {
 }
 
 // GetBucketTaggingRequestCalls returns the calls made to GetBucketTaggingRequest.
-func (m *MockS3API) GetBucketTaggingRequestCalls() []struct {
+func (m *S3API) GetBucketTaggingRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketTaggingInput
 } {
 	m.lockGetBucketTaggingRequest.Lock()
@@ -6475,12 +6475,12 @@ func (m *MockS3API) GetBucketTaggingRequestCalls() []struct {
 }
 
 // GetBucketVersioning mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketVersioning(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketVersioningInput) (*github_com_aws_aws_sdk_go_service_s3.GetBucketVersioningOutput, error) {
+func (m *S3API) GetBucketVersioning(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketVersioningInput) (*github_com_aws_aws_sdk_go_service_s3.GetBucketVersioningOutput, error) {
 	m.lockGetBucketVersioning.Lock()
 	defer m.lockGetBucketVersioning.Unlock()
 
 	if m.GetBucketVersioningFunc == nil {
-		panic("mocker: MockS3API.GetBucketVersioningFunc is nil but MockS3API.GetBucketVersioning was called.")
+		panic("mocker: S3API.GetBucketVersioningFunc is nil but S3API.GetBucketVersioning was called.")
 	}
 
 	call := struct {
@@ -6495,7 +6495,7 @@ func (m *MockS3API) GetBucketVersioning(arg0 *github_com_aws_aws_sdk_go_service_
 }
 
 // GetBucketVersioningCalled returns true if GetBucketVersioning was called at least once.
-func (m *MockS3API) GetBucketVersioningCalled() bool {
+func (m *S3API) GetBucketVersioningCalled() bool {
 	m.lockGetBucketVersioning.Lock()
 	defer m.lockGetBucketVersioning.Unlock()
 
@@ -6503,7 +6503,7 @@ func (m *MockS3API) GetBucketVersioningCalled() bool {
 }
 
 // GetBucketVersioningCalls returns the calls made to GetBucketVersioning.
-func (m *MockS3API) GetBucketVersioningCalls() []struct {
+func (m *S3API) GetBucketVersioningCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketVersioningInput
 } {
 	m.lockGetBucketVersioning.Lock()
@@ -6513,12 +6513,12 @@ func (m *MockS3API) GetBucketVersioningCalls() []struct {
 }
 
 // GetBucketVersioningWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketVersioningWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketVersioningInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetBucketVersioningOutput, error) {
+func (m *S3API) GetBucketVersioningWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketVersioningInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetBucketVersioningOutput, error) {
 	m.lockGetBucketVersioningWithContext.Lock()
 	defer m.lockGetBucketVersioningWithContext.Unlock()
 
 	if m.GetBucketVersioningWithContextFunc == nil {
-		panic("mocker: MockS3API.GetBucketVersioningWithContextFunc is nil but MockS3API.GetBucketVersioningWithContext was called.")
+		panic("mocker: S3API.GetBucketVersioningWithContextFunc is nil but S3API.GetBucketVersioningWithContext was called.")
 	}
 
 	call := struct {
@@ -6537,7 +6537,7 @@ func (m *MockS3API) GetBucketVersioningWithContext(arg0 github_com_aws_aws_sdk_g
 }
 
 // GetBucketVersioningWithContextCalled returns true if GetBucketVersioningWithContext was called at least once.
-func (m *MockS3API) GetBucketVersioningWithContextCalled() bool {
+func (m *S3API) GetBucketVersioningWithContextCalled() bool {
 	m.lockGetBucketVersioningWithContext.Lock()
 	defer m.lockGetBucketVersioningWithContext.Unlock()
 
@@ -6545,7 +6545,7 @@ func (m *MockS3API) GetBucketVersioningWithContextCalled() bool {
 }
 
 // GetBucketVersioningWithContextCalls returns the calls made to GetBucketVersioningWithContext.
-func (m *MockS3API) GetBucketVersioningWithContextCalls() []struct {
+func (m *S3API) GetBucketVersioningWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketVersioningInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -6557,12 +6557,12 @@ func (m *MockS3API) GetBucketVersioningWithContextCalls() []struct {
 }
 
 // GetBucketVersioningRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketVersioningRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketVersioningInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetBucketVersioningOutput) {
+func (m *S3API) GetBucketVersioningRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketVersioningInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetBucketVersioningOutput) {
 	m.lockGetBucketVersioningRequest.Lock()
 	defer m.lockGetBucketVersioningRequest.Unlock()
 
 	if m.GetBucketVersioningRequestFunc == nil {
-		panic("mocker: MockS3API.GetBucketVersioningRequestFunc is nil but MockS3API.GetBucketVersioningRequest was called.")
+		panic("mocker: S3API.GetBucketVersioningRequestFunc is nil but S3API.GetBucketVersioningRequest was called.")
 	}
 
 	call := struct {
@@ -6577,7 +6577,7 @@ func (m *MockS3API) GetBucketVersioningRequest(arg0 *github_com_aws_aws_sdk_go_s
 }
 
 // GetBucketVersioningRequestCalled returns true if GetBucketVersioningRequest was called at least once.
-func (m *MockS3API) GetBucketVersioningRequestCalled() bool {
+func (m *S3API) GetBucketVersioningRequestCalled() bool {
 	m.lockGetBucketVersioningRequest.Lock()
 	defer m.lockGetBucketVersioningRequest.Unlock()
 
@@ -6585,7 +6585,7 @@ func (m *MockS3API) GetBucketVersioningRequestCalled() bool {
 }
 
 // GetBucketVersioningRequestCalls returns the calls made to GetBucketVersioningRequest.
-func (m *MockS3API) GetBucketVersioningRequestCalls() []struct {
+func (m *S3API) GetBucketVersioningRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketVersioningInput
 } {
 	m.lockGetBucketVersioningRequest.Lock()
@@ -6595,12 +6595,12 @@ func (m *MockS3API) GetBucketVersioningRequestCalls() []struct {
 }
 
 // GetBucketWebsite mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketWebsite(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketWebsiteInput) (*github_com_aws_aws_sdk_go_service_s3.GetBucketWebsiteOutput, error) {
+func (m *S3API) GetBucketWebsite(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketWebsiteInput) (*github_com_aws_aws_sdk_go_service_s3.GetBucketWebsiteOutput, error) {
 	m.lockGetBucketWebsite.Lock()
 	defer m.lockGetBucketWebsite.Unlock()
 
 	if m.GetBucketWebsiteFunc == nil {
-		panic("mocker: MockS3API.GetBucketWebsiteFunc is nil but MockS3API.GetBucketWebsite was called.")
+		panic("mocker: S3API.GetBucketWebsiteFunc is nil but S3API.GetBucketWebsite was called.")
 	}
 
 	call := struct {
@@ -6615,7 +6615,7 @@ func (m *MockS3API) GetBucketWebsite(arg0 *github_com_aws_aws_sdk_go_service_s3.
 }
 
 // GetBucketWebsiteCalled returns true if GetBucketWebsite was called at least once.
-func (m *MockS3API) GetBucketWebsiteCalled() bool {
+func (m *S3API) GetBucketWebsiteCalled() bool {
 	m.lockGetBucketWebsite.Lock()
 	defer m.lockGetBucketWebsite.Unlock()
 
@@ -6623,7 +6623,7 @@ func (m *MockS3API) GetBucketWebsiteCalled() bool {
 }
 
 // GetBucketWebsiteCalls returns the calls made to GetBucketWebsite.
-func (m *MockS3API) GetBucketWebsiteCalls() []struct {
+func (m *S3API) GetBucketWebsiteCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketWebsiteInput
 } {
 	m.lockGetBucketWebsite.Lock()
@@ -6633,12 +6633,12 @@ func (m *MockS3API) GetBucketWebsiteCalls() []struct {
 }
 
 // GetBucketWebsiteWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketWebsiteWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketWebsiteInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetBucketWebsiteOutput, error) {
+func (m *S3API) GetBucketWebsiteWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketWebsiteInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetBucketWebsiteOutput, error) {
 	m.lockGetBucketWebsiteWithContext.Lock()
 	defer m.lockGetBucketWebsiteWithContext.Unlock()
 
 	if m.GetBucketWebsiteWithContextFunc == nil {
-		panic("mocker: MockS3API.GetBucketWebsiteWithContextFunc is nil but MockS3API.GetBucketWebsiteWithContext was called.")
+		panic("mocker: S3API.GetBucketWebsiteWithContextFunc is nil but S3API.GetBucketWebsiteWithContext was called.")
 	}
 
 	call := struct {
@@ -6657,7 +6657,7 @@ func (m *MockS3API) GetBucketWebsiteWithContext(arg0 github_com_aws_aws_sdk_go_a
 }
 
 // GetBucketWebsiteWithContextCalled returns true if GetBucketWebsiteWithContext was called at least once.
-func (m *MockS3API) GetBucketWebsiteWithContextCalled() bool {
+func (m *S3API) GetBucketWebsiteWithContextCalled() bool {
 	m.lockGetBucketWebsiteWithContext.Lock()
 	defer m.lockGetBucketWebsiteWithContext.Unlock()
 
@@ -6665,7 +6665,7 @@ func (m *MockS3API) GetBucketWebsiteWithContextCalled() bool {
 }
 
 // GetBucketWebsiteWithContextCalls returns the calls made to GetBucketWebsiteWithContext.
-func (m *MockS3API) GetBucketWebsiteWithContextCalls() []struct {
+func (m *S3API) GetBucketWebsiteWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.GetBucketWebsiteInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -6677,12 +6677,12 @@ func (m *MockS3API) GetBucketWebsiteWithContextCalls() []struct {
 }
 
 // GetBucketWebsiteRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) GetBucketWebsiteRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketWebsiteInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetBucketWebsiteOutput) {
+func (m *S3API) GetBucketWebsiteRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketWebsiteInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetBucketWebsiteOutput) {
 	m.lockGetBucketWebsiteRequest.Lock()
 	defer m.lockGetBucketWebsiteRequest.Unlock()
 
 	if m.GetBucketWebsiteRequestFunc == nil {
-		panic("mocker: MockS3API.GetBucketWebsiteRequestFunc is nil but MockS3API.GetBucketWebsiteRequest was called.")
+		panic("mocker: S3API.GetBucketWebsiteRequestFunc is nil but S3API.GetBucketWebsiteRequest was called.")
 	}
 
 	call := struct {
@@ -6697,7 +6697,7 @@ func (m *MockS3API) GetBucketWebsiteRequest(arg0 *github_com_aws_aws_sdk_go_serv
 }
 
 // GetBucketWebsiteRequestCalled returns true if GetBucketWebsiteRequest was called at least once.
-func (m *MockS3API) GetBucketWebsiteRequestCalled() bool {
+func (m *S3API) GetBucketWebsiteRequestCalled() bool {
 	m.lockGetBucketWebsiteRequest.Lock()
 	defer m.lockGetBucketWebsiteRequest.Unlock()
 
@@ -6705,7 +6705,7 @@ func (m *MockS3API) GetBucketWebsiteRequestCalled() bool {
 }
 
 // GetBucketWebsiteRequestCalls returns the calls made to GetBucketWebsiteRequest.
-func (m *MockS3API) GetBucketWebsiteRequestCalls() []struct {
+func (m *S3API) GetBucketWebsiteRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetBucketWebsiteInput
 } {
 	m.lockGetBucketWebsiteRequest.Lock()
@@ -6715,12 +6715,12 @@ func (m *MockS3API) GetBucketWebsiteRequestCalls() []struct {
 }
 
 // GetObject mocks base method by wrapping the associated func.
-func (m *MockS3API) GetObject(arg0 *github_com_aws_aws_sdk_go_service_s3.GetObjectInput) (*github_com_aws_aws_sdk_go_service_s3.GetObjectOutput, error) {
+func (m *S3API) GetObject(arg0 *github_com_aws_aws_sdk_go_service_s3.GetObjectInput) (*github_com_aws_aws_sdk_go_service_s3.GetObjectOutput, error) {
 	m.lockGetObject.Lock()
 	defer m.lockGetObject.Unlock()
 
 	if m.GetObjectFunc == nil {
-		panic("mocker: MockS3API.GetObjectFunc is nil but MockS3API.GetObject was called.")
+		panic("mocker: S3API.GetObjectFunc is nil but S3API.GetObject was called.")
 	}
 
 	call := struct {
@@ -6735,7 +6735,7 @@ func (m *MockS3API) GetObject(arg0 *github_com_aws_aws_sdk_go_service_s3.GetObje
 }
 
 // GetObjectCalled returns true if GetObject was called at least once.
-func (m *MockS3API) GetObjectCalled() bool {
+func (m *S3API) GetObjectCalled() bool {
 	m.lockGetObject.Lock()
 	defer m.lockGetObject.Unlock()
 
@@ -6743,7 +6743,7 @@ func (m *MockS3API) GetObjectCalled() bool {
 }
 
 // GetObjectCalls returns the calls made to GetObject.
-func (m *MockS3API) GetObjectCalls() []struct {
+func (m *S3API) GetObjectCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetObjectInput
 } {
 	m.lockGetObject.Lock()
@@ -6753,12 +6753,12 @@ func (m *MockS3API) GetObjectCalls() []struct {
 }
 
 // GetObjectWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) GetObjectWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetObjectInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetObjectOutput, error) {
+func (m *S3API) GetObjectWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetObjectInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetObjectOutput, error) {
 	m.lockGetObjectWithContext.Lock()
 	defer m.lockGetObjectWithContext.Unlock()
 
 	if m.GetObjectWithContextFunc == nil {
-		panic("mocker: MockS3API.GetObjectWithContextFunc is nil but MockS3API.GetObjectWithContext was called.")
+		panic("mocker: S3API.GetObjectWithContextFunc is nil but S3API.GetObjectWithContext was called.")
 	}
 
 	call := struct {
@@ -6777,7 +6777,7 @@ func (m *MockS3API) GetObjectWithContext(arg0 github_com_aws_aws_sdk_go_aws.Cont
 }
 
 // GetObjectWithContextCalled returns true if GetObjectWithContext was called at least once.
-func (m *MockS3API) GetObjectWithContextCalled() bool {
+func (m *S3API) GetObjectWithContextCalled() bool {
 	m.lockGetObjectWithContext.Lock()
 	defer m.lockGetObjectWithContext.Unlock()
 
@@ -6785,7 +6785,7 @@ func (m *MockS3API) GetObjectWithContextCalled() bool {
 }
 
 // GetObjectWithContextCalls returns the calls made to GetObjectWithContext.
-func (m *MockS3API) GetObjectWithContextCalls() []struct {
+func (m *S3API) GetObjectWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.GetObjectInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -6797,12 +6797,12 @@ func (m *MockS3API) GetObjectWithContextCalls() []struct {
 }
 
 // GetObjectRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) GetObjectRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetObjectInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetObjectOutput) {
+func (m *S3API) GetObjectRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetObjectInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetObjectOutput) {
 	m.lockGetObjectRequest.Lock()
 	defer m.lockGetObjectRequest.Unlock()
 
 	if m.GetObjectRequestFunc == nil {
-		panic("mocker: MockS3API.GetObjectRequestFunc is nil but MockS3API.GetObjectRequest was called.")
+		panic("mocker: S3API.GetObjectRequestFunc is nil but S3API.GetObjectRequest was called.")
 	}
 
 	call := struct {
@@ -6817,7 +6817,7 @@ func (m *MockS3API) GetObjectRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.
 }
 
 // GetObjectRequestCalled returns true if GetObjectRequest was called at least once.
-func (m *MockS3API) GetObjectRequestCalled() bool {
+func (m *S3API) GetObjectRequestCalled() bool {
 	m.lockGetObjectRequest.Lock()
 	defer m.lockGetObjectRequest.Unlock()
 
@@ -6825,7 +6825,7 @@ func (m *MockS3API) GetObjectRequestCalled() bool {
 }
 
 // GetObjectRequestCalls returns the calls made to GetObjectRequest.
-func (m *MockS3API) GetObjectRequestCalls() []struct {
+func (m *S3API) GetObjectRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetObjectInput
 } {
 	m.lockGetObjectRequest.Lock()
@@ -6835,12 +6835,12 @@ func (m *MockS3API) GetObjectRequestCalls() []struct {
 }
 
 // GetObjectAcl mocks base method by wrapping the associated func.
-func (m *MockS3API) GetObjectAcl(arg0 *github_com_aws_aws_sdk_go_service_s3.GetObjectAclInput) (*github_com_aws_aws_sdk_go_service_s3.GetObjectAclOutput, error) {
+func (m *S3API) GetObjectAcl(arg0 *github_com_aws_aws_sdk_go_service_s3.GetObjectAclInput) (*github_com_aws_aws_sdk_go_service_s3.GetObjectAclOutput, error) {
 	m.lockGetObjectAcl.Lock()
 	defer m.lockGetObjectAcl.Unlock()
 
 	if m.GetObjectAclFunc == nil {
-		panic("mocker: MockS3API.GetObjectAclFunc is nil but MockS3API.GetObjectAcl was called.")
+		panic("mocker: S3API.GetObjectAclFunc is nil but S3API.GetObjectAcl was called.")
 	}
 
 	call := struct {
@@ -6855,7 +6855,7 @@ func (m *MockS3API) GetObjectAcl(arg0 *github_com_aws_aws_sdk_go_service_s3.GetO
 }
 
 // GetObjectAclCalled returns true if GetObjectAcl was called at least once.
-func (m *MockS3API) GetObjectAclCalled() bool {
+func (m *S3API) GetObjectAclCalled() bool {
 	m.lockGetObjectAcl.Lock()
 	defer m.lockGetObjectAcl.Unlock()
 
@@ -6863,7 +6863,7 @@ func (m *MockS3API) GetObjectAclCalled() bool {
 }
 
 // GetObjectAclCalls returns the calls made to GetObjectAcl.
-func (m *MockS3API) GetObjectAclCalls() []struct {
+func (m *S3API) GetObjectAclCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetObjectAclInput
 } {
 	m.lockGetObjectAcl.Lock()
@@ -6873,12 +6873,12 @@ func (m *MockS3API) GetObjectAclCalls() []struct {
 }
 
 // GetObjectAclWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) GetObjectAclWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetObjectAclInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetObjectAclOutput, error) {
+func (m *S3API) GetObjectAclWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetObjectAclInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetObjectAclOutput, error) {
 	m.lockGetObjectAclWithContext.Lock()
 	defer m.lockGetObjectAclWithContext.Unlock()
 
 	if m.GetObjectAclWithContextFunc == nil {
-		panic("mocker: MockS3API.GetObjectAclWithContextFunc is nil but MockS3API.GetObjectAclWithContext was called.")
+		panic("mocker: S3API.GetObjectAclWithContextFunc is nil but S3API.GetObjectAclWithContext was called.")
 	}
 
 	call := struct {
@@ -6897,7 +6897,7 @@ func (m *MockS3API) GetObjectAclWithContext(arg0 github_com_aws_aws_sdk_go_aws.C
 }
 
 // GetObjectAclWithContextCalled returns true if GetObjectAclWithContext was called at least once.
-func (m *MockS3API) GetObjectAclWithContextCalled() bool {
+func (m *S3API) GetObjectAclWithContextCalled() bool {
 	m.lockGetObjectAclWithContext.Lock()
 	defer m.lockGetObjectAclWithContext.Unlock()
 
@@ -6905,7 +6905,7 @@ func (m *MockS3API) GetObjectAclWithContextCalled() bool {
 }
 
 // GetObjectAclWithContextCalls returns the calls made to GetObjectAclWithContext.
-func (m *MockS3API) GetObjectAclWithContextCalls() []struct {
+func (m *S3API) GetObjectAclWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.GetObjectAclInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -6917,12 +6917,12 @@ func (m *MockS3API) GetObjectAclWithContextCalls() []struct {
 }
 
 // GetObjectAclRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) GetObjectAclRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetObjectAclInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetObjectAclOutput) {
+func (m *S3API) GetObjectAclRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetObjectAclInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetObjectAclOutput) {
 	m.lockGetObjectAclRequest.Lock()
 	defer m.lockGetObjectAclRequest.Unlock()
 
 	if m.GetObjectAclRequestFunc == nil {
-		panic("mocker: MockS3API.GetObjectAclRequestFunc is nil but MockS3API.GetObjectAclRequest was called.")
+		panic("mocker: S3API.GetObjectAclRequestFunc is nil but S3API.GetObjectAclRequest was called.")
 	}
 
 	call := struct {
@@ -6937,7 +6937,7 @@ func (m *MockS3API) GetObjectAclRequest(arg0 *github_com_aws_aws_sdk_go_service_
 }
 
 // GetObjectAclRequestCalled returns true if GetObjectAclRequest was called at least once.
-func (m *MockS3API) GetObjectAclRequestCalled() bool {
+func (m *S3API) GetObjectAclRequestCalled() bool {
 	m.lockGetObjectAclRequest.Lock()
 	defer m.lockGetObjectAclRequest.Unlock()
 
@@ -6945,7 +6945,7 @@ func (m *MockS3API) GetObjectAclRequestCalled() bool {
 }
 
 // GetObjectAclRequestCalls returns the calls made to GetObjectAclRequest.
-func (m *MockS3API) GetObjectAclRequestCalls() []struct {
+func (m *S3API) GetObjectAclRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetObjectAclInput
 } {
 	m.lockGetObjectAclRequest.Lock()
@@ -6955,12 +6955,12 @@ func (m *MockS3API) GetObjectAclRequestCalls() []struct {
 }
 
 // GetObjectLegalHold mocks base method by wrapping the associated func.
-func (m *MockS3API) GetObjectLegalHold(arg0 *github_com_aws_aws_sdk_go_service_s3.GetObjectLegalHoldInput) (*github_com_aws_aws_sdk_go_service_s3.GetObjectLegalHoldOutput, error) {
+func (m *S3API) GetObjectLegalHold(arg0 *github_com_aws_aws_sdk_go_service_s3.GetObjectLegalHoldInput) (*github_com_aws_aws_sdk_go_service_s3.GetObjectLegalHoldOutput, error) {
 	m.lockGetObjectLegalHold.Lock()
 	defer m.lockGetObjectLegalHold.Unlock()
 
 	if m.GetObjectLegalHoldFunc == nil {
-		panic("mocker: MockS3API.GetObjectLegalHoldFunc is nil but MockS3API.GetObjectLegalHold was called.")
+		panic("mocker: S3API.GetObjectLegalHoldFunc is nil but S3API.GetObjectLegalHold was called.")
 	}
 
 	call := struct {
@@ -6975,7 +6975,7 @@ func (m *MockS3API) GetObjectLegalHold(arg0 *github_com_aws_aws_sdk_go_service_s
 }
 
 // GetObjectLegalHoldCalled returns true if GetObjectLegalHold was called at least once.
-func (m *MockS3API) GetObjectLegalHoldCalled() bool {
+func (m *S3API) GetObjectLegalHoldCalled() bool {
 	m.lockGetObjectLegalHold.Lock()
 	defer m.lockGetObjectLegalHold.Unlock()
 
@@ -6983,7 +6983,7 @@ func (m *MockS3API) GetObjectLegalHoldCalled() bool {
 }
 
 // GetObjectLegalHoldCalls returns the calls made to GetObjectLegalHold.
-func (m *MockS3API) GetObjectLegalHoldCalls() []struct {
+func (m *S3API) GetObjectLegalHoldCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetObjectLegalHoldInput
 } {
 	m.lockGetObjectLegalHold.Lock()
@@ -6993,12 +6993,12 @@ func (m *MockS3API) GetObjectLegalHoldCalls() []struct {
 }
 
 // GetObjectLegalHoldWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) GetObjectLegalHoldWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetObjectLegalHoldInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetObjectLegalHoldOutput, error) {
+func (m *S3API) GetObjectLegalHoldWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetObjectLegalHoldInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetObjectLegalHoldOutput, error) {
 	m.lockGetObjectLegalHoldWithContext.Lock()
 	defer m.lockGetObjectLegalHoldWithContext.Unlock()
 
 	if m.GetObjectLegalHoldWithContextFunc == nil {
-		panic("mocker: MockS3API.GetObjectLegalHoldWithContextFunc is nil but MockS3API.GetObjectLegalHoldWithContext was called.")
+		panic("mocker: S3API.GetObjectLegalHoldWithContextFunc is nil but S3API.GetObjectLegalHoldWithContext was called.")
 	}
 
 	call := struct {
@@ -7017,7 +7017,7 @@ func (m *MockS3API) GetObjectLegalHoldWithContext(arg0 github_com_aws_aws_sdk_go
 }
 
 // GetObjectLegalHoldWithContextCalled returns true if GetObjectLegalHoldWithContext was called at least once.
-func (m *MockS3API) GetObjectLegalHoldWithContextCalled() bool {
+func (m *S3API) GetObjectLegalHoldWithContextCalled() bool {
 	m.lockGetObjectLegalHoldWithContext.Lock()
 	defer m.lockGetObjectLegalHoldWithContext.Unlock()
 
@@ -7025,7 +7025,7 @@ func (m *MockS3API) GetObjectLegalHoldWithContextCalled() bool {
 }
 
 // GetObjectLegalHoldWithContextCalls returns the calls made to GetObjectLegalHoldWithContext.
-func (m *MockS3API) GetObjectLegalHoldWithContextCalls() []struct {
+func (m *S3API) GetObjectLegalHoldWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.GetObjectLegalHoldInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -7037,12 +7037,12 @@ func (m *MockS3API) GetObjectLegalHoldWithContextCalls() []struct {
 }
 
 // GetObjectLegalHoldRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) GetObjectLegalHoldRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetObjectLegalHoldInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetObjectLegalHoldOutput) {
+func (m *S3API) GetObjectLegalHoldRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetObjectLegalHoldInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetObjectLegalHoldOutput) {
 	m.lockGetObjectLegalHoldRequest.Lock()
 	defer m.lockGetObjectLegalHoldRequest.Unlock()
 
 	if m.GetObjectLegalHoldRequestFunc == nil {
-		panic("mocker: MockS3API.GetObjectLegalHoldRequestFunc is nil but MockS3API.GetObjectLegalHoldRequest was called.")
+		panic("mocker: S3API.GetObjectLegalHoldRequestFunc is nil but S3API.GetObjectLegalHoldRequest was called.")
 	}
 
 	call := struct {
@@ -7057,7 +7057,7 @@ func (m *MockS3API) GetObjectLegalHoldRequest(arg0 *github_com_aws_aws_sdk_go_se
 }
 
 // GetObjectLegalHoldRequestCalled returns true if GetObjectLegalHoldRequest was called at least once.
-func (m *MockS3API) GetObjectLegalHoldRequestCalled() bool {
+func (m *S3API) GetObjectLegalHoldRequestCalled() bool {
 	m.lockGetObjectLegalHoldRequest.Lock()
 	defer m.lockGetObjectLegalHoldRequest.Unlock()
 
@@ -7065,7 +7065,7 @@ func (m *MockS3API) GetObjectLegalHoldRequestCalled() bool {
 }
 
 // GetObjectLegalHoldRequestCalls returns the calls made to GetObjectLegalHoldRequest.
-func (m *MockS3API) GetObjectLegalHoldRequestCalls() []struct {
+func (m *S3API) GetObjectLegalHoldRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetObjectLegalHoldInput
 } {
 	m.lockGetObjectLegalHoldRequest.Lock()
@@ -7075,12 +7075,12 @@ func (m *MockS3API) GetObjectLegalHoldRequestCalls() []struct {
 }
 
 // GetObjectLockConfiguration mocks base method by wrapping the associated func.
-func (m *MockS3API) GetObjectLockConfiguration(arg0 *github_com_aws_aws_sdk_go_service_s3.GetObjectLockConfigurationInput) (*github_com_aws_aws_sdk_go_service_s3.GetObjectLockConfigurationOutput, error) {
+func (m *S3API) GetObjectLockConfiguration(arg0 *github_com_aws_aws_sdk_go_service_s3.GetObjectLockConfigurationInput) (*github_com_aws_aws_sdk_go_service_s3.GetObjectLockConfigurationOutput, error) {
 	m.lockGetObjectLockConfiguration.Lock()
 	defer m.lockGetObjectLockConfiguration.Unlock()
 
 	if m.GetObjectLockConfigurationFunc == nil {
-		panic("mocker: MockS3API.GetObjectLockConfigurationFunc is nil but MockS3API.GetObjectLockConfiguration was called.")
+		panic("mocker: S3API.GetObjectLockConfigurationFunc is nil but S3API.GetObjectLockConfiguration was called.")
 	}
 
 	call := struct {
@@ -7095,7 +7095,7 @@ func (m *MockS3API) GetObjectLockConfiguration(arg0 *github_com_aws_aws_sdk_go_s
 }
 
 // GetObjectLockConfigurationCalled returns true if GetObjectLockConfiguration was called at least once.
-func (m *MockS3API) GetObjectLockConfigurationCalled() bool {
+func (m *S3API) GetObjectLockConfigurationCalled() bool {
 	m.lockGetObjectLockConfiguration.Lock()
 	defer m.lockGetObjectLockConfiguration.Unlock()
 
@@ -7103,7 +7103,7 @@ func (m *MockS3API) GetObjectLockConfigurationCalled() bool {
 }
 
 // GetObjectLockConfigurationCalls returns the calls made to GetObjectLockConfiguration.
-func (m *MockS3API) GetObjectLockConfigurationCalls() []struct {
+func (m *S3API) GetObjectLockConfigurationCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetObjectLockConfigurationInput
 } {
 	m.lockGetObjectLockConfiguration.Lock()
@@ -7113,12 +7113,12 @@ func (m *MockS3API) GetObjectLockConfigurationCalls() []struct {
 }
 
 // GetObjectLockConfigurationWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) GetObjectLockConfigurationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetObjectLockConfigurationInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetObjectLockConfigurationOutput, error) {
+func (m *S3API) GetObjectLockConfigurationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetObjectLockConfigurationInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetObjectLockConfigurationOutput, error) {
 	m.lockGetObjectLockConfigurationWithContext.Lock()
 	defer m.lockGetObjectLockConfigurationWithContext.Unlock()
 
 	if m.GetObjectLockConfigurationWithContextFunc == nil {
-		panic("mocker: MockS3API.GetObjectLockConfigurationWithContextFunc is nil but MockS3API.GetObjectLockConfigurationWithContext was called.")
+		panic("mocker: S3API.GetObjectLockConfigurationWithContextFunc is nil but S3API.GetObjectLockConfigurationWithContext was called.")
 	}
 
 	call := struct {
@@ -7137,7 +7137,7 @@ func (m *MockS3API) GetObjectLockConfigurationWithContext(arg0 github_com_aws_aw
 }
 
 // GetObjectLockConfigurationWithContextCalled returns true if GetObjectLockConfigurationWithContext was called at least once.
-func (m *MockS3API) GetObjectLockConfigurationWithContextCalled() bool {
+func (m *S3API) GetObjectLockConfigurationWithContextCalled() bool {
 	m.lockGetObjectLockConfigurationWithContext.Lock()
 	defer m.lockGetObjectLockConfigurationWithContext.Unlock()
 
@@ -7145,7 +7145,7 @@ func (m *MockS3API) GetObjectLockConfigurationWithContextCalled() bool {
 }
 
 // GetObjectLockConfigurationWithContextCalls returns the calls made to GetObjectLockConfigurationWithContext.
-func (m *MockS3API) GetObjectLockConfigurationWithContextCalls() []struct {
+func (m *S3API) GetObjectLockConfigurationWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.GetObjectLockConfigurationInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -7157,12 +7157,12 @@ func (m *MockS3API) GetObjectLockConfigurationWithContextCalls() []struct {
 }
 
 // GetObjectLockConfigurationRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) GetObjectLockConfigurationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetObjectLockConfigurationInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetObjectLockConfigurationOutput) {
+func (m *S3API) GetObjectLockConfigurationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetObjectLockConfigurationInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetObjectLockConfigurationOutput) {
 	m.lockGetObjectLockConfigurationRequest.Lock()
 	defer m.lockGetObjectLockConfigurationRequest.Unlock()
 
 	if m.GetObjectLockConfigurationRequestFunc == nil {
-		panic("mocker: MockS3API.GetObjectLockConfigurationRequestFunc is nil but MockS3API.GetObjectLockConfigurationRequest was called.")
+		panic("mocker: S3API.GetObjectLockConfigurationRequestFunc is nil but S3API.GetObjectLockConfigurationRequest was called.")
 	}
 
 	call := struct {
@@ -7177,7 +7177,7 @@ func (m *MockS3API) GetObjectLockConfigurationRequest(arg0 *github_com_aws_aws_s
 }
 
 // GetObjectLockConfigurationRequestCalled returns true if GetObjectLockConfigurationRequest was called at least once.
-func (m *MockS3API) GetObjectLockConfigurationRequestCalled() bool {
+func (m *S3API) GetObjectLockConfigurationRequestCalled() bool {
 	m.lockGetObjectLockConfigurationRequest.Lock()
 	defer m.lockGetObjectLockConfigurationRequest.Unlock()
 
@@ -7185,7 +7185,7 @@ func (m *MockS3API) GetObjectLockConfigurationRequestCalled() bool {
 }
 
 // GetObjectLockConfigurationRequestCalls returns the calls made to GetObjectLockConfigurationRequest.
-func (m *MockS3API) GetObjectLockConfigurationRequestCalls() []struct {
+func (m *S3API) GetObjectLockConfigurationRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetObjectLockConfigurationInput
 } {
 	m.lockGetObjectLockConfigurationRequest.Lock()
@@ -7195,12 +7195,12 @@ func (m *MockS3API) GetObjectLockConfigurationRequestCalls() []struct {
 }
 
 // GetObjectRetention mocks base method by wrapping the associated func.
-func (m *MockS3API) GetObjectRetention(arg0 *github_com_aws_aws_sdk_go_service_s3.GetObjectRetentionInput) (*github_com_aws_aws_sdk_go_service_s3.GetObjectRetentionOutput, error) {
+func (m *S3API) GetObjectRetention(arg0 *github_com_aws_aws_sdk_go_service_s3.GetObjectRetentionInput) (*github_com_aws_aws_sdk_go_service_s3.GetObjectRetentionOutput, error) {
 	m.lockGetObjectRetention.Lock()
 	defer m.lockGetObjectRetention.Unlock()
 
 	if m.GetObjectRetentionFunc == nil {
-		panic("mocker: MockS3API.GetObjectRetentionFunc is nil but MockS3API.GetObjectRetention was called.")
+		panic("mocker: S3API.GetObjectRetentionFunc is nil but S3API.GetObjectRetention was called.")
 	}
 
 	call := struct {
@@ -7215,7 +7215,7 @@ func (m *MockS3API) GetObjectRetention(arg0 *github_com_aws_aws_sdk_go_service_s
 }
 
 // GetObjectRetentionCalled returns true if GetObjectRetention was called at least once.
-func (m *MockS3API) GetObjectRetentionCalled() bool {
+func (m *S3API) GetObjectRetentionCalled() bool {
 	m.lockGetObjectRetention.Lock()
 	defer m.lockGetObjectRetention.Unlock()
 
@@ -7223,7 +7223,7 @@ func (m *MockS3API) GetObjectRetentionCalled() bool {
 }
 
 // GetObjectRetentionCalls returns the calls made to GetObjectRetention.
-func (m *MockS3API) GetObjectRetentionCalls() []struct {
+func (m *S3API) GetObjectRetentionCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetObjectRetentionInput
 } {
 	m.lockGetObjectRetention.Lock()
@@ -7233,12 +7233,12 @@ func (m *MockS3API) GetObjectRetentionCalls() []struct {
 }
 
 // GetObjectRetentionWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) GetObjectRetentionWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetObjectRetentionInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetObjectRetentionOutput, error) {
+func (m *S3API) GetObjectRetentionWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetObjectRetentionInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetObjectRetentionOutput, error) {
 	m.lockGetObjectRetentionWithContext.Lock()
 	defer m.lockGetObjectRetentionWithContext.Unlock()
 
 	if m.GetObjectRetentionWithContextFunc == nil {
-		panic("mocker: MockS3API.GetObjectRetentionWithContextFunc is nil but MockS3API.GetObjectRetentionWithContext was called.")
+		panic("mocker: S3API.GetObjectRetentionWithContextFunc is nil but S3API.GetObjectRetentionWithContext was called.")
 	}
 
 	call := struct {
@@ -7257,7 +7257,7 @@ func (m *MockS3API) GetObjectRetentionWithContext(arg0 github_com_aws_aws_sdk_go
 }
 
 // GetObjectRetentionWithContextCalled returns true if GetObjectRetentionWithContext was called at least once.
-func (m *MockS3API) GetObjectRetentionWithContextCalled() bool {
+func (m *S3API) GetObjectRetentionWithContextCalled() bool {
 	m.lockGetObjectRetentionWithContext.Lock()
 	defer m.lockGetObjectRetentionWithContext.Unlock()
 
@@ -7265,7 +7265,7 @@ func (m *MockS3API) GetObjectRetentionWithContextCalled() bool {
 }
 
 // GetObjectRetentionWithContextCalls returns the calls made to GetObjectRetentionWithContext.
-func (m *MockS3API) GetObjectRetentionWithContextCalls() []struct {
+func (m *S3API) GetObjectRetentionWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.GetObjectRetentionInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -7277,12 +7277,12 @@ func (m *MockS3API) GetObjectRetentionWithContextCalls() []struct {
 }
 
 // GetObjectRetentionRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) GetObjectRetentionRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetObjectRetentionInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetObjectRetentionOutput) {
+func (m *S3API) GetObjectRetentionRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetObjectRetentionInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetObjectRetentionOutput) {
 	m.lockGetObjectRetentionRequest.Lock()
 	defer m.lockGetObjectRetentionRequest.Unlock()
 
 	if m.GetObjectRetentionRequestFunc == nil {
-		panic("mocker: MockS3API.GetObjectRetentionRequestFunc is nil but MockS3API.GetObjectRetentionRequest was called.")
+		panic("mocker: S3API.GetObjectRetentionRequestFunc is nil but S3API.GetObjectRetentionRequest was called.")
 	}
 
 	call := struct {
@@ -7297,7 +7297,7 @@ func (m *MockS3API) GetObjectRetentionRequest(arg0 *github_com_aws_aws_sdk_go_se
 }
 
 // GetObjectRetentionRequestCalled returns true if GetObjectRetentionRequest was called at least once.
-func (m *MockS3API) GetObjectRetentionRequestCalled() bool {
+func (m *S3API) GetObjectRetentionRequestCalled() bool {
 	m.lockGetObjectRetentionRequest.Lock()
 	defer m.lockGetObjectRetentionRequest.Unlock()
 
@@ -7305,7 +7305,7 @@ func (m *MockS3API) GetObjectRetentionRequestCalled() bool {
 }
 
 // GetObjectRetentionRequestCalls returns the calls made to GetObjectRetentionRequest.
-func (m *MockS3API) GetObjectRetentionRequestCalls() []struct {
+func (m *S3API) GetObjectRetentionRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetObjectRetentionInput
 } {
 	m.lockGetObjectRetentionRequest.Lock()
@@ -7315,12 +7315,12 @@ func (m *MockS3API) GetObjectRetentionRequestCalls() []struct {
 }
 
 // GetObjectTagging mocks base method by wrapping the associated func.
-func (m *MockS3API) GetObjectTagging(arg0 *github_com_aws_aws_sdk_go_service_s3.GetObjectTaggingInput) (*github_com_aws_aws_sdk_go_service_s3.GetObjectTaggingOutput, error) {
+func (m *S3API) GetObjectTagging(arg0 *github_com_aws_aws_sdk_go_service_s3.GetObjectTaggingInput) (*github_com_aws_aws_sdk_go_service_s3.GetObjectTaggingOutput, error) {
 	m.lockGetObjectTagging.Lock()
 	defer m.lockGetObjectTagging.Unlock()
 
 	if m.GetObjectTaggingFunc == nil {
-		panic("mocker: MockS3API.GetObjectTaggingFunc is nil but MockS3API.GetObjectTagging was called.")
+		panic("mocker: S3API.GetObjectTaggingFunc is nil but S3API.GetObjectTagging was called.")
 	}
 
 	call := struct {
@@ -7335,7 +7335,7 @@ func (m *MockS3API) GetObjectTagging(arg0 *github_com_aws_aws_sdk_go_service_s3.
 }
 
 // GetObjectTaggingCalled returns true if GetObjectTagging was called at least once.
-func (m *MockS3API) GetObjectTaggingCalled() bool {
+func (m *S3API) GetObjectTaggingCalled() bool {
 	m.lockGetObjectTagging.Lock()
 	defer m.lockGetObjectTagging.Unlock()
 
@@ -7343,7 +7343,7 @@ func (m *MockS3API) GetObjectTaggingCalled() bool {
 }
 
 // GetObjectTaggingCalls returns the calls made to GetObjectTagging.
-func (m *MockS3API) GetObjectTaggingCalls() []struct {
+func (m *S3API) GetObjectTaggingCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetObjectTaggingInput
 } {
 	m.lockGetObjectTagging.Lock()
@@ -7353,12 +7353,12 @@ func (m *MockS3API) GetObjectTaggingCalls() []struct {
 }
 
 // GetObjectTaggingWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) GetObjectTaggingWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetObjectTaggingInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetObjectTaggingOutput, error) {
+func (m *S3API) GetObjectTaggingWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetObjectTaggingInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetObjectTaggingOutput, error) {
 	m.lockGetObjectTaggingWithContext.Lock()
 	defer m.lockGetObjectTaggingWithContext.Unlock()
 
 	if m.GetObjectTaggingWithContextFunc == nil {
-		panic("mocker: MockS3API.GetObjectTaggingWithContextFunc is nil but MockS3API.GetObjectTaggingWithContext was called.")
+		panic("mocker: S3API.GetObjectTaggingWithContextFunc is nil but S3API.GetObjectTaggingWithContext was called.")
 	}
 
 	call := struct {
@@ -7377,7 +7377,7 @@ func (m *MockS3API) GetObjectTaggingWithContext(arg0 github_com_aws_aws_sdk_go_a
 }
 
 // GetObjectTaggingWithContextCalled returns true if GetObjectTaggingWithContext was called at least once.
-func (m *MockS3API) GetObjectTaggingWithContextCalled() bool {
+func (m *S3API) GetObjectTaggingWithContextCalled() bool {
 	m.lockGetObjectTaggingWithContext.Lock()
 	defer m.lockGetObjectTaggingWithContext.Unlock()
 
@@ -7385,7 +7385,7 @@ func (m *MockS3API) GetObjectTaggingWithContextCalled() bool {
 }
 
 // GetObjectTaggingWithContextCalls returns the calls made to GetObjectTaggingWithContext.
-func (m *MockS3API) GetObjectTaggingWithContextCalls() []struct {
+func (m *S3API) GetObjectTaggingWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.GetObjectTaggingInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -7397,12 +7397,12 @@ func (m *MockS3API) GetObjectTaggingWithContextCalls() []struct {
 }
 
 // GetObjectTaggingRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) GetObjectTaggingRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetObjectTaggingInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetObjectTaggingOutput) {
+func (m *S3API) GetObjectTaggingRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetObjectTaggingInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetObjectTaggingOutput) {
 	m.lockGetObjectTaggingRequest.Lock()
 	defer m.lockGetObjectTaggingRequest.Unlock()
 
 	if m.GetObjectTaggingRequestFunc == nil {
-		panic("mocker: MockS3API.GetObjectTaggingRequestFunc is nil but MockS3API.GetObjectTaggingRequest was called.")
+		panic("mocker: S3API.GetObjectTaggingRequestFunc is nil but S3API.GetObjectTaggingRequest was called.")
 	}
 
 	call := struct {
@@ -7417,7 +7417,7 @@ func (m *MockS3API) GetObjectTaggingRequest(arg0 *github_com_aws_aws_sdk_go_serv
 }
 
 // GetObjectTaggingRequestCalled returns true if GetObjectTaggingRequest was called at least once.
-func (m *MockS3API) GetObjectTaggingRequestCalled() bool {
+func (m *S3API) GetObjectTaggingRequestCalled() bool {
 	m.lockGetObjectTaggingRequest.Lock()
 	defer m.lockGetObjectTaggingRequest.Unlock()
 
@@ -7425,7 +7425,7 @@ func (m *MockS3API) GetObjectTaggingRequestCalled() bool {
 }
 
 // GetObjectTaggingRequestCalls returns the calls made to GetObjectTaggingRequest.
-func (m *MockS3API) GetObjectTaggingRequestCalls() []struct {
+func (m *S3API) GetObjectTaggingRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetObjectTaggingInput
 } {
 	m.lockGetObjectTaggingRequest.Lock()
@@ -7435,12 +7435,12 @@ func (m *MockS3API) GetObjectTaggingRequestCalls() []struct {
 }
 
 // GetObjectTorrent mocks base method by wrapping the associated func.
-func (m *MockS3API) GetObjectTorrent(arg0 *github_com_aws_aws_sdk_go_service_s3.GetObjectTorrentInput) (*github_com_aws_aws_sdk_go_service_s3.GetObjectTorrentOutput, error) {
+func (m *S3API) GetObjectTorrent(arg0 *github_com_aws_aws_sdk_go_service_s3.GetObjectTorrentInput) (*github_com_aws_aws_sdk_go_service_s3.GetObjectTorrentOutput, error) {
 	m.lockGetObjectTorrent.Lock()
 	defer m.lockGetObjectTorrent.Unlock()
 
 	if m.GetObjectTorrentFunc == nil {
-		panic("mocker: MockS3API.GetObjectTorrentFunc is nil but MockS3API.GetObjectTorrent was called.")
+		panic("mocker: S3API.GetObjectTorrentFunc is nil but S3API.GetObjectTorrent was called.")
 	}
 
 	call := struct {
@@ -7455,7 +7455,7 @@ func (m *MockS3API) GetObjectTorrent(arg0 *github_com_aws_aws_sdk_go_service_s3.
 }
 
 // GetObjectTorrentCalled returns true if GetObjectTorrent was called at least once.
-func (m *MockS3API) GetObjectTorrentCalled() bool {
+func (m *S3API) GetObjectTorrentCalled() bool {
 	m.lockGetObjectTorrent.Lock()
 	defer m.lockGetObjectTorrent.Unlock()
 
@@ -7463,7 +7463,7 @@ func (m *MockS3API) GetObjectTorrentCalled() bool {
 }
 
 // GetObjectTorrentCalls returns the calls made to GetObjectTorrent.
-func (m *MockS3API) GetObjectTorrentCalls() []struct {
+func (m *S3API) GetObjectTorrentCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetObjectTorrentInput
 } {
 	m.lockGetObjectTorrent.Lock()
@@ -7473,12 +7473,12 @@ func (m *MockS3API) GetObjectTorrentCalls() []struct {
 }
 
 // GetObjectTorrentWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) GetObjectTorrentWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetObjectTorrentInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetObjectTorrentOutput, error) {
+func (m *S3API) GetObjectTorrentWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetObjectTorrentInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetObjectTorrentOutput, error) {
 	m.lockGetObjectTorrentWithContext.Lock()
 	defer m.lockGetObjectTorrentWithContext.Unlock()
 
 	if m.GetObjectTorrentWithContextFunc == nil {
-		panic("mocker: MockS3API.GetObjectTorrentWithContextFunc is nil but MockS3API.GetObjectTorrentWithContext was called.")
+		panic("mocker: S3API.GetObjectTorrentWithContextFunc is nil but S3API.GetObjectTorrentWithContext was called.")
 	}
 
 	call := struct {
@@ -7497,7 +7497,7 @@ func (m *MockS3API) GetObjectTorrentWithContext(arg0 github_com_aws_aws_sdk_go_a
 }
 
 // GetObjectTorrentWithContextCalled returns true if GetObjectTorrentWithContext was called at least once.
-func (m *MockS3API) GetObjectTorrentWithContextCalled() bool {
+func (m *S3API) GetObjectTorrentWithContextCalled() bool {
 	m.lockGetObjectTorrentWithContext.Lock()
 	defer m.lockGetObjectTorrentWithContext.Unlock()
 
@@ -7505,7 +7505,7 @@ func (m *MockS3API) GetObjectTorrentWithContextCalled() bool {
 }
 
 // GetObjectTorrentWithContextCalls returns the calls made to GetObjectTorrentWithContext.
-func (m *MockS3API) GetObjectTorrentWithContextCalls() []struct {
+func (m *S3API) GetObjectTorrentWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.GetObjectTorrentInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -7517,12 +7517,12 @@ func (m *MockS3API) GetObjectTorrentWithContextCalls() []struct {
 }
 
 // GetObjectTorrentRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) GetObjectTorrentRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetObjectTorrentInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetObjectTorrentOutput) {
+func (m *S3API) GetObjectTorrentRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetObjectTorrentInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetObjectTorrentOutput) {
 	m.lockGetObjectTorrentRequest.Lock()
 	defer m.lockGetObjectTorrentRequest.Unlock()
 
 	if m.GetObjectTorrentRequestFunc == nil {
-		panic("mocker: MockS3API.GetObjectTorrentRequestFunc is nil but MockS3API.GetObjectTorrentRequest was called.")
+		panic("mocker: S3API.GetObjectTorrentRequestFunc is nil but S3API.GetObjectTorrentRequest was called.")
 	}
 
 	call := struct {
@@ -7537,7 +7537,7 @@ func (m *MockS3API) GetObjectTorrentRequest(arg0 *github_com_aws_aws_sdk_go_serv
 }
 
 // GetObjectTorrentRequestCalled returns true if GetObjectTorrentRequest was called at least once.
-func (m *MockS3API) GetObjectTorrentRequestCalled() bool {
+func (m *S3API) GetObjectTorrentRequestCalled() bool {
 	m.lockGetObjectTorrentRequest.Lock()
 	defer m.lockGetObjectTorrentRequest.Unlock()
 
@@ -7545,7 +7545,7 @@ func (m *MockS3API) GetObjectTorrentRequestCalled() bool {
 }
 
 // GetObjectTorrentRequestCalls returns the calls made to GetObjectTorrentRequest.
-func (m *MockS3API) GetObjectTorrentRequestCalls() []struct {
+func (m *S3API) GetObjectTorrentRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetObjectTorrentInput
 } {
 	m.lockGetObjectTorrentRequest.Lock()
@@ -7555,12 +7555,12 @@ func (m *MockS3API) GetObjectTorrentRequestCalls() []struct {
 }
 
 // GetPublicAccessBlock mocks base method by wrapping the associated func.
-func (m *MockS3API) GetPublicAccessBlock(arg0 *github_com_aws_aws_sdk_go_service_s3.GetPublicAccessBlockInput) (*github_com_aws_aws_sdk_go_service_s3.GetPublicAccessBlockOutput, error) {
+func (m *S3API) GetPublicAccessBlock(arg0 *github_com_aws_aws_sdk_go_service_s3.GetPublicAccessBlockInput) (*github_com_aws_aws_sdk_go_service_s3.GetPublicAccessBlockOutput, error) {
 	m.lockGetPublicAccessBlock.Lock()
 	defer m.lockGetPublicAccessBlock.Unlock()
 
 	if m.GetPublicAccessBlockFunc == nil {
-		panic("mocker: MockS3API.GetPublicAccessBlockFunc is nil but MockS3API.GetPublicAccessBlock was called.")
+		panic("mocker: S3API.GetPublicAccessBlockFunc is nil but S3API.GetPublicAccessBlock was called.")
 	}
 
 	call := struct {
@@ -7575,7 +7575,7 @@ func (m *MockS3API) GetPublicAccessBlock(arg0 *github_com_aws_aws_sdk_go_service
 }
 
 // GetPublicAccessBlockCalled returns true if GetPublicAccessBlock was called at least once.
-func (m *MockS3API) GetPublicAccessBlockCalled() bool {
+func (m *S3API) GetPublicAccessBlockCalled() bool {
 	m.lockGetPublicAccessBlock.Lock()
 	defer m.lockGetPublicAccessBlock.Unlock()
 
@@ -7583,7 +7583,7 @@ func (m *MockS3API) GetPublicAccessBlockCalled() bool {
 }
 
 // GetPublicAccessBlockCalls returns the calls made to GetPublicAccessBlock.
-func (m *MockS3API) GetPublicAccessBlockCalls() []struct {
+func (m *S3API) GetPublicAccessBlockCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetPublicAccessBlockInput
 } {
 	m.lockGetPublicAccessBlock.Lock()
@@ -7593,12 +7593,12 @@ func (m *MockS3API) GetPublicAccessBlockCalls() []struct {
 }
 
 // GetPublicAccessBlockWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) GetPublicAccessBlockWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetPublicAccessBlockInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetPublicAccessBlockOutput, error) {
+func (m *S3API) GetPublicAccessBlockWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.GetPublicAccessBlockInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.GetPublicAccessBlockOutput, error) {
 	m.lockGetPublicAccessBlockWithContext.Lock()
 	defer m.lockGetPublicAccessBlockWithContext.Unlock()
 
 	if m.GetPublicAccessBlockWithContextFunc == nil {
-		panic("mocker: MockS3API.GetPublicAccessBlockWithContextFunc is nil but MockS3API.GetPublicAccessBlockWithContext was called.")
+		panic("mocker: S3API.GetPublicAccessBlockWithContextFunc is nil but S3API.GetPublicAccessBlockWithContext was called.")
 	}
 
 	call := struct {
@@ -7617,7 +7617,7 @@ func (m *MockS3API) GetPublicAccessBlockWithContext(arg0 github_com_aws_aws_sdk_
 }
 
 // GetPublicAccessBlockWithContextCalled returns true if GetPublicAccessBlockWithContext was called at least once.
-func (m *MockS3API) GetPublicAccessBlockWithContextCalled() bool {
+func (m *S3API) GetPublicAccessBlockWithContextCalled() bool {
 	m.lockGetPublicAccessBlockWithContext.Lock()
 	defer m.lockGetPublicAccessBlockWithContext.Unlock()
 
@@ -7625,7 +7625,7 @@ func (m *MockS3API) GetPublicAccessBlockWithContextCalled() bool {
 }
 
 // GetPublicAccessBlockWithContextCalls returns the calls made to GetPublicAccessBlockWithContext.
-func (m *MockS3API) GetPublicAccessBlockWithContextCalls() []struct {
+func (m *S3API) GetPublicAccessBlockWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.GetPublicAccessBlockInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -7637,12 +7637,12 @@ func (m *MockS3API) GetPublicAccessBlockWithContextCalls() []struct {
 }
 
 // GetPublicAccessBlockRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) GetPublicAccessBlockRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetPublicAccessBlockInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetPublicAccessBlockOutput) {
+func (m *S3API) GetPublicAccessBlockRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.GetPublicAccessBlockInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.GetPublicAccessBlockOutput) {
 	m.lockGetPublicAccessBlockRequest.Lock()
 	defer m.lockGetPublicAccessBlockRequest.Unlock()
 
 	if m.GetPublicAccessBlockRequestFunc == nil {
-		panic("mocker: MockS3API.GetPublicAccessBlockRequestFunc is nil but MockS3API.GetPublicAccessBlockRequest was called.")
+		panic("mocker: S3API.GetPublicAccessBlockRequestFunc is nil but S3API.GetPublicAccessBlockRequest was called.")
 	}
 
 	call := struct {
@@ -7657,7 +7657,7 @@ func (m *MockS3API) GetPublicAccessBlockRequest(arg0 *github_com_aws_aws_sdk_go_
 }
 
 // GetPublicAccessBlockRequestCalled returns true if GetPublicAccessBlockRequest was called at least once.
-func (m *MockS3API) GetPublicAccessBlockRequestCalled() bool {
+func (m *S3API) GetPublicAccessBlockRequestCalled() bool {
 	m.lockGetPublicAccessBlockRequest.Lock()
 	defer m.lockGetPublicAccessBlockRequest.Unlock()
 
@@ -7665,7 +7665,7 @@ func (m *MockS3API) GetPublicAccessBlockRequestCalled() bool {
 }
 
 // GetPublicAccessBlockRequestCalls returns the calls made to GetPublicAccessBlockRequest.
-func (m *MockS3API) GetPublicAccessBlockRequestCalls() []struct {
+func (m *S3API) GetPublicAccessBlockRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.GetPublicAccessBlockInput
 } {
 	m.lockGetPublicAccessBlockRequest.Lock()
@@ -7675,12 +7675,12 @@ func (m *MockS3API) GetPublicAccessBlockRequestCalls() []struct {
 }
 
 // HeadBucket mocks base method by wrapping the associated func.
-func (m *MockS3API) HeadBucket(arg0 *github_com_aws_aws_sdk_go_service_s3.HeadBucketInput) (*github_com_aws_aws_sdk_go_service_s3.HeadBucketOutput, error) {
+func (m *S3API) HeadBucket(arg0 *github_com_aws_aws_sdk_go_service_s3.HeadBucketInput) (*github_com_aws_aws_sdk_go_service_s3.HeadBucketOutput, error) {
 	m.lockHeadBucket.Lock()
 	defer m.lockHeadBucket.Unlock()
 
 	if m.HeadBucketFunc == nil {
-		panic("mocker: MockS3API.HeadBucketFunc is nil but MockS3API.HeadBucket was called.")
+		panic("mocker: S3API.HeadBucketFunc is nil but S3API.HeadBucket was called.")
 	}
 
 	call := struct {
@@ -7695,7 +7695,7 @@ func (m *MockS3API) HeadBucket(arg0 *github_com_aws_aws_sdk_go_service_s3.HeadBu
 }
 
 // HeadBucketCalled returns true if HeadBucket was called at least once.
-func (m *MockS3API) HeadBucketCalled() bool {
+func (m *S3API) HeadBucketCalled() bool {
 	m.lockHeadBucket.Lock()
 	defer m.lockHeadBucket.Unlock()
 
@@ -7703,7 +7703,7 @@ func (m *MockS3API) HeadBucketCalled() bool {
 }
 
 // HeadBucketCalls returns the calls made to HeadBucket.
-func (m *MockS3API) HeadBucketCalls() []struct {
+func (m *S3API) HeadBucketCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.HeadBucketInput
 } {
 	m.lockHeadBucket.Lock()
@@ -7713,12 +7713,12 @@ func (m *MockS3API) HeadBucketCalls() []struct {
 }
 
 // HeadBucketWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) HeadBucketWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.HeadBucketInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.HeadBucketOutput, error) {
+func (m *S3API) HeadBucketWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.HeadBucketInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.HeadBucketOutput, error) {
 	m.lockHeadBucketWithContext.Lock()
 	defer m.lockHeadBucketWithContext.Unlock()
 
 	if m.HeadBucketWithContextFunc == nil {
-		panic("mocker: MockS3API.HeadBucketWithContextFunc is nil but MockS3API.HeadBucketWithContext was called.")
+		panic("mocker: S3API.HeadBucketWithContextFunc is nil but S3API.HeadBucketWithContext was called.")
 	}
 
 	call := struct {
@@ -7737,7 +7737,7 @@ func (m *MockS3API) HeadBucketWithContext(arg0 github_com_aws_aws_sdk_go_aws.Con
 }
 
 // HeadBucketWithContextCalled returns true if HeadBucketWithContext was called at least once.
-func (m *MockS3API) HeadBucketWithContextCalled() bool {
+func (m *S3API) HeadBucketWithContextCalled() bool {
 	m.lockHeadBucketWithContext.Lock()
 	defer m.lockHeadBucketWithContext.Unlock()
 
@@ -7745,7 +7745,7 @@ func (m *MockS3API) HeadBucketWithContextCalled() bool {
 }
 
 // HeadBucketWithContextCalls returns the calls made to HeadBucketWithContext.
-func (m *MockS3API) HeadBucketWithContextCalls() []struct {
+func (m *S3API) HeadBucketWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.HeadBucketInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -7757,12 +7757,12 @@ func (m *MockS3API) HeadBucketWithContextCalls() []struct {
 }
 
 // HeadBucketRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) HeadBucketRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.HeadBucketInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.HeadBucketOutput) {
+func (m *S3API) HeadBucketRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.HeadBucketInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.HeadBucketOutput) {
 	m.lockHeadBucketRequest.Lock()
 	defer m.lockHeadBucketRequest.Unlock()
 
 	if m.HeadBucketRequestFunc == nil {
-		panic("mocker: MockS3API.HeadBucketRequestFunc is nil but MockS3API.HeadBucketRequest was called.")
+		panic("mocker: S3API.HeadBucketRequestFunc is nil but S3API.HeadBucketRequest was called.")
 	}
 
 	call := struct {
@@ -7777,7 +7777,7 @@ func (m *MockS3API) HeadBucketRequest(arg0 *github_com_aws_aws_sdk_go_service_s3
 }
 
 // HeadBucketRequestCalled returns true if HeadBucketRequest was called at least once.
-func (m *MockS3API) HeadBucketRequestCalled() bool {
+func (m *S3API) HeadBucketRequestCalled() bool {
 	m.lockHeadBucketRequest.Lock()
 	defer m.lockHeadBucketRequest.Unlock()
 
@@ -7785,7 +7785,7 @@ func (m *MockS3API) HeadBucketRequestCalled() bool {
 }
 
 // HeadBucketRequestCalls returns the calls made to HeadBucketRequest.
-func (m *MockS3API) HeadBucketRequestCalls() []struct {
+func (m *S3API) HeadBucketRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.HeadBucketInput
 } {
 	m.lockHeadBucketRequest.Lock()
@@ -7795,12 +7795,12 @@ func (m *MockS3API) HeadBucketRequestCalls() []struct {
 }
 
 // HeadObject mocks base method by wrapping the associated func.
-func (m *MockS3API) HeadObject(arg0 *github_com_aws_aws_sdk_go_service_s3.HeadObjectInput) (*github_com_aws_aws_sdk_go_service_s3.HeadObjectOutput, error) {
+func (m *S3API) HeadObject(arg0 *github_com_aws_aws_sdk_go_service_s3.HeadObjectInput) (*github_com_aws_aws_sdk_go_service_s3.HeadObjectOutput, error) {
 	m.lockHeadObject.Lock()
 	defer m.lockHeadObject.Unlock()
 
 	if m.HeadObjectFunc == nil {
-		panic("mocker: MockS3API.HeadObjectFunc is nil but MockS3API.HeadObject was called.")
+		panic("mocker: S3API.HeadObjectFunc is nil but S3API.HeadObject was called.")
 	}
 
 	call := struct {
@@ -7815,7 +7815,7 @@ func (m *MockS3API) HeadObject(arg0 *github_com_aws_aws_sdk_go_service_s3.HeadOb
 }
 
 // HeadObjectCalled returns true if HeadObject was called at least once.
-func (m *MockS3API) HeadObjectCalled() bool {
+func (m *S3API) HeadObjectCalled() bool {
 	m.lockHeadObject.Lock()
 	defer m.lockHeadObject.Unlock()
 
@@ -7823,7 +7823,7 @@ func (m *MockS3API) HeadObjectCalled() bool {
 }
 
 // HeadObjectCalls returns the calls made to HeadObject.
-func (m *MockS3API) HeadObjectCalls() []struct {
+func (m *S3API) HeadObjectCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.HeadObjectInput
 } {
 	m.lockHeadObject.Lock()
@@ -7833,12 +7833,12 @@ func (m *MockS3API) HeadObjectCalls() []struct {
 }
 
 // HeadObjectWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) HeadObjectWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.HeadObjectInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.HeadObjectOutput, error) {
+func (m *S3API) HeadObjectWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.HeadObjectInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.HeadObjectOutput, error) {
 	m.lockHeadObjectWithContext.Lock()
 	defer m.lockHeadObjectWithContext.Unlock()
 
 	if m.HeadObjectWithContextFunc == nil {
-		panic("mocker: MockS3API.HeadObjectWithContextFunc is nil but MockS3API.HeadObjectWithContext was called.")
+		panic("mocker: S3API.HeadObjectWithContextFunc is nil but S3API.HeadObjectWithContext was called.")
 	}
 
 	call := struct {
@@ -7857,7 +7857,7 @@ func (m *MockS3API) HeadObjectWithContext(arg0 github_com_aws_aws_sdk_go_aws.Con
 }
 
 // HeadObjectWithContextCalled returns true if HeadObjectWithContext was called at least once.
-func (m *MockS3API) HeadObjectWithContextCalled() bool {
+func (m *S3API) HeadObjectWithContextCalled() bool {
 	m.lockHeadObjectWithContext.Lock()
 	defer m.lockHeadObjectWithContext.Unlock()
 
@@ -7865,7 +7865,7 @@ func (m *MockS3API) HeadObjectWithContextCalled() bool {
 }
 
 // HeadObjectWithContextCalls returns the calls made to HeadObjectWithContext.
-func (m *MockS3API) HeadObjectWithContextCalls() []struct {
+func (m *S3API) HeadObjectWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.HeadObjectInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -7877,12 +7877,12 @@ func (m *MockS3API) HeadObjectWithContextCalls() []struct {
 }
 
 // HeadObjectRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) HeadObjectRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.HeadObjectInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.HeadObjectOutput) {
+func (m *S3API) HeadObjectRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.HeadObjectInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.HeadObjectOutput) {
 	m.lockHeadObjectRequest.Lock()
 	defer m.lockHeadObjectRequest.Unlock()
 
 	if m.HeadObjectRequestFunc == nil {
-		panic("mocker: MockS3API.HeadObjectRequestFunc is nil but MockS3API.HeadObjectRequest was called.")
+		panic("mocker: S3API.HeadObjectRequestFunc is nil but S3API.HeadObjectRequest was called.")
 	}
 
 	call := struct {
@@ -7897,7 +7897,7 @@ func (m *MockS3API) HeadObjectRequest(arg0 *github_com_aws_aws_sdk_go_service_s3
 }
 
 // HeadObjectRequestCalled returns true if HeadObjectRequest was called at least once.
-func (m *MockS3API) HeadObjectRequestCalled() bool {
+func (m *S3API) HeadObjectRequestCalled() bool {
 	m.lockHeadObjectRequest.Lock()
 	defer m.lockHeadObjectRequest.Unlock()
 
@@ -7905,7 +7905,7 @@ func (m *MockS3API) HeadObjectRequestCalled() bool {
 }
 
 // HeadObjectRequestCalls returns the calls made to HeadObjectRequest.
-func (m *MockS3API) HeadObjectRequestCalls() []struct {
+func (m *S3API) HeadObjectRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.HeadObjectInput
 } {
 	m.lockHeadObjectRequest.Lock()
@@ -7915,12 +7915,12 @@ func (m *MockS3API) HeadObjectRequestCalls() []struct {
 }
 
 // ListBucketAnalyticsConfigurations mocks base method by wrapping the associated func.
-func (m *MockS3API) ListBucketAnalyticsConfigurations(arg0 *github_com_aws_aws_sdk_go_service_s3.ListBucketAnalyticsConfigurationsInput) (*github_com_aws_aws_sdk_go_service_s3.ListBucketAnalyticsConfigurationsOutput, error) {
+func (m *S3API) ListBucketAnalyticsConfigurations(arg0 *github_com_aws_aws_sdk_go_service_s3.ListBucketAnalyticsConfigurationsInput) (*github_com_aws_aws_sdk_go_service_s3.ListBucketAnalyticsConfigurationsOutput, error) {
 	m.lockListBucketAnalyticsConfigurations.Lock()
 	defer m.lockListBucketAnalyticsConfigurations.Unlock()
 
 	if m.ListBucketAnalyticsConfigurationsFunc == nil {
-		panic("mocker: MockS3API.ListBucketAnalyticsConfigurationsFunc is nil but MockS3API.ListBucketAnalyticsConfigurations was called.")
+		panic("mocker: S3API.ListBucketAnalyticsConfigurationsFunc is nil but S3API.ListBucketAnalyticsConfigurations was called.")
 	}
 
 	call := struct {
@@ -7935,7 +7935,7 @@ func (m *MockS3API) ListBucketAnalyticsConfigurations(arg0 *github_com_aws_aws_s
 }
 
 // ListBucketAnalyticsConfigurationsCalled returns true if ListBucketAnalyticsConfigurations was called at least once.
-func (m *MockS3API) ListBucketAnalyticsConfigurationsCalled() bool {
+func (m *S3API) ListBucketAnalyticsConfigurationsCalled() bool {
 	m.lockListBucketAnalyticsConfigurations.Lock()
 	defer m.lockListBucketAnalyticsConfigurations.Unlock()
 
@@ -7943,7 +7943,7 @@ func (m *MockS3API) ListBucketAnalyticsConfigurationsCalled() bool {
 }
 
 // ListBucketAnalyticsConfigurationsCalls returns the calls made to ListBucketAnalyticsConfigurations.
-func (m *MockS3API) ListBucketAnalyticsConfigurationsCalls() []struct {
+func (m *S3API) ListBucketAnalyticsConfigurationsCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.ListBucketAnalyticsConfigurationsInput
 } {
 	m.lockListBucketAnalyticsConfigurations.Lock()
@@ -7953,12 +7953,12 @@ func (m *MockS3API) ListBucketAnalyticsConfigurationsCalls() []struct {
 }
 
 // ListBucketAnalyticsConfigurationsWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) ListBucketAnalyticsConfigurationsWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.ListBucketAnalyticsConfigurationsInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.ListBucketAnalyticsConfigurationsOutput, error) {
+func (m *S3API) ListBucketAnalyticsConfigurationsWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.ListBucketAnalyticsConfigurationsInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.ListBucketAnalyticsConfigurationsOutput, error) {
 	m.lockListBucketAnalyticsConfigurationsWithContext.Lock()
 	defer m.lockListBucketAnalyticsConfigurationsWithContext.Unlock()
 
 	if m.ListBucketAnalyticsConfigurationsWithContextFunc == nil {
-		panic("mocker: MockS3API.ListBucketAnalyticsConfigurationsWithContextFunc is nil but MockS3API.ListBucketAnalyticsConfigurationsWithContext was called.")
+		panic("mocker: S3API.ListBucketAnalyticsConfigurationsWithContextFunc is nil but S3API.ListBucketAnalyticsConfigurationsWithContext was called.")
 	}
 
 	call := struct {
@@ -7977,7 +7977,7 @@ func (m *MockS3API) ListBucketAnalyticsConfigurationsWithContext(arg0 github_com
 }
 
 // ListBucketAnalyticsConfigurationsWithContextCalled returns true if ListBucketAnalyticsConfigurationsWithContext was called at least once.
-func (m *MockS3API) ListBucketAnalyticsConfigurationsWithContextCalled() bool {
+func (m *S3API) ListBucketAnalyticsConfigurationsWithContextCalled() bool {
 	m.lockListBucketAnalyticsConfigurationsWithContext.Lock()
 	defer m.lockListBucketAnalyticsConfigurationsWithContext.Unlock()
 
@@ -7985,7 +7985,7 @@ func (m *MockS3API) ListBucketAnalyticsConfigurationsWithContextCalled() bool {
 }
 
 // ListBucketAnalyticsConfigurationsWithContextCalls returns the calls made to ListBucketAnalyticsConfigurationsWithContext.
-func (m *MockS3API) ListBucketAnalyticsConfigurationsWithContextCalls() []struct {
+func (m *S3API) ListBucketAnalyticsConfigurationsWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.ListBucketAnalyticsConfigurationsInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -7997,12 +7997,12 @@ func (m *MockS3API) ListBucketAnalyticsConfigurationsWithContextCalls() []struct
 }
 
 // ListBucketAnalyticsConfigurationsRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) ListBucketAnalyticsConfigurationsRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.ListBucketAnalyticsConfigurationsInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.ListBucketAnalyticsConfigurationsOutput) {
+func (m *S3API) ListBucketAnalyticsConfigurationsRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.ListBucketAnalyticsConfigurationsInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.ListBucketAnalyticsConfigurationsOutput) {
 	m.lockListBucketAnalyticsConfigurationsRequest.Lock()
 	defer m.lockListBucketAnalyticsConfigurationsRequest.Unlock()
 
 	if m.ListBucketAnalyticsConfigurationsRequestFunc == nil {
-		panic("mocker: MockS3API.ListBucketAnalyticsConfigurationsRequestFunc is nil but MockS3API.ListBucketAnalyticsConfigurationsRequest was called.")
+		panic("mocker: S3API.ListBucketAnalyticsConfigurationsRequestFunc is nil but S3API.ListBucketAnalyticsConfigurationsRequest was called.")
 	}
 
 	call := struct {
@@ -8017,7 +8017,7 @@ func (m *MockS3API) ListBucketAnalyticsConfigurationsRequest(arg0 *github_com_aw
 }
 
 // ListBucketAnalyticsConfigurationsRequestCalled returns true if ListBucketAnalyticsConfigurationsRequest was called at least once.
-func (m *MockS3API) ListBucketAnalyticsConfigurationsRequestCalled() bool {
+func (m *S3API) ListBucketAnalyticsConfigurationsRequestCalled() bool {
 	m.lockListBucketAnalyticsConfigurationsRequest.Lock()
 	defer m.lockListBucketAnalyticsConfigurationsRequest.Unlock()
 
@@ -8025,7 +8025,7 @@ func (m *MockS3API) ListBucketAnalyticsConfigurationsRequestCalled() bool {
 }
 
 // ListBucketAnalyticsConfigurationsRequestCalls returns the calls made to ListBucketAnalyticsConfigurationsRequest.
-func (m *MockS3API) ListBucketAnalyticsConfigurationsRequestCalls() []struct {
+func (m *S3API) ListBucketAnalyticsConfigurationsRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.ListBucketAnalyticsConfigurationsInput
 } {
 	m.lockListBucketAnalyticsConfigurationsRequest.Lock()
@@ -8035,12 +8035,12 @@ func (m *MockS3API) ListBucketAnalyticsConfigurationsRequestCalls() []struct {
 }
 
 // ListBucketInventoryConfigurations mocks base method by wrapping the associated func.
-func (m *MockS3API) ListBucketInventoryConfigurations(arg0 *github_com_aws_aws_sdk_go_service_s3.ListBucketInventoryConfigurationsInput) (*github_com_aws_aws_sdk_go_service_s3.ListBucketInventoryConfigurationsOutput, error) {
+func (m *S3API) ListBucketInventoryConfigurations(arg0 *github_com_aws_aws_sdk_go_service_s3.ListBucketInventoryConfigurationsInput) (*github_com_aws_aws_sdk_go_service_s3.ListBucketInventoryConfigurationsOutput, error) {
 	m.lockListBucketInventoryConfigurations.Lock()
 	defer m.lockListBucketInventoryConfigurations.Unlock()
 
 	if m.ListBucketInventoryConfigurationsFunc == nil {
-		panic("mocker: MockS3API.ListBucketInventoryConfigurationsFunc is nil but MockS3API.ListBucketInventoryConfigurations was called.")
+		panic("mocker: S3API.ListBucketInventoryConfigurationsFunc is nil but S3API.ListBucketInventoryConfigurations was called.")
 	}
 
 	call := struct {
@@ -8055,7 +8055,7 @@ func (m *MockS3API) ListBucketInventoryConfigurations(arg0 *github_com_aws_aws_s
 }
 
 // ListBucketInventoryConfigurationsCalled returns true if ListBucketInventoryConfigurations was called at least once.
-func (m *MockS3API) ListBucketInventoryConfigurationsCalled() bool {
+func (m *S3API) ListBucketInventoryConfigurationsCalled() bool {
 	m.lockListBucketInventoryConfigurations.Lock()
 	defer m.lockListBucketInventoryConfigurations.Unlock()
 
@@ -8063,7 +8063,7 @@ func (m *MockS3API) ListBucketInventoryConfigurationsCalled() bool {
 }
 
 // ListBucketInventoryConfigurationsCalls returns the calls made to ListBucketInventoryConfigurations.
-func (m *MockS3API) ListBucketInventoryConfigurationsCalls() []struct {
+func (m *S3API) ListBucketInventoryConfigurationsCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.ListBucketInventoryConfigurationsInput
 } {
 	m.lockListBucketInventoryConfigurations.Lock()
@@ -8073,12 +8073,12 @@ func (m *MockS3API) ListBucketInventoryConfigurationsCalls() []struct {
 }
 
 // ListBucketInventoryConfigurationsWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) ListBucketInventoryConfigurationsWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.ListBucketInventoryConfigurationsInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.ListBucketInventoryConfigurationsOutput, error) {
+func (m *S3API) ListBucketInventoryConfigurationsWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.ListBucketInventoryConfigurationsInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.ListBucketInventoryConfigurationsOutput, error) {
 	m.lockListBucketInventoryConfigurationsWithContext.Lock()
 	defer m.lockListBucketInventoryConfigurationsWithContext.Unlock()
 
 	if m.ListBucketInventoryConfigurationsWithContextFunc == nil {
-		panic("mocker: MockS3API.ListBucketInventoryConfigurationsWithContextFunc is nil but MockS3API.ListBucketInventoryConfigurationsWithContext was called.")
+		panic("mocker: S3API.ListBucketInventoryConfigurationsWithContextFunc is nil but S3API.ListBucketInventoryConfigurationsWithContext was called.")
 	}
 
 	call := struct {
@@ -8097,7 +8097,7 @@ func (m *MockS3API) ListBucketInventoryConfigurationsWithContext(arg0 github_com
 }
 
 // ListBucketInventoryConfigurationsWithContextCalled returns true if ListBucketInventoryConfigurationsWithContext was called at least once.
-func (m *MockS3API) ListBucketInventoryConfigurationsWithContextCalled() bool {
+func (m *S3API) ListBucketInventoryConfigurationsWithContextCalled() bool {
 	m.lockListBucketInventoryConfigurationsWithContext.Lock()
 	defer m.lockListBucketInventoryConfigurationsWithContext.Unlock()
 
@@ -8105,7 +8105,7 @@ func (m *MockS3API) ListBucketInventoryConfigurationsWithContextCalled() bool {
 }
 
 // ListBucketInventoryConfigurationsWithContextCalls returns the calls made to ListBucketInventoryConfigurationsWithContext.
-func (m *MockS3API) ListBucketInventoryConfigurationsWithContextCalls() []struct {
+func (m *S3API) ListBucketInventoryConfigurationsWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.ListBucketInventoryConfigurationsInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -8117,12 +8117,12 @@ func (m *MockS3API) ListBucketInventoryConfigurationsWithContextCalls() []struct
 }
 
 // ListBucketInventoryConfigurationsRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) ListBucketInventoryConfigurationsRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.ListBucketInventoryConfigurationsInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.ListBucketInventoryConfigurationsOutput) {
+func (m *S3API) ListBucketInventoryConfigurationsRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.ListBucketInventoryConfigurationsInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.ListBucketInventoryConfigurationsOutput) {
 	m.lockListBucketInventoryConfigurationsRequest.Lock()
 	defer m.lockListBucketInventoryConfigurationsRequest.Unlock()
 
 	if m.ListBucketInventoryConfigurationsRequestFunc == nil {
-		panic("mocker: MockS3API.ListBucketInventoryConfigurationsRequestFunc is nil but MockS3API.ListBucketInventoryConfigurationsRequest was called.")
+		panic("mocker: S3API.ListBucketInventoryConfigurationsRequestFunc is nil but S3API.ListBucketInventoryConfigurationsRequest was called.")
 	}
 
 	call := struct {
@@ -8137,7 +8137,7 @@ func (m *MockS3API) ListBucketInventoryConfigurationsRequest(arg0 *github_com_aw
 }
 
 // ListBucketInventoryConfigurationsRequestCalled returns true if ListBucketInventoryConfigurationsRequest was called at least once.
-func (m *MockS3API) ListBucketInventoryConfigurationsRequestCalled() bool {
+func (m *S3API) ListBucketInventoryConfigurationsRequestCalled() bool {
 	m.lockListBucketInventoryConfigurationsRequest.Lock()
 	defer m.lockListBucketInventoryConfigurationsRequest.Unlock()
 
@@ -8145,7 +8145,7 @@ func (m *MockS3API) ListBucketInventoryConfigurationsRequestCalled() bool {
 }
 
 // ListBucketInventoryConfigurationsRequestCalls returns the calls made to ListBucketInventoryConfigurationsRequest.
-func (m *MockS3API) ListBucketInventoryConfigurationsRequestCalls() []struct {
+func (m *S3API) ListBucketInventoryConfigurationsRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.ListBucketInventoryConfigurationsInput
 } {
 	m.lockListBucketInventoryConfigurationsRequest.Lock()
@@ -8155,12 +8155,12 @@ func (m *MockS3API) ListBucketInventoryConfigurationsRequestCalls() []struct {
 }
 
 // ListBucketMetricsConfigurations mocks base method by wrapping the associated func.
-func (m *MockS3API) ListBucketMetricsConfigurations(arg0 *github_com_aws_aws_sdk_go_service_s3.ListBucketMetricsConfigurationsInput) (*github_com_aws_aws_sdk_go_service_s3.ListBucketMetricsConfigurationsOutput, error) {
+func (m *S3API) ListBucketMetricsConfigurations(arg0 *github_com_aws_aws_sdk_go_service_s3.ListBucketMetricsConfigurationsInput) (*github_com_aws_aws_sdk_go_service_s3.ListBucketMetricsConfigurationsOutput, error) {
 	m.lockListBucketMetricsConfigurations.Lock()
 	defer m.lockListBucketMetricsConfigurations.Unlock()
 
 	if m.ListBucketMetricsConfigurationsFunc == nil {
-		panic("mocker: MockS3API.ListBucketMetricsConfigurationsFunc is nil but MockS3API.ListBucketMetricsConfigurations was called.")
+		panic("mocker: S3API.ListBucketMetricsConfigurationsFunc is nil but S3API.ListBucketMetricsConfigurations was called.")
 	}
 
 	call := struct {
@@ -8175,7 +8175,7 @@ func (m *MockS3API) ListBucketMetricsConfigurations(arg0 *github_com_aws_aws_sdk
 }
 
 // ListBucketMetricsConfigurationsCalled returns true if ListBucketMetricsConfigurations was called at least once.
-func (m *MockS3API) ListBucketMetricsConfigurationsCalled() bool {
+func (m *S3API) ListBucketMetricsConfigurationsCalled() bool {
 	m.lockListBucketMetricsConfigurations.Lock()
 	defer m.lockListBucketMetricsConfigurations.Unlock()
 
@@ -8183,7 +8183,7 @@ func (m *MockS3API) ListBucketMetricsConfigurationsCalled() bool {
 }
 
 // ListBucketMetricsConfigurationsCalls returns the calls made to ListBucketMetricsConfigurations.
-func (m *MockS3API) ListBucketMetricsConfigurationsCalls() []struct {
+func (m *S3API) ListBucketMetricsConfigurationsCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.ListBucketMetricsConfigurationsInput
 } {
 	m.lockListBucketMetricsConfigurations.Lock()
@@ -8193,12 +8193,12 @@ func (m *MockS3API) ListBucketMetricsConfigurationsCalls() []struct {
 }
 
 // ListBucketMetricsConfigurationsWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) ListBucketMetricsConfigurationsWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.ListBucketMetricsConfigurationsInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.ListBucketMetricsConfigurationsOutput, error) {
+func (m *S3API) ListBucketMetricsConfigurationsWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.ListBucketMetricsConfigurationsInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.ListBucketMetricsConfigurationsOutput, error) {
 	m.lockListBucketMetricsConfigurationsWithContext.Lock()
 	defer m.lockListBucketMetricsConfigurationsWithContext.Unlock()
 
 	if m.ListBucketMetricsConfigurationsWithContextFunc == nil {
-		panic("mocker: MockS3API.ListBucketMetricsConfigurationsWithContextFunc is nil but MockS3API.ListBucketMetricsConfigurationsWithContext was called.")
+		panic("mocker: S3API.ListBucketMetricsConfigurationsWithContextFunc is nil but S3API.ListBucketMetricsConfigurationsWithContext was called.")
 	}
 
 	call := struct {
@@ -8217,7 +8217,7 @@ func (m *MockS3API) ListBucketMetricsConfigurationsWithContext(arg0 github_com_a
 }
 
 // ListBucketMetricsConfigurationsWithContextCalled returns true if ListBucketMetricsConfigurationsWithContext was called at least once.
-func (m *MockS3API) ListBucketMetricsConfigurationsWithContextCalled() bool {
+func (m *S3API) ListBucketMetricsConfigurationsWithContextCalled() bool {
 	m.lockListBucketMetricsConfigurationsWithContext.Lock()
 	defer m.lockListBucketMetricsConfigurationsWithContext.Unlock()
 
@@ -8225,7 +8225,7 @@ func (m *MockS3API) ListBucketMetricsConfigurationsWithContextCalled() bool {
 }
 
 // ListBucketMetricsConfigurationsWithContextCalls returns the calls made to ListBucketMetricsConfigurationsWithContext.
-func (m *MockS3API) ListBucketMetricsConfigurationsWithContextCalls() []struct {
+func (m *S3API) ListBucketMetricsConfigurationsWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.ListBucketMetricsConfigurationsInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -8237,12 +8237,12 @@ func (m *MockS3API) ListBucketMetricsConfigurationsWithContextCalls() []struct {
 }
 
 // ListBucketMetricsConfigurationsRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) ListBucketMetricsConfigurationsRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.ListBucketMetricsConfigurationsInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.ListBucketMetricsConfigurationsOutput) {
+func (m *S3API) ListBucketMetricsConfigurationsRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.ListBucketMetricsConfigurationsInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.ListBucketMetricsConfigurationsOutput) {
 	m.lockListBucketMetricsConfigurationsRequest.Lock()
 	defer m.lockListBucketMetricsConfigurationsRequest.Unlock()
 
 	if m.ListBucketMetricsConfigurationsRequestFunc == nil {
-		panic("mocker: MockS3API.ListBucketMetricsConfigurationsRequestFunc is nil but MockS3API.ListBucketMetricsConfigurationsRequest was called.")
+		panic("mocker: S3API.ListBucketMetricsConfigurationsRequestFunc is nil but S3API.ListBucketMetricsConfigurationsRequest was called.")
 	}
 
 	call := struct {
@@ -8257,7 +8257,7 @@ func (m *MockS3API) ListBucketMetricsConfigurationsRequest(arg0 *github_com_aws_
 }
 
 // ListBucketMetricsConfigurationsRequestCalled returns true if ListBucketMetricsConfigurationsRequest was called at least once.
-func (m *MockS3API) ListBucketMetricsConfigurationsRequestCalled() bool {
+func (m *S3API) ListBucketMetricsConfigurationsRequestCalled() bool {
 	m.lockListBucketMetricsConfigurationsRequest.Lock()
 	defer m.lockListBucketMetricsConfigurationsRequest.Unlock()
 
@@ -8265,7 +8265,7 @@ func (m *MockS3API) ListBucketMetricsConfigurationsRequestCalled() bool {
 }
 
 // ListBucketMetricsConfigurationsRequestCalls returns the calls made to ListBucketMetricsConfigurationsRequest.
-func (m *MockS3API) ListBucketMetricsConfigurationsRequestCalls() []struct {
+func (m *S3API) ListBucketMetricsConfigurationsRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.ListBucketMetricsConfigurationsInput
 } {
 	m.lockListBucketMetricsConfigurationsRequest.Lock()
@@ -8275,12 +8275,12 @@ func (m *MockS3API) ListBucketMetricsConfigurationsRequestCalls() []struct {
 }
 
 // ListBuckets mocks base method by wrapping the associated func.
-func (m *MockS3API) ListBuckets(arg0 *github_com_aws_aws_sdk_go_service_s3.ListBucketsInput) (*github_com_aws_aws_sdk_go_service_s3.ListBucketsOutput, error) {
+func (m *S3API) ListBuckets(arg0 *github_com_aws_aws_sdk_go_service_s3.ListBucketsInput) (*github_com_aws_aws_sdk_go_service_s3.ListBucketsOutput, error) {
 	m.lockListBuckets.Lock()
 	defer m.lockListBuckets.Unlock()
 
 	if m.ListBucketsFunc == nil {
-		panic("mocker: MockS3API.ListBucketsFunc is nil but MockS3API.ListBuckets was called.")
+		panic("mocker: S3API.ListBucketsFunc is nil but S3API.ListBuckets was called.")
 	}
 
 	call := struct {
@@ -8295,7 +8295,7 @@ func (m *MockS3API) ListBuckets(arg0 *github_com_aws_aws_sdk_go_service_s3.ListB
 }
 
 // ListBucketsCalled returns true if ListBuckets was called at least once.
-func (m *MockS3API) ListBucketsCalled() bool {
+func (m *S3API) ListBucketsCalled() bool {
 	m.lockListBuckets.Lock()
 	defer m.lockListBuckets.Unlock()
 
@@ -8303,7 +8303,7 @@ func (m *MockS3API) ListBucketsCalled() bool {
 }
 
 // ListBucketsCalls returns the calls made to ListBuckets.
-func (m *MockS3API) ListBucketsCalls() []struct {
+func (m *S3API) ListBucketsCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.ListBucketsInput
 } {
 	m.lockListBuckets.Lock()
@@ -8313,12 +8313,12 @@ func (m *MockS3API) ListBucketsCalls() []struct {
 }
 
 // ListBucketsWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) ListBucketsWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.ListBucketsInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.ListBucketsOutput, error) {
+func (m *S3API) ListBucketsWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.ListBucketsInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.ListBucketsOutput, error) {
 	m.lockListBucketsWithContext.Lock()
 	defer m.lockListBucketsWithContext.Unlock()
 
 	if m.ListBucketsWithContextFunc == nil {
-		panic("mocker: MockS3API.ListBucketsWithContextFunc is nil but MockS3API.ListBucketsWithContext was called.")
+		panic("mocker: S3API.ListBucketsWithContextFunc is nil but S3API.ListBucketsWithContext was called.")
 	}
 
 	call := struct {
@@ -8337,7 +8337,7 @@ func (m *MockS3API) ListBucketsWithContext(arg0 github_com_aws_aws_sdk_go_aws.Co
 }
 
 // ListBucketsWithContextCalled returns true if ListBucketsWithContext was called at least once.
-func (m *MockS3API) ListBucketsWithContextCalled() bool {
+func (m *S3API) ListBucketsWithContextCalled() bool {
 	m.lockListBucketsWithContext.Lock()
 	defer m.lockListBucketsWithContext.Unlock()
 
@@ -8345,7 +8345,7 @@ func (m *MockS3API) ListBucketsWithContextCalled() bool {
 }
 
 // ListBucketsWithContextCalls returns the calls made to ListBucketsWithContext.
-func (m *MockS3API) ListBucketsWithContextCalls() []struct {
+func (m *S3API) ListBucketsWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.ListBucketsInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -8357,12 +8357,12 @@ func (m *MockS3API) ListBucketsWithContextCalls() []struct {
 }
 
 // ListBucketsRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) ListBucketsRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.ListBucketsInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.ListBucketsOutput) {
+func (m *S3API) ListBucketsRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.ListBucketsInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.ListBucketsOutput) {
 	m.lockListBucketsRequest.Lock()
 	defer m.lockListBucketsRequest.Unlock()
 
 	if m.ListBucketsRequestFunc == nil {
-		panic("mocker: MockS3API.ListBucketsRequestFunc is nil but MockS3API.ListBucketsRequest was called.")
+		panic("mocker: S3API.ListBucketsRequestFunc is nil but S3API.ListBucketsRequest was called.")
 	}
 
 	call := struct {
@@ -8377,7 +8377,7 @@ func (m *MockS3API) ListBucketsRequest(arg0 *github_com_aws_aws_sdk_go_service_s
 }
 
 // ListBucketsRequestCalled returns true if ListBucketsRequest was called at least once.
-func (m *MockS3API) ListBucketsRequestCalled() bool {
+func (m *S3API) ListBucketsRequestCalled() bool {
 	m.lockListBucketsRequest.Lock()
 	defer m.lockListBucketsRequest.Unlock()
 
@@ -8385,7 +8385,7 @@ func (m *MockS3API) ListBucketsRequestCalled() bool {
 }
 
 // ListBucketsRequestCalls returns the calls made to ListBucketsRequest.
-func (m *MockS3API) ListBucketsRequestCalls() []struct {
+func (m *S3API) ListBucketsRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.ListBucketsInput
 } {
 	m.lockListBucketsRequest.Lock()
@@ -8395,12 +8395,12 @@ func (m *MockS3API) ListBucketsRequestCalls() []struct {
 }
 
 // ListMultipartUploads mocks base method by wrapping the associated func.
-func (m *MockS3API) ListMultipartUploads(arg0 *github_com_aws_aws_sdk_go_service_s3.ListMultipartUploadsInput) (*github_com_aws_aws_sdk_go_service_s3.ListMultipartUploadsOutput, error) {
+func (m *S3API) ListMultipartUploads(arg0 *github_com_aws_aws_sdk_go_service_s3.ListMultipartUploadsInput) (*github_com_aws_aws_sdk_go_service_s3.ListMultipartUploadsOutput, error) {
 	m.lockListMultipartUploads.Lock()
 	defer m.lockListMultipartUploads.Unlock()
 
 	if m.ListMultipartUploadsFunc == nil {
-		panic("mocker: MockS3API.ListMultipartUploadsFunc is nil but MockS3API.ListMultipartUploads was called.")
+		panic("mocker: S3API.ListMultipartUploadsFunc is nil but S3API.ListMultipartUploads was called.")
 	}
 
 	call := struct {
@@ -8415,7 +8415,7 @@ func (m *MockS3API) ListMultipartUploads(arg0 *github_com_aws_aws_sdk_go_service
 }
 
 // ListMultipartUploadsCalled returns true if ListMultipartUploads was called at least once.
-func (m *MockS3API) ListMultipartUploadsCalled() bool {
+func (m *S3API) ListMultipartUploadsCalled() bool {
 	m.lockListMultipartUploads.Lock()
 	defer m.lockListMultipartUploads.Unlock()
 
@@ -8423,7 +8423,7 @@ func (m *MockS3API) ListMultipartUploadsCalled() bool {
 }
 
 // ListMultipartUploadsCalls returns the calls made to ListMultipartUploads.
-func (m *MockS3API) ListMultipartUploadsCalls() []struct {
+func (m *S3API) ListMultipartUploadsCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.ListMultipartUploadsInput
 } {
 	m.lockListMultipartUploads.Lock()
@@ -8433,12 +8433,12 @@ func (m *MockS3API) ListMultipartUploadsCalls() []struct {
 }
 
 // ListMultipartUploadsWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) ListMultipartUploadsWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.ListMultipartUploadsInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.ListMultipartUploadsOutput, error) {
+func (m *S3API) ListMultipartUploadsWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.ListMultipartUploadsInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.ListMultipartUploadsOutput, error) {
 	m.lockListMultipartUploadsWithContext.Lock()
 	defer m.lockListMultipartUploadsWithContext.Unlock()
 
 	if m.ListMultipartUploadsWithContextFunc == nil {
-		panic("mocker: MockS3API.ListMultipartUploadsWithContextFunc is nil but MockS3API.ListMultipartUploadsWithContext was called.")
+		panic("mocker: S3API.ListMultipartUploadsWithContextFunc is nil but S3API.ListMultipartUploadsWithContext was called.")
 	}
 
 	call := struct {
@@ -8457,7 +8457,7 @@ func (m *MockS3API) ListMultipartUploadsWithContext(arg0 github_com_aws_aws_sdk_
 }
 
 // ListMultipartUploadsWithContextCalled returns true if ListMultipartUploadsWithContext was called at least once.
-func (m *MockS3API) ListMultipartUploadsWithContextCalled() bool {
+func (m *S3API) ListMultipartUploadsWithContextCalled() bool {
 	m.lockListMultipartUploadsWithContext.Lock()
 	defer m.lockListMultipartUploadsWithContext.Unlock()
 
@@ -8465,7 +8465,7 @@ func (m *MockS3API) ListMultipartUploadsWithContextCalled() bool {
 }
 
 // ListMultipartUploadsWithContextCalls returns the calls made to ListMultipartUploadsWithContext.
-func (m *MockS3API) ListMultipartUploadsWithContextCalls() []struct {
+func (m *S3API) ListMultipartUploadsWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.ListMultipartUploadsInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -8477,12 +8477,12 @@ func (m *MockS3API) ListMultipartUploadsWithContextCalls() []struct {
 }
 
 // ListMultipartUploadsRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) ListMultipartUploadsRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.ListMultipartUploadsInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.ListMultipartUploadsOutput) {
+func (m *S3API) ListMultipartUploadsRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.ListMultipartUploadsInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.ListMultipartUploadsOutput) {
 	m.lockListMultipartUploadsRequest.Lock()
 	defer m.lockListMultipartUploadsRequest.Unlock()
 
 	if m.ListMultipartUploadsRequestFunc == nil {
-		panic("mocker: MockS3API.ListMultipartUploadsRequestFunc is nil but MockS3API.ListMultipartUploadsRequest was called.")
+		panic("mocker: S3API.ListMultipartUploadsRequestFunc is nil but S3API.ListMultipartUploadsRequest was called.")
 	}
 
 	call := struct {
@@ -8497,7 +8497,7 @@ func (m *MockS3API) ListMultipartUploadsRequest(arg0 *github_com_aws_aws_sdk_go_
 }
 
 // ListMultipartUploadsRequestCalled returns true if ListMultipartUploadsRequest was called at least once.
-func (m *MockS3API) ListMultipartUploadsRequestCalled() bool {
+func (m *S3API) ListMultipartUploadsRequestCalled() bool {
 	m.lockListMultipartUploadsRequest.Lock()
 	defer m.lockListMultipartUploadsRequest.Unlock()
 
@@ -8505,7 +8505,7 @@ func (m *MockS3API) ListMultipartUploadsRequestCalled() bool {
 }
 
 // ListMultipartUploadsRequestCalls returns the calls made to ListMultipartUploadsRequest.
-func (m *MockS3API) ListMultipartUploadsRequestCalls() []struct {
+func (m *S3API) ListMultipartUploadsRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.ListMultipartUploadsInput
 } {
 	m.lockListMultipartUploadsRequest.Lock()
@@ -8515,12 +8515,12 @@ func (m *MockS3API) ListMultipartUploadsRequestCalls() []struct {
 }
 
 // ListMultipartUploadsPages mocks base method by wrapping the associated func.
-func (m *MockS3API) ListMultipartUploadsPages(arg0 *github_com_aws_aws_sdk_go_service_s3.ListMultipartUploadsInput, arg1 func(*github_com_aws_aws_sdk_go_service_s3.ListMultipartUploadsOutput, bool) bool) error {
+func (m *S3API) ListMultipartUploadsPages(arg0 *github_com_aws_aws_sdk_go_service_s3.ListMultipartUploadsInput, arg1 func(*github_com_aws_aws_sdk_go_service_s3.ListMultipartUploadsOutput, bool) bool) error {
 	m.lockListMultipartUploadsPages.Lock()
 	defer m.lockListMultipartUploadsPages.Unlock()
 
 	if m.ListMultipartUploadsPagesFunc == nil {
-		panic("mocker: MockS3API.ListMultipartUploadsPagesFunc is nil but MockS3API.ListMultipartUploadsPages was called.")
+		panic("mocker: S3API.ListMultipartUploadsPagesFunc is nil but S3API.ListMultipartUploadsPages was called.")
 	}
 
 	call := struct {
@@ -8537,7 +8537,7 @@ func (m *MockS3API) ListMultipartUploadsPages(arg0 *github_com_aws_aws_sdk_go_se
 }
 
 // ListMultipartUploadsPagesCalled returns true if ListMultipartUploadsPages was called at least once.
-func (m *MockS3API) ListMultipartUploadsPagesCalled() bool {
+func (m *S3API) ListMultipartUploadsPagesCalled() bool {
 	m.lockListMultipartUploadsPages.Lock()
 	defer m.lockListMultipartUploadsPages.Unlock()
 
@@ -8545,7 +8545,7 @@ func (m *MockS3API) ListMultipartUploadsPagesCalled() bool {
 }
 
 // ListMultipartUploadsPagesCalls returns the calls made to ListMultipartUploadsPages.
-func (m *MockS3API) ListMultipartUploadsPagesCalls() []struct {
+func (m *S3API) ListMultipartUploadsPagesCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.ListMultipartUploadsInput
 	Arg1 func(*github_com_aws_aws_sdk_go_service_s3.ListMultipartUploadsOutput, bool) bool
 } {
@@ -8556,12 +8556,12 @@ func (m *MockS3API) ListMultipartUploadsPagesCalls() []struct {
 }
 
 // ListMultipartUploadsPagesWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) ListMultipartUploadsPagesWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.ListMultipartUploadsInput, arg2 func(*github_com_aws_aws_sdk_go_service_s3.ListMultipartUploadsOutput, bool) bool, arg3 ...github_com_aws_aws_sdk_go_aws_request.Option) error {
+func (m *S3API) ListMultipartUploadsPagesWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.ListMultipartUploadsInput, arg2 func(*github_com_aws_aws_sdk_go_service_s3.ListMultipartUploadsOutput, bool) bool, arg3 ...github_com_aws_aws_sdk_go_aws_request.Option) error {
 	m.lockListMultipartUploadsPagesWithContext.Lock()
 	defer m.lockListMultipartUploadsPagesWithContext.Unlock()
 
 	if m.ListMultipartUploadsPagesWithContextFunc == nil {
-		panic("mocker: MockS3API.ListMultipartUploadsPagesWithContextFunc is nil but MockS3API.ListMultipartUploadsPagesWithContext was called.")
+		panic("mocker: S3API.ListMultipartUploadsPagesWithContextFunc is nil but S3API.ListMultipartUploadsPagesWithContext was called.")
 	}
 
 	call := struct {
@@ -8582,7 +8582,7 @@ func (m *MockS3API) ListMultipartUploadsPagesWithContext(arg0 github_com_aws_aws
 }
 
 // ListMultipartUploadsPagesWithContextCalled returns true if ListMultipartUploadsPagesWithContext was called at least once.
-func (m *MockS3API) ListMultipartUploadsPagesWithContextCalled() bool {
+func (m *S3API) ListMultipartUploadsPagesWithContextCalled() bool {
 	m.lockListMultipartUploadsPagesWithContext.Lock()
 	defer m.lockListMultipartUploadsPagesWithContext.Unlock()
 
@@ -8590,7 +8590,7 @@ func (m *MockS3API) ListMultipartUploadsPagesWithContextCalled() bool {
 }
 
 // ListMultipartUploadsPagesWithContextCalls returns the calls made to ListMultipartUploadsPagesWithContext.
-func (m *MockS3API) ListMultipartUploadsPagesWithContextCalls() []struct {
+func (m *S3API) ListMultipartUploadsPagesWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.ListMultipartUploadsInput
 	Arg2 func(*github_com_aws_aws_sdk_go_service_s3.ListMultipartUploadsOutput, bool) bool
@@ -8603,12 +8603,12 @@ func (m *MockS3API) ListMultipartUploadsPagesWithContextCalls() []struct {
 }
 
 // ListObjectVersions mocks base method by wrapping the associated func.
-func (m *MockS3API) ListObjectVersions(arg0 *github_com_aws_aws_sdk_go_service_s3.ListObjectVersionsInput) (*github_com_aws_aws_sdk_go_service_s3.ListObjectVersionsOutput, error) {
+func (m *S3API) ListObjectVersions(arg0 *github_com_aws_aws_sdk_go_service_s3.ListObjectVersionsInput) (*github_com_aws_aws_sdk_go_service_s3.ListObjectVersionsOutput, error) {
 	m.lockListObjectVersions.Lock()
 	defer m.lockListObjectVersions.Unlock()
 
 	if m.ListObjectVersionsFunc == nil {
-		panic("mocker: MockS3API.ListObjectVersionsFunc is nil but MockS3API.ListObjectVersions was called.")
+		panic("mocker: S3API.ListObjectVersionsFunc is nil but S3API.ListObjectVersions was called.")
 	}
 
 	call := struct {
@@ -8623,7 +8623,7 @@ func (m *MockS3API) ListObjectVersions(arg0 *github_com_aws_aws_sdk_go_service_s
 }
 
 // ListObjectVersionsCalled returns true if ListObjectVersions was called at least once.
-func (m *MockS3API) ListObjectVersionsCalled() bool {
+func (m *S3API) ListObjectVersionsCalled() bool {
 	m.lockListObjectVersions.Lock()
 	defer m.lockListObjectVersions.Unlock()
 
@@ -8631,7 +8631,7 @@ func (m *MockS3API) ListObjectVersionsCalled() bool {
 }
 
 // ListObjectVersionsCalls returns the calls made to ListObjectVersions.
-func (m *MockS3API) ListObjectVersionsCalls() []struct {
+func (m *S3API) ListObjectVersionsCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.ListObjectVersionsInput
 } {
 	m.lockListObjectVersions.Lock()
@@ -8641,12 +8641,12 @@ func (m *MockS3API) ListObjectVersionsCalls() []struct {
 }
 
 // ListObjectVersionsWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) ListObjectVersionsWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.ListObjectVersionsInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.ListObjectVersionsOutput, error) {
+func (m *S3API) ListObjectVersionsWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.ListObjectVersionsInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.ListObjectVersionsOutput, error) {
 	m.lockListObjectVersionsWithContext.Lock()
 	defer m.lockListObjectVersionsWithContext.Unlock()
 
 	if m.ListObjectVersionsWithContextFunc == nil {
-		panic("mocker: MockS3API.ListObjectVersionsWithContextFunc is nil but MockS3API.ListObjectVersionsWithContext was called.")
+		panic("mocker: S3API.ListObjectVersionsWithContextFunc is nil but S3API.ListObjectVersionsWithContext was called.")
 	}
 
 	call := struct {
@@ -8665,7 +8665,7 @@ func (m *MockS3API) ListObjectVersionsWithContext(arg0 github_com_aws_aws_sdk_go
 }
 
 // ListObjectVersionsWithContextCalled returns true if ListObjectVersionsWithContext was called at least once.
-func (m *MockS3API) ListObjectVersionsWithContextCalled() bool {
+func (m *S3API) ListObjectVersionsWithContextCalled() bool {
 	m.lockListObjectVersionsWithContext.Lock()
 	defer m.lockListObjectVersionsWithContext.Unlock()
 
@@ -8673,7 +8673,7 @@ func (m *MockS3API) ListObjectVersionsWithContextCalled() bool {
 }
 
 // ListObjectVersionsWithContextCalls returns the calls made to ListObjectVersionsWithContext.
-func (m *MockS3API) ListObjectVersionsWithContextCalls() []struct {
+func (m *S3API) ListObjectVersionsWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.ListObjectVersionsInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -8685,12 +8685,12 @@ func (m *MockS3API) ListObjectVersionsWithContextCalls() []struct {
 }
 
 // ListObjectVersionsRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) ListObjectVersionsRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.ListObjectVersionsInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.ListObjectVersionsOutput) {
+func (m *S3API) ListObjectVersionsRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.ListObjectVersionsInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.ListObjectVersionsOutput) {
 	m.lockListObjectVersionsRequest.Lock()
 	defer m.lockListObjectVersionsRequest.Unlock()
 
 	if m.ListObjectVersionsRequestFunc == nil {
-		panic("mocker: MockS3API.ListObjectVersionsRequestFunc is nil but MockS3API.ListObjectVersionsRequest was called.")
+		panic("mocker: S3API.ListObjectVersionsRequestFunc is nil but S3API.ListObjectVersionsRequest was called.")
 	}
 
 	call := struct {
@@ -8705,7 +8705,7 @@ func (m *MockS3API) ListObjectVersionsRequest(arg0 *github_com_aws_aws_sdk_go_se
 }
 
 // ListObjectVersionsRequestCalled returns true if ListObjectVersionsRequest was called at least once.
-func (m *MockS3API) ListObjectVersionsRequestCalled() bool {
+func (m *S3API) ListObjectVersionsRequestCalled() bool {
 	m.lockListObjectVersionsRequest.Lock()
 	defer m.lockListObjectVersionsRequest.Unlock()
 
@@ -8713,7 +8713,7 @@ func (m *MockS3API) ListObjectVersionsRequestCalled() bool {
 }
 
 // ListObjectVersionsRequestCalls returns the calls made to ListObjectVersionsRequest.
-func (m *MockS3API) ListObjectVersionsRequestCalls() []struct {
+func (m *S3API) ListObjectVersionsRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.ListObjectVersionsInput
 } {
 	m.lockListObjectVersionsRequest.Lock()
@@ -8723,12 +8723,12 @@ func (m *MockS3API) ListObjectVersionsRequestCalls() []struct {
 }
 
 // ListObjectVersionsPages mocks base method by wrapping the associated func.
-func (m *MockS3API) ListObjectVersionsPages(arg0 *github_com_aws_aws_sdk_go_service_s3.ListObjectVersionsInput, arg1 func(*github_com_aws_aws_sdk_go_service_s3.ListObjectVersionsOutput, bool) bool) error {
+func (m *S3API) ListObjectVersionsPages(arg0 *github_com_aws_aws_sdk_go_service_s3.ListObjectVersionsInput, arg1 func(*github_com_aws_aws_sdk_go_service_s3.ListObjectVersionsOutput, bool) bool) error {
 	m.lockListObjectVersionsPages.Lock()
 	defer m.lockListObjectVersionsPages.Unlock()
 
 	if m.ListObjectVersionsPagesFunc == nil {
-		panic("mocker: MockS3API.ListObjectVersionsPagesFunc is nil but MockS3API.ListObjectVersionsPages was called.")
+		panic("mocker: S3API.ListObjectVersionsPagesFunc is nil but S3API.ListObjectVersionsPages was called.")
 	}
 
 	call := struct {
@@ -8745,7 +8745,7 @@ func (m *MockS3API) ListObjectVersionsPages(arg0 *github_com_aws_aws_sdk_go_serv
 }
 
 // ListObjectVersionsPagesCalled returns true if ListObjectVersionsPages was called at least once.
-func (m *MockS3API) ListObjectVersionsPagesCalled() bool {
+func (m *S3API) ListObjectVersionsPagesCalled() bool {
 	m.lockListObjectVersionsPages.Lock()
 	defer m.lockListObjectVersionsPages.Unlock()
 
@@ -8753,7 +8753,7 @@ func (m *MockS3API) ListObjectVersionsPagesCalled() bool {
 }
 
 // ListObjectVersionsPagesCalls returns the calls made to ListObjectVersionsPages.
-func (m *MockS3API) ListObjectVersionsPagesCalls() []struct {
+func (m *S3API) ListObjectVersionsPagesCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.ListObjectVersionsInput
 	Arg1 func(*github_com_aws_aws_sdk_go_service_s3.ListObjectVersionsOutput, bool) bool
 } {
@@ -8764,12 +8764,12 @@ func (m *MockS3API) ListObjectVersionsPagesCalls() []struct {
 }
 
 // ListObjectVersionsPagesWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) ListObjectVersionsPagesWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.ListObjectVersionsInput, arg2 func(*github_com_aws_aws_sdk_go_service_s3.ListObjectVersionsOutput, bool) bool, arg3 ...github_com_aws_aws_sdk_go_aws_request.Option) error {
+func (m *S3API) ListObjectVersionsPagesWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.ListObjectVersionsInput, arg2 func(*github_com_aws_aws_sdk_go_service_s3.ListObjectVersionsOutput, bool) bool, arg3 ...github_com_aws_aws_sdk_go_aws_request.Option) error {
 	m.lockListObjectVersionsPagesWithContext.Lock()
 	defer m.lockListObjectVersionsPagesWithContext.Unlock()
 
 	if m.ListObjectVersionsPagesWithContextFunc == nil {
-		panic("mocker: MockS3API.ListObjectVersionsPagesWithContextFunc is nil but MockS3API.ListObjectVersionsPagesWithContext was called.")
+		panic("mocker: S3API.ListObjectVersionsPagesWithContextFunc is nil but S3API.ListObjectVersionsPagesWithContext was called.")
 	}
 
 	call := struct {
@@ -8790,7 +8790,7 @@ func (m *MockS3API) ListObjectVersionsPagesWithContext(arg0 github_com_aws_aws_s
 }
 
 // ListObjectVersionsPagesWithContextCalled returns true if ListObjectVersionsPagesWithContext was called at least once.
-func (m *MockS3API) ListObjectVersionsPagesWithContextCalled() bool {
+func (m *S3API) ListObjectVersionsPagesWithContextCalled() bool {
 	m.lockListObjectVersionsPagesWithContext.Lock()
 	defer m.lockListObjectVersionsPagesWithContext.Unlock()
 
@@ -8798,7 +8798,7 @@ func (m *MockS3API) ListObjectVersionsPagesWithContextCalled() bool {
 }
 
 // ListObjectVersionsPagesWithContextCalls returns the calls made to ListObjectVersionsPagesWithContext.
-func (m *MockS3API) ListObjectVersionsPagesWithContextCalls() []struct {
+func (m *S3API) ListObjectVersionsPagesWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.ListObjectVersionsInput
 	Arg2 func(*github_com_aws_aws_sdk_go_service_s3.ListObjectVersionsOutput, bool) bool
@@ -8811,12 +8811,12 @@ func (m *MockS3API) ListObjectVersionsPagesWithContextCalls() []struct {
 }
 
 // ListObjects mocks base method by wrapping the associated func.
-func (m *MockS3API) ListObjects(arg0 *github_com_aws_aws_sdk_go_service_s3.ListObjectsInput) (*github_com_aws_aws_sdk_go_service_s3.ListObjectsOutput, error) {
+func (m *S3API) ListObjects(arg0 *github_com_aws_aws_sdk_go_service_s3.ListObjectsInput) (*github_com_aws_aws_sdk_go_service_s3.ListObjectsOutput, error) {
 	m.lockListObjects.Lock()
 	defer m.lockListObjects.Unlock()
 
 	if m.ListObjectsFunc == nil {
-		panic("mocker: MockS3API.ListObjectsFunc is nil but MockS3API.ListObjects was called.")
+		panic("mocker: S3API.ListObjectsFunc is nil but S3API.ListObjects was called.")
 	}
 
 	call := struct {
@@ -8831,7 +8831,7 @@ func (m *MockS3API) ListObjects(arg0 *github_com_aws_aws_sdk_go_service_s3.ListO
 }
 
 // ListObjectsCalled returns true if ListObjects was called at least once.
-func (m *MockS3API) ListObjectsCalled() bool {
+func (m *S3API) ListObjectsCalled() bool {
 	m.lockListObjects.Lock()
 	defer m.lockListObjects.Unlock()
 
@@ -8839,7 +8839,7 @@ func (m *MockS3API) ListObjectsCalled() bool {
 }
 
 // ListObjectsCalls returns the calls made to ListObjects.
-func (m *MockS3API) ListObjectsCalls() []struct {
+func (m *S3API) ListObjectsCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.ListObjectsInput
 } {
 	m.lockListObjects.Lock()
@@ -8849,12 +8849,12 @@ func (m *MockS3API) ListObjectsCalls() []struct {
 }
 
 // ListObjectsWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) ListObjectsWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.ListObjectsInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.ListObjectsOutput, error) {
+func (m *S3API) ListObjectsWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.ListObjectsInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.ListObjectsOutput, error) {
 	m.lockListObjectsWithContext.Lock()
 	defer m.lockListObjectsWithContext.Unlock()
 
 	if m.ListObjectsWithContextFunc == nil {
-		panic("mocker: MockS3API.ListObjectsWithContextFunc is nil but MockS3API.ListObjectsWithContext was called.")
+		panic("mocker: S3API.ListObjectsWithContextFunc is nil but S3API.ListObjectsWithContext was called.")
 	}
 
 	call := struct {
@@ -8873,7 +8873,7 @@ func (m *MockS3API) ListObjectsWithContext(arg0 github_com_aws_aws_sdk_go_aws.Co
 }
 
 // ListObjectsWithContextCalled returns true if ListObjectsWithContext was called at least once.
-func (m *MockS3API) ListObjectsWithContextCalled() bool {
+func (m *S3API) ListObjectsWithContextCalled() bool {
 	m.lockListObjectsWithContext.Lock()
 	defer m.lockListObjectsWithContext.Unlock()
 
@@ -8881,7 +8881,7 @@ func (m *MockS3API) ListObjectsWithContextCalled() bool {
 }
 
 // ListObjectsWithContextCalls returns the calls made to ListObjectsWithContext.
-func (m *MockS3API) ListObjectsWithContextCalls() []struct {
+func (m *S3API) ListObjectsWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.ListObjectsInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -8893,12 +8893,12 @@ func (m *MockS3API) ListObjectsWithContextCalls() []struct {
 }
 
 // ListObjectsRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) ListObjectsRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.ListObjectsInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.ListObjectsOutput) {
+func (m *S3API) ListObjectsRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.ListObjectsInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.ListObjectsOutput) {
 	m.lockListObjectsRequest.Lock()
 	defer m.lockListObjectsRequest.Unlock()
 
 	if m.ListObjectsRequestFunc == nil {
-		panic("mocker: MockS3API.ListObjectsRequestFunc is nil but MockS3API.ListObjectsRequest was called.")
+		panic("mocker: S3API.ListObjectsRequestFunc is nil but S3API.ListObjectsRequest was called.")
 	}
 
 	call := struct {
@@ -8913,7 +8913,7 @@ func (m *MockS3API) ListObjectsRequest(arg0 *github_com_aws_aws_sdk_go_service_s
 }
 
 // ListObjectsRequestCalled returns true if ListObjectsRequest was called at least once.
-func (m *MockS3API) ListObjectsRequestCalled() bool {
+func (m *S3API) ListObjectsRequestCalled() bool {
 	m.lockListObjectsRequest.Lock()
 	defer m.lockListObjectsRequest.Unlock()
 
@@ -8921,7 +8921,7 @@ func (m *MockS3API) ListObjectsRequestCalled() bool {
 }
 
 // ListObjectsRequestCalls returns the calls made to ListObjectsRequest.
-func (m *MockS3API) ListObjectsRequestCalls() []struct {
+func (m *S3API) ListObjectsRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.ListObjectsInput
 } {
 	m.lockListObjectsRequest.Lock()
@@ -8931,12 +8931,12 @@ func (m *MockS3API) ListObjectsRequestCalls() []struct {
 }
 
 // ListObjectsPages mocks base method by wrapping the associated func.
-func (m *MockS3API) ListObjectsPages(arg0 *github_com_aws_aws_sdk_go_service_s3.ListObjectsInput, arg1 func(*github_com_aws_aws_sdk_go_service_s3.ListObjectsOutput, bool) bool) error {
+func (m *S3API) ListObjectsPages(arg0 *github_com_aws_aws_sdk_go_service_s3.ListObjectsInput, arg1 func(*github_com_aws_aws_sdk_go_service_s3.ListObjectsOutput, bool) bool) error {
 	m.lockListObjectsPages.Lock()
 	defer m.lockListObjectsPages.Unlock()
 
 	if m.ListObjectsPagesFunc == nil {
-		panic("mocker: MockS3API.ListObjectsPagesFunc is nil but MockS3API.ListObjectsPages was called.")
+		panic("mocker: S3API.ListObjectsPagesFunc is nil but S3API.ListObjectsPages was called.")
 	}
 
 	call := struct {
@@ -8953,7 +8953,7 @@ func (m *MockS3API) ListObjectsPages(arg0 *github_com_aws_aws_sdk_go_service_s3.
 }
 
 // ListObjectsPagesCalled returns true if ListObjectsPages was called at least once.
-func (m *MockS3API) ListObjectsPagesCalled() bool {
+func (m *S3API) ListObjectsPagesCalled() bool {
 	m.lockListObjectsPages.Lock()
 	defer m.lockListObjectsPages.Unlock()
 
@@ -8961,7 +8961,7 @@ func (m *MockS3API) ListObjectsPagesCalled() bool {
 }
 
 // ListObjectsPagesCalls returns the calls made to ListObjectsPages.
-func (m *MockS3API) ListObjectsPagesCalls() []struct {
+func (m *S3API) ListObjectsPagesCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.ListObjectsInput
 	Arg1 func(*github_com_aws_aws_sdk_go_service_s3.ListObjectsOutput, bool) bool
 } {
@@ -8972,12 +8972,12 @@ func (m *MockS3API) ListObjectsPagesCalls() []struct {
 }
 
 // ListObjectsPagesWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) ListObjectsPagesWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.ListObjectsInput, arg2 func(*github_com_aws_aws_sdk_go_service_s3.ListObjectsOutput, bool) bool, arg3 ...github_com_aws_aws_sdk_go_aws_request.Option) error {
+func (m *S3API) ListObjectsPagesWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.ListObjectsInput, arg2 func(*github_com_aws_aws_sdk_go_service_s3.ListObjectsOutput, bool) bool, arg3 ...github_com_aws_aws_sdk_go_aws_request.Option) error {
 	m.lockListObjectsPagesWithContext.Lock()
 	defer m.lockListObjectsPagesWithContext.Unlock()
 
 	if m.ListObjectsPagesWithContextFunc == nil {
-		panic("mocker: MockS3API.ListObjectsPagesWithContextFunc is nil but MockS3API.ListObjectsPagesWithContext was called.")
+		panic("mocker: S3API.ListObjectsPagesWithContextFunc is nil but S3API.ListObjectsPagesWithContext was called.")
 	}
 
 	call := struct {
@@ -8998,7 +8998,7 @@ func (m *MockS3API) ListObjectsPagesWithContext(arg0 github_com_aws_aws_sdk_go_a
 }
 
 // ListObjectsPagesWithContextCalled returns true if ListObjectsPagesWithContext was called at least once.
-func (m *MockS3API) ListObjectsPagesWithContextCalled() bool {
+func (m *S3API) ListObjectsPagesWithContextCalled() bool {
 	m.lockListObjectsPagesWithContext.Lock()
 	defer m.lockListObjectsPagesWithContext.Unlock()
 
@@ -9006,7 +9006,7 @@ func (m *MockS3API) ListObjectsPagesWithContextCalled() bool {
 }
 
 // ListObjectsPagesWithContextCalls returns the calls made to ListObjectsPagesWithContext.
-func (m *MockS3API) ListObjectsPagesWithContextCalls() []struct {
+func (m *S3API) ListObjectsPagesWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.ListObjectsInput
 	Arg2 func(*github_com_aws_aws_sdk_go_service_s3.ListObjectsOutput, bool) bool
@@ -9019,12 +9019,12 @@ func (m *MockS3API) ListObjectsPagesWithContextCalls() []struct {
 }
 
 // ListObjectsV2 mocks base method by wrapping the associated func.
-func (m *MockS3API) ListObjectsV2(arg0 *github_com_aws_aws_sdk_go_service_s3.ListObjectsV2Input) (*github_com_aws_aws_sdk_go_service_s3.ListObjectsV2Output, error) {
+func (m *S3API) ListObjectsV2(arg0 *github_com_aws_aws_sdk_go_service_s3.ListObjectsV2Input) (*github_com_aws_aws_sdk_go_service_s3.ListObjectsV2Output, error) {
 	m.lockListObjectsV2.Lock()
 	defer m.lockListObjectsV2.Unlock()
 
 	if m.ListObjectsV2Func == nil {
-		panic("mocker: MockS3API.ListObjectsV2Func is nil but MockS3API.ListObjectsV2 was called.")
+		panic("mocker: S3API.ListObjectsV2Func is nil but S3API.ListObjectsV2 was called.")
 	}
 
 	call := struct {
@@ -9039,7 +9039,7 @@ func (m *MockS3API) ListObjectsV2(arg0 *github_com_aws_aws_sdk_go_service_s3.Lis
 }
 
 // ListObjectsV2Called returns true if ListObjectsV2 was called at least once.
-func (m *MockS3API) ListObjectsV2Called() bool {
+func (m *S3API) ListObjectsV2Called() bool {
 	m.lockListObjectsV2.Lock()
 	defer m.lockListObjectsV2.Unlock()
 
@@ -9047,7 +9047,7 @@ func (m *MockS3API) ListObjectsV2Called() bool {
 }
 
 // ListObjectsV2Calls returns the calls made to ListObjectsV2.
-func (m *MockS3API) ListObjectsV2Calls() []struct {
+func (m *S3API) ListObjectsV2Calls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.ListObjectsV2Input
 } {
 	m.lockListObjectsV2.Lock()
@@ -9057,12 +9057,12 @@ func (m *MockS3API) ListObjectsV2Calls() []struct {
 }
 
 // ListObjectsV2WithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) ListObjectsV2WithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.ListObjectsV2Input, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.ListObjectsV2Output, error) {
+func (m *S3API) ListObjectsV2WithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.ListObjectsV2Input, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.ListObjectsV2Output, error) {
 	m.lockListObjectsV2WithContext.Lock()
 	defer m.lockListObjectsV2WithContext.Unlock()
 
 	if m.ListObjectsV2WithContextFunc == nil {
-		panic("mocker: MockS3API.ListObjectsV2WithContextFunc is nil but MockS3API.ListObjectsV2WithContext was called.")
+		panic("mocker: S3API.ListObjectsV2WithContextFunc is nil but S3API.ListObjectsV2WithContext was called.")
 	}
 
 	call := struct {
@@ -9081,7 +9081,7 @@ func (m *MockS3API) ListObjectsV2WithContext(arg0 github_com_aws_aws_sdk_go_aws.
 }
 
 // ListObjectsV2WithContextCalled returns true if ListObjectsV2WithContext was called at least once.
-func (m *MockS3API) ListObjectsV2WithContextCalled() bool {
+func (m *S3API) ListObjectsV2WithContextCalled() bool {
 	m.lockListObjectsV2WithContext.Lock()
 	defer m.lockListObjectsV2WithContext.Unlock()
 
@@ -9089,7 +9089,7 @@ func (m *MockS3API) ListObjectsV2WithContextCalled() bool {
 }
 
 // ListObjectsV2WithContextCalls returns the calls made to ListObjectsV2WithContext.
-func (m *MockS3API) ListObjectsV2WithContextCalls() []struct {
+func (m *S3API) ListObjectsV2WithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.ListObjectsV2Input
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -9101,12 +9101,12 @@ func (m *MockS3API) ListObjectsV2WithContextCalls() []struct {
 }
 
 // ListObjectsV2Request mocks base method by wrapping the associated func.
-func (m *MockS3API) ListObjectsV2Request(arg0 *github_com_aws_aws_sdk_go_service_s3.ListObjectsV2Input) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.ListObjectsV2Output) {
+func (m *S3API) ListObjectsV2Request(arg0 *github_com_aws_aws_sdk_go_service_s3.ListObjectsV2Input) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.ListObjectsV2Output) {
 	m.lockListObjectsV2Request.Lock()
 	defer m.lockListObjectsV2Request.Unlock()
 
 	if m.ListObjectsV2RequestFunc == nil {
-		panic("mocker: MockS3API.ListObjectsV2RequestFunc is nil but MockS3API.ListObjectsV2Request was called.")
+		panic("mocker: S3API.ListObjectsV2RequestFunc is nil but S3API.ListObjectsV2Request was called.")
 	}
 
 	call := struct {
@@ -9121,7 +9121,7 @@ func (m *MockS3API) ListObjectsV2Request(arg0 *github_com_aws_aws_sdk_go_service
 }
 
 // ListObjectsV2RequestCalled returns true if ListObjectsV2Request was called at least once.
-func (m *MockS3API) ListObjectsV2RequestCalled() bool {
+func (m *S3API) ListObjectsV2RequestCalled() bool {
 	m.lockListObjectsV2Request.Lock()
 	defer m.lockListObjectsV2Request.Unlock()
 
@@ -9129,7 +9129,7 @@ func (m *MockS3API) ListObjectsV2RequestCalled() bool {
 }
 
 // ListObjectsV2RequestCalls returns the calls made to ListObjectsV2Request.
-func (m *MockS3API) ListObjectsV2RequestCalls() []struct {
+func (m *S3API) ListObjectsV2RequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.ListObjectsV2Input
 } {
 	m.lockListObjectsV2Request.Lock()
@@ -9139,12 +9139,12 @@ func (m *MockS3API) ListObjectsV2RequestCalls() []struct {
 }
 
 // ListObjectsV2Pages mocks base method by wrapping the associated func.
-func (m *MockS3API) ListObjectsV2Pages(arg0 *github_com_aws_aws_sdk_go_service_s3.ListObjectsV2Input, arg1 func(*github_com_aws_aws_sdk_go_service_s3.ListObjectsV2Output, bool) bool) error {
+func (m *S3API) ListObjectsV2Pages(arg0 *github_com_aws_aws_sdk_go_service_s3.ListObjectsV2Input, arg1 func(*github_com_aws_aws_sdk_go_service_s3.ListObjectsV2Output, bool) bool) error {
 	m.lockListObjectsV2Pages.Lock()
 	defer m.lockListObjectsV2Pages.Unlock()
 
 	if m.ListObjectsV2PagesFunc == nil {
-		panic("mocker: MockS3API.ListObjectsV2PagesFunc is nil but MockS3API.ListObjectsV2Pages was called.")
+		panic("mocker: S3API.ListObjectsV2PagesFunc is nil but S3API.ListObjectsV2Pages was called.")
 	}
 
 	call := struct {
@@ -9161,7 +9161,7 @@ func (m *MockS3API) ListObjectsV2Pages(arg0 *github_com_aws_aws_sdk_go_service_s
 }
 
 // ListObjectsV2PagesCalled returns true if ListObjectsV2Pages was called at least once.
-func (m *MockS3API) ListObjectsV2PagesCalled() bool {
+func (m *S3API) ListObjectsV2PagesCalled() bool {
 	m.lockListObjectsV2Pages.Lock()
 	defer m.lockListObjectsV2Pages.Unlock()
 
@@ -9169,7 +9169,7 @@ func (m *MockS3API) ListObjectsV2PagesCalled() bool {
 }
 
 // ListObjectsV2PagesCalls returns the calls made to ListObjectsV2Pages.
-func (m *MockS3API) ListObjectsV2PagesCalls() []struct {
+func (m *S3API) ListObjectsV2PagesCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.ListObjectsV2Input
 	Arg1 func(*github_com_aws_aws_sdk_go_service_s3.ListObjectsV2Output, bool) bool
 } {
@@ -9180,12 +9180,12 @@ func (m *MockS3API) ListObjectsV2PagesCalls() []struct {
 }
 
 // ListObjectsV2PagesWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) ListObjectsV2PagesWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.ListObjectsV2Input, arg2 func(*github_com_aws_aws_sdk_go_service_s3.ListObjectsV2Output, bool) bool, arg3 ...github_com_aws_aws_sdk_go_aws_request.Option) error {
+func (m *S3API) ListObjectsV2PagesWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.ListObjectsV2Input, arg2 func(*github_com_aws_aws_sdk_go_service_s3.ListObjectsV2Output, bool) bool, arg3 ...github_com_aws_aws_sdk_go_aws_request.Option) error {
 	m.lockListObjectsV2PagesWithContext.Lock()
 	defer m.lockListObjectsV2PagesWithContext.Unlock()
 
 	if m.ListObjectsV2PagesWithContextFunc == nil {
-		panic("mocker: MockS3API.ListObjectsV2PagesWithContextFunc is nil but MockS3API.ListObjectsV2PagesWithContext was called.")
+		panic("mocker: S3API.ListObjectsV2PagesWithContextFunc is nil but S3API.ListObjectsV2PagesWithContext was called.")
 	}
 
 	call := struct {
@@ -9206,7 +9206,7 @@ func (m *MockS3API) ListObjectsV2PagesWithContext(arg0 github_com_aws_aws_sdk_go
 }
 
 // ListObjectsV2PagesWithContextCalled returns true if ListObjectsV2PagesWithContext was called at least once.
-func (m *MockS3API) ListObjectsV2PagesWithContextCalled() bool {
+func (m *S3API) ListObjectsV2PagesWithContextCalled() bool {
 	m.lockListObjectsV2PagesWithContext.Lock()
 	defer m.lockListObjectsV2PagesWithContext.Unlock()
 
@@ -9214,7 +9214,7 @@ func (m *MockS3API) ListObjectsV2PagesWithContextCalled() bool {
 }
 
 // ListObjectsV2PagesWithContextCalls returns the calls made to ListObjectsV2PagesWithContext.
-func (m *MockS3API) ListObjectsV2PagesWithContextCalls() []struct {
+func (m *S3API) ListObjectsV2PagesWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.ListObjectsV2Input
 	Arg2 func(*github_com_aws_aws_sdk_go_service_s3.ListObjectsV2Output, bool) bool
@@ -9227,12 +9227,12 @@ func (m *MockS3API) ListObjectsV2PagesWithContextCalls() []struct {
 }
 
 // ListParts mocks base method by wrapping the associated func.
-func (m *MockS3API) ListParts(arg0 *github_com_aws_aws_sdk_go_service_s3.ListPartsInput) (*github_com_aws_aws_sdk_go_service_s3.ListPartsOutput, error) {
+func (m *S3API) ListParts(arg0 *github_com_aws_aws_sdk_go_service_s3.ListPartsInput) (*github_com_aws_aws_sdk_go_service_s3.ListPartsOutput, error) {
 	m.lockListParts.Lock()
 	defer m.lockListParts.Unlock()
 
 	if m.ListPartsFunc == nil {
-		panic("mocker: MockS3API.ListPartsFunc is nil but MockS3API.ListParts was called.")
+		panic("mocker: S3API.ListPartsFunc is nil but S3API.ListParts was called.")
 	}
 
 	call := struct {
@@ -9247,7 +9247,7 @@ func (m *MockS3API) ListParts(arg0 *github_com_aws_aws_sdk_go_service_s3.ListPar
 }
 
 // ListPartsCalled returns true if ListParts was called at least once.
-func (m *MockS3API) ListPartsCalled() bool {
+func (m *S3API) ListPartsCalled() bool {
 	m.lockListParts.Lock()
 	defer m.lockListParts.Unlock()
 
@@ -9255,7 +9255,7 @@ func (m *MockS3API) ListPartsCalled() bool {
 }
 
 // ListPartsCalls returns the calls made to ListParts.
-func (m *MockS3API) ListPartsCalls() []struct {
+func (m *S3API) ListPartsCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.ListPartsInput
 } {
 	m.lockListParts.Lock()
@@ -9265,12 +9265,12 @@ func (m *MockS3API) ListPartsCalls() []struct {
 }
 
 // ListPartsWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) ListPartsWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.ListPartsInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.ListPartsOutput, error) {
+func (m *S3API) ListPartsWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.ListPartsInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.ListPartsOutput, error) {
 	m.lockListPartsWithContext.Lock()
 	defer m.lockListPartsWithContext.Unlock()
 
 	if m.ListPartsWithContextFunc == nil {
-		panic("mocker: MockS3API.ListPartsWithContextFunc is nil but MockS3API.ListPartsWithContext was called.")
+		panic("mocker: S3API.ListPartsWithContextFunc is nil but S3API.ListPartsWithContext was called.")
 	}
 
 	call := struct {
@@ -9289,7 +9289,7 @@ func (m *MockS3API) ListPartsWithContext(arg0 github_com_aws_aws_sdk_go_aws.Cont
 }
 
 // ListPartsWithContextCalled returns true if ListPartsWithContext was called at least once.
-func (m *MockS3API) ListPartsWithContextCalled() bool {
+func (m *S3API) ListPartsWithContextCalled() bool {
 	m.lockListPartsWithContext.Lock()
 	defer m.lockListPartsWithContext.Unlock()
 
@@ -9297,7 +9297,7 @@ func (m *MockS3API) ListPartsWithContextCalled() bool {
 }
 
 // ListPartsWithContextCalls returns the calls made to ListPartsWithContext.
-func (m *MockS3API) ListPartsWithContextCalls() []struct {
+func (m *S3API) ListPartsWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.ListPartsInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -9309,12 +9309,12 @@ func (m *MockS3API) ListPartsWithContextCalls() []struct {
 }
 
 // ListPartsRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) ListPartsRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.ListPartsInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.ListPartsOutput) {
+func (m *S3API) ListPartsRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.ListPartsInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.ListPartsOutput) {
 	m.lockListPartsRequest.Lock()
 	defer m.lockListPartsRequest.Unlock()
 
 	if m.ListPartsRequestFunc == nil {
-		panic("mocker: MockS3API.ListPartsRequestFunc is nil but MockS3API.ListPartsRequest was called.")
+		panic("mocker: S3API.ListPartsRequestFunc is nil but S3API.ListPartsRequest was called.")
 	}
 
 	call := struct {
@@ -9329,7 +9329,7 @@ func (m *MockS3API) ListPartsRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.
 }
 
 // ListPartsRequestCalled returns true if ListPartsRequest was called at least once.
-func (m *MockS3API) ListPartsRequestCalled() bool {
+func (m *S3API) ListPartsRequestCalled() bool {
 	m.lockListPartsRequest.Lock()
 	defer m.lockListPartsRequest.Unlock()
 
@@ -9337,7 +9337,7 @@ func (m *MockS3API) ListPartsRequestCalled() bool {
 }
 
 // ListPartsRequestCalls returns the calls made to ListPartsRequest.
-func (m *MockS3API) ListPartsRequestCalls() []struct {
+func (m *S3API) ListPartsRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.ListPartsInput
 } {
 	m.lockListPartsRequest.Lock()
@@ -9347,12 +9347,12 @@ func (m *MockS3API) ListPartsRequestCalls() []struct {
 }
 
 // ListPartsPages mocks base method by wrapping the associated func.
-func (m *MockS3API) ListPartsPages(arg0 *github_com_aws_aws_sdk_go_service_s3.ListPartsInput, arg1 func(*github_com_aws_aws_sdk_go_service_s3.ListPartsOutput, bool) bool) error {
+func (m *S3API) ListPartsPages(arg0 *github_com_aws_aws_sdk_go_service_s3.ListPartsInput, arg1 func(*github_com_aws_aws_sdk_go_service_s3.ListPartsOutput, bool) bool) error {
 	m.lockListPartsPages.Lock()
 	defer m.lockListPartsPages.Unlock()
 
 	if m.ListPartsPagesFunc == nil {
-		panic("mocker: MockS3API.ListPartsPagesFunc is nil but MockS3API.ListPartsPages was called.")
+		panic("mocker: S3API.ListPartsPagesFunc is nil but S3API.ListPartsPages was called.")
 	}
 
 	call := struct {
@@ -9369,7 +9369,7 @@ func (m *MockS3API) ListPartsPages(arg0 *github_com_aws_aws_sdk_go_service_s3.Li
 }
 
 // ListPartsPagesCalled returns true if ListPartsPages was called at least once.
-func (m *MockS3API) ListPartsPagesCalled() bool {
+func (m *S3API) ListPartsPagesCalled() bool {
 	m.lockListPartsPages.Lock()
 	defer m.lockListPartsPages.Unlock()
 
@@ -9377,7 +9377,7 @@ func (m *MockS3API) ListPartsPagesCalled() bool {
 }
 
 // ListPartsPagesCalls returns the calls made to ListPartsPages.
-func (m *MockS3API) ListPartsPagesCalls() []struct {
+func (m *S3API) ListPartsPagesCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.ListPartsInput
 	Arg1 func(*github_com_aws_aws_sdk_go_service_s3.ListPartsOutput, bool) bool
 } {
@@ -9388,12 +9388,12 @@ func (m *MockS3API) ListPartsPagesCalls() []struct {
 }
 
 // ListPartsPagesWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) ListPartsPagesWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.ListPartsInput, arg2 func(*github_com_aws_aws_sdk_go_service_s3.ListPartsOutput, bool) bool, arg3 ...github_com_aws_aws_sdk_go_aws_request.Option) error {
+func (m *S3API) ListPartsPagesWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.ListPartsInput, arg2 func(*github_com_aws_aws_sdk_go_service_s3.ListPartsOutput, bool) bool, arg3 ...github_com_aws_aws_sdk_go_aws_request.Option) error {
 	m.lockListPartsPagesWithContext.Lock()
 	defer m.lockListPartsPagesWithContext.Unlock()
 
 	if m.ListPartsPagesWithContextFunc == nil {
-		panic("mocker: MockS3API.ListPartsPagesWithContextFunc is nil but MockS3API.ListPartsPagesWithContext was called.")
+		panic("mocker: S3API.ListPartsPagesWithContextFunc is nil but S3API.ListPartsPagesWithContext was called.")
 	}
 
 	call := struct {
@@ -9414,7 +9414,7 @@ func (m *MockS3API) ListPartsPagesWithContext(arg0 github_com_aws_aws_sdk_go_aws
 }
 
 // ListPartsPagesWithContextCalled returns true if ListPartsPagesWithContext was called at least once.
-func (m *MockS3API) ListPartsPagesWithContextCalled() bool {
+func (m *S3API) ListPartsPagesWithContextCalled() bool {
 	m.lockListPartsPagesWithContext.Lock()
 	defer m.lockListPartsPagesWithContext.Unlock()
 
@@ -9422,7 +9422,7 @@ func (m *MockS3API) ListPartsPagesWithContextCalled() bool {
 }
 
 // ListPartsPagesWithContextCalls returns the calls made to ListPartsPagesWithContext.
-func (m *MockS3API) ListPartsPagesWithContextCalls() []struct {
+func (m *S3API) ListPartsPagesWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.ListPartsInput
 	Arg2 func(*github_com_aws_aws_sdk_go_service_s3.ListPartsOutput, bool) bool
@@ -9435,12 +9435,12 @@ func (m *MockS3API) ListPartsPagesWithContextCalls() []struct {
 }
 
 // PutBucketAccelerateConfiguration mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketAccelerateConfiguration(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketAccelerateConfigurationInput) (*github_com_aws_aws_sdk_go_service_s3.PutBucketAccelerateConfigurationOutput, error) {
+func (m *S3API) PutBucketAccelerateConfiguration(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketAccelerateConfigurationInput) (*github_com_aws_aws_sdk_go_service_s3.PutBucketAccelerateConfigurationOutput, error) {
 	m.lockPutBucketAccelerateConfiguration.Lock()
 	defer m.lockPutBucketAccelerateConfiguration.Unlock()
 
 	if m.PutBucketAccelerateConfigurationFunc == nil {
-		panic("mocker: MockS3API.PutBucketAccelerateConfigurationFunc is nil but MockS3API.PutBucketAccelerateConfiguration was called.")
+		panic("mocker: S3API.PutBucketAccelerateConfigurationFunc is nil but S3API.PutBucketAccelerateConfiguration was called.")
 	}
 
 	call := struct {
@@ -9455,7 +9455,7 @@ func (m *MockS3API) PutBucketAccelerateConfiguration(arg0 *github_com_aws_aws_sd
 }
 
 // PutBucketAccelerateConfigurationCalled returns true if PutBucketAccelerateConfiguration was called at least once.
-func (m *MockS3API) PutBucketAccelerateConfigurationCalled() bool {
+func (m *S3API) PutBucketAccelerateConfigurationCalled() bool {
 	m.lockPutBucketAccelerateConfiguration.Lock()
 	defer m.lockPutBucketAccelerateConfiguration.Unlock()
 
@@ -9463,7 +9463,7 @@ func (m *MockS3API) PutBucketAccelerateConfigurationCalled() bool {
 }
 
 // PutBucketAccelerateConfigurationCalls returns the calls made to PutBucketAccelerateConfiguration.
-func (m *MockS3API) PutBucketAccelerateConfigurationCalls() []struct {
+func (m *S3API) PutBucketAccelerateConfigurationCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketAccelerateConfigurationInput
 } {
 	m.lockPutBucketAccelerateConfiguration.Lock()
@@ -9473,12 +9473,12 @@ func (m *MockS3API) PutBucketAccelerateConfigurationCalls() []struct {
 }
 
 // PutBucketAccelerateConfigurationWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketAccelerateConfigurationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketAccelerateConfigurationInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutBucketAccelerateConfigurationOutput, error) {
+func (m *S3API) PutBucketAccelerateConfigurationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketAccelerateConfigurationInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutBucketAccelerateConfigurationOutput, error) {
 	m.lockPutBucketAccelerateConfigurationWithContext.Lock()
 	defer m.lockPutBucketAccelerateConfigurationWithContext.Unlock()
 
 	if m.PutBucketAccelerateConfigurationWithContextFunc == nil {
-		panic("mocker: MockS3API.PutBucketAccelerateConfigurationWithContextFunc is nil but MockS3API.PutBucketAccelerateConfigurationWithContext was called.")
+		panic("mocker: S3API.PutBucketAccelerateConfigurationWithContextFunc is nil but S3API.PutBucketAccelerateConfigurationWithContext was called.")
 	}
 
 	call := struct {
@@ -9497,7 +9497,7 @@ func (m *MockS3API) PutBucketAccelerateConfigurationWithContext(arg0 github_com_
 }
 
 // PutBucketAccelerateConfigurationWithContextCalled returns true if PutBucketAccelerateConfigurationWithContext was called at least once.
-func (m *MockS3API) PutBucketAccelerateConfigurationWithContextCalled() bool {
+func (m *S3API) PutBucketAccelerateConfigurationWithContextCalled() bool {
 	m.lockPutBucketAccelerateConfigurationWithContext.Lock()
 	defer m.lockPutBucketAccelerateConfigurationWithContext.Unlock()
 
@@ -9505,7 +9505,7 @@ func (m *MockS3API) PutBucketAccelerateConfigurationWithContextCalled() bool {
 }
 
 // PutBucketAccelerateConfigurationWithContextCalls returns the calls made to PutBucketAccelerateConfigurationWithContext.
-func (m *MockS3API) PutBucketAccelerateConfigurationWithContextCalls() []struct {
+func (m *S3API) PutBucketAccelerateConfigurationWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketAccelerateConfigurationInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -9517,12 +9517,12 @@ func (m *MockS3API) PutBucketAccelerateConfigurationWithContextCalls() []struct 
 }
 
 // PutBucketAccelerateConfigurationRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketAccelerateConfigurationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketAccelerateConfigurationInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutBucketAccelerateConfigurationOutput) {
+func (m *S3API) PutBucketAccelerateConfigurationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketAccelerateConfigurationInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutBucketAccelerateConfigurationOutput) {
 	m.lockPutBucketAccelerateConfigurationRequest.Lock()
 	defer m.lockPutBucketAccelerateConfigurationRequest.Unlock()
 
 	if m.PutBucketAccelerateConfigurationRequestFunc == nil {
-		panic("mocker: MockS3API.PutBucketAccelerateConfigurationRequestFunc is nil but MockS3API.PutBucketAccelerateConfigurationRequest was called.")
+		panic("mocker: S3API.PutBucketAccelerateConfigurationRequestFunc is nil but S3API.PutBucketAccelerateConfigurationRequest was called.")
 	}
 
 	call := struct {
@@ -9537,7 +9537,7 @@ func (m *MockS3API) PutBucketAccelerateConfigurationRequest(arg0 *github_com_aws
 }
 
 // PutBucketAccelerateConfigurationRequestCalled returns true if PutBucketAccelerateConfigurationRequest was called at least once.
-func (m *MockS3API) PutBucketAccelerateConfigurationRequestCalled() bool {
+func (m *S3API) PutBucketAccelerateConfigurationRequestCalled() bool {
 	m.lockPutBucketAccelerateConfigurationRequest.Lock()
 	defer m.lockPutBucketAccelerateConfigurationRequest.Unlock()
 
@@ -9545,7 +9545,7 @@ func (m *MockS3API) PutBucketAccelerateConfigurationRequestCalled() bool {
 }
 
 // PutBucketAccelerateConfigurationRequestCalls returns the calls made to PutBucketAccelerateConfigurationRequest.
-func (m *MockS3API) PutBucketAccelerateConfigurationRequestCalls() []struct {
+func (m *S3API) PutBucketAccelerateConfigurationRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketAccelerateConfigurationInput
 } {
 	m.lockPutBucketAccelerateConfigurationRequest.Lock()
@@ -9555,12 +9555,12 @@ func (m *MockS3API) PutBucketAccelerateConfigurationRequestCalls() []struct {
 }
 
 // PutBucketAcl mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketAcl(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketAclInput) (*github_com_aws_aws_sdk_go_service_s3.PutBucketAclOutput, error) {
+func (m *S3API) PutBucketAcl(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketAclInput) (*github_com_aws_aws_sdk_go_service_s3.PutBucketAclOutput, error) {
 	m.lockPutBucketAcl.Lock()
 	defer m.lockPutBucketAcl.Unlock()
 
 	if m.PutBucketAclFunc == nil {
-		panic("mocker: MockS3API.PutBucketAclFunc is nil but MockS3API.PutBucketAcl was called.")
+		panic("mocker: S3API.PutBucketAclFunc is nil but S3API.PutBucketAcl was called.")
 	}
 
 	call := struct {
@@ -9575,7 +9575,7 @@ func (m *MockS3API) PutBucketAcl(arg0 *github_com_aws_aws_sdk_go_service_s3.PutB
 }
 
 // PutBucketAclCalled returns true if PutBucketAcl was called at least once.
-func (m *MockS3API) PutBucketAclCalled() bool {
+func (m *S3API) PutBucketAclCalled() bool {
 	m.lockPutBucketAcl.Lock()
 	defer m.lockPutBucketAcl.Unlock()
 
@@ -9583,7 +9583,7 @@ func (m *MockS3API) PutBucketAclCalled() bool {
 }
 
 // PutBucketAclCalls returns the calls made to PutBucketAcl.
-func (m *MockS3API) PutBucketAclCalls() []struct {
+func (m *S3API) PutBucketAclCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketAclInput
 } {
 	m.lockPutBucketAcl.Lock()
@@ -9593,12 +9593,12 @@ func (m *MockS3API) PutBucketAclCalls() []struct {
 }
 
 // PutBucketAclWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketAclWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketAclInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutBucketAclOutput, error) {
+func (m *S3API) PutBucketAclWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketAclInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutBucketAclOutput, error) {
 	m.lockPutBucketAclWithContext.Lock()
 	defer m.lockPutBucketAclWithContext.Unlock()
 
 	if m.PutBucketAclWithContextFunc == nil {
-		panic("mocker: MockS3API.PutBucketAclWithContextFunc is nil but MockS3API.PutBucketAclWithContext was called.")
+		panic("mocker: S3API.PutBucketAclWithContextFunc is nil but S3API.PutBucketAclWithContext was called.")
 	}
 
 	call := struct {
@@ -9617,7 +9617,7 @@ func (m *MockS3API) PutBucketAclWithContext(arg0 github_com_aws_aws_sdk_go_aws.C
 }
 
 // PutBucketAclWithContextCalled returns true if PutBucketAclWithContext was called at least once.
-func (m *MockS3API) PutBucketAclWithContextCalled() bool {
+func (m *S3API) PutBucketAclWithContextCalled() bool {
 	m.lockPutBucketAclWithContext.Lock()
 	defer m.lockPutBucketAclWithContext.Unlock()
 
@@ -9625,7 +9625,7 @@ func (m *MockS3API) PutBucketAclWithContextCalled() bool {
 }
 
 // PutBucketAclWithContextCalls returns the calls made to PutBucketAclWithContext.
-func (m *MockS3API) PutBucketAclWithContextCalls() []struct {
+func (m *S3API) PutBucketAclWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketAclInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -9637,12 +9637,12 @@ func (m *MockS3API) PutBucketAclWithContextCalls() []struct {
 }
 
 // PutBucketAclRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketAclRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketAclInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutBucketAclOutput) {
+func (m *S3API) PutBucketAclRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketAclInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutBucketAclOutput) {
 	m.lockPutBucketAclRequest.Lock()
 	defer m.lockPutBucketAclRequest.Unlock()
 
 	if m.PutBucketAclRequestFunc == nil {
-		panic("mocker: MockS3API.PutBucketAclRequestFunc is nil but MockS3API.PutBucketAclRequest was called.")
+		panic("mocker: S3API.PutBucketAclRequestFunc is nil but S3API.PutBucketAclRequest was called.")
 	}
 
 	call := struct {
@@ -9657,7 +9657,7 @@ func (m *MockS3API) PutBucketAclRequest(arg0 *github_com_aws_aws_sdk_go_service_
 }
 
 // PutBucketAclRequestCalled returns true if PutBucketAclRequest was called at least once.
-func (m *MockS3API) PutBucketAclRequestCalled() bool {
+func (m *S3API) PutBucketAclRequestCalled() bool {
 	m.lockPutBucketAclRequest.Lock()
 	defer m.lockPutBucketAclRequest.Unlock()
 
@@ -9665,7 +9665,7 @@ func (m *MockS3API) PutBucketAclRequestCalled() bool {
 }
 
 // PutBucketAclRequestCalls returns the calls made to PutBucketAclRequest.
-func (m *MockS3API) PutBucketAclRequestCalls() []struct {
+func (m *S3API) PutBucketAclRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketAclInput
 } {
 	m.lockPutBucketAclRequest.Lock()
@@ -9675,12 +9675,12 @@ func (m *MockS3API) PutBucketAclRequestCalls() []struct {
 }
 
 // PutBucketAnalyticsConfiguration mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketAnalyticsConfiguration(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketAnalyticsConfigurationInput) (*github_com_aws_aws_sdk_go_service_s3.PutBucketAnalyticsConfigurationOutput, error) {
+func (m *S3API) PutBucketAnalyticsConfiguration(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketAnalyticsConfigurationInput) (*github_com_aws_aws_sdk_go_service_s3.PutBucketAnalyticsConfigurationOutput, error) {
 	m.lockPutBucketAnalyticsConfiguration.Lock()
 	defer m.lockPutBucketAnalyticsConfiguration.Unlock()
 
 	if m.PutBucketAnalyticsConfigurationFunc == nil {
-		panic("mocker: MockS3API.PutBucketAnalyticsConfigurationFunc is nil but MockS3API.PutBucketAnalyticsConfiguration was called.")
+		panic("mocker: S3API.PutBucketAnalyticsConfigurationFunc is nil but S3API.PutBucketAnalyticsConfiguration was called.")
 	}
 
 	call := struct {
@@ -9695,7 +9695,7 @@ func (m *MockS3API) PutBucketAnalyticsConfiguration(arg0 *github_com_aws_aws_sdk
 }
 
 // PutBucketAnalyticsConfigurationCalled returns true if PutBucketAnalyticsConfiguration was called at least once.
-func (m *MockS3API) PutBucketAnalyticsConfigurationCalled() bool {
+func (m *S3API) PutBucketAnalyticsConfigurationCalled() bool {
 	m.lockPutBucketAnalyticsConfiguration.Lock()
 	defer m.lockPutBucketAnalyticsConfiguration.Unlock()
 
@@ -9703,7 +9703,7 @@ func (m *MockS3API) PutBucketAnalyticsConfigurationCalled() bool {
 }
 
 // PutBucketAnalyticsConfigurationCalls returns the calls made to PutBucketAnalyticsConfiguration.
-func (m *MockS3API) PutBucketAnalyticsConfigurationCalls() []struct {
+func (m *S3API) PutBucketAnalyticsConfigurationCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketAnalyticsConfigurationInput
 } {
 	m.lockPutBucketAnalyticsConfiguration.Lock()
@@ -9713,12 +9713,12 @@ func (m *MockS3API) PutBucketAnalyticsConfigurationCalls() []struct {
 }
 
 // PutBucketAnalyticsConfigurationWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketAnalyticsConfigurationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketAnalyticsConfigurationInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutBucketAnalyticsConfigurationOutput, error) {
+func (m *S3API) PutBucketAnalyticsConfigurationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketAnalyticsConfigurationInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutBucketAnalyticsConfigurationOutput, error) {
 	m.lockPutBucketAnalyticsConfigurationWithContext.Lock()
 	defer m.lockPutBucketAnalyticsConfigurationWithContext.Unlock()
 
 	if m.PutBucketAnalyticsConfigurationWithContextFunc == nil {
-		panic("mocker: MockS3API.PutBucketAnalyticsConfigurationWithContextFunc is nil but MockS3API.PutBucketAnalyticsConfigurationWithContext was called.")
+		panic("mocker: S3API.PutBucketAnalyticsConfigurationWithContextFunc is nil but S3API.PutBucketAnalyticsConfigurationWithContext was called.")
 	}
 
 	call := struct {
@@ -9737,7 +9737,7 @@ func (m *MockS3API) PutBucketAnalyticsConfigurationWithContext(arg0 github_com_a
 }
 
 // PutBucketAnalyticsConfigurationWithContextCalled returns true if PutBucketAnalyticsConfigurationWithContext was called at least once.
-func (m *MockS3API) PutBucketAnalyticsConfigurationWithContextCalled() bool {
+func (m *S3API) PutBucketAnalyticsConfigurationWithContextCalled() bool {
 	m.lockPutBucketAnalyticsConfigurationWithContext.Lock()
 	defer m.lockPutBucketAnalyticsConfigurationWithContext.Unlock()
 
@@ -9745,7 +9745,7 @@ func (m *MockS3API) PutBucketAnalyticsConfigurationWithContextCalled() bool {
 }
 
 // PutBucketAnalyticsConfigurationWithContextCalls returns the calls made to PutBucketAnalyticsConfigurationWithContext.
-func (m *MockS3API) PutBucketAnalyticsConfigurationWithContextCalls() []struct {
+func (m *S3API) PutBucketAnalyticsConfigurationWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketAnalyticsConfigurationInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -9757,12 +9757,12 @@ func (m *MockS3API) PutBucketAnalyticsConfigurationWithContextCalls() []struct {
 }
 
 // PutBucketAnalyticsConfigurationRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketAnalyticsConfigurationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketAnalyticsConfigurationInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutBucketAnalyticsConfigurationOutput) {
+func (m *S3API) PutBucketAnalyticsConfigurationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketAnalyticsConfigurationInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutBucketAnalyticsConfigurationOutput) {
 	m.lockPutBucketAnalyticsConfigurationRequest.Lock()
 	defer m.lockPutBucketAnalyticsConfigurationRequest.Unlock()
 
 	if m.PutBucketAnalyticsConfigurationRequestFunc == nil {
-		panic("mocker: MockS3API.PutBucketAnalyticsConfigurationRequestFunc is nil but MockS3API.PutBucketAnalyticsConfigurationRequest was called.")
+		panic("mocker: S3API.PutBucketAnalyticsConfigurationRequestFunc is nil but S3API.PutBucketAnalyticsConfigurationRequest was called.")
 	}
 
 	call := struct {
@@ -9777,7 +9777,7 @@ func (m *MockS3API) PutBucketAnalyticsConfigurationRequest(arg0 *github_com_aws_
 }
 
 // PutBucketAnalyticsConfigurationRequestCalled returns true if PutBucketAnalyticsConfigurationRequest was called at least once.
-func (m *MockS3API) PutBucketAnalyticsConfigurationRequestCalled() bool {
+func (m *S3API) PutBucketAnalyticsConfigurationRequestCalled() bool {
 	m.lockPutBucketAnalyticsConfigurationRequest.Lock()
 	defer m.lockPutBucketAnalyticsConfigurationRequest.Unlock()
 
@@ -9785,7 +9785,7 @@ func (m *MockS3API) PutBucketAnalyticsConfigurationRequestCalled() bool {
 }
 
 // PutBucketAnalyticsConfigurationRequestCalls returns the calls made to PutBucketAnalyticsConfigurationRequest.
-func (m *MockS3API) PutBucketAnalyticsConfigurationRequestCalls() []struct {
+func (m *S3API) PutBucketAnalyticsConfigurationRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketAnalyticsConfigurationInput
 } {
 	m.lockPutBucketAnalyticsConfigurationRequest.Lock()
@@ -9795,12 +9795,12 @@ func (m *MockS3API) PutBucketAnalyticsConfigurationRequestCalls() []struct {
 }
 
 // PutBucketCors mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketCors(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketCorsInput) (*github_com_aws_aws_sdk_go_service_s3.PutBucketCorsOutput, error) {
+func (m *S3API) PutBucketCors(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketCorsInput) (*github_com_aws_aws_sdk_go_service_s3.PutBucketCorsOutput, error) {
 	m.lockPutBucketCors.Lock()
 	defer m.lockPutBucketCors.Unlock()
 
 	if m.PutBucketCorsFunc == nil {
-		panic("mocker: MockS3API.PutBucketCorsFunc is nil but MockS3API.PutBucketCors was called.")
+		panic("mocker: S3API.PutBucketCorsFunc is nil but S3API.PutBucketCors was called.")
 	}
 
 	call := struct {
@@ -9815,7 +9815,7 @@ func (m *MockS3API) PutBucketCors(arg0 *github_com_aws_aws_sdk_go_service_s3.Put
 }
 
 // PutBucketCorsCalled returns true if PutBucketCors was called at least once.
-func (m *MockS3API) PutBucketCorsCalled() bool {
+func (m *S3API) PutBucketCorsCalled() bool {
 	m.lockPutBucketCors.Lock()
 	defer m.lockPutBucketCors.Unlock()
 
@@ -9823,7 +9823,7 @@ func (m *MockS3API) PutBucketCorsCalled() bool {
 }
 
 // PutBucketCorsCalls returns the calls made to PutBucketCors.
-func (m *MockS3API) PutBucketCorsCalls() []struct {
+func (m *S3API) PutBucketCorsCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketCorsInput
 } {
 	m.lockPutBucketCors.Lock()
@@ -9833,12 +9833,12 @@ func (m *MockS3API) PutBucketCorsCalls() []struct {
 }
 
 // PutBucketCorsWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketCorsWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketCorsInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutBucketCorsOutput, error) {
+func (m *S3API) PutBucketCorsWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketCorsInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutBucketCorsOutput, error) {
 	m.lockPutBucketCorsWithContext.Lock()
 	defer m.lockPutBucketCorsWithContext.Unlock()
 
 	if m.PutBucketCorsWithContextFunc == nil {
-		panic("mocker: MockS3API.PutBucketCorsWithContextFunc is nil but MockS3API.PutBucketCorsWithContext was called.")
+		panic("mocker: S3API.PutBucketCorsWithContextFunc is nil but S3API.PutBucketCorsWithContext was called.")
 	}
 
 	call := struct {
@@ -9857,7 +9857,7 @@ func (m *MockS3API) PutBucketCorsWithContext(arg0 github_com_aws_aws_sdk_go_aws.
 }
 
 // PutBucketCorsWithContextCalled returns true if PutBucketCorsWithContext was called at least once.
-func (m *MockS3API) PutBucketCorsWithContextCalled() bool {
+func (m *S3API) PutBucketCorsWithContextCalled() bool {
 	m.lockPutBucketCorsWithContext.Lock()
 	defer m.lockPutBucketCorsWithContext.Unlock()
 
@@ -9865,7 +9865,7 @@ func (m *MockS3API) PutBucketCorsWithContextCalled() bool {
 }
 
 // PutBucketCorsWithContextCalls returns the calls made to PutBucketCorsWithContext.
-func (m *MockS3API) PutBucketCorsWithContextCalls() []struct {
+func (m *S3API) PutBucketCorsWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketCorsInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -9877,12 +9877,12 @@ func (m *MockS3API) PutBucketCorsWithContextCalls() []struct {
 }
 
 // PutBucketCorsRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketCorsRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketCorsInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutBucketCorsOutput) {
+func (m *S3API) PutBucketCorsRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketCorsInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutBucketCorsOutput) {
 	m.lockPutBucketCorsRequest.Lock()
 	defer m.lockPutBucketCorsRequest.Unlock()
 
 	if m.PutBucketCorsRequestFunc == nil {
-		panic("mocker: MockS3API.PutBucketCorsRequestFunc is nil but MockS3API.PutBucketCorsRequest was called.")
+		panic("mocker: S3API.PutBucketCorsRequestFunc is nil but S3API.PutBucketCorsRequest was called.")
 	}
 
 	call := struct {
@@ -9897,7 +9897,7 @@ func (m *MockS3API) PutBucketCorsRequest(arg0 *github_com_aws_aws_sdk_go_service
 }
 
 // PutBucketCorsRequestCalled returns true if PutBucketCorsRequest was called at least once.
-func (m *MockS3API) PutBucketCorsRequestCalled() bool {
+func (m *S3API) PutBucketCorsRequestCalled() bool {
 	m.lockPutBucketCorsRequest.Lock()
 	defer m.lockPutBucketCorsRequest.Unlock()
 
@@ -9905,7 +9905,7 @@ func (m *MockS3API) PutBucketCorsRequestCalled() bool {
 }
 
 // PutBucketCorsRequestCalls returns the calls made to PutBucketCorsRequest.
-func (m *MockS3API) PutBucketCorsRequestCalls() []struct {
+func (m *S3API) PutBucketCorsRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketCorsInput
 } {
 	m.lockPutBucketCorsRequest.Lock()
@@ -9915,12 +9915,12 @@ func (m *MockS3API) PutBucketCorsRequestCalls() []struct {
 }
 
 // PutBucketEncryption mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketEncryption(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketEncryptionInput) (*github_com_aws_aws_sdk_go_service_s3.PutBucketEncryptionOutput, error) {
+func (m *S3API) PutBucketEncryption(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketEncryptionInput) (*github_com_aws_aws_sdk_go_service_s3.PutBucketEncryptionOutput, error) {
 	m.lockPutBucketEncryption.Lock()
 	defer m.lockPutBucketEncryption.Unlock()
 
 	if m.PutBucketEncryptionFunc == nil {
-		panic("mocker: MockS3API.PutBucketEncryptionFunc is nil but MockS3API.PutBucketEncryption was called.")
+		panic("mocker: S3API.PutBucketEncryptionFunc is nil but S3API.PutBucketEncryption was called.")
 	}
 
 	call := struct {
@@ -9935,7 +9935,7 @@ func (m *MockS3API) PutBucketEncryption(arg0 *github_com_aws_aws_sdk_go_service_
 }
 
 // PutBucketEncryptionCalled returns true if PutBucketEncryption was called at least once.
-func (m *MockS3API) PutBucketEncryptionCalled() bool {
+func (m *S3API) PutBucketEncryptionCalled() bool {
 	m.lockPutBucketEncryption.Lock()
 	defer m.lockPutBucketEncryption.Unlock()
 
@@ -9943,7 +9943,7 @@ func (m *MockS3API) PutBucketEncryptionCalled() bool {
 }
 
 // PutBucketEncryptionCalls returns the calls made to PutBucketEncryption.
-func (m *MockS3API) PutBucketEncryptionCalls() []struct {
+func (m *S3API) PutBucketEncryptionCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketEncryptionInput
 } {
 	m.lockPutBucketEncryption.Lock()
@@ -9953,12 +9953,12 @@ func (m *MockS3API) PutBucketEncryptionCalls() []struct {
 }
 
 // PutBucketEncryptionWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketEncryptionWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketEncryptionInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutBucketEncryptionOutput, error) {
+func (m *S3API) PutBucketEncryptionWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketEncryptionInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutBucketEncryptionOutput, error) {
 	m.lockPutBucketEncryptionWithContext.Lock()
 	defer m.lockPutBucketEncryptionWithContext.Unlock()
 
 	if m.PutBucketEncryptionWithContextFunc == nil {
-		panic("mocker: MockS3API.PutBucketEncryptionWithContextFunc is nil but MockS3API.PutBucketEncryptionWithContext was called.")
+		panic("mocker: S3API.PutBucketEncryptionWithContextFunc is nil but S3API.PutBucketEncryptionWithContext was called.")
 	}
 
 	call := struct {
@@ -9977,7 +9977,7 @@ func (m *MockS3API) PutBucketEncryptionWithContext(arg0 github_com_aws_aws_sdk_g
 }
 
 // PutBucketEncryptionWithContextCalled returns true if PutBucketEncryptionWithContext was called at least once.
-func (m *MockS3API) PutBucketEncryptionWithContextCalled() bool {
+func (m *S3API) PutBucketEncryptionWithContextCalled() bool {
 	m.lockPutBucketEncryptionWithContext.Lock()
 	defer m.lockPutBucketEncryptionWithContext.Unlock()
 
@@ -9985,7 +9985,7 @@ func (m *MockS3API) PutBucketEncryptionWithContextCalled() bool {
 }
 
 // PutBucketEncryptionWithContextCalls returns the calls made to PutBucketEncryptionWithContext.
-func (m *MockS3API) PutBucketEncryptionWithContextCalls() []struct {
+func (m *S3API) PutBucketEncryptionWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketEncryptionInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -9997,12 +9997,12 @@ func (m *MockS3API) PutBucketEncryptionWithContextCalls() []struct {
 }
 
 // PutBucketEncryptionRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketEncryptionRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketEncryptionInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutBucketEncryptionOutput) {
+func (m *S3API) PutBucketEncryptionRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketEncryptionInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutBucketEncryptionOutput) {
 	m.lockPutBucketEncryptionRequest.Lock()
 	defer m.lockPutBucketEncryptionRequest.Unlock()
 
 	if m.PutBucketEncryptionRequestFunc == nil {
-		panic("mocker: MockS3API.PutBucketEncryptionRequestFunc is nil but MockS3API.PutBucketEncryptionRequest was called.")
+		panic("mocker: S3API.PutBucketEncryptionRequestFunc is nil but S3API.PutBucketEncryptionRequest was called.")
 	}
 
 	call := struct {
@@ -10017,7 +10017,7 @@ func (m *MockS3API) PutBucketEncryptionRequest(arg0 *github_com_aws_aws_sdk_go_s
 }
 
 // PutBucketEncryptionRequestCalled returns true if PutBucketEncryptionRequest was called at least once.
-func (m *MockS3API) PutBucketEncryptionRequestCalled() bool {
+func (m *S3API) PutBucketEncryptionRequestCalled() bool {
 	m.lockPutBucketEncryptionRequest.Lock()
 	defer m.lockPutBucketEncryptionRequest.Unlock()
 
@@ -10025,7 +10025,7 @@ func (m *MockS3API) PutBucketEncryptionRequestCalled() bool {
 }
 
 // PutBucketEncryptionRequestCalls returns the calls made to PutBucketEncryptionRequest.
-func (m *MockS3API) PutBucketEncryptionRequestCalls() []struct {
+func (m *S3API) PutBucketEncryptionRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketEncryptionInput
 } {
 	m.lockPutBucketEncryptionRequest.Lock()
@@ -10035,12 +10035,12 @@ func (m *MockS3API) PutBucketEncryptionRequestCalls() []struct {
 }
 
 // PutBucketInventoryConfiguration mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketInventoryConfiguration(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketInventoryConfigurationInput) (*github_com_aws_aws_sdk_go_service_s3.PutBucketInventoryConfigurationOutput, error) {
+func (m *S3API) PutBucketInventoryConfiguration(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketInventoryConfigurationInput) (*github_com_aws_aws_sdk_go_service_s3.PutBucketInventoryConfigurationOutput, error) {
 	m.lockPutBucketInventoryConfiguration.Lock()
 	defer m.lockPutBucketInventoryConfiguration.Unlock()
 
 	if m.PutBucketInventoryConfigurationFunc == nil {
-		panic("mocker: MockS3API.PutBucketInventoryConfigurationFunc is nil but MockS3API.PutBucketInventoryConfiguration was called.")
+		panic("mocker: S3API.PutBucketInventoryConfigurationFunc is nil but S3API.PutBucketInventoryConfiguration was called.")
 	}
 
 	call := struct {
@@ -10055,7 +10055,7 @@ func (m *MockS3API) PutBucketInventoryConfiguration(arg0 *github_com_aws_aws_sdk
 }
 
 // PutBucketInventoryConfigurationCalled returns true if PutBucketInventoryConfiguration was called at least once.
-func (m *MockS3API) PutBucketInventoryConfigurationCalled() bool {
+func (m *S3API) PutBucketInventoryConfigurationCalled() bool {
 	m.lockPutBucketInventoryConfiguration.Lock()
 	defer m.lockPutBucketInventoryConfiguration.Unlock()
 
@@ -10063,7 +10063,7 @@ func (m *MockS3API) PutBucketInventoryConfigurationCalled() bool {
 }
 
 // PutBucketInventoryConfigurationCalls returns the calls made to PutBucketInventoryConfiguration.
-func (m *MockS3API) PutBucketInventoryConfigurationCalls() []struct {
+func (m *S3API) PutBucketInventoryConfigurationCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketInventoryConfigurationInput
 } {
 	m.lockPutBucketInventoryConfiguration.Lock()
@@ -10073,12 +10073,12 @@ func (m *MockS3API) PutBucketInventoryConfigurationCalls() []struct {
 }
 
 // PutBucketInventoryConfigurationWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketInventoryConfigurationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketInventoryConfigurationInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutBucketInventoryConfigurationOutput, error) {
+func (m *S3API) PutBucketInventoryConfigurationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketInventoryConfigurationInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutBucketInventoryConfigurationOutput, error) {
 	m.lockPutBucketInventoryConfigurationWithContext.Lock()
 	defer m.lockPutBucketInventoryConfigurationWithContext.Unlock()
 
 	if m.PutBucketInventoryConfigurationWithContextFunc == nil {
-		panic("mocker: MockS3API.PutBucketInventoryConfigurationWithContextFunc is nil but MockS3API.PutBucketInventoryConfigurationWithContext was called.")
+		panic("mocker: S3API.PutBucketInventoryConfigurationWithContextFunc is nil but S3API.PutBucketInventoryConfigurationWithContext was called.")
 	}
 
 	call := struct {
@@ -10097,7 +10097,7 @@ func (m *MockS3API) PutBucketInventoryConfigurationWithContext(arg0 github_com_a
 }
 
 // PutBucketInventoryConfigurationWithContextCalled returns true if PutBucketInventoryConfigurationWithContext was called at least once.
-func (m *MockS3API) PutBucketInventoryConfigurationWithContextCalled() bool {
+func (m *S3API) PutBucketInventoryConfigurationWithContextCalled() bool {
 	m.lockPutBucketInventoryConfigurationWithContext.Lock()
 	defer m.lockPutBucketInventoryConfigurationWithContext.Unlock()
 
@@ -10105,7 +10105,7 @@ func (m *MockS3API) PutBucketInventoryConfigurationWithContextCalled() bool {
 }
 
 // PutBucketInventoryConfigurationWithContextCalls returns the calls made to PutBucketInventoryConfigurationWithContext.
-func (m *MockS3API) PutBucketInventoryConfigurationWithContextCalls() []struct {
+func (m *S3API) PutBucketInventoryConfigurationWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketInventoryConfigurationInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -10117,12 +10117,12 @@ func (m *MockS3API) PutBucketInventoryConfigurationWithContextCalls() []struct {
 }
 
 // PutBucketInventoryConfigurationRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketInventoryConfigurationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketInventoryConfigurationInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutBucketInventoryConfigurationOutput) {
+func (m *S3API) PutBucketInventoryConfigurationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketInventoryConfigurationInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutBucketInventoryConfigurationOutput) {
 	m.lockPutBucketInventoryConfigurationRequest.Lock()
 	defer m.lockPutBucketInventoryConfigurationRequest.Unlock()
 
 	if m.PutBucketInventoryConfigurationRequestFunc == nil {
-		panic("mocker: MockS3API.PutBucketInventoryConfigurationRequestFunc is nil but MockS3API.PutBucketInventoryConfigurationRequest was called.")
+		panic("mocker: S3API.PutBucketInventoryConfigurationRequestFunc is nil but S3API.PutBucketInventoryConfigurationRequest was called.")
 	}
 
 	call := struct {
@@ -10137,7 +10137,7 @@ func (m *MockS3API) PutBucketInventoryConfigurationRequest(arg0 *github_com_aws_
 }
 
 // PutBucketInventoryConfigurationRequestCalled returns true if PutBucketInventoryConfigurationRequest was called at least once.
-func (m *MockS3API) PutBucketInventoryConfigurationRequestCalled() bool {
+func (m *S3API) PutBucketInventoryConfigurationRequestCalled() bool {
 	m.lockPutBucketInventoryConfigurationRequest.Lock()
 	defer m.lockPutBucketInventoryConfigurationRequest.Unlock()
 
@@ -10145,7 +10145,7 @@ func (m *MockS3API) PutBucketInventoryConfigurationRequestCalled() bool {
 }
 
 // PutBucketInventoryConfigurationRequestCalls returns the calls made to PutBucketInventoryConfigurationRequest.
-func (m *MockS3API) PutBucketInventoryConfigurationRequestCalls() []struct {
+func (m *S3API) PutBucketInventoryConfigurationRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketInventoryConfigurationInput
 } {
 	m.lockPutBucketInventoryConfigurationRequest.Lock()
@@ -10155,12 +10155,12 @@ func (m *MockS3API) PutBucketInventoryConfigurationRequestCalls() []struct {
 }
 
 // PutBucketLifecycle mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketLifecycle(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketLifecycleInput) (*github_com_aws_aws_sdk_go_service_s3.PutBucketLifecycleOutput, error) {
+func (m *S3API) PutBucketLifecycle(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketLifecycleInput) (*github_com_aws_aws_sdk_go_service_s3.PutBucketLifecycleOutput, error) {
 	m.lockPutBucketLifecycle.Lock()
 	defer m.lockPutBucketLifecycle.Unlock()
 
 	if m.PutBucketLifecycleFunc == nil {
-		panic("mocker: MockS3API.PutBucketLifecycleFunc is nil but MockS3API.PutBucketLifecycle was called.")
+		panic("mocker: S3API.PutBucketLifecycleFunc is nil but S3API.PutBucketLifecycle was called.")
 	}
 
 	call := struct {
@@ -10175,7 +10175,7 @@ func (m *MockS3API) PutBucketLifecycle(arg0 *github_com_aws_aws_sdk_go_service_s
 }
 
 // PutBucketLifecycleCalled returns true if PutBucketLifecycle was called at least once.
-func (m *MockS3API) PutBucketLifecycleCalled() bool {
+func (m *S3API) PutBucketLifecycleCalled() bool {
 	m.lockPutBucketLifecycle.Lock()
 	defer m.lockPutBucketLifecycle.Unlock()
 
@@ -10183,7 +10183,7 @@ func (m *MockS3API) PutBucketLifecycleCalled() bool {
 }
 
 // PutBucketLifecycleCalls returns the calls made to PutBucketLifecycle.
-func (m *MockS3API) PutBucketLifecycleCalls() []struct {
+func (m *S3API) PutBucketLifecycleCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketLifecycleInput
 } {
 	m.lockPutBucketLifecycle.Lock()
@@ -10193,12 +10193,12 @@ func (m *MockS3API) PutBucketLifecycleCalls() []struct {
 }
 
 // PutBucketLifecycleWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketLifecycleWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketLifecycleInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutBucketLifecycleOutput, error) {
+func (m *S3API) PutBucketLifecycleWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketLifecycleInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutBucketLifecycleOutput, error) {
 	m.lockPutBucketLifecycleWithContext.Lock()
 	defer m.lockPutBucketLifecycleWithContext.Unlock()
 
 	if m.PutBucketLifecycleWithContextFunc == nil {
-		panic("mocker: MockS3API.PutBucketLifecycleWithContextFunc is nil but MockS3API.PutBucketLifecycleWithContext was called.")
+		panic("mocker: S3API.PutBucketLifecycleWithContextFunc is nil but S3API.PutBucketLifecycleWithContext was called.")
 	}
 
 	call := struct {
@@ -10217,7 +10217,7 @@ func (m *MockS3API) PutBucketLifecycleWithContext(arg0 github_com_aws_aws_sdk_go
 }
 
 // PutBucketLifecycleWithContextCalled returns true if PutBucketLifecycleWithContext was called at least once.
-func (m *MockS3API) PutBucketLifecycleWithContextCalled() bool {
+func (m *S3API) PutBucketLifecycleWithContextCalled() bool {
 	m.lockPutBucketLifecycleWithContext.Lock()
 	defer m.lockPutBucketLifecycleWithContext.Unlock()
 
@@ -10225,7 +10225,7 @@ func (m *MockS3API) PutBucketLifecycleWithContextCalled() bool {
 }
 
 // PutBucketLifecycleWithContextCalls returns the calls made to PutBucketLifecycleWithContext.
-func (m *MockS3API) PutBucketLifecycleWithContextCalls() []struct {
+func (m *S3API) PutBucketLifecycleWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketLifecycleInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -10237,12 +10237,12 @@ func (m *MockS3API) PutBucketLifecycleWithContextCalls() []struct {
 }
 
 // PutBucketLifecycleRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketLifecycleRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketLifecycleInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutBucketLifecycleOutput) {
+func (m *S3API) PutBucketLifecycleRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketLifecycleInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutBucketLifecycleOutput) {
 	m.lockPutBucketLifecycleRequest.Lock()
 	defer m.lockPutBucketLifecycleRequest.Unlock()
 
 	if m.PutBucketLifecycleRequestFunc == nil {
-		panic("mocker: MockS3API.PutBucketLifecycleRequestFunc is nil but MockS3API.PutBucketLifecycleRequest was called.")
+		panic("mocker: S3API.PutBucketLifecycleRequestFunc is nil but S3API.PutBucketLifecycleRequest was called.")
 	}
 
 	call := struct {
@@ -10257,7 +10257,7 @@ func (m *MockS3API) PutBucketLifecycleRequest(arg0 *github_com_aws_aws_sdk_go_se
 }
 
 // PutBucketLifecycleRequestCalled returns true if PutBucketLifecycleRequest was called at least once.
-func (m *MockS3API) PutBucketLifecycleRequestCalled() bool {
+func (m *S3API) PutBucketLifecycleRequestCalled() bool {
 	m.lockPutBucketLifecycleRequest.Lock()
 	defer m.lockPutBucketLifecycleRequest.Unlock()
 
@@ -10265,7 +10265,7 @@ func (m *MockS3API) PutBucketLifecycleRequestCalled() bool {
 }
 
 // PutBucketLifecycleRequestCalls returns the calls made to PutBucketLifecycleRequest.
-func (m *MockS3API) PutBucketLifecycleRequestCalls() []struct {
+func (m *S3API) PutBucketLifecycleRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketLifecycleInput
 } {
 	m.lockPutBucketLifecycleRequest.Lock()
@@ -10275,12 +10275,12 @@ func (m *MockS3API) PutBucketLifecycleRequestCalls() []struct {
 }
 
 // PutBucketLifecycleConfiguration mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketLifecycleConfiguration(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketLifecycleConfigurationInput) (*github_com_aws_aws_sdk_go_service_s3.PutBucketLifecycleConfigurationOutput, error) {
+func (m *S3API) PutBucketLifecycleConfiguration(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketLifecycleConfigurationInput) (*github_com_aws_aws_sdk_go_service_s3.PutBucketLifecycleConfigurationOutput, error) {
 	m.lockPutBucketLifecycleConfiguration.Lock()
 	defer m.lockPutBucketLifecycleConfiguration.Unlock()
 
 	if m.PutBucketLifecycleConfigurationFunc == nil {
-		panic("mocker: MockS3API.PutBucketLifecycleConfigurationFunc is nil but MockS3API.PutBucketLifecycleConfiguration was called.")
+		panic("mocker: S3API.PutBucketLifecycleConfigurationFunc is nil but S3API.PutBucketLifecycleConfiguration was called.")
 	}
 
 	call := struct {
@@ -10295,7 +10295,7 @@ func (m *MockS3API) PutBucketLifecycleConfiguration(arg0 *github_com_aws_aws_sdk
 }
 
 // PutBucketLifecycleConfigurationCalled returns true if PutBucketLifecycleConfiguration was called at least once.
-func (m *MockS3API) PutBucketLifecycleConfigurationCalled() bool {
+func (m *S3API) PutBucketLifecycleConfigurationCalled() bool {
 	m.lockPutBucketLifecycleConfiguration.Lock()
 	defer m.lockPutBucketLifecycleConfiguration.Unlock()
 
@@ -10303,7 +10303,7 @@ func (m *MockS3API) PutBucketLifecycleConfigurationCalled() bool {
 }
 
 // PutBucketLifecycleConfigurationCalls returns the calls made to PutBucketLifecycleConfiguration.
-func (m *MockS3API) PutBucketLifecycleConfigurationCalls() []struct {
+func (m *S3API) PutBucketLifecycleConfigurationCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketLifecycleConfigurationInput
 } {
 	m.lockPutBucketLifecycleConfiguration.Lock()
@@ -10313,12 +10313,12 @@ func (m *MockS3API) PutBucketLifecycleConfigurationCalls() []struct {
 }
 
 // PutBucketLifecycleConfigurationWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketLifecycleConfigurationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketLifecycleConfigurationInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutBucketLifecycleConfigurationOutput, error) {
+func (m *S3API) PutBucketLifecycleConfigurationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketLifecycleConfigurationInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutBucketLifecycleConfigurationOutput, error) {
 	m.lockPutBucketLifecycleConfigurationWithContext.Lock()
 	defer m.lockPutBucketLifecycleConfigurationWithContext.Unlock()
 
 	if m.PutBucketLifecycleConfigurationWithContextFunc == nil {
-		panic("mocker: MockS3API.PutBucketLifecycleConfigurationWithContextFunc is nil but MockS3API.PutBucketLifecycleConfigurationWithContext was called.")
+		panic("mocker: S3API.PutBucketLifecycleConfigurationWithContextFunc is nil but S3API.PutBucketLifecycleConfigurationWithContext was called.")
 	}
 
 	call := struct {
@@ -10337,7 +10337,7 @@ func (m *MockS3API) PutBucketLifecycleConfigurationWithContext(arg0 github_com_a
 }
 
 // PutBucketLifecycleConfigurationWithContextCalled returns true if PutBucketLifecycleConfigurationWithContext was called at least once.
-func (m *MockS3API) PutBucketLifecycleConfigurationWithContextCalled() bool {
+func (m *S3API) PutBucketLifecycleConfigurationWithContextCalled() bool {
 	m.lockPutBucketLifecycleConfigurationWithContext.Lock()
 	defer m.lockPutBucketLifecycleConfigurationWithContext.Unlock()
 
@@ -10345,7 +10345,7 @@ func (m *MockS3API) PutBucketLifecycleConfigurationWithContextCalled() bool {
 }
 
 // PutBucketLifecycleConfigurationWithContextCalls returns the calls made to PutBucketLifecycleConfigurationWithContext.
-func (m *MockS3API) PutBucketLifecycleConfigurationWithContextCalls() []struct {
+func (m *S3API) PutBucketLifecycleConfigurationWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketLifecycleConfigurationInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -10357,12 +10357,12 @@ func (m *MockS3API) PutBucketLifecycleConfigurationWithContextCalls() []struct {
 }
 
 // PutBucketLifecycleConfigurationRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketLifecycleConfigurationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketLifecycleConfigurationInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutBucketLifecycleConfigurationOutput) {
+func (m *S3API) PutBucketLifecycleConfigurationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketLifecycleConfigurationInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutBucketLifecycleConfigurationOutput) {
 	m.lockPutBucketLifecycleConfigurationRequest.Lock()
 	defer m.lockPutBucketLifecycleConfigurationRequest.Unlock()
 
 	if m.PutBucketLifecycleConfigurationRequestFunc == nil {
-		panic("mocker: MockS3API.PutBucketLifecycleConfigurationRequestFunc is nil but MockS3API.PutBucketLifecycleConfigurationRequest was called.")
+		panic("mocker: S3API.PutBucketLifecycleConfigurationRequestFunc is nil but S3API.PutBucketLifecycleConfigurationRequest was called.")
 	}
 
 	call := struct {
@@ -10377,7 +10377,7 @@ func (m *MockS3API) PutBucketLifecycleConfigurationRequest(arg0 *github_com_aws_
 }
 
 // PutBucketLifecycleConfigurationRequestCalled returns true if PutBucketLifecycleConfigurationRequest was called at least once.
-func (m *MockS3API) PutBucketLifecycleConfigurationRequestCalled() bool {
+func (m *S3API) PutBucketLifecycleConfigurationRequestCalled() bool {
 	m.lockPutBucketLifecycleConfigurationRequest.Lock()
 	defer m.lockPutBucketLifecycleConfigurationRequest.Unlock()
 
@@ -10385,7 +10385,7 @@ func (m *MockS3API) PutBucketLifecycleConfigurationRequestCalled() bool {
 }
 
 // PutBucketLifecycleConfigurationRequestCalls returns the calls made to PutBucketLifecycleConfigurationRequest.
-func (m *MockS3API) PutBucketLifecycleConfigurationRequestCalls() []struct {
+func (m *S3API) PutBucketLifecycleConfigurationRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketLifecycleConfigurationInput
 } {
 	m.lockPutBucketLifecycleConfigurationRequest.Lock()
@@ -10395,12 +10395,12 @@ func (m *MockS3API) PutBucketLifecycleConfigurationRequestCalls() []struct {
 }
 
 // PutBucketLogging mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketLogging(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketLoggingInput) (*github_com_aws_aws_sdk_go_service_s3.PutBucketLoggingOutput, error) {
+func (m *S3API) PutBucketLogging(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketLoggingInput) (*github_com_aws_aws_sdk_go_service_s3.PutBucketLoggingOutput, error) {
 	m.lockPutBucketLogging.Lock()
 	defer m.lockPutBucketLogging.Unlock()
 
 	if m.PutBucketLoggingFunc == nil {
-		panic("mocker: MockS3API.PutBucketLoggingFunc is nil but MockS3API.PutBucketLogging was called.")
+		panic("mocker: S3API.PutBucketLoggingFunc is nil but S3API.PutBucketLogging was called.")
 	}
 
 	call := struct {
@@ -10415,7 +10415,7 @@ func (m *MockS3API) PutBucketLogging(arg0 *github_com_aws_aws_sdk_go_service_s3.
 }
 
 // PutBucketLoggingCalled returns true if PutBucketLogging was called at least once.
-func (m *MockS3API) PutBucketLoggingCalled() bool {
+func (m *S3API) PutBucketLoggingCalled() bool {
 	m.lockPutBucketLogging.Lock()
 	defer m.lockPutBucketLogging.Unlock()
 
@@ -10423,7 +10423,7 @@ func (m *MockS3API) PutBucketLoggingCalled() bool {
 }
 
 // PutBucketLoggingCalls returns the calls made to PutBucketLogging.
-func (m *MockS3API) PutBucketLoggingCalls() []struct {
+func (m *S3API) PutBucketLoggingCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketLoggingInput
 } {
 	m.lockPutBucketLogging.Lock()
@@ -10433,12 +10433,12 @@ func (m *MockS3API) PutBucketLoggingCalls() []struct {
 }
 
 // PutBucketLoggingWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketLoggingWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketLoggingInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutBucketLoggingOutput, error) {
+func (m *S3API) PutBucketLoggingWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketLoggingInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutBucketLoggingOutput, error) {
 	m.lockPutBucketLoggingWithContext.Lock()
 	defer m.lockPutBucketLoggingWithContext.Unlock()
 
 	if m.PutBucketLoggingWithContextFunc == nil {
-		panic("mocker: MockS3API.PutBucketLoggingWithContextFunc is nil but MockS3API.PutBucketLoggingWithContext was called.")
+		panic("mocker: S3API.PutBucketLoggingWithContextFunc is nil but S3API.PutBucketLoggingWithContext was called.")
 	}
 
 	call := struct {
@@ -10457,7 +10457,7 @@ func (m *MockS3API) PutBucketLoggingWithContext(arg0 github_com_aws_aws_sdk_go_a
 }
 
 // PutBucketLoggingWithContextCalled returns true if PutBucketLoggingWithContext was called at least once.
-func (m *MockS3API) PutBucketLoggingWithContextCalled() bool {
+func (m *S3API) PutBucketLoggingWithContextCalled() bool {
 	m.lockPutBucketLoggingWithContext.Lock()
 	defer m.lockPutBucketLoggingWithContext.Unlock()
 
@@ -10465,7 +10465,7 @@ func (m *MockS3API) PutBucketLoggingWithContextCalled() bool {
 }
 
 // PutBucketLoggingWithContextCalls returns the calls made to PutBucketLoggingWithContext.
-func (m *MockS3API) PutBucketLoggingWithContextCalls() []struct {
+func (m *S3API) PutBucketLoggingWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketLoggingInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -10477,12 +10477,12 @@ func (m *MockS3API) PutBucketLoggingWithContextCalls() []struct {
 }
 
 // PutBucketLoggingRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketLoggingRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketLoggingInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutBucketLoggingOutput) {
+func (m *S3API) PutBucketLoggingRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketLoggingInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutBucketLoggingOutput) {
 	m.lockPutBucketLoggingRequest.Lock()
 	defer m.lockPutBucketLoggingRequest.Unlock()
 
 	if m.PutBucketLoggingRequestFunc == nil {
-		panic("mocker: MockS3API.PutBucketLoggingRequestFunc is nil but MockS3API.PutBucketLoggingRequest was called.")
+		panic("mocker: S3API.PutBucketLoggingRequestFunc is nil but S3API.PutBucketLoggingRequest was called.")
 	}
 
 	call := struct {
@@ -10497,7 +10497,7 @@ func (m *MockS3API) PutBucketLoggingRequest(arg0 *github_com_aws_aws_sdk_go_serv
 }
 
 // PutBucketLoggingRequestCalled returns true if PutBucketLoggingRequest was called at least once.
-func (m *MockS3API) PutBucketLoggingRequestCalled() bool {
+func (m *S3API) PutBucketLoggingRequestCalled() bool {
 	m.lockPutBucketLoggingRequest.Lock()
 	defer m.lockPutBucketLoggingRequest.Unlock()
 
@@ -10505,7 +10505,7 @@ func (m *MockS3API) PutBucketLoggingRequestCalled() bool {
 }
 
 // PutBucketLoggingRequestCalls returns the calls made to PutBucketLoggingRequest.
-func (m *MockS3API) PutBucketLoggingRequestCalls() []struct {
+func (m *S3API) PutBucketLoggingRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketLoggingInput
 } {
 	m.lockPutBucketLoggingRequest.Lock()
@@ -10515,12 +10515,12 @@ func (m *MockS3API) PutBucketLoggingRequestCalls() []struct {
 }
 
 // PutBucketMetricsConfiguration mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketMetricsConfiguration(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketMetricsConfigurationInput) (*github_com_aws_aws_sdk_go_service_s3.PutBucketMetricsConfigurationOutput, error) {
+func (m *S3API) PutBucketMetricsConfiguration(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketMetricsConfigurationInput) (*github_com_aws_aws_sdk_go_service_s3.PutBucketMetricsConfigurationOutput, error) {
 	m.lockPutBucketMetricsConfiguration.Lock()
 	defer m.lockPutBucketMetricsConfiguration.Unlock()
 
 	if m.PutBucketMetricsConfigurationFunc == nil {
-		panic("mocker: MockS3API.PutBucketMetricsConfigurationFunc is nil but MockS3API.PutBucketMetricsConfiguration was called.")
+		panic("mocker: S3API.PutBucketMetricsConfigurationFunc is nil but S3API.PutBucketMetricsConfiguration was called.")
 	}
 
 	call := struct {
@@ -10535,7 +10535,7 @@ func (m *MockS3API) PutBucketMetricsConfiguration(arg0 *github_com_aws_aws_sdk_g
 }
 
 // PutBucketMetricsConfigurationCalled returns true if PutBucketMetricsConfiguration was called at least once.
-func (m *MockS3API) PutBucketMetricsConfigurationCalled() bool {
+func (m *S3API) PutBucketMetricsConfigurationCalled() bool {
 	m.lockPutBucketMetricsConfiguration.Lock()
 	defer m.lockPutBucketMetricsConfiguration.Unlock()
 
@@ -10543,7 +10543,7 @@ func (m *MockS3API) PutBucketMetricsConfigurationCalled() bool {
 }
 
 // PutBucketMetricsConfigurationCalls returns the calls made to PutBucketMetricsConfiguration.
-func (m *MockS3API) PutBucketMetricsConfigurationCalls() []struct {
+func (m *S3API) PutBucketMetricsConfigurationCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketMetricsConfigurationInput
 } {
 	m.lockPutBucketMetricsConfiguration.Lock()
@@ -10553,12 +10553,12 @@ func (m *MockS3API) PutBucketMetricsConfigurationCalls() []struct {
 }
 
 // PutBucketMetricsConfigurationWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketMetricsConfigurationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketMetricsConfigurationInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutBucketMetricsConfigurationOutput, error) {
+func (m *S3API) PutBucketMetricsConfigurationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketMetricsConfigurationInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutBucketMetricsConfigurationOutput, error) {
 	m.lockPutBucketMetricsConfigurationWithContext.Lock()
 	defer m.lockPutBucketMetricsConfigurationWithContext.Unlock()
 
 	if m.PutBucketMetricsConfigurationWithContextFunc == nil {
-		panic("mocker: MockS3API.PutBucketMetricsConfigurationWithContextFunc is nil but MockS3API.PutBucketMetricsConfigurationWithContext was called.")
+		panic("mocker: S3API.PutBucketMetricsConfigurationWithContextFunc is nil but S3API.PutBucketMetricsConfigurationWithContext was called.")
 	}
 
 	call := struct {
@@ -10577,7 +10577,7 @@ func (m *MockS3API) PutBucketMetricsConfigurationWithContext(arg0 github_com_aws
 }
 
 // PutBucketMetricsConfigurationWithContextCalled returns true if PutBucketMetricsConfigurationWithContext was called at least once.
-func (m *MockS3API) PutBucketMetricsConfigurationWithContextCalled() bool {
+func (m *S3API) PutBucketMetricsConfigurationWithContextCalled() bool {
 	m.lockPutBucketMetricsConfigurationWithContext.Lock()
 	defer m.lockPutBucketMetricsConfigurationWithContext.Unlock()
 
@@ -10585,7 +10585,7 @@ func (m *MockS3API) PutBucketMetricsConfigurationWithContextCalled() bool {
 }
 
 // PutBucketMetricsConfigurationWithContextCalls returns the calls made to PutBucketMetricsConfigurationWithContext.
-func (m *MockS3API) PutBucketMetricsConfigurationWithContextCalls() []struct {
+func (m *S3API) PutBucketMetricsConfigurationWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketMetricsConfigurationInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -10597,12 +10597,12 @@ func (m *MockS3API) PutBucketMetricsConfigurationWithContextCalls() []struct {
 }
 
 // PutBucketMetricsConfigurationRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketMetricsConfigurationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketMetricsConfigurationInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutBucketMetricsConfigurationOutput) {
+func (m *S3API) PutBucketMetricsConfigurationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketMetricsConfigurationInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutBucketMetricsConfigurationOutput) {
 	m.lockPutBucketMetricsConfigurationRequest.Lock()
 	defer m.lockPutBucketMetricsConfigurationRequest.Unlock()
 
 	if m.PutBucketMetricsConfigurationRequestFunc == nil {
-		panic("mocker: MockS3API.PutBucketMetricsConfigurationRequestFunc is nil but MockS3API.PutBucketMetricsConfigurationRequest was called.")
+		panic("mocker: S3API.PutBucketMetricsConfigurationRequestFunc is nil but S3API.PutBucketMetricsConfigurationRequest was called.")
 	}
 
 	call := struct {
@@ -10617,7 +10617,7 @@ func (m *MockS3API) PutBucketMetricsConfigurationRequest(arg0 *github_com_aws_aw
 }
 
 // PutBucketMetricsConfigurationRequestCalled returns true if PutBucketMetricsConfigurationRequest was called at least once.
-func (m *MockS3API) PutBucketMetricsConfigurationRequestCalled() bool {
+func (m *S3API) PutBucketMetricsConfigurationRequestCalled() bool {
 	m.lockPutBucketMetricsConfigurationRequest.Lock()
 	defer m.lockPutBucketMetricsConfigurationRequest.Unlock()
 
@@ -10625,7 +10625,7 @@ func (m *MockS3API) PutBucketMetricsConfigurationRequestCalled() bool {
 }
 
 // PutBucketMetricsConfigurationRequestCalls returns the calls made to PutBucketMetricsConfigurationRequest.
-func (m *MockS3API) PutBucketMetricsConfigurationRequestCalls() []struct {
+func (m *S3API) PutBucketMetricsConfigurationRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketMetricsConfigurationInput
 } {
 	m.lockPutBucketMetricsConfigurationRequest.Lock()
@@ -10635,12 +10635,12 @@ func (m *MockS3API) PutBucketMetricsConfigurationRequestCalls() []struct {
 }
 
 // PutBucketNotification mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketNotification(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketNotificationInput) (*github_com_aws_aws_sdk_go_service_s3.PutBucketNotificationOutput, error) {
+func (m *S3API) PutBucketNotification(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketNotificationInput) (*github_com_aws_aws_sdk_go_service_s3.PutBucketNotificationOutput, error) {
 	m.lockPutBucketNotification.Lock()
 	defer m.lockPutBucketNotification.Unlock()
 
 	if m.PutBucketNotificationFunc == nil {
-		panic("mocker: MockS3API.PutBucketNotificationFunc is nil but MockS3API.PutBucketNotification was called.")
+		panic("mocker: S3API.PutBucketNotificationFunc is nil but S3API.PutBucketNotification was called.")
 	}
 
 	call := struct {
@@ -10655,7 +10655,7 @@ func (m *MockS3API) PutBucketNotification(arg0 *github_com_aws_aws_sdk_go_servic
 }
 
 // PutBucketNotificationCalled returns true if PutBucketNotification was called at least once.
-func (m *MockS3API) PutBucketNotificationCalled() bool {
+func (m *S3API) PutBucketNotificationCalled() bool {
 	m.lockPutBucketNotification.Lock()
 	defer m.lockPutBucketNotification.Unlock()
 
@@ -10663,7 +10663,7 @@ func (m *MockS3API) PutBucketNotificationCalled() bool {
 }
 
 // PutBucketNotificationCalls returns the calls made to PutBucketNotification.
-func (m *MockS3API) PutBucketNotificationCalls() []struct {
+func (m *S3API) PutBucketNotificationCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketNotificationInput
 } {
 	m.lockPutBucketNotification.Lock()
@@ -10673,12 +10673,12 @@ func (m *MockS3API) PutBucketNotificationCalls() []struct {
 }
 
 // PutBucketNotificationWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketNotificationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketNotificationInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutBucketNotificationOutput, error) {
+func (m *S3API) PutBucketNotificationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketNotificationInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutBucketNotificationOutput, error) {
 	m.lockPutBucketNotificationWithContext.Lock()
 	defer m.lockPutBucketNotificationWithContext.Unlock()
 
 	if m.PutBucketNotificationWithContextFunc == nil {
-		panic("mocker: MockS3API.PutBucketNotificationWithContextFunc is nil but MockS3API.PutBucketNotificationWithContext was called.")
+		panic("mocker: S3API.PutBucketNotificationWithContextFunc is nil but S3API.PutBucketNotificationWithContext was called.")
 	}
 
 	call := struct {
@@ -10697,7 +10697,7 @@ func (m *MockS3API) PutBucketNotificationWithContext(arg0 github_com_aws_aws_sdk
 }
 
 // PutBucketNotificationWithContextCalled returns true if PutBucketNotificationWithContext was called at least once.
-func (m *MockS3API) PutBucketNotificationWithContextCalled() bool {
+func (m *S3API) PutBucketNotificationWithContextCalled() bool {
 	m.lockPutBucketNotificationWithContext.Lock()
 	defer m.lockPutBucketNotificationWithContext.Unlock()
 
@@ -10705,7 +10705,7 @@ func (m *MockS3API) PutBucketNotificationWithContextCalled() bool {
 }
 
 // PutBucketNotificationWithContextCalls returns the calls made to PutBucketNotificationWithContext.
-func (m *MockS3API) PutBucketNotificationWithContextCalls() []struct {
+func (m *S3API) PutBucketNotificationWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketNotificationInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -10717,12 +10717,12 @@ func (m *MockS3API) PutBucketNotificationWithContextCalls() []struct {
 }
 
 // PutBucketNotificationRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketNotificationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketNotificationInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutBucketNotificationOutput) {
+func (m *S3API) PutBucketNotificationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketNotificationInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutBucketNotificationOutput) {
 	m.lockPutBucketNotificationRequest.Lock()
 	defer m.lockPutBucketNotificationRequest.Unlock()
 
 	if m.PutBucketNotificationRequestFunc == nil {
-		panic("mocker: MockS3API.PutBucketNotificationRequestFunc is nil but MockS3API.PutBucketNotificationRequest was called.")
+		panic("mocker: S3API.PutBucketNotificationRequestFunc is nil but S3API.PutBucketNotificationRequest was called.")
 	}
 
 	call := struct {
@@ -10737,7 +10737,7 @@ func (m *MockS3API) PutBucketNotificationRequest(arg0 *github_com_aws_aws_sdk_go
 }
 
 // PutBucketNotificationRequestCalled returns true if PutBucketNotificationRequest was called at least once.
-func (m *MockS3API) PutBucketNotificationRequestCalled() bool {
+func (m *S3API) PutBucketNotificationRequestCalled() bool {
 	m.lockPutBucketNotificationRequest.Lock()
 	defer m.lockPutBucketNotificationRequest.Unlock()
 
@@ -10745,7 +10745,7 @@ func (m *MockS3API) PutBucketNotificationRequestCalled() bool {
 }
 
 // PutBucketNotificationRequestCalls returns the calls made to PutBucketNotificationRequest.
-func (m *MockS3API) PutBucketNotificationRequestCalls() []struct {
+func (m *S3API) PutBucketNotificationRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketNotificationInput
 } {
 	m.lockPutBucketNotificationRequest.Lock()
@@ -10755,12 +10755,12 @@ func (m *MockS3API) PutBucketNotificationRequestCalls() []struct {
 }
 
 // PutBucketNotificationConfiguration mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketNotificationConfiguration(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketNotificationConfigurationInput) (*github_com_aws_aws_sdk_go_service_s3.PutBucketNotificationConfigurationOutput, error) {
+func (m *S3API) PutBucketNotificationConfiguration(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketNotificationConfigurationInput) (*github_com_aws_aws_sdk_go_service_s3.PutBucketNotificationConfigurationOutput, error) {
 	m.lockPutBucketNotificationConfiguration.Lock()
 	defer m.lockPutBucketNotificationConfiguration.Unlock()
 
 	if m.PutBucketNotificationConfigurationFunc == nil {
-		panic("mocker: MockS3API.PutBucketNotificationConfigurationFunc is nil but MockS3API.PutBucketNotificationConfiguration was called.")
+		panic("mocker: S3API.PutBucketNotificationConfigurationFunc is nil but S3API.PutBucketNotificationConfiguration was called.")
 	}
 
 	call := struct {
@@ -10775,7 +10775,7 @@ func (m *MockS3API) PutBucketNotificationConfiguration(arg0 *github_com_aws_aws_
 }
 
 // PutBucketNotificationConfigurationCalled returns true if PutBucketNotificationConfiguration was called at least once.
-func (m *MockS3API) PutBucketNotificationConfigurationCalled() bool {
+func (m *S3API) PutBucketNotificationConfigurationCalled() bool {
 	m.lockPutBucketNotificationConfiguration.Lock()
 	defer m.lockPutBucketNotificationConfiguration.Unlock()
 
@@ -10783,7 +10783,7 @@ func (m *MockS3API) PutBucketNotificationConfigurationCalled() bool {
 }
 
 // PutBucketNotificationConfigurationCalls returns the calls made to PutBucketNotificationConfiguration.
-func (m *MockS3API) PutBucketNotificationConfigurationCalls() []struct {
+func (m *S3API) PutBucketNotificationConfigurationCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketNotificationConfigurationInput
 } {
 	m.lockPutBucketNotificationConfiguration.Lock()
@@ -10793,12 +10793,12 @@ func (m *MockS3API) PutBucketNotificationConfigurationCalls() []struct {
 }
 
 // PutBucketNotificationConfigurationWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketNotificationConfigurationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketNotificationConfigurationInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutBucketNotificationConfigurationOutput, error) {
+func (m *S3API) PutBucketNotificationConfigurationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketNotificationConfigurationInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutBucketNotificationConfigurationOutput, error) {
 	m.lockPutBucketNotificationConfigurationWithContext.Lock()
 	defer m.lockPutBucketNotificationConfigurationWithContext.Unlock()
 
 	if m.PutBucketNotificationConfigurationWithContextFunc == nil {
-		panic("mocker: MockS3API.PutBucketNotificationConfigurationWithContextFunc is nil but MockS3API.PutBucketNotificationConfigurationWithContext was called.")
+		panic("mocker: S3API.PutBucketNotificationConfigurationWithContextFunc is nil but S3API.PutBucketNotificationConfigurationWithContext was called.")
 	}
 
 	call := struct {
@@ -10817,7 +10817,7 @@ func (m *MockS3API) PutBucketNotificationConfigurationWithContext(arg0 github_co
 }
 
 // PutBucketNotificationConfigurationWithContextCalled returns true if PutBucketNotificationConfigurationWithContext was called at least once.
-func (m *MockS3API) PutBucketNotificationConfigurationWithContextCalled() bool {
+func (m *S3API) PutBucketNotificationConfigurationWithContextCalled() bool {
 	m.lockPutBucketNotificationConfigurationWithContext.Lock()
 	defer m.lockPutBucketNotificationConfigurationWithContext.Unlock()
 
@@ -10825,7 +10825,7 @@ func (m *MockS3API) PutBucketNotificationConfigurationWithContextCalled() bool {
 }
 
 // PutBucketNotificationConfigurationWithContextCalls returns the calls made to PutBucketNotificationConfigurationWithContext.
-func (m *MockS3API) PutBucketNotificationConfigurationWithContextCalls() []struct {
+func (m *S3API) PutBucketNotificationConfigurationWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketNotificationConfigurationInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -10837,12 +10837,12 @@ func (m *MockS3API) PutBucketNotificationConfigurationWithContextCalls() []struc
 }
 
 // PutBucketNotificationConfigurationRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketNotificationConfigurationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketNotificationConfigurationInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutBucketNotificationConfigurationOutput) {
+func (m *S3API) PutBucketNotificationConfigurationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketNotificationConfigurationInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutBucketNotificationConfigurationOutput) {
 	m.lockPutBucketNotificationConfigurationRequest.Lock()
 	defer m.lockPutBucketNotificationConfigurationRequest.Unlock()
 
 	if m.PutBucketNotificationConfigurationRequestFunc == nil {
-		panic("mocker: MockS3API.PutBucketNotificationConfigurationRequestFunc is nil but MockS3API.PutBucketNotificationConfigurationRequest was called.")
+		panic("mocker: S3API.PutBucketNotificationConfigurationRequestFunc is nil but S3API.PutBucketNotificationConfigurationRequest was called.")
 	}
 
 	call := struct {
@@ -10857,7 +10857,7 @@ func (m *MockS3API) PutBucketNotificationConfigurationRequest(arg0 *github_com_a
 }
 
 // PutBucketNotificationConfigurationRequestCalled returns true if PutBucketNotificationConfigurationRequest was called at least once.
-func (m *MockS3API) PutBucketNotificationConfigurationRequestCalled() bool {
+func (m *S3API) PutBucketNotificationConfigurationRequestCalled() bool {
 	m.lockPutBucketNotificationConfigurationRequest.Lock()
 	defer m.lockPutBucketNotificationConfigurationRequest.Unlock()
 
@@ -10865,7 +10865,7 @@ func (m *MockS3API) PutBucketNotificationConfigurationRequestCalled() bool {
 }
 
 // PutBucketNotificationConfigurationRequestCalls returns the calls made to PutBucketNotificationConfigurationRequest.
-func (m *MockS3API) PutBucketNotificationConfigurationRequestCalls() []struct {
+func (m *S3API) PutBucketNotificationConfigurationRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketNotificationConfigurationInput
 } {
 	m.lockPutBucketNotificationConfigurationRequest.Lock()
@@ -10875,12 +10875,12 @@ func (m *MockS3API) PutBucketNotificationConfigurationRequestCalls() []struct {
 }
 
 // PutBucketPolicy mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketPolicy(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketPolicyInput) (*github_com_aws_aws_sdk_go_service_s3.PutBucketPolicyOutput, error) {
+func (m *S3API) PutBucketPolicy(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketPolicyInput) (*github_com_aws_aws_sdk_go_service_s3.PutBucketPolicyOutput, error) {
 	m.lockPutBucketPolicy.Lock()
 	defer m.lockPutBucketPolicy.Unlock()
 
 	if m.PutBucketPolicyFunc == nil {
-		panic("mocker: MockS3API.PutBucketPolicyFunc is nil but MockS3API.PutBucketPolicy was called.")
+		panic("mocker: S3API.PutBucketPolicyFunc is nil but S3API.PutBucketPolicy was called.")
 	}
 
 	call := struct {
@@ -10895,7 +10895,7 @@ func (m *MockS3API) PutBucketPolicy(arg0 *github_com_aws_aws_sdk_go_service_s3.P
 }
 
 // PutBucketPolicyCalled returns true if PutBucketPolicy was called at least once.
-func (m *MockS3API) PutBucketPolicyCalled() bool {
+func (m *S3API) PutBucketPolicyCalled() bool {
 	m.lockPutBucketPolicy.Lock()
 	defer m.lockPutBucketPolicy.Unlock()
 
@@ -10903,7 +10903,7 @@ func (m *MockS3API) PutBucketPolicyCalled() bool {
 }
 
 // PutBucketPolicyCalls returns the calls made to PutBucketPolicy.
-func (m *MockS3API) PutBucketPolicyCalls() []struct {
+func (m *S3API) PutBucketPolicyCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketPolicyInput
 } {
 	m.lockPutBucketPolicy.Lock()
@@ -10913,12 +10913,12 @@ func (m *MockS3API) PutBucketPolicyCalls() []struct {
 }
 
 // PutBucketPolicyWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketPolicyWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketPolicyInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutBucketPolicyOutput, error) {
+func (m *S3API) PutBucketPolicyWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketPolicyInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutBucketPolicyOutput, error) {
 	m.lockPutBucketPolicyWithContext.Lock()
 	defer m.lockPutBucketPolicyWithContext.Unlock()
 
 	if m.PutBucketPolicyWithContextFunc == nil {
-		panic("mocker: MockS3API.PutBucketPolicyWithContextFunc is nil but MockS3API.PutBucketPolicyWithContext was called.")
+		panic("mocker: S3API.PutBucketPolicyWithContextFunc is nil but S3API.PutBucketPolicyWithContext was called.")
 	}
 
 	call := struct {
@@ -10937,7 +10937,7 @@ func (m *MockS3API) PutBucketPolicyWithContext(arg0 github_com_aws_aws_sdk_go_aw
 }
 
 // PutBucketPolicyWithContextCalled returns true if PutBucketPolicyWithContext was called at least once.
-func (m *MockS3API) PutBucketPolicyWithContextCalled() bool {
+func (m *S3API) PutBucketPolicyWithContextCalled() bool {
 	m.lockPutBucketPolicyWithContext.Lock()
 	defer m.lockPutBucketPolicyWithContext.Unlock()
 
@@ -10945,7 +10945,7 @@ func (m *MockS3API) PutBucketPolicyWithContextCalled() bool {
 }
 
 // PutBucketPolicyWithContextCalls returns the calls made to PutBucketPolicyWithContext.
-func (m *MockS3API) PutBucketPolicyWithContextCalls() []struct {
+func (m *S3API) PutBucketPolicyWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketPolicyInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -10957,12 +10957,12 @@ func (m *MockS3API) PutBucketPolicyWithContextCalls() []struct {
 }
 
 // PutBucketPolicyRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketPolicyRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketPolicyInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutBucketPolicyOutput) {
+func (m *S3API) PutBucketPolicyRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketPolicyInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutBucketPolicyOutput) {
 	m.lockPutBucketPolicyRequest.Lock()
 	defer m.lockPutBucketPolicyRequest.Unlock()
 
 	if m.PutBucketPolicyRequestFunc == nil {
-		panic("mocker: MockS3API.PutBucketPolicyRequestFunc is nil but MockS3API.PutBucketPolicyRequest was called.")
+		panic("mocker: S3API.PutBucketPolicyRequestFunc is nil but S3API.PutBucketPolicyRequest was called.")
 	}
 
 	call := struct {
@@ -10977,7 +10977,7 @@ func (m *MockS3API) PutBucketPolicyRequest(arg0 *github_com_aws_aws_sdk_go_servi
 }
 
 // PutBucketPolicyRequestCalled returns true if PutBucketPolicyRequest was called at least once.
-func (m *MockS3API) PutBucketPolicyRequestCalled() bool {
+func (m *S3API) PutBucketPolicyRequestCalled() bool {
 	m.lockPutBucketPolicyRequest.Lock()
 	defer m.lockPutBucketPolicyRequest.Unlock()
 
@@ -10985,7 +10985,7 @@ func (m *MockS3API) PutBucketPolicyRequestCalled() bool {
 }
 
 // PutBucketPolicyRequestCalls returns the calls made to PutBucketPolicyRequest.
-func (m *MockS3API) PutBucketPolicyRequestCalls() []struct {
+func (m *S3API) PutBucketPolicyRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketPolicyInput
 } {
 	m.lockPutBucketPolicyRequest.Lock()
@@ -10995,12 +10995,12 @@ func (m *MockS3API) PutBucketPolicyRequestCalls() []struct {
 }
 
 // PutBucketReplication mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketReplication(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketReplicationInput) (*github_com_aws_aws_sdk_go_service_s3.PutBucketReplicationOutput, error) {
+func (m *S3API) PutBucketReplication(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketReplicationInput) (*github_com_aws_aws_sdk_go_service_s3.PutBucketReplicationOutput, error) {
 	m.lockPutBucketReplication.Lock()
 	defer m.lockPutBucketReplication.Unlock()
 
 	if m.PutBucketReplicationFunc == nil {
-		panic("mocker: MockS3API.PutBucketReplicationFunc is nil but MockS3API.PutBucketReplication was called.")
+		panic("mocker: S3API.PutBucketReplicationFunc is nil but S3API.PutBucketReplication was called.")
 	}
 
 	call := struct {
@@ -11015,7 +11015,7 @@ func (m *MockS3API) PutBucketReplication(arg0 *github_com_aws_aws_sdk_go_service
 }
 
 // PutBucketReplicationCalled returns true if PutBucketReplication was called at least once.
-func (m *MockS3API) PutBucketReplicationCalled() bool {
+func (m *S3API) PutBucketReplicationCalled() bool {
 	m.lockPutBucketReplication.Lock()
 	defer m.lockPutBucketReplication.Unlock()
 
@@ -11023,7 +11023,7 @@ func (m *MockS3API) PutBucketReplicationCalled() bool {
 }
 
 // PutBucketReplicationCalls returns the calls made to PutBucketReplication.
-func (m *MockS3API) PutBucketReplicationCalls() []struct {
+func (m *S3API) PutBucketReplicationCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketReplicationInput
 } {
 	m.lockPutBucketReplication.Lock()
@@ -11033,12 +11033,12 @@ func (m *MockS3API) PutBucketReplicationCalls() []struct {
 }
 
 // PutBucketReplicationWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketReplicationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketReplicationInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutBucketReplicationOutput, error) {
+func (m *S3API) PutBucketReplicationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketReplicationInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutBucketReplicationOutput, error) {
 	m.lockPutBucketReplicationWithContext.Lock()
 	defer m.lockPutBucketReplicationWithContext.Unlock()
 
 	if m.PutBucketReplicationWithContextFunc == nil {
-		panic("mocker: MockS3API.PutBucketReplicationWithContextFunc is nil but MockS3API.PutBucketReplicationWithContext was called.")
+		panic("mocker: S3API.PutBucketReplicationWithContextFunc is nil but S3API.PutBucketReplicationWithContext was called.")
 	}
 
 	call := struct {
@@ -11057,7 +11057,7 @@ func (m *MockS3API) PutBucketReplicationWithContext(arg0 github_com_aws_aws_sdk_
 }
 
 // PutBucketReplicationWithContextCalled returns true if PutBucketReplicationWithContext was called at least once.
-func (m *MockS3API) PutBucketReplicationWithContextCalled() bool {
+func (m *S3API) PutBucketReplicationWithContextCalled() bool {
 	m.lockPutBucketReplicationWithContext.Lock()
 	defer m.lockPutBucketReplicationWithContext.Unlock()
 
@@ -11065,7 +11065,7 @@ func (m *MockS3API) PutBucketReplicationWithContextCalled() bool {
 }
 
 // PutBucketReplicationWithContextCalls returns the calls made to PutBucketReplicationWithContext.
-func (m *MockS3API) PutBucketReplicationWithContextCalls() []struct {
+func (m *S3API) PutBucketReplicationWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketReplicationInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -11077,12 +11077,12 @@ func (m *MockS3API) PutBucketReplicationWithContextCalls() []struct {
 }
 
 // PutBucketReplicationRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketReplicationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketReplicationInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutBucketReplicationOutput) {
+func (m *S3API) PutBucketReplicationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketReplicationInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutBucketReplicationOutput) {
 	m.lockPutBucketReplicationRequest.Lock()
 	defer m.lockPutBucketReplicationRequest.Unlock()
 
 	if m.PutBucketReplicationRequestFunc == nil {
-		panic("mocker: MockS3API.PutBucketReplicationRequestFunc is nil but MockS3API.PutBucketReplicationRequest was called.")
+		panic("mocker: S3API.PutBucketReplicationRequestFunc is nil but S3API.PutBucketReplicationRequest was called.")
 	}
 
 	call := struct {
@@ -11097,7 +11097,7 @@ func (m *MockS3API) PutBucketReplicationRequest(arg0 *github_com_aws_aws_sdk_go_
 }
 
 // PutBucketReplicationRequestCalled returns true if PutBucketReplicationRequest was called at least once.
-func (m *MockS3API) PutBucketReplicationRequestCalled() bool {
+func (m *S3API) PutBucketReplicationRequestCalled() bool {
 	m.lockPutBucketReplicationRequest.Lock()
 	defer m.lockPutBucketReplicationRequest.Unlock()
 
@@ -11105,7 +11105,7 @@ func (m *MockS3API) PutBucketReplicationRequestCalled() bool {
 }
 
 // PutBucketReplicationRequestCalls returns the calls made to PutBucketReplicationRequest.
-func (m *MockS3API) PutBucketReplicationRequestCalls() []struct {
+func (m *S3API) PutBucketReplicationRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketReplicationInput
 } {
 	m.lockPutBucketReplicationRequest.Lock()
@@ -11115,12 +11115,12 @@ func (m *MockS3API) PutBucketReplicationRequestCalls() []struct {
 }
 
 // PutBucketRequestPayment mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketRequestPayment(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketRequestPaymentInput) (*github_com_aws_aws_sdk_go_service_s3.PutBucketRequestPaymentOutput, error) {
+func (m *S3API) PutBucketRequestPayment(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketRequestPaymentInput) (*github_com_aws_aws_sdk_go_service_s3.PutBucketRequestPaymentOutput, error) {
 	m.lockPutBucketRequestPayment.Lock()
 	defer m.lockPutBucketRequestPayment.Unlock()
 
 	if m.PutBucketRequestPaymentFunc == nil {
-		panic("mocker: MockS3API.PutBucketRequestPaymentFunc is nil but MockS3API.PutBucketRequestPayment was called.")
+		panic("mocker: S3API.PutBucketRequestPaymentFunc is nil but S3API.PutBucketRequestPayment was called.")
 	}
 
 	call := struct {
@@ -11135,7 +11135,7 @@ func (m *MockS3API) PutBucketRequestPayment(arg0 *github_com_aws_aws_sdk_go_serv
 }
 
 // PutBucketRequestPaymentCalled returns true if PutBucketRequestPayment was called at least once.
-func (m *MockS3API) PutBucketRequestPaymentCalled() bool {
+func (m *S3API) PutBucketRequestPaymentCalled() bool {
 	m.lockPutBucketRequestPayment.Lock()
 	defer m.lockPutBucketRequestPayment.Unlock()
 
@@ -11143,7 +11143,7 @@ func (m *MockS3API) PutBucketRequestPaymentCalled() bool {
 }
 
 // PutBucketRequestPaymentCalls returns the calls made to PutBucketRequestPayment.
-func (m *MockS3API) PutBucketRequestPaymentCalls() []struct {
+func (m *S3API) PutBucketRequestPaymentCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketRequestPaymentInput
 } {
 	m.lockPutBucketRequestPayment.Lock()
@@ -11153,12 +11153,12 @@ func (m *MockS3API) PutBucketRequestPaymentCalls() []struct {
 }
 
 // PutBucketRequestPaymentWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketRequestPaymentWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketRequestPaymentInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutBucketRequestPaymentOutput, error) {
+func (m *S3API) PutBucketRequestPaymentWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketRequestPaymentInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutBucketRequestPaymentOutput, error) {
 	m.lockPutBucketRequestPaymentWithContext.Lock()
 	defer m.lockPutBucketRequestPaymentWithContext.Unlock()
 
 	if m.PutBucketRequestPaymentWithContextFunc == nil {
-		panic("mocker: MockS3API.PutBucketRequestPaymentWithContextFunc is nil but MockS3API.PutBucketRequestPaymentWithContext was called.")
+		panic("mocker: S3API.PutBucketRequestPaymentWithContextFunc is nil but S3API.PutBucketRequestPaymentWithContext was called.")
 	}
 
 	call := struct {
@@ -11177,7 +11177,7 @@ func (m *MockS3API) PutBucketRequestPaymentWithContext(arg0 github_com_aws_aws_s
 }
 
 // PutBucketRequestPaymentWithContextCalled returns true if PutBucketRequestPaymentWithContext was called at least once.
-func (m *MockS3API) PutBucketRequestPaymentWithContextCalled() bool {
+func (m *S3API) PutBucketRequestPaymentWithContextCalled() bool {
 	m.lockPutBucketRequestPaymentWithContext.Lock()
 	defer m.lockPutBucketRequestPaymentWithContext.Unlock()
 
@@ -11185,7 +11185,7 @@ func (m *MockS3API) PutBucketRequestPaymentWithContextCalled() bool {
 }
 
 // PutBucketRequestPaymentWithContextCalls returns the calls made to PutBucketRequestPaymentWithContext.
-func (m *MockS3API) PutBucketRequestPaymentWithContextCalls() []struct {
+func (m *S3API) PutBucketRequestPaymentWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketRequestPaymentInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -11197,12 +11197,12 @@ func (m *MockS3API) PutBucketRequestPaymentWithContextCalls() []struct {
 }
 
 // PutBucketRequestPaymentRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketRequestPaymentRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketRequestPaymentInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutBucketRequestPaymentOutput) {
+func (m *S3API) PutBucketRequestPaymentRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketRequestPaymentInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutBucketRequestPaymentOutput) {
 	m.lockPutBucketRequestPaymentRequest.Lock()
 	defer m.lockPutBucketRequestPaymentRequest.Unlock()
 
 	if m.PutBucketRequestPaymentRequestFunc == nil {
-		panic("mocker: MockS3API.PutBucketRequestPaymentRequestFunc is nil but MockS3API.PutBucketRequestPaymentRequest was called.")
+		panic("mocker: S3API.PutBucketRequestPaymentRequestFunc is nil but S3API.PutBucketRequestPaymentRequest was called.")
 	}
 
 	call := struct {
@@ -11217,7 +11217,7 @@ func (m *MockS3API) PutBucketRequestPaymentRequest(arg0 *github_com_aws_aws_sdk_
 }
 
 // PutBucketRequestPaymentRequestCalled returns true if PutBucketRequestPaymentRequest was called at least once.
-func (m *MockS3API) PutBucketRequestPaymentRequestCalled() bool {
+func (m *S3API) PutBucketRequestPaymentRequestCalled() bool {
 	m.lockPutBucketRequestPaymentRequest.Lock()
 	defer m.lockPutBucketRequestPaymentRequest.Unlock()
 
@@ -11225,7 +11225,7 @@ func (m *MockS3API) PutBucketRequestPaymentRequestCalled() bool {
 }
 
 // PutBucketRequestPaymentRequestCalls returns the calls made to PutBucketRequestPaymentRequest.
-func (m *MockS3API) PutBucketRequestPaymentRequestCalls() []struct {
+func (m *S3API) PutBucketRequestPaymentRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketRequestPaymentInput
 } {
 	m.lockPutBucketRequestPaymentRequest.Lock()
@@ -11235,12 +11235,12 @@ func (m *MockS3API) PutBucketRequestPaymentRequestCalls() []struct {
 }
 
 // PutBucketTagging mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketTagging(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketTaggingInput) (*github_com_aws_aws_sdk_go_service_s3.PutBucketTaggingOutput, error) {
+func (m *S3API) PutBucketTagging(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketTaggingInput) (*github_com_aws_aws_sdk_go_service_s3.PutBucketTaggingOutput, error) {
 	m.lockPutBucketTagging.Lock()
 	defer m.lockPutBucketTagging.Unlock()
 
 	if m.PutBucketTaggingFunc == nil {
-		panic("mocker: MockS3API.PutBucketTaggingFunc is nil but MockS3API.PutBucketTagging was called.")
+		panic("mocker: S3API.PutBucketTaggingFunc is nil but S3API.PutBucketTagging was called.")
 	}
 
 	call := struct {
@@ -11255,7 +11255,7 @@ func (m *MockS3API) PutBucketTagging(arg0 *github_com_aws_aws_sdk_go_service_s3.
 }
 
 // PutBucketTaggingCalled returns true if PutBucketTagging was called at least once.
-func (m *MockS3API) PutBucketTaggingCalled() bool {
+func (m *S3API) PutBucketTaggingCalled() bool {
 	m.lockPutBucketTagging.Lock()
 	defer m.lockPutBucketTagging.Unlock()
 
@@ -11263,7 +11263,7 @@ func (m *MockS3API) PutBucketTaggingCalled() bool {
 }
 
 // PutBucketTaggingCalls returns the calls made to PutBucketTagging.
-func (m *MockS3API) PutBucketTaggingCalls() []struct {
+func (m *S3API) PutBucketTaggingCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketTaggingInput
 } {
 	m.lockPutBucketTagging.Lock()
@@ -11273,12 +11273,12 @@ func (m *MockS3API) PutBucketTaggingCalls() []struct {
 }
 
 // PutBucketTaggingWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketTaggingWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketTaggingInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutBucketTaggingOutput, error) {
+func (m *S3API) PutBucketTaggingWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketTaggingInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutBucketTaggingOutput, error) {
 	m.lockPutBucketTaggingWithContext.Lock()
 	defer m.lockPutBucketTaggingWithContext.Unlock()
 
 	if m.PutBucketTaggingWithContextFunc == nil {
-		panic("mocker: MockS3API.PutBucketTaggingWithContextFunc is nil but MockS3API.PutBucketTaggingWithContext was called.")
+		panic("mocker: S3API.PutBucketTaggingWithContextFunc is nil but S3API.PutBucketTaggingWithContext was called.")
 	}
 
 	call := struct {
@@ -11297,7 +11297,7 @@ func (m *MockS3API) PutBucketTaggingWithContext(arg0 github_com_aws_aws_sdk_go_a
 }
 
 // PutBucketTaggingWithContextCalled returns true if PutBucketTaggingWithContext was called at least once.
-func (m *MockS3API) PutBucketTaggingWithContextCalled() bool {
+func (m *S3API) PutBucketTaggingWithContextCalled() bool {
 	m.lockPutBucketTaggingWithContext.Lock()
 	defer m.lockPutBucketTaggingWithContext.Unlock()
 
@@ -11305,7 +11305,7 @@ func (m *MockS3API) PutBucketTaggingWithContextCalled() bool {
 }
 
 // PutBucketTaggingWithContextCalls returns the calls made to PutBucketTaggingWithContext.
-func (m *MockS3API) PutBucketTaggingWithContextCalls() []struct {
+func (m *S3API) PutBucketTaggingWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketTaggingInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -11317,12 +11317,12 @@ func (m *MockS3API) PutBucketTaggingWithContextCalls() []struct {
 }
 
 // PutBucketTaggingRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketTaggingRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketTaggingInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutBucketTaggingOutput) {
+func (m *S3API) PutBucketTaggingRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketTaggingInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutBucketTaggingOutput) {
 	m.lockPutBucketTaggingRequest.Lock()
 	defer m.lockPutBucketTaggingRequest.Unlock()
 
 	if m.PutBucketTaggingRequestFunc == nil {
-		panic("mocker: MockS3API.PutBucketTaggingRequestFunc is nil but MockS3API.PutBucketTaggingRequest was called.")
+		panic("mocker: S3API.PutBucketTaggingRequestFunc is nil but S3API.PutBucketTaggingRequest was called.")
 	}
 
 	call := struct {
@@ -11337,7 +11337,7 @@ func (m *MockS3API) PutBucketTaggingRequest(arg0 *github_com_aws_aws_sdk_go_serv
 }
 
 // PutBucketTaggingRequestCalled returns true if PutBucketTaggingRequest was called at least once.
-func (m *MockS3API) PutBucketTaggingRequestCalled() bool {
+func (m *S3API) PutBucketTaggingRequestCalled() bool {
 	m.lockPutBucketTaggingRequest.Lock()
 	defer m.lockPutBucketTaggingRequest.Unlock()
 
@@ -11345,7 +11345,7 @@ func (m *MockS3API) PutBucketTaggingRequestCalled() bool {
 }
 
 // PutBucketTaggingRequestCalls returns the calls made to PutBucketTaggingRequest.
-func (m *MockS3API) PutBucketTaggingRequestCalls() []struct {
+func (m *S3API) PutBucketTaggingRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketTaggingInput
 } {
 	m.lockPutBucketTaggingRequest.Lock()
@@ -11355,12 +11355,12 @@ func (m *MockS3API) PutBucketTaggingRequestCalls() []struct {
 }
 
 // PutBucketVersioning mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketVersioning(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketVersioningInput) (*github_com_aws_aws_sdk_go_service_s3.PutBucketVersioningOutput, error) {
+func (m *S3API) PutBucketVersioning(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketVersioningInput) (*github_com_aws_aws_sdk_go_service_s3.PutBucketVersioningOutput, error) {
 	m.lockPutBucketVersioning.Lock()
 	defer m.lockPutBucketVersioning.Unlock()
 
 	if m.PutBucketVersioningFunc == nil {
-		panic("mocker: MockS3API.PutBucketVersioningFunc is nil but MockS3API.PutBucketVersioning was called.")
+		panic("mocker: S3API.PutBucketVersioningFunc is nil but S3API.PutBucketVersioning was called.")
 	}
 
 	call := struct {
@@ -11375,7 +11375,7 @@ func (m *MockS3API) PutBucketVersioning(arg0 *github_com_aws_aws_sdk_go_service_
 }
 
 // PutBucketVersioningCalled returns true if PutBucketVersioning was called at least once.
-func (m *MockS3API) PutBucketVersioningCalled() bool {
+func (m *S3API) PutBucketVersioningCalled() bool {
 	m.lockPutBucketVersioning.Lock()
 	defer m.lockPutBucketVersioning.Unlock()
 
@@ -11383,7 +11383,7 @@ func (m *MockS3API) PutBucketVersioningCalled() bool {
 }
 
 // PutBucketVersioningCalls returns the calls made to PutBucketVersioning.
-func (m *MockS3API) PutBucketVersioningCalls() []struct {
+func (m *S3API) PutBucketVersioningCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketVersioningInput
 } {
 	m.lockPutBucketVersioning.Lock()
@@ -11393,12 +11393,12 @@ func (m *MockS3API) PutBucketVersioningCalls() []struct {
 }
 
 // PutBucketVersioningWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketVersioningWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketVersioningInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutBucketVersioningOutput, error) {
+func (m *S3API) PutBucketVersioningWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketVersioningInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutBucketVersioningOutput, error) {
 	m.lockPutBucketVersioningWithContext.Lock()
 	defer m.lockPutBucketVersioningWithContext.Unlock()
 
 	if m.PutBucketVersioningWithContextFunc == nil {
-		panic("mocker: MockS3API.PutBucketVersioningWithContextFunc is nil but MockS3API.PutBucketVersioningWithContext was called.")
+		panic("mocker: S3API.PutBucketVersioningWithContextFunc is nil but S3API.PutBucketVersioningWithContext was called.")
 	}
 
 	call := struct {
@@ -11417,7 +11417,7 @@ func (m *MockS3API) PutBucketVersioningWithContext(arg0 github_com_aws_aws_sdk_g
 }
 
 // PutBucketVersioningWithContextCalled returns true if PutBucketVersioningWithContext was called at least once.
-func (m *MockS3API) PutBucketVersioningWithContextCalled() bool {
+func (m *S3API) PutBucketVersioningWithContextCalled() bool {
 	m.lockPutBucketVersioningWithContext.Lock()
 	defer m.lockPutBucketVersioningWithContext.Unlock()
 
@@ -11425,7 +11425,7 @@ func (m *MockS3API) PutBucketVersioningWithContextCalled() bool {
 }
 
 // PutBucketVersioningWithContextCalls returns the calls made to PutBucketVersioningWithContext.
-func (m *MockS3API) PutBucketVersioningWithContextCalls() []struct {
+func (m *S3API) PutBucketVersioningWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketVersioningInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -11437,12 +11437,12 @@ func (m *MockS3API) PutBucketVersioningWithContextCalls() []struct {
 }
 
 // PutBucketVersioningRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketVersioningRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketVersioningInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutBucketVersioningOutput) {
+func (m *S3API) PutBucketVersioningRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketVersioningInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutBucketVersioningOutput) {
 	m.lockPutBucketVersioningRequest.Lock()
 	defer m.lockPutBucketVersioningRequest.Unlock()
 
 	if m.PutBucketVersioningRequestFunc == nil {
-		panic("mocker: MockS3API.PutBucketVersioningRequestFunc is nil but MockS3API.PutBucketVersioningRequest was called.")
+		panic("mocker: S3API.PutBucketVersioningRequestFunc is nil but S3API.PutBucketVersioningRequest was called.")
 	}
 
 	call := struct {
@@ -11457,7 +11457,7 @@ func (m *MockS3API) PutBucketVersioningRequest(arg0 *github_com_aws_aws_sdk_go_s
 }
 
 // PutBucketVersioningRequestCalled returns true if PutBucketVersioningRequest was called at least once.
-func (m *MockS3API) PutBucketVersioningRequestCalled() bool {
+func (m *S3API) PutBucketVersioningRequestCalled() bool {
 	m.lockPutBucketVersioningRequest.Lock()
 	defer m.lockPutBucketVersioningRequest.Unlock()
 
@@ -11465,7 +11465,7 @@ func (m *MockS3API) PutBucketVersioningRequestCalled() bool {
 }
 
 // PutBucketVersioningRequestCalls returns the calls made to PutBucketVersioningRequest.
-func (m *MockS3API) PutBucketVersioningRequestCalls() []struct {
+func (m *S3API) PutBucketVersioningRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketVersioningInput
 } {
 	m.lockPutBucketVersioningRequest.Lock()
@@ -11475,12 +11475,12 @@ func (m *MockS3API) PutBucketVersioningRequestCalls() []struct {
 }
 
 // PutBucketWebsite mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketWebsite(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketWebsiteInput) (*github_com_aws_aws_sdk_go_service_s3.PutBucketWebsiteOutput, error) {
+func (m *S3API) PutBucketWebsite(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketWebsiteInput) (*github_com_aws_aws_sdk_go_service_s3.PutBucketWebsiteOutput, error) {
 	m.lockPutBucketWebsite.Lock()
 	defer m.lockPutBucketWebsite.Unlock()
 
 	if m.PutBucketWebsiteFunc == nil {
-		panic("mocker: MockS3API.PutBucketWebsiteFunc is nil but MockS3API.PutBucketWebsite was called.")
+		panic("mocker: S3API.PutBucketWebsiteFunc is nil but S3API.PutBucketWebsite was called.")
 	}
 
 	call := struct {
@@ -11495,7 +11495,7 @@ func (m *MockS3API) PutBucketWebsite(arg0 *github_com_aws_aws_sdk_go_service_s3.
 }
 
 // PutBucketWebsiteCalled returns true if PutBucketWebsite was called at least once.
-func (m *MockS3API) PutBucketWebsiteCalled() bool {
+func (m *S3API) PutBucketWebsiteCalled() bool {
 	m.lockPutBucketWebsite.Lock()
 	defer m.lockPutBucketWebsite.Unlock()
 
@@ -11503,7 +11503,7 @@ func (m *MockS3API) PutBucketWebsiteCalled() bool {
 }
 
 // PutBucketWebsiteCalls returns the calls made to PutBucketWebsite.
-func (m *MockS3API) PutBucketWebsiteCalls() []struct {
+func (m *S3API) PutBucketWebsiteCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketWebsiteInput
 } {
 	m.lockPutBucketWebsite.Lock()
@@ -11513,12 +11513,12 @@ func (m *MockS3API) PutBucketWebsiteCalls() []struct {
 }
 
 // PutBucketWebsiteWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketWebsiteWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketWebsiteInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutBucketWebsiteOutput, error) {
+func (m *S3API) PutBucketWebsiteWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketWebsiteInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutBucketWebsiteOutput, error) {
 	m.lockPutBucketWebsiteWithContext.Lock()
 	defer m.lockPutBucketWebsiteWithContext.Unlock()
 
 	if m.PutBucketWebsiteWithContextFunc == nil {
-		panic("mocker: MockS3API.PutBucketWebsiteWithContextFunc is nil but MockS3API.PutBucketWebsiteWithContext was called.")
+		panic("mocker: S3API.PutBucketWebsiteWithContextFunc is nil but S3API.PutBucketWebsiteWithContext was called.")
 	}
 
 	call := struct {
@@ -11537,7 +11537,7 @@ func (m *MockS3API) PutBucketWebsiteWithContext(arg0 github_com_aws_aws_sdk_go_a
 }
 
 // PutBucketWebsiteWithContextCalled returns true if PutBucketWebsiteWithContext was called at least once.
-func (m *MockS3API) PutBucketWebsiteWithContextCalled() bool {
+func (m *S3API) PutBucketWebsiteWithContextCalled() bool {
 	m.lockPutBucketWebsiteWithContext.Lock()
 	defer m.lockPutBucketWebsiteWithContext.Unlock()
 
@@ -11545,7 +11545,7 @@ func (m *MockS3API) PutBucketWebsiteWithContextCalled() bool {
 }
 
 // PutBucketWebsiteWithContextCalls returns the calls made to PutBucketWebsiteWithContext.
-func (m *MockS3API) PutBucketWebsiteWithContextCalls() []struct {
+func (m *S3API) PutBucketWebsiteWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.PutBucketWebsiteInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -11557,12 +11557,12 @@ func (m *MockS3API) PutBucketWebsiteWithContextCalls() []struct {
 }
 
 // PutBucketWebsiteRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) PutBucketWebsiteRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketWebsiteInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutBucketWebsiteOutput) {
+func (m *S3API) PutBucketWebsiteRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketWebsiteInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutBucketWebsiteOutput) {
 	m.lockPutBucketWebsiteRequest.Lock()
 	defer m.lockPutBucketWebsiteRequest.Unlock()
 
 	if m.PutBucketWebsiteRequestFunc == nil {
-		panic("mocker: MockS3API.PutBucketWebsiteRequestFunc is nil but MockS3API.PutBucketWebsiteRequest was called.")
+		panic("mocker: S3API.PutBucketWebsiteRequestFunc is nil but S3API.PutBucketWebsiteRequest was called.")
 	}
 
 	call := struct {
@@ -11577,7 +11577,7 @@ func (m *MockS3API) PutBucketWebsiteRequest(arg0 *github_com_aws_aws_sdk_go_serv
 }
 
 // PutBucketWebsiteRequestCalled returns true if PutBucketWebsiteRequest was called at least once.
-func (m *MockS3API) PutBucketWebsiteRequestCalled() bool {
+func (m *S3API) PutBucketWebsiteRequestCalled() bool {
 	m.lockPutBucketWebsiteRequest.Lock()
 	defer m.lockPutBucketWebsiteRequest.Unlock()
 
@@ -11585,7 +11585,7 @@ func (m *MockS3API) PutBucketWebsiteRequestCalled() bool {
 }
 
 // PutBucketWebsiteRequestCalls returns the calls made to PutBucketWebsiteRequest.
-func (m *MockS3API) PutBucketWebsiteRequestCalls() []struct {
+func (m *S3API) PutBucketWebsiteRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutBucketWebsiteInput
 } {
 	m.lockPutBucketWebsiteRequest.Lock()
@@ -11595,12 +11595,12 @@ func (m *MockS3API) PutBucketWebsiteRequestCalls() []struct {
 }
 
 // PutObject mocks base method by wrapping the associated func.
-func (m *MockS3API) PutObject(arg0 *github_com_aws_aws_sdk_go_service_s3.PutObjectInput) (*github_com_aws_aws_sdk_go_service_s3.PutObjectOutput, error) {
+func (m *S3API) PutObject(arg0 *github_com_aws_aws_sdk_go_service_s3.PutObjectInput) (*github_com_aws_aws_sdk_go_service_s3.PutObjectOutput, error) {
 	m.lockPutObject.Lock()
 	defer m.lockPutObject.Unlock()
 
 	if m.PutObjectFunc == nil {
-		panic("mocker: MockS3API.PutObjectFunc is nil but MockS3API.PutObject was called.")
+		panic("mocker: S3API.PutObjectFunc is nil but S3API.PutObject was called.")
 	}
 
 	call := struct {
@@ -11615,7 +11615,7 @@ func (m *MockS3API) PutObject(arg0 *github_com_aws_aws_sdk_go_service_s3.PutObje
 }
 
 // PutObjectCalled returns true if PutObject was called at least once.
-func (m *MockS3API) PutObjectCalled() bool {
+func (m *S3API) PutObjectCalled() bool {
 	m.lockPutObject.Lock()
 	defer m.lockPutObject.Unlock()
 
@@ -11623,7 +11623,7 @@ func (m *MockS3API) PutObjectCalled() bool {
 }
 
 // PutObjectCalls returns the calls made to PutObject.
-func (m *MockS3API) PutObjectCalls() []struct {
+func (m *S3API) PutObjectCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutObjectInput
 } {
 	m.lockPutObject.Lock()
@@ -11633,12 +11633,12 @@ func (m *MockS3API) PutObjectCalls() []struct {
 }
 
 // PutObjectWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) PutObjectWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutObjectInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutObjectOutput, error) {
+func (m *S3API) PutObjectWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutObjectInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutObjectOutput, error) {
 	m.lockPutObjectWithContext.Lock()
 	defer m.lockPutObjectWithContext.Unlock()
 
 	if m.PutObjectWithContextFunc == nil {
-		panic("mocker: MockS3API.PutObjectWithContextFunc is nil but MockS3API.PutObjectWithContext was called.")
+		panic("mocker: S3API.PutObjectWithContextFunc is nil but S3API.PutObjectWithContext was called.")
 	}
 
 	call := struct {
@@ -11657,7 +11657,7 @@ func (m *MockS3API) PutObjectWithContext(arg0 github_com_aws_aws_sdk_go_aws.Cont
 }
 
 // PutObjectWithContextCalled returns true if PutObjectWithContext was called at least once.
-func (m *MockS3API) PutObjectWithContextCalled() bool {
+func (m *S3API) PutObjectWithContextCalled() bool {
 	m.lockPutObjectWithContext.Lock()
 	defer m.lockPutObjectWithContext.Unlock()
 
@@ -11665,7 +11665,7 @@ func (m *MockS3API) PutObjectWithContextCalled() bool {
 }
 
 // PutObjectWithContextCalls returns the calls made to PutObjectWithContext.
-func (m *MockS3API) PutObjectWithContextCalls() []struct {
+func (m *S3API) PutObjectWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.PutObjectInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -11677,12 +11677,12 @@ func (m *MockS3API) PutObjectWithContextCalls() []struct {
 }
 
 // PutObjectRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) PutObjectRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutObjectInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutObjectOutput) {
+func (m *S3API) PutObjectRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutObjectInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutObjectOutput) {
 	m.lockPutObjectRequest.Lock()
 	defer m.lockPutObjectRequest.Unlock()
 
 	if m.PutObjectRequestFunc == nil {
-		panic("mocker: MockS3API.PutObjectRequestFunc is nil but MockS3API.PutObjectRequest was called.")
+		panic("mocker: S3API.PutObjectRequestFunc is nil but S3API.PutObjectRequest was called.")
 	}
 
 	call := struct {
@@ -11697,7 +11697,7 @@ func (m *MockS3API) PutObjectRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.
 }
 
 // PutObjectRequestCalled returns true if PutObjectRequest was called at least once.
-func (m *MockS3API) PutObjectRequestCalled() bool {
+func (m *S3API) PutObjectRequestCalled() bool {
 	m.lockPutObjectRequest.Lock()
 	defer m.lockPutObjectRequest.Unlock()
 
@@ -11705,7 +11705,7 @@ func (m *MockS3API) PutObjectRequestCalled() bool {
 }
 
 // PutObjectRequestCalls returns the calls made to PutObjectRequest.
-func (m *MockS3API) PutObjectRequestCalls() []struct {
+func (m *S3API) PutObjectRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutObjectInput
 } {
 	m.lockPutObjectRequest.Lock()
@@ -11715,12 +11715,12 @@ func (m *MockS3API) PutObjectRequestCalls() []struct {
 }
 
 // PutObjectAcl mocks base method by wrapping the associated func.
-func (m *MockS3API) PutObjectAcl(arg0 *github_com_aws_aws_sdk_go_service_s3.PutObjectAclInput) (*github_com_aws_aws_sdk_go_service_s3.PutObjectAclOutput, error) {
+func (m *S3API) PutObjectAcl(arg0 *github_com_aws_aws_sdk_go_service_s3.PutObjectAclInput) (*github_com_aws_aws_sdk_go_service_s3.PutObjectAclOutput, error) {
 	m.lockPutObjectAcl.Lock()
 	defer m.lockPutObjectAcl.Unlock()
 
 	if m.PutObjectAclFunc == nil {
-		panic("mocker: MockS3API.PutObjectAclFunc is nil but MockS3API.PutObjectAcl was called.")
+		panic("mocker: S3API.PutObjectAclFunc is nil but S3API.PutObjectAcl was called.")
 	}
 
 	call := struct {
@@ -11735,7 +11735,7 @@ func (m *MockS3API) PutObjectAcl(arg0 *github_com_aws_aws_sdk_go_service_s3.PutO
 }
 
 // PutObjectAclCalled returns true if PutObjectAcl was called at least once.
-func (m *MockS3API) PutObjectAclCalled() bool {
+func (m *S3API) PutObjectAclCalled() bool {
 	m.lockPutObjectAcl.Lock()
 	defer m.lockPutObjectAcl.Unlock()
 
@@ -11743,7 +11743,7 @@ func (m *MockS3API) PutObjectAclCalled() bool {
 }
 
 // PutObjectAclCalls returns the calls made to PutObjectAcl.
-func (m *MockS3API) PutObjectAclCalls() []struct {
+func (m *S3API) PutObjectAclCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutObjectAclInput
 } {
 	m.lockPutObjectAcl.Lock()
@@ -11753,12 +11753,12 @@ func (m *MockS3API) PutObjectAclCalls() []struct {
 }
 
 // PutObjectAclWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) PutObjectAclWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutObjectAclInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutObjectAclOutput, error) {
+func (m *S3API) PutObjectAclWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutObjectAclInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutObjectAclOutput, error) {
 	m.lockPutObjectAclWithContext.Lock()
 	defer m.lockPutObjectAclWithContext.Unlock()
 
 	if m.PutObjectAclWithContextFunc == nil {
-		panic("mocker: MockS3API.PutObjectAclWithContextFunc is nil but MockS3API.PutObjectAclWithContext was called.")
+		panic("mocker: S3API.PutObjectAclWithContextFunc is nil but S3API.PutObjectAclWithContext was called.")
 	}
 
 	call := struct {
@@ -11777,7 +11777,7 @@ func (m *MockS3API) PutObjectAclWithContext(arg0 github_com_aws_aws_sdk_go_aws.C
 }
 
 // PutObjectAclWithContextCalled returns true if PutObjectAclWithContext was called at least once.
-func (m *MockS3API) PutObjectAclWithContextCalled() bool {
+func (m *S3API) PutObjectAclWithContextCalled() bool {
 	m.lockPutObjectAclWithContext.Lock()
 	defer m.lockPutObjectAclWithContext.Unlock()
 
@@ -11785,7 +11785,7 @@ func (m *MockS3API) PutObjectAclWithContextCalled() bool {
 }
 
 // PutObjectAclWithContextCalls returns the calls made to PutObjectAclWithContext.
-func (m *MockS3API) PutObjectAclWithContextCalls() []struct {
+func (m *S3API) PutObjectAclWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.PutObjectAclInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -11797,12 +11797,12 @@ func (m *MockS3API) PutObjectAclWithContextCalls() []struct {
 }
 
 // PutObjectAclRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) PutObjectAclRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutObjectAclInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutObjectAclOutput) {
+func (m *S3API) PutObjectAclRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutObjectAclInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutObjectAclOutput) {
 	m.lockPutObjectAclRequest.Lock()
 	defer m.lockPutObjectAclRequest.Unlock()
 
 	if m.PutObjectAclRequestFunc == nil {
-		panic("mocker: MockS3API.PutObjectAclRequestFunc is nil but MockS3API.PutObjectAclRequest was called.")
+		panic("mocker: S3API.PutObjectAclRequestFunc is nil but S3API.PutObjectAclRequest was called.")
 	}
 
 	call := struct {
@@ -11817,7 +11817,7 @@ func (m *MockS3API) PutObjectAclRequest(arg0 *github_com_aws_aws_sdk_go_service_
 }
 
 // PutObjectAclRequestCalled returns true if PutObjectAclRequest was called at least once.
-func (m *MockS3API) PutObjectAclRequestCalled() bool {
+func (m *S3API) PutObjectAclRequestCalled() bool {
 	m.lockPutObjectAclRequest.Lock()
 	defer m.lockPutObjectAclRequest.Unlock()
 
@@ -11825,7 +11825,7 @@ func (m *MockS3API) PutObjectAclRequestCalled() bool {
 }
 
 // PutObjectAclRequestCalls returns the calls made to PutObjectAclRequest.
-func (m *MockS3API) PutObjectAclRequestCalls() []struct {
+func (m *S3API) PutObjectAclRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutObjectAclInput
 } {
 	m.lockPutObjectAclRequest.Lock()
@@ -11835,12 +11835,12 @@ func (m *MockS3API) PutObjectAclRequestCalls() []struct {
 }
 
 // PutObjectLegalHold mocks base method by wrapping the associated func.
-func (m *MockS3API) PutObjectLegalHold(arg0 *github_com_aws_aws_sdk_go_service_s3.PutObjectLegalHoldInput) (*github_com_aws_aws_sdk_go_service_s3.PutObjectLegalHoldOutput, error) {
+func (m *S3API) PutObjectLegalHold(arg0 *github_com_aws_aws_sdk_go_service_s3.PutObjectLegalHoldInput) (*github_com_aws_aws_sdk_go_service_s3.PutObjectLegalHoldOutput, error) {
 	m.lockPutObjectLegalHold.Lock()
 	defer m.lockPutObjectLegalHold.Unlock()
 
 	if m.PutObjectLegalHoldFunc == nil {
-		panic("mocker: MockS3API.PutObjectLegalHoldFunc is nil but MockS3API.PutObjectLegalHold was called.")
+		panic("mocker: S3API.PutObjectLegalHoldFunc is nil but S3API.PutObjectLegalHold was called.")
 	}
 
 	call := struct {
@@ -11855,7 +11855,7 @@ func (m *MockS3API) PutObjectLegalHold(arg0 *github_com_aws_aws_sdk_go_service_s
 }
 
 // PutObjectLegalHoldCalled returns true if PutObjectLegalHold was called at least once.
-func (m *MockS3API) PutObjectLegalHoldCalled() bool {
+func (m *S3API) PutObjectLegalHoldCalled() bool {
 	m.lockPutObjectLegalHold.Lock()
 	defer m.lockPutObjectLegalHold.Unlock()
 
@@ -11863,7 +11863,7 @@ func (m *MockS3API) PutObjectLegalHoldCalled() bool {
 }
 
 // PutObjectLegalHoldCalls returns the calls made to PutObjectLegalHold.
-func (m *MockS3API) PutObjectLegalHoldCalls() []struct {
+func (m *S3API) PutObjectLegalHoldCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutObjectLegalHoldInput
 } {
 	m.lockPutObjectLegalHold.Lock()
@@ -11873,12 +11873,12 @@ func (m *MockS3API) PutObjectLegalHoldCalls() []struct {
 }
 
 // PutObjectLegalHoldWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) PutObjectLegalHoldWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutObjectLegalHoldInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutObjectLegalHoldOutput, error) {
+func (m *S3API) PutObjectLegalHoldWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutObjectLegalHoldInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutObjectLegalHoldOutput, error) {
 	m.lockPutObjectLegalHoldWithContext.Lock()
 	defer m.lockPutObjectLegalHoldWithContext.Unlock()
 
 	if m.PutObjectLegalHoldWithContextFunc == nil {
-		panic("mocker: MockS3API.PutObjectLegalHoldWithContextFunc is nil but MockS3API.PutObjectLegalHoldWithContext was called.")
+		panic("mocker: S3API.PutObjectLegalHoldWithContextFunc is nil but S3API.PutObjectLegalHoldWithContext was called.")
 	}
 
 	call := struct {
@@ -11897,7 +11897,7 @@ func (m *MockS3API) PutObjectLegalHoldWithContext(arg0 github_com_aws_aws_sdk_go
 }
 
 // PutObjectLegalHoldWithContextCalled returns true if PutObjectLegalHoldWithContext was called at least once.
-func (m *MockS3API) PutObjectLegalHoldWithContextCalled() bool {
+func (m *S3API) PutObjectLegalHoldWithContextCalled() bool {
 	m.lockPutObjectLegalHoldWithContext.Lock()
 	defer m.lockPutObjectLegalHoldWithContext.Unlock()
 
@@ -11905,7 +11905,7 @@ func (m *MockS3API) PutObjectLegalHoldWithContextCalled() bool {
 }
 
 // PutObjectLegalHoldWithContextCalls returns the calls made to PutObjectLegalHoldWithContext.
-func (m *MockS3API) PutObjectLegalHoldWithContextCalls() []struct {
+func (m *S3API) PutObjectLegalHoldWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.PutObjectLegalHoldInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -11917,12 +11917,12 @@ func (m *MockS3API) PutObjectLegalHoldWithContextCalls() []struct {
 }
 
 // PutObjectLegalHoldRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) PutObjectLegalHoldRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutObjectLegalHoldInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutObjectLegalHoldOutput) {
+func (m *S3API) PutObjectLegalHoldRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutObjectLegalHoldInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutObjectLegalHoldOutput) {
 	m.lockPutObjectLegalHoldRequest.Lock()
 	defer m.lockPutObjectLegalHoldRequest.Unlock()
 
 	if m.PutObjectLegalHoldRequestFunc == nil {
-		panic("mocker: MockS3API.PutObjectLegalHoldRequestFunc is nil but MockS3API.PutObjectLegalHoldRequest was called.")
+		panic("mocker: S3API.PutObjectLegalHoldRequestFunc is nil but S3API.PutObjectLegalHoldRequest was called.")
 	}
 
 	call := struct {
@@ -11937,7 +11937,7 @@ func (m *MockS3API) PutObjectLegalHoldRequest(arg0 *github_com_aws_aws_sdk_go_se
 }
 
 // PutObjectLegalHoldRequestCalled returns true if PutObjectLegalHoldRequest was called at least once.
-func (m *MockS3API) PutObjectLegalHoldRequestCalled() bool {
+func (m *S3API) PutObjectLegalHoldRequestCalled() bool {
 	m.lockPutObjectLegalHoldRequest.Lock()
 	defer m.lockPutObjectLegalHoldRequest.Unlock()
 
@@ -11945,7 +11945,7 @@ func (m *MockS3API) PutObjectLegalHoldRequestCalled() bool {
 }
 
 // PutObjectLegalHoldRequestCalls returns the calls made to PutObjectLegalHoldRequest.
-func (m *MockS3API) PutObjectLegalHoldRequestCalls() []struct {
+func (m *S3API) PutObjectLegalHoldRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutObjectLegalHoldInput
 } {
 	m.lockPutObjectLegalHoldRequest.Lock()
@@ -11955,12 +11955,12 @@ func (m *MockS3API) PutObjectLegalHoldRequestCalls() []struct {
 }
 
 // PutObjectLockConfiguration mocks base method by wrapping the associated func.
-func (m *MockS3API) PutObjectLockConfiguration(arg0 *github_com_aws_aws_sdk_go_service_s3.PutObjectLockConfigurationInput) (*github_com_aws_aws_sdk_go_service_s3.PutObjectLockConfigurationOutput, error) {
+func (m *S3API) PutObjectLockConfiguration(arg0 *github_com_aws_aws_sdk_go_service_s3.PutObjectLockConfigurationInput) (*github_com_aws_aws_sdk_go_service_s3.PutObjectLockConfigurationOutput, error) {
 	m.lockPutObjectLockConfiguration.Lock()
 	defer m.lockPutObjectLockConfiguration.Unlock()
 
 	if m.PutObjectLockConfigurationFunc == nil {
-		panic("mocker: MockS3API.PutObjectLockConfigurationFunc is nil but MockS3API.PutObjectLockConfiguration was called.")
+		panic("mocker: S3API.PutObjectLockConfigurationFunc is nil but S3API.PutObjectLockConfiguration was called.")
 	}
 
 	call := struct {
@@ -11975,7 +11975,7 @@ func (m *MockS3API) PutObjectLockConfiguration(arg0 *github_com_aws_aws_sdk_go_s
 }
 
 // PutObjectLockConfigurationCalled returns true if PutObjectLockConfiguration was called at least once.
-func (m *MockS3API) PutObjectLockConfigurationCalled() bool {
+func (m *S3API) PutObjectLockConfigurationCalled() bool {
 	m.lockPutObjectLockConfiguration.Lock()
 	defer m.lockPutObjectLockConfiguration.Unlock()
 
@@ -11983,7 +11983,7 @@ func (m *MockS3API) PutObjectLockConfigurationCalled() bool {
 }
 
 // PutObjectLockConfigurationCalls returns the calls made to PutObjectLockConfiguration.
-func (m *MockS3API) PutObjectLockConfigurationCalls() []struct {
+func (m *S3API) PutObjectLockConfigurationCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutObjectLockConfigurationInput
 } {
 	m.lockPutObjectLockConfiguration.Lock()
@@ -11993,12 +11993,12 @@ func (m *MockS3API) PutObjectLockConfigurationCalls() []struct {
 }
 
 // PutObjectLockConfigurationWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) PutObjectLockConfigurationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutObjectLockConfigurationInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutObjectLockConfigurationOutput, error) {
+func (m *S3API) PutObjectLockConfigurationWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutObjectLockConfigurationInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutObjectLockConfigurationOutput, error) {
 	m.lockPutObjectLockConfigurationWithContext.Lock()
 	defer m.lockPutObjectLockConfigurationWithContext.Unlock()
 
 	if m.PutObjectLockConfigurationWithContextFunc == nil {
-		panic("mocker: MockS3API.PutObjectLockConfigurationWithContextFunc is nil but MockS3API.PutObjectLockConfigurationWithContext was called.")
+		panic("mocker: S3API.PutObjectLockConfigurationWithContextFunc is nil but S3API.PutObjectLockConfigurationWithContext was called.")
 	}
 
 	call := struct {
@@ -12017,7 +12017,7 @@ func (m *MockS3API) PutObjectLockConfigurationWithContext(arg0 github_com_aws_aw
 }
 
 // PutObjectLockConfigurationWithContextCalled returns true if PutObjectLockConfigurationWithContext was called at least once.
-func (m *MockS3API) PutObjectLockConfigurationWithContextCalled() bool {
+func (m *S3API) PutObjectLockConfigurationWithContextCalled() bool {
 	m.lockPutObjectLockConfigurationWithContext.Lock()
 	defer m.lockPutObjectLockConfigurationWithContext.Unlock()
 
@@ -12025,7 +12025,7 @@ func (m *MockS3API) PutObjectLockConfigurationWithContextCalled() bool {
 }
 
 // PutObjectLockConfigurationWithContextCalls returns the calls made to PutObjectLockConfigurationWithContext.
-func (m *MockS3API) PutObjectLockConfigurationWithContextCalls() []struct {
+func (m *S3API) PutObjectLockConfigurationWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.PutObjectLockConfigurationInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -12037,12 +12037,12 @@ func (m *MockS3API) PutObjectLockConfigurationWithContextCalls() []struct {
 }
 
 // PutObjectLockConfigurationRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) PutObjectLockConfigurationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutObjectLockConfigurationInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutObjectLockConfigurationOutput) {
+func (m *S3API) PutObjectLockConfigurationRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutObjectLockConfigurationInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutObjectLockConfigurationOutput) {
 	m.lockPutObjectLockConfigurationRequest.Lock()
 	defer m.lockPutObjectLockConfigurationRequest.Unlock()
 
 	if m.PutObjectLockConfigurationRequestFunc == nil {
-		panic("mocker: MockS3API.PutObjectLockConfigurationRequestFunc is nil but MockS3API.PutObjectLockConfigurationRequest was called.")
+		panic("mocker: S3API.PutObjectLockConfigurationRequestFunc is nil but S3API.PutObjectLockConfigurationRequest was called.")
 	}
 
 	call := struct {
@@ -12057,7 +12057,7 @@ func (m *MockS3API) PutObjectLockConfigurationRequest(arg0 *github_com_aws_aws_s
 }
 
 // PutObjectLockConfigurationRequestCalled returns true if PutObjectLockConfigurationRequest was called at least once.
-func (m *MockS3API) PutObjectLockConfigurationRequestCalled() bool {
+func (m *S3API) PutObjectLockConfigurationRequestCalled() bool {
 	m.lockPutObjectLockConfigurationRequest.Lock()
 	defer m.lockPutObjectLockConfigurationRequest.Unlock()
 
@@ -12065,7 +12065,7 @@ func (m *MockS3API) PutObjectLockConfigurationRequestCalled() bool {
 }
 
 // PutObjectLockConfigurationRequestCalls returns the calls made to PutObjectLockConfigurationRequest.
-func (m *MockS3API) PutObjectLockConfigurationRequestCalls() []struct {
+func (m *S3API) PutObjectLockConfigurationRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutObjectLockConfigurationInput
 } {
 	m.lockPutObjectLockConfigurationRequest.Lock()
@@ -12075,12 +12075,12 @@ func (m *MockS3API) PutObjectLockConfigurationRequestCalls() []struct {
 }
 
 // PutObjectRetention mocks base method by wrapping the associated func.
-func (m *MockS3API) PutObjectRetention(arg0 *github_com_aws_aws_sdk_go_service_s3.PutObjectRetentionInput) (*github_com_aws_aws_sdk_go_service_s3.PutObjectRetentionOutput, error) {
+func (m *S3API) PutObjectRetention(arg0 *github_com_aws_aws_sdk_go_service_s3.PutObjectRetentionInput) (*github_com_aws_aws_sdk_go_service_s3.PutObjectRetentionOutput, error) {
 	m.lockPutObjectRetention.Lock()
 	defer m.lockPutObjectRetention.Unlock()
 
 	if m.PutObjectRetentionFunc == nil {
-		panic("mocker: MockS3API.PutObjectRetentionFunc is nil but MockS3API.PutObjectRetention was called.")
+		panic("mocker: S3API.PutObjectRetentionFunc is nil but S3API.PutObjectRetention was called.")
 	}
 
 	call := struct {
@@ -12095,7 +12095,7 @@ func (m *MockS3API) PutObjectRetention(arg0 *github_com_aws_aws_sdk_go_service_s
 }
 
 // PutObjectRetentionCalled returns true if PutObjectRetention was called at least once.
-func (m *MockS3API) PutObjectRetentionCalled() bool {
+func (m *S3API) PutObjectRetentionCalled() bool {
 	m.lockPutObjectRetention.Lock()
 	defer m.lockPutObjectRetention.Unlock()
 
@@ -12103,7 +12103,7 @@ func (m *MockS3API) PutObjectRetentionCalled() bool {
 }
 
 // PutObjectRetentionCalls returns the calls made to PutObjectRetention.
-func (m *MockS3API) PutObjectRetentionCalls() []struct {
+func (m *S3API) PutObjectRetentionCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutObjectRetentionInput
 } {
 	m.lockPutObjectRetention.Lock()
@@ -12113,12 +12113,12 @@ func (m *MockS3API) PutObjectRetentionCalls() []struct {
 }
 
 // PutObjectRetentionWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) PutObjectRetentionWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutObjectRetentionInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutObjectRetentionOutput, error) {
+func (m *S3API) PutObjectRetentionWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutObjectRetentionInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutObjectRetentionOutput, error) {
 	m.lockPutObjectRetentionWithContext.Lock()
 	defer m.lockPutObjectRetentionWithContext.Unlock()
 
 	if m.PutObjectRetentionWithContextFunc == nil {
-		panic("mocker: MockS3API.PutObjectRetentionWithContextFunc is nil but MockS3API.PutObjectRetentionWithContext was called.")
+		panic("mocker: S3API.PutObjectRetentionWithContextFunc is nil but S3API.PutObjectRetentionWithContext was called.")
 	}
 
 	call := struct {
@@ -12137,7 +12137,7 @@ func (m *MockS3API) PutObjectRetentionWithContext(arg0 github_com_aws_aws_sdk_go
 }
 
 // PutObjectRetentionWithContextCalled returns true if PutObjectRetentionWithContext was called at least once.
-func (m *MockS3API) PutObjectRetentionWithContextCalled() bool {
+func (m *S3API) PutObjectRetentionWithContextCalled() bool {
 	m.lockPutObjectRetentionWithContext.Lock()
 	defer m.lockPutObjectRetentionWithContext.Unlock()
 
@@ -12145,7 +12145,7 @@ func (m *MockS3API) PutObjectRetentionWithContextCalled() bool {
 }
 
 // PutObjectRetentionWithContextCalls returns the calls made to PutObjectRetentionWithContext.
-func (m *MockS3API) PutObjectRetentionWithContextCalls() []struct {
+func (m *S3API) PutObjectRetentionWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.PutObjectRetentionInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -12157,12 +12157,12 @@ func (m *MockS3API) PutObjectRetentionWithContextCalls() []struct {
 }
 
 // PutObjectRetentionRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) PutObjectRetentionRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutObjectRetentionInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutObjectRetentionOutput) {
+func (m *S3API) PutObjectRetentionRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutObjectRetentionInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutObjectRetentionOutput) {
 	m.lockPutObjectRetentionRequest.Lock()
 	defer m.lockPutObjectRetentionRequest.Unlock()
 
 	if m.PutObjectRetentionRequestFunc == nil {
-		panic("mocker: MockS3API.PutObjectRetentionRequestFunc is nil but MockS3API.PutObjectRetentionRequest was called.")
+		panic("mocker: S3API.PutObjectRetentionRequestFunc is nil but S3API.PutObjectRetentionRequest was called.")
 	}
 
 	call := struct {
@@ -12177,7 +12177,7 @@ func (m *MockS3API) PutObjectRetentionRequest(arg0 *github_com_aws_aws_sdk_go_se
 }
 
 // PutObjectRetentionRequestCalled returns true if PutObjectRetentionRequest was called at least once.
-func (m *MockS3API) PutObjectRetentionRequestCalled() bool {
+func (m *S3API) PutObjectRetentionRequestCalled() bool {
 	m.lockPutObjectRetentionRequest.Lock()
 	defer m.lockPutObjectRetentionRequest.Unlock()
 
@@ -12185,7 +12185,7 @@ func (m *MockS3API) PutObjectRetentionRequestCalled() bool {
 }
 
 // PutObjectRetentionRequestCalls returns the calls made to PutObjectRetentionRequest.
-func (m *MockS3API) PutObjectRetentionRequestCalls() []struct {
+func (m *S3API) PutObjectRetentionRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutObjectRetentionInput
 } {
 	m.lockPutObjectRetentionRequest.Lock()
@@ -12195,12 +12195,12 @@ func (m *MockS3API) PutObjectRetentionRequestCalls() []struct {
 }
 
 // PutObjectTagging mocks base method by wrapping the associated func.
-func (m *MockS3API) PutObjectTagging(arg0 *github_com_aws_aws_sdk_go_service_s3.PutObjectTaggingInput) (*github_com_aws_aws_sdk_go_service_s3.PutObjectTaggingOutput, error) {
+func (m *S3API) PutObjectTagging(arg0 *github_com_aws_aws_sdk_go_service_s3.PutObjectTaggingInput) (*github_com_aws_aws_sdk_go_service_s3.PutObjectTaggingOutput, error) {
 	m.lockPutObjectTagging.Lock()
 	defer m.lockPutObjectTagging.Unlock()
 
 	if m.PutObjectTaggingFunc == nil {
-		panic("mocker: MockS3API.PutObjectTaggingFunc is nil but MockS3API.PutObjectTagging was called.")
+		panic("mocker: S3API.PutObjectTaggingFunc is nil but S3API.PutObjectTagging was called.")
 	}
 
 	call := struct {
@@ -12215,7 +12215,7 @@ func (m *MockS3API) PutObjectTagging(arg0 *github_com_aws_aws_sdk_go_service_s3.
 }
 
 // PutObjectTaggingCalled returns true if PutObjectTagging was called at least once.
-func (m *MockS3API) PutObjectTaggingCalled() bool {
+func (m *S3API) PutObjectTaggingCalled() bool {
 	m.lockPutObjectTagging.Lock()
 	defer m.lockPutObjectTagging.Unlock()
 
@@ -12223,7 +12223,7 @@ func (m *MockS3API) PutObjectTaggingCalled() bool {
 }
 
 // PutObjectTaggingCalls returns the calls made to PutObjectTagging.
-func (m *MockS3API) PutObjectTaggingCalls() []struct {
+func (m *S3API) PutObjectTaggingCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutObjectTaggingInput
 } {
 	m.lockPutObjectTagging.Lock()
@@ -12233,12 +12233,12 @@ func (m *MockS3API) PutObjectTaggingCalls() []struct {
 }
 
 // PutObjectTaggingWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) PutObjectTaggingWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutObjectTaggingInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutObjectTaggingOutput, error) {
+func (m *S3API) PutObjectTaggingWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutObjectTaggingInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutObjectTaggingOutput, error) {
 	m.lockPutObjectTaggingWithContext.Lock()
 	defer m.lockPutObjectTaggingWithContext.Unlock()
 
 	if m.PutObjectTaggingWithContextFunc == nil {
-		panic("mocker: MockS3API.PutObjectTaggingWithContextFunc is nil but MockS3API.PutObjectTaggingWithContext was called.")
+		panic("mocker: S3API.PutObjectTaggingWithContextFunc is nil but S3API.PutObjectTaggingWithContext was called.")
 	}
 
 	call := struct {
@@ -12257,7 +12257,7 @@ func (m *MockS3API) PutObjectTaggingWithContext(arg0 github_com_aws_aws_sdk_go_a
 }
 
 // PutObjectTaggingWithContextCalled returns true if PutObjectTaggingWithContext was called at least once.
-func (m *MockS3API) PutObjectTaggingWithContextCalled() bool {
+func (m *S3API) PutObjectTaggingWithContextCalled() bool {
 	m.lockPutObjectTaggingWithContext.Lock()
 	defer m.lockPutObjectTaggingWithContext.Unlock()
 
@@ -12265,7 +12265,7 @@ func (m *MockS3API) PutObjectTaggingWithContextCalled() bool {
 }
 
 // PutObjectTaggingWithContextCalls returns the calls made to PutObjectTaggingWithContext.
-func (m *MockS3API) PutObjectTaggingWithContextCalls() []struct {
+func (m *S3API) PutObjectTaggingWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.PutObjectTaggingInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -12277,12 +12277,12 @@ func (m *MockS3API) PutObjectTaggingWithContextCalls() []struct {
 }
 
 // PutObjectTaggingRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) PutObjectTaggingRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutObjectTaggingInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutObjectTaggingOutput) {
+func (m *S3API) PutObjectTaggingRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutObjectTaggingInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutObjectTaggingOutput) {
 	m.lockPutObjectTaggingRequest.Lock()
 	defer m.lockPutObjectTaggingRequest.Unlock()
 
 	if m.PutObjectTaggingRequestFunc == nil {
-		panic("mocker: MockS3API.PutObjectTaggingRequestFunc is nil but MockS3API.PutObjectTaggingRequest was called.")
+		panic("mocker: S3API.PutObjectTaggingRequestFunc is nil but S3API.PutObjectTaggingRequest was called.")
 	}
 
 	call := struct {
@@ -12297,7 +12297,7 @@ func (m *MockS3API) PutObjectTaggingRequest(arg0 *github_com_aws_aws_sdk_go_serv
 }
 
 // PutObjectTaggingRequestCalled returns true if PutObjectTaggingRequest was called at least once.
-func (m *MockS3API) PutObjectTaggingRequestCalled() bool {
+func (m *S3API) PutObjectTaggingRequestCalled() bool {
 	m.lockPutObjectTaggingRequest.Lock()
 	defer m.lockPutObjectTaggingRequest.Unlock()
 
@@ -12305,7 +12305,7 @@ func (m *MockS3API) PutObjectTaggingRequestCalled() bool {
 }
 
 // PutObjectTaggingRequestCalls returns the calls made to PutObjectTaggingRequest.
-func (m *MockS3API) PutObjectTaggingRequestCalls() []struct {
+func (m *S3API) PutObjectTaggingRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutObjectTaggingInput
 } {
 	m.lockPutObjectTaggingRequest.Lock()
@@ -12315,12 +12315,12 @@ func (m *MockS3API) PutObjectTaggingRequestCalls() []struct {
 }
 
 // PutPublicAccessBlock mocks base method by wrapping the associated func.
-func (m *MockS3API) PutPublicAccessBlock(arg0 *github_com_aws_aws_sdk_go_service_s3.PutPublicAccessBlockInput) (*github_com_aws_aws_sdk_go_service_s3.PutPublicAccessBlockOutput, error) {
+func (m *S3API) PutPublicAccessBlock(arg0 *github_com_aws_aws_sdk_go_service_s3.PutPublicAccessBlockInput) (*github_com_aws_aws_sdk_go_service_s3.PutPublicAccessBlockOutput, error) {
 	m.lockPutPublicAccessBlock.Lock()
 	defer m.lockPutPublicAccessBlock.Unlock()
 
 	if m.PutPublicAccessBlockFunc == nil {
-		panic("mocker: MockS3API.PutPublicAccessBlockFunc is nil but MockS3API.PutPublicAccessBlock was called.")
+		panic("mocker: S3API.PutPublicAccessBlockFunc is nil but S3API.PutPublicAccessBlock was called.")
 	}
 
 	call := struct {
@@ -12335,7 +12335,7 @@ func (m *MockS3API) PutPublicAccessBlock(arg0 *github_com_aws_aws_sdk_go_service
 }
 
 // PutPublicAccessBlockCalled returns true if PutPublicAccessBlock was called at least once.
-func (m *MockS3API) PutPublicAccessBlockCalled() bool {
+func (m *S3API) PutPublicAccessBlockCalled() bool {
 	m.lockPutPublicAccessBlock.Lock()
 	defer m.lockPutPublicAccessBlock.Unlock()
 
@@ -12343,7 +12343,7 @@ func (m *MockS3API) PutPublicAccessBlockCalled() bool {
 }
 
 // PutPublicAccessBlockCalls returns the calls made to PutPublicAccessBlock.
-func (m *MockS3API) PutPublicAccessBlockCalls() []struct {
+func (m *S3API) PutPublicAccessBlockCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutPublicAccessBlockInput
 } {
 	m.lockPutPublicAccessBlock.Lock()
@@ -12353,12 +12353,12 @@ func (m *MockS3API) PutPublicAccessBlockCalls() []struct {
 }
 
 // PutPublicAccessBlockWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) PutPublicAccessBlockWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutPublicAccessBlockInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutPublicAccessBlockOutput, error) {
+func (m *S3API) PutPublicAccessBlockWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.PutPublicAccessBlockInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.PutPublicAccessBlockOutput, error) {
 	m.lockPutPublicAccessBlockWithContext.Lock()
 	defer m.lockPutPublicAccessBlockWithContext.Unlock()
 
 	if m.PutPublicAccessBlockWithContextFunc == nil {
-		panic("mocker: MockS3API.PutPublicAccessBlockWithContextFunc is nil but MockS3API.PutPublicAccessBlockWithContext was called.")
+		panic("mocker: S3API.PutPublicAccessBlockWithContextFunc is nil but S3API.PutPublicAccessBlockWithContext was called.")
 	}
 
 	call := struct {
@@ -12377,7 +12377,7 @@ func (m *MockS3API) PutPublicAccessBlockWithContext(arg0 github_com_aws_aws_sdk_
 }
 
 // PutPublicAccessBlockWithContextCalled returns true if PutPublicAccessBlockWithContext was called at least once.
-func (m *MockS3API) PutPublicAccessBlockWithContextCalled() bool {
+func (m *S3API) PutPublicAccessBlockWithContextCalled() bool {
 	m.lockPutPublicAccessBlockWithContext.Lock()
 	defer m.lockPutPublicAccessBlockWithContext.Unlock()
 
@@ -12385,7 +12385,7 @@ func (m *MockS3API) PutPublicAccessBlockWithContextCalled() bool {
 }
 
 // PutPublicAccessBlockWithContextCalls returns the calls made to PutPublicAccessBlockWithContext.
-func (m *MockS3API) PutPublicAccessBlockWithContextCalls() []struct {
+func (m *S3API) PutPublicAccessBlockWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.PutPublicAccessBlockInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -12397,12 +12397,12 @@ func (m *MockS3API) PutPublicAccessBlockWithContextCalls() []struct {
 }
 
 // PutPublicAccessBlockRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) PutPublicAccessBlockRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutPublicAccessBlockInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutPublicAccessBlockOutput) {
+func (m *S3API) PutPublicAccessBlockRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.PutPublicAccessBlockInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.PutPublicAccessBlockOutput) {
 	m.lockPutPublicAccessBlockRequest.Lock()
 	defer m.lockPutPublicAccessBlockRequest.Unlock()
 
 	if m.PutPublicAccessBlockRequestFunc == nil {
-		panic("mocker: MockS3API.PutPublicAccessBlockRequestFunc is nil but MockS3API.PutPublicAccessBlockRequest was called.")
+		panic("mocker: S3API.PutPublicAccessBlockRequestFunc is nil but S3API.PutPublicAccessBlockRequest was called.")
 	}
 
 	call := struct {
@@ -12417,7 +12417,7 @@ func (m *MockS3API) PutPublicAccessBlockRequest(arg0 *github_com_aws_aws_sdk_go_
 }
 
 // PutPublicAccessBlockRequestCalled returns true if PutPublicAccessBlockRequest was called at least once.
-func (m *MockS3API) PutPublicAccessBlockRequestCalled() bool {
+func (m *S3API) PutPublicAccessBlockRequestCalled() bool {
 	m.lockPutPublicAccessBlockRequest.Lock()
 	defer m.lockPutPublicAccessBlockRequest.Unlock()
 
@@ -12425,7 +12425,7 @@ func (m *MockS3API) PutPublicAccessBlockRequestCalled() bool {
 }
 
 // PutPublicAccessBlockRequestCalls returns the calls made to PutPublicAccessBlockRequest.
-func (m *MockS3API) PutPublicAccessBlockRequestCalls() []struct {
+func (m *S3API) PutPublicAccessBlockRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.PutPublicAccessBlockInput
 } {
 	m.lockPutPublicAccessBlockRequest.Lock()
@@ -12435,12 +12435,12 @@ func (m *MockS3API) PutPublicAccessBlockRequestCalls() []struct {
 }
 
 // RestoreObject mocks base method by wrapping the associated func.
-func (m *MockS3API) RestoreObject(arg0 *github_com_aws_aws_sdk_go_service_s3.RestoreObjectInput) (*github_com_aws_aws_sdk_go_service_s3.RestoreObjectOutput, error) {
+func (m *S3API) RestoreObject(arg0 *github_com_aws_aws_sdk_go_service_s3.RestoreObjectInput) (*github_com_aws_aws_sdk_go_service_s3.RestoreObjectOutput, error) {
 	m.lockRestoreObject.Lock()
 	defer m.lockRestoreObject.Unlock()
 
 	if m.RestoreObjectFunc == nil {
-		panic("mocker: MockS3API.RestoreObjectFunc is nil but MockS3API.RestoreObject was called.")
+		panic("mocker: S3API.RestoreObjectFunc is nil but S3API.RestoreObject was called.")
 	}
 
 	call := struct {
@@ -12455,7 +12455,7 @@ func (m *MockS3API) RestoreObject(arg0 *github_com_aws_aws_sdk_go_service_s3.Res
 }
 
 // RestoreObjectCalled returns true if RestoreObject was called at least once.
-func (m *MockS3API) RestoreObjectCalled() bool {
+func (m *S3API) RestoreObjectCalled() bool {
 	m.lockRestoreObject.Lock()
 	defer m.lockRestoreObject.Unlock()
 
@@ -12463,7 +12463,7 @@ func (m *MockS3API) RestoreObjectCalled() bool {
 }
 
 // RestoreObjectCalls returns the calls made to RestoreObject.
-func (m *MockS3API) RestoreObjectCalls() []struct {
+func (m *S3API) RestoreObjectCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.RestoreObjectInput
 } {
 	m.lockRestoreObject.Lock()
@@ -12473,12 +12473,12 @@ func (m *MockS3API) RestoreObjectCalls() []struct {
 }
 
 // RestoreObjectWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) RestoreObjectWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.RestoreObjectInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.RestoreObjectOutput, error) {
+func (m *S3API) RestoreObjectWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.RestoreObjectInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.RestoreObjectOutput, error) {
 	m.lockRestoreObjectWithContext.Lock()
 	defer m.lockRestoreObjectWithContext.Unlock()
 
 	if m.RestoreObjectWithContextFunc == nil {
-		panic("mocker: MockS3API.RestoreObjectWithContextFunc is nil but MockS3API.RestoreObjectWithContext was called.")
+		panic("mocker: S3API.RestoreObjectWithContextFunc is nil but S3API.RestoreObjectWithContext was called.")
 	}
 
 	call := struct {
@@ -12497,7 +12497,7 @@ func (m *MockS3API) RestoreObjectWithContext(arg0 github_com_aws_aws_sdk_go_aws.
 }
 
 // RestoreObjectWithContextCalled returns true if RestoreObjectWithContext was called at least once.
-func (m *MockS3API) RestoreObjectWithContextCalled() bool {
+func (m *S3API) RestoreObjectWithContextCalled() bool {
 	m.lockRestoreObjectWithContext.Lock()
 	defer m.lockRestoreObjectWithContext.Unlock()
 
@@ -12505,7 +12505,7 @@ func (m *MockS3API) RestoreObjectWithContextCalled() bool {
 }
 
 // RestoreObjectWithContextCalls returns the calls made to RestoreObjectWithContext.
-func (m *MockS3API) RestoreObjectWithContextCalls() []struct {
+func (m *S3API) RestoreObjectWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.RestoreObjectInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -12517,12 +12517,12 @@ func (m *MockS3API) RestoreObjectWithContextCalls() []struct {
 }
 
 // RestoreObjectRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) RestoreObjectRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.RestoreObjectInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.RestoreObjectOutput) {
+func (m *S3API) RestoreObjectRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.RestoreObjectInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.RestoreObjectOutput) {
 	m.lockRestoreObjectRequest.Lock()
 	defer m.lockRestoreObjectRequest.Unlock()
 
 	if m.RestoreObjectRequestFunc == nil {
-		panic("mocker: MockS3API.RestoreObjectRequestFunc is nil but MockS3API.RestoreObjectRequest was called.")
+		panic("mocker: S3API.RestoreObjectRequestFunc is nil but S3API.RestoreObjectRequest was called.")
 	}
 
 	call := struct {
@@ -12537,7 +12537,7 @@ func (m *MockS3API) RestoreObjectRequest(arg0 *github_com_aws_aws_sdk_go_service
 }
 
 // RestoreObjectRequestCalled returns true if RestoreObjectRequest was called at least once.
-func (m *MockS3API) RestoreObjectRequestCalled() bool {
+func (m *S3API) RestoreObjectRequestCalled() bool {
 	m.lockRestoreObjectRequest.Lock()
 	defer m.lockRestoreObjectRequest.Unlock()
 
@@ -12545,7 +12545,7 @@ func (m *MockS3API) RestoreObjectRequestCalled() bool {
 }
 
 // RestoreObjectRequestCalls returns the calls made to RestoreObjectRequest.
-func (m *MockS3API) RestoreObjectRequestCalls() []struct {
+func (m *S3API) RestoreObjectRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.RestoreObjectInput
 } {
 	m.lockRestoreObjectRequest.Lock()
@@ -12555,12 +12555,12 @@ func (m *MockS3API) RestoreObjectRequestCalls() []struct {
 }
 
 // SelectObjectContent mocks base method by wrapping the associated func.
-func (m *MockS3API) SelectObjectContent(arg0 *github_com_aws_aws_sdk_go_service_s3.SelectObjectContentInput) (*github_com_aws_aws_sdk_go_service_s3.SelectObjectContentOutput, error) {
+func (m *S3API) SelectObjectContent(arg0 *github_com_aws_aws_sdk_go_service_s3.SelectObjectContentInput) (*github_com_aws_aws_sdk_go_service_s3.SelectObjectContentOutput, error) {
 	m.lockSelectObjectContent.Lock()
 	defer m.lockSelectObjectContent.Unlock()
 
 	if m.SelectObjectContentFunc == nil {
-		panic("mocker: MockS3API.SelectObjectContentFunc is nil but MockS3API.SelectObjectContent was called.")
+		panic("mocker: S3API.SelectObjectContentFunc is nil but S3API.SelectObjectContent was called.")
 	}
 
 	call := struct {
@@ -12575,7 +12575,7 @@ func (m *MockS3API) SelectObjectContent(arg0 *github_com_aws_aws_sdk_go_service_
 }
 
 // SelectObjectContentCalled returns true if SelectObjectContent was called at least once.
-func (m *MockS3API) SelectObjectContentCalled() bool {
+func (m *S3API) SelectObjectContentCalled() bool {
 	m.lockSelectObjectContent.Lock()
 	defer m.lockSelectObjectContent.Unlock()
 
@@ -12583,7 +12583,7 @@ func (m *MockS3API) SelectObjectContentCalled() bool {
 }
 
 // SelectObjectContentCalls returns the calls made to SelectObjectContent.
-func (m *MockS3API) SelectObjectContentCalls() []struct {
+func (m *S3API) SelectObjectContentCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.SelectObjectContentInput
 } {
 	m.lockSelectObjectContent.Lock()
@@ -12593,12 +12593,12 @@ func (m *MockS3API) SelectObjectContentCalls() []struct {
 }
 
 // SelectObjectContentWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) SelectObjectContentWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.SelectObjectContentInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.SelectObjectContentOutput, error) {
+func (m *S3API) SelectObjectContentWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.SelectObjectContentInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.SelectObjectContentOutput, error) {
 	m.lockSelectObjectContentWithContext.Lock()
 	defer m.lockSelectObjectContentWithContext.Unlock()
 
 	if m.SelectObjectContentWithContextFunc == nil {
-		panic("mocker: MockS3API.SelectObjectContentWithContextFunc is nil but MockS3API.SelectObjectContentWithContext was called.")
+		panic("mocker: S3API.SelectObjectContentWithContextFunc is nil but S3API.SelectObjectContentWithContext was called.")
 	}
 
 	call := struct {
@@ -12617,7 +12617,7 @@ func (m *MockS3API) SelectObjectContentWithContext(arg0 github_com_aws_aws_sdk_g
 }
 
 // SelectObjectContentWithContextCalled returns true if SelectObjectContentWithContext was called at least once.
-func (m *MockS3API) SelectObjectContentWithContextCalled() bool {
+func (m *S3API) SelectObjectContentWithContextCalled() bool {
 	m.lockSelectObjectContentWithContext.Lock()
 	defer m.lockSelectObjectContentWithContext.Unlock()
 
@@ -12625,7 +12625,7 @@ func (m *MockS3API) SelectObjectContentWithContextCalled() bool {
 }
 
 // SelectObjectContentWithContextCalls returns the calls made to SelectObjectContentWithContext.
-func (m *MockS3API) SelectObjectContentWithContextCalls() []struct {
+func (m *S3API) SelectObjectContentWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.SelectObjectContentInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -12637,12 +12637,12 @@ func (m *MockS3API) SelectObjectContentWithContextCalls() []struct {
 }
 
 // SelectObjectContentRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) SelectObjectContentRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.SelectObjectContentInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.SelectObjectContentOutput) {
+func (m *S3API) SelectObjectContentRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.SelectObjectContentInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.SelectObjectContentOutput) {
 	m.lockSelectObjectContentRequest.Lock()
 	defer m.lockSelectObjectContentRequest.Unlock()
 
 	if m.SelectObjectContentRequestFunc == nil {
-		panic("mocker: MockS3API.SelectObjectContentRequestFunc is nil but MockS3API.SelectObjectContentRequest was called.")
+		panic("mocker: S3API.SelectObjectContentRequestFunc is nil but S3API.SelectObjectContentRequest was called.")
 	}
 
 	call := struct {
@@ -12657,7 +12657,7 @@ func (m *MockS3API) SelectObjectContentRequest(arg0 *github_com_aws_aws_sdk_go_s
 }
 
 // SelectObjectContentRequestCalled returns true if SelectObjectContentRequest was called at least once.
-func (m *MockS3API) SelectObjectContentRequestCalled() bool {
+func (m *S3API) SelectObjectContentRequestCalled() bool {
 	m.lockSelectObjectContentRequest.Lock()
 	defer m.lockSelectObjectContentRequest.Unlock()
 
@@ -12665,7 +12665,7 @@ func (m *MockS3API) SelectObjectContentRequestCalled() bool {
 }
 
 // SelectObjectContentRequestCalls returns the calls made to SelectObjectContentRequest.
-func (m *MockS3API) SelectObjectContentRequestCalls() []struct {
+func (m *S3API) SelectObjectContentRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.SelectObjectContentInput
 } {
 	m.lockSelectObjectContentRequest.Lock()
@@ -12675,12 +12675,12 @@ func (m *MockS3API) SelectObjectContentRequestCalls() []struct {
 }
 
 // UploadPart mocks base method by wrapping the associated func.
-func (m *MockS3API) UploadPart(arg0 *github_com_aws_aws_sdk_go_service_s3.UploadPartInput) (*github_com_aws_aws_sdk_go_service_s3.UploadPartOutput, error) {
+func (m *S3API) UploadPart(arg0 *github_com_aws_aws_sdk_go_service_s3.UploadPartInput) (*github_com_aws_aws_sdk_go_service_s3.UploadPartOutput, error) {
 	m.lockUploadPart.Lock()
 	defer m.lockUploadPart.Unlock()
 
 	if m.UploadPartFunc == nil {
-		panic("mocker: MockS3API.UploadPartFunc is nil but MockS3API.UploadPart was called.")
+		panic("mocker: S3API.UploadPartFunc is nil but S3API.UploadPart was called.")
 	}
 
 	call := struct {
@@ -12695,7 +12695,7 @@ func (m *MockS3API) UploadPart(arg0 *github_com_aws_aws_sdk_go_service_s3.Upload
 }
 
 // UploadPartCalled returns true if UploadPart was called at least once.
-func (m *MockS3API) UploadPartCalled() bool {
+func (m *S3API) UploadPartCalled() bool {
 	m.lockUploadPart.Lock()
 	defer m.lockUploadPart.Unlock()
 
@@ -12703,7 +12703,7 @@ func (m *MockS3API) UploadPartCalled() bool {
 }
 
 // UploadPartCalls returns the calls made to UploadPart.
-func (m *MockS3API) UploadPartCalls() []struct {
+func (m *S3API) UploadPartCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.UploadPartInput
 } {
 	m.lockUploadPart.Lock()
@@ -12713,12 +12713,12 @@ func (m *MockS3API) UploadPartCalls() []struct {
 }
 
 // UploadPartWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) UploadPartWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.UploadPartInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.UploadPartOutput, error) {
+func (m *S3API) UploadPartWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.UploadPartInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.UploadPartOutput, error) {
 	m.lockUploadPartWithContext.Lock()
 	defer m.lockUploadPartWithContext.Unlock()
 
 	if m.UploadPartWithContextFunc == nil {
-		panic("mocker: MockS3API.UploadPartWithContextFunc is nil but MockS3API.UploadPartWithContext was called.")
+		panic("mocker: S3API.UploadPartWithContextFunc is nil but S3API.UploadPartWithContext was called.")
 	}
 
 	call := struct {
@@ -12737,7 +12737,7 @@ func (m *MockS3API) UploadPartWithContext(arg0 github_com_aws_aws_sdk_go_aws.Con
 }
 
 // UploadPartWithContextCalled returns true if UploadPartWithContext was called at least once.
-func (m *MockS3API) UploadPartWithContextCalled() bool {
+func (m *S3API) UploadPartWithContextCalled() bool {
 	m.lockUploadPartWithContext.Lock()
 	defer m.lockUploadPartWithContext.Unlock()
 
@@ -12745,7 +12745,7 @@ func (m *MockS3API) UploadPartWithContextCalled() bool {
 }
 
 // UploadPartWithContextCalls returns the calls made to UploadPartWithContext.
-func (m *MockS3API) UploadPartWithContextCalls() []struct {
+func (m *S3API) UploadPartWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.UploadPartInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -12757,12 +12757,12 @@ func (m *MockS3API) UploadPartWithContextCalls() []struct {
 }
 
 // UploadPartRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) UploadPartRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.UploadPartInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.UploadPartOutput) {
+func (m *S3API) UploadPartRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.UploadPartInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.UploadPartOutput) {
 	m.lockUploadPartRequest.Lock()
 	defer m.lockUploadPartRequest.Unlock()
 
 	if m.UploadPartRequestFunc == nil {
-		panic("mocker: MockS3API.UploadPartRequestFunc is nil but MockS3API.UploadPartRequest was called.")
+		panic("mocker: S3API.UploadPartRequestFunc is nil but S3API.UploadPartRequest was called.")
 	}
 
 	call := struct {
@@ -12777,7 +12777,7 @@ func (m *MockS3API) UploadPartRequest(arg0 *github_com_aws_aws_sdk_go_service_s3
 }
 
 // UploadPartRequestCalled returns true if UploadPartRequest was called at least once.
-func (m *MockS3API) UploadPartRequestCalled() bool {
+func (m *S3API) UploadPartRequestCalled() bool {
 	m.lockUploadPartRequest.Lock()
 	defer m.lockUploadPartRequest.Unlock()
 
@@ -12785,7 +12785,7 @@ func (m *MockS3API) UploadPartRequestCalled() bool {
 }
 
 // UploadPartRequestCalls returns the calls made to UploadPartRequest.
-func (m *MockS3API) UploadPartRequestCalls() []struct {
+func (m *S3API) UploadPartRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.UploadPartInput
 } {
 	m.lockUploadPartRequest.Lock()
@@ -12795,12 +12795,12 @@ func (m *MockS3API) UploadPartRequestCalls() []struct {
 }
 
 // UploadPartCopy mocks base method by wrapping the associated func.
-func (m *MockS3API) UploadPartCopy(arg0 *github_com_aws_aws_sdk_go_service_s3.UploadPartCopyInput) (*github_com_aws_aws_sdk_go_service_s3.UploadPartCopyOutput, error) {
+func (m *S3API) UploadPartCopy(arg0 *github_com_aws_aws_sdk_go_service_s3.UploadPartCopyInput) (*github_com_aws_aws_sdk_go_service_s3.UploadPartCopyOutput, error) {
 	m.lockUploadPartCopy.Lock()
 	defer m.lockUploadPartCopy.Unlock()
 
 	if m.UploadPartCopyFunc == nil {
-		panic("mocker: MockS3API.UploadPartCopyFunc is nil but MockS3API.UploadPartCopy was called.")
+		panic("mocker: S3API.UploadPartCopyFunc is nil but S3API.UploadPartCopy was called.")
 	}
 
 	call := struct {
@@ -12815,7 +12815,7 @@ func (m *MockS3API) UploadPartCopy(arg0 *github_com_aws_aws_sdk_go_service_s3.Up
 }
 
 // UploadPartCopyCalled returns true if UploadPartCopy was called at least once.
-func (m *MockS3API) UploadPartCopyCalled() bool {
+func (m *S3API) UploadPartCopyCalled() bool {
 	m.lockUploadPartCopy.Lock()
 	defer m.lockUploadPartCopy.Unlock()
 
@@ -12823,7 +12823,7 @@ func (m *MockS3API) UploadPartCopyCalled() bool {
 }
 
 // UploadPartCopyCalls returns the calls made to UploadPartCopy.
-func (m *MockS3API) UploadPartCopyCalls() []struct {
+func (m *S3API) UploadPartCopyCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.UploadPartCopyInput
 } {
 	m.lockUploadPartCopy.Lock()
@@ -12833,12 +12833,12 @@ func (m *MockS3API) UploadPartCopyCalls() []struct {
 }
 
 // UploadPartCopyWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) UploadPartCopyWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.UploadPartCopyInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.UploadPartCopyOutput, error) {
+func (m *S3API) UploadPartCopyWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.UploadPartCopyInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.Option) (*github_com_aws_aws_sdk_go_service_s3.UploadPartCopyOutput, error) {
 	m.lockUploadPartCopyWithContext.Lock()
 	defer m.lockUploadPartCopyWithContext.Unlock()
 
 	if m.UploadPartCopyWithContextFunc == nil {
-		panic("mocker: MockS3API.UploadPartCopyWithContextFunc is nil but MockS3API.UploadPartCopyWithContext was called.")
+		panic("mocker: S3API.UploadPartCopyWithContextFunc is nil but S3API.UploadPartCopyWithContext was called.")
 	}
 
 	call := struct {
@@ -12857,7 +12857,7 @@ func (m *MockS3API) UploadPartCopyWithContext(arg0 github_com_aws_aws_sdk_go_aws
 }
 
 // UploadPartCopyWithContextCalled returns true if UploadPartCopyWithContext was called at least once.
-func (m *MockS3API) UploadPartCopyWithContextCalled() bool {
+func (m *S3API) UploadPartCopyWithContextCalled() bool {
 	m.lockUploadPartCopyWithContext.Lock()
 	defer m.lockUploadPartCopyWithContext.Unlock()
 
@@ -12865,7 +12865,7 @@ func (m *MockS3API) UploadPartCopyWithContextCalled() bool {
 }
 
 // UploadPartCopyWithContextCalls returns the calls made to UploadPartCopyWithContext.
-func (m *MockS3API) UploadPartCopyWithContextCalls() []struct {
+func (m *S3API) UploadPartCopyWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.UploadPartCopyInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.Option
@@ -12877,12 +12877,12 @@ func (m *MockS3API) UploadPartCopyWithContextCalls() []struct {
 }
 
 // UploadPartCopyRequest mocks base method by wrapping the associated func.
-func (m *MockS3API) UploadPartCopyRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.UploadPartCopyInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.UploadPartCopyOutput) {
+func (m *S3API) UploadPartCopyRequest(arg0 *github_com_aws_aws_sdk_go_service_s3.UploadPartCopyInput) (*github_com_aws_aws_sdk_go_aws_request.Request, *github_com_aws_aws_sdk_go_service_s3.UploadPartCopyOutput) {
 	m.lockUploadPartCopyRequest.Lock()
 	defer m.lockUploadPartCopyRequest.Unlock()
 
 	if m.UploadPartCopyRequestFunc == nil {
-		panic("mocker: MockS3API.UploadPartCopyRequestFunc is nil but MockS3API.UploadPartCopyRequest was called.")
+		panic("mocker: S3API.UploadPartCopyRequestFunc is nil but S3API.UploadPartCopyRequest was called.")
 	}
 
 	call := struct {
@@ -12897,7 +12897,7 @@ func (m *MockS3API) UploadPartCopyRequest(arg0 *github_com_aws_aws_sdk_go_servic
 }
 
 // UploadPartCopyRequestCalled returns true if UploadPartCopyRequest was called at least once.
-func (m *MockS3API) UploadPartCopyRequestCalled() bool {
+func (m *S3API) UploadPartCopyRequestCalled() bool {
 	m.lockUploadPartCopyRequest.Lock()
 	defer m.lockUploadPartCopyRequest.Unlock()
 
@@ -12905,7 +12905,7 @@ func (m *MockS3API) UploadPartCopyRequestCalled() bool {
 }
 
 // UploadPartCopyRequestCalls returns the calls made to UploadPartCopyRequest.
-func (m *MockS3API) UploadPartCopyRequestCalls() []struct {
+func (m *S3API) UploadPartCopyRequestCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.UploadPartCopyInput
 } {
 	m.lockUploadPartCopyRequest.Lock()
@@ -12915,12 +12915,12 @@ func (m *MockS3API) UploadPartCopyRequestCalls() []struct {
 }
 
 // WaitUntilBucketExists mocks base method by wrapping the associated func.
-func (m *MockS3API) WaitUntilBucketExists(arg0 *github_com_aws_aws_sdk_go_service_s3.HeadBucketInput) error {
+func (m *S3API) WaitUntilBucketExists(arg0 *github_com_aws_aws_sdk_go_service_s3.HeadBucketInput) error {
 	m.lockWaitUntilBucketExists.Lock()
 	defer m.lockWaitUntilBucketExists.Unlock()
 
 	if m.WaitUntilBucketExistsFunc == nil {
-		panic("mocker: MockS3API.WaitUntilBucketExistsFunc is nil but MockS3API.WaitUntilBucketExists was called.")
+		panic("mocker: S3API.WaitUntilBucketExistsFunc is nil but S3API.WaitUntilBucketExists was called.")
 	}
 
 	call := struct {
@@ -12935,7 +12935,7 @@ func (m *MockS3API) WaitUntilBucketExists(arg0 *github_com_aws_aws_sdk_go_servic
 }
 
 // WaitUntilBucketExistsCalled returns true if WaitUntilBucketExists was called at least once.
-func (m *MockS3API) WaitUntilBucketExistsCalled() bool {
+func (m *S3API) WaitUntilBucketExistsCalled() bool {
 	m.lockWaitUntilBucketExists.Lock()
 	defer m.lockWaitUntilBucketExists.Unlock()
 
@@ -12943,7 +12943,7 @@ func (m *MockS3API) WaitUntilBucketExistsCalled() bool {
 }
 
 // WaitUntilBucketExistsCalls returns the calls made to WaitUntilBucketExists.
-func (m *MockS3API) WaitUntilBucketExistsCalls() []struct {
+func (m *S3API) WaitUntilBucketExistsCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.HeadBucketInput
 } {
 	m.lockWaitUntilBucketExists.Lock()
@@ -12953,12 +12953,12 @@ func (m *MockS3API) WaitUntilBucketExistsCalls() []struct {
 }
 
 // WaitUntilBucketExistsWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) WaitUntilBucketExistsWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.HeadBucketInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.WaiterOption) error {
+func (m *S3API) WaitUntilBucketExistsWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.HeadBucketInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.WaiterOption) error {
 	m.lockWaitUntilBucketExistsWithContext.Lock()
 	defer m.lockWaitUntilBucketExistsWithContext.Unlock()
 
 	if m.WaitUntilBucketExistsWithContextFunc == nil {
-		panic("mocker: MockS3API.WaitUntilBucketExistsWithContextFunc is nil but MockS3API.WaitUntilBucketExistsWithContext was called.")
+		panic("mocker: S3API.WaitUntilBucketExistsWithContextFunc is nil but S3API.WaitUntilBucketExistsWithContext was called.")
 	}
 
 	call := struct {
@@ -12977,7 +12977,7 @@ func (m *MockS3API) WaitUntilBucketExistsWithContext(arg0 github_com_aws_aws_sdk
 }
 
 // WaitUntilBucketExistsWithContextCalled returns true if WaitUntilBucketExistsWithContext was called at least once.
-func (m *MockS3API) WaitUntilBucketExistsWithContextCalled() bool {
+func (m *S3API) WaitUntilBucketExistsWithContextCalled() bool {
 	m.lockWaitUntilBucketExistsWithContext.Lock()
 	defer m.lockWaitUntilBucketExistsWithContext.Unlock()
 
@@ -12985,7 +12985,7 @@ func (m *MockS3API) WaitUntilBucketExistsWithContextCalled() bool {
 }
 
 // WaitUntilBucketExistsWithContextCalls returns the calls made to WaitUntilBucketExistsWithContext.
-func (m *MockS3API) WaitUntilBucketExistsWithContextCalls() []struct {
+func (m *S3API) WaitUntilBucketExistsWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.HeadBucketInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.WaiterOption
@@ -12997,12 +12997,12 @@ func (m *MockS3API) WaitUntilBucketExistsWithContextCalls() []struct {
 }
 
 // WaitUntilBucketNotExists mocks base method by wrapping the associated func.
-func (m *MockS3API) WaitUntilBucketNotExists(arg0 *github_com_aws_aws_sdk_go_service_s3.HeadBucketInput) error {
+func (m *S3API) WaitUntilBucketNotExists(arg0 *github_com_aws_aws_sdk_go_service_s3.HeadBucketInput) error {
 	m.lockWaitUntilBucketNotExists.Lock()
 	defer m.lockWaitUntilBucketNotExists.Unlock()
 
 	if m.WaitUntilBucketNotExistsFunc == nil {
-		panic("mocker: MockS3API.WaitUntilBucketNotExistsFunc is nil but MockS3API.WaitUntilBucketNotExists was called.")
+		panic("mocker: S3API.WaitUntilBucketNotExistsFunc is nil but S3API.WaitUntilBucketNotExists was called.")
 	}
 
 	call := struct {
@@ -13017,7 +13017,7 @@ func (m *MockS3API) WaitUntilBucketNotExists(arg0 *github_com_aws_aws_sdk_go_ser
 }
 
 // WaitUntilBucketNotExistsCalled returns true if WaitUntilBucketNotExists was called at least once.
-func (m *MockS3API) WaitUntilBucketNotExistsCalled() bool {
+func (m *S3API) WaitUntilBucketNotExistsCalled() bool {
 	m.lockWaitUntilBucketNotExists.Lock()
 	defer m.lockWaitUntilBucketNotExists.Unlock()
 
@@ -13025,7 +13025,7 @@ func (m *MockS3API) WaitUntilBucketNotExistsCalled() bool {
 }
 
 // WaitUntilBucketNotExistsCalls returns the calls made to WaitUntilBucketNotExists.
-func (m *MockS3API) WaitUntilBucketNotExistsCalls() []struct {
+func (m *S3API) WaitUntilBucketNotExistsCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.HeadBucketInput
 } {
 	m.lockWaitUntilBucketNotExists.Lock()
@@ -13035,12 +13035,12 @@ func (m *MockS3API) WaitUntilBucketNotExistsCalls() []struct {
 }
 
 // WaitUntilBucketNotExistsWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) WaitUntilBucketNotExistsWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.HeadBucketInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.WaiterOption) error {
+func (m *S3API) WaitUntilBucketNotExistsWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.HeadBucketInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.WaiterOption) error {
 	m.lockWaitUntilBucketNotExistsWithContext.Lock()
 	defer m.lockWaitUntilBucketNotExistsWithContext.Unlock()
 
 	if m.WaitUntilBucketNotExistsWithContextFunc == nil {
-		panic("mocker: MockS3API.WaitUntilBucketNotExistsWithContextFunc is nil but MockS3API.WaitUntilBucketNotExistsWithContext was called.")
+		panic("mocker: S3API.WaitUntilBucketNotExistsWithContextFunc is nil but S3API.WaitUntilBucketNotExistsWithContext was called.")
 	}
 
 	call := struct {
@@ -13059,7 +13059,7 @@ func (m *MockS3API) WaitUntilBucketNotExistsWithContext(arg0 github_com_aws_aws_
 }
 
 // WaitUntilBucketNotExistsWithContextCalled returns true if WaitUntilBucketNotExistsWithContext was called at least once.
-func (m *MockS3API) WaitUntilBucketNotExistsWithContextCalled() bool {
+func (m *S3API) WaitUntilBucketNotExistsWithContextCalled() bool {
 	m.lockWaitUntilBucketNotExistsWithContext.Lock()
 	defer m.lockWaitUntilBucketNotExistsWithContext.Unlock()
 
@@ -13067,7 +13067,7 @@ func (m *MockS3API) WaitUntilBucketNotExistsWithContextCalled() bool {
 }
 
 // WaitUntilBucketNotExistsWithContextCalls returns the calls made to WaitUntilBucketNotExistsWithContext.
-func (m *MockS3API) WaitUntilBucketNotExistsWithContextCalls() []struct {
+func (m *S3API) WaitUntilBucketNotExistsWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.HeadBucketInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.WaiterOption
@@ -13079,12 +13079,12 @@ func (m *MockS3API) WaitUntilBucketNotExistsWithContextCalls() []struct {
 }
 
 // WaitUntilObjectExists mocks base method by wrapping the associated func.
-func (m *MockS3API) WaitUntilObjectExists(arg0 *github_com_aws_aws_sdk_go_service_s3.HeadObjectInput) error {
+func (m *S3API) WaitUntilObjectExists(arg0 *github_com_aws_aws_sdk_go_service_s3.HeadObjectInput) error {
 	m.lockWaitUntilObjectExists.Lock()
 	defer m.lockWaitUntilObjectExists.Unlock()
 
 	if m.WaitUntilObjectExistsFunc == nil {
-		panic("mocker: MockS3API.WaitUntilObjectExistsFunc is nil but MockS3API.WaitUntilObjectExists was called.")
+		panic("mocker: S3API.WaitUntilObjectExistsFunc is nil but S3API.WaitUntilObjectExists was called.")
 	}
 
 	call := struct {
@@ -13099,7 +13099,7 @@ func (m *MockS3API) WaitUntilObjectExists(arg0 *github_com_aws_aws_sdk_go_servic
 }
 
 // WaitUntilObjectExistsCalled returns true if WaitUntilObjectExists was called at least once.
-func (m *MockS3API) WaitUntilObjectExistsCalled() bool {
+func (m *S3API) WaitUntilObjectExistsCalled() bool {
 	m.lockWaitUntilObjectExists.Lock()
 	defer m.lockWaitUntilObjectExists.Unlock()
 
@@ -13107,7 +13107,7 @@ func (m *MockS3API) WaitUntilObjectExistsCalled() bool {
 }
 
 // WaitUntilObjectExistsCalls returns the calls made to WaitUntilObjectExists.
-func (m *MockS3API) WaitUntilObjectExistsCalls() []struct {
+func (m *S3API) WaitUntilObjectExistsCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.HeadObjectInput
 } {
 	m.lockWaitUntilObjectExists.Lock()
@@ -13117,12 +13117,12 @@ func (m *MockS3API) WaitUntilObjectExistsCalls() []struct {
 }
 
 // WaitUntilObjectExistsWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) WaitUntilObjectExistsWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.HeadObjectInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.WaiterOption) error {
+func (m *S3API) WaitUntilObjectExistsWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.HeadObjectInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.WaiterOption) error {
 	m.lockWaitUntilObjectExistsWithContext.Lock()
 	defer m.lockWaitUntilObjectExistsWithContext.Unlock()
 
 	if m.WaitUntilObjectExistsWithContextFunc == nil {
-		panic("mocker: MockS3API.WaitUntilObjectExistsWithContextFunc is nil but MockS3API.WaitUntilObjectExistsWithContext was called.")
+		panic("mocker: S3API.WaitUntilObjectExistsWithContextFunc is nil but S3API.WaitUntilObjectExistsWithContext was called.")
 	}
 
 	call := struct {
@@ -13141,7 +13141,7 @@ func (m *MockS3API) WaitUntilObjectExistsWithContext(arg0 github_com_aws_aws_sdk
 }
 
 // WaitUntilObjectExistsWithContextCalled returns true if WaitUntilObjectExistsWithContext was called at least once.
-func (m *MockS3API) WaitUntilObjectExistsWithContextCalled() bool {
+func (m *S3API) WaitUntilObjectExistsWithContextCalled() bool {
 	m.lockWaitUntilObjectExistsWithContext.Lock()
 	defer m.lockWaitUntilObjectExistsWithContext.Unlock()
 
@@ -13149,7 +13149,7 @@ func (m *MockS3API) WaitUntilObjectExistsWithContextCalled() bool {
 }
 
 // WaitUntilObjectExistsWithContextCalls returns the calls made to WaitUntilObjectExistsWithContext.
-func (m *MockS3API) WaitUntilObjectExistsWithContextCalls() []struct {
+func (m *S3API) WaitUntilObjectExistsWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.HeadObjectInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.WaiterOption
@@ -13161,12 +13161,12 @@ func (m *MockS3API) WaitUntilObjectExistsWithContextCalls() []struct {
 }
 
 // WaitUntilObjectNotExists mocks base method by wrapping the associated func.
-func (m *MockS3API) WaitUntilObjectNotExists(arg0 *github_com_aws_aws_sdk_go_service_s3.HeadObjectInput) error {
+func (m *S3API) WaitUntilObjectNotExists(arg0 *github_com_aws_aws_sdk_go_service_s3.HeadObjectInput) error {
 	m.lockWaitUntilObjectNotExists.Lock()
 	defer m.lockWaitUntilObjectNotExists.Unlock()
 
 	if m.WaitUntilObjectNotExistsFunc == nil {
-		panic("mocker: MockS3API.WaitUntilObjectNotExistsFunc is nil but MockS3API.WaitUntilObjectNotExists was called.")
+		panic("mocker: S3API.WaitUntilObjectNotExistsFunc is nil but S3API.WaitUntilObjectNotExists was called.")
 	}
 
 	call := struct {
@@ -13181,7 +13181,7 @@ func (m *MockS3API) WaitUntilObjectNotExists(arg0 *github_com_aws_aws_sdk_go_ser
 }
 
 // WaitUntilObjectNotExistsCalled returns true if WaitUntilObjectNotExists was called at least once.
-func (m *MockS3API) WaitUntilObjectNotExistsCalled() bool {
+func (m *S3API) WaitUntilObjectNotExistsCalled() bool {
 	m.lockWaitUntilObjectNotExists.Lock()
 	defer m.lockWaitUntilObjectNotExists.Unlock()
 
@@ -13189,7 +13189,7 @@ func (m *MockS3API) WaitUntilObjectNotExistsCalled() bool {
 }
 
 // WaitUntilObjectNotExistsCalls returns the calls made to WaitUntilObjectNotExists.
-func (m *MockS3API) WaitUntilObjectNotExistsCalls() []struct {
+func (m *S3API) WaitUntilObjectNotExistsCalls() []struct {
 	Arg0 *github_com_aws_aws_sdk_go_service_s3.HeadObjectInput
 } {
 	m.lockWaitUntilObjectNotExists.Lock()
@@ -13199,12 +13199,12 @@ func (m *MockS3API) WaitUntilObjectNotExistsCalls() []struct {
 }
 
 // WaitUntilObjectNotExistsWithContext mocks base method by wrapping the associated func.
-func (m *MockS3API) WaitUntilObjectNotExistsWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.HeadObjectInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.WaiterOption) error {
+func (m *S3API) WaitUntilObjectNotExistsWithContext(arg0 github_com_aws_aws_sdk_go_aws.Context, arg1 *github_com_aws_aws_sdk_go_service_s3.HeadObjectInput, arg2 ...github_com_aws_aws_sdk_go_aws_request.WaiterOption) error {
 	m.lockWaitUntilObjectNotExistsWithContext.Lock()
 	defer m.lockWaitUntilObjectNotExistsWithContext.Unlock()
 
 	if m.WaitUntilObjectNotExistsWithContextFunc == nil {
-		panic("mocker: MockS3API.WaitUntilObjectNotExistsWithContextFunc is nil but MockS3API.WaitUntilObjectNotExistsWithContext was called.")
+		panic("mocker: S3API.WaitUntilObjectNotExistsWithContextFunc is nil but S3API.WaitUntilObjectNotExistsWithContext was called.")
 	}
 
 	call := struct {
@@ -13223,7 +13223,7 @@ func (m *MockS3API) WaitUntilObjectNotExistsWithContext(arg0 github_com_aws_aws_
 }
 
 // WaitUntilObjectNotExistsWithContextCalled returns true if WaitUntilObjectNotExistsWithContext was called at least once.
-func (m *MockS3API) WaitUntilObjectNotExistsWithContextCalled() bool {
+func (m *S3API) WaitUntilObjectNotExistsWithContextCalled() bool {
 	m.lockWaitUntilObjectNotExistsWithContext.Lock()
 	defer m.lockWaitUntilObjectNotExistsWithContext.Unlock()
 
@@ -13231,7 +13231,7 @@ func (m *MockS3API) WaitUntilObjectNotExistsWithContextCalled() bool {
 }
 
 // WaitUntilObjectNotExistsWithContextCalls returns the calls made to WaitUntilObjectNotExistsWithContext.
-func (m *MockS3API) WaitUntilObjectNotExistsWithContextCalls() []struct {
+func (m *S3API) WaitUntilObjectNotExistsWithContextCalls() []struct {
 	Arg0 github_com_aws_aws_sdk_go_aws.Context
 	Arg1 *github_com_aws_aws_sdk_go_service_s3.HeadObjectInput
 	Arg2 []github_com_aws_aws_sdk_go_aws_request.WaiterOption
@@ -13243,7 +13243,7 @@ func (m *MockS3API) WaitUntilObjectNotExistsWithContextCalls() []struct {
 }
 
 // Reset resets the calls made to the mocked methods.
-func (m *MockS3API) Reset() {
+func (m *S3API) Reset() {
 	m.lockAbortMultipartUpload.Lock()
 	m.calls.AbortMultipartUpload = nil
 	m.lockAbortMultipartUpload.Unlock()
