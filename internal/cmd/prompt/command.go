@@ -21,14 +21,14 @@ For Bash, you'll want to do something like this:
 
 ::
 
-  $ export PS1="$({{.CLIName}} prompt) $PS1"
+  $ export PS1="\$({{.CLIName}} prompt) $PS1"
 
 ZSH users should be aware that they will have to set the 'PROMPT_SUBST' option first:
 
 ::
 
   $ setopt prompt_subst
-  $ export PS1="$({{.CLIName}} prompt) $PS1"
+  $ export PS1="\$({{.CLIName}} prompt) $PS1"
 
 You can customize the prompt by calling passing a '--format' flag, such as '-f "{{.CLIName}}|%E:%K"'.
 If you want to create a more sophisticated prompt (such as using the built-in color functions),
@@ -37,7 +37,7 @@ it'll be easiest for you if you use an environment variable rather than try to e
 ::
 
   $ export {{.CLIName | ToUpper}}_PROMPT_FMT='({{"{{"}}color "blue" "{{.CLIName}}"{{"}}"}}|{{"{{"}}color "red" "%E"{{"}}"}}:{{"{{"}}color "cyan" "%K"{{"}}"}})'
-  $ export PS1="$({{.CLIName}} prompt -f "${{.CLIName | ToUpper}}_PROMPT_FMT") $PS1"
+  $ export PS1="\$({{.CLIName}} prompt -f "${{.CLIName | ToUpper}}_PROMPT_FMT") $PS1"
 
 To make this permanent, you must add it to your bash or zsh profile.
 
