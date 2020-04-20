@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/local"
+	"github.com/confluentinc/cc-utils/local"
 )
 
 /*
