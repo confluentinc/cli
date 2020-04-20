@@ -37,7 +37,7 @@ it'll be easiest for you if you use an environment variable rather than try to e
 ::
 
   $ export {{.CLIName | ToUpper}}_PROMPT_FMT='({{"{{"}}color "blue" "{{.CLIName}}"{{"}}"}}|{{"{{"}}color "red" "%E"{{"}}"}}:{{"{{"}}color "cyan" "%K"{{"}}"}})'
-  $ export PS1="\$({{.CLIName}} prompt -f "${{.CLIName | ToUpper}}_PROMPT_FMT") $PS1"
+  $ export PS1="\$({{.CLIName}} prompt -f '${{.CLIName | ToUpper}}_PROMPT_FMT') $PS1"
 
 To make this permanent, you must add it to your bash or zsh profile.
 
