@@ -21,6 +21,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/metric"
+	"github.com/confluentinc/cli/internal/pkg/shell/completer"
+	"github.com/confluentinc/cli/internal/pkg/shell/prompt"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 	"github.com/confluentinc/cli/mock"
 )
@@ -83,7 +85,8 @@ func main() {
 		analyticsClient = mock.NewDummyAnalyticsMock()
 	}
 
-	cli, err := cmd.NewConfluentCommand(cliName, cfg, logger, version, analyticsClient, pauth.NewNetrcHandler(pauth.GetNetrcFilePath(isTest)))
+	cmdCompleter := completer.NewSubCommandCompleter(nil)
+	cli, err := cmd.NewConfluentCommand(cliName, cmdCompleter, cfg, logger, version, analyticsClient, pauth.NewNetrcHandler(pauth.GetNetrcFilePath(isTest)))
 	if err != nil {
 		if cli == nil {
 			fmt.Fprintln(os.Stderr, err)
@@ -97,6 +100,11 @@ func main() {
 			exit(1, analyticsClient, logger)
 		}
 	}
+
+	masterCompleter := completer.NewShellCompleter(cli.Command, cliName)
+	cliPrompt := prompt.NewShellPrompt(cli.Command, masterCompleter, cfg, prompt.DefaultPromptOptions()...)
+	cliPrompt.Run()
+
 	err = cli.Execute(os.Args[1:])
 	if err != nil {
 		if isTest {
