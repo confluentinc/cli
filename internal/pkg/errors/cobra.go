@@ -3,9 +3,10 @@ package errors
 import (
 	"crypto/x509"
 	"fmt"
+	"net/url"
+
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
-	"net/url"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	corev1 "github.com/confluentinc/ccloudapis/core/v1"
