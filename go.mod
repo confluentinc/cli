@@ -17,7 +17,7 @@ require (
 	github.com/confluentinc/cc-structs/kafka/auth v0.36.0 // indirect
 	github.com/confluentinc/cc-utils v0.0.0-00010101000000-000000000000
 	github.com/confluentinc/ccloud-sdk-go v0.0.18
-	github.com/confluentinc/ccloudapis v0.0.0-20200323172841-c4a51af500ae\
+	github.com/confluentinc/ccloudapis v0.0.0-20200407174848-05fc38d8af33
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-printer v0.13.0
 	github.com/confluentinc/mds-sdk-go v0.0.0-20200330220448-02620efc8d62
@@ -32,7 +32,7 @@ require (
 	github.com/gobuffalo/flect v0.1.3
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/mock v1.3.1
-	github.com/golang/protobuf v1.3.4
+	github.com/golang/protobuf v1.3.5
 	github.com/golangci/gocyclo v0.0.0-20180528144436-0a533e8fa43d // indirect
 	github.com/golangci/golangci-lint v1.21.0
 	github.com/golangci/revgrep v0.0.0-20180812185044-276a5c0a1039 // indirect
@@ -73,7 +73,7 @@ require (
 	github.com/tidwall/pretty v1.0.0
 	github.com/tidwall/sjson v1.0.4
 	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c // indirect
-	golang.org/x/crypto v0.0.0-20200311171314-f7b00557c8c4
+	golang.org/x/crypto v0.0.0-20200406173513-056763e48d71
 	golang.org/x/exp v0.0.0-20200207192155-f17229e696bd // indirect
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	google.golang.org/appengine v1.6.5
