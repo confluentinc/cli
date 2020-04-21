@@ -170,8 +170,7 @@ func (s *CLITestSuite) Test_Confluent_Help() {
 		}
 	}
 	for _, tt := range tests {
-		kafkaAPIURL := serveKafkaAPI(s.T()).URL
-		s.runConfluentTest(tt, serveMds(s.T(), kafkaAPIURL).URL)
+		s.runConfluentTest(tt, serveMds(s.T()).URL)
 	}
 }
 

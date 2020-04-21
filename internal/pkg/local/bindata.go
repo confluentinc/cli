@@ -86,7 +86,7 @@ func cp_cliConfluentPatch() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "cp_cli/confluent.patch", size: 4731, mode: os.FileMode(0644), modTime: time.Unix(1562628108, 0)}
+	info := bindataFileInfo{name: "cp_cli/confluent.patch", size: 4731, mode: os.FileMode(0644), modTime: time.Unix(1586379676, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x2c, 0x9f, 0x94, 0x72, 0x55, 0x7c, 0xaf, 0xb0, 0xee, 0x22, 0x4, 0x46, 0xc9, 0x12, 0x31, 0x1a, 0xa6, 0xeb, 0xfc, 0xf7, 0xa, 0xe6, 0xc9, 0xae, 0x43, 0x71, 0xdd, 0x39, 0x9d, 0x77, 0xf4, 0x66}}
 	return a, nil
 }
@@ -106,7 +106,7 @@ func cp_cliConfluentSh() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "cp_cli/confluent.sh", size: 73432, mode: os.FileMode(0755), modTime: time.Unix(1585804486, 0)}
+	info := bindataFileInfo{name: "cp_cli/confluent.sh", size: 73432, mode: os.FileMode(0755), modTime: time.Unix(1586379676, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x31, 0x57, 0x31, 0x74, 0x8e, 0x14, 0x2d, 0x2a, 0x3f, 0x1a, 0x95, 0x7c, 0x2f, 0x1, 0x9a, 0x6d, 0xef, 0x43, 0x29, 0xe3, 0x32, 0x4c, 0x87, 0x53, 0x9c, 0x9b, 0x16, 0xa9, 0x43, 0xf9, 0xc3, 0x27}}
 	return a, nil
 }
@@ -126,7 +126,7 @@ func assetsSso_callbackHtml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "assets/sso_callback.html", size: 1125, mode: os.FileMode(0644), modTime: time.Unix(1576647685, 0)}
+	info := bindataFileInfo{name: "assets/sso_callback.html", size: 1125, mode: os.FileMode(0644), modTime: time.Unix(1586990610, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0xe1, 0xe8, 0x53, 0xb4, 0x83, 0x2a, 0x23, 0x59, 0xeb, 0xf2, 0xda, 0xc6, 0x3c, 0x6a, 0x4d, 0xe, 0x38, 0x8b, 0x3d, 0x9d, 0x3b, 0x2b, 0x16, 0x6, 0x40, 0xe, 0xe, 0x59, 0xb5, 0x71, 0xe2, 0x7a}}
 	return a, nil
 }
@@ -270,12 +270,12 @@ type bintree struct {
 }
 
 var _bintree = &bintree{nil, map[string]*bintree{
-	"assets": {nil, map[string]*bintree{
-		"sso_callback.html": {assetsSso_callbackHtml, map[string]*bintree{}},
+	"assets": &bintree{nil, map[string]*bintree{
+		"sso_callback.html": &bintree{assetsSso_callbackHtml, map[string]*bintree{}},
 	}},
-	"cp_cli": {nil, map[string]*bintree{
-		"confluent.patch": {cp_cliConfluentPatch, map[string]*bintree{}},
-		"confluent.sh":    {cp_cliConfluentSh, map[string]*bintree{}},
+	"cp_cli": &bintree{nil, map[string]*bintree{
+		"confluent.patch": &bintree{cp_cliConfluentPatch, map[string]*bintree{}},
+		"confluent.sh":    &bintree{cp_cliConfluentSh, map[string]*bintree{}},
 	}},
 }}
 

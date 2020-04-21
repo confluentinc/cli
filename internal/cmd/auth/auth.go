@@ -18,6 +18,7 @@ import (
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	mds "github.com/confluentinc/mds-sdk-go"
 )
 
 type commands struct {
@@ -229,6 +230,11 @@ func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	authToken, err := pauth.GetConfluentAuthToken(mdsClient, email, password)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	basicContext := context.WithValue(context.Background(), mds.ContextBasicAuth, mds.BasicAuth{UserName: email, Password: password})
+	_, _, err = mdsClient.TokensAndAuthenticationApi.GetToken(basicContext)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}

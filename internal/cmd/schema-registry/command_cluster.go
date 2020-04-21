@@ -91,8 +91,8 @@ func (c *clusterCommand) init() {
 		Example: FormatDescription(`Update top level compatibility or mode of schema registry.
 
 ::
-		{{.CLIName}} schema-registry cluster update <subjectname> --compatibility=BACKWARD
-		{{.CLIName}} schema-registry cluster update <subjectname> --mode=READWRITE`, c.Config.CLIName),
+		{{.CLIName}} schema-registry cluster update --compatibility=BACKWARD
+		{{.CLIName}} schema-registry cluster update --mode=READWRITE`, c.Config.CLIName),
 		RunE: c.update,
 		Args: cobra.NoArgs,
 	}

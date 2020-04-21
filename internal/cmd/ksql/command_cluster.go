@@ -132,6 +132,20 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
+	// use count to prevent the command from hanging too long waiting for the endpoint value
+	count := 0
+	// endpoint value filled later, loop until endpoint information is not null (usually just one describe call is enough)
+	for cluster.Endpoint == "" && count < 3 {
+		req := &ksqlv1.KSQLCluster{AccountId: c.EnvironmentId(), Id: cluster.Id}
+		cluster, err = c.Client.KSQL.Describe(context.Background(), req)
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+		count += 1
+	}
+	if cluster.Endpoint == "" {
+		pcmd.ErrPrint(cmd, "Endpoint not yet populated. To obtain the endpoint please use `ccloud ksql app describe`.")
+	}
 	return output.DescribeObject(cmd, cluster, describeFields, describeHumanRenames, describeStructuredRenames)
 }
 

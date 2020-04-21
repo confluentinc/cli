@@ -150,8 +150,8 @@ build-integ-confluent-race:
 .PHONY: bindata
 bindata: internal/pkg/local/bindata.go
 
-internal/pkg/local/bindata.go: cp_cli/* assets/*
-	@go-bindata -pkg local -o internal/pkg/local/bindata.go cp_cli/ assets/
+internal/pkg/local/bindata.go: cp_cli/*
+	@go-bindata -pkg local -o internal/pkg/local/bindata.go cp_cli/
 
 .PHONY: authenticate
 authenticate:
