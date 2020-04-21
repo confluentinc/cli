@@ -342,6 +342,41 @@ config.properties/listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config/org.apac
 `,
 		},
 		{
+			name: "ValidTestCase: encrypt properties file with multiple jaas entry",
+			args: &args{
+				masterKeyPassphrase: "abc123",
+				contents: `ssl.keystore.location=/usr/ssl
+		ssl.keystore.key=ssl
+		listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required \
+          username="admin" \
+          password="admin-secret";`,
+				configFilePath:         "/tmp/securePass987/encrypt/config.properties",
+				localSecureConfigPath:  "/tmp/securePass987/encrypt/secureConfig.properties",
+				secureDir:              "/tmp/securePass987/encrypt",
+				remoteSecureConfigPath: "/tmp/securePass987/encrypt/secureConfig.properties",
+				config:                 "listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config/org.apache.kafka.common.security.scram.ScramLoginModule/username, listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config/org.apache.kafka.common.security.scram.ScramLoginModule/password",
+				setMEK:                 true,
+				createConfig:           true,
+			},
+			wantErr: false,
+			wantConfigFile: `ssl.keystore.location = /usr/ssl
+ssl.keystore.key = ssl
+listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config = org.apache.kafka.common.security.scram.ScramLoginModule required username=${securepass:/tmp/securePass987/encrypt/secureConfig.properties:config.properties/listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config/org.apache.kafka.common.security.scram.ScramLoginModule/username} password=${securepass:/tmp/securePass987/encrypt/secureConfig.properties:config.properties/listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config/org.apache.kafka.common.security.scram.ScramLoginModule/password};
+config.providers = securepass
+config.providers.securepass.class = io.confluent.kafka.security.config.provider.SecurePassConfigProvider
+`,
+			wantSecretsFile: `_metadata.master_key.0.salt = de0YQknpvBlnXk0fdmIT2nG2Qnj+0srV8YokdhkgXjA=
+_metadata.symmetric_key.0.created_at = 1984-04-04 00:00:00 +0000 UTC
+_metadata.symmetric_key.0.envvar = CONFLUENT_SECURITY_MASTER_KEY
+_metadata.symmetric_key.0.length = 32
+_metadata.symmetric_key.0.iterations = 1000
+_metadata.symmetric_key.0.salt = 2BEkhLYyr0iZ2wI5xxsbTJHKWul75JcuQu3BnIO4Eyw=
+_metadata.symmetric_key.0.enc = ENC[AES/CBC/PKCS5Padding,data:SlpCTPDO/uyWDOS59hkcS9vTKm2MQ284YQhBM2iFSUXgsDGPBIlYBs4BMeWFt1yn,iv:qDtNy+skN3DKhtHE/XD6yQ==,type:str]
+config.properties/listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config/org.apache.kafka.common.security.scram.ScramLoginModule/username = ENC[AES/CBC/PKCS5Padding,data:Giz2MCYpidfjuBTO6pQI3g==,iv:3IhIyRrhQpYzp4vhVdcqqw==,type:str]
+config.properties/listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config/org.apache.kafka.common.security.scram.ScramLoginModule/password = ENC[AES/CBC/PKCS5Padding,data:fq1JyyjPO1lUHzvQE/sN6g==,iv:YSAFrPMANTGRyrB2YzLRFw==,type:str]
+`,
+		},
+		{
 			name: "ValidTestCase: encrypt configuration in a JSON file",
 			args: &args{
 				masterKeyPassphrase: "abc123",
