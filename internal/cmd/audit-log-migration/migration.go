@@ -44,15 +44,14 @@ func AuditLogConfigTranslation(clusterConfigs map[string]string, bootstrapServer
 	newWarnings = warnNewExcludedPrincipals(clusterAuditLogConfigSpecs, &newSpec)
 	warnings = append(warnings, newWarnings...)
 
-	combineRoutes(clusterAuditLogConfigSpecs, &newSpec)
+	newWarnings = combineRoutes(clusterAuditLogConfigSpecs, &newSpec)
+	warnings = append(warnings, newWarnings...)
 
 	generateAlternateDefaultTopicRoutes(clusterAuditLogConfigSpecs, &newSpec, crnAuthority)
 
 	replaceCRNAuthorityRoutes(&newSpec, crnAuthority)
 
-	sort.Slice(warnings, func(i, j int) bool {
-		return warnings[i] < warnings[j]
-	})
+	sort.Strings(warnings)
 
 	return newSpec, warnings, nil
 }
@@ -86,6 +85,7 @@ func warnMultipleCrnAuthorities(specs map[string]*mds.AuditLogConfigSpec) []stri
 		}
 		foundAuthorities = removeDuplicates(foundAuthorities)
 		if len(foundAuthorities) != 1 {
+			sort.Strings(foundAuthorities)
 			newWarning := fmt.Sprintf("Multiple Crn Authorities Warning: Cluster %q had multiple CRN Authorities in its routes: %v.", clusterId, foundAuthorities)
 			warnings = append(warnings, newWarning)
 		}
@@ -209,25 +209,30 @@ func combineExcludedPrincipals(specs map[string]*mds.AuditLogConfigSpec, newSpec
 		}
 	}
 
-	sort.Slice(newExcludedPrincipals, func(i, j int) bool {
-		return newExcludedPrincipals[i] < newExcludedPrincipals[j]
-	})
+	sort.Strings(newExcludedPrincipals)
 
 	newSpec.ExcludedPrincipals = newExcludedPrincipals
 }
 
-func combineRoutes(specs map[string]*mds.AuditLogConfigSpec, newSpec *mds.AuditLogConfigSpec) {
+func combineRoutes(specs map[string]*mds.AuditLogConfigSpec, newSpec *mds.AuditLogConfigSpec) []string {
 	newRoutes := make(map[string]mds.AuditLogConfigRouteCategories)
+	warnings := []string{}
 
 	for clusterId, spec := range specs {
 		routes := spec.Routes
 		for crnPath, route := range routes {
 			newCrnPath := replaceClusterId(crnPath, clusterId)
-			newRoutes[newCrnPath] = route
+			if _, ok := newRoutes[newCrnPath]; ok {
+				newWarning := fmt.Sprintf("Repeated Route Warning: Route Name : %q.", newCrnPath)
+				warnings = append(warnings, newWarning)
+			} else {
+				newRoutes[newCrnPath] = route
+			}
 		}
 	}
 
 	newSpec.Routes = newRoutes
+	return warnings
 }
 
 func replaceCRNAuthorityRoutes(newSpec *mds.AuditLogConfigSpec, newCrnAuthority string) {
