@@ -30,10 +30,10 @@ var (
 )
 
 const (
-	singleZone = "singlezone"
-	multiZone  = "multizone"
-	skuBasic = "basic"
-	skuStandard = "standard"
+	singleZone   = "singlezone"
+	multiZone    = "multizone"
+	skuBasic     = "basic"
+	skuStandard  = "standard"
 	skuDedicated = "dedicated"
 )
 
@@ -180,7 +180,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		ServiceProvider: cloud,
 		Region:          region,
 		Durability:      durability,
-		Deployment: &kafkav1.Deployment{Sku: sku},
+		Deployment:      &kafkav1.Deployment{Sku: sku},
 	}
 	if sku == productv1.Sku_DEDICATED {
 		cku, err := cmd.Flags().GetInt("cku")
