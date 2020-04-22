@@ -32,7 +32,7 @@ func TestAuditLogConfigTranslation(t *testing.T) {
 		json.Unmarshal([]byte(c.wantSpecAsString), &want)
 
 		got, err := AuditLogConfigTranslation(c.clusterConfigs, c.bootstrapServers, c.crnAuthority)
-    require.Nil(t, err)
+		require.Nil(t, err)
 		require.Equal(t, want, got)
 	}
 }

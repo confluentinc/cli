@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
+	"sort"
 	"strings"
-  "sort"
 
 	"github.com/confluentinc/mds-sdk-go"
 )
@@ -15,15 +15,15 @@ func AuditLogConfigTranslation(clusterConfigs map[string]string, bootstrapServer
 	const defaultTopicName = "confluent-audit-log-events"
 
 	clusterAuditLogConfigSpecs, err := jsonConfigsToAuditLogConfigSpecs(clusterConfigs)
-  if err != nil {
-    return mds.AuditLogConfigSpec{}, err
-  }
+	if err != nil {
+		return mds.AuditLogConfigSpec{}, err
+	}
 
-  warnMultipleCrnAuthorities(clusterAuditLogConfigSpecs)
+	warnMultipleCrnAuthorities(clusterAuditLogConfigSpecs)
 
-  warnMismatchKafaClusters(clusterAuditLogConfigSpecs)
+	warnMismatchKafaClusters(clusterAuditLogConfigSpecs)
 
-  warnNewBootstrapServers(clusterAuditLogConfigSpecs, bootstrapServers)
+	warnNewBootstrapServers(clusterAuditLogConfigSpecs, bootstrapServers)
 
 	addBootstrapServers(&newSpec, bootstrapServers)
 
@@ -33,7 +33,7 @@ func AuditLogConfigTranslation(clusterConfigs map[string]string, bootstrapServer
 
 	combineExcludedPrincipals(clusterAuditLogConfigSpecs, &newSpec)
 
-  warnNewExcludedPrincipals(clusterAuditLogConfigSpecs, &newSpec)
+	warnNewExcludedPrincipals(clusterAuditLogConfigSpecs, &newSpec)
 
 	combineRoutes(clusterAuditLogConfigSpecs, &newSpec)
 
@@ -45,50 +45,50 @@ func AuditLogConfigTranslation(clusterConfigs map[string]string, bootstrapServer
 }
 
 func warnMultipleCrnAuthorities(specs map[string]*mds.AuditLogConfigSpec) {
-  for clusterId, spec := range specs {
-    routes := spec.Routes
-    foundAuthorities := []string{}
-    for routeName, _ := range routes {
-      foundAuthority := getCrnAuthority(routeName)
-      foundAuthorities = append(foundAuthorities, foundAuthority)
-    }
-    foundAuthorities = removeDuplicates(foundAuthorities)
-    if len(foundAuthorities) != 1 {
-      fmt.Printf("Cluster %q had multiple CRN Authorities in its routes: %v.\n", clusterId, foundAuthorities)
-    }
-  }
+	for clusterId, spec := range specs {
+		routes := spec.Routes
+		foundAuthorities := []string{}
+		for routeName := range routes {
+			foundAuthority := getCrnAuthority(routeName)
+			foundAuthorities = append(foundAuthorities, foundAuthority)
+		}
+		foundAuthorities = removeDuplicates(foundAuthorities)
+		if len(foundAuthorities) != 1 {
+			fmt.Printf("Cluster %q had multiple CRN Authorities in its routes: %v.\n", clusterId, foundAuthorities)
+		}
+	}
 }
 
 func getCrnAuthority(routeName string) string {
-  re := regexp.MustCompile("crn://[^/]+/")
-  return string(re.Find([]byte(routeName)))
+	re := regexp.MustCompile("crn://[^/]+/")
+	return string(re.Find([]byte(routeName)))
 }
 
 func warnMismatchKafaClusters(specs map[string]*mds.AuditLogConfigSpec) {
-  for clusterId, spec := range specs {
-    routes := spec.Routes
-    for routeName, _ := range routes {
-      if checkMismatchKafkaCluster(routeName, clusterId) {
-        fmt.Printf("Cluster %q has a route with a different clusterId. Offending route: %q.\n", clusterId, routeName)
-      }
-    }
-  }
+	for clusterId, spec := range specs {
+		routes := spec.Routes
+		for routeName := range routes {
+			if checkMismatchKafkaCluster(routeName, clusterId) {
+				fmt.Printf("Cluster %q has a route with a different clusterId. Offending route: %q.\n", clusterId, routeName)
+			}
+		}
+	}
 }
 
 func checkMismatchKafkaCluster(routeName, expectedClusterId string) bool {
-  re := regexp.MustCompile("(kafka=\\*|kafka="+ expectedClusterId +")")
-  result := string(re.Find([]byte(routeName)))
-  return result == ""
+	re := regexp.MustCompile("(kafka=\\*|kafka=" + expectedClusterId + ")")
+	result := string(re.Find([]byte(routeName)))
+	return result == ""
 }
 
 func warnNewBootstrapServers(specs map[string]*mds.AuditLogConfigSpec, bootstrapServers string) {
-  for clusterId, spec := range specs {
-    old_bootstrap := spec.Destinations.BootstrapServers[0] // assuming there is only a single server
+	for clusterId, spec := range specs {
+		old_bootstrap := spec.Destinations.BootstrapServers[0] // assuming there is only a single server
 
-    if old_bootstrap != bootstrapServers {
-      fmt.Printf("Cluster %q currently has bootstrap server %q. Replacing with %q.\n", clusterId, old_bootstrap, bootstrapServers)
-    }
-  }
+		if old_bootstrap != bootstrapServers {
+			fmt.Printf("Cluster %q currently has bootstrap server %q. Replacing with %q.\n", clusterId, old_bootstrap, bootstrapServers)
+		}
+	}
 }
 
 func jsonConfigsToAuditLogConfigSpecs(clusterConfigs map[string]string) (map[string]*mds.AuditLogConfigSpec, error) {
@@ -96,9 +96,9 @@ func jsonConfigsToAuditLogConfigSpecs(clusterConfigs map[string]string) (map[str
 	for k, v := range clusterConfigs {
 		var spec mds.AuditLogConfigSpec
 		err := json.Unmarshal([]byte(v), &spec)
-    if err !=  nil {
-      return nil, err
-    }
+		if err != nil {
+			return nil, err
+		}
 		clusterAuditLogConfigSpecs[k] = &spec
 	}
 	return clusterAuditLogConfigSpecs, nil
@@ -110,38 +110,38 @@ func addBootstrapServers(spec *mds.AuditLogConfigSpec, bootstrapServers string) 
 
 func combineDestinationTopics(specs map[string]*mds.AuditLogConfigSpec, newSpec *mds.AuditLogConfigSpec) {
 	newTopics := make(map[string]mds.AuditLogConfigDestinationConfig)
-  topicRetentionDiscrepancies := make(map[string][]int64)
+	topicRetentionDiscrepancies := make(map[string][]int64)
 
 	for _, spec := range specs {
 		topics := spec.Destinations.Topics
 		for topicName, destination := range topics {
 			if _, ok := newTopics[topicName]; ok {
-        if destination.RetentionMs != newTopics[topicName].RetentionMs {
-          old_retention := min(destination.RetentionMs, newTopics[topicName].RetentionMs)
-          handleTopicRetentionDiscrepancy(topicRetentionDiscrepancies, topicName, old_retention)
-        }
-        newTopics[topicName] = mds.AuditLogConfigDestinationConfig{
-          max(destination.RetentionMs, newTopics[topicName].RetentionMs),
-        }
+				if destination.RetentionMs != newTopics[topicName].RetentionMs {
+					old_retention := min(destination.RetentionMs, newTopics[topicName].RetentionMs)
+					handleTopicRetentionDiscrepancy(topicRetentionDiscrepancies, topicName, old_retention)
+				}
+				newTopics[topicName] = mds.AuditLogConfigDestinationConfig{
+					max(destination.RetentionMs, newTopics[topicName].RetentionMs),
+				}
 			} else {
 				newTopics[topicName] = destination
 			}
 		}
 	}
 
-  warnTopicRetentionDiscrepancies(topicRetentionDiscrepancies)
+	warnTopicRetentionDiscrepancies(topicRetentionDiscrepancies)
 
 	newSpec.Destinations.Topics = newTopics
 }
 
 func handleTopicRetentionDiscrepancy(topicRetentionDiscrepancies map[string][]int64, topicName string, time int64) {
-  topicRetentionDiscrepancies[topicName] = append(topicRetentionDiscrepancies[topicName], time)
+	topicRetentionDiscrepancies[topicName] = append(topicRetentionDiscrepancies[topicName], time)
 }
 
 func warnTopicRetentionDiscrepancies(topicRetentionDiscrepancies map[string][]int64) {
-  for topicName, retentionTimes := range topicRetentionDiscrepancies {
-    fmt.Printf("Topic %q had discrepancies with retention time. The following retention times were discarded: %v.\n", topicName, retentionTimes)
-  }
+	for topicName, retentionTimes := range topicRetentionDiscrepancies {
+		fmt.Printf("Topic %q had discrepancies with retention time. The following retention times were discarded: %v.\n", topicName, retentionTimes)
+	}
 }
 
 func setDefaultTopic(newSpec *mds.AuditLogConfigSpec, defaultTopicName string) {
@@ -171,9 +171,9 @@ func combineExcludedPrincipals(specs map[string]*mds.AuditLogConfigSpec, newSpec
 		}
 	}
 
-  sort.Slice(newExcludedPrincipals, func(i, j int) bool {
-      return newExcludedPrincipals[i] < newExcludedPrincipals[j]
-  })
+	sort.Slice(newExcludedPrincipals, func(i, j int) bool {
+		return newExcludedPrincipals[i] < newExcludedPrincipals[j]
+	})
 
 	newSpec.ExcludedPrincipals = newExcludedPrincipals
 }
@@ -267,18 +267,18 @@ func generateAlternateDefaultTopicRoutes(specs map[string]*mds.AuditLogConfigSpe
 }
 
 func warnNewExcludedPrincipals(specs map[string]*mds.AuditLogConfigSpec, newSpec *mds.AuditLogConfigSpec) {
-  for clusterId, spec := range specs {
-    excludedPrincipals := spec.ExcludedPrincipals
-    differentPrincipals := []string{}
-    for _, principal := range newSpec.ExcludedPrincipals {
-      if !find(excludedPrincipals, principal) {
-        differentPrincipals = append(differentPrincipals, principal)
-      }
-    }
-    if len(differentPrincipals) != 0 {
-      fmt.Printf("Cluster %q will now also exclude the following principals: %v.\n", clusterId, differentPrincipals)
-    }
-  }
+	for clusterId, spec := range specs {
+		excludedPrincipals := spec.ExcludedPrincipals
+		differentPrincipals := []string{}
+		for _, principal := range newSpec.ExcludedPrincipals {
+			if !find(excludedPrincipals, principal) {
+				differentPrincipals = append(differentPrincipals, principal)
+			}
+		}
+		if len(differentPrincipals) != 0 {
+			fmt.Printf("Cluster %q will now also exclude the following principals: %v.\n", clusterId, differentPrincipals)
+		}
+	}
 }
 
 func max(x, y int64) int64 {
@@ -305,13 +305,13 @@ func find(slice []string, val string) bool {
 }
 
 func removeDuplicates(s []string) []string {
-  check := make(map[string]int)
-  for _, v := range s {
-    check[v] = 0
-  }
-  var noDups []string
-  for k, _ := range check {
-    noDups = append(noDups, k)
-  }
-  return noDups
+	check := make(map[string]int)
+	for _, v := range s {
+		check[v] = 0
+	}
+	var noDups []string
+	for k := range check {
+		noDups = append(noDups, k)
+	}
+	return noDups
 }
