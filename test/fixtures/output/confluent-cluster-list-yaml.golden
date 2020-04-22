@@ -1,0 +1,42 @@
+- name: theMdsConnectCluster
+  scope:
+    clusters:
+      kafkacluster: kafka-GUID
+      connectcluster: connect-name
+      ksqlcluster: ""
+      schemaregistrycluster: ""
+  hosts:
+  - host: 10.5.5.5
+    port: 9005
+- name: theMdsKafkaCluster
+  scope:
+    clusters:
+      kafkacluster: kafka-GUID
+      connectcluster: ""
+      ksqlcluster: ""
+      schemaregistrycluster: ""
+  hosts:
+  - host: 10.10.10.10
+    port: 8090
+  - host: mds.example.com
+    port: 8090
+- name: theMdsKSQLCluster
+  scope:
+    clusters:
+      kafkacluster: kafka-GUID
+      connectcluster: ""
+      ksqlcluster: ksql-name
+      schemaregistrycluster: ""
+  hosts:
+  - host: 10.4.4.4
+    port: 9004
+- name: theMdsSchemaRegistryCluster
+  scope:
+    clusters:
+      kafkacluster: kafka-GUID
+      connectcluster: ""
+      ksqlcluster: ""
+      schemaregistrycluster: schema-registry-name
+  hosts:
+  - host: 10.3.3.3
+    port: 9003

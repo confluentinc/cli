@@ -167,6 +167,7 @@ func (j *JAASParser) ConvertPropertiesToJAAS(props *properties.Properties, op st
 	configKey := ""
 	result := properties.NewProperties()
 	result.DisableExpansion = true
+	j.JaasOriginalConfigKeys.DisableExpansion = true
 	for key, value := range props.Map() {
 		keys := strings.Split(key, KEY_SEPARATOR)
 		configKey = keys[CLASS_ID] + KEY_SEPARATOR + keys[PARENT_ID]

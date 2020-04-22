@@ -31,8 +31,7 @@ func (s *CLITestSuite) TestLocalHelpCommands() {
 		if tt.name == "" {
 			tt.name = tt.args
 		}
-		kafkaAPIURL := serveKafkaAPI(s.T()).URL
-		s.runConfluentTest(tt, serveMds(s.T(), kafkaAPIURL).URL)
+		s.runConfluentTest(tt, serveMds(s.T()).URL)
 	}
 }
 
@@ -53,8 +52,7 @@ func (s *CLITestSuite) TestLocalVersion() {
 		//noinspection GoDeferInLoop
 		defer os.RemoveAll(path) // clean up
 		tt.args = fmt.Sprintf(tt.args, path)
-		kafkaAPIURL := serveKafkaAPI(s.T()).URL
-		s.runConfluentTest(tt, serveMds(s.T(), kafkaAPIURL).URL)
+		s.runConfluentTest(tt, serveMds(s.T()).URL)
 	}
 }
 

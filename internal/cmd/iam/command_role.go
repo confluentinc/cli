@@ -77,7 +77,7 @@ func (c *roleCommand) init() {
 }
 
 func (c *roleCommand) list(cmd *cobra.Command, args []string) error {
-	roles, _, err := c.MDSClient.RoleDefinitionsApi.Roles(c.createContext())
+	roles, _, err := c.MDSClient.RBACRoleDefinitionsApi.Roles(c.createContext())
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -104,10 +104,10 @@ func (c *roleCommand) list(cmd *cobra.Command, args []string) error {
 func (c *roleCommand) describe(cmd *cobra.Command, args []string) error {
 	role := args[0]
 
-	details, r, err := c.MDSClient.RoleDefinitionsApi.RoleDetail(c.createContext(), role)
+	details, r, err := c.MDSClient.RBACRoleDefinitionsApi.RoleDetail(c.createContext(), role)
 	if err != nil {
 		if r.StatusCode == http.StatusNoContent {
-			availableRoleNames, _, err := c.MDSClient.RoleDefinitionsApi.Rolenames(c.createContext())
+			availableRoleNames, _, err := c.MDSClient.RBACRoleDefinitionsApi.Rolenames(c.createContext())
 			if err != nil {
 				return errors.HandleCommon(err, cmd)
 			}

@@ -102,12 +102,13 @@ Describe the schema string by schema ID
 
 		{{.CLIName}} schema-registry schema describe 1337
 
-Describe the schema by subject and version
+Describe the schema by both subject and version
 
 ::
 
 		{{.CLIName}} schema-registry describe --subject payments --version latest
 `, c.Config.CLIName),
+        PreRunE: c.preDescribe,
 		RunE: c.describe,
 		Args: cobra.MaximumNArgs(1),
 	}
@@ -203,6 +204,25 @@ func (c *schemaCommand) delete(cmd *cobra.Command, args []string) error {
 		PrintVersions([]int32{versionResult})
 		return nil
 	}
+}
+
+func (c *schemaCommand) preDescribe(cmd *cobra.Command, args []string) error {
+	subject, err := cmd.Flags().GetString("subject")
+	if err != nil {
+		return err
+	}
+	
+	version, err := cmd.Flags().GetString("version")
+	if err != nil {
+		return err
+	}
+
+	if len(args) > 0 && (subject != "" || version != "") {
+		return fmt.Errorf("Cannot specify both schema ID and subject/version")
+	} else if len(args) == 0 && (subject == "" || version == "") {
+		return fmt.Errorf("Must specify either schema ID or subject and version")
+	}
+	return nil
 }
 
 func (c *schemaCommand) describe(cmd *cobra.Command, args []string) error {
