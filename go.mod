@@ -14,8 +14,6 @@ require (
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
 	github.com/confluentinc/bincover v0.0.0-20191217221125-80a7bb37ae5e
-	github.com/confluentinc/cc-structs/kafka/auth v0.36.0 // indirect
-	github.com/confluentinc/cc-utils v0.0.0-00010101000000-000000000000
 	github.com/confluentinc/ccloud-sdk-go v0.0.18-0.20200331232827-b1565f98d0a7
 	github.com/confluentinc/ccloudapis v0.0.0-20200323172841-c4a51af500ae
 	github.com/confluentinc/go-editor v0.4.0
@@ -68,7 +66,7 @@ require (
 	github.com/spf13/cobra v0.0.6-0.20190805155617-b80588d523ec
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.4.0
-	github.com/stretchr/testify v1.4.0
+	github.com/stretchr/testify v1.5.1
 	github.com/tidwall/gjson v1.6.0
 	github.com/tidwall/pretty v1.0.0
 	github.com/tidwall/sjson v1.0.4
@@ -82,7 +80,7 @@ require (
 )
 
 replace (
-	github.com/confluentinc/cc-utils => github.com/confluentinc/cc-utils v0.96.0
+	github.com/confluentinc/mds-sdk-go => /Users/rshravan/confluent/mds-sdk-go
 	github.com/confluentinc/protoc-gen-ccloud => github.com/confluentinc/protoc-gen-ccloud v0.0.3
 	github.com/influxdata/influxdb1-client => github.com/influxdata/influxdb1-client v0.0.0-20190124185755-16c852ea613f
 	github.com/mutagen-io/gopass => github.com/mutagen-io/gopass v0.0.0-20161007065903-6331a34a3f3b

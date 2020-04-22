@@ -10,14 +10,17 @@ import (
 	"github.com/confluentinc/mds-sdk-go"
 )
 
-func AuditLogConfigTranslation(clusterConfigs map[string]string, bootstrapServers, crnAuthority string) (mds.AuditLogConfigSpec, error) {
+func AuditLogConfigTranslation(clusterConfigs map[string]string, bootstrapServers []string, crnAuthority string) (mds.AuditLogConfigSpec, []string, error) {
 	var newSpec mds.AuditLogConfigSpec
 	const defaultTopicName = "confluent-audit-log-events"
+	warnings := []string{}
 
 	clusterAuditLogConfigSpecs, err := jsonConfigsToAuditLogConfigSpecs(clusterConfigs)
 	if err != nil {
-		return mds.AuditLogConfigSpec{}, err
+		return mds.AuditLogConfigSpec{}, warnings, err
 	}
+
+	addOtherBlock(clusterAuditLogConfigSpecs, defaultTopicName)
 
 	warnMultipleCrnAuthorities(clusterAuditLogConfigSpecs)
 
@@ -37,11 +40,29 @@ func AuditLogConfigTranslation(clusterConfigs map[string]string, bootstrapServer
 
 	combineRoutes(clusterAuditLogConfigSpecs, &newSpec)
 
-	replaceCRNAuthorityRoutes(&newSpec, crnAuthority)
-
 	generateAlternateDefaultTopicRoutes(clusterAuditLogConfigSpecs, &newSpec, crnAuthority)
 
-	return newSpec, nil
+	replaceCRNAuthorityRoutes(&newSpec, crnAuthority)
+
+	return newSpec, warnings, nil
+}
+
+// add the OTHER block to the route when the default topic is different than the default ("confluent-audit-log-events")
+func addOtherBlock(specs map[string]*mds.AuditLogConfigSpec, defaultTopicName string) {
+	for _, spec := range specs {
+		if spec.DefaultTopics.Denied != defaultTopicName || spec.DefaultTopics.Allowed != defaultTopicName {
+			other := mds.AuditLogConfigRouteCategoryTopics{
+				Allowed: &spec.DefaultTopics.Allowed,
+				Denied:  &spec.DefaultTopics.Denied,
+			}
+			for routeName, route := range spec.Routes {
+				if route.Other == nil {
+					route.Other = &other
+					spec.Routes[routeName] = route
+				}
+			}
+		}
+	}
 }
 
 func warnMultipleCrnAuthorities(specs map[string]*mds.AuditLogConfigSpec) {
@@ -60,8 +81,8 @@ func warnMultipleCrnAuthorities(specs map[string]*mds.AuditLogConfigSpec) {
 }
 
 func getCrnAuthority(routeName string) string {
-	re := regexp.MustCompile("crn://[^/]+/")
-	return string(re.Find([]byte(routeName)))
+	re := regexp.MustCompile("^crn://[^/]+/")
+	return re.FindString(routeName)
 }
 
 func warnMismatchKafaClusters(specs map[string]*mds.AuditLogConfigSpec) {
@@ -69,24 +90,23 @@ func warnMismatchKafaClusters(specs map[string]*mds.AuditLogConfigSpec) {
 		routes := spec.Routes
 		for routeName := range routes {
 			if checkMismatchKafkaCluster(routeName, clusterId) {
-				fmt.Printf("Cluster %q has a route with a different clusterId. Offending route: %q.\n", clusterId, routeName)
+				fmt.Printf("Cluster %q has a route with a different clusterId. Route: %q.\n", clusterId, routeName)
 			}
 		}
 	}
 }
 
 func checkMismatchKafkaCluster(routeName, expectedClusterId string) bool {
-	re := regexp.MustCompile("(kafka=\\*|kafka=" + expectedClusterId + ")")
-	result := string(re.Find([]byte(routeName)))
+	re := regexp.MustCompile("/kafka=(\\*|" + regexp.QuoteMeta(expectedClusterId) + ")(?:$|/)")
+	result := re.FindString(routeName)
 	return result == ""
 }
 
-func warnNewBootstrapServers(specs map[string]*mds.AuditLogConfigSpec, bootstrapServers string) {
+func warnNewBootstrapServers(specs map[string]*mds.AuditLogConfigSpec, bootstrapServers []string) {
 	for clusterId, spec := range specs {
-		old_bootstrap := spec.Destinations.BootstrapServers[0] // assuming there is only a single server
-
-		if old_bootstrap != bootstrapServers {
-			fmt.Printf("Cluster %q currently has bootstrap server %q. Replacing with %q.\n", clusterId, old_bootstrap, bootstrapServers)
+		oldBootStrapServers := spec.Destinations.BootstrapServers
+		if !testEq(oldBootStrapServers, bootstrapServers) {
+			fmt.Printf("Cluster %q currently has bootstrap servers = %v. Replacing with %v.\n", clusterId, oldBootStrapServers, bootstrapServers)
 		}
 	}
 }
@@ -104,24 +124,24 @@ func jsonConfigsToAuditLogConfigSpecs(clusterConfigs map[string]string) (map[str
 	return clusterAuditLogConfigSpecs, nil
 }
 
-func addBootstrapServers(spec *mds.AuditLogConfigSpec, bootstrapServers string) {
-	spec.Destinations.BootstrapServers = []string{bootstrapServers}
+func addBootstrapServers(spec *mds.AuditLogConfigSpec, bootstrapServers []string) {
+	spec.Destinations.BootstrapServers = bootstrapServers
 }
 
 func combineDestinationTopics(specs map[string]*mds.AuditLogConfigSpec, newSpec *mds.AuditLogConfigSpec) {
 	newTopics := make(map[string]mds.AuditLogConfigDestinationConfig)
-	topicRetentionDiscrepancies := make(map[string][]int64)
+	topicRetentionDiscrepancies := make(map[string]int64)
 
 	for _, spec := range specs {
 		topics := spec.Destinations.Topics
 		for topicName, destination := range topics {
 			if _, ok := newTopics[topicName]; ok {
+				retentionTime := max(destination.RetentionMs, newTopics[topicName].RetentionMs)
 				if destination.RetentionMs != newTopics[topicName].RetentionMs {
-					old_retention := min(destination.RetentionMs, newTopics[topicName].RetentionMs)
-					handleTopicRetentionDiscrepancy(topicRetentionDiscrepancies, topicName, old_retention)
+					topicRetentionDiscrepancies[topicName] = retentionTime
 				}
 				newTopics[topicName] = mds.AuditLogConfigDestinationConfig{
-					max(destination.RetentionMs, newTopics[topicName].RetentionMs),
+					retentionTime,
 				}
 			} else {
 				newTopics[topicName] = destination
@@ -134,13 +154,9 @@ func combineDestinationTopics(specs map[string]*mds.AuditLogConfigSpec, newSpec 
 	newSpec.Destinations.Topics = newTopics
 }
 
-func handleTopicRetentionDiscrepancy(topicRetentionDiscrepancies map[string][]int64, topicName string, time int64) {
-	topicRetentionDiscrepancies[topicName] = append(topicRetentionDiscrepancies[topicName], time)
-}
-
-func warnTopicRetentionDiscrepancies(topicRetentionDiscrepancies map[string][]int64) {
-	for topicName, retentionTimes := range topicRetentionDiscrepancies {
-		fmt.Printf("Topic %q had discrepancies with retention time. The following retention times were discarded: %v.\n", topicName, retentionTimes)
+func warnTopicRetentionDiscrepancies(topicRetentionDiscrepancies map[string]int64) {
+	for topicName, maxRetentionTime := range topicRetentionDiscrepancies {
+		fmt.Printf("Topic %q had discrepancies with retention time. Using max: %v.\n", topicName, maxRetentionTime)
 	}
 }
 
@@ -206,12 +222,12 @@ func replaceCRNAuthorityRoutes(newSpec *mds.AuditLogConfigSpec, newCrnAuthority 
 
 func crnPathContainsAuthority(crnPath, crnAuthority string) bool {
 	re := regexp.MustCompile("^crn://" + crnAuthority + "/.*")
-	return re.Match([]byte(crnPath))
+	return re.MatchString(crnPath)
 }
 
 func replaceCRNAuthority(crnPath, newCrnAuthority string) string {
 	re := regexp.MustCompile("^crn://([^/]*)/")
-	return string(re.ReplaceAll([]byte(crnPath), []byte("crn://"+newCrnAuthority+"/")))
+	return re.ReplaceAllString(crnPath, "crn://"+newCrnAuthority+"/")
 }
 
 func replaceClusterId(crnPath, clusterId string) string {
@@ -233,22 +249,10 @@ func generateCrnPath(clusterId, crnAuthority, pathExtension string) string {
 
 func generateAlternateDefaultTopicRoutes(specs map[string]*mds.AuditLogConfigSpec, newSpec *mds.AuditLogConfigSpec, crnAuthority string) {
 	for clusterId, spec := range specs {
-		defaultTopic := spec.DefaultTopics.Denied
-		if defaultTopic != "confluent-audit-log-events" {
+		if spec.DefaultTopics.Denied != newSpec.DefaultTopics.Denied || spec.DefaultTopics.Allowed != newSpec.DefaultTopics.Allowed {
 			other := mds.AuditLogConfigRouteCategoryTopics{
-				Allowed: &defaultTopic,
-				Denied:  &defaultTopic,
-			}
-
-			// add OTHER block
-			for routeName, route := range newSpec.Routes {
-				if strings.Contains(routeName, "kafka="+clusterId) {
-
-					if newSpec.Routes[routeName].Other == nil {
-						route.Other = &other
-						newSpec.Routes[routeName] = route
-					}
-				}
+				Allowed: &spec.DefaultTopics.Allowed,
+				Denied:  &spec.DefaultTopics.Denied,
 			}
 
 			// add the four new routes to the newSpec, if not already there
@@ -288,11 +292,24 @@ func max(x, y int64) int64 {
 	return y
 }
 
-func min(x, y int64) int64 {
-	if x < y {
-		return x
+func testEq(a, b []string) bool {
+
+	// If one is nil, the other must also be nil.
+	if (a == nil) != (b == nil) {
+		return false
 	}
-	return y
+
+	if len(a) != len(b) {
+		return false
+	}
+
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+
+	return true
 }
 
 func find(slice []string, val string) bool {
