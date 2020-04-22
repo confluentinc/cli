@@ -1,10 +1,7 @@
 package errors
 
 import (
-	"crypto/x509"
 	"fmt"
-	"net/url"
-
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
@@ -32,7 +29,6 @@ func HandleCommon(err error, cmd *cobra.Command) error {
 	if msg, ok := messages[err]; ok {
 		return fmt.Errorf(msg)
 	}
-
 	switch e := err.(type) {
 	case mds.GenericOpenAPIError:
 		return fmt.Errorf(e.Error() + ": " + string(e.Body()))
@@ -43,27 +39,18 @@ func HandleCommon(err error, cmd *cobra.Command) error {
 			result = multierror.Append(result, fmt.Errorf("%s: %s", name, msg))
 		}
 		return result
-	case *url.Error:
-		if certErr, ok := e.Err.(x509.CertificateInvalidError); ok {
-			return fmt.Errorf("%s. Check the system keystore or login again with the --ca-cert-path option to add custom certs", certErr.Error())
-		}
-		return e
 	case *UnspecifiedAPIKeyError:
 		return fmt.Errorf("no API key selected for %s, please select an api-key first (e.g., with `api-key use`)", e.ClusterID)
 	case *UnspecifiedCredentialError:
 		// TODO: Add more context to credential error messages (add variable error).
-		return fmt.Errorf("context \"%s\" has corrupted credentials. To fix, please remove the config file, "+
-			"and run `login` or `init`", e.ContextName)
+		return fmt.Errorf(ConfigUnspecifiedCredentialError, e.ContextName)
 	case *UnspecifiedPlatformError:
-
 		// TODO: Add more context to platform error messages (add variable error).
-		return fmt.Errorf("context \"%s\" has a corrupted platform. To fix, please remove the config file, "+
-			"and run `login` or `init`", e.ContextName)
+		return fmt.Errorf(ConfigUnspecifiedPlatformError, e.ContextName)
 	case *ccloud.InvalidLoginError:
 		return fmt.Errorf("You have entered an incorrect username or password. Please try again.")
 	case *ccloud.InvalidTokenError:
 		return fmt.Errorf("Your auth token has been corrupted. Please login again.")
 	}
-
 	return err
 }

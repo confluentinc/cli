@@ -60,7 +60,7 @@ func New(params *config.Params) *Config {
 // Save a default version if none exists yet.
 func (c *Config) Load() error {
 	currentVersion := Version
-	filename, err := c.getFilename()
+	filename, err := c.GetFilename()
 	if err != nil {
 		return err
 	}
@@ -77,9 +77,9 @@ func (c *Config) Load() error {
 	}
 	err = json.Unmarshal(input, c)
 	if c.Ver.Compare(currentVersion) < 0 {
-		return errors.New(fmt.Sprintf("Config version V%s not up to date with the latest version V%s.", c.Ver, currentVersion))
+		return &errors.DeprecatedConfigVersion{Version: c.Ver.String()}
 	} else if c.Ver.Compare(Version) > 0 {
-		return errors.New(fmt.Sprintf("Invalid config version V%s.", c.Ver))
+		return &errors.InvalidConfigVersion{Version: c.Ver.String()}
 	}
 	if err != nil {
 		return errors.Wrapf(err, "unable to parse config file: %s", filename)
@@ -122,7 +122,7 @@ func (c *Config) Save() error {
 	if err != nil {
 		return errors.Wrapf(err, "unable to marshal config")
 	}
-	filename, err := c.getFilename()
+	filename, err := c.GetFilename()
 	if err != nil {
 		return err
 	}
@@ -313,7 +313,7 @@ func (c *Config) ResetAnonymousId() error {
 	return c.Save()
 }
 
-func (c *Config) getFilename() (string, error) {
+func (c *Config) GetFilename() (string, error) {
 	if c.Filename == "" {
 		c.Filename = fmt.Sprintf(defaultConfigFileFmt, c.CLIName)
 	}
@@ -331,25 +331,12 @@ func (c *Config) getFilename() (string, error) {
 // corruptedConfigError returns an error signaling that the config file has been corrupted,
 // or another error if the config's filepath is unable to be resolved.
 func (c *Config) corruptedConfigError() error {
-	configPath, err := c.getFilename()
+	configPath, err := c.GetFilename()
 	if err != nil {
 		return err
 	}
 	errMsg := "the config file located at %s has been corrupted. " +
 		"To fix, please remove the config file, and run `login` or `init`"
 	err = fmt.Errorf(errMsg, configPath)
-	return err
-}
-
-// corruptedContextError returns an error signaling that the specified context's,
-// config has been corrupted, or another error if the config's filepath is unable to be resolved.
-func (c *Config) corruptedContextError(contextName string) error {
-	configPath, err := c.getFilename()
-	if err != nil {
-		return err
-	}
-	errMsg := "the configuration of context '%s' has been corrupted. " +
-		"To fix, please remove the config file located at %s, and run `login` or `init`"
-	err = fmt.Errorf(errMsg, contextName, configPath)
 	return err
 }

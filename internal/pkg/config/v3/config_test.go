@@ -344,13 +344,13 @@ func TestConfig_getFilename(t *testing.T) {
 				MetricSink: nil,
 				Logger:     log.New(),
 			})
-			got, err := c.getFilename()
+			got, err := c.GetFilename()
 			if (err != nil) != tt.wantErr {
-				t.Errorf("Config.getFilename() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("Config.GetFilename() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if got != tt.want {
-				t.Errorf("Config.getFilename() = %v, want %v", got, tt.want)
+				t.Errorf("Config.GetFilename() = %v, want %v", got, tt.want)
 			}
 		})
 	}

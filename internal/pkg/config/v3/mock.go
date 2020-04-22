@@ -94,3 +94,15 @@ func AuthenticatedCloudConfigMock() *Config {
 func AuthenticatedConfluentConfigMock() *Config {
 	return AuthenticatedConfigMock("")
 }
+
+func CorruptedConfigUnspecifiedPlatform() *Config {
+	cfg := AuthenticatedCloudConfigMock()
+	cfg.Context().PlatformName = ""
+	return cfg
+}
+
+func CorruptedConfigUnspecifiedCredential() *Config {
+	cfg := AuthenticatedCloudConfigMock()
+	cfg.Context().CredentialName = ""
+	return cfg
+}

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -299,6 +300,42 @@ func (s *CLITestSuite) Test_Ccloud_Errors() {
 	})
 }
 
+func (s *CLITestSuite) Test_Corrupted_Configs() {
+	t := s.T()
+
+	cfg := v3.New(&config.Params{
+		CLIName: "ccloud",
+	})
+	destConfigFile, err := cfg.GetFilename()
+	require.NoError(t, err)
+
+	contextName := "login-cody@confluent.io-http://127.0.0.1:55013"
+	kafkaAPIURL := serveKafkaAPI(s.T()).URL
+	loginURL := serve(s.T(), kafkaAPIURL).URL
+	re := regexp.MustCompile("https?://127.0.0.1:[0-9]+")
+	contextName = re.ReplaceAllString(contextName, loginURL)
+
+	t.Run("Corrupted Unspecified Platform Error", func(tt *testing.T) {
+		fileName := fixturePath(t, "input", "ccloudUnspecifiedPlatformConfig")
+		err := WriteConfig(fileName, "ccloud", destConfigFile, loginURL)
+		require.NoError(t, err)
+		output := runCommand(tt, ccloudTestBin, []string{}, "environment list", 1)
+		unspecifiedPlatformErrMsg := fmt.Sprintf(errors.ConfigUnspecifiedPlatformError, contextName)
+		unableToLoadError := fmt.Sprintf(errors.ConfigUnableToLoadError, unspecifiedPlatformErrMsg)
+		require.Equal(tt, unableToLoadError, output)
+	})
+
+	t.Run("Corrupted Unspecified Credential Error", func(tt *testing.T) {
+		fileName := fixturePath(t, "input", "ccloudUnspecifiedCredentialConfig")
+		err := WriteConfig(fileName, "ccloud", destConfigFile, loginURL)
+		require.NoError(t, err)
+		output := runCommand(tt, ccloudTestBin, []string{}, "environment list", 1)
+		unspecifiedCredentialErrMsg := fmt.Sprintf(errors.ConfigUnspecifiedCredentialError, contextName)
+		unableToLoadError := fmt.Sprintf(errors.ConfigUnableToLoadError, unspecifiedCredentialErrMsg)
+		require.Equal(tt, unableToLoadError, output)
+	})
+}
+
 func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint string) {
 	if tt.name == "" {
 		tt.name = tt.args
@@ -422,27 +459,27 @@ func resetConfiguration(t *testing.T, cliName string) {
 }
 
 func writeFixture(t *testing.T, fixture string, content string) {
-	err := ioutil.WriteFile(fixturePath(t, fixture), []byte(content), 0644)
+	err := ioutil.WriteFile(fixturePath(t, "output", fixture), []byte(content), 0644)
 	if err != nil {
 		t.Fatal(err)
 	}
 }
 
 func loadFixture(t *testing.T, fixture string) string {
-	content, err := ioutil.ReadFile(fixturePath(t, fixture))
+	content, err := ioutil.ReadFile(fixturePath(t, "output", fixture))
 	if err != nil {
 		t.Fatal(err)
 	}
 	return string(content)
 }
 
-func fixturePath(t *testing.T, fixture string) string {
+func fixturePath(t *testing.T, fixtureDir string, fixture string) string {
 	_, filename, _, ok := runtime.Caller(0)
 	if !ok {
 		t.Fatalf("problems recovering caller information")
 	}
 
-	return filepath.Join(filepath.Dir(filename), "fixtures", "output", fixture)
+	return filepath.Join(filepath.Dir(filename), "fixtures", fixtureDir, fixture)
 }
 
 func binaryPath(t *testing.T, binaryName string) string {
