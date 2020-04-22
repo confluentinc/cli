@@ -16,6 +16,8 @@ func AuditLogConfigTranslation(clusterConfigs map[string]string, bootstrapServer
 	warnings := []string{}
 	var newWarnings []string
 
+	sort.Strings(bootstrapServers)
+
 	clusterAuditLogConfigSpecs, err := jsonConfigsToAuditLogConfigSpecs(clusterConfigs)
 	if err != nil {
 		return mds.AuditLogConfigSpec{}, warnings, err
@@ -122,6 +124,7 @@ func warnNewBootstrapServers(specs map[string]*mds.AuditLogConfigSpec, bootstrap
 	warnings := []string{}
 	for clusterId, spec := range specs {
 		oldBootStrapServers := spec.Destinations.BootstrapServers
+		sort.Strings(oldBootStrapServers)
 		if !testEq(oldBootStrapServers, bootstrapServers) {
 			newWarning := fmt.Sprintf("New Bootstrap Servers Warning: Cluster %q currently has bootstrap servers = %v. Replacing with %v.", clusterId, oldBootStrapServers, bootstrapServers)
 			warnings = append(warnings, newWarning)
