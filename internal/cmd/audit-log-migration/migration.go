@@ -14,6 +14,7 @@ func AuditLogConfigTranslation(clusterConfigs map[string]string, bootstrapServer
 	var newSpec mds.AuditLogConfigSpec
 	const defaultTopicName = "confluent-audit-log-events"
 	warnings := []string{}
+	var newWarnings []string
 
 	clusterAuditLogConfigSpecs, err := jsonConfigsToAuditLogConfigSpecs(clusterConfigs)
 	if err != nil {
@@ -22,27 +23,36 @@ func AuditLogConfigTranslation(clusterConfigs map[string]string, bootstrapServer
 
 	addOtherBlock(clusterAuditLogConfigSpecs, defaultTopicName)
 
-	warnMultipleCrnAuthorities(clusterAuditLogConfigSpecs)
+	newWarnings = warnMultipleCrnAuthorities(clusterAuditLogConfigSpecs)
+	warnings = append(warnings, newWarnings...)
 
-	warnMismatchKafaClusters(clusterAuditLogConfigSpecs)
+	newWarnings = warnMismatchKafaClusters(clusterAuditLogConfigSpecs)
+	warnings = append(warnings, newWarnings...)
 
-	warnNewBootstrapServers(clusterAuditLogConfigSpecs, bootstrapServers)
+	newWarnings = warnNewBootstrapServers(clusterAuditLogConfigSpecs, bootstrapServers)
+	warnings = append(warnings, newWarnings...)
 
 	addBootstrapServers(&newSpec, bootstrapServers)
 
-	combineDestinationTopics(clusterAuditLogConfigSpecs, &newSpec)
+	newWarnings = combineDestinationTopics(clusterAuditLogConfigSpecs, &newSpec)
+	warnings = append(warnings, newWarnings...)
 
 	setDefaultTopic(&newSpec, defaultTopicName)
 
 	combineExcludedPrincipals(clusterAuditLogConfigSpecs, &newSpec)
 
-	warnNewExcludedPrincipals(clusterAuditLogConfigSpecs, &newSpec)
+	newWarnings = warnNewExcludedPrincipals(clusterAuditLogConfigSpecs, &newSpec)
+	warnings = append(warnings, newWarnings...)
 
 	combineRoutes(clusterAuditLogConfigSpecs, &newSpec)
 
 	generateAlternateDefaultTopicRoutes(clusterAuditLogConfigSpecs, &newSpec, crnAuthority)
 
 	replaceCRNAuthorityRoutes(&newSpec, crnAuthority)
+
+	sort.Slice(warnings, func(i, j int) bool {
+		return warnings[i] < warnings[j]
+	})
 
 	return newSpec, warnings, nil
 }
@@ -65,7 +75,8 @@ func addOtherBlock(specs map[string]*mds.AuditLogConfigSpec, defaultTopicName st
 	}
 }
 
-func warnMultipleCrnAuthorities(specs map[string]*mds.AuditLogConfigSpec) {
+func warnMultipleCrnAuthorities(specs map[string]*mds.AuditLogConfigSpec) []string {
+	warnings := []string{}
 	for clusterId, spec := range specs {
 		routes := spec.Routes
 		foundAuthorities := []string{}
@@ -75,9 +86,11 @@ func warnMultipleCrnAuthorities(specs map[string]*mds.AuditLogConfigSpec) {
 		}
 		foundAuthorities = removeDuplicates(foundAuthorities)
 		if len(foundAuthorities) != 1 {
-			fmt.Printf("Cluster %q had multiple CRN Authorities in its routes: %v.\n", clusterId, foundAuthorities)
+			newWarning := fmt.Sprintf("Multiple Crn Authorities Warning: Cluster %q had multiple CRN Authorities in its routes: %v.", clusterId, foundAuthorities)
+			warnings = append(warnings, newWarning)
 		}
 	}
+	return warnings
 }
 
 func getCrnAuthority(routeName string) string {
@@ -85,15 +98,18 @@ func getCrnAuthority(routeName string) string {
 	return re.FindString(routeName)
 }
 
-func warnMismatchKafaClusters(specs map[string]*mds.AuditLogConfigSpec) {
+func warnMismatchKafaClusters(specs map[string]*mds.AuditLogConfigSpec) []string {
+	warnings := []string{}
 	for clusterId, spec := range specs {
 		routes := spec.Routes
 		for routeName := range routes {
 			if checkMismatchKafkaCluster(routeName, clusterId) {
-				fmt.Printf("Cluster %q has a route with a different clusterId. Route: %q.\n", clusterId, routeName)
+				newWarning := fmt.Sprintf("Mismatched Kafka Cluster Warning: Cluster %q has a route with a different clusterId. Route: %q.", clusterId, routeName)
+				warnings = append(warnings, newWarning)
 			}
 		}
 	}
+	return warnings
 }
 
 func checkMismatchKafkaCluster(routeName, expectedClusterId string) bool {
@@ -102,13 +118,16 @@ func checkMismatchKafkaCluster(routeName, expectedClusterId string) bool {
 	return result == ""
 }
 
-func warnNewBootstrapServers(specs map[string]*mds.AuditLogConfigSpec, bootstrapServers []string) {
+func warnNewBootstrapServers(specs map[string]*mds.AuditLogConfigSpec, bootstrapServers []string) []string {
+	warnings := []string{}
 	for clusterId, spec := range specs {
 		oldBootStrapServers := spec.Destinations.BootstrapServers
 		if !testEq(oldBootStrapServers, bootstrapServers) {
-			fmt.Printf("Cluster %q currently has bootstrap servers = %v. Replacing with %v.\n", clusterId, oldBootStrapServers, bootstrapServers)
+			newWarning := fmt.Sprintf("New Bootstrap Servers Warning: Cluster %q currently has bootstrap servers = %v. Replacing with %v.", clusterId, oldBootStrapServers, bootstrapServers)
+			warnings = append(warnings, newWarning)
 		}
 	}
+	return warnings
 }
 
 func jsonConfigsToAuditLogConfigSpecs(clusterConfigs map[string]string) (map[string]*mds.AuditLogConfigSpec, error) {
@@ -128,7 +147,7 @@ func addBootstrapServers(spec *mds.AuditLogConfigSpec, bootstrapServers []string
 	spec.Destinations.BootstrapServers = bootstrapServers
 }
 
-func combineDestinationTopics(specs map[string]*mds.AuditLogConfigSpec, newSpec *mds.AuditLogConfigSpec) {
+func combineDestinationTopics(specs map[string]*mds.AuditLogConfigSpec, newSpec *mds.AuditLogConfigSpec) []string {
 	newTopics := make(map[string]mds.AuditLogConfigDestinationConfig)
 	topicRetentionDiscrepancies := make(map[string]int64)
 
@@ -149,15 +168,18 @@ func combineDestinationTopics(specs map[string]*mds.AuditLogConfigSpec, newSpec 
 		}
 	}
 
-	warnTopicRetentionDiscrepancies(topicRetentionDiscrepancies)
-
 	newSpec.Destinations.Topics = newTopics
+
+	return warnTopicRetentionDiscrepancies(topicRetentionDiscrepancies)
 }
 
-func warnTopicRetentionDiscrepancies(topicRetentionDiscrepancies map[string]int64) {
+func warnTopicRetentionDiscrepancies(topicRetentionDiscrepancies map[string]int64) []string {
+	warnings := []string{}
 	for topicName, maxRetentionTime := range topicRetentionDiscrepancies {
-		fmt.Printf("Topic %q had discrepancies with retention time. Using max: %v.\n", topicName, maxRetentionTime)
+		newWarning := fmt.Sprintf("Retention Time Discrepancy Warning: Topic %q had discrepancies with retention time. Using max: %v.", topicName, maxRetentionTime)
+		warnings = append(warnings, newWarning)
 	}
+	return warnings
 }
 
 func setDefaultTopic(newSpec *mds.AuditLogConfigSpec, defaultTopicName string) {
@@ -270,7 +292,8 @@ func generateAlternateDefaultTopicRoutes(specs map[string]*mds.AuditLogConfigSpe
 	}
 }
 
-func warnNewExcludedPrincipals(specs map[string]*mds.AuditLogConfigSpec, newSpec *mds.AuditLogConfigSpec) {
+func warnNewExcludedPrincipals(specs map[string]*mds.AuditLogConfigSpec, newSpec *mds.AuditLogConfigSpec) []string {
+	warnings := []string{}
 	for clusterId, spec := range specs {
 		excludedPrincipals := spec.ExcludedPrincipals
 		differentPrincipals := []string{}
@@ -280,9 +303,11 @@ func warnNewExcludedPrincipals(specs map[string]*mds.AuditLogConfigSpec, newSpec
 			}
 		}
 		if len(differentPrincipals) != 0 {
-			fmt.Printf("Cluster %q will now also exclude the following principals: %v.\n", clusterId, differentPrincipals)
+			newWarning := fmt.Sprintf("New Excluded Principals Warning: Cluster %q will now also exclude the following principals: %v.", clusterId, differentPrincipals)
+			warnings = append(warnings, newWarning)
 		}
 	}
+	return warnings
 }
 
 func max(x, y int64) int64 {
