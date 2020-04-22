@@ -3,7 +3,6 @@ package cmd
 import (
 	"github.com/confluentinc/cli/internal/cmd/shell"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
-	"github.com/confluentinc/cli/internal/pkg/shell/completer"
 	"net/http"
 	"os"
 	"runtime"
@@ -50,7 +49,7 @@ type Command struct {
 	logger    *log.Logger
 }
 
-func NewConfluentCommand(cliName string, completer completer.CommandCompleter, cfg *v3.Config, logger *log.Logger, ver *pversion.Version, analytics analytics.Client, netrcHandler *pauth.NetrcHandler) (*Command, error) {
+func NewConfluentCommand(cliName string, cfg *v3.Config, logger *log.Logger, ver *pversion.Version, analytics analytics.Client, netrcHandler *pauth.NetrcHandler) (*Command, error) {
 	cli := &cobra.Command{
 		Use:               cliName,
 		Version:           ver.Version,

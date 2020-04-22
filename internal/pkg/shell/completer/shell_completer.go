@@ -7,16 +7,14 @@ import (
 
 type ShellCompleter struct {
 	*CobraCompleter
-	*SubCommandCompleter
 }
 
 func NewShellCompleter(rootCmd *cobra.Command, cliName string) *ShellCompleter {
 	return &ShellCompleter{
 		CobraCompleter:      NewCobraCompleter(rootCmd),
-		SubCommandCompleter: NewSubCommandCompleter(rootCmd),
 	}
 }
 
 func (c *ShellCompleter) Complete(d prompt.Document) []prompt.Suggest {
-	return append(c.CobraCompleter.Complete(d), c.SubCommandCompleter.Complete(d)...)
+	return c.CobraCompleter.Complete(d)
 }
