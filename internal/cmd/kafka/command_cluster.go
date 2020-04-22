@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 
@@ -31,6 +32,9 @@ var (
 const (
 	singleZone = "singlezone"
 	multiZone  = "multizone"
+	skuBasic = "basic"
+	skuStandard = "standard"
+	skuDedicated = "dedicated"
 )
 
 type clusterCommand struct {
@@ -75,10 +79,10 @@ func (c *clusterCommand) init() {
 	createCmd.Flags().String("region", "", "Cloud region ID for cluster (e.g. 'us-west-2').")
 	check(createCmd.MarkFlagRequired("cloud"))
 	check(createCmd.MarkFlagRequired("region"))
-	createCmd.Flags().String("durability", "", "Durability of the cluster. Allowed Values: singlezone, multizone.")
+	createCmd.Flags().String("durability", "", fmt.Sprintf("Durability of the cluster. Allowed Values: %s, %s.", singleZone, multiZone))
 	check(createCmd.MarkFlagRequired("durability"))
-	createCmd.Flags().Bool("dedicated", false, "Create dedicated cluster.")
-	createCmd.Flags().Int("cku", 0, "Confluent Kafka Unit value. Should be passed for dedicated kafka cluster creation with value more than 0.")
+	createCmd.Flags().String("type", skuBasic, fmt.Sprintf("Type of the Kafka cluster. Allowed values: %s, %s, %s.", skuBasic, skuStandard, skuDedicated))
+	createCmd.Flags().Int("cku", 0, "Number of Confluent Kafka Units (non-negative). Required for Kafka clusters of type 'dedicated'.")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
@@ -161,41 +165,34 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	dedicated, err := cmd.Flags().GetBool("dedicated")
+	typeString, err := cmd.Flags().GetString("type")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	sku, err := stringToSku(typeString)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	var cfg *kafkav1.KafkaClusterConfig
-	if dedicated {
+	cfg := &kafkav1.KafkaClusterConfig{
+		AccountId:       c.EnvironmentId(),
+		Name:            args[0],
+		ServiceProvider: cloud,
+		Region:          region,
+		Durability:      durability,
+		Deployment: &kafkav1.Deployment{Sku: sku},
+	}
+	if sku == productv1.Sku_DEDICATED {
 		cku, err := cmd.Flags().GetInt("cku")
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
 		if cku <= 0 {
-			return errors.HandleCommon(errors.New("For dedicated kafka cluster creation, cku should be passed with value greater than 0."), cmd)
+			return errors.HandleCommon(errors.New("For dedicated Kafka cluster creation, --cku should be passed with value greater than 0."), cmd)
 		}
-		cfg = &kafkav1.KafkaClusterConfig{
-			AccountId:       c.EnvironmentId(),
-			Name:            args[0],
-			ServiceProvider: cloud,
-			Region:          region,
-			Durability:      durability,
-			Deployment: &kafkav1.Deployment{
-				Sku: productv1.Sku_DEDICATED,
-			},
-			Cku: int32(cku),
-		}
+		cfg.Cku = int32(cku)
 	} else {
-		cfg = &kafkav1.KafkaClusterConfig{
-			AccountId:       c.EnvironmentId(),
-			Name:            args[0],
-			ServiceProvider: cloud,
-			Region:          region,
-			Durability:      durability,
-			// TODO: remove this once it's no longer required (MCM-130)
-			Storage: 5000,
-		}
+		cfg.Storage = 5000
 	}
 
 	cluster, err := c.Client.Kafka.Create(context.Background(), cfg)
@@ -212,7 +209,18 @@ func stringToDurability(s string) (kafkav1.Durability, error) {
 	} else if s == multiZone {
 		return kafkav1.Durability_HIGH, nil
 	}
-	return kafkav1.Durability_LOW, errors.New("Only allowed values for durability are: singlezone, multizone.")
+	return kafkav1.Durability_LOW, fmt.Errorf("Only allowed values for --durability are: %s, %s.", singleZone, multiZone)
+}
+
+func stringToSku(s string) (productv1.Sku, error) {
+	sku := productv1.Sku(productv1.Sku_value[strings.ToUpper(s)])
+	switch sku {
+	case productv1.Sku_BASIC, productv1.Sku_STANDARD, productv1.Sku_DEDICATED:
+		break
+	default:
+		return productv1.Sku_UNKNOWN, fmt.Errorf("Only allowed values for --type are: %s, %s, %s.", skuBasic, skuStandard, skuDedicated)
+	}
+	return sku, nil
 }
 
 func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {

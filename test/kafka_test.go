@@ -12,6 +12,8 @@ func (s *CLITestSuite) TestKafkaCommands() {
 		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1 --durability singlezone", fixture: "kafka2.golden", wantErrCode: 0},
 		{args: "kafka cluster create my-failed-cluster --cloud oops --region us-east1 --durability singlezone", fixture: "kafka12.golden", wantErrCode: 1},
 		{args: "kafka cluster create my-failed-cluster --cloud aws --region oops --durability singlezone", fixture: "kafka13.golden", wantErrCode: 1},
+		{args: "kafka cluster create my-failed-cluster --cloud aws --region us-east-1 --durability singlezone --type oops", fixture: "kafka20.golden", wantErrCode: 1},
+		{args: "kafka cluster create my-failed-cluster --cloud aws --region us-east-1 --durability singlezone --type dedicated --cku 0", fixture: "kafka21.golden", wantErrCode: 1},
 		{args: "kafka cluster delete", fixture: "kafka3.golden", wantErrCode: 1},
 		{args: "kafka cluster delete lkc-unknown", fixture: "kafka4.golden", wantErrCode: 1},
 		{args: "kafka cluster delete lkc-def973", fixture: "kafka5.golden", wantErrCode: 0},
