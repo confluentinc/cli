@@ -65,7 +65,7 @@ func NewConfluentCommand(cliName string, cfg *v3.Config, logger *log.Logger, ver
 		cli.Long = "Manage your Confluent Cloud."
 	} else {
 		cli.Short = "Confluent CLI."
-		cli.Long = "Manage your Confluent Platform. TESST"
+		cli.Long = "Manage your Confluent Platform."
 	}
 	cli.PersistentFlags().CountP("verbose", "v",
 		"Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).")
