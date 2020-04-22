@@ -10,11 +10,14 @@ import (
 	"github.com/confluentinc/mds-sdk-go"
 )
 
-func AuditLogConfigTranslation(clusterConfigs map[string]string, bootstrapServers, crnAuthority string) mds.AuditLogConfigSpec {
+func AuditLogConfigTranslation(clusterConfigs map[string]string, bootstrapServers, crnAuthority string) (mds.AuditLogConfigSpec, error) {
 	var newSpec mds.AuditLogConfigSpec
 	const defaultTopicName = "confluent-audit-log-events"
 
-	clusterAuditLogConfigSpecs := jsonConfigsToAuditLogConfigSpecs(clusterConfigs)
+	clusterAuditLogConfigSpecs, err := jsonConfigsToAuditLogConfigSpecs(clusterConfigs)
+  if err != nil {
+    return mds.AuditLogConfigSpec{}, err
+  }
 
   warnMultipleCrnAuthorities(clusterAuditLogConfigSpecs)
 
@@ -38,7 +41,7 @@ func AuditLogConfigTranslation(clusterConfigs map[string]string, bootstrapServer
 
 	generateAlternateDefaultTopicRoutes(clusterAuditLogConfigSpecs, &newSpec, crnAuthority)
 
-	return newSpec
+	return newSpec, nil
 }
 
 func warnMultipleCrnAuthorities(specs map[string]*mds.AuditLogConfigSpec) {
@@ -80,22 +83,25 @@ func checkMismatchKafkaCluster(routeName, expectedClusterId string) bool {
 
 func warnNewBootstrapServers(specs map[string]*mds.AuditLogConfigSpec, bootstrapServers string) {
   for clusterId, spec := range specs {
-    old_bootstrap := spec.Destinations.BootstrapServers[0]
-    // assuming there is only a single server listed
+    old_bootstrap := spec.Destinations.BootstrapServers[0] // assuming there is only a single server
+
     if old_bootstrap != bootstrapServers {
       fmt.Printf("Cluster %q currently has bootstrap server %q. Replacing with %q.\n", clusterId, old_bootstrap, bootstrapServers)
     }
   }
 }
 
-func jsonConfigsToAuditLogConfigSpecs(clusterConfigs map[string]string) map[string]*mds.AuditLogConfigSpec {
+func jsonConfigsToAuditLogConfigSpecs(clusterConfigs map[string]string) (map[string]*mds.AuditLogConfigSpec, error) {
 	clusterAuditLogConfigSpecs := make(map[string]*mds.AuditLogConfigSpec)
 	for k, v := range clusterConfigs {
 		var spec mds.AuditLogConfigSpec
-		json.Unmarshal([]byte(v), &spec)
+		err := json.Unmarshal([]byte(v), &spec)
+    if err !=  nil {
+      return nil, err
+    }
 		clusterAuditLogConfigSpecs[k] = &spec
 	}
-	return clusterAuditLogConfigSpecs
+	return clusterAuditLogConfigSpecs, nil
 }
 
 func addBootstrapServers(spec *mds.AuditLogConfigSpec, bootstrapServers string) {
