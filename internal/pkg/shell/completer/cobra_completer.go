@@ -8,17 +8,17 @@ import (
 	"github.com/spf13/pflag"
 )
 
-type RootCompleter struct {
+type CobraCompleter struct {
 	RootCmd *cobra.Command
 }
 
-func NewRootCompleter(rootCmd *cobra.Command) *RootCompleter {
-	return &RootCompleter{
+func NewCobraCompleter(rootCmd *cobra.Command) *CobraCompleter {
+	return &CobraCompleter{
 		RootCmd: rootCmd,
 	}
 }
 
-func (c *RootCompleter) Complete(d prompt.Document) []prompt.Suggest {
+func (c *CobraCompleter) Complete(d prompt.Document) []prompt.Suggest {
 	command := c.RootCmd
 	args := strings.Fields(d.CurrentLine())
 	var foundArgs []string

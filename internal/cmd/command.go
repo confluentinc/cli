@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/confluentinc/cli/internal/cmd/shell"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/shell/completer"
 	"net/http"
@@ -137,6 +138,9 @@ func NewConfluentCommand(cliName string, completer completer.CommandCompleter, c
 		//conn = connect.New(prerunner, cfg, connects.New(client, logger))
 		//conn.Hidden = true // The connect feature isn't finished yet, so let's hide it
 		//cli.AddCommand(conn)
+
+		// Shell
+		cli.AddCommand(shell.NewShellCmd(prerunner, cli, cfg))
 	} else if cliName == "confluent" {
 		cli.AddCommand(iam.New(prerunner, cfg))
 

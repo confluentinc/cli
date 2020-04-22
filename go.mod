@@ -4,7 +4,6 @@ require (
 	github.com/DABH/go-basher v0.0.0-20191104233559-daa7fee9545c
 	github.com/Shopify/sarama v1.23.1
 	github.com/alcortesm/tgz v0.0.0-20161220082320-9c5fe88206d7 // indirect
-	github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239 // indirect
 	github.com/antihax/optional v1.0.0
 	github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da
 	github.com/atrox/homedir v1.0.0
@@ -16,6 +15,7 @@ require (
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
 	github.com/confluentinc/bincover v0.0.0-20191217221125-80a7bb37ae5e
+	github.com/confluentinc/cc-structs/kafka/auth v0.36.0 // indirect
 	github.com/confluentinc/cc-utils v0.0.0-00010101000000-000000000000
 	github.com/confluentinc/ccloud-sdk-go v0.0.18-0.20200331232827-b1565f98d0a7
 	github.com/confluentinc/ccloudapis v0.0.0-20200323172841-c4a51af500ae
@@ -28,7 +28,6 @@ require (
 	github.com/dgryski/go-metro v0.0.0-20180109044635-280f6062b5bc // indirect
 	github.com/dgryski/go-spooky v0.0.0-20170606183049-ed3d087f40e2 // indirect
 	github.com/fatih/color v1.7.0
-	github.com/flynn/go-shlex v0.0.0-20150515145356-3f9db97f8568 // indirect
 	github.com/frankban/quicktest v1.7.2 // indirect
 	github.com/go-yaml/yaml v2.1.0+incompatible
 	github.com/gobuffalo/flect v0.1.3
