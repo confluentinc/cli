@@ -21,7 +21,7 @@ import (
 
 var (
 	listFields                = []string{"Id", "Name", "ServiceProvider", "Region", "Durability", "Status"}
-	listHumanLabels           = []string{"Id", "Name", "Provider", "Region", "Durability", "Status"}
+	listHumanLabels           = []string{"Id", "Name", "Provider", "Region", "Availability", "Status"}
 	listStructuredLabels      = []string{"id", "name", "provider", "region", "durability", "status"}
 	describeFields            = []string{"Id", "Name", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "ApiEndpoint"}
 	describeHumanRenames      = map[string]string{"NetworkIngress": "Ingress", "NetworkEgress": "Egress", "ServiceProvider": "Provider"}
@@ -30,8 +30,8 @@ var (
 )
 
 const (
-	singleZone   = "singlezone"
-	multiZone    = "multizone"
+	singleZone   = "single-zone"
+	multiZone    = "multi-zone"
 	skuBasic     = "basic"
 	skuStandard  = "standard"
 	skuDedicated = "dedicated"
@@ -79,8 +79,7 @@ func (c *clusterCommand) init() {
 	createCmd.Flags().String("region", "", "Cloud region ID for cluster (e.g. 'us-west-2').")
 	check(createCmd.MarkFlagRequired("cloud"))
 	check(createCmd.MarkFlagRequired("region"))
-	createCmd.Flags().String("durability", "", fmt.Sprintf("Durability of the cluster. Allowed Values: %s, %s.", singleZone, multiZone))
-	check(createCmd.MarkFlagRequired("durability"))
+	createCmd.Flags().String("availability", singleZone, fmt.Sprintf("Availability of the cluster. Allowed Values: %s, %s.", singleZone, multiZone))
 	createCmd.Flags().String("type", skuBasic, fmt.Sprintf("Type of the Kafka cluster. Allowed values: %s, %s, %s.", skuBasic, skuStandard, skuDedicated))
 	createCmd.Flags().Int("cku", 0, "Number of Confluent Kafka Units (non-negative). Required for Kafka clusters of type 'dedicated'.")
 	createCmd.Flags().SortFlags = false
@@ -157,11 +156,11 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	durabilityString, err := cmd.Flags().GetString("durability")
+	availabilityString, err := cmd.Flags().GetString("availability")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	durability, err := stringToDurability(durabilityString)
+	availability, err := stringToAvailability(availabilityString)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -179,7 +178,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		Name:            args[0],
 		ServiceProvider: cloud,
 		Region:          region,
-		Durability:      durability,
+		Durability:      availability,
 		Deployment:      &kafkav1.Deployment{Sku: sku},
 	}
 	if sku == productv1.Sku_DEDICATED {
@@ -192,7 +191,9 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		}
 		cfg.Cku = int32(cku)
 	} else {
-		cfg.Storage = 5000
+		if cmd.Flags().Changed("cku") {
+			return errors.HandleCommon(errors.New("Specifying --cku is valid only for dedicated Kafka cluster creation"), cmd)
+		}
 	}
 
 	cluster, err := c.Client.Kafka.Create(context.Background(), cfg)
@@ -203,13 +204,13 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	return printer.RenderTableOut(cluster, describeFields, describeHumanRenames, os.Stdout)
 }
 
-func stringToDurability(s string) (kafkav1.Durability, error) {
+func stringToAvailability(s string) (kafkav1.Durability, error) {
 	if s == singleZone {
 		return kafkav1.Durability_LOW, nil
 	} else if s == multiZone {
 		return kafkav1.Durability_HIGH, nil
 	}
-	return kafkav1.Durability_LOW, fmt.Errorf("Only allowed values for --durability are: %s, %s.", singleZone, multiZone)
+	return kafkav1.Durability_LOW, fmt.Errorf("Only allowed values for --availability are: %s, %s.", singleZone, multiZone)
 }
 
 func stringToSku(s string) (productv1.Sku, error) {
