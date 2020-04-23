@@ -54,7 +54,7 @@ type UnspecifiedCredentialError struct {
 }
 
 func (e *UnspecifiedCredentialError) Error() string {
-	return e.ContextName
+	return "CRED ERROR"
 }
 
 type UnspecifiedPlatformError struct {
@@ -62,7 +62,7 @@ type UnspecifiedPlatformError struct {
 }
 
 func (e *UnspecifiedPlatformError) Error() string {
-	return e.ContextName
+	return "PLATFORM ERROR"
 }
 
 type InvalidConfigVersion struct {

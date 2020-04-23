@@ -74,6 +74,10 @@ func (c *Config) Load() error {
 		return errors.Wrapf(err, "unable to read config file: %s", filename)
 	}
 	err = json.Unmarshal(input, c)
+	if c.Context() != nil {
+		fmt.Println("V2 Credname: ", c.Context().CredentialName )
+		fmt.Println("V2 Cred: ", c.Context().Credential )
+	}
 	if err != nil {
 		return errors.Wrapf(err, "unable to parse config file: %s", filename)
 	}
@@ -145,6 +149,7 @@ func (c *Config) Validate() error {
 		}
 		if _, ok := c.Credentials[context.CredentialName]; !ok {
 			c.Logger.Trace("unspecified credential error")
+			fmt.Println("V2 CRED VALIDATE", context.CredentialName)
 			return &errors.UnspecifiedCredentialError{ContextName: context.Name}
 		}
 		if _, ok := c.Platforms[context.PlatformName]; !ok {

@@ -76,6 +76,10 @@ func (c *Config) Load() error {
 		return errors.Wrapf(err, "unable to read config file: %s", filename)
 	}
 	err = json.Unmarshal(input, c)
+	if c.Context() != nil {
+		fmt.Println("V3 Cred name: ", c.Context().CredentialName)
+		fmt.Println("V3 Cred: ", c.Context().Credential)
+	}
 	if c.Ver.Compare(currentVersion) < 0 {
 		return &errors.DeprecatedConfigVersion{Version: c.Ver.String()}
 	} else if c.Ver.Compare(Version) > 0 {
