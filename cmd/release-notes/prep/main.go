@@ -38,7 +38,7 @@ func writeReleaseNotesPrep(filename string, releaseVersion string, prevVersion s
 	}
 	defer f.Close()
 	mergedPRs := getMergedPRs(prevVersion)
-	_, err = io.WriteString(f, fmt.Sprintf(prepBaseString, releaseVersion, mergedPRs))
+	_, err = io.WriteString(f, fmt.Sprintf(prepBaseString, releaseVersion, prevVersion, mergedPRs))
 	return err
 }
 

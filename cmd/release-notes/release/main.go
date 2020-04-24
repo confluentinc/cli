@@ -43,10 +43,12 @@ var (
 		"Confluent Bug Fixes": confluentBugFix,
 	}
 	prepFileName = path.Join(".", "release-notes", "prep")
-	placeHolder = "<PLACEHOLDER: REPLACE WITH CONTENT OR DO NOTHING IF NO CONTENT>"
+	placeHolder = "<PLACEHOLDER>"
 
 	newFeaturesSectionTitle = "New Features"
 	bugFixesSectionTitle = "Bug Fixes"
+
+	releaseNotesMsgFile = path.Join(".", "internal", "pkg", "update" , "update_msg.go")
 )
 
 
@@ -78,19 +80,17 @@ func writeReleaseNotes(cliName string, releaseVersion string) error {
 	}
 	defer f.Close()
 
-	updateFileName := path.Join(".", "internal", "pkg", "update", "update-release-notes")
-	updateFile, err := os.Create(updateFileName)
-	defer updateFile.Close()
-
 	sectionContentMap, err := getSectionContentMap()
 
 	sections := getSectionsString(cliName, sectionContentMap)
 
 	releaseNotes := fmt.Sprintf(content, strings.ToUpper(cliName), releaseVersion, sections)
 
-	_, err = io.WriteString(updateFile, releaseNotes)
-	if err != nil {
-		return err
+	if cliName == "ccloud" {
+		err := writeUpdateMsgGoFile(releaseNotes)
+		if err != nil {
+			return err
+		}
 	}
 
 	var oldReleaseFileName string
@@ -113,6 +113,33 @@ func writeReleaseNotes(cliName string, releaseVersion string) error {
 		return err
 	}
 
+	return nil
+}
+
+func writeUpdateMsgGoFile(releaseNotes string) error {
+	fileContent := `
+package update
+
+var (
+	ReleaseNotesMsg = <back_tick>
+%s
+<back_tick>
+)
+`
+	msg := 	"Updates are available for %s from (current: %s, latest: %s).\n" +
+		releaseNotes +
+		"To install them, please run:\n$ %s update\n\n"
+	f, err := os.Create(releaseNotesMsgFile)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	fileContent = fmt.Sprintf(fileContent, msg)
+	fileContent = strings.ReplaceAll(fileContent, "<back_tick>", "`")
+	_, err = io.WriteString(f, fileContent)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

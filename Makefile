@@ -298,10 +298,18 @@ clean-docs:
 
 .PHONY: release-notes-prep
 release-notes-prep:
-	@echo Preparing Release Notes for v$(BUMPED_VERSION) (Previous Release Version: v$(CLEAN_VERSION))
+	@echo "Preparing Release Notes for $(BUMPED_VERSION) (Previous Release Version: v$(CLEAN_VERSION))"
+	@echo
 	@GO11MODULE=on go run -ldflags '-X main.releaseVersion=$(BUMPED_VERSION) -X main.prevVersion=v$(CLEAN_VERSION)' cmd/release-notes/prep/main.go
-	@echo "NEXT STEP: Please fill in 'prep' file located in release-notes directory."
-	@echo "Once finished, run 'make publish-release-notes'."
+	@echo "===================="
+	@echo "NEXT STEPS"
+	@echo "===================="
+	@echo
+	@echo "- Open 'cli/release-notes/prep' and fill in the content following the instructions."
+	@echo
+	@echo "- Once finished, run 'make publish-release-notes'."
+	@echo
+	@echo "===================="
 
 # TODO: replace master with DOCS_BRANCH
 # TODO: change the git clone branch to the docs branch
@@ -309,23 +317,47 @@ REPLACE_ME_BRANCH := master
 .PHONY: publish-release-notes
 publish-release-notes:
 	@TMP_BASE=$$(mktemp -d) || exit 1; \
-		TMP_DIR=$${TMP_BASE}/release-notes; \
-		git clone git@github.com:csreesan/test-release-notes.git $${TMP_DIR}; \
-		cd $${TMP_DIR} || exit 1; \
+		TMP_RELEASE=$${TMP_BASE}/release-notes; \
+		TMP_CLI=$${TMP_BASE}/cli; \
+		git clone git@github.com:csreesan/test-release-notes.git $${TMP_RELEASE}; \
+		git clone git@github.com:confluentinc/cli.git $${TMP_CLI}; \
+		cd $${TMP_RELEASE} || exit 1; \
 		git fetch ; \
 		git checkout -b cli-$(BUMPED_VERSION) origin/$(REPLACE_ME_BRANCH) || exit 1; \
 		cd - || exit 1; \
-		CCLOUD_RELEASE_DIR=$${TMP_DIR}/cloud/cli/release-notes; \
-		CONFLUENT_RELEASE_DIR=$${TMP_DIR}/confluent/cli/release-notes; \
+		cd $${TMP_CLI} || exit; \
+		git checkout -b cli-$(BUMPED_VERSION) || exit 1; \
+		cd - || exit 1; \
+		CCLOUD_RELEASE_DIR=$${TMP_RELEASE}/cloud/cli/release-notes; \
+		CONFLUENT_RELEASE_DIR=$${TMP_RELEASE}/confluent/cli/release-notes; \
 		make release-notes CCLOUD_RELEASE_DIR=$${CCLOUD_RELEASE_DIR} CONFLUENT_RELEASE_DIR=$${CONFLUENT_RELEASE_DIR}; \
-		make publish-release-notes-internal CCLOUD_RELEASE_DIR=$${CCLOUD_RELEASE_DIR} CONFLUENT_RELEASE_DIR=$${CONFLUENT_RELEASE_DIR} || exit 1; \
-		cd $${TMP_DIR} || exit 1; \
+		make publish-release-notes-internal CCLOUD_RELEASE_DIR=$${CCLOUD_RELEASE_DIR} CONFLUENT_RELEASE_DIR=$${CONFLUENT_RELEASE_DIR} TMP_CLI=$${TMP_CLI} || exit 1; \
+		cd $${TMP_RELEASE} || exit 1; \
 		git add . || exit 1; \
 		git diff --cached --exit-code > /dev/null && echo "nothing to update" && exit 0; \
-		git commit -m "[WIP] new release notes for $(BUMPED_VERSION)" || exit 1; \
+		git commit -m "New release notes for $(BUMPED_VERSION)" || exit 1; \
 		git push origin cli-$(BUMPED_VERSION) || exit 1; \
-		hub pull-request -b $(REPLACE_ME_BRANCH) -m "new release notes for $(BUMPED_VERSION)" || exit 1; \
+		hub pull-request -b $(REPLACE_ME_BRANCH) -m "New release notes for $(BUMPED_VERSION)" || exit 1; \
+		cd $${TMP_CLI} || exit 1; \
+		git add internal/pkg/update/update_msg.go || exit 1; \
+		git diff --cached --exit-code > /dev/null && echo "nothing to update" && exit 0; \
+		git commit internal/pkg/update/update_msg.go -m "New release notes for $(BUMPED_VERSION)" || exit 1; \
+		git push origin cli-$(BUMPED_VERSION) || exit 1; \
+		hub pull-request -b master -m "new release notes for $(BUMPED_VERSION)" || exit 1; \
 		rm -rf $${TMP_BASE}
+	@echo
+	@echo
+	@echo "===================="
+	@echo "NEXT STEPS"
+	@echo "===================="
+	@echo
+	@echo "- Find PR named 'New release notes for $(BUMPED_VERSION)' in cc-documentation, and cli repos."
+	@echo
+	@echo "- Double check and merge the PRs."
+	@echo
+	@echo "- Once the release notes have been released, it's time to release the CLI!"
+	@echo
+	@echo "===================="
 
 .PHONY: release-notes
 release-notes:
@@ -339,6 +371,14 @@ publish-release-notes-internal:
 	cp release-notes/ccloud/*.rst $(CCLOUD_RELEASE_DIR)
 	rm $(CONFLUENT_RELEASE_DIR)/*.rst
 	cp release-notes/confluent/*.rst $(CONFLUENT_RELEASE_DIR)
+# 	rm $(TMP_CLI)/internal/pkg/update/update-release-notes
+	cp internal/pkg/update/update_msg.go $(TMP_CLI)/internal/pkg/update/update_msg.go
+
+.PHONY: clean-release-notes
+clean-release-notes:
+	-rm release-notes/prep
+	-rm release-notes/ccloud/index.rst
+	-rm release-notes/confluent/index.rst
 
 .PHONY: fmt
 fmt:

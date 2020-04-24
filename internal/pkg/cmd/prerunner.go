@@ -253,19 +253,20 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 
 // notifyIfUpdateAvailable prints a message if an update is available
 func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, name string, currentVersion string) error {
-	updateAvailable, latestVersion, err := r.UpdateClient.CheckForUpdates(name, currentVersion, false)
-	if err != nil {
-		// This is a convenience helper to check-for-updates before arbitrary commands. Since the CLI supports running
-		// in internet-less environments (e.g., local or on-prem deploys), swallow the error and log a warning.
-		r.Logger.Warn(err)
-		return nil
-	}
+	//updateAvailable, latestVersion, err := r.UpdateClient.CheckForUpdates(name, currentVersion, false)
+	//if err != nil {
+	//	// This is a convenience helper to check-for-updates before arbitrary commands. Since the CLI supports running
+	//	// in internet-less environments (e.g., local or on-prem deploys), swallow the error and log a warning.
+	//	r.Logger.Warn(err)
+	//	return nil
+	//}
+	updateAvailable := true
+	latestVersion := "v1.1.1.1.1.0"
 	if updateAvailable {
-		msg := "Updates are available for %s from (current: %s, latest: %s). To install them, please run:\n$ %s update\n\n"
 		if !strings.HasPrefix(latestVersion, "v") {
 			latestVersion = "v" + latestVersion
 		}
-		ErrPrintf(cmd, msg, name, currentVersion, latestVersion, name)
+		ErrPrintf(cmd, update.ReleaseNotesMsg, name, currentVersion, latestVersion, name)
 	}
 	return nil
 }
