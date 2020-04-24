@@ -22,7 +22,7 @@ func TestCobraCompleter_Complete(t *testing.T) {
 		want   []prompt.Suggest
 	}{
 		{
-			name:   "RootCommandTest",
+			name:   "TestNoSuggestions",
 			fields: fields{
 				RootCmd: createNestedCommand(0, false),
 			},
@@ -33,18 +33,18 @@ func TestCobraCompleter_Complete(t *testing.T) {
 			want:   []prompt.Suggest{},
 		},
 		{
-			name:   "SimpleCommandTest",
+			name:   "TestSuggestionSuccess",
 			fields: fields{
 				RootCmd: createNestedCommand(1, false),
 			},
 			levels: 1,
 			args:   args{
-				d: prompt.Document{Text: ""},
+				d: *createDocument(""),
 			},
 			want:   expectedSuggestions(1, []string{"a", "b", "c"}),
 		},
 		{
-			name:   "PartialCommandTest",
+			name:   "TestFilteredSuggestionSuccess",
 			fields: fields{
 				RootCmd: createNestedCommand(1, false),
 			},
@@ -55,7 +55,7 @@ func TestCobraCompleter_Complete(t *testing.T) {
 			want:   expectedSuggestions(1, []string{"a"}),
 		},
 		{
-			name:   "FlagCommandTest",
+			name:   "TestFlagSuggestionSuccess",
 			fields: fields{
 				RootCmd: createNestedCommand(1, true),
 			},
@@ -93,7 +93,7 @@ func TestCobraCompleter_Complete(t *testing.T) {
 }
 
 func createDocument(s string) *prompt.Document {
-	buf:= prompt.NewBuffer()
+	buf := prompt.NewBuffer()
 	buf.InsertText(s, false, true)
 
 	return buf.Document()
@@ -112,7 +112,6 @@ func expectedSuggestions(level int, subcommands []string) []prompt.Suggest {
 }
 
 func createNestedCommand(levels int, flags bool) *cobra.Command {
-
 	rootCmd := &cobra.Command{
 		Use:                        "root",
 		Short:                      "this is the root command at level 0",
