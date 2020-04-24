@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"github.com/confluentinc/cli/internal/cmd/shell"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"net/http"
 	"os"
 	"runtime"
@@ -28,12 +26,14 @@ import (
 	schema_registry "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	"github.com/confluentinc/cli/internal/cmd/secret"
 	service_account "github.com/confluentinc/cli/internal/cmd/service-account"
+	"github.com/confluentinc/cli/internal/cmd/shell"
 	"github.com/confluentinc/cli/internal/cmd/update"
 	"github.com/confluentinc/cli/internal/cmd/version"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	"github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/help"
 	"github.com/confluentinc/cli/internal/pkg/io"
 	"github.com/confluentinc/cli/internal/pkg/log"
