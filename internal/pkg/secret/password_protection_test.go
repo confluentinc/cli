@@ -179,6 +179,9 @@ func TestPasswordProtectionSuite_EncryptConfigFileSecrets(t *testing.T) {
 		setMEK                 bool
 		createConfig           bool
 		config                 string
+		validateUsingDecrypt   bool
+		outputConfigPath       string
+		originalConfigs        string
 	}
 	tests := []struct {
 		name            string
@@ -200,6 +203,7 @@ func TestPasswordProtectionSuite_EncryptConfigFileSecrets(t *testing.T) {
 				config:                 "",
 				setMEK:                 false,
 				createConfig:           true,
+				validateUsingDecrypt:   false,
 			},
 			wantErr:    true,
 			wantErrMsg: "master key is not exported in CONFLUENT_SECURITY_MASTER_KEY environment variable; export the key and execute this command again",
@@ -216,6 +220,7 @@ func TestPasswordProtectionSuite_EncryptConfigFileSecrets(t *testing.T) {
 				config:                 "",
 				setMEK:                 true,
 				createConfig:           false,
+				validateUsingDecrypt:   false,
 			},
 			wantErr:    true,
 			wantErrMsg: "invalid config file path: /tmp/securePass987/encrypt/random.properties",
@@ -232,6 +237,7 @@ func TestPasswordProtectionSuite_EncryptConfigFileSecrets(t *testing.T) {
 				config:                 "",
 				setMEK:                 true,
 				createConfig:           true,
+				validateUsingDecrypt:   false,
 			},
 			wantErr: false,
 			wantConfigFile: `testPassword = ${securepass:/tmp/securePass987/encrypt/secureConfig.properties:config.properties/testPassword}
@@ -260,6 +266,7 @@ config.properties/testPassword = ENC[AES/CBC/PKCS5Padding,data:SclgTBDDeLwccqtsa
 				config:                 "",
 				setMEK:                 true,
 				createConfig:           true,
+				validateUsingDecrypt:   false,
 			},
 			wantErr: false,
 			wantConfigFile: `testPassword = ${securepass:/tmp/securePass987/encrypt/secureConfig.properties:config.properties/testPassword}
@@ -289,6 +296,7 @@ config.properties/testPassword = ENC[AES/CBC/PKCS5Padding,data:SclgTBDDeLwccqtsa
 				config:                 "ssl.keystore.password",
 				setMEK:                 true,
 				createConfig:           true,
+				validateUsingDecrypt:   false,
 			},
 			wantErr: false,
 			wantConfigFile: `ssl.keystore.password = ${securepass:/tmp/securePass987/encrypt/secureConfig.properties:config.properties/ssl.keystore.password}
@@ -323,6 +331,7 @@ config.properties/ssl.keystore.password = ENC[AES/CBC/PKCS5Padding,data:SclgTBDD
 				config:                 "",
 				setMEK:                 true,
 				createConfig:           true,
+				validateUsingDecrypt:   false,
 			},
 			wantErr: false,
 			wantConfigFile: `ssl.keystore.location = /usr/ssl
@@ -342,6 +351,28 @@ config.properties/listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config/org.apac
 `,
 		},
 		{
+			name: "ValidTestCase: encrypt properties file with multiple jaas entry",
+			args: &args{
+				masterKeyPassphrase: "abc123",
+				contents: `ssl.keystore.location=/usr/ssl
+		ssl.keystore.key=ssl
+		listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required \
+          username="admin" \
+          password="admin-secret";`,
+				configFilePath:         "/tmp/securePass987/encrypt/config.properties",
+				localSecureConfigPath:  "/tmp/securePass987/encrypt/secureConfig.properties",
+				secureDir:              "/tmp/securePass987/encrypt",
+				remoteSecureConfigPath: "/tmp/securePass987/encrypt/secureConfig.properties",
+				config:                 "listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config/org.apache.kafka.common.security.scram.ScramLoginModule/username, listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config/org.apache.kafka.common.security.scram.ScramLoginModule/password",
+				setMEK:                 true,
+				createConfig:           true,
+				validateUsingDecrypt:   true,
+				outputConfigPath:       "/tmp/securePass987/encrypt/output.properties",
+				originalConfigs:        "listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config/org.apache.kafka.common.security.scram.ScramLoginModule/username=\"admin\"\nlistener.name.sasl_ssl.scram-sha-256.sasl.jaas.config/org.apache.kafka.common.security.scram.ScramLoginModule/password=\"admin-secret\"",
+			},
+			wantErr: false,
+		},
+		{
 			name: "ValidTestCase: encrypt configuration in a JSON file",
 			args: &args{
 				masterKeyPassphrase: "abc123",
@@ -359,6 +390,7 @@ config.properties/listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config/org.apac
 				config:                 "credentials.ssl\\.keystore\\.password",
 				setMEK:                 true,
 				createConfig:           true,
+				validateUsingDecrypt:   false,
 			},
 			wantErr: false,
 			wantConfigFile: `{
@@ -399,6 +431,7 @@ config.json/credentials.ssl\.keystore\.password = ENC[AES/CBC/PKCS5Padding,data:
 				config:                 "credentials.ssl\\.trustore.\\location",
 				setMEK:                 true,
 				createConfig:           true,
+				validateUsingDecrypt:   false,
 			},
 			wantErr:    true,
 			wantErrMsg: "Configuration key credentials.ssl\\.trustore.\\location is not present in JSON configuration file.",
@@ -420,6 +453,7 @@ config.json/credentials.ssl\.keystore\.password = ENC[AES/CBC/PKCS5Padding,data:
 				config:                 "credentials.ssl\\.trustore.\\location",
 				setMEK:                 true,
 				createConfig:           true,
+				validateUsingDecrypt:   false,
 			},
 			wantErr:    true,
 			wantErrMsg: "Invalid json file format.",
@@ -452,8 +486,13 @@ config.json/credentials.ssl\.keystore\.password = ENC[AES/CBC/PKCS5Padding,data:
 
 			// Validate file contents for valid test cases
 			if !tt.wantErr {
-				validateFileContents(tt.args.configFilePath, tt.wantConfigFile, req)
-				validateFileContents(tt.args.localSecureConfigPath, tt.wantSecretsFile, req)
+				if tt.args.validateUsingDecrypt {
+					err = validateUsingDecryption(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.outputConfigPath, tt.args.originalConfigs, plugin)
+					req.NoError(err)
+				} else {
+					validateFileContents(tt.args.configFilePath, tt.wantConfigFile, req)
+					validateFileContents(tt.args.localSecureConfigPath, tt.wantSecretsFile, req)
+				}
 			}
 
 			// Clean Up
@@ -974,15 +1013,13 @@ func TestPasswordProtectionSuite_RemoveConfigFileSecrets(t *testing.T) {
     useKeyTab=false \
     password=pass234 \
     useTicketCache=true \
-    password=testPass \
-    doNotPrompt=true;
-};`,
+    doNotPrompt=true;`,
 				configFilePath:         "/tmp/securePass987/remove/embeddedJaas.properties",
 				localSecureConfigPath:  "/tmp/securePass987/remove/secureConfig.properties",
 				secureDir:              "/tmp/securePass987/remove",
 				remoteSecureConfigPath: "/tmp/securePass987/remove/secureConfig.properties",
-				removeConfigs:          "test.config.jaas/com.sun.security.auth.module.Krb5LoginModule/password",
-				config:                 "",
+				removeConfigs:          "test.config.jaas",
+				config:                 "test.config.jaas",
 			},
 			wantErr: false,
 		},

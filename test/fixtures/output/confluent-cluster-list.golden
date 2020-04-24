@@ -1,0 +1,6 @@
+             Name             |          Type           |          ID          |                 Hosts                   
++-----------------------------+-------------------------+----------------------+----------------------------------------+
+  theMdsConnectCluster        | connect-cluster         | connect-name         | 10.5.5.5:9005                           
+  theMdsKafkaCluster          | kafka-cluster           | kafka-GUID           | 10.10.10.10:8090, mds.example.com:8090  
+  theMdsKSQLCluster           | ksql-cluster            | ksql-name            | 10.4.4.4:9004                           
+  theMdsSchemaRegistryCluster | schema-registry-cluster | schema-registry-name | 10.3.3.3:9003                           

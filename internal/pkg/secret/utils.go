@@ -190,7 +190,6 @@ func parseJAASProperties(props *properties.Properties) *properties.Properties {
 		jaasProps, err := parser.ParseJAASConfigurationEntry(value, key)
 		if err == nil {
 			props.Merge(jaasProps)
-			props.Delete(key)
 		}
 
 	}

@@ -11,6 +11,7 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -32,9 +33,9 @@ var (
 	describeLabels            = []string{"Name", "ID", "URL", "Used", "Available", "Compatibility", "Mode", "ServiceProvider"}
 	describeHumanRenames      = map[string]string{"ID": "Cluster ID", "URL": "Endpoint URL", "Used": "Used Schemas", "Available": "Available Schemas", "Compatibility": "Global Compatibility", "ServiceProvider": "Service Provider"}
 	describeStructuredRenames = map[string]string{"Name": "name", "ID": "cluster_id", "URL": "endpoint_url", "Used": "used_schemas", "Available": "available_schemas", "Compatibility": "global_compatibility", "Mode": "mode", "ServiceProvider": "service_provider"}
-	enableLabels              = []string{"Id", "Endpoint"}
-	enableHumanRenames        = map[string]string{"ID": "Cluster ID", "URL": "Endpoint URL"}
-	enableStructuredRenames   = map[string]string{"ID": "cluster_id", "URL": "endpoint_url"}
+	enableLabels              = []string{"Id", "SchemaRegistryEndpoint"}
+	enableHumanRenames        = map[string]string{"ID": "Cluster ID", "SchemaRegistryEndpoint": "Endpoint URL"}
+	enableStructuredRenames   = map[string]string{"ID": "cluster_id", "SchemaRegistryEndpoint": "endpoint_url"}
 )
 
 type clusterCommand struct {
@@ -90,8 +91,8 @@ func (c *clusterCommand) init() {
 		Example: FormatDescription(`Update top level compatibility or mode of schema registry.
 
 ::
-		{{.CLIName}} schema-registry cluster update <subjectname> --compatibility=BACKWARD
-		{{.CLIName}} schema-registry cluster update <subjectname> --mode=READWRITE`, c.Config.CLIName),
+		{{.CLIName}} schema-registry cluster update --compatibility=BACKWARD
+		{{.CLIName}} schema-registry cluster update --mode=READWRITE`, c.Config.CLIName),
 		RunE: c.update,
 		Args: cobra.NoArgs,
 	}
@@ -136,7 +137,11 @@ func (c *clusterCommand) enable(cmd *cobra.Command, args []string) error {
 		}
 		_ = output.DescribeObject(cmd, cluster, enableLabels, enableHumanRenames, enableStructuredRenames)
 	} else {
-		_ = output.DescribeObject(cmd, newCluster, enableLabels, enableHumanRenames, enableStructuredRenames)
+		v2Cluster := &v2.SchemaRegistryCluster{
+			Id:                     newCluster.Id,
+			SchemaRegistryEndpoint: newCluster.Endpoint,
+		}
+		_ = output.DescribeObject(cmd, v2Cluster, enableLabels, enableHumanRenames, enableStructuredRenames)
 	}
 	return nil
 }

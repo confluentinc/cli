@@ -170,8 +170,7 @@ func (s *CLITestSuite) Test_Confluent_Help() {
 		}
 	}
 	for _, tt := range tests {
-		kafkaAPIURL := serveKafkaAPI(s.T()).URL
-		s.runConfluentTest(tt, serveMds(s.T(), kafkaAPIURL).URL)
+		s.runConfluentTest(tt, serveMds(s.T()).URL)
 	}
 }
 
@@ -616,6 +615,9 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 	router.HandleFunc("/api/schema_registries/", func(w http.ResponseWriter, r *http.Request) {
 		q := r.URL.Query()
 		id := q.Get("Id")
+		if id == "" {
+			id = "lsrc-1234"
+		}
 		accountId := q.Get("account_id")
 		srCluster := &srv1.SchemaRegistryCluster{
 			Id:        id,

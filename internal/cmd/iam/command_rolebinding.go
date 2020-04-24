@@ -155,7 +155,7 @@ func (c *rolebindingCommand) parseAndValidateResourcePattern(typename string, pr
 
 func (c *rolebindingCommand) validateRoleAndResourceType(roleName string, resourceType string) error {
 	ctx := c.createContext()
-	role, _, err := c.MDSClient.RoleDefinitionsApi.RoleDetail(ctx, roleName)
+	role, _, err := c.MDSClient.RBACRoleDefinitionsApi.RoleDetail(ctx, roleName)
 	if err != nil {
 		return errors.Wrapf(err, "Failed to look up role %s. Was an invalid role name specified?", roleName)
 	}
@@ -245,7 +245,7 @@ func (c *rolebindingCommand) listPrincipalResources(cmd *cobra.Command) error {
 		}
 		role = r
 	}
-	principalsRolesResourcePatterns, response, err := c.MDSClient.RoleBindingSummariesApi.LookupResourcesForPrincipal(
+	principalsRolesResourcePatterns, response, err := c.MDSClient.RBACRoleBindingSummariesApi.LookupResourcesForPrincipal(
 		c.createContext(),
 		principal,
 		mds.Scope{Clusters: *scopeClusters})
@@ -295,7 +295,7 @@ func (c *rolebindingCommand) listPrincipalResourcesV1(cmd *cobra.Command, scopeC
 	var err error
 	roleNames := []string{role}
 	if role == "*" {
-		roleNames, _, err = c.MDSClient.RoleBindingSummariesApi.ScopedPrincipalRolenames(
+		roleNames, _, err = c.MDSClient.RBACRoleBindingSummariesApi.ScopedPrincipalRolenames(
 			c.createContext(),
 			principal,
 			mds.Scope{Clusters: *scopeClusters})
@@ -306,7 +306,7 @@ func (c *rolebindingCommand) listPrincipalResourcesV1(cmd *cobra.Command, scopeC
 
 	var data [][]string
 	for _, roleName := range roleNames {
-		rps, _, err := c.MDSClient.RoleBindingCRUDApi.GetRoleResourcesForPrincipal(
+		rps, _, err := c.MDSClient.RBACRoleBindingCRUDApi.GetRoleResourcesForPrincipal(
 			c.createContext(),
 			principal,
 			roleName,
@@ -351,7 +351,7 @@ func (c *rolebindingCommand) listRolePrincipals(cmd *cobra.Command) error {
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
-		principals, _, err = c.MDSClient.RoleBindingSummariesApi.LookupPrincipalsWithRoleOnResource(
+		principals, _, err = c.MDSClient.RBACRoleBindingSummariesApi.LookupPrincipalsWithRoleOnResource(
 			c.createContext(),
 			role,
 			resource.ResourceType,
@@ -361,7 +361,7 @@ func (c *rolebindingCommand) listRolePrincipals(cmd *cobra.Command) error {
 			return errors.HandleCommon(err, cmd)
 		}
 	} else {
-		principals, _, err = c.MDSClient.RoleBindingSummariesApi.LookupPrincipalsWithRole(
+		principals, _, err = c.MDSClient.RBACRoleBindingSummariesApi.LookupPrincipalsWithRole(
 			c.createContext(),
 			role,
 			mds.Scope{Clusters: *scopeClusters})
@@ -451,13 +451,13 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, args []string) error {
 
 	var resp *http.Response
 	if options.resource != "" {
-		resp, err = c.MDSClient.RoleBindingCRUDApi.AddRoleResourcesForPrincipal(
+		resp, err = c.MDSClient.RBACRoleBindingCRUDApi.AddRoleResourcesForPrincipal(
 			c.createContext(),
 			options.principal,
 			options.role,
 			options.resourcesRequest)
 	} else {
-		resp, err = c.MDSClient.RoleBindingCRUDApi.AddRoleForPrincipal(
+		resp, err = c.MDSClient.RBACRoleBindingCRUDApi.AddRoleForPrincipal(
 			c.createContext(),
 			options.principal,
 			options.role,
@@ -483,13 +483,13 @@ func (c *rolebindingCommand) delete(cmd *cobra.Command, args []string) error {
 
 	var resp *http.Response
 	if options.resource != "" {
-		resp, err = c.MDSClient.RoleBindingCRUDApi.RemoveRoleResourcesForPrincipal(
+		resp, err = c.MDSClient.RBACRoleBindingCRUDApi.RemoveRoleResourcesForPrincipal(
 			c.createContext(),
 			options.principal,
 			options.role,
 			options.resourcesRequest)
 	} else {
-		resp, err = c.MDSClient.RoleBindingCRUDApi.DeleteRoleForPrincipal(
+		resp, err = c.MDSClient.RBACRoleBindingCRUDApi.DeleteRoleForPrincipal(
 			c.createContext(),
 			options.principal,
 			options.role,
