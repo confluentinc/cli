@@ -296,47 +296,49 @@ endif
 clean-docs:
 	rm docs/*/*.rst
 
-
-.PHONY: release-notes
-release-notes:
-	echo $(PREVIOUS_RELEASE_VERSION)
-	echo v$(CLEAN_VERSION)
-	@GO11MODULE=on go run -ldflags '-X main.cliName=ccloud -X main.releaseVersion=$(BUMPED_VERSION) -X main.prevVersion=v$(CLEAN_VERSION)' cmd/release-notes/main.go
+.PHONY: release-notes-prep
+release-notes-prep:
+	@echo Preparing Release Notes for v$(BUMPED_VERSION) (Previous Release Version: v$(CLEAN_VERSION))
+	@GO11MODULE=on go run -ldflags '-X main.releaseVersion=$(BUMPED_VERSION) -X main.prevVersion=v$(CLEAN_VERSION)' cmd/release-notes/prep/main.go
+	@echo "NEXT STEP: Please fill in 'prep' file located in release-notes directory."
+	@echo "Once finished, run 'make publish-release-notes'."
 
 # TODO: replace master with DOCS_BRANCH
 # TODO: change the git clone branch to the docs branch
 REPLACE_ME_BRANCH := master
 .PHONY: publish-release-notes
-publish-release-notes: release-notes
+publish-release-notes:
 	@TMP_BASE=$$(mktemp -d) || exit 1; \
 		TMP_DIR=$${TMP_BASE}/release-notes; \
 		git clone git@github.com:csreesan/test-release-notes.git $${TMP_DIR}; \
 		cd $${TMP_DIR} || exit 1; \
-		ls; \
 		git fetch ; \
 		git checkout -b cli-$(BUMPED_VERSION) origin/$(REPLACE_ME_BRANCH) || exit 1; \
 		cd - || exit 1; \
-		make publish-release-notes-internal BASE_DIR=$${TMP_DIR} CLI_NAME=ccloud || exit 1; \
+		CCLOUD_RELEASE_DIR=$${TMP_DIR}/cloud/cli/release-notes; \
+		CONFLUENT_RELEASE_DIR=$${TMP_DIR}/confluent/cli/release-notes; \
+		make release-notes CCLOUD_RELEASE_DIR=$${CCLOUD_RELEASE_DIR} CONFLUENT_RELEASE_DIR=$${CONFLUENT_RELEASE_DIR}; \
+		make publish-release-notes-internal CCLOUD_RELEASE_DIR=$${CCLOUD_RELEASE_DIR} CONFLUENT_RELEASE_DIR=$${CONFLUENT_RELEASE_DIR} || exit 1; \
 		cd $${TMP_DIR} || exit 1; \
 		git add . || exit 1; \
 		git diff --cached --exit-code > /dev/null && echo "nothing to update" && exit 0; \
 		git commit -m "[WIP] new release notes for $(BUMPED_VERSION)" || exit 1; \
 		git push origin cli-$(BUMPED_VERSION) || exit 1; \
 		hub pull-request -b $(REPLACE_ME_BRANCH) -m "new release notes for $(BUMPED_VERSION)" || exit 1; \
-		rm -rf $${TMP_BASE}; \
-		echo "GOT TO THE END $${TMP_DIR}"
+		rm -rf $${TMP_BASE}
+
+.PHONY: release-notes
+release-notes:
+	@echo Previous Release Version: v$(CLEAN_VERSION)
+	@GO11MODULE=on go run -ldflags '-X main.releaseVersion=$(BUMPED_VERSION) -X main.ccloudReleaseNotesPath=$(CCLOUD_RELEASE_DIR) -X main.confluentReleaseNotesPath=$(CONFLUENT_RELEASE_DIR)' cmd/release-notes/release/main.go
 
 # TODO: make sure to settle where the release notes dir would be
 .PHONY: publish-release-notes-internal
 publish-release-notes-internal:
-ifndef BASE_DIR
-	$(error BASE_DIR is not set)
-endif
-ifeq (ccloud,$(CLI_NAME))
-	$(eval RELEASE_DIR := cloud/cli/release-notes)
-endif
-	rm $(BASE_DIR)/$(RELEASE_DIR)/*.rst
-	cp release-notes/$(CLI_NAME)/*.rst $(BASE_DIR)/$(RELEASE_DIR)
+	rm $(CCLOUD_RELEASE_DIR)/*.rst
+	cp release-notes/ccloud/*.rst $(CCLOUD_RELEASE_DIR)
+	rm $(CONFLUENT_RELEASE_DIR)/*.rst
+	cp release-notes/confluent/*.rst $(CONFLUENT_RELEASE_DIR)
 
 .PHONY: fmt
 fmt:

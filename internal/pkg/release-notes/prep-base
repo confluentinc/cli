@@ -1,0 +1,46 @@
+Release Notes Preparation for CLI %s
+
+
+LIST OF ALL PRs SINCE LAST RELEASE:
+%s
+
+------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------
+
+PLEASE FILL ALL CHANGES TO THE BELOW CATEGORIES (ADD MORE BULLET POINTS AS NEEDED):
+
+-------------
+BOTH CLIs
+-------------
+
+New Features for Both CLIs
+- <PLACEHOLDER: REPLACE WITH CONTENT OR DO NOTHING IF NO CONTENT>
+
+
+Bug Fixes for Both CLIs
+- <PLACEHOLDER: REPLACE WITH CONTENT OR DO NOTHING IF NO CONTENT>
+
+
+-------------
+CCLOUD
+-------------
+
+CCloud New Features
+- <PLACEHOLDER: REPLACE WITH CONTENT OR DO NOTHING IF NO CONTENT>
+
+
+CCloud Bug Fixes
+- <PLACEHOLDER: REPLACE WITH CONTENT OR DO NOTHING IF NO CONTENT>
+
+
+-------------
+CONFLUENT
+-------------
+
+Confluent New Features
+- <PLACEHOLDER: REPLACE WITH CONTENT OR DO NOTHING IF NO CONTENT>
+
+
+Confluent Bug Fixes
+- <PLACEHOLDER: REPLACE WITH CONTENT OR DO NOTHING IF NO CONTENT>
+
