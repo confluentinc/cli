@@ -3,7 +3,7 @@ strategy:
     windows:
       imageName: 'windows-2019'
     mac:
-      imageName: 'macOS-10.14'
+      imageName: 'macOS-10.15'
     linux:
       imageName: 'ubuntu-18.04'
 
@@ -17,10 +17,10 @@ variables:
 
 steps:
 - script: |
-    wget "https://storage.googleapis.com/golang/go1.13.5.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.13.5.tar.gz"
-    tar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.13.5.tar.gz"
+    wget "https://storage.googleapis.com/golang/go1.14.2.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
+    tar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
   condition: eq( variables['Agent.OS'], 'Linux' )
-  displayName: 'Install Go 1.13.5 (Linux)'
+  displayName: 'Install Go 1.14.2 (Linux)'
 
 - script: |
     brew install gnu-tar
@@ -35,16 +35,16 @@ steps:
   displayName: 'Install chrome (Darwin)'
 
 - script: |
-    wget "https://storage.googleapis.com/golang/go1.13.5.darwin-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.13.5.tar.gz"
-    gtar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.13.5.tar.gz"
+    wget "https://storage.googleapis.com/golang/go1.14.2.darwin-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
+    gtar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
   condition: eq( variables['Agent.OS'], 'Darwin' )
-  displayName: 'Install Go 1.13.5 (Darwin)'
+  displayName: 'Install Go 1.14.2 (Darwin)'
 
 - powershell: |
-    Invoke-WebRequest -Uri "https://storage.googleapis.com/golang/go1.13.5.windows-amd64.zip" -OutFile "$(Agent.BuildDirectory)\go1.13.5.zip" -Verbose
-    & ${env:ProgramFiles}\7-Zip\7z.exe x $(Agent.BuildDirectory)/go1.13.5.zip "-o$(Agent.BuildDirectory)" -y
+    Invoke-WebRequest -Uri "https://storage.googleapis.com/golang/go1.14.2.windows-amd64.zip" -OutFile "$(Agent.BuildDirectory)\go1.14.2.zip" -Verbose
+    & ${env:ProgramFiles}\7-Zip\7z.exe x $(Agent.BuildDirectory)/go1.14.2.zip "-o$(Agent.BuildDirectory)" -y
   condition: eq( variables['Agent.OS'], 'Windows_NT' )
-  displayName: 'Install Go 1.13.5 (Windows)'
+  displayName: 'Install Go 1.14.2 (Windows)'
 
 # Linux
 - bash: |
@@ -151,4 +151,3 @@ steps:
     git checkout go.*
   displayName: 'Reset go.* just in case'
 
-# Do not release yet while Semaphore is still running!
