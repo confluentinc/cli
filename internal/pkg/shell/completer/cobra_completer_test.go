@@ -2,9 +2,11 @@ package completer
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/c-bata/go-prompt"
 	"github.com/spf13/cobra"
-	"testing"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCobraCompleter_Complete(t *testing.T) {
@@ -22,52 +24,74 @@ func TestCobraCompleter_Complete(t *testing.T) {
 		want   []prompt.Suggest
 	}{
 		{
-			name:   "TestNoSuggestions",
+			name: "NoSuggestions",
 			fields: fields{
-				RootCmd: createNestedCommand(0, false),
+				RootCmd: createCommands([]string{"a", "b", "c"}, false, false),
 			},
 			levels: 0,
-			args:   args{
-						d: *prompt.NewDocument(),
+			args: args{
+				d: *createDocument("this command doesn't even exist"),
 			},
-			want:   []prompt.Suggest{},
+			want: []prompt.Suggest{},
 		},
 		{
-			name:   "TestSuggestionSuccess",
+			name: "AllSuggestions",
 			fields: fields{
-				RootCmd: createNestedCommand(1, false),
+				RootCmd: createCommands([]string{"a", "b", "c"}, false, false),
 			},
 			levels: 1,
-			args:   args{
+			args: args{
 				d: *createDocument(""),
 			},
-			want:   expectedSuggestions(1, []string{"a", "b", "c"}),
+			want: expectedSuggestions([]string{"a", "b", "c"}),
 		},
 		{
-			name:   "TestFilteredSuggestionSuccess",
+			name: "OneSuggestion",
 			fields: fields{
-				RootCmd: createNestedCommand(1, false),
+				RootCmd: createCommands([]string{"aa", "bb", "cc"}, false, false),
 			},
 			levels: 1,
-			args:   args{
-				d: *createDocument("level-a"),
+			args: args{
+				d: *createDocument("b"),
 			},
-			want:   expectedSuggestions(1, []string{"a"}),
+			want: expectedSuggestions([]string{"bb"}),
 		},
 		{
-			name:   "TestFlagSuggestionSuccess",
+			name: "SomeSuggestions",
 			fields: fields{
-				RootCmd: createNestedCommand(1, true),
+				RootCmd: createCommands([]string{"ab", "abc", "bc"}, false, false),
 			},
 			levels: 1,
-			args:   args{
+			args: args{
+				d: *createDocument("a"),
+			},
+			want: expectedSuggestions([]string{"ab", "abc"}),
+		},
+		{
+			name: "NoHiddenCommandsSuggested",
+			fields: fields{
+				RootCmd: createCommands([]string{"a", "b", "c"}, false, true),
+			},
+			levels: 1,
+			args: args{
+				d: *createDocument(""),
+			},
+			want: expectedSuggestions([]string{}),
+		},
+		{
+			name: "FlagSuggestions",
+			fields: fields{
+				RootCmd: createCommands([]string{"a", "b", "c"}, true, false),
+			},
+			levels: 1,
+			args: args{
 				d: *createDocument("--"),
 			},
-			want:   []prompt.Suggest{
-					{
-						Text: "--flag",
-						Description: "Just a flag",
-					},
+			want: []prompt.Suggest{
+				{
+					Text:        "--flag",
+					Description: "Just a flag",
+				},
 			},
 		},
 	}
@@ -76,18 +100,8 @@ func TestCobraCompleter_Complete(t *testing.T) {
 			c := &CobraCompleter{
 				RootCmd: tt.fields.RootCmd,
 			}
-			got := c.Complete(tt.args.d);
-			if len(got) != len(tt.want) {
-				t.Errorf("Complete() = %v, want %v", got, tt.want)
-			} else {
-				for i, suggest := range got {
-					expected := tt.want[i]
-					if suggest != expected {
-						t.Errorf("Complete() = %v, want %v", got, tt.want)
-						break
-					}
-				}
-			}
+			got := c.Complete(tt.args.d)
+			require.Equal(t, tt.want, got)
 		})
 	}
 }
@@ -99,22 +113,22 @@ func createDocument(s string) *prompt.Document {
 	return buf.Document()
 }
 
-func expectedSuggestions(level int, subcommands []string) []prompt.Suggest {
+func expectedSuggestions(subcommands []string) []prompt.Suggest {
 	var expected []prompt.Suggest
 	for _, s := range subcommands {
 		expected = append(expected, prompt.Suggest{
-			Text:        fmt.Sprintf("level-%s-%d", s, level),
-			Description: fmt.Sprintf("this is command %s on level %d of the root command", s, level),
+			Text:        s,
+			Description: s,
 		})
 	}
 
 	return expected
 }
 
-func createNestedCommand(levels int, flags bool) *cobra.Command {
+func createCommands(subcommands []string, flags bool, hidden bool) *cobra.Command {
 	rootCmd := &cobra.Command{
-		Use:                        "root",
-		Short:                      "this is the root command at level 0",
+		Use:   "root",
+		Short: "this is the root command at level 0",
 	}
 
 	if flags {
@@ -122,24 +136,17 @@ func createNestedCommand(levels int, flags bool) *cobra.Command {
 		rootCmd.Flags().SortFlags = false
 	}
 
-	addNestedCommands(rootCmd, levels)
-	return rootCmd
-}
-
-func addNestedCommands(cmd *cobra.Command, levels int) {
-	if levels < 1 {
-		return
-	}
-
-	for _, s := range []string{"a", "b", "c"} {
+	for _, s := range subcommands {
 		subCmd := &cobra.Command{
-			Use:	fmt.Sprintf("level-%s-%d", s, levels),
-			Short:	fmt.Sprintf("this is command %s on level %d of the root command", s, levels),
+			Use:   s,
+			Short: s,
 			Run: func(cmd *cobra.Command, args []string) {
 				fmt.Println(cmd.Use)
 			},
+			Hidden: hidden,
 		}
-		addNestedCommands(subCmd, levels - 1)
-		cmd.AddCommand(subCmd)
+		rootCmd.AddCommand(subCmd)
 	}
+
+	return rootCmd
 }

@@ -2,6 +2,7 @@ package shell
 
 import (
 	"fmt"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -15,14 +16,14 @@ func NewShellCmd(prerunner pcmd.PreRunner, rootCmd *cobra.Command, config *v3.Co
 	cliCmd := pcmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "shell",
-			Short: "Run the " + config.CLIName + " shell.",
+			Short: fmt.Sprintf("Run the %s shell.", config.CLIName),
 			Run: func(cmd *cobra.Command, args []string) {
 				// remove shell command from the shell
 				rootCmd.RemoveCommand(cmd)
 
 				// run the shell
 				fmt.Printf("Welcome to the %s shell!\n", config.CLIName)
-				fmt.Printf("Please press ctrl-D to exit.\n")
+				fmt.Println("Please press ctrl-D to exit.")
 				masterCompleter := completer.NewShellCompleter(rootCmd, config.CLIName)
 				cliPrompt := prompt.NewShellPrompt(rootCmd, masterCompleter, config, prompt.DefaultPromptOptions()...)
 				cliPrompt.Run()

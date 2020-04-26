@@ -11,7 +11,7 @@ type ShellCompleter struct {
 
 func NewShellCompleter(rootCmd *cobra.Command, cliName string) *ShellCompleter {
 	return &ShellCompleter{
-		CobraCompleter:      NewCobraCompleter(rootCmd),
+		CobraCompleter: NewCobraCompleter(rootCmd),
 	}
 }
 
