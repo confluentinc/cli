@@ -1,8 +1,6 @@
 package test
 
-import (
-	"bytes"
-)
+import "bytes"
 
 // NormalizeNewLines replaces \r\n and \r newline sequences with \n
 func NormalizeNewLines(raw string) string {

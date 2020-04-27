@@ -60,7 +60,7 @@ func New(params *config.Params) *Config {
 // Save a default version if none exists yet.
 func (c *Config) Load() error {
 	currentVersion := Version
-	filename, err := c.GetFilename()
+	filename, err := c.getFilename()
 	if err != nil {
 		return err
 	}
@@ -122,7 +122,7 @@ func (c *Config) Save() error {
 	if err != nil {
 		return errors.Wrapf(err, "unable to marshal config")
 	}
-	filename, err := c.GetFilename()
+	filename, err := c.getFilename()
 	if err != nil {
 		return err
 	}

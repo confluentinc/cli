@@ -59,8 +59,7 @@ func main() {
 	if err != nil {
 		stubCmd := &cobra.Command{}
 		err = errors.HandleCommon(err, stubCmd)
-		logger.Debug(errors.ConfigUnableToLoadError, err)
-		fmt.Fprintf(os.Stderr, errors.ConfigUnableToLoadError, err)
+		logger.Errorf(errors.ConfigUnableToLoadError, err)
 		if isTest {
 			bincover.ExitCode = 1
 			return

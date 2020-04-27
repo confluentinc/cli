@@ -442,7 +442,7 @@ func fixturePath(t *testing.T, fixture string) string {
 		t.Fatalf("problems recovering caller information")
 	}
 
-	return filepath.Join(filepath.Dir(filename), "fixtures", fixture)
+	return filepath.Join(filepath.Dir(filename), "fixtures", "output", fixture)
 }
 
 func binaryPath(t *testing.T, binaryName string) string {
