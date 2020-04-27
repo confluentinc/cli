@@ -159,6 +159,27 @@ authenticate:
 	# then assuming caas.sh lives here should be fine
 	source $$GOPATH/src/github.com/confluentinc/cc-dotfiles/caas.sh && caasenv prod
 
+.PHONY: unrelease
+unrelease: authenticate unrelease-warn
+	aws s3 rm s3://confluent.cloud/ccloud-cli/binaries/$(CLEAN_VERSION) --recursive
+	aws s3 rm s3://confluent.cloud/ccloud-cli/archives/$(CLEAN_VERSION) --recursive
+	aws s3 rm s3://confluent.cloud/ccloud-cli/release-notes/$(CLEAN_VERSION) --recursive
+	aws s3 rm s3://confluent.cloud/confluent-cli/binaries/$(CLEAN_VERSION) --recursive
+	aws s3 rm s3://confluent.cloud/confluent-cli/archives/$(CLEAN_VERSION) --recursive
+	aws s3 rm s3://confluent.cloud/confluent-cli/release-notes/$(CLEAN_VERSION) --recursive
+	git checkout master
+	git pull
+	git diff-index --quiet HEAD # ensures git status is clean
+	git tag -d v$(CLEAN_VERSION) # delete local tag
+	git push --delete origin v$(CLEAN_VERSION) # delete remote tag
+	git reset --hard HEAD~1 # warning: assumes "chore" version bump was last commit
+	git push origin HEAD --force
+
+.PHONY: unrelease-warn
+unrelease-warn:
+	@echo "Warning: Ensure a git version bump (new commit and new tag) has occurred before continuing, else you will remove the prior version.  Continue? [Y/n]"
+	@read line; if [ $$line = "n" ]; then echo aborting; exit 1 ; fi
+
 .PHONY: release
 release: authenticate get-release-image commit-release tag-release
 	@GO111MODULE=on make gorelease
