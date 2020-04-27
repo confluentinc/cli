@@ -26,7 +26,7 @@ func TestCobraCompleter_Complete(t *testing.T) {
 		{
 			name: "NoSuggestions",
 			fields: fields{
-				RootCmd: createCommands([]string{"a", "b", "c"}, false, false),
+				RootCmd: createCommands([]string{"a", "b", "c"}),
 			},
 			levels: 0,
 			args: args{
@@ -37,7 +37,7 @@ func TestCobraCompleter_Complete(t *testing.T) {
 		{
 			name: "AllSuggestions",
 			fields: fields{
-				RootCmd: createCommands([]string{"a", "b", "c"}, false, false),
+				RootCmd: createCommands([]string{"a", "b", "c"}),
 			},
 			levels: 1,
 			args: args{
@@ -48,7 +48,7 @@ func TestCobraCompleter_Complete(t *testing.T) {
 		{
 			name: "OneSuggestion",
 			fields: fields{
-				RootCmd: createCommands([]string{"aa", "bb", "cc"}, false, false),
+				RootCmd: createCommands([]string{"aa", "bb", "cc"}),
 			},
 			levels: 1,
 			args: args{
@@ -59,7 +59,7 @@ func TestCobraCompleter_Complete(t *testing.T) {
 		{
 			name: "SomeSuggestions",
 			fields: fields{
-				RootCmd: createCommands([]string{"ab", "abc", "bc"}, false, false),
+				RootCmd: createCommands([]string{"ab", "abc", "bc"}),
 			},
 			levels: 1,
 			args: args{
@@ -70,7 +70,13 @@ func TestCobraCompleter_Complete(t *testing.T) {
 		{
 			name: "NoHiddenCommandsSuggested",
 			fields: fields{
-				RootCmd: createCommands([]string{"a", "b", "c"}, false, true),
+				RootCmd: func() *cobra.Command {
+					cmd := createCommands([]string{"a", "b", "c"}) // No hidden param.
+					for _, subcmd := range cmd.Commands() {
+						subcmd.Hidden = true
+					}
+					return cmd
+				}(),
 			},
 			levels: 1,
 			args: args{
@@ -81,7 +87,12 @@ func TestCobraCompleter_Complete(t *testing.T) {
 		{
 			name: "FlagSuggestions",
 			fields: fields{
-				RootCmd: createCommands([]string{"a", "b", "c"}, true, false),
+				RootCmd: func() *cobra.Command {
+					cmd := createCommands([]string{"a", "b", "c"}) // No hidden param.
+					cmd.Flags().String("flag", "default", "Just a flag")
+					cmd.Flags().SortFlags = false
+					return cmd
+				}(),
 			},
 			levels: 1,
 			args: args{
@@ -125,15 +136,10 @@ func expectedSuggestions(subcommands []string) []prompt.Suggest {
 	return expected
 }
 
-func createCommands(subcommands []string, flags bool, hidden bool) *cobra.Command {
+func createCommands(subcommands []string) *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:   "root",
 		Short: "this is the root command at level 0",
-	}
-
-	if flags {
-		rootCmd.Flags().String("flag", "default", "Just a flag")
-		rootCmd.Flags().SortFlags = false
 	}
 
 	for _, s := range subcommands {
@@ -143,7 +149,6 @@ func createCommands(subcommands []string, flags bool, hidden bool) *cobra.Comman
 			Run: func(cmd *cobra.Command, args []string) {
 				fmt.Println(cmd.Use)
 			},
-			Hidden: hidden,
 		}
 		rootCmd.AddCommand(subCmd)
 	}
