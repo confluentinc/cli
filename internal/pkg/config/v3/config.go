@@ -76,14 +76,10 @@ func (c *Config) Load() error {
 		return errors.Wrapf(err, "unable to read config file: %s", filename)
 	}
 	err = json.Unmarshal(input, c)
-	if c.Context() != nil {
-		fmt.Println("V3 Cred name: ", c.Context().CredentialName)
-		fmt.Println("V3 Cred: ", c.Context().Credential)
-	}
 	if c.Ver.Compare(currentVersion) < 0 {
-		return &errors.DeprecatedConfigVersion{Version: c.Ver.String()}
+		return errors.New(fmt.Sprintf("Config version V%s not up to date with the latest version V%s.", c.Ver, currentVersion))
 	} else if c.Ver.Compare(Version) > 0 {
-		return &errors.InvalidConfigVersion{Version: c.Ver.String()}
+		return errors.New(fmt.Sprintf("Invalid config version V%s.", c.Ver))
 	}
 	if err != nil {
 		return errors.Wrapf(err, "unable to parse config file: %s", filename)
@@ -317,7 +313,7 @@ func (c *Config) ResetAnonymousId() error {
 	return c.Save()
 }
 
-func (c *Config) GetFilename() (string, error) {
+func (c *Config) getFilename() (string, error) {
 	if c.Filename == "" {
 		c.Filename = fmt.Sprintf(defaultConfigFileFmt, c.CLIName)
 	}
@@ -335,7 +331,7 @@ func (c *Config) GetFilename() (string, error) {
 // corruptedConfigError returns an error signaling that the config file has been corrupted,
 // or another error if the config's filepath is unable to be resolved.
 func (c *Config) corruptedConfigError() error {
-	configPath, err := c.GetFilename()
+	configPath, err := c.getFilename()
 	if err != nil {
 		return err
 	}

@@ -73,9 +73,6 @@ func (c *Config) Load() error {
 		return errors.Wrapf(err, "unable to read config file: %s", filename)
 	}
 	err = json.Unmarshal(input, c)
-	if c.Contexts[c.CurrentContext] != nil {
-		fmt.Println("V1 Cred (name): ", c.Contexts[c.CurrentContext].Credential )
-	}
 	if err != nil {
 		return errors.Wrapf(err, "unable to parse config file: %s", filename)
 	}

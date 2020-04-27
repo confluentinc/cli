@@ -11,7 +11,6 @@ import (
 )
 
 func MigrateV2ToV3(cfgV2 *v2.Config) (*v3.Config, error) {
-	fmt.Println("MIGRATING FROM 2 to 3")
 	baseCfgV3 := &config.BaseConfig{
 		Params:   cfgV2.BaseConfig.Params,
 		Filename: cfgV2.BaseConfig.Filename,

@@ -54,7 +54,7 @@ type UnspecifiedCredentialError struct {
 }
 
 func (e *UnspecifiedCredentialError) Error() string {
-	return "CRED ERROR"
+	return e.ContextName
 }
 
 type UnspecifiedPlatformError struct {
@@ -62,23 +62,15 @@ type UnspecifiedPlatformError struct {
 }
 
 func (e *UnspecifiedPlatformError) Error() string {
-	return "PLATFORM ERROR"
+	return e.ContextName
 }
 
-type InvalidConfigVersion struct {
-	Version string
+type CorruptedContextError struct {
+	ContextName string
 }
 
-func (e *InvalidConfigVersion) Error() string {
-	return e.Version
-}
-
-type DeprecatedConfigVersion struct {
-	Version string
-}
-
-func (e *DeprecatedConfigVersion) Error() string {
-	return e.Version
+func (e *CorruptedContextError) Error() string {
+	return e.ContextName
 }
 
 // UnconfiguredAPISecretError means the user needs to store the API secret locally

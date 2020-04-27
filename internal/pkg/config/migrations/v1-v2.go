@@ -1,7 +1,6 @@
 package migrations
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
@@ -10,7 +9,6 @@ import (
 )
 
 func MigrateV1ToV2(cfgV1 *v1.Config) (*v2.Config, error) {
-	fmt.Println("MIGRATING FROM 1 to 2")
 	platformsV1 := make(map[string]*v2.Platform)
 	for name, platformV0 := range cfgV1.Platforms {
 		platformsV1[name] = migratePlatformV1ToV2(platformV0)

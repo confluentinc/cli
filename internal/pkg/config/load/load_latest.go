@@ -1,7 +1,6 @@
 package load
 
 import (
-	"fmt"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/config/migrations"
 	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
@@ -30,31 +29,10 @@ func LoadAndMigrate(latestCfg *v3.Config) (*v3.Config, error) {
 func loadLatestNoErr(latestCfg *v3.Config, cfgIndex int) (config.Config, error) {
 	cfg := cfgVersions[cfgIndex]
 	cfg.SetParams(latestCfg.Params)
-	cfg.Version()
-	//var isLatest bool
-	//if cfg.Version().Compare(latestCfg.Version()) == 0 {
-	//	isLatest = true
-	//}
 	err := cfg.Load()
-	fmt.Println("INDEX: ", cfgIndex)
-	fmt.Println("ERR: ", err)
 	if err == nil {
 		return cfg, nil
 	}
-	// For the latest version v3, there are version comparison errors available.
-	// If there is error when the user's config is already updated then there is a problem with the config, and the error must be returned.
-	// Continuing to load older versions when the config is invalid might accidentally suppress corrupted config errors.
-	//if isLatest {
-	//	_, isDeprecatedConfigVersion := err.(*errors.DeprecatedConfigVersion)
-	//	_, isInvalidConfigVersion := err.(*errors.InvalidConfigVersion)
-	//	if !(isDeprecatedConfigVersion || isInvalidConfigVersion) {
-	//		return nil, err
-	//	}
-	//} else {
-	//	if cfgIndex == 0 {
-	//		return nil, err
-	//	}
-	//}
 	if cfgIndex == 0 {
 		return nil, err
 	}
