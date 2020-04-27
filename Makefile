@@ -177,6 +177,10 @@ unrelease: authenticate unrelease-warn
 
 .PHONY: unrelease-warn
 unrelease-warn:
+	@echo "Latest tag:"
+	@git describe --tags `git rev-list --tags --max-count=1`
+	@echo "Latest commits:"
+	@git --no-pager log --decorate=short --pretty=oneline -n10
 	@echo "Warning: Ensure a git version bump (new commit and new tag) has occurred before continuing, else you will remove the prior version.  Continue? [Y/n]"
 	@read line; if [ $$line = "n" ]; then echo aborting; exit 1 ; fi
 
