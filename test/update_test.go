@@ -52,8 +52,7 @@ func (s *CLITestSuite) Test_Update() {
 			err = ioutil.WriteFile(configFile, []byte(`{"disable_updates": true}`), os.ModePerm)
 			require.NoError(s.T(), err)
 		default:
-			kafkaAPIURL := serveKafkaAPI(s.T()).URL
-			s.runConfluentTest(tt, serveMds(s.T(), kafkaAPIURL).URL)
+			s.runConfluentTest(tt, serveMds(s.T()).URL)
 			if tt.fixture == "update1.golden" {
 				// Remove the cache file so it _would_ prompt again (if not disabled)
 				err = os.RemoveAll(path) // RemoveAll so we don't return an error if file doesn't exist

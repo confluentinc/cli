@@ -170,8 +170,7 @@ func (s *CLITestSuite) Test_Confluent_Help() {
 		}
 	}
 	for _, tt := range tests {
-		kafkaAPIURL := serveKafkaAPI(s.T()).URL
-		s.runConfluentTest(tt, serveMds(s.T(), kafkaAPIURL).URL)
+		s.runConfluentTest(tt, serveMds(s.T()).URL)
 	}
 }
 
@@ -707,7 +706,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		require.NoError(t, err)
 	})
 	router.HandleFunc("/api/env_metadata", func(w http.ResponseWriter, r *http.Request) {
-		clouds := []*kafkav1.Cloud{
+		clouds := []*kafkav1.CloudMetadata{
 			{
 				Id:   "gcp",
 				Name: "Google Cloud Platform",
@@ -933,7 +932,7 @@ func handleKafkaClusterCreate(t *testing.T, kafkaAPIURL string) func(w http.Resp
 				Name:            req.Config.Name,
 				NetworkIngress:  100,
 				NetworkEgress:   100,
-				Storage:         req.Config.Storage,
+				Storage:         5000,
 				ServiceProvider: req.Config.ServiceProvider,
 				Region:          req.Config.Region,
 				Endpoint:        "SASL_SSL://kafka-endpoint",

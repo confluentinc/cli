@@ -3,10 +3,13 @@ package kafka
 import (
 	"context"
 	"fmt"
-	"github.com/confluentinc/ccloud-sdk-go"
 	"os"
+	"strings"
+
+	"github.com/confluentinc/ccloud-sdk-go"
 
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
+	productv1 "github.com/confluentinc/ccloudapis/product/v1"
 	"github.com/confluentinc/go-printer"
 	"github.com/spf13/cobra"
 
@@ -18,12 +21,20 @@ import (
 
 var (
 	listFields                = []string{"Id", "Name", "ServiceProvider", "Region", "Durability", "Status"}
-	listHumanLabels           = []string{"Id", "Name", "Provider", "Region", "Durability", "Status"}
+	listHumanLabels           = []string{"Id", "Name", "Provider", "Region", "Availability", "Status"}
 	listStructuredLabels      = []string{"id", "name", "provider", "region", "durability", "status"}
 	describeFields            = []string{"Id", "Name", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "ApiEndpoint"}
 	describeHumanRenames      = map[string]string{"NetworkIngress": "Ingress", "NetworkEgress": "Egress", "ServiceProvider": "Provider"}
 	describeStructuredRenames = map[string]string{"Id": "id", "Name": "name", "NetworkIngress": "ingress", "NetworkEgress": "egress", "Storage": "storage",
 		"ServiceProvider": "provider", "Region": "region", "Status": "status", "Endpoint": "endpoint", "ApiEndpoint": "api_endpoint"}
+)
+
+const (
+	singleZone   = "single-zone"
+	multiZone    = "multi-zone"
+	skuBasic     = "basic"
+	skuStandard  = "standard"
+	skuDedicated = "dedicated"
 )
 
 type clusterCommand struct {
@@ -68,6 +79,9 @@ func (c *clusterCommand) init() {
 	createCmd.Flags().String("region", "", "Cloud region ID for cluster (e.g. 'us-west-2').")
 	check(createCmd.MarkFlagRequired("cloud"))
 	check(createCmd.MarkFlagRequired("region"))
+	createCmd.Flags().String("availability", singleZone, fmt.Sprintf("Availability of the cluster. Allowed Values: %s, %s.", singleZone, multiZone))
+	createCmd.Flags().String("type", skuBasic, fmt.Sprintf("Type of the Kafka cluster. Allowed values: %s, %s, %s.", skuBasic, skuStandard, skuDedicated))
+	createCmd.Flags().Int("cku", 0, "Number of Confluent Kafka Units (non-negative). Required for Kafka clusters of type 'dedicated'.")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
@@ -142,21 +156,72 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
+	availabilityString, err := cmd.Flags().GetString("availability")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	availability, err := stringToAvailability(availabilityString)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	typeString, err := cmd.Flags().GetString("type")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	sku, err := stringToSku(typeString)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
 	cfg := &kafkav1.KafkaClusterConfig{
 		AccountId:       c.EnvironmentId(),
 		Name:            args[0],
 		ServiceProvider: cloud,
 		Region:          region,
-		Durability:      kafkav1.Durability_LOW,
-		// TODO: remove this once it's no longer required (MCM-130)
-		Storage: 5000,
+		Durability:      availability,
+		Deployment:      &kafkav1.Deployment{Sku: sku},
 	}
+	if sku == productv1.Sku_DEDICATED {
+		cku, err := cmd.Flags().GetInt("cku")
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+		if cku <= 0 {
+			return errors.HandleCommon(errors.New("For dedicated Kafka cluster creation, --cku should be passed with value greater than 0."), cmd)
+		}
+		cfg.Cku = int32(cku)
+	} else {
+		if cmd.Flags().Changed("cku") {
+			return errors.HandleCommon(errors.New("Specifying --cku is valid only for dedicated Kafka cluster creation"), cmd)
+		}
+	}
+
 	cluster, err := c.Client.Kafka.Create(context.Background(), cfg)
 	if err != nil {
 		// TODO: don't swallow validation errors (reportedly separately)
 		return errors.HandleCommon(err, cmd)
 	}
 	return printer.RenderTableOut(cluster, describeFields, describeHumanRenames, os.Stdout)
+}
+
+func stringToAvailability(s string) (kafkav1.Durability, error) {
+	if s == singleZone {
+		return kafkav1.Durability_LOW, nil
+	} else if s == multiZone {
+		return kafkav1.Durability_HIGH, nil
+	}
+	return kafkav1.Durability_LOW, fmt.Errorf("Only allowed values for --availability are: %s, %s.", singleZone, multiZone)
+}
+
+func stringToSku(s string) (productv1.Sku, error) {
+	sku := productv1.Sku(productv1.Sku_value[strings.ToUpper(s)])
+	switch sku {
+	case productv1.Sku_BASIC, productv1.Sku_STANDARD, productv1.Sku_DEDICATED:
+		break
+	default:
+		return productv1.Sku_UNKNOWN, fmt.Errorf("Only allowed values for --type are: %s, %s, %s.", skuBasic, skuStandard, skuDedicated)
+	}
+	return sku, nil
 }
 
 func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {

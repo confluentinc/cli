@@ -15,7 +15,7 @@ type ConfluentTokenHandlerImp struct{}
 
 func (c *ConfluentTokenHandlerImp) GetAuthToken(mdsClient *mds.APIClient, email string, password string) (string, error) {
 	basicContext := context.WithValue(context.Background(), mds.ContextBasicAuth, mds.BasicAuth{UserName: email, Password: password})
-	resp, _, err := mdsClient.TokensAuthenticationApi.GetToken(basicContext, "")
+	resp, _, err := mdsClient.TokensAndAuthenticationApi.GetToken(basicContext)
 	if err != nil {
 		return "", err
 	}

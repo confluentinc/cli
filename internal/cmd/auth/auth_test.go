@@ -223,8 +223,8 @@ func Test_SelfSignedCerts(t *testing.T) {
 	cert, err := x509.ParseCertificate(ca_b)
 	req.NoError(err, "Couldn't reparse certificate")
 	expectedSubject := cert.RawSubject
-	mdsClient.TokensAuthenticationApi = &mdsMock.TokensAuthenticationApi{
-		GetTokenFunc: func(ctx context.Context, xSPECIALRYANHEADER string) (mds.AuthenticationResponse, *http.Response, error) {
+	mdsClient.TokensAndAuthenticationApi = &mdsMock.TokensAndAuthenticationApi{
+		GetTokenFunc: func(ctx context.Context) (mds.AuthenticationResponse, *http.Response, error) {
 			req.NotEqual(http.DefaultClient, mdsClient)
 			transport, ok := mdsClient.GetConfig().HTTPClient.Transport.(*http.Transport)
 			req.True(ok)
@@ -408,8 +408,8 @@ func newAuthCommand(prompt pcmd.Prompt, auth *sdkMock.Auth, user *sdkMock.User, 
 	if cliName == "confluent" {
 		mdsConfig := mds.NewConfiguration()
 		mdsClient = mds.NewAPIClient(mdsConfig)
-		mdsClient.TokensAuthenticationApi = &mdsMock.TokensAuthenticationApi{
-			GetTokenFunc: func(ctx context.Context, xSPECIALRYANHEADER string) (mds.AuthenticationResponse, *http.Response, error) {
+		mdsClient.TokensAndAuthenticationApi = &mdsMock.TokensAndAuthenticationApi{
+			GetTokenFunc: func(ctx context.Context) (mds.AuthenticationResponse, *http.Response, error) {
 				return mds.AuthenticationResponse{
 					AuthToken: "y0ur.jwt.T0kEn",
 					TokenType: "JWT",
