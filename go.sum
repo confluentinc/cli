@@ -163,6 +163,16 @@ github.com/confluentinc/ccloudapis v0.0.0-20200407174848-05fc38d8af33 h1:3iWifQ3
 github.com/confluentinc/ccloudapis v0.0.0-20200407174848-05fc38d8af33/go.mod h1:GFtO4obMaNb4iRYrRYw0BiK3Ac+rVO/toNbX96DAbRs=
 github.com/confluentinc/ccloudapis v0.0.0-20200410070451-11aa764990cb h1:AocDQW4PPyvKz+UmW/ctnshyXRbejI4Vngbwf/1ZFGc=
 github.com/confluentinc/ccloudapis v0.0.0-20200410070451-11aa764990cb/go.mod h1:GFtO4obMaNb4iRYrRYw0BiK3Ac+rVO/toNbX96DAbRs=
+github.com/confluentinc/ccloudapis v0.0.0-20200423212708-6019ee013cff h1:4keNvQ2ovdogPyGDLE1mtHg3RzovtloSEFgGCh7k7hk=
+github.com/confluentinc/ccloudapis v0.0.0-20200423212708-6019ee013cff/go.mod h1:GFtO4obMaNb4iRYrRYw0BiK3Ac+rVO/toNbX96DAbRs=
+github.com/confluentinc/ccloudapis v0.0.0-20200428004543-fe42fb36bd07 h1:qB1hD1etMiwocnixED59ZeU2jkUHCIvbfATt0+XEAFI=
+github.com/confluentinc/ccloudapis v0.0.0-20200428004543-fe42fb36bd07/go.mod h1:GFtO4obMaNb4iRYrRYw0BiK3Ac+rVO/toNbX96DAbRs=
+github.com/confluentinc/ccloudapis v0.0.0-20200428223209-6266b1945e98 h1:OebQcUawjRYCqqyFKV3PxUhVzQ8oUQzZ7/PU+q86Lj4=
+github.com/confluentinc/ccloudapis v0.0.0-20200428223209-6266b1945e98/go.mod h1:GFtO4obMaNb4iRYrRYw0BiK3Ac+rVO/toNbX96DAbRs=
+github.com/confluentinc/ccloudapis v0.0.0-20200429003458-81a24608ce28 h1:Rt2pqIQXQP9AdLa4idafR346hKTq7KaX6a3C7vlMVpk=
+github.com/confluentinc/ccloudapis v0.0.0-20200429003458-81a24608ce28/go.mod h1:GFtO4obMaNb4iRYrRYw0BiK3Ac+rVO/toNbX96DAbRs=
+github.com/confluentinc/ccloudapis v0.0.0-20200429004216-5b0116d352df h1:LTvA8pOgF0JZMtomaZ1W9pZOmT8aAYYAVbxJfM+UCs0=
+github.com/confluentinc/ccloudapis v0.0.0-20200429004216-5b0116d352df/go.mod h1:tyzImKEw5aWgZ5mYIYZHWPahsGrwYD4FbEr4p/3vpAI=
 github.com/confluentinc/confluent-kafka-go-dev v0.0.0-20190802212433-4315eca36bc9/go.mod h1:MUrc101nfomW+4pCJKUAiWFsmUTfFwMnXpBxFd6gEqk=
 github.com/confluentinc/go-editor v0.4.0 h1:5hMjKsKmIOmlu3Yyz8zDq66Qpdin8HSmRaMhqhxRf5Y=
 github.com/confluentinc/go-editor v0.4.0/go.mod h1:sW1NzJdowffHQzy4iSbfY/ykRFMDE69I8EaT33Ebh7Y=

@@ -16,7 +16,7 @@ require (
 	github.com/confluentinc/bincover v0.0.0-20191217221125-80a7bb37ae5e
 	github.com/confluentinc/cc-utils v0.0.0-00010101000000-000000000000
 	github.com/confluentinc/ccloud-sdk-go v0.0.18-0.20200410150929-37c5f02664e7
-	github.com/confluentinc/ccloudapis v0.0.0-20200410070451-11aa764990cb
+	github.com/confluentinc/ccloudapis v0.0.0-20200423212708-6019ee013cff
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-printer v0.13.0
 	github.com/confluentinc/mds-sdk-go v0.0.0-20200330220448-02620efc8d62

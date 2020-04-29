@@ -11,6 +11,7 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go/mock"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
 
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -553,11 +554,51 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 
 /*************** TEST setup/helpers ***************/
 func NewCMD(expect chan interface{}) *cobra.Command {
-	client := &ccloud.Client{Kafka: cliMock.NewKafkaMock(expect)}
+	client := &ccloud.Client{
+		Kafka: cliMock.NewKafkaMock(expect),
+		EnvironmentMetadata: &mock.EnvironmentMetadata{
+			GetFunc: func(ctx context.Context) ([]*kafkav1.CloudMetadata, error) {
+				return []*kafkav1.CloudMetadata{{
+					Id:      "aws",
+					Regions: []*kafkav1.Region{{IsSchedulable: true, Id: "us-west-2"}},
+				}}, nil
+			},
+		},
+	}
 	cmd := New(cliMock.NewPreRunnerMock(client, nil), conf, log.New(), "test-client")
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 
 	return cmd
+}
+
+func TestCreateEncryptionKeyId(t *testing.T) {
+	c := make(chan interface{})
+	cmd := NewCMD(c)
+	// err: not dedicated, the api validates this too
+	cmd.SetArgs([]string{
+		"cluster",
+		"create",
+		"name-xyz",
+		"--region=us-west-2",
+		"--cloud=aws",
+		"--encryption-key-id=xyz",
+	})
+	err := cmd.Execute()
+	require.Error(t, err)
+
+	// success: dedicated
+	cmd.SetArgs([]string{
+		"cluster",
+		"create",
+		"name-xyz",
+		"--region=us-west-2",
+		"--cloud=aws",
+		"--encryption-key-id=xyz",
+		"--type=dedicated",
+		"--cku=4",
+	})
+	err = cmd.Execute()
+	require.NoError(t, err)
 }
 
 func init() {

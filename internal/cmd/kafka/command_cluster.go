@@ -23,10 +23,10 @@ var (
 	listFields                = []string{"Id", "Name", "ServiceProvider", "Region", "Durability", "Status"}
 	listHumanLabels           = []string{"Id", "Name", "Provider", "Region", "Availability", "Status"}
 	listStructuredLabels      = []string{"id", "name", "provider", "region", "durability", "status"}
-	describeFields            = []string{"Id", "Name", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "ApiEndpoint"}
-	describeHumanRenames      = map[string]string{"NetworkIngress": "Ingress", "NetworkEgress": "Egress", "ServiceProvider": "Provider"}
+	describeFields            = []string{"Id", "Name", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "ApiEndpoint", "EncryptionKeyId"}
+	describeHumanRenames      = map[string]string{"NetworkIngress": "Ingress", "NetworkEgress": "Egress", "ServiceProvider": "Provider", "EncryptionKeyId": "Encryption Key ID"}
 	describeStructuredRenames = map[string]string{"Id": "id", "Name": "name", "NetworkIngress": "ingress", "NetworkEgress": "egress", "Storage": "storage",
-		"ServiceProvider": "provider", "Region": "region", "Status": "status", "Endpoint": "endpoint", "ApiEndpoint": "api_endpoint"}
+		"ServiceProvider": "provider", "Region": "region", "Status": "status", "Endpoint": "endpoint", "ApiEndpoint": "api_endpoint", "EncryptionKeyId": "encryption_key_id"}
 )
 
 const (
@@ -75,6 +75,7 @@ func (c *clusterCommand) init() {
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	}
+
 	createCmd.Flags().String("cloud", "", "Cloud provider ID (e.g. 'aws' or 'gcp').")
 	createCmd.Flags().String("region", "", "Cloud region ID for cluster (e.g. 'us-west-2').")
 	check(createCmd.MarkFlagRequired("cloud"))
@@ -82,6 +83,7 @@ func (c *clusterCommand) init() {
 	createCmd.Flags().String("availability", singleZone, fmt.Sprintf("Availability of the cluster. Allowed Values: %s, %s.", singleZone, multiZone))
 	createCmd.Flags().String("type", skuBasic, fmt.Sprintf("Type of the Kafka cluster. Allowed values: %s, %s, %s.", skuBasic, skuStandard, skuDedicated))
 	createCmd.Flags().Int("cku", 0, "Number of Confluent Kafka Units (non-negative). Required for Kafka clusters of type 'dedicated'.")
+	createCmd.Flags().String("encryption-key-id", "", "Encryption Key ID (e.g. on CMK ARN for AWS)")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
@@ -172,6 +174,14 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
+	encryptionKeyID, err := cmd.Flags().GetString("encryption-key-id")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	isDedicated := sku == productv1.Sku_DEDICATED || sku == productv1.Sku_DEDICATED_LEGACY
+	if encryptionKeyID != "" && !isDedicated {
+		return errors.HandleCommon(errors.New("Customer managed keys are supported on dedicated clusters only"), cmd)
+	}
 
 	cfg := &kafkav1.KafkaClusterConfig{
 		AccountId:       c.EnvironmentId(),
@@ -180,6 +190,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		Region:          region,
 		Durability:      availability,
 		Deployment:      &kafkav1.Deployment{Sku: sku},
+		EncryptionKeyId: encryptionKeyID,
 	}
 	if sku == productv1.Sku_DEDICATED {
 		cku, err := cmd.Flags().GetInt("cku")
