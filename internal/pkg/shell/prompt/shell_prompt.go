@@ -1,7 +1,6 @@
 package prompt
 
 import (
-	"os"
 	"strings"
 
 	goprompt "github.com/c-bata/go-prompt"
@@ -32,12 +31,10 @@ func NewShellPrompt(rootCmd *cobra.Command, compl completer.Completer, cfg *v3.C
 	prompt := goprompt.New(
 		func(in string) {
 			promptArgs := strings.Fields(in)
-			os.Args = append([]string{os.Args[0]}, promptArgs...)
+			rootCmd.SetArgs(promptArgs)
 			rootCmd.Execute()
 		},
-		func(doc goprompt.Document) []goprompt.Suggest {
-			return shell.Complete(doc)
-		},
+		shell.Complete,
 		opts...,
 	)
 	shell.Prompt = prompt
