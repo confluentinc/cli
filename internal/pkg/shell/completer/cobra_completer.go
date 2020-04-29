@@ -19,11 +19,11 @@ func NewCobraCompleter(rootCmd *cobra.Command) *CobraCompleter {
 }
 
 func (c *CobraCompleter) Complete(d prompt.Document) []prompt.Suggest {
-	command := c.RootCmd
+	matchedCmd := c.RootCmd
 	args := strings.Fields(d.CurrentLine())
 	var foundArgs []string
-	if found, cmdArgs, err := command.Find(args); err == nil {
-		command = found
+	if found, cmdArgs, err := matchedCmd.Find(args); err == nil {
+		matchedCmd = found
 		foundArgs = cmdArgs
 	}
 
@@ -42,24 +42,34 @@ func (c *CobraCompleter) Complete(d prompt.Document) []prompt.Suggest {
 		}
 	}
 
-	command.LocalFlags().VisitAll(addFlags)
-	command.InheritedFlags().VisitAll(addFlags)
+	matchedCmd.LocalFlags().VisitAll(addFlags)
+	matchedCmd.InheritedFlags().VisitAll(addFlags)
 
-	if command.HasAvailableSubCommands() {
-		for _, c := range command.Commands() {
-			if !c.Hidden {
-				suggestions = append(suggestions, prompt.Suggest{Text: c.Name(), Description: c.Short})
+	if matchedCmd.HasAvailableSubCommands() {
+		for _, cmd := range matchedCmd.Commands() {
+			if !cmd.Hidden {
+				suggestions = append(suggestions, prompt.Suggest{Text: cmd.Name(), Description: cmd.Short})
 			}
 		}
 	}
-
-	if len(foundArgs) > 0 {
-		for _, suggestion := range suggestions {
-			if foundArgs[0] == suggestion.Text {
-				return []prompt.Suggest{}
+	// Handle commands that are prefixes of each other (e.g. "a" and "aa")
+	// This is necessary because (c *cobra.Command).Find() will only return the shortest matching command.
+	if matchedCmd.HasParent() && matchedCmd.Parent().HasAvailableSubCommands() {
+		for _, cmd := range matchedCmd.Parent().Commands() {
+			if !cmd.Hidden {
+				if strings.HasPrefix(cmd.Name(), matchedCmd.Name()) {
+					suggestions = append(suggestions, prompt.Suggest{Text: cmd.Name(), Description: cmd.Short})
+				}
 			}
 		}
 	}
-
+	if len(foundArgs) > 0 && matchedCmd.Args == nil {
+		// Partial subcommand filter.
+		if len(foundArgs) > 1 {
+			// Can't have two partial subcommands.
+			return []prompt.Suggest{}
+		}
+		return prompt.FilterHasPrefix(suggestions, d.GetWordBeforeCursorWithSpace(), true)
+	}
 	return prompt.FilterHasPrefix(suggestions, d.GetWordBeforeCursor(), true)
 }
