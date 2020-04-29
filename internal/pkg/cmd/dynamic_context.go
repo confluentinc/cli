@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
-	srV1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
 	"github.com/mohae/deepcopy"
 	"github.com/spf13/cobra"
 
@@ -271,7 +271,7 @@ func missingDetails(cluster *v2.SchemaRegistryCluster) bool {
 	return cluster.SchemaRegistryEndpoint == "" || cluster.Id == ""
 }
 
-func makeSRCluster(cluster *srV1.SchemaRegistryCluster) *v2.SchemaRegistryCluster {
+func makeSRCluster(cluster *schedv1.SchemaRegistryCluster) *v2.SchemaRegistryCluster {
 	return &v2.SchemaRegistryCluster{
 		Id:                     cluster.Id,
 		SchemaRegistryEndpoint: cluster.Endpoint,

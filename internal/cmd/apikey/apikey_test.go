@@ -10,10 +10,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go/mock"
-	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
-	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
-	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
@@ -36,7 +34,7 @@ const (
 )
 
 var (
-	apiValue = &authv1.ApiKey{
+	apiValue = &schedv1.ApiKey{
 		Key:         apiKeyVal,
 		Secret:      apiSecretVal,
 		Description: "Mock Apis",
@@ -48,8 +46,8 @@ type APITestSuite struct {
 	conf             *v3.Config
 	apiMock          *ccsdkmock.APIKey
 	keystore         *mock.KeyStore
-	kafkaCluster     *kafkav1.KafkaCluster
-	srCluster        *srv1.SchemaRegistryCluster
+	kafkaCluster     *schedv1.KafkaCluster
+	srCluster        *schedv1.SchemaRegistryCluster
 	srMothershipMock *ccsdkmock.SchemaRegistry
 	kafkaMock        *ccsdkmock.Kafka
 	isPromptPipe     bool
@@ -62,54 +60,54 @@ func (suite *APITestSuite) SetupTest() {
 	srCluster := ctx.SchemaRegistryClusters[ctx.State.Auth.Account.Id]
 	srCluster.SrCredentials = &v0.APIKeyPair{Key: apiKeyVal, Secret: apiSecretVal}
 	cluster := ctx.KafkaClusterContext.GetActiveKafkaClusterConfig()
-	suite.kafkaCluster = &kafkav1.KafkaCluster{
+	suite.kafkaCluster = &schedv1.KafkaCluster{
 		Id:         cluster.ID,
 		Name:       cluster.Name,
 		Endpoint:   cluster.APIEndpoint,
 		Enterprise: true,
 		AccountId:  environment,
 	}
-	suite.srCluster = &srv1.SchemaRegistryCluster{
+	suite.srCluster = &schedv1.SchemaRegistryCluster{
 		Id: srClusterID,
 	}
 	suite.kafkaMock = &ccsdkmock.Kafka{
-		DescribeFunc: func(ctx context.Context, cluster *kafkav1.KafkaCluster) (*kafkav1.KafkaCluster, error) {
+		DescribeFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error) {
 			return suite.kafkaCluster, nil
 		},
 	}
 	suite.srMothershipMock = &ccsdkmock.SchemaRegistry{
-		CreateSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *srv1.SchemaRegistryClusterConfig) (*srv1.SchemaRegistryCluster, error) {
+		CreateSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *schedv1.SchemaRegistryClusterConfig) (*schedv1.SchemaRegistryCluster, error) {
 			return suite.srCluster, nil
 		},
-		GetSchemaRegistryClusterFunc: func(ctx context.Context, cluster *srv1.SchemaRegistryCluster) (*srv1.SchemaRegistryCluster, error) {
+		GetSchemaRegistryClusterFunc: func(ctx context.Context, cluster *schedv1.SchemaRegistryCluster) (*schedv1.SchemaRegistryCluster, error) {
 			return suite.srCluster, nil
 		},
-		GetSchemaRegistryClustersFunc: func(ctx context.Context, cluster *srv1.SchemaRegistryCluster) (clusters []*srv1.SchemaRegistryCluster, e error) {
-			return []*srv1.SchemaRegistryCluster{suite.srCluster}, nil
+		GetSchemaRegistryClustersFunc: func(ctx context.Context, cluster *schedv1.SchemaRegistryCluster) (clusters []*schedv1.SchemaRegistryCluster, e error) {
+			return []*schedv1.SchemaRegistryCluster{suite.srCluster}, nil
 		},
 	}
 	suite.apiMock = &ccsdkmock.APIKey{
-		GetFunc: func(ctx context.Context, apiKey *authv1.ApiKey) (key *authv1.ApiKey, e error) {
+		GetFunc: func(ctx context.Context, apiKey *schedv1.ApiKey) (key *schedv1.ApiKey, e error) {
 			return apiValue, nil
 		},
-		UpdateFunc: func(ctx context.Context, apiKey *authv1.ApiKey) error {
+		UpdateFunc: func(ctx context.Context, apiKey *schedv1.ApiKey) error {
 			return nil
 		},
-		CreateFunc: func(ctx context.Context, apiKey *authv1.ApiKey) (*authv1.ApiKey, error) {
+		CreateFunc: func(ctx context.Context, apiKey *schedv1.ApiKey) (*schedv1.ApiKey, error) {
 			return apiValue, nil
 		},
-		DeleteFunc: func(ctx context.Context, apiKey *authv1.ApiKey) error {
+		DeleteFunc: func(ctx context.Context, apiKey *schedv1.ApiKey) error {
 			return nil
 		},
-		ListFunc: func(ctx context.Context, apiKey *authv1.ApiKey) ([]*authv1.ApiKey, error) {
-			return []*authv1.ApiKey{apiValue}, nil
+		ListFunc: func(ctx context.Context, apiKey *schedv1.ApiKey) ([]*schedv1.ApiKey, error) {
+			return []*schedv1.ApiKey{apiValue}, nil
 		},
 	}
 	suite.keystore = &mock.KeyStore{
 		HasAPIKeyFunc: func(key, clusterId string, cmd *cobra.Command) (b bool, e error) {
 			return key == apiKeyVal, nil
 		},
-		StoreAPIKeyFunc: func(key *authv1.ApiKey, clusterId string, cmd *cobra.Command) error {
+		StoreAPIKeyFunc: func(key *schedv1.ApiKey, clusterId string, cmd *cobra.Command) error {
 			return nil
 		},
 		DeleteAPIKeyFunc: func(key string, cmd *cobra.Command) error {
@@ -127,7 +125,7 @@ func (suite *APITestSuite) newCMD() *cobra.Command {
 		Connect:        &ccsdkmock.Connect{},
 		User:           &ccsdkmock.User{},
 		APIKey:         suite.apiMock,
-		KSQL:           &ccsdkmock.MockKSQL{},
+		KSQL:           &ccsdkmock.KSQL{},
 		Metrics:        &ccsdkmock.Metrics{},
 	}
 	prompt := &cliMock.Prompt{

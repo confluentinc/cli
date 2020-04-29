@@ -7,7 +7,7 @@ package mock
 import (
 	sync "sync"
 
-	github_com_confluentinc_ccloudapis_auth_v1 "github.com/confluentinc/ccloudapis/auth/v1"
+	github_com_confluentinc_cc_structs_kafka_scheduler_v1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	github_com_spf13_cobra "github.com/spf13/cobra"
 )
 
@@ -17,7 +17,7 @@ type KeyStore struct {
 	HasAPIKeyFunc func(key, clusterId string, cmd *github_com_spf13_cobra.Command) (bool, error)
 
 	lockStoreAPIKey sync.Mutex
-	StoreAPIKeyFunc func(key *github_com_confluentinc_ccloudapis_auth_v1.ApiKey, clusterId string, cmd *github_com_spf13_cobra.Command) error
+	StoreAPIKeyFunc func(key *github_com_confluentinc_cc_structs_kafka_scheduler_v1.ApiKey, clusterId string, cmd *github_com_spf13_cobra.Command) error
 
 	lockDeleteAPIKey sync.Mutex
 	DeleteAPIKeyFunc func(key string, cmd *github_com_spf13_cobra.Command) error
@@ -29,7 +29,7 @@ type KeyStore struct {
 			Cmd       *github_com_spf13_cobra.Command
 		}
 		StoreAPIKey []struct {
-			Key       *github_com_confluentinc_ccloudapis_auth_v1.ApiKey
+			Key       *github_com_confluentinc_cc_structs_kafka_scheduler_v1.ApiKey
 			ClusterId string
 			Cmd       *github_com_spf13_cobra.Command
 		}
@@ -85,7 +85,7 @@ func (m *KeyStore) HasAPIKeyCalls() []struct {
 }
 
 // StoreAPIKey mocks base method by wrapping the associated func.
-func (m *KeyStore) StoreAPIKey(key *github_com_confluentinc_ccloudapis_auth_v1.ApiKey, clusterId string, cmd *github_com_spf13_cobra.Command) error {
+func (m *KeyStore) StoreAPIKey(key *github_com_confluentinc_cc_structs_kafka_scheduler_v1.ApiKey, clusterId string, cmd *github_com_spf13_cobra.Command) error {
 	m.lockStoreAPIKey.Lock()
 	defer m.lockStoreAPIKey.Unlock()
 
@@ -94,7 +94,7 @@ func (m *KeyStore) StoreAPIKey(key *github_com_confluentinc_ccloudapis_auth_v1.A
 	}
 
 	call := struct {
-		Key       *github_com_confluentinc_ccloudapis_auth_v1.ApiKey
+		Key       *github_com_confluentinc_cc_structs_kafka_scheduler_v1.ApiKey
 		ClusterId string
 		Cmd       *github_com_spf13_cobra.Command
 	}{
@@ -118,7 +118,7 @@ func (m *KeyStore) StoreAPIKeyCalled() bool {
 
 // StoreAPIKeyCalls returns the calls made to StoreAPIKey.
 func (m *KeyStore) StoreAPIKeyCalls() []struct {
-	Key       *github_com_confluentinc_ccloudapis_auth_v1.ApiKey
+	Key       *github_com_confluentinc_cc_structs_kafka_scheduler_v1.ApiKey
 	ClusterId string
 	Cmd       *github_com_spf13_cobra.Command
 } {

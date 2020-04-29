@@ -4,8 +4,8 @@ package auth
 import (
 	"context"
 
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
-	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	"github.com/confluentinc/cli/internal/pkg/sso"
 )
 
