@@ -589,7 +589,7 @@ func TestCreateEncryptionKeyId(t *testing.T) {
 		"name-xyz",
 		"--region=us-west-2",
 		"--cloud=aws",
-		"--encryption-key-id=xyz",
+		"--cmk-id=xyz",
 	})
 	err := cmd.Execute()
 	require.Error(t, err)
@@ -604,7 +604,7 @@ func TestCreateEncryptionKeyId(t *testing.T) {
 		"name-xyz",
 		"--region=us-west-2",
 		"--cloud=aws",
-		"--encryption-key-id=xyz",
+		"--cmk-id=xyz",
 		"--type=dedicated",
 		"--cku=4",
 	})
