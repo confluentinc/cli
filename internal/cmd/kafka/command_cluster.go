@@ -83,7 +83,7 @@ func (c *clusterCommand) init() {
 	createCmd.Flags().String("availability", singleZone, fmt.Sprintf("Availability of the cluster. Allowed Values: %s, %s.", singleZone, multiZone))
 	createCmd.Flags().String("type", skuBasic, fmt.Sprintf("Type of the Kafka cluster. Allowed values: %s, %s, %s.", skuBasic, skuStandard, skuDedicated))
 	createCmd.Flags().Int("cku", 0, "Number of Confluent Kafka Units (non-negative). Required for Kafka clusters of type 'dedicated'.")
-	createCmd.Flags().String("cmk-id", "", "Encryption Key ID (e.g. on CMK ARN for AWS)")
+	createCmd.Flags().String("encryption-key", "", "Encryption Key ID (e.g. for Amazon Web Services, the Amazon Resource Name of the key).")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
@@ -181,7 +181,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	encryptionKeyID, err := cmd.Flags().GetString("cmk-id")
+	encryptionKeyID, err := cmd.Flags().GetString("encryption-key")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
