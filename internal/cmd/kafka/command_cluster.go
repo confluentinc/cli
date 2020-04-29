@@ -3,10 +3,9 @@ package kafka
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"strings"
-
-	"github.com/confluentinc/ccloud-sdk-go"
 
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	productv1 "github.com/confluentinc/ccloudapis/product/v1"
@@ -15,6 +14,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/confirm"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -145,6 +145,9 @@ func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 	return outputWriter.Out()
 }
 
+var stdin io.ReadWriter = os.Stdin
+var stdout io.ReadWriter = os.Stdout
+
 func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	cloud, err := cmd.Flags().GetString("cloud")
 	if err != nil {
@@ -154,7 +157,11 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	err = checkCloudAndRegion(cloud, region, c.Client)
+	clouds, err := c.Client.EnvironmentMetadata.Get(context.Background())
+	if err != nil {
+		return err
+	}
+	err = checkCloudAndRegion(cloud, region, clouds)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -179,8 +186,20 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	isDedicated := sku == productv1.Sku_DEDICATED || sku == productv1.Sku_DEDICATED_LEGACY
-	if encryptionKeyID != "" && !isDedicated {
-		return errors.HandleCommon(errors.New("Customer managed keys are supported on dedicated clusters only"), cmd)
+	if encryptionKeyID != "" {
+		if !isDedicated {
+			return errors.HandleCommon(errors.New("Customer managed keys are supported on dedicated clusters only"), cmd)
+		}
+		accounts := getAccountsForCloud(cloud, clouds)
+		accountsStr := strings.Join(accounts, ", ")
+		msg := fmt.Sprintf("Please confirm you've authorized these AWS accounts for the key %s", accountsStr)
+		if !confirm.Do(
+			stdout,
+			stdin,
+			msg,
+		) {
+			return errors.HandleCommon(errors.New("Please authorize the AWS accounts for the key"), cmd)
+		}
 	}
 
 	cfg := &kafkav1.KafkaClusterConfig{
@@ -299,11 +318,7 @@ func check(err error) {
 	}
 }
 
-func checkCloudAndRegion(cloudId string, regionId string, client *ccloud.Client) error {
-	clouds, err := client.EnvironmentMetadata.Get(context.Background())
-	if err != nil {
-		return err
-	}
+func checkCloudAndRegion(cloudId string, regionId string, clouds []*kafkav1.CloudMetadata) error {
 	for _, cloud := range clouds {
 		if cloudId == cloud.Id {
 			for _, region := range cloud.Regions {
@@ -319,4 +334,16 @@ func checkCloudAndRegion(cloudId string, regionId string, client *ccloud.Client)
 		}
 	}
 	return fmt.Errorf("'%s' cloud provider does not exist. You can view a list of available cloud providers and regions with the 'kafka region list' command.", cloudId)
+}
+
+func getAccountsForCloud(cloudId string, clouds []*kafkav1.CloudMetadata) []string {
+	var accounts []string
+	for _, cloud := range clouds {
+		if cloudId == cloud.Id {
+			for _, account := range cloud.Accounts {
+				accounts = append(accounts, account.Id)
+			}
+		}
+	}
+	return accounts
 }

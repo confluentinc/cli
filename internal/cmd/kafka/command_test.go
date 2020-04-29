@@ -21,6 +21,11 @@ import (
 
 var conf *v3.Config
 
+func init() {
+	stdin = bytes.NewBuffer(nil)
+	stdout = bytes.NewBuffer(nil)
+}
+
 /*************** TEST command_acl ***************/
 var resourcePatterns = []struct {
 	args    []string
@@ -573,6 +578,9 @@ func NewCMD(expect chan interface{}) *cobra.Command {
 
 func TestCreateEncryptionKeyId(t *testing.T) {
 	c := make(chan interface{})
+	_, err := stdin.Write([]byte("y\n"))
+	require.NoError(t, err)
+
 	cmd := NewCMD(c)
 	// err: not dedicated, the api validates this too
 	cmd.SetArgs([]string{
@@ -583,8 +591,11 @@ func TestCreateEncryptionKeyId(t *testing.T) {
 		"--cloud=aws",
 		"--encryption-key-id=xyz",
 	})
-	err := cmd.Execute()
+	err = cmd.Execute()
 	require.Error(t, err)
+
+	_, err = stdin.Write([]byte("y\n"))
+	require.NoError(t, err)
 
 	// success: dedicated
 	cmd.SetArgs([]string{
