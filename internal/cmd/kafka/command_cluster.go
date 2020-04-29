@@ -20,13 +20,27 @@ import (
 )
 
 var (
-	listFields                = []string{"Id", "Name", "ServiceProvider", "Region", "Durability", "Status"}
-	listHumanLabels           = []string{"Id", "Name", "Provider", "Region", "Availability", "Status"}
-	listStructuredLabels      = []string{"id", "name", "provider", "region", "durability", "status"}
-	describeFields            = []string{"Id", "Name", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "ApiEndpoint", "EncryptionKeyId"}
-	describeHumanRenames      = map[string]string{"NetworkIngress": "Ingress", "NetworkEgress": "Egress", "ServiceProvider": "Provider", "EncryptionKeyId": "Encryption Key ID"}
-	describeStructuredRenames = map[string]string{"Id": "id", "Name": "name", "NetworkIngress": "ingress", "NetworkEgress": "egress", "Storage": "storage",
-		"ServiceProvider": "provider", "Region": "region", "Status": "status", "Endpoint": "endpoint", "ApiEndpoint": "api_endpoint", "EncryptionKeyId": "encryption_key_id"}
+	listFields           = []string{"Id", "Name", "ServiceProvider", "Region", "Durability", "Status"}
+	listHumanLabels      = []string{"Id", "Name", "Provider", "Region", "Availability", "Status"}
+	listStructuredLabels = []string{"id", "name", "provider", "region", "durability", "status"}
+	describeFields       = []string{"Id", "Name", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "ApiEndpoint", "EncryptionKeyId"}
+	describeHumanRenames = map[string]string{
+		"NetworkIngress":  "Ingress",
+		"NetworkEgress":   "Egress",
+		"ServiceProvider": "Provider",
+		"EncryptionKeyId": "Encryption Key ID"}
+	describeStructuredRenames = map[string]string{
+		"Id":              "id",
+		"Name":            "name",
+		"NetworkIngress":  "ingress",
+		"NetworkEgress":   "egress",
+		"Storage":         "storage",
+		"ServiceProvider": "provider",
+		"Region":          "region",
+		"Status":          "status",
+		"Endpoint":        "endpoint",
+		"ApiEndpoint":     "api_endpoint",
+		"EncryptionKeyId": "encryption_key_id"}
 )
 
 const (
@@ -272,6 +286,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 		Status          string
 		Endpoint        string
 		ApiEndpoint     string
+		EncryptionKeyId string
 	}
 	describeObject := &describeStruct{
 		Id:              cluster.Id,
@@ -284,6 +299,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 		Status:          cluster.Status.String(),
 		Endpoint:        cluster.Endpoint,
 		ApiEndpoint:     cluster.ApiEndpoint,
+		EncryptionKeyId: cluster.EncryptionKeyId,
 	}
 	return output.DescribeObject(cmd, describeObject, describeFields, describeHumanRenames, describeStructuredRenames)
 }
