@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"log"
 	"strings"
 	"unicode"
 )
@@ -16,7 +17,7 @@ func Do(out io.Writer, in io.Reader, msg string) bool {
 
 		input, err := reader.ReadString('\n')
 		if err != nil {
-			fmt.Println(err)
+			log.Fatal(err)
 		}
 
 		choice := strings.TrimRightFunc(input, unicode.IsSpace)
