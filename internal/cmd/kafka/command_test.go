@@ -3,6 +3,7 @@ package kafka
 import (
 	"bytes"
 	"context"
+	"io/ioutil"
 	"strconv"
 	"strings"
 	"testing"
@@ -564,8 +565,9 @@ func NewCMD(expect chan interface{}) *cobra.Command {
 		EnvironmentMetadata: &mock.EnvironmentMetadata{
 			GetFunc: func(ctx context.Context) ([]*kafkav1.CloudMetadata, error) {
 				return []*kafkav1.CloudMetadata{{
-					Id:      "aws",
-					Regions: []*kafkav1.Region{{IsSchedulable: true, Id: "us-west-2"}},
+					Id:       "aws",
+					Accounts: []*kafkav1.AccountMetadata{{Id: "account-xyz"}},
+					Regions:  []*kafkav1.Region{{IsSchedulable: true, Id: "us-west-2"}},
 				}}, nil
 			},
 		},
@@ -578,8 +580,6 @@ func NewCMD(expect chan interface{}) *cobra.Command {
 
 func TestCreateEncryptionKeyId(t *testing.T) {
 	c := make(chan interface{})
-	_, err := stdin.Write([]byte("y\n"))
-	require.NoError(t, err)
 
 	cmd := NewCMD(c)
 	// err: not dedicated, the api validates this too
@@ -591,7 +591,7 @@ func TestCreateEncryptionKeyId(t *testing.T) {
 		"--cloud=aws",
 		"--encryption-key-id=xyz",
 	})
-	err = cmd.Execute()
+	err := cmd.Execute()
 	require.Error(t, err)
 
 	_, err = stdin.Write([]byte("y\n"))
@@ -610,6 +610,10 @@ func TestCreateEncryptionKeyId(t *testing.T) {
 	})
 	err = cmd.Execute()
 	require.NoError(t, err)
+
+	b, err := ioutil.ReadAll(stdout)
+	require.NoError(t, err)
+	require.Equal(t, "Please confirm you've authorized the key for these AWS accounts account-xyz (y/n): ", string(b))
 }
 
 func init() {
