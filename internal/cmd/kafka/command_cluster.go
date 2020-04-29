@@ -206,13 +206,13 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		}
 		accounts := getAccountsForCloud(cloud, clouds)
 		accountsStr := strings.Join(accounts, ", ")
-		msg := fmt.Sprintf("Please confirm you've authorized the key for these AWS accounts %s", accountsStr)
+		msg := fmt.Sprintf("Please confirm you've authorized the key for these accounts %s", accountsStr)
 		if !confirm.Do(
 			stdout,
 			stdin,
 			msg,
 		) {
-			return errors.HandleCommon(errors.New("Please authorize the AWS accounts for the key"), cmd)
+			return errors.HandleCommon(errors.New("Please authorize the accounts for the key"), cmd)
 		}
 	}
 
