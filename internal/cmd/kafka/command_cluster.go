@@ -173,7 +173,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	}
 	clouds, err := c.Client.EnvironmentMetadata.Get(context.Background())
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, cmd)
 	}
 	err = checkCloudAndRegion(cloud, region, clouds)
 	if err != nil {
@@ -199,19 +199,19 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	isDedicated := sku == productv1.Sku_DEDICATED || sku == productv1.Sku_DEDICATED_LEGACY
 	if encryptionKeyID != "" {
-		if !isDedicated {
-			return errors.HandleCommon(errors.New("Customer managed keys are supported on dedicated clusters only"), cmd)
-		}
 		accounts := getAccountsForCloud(cloud, clouds)
 		accountsStr := strings.Join(accounts, ", ")
 		msg := fmt.Sprintf("Please confirm you've authorized the key for these accounts %s", accountsStr)
-		if !confirm.Do(
+		ok, err := confirm.Do(
 			stdout,
 			stdin,
 			msg,
-		) {
+		)
+		if err != nil {
+			return errors.HandleCommon(errors.New("Failed to read your confirmation"), cmd)
+		}
+		if !ok {
 			return errors.HandleCommon(errors.New("Please authorize the accounts for the key"), cmd)
 		}
 	}
@@ -359,6 +359,7 @@ func getAccountsForCloud(cloudId string, clouds []*kafkav1.CloudMetadata) []stri
 			for _, account := range cloud.Accounts {
 				accounts = append(accounts, account.Id)
 			}
+			break
 		}
 	}
 	return accounts

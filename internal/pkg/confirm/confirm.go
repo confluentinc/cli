@@ -4,12 +4,11 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"log"
 	"strings"
 	"unicode"
 )
 
-func Do(out io.Writer, in io.Reader, msg string) bool {
+func Do(out io.Writer, in io.Reader, msg string) (bool, error) {
 	reader := bufio.NewReader(in)
 
 	for {
@@ -17,16 +16,16 @@ func Do(out io.Writer, in io.Reader, msg string) bool {
 
 		input, err := reader.ReadString('\n')
 		if err != nil {
-			log.Fatal(err)
+			return false, err
 		}
 
 		choice := strings.TrimRightFunc(input, unicode.IsSpace)
 
 		switch choice {
 		case "yes", "y", "Y":
-			return true
+			return true, nil
 		case "no", "n", "N":
-			return false
+			return false, nil
 		default:
 			fmt.Fprintf(out, "%s is not a valid choice\n", choice)
 			continue

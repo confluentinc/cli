@@ -581,23 +581,11 @@ func NewCMD(expect chan interface{}) *cobra.Command {
 func TestCreateEncryptionKeyId(t *testing.T) {
 	c := make(chan interface{})
 
-	cmd := NewCMD(c)
-	// err: not dedicated, the api validates this too
-	cmd.SetArgs([]string{
-		"cluster",
-		"create",
-		"name-xyz",
-		"--region=us-west-2",
-		"--cloud=aws",
-		"--encryption-key=xyz",
-	})
-	err := cmd.Execute()
-	require.Error(t, err)
-
-	_, err = stdin.Write([]byte("y\n"))
+	_, err := stdin.Write([]byte("y\n"))
 	require.NoError(t, err)
 
-	// success: dedicated
+	cmd := NewCMD(c)
+	// err: not dedicated, the api validates this too
 	cmd.SetArgs([]string{
 		"cluster",
 		"create",
@@ -613,7 +601,7 @@ func TestCreateEncryptionKeyId(t *testing.T) {
 
 	b, err := ioutil.ReadAll(stdout)
 	require.NoError(t, err)
-	require.Equal(t, "Please confirm you've authorized the key for these AWS accounts account-xyz (y/n): ", string(b))
+	require.Equal(t, "Please confirm you've authorized the key for these accounts account-xyz (y/n): ", string(b))
 }
 
 func init() {
