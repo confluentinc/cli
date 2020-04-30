@@ -370,9 +370,9 @@ publish-release-notes:
 
 .PHONY: publish-release-notes-to-s3
 publish-release-notes-to-s3:
-	$(authenticate); \
-	aws s3 cp release-notes/ccloud/latest-release.rst s3://confluent.cloud/ccloud-cli/release-notes/$(BUMPED_VERSION:v%=%)/ --acl public-read; \
-    aws s3 cp release-notes/confluent/latest-release.rst s3://confluent.cloud/confluent-cli/release-notes/$(BUMPED_VERSION:v%=%)/ --acl public-read
+	$(caasenv-authenticate); \
+	aws s3 cp release-notes/ccloud/latest-release.rst s3://confluent.cloud/ccloud-cli/release-notes/$(BUMPED_VERSION:v%=%)/release-notes.rst --acl public-read; \
+    aws s3 cp release-notes/confluent/latest-release.rst s3://confluent.cloud/confluent-cli/release-notes/$(BUMPED_VERSION:v%=%)/release-notes.rst --acl public-read
 
 define print-publish-release-notes-next-steps
 	@echo

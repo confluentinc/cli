@@ -70,14 +70,13 @@ func (c *client) CheckForUpdates(name string, currentVersion string, forceCheck 
 	if c.DisableCheck {
 		return false, currentVersion, releaseNotes, nil
 	}
-	//shouldCheck, err := c.readCheckFile()
-	//if err != nil {
-	//	return false, currentVersion, err
-	//}
-	//if !shouldCheck && !forceCheck {
-	//	return false, currentVersion, nil
-	//}
-	fmt.Println(releaseNotes)
+	shouldCheck, err := c.readCheckFile()
+	if err != nil {
+		return false, currentVersion, releaseNotes, err
+	}
+	if !shouldCheck && !forceCheck {
+		return false, currentVersion, releaseNotes, nil
+	}
 	currVersion, err := version.NewVersion(currentVersion)
 	if err != nil {
 		err = errors.Wrapf(err, "unable to parse %s version %s", name, currentVersion)
@@ -104,16 +103,15 @@ func (c *client) CheckForUpdates(name string, currentVersion string, forceCheck 
 		}
 		return true, mostRecentBinaryVersion.Original(), releaseNotes, nil
 	}
-
 	return false, currentVersion, releaseNotes, nil
 }
 
-func (c *client) checkReleaseNotesVersion(name string, version *version.Version) error {
-	mostRecentReleaseNotesVersion, err := c.Repository.GetLatestBinaryVersion(name)
+func (c *client) checkReleaseNotesVersion(name string, mostRecentBinaryVersion *version.Version) error {
+	mostRecentReleaseNotesVersion, err := c.Repository.GetLatestReleaseNotesVersion(name)
 	if err != nil {
 		return err
 	}
-	if version.Compare(mostRecentReleaseNotesVersion) != 0 {
+	if mostRecentBinaryVersion.Compare(mostRecentReleaseNotesVersion) != 0 {
 		return errors.Errorf("Binary and release notes version mismatch.")
 	}
 	return nil
@@ -151,7 +149,7 @@ func (c *client) PromptToDownload(name, currVersion, latestVersion string, relea
 	fmt.Fprintf(c.Out, "New version of %s is available\n", name)
 	fmt.Fprintf(c.Out, "Current Version: %s\n", currVersion)
 	fmt.Fprintf(c.Out, "Latest Version:  %s\n", latestVersion)
-	fmt.Fprintf(c.Out, "%s\n\n", releaseNotes)
+	fmt.Fprintf(c.Out, "\n%s\n\n", releaseNotes)
 
 	if !confirm {
 		return true
