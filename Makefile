@@ -28,6 +28,7 @@ generate-go:
 
 .PHONY: deps
 deps:
+	export GOPRIVATE=github.com/confluentinc && \
 	export GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc && \
 	export GO111MODULE=on && \
         go get github.com/goreleaser/goreleaser@v0.106.0 && \
