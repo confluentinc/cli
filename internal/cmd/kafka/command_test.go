@@ -3,6 +3,7 @@ package kafka
 import (
 	"bytes"
 	"context"
+	"io/ioutil"
 	"strconv"
 	"strings"
 	"testing"
@@ -11,6 +12,7 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go/mock"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
 
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -19,6 +21,11 @@ import (
 )
 
 var conf *v3.Config
+
+func init() {
+	stdin = bytes.NewBuffer(nil)
+	stdout = bytes.NewBuffer(nil)
+}
 
 /*************** TEST command_acl ***************/
 var resourcePatterns = []struct {
@@ -553,11 +560,48 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 
 /*************** TEST setup/helpers ***************/
 func NewCMD(expect chan interface{}) *cobra.Command {
-	client := &ccloud.Client{Kafka: cliMock.NewKafkaMock(expect)}
+	client := &ccloud.Client{
+		Kafka: cliMock.NewKafkaMock(expect),
+		EnvironmentMetadata: &mock.EnvironmentMetadata{
+			GetFunc: func(ctx context.Context) ([]*kafkav1.CloudMetadata, error) {
+				return []*kafkav1.CloudMetadata{{
+					Id:       "aws",
+					Accounts: []*kafkav1.AccountMetadata{{Id: "account-xyz"}},
+					Regions:  []*kafkav1.Region{{IsSchedulable: true, Id: "us-west-2"}},
+				}}, nil
+			},
+		},
+	}
 	cmd := New(cliMock.NewPreRunnerMock(client, nil), conf, log.New(), "test-client")
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 
 	return cmd
+}
+
+func TestCreateEncryptionKeyId(t *testing.T) {
+	c := make(chan interface{})
+
+	_, err := stdin.Write([]byte("y\n"))
+	require.NoError(t, err)
+
+	cmd := NewCMD(c)
+	// err: not dedicated, the api validates this too
+	cmd.SetArgs([]string{
+		"cluster",
+		"create",
+		"name-xyz",
+		"--region=us-west-2",
+		"--cloud=aws",
+		"--encryption-key=xyz",
+		"--type=dedicated",
+		"--cku=4",
+	})
+	err = cmd.Execute()
+	require.NoError(t, err)
+
+	b, err := ioutil.ReadAll(stdout)
+	require.NoError(t, err)
+	require.Equal(t, "Please confirm you've authorized the key for these accounts account-xyz (y/n): ", string(b))
 }
 
 func init() {
