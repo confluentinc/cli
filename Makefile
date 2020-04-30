@@ -153,11 +153,12 @@ bindata: internal/pkg/local/bindata.go
 internal/pkg/local/bindata.go: cp_cli/*
 	@go-bindata -pkg local -o internal/pkg/local/bindata.go cp_cli/
 
-.PHONY: authenticate
-authenticate:
-	# If you setup your laptop following https://github.com/confluentinc/cc-documentation/blob/master/Operations/Laptop%20Setup.md
-	# then assuming caas.sh lives here should be fine
+
+# If you setup your laptop following https://github.com/confluentinc/cc-documentation/blob/master/Operations/Laptop%20Setup.md
+# then assuming caas.sh lives here should be fine
+define authenticate
 	source $$GOPATH/src/github.com/confluentinc/cc-dotfiles/caas.sh && caasenv prod
+endef
 
 .PHONY: unrelease
 unrelease: authenticate unrelease-warn
@@ -185,7 +186,7 @@ unrelease-warn:
 	@read line; if [ $$line = "n" ]; then echo aborting; exit 1 ; fi
 
 .PHONY: release
-release: authenticate get-release-image commit-release tag-release
+release: get-release-image commit-release tag-release
 	@GO111MODULE=on make gorelease
 	git checkout go.sum
 	@GO111MODULE=on VERSION=$(VERSION) make publish
@@ -261,7 +262,8 @@ dist: download-licenses
 .PHONY: publish
 ## Note: gorelease target publishes unsigned binaries to the binaries folder in the bucket, we have to overwrite them here after signing
 publish: sign dist
-	@for binary in ccloud confluent; do \
+	@$(authenticate); \
+	for binary in ccloud confluent; do \
 		source $$GOPATH/src/github.com/confluentinc/cc-dotfiles/caas.sh && caasenv prod && \
 		aws s3 cp dist/$${binary}/darwin_amd64/$${binary} s3://confluent.cloud/$${binary}-cli/binaries/$(VERSION:v%=%)/$${binary}_$(VERSION:v%=%)_darwin_amd64 --acl public-read ; \
 		aws s3 cp dist/$${binary}/ s3://confluent.cloud/$${binary}-cli/archives/$(VERSION:v%=%)/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --include "*_checksums.txt" --exclude "*_latest_*" --acl public-read ; \
@@ -271,6 +273,7 @@ publish: sign dist
 .PHONY: publish-installers
 ## Publish install scripts to S3. You MUST re-run this if/when you update any install script.
 publish-installers:
+	$(authenticate); \
 	source $$GOPATH/src/github.com/confluentinc/cc-dotfiles/caas.sh && caasenv prod && \
 	aws s3 cp install-ccloud.sh s3://confluent.cloud/ccloud-cli/install.sh --acl public-read && \
 	aws s3 cp install-confluent.sh s3://confluent.cloud/confluent-cli/install.sh --acl public-read
@@ -326,6 +329,9 @@ release-notes-prep:
 	@echo "Preparing Release Notes for $(BUMPED_VERSION) (Previous Release Version: v$(CLEAN_VERSION))"
 	@echo
 	@GO11MODULE=on go run -ldflags '-X main.releaseVersion=$(BUMPED_VERSION) -X main.prevVersion=v$(CLEAN_VERSION)' cmd/release-notes/prep/main.go
+	$(print-release-notes-prep-next-steps)
+
+define print-release-notes-prep-next-steps
 	@echo "===================="
 	@echo "NEXT STEPS"
 	@echo "===================="
@@ -335,6 +341,7 @@ release-notes-prep:
 	@echo "- Once finished, run 'make publish-release-notes'."
 	@echo
 	@echo "===================="
+endef
 
 # TODO: replace master with DOCS_BRANCH
 # TODO: change the git clone branch to the docs branch
@@ -343,46 +350,46 @@ REPLACE_ME_BRANCH := master
 publish-release-notes:
 	@TMP_BASE=$$(mktemp -d) || exit 1; \
 		TMP_RELEASE=$${TMP_BASE}/release-notes; \
-		TMP_CLI=$${TMP_BASE}/cli; \
 		git clone git@github.com:csreesan/test-release-notes.git $${TMP_RELEASE}; \
-		git clone git@github.com:confluentinc/cli.git $${TMP_CLI}; \
 		cd $${TMP_RELEASE} || exit 1; \
 		git fetch ; \
 		git checkout -b cli-$(BUMPED_VERSION) origin/$(REPLACE_ME_BRANCH) || exit 1; \
 		cd - || exit 1; \
-		cd $${TMP_CLI} || exit; \
-		git checkout -b cli-$(BUMPED_VERSION) || exit 1; \
-		cd - || exit 1; \
 		CCLOUD_RELEASE_DIR=$${TMP_RELEASE}/cloud/cli/release-notes; \
 		CONFLUENT_RELEASE_DIR=$${TMP_RELEASE}/confluent/cli/release-notes; \
 		make release-notes CCLOUD_RELEASE_DIR=$${CCLOUD_RELEASE_DIR} CONFLUENT_RELEASE_DIR=$${CONFLUENT_RELEASE_DIR}; \
-		make publish-release-notes-internal CCLOUD_RELEASE_DIR=$${CCLOUD_RELEASE_DIR} CONFLUENT_RELEASE_DIR=$${CONFLUENT_RELEASE_DIR} TMP_CLI=$${TMP_CLI} || exit 1; \
+		make publish-release-notes-internal CCLOUD_RELEASE_DIR=$${CCLOUD_RELEASE_DIR} CONFLUENT_RELEASE_DIR=$${CONFLUENT_RELEASE_DIR} || exit 1; \
 		cd $${TMP_RELEASE} || exit 1; \
 		git add . || exit 1; \
 		git diff --cached --exit-code > /dev/null && echo "nothing to update" && exit 0; \
 		git commit -m "New release notes for $(BUMPED_VERSION)" || exit 1; \
 		git push origin cli-$(BUMPED_VERSION) || exit 1; \
 		hub pull-request -b $(REPLACE_ME_BRANCH) -m "New release notes for $(BUMPED_VERSION)" || exit 1; \
-		cd $${TMP_CLI} || exit 1; \
-		git add internal/pkg/update/update_msg.go || exit 1; \
-		git diff --cached --exit-code > /dev/null && echo "nothing to update" && exit 0; \
-		git commit internal/pkg/update/update_msg.go -m "New release notes for $(BUMPED_VERSION)" || exit 1; \
-		git push origin cli-$(BUMPED_VERSION) || exit 1; \
-		hub pull-request -b master -m "new release notes for $(BUMPED_VERSION)" || exit 1; \
 		rm -rf $${TMP_BASE}
+	make publish-release-notes-to-s3
+	$(print-publish-release-notes-next-steps)
+
+.PHONY: publish-release-notes-to-s3
+publish-release-notes-to-s3:
+	$(authenticate); \
+	aws s3 cp release-notes/ccloud/latest-release.rst s3://confluent.cloud/ccloud-cli/release-notes/$(BUMPED_VERSION:v%=%)/ --acl public-read; \
+    aws s3 cp release-notes/confluent/latest-release.rst s3://confluent.cloud/confluent-cli/release-notes/$(BUMPED_VERSION:v%=%)/ --acl public-read
+
+define print-publish-release-notes-next-steps
 	@echo
 	@echo
 	@echo "===================="
 	@echo "NEXT STEPS"
 	@echo "===================="
 	@echo
-	@echo "- Find PR named 'New release notes for $(BUMPED_VERSION)' in cc-documentation, and cli repos."
+	@echo "- Find PR named 'New release notes for $(BUMPED_VERSION)' in cc-documentation and merge it."
 	@echo
-	@echo "- Double check and merge the PRs."
+	@echo "- Check release notes file in s3 confluent.cloud/ccloud-cli/release-notes/$(BUMPED_VERSION)/"
 	@echo
-	@echo "- Once the release notes have been released, it's time to release the CLI!"
+	@echo "- Once the release notes are ready, it's time to release the CLI!"
 	@echo
 	@echo "===================="
+endef
 
 .PHONY: release-notes
 release-notes:
@@ -396,14 +403,14 @@ publish-release-notes-internal:
 	cp release-notes/ccloud/*.rst $(CCLOUD_RELEASE_DIR)
 	rm $(CONFLUENT_RELEASE_DIR)/*.rst
 	cp release-notes/confluent/*.rst $(CONFLUENT_RELEASE_DIR)
-# 	rm $(TMP_CLI)/internal/pkg/update/update-release-notes
-	cp internal/pkg/update/update_msg.go $(TMP_CLI)/internal/pkg/update/update_msg.go
 
 .PHONY: clean-release-notes
 clean-release-notes:
 	-rm release-notes/prep
 	-rm release-notes/ccloud/index.rst
 	-rm release-notes/confluent/index.rst
+	-rm release-notes/ccloud/latest-release.rst
+	-rm release-notes/confluent/latest-release.rst
 
 .PHONY: fmt
 fmt:

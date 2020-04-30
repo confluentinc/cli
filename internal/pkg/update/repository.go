@@ -7,10 +7,14 @@ import (
 
 // Repository is a collection of versioned packages
 type Repository interface {
-	// Returns a collection of versions for the named package, or an error if one occurred.
-	GetAvailableVersions(name string) (version.Collection, error)
+
+	GetLatestBinaryVersion(name string) (*version.Version, error)
+
+	GetLatestReleaseNotesVersion(name string) (*version.Version, error)
 
 	// Downloads the versioned package to download dir to downloadDir.
 	// Returns the full path to the downloaded package, the download size in bytes, or an error if one occurred.
 	DownloadVersion(name, version, downloadDir string) (downloadPath string, downloadedBytes int64, err error)
+
+	DownloadReleaseNotes(name, version string) (string, error)
 }

@@ -16,6 +16,10 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
+var (
+	S3ReleaseNotesFile = "%s/release-notes.txt"
+)
+
 type PublicRepo struct {
 	*PublicRepoParams
 	// @VisibleForTesting
@@ -26,11 +30,12 @@ type PublicRepo struct {
 }
 
 type PublicRepoParams struct {
-	S3BinBucket string
-	S3BinRegion string
-	S3BinPrefix string
-	S3ObjectKey ObjectKey
-	Logger      *log.Logger
+	S3BinBucket          string
+	S3BinRegion          string
+	S3BinPrefix          string
+	S3ReleaseNotesPrefix string
+	S3ObjectKey          ObjectKey
+	Logger               *log.Logger
 }
 
 type ListBucketResult struct {
@@ -62,10 +67,27 @@ func NewPublicRepo(params *PublicRepoParams) *PublicRepo {
 	}
 }
 
-func (r *PublicRepo) GetAvailableVersions(name string) (version.Collection, error) {
-	listVersions := fmt.Sprintf("%s?prefix=%s/", r.endpoint, r.S3BinPrefix)
+func (r *PublicRepo) GetLatestBinaryVersion(name string) (*version.Version, error) {
+	availableVersions, err := r.GetAvailableVersions(name, r.S3BinPrefix)
+	if err != nil {
+		return nil, errors.Wrapf(err, "unable to get available versions")
+	}
+	return availableVersions[len(availableVersions)-1], nil
+}
+
+func (r *PublicRepo) GetLatestReleaseNotesVersion(name string) (*version.Version, error) {
+	availableVersions, err := r.GetAvailableVersions(name, r.S3ReleaseNotesPrefix)
+	if err != nil {
+		return nil, errors.Wrapf(err, "unable to get available versions")
+	}
+	return availableVersions[len(availableVersions)-1], nil
+}
+
+func (r *PublicRepo) GetAvailableVersions(name string, s3DirPrefix string) (version.Collection, error) {
+	listVersions := fmt.Sprintf("%s?prefix=%s/", r.endpoint, s3DirPrefix)
 	r.Logger.Debugf("Getting available versions from %s", listVersions)
-	resp, err := http.Get(listVersions)
+
+	resp, err := r.getHttpResponse(listVersions)
 	if err != nil {
 		return nil, err
 	}
@@ -75,12 +97,6 @@ func (r *PublicRepo) GetAvailableVersions(name string) (version.Collection, erro
 	if err != nil {
 		return nil, err
 	}
-	r.Logger.Tracef("Response from AWS: %s", string(body))
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, errors.Errorf("received unexpected response from S3: %s", resp.Status)
-	}
-
 	var result ListBucketResult
 	err = xml.Unmarshal(body, &result)
 	if err != nil {
@@ -112,19 +128,11 @@ func (r *PublicRepo) DownloadVersion(name, version, downloadDir string) (string,
 	s3URL := r.S3ObjectKey.URLFor(name, version)
 	downloadVersion := fmt.Sprintf("%s/%s", r.endpoint, s3URL)
 
-	resp, err := http.Get(downloadVersion)
+	resp, err := r.getHttpResponse(downloadVersion)
 	if err != nil {
 		return "", 0, err
 	}
 	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		body, err := ioutil.ReadAll(resp.Body)
-		if err == nil {
-			r.Logger.Tracef("Response from AWS: %s", string(body))
-		}
-		return "", 0, errors.Errorf("received unexpected response from S3: %s", resp.Status)
-	}
 
 	binName := fmt.Sprintf("%s-v%s-%s-%s", name, version, r.goos, r.goarch)
 	downloadBinPath := filepath.Join(downloadDir, binName)
@@ -141,4 +149,38 @@ func (r *PublicRepo) DownloadVersion(name, version, downloadDir string) (string,
 	}
 
 	return downloadBinPath, bytes, nil
+}
+
+func (r *PublicRepo) DownloadReleaseNotes(name, version string) (string, error) {
+	releaseNotesPath := fmt.Sprintf(S3ReleaseNotesFile, version)
+	downloadURL := fmt.Sprintf("%s/%s/%s", r.endpoint, r.S3ReleaseNotesPrefix, releaseNotesPath)
+	fmt.Println("URL: ", downloadURL)
+	resp, err := r.getHttpResponse(downloadURL)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+	return string(body), nil
+}
+
+// must close the response afterwards
+func (r *PublicRepo) getHttpResponse(url string) (*http.Response, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		if err == nil {
+			r.Logger.Tracef("Response from AWS: %s", string(body))
+		}
+		return nil, errors.Errorf("received unexpected response from S3: %s", resp.Status)
+	}
+	return resp, nil
 }

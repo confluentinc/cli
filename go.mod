@@ -14,6 +14,7 @@ require (
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
 	github.com/confluentinc/bincover v0.0.0-20191217221125-80a7bb37ae5e
+	github.com/confluentinc/cc-structs/kafka/auth v0.36.0 // indirect
 	github.com/confluentinc/cc-utils v0.0.0-00010101000000-000000000000
 	github.com/confluentinc/ccloud-sdk-go v0.0.18-0.20200410150929-37c5f02664e7
 	github.com/confluentinc/ccloudapis v0.0.0-20200410070451-11aa764990cb

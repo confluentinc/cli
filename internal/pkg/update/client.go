@@ -21,8 +21,8 @@ import (
 
 // Client lets you check for updated application binaries and install them if desired
 type Client interface {
-	CheckForUpdates(name string, currentVersion string, forceCheck bool) (updateAvailable bool, latestVersion string, err error)
-	PromptToDownload(name, currVersion, latestVersion string, confirm bool) bool
+	CheckForUpdates(name string, currentVersion string, forceCheck bool) (updateAvailable bool, latestVersion string, releaseNotes string, err error)
+	PromptToDownload(name, currVersion, latestVersion string, releaseNotes string, confirm bool) bool
 	UpdateBinary(name, version, path string) error
 }
 
@@ -66,39 +66,57 @@ func NewClient(params *ClientParams) *client {
 }
 
 // CheckForUpdates checks for new versions in the repo
-func (c *client) CheckForUpdates(name string, currentVersion string, forceCheck bool) (updateAvailable bool, latestVersion string, err error) {
+func (c *client) CheckForUpdates(name string, currentVersion string, forceCheck bool) (updateAvailable bool, latestVersion string, releaseNotes string, err error) {
 	if c.DisableCheck {
-		return false, currentVersion, nil
+		return false, currentVersion, releaseNotes, nil
 	}
-	shouldCheck, err := c.readCheckFile()
-	if err != nil {
-		return false, currentVersion, err
-	}
-	if !shouldCheck && !forceCheck {
-		return false, currentVersion, nil
-	}
-
+	//shouldCheck, err := c.readCheckFile()
+	//if err != nil {
+	//	return false, currentVersion, err
+	//}
+	//if !shouldCheck && !forceCheck {
+	//	return false, currentVersion, nil
+	//}
+	fmt.Println(releaseNotes)
 	currVersion, err := version.NewVersion(currentVersion)
 	if err != nil {
 		err = errors.Wrapf(err, "unable to parse %s version %s", name, currentVersion)
-		return false, currentVersion, err
-	}
-
-	availableVersions, err := c.Repository.GetAvailableVersions(name)
-	if err != nil {
-		return false, currentVersion, errors.Wrapf(err, "unable to get available versions")
+		return false, currentVersion, releaseNotes, err
 	}
 
 	if err := c.touchCheckFile(); err != nil {
-		return false, currentVersion, errors.Wrapf(err, "unable to touch last check file")
+		return false, currentVersion, releaseNotes, errors.Wrapf(err, "unable to touch last check file")
 	}
 
-	mostRecentVersion := availableVersions[len(availableVersions)-1]
-	if isLessThanVersion(currVersion, mostRecentVersion) {
-		return true, mostRecentVersion.Original(), nil
+	mostRecentBinaryVersion, err := c.Repository.GetLatestBinaryVersion(name)
+	if err != nil {
+		return false, currentVersion, releaseNotes, err
 	}
 
-	return false, currentVersion, nil
+	if isLessThanVersion(currVersion, mostRecentBinaryVersion) {
+		err := c.checkReleaseNotesVersion(name, mostRecentBinaryVersion)
+		if err != nil {
+			return false, currentVersion, releaseNotes, err
+		}
+		releaseNotes, err = c.Repository.DownloadReleaseNotes(name, mostRecentBinaryVersion.String())
+		if err != nil {
+			return false, currentVersion, releaseNotes, errors.Wrapf(err, "unable to download release notes")
+		}
+		return true, mostRecentBinaryVersion.Original(), releaseNotes, nil
+	}
+
+	return false, currentVersion, releaseNotes, nil
+}
+
+func (c *client) checkReleaseNotesVersion(name string, version *version.Version) error {
+	mostRecentReleaseNotesVersion, err := c.Repository.GetLatestBinaryVersion(name)
+	if err != nil {
+		return err
+	}
+	if version.Compare(mostRecentReleaseNotesVersion) != 0 {
+		return errors.Errorf("Binary and release notes version mismatch.")
+	}
+	return nil
 }
 
 // SemVer considers x.x.x-yyy to be less (older) than x.x.x
@@ -124,7 +142,7 @@ func isLessThanVersion(curr, latest *version.Version) bool {
 }
 
 // PromptToDownload displays an interactive CLI prompt to download the latest version
-func (c *client) PromptToDownload(name, currVersion, latestVersion string, confirm bool) bool {
+func (c *client) PromptToDownload(name, currVersion, latestVersion string, releaseNotes string, confirm bool) bool {
 	if confirm && !c.fs.IsTerminal(c.Out.Fd()) {
 		c.Logger.Warn("disable confirm as stdout is not a tty")
 		confirm = false
@@ -133,6 +151,7 @@ func (c *client) PromptToDownload(name, currVersion, latestVersion string, confi
 	fmt.Fprintf(c.Out, "New version of %s is available\n", name)
 	fmt.Fprintf(c.Out, "Current Version: %s\n", currVersion)
 	fmt.Fprintf(c.Out, "Latest Version:  %s\n", latestVersion)
+	fmt.Fprintf(c.Out, "%s\n\n", releaseNotes)
 
 	if !confirm {
 		return true

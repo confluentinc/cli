@@ -20,6 +20,7 @@ const (
 	S3BinBucket   = "confluent.cloud"
 	S3BinRegion   = "us-west-2"
 	S3BinPrefix   = "%s-cli/binaries"
+	S3ReleaseNotesPrefix = "%s-cli/release-notes"
 	CheckFileFmt  = "~/.%s/update_check"
 	CheckInterval = 24 * time.Hour
 )
@@ -34,6 +35,7 @@ func NewClient(cliName string, disableUpdateCheck bool, logger *log.Logger) (upd
 		S3BinRegion: S3BinRegion,
 		S3BinBucket: S3BinBucket,
 		S3BinPrefix: fmt.Sprintf(S3BinPrefix, cliName),
+		S3ReleaseNotesPrefix: fmt.Sprintf(S3ReleaseNotesPrefix, cliName),
 		S3ObjectKey: objectKey,
 		Logger:      logger,
 	})
@@ -91,7 +93,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 
 	pcmd.ErrPrintln(cmd, "Checking for updates...")
-	updateAvailable, latestVersion, err := c.client.CheckForUpdates(c.cliName, c.version.Version, true)
+	updateAvailable, latestVersion, releaseNotes, err := c.client.CheckForUpdates(c.cliName, c.version.Version, true)
 	if err != nil {
 		c.Command.SilenceUsage = true
 		return errors.Wrap(err, "Error checking for updates.")
@@ -108,7 +110,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	//   Current Version: v0.0.0
 	//   Latest Version:  0.50.0
 	// Unfortunately the "UpdateBinary" output will still show 0.50.0, and we can't hack that since it must match S3
-	doUpdate := c.client.PromptToDownload(c.cliName, c.version.Version, "v"+latestVersion, !updateYes)
+	doUpdate := c.client.PromptToDownload(c.cliName, c.version.Version, "v"+latestVersion, releaseNotes, !updateYes)
 	if !doUpdate {
 		return nil
 	}
