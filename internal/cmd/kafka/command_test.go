@@ -563,11 +563,11 @@ func NewCMD(expect chan interface{}) *cobra.Command {
 	client := &ccloud.Client{
 		Kafka: cliMock.NewKafkaMock(expect),
 		EnvironmentMetadata: &mock.EnvironmentMetadata{
-			GetFunc: func(ctx context.Context) ([]*kafkav1.CloudMetadata, error) {
-				return []*kafkav1.CloudMetadata{{
+			GetFunc: func(ctx context.Context) ([]*schedv1.CloudMetadata, error) {
+				return []*schedv1.CloudMetadata{{
 					Id:       "aws",
-					Accounts: []*kafkav1.AccountMetadata{{Id: "account-xyz"}},
-					Regions:  []*kafkav1.Region{{IsSchedulable: true, Id: "us-west-2"}},
+					Accounts: []*schedv1.AccountMetadata{{Id: "account-xyz"}},
+					Regions:  []*schedv1.Region{{IsSchedulable: true, Id: "us-west-2"}},
 				}}, nil
 			},
 		},

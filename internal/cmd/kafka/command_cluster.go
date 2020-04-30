@@ -7,8 +7,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/confluentinc/ccloud-sdk-go"
-
 	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/go-printer"
@@ -336,7 +334,7 @@ func check(err error) {
 	}
 }
 
-func checkCloudAndRegion(cloudId string, regionId string, clouds []*kafkav1.CloudMetadata) error {
+func checkCloudAndRegion(cloudId string, regionId string, clouds []*schedv1.CloudMetadata) error {
 	for _, cloud := range clouds {
 		if cloudId == cloud.Id {
 			for _, region := range cloud.Regions {
@@ -354,7 +352,7 @@ func checkCloudAndRegion(cloudId string, regionId string, clouds []*kafkav1.Clou
 	return fmt.Errorf("'%s' cloud provider does not exist. You can view a list of available cloud providers and regions with the 'kafka region list' command.", cloudId)
 }
 
-func getAccountsForCloud(cloudId string, clouds []*kafkav1.CloudMetadata) []string {
+func getAccountsForCloud(cloudId string, clouds []*schedv1.CloudMetadata) []string {
 	var accounts []string
 	for _, cloud := range clouds {
 		if cloudId == cloud.Id {
