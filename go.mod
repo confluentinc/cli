@@ -87,6 +87,7 @@ require (
 	github.com/tidwall/gjson v1.6.0
 	github.com/tidwall/pretty v1.0.0
 	github.com/tidwall/sjson v1.0.4
+	github.com/travisjeffery/mocker v1.1.0
 	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c // indirect
 	golang.org/x/crypto v0.0.0-20200406173513-056763e48d71
 	golang.org/x/exp v0.0.0-20200207192155-f17229e696bd // indirect
@@ -101,7 +102,7 @@ require (
 )
 
 replace (
-	github.com/confluentinc/ccloud-sdk-go => github.com/confluentinc/ccloud-sdk-go v0.0.23
+	github.com/confluentinc/ccloud-sdk-go => github.com/confluentinc/ccloud-sdk-go v0.0.24
 	github.com/mutagen-io/gopass => github.com/mutagen-io/gopass v0.0.0-20161007065903-6331a34a3f3b
 	github.com/shurcooL/sanitized_anchor_name => github.com/shurcooL/sanitized_anchor_name v1.0.0
 	github.com/ugorji/go v1.1.4 => github.com/ugorji/go v0.0.0-20190316192920-e2bddce071ad

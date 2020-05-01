@@ -117,7 +117,8 @@ func (c *clusterCommand) init() {
 		RunE:  c.update,
 		Args:  cobra.ExactArgs(1),
 	}
-	updateCmd.Hidden = true
+	updateCmd.Flags().String("name", "", "Name of the Kafka cluster.")
+	updateCmd.Flags().Int("cku", 0, "Number of Confluent Kafka Units (non-negative). For Kafka clusters of type 'dedicated' only.")
 	c.AddCommand(updateCmd)
 
 	deleteCmd := &cobra.Command{
@@ -246,6 +247,25 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	return printer.RenderTableOut(cluster, describeFields, describeHumanRenames, os.Stdout)
+}
+
+func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
+	name, err := cmd.Flags().GetString("name")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	cku, err := cmd.Flags().GetInt("cku")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	if name == "" && cku <= 0 {
+		return errors.HandleCommon(errors.New("Must either specify --name with non-empty value or --cku (for dedicated clusters) with non-negative value when updating a cluster."), cmd)
+	}
+
+	cluster := &schedv1.KafkaCluster {
+		AccountId:	c.EnvironmentId(),
+
+	}
 }
 
 func stringToAvailability(s string) (schedv1.Durability, error) {
