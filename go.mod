@@ -5,6 +5,8 @@ require (
 	github.com/DataDog/zstd v1.4.1 // indirect
 	github.com/Shopify/sarama v1.23.1
 	github.com/alcortesm/tgz v0.0.0-20161220082320-9c5fe88206d7 // indirect
+	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
+	github.com/alecthomas/units v0.0.0-20190717042225-c3de453c63f4 // indirect
 	github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239 // indirect
 	github.com/antihax/optional v1.0.0
 	github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da
@@ -19,17 +21,15 @@ require (
 	github.com/confluentinc/bincover v0.0.0-20191217221125-80a7bb37ae5e
 	github.com/confluentinc/cc-structs/kafka/core v0.419.0
 	github.com/confluentinc/cc-structs/kafka/metrics v0.419.0
-	github.com/confluentinc/cc-structs/kafka/org v0.424.0
 	github.com/confluentinc/cc-structs/kafka/product/core v0.419.0
-	github.com/confluentinc/cc-structs/kafka/scheduler v0.424.0
 	github.com/confluentinc/cc-structs/kafka/util v0.419.0
 	github.com/confluentinc/cc-structs/operator v0.419.0
 	github.com/confluentinc/cc-utils-public v0.1.0
-	github.com/confluentinc/ccloud-sdk-go v0.0.0-00010101000000-000000000000
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-printer v0.13.0
 	github.com/confluentinc/mds-sdk-go v0.0.0-20200330220448-02620efc8d62
 	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787
+	github.com/confluentinc/proto-go-setter v0.0.0-20180912191759-fb17e76fc076 // indirect
 	github.com/confluentinc/schema-registry-sdk-go v0.0.8
 	github.com/dghubble/sling v1.3.0 // indirect
 	github.com/dgryski/go-metro v0.0.0-20180109044635-280f6062b5bc // indirect
@@ -40,12 +40,14 @@ require (
 	github.com/flynn/go-shlex v0.0.0-20150515145356-3f9db97f8568 // indirect
 	github.com/frankban/quicktest v1.7.2 // indirect
 	github.com/gliderlabs/ssh v0.2.2 // indirect
+	github.com/go-kit/kit v0.9.0 // indirect
+	github.com/go-logfmt/logfmt v0.5.0 // indirect
 	github.com/go-openapi/spec v0.19.2 // indirect
 	github.com/go-openapi/swag v0.19.4 // indirect
 	github.com/go-yaml/yaml v2.1.0+incompatible
 	github.com/gobuffalo/flect v0.1.3
 	github.com/gogo/protobuf v1.3.1
-	github.com/golang/mock v1.3.1
+	github.com/golang/mock v1.2.0
 	github.com/golang/protobuf v1.3.5
 	github.com/golangci/gocyclo v0.0.0-20180528144436-0a533e8fa43d // indirect
 	github.com/golangci/golangci-lint v1.21.0
@@ -64,12 +66,14 @@ require (
 	github.com/iancoleman/strcase v0.0.0-20190422225806-e506e3ef7365
 	github.com/jonboulle/clockwork v0.1.0
 	github.com/kevinburke/go-bindata v3.13.0+incompatible
+	github.com/kr/text v0.2.0 // indirect
 	github.com/lithammer/dedent v1.1.0
 	github.com/mattn/go-isatty v0.0.9
 	github.com/mattn/go-runewidth v0.0.3 // indirect
 	github.com/mitchellh/golicense v0.1.1
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/neurosnap/sentences v1.0.6 // indirect
+	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/olekukonko/tablewriter v0.0.0-20180912035003-be2c049b30cc
 	github.com/pascaldekloe/goe v0.0.0-20180627143212-57f6aae5913c // indirect
 	github.com/pierrec/lz4 v2.4.1+incompatible // indirect
@@ -94,6 +98,8 @@ require (
 	golang.org/x/sys v0.0.0-20200409092240-59c9f1ba88fa // indirect
 	gonum.org/v1/netlib v0.0.0-20200317120129-c5a04cffd98a // indirect
 	google.golang.org/appengine v1.6.5 // indirect
+	google.golang.org/genproto v0.0.0-20190122154452-ba6ebe99b011 // indirect
+	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/jcmturner/goidentity.v3 v3.0.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.3.1
 	gopkg.in/src-d/go-git-fixtures.v3 v3.5.0 // indirect
