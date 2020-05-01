@@ -52,15 +52,12 @@ func (c *CobraCompleter) Complete(d prompt.Document) []prompt.Suggest {
 		return prompt.FilterHasPrefix(suggestions, filter, true)
 	}
 
+	// Filter is all args + flags starting from first unmatched arg.
 	unmatchedIndex := firstOccurrence(foundArgs, unmatchedArgArr[0])
 	filterSuffix := filter
 	filter = strings.Join(foundArgs[unmatchedIndex:], " ")
 	filter = strings.TrimPrefix(filter, pathWithoutRoot)
-
 	filter += " " + filterSuffix
-	if len(strings.TrimSpace(filter)) == 0 {
-		filter = ""
-	}
 
 	return prompt.FilterHasPrefix(suggestions, filter, true)
 }
@@ -89,7 +86,8 @@ func getFlagSuggestions(d prompt.Document, matchedCmd *cobra.Command) []prompt.S
 		}
 		longName := "--" + flag.Name
 		shortName := "-" + flag.Shorthand
-		if !strings.Contains(d.CurrentLine(), shortName+" ") && !strings.Contains(d.CurrentLine(), longName+" ") {
+		flagUsed := strings.Contains(d.CurrentLine(), shortName+" ") || strings.Contains(d.CurrentLine(), longName+" ")
+		if !flagUsed {
 			if strings.HasPrefix(d.GetWordBeforeCursor(), "--") {
 				suggestions = append(suggestions, prompt.Suggest{Text: longName, Description: flag.Usage})
 			} else if strings.HasPrefix(d.GetWordBeforeCursor(), "-") && flag.Shorthand != "" {
