@@ -67,16 +67,16 @@ func NewClient(params *ClientParams) *client {
 
 // CheckForUpdates checks for new versions in the repo
 func (c *client) CheckForUpdates(name string, currentVersion string, forceCheck bool) (updateAvailable bool, latestVersion string, releaseNotes string, err error) {
-	if c.DisableCheck {
-		return false, currentVersion, releaseNotes, nil
-	}
-	shouldCheck, err := c.readCheckFile()
-	if err != nil {
-		return false, currentVersion, releaseNotes, err
-	}
-	if !shouldCheck && !forceCheck {
-		return false, currentVersion, releaseNotes, nil
-	}
+	//if c.DisableCheck {
+	//	return false, currentVersion, releaseNotes, nil
+	//}
+	//shouldCheck, err := c.readCheckFile()
+	//if err != nil {
+	//	return false, currentVersion, releaseNotes, err
+	//}
+	//if !shouldCheck && !forceCheck {
+	//	return false, currentVersion, releaseNotes, nil
+	//}
 	currVersion, err := version.NewVersion(currentVersion)
 	if err != nil {
 		err = errors.Wrapf(err, "unable to parse %s version %s", name, currentVersion)
