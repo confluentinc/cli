@@ -23,7 +23,7 @@ func NewShellCmd(prerunner pcmd.PreRunner, rootCmd *cobra.Command, config *v3.Co
 
 				// run the shell
 				fmt.Printf("Welcome to the %s shell!\n", config.CLIName)
-				fmt.Println("Please press ctrl-D to exit.")
+				fmt.Println("Please press `Ctrl-D` to exit.")
 				masterCompleter := completer.NewShellCompleter(rootCmd, config.CLIName)
 				cliPrompt := prompt.NewShellPrompt(rootCmd, masterCompleter, config, prompt.DefaultPromptOptions()...)
 				cliPrompt.Run()

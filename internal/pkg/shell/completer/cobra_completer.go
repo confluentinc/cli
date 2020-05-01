@@ -1,7 +1,6 @@
 package completer
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/c-bata/go-prompt"
@@ -21,25 +20,21 @@ func NewCobraCompleter(rootCmd *cobra.Command) *CobraCompleter {
 
 func (c *CobraCompleter) Complete(d prompt.Document) []prompt.Suggest {
 	matchedCmd := c.RootCmd
-	line := d.CurrentLine()
-	suggestionAccepted := strings.HasSuffix(line, " ")
-	args := strings.Fields(line)
 	filter := ""
+	args := strings.Fields(d.CurrentLine())
+
+	suggestionAccepted := strings.HasSuffix(d.CurrentLine(), " ")
 	if !suggestionAccepted && len(args) > 0 {
 		filter = args[len(args)-1]
 		args = args[:len(args)-1]
 	}
-	var foundArgs []string
-	found, cmdArgs, err := matchedCmd.Find(args)
-	var suggestions []prompt.Suggest
-	if err == nil {
-		matchedCmd = found
+
+	matchedCmd, foundArgs, err := matchedCmd.Find(args)
+	if err != nil {
+		return []prompt.Suggest{}
 	}
-	foundArgs = cmdArgs
 
-	suggestions = append(suggestions, getFlagSuggestions(d, matchedCmd)...)
-	// TODO: Check if persistent flags are handled.
-
+	suggestions := append([]prompt.Suggest{}, getFlagSuggestions(d, matchedCmd)...)
 	if matchedCmd.HasAvailableSubCommands() {
 		for _, cmd := range matchedCmd.Commands() {
 			if !cmd.Hidden {
@@ -47,25 +42,17 @@ func (c *CobraCompleter) Complete(d prompt.Document) []prompt.Suggest {
 			}
 		}
 	}
+
 	_ = matchedCmd.ParseFlags(args)
-	pathWithoutRoot := strings.TrimPrefix(matchedCmd.CommandPath(), c.RootCmd.Name())
-	pathWithoutRoot = strings.TrimSpace(pathWithoutRoot)
 	allArgs := matchedCmd.Flags().Args()
+	pathWithoutRoot := strings.TrimPrefix(matchedCmd.CommandPath(), c.RootCmd.Name()+" ")
 	unmatchedArgs := strings.TrimPrefix(strings.Join(allArgs, " "), pathWithoutRoot)
 	unmatchedArgArr := strings.Fields(unmatchedArgs)
 	if len(unmatchedArgArr) == 0 {
 		return prompt.FilterHasPrefix(suggestions, filter, true)
 	}
-	// Filter is all args + flags starting from first unmatched arg.
-	// Find index first unmatched arg.
-	if unmatchedArgArr[0] == matchedCmd.Name() {
-		unmatchedArgs = unmatchedArgs[1:]
-	}
 
 	unmatchedIndex := firstOccurrence(foundArgs, unmatchedArgArr[0])
-	if unmatchedIndex == -1 {
-		panic(fmt.Sprint(foundArgs, unmatchedArgs))
-	}
 	filterSuffix := filter
 	filter = strings.Join(foundArgs[unmatchedIndex:], " ")
 	filter = strings.TrimPrefix(filter, pathWithoutRoot)
@@ -74,6 +61,7 @@ func (c *CobraCompleter) Complete(d prompt.Document) []prompt.Suggest {
 	if len(strings.TrimSpace(filter)) == 0 {
 		filter = ""
 	}
+
 	return prompt.FilterHasPrefix(suggestions, filter, true)
 }
 
@@ -99,10 +87,14 @@ func getFlagSuggestions(d prompt.Document, matchedCmd *cobra.Command) []prompt.S
 		if flag.Hidden {
 			return
 		}
-		if strings.HasPrefix(d.GetWordBeforeCursorWithSpace(), "--") {
-			suggestions = append(suggestions, prompt.Suggest{Text: "--" + flag.Name, Description: flag.Usage})
-		} else if strings.HasPrefix(d.GetWordBeforeCursorWithSpace(), "-") && flag.Shorthand != "" {
-			suggestions = append(suggestions, prompt.Suggest{Text: "-" + flag.Shorthand, Description: flag.Usage})
+		longName := "--" + flag.Name
+		shortName := "-" + flag.Shorthand
+		if !strings.Contains(d.CurrentLine(), shortName+" ") && !strings.Contains(d.CurrentLine(), longName+" ") {
+			if strings.HasPrefix(d.GetWordBeforeCursor(), "--") {
+				suggestions = append(suggestions, prompt.Suggest{Text: longName, Description: flag.Usage})
+			} else if strings.HasPrefix(d.GetWordBeforeCursor(), "-") && flag.Shorthand != "" {
+				suggestions = append(suggestions, prompt.Suggest{Text: shortName, Description: flag.Usage})
+			}
 		}
 	}
 
