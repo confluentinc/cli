@@ -18,9 +18,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
 	sdkMock "github.com/confluentinc/ccloud-sdk-go/mock"
-	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 
 	"github.com/confluentinc/mds-sdk-go"
 	mdsMock "github.com/confluentinc/mds-sdk-go/mock"

@@ -153,14 +153,40 @@ bindata: internal/pkg/local/bindata.go
 internal/pkg/local/bindata.go: cp_cli/*
 	@go-bindata -pkg local -o internal/pkg/local/bindata.go cp_cli/
 
-.PHONY: authenticate
-authenticate:
-	# If you setup your laptop following https://github.com/confluentinc/cc-documentation/blob/master/Operations/Laptop%20Setup.md
-	# then assuming caas.sh lives here should be fine
+# If you setup your laptop following https://github.com/confluentinc/cc-documentation/blob/master/Operations/Laptop%20Setup.md
+# then assuming caas.sh lives here should be fine
+define caasenv-authenticate
 	source $$GOPATH/src/github.com/confluentinc/cc-dotfiles/caas.sh && caasenv prod
+endef
+
+.PHONY: unrelease
+unrelease: unrelease-warn
+	$(caasenv-authenticate); \
+	aws s3 rm s3://confluent.cloud/ccloud-cli/binaries/$(CLEAN_VERSION) --recursive; \
+	aws s3 rm s3://confluent.cloud/ccloud-cli/archives/$(CLEAN_VERSION) --recursive; \
+	aws s3 rm s3://confluent.cloud/ccloud-cli/release-notes/$(CLEAN_VERSION) --recursive; \
+	aws s3 rm s3://confluent.cloud/confluent-cli/binaries/$(CLEAN_VERSION) --recursive; \
+	aws s3 rm s3://confluent.cloud/confluent-cli/archives/$(CLEAN_VERSION) --recursive; \
+	aws s3 rm s3://confluent.cloud/confluent-cli/release-notes/$(CLEAN_VERSION) --recursive;
+	git checkout master
+	git pull
+	git diff-index --quiet HEAD # ensures git status is clean
+	git tag -d v$(CLEAN_VERSION) # delete local tag
+	git push --delete origin v$(CLEAN_VERSION) # delete remote tag
+	git reset --hard HEAD~1 # warning: assumes "chore" version bump was last commit
+	git push origin HEAD --force
+
+.PHONY: unrelease-warn
+unrelease-warn:
+	@echo "Latest tag:"
+	@git describe --tags `git rev-list --tags --max-count=1`
+	@echo "Latest commits:"
+	@git --no-pager log --decorate=short --pretty=oneline -n10
+	@echo "Warning: Ensure a git version bump (new commit and new tag) has occurred before continuing, else you will remove the prior version.  Continue? [Y/n]"
+	@read line; if [ $$line = "n" ]; then echo aborting; exit 1 ; fi
 
 .PHONY: release
-release: authenticate get-release-image commit-release tag-release
+release: get-release-image commit-release tag-release
 	@GO111MODULE=on make gorelease
 	git checkout go.sum
 	@GO111MODULE=on VERSION=$(VERSION) make publish
@@ -236,8 +262,8 @@ dist: download-licenses
 .PHONY: publish
 ## Note: gorelease target publishes unsigned binaries to the binaries folder in the bucket, we have to overwrite them here after signing
 publish: sign dist
-	@for binary in ccloud confluent; do \
-		source $$GOPATH/src/github.com/confluentinc/cc-dotfiles/caas.sh && caasenv prod && \
+	@$(caasenv-authenticate); \
+	for binary in ccloud confluent; do \
 		aws s3 cp dist/$${binary}/darwin_amd64/$${binary} s3://confluent.cloud/$${binary}-cli/binaries/$(VERSION:v%=%)/$${binary}_$(VERSION:v%=%)_darwin_amd64 --acl public-read ; \
 		aws s3 cp dist/$${binary}/ s3://confluent.cloud/$${binary}-cli/archives/$(VERSION:v%=%)/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --include "*_checksums.txt" --exclude "*_latest_*" --acl public-read ; \
 		aws s3 cp dist/$${binary}/ s3://confluent.cloud/$${binary}-cli/archives/latest/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --include "*_checksums.txt" --exclude "*_$(VERSION)_*" --acl public-read ; \
@@ -246,7 +272,7 @@ publish: sign dist
 .PHONY: publish-installers
 ## Publish install scripts to S3. You MUST re-run this if/when you update any install script.
 publish-installers:
-	source $$GOPATH/src/github.com/confluentinc/cc-dotfiles/caas.sh && caasenv prod && \
+	$(caasenv-authenticate) && \
 	aws s3 cp install-ccloud.sh s3://confluent.cloud/ccloud-cli/install.sh --acl public-read && \
 	aws s3 cp install-confluent.sh s3://confluent.cloud/confluent-cli/install.sh --acl public-read
 

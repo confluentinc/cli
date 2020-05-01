@@ -30,11 +30,11 @@ var (
 
 	properNouns = []string{
 		"Apache", "Kafka", "CLI", "API", "ACL", "ACLs", "Confluent Cloud", "Confluent Platform", "Confluent", "RBAC", "IAM", "Schema Registry",
-		"Enterprise", "KSQL", "Connect",
+		"Enterprise", "KSQL", "Connect", "cku",
 	}
 	vocabWords = []string{
-		"ccloud", "kafka", "api", "url", "config", "configs", "csu", "multizone", "transactional", "ksql", "KSQL", "stdin",
-		"connect", "connect-catalog", "JSON", "plaintext", "json", "YAML", "yaml", "SSO", "netrc",
+		"ccloud", "kafka", "api", "url", "config", "configs", "csu", "transactional", "ksql", "KSQL", "stdin",
+		"connect", "connect-catalog", "JSON", "plaintext", "json", "YAML", "yaml", "SSO", "netrc", "single-zone", "multi-zone",
 		// security
 		"iam", "acl", "acls", "ACL", "rolebinding", "rolebindings", "PEM", "auth", "init", "decrypt", "READWRITE",
 		"txt", // this is because @file.txt -> file txt
@@ -42,6 +42,8 @@ var (
 		"aws", "gcp",
 		// geos
 		"geo", "us", "eu", "apac",
+		// dedicated clusters
+		"cku",
 	}
 	utilityCommands = []string{
 		"login", "logout", "version", "completion <shell>", "prompt", "update", "init <context-name>",

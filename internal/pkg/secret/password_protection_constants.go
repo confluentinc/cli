@@ -43,7 +43,7 @@ const (
 
 	ENC_PATTERN = "ENC\\[(.*?)\\,"
 
-	PASSWORD_PATTERN = "\\$\\{(.*?):((.*?):)?(.*?)\\}"
+	PASSWORD_PATTERN = "^\\$\\{(.*?):((.*?):)?(.*?)\\}$"
 
 	CIPHER_PATTERN = "ENC\\[(.*?)\\]"
 )

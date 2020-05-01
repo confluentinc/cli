@@ -7,20 +7,20 @@ package mock
 import (
 	sync "sync"
 
+	github_com_confluentinc_cc_structs_kafka_org_v1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	github_com_confluentinc_ccloud_sdk_go "github.com/confluentinc/ccloud-sdk-go"
-	github_com_confluentinc_ccloudapis_org_v1 "github.com/confluentinc/ccloudapis/org/v1"
 )
 
 // MockCCloudTokenHandler is a mock of CCloudTokenHandler interface
 type MockCCloudTokenHandler struct {
 	lockGetUserSSO sync.Mutex
-	GetUserSSOFunc func(client *github_com_confluentinc_ccloud_sdk_go.Client, email string) (*github_com_confluentinc_ccloudapis_org_v1.User, error)
+	GetUserSSOFunc func(client *github_com_confluentinc_ccloud_sdk_go.Client, email string) (*github_com_confluentinc_cc_structs_kafka_org_v1.User, error)
 
 	lockGetCredentialsToken sync.Mutex
 	GetCredentialsTokenFunc func(client *github_com_confluentinc_ccloud_sdk_go.Client, email, password string) (string, error)
 
 	lockGetSSOToken sync.Mutex
-	GetSSOTokenFunc func(client *github_com_confluentinc_ccloud_sdk_go.Client, url string, noBrowser bool, userSSO *github_com_confluentinc_ccloudapis_org_v1.User) (string, string, error)
+	GetSSOTokenFunc func(client *github_com_confluentinc_ccloud_sdk_go.Client, url string, noBrowser bool, userSSO *github_com_confluentinc_cc_structs_kafka_org_v1.User) (string, string, error)
 
 	lockRefreshSSOToken sync.Mutex
 	RefreshSSOTokenFunc func(client *github_com_confluentinc_ccloud_sdk_go.Client, refreshToken, url string) (string, error)
@@ -39,7 +39,7 @@ type MockCCloudTokenHandler struct {
 			Client    *github_com_confluentinc_ccloud_sdk_go.Client
 			Url       string
 			NoBrowser bool
-			UserSSO   *github_com_confluentinc_ccloudapis_org_v1.User
+			UserSSO   *github_com_confluentinc_cc_structs_kafka_org_v1.User
 		}
 		RefreshSSOToken []struct {
 			Client       *github_com_confluentinc_ccloud_sdk_go.Client
@@ -50,7 +50,7 @@ type MockCCloudTokenHandler struct {
 }
 
 // GetUserSSO mocks base method by wrapping the associated func.
-func (m *MockCCloudTokenHandler) GetUserSSO(client *github_com_confluentinc_ccloud_sdk_go.Client, email string) (*github_com_confluentinc_ccloudapis_org_v1.User, error) {
+func (m *MockCCloudTokenHandler) GetUserSSO(client *github_com_confluentinc_ccloud_sdk_go.Client, email string) (*github_com_confluentinc_cc_structs_kafka_org_v1.User, error) {
 	m.lockGetUserSSO.Lock()
 	defer m.lockGetUserSSO.Unlock()
 
@@ -135,7 +135,7 @@ func (m *MockCCloudTokenHandler) GetCredentialsTokenCalls() []struct {
 }
 
 // GetSSOToken mocks base method by wrapping the associated func.
-func (m *MockCCloudTokenHandler) GetSSOToken(client *github_com_confluentinc_ccloud_sdk_go.Client, url string, noBrowser bool, userSSO *github_com_confluentinc_ccloudapis_org_v1.User) (string, string, error) {
+func (m *MockCCloudTokenHandler) GetSSOToken(client *github_com_confluentinc_ccloud_sdk_go.Client, url string, noBrowser bool, userSSO *github_com_confluentinc_cc_structs_kafka_org_v1.User) (string, string, error) {
 	m.lockGetSSOToken.Lock()
 	defer m.lockGetSSOToken.Unlock()
 
@@ -147,7 +147,7 @@ func (m *MockCCloudTokenHandler) GetSSOToken(client *github_com_confluentinc_ccl
 		Client    *github_com_confluentinc_ccloud_sdk_go.Client
 		Url       string
 		NoBrowser bool
-		UserSSO   *github_com_confluentinc_ccloudapis_org_v1.User
+		UserSSO   *github_com_confluentinc_cc_structs_kafka_org_v1.User
 	}{
 		Client:    client,
 		Url:       url,
@@ -173,7 +173,7 @@ func (m *MockCCloudTokenHandler) GetSSOTokenCalls() []struct {
 	Client    *github_com_confluentinc_ccloud_sdk_go.Client
 	Url       string
 	NoBrowser bool
-	UserSSO   *github_com_confluentinc_ccloudapis_org_v1.User
+	UserSSO   *github_com_confluentinc_cc_structs_kafka_org_v1.User
 } {
 	m.lockGetSSOToken.Lock()
 	defer m.lockGetSSOToken.Unlock()

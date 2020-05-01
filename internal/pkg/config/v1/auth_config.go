@@ -1,6 +1,6 @@
 package v1
 
-import orgv1 "github.com/confluentinc/ccloudapis/org/v1"
+import orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 
 // AuthConfig represents an authenticated user.
 type AuthConfig struct {
