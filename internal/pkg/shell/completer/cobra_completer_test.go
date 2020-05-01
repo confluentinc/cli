@@ -8,6 +8,7 @@ import (
 
 	"github.com/c-bata/go-prompt"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/stretchr/testify/require"
 )
 
@@ -25,12 +26,12 @@ func TestCobraCompleter_Complete(t *testing.T) {
 		want   []prompt.Suggest
 	}{
 		{
-			name: "suggest no commands if documents matches nothing",
+			name: "suggest no commands if document matches nothing",
 			fields: fields{
 				RootCmd: createNestedCommands(1, 1),
 			},
 			args: args{
-				d: *createDocument("this command doesn't even exist"),
+				d: *createDocument("this command doesn't even exist "),
 			},
 			want: []prompt.Suggest{},
 		},
@@ -185,19 +186,20 @@ func TestCobraCompleter_Complete(t *testing.T) {
 				RootCmd: createNestedCommands(2, 2),
 			},
 			args: args{
-				d: *createDocument("2 "),
+				d: *createDocument("1 "),
 			},
 			want: []prompt.Suggest{
 				{
-					Text:        "1",
-					Description: "1",
+					Text:        "2",
+					Description: "2",
 				},
 				{
-					Text:        "11",
-					Description: "11",
+					Text:        "22",
+					Description: "22",
 				},
 			},
 		},
+		// TODO: Add test case for args.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -253,5 +255,27 @@ func addNestedCommands(rootCmd *cobra.Command, maxLevel int, levels int, cmdsPer
 		}
 		addNestedCommands(subCmd, maxLevel, levels-1, cmdsPerLevel)
 		rootCmd.AddCommand(subCmd)
+	}
+}
+
+func TestArgs(t *testing.T) {
+	tests := []struct{
+		args []string
+		wantArgs int
+		wantFlags int
+	}{
+		{
+			args: []string{"hi", "there"},
+		},
+		{
+			args: []string{"hi", "--there", "sir"},
+			
+		},
+	}
+	for _, tt := range tests {
+		t.Run("hi", func(t *testing.T) {
+			require.Equal(t, tt.wantArgs, pflag.NArg())
+			require.Equal(t, tt.wantFlags, pflag.NFlag())
+		})
 	}
 }
