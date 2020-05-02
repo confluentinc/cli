@@ -32,13 +32,12 @@ var (
 	newFeaturesSectionTitle = "New Features"
 	bugFixesSectionTitle = "Bug Fixes"
 
-	//releaseNotesMsgFile = path.Join(".", "internal", "pkg", "update" , "update_msg.go")
-
+	noChangeContentFormat = "No change relating to %s CLI for this version."
 
 	releaseNotesContentFormat = `
-=============================================================
+========================================
 %s CLI %s Release Notes
-=============================================================
+========================================
 
 %s
 `

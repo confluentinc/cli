@@ -335,7 +335,7 @@ define print-release-notes-prep-next-steps
 	@echo "NEXT STEPS"
 	@echo "===================="
 	@echo
-	@echo "- Open 'cli/release-notes/prep' and fill in the content following the instructions."
+	@echo "- Open './release-notes/prep' and fill in the content following the instructions."
 	@echo
 	@echo "- Once finished, run 'make publish-release-notes'."
 	@echo

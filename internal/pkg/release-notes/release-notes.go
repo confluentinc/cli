@@ -80,6 +80,9 @@ func getReleaseNotesContent(cliName string) (string, error) {
 	if bugFixesString != "" {
 		sectionString += bugFixesString
 	}
+	if sectionString == "" {
+		sectionString = fmt.Sprintf(noChangeContentFormat, strings.ToUpper(cliName))
+	}
 	return sectionString, nil
 }
 
