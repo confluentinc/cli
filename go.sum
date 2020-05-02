@@ -120,6 +120,7 @@ github.com/confluentinc/cc-structs/operator v0.419.0 h1:qX2PwktPTUUVoO4r/hkkwYmg
 github.com/confluentinc/cc-structs/operator v0.419.0/go.mod h1:h80UL1NR+Q9Ey/umropf7dg7/RvW2zqXhRvqvAJVgv4=
 github.com/confluentinc/cc-utils-public v0.1.0 h1:0EkUM94lvOLoYQIoaglfCldLCjJTNDiITYoGqUZrpS4=
 github.com/confluentinc/cc-utils-public v0.1.0/go.mod h1:9GIApQ66kQGr+ROZvop7GFyxpXyzwIi83ZedYrHLQUU=
+github.com/confluentinc/ccloud-sdk-go v0.0.23/go.mod h1:M7y3t26P7O+pf27PEP4RsK+T5VNMpMKO2FC6ZiGzLds=
 github.com/confluentinc/ccloud-sdk-go v0.0.24 h1:4xL8lcUbbBZhDiJISrSb0zN/GIB/djpeNT8tV5VKi3c=
 github.com/confluentinc/ccloud-sdk-go v0.0.24/go.mod h1:M7y3t26P7O+pf27PEP4RsK+T5VNMpMKO2FC6ZiGzLds=
 github.com/confluentinc/go-editor v0.4.0 h1:5hMjKsKmIOmlu3Yyz8zDq66Qpdin8HSmRaMhqhxRf5Y=
