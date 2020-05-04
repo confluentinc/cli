@@ -2,6 +2,7 @@ package cmd_test
 
 import (
 	"github.com/confluentinc/cli/internal/pkg/auth"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"os"
 	"reflect"
 	"strings"
@@ -336,6 +337,66 @@ func Test_UpdateToken(t *testing.T) {
 				require.True(t, updateTokenHandler.UpdateCCloudAuthTokenUsingNetrcCredentialsCalled())
 			} else {
 				require.True(t, updateTokenHandler.UpdateConfluentAuthTokenUsingNetrcCredentialsCalled())
+			}
+		})
+	}
+}
+
+// Test that when context is of username login type it should check auth token and login state
+// And when context is of API key credential then it should not ask for user to login
+func TestPreRun_HasAPIKeyCommand(t *testing.T) {
+	userNameCfgCorruptedAuthToken := v3.AuthenticatedCloudConfigMock()
+	userNameCfgCorruptedAuthToken.Context().State.AuthToken = "corrupted.auth.token"
+
+	tests := []struct {
+		name      string
+		config 	  *v3.Config
+		errMsg    string
+	}{
+		{
+			name:   "username context corrupted auth token",
+			config: userNameCfgCorruptedAuthToken,
+			errMsg: errors.CorruptedAuthTkenErrorMsg,
+		},
+		{
+			name:   "api credential context",
+			config: v3.APICredentialConfigMock(),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ver := pmock.NewVersionMock()
+			analyticsClient := cliMock.NewDummyAnalyticsMock()
+
+			r := &pcmd.PreRun{
+				Version: ver,
+				Logger:  log.New(),
+				UpdateClient: &mock.Client{
+					CheckForUpdatesFunc: func(n, v string, f bool) (bool, string, error) {
+						return false, "", nil
+					},
+				},
+				FlagResolver: &pcmd.FlagResolverImpl{
+					Prompt: &pcmd.RealPrompt{},
+					Out:    os.Stdout,
+				},
+				Analytics:          analyticsClient,
+				Clock:              clockwork.NewRealClock(),
+				UpdateTokenHandler: auth.NewUpdateTokenHandler(auth.NewNetrcHandler("")),
+			}
+
+			root := &cobra.Command{
+				Run: func(cmd *cobra.Command, args []string) {},
+			}
+			rootCmd := pcmd.NewHasAPIKeyCLICommand(root, tt.config, r)
+			root.Flags().CountP("verbose", "v", "Increase verbosity")
+
+			_, err := pcmd.ExecuteCommand(rootCmd.Command)
+			if tt.errMsg != "" {
+				require.Error(t, err)
+				require.Equal(t, tt.errMsg, err.Error())
+			} else {
+				require.NoError(t, err)
 			}
 		})
 	}

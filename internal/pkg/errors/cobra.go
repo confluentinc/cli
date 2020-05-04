@@ -11,8 +11,8 @@ import (
 )
 
 var messages = map[error]string{
-	ErrNoContext:      "You must log in to run that command.",
-	ErrNotLoggedIn:    "You must log in to run that command.",
+	ErrNoContext:      UserNotLoggedInErrMsg,
+	ErrNotLoggedIn:    UserNotLoggedInErrMsg,
 	ErrNotImplemented: "Sorry, this functionality is not yet available in the CLI.",
 	ErrNoKafkaContext: "You must pass --cluster or set an active kafka in your context with 'kafka cluster use'",
 	ErrNoKSQL:         "Could not find KSQL cluster with Resource ID specified.",
@@ -50,7 +50,7 @@ func HandleCommon(err error, cmd *cobra.Command) error {
 	case *ccloud.InvalidLoginError:
 		return fmt.Errorf("You have entered an incorrect username or password. Please try again.")
 	case *ccloud.InvalidTokenError:
-		return fmt.Errorf("Your auth token has been corrupted. Please login again.")
+		return fmt.Errorf(CorruptedAuthTkenErrorMsg)
 	}
 	return err
 }

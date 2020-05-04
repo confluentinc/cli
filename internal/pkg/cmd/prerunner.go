@@ -230,11 +230,13 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 		var clusterId string
 		if command.Context.Credential.CredentialType == v2.APIKey {
 			clusterId = r.getClusterIdForAPIKeyCredential(ctx)
-		} else {
+		} else if command.Context.Credential.CredentialType == v2.Username {
 			clusterId, err = r.getClusterIdForAuthenticatedUser(command, ctx, cmd)
 			if err != nil {
 				return err
 			}
+		} else {
+			panic("Invalid Credential Type")
 		}
 		hasAPIKey, err := ctx.HasAPIKey(cmd, clusterId)
 		if err != nil {
@@ -250,11 +252,15 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 
 // if context is authenticated, client is created and used to for DynamicContext.FindKafkaCluster for finding active cluster
 func (r *PreRun) getClusterIdForAuthenticatedUser(command *HasAPIKeyCLICommand, ctx *DynamicContext, cmd *cobra.Command, ) (string, error) {
+	err := r.validateToken(cmd, ctx)
+	if err != nil {
+		return "", err
+	}
 	client, err := r.createCCloudClient(ctx, cmd, command.Version)
-	ctx.client = client
-	if err != nil && err != errors.ErrNotLoggedIn {
+	if err != nil {
 		return "", errors.HandleCommon(err, cmd)
 	}
+	ctx.client = client
 	// Get active kafka cluster
 	cluster, err := KafkaCluster(cmd, ctx)
 	if err != nil {
