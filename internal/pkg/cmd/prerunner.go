@@ -227,28 +227,45 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 			return errors.HandleCommon(errors.ErrNoContext, cmd)
 		}
 		command.Context = ctx
-		if r.CLIName == "ccloud" {
-			// if context is authenticated, client is created and used to for DynamicContext.FindKafkaCluster for finding active cluster
-			ctx.client, err = r.createCCloudClient(ctx, cmd, command.Version)
-			if err != nil && err != errors.ErrNotLoggedIn {
-				return errors.HandleCommon(err, cmd)
+		var clusterId string
+		if command.Context.Credential.CredentialType == v2.APIKey {
+			clusterId = r.getClusterIdForAPIKeyCredential(ctx)
+		} else {
+			clusterId, err = r.getClusterIdForAuthenticatedUser(command, ctx, cmd)
+			if err != nil {
+				return err
 			}
 		}
-		// Get active kafka cluster
-		cluster, err := KafkaCluster(cmd, ctx)
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-		hasAPIKey, err := ctx.HasAPIKey(cmd, cluster.Id)
+		hasAPIKey, err := ctx.HasAPIKey(cmd, clusterId)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
 		if !hasAPIKey {
-			err = &errors.UnspecifiedAPIKeyError{ClusterID: cluster.Id}
+			err = &errors.UnspecifiedAPIKeyError{ClusterID: clusterId}
 			return errors.HandleCommon(err, cmd)
 		}
 		return nil
 	}
+}
+
+// if context is authenticated, client is created and used to for DynamicContext.FindKafkaCluster for finding active cluster
+func (r *PreRun) getClusterIdForAuthenticatedUser(command *HasAPIKeyCLICommand, ctx *DynamicContext, cmd *cobra.Command, ) (string, error) {
+	client, err := r.createCCloudClient(ctx, cmd, command.Version)
+	ctx.client = client
+	if err != nil && err != errors.ErrNotLoggedIn {
+		return "", errors.HandleCommon(err, cmd)
+	}
+	// Get active kafka cluster
+	cluster, err := KafkaCluster(cmd, ctx)
+	if err != nil {
+		return "", errors.HandleCommon(err, cmd)
+	}
+	return cluster.Id, nil
+}
+
+// if API key credential then the context is initialized to be used for only one cluster, and cluster id can be obtained directly from the context config
+func (r *PreRun) getClusterIdForAPIKeyCredential(ctx *DynamicContext) string {
+	return ctx.KafkaClusterContext.GetActiveKafkaClusterId()
 }
 
 // notifyIfUpdateAvailable prints a message if an update is available
