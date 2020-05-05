@@ -101,31 +101,3 @@ func Errorf(fmt string, args ...interface{}) error {
 func Cause(err error) error {
 	return errors.Cause(err)
 }
-
-type Handler struct {
-	err error
-}
-
-func (h *Handler) HandleString(s string, e error) string {
-	if h.err != nil {
-		return ""
-	}
-	h.err = e
-	if h.err != nil {
-		return ""
-	}
-	return s
-}
-
-func (h *Handler) Handle(err error) {
-	if h.err != nil {
-		return
-	}
-	h.err = err
-}
-
-func (h *Handler) Reset() error {
-	err := h.err
-	h.err = nil
-	return err
-}
