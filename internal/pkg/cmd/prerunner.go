@@ -231,6 +231,10 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 		if command.Context.Credential.CredentialType == v2.APIKey {
 			clusterId = r.getClusterIdForAPIKeyCredential(ctx)
 		} else if command.Context.Credential.CredentialType == v2.Username {
+			err := r.checkUserAuthentication(ctx, cmd)
+			if err != nil {
+				return err
+			}
 			clusterId, err = r.getClusterIdForAuthenticatedUser(command, ctx, cmd)
 			if err != nil {
 				return err
@@ -250,12 +254,22 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 	}
 }
 
+// Check if user is logged in with valid auth token, for commands that are not of AuthenticatedCLICommand type which already
+// does that check automatically in the prerun
+func (r *PreRun) checkUserAuthentication(ctx *DynamicContext, cmd *cobra.Command) error {
+	_, err := ctx.AuthenticatedState(cmd)
+	if err != nil {
+		return err
+	}
+	err = r.validateToken(cmd, ctx)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // if context is authenticated, client is created and used to for DynamicContext.FindKafkaCluster for finding active cluster
 func (r *PreRun) getClusterIdForAuthenticatedUser(command *HasAPIKeyCLICommand, ctx *DynamicContext, cmd *cobra.Command, ) (string, error) {
-	err := r.validateToken(cmd, ctx)
-	if err != nil {
-		return "", err
-	}
 	client, err := r.createCCloudClient(ctx, cmd, command.Version)
 	if err != nil {
 		return "", errors.HandleCommon(err, cmd)

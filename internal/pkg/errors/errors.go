@@ -21,7 +21,7 @@ import (
 
 var (
 	ErrNotImplemented  = fmt.Errorf("not implemented")
-	ErrNotLoggedIn     = fmt.Errorf("not logged in")
+	ErrNotLoggedIn     = fmt.Errorf(NotLoggedInInternalErrorMsg)
 	ErrNoContext       = fmt.Errorf("context not set")
 	ErrNoKafkaContext  = fmt.Errorf("kafka not set")
 	ErrNoSrEnabled     = fmt.Errorf("schema registry not enabled")

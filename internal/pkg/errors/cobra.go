@@ -50,7 +50,7 @@ func HandleCommon(err error, cmd *cobra.Command) error {
 	case *ccloud.InvalidLoginError:
 		return fmt.Errorf("You have entered an incorrect username or password. Please try again.")
 	case *ccloud.InvalidTokenError:
-		return fmt.Errorf(CorruptedAuthTkenErrorMsg)
+		return fmt.Errorf(CorruptedAuthTokenErrorMsg)
 	}
 	return err
 }
