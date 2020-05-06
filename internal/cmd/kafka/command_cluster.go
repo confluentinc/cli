@@ -293,7 +293,6 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	// go-printer has trouble marshaling schedv1.KafkaCluster struct, creating another struct to fix for now
 	return output.DescribeObject(cmd, convertClusterToDescribeStruct(cluster), describeFields, describeHumanRenames, describeStructuredRenames)
 }
 
