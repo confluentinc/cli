@@ -335,7 +335,14 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 func (c *command) store(cmd *cobra.Command, args []string) error {
 	c.setKeyStoreIfNil()
 
-	cluster, err := c.Context.ActiveKafkaCluster(cmd)
+	resourceType, clusterId, _, err := c.resolveResourceId(cmd, c.Config.Resolver, c.Client)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	if resourceType != pcmd.KafkaResourceType {
+		return errors.HandleCommon(errors.Errorf(errors.APIKeyCommandResourceTypeNotImplementedErrorMsg), cmd)
+	}
+	cluster, err := c.Context.FindKafkaCluster(cmd, clusterId)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -389,12 +396,18 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 func (c *command) use(cmd *cobra.Command, args []string) error {
 	c.setKeyStoreIfNil()
 	apiKey := args[0]
-	cluster, err := pcmd.KafkaCluster(cmd, c.Context)
+	resourceType, clusterId, _, err := c.resolveResourceId(cmd, c.Config.Resolver, c.Client)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-
-	err = c.Context.UseAPIKey(cmd, apiKey, cluster.Id)
+	if resourceType != pcmd.KafkaResourceType {
+		return errors.HandleCommon(errors.Errorf(errors.APIKeyCommandResourceTypeNotImplementedErrorMsg), cmd)
+	}
+	cluster, err := c.Context.FindKafkaCluster(cmd, clusterId)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	err = c.Context.UseAPIKey(cmd, apiKey, cluster.ID)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}

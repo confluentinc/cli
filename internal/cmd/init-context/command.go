@@ -78,17 +78,22 @@ func (c *command) initContext(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	eh := new(errors.Handler)
 	if !kafkaAuth {
 		return errors.HandleCommon(errors.New("only kafka-auth is currently supported"), cmd)
 	}
-	bootstrapURL := eh.HandleString(c.parseStringFlag("bootstrap", "Bootstrap URL: ", false,
-		"Bootstrap URL"))
-	apiKey := eh.HandleString(c.parseStringFlag("api-key", "API Key: ", false,
-		"API key"))
-	apiSecret := eh.HandleString(c.parseStringFlag("api-secret", "API Secret: ", true,
-		"API secret"))
-	if err := eh.Reset(); err != nil {
+	bootstrapURL, err := c.parseStringFlag("bootstrap", "Bootstrap URL: ", false,
+		"Bootstrap URL")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	apiKey, err := c.parseStringFlag("api-key", "API Key: ", false,
+		"API key")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	apiSecret, err := c.parseStringFlag("api-secret", "API Secret: ", true,
+		"API secret")
+	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 	err = c.addContext(contextName, bootstrapURL, apiKey, apiSecret)

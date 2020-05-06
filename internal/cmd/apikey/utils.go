@@ -39,7 +39,7 @@ func (c *command) resolveResourceId(cmd *cobra.Command, resolver pcmd.FlagResolv
 		return resourceType, "", "", nil
 	} else {
 		// Resource is of KafkaResourceType.
-		cluster, err := c.Context.ActiveKafkaCluster(cmd)
+		cluster, err := c.Context.FindKafkaCluster(cmd, resourceId)
 		if err != nil {
 			return "", "", "", err
 		}

@@ -113,7 +113,7 @@ func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
-	kafkaCluster, err := pcmd.KafkaCluster(cmd, c.Context)
+	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(cmd)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -125,7 +125,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		AccountId:      c.EnvironmentId(),
 		Name:           args[0],
 		TotalNumCsu:    uint32(csus),
-		KafkaClusterId: kafkaCluster.Id,
+		KafkaClusterId: kafkaCluster.ID,
 	}
 	cluster, err := c.Client.KSQL.Create(context.Background(), cfg)
 	if err != nil {
