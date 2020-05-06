@@ -1,0 +1,11 @@
+Error: required flag(s) "resource" not set
+Usage:
+  ccloud api-key use <apikey> [flags]
+
+Flags:
+      --resource string   REQUIRED: The resource ID.
+  -h, --help              help for use
+
+Global Flags:
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+

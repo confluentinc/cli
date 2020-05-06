@@ -78,11 +78,11 @@ List connectors in the current or specified Kafka cluster context.
 }
 
 func (c *command) list(cmd *cobra.Command, args []string) error {
-	kafkaCluster, err := pcmd.KafkaCluster(cmd, c.Context)
+	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(cmd)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	connectorInfo, err := c.Client.Connect.GetPlugins(context.Background(), &schedv1.Connector{AccountId: c.EnvironmentId(), KafkaClusterId: kafkaCluster.Id}, "")
+	connectorInfo, err := c.Client.Connect.GetPlugins(context.Background(), &schedv1.Connector{AccountId: c.EnvironmentId(), KafkaClusterId: kafkaCluster.ID}, "")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -101,7 +101,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) describe(cmd *cobra.Command, args []string) error {
-	kafkaCluster, err := pcmd.KafkaCluster(cmd, c.Context)
+	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(cmd)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -114,7 +114,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		&schedv1.ConnectorConfig{
 			UserConfigs:    config,
 			AccountId:      c.EnvironmentId(),
-			KafkaClusterId: kafkaCluster.Id,
+			KafkaClusterId: kafkaCluster.ID,
 			Plugin:         args[0]})
 	if reply != nil && err != nil {
 		outputFormat, flagErr := cmd.Flags().GetString(output.FlagName)

@@ -235,16 +235,16 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 			}
 		}
 		// Get active kafka cluster
-		cluster, err := KafkaCluster(cmd, ctx)
+		cluster, err := ctx.GetKafkaClusterForCommand(cmd)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
-		hasAPIKey, err := ctx.HasAPIKey(cmd, cluster.Id)
+		hasAPIKey, err := ctx.HasAPIKey(cmd, cluster.ID)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
 		if !hasAPIKey {
-			err = &errors.UnspecifiedAPIKeyError{ClusterID: cluster.Id}
+			err = &errors.UnspecifiedAPIKeyError{ClusterID: cluster.ID}
 			return errors.HandleCommon(err, cmd)
 		}
 		return nil

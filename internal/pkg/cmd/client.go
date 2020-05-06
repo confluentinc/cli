@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -30,10 +29,7 @@ func (c *contextClient) FetchCluster(cmd *cobra.Command, clusterId string) (*sch
 	req := &schedv1.KafkaCluster{AccountId: envId, Id: clusterId}
 	kc, err := c.context.client.Kafka.Describe(context.Background(), req)
 	if err != nil {
-		if err != ccloud.ErrNotFound {
-			return nil, err
-		}
-		return nil, errors.ErrNoKafkaContext
+		return nil, err
 	}
 	return kc, nil
 }

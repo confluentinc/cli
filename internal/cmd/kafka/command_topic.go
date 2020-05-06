@@ -323,7 +323,7 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 
 func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error {
 	topic := args[0]
-	cluster, err := h.Context.ActiveKafkaCluster(cmd)
+	cluster, err := h.Context.GetKafkaClusterForCommand(cmd)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -405,7 +405,7 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	cluster, err := h.Context.ActiveKafkaCluster(cmd)
+	cluster, err := h.Context.GetKafkaClusterForCommand(cmd)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
