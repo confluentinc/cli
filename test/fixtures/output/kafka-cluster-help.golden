@@ -8,6 +8,7 @@ Available Commands:
   delete      Delete a Kafka cluster.
   describe    Describe a Kafka cluster.
   list        List Kafka clusters.
+  update      Update a Kafka cluster.
   use         Make the Kafka cluster active for use in other commands.
 
 Flags:

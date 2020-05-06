@@ -9,7 +9,6 @@ import (
 
 	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/go-printer"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -23,7 +22,7 @@ var (
 	listFields           = []string{"Id", "Name", "ServiceProvider", "Region", "Durability", "Status"}
 	listHumanLabels      = []string{"Id", "Name", "Provider", "Region", "Availability", "Status"}
 	listStructuredLabels = []string{"id", "name", "provider", "region", "durability", "status"}
-	describeFields       = []string{"Id", "Name", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "ApiEndpoint", "EncryptionKeyId"}
+	describeFields       = []string{"Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "ApiEndpoint", "EncryptionKeyId"}
 	describeHumanRenames = map[string]string{
 		"NetworkIngress":  "Ingress",
 		"NetworkEgress":   "Egress",
@@ -32,6 +31,7 @@ var (
 	describeStructuredRenames = map[string]string{
 		"Id":              "id",
 		"Name":            "name",
+		"Type":            "type",
 		"NetworkIngress":  "ingress",
 		"NetworkEgress":   "egress",
 		"Storage":         "storage",
@@ -54,6 +54,21 @@ const (
 type clusterCommand struct {
 	*pcmd.AuthenticatedCLICommand
 	prerunner pcmd.PreRunner
+}
+
+type describeStruct struct {
+	Id              string
+	Name            string
+	Type            string
+	NetworkIngress  int32
+	NetworkEgress   int32
+	Storage         int32
+	ServiceProvider string
+	Region          string
+	Status          string
+	Endpoint        string
+	ApiEndpoint     string
+	EncryptionKeyId string
 }
 
 // NewClusterCommand returns the Cobra command for Kafka cluster.
@@ -98,6 +113,7 @@ func (c *clusterCommand) init() {
 	createCmd.Flags().String("type", skuBasic, fmt.Sprintf("Type of the Kafka cluster. Allowed values: %s, %s, %s.", skuBasic, skuStandard, skuDedicated))
 	createCmd.Flags().Int("cku", 0, "Number of Confluent Kafka Units (non-negative). Required for Kafka clusters of type 'dedicated'.")
 	createCmd.Flags().String("encryption-key", "", "Encryption Key ID (e.g. for Amazon Web Services, the Amazon Resource Name of the key).")
+	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
@@ -119,6 +135,8 @@ func (c *clusterCommand) init() {
 	}
 	updateCmd.Flags().String("name", "", "Name of the Kafka cluster.")
 	updateCmd.Flags().Int("cku", 0, "Number of Confluent Kafka Units (non-negative). For Kafka clusters of type 'dedicated' only.")
+	updateCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
 
 	deleteCmd := &cobra.Command{
@@ -246,26 +264,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		// TODO: don't swallow validation errors (reportedly separately)
 		return errors.HandleCommon(err, cmd)
 	}
-	return printer.RenderTableOut(cluster, describeFields, describeHumanRenames, os.Stdout)
-}
-
-func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
-	name, err := cmd.Flags().GetString("name")
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	cku, err := cmd.Flags().GetInt("cku")
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	if name == "" && cku <= 0 {
-		return errors.HandleCommon(errors.New("Must either specify --name with non-empty value or --cku (for dedicated clusters) with non-negative value when updating a cluster."), cmd)
-	}
-
-	cluster := &schedv1.KafkaCluster {
-		AccountId:	c.EnvironmentId(),
-
-	}
+	return output.DescribeObject(cmd, convertClusterToDescribeStruct(cluster), describeFields, describeHumanRenames, describeStructuredRenames)
 }
 
 func stringToAvailability(s string) (schedv1.Durability, error) {
@@ -295,37 +294,45 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	// go-printer has trouble marshaling schedv1.KafkaCluster struct, creating another struct to fix for now
-	type describeStruct struct {
-		Id              string
-		Name            string
-		NetworkIngress  int32
-		NetworkEgress   int32
-		Storage         int32
-		ServiceProvider string
-		Region          string
-		Status          string
-		Endpoint        string
-		ApiEndpoint     string
-		EncryptionKeyId string
-	}
-	describeObject := &describeStruct{
-		Id:              cluster.Id,
-		Name:            cluster.Name,
-		NetworkIngress:  cluster.NetworkIngress,
-		NetworkEgress:   cluster.NetworkEgress,
-		Storage:         cluster.Storage,
-		ServiceProvider: cluster.ServiceProvider,
-		Region:          cluster.Region,
-		Status:          cluster.Status.String(),
-		Endpoint:        cluster.Endpoint,
-		ApiEndpoint:     cluster.ApiEndpoint,
-		EncryptionKeyId: cluster.EncryptionKeyId,
-	}
-	return output.DescribeObject(cmd, describeObject, describeFields, describeHumanRenames, describeStructuredRenames)
+	return output.DescribeObject(cmd, convertClusterToDescribeStruct(cluster), describeFields, describeHumanRenames, describeStructuredRenames)
 }
 
 func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
-	return errors.ErrNotImplemented
+	if !cmd.Flags().Changed("name") && !cmd.Flags().Changed("cku") {
+		return errors.HandleCommon(errors.New("Must either specify --name with non-empty value or --cku (for dedicated clusters) with positive integer when updating a cluster."), cmd)
+	}
+	name, err := cmd.Flags().GetString("name")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	cku, err := cmd.Flags().GetInt("cku")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	req := &schedv1.KafkaCluster {
+		AccountId:	c.EnvironmentId(),
+		Id: args[0],
+	}
+	if name != "" {
+		req.Name = name
+	} else {
+		// scheduler validator will complain if we pass an empty name
+		// so get the existing one
+		cluster, err := c.Client.Kafka.Describe(context.Background(), req)
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+		req.Name = cluster.Name
+	}
+	if cku > 0 {
+		req.Cku = int32(cku)
+	}
+	cluster, err := c.Client.Kafka.Update(context.Background(), req)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	return output.DescribeObject(cmd, convertClusterToDescribeStruct(cluster), describeFields, describeHumanRenames, describeStructuredRenames)
 }
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
@@ -383,4 +390,21 @@ func getAccountsForCloud(cloudId string, clouds []*schedv1.CloudMetadata) []stri
 		}
 	}
 	return accounts
+}
+
+func convertClusterToDescribeStruct(cluster *schedv1.KafkaCluster) *describeStruct {
+	return &describeStruct{
+		Id:              cluster.Id,
+		Name:            cluster.Name,
+		Type:            cluster.Deployment.Sku.String(), // this is different from cluster.Type, which would be 'kafka'
+		NetworkIngress:  cluster.NetworkIngress,
+		NetworkEgress:   cluster.NetworkEgress,
+		Storage:         cluster.Storage,
+		ServiceProvider: cluster.ServiceProvider,
+		Region:          cluster.Region,
+		Status:          cluster.Status.String(),
+		Endpoint:        cluster.Endpoint,
+		ApiEndpoint:     cluster.ApiEndpoint,
+		EncryptionKeyId: cluster.EncryptionKeyId,
+	}
 }

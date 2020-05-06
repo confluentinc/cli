@@ -1,10 +1,10 @@
 +-------------------+---------------------------+
-| Id                | lkc-describe              |
-| Name              | kafka-cluster             |
-| Type              | BASIC                     |
+| Id                | lkc-update-dedicated      |
+| Name              | lkc-update-dedicated-name |
+| Type              | DEDICATED                 |
 | Ingress           |                       100 |
-| Egress            |                       100 |
-| Storage           |                       500 |
+| Egress            |                       300 |
+| Storage           |                     60000 |
 | Provider          | aws                       |
 | Region            | us-west-2                 |
 | Status            | PROVISIONING              |

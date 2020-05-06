@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -584,6 +585,8 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 	router.HandleFunc("/api/accounts/a-595", handleEnvironmentGet(t, "a-595"))
 	router.HandleFunc("/api/accounts/not-595", handleEnvironmentGet(t, "not-595"))
 	router.HandleFunc("/api/clusters/lkc-describe", handleKafkaClusterDescribeTest(t, kafkaAPIURL))
+	router.HandleFunc("/api/clusters/lkc-update", handleKafkaClusterUpdateTest(t, kafkaAPIURL))
+	router.HandleFunc("/api/clusters/lkc-update-dedicated", handleKafkaDedicatedClusterUpdateTest(t, kafkaAPIURL))
 	router.HandleFunc("/api/clusters/", handleKafkaClusterGetListDeleteDescribe(t, kafkaAPIURL))
 	router.HandleFunc("/api/clusters", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
@@ -592,6 +595,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 			cluster := schedv1.KafkaCluster{
 				Id:              "lkc-123",
 				Name:            "abc",
+				Deployment:      &schedv1.Deployment{Sku: productv1.Sku_BASIC},
 				Durability:      0,
 				Status:          0,
 				Region:          "us-central1",
@@ -882,6 +886,7 @@ func handleKafkaClusterGetListDeleteDescribe(t *testing.T, kafkaAPIURL string) f
 			Cluster: &schedv1.KafkaCluster{
 				Id:              id,
 				Name:            "kafka-cluster",
+				Deployment:      &schedv1.Deployment{Sku: productv1.Sku_BASIC},
 				NetworkIngress:  100,
 				NetworkEgress:   100,
 				Storage:         500,
@@ -903,9 +908,54 @@ func handleKafkaClusterDescribeTest(t *testing.T, kafkaAPIURL string) func(w htt
 			Cluster: &schedv1.KafkaCluster{
 				Id:              "lkc-describe",
 				Name:            "kafka-cluster",
+				Deployment:      &schedv1.Deployment{Sku: productv1.Sku_BASIC},
 				NetworkIngress:  100,
 				NetworkEgress:   100,
 				Storage:         500,
+				ServiceProvider: "aws",
+				Region:          "us-west-2",
+				Endpoint:        "SASL_SSL://kafka-endpoint",
+				ApiEndpoint:     "http://kafka-api-url",
+			},
+		})
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(b))
+		require.NoError(t, err)
+	}
+}
+
+func handleKafkaClusterUpdateTest(t *testing.T, kafkaAPIURL string) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		b, err := utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
+			Cluster: &schedv1.KafkaCluster{
+				Id:              "lkc-update",
+				Name:            "lkc-update-name",
+				Deployment:      &schedv1.Deployment{Sku: productv1.Sku_BASIC},
+				NetworkIngress:  100,
+				NetworkEgress:   100,
+				Storage:         500,
+				ServiceProvider: "aws",
+				Region:          "us-west-2",
+				Endpoint:        "SASL_SSL://kafka-endpoint",
+				ApiEndpoint:     "http://kafka-api-url",
+			},
+		})
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(b))
+		require.NoError(t, err)
+	}
+}
+
+func handleKafkaDedicatedClusterUpdateTest(t *testing.T, kafkaAPIURL string) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		b, err := utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
+			Cluster: &schedv1.KafkaCluster{
+				Id:              "lkc-update-dedicated",
+				Name:            "lkc-update-dedicated-name",
+				Deployment:      &schedv1.Deployment{Sku: productv1.Sku_DEDICATED},
+				NetworkIngress:  100,
+				NetworkEgress:   300,
+				Storage:         60000,
 				ServiceProvider: "aws",
 				Region:          "us-west-2",
 				Endpoint:        "SASL_SSL://kafka-endpoint",
@@ -923,20 +973,40 @@ func handleKafkaClusterCreate(t *testing.T, kafkaAPIURL string) func(w http.Resp
 		req := &schedv1.CreateKafkaClusterRequest{}
 		err := utilv1.UnmarshalJSON(r.Body, req)
 		require.NoError(t, err)
-		b, err := utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
-			Cluster: &schedv1.KafkaCluster{
-				Id:              "lkc-def963",
-				AccountId:       req.Config.AccountId,
-				Name:            req.Config.Name,
-				NetworkIngress:  100,
-				NetworkEgress:   100,
-				Storage:         5000,
-				ServiceProvider: req.Config.ServiceProvider,
-				Region:          req.Config.Region,
-				Endpoint:        "SASL_SSL://kafka-endpoint",
-				ApiEndpoint:     kafkaAPIURL,
-			},
-		})
+		var b []byte
+		if req.Config.Deployment.Sku == productv1.Sku_DEDICATED {
+			b, err = utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
+				Cluster: &schedv1.KafkaCluster{
+					Id:              "lkc-def963",
+					AccountId:       req.Config.AccountId,
+					Name:            req.Config.Name,
+					Deployment:      &schedv1.Deployment{Sku: productv1.Sku_DEDICATED},
+					NetworkIngress:  50,
+					NetworkEgress:   150,
+					Storage:         30000,
+					ServiceProvider: req.Config.ServiceProvider,
+					Region:          req.Config.Region,
+					Endpoint:        "SASL_SSL://kafka-endpoint",
+					ApiEndpoint:     kafkaAPIURL,
+				},
+			})
+		} else {
+			b, err = utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
+				Cluster: &schedv1.KafkaCluster{
+					Id:              "lkc-def963",
+					AccountId:       req.Config.AccountId,
+					Name:            req.Config.Name,
+					Deployment:      &schedv1.Deployment{Sku: productv1.Sku_BASIC},
+					NetworkIngress:  100,
+					NetworkEgress:   100,
+					Storage:         5000,
+					ServiceProvider: req.Config.ServiceProvider,
+					Region:          req.Config.Region,
+					Endpoint:        "SASL_SSL://kafka-endpoint",
+					ApiEndpoint:     kafkaAPIURL,
+				},
+			})
+		}
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(b))
 		require.NoError(t, err)
