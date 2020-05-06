@@ -279,7 +279,7 @@ func (r *PreRun) getClusterIdForAuthenticatedUser(command *HasAPIKeyCLICommand, 
 	if err != nil {
 		return "", errors.HandleCommon(err, cmd)
 	}
-	return cluster.Id, nil
+	return cluster.ID, nil
 }
 
 // if API key credential then the context is initialized to be used for only one cluster, and cluster id can be obtained directly from the context config
