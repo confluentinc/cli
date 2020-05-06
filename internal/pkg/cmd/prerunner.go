@@ -269,7 +269,7 @@ func (r *PreRun) checkUserAuthentication(ctx *DynamicContext, cmd *cobra.Command
 }
 
 // if context is authenticated, client is created and used to for DynamicContext.FindKafkaCluster for finding active cluster
-func (r *PreRun) getClusterIdForAuthenticatedUser(command *HasAPIKeyCLICommand, ctx *DynamicContext, cmd *cobra.Command, ) (string, error) {
+func (r *PreRun) getClusterIdForAuthenticatedUser(command *HasAPIKeyCLICommand, ctx *DynamicContext, cmd *cobra.Command) (string, error) {
 	client, err := r.createCCloudClient(ctx, cmd, command.Version)
 	if err != nil {
 		return "", errors.HandleCommon(err, cmd)
