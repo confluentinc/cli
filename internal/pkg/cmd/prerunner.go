@@ -275,8 +275,7 @@ func (r *PreRun) getClusterIdForAuthenticatedUser(command *HasAPIKeyCLICommand, 
 		return "", errors.HandleCommon(err, cmd)
 	}
 	ctx.client = client
-	// Get active kafka cluster
-	cluster, err := KafkaCluster(cmd, ctx)
+	cluster, err := ctx.GetKafkaClusterForCommand(cmd)
 	if err != nil {
 		return "", errors.HandleCommon(err, cmd)
 	}
