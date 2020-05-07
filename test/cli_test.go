@@ -926,10 +926,13 @@ func handleKafkaClusterDescribeTest(t *testing.T, kafkaAPIURL string) func(w htt
 
 func handleKafkaClusterUpdateTest(t *testing.T, kafkaAPIURL string) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		req := &schedv1.UpdateKafkaClusterRequest{}
+		err := utilv1.UnmarshalJSON(r.Body, req)
+		require.NoError(t, err)
 		b, err := utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
 			Cluster: &schedv1.KafkaCluster{
-				Id:              "lkc-update",
-				Name:            "lkc-update-name",
+				Id:              req.Cluster.Id,
+				Name:            req.Cluster.Name,
 				Deployment:      &schedv1.Deployment{Sku: productv1.Sku_BASIC},
 				NetworkIngress:  100,
 				NetworkEgress:   100,
@@ -948,10 +951,13 @@ func handleKafkaClusterUpdateTest(t *testing.T, kafkaAPIURL string) func(w http.
 
 func handleKafkaDedicatedClusterUpdateTest(t *testing.T, kafkaAPIURL string) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		req := &schedv1.UpdateKafkaClusterRequest{}
+		err := utilv1.UnmarshalJSON(r.Body, req)
+		require.NoError(t, err)
 		b, err := utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
 			Cluster: &schedv1.KafkaCluster{
-				Id:              "lkc-update-dedicated",
-				Name:            "lkc-update-dedicated-name",
+				Id:              req.Cluster.Id,
+				Name:            req.Cluster.Name,
 				Deployment:      &schedv1.Deployment{Sku: productv1.Sku_DEDICATED},
 				NetworkIngress:  100,
 				NetworkEgress:   300,
