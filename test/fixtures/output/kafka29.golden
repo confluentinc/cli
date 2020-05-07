@@ -7,6 +7,6 @@ ingress: 100
 name: lkc-update-name
 provider: aws
 region: us-west-2
-status: PROVISIONING
+status: UP
 storage: 500
 type: BASIC

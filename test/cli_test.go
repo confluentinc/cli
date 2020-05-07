@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -29,6 +28,7 @@ import (
 	"github.com/confluentinc/bincover"
 	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	utilv1 "github.com/confluentinc/cc-structs/kafka/util/v1"
 	opv1 "github.com/confluentinc/cc-structs/operator/v1"
@@ -614,8 +614,6 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		require.NoError(t, err)
 	})
 	router.HandleFunc("/api/schema_registries/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("REQUEST!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-		fmt.Println(r)
 		q := r.URL.Query()
 		id := q.Get("id")
 		if id == "" {
@@ -937,6 +935,7 @@ func handleKafkaClusterUpdateTest(t *testing.T, kafkaAPIURL string) func(w http.
 				NetworkIngress:  100,
 				NetworkEgress:   100,
 				Storage:         500,
+				Status:          schedv1.ClusterStatus_UP,
 				ServiceProvider: "aws",
 				Region:          "us-west-2",
 				Endpoint:        "SASL_SSL://kafka-endpoint",
@@ -958,10 +957,12 @@ func handleKafkaDedicatedClusterUpdateTest(t *testing.T, kafkaAPIURL string) fun
 			Cluster: &schedv1.KafkaCluster{
 				Id:              req.Cluster.Id,
 				Name:            req.Cluster.Name,
+				PendingCku:      req.Cluster.Cku,
 				Deployment:      &schedv1.Deployment{Sku: productv1.Sku_DEDICATED},
 				NetworkIngress:  50 * req.Cluster.Cku,
 				NetworkEgress:   150 * req.Cluster.Cku,
 				Storage:         30000 * req.Cluster.Cku,
+				Status:          schedv1.ClusterStatus_EXPANSION_PENDING,
 				ServiceProvider: "aws",
 				Region:          "us-west-2",
 				Endpoint:        "SASL_SSL://kafka-endpoint",
@@ -986,6 +987,7 @@ func handleKafkaClusterCreate(t *testing.T, kafkaAPIURL string) func(w http.Resp
 					Id:              "lkc-def963",
 					AccountId:       req.Config.AccountId,
 					Name:            req.Config.Name,
+					Cku:             req.Config.Cku,
 					Deployment:      &schedv1.Deployment{Sku: productv1.Sku_DEDICATED},
 					NetworkIngress:  50 * req.Config.Cku,
 					NetworkEgress:   150 * req.Config.Cku,

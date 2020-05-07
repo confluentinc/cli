@@ -2,6 +2,7 @@
 | Id                | lkc-def963                |
 | Name              | my-dedicated-cluster      |
 | Type              | DEDICATED                 |
+| ClusterSize       |                         1 |
 | Ingress           |                        50 |
 | Egress            |                       150 |
 | Storage           |                     30000 |

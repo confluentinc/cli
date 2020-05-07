@@ -7,7 +7,7 @@
 | Storage           |                       500 |
 | Provider          | aws                       |
 | Region            | us-west-2                 |
-| Status            | PROVISIONING              |
+| Status            | UP                        |
 | Endpoint          | SASL_SSL://kafka-endpoint |
 | ApiEndpoint       | http://kafka-api-url      |
 | Encryption Key ID |                           |

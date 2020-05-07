@@ -19,28 +19,32 @@ import (
 )
 
 var (
-	listFields           = []string{"Id", "Name", "ServiceProvider", "Region", "Durability", "Status"}
-	listHumanLabels      = []string{"Id", "Name", "Provider", "Region", "Availability", "Status"}
-	listStructuredLabels = []string{"id", "name", "provider", "region", "durability", "status"}
-	describeFields       = []string{"Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "ApiEndpoint", "EncryptionKeyId"}
-	describeHumanRenames = map[string]string{
+	listFields                     = []string{"Id", "Name", "ServiceProvider", "Region", "Durability", "Status"}
+	listHumanLabels                = []string{"Id", "Name", "Provider", "Region", "Availability", "Status"}
+	listStructuredLabels           = []string{"id", "name", "provider", "region", "durability", "status"}
+	describeFields                 = []string{"Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "ApiEndpoint", "EncryptionKeyId"}
+	dedicatedDescribeFields        = []string{"Id", "Name", "Type", "ClusterSize", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "ApiEndpoint", "EncryptionKeyId"}
+	dedicatedPendingDescribeFields = []string{"Id", "Name", "Type", "PendingClusterSize", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "ApiEndpoint", "EncryptionKeyId"}
+	describeHumanRenames           = map[string]string{
 		"NetworkIngress":  "Ingress",
 		"NetworkEgress":   "Egress",
 		"ServiceProvider": "Provider",
 		"EncryptionKeyId": "Encryption Key ID"}
 	describeStructuredRenames = map[string]string{
-		"Id":              "id",
-		"Name":            "name",
-		"Type":            "type",
-		"NetworkIngress":  "ingress",
-		"NetworkEgress":   "egress",
-		"Storage":         "storage",
-		"ServiceProvider": "provider",
-		"Region":          "region",
-		"Status":          "status",
-		"Endpoint":        "endpoint",
-		"ApiEndpoint":     "api_endpoint",
-		"EncryptionKeyId": "encryption_key_id"}
+		"Id":                 "id",
+		"Name":               "name",
+		"Type":               "type",
+		"ClusterSize":        "cluster_size",
+		"PendingClusterSize": "pending_cluster_size",
+		"NetworkIngress":     "ingress",
+		"NetworkEgress":      "egress",
+		"Storage":            "storage",
+		"ServiceProvider":    "provider",
+		"Region":             "region",
+		"Status":             "status",
+		"Endpoint":           "endpoint",
+		"ApiEndpoint":        "api_endpoint",
+		"EncryptionKeyId":    "encryption_key_id"}
 )
 
 const (
@@ -57,18 +61,20 @@ type clusterCommand struct {
 }
 
 type describeStruct struct {
-	Id              string
-	Name            string
-	Type            string
-	NetworkIngress  int32
-	NetworkEgress   int32
-	Storage         int32
-	ServiceProvider string
-	Region          string
-	Status          string
-	Endpoint        string
-	ApiEndpoint     string
-	EncryptionKeyId string
+	Id                 string
+	Name               string
+	Type               string
+	ClusterSize        int32
+	PendingClusterSize int32
+	NetworkIngress     int32
+	NetworkEgress      int32
+	Storage            int32
+	ServiceProvider    string
+	Region             string
+	Status             string
+	Endpoint           string
+	ApiEndpoint        string
+	EncryptionKeyId    string
 }
 
 // NewClusterCommand returns the Cobra command for Kafka cluster.
@@ -264,7 +270,17 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		// TODO: don't swallow validation errors (reportedly separately)
 		return errors.HandleCommon(err, cmd)
 	}
-	return output.DescribeObject(cmd, convertClusterToDescribeStruct(cluster), describeFields, describeHumanRenames, describeStructuredRenames)
+	var fields []string
+	if cluster.Deployment.Sku == productv1.Sku_DEDICATED {
+		if cluster.Status == schedv1.ClusterStatus_EXPANSION_PENDING || cluster.Status == schedv1.ClusterStatus_EXPANDING {
+			fields = dedicatedPendingDescribeFields
+		} else {
+			fields = dedicatedDescribeFields
+		}
+	} else {
+		fields = describeFields
+	}
+	return output.DescribeObject(cmd, convertClusterToDescribeStruct(cluster), fields, describeHumanRenames, describeStructuredRenames)
 }
 
 func stringToAvailability(s string) (schedv1.Durability, error) {
@@ -293,7 +309,17 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	return output.DescribeObject(cmd, convertClusterToDescribeStruct(cluster), describeFields, describeHumanRenames, describeStructuredRenames)
+	var fields []string
+	if cluster.Deployment.Sku == productv1.Sku_DEDICATED {
+		if cluster.Status == schedv1.ClusterStatus_EXPANSION_PENDING || cluster.Status == schedv1.ClusterStatus_EXPANDING {
+			fields = dedicatedPendingDescribeFields
+		} else {
+			fields = dedicatedDescribeFields
+		}
+	} else {
+		fields = describeFields
+	}
+	return output.DescribeObject(cmd, convertClusterToDescribeStruct(cluster), fields, describeHumanRenames, describeStructuredRenames)
 }
 
 func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
@@ -309,9 +335,9 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	req := &schedv1.KafkaCluster {
-		AccountId:	c.EnvironmentId(),
-		Id: args[0],
+	req := &schedv1.KafkaCluster{
+		AccountId: c.EnvironmentId(),
+		Id:        args[0],
 	}
 	if name != "" {
 		req.Name = name
@@ -331,7 +357,17 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	return output.DescribeObject(cmd, convertClusterToDescribeStruct(cluster), describeFields, describeHumanRenames, describeStructuredRenames)
+	var fields []string
+	if cluster.Deployment.Sku == productv1.Sku_DEDICATED {
+		if cluster.Status == schedv1.ClusterStatus_EXPANSION_PENDING || cluster.Status == schedv1.ClusterStatus_EXPANDING {
+			fields = dedicatedPendingDescribeFields
+		} else {
+			fields = dedicatedDescribeFields
+		}
+	} else {
+		fields = describeFields
+	}
+	return output.DescribeObject(cmd, convertClusterToDescribeStruct(cluster), fields, describeHumanRenames, describeStructuredRenames)
 }
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
@@ -393,17 +429,19 @@ func getAccountsForCloud(cloudId string, clouds []*schedv1.CloudMetadata) []stri
 
 func convertClusterToDescribeStruct(cluster *schedv1.KafkaCluster) *describeStruct {
 	return &describeStruct{
-		Id:              cluster.Id,
-		Name:            cluster.Name,
-		Type:            cluster.Deployment.Sku.String(), // this is different from cluster.Type, which would be 'kafka'
-		NetworkIngress:  cluster.NetworkIngress,
-		NetworkEgress:   cluster.NetworkEgress,
-		Storage:         cluster.Storage,
-		ServiceProvider: cluster.ServiceProvider,
-		Region:          cluster.Region,
-		Status:          cluster.Status.String(),
-		Endpoint:        cluster.Endpoint,
-		ApiEndpoint:     cluster.ApiEndpoint,
-		EncryptionKeyId: cluster.EncryptionKeyId,
+		Id:                 cluster.Id,
+		Name:               cluster.Name,
+		Type:               cluster.Deployment.Sku.String(), // this is different from cluster.Type, which would be 'kafka'
+		ClusterSize:        cluster.Cku,
+		PendingClusterSize: cluster.PendingCku,
+		NetworkIngress:     cluster.NetworkIngress,
+		NetworkEgress:      cluster.NetworkEgress,
+		Storage:            cluster.Storage,
+		ServiceProvider:    cluster.ServiceProvider,
+		Region:             cluster.Region,
+		Status:             cluster.Status.String(),
+		Endpoint:           cluster.Endpoint,
+		ApiEndpoint:        cluster.ApiEndpoint,
+		EncryptionKeyId:    cluster.EncryptionKeyId,
 	}
 }
