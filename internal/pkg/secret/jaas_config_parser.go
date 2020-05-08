@@ -44,6 +44,9 @@ func (j *JAASParser) updateJAASConfig(op string, key string, value string, confi
 				return "", fmt.Errorf("The configuration " + config + " not present in JAAS configuration.")
 			}
 			config = pattern.ReplaceAllString(config, delete)
+			if strings.HasSuffix(matched, ";") {
+				config = config + ";"
+			}
 		} else {
 			keyValuePattern := key + PASSWORD_PATTERN // check if value is in Secrets format
 			pattern := regexp.MustCompile(keyValuePattern)
@@ -65,7 +68,7 @@ func (j *JAASParser) updateJAASConfig(op string, key string, value string, confi
 				config = config + ";"
 			}
 		} else {
-			add := NEW_LINE + key + j.WhitespaceKey + "=" + j.WhitespaceKey + value
+			add := SPACE + key + j.WhitespaceKey + "=" + j.WhitespaceKey + value
 			config = strings.TrimSuffix(config, ";") + add + ";"
 		}
 		break

@@ -1003,7 +1003,7 @@ func TestPasswordProtectionSuite_RemoveConfigFileSecrets(t *testing.T) {
 				config:                 "",
 			},
 			wantErr:    true,
-			wantErrMsg: "Configuration key ssl.keystore.password is not present in the configuration file.",
+			wantErrMsg: "Configuration key ssl.keystore.password is not encrypted.",
 		},
 		{
 			name: "ValidTestCase:Remove existing configs from jaas config file",
@@ -1024,6 +1024,24 @@ func TestPasswordProtectionSuite_RemoveConfigFileSecrets(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "ValidTestCase:Nested Key in jaas config file",
+			args: &args{
+				masterKeyPassphrase: "abc123",
+				contents: `test.config.jaas = com.sun.security.auth.module.Krb5LoginModule required \
+    useKeyTab=false \
+    password=pass234 \
+    useTicketCache=true \
+    doNotPrompt=true;`,
+				configFilePath:         "/tmp/securePass987/remove/embeddedJaas.properties",
+				localSecureConfigPath:  "/tmp/securePass987/remove/secureConfig.properties",
+				secureDir:              "/tmp/securePass987/remove",
+				remoteSecureConfigPath: "/tmp/securePass987/remove/secureConfig.properties",
+				removeConfigs:          "test.config.jaas/com.sun.security.auth.module.Krb5LoginModule/password",
+				config:                 "",
+			},
+			wantErr: false,
+		},
+		{
 			name: "InvalidTestCase:Key not present in jaas config file",
 			args: &args{
 				masterKeyPassphrase: "abc123",
@@ -1040,7 +1058,7 @@ func TestPasswordProtectionSuite_RemoveConfigFileSecrets(t *testing.T) {
 				config:                 "",
 			},
 			wantErr:    true,
-			wantErrMsg: "Configuration key test.config.jaas/com.sun.security.auth.module.Krb5LoginModule/location is not present in the configuration file.",
+			wantErrMsg: "Configuration key test.config.jaas/com.sun.security.auth.module.Krb5LoginModule/location is not encrypted.",
 		},
 		{
 			name: "ValidTestCase:Remove existing configs from json config file",
@@ -1079,7 +1097,7 @@ func TestPasswordProtectionSuite_RemoveConfigFileSecrets(t *testing.T) {
 				config:                 "",
 			},
 			wantErr:    true,
-			wantErrMsg: "Configuration key credentials/location is not present in JSON configuration file.",
+			wantErrMsg: "Configuration key credentials/location is not encrypted.",
 		},
 	}
 	for _, tt := range tests {
