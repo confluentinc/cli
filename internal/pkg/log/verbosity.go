@@ -4,7 +4,12 @@ import (
 	"strings"
 )
 
-
+/*
+Sets the verbosity of the log by looking for verbosity flags.
+No need to return flag validation error as cobra will handle that.
+Used to allow verbosity settings of actions taken before commands are
+actually executed (e.g. loading config).
+ */
 func SetLoggingVerbosity(args []string, logger *Logger) {
 	verbosity := getVerbosity(args)
 	level := getLoggerLevel(verbosity)
@@ -21,14 +26,39 @@ func getVerbosity(args []string) int {
 
 func getVerbosityFlagCount(arg string) int {
 	if strings.HasPrefix(arg, "--") {
-		if arg == "--verbose" {
-			return 1
-		}
+		return getFullFlagCount(arg)
 	} else if strings.HasPrefix(arg, "-") {
+		return getShortHandFlagCount(arg)
+	}
+	return 0
+}
+
+func getFullFlagCount(arg string) int {
+	if arg == "--verbose" {
+		return 1
+	}
+	return 0
+}
+
+func getShortHandFlagCount(arg string) int {
+	if isValidShortHandFlag(arg) {
 		return strings.Count(arg, "v")
 	}
 	return 0
 }
+
+func isValidShortHandFlag(arg string) bool {
+	if !strings.HasPrefix(arg, "-") {
+		return false
+	}
+	if len(arg) == 1 {
+		return false
+	}
+	flagValue := arg[1:]
+	return !strings.Contains(flagValue, "-")
+}
+
+
 
 func getLoggerLevel(verbosity int) Level {
 	switch verbosity {
