@@ -130,9 +130,6 @@ func (r *PreRun) Anonymous(command *CLICommand) func(cmd *cobra.Command, args []
 	return func(cmd *cobra.Command, args []string) error {
 		command.Version = r.Version
 		command.Config.Resolver = r.FlagResolver
-		if err := log.SetLoggingVerbosity(cmd, r.Logger); err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
 		if err := r.notifyIfUpdateAvailable(cmd, r.CLIName, command.Version.Version); err != nil {
 			return errors.HandleCommon(err, cmd)
 		}

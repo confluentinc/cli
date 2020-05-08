@@ -44,6 +44,7 @@ func main() {
 	viper.AutomaticEnv()
 
 	logger := log.New()
+	log.SetLoggingVerbosity(os.Args, logger)
 
 	metricSink := metric.NewSink()
 
