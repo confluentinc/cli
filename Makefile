@@ -200,9 +200,9 @@ fakerelease: get-release-image commit-release tag-release
 .PHONY: gorelease
 gorelease:
 	$(caasenv-authenticate) && \
-	@GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
-	@GO111MODULE=on GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --rm-dist -f .goreleaser-ccloud.yml && \
-	@GO111MODULE=on GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --rm-dist -f .goreleaser-confluent.yml
+	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
+	GO111MODULE=on GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --rm-dist -f .goreleaser-ccloud.yml && \
+	GO111MODULE=on GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --rm-dist -f .goreleaser-confluent.yml
 
 .PHONY: fakegorelease
 fakegorelease:
