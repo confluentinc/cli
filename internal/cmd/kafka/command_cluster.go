@@ -24,7 +24,7 @@ var (
 	listStructuredLabels           = []string{"id", "name", "provider", "region", "durability", "status"}
 	describeFields                 = []string{"Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "ApiEndpoint", "EncryptionKeyId"}
 	dedicatedDescribeFields        = []string{"Id", "Name", "Type", "ClusterSize", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "ApiEndpoint", "EncryptionKeyId"}
-	dedicatedPendingDescribeFields = []string{"Id", "Name", "Type", "PendingClusterSize", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "ApiEndpoint", "EncryptionKeyId"}
+	dedicatedPendingDescribeFields = []string{"Id", "Name", "Type", "ClusterSize", "PendingClusterSize", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "ApiEndpoint", "EncryptionKeyId"}
 	describeHumanRenames           = map[string]string{
 		"NetworkIngress":  "Ingress",
 		"NetworkEgress":   "Egress",
@@ -272,11 +272,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	}
 	var fields []string
 	if cluster.Deployment.Sku == productv1.Sku_DEDICATED {
-		if cluster.Status == schedv1.ClusterStatus_EXPANSION_PENDING || cluster.Status == schedv1.ClusterStatus_EXPANDING {
-			fields = dedicatedPendingDescribeFields
-		} else {
-			fields = dedicatedDescribeFields
-		}
+		fields = dedicatedDescribeFields
 	} else {
 		fields = describeFields
 	}
@@ -311,7 +307,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	}
 	var fields []string
 	if cluster.Deployment.Sku == productv1.Sku_DEDICATED {
-		if cluster.Status == schedv1.ClusterStatus_EXPANSION_PENDING || cluster.Status == schedv1.ClusterStatus_EXPANDING {
+		if cluster.Status == schedv1.ClusterStatus_EXPANDING || cluster.PendingCku > cluster.Cku{
 			fields = dedicatedPendingDescribeFields
 		} else {
 			fields = dedicatedDescribeFields
@@ -359,7 +355,7 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 	}
 	var fields []string
 	if cluster.Deployment.Sku == productv1.Sku_DEDICATED {
-		if cluster.Status == schedv1.ClusterStatus_EXPANSION_PENDING || cluster.Status == schedv1.ClusterStatus_EXPANDING {
+		if cluster.Status == schedv1.ClusterStatus_EXPANDING || cluster.PendingCku > cluster.Cku{
 			fields = dedicatedPendingDescribeFields
 		} else {
 			fields = dedicatedDescribeFields
