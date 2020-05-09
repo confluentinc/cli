@@ -9,7 +9,7 @@ import (
 	"runtime"
 	"testing"
 
-	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 

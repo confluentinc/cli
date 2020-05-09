@@ -340,16 +340,3 @@ func (c *Config) corruptedConfigError() error {
 	err = fmt.Errorf(errMsg, configPath)
 	return err
 }
-
-// corruptedContextError returns an error signaling that the specified context's,
-// config has been corrupted, or another error if the config's filepath is unable to be resolved.
-func (c *Config) corruptedContextError(contextName string) error {
-	configPath, err := c.getFilename()
-	if err != nil {
-		return err
-	}
-	errMsg := "the configuration of context '%s' has been corrupted. " +
-		"To fix, please remove the config file located at %s, and run `login` or `init`"
-	err = fmt.Errorf(errMsg, contextName, configPath)
-	return err
-}

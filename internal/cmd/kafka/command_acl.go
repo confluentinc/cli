@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
-	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	aclutil "github.com/confluentinc/cli/internal/pkg/acl"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
@@ -115,7 +115,7 @@ func (c *aclCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	bindings := []*kafkav1.ACLBinding{}
+	bindings := []*schedv1.ACLBinding{}
 	for _, acl := range acls {
 		validateAddDelete(acl)
 		if acl.errors != nil {
@@ -139,7 +139,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	filters := []*kafkav1.ACLFilter{}
+	filters := []*schedv1.ACLFilter{}
 	for _, acl := range acls {
 		validateAddDelete(acl)
 		if acl.errors != nil {
@@ -159,53 +159,53 @@ func (c *aclCommand) delete(cmd *cobra.Command, args []string) error {
 
 // validateAddDelete ensures the minimum requirements for acl add and delete are met
 func validateAddDelete(binding *ACLConfiguration) {
-	if binding.Entry.PermissionType == kafkav1.ACLPermissionTypes_UNKNOWN {
+	if binding.Entry.PermissionType == schedv1.ACLPermissionTypes_UNKNOWN {
 		binding.errors = multierror.Append(binding.errors, fmt.Errorf("--allow or --deny must be set when adding or deleting an ACL"))
 	}
 
-	if binding.Pattern.PatternType == kafkav1.PatternTypes_UNKNOWN {
-		binding.Pattern.PatternType = kafkav1.PatternTypes_LITERAL
+	if binding.Pattern.PatternType == schedv1.PatternTypes_UNKNOWN {
+		binding.Pattern.PatternType = schedv1.PatternTypes_LITERAL
 	}
 
-	if binding.Pattern == nil || binding.Pattern.ResourceType == kafkav1.ResourceTypes_UNKNOWN {
+	if binding.Pattern == nil || binding.Pattern.ResourceType == schedv1.ResourceTypes_UNKNOWN {
 		binding.errors = multierror.Append(binding.errors, fmt.Errorf("exactly one of %v must be set",
-			listEnum(kafkav1.ResourceTypes_ResourceType_name, []string{"ANY", "UNKNOWN"})))
+			listEnum(schedv1.ResourceTypes_ResourceType_name, []string{"ANY", "UNKNOWN"})))
 	}
 }
 
 // convertToFilter converts a ACLBinding to a KafkaAPIACLFilterRequest
-func convertToFilter(binding *kafkav1.ACLBinding) *kafkav1.ACLFilter {
+func convertToFilter(binding *schedv1.ACLBinding) *schedv1.ACLFilter {
 	// ACE matching rules
 	// https://github.com/apache/kafka/blob/trunk/clients/src/main/java/org/apache/kafka/common/acl/AccessControlEntryFilter.java#L102-L113
 	if binding.Entry == nil {
-		binding.Entry = new(kafkav1.AccessControlEntryConfig)
+		binding.Entry = new(schedv1.AccessControlEntryConfig)
 	}
 
-	if binding.Entry.Operation == kafkav1.ACLOperations_UNKNOWN {
-		binding.Entry.Operation = kafkav1.ACLOperations_ANY
+	if binding.Entry.Operation == schedv1.ACLOperations_UNKNOWN {
+		binding.Entry.Operation = schedv1.ACLOperations_ANY
 	}
 
-	if binding.Entry.PermissionType == kafkav1.ACLPermissionTypes_UNKNOWN {
-		binding.Entry.PermissionType = kafkav1.ACLPermissionTypes_ANY
+	if binding.Entry.PermissionType == schedv1.ACLPermissionTypes_UNKNOWN {
+		binding.Entry.PermissionType = schedv1.ACLPermissionTypes_ANY
 	}
 
 	// ResourcePattern matching rules
 	// https://github.com/apache/kafka/blob/trunk/clients/src/main/java/org/apache/kafka/common/resource/ResourcePatternFilter.java#L42-L56
 	if binding.Pattern == nil {
-		binding.Pattern = &kafkav1.ResourcePatternConfig{}
+		binding.Pattern = &schedv1.ResourcePatternConfig{}
 	}
 
 	binding.Entry.Host = "*"
 
-	if binding.Pattern.ResourceType == kafkav1.ResourceTypes_UNKNOWN {
-		binding.Pattern.ResourceType = kafkav1.ResourceTypes_ANY
+	if binding.Pattern.ResourceType == schedv1.ResourceTypes_UNKNOWN {
+		binding.Pattern.ResourceType = schedv1.ResourceTypes_ANY
 	}
 
-	if binding.Pattern.PatternType == kafkav1.PatternTypes_UNKNOWN {
-		binding.Pattern.PatternType = kafkav1.PatternTypes_ANY
+	if binding.Pattern.PatternType == schedv1.PatternTypes_UNKNOWN {
+		binding.Pattern.PatternType = schedv1.PatternTypes_ANY
 	}
 
-	return &kafkav1.ACLFilter{
+	return &schedv1.ACLFilter{
 		EntryFilter:   binding.Entry,
 		PatternFilter: binding.Pattern,
 	}

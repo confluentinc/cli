@@ -3,9 +3,9 @@ package cluster
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 	"strings"
-	"net/http"
 
 	"github.com/antihax/optional"
 
@@ -29,8 +29,8 @@ const (
 )
 
 var (
-	clusterFields = []string{"Name", "Type", "ID", "Hosts"}
-	clusterLabels = []string{"Name", "Type", "ID", "Hosts"}
+	clusterFields    = []string{"Name", "Type", "ID", "Hosts"}
+	clusterLabels    = []string{"Name", "Type", "ID", "Hosts"}
 	clusterTypeNames = []string{connectClusterTypeName, kafkaClusterTypeName, ksqlClusterTypeName, schemaRegistryClusterTypeName}
 )
 

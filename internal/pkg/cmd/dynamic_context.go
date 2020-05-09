@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
-	srV1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
 	"github.com/mohae/deepcopy"
 	"github.com/spf13/cobra"
 
@@ -31,31 +31,30 @@ func NewDynamicContext(context *v3.Context, resolver FlagResolver, client *cclou
 	}
 }
 
-func (d *DynamicContext) ActiveKafkaCluster(cmd *cobra.Command) (*v1.KafkaClusterConfig, error) {
-	var clusterId string
-	resourceType, resourceId, err := d.resolver.ResolveResourceId(cmd)
+func (d *DynamicContext) GetKafkaClusterForCommand(cmd *cobra.Command) (*v1.KafkaClusterConfig, error) {
+	clusterId, err := d.getKafkaClusterIDForCommand(cmd)
 	if err != nil {
 		return nil, err
-	}
-	if resourceType == KafkaResourceType || resourceType == KSQLResourceType {
-		clusterId = resourceId
-	}
-	if clusterId == "" {
-		// Try "cluster" flag.
-		clusterId, err = d.resolver.ResolveClusterFlag(cmd)
-		if err != nil {
-			return nil, err
-		}
-		if clusterId == "" {
-			// No flags provided, just retrieve the current one specified in the config.
-			clusterId = d.KafkaClusterContext.GetActiveKafkaClusterId()
-		}
 	}
 	cluster, err := d.FindKafkaCluster(cmd, clusterId)
 	if err != nil {
 		return nil, err
 	}
 	return cluster, nil
+}
+
+func (d *DynamicContext) getKafkaClusterIDForCommand(cmd *cobra.Command) (string, error) {
+	clusterId, err := d.resolver.ResolveClusterFlag(cmd)
+	if err != nil {
+		return "", err
+	}
+	if clusterId == "" {
+		clusterId = d.KafkaClusterContext.GetActiveKafkaClusterId()
+	}
+	if clusterId == "" {
+		return "", errors.ErrNoKafkaContext
+	}
+	return clusterId, nil
 }
 
 func (d *DynamicContext) FindKafkaCluster(cmd *cobra.Command, clusterId string) (*v1.KafkaClusterConfig, error) {
@@ -271,7 +270,7 @@ func missingDetails(cluster *v2.SchemaRegistryCluster) bool {
 	return cluster.SchemaRegistryEndpoint == "" || cluster.Id == ""
 }
 
-func makeSRCluster(cluster *srV1.SchemaRegistryCluster) *v2.SchemaRegistryCluster {
+func makeSRCluster(cluster *schedv1.SchemaRegistryCluster) *v2.SchemaRegistryCluster {
 	return &v2.SchemaRegistryCluster{
 		Id:                     cluster.Id,
 		SchemaRegistryEndpoint: cluster.Endpoint,

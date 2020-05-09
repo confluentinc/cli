@@ -2,6 +2,7 @@ package cmd_test
 
 import (
 	"github.com/confluentinc/cli/internal/pkg/auth"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"os"
 	"reflect"
 	"strings"
@@ -32,6 +33,9 @@ var (
 		"55IgHZ15zwDkFqixoV1hY_tG7dWtQNZIlPDabgm5UH0mc7GS2dh9Z5spZTvqH8xZ0SFF6T5-iFqpJjm6wkzMd6" +
 		"1u9UuWTTTNG-Nr_8abS0cYfChZIXde3D1so2KhG4r6uAB1onlNWK4Gq2Lc9uT_r2tKcGDqyZWFPvVtAepr8duW" +
 		"ts27QsDs7BvMnwSkUjGv6scSJZWX1fMZbXh7zd0Khg_13dWshAyE935n46T4S7VJm9JhZLEwUcoOPOhWmVcJn5xSJ-YQ"
+	validAuthToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiO" +
+		"jE1NjE2NjA4NTcsImV4cCI6MjUzMzg2MDM4NDU3LCJhdWQiOiJ3d3cuZXhhbXBsZS5jb20iLCJzdWIiOiJqcm9ja2V0QGV4YW1w" +
+		"bGUuY29tIn0.G6IgrFm5i0mN7Lz9tkZQ2tZvuZ2U7HKnvxMuZAooPmE"
 )
 
 func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
@@ -336,6 +340,81 @@ func Test_UpdateToken(t *testing.T) {
 				require.True(t, updateTokenHandler.UpdateCCloudAuthTokenUsingNetrcCredentialsCalled())
 			} else {
 				require.True(t, updateTokenHandler.UpdateConfluentAuthTokenUsingNetrcCredentialsCalled())
+			}
+		})
+	}
+}
+
+// Test that when context is of username login type it should check auth token and login state
+// And when context is of API key credential then it should not ask for user to login
+func TestPreRun_HasAPIKeyCommand(t *testing.T) {
+	userNameConfigLoggedIn := v3.AuthenticatedCloudConfigMock()
+	userNameConfigLoggedIn.Context().State.AuthToken = validAuthToken
+
+	userNameCfgCorruptedAuthToken := v3.AuthenticatedCloudConfigMock()
+	userNameCfgCorruptedAuthToken.Context().State.AuthToken = "corrupted.auth.token"
+
+	userNotLoggedIn := v3.AuthenticatedCloudConfigMock()
+	userNotLoggedIn.Context().State.Auth = nil
+
+	tests := []struct {
+		name      string
+		config 	  *v3.Config
+		errMsg    string
+	}{
+		{
+			name:   "username logged in user",
+			config: userNameConfigLoggedIn,
+		},
+		{
+			name:   "not logged in user",
+			config: userNotLoggedIn,
+			errMsg: errors.NotLoggedInInternalErrorMsg,
+		},
+		{
+			name:   "username context corrupted auth token",
+			config: userNameCfgCorruptedAuthToken,
+			errMsg: errors.CorruptedAuthTokenErrorMsg,
+		},
+		{
+			name:   "api credential context",
+			config: v3.APICredentialConfigMock(),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ver := pmock.NewVersionMock()
+			analyticsClient := cliMock.NewDummyAnalyticsMock()
+
+			r := &pcmd.PreRun{
+				Version: ver,
+				Logger:  log.New(),
+				UpdateClient: &mock.Client{
+					CheckForUpdatesFunc: func(n, v string, f bool) (bool, string, error) {
+						return false, "", nil
+					},
+				},
+				FlagResolver: &pcmd.FlagResolverImpl{
+					Prompt: &pcmd.RealPrompt{},
+					Out:    os.Stdout,
+				},
+				Analytics:          analyticsClient,
+				Clock:              clockwork.NewRealClock(),
+				UpdateTokenHandler: auth.NewUpdateTokenHandler(auth.NewNetrcHandler("")),
+			}
+
+			root := &cobra.Command{
+				Run: func(cmd *cobra.Command, args []string) {},
+			}
+			rootCmd := pcmd.NewHasAPIKeyCLICommand(root, tt.config, r)
+			root.Flags().CountP("verbose", "v", "Increase verbosity")
+
+			_, err := pcmd.ExecuteCommand(rootCmd.Command)
+			if tt.errMsg != "" {
+				require.Error(t, err)
+				require.Equal(t, tt.errMsg, err.Error())
+			} else {
+				require.NoError(t, err)
 			}
 		})
 	}

@@ -7,8 +7,8 @@ import (
 	"os"
 	"strings"
 
-	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
-	productv1 "github.com/confluentinc/ccloudapis/product/v1"
+	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/go-printer"
 	"github.com/spf13/cobra"
 
@@ -136,7 +136,7 @@ func (c *clusterCommand) init() {
 }
 
 func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
-	req := &kafkav1.KafkaCluster{AccountId: c.EnvironmentId()}
+	req := &schedv1.KafkaCluster{AccountId: c.EnvironmentId()}
 	clusters, err := c.Client.Kafka.List(context.Background(), req)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -216,13 +216,13 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	cfg := &kafkav1.KafkaClusterConfig{
+	cfg := &schedv1.KafkaClusterConfig{
 		AccountId:       c.EnvironmentId(),
 		Name:            args[0],
 		ServiceProvider: cloud,
 		Region:          region,
 		Durability:      availability,
-		Deployment:      &kafkav1.Deployment{Sku: sku},
+		Deployment:      &schedv1.Deployment{Sku: sku},
 		EncryptionKeyId: encryptionKeyID,
 	}
 	if sku == productv1.Sku_DEDICATED {
@@ -248,13 +248,13 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	return printer.RenderTableOut(cluster, describeFields, describeHumanRenames, os.Stdout)
 }
 
-func stringToAvailability(s string) (kafkav1.Durability, error) {
+func stringToAvailability(s string) (schedv1.Durability, error) {
 	if s == singleZone {
-		return kafkav1.Durability_LOW, nil
+		return schedv1.Durability_LOW, nil
 	} else if s == multiZone {
-		return kafkav1.Durability_HIGH, nil
+		return schedv1.Durability_HIGH, nil
 	}
-	return kafkav1.Durability_LOW, fmt.Errorf("Only allowed values for --availability are: %s, %s.", singleZone, multiZone)
+	return schedv1.Durability_LOW, fmt.Errorf("Only allowed values for --availability are: %s, %s.", singleZone, multiZone)
 }
 
 func stringToSku(s string) (productv1.Sku, error) {
@@ -269,12 +269,12 @@ func stringToSku(s string) (productv1.Sku, error) {
 }
 
 func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
-	req := &kafkav1.KafkaCluster{AccountId: c.EnvironmentId(), Id: args[0]}
+	req := &schedv1.KafkaCluster{AccountId: c.EnvironmentId(), Id: args[0]}
 	cluster, err := c.Client.Kafka.Describe(context.Background(), req)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	// go-printer has trouble marshaling kafkav1.KafkaCluster struct, creating another struct to fix for now
+	// go-printer has trouble marshaling schedv1.KafkaCluster struct, creating another struct to fix for now
 	type describeStruct struct {
 		Id              string
 		Name            string
@@ -309,7 +309,7 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
-	req := &kafkav1.KafkaCluster{AccountId: c.EnvironmentId(), Id: args[0]}
+	req := &schedv1.KafkaCluster{AccountId: c.EnvironmentId(), Id: args[0]}
 	err := c.Client.Kafka.Delete(context.Background(), req)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -334,7 +334,7 @@ func check(err error) {
 	}
 }
 
-func checkCloudAndRegion(cloudId string, regionId string, clouds []*kafkav1.CloudMetadata) error {
+func checkCloudAndRegion(cloudId string, regionId string, clouds []*schedv1.CloudMetadata) error {
 	for _, cloud := range clouds {
 		if cloudId == cloud.Id {
 			for _, region := range cloud.Regions {
@@ -352,7 +352,7 @@ func checkCloudAndRegion(cloudId string, regionId string, clouds []*kafkav1.Clou
 	return fmt.Errorf("'%s' cloud provider does not exist. You can view a list of available cloud providers and regions with the 'kafka region list' command.", cloudId)
 }
 
-func getAccountsForCloud(cloudId string, clouds []*kafkav1.CloudMetadata) []string {
+func getAccountsForCloud(cloudId string, clouds []*schedv1.CloudMetadata) []string {
 	var accounts []string
 	for _, cloud := range clouds {
 		if cloudId == cloud.Id {

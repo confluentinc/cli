@@ -9,11 +9,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/confluentinc/ccloud-sdk-go/mock"
-	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
-	ksqlv1 "github.com/confluentinc/ccloudapis/ksql/v1"
-	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/acl"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
@@ -65,17 +64,17 @@ const (
 type KSQLTestSuite struct {
 	suite.Suite
 	conf         *v3.Config
-	kafkaCluster *kafkav1.KafkaCluster
-	ksqlCluster  *ksqlv1.KSQLCluster
+	kafkaCluster *schedv1.KafkaCluster
+	ksqlCluster  *schedv1.KSQLCluster
 	serviceAcct  *orgv1.User
-	ksqlc        *mock.MockKSQL
+	ksqlc        *mock.KSQL
 	kafkac       *mock.Kafka
 	userc        *mock.User
 }
 
 func (suite *KSQLTestSuite) SetupSuite() {
 	suite.conf = v3.AuthenticatedCloudConfigMock()
-	suite.ksqlCluster = &ksqlv1.KSQLCluster{
+	suite.ksqlCluster = &schedv1.KSQLCluster{
 		Id:                ksqlClusterID,
 		KafkaClusterId:    suite.conf.Context().KafkaClusterContext.GetActiveKafkaClusterId(),
 		PhysicalClusterId: physicalClusterID,
@@ -90,24 +89,24 @@ func (suite *KSQLTestSuite) SetupSuite() {
 
 func (suite *KSQLTestSuite) SetupTest() {
 	suite.kafkac = &mock.Kafka{
-		DescribeFunc: func(ctx context.Context, cluster *kafkav1.KafkaCluster) (*kafkav1.KafkaCluster, error) {
+		DescribeFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error) {
 			return suite.kafkaCluster, nil
 		},
-		CreateACLsFunc: func(ctx context.Context, cluster *kafkav1.KafkaCluster, binding []*kafkav1.ACLBinding) error {
+		CreateACLsFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster, binding []*schedv1.ACLBinding) error {
 			return nil
 		},
 	}
-	suite.ksqlc = &mock.MockKSQL{
-		DescribeFunc: func(arg0 context.Context, arg1 *ksqlv1.KSQLCluster) (*ksqlv1.KSQLCluster, error) {
+	suite.ksqlc = &mock.KSQL{
+		DescribeFunc: func(arg0 context.Context, arg1 *schedv1.KSQLCluster) (*schedv1.KSQLCluster, error) {
 			return suite.ksqlCluster, nil
 		},
-		CreateFunc: func(arg0 context.Context, arg1 *ksqlv1.KSQLClusterConfig) (*ksqlv1.KSQLCluster, error) {
+		CreateFunc: func(arg0 context.Context, arg1 *schedv1.KSQLClusterConfig) (*schedv1.KSQLCluster, error) {
 			return suite.ksqlCluster, nil
 		},
-		ListFunc: func(arg0 context.Context, arg1 *ksqlv1.KSQLCluster) ([]*ksqlv1.KSQLCluster, error) {
-			return []*ksqlv1.KSQLCluster{suite.ksqlCluster}, nil
+		ListFunc: func(arg0 context.Context, arg1 *schedv1.KSQLCluster) ([]*schedv1.KSQLCluster, error) {
+			return []*schedv1.KSQLCluster{suite.ksqlCluster}, nil
 		},
-		DeleteFunc: func(arg0 context.Context, arg1 *ksqlv1.KSQLCluster) error {
+		DeleteFunc: func(arg0 context.Context, arg1 *schedv1.KSQLCluster) error {
 			return nil
 		},
 	}
@@ -147,8 +146,8 @@ func (suite *KSQLTestSuite) TestShouldConfigureACLs() {
 func (suite *KSQLTestSuite) TestShouldAlsoConfigureForPro() {
 	cmd := suite.newCMD()
 	cmd.SetArgs(append([]string{"app", "configure-acls", ksqlClusterID}))
-	suite.kafkac.DescribeFunc = func(ctx context.Context, cluster *kafkav1.KafkaCluster) (cluster2 *kafkav1.KafkaCluster, e error) {
-		return &kafkav1.KafkaCluster{Id: suite.conf.Context().KafkaClusterContext.GetActiveKafkaClusterId(), Enterprise: false}, nil
+	suite.kafkac.DescribeFunc = func(ctx context.Context, cluster *schedv1.KafkaCluster) (cluster2 *schedv1.KafkaCluster, e error) {
+		return &schedv1.KafkaCluster{Id: suite.conf.Context().KafkaClusterContext.GetActiveKafkaClusterId(), Enterprise: false}, nil
 	}
 
 	err := cmd.Execute()
