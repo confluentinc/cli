@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -115,10 +115,10 @@ func (c *clusterCommand) enable(cmd *cobra.Command, args []string) error {
 	}
 
 	// Trust the API will handle CCP/CCE
-	location := srv1.GlobalSchemaRegistryLocation(srv1.GlobalSchemaRegistryLocation_value[strings.ToUpper(locationFlag)])
+	location := schedv1.GlobalSchemaRegistryLocation(schedv1.GlobalSchemaRegistryLocation_value[strings.ToUpper(locationFlag)])
 
 	// Build the SR instance
-	clusterConfig := &srv1.SchemaRegistryClusterConfig{
+	clusterConfig := &schedv1.SchemaRegistryClusterConfig{
 		AccountId:       c.EnvironmentId(),
 		Location:        location,
 		ServiceProvider: serviceProvider,

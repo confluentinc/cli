@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 )
 
@@ -15,5 +15,5 @@ func KafkaCluster(cmd *cobra.Command, ctx *DynamicContext) (*schedv1.KafkaCluste
 	if err != nil {
 		return nil, err
 	}
-	return &kafkav1.KafkaCluster{AccountId: envId, Id: kcc.ID, ApiEndpoint: kcc.APIEndpoint}, nil
+	return &schedv1.KafkaCluster{AccountId: envId, Id: kcc.ID, ApiEndpoint: kcc.APIEndpoint}, nil
 }

@@ -8,10 +8,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	opv1 "github.com/confluentinc/cc-structs/operator/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go/mock"
-	connectv1 "github.com/confluentinc/ccloudapis/connect/v1"
-	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -27,8 +27,8 @@ const (
 type CatalogTestSuite struct {
 	suite.Suite
 	conf         *v3.Config
-	kafkaCluster *kafkav1.KafkaCluster
-	connector    *connectv1.Connector
+	kafkaCluster *schedv1.KafkaCluster
+	connector    *schedv1.Connector
 	connectMock  *ccsdkmock.Connect
 	kafkaMock    *ccsdkmock.Kafka
 }
@@ -36,33 +36,33 @@ type CatalogTestSuite struct {
 func (suite *CatalogTestSuite) SetupSuite() {
 	suite.conf = v3.AuthenticatedCloudConfigMock()
 	ctx := suite.conf.Context()
-	suite.kafkaCluster = &kafkav1.KafkaCluster{
+	suite.kafkaCluster = &schedv1.KafkaCluster{
 		Id:         ctx.KafkaClusterContext.GetActiveKafkaClusterId(),
 		Name:       "KafkaMock",
 		AccountId:  "testAccount",
 		Enterprise: true,
 	}
-	suite.connector = &connectv1.Connector{
+	suite.connector = &schedv1.Connector{
 		Name:           connectorName,
 		Id:             connectorID,
 		KafkaClusterId: suite.kafkaCluster.Id,
 		AccountId:      "testAccount",
-		Status:         connectv1.Connector_RUNNING,
+		Status:         schedv1.Connector_RUNNING,
 		UserConfigs:    map[string]string{},
 	}
 }
 
 func (suite *CatalogTestSuite) SetupTest() {
 	suite.kafkaMock = &ccsdkmock.Kafka{
-		DescribeFunc: func(ctx context.Context, cluster *kafkav1.KafkaCluster) (*kafkav1.KafkaCluster, error) {
+		DescribeFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error) {
 			return suite.kafkaCluster, nil
 		},
 	}
 	suite.connectMock = &ccsdkmock.Connect{
-		ValidateFunc: func(arg0 context.Context, arg1 *connectv1.ConnectorConfig) (connector *connectv1.ConfigInfos, e error) {
-			return &connectv1.ConfigInfos{Configs: []*connectv1.Configs{{Value: &connectv1.ConfigValue{Value: "abc", Errors: []string{"new error"}}}}}, errors.New("config.name")
+		ValidateFunc: func(arg0 context.Context, arg1 *schedv1.ConnectorConfig) (connector *opv1.ConfigInfos, e error) {
+			return &opv1.ConfigInfos{Configs: []*opv1.Configs{{Value: &opv1.ConfigValue{Value: "abc", Errors: []string{"new error"}}}}}, errors.New("config.name")
 		},
-		GetPluginsFunc: func(arg0 context.Context, arg1 *connectv1.Connector, arg2 string) (infos []*connectv1.ConnectorPluginInfo, e error) {
+		GetPluginsFunc: func(arg0 context.Context, arg1 *schedv1.Connector, arg2 string) (infos []*opv1.ConnectorPluginInfo, e error) {
 			return nil, nil
 		},
 	}

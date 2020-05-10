@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/Shopify/sarama"
-	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/go-printer"
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
@@ -227,8 +227,8 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 		return errors.HandleCommon(err, cmd)
 	}
 
-	topic := &kafkav1.Topic{
-		Spec: &kafkav1.TopicSpecification{
+	topic := &schedv1.Topic{
+		Spec: &schedv1.TopicSpecification{
 			Configs: make(map[string]string)},
 		Validate: false,
 	}
@@ -267,8 +267,8 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 		return errors.HandleCommon(err, cmd)
 	}
 
-	topic := &kafkav1.TopicSpecification{Name: args[0]}
-	resp, err := a.Client.Kafka.DescribeTopic(context.Background(), cluster, &kafkav1.Topic{Spec: topic, Validate: false})
+	topic := &schedv1.TopicSpecification{Name: args[0]}
+	resp, err := a.Client.Kafka.DescribeTopic(context.Background(), cluster, &schedv1.Topic{Spec: topic, Validate: false})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -289,7 +289,7 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		return errors.HandleCommon(err, cmd)
 	}
 
-	topic := &kafkav1.TopicSpecification{Name: args[0], Configs: make(map[string]string)}
+	topic := &schedv1.TopicSpecification{Name: args[0], Configs: make(map[string]string)}
 
 	configs, err := cmd.Flags().GetStringSlice("config")
 	if err != nil {
@@ -304,7 +304,7 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	err = a.Client.Kafka.UpdateTopic(context.Background(), cluster, &kafkav1.Topic{Spec: topic, Validate: validate})
+	err = a.Client.Kafka.UpdateTopic(context.Background(), cluster, &schedv1.Topic{Spec: topic, Validate: validate})
 
 	return errors.HandleCommon(err, cmd)
 }
@@ -315,8 +315,8 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 		return errors.HandleCommon(err, cmd)
 	}
 
-	topic := &kafkav1.TopicSpecification{Name: args[0]}
-	err = a.Client.Kafka.DeleteTopic(context.Background(), cluster, &kafkav1.Topic{Spec: topic, Validate: false})
+	topic := &schedv1.TopicSpecification{Name: args[0]}
+	err = a.Client.Kafka.DeleteTopic(context.Background(), cluster, &schedv1.Topic{Spec: topic, Validate: false})
 
 	return errors.HandleCommon(err, cmd)
 }
@@ -454,7 +454,7 @@ func toMap(configs []string) (map[string]string, error) {
 	return configMap, nil
 }
 
-func printHumanDescribe(cmd *cobra.Command, resp *kafkav1.TopicDescription) error {
+func printHumanDescribe(cmd *cobra.Command, resp *schedv1.TopicDescription) error {
 	pcmd.Printf(cmd, "Topic: %s PartitionCount: %d ReplicationFactor: %d\n",
 		resp.Name, len(resp.Partitions), len(resp.Partitions[0].Replicas))
 
@@ -484,7 +484,7 @@ func printHumanDescribe(cmd *cobra.Command, resp *kafkav1.TopicDescription) erro
 	return nil
 }
 
-func printStructuredDescribe(resp *kafkav1.TopicDescription, format string) error {
+func printStructuredDescribe(resp *schedv1.TopicDescription, format string) error {
 	structuredDisplay := &structuredDescribeDisplay{Config: make(map[string]string)}
 	structuredDisplay.TopicName = resp.Name
 	structuredDisplay.PartitionCount = len(resp.Partitions)
@@ -503,7 +503,7 @@ func printStructuredDescribe(resp *kafkav1.TopicDescription, format string) erro
 	return output.StructuredOutput(format, structuredDisplay)
 }
 
-func getPartitionDisplay(partition *kafkav1.TopicPartitionInfo, topicName string) *partitionDescribeDisplay {
+func getPartitionDisplay(partition *schedv1.TopicPartitionInfo, topicName string) *partitionDescribeDisplay {
 	var replicas []uint32
 	for _, replica := range partition.Replicas {
 		replicas = append(replicas, replica.Id)

@@ -9,8 +9,8 @@ import (
 	"os"
 	"testing"
 
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
-	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	authMock "github.com/confluentinc/cli/internal/pkg/auth/mock"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	testUtils "github.com/confluentinc/cli/test"

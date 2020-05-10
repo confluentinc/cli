@@ -3,8 +3,8 @@ package apikey
 import (
 	"context"
 
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
-	v1 "github.com/confluentinc/ccloudapis/ksql/v1"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -27,7 +27,7 @@ func (c *command) resolveResourceId(cmd *cobra.Command, resolver pcmd.FlagResolv
 	} else if resourceType == pcmd.KSQLResourceType {
 		ctx := context.Background()
 		cluster, err := client.KSQL.Describe(
-			ctx, &v1.KSQLCluster{
+			ctx, &schedv1.KSQLCluster{
 				Id:        resourceId,
 				AccountId: c.EnvironmentId(),
 			})

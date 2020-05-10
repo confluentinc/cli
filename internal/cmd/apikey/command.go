@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
@@ -153,15 +153,15 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		ResourceType string
 		ResourceId   string
 	}
-	var apiKeys []*authv1.ApiKey
+	var apiKeys []*schedv1.ApiKey
 
 	resourceType, resourceId, currentKey, err := c.resolveResourceId(cmd, c.Config.Resolver, c.Client)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	var logicalClusters []*authv1.ApiKey_Cluster
+	var logicalClusters []*schedv1.ApiKey_Cluster
 	if resourceId != "" {
-		logicalClusters = []*authv1.ApiKey_Cluster{{Id: resourceId, Type: resourceType}}
+		logicalClusters = []*schedv1.ApiKey_Cluster{{Id: resourceId, Type: resourceType}}
 	}
 
 	userId, err := cmd.Flags().GetInt32("service-account")
@@ -180,7 +180,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		userId = c.State.Auth.User.Id
 	}
 
-	apiKeys, err = c.Client.APIKey.List(context.Background(), &authv1.ApiKey{AccountId: c.EnvironmentId(), LogicalClusters: logicalClusters, UserId: userId})
+	apiKeys, err = c.Client.APIKey.List(context.Background(), &schedv1.ApiKey{AccountId: c.EnvironmentId(), LogicalClusters: logicalClusters, UserId: userId})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -238,7 +238,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 func (c *command) update(cmd *cobra.Command, args []string) error {
 	c.setKeyStoreIfNil()
 	apiKey := args[0]
-	key, err := c.Client.APIKey.Get(context.Background(), &authv1.ApiKey{Key: apiKey, AccountId: c.EnvironmentId()})
+	key, err := c.Client.APIKey.Get(context.Background(), &schedv1.ApiKey{Key: apiKey, AccountId: c.EnvironmentId()})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -275,13 +275,13 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	key := &authv1.ApiKey{
+	key := &schedv1.ApiKey{
 		UserId:      userId,
 		Description: description,
 		AccountId:   c.EnvironmentId(),
 	}
 	if resourceType != pcmd.CloudResourceType {
-		key.LogicalClusters = []*authv1.ApiKey_Cluster{{Id: clusterId, Type: resourceType}}
+		key.LogicalClusters = []*schedv1.ApiKey_Cluster{{Id: clusterId, Type: resourceType}}
 	}
 	userKey, err := c.Client.APIKey.Create(context.Background(), key)
 	if err != nil {
@@ -314,11 +314,11 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	c.setKeyStoreIfNil()
 	apiKey := args[0]
 
-	userKey, err := c.Client.APIKey.Get(context.Background(), &authv1.ApiKey{Key: apiKey, AccountId: c.EnvironmentId()})
+	userKey, err := c.Client.APIKey.Get(context.Background(), &schedv1.ApiKey{Key: apiKey, AccountId: c.EnvironmentId()})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	key := &authv1.ApiKey{
+	key := &schedv1.ApiKey{
 		Id:        userKey.Id,
 		Key:       apiKey,
 		AccountId: c.EnvironmentId(),
@@ -375,7 +375,7 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	}
 
 	// Check if API key exists server-side
-	_, err = c.Client.APIKey.Get(context.Background(), &authv1.ApiKey{Key: key, AccountId: c.EnvironmentId()})
+	_, err = c.Client.APIKey.Get(context.Background(), &schedv1.ApiKey{Key: key, AccountId: c.EnvironmentId()})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -387,7 +387,7 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(errors.Errorf("Refusing to overwrite existing secret for API Key %s", key), cmd)
 	}
 
-	if err := c.keystore.StoreAPIKey(&authv1.ApiKey{Key: key, Secret: secret}, cluster.ID, cmd); err != nil {
+	if err := c.keystore.StoreAPIKey(&schedv1.ApiKey{Key: key, Secret: secret}, cluster.ID, cmd); err != nil {
 		return errors.HandleCommon(errors.Wrapf(err, "unable to store the API key locally"), cmd)
 	}
 	return nil
