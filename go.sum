@@ -109,6 +109,8 @@ github.com/confluentinc/cc-structs/kafka/scheduler v0.419.0 h1:3c0KFF+bhG55ZdaaC
 github.com/confluentinc/cc-structs/kafka/scheduler v0.419.0/go.mod h1:VzT5EDgrn2JRsRPkY+12iN6L8hP+UzH4Zbn0IfxB0sc=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.424.0 h1:9WDdPd026LmZsT6T3SkWgzv2+8aWGoZ9C/DBd4Vjcr0=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.424.0/go.mod h1:VzT5EDgrn2JRsRPkY+12iN6L8hP+UzH4Zbn0IfxB0sc=
+github.com/confluentinc/cc-structs/kafka/scheduler v0.441.0 h1:zg5/pQf7YjgFS9wTp5TPx6weMbTuT6QG3pNrNQteg60=
+github.com/confluentinc/cc-structs/kafka/scheduler v0.441.0/go.mod h1:ObI7Nx0HE/gAltBMzoDYDlUna0LITS8ZTLtyjxQYGY0=
 github.com/confluentinc/cc-structs/kafka/util v0.44.0/go.mod h1:2dfBQRadkzTsF+JgcEODjsvrHsw/U3GcftdEOZVv+D4=
 github.com/confluentinc/cc-structs/kafka/util v0.405.0/go.mod h1:gsDgEuy4t2754lindeBd5ESWJPUQEO0byDd97RJkKA0=
 github.com/confluentinc/cc-structs/kafka/util v0.408.0 h1:bDeXoIAPhHZjpaceVGldJ0gm4y1n5DrzZELd+th+J28=
@@ -123,6 +125,8 @@ github.com/confluentinc/cc-utils-public v0.1.0/go.mod h1:9GIApQ66kQGr+ROZvop7GFy
 github.com/confluentinc/ccloud-sdk-go v0.0.23/go.mod h1:M7y3t26P7O+pf27PEP4RsK+T5VNMpMKO2FC6ZiGzLds=
 github.com/confluentinc/ccloud-sdk-go v0.0.24 h1:4xL8lcUbbBZhDiJISrSb0zN/GIB/djpeNT8tV5VKi3c=
 github.com/confluentinc/ccloud-sdk-go v0.0.24/go.mod h1:M7y3t26P7O+pf27PEP4RsK+T5VNMpMKO2FC6ZiGzLds=
+github.com/confluentinc/ccloud-sdk-go v0.0.27 h1:lrotLr1FRTS/Vgu2BeeZxTm59o430+W3JfFqZnXEgHQ=
+github.com/confluentinc/ccloud-sdk-go v0.0.27/go.mod h1:/syWTcDfi+P3LmFy7Q9GKI3wRpw986g/JOn4SnxXS68=
 github.com/confluentinc/go-editor v0.4.0 h1:5hMjKsKmIOmlu3Yyz8zDq66Qpdin8HSmRaMhqhxRf5Y=
 github.com/confluentinc/go-editor v0.4.0/go.mod h1:sW1NzJdowffHQzy4iSbfY/ykRFMDE69I8EaT33Ebh7Y=
 github.com/confluentinc/go-printer v0.13.0 h1:zgmoYZPQ51xjOPSW4G+QimPcoZEAflCb4UsgvlKA544=
