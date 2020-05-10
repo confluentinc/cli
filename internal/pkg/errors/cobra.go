@@ -7,6 +7,7 @@ import (
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	corev1 "github.com/confluentinc/ccloudapis/core/v1"
+	"github.com/confluentinc/go-editor"
 	"github.com/confluentinc/mds-sdk-go"
 )
 

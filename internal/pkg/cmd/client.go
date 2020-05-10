@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/confluentinc/ccloud-sdk-go"
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
 	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
 	v1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
