@@ -3,6 +3,7 @@ package mock
 import (
 	"context"
 	"fmt"
+	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 
 	"github.com/golang/protobuf/proto"
 
@@ -15,6 +16,10 @@ var _ ccloud.Kafka = (*Kafka)(nil)
 
 type Kafka struct {
 	Expect chan interface{}
+}
+
+func (m *Kafka) Update(ctx context.Context, cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error) {
+	return cluster, nil
 }
 
 func (m *Kafka) GetTopicDefaults(ctx context.Context, cluster *schedv1.KafkaCluster) (*schedv1.TopicSpecification, error) {
@@ -42,7 +47,7 @@ func (m *Kafka) Describe(_ context.Context, cluster *schedv1.KafkaCluster) (*sch
 }
 
 func (m *Kafka) Create(_ context.Context, config *schedv1.KafkaClusterConfig) (*schedv1.KafkaCluster, error) {
-	return &schedv1.KafkaCluster{}, nil
+	return &schedv1.KafkaCluster{Deployment: &schedv1.Deployment{Sku: productv1.Sku_BASIC}}, nil
 }
 
 func (m *Kafka) Delete(_ context.Context, cluster *schedv1.KafkaCluster) error {

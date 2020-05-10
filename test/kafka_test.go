@@ -8,24 +8,38 @@ func (s *CLITestSuite) TestKafkaCommands() {
 		{args: "kafka cluster list", fixture: "kafka6.golden", wantErrCode: 0},
 		{args: "kafka cluster list -o json", fixture: "kafka7.golden", wantErrCode: 0},
 		{args: "kafka cluster list -o yaml", fixture: "kafka8.golden", wantErrCode: 0},
+
 		{args: "kafka cluster create", fixture: "kafka1.golden", wantErrCode: 1},
 		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1 --availability single-zone", fixture: "kafka2.golden", wantErrCode: 0},
 		{args: "kafka cluster create my-failed-cluster --cloud oops --region us-east1 --availability single-zone", fixture: "kafka12.golden", wantErrCode: 1},
 		{args: "kafka cluster create my-failed-cluster --cloud aws --region oops --availability single-zone", fixture: "kafka13.golden", wantErrCode: 1},
 		{args: "kafka cluster create my-failed-cluster --cloud aws --region us-east-1 --availability single-zone --type oops", fixture: "kafka20.golden", wantErrCode: 1},
 		{args: "kafka cluster create my-failed-cluster --cloud aws --region us-east-1 --availability single-zone --type dedicated --cku 0", fixture: "kafka21.golden", wantErrCode: 1},
+		{args: "kafka cluster create my-dedicated-cluster --cloud aws --region us-east-1 --type dedicated --cku 1", fixture: "kafka22.golden", wantErrCode: 0},
+		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1 --availability single-zone -o json", fixture: "kafka23.golden", wantErrCode: 0},
+		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1 --availability single-zone -o yaml", fixture: "kafka24.golden", wantErrCode: 0},
+
+		{args: "kafka cluster update lkc-update ", fixture: "kafka25.golden", wantErrCode: 1},
+		{args: "kafka cluster update lkc-update --name lkc-update-name", fixture: "kafka26.golden", wantErrCode: 0},
+		{args: "kafka cluster update lkc-update-dedicated --name lkc-update-dedicated-name --cku 2", fixture: "kafka27.golden", wantErrCode: 0},
+		{args: "kafka cluster update lkc-update --name lkc-update-name -o json", fixture: "kafka28.golden", wantErrCode: 0},
+		{args: "kafka cluster update lkc-update --name lkc-update-name -o yaml", fixture: "kafka29.golden", wantErrCode: 0},
+
 		{args: "kafka cluster delete", fixture: "kafka3.golden", wantErrCode: 1},
 		{args: "kafka cluster delete lkc-unknown", fixture: "kafka4.golden", wantErrCode: 1},
 		{args: "kafka cluster delete lkc-def973", fixture: "kafka5.golden", wantErrCode: 0},
+
 		{args: "kafka region list", fixture: "kafka14.golden", wantErrCode: 0},
 		{args: "kafka region list -o json", fixture: "kafka15.golden", wantErrCode: 0},
 		{args: "kafka region list -o json", fixture: "kafka16.golden", wantErrCode: 0},
 		{args: "kafka region list --cloud gcp", fixture: "kafka9.golden", wantErrCode: 0},
 		{args: "kafka region list --cloud aws", fixture: "kafka10.golden", wantErrCode: 0},
 		{args: "kafka region list --cloud azure", fixture: "kafka11.golden", wantErrCode: 0},
+
 		{args: "kafka cluster describe lkc-describe", fixture: "kafka17.golden", wantErrCode: 0},
 		{args: "kafka cluster describe lkc-describe -o json", fixture: "kafka18.golden", wantErrCode: 0},
 		{args: "kafka cluster describe lkc-describe -o yaml", fixture: "kafka19.golden", wantErrCode: 0},
+
 		{args: "kafka acl list --cluster lkc-acls", fixture: "kafka-acls-list.golden", wantErrCode: 0},
 		{args: "kafka acl create --cluster lkc-acls --allow --service-account 7272 --operation READ --operation DESCRIBED --topic 'test-topic'", fixture: "kafka-acls-invalid-operation.golden", wantErrCode: 1},
 		{args: "kafka acl create --cluster lkc-acls --allow --service-account 7272 --operation READ --operation DESCRIBE --topic 'test-topic'", fixture: "", wantErrCode: 0},

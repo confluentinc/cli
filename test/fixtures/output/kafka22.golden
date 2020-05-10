@@ -1,10 +1,11 @@
 +-------------------+---------------------------+
 | Id                | lkc-def963                |
-| Name              | my-new-cluster            |
-| Type              | BASIC                     |
-| Ingress           |                       100 |
-| Egress            |                       100 |
-| Storage           |                      5000 |
+| Name              | my-dedicated-cluster      |
+| Type              | DEDICATED                 |
+| ClusterSize       |                         1 |
+| Ingress           |                        50 |
+| Egress            |                       150 |
+| Storage           |                     30000 |
 | Provider          | aws                       |
 | Region            | us-east-1                 |
 | Status            | PROVISIONING              |
