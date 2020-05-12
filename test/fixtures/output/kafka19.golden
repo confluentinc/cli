@@ -1,6 +1,5 @@
 api_endpoint: http://kafka-api-url
 egress: 100
-encryption_key_id: ""
 endpoint: SASL_SSL://kafka-endpoint
 id: lkc-describe
 ingress: 100

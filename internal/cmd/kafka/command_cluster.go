@@ -3,9 +3,10 @@ package kafka
 import (
 	"context"
 	"fmt"
-	"io"
 	"os"
 	"strings"
+
+	"github.com/confluentinc/ccloud-sdk-go"
 
 	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
@@ -14,33 +15,18 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
-	"github.com/confluentinc/cli/internal/pkg/confirm"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 var (
-	listFields           = []string{"Id", "Name", "ServiceProvider", "Region", "Durability", "Status"}
-	listHumanLabels      = []string{"Id", "Name", "Provider", "Region", "Availability", "Status"}
-	listStructuredLabels = []string{"id", "name", "provider", "region", "durability", "status"}
-	describeFields       = []string{"Id", "Name", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "ApiEndpoint", "EncryptionKeyId"}
-	describeHumanRenames = map[string]string{
-		"NetworkIngress":  "Ingress",
-		"NetworkEgress":   "Egress",
-		"ServiceProvider": "Provider",
-		"EncryptionKeyId": "Encryption Key ID"}
-	describeStructuredRenames = map[string]string{
-		"Id":              "id",
-		"Name":            "name",
-		"NetworkIngress":  "ingress",
-		"NetworkEgress":   "egress",
-		"Storage":         "storage",
-		"ServiceProvider": "provider",
-		"Region":          "region",
-		"Status":          "status",
-		"Endpoint":        "endpoint",
-		"ApiEndpoint":     "api_endpoint",
-		"EncryptionKeyId": "encryption_key_id"}
+	listFields                = []string{"Id", "Name", "ServiceProvider", "Region", "Durability", "Status"}
+	listHumanLabels           = []string{"Id", "Name", "Provider", "Region", "Availability", "Status"}
+	listStructuredLabels      = []string{"id", "name", "provider", "region", "durability", "status"}
+	describeFields            = []string{"Id", "Name", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "ApiEndpoint"}
+	describeHumanRenames      = map[string]string{"NetworkIngress": "Ingress", "NetworkEgress": "Egress", "ServiceProvider": "Provider"}
+	describeStructuredRenames = map[string]string{"Id": "id", "Name": "name", "NetworkIngress": "ingress", "NetworkEgress": "egress", "Storage": "storage",
+		"ServiceProvider": "provider", "Region": "region", "Status": "status", "Endpoint": "endpoint", "ApiEndpoint": "api_endpoint"}
 )
 
 const (
@@ -89,7 +75,6 @@ func (c *clusterCommand) init() {
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	}
-
 	createCmd.Flags().String("cloud", "", "Cloud provider ID (e.g. 'aws' or 'gcp').")
 	createCmd.Flags().String("region", "", "Cloud region ID for cluster (e.g. 'us-west-2').")
 	check(createCmd.MarkFlagRequired("cloud"))
@@ -97,7 +82,6 @@ func (c *clusterCommand) init() {
 	createCmd.Flags().String("availability", singleZone, fmt.Sprintf("Availability of the cluster. Allowed Values: %s, %s.", singleZone, multiZone))
 	createCmd.Flags().String("type", skuBasic, fmt.Sprintf("Type of the Kafka cluster. Allowed values: %s, %s, %s.", skuBasic, skuStandard, skuDedicated))
 	createCmd.Flags().Int("cku", 0, "Number of Confluent Kafka Units (non-negative). Required for Kafka clusters of type 'dedicated'.")
-	createCmd.Flags().String("encryption-key", "", "Encryption Key ID (e.g. for Amazon Web Services, the Amazon Resource Name of the key).")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
@@ -159,9 +143,6 @@ func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 	return outputWriter.Out()
 }
 
-var stdin io.ReadWriter = os.Stdin
-var stdout io.ReadWriter = os.Stdout
-
 func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	cloud, err := cmd.Flags().GetString("cloud")
 	if err != nil {
@@ -171,11 +152,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	clouds, err := c.Client.EnvironmentMetadata.Get(context.Background())
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	err = checkCloudAndRegion(cloud, region, clouds)
+	err = checkCloudAndRegion(cloud, region, c.Client)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -195,26 +172,6 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	encryptionKeyID, err := cmd.Flags().GetString("encryption-key")
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	if encryptionKeyID != "" {
-		accounts := getAccountsForCloud(cloud, clouds)
-		accountsStr := strings.Join(accounts, ", ")
-		msg := fmt.Sprintf("Please confirm you've authorized the key for these accounts %s", accountsStr)
-		ok, err := confirm.Do(
-			stdout,
-			stdin,
-			msg,
-		)
-		if err != nil {
-			return errors.HandleCommon(errors.New("Failed to read your confirmation"), cmd)
-		}
-		if !ok {
-			return errors.HandleCommon(errors.New("Please authorize the accounts for the key"), cmd)
-		}
-	}
 
 	cfg := &schedv1.KafkaClusterConfig{
 		AccountId:       c.EnvironmentId(),
@@ -223,7 +180,6 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		Region:          region,
 		Durability:      availability,
 		Deployment:      &schedv1.Deployment{Sku: sku},
-		EncryptionKeyId: encryptionKeyID,
 	}
 	if sku == productv1.Sku_DEDICATED {
 		cku, err := cmd.Flags().GetInt("cku")
@@ -286,7 +242,6 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 		Status          string
 		Endpoint        string
 		ApiEndpoint     string
-		EncryptionKeyId string
 	}
 	describeObject := &describeStruct{
 		Id:              cluster.Id,
@@ -299,7 +254,6 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 		Status:          cluster.Status.String(),
 		Endpoint:        cluster.Endpoint,
 		ApiEndpoint:     cluster.ApiEndpoint,
-		EncryptionKeyId: cluster.EncryptionKeyId,
 	}
 	return output.DescribeObject(cmd, describeObject, describeFields, describeHumanRenames, describeStructuredRenames)
 }
@@ -334,7 +288,11 @@ func check(err error) {
 	}
 }
 
-func checkCloudAndRegion(cloudId string, regionId string, clouds []*schedv1.CloudMetadata) error {
+func checkCloudAndRegion(cloudId string, regionId string, client *ccloud.Client) error {
+	clouds, err := client.EnvironmentMetadata.Get(context.Background())
+	if err != nil {
+		return err
+	}
 	for _, cloud := range clouds {
 		if cloudId == cloud.Id {
 			for _, region := range cloud.Regions {
@@ -350,17 +308,4 @@ func checkCloudAndRegion(cloudId string, regionId string, clouds []*schedv1.Clou
 		}
 	}
 	return fmt.Errorf("'%s' cloud provider does not exist. You can view a list of available cloud providers and regions with the 'kafka region list' command.", cloudId)
-}
-
-func getAccountsForCloud(cloudId string, clouds []*schedv1.CloudMetadata) []string {
-	var accounts []string
-	for _, cloud := range clouds {
-		if cloudId == cloud.Id {
-			for _, account := range cloud.Accounts {
-				accounts = append(accounts, account.Id)
-			}
-			break
-		}
-	}
-	return accounts
 }

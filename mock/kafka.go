@@ -17,6 +17,10 @@ type Kafka struct {
 	Expect chan interface{}
 }
 
+func (m *Kafka) Update(ctx context.Context, cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error) {
+	return cluster, nil
+}
+
 func (m *Kafka) GetTopicDefaults(ctx context.Context, cluster *schedv1.KafkaCluster) (*schedv1.TopicSpecification, error) {
 	return &schedv1.TopicSpecification{}, nil
 }

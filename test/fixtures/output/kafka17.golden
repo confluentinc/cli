@@ -1,13 +1,12 @@
-+-------------------+---------------------------+
-| Id                | lkc-describe              |
-| Name              | kafka-cluster             |
-| Ingress           |                       100 |
-| Egress            |                       100 |
-| Storage           |                       500 |
-| Provider          | aws                       |
-| Region            | us-west-2                 |
-| Status            | PROVISIONING              |
-| Endpoint          | SASL_SSL://kafka-endpoint |
-| ApiEndpoint       | http://kafka-api-url      |
-| Encryption Key ID |                           |
-+-------------------+---------------------------+
++-------------+---------------------------+
+| Id          | lkc-describe              |
+| Name        | kafka-cluster             |
+| Ingress     |                       100 |
+| Egress      |                       100 |
+| Storage     |                       500 |
+| Provider    | aws                       |
+| Region      | us-west-2                 |
+| Status      | PROVISIONING              |
+| Endpoint    | SASL_SSL://kafka-endpoint |
+| ApiEndpoint | http://kafka-api-url      |
++-------------+---------------------------+
