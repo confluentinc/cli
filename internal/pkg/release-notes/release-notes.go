@@ -11,32 +11,72 @@ import (
 )
 
 
-func WriteReleaseNotes(releaseNotesPath, cliName, releaseVersion string) error {
+func WriteReleaseNotes(releaseNotesDocsPagePath, cliName, releaseVersion string) error {
+	releaseNotes, err := getReleaseNotes(cliName, releaseVersion)
+	if err != nil {
+		return err
+	}
+
+	err = writeLatestReleaseNotesFile(cliName, releaseNotes)
+	if err != nil {
+		return err
+	}
+
+	pastReleaseNotes, err := getPastReleaseNotesDocsPage(releaseNotesDocsPagePath)
+	if err != nil {
+		return err
+	}
+	var releaseNotesDocsPage string
+	if cliName == "ccloud" {
+		releaseNotesDocsPage = constructReleaseNotesDocsPage(ccloudHeader, releaseNotes, pastReleaseNotes)
+	} else {
+		releaseNotesDocsPage = constructReleaseNotesDocsPage(confluentHeader, releaseNotes, pastReleaseNotes)
+	}
+	return writeLocalReleaseNotesDocsPage(cliName, releaseNotesDocsPage)
+}
+
+func getReleaseNotes(cliName, releaseVersion string) (string, error) {
 	releaseNotesContent, err := getReleaseNotesContent(cliName)
 	if err != nil {
-		return err
+		return "", err
 	}
+	var format string
+	if cliName == "ccloud" {
+		format = ccloudReleaseNotesFormat
+	} else {
+		format = confluentReleaseNotesFormat
+	}
+	releaseNotes := fmt.Sprintf(format, releaseVersion, releaseNotesContent)
+	return releaseNotes, nil
+}
 
-	latestReleaseNotes := fmt.Sprintf(releaseNotesContentFormat, strings.ToUpper(cliName), releaseVersion, releaseNotesContent)
-
-	latestReleaseNotesFilePath := fmt.Sprintf(releaseNotesLocalFile, cliName, latestReleaseNotesFileName)
-	err = writeReleaseNotesToLocalFile(latestReleaseNotesFilePath, latestReleaseNotes)
+func getReleaseNotesContent(cliName string) (string, error) {
+	sectionContentMap, err := getSectionContentMap()
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	pastReleaseNotes, err := getPastReleaseNotes(releaseNotesPath)
-	if err != nil {
-		return err
-	}
-	fullReleaseNotes  := latestReleaseNotes + pastReleaseNotes
+	newFeaturesList, bugFixesList := getNewFeatureAndBugFixesList(sectionContentMap, cliName)
 
-	fullReleaseNotesFilePath := fmt.Sprintf(releaseNotesLocalFile, cliName, fullReleaseNotesFileName)
-	err = writeReleaseNotesToLocalFile(fullReleaseNotesFilePath, fullReleaseNotes)
-	if err != nil {
-		return err
+	newFeaturesString := assembleSectionString(newFeaturesSectionTitle, newFeaturesList)
+	bugFixesString := assembleSectionString(bugFixesSectionTitle, bugFixesList)
+
+	var sectionString string
+	if newFeaturesString != "" {
+		sectionString += newFeaturesString + "\n"
 	}
-	return nil
+	if bugFixesString != "" {
+		sectionString += bugFixesString
+	}
+	if sectionString == "" {
+		sectionString = fmt.Sprintf(noChangeContentFormat, strings.ToUpper(cliName))
+	}
+	return sectionString, nil
+}
+
+func writeLatestReleaseNotesFile(cliName, releaseNotes string) error {
+	latestReleaseNotesFilePath := fmt.Sprintf(releaseNotesLocalFileFormat, cliName, latestReleaseNotesFileName)
+	return writeReleaseNotesToLocalFile(latestReleaseNotesFilePath, releaseNotes)
 }
 
 func writeReleaseNotesToLocalFile(fileName, releaseNotes string) error {
@@ -53,8 +93,13 @@ func writeReleaseNotesToLocalFile(fileName, releaseNotes string) error {
 	return nil
 }
 
-func getPastReleaseNotes(releaseNotesPath string) (string, error) {
-	oldReleaseFileName := path.Join(releaseNotesPath, "index.rst")
+func writeLocalReleaseNotesDocsPage(cliName, releaseNotesDocsPage string) error {
+	filePath := fmt.Sprintf(releaseNotesLocalFileFormat, cliName, releaseNotesDocsPageFileName)
+	return writeReleaseNotesToLocalFile(filePath, releaseNotesDocsPage)
+}
+
+func getPastReleaseNotesDocsPage(filePath string) (string, error) {
+	oldReleaseFileName := path.Join(filePath, releaseNotesDocsPageFileName)
 	b, err := ioutil.ReadFile(oldReleaseFileName)
 	if err != nil {
 		return "", err
@@ -62,28 +107,10 @@ func getPastReleaseNotes(releaseNotesPath string) (string, error) {
 	return string(b), nil
 }
 
-func getReleaseNotesContent(cliName string) (string, error) {
-	sectionContentMap, err := getSectionContentMap()
-	if err != nil {
-		return "", err
-	}
-
-	newFeaturesList, bugFixesList := getNewFeatureAndBugFixesList(sectionContentMap, cliName)
-
-	newFeaturesString := assembleSectionString(newFeaturesSectionTitle, newFeaturesList)
-	bugFixesString := assembleSectionString(bugFixesSectionTitle, bugFixesList)
-
-	var sectionString string
-	if newFeaturesString != "" {
-		sectionString += newFeaturesString + "\n\n"
-	}
-	if bugFixesString != "" {
-		sectionString += bugFixesString
-	}
-	if sectionString == "" {
-		sectionString = fmt.Sprintf(noChangeContentFormat, strings.ToUpper(cliName))
-	}
-	return sectionString, nil
+func constructReleaseNotesDocsPage(header, latestReleaseNotes, pastReleaseNotes string) string {
+	// remove old header
+	pastReleaseNotes = strings.ReplaceAll(pastReleaseNotes, header, "")
+	return header + latestReleaseNotes + pastReleaseNotes
 }
 
 func getSectionContentMap() (map[ReleaseNotesSection][]string, error) {
@@ -127,7 +154,7 @@ func assembleSectionString(sectionTitle string, sectionList []string) string {
 		sectionString += "- " + element + "\n"
 	}
 	if sectionString != "" {
-		return sectionTitle + "\n----------------------------\n" + sectionString
+		return sectionTitle + "\n------------------------\n" + sectionString
 	}
 	return ""
 }

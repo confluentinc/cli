@@ -4,7 +4,7 @@ GIT_REMOTE_NAME ?= origin
 MASTER_BRANCH   ?= master
 RELEASE_BRANCH  ?= master
 
-DOCS_BRANCH     ?= 5.4.0-post
+DOCS_BRANCH     ?= 5.5.0-post
 
 include ./semver.mk
 
@@ -300,7 +300,7 @@ publish-docs: docs
 		git diff --cached --exit-code >/dev/null && echo "nothing to update for docs" && exit 0; \
 		git commit -m "chore: updating CLI docs for $(VERSION)" || exit 1; \
 		git push origin cli-$(VERSION) || exit 1; \
-		#hub pull-request -b $(DOCS_BRANCH) -m "chore: updating CLI docs for $(VERSION)" || exit 1;
+		hub pull-request -b $(DOCS_BRANCH) -m "chore: updating CLI docs for $(VERSION)" || exit 1;
 		rm -rf $${TMP_BASE}
 #   TODO: we can't enable auto-docs generation for confluent until we migrate go-basher commands into cobra
 #	    make publish-docs-internal BASE_DIR=$${TMP_DIR} CLI_NAME=confluent || exit 1; \
@@ -343,20 +343,17 @@ define print-release-notes-prep-next-steps
 	@echo "===================="
 endef
 
-# TODO: replace master with DOCS_BRANCH
-# TODO: change the git clone branch to the docs branch
-REPLACE_ME_BRANCH := master
 .PHONY: publish-release-notes
 publish-release-notes:
 	@TMP_BASE=$$(mktemp -d) || exit 1; \
-		TMP_RELEASE=$${TMP_BASE}/release-notes; \
-		git clone git@github.com:csreesan/test-release-notes.git $${TMP_RELEASE}; \
+		TMP_RELEASE=$${TMP_BASE}/docs; \
+		git clone git@github.com:csreesan/docs.git $${TMP_RELEASE}; \
 		cd $${TMP_RELEASE} || exit 1; \
 		git fetch ; \
-		git checkout -b cli-$(BUMPED_VERSION) origin/$(REPLACE_ME_BRANCH) || exit 1; \
+		git checkout -b cli-$(BUMPED_VERSION) origin/$(DOCS_BRANCH) || exit 1; \
 		cd - || exit 1; \
-		CCLOUD_RELEASE_DIR=$${TMP_RELEASE}/cloud/cli/release-notes; \
-		CONFLUENT_RELEASE_DIR=$${TMP_RELEASE}/confluent/cli/release-notes; \
+		CCLOUD_RELEASE_DIR=$${TMP_RELEASE}/cloud/cli; \
+		CONFLUENT_RELEASE_DIR=$${TMP_RELEASE}/cli; \
 		make release-notes CCLOUD_RELEASE_DIR=$${CCLOUD_RELEASE_DIR} CONFLUENT_RELEASE_DIR=$${CONFLUENT_RELEASE_DIR}; \
 		make publish-release-notes-internal CCLOUD_RELEASE_DIR=$${CCLOUD_RELEASE_DIR} CONFLUENT_RELEASE_DIR=$${CONFLUENT_RELEASE_DIR} || exit 1; \
 		cd $${TMP_RELEASE} || exit 1; \
@@ -364,7 +361,7 @@ publish-release-notes:
 		git diff --cached --exit-code > /dev/null && echo "nothing to update" && exit 0; \
 		git commit -m "New release notes for $(BUMPED_VERSION)" || exit 1; \
 		git push origin cli-$(BUMPED_VERSION) || exit 1; \
-		hub pull-request -b $(REPLACE_ME_BRANCH) -m "New release notes for $(BUMPED_VERSION)" || exit 1; \
+		hub pull-request -b $(DOCS_BRANCH) -m "New release notes for $(BUMPED_VERSION)" || exit 1; \
 		rm -rf $${TMP_BASE}
 	make publish-release-notes-to-s3
 	$(print-publish-release-notes-next-steps)
@@ -396,13 +393,10 @@ release-notes:
 	@echo Previous Release Version: v$(CLEAN_VERSION)
 	@GO11MODULE=on go run -ldflags '-X main.releaseVersion=$(BUMPED_VERSION) -X main.ccloudReleaseNotesPath=$(CCLOUD_RELEASE_DIR) -X main.confluentReleaseNotesPath=$(CONFLUENT_RELEASE_DIR)' cmd/release-notes/release/main.go
 
-# TODO: make sure to settle where the release notes dir would be
 .PHONY: publish-release-notes-internal
 publish-release-notes-internal:
-	rm $(CCLOUD_RELEASE_DIR)/*.rst
-	cp release-notes/ccloud/*.rst $(CCLOUD_RELEASE_DIR)
-	rm $(CONFLUENT_RELEASE_DIR)/*.rst
-	cp release-notes/confluent/*.rst $(CONFLUENT_RELEASE_DIR)
+	cp release-notes/ccloud/release-notes.rst $(CCLOUD_RELEASE_DIR)
+	cp release-notes/confluent/release-notes.rst $(CONFLUENT_RELEASE_DIR)
 
 .PHONY: clean-release-notes
 clean-release-notes:

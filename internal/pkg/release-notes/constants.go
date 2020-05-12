@@ -1,7 +1,5 @@
 package release_notes
 
-import "path"
-
 type ReleaseNotesSection int
 
 const (
@@ -22,11 +20,14 @@ var (
 		"Confluent New Features": confluentNewFeature,
 		"Confluent Bug Fixes": confluentBugFix,
 	}
-	releaseNotesLocalFile = "./release-notes/%s/%s"
-	latestReleaseNotesFileName = "latest-release.rst"
-	fullReleaseNotesFileName = "index.rst"
+)
 
-	prepFileName = path.Join(".", "release-notes", "prep")
+const (
+	releaseNotesLocalFileFormat  = "./release-notes/%s/%s"
+	latestReleaseNotesFileName   = "latest-release.rst"
+	releaseNotesDocsPageFileName = "release-notes.rst"
+
+	prepFileName = "./release-notes/prep"
 	placeHolder = "<PLACEHOLDER>"
 
 	newFeaturesSectionTitle = "New Features"
@@ -34,11 +35,26 @@ var (
 
 	noChangeContentFormat = "No change relating to %s CLI for this version."
 
-	releaseNotesContentFormat = `
-========================================
-%s CLI %s Release Notes
-========================================
+	ccloudReleaseNotesFormat = `
+%s Release Notes
+==========================
+%s`
+	confluentReleaseNotesFormat = `
+%s Release Notes
+==========================
+%s`
 
-%s
+	confluentHeader = `.. _cli-release-notes:
+
+=============================
+|confluent-cli| Release Notes
+=============================
+`
+
+	ccloudHeader = `.. _ccloud-release-notes:
+
+==========================
+|ccloud| CLI Release Notes
+==========================
 `
 )
