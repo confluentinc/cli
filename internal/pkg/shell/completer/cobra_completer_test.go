@@ -61,6 +61,44 @@ func TestCobraCompleter_Complete(t *testing.T) {
 			},
 		},
 		{
+			name: "suggest command if document is a partial match",
+			fields: fields{
+				RootCmd: func() *cobra.Command {
+					rootCmd := &cobra.Command{
+						Use:   "a",
+						Short: "a",
+						Run: func(cmd *cobra.Command, args []string) {
+							fmt.Println(cmd.Use)
+						},
+					}
+
+					rootCmd.AddCommand(
+						&cobra.Command{
+							Use:   "ba",
+							Short: "ba",
+							Run: func(cmd *cobra.Command, args []string) {
+								fmt.Println(cmd.Use)
+							},
+						}, &cobra.Command{
+							Use:   "ca",
+							Short: "ca",
+							Run: func(cmd *cobra.Command, args []string) {
+								fmt.Println(cmd.Use)
+							},
+						},
+					)
+
+					return rootCmd
+				}(),
+			},
+			args: args{
+				d: *createDocument("b"),
+			},
+			want: []prompt.Suggest{
+				newSuggestion("ba"),
+			},
+		},
+		{
 			name: "don't suggest any hidden commands",
 			fields: fields{
 				RootCmd: func() *cobra.Command {
@@ -180,6 +218,41 @@ func TestCobraCompleter_Complete(t *testing.T) {
 			},
 		},
 		{
+			name: "suggest flag after preceding argument",
+			fields: fields{
+				RootCmd: func() *cobra.Command {
+					cmd := createNestedCommands(2, 2) // No hidden param.
+					cmd.Commands()[1].Flags().StringP("flag", "f", "", "Just a flag")
+					cmd.Flags().SortFlags = false
+					return cmd
+				}(),
+			},
+			args: args{
+				d: *createDocument("11 some_arg --"),
+			},
+			want: []prompt.Suggest{
+				{
+					Text:        "--flag",
+					Description: "Just a flag",
+				},
+			},
+		},
+		{
+			name: "does not suggest anything after invalid flag",
+			fields: fields{
+				RootCmd: func() *cobra.Command {
+					cmd := createNestedCommands(2, 2) // No hidden param.
+					cmd.Commands()[1].Flags().StringP("flag", "f", "", "Just a flag")
+					cmd.Flags().SortFlags = false
+					return cmd
+				}(),
+			},
+			args: args{
+				d: *createDocument("11 -- "),
+			},
+			want: []prompt.Suggest{},
+		},
+		{
 			name: "suggest nested commands",
 			fields: fields{
 				RootCmd: createNestedCommands(2, 2),
@@ -207,8 +280,8 @@ func TestCobraCompleter_Complete(t *testing.T) {
 			fields: fields{
 				RootCmd: func() *cobra.Command {
 					cmd := createNestedCommands(2, 1) // No hidden param.
-					cmd.Flags().StringP("one", "o", "", "Just a flag")
-					cmd.Flags().StringP("two", "t", "", "Just another flag")
+					cmd.PersistentFlags().StringP("one", "o", "", "Just a flag")
+					cmd.PersistentFlags().StringP("two", "t", "", "Just another flag")
 					cmd.Flags().SortFlags = false
 					return cmd
 				}(),
@@ -291,7 +364,7 @@ func createNestedCommands(levels int, cmdsPerLevel int) (cmd *cobra.Command) {
 			fmt.Println(cmd.Use)
 		},
 	}
-	addNestedCommands(rootCmd, levels, levels, cmdsPerLevel)
+	addNestedCommands(rootCmd, levels, 1, cmdsPerLevel)
 	return rootCmd
 }
 
@@ -303,11 +376,11 @@ func newSuggestion(s string) prompt.Suggest {
 }
 
 func addNestedCommands(rootCmd *cobra.Command, maxLevel int, levels int, cmdsPerLevel int) {
-	if levels < 1 {
+	if levels > maxLevel {
 		return
 	}
 	for i := 0; i < cmdsPerLevel; i++ {
-		s := strings.Repeat(strconv.Itoa(maxLevel-levels+1), i+1)
+		s := strings.Repeat(strconv.Itoa(levels), i+1)
 		subCmd := &cobra.Command{
 			Use:   s,
 			Short: s,
@@ -315,7 +388,7 @@ func addNestedCommands(rootCmd *cobra.Command, maxLevel int, levels int, cmdsPer
 				fmt.Println(cmd.Use)
 			},
 		}
-		addNestedCommands(subCmd, maxLevel, levels-1, cmdsPerLevel)
+		addNestedCommands(subCmd, maxLevel, levels+1, cmdsPerLevel)
 		rootCmd.AddCommand(subCmd)
 	}
 }

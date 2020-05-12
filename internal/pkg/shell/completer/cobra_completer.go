@@ -35,6 +35,11 @@ func (c *CobraCompleter) Complete(d prompt.Document) []prompt.Suggest {
 	}
 
 	suggestions := append([]prompt.Suggest{}, getFlagSuggestions(d, matchedCmd)...)
+	if len(suggestions) > 0 {
+		// if flags are suggested, don't need command suggestions
+		return suggestions
+	}
+
 	if matchedCmd.HasAvailableSubCommands() {
 		for _, cmd := range matchedCmd.Commands() {
 			if !cmd.Hidden {
@@ -44,10 +49,21 @@ func (c *CobraCompleter) Complete(d prompt.Document) []prompt.Suggest {
 	}
 
 	_ = matchedCmd.ParseFlags(args)
+
+	// handle completed flags
+	matchedCmd.Flags().VisitAll(func(f *pflag.Flag) {
+		for i, arg := range foundArgs {
+			if "--"+f.Name == arg || "-"+f.Shorthand == arg {
+				foundArgs = append(foundArgs[:i], foundArgs[i+1:]...)
+				break
+			}
+		}
+	})
+
 	allArgs := matchedCmd.Flags().Args()
 	pathWithoutRoot := strings.TrimPrefix(matchedCmd.CommandPath(), c.RootCmd.Name()+" ")
 	unmatchedArgs := strings.TrimPrefix(strings.Join(allArgs, " "), pathWithoutRoot)
-	unmatchedArgArr := strings.Fields(unmatchedArgs)
+	unmatchedArgArr := append(strings.Fields(unmatchedArgs), foundArgs...)
 	if len(unmatchedArgArr) == 0 {
 		return prompt.FilterHasPrefix(suggestions, filter, true)
 	}

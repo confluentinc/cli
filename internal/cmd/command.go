@@ -139,7 +139,7 @@ func NewConfluentCommand(cliName string, cfg *v3.Config, logger *log.Logger, ver
 		//cli.AddCommand(conn)
 
 		// Shell
-		cli.AddCommand(shell.NewShellCmd(prerunner, cli, cfg))
+		cli.AddCommand(shell.NewShellCmd(cli, cfg))
 	} else if cliName == "confluent" {
 		cli.AddCommand(iam.New(prerunner, cfg))
 
