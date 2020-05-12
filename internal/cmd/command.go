@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"net/http"
 	"os"
 	"runtime"
@@ -27,12 +26,14 @@ import (
 	schema_registry "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	"github.com/confluentinc/cli/internal/cmd/secret"
 	service_account "github.com/confluentinc/cli/internal/cmd/service-account"
+	"github.com/confluentinc/cli/internal/cmd/shell"
 	"github.com/confluentinc/cli/internal/cmd/update"
 	"github.com/confluentinc/cli/internal/cmd/version"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	"github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/help"
 	"github.com/confluentinc/cli/internal/pkg/io"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -136,6 +137,9 @@ func NewConfluentCommand(cliName string, cfg *v3.Config, logger *log.Logger, ver
 		//conn = connect.New(prerunner, cfg, connects.New(client, logger))
 		//conn.Hidden = true // The connect feature isn't finished yet, so let's hide it
 		//cli.AddCommand(conn)
+
+		// Shell
+		cli.AddCommand(shell.NewShellCmd(cli, cfg))
 	} else if cliName == "confluent" {
 		cli.AddCommand(iam.New(prerunner, cfg))
 
