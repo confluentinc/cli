@@ -2,6 +2,7 @@ package shell
 
 import (
 	"fmt"
+	goprompt "github.com/c-bata/go-prompt"
 
 	"github.com/spf13/cobra"
 
@@ -38,6 +39,8 @@ func (c *command) init() {
 }
 
 func (c *command) shell(cmd *cobra.Command, args []string) {
+	cliName := c.config.CLIName
+
 	// remove shell command from the shell
 	c.RootCmd.RemoveCommand(c.Command)
 
@@ -47,7 +50,28 @@ func (c *command) shell(cmd *cobra.Command, args []string) {
 	// run the shell
 	fmt.Printf("Welcome to the %s shell!\n", c.config.CLIName)
 	fmt.Println("Please press `Ctrl-D` or type `quit` to exit.")
+
+	if c.config.HasLogin() {
+		fmt.Println("Started shell with authenticated user.")
+	} else {
+		fmt.Println("WARNING❗❗❗ You are currently not authenticated. Please log in to use full features.")
+	}
+
+	livePrefixFunc := func() (prefix string, useLivePrefix bool) {
+		hasLogin := c.config.HasLogin()
+		if hasLogin {
+			prefix = cliName + " ✅ "
+		} else {
+			prefix = cliName + " ❌ "
+		}
+
+		prefix += " > "
+		return prefix, true
+	}
+	livePrefixOpt := goprompt.OptionLivePrefix(livePrefixFunc)
+
+	opts := append(prompt.DefaultPromptOptions(), livePrefixOpt)
 	masterCompleter := completer.NewShellCompleter(c.RootCmd, c.config.CLIName)
-	cliPrompt := prompt.NewShellPrompt(c.RootCmd, masterCompleter, c.config, prompt.DefaultPromptOptions()...)
+	cliPrompt := prompt.NewShellPrompt(c.RootCmd, masterCompleter, c.config, opts...)
 	cliPrompt.Run()
 }
