@@ -2,8 +2,10 @@ package shell
 
 import (
 	"fmt"
+
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/cmd/quit"
 	"github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/shell/completer"
 	"github.com/confluentinc/cli/internal/pkg/shell/prompt"
@@ -39,9 +41,12 @@ func (c *command) shell(cmd *cobra.Command, args []string) {
 	// remove shell command from the shell
 	c.RootCmd.RemoveCommand(c.Command)
 
+	// add shell only quit command
+	c.RootCmd.AddCommand(quit.NewQuitCmd(c.config))
+
 	// run the shell
 	fmt.Printf("Welcome to the %s shell!\n", c.config.CLIName)
-	fmt.Println("Please press `Ctrl-D` to exit.")
+	fmt.Println("Please press `Ctrl-D` or type `quit` to exit.")
 	masterCompleter := completer.NewShellCompleter(c.RootCmd, c.config.CLIName)
 	cliPrompt := prompt.NewShellPrompt(c.RootCmd, masterCompleter, c.config, prompt.DefaultPromptOptions()...)
 	cliPrompt.Run()
