@@ -54,7 +54,7 @@ func (c *command) shell(cmd *cobra.Command, args []string) {
 	if c.config.HasLogin() {
 		fmt.Println("Started shell with authenticated user.")
 	} else {
-		fmt.Println("WARNING❗❗❗ You are currently not authenticated. Please log in to use full features.")
+		fmt.Println("Warning: You are currently not authenticated. Please log in to use full features.")
 	}
 
 	livePrefixFunc := func() (prefix string, useLivePrefix bool) {
