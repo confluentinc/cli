@@ -12,11 +12,7 @@ var (
 
 
 func main() {
-	err := rn.WriteReleaseNotes(ccloudReleaseNotesPath, "ccloud", releaseVersion)
-	if err != nil {
-		panic(err)
-	}
-	err = rn.WriteReleaseNotes(confluentReleaseNotesPath,"confluent", releaseVersion)
+	err := rn.WriteReleaseNotes(ccloudReleaseNotesPath, confluentReleaseNotesPath, releaseVersion)
 	if err != nil {
 		panic(err)
 	}

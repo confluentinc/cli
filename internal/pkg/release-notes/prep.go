@@ -9,6 +9,18 @@ import (
 	"path"
 )
 
+const (
+	bothNewFeaturesTitle = "New Features for Both CLIs"
+	bothBugFixesTitle = "Bug Fixes for Both CLIs"
+	ccloudNewFeaturesTitle = "CCloud New Features"
+	ccloudBugFixesTitle = "CCloud Bug Fixes"
+	confluentNewFeaturesTitle = "Confluent New Features"
+	confluentBugFixesTitle = "Confluent Bug Fixes"
+
+	prepFileName = "./release-notes/prep"
+	placeHolder = "<PLACEHOLDER>"
+)
+
 func WriteReleaseNotesPrep(filename string, releaseVersion string, prevVersion string) error {
 	prepBaseFile := path.Join(".", "internal", "pkg", "release-notes", "prep-base")
 	prepBaseBytes, err := ioutil.ReadFile(prepBaseFile)
@@ -22,7 +34,15 @@ func WriteReleaseNotesPrep(filename string, releaseVersion string, prevVersion s
 	}
 	defer f.Close()
 	mergedPRs := getMergedPRs(prevVersion)
-	_, err = io.WriteString(f, fmt.Sprintf(prepBaseString, releaseVersion, prevVersion, mergedPRs))
+	prepFile := fmt.Sprintf(prepBaseString, releaseVersion, prevVersion, mergedPRs,
+		bothNewFeaturesTitle,
+		bothBugFixesTitle,
+		ccloudNewFeaturesTitle,
+		ccloudBugFixesTitle,
+		confluentNewFeaturesTitle,
+		confluentBugFixesTitle,
+	)
+	_, err = io.WriteString(f, prepFile)
 	return err
 }
 

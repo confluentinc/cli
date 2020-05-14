@@ -346,17 +346,17 @@ endef
 .PHONY: publish-release-notes
 publish-release-notes:
 	@TMP_BASE=$$(mktemp -d) || exit 1; \
-		TMP_RELEASE=$${TMP_BASE}/docs; \
-		git clone git@github.com:csreesan/docs.git $${TMP_RELEASE}; \
-		cd $${TMP_RELEASE} || exit 1; \
+		TMP_DOCS=$${TMP_BASE}/docs; \
+		git clone git@github.com:csreesan/docs.git $${TMP_DOCS}; \
+		cd $${TMP_DOCS} || exit 1; \
 		git fetch ; \
 		git checkout -b cli-$(BUMPED_VERSION) origin/$(DOCS_BRANCH) || exit 1; \
 		cd - || exit 1; \
-		CCLOUD_RELEASE_DIR=$${TMP_RELEASE}/cloud/cli; \
-		CONFLUENT_RELEASE_DIR=$${TMP_RELEASE}/cli; \
-		make release-notes CCLOUD_RELEASE_DIR=$${CCLOUD_RELEASE_DIR} CONFLUENT_RELEASE_DIR=$${CONFLUENT_RELEASE_DIR}; \
-		make publish-release-notes-internal CCLOUD_RELEASE_DIR=$${CCLOUD_RELEASE_DIR} CONFLUENT_RELEASE_DIR=$${CONFLUENT_RELEASE_DIR} || exit 1; \
-		cd $${TMP_RELEASE} || exit 1; \
+		CCLOUD_DOCS_DIR=$${TMP_DOCS}/cloud/cli; \
+		CONFLUENT_DOCS_DIR=$${TMP_DOCS}/cli; \
+		make release-notes CCLOUD_DOCS_DIR=$${CCLOUD_DOCS_DIR} CONFLUENT_DOCS_DIR=$${CONFLUENT_DOCS_DIR}; \
+		make publish-release-notes-to-local-docs-repo CCLOUD_DOCS_DIR=$${CCLOUD_DOCS_DIR} CONFLUENT_DOCS_DIR=$${CONFLUENT_DOCS_DIR} || exit 1; \
+		cd $${TMP_DOCS} || exit 1; \
 		git add . || exit 1; \
 		git diff --cached --exit-code > /dev/null && echo "nothing to update" && exit 0; \
 		git commit -m "New release notes for $(BUMPED_VERSION)" || exit 1; \
@@ -379,7 +379,7 @@ define print-publish-release-notes-next-steps
 	@echo "NEXT STEPS"
 	@echo "===================="
 	@echo
-	@echo "- Find PR named 'New release notes for $(BUMPED_VERSION)' in cc-documentation and merge it."
+	@echo "- Find PR named 'New release notes for $(BUMPED_VERSION)' in confluentinc/docs and merge it."
 	@echo
 	@echo "- Check release notes file in s3 confluent.cloud/ccloud-cli/release-notes/$(BUMPED_VERSION)/"
 	@echo
@@ -391,18 +391,18 @@ endef
 .PHONY: release-notes
 release-notes:
 	@echo Previous Release Version: v$(CLEAN_VERSION)
-	@GO11MODULE=on go run -ldflags '-X main.releaseVersion=$(BUMPED_VERSION) -X main.ccloudReleaseNotesPath=$(CCLOUD_RELEASE_DIR) -X main.confluentReleaseNotesPath=$(CONFLUENT_RELEASE_DIR)' cmd/release-notes/release/main.go
+	@GO11MODULE=on go run -ldflags '-X main.releaseVersion=$(BUMPED_VERSION) -X main.ccloudReleaseNotesPath=$(CCLOUD_DOCS_DIR) -X main.confluentReleaseNotesPath=$(CONFLUENT_DOCS_DIR)' cmd/release-notes/release/main.go
 
-.PHONY: publish-release-notes-internal
-publish-release-notes-internal:
-	cp release-notes/ccloud/release-notes.rst $(CCLOUD_RELEASE_DIR)
-	cp release-notes/confluent/release-notes.rst $(CONFLUENT_RELEASE_DIR)
+.PHONY: publish-release-notes-to-local-docs-repo
+publish-release-notes-to-local-docs-repo:
+	cp release-notes/ccloud/release-notes.rst $(CCLOUD_DOCS_DIR)
+	cp release-notes/confluent/release-notes.rst $(CONFLUENT_DOCS_DIR)
 
 .PHONY: clean-release-notes
 clean-release-notes:
 	-rm release-notes/prep
-	-rm release-notes/ccloud/index.rst
-	-rm release-notes/confluent/index.rst
+	-rm release-notes/ccloud/release-notes.rst
+	-rm release-notes/confluent/release-notes.rst
 	-rm release-notes/ccloud/latest-release.rst
 	-rm release-notes/confluent/latest-release.rst
 

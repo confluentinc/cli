@@ -1,8 +1,8 @@
-RELEASE NOTES PREPARATION FOR CLI %s
+RELEASE NOTES PREPARATION FOR CLI v1.7.0
 
 
-LIST OF ALL PRs SINCE LAST RELEASE (%s):
-%s
+LIST OF ALL PRs SINCE LAST RELEASE (v1.6.0):
+
 
 ------------------------------------------------------------------------------------------
 
@@ -21,34 +21,42 @@ NOTE: DO NOT EDIT THE SECTION NAMES (e.g. 'New Features for Both CLIs')
 BOTH CLIs
 -------------
 
-%s
-- <PLACEHOLDER>
+New Features for Both CLIs
+- both feature1
+- both feature2
 
 
-%s
-- <PLACEHOLDER>
+Bug Fixes for Both CLIs
+- both bug1
+- both bug2
 
 
 -------------
 CCLOUD
 -------------
 
-%s
-- <PLACEHOLDER>
-
-
-%s
-- <PLACEHOLDER>
+CCloud New Features
+- ccloud feature1
+- ccloud feature2
+CCloud Bug Fixes
+- ccloud bug1
+-        ccloud bug2
 
 
 -------------
 CONFLUENT
 -------------
 
-%s
-- <PLACEHOLDER>
+Confluent New Features
+- confluent new feature1
+-confluent new feature2
 
 
-%s
-- <PLACEHOLDER>
 
+notes notes notes
+notes notes notes
+
+
+Confluent Bug Fixes
+- confluent bug1
+- confluent bug2
