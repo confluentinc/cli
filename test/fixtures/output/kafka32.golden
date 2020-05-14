@@ -1,0 +1,13 @@
+api_endpoint: http://kafka-api-url
+cluster_size: 1
+egress: 100
+encryption_key_id: ""
+endpoint: SASL_SSL://kafka-endpoint
+id: lkc-describe-dedicated
+ingress: 100
+name: kafka-cluster
+provider: aws
+region: us-west-2
+status: PROVISIONING
+storage: 500
+type: DEDICATED
