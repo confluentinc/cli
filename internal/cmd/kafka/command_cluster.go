@@ -417,9 +417,9 @@ func convertClusterToDescribeStruct(cluster *schedv1.KafkaCluster) *describeStru
 
 func getKafkaClusterDescribeFields(cluster *schedv1.KafkaCluster) []string {
 	describeFields := basicDescribeFields
-	if cluster.Deployment.Sku == productv1.Sku_DEDICATED {
+	if isDedicated(cluster) {
 		describeFields = append(describeFields, "ClusterSize")
-		if isPending(cluster) {
+		if isExpanding(cluster) {
 			describeFields = append(describeFields, "PendingClusterSize")
 		}
 		if cluster.EncryptionKeyId != "" {
@@ -429,6 +429,10 @@ func getKafkaClusterDescribeFields(cluster *schedv1.KafkaCluster) []string {
 	return describeFields
 }
 
-func isPending(cluster *schedv1.KafkaCluster) bool {
+func isDedicated(cluster *schedv1.KafkaCluster) bool {
+	return cluster.Deployment.Sku == productv1.Sku_DEDICATED
+}
+
+func isExpanding(cluster *schedv1.KafkaCluster) bool {
 	return cluster.Status == schedv1.ClusterStatus_EXPANDING || cluster.PendingCku > cluster.Cku
 }
