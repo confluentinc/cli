@@ -22,9 +22,7 @@ var (
 	listFields                     = []string{"Id", "Name", "ServiceProvider", "Region", "Durability", "Status"}
 	listHumanLabels                = []string{"Id", "Name", "Provider", "Region", "Availability", "Status"}
 	listStructuredLabels           = []string{"id", "name", "provider", "region", "durability", "status"}
-	describeFields                 = []string{"Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "ApiEndpoint", "EncryptionKeyId"}
-	dedicatedDescribeFields        = []string{"Id", "Name", "Type", "ClusterSize", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "ApiEndpoint", "EncryptionKeyId"}
-	dedicatedPendingDescribeFields = []string{"Id", "Name", "Type", "ClusterSize", "PendingClusterSize", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "ApiEndpoint", "EncryptionKeyId"}
+	basicDescribeFields            = []string{"Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "ApiEndpoint"}
 	describeHumanRenames           = map[string]string{
 		"NetworkIngress":  "Ingress",
 		"NetworkEgress":   "Egress",
@@ -120,6 +118,7 @@ func (c *clusterCommand) init() {
 	createCmd.Flags().Int("cku", 0, "Number of Confluent Kafka Units (non-negative). Required for Kafka clusters of type 'dedicated'.")
 	createCmd.Flags().String("encryption-key", "", "Encryption Key ID (e.g. for Amazon Web Services, the Amazon Resource Name of the key).")
 	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	_ = createCmd.Flags().MarkHidden("encryption-key")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
@@ -270,13 +269,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		// TODO: don't swallow validation errors (reportedly separately)
 		return errors.HandleCommon(err, cmd)
 	}
-	var fields []string
-	if cluster.Deployment.Sku == productv1.Sku_DEDICATED {
-		fields = dedicatedDescribeFields
-	} else {
-		fields = describeFields
-	}
-	return output.DescribeObject(cmd, convertClusterToDescribeStruct(cluster), fields, describeHumanRenames, describeStructuredRenames)
+	return output.DescribeObject(cmd, convertClusterToDescribeStruct(cluster), getKafkaClusterDescribeFields(cluster), describeHumanRenames, describeStructuredRenames)
 }
 
 func stringToAvailability(s string) (schedv1.Durability, error) {
@@ -305,17 +298,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	var fields []string
-	if cluster.Deployment.Sku == productv1.Sku_DEDICATED {
-		if cluster.Status == schedv1.ClusterStatus_EXPANDING || cluster.PendingCku > cluster.Cku{
-			fields = dedicatedPendingDescribeFields
-		} else {
-			fields = dedicatedDescribeFields
-		}
-	} else {
-		fields = describeFields
-	}
-	return output.DescribeObject(cmd, convertClusterToDescribeStruct(cluster), fields, describeHumanRenames, describeStructuredRenames)
+	return output.DescribeObject(cmd, convertClusterToDescribeStruct(cluster), getKafkaClusterDescribeFields(cluster), describeHumanRenames, describeStructuredRenames)
 }
 
 func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
@@ -353,17 +336,7 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	var fields []string
-	if cluster.Deployment.Sku == productv1.Sku_DEDICATED {
-		if cluster.Status == schedv1.ClusterStatus_EXPANDING || cluster.PendingCku > cluster.Cku{
-			fields = dedicatedPendingDescribeFields
-		} else {
-			fields = dedicatedDescribeFields
-		}
-	} else {
-		fields = describeFields
-	}
-	return output.DescribeObject(cmd, convertClusterToDescribeStruct(cluster), fields, describeHumanRenames, describeStructuredRenames)
+	return output.DescribeObject(cmd, convertClusterToDescribeStruct(cluster), getKafkaClusterDescribeFields(cluster), describeHumanRenames, describeStructuredRenames)
 }
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
@@ -440,4 +413,22 @@ func convertClusterToDescribeStruct(cluster *schedv1.KafkaCluster) *describeStru
 		ApiEndpoint:        cluster.ApiEndpoint,
 		EncryptionKeyId:    cluster.EncryptionKeyId,
 	}
+}
+
+func getKafkaClusterDescribeFields(cluster *schedv1.KafkaCluster) []string {
+	describeFields := basicDescribeFields
+	if cluster.Deployment.Sku == productv1.Sku_DEDICATED {
+		describeFields = append(describeFields, "ClusterSize")
+		if isPending(cluster) {
+			describeFields = append(describeFields, "PendingClusterSize")
+		}
+		if cluster.EncryptionKeyId != "" {
+			describeFields = append(describeFields, "EncryptionKeyId")
+		}
+	}
+	return describeFields
+}
+
+func isPending(cluster *schedv1.KafkaCluster) bool {
+	return cluster.Status == schedv1.ClusterStatus_EXPANDING || cluster.PendingCku > cluster.Cku
 }

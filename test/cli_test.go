@@ -900,7 +900,7 @@ func handleKafkaClusterGetListDeleteDescribe(t *testing.T, kafkaAPIURL string) f
 	}
 }
 
-func handleKafkaClusterDescribeTest(t *testing.T, kafkaAPIURL string) func(w http.ResponseWriter, r *http.Request) {
+func handleKafkaClusterDescribeTest(t *testing.T, kafkaAPIURL string, isDedicated bool, isPending bool, hasEncryptionKey bool) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		b, err := utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
 			Cluster: &schedv1.KafkaCluster{

@@ -9,6 +9,5 @@
   "region": "us-east-1",
   "status": "PROVISIONING",
   "endpoint": "SASL_SSL://kafka-endpoint",
-  "api_endpoint": "http://127.0.0.1:12345",
-  "encryption_key_id": ""
+  "api_endpoint": "http://127.0.0.1:12345"
 }
