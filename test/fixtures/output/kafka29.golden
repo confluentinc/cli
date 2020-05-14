@@ -2,11 +2,11 @@ api_endpoint: http://kafka-api-url
 egress: 100
 encryption_key_id: ""
 endpoint: SASL_SSL://kafka-endpoint
-id: lkc-describe
+id: lkc-update
 ingress: 100
-name: kafka-cluster
+name: lkc-update-name
 provider: aws
 region: us-west-2
-status: PROVISIONING
+status: UP
 storage: 500
 type: BASIC

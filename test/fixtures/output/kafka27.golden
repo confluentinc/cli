@@ -1,0 +1,16 @@
++--------------------+---------------------------+
+| Id                 | lkc-update-dedicated      |
+| Name               | lkc-update-dedicated-name |
+| Type               | DEDICATED                 |
+| ClusterSize        |                         1 |
+| PendingClusterSize |                         2 |
+| Ingress            |                       100 |
+| Egress             |                       300 |
+| Storage            |                     60000 |
+| Provider           | aws                       |
+| Region             | us-west-2                 |
+| Status             | EXPANDING                 |
+| Endpoint           | SASL_SSL://kafka-endpoint |
+| ApiEndpoint        | http://kafka-api-url      |
+| Encryption Key ID  |                           |
++--------------------+---------------------------+

@@ -1,14 +1,14 @@
 {
-  "id": "lkc-describe",
-  "name": "kafka-cluster",
+  "id": "lkc-def963",
+  "name": "my-new-cluster",
   "type": "BASIC",
   "ingress": 100,
   "egress": 100,
-  "storage": 500,
+  "storage": 5000,
   "provider": "aws",
-  "region": "us-west-2",
+  "region": "us-east-1",
   "status": "PROVISIONING",
   "endpoint": "SASL_SSL://kafka-endpoint",
-  "api_endpoint": "http://kafka-api-url",
+  "api_endpoint": "http://127.0.0.1:12345",
   "encryption_key_id": ""
 }
