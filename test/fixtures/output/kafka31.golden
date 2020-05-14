@@ -1,0 +1,15 @@
+{
+  "id": "lkc-describe-dedicated",
+  "name": "kafka-cluster",
+  "type": "DEDICATED",
+  "cluster_size": 1,
+  "ingress": 100,
+  "egress": 100,
+  "storage": 500,
+  "provider": "aws",
+  "region": "us-west-2",
+  "status": "PROVISIONING",
+  "endpoint": "SASL_SSL://kafka-endpoint",
+  "api_endpoint": "http://kafka-api-url",
+  "encryption_key_id": ""
+}

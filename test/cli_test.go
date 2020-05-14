@@ -585,6 +585,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 	router.HandleFunc("/api/accounts/a-595", handleEnvironmentGet(t, "a-595"))
 	router.HandleFunc("/api/accounts/not-595", handleEnvironmentGet(t, "not-595"))
 	router.HandleFunc("/api/clusters/lkc-describe", handleKafkaClusterDescribeTest(t, kafkaAPIURL))
+	router.HandleFunc("/api/clusters/lkc-describe-dedicated", handleKafkaDedicatedClusterDescribeTest(t, kafkaAPIURL))
 	router.HandleFunc("/api/clusters/lkc-update", handleKafkaClusterUpdateTest(t, kafkaAPIURL))
 	router.HandleFunc("/api/clusters/lkc-update-dedicated", handleKafkaDedicatedClusterUpdateTest(t, kafkaAPIURL))
 	router.HandleFunc("/api/clusters/", handleKafkaClusterGetListDeleteDescribe(t, kafkaAPIURL))
@@ -907,6 +908,30 @@ func handleKafkaClusterDescribeTest(t *testing.T, kafkaAPIURL string) func(w htt
 				Id:              "lkc-describe",
 				Name:            "kafka-cluster",
 				Deployment:      &schedv1.Deployment{Sku: productv1.Sku_BASIC},
+				NetworkIngress:  100,
+				NetworkEgress:   100,
+				Storage:         500,
+				ServiceProvider: "aws",
+				Region:          "us-west-2",
+				Endpoint:        "SASL_SSL://kafka-endpoint",
+				ApiEndpoint:     "http://kafka-api-url",
+			},
+		})
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(b))
+		require.NoError(t, err)
+	}
+}
+
+func handleKafkaDedicatedClusterDescribeTest(t *testing.T, kafkaAPIURL string) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := r.URL.Query().Get("id")
+		b, err := utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
+			Cluster: &schedv1.KafkaCluster{
+				Id:              id,
+				Name:            "kafka-cluster",
+				Deployment:      &schedv1.Deployment{Sku: productv1.Sku_DEDICATED},
+				Cku:             1,
 				NetworkIngress:  100,
 				NetworkEgress:   100,
 				Storage:         500,

@@ -39,6 +39,9 @@ func (s *CLITestSuite) TestKafkaCommands() {
 		{args: "kafka cluster describe lkc-describe", fixture: "kafka17.golden", wantErrCode: 0},
 		{args: "kafka cluster describe lkc-describe -o json", fixture: "kafka18.golden", wantErrCode: 0},
 		{args: "kafka cluster describe lkc-describe -o yaml", fixture: "kafka19.golden", wantErrCode: 0},
+		{args: "kafka cluster describe lkc-describe-dedicated", fixture: "kafka30.golden", wantErrCode: 0},
+		{args: "kafka cluster describe lkc-describe-dedicated -o json", fixture: "kafka31.golden", wantErrCode: 0},
+		{args: "kafka cluster describe lkc-describe-dedicated -o yaml", fixture: "kafka32.golden", wantErrCode: 0},
 
 		{args: "kafka acl list --cluster lkc-acls", fixture: "kafka-acls-list.golden", wantErrCode: 0},
 		{args: "kafka acl create --cluster lkc-acls --allow --service-account 7272 --operation READ --operation DESCRIBED --topic 'test-topic'", fixture: "kafka-acls-invalid-operation.golden", wantErrCode: 1},
