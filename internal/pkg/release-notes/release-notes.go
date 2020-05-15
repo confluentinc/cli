@@ -1,90 +1,148 @@
 package release_notes
 
 import (
-	"fmt"
 	"io"
 	"os"
 )
 
 const (
-	releaseNotesLocalFilePathFormat = "./release-notes/%s/%s"
-	latestReleaseNotesFileName      = "latest-release.rst"
 	docsPageFileName                = "release-notes.rst"
+
+	s3CCloudReleaseNotesFilePath = "./release-notes/ccloud/latest-release.rst"
+	s3ConfluentReleaseNotesFilePath = "./release-notes/confluent/latest-release.rst"
+
+	updatedCCloudDocsFilePath = "./release-notes/ccloud/release-notes.rst"
+	updatedConflunetDocsFilePath = "./release-notes/confluent/release-notes.rst"
+
+
+	s3ReleaseNotesTitleFormat = `
+=======================================
+%s %s Release Notes
+=======================================
+`
+	docsReleaseNotesTitleFormat = `
+%s %s Release Notes
+=====================================`
+
+	s3SectionHeaderFormat = "%s\n-------------"
+	docsSectionHeaderFormat = "**%s**"
+
+	s3CCloudCLIName = "CCloud CLI"
+	docsCCloudCLIName = "|ccloud| CLI"
+
+	s3ConfluentCLIName = "Confluent CLI"
+	docsConfluentCLIName = "|confluent-cli|"
 )
 
-type ReleaseNotesContent struct {
-	newFeatures []string
-	bugFixes    []string
-}
+var (
+	s3CCloudReleaseNotesBuildParams = ReleaseNotesBuilderParams{
+		cliDisplayName:      s3CCloudCLIName,
+		titleFormat:         s3ReleaseNotesTitleFormat,
+		sectionHeaderFormat: s3SectionHeaderFormat,
+		version:             "",
+	}
+	s3ConfluentReleaseNotesBuildParams = ReleaseNotesBuilderParams{
+		cliDisplayName:      s3ConfluentCLIName,
+		titleFormat:         s3ReleaseNotesTitleFormat,
+		sectionHeaderFormat: s3SectionHeaderFormat,
+		version:             "",
+	}
+	docsCCloudReleaseNotesBuildParams = ReleaseNotesBuilderParams{
+		cliDisplayName:      docsCCloudCLIName,
+		titleFormat:         docsReleaseNotesTitleFormat,
+		sectionHeaderFormat: docsSectionHeaderFormat,
+		version:             "",
+	}
+	docsConfluentReleaseNotesBuildParmas = ReleaseNotesBuilderParams{
+		cliDisplayName:      docsConfluentCLIName,
+		titleFormat:         docsReleaseNotesTitleFormat,
+		sectionHeaderFormat: docsSectionHeaderFormat,
+		version:             "",
+	}
+)
 
-func WriteReleaseNotes(ccloudReleaseNotesPath, confluentReleaseNotesPath, releaseVersion string) error {
-	prepFileReader := NewPrepFileReader(prepFileName)
-	sections, err := prepFileReader.getSectionsMap()
+func WriteReleaseNotes(ccloudDocsPath, confluentDocsPath, releaseVersion string) error {
+	ccloudReleaseNotesContent, confluentReleaseNotesContent, err := getCCloudAndConfluentReleaseNotesContent()
 	if err != nil {
 		return err
 	}
-	err = constructAndWriteCLIReleaseNotes(ccloudReleaseNotesPath, "ccloud", releaseVersion, sections)
+	err = buildAndWriteCCloudReleaseNotes(ccloudReleaseNotesContent, releaseVersion, ccloudDocsPath)
 	if err != nil {
 		return err
 	}
-	err = constructAndWriteCLIReleaseNotes(confluentReleaseNotesPath, "confluent", releaseVersion, sections)
+	err = buildAndWriteConfluentReleaseNotes(confluentReleaseNotesContent, releaseVersion, confluentDocsPath)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func constructAndWriteCLIReleaseNotes(docsPath string, cliName string, releaseVersion string, sectionsMap map[SectionType][]string) error {
-	content := extractReleaseNotesContent(sectionsMap, cliName)
-	err := constructAndWriteLatestReleaseNotesForS3(content, cliName, releaseVersion)
-	if err != nil{
+func getCCloudAndConfluentReleaseNotesContent() (ccloudReleaseNotesContent ReleaseNotesContent, confluentReleaseNotesContent ReleaseNotesContent, err error) {
+	prepFileReader := NewPrepFileReader()
+	err = prepFileReader.ReadPrepFile(prepFileName)
+	if err != nil {
+		return ccloudReleaseNotesContent, confluentReleaseNotesContent, err
+	}
+	ccloudReleaseNotesContent, err = prepFileReader.GetCCloudReleaseNotesContent()
+	if err != nil {
+		return ccloudReleaseNotesContent, confluentReleaseNotesContent, err
+	}
+	confluentReleaseNotesContent, err = prepFileReader.GetConfluentReleaseNotesContent()
+	if err != nil {
+		return ccloudReleaseNotesContent, confluentReleaseNotesContent, err
+	}
+	return ccloudReleaseNotesContent, confluentReleaseNotesContent, nil
+}
+
+func buildAndWriteCCloudReleaseNotes(content ReleaseNotesContent, version string, docsPath string) error {
+	s3ReleaseNotes := buildReleaseNotes(s3CCloudReleaseNotesBuildParams, content, version)
+	err := writeFile(s3CCloudReleaseNotesFilePath, s3ReleaseNotes)
+	if err != nil {
 		return err
 	}
-	err = constructAndWriteUpdatedDocsPage(docsPath, content, cliName, releaseVersion)
+	ccloudDocsReleaseNotes := buildReleaseNotes(docsCCloudReleaseNotesBuildParams, content, version)
+	ccloudDocsPage, err := buildDocsPage(docsPath, ccloudDocsPageHeader, ccloudDocsReleaseNotes)
+	if err != nil {
+		return err
+	}
+	err = writeFile(updatedCCloudDocsFilePath, ccloudDocsPage)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func extractReleaseNotesContent(sectionsMap map[SectionType][]string, cliName string) ReleaseNotesContent {
-	if cliName == "ccloud" {
-		return ReleaseNotesContent{
-			newFeatures: getSectionContentList(sectionsMap, ccloudNewFeatures, bothNewFeatures),
-			bugFixes:    getSectionContentList(sectionsMap, ccloudBugFixes, bothBugFixes),
-		}
-	} else {
-		return ReleaseNotesContent{
-			newFeatures: getSectionContentList(sectionsMap, confluentNewFeatures, bothNewFeatures),
-			bugFixes:    getSectionContentList(sectionsMap, confluentBugFixes, bothBugFixes),
-		}
-	}
-}
-
-func getSectionContentList(sectionsMap map[SectionType][]string, exclusiveSection, bothSection SectionType, ) []string {
-	var contentList []string
-	contentList = append(contentList, sectionsMap[exclusiveSection]...)
-	contentList = append(contentList, sectionsMap[bothSection]...)
-	return contentList
-}
-
-func constructAndWriteLatestReleaseNotesForS3(content ReleaseNotesContent, cliName string, version string) error {
-	releaseNotesBuilder := NewReleaseNotesBuilder(s3ReleaseNotesTitleFormat, s3SectionHeaderFormat, cliName, version)
-	releaseNotes := releaseNotesBuilder.buildReleaseNotes(content)
-	destFile := fmt.Sprintf(releaseNotesLocalFilePathFormat, cliName, latestReleaseNotesFileName)
-	return writeFile(destFile, releaseNotes)
-}
-
-func constructAndWriteUpdatedDocsPage(docsFilePath string, content ReleaseNotesContent, cliName string, version string) error {
-	releaseNotesBuilder := NewReleaseNotesBuilder(docsReleaseNotesTitleFormat, docsSectionHeaderFormat, cliName, version)
-	releaseNotes := releaseNotesBuilder.buildReleaseNotes(content)
-	docsUpdateHandler := NewDocsUpdateHandler(cliName, docsFilePath + "/" + docsPageFileName)
-	updatedDocsPage, err := docsUpdateHandler.getUpdatedDocsPage(releaseNotes)
+func buildAndWriteConfluentReleaseNotes(content ReleaseNotesContent, version string, docsPath string) error {
+	s3ReleaseNotes := buildReleaseNotes(s3ConfluentReleaseNotesBuildParams, content, version)
+	err := writeFile(s3ConfluentReleaseNotesFilePath, s3ReleaseNotes)
 	if err != nil {
 		return err
 	}
-	destFile := fmt.Sprintf(releaseNotesLocalFilePathFormat, cliName, docsPageFileName)
-	return writeFile(destFile, updatedDocsPage)
+	docsReleaseNotes := buildReleaseNotes(docsConfluentReleaseNotesBuildParmas, content, version)
+	updatedDocsPage, err := buildDocsPage(docsPath, confluentDocsPageHeader, docsReleaseNotes)
+	if err != nil {
+		return err
+	}
+	err = writeFile(updatedConflunetDocsFilePath, updatedDocsPage)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func buildReleaseNotes(releaseNotesBuildParams ReleaseNotesBuilderParams, content ReleaseNotesContent, version string) string {
+	releaseNotesBuildParams.version = version
+	releaseNotesBuilder := NewReleaseNotesBuilder(releaseNotesBuildParams)
+	return releaseNotesBuilder.buildReleaseNotes(content)
+}
+
+func buildDocsPage(docsFilePath string, docsHeader string, latestReleaseNotes string) (string, error) {
+	docsUpdateHandler := NewDocsUpdateHandler(docsHeader, docsFilePath + "/" + docsPageFileName)
+	updatedDocsPage, err := docsUpdateHandler.getUpdatedDocsPage(latestReleaseNotes)
+	if err != nil {
+		return "", err
+	}
+	return updatedDocsPage, nil
 }
 
 func writeFile(filePath, fileContent string) error {

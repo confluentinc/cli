@@ -9,18 +9,7 @@ const (
 	newFeaturesSectionTitle = "New Features"
 	bugFixesSectionTitle = "Bug Fixes"
 	noChangeContentFormat = "No changes relating to %s CLI for this version."
-
-	s3ReleaseNotesTitleFormat = `
-===============================
-%s %s Release Notes
-===============================
-`
-	docsReleaseNotesTitleFormat = `
-%s %s Release Notes
-=============================`
-
-	s3SectionHeaderFormat = "%s\n-------------"
-	docsSectionHeaderFormat = "**%s**"
+	bulletPointFormat = "  - %s"
 )
 
 type ReleaseNotesBuilder interface {
@@ -28,19 +17,26 @@ type ReleaseNotesBuilder interface {
 }
 
 
-type ReleaseNotesBuilderImpl struct {
+type ReleaseNotesBuilderParams struct {
+	cliDisplayName      string
 	titleFormat         string
 	sectionHeaderFormat string
-	cliName             string
 	version             string
 }
 
-func NewReleaseNotesBuilder(titleFormat string, sectionHeaderFormat string, cliName string, version string) ReleaseNotesBuilder {
+type ReleaseNotesBuilderImpl struct {
+	cliDisplayName      string
+	titleFormat         string
+	sectionHeaderFormat string
+	version             string
+}
+
+func NewReleaseNotesBuilder(params ReleaseNotesBuilderParams) ReleaseNotesBuilder {
 	return &ReleaseNotesBuilderImpl{
-		titleFormat:         titleFormat,
-		sectionHeaderFormat: sectionHeaderFormat,
-		cliName:             cliName,
-		version:             version,
+		cliDisplayName:      params.cliDisplayName,
+		titleFormat:         params.titleFormat,
+		sectionHeaderFormat: params.sectionHeaderFormat,
+		version:             params.version,
 	}
 }
 
@@ -48,7 +44,7 @@ func NewReleaseNotesBuilder(titleFormat string, sectionHeaderFormat string, cliN
 func (b *ReleaseNotesBuilderImpl) buildReleaseNotes(content ReleaseNotesContent) string {
 	newFeaturesSection := b.buildSection(newFeaturesSectionTitle, content.newFeatures)
 	bugFixesSection := b.buildSection(bugFixesSectionTitle, content.bugFixes)
-	title := fmt.Sprintf(b.titleFormat, b.cliName, b.version)
+	title := fmt.Sprintf(b.titleFormat, b.cliDisplayName, b.version)
 	return b.assembleReleaseNotes(title, newFeaturesSection, bugFixesSection)
 }
 
@@ -64,7 +60,7 @@ func (b *ReleaseNotesBuilderImpl) buildSection(sectionTitle string, sectionEleme
 func (b *ReleaseNotesBuilderImpl) buildBulletPoints(elements []string) string {
 	var bulletPointList []string
 	for _, element := range elements {
-		bulletPointList = append(bulletPointList, fmt.Sprintf("  - %s", element))
+		bulletPointList = append(bulletPointList, fmt.Sprintf(bulletPointFormat, element))
 	}
 	return strings.Join(bulletPointList, "\n")
 }
@@ -76,7 +72,7 @@ func (b *ReleaseNotesBuilderImpl) assembleReleaseNotes(title string, newFeatures
 
 func (b *ReleaseNotesBuilderImpl) getReleaseNotesContent(newFeaturesSection string, bugFixesSection string) string {
 	if newFeaturesSection == "" && bugFixesSection == "" {
-		return fmt.Sprintf(noChangeContentFormat, b.cliName)
+		return fmt.Sprintf(noChangeContentFormat, b.cliDisplayName)
 	}
 	return newFeaturesSection + "\n\n" + bugFixesSection
 }

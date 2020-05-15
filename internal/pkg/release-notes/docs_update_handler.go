@@ -1,7 +1,6 @@
 package release_notes
 
 import (
-	"fmt"
 	"io/ioutil"
 	"strings"
 )
@@ -26,14 +25,7 @@ type DocsUpdateHandler interface {
 	getUpdatedDocsPage(newReleaseNotes string) (string, error)
 }
 
-func NewDocsUpdateHandler(cliName string, docsFilePath string) DocsUpdateHandler {
-	fmt.Println(docsFilePath)
-	var header string
-	if cliName == "ccloud" {
-		header = ccloudDocsPageHeader
-	} else {
-		header = confluentDocsPageHeader
-	}
+func NewDocsUpdateHandler(header string, docsFilePath string) DocsUpdateHandler {
 	return &DocsUpdateHandlerImp{
 		pageHeader:   header,
 		docsFilePath: docsFilePath,

@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func Test_Prep_Reader(t *testing.T) {
+func Test_Prep_Reader_Imp_Read_File(t *testing.T) {
 
 	tests := []struct {
 		name                     string
@@ -42,20 +42,20 @@ func Test_Prep_Reader(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			prepReader := NewPrepFileReader(tt.prepFile)
-			sections, err := prepReader.getSectionsMap()
+			prepReader := PrepFileReaderImpl{}
+			err := prepReader.ReadPrepFile(tt.prepFile)
 			require.NoError(t, err)
-			require.Equal(t, sections[bothNewFeatures], tt.wantBothNewFeatures)
-			require.Equal(t, sections[bothBugFixes], tt.wantBothBugFixes)
-			require.Equal(t, sections[ccloudNewFeatures], tt.wantCCloudNewFeatures)
-			require.Equal(t, sections[ccloudBugFixes], tt.wantCCloudBugFixes)
-			require.Equal(t, sections[confluentNewFeatures], tt.wantConfluentNewFeatures)
-			require.Equal(t, sections[confluentBugFixes], tt.wantConfleuntBugFixes)
+			require.Equal(t, prepReader.sections[bothNewFeatures], tt.wantBothNewFeatures)
+			require.Equal(t, prepReader.sections[bothBugFixes], tt.wantBothBugFixes)
+			require.Equal(t, prepReader.sections[ccloudNewFeatures], tt.wantCCloudNewFeatures)
+			require.Equal(t, prepReader.sections[ccloudBugFixes], tt.wantCCloudBugFixes)
+			require.Equal(t, prepReader.sections[confluentNewFeatures], tt.wantConfluentNewFeatures)
+			require.Equal(t, prepReader.sections[confluentBugFixes], tt.wantConfleuntBugFixes)
 		})
 	}
 }
 
-func Test_Extract_Release_Notes_Content(t *testing.T) {
+func Test_Prep_Reader_Impl_Get_Content_Funcs(t *testing.T) {
 	sections := map[SectionType][]string {
 		bothNewFeatures:      {"both feature1", "both feature2"},
 		bothBugFixes:         {"both bug1", "both bug2"},
@@ -99,11 +99,15 @@ func Test_Extract_Release_Notes_Content(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ccloudContent := extractReleaseNotesContent(tt.sections, "ccloud")
+			prepReader := PrepFileReaderImpl{}
+			prepReader.sections = tt.sections
+			ccloudContent, err := prepReader.GetCCloudReleaseNotesContent()
+			require.NoError(t, err)
 			require.Equal(t, tt.wantCCloudNewFeatures, ccloudContent.newFeatures)
 			require.Equal(t, tt.wantCCloudBugFixes, ccloudContent.bugFixes)
 
-			confluentContent := extractReleaseNotesContent(tt.sections, "confluent")
+			confluentContent, err := prepReader.GetConfluentReleaseNotesContent()
+			require.NoError(t, err)
 			require.Equal(t, tt.wantConfluentNewFeatures, confluentContent.newFeatures)
 			require.Equal(t, tt.wantConfleuntBugFixes, confluentContent.bugFixes)
 		})
@@ -146,8 +150,8 @@ func Test_Release_Notes_Builder(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			releaseNotesBuilder := NewReleaseNotesBuilder(s3ReleaseNotesTitleFormat, s3SectionHeaderFormat,
-				"ccloud", "v1.2.3")
+			s3CCloudReleaseNotesBuildParams.version = "v1.2.3"
+			releaseNotesBuilder := NewReleaseNotesBuilder(s3CCloudReleaseNotesBuildParams)
 			releaseNotes := releaseNotesBuilder.buildReleaseNotes(tt.content)
 			want, err := readTestFile(tt.wantFile)
 			require.NoError(t, err)
@@ -156,28 +160,19 @@ func Test_Release_Notes_Builder(t *testing.T) {
 	}
 }
 
-func readTestFile(filePath string) (string, error) {
-	fileBytes, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		return "", fmt.Errorf("Unable to load output file.")
-	}
-	fileContent := string(fileBytes)
-	return fileContent, nil
-}
-
 func Test_Docs_Update_Handler(t *testing.T) {
-	newReleaseNotes := `v1.3.0 Release Notes
-==========================
+	newReleaseNotes := `|ccloud| CLI v1.2.0 Release Notes
+=================================
 
 New Features
 ------------------------
-- 1.3 cloud feature
-- 1.3 both feat
+- 1.2 cloud feature
+- 1.2 both feat
 
 Bug Fixes
 ------------------------
-- 1.3 cloud bug
-- 1.3 two both bugs`
+- 1.2 cloud bug
+- 1.2 two both bugs`
 
 	tests := []struct {
 		name     string
@@ -194,7 +189,7 @@ Bug Fixes
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			docsUpdateHandler := NewDocsUpdateHandler("ccloud", tt.docsFile)
+			docsUpdateHandler := NewDocsUpdateHandler(ccloudDocsPageHeader, tt.docsFile)
 			docs, err := docsUpdateHandler.getUpdatedDocsPage(tt.newReleaseNotes)
 			require.NoError(t, err)
 			want, err := readTestFile(tt.wantFile)
@@ -204,3 +199,11 @@ Bug Fixes
 	}
 }
 
+func readTestFile(filePath string) (string, error) {
+	fileBytes, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return "", fmt.Errorf("Unable to load output file.")
+	}
+	fileContent := string(fileBytes)
+	return fileContent, nil
+}
