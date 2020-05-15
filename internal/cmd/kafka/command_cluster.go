@@ -269,7 +269,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		// TODO: don't swallow validation errors (reportedly separately)
 		return errors.HandleCommon(err, cmd)
 	}
-	return output.DescribeObject(cmd, convertClusterToDescribeStruct(cluster), getKafkaClusterDescribeFields(cluster), describeHumanRenames, describeStructuredRenames)
+	return outputKafkaClusterDescription(cmd, cluster)
 }
 
 func stringToAvailability(s string) (schedv1.Durability, error) {
@@ -298,7 +298,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	return output.DescribeObject(cmd, convertClusterToDescribeStruct(cluster), getKafkaClusterDescribeFields(cluster), describeHumanRenames, describeStructuredRenames)
+	return outputKafkaClusterDescription(cmd, cluster)
 }
 
 func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
@@ -336,7 +336,7 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	return output.DescribeObject(cmd, convertClusterToDescribeStruct(cluster), getKafkaClusterDescribeFields(cluster), describeHumanRenames, describeStructuredRenames)
+	return outputKafkaClusterDescription(cmd, cluster)
 }
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
@@ -394,6 +394,10 @@ func getAccountsForCloud(cloudId string, clouds []*schedv1.CloudMetadata) []stri
 		}
 	}
 	return accounts
+}
+
+func outputKafkaClusterDescription(cmd *cobra.Command, cluster *schedv1.KafkaCluster) error {
+	return output.DescribeObject(cmd, convertClusterToDescribeStruct(cluster), getKafkaClusterDescribeFields(cluster), describeHumanRenames, describeStructuredRenames)
 }
 
 func convertClusterToDescribeStruct(cluster *schedv1.KafkaCluster) *describeStruct {
