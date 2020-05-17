@@ -7,15 +7,14 @@ import (
 
 const (
 	newFeaturesSectionTitle = "New Features"
-	bugFixesSectionTitle = "Bug Fixes"
-	noChangeContentFormat = "No changes relating to %s CLI for this version."
-	bulletPointFormat = "  - %s"
+	bugFixesSectionTitle    = "Bug Fixes"
+	noChangeContentFormat   = "No changes relating to %s CLI for this version."
+	bulletPointFormat       = "  - %s"
 )
 
 type ReleaseNotesBuilder interface {
-	buildReleaseNotes(content ReleaseNotesContent) string
+	buildReleaseNotes(content *ReleaseNotesContent) string
 }
-
 
 type ReleaseNotesBuilderParams struct {
 	cliDisplayName      string
@@ -25,23 +24,14 @@ type ReleaseNotesBuilderParams struct {
 }
 
 type ReleaseNotesBuilderImpl struct {
-	cliDisplayName      string
-	titleFormat         string
-	sectionHeaderFormat string
-	version             string
+	*ReleaseNotesBuilderParams
 }
 
-func NewReleaseNotesBuilder(params ReleaseNotesBuilderParams) ReleaseNotesBuilder {
-	return &ReleaseNotesBuilderImpl{
-		cliDisplayName:      params.cliDisplayName,
-		titleFormat:         params.titleFormat,
-		sectionHeaderFormat: params.sectionHeaderFormat,
-		version:             params.version,
-	}
+func NewReleaseNotesBuilder(params *ReleaseNotesBuilderParams) ReleaseNotesBuilder {
+	return &ReleaseNotesBuilderImpl{params}
 }
 
-
-func (b *ReleaseNotesBuilderImpl) buildReleaseNotes(content ReleaseNotesContent) string {
+func (b *ReleaseNotesBuilderImpl) buildReleaseNotes(content *ReleaseNotesContent) string {
 	newFeaturesSection := b.buildSection(newFeaturesSectionTitle, content.newFeatures)
 	bugFixesSection := b.buildSection(bugFixesSectionTitle, content.bugFixes)
 	title := fmt.Sprintf(b.titleFormat, b.cliDisplayName, b.version)
@@ -76,5 +66,3 @@ func (b *ReleaseNotesBuilderImpl) getReleaseNotesContent(newFeaturesSection stri
 	}
 	return newFeaturesSection + "\n\n" + bugFixesSection
 }
-
-

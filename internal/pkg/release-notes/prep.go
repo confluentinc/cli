@@ -10,15 +10,15 @@ import (
 )
 
 const (
-	bothNewFeaturesTitle = "New Features for Both CLIs"
-	bothBugFixesTitle = "Bug Fixes for Both CLIs"
-	ccloudNewFeaturesTitle = "CCloud New Features"
-	ccloudBugFixesTitle = "CCloud Bug Fixes"
+	bothNewFeaturesTitle      = "New Features for Both CLIs"
+	bothBugFixesTitle         = "Bug Fixes for Both CLIs"
+	ccloudNewFeaturesTitle    = "CCloud New Features"
+	ccloudBugFixesTitle       = "CCloud Bug Fixes"
 	confluentNewFeaturesTitle = "Confluent New Features"
-	confluentBugFixesTitle = "Confluent Bug Fixes"
+	confluentBugFixesTitle    = "Confluent Bug Fixes"
 
 	prepFileName = "./release-notes/prep"
-	placeHolder = "<PLACEHOLDER>"
+	placeHolder  = "<PLACEHOLDER>"
 )
 
 func WriteReleaseNotesPrep(filename string, releaseVersion string, prevVersion string) error {
@@ -45,7 +45,6 @@ func WriteReleaseNotesPrep(filename string, releaseVersion string, prevVersion s
 	_, err = io.WriteString(f, prepFile)
 	return err
 }
-
 
 func getMergedPRs(prevVersion string) string {
 	cmd := fmt.Sprintf("git log %s..HEAD | grep -e \"(#[0-9]*)\"", prevVersion)

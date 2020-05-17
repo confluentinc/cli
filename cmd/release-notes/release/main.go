@@ -5,11 +5,10 @@ import (
 )
 
 var (
-	releaseVersion = "v0.0.0"
-	ccloudReleaseNotesPath = ""
+	releaseVersion            = "v0.0.0"
+	ccloudReleaseNotesPath    = ""
 	confluentReleaseNotesPath = ""
 )
-
 
 func main() {
 	err := rn.WriteReleaseNotes(ccloudReleaseNotesPath, confluentReleaseNotesPath, releaseVersion)

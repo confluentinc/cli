@@ -32,13 +32,13 @@ var (
 
 type PrepFileReader interface {
 	ReadPrepFile(prepFilePath string) error
-	GetCCloudReleaseNotesContent() (ReleaseNotesContent, error)
-	GetConfluentReleaseNotesContent() (ReleaseNotesContent, error)
+	GetCCloudReleaseNotesContent() (*ReleaseNotesContent, error)
+	GetConfluentReleaseNotesContent() (*ReleaseNotesContent, error)
 }
 
 type PrepFileReaderImpl struct {
-	scanner      *bufio.Scanner
-	sections     map[SectionType][]string
+	scanner  *bufio.Scanner
+	sections map[SectionType][]string
 }
 
 type ReleaseNotesContent struct {
@@ -49,7 +49,6 @@ type ReleaseNotesContent struct {
 func NewPrepFileReader() PrepFileReader {
 	return &PrepFileReaderImpl{}
 }
-
 
 func (p *PrepFileReaderImpl) ReadPrepFile(prepFilePath string) error {
 	err := p.initializeFileScanner(prepFilePath)
@@ -124,22 +123,22 @@ func (p *PrepFileReaderImpl) isPlaceHolder(element string) bool {
 		(strings.HasPrefix(element, "<") && strings.HasSuffix(element, ">"))
 }
 
-func (p *PrepFileReaderImpl) GetCCloudReleaseNotesContent() (ReleaseNotesContent, error) {
+func (p *PrepFileReaderImpl) GetCCloudReleaseNotesContent() (*ReleaseNotesContent, error) {
 	if p.sections == nil {
-		return ReleaseNotesContent{}, errors.Errorf(prepFileNotReadErrorMsg)
+		return nil, errors.Errorf(prepFileNotReadErrorMsg)
 	}
-	content := ReleaseNotesContent{
+	content := &ReleaseNotesContent{
 		newFeatures: p.getSectionContentList(ccloudNewFeatures, bothNewFeatures),
 		bugFixes:    p.getSectionContentList(ccloudBugFixes, bothBugFixes),
 	}
 	return content, nil
 }
 
-func (p *PrepFileReaderImpl) GetConfluentReleaseNotesContent() (ReleaseNotesContent, error) {
+func (p *PrepFileReaderImpl) GetConfluentReleaseNotesContent() (*ReleaseNotesContent, error) {
 	if p.sections == nil {
-		return ReleaseNotesContent{}, errors.Errorf(prepFileNotReadErrorMsg)
+		return nil, errors.Errorf(prepFileNotReadErrorMsg)
 	}
-	content := ReleaseNotesContent{
+	content := &ReleaseNotesContent{
 		newFeatures: p.getSectionContentList(confluentNewFeatures, bothNewFeatures),
 		bugFixes:    p.getSectionContentList(confluentBugFixes, bothBugFixes),
 	}
@@ -149,7 +148,7 @@ func (p *PrepFileReaderImpl) GetConfluentReleaseNotesContent() (ReleaseNotesCont
 func (p *PrepFileReaderImpl) getSectionContentList(exclusiveSection, bothSection SectionType) []string {
 	exclusiveContent := p.sections[exclusiveSection]
 	bothContent := p.sections[bothSection]
-	if len(exclusiveContent) + len(bothContent) == 0 {
+	if len(exclusiveContent)+len(bothContent) == 0 {
 		return []string{}
 	}
 	var contentList []string

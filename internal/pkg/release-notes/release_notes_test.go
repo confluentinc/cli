@@ -56,7 +56,7 @@ func Test_Prep_Reader_Imp_Read_File(t *testing.T) {
 }
 
 func Test_Prep_Reader_Impl_Get_Content_Funcs(t *testing.T) {
-	sections := map[SectionType][]string {
+	sections := map[SectionType][]string{
 		bothNewFeatures:      {"both feature1", "both feature2"},
 		bothBugFixes:         {"both bug1", "both bug2"},
 		ccloudNewFeatures:    {"ccloud feature1", "ccloud feature2"},
@@ -64,7 +64,7 @@ func Test_Prep_Reader_Impl_Get_Content_Funcs(t *testing.T) {
 		confluentNewFeatures: {"confluent new feature1", "confluent new feature2"},
 		confluentBugFixes:    {"confluent bug1", "confluent bug2"},
 	}
-	sectionsNoConfluentBugFix := map[SectionType][]string {
+	sectionsNoConfluentBugFix := map[SectionType][]string{
 		bothNewFeatures:      {"both feature1", "both feature2"},
 		bothBugFixes:         {},
 		ccloudNewFeatures:    {"ccloud feature1", "ccloud feature2"},
@@ -73,8 +73,8 @@ func Test_Prep_Reader_Impl_Get_Content_Funcs(t *testing.T) {
 		confluentBugFixes:    {},
 	}
 	tests := []struct {
-		name     string
-		sections  map[SectionType][]string
+		name                     string
+		sections                 map[SectionType][]string
 		wantCCloudNewFeatures    []string
 		wantCCloudBugFixes       []string
 		wantConfluentNewFeatures []string
@@ -82,7 +82,7 @@ func Test_Prep_Reader_Impl_Get_Content_Funcs(t *testing.T) {
 	}{
 		{
 			name:                     "basics release notes",
-			sections: 				  sections,
+			sections:                 sections,
 			wantCCloudNewFeatures:    []string{"ccloud feature1", "ccloud feature2", "both feature1", "both feature2"},
 			wantCCloudBugFixes:       []string{"ccloud bug1", "ccloud bug2", "both bug1", "both bug2"},
 			wantConfluentNewFeatures: []string{"confluent new feature1", "confluent new feature2", "both feature1", "both feature2"},
@@ -90,7 +90,7 @@ func Test_Prep_Reader_Impl_Get_Content_Funcs(t *testing.T) {
 		},
 		{
 			name:                     "empty bug fixes",
-			sections: sectionsNoConfluentBugFix,
+			sections:                 sectionsNoConfluentBugFix,
 			wantCCloudNewFeatures:    []string{"ccloud feature1", "ccloud feature2", "both feature1", "both feature2"},
 			wantCCloudBugFixes:       []string{"ccloud bug1", "ccloud bug2"},
 			wantConfluentNewFeatures: []string{"confluent new feature1", "confluent new feature2", "both feature1", "both feature2"},
@@ -115,37 +115,37 @@ func Test_Prep_Reader_Impl_Get_Content_Funcs(t *testing.T) {
 }
 
 func Test_Release_Notes_Builder(t *testing.T) {
-	content := ReleaseNotesContent{
+	content := &ReleaseNotesContent{
 		newFeatures: []string{"new feature1", "new feature2"},
 		bugFixes:    []string{"bug fixes1", "bug fixes2"},
 	}
-	contentNoBugFix := ReleaseNotesContent{
+	contentNoBugFix := &ReleaseNotesContent{
 		newFeatures: []string{"new feature1", "new feature2"},
 		bugFixes:    []string{},
 	}
-	contentNoChange := ReleaseNotesContent{
+	contentNoChange := &ReleaseNotesContent{
 		newFeatures: []string{},
 		bugFixes:    []string{},
 	}
 	tests := []struct {
 		name     string
-		content  ReleaseNotesContent
-		wantFile  string
+		content  *ReleaseNotesContent
+		wantFile string
 	}{
 		{
-			name:                     "basics release notes",
-			content: content,
-			wantFile:                 "test_files/release_notes_builder_output1",
+			name:     "basics release notes",
+			content:  content,
+			wantFile: "test_files/release_notes_builder_output1",
 		},
 		{
-			name:                     "empty bug fixes",
-			content: contentNoBugFix,
-			wantFile:                 "test_files/release_notes_builder_output2",
+			name:     "empty bug fixes",
+			content:  contentNoBugFix,
+			wantFile: "test_files/release_notes_builder_output2",
 		},
 		{
-			name:                     "empty bug fixes",
-			content: contentNoChange,
-			wantFile:                 "test_files/release_notes_builder_output3",
+			name:     "empty bug fixes",
+			content:  contentNoChange,
+			wantFile: "test_files/release_notes_builder_output3",
 		},
 	}
 	for _, tt := range tests {
@@ -175,16 +175,16 @@ Bug Fixes
 - 1.2 two both bugs`
 
 	tests := []struct {
-		name     string
+		name            string
 		newReleaseNotes string
-		docsFile string
-		wantFile  string
+		docsFile        string
+		wantFile        string
 	}{
 		{
-			name:                     "basics release notes",
+			name:            "basics release notes",
 			newReleaseNotes: newReleaseNotes,
-			docsFile:                 "test_files/release-notes.rst",
-			wantFile:                 "test_files/docs_update_handler_output",
+			docsFile:        "test_files/release-notes.rst",
+			wantFile:        "test_files/docs_update_handler_output",
 		},
 	}
 	for _, tt := range tests {

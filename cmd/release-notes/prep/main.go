@@ -8,9 +8,8 @@ import (
 
 var (
 	releaseVersion = "v0.0.0"
-	prevVersion = "v0.0.0"
+	prevVersion    = "v0.0.0"
 )
-
 
 func main() {
 	fileName := path.Join(".", "release-notes", "prep")

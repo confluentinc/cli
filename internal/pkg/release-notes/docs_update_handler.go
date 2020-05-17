@@ -32,7 +32,7 @@ func NewDocsUpdateHandler(header string, docsFilePath string) DocsUpdateHandler 
 }
 
 type DocsUpdateHandlerImp struct {
-	pageHeader string
+	pageHeader   string
 	docsFilePath string
 }
 
@@ -43,7 +43,6 @@ func (h *DocsUpdateHandlerImp) getUpdatedDocsPage(newReleaseNotes string) (strin
 	}
 	return h.addNewReleaseNotesToDocsPage(currentDocsPage, newReleaseNotes), nil
 }
-
 
 func (h *DocsUpdateHandlerImp) getCurrentDocsPage() (string, error) {
 	b, err := ioutil.ReadFile(h.docsFilePath)

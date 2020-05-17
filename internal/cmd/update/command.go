@@ -17,12 +17,12 @@ import (
 )
 
 const (
-	S3BinBucket   = "confluent.cloud"
-	S3BinRegion   = "us-west-2"
-	S3BinPrefix   = "%s-cli/binaries"
+	S3BinBucket          = "confluent.cloud"
+	S3BinRegion          = "us-west-2"
+	S3BinPrefix          = "%s-cli/binaries"
 	S3ReleaseNotesPrefix = "%s-cli/release-notes"
-	CheckFileFmt  = "~/.%s/update_check"
-	CheckInterval = 24 * time.Hour
+	CheckFileFmt         = "~/.%s/update_check"
+	CheckInterval        = 24 * time.Hour
 )
 
 // NewClient returns a new update.Client configured for the CLI
@@ -32,12 +32,12 @@ func NewClient(cliName string, disableUpdateCheck bool, logger *log.Logger) (upd
 		return nil, err
 	}
 	repo := s3.NewPublicRepo(&s3.PublicRepoParams{
-		S3BinRegion: S3BinRegion,
-		S3BinBucket: S3BinBucket,
-		S3BinPrefix: fmt.Sprintf(S3BinPrefix, cliName),
+		S3BinRegion:          S3BinRegion,
+		S3BinBucket:          S3BinBucket,
+		S3BinPrefix:          fmt.Sprintf(S3BinPrefix, cliName),
 		S3ReleaseNotesPrefix: fmt.Sprintf(S3ReleaseNotesPrefix, cliName),
-		S3ObjectKey: objectKey,
-		Logger:      logger,
+		S3ObjectKey:          objectKey,
+		Logger:               logger,
 	})
 	return update.NewClient(&update.ClientParams{
 		Repository:    repo,

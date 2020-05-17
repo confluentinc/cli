@@ -167,7 +167,7 @@ func (r *PublicRepo) parseMatchedReleaseNotesVersion(key string) (match bool, ve
 		return false, nil
 	}
 	split := strings.Split(key, "/")
-	if split[len(split) - 1] != S3ReleaseNotesFile {
+	if split[len(split)-1] != S3ReleaseNotesFile {
 		return false, nil
 	}
 	ver, err := version.NewVersion(split[2])
@@ -176,7 +176,6 @@ func (r *PublicRepo) parseMatchedReleaseNotesVersion(key string) (match bool, ve
 	}
 	return true, ver
 }
-
 
 func (r *PublicRepo) DownloadVersion(name, version, downloadDir string) (string, int64, error) {
 	s3URL := r.S3ObjectKey.URLFor(name, version)

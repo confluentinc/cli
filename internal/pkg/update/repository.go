@@ -7,7 +7,6 @@ import (
 
 // Repository is a collection of versioned packages
 type Repository interface {
-
 	GetLatestBinaryVersion(name string) (*version.Version, error)
 
 	GetLatestReleaseNotesVersion(name string) (*version.Version, error)
