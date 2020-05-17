@@ -11,10 +11,10 @@ import (
 // Client is a mock of Client interface
 type Client struct {
 	lockCheckForUpdates sync.Mutex
-	CheckForUpdatesFunc func(name, currentVersion string, forceCheck bool) (bool, string, error)
+	CheckForUpdatesFunc func(name, currentVersion string, forceCheck bool) (bool, string, string, error)
 
 	lockPromptToDownload sync.Mutex
-	PromptToDownloadFunc func(name, currVersion, latestVersion string, confirm bool) bool
+	PromptToDownloadFunc func(name, currVersion, latestVersion, releaseNotes string, confirm bool) bool
 
 	lockUpdateBinary sync.Mutex
 	UpdateBinaryFunc func(name, version, path string) error
@@ -29,6 +29,7 @@ type Client struct {
 			Name          string
 			CurrVersion   string
 			LatestVersion string
+			ReleaseNotes  string
 			Confirm       bool
 		}
 		UpdateBinary []struct {
@@ -40,7 +41,7 @@ type Client struct {
 }
 
 // CheckForUpdates mocks base method by wrapping the associated func.
-func (m *Client) CheckForUpdates(name, currentVersion string, forceCheck bool) (bool, string, error) {
+func (m *Client) CheckForUpdates(name, currentVersion string, forceCheck bool) (bool, string, string, error) {
 	m.lockCheckForUpdates.Lock()
 	defer m.lockCheckForUpdates.Unlock()
 
@@ -84,7 +85,7 @@ func (m *Client) CheckForUpdatesCalls() []struct {
 }
 
 // PromptToDownload mocks base method by wrapping the associated func.
-func (m *Client) PromptToDownload(name, currVersion, latestVersion string, confirm bool) bool {
+func (m *Client) PromptToDownload(name, currVersion, latestVersion, releaseNotes string, confirm bool) bool {
 	m.lockPromptToDownload.Lock()
 	defer m.lockPromptToDownload.Unlock()
 
@@ -96,17 +97,19 @@ func (m *Client) PromptToDownload(name, currVersion, latestVersion string, confi
 		Name          string
 		CurrVersion   string
 		LatestVersion string
+		ReleaseNotes  string
 		Confirm       bool
 	}{
 		Name:          name,
 		CurrVersion:   currVersion,
 		LatestVersion: latestVersion,
+		ReleaseNotes:  releaseNotes,
 		Confirm:       confirm,
 	}
 
 	m.calls.PromptToDownload = append(m.calls.PromptToDownload, call)
 
-	return m.PromptToDownloadFunc(name, currVersion, latestVersion, confirm)
+	return m.PromptToDownloadFunc(name, currVersion, latestVersion, releaseNotes, confirm)
 }
 
 // PromptToDownloadCalled returns true if PromptToDownload was called at least once.
@@ -122,6 +125,7 @@ func (m *Client) PromptToDownloadCalls() []struct {
 	Name          string
 	CurrVersion   string
 	LatestVersion string
+	ReleaseNotes  string
 	Confirm       bool
 } {
 	m.lockPromptToDownload.Lock()

@@ -20,12 +20,6 @@ var (
 	S3ReleaseNotesFile = "release-notes.rst"
 )
 
-type fileType int
-const (
-	binary fileType = iota
-	releaseNote
-)
-
 type PublicRepo struct {
 	*PublicRepoParams
 	// @VisibleForTesting
@@ -74,48 +68,33 @@ func NewPublicRepo(params *PublicRepoParams) *PublicRepo {
 }
 
 func (r *PublicRepo) GetLatestBinaryVersion(name string) (*version.Version, error) {
-	availableVersions, err := r.getAvailableVersions(name, binary)
+	availableVersions, err := r.GetAvailableBinaryVersions(name)
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to get available binary versions")
 	}
 	return availableVersions[len(availableVersions)-1], nil
 }
 
-func (r *PublicRepo) GetLatestReleaseNotesVersion(name string) (*version.Version, error) {
-	availableVersions, err := r.getAvailableVersions(name, releaseNote)
-	if err != nil {
-		return nil, errors.Wrapf(err, "unable to get available release notes versions")
-	}
-	return availableVersions[len(availableVersions)-1], nil
-}
-
-func (r *PublicRepo) getAvailableVersions(name string, contentType fileType) (version.Collection, error) {
-	var result *ListBucketResult
-	var err error
-	if contentType == binary {
-		result, err = r.getVersionListBucketResult(r.S3BinPrefix)
-	} else {
-		result, err = r.getVersionListBucketResult(r.S3ReleaseNotesPrefix)
-	}
+func (r *PublicRepo) GetAvailableBinaryVersions(name string) (version.Collection, error) {
+	listBucketResult, err := r.getListBucketResultFromDir(r.S3BinPrefix)
 	if err != nil {
 		return nil, err
 	}
-
-	availableVersions, err := r.getAvailableVersionsFromListBucketResult(result, name, contentType)
+	availableVersions, err := r.getMatchedBinaryVersionsFromListBucketResult(listBucketResult, name)
+	if err != nil {
+		return nil, err
+	}
 	if len(availableVersions) <= 0 {
 		return nil, fmt.Errorf("no versions found")
 	}
-
-	sort.Sort(availableVersions)
-
 	return availableVersions, nil
 }
 
-func (r *PublicRepo) getVersionListBucketResult(s3DirPrefix string) (*ListBucketResult, error) {
-	listVersions := fmt.Sprintf("%s?prefix=%s/", r.endpoint, s3DirPrefix)
-	r.Logger.Debugf("Getting available versions from %s", listVersions)
+func (r *PublicRepo) getListBucketResultFromDir(s3DirPrefix string) (*ListBucketResult, error) {
+	url := fmt.Sprintf("%s?prefix=%s/", r.endpoint, s3DirPrefix)
+	r.Logger.Debugf("Getting available versions from %s", url)
 
-	resp, err := r.getHttpResponse(listVersions)
+	resp, err := r.getHttpResponse(url)
 	if err != nil {
 		return nil, err
 	}
@@ -133,29 +112,53 @@ func (r *PublicRepo) getVersionListBucketResult(s3DirPrefix string) (*ListBucket
 	return &result, nil
 }
 
-func (r *PublicRepo) getAvailableVersionsFromListBucketResult(result *ListBucketResult, name string, contentType fileType) (version.Collection, error) {
+func (r *PublicRepo) getMatchedBinaryVersionsFromListBucketResult(result *ListBucketResult, name string) (version.Collection, error) {
 	var versions version.Collection
 	for _, v := range result.Contents {
-		var foundVersion *version.Version
-		var match bool
-		var err error
-		if contentType == binary {
-			match, foundVersion, err = r.S3ObjectKey.ParseVersion(v.Key, name)
-			if err != nil {
-				return nil, err
-			}
-
-		} else {
-			match, foundVersion = r.parseMatchedReleaseNotesVersion(v.Key)
-			if !match {
-				continue
-			}
+		match, foundVersion, err := r.S3ObjectKey.ParseVersion(v.Key, name)
+		if err != nil {
+			return nil, err
 		}
-		if !match {
-			continue
+		if match {
+			versions = append(versions, foundVersion)
 		}
-		versions = append(versions, foundVersion)
 	}
+	sort.Sort(versions)
+	return versions, nil
+}
+
+func (r *PublicRepo) GetLatestReleaseNotesVersion(name string) (*version.Version, error) {
+	availableVersions, err := r.GetAvailableReleaseNotesVersions(name)
+	if err != nil {
+		return nil, errors.Wrapf(err, "unable to get available release notes versions")
+	}
+	return availableVersions[len(availableVersions)-1], nil
+}
+
+func (r *PublicRepo) GetAvailableReleaseNotesVersions(name string) (version.Collection, error) {
+	listBucketResult, err := r.getListBucketResultFromDir(r.S3BinPrefix)
+	if err != nil {
+		return nil, err
+	}
+	availableVersions, err := r.getMatchedReleaseNotesVersionsFromListBucketResult(listBucketResult, name)
+	if err != nil {
+		return nil, err
+	}
+	if len(availableVersions) <= 0 {
+		return nil, fmt.Errorf("no versions found")
+	}
+	return availableVersions, nil
+}
+
+func (r *PublicRepo) getMatchedReleaseNotesVersionsFromListBucketResult(result *ListBucketResult, name string) (version.Collection, error) {
+	var versions version.Collection
+	for _, v := range result.Contents {
+		match, foundVersion := r.parseMatchedReleaseNotesVersion(v.Key)
+		if match {
+			versions = append(versions, foundVersion)
+		}
+	}
+	sort.Sort(versions)
 	return versions, nil
 }
 

@@ -140,7 +140,7 @@ func isLessThanVersion(curr, latest *version.Version) bool {
 }
 
 // PromptToDownload displays an interactive CLI prompt to download the latest version
-func (c *client) PromptToDownload(name, currVersion, latestVersion string, releaseNotes string, confirm bool) bool {
+func (c *client) PromptToDownload(name, currVersion, latestVersion, releaseNotes string, confirm bool) bool {
 	if confirm && !c.fs.IsTerminal(c.Out.Fd()) {
 		c.Logger.Warn("disable confirm as stdout is not a tty")
 		confirm = false

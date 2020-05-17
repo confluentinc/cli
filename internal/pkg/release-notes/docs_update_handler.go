@@ -6,7 +6,6 @@ import (
 )
 
 const (
-	releaseNotesDocsPageFileName = "release-notes.rst"
 	ccloudDocsPageHeader = `.. _ccloud-release-notes:
 
 ==========================

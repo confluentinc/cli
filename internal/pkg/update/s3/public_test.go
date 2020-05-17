@@ -186,7 +186,7 @@ func TestPublicRepo_GetAvailableVersions(t *testing.T) {
 			r.goos = goos
 			r.goarch = goarch
 
-			got, err := r.GetAvailableVersions(tt.args.name)
+			got, err := r.GetAvailableBinaryVersions(tt.args.name)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("PublicRepo.GetAvailableVersions() error = %v, wantErr %v", err, tt.wantErr)
 				return

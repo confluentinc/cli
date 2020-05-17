@@ -1432,6 +1432,7 @@ github.com/tidwall/sjson v1.0.4/go.mod h1:bURseu1nuBkFpIES5cz6zBtjmYeOQmEESshn7V
 github.com/timakin/bodyclose v0.0.0-20190930140734-f7f2e9bca95e h1:RumXZ56IrCj4CL+g1b9OL/oH0QnsF976bC8xQFYUD5Q=
 github.com/timakin/bodyclose v0.0.0-20190930140734-f7f2e9bca95e/go.mod h1:Qimiffbc6q9tBWlVV6x0P9sat/ao1xEkREYPPj9hphk=
 github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=
+github.com/travisjeffery/mocker v1.1.0 h1:Gx8BRwWoIfTuKqYKu7f4Dhp9MBj8U0m77LqFaVglsH8=
 github.com/travisjeffery/mocker v1.1.0/go.mod h1:ezREEUpF+NpAhAcbduW0dLT4GIkNCZwdcsz0tsaTSCU=
 github.com/travisjeffery/proto-go-sql v0.0.0-20190911121832-39ff47280e87 h1:PYSpVMo7ihL46eJdNnu1KITaPG7h/YJ0TaSzE9Ijpek=
 github.com/travisjeffery/proto-go-sql v0.0.0-20190911121832-39ff47280e87/go.mod h1:xcL7ttDidGRkmF2+B1PEMMgZKK0hm74DDVM/JhB+fY0=
