@@ -127,20 +127,20 @@ func (r *PublicRepo) getMatchedBinaryVersionsFromListBucketResult(result *ListBu
 	return versions, nil
 }
 
-func (r *PublicRepo) GetLatestReleaseNotesVersion(name string) (*version.Version, error) {
-	availableVersions, err := r.GetAvailableReleaseNotesVersions(name)
+func (r *PublicRepo) GetLatestReleaseNotesVersion() (*version.Version, error) {
+	availableVersions, err := r.GetAvailableReleaseNotesVersions()
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to get available release notes versions")
 	}
 	return availableVersions[len(availableVersions)-1], nil
 }
 
-func (r *PublicRepo) GetAvailableReleaseNotesVersions(name string) (version.Collection, error) {
-	listBucketResult, err := r.getListBucketResultFromDir(r.S3BinPrefix)
+func (r *PublicRepo) GetAvailableReleaseNotesVersions() (version.Collection, error) {
+	listBucketResult, err := r.getListBucketResultFromDir(r.S3ReleaseNotesPrefix)
 	if err != nil {
 		return nil, err
 	}
-	availableVersions, err := r.getMatchedReleaseNotesVersionsFromListBucketResult(listBucketResult, name)
+	availableVersions, err := r.getMatchedReleaseNotesVersionsFromListBucketResult(listBucketResult)
 	if err != nil {
 		return nil, err
 	}
@@ -150,7 +150,7 @@ func (r *PublicRepo) GetAvailableReleaseNotesVersions(name string) (version.Coll
 	return availableVersions, nil
 }
 
-func (r *PublicRepo) getMatchedReleaseNotesVersionsFromListBucketResult(result *ListBucketResult, name string) (version.Collection, error) {
+func (r *PublicRepo) getMatchedReleaseNotesVersionsFromListBucketResult(result *ListBucketResult) (version.Collection, error) {
 	var versions version.Collection
 	for _, v := range result.Contents {
 		match, foundVersion := r.parseMatchedReleaseNotesVersion(v.Key)
@@ -170,7 +170,7 @@ func (r *PublicRepo) parseMatchedReleaseNotesVersion(key string) (match bool, ve
 	if split[len(split)-1] != S3ReleaseNotesFile {
 		return false, nil
 	}
-	ver, err := version.NewVersion(split[2])
+	ver, err := version.NewSemver(split[2])
 	if err != nil {
 		return false, nil
 	}
@@ -204,7 +204,7 @@ func (r *PublicRepo) DownloadVersion(name, version, downloadDir string) (string,
 	return downloadBinPath, bytes, nil
 }
 
-func (r *PublicRepo) DownloadReleaseNotes(name, version string) (string, error) {
+func (r *PublicRepo) DownloadReleaseNotes(version string) (string, error) {
 	downloadURL := fmt.Sprintf("%s/%s/%s/%s", r.endpoint, r.S3ReleaseNotesPrefix, version, S3ReleaseNotesFile)
 	resp, err := r.getHttpResponse(downloadURL)
 	if err != nil {

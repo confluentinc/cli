@@ -9,15 +9,15 @@ import (
 type Repository interface {
 	GetLatestBinaryVersion(name string) (*version.Version, error)
 
-	GetLatestReleaseNotesVersion(name string) (*version.Version, error)
+	GetLatestReleaseNotesVersion() (*version.Version, error)
 
 	GetAvailableBinaryVersions(name string) (version.Collection, error)
 
-	GetAvailableReleaseNotesVersions(name string) (version.Collection, error)
+	GetAvailableReleaseNotesVersions() (version.Collection, error)
 
 	// Downloads the versioned package to download dir to downloadDir.
 	// Returns the full path to the downloaded package, the download size in bytes, or an error if one occurred.
 	DownloadVersion(name, version, downloadDir string) (downloadPath string, downloadedBytes int64, err error)
 
-	DownloadReleaseNotes(name, version string) (string, error)
+	DownloadReleaseNotes(version string) (string, error)
 }

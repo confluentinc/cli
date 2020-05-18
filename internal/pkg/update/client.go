@@ -93,11 +93,11 @@ func (c *client) CheckForUpdates(name string, currentVersion string, forceCheck 
 	}
 
 	if isLessThanVersion(currVersion, mostRecentBinaryVersion) {
-		err := c.checkReleaseNotesVersion(name, mostRecentBinaryVersion)
+		err := c.checkReleaseNotesVersion(mostRecentBinaryVersion)
 		if err != nil {
 			return false, currentVersion, releaseNotes, err
 		}
-		releaseNotes, err = c.Repository.DownloadReleaseNotes(name, mostRecentBinaryVersion.String())
+		releaseNotes, err = c.Repository.DownloadReleaseNotes(mostRecentBinaryVersion.String())
 		if err != nil {
 			return false, currentVersion, releaseNotes, errors.Wrapf(err, "unable to download release notes")
 		}
@@ -106,8 +106,8 @@ func (c *client) CheckForUpdates(name string, currentVersion string, forceCheck 
 	return false, currentVersion, releaseNotes, nil
 }
 
-func (c *client) checkReleaseNotesVersion(name string, mostRecentBinaryVersion *version.Version) error {
-	mostRecentReleaseNotesVersion, err := c.Repository.GetLatestReleaseNotesVersion(name)
+func (c *client) checkReleaseNotesVersion(mostRecentBinaryVersion *version.Version) error {
+	mostRecentReleaseNotesVersion, err := c.Repository.GetLatestReleaseNotesVersion()
 	if err != nil {
 		return err
 	}
