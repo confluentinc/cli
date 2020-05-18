@@ -26,6 +26,9 @@ type DocsUpdateHandler interface {
 }
 
 func NewDocsUpdateHandler(header string, docsFilePath string) DocsUpdateHandler {
+	if runtime.GOOS == "windows" {
+		header = strings.ReplaceAll(header, "\n", "\r\n")
+	}
 	return &DocsUpdateHandlerImp{
 		pageHeader:   header,
 		docsFilePath: docsFilePath,
@@ -54,15 +57,6 @@ func (h *DocsUpdateHandlerImp) getCurrentDocsPage() (string, error) {
 }
 
 func (h *DocsUpdateHandlerImp) addNewReleaseNotesToDocsPage(currentDocsPage string, newReleaseNotes string) string {
-	previousReleaseNotes := h.removeHeaderFromDocsPage(currentDocsPage)
+	previousReleaseNotes := strings.ReplaceAll(currentDocsPage, h.pageHeader, "")
 	return h.pageHeader + "\n" + newReleaseNotes + "\n" + previousReleaseNotes
-}
-
-func (h *DocsUpdateHandlerImp) removeHeaderFromDocsPage(currentDocsPage string) string {
-	headerString := h.pageHeader
-	if runtime.GOOS == "windows" {
-		headerString = strings.ReplaceAll(headerString, "\n", "\r\n")
-	}
-	previousReleaseNotes := strings.ReplaceAll(currentDocsPage, headerString, "")
-	return previousReleaseNotes
 }

@@ -175,7 +175,7 @@ Bug Fixes
 ------------------------
 - 1.2 cloud bug
 - 1.2 two both bugs`
-
+	
 	tests := []struct {
 		name            string
 		newReleaseNotes string
