@@ -15,9 +15,9 @@ const (
 	updatedConflunetDocsFilePath = "./release-notes/confluent/release-notes.rst"
 
 	s3ReleaseNotesTitleFormat = `
-=======================================
+===================================
 %s %s Release Notes
-=======================================
+===================================
 `
 	docsReleaseNotesTitleFormat = `
 %s %s Release Notes

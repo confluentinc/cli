@@ -369,7 +369,6 @@ const ListVersionsPublicFixtureInvalidPrefix = `\
   </Contents>
 </ListBucketResult>`
 
-
 const ListReleaseNotesVersionsPublicFixture = `\
 <?xml version="1.0" encoding="utf-8"?>
 <ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/">

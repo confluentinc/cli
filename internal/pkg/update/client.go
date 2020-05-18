@@ -149,7 +149,7 @@ func (c *client) PromptToDownload(name, currVersion, latestVersion, releaseNotes
 	fmt.Fprintf(c.Out, "New version of %s is available\n", name)
 	fmt.Fprintf(c.Out, "Current Version: %s\n", currVersion)
 	fmt.Fprintf(c.Out, "Latest Version:  %s\n", latestVersion)
-	fmt.Fprintf(c.Out, "\n%s\n\n", releaseNotes)
+	fmt.Fprintf(c.Out, "%s\n\n\n", releaseNotes)
 
 	if !confirm {
 		return true
