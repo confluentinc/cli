@@ -316,13 +316,9 @@ func TestPublicRepo_GetAvailableReleaseNotesVersions(t *testing.T) {
 		S3ReleaseNotesPrefix string
 		Endpoint    string
 	}
-	type args struct {
-		name string
-	}
 	tests := []struct {
 		name    string
 		fields  fields
-		args    args
 		want    version.Collection
 		wantErr bool
 	}{
@@ -421,13 +417,9 @@ func TestPublicRepo_GetLatestReleaseNotesVersion(t *testing.T) {
 		S3ReleaseNotesPrefix string
 		Endpoint    string
 	}
-	type args struct {
-		name string
-	}
 	tests := []struct {
 		name    string
 		fields  fields
-		args    args
 		want    *version.Version
 		wantErr bool
 	}{
