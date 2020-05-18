@@ -202,6 +202,8 @@ Bug Fixes
 			require.NoError(t, err)
 			want, err := readTestFile(tt.wantFile)
 			require.NoError(t, err)
+			// got windows docs result will contain /r/n but readTestfile already uses NormalizeNewLines
+			docs = testUtils.NormalizeNewLines(docs)
 			require.Equal(t, want, docs)
 		})
 	}
