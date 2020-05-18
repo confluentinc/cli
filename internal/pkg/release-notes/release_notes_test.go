@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/require"
 	"io/ioutil"
+	"runtime"
+	"strings"
 	"testing"
 
 	testUtils "github.com/confluentinc/cli/test"
@@ -175,7 +177,11 @@ Bug Fixes
 ------------------------
 - 1.2 cloud bug
 - 1.2 two both bugs`
-	
+
+	if runtime.GOOS == "windows" {
+		newReleaseNotes = strings.ReplaceAll(newReleaseNotes, "\n", "\r\n")
+	}
+
 	tests := []struct {
 		name            string
 		newReleaseNotes string
