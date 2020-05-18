@@ -2,9 +2,8 @@ package release_notes
 
 import (
 	"io/ioutil"
+	"runtime"
 	"strings"
-
-	testUtils "github.com/confluentinc/cli/test"
 )
 
 const (
@@ -55,7 +54,15 @@ func (h *DocsUpdateHandlerImp) getCurrentDocsPage() (string, error) {
 }
 
 func (h *DocsUpdateHandlerImp) addNewReleaseNotesToDocsPage(currentDocsPage string, newReleaseNotes string) string {
-	testUtils.NormalizeNewLines(currentDocsPage)
-	previousReleaseNotes := strings.ReplaceAll(currentDocsPage, h.pageHeader, "")
+	previousReleaseNotes := h.removeHeaderFromDocsPage(currentDocsPage)
 	return h.pageHeader + "\n" + newReleaseNotes + "\n" + previousReleaseNotes
+}
+
+func (h *DocsUpdateHandlerImp) removeHeaderFromDocsPage(currentDocsPage string) string {
+	headerString := h.pageHeader
+	if runtime.GOOS == "windows" {
+		headerString = strings.ReplaceAll(headerString, "\n", "\r\n")
+	}
+	previousReleaseNotes := strings.ReplaceAll(currentDocsPage, headerString, "")
+	return previousReleaseNotes
 }
