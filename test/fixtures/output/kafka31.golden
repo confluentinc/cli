@@ -1,7 +1,8 @@
 {
-  "id": "lkc-describe",
+  "id": "lkc-describe-dedicated",
   "name": "kafka-cluster",
-  "type": "BASIC",
+  "type": "DEDICATED",
+  "cluster_size": 1,
   "ingress": 100,
   "egress": 100,
   "storage": 500,

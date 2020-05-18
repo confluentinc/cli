@@ -1,0 +1,1 @@
+Error: Must either specify --name with non-empty value or --cku (for dedicated clusters) with positive integer when updating a cluster.

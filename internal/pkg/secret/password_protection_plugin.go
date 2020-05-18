@@ -467,21 +467,13 @@ func (c *PasswordProtectionSuite) RemoveEncryptedPasswords(configFilePath string
 	}
 
 	configs := strings.Split(removeConfigs, ",")
+	configProps := properties.NewProperties()
+	configProps.DisableExpansion = true
 
-	// Delete the config from Configuration File.
 	fileType := filepath.Ext(configFilePath)
 	isJson := false
-	switch fileType {
-	case ".properties":
-		err = c.removePropertiesConfig(configFilePath, configs)
-	case ".json":
+	if fileType == ".json" {
 		isJson = true
-		err = c.removeJsonConfig(configFilePath, configs)
-	default:
-		err = fmt.Errorf("File type " + fileType + " currently not supported.")
-	}
-	if err != nil {
-		return err
 	}
 
 	// Delete the config from Security File.
@@ -494,10 +486,24 @@ func (c *PasswordProtectionSuite) RemoveEncryptedPasswords(configFilePath string
 		// Check if config is removed from secrets files
 		_, ok := secureConfigProps.Get(pathKey)
 		if !ok {
-			return fmt.Errorf("config " + key + " not present in secrets file.")
+			return fmt.Errorf("Configuration key " + key + " is not encrypted.")
 		}
 		secureConfigProps.Delete(pathKey)
 	}
+
+	// Delete the config from Configuration File.
+	switch fileType {
+	case ".properties":
+		err = c.removePropertiesConfig(configFilePath, configs)
+	case ".json":
+		err = c.removeJsonConfig(configFilePath, configs)
+	default:
+		err = fmt.Errorf("File type " + fileType + " currently not supported.")
+	}
+	if err != nil {
+		return err
+	}
+
 	err = WritePropertiesFile(localSecureConfigPath, secureConfigProps, true)
 	return err
 }
@@ -526,21 +532,8 @@ func (c *PasswordProtectionSuite) removeJsonConfig(configFilePath string, config
 }
 
 func (c *PasswordProtectionSuite) removePropertiesConfig(configFilePath string, configs []string) error {
-	configProps, err := LoadConfiguration(configFilePath, nil, false)
-	configProps.DisableExpansion = true
-	if err != nil {
-		return err
-	}
-	for _, key := range configs {
-		//Check if config is present
-		_, ok := configProps.Get(key)
-		if !ok {
-			return fmt.Errorf("Configuration key " + key + " is not present in the configuration file.")
-		}
-		configProps.Delete(key)
-	}
 
-	return WritePropertiesFile(configFilePath, configProps, true)
+	return RemovePropertiesConfig(configs, configFilePath)
 }
 
 func (c *PasswordProtectionSuite) wrapDataKey(engine EncryptionEngine, dataKey []byte, masterKey string) (string, error) {

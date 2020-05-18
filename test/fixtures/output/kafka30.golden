@@ -1,7 +1,7 @@
 +-------------+---------------------------+
-| Id          | lkc-describe              |
+| Id          | lkc-describe-dedicated    |
 | Name        | kafka-cluster             |
-| Type        | BASIC                     |
+| Type        | DEDICATED                 |
 | Ingress     |                       100 |
 | Egress      |                       100 |
 | Storage     |                       500 |
@@ -10,4 +10,5 @@
 | Status      | PROVISIONING              |
 | Endpoint    | SASL_SSL://kafka-endpoint |
 | ApiEndpoint | http://kafka-api-url      |
+| ClusterSize |                         1 |
 +-------------+---------------------------+

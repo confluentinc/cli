@@ -67,6 +67,6 @@ const (
 	ADD                     = "add"
 	DELETE                  = "delete"
 	UPDATE                  = "update"
-	NEW_LINE                = "\n "
+	SPACE                   = " "
 	KEY_SEPARATOR           = "/"
 )
