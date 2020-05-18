@@ -5,6 +5,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"testing"
+
+	testUtils "github.com/confluentinc/cli/test"
 )
 
 func Test_Prep_Reader_Imp_Read_File(t *testing.T) {
@@ -205,5 +207,5 @@ func readTestFile(filePath string) (string, error) {
 		return "", fmt.Errorf("Unable to load output file.")
 	}
 	fileContent := string(fileBytes)
-	return fileContent, nil
+	return testUtils.NormalizeNewLines(fileContent), nil
 }
