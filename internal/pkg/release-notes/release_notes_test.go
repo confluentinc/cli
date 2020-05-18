@@ -19,7 +19,7 @@ func Test_Prep_Reader_Imp_Read_File(t *testing.T) {
 		wantCCloudNewFeatures    []string
 		wantCCloudBugFixes       []string
 		wantConfluentNewFeatures []string
-		wantConfleuntBugFixes    []string
+		wantConfluentBugFixes    []string
 	}{
 		{
 			name:                     "test get sections map",
@@ -29,7 +29,7 @@ func Test_Prep_Reader_Imp_Read_File(t *testing.T) {
 			wantCCloudNewFeatures:    []string{"ccloud feature1", "ccloud feature2"},
 			wantCCloudBugFixes:       []string{"ccloud bug1", "ccloud bug2"},
 			wantConfluentNewFeatures: []string{"confluent new feature1", "confluent new feature2"},
-			wantConfleuntBugFixes:    []string{"confluent bug1", "confluent bug2"},
+			wantConfluentBugFixes:    []string{"confluent bug1", "confluent bug2"},
 		},
 		{
 			name:                     "test get sections map",
@@ -39,7 +39,7 @@ func Test_Prep_Reader_Imp_Read_File(t *testing.T) {
 			wantCCloudNewFeatures:    []string{"ccloud feature1", "ccloud feature2"},
 			wantCCloudBugFixes:       []string{"ccloud bug1", "ccloud bug2"},
 			wantConfluentNewFeatures: []string{"confluent new feature1", "confluent new feature2"},
-			wantConfleuntBugFixes:    []string{"confluent bug1", "confluent bug2"},
+			wantConfluentBugFixes:    []string{"confluent bug1", "confluent bug2"},
 		},
 	}
 	for _, tt := range tests {
@@ -52,7 +52,7 @@ func Test_Prep_Reader_Imp_Read_File(t *testing.T) {
 			require.Equal(t, prepReader.sections[ccloudNewFeatures], tt.wantCCloudNewFeatures)
 			require.Equal(t, prepReader.sections[ccloudBugFixes], tt.wantCCloudBugFixes)
 			require.Equal(t, prepReader.sections[confluentNewFeatures], tt.wantConfluentNewFeatures)
-			require.Equal(t, prepReader.sections[confluentBugFixes], tt.wantConfleuntBugFixes)
+			require.Equal(t, prepReader.sections[confluentBugFixes], tt.wantConfluentBugFixes)
 		})
 	}
 }

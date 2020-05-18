@@ -3,6 +3,8 @@ package release_notes
 import (
 	"io/ioutil"
 	"strings"
+
+	testUtils "github.com/confluentinc/cli/test"
 )
 
 const (
@@ -53,6 +55,7 @@ func (h *DocsUpdateHandlerImp) getCurrentDocsPage() (string, error) {
 }
 
 func (h *DocsUpdateHandlerImp) addNewReleaseNotesToDocsPage(currentDocsPage string, newReleaseNotes string) string {
+	testUtils.NormalizeNewLines(currentDocsPage)
 	previousReleaseNotes := strings.ReplaceAll(currentDocsPage, h.pageHeader, "")
 	return h.pageHeader + "\n" + newReleaseNotes + "\n" + previousReleaseNotes
 }
