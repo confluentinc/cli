@@ -47,26 +47,22 @@ func (c *command) shell(cmd *cobra.Command, args []string) {
 	// add shell only quit command
 	c.RootCmd.AddCommand(quit.NewQuitCmd(c.config))
 
-	// run the shell
-	fmt.Printf("Welcome to the %s shell!\n", c.config.CLIName)
-	fmt.Println("Please press `Ctrl-D` or type `quit` to exit.")
-
-	if c.config.HasLogin() {
-		fmt.Println("Started shell with authenticated user.")
-	} else {
-		fmt.Println("Warning: You are currently not authenticated. Please log in to use full features.")
+	msg := "You are already authenticated."
+	if !c.config.HasLogin() {
+		msg = "You are currently not authenticated."
 	}
 
+	// run the shell
+	fmt.Printf("Welcome to the %s shell! %s\n", cliName, msg)
+	fmt.Println("Please press `Ctrl-D` or type `quit` to exit.")
+
 	livePrefixFunc := func() (prefix string, useLivePrefix bool) {
-		hasLogin := c.config.HasLogin()
-		if hasLogin {
-			prefix = cliName + " ✅ "
-		} else {
-			prefix = cliName + " ❌ "
+		indicator := "❌ "
+		if c.config.HasLogin() {
+			indicator = "✅ "
 		}
 
-		prefix += " > "
-		return prefix, true
+		return fmt.Sprintf("%s %s> ", cliName, indicator), true
 	}
 	livePrefixOpt := goprompt.OptionLivePrefix(livePrefixFunc)
 
