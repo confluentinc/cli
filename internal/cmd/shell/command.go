@@ -2,8 +2,8 @@ package shell
 
 import (
 	"fmt"
-	goprompt "github.com/c-bata/go-prompt"
 
+	goprompt "github.com/c-bata/go-prompt"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/cmd/quit"
@@ -57,12 +57,12 @@ func (c *command) shell(cmd *cobra.Command, args []string) {
 	fmt.Println("Please press `Ctrl-D` or type `quit` to exit.")
 
 	livePrefixFunc := func() (prefix string, useLivePrefix bool) {
-		indicator := "❌ "
+		indicator := "❌"
 		if c.config.HasLogin() {
-			indicator = "✅ "
+			indicator = "✅"
 		}
 
-		return fmt.Sprintf("%s %s> ", cliName, indicator), true
+		return fmt.Sprintf("%s %s > ", cliName, indicator), true
 	}
 	livePrefixOpt := goprompt.OptionLivePrefix(livePrefixFunc)
 
