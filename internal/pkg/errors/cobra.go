@@ -2,6 +2,8 @@ package errors
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
@@ -10,26 +12,26 @@ import (
 	"github.com/confluentinc/mds-sdk-go"
 )
 
-var messages = map[error]string{
-	ErrNoContext:      UserNotLoggedInErrMsg,
-	ErrNotLoggedIn:    UserNotLoggedInErrMsg,
-	ErrNotImplemented: "Sorry, this functionality is not yet available in the CLI.",
-	ErrNoKafkaContext: "You must pass --cluster or set an active kafka in your context with 'kafka cluster use'",
-}
+var (
+	messages = map[error]string{
+		ErrNoContext:      UserNotLoggedInErrMsg,
+		ErrNotLoggedIn:    UserNotLoggedInErrMsg,
+		ErrNotImplemented: "Sorry, this functionality is not yet available in the CLI.",
+		ErrNoKafkaContext: "You must pass --cluster or set an active kafka in your context with 'kafka cluster use'",
+	}
 
-// HandleCommon provides standard error messaging for common errors.
+	directionsMessageFormat = "\nDirections:\n    %s\n"
+)
+
 func HandleCommon(err error, cmd *cobra.Command) error {
-	// Give an indication of successful completion
 	if err == nil {
 		return nil
 	}
-	cmd.SilenceUsage = true
-
-	if msg, ok := messages[err]; ok {
-		return fmt.Errorf(msg)
-	}
+	var cliError CLIDefinedError
 	switch e := err.(type) {
+
 	case mds.GenericOpenAPIError:
+		cmd.SilenceUsage = true
 		return fmt.Errorf(e.Error() + ": " + string(e.Body()))
 	case *corev1.Error:
 		var result error
@@ -37,19 +39,23 @@ func HandleCommon(err error, cmd *cobra.Command) error {
 		for name, msg := range e.GetNestedErrors() {
 			result = multierror.Append(result, fmt.Errorf("%s: %s", name, msg))
 		}
+		cmd.SilenceUsage = true
 		return result
-	case *UnspecifiedAPIKeyError:
-		return fmt.Errorf("no API key selected for %s, please select an api-key first (e.g., with `api-key use`)", e.ClusterID)
-	case *UnspecifiedCredentialError:
-		// TODO: Add more context to credential error messages (add variable error).
-		return fmt.Errorf(ConfigUnspecifiedCredentialError, e.ContextName)
-	case *UnspecifiedPlatformError:
-		// TODO: Add more context to platform error messages (add variable error).
-		return fmt.Errorf(ConfigUnspecifiedPlatformError, e.ContextName)
-	case *ccloud.InvalidLoginError:
-		return fmt.Errorf("You have entered an incorrect username or password. Please try again.")
 	case *ccloud.InvalidTokenError:
+		cmd.SilenceUsage = true
 		return fmt.Errorf(CorruptedAuthTokenErrorMsg)
+	case CLIDefinedError:
+		cliError = e
+	default:
+		cliError = NewUnexpectedCLIBehaviorErrorf(e.Error())
 	}
-	return err
+	cmd.SilenceUsage = cliError.SilenceUsage()
+	return cliError
+}
+
+func HandleDirectionsMessageDisplay(err error) {
+	cliErr, ok := err.(CLIDefinedError)
+	if ok && cliErr.GetDirectionsMsg() != "" {
+		_, _ = fmt.Fprintf(os.Stderr, directionsMessageFormat, cliErr.GetDirectionsMsg())
+	}
 }

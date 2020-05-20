@@ -180,7 +180,7 @@ func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 		}
 		outputWriter.AddElement(cluster)
 	}
-	return outputWriter.Out()
+	return errors.HandleCommon(outputWriter.Out(), cmd)
 }
 
 var stdin io.ReadWriter = os.Stdin
@@ -298,7 +298,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	return outputKafkaClusterDescription(cmd, cluster)
+	return errors.HandleCommon(outputKafkaClusterDescription(cmd, cluster), cmd)
 }
 
 func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
@@ -336,7 +336,7 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	return outputKafkaClusterDescription(cmd, cluster)
+	return errors.HandleCommon(outputKafkaClusterDescription(cmd, cluster), cmd)
 }
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
@@ -345,7 +345,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	pcmd.Printf(cmd, "The Kafka cluster %s has been deleted.\n", args[0])
+	pcmd.Printf(cmd, errors.KafkaClusterDeletedWarningMsg, args[0])
 	return nil
 }
 
@@ -356,7 +356,7 @@ func (c *clusterCommand) use(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	return c.Context.SetActiveKafkaCluster(cmd, clusterID)
+	return errors.HandleCommon(c.Context.SetActiveKafkaCluster(cmd, clusterID), cmd)
 }
 
 func check(err error) {
@@ -377,10 +377,14 @@ func checkCloudAndRegion(cloudId string, regionId string, clouds []*schedv1.Clou
 					}
 				}
 			}
-			return fmt.Errorf("'%s' is not an available region for '%s'. You can view a list of available regions for '%s' with 'kafka region list --cloud %s' command.", regionId, cloudId, cloudId, cloudId)
+			cliErr := errors.NewResourceValidationErrorf(errors.KafkaClusterCreateCloudRegionNotAvailableErrorMsg,  regionId, cloudId)
+			cliErr.SetDirectionsMsg(errors.KafkaClusterCreateCloudRegionNotAvailableDirectionsMsg, cloudId, cloudId)
+			return cliErr
 		}
 	}
-	return fmt.Errorf("'%s' cloud provider does not exist. You can view a list of available cloud providers and regions with the 'kafka region list' command.", cloudId)
+	cliErr := errors.NewResourceValidationErrorf(errors.KafkaClusterCreateCloudProviderNotAvailableErrorMsg,  cloudId)
+	cliErr.SetDirectionsMsg(errors.KafkaClusterCreateCloudProviderNotAvailableDirectionsMsg)
+	return cliErr
 }
 
 func getAccountsForCloud(cloudId string, clouds []*schedv1.CloudMetadata) []string {

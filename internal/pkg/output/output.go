@@ -24,10 +24,6 @@ const (
 	DefaultValue  = humanString
 )
 
-var (
-	InvalidFormatString = "Invalid output format type '%s'."
-)
-
 type Format int
 
 const (
@@ -56,29 +52,31 @@ func NewListOutputCustomizableWriter(cmd *cobra.Command, listFields []string, hu
 	if err != nil {
 		return nil, errors.HandleCommon(err, cmd)
 	}
-	if format == JSON.String() {
+	switch format {
+	case JSON.String():
 		return &StructuredListWriter{
 			outputFormat: JSON,
 			listFields:   listFields,
 			listLabels:   structuredLabels,
 			writer:       writer,
 		}, nil
-	} else if format == YAML.String() {
+	case YAML.String():
 		return &StructuredListWriter{
-			outputFormat: YAML,
+			outputFormat: JSON,
 			listFields:   listFields,
 			listLabels:   structuredLabels,
 			writer:       writer,
 		}, nil
-	} else if format == Human.String() {
+	case Human.String():
 		return &HumanListWriter{
 			outputFormat: Human,
 			listFields:   listFields,
 			listLabels:   humanLabels,
 			writer:       writer,
 		}, nil
+	default:
+		return nil, errors.NewFlagUseErrorf(errors.OutputWriterInvalidFormatFlagErrorMsg, format)
 	}
-	return nil, fmt.Errorf(InvalidFormatString, format)
 }
 
 func DescribeObject(cmd *cobra.Command, obj interface{}, fields []string, humanRenames, structuredRenames map[string]string) error {
@@ -87,7 +85,7 @@ func DescribeObject(cmd *cobra.Command, obj interface{}, fields []string, humanR
 		return errors.HandleCommon(err, cmd)
 	}
 	if !(format == Human.String() || format == JSON.String() || format == YAML.String()) {
-		return fmt.Errorf(InvalidFormatString, format)
+		return errors.NewFlagUseErrorf(errors.OutputWriterInvalidFormatFlagErrorMsg, format)
 	}
 	return printer.RenderOut(obj, fields, humanRenames, structuredRenames, format, os.Stdout)
 }
@@ -100,7 +98,7 @@ func StructuredOutput(format string, obj interface{}) error {
 	} else if format == YAML.String() {
 		b, _ = yaml.Marshal(obj)
 	} else {
-		return fmt.Errorf(InvalidFormatString, format)
+		return errors.NewFlagUseErrorf(errors.OutputWriterInvalidFormatFlagErrorMsg, format)
 	}
 	_, err := fmt.Fprintf(os.Stdout, string(b))
 	return err

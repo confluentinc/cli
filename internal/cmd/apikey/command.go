@@ -175,7 +175,9 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	}
 	if currentUser {
 		if userId != 0 {
-			return errors.Errorf("Cannot use both service-account and current-user flags at the same time.")
+			return errors.HandleCommon(errors.NewFlagUseErrorf(
+				errors.ProhibitedFlagCombinationMsg, "service-account", "current-user"),
+				cmd)
 		}
 		userId = c.State.Auth.User.Id
 	}
@@ -197,7 +199,6 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		}
 		// Add '*' only in the case where we are printing out tables
 		if outputWriter.GetOutputFormat() == output.Human {
-			// resourceId != "" added to be explicit that when no resourceId is specified we will not have "*"
 			if resourceId != "" && apiKey.Key == currentKey {
 				apiKey.Key = fmt.Sprintf("* %s", apiKey.Key)
 			} else {
@@ -232,7 +233,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 			})
 		}
 	}
-	return outputWriter.Out()
+	return errors.HandleCommon(outputWriter.Out(), cmd)
 }
 
 func (c *command) update(cmd *cobra.Command, args []string) error {
@@ -294,7 +295,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	}
 
 	if outputFormat == output.Human.String() {
-		pcmd.ErrPrintln(cmd, "Save the API key and secret. The secret is not retrievable later.")
+		pcmd.ErrPrintln(cmd, errors.APIKeyCreateAPIKeyNotRetrievableWarningMsg)
 	}
 
 	err = output.DescribeObject(cmd, userKey, createFields, createHumanRenames, createStructuredRenames)
@@ -304,7 +305,9 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 
 	if resourceType == pcmd.KafkaResourceType {
 		if err := c.keystore.StoreAPIKey(userKey, clusterId, cmd); err != nil {
-			return errors.HandleCommon(errors.Wrapf(err, "unable to store API key locally"), cmd)
+			return errors.HandleCommon(
+				errors.NewUnexpectedCLIBehaviorErrorWrapf(err, errors.APIKeyCommandUnableToStoreAPIKeyErrorMsg),
+				cmd)
 		}
 	}
 	return nil
@@ -328,7 +331,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	pcmd.Println(cmd, "API Key successfully deleted.")
+	pcmd.Println(cmd, errors.APIKeyDeleteAPIKeySuccessfullyDeletedWarningMsg)
 	return c.keystore.DeleteAPIKey(apiKey, cmd)
 }
 
@@ -384,11 +387,15 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	if found, err := c.keystore.HasAPIKey(key, cluster.ID, cmd); err != nil {
 		return errors.HandleCommon(err, cmd)
 	} else if found && !force {
-		return errors.HandleCommon(errors.Errorf("Refusing to overwrite existing secret for API Key %s", key), cmd)
+		cliErr := errors.NewProhibitedActionErrorf(errors.APIKeyStoreRefuseToOverrideExistingSecretErrorMsg, key)
+		cliErr.SetDirectionsMsg(errors.APIKeyStoreRefuseToOverrideExistingSecretDirectionsMsg, key)
+		return errors.HandleCommon(cliErr, cmd)
 	}
 
 	if err := c.keystore.StoreAPIKey(&schedv1.ApiKey{Key: key, Secret: secret}, cluster.ID, cmd); err != nil {
-		return errors.HandleCommon(errors.Wrapf(err, "unable to store the API key locally"), cmd)
+		return errors.HandleCommon(
+			errors.NewUnexpectedCLIBehaviorErrorWrapf(err, errors.APIKeyCommandUnableToStoreAPIKeyErrorMsg),
+			cmd)
 	}
 	return nil
 }
@@ -401,7 +408,7 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	if resourceType != pcmd.KafkaResourceType {
-		return errors.HandleCommon(errors.Errorf(errors.APIKeyCommandResourceTypeNotImplementedErrorMsg), cmd)
+		return errors.HandleCommon(errors.NewProhibitedActionErrorf(errors.APIKeyCommandResourceTypeNotImplementedErrorMsg), cmd)
 	}
 	cluster, err := c.Context.FindKafkaCluster(cmd, clusterId)
 	if err != nil {
@@ -409,7 +416,7 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 	}
 	err = c.Context.UseAPIKey(cmd, apiKey, cluster.ID)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return errors.HandleCommon(errors.NewUnexpectedCLIBehaviorErrorWrapf(err, errors.APIKeyUseFailedErrorMsg), cmd)
 	}
 	return nil
 }

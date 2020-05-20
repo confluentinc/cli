@@ -2,6 +2,7 @@ package cmd
 
 import (
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"net/http"
 	"os"
 	"runtime"
@@ -160,17 +161,21 @@ func (c *Command) Execute(args []string) error {
 	c.Analytics.SetStartTime()
 	c.Command.SetArgs(args)
 	err := c.Command.Execute()
+	c.AnalyticsHandling(err, args)
+	errors.HandleDirectionsMessageDisplay(err)
+	return err
+}
+
+func (c *Command) AnalyticsHandling(err error, args []string) {
 	if err != nil {
 		analyticsError := c.Analytics.SendCommandFailed(err)
 		if analyticsError != nil {
 			c.logger.Debugf("segment analytics sending event failed: %s\n", analyticsError.Error())
 		}
-		return err
 	}
 	c.Analytics.CatchHelpCall(c.Command, args)
 	analyticsError := c.Analytics.SendCommandSucceeded()
 	if analyticsError != nil {
 		c.logger.Debugf("segment analytics sending event failed: %s\n", analyticsError.Error())
 	}
-	return nil
 }

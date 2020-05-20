@@ -62,7 +62,7 @@ func (d *DynamicContext) FindKafkaCluster(cmd *cobra.Command, clusterId string) 
 		return cluster, nil
 	}
 	if d.client == nil {
-		return nil, errors.Errorf("Unable to obtain Kafka cluster information for cluster %s: no client.", clusterId)
+		return nil, errors.NewUnexpectedCLIBehaviorErrorf(errors.FindKafkaClusterNoClientErrorMsg, clusterId)
 	}
 	// Resolve cluster details if not found locally.
 	ctxClient := NewContextClient(d)

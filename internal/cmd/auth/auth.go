@@ -114,19 +114,19 @@ func (a *commands) init(prerunner pcmd.PreRunner) {
 func (a *commands) login(cmd *cobra.Command, args []string) error {
 	url, err := cmd.Flags().GetString("url")
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, cmd)
 	}
 
 	noBrowser, err := cmd.Flags().GetBool("no-browser")
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, cmd)
 	}
 	a.config.NoBrowser = noBrowser
 
 	client := a.anonHTTPClientFactory(url, a.config.Logger)
 	email, password, err := a.credentials(cmd, "Email", client)
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, cmd)
 	}
 
 	token, refreshToken, err := pauth.GetCCloudAuthToken(client, url, email, password, noBrowser)
@@ -141,7 +141,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(user.Accounts) == 0 {
-		return errors.HandleCommon(errors.New("No environments found for authenticated user!"), cmd)
+		return errors.HandleCommon(errors.NewResourceValidationErrorf(errors.LoginNoEnvironmentErrorMsg), cmd)
 	}
 	username := user.User.Email
 	name := generateContextName(username, url)
@@ -183,17 +183,17 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	}
 	err = a.config.Save()
 	if err != nil {
-		return errors.Wrap(err, "unable to save user authentication")
+		return errors.HandleCommon(errors.NewUnexpectedCLIBehaviorErrorWrapf(err, errors.LoginUnableToSaveUserAuthErrorMsg), cmd)
 	}
 
 	saveToNetrc, err := cmd.Flags().GetBool("save")
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, cmd)
 	}
 	if saveToNetrc {
 		err = a.saveToNetrc(cmd, email, password, refreshToken)
 		if err != nil {
-			return err
+			return errors.HandleCommon(err, cmd)
 		}
 	}
 
@@ -386,7 +386,7 @@ func (a *commands) saveToNetrc(cmd *cobra.Command, email, password, refreshToken
 	if err != nil {
 		return err
 	}
-	pcmd.ErrPrintf(cmd, "Written credentials to file %s\n", a.netrcHandler.FileName)
+	pcmd.ErrPrintf(cmd, errors.LoginWroteCredentialsToNetrcWarningMsg, a.netrcHandler.FileName)
 	return nil
 }
 
