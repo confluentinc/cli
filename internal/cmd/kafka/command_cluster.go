@@ -249,19 +249,12 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		Deployment:      &schedv1.Deployment{Sku: sku},
 		EncryptionKeyId: encryptionKeyID,
 	}
-	if sku == productv1.Sku_DEDICATED {
-		cku, err := cmd.Flags().GetInt("cku")
+	if cmd.Flags().Changed("cku") {
+		cku, err := getAndVerifyCKUFlagValue(cmd, sku)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
-		if cku <= 0 {
-			return errors.HandleCommon(errors.New("For dedicated Kafka cluster creation, --cku should be passed with value greater than 0."), cmd)
-		}
 		cfg.Cku = int32(cku)
-	} else {
-		if cmd.Flags().Changed("cku") {
-			return errors.HandleCommon(errors.New("Specifying --cku is valid only for dedicated Kafka cluster creation"), cmd)
-		}
 	}
 
 	cluster, err := c.Client.Kafka.Create(context.Background(), cfg)
@@ -305,38 +298,38 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 	if !cmd.Flags().Changed("name") && !cmd.Flags().Changed("cku") {
 		return errors.HandleCommon(errors.New("Must either specify --name with non-empty value or --cku (for dedicated clusters) with positive integer when updating a cluster."), cmd)
 	}
-	name, err := cmd.Flags().GetString("name")
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	cku, err := cmd.Flags().GetInt("cku")
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
 	req := &schedv1.KafkaCluster{
 		AccountId: c.EnvironmentId(),
 		Id:        args[0],
 	}
-	if name != "" {
-		req.Name = name
-	} else {
-		// scheduler validator will complain if we pass an empty name
-		// so get the existing one
-		cluster, err := c.Client.Kafka.Describe(context.Background(), req)
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-		req.Name = cluster.Name
-	}
-	if cku > 0 {
-		req.Cku = int32(cku)
-	}
-	cluster, err := c.Client.Kafka.Update(context.Background(), req)
+	currentCluster, err := c.Client.Kafka.Describe(context.Background(), req)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	return outputKafkaClusterDescription(cmd, cluster)
+	if cmd.Flags().Changed("name") {
+		name, err := cmd.Flags().GetString("name")
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+		if name == "" {
+			return errors.HandleCommon(errors.New("must specify --name with non-empty value"), cmd)
+		}
+		req.Name = name
+	} else {
+		req.Name = currentCluster.Name
+	}
+	if cmd.Flags().Changed("cku") {
+		cku, err := getAndVerifyCKUFlagValue(cmd, currentCluster.Deployment.Sku)
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+		req.Cku = int32(cku)
+	}
+	updatedCluster, err := c.Client.Kafka.Update(context.Background(), req)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	return outputKafkaClusterDescription(cmd, updatedCluster)
 }
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
@@ -439,4 +432,18 @@ func isDedicated(cluster *schedv1.KafkaCluster) bool {
 
 func isExpanding(cluster *schedv1.KafkaCluster) bool {
 	return cluster.Status == schedv1.ClusterStatus_EXPANDING || cluster.PendingCku > cluster.Cku
+}
+
+func getAndVerifyCKUFlagValue(cmd *cobra.Command, clusterSKU productv1.Sku) (int, error) {
+	cku, err := cmd.Flags().GetInt("cku")
+	if err != nil {
+		return 0, errors.HandleCommon(err, cmd)
+	}
+	if clusterSKU != productv1.Sku_DEDICATED {
+		return 0, errors.New("specifying --cku is valid only for dedicated Kafka cluster creation")
+	}
+	if cku <= 0 {
+		return 0, errors.New("--cku should be passed with value greater than 0")
+	}
+	return cku, nil
 }
