@@ -250,9 +250,15 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		EncryptionKeyId: encryptionKeyID,
 	}
 	if cmd.Flags().Changed("cku") {
-		cku, err := getAndVerifyCKUFlagValue(cmd, sku)
+		cku, err := cmd.Flags().GetInt("cku")
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
+		}
+		if sku != productv1.Sku_DEDICATED {
+			return errors.New("specifying --cku is valid only for dedicated Kafka cluster creation")
+		}
+		if cku <= 0 {
+			return errors.HandleCommon(errors.New("--cku should be passed with value greater than 0"), cmd)
 		}
 		cfg.Cku = int32(cku)
 	}
@@ -302,10 +308,6 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 		AccountId: c.EnvironmentId(),
 		Id:        args[0],
 	}
-	currentCluster, err := c.Client.Kafka.Describe(context.Background(), req)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
 	if cmd.Flags().Changed("name") {
 		name, err := cmd.Flags().GetString("name")
 		if err != nil {
@@ -316,20 +318,34 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 		}
 		req.Name = name
 	} else {
+		currentCluster, err := c.Client.Kafka.Describe(context.Background(), req)
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
 		req.Name = currentCluster.Name
 	}
 	if cmd.Flags().Changed("cku") {
-		cku, err := getAndVerifyCKUFlagValue(cmd, currentCluster.Deployment.Sku)
+		cku, err := cmd.Flags().GetInt("cku")
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
+		}
+		if cku <= 0 {
+			return errors.HandleCommon(errors.New("--cku should be passed with value greater than 0"), cmd)
 		}
 		req.Cku = int32(cku)
 	}
 	updatedCluster, err := c.Client.Kafka.Update(context.Background(), req)
 	if err != nil {
+		if isInvalidSKUForClusterExpansionError(err) {
+			err = errors.New("cluster expansion is supported for dedicated clusters only")
+		}
 		return errors.HandleCommon(err, cmd)
 	}
 	return outputKafkaClusterDescription(cmd, updatedCluster)
+}
+
+func isInvalidSKUForClusterExpansionError(err error) bool {
+	return strings.Contains(err.Error(), "cluster expansion is supported for sku_dedicated only")
 }
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
@@ -432,18 +448,4 @@ func isDedicated(cluster *schedv1.KafkaCluster) bool {
 
 func isExpanding(cluster *schedv1.KafkaCluster) bool {
 	return cluster.Status == schedv1.ClusterStatus_EXPANDING || cluster.PendingCku > cluster.Cku
-}
-
-func getAndVerifyCKUFlagValue(cmd *cobra.Command, clusterSKU productv1.Sku) (int, error) {
-	cku, err := cmd.Flags().GetInt("cku")
-	if err != nil {
-		return 0, errors.HandleCommon(err, cmd)
-	}
-	if clusterSKU != productv1.Sku_DEDICATED {
-		return 0, errors.New("specifying --cku is valid only for dedicated Kafka cluster creation")
-	}
-	if cku <= 0 {
-		return 0, errors.New("--cku should be passed with value greater than 0")
-	}
-	return cku, nil
 }

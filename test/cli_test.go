@@ -969,21 +969,30 @@ func handleKafkaClusterUpdateTest(t *testing.T, kafkaAPIURL string) func(w http.
 			req := &schedv1.UpdateKafkaClusterRequest{}
 			err := utilv1.UnmarshalJSON(r.Body, req)
 			require.NoError(t, err)
-			out, err = utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
-				Cluster: &schedv1.KafkaCluster{
-					Id:              req.Cluster.Id,
-					Name:            req.Cluster.Name,
-					Deployment:      &schedv1.Deployment{Sku: productv1.Sku_BASIC},
-					NetworkIngress:  100,
-					NetworkEgress:   100,
-					Storage:         500,
-					Status:          schedv1.ClusterStatus_UP,
-					ServiceProvider: "aws",
-					Region:          "us-west-2",
-					Endpoint:        "SASL_SSL://kafka-endpoint",
-					ApiEndpoint:     "http://kafka-api-url",
-				},
-			})
+			if req.Cluster.Cku > 0 {
+				out, err = utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
+					Cluster: nil,
+					Error: &corev1.Error{
+						Message: "cluster expansion is supported for sku_dedicated only",
+					},
+				})
+			} else {
+				out, err = utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
+					Cluster: &schedv1.KafkaCluster{
+						Id:              req.Cluster.Id,
+						Name:            req.Cluster.Name,
+						Deployment:      &schedv1.Deployment{Sku: productv1.Sku_BASIC},
+						NetworkIngress:  100,
+						NetworkEgress:   100,
+						Storage:         500,
+						Status:          schedv1.ClusterStatus_UP,
+						ServiceProvider: "aws",
+						Region:          "us-west-2",
+						Endpoint:        "SASL_SSL://kafka-endpoint",
+						ApiEndpoint:     "http://kafka-api-url",
+					},
+				})
+			}
 			require.NoError(t, err)
 		}
 		_, err := io.WriteString(w, string(out))
