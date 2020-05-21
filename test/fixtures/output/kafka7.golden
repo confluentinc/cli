@@ -1,6 +1,6 @@
 [
   {
-    "durability": "LOW",
+    "availability": "LOW",
     "id": "lkc-123",
     "name": "abc",
     "provider": "gcp",

@@ -21,9 +21,10 @@ import (
 var (
 	listFields                     = []string{"Id", "Name", "Type", "ServiceProvider", "Region", "Durability", "Status"}
 	listHumanLabels                = []string{"Id", "Name", "Type", "Provider", "Region", "Availability", "Status"}
-	listStructuredLabels           = []string{"id", "name", "type", "provider", "region", "durability", "status"}
-	basicDescribeFields            = []string{"Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "ApiEndpoint"}
+	listStructuredLabels           = []string{"id", "name", "type", "provider", "region", "availability", "status"}
+	basicDescribeFields            = []string{"Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Durability", "Region", "Status", "Endpoint", "ApiEndpoint"}
 	describeHumanRenames           = map[string]string{
+		"Durability":      "Availability",
 		"NetworkIngress":  "Ingress",
 		"NetworkEgress":   "Egress",
 		"ServiceProvider": "Provider",
@@ -39,6 +40,7 @@ var (
 		"Storage":            "storage",
 		"ServiceProvider":    "provider",
 		"Region":             "region",
+		"Durability":         "availability",
 		"Status":             "status",
 		"Endpoint":           "endpoint",
 		"ApiEndpoint":        "api_endpoint",
@@ -58,16 +60,6 @@ type clusterCommand struct {
 	prerunner pcmd.PreRunner
 }
 
-type listStruct struct {
-	Id                 string
-	Name               string
-	Type               string
-	ServiceProvider    string
-	Region             string
-	Durability         schedv1.Durability
-	Status             string
-}
-
 type describeStruct struct {
 	Id                 string
 	Name               string
@@ -79,6 +71,7 @@ type describeStruct struct {
 	Storage            int32
 	ServiceProvider    string
 	Region             string
+	Durability         string
 	Status             string
 	Endpoint           string
 	ApiEndpoint        string
@@ -188,7 +181,7 @@ func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 				cluster.Id = fmt.Sprintf("  %s", cluster.Id)
 			}
 		}
-		outputWriter.AddElement(convertClusterToListStruct(cluster))
+		outputWriter.AddElement(convertClusterToDescribeStruct(cluster))
 	}
 	return outputWriter.Out()
 }
@@ -410,18 +403,6 @@ func outputKafkaClusterDescription(cmd *cobra.Command, cluster *schedv1.KafkaClu
 	return output.DescribeObject(cmd, convertClusterToDescribeStruct(cluster), getKafkaClusterDescribeFields(cluster), describeHumanRenames, describeStructuredRenames)
 }
 
-func convertClusterToListStruct(cluster *schedv1.KafkaCluster) *listStruct {
-	return &listStruct{
-		Id:              cluster.Id,
-		Name:            cluster.Name,
-		Type:            cluster.Deployment.Sku.String(),
-		Durability:      cluster.Durability,
-		ServiceProvider: cluster.ServiceProvider,
-		Region:          cluster.Region,
-		Status:          cluster.Status.String(),
-	}
-}
-
 func convertClusterToDescribeStruct(cluster *schedv1.KafkaCluster) *describeStruct {
 	return &describeStruct{
 		Id:                 cluster.Id,
@@ -434,6 +415,7 @@ func convertClusterToDescribeStruct(cluster *schedv1.KafkaCluster) *describeStru
 		Storage:            cluster.Storage,
 		ServiceProvider:    cluster.ServiceProvider,
 		Region:             cluster.Region,
+		Durability:         cluster.Durability.String(),
 		Status:             cluster.Status.String(),
 		Endpoint:           cluster.Endpoint,
 		ApiEndpoint:        cluster.ApiEndpoint,

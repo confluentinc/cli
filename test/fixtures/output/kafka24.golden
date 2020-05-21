@@ -1,4 +1,5 @@
 api_endpoint: http://127.0.0.1:12345
+availability: LOW
 egress: 100
 endpoint: SASL_SSL://kafka-endpoint
 id: lkc-def963
