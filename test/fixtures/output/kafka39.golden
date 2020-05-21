@@ -1,12 +1,11 @@
 +--------------------+---------------------------+
 | Id                 | lkc-update-dedicated      |
-| Name               | lkc-update-dedicated-name |
+| Name               | lkc-update-dedicated      |
 | Type               | DEDICATED                 |
 | Ingress            |                       100 |
 | Egress             |                       300 |
 | Storage            |                     60000 |
 | Provider           | aws                       |
-| Availability       | LOW                       |
 | Region             | us-west-2                 |
 | Status             | EXPANDING                 |
 | Endpoint           | SASL_SSL://kafka-endpoint |

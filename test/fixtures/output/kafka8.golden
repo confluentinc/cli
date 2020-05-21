@@ -1,6 +1,7 @@
-- durability: LOW
+- availability: LOW
   id: lkc-123
   name: abc
   provider: gcp
   region: us-central1
   status: PROVISIONING
+  type: BASIC

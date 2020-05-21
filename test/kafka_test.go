@@ -21,9 +21,11 @@ func (s *CLITestSuite) TestKafkaCommands() {
 
 		{args: "kafka cluster update lkc-update ", fixture: "kafka25.golden", wantErrCode: 1},
 		{args: "kafka cluster update lkc-update --name lkc-update-name", fixture: "kafka26.golden", wantErrCode: 0},
-		{args: "kafka cluster update lkc-update-dedicated --name lkc-update-dedicated-name --cku 2", fixture: "kafka27.golden", wantErrCode: 0},
 		{args: "kafka cluster update lkc-update --name lkc-update-name -o json", fixture: "kafka28.golden", wantErrCode: 0},
 		{args: "kafka cluster update lkc-update --name lkc-update-name -o yaml", fixture: "kafka29.golden", wantErrCode: 0},
+		{args: "kafka cluster update lkc-update-dedicated --name lkc-update-dedicated-name --cku 2", fixture: "kafka27.golden", wantErrCode: 0},
+		{args: "kafka cluster update lkc-update-dedicated --cku 2", fixture: "kafka39.golden", wantErrCode: 0},
+		{args: "kafka cluster update lkc-update --cku 2", fixture: "kafka40.golden", wantErrCode: 1},
 
 		{args: "kafka cluster delete", fixture: "kafka3.golden", wantErrCode: 1},
 		{args: "kafka cluster delete lkc-unknown", fixture: "kafka4.golden", wantErrCode: 1},

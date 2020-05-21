@@ -1,13 +1,14 @@
-+-------------+---------------------------+
-| Id          | lkc-update                |
-| Name        | lkc-update-name           |
-| Type        | BASIC                     |
-| Ingress     |                       100 |
-| Egress      |                       100 |
-| Storage     |                       500 |
-| Provider    | aws                       |
-| Region      | us-west-2                 |
-| Status      | UP                        |
-| Endpoint    | SASL_SSL://kafka-endpoint |
-| ApiEndpoint | http://kafka-api-url      |
-+-------------+---------------------------+
++--------------+---------------------------+
+| Id           | lkc-update                |
+| Name         | lkc-update-name           |
+| Type         | BASIC                     |
+| Ingress      |                       100 |
+| Egress       |                       100 |
+| Storage      |                       500 |
+| Provider     | aws                       |
+| Availability | LOW                       |
+| Region       | us-west-2                 |
+| Status       | UP                        |
+| Endpoint     | SASL_SSL://kafka-endpoint |
+| ApiEndpoint  | http://kafka-api-url      |
++--------------+---------------------------+

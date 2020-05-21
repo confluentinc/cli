@@ -1,14 +1,15 @@
-+-------------+---------------------------+
-| Id          | lkc-def963                |
-| Name        | my-dedicated-cluster      |
-| Type        | DEDICATED                 |
-| Ingress     |                        50 |
-| Egress      |                       150 |
-| Storage     |                     30000 |
-| Provider    | aws                       |
-| Region      | us-east-1                 |
-| Status      | PROVISIONING              |
-| Endpoint    | SASL_SSL://kafka-endpoint |
-| ApiEndpoint | http://127.0.0.1:12345    |
-| ClusterSize |                         1 |
-+-------------+---------------------------+
++--------------+---------------------------+
+| Id           | lkc-def963                |
+| Name         | my-dedicated-cluster      |
+| Type         | DEDICATED                 |
+| Ingress      |                        50 |
+| Egress       |                       150 |
+| Storage      |                     30000 |
+| Provider     | aws                       |
+| Availability | LOW                       |
+| Region       | us-east-1                 |
+| Status       | PROVISIONING              |
+| Endpoint     | SASL_SSL://kafka-endpoint |
+| ApiEndpoint  | http://127.0.0.1:12345    |
+| ClusterSize  |                         1 |
++--------------+---------------------------+

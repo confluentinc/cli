@@ -8,6 +8,7 @@
   "storage": 500,
   "provider": "aws",
   "region": "us-west-2",
+  "availability": "LOW",
   "status": "PROVISIONING",
   "endpoint": "SASL_SSL://kafka-endpoint",
   "api_endpoint": "http://kafka-api-url",
