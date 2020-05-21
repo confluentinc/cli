@@ -300,7 +300,7 @@ publish-docs: docs
 		git diff --cached --exit-code >/dev/null && echo "nothing to update for docs" && exit 0; \
 		git commit -m "chore: updating CLI docs for $(VERSION)" || exit 1; \
 		git push origin cli-$(VERSION) || exit 1; \
-		hub pull-request -b $(DOCS_BRANCH) -m "chore: updating CLI docs for $(VERSION)" || exit 1;
+		hub pull-request -b $(DOCS_BRANCH) -m "chore: updating CLI docs for $(VERSION)" || exit 1; \
 		rm -rf $${TMP_BASE}
 #   TODO: we can't enable auto-docs generation for confluent until we migrate go-basher commands into cobra
 #	    make publish-docs-internal BASE_DIR=$${TMP_DIR} CLI_NAME=confluent || exit 1; \
