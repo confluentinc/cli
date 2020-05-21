@@ -19,12 +19,11 @@ import (
 )
 
 var (
-	listFields                     = []string{"Id", "Name", "Type", "ServiceProvider", "Region", "Durability", "Status"}
+	listFields                     = []string{"Id", "Name", "Type", "ServiceProvider", "Region", "Availability", "Status"}
 	listHumanLabels                = []string{"Id", "Name", "Type", "Provider", "Region", "Availability", "Status"}
 	listStructuredLabels           = []string{"id", "name", "type", "provider", "region", "availability", "status"}
-	basicDescribeFields            = []string{"Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Durability", "Region", "Status", "Endpoint", "ApiEndpoint"}
+	basicDescribeFields            = []string{"Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Availability", "Region", "Status", "Endpoint", "ApiEndpoint"}
 	describeHumanRenames           = map[string]string{
-		"Durability":      "Availability",
 		"NetworkIngress":  "Ingress",
 		"NetworkEgress":   "Egress",
 		"ServiceProvider": "Provider",
@@ -40,7 +39,7 @@ var (
 		"Storage":            "storage",
 		"ServiceProvider":    "provider",
 		"Region":             "region",
-		"Durability":         "availability",
+		"Availability":       "availability",
 		"Status":             "status",
 		"Endpoint":           "endpoint",
 		"ApiEndpoint":        "api_endpoint",
@@ -71,7 +70,7 @@ type describeStruct struct {
 	Storage            int32
 	ServiceProvider    string
 	Region             string
-	Durability         string
+	Availability       string
 	Status             string
 	Endpoint           string
 	ApiEndpoint        string
@@ -415,7 +414,7 @@ func convertClusterToDescribeStruct(cluster *schedv1.KafkaCluster) *describeStru
 		Storage:            cluster.Storage,
 		ServiceProvider:    cluster.ServiceProvider,
 		Region:             cluster.Region,
-		Durability:         cluster.Durability.String(),
+		Availability:       cluster.Durability.String(),
 		Status:             cluster.Status.String(),
 		Endpoint:           cluster.Endpoint,
 		ApiEndpoint:        cluster.ApiEndpoint,
