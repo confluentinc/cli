@@ -19,9 +19,9 @@ import (
 )
 
 var (
-	listFields                     = []string{"Id", "Name", "ServiceProvider", "Region", "Durability", "Status"}
-	listHumanLabels                = []string{"Id", "Name", "Provider", "Region", "Availability", "Status"}
-	listStructuredLabels           = []string{"id", "name", "provider", "region", "durability", "status"}
+	listFields                     = []string{"Id", "Name", "Type", "ServiceProvider", "Region", "Durability", "Status"}
+	listHumanLabels                = []string{"Id", "Name", "Type", "Provider", "Region", "Availability", "Status"}
+	listStructuredLabels           = []string{"id", "name", "type", "provider", "region", "durability", "status"}
 	basicDescribeFields            = []string{"Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "ApiEndpoint"}
 	describeHumanRenames           = map[string]string{
 		"NetworkIngress":  "Ingress",
@@ -56,6 +56,16 @@ const (
 type clusterCommand struct {
 	*pcmd.AuthenticatedCLICommand
 	prerunner pcmd.PreRunner
+}
+
+type listStruct struct {
+	Id                 string
+	Name               string
+	Type               string
+	ServiceProvider    string
+	Region             string
+	Durability         schedv1.Durability
+	Status             string
 }
 
 type describeStruct struct {
@@ -178,7 +188,7 @@ func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 				cluster.Id = fmt.Sprintf("  %s", cluster.Id)
 			}
 		}
-		outputWriter.AddElement(cluster)
+		outputWriter.AddElement(convertClusterToListStruct(cluster))
 	}
 	return outputWriter.Out()
 }
@@ -400,11 +410,23 @@ func outputKafkaClusterDescription(cmd *cobra.Command, cluster *schedv1.KafkaClu
 	return output.DescribeObject(cmd, convertClusterToDescribeStruct(cluster), getKafkaClusterDescribeFields(cluster), describeHumanRenames, describeStructuredRenames)
 }
 
+func convertClusterToListStruct(cluster *schedv1.KafkaCluster) *listStruct {
+	return &listStruct{
+		Id:              cluster.Id,
+		Name:            cluster.Name,
+		Type:            cluster.Deployment.Sku.String(),
+		Durability:      cluster.Durability,
+		ServiceProvider: cluster.ServiceProvider,
+		Region:          cluster.Region,
+		Status:          cluster.Status.String(),
+	}
+}
+
 func convertClusterToDescribeStruct(cluster *schedv1.KafkaCluster) *describeStruct {
 	return &describeStruct{
 		Id:                 cluster.Id,
 		Name:               cluster.Name,
-		Type:               cluster.Deployment.Sku.String(), // this is different from cluster.Type, which would be 'kafka'
+		Type:               cluster.Deployment.Sku.String(),
 		ClusterSize:        cluster.Cku,
 		PendingClusterSize: cluster.PendingCku,
 		NetworkIngress:     cluster.NetworkIngress,
