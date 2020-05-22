@@ -973,7 +973,7 @@ func handleKafkaClusterUpdateTest(t *testing.T, kafkaAPIURL string) func(w http.
 				out, err = utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
 					Cluster: nil,
 					Error: &corev1.Error{
-						Message: "cluster expansion is supported for sku_dedicated only",
+						Message: "cluster expansion is supported for dedicated clusters only",
 					},
 				})
 			} else {
