@@ -19,11 +19,11 @@ import (
 )
 
 var (
-	listFields                     = []string{"Id", "Name", "Type", "ServiceProvider", "Region", "Availability", "Status"}
-	listHumanLabels                = []string{"Id", "Name", "Type", "Provider", "Region", "Availability", "Status"}
-	listStructuredLabels           = []string{"id", "name", "type", "provider", "region", "availability", "status"}
-	basicDescribeFields            = []string{"Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Availability", "Region", "Status", "Endpoint", "ApiEndpoint"}
-	describeHumanRenames           = map[string]string{
+	listFields           = []string{"Id", "Name", "Type", "ServiceProvider", "Region", "Availability", "Status"}
+	listHumanLabels      = []string{"Id", "Name", "Type", "Provider", "Region", "Availability", "Status"}
+	listStructuredLabels = []string{"id", "name", "type", "provider", "region", "availability", "status"}
+	basicDescribeFields  = []string{"Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Availability", "Region", "Status", "Endpoint", "ApiEndpoint"}
+	describeHumanRenames = map[string]string{
 		"NetworkIngress":  "Ingress",
 		"NetworkEgress":   "Egress",
 		"ServiceProvider": "Provider",
@@ -338,16 +338,9 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 	}
 	updatedCluster, err := c.Client.Kafka.Update(context.Background(), req)
 	if err != nil {
-		if isInvalidSKUForClusterExpansionError(err) {
-			err = errors.New("cluster expansion is supported for dedicated clusters only")
-		}
 		return errors.HandleCommon(err, cmd)
 	}
 	return outputKafkaClusterDescription(cmd, updatedCluster)
-}
-
-func isInvalidSKUForClusterExpansionError(err error) bool {
-	return strings.Contains(err.Error(), "cluster expansion is supported for sku_dedicated only")
 }
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {

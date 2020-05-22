@@ -1,1 +1,4 @@
-Error: cluster expansion is supported for dedicated clusters only
+Error: 1 error occurred:
+	* error updating kafka cluster: cluster expansion is supported for dedicated clusters only
+
+
