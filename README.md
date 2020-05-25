@@ -351,16 +351,16 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config"
+	v3 "github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 type fileCommand struct {
 	*cobra.Command
-	config *config.Config
+	config *v3.Config
 }
 
-func NewFileCommand(config *config.Config) *cobra.Command {
+func NewFileCommand(config *v3.Config) *cobra.Command {
 	cmd := &fileCommand{
 		Command: &cobra.Command{
 			Use:   "file",
