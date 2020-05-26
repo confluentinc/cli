@@ -24,7 +24,7 @@ func constructErrorMessage(params *cliDefinedErrorImplParams, args ...interface{
 		msg = fmt.Sprintf(errorFormat, params.prefix, params.msgFormat)
 		msg = fmt.Sprintf(msg, args...)
 	} else {
-		msg = fmt.Sprintf(wrapErrorFormat, params.wrappedErr.Error(), params.prefix, params.msgFormat)
+		msg = fmt.Sprintf(wrapErrorFormat, params.prefix, params.msgFormat, params.wrappedErr.Error())
 		msg = fmt.Sprintf(msg, args...)
 	}
 	return msg

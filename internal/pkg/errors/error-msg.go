@@ -23,8 +23,6 @@ var (
 	LoginUnableToSaveUserAuthErrorMsg = "unable to save user authentication"
 	LoginNoEnvironmentErrorMsg = "no environment found for authenticated user"
 
-
-
 	FindKafkaClusterNoClientErrorMsg          = "unable to obtain Kafka cluster information for cluster \"%s\": no client"
 	ResolveResourceIDResourceNotFoundErrorMsg = "resource \"%s\" not found"
 

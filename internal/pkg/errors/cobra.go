@@ -2,10 +2,9 @@ package errors
 
 import (
 	"fmt"
-	"os"
-
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
+	"io"
 
 	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
@@ -53,9 +52,9 @@ func HandleCommon(err error, cmd *cobra.Command) error {
 	return cliError
 }
 
-func HandleDirectionsMessageDisplay(err error) {
+func HandleDirectionsMessageDisplay(err error, writer io.Writer) {
 	cliErr, ok := err.(CLIDefinedError)
 	if ok && cliErr.GetDirectionsMsg() != "" {
-		_, _ = fmt.Fprintf(os.Stderr, directionsMessageFormat, cliErr.GetDirectionsMsg())
+		_, _ = fmt.Fprintf(writer, directionsMessageFormat, cliErr.GetDirectionsMsg())
 	}
 }
