@@ -25,7 +25,7 @@ require (
 	github.com/confluentinc/cc-structs/kafka/util v0.419.0
 	github.com/confluentinc/cc-structs/operator v0.419.0
 	github.com/confluentinc/cc-utils-public v0.1.0
-	github.com/confluentinc/ccloud-sdk-go v0.0.27
+	github.com/confluentinc/ccloud-sdk-go v0.0.30
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-printer v0.13.0
 	github.com/confluentinc/mds-sdk-go v0.0.0-20200330220448-02620efc8d62

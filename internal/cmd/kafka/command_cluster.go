@@ -19,11 +19,11 @@ import (
 )
 
 var (
-	listFields                     = []string{"Id", "Name", "ServiceProvider", "Region", "Durability", "Status"}
-	listHumanLabels                = []string{"Id", "Name", "Provider", "Region", "Availability", "Status"}
-	listStructuredLabels           = []string{"id", "name", "provider", "region", "durability", "status"}
-	basicDescribeFields            = []string{"Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Region", "Status", "Endpoint", "ApiEndpoint"}
-	describeHumanRenames           = map[string]string{
+	listFields           = []string{"Id", "Name", "Type", "ServiceProvider", "Region", "Availability", "Status"}
+	listHumanLabels      = []string{"Id", "Name", "Type", "Provider", "Region", "Availability", "Status"}
+	listStructuredLabels = []string{"id", "name", "type", "provider", "region", "availability", "status"}
+	basicDescribeFields  = []string{"Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Availability", "Region", "Status", "Endpoint", "ApiEndpoint"}
+	describeHumanRenames = map[string]string{
 		"NetworkIngress":  "Ingress",
 		"NetworkEgress":   "Egress",
 		"ServiceProvider": "Provider",
@@ -39,6 +39,7 @@ var (
 		"Storage":            "storage",
 		"ServiceProvider":    "provider",
 		"Region":             "region",
+		"Availability":       "availability",
 		"Status":             "status",
 		"Endpoint":           "endpoint",
 		"ApiEndpoint":        "api_endpoint",
@@ -69,6 +70,7 @@ type describeStruct struct {
 	Storage            int32
 	ServiceProvider    string
 	Region             string
+	Availability       string
 	Status             string
 	Endpoint           string
 	ApiEndpoint        string
@@ -178,7 +180,7 @@ func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 				cluster.Id = fmt.Sprintf("  %s", cluster.Id)
 			}
 		}
-		outputWriter.AddElement(cluster)
+		outputWriter.AddElement(convertClusterToDescribeStruct(cluster))
 	}
 	return errors.HandleCommon(outputWriter.Out(), cmd)
 }
@@ -249,19 +251,18 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		Deployment:      &schedv1.Deployment{Sku: sku},
 		EncryptionKeyId: encryptionKeyID,
 	}
-	if sku == productv1.Sku_DEDICATED {
+	if cmd.Flags().Changed("cku") {
 		cku, err := cmd.Flags().GetInt("cku")
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
+		if sku != productv1.Sku_DEDICATED {
+			return errors.New("specifying --cku is valid only for dedicated Kafka cluster creation")
+		}
 		if cku <= 0 {
-			return errors.HandleCommon(errors.New("For dedicated Kafka cluster creation, --cku should be passed with value greater than 0."), cmd)
+			return errors.HandleCommon(errors.New("--cku should be passed with value greater than 0"), cmd)
 		}
 		cfg.Cku = int32(cku)
-	} else {
-		if cmd.Flags().Changed("cku") {
-			return errors.HandleCommon(errors.New("Specifying --cku is valid only for dedicated Kafka cluster creation"), cmd)
-		}
 	}
 
 	cluster, err := c.Client.Kafka.Create(context.Background(), cfg)
@@ -305,38 +306,41 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 	if !cmd.Flags().Changed("name") && !cmd.Flags().Changed("cku") {
 		return errors.HandleCommon(errors.New("Must either specify --name with non-empty value or --cku (for dedicated clusters) with positive integer when updating a cluster."), cmd)
 	}
-	name, err := cmd.Flags().GetString("name")
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	cku, err := cmd.Flags().GetInt("cku")
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
 	req := &schedv1.KafkaCluster{
 		AccountId: c.EnvironmentId(),
 		Id:        args[0],
 	}
-	if name != "" {
-		req.Name = name
-	} else {
-		// scheduler validator will complain if we pass an empty name
-		// so get the existing one
-		cluster, err := c.Client.Kafka.Describe(context.Background(), req)
+	if cmd.Flags().Changed("name") {
+		name, err := cmd.Flags().GetString("name")
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
-		req.Name = cluster.Name
+		if name == "" {
+			return errors.HandleCommon(errors.New("must specify --name with non-empty value"), cmd)
+		}
+		req.Name = name
+	} else {
+		currentCluster, err := c.Client.Kafka.Describe(context.Background(), req)
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+		req.Name = currentCluster.Name
 	}
-	if cku > 0 {
+	if cmd.Flags().Changed("cku") {
+		cku, err := cmd.Flags().GetInt("cku")
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+		if cku <= 0 {
+			return errors.HandleCommon(errors.New("--cku should be passed with value greater than 0"), cmd)
+		}
 		req.Cku = int32(cku)
 	}
-	cluster, err := c.Client.Kafka.Update(context.Background(), req)
+	updatedCluster, err := c.Client.Kafka.Update(context.Background(), req)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	return errors.HandleCommon(outputKafkaClusterDescription(cmd, cluster), cmd)
+	return errors.HandleCommon(outputKafkaClusterDescription(cmd, updatedCluster), cmd)
 }
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
@@ -408,7 +412,7 @@ func convertClusterToDescribeStruct(cluster *schedv1.KafkaCluster) *describeStru
 	return &describeStruct{
 		Id:                 cluster.Id,
 		Name:               cluster.Name,
-		Type:               cluster.Deployment.Sku.String(), // this is different from cluster.Type, which would be 'kafka'
+		Type:               cluster.Deployment.Sku.String(),
 		ClusterSize:        cluster.Cku,
 		PendingClusterSize: cluster.PendingCku,
 		NetworkIngress:     cluster.NetworkIngress,
@@ -416,6 +420,7 @@ func convertClusterToDescribeStruct(cluster *schedv1.KafkaCluster) *describeStru
 		Storage:            cluster.Storage,
 		ServiceProvider:    cluster.ServiceProvider,
 		Region:             cluster.Region,
+		Availability:       cluster.Durability.String(),
 		Status:             cluster.Status.String(),
 		Endpoint:           cluster.Endpoint,
 		ApiEndpoint:        cluster.ApiEndpoint,

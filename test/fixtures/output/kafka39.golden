@@ -1,6 +1,6 @@
 +--------------------+---------------------------+
 | Id                 | lkc-update-dedicated      |
-| Name               | lkc-update-dedicated-name |
+| Name               | lkc-update-dedicated      |
 | Type               | DEDICATED                 |
 | Ingress            |                       100 |
 | Egress             |                       300 |

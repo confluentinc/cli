@@ -358,9 +358,9 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 	userNotLoggedIn.Context().State.Auth = nil
 
 	tests := []struct {
-		name      string
-		config 	  *v3.Config
-		errMsg    string
+		name   string
+		config *v3.Config
+		errMsg string
 	}{
 		{
 			name:   "username logged in user",

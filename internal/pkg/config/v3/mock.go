@@ -21,21 +21,20 @@ var (
 	mockAuthToken          = "some.token.here"
 
 	// kafka cluster
-	kafkaClusterId   = "lkc-0000"
+	kafkaClusterId     = "lkc-0000"
 	anonymousKafkaId   = "anonymous-id"
 	anonymousKafkaName = "anonymous-cluster"
-	kafkaClusterName = "toby-flenderson"
-	bootstrapServer  = "http://toby-cluster"
-	kafkaApiEndpoint = "http://is-the-worst"
-	kafkaAPIKey      = "costa"
-	kafkaAPISecret   = "rica"
+	kafkaClusterName   = "toby-flenderson"
+	bootstrapServer    = "http://toby-cluster"
+	kafkaApiEndpoint   = "http://is-the-worst"
+	kafkaAPIKey        = "costa"
+	kafkaAPISecret     = "rica"
 
 	// sr cluster
-	srClusterId   = "lsrc-test"
-	srEndpoint    = "https://sr-test"
-	srAPIKey      = "michael"
-	srAPISecret   = "scott"
-
+	srClusterId = "lsrc-test"
+	srEndpoint  = "https://sr-test"
+	srAPIKey    = "michael"
+	srAPISecret = "scott"
 
 	MockContextName = fmt.Sprintf("login-%s-%s", mockEmail, mockURL)
 )
@@ -91,7 +90,7 @@ func AuthenticatedConfigMock(cliName string) *Config {
 	srAPIKeyPair := createAPIKeyPair(srAPIKey, srAPISecret)
 	srCluster := createSRCluster(srAPIKeyPair)
 	srClusters := map[string]*v2.SchemaRegistryCluster{
-		mockEnvironmentId : srCluster,
+		mockEnvironmentId: srCluster,
 	}
 
 	conf := New(&config.Params{
@@ -160,17 +159,16 @@ func createAPIKeyPair(apiKey, apiSecret string) *v0.APIKeyPair {
 	return keyPair
 }
 
-
 func createKafkaCluster(clusterID string, clusterName string, apiKeyPair *v0.APIKeyPair) *v1.KafkaClusterConfig {
 	cluster := &v1.KafkaClusterConfig{
 		ID:          clusterID,
 		Name:        clusterName,
 		Bootstrap:   bootstrapServer,
 		APIEndpoint: kafkaApiEndpoint,
-		APIKeys:     map[string]*v0.APIKeyPair{
+		APIKeys: map[string]*v0.APIKeyPair{
 			apiKeyPair.Key: apiKeyPair,
 		},
-		APIKey:      apiKeyPair.Key,
+		APIKey: apiKeyPair.Key,
 	}
 	return cluster
 }

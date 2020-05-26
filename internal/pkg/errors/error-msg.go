@@ -11,30 +11,7 @@ var (
 
 
 var (
-	ProhibitedFlagCombinationMsg = "cannot use `--%s` and `--%s` flags at the same time"
-
-	UserNotLoggedInErrorMsg =  "You must log in to run that command."
-
-
-	APIKeyNotValidForResourceErrorMsg = "invalid API key \"%s\" for resource \"%s\""
-	FlagUseProhibitedCombinationErrorMsg = "flag \"%s\" cannot be use with flag \"%s\""
-
-	// Direction messages
-	CorruptedConfigErrorDirectionMsg = "Please remove the config file, and run `ccloud login` or `ccloud init`."
-
-	//// ErrMsg and Directions pair
-	//UserNotLoggedInErrorPair = ErrorMsgAndDirectionMsgPair{
-	//	Msg:        "login required",
-	//	Directions: "Please login to use the command.",
-	//}
-	//APIKeyNotSelectedForResourceErrorPair = ErrorMsgAndDirectionMsgPair{
-	//	Msg:        "no API key selected for resource \"%s\"",
-	//	Directions: "Please select an API key for the resource with `ccloud api-key use`.",
-	//}
-	//APISecretNotStoredForAPIKeyErrorPair = ErrorMsgAndDirectionMsgPair{
-	//	Msg:        "no API key secret stored for resource API key \"%s\", resource \"%s\"",
-	//	Directions: "Please add API secret for the API key using `ccloud api-key store`.",
-	//}
+	ProhibitedFlagCombinationErrorMsg = "cannot use `--%s` and `--%s` flags at the same time"
 
 	OutputWriterInvalidFormatFlagErrorMsg = "invalid `format` flag value \"%s\""
 
@@ -59,5 +36,4 @@ var (
 
 	KafkaClusterCreateCloudRegionNotAvailableErrorMsg    = "\"%s\" is not an available region for \"%s\""
 	KafkaClusterCreateCloudProviderNotAvailableErrorMsg = "\"%s\" is not an available cloud provider"
-	KafkaClusterCommandCKUFlagValueErrorMsg = ""
 )

@@ -176,7 +176,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	if currentUser {
 		if userId != 0 {
 			return errors.HandleCommon(errors.NewFlagUseErrorf(
-				errors.ProhibitedFlagCombinationMsg, "service-account", "current-user"),
+				errors.ProhibitedFlagCombinationErrorMsg, "service-account", "current-user"),
 				cmd)
 		}
 		userId = c.State.Auth.User.Id

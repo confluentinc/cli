@@ -1,1 +1,1 @@
-Error: For dedicated Kafka cluster creation, --cku should be passed with value greater than 0.
+Error: --cku should be passed with value greater than 0
