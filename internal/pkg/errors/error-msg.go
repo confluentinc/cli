@@ -1,16 +1,6 @@
 package errors
 
 var (
-	ConfigUnableToLoadError          = "Unable to load config: %s"
-	ConfigUnspecifiedPlatformError   = "Context \"%s\" has a corrupted platform. To fix, please remove the config file, and run `login` or `init`."
-	ConfigUnspecifiedCredentialError = "Context \"%s\" has corrupted credentials. To fix, please remove the config file, and run `login` or `init`."
-	UserNotLoggedInErrMsg            = "You must log in to run that command."
-	CorruptedAuthTokenErrorMsg       = "Your auth token has been corrupted. Please login again."
-	NotLoggedInInternalErrorMsg      = "not logged in"
-)
-
-
-var (
 	ProhibitedFlagCombinationErrorMsg = "cannot use `--%s` and `--%s` flags at the same time"
 
 	OutputWriterInvalidFormatFlagErrorMsg = "invalid `format` flag value \"%s\""
@@ -34,4 +24,13 @@ var (
 
 	KafkaClusterCreateCloudRegionNotAvailableErrorMsg    = "\"%s\" is not an available region for \"%s\""
 	KafkaClusterCreateCloudProviderNotAvailableErrorMsg = "\"%s\" is not an available cloud provider"
+)
+
+var (
+	ConfigUnableToLoadError          = "Unable to load config: %s"
+	ConfigUnspecifiedPlatformError   = "Context \"%s\" has a corrupted platform. To fix, please remove the config file, and run `login` or `init`."
+	ConfigUnspecifiedCredentialError = "Context \"%s\" has corrupted credentials. To fix, please remove the config file, and run `login` or `init`."
+	UserNotLoggedInErrMsg            = "You must log in to run that command."
+	CorruptedAuthTokenErrorMsg       = "Your auth token has been corrupted. Please login again."
+	NotLoggedInInternalErrorMsg      = "not logged in"
 )

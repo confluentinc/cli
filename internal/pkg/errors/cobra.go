@@ -12,13 +12,6 @@ import (
 )
 
 var (
-	messages = map[error]string{
-		ErrNoContext:      UserNotLoggedInErrMsg,
-		ErrNotLoggedIn:    UserNotLoggedInErrMsg,
-		ErrNotImplemented: "Sorry, this functionality is not yet available in the CLI.",
-		ErrNoKafkaContext: "You must pass --cluster or set an active kafka in your context with 'kafka cluster use'",
-	}
-
 	directionsMessageFormat = "\nDirections:\n    %s\n"
 )
 
