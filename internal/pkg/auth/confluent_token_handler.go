@@ -4,7 +4,7 @@ package auth
 import (
 	"context"
 
-	mds "github.com/confluentinc/mds-sdk-go"
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 )
 
 type ConfluentTokenHandler interface {

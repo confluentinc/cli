@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	"net/http"
 
-	"github.com/confluentinc/mds-sdk-go"
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
@@ -145,13 +145,13 @@ func validateAclAddDelete(aclConfiguration *ACLConfiguration) *ACLConfiguration 
 	}
 
 	if aclConfiguration.AclBinding.Pattern.PatternType == "" {
-		aclConfiguration.AclBinding.Pattern.PatternType = mds.PATTERN_TYPE_LITERAL
+		aclConfiguration.AclBinding.Pattern.PatternType = mds.PATTERNTYPE_LITERAL
 	}
 
 	if aclConfiguration.AclBinding.Pattern.ResourceType == "" {
 		aclConfiguration.errors = multierror.Append(aclConfiguration.errors, fmt.Errorf("exactly one of %v must be set",
-			convertToFlags(mds.ACL_RESOURCE_TYPE_TOPIC, mds.ACL_RESOURCE_TYPE_GROUP,
-				mds.ACL_RESOURCE_TYPE_CLUSTER, mds.ACL_RESOURCE_TYPE_TRANSACTIONAL_ID)))
+			convertToFlags(mds.ACLRESOURCETYPE_TOPIC, mds.ACLRESOURCETYPE_GROUP,
+				mds.ACLRESOURCETYPE_CLUSTER, mds.ACLRESOURCETYPE_TRANSACTIONAL_ID)))
 	}
 	return aclConfiguration
 }
@@ -162,11 +162,11 @@ func convertToAclFilterRequest(request *mds.CreateAclRequest) mds.AclFilterReque
 	// https://github.com/apache/kafka/blob/trunk/clients/src/main/java/org/apache/kafka/common/acl/AccessControlEntryFilter.java#L102-L113
 
 	if request.AclBinding.Entry.Operation == "" {
-		request.AclBinding.Entry.Operation = mds.ACL_OPERATION_ANY
+		request.AclBinding.Entry.Operation = mds.ACLOPERATION_ANY
 	}
 
 	if request.AclBinding.Entry.PermissionType == "" {
-		request.AclBinding.Entry.PermissionType = mds.ACL_PERMISSION_TYPE_ANY
+		request.AclBinding.Entry.PermissionType = mds.ACLPERMISSIONTYPE_ANY
 	}
 	// delete/list shouldn't provide a host value
 	request.AclBinding.Entry.Host = ""
@@ -174,14 +174,14 @@ func convertToAclFilterRequest(request *mds.CreateAclRequest) mds.AclFilterReque
 	// ResourcePattern matching rules
 	// https://github.com/apache/kafka/blob/trunk/clients/src/main/java/org/apache/kafka/common/resource/ResourcePatternFilter.java#L42-L56
 	if request.AclBinding.Pattern.ResourceType == "" {
-		request.AclBinding.Pattern.ResourceType = mds.ACL_RESOURCE_TYPE_ANY
+		request.AclBinding.Pattern.ResourceType = mds.ACLRESOURCETYPE_ANY
 	}
 
 	if request.AclBinding.Pattern.PatternType == "" {
 		if request.AclBinding.Pattern.Name == "" {
-			request.AclBinding.Pattern.PatternType = mds.PATTERN_TYPE_ANY
+			request.AclBinding.Pattern.PatternType = mds.PATTERNTYPE_ANY
 		} else {
-			request.AclBinding.Pattern.PatternType = mds.PATTERN_TYPE_LITERAL
+			request.AclBinding.Pattern.PatternType = mds.PATTERNTYPE_LITERAL
 		}
 	}
 
