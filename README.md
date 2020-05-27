@@ -351,7 +351,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
@@ -413,12 +413,17 @@ This function is named after the verb component of the command, `show`. It does 
 
 
 ### Registering the Command
-We must register our newly created command with the top-level `config` command located at `internal/cmd/config/comman.go`. We add it to the `config` command with `c.AddCommand(NewFileCommand(c.config))`.
+We must register our newly created command with the top-level `config` command located at `internal/cmd/config/command.go`. We add it to the `config` command with `c.AddCommand(NewFileCommand(c.config))`.
 
 With an entirely new command, we would also need to register it with the base top-level command (`ccloud` and/or `confluent`) located at `internal/cmd/command.go`, using the same `AddCommand` syntax. Since the `config` is already registered, we can skip this step.
 
 ### Building
-To build both binaries, we run `make build`. After this, we can run our command, and see that it (hopefully) works!
+To build both binaries, we run `make build`. After this, we can run our command either of the following ways, and see that they (hopefully) work!
+
+```
+dist/ccloud/<platform>/ccloud config file show 3
+dist/confluent/<platform>/confluent config file show 3
+```
 
 ### Integration Testing
 There's not much code here to unit test, so we'll skip right to integration testing. We'll create a file named `file_test.go` under the `test` directory, and add the following code to it:
@@ -447,6 +452,8 @@ We'll also need to add the new golden file, `file1.golden`, to `test/fixtures/ou
 
 1. Copied directly from the shell
 2. Generated automatically by running `make test TEST_ARGS="./test/... -update"`, which runs all integration tests and updates all golden files to match their output. This is a risky command to run, as it essentially passes all integration tests, but is convenient to use if you can't get tests to pass from manual copying due to some hidden spaces. In addition to auto-filling the `file` golden file, this command will update the `help` command test outputs to reflect the added command.
+
+To run this integration test, run `make test TEST_ARGS="-run TestCLI/TestFileCommands"`.
 
 ### Opening a PR!
 
