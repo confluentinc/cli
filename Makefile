@@ -153,7 +153,6 @@ bindata: internal/pkg/local/bindata.go
 internal/pkg/local/bindata.go: cp_cli/*
 	@go-bindata -pkg local -o internal/pkg/local/bindata.go cp_cli/
 
-
 # If you setup your laptop following https://github.com/confluentinc/cc-documentation/blob/master/Operations/Laptop%20Setup.md
 # then assuming caas.sh lives here should be fine
 define caasenv-authenticate
