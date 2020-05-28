@@ -7,6 +7,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/config"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/mock"
 )
 
@@ -33,7 +35,8 @@ func TestFeedbackEmptyMessage(t *testing.T) {
 
 func mockFeedbackCommand(msg string) *cobra.Command {
 	mockPreRunner := mock.NewPreRunnerMock(nil, nil)
+	mockConfig := v3.New(&config.Params{CLIName: "ccloud"})
 	mockAnalytics := mock.NewDummyAnalyticsMock()
 	mockPrompt := mock.NewPromptMock(msg)
-	return NewFeedbackCmdWithPrompt(mockPreRunner, nil, mockAnalytics, mockPrompt)
+	return NewFeedbackCmdWithPrompt(mockPreRunner, mockConfig, mockAnalytics, mockPrompt)
 }
