@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
-	"github.com/confluentinc/mds-sdk-go/mock"
+	"github.com/confluentinc/mds-sdk-go/mdsv1/mock"
 
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -24,7 +24,7 @@ var mdsResourcePatterns = []struct {
 }{
 	{
 		args: []string{"--cluster-scope"},
-		pattern: mds.KafkaResourcePattern{ResourceType: ACLRESOURCETYPE_CLUSTER, Name: "kafka-cluster",
+		pattern: mds.KafkaResourcePattern{ResourceType: mds.ACLRESOURCETYPE_CLUSTER, Name: "kafka-cluster",
 			PatternType: mds.PATTERNTYPE_LITERAL},
 	},
 	{
@@ -403,7 +403,7 @@ func (suite *AclTestSuite) TestMdsDefaults() {
 			},
 			AclBinding: mds.AclBinding{
 				Pattern: mds.KafkaResourcePattern{
-					ResourceType: ACLRESOURCETYPE_CLUSTER,
+					ResourceType: mds.ACLRESOURCETYPE_CLUSTER,
 					Name:         "kafka-cluster",
 					PatternType:  mds.PATTERNTYPE_LITERAL,
 				},
