@@ -14,5 +14,6 @@ func NewDummyAnalyticsMock() *AnalyticsClient {
 		SetCommandTypeFunc:       func(commandType analytics.CommandType) {},
 		SessionTimedOutFunc:      func() error { return nil },
 		CloseFunc:                func() error { return nil },
+		SetSpecialPropertyFunc: func(propertiesKey string, value interface{}) {},
 	}
 }

@@ -31,6 +31,9 @@ type AnalyticsClient struct {
 	lockClose sync.Mutex
 	CloseFunc func() error
 
+	lockSetSpecialProperty sync.Mutex
+	SetSpecialPropertyFunc func(propertiesKey string, value interface{})
+
 	calls struct {
 		SetStartTime []struct {
 		}
@@ -49,6 +52,10 @@ type AnalyticsClient struct {
 			CmdExecutionError error
 		}
 		Close []struct {
+		}
+		SetSpecialProperty []struct {
+			PropertiesKey string
+			Value         interface{}
 		}
 	}
 }
@@ -278,6 +285,47 @@ func (m *AnalyticsClient) CloseCalls() []struct {
 	return m.calls.Close
 }
 
+// SetSpecialProperty mocks base method by wrapping the associated func.
+func (m *AnalyticsClient) SetSpecialProperty(propertiesKey string, value interface{}) {
+	m.lockSetSpecialProperty.Lock()
+	defer m.lockSetSpecialProperty.Unlock()
+
+	if m.SetSpecialPropertyFunc == nil {
+		panic("mocker: AnalyticsClient.SetSpecialPropertyFunc is nil but AnalyticsClient.SetSpecialProperty was called.")
+	}
+
+	call := struct {
+		PropertiesKey string
+		Value         interface{}
+	}{
+		PropertiesKey: propertiesKey,
+		Value:         value,
+	}
+
+	m.calls.SetSpecialProperty = append(m.calls.SetSpecialProperty, call)
+
+	m.SetSpecialPropertyFunc(propertiesKey, value)
+}
+
+// SetSpecialPropertyCalled returns true if SetSpecialProperty was called at least once.
+func (m *AnalyticsClient) SetSpecialPropertyCalled() bool {
+	m.lockSetSpecialProperty.Lock()
+	defer m.lockSetSpecialProperty.Unlock()
+
+	return len(m.calls.SetSpecialProperty) > 0
+}
+
+// SetSpecialPropertyCalls returns the calls made to SetSpecialProperty.
+func (m *AnalyticsClient) SetSpecialPropertyCalls() []struct {
+	PropertiesKey string
+	Value         interface{}
+} {
+	m.lockSetSpecialProperty.Lock()
+	defer m.lockSetSpecialProperty.Unlock()
+
+	return m.calls.SetSpecialProperty
+}
+
 // Reset resets the calls made to the mocked methods.
 func (m *AnalyticsClient) Reset() {
 	m.lockSetStartTime.Lock()
@@ -298,4 +346,7 @@ func (m *AnalyticsClient) Reset() {
 	m.lockClose.Lock()
 	m.calls.Close = nil
 	m.lockClose.Unlock()
+	m.lockSetSpecialProperty.Lock()
+	m.calls.SetSpecialProperty = nil
+	m.lockSetSpecialProperty.Unlock()
 }

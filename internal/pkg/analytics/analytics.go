@@ -77,6 +77,7 @@ type Client interface {
 	SessionTimedOut() error
 	SendCommandAnalytics(cmd *cobra.Command, args []string, cmdExecutionError error) error
 	Close() error
+	SetSpecialProperty(propertiesKey string, value interface{})
 }
 
 type ClientObj struct {
@@ -205,6 +206,11 @@ func (a *ClientObj) SetCommandType(commandType CommandType) {
 
 func (a *ClientObj) Close() error {
 	return a.client.Close()
+}
+
+// for commands that need extra properties from the common ones already set
+func (a *ClientObj) SetSpecialProperty(propertiesKey string, value interface{}) {
+	a.properties.Set(propertiesKey, value)
 }
 
 // Helper Functions
