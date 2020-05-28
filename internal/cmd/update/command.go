@@ -2,6 +2,7 @@ package update
 
 import (
 	"fmt"
+	"github.com/hashicorp/go-version"
 	"os"
 	"time"
 
@@ -93,15 +94,30 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 
 	pcmd.ErrPrintln(cmd, "Checking for updates...")
-	updateAvailable, latestVersion, releaseNotes, err := c.client.CheckForUpdates(c.cliName, c.version.Version, true)
+	updateAvailable, latestVersion, err := c.client.CheckForUpdates(c.cliName, "1.0.0", true)
 	if err != nil {
 		c.Command.SilenceUsage = true
-		return errors.Wrap(err, "Error checking for updates.")
+		return errors.Wrap(err, "error checking for updates")
 	}
 
 	if !updateAvailable {
 		pcmd.Println(cmd, "Already up to date.")
 		return nil
+	}
+
+	latestReleaseNotesVersion, releaseNotes, err := c.client.GetLatestReleaseNotes()
+	if err != nil {
+		c.logger.Debugf("error obtaining release notes: %s", err)
+	} else {
+		isSameVersion, err := sameVersionCheck(latestVersion, latestReleaseNotesVersion)
+		if err != nil {
+			c.logger.Debugf("unable to perform release notes and binary version check: %s", err)
+			releaseNotes = ""
+		}
+		if !isSameVersion {
+			c.logger.Debugf("binary version (v%s) and latest release notes version (v%s) mismatch", latestVersion, latestReleaseNotesVersion)
+			releaseNotes = ""
+		}
 	}
 
 	// HACK: our packaging doesn't include the "v" in the version, so we add it back so  that the prompt is consistent
@@ -125,4 +141,16 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	pcmd.ErrPrintf(cmd, "Update your autocomplete scripts as instructed by: %s help completion\n", c.config.CLIName)
 
 	return nil
+}
+
+func sameVersionCheck(v1 string, v2 string) (bool, error){
+	version1, err := version.NewVersion(v1)
+	if err != nil {
+		return false, err
+	}
+	version2, err := version.NewVersion(v2)
+	if err != nil {
+		return false, err
+	}
+	return version1.Compare(version2) == 0, nil
 }

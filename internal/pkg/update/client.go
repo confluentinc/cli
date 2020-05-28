@@ -21,7 +21,8 @@ import (
 
 // Client lets you check for updated application binaries and install them if desired
 type Client interface {
-	CheckForUpdates(name string, currentVersion string, forceCheck bool) (updateAvailable bool, latestVersion string, releaseNotes string, err error)
+	CheckForUpdates(name string, currentVersion string, forceCheck bool) (updateAvailable bool, latestVersion string, err error)
+	GetLatestReleaseNotes() (string, string, error)
 	PromptToDownload(name, currVersion, latestVersion string, releaseNotes string, confirm bool) bool
 	UpdateBinary(name, version, path string) error
 }
@@ -66,61 +67,47 @@ func NewClient(params *ClientParams) *client {
 }
 
 // CheckForUpdates checks for new versions in the repo
-func (c *client) CheckForUpdates(name string, currentVersion string, forceCheck bool) (updateAvailable bool, latestVersion string, releaseNotes string, err error) {
+func (c *client) CheckForUpdates(name string, currentVersion string, forceCheck bool) (updateAvailable bool, latestVersion string, err error) {
 	if c.DisableCheck {
-		return false, currentVersion, releaseNotes, nil
+		return false, currentVersion, nil
 	}
 	shouldCheck, err := c.readCheckFile()
 	if err != nil {
-		return false, currentVersion, releaseNotes, err
+		return false, currentVersion, err
 	}
 	if !shouldCheck && !forceCheck {
-		return false, currentVersion, releaseNotes, nil
+		return false, currentVersion, nil
 	}
 	currVersion, err := version.NewVersion(currentVersion)
 	if err != nil {
 		err = errors.Wrapf(err, "unable to parse %s version %s", name, currentVersion)
-		return false, currentVersion, releaseNotes, err
+		return false, currentVersion, err
 	}
 
 	if err := c.touchCheckFile(); err != nil {
-		return false, currentVersion, releaseNotes, errors.Wrapf(err, "unable to touch last check file")
+		return false, currentVersion, errors.Wrapf(err, "unable to touch last check file")
 	}
 
-	mostRecentBinaryVersion, err := c.Repository.GetLatestBinaryVersion(name)
+	latestBinaryVersion, err := c.Repository.GetLatestBinaryVersion(name)
 	if err != nil {
-		return false, currentVersion, releaseNotes, err
+		return false, currentVersion, err
 	}
-	if isLessThanVersion(currVersion, mostRecentBinaryVersion) {
-		releaseNotes := c.getReleaseNotes(mostRecentBinaryVersion)
-		return true, mostRecentBinaryVersion.Original(), releaseNotes, nil
+	if isLessThanVersion(currVersion, latestBinaryVersion) {
+		return true, latestBinaryVersion.Original(), nil
 	}
-	return false, currentVersion, releaseNotes, nil
+	return false, currentVersion, nil
 }
 
-func (c *client) getReleaseNotes(mostRecentBinaryVersion *version.Version) string {
-	err := c.checkReleaseNotesVersion(mostRecentBinaryVersion)
+func (c *client) GetLatestReleaseNotes() (string, string, error) {
+	latestReleaseNotesVersion, err := c.Repository.GetLatestReleaseNotesVersion()
 	if err != nil {
-		c.Logger.Debugf("release notes version check failed: %s", err.Error())
-		return ""
+		return "", "", err
 	}
-	releaseNotes, err := c.Repository.DownloadReleaseNotes(mostRecentBinaryVersion.String())
+	releaseNotes, err := c.Repository.DownloadReleaseNotes(latestReleaseNotesVersion.String())
 	if err != nil {
-		c.Logger.Debugf("release notes version check failed: %s", err.Error())
-		return ""
+		return "", "", err
 	}
-	return releaseNotes
-}
-
-func (c *client) checkReleaseNotesVersion(mostRecentBinaryVersion *version.Version) error {
-	mostRecentReleaseNotesVersion, err := c.Repository.GetLatestReleaseNotesVersion()
-	if err != nil {
-		return err
-	}
-	if mostRecentBinaryVersion.Compare(mostRecentReleaseNotesVersion) != 0 {
-		return errors.Errorf("binary and release notes version mismatch")
-	}
-	return nil
+	return latestReleaseNotesVersion.Original(), releaseNotes, nil
 }
 
 // SemVer considers x.x.x-yyy to be less (older) than x.x.x
