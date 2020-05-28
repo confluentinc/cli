@@ -9,6 +9,7 @@ import (
 func NewDummyAnalyticsMock() *AnalyticsClient {
 	return &AnalyticsClient{
 		SetStartTimeFunc:         func() {},
+		SetFeedbackFunc:          func(msg string) {},
 		TrackCommandFunc:         func(cmd *cobra.Command, args []string) {},
 		CatchHelpCallFunc:        func(cmd *cobra.Command, args []string) {},
 		SendCommandFailedFunc:    func(e error) error { return nil },
@@ -16,5 +17,13 @@ func NewDummyAnalyticsMock() *AnalyticsClient {
 		SetCommandTypeFunc:       func(commandType analytics.CommandType) {},
 		SessionTimedOutFunc:      func() error { return nil },
 		CloseFunc:                func() error { return nil },
+	}
+}
+
+func NewPromptMock(msg string) *Prompt {
+	return &Prompt{
+		ReadStringFunc: func(delim byte) (string, error) {
+			return msg, nil
+		},
 	}
 }

@@ -96,7 +96,7 @@ var rules = []linter.Rule{
 		// skip connector-catalog describe as it connector plugin name
 		linter.ExcludeCommandContains("connector-catalog describe"),
 		// skip feedback command
-		linter.ExcludeCommand("feedback <message>"),
+		linter.ExcludeCommand("feedback"),
 	),
 	// TODO: ensuring --cluster is optional DOES NOT actually ensure that the cluster context is used
 	linter.Filter(linter.RequireFlag("cluster", true), clusterScopedCommands...),

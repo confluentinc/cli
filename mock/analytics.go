@@ -16,6 +16,9 @@ type AnalyticsClient struct {
 	lockSetStartTime sync.Mutex
 	SetStartTimeFunc func()
 
+	lockSetFeedback sync.Mutex
+	SetFeedbackFunc func(msg string)
+
 	lockTrackCommand sync.Mutex
 	TrackCommandFunc func(cmd *github_com_spf13_cobra.Command, args []string)
 
@@ -39,6 +42,9 @@ type AnalyticsClient struct {
 
 	calls struct {
 		SetStartTime []struct {
+		}
+		SetFeedback []struct {
+			Msg string
 		}
 		TrackCommand []struct {
 			Cmd  *github_com_spf13_cobra.Command
@@ -95,6 +101,44 @@ func (m *AnalyticsClient) SetStartTimeCalls() []struct {
 	defer m.lockSetStartTime.Unlock()
 
 	return m.calls.SetStartTime
+}
+
+// SetFeedback mocks base method by wrapping the associated func.
+func (m *AnalyticsClient) SetFeedback(msg string) {
+	m.lockSetFeedback.Lock()
+	defer m.lockSetFeedback.Unlock()
+
+	if m.SetFeedbackFunc == nil {
+		panic("mocker: AnalyticsClient.SetFeedbackFunc is nil but AnalyticsClient.SetFeedback was called.")
+	}
+
+	call := struct {
+		Msg string
+	}{
+		Msg: msg,
+	}
+
+	m.calls.SetFeedback = append(m.calls.SetFeedback, call)
+
+	m.SetFeedbackFunc(msg)
+}
+
+// SetFeedbackCalled returns true if SetFeedback was called at least once.
+func (m *AnalyticsClient) SetFeedbackCalled() bool {
+	m.lockSetFeedback.Lock()
+	defer m.lockSetFeedback.Unlock()
+
+	return len(m.calls.SetFeedback) > 0
+}
+
+// SetFeedbackCalls returns the calls made to SetFeedback.
+func (m *AnalyticsClient) SetFeedbackCalls() []struct {
+	Msg string
+} {
+	m.lockSetFeedback.Lock()
+	defer m.lockSetFeedback.Unlock()
+
+	return m.calls.SetFeedback
 }
 
 // TrackCommand mocks base method by wrapping the associated func.
@@ -362,6 +406,9 @@ func (m *AnalyticsClient) Reset() {
 	m.lockSetStartTime.Lock()
 	m.calls.SetStartTime = nil
 	m.lockSetStartTime.Unlock()
+	m.lockSetFeedback.Lock()
+	m.calls.SetFeedback = nil
+	m.lockSetFeedback.Unlock()
 	m.lockTrackCommand.Lock()
 	m.calls.TrackCommand = nil
 	m.lockTrackCommand.Unlock()

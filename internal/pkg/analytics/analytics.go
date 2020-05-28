@@ -46,6 +46,7 @@ var (
 	ErrorMsgPropertiesKey   = "error_message"
 	StartTimePropertiesKey  = "start_time"
 	FinishTimePropertiesKey = "finish_time"
+	FeedbackPropertiesKey   = "feedback"
 	SucceededPropertiesKey  = "succeeded"
 	CredentialPropertiesKey = "credential_type"
 	ApiKeyPropertiesKey     = "api-key"
@@ -72,6 +73,7 @@ func (l *Logger) Errorf(format string, args ...interface{}) {
 
 type Client interface {
 	SetStartTime()
+	SetFeedback(msg string)
 	TrackCommand(cmd *cobra.Command, args []string)
 	CatchHelpCall(rootCmd *cobra.Command, args []string)
 	SendCommandSucceeded() error
@@ -119,6 +121,10 @@ func NewAnalyticsClient(cliName string, cfg *v3.Config, version string, segmentC
 // not in prerun because help calls do not trigger prerun
 func (a *ClientObj) SetStartTime() {
 	a.properties.Set(StartTimePropertiesKey, a.clock.Now())
+}
+
+func (a *ClientObj) SetFeedback(msg string) {
+	a.properties.Set(FeedbackPropertiesKey, msg)
 }
 
 func (a *ClientObj) TrackCommand(cmd *cobra.Command, args []string) {

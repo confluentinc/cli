@@ -112,7 +112,7 @@ func NewConfluentCommand(cliName string, cfg *v3.Config, logger *log.Logger, ver
 	if cliName == "ccloud" {
 		cmd := kafka.New(prerunner, cfg, logger.Named("kafka"), ver.ClientID)
 		cli.AddCommand(cmd)
-		cli.AddCommand(feedback.NewFeedbackCmd(prerunner, cfg))
+		cli.AddCommand(feedback.NewFeedbackCmd(prerunner, cfg, analytics))
 		cli.AddCommand(initcontext.New(prerunner, cfg, prompt, resolver, analytics))
 		if currCtx != nil && currCtx.Credential != nil && currCtx.Credential.CredentialType == v2.APIKey {
 			return command, nil
