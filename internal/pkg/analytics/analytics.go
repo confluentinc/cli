@@ -208,7 +208,7 @@ func (a *ClientObj) Close() error {
 	return a.client.Close()
 }
 
-// for commands that need extra properties from the common ones already set
+// for commands that need extra properties other than the common ones already set
 func (a *ClientObj) SetSpecialProperty(propertiesKey string, value interface{}) {
 	a.properties.Set(propertiesKey, value)
 }
