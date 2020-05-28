@@ -1,9 +1,10 @@
 package feedback
 
 import (
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
-	"github.com/spf13/cobra"
 )
 
 func NewFeedbackCmd(prerunner pcmd.PreRunner, cfg *v3.Config) *cobra.Command {
