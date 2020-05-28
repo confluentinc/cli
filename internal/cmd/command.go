@@ -161,18 +161,29 @@ func NewConfluentCommand(cliName string, cfg *v3.Config, logger *log.Logger, ver
 func (c *Command) Execute(args []string) error {
 	c.Analytics.SetStartTime()
 	c.Command.SetArgs(args)
+
 	err := c.Command.Execute()
 	if err != nil {
-		analyticsError := c.Analytics.SendCommandFailed(err)
-		if analyticsError != nil {
-			c.logger.Debugf("segment analytics sending event failed: %s\n", analyticsError.Error())
-		}
+		c.onFailure(err)
 		return err
 	}
+
 	c.Analytics.CatchHelpCall(c.Command, args)
-	analyticsError := c.Analytics.SendCommandSucceeded()
-	if analyticsError != nil {
-		c.logger.Debugf("segment analytics sending event failed: %s\n", analyticsError.Error())
-	}
+	c.onSuccess()
+
 	return nil
+}
+
+func (c *Command) onFailure(err error) {
+	err = c.Analytics.SendCommandFailed(err)
+	if err != nil {
+		c.logger.Debugf("segment analytics sending event failed: %s\n", err.Error())
+	}
+}
+
+func (c *Command) onSuccess() {
+	err := c.Analytics.SendCommandSucceeded()
+	if err != nil {
+		c.logger.Debugf("segment analytics sending event failed: %s\n", err.Error())
+	}
 }
