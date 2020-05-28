@@ -20,7 +20,7 @@ func NewFeedbackCmdWithPrompt(prerunner pcmd.PreRunner, cfg *v3.Config, analytic
 	cmd := pcmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "feedback",
-			Short: "Submit feedback about the ccloud CLI.",
+			Short: "Submit feedback about the " + cfg.CLIName + " CLI.",
 			RunE: func(cmd *cobra.Command, _ []string) error {
 				pcmd.Print(cmd, "Enter feedback: ")
 				msg, err := prompt.ReadString('\n')
