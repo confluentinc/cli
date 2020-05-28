@@ -73,11 +73,9 @@ func (l *Logger) Errorf(format string, args ...interface{}) {
 type Client interface {
 	SetStartTime()
 	TrackCommand(cmd *cobra.Command, args []string)
-	CatchHelpCall(rootCmd *cobra.Command, args []string)
-	SendCommandSucceeded() error
-	SendCommandFailed(e error) error
 	SetCommandType(commandType CommandType)
 	SessionTimedOut() error
+	SendCommandAnalytics(cmd *cobra.Command, args []string, cmdExecutionError error) error
 	Close() error
 }
 
@@ -139,8 +137,8 @@ func (a *ClientObj) SessionTimedOut() error {
 	return nil
 }
 
-// Cobra does not trigger prerun and postrun when help flag is true
-func (a *ClientObj) CatchHelpCall(rootCmd *cobra.Command, args []string) {
+// Cobra does not trigger prerun and postrun when help flag is used
+func (a *ClientObj) catchHelpCall(rootCmd *cobra.Command, args []string) {
 	// non-help calls would already have triggered preruns
 	if a.cmdCalled != "" {
 		return
@@ -157,7 +155,16 @@ func (a *ClientObj) CatchHelpCall(rootCmd *cobra.Command, args []string) {
 	}
 }
 
-func (a *ClientObj) SendCommandSucceeded() error {
+func (a *ClientObj) SendCommandAnalytics(cmd *cobra.Command, args []string, cmdExecutionError error) error {
+	a.catchHelpCall(cmd, args)
+	if cmdExecutionError != nil {
+		err := a.sendCommandFailed(cmdExecutionError)
+		return err
+	}
+	return a.sendCommandSucceeded()
+}
+
+func (a *ClientObj) sendCommandSucceeded() error {
 	if a.commandType == Login || a.commandType == Init || a.commandType == ContextUse {
 		err := a.loginHandler()
 		if err != nil {
@@ -179,7 +186,7 @@ func (a *ClientObj) SendCommandSucceeded() error {
 	return nil
 }
 
-func (a *ClientObj) SendCommandFailed(e error) error {
+func (a *ClientObj) sendCommandFailed(e error) error {
 	a.properties.Set(SucceededPropertiesKey, false)
 	a.properties.Set(FinishTimePropertiesKey, a.clock.Now())
 	a.properties.Set(ErrorMsgPropertiesKey, e.Error())

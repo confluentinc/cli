@@ -160,17 +160,9 @@ func (c *Command) Execute(args []string) error {
 	c.Analytics.SetStartTime()
 	c.Command.SetArgs(args)
 	err := c.Command.Execute()
-	if err != nil {
-		analyticsError := c.Analytics.SendCommandFailed(err)
-		if analyticsError != nil {
-			c.logger.Debugf("segment analytics sending event failed: %s\n", analyticsError.Error())
-		}
-		return err
-	}
-	c.Analytics.CatchHelpCall(c.Command, args)
-	analyticsError := c.Analytics.SendCommandSucceeded()
+	analyticsError := c.Analytics.SendCommandAnalytics(c.Command, args, err)
 	if analyticsError != nil {
 		c.logger.Debugf("segment analytics sending event failed: %s\n", analyticsError.Error())
 	}
-	return nil
+	return err
 }
