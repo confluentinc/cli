@@ -91,19 +91,25 @@ func (c *client) CheckForUpdates(name string, currentVersion string, forceCheck 
 	if err != nil {
 		return false, currentVersion, releaseNotes, err
 	}
-
 	if isLessThanVersion(currVersion, mostRecentBinaryVersion) {
-		err := c.checkReleaseNotesVersion(mostRecentBinaryVersion)
-		if err != nil {
-			return false, currentVersion, releaseNotes, err
-		}
-		releaseNotes, err = c.Repository.DownloadReleaseNotes(mostRecentBinaryVersion.String())
-		if err != nil {
-			return false, currentVersion, releaseNotes, errors.Wrapf(err, "unable to download release notes")
-		}
+		releaseNotes := c.getReleaseNotes(mostRecentBinaryVersion)
 		return true, mostRecentBinaryVersion.Original(), releaseNotes, nil
 	}
 	return false, currentVersion, releaseNotes, nil
+}
+
+func (c *client) getReleaseNotes(mostRecentBinaryVersion *version.Version) string {
+	err := c.checkReleaseNotesVersion(mostRecentBinaryVersion)
+	if err != nil {
+		c.Logger.Debugf("release notes version check failed: %s", err.Error())
+		return ""
+	}
+	releaseNotes, err := c.Repository.DownloadReleaseNotes(mostRecentBinaryVersion.String())
+	if err != nil {
+		c.Logger.Debugf("release notes version check failed: %s", err.Error())
+		return ""
+	}
+	return releaseNotes
 }
 
 func (c *client) checkReleaseNotesVersion(mostRecentBinaryVersion *version.Version) error {
@@ -112,7 +118,7 @@ func (c *client) checkReleaseNotesVersion(mostRecentBinaryVersion *version.Versi
 		return err
 	}
 	if mostRecentBinaryVersion.Compare(mostRecentReleaseNotesVersion) != 0 {
-		return errors.Errorf("Binary and release notes version mismatch.")
+		return errors.Errorf("binary and release notes version mismatch")
 	}
 	return nil
 }
