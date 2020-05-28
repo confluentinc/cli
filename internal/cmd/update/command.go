@@ -94,7 +94,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 
 	pcmd.ErrPrintln(cmd, "Checking for updates...")
-	updateAvailable, latestVersion, err := c.client.CheckForUpdates(c.cliName, "1.0.0", true)
+	updateAvailable, latestVersion, err := c.client.CheckForUpdates(c.cliName, c.version.Version, true)
 	if err != nil {
 		c.Command.SilenceUsage = true
 		return errors.Wrap(err, "error checking for updates")
