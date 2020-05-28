@@ -12,6 +12,7 @@ import (
 
 const (
 	defaultShellPrefix = " > "
+	maxSuggestion = 15
 )
 
 type ShellPrompt struct {
@@ -46,5 +47,6 @@ func DefaultPromptOptions() []goprompt.Option {
 	return []goprompt.Option{
 		goprompt.OptionShowCompletionAtStart(),
 		goprompt.OptionPrefix(defaultShellPrefix),
+		goprompt.OptionMaxSuggestion(maxSuggestion),
 	}
 }
