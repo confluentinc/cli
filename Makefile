@@ -28,14 +28,14 @@ generate-go:
 
 .PHONY: deps
 deps:
-    export GOPRIVATE=github.com/confluentinc && \
-	export GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc && \
+    export GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc && \
 	export GO111MODULE=on && \
         go get github.com/goreleaser/goreleaser@v0.106.0 && \
 	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.21.0 && \
 	go get github.com/mitchellh/golicense@v0.1.1 && \
 	go get github.com/golang/mock/mockgen@v1.3.1 && \
-	go get github.com/kevinburke/go-bindata/...@v3.13.0
+	go get github.com/kevinburke/go-bindata/...@v3.13.0 && \
+	export GOPRIVATE=github.com/confluentinc
 
 build: bindata build-go
 
