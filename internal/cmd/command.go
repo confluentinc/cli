@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"os"
 	"runtime"
+	"strings"
 
 	"github.com/DABH/go-basher"
 	"github.com/jonboulle/clockwork"
@@ -40,6 +41,21 @@ import (
 	pps1 "github.com/confluentinc/cli/internal/pkg/ps1"
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
+)
+
+var (
+	feedbackNudge     = "\nDid you know you can use the \"ccloud feedback\" command to send the team feedback?\nLet us know if the ccloud CLI is meeting your needs, or what we can do to improve it."
+	feedbackNudgeCmds = []string{
+		"api-key create", "api-key delete",
+		"connector create", "connector delete",
+		"environment create", "environment delete",
+		"kafka acl create", "kafka acl delete",
+		"kafka cluster create", "kafka cluster delete",
+		"kafka topic create", "kafka topic delete",
+		"ksql app create", "ksql app delete",
+		"schema-registry schema create", "schema-registry schema delete",
+		"service-account create", "service-account delete",
+	}
 )
 
 type Command struct {
@@ -169,19 +185,29 @@ func (c *Command) Execute(args []string) error {
 	}
 
 	c.Analytics.CatchHelpCall(c.Command, args)
-	c.onSuccess()
+	c.onSuccess(args)
 
 	return nil
 }
 
 func (c *Command) onFailure(err error) {
+	c.Println(feedbackNudge)
+
 	err = c.Analytics.SendCommandFailed(err)
 	if err != nil {
 		c.logger.Debugf("segment analytics sending event failed: %s\n", err.Error())
 	}
 }
 
-func (c *Command) onSuccess() {
+func (c *Command) onSuccess(args []string) {
+	cmd := strings.Join(args, " ")
+	for _, cmdPrefix := range feedbackNudgeCmds {
+		if strings.HasPrefix(cmd, cmdPrefix) {
+			c.Println(feedbackNudge)
+			break
+		}
+	}
+
 	err := c.Analytics.SendCommandSucceeded()
 	if err != nil {
 		c.logger.Debugf("segment analytics sending event failed: %s\n", err.Error())
