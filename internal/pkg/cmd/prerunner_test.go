@@ -96,8 +96,8 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 				Version: ver,
 				Logger:  tt.fields.Logger,
 				UpdateClient: &mock.Client{
-					CheckForUpdatesFunc: func(n, v string, f bool) (bool, string, string, error) {
-						return false, "", "", nil
+					CheckForUpdatesFunc: func(n, v string, f bool) (bool, string, error) {
+						return false, "", nil
 					},
 				},
 				FlagResolver: &pcmd.FlagResolverImpl{
@@ -140,9 +140,9 @@ func TestPreRun_HasAPIKey_SetupLoggingAndCheckForUpdates(t *testing.T) {
 		Version: ver,
 		Logger:  log.New(),
 		UpdateClient: &mock.Client{
-			CheckForUpdatesFunc: func(n, v string, f bool) (bool, string, string, error) {
+			CheckForUpdatesFunc: func(n, v string, f bool) (bool, string, error) {
 				calledAnonymous = true
-				return false, "", "", nil
+				return false, "", nil
 			},
 		},
 		FlagResolver: &pcmd.FlagResolverImpl{
@@ -178,8 +178,8 @@ func TestPreRun_CallsAnalyticsTrackCommand(t *testing.T) {
 		Version: ver,
 		Logger:  log.New(),
 		UpdateClient: &mock.Client{
-			CheckForUpdatesFunc: func(n, v string, f bool) (bool, string, string, error) {
-				return false, "", "", nil
+			CheckForUpdatesFunc: func(n, v string, f bool) (bool, string, error) {
+				return false, "", nil
 			},
 		},
 		FlagResolver: &pcmd.FlagResolverImpl{
@@ -214,8 +214,8 @@ func TestPreRun_TokenExpires(t *testing.T) {
 		Version: ver,
 		Logger:  log.New(),
 		UpdateClient: &mock.Client{
-			CheckForUpdatesFunc: func(n, v string, f bool) (bool, string, string, error) {
-				return false, "", "", nil
+			CheckForUpdatesFunc: func(n, v string, f bool) (bool, string, error) {
+				return false, "", nil
 			},
 		},
 		FlagResolver: &pcmd.FlagResolverImpl{
@@ -315,8 +315,8 @@ func Test_UpdateToken(t *testing.T) {
 				Version: ver,
 				Logger:  log.New(),
 				UpdateClient: &mock.Client{
-					CheckForUpdatesFunc: func(n, v string, f bool) (bool, string, string, error) {
-						return false, "", "", nil
+					CheckForUpdatesFunc: func(n, v string, f bool) (bool, string, error) {
+						return false, "", nil
 					},
 				},
 				FlagResolver: &pcmd.FlagResolverImpl{
@@ -390,8 +390,8 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 				Version: ver,
 				Logger:  log.New(),
 				UpdateClient: &mock.Client{
-					CheckForUpdatesFunc: func(n, v string, f bool) (bool, string, string, error) {
-						return false, "", "", nil
+					CheckForUpdatesFunc: func(n, v string, f bool) (bool, string, error) {
+						return false, "", nil
 					},
 				},
 				FlagResolver: &pcmd.FlagResolverImpl{

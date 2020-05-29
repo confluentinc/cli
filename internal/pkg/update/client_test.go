@@ -115,14 +115,6 @@ func TestCheckForUpdates(t *testing.T) {
 					GetLatestBinaryVersionFunc: func(name string) (i *version.Version, e error) {
 						return nil, errors.New("zap")
 					},
-					GetLatestReleaseNotesVersionFunc: func() (i *version.Version, e error) {
-						require.Fail(t, "Shouldn't be called")
-						return nil, errors.New("whoops")
-					},
-					DownloadReleaseNotesFunc: func(version string) (s string, e error) {
-						require.Fail(t, "Shouldn't be called")
-						return "", errors.New("whoops")
-					},
 				},
 				Logger: log.New(),
 			}),
@@ -142,13 +134,6 @@ func TestCheckForUpdates(t *testing.T) {
 						v3, _ := version.NewSemver("v3")
 						return v3, nil
 					},
-					GetLatestReleaseNotesVersionFunc: func() (i *version.Version, e error) {
-						v3, _ := version.NewSemver("v3")
-						return v3, nil
-					},
-					DownloadReleaseNotesFunc: func(version string) (s string, e error) {
-						return "", nil
-					},
 				},
 				Logger: log.New(),
 			}),
@@ -167,14 +152,6 @@ func TestCheckForUpdates(t *testing.T) {
 					GetLatestBinaryVersionFunc: func(name string) (*version.Version, error) {
 						require.Fail(t, "Shouldn't be called")
 						return nil, errors.New("whoops")
-					},
-					GetLatestReleaseNotesVersionFunc: func() (i *version.Version, e error) {
-						require.Fail(t, "Shouldn't be called")
-						return nil, errors.New("whoops")
-					},
-					DownloadReleaseNotesFunc: func(version string) (s string, e error) {
-						require.Fail(t, "Shouldn't be called")
-						return "", errors.New("whoops")
 					},
 				},
 				Logger: log.New(),
@@ -196,13 +173,6 @@ func TestCheckForUpdates(t *testing.T) {
 					GetLatestBinaryVersionFunc: func(name string) (*version.Version, error) {
 						v3, _ := version.NewSemver("v3")
 						return v3, nil
-					},
-					GetLatestReleaseNotesVersionFunc: func() (i *version.Version, e error) {
-						v3, _ := version.NewSemver("v3")
-						return v3, nil
-					},
-					DownloadReleaseNotesFunc: func(version string) (s string, e error) {
-						return "", nil
 					},
 				},
 				Logger: log.New(),
@@ -226,13 +196,6 @@ func TestCheckForUpdates(t *testing.T) {
 						v1, _ := version.NewSemver("v1")
 						return v1, nil
 					},
-					GetLatestReleaseNotesVersionFunc: func() (i *version.Version, e error) {
-						v1, _ := version.NewSemver("v1")
-						return v1, nil
-					},
-					DownloadReleaseNotesFunc: func(version string) (s string, e error) {
-						return "", nil
-					},
 				},
 				Logger: log.New(),
 				// This file doesn't exist but you won't have permission to create it
@@ -253,13 +216,6 @@ func TestCheckForUpdates(t *testing.T) {
 					GetLatestBinaryVersionFunc: func(name string) (*version.Version, error) {
 						v1, _ := version.NewSemver("v1")
 						return v1, nil
-					},
-					GetLatestReleaseNotesVersionFunc: func() (i *version.Version, e error) {
-						v1, _ := version.NewSemver("v1")
-						return v1, nil
-					},
-					DownloadReleaseNotesFunc: func(version string) (s string, e error) {
-						return "", nil
 					},
 				},
 				Logger: log.New(),
@@ -282,14 +238,6 @@ func TestCheckForUpdates(t *testing.T) {
 						require.Fail(t, "Shouldn't be called")
 						return nil, errors.New("whoops")
 					},
-					GetLatestReleaseNotesVersionFunc: func() (i *version.Version, e error) {
-						require.Fail(t, "Shouldn't be called")
-						return nil, errors.New("whoops")
-					},
-					DownloadReleaseNotesFunc: func(version string) (s string, e error) {
-						require.Fail(t, "Shouldn't be called")
-						return "", errors.New("whoops")
-					},
 				},
 				Logger: log.New(),
 				// This check file name has ~ in the path
@@ -311,14 +259,6 @@ func TestCheckForUpdates(t *testing.T) {
 						require.Fail(t, "Shouldn't be called")
 						return nil, errors.New("whoops")
 					},
-					GetLatestReleaseNotesVersionFunc: func() (i *version.Version, e error) {
-						require.Fail(t, "Shouldn't be called")
-						return nil, errors.New("whoops")
-					},
-					DownloadReleaseNotesFunc: func(version string) (s string, e error) {
-						require.Fail(t, "Shouldn't be called")
-						return "", errors.New("whoops")
-					},
 				},
 				Logger:       log.New(),
 				DisableCheck: true,
@@ -338,14 +278,6 @@ func TestCheckForUpdates(t *testing.T) {
 					GetLatestBinaryVersionFunc: func(name string) (*version.Version, error) {
 						return nil, errors.New("whoops")
 					},
-					GetLatestReleaseNotesVersionFunc: func() (i *version.Version, e error) {
-						require.Fail(t, "Shouldn't be called")
-						return nil, errors.New("whoops")
-					},
-					DownloadReleaseNotesFunc: func(version string) (s string, e error) {
-						require.Fail(t, "Shouldn't be called")
-						return "", errors.New("whoops")
-					},
 				},
 				Logger: log.New(),
 			}),
@@ -363,12 +295,6 @@ func TestCheckForUpdates(t *testing.T) {
 				Repository: &updateMock.Repository{
 					GetLatestBinaryVersionFunc: func(name string) (*version.Version, error) {
 						return version.Must(version.NewVersion("v1.2.4")), nil
-					},
-					GetLatestReleaseNotesVersionFunc: func() (*version.Version, error) {
-						return version.Must(version.NewVersion("v1.2.4")), nil
-					},
-					DownloadReleaseNotesFunc: func(version string) (s string, e error) {
-						return "", nil
 					},
 				},
 				Logger: log.New(),
@@ -388,12 +314,6 @@ func TestCheckForUpdates(t *testing.T) {
 					GetLatestBinaryVersionFunc: func(name string) (*version.Version, error) {
 						return version.Must(version.NewVersion("v1.2.4")), nil
 					},
-					GetLatestReleaseNotesVersionFunc: func() (*version.Version, error) {
-						return version.Must(version.NewVersion("v1.2.4")), nil
-					},
-					DownloadReleaseNotesFunc: func(version string) (s string, e error) {
-						return "", nil
-					},
 				},
 				Logger: log.New(),
 			}),
@@ -411,12 +331,6 @@ func TestCheckForUpdates(t *testing.T) {
 				Repository: &updateMock.Repository{
 					GetLatestBinaryVersionFunc: func(name string) (*version.Version, error) {
 						return version.Must(version.NewVersion("v0.238.0")), nil
-					},
-					GetLatestReleaseNotesVersionFunc: func() (*version.Version, error) {
-						return version.Must(version.NewVersion("v0.238.0")), nil
-					},
-					DownloadReleaseNotesFunc: func(version string) (s string, e error) {
-						return "", nil
 					},
 				},
 				Logger: log.New(),
@@ -436,12 +350,6 @@ func TestCheckForUpdates(t *testing.T) {
 					GetLatestBinaryVersionFunc: func(name string) (*version.Version, error) {
 						return version.Must(version.NewVersion("v0.238.0-7-g5060ef4")), nil
 					},
-					GetLatestReleaseNotesVersionFunc: func() (*version.Version, error) {
-						return version.Must(version.NewVersion("v0.238.0-7-g5060ef4")), nil
-					},
-					DownloadReleaseNotesFunc: func(version string) (s string, e error) {
-						return "", nil
-					},
 				},
 				Logger: log.New(),
 			}),
@@ -460,12 +368,6 @@ func TestCheckForUpdates(t *testing.T) {
 					GetLatestBinaryVersionFunc: func(name string) (*version.Version, error) {
 						return version.Must(version.NewVersion("v0.238.0-7-g5060ef4")), nil
 					},
-					GetLatestReleaseNotesVersionFunc: func() (*version.Version, error) {
-						return version.Must(version.NewVersion("v0.238.0-7-g5060ef4")), nil
-					},
-					DownloadReleaseNotesFunc: func(version string) (s string, e error) {
-						return "", nil
-					},
 				},
 				Logger: log.New(),
 			}),
@@ -477,114 +379,10 @@ func TestCheckForUpdates(t *testing.T) {
 			wantLatestVersion:   "v0.238.0-7-g5060ef4",
 			wantErr:             false,
 		},
-		{
-			name: "should err if binary version is newer than release notes version",
-			client: NewClient(&ClientParams{
-				Repository: &updateMock.Repository{
-					GetLatestBinaryVersionFunc: func(name string) (*version.Version, error) {
-						v3, _ := version.NewSemver("v3")
-						return v3, nil
-					},
-					GetLatestReleaseNotesVersionFunc: func() (i *version.Version, e error) {
-						v2, _ := version.NewSemver("v2")
-						return v2, nil
-					},
-					DownloadReleaseNotesFunc: func(version string) (s string, e error) {
-						return "", nil
-					},
-				},
-				Logger: log.New(),
-			}),
-			args: args{
-				name:           "my-cli",
-				currentVersion: "v1.2.3",
-			},
-			wantUpdateAvailable: false,
-			wantLatestVersion:   "v1.2.3",
-			wantErr:             true,
-		},
-		{
-			name: "should err if release notes is newer than binary version",
-			client: NewClient(&ClientParams{
-				Repository: &updateMock.Repository{
-					GetLatestBinaryVersionFunc: func(name string) (*version.Version, error) {
-						v2, _ := version.NewSemver("v2")
-						return v2, nil
-					},
-					GetLatestReleaseNotesVersionFunc: func() (i *version.Version, e error) {
-						v3, _ := version.NewSemver("v3")
-						return v3, nil
-					},
-					DownloadReleaseNotesFunc: func(version string) (s string, e error) {
-						return "", nil
-					},
-				},
-				Logger: log.New(),
-			}),
-			args: args{
-				name:           "my-cli",
-				currentVersion: "v1.2.3",
-			},
-			wantUpdateAvailable: false,
-			wantLatestVersion:   "v1.2.3",
-			wantErr:             true,
-		},
-		{
-			name: "should err if failed to get release notes version",
-			client: NewClient(&ClientParams{
-				Repository: &updateMock.Repository{
-					GetLatestBinaryVersionFunc: func(name string) (*version.Version, error) {
-						v3, _ := version.NewSemver("v3")
-						return v3, nil
-					},
-					GetLatestReleaseNotesVersionFunc: func() (i *version.Version, e error) {
-						return nil, fmt.Errorf("whoops")
-					},
-					DownloadReleaseNotesFunc: func(version string) (s string, e error) {
-						require.Fail(t, "Shouldn't be called")
-						return "", errors.New("whoops")
-					},
-				},
-				Logger: log.New(),
-			}),
-			args: args{
-				name:           "my-cli",
-				currentVersion: "v1.2.3",
-			},
-			wantUpdateAvailable: false,
-			wantLatestVersion:   "v1.2.3",
-			wantErr:             true,
-		},
-		{
-			name: "should err if failed to download release notes",
-			client: NewClient(&ClientParams{
-				Repository: &updateMock.Repository{
-					GetLatestBinaryVersionFunc: func(name string) (*version.Version, error) {
-						v3, _ := version.NewSemver("v3")
-						return v3, nil
-					},
-					GetLatestReleaseNotesVersionFunc: func() (i *version.Version, e error) {
-						v3, _ := version.NewSemver("v3")
-						return v3, nil
-					},
-					DownloadReleaseNotesFunc: func(version string) (s string, e error) {
-						return "", fmt.Errorf("whoops")
-					},
-				},
-				Logger: log.New(),
-			}),
-			args: args{
-				name:           "my-cli",
-				currentVersion: "v1.2.3",
-			},
-			wantUpdateAvailable: false,
-			wantLatestVersion:   "v1.2.3",
-			wantErr:             true,
-		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotUpdateAvailable, gotLatestVersion, _, err := tt.client.CheckForUpdates(tt.args.name, tt.args.currentVersion, tt.args.forceCheck)
+			gotUpdateAvailable, gotLatestVersion, err := tt.client.CheckForUpdates(tt.args.name, tt.args.currentVersion, tt.args.forceCheck)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("client.CheckForUpdates() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -612,13 +410,6 @@ func TestCheckForUpdates_BehaviorOverTime(t *testing.T) {
 			v3, _ := version.NewSemver("v3")
 			return v3, nil
 		},
-		GetLatestReleaseNotesVersionFunc: func() (*version.Version, error) {
-			v3, _ := version.NewSemver("v3")
-			return v3, nil
-		},
-		DownloadReleaseNotesFunc: func(version string) (s string, e error) {
-			return "", nil
-		},
 	}
 	clock := clockwork.NewFakeClockAt(time.Now())
 	client := NewClient(&ClientParams{
@@ -629,44 +420,44 @@ func TestCheckForUpdates_BehaviorOverTime(t *testing.T) {
 	client.clock = clock
 
 	// Should check and find update
-	updateAvailable, latestVersion, _, err := client.CheckForUpdates("my-cli", "v1.2.3", false)
+	updateAvailable, latestVersion, err := client.CheckForUpdates("my-cli", "v1.2.3", false)
 	req.NoError(err)
 	req.True(updateAvailable)
 	req.Equal("v3", latestVersion)
-	repoMethodsCalledAssertions(req, repo, true)
+	req.True(repo.GetLatestBinaryVersionCalled())
 
 	// Shouldn't check anymore for 24 hours
 	for i := 0; i < 3; i++ {
 		clock.Advance(8*time.Hour + -1*time.Second)
 		repo.Reset()
 
-		_, _, _, _ = client.CheckForUpdates("my-cli", "v1.2.3", false)
-		repoMethodsCalledAssertions(req, repo, false)
+		_, _, _ = client.CheckForUpdates("my-cli", "v1.2.3", false)
+		req.False(repo.GetLatestBinaryVersionCalled())
 	}
 
 	// 5 days pass...
 	clock.Advance(5 * 24 * time.Hour)
 
 	// Should check and find update
-	updateAvailable, latestVersion, _, err = client.CheckForUpdates("my-cli", "v1.2.3", false)
+	updateAvailable, latestVersion, err = client.CheckForUpdates("my-cli", "v1.2.3", false)
 	req.NoError(err)
 	req.True(updateAvailable)
 	req.Equal("v3", latestVersion)
-	repoMethodsCalledAssertions(req, repo, true)
+	req.True(repo.GetLatestBinaryVersionCalled())
 
 	// Shouldn't check anymore for 24 hours
 	for i := 0; i < 3; i++ {
 		clock.Advance(8*time.Hour + -1*time.Second)
 		repo.Reset()
 
-		_, _, _, _ = client.CheckForUpdates("my-cli", "v1.2.3", false)
-		repoMethodsCalledAssertions(req, repo, false)
+		_, _, _ = client.CheckForUpdates("my-cli", "v1.2.3", false)
+		req.False(repo.GetLatestBinaryVersionCalled())
 	}
 
 	// Finally we should check once more
 	clock.Advance(3 * time.Second)
 	repo.Reset()
-	_, _, _, _ = client.CheckForUpdates("my-cli", "v1.2.3", false)
+	_, _, _ = client.CheckForUpdates("my-cli", "v1.2.3", false)
 	req.True(repo.GetLatestBinaryVersionCalled())
 }
 
@@ -678,13 +469,6 @@ func TestCheckForUpdates_NoCheckFileGiven(t *testing.T) {
 			v3, _ := version.NewSemver("v3")
 			return v3, nil
 		},
-		GetLatestReleaseNotesVersionFunc: func() (*version.Version, error) {
-			v3, _ := version.NewSemver("v3")
-			return v3, nil
-		},
-		DownloadReleaseNotesFunc: func(version string) (s string, e error) {
-			return "", nil
-		},
 	}
 	client := NewClient(&ClientParams{
 		Repository: repo,
@@ -694,24 +478,89 @@ func TestCheckForUpdates_NoCheckFileGiven(t *testing.T) {
 
 	// Should check for updates every time if no CheckFile given to serve as the "last check" cache
 	for i := 0; i < 3; i++ {
-		updateAvailable, latestVersion, _, err := client.CheckForUpdates("my-cli", "v1.2.3", false)
+		updateAvailable, latestVersion, err := client.CheckForUpdates("my-cli", "v1.2.3", false)
 		req.NoError(err)
 		req.True(updateAvailable)
 		req.Equal("v3", latestVersion)
-		repoMethodsCalledAssertions(req, repo, true)
+		req.True(repo.GetLatestBinaryVersionCalled())
 		repo.Reset()
 	}
 }
 
-func repoMethodsCalledAssertions(req *require.Assertions, repo *updateMock.Repository, called bool) {
-	if called {
-		req.True(repo.GetLatestBinaryVersionCalled())
-		req.True(repo.GetLatestReleaseNotesVersionCalled())
-		req.True(repo.DownloadReleaseNotesCalled())
-	} else {
-		req.False(repo.GetLatestBinaryVersionCalled())
-		req.False(repo.GetLatestReleaseNotesVersionCalled())
-		req.False(repo.DownloadReleaseNotesCalled())
+func TestGetLatestReleaseNotes(t *testing.T) {
+	releaseNotesVersion := "1.0.0"
+	releaseNotes := "nice release notes"
+	tests := []struct {
+		name             string
+		client           *client
+		wantVersion      string
+		wantReleaseNotes string
+		wantErr          bool
+	}{
+		{
+			name: "success",
+			client: NewClient(&ClientParams{
+				Repository: &updateMock.Repository{
+					GetLatestReleaseNotesVersionFunc: func() (*version.Version, error) {
+						v, _ := version.NewSemver(releaseNotesVersion)
+						return v, nil
+					},
+					DownloadReleaseNotesFunc: func(version string) (s string, e error) {
+						return releaseNotes, nil
+					},
+				},
+				Logger: log.New(),
+			}),
+			wantVersion: releaseNotesVersion,
+			wantReleaseNotes: releaseNotes,
+			wantErr: false,
+		},
+		{
+			name: "error getting release notes version",
+			client: NewClient(&ClientParams{
+				Repository: &updateMock.Repository{
+					GetLatestReleaseNotesVersionFunc: func() (*version.Version, error) {
+						return nil, errors.New("whoops")
+					},
+					DownloadReleaseNotesFunc: func(version string) (s string, e error) {
+						return "", nil
+					},
+				},
+				Logger: log.New(),
+			}),
+			wantErr: true,
+		},
+		{
+			name: "error downloading release notes",
+			client: NewClient(&ClientParams{
+				Repository: &updateMock.Repository{
+					GetLatestReleaseNotesVersionFunc: func() (*version.Version, error) {
+						v, _ := version.NewSemver("v1")
+						return v, nil
+					},
+					DownloadReleaseNotesFunc: func(version string) (s string, e error) {
+						return "", errors.New("whoops")
+					},
+				},
+				Logger: log.New(),
+			}),
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotReleaseNotesVersion, gotReleaseNotes, err := tt.client.GetLatestReleaseNotes()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("client.GetLatestReleaseNotes() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if gotReleaseNotesVersion != tt.wantVersion {
+				t.Errorf("client.GetLatestReleaseNotes() got releaseNotesVersion = %v, want %v", releaseNotesVersion, tt.wantVersion)
+			}
+			if gotReleaseNotes != tt.wantReleaseNotes {
+				t.Errorf("client.GetLatestReleaseNotes() got releaseNotes = %v, want %v", gotReleaseNotes, tt.wantReleaseNotes)
+			}
+		})
 	}
 }
 
