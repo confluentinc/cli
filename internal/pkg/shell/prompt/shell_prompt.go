@@ -52,7 +52,7 @@ func DefaultPromptOptions() []goprompt.Option {
 }
 
 func DefaultColor256PromptOptions() []goprompt.Option {
-	const powderSimilar = 152
+	const powderSimilar = 195
 	const denimSimilar = 17
 
 	colorOpts := []goprompt.Option{
