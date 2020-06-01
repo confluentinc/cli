@@ -3,3 +3,6 @@ Save the API key and secret. The secret is not retrievable later.
 | API Key | MYKEY6    |
 | Secret  | MYSECRET6 |
 +---------+-----------+
+
+Did you know you can use the "ccloud feedback" command to send the team feedback?
+Let us know if the ccloud CLI is meeting your needs, or what we can do to improve it.
