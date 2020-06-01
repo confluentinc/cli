@@ -104,7 +104,7 @@ func NewConfluentCommand(cliName string, cfg *v3.Config, logger *log.Logger, ver
 	cli.AddCommand(completion.NewCompletionCmd(cli, cliName))
 
 	if !cfg.DisableUpdates {
-		cli.AddCommand(update.New(cliName, cfg, ver, prompt, updateClient))
+		cli.AddCommand(update.New(cliName, cfg, ver, prompt, updateClient, analytics))
 	}
 	cli.AddCommand(auth.New(prerunner, cfg, logger, ver.UserAgent, analytics, netrcHandler)...)
 

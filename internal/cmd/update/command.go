@@ -65,7 +65,7 @@ type command struct {
 
 // New returns the command for the built-in updater.
 func New(cliName string, config *v3.Config, version *cliVersion.Version, prompt pcmd.Prompt,
-	client update.Client) *cobra.Command {
+	client update.Client, analytics analytics.Client) *cobra.Command {
 	cmd := &command{
 		cliName: cliName,
 		config:  config,
@@ -73,6 +73,7 @@ func New(cliName string, config *v3.Config, version *cliVersion.Version, prompt 
 		logger:  config.Logger,
 		prompt:  prompt,
 		client:  client,
+		analyticsClient: analytics,
 	}
 	cmd.init()
 	return cmd.Command
