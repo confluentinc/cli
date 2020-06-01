@@ -6,29 +6,29 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/mock"
 )
 
 func TestFeedback(t *testing.T) {
-	cmd := pcmd.BuildRootCommand()
-	cmd.AddCommand(mockFeedbackCommand("This feedback tool is great!"))
+	command := cmd.BuildRootCommand()
+	command.AddCommand(mockFeedbackCommand("This feedback tool is great!"))
 
 	req := require.New(t)
-	out, err := pcmd.ExecuteCommand(cmd, "feedback")
+	out, err := cmd.ExecuteCommand(command, "feedback")
 	req.NoError(err)
 	req.Contains(out, "Enter feedback: ")
 	req.Contains(out, "Thanks for your feedback.")
 }
 
 func TestFeedbackEmptyMessage(t *testing.T) {
-	cmd := pcmd.BuildRootCommand()
-	cmd.AddCommand(mockFeedbackCommand(""))
+	command := cmd.BuildRootCommand()
+	command.AddCommand(mockFeedbackCommand(""))
 
 	req := require.New(t)
-	out, err := pcmd.ExecuteCommand(cmd, "feedback")
+	out, err := cmd.ExecuteCommand(command, "feedback")
 	req.NoError(err)
 	req.Contains(out, "Enter feedback: ")
 }

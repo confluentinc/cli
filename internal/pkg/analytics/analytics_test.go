@@ -622,42 +622,6 @@ func (suite *AnalyticsTestSuite) TestApiKeyStoreSecretHandler() {
 	}
 }
 
-func (suite *AnalyticsTestSuite) TestSubmitFeedback() {
-	req := require.New(suite.T())
-
-	const feedbackMsg = "This feedback command is great!"
-
-	rootCmd := &cobra.Command{
-		Use: suite.config.CLIName,
-	}
-	feedbackCmd := &cobra.Command{
-		Use: "feedback",
-		Run: func(cmd *cobra.Command, args []string) {
-			suite.analyticsClient.SetFeedback(feedbackMsg)
-		},
-		PreRun: suite.preRunFunc(),
-	}
-	rootCmd.AddCommand(feedbackCmd)
-
-	command := cmd.Command{
-		Command:   rootCmd,
-		Analytics: suite.analyticsClient,
-	}
-	err := command.Execute([]string{"feedback"})
-	req.NoError(err)
-
-	req.Equal(1, len(suite.output))
-	page, ok := suite.output[0].(segment.Page)
-	req.True(ok)
-
-	suite.checkPageBasic(page)
-	suite.checkPageSuccess(page)
-
-	msg, ok := page.Properties[analytics.FeedbackPropertiesKey]
-	req.True(ok)
-	req.Equal(feedbackMsg, msg)
-}
-
 // --------------------------- setup helper functions -------------------------------
 func (suite *AnalyticsTestSuite) createContexts() {
 	platform := &v2.Platform{
