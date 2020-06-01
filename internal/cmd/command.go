@@ -151,6 +151,10 @@ func NewConfluentCommand(cliName string, cfg *v3.Config, logger *log.Logger, ver
 			cli.AddCommand(local.New(cli, prerunner, shellRunner, logger, fs, cfg))
 		}
 
+		command := local.NewCommand(prerunner, cfg)
+		command.Hidden = true // WIP
+		cli.AddCommand(command)
+
 		cli.AddCommand(secret.New(prompt, resolver, secrets.NewPasswordProtectionPlugin(logger)))
 	}
 	return command, nil
