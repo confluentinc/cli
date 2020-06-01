@@ -2,12 +2,13 @@ package update
 
 import (
 	"fmt"
-	"github.com/hashicorp/go-version"
 	"os"
 	"time"
 
+	"github.com/hashicorp/go-version"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -59,6 +60,7 @@ type command struct {
 	client  update.Client
 	// for testing
 	prompt pcmd.Prompt
+	analyticsClient analytics.Client
 }
 
 // New returns the command for the built-in updater.
@@ -105,20 +107,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	latestReleaseNotesVersion, releaseNotes, err := c.client.GetLatestReleaseNotes()
-	if err != nil {
-		c.logger.Debugf("error obtaining release notes: %s", err)
-	} else {
-		isSameVersion, err := sameVersionCheck(latestVersion, latestReleaseNotesVersion)
-		if err != nil {
-			c.logger.Debugf("unable to perform release notes and binary version check: %s", err)
-			releaseNotes = ""
-		}
-		if !isSameVersion {
-			c.logger.Debugf("binary version (v%s) and latest release notes version (v%s) mismatch", latestVersion, latestReleaseNotesVersion)
-			releaseNotes = ""
-		}
-	}
+	releaseNotes := c.getReleaseNotes(latestVersion)
 
 	// HACK: our packaging doesn't include the "v" in the version, so we add it back so  that the prompt is consistent
 	//   example S3 path: ccloud-cli/binaries/0.50.0/ccloud_0.50.0_darwin_amd64
@@ -141,6 +130,28 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	pcmd.ErrPrintf(cmd, "Update your autocomplete scripts as instructed by: %s help completion\n", c.config.CLIName)
 
 	return nil
+}
+
+func (c *command) getReleaseNotes(latestBinaryVersion string) string {
+	latestReleaseNotesVersion, releaseNotes, err := c.client.GetLatestReleaseNotes()
+	var errMsg string
+	if err != nil {
+		errMsg = fmt.Sprintf("error obtaining release notes: %s", err)
+	} else {
+		isSameVersion, err := sameVersionCheck(latestBinaryVersion, latestReleaseNotesVersion)
+		if err != nil {
+			errMsg = fmt.Sprintf("unable to perform release notes and binary version check: %s", err)
+		}
+		if !isSameVersion {
+			errMsg = fmt.Sprintf("binary version (v%s) and latest release notes version (v%s) mismatch", latestBinaryVersion, latestReleaseNotesVersion)
+		}
+	}
+	if errMsg != "" {
+		c.logger.Debugf(errMsg)
+		c.analyticsClient.SetSpecialProperty(analytics.ReleaseNotesErrorPropertiesKeys, errMsg)
+		return ""
+	}
+	return releaseNotes
 }
 
 func sameVersionCheck(v1 string, v2 string) (bool, error){
