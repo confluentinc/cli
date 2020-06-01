@@ -16,7 +16,7 @@ func NewFeedbackCmd(prerunner pcmd.PreRunner, cfg *v3.Config, analytics analytic
 	return NewFeedbackCmdWithPrompt(prerunner, cfg, analytics, prompt)
 }
 
-func NewFeedbackCmdWithPrompt(prerunner pcmd.PreRunner, cfg *v3.Config, analytics analytics.Client, prompt pcmd.Prompt) *cobra.Command {
+func NewFeedbackCmdWithPrompt(prerunner pcmd.PreRunner, cfg *v3.Config, analyticsClient analytics.Client, prompt pcmd.Prompt) *cobra.Command {
 	cmd := pcmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "feedback",
@@ -30,7 +30,7 @@ func NewFeedbackCmdWithPrompt(prerunner pcmd.PreRunner, cfg *v3.Config, analytic
 				msg = strings.TrimRight(msg, "\n")
 
 				if len(msg) > 0 {
-					analytics.SetSpecialProperty("feedback", msg)
+					analyticsClient.SetSpecialProperty(analytics.FeedbackPropertiesKey, msg)
 					pcmd.Println(cmd, "Thanks for your feedback.")
 				}
 				return nil

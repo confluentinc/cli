@@ -51,6 +51,7 @@ var (
 	ApiKeyPropertiesKey     = "api-key"
 	VersionPropertiesKey    = "version"
 	CliNameTraitsKey        = "cli_name"
+	FeedbackPropertiesKey   = "feedback"
 )
 
 // Logger struct that implements Segment's logger and redirects segments error log to debug log
