@@ -271,7 +271,7 @@ func (s *CLITestSuite) Test_Ccloud_Errors() {
 		loginURL := serveErrors(tt)
 		env := []string{"XX_CCLOUD_EMAIL=expired@user.com", "XX_CCLOUD_PASSWORD=pass1"}
 		output := runCommand(tt, ccloudTestBin, env, "login --url "+loginURL, 0)
-		require.Contains(tt, "Logged in as expired@user.com\nUsing environment a-595 (\"default\")\n", output)
+		require.Contains(tt, output, "Logged in as expired@user.com\nUsing environment a-595 (\"default\")\n")
 		output = runCommand(tt, ccloudTestBin, []string{}, "kafka cluster list", 1)
 		require.Contains(tt, output, "Your token has expired. You are now logged out.\nError: You must log in to run that command.\n")
 	})
