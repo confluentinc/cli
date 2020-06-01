@@ -511,9 +511,9 @@ func TestGetLatestReleaseNotes(t *testing.T) {
 				},
 				Logger: log.New(),
 			}),
-			wantVersion: releaseNotesVersion,
+			wantVersion:      releaseNotesVersion,
 			wantReleaseNotes: releaseNotes,
-			wantErr: false,
+			wantErr:          false,
 		},
 		{
 			name: "error getting release notes version",

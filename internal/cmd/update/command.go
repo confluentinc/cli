@@ -59,7 +59,7 @@ type command struct {
 	logger  *log.Logger
 	client  update.Client
 	// for testing
-	prompt pcmd.Prompt
+	prompt          pcmd.Prompt
 	analyticsClient analytics.Client
 }
 
@@ -67,12 +67,12 @@ type command struct {
 func New(cliName string, config *v3.Config, version *cliVersion.Version, prompt pcmd.Prompt,
 	client update.Client, analytics analytics.Client) *cobra.Command {
 	cmd := &command{
-		cliName: cliName,
-		config:  config,
-		version: version,
-		logger:  config.Logger,
-		prompt:  prompt,
-		client:  client,
+		cliName:         cliName,
+		config:          config,
+		version:         version,
+		logger:          config.Logger,
+		prompt:          prompt,
+		client:          client,
 		analyticsClient: analytics,
 	}
 	cmd.init()
@@ -155,7 +155,7 @@ func (c *command) getReleaseNotes(latestBinaryVersion string) string {
 	return releaseNotes
 }
 
-func sameVersionCheck(v1 string, v2 string) (bool, error){
+func sameVersionCheck(v1 string, v2 string) (bool, error) {
 	version1, err := version.NewVersion(v1)
 	if err != nil {
 		return false, err
