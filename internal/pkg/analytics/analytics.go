@@ -46,7 +46,6 @@ var (
 	ErrorMsgPropertiesKey   = "error_message"
 	StartTimePropertiesKey  = "start_time"
 	FinishTimePropertiesKey = "finish_time"
-	FeedbackPropertiesKey   = "feedback"
 	SucceededPropertiesKey  = "succeeded"
 	CredentialPropertiesKey = "credential_type"
 	ApiKeyPropertiesKey     = "api-key"
