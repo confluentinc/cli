@@ -346,7 +346,7 @@ endef
 publish-release-notes:
 	@TMP_BASE=$$(mktemp -d) || exit 1; \
 		TMP_DOCS=$${TMP_BASE}/docs; \
-		git clone git@github.com:csreesan/docs.git $${TMP_DOCS}; \
+		git clone git@github.com:confluentinc/docs.git $${TMP_DOCS}; \
 		cd $${TMP_DOCS} || exit 1; \
 		git fetch ; \
 		git checkout -b cli-$(BUMPED_VERSION) origin/$(DOCS_BRANCH) || exit 1; \
