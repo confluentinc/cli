@@ -30,7 +30,7 @@ func NewFeedbackCmdWithPrompt(prerunner pcmd.PreRunner, cfg *v3.Config, analytic
 				msg = strings.TrimRight(msg, "\n")
 
 				if len(msg) > 0 {
-					analytics.SetFeedback(msg)
+					analytics.SetSpecialProperty("feedback", msg)
 					pcmd.Println(cmd, "Thanks for your feedback.")
 				}
 				return nil

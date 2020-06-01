@@ -153,6 +153,40 @@ func (suite *AnalyticsTestSuite) TestSuccessWithFlagAndArgs() {
 	req.Equal(arg2, args[1])
 }
 
+func (suite *AnalyticsTestSuite) TestSetSpecialProperty() {
+	// assume user already logged in
+	suite.loginUser()
+	specialPropertyKey := "special key"
+	specialPropertyValue := "special value"
+	req := require.New(suite.T())
+	cobraCmd := &cobra.Command{
+		Use:    suite.config.CLIName,
+		Run:    func(cmd *cobra.Command, args []string) {
+			suite.analyticsClient.SetSpecialProperty(specialPropertyKey, specialPropertyValue)
+		},
+		PreRun: suite.preRunFunc(),
+	}
+	cobraCmd.Flags().String(flagName, "", "")
+	command := cmd.Command{
+		Command:   cobraCmd,
+		Analytics: suite.analyticsClient,
+	}
+	err := command.Execute([]string{})
+	req.NoError(err)
+
+	req.Equal(1, len(suite.output))
+	page, ok := suite.output[0].(segment.Page)
+	req.True(ok)
+
+	suite.checkPageBasic(page)
+	suite.checkPageLoggedIn(page)
+	suite.checkPageSuccess(page)
+
+	propertyValue, ok := page.Properties[specialPropertyKey]
+	req.True(ok)
+	req.Equal(specialPropertyValue, propertyValue)
+}
+
 func (suite *AnalyticsTestSuite) TestHelpWithFlagAndArgs() {
 
 	// assume user already logged in

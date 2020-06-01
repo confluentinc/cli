@@ -179,37 +179,28 @@ func (c *Command) Execute(args []string) error {
 	c.Command.SetArgs(args)
 
 	err := c.Command.Execute()
-	if err != nil {
-		c.onFailure(err)
-		return err
+	analyticsError := c.Analytics.SendCommandAnalytics(c.Command, args, err)
+	if analyticsError != nil {
+		c.logger.Debugf("segment analytics sending event failed: %s\n", analyticsError.Error())
 	}
 
-	c.Analytics.CatchHelpCall(c.Command, args)
-	c.onSuccess(args)
+	failed := err != nil
+	c.sendFeedbackNudge(args, failed)
 
-	return nil
+	return err
 }
 
-func (c *Command) onFailure(err error) {
-	c.Println(feedbackNudge)
-
-	err = c.Analytics.SendCommandFailed(err)
-	if err != nil {
-		c.logger.Debugf("segment analytics sending event failed: %s\n", err.Error())
+func (c *Command) sendFeedbackNudge(args []string, failed bool) {
+	if failed {
+		c.Println(feedbackNudge)
+		return
 	}
-}
 
-func (c *Command) onSuccess(args []string) {
 	cmd := strings.Join(args, " ")
 	for _, cmdPrefix := range feedbackNudgeCmds {
 		if strings.HasPrefix(cmd, cmdPrefix) {
 			c.Println(feedbackNudge)
-			break
+			return
 		}
-	}
-
-	err := c.Analytics.SendCommandSucceeded()
-	if err != nil {
-		c.logger.Debugf("segment analytics sending event failed: %s\n", err.Error())
 	}
 }
