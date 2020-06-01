@@ -52,6 +52,7 @@ var (
 	VersionPropertiesKey            = "version"
 	CliNameTraitsKey                = "cli_name"
 	ReleaseNotesErrorPropertiesKeys = "release_notes_error"
+	FeedbackPropertiesKey           = "feedback"
 )
 
 // Logger struct that implements Segment's logger and redirects segments error log to debug log

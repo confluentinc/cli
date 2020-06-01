@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"net/http"
 	"os"
 	"runtime"
@@ -18,6 +17,7 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/connector"
 	connector_catalog "github.com/confluentinc/cli/internal/cmd/connector-catalog"
 	"github.com/confluentinc/cli/internal/cmd/environment"
+	"github.com/confluentinc/cli/internal/cmd/feedback"
 	"github.com/confluentinc/cli/internal/cmd/iam"
 	initcontext "github.com/confluentinc/cli/internal/cmd/init-context"
 	"github.com/confluentinc/cli/internal/cmd/kafka"
@@ -33,6 +33,7 @@ import (
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/help"
 	"github.com/confluentinc/cli/internal/pkg/io"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -111,6 +112,7 @@ func NewConfluentCommand(cliName string, cfg *v3.Config, logger *log.Logger, ver
 	if cliName == "ccloud" {
 		cmd := kafka.New(prerunner, cfg, logger.Named("kafka"), ver.ClientID)
 		cli.AddCommand(cmd)
+		cli.AddCommand(feedback.NewFeedbackCmd(prerunner, cfg, analytics))
 		cli.AddCommand(initcontext.New(prerunner, cfg, prompt, resolver, analytics))
 		if currCtx != nil && currCtx.Credential != nil && currCtx.Credential.CredentialType == v2.APIKey {
 			return command, nil

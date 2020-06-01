@@ -10,10 +10,18 @@ func NewDummyAnalyticsMock() *AnalyticsClient {
 	return &AnalyticsClient{
 		SetStartTimeFunc:         func() {},
 		TrackCommandFunc:         func(cmd *cobra.Command, args []string) {},
-		SendCommandAnalyticsFunc: func(cmd *cobra.Command, args []string, cmdExecutionError error) error {return nil},
+		SendCommandAnalyticsFunc: func(cmd *cobra.Command, args []string, cmdExecutionError error) error { return nil },
 		SetCommandTypeFunc:       func(commandType analytics.CommandType) {},
 		SessionTimedOutFunc:      func() error { return nil },
 		CloseFunc:                func() error { return nil },
-		SetSpecialPropertyFunc: func(propertiesKey string, value interface{}) {},
+		SetSpecialPropertyFunc:   func(propertiesKey string, value interface{}) {},
+	}
+}
+
+func NewPromptMock(msg string) *Prompt {
+	return &Prompt{
+		ReadStringFunc: func(delim byte) (string, error) {
+			return msg, nil
+		},
 	}
 }
