@@ -1,0 +1,38 @@
+package local
+
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+)
+
+var confluentControlCenter = "share/java/confluent-control-center/control-center-*.jar"
+
+func findConfluentFile(pattern string) ([]string, error) {
+	confluentHome := os.Getenv("CONFLUENT_HOME")
+	if confluentHome == "" {
+		return []string{}, fmt.Errorf("set environment variable CONFLUENT_HOME")
+	}
+
+	path := filepath.Join(confluentHome, pattern)
+	matches, err := filepath.Glob(path)
+	if err != nil {
+		return []string{}, err
+	}
+
+	for i := range matches {
+		matches[i], err = filepath.Rel(confluentHome, matches[i])
+		if err != nil {
+			return []string{}, err
+		}
+	}
+	return matches, nil
+}
+
+func isConfluentPlatform() (bool, error) {
+	files, err := findConfluentFile(confluentControlCenter)
+	if err != nil {
+		return false, err
+	}
+	return len(files) > 0, nil
+}

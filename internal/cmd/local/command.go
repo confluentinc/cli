@@ -22,7 +22,7 @@ func NewCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
 	// TODO: confluent local current
 	// TODO: confluent local demo
 	// TODO: confluent local destroy
-	// TODO: confluent local list
+	localCommand.AddCommand(NewListCommand(prerunner, cfg))
 	// TODO: confluent local load
 	// TODO: confluent local log
 	// TODO: confluent local produce

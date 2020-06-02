@@ -1,8 +1,6 @@
 package local
 
 import (
-	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 
@@ -16,35 +14,35 @@ import (
 func TestConfluentCommunitySoftwareVersion(t *testing.T) {
 	req := require.New(t)
 
-	dir := filepath.Join(os.TempDir(), "confluent1")
-	req.NoError(setupConfluentHome(dir))
-	defer req.NoError(teardownConfluentHome(dir))
+	confluentHome := mock.NewConfluentHomeMock()
+	req.NoError(confluentHome.Setup())
+	defer req.NoError(confluentHome.TearDown())
 
 	file := strings.Replace(versionFiles["Confluent Community Software"], "*", "0.0.0", 1)
-	req.NoError(addFileToConfluentHome(dir, file))
+	req.NoError(confluentHome.AddFile(file))
 
-	testVersion(t, []string{}, "Confluent Community Software: 0.0.0")
+	testVersion(req, []string{}, "Confluent Community Software: 0.0.0")
 }
 
 func TestConfluentPlatformVersion(t *testing.T) {
 	req := require.New(t)
 
-	dir := filepath.Join(os.TempDir(), "confluent2")
-	req.NoError(setupConfluentHome(dir))
-	defer req.NoError(teardownConfluentHome(dir))
+	confluentHome := mock.NewConfluentHomeMock()
+	req.NoError(confluentHome.Setup())
+	defer req.NoError(confluentHome.TearDown())
 
 	file := strings.Replace(versionFiles["Confluent Platform"], "*", "1.0.0", 1)
-	req.NoError(addFileToConfluentHome(dir, file))
+	req.NoError(confluentHome.AddFile(file))
 
-	testVersion(t, []string{}, "Confluent Platform: 1.0.0")
+	testVersion(req, []string{}, "Confluent Platform: 1.0.0")
 }
 
 func TestServiceVersions(t *testing.T) {
 	req := require.New(t)
 
-	dir := filepath.Join(os.TempDir(), "confluent3")
-	req.NoError(setupConfluentHome(dir))
-	defer req.NoError(teardownConfluentHome(dir))
+	confluentHome := mock.NewConfluentHomeMock()
+	req.NoError(confluentHome.Setup())
+	defer req.NoError(confluentHome.TearDown())
 
 	services := []string{"kafka", "zookeeper"}
 	versions := []string{"2.0.0", "3.0.0"}
@@ -54,36 +52,12 @@ func TestServiceVersions(t *testing.T) {
 		version := versions[i]
 
 		file := strings.Replace(versionFiles[service], "*", version, 1)
-		req.NoError(addFileToConfluentHome(dir, file))
-		testVersion(t, []string{service}, version)
+		req.NoError(confluentHome.AddFile(file))
+		testVersion(req, []string{service}, version)
 	}
 }
 
-func setupConfluentHome(dir string) error {
-	return os.Setenv("CONFLUENT_HOME", dir)
-}
-
-func teardownConfluentHome(dir string) error {
-	return os.RemoveAll(dir)
-}
-
-func addFileToConfluentHome(dir string, file string) error {
-	path := filepath.Join(dir, file)
-
-	if err := os.MkdirAll(filepath.Dir(path), os.ModePerm); err != nil {
-		return err
-	}
-
-	if _, err := os.Create(path); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func testVersion(t *testing.T, args []string, version string) {
-	req := require.New(t)
-
+func testVersion(req *require.Assertions, args []string, version string) {
 	mockPrerunner := mock.NewPreRunnerMock(nil, nil)
 	mockCfg := &v3.Config{}
 
