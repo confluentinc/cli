@@ -13,16 +13,15 @@ import (
 	"github.com/confluentinc/cli/mock"
 )
 
-var confluentHome = filepath.Join(os.TempDir(), "confluent")
-
 func TestConfluentCommunitySoftwareVersion(t *testing.T) {
 	req := require.New(t)
 
-	req.NoError(setupConfluentHome())
-	defer req.NoError(teardownConfluentHome())
+	dir := filepath.Join(os.TempDir(), "confluent1")
+	req.NoError(setupConfluentHome(dir))
+	defer req.NoError(teardownConfluentHome(dir))
 
 	file := strings.Replace(versionFiles["Confluent Community Software"], "*", "0.0.0", 1)
-	req.NoError(addFileToConfluentHome(file))
+	req.NoError(addFileToConfluentHome(dir, file))
 
 	testVersion(t, []string{}, "Confluent Community Software: 0.0.0")
 }
@@ -30,11 +29,12 @@ func TestConfluentCommunitySoftwareVersion(t *testing.T) {
 func TestConfluentPlatformVersion(t *testing.T) {
 	req := require.New(t)
 
-	req.NoError(setupConfluentHome())
-	defer req.NoError(teardownConfluentHome())
+	dir := filepath.Join(os.TempDir(), "confluent2")
+	req.NoError(setupConfluentHome(dir))
+	defer req.NoError(teardownConfluentHome(dir))
 
 	file := strings.Replace(versionFiles["Confluent Platform"], "*", "1.0.0", 1)
-	req.NoError(addFileToConfluentHome(file))
+	req.NoError(addFileToConfluentHome(dir, file))
 
 	testVersion(t, []string{}, "Confluent Platform: 1.0.0")
 }
@@ -42,8 +42,9 @@ func TestConfluentPlatformVersion(t *testing.T) {
 func TestServiceVersions(t *testing.T) {
 	req := require.New(t)
 
-	req.NoError(setupConfluentHome())
-	defer req.NoError(teardownConfluentHome())
+	dir := filepath.Join(os.TempDir(), "confluent3")
+	req.NoError(setupConfluentHome(dir))
+	defer req.NoError(teardownConfluentHome(dir))
 
 	services := []string{"kafka", "zookeeper"}
 	versions := []string{"2.0.0", "3.0.0"}
@@ -53,21 +54,21 @@ func TestServiceVersions(t *testing.T) {
 		version := versions[i]
 
 		file := strings.Replace(versionFiles[service], "*", version, 1)
-		req.NoError(addFileToConfluentHome(file))
+		req.NoError(addFileToConfluentHome(dir, file))
 		testVersion(t, []string{service}, version)
 	}
 }
 
-func setupConfluentHome() error {
-	return os.Setenv("CONFLUENT_HOME", confluentHome)
+func setupConfluentHome(dir string) error {
+	return os.Setenv("CONFLUENT_HOME", dir)
 }
 
-func teardownConfluentHome() error {
-	return os.RemoveAll(confluentHome)
+func teardownConfluentHome(dir string) error {
+	return os.RemoveAll(dir)
 }
 
-func addFileToConfluentHome(file string) error {
-	path := filepath.Join(confluentHome, file)
+func addFileToConfluentHome(dir string, file string) error {
+	path := filepath.Join(dir, file)
 
 	if err := os.MkdirAll(filepath.Dir(path), os.ModePerm); err != nil {
 		return err
