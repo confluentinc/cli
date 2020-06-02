@@ -169,12 +169,21 @@ func (c *Command) Execute(cliName string, args []string) error {
 		c.logger.Debugf("segment analytics sending event failed: %s\n", analyticsError.Error())
 	}
 
-	if cliName == "ccloud" {
+	if cliName == "ccloud" && isHumanReadable(args) {
 		failed := err != nil
 		c.sendFeedbackNudge(failed, args)
 	}
 
 	return err
+}
+
+func isHumanReadable(args []string) bool {
+	for i := 0; i < len(args)-1; i++ {
+		if args[i] == "-o" {
+			return args[i+1] == "human"
+		}
+	}
+	return true
 }
 
 func (c *Command) sendFeedbackNudge(failed bool, args []string) {
