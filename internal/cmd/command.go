@@ -43,21 +43,6 @@ import (
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
-var (
-	feedbackNudge     = "\nDid you know you can use the \"ccloud feedback\" command to send the team feedback?\nLet us know if the ccloud CLI is meeting your needs, or what we can do to improve it."
-	feedbackNudgeCmds = []string{
-		"api-key create", "api-key delete",
-		"connector create", "connector delete",
-		"environment create", "environment delete",
-		"kafka acl create", "kafka acl delete",
-		"kafka cluster create", "kafka cluster delete",
-		"kafka topic create", "kafka topic delete",
-		"ksql app create", "ksql app delete",
-		"schema-registry schema create", "schema-registry schema delete",
-		"service-account create", "service-account delete",
-	}
-)
-
 type Command struct {
 	*cobra.Command
 	// @VisibleForTesting
@@ -174,7 +159,7 @@ func NewConfluentCommand(cliName string, cfg *v3.Config, logger *log.Logger, ver
 	return command, nil
 }
 
-func (c *Command) Execute(args []string) error {
+func (c *Command) Execute(cliName string, args []string) error {
 	c.Analytics.SetStartTime()
 	c.Command.SetArgs(args)
 
@@ -184,22 +169,38 @@ func (c *Command) Execute(args []string) error {
 		c.logger.Debugf("segment analytics sending event failed: %s\n", analyticsError.Error())
 	}
 
-	failed := err != nil
-	c.sendFeedbackNudge(args, failed)
+	if cliName == "ccloud" {
+		failed := err != nil
+		c.sendFeedbackNudge(failed, args)
+	}
 
 	return err
 }
 
-func (c *Command) sendFeedbackNudge(args []string, failed bool) {
+func (c *Command) sendFeedbackNudge(failed bool, args []string) {
+	feedbackNudge := "\nDid you know you can use the \"ccloud feedback\" command to send the team feedback?\nLet us know if the ccloud CLI is meeting your needs, or what we can do to improve it."
+
 	if failed {
 		c.Println(feedbackNudge)
 		return
 	}
 
+	feedbackNudgeCmds := []string{
+		"api-key create", "api-key delete",
+		"connector create", "connector delete",
+		"environment create", "environment delete",
+		"kafka acl create", "kafka acl delete",
+		"kafka cluster create", "kafka cluster delete",
+		"kafka topic create", "kafka topic delete",
+		"ksql app create", "ksql app delete",
+		"schema-registry schema create", "schema-registry schema delete",
+		"service-account create", "service-account delete",
+	}
+
 	cmd := strings.Join(args, " ")
 	for _, cmdPrefix := range feedbackNudgeCmds {
 		if strings.HasPrefix(cmd, cmdPrefix) {
-			c.Println(feedbackNudge)
+			c.PrintErrln(feedbackNudge)
 			return
 		}
 	}

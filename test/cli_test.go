@@ -174,7 +174,7 @@ func (s *CLITestSuite) Test_Confluent_Help() {
 
 func (s *CLITestSuite) Test_Ccloud_Help() {
 	tests := []CLITest{
-		{name: "no args", fixture: "help-flag.golden", wantErrCode: 1},
+		{name: "no args", fixture: "help-flag-fail.golden", wantErrCode: 1},
 		{args: "help", fixture: "help.golden"},
 		{args: "--help", fixture: "help-flag.golden"},
 		{args: "version", fixture: "version.golden", regex: true},
