@@ -1,6 +1,7 @@
 package local
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -17,7 +18,8 @@ func TestListConfluentPlatform(t *testing.T) {
 	req.NoError(confluentHome.Setup())
 	defer req.NoError(confluentHome.TearDown())
 
-	req.NoError(confluentHome.AddFile(confluentControlCenter))
+	file := strings.Replace(confluentControlCenter, "*", "0.0.0", 1)
+	req.NoError(confluentHome.AddFile(file))
 
 	out, err := runList()
 	req.NoError(err)
