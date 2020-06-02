@@ -181,7 +181,7 @@ func (c *Command) sendFeedbackNudge(failed bool, args []string) {
 	feedbackNudge := "\nDid you know you can use the \"ccloud feedback\" command to send the team feedback?\nLet us know if the ccloud CLI is meeting your needs, or what we can do to improve it."
 
 	if failed {
-		c.Println(feedbackNudge)
+		c.PrintErrln(feedbackNudge)
 		return
 	}
 
