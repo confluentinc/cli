@@ -12,31 +12,53 @@ import (
 
 // Repository is a mock of Repository interface
 type Repository struct {
-	lockGetAvailableVersions sync.Mutex
-	GetAvailableVersionsFunc func(name string) (github_com_hashicorp_go_version.Collection, error)
+	lockGetLatestBinaryVersion sync.Mutex
+	GetLatestBinaryVersionFunc func(name string) (*github_com_hashicorp_go_version.Version, error)
+
+	lockGetLatestReleaseNotesVersion sync.Mutex
+	GetLatestReleaseNotesVersionFunc func() (*github_com_hashicorp_go_version.Version, error)
+
+	lockGetAvailableBinaryVersions sync.Mutex
+	GetAvailableBinaryVersionsFunc func(name string) (github_com_hashicorp_go_version.Collection, error)
+
+	lockGetAvailableReleaseNotesVersions sync.Mutex
+	GetAvailableReleaseNotesVersionsFunc func() (github_com_hashicorp_go_version.Collection, error)
 
 	lockDownloadVersion sync.Mutex
 	DownloadVersionFunc func(name, version, downloadDir string) (string, int64, error)
 
+	lockDownloadReleaseNotes sync.Mutex
+	DownloadReleaseNotesFunc func(version string) (string, error)
+
 	calls struct {
-		GetAvailableVersions []struct {
+		GetLatestBinaryVersion []struct {
 			Name string
+		}
+		GetLatestReleaseNotesVersion []struct {
+		}
+		GetAvailableBinaryVersions []struct {
+			Name string
+		}
+		GetAvailableReleaseNotesVersions []struct {
 		}
 		DownloadVersion []struct {
 			Name        string
 			Version     string
 			DownloadDir string
 		}
+		DownloadReleaseNotes []struct {
+			Version string
+		}
 	}
 }
 
-// GetAvailableVersions mocks base method by wrapping the associated func.
-func (m *Repository) GetAvailableVersions(name string) (github_com_hashicorp_go_version.Collection, error) {
-	m.lockGetAvailableVersions.Lock()
-	defer m.lockGetAvailableVersions.Unlock()
+// GetLatestBinaryVersion mocks base method by wrapping the associated func.
+func (m *Repository) GetLatestBinaryVersion(name string) (*github_com_hashicorp_go_version.Version, error) {
+	m.lockGetLatestBinaryVersion.Lock()
+	defer m.lockGetLatestBinaryVersion.Unlock()
 
-	if m.GetAvailableVersionsFunc == nil {
-		panic("mocker: Repository.GetAvailableVersionsFunc is nil but Repository.GetAvailableVersions was called.")
+	if m.GetLatestBinaryVersionFunc == nil {
+		panic("mocker: Repository.GetLatestBinaryVersionFunc is nil but Repository.GetLatestBinaryVersion was called.")
 	}
 
 	call := struct {
@@ -45,27 +67,133 @@ func (m *Repository) GetAvailableVersions(name string) (github_com_hashicorp_go_
 		Name: name,
 	}
 
-	m.calls.GetAvailableVersions = append(m.calls.GetAvailableVersions, call)
+	m.calls.GetLatestBinaryVersion = append(m.calls.GetLatestBinaryVersion, call)
 
-	return m.GetAvailableVersionsFunc(name)
+	return m.GetLatestBinaryVersionFunc(name)
 }
 
-// GetAvailableVersionsCalled returns true if GetAvailableVersions was called at least once.
-func (m *Repository) GetAvailableVersionsCalled() bool {
-	m.lockGetAvailableVersions.Lock()
-	defer m.lockGetAvailableVersions.Unlock()
+// GetLatestBinaryVersionCalled returns true if GetLatestBinaryVersion was called at least once.
+func (m *Repository) GetLatestBinaryVersionCalled() bool {
+	m.lockGetLatestBinaryVersion.Lock()
+	defer m.lockGetLatestBinaryVersion.Unlock()
 
-	return len(m.calls.GetAvailableVersions) > 0
+	return len(m.calls.GetLatestBinaryVersion) > 0
 }
 
-// GetAvailableVersionsCalls returns the calls made to GetAvailableVersions.
-func (m *Repository) GetAvailableVersionsCalls() []struct {
+// GetLatestBinaryVersionCalls returns the calls made to GetLatestBinaryVersion.
+func (m *Repository) GetLatestBinaryVersionCalls() []struct {
 	Name string
 } {
-	m.lockGetAvailableVersions.Lock()
-	defer m.lockGetAvailableVersions.Unlock()
+	m.lockGetLatestBinaryVersion.Lock()
+	defer m.lockGetLatestBinaryVersion.Unlock()
 
-	return m.calls.GetAvailableVersions
+	return m.calls.GetLatestBinaryVersion
+}
+
+// GetLatestReleaseNotesVersion mocks base method by wrapping the associated func.
+func (m *Repository) GetLatestReleaseNotesVersion() (*github_com_hashicorp_go_version.Version, error) {
+	m.lockGetLatestReleaseNotesVersion.Lock()
+	defer m.lockGetLatestReleaseNotesVersion.Unlock()
+
+	if m.GetLatestReleaseNotesVersionFunc == nil {
+		panic("mocker: Repository.GetLatestReleaseNotesVersionFunc is nil but Repository.GetLatestReleaseNotesVersion was called.")
+	}
+
+	call := struct {
+	}{}
+
+	m.calls.GetLatestReleaseNotesVersion = append(m.calls.GetLatestReleaseNotesVersion, call)
+
+	return m.GetLatestReleaseNotesVersionFunc()
+}
+
+// GetLatestReleaseNotesVersionCalled returns true if GetLatestReleaseNotesVersion was called at least once.
+func (m *Repository) GetLatestReleaseNotesVersionCalled() bool {
+	m.lockGetLatestReleaseNotesVersion.Lock()
+	defer m.lockGetLatestReleaseNotesVersion.Unlock()
+
+	return len(m.calls.GetLatestReleaseNotesVersion) > 0
+}
+
+// GetLatestReleaseNotesVersionCalls returns the calls made to GetLatestReleaseNotesVersion.
+func (m *Repository) GetLatestReleaseNotesVersionCalls() []struct {
+} {
+	m.lockGetLatestReleaseNotesVersion.Lock()
+	defer m.lockGetLatestReleaseNotesVersion.Unlock()
+
+	return m.calls.GetLatestReleaseNotesVersion
+}
+
+// GetAvailableBinaryVersions mocks base method by wrapping the associated func.
+func (m *Repository) GetAvailableBinaryVersions(name string) (github_com_hashicorp_go_version.Collection, error) {
+	m.lockGetAvailableBinaryVersions.Lock()
+	defer m.lockGetAvailableBinaryVersions.Unlock()
+
+	if m.GetAvailableBinaryVersionsFunc == nil {
+		panic("mocker: Repository.GetAvailableBinaryVersionsFunc is nil but Repository.GetAvailableBinaryVersions was called.")
+	}
+
+	call := struct {
+		Name string
+	}{
+		Name: name,
+	}
+
+	m.calls.GetAvailableBinaryVersions = append(m.calls.GetAvailableBinaryVersions, call)
+
+	return m.GetAvailableBinaryVersionsFunc(name)
+}
+
+// GetAvailableBinaryVersionsCalled returns true if GetAvailableBinaryVersions was called at least once.
+func (m *Repository) GetAvailableBinaryVersionsCalled() bool {
+	m.lockGetAvailableBinaryVersions.Lock()
+	defer m.lockGetAvailableBinaryVersions.Unlock()
+
+	return len(m.calls.GetAvailableBinaryVersions) > 0
+}
+
+// GetAvailableBinaryVersionsCalls returns the calls made to GetAvailableBinaryVersions.
+func (m *Repository) GetAvailableBinaryVersionsCalls() []struct {
+	Name string
+} {
+	m.lockGetAvailableBinaryVersions.Lock()
+	defer m.lockGetAvailableBinaryVersions.Unlock()
+
+	return m.calls.GetAvailableBinaryVersions
+}
+
+// GetAvailableReleaseNotesVersions mocks base method by wrapping the associated func.
+func (m *Repository) GetAvailableReleaseNotesVersions() (github_com_hashicorp_go_version.Collection, error) {
+	m.lockGetAvailableReleaseNotesVersions.Lock()
+	defer m.lockGetAvailableReleaseNotesVersions.Unlock()
+
+	if m.GetAvailableReleaseNotesVersionsFunc == nil {
+		panic("mocker: Repository.GetAvailableReleaseNotesVersionsFunc is nil but Repository.GetAvailableReleaseNotesVersions was called.")
+	}
+
+	call := struct {
+	}{}
+
+	m.calls.GetAvailableReleaseNotesVersions = append(m.calls.GetAvailableReleaseNotesVersions, call)
+
+	return m.GetAvailableReleaseNotesVersionsFunc()
+}
+
+// GetAvailableReleaseNotesVersionsCalled returns true if GetAvailableReleaseNotesVersions was called at least once.
+func (m *Repository) GetAvailableReleaseNotesVersionsCalled() bool {
+	m.lockGetAvailableReleaseNotesVersions.Lock()
+	defer m.lockGetAvailableReleaseNotesVersions.Unlock()
+
+	return len(m.calls.GetAvailableReleaseNotesVersions) > 0
+}
+
+// GetAvailableReleaseNotesVersionsCalls returns the calls made to GetAvailableReleaseNotesVersions.
+func (m *Repository) GetAvailableReleaseNotesVersionsCalls() []struct {
+} {
+	m.lockGetAvailableReleaseNotesVersions.Lock()
+	defer m.lockGetAvailableReleaseNotesVersions.Unlock()
+
+	return m.calls.GetAvailableReleaseNotesVersions
 }
 
 // DownloadVersion mocks base method by wrapping the associated func.
@@ -112,12 +240,62 @@ func (m *Repository) DownloadVersionCalls() []struct {
 	return m.calls.DownloadVersion
 }
 
+// DownloadReleaseNotes mocks base method by wrapping the associated func.
+func (m *Repository) DownloadReleaseNotes(version string) (string, error) {
+	m.lockDownloadReleaseNotes.Lock()
+	defer m.lockDownloadReleaseNotes.Unlock()
+
+	if m.DownloadReleaseNotesFunc == nil {
+		panic("mocker: Repository.DownloadReleaseNotesFunc is nil but Repository.DownloadReleaseNotes was called.")
+	}
+
+	call := struct {
+		Version string
+	}{
+		Version: version,
+	}
+
+	m.calls.DownloadReleaseNotes = append(m.calls.DownloadReleaseNotes, call)
+
+	return m.DownloadReleaseNotesFunc(version)
+}
+
+// DownloadReleaseNotesCalled returns true if DownloadReleaseNotes was called at least once.
+func (m *Repository) DownloadReleaseNotesCalled() bool {
+	m.lockDownloadReleaseNotes.Lock()
+	defer m.lockDownloadReleaseNotes.Unlock()
+
+	return len(m.calls.DownloadReleaseNotes) > 0
+}
+
+// DownloadReleaseNotesCalls returns the calls made to DownloadReleaseNotes.
+func (m *Repository) DownloadReleaseNotesCalls() []struct {
+	Version string
+} {
+	m.lockDownloadReleaseNotes.Lock()
+	defer m.lockDownloadReleaseNotes.Unlock()
+
+	return m.calls.DownloadReleaseNotes
+}
+
 // Reset resets the calls made to the mocked methods.
 func (m *Repository) Reset() {
-	m.lockGetAvailableVersions.Lock()
-	m.calls.GetAvailableVersions = nil
-	m.lockGetAvailableVersions.Unlock()
+	m.lockGetLatestBinaryVersion.Lock()
+	m.calls.GetLatestBinaryVersion = nil
+	m.lockGetLatestBinaryVersion.Unlock()
+	m.lockGetLatestReleaseNotesVersion.Lock()
+	m.calls.GetLatestReleaseNotesVersion = nil
+	m.lockGetLatestReleaseNotesVersion.Unlock()
+	m.lockGetAvailableBinaryVersions.Lock()
+	m.calls.GetAvailableBinaryVersions = nil
+	m.lockGetAvailableBinaryVersions.Unlock()
+	m.lockGetAvailableReleaseNotesVersions.Lock()
+	m.calls.GetAvailableReleaseNotesVersions = nil
+	m.lockGetAvailableReleaseNotesVersions.Unlock()
 	m.lockDownloadVersion.Lock()
 	m.calls.DownloadVersion = nil
 	m.lockDownloadVersion.Unlock()
+	m.lockDownloadReleaseNotes.Lock()
+	m.calls.DownloadReleaseNotes = nil
+	m.lockDownloadReleaseNotes.Unlock()
 }

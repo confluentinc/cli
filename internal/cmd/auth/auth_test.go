@@ -22,8 +22,8 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go"
 	sdkMock "github.com/confluentinc/ccloud-sdk-go/mock"
 
-	"github.com/confluentinc/mds-sdk-go"
-	mdsMock "github.com/confluentinc/mds-sdk-go/mock"
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	mdsMock "github.com/confluentinc/mds-sdk-go/mdsv1/mock"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"

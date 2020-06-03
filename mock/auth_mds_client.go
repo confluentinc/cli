@@ -9,13 +9,13 @@ import (
 
 	github_com_confluentinc_cli_internal_pkg_config_v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	github_com_confluentinc_cli_internal_pkg_log "github.com/confluentinc/cli/internal/pkg/log"
-	github_com_confluentinc_mds_sdk_go "github.com/confluentinc/mds-sdk-go"
+	github_com_confluentinc_mds_sdk_go_mdsv1 "github.com/confluentinc/mds-sdk-go/mdsv1"
 )
 
 // MockMDSClientManager is a mock of MDSClientManager interface
 type MockMDSClientManager struct {
 	lockGetMDSClient sync.Mutex
-	GetMDSClientFunc func(ctx *github_com_confluentinc_cli_internal_pkg_config_v3.Context, caCertPath string, flagChanged bool, url string, logger *github_com_confluentinc_cli_internal_pkg_log.Logger) (*github_com_confluentinc_mds_sdk_go.APIClient, error)
+	GetMDSClientFunc func(ctx *github_com_confluentinc_cli_internal_pkg_config_v3.Context, caCertPath string, flagChanged bool, url string, logger *github_com_confluentinc_cli_internal_pkg_log.Logger) (*github_com_confluentinc_mds_sdk_go_mdsv1.APIClient, error)
 
 	calls struct {
 		GetMDSClient []struct {
@@ -29,7 +29,7 @@ type MockMDSClientManager struct {
 }
 
 // GetMDSClient mocks base method by wrapping the associated func.
-func (m *MockMDSClientManager) GetMDSClient(ctx *github_com_confluentinc_cli_internal_pkg_config_v3.Context, caCertPath string, flagChanged bool, url string, logger *github_com_confluentinc_cli_internal_pkg_log.Logger) (*github_com_confluentinc_mds_sdk_go.APIClient, error) {
+func (m *MockMDSClientManager) GetMDSClient(ctx *github_com_confluentinc_cli_internal_pkg_config_v3.Context, caCertPath string, flagChanged bool, url string, logger *github_com_confluentinc_cli_internal_pkg_log.Logger) (*github_com_confluentinc_mds_sdk_go_mdsv1.APIClient, error) {
 	m.lockGetMDSClient.Lock()
 	defer m.lockGetMDSClient.Unlock()
 

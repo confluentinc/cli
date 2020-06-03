@@ -22,7 +22,8 @@ import (
 // Client lets you check for updated application binaries and install them if desired
 type Client interface {
 	CheckForUpdates(name string, currentVersion string, forceCheck bool) (updateAvailable bool, latestVersion string, err error)
-	PromptToDownload(name, currVersion, latestVersion string, confirm bool) bool
+	GetLatestReleaseNotes() (string, string, error)
+	PromptToDownload(name, currVersion, latestVersion string, releaseNotes string, confirm bool) bool
 	UpdateBinary(name, version, path string) error
 }
 
@@ -77,28 +78,36 @@ func (c *client) CheckForUpdates(name string, currentVersion string, forceCheck 
 	if !shouldCheck && !forceCheck {
 		return false, currentVersion, nil
 	}
-
 	currVersion, err := version.NewVersion(currentVersion)
 	if err != nil {
 		err = errors.Wrapf(err, "unable to parse %s version %s", name, currentVersion)
 		return false, currentVersion, err
 	}
 
-	availableVersions, err := c.Repository.GetAvailableVersions(name)
-	if err != nil {
-		return false, currentVersion, errors.Wrapf(err, "unable to get available versions")
-	}
-
 	if err := c.touchCheckFile(); err != nil {
 		return false, currentVersion, errors.Wrapf(err, "unable to touch last check file")
 	}
 
-	mostRecentVersion := availableVersions[len(availableVersions)-1]
-	if isLessThanVersion(currVersion, mostRecentVersion) {
-		return true, mostRecentVersion.Original(), nil
+	latestBinaryVersion, err := c.Repository.GetLatestBinaryVersion(name)
+	if err != nil {
+		return false, currentVersion, err
 	}
-
+	if isLessThanVersion(currVersion, latestBinaryVersion) {
+		return true, latestBinaryVersion.Original(), nil
+	}
 	return false, currentVersion, nil
+}
+
+func (c *client) GetLatestReleaseNotes() (string, string, error) {
+	latestReleaseNotesVersion, err := c.Repository.GetLatestReleaseNotesVersion()
+	if err != nil {
+		return "", "", err
+	}
+	releaseNotes, err := c.Repository.DownloadReleaseNotes(latestReleaseNotesVersion.String())
+	if err != nil {
+		return "", "", err
+	}
+	return latestReleaseNotesVersion.Original(), releaseNotes, nil
 }
 
 // SemVer considers x.x.x-yyy to be less (older) than x.x.x
@@ -124,7 +133,7 @@ func isLessThanVersion(curr, latest *version.Version) bool {
 }
 
 // PromptToDownload displays an interactive CLI prompt to download the latest version
-func (c *client) PromptToDownload(name, currVersion, latestVersion string, confirm bool) bool {
+func (c *client) PromptToDownload(name, currVersion, latestVersion, releaseNotes string, confirm bool) bool {
 	if confirm && !c.fs.IsTerminal(c.Out.Fd()) {
 		c.Logger.Warn("disable confirm as stdout is not a tty")
 		confirm = false
@@ -133,6 +142,7 @@ func (c *client) PromptToDownload(name, currVersion, latestVersion string, confi
 	fmt.Fprintf(c.Out, "New version of %s is available\n", name)
 	fmt.Fprintf(c.Out, "Current Version: %s\n", currVersion)
 	fmt.Fprintf(c.Out, "Latest Version:  %s\n", latestVersion)
+	fmt.Fprintf(c.Out, "%s\n\n\n", releaseNotes)
 
 	if !confirm {
 		return true

@@ -39,19 +39,20 @@ var (
 
 	// these are exported to avoid import cycle with test (test is in package analytics_test)
 	// @VisibleForTesting
-	FlagsPropertiesKey      = "flags"
-	ArgsPropertiesKey       = "args"
-	OrgIdPropertiesKey      = "organization_id"
-	EmailPropertiesKey      = "email"
-	ErrorMsgPropertiesKey   = "error_message"
-	StartTimePropertiesKey  = "start_time"
-	FinishTimePropertiesKey = "finish_time"
-	SucceededPropertiesKey  = "succeeded"
-	CredentialPropertiesKey = "credential_type"
-	ApiKeyPropertiesKey     = "api-key"
-	VersionPropertiesKey    = "version"
-	CliNameTraitsKey        = "cli_name"
-	FeedbackPropertiesKey   = "feedback"
+	FlagsPropertiesKey              = "flags"
+	ArgsPropertiesKey               = "args"
+	OrgIdPropertiesKey              = "organization_id"
+	EmailPropertiesKey              = "email"
+	ErrorMsgPropertiesKey           = "error_message"
+	StartTimePropertiesKey          = "start_time"
+	FinishTimePropertiesKey         = "finish_time"
+	SucceededPropertiesKey          = "succeeded"
+	CredentialPropertiesKey         = "credential_type"
+	ApiKeyPropertiesKey             = "api-key"
+	VersionPropertiesKey            = "version"
+	CliNameTraitsKey                = "cli_name"
+	ReleaseNotesErrorPropertiesKeys = "release_notes_error"
+	FeedbackPropertiesKey           = "feedback"
 )
 
 // Logger struct that implements Segment's logger and redirects segments error log to debug log

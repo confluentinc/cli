@@ -3,7 +3,7 @@ package auth
 import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
-	"github.com/confluentinc/mds-sdk-go"
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"os"

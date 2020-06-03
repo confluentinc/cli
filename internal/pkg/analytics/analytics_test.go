@@ -160,8 +160,8 @@ func (suite *AnalyticsTestSuite) TestSetSpecialProperty() {
 	specialPropertyValue := "special value"
 	req := require.New(suite.T())
 	cobraCmd := &cobra.Command{
-		Use:    suite.config.CLIName,
-		Run:    func(cmd *cobra.Command, args []string) {
+		Use: suite.config.CLIName,
+		Run: func(cmd *cobra.Command, args []string) {
 			suite.analyticsClient.SetSpecialProperty(specialPropertyKey, specialPropertyValue)
 		},
 		PreRun: suite.preRunFunc(),
