@@ -183,7 +183,7 @@ func (c *Command) Execute(cliName string, args []string) error {
 
 func isHumanReadable(args []string) bool {
 	for i := 0; i < len(args)-1; i++ {
-		if args[i] == "-o" {
+		if args[i] == "-o" || args[i] == "--output" {
 			return args[i+1] == "human"
 		}
 	}
