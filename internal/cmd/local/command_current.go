@@ -2,13 +2,12 @@ package local
 
 import (
 	"fmt"
+	"github.com/spf13/cobra"
 	"io/ioutil"
 	"math/rand"
 	"os"
 	"path/filepath"
 	"time"
-
-	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config/v3"
@@ -37,7 +36,7 @@ func runCurrentCommand(command *cobra.Command, _ []string) error {
 
 	trackingFile := filepath.Join(root, "confluent.current")
 	if _, err := os.Stat(trackingFile); os.IsNotExist(err) {
-		confluentCurrent = createChildDirectory(root)
+		confluentCurrent = createCurrentDirectory(root)
 		if err := os.Mkdir(confluentCurrent, 0777); err != nil {
 			return err
 		}
@@ -56,7 +55,7 @@ func runCurrentCommand(command *cobra.Command, _ []string) error {
 	return nil
 }
 
-func createChildDirectory(parentDir string) string {
+func createCurrentDirectory(parentDir string) string {
 	rand.Seed(time.Now().Unix())
 
 	for {
@@ -67,3 +66,4 @@ func createChildDirectory(parentDir string) string {
 		}
 	}
 }
+
