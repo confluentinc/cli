@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 var confluentControlCenter = "share/java/confluent-control-center/control-center-*.jar"
@@ -35,4 +36,12 @@ func isConfluentPlatform() (bool, error) {
 		return false, err
 	}
 	return len(files) > 0, nil
+}
+
+func buildTabbedList(slice []string) string {
+	var list strings.Builder
+	for _, x := range slice {
+		fmt.Fprintf(&list, "  %s\n", x)
+	}
+	return list.String()
 }

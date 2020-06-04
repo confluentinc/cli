@@ -20,9 +20,9 @@ var versionFiles = map[string]string{
 func NewVersionCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
 	versionCommand := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
-			Use:   "version [service]",
-			Short: "Print the Confluent Platform version, or the individual version of a service.",
-			Args:  cobra.MaximumNArgs(1),
+			Use:   "version",
+			Short: "Print the Confluent Platform version.",
+			Args:  cobra.NoArgs,
 			RunE:  runVersionCommand,
 		},
 		cfg, prerunner)
@@ -31,26 +31,19 @@ func NewVersionCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
 }
 
 func runVersionCommand(command *cobra.Command, args []string) error {
-	if len(args) > 0 {
-		service := args[0]
-
-		version, err := getVersion(service)
-		if err != nil {
-			return err
-		}
-
-		cmd.Println(command, version)
-		return nil
+	isCP, err := isConfluentPlatform()
+	if err != nil {
+		return err
 	}
 
-	flavor := "Confluent Platform"
+	flavor := "Confluent Community Software"
+	if isCP {
+		flavor = "Confluent Platform"
+	}
+
 	version, err := getVersion(flavor)
 	if err != nil {
-		flavor = "Confluent Community Software"
-		version, err = getVersion(flavor)
-		if err != nil {
-			return fmt.Errorf("could not find Confluent Platform version")
-		}
+		return err
 	}
 
 	cmd.Printf(command, "%s: %s\n", flavor, version)
@@ -61,7 +54,7 @@ func runVersionCommand(command *cobra.Command, args []string) error {
 func getVersion(service string) (string, error) {
 	versionFilePattern, ok := versionFiles[service]
 	if !ok {
-		return "", fmt.Errorf("unknown service: %s", service)
+		versionFilePattern = versionFiles["Confluent Platform"]
 	}
 
 	matches, err := findConfluentFile(versionFilePattern)
