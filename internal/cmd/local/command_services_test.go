@@ -28,6 +28,11 @@ func TestConfluentPlatformAvailableServices(t *testing.T) {
 func TestAvailableServicesNoConfluentPlatform(t *testing.T) {
 	req := require.New(t)
 
+	cp := mock.NewConfluentPlatform()
+	defer cp.TearDown()
+
+	req.NoError(cp.NewConfluentHome())
+
 	availableServices, err := getAvailableServices()
 	req.NoError(err)
 	req.Equal(availableServices, topologicallySortedServices[:len(topologicallySortedServices)-1])
