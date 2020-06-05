@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
@@ -27,6 +28,16 @@ func NewCurrentCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
 }
 
 func runCurrentCommand(command *cobra.Command, _ []string) error {
+	current, err := getConfluentCurrent()
+	if err != nil {
+		return err
+	}
+
+	command.Println(current)
+	return nil
+}
+
+func getConfluentCurrent() (string, error) {
 	root := os.Getenv("CONFLUENT_CURRENT")
 	if root == "" {
 		root = os.TempDir()
@@ -38,21 +49,20 @@ func runCurrentCommand(command *cobra.Command, _ []string) error {
 	if _, err := os.Stat(trackingFile); os.IsNotExist(err) {
 		confluentCurrent = createCurrentDirectory(root)
 		if err := os.Mkdir(confluentCurrent, 0777); err != nil {
-			return err
+			return "", err
 		}
 		if err := ioutil.WriteFile(trackingFile, []byte(confluentCurrent), 0644); err != nil {
-			return err
+			return "", err
 		}
 	} else {
 		data, err := ioutil.ReadFile(trackingFile)
 		if err != nil {
-			return err
+			return "", err
 		}
-		confluentCurrent = string(data)
+		confluentCurrent = strings.TrimRight(string(data), "\n")
 	}
 
-	command.Println(confluentCurrent)
-	return nil
+	return confluentCurrent, nil
 }
 
 func createCurrentDirectory(parentDir string) string {

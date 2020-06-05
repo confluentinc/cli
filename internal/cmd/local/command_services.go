@@ -1,25 +1,124 @@
 package local
 
 import (
-	"fmt"
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/spf13/cobra"
 )
 
+type Service struct {
+	startDependencies       []string
+	stopDependencies        []string
+	startCommand            string
+	properties              string
+	isConfluentPlatformOnly bool
+}
+
 var (
-	services = []string{
+	services = map[string]Service{
+		"connect": {
+			startDependencies: []string{
+				"zookeeper",
+				"kafka",
+			},
+			stopDependencies: []string{
+				"control-center",
+			},
+			startCommand:            "connect-distributed",
+			properties:              "schema-registry/connect-avro-distributed.properties",
+			isConfluentPlatformOnly: false,
+		},
+		"control-center": {
+			startDependencies: []string{
+				"zookeeper",
+				"kafka",
+				"connect",
+				"schema-registry",
+				"ksql-server",
+			},
+			stopDependencies:        []string{},
+			startCommand:            "control-center-start",
+			properties:              "confluent-control-center/control-center-dev.properties",
+			isConfluentPlatformOnly: true,
+		},
+		"kafka": {
+			startDependencies: []string{
+				"zookeeper",
+			},
+			stopDependencies: []string{
+				"control-center",
+				"ksql-server",
+				"connect",
+				"kafka-rest",
+				"schema-registry",
+			},
+			startCommand:            "kafka-server-start",
+			properties:              "kafka/server.properties",
+			isConfluentPlatformOnly: false,
+		},
+		"kafka-rest": {
+			startDependencies: []string{
+				"zookeeper",
+				"kafka",
+				"schema-registry",
+			},
+			stopDependencies:        []string{},
+			startCommand:            "kafka-rest-start",
+			properties:              "kafka-rest/kafka-rest.properties",
+			isConfluentPlatformOnly: false,
+		},
+		"ksql-server": {
+			startDependencies: []string{
+				"zookeeper",
+				"kafka",
+				"schema-registry",
+			},
+			stopDependencies: []string{
+				"control-center",
+			},
+			startCommand:            "ksql-server-start",
+			properties:              "ksqldb/ksql-server.properties", // TODO: ksql/ksql-server.properties for older versions
+			isConfluentPlatformOnly: false,
+		},
+		"schema-registry": {
+			startDependencies: []string{
+				"zookeeper",
+				"kafka",
+			},
+			stopDependencies: []string{
+				"control-center",
+				"ksql-server",
+				"connect",
+				"kafka-rest",
+			},
+			startCommand:            "schema-registry-start",
+			properties:              "schema-registry/schema-registry.properties",
+			isConfluentPlatformOnly: false,
+		},
+		"zookeeper": {
+			startDependencies: []string{},
+			stopDependencies: []string{
+				"control-center",
+				"ksql-server",
+				"connect",
+				"kafka-rest",
+				"schema-registry",
+				"kafka",
+			},
+			startCommand:            "zookeeper-server-start",
+			properties:              "kafka/zookeeper.properties",
+			isConfluentPlatformOnly: false,
+		},
+	}
+	topologicallySortedServices = []string{
 		"zookeeper",
 		"kafka",
-		"schema-registry",
-		"kafka-rest",
 		"connect",
+		"kafka-rest",
+		"schema-registry",
 		"ksql-server",
-	}
-	confluentPlatformServices = []string{
 		"control-center",
 	}
-	allServices = append(services, confluentPlatformServices...)
 )
 
 func NewServicesCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
@@ -31,10 +130,13 @@ func NewServicesCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command 
 		},
 		cfg, prerunner)
 
-	servicesCommand.AddCommand(NewServicesListCommand(prerunner, cfg))
-	for _, service := range allServices {
+	for service := range services {
 		servicesCommand.AddCommand(NewServiceCommand(service, prerunner, cfg))
 	}
+	servicesCommand.AddCommand(NewServicesListCommand(prerunner, cfg))
+	servicesCommand.AddCommand(NewServicesStartCommand(prerunner, cfg))
+	servicesCommand.AddCommand(NewServicesStatusCommand(prerunner, cfg))
+	servicesCommand.AddCommand(NewServicesStopCommand(prerunner, cfg))
 
 	return servicesCommand.Command
 }
@@ -63,50 +165,91 @@ func runListCommand(command *cobra.Command, _ []string) error {
 	return nil
 }
 
-func NewServiceCommand(service string, prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
-	serviceCommand := cmd.NewAnonymousCLICommand(
+func NewServicesStartCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
+	servicesStartCommand := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
-			Use:   service + " [command]",
-			Short: "Manage the " + service + " service.",
-			Args:  cobra.ExactArgs(1),
-		},
-		cfg, prerunner)
-
-	serviceCommand.AddCommand(NewServiceVersionCommand(service, prerunner, cfg))
-
-	return serviceCommand.Command
-}
-
-func NewServiceVersionCommand(service string, prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
-	serviceVersionCommand := cmd.NewAnonymousCLICommand(
-		&cobra.Command{
-			Use:   "version",
-			Short: "Print the version of " + service + ".",
+			Use:   "start",
+			Short: "Start all Confluent Platform services.",
 			Args:  cobra.NoArgs,
-			RunE:  runServiceVersionCommand,
+			RunE:  runStartCommand,
 		},
 		cfg, prerunner)
 
-	return serviceVersionCommand.Command
+	return servicesStartCommand.Command
 }
 
-func runServiceVersionCommand(command *cobra.Command, args []string) error {
-	service := command.Parent().Name()
-
-	isValid, err := isValidService(service)
-	if err != nil {
-		return err
-	}
-	if !isValid {
-		return fmt.Errorf("unknown service: %s", service)
-	}
-
-	version, err := getVersion(service)
+func runStartCommand(command *cobra.Command, _ []string) error {
+	availableServices, err := getAvailableServices()
 	if err != nil {
 		return err
 	}
 
-	command.Println(version)
+	// Topological order
+	for i := 0; i < len(availableServices); i++ {
+		service := availableServices[i]
+		if err := startService(command, service); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func NewServicesStatusCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
+	servicesStatusCommand := cmd.NewAnonymousCLICommand(
+		&cobra.Command{
+			Use:   "status",
+			Short: "Check the status of all Confluent Platform services.",
+			Args:  cobra.NoArgs,
+			RunE:  runStatusCommand,
+		},
+		cfg, prerunner)
+
+	return servicesStatusCommand.Command
+}
+
+func runStatusCommand(command *cobra.Command, _ []string) error {
+	availableServices, err := getAvailableServices()
+	if err != nil {
+		return err
+	}
+
+	for _, service := range availableServices {
+		if err := printStatus(command, service); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func NewServicesStopCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
+	servicesStopCommand := cmd.NewAnonymousCLICommand(
+		&cobra.Command{
+			Use:   "stop",
+			Short: "Stop all Confluent Platform services.",
+			Args:  cobra.NoArgs,
+			RunE:  runStopCommand,
+		},
+		cfg, prerunner)
+
+	return servicesStopCommand.Command
+}
+
+func runStopCommand(command *cobra.Command, _ []string) error {
+	availableServices, err := getAvailableServices()
+	if err != nil {
+		return err
+	}
+
+	// Reverse topological order
+	for i := len(availableServices) - 1; i >= 0; i-- {
+		service := availableServices[i]
+		if err := stopService(command, service); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -116,23 +259,11 @@ func getAvailableServices() ([]string, error) {
 		return []string{}, err
 	}
 
-	if isCP {
-		return allServices, nil
-	}
-
-	return services, nil
-}
-
-func isValidService(service string) (bool, error) {
-	availableServices, err := getAvailableServices()
-	if err != nil {
-		return false, err
-	}
-
-	for _, validService := range availableServices {
-		if service == validService {
-			return true, nil
+	var availableServices []string
+	for _, service := range topologicallySortedServices {
+		if isCP || !services[service].isConfluentPlatformOnly {
+			availableServices = append(availableServices, service)
 		}
 	}
-	return false, nil
+	return availableServices, nil
 }

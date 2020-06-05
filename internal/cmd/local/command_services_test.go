@@ -9,7 +9,7 @@ import (
 	"github.com/confluentinc/cli/mock"
 )
 
-func TestListConfluentPlatformServices(t *testing.T) {
+func TestConfluentPlatformAvailableServices(t *testing.T) {
 	req := require.New(t)
 
 	cp := mock.NewConfluentPlatform()
@@ -20,55 +20,15 @@ func TestListConfluentPlatformServices(t *testing.T) {
 	file := strings.Replace(confluentControlCenter, "*", "0.0.0", 1)
 	req.NoError(cp.AddFileToConfluentHome(file))
 
-	out, err := mockLocalCommand("services", "list")
+	availableServices, err := getAvailableServices()
 	req.NoError(err)
-	allServices := append(services, confluentPlatformServices...)
-	req.Contains(out, buildTabbedList(allServices))
+	req.Equal(availableServices, topologicallySortedServices)
 }
 
-func TestListServicesNoConfluentPlatform(t *testing.T) {
+func TestAvailableServicesNoConfluentPlatform(t *testing.T) {
 	req := require.New(t)
 
-	cp := mock.NewConfluentPlatform()
-	defer cp.TearDown()
-
-	req.NoError(cp.NewConfluentHome())
-
-	out, err := mockLocalCommand("services", "list")
+	availableServices, err := getAvailableServices()
 	req.NoError(err)
-	req.Contains(out, buildTabbedList(services))
-}
-
-func TestServiceVersions(t *testing.T) {
-	req := require.New(t)
-
-	cp := mock.NewConfluentPlatform()
-	defer cp.TearDown()
-
-	req.NoError(cp.NewConfluentHome())
-
-	file := strings.Replace(confluentControlCenter, "*", "0.0.0", 1)
-	req.NoError(cp.AddFileToConfluentHome(file))
-
-	versions := map[string]string{
-		"Confluent Platform": "1.0.0",
-		"kafka":              "2.0.0",
-		"zookeeper":          "3.0.0",
-	}
-
-	for service, version := range versions {
-		file := strings.Replace(versionFiles[service], "*", version, 1)
-		req.NoError(cp.AddFileToConfluentHome(file))
-	}
-
-	for _, service := range services {
-		out, err := mockLocalCommand("services", service, "version")
-		req.NoError(err)
-
-		version, ok := versions[service]
-		if !ok {
-			version = versions["Confluent Platform"]
-		}
-		req.Contains(out, version)
-	}
+	req.Equal(availableServices, topologicallySortedServices[:len(topologicallySortedServices)-1])
 }

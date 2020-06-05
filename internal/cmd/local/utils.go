@@ -4,15 +4,16 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 )
 
 var confluentControlCenter = "share/java/confluent-control-center/control-center-*.jar"
 
 func findConfluentFile(pattern string) ([]string, error) {
-	confluentHome := os.Getenv("CONFLUENT_HOME")
-	if confluentHome == "" {
-		return []string{}, fmt.Errorf("set environment variable CONFLUENT_HOME")
+	confluentHome, err := getConfluentHome()
+	if err != nil {
+		return []string{}, err
 	}
 
 	path := filepath.Join(confluentHome, pattern)
@@ -30,6 +31,14 @@ func findConfluentFile(pattern string) ([]string, error) {
 	return matches, nil
 }
 
+func getConfluentHome() (string, error) {
+	confluentHome := os.Getenv("CONFLUENT_HOME")
+	if confluentHome == "" {
+		return "", fmt.Errorf("set environment variable CONFLUENT_HOME")
+	}
+	return confluentHome, nil
+}
+
 func isConfluentPlatform() (bool, error) {
 	files, err := findConfluentFile(confluentControlCenter)
 	if err != nil {
@@ -39,6 +48,8 @@ func isConfluentPlatform() (bool, error) {
 }
 
 func buildTabbedList(slice []string) string {
+	sort.Strings(slice)
+
 	var list strings.Builder
 	for _, x := range slice {
 		fmt.Fprintf(&list, "  %s\n", x)
