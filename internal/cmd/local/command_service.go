@@ -2,8 +2,6 @@ package local
 
 import (
 	"fmt"
-	"github.com/fatih/color"
-	"github.com/spf13/cobra"
 	"io"
 	"io/ioutil"
 	"os"
@@ -12,6 +10,9 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+
+	"github.com/fatih/color"
+	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config/v3"
@@ -176,6 +177,12 @@ func startService(command *cobra.Command, service string) error {
 
 	bin := filepath.Join(confluentHome, "bin", services[service].startCommand)
 	startCmd := exec.Command(bin, dst)
+
+	log := filepath.Join(dir, fmt.Sprintf("%s.log", service))
+	fd, err := os.Create(log)
+	startCmd.Stdout = fd
+	startCmd.Stderr = fd
+
 	if err := startCmd.Start(); err != nil {
 		return err
 	}
@@ -257,6 +264,10 @@ func stopService(command *cobra.Command, service string) error {
 		if !isUp {
 			break
 		}
+	}
+
+	if err := os.Remove(pidFile); err != nil {
+		return err
 	}
 
 	return printStatus(command, service)

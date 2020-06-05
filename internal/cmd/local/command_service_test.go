@@ -1,9 +1,10 @@
 package local
 
 import (
-	"github.com/stretchr/testify/require"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/cli/mock"
 )
