@@ -28,6 +28,7 @@ func NewServiceCommand(service string, prerunner cmd.PreRunner, cfg *v3.Config) 
 		},
 		cfg, prerunner)
 
+	serviceCommand.AddCommand(NewServiceLogCommand(service, prerunner, cfg))
 	serviceCommand.AddCommand(NewServiceStartCommand(service, prerunner, cfg))
 	serviceCommand.AddCommand(NewServiceStatusCommand(service, prerunner, cfg))
 	serviceCommand.AddCommand(NewServiceStopCommand(service, prerunner, cfg))
@@ -50,6 +51,38 @@ func validateService(command *cobra.Command, _ []string) error {
 		}
 	}
 	return fmt.Errorf("unknown service: %s", service)
+}
+
+func NewServiceLogCommand(service string, prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
+	serviceLogCommand := cmd.NewAnonymousCLICommand(
+		&cobra.Command{
+			Use:   "log",
+			Short: "Print logs for " + service + ".",
+			Args:  cobra.NoArgs,
+			RunE:  runServiceLogCommand,
+		},
+		cfg, prerunner)
+
+	return serviceLogCommand.Command
+}
+
+func runServiceLogCommand(command *cobra.Command, _ []string) error {
+	service := command.Parent().Name()
+
+	dir, err := getDir(service)
+	if err != nil {
+		return err
+	}
+
+	log := filepath.Join(dir, fmt.Sprintf("%s.log", service))
+
+	data, err := ioutil.ReadFile(log)
+	if err != nil {
+		return err
+	}
+	command.Print(string(data))
+
+	return nil
 }
 
 func NewServiceStartCommand(service string, prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
@@ -180,6 +213,9 @@ func startService(command *cobra.Command, service string) error {
 
 	log := filepath.Join(dir, fmt.Sprintf("%s.log", service))
 	fd, err := os.Create(log)
+	if err != nil {
+		return err
+	}
 	startCmd.Stdout = fd
 	startCmd.Stderr = fd
 
