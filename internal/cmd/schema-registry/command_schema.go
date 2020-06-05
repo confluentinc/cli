@@ -61,8 +61,10 @@ Where schemafilepath may include these contents:
 	   ]
 	}
 
-For more information on serialization formats, see
-https://docs.confluent.io/current/schema-registry/serdes-develop/index.html#referenced-schemas.
+- For more information on schema types, see
+  https://docs.confluent.io/current/schema-registry/serdes-develop/index.html.
+- For more information on schema references, see
+  https://docs.confluent.io/current/schema-registry/serdes-develop/index.html#schema-references.
 `, c.Config.CLIName),
 		RunE: c.create,
 		Args: cobra.NoArgs,
