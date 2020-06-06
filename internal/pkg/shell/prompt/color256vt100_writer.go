@@ -41,7 +41,7 @@ func (w *Color256VT100Writer) setDisplayAttributes(fg, bg goprompt.Color, attrs 
 	// Begin writing 256 color strings.
 	// Foreground.
 	if fg == 0 {
-		w.WriteRawStr("39") // Reset to default fg color. 
+		w.WriteRawStr("39") // Reset to default fg color.
 	} else {
 		w.WriteRawStr(fmt.Sprintf("38;5;%d", fg)) // 8-bit foreground escape sequence.
 	}

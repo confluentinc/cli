@@ -2,6 +2,7 @@ module github.com/confluentinc/cli
 
 require (
 	github.com/DABH/go-basher v0.0.0-20191104233559-daa7fee9545c
+	github.com/NYTimes/openapi2proto v0.2.2 // indirect
 	github.com/Shopify/sarama v1.23.1
 	github.com/alcortesm/tgz v0.0.0-20161220082320-9c5fe88206d7 // indirect
 	github.com/antihax/optional v1.0.0
@@ -27,6 +28,7 @@ require (
 	github.com/dghubble/sling v1.3.0 // indirect
 	github.com/dgryski/go-metro v0.0.0-20180109044635-280f6062b5bc // indirect
 	github.com/dgryski/go-spooky v0.0.0-20170606183049-ed3d087f40e2 // indirect
+	github.com/dolmen-go/jsonptr v0.0.0-20200427210345-20e1608f9d85 // indirect
 	github.com/fatih/color v1.7.0
 	github.com/frankban/quicktest v1.7.2 // indirect
 	github.com/go-yaml/yaml v2.1.0+incompatible
@@ -82,6 +84,7 @@ require (
 	google.golang.org/appengine v1.6.5 // indirect
 	gopkg.in/square/go-jose.v2 v2.3.1
 	gopkg.in/src-d/go-git-fixtures.v3 v3.5.0 // indirect
+	gopkg.in/yaml.v2 v2.3.0 // indirect
 )
 
 replace (

@@ -12,6 +12,11 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/shell/prompt"
 )
 
+const (
+	watermelonRed   = goprompt.Color(167)
+	candyAppleGreen = goprompt.Color(77)
+)
+
 type command struct {
 	Command *cobra.Command
 	RootCmd *cobra.Command
@@ -56,18 +61,30 @@ func (c *command) shell(cmd *cobra.Command, args []string) {
 	fmt.Printf("Welcome to the %s shell! %s\n", cliName, msg)
 	fmt.Println("Please press `Ctrl-D` or type `quit` to exit.")
 
-	livePrefixFunc := func() (prefix string, useLivePrefix bool) {
-		indicator := "❌"
-		if c.config.HasLogin() {
-			indicator = "✅"
-		}
+	opts := prompt.DefaultPromptOptions()
 
-		return fmt.Sprintf("%s %s > ", cliName, indicator), true
-	}
-	livePrefixOpt := goprompt.OptionLivePrefix(livePrefixFunc)
-
-	opts := append(prompt.DefaultPromptOptions(), livePrefixOpt)
 	masterCompleter := completer.NewShellCompleter(c.RootCmd, c.config.CLIName)
 	cliPrompt := prompt.NewShellPrompt(c.RootCmd, masterCompleter, c.config, opts...)
+	livePrefixOpt := goprompt.OptionLivePrefix(livePrefixFunc(cliPrompt))
+	if err := livePrefixOpt(cliPrompt.Prompt); err != nil {
+		// This returns nil in the go-prompt implementation.
+		// This is also what go-prompt does if err != nil.
+		panic(err)
+	}
 	cliPrompt.Run()
+}
+
+func livePrefixFunc(cliPrompt *prompt.ShellPrompt) func() (prefix string, useLivePrefix bool) {
+	return func() (prefix string, useLivePrefix bool) {
+		prefixColor := watermelonRed
+		if cliPrompt.Config.HasLogin() {
+			prefixColor = candyAppleGreen
+		}
+		if err := goprompt.OptionPrefixTextColor(prefixColor)(cliPrompt.Prompt); err != nil {
+			// This returns nil in the go-prompt implementation.
+			// This is also what go-prompt does if err != nil for all of its options.
+			panic(err)
+		}
+		return fmt.Sprintf("%s > ", cliPrompt.Config.CLIName), true
+	}
 }
