@@ -69,7 +69,7 @@ func NewServiceLogCommand(service string, prerunner cmd.PreRunner, cfg *v3.Confi
 func runServiceLogCommand(command *cobra.Command, _ []string) error {
 	service := command.Parent().Name()
 
-	dir, err := getDir(service)
+	dir, err := getServiceDir(service)
 	if err != nil {
 		return err
 	}
@@ -179,7 +179,7 @@ func runServiceVersionCommand(command *cobra.Command, _ []string) error {
 }
 
 func startService(command *cobra.Command, service string) error {
-	dir, err := getDir(service)
+	dir, err := getServiceDir(service)
 	if err != nil {
 		return err
 	}
@@ -242,7 +242,7 @@ func startService(command *cobra.Command, service string) error {
 }
 
 func printStatus(command *cobra.Command, service string) error {
-	dir, err := getDir(service)
+	dir, err := getServiceDir(service)
 	if err != nil {
 		return err
 	}
@@ -262,7 +262,7 @@ func printStatus(command *cobra.Command, service string) error {
 }
 
 func stopService(command *cobra.Command, service string) error {
-	dir, err := getDir(service)
+	dir, err := getServiceDir(service)
 	if err != nil {
 		return err
 	}
@@ -309,7 +309,7 @@ func stopService(command *cobra.Command, service string) error {
 	return printStatus(command, service)
 }
 
-func getDir(service string) (string, error) {
+func getServiceDir(service string) (string, error) {
 	confluentCurrent, err := getConfluentCurrent()
 	if err != nil {
 		return "", err

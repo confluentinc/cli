@@ -22,7 +22,7 @@ func TestConfluentPlatformAvailableServices(t *testing.T) {
 
 	availableServices, err := getAvailableServices()
 	req.NoError(err)
-	req.Equal(availableServices, topologicallySortedServices)
+	req.Equal(orderedServices, availableServices)
 }
 
 func TestAvailableServicesNoConfluentPlatform(t *testing.T) {
@@ -33,7 +33,16 @@ func TestAvailableServicesNoConfluentPlatform(t *testing.T) {
 
 	req.NoError(cp.NewConfluentHome())
 
+	servicesNoControlCenter := []string{
+		"zookeeper",
+		"kafka",
+		"connect",
+		"kafka-rest",
+		"schema-registry",
+		"ksql-server",
+	}
 	availableServices, err := getAvailableServices()
 	req.NoError(err)
-	req.Equal(availableServices, topologicallySortedServices[:len(topologicallySortedServices)-1])
+	req.Equal(servicesNoControlCenter, availableServices)
+
 }

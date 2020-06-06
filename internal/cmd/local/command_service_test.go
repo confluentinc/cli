@@ -1,6 +1,7 @@
 package local
 
 import (
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -8,6 +9,28 @@ import (
 
 	"github.com/confluentinc/cli/mock"
 )
+
+func TestServiceZookeeperStart(t *testing.T) {
+	req := require.New(t)
+
+	cp := mock.NewConfluentPlatform()
+	defer cp.TearDown()
+
+	req.NoError(cp.NewConfluentHome())
+	req.NoError(cp.AddScriptToConfluentHome("bin/zookeeper-server-start"))
+	req.NoError(cp.AddFileToConfluentHome("etc/kafka/zookeeper.properties"))
+	req.NoError(cp.NewConfluentCurrent())
+	req.NoError(cp.NewConfluentCurrentDir())
+
+	out, err := mockLocalCommand("services", "zookeeper", "start")
+	req.NoError(err)
+	req.Contains(out, "Starting zookeeper")
+	req.Contains(out, "zookeeper is [UP]")
+	req.DirExists(filepath.Join(cp.ConfluentCurrentDir, "zookeeper"))
+	req.FileExists(filepath.Join(cp.ConfluentCurrentDir, "zookeeper", "zookeeper.log"))
+	req.FileExists(filepath.Join(cp.ConfluentCurrentDir, "zookeeper", "zookeeper.pid"))
+	req.FileExists(filepath.Join(cp.ConfluentCurrentDir, "zookeeper", "zookeeper.properties"))
+}
 
 func TestServiceVersions(t *testing.T) {
 	req := require.New(t)

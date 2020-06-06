@@ -111,7 +111,8 @@ var (
 			isConfluentPlatformOnly: false,
 		},
 	}
-	topologicallySortedServices = []string{
+
+	orderedServices = []string{
 		"zookeeper",
 		"kafka",
 		"connect",
@@ -260,11 +261,11 @@ func getAvailableServices() ([]string, error) {
 		return []string{}, err
 	}
 
-	var availableServices []string
-	for _, service := range topologicallySortedServices {
+	var available []string
+	for _, service := range orderedServices {
 		if isCP || !services[service].isConfluentPlatformOnly {
-			availableServices = append(availableServices, service)
+			available = append(available, service)
 		}
 	}
-	return availableServices, nil
+	return available, nil
 }
