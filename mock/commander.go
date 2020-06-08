@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/confluentinc/ccloud-sdk-go"
-	"github.com/confluentinc/mds-sdk-go"
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"

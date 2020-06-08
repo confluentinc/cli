@@ -13,8 +13,11 @@ type Client struct {
 	lockCheckForUpdates sync.Mutex
 	CheckForUpdatesFunc func(name, currentVersion string, forceCheck bool) (bool, string, error)
 
+	lockGetLatestReleaseNotes sync.Mutex
+	GetLatestReleaseNotesFunc func() (string, string, error)
+
 	lockPromptToDownload sync.Mutex
-	PromptToDownloadFunc func(name, currVersion, latestVersion string, confirm bool) bool
+	PromptToDownloadFunc func(name, currVersion, latestVersion, releaseNotes string, confirm bool) bool
 
 	lockUpdateBinary sync.Mutex
 	UpdateBinaryFunc func(name, version, path string) error
@@ -25,10 +28,13 @@ type Client struct {
 			CurrentVersion string
 			ForceCheck     bool
 		}
+		GetLatestReleaseNotes []struct {
+		}
 		PromptToDownload []struct {
 			Name          string
 			CurrVersion   string
 			LatestVersion string
+			ReleaseNotes  string
 			Confirm       bool
 		}
 		UpdateBinary []struct {
@@ -83,8 +89,42 @@ func (m *Client) CheckForUpdatesCalls() []struct {
 	return m.calls.CheckForUpdates
 }
 
+// GetLatestReleaseNotes mocks base method by wrapping the associated func.
+func (m *Client) GetLatestReleaseNotes() (string, string, error) {
+	m.lockGetLatestReleaseNotes.Lock()
+	defer m.lockGetLatestReleaseNotes.Unlock()
+
+	if m.GetLatestReleaseNotesFunc == nil {
+		panic("mocker: Client.GetLatestReleaseNotesFunc is nil but Client.GetLatestReleaseNotes was called.")
+	}
+
+	call := struct {
+	}{}
+
+	m.calls.GetLatestReleaseNotes = append(m.calls.GetLatestReleaseNotes, call)
+
+	return m.GetLatestReleaseNotesFunc()
+}
+
+// GetLatestReleaseNotesCalled returns true if GetLatestReleaseNotes was called at least once.
+func (m *Client) GetLatestReleaseNotesCalled() bool {
+	m.lockGetLatestReleaseNotes.Lock()
+	defer m.lockGetLatestReleaseNotes.Unlock()
+
+	return len(m.calls.GetLatestReleaseNotes) > 0
+}
+
+// GetLatestReleaseNotesCalls returns the calls made to GetLatestReleaseNotes.
+func (m *Client) GetLatestReleaseNotesCalls() []struct {
+} {
+	m.lockGetLatestReleaseNotes.Lock()
+	defer m.lockGetLatestReleaseNotes.Unlock()
+
+	return m.calls.GetLatestReleaseNotes
+}
+
 // PromptToDownload mocks base method by wrapping the associated func.
-func (m *Client) PromptToDownload(name, currVersion, latestVersion string, confirm bool) bool {
+func (m *Client) PromptToDownload(name, currVersion, latestVersion, releaseNotes string, confirm bool) bool {
 	m.lockPromptToDownload.Lock()
 	defer m.lockPromptToDownload.Unlock()
 
@@ -96,17 +136,19 @@ func (m *Client) PromptToDownload(name, currVersion, latestVersion string, confi
 		Name          string
 		CurrVersion   string
 		LatestVersion string
+		ReleaseNotes  string
 		Confirm       bool
 	}{
 		Name:          name,
 		CurrVersion:   currVersion,
 		LatestVersion: latestVersion,
+		ReleaseNotes:  releaseNotes,
 		Confirm:       confirm,
 	}
 
 	m.calls.PromptToDownload = append(m.calls.PromptToDownload, call)
 
-	return m.PromptToDownloadFunc(name, currVersion, latestVersion, confirm)
+	return m.PromptToDownloadFunc(name, currVersion, latestVersion, releaseNotes, confirm)
 }
 
 // PromptToDownloadCalled returns true if PromptToDownload was called at least once.
@@ -122,6 +164,7 @@ func (m *Client) PromptToDownloadCalls() []struct {
 	Name          string
 	CurrVersion   string
 	LatestVersion string
+	ReleaseNotes  string
 	Confirm       bool
 } {
 	m.lockPromptToDownload.Lock()
@@ -179,6 +222,9 @@ func (m *Client) Reset() {
 	m.lockCheckForUpdates.Lock()
 	m.calls.CheckForUpdates = nil
 	m.lockCheckForUpdates.Unlock()
+	m.lockGetLatestReleaseNotes.Lock()
+	m.calls.GetLatestReleaseNotes = nil
+	m.lockGetLatestReleaseNotes.Unlock()
 	m.lockPromptToDownload.Lock()
 	m.calls.PromptToDownload = nil
 	m.lockPromptToDownload.Unlock()

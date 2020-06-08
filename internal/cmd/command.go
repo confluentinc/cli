@@ -1,10 +1,10 @@
 package cmd
 
 import (
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"net/http"
 	"os"
 	"runtime"
+	"strings"
 
 	"github.com/DABH/go-basher"
 	"github.com/jonboulle/clockwork"
@@ -18,6 +18,7 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/connector"
 	connector_catalog "github.com/confluentinc/cli/internal/cmd/connector-catalog"
 	"github.com/confluentinc/cli/internal/cmd/environment"
+	"github.com/confluentinc/cli/internal/cmd/feedback"
 	"github.com/confluentinc/cli/internal/cmd/iam"
 	initcontext "github.com/confluentinc/cli/internal/cmd/init-context"
 	"github.com/confluentinc/cli/internal/cmd/kafka"
@@ -33,6 +34,7 @@ import (
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/help"
 	"github.com/confluentinc/cli/internal/pkg/io"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -104,7 +106,7 @@ func NewConfluentCommand(cliName string, cfg *v3.Config, logger *log.Logger, ver
 	cli.AddCommand(completion.NewCompletionCmd(cli, cliName))
 
 	if !cfg.DisableUpdates {
-		cli.AddCommand(update.New(cliName, cfg, ver, prompt, updateClient))
+		cli.AddCommand(update.New(cliName, cfg, ver, prompt, updateClient, analytics))
 	}
 	cli.AddCommand(auth.New(prerunner, cfg, logger, ver.UserAgent, analytics, netrcHandler)...)
 	cli.AddCommand(iam.New(prerunner, cfg))
@@ -112,6 +114,7 @@ func NewConfluentCommand(cliName string, cfg *v3.Config, logger *log.Logger, ver
 	if cliName == "ccloud" {
 		cmd := kafka.New(prerunner, cfg, logger.Named("kafka"), ver.ClientID)
 		cli.AddCommand(cmd)
+		cli.AddCommand(feedback.NewFeedbackCmd(prerunner, cfg, analytics))
 		cli.AddCommand(initcontext.New(prerunner, cfg, prompt, resolver, analytics))
 		if currCtx != nil && currCtx.Credential != nil && currCtx.Credential.CredentialType == v2.APIKey {
 			return command, nil
@@ -151,26 +154,67 @@ func NewConfluentCommand(cliName string, cfg *v3.Config, logger *log.Logger, ver
 			cli.AddCommand(local.New(cli, prerunner, shellRunner, logger, fs, cfg))
 		}
 
+		command := local.NewCommand(prerunner, cfg)
+		command.Hidden = true // WIP
+		cli.AddCommand(command)
+
 		cli.AddCommand(secret.New(prompt, resolver, secrets.NewPasswordProtectionPlugin(logger)))
 	}
 	return command, nil
 }
 
-func (c *Command) Execute(args []string) error {
+func (c *Command) Execute(cliName string, args []string) error {
 	c.Analytics.SetStartTime()
 	c.Command.SetArgs(args)
+
 	err := c.Command.Execute()
-	if err != nil {
-		analyticsError := c.Analytics.SendCommandFailed(err)
-		if analyticsError != nil {
-			c.logger.Debugf("segment analytics sending event failed: %s\n", analyticsError.Error())
-		}
-		return err
-	}
-	c.Analytics.CatchHelpCall(c.Command, args)
-	analyticsError := c.Analytics.SendCommandSucceeded()
+	analyticsError := c.Analytics.SendCommandAnalytics(c.Command, args, err)
 	if analyticsError != nil {
 		c.logger.Debugf("segment analytics sending event failed: %s\n", analyticsError.Error())
 	}
-	return nil
+
+	if cliName == "ccloud" && isHumanReadable(args) {
+		failed := err != nil
+		c.sendFeedbackNudge(failed, args)
+	}
+
+	return err
+}
+
+func isHumanReadable(args []string) bool {
+	for i := 0; i < len(args)-1; i++ {
+		if args[i] == "-o" || args[i] == "--output" {
+			return args[i+1] == "human"
+		}
+	}
+	return true
+}
+
+func (c *Command) sendFeedbackNudge(failed bool, args []string) {
+	feedbackNudge := "\nDid you know you can use the \"ccloud feedback\" command to send the team feedback?\nLet us know if the ccloud CLI is meeting your needs, or what we can do to improve it."
+
+	if failed {
+		c.PrintErrln(feedbackNudge)
+		return
+	}
+
+	feedbackNudgeCmds := []string{
+		"api-key create", "api-key delete",
+		"connector create", "connector delete",
+		"environment create", "environment delete",
+		"kafka acl create", "kafka acl delete",
+		"kafka cluster create", "kafka cluster delete",
+		"kafka topic create", "kafka topic delete",
+		"ksql app create", "ksql app delete",
+		"schema-registry schema create", "schema-registry schema delete",
+		"service-account create", "service-account delete",
+	}
+
+	cmd := strings.Join(args, " ")
+	for _, cmdPrefix := range feedbackNudgeCmds {
+		if strings.HasPrefix(cmd, cmdPrefix) {
+			c.PrintErrln(feedbackNudge)
+			return
+		}
+	}
 }

@@ -9,6 +9,7 @@ Available Commands:
   connector         Manage Kafka Connect.
   connector-catalog Catalog of connectors and their configurations.
   environment       Manage and select ccloud environments.
+  feedback          Submit feedback about the ccloud CLI.
   help              Help about any command
   init              Initialize a context.
   kafka             Manage Apache Kafka.

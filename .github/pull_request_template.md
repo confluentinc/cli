@@ -8,7 +8,11 @@ Suggested PR template: Fill/delete/add sections as needed. Optionally delete any
 -->
 Checklist
 ---
-1. Did you add/update any commands that accept secrets as args/flags?
+1. [CRUCIAL] Is the change for CP or CCloud functionalities that are already live in prod?
+   * yes: ok
+   * no: DO NOT MERGE until the required functionalites are live in prod  
+   
+2. Did you add/update any commands that accept secrets as args/flags?
    * yes: did you update `secretCommandFlags` and/or `secretCommandArgs` in [internal/pkg/analytics/analytics.go](https://github.com/confluentinc/cli/pull/325/files#diff-2d0a5a6a592890b6dff2d6f891316b82R28)
    * no: ok
 

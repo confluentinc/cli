@@ -8,6 +8,7 @@
   hosts:
   - host: 10.5.5.5
     port: 9005
+  protocol: ""
 - name: theMdsKafkaCluster
   scope:
     clusters:
@@ -20,6 +21,7 @@
     port: 8090
   - host: mds.example.com
     port: 8090
+  protocol: ""
 - name: theMdsKSQLCluster
   scope:
     clusters:
@@ -30,6 +32,7 @@
   hosts:
   - host: 10.4.4.4
     port: 9004
+  protocol: ""
 - name: theMdsSchemaRegistryCluster
   scope:
     clusters:
@@ -40,3 +43,4 @@
   hosts:
   - host: 10.3.3.3
     port: 9003
+  protocol: ""
