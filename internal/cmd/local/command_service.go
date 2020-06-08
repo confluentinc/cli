@@ -225,8 +225,6 @@ func startService(command *cobra.Command, service string) error {
 		return err
 	}
 
-	exportService()
-
 	for {
 		isUp, err := isRunning(service, dir)
 		if err != nil {
@@ -238,31 +236,6 @@ func startService(command *cobra.Command, service string) error {
 	}
 
 	return printStatus(command, service)
-}
-
-func getConfig(service string, dir string) map[string]string {
-	config := map[string]string{}
-
-	switch service {
-	case "connect":
-		config["bootstrap.servers"] = fmt.Sprintf("localhost:%d", services["kafka"].port)
-	case "control-center":
-		config["confluent.controlcenter.data.dir"] = filepath.Join(dir, "data")
-	case "kafka":
-		config["log.dirs"] = filepath.Join(dir, "data")
-	case "kafka-rest":
-		config["zookeeper.connect"] = fmt.Sprintf("localhost:%d", services["zookeeper"].port)
-		config["schema.registry.url"] = fmt.Sprintf("http://localhost:%d", services["schema-registry"].port)
-	case "ksql-server":
-		config["kafkastore.connection.url"] = fmt.Sprintf("localhost:%d", services["zookeeper"].port)
-		config["ksql.schema.registry.url"] = fmt.Sprintf("http://localhost:%d", services["schema-registry"].port)
-	case "schema-registry":
-		config["kafkastore.connection.url"] = fmt.Sprintf("localhost:%d", services["zookeeper"].port)
-	case "zookeeper":
-		config["dataDir"] = filepath.Join(dir, "data")
-	}
-
-	return config
 }
 
 func configService(service string, dir string, config map[string]string) error {
@@ -284,13 +257,12 @@ func configService(service string, dir string, config map[string]string) error {
 	}
 
 	for key, val := range config {
-		re := regexp.MustCompile(fmt.Sprintf("^%s=.+$", key))
+		re := regexp.MustCompile(fmt.Sprintf(`(?m)^(#\s)?%s=.+\n`, key))
+		line := []byte(fmt.Sprintf("%s=%s\n", key, val))
 
-		line := []byte(fmt.Sprintf("%s=%s", key, val))
-		if re.Match(data) {
+		if len(re.FindAll(data, -1)) > 0 {
 			data = re.ReplaceAll(data, line)
 		} else {
-			data = append(data, byte('\n'))
 			data = append(data, line...)
 		}
 	}

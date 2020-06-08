@@ -1,6 +1,9 @@
 package local
 
 import (
+	"fmt"
+	"path/filepath"
+
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
@@ -203,6 +206,31 @@ func runStartCommand(command *cobra.Command, _ []string) error {
 	}
 
 	return nil
+}
+
+func getConfig(service string, dir string) map[string]string {
+	config := map[string]string{}
+
+	switch service {
+	case "connect":
+		config["bootstrap.servers"] = fmt.Sprintf("localhost:%d", services["kafka"].port)
+	case "control-center":
+		config["confluent.controlcenter.data.dir"] = filepath.Join(dir, "data")
+	case "kafka":
+		config["log.dirs"] = filepath.Join(dir, "data")
+	case "kafka-rest":
+		config["zookeeper.connect"] = fmt.Sprintf("localhost:%d", services["zookeeper"].port)
+		config["schema.registry.url"] = fmt.Sprintf("http://localhost:%d", services["schema-registry"].port)
+	case "ksql-server":
+		config["kafkastore.connection.url"] = fmt.Sprintf("localhost:%d", services["zookeeper"].port)
+		config["ksql.schema.registry.url"] = fmt.Sprintf("http://localhost:%d", services["schema-registry"].port)
+	case "schema-registry":
+		config["kafkastore.connection.url"] = fmt.Sprintf("localhost:%d", services["zookeeper"].port)
+	case "zookeeper":
+		config["dataDir"] = filepath.Join(dir, "data")
+	}
+
+	return config
 }
 
 func NewServicesStatusCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {

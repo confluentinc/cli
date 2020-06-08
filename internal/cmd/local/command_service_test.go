@@ -44,19 +44,23 @@ func TestConfigService(t *testing.T) {
 	defer cp.TearDown()
 
 	req.NoError(cp.NewConfluentHome())
-	req.NoError(cp.AddFileToConfluentHome("etc/kafka/zookeeper.properties", "replace=old", 0644))
+	req.NoError(cp.AddFileToConfluentHome("etc/kafka/zookeeper.properties", "replace=old\n# comment=old\n", 0644))
 	req.NoError(cp.NewConfluentCurrentDir())
 
 	dir, err := getServiceDir("zookeeper")
 	req.NoError(err)
-	config := map[string]string{"replace": "new", "append": "new"}
+	config := map[string]string{"replace": "new", "comment": "new", "append": "new"}
 	req.NoError(configService("zookeeper", dir, config))
 
 	properties := filepath.Join(cp.ConfluentCurrentDir, "zookeeper", "zookeeper.properties")
 	req.FileExists(properties)
 	data, err := ioutil.ReadFile(properties)
 	req.NoError(err)
-	req.Equal("replace=new\nappend=new", string(data))
+	req.NotContains(string(data), "replace=old")
+	req.Contains(string(data), "replace=new")
+	req.NotContains(string(data), "# comment=old")
+	req.Contains(string(data), "comment=new")
+	req.Contains(string(data), "append=new")
 }
 
 func TestServiceVersions(t *testing.T) {
