@@ -265,9 +265,6 @@ func runStopCommand(command *cobra.Command, _ []string) error {
 
 func getAvailableServices() ([]string, error) {
 	isCP, err := isConfluentPlatform()
-	if err != nil {
-		return []string{}, err
-	}
 
 	var available []string
 	for _, service := range orderedServices {
@@ -275,5 +272,6 @@ func getAvailableServices() ([]string, error) {
 			available = append(available, service)
 		}
 	}
-	return available, nil
+
+	return available, err
 }
