@@ -2,6 +2,7 @@ package local
 
 import (
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -11,6 +12,11 @@ import (
 )
 
 func TestServiceZookeeperStart(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		// Bash scripts can not be run on Windows
+		return
+	}
+
 	req := require.New(t)
 
 	cp := mock.NewConfluentPlatform()

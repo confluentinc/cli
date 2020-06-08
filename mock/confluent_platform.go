@@ -59,14 +59,12 @@ func newTestDir() (string, error) {
 
 func (cp *ConfluentPlatform) AddFileToConfluentHome(file string) error {
 	path := filepath.Join(cp.ConfluentHome, file)
-
 	if err := os.MkdirAll(filepath.Dir(path), 0777); err != nil {
 		return err
 	}
 	if _, err := os.Create(path); err != nil {
 		return err
 	}
-
 	return nil
 }
 
