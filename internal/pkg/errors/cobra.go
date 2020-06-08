@@ -1,7 +1,9 @@
 package errors
 
 import (
+	"errors"
 	"fmt"
+
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
@@ -25,12 +27,15 @@ func HandleCommon(err error, cmd *cobra.Command) error {
 	}
 	cmd.SilenceUsage = true
 
-	if msg, ok := messages[err]; ok {
+	// [CLI-505] mds.GenericOpenAPIErrors are not hashable so messages[err] panics;
+	// re-wrap the message to get around that case, which is ok since the hash/comparison
+	// is just based on the error strings
+	if msg, ok := messages[errors.New(err.Error())]; ok {
 		return fmt.Errorf(msg)
 	}
 	switch e := err.(type) {
 	case mds.GenericOpenAPIError:
-		return fmt.Errorf(e.Error() + ": " + string(e.Body()))
+		return fmt.Errorf("metadata service backend error: " + e.Error() + ": " + string(e.Body()))
 	case *corev1.Error:
 		var result error
 		result = multierror.Append(result, e)
