@@ -101,6 +101,10 @@ func NewServiceStartCommand(service string, prerunner cmd.PreRunner, cfg *v3.Con
 func runServiceStartCommand(command *cobra.Command, _ []string) error {
 	service := command.Parent().Name()
 
+	if err := notifyConfluentCurrent(command); err != nil {
+		return err
+	}
+
 	for _, dependency := range services[service].startDependencies {
 		if err := startService(command, dependency); err != nil {
 			return err
@@ -143,6 +147,10 @@ func NewServiceStopCommand(service string, prerunner cmd.PreRunner, cfg *v3.Conf
 
 func runServiceStopCommand(command *cobra.Command, _ []string) error {
 	service := command.Parent().Name()
+
+	if err := notifyConfluentCurrent(command); err != nil {
+		return err
+	}
 
 	for _, dependency := range services[service].stopDependencies {
 		if err := stopService(command, dependency); err != nil {

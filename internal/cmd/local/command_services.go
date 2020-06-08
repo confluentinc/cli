@@ -186,6 +186,10 @@ func runStartCommand(command *cobra.Command, _ []string) error {
 		return err
 	}
 
+	if err := notifyConfluentCurrent(command); err != nil {
+		return err
+	}
+
 	// Topological order
 	for i := 0; i < len(availableServices); i++ {
 		service := availableServices[i]
@@ -241,6 +245,10 @@ func NewServicesStopCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Comm
 func runStopCommand(command *cobra.Command, _ []string) error {
 	availableServices, err := getAvailableServices()
 	if err != nil {
+		return err
+	}
+
+	if err := notifyConfluentCurrent(command); err != nil {
 		return err
 	}
 
