@@ -25,9 +25,6 @@ func HandleCommon(err error, cmd *cobra.Command) error {
 	}
 	cmd.SilenceUsage = true
 
-	if msg, ok := messages[err]; ok {
-		return fmt.Errorf(msg)
-	}
 	switch e := err.(type) {
 	case mds.GenericOpenAPIError:
 		return fmt.Errorf(e.Error() + ": " + string(e.Body()))
@@ -51,5 +48,10 @@ func HandleCommon(err error, cmd *cobra.Command) error {
 	case *ccloud.InvalidTokenError:
 		return fmt.Errorf(CorruptedAuthTokenErrorMsg)
 	}
+
+	if msg, ok := messages[err]; ok {
+		return fmt.Errorf(msg)
+	}
+
 	return err
 }
