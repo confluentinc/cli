@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
 	"syscall"
@@ -32,6 +33,7 @@ func NewServiceCommand(service string, prerunner cmd.PreRunner, cfg *v3.Config) 
 	serviceCommand.AddCommand(NewServiceStartCommand(service, prerunner, cfg))
 	serviceCommand.AddCommand(NewServiceStatusCommand(service, prerunner, cfg))
 	serviceCommand.AddCommand(NewServiceStopCommand(service, prerunner, cfg))
+	serviceCommand.AddCommand(NewServiceTopCommand(service, prerunner, cfg))
 	serviceCommand.AddCommand(NewServiceVersionCommand(service, prerunner, cfg))
 
 	return serviceCommand.Command
@@ -151,6 +153,46 @@ func runServiceStopCommand(command *cobra.Command, _ []string) error {
 	}
 
 	return stopService(command, service)
+}
+
+func NewServiceTopCommand(service string, prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
+	serviceTopCommand := cmd.NewAnonymousCLICommand(
+		&cobra.Command{
+			Use:   "top",
+			Short: "Monitor " + service + " processes.",
+			Args:  cobra.NoArgs,
+			RunE:  runServiceTopCommand,
+		},
+		cfg, prerunner)
+
+	return serviceTopCommand.Command
+}
+
+func runServiceTopCommand(command *cobra.Command, _ []string) error {
+	service := command.Parent().Name()
+
+	dir, err := getServiceDir(service)
+	if err != nil {
+		return err
+	}
+
+	file := getPidFile(service, dir)
+	pid, err := readInt(file)
+	if err != nil {
+		return err
+	}
+
+	var top *exec.Cmd
+	switch runtime.GOOS {
+	case "darwin":
+		top = exec.Command("top", "-pid", strconv.Itoa(pid))
+	case "linux":
+		top = exec.Command("top", "-p", strconv.Itoa(pid))
+	default:
+		return fmt.Errorf("top is not supported")
+	}
+	top.Stdout, top.Stderr, top.Stdin = os.Stdout, os.Stderr, os.Stdin
+	return top.Run()
 }
 
 func NewServiceVersionCommand(service string, prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
