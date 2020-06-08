@@ -18,7 +18,7 @@ func TestConfluentPlatformAvailableServices(t *testing.T) {
 	req.NoError(cp.NewConfluentHome())
 
 	file := strings.Replace(confluentControlCenter, "*", "0.0.0", 1)
-	req.NoError(cp.AddFileToConfluentHome(file))
+	req.NoError(cp.AddEmptyFileToConfluentHome(file))
 
 	availableServices, err := getAvailableServices()
 	req.NoError(err)
@@ -44,5 +44,4 @@ func TestAvailableServicesNoConfluentPlatform(t *testing.T) {
 	availableServices, err := getAvailableServices()
 	req.NoError(err)
 	req.Equal(servicesNoControlCenter, availableServices)
-
 }

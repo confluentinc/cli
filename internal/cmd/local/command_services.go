@@ -12,6 +12,7 @@ type Service struct {
 	stopDependencies        []string
 	startCommand            string
 	properties              string
+	port                    int
 	isConfluentPlatformOnly bool
 }
 
@@ -27,6 +28,7 @@ var (
 			},
 			startCommand:            "connect-distributed",
 			properties:              "schema-registry/connect-avro-distributed.properties",
+			port:                    8083,
 			isConfluentPlatformOnly: false,
 		},
 		"control-center": {
@@ -40,6 +42,7 @@ var (
 			stopDependencies:        []string{},
 			startCommand:            "control-center-start",
 			properties:              "confluent-control-center/control-center-dev.properties",
+			port:                    9021,
 			isConfluentPlatformOnly: true,
 		},
 		"kafka": {
@@ -55,6 +58,7 @@ var (
 			},
 			startCommand:            "kafka-server-start",
 			properties:              "kafka/server.properties",
+			port:                    9092,
 			isConfluentPlatformOnly: false,
 		},
 		"kafka-rest": {
@@ -66,6 +70,7 @@ var (
 			stopDependencies:        []string{},
 			startCommand:            "kafka-rest-start",
 			properties:              "kafka-rest/kafka-rest.properties",
+			port:                    8082,
 			isConfluentPlatformOnly: false,
 		},
 		"ksql-server": {
@@ -79,6 +84,7 @@ var (
 			},
 			startCommand:            "ksql-server-start",
 			properties:              "ksqldb/ksql-server.properties", // TODO: ksql/ksql-server.properties for older versions
+			port:                    8088,
 			isConfluentPlatformOnly: false,
 		},
 		"schema-registry": {
@@ -94,6 +100,7 @@ var (
 			},
 			startCommand:            "schema-registry-start",
 			properties:              "schema-registry/schema-registry.properties",
+			port:                    8081,
 			isConfluentPlatformOnly: false,
 		},
 		"zookeeper": {
@@ -108,6 +115,7 @@ var (
 			},
 			startCommand:            "zookeeper-server-start",
 			properties:              "kafka/zookeeper.properties",
+			port:                    2181,
 			isConfluentPlatformOnly: false,
 		},
 	}

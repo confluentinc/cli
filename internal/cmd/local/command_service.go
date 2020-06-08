@@ -2,11 +2,11 @@ package local
 
 import (
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"syscall"
@@ -74,7 +74,7 @@ func runServiceLogCommand(command *cobra.Command, _ []string) error {
 		return err
 	}
 
-	log := filepath.Join(dir, fmt.Sprintf("%s.log", service))
+	log := filepath.Join(dir, fmt.Sprintf("%s.stdout", service))
 
 	data, err := ioutil.ReadFile(log)
 	if err != nil {
@@ -184,15 +184,16 @@ func startService(command *cobra.Command, service string) error {
 		return err
 	}
 
-	if err := os.MkdirAll(dir, 0777); err != nil {
-		return err
-	}
-
 	isUp, err := isRunning(service, dir)
 	if err != nil {
 		return err
 	}
 	if isUp {
+		return nil
+	}
+
+	config := getConfig(service, dir)
+	if err := configService(service, dir, config); err != nil {
 		return nil
 	}
 
@@ -202,16 +203,12 @@ func startService(command *cobra.Command, service string) error {
 	if err != nil {
 		return err
 	}
-	src := filepath.Join(confluentHome, "etc", services[service].properties)
-	dst := filepath.Join(dir, fmt.Sprintf("%s.properties", service))
-	if err := copyFile(src, dst); err != nil {
-		return err
-	}
 
 	bin := filepath.Join(confluentHome, "bin", services[service].startCommand)
-	startCmd := exec.Command(bin, dst)
+	arg := filepath.Join(dir, fmt.Sprintf("%s.properties", service))
+	startCmd := exec.Command(bin, arg)
 
-	log := filepath.Join(dir, fmt.Sprintf("%s.log", service))
+	log := filepath.Join(dir, fmt.Sprintf("%s.stdout", service))
 	fd, err := os.Create(log)
 	if err != nil {
 		return err
@@ -228,6 +225,8 @@ func startService(command *cobra.Command, service string) error {
 		return err
 	}
 
+	exportService()
+
 	for {
 		isUp, err := isRunning(service, dir)
 		if err != nil {
@@ -239,6 +238,64 @@ func startService(command *cobra.Command, service string) error {
 	}
 
 	return printStatus(command, service)
+}
+
+func getConfig(service string, dir string) map[string]string {
+	config := map[string]string{}
+
+	switch service {
+	case "connect":
+		config["bootstrap.servers"] = fmt.Sprintf("localhost:%d", services["kafka"].port)
+	case "control-center":
+		config["confluent.controlcenter.data.dir"] = filepath.Join(dir, "data")
+	case "kafka":
+		config["log.dirs"] = filepath.Join(dir, "data")
+	case "kafka-rest":
+		config["zookeeper.connect"] = fmt.Sprintf("localhost:%d", services["zookeeper"].port)
+		config["schema.registry.url"] = fmt.Sprintf("http://localhost:%d", services["schema-registry"].port)
+	case "ksql-server":
+		config["kafkastore.connection.url"] = fmt.Sprintf("localhost:%d", services["zookeeper"].port)
+		config["ksql.schema.registry.url"] = fmt.Sprintf("http://localhost:%d", services["schema-registry"].port)
+	case "schema-registry":
+		config["kafkastore.connection.url"] = fmt.Sprintf("localhost:%d", services["zookeeper"].port)
+	case "zookeeper":
+		config["dataDir"] = filepath.Join(dir, "data")
+	}
+
+	return config
+}
+
+func configService(service string, dir string, config map[string]string) error {
+	if err := os.MkdirAll(filepath.Join(dir, "data"), 0777); err != nil {
+		return err
+	}
+
+	confluentHome, err := getConfluentHome()
+	if err != nil {
+		return err
+	}
+
+	src := filepath.Join(confluentHome, "etc", services[service].properties)
+	dst := filepath.Join(dir, fmt.Sprintf("%s.properties", service))
+
+	data, err := ioutil.ReadFile(src)
+	if err != nil {
+		return err
+	}
+
+	for key, val := range config {
+		re := regexp.MustCompile(fmt.Sprintf("^%s=.+$", key))
+
+		line := []byte(fmt.Sprintf("%s=%s", key, val))
+		if re.Match(data) {
+			data = re.ReplaceAll(data, line)
+		} else {
+			data = append(data, byte('\n'))
+			data = append(data, line...)
+		}
+	}
+
+	return ioutil.WriteFile(dst, data, 0644)
 }
 
 func printStatus(command *cobra.Command, service string) error {
@@ -354,6 +411,7 @@ func readInt(file string) (int, error) {
 		return 0, err
 	}
 
+	// TODO: Remove \n once the original local command is removed
 	x, err := strconv.Atoi(strings.TrimRight(string(data), "\n"))
 	if err != nil {
 		return 0, err
@@ -363,23 +421,7 @@ func readInt(file string) (int, error) {
 }
 
 func writeInt(file string, x int) error {
+	// TODO: Remove \n once the original local command is removed
 	data := []byte(fmt.Sprintf("%d\n", x))
 	return ioutil.WriteFile(file, data, 0644)
-}
-
-func copyFile(src string, dst string) error {
-	srcFd, err := os.Open(src)
-	if err != nil {
-		return err
-	}
-	defer srcFd.Close()
-
-	dstFd, err := os.Create(dst)
-	if err != nil {
-		return err
-	}
-	defer dstFd.Close()
-
-	_, err = io.Copy(dstFd, srcFd)
-	return err
 }

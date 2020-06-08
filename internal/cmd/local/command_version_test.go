@@ -18,7 +18,7 @@ func TestConfluentCommunitySoftwareVersion(t *testing.T) {
 	req.NoError(cp.NewConfluentHome())
 
 	file := strings.Replace(versionFiles["Confluent Community Software"], "*", "0.0.0", 1)
-	req.NoError(cp.AddFileToConfluentHome(file))
+	req.NoError(cp.AddEmptyFileToConfluentHome(file))
 
 	out, err := mockLocalCommand("version")
 	req.NoError(err)
@@ -34,10 +34,10 @@ func TestConfluentPlatformVersion(t *testing.T) {
 	req.NoError(cp.NewConfluentHome())
 
 	file := strings.Replace(confluentControlCenter, "*", "0.0.0", 1)
-	req.NoError(cp.AddFileToConfluentHome(file))
+	req.NoError(cp.AddEmptyFileToConfluentHome(file))
 
 	file = strings.Replace(versionFiles["Confluent Platform"], "*", "1.0.0", 1)
-	req.NoError(cp.AddFileToConfluentHome(file))
+	req.NoError(cp.AddEmptyFileToConfluentHome(file))
 
 	out, err := mockLocalCommand("version")
 	req.NoError(err)
