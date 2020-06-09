@@ -387,11 +387,10 @@ func (s *CLITestSuite) validateTestOutput(tt CLITest, t *testing.T, output strin
 		require.NotContains(t, actual, tt.notContains)
 	} else if tt.fixture != "" {
 		expected := NormalizeNewLines(loadFixture(t, tt.fixture))
-
 		if tt.regex {
 			require.Regexp(t, expected, actual)
 		} else if !reflect.DeepEqual(actual, expected) {
-			t.Fatalf("\n   actual:\n%s\nexpected:\n%s", actual, expected)
+			t.Fatalf("\nactual:\n%s\nexpected:\n%s", actual, expected)
 		}
 	}
 	if tt.wantFunc != nil {

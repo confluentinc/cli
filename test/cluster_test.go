@@ -14,15 +14,24 @@ func (s *CLITestSuite) Test_Cluster() {
 			login:   "default",
 		},
 		{
-			args:    "cluster list --type ksql-cluster",
+			args:    "ksql cluster list",
 			fixture: "confluent-cluster-list-type-ksql.golden",
 			login:   "default",
 		},
 		{
-			args:        "cluster list --type unknown",
-			fixture:     "confluent-cluster-list-type-unknown.golden",
-			login:       "default",
-			wantErrCode: 1,
+			args:    "kafka cluster list",
+			fixture: "confluent-cluster-list-type-kafka.golden",
+			login:   "default",
+		},
+		{
+			args:    "schema-registry cluster list",
+			fixture: "confluent-cluster-list-type-schema-registry.golden",
+			login:   "default",
+		},
+		{
+			args:    "connect cluster list",
+			fixture: "confluent-cluster-list-type-connect.golden",
+			login:   "default",
 		},
 		{
 			args:    "cluster list -o json",

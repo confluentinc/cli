@@ -8,7 +8,18 @@
   hosts:
   - host: 10.5.5.5
     port: 9005
-  protocol: ""
+  protocol: HTTPS
+- clustername: theMdsKSQLCluster
+  scope:
+    clusters:
+      kafkacluster: kafka-GUID
+      connectcluster: ""
+      ksqlcluster: ksql-name
+      schemaregistrycluster: ""
+  hosts:
+  - host: 10.4.4.4
+    port: 9004
+  protocol: HTTPS
 - clustername: theMdsKafkaCluster
   scope:
     clusters:
@@ -21,18 +32,7 @@
     port: 8090
   - host: mds.example.com
     port: 8090
-  protocol: ""
-- clustername: theMdsKSQLCluster
-  scope:
-    clusters:
-      kafkacluster: kafka-GUID
-      connectcluster: ""
-      ksqlcluster: ksql-name
-      schemaregistrycluster: ""
-  hosts:
-  - host: 10.4.4.4
-    port: 9004
-  protocol: ""
+  protocol: SASL_PLAINTEXT
 - clustername: theMdsSchemaRegistryCluster
   scope:
     clusters:
@@ -43,4 +43,4 @@
   hosts:
   - host: 10.3.3.3
     port: 9003
-  protocol: ""
+  protocol: HTTPS

@@ -81,6 +81,12 @@ var rules = []linter.Rule{
 		linter.ExcludeCommand("api-key store <apikey> <secret>"),
 		// skip for rolebindings since they don't have names/IDs
 		linter.ExcludeCommandContains("iam rolebinding"),
+		// skip for register command since they don't have names/IDs
+		linter.ExcludeCommandContains("cluster register"),
+		// skip for unregister command since they don't have names/IDs
+		linter.ExcludeCommandContains("cluster unregister"),
+		// skip for unregister command since they don't have names/IDs
+		linter.ExcludeCommandContains("cluster update"),
 		// skip secret commands
 		linter.ExcludeCommandContains("secret"),
 		// skip schema-registry commands which do not use names/ID's
@@ -123,7 +129,8 @@ var rules = []linter.Rule{
 	linter.RequireCapitalizeProperNouns("Long", linter.SetDifferenceIgnoresCase(properNouns, cliNames)),
 	linter.Filter(linter.RequireNotTitleCase("Short", properNouns),
 		linter.ExcludeCommandContains("secret")),
-	linter.RequireRealWords("Use", '-'),
+	linter.Filter(linter.RequireRealWords("Use", '-'),
+		linter.ExcludeCommandContains("unregister")),
 }
 
 var flagRules = []linter.FlagRule{

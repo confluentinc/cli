@@ -1,10 +1,6 @@
 package cluster
 
 import (
-	"os"
-
-	"github.com/spf13/cobra"
-
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 )
@@ -32,8 +28,7 @@ func New(prerunner pcmd.PreRunner, metaClient Metadata) *cobra.Command {
 
 func (c *command) init() {
 	c.AddCommand(NewDescribeCommand(c.prerunner, c.metaClient))
-	if os.Getenv("XX_FLAG_CLUSTER_REGISTRY_ENABLE") != "" {
-		// TODO: Remove this feature flag if statement once 6.0 is released
-		c.AddCommand(NewListCommand(c.config, c.prerunner))
-	}
+	c.AddCommand(NewListCommand(c.config, c.prerunner))
+	c.AddCommand(NewRegisterCommand(c.config, c.prerunner))
+	c.AddCommand(NewUnregisterCommand(c.config, c.prerunner))
 }
