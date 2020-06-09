@@ -390,7 +390,7 @@ func (s *CLITestSuite) validateTestOutput(tt CLITest, t *testing.T, output strin
 		if tt.regex {
 			require.Regexp(t, expected, actual)
 		} else if !reflect.DeepEqual(actual, expected) {
-			t.Fatalf("\nactual:\n%s\nexpected:\n%s", actual, expected)
+			t.Fatalf("\n   actual:\n%s\nexpected:\n%s", actual, expected)
 		}
 	}
 	if tt.wantFunc != nil {

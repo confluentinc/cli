@@ -17,7 +17,7 @@ func New(prerunner pcmd.PreRunner, config *v3.Config) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "connect",
-			Short: "Manage Connect Cluster.",
+			Short: "Manage Connect.",
 		},
 		config, prerunner)
 	cmd := &command{
