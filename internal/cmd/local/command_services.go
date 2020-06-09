@@ -160,14 +160,14 @@ func NewServicesListCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Comm
 			Use:   "list",
 			Short: "List all Confluent Platform services.",
 			Args:  cobra.NoArgs,
-			RunE:  runListCommand,
+			RunE:  runServicesListCommand,
 		},
 		cfg, prerunner)
 
 	return servicesListCommand.Command
 }
 
-func runListCommand(command *cobra.Command, _ []string) error {
+func runServicesListCommand(command *cobra.Command, _ []string) error {
 	availableServices, err := getAvailableServices()
 	if err != nil {
 		return err
@@ -184,14 +184,14 @@ func NewServicesStartCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Com
 			Use:   "start",
 			Short: "Start all Confluent Platform services.",
 			Args:  cobra.NoArgs,
-			RunE:  runStartCommand,
+			RunE:  runServicesStartCommand,
 		},
 		cfg, prerunner)
 
 	return servicesStartCommand.Command
 }
 
-func runStartCommand(command *cobra.Command, _ []string) error {
+func runServicesStartCommand(command *cobra.Command, _ []string) error {
 	availableServices, err := getAvailableServices()
 	if err != nil {
 		return err
@@ -239,14 +239,14 @@ func NewServicesStatusCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Co
 			Use:   "status",
 			Short: "Check the status of all Confluent Platform services.",
 			Args:  cobra.NoArgs,
-			RunE:  runStatusCommand,
+			RunE:  runServicesStatusCommand,
 		},
 		cfg, prerunner)
 
 	return servicesStatusCommand.Command
 }
 
-func runStatusCommand(command *cobra.Command, _ []string) error {
+func runServicesStatusCommand(command *cobra.Command, _ []string) error {
 	availableServices, err := getAvailableServices()
 	if err != nil {
 		return err
@@ -267,14 +267,14 @@ func NewServicesStopCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Comm
 			Use:   "stop",
 			Short: "Stop all Confluent Platform services.",
 			Args:  cobra.NoArgs,
-			RunE:  runStopCommand,
+			RunE:  runServicesStopCommand,
 		},
 		cfg, prerunner)
 
 	return servicesStopCommand.Command
 }
 
-func runStopCommand(command *cobra.Command, _ []string) error {
+func runServicesStopCommand(command *cobra.Command, _ []string) error {
 	availableServices, err := getAvailableServices()
 	if err != nil {
 		return err

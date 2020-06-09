@@ -1,0 +1,44 @@
+package local
+
+import (
+	"github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/spf13/cobra"
+	"os"
+	"path/filepath"
+)
+
+func NewDestroyCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
+	destroyCommand := cmd.NewAnonymousCLICommand(
+		&cobra.Command{
+			Use:   "destroy",
+			Short: "Delete the data and logs of the current Confluent run.",
+			Args:  cobra.NoArgs,
+			RunE:  runDestroyCommand,
+		},
+		cfg, prerunner)
+
+	return destroyCommand.Command
+}
+
+func runDestroyCommand(command *cobra.Command, _ []string) error {
+	if err := runServicesStopCommand(command, []string{}); err != nil {
+		return err
+	}
+
+	root := os.Getenv("CONFLUENT_CURRENT")
+	if root == "" {
+		root = os.TempDir()
+	}
+
+	confluentCurrent, err := getConfluentCurrent()
+	if err != nil {
+		return err
+	}
+	if err := os.RemoveAll(confluentCurrent); err != nil {
+		return err
+	}
+
+	trackingFile := filepath.Join(root, "confluent.current")
+	return os.Remove(trackingFile)
+}
