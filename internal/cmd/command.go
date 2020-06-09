@@ -98,9 +98,6 @@ func NewConfluentCommand(cliName string, cfg *v3.Config, logger *log.Logger, ver
 	cli.Version = ver.Version
 	cli.AddCommand(version.NewVersionCmd(prerunner, ver))
 
-	conn := config.New(cfg, prerunner, analytics)
-	cli.AddCommand(conn)
-
 	cli.AddCommand(completion.NewCompletionCmd(cli, cliName))
 
 	if !cfg.DisableUpdates {
@@ -113,6 +110,7 @@ func NewConfluentCommand(cliName string, cfg *v3.Config, logger *log.Logger, ver
 		cli.AddCommand(cmd)
 		cli.AddCommand(feedback.NewFeedbackCmd(prerunner, cfg, analytics))
 		cli.AddCommand(initcontext.New(prerunner, cfg, prompt, resolver, analytics))
+		cli.AddCommand(config.New(cfg, prerunner, analytics))
 		if currCtx != nil && currCtx.Credential != nil && currCtx.Credential.CredentialType == v2.APIKey {
 			return command, nil
 		}
