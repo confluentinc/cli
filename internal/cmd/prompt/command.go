@@ -107,25 +107,25 @@ You can disable color output by passing the flag '--no-color'.
 // UX inspired by https://github.com/djl/vcprompt
 
 type promptCommand struct {
-	*cobra.Command
+	*pcmd.CLICommand
 	config *v3.Config
 	ps1    *ps1.Prompt
 	logger *log.Logger
 }
 
 // NewPromptCmd returns the Cobra command for the PS1 prompt.
-func NewPromptCmd(config *v3.Config, ps1 *ps1.Prompt, logger *log.Logger) *cobra.Command {
+func NewPromptCmd(config *v3.Config, prerunner pcmd.PreRunner, ps1 *ps1.Prompt, logger *log.Logger) *cobra.Command {
 	cmd := &promptCommand{
 		config: config,
 		ps1:    ps1,
 		logger: logger,
 	}
-	cmd.init()
+	cmd.init(config, prerunner)
 	return cmd.Command
 }
 
-func (c *promptCommand) init() {
-	c.Command = &cobra.Command{
+func (c *promptCommand) init(config *v3.Config, prerunner pcmd.PreRunner) {
+	promptCmd := &cobra.Command{
 		Use:   "prompt",
 		Short: c.mustParseTemplate("Print {{.CLIName}} CLI context for your terminal prompt."),
 		Long:  c.mustParseTemplate(longDescriptionTemplate),
@@ -137,10 +137,11 @@ func (c *promptCommand) init() {
 	if c.config.CLIName == "confluent" {
 		defaultFormat = `({{color "blue" "confluent"}}|{{color "cyan" "%K"}})`
 	}
-	c.Command.Flags().StringP("format", "f", defaultFormat, "The format string to use. See the help for details.")
-	c.Command.Flags().BoolP("no-color", "g", false, "Do not include ANSI color codes in the output.")
-	c.Command.Flags().StringP("timeout", "t", "200ms", "The maximum execution time in milliseconds.")
-	c.Command.Flags().SortFlags = false
+	promptCmd.Flags().StringP("format", "f", defaultFormat, "The format string to use. See the help for details.")
+	promptCmd.Flags().BoolP("no-color", "g", false, "Do not include ANSI color codes in the output.")
+	promptCmd.Flags().StringP("timeout", "t", "200ms", "The maximum execution time in milliseconds.")
+	promptCmd.Flags().SortFlags = false
+	c.CLICommand = pcmd.NewAnonymousCLICommand(promptCmd, config, prerunner)
 }
 
 // Output context about the current CLI config suitable for a PS1 prompt.

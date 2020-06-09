@@ -93,14 +93,12 @@ func NewConfluentCommand(cliName string, cfg *v3.Config, logger *log.Logger, ver
 		Analytics:          analytics,
 		UpdateTokenHandler: pauth.NewUpdateTokenHandler(netrcHandler),
 	}
-	_ = pcmd.NewAnonymousCLICommand(cli, cfg, prerunner) // Add to correctly set prerunners. TODO: Check if really needed.
 	command := &Command{Command: cli, Analytics: analytics, logger: logger}
 
 	cli.Version = ver.Version
 	cli.AddCommand(version.NewVersionCmd(prerunner, ver))
 
 	conn := config.New(cfg, prerunner, analytics)
-	conn.Hidden = true // The config/context feature isn't finished yet, so let's hide it
 	cli.AddCommand(conn)
 
 	cli.AddCommand(completion.NewCompletionCmd(cli, cliName))
@@ -118,7 +116,7 @@ func NewConfluentCommand(cliName string, cfg *v3.Config, logger *log.Logger, ver
 		if currCtx != nil && currCtx.Credential != nil && currCtx.Credential.CredentialType == v2.APIKey {
 			return command, nil
 		}
-		cli.AddCommand(ps1.NewPromptCmd(cfg, &pps1.Prompt{Config: cfg}, logger))
+		cli.AddCommand(ps1.NewPromptCmd(cfg, prerunner, &pps1.Prompt{Config: cfg}, logger))
 		cli.AddCommand(environment.New(prerunner, cfg, cliName))
 		cli.AddCommand(service_account.New(prerunner, cfg))
 		// Keystore exposed so tests can pass mocks.
@@ -126,15 +124,10 @@ func NewConfluentCommand(cliName string, cfg *v3.Config, logger *log.Logger, ver
 
 		// Schema Registry
 		// If srClient is nil, the function will look it up after prerunner verifies authentication. Exposed so tests can pass mocks
-		sr := schema_registry.New(prerunner, cfg, nil, logger)
-		cli.AddCommand(sr)
+		cli.AddCommand(schema_registry.New(prerunner, cfg, nil, logger))
 		cli.AddCommand(ksql.New(prerunner, cfg))
 		cli.AddCommand(connector.New(prerunner, cfg))
 		cli.AddCommand(connector_catalog.New(prerunner, cfg))
-
-		conn = ksql.New(prerunner, cfg)
-		conn.Hidden = true // The ksql feature isn't finished yet, so let's hide it
-		cli.AddCommand(conn)
 
 		//conn = connect.New(prerunner, cfg, connects.New(client, logger))
 		//conn.Hidden = true // The connect feature isn't finished yet, so let's hide it
