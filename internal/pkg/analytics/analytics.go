@@ -73,6 +73,7 @@ func (l *Logger) Errorf(format string, args ...interface{}) {
 }
 
 type Client interface {
+	SetCLIConfig(cfg *v3.Config)
 	SetStartTime()
 	TrackCommand(cmd *cobra.Command, args []string)
 	SetCommandType(commandType CommandType)
@@ -104,17 +105,20 @@ type userInfo struct {
 	apiKey         string
 }
 
-func NewAnalyticsClient(cliName string, cfg *v3.Config, version string, segmentClient segment.Client, clock clockwork.Clock) *ClientObj {
+func NewAnalyticsClient(cliName string, version string, segmentClient segment.Client, clock clockwork.Clock) *ClientObj {
 	client := &ClientObj{
 		cliName:     cliName,
 		client:      segmentClient,
-		config:      cfg,
 		properties:  make(segment.Properties),
 		cliVersion:  version,
 		clock:       clock,
 		commandType: Other,
 	}
 	return client
+}
+
+func (a *ClientObj) SetCLIConfig(cfg *v3.Config) {
+	a.config = cfg
 }
 
 // not in prerun because help calls do not trigger prerun

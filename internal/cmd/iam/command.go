@@ -14,25 +14,23 @@ type command struct {
 }
 
 // New returns the default command object for interacting with RBAC.
-func New(prerunner pcmd.PreRunner, config *v3.Config) *cobra.Command {
+func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedWithMDSCLICommand(
 		&cobra.Command{
 			Use:   "iam",
 			Short: "Manage RBAC, ACL and IAM permissions.",
 			Long:  "Manage Role Based Access (RBAC), Access Control Lists (ACL), and Identity and Access Management (IAM) permissions.",
-		},
-		config, prerunner)
+		}, prerunner)
 	cmd := &command{
 		AuthenticatedCLICommand: cliCmd,
 		prerunner:               prerunner,
-		config:                  config,
 	}
 	cmd.init()
 	return cmd.Command
 }
 
 func (c *command) init() {
-	c.AddCommand(NewRoleCommand(c.config, c.prerunner))
-	c.AddCommand(NewRolebindingCommand(c.config, c.prerunner))
-	c.AddCommand(NewACLCommand(c.config, c.prerunner))
+	c.AddCommand(NewRoleCommand(c.prerunner))
+	c.AddCommand(NewRolebindingCommand(c.prerunner))
+	c.AddCommand(NewACLCommand(c.prerunner))
 }

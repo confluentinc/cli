@@ -53,8 +53,7 @@ func NewListCommand(cfg *v3.Config, prerunner cmd.PreRunner) *cobra.Command {
 				Use:   "list",
 				Short: "List registered clusters.",
 				Long:  "List clusters that are registered with the MDS cluster registry.",
-			},
-			cfg, prerunner),
+			}, prerunner),
 	}
 	listCmd.Flags().String(typeFlag, "", fmt.Sprintf("Filter list to this cluster type (%s).", strings.Join(clusterTypeNames, ", ")))
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)

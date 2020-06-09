@@ -10,7 +10,6 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/acl"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -31,13 +30,12 @@ type clusterCommand struct {
 }
 
 // NewClusterCommand returns the Cobra clusterCommand for Ksql Cluster.
-func NewClusterCommand(config *v3.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func NewClusterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "app",
 			Short: "Manage KSQL apps.",
-		},
-		config, prerunner)
+		}, prerunner)
 	cmd := &clusterCommand{AuthenticatedCLICommand: cliCmd}
 	cmd.prerunner = prerunner
 	cmd.init()

@@ -8,7 +8,6 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -26,13 +25,12 @@ type contextCommand struct {
 }
 
 // NewContext returns the Cobra contextCommand for `config context`.
-func NewContext(config *v3.Config, prerunner pcmd.PreRunner, analytics analytics.Client) *cobra.Command {
+func NewContext(prerunner pcmd.PreRunner, analytics analytics.Client) *cobra.Command {
 	cliCmd := pcmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "context",
 			Short: "Manage config contexts.",
-		},
-		config, prerunner)
+		}, prerunner)
 	cmd := &contextCommand{
 		CLICommand: cliCmd,
 		prerunner:  prerunner,

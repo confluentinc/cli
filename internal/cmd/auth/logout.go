@@ -1,0 +1,57 @@
+package auth
+
+import (
+	"fmt"
+
+	"github.com/confluentinc/cli/internal/pkg/analytics"
+	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+)
+
+type logoutCommand struct {
+	*pcmd.CLICommand
+	analyticsClient analytics.Client
+}
+
+func NewLogoutCmd(cliName string, prerunner pcmd.PreRunner, analyticsClient analytics.Client) *cobra.Command {
+	logoutCmd := logoutCommand{
+		analyticsClient: analyticsClient,
+	}
+	logoutCmd.init(cliName, prerunner)
+	return logoutCmd.Command
+}
+
+func (a *logoutCommand) init(cliName string, prerunner pcmd.PreRunner) {
+	remoteAPIName := getRemoteAPIName(cliName)
+	logoutCmd := &cobra.Command{
+		Use:   "logout",
+		Short: fmt.Sprintf("Logout of %s.", remoteAPIName),
+		Long:  fmt.Sprintf("Logout of %s.", remoteAPIName),
+
+		RunE: a.logout,
+		Args: cobra.NoArgs,
+	}
+	cliLogoutCmd := pcmd.NewAnonymousCLICommand(logoutCmd, prerunner)
+	logoutCmd.PersistentPreRunE = analyticsPreRunCover(a.analyticsClient, cliLogoutCmd, analytics.Logout, prerunner)
+	a.CLICommand = cliLogoutCmd
+}
+
+
+
+func (a *logoutCommand) logout(cmd *cobra.Command, args []string) error {
+	ctx := a.Config.Config.Context()
+	if ctx == nil {
+		return nil
+	}
+	err := ctx.DeleteUserAuth()
+	if err != nil {
+		return err
+	}
+	err = a.Config.Save()
+	if err != nil {
+		return err
+	}
+	pcmd.Println(cmd, "You are now logged out")
+	return nil
+}

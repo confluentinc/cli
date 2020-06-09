@@ -28,7 +28,7 @@ const (
 )
 
 // NewClient returns a new update.Client configured for the CLI
-func NewClient(cliName string, disableUpdateCheck bool, logger *log.Logger) (update.Client, error) {
+func NewClient(cliName string, logger *log.Logger) (update.Client, error) {
 	objectKey, err := s3.NewPrefixedKey(fmt.Sprintf(S3BinPrefix, cliName), "_", true)
 	if err != nil {
 		return nil, err
@@ -43,7 +43,6 @@ func NewClient(cliName string, disableUpdateCheck bool, logger *log.Logger) (upd
 	})
 	return update.NewClient(&update.ClientParams{
 		Repository:    repo,
-		DisableCheck:  disableUpdateCheck,
 		CheckFile:     fmt.Sprintf(CheckFileFmt, cliName),
 		CheckInterval: CheckInterval,
 		Logger:        logger,
@@ -64,13 +63,12 @@ type command struct {
 }
 
 // New returns the command for the built-in updater.
-func New(cliName string, config *v3.Config, version *cliVersion.Version, prompt pcmd.Prompt,
+func New(cliName string, logger *log.Logger, version *cliVersion.Version, prompt pcmd.Prompt,
 	client update.Client, analytics analytics.Client) *cobra.Command {
 	cmd := &command{
 		cliName:         cliName,
-		config:          config,
 		version:         version,
-		logger:          config.Logger,
+		logger:          logger,
 		prompt:          prompt,
 		client:          client,
 		analyticsClient: analytics,
@@ -91,11 +89,13 @@ func (c *command) init() {
 }
 
 func (c *command) update(cmd *cobra.Command, args []string) error {
+	if c.config.DisableUpdates || c.config.DisableUpdateCheck {
+		return nil
+	}
 	updateYes, err := cmd.Flags().GetBool("yes")
 	if err != nil {
 		return errors.Wrap(err, "error reading --yes as bool")
 	}
-
 	pcmd.ErrPrintln(cmd, "Checking for updates...")
 	updateAvailable, latestVersion, err := c.client.CheckForUpdates(c.cliName, c.version.Version, true)
 	if err != nil {

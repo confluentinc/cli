@@ -9,7 +9,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config/v3"
 )
 
 var versionFiles = map[string]string{
@@ -19,15 +18,14 @@ var versionFiles = map[string]string{
 	"zookeeper":                    "/share/java/kafka/zookeeper-*.jar",
 }
 
-func NewVersionCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
+func NewVersionCommand(prerunner cmd.PreRunner) *cobra.Command {
 	versionCommand := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "version [service]",
 			Short: "Print the Confluent Platform version, or the individual version of a service.",
 			Args:  cobra.MaximumNArgs(1),
 			RunE:  executeVersionCommand,
-		},
-		cfg, prerunner)
+		}, prerunner)
 
 	return versionCommand.Command
 }

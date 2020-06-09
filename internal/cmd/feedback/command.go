@@ -8,19 +8,18 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 )
 
-func NewFeedbackCmd(prerunner pcmd.PreRunner, cfg *v3.Config, analytics analytics.Client) *cobra.Command {
+func NewFeedbackCmd(cliName string, prerunner pcmd.PreRunner, analytics analytics.Client) *cobra.Command {
 	prompt := pcmd.NewPrompt(os.Stdin)
-	return NewFeedbackCmdWithPrompt(prerunner, cfg, analytics, prompt)
+	return NewFeedbackCmdWithPrompt(cliName, prerunner, analytics, prompt)
 }
 
-func NewFeedbackCmdWithPrompt(prerunner pcmd.PreRunner, cfg *v3.Config, analyticsClient analytics.Client, prompt pcmd.Prompt) *cobra.Command {
+func NewFeedbackCmdWithPrompt(cliName string, prerunner pcmd.PreRunner, analyticsClient analytics.Client, prompt pcmd.Prompt) *cobra.Command {
 	cmd := pcmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "feedback",
-			Short: "Submit feedback about the " + cfg.CLIName + " CLI.",
+			Short: "Submit feedback about the " + cliName + " CLI.",
 			RunE: func(cmd *cobra.Command, _ []string) error {
 				pcmd.Print(cmd, "Enter feedback: ")
 				msg, err := prompt.ReadString('\n')
@@ -36,8 +35,7 @@ func NewFeedbackCmdWithPrompt(prerunner pcmd.PreRunner, cfg *v3.Config, analytic
 				return nil
 			},
 			Args: cobra.NoArgs,
-		},
-		cfg, prerunner)
+		}, prerunner)
 
 	return cmd.Command
 }

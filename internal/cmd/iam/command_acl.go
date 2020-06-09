@@ -11,7 +11,6 @@ import (
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
@@ -20,12 +19,12 @@ type aclCommand struct {
 }
 
 // NewACLCommand returns the Cobra command for ACLs.
-func NewACLCommand(config *v3.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func NewACLCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &aclCommand{
 		AuthenticatedCLICommand: pcmd.NewAuthenticatedWithMDSCLICommand(&cobra.Command{
 			Use:   "acl",
 			Short: `Manage Kafka ACLs (5.4+ only).`,
-		}, config, prerunner),
+		}, prerunner),
 	}
 	cmd.init()
 	return cmd.Command

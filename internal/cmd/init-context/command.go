@@ -11,7 +11,6 @@ import (
 	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
@@ -24,14 +23,14 @@ type command struct {
 // TODO: Make long description better.
 const longDescription = "Initialize and set a current context."
 
-func New(prerunner pcmd.PreRunner, config *v3.Config, prompt pcmd.Prompt, resolver pcmd.FlagResolver, analyticsClient analytics.Client) *cobra.Command {
+func New(prerunner pcmd.PreRunner, prompt pcmd.Prompt, resolver pcmd.FlagResolver, analyticsClient analytics.Client) *cobra.Command {
 	cobraCmd := &cobra.Command{
 		Use:   "init <context-name>",
 		Short: "Initialize a context.",
 		Long:  longDescription,
 		Args:  cobra.ExactArgs(1),
 	}
-	cliCmd := pcmd.NewAnonymousCLICommand(cobraCmd, config, prerunner)
+	cliCmd := pcmd.NewAnonymousCLICommand(cobraCmd, prerunner)
 	cobraCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		analyticsClient.SetCommandType(analytics.Init)
 		return prerunner.Anonymous(cliCmd)(cmd, args)

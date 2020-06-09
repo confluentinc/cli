@@ -4,16 +4,14 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config/v3"
 )
 
-func NewCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
+func NewCommand(prerunner cmd.PreRunner) *cobra.Command {
 	localCommand := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "local-v2 [command]",
 			Short: "Manage a local Confluent Platform development environment.",
-		},
-		cfg, prerunner,
+		}, prerunner,
 	)
 
 	// TODO: confluent local acl
@@ -31,7 +29,7 @@ func NewCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
 	// TODO: confluent local stop
 	// TODO: confluent local top
 	// TODO: confluent local unload
-	localCommand.AddCommand(NewVersionCommand(prerunner, cfg))
+	localCommand.AddCommand(NewVersionCommand(prerunner))
 
 	return localCommand.Command
 }

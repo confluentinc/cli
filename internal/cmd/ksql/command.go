@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 )
 
 type command struct {
@@ -13,13 +12,12 @@ type command struct {
 }
 
 // New returns the default command object for interacting with KSQL.
-func New(prerunner pcmd.PreRunner, config *v3.Config) *cobra.Command {
+func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "ksql",
 			Short: "Manage KSQL applications.",
-		},
-		config, prerunner)
+		}, prerunner)
 	cmd := &command{
 		AuthenticatedCLICommand: cliCmd,
 		prerunner:               prerunner,
@@ -29,5 +27,5 @@ func New(prerunner pcmd.PreRunner, config *v3.Config) *cobra.Command {
 }
 
 func (c *command) init() {
-	c.AddCommand(NewClusterCommand(c.Config.Config, c.prerunner))
+	c.AddCommand(NewClusterCommand(c.prerunner))
 }

@@ -11,7 +11,6 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -21,22 +20,21 @@ type schemaCommand struct {
 	srClient *srsdk.APIClient
 }
 
-func NewSchemaCommand(config *v3.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
+func NewSchemaCommand(cliName string, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "schema",
 			Short: "Manage Schema Registry schemas.",
-		},
-		config, prerunner)
+		}, prerunner)
 	schemaCmd := &schemaCommand{
 		AuthenticatedCLICommand: cliCmd,
 		srClient:                srClient,
 	}
-	schemaCmd.init()
+	schemaCmd.init(cliName)
 	return schemaCmd.Command
 }
 
-func (c *schemaCommand) init() {
+func (c *schemaCommand) init(cliName string) {
 	cmd := &cobra.Command{
 		Use:   "create --subject <subject> --schema <schema-file> --type <schema-type> --refs <ref-file>",
 		Short: "Create a schema.",
@@ -61,7 +59,7 @@ Where schemafilepath may include these contents:
 	   ]
 	}
 
-`, c.Config.CLIName),
+`, cliName),
 		RunE: c.create,
 		Args: cobra.NoArgs,
 	}
@@ -82,7 +80,7 @@ Delete one or more topics. This command should only be used in extreme circumsta
 
 ::
 
-		{{.CLIName}} schema-registry schema delete --subject payments --version latest`, c.Config.CLIName),
+		{{.CLIName}} schema-registry schema delete --subject payments --version latest`, cliName),
 		RunE: c.delete,
 		Args: cobra.NoArgs,
 	}
@@ -107,7 +105,7 @@ Describe the schema by both subject and version
 ::
 
 		{{.CLIName}} schema-registry describe --subject payments --version latest
-`, c.Config.CLIName),
+`, cliName),
 		PreRunE: c.preDescribe,
 		RunE:    c.describe,
 		Args:    cobra.MaximumNArgs(1),

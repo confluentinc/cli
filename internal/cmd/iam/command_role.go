@@ -13,7 +13,6 @@ import (
 	"github.com/tidwall/pretty"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/go-printer"
@@ -35,14 +34,13 @@ type prettyRole struct {
 }
 
 // NewRoleCommand returns the sub-command object for interacting with RBAC roles.
-func NewRoleCommand(cfg *v3.Config, prerunner cmd.PreRunner) *cobra.Command {
+func NewRoleCommand(prerunner cmd.PreRunner) *cobra.Command {
 	cliCmd := cmd.NewAuthenticatedWithMDSCLICommand(
 		&cobra.Command{
 			Use:   "role",
 			Short: "Manage RBAC and IAM roles.",
 			Long:  "Manage Role Based Access (RBAC) and Identity and Access Management (IAM) roles.",
-		},
-		cfg, prerunner)
+		}, prerunner)
 	roleCmd := &roleCommand{
 		AuthenticatedCLICommand: cliCmd,
 	}

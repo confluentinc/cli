@@ -8,11 +8,15 @@ import (
 	sync "sync"
 
 	github_com_confluentinc_cli_internal_pkg_analytics "github.com/confluentinc/cli/internal/pkg/analytics"
+	github_com_confluentinc_cli_internal_pkg_config_v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	github_com_spf13_cobra "github.com/spf13/cobra"
 )
 
 // AnalyticsClient is a mock of Client interface
 type AnalyticsClient struct {
+	lockSetCLIConfig sync.Mutex
+	SetCLIConfigFunc func(cfg *github_com_confluentinc_cli_internal_pkg_config_v3.Config)
+
 	lockSetStartTime sync.Mutex
 	SetStartTimeFunc func()
 
@@ -35,6 +39,9 @@ type AnalyticsClient struct {
 	SetSpecialPropertyFunc func(propertiesKey string, value interface{})
 
 	calls struct {
+		SetCLIConfig []struct {
+			Cfg *github_com_confluentinc_cli_internal_pkg_config_v3.Config
+		}
 		SetStartTime []struct {
 		}
 		TrackCommand []struct {
@@ -58,6 +65,44 @@ type AnalyticsClient struct {
 			Value         interface{}
 		}
 	}
+}
+
+// SetCLIConfig mocks base method by wrapping the associated func.
+func (m *AnalyticsClient) SetCLIConfig(cfg *github_com_confluentinc_cli_internal_pkg_config_v3.Config) {
+	m.lockSetCLIConfig.Lock()
+	defer m.lockSetCLIConfig.Unlock()
+
+	if m.SetCLIConfigFunc == nil {
+		panic("mocker: AnalyticsClient.SetCLIConfigFunc is nil but AnalyticsClient.SetCLIConfig was called.")
+	}
+
+	call := struct {
+		Cfg *github_com_confluentinc_cli_internal_pkg_config_v3.Config
+	}{
+		Cfg: cfg,
+	}
+
+	m.calls.SetCLIConfig = append(m.calls.SetCLIConfig, call)
+
+	m.SetCLIConfigFunc(cfg)
+}
+
+// SetCLIConfigCalled returns true if SetCLIConfig was called at least once.
+func (m *AnalyticsClient) SetCLIConfigCalled() bool {
+	m.lockSetCLIConfig.Lock()
+	defer m.lockSetCLIConfig.Unlock()
+
+	return len(m.calls.SetCLIConfig) > 0
+}
+
+// SetCLIConfigCalls returns the calls made to SetCLIConfig.
+func (m *AnalyticsClient) SetCLIConfigCalls() []struct {
+	Cfg *github_com_confluentinc_cli_internal_pkg_config_v3.Config
+} {
+	m.lockSetCLIConfig.Lock()
+	defer m.lockSetCLIConfig.Unlock()
+
+	return m.calls.SetCLIConfig
 }
 
 // SetStartTime mocks base method by wrapping the associated func.
@@ -328,6 +373,9 @@ func (m *AnalyticsClient) SetSpecialPropertyCalls() []struct {
 
 // Reset resets the calls made to the mocked methods.
 func (m *AnalyticsClient) Reset() {
+	m.lockSetCLIConfig.Lock()
+	m.calls.SetCLIConfig = nil
+	m.lockSetCLIConfig.Unlock()
 	m.lockSetStartTime.Lock()
 	m.calls.SetStartTime = nil
 	m.lockSetStartTime.Unlock()

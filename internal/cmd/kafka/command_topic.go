@@ -15,8 +15,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -51,19 +49,19 @@ type structuredDescribeDisplay struct {
 }
 
 // NewTopicCommand returns the Cobra command for Kafka topic.
-func NewTopicCommand(prerunner pcmd.PreRunner, config *v3.Config, logger *log.Logger, clientID string) *cobra.Command {
+func NewTopicCommand(prerunner pcmd.PreRunner, logger *log.Logger, clientID string) *cobra.Command {
 	command := &cobra.Command{
 		Use:   "topic",
 		Short: "Manage Kafka topics.",
 	}
 	hasAPIKeyCmd := &hasAPIKeyTopicCommand{
-		HasAPIKeyCLICommand: pcmd.NewHasAPIKeyCLICommand(command, config, prerunner),
+		HasAPIKeyCLICommand: pcmd.NewHasAPIKeyCLICommand(command, prerunner),
 		prerunner:           prerunner,
 		logger:              logger,
 		clientID:            clientID,
 	}
 	authenticatedCmd := &authenticatedTopicCommand{
-		AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(command, config, prerunner),
+		AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(command, prerunner),
 		logger:                  logger,
 		clientID:                clientID,
 	}
@@ -106,11 +104,6 @@ Consume items from the 'my_topic' topic and press 'Ctrl + C' to exit.
 }
 
 func (a *authenticatedTopicCommand) init() {
-	// Issue: Can't resolve context here, but need context to decide whether or not to show command.
-	ctx := a.Config.Config.Context() // TODO: Change to DynamicConfig to handle flags.
-	if ctx != nil && ctx.Credential.CredentialType == v2.APIKey {
-		return
-	}
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List Kafka topics.",

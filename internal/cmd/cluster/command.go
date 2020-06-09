@@ -16,14 +16,13 @@ type command struct {
 }
 
 // New returns the Cobra command for `cluster`.
-func New(prerunner pcmd.PreRunner, config *v3.Config, metaClient Metadata) *cobra.Command {
+func New(prerunner pcmd.PreRunner, metaClient Metadata) *cobra.Command {
 	cmd := &command{
 		CLICommand: pcmd.NewAnonymousCLICommand(&cobra.Command{
 			Use:   "cluster",
 			Short: "Retrieve metadata about Confluent clusters.",
-		}, config, prerunner),
+		}, prerunner),
 		prerunner:  prerunner,
-		config:     config,
 		metaClient: metaClient,
 	}
 	cmd.init()
@@ -31,7 +30,7 @@ func New(prerunner pcmd.PreRunner, config *v3.Config, metaClient Metadata) *cobr
 }
 
 func (c *command) init() {
-	c.AddCommand(NewDescribeCommand(c.config, c.prerunner, c.metaClient))
+	c.AddCommand(NewDescribeCommand(c.prerunner, c.metaClient))
 	if os.Getenv("XX_FLAG_CLUSTER_REGISTRY_ENABLE") != "" {
 		// TODO: Remove this feature flag if statement once 6.0 is released
 		c.AddCommand(NewListCommand(c.config, c.prerunner))
