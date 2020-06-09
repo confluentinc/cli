@@ -12,7 +12,9 @@ type Color256VT100Writer struct {
 	goprompt.ConsoleWriter
 }
 
-type TestableColor256VT100Writer struct {
+// testableColor256VT100Writer implements io.Writer to make Color256VT100Writer easy to test.
+// go-prompt doesn't conform to io.Writer, nor expose internal buffers which makes testing not fun.
+type testableColor256VT100Writer struct {
 	*Color256VT100Writer
 }
 
@@ -32,14 +34,14 @@ func NewStdoutColor256VT100Writer() *Color256VT100Writer {
 	return &Color256VT100Writer{ConsoleWriter: goprompt.NewStdoutWriter()}
 }
 
-func (tw *TestableColor256VT100Writer) Write(p []byte) (n int, err error) {
+func (tw *testableColor256VT100Writer) Write(p []byte) (n int, err error) {
 	tw.Color256VT100Writer.WriteRaw(p)
 	return len(p), nil
 }
 
 // SetDisplayAttributes to set VT100 display attributes.
 func (w *Color256VT100Writer) setDisplayAttributes(fg, bg goprompt.Color, attrs ...goprompt.DisplayAttribute) {
-	writeColorString(&TestableColor256VT100Writer{Color256VT100Writer: w}, fg, bg, attrs...)
+	writeColorString(&testableColor256VT100Writer{Color256VT100Writer: w}, fg, bg, attrs...)
 }
 
 func writeColorString(w io.Writer, fg, bg goprompt.Color, attrs ...goprompt.DisplayAttribute) {
