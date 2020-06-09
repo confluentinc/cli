@@ -85,8 +85,6 @@ var rules = []linter.Rule{
 		linter.ExcludeCommandContains("cluster register"),
 		// skip for unregister command since they don't have names/IDs
 		linter.ExcludeCommandContains("cluster unregister"),
-		// skip for unregister command since they don't have names/IDs
-		linter.ExcludeCommandContains("cluster update"),
 		// skip secret commands
 		linter.ExcludeCommandContains("secret"),
 		// skip schema-registry commands which do not use names/ID's

@@ -12,12 +12,12 @@ type command struct {
 	prerunner pcmd.PreRunner
 }
 
-// New returns the default command object for interacting with KSQL.
+// New returns the default command object for interacting with Connect.
 func New(prerunner pcmd.PreRunner, config *v3.Config) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "connect",
-			Short: "Manage Connect.",
+			Short: "Manage Connect Cluster.",
 		},
 		config, prerunner)
 	cmd := &command{
