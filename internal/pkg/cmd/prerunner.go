@@ -7,7 +7,7 @@ import (
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
-	mdsv2alpha1 "github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
+	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	"github.com/jonboulle/clockwork"
 	"github.com/spf13/cobra"
 	"gopkg.in/square/go-jose.v2/jwt"
@@ -51,11 +51,11 @@ type CLICommand struct {
 
 type AuthenticatedCLICommand struct {
 	*CLICommand
-	Client		*ccloud.Client
-	MDSClient	*mds.APIClient
-	MDSClientv2	*mdsv2alpha1.APIClient
-	Context		*DynamicContext
-	State		*v2.ContextState
+	Client      *ccloud.Client
+	MDSClient   *mdsv2alpha1.APIClient
+	// MDSv2Client *mdsv2alpha1.APIClient
+	Context     *DynamicContext
+	State       *v2.ContextState
 }
 
 type HasAPIKeyCLICommand struct {
@@ -374,6 +374,35 @@ func (r *PreRun) createMDSClient(ctx *DynamicContext, ver *version.Version) *mds
 
 	}
 	return mds.NewAPIClient(mdsConfig)
+}
+
+func (r *PreRun) createMDSv2Client(ctx *DynamicContext, ver *version.Version) *mdsv2alpha1.APIClient {
+	mdsv2Config := mdsv2alpha1.NewConfiguration()
+	if ctx == nil {
+		return mdsv2alpha1.NewAPIClient(mdsv2Config)
+	}
+	mdsv2Config.BasePath = ctx.Platform.Server
+	mdsv2Config.UserAgent = ver.UserAgent
+	if ctx.Platform.CaCertPath == "" {
+		return mdsv2alpha1.NewAPIClient(mdsv2Config)
+	}
+	caCertPath := ctx.Platform.CaCertPath
+	// Try to load certs. On failure, warn, but don't error out because this may be an auth command, so there may
+	// be a --ca-cert-path flag on the cmd line that'll fix whatever issue there is with the cert file in the config
+	caCertFile, err := os.Open(caCertPath)
+	if err == nil {
+		defer caCertFile.Close()
+		mdsv2Config.HTTPClient, err = pauth.SelfSignedCertClient(caCertFile, r.Logger)
+		if err != nil {
+			r.Logger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
+			mdsv2Config.HTTPClient = pauth.DefaultClient()
+		}
+	} else {
+		r.Logger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
+		mdsv2Config.HTTPClient = pauth.DefaultClient()
+
+	}
+	return mdsv2alpha1.NewAPIClient(mdsv2Config)
 }
 
 func (r *PreRun) validateToken(cmd *cobra.Command, ctx *DynamicContext) error {
