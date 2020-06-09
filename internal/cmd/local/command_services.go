@@ -303,7 +303,7 @@ func NewServicesTopCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Comma
 	return servicesTopCommand.Command
 }
 
-func runServicesTopCommand(command *cobra.Command, _ []string) error {
+func runServicesTopCommand(_ *cobra.Command, _ []string) error {
 	availableServices, err := getAvailableServices()
 	if err != nil {
 		return err

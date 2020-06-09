@@ -15,15 +15,13 @@ func TestCurrentCreateAndTrackDir(t *testing.T) {
 
 	cp := mock.NewConfluentPlatform()
 	defer cp.TearDown()
-
 	req.NoError(cp.NewConfluentCurrent())
 
 	out, err := mockLocalCommand("current")
 	req.NoError(err)
 	req.Contains(out, cp.ConfluentCurrent)
 
-	trackingFile := filepath.Join(cp.ConfluentCurrent, "confluent.current")
-	req.FileExists(trackingFile)
+	req.FileExists(cp.TrackingFile)
 }
 
 func TestCurrentGetTrackedDir(t *testing.T) {

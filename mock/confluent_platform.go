@@ -11,11 +11,19 @@ var count = 0
 
 type ConfluentPlatform struct {
 	ConfluentHome       string
-	ConfluentCurrent    string
 	ConfluentCurrentDir string
+	ConfluentCurrent    string
+	TrackingFile        string
+	IsConfluentPlatform bool
 }
 
 func NewConfluentPlatform() *ConfluentPlatform {
+	cp := new(ConfluentPlatform)
+	cp.IsConfluentPlatform = true
+	return cp
+}
+
+func NewConfluentCommunitySoftware() *ConfluentPlatform {
 	return new(ConfluentPlatform)
 }
 
@@ -26,12 +34,19 @@ func (cp *ConfluentPlatform) NewConfluentHome() error {
 		return err
 	}
 
+	if cp.IsConfluentPlatform {
+		controlCenter := "share/java/confluent-control-center/control-center-0.0.0.jar"
+		if err := cp.AddEmptyFileToConfluentHome(controlCenter); err != nil {
+			return err
+		}
+	}
+
 	return os.Setenv("CONFLUENT_HOME", dir)
 }
 
-func (cp *ConfluentPlatform) NewConfluentCurrent() error {
+func (cp *ConfluentPlatform) NewConfluentCurrentDir() error {
 	dir, err := newTestDir()
-	cp.ConfluentCurrent = dir
+	cp.ConfluentCurrentDir = dir
 	if err != nil {
 		return err
 	}
@@ -39,19 +54,19 @@ func (cp *ConfluentPlatform) NewConfluentCurrent() error {
 	return os.Setenv("CONFLUENT_CURRENT", dir)
 }
 
-func (cp *ConfluentPlatform) NewConfluentCurrentDir() error {
-	if err := cp.NewConfluentCurrent(); err != nil {
+func (cp *ConfluentPlatform) NewConfluentCurrent() error {
+	if err := cp.NewConfluentCurrentDir(); err != nil {
 		return err
 	}
 
 	dir, err := newTestDir()
-	cp.ConfluentCurrentDir = dir
+	cp.ConfluentCurrent = dir
 	if err != nil {
 		return err
 	}
 
-	trackingFile := filepath.Join(cp.ConfluentCurrent, "confluent.current")
-	return ioutil.WriteFile(trackingFile, []byte(dir), 0644)
+	cp.TrackingFile = filepath.Join(cp.ConfluentCurrentDir, "confluent.current")
+	return ioutil.WriteFile(cp.TrackingFile, []byte(dir), 0644)
 }
 
 func newTestDir() (string, error) {
@@ -79,6 +94,6 @@ func (cp *ConfluentPlatform) AddFileToConfluentHome(file string, contents string
 
 func (cp *ConfluentPlatform) TearDown() {
 	os.RemoveAll(cp.ConfluentHome)
-	os.RemoveAll(cp.ConfluentCurrent)
 	os.RemoveAll(cp.ConfluentCurrentDir)
+	os.RemoveAll(cp.ConfluentCurrent)
 }

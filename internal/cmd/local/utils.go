@@ -8,8 +8,6 @@ import (
 	"strings"
 )
 
-var confluentControlCenter = "share/java/confluent-control-center/control-center-*.jar"
-
 func findConfluentFile(pattern string) ([]string, error) {
 	confluentHome, err := getConfluentHome()
 	if err != nil {
@@ -40,7 +38,8 @@ func getConfluentHome() (string, error) {
 }
 
 func isConfluentPlatform() (bool, error) {
-	files, err := findConfluentFile(confluentControlCenter)
+	controlCenter := "share/java/confluent-control-center/control-center-*.jar"
+	files, err := findConfluentFile(controlCenter)
 	if err != nil {
 		return false, err
 	}

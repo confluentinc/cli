@@ -26,15 +26,16 @@ func TestServiceZookeeperStart(t *testing.T) {
 	req.NoError(cp.NewConfluentHome())
 	req.NoError(cp.AddScriptToConfluentHome("bin/zookeeper-server-start", "#!/bin/bash\necho Hello, World!"))
 	req.NoError(cp.AddEmptyFileToConfluentHome("etc/kafka/zookeeper.properties"))
-	req.NoError(cp.NewConfluentCurrentDir())
+	req.NoError(cp.NewConfluentCurrent())
 
 	out, err := mockLocalCommand("services", "zookeeper", "start")
 	req.NoError(err)
 	req.Contains(out, "Starting zookeeper")
 	req.Contains(out, "zookeeper is [UP]")
-	req.DirExists(filepath.Join(cp.ConfluentCurrentDir, "zookeeper"))
-	req.FileExists(filepath.Join(cp.ConfluentCurrentDir, "zookeeper", "zookeeper.stdout"))
-	req.FileExists(filepath.Join(cp.ConfluentCurrentDir, "zookeeper", "zookeeper.pid"))
+
+	req.DirExists(filepath.Join(cp.ConfluentCurrent, "zookeeper"))
+	req.FileExists(filepath.Join(cp.ConfluentCurrent, "zookeeper", "zookeeper.stdout"))
+	req.FileExists(filepath.Join(cp.ConfluentCurrent, "zookeeper", "zookeeper.pid"))
 }
 
 func TestConfigService(t *testing.T) {
@@ -45,14 +46,14 @@ func TestConfigService(t *testing.T) {
 
 	req.NoError(cp.NewConfluentHome())
 	req.NoError(cp.AddFileToConfluentHome("etc/kafka/zookeeper.properties", "replace=old\n# comment=old\n", 0644))
-	req.NoError(cp.NewConfluentCurrentDir())
+	req.NoError(cp.NewConfluentCurrent())
 
 	dir, err := getServiceDir("zookeeper")
 	req.NoError(err)
 	config := map[string]string{"replace": "new", "comment": "new", "append": "new"}
 	req.NoError(configService("zookeeper", dir, config))
 
-	properties := filepath.Join(cp.ConfluentCurrentDir, "zookeeper", "zookeeper.properties")
+	properties := filepath.Join(cp.ConfluentCurrent, "zookeeper", "zookeeper.properties")
 	req.FileExists(properties)
 	data, err := ioutil.ReadFile(properties)
 	req.NoError(err)
@@ -68,11 +69,7 @@ func TestServiceVersions(t *testing.T) {
 
 	cp := mock.NewConfluentPlatform()
 	defer cp.TearDown()
-
 	req.NoError(cp.NewConfluentHome())
-
-	file := strings.Replace(confluentControlCenter, "*", "0.0.0", 1)
-	req.NoError(cp.AddEmptyFileToConfluentHome(file))
 
 	versions := map[string]string{
 		"Confluent Platform": "1.0.0",
