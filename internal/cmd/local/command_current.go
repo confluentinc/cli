@@ -77,4 +77,3 @@ func createCurrentDirectory(parentDir string) string {
 		}
 	}
 }
-

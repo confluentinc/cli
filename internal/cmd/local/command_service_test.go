@@ -3,7 +3,6 @@ package local
 import (
 	"io/ioutil"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"testing"
 
@@ -11,32 +10,6 @@ import (
 
 	"github.com/confluentinc/cli/mock"
 )
-
-func TestServiceZookeeperStart(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		// Bash scripts can not be run on Windows
-		return
-	}
-
-	req := require.New(t)
-
-	cp := mock.NewConfluentPlatform()
-	defer cp.TearDown()
-
-	req.NoError(cp.NewConfluentHome())
-	req.NoError(cp.AddScriptToConfluentHome("bin/zookeeper-server-start", "#!/bin/bash\necho Hello, World!"))
-	req.NoError(cp.AddEmptyFileToConfluentHome("etc/kafka/zookeeper.properties"))
-	req.NoError(cp.NewConfluentCurrent())
-
-	out, err := mockLocalCommand("services", "zookeeper", "start")
-	req.NoError(err)
-	req.Contains(out, "Starting zookeeper")
-	req.Contains(out, "zookeeper is [UP]")
-
-	req.DirExists(filepath.Join(cp.ConfluentCurrent, "zookeeper"))
-	req.FileExists(filepath.Join(cp.ConfluentCurrent, "zookeeper", "zookeeper.stdout"))
-	req.FileExists(filepath.Join(cp.ConfluentCurrent, "zookeeper", "zookeeper.pid"))
-}
 
 func TestConfigService(t *testing.T) {
 	req := require.New(t)
