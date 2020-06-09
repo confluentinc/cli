@@ -3,6 +3,7 @@ package iam
 import (
 	"context"
 	"fmt"
+	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	"net/http"
 	"sort"
 	"strings"
@@ -38,6 +39,7 @@ type rolebindingOptions struct {
 	resource         string
 	prefix           bool
 	principal        string
+	v2Scope			 mdsv2alpha1.Scope
 	mdsScope         mds.MdsScope
 	resourcesRequest mds.ResourcesRequest
 }
@@ -451,18 +453,13 @@ func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOption
 			prefix,
 			principal,
 			*scope,
+			*scope,
 			resourcesRequest,
 		},
 		nil
 }
 
-func (c *rolebindingCommand) create(cmd *cobra.Command, args []string) error {
-	options, err := c.parseCommon(cmd)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
-	var resp *http.Response
+func (c *rolebindingCommand) confluentCreateHelper(options *rolebindingOptions) (resp *http.Response, err error) {
 	if options.resource != "" {
 		resp, err = c.MDSClient.RBACRoleBindingCRUDApi.AddRoleResourcesForPrincipal(
 			c.createContext(),
@@ -475,6 +472,39 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, args []string) error {
 			options.principal,
 			options.role,
 			options.mdsScope)
+	}
+	return
+}
+
+func (c *rolebindingCommand) ccloudCreateHelper(options *rolebindingOptions) (resp *http.Response, err error) {
+	/*if options.resource != "" {
+		resp, err = c.MDSv2Client.RBACRoleBindingCRUDApi.AddRoleResourcesForPrincipal(
+			c.createContext(),
+			options.principal,
+			options.role,
+			options.resourcesRequest)
+	} else {*/
+		resp, err = c.MDSv2Client.RBACRoleBindingCRUDApi.AddRoleForPrincipal(
+			c.createContext(),
+			options.principal,
+			options.role,
+			// options.mdsScope)
+			options.v2Scope)
+	// }
+	return
+}
+
+func (c *rolebindingCommand) create(cmd *cobra.Command, args []string) error {
+	options, err := c.parseCommon(cmd)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	var resp *http.Response
+	if c.Config.CLIName == "ccloud" {
+		resp, err = c.ccloudCreateHelper(options)
+	} else {
+		resp, err = c.confluentCreateHelper(options)
 	}
 
 	if err != nil {

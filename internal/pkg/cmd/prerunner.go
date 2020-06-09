@@ -52,8 +52,8 @@ type CLICommand struct {
 type AuthenticatedCLICommand struct {
 	*CLICommand
 	Client      *ccloud.Client
-	MDSClient   *mdsv2alpha1.APIClient
-	// MDSv2Client *mdsv2alpha1.APIClient
+	MDSClient   *mds.APIClient
+	MDSv2Client *mdsv2alpha1.APIClient
 	Context     *DynamicContext
 	State       *v2.ContextState
 }
@@ -331,9 +331,11 @@ func (r *PreRun) setClients(cliCmd *AuthenticatedCLICommand) error {
 		}
 		cliCmd.Client = ccloudClient
 		cliCmd.Config.Client = ccloudClient
-		cliCmd.MDSClient = r.createMDSClient(ctx, cliCmd.Version)
+		cliCmd.MDSClient = nil
+		cliCmd.MDSv2Client = r.createMDSv2Client(ctx, cliCmd.Version)
 	} else {
 		cliCmd.MDSClient = r.createMDSClient(ctx, cliCmd.Version)
+		cliCmd.MDSv2Client = nil
 	}
 	return nil
 }

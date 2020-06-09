@@ -34,5 +34,7 @@ func New(prerunner pcmd.PreRunner, config *v3.Config) *cobra.Command {
 func (c *command) init() {
 	c.AddCommand(NewRoleCommand(c.config, c.prerunner))
 	c.AddCommand(NewRolebindingCommand(c.config, c.prerunner))
-	c.AddCommand(NewACLCommand(c.config, c.prerunner))
+	if c.config.CLIName != "ccloud" {
+		c.AddCommand(NewACLCommand(c.config, c.prerunner))
+	}
 }
