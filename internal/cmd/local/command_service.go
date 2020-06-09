@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -248,22 +249,22 @@ func startService(command *cobra.Command, service string) error {
 
 	bin := filepath.Join(confluentHome, "bin", services[service].startCommand)
 	arg := filepath.Join(dir, fmt.Sprintf("%s.properties", service))
-	startCmd := exec.Command(bin, arg)
+	start := exec.Command(bin, arg)
 
 	log := filepath.Join(dir, fmt.Sprintf("%s.stdout", service))
 	fd, err := os.Create(log)
 	if err != nil {
 		return err
 	}
-	startCmd.Stdout = fd
-	startCmd.Stderr = fd
+	start.Stdout = fd
+	start.Stderr = fd
 
-	if err := startCmd.Start(); err != nil {
+	if err := start.Start(); err != nil {
 		return err
 	}
 
 	pidFile := getPidFile(service, dir)
-	if err := writeInt(pidFile, startCmd.Process.Pid); err != nil {
+	if err := writeInt(pidFile, start.Process.Pid); err != nil {
 		return err
 	}
 
@@ -275,13 +276,18 @@ func startService(command *cobra.Command, service string) error {
 		if isUp {
 			break
 		}
+		time.Sleep(time.Second)
 	}
 
 	return printStatus(command, service)
 }
 
 func configService(service string, dir string, config map[string]string) error {
-	if err := os.MkdirAll(filepath.Join(dir, "data"), 0777); err != nil {
+	dataDir := filepath.Join(dir, "data")
+	if service == "ksql-server" {
+		dataDir = filepath.Join(dir, "data", "kafka-streams")
+	}
+	if err := os.MkdirAll(dataDir, 0777); err != nil {
 		return err
 	}
 
@@ -371,6 +377,7 @@ func stopService(command *cobra.Command, service string) error {
 		if !isUp {
 			break
 		}
+		time.Sleep(time.Second)
 	}
 
 	if err := os.Remove(pidFile); err != nil {
@@ -406,8 +413,20 @@ func isRunning(service, dir string) (bool, error) {
 		return false, err
 	}
 
-	err = process.Signal(syscall.Signal(0))
-	return err == nil, nil
+	if err := process.Signal(syscall.Signal(0)); err != nil {
+		return false, nil
+	}
+
+	return isPortOpen(service)
+}
+
+func isPortOpen(service string) (bool, error) {
+	addr := fmt.Sprintf(":%d", services[service].port)
+	out, err := exec.Command("lsof", "-i", addr).Output()
+	if err != nil {
+		return false, nil
+	}
+	return len(out) > 0, nil
 }
 
 func getPidFile(service, dir string) string {

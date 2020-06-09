@@ -25,10 +25,9 @@ var (
 			startDependencies: []string{
 				"zookeeper",
 				"kafka",
+				"schema-registry",
 			},
-			stopDependencies: []string{
-				"control-center",
-			},
+			stopDependencies:        []string{},
 			startCommand:            "connect-distributed",
 			properties:              "schema-registry/connect-avro-distributed.properties",
 			port:                    8083,
@@ -38,8 +37,8 @@ var (
 			startDependencies: []string{
 				"zookeeper",
 				"kafka",
-				"connect",
 				"schema-registry",
+				"connect",
 				"ksql-server",
 			},
 			stopDependencies:        []string{},
@@ -82,9 +81,7 @@ var (
 				"kafka",
 				"schema-registry",
 			},
-			stopDependencies: []string{
-				"control-center",
-			},
+			stopDependencies:        []string{},
 			startCommand:            "ksql-server-start",
 			properties:              "ksqldb/ksql-server.properties", // TODO: ksql/ksql-server.properties for older versions
 			port:                    8088,
@@ -95,12 +92,7 @@ var (
 				"zookeeper",
 				"kafka",
 			},
-			stopDependencies: []string{
-				"control-center",
-				"ksql-server",
-				"connect",
-				"kafka-rest",
-			},
+			stopDependencies:        []string{},
 			startCommand:            "schema-registry-start",
 			properties:              "schema-registry/schema-registry.properties",
 			port:                    8081,
@@ -126,9 +118,9 @@ var (
 	orderedServices = []string{
 		"zookeeper",
 		"kafka",
-		"connect",
-		"kafka-rest",
 		"schema-registry",
+		"kafka-rest",
+		"connect",
 		"ksql-server",
 		"control-center",
 	}
@@ -222,6 +214,7 @@ func getConfig(service string, dir string) map[string]string {
 		config["zookeeper.connect"] = fmt.Sprintf("localhost:%d", services["zookeeper"].port)
 		config["schema.registry.url"] = fmt.Sprintf("http://localhost:%d", services["schema-registry"].port)
 	case "ksql-server":
+		config["state.dir"] = filepath.Join(dir, "data", "kafka-streams")
 		config["kafkastore.connection.url"] = fmt.Sprintf("localhost:%d", services["zookeeper"].port)
 		config["ksql.schema.registry.url"] = fmt.Sprintf("http://localhost:%d", services["schema-registry"].port)
 	case "schema-registry":
