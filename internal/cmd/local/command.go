@@ -16,21 +16,13 @@ func NewCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
 		cfg, prerunner,
 	)
 
-	// TODO: confluent local acl
-	// TODO: confluent local config
-	// TODO: confluent local consume
-	// TODO: confluent local current
+	localCommand.AddCommand(NewConnectorsCommand(prerunner, cfg))
+	localCommand.AddCommand(NewCurrentCommand(prerunner, cfg))
 	// TODO: confluent local demo
 	// TODO: confluent local destroy
-	// TODO: confluent local list
-	// TODO: confluent local load
-	// TODO: confluent local log
-	// TODO: confluent local produce
-	// TODO: confluent local start
-	// TODO: confluent local status
-	// TODO: confluent local stop
-	// TODO: confluent local top
-	// TODO: confluent local unload
+	localCommand.AddCommand(NewPluginsCommand(prerunner, cfg))
+	localCommand.AddCommand(NewServicesCommand(prerunner, cfg))
+	// TODO: confluent local topics
 	localCommand.AddCommand(NewVersionCommand(prerunner, cfg))
 
 	return localCommand.Command
