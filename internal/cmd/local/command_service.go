@@ -103,6 +103,10 @@ func NewServiceStartCommand(service string, prerunner cmd.PreRunner, cfg *v3.Con
 func runServiceStartCommand(command *cobra.Command, _ []string) error {
 	service := command.Parent().Name()
 
+	if err := notifyConfluentCurrent(command); err != nil {
+		return err
+	}
+
 	for _, dependency := range services[service].startDependencies {
 		if err := startService(command, dependency); err != nil {
 			return err
@@ -145,6 +149,10 @@ func NewServiceStopCommand(service string, prerunner cmd.PreRunner, cfg *v3.Conf
 
 func runServiceStopCommand(command *cobra.Command, _ []string) error {
 	service := command.Parent().Name()
+
+	if err := notifyConfluentCurrent(command); err != nil {
+		return err
+	}
 
 	for _, dependency := range services[service].stopDependencies {
 		if err := stopService(command, dependency); err != nil {
@@ -450,7 +458,7 @@ func readInt(file string) (int, error) {
 	}
 
 	// TODO: Remove \n once the original local command is removed
-	x, err := strconv.Atoi(strings.TrimRight(string(data), "\n"))
+	x, err := strconv.Atoi(strings.TrimSuffix(string(data), "\n"))
 	if err != nil {
 		return 0, err
 	}

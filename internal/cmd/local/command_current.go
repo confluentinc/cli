@@ -60,7 +60,7 @@ func getConfluentCurrent() (string, error) {
 		if err != nil {
 			return "", err
 		}
-		confluentCurrent = strings.TrimRight(string(data), "\n")
+		confluentCurrent = strings.TrimSuffix(string(data), "\n")
 	}
 
 	return confluentCurrent, nil
@@ -76,4 +76,14 @@ func createCurrentDirectory(parentDir string) string {
 			return path
 		}
 	}
+}
+
+func notifyConfluentCurrent(command *cobra.Command) error {
+	current, err := getConfluentCurrent()
+	if err != nil {
+		return err
+	}
+
+	command.Printf("Using CONFLUENT_CURRENT: %s\n", current)
+	return nil
 }
