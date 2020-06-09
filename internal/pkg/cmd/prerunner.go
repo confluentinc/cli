@@ -51,10 +51,11 @@ type CLICommand struct {
 
 type AuthenticatedCLICommand struct {
 	*CLICommand
-	Client    *ccloud.Client
-	MDSClient *mds.APIClient
-	Context   *DynamicContext
-	State     *v2.ContextState
+	Client		*ccloud.Client
+	MDSClient	*mds.APIClient
+	MDSClientv2	*mdsv2alpha1.APIClient
+	Context		*DynamicContext
+	State		*v2.ContextState
 }
 
 type HasAPIKeyCLICommand struct {
