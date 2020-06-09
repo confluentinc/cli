@@ -2,7 +2,12 @@ package local
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
 	"path/filepath"
+	"runtime"
+	"strconv"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -142,6 +147,7 @@ func NewServicesCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command 
 	servicesCommand.AddCommand(NewServicesStartCommand(prerunner, cfg))
 	servicesCommand.AddCommand(NewServicesStatusCommand(prerunner, cfg))
 	servicesCommand.AddCommand(NewServicesStopCommand(prerunner, cfg))
+	servicesCommand.AddCommand(NewServicesTopCommand(prerunner, cfg))
 
 	return servicesCommand.Command
 }
@@ -282,6 +288,78 @@ func runServicesStopCommand(command *cobra.Command, _ []string) error {
 	}
 
 	return nil
+}
+
+func NewServicesTopCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
+	servicesTopCommand := cmd.NewAnonymousCLICommand(
+		&cobra.Command{
+			Use:   "top",
+			Short: "Monitor all Confluent Platform services.",
+			Args:  cobra.NoArgs,
+			RunE:  runServicesTopCommand,
+		},
+		cfg, prerunner)
+
+	return servicesTopCommand.Command
+}
+
+func runServicesTopCommand(command *cobra.Command, _ []string) error {
+	availableServices, err := getAvailableServices()
+	if err != nil {
+		return err
+	}
+
+	pids := []int{}
+	for _, service := range availableServices {
+		dir, err := getServiceDir(service)
+		if err != nil {
+			return err
+		}
+
+		isUp, err := isRunning(service, dir)
+		if err != nil {
+			return err
+		}
+
+		if isUp {
+			pid, err := readInt(getPidFile(service, dir))
+			if err != nil {
+				return err
+			}
+			pids = append(pids, pid)
+		}
+	}
+
+	if len(pids) == 0 {
+		return fmt.Errorf("no services are running")
+	}
+
+	return top(pids)
+}
+
+func top(pids []int) error {
+	var top *exec.Cmd
+
+	switch runtime.GOOS {
+	case "darwin":
+		args := make([]string, len(pids) * 2)
+		for i := 0; i < len(pids); i++ {
+			args[i * 2] = "-pid"
+			args[i * 2 + 1] = strconv.Itoa(pids[i])
+		}
+		top = exec.Command("top", args...)
+	case "linux":
+		args := make([]string, len(pids))
+		for i := 0; i < len(pids); i++ {
+			args[i] = strconv.Itoa(pids[i])
+		}
+		top = exec.Command("top", "-p", strings.Join(args, ","))
+	default:
+		return fmt.Errorf("top not available on platform: %s", runtime.GOOS)
+	}
+
+	top.Stdout, top.Stderr, top.Stdin = os.Stdout, os.Stderr, os.Stdin
+	return top.Run()
 }
 
 func getAvailableServices() ([]string, error) {

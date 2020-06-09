@@ -37,6 +37,7 @@ func runDestroyCommand(command *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+	command.Printf("Deleting: %s", confluentCurrent)
 	if err := os.RemoveAll(confluentCurrent); err != nil {
 		return err
 	}

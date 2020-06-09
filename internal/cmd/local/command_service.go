@@ -7,7 +7,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
-	"runtime"
 	"strconv"
 	"strings"
 	"syscall"
@@ -177,23 +176,20 @@ func runServiceTopCommand(command *cobra.Command, _ []string) error {
 		return err
 	}
 
-	file := getPidFile(service, dir)
-	pid, err := readInt(file)
+	isUp, err := isRunning(service, dir)
+	if err != nil {
+		return err
+	}
+	if !isUp {
+		return printStatus(command, service)
+	}
+
+	pid, err := readInt(getPidFile(service, dir))
 	if err != nil {
 		return err
 	}
 
-	var top *exec.Cmd
-	switch runtime.GOOS {
-	case "darwin":
-		top = exec.Command("top", "-pid", strconv.Itoa(pid))
-	case "linux":
-		top = exec.Command("top", "-p", strconv.Itoa(pid))
-	default:
-		return fmt.Errorf("top is not supported")
-	}
-	top.Stdout, top.Stderr, top.Stdin = os.Stdout, os.Stderr, os.Stdin
-	return top.Run()
+	return top([]int{pid})
 }
 
 func NewServiceVersionCommand(service string, prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
@@ -232,7 +228,7 @@ func startService(command *cobra.Command, service string) error {
 		return err
 	}
 	if isUp {
-		return nil
+		return printStatus(command, service)
 	}
 
 	config := getConfig(service, dir)
@@ -274,6 +270,16 @@ func startService(command *cobra.Command, service string) error {
 			return err
 		}
 		if isUp {
+			break
+		}
+	}
+
+	for {
+		isOpen, err := isPortOpen(service)
+		if err != nil {
+			return err
+		}
+		if isOpen {
 			break
 		}
 		time.Sleep(time.Second)
@@ -349,7 +355,7 @@ func stopService(command *cobra.Command, service string) error {
 		return err
 	}
 	if !isUp {
-		return nil
+		return printStatus(command, service)
 	}
 
 	command.Printf("Stopping %s\n", service)
@@ -377,7 +383,6 @@ func stopService(command *cobra.Command, service string) error {
 		if !isUp {
 			break
 		}
-		time.Sleep(time.Second)
 	}
 
 	if err := os.Remove(pidFile); err != nil {
@@ -417,7 +422,7 @@ func isRunning(service, dir string) (bool, error) {
 		return false, nil
 	}
 
-	return isPortOpen(service)
+	return true, nil
 }
 
 func isPortOpen(service string) (bool, error) {
