@@ -31,7 +31,7 @@ var (
 	commit     = ""
 	date       = ""
 	host       = ""
-	cliName    = "ccloud"
+	cliName    = "confluent"
 	segmentKey = "KDsYPLPBNVB1IPJIN5oqrXnxQT9iKezo"
 	isTest     = "false"
 )
