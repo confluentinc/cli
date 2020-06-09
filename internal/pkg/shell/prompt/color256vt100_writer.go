@@ -2,6 +2,7 @@ package prompt
 
 import (
 	"fmt"
+	"io"
 	"strconv"
 
 	goprompt "github.com/c-bata/go-prompt"
@@ -9,6 +10,10 @@ import (
 
 type Color256VT100Writer struct {
 	goprompt.ConsoleWriter
+}
+
+type TestableColor256VT100Writer struct {
+	*Color256VT100Writer
 }
 
 // SetColor sets the text color. Color256VT100Writer will interpret each color
@@ -21,36 +26,51 @@ func (w *Color256VT100Writer) SetColor(fg, bg goprompt.Color, bold bool) {
 	} else {
 		w.setDisplayAttributes(fg, bg, goprompt.DisplayReset)
 	}
-	return
 }
 
 func NewStdoutColor256VT100Writer() *Color256VT100Writer {
 	return &Color256VT100Writer{ConsoleWriter: goprompt.NewStdoutWriter()}
 }
 
+func (tw *TestableColor256VT100Writer) Write(p []byte) (n int, err error) {
+	tw.Color256VT100Writer.WriteRaw(p)
+	return len(p), nil
+}
+
 // SetDisplayAttributes to set VT100 display attributes.
 func (w *Color256VT100Writer) setDisplayAttributes(fg, bg goprompt.Color, attrs ...goprompt.DisplayAttribute) {
-	w.WriteRawStr("\x1b[")        // Control sequence introducer.
-	defer w.WriteRaw([]byte{'m'}) // final character
-	var separator byte = ';'
-	for a := range attrs {
+	writeColorString(&TestableColor256VT100Writer{Color256VT100Writer: w}, fg, bg, attrs...)
+}
+
+func writeColorString(w io.Writer, fg, bg goprompt.Color, attrs ...goprompt.DisplayAttribute) {
+	var err error
+	write := func(p []byte) {
+		if err != nil {
+			return
+		}
+		_, err = w.Write(p)
+	}
+	write([]byte("\x1b["))   // Control sequence introducer.
+	defer write([]byte{'m'}) // final character
+	separator := []byte{';'}
+	for _, a := range attrs {
 		b := displayAttributeToBytes(goprompt.DisplayAttribute(a))
-		w.WriteRaw(b)
-		w.WriteRaw([]byte{separator})
+		write(b)
+		write(separator)
 	}
 	// Begin writing 256 color strings.
 	// Foreground.
 	if fg == 0 {
-		w.WriteRawStr("39") // Reset to default fg color.
+		write([]byte{'3', '9'}) // Reset to default fg color.
 	} else {
-		w.WriteRawStr(fmt.Sprintf("38;5;%d", fg)) // 8-bit foreground escape sequence.
+		write([]byte(fmt.Sprintf("38;5;%d", fg))) // 8-bit foreground escape sequence.
 	}
-	w.WriteRaw([]byte{separator})
+	write(separator)
 	// Background.
 	if bg == 0 {
-		w.WriteRawStr("49") // Reset to default fg color.
+		write([]byte{'4', '9'}) // Reset to default fg color.
 	} else {
-		w.WriteRawStr(fmt.Sprintf("48;5;%d", bg)) // 8-bit background escape sequence.
+		write([]byte(fmt.Sprintf("48;5;%d", bg))) // 8-bit background escape sequence.
 	}
 }
 
