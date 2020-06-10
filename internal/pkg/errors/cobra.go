@@ -1,8 +1,8 @@
 package errors
 
 import (
-	"errors"
 	"fmt"
+	"reflect"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
@@ -28,10 +28,15 @@ func HandleCommon(err error, cmd *cobra.Command) error {
 	cmd.SilenceUsage = true
 
 	// [CLI-505] mds.GenericOpenAPIErrors are not hashable so messages[err] panics;
-	// re-wrap the message to get around that case, which is ok since the hash/comparison
-	// is just based on the error strings
-	if msg, ok := messages[errors.New(err.Error())]; ok {
-		return fmt.Errorf(msg)
+	// so check if the error is hashable before trying to use messages[err]
+	// (This is a recommended way of checking whether a variable is hashable, see
+	//  https://groups.google.com/forum/#!topic/golang-nuts/fpzQdHBdV3c )
+	k := reflect.TypeOf(err).Kind()
+	hashable := k < reflect.Array || k == reflect.Ptr || k == reflect.UnsafePointer
+	if hashable {
+		if msg, ok := messages[err]; ok {
+			return fmt.Errorf(msg)
+		}
 	}
 	switch e := err.(type) {
 	case mds.GenericOpenAPIError:
