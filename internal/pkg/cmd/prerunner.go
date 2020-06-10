@@ -394,7 +394,7 @@ func (r *PreRun) createMDSv2Client(ctx *DynamicContext, ver *version.Version) *m
 	if ctx == nil {
 		return mdsv2alpha1.NewAPIClient(mdsv2Config)
 	}
-	mdsv2Config.BasePath = ctx.Platform.Server
+	mdsv2Config.BasePath = ctx.Platform.Server + "/security/v2alpha1"
 	mdsv2Config.UserAgent = ver.UserAgent
 	if ctx.Platform.CaCertPath == "" {
 		return mdsv2alpha1.NewAPIClient(mdsv2Config)

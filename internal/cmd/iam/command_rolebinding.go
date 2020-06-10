@@ -183,6 +183,20 @@ func (c *rolebindingCommand) validateRoleAndResourceType(roleName string, resour
 }
 
 func (c *rolebindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mds.MdsScope, error) {
+	return c.parseAndValidateScopeHelper(cmd)
+}
+
+func (c *rolebindingCommand) parseAndValidateV2Scope(cmd *cobra.Command) (*mdsv2alpha1.Scope, error) {
+	mdsScope, err := c.parseAndValidateScopeHelper(cmd)
+	// orgId := c.State.Auth.User.OrganizationId
+	v2Scope := &mdsv2alpha1.Scope{
+		Path: []string{"organization=", "environment=" + c.EnvironmentId()},
+		Clusters: mdsv2alpha1.ScopeClusters(mdsScope.Clusters),
+	}
+	return v2Scope, err
+}
+
+func (c *rolebindingCommand) parseAndValidateScopeHelper(cmd *cobra.Command) (*mds.MdsScope, error) {
 	scope := &mds.ScopeClusters{}
 	nonKafkaScopesSet := 0
 
@@ -212,12 +226,14 @@ func (c *rolebindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mds.Mds
 	}
 
 	if clusterName == "" {
-		if scope.KafkaCluster == "" && nonKafkaScopesSet > 0 {
-			return nil, errors.HandleCommon(errors.New("Must also specify a --kafka-cluster-id to uniquely identify the scope."), cmd)
-		}
+		if c.Config.CLIName != "ccloud" {
+			if scope.KafkaCluster == "" && nonKafkaScopesSet > 0 {
+				return nil, errors.HandleCommon(errors.New("Must also specify a --kafka-cluster-id to uniquely identify the scope."), cmd)
+			}
 
-		if scope.KafkaCluster == "" && nonKafkaScopesSet == 0 {
-			return nil, errors.HandleCommon(errors.New("Must specify either cluster ID flag to indicate role binding scope or the cluster name."), cmd)
+			if scope.KafkaCluster == "" && nonKafkaScopesSet == 0 {
+				return nil, errors.HandleCommon(errors.New("Must specify either cluster ID flag to indicate role binding scope or the cluster name."), cmd)
+			}
 		}
 
 		if nonKafkaScopesSet > 1 {
@@ -424,27 +440,35 @@ func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOption
 		return nil, errors.HandleCommon(err, cmd)
 	}
 
-	scope, err := c.parseAndValidateScope(cmd)
+	scope := &mds.MdsScope{}
+	v2Scope := &mdsv2alpha1.Scope{}
+	if c.Config.CLIName != "ccloud" {
+		scope, err = c.parseAndValidateScope(cmd)
+	} else {
+		v2Scope, err = c.parseAndValidateV2Scope(cmd)
+	}
 	if err != nil {
 		return nil, errors.HandleCommon(err, cmd)
 	}
 
 	resourcesRequest := mds.ResourcesRequest{}
-	if resource != "" {
-		parsedResourcePattern, err := c.parseAndValidateResourcePattern(resource, prefix)
-		if err != nil {
-			return nil, errors.HandleCommon(err, cmd)
-		}
-		err = c.validateRoleAndResourceType(role, parsedResourcePattern.ResourceType)
-		if err != nil {
-			return nil, errors.HandleCommon(err, cmd)
-		}
-		resourcePatterns := []mds.ResourcePattern{
-			parsedResourcePattern,
-		}
-		resourcesRequest = mds.ResourcesRequest{
-			MdsScope:         *scope,
-			ResourcePatterns: resourcePatterns,
+	if c.Config.CLIName != "ccloud" {
+		if resource != "" {
+			parsedResourcePattern, err := c.parseAndValidateResourcePattern(resource, prefix)
+			if err != nil {
+				return nil, errors.HandleCommon(err, cmd)
+			}
+			err = c.validateRoleAndResourceType(role, parsedResourcePattern.ResourceType)
+			if err != nil {
+				return nil, errors.HandleCommon(err, cmd)
+			}
+			resourcePatterns := []mds.ResourcePattern{
+				parsedResourcePattern,
+			}
+			resourcesRequest = mds.ResourcesRequest{
+				MdsScope:         *scope,
+				ResourcePatterns: resourcePatterns,
+			}
 		}
 	}
 	return &rolebindingOptions{
@@ -452,7 +476,7 @@ func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOption
 			resource,
 			prefix,
 			principal,
-			*scope,
+			*v2Scope,
 			*scope,
 			resourcesRequest,
 		},

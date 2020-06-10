@@ -2,6 +2,7 @@ package errors
 
 import (
 	"fmt"
+	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
@@ -27,6 +28,8 @@ func HandleCommon(err error, cmd *cobra.Command) error {
 
 	switch e := err.(type) {
 	case mds.GenericOpenAPIError:
+		return fmt.Errorf(e.Error() + ": " + string(e.Body()))
+	case mdsv2alpha1.GenericOpenAPIError:
 		return fmt.Errorf(e.Error() + ": " + string(e.Body()))
 	case *corev1.Error:
 		var result error
