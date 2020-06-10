@@ -39,7 +39,7 @@ type rolebindingOptions struct {
 	resource         string
 	prefix           bool
 	principal        string
-	v2Scope			 mdsv2alpha1.Scope
+	scopeV2			 mdsv2alpha1.Scope
 	mdsScope         mds.MdsScope
 	resourcesRequest mds.ResourcesRequest
 }
@@ -158,7 +158,23 @@ func (c *rolebindingCommand) parseAndValidateResourcePattern(typename string, pr
 	return result, nil
 }
 
+func (c *rolebindingCommand) parseAndValidateResourcePatternV2(typename string, prefix bool) (mdsv2alpha1.ResourcePattern, error) {
+	r, err := c.parseAndValidateResourcePattern(typename, prefix)
+	rv2 := mdsv2alpha1.ResourcePattern{
+		PatternType: r.PatternType,
+	}
+	if err != nil {
+		return rv2, err
+	}
+	rv2.Name = r.Name
+	rv2.ResourceType = r.ResourceType
+	return rv2, err
+}
+
 func (c *rolebindingCommand) validateRoleAndResourceType(roleName string, resourceType string) error {
+	if c.Config.CLIName == "ccloud" {
+		return nil
+	}
 	ctx := c.createContext()
 	role, _, err := c.MDSClient.RBACRoleDefinitionsApi.RoleDetail(ctx, roleName)
 	if err != nil {
@@ -183,20 +199,6 @@ func (c *rolebindingCommand) validateRoleAndResourceType(roleName string, resour
 }
 
 func (c *rolebindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mds.MdsScope, error) {
-	return c.parseAndValidateScopeHelper(cmd)
-}
-
-func (c *rolebindingCommand) parseAndValidateV2Scope(cmd *cobra.Command) (*mdsv2alpha1.Scope, error) {
-	mdsScope, err := c.parseAndValidateScopeHelper(cmd)
-	// orgId := c.State.Auth.User.OrganizationId
-	v2Scope := &mdsv2alpha1.Scope{
-		Path: []string{"organization=", "environment=" + c.EnvironmentId()},
-		Clusters: mdsv2alpha1.ScopeClusters(mdsScope.Clusters),
-	}
-	return v2Scope, err
-}
-
-func (c *rolebindingCommand) parseAndValidateScopeHelper(cmd *cobra.Command) (*mds.MdsScope, error) {
 	scope := &mds.ScopeClusters{}
 	nonKafkaScopesSet := 0
 
@@ -245,6 +247,16 @@ func (c *rolebindingCommand) parseAndValidateScopeHelper(cmd *cobra.Command) (*m
 	return &mds.MdsScope{ClusterName: clusterName}, nil
 }
 
+func (c *rolebindingCommand) parseAndValidateScopeV2(cmd *cobra.Command) (*mdsv2alpha1.Scope, error) {
+	mdsScope, err := c.parseAndValidateScope(cmd)
+	// orgId := c.State.Auth.User.GetOrganizationId()
+	scopeV2 := &mdsv2alpha1.Scope{
+		Path: []string{"organization=", "environment=" + c.EnvironmentId()},
+		Clusters: mdsv2alpha1.ScopeClusters(mdsScope.Clusters),
+	}
+	return scopeV2, err
+}
+
 func (c *rolebindingCommand) list(cmd *cobra.Command, args []string) error {
 	if cmd.Flags().Changed("principal") {
 		return c.listPrincipalResources(cmd)
@@ -254,29 +266,7 @@ func (c *rolebindingCommand) list(cmd *cobra.Command, args []string) error {
 	return errors.HandleCommon(fmt.Errorf("required: either principal or role is required"), cmd)
 }
 
-func (c *rolebindingCommand) listPrincipalResources(cmd *cobra.Command) error {
-	scope, err := c.parseAndValidateScope(cmd)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
-	principal, err := cmd.Flags().GetString("principal")
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	err = c.validatePrincipalFormat(principal)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
-	role := "*"
-	if cmd.Flags().Changed("role") {
-		r, err := cmd.Flags().GetString("role")
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-		role = r
-	}
+func (c *rolebindingCommand) confluentListPrincipalResourcesHelper(cmd *cobra.Command, principal string, scope *mds.MdsScope, role string) error {
 	principalsRolesResourcePatterns, response, err := c.MDSClient.RBACRoleBindingSummariesApi.LookupResourcesForPrincipal(
 		c.createContext(),
 		principal,
@@ -321,6 +311,91 @@ func (c *rolebindingCommand) listPrincipalResources(cmd *cobra.Command) error {
 	outputWriter.StableSort()
 
 	return outputWriter.Out()
+}
+
+func (c *rolebindingCommand) ccloudListPrincipalResourcesHelper(cmd *cobra.Command, principal string, scopeV2 *mdsv2alpha1.Scope, role string) error {
+	scopedPrincipalsRolesResourcePatterns, _, err := c.MDSv2Client.RBACRoleBindingSummariesApi.MyRoleBindings(
+		c.createContext(),
+		principal,
+		*scopeV2)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	outputWriter, err := output.NewListOutputWriter(cmd, resourcePatternListFields, resourcePatternHumanListLabels, resourcePatternStructuredListLabels)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	for _, scopeRoleBindingMapping := range scopedPrincipalsRolesResourcePatterns {
+		// roleBindingScope := scopeRoleBindingMapping.Scope
+		principalsRolesResourcePatterns := scopeRoleBindingMapping.Rolebindings
+		for principalName, rolesResourcePatterns := range principalsRolesResourcePatterns {
+			for roleName, resourcePatterns := range rolesResourcePatterns {
+				if role == "*" || roleName == role {
+					for _, resourcePattern := range resourcePatterns {
+						outputWriter.AddElement(&listDisplay{
+							Principal:    principalName,
+							Role:         roleName,
+							ResourceType: resourcePattern.ResourceType,
+							Name:         resourcePattern.Name,
+							PatternType:  resourcePattern.PatternType,
+						})
+					}
+					if len(resourcePatterns) == 0 && clusterScopedRoles[roleName] {
+						outputWriter.AddElement(&listDisplay{
+							Principal:    principalName,
+							Role:         roleName,
+							ResourceType: "Cluster",
+							Name:         "",
+							PatternType:  "",
+						})
+					}
+				}
+			}
+		}
+	}
+
+	outputWriter.StableSort()
+
+	return outputWriter.Out()
+}
+
+func (c *rolebindingCommand) listPrincipalResources(cmd *cobra.Command) error {
+	scope := &mds.MdsScope{}
+	scopeV2 := &mdsv2alpha1.Scope{}
+	var err error
+	if c.Config.CLIName == "ccloud" {
+		scopeV2, err = c.parseAndValidateScopeV2(cmd)
+	} else {
+		scope, err = c.parseAndValidateScope(cmd)
+	}
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	principal, err := cmd.Flags().GetString("principal")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	err = c.validatePrincipalFormat(principal)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	role := "*"
+	if cmd.Flags().Changed("role") {
+		r, err := cmd.Flags().GetString("role")
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+		role = r
+	}
+	if c.Config.CLIName == "ccloud" {
+		return c.ccloudListPrincipalResourcesHelper(cmd, principal, scopeV2, role)
+	} else {
+		return c.confluentListPrincipalResourcesHelper(cmd, principal, scope, role)
+	}
 }
 
 func (c *rolebindingCommand) listPrincipalResourcesV1(cmd *cobra.Command, mdsScope *mds.MdsScope, principal string, role string) error {
@@ -441,11 +516,11 @@ func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOption
 	}
 
 	scope := &mds.MdsScope{}
-	v2Scope := &mdsv2alpha1.Scope{}
+	scopeV2 := &mdsv2alpha1.Scope{}
 	if c.Config.CLIName != "ccloud" {
 		scope, err = c.parseAndValidateScope(cmd)
 	} else {
-		v2Scope, err = c.parseAndValidateV2Scope(cmd)
+		scopeV2, err = c.parseAndValidateScopeV2(cmd)
 	}
 	if err != nil {
 		return nil, errors.HandleCommon(err, cmd)
@@ -476,7 +551,7 @@ func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOption
 			resource,
 			prefix,
 			principal,
-			*v2Scope,
+			*scopeV2,
 			*scope,
 			resourcesRequest,
 		},
@@ -513,7 +588,7 @@ func (c *rolebindingCommand) ccloudCreateHelper(options *rolebindingOptions) (re
 			options.principal,
 			options.role,
 			// options.mdsScope)
-			options.v2Scope)
+			options.scopeV2)
 	// }
 	return
 }
@@ -542,13 +617,7 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *rolebindingCommand) delete(cmd *cobra.Command, args []string) error {
-	options, err := c.parseCommon(cmd)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
-	var resp *http.Response
+func (c* rolebindingCommand) confluentDeleteHelper(options *rolebindingOptions) (resp *http.Response, err error) {
 	if options.resource != "" {
 		resp, err = c.MDSClient.RBACRoleBindingCRUDApi.RemoveRoleResourcesForPrincipal(
 			c.createContext(),
@@ -561,6 +630,39 @@ func (c *rolebindingCommand) delete(cmd *cobra.Command, args []string) error {
 			options.principal,
 			options.role,
 			options.mdsScope)
+	}
+	return
+}
+
+func (c* rolebindingCommand) ccloudDeleteHelper(options *rolebindingOptions) (resp *http.Response, err error) {
+	/* if options.resource != "" {
+		resp, err = c.MDSv2Client.RBACRoleBindingCRUDApi.RemoveRoleResourcesForPrincipal(
+			c.createContext(),
+			options.principal,
+			options.role,
+			options.resourcesRequest)
+	} else { */
+		resp, err = c.MDSv2Client.RBACRoleBindingCRUDApi.DeleteRoleForPrincipal(
+			c.createContext(),
+			options.principal,
+			options.role,
+			// options.mdsScope)
+			options.scopeV2)
+	// }
+	return
+}
+
+func (c *rolebindingCommand) delete(cmd *cobra.Command, args []string) error {
+	options, err := c.parseCommon(cmd)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	var resp *http.Response
+	if c.Config.CLIName == "ccloud" {
+		resp, err = c.ccloudDeleteHelper(options)
+	} else {
+		resp, err = c.confluentDeleteHelper(options)
 	}
 
 	if err != nil {
