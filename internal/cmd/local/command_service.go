@@ -22,9 +22,9 @@ import (
 func NewServiceCommand(service string, prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
 	serviceCommand := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
-			Use:     service + " [command]",
-			Short:   "Manage the " + service + " service.",
-			Args:    cobra.ExactArgs(1),
+			Use:   service + " [command]",
+			Short: "Manage the " + service + " service.",
+			Args:  cobra.ExactArgs(1),
 		},
 		cfg, prerunner)
 
@@ -59,7 +59,7 @@ func runServiceLogCommand(command *cobra.Command, _ []string) error {
 		return err
 	}
 
-	log := filepath.Join(dir, fmt.Sprintf("%s.stdout", service))
+	log := filepath.Join(dir, fmt.Sprintf("%s.log", service))
 
 	data, err := ioutil.ReadFile(log)
 	if err != nil {
