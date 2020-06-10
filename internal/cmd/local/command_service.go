@@ -25,7 +25,6 @@ func NewServiceCommand(service string, prerunner cmd.PreRunner, cfg *v3.Config) 
 			Use:     service + " [command]",
 			Short:   "Manage the " + service + " service.",
 			Args:    cobra.ExactArgs(1),
-			PreRunE: validateService,
 		},
 		cfg, prerunner)
 
@@ -37,22 +36,6 @@ func NewServiceCommand(service string, prerunner cmd.PreRunner, cfg *v3.Config) 
 	serviceCommand.AddCommand(NewServiceVersionCommand(service, prerunner, cfg))
 
 	return serviceCommand.Command
-}
-
-func validateService(command *cobra.Command, _ []string) error {
-	service := command.Parent().Name()
-
-	availableServices, err := getAvailableServices()
-	if err != nil {
-		return err
-	}
-
-	for _, validService := range availableServices {
-		if service == validService {
-			return nil
-		}
-	}
-	return fmt.Errorf("unknown service: %s", service)
 }
 
 func NewServiceLogCommand(service string, prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {

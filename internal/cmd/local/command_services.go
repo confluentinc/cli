@@ -140,7 +140,8 @@ func NewServicesCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command 
 		},
 		cfg, prerunner)
 
-	for service := range services {
+	availableServices, _ := getAvailableServices()
+	for _, service := range availableServices {
 		servicesCommand.AddCommand(NewServiceCommand(service, prerunner, cfg))
 	}
 	servicesCommand.AddCommand(NewServicesListCommand(prerunner, cfg))
