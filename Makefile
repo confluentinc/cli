@@ -343,6 +343,7 @@ define print-release-notes-prep-next-steps
 	@echo "===================="
 endef
 
+RELEASE_NOTES_BRANCH ?= cli-$(BUMPED_VERSION)-release-notes
 .PHONY: publish-release-notes
 publish-release-notes:
 	@TMP_BASE=$$(mktemp -d) || exit 1; \
@@ -350,7 +351,7 @@ publish-release-notes:
 		git clone git@github.com:confluentinc/docs.git $${TMP_DOCS}; \
 		cd $${TMP_DOCS} || exit 1; \
 		git fetch ; \
-		git checkout -b cli-$(BUMPED_VERSION) origin/$(DOCS_BRANCH) || exit 1; \
+		git checkout -b $(RELEASE_NOTES_BRANCH) origin/$(DOCS_BRANCH) || exit 1; \
 		cd - || exit 1; \
 		CCLOUD_DOCS_DIR=$${TMP_DOCS}/cloud/cli; \
 		CONFLUENT_DOCS_DIR=$${TMP_DOCS}/cli; \
@@ -360,7 +361,7 @@ publish-release-notes:
 		git add . || exit 1; \
 		git diff --cached --exit-code > /dev/null && echo "nothing to update" && exit 0; \
 		git commit -m "New release notes for $(BUMPED_VERSION)" || exit 1; \
-		git push origin cli-$(BUMPED_VERSION) || exit 1; \
+		git push origin $(RELEASE_NOTES_BRANCH) || exit 1; \
 		hub pull-request -b $(DOCS_BRANCH) -m "New release notes for $(BUMPED_VERSION)" || exit 1; \
 		rm -rf $${TMP_BASE}
 	make publish-release-notes-to-s3
