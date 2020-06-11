@@ -13,16 +13,18 @@ import (
 )
 
 type command struct {
-	Command *cobra.Command
-	RootCmd *cobra.Command
-	config  *v3.Config
+	Command   *cobra.Command
+	RootCmd   *cobra.Command
+	config    *v3.Config
+	completer *completer.ShellCompleter
 }
 
 // NewShellCmd returns the Cobra command for the shell.
-func NewShellCmd(rootCmd *cobra.Command, config *v3.Config) *cobra.Command {
+func NewShellCmd(rootCmd *cobra.Command, config *v3.Config, completer *completer.ShellCompleter) *cobra.Command {
 	cliCmd := &command{
-		RootCmd: rootCmd,
-		config:  config,
+		RootCmd:   rootCmd,
+		config:    config,
+		completer: completer,
 	}
 
 	cliCmd.init()
@@ -67,7 +69,6 @@ func (c *command) shell(cmd *cobra.Command, args []string) {
 	livePrefixOpt := goprompt.OptionLivePrefix(livePrefixFunc)
 
 	opts := append(prompt.DefaultPromptOptions(), livePrefixOpt)
-	masterCompleter := completer.NewShellCompleter(c.RootCmd, c.config.CLIName)
-	cliPrompt := prompt.NewShellPrompt(c.RootCmd, masterCompleter, c.config, opts...)
+	cliPrompt := prompt.NewShellPrompt(c.RootCmd, c.completer, c.config, opts...)
 	cliPrompt.Run()
 }

@@ -39,6 +39,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 	pps1 "github.com/confluentinc/cli/internal/pkg/ps1"
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
+	"github.com/confluentinc/cli/internal/pkg/shell/completer"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -47,6 +48,7 @@ type Command struct {
 	// @VisibleForTesting
 	Analytics analytics.Client
 	logger    *log.Logger
+	completer *completer.ShellCompleter
 }
 
 func NewConfluentCommand(cliName string, cfg *v3.Config, logger *log.Logger, ver *pversion.Version, analytics analytics.Client, netrcHandler *pauth.NetrcHandler) (*Command, error) {
@@ -94,6 +96,7 @@ func NewConfluentCommand(cliName string, cfg *v3.Config, logger *log.Logger, ver
 	}
 	_ = pcmd.NewAnonymousCLICommand(cli, cfg, prerunner) // Add to correctly set prerunners. TODO: Check if really needed.
 	command := &Command{Command: cli, Analytics: analytics, logger: logger}
+	command.completer = completer.NewShellCompleter(cli, cliName)
 
 	cli.Version = ver.Version
 	cli.AddCommand(version.NewVersionCmd(prerunner, ver))
@@ -120,7 +123,7 @@ func NewConfluentCommand(cliName string, cfg *v3.Config, logger *log.Logger, ver
 		cli.AddCommand(environment.New(prerunner, cfg, cliName))
 		cli.AddCommand(service_account.New(prerunner, cfg))
 		// Keystore exposed so tests can pass mocks.
-		cli.AddCommand(apikey.New(prerunner, cfg, nil, resolver))
+		cli.AddCommand(apikey.New(prerunner, cfg, nil, resolver, command.completer.ServerSideCompleter))
 
 		// Schema Registry
 		// If srClient is nil, the function will look it up after prerunner verifies authentication. Exposed so tests can pass mocks
@@ -139,7 +142,7 @@ func NewConfluentCommand(cliName string, cfg *v3.Config, logger *log.Logger, ver
 		//cli.AddCommand(conn)
 
 		// Shell
-		cli.AddCommand(shell.NewShellCmd(cli, cfg))
+		cli.AddCommand(shell.NewShellCmd(cli, cfg, command.completer))
 	} else if cliName == "confluent" {
 		cli.AddCommand(iam.New(prerunner, cfg))
 

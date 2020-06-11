@@ -12,7 +12,7 @@ import (
 
 const (
 	defaultShellPrefix = " > "
-	maxSuggestion = 15
+	maxSuggestion      = 15
 )
 
 type ShellPrompt struct {

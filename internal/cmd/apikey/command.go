@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/c-bata/go-prompt"
 	"github.com/spf13/cobra"
 
 	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
@@ -14,6 +15,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/keystore"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/shell/completer"
 )
 
 const longDescription = `Use this command to register an API secret created by another
@@ -39,6 +41,7 @@ type command struct {
 	*pcmd.AuthenticatedCLICommand
 	keystore     keystore.KeyStore
 	flagResolver pcmd.FlagResolver
+	completer    *completer.ServerSideCompleter
 }
 
 var (
@@ -52,7 +55,7 @@ var (
 )
 
 // New returns the Cobra command for API Key.
-func New(prerunner pcmd.PreRunner, config *v3.Config, keystore keystore.KeyStore, resolver pcmd.FlagResolver) *cobra.Command {
+func New(prerunner pcmd.PreRunner, config *v3.Config, keystore keystore.KeyStore, resolver pcmd.FlagResolver, completer *completer.ServerSideCompleter) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "api-key",
@@ -63,6 +66,7 @@ func New(prerunner pcmd.PreRunner, config *v3.Config, keystore keystore.KeyStore
 		AuthenticatedCLICommand: cliCmd,
 		keystore:                keystore,
 		flagResolver:            resolver,
+		completer:               completer,
 	}
 	cmd.init()
 	return cmd.Command
@@ -108,12 +112,13 @@ func (c *command) init() {
 	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
 
-	c.AddCommand(&cobra.Command{
+	deleteCmd := &cobra.Command{
 		Use:   "delete <apikey>",
 		Short: "Delete API keys.",
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
-	})
+	}
+	c.AddCommand(deleteCmd)
 
 	storeCmd := &cobra.Command{
 		Use:   "store <apikey> <secret>",
@@ -142,6 +147,8 @@ func (c *command) init() {
 		panic(err)
 	}
 	c.AddCommand(useCmd)
+
+	c.completer.AddCommand(c.Command, c.suggestAPIKeys(c.Command))
 }
 
 func (c *command) list(cmd *cobra.Command, args []string) error {
@@ -413,4 +420,44 @@ func (c *command) parseFlagResolverPromptValue(source, prompt string, secure boo
 		return "", err
 	}
 	return strings.TrimSpace(val), nil
+}
+
+func (c *command) suggestAPIKeys(cmd *cobra.Command) func() []prompt.Suggest {
+	return func() []prompt.Suggest {
+		if err := c.Prerunner.Authenticated(c.AuthenticatedCLICommand)(cmd, []string{}); err != nil {
+			return []prompt.Suggest{
+				{
+					Text:        " ",
+					Description: "You are currently not authenticated. Please login.",
+				},
+			}
+		}
+		var suggests []prompt.Suggest
+		apiKeys, err := c.fetchAPIKeys(cmd)
+		if err != nil {
+			return suggests
+		}
+		for _, key := range apiKeys {
+			suggests = append(suggests, prompt.Suggest{
+				Text:        key.Key,
+				Description: key.Description,
+			})
+		}
+		return suggests
+	}
+}
+
+func (c *command) fetchAPIKeys(cmd *cobra.Command) ([]*authv1.ApiKey, error) {
+	apiKeys, err := c.Client.APIKey.List(context.Background(), &authv1.ApiKey{AccountId: c.EnvironmentId(), LogicalClusters: nil, UserId: 0})
+	if err != nil {
+		return nil, errors.HandleCommon(err, cmd)
+	}
+
+	var userApiKeys []*authv1.ApiKey
+	for _, key := range apiKeys {
+		if key.Id != 0 {
+			userApiKeys = append(userApiKeys, key)
+		}
+	}
+	return userApiKeys, nil
 }
