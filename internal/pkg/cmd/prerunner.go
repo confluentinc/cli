@@ -292,6 +292,9 @@ func (r *PreRun) getClusterIdForAPIKeyCredential(ctx *DynamicContext) string {
 
 // notifyIfUpdateAvailable prints a message if an update is available
 func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, name string, currentVersion string) error {
+	if isUpdateCommand(cmd) {
+		return nil
+	}
 	updateAvailable, latestVersion, err := r.UpdateClient.CheckForUpdates(name, currentVersion, true)
 	if err != nil {
 		// This is a convenience helper to check-for-updates before arbitrary commands. Since the CLI supports running
@@ -307,6 +310,10 @@ func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, name string, curren
 		ErrPrintf(cmd, msg, name, currentVersion, latestVersion, name)
 	}
 	return nil
+}
+
+func isUpdateCommand(cmd *cobra.Command) bool {
+	return strings.Contains(cmd.CommandPath(), "update")
 }
 
 func (r *PreRun) warnIfConfluentLocal(cmd *cobra.Command) {
