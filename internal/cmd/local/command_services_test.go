@@ -32,7 +32,7 @@ func TestConfluentCommunitySoftwareAvailableServices(t *testing.T) {
 	req.NotContains(availableServices, "control-center")
 }
 
-func TestTopNoServices(t *testing.T) {
+func TestTopErrorNoRunningServices(t *testing.T) {
 	req := require.New(t)
 
 	cp := mock.NewConfluentPlatform()

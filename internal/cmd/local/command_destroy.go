@@ -28,18 +28,19 @@ func runDestroyCommand(command *cobra.Command, _ []string) error {
 		return err
 	}
 
-	root := os.Getenv("CONFLUENT_CURRENT")
-	if root == "" {
-		root = os.TempDir()
-	}
-
 	confluentCurrent, err := getConfluentCurrent()
 	if err != nil {
 		return err
 	}
+
 	command.Printf("Deleting: %s\n", confluentCurrent)
 	if err := os.RemoveAll(confluentCurrent); err != nil {
 		return err
+	}
+
+	root := os.Getenv("CONFLUENT_CURRENT")
+	if root == "" {
+		root = os.TempDir()
 	}
 
 	trackingFile := filepath.Join(root, "confluent.current")
