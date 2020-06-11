@@ -33,7 +33,7 @@ func NewShellPrompt(rootCmd *cobra.Command, compl completer.Completer, cfg *v3.C
 		func(in string) {
 			promptArgs := strings.Fields(in)
 			rootCmd.SetArgs(promptArgs)
-			rootCmd.Execute()
+			_ = rootCmd.Execute()
 		},
 		shell.Complete,
 		opts...,
