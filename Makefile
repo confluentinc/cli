@@ -383,6 +383,8 @@ define print-publish-release-notes-next-steps
 	@echo
 	@echo "- Check release notes file in s3 confluent.cloud/ccloud-cli/release-notes/$(BUMPED_VERSION)/"
 	@echo
+	@echo "- Run 'make clean-release-notes' to clean up your local repo"
+	@echo
 	@echo "- Once the release notes are ready, it's time to release the CLI!"
 	@echo
 	@echo "===================="
