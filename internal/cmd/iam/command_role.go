@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	"net/http"
 	"os"
 	"strings"
@@ -77,7 +78,14 @@ func (c *roleCommand) init() {
 }
 
 func (c *roleCommand) list(cmd *cobra.Command, args []string) error {
-	roles, _, err := c.MDSClient.RBACRoleDefinitionsApi.Roles(c.createContext())
+	var rolesV2 []mdsv2alpha1.Role
+	var roles []mds.Role
+	var err error
+	if c.Config.CLIName == "ccloud" {
+		rolesV2, _, err = c.MDSv2Client.RBACRoleDefinitionsApi.Roles(c.createContext())
+	} else {
+		roles, _, err = c.MDSClient.RBACRoleDefinitionsApi.Roles(c.createContext())
+	}
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -87,12 +95,22 @@ func (c *roleCommand) list(cmd *cobra.Command, args []string) error {
 	}
 	if format == output.Human.String() {
 		var data [][]string
-		for _, role := range roles {
-			roleDisplay, err := createPrettyRole(role)
-			if err != nil {
-				return errors.HandleCommon(err, cmd)
+		if c.Config.CLIName == "ccloud" {
+			for _, role := range rolesV2 {
+				roleDisplay, err := createPrettyRoleV2(role)
+				if err != nil {
+					return errors.HandleCommon(err, cmd)
+				}
+				data = append(data, printer.ToRow(roleDisplay, roleFields))
 			}
-			data = append(data, printer.ToRow(roleDisplay, roleFields))
+		} else {
+			for _, role := range roles {
+				roleDisplay, err := createPrettyRole(role)
+				if err != nil {
+					return errors.HandleCommon(err, cmd)
+				}
+				data = append(data, printer.ToRow(roleDisplay, roleFields))
+			}
 		}
 		outputTable(data)
 	} else {
@@ -140,6 +158,17 @@ func (c *roleCommand) describe(cmd *cobra.Command, args []string) error {
 }
 
 func createPrettyRole(role mds.Role) (*prettyRole, error) {
+	marshalled, err := json.Marshal(role.AccessPolicy)
+	if err != nil {
+		return nil, err
+	}
+	return &prettyRole{
+		role.Name,
+		string(pretty.Pretty(marshalled)),
+	}, nil
+}
+
+func createPrettyRoleV2(role mdsv2alpha1.Role) (*prettyRole, error) {
 	marshalled, err := json.Marshal(role.AccessPolicy)
 	if err != nil {
 		return nil, err
