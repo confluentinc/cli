@@ -2,13 +2,12 @@
 package analytics
 
 import (
-	"strconv"
-	"strings"
-
 	"github.com/jonboulle/clockwork"
 	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"strconv"
+	"strings"
 
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
@@ -73,7 +72,6 @@ func (l *Logger) Errorf(format string, args ...interface{}) {
 }
 
 type Client interface {
-	SetCLIConfig(cfg *v3.Config)
 	SetStartTime()
 	TrackCommand(cmd *cobra.Command, args []string)
 	SetCommandType(commandType CommandType)
@@ -103,11 +101,13 @@ type userInfo struct {
 	email          string
 	organizationId string
 	apiKey         string
+	anonymousId    string
 }
 
-func NewAnalyticsClient(cliName string, version string, segmentClient segment.Client, clock clockwork.Clock) *ClientObj {
+func NewAnalyticsClient(cliName string, cfg *v3.Config, version string, segmentClient segment.Client, clock clockwork.Clock) *ClientObj {
 	client := &ClientObj{
 		cliName:     cliName,
+		config:      cfg,
 		client:      segmentClient,
 		properties:  make(segment.Properties),
 		cliVersion:  version,
@@ -115,10 +115,6 @@ func NewAnalyticsClient(cliName string, version string, segmentClient segment.Cl
 		commandType: Other,
 	}
 	return client
-}
-
-func (a *ClientObj) SetCLIConfig(cfg *v3.Config) {
-	a.config = cfg
 }
 
 // not in prerun because help calls do not trigger prerun
@@ -137,9 +133,11 @@ func (a *ClientObj) TrackCommand(cmd *cobra.Command, args []string) {
 func (a *ClientObj) SessionTimedOut() error {
 	// just in case; redundant if config.DeleteUserAuth called before TrackCommand in prerunner.Anonymous()
 	a.user = userInfo{}
-	err := a.config.ResetAnonymousId()
-	if err != nil {
-		return errors.Wrap(err, "Unable to reset anonymous id")
+	if a.config != nil {
+		err := a.config.ResetAnonymousId()
+		if err != nil {
+			return errors.Wrap(err, "Unable to reset anonymous id")
+		}
 	}
 	return nil
 }
@@ -223,23 +221,25 @@ func (a *ClientObj) SetSpecialProperty(propertiesKey string, value interface{}) 
 
 func (a *ClientObj) sendPage() error {
 	page := segment.Page{
-		AnonymousId: a.config.AnonymousId,
 		Name:        a.cmdCalled,
 		Properties:  a.properties,
 		UserId:      a.user.id,
+		AnonymousId: a.user.anonymousId,
 	}
-	a.addUserProperties()
+	if a.config != nil {
+		a.addUserProperties()
+	}
 	return a.client.Enqueue(page)
 }
 
 func (a *ClientObj) identify() error {
 	identify := segment.Identify{
-		AnonymousId: a.config.AnonymousId,
+		AnonymousId: a.user.anonymousId,
 		UserId:      a.user.id,
 	}
 	traits := segment.Traits{}
 	traits.Set(VersionPropertiesKey, a.cliVersion)
-	traits.Set(CliNameTraitsKey, a.config.CLIName)
+	traits.Set(CliNameTraitsKey, a.cliName)
 	traits.Set(CredentialPropertiesKey, a.user.credentialType)
 	if a.user.credentialType == v2.APIKey.String() {
 		traits.Set(ApiKeyPropertiesKey, a.user.apiKey)
@@ -249,14 +249,16 @@ func (a *ClientObj) identify() error {
 }
 
 func (a *ClientObj) malformedCommandError(e error) error {
-	a.user = a.getUser()
 	track := segment.Track{
-		AnonymousId: a.config.AnonymousId,
 		Event:       malformedCmdEventName,
 		Properties:  a.properties,
-		UserId:      a.user.id,
 	}
-	a.addUserProperties()
+	if a.config != nil {
+		a.user = a.getUser()
+		track.AnonymousId = a.user.anonymousId
+		track.UserId = a.user.id
+		a.addUserProperties()
+	}
 	return a.client.Enqueue(track)
 }
 
@@ -288,7 +290,7 @@ func (a *ClientObj) addArgsProperties(cmd *cobra.Command, args []string) {
 
 func (a *ClientObj) addUserProperties() {
 	a.properties.Set(CredentialPropertiesKey, a.user.credentialType)
-	if a.config.CLIName == "ccloud" && a.user.credentialType == v2.Username.String() {
+	if a.cliName == "ccloud" && a.user.credentialType == v2.Username.String() {
 		a.properties.Set(OrgIdPropertiesKey, a.user.organizationId)
 		a.properties.Set(EmailPropertiesKey, a.user.email)
 	}
@@ -299,6 +301,9 @@ func (a *ClientObj) addUserProperties() {
 
 func (a *ClientObj) getUser() userInfo {
 	var user userInfo
+	if a.config == nil {
+		return userInfo{}
+	}
 	user.credentialType = a.getCredentialType()
 	// If the user is not logged in
 	if user.credentialType == "" {
@@ -315,6 +320,7 @@ func (a *ClientObj) getUser() userInfo {
 	} else {
 		user.id = a.getCPUsername()
 	}
+	user.anonymousId = a.config.AnonymousId
 	return user
 }
 

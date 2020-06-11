@@ -2,9 +2,6 @@ package cmd
 
 import (
 	"context"
-	"github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/cli/internal/pkg/config/load"
-	"github.com/confluentinc/cli/internal/pkg/metric"
 	"os"
 	"strings"
 
@@ -17,7 +14,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/update"
@@ -130,12 +126,6 @@ func (h *HasAPIKeyCLICommand) AddCommand(command *cobra.Command) {
 // Anonymous provides PreRun operations for commands that may be run without a logged-in user
 func (r *PreRun) Anonymous(command *CLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		cfg, err := loadConfig()
-		if err != nil {
-			return err
-		}
-		r.Analytics.SetCLIConfig(cfg.Config)
-		command.Config = cfg
 		command.Version = r.Version
 		command.Config.Resolver = r.FlagResolver
 		if err := log.SetLoggingVerbosity(cmd, r.Logger); err != nil {
@@ -164,22 +154,6 @@ func (r *PreRun) Anonymous(command *CLICommand) func(cmd *cobra.Command, args []
 		r.Analytics.TrackCommand(cmd, args)
 		return nil
 	}
-}
-
-func loadConfig() (*DynamicConfig, error) {
-	logger := log.New()
-	metricSink := metric.NewSink()
-	params := &config.Params{
-		CLIName:    "ccloud",
-		MetricSink: metricSink,
-		Logger:     logger,
-	}
-	cfg := v3.New(params)
-	cfg, err := load.LoadAndMigrate(cfg)
-	if err != nil {
-		return nil, err
-	}
-	return NewDynamicConfig(cfg, nil, nil), nil
 }
 
 // Authenticated provides PreRun operations for commands that require a logged-in Confluent Cloud user.
