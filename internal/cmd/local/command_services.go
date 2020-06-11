@@ -135,7 +135,7 @@ func NewServicesCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command 
 	servicesCommand := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "services [command]",
-			Short: "Manage Confluent services.",
+			Short: "Manage Confluent Platform services.",
 			Args:  cobra.MinimumNArgs(1),
 		},
 		cfg, prerunner)
@@ -157,7 +157,7 @@ func NewServicesListCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Comm
 	servicesListCommand := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "list",
-			Short: "List all Confluent services.",
+			Short: "List all Confluent Platform services.",
 			Args:  cobra.NoArgs,
 			RunE:  runServicesListCommand,
 		},
@@ -181,7 +181,7 @@ func NewServicesStartCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Com
 	servicesStartCommand := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "start",
-			Short: "Start all Confluent services.",
+			Short: "Start all Confluent Platform services.",
 			Args:  cobra.NoArgs,
 			RunE:  runServicesStartCommand,
 		},
@@ -215,7 +215,7 @@ func NewServicesStatusCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Co
 	servicesStatusCommand := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "status",
-			Short: "Check the status of all Confluent services.",
+			Short: "Check the status of all Confluent Platform services.",
 			Args:  cobra.NoArgs,
 			RunE:  runServicesStatusCommand,
 		},
@@ -243,7 +243,7 @@ func NewServicesStopCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Comm
 	servicesStopCommand := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "stop",
-			Short: "Stop all Confluent services.",
+			Short: "Stop all Confluent Platform services.",
 			Args:  cobra.NoArgs,
 			RunE:  runServicesStopCommand,
 		},
@@ -277,7 +277,7 @@ func NewServicesTopCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Comma
 	servicesTopCommand := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "top",
-			Short: "Monitor all Confluent services.",
+			Short: "Monitor all Confluent Platform services.",
 			Args:  cobra.NoArgs,
 			RunE:  runServicesTopCommand,
 		},
