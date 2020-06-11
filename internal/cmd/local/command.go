@@ -16,13 +16,10 @@ func NewCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
 		cfg, prerunner,
 	)
 
-	localCommand.AddCommand(NewConnectorsCommand(prerunner, cfg))
 	localCommand.AddCommand(NewCurrentCommand(prerunner, cfg))
 	// TODO: confluent local demo
 	localCommand.AddCommand(NewDestroyCommand(prerunner, cfg))
-	localCommand.AddCommand(NewPluginsCommand(prerunner, cfg))
 	localCommand.AddCommand(NewServicesCommand(prerunner, cfg))
-	// TODO: confluent local topics
 	localCommand.AddCommand(NewVersionCommand(prerunner, cfg))
 
 	return localCommand.Command

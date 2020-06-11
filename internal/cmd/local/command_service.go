@@ -22,8 +22,8 @@ import (
 func NewServiceCommand(service string, prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
 	serviceCommand := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
-			Use:   service + " [command]",
-			Short: "Manage the " + service + " service.",
+			Use:   fmt.Sprintf("%s [command]", service),
+			Short: fmt.Sprintf("Manage the %s service.", service),
 			Args:  cobra.ExactArgs(1),
 		},
 		cfg, prerunner)
@@ -34,6 +34,19 @@ func NewServiceCommand(service string, prerunner cmd.PreRunner, cfg *v3.Config) 
 	serviceCommand.AddCommand(NewServiceStopCommand(service, prerunner, cfg))
 	serviceCommand.AddCommand(NewServiceTopCommand(service, prerunner, cfg))
 	serviceCommand.AddCommand(NewServiceVersionCommand(service, prerunner, cfg))
+
+	switch service {
+	case "connect":
+		serviceCommand.AddCommand(NewConnectConfigCommand(prerunner, cfg))
+		serviceCommand.AddCommand(NewConnectConnectorStatusCommand(prerunner, cfg))
+		serviceCommand.AddCommand(NewConnectListCommand(prerunner, cfg))
+		serviceCommand.AddCommand(NewConnectLoadCommand(prerunner, cfg))
+		serviceCommand.AddCommand(NewConnectUnloadCommand(prerunner, cfg))
+	case "kafka":
+		// TODO
+	case "schema-registry":
+		// TODO
+	}
 
 	return serviceCommand.Command
 }
@@ -103,7 +116,7 @@ func NewServiceStatusCommand(service string, prerunner cmd.PreRunner, cfg *v3.Co
 	serviceVersionCommand := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "status",
-			Short: "Check the status of " + service + ".",
+			Short: fmt.Sprintf("Check the status of %s.", service),
 			Args:  cobra.NoArgs,
 			RunE:  runServiceStatusCommand,
 		},
@@ -121,7 +134,7 @@ func NewServiceStopCommand(service string, prerunner cmd.PreRunner, cfg *v3.Conf
 	serviceVersionCommand := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "stop",
-			Short: "Stop " + service + ".",
+			Short: fmt.Sprintf("Stop %s.", service),
 			Args:  cobra.NoArgs,
 			RunE:  runServiceStopCommand,
 		},
@@ -150,7 +163,7 @@ func NewServiceTopCommand(service string, prerunner cmd.PreRunner, cfg *v3.Confi
 	serviceTopCommand := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "top",
-			Short: "Monitor " + service + " processes.",
+			Short: fmt.Sprintf("Monitor %s processes.", service),
 			Args:  cobra.NoArgs,
 			RunE:  runServiceTopCommand,
 		},
@@ -187,7 +200,7 @@ func NewServiceVersionCommand(service string, prerunner cmd.PreRunner, cfg *v3.C
 	serviceVersionCommand := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "version",
-			Short: "Print the version of " + service + ".",
+			Short: fmt.Sprintf("Print the version of %s.", service),
 			Args:  cobra.NoArgs,
 			RunE:  runServiceVersionCommand,
 		},
@@ -222,7 +235,7 @@ func startService(command *cobra.Command, service string) error {
 		return printStatus(command, service)
 	}
 
-	config := getConfig(service, dir)
+	config := getServiceConfig(service, dir)
 	if err := configService(service, dir, config); err != nil {
 		return nil
 	}

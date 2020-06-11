@@ -135,7 +135,7 @@ func NewServicesCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command 
 	servicesCommand := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "services [command]",
-			Short: "Manage all Confluent Platform services.",
+			Short: "Manage Confluent Platform services.",
 			Args:  cobra.MinimumNArgs(1),
 		},
 		cfg, prerunner)
@@ -320,7 +320,7 @@ func runServicesTopCommand(_ *cobra.Command, _ []string) error {
 	return top(pids)
 }
 
-func getConfig(service string, dir string) map[string]string {
+func getServiceConfig(service string, dir string) map[string]string {
 	config := map[string]string{}
 
 	switch service {
@@ -382,4 +382,14 @@ func getAvailableServices() ([]string, error) {
 	}
 
 	return available, err
+}
+
+func notifyConfluentCurrent(command *cobra.Command) error {
+	current, err := getConfluentCurrent()
+	if err != nil {
+		return err
+	}
+
+	command.Printf("Using CONFLUENT_CURRENT: %s\n", current)
+	return nil
 }

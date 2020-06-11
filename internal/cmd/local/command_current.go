@@ -19,7 +19,7 @@ func NewCurrentCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
 	currentCommand := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "current",
-			Short: "Get the path of the data and logs of the services managed by the current Confluent run.",
+			Short: "Get the path of the data and logs for the current Confluent run.",
 			Args:  cobra.NoArgs,
 			RunE:  runCurrentCommand,
 		},
@@ -76,14 +76,4 @@ func createCurrentDirectory(parentDir string) string {
 			return path
 		}
 	}
-}
-
-func notifyConfluentCurrent(command *cobra.Command) error {
-	current, err := getConfluentCurrent()
-	if err != nil {
-		return err
-	}
-
-	command.Printf("Using CONFLUENT_CURRENT: %s\n", current)
-	return nil
 }

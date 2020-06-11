@@ -14,7 +14,7 @@ func NewDestroyCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
 	destroyCommand := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "destroy",
-			Short: "Delete the data and logs of the current Confluent run.",
+			Short: "Delete the data and logs for the current Confluent run.",
 			Args:  cobra.NoArgs,
 			RunE:  runDestroyCommand,
 		},
