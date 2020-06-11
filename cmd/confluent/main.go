@@ -41,17 +41,20 @@ func main() {
 	}
 	viper.AutomaticEnv()
 
-	logger := log.New()
-
 	version := pversion.NewVersion(cliName, version, commit, date, host)
 
+	logger := log.New()
+	cfg, err := loadConfig(logger)
+	if err != nil {
+		fmt.Println(err)
+	}
+	cfg.Logger = logger
 	var analyticsClient analytics.Client
 	if !isTest && cliName == "ccloud" {
 		segmentClient, _ := segment.NewWithConfig(segmentKey, segment.Config{
 			Logger: analytics.NewLogger(logger),
 		})
-
-		analyticsClient = analytics.NewAnalyticsClient(cliName, version.Version, segmentClient, clockwork.NewRealClock())
+		analyticsClient = analytics.NewAnalyticsClient(cliName, cfg, version.Version, segmentClient, clockwork.NewRealClock())
 	} else {
 		analyticsClient = mock.NewDummyAnalyticsMock()
 	}
