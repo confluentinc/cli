@@ -1,14 +1,12 @@
 package cmd
 
 import (
-	"net/http"
-	"os"
-	"runtime"
-	"strings"
-
 	"github.com/DABH/go-basher"
 	"github.com/jonboulle/clockwork"
 	"github.com/spf13/cobra"
+	"net/http"
+	"os"
+	"runtime"
 
 	"github.com/confluentinc/cli/internal/cmd/apikey"
 	"github.com/confluentinc/cli/internal/cmd/auth"
@@ -173,9 +171,8 @@ func (c *Command) Execute(cliName string, args []string) error {
 		c.logger.Debugf("segment analytics sending event failed: %s\n", analyticsError.Error())
 	}
 
-	if cliName == "ccloud" && isHumanReadable(args) {
-		failed := err != nil
-		c.sendFeedbackNudge(failed, args)
+	if err != nil && cliName == "ccloud" && isHumanReadable(args) {
+		c.sendFeedbackNudge()
 	}
 
 	return err
@@ -190,31 +187,7 @@ func isHumanReadable(args []string) bool {
 	return true
 }
 
-func (c *Command) sendFeedbackNudge(failed bool, args []string) {
+func (c *Command) sendFeedbackNudge() {
 	feedbackNudge := "\nDid you know you can use the \"ccloud feedback\" command to send the team feedback?\nLet us know if the ccloud CLI is meeting your needs, or what we can do to improve it."
-
-	if failed {
-		c.PrintErrln(feedbackNudge)
-		return
-	}
-
-	feedbackNudgeCmds := []string{
-		"api-key create", "api-key delete",
-		"connector create", "connector delete",
-		"environment create", "environment delete",
-		"kafka acl create", "kafka acl delete",
-		"kafka cluster create", "kafka cluster delete",
-		"kafka topic create", "kafka topic delete",
-		"ksql app create", "ksql app delete",
-		"schema-registry schema create", "schema-registry schema delete",
-		"service-account create", "service-account delete",
-	}
-
-	cmd := strings.Join(args, " ")
-	for _, cmdPrefix := range feedbackNudgeCmds {
-		if strings.HasPrefix(cmd, cmdPrefix) {
-			c.PrintErrln(feedbackNudge)
-			return
-		}
-	}
+	c.PrintErrln(feedbackNudge)
 }
