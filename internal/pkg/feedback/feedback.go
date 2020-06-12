@@ -13,7 +13,6 @@ func HandleFeedbackNudge(cliName string, cmdArgs []string, cmdErr error) {
 	if cliName == "ccloud" && (cmdErr != nil || isHumanReadableOrHelp(cmdArgs)) {
 		_, _ = fmt.Fprintln(os.Stderr, feedbackNudge)
 	}
-
 }
 
 func isHumanReadableOrHelp(args []string) bool {
