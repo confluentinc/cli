@@ -33,6 +33,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	pfeedback "github.com/confluentinc/cli/internal/pkg/feedback"
 	"github.com/confluentinc/cli/internal/pkg/help"
 	"github.com/confluentinc/cli/internal/pkg/io"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -170,24 +171,8 @@ func (c *Command) Execute(cliName string, args []string) error {
 	if analyticsError != nil {
 		c.logger.Debugf("segment analytics sending event failed: %s\n", analyticsError.Error())
 	}
-
-	if err != nil && cliName == "ccloud" && isHumanReadable(args) {
-		c.sendFeedbackNudge()
-	}
+	pfeedback.HandleFeedbackNudge(cliName, args, err)
 
 	return err
 }
 
-func isHumanReadable(args []string) bool {
-	for i := 0; i < len(args)-1; i++ {
-		if args[i] == "-o" || args[i] == "--output" {
-			return args[i+1] == "human"
-		}
-	}
-	return true
-}
-
-func (c *Command) sendFeedbackNudge() {
-	feedbackNudge := "\nDid you know you can use the \"ccloud feedback\" command to send the team feedback?\nLet us know if the ccloud CLI is meeting your needs, or what we can do to improve it."
-	c.PrintErrln(feedbackNudge)
-}
