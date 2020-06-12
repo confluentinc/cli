@@ -8,10 +8,7 @@ VERSION_POST ?=
 BUMP ?= auto
 # If on master branch bump the minor by default
 ifeq ($(RELEASE_BRANCH),$(MASTER_BRANCH))
-DEFAULT_BUMP ?= minor
-# Else bump the patch by default
-else
-DEFAULT_BUMP ?= patch
+DEFAULT_BUMP = patch
 endif
 
 VERSION ?= $(shell git rev-parse --is-inside-work-tree > /dev/null && git describe --tags --always --dirty)

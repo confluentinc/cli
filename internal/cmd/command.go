@@ -172,7 +172,7 @@ func (c *Command) Execute(cliName string, args []string) error {
 	if analyticsError != nil {
 		c.logger.Debugf("segment analytics sending event failed: %s\n", analyticsError.Error())
 	}
-	pfeedback.HandleFeedbackNudge(cliName, args, err)
+	pfeedback.HandleFeedbackNudge(cliName, args)
 
 	return err
 }
