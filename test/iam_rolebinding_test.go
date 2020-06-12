@@ -1,5 +1,60 @@
 package test
 
+func (s *CLITestSuite) Test_Ccloud_Iam_Role_Binding_CRUD() {
+	tests := []CLITest{
+		{
+			name: "",
+			args: "",
+			login: "",
+			wantErrCode: 0,
+		},
+		{
+			name: "",
+			args: "",
+			login: "",
+			wantErrCode: 0,
+		},
+		{
+			name: "",
+			args: "",
+			fixture: "",
+			login: "",
+			wantErrCode: 0,
+		},
+		{
+			name: "",
+			args: "",
+			fixture: "",
+			login: "",
+			wantErrCode: 0,
+		},
+		{
+			name: "",
+			args: "",
+			fixture: "",
+			login: "",
+			wantErrCode: 0,
+		},
+		{
+			name: "",
+			args: "",
+			fixture: "",
+			login: "",
+			wantErrCode: 0,
+		},
+		{
+			name: "",
+			args: "",
+			fixture: "",
+			login: "",
+			wantErrCode: 0,
+		},
+	}
+	for _, tt := range tests {
+		s.runCcloudTest(tt, serveMds(s.T()).URL, "")
+	}
+}
+
 func (s *CLITestSuite) Test_Confluent_Iam_Role_Binding_CRUD() {
 	tests := []CLITest{
 		{
