@@ -10,29 +10,16 @@ var (
 )
 
 func HandleFeedbackNudge(cliName string, cmdArgs []string, cmdErr error) {
-	if cliName == "ccloud" &&  isHelpOrIsCommandFailureInHumanReadableMode(cmdArgs, cmdErr) {
+	if cliName == "ccloud" &&  isHelpCommand(cmdArgs, cmdErr) {
 		_, _ = fmt.Fprintln(os.Stderr, feedbackNudge)
 	}
 }
 
-func isHelpOrIsCommandFailureInHumanReadableMode(args []string, err error) bool {
-	for i := 0; i < len(args); i++ {
-		if isHelp(args[i]) {
+func isHelpCommand(args []string, err error) bool {
+	for _, arg := range args {
+		if arg == "-h" || arg == "--help" {
 			return true
-		}
-		if i < len(args) - 1 {
-			if err != nil && isHumanReadable(args[i], args[i+1]) {
-				return true
-			}
 		}
 	}
 	return false
-}
-
-func isHelp(flag string) bool {
-	return flag == "-h" || flag == "--help"
-}
-
-func isHumanReadable(flag string, flagVlaue string) bool {
-	return (flag == "-o" || flag == "--output") && flagVlaue == "human"
 }
