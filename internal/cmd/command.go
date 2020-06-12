@@ -1,12 +1,13 @@
 package cmd
 
 import (
-	"github.com/DABH/go-basher"
-	"github.com/jonboulle/clockwork"
-	"github.com/spf13/cobra"
 	"net/http"
 	"os"
 	"runtime"
+
+	"github.com/DABH/go-basher"
+	"github.com/jonboulle/clockwork"
+	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/cmd/apikey"
 	"github.com/confluentinc/cli/internal/cmd/auth"
