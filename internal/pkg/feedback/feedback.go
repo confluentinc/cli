@@ -10,19 +10,29 @@ var (
 )
 
 func HandleFeedbackNudge(cliName string, cmdArgs []string, cmdErr error) {
-	if cliName == "ccloud" && (cmdErr != nil || isHumanReadableOrHelp(cmdArgs)) {
+	if cliName == "ccloud" &&  isHelpOrIsCommandFailureInHumanReadableMode(cmdArgs, cmdErr) {
 		_, _ = fmt.Fprintln(os.Stderr, feedbackNudge)
 	}
 }
 
-func isHumanReadableOrHelp(args []string) bool {
-	for i := 0; i < len(args)-1; i++ {
-		if args[i] == "-o" || args[i] == "--output" {
-			return args[i+1] == "human"
-		}
-		if args[i] == "-h" || args[i] == "--help" {
+func isHelpOrIsCommandFailureInHumanReadableMode(args []string, err error) bool {
+	for i := 0; i < len(args); i++ {
+		if isHelp(args[i]) {
 			return true
 		}
+		if i < len(args) - 1 {
+			if err != nil && isHumanReadable(args[i], args[i+1]) {
+				return true
+			}
+		}
 	}
-	return true
+	return false
+}
+
+func isHelp(flag string) bool {
+	return flag == "-h" || flag == "--help"
+}
+
+func isHumanReadable(flag string, flagVlaue string) bool {
+	return (flag == "-o" || flag == "--output") && flagVlaue == "human"
 }
