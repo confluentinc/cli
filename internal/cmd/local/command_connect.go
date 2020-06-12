@@ -118,7 +118,7 @@ func NewConnectListCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Comma
 		&cobra.Command{
 			Use:   "list",
 			Short: "List connect plugins or connectors.",
-			Args:  cobra.ExactArgs(1),
+			Args:  cobra.NoArgs,
 		},
 		cfg, prerunner)
 
