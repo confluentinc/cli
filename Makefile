@@ -470,7 +470,7 @@ coverage:
 	@# Run unit tests.
 	@GO111MODULE=on GOPRIVATE=github.com/confluentinc go test -race -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test) $(TEST_ARGS)
 	@# Run integration tests.
-	@GO111MODULE=on GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(TEST_ARGS)
+	@GO111MODULE=on GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(TEST_ARGS) $(INT_TEST_ARGS)
       endif
 
 .PHONY: mocks
