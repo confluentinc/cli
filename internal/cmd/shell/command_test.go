@@ -3,6 +3,7 @@ package shell
 import (
 	"testing"
 
+	goprompt "github.com/c-bata/go-prompt"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
@@ -32,6 +33,7 @@ func Test_livePrefixFunc(t *testing.T) {
 						BaseConfig: &config.BaseConfig{
 							Params: &config.Params{CLIName: "testingtesting"},
 						}},
+					goprompt.OptionParser(new(mockConsoleParser)),
 				)},
 			wantPrefix:    "testingtesting > ",
 			wantUsePrefix: true,
@@ -44,4 +46,27 @@ func Test_livePrefixFunc(t *testing.T) {
 			require.Equal(t, tt.wantUsePrefix, usePrefix)
 		})
 	}
+}
+
+type mockConsoleParser struct {
+}
+
+func (c mockConsoleParser) Setup() error {
+	return nil
+}
+
+func (c mockConsoleParser) TearDown() error {
+	return nil
+}
+
+func (c mockConsoleParser) GetKey(b []byte) goprompt.Key {
+	return 0
+}
+
+func (c mockConsoleParser) GetWinSize() *goprompt.WinSize {
+	return nil
+}
+
+func (c mockConsoleParser) Read() ([]byte, error) {
+	return nil, nil
 }
