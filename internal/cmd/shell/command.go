@@ -76,15 +76,21 @@ func (c *command) shell(cmd *cobra.Command, args []string) {
 
 func livePrefixFunc(cliPrompt *prompt.ShellPrompt) func() (prefix string, useLivePrefix bool) {
 	return func() (prefix string, useLivePrefix bool) {
-		prefixColor := watermelonRed
-		if cliPrompt.Config.HasLogin() {
-			prefixColor = candyAppleGreen
-		}
-		if err := goprompt.OptionPrefixTextColor(prefixColor)(cliPrompt.Prompt); err != nil {
+		text, color := prefixState(cliPrompt.Config)
+		if err := goprompt.OptionPrefixTextColor(color)(cliPrompt.Prompt); err != nil {
 			// This returns nil in the go-prompt implementation.
 			// This is also what go-prompt does if err != nil for all of its options.
 			panic(err)
 		}
-		return fmt.Sprintf("%s > ", cliPrompt.Config.CLIName), true
+		return text, true
 	}
+}
+
+// prefixState returns the text and color of the prompt prefix.
+func prefixState(config *v3.Config) (text string, color goprompt.Color) {
+	prefixColor := watermelonRed
+	if config.HasLogin() {
+		prefixColor = candyAppleGreen
+	}
+	return fmt.Sprintf("%s > ", config.CLIName), prefixColor
 }
