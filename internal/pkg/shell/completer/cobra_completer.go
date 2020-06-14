@@ -95,7 +95,7 @@ func getFlagSuggestions(d prompt.Document, matchedCmd *cobra.Command) []prompt.S
 	var suggestions []prompt.Suggest
 	addFlags := func(flag *pflag.Flag) {
 		if flag.Changed {
-			flag.Value.Set(flag.DefValue)
+			_ = flag.Value.Set(flag.DefValue)
 		}
 		if flag.Hidden {
 			return

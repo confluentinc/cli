@@ -4,6 +4,7 @@ require (
 	github.com/DABH/go-basher v0.0.0-20191104233559-daa7fee9545c
 	github.com/Shopify/sarama v1.23.1
 	github.com/alcortesm/tgz v0.0.0-20161220082320-9c5fe88206d7 // indirect
+	github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be // indirect
 	github.com/antihax/optional v1.0.0
 	github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da
 	github.com/atrox/homedir v1.0.0
@@ -15,7 +16,6 @@ require (
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
 	github.com/confluentinc/bincover v0.0.0-20191217221125-80a7bb37ae5e
-	github.com/confluentinc/cc-structs/kafka/auth v0.36.0 // indirect
 	github.com/confluentinc/cc-utils v0.0.0-00010101000000-000000000000
 	github.com/confluentinc/ccloud-sdk-go v0.0.18-0.20200331232827-b1565f98d0a7
 	github.com/confluentinc/ccloudapis v0.0.0-20200323172841-c4a51af500ae
@@ -82,6 +82,7 @@ require (
 	google.golang.org/appengine v1.6.5 // indirect
 	gopkg.in/square/go-jose.v2 v2.3.1
 	gopkg.in/src-d/go-git-fixtures.v3 v3.5.0 // indirect
+	gopkg.in/yaml.v2 v2.3.0 // indirect
 )
 
 replace (

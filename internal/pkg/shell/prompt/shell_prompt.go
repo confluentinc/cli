@@ -12,7 +12,7 @@ import (
 
 const (
 	defaultShellPrefix = " > "
-	maxSuggestion = 15
+	maxSuggestion      = 15
 )
 
 type ShellPrompt struct {
@@ -33,7 +33,7 @@ func NewShellPrompt(rootCmd *cobra.Command, compl completer.Completer, cfg *v3.C
 		func(in string) {
 			promptArgs := strings.Fields(in)
 			rootCmd.SetArgs(promptArgs)
-			rootCmd.Execute()
+			_ = rootCmd.Execute()
 		},
 		shell.Complete,
 		opts...,
@@ -44,9 +44,31 @@ func NewShellPrompt(rootCmd *cobra.Command, compl completer.Completer, cfg *v3.C
 }
 
 func DefaultPromptOptions() []goprompt.Option {
-	return []goprompt.Option{
+	return append([]goprompt.Option{
 		goprompt.OptionShowCompletionAtStart(),
 		goprompt.OptionPrefix(defaultShellPrefix),
 		goprompt.OptionMaxSuggestion(maxSuggestion),
+	}, DefaultColor256PromptOptions()...)
+}
+
+func DefaultColor256PromptOptions() []goprompt.Option {
+	const powderSimilar = 195
+	const denimSimilar = 17
+
+	colorOpts := []goprompt.Option{
+		goprompt.OptionPrefixTextColor(powderSimilar),
+		goprompt.OptionPreviewSuggestionTextColor(powderSimilar),
+		goprompt.OptionSuggestionBGColor(powderSimilar),
+		goprompt.OptionSuggestionTextColor(denimSimilar),
+		goprompt.OptionSelectedSuggestionBGColor(denimSimilar),
+		goprompt.OptionSelectedSuggestionTextColor(powderSimilar),
+		goprompt.OptionDescriptionBGColor(denimSimilar),
+		goprompt.OptionDescriptionTextColor(powderSimilar),
+		goprompt.OptionSelectedDescriptionBGColor(powderSimilar),
+		goprompt.OptionSelectedDescriptionTextColor(denimSimilar),
+		goprompt.OptionScrollbarBGColor(denimSimilar),
+		goprompt.OptionScrollbarThumbColor(powderSimilar),
+		goprompt.OptionInputTextColor(powderSimilar),
 	}
+	return append(colorOpts, goprompt.OptionWriter(NewStdoutColor256VT100Writer())) // Be mindful of order.
 }

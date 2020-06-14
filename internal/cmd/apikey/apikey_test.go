@@ -230,7 +230,6 @@ func (suite *APITestSuite) TestListCloudAPIKey() {
 	req.Equal(0, len(inputKey.LogicalClusters))
 }
 
-
 func (suite *APITestSuite) TestStoreApiKeyForce() {
 	req := require.New(suite.T())
 	suite.isPromptPipe = false
