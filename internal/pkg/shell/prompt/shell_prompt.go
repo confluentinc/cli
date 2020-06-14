@@ -28,7 +28,6 @@ func NewShellPrompt(rootCmd *cobra.Command, compl completer.Completer, cfg *v3.C
 		RootCmd:   rootCmd,
 		Config:    cfg,
 	}
-
 	prompt := goprompt.New(
 		func(in string) {
 			promptArgs := strings.Fields(in)
@@ -41,6 +40,12 @@ func NewShellPrompt(rootCmd *cobra.Command, compl completer.Completer, cfg *v3.C
 	shell.Prompt = prompt
 
 	return shell
+}
+
+func (p *ShellPrompt) Run() {
+	p.RootCmd.InitDefaultHelpCmd()
+	p.RootCmd.InitDefaultHelpFlag()
+	p.Prompt.Run()
 }
 
 func DefaultPromptOptions() []goprompt.Option {
