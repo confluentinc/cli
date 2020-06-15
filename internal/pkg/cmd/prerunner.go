@@ -66,6 +66,7 @@ type HasAPIKeyCLICommand struct {
 func (a *AuthenticatedCLICommand) AuthToken() string {
 	return a.State.AuthToken
 }
+
 func (a *AuthenticatedCLICommand) EnvironmentId() string {
 	return a.State.Auth.Account.Id
 }
@@ -160,17 +161,18 @@ func (r *PreRun) Anonymous(command *CLICommand) func(cmd *cobra.Command, args []
 				}
 			}
 		} else {
-			if strings.Contains(cmd.CommandPath(), "logout") {
-				r.Analytics.SetCommandType(analytics.Login)
-				return errors.HandleCommon(r.ConfigLoadingError, cmd)
-			}
-			if strings.Contains(cmd.CommandPath(), "logout") {
-				r.Analytics.SetCommandType(analytics.Logout)
+			if isAuthOrConfigCommands(cmd) {
 				return errors.HandleCommon(r.ConfigLoadingError, cmd)
 			}
 		}
 		return nil
 	}
+}
+
+func isAuthOrConfigCommands(cmd *cobra.Command) bool {
+	return strings.Contains(cmd.CommandPath(), "login") ||
+		strings.Contains(cmd.CommandPath(), "logout") ||
+		strings.Contains(cmd.CommandPath(), "config")
 }
 
 // Authenticated provides PreRun operations for commands that require a logged-in Confluent Cloud user.

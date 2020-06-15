@@ -35,6 +35,7 @@ var (
 	secretCommandArgs     = map[string]func([]string) []string{"ccloud api-key store": apiKeyStoreSecretHandler}
 	SecretValueString     = "<secret_value>"
 	malformedCmdEventName = "Malformed Command Error"
+	nonUser               = "no-user-info"
 
 	// these are exported to avoid import cycle with test (test is in package analytics_test)
 	// @VisibleForTesting
@@ -302,7 +303,10 @@ func (a *ClientObj) addUserProperties() {
 func (a *ClientObj) getUser() userInfo {
 	var user userInfo
 	if a.config == nil {
-		return userInfo{}
+		return userInfo{
+			id:          nonUser,
+			anonymousId: nonUser,
+		}
 	}
 	user.credentialType = a.getCredentialType()
 	// If the user is not logged in

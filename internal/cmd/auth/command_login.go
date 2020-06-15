@@ -57,6 +57,10 @@ func (a *loginCommand) init(cliName string, prerunner pcmd.PreRunner) {
 		Short: fmt.Sprintf("Log in to %s.", remoteAPIName),
 		Long:  fmt.Sprintf("Log in to %s.", remoteAPIName),
 		Args:  cobra.NoArgs,
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			a.analyticsClient.SetCommandType(analytics.Login)
+			return a.CLICommand.PersistentPreRunE(cmd, args)
+		},
 	}
 	if cliName == "ccloud" {
 		loginCmd.RunE = a.login
