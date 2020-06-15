@@ -1,0 +1,16 @@
+package local
+
+import (
+	"github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/mock"
+)
+
+func mockLocalCommand(args... string) (string, error) {
+	mockPrerunner := mock.NewPreRunnerMock(nil, nil)
+
+	command := cmd.BuildRootCommand()
+	command.AddCommand(NewCommand(mockPrerunner))
+
+	args = append([]string{"local-v2"}, args...)
+	return cmd.ExecuteCommand(command, args...)
+}

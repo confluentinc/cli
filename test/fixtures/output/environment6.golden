@@ -1,4 +1,1 @@
 Error: The specified environment ID was not found.  To see available environments, use `ccloud environment list`.
-
-Did you know you can use the "ccloud feedback" command to send the team feedback?
-Let us know if the ccloud CLI is meeting your needs, or what we can do to improve it.

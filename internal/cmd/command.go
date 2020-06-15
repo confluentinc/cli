@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"os"
 	"runtime"
-	"strings"
 
 	"github.com/DABH/go-basher"
 	"github.com/jonboulle/clockwork"
@@ -33,6 +32,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	pfeedback "github.com/confluentinc/cli/internal/pkg/feedback"
 	"github.com/confluentinc/cli/internal/pkg/help"
 	"github.com/confluentinc/cli/internal/pkg/io"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -90,14 +90,10 @@ func NewConfluentCommand(cliName string, logger *log.Logger, ver *pversion.Versi
 		Analytics:          analytics,
 		UpdateTokenHandler: pauth.NewUpdateTokenHandler(netrcHandler),
 	}
-	_ = pcmd.NewAnonymousCLICommand(cli, prerunner) // Add to correctly set prerunners. TODO: Check if really needed.
 	command := &Command{Command: cli, Analytics: analytics, logger: logger}
 
 	cli.Version = ver.Version
 	cli.AddCommand(version.NewVersionCmd(prerunner, ver))
-
-	conn := config.New(prerunner, analytics)
-	cli.AddCommand(conn)
 
 	cli.AddCommand(completion.NewCompletionCmd(cli, cliName))
 
@@ -113,21 +109,16 @@ func NewConfluentCommand(cliName string, logger *log.Logger, ver *pversion.Versi
 		cli.AddCommand(ps1.NewPromptCmd(cliName, prerunner, &pps1.Prompt{}, logger))
 		cli.AddCommand(environment.New(cliName, prerunner))
 		cli.AddCommand(service_account.New(prerunner))
+		cli.AddCommand(config.New(prerunner, analytics))
 		// Keystore exposed so tests can pass mocks.
 		cli.AddCommand(apikey.New(prerunner, nil, resolver))
 
 		// Schema Registry
 		// If srClient is nil, the function will look it up after prerunner verifies authentication. Exposed so tests can pass mocks
-		sr := schema_registry.New(cliName, prerunner, nil, logger)
-		cli.AddCommand(sr)
+		cli.AddCommand(schema_registry.New(cliName, prerunner, nil, logger))
 		cli.AddCommand(ksql.New(prerunner))
 		cli.AddCommand(connector.New(cliName, prerunner))
 		cli.AddCommand(connector_catalog.New(cliName, prerunner))
-
-		conn = ksql.New(prerunner)
-		conn.Hidden = true // The ksql feature isn't finished yet, so let's hide it
-		cli.AddCommand(conn)
-
 		//conn = connect.New(prerunner, cfg, connects.New(client, logger))
 		//conn.Hidden = true // The connect feature isn't finished yet, so let's hide it
 		//cli.AddCommand(conn)
@@ -164,49 +155,8 @@ func (c *Command) Execute(cliName string, args []string) error {
 	if analyticsError != nil {
 		c.logger.Debugf("segment analytics sending event failed: %s\n", analyticsError.Error())
 	}
-
-	if cliName == "ccloud" && isHumanReadable(args) {
-		failed := err != nil
-		c.sendFeedbackNudge(failed, args)
-	}
+	pfeedback.HandleFeedbackNudge(cliName, args)
 
 	return err
 }
 
-func isHumanReadable(args []string) bool {
-	for i := 0; i < len(args)-1; i++ {
-		if args[i] == "-o" || args[i] == "--output" {
-			return args[i+1] == "human"
-		}
-	}
-	return true
-}
-
-func (c *Command) sendFeedbackNudge(failed bool, args []string) {
-	feedbackNudge := "\nDid you know you can use the \"ccloud feedback\" command to send the team feedback?\nLet us know if the ccloud CLI is meeting your needs, or what we can do to improve it."
-
-	if failed {
-		c.PrintErrln(feedbackNudge)
-		return
-	}
-
-	feedbackNudgeCmds := []string{
-		"api-key create", "api-key delete",
-		"connector create", "connector delete",
-		"environment create", "environment delete",
-		"kafka acl create", "kafka acl delete",
-		"kafka cluster create", "kafka cluster delete",
-		"kafka topic create", "kafka topic delete",
-		"ksql app create", "ksql app delete",
-		"schema-registry schema create", "schema-registry schema delete",
-		"service-account create", "service-account delete",
-	}
-
-	cmd := strings.Join(args, " ")
-	for _, cmdPrefix := range feedbackNudgeCmds {
-		if strings.HasPrefix(cmd, cmdPrefix) {
-			c.PrintErrln(feedbackNudge)
-			return
-		}
-	}
-}

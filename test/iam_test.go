@@ -15,17 +15,6 @@ func (s *CLITestSuite) Test_Confluent_Iam_Rolebinding_List() {
 			login:   "default",
 		},
 		{
-			args:    "iam rolebinding list --cluster-name kafka --principal User:frodo",
-			fixture: "confluent-iam-rolebinding-list-user.golden",
-			login:   "default",
-		},
-		{
-			args:        "iam rolebinding list --cluster-name kafka  --kafka-cluster-id CID --principal User:frodo",
-			fixture:     "confluent-iam-rolebinding-name-and-id.golden",
-			login:       "default",
-			wantErrCode: 1,
-		},
-		{
 			args:    "iam rolebinding list --kafka-cluster-id CID --principal User:frodo --role DeveloperRead",
 			fixture: "confluent-iam-rolebinding-list-user-and-role-with-multiple-resources-from-one-group.golden",
 			login:   "default",

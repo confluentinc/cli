@@ -131,9 +131,12 @@ func (r *PreRun) Anonymous(command *CLICommand) func(cmd *cobra.Command, args []
 		if err := log.SetLoggingVerbosity(cmd, r.Logger); err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
+
 		if err := r.notifyIfUpdateAvailable(cmd, r.CLIName, command.Version.Version); err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
+		r.warnIfConfluentLocal(cmd)
+
 		ctx, err := command.Config.Context(cmd)
 		if err != nil {
 			return err
@@ -287,6 +290,9 @@ func (r *PreRun) getClusterIdForAPIKeyCredential(ctx *DynamicContext) string {
 
 // notifyIfUpdateAvailable prints a message if an update is available
 func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, name string, currentVersion string) error {
+	if isUpdateCommand(cmd) {
+		return nil
+	}
 	updateAvailable, latestVersion, err := r.UpdateClient.CheckForUpdates(name, currentVersion, true)
 	if err != nil {
 		// This is a convenience helper to check-for-updates before arbitrary commands. Since the CLI supports running
@@ -302,6 +308,18 @@ func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, name string, curren
 		ErrPrintf(cmd, msg, name, currentVersion, latestVersion, name)
 	}
 	return nil
+}
+
+func isUpdateCommand(cmd *cobra.Command) bool {
+	return strings.Contains(cmd.CommandPath(), "update")
+}
+
+func (r *PreRun) warnIfConfluentLocal(cmd *cobra.Command) {
+	if strings.HasPrefix(cmd.CommandPath(), "confluent local-v2") {
+		cmd.PrintErrln("The local commands are intended for a single-node development environment only,")
+		cmd.PrintErrln("NOT for production usage. https://docs.confluent.io/current/cli/index.html")
+		cmd.PrintErrln()
+	}
 }
 
 func (r *PreRun) setClients(cliCmd *AuthenticatedCLICommand) error {
