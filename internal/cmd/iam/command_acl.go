@@ -5,16 +5,14 @@ import (
 	"fmt"
 	"net/http"
 
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
-
-	"github.com/confluentinc/cli/internal/pkg/output"
-
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 type aclCommand struct {

@@ -15,17 +15,14 @@ import (
 	"reflect"
 	"testing"
 
-	pauth "github.com/confluentinc/cli/internal/pkg/auth"
-
-	"github.com/stretchr/testify/require"
-
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
 	sdkMock "github.com/confluentinc/ccloud-sdk-go/mock"
-
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	mdsMock "github.com/confluentinc/mds-sdk-go/mdsv1/mock"
+	"github.com/stretchr/testify/require"
 
+	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"

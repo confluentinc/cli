@@ -3,9 +3,8 @@ package kafka
 import (
 	"github.com/spf13/cobra"
 
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
-
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/log"
 )

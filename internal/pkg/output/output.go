@@ -7,7 +7,6 @@ import (
 	"os"
 
 	"github.com/confluentinc/go-printer"
-
 	"github.com/go-yaml/yaml"
 	"github.com/spf13/cobra"
 	"github.com/tidwall/pretty"
