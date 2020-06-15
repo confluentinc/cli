@@ -9,12 +9,13 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
-	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	"math/big"
 	"net/http"
 	"os"
 	"reflect"
 	"testing"
+
+	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 
 	"github.com/stretchr/testify/require"
 

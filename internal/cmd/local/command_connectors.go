@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config/v3"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 )
 
 var connectors = []string{
@@ -50,4 +50,3 @@ func runListConnectorsCommand(command *cobra.Command, _ []string) error {
 
 	return nil
 }
-

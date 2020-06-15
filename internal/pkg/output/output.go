@@ -3,9 +3,10 @@ package output
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/confluentinc/go-printer"
 	"io"
 	"os"
+
+	"github.com/confluentinc/go-printer"
 
 	"github.com/go-yaml/yaml"
 	"github.com/spf13/cobra"

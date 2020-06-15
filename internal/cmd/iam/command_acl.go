@@ -3,10 +3,12 @@ package iam
 import (
 	"context"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/output"
+	"net/http"
+
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
-	"net/http"
+
+	"github.com/confluentinc/cli/internal/pkg/output"
 
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 

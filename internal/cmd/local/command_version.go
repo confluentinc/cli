@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config/v3"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 )
 
 var versionFiles = map[string]string{
@@ -72,4 +72,3 @@ func getVersion(service string) (string, error) {
 
 	return version, nil
 }
-

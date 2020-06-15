@@ -2,10 +2,10 @@ package v3
 
 import (
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/config/v0"
 	"os"
 	"strings"
 
+	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 )

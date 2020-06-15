@@ -2,11 +2,11 @@ package local
 
 import (
 	"github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config/v3"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/mock"
 )
 
-func mockLocalCommand(args... string) (string, error) {
+func mockLocalCommand(args ...string) (string, error) {
 	mockPrerunner := mock.NewPreRunnerMock(nil, nil)
 	mockCfg := &v3.Config{}
 

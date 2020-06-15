@@ -167,4 +167,3 @@ func (c *Command) Execute(cliName string, args []string) error {
 
 	return err
 }
-
