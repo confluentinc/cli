@@ -73,7 +73,6 @@ func (a *loginCommand) init(cliName string, prerunner pcmd.PreRunner) {
 	loginCmd.Flags().Bool("save", false, "Save login credentials or refresh token (in the case of SSO) to local netrc file.")
 	loginCmd.Flags().SortFlags = false
 	cliLoginCmd := pcmd.NewAnonymousCLICommand(loginCmd, prerunner)
-	loginCmd.PersistentPreRunE = analyticsPreRunCover(a.analyticsClient, cliLoginCmd, analytics.Logout, prerunner)
 	a.CLICommand = cliLoginCmd
 }
 

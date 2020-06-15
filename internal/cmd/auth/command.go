@@ -31,11 +31,3 @@ func New(cliName string, prerunner pcmd.PreRunner, logger *log.Logger, userAgent
 	logoutCmd := NewLogoutCmd(cliName, prerunner, analyticsClient)
 	return []*cobra.Command{loginCmd, logoutCmd}
 }
-
-
-func analyticsPreRunCover(analyticsClient analytics.Client, command *pcmd.CLICommand, commandType analytics.CommandType, prerunner pcmd.PreRunner) func(cmd *cobra.Command, args []string) error {
-	return func(cmd *cobra.Command, args []string) error {
-		analyticsClient.SetCommandType(commandType)
-		return prerunner.Anonymous(command)(cmd, args)
-	}
-}

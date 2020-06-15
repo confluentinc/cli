@@ -39,7 +39,16 @@ import (
 	pps1 "github.com/confluentinc/cli/internal/pkg/ps1"
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
+
+	segment "github.com/segmentio/analytics-go"
+	pconfig "github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/config/load"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/metric"
+	"github.com/confluentinc/cli/mock"
 )
+
+var segmentKey = "KDsYPLPBNVB1IPJIN5oqrXnxQT9iKezo"
 
 type Command struct {
 	*cobra.Command
@@ -48,7 +57,7 @@ type Command struct {
 	logger    *log.Logger
 }
 
-func NewConfluentCommand(cliName string, logger *log.Logger, ver *pversion.Version, analytics analytics.Client, netrcHandler *pauth.NetrcHandler) (*Command, error) {
+func NewConfluentCommand(cliName string, isTest bool, logger *log.Logger, ver *pversion.Version, netrcHandler *pauth.NetrcHandler) (*Command, error) {
 	cli := &cobra.Command{
 		Use:               cliName,
 		Version:           ver.Version,
@@ -77,39 +86,44 @@ func NewConfluentCommand(cliName string, logger *log.Logger, ver *pversion.Versi
 		return nil, err
 	}
 
-	fs := &io.RealFileSystem{}
-
+	cfg, configLoadingErr := loadConfig(logger)
+	if cfg != nil {
+		cfg.Logger = logger
+	}
+	analyticsClient := getAnalyticsClient(isTest, cliName, cfg, ver.Version, logger)
 	resolver := &pcmd.FlagResolverImpl{Prompt: prompt, Out: os.Stdout}
 	prerunner := &pcmd.PreRun{
+		Config: cfg,
+		ConfigLoadingError: configLoadingErr,
 		UpdateClient:       updateClient,
 		CLIName:            cliName,
 		Logger:             logger,
 		Clock:              clockwork.NewRealClock(),
 		FlagResolver:       resolver,
 		Version:            ver,
-		Analytics:          analytics,
+		Analytics:          analyticsClient,
 		UpdateTokenHandler: pauth.NewUpdateTokenHandler(netrcHandler),
 	}
-	command := &Command{Command: cli, Analytics: analytics, logger: logger}
+	command := &Command{Command: cli, Analytics: analyticsClient, logger: logger}
 
 	cli.Version = ver.Version
 	cli.AddCommand(version.NewVersionCmd(prerunner, ver))
 
 	cli.AddCommand(completion.NewCompletionCmd(cli, cliName))
 
-	cli.AddCommand(update.New(cliName, logger, ver, prompt, updateClient, analytics))
+	cli.AddCommand(update.New(cliName, logger, ver, prompt, updateClient, analyticsClient))
 
-	cli.AddCommand(auth.New(cliName, prerunner, logger, ver.UserAgent, analytics, netrcHandler)...)
+	cli.AddCommand(auth.New(cliName, prerunner, logger, ver.UserAgent, analyticsClient, netrcHandler)...)
 
 	if cliName == "ccloud" {
 		cmd := kafka.New(prerunner, logger.Named("kafka"), ver.ClientID)
 		cli.AddCommand(cmd)
-		cli.AddCommand(feedback.NewFeedbackCmd(cliName, prerunner, analytics))
-		cli.AddCommand(initcontext.New(prerunner, prompt, resolver, analytics))
+		cli.AddCommand(feedback.NewFeedbackCmd(cliName, prerunner, analyticsClient))
+		cli.AddCommand(initcontext.New(prerunner, prompt, resolver, analyticsClient))
 		cli.AddCommand(ps1.NewPromptCmd(cliName, prerunner, &pps1.Prompt{}, logger))
 		cli.AddCommand(environment.New(cliName, prerunner))
 		cli.AddCommand(service_account.New(prerunner))
-		cli.AddCommand(config.New(prerunner, analytics))
+		cli.AddCommand(config.New(prerunner, analyticsClient))
 		// Keystore exposed so tests can pass mocks.
 		cli.AddCommand(apikey.New(prerunner, nil, resolver))
 
@@ -134,7 +148,7 @@ func NewConfluentCommand(cliName string, logger *log.Logger, ver *pversion.Versi
 				return nil, err
 			}
 			shellRunner := &local.BashShellRunner{BasherContext: bash}
-			cli.AddCommand(local.New(cli, prerunner, shellRunner, logger, fs))
+			cli.AddCommand(local.New(cli, prerunner, shellRunner, logger, &io.RealFileSystem{}))
 		}
 
 		command := local.NewCommand(prerunner)
@@ -146,17 +160,48 @@ func NewConfluentCommand(cliName string, logger *log.Logger, ver *pversion.Versi
 	return command, nil
 }
 
+func getAnalyticsClient(isTest bool, cliName string, cfg *v3.Config, cliVersion string, logger *log.Logger) analytics.Client {
+	if cliName == "confluent" || isTest {
+		return mock.NewDummyAnalyticsMock()
+	}
+	segmentClient, _ := segment.NewWithConfig(segmentKey, segment.Config{
+		Logger: analytics.NewLogger(logger),
+	})
+	return analytics.NewAnalyticsClient(cliName, cfg, cliVersion, segmentClient, clockwork.NewRealClock())
+}
+
 func (c *Command) Execute(cliName string, args []string) error {
 	c.Analytics.SetStartTime()
 	c.Command.SetArgs(args)
 
 	err := c.Command.Execute()
+	c.sendAndFlushAnalytics(args, err)
+	pfeedback.HandleFeedbackNudge(cliName, args)
+	return err
+}
+
+func (c *Command) sendAndFlushAnalytics(args []string, err error) {
 	analyticsError := c.Analytics.SendCommandAnalytics(c.Command, args, err)
 	if analyticsError != nil {
 		c.logger.Debugf("segment analytics sending event failed: %s\n", analyticsError.Error())
 	}
-	pfeedback.HandleFeedbackNudge(cliName, args)
-
-	return err
+	err = c.Analytics.Close()
+	if err != nil {
+		c.logger.Debug(err)
+	}
 }
 
+func loadConfig(logger *log.Logger) (*v3.Config, error) {
+	metricSink := metric.NewSink()
+	params := &pconfig.Params{
+		CLIName:    "ccloud",
+		MetricSink: metricSink,
+		Logger:     logger,
+	}
+	cfg := v3.New(params)
+	cfg, err := load.LoadAndMigrate(cfg)
+	if err != nil {
+		return nil, err
+	}
+	return cfg, err
+}

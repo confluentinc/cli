@@ -33,7 +33,6 @@ func (a *logoutCommand) init(cliName string, prerunner pcmd.PreRunner) {
 		Args: cobra.NoArgs,
 	}
 	cliLogoutCmd := pcmd.NewAnonymousCLICommand(logoutCmd, prerunner)
-	logoutCmd.PersistentPreRunE = analyticsPreRunCover(a.analyticsClient, cliLogoutCmd, analytics.Logout, prerunner)
 	a.CLICommand = cliLogoutCmd
 }
 

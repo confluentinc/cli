@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"os"
 	"strings"
 
@@ -30,6 +31,8 @@ type PreRunner interface {
 
 // PreRun is the standard PreRunner implementation
 type PreRun struct {
+	Config             *v3.Config
+	ConfigLoadingError error
 	UpdateClient       update.Client
 	CLIName            string
 	Logger             *log.Logger
@@ -108,6 +111,7 @@ func NewAnonymousCLICommand(command *cobra.Command, prerunner PreRunner) *CLICom
 
 func NewCLICommand(command *cobra.Command, prerunner PreRunner) *CLICommand {
 	return &CLICommand{
+		Config: &DynamicConfig{},
 		Command:   command,
 		prerunner: prerunner,
 	}
@@ -126,35 +130,45 @@ func (h *HasAPIKeyCLICommand) AddCommand(command *cobra.Command) {
 // Anonymous provides PreRun operations for commands that may be run without a logged-in user
 func (r *PreRun) Anonymous(command *CLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
+		r.Analytics.TrackCommand(cmd, args)
+		command.Config.Config = r.Config
 		command.Version = r.Version
 		command.Config.Resolver = r.FlagResolver
 		if err := log.SetLoggingVerbosity(cmd, r.Logger); err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
-
 		if err := r.notifyIfUpdateAvailable(cmd, r.CLIName, command.Version.Version); err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
 		r.warnIfConfluentLocal(cmd)
-
-		ctx, err := command.Config.Context(cmd)
-		if err != nil {
-			return err
-		}
-		err = r.validateToken(cmd, ctx)
-		switch err.(type) {
-		case *ccloud.ExpiredTokenError:
-			err := ctx.DeleteUserAuth()
+		if r.Config != nil {
+			ctx, err := command.Config.Context(cmd)
 			if err != nil {
 				return err
 			}
-			ErrPrintln(cmd, "Your token has expired. You are now logged out.")
-			analyticsError := r.Analytics.SessionTimedOut()
-			if analyticsError != nil {
-				r.Logger.Debug(analyticsError.Error())
+			err = r.validateToken(cmd, ctx)
+			switch err.(type) {
+			case *ccloud.ExpiredTokenError:
+				err := ctx.DeleteUserAuth()
+				if err != nil {
+					return err
+				}
+				ErrPrintln(cmd, "Your token has expired. You are now logged out.")
+				analyticsError := r.Analytics.SessionTimedOut()
+				if analyticsError != nil {
+					r.Logger.Debug(analyticsError.Error())
+				}
+			}
+		} else {
+			if strings.Contains(cmd.CommandPath(), "logout") {
+				r.Analytics.SetCommandType(analytics.Login)
+				return errors.HandleCommon(r.ConfigLoadingError, cmd)
+			}
+			if strings.Contains(cmd.CommandPath(), "logout") {
+				r.Analytics.SetCommandType(analytics.Logout)
+				return errors.HandleCommon(r.ConfigLoadingError, cmd)
 			}
 		}
-		r.Analytics.TrackCommand(cmd, args)
 		return nil
 	}
 }
@@ -163,6 +177,9 @@ func (r *PreRun) Anonymous(command *CLICommand) func(cmd *cobra.Command, args []
 func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		err := r.Anonymous(command.CLICommand)(cmd, args)
+		if r.Config == nil {
+			return errors.HandleCommon(r.ConfigLoadingError, cmd)
+		}
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
@@ -193,6 +210,9 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
+		if r.Config == nil {
+			return errors.HandleCommon(r.ConfigLoadingError, cmd)
+		}
 		err = r.setClients(command)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
@@ -219,6 +239,9 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 		err := r.Anonymous(command.CLICommand)(cmd, args)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
+		}
+		if r.Config == nil {
+			return errors.HandleCommon(r.ConfigLoadingError, cmd)
 		}
 		ctx, err := command.Config.Context(cmd)
 		if err != nil {
