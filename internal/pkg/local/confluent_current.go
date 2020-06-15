@@ -41,6 +41,7 @@ type ConfluentCurrent interface {
 	GetLogFile(service string) (string, error)
 
 	GetPidFile(service string) (string, error)
+	HasPidFile(service string) (bool, error)
 	GetPid(service string) (int, error)
 	SetPid(service string, pid int) error
 	RemovePidFile(service string) error
@@ -131,6 +132,15 @@ func (cc *ConfluentCurrentManager) GetLogFile(service string) (string, error) {
 	return cc.getServiceFile(service, fmt.Sprintf("%s.log", service))
 }
 
+func (cc *ConfluentCurrentManager) HasPidFile(service string) (bool, error) {
+	file, err := cc.GetPidFile(service)
+	if err != nil {
+		return false, err
+	}
+
+	return fileExists(file), nil
+}
+
 func (cc *ConfluentCurrentManager) GetPidFile(service string) (string, error) {
 	if file, ok := cc.pidFiles[service]; ok {
 		return file, nil
@@ -216,4 +226,9 @@ func getRandomChildDir(parentDir string) string {
 			return path
 		}
 	}
+}
+
+func fileExists(file string) bool {
+	_, err := os.Stat(file)
+	return !os.IsNotExist(err)
 }

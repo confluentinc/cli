@@ -385,6 +385,14 @@ func stopService(command *cobra.Command, cc local.ConfluentCurrent, service stri
 }
 
 func isRunning(cc local.ConfluentCurrent, service string) (bool, error) {
+	hasPidFile, err := cc.HasPidFile(service)
+	if err != nil {
+		return false, err
+	}
+	if !hasPidFile {
+		return false, nil
+	}
+
 	pid, err := cc.GetPid(service)
 	if err != nil {
 		return false, err

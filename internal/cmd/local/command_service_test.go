@@ -45,6 +45,9 @@ func TestIsRunning(t *testing.T) {
 	defer cat.Process.Kill()
 
 	cc := &mock.MockConfluentCurrent{
+		HasPidFileFunc: func(service string) (bool, error) {
+			return true, nil
+		},
 		GetPidFunc: func(service string) (int, error) {
 			return cat.Process.Pid, nil
 		},
@@ -59,8 +62,8 @@ func TestIsNotRunning(t *testing.T) {
 	req := require.New(t)
 
 	cc := &mock.MockConfluentCurrent{
-		GetPidFunc: func(service string) (int, error) {
-			return 0, nil
+		HasPidFileFunc: func(service string) (bool, error) {
+			return false, nil
 		},
 	}
 

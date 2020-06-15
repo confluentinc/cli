@@ -287,7 +287,7 @@ func NewServicesTopCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Comma
 	return servicesTopCommand.Command
 }
 
-func runServicesTopCommand(_ *cobra.Command, _ []string) error {
+func runServicesTopCommand(command *cobra.Command, _ []string) error {
 	ch := local.NewConfluentHomeManager()
 
 	availableServices, err := getAvailableServices(ch)
@@ -314,7 +314,8 @@ func runServicesTopCommand(_ *cobra.Command, _ []string) error {
 	}
 
 	if len(pids) == 0 {
-		return fmt.Errorf("no services are running")
+		command.PrintErrln("No services are running.")
+		return nil
 	}
 
 	return top(pids)

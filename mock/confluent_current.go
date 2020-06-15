@@ -37,6 +37,9 @@ type MockConfluentCurrent struct {
 	lockGetPidFile sync.Mutex
 	GetPidFileFunc func(service string) (string, error)
 
+	lockHasPidFile sync.Mutex
+	HasPidFileFunc func(service string) (bool, error)
+
 	lockGetPid sync.Mutex
 	GetPidFunc func(service string) (int, error)
 
@@ -70,6 +73,9 @@ type MockConfluentCurrent struct {
 			Service string
 		}
 		GetPidFile []struct {
+			Service string
+		}
+		HasPidFile []struct {
 			Service string
 		}
 		GetPid []struct {
@@ -418,6 +424,44 @@ func (m *MockConfluentCurrent) GetPidFileCalls() []struct {
 	return m.calls.GetPidFile
 }
 
+// HasPidFile mocks base method by wrapping the associated func.
+func (m *MockConfluentCurrent) HasPidFile(service string) (bool, error) {
+	m.lockHasPidFile.Lock()
+	defer m.lockHasPidFile.Unlock()
+
+	if m.HasPidFileFunc == nil {
+		panic("mocker: MockConfluentCurrent.HasPidFileFunc is nil but MockConfluentCurrent.HasPidFile was called.")
+	}
+
+	call := struct {
+		Service string
+	}{
+		Service: service,
+	}
+
+	m.calls.HasPidFile = append(m.calls.HasPidFile, call)
+
+	return m.HasPidFileFunc(service)
+}
+
+// HasPidFileCalled returns true if HasPidFile was called at least once.
+func (m *MockConfluentCurrent) HasPidFileCalled() bool {
+	m.lockHasPidFile.Lock()
+	defer m.lockHasPidFile.Unlock()
+
+	return len(m.calls.HasPidFile) > 0
+}
+
+// HasPidFileCalls returns the calls made to HasPidFile.
+func (m *MockConfluentCurrent) HasPidFileCalls() []struct {
+	Service string
+} {
+	m.lockHasPidFile.Lock()
+	defer m.lockHasPidFile.Unlock()
+
+	return m.calls.HasPidFile
+}
+
 // GetPid mocks base method by wrapping the associated func.
 func (m *MockConfluentCurrent) GetPid(service string) (int, error) {
 	m.lockGetPid.Lock()
@@ -564,6 +608,9 @@ func (m *MockConfluentCurrent) Reset() {
 	m.lockGetPidFile.Lock()
 	m.calls.GetPidFile = nil
 	m.lockGetPidFile.Unlock()
+	m.lockHasPidFile.Lock()
+	m.calls.HasPidFile = nil
+	m.lockHasPidFile.Unlock()
 	m.lockGetPid.Lock()
 	m.calls.GetPid = nil
 	m.lockGetPid.Unlock()
