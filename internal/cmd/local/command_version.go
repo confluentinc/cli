@@ -2,6 +2,7 @@ package local
 
 import (
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/local"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -30,8 +31,10 @@ func NewVersionCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
 	return versionCommand.Command
 }
 
-func runVersionCommand(command *cobra.Command, args []string) error {
-	isCP, err := isConfluentPlatform()
+func runVersionCommand(command *cobra.Command, _ []string) error {
+	ch := local.NewConfluentHomeManager()
+
+	isCP, err := ch.IsConfluentPlatform()
 	if err != nil {
 		return err
 	}
@@ -41,7 +44,7 @@ func runVersionCommand(command *cobra.Command, args []string) error {
 		flavor = "Confluent Platform"
 	}
 
-	version, err := getVersion(flavor)
+	version, err := getVersion(ch, flavor)
 	if err != nil {
 		return err
 	}
@@ -51,22 +54,22 @@ func runVersionCommand(command *cobra.Command, args []string) error {
 }
 
 // Get the version number of a service based on a trusted file
-func getVersion(service string) (string, error) {
-	versionFilePattern, ok := versionFiles[service]
+func getVersion(ch local.ConfluentHome, service string) (string, error) {
+	pattern, ok := versionFiles[service]
 	if !ok {
-		versionFilePattern = versionFiles["Confluent Platform"]
+		pattern = versionFiles["Confluent Platform"]
 	}
 
-	matches, err := findConfluentFile(versionFilePattern)
+	matches, err := ch.FindFile(pattern)
 	if err != nil {
 		return "", err
 	}
 	if len(matches) == 0 {
-		return "", fmt.Errorf("could not find %s inside CONFLUENT_HOME", versionFilePattern)
+		return "", fmt.Errorf("could not find %s in CONFLUENT_HOME", pattern)
 	}
 
 	versionFile := matches[0]
-	x := strings.Split(versionFilePattern, "*")
+	x := strings.Split(pattern, "*")
 	prefix, suffix := x[0], x[1]
 	version := versionFile[len(prefix) : len(versionFile)-len(suffix)]
 

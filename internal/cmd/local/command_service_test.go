@@ -1,9 +1,9 @@
 package local
 
 import (
-	"io/ioutil"
-	"path/filepath"
-	"strings"
+	"fmt"
+	"net"
+	"os/exec"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -11,58 +11,81 @@ import (
 	"github.com/confluentinc/cli/mock"
 )
 
+const exampleService = "kafka"
+
 func TestConfigService(t *testing.T) {
 	req := require.New(t)
 
-	cp := mock.NewConfluentPlatform()
-	defer cp.TearDown()
+	ch := &mock.MockConfluentHome{
+		GetConfigFunc: func(service string) ([]byte, error) {
+			return []byte("replace=old\n# comment=old\n"), nil
+		},
+	}
 
-	req.NoError(cp.NewConfluentHome())
-	req.NoError(cp.AddFileToConfluentHome("etc/kafka/zookeeper.properties", "replace=old\n# comment=old\n", 0644))
-	req.NoError(cp.NewConfluentCurrent())
+	cc := &mock.MockConfluentCurrent{
+		SetConfigFunc: func(service string, config []byte) error {
+			req.NotContains(string(config), "replace=old")
+			req.Contains(string(config), "replace=new")
+			req.NotContains(string(config), "# comment=old")
+			req.Contains(string(config), "comment=new")
+			req.Contains(string(config), "append=new")
+			return nil
+		},
+	}
 
-	dir, err := getServiceDir("zookeeper")
-	req.NoError(err)
 	config := map[string]string{"replace": "new", "comment": "new", "append": "new"}
-	req.NoError(configService("zookeeper", dir, config))
-
-	properties := filepath.Join(cp.ConfluentCurrent, "zookeeper", "zookeeper.properties")
-	req.FileExists(properties)
-	data, err := ioutil.ReadFile(properties)
-	req.NoError(err)
-	req.NotContains(string(data), "replace=old")
-	req.Contains(string(data), "replace=new")
-	req.NotContains(string(data), "# comment=old")
-	req.Contains(string(data), "comment=new")
-	req.Contains(string(data), "append=new")
+	req.NoError(configService(ch, cc, exampleService, config))
 }
 
-func TestServiceVersions(t *testing.T) {
+func TestIsRunning(t *testing.T) {
 	req := require.New(t)
 
-	cp := mock.NewConfluentPlatform()
-	defer cp.TearDown()
-	req.NoError(cp.NewConfluentHome())
+	cat := exec.Command("cat")
+	req.NoError(cat.Start())
+	defer cat.Process.Kill()
 
-	versions := map[string]string{
-		"Confluent Platform": "1.0.0",
-		"kafka":              "2.0.0",
-		"zookeeper":          "3.0.0",
+	cc := &mock.MockConfluentCurrent{
+		GetPidFunc: func(service string) (int, error) {
+			return cat.Process.Pid, nil
+		},
 	}
 
-	for service, version := range versions {
-		file := strings.Replace(versionFiles[service], "*", version, 1)
-		req.NoError(cp.AddEmptyFileToConfluentHome(file))
+	isUp, err := isRunning(cc, exampleService)
+	req.NoError(err)
+	req.True(isUp)
+}
+
+func TestIsNotRunning(t *testing.T) {
+	req := require.New(t)
+
+	cc := &mock.MockConfluentCurrent{
+		GetPidFunc: func(service string) (int, error) {
+			return 0, nil
+		},
 	}
 
-	for service := range services {
-		out, err := mockLocalCommand("services", service, "version")
-		req.NoError(err)
+	isUp, err := isRunning(cc, exampleService)
+	req.NoError(err)
+	req.False(isUp)
+}
 
-		version, ok := versions[service]
-		if !ok {
-			version = versions["Confluent Platform"]
-		}
-		req.Contains(out, version)
-	}
+func TestIsPortOpen(t *testing.T) {
+	req := require.New(t)
+
+	addr := fmt.Sprintf(":%d", services[exampleService].port)
+	lis, err := net.Listen("tcp", addr)
+	req.NoError(err)
+	defer lis.Close()
+
+	isOpen, err := isPortOpen(exampleService)
+	req.NoError(err)
+	req.True(isOpen)
+}
+
+func TestIsPortClosed(t *testing.T) {
+	req := require.New(t)
+
+	isOpen, err := isPortOpen(exampleService)
+	req.NoError(err)
+	req.False(isOpen)
 }

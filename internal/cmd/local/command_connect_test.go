@@ -6,14 +6,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestListConnectors(t *testing.T) {
-	req := require.New(t)
-
-	out, err := mockLocalCommand("services", "connect", "list", "connectors")
-	req.NoError(err)
-	req.Contains(out, buildTabbedList(getConnectors()))
-}
-
 func TestExtractConfig(t *testing.T) {
 	req := require.New(t)
 

@@ -2,9 +2,9 @@ package local
 
 import (
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/local"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
@@ -18,8 +18,6 @@ import (
 type Service struct {
 	startDependencies       []string
 	stopDependencies        []string
-	startCommand            string
-	properties              string
 	port                    int
 	isConfluentPlatformOnly bool
 }
@@ -33,8 +31,6 @@ var (
 				"schema-registry",
 			},
 			stopDependencies:        []string{},
-			startCommand:            "connect-distributed",
-			properties:              "schema-registry/connect-avro-distributed.properties",
 			port:                    8083,
 			isConfluentPlatformOnly: false,
 		},
@@ -47,8 +43,6 @@ var (
 				"ksql-server",
 			},
 			stopDependencies:        []string{},
-			startCommand:            "control-center-start",
-			properties:              "confluent-control-center/control-center-dev.properties",
 			port:                    9021,
 			isConfluentPlatformOnly: true,
 		},
@@ -63,8 +57,6 @@ var (
 				"kafka-rest",
 				"schema-registry",
 			},
-			startCommand:            "kafka-server-start",
-			properties:              "kafka/server.properties",
 			port:                    9092,
 			isConfluentPlatformOnly: false,
 		},
@@ -75,8 +67,6 @@ var (
 				"schema-registry",
 			},
 			stopDependencies:        []string{},
-			startCommand:            "kafka-rest-start",
-			properties:              "kafka-rest/kafka-rest.properties",
 			port:                    8082,
 			isConfluentPlatformOnly: false,
 		},
@@ -87,8 +77,6 @@ var (
 				"schema-registry",
 			},
 			stopDependencies:        []string{},
-			startCommand:            "ksql-server-start",
-			properties:              "ksqldb/ksql-server.properties", // TODO: ksql/ksql-server.properties for older versions
 			port:                    8088,
 			isConfluentPlatformOnly: false,
 		},
@@ -98,8 +86,6 @@ var (
 				"kafka",
 			},
 			stopDependencies:        []string{},
-			startCommand:            "schema-registry-start",
-			properties:              "schema-registry/schema-registry.properties",
 			port:                    8081,
 			isConfluentPlatformOnly: false,
 		},
@@ -113,8 +99,6 @@ var (
 				"schema-registry",
 				"kafka",
 			},
-			startCommand:            "zookeeper-server-start",
-			properties:              "kafka/zookeeper.properties",
 			port:                    2181,
 			isConfluentPlatformOnly: false,
 		},
@@ -140,7 +124,10 @@ func NewServicesCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command 
 		},
 		cfg, prerunner)
 
-	availableServices, _ := getAvailableServices()
+	ch := local.NewConfluentHomeManager()
+
+	availableServices, _ := getAvailableServices(ch)
+
 	for _, service := range availableServices {
 		servicesCommand.AddCommand(NewServiceCommand(service, prerunner, cfg))
 	}
@@ -167,7 +154,9 @@ func NewServicesListCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Comm
 }
 
 func runServicesListCommand(command *cobra.Command, _ []string) error {
-	availableServices, err := getAvailableServices()
+	ch := local.NewConfluentHomeManager()
+
+	availableServices, err := getAvailableServices(ch)
 	if err != nil {
 		return err
 	}
@@ -191,19 +180,23 @@ func NewServicesStartCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Com
 }
 
 func runServicesStartCommand(command *cobra.Command, _ []string) error {
-	availableServices, err := getAvailableServices()
+	ch := local.NewConfluentHomeManager()
+
+	availableServices, err := getAvailableServices(ch)
 	if err != nil {
 		return err
 	}
 
-	if err := notifyConfluentCurrent(command); err != nil {
+	cc := local.NewConfluentCurrentManager()
+
+	if err := notifyConfluentCurrent(command, cc); err != nil {
 		return err
 	}
 
 	// Topological order
 	for i := 0; i < len(availableServices); i++ {
 		service := availableServices[i]
-		if err := startService(command, service); err != nil {
+		if err := startService(command, ch, cc, service); err != nil {
 			return err
 		}
 	}
@@ -225,13 +218,17 @@ func NewServicesStatusCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Co
 }
 
 func runServicesStatusCommand(command *cobra.Command, _ []string) error {
-	availableServices, err := getAvailableServices()
+	ch := local.NewConfluentHomeManager()
+
+	availableServices, err := getAvailableServices(ch)
 	if err != nil {
 		return err
 	}
 
+	cc := local.NewConfluentCurrentManager()
+
 	for _, service := range availableServices {
-		if err := printStatus(command, service); err != nil {
+		if err := printStatus(command, cc, service); err != nil {
 			return err
 		}
 	}
@@ -253,19 +250,23 @@ func NewServicesStopCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Comm
 }
 
 func runServicesStopCommand(command *cobra.Command, _ []string) error {
-	availableServices, err := getAvailableServices()
+	ch := local.NewConfluentHomeManager()
+
+	availableServices, err := getAvailableServices(ch)
 	if err != nil {
 		return err
 	}
 
-	if err := notifyConfluentCurrent(command); err != nil {
+	cc := local.NewConfluentCurrentManager()
+
+	if err := notifyConfluentCurrent(command, cc); err != nil {
 		return err
 	}
 
 	// Reverse topological order
 	for i := len(availableServices) - 1; i >= 0; i-- {
 		service := availableServices[i]
-		if err := stopService(command, service); err != nil {
+		if err := stopService(command, cc, service); err != nil {
 			return err
 		}
 	}
@@ -287,25 +288,24 @@ func NewServicesTopCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Comma
 }
 
 func runServicesTopCommand(_ *cobra.Command, _ []string) error {
-	availableServices, err := getAvailableServices()
+	ch := local.NewConfluentHomeManager()
+
+	availableServices, err := getAvailableServices(ch)
 	if err != nil {
 		return err
 	}
 
-	pids := []int{}
-	for _, service := range availableServices {
-		dir, err := getServiceDir(service)
-		if err != nil {
-			return err
-		}
+	cc := local.NewConfluentCurrentManager()
 
-		isUp, err := isRunning(service, dir)
+	var pids []int
+	for _, service := range availableServices {
+		isUp, err := isRunning(cc, service)
 		if err != nil {
 			return err
 		}
 
 		if isUp {
-			pid, err := readInt(getPidFile(service, dir))
+			pid, err := cc.GetPid(service)
 			if err != nil {
 				return err
 			}
@@ -320,27 +320,42 @@ func runServicesTopCommand(_ *cobra.Command, _ []string) error {
 	return top(pids)
 }
 
-func getServiceConfig(service string, dir string) map[string]string {
-	config := map[string]string{}
+func getDataDirConfig(cc local.ConfluentCurrent, service string) (map[string]string, error) {
+	data, err := cc.GetDataDir(service)
+	if err != nil {
+		return map[string]string{}, err
+	}
+
+	config := make(map[string]string)
+
+	switch service {
+	case "control-center":
+		config["confluent.controlcenter.data.dir"] = data
+	case "kafka":
+		config["log.dirs"] = data
+	case "ksql-server":
+		config["state.dir"] = data
+	case "zookeeper":
+		config["dataDir"] = data
+	}
+
+	return config, nil
+}
+
+func getPortConfig(service string) map[string]string {
+	config := make(map[string]string)
 
 	switch service {
 	case "connect":
 		config["bootstrap.servers"] = fmt.Sprintf("localhost:%d", services["kafka"].port)
-	case "control-center":
-		config["confluent.controlcenter.data.dir"] = filepath.Join(dir, "data")
-	case "kafka":
-		config["log.dirs"] = filepath.Join(dir, "data")
 	case "kafka-rest":
 		config["zookeeper.connect"] = fmt.Sprintf("localhost:%d", services["zookeeper"].port)
 		config["schema.registry.url"] = fmt.Sprintf("http://localhost:%d", services["schema-registry"].port)
 	case "ksql-server":
-		config["state.dir"] = filepath.Join(dir, "data", "kafka-streams")
 		config["kafkastore.connection.url"] = fmt.Sprintf("localhost:%d", services["zookeeper"].port)
 		config["ksql.schema.registry.url"] = fmt.Sprintf("http://localhost:%d", services["schema-registry"].port)
 	case "schema-registry":
 		config["kafkastore.connection.url"] = fmt.Sprintf("localhost:%d", services["zookeeper"].port)
-	case "zookeeper":
-		config["dataDir"] = filepath.Join(dir, "data")
 	}
 
 	return config
@@ -351,10 +366,10 @@ func top(pids []int) error {
 
 	switch runtime.GOOS {
 	case "darwin":
-		args := make([]string, len(pids) * 2)
+		args := make([]string, len(pids)*2)
 		for i := 0; i < len(pids); i++ {
-			args[i * 2] = "-pid"
-			args[i * 2 + 1] = strconv.Itoa(pids[i])
+			args[i*2] = "-pid"
+			args[i*2+1] = strconv.Itoa(pids[i])
 		}
 		top = exec.Command("top", args...)
 	case "linux":
@@ -367,12 +382,15 @@ func top(pids []int) error {
 		return fmt.Errorf("top not available on platform: %s", runtime.GOOS)
 	}
 
-	top.Stdout, top.Stderr, top.Stdin = os.Stdout, os.Stderr, os.Stdin
+	top.Stdout = os.Stdout
+	top.Stderr = os.Stderr
+	top.Stdin = os.Stdin
+
 	return top.Run()
 }
 
-func getAvailableServices() ([]string, error) {
-	isCP, err := isConfluentPlatform()
+func getAvailableServices(ch local.ConfluentHome) ([]string, error) {
+	isCP, err := ch.IsConfluentPlatform()
 
 	var available []string
 	for _, service := range orderedServices {
@@ -384,12 +402,12 @@ func getAvailableServices() ([]string, error) {
 	return available, err
 }
 
-func notifyConfluentCurrent(command *cobra.Command) error {
-	current, err := getConfluentCurrent()
+func notifyConfluentCurrent(command *cobra.Command, cc local.ConfluentCurrent) error {
+	dir, err := cc.GetCurrentDir()
 	if err != nil {
 		return err
 	}
 
-	command.Printf("Using CONFLUENT_CURRENT: %s\n", current)
+	command.Printf("Using CONFLUENT_CURRENT: %s\n", dir)
 	return nil
 }
