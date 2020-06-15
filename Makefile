@@ -1,4 +1,5 @@
 SHELL           := /bin/bash
+ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
 GIT_REMOTE_NAME ?= origin
 MASTER_BRANCH   ?= master
 RELEASE_BRANCH  ?= master
@@ -410,7 +411,7 @@ clean-release-notes:
 
 .PHONY: fmt
 fmt:
-	@goimports -local github.com/confluentinc/cli/ -w .
+	@goimports -local github.com/confluentinc/cli/ -w $(ALL_SRC)
 
 .PHONY: release-ci
 release-ci:
