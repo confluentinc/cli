@@ -6,6 +6,7 @@ import (
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	"net/http"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -249,9 +250,9 @@ func (c *rolebindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mds.Mds
 
 func (c *rolebindingCommand) parseAndValidateScopeV2(cmd *cobra.Command) (*mdsv2alpha1.Scope, error) {
 	mdsScope, err := c.parseAndValidateScope(cmd)
-	// orgId := c.State.Auth.User.GetOrganizationId()
+	orgId := strconv.Itoa(int(c.State.Auth.User.GetOrganizationId()))
 	scopeV2 := &mdsv2alpha1.Scope{
-		Path: []string{"organization=", "environment=" + c.EnvironmentId()},
+		Path: []string{"organization=" + orgId, "environment=" + c.EnvironmentId()},
 		Clusters: mdsv2alpha1.ScopeClusters(mdsScope.Clusters),
 	}
 	return scopeV2, err
@@ -434,7 +435,14 @@ func (c *rolebindingCommand) listPrincipalResourcesV1(cmd *cobra.Command, mdsSco
 }
 
 func (c *rolebindingCommand) listRolePrincipals(cmd *cobra.Command) error {
-	scope, err := c.parseAndValidateScope(cmd)
+	scope := &mds.MdsScope{}
+	// scopeV2 := &mdsv2alpha1.Scope{}
+	var err error
+	if c.Config.CLIName == "ccloud" {
+		// scopeV2, err = c.parseAndValidateScopeV2(cmd)
+	} else {
+		scope, err = c.parseAndValidateScope(cmd)
+	}
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -445,7 +453,7 @@ func (c *rolebindingCommand) listRolePrincipals(cmd *cobra.Command) error {
 	}
 
 	var principals []string
-	if cmd.Flags().Changed("resource") {
+	if cmd.Flags().Changed("resource") && c.Config.CLIName != "ccloud" {
 		r, err := cmd.Flags().GetString("resource")
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
