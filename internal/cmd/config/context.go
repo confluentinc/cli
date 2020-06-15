@@ -53,7 +53,7 @@ func (c *contextCommand) init() {
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 	c.AddCommand(&cobra.Command{
-		Use:   "use ID",
+		Use:   "use <id>",
 		Short: "Use a config context.",
 		RunE:  c.use,
 		Args:  cobra.ExactArgs(1),
@@ -68,24 +68,29 @@ func (c *contextCommand) init() {
 		RunE:  c.current,
 		Args:  cobra.NoArgs,
 	})
-	c.AddCommand(&cobra.Command{
-		Use:   "get [ID]",
+
+	getCmd := &cobra.Command{
+		Use:   "get <id or no argument for current context>",
 		Short: "Get a config context parameter.",
 		RunE:  c.get,
 		Args:  cobra.RangeArgs(0, 1),
-	})
+	}
+	getCmd.Hidden = true
+	c.AddCommand(getCmd)
 
 	setCmd := &cobra.Command{
-		Use:   "set [ID]",
+		Use:   "set <id or no argument for current context>",
 		Short: "Set a config context parameter.",
 		RunE:  c.set,
 		Args:  cobra.RangeArgs(0, 1),
 	}
-	setCmd.Flags().String("kafka-cluster", "", "Set the current Kafka cluster context")
+	setCmd.Flags().String("kafka-cluster", "", "Set the current Kafka cluster context.")
+	setCmd.Flags().SortFlags = false
+	setCmd.Hidden = true
 	c.AddCommand(setCmd)
 
 	c.AddCommand(&cobra.Command{
-		Use:   "delete ID",
+		Use:   "delete <id>",
 		Short: "Delete a config context.",
 		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
