@@ -1,9 +1,10 @@
 package secret
 
 import (
+	"testing"
+
 	"github.com/confluentinc/properties"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestJAASParser_String(t *testing.T) {

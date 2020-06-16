@@ -40,4 +40,3 @@ func TestConfluentPlatformVersion(t *testing.T) {
 	req.NoError(err)
 	req.Contains(out, "Confluent Platform: 1.0.0")
 }
-
