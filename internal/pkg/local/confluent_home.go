@@ -54,9 +54,10 @@ type ConfluentHome interface {
 	GetConfig(service string) ([]byte, error)
 	GetConnectorConfigFile(connector string) (string, error)
 	GetScriptFile(service string) (string, error)
+	GetKafkaScriptFile(mode, format string) (string, error)
 }
 
-type ConfluentHomeManager struct {}
+type ConfluentHomeManager struct{}
 
 func NewConfluentHomeManager() *ConfluentHomeManager {
 	return new(ConfluentHomeManager)
@@ -112,6 +113,15 @@ func (ch *ConfluentHomeManager) GetConnectorConfigFile(connector string) (string
 
 func (ch *ConfluentHomeManager) GetScriptFile(service string) (string, error) {
 	return ch.getFile(filepath.Join("bin", scripts[service]))
+}
+
+func (ch *ConfluentHomeManager) GetKafkaScriptFile(format, mode string) (string, error) {
+	script := fmt.Sprintf("kafka-%s-console-%s", format, mode)
+	if format == "" {
+		script = fmt.Sprintf("kafka-console-%s", mode)
+	}
+
+	return ch.getFile(filepath.Join("bin", script))
 }
 
 func (ch *ConfluentHomeManager) getRootDir() (string, error) {

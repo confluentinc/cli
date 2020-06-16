@@ -2,7 +2,6 @@ package local
 
 import (
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/local"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -10,11 +9,13 @@ import (
 	"syscall"
 	"time"
 
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/local"
+
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config/v3"
 )
 
 func NewServiceCommand(service string, prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
@@ -41,7 +42,8 @@ func NewServiceCommand(service string, prerunner cmd.PreRunner, cfg *v3.Config) 
 		serviceCommand.AddCommand(NewConnectLoadCommand(prerunner, cfg))
 		serviceCommand.AddCommand(NewConnectUnloadCommand(prerunner, cfg))
 	case "kafka":
-		// TODO
+		serviceCommand.AddCommand(NewKafkaConsumeCommand(prerunner, cfg))
+		serviceCommand.AddCommand(NewKafkaProduceCommand(prerunner, cfg))
 	case "schema-registry":
 		// TODO
 	}
