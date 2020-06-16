@@ -2,16 +2,17 @@ package local
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"strconv"
 
-	"github.com/confluentinc/cli/internal/pkg/local"
-
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/local"
 )
 
 var (
@@ -60,9 +61,6 @@ func NewKafkaConsumeCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Comm
 }
 
 func runKafkaConsumeCommand(command *cobra.Command, args []string) error {
-	// TODO --cloud
-	// TODO --config
-
 	format, err := command.Flags().GetString("value-format")
 	if err != nil {
 		return err
@@ -72,6 +70,31 @@ func runKafkaConsumeCommand(command *cobra.Command, args []string) error {
 	scriptFile, err := ch.GetKafkaScriptFile(format, "consumer")
 	if err != nil {
 		return err
+	}
+
+	var cloudConfigFile string
+	var cloudServer string
+
+	cloud, err := command.Flags().GetBool("cloud")
+	if err != nil {
+		return err
+	}
+	if cloud {
+		cloudConfigFile, err = command.Flags().GetString("config")
+		if err != nil {
+			return err
+		}
+		if err := command.Flags().Set("producer.config", cloudConfigFile); err != nil {
+			return err
+		}
+
+		data, err := ioutil.ReadFile(cloudConfigFile)
+		if err != nil {
+			return err
+		}
+
+		config := extractConfig(data)
+		cloudServer = config["bootstrap.servers"]
 	}
 
 	kafkaFlagTypes := map[string]interface{}{
@@ -94,16 +117,26 @@ func runKafkaConsumeCommand(command *cobra.Command, args []string) error {
 		"whitelist":             defaultString,
 	}
 
-	kafkaArgs, err := collectFlags(command, kafkaFlagTypes)
+	if cloud {
+		delete(kafkaFlagTypes, "consumer.config")
+		delete(kafkaFlagTypes, "bootstrap-server")
+	}
+
+	kafkaArgs, err := collectFlags(command.Flags(), kafkaFlagTypes)
 	if err != nil {
 		return err
 	}
 
 	kafkaArgs = append(kafkaArgs, "--topic", args[0])
+	if cloud {
+		kafkaArgs = append(kafkaArgs, "--consumer.config", cloudConfigFile)
+		kafkaArgs = append(kafkaArgs, "--bootstrap-server", cloudServer)
+	}
 
 	consumer := exec.Command(scriptFile, kafkaArgs...)
 	consumer.Stdout = os.Stdout
 	consumer.Stderr = os.Stderr
+
 	return consumer.Run()
 }
 
@@ -159,6 +192,28 @@ func runKafkaProduceCommand(command *cobra.Command, args []string) error {
 		return err
 	}
 
+	var cloudConfigFile string
+	var cloudServer string
+
+	cloud, err := command.Flags().GetBool("cloud")
+	if err != nil {
+		return err
+	}
+	if cloud {
+		cloudConfigFile, err = command.Flags().GetString("config")
+		if err != nil {
+			return err
+		}
+
+		data, err := ioutil.ReadFile(cloudConfigFile)
+		if err != nil {
+			return err
+		}
+
+		config := extractConfig(data)
+		cloudServer = config["bootstrap.servers"]
+	}
+
 	kafkaFlagTypes := map[string]interface{}{
 		"batch-size":                 defaultInt,
 		"bootstrap-server":           defaultString,
@@ -180,22 +235,33 @@ func runKafkaProduceCommand(command *cobra.Command, args []string) error {
 		"timeout":                    defaultInt,
 	}
 
-	kafkaArgs, err := collectFlags(command, kafkaFlagTypes)
+	if cloud {
+		delete(kafkaFlagTypes, "consumer.config")
+		delete(kafkaFlagTypes, "bootstrap-server")
+	}
+
+	kafkaArgs, err := collectFlags(command.Flags(), kafkaFlagTypes)
 	if err != nil {
 		return err
 	}
 
 	kafkaArgs = append(kafkaArgs, "--topic", args[0])
+	if cloud {
+		kafkaArgs = append(kafkaArgs, "--producer.config", cloudConfigFile)
+		kafkaArgs = append(kafkaArgs, "--bootstrap-server", cloudServer)
+	}
 
 	producer := exec.Command(scriptFile, kafkaArgs...)
 	producer.Stdin = os.Stdin
 	producer.Stdout = os.Stdout
 	producer.Stderr = os.Stderr
+
+	fmt.Println("Exit with Ctrl+D")
 	return producer.Run()
 }
 
-func collectFlags(command *cobra.Command, flagTypes map[string]interface{}) ([]string, error) {
-	args := []string{}
+func collectFlags(flags *pflag.FlagSet, flagTypes map[string]interface{}) ([]string, error) {
+	var args []string
 
 	for key, typeDefault := range flagTypes {
 		var val interface{}
@@ -203,11 +269,11 @@ func collectFlags(command *cobra.Command, flagTypes map[string]interface{}) ([]s
 
 		switch typeDefault.(type) {
 		case bool:
-			val, err = command.Flags().GetBool(key)
+			val, err = flags.GetBool(key)
 		case string:
-			val, err = command.Flags().GetString(key)
+			val, err = flags.GetString(key)
 		case int:
-			val, err = command.Flags().GetInt(key)
+			val, err = flags.GetInt(key)
 		}
 
 		if err != nil {

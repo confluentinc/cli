@@ -116,9 +116,15 @@ func (ch *ConfluentHomeManager) GetScriptFile(service string) (string, error) {
 }
 
 func (ch *ConfluentHomeManager) GetKafkaScriptFile(format, mode string) (string, error) {
-	script := fmt.Sprintf("kafka-%s-console-%s", format, mode)
-	if format == "" {
+	var script string
+
+	switch format {
+	case "":
 		script = fmt.Sprintf("kafka-console-%s", mode)
+	case "json":
+		script = fmt.Sprintf("kafka-json-schema-console-%s", mode)
+	default:
+		script = fmt.Sprintf("kafka-%s-console-%s", format, mode)
 	}
 
 	return ch.getFile(filepath.Join("bin", script))

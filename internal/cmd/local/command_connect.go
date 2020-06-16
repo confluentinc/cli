@@ -4,17 +4,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/local"
 	"io/ioutil"
 	"net/http"
-	"regexp"
-	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config/v3"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/local"
 )
 
 var connectors = []string{
@@ -276,19 +274,6 @@ func isBuiltin(connector string) bool {
 func isJSON(data []byte) bool {
 	var out map[string]interface{}
 	return json.Unmarshal(data, &out) == nil
-}
-
-func extractConfig(data []byte) map[string]string {
-	re := regexp.MustCompile(`(?m)^[^\s#]*=.+`)
-	matches := re.FindAllString(string(data), -1)
-	config := map[string]string{}
-
-	for _, match := range matches {
-		x := strings.Split(match, "=")
-		key, val := x[0], x[1]
-		config[key] = val
-	}
-	return config
 }
 
 func getConnectorConfig(connector string) (string, error) {
