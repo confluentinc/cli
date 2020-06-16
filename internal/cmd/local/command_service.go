@@ -37,11 +37,8 @@ func NewServiceCommand(service string, prerunner cmd.PreRunner, cfg *v3.Config) 
 
 	switch service {
 	case "connect":
-		serviceCommand.AddCommand(NewConnectConfigCommand(prerunner, cfg))
-		serviceCommand.AddCommand(NewConnectConnectorStatusCommand(prerunner, cfg))
-		serviceCommand.AddCommand(NewConnectListCommand(prerunner, cfg))
-		serviceCommand.AddCommand(NewConnectLoadCommand(prerunner, cfg))
-		serviceCommand.AddCommand(NewConnectUnloadCommand(prerunner, cfg))
+		serviceCommand.AddCommand(NewConnectConnectorCommand(prerunner, cfg))
+		serviceCommand.AddCommand(NewConnectPluginCommand(prerunner, cfg))
 	case "kafka":
 		// TODO
 	case "schema-registry":

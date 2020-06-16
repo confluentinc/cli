@@ -9,7 +9,7 @@ import (
 func TestListConnectors(t *testing.T) {
 	req := require.New(t)
 
-	out, err := mockLocalCommand("services", "connect", "list", "connectors")
+	out, err := mockLocalCommand("services", "connect", "connector", "list")
 	req.NoError(err)
 	req.Contains(out, buildTabbedList(getConnectors()))
 }
