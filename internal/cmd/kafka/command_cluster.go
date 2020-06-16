@@ -107,6 +107,15 @@ func (c *clusterCommand) init() {
 	createCmd := &cobra.Command{
 		Use:   "create <name>",
 		Short: "Create a Kafka cluster.",
+		Example: `
+Create a new dedicated cluster that uses a customer-managed encryption key in AWS:
+
+::
+
+	ccloud kafka cluster create sales092020 --cloud "aws" --type "dedicated" --encryption-key "arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"
+
+For more information, see https://docs.confluent.io/current/cloud/clusters/byok-encrypted-clusters.html.
+`,
 		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
 	}
