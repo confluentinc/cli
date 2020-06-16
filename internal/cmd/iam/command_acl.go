@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 	"net/http"
@@ -244,5 +245,9 @@ func PrintAcls(cmd *cobra.Command, kafkaClusterId string, bindingsObj []mds.AclB
 }
 
 func (c *aclCommand) createContext() context.Context {
-	return context.WithValue(context.Background(), mds.ContextAccessToken, c.AuthToken())
+	if c.Config.CLIName == "ccloud" {
+		return context.WithValue(context.Background(), mdsv2alpha1.ContextAccessToken, c.State.AuthToken)
+	} else {
+		return context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
+	}
 }

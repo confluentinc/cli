@@ -3,6 +3,7 @@ package cluster
 import (
 	"context"
 	"fmt"
+	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	"net/http"
 	"os"
 	"strings"
@@ -64,7 +65,11 @@ func NewListCommand(cfg *v3.Config, prerunner cmd.PreRunner) *cobra.Command {
 }
 
 func (c *listCommand) createContext() context.Context {
-	return context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
+	if c.Config.CLIName == "ccloud" {
+		return context.WithValue(context.Background(), mdsv2alpha1.ContextAccessToken, c.State.AuthToken)
+	} else {
+		return context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
+	}
 }
 
 func (c *listCommand) list(cmd *cobra.Command, args []string) error {

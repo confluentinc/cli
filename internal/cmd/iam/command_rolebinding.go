@@ -6,7 +6,6 @@ import (
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	"net/http"
 	"sort"
-	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -250,10 +249,18 @@ func (c *rolebindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mds.Mds
 
 func (c *rolebindingCommand) parseAndValidateScopeV2(cmd *cobra.Command) (*mdsv2alpha1.Scope, error) {
 	mdsScope, err := c.parseAndValidateScope(cmd)
-	orgId := strconv.Itoa(int(c.State.Auth.User.GetOrganizationId()))
+	if err != nil {
+		return nil, err
+	}
+	orgId := c.State.Auth.User.GetResourceId()
 	scopeV2 := &mdsv2alpha1.Scope{
 		Path: []string{"organization=" + orgId, "environment=" + c.EnvironmentId()},
-		Clusters: mdsv2alpha1.ScopeClusters(mdsScope.Clusters),
+		Clusters: mdsv2alpha1.ScopeClusters{
+			KafkaCluster: mdsScope.Clusters.KafkaCluster,
+			ConnectCluster: mdsScope.Clusters.ConnectCluster,
+			KsqlCluster: mdsScope.Clusters.KsqlCluster,
+			SchemaRegistryCluster: mdsScope.Clusters.SchemaRegistryCluster,
+		},
 	}
 	return scopeV2, err
 }
@@ -691,5 +698,9 @@ func check(err error) {
 }
 
 func (c *rolebindingCommand) createContext() context.Context {
-	return context.WithValue(context.Background(), mds.ContextAccessToken, c.AuthToken())
+	if c.Config.CLIName == "ccloud" {
+		return context.WithValue(context.Background(), mdsv2alpha1.ContextAccessToken, c.AuthToken())
+	} else {
+		return context.WithValue(context.Background(), mds.ContextAccessToken, c.AuthToken())
+	}
 }
