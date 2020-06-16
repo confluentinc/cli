@@ -3,9 +3,9 @@ package connector_catalog
 import (
 	"context"
 	"fmt"
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"strings"
 
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"

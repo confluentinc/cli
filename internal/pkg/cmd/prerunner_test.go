@@ -1,12 +1,13 @@
 package cmd_test
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/auth"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"os"
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/confluentinc/cli/internal/pkg/auth"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 
 	"github.com/jonboulle/clockwork"
 	"github.com/spf13/cobra"
