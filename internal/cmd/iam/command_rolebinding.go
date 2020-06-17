@@ -252,9 +252,9 @@ func (c *rolebindingCommand) parseAndValidateScopeV2(cmd *cobra.Command) (*mdsv2
 	if err != nil {
 		return nil, err
 	}
-	orgId := c.State.Auth.User.GetResourceId()
+	orgResourceId := c.State.Auth.Organization.GetResourceId()
 	scopeV2 := &mdsv2alpha1.Scope{
-		Path: []string{"organization=" + orgId, "environment=" + c.EnvironmentId()},
+		Path: []string{"organization=" + orgResourceId, "environment=" + c.EnvironmentId()},
 		Clusters: mdsv2alpha1.ScopeClusters{
 			KafkaCluster: mdsScope.Clusters.KafkaCluster,
 			ConnectCluster: mdsScope.Clusters.ConnectCluster,
