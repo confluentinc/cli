@@ -52,7 +52,7 @@ func NewLoginCommand(cliName string, prerunner pcmd.PreRunner, log *log.Logger, 
 }
 
 func (a *loginCommand) init(cliName string, prerunner pcmd.PreRunner) {
-	remoteAPIName := getRemoteAPIName("")
+	remoteAPIName := getRemoteAPIName(cliName)
 	loginCmd := &cobra.Command{
 		Use:   "login",
 		Short: fmt.Sprintf("Log in to %s.", remoteAPIName),
