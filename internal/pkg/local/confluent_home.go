@@ -62,6 +62,7 @@ type ConfluentHome interface {
 	GetConnectorConfigFile(connector string) (string, error)
 	GetScriptFile(service string) (string, error)
 	GetKafkaScriptFile(mode, format string) (string, error)
+	GetVersion(service string) (string, error)
 }
 
 type ConfluentHomeManager struct{}
@@ -98,6 +99,14 @@ func (ch *ConfluentHomeManager) FindFile(pattern string) ([]string, error) {
 		}
 	}
 	return matches, nil
+}
+
+func (ch *ConfluentHomeManager) getRootDir() (string, error) {
+	if dir := os.Getenv("CONFLUENT_HOME"); dir != "" {
+		return dir, nil
+	}
+
+	return "", fmt.Errorf("set environment variable CONFLUENT_HOME")
 }
 
 func (ch *ConfluentHomeManager) getConfigFile(service string) (string, error) {
@@ -160,24 +169,6 @@ func (ch *ConfluentHomeManager) GetKafkaScriptFile(format, mode string) (string,
 	return ch.getFile(filepath.Join("bin", script))
 }
 
-func (ch *ConfluentHomeManager) getRootDir() (string, error) {
-	if dir := os.Getenv("CONFLUENT_HOME"); dir != "" {
-		return dir, nil
-	}
-
-	return "", fmt.Errorf("set environment variable CONFLUENT_HOME")
-}
-
-func (ch *ConfluentHomeManager) getFile(file string) (string, error) {
-	dir, err := ch.getRootDir()
-	if err != nil {
-		return "", err
-	}
-
-	return filepath.Join(dir, file), nil
-}
-
-// Get the version number of a service based on a trusted file
 func (ch *ConfluentHomeManager) GetVersion(service string) (string, error) {
 	pattern, ok := versionFiles[service]
 	if !ok {
@@ -225,4 +216,13 @@ func (ch *ConfluentHomeManager) isAboveVersion(target string) (bool, error) {
 	}
 
 	return cmp >= 0, nil
+}
+
+func (ch *ConfluentHomeManager) getFile(file string) (string, error) {
+	dir, err := ch.getRootDir()
+	if err != nil {
+		return "", err
+	}
+
+	return filepath.Join(dir, file), nil
 }

@@ -49,10 +49,7 @@ func TestVersionCmpBasic(t *testing.T) {
 func TestVersionCmpSamePrefix(t *testing.T) {
 	req := require.New(t)
 
-	var cmp int
-	var err error
-
-	cmp, err = versionCmp("1.0.1", "1.0.2")
+	cmp, err := versionCmp("1.0.1", "1.0.2")
 	req.NoError(err)
 	isNegative(req, cmp)
 }
@@ -60,9 +57,16 @@ func TestVersionCmpSamePrefix(t *testing.T) {
 func TestVersionCmpDifferentLengths(t *testing.T) {
 	req := require.New(t)
 
-	cmp, err := versionCmp("1.0", "1.0.1")
+	var cmp int
+	var err error
+
+	cmp, err = versionCmp("1.0", "1.0.1")
 	req.NoError(err)
 	isNegative(req, cmp)
+
+	cmp, err = versionCmp("1.0", "1.0.0")
+	req.NoError(err)
+	req.Equal(0, cmp)
 }
 
 func isNegative(req *require.Assertions, n int) {

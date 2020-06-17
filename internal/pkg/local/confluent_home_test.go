@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -13,7 +14,8 @@ import (
 const (
 	exampleDir     = "dir"
 	exampleFile    = "file"
-	exampleService = "service"
+	exampleService = "kafka"
+	exampleVersion = "0.0.0"
 )
 
 var (
@@ -57,6 +59,30 @@ func TestFindFile(t *testing.T) {
 	matches, err := ch.FindFile("file-*.txt")
 	req.NoError(err)
 	req.Equal([]string{"file-0.0.0.txt"}, matches)
+}
+
+func TestGetVersion(t *testing.T) {
+	req := require.New(t)
+
+	setup(req)
+	defer teardown()
+
+	file := strings.ReplaceAll(versionFiles[exampleService], "*", exampleVersion)
+	req.NoError(createTestConfluentFile(ch, file))
+
+	version, err := ch.GetVersion(exampleService)
+	req.NoError(err)
+	req.Equal(exampleVersion, version)
+}
+
+func TestGetVersionNoMatchError(t *testing.T) {
+	req := require.New(t)
+
+	setup(req)
+	defer teardown()
+
+	_, err := ch.GetVersion(exampleService)
+	req.Error(err)
 }
 
 func setup(req *require.Assertions) {

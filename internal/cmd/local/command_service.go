@@ -9,13 +9,12 @@ import (
 	"syscall"
 	"time"
 
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
-	"github.com/confluentinc/cli/internal/pkg/local"
-
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/local"
 )
 
 func NewServiceCommand(service string, prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
@@ -220,7 +219,7 @@ func runServiceVersionCommand(command *cobra.Command, _ []string) error {
 
 	ch := local.NewConfluentHomeManager()
 
-	version, err := getVersion(ch, service)
+	version, err := ch.GetVersion(service)
 	if err != nil {
 		return err
 	}

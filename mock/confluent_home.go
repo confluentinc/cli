@@ -25,6 +25,12 @@ type MockConfluentHome struct {
 	lockGetScriptFile sync.Mutex
 	GetScriptFileFunc func(service string) (string, error)
 
+	lockGetKafkaScriptFile sync.Mutex
+	GetKafkaScriptFileFunc func(mode, format string) (string, error)
+
+	lockGetVersion sync.Mutex
+	GetVersionFunc func(service string) (string, error)
+
 	calls struct {
 		IsConfluentPlatform []struct {
 		}
@@ -38,6 +44,13 @@ type MockConfluentHome struct {
 			Connector string
 		}
 		GetScriptFile []struct {
+			Service string
+		}
+		GetKafkaScriptFile []struct {
+			Mode   string
+			Format string
+		}
+		GetVersion []struct {
 			Service string
 		}
 	}
@@ -229,6 +242,85 @@ func (m *MockConfluentHome) GetScriptFileCalls() []struct {
 	return m.calls.GetScriptFile
 }
 
+// GetKafkaScriptFile mocks base method by wrapping the associated func.
+func (m *MockConfluentHome) GetKafkaScriptFile(mode, format string) (string, error) {
+	m.lockGetKafkaScriptFile.Lock()
+	defer m.lockGetKafkaScriptFile.Unlock()
+
+	if m.GetKafkaScriptFileFunc == nil {
+		panic("mocker: MockConfluentHome.GetKafkaScriptFileFunc is nil but MockConfluentHome.GetKafkaScriptFile was called.")
+	}
+
+	call := struct {
+		Mode   string
+		Format string
+	}{
+		Mode:   mode,
+		Format: format,
+	}
+
+	m.calls.GetKafkaScriptFile = append(m.calls.GetKafkaScriptFile, call)
+
+	return m.GetKafkaScriptFileFunc(mode, format)
+}
+
+// GetKafkaScriptFileCalled returns true if GetKafkaScriptFile was called at least once.
+func (m *MockConfluentHome) GetKafkaScriptFileCalled() bool {
+	m.lockGetKafkaScriptFile.Lock()
+	defer m.lockGetKafkaScriptFile.Unlock()
+
+	return len(m.calls.GetKafkaScriptFile) > 0
+}
+
+// GetKafkaScriptFileCalls returns the calls made to GetKafkaScriptFile.
+func (m *MockConfluentHome) GetKafkaScriptFileCalls() []struct {
+	Mode   string
+	Format string
+} {
+	m.lockGetKafkaScriptFile.Lock()
+	defer m.lockGetKafkaScriptFile.Unlock()
+
+	return m.calls.GetKafkaScriptFile
+}
+
+// GetVersion mocks base method by wrapping the associated func.
+func (m *MockConfluentHome) GetVersion(service string) (string, error) {
+	m.lockGetVersion.Lock()
+	defer m.lockGetVersion.Unlock()
+
+	if m.GetVersionFunc == nil {
+		panic("mocker: MockConfluentHome.GetVersionFunc is nil but MockConfluentHome.GetVersion was called.")
+	}
+
+	call := struct {
+		Service string
+	}{
+		Service: service,
+	}
+
+	m.calls.GetVersion = append(m.calls.GetVersion, call)
+
+	return m.GetVersionFunc(service)
+}
+
+// GetVersionCalled returns true if GetVersion was called at least once.
+func (m *MockConfluentHome) GetVersionCalled() bool {
+	m.lockGetVersion.Lock()
+	defer m.lockGetVersion.Unlock()
+
+	return len(m.calls.GetVersion) > 0
+}
+
+// GetVersionCalls returns the calls made to GetVersion.
+func (m *MockConfluentHome) GetVersionCalls() []struct {
+	Service string
+} {
+	m.lockGetVersion.Lock()
+	defer m.lockGetVersion.Unlock()
+
+	return m.calls.GetVersion
+}
+
 // Reset resets the calls made to the mocked methods.
 func (m *MockConfluentHome) Reset() {
 	m.lockIsConfluentPlatform.Lock()
@@ -246,4 +338,10 @@ func (m *MockConfluentHome) Reset() {
 	m.lockGetScriptFile.Lock()
 	m.calls.GetScriptFile = nil
 	m.lockGetScriptFile.Unlock()
+	m.lockGetKafkaScriptFile.Lock()
+	m.calls.GetKafkaScriptFile = nil
+	m.lockGetKafkaScriptFile.Unlock()
+	m.lockGetVersion.Lock()
+	m.calls.GetVersion = nil
+	m.lockGetVersion.Unlock()
 }

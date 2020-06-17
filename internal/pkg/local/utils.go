@@ -41,6 +41,13 @@ func versionCmp(a, b string) (int, error) {
 		return 0, err
 	}
 
+	for i := len(as); i < len(bs); i++ {
+		as = append(as, 0)
+	}
+	for i := len(bs); i < len(as); i++ {
+		bs = append(bs, 0)
+	}
+
 	for i := 0; i < len(as) && i < len(bs); i++ {
 		if as[i] == bs[i] {
 			continue
@@ -48,7 +55,7 @@ func versionCmp(a, b string) (int, error) {
 		return as[i] - bs[i], nil
 	}
 
-	return len(as) - len(bs), nil
+	return 0, nil
 }
 
 func stringSliceToIntSlice(arr []string) ([]int, error) {
