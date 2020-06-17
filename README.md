@@ -289,7 +289,7 @@ To run all tests
 UNIT_TEST_ARGS environment variable is used to manipulate unit test execution,
 while INT_TEST_ARGS environment variable is for integration tests.
 
-For example you can filter for a subset of unit test and as subset integration tests to be run
+For example you can filter for a subset of unit test and a subset integration tests to be run
 
     make test UNIT_TEST_ARGS="-run TestApiTestSuite" INT_TEST_ARGS="-run TestCLI/Test_Confluent_Iam_Rolebinding_List"
 
