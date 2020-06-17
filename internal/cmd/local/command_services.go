@@ -351,10 +351,10 @@ func top(pids []int) error {
 
 	switch runtime.GOOS {
 	case "darwin":
-		args := make([]string, len(pids) * 2)
+		args := make([]string, len(pids)*2)
 		for i := 0; i < len(pids); i++ {
-			args[i * 2] = "-pid"
-			args[i * 2 + 1] = strconv.Itoa(pids[i])
+			args[i*2] = "-pid"
+			args[i*2+1] = strconv.Itoa(pids[i])
 		}
 		top = exec.Command("top", args...)
 	case "linux":
