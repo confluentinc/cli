@@ -13,6 +13,3 @@
 | ApiEndpoint  | http://127.0.0.1:12345    |
 | ClusterSize  |                         1 |
 +--------------+---------------------------+
-
-Did you know you can use the "ccloud feedback" command to send the team feedback?
-Let us know if the ccloud CLI is meeting your needs, or what we can do to improve it.

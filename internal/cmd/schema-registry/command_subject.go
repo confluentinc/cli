@@ -1,13 +1,13 @@
 package schema_registry
 
 import (
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 )
 
 type subjectCommand struct {

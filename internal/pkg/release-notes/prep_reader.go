@@ -2,9 +2,10 @@ package release_notes
 
 import (
 	"bufio"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"os"
 	"strings"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 type SectionType int

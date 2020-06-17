@@ -343,6 +343,7 @@ define print-release-notes-prep-next-steps
 	@echo "===================="
 endef
 
+RELEASE_NOTES_BRANCH ?= cli-$(BUMPED_VERSION)-release-notes
 .PHONY: publish-release-notes
 publish-release-notes:
 	@TMP_BASE=$$(mktemp -d) || exit 1; \
@@ -350,7 +351,7 @@ publish-release-notes:
 		git clone git@github.com:confluentinc/docs.git $${TMP_DOCS}; \
 		cd $${TMP_DOCS} || exit 1; \
 		git fetch ; \
-		git checkout -b cli-$(BUMPED_VERSION) origin/$(DOCS_BRANCH) || exit 1; \
+		git checkout -b $(RELEASE_NOTES_BRANCH) origin/$(DOCS_BRANCH) || exit 1; \
 		cd - || exit 1; \
 		CCLOUD_DOCS_DIR=$${TMP_DOCS}/cloud/cli; \
 		CONFLUENT_DOCS_DIR=$${TMP_DOCS}/cli; \
@@ -360,7 +361,7 @@ publish-release-notes:
 		git add . || exit 1; \
 		git diff --cached --exit-code > /dev/null && echo "nothing to update" && exit 0; \
 		git commit -m "New release notes for $(BUMPED_VERSION)" || exit 1; \
-		git push origin cli-$(BUMPED_VERSION) || exit 1; \
+		git push origin $(RELEASE_NOTES_BRANCH) || exit 1; \
 		hub pull-request -b $(DOCS_BRANCH) -m "New release notes for $(BUMPED_VERSION)" || exit 1; \
 		rm -rf $${TMP_BASE}
 	make publish-release-notes-to-s3
@@ -382,6 +383,8 @@ define print-publish-release-notes-next-steps
 	@echo "- Find PR named 'New release notes for $(BUMPED_VERSION)' in confluentinc/docs and merge it."
 	@echo
 	@echo "- Check release notes file in s3 confluent.cloud/ccloud-cli/release-notes/$(BUMPED_VERSION)/"
+	@echo
+	@echo "- Run 'make clean-release-notes' to clean up your local repo"
 	@echo
 	@echo "- Once the release notes are ready, it's time to release the CLI!"
 	@echo
@@ -408,7 +411,7 @@ clean-release-notes:
 
 .PHONY: fmt
 fmt:
-	@gofmt -e -s -l -w $(ALL_SRC)
+	@goimports -e -l -local github.com/confluentinc/cli/ -w $(ALL_SRC)
 
 .PHONY: release-ci
 release-ci:
@@ -457,8 +460,7 @@ lint-licenses: build
 coverage:
       ifdef CI
 	@# Run unit tests with coverage.
-	@GO111MODULE=on go test -v -race -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') \
-		-coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test)
+	@GO111MODULE=on GOPRIVATE=github.com/confluentinc go test -v -race -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) $(TEST_ARGS)
 	@# Run integration tests with coverage.
 	@GO111MODULE=on INTEG_COVER=on go test -v $$(go list ./... | grep cli/test) $(TEST_ARGS)
 	@echo "mode: atomic" > coverage.txt
@@ -466,9 +468,9 @@ coverage:
 	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
       else
 	@# Run unit tests.
-	@GO111MODULE=on go test -race -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test)
+	@GO111MODULE=on GOPRIVATE=github.com/confluentinc go test -race -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test) $(TEST_ARGS)
 	@# Run integration tests.
-	@GO111MODULE=on go test -v -race $$(go list ./... | grep cli/test) $(TEST_ARGS)
+	@GO111MODULE=on GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(TEST_ARGS) $(INT_TEST_ARGS)
       endif
 
 .PHONY: mocks

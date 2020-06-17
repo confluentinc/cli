@@ -20,7 +20,7 @@ func New(config *v3.Config, prerunner pcmd.PreRunner, analytics analytics.Client
 	cliCmd := pcmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "config",
-			Short: "Modify the CLI config files.",
+			Short: "Modify the CLI configuration.",
 		},
 		config, prerunner)
 	cmd := &command{

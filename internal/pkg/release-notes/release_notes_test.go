@@ -2,11 +2,12 @@ package release_notes
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	testUtils "github.com/confluentinc/cli/test"
 )
