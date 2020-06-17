@@ -1,7 +1,6 @@
 package mock
 
 import (
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
@@ -9,7 +8,6 @@ import (
 
 func NewDummyAnalyticsMock() *AnalyticsClient {
 	return &AnalyticsClient{
-		SetCLIConfigFunc:         func(cfg *v3.Config) {},
 		SetStartTimeFunc:         func() {},
 		TrackCommandFunc:         func(cmd *cobra.Command, args []string) {},
 		SendCommandAnalyticsFunc: func(cmd *cobra.Command, args []string, cmdExecutionError error) error { return nil },
