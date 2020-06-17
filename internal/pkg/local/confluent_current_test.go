@@ -195,5 +195,5 @@ func TestGetRandomChildDir(t *testing.T) {
 	defer os.RemoveAll(parentDir)
 
 	childDir := getRandomChildDir(parentDir)
-	req.Regexp(regexp.MustCompile(filepath.Join(parentDir, `confluent.\d{6}`)), childDir)
+	req.Regexp(regexp.MustCompile(`confluent.\d{6}`), childDir)
 }

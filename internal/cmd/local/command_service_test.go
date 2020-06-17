@@ -1,10 +1,6 @@
 package local
 
 import (
-	"fmt"
-	"net"
-	"os"
-	"os/exec"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -38,29 +34,6 @@ func TestConfigService(t *testing.T) {
 	req.NoError(configService(ch, cc, exampleService, config))
 }
 
-func TestIsRunning(t *testing.T) {
-	req := require.New(t)
-
-	cat := exec.Command("cat")
-	req.NoError(cat.Start())
-	defer func(proc *os.Process) {
-		_ = proc.Kill()
-	}(cat.Process)
-
-	cc := &mock.MockConfluentCurrent{
-		HasPidFileFunc: func(service string) (bool, error) {
-			return true, nil
-		},
-		GetPidFunc: func(service string) (int, error) {
-			return cat.Process.Pid, nil
-		},
-	}
-
-	isUp, err := isRunning(cc, exampleService)
-	req.NoError(err)
-	req.True(isUp)
-}
-
 func TestIsNotRunning(t *testing.T) {
 	req := require.New(t)
 
@@ -73,19 +46,6 @@ func TestIsNotRunning(t *testing.T) {
 	isUp, err := isRunning(cc, exampleService)
 	req.NoError(err)
 	req.False(isUp)
-}
-
-func TestIsPortOpen(t *testing.T) {
-	req := require.New(t)
-
-	addr := fmt.Sprintf(":%d", services[exampleService].port)
-	lis, err := net.Listen("tcp", addr)
-	req.NoError(err)
-	defer lis.Close()
-
-	isOpen, err := isPortOpen(exampleService)
-	req.NoError(err)
-	req.True(isOpen)
 }
 
 func TestIsPortClosed(t *testing.T) {
