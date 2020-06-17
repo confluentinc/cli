@@ -47,7 +47,7 @@ func NewConnectConnectorCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.
 func NewConnectConnectorConfigCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
 	connectConnectorConfigCommand := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
-			Use:   "config",
+			Use:   "config [connector]",
 			Short: "Print a connector config, or configure an existing connector.",
 			Args:  cobra.ExactArgs(1),
 			RunE:  runConnectConnectorConfigCommand,
@@ -100,7 +100,7 @@ func runConnectConnectorConfigCommand(command *cobra.Command, args []string) err
 func NewConnectConnectorStatusCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
 	connectConnectorStatusCommand := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
-			Use:   "connector-status [connector]",
+			Use:   "status [connector]",
 			Short: "Check the status of all connectors, or a single connector.",
 			Args:  cobra.MaximumNArgs(1),
 			RunE:  runConnectConnectorStatusCommand,
