@@ -59,7 +59,7 @@ type Command struct {
 
 func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, netrcHandler *pauth.NetrcHandler) (*Command, error) {
 	logger := log.New()
-	cfg, configLoadingErr := loadConfig(logger)
+	cfg, configLoadingErr := loadConfig(cliName, logger)
 	if cfg != nil {
 		cfg.Logger = logger
 	}
@@ -209,10 +209,10 @@ func (c *Command) sendAndFlushAnalytics(args []string, err error) {
 	}
 }
 
-func loadConfig(logger *log.Logger) (*v3.Config, error) {
+func loadConfig(cliName string, logger *log.Logger) (*v3.Config, error) {
 	metricSink := metric.NewSink()
 	params := &pconfig.Params{
-		CLIName:    "ccloud",
+		CLIName:    cliName,
 		MetricSink: metricSink,
 		Logger:     logger,
 	}
