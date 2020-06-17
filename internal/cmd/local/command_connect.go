@@ -62,7 +62,7 @@ func runConnectConfigCommand(command *cobra.Command, args []string) error {
 		return err
 	}
 	if !isJSON(data) {
-		config := extractConfig(data)
+		config := local.ExtractConfig(data)
 		data, err = json.Marshal(config)
 		if err != nil {
 			return err
@@ -141,7 +141,7 @@ func NewConnectListConnectorsCommand(prerunner cmd.PreRunner, cfg *v3.Config) *c
 
 func runConnectListConnectorsCommand(command *cobra.Command, _ []string) {
 	command.Println("Bundled Predefined Connectors:")
-	command.Println(buildTabbedList(connectors))
+	command.Println(local.BuildTabbedList(connectors))
 }
 
 func NewConnectListPluginsCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
@@ -212,7 +212,7 @@ func runConnectLoadCommand(command *cobra.Command, args []string) error {
 		return err
 	}
 	if !isJSON(data) {
-		config := extractConfig(data)
+		config := local.ExtractConfig(data)
 		delete(config, "name")
 
 		full := map[string]interface{}{

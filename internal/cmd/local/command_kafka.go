@@ -33,7 +33,7 @@ func NewKafkaConsumeCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Comm
 
 	// CLI Flags
 	kafkaConsumeCommand.Flags().Bool("cloud", defaultBool, "Consume from Confluent Cloud.")
-	defaultConfig := fmt.Sprintf("%s/.ccloud/config", os.Getenv("HOME")) // TODO: Supposed to be config.json?
+	defaultConfig := fmt.Sprintf("%s/.ccloud/config", os.Getenv("HOME"))
 	kafkaConsumeCommand.Flags().String("config", defaultConfig, "Change the ccloud configuration file.")
 	kafkaConsumeCommand.Flags().String("value-format", defaultString, "Format output data: avro, json, or protobuf.")
 
@@ -61,42 +61,6 @@ func NewKafkaConsumeCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Comm
 }
 
 func runKafkaConsumeCommand(command *cobra.Command, args []string) error {
-	format, err := command.Flags().GetString("value-format")
-	if err != nil {
-		return err
-	}
-
-	ch := local.NewConfluentHomeManager()
-	scriptFile, err := ch.GetKafkaScriptFile(format, "consumer")
-	if err != nil {
-		return err
-	}
-
-	var cloudConfigFile string
-	var cloudServer string
-
-	cloud, err := command.Flags().GetBool("cloud")
-	if err != nil {
-		return err
-	}
-	if cloud {
-		cloudConfigFile, err = command.Flags().GetString("config")
-		if err != nil {
-			return err
-		}
-		if err := command.Flags().Set("producer.config", cloudConfigFile); err != nil {
-			return err
-		}
-
-		data, err := ioutil.ReadFile(cloudConfigFile)
-		if err != nil {
-			return err
-		}
-
-		config := extractConfig(data)
-		cloudServer = config["bootstrap.servers"]
-	}
-
 	kafkaFlagTypes := map[string]interface{}{
 		"bootstrap-server":      defaultString,
 		"consumer-property":     defaultString,
@@ -117,27 +81,7 @@ func runKafkaConsumeCommand(command *cobra.Command, args []string) error {
 		"whitelist":             defaultString,
 	}
 
-	if cloud {
-		delete(kafkaFlagTypes, "consumer.config")
-		delete(kafkaFlagTypes, "bootstrap-server")
-	}
-
-	kafkaArgs, err := collectFlags(command.Flags(), kafkaFlagTypes)
-	if err != nil {
-		return err
-	}
-
-	kafkaArgs = append(kafkaArgs, "--topic", args[0])
-	if cloud {
-		kafkaArgs = append(kafkaArgs, "--consumer.config", cloudConfigFile)
-		kafkaArgs = append(kafkaArgs, "--bootstrap-server", cloudServer)
-	}
-
-	consumer := exec.Command(scriptFile, kafkaArgs...)
-	consumer.Stdout = os.Stdout
-	consumer.Stderr = os.Stderr
-
-	return consumer.Run()
+	return runKafkaCommand(command, args, "consume", kafkaFlagTypes)
 }
 
 func NewKafkaProduceCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
@@ -152,7 +96,7 @@ func NewKafkaProduceCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Comm
 
 	// CLI Flags
 	kafkaProduceCommand.Flags().Bool("cloud", defaultBool, "Consume from Confluent Cloud.")
-	defaultConfig := fmt.Sprintf("%s/.ccloud/config", os.Getenv("HOME")) // TODO: Supposed to be config.json?
+	defaultConfig := fmt.Sprintf("%s/.ccloud/config", os.Getenv("HOME"))
 	kafkaProduceCommand.Flags().String("config", defaultConfig, "Change the ccloud configuration file.")
 	kafkaProduceCommand.Flags().String("value-format", defaultString, "Format output data: avro, json, or protobuf.")
 
@@ -181,13 +125,43 @@ func NewKafkaProduceCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Comm
 }
 
 func runKafkaProduceCommand(command *cobra.Command, args []string) error {
+	kafkaFlagTypes := map[string]interface{}{
+		"batch-size":                 defaultInt,
+		"bootstrap-server":           defaultString,
+		"compression-codec":          defaultString,
+		"line-reader":                defaultString,
+		"max-block-ms":               defaultInt,
+		"max-memory-bytes":           defaultInt,
+		"max-partition-memory-bytes": defaultInt,
+		"message-send-max-retries":   defaultInt,
+		"metadata-expiry-ms":         defaultInt,
+		"producer-property":          defaultString,
+		"producer.config":            defaultString,
+		"property":                   defaultString,
+		"request-required-acks":      defaultString,
+		"request-timeout-ms":         defaultInt,
+		"retry-backoff-ms":           defaultInt,
+		"socket-buffer-size":         defaultInt,
+		"sync":                       defaultBool,
+		"timeout":                    defaultInt,
+	}
+
+	return runKafkaCommand(command, args, "produce", kafkaFlagTypes)
+}
+
+func runKafkaCommand(command *cobra.Command, args []string, mode string, kafkaFlagTypes map[string]interface{}) error {
 	format, err := command.Flags().GetString("value-format")
 	if err != nil {
 		return err
 	}
 
+	// "consume" --> "consumer"
+	// "produce" --> "producer"
+	modeNoun := fmt.Sprintf("%sr", mode)
+
 	ch := local.NewConfluentHomeManager()
-	scriptFile, err := ch.GetKafkaScriptFile(format, "producer")
+
+	scriptFile, err := ch.GetKafkaScriptFile(format, modeNoun)
 	if err != nil {
 		return err
 	}
@@ -210,33 +184,13 @@ func runKafkaProduceCommand(command *cobra.Command, args []string) error {
 			return err
 		}
 
-		config := extractConfig(data)
+		config := local.ExtractConfig(data)
 		cloudServer = config["bootstrap.servers"]
 	}
 
-	kafkaFlagTypes := map[string]interface{}{
-		"batch-size":                 defaultInt,
-		"bootstrap-server":           defaultString,
-		"compression-codec":          defaultString,
-		"line-reader":                defaultString,
-		"max-block-ms":               defaultInt,
-		"max-memory-bytes":           defaultInt,
-		"max-partition-memory-bytes": defaultInt,
-		"message-send-max-retries":   defaultInt,
-		"metadata-expiry-ms":         defaultInt,
-		"producer-property":          defaultString,
-		"producer.config":            defaultString,
-		"property":                   defaultString,
-		"request-required-acks":      defaultString,
-		"request-timeout-ms":         defaultInt,
-		"retry-backoff-ms":           defaultInt,
-		"socket-buffer-size":         defaultInt,
-		"sync":                       defaultBool,
-		"timeout":                    defaultInt,
-	}
-
 	if cloud {
-		delete(kafkaFlagTypes, "consumer.config")
+		configFileFlag := fmt.Sprintf("%s.config", modeNoun)
+		delete(kafkaFlagTypes, configFileFlag)
 		delete(kafkaFlagTypes, "bootstrap-server")
 	}
 
@@ -247,17 +201,20 @@ func runKafkaProduceCommand(command *cobra.Command, args []string) error {
 
 	kafkaArgs = append(kafkaArgs, "--topic", args[0])
 	if cloud {
-		kafkaArgs = append(kafkaArgs, "--producer.config", cloudConfigFile)
+		configFileFlag := fmt.Sprintf("--%s.config", modeNoun)
+		kafkaArgs = append(kafkaArgs, configFileFlag, cloudConfigFile)
 		kafkaArgs = append(kafkaArgs, "--bootstrap-server", cloudServer)
 	}
 
-	producer := exec.Command(scriptFile, kafkaArgs...)
-	producer.Stdin = os.Stdin
-	producer.Stdout = os.Stdout
-	producer.Stderr = os.Stderr
+	kafkaCommand := exec.Command(scriptFile, kafkaArgs...)
+	kafkaCommand.Stdout = os.Stdout
+	kafkaCommand.Stderr = os.Stderr
+	if mode == "produce" {
+		kafkaCommand.Stdin = os.Stdin
+		fmt.Println("Exit with Ctrl+D")
+	}
 
-	fmt.Println("Exit with Ctrl+D")
-	return producer.Run()
+	return kafkaCommand.Run()
 }
 
 func collectFlags(flags *pflag.FlagSet, flagTypes map[string]interface{}) ([]string, error) {

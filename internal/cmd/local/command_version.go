@@ -1,22 +1,13 @@
 package local
 
 import (
-	"fmt"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/local"
-	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config/v3"
 )
-
-var versionFiles = map[string]string{
-	"Confluent Platform":           "share/java/kafka-connect-replicator/connect-replicator-*.jar",
-	"Confluent Community Software": "share/java/confluent-common/common-config-*.jar",
-	"kafka":                        "share/java/kafka/kafka-clients-*.jar",
-	"zookeeper":                    "share/java/kafka/zookeeper-*.jar",
-}
 
 func NewVersionCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
 	versionCommand := cmd.NewAnonymousCLICommand(
@@ -44,7 +35,7 @@ func runVersionCommand(command *cobra.Command, _ []string) error {
 		flavor = "Confluent Platform"
 	}
 
-	version, err := getVersion(ch, flavor)
+	version, err := ch.GetVersion(flavor)
 	if err != nil {
 		return err
 	}
@@ -52,27 +43,3 @@ func runVersionCommand(command *cobra.Command, _ []string) error {
 	cmd.Printf(command, "%s: %s\n", flavor, version)
 	return nil
 }
-
-// Get the version number of a service based on a trusted file
-func getVersion(ch local.ConfluentHome, service string) (string, error) {
-	pattern, ok := versionFiles[service]
-	if !ok {
-		pattern = versionFiles["Confluent Platform"]
-	}
-
-	matches, err := ch.FindFile(pattern)
-	if err != nil {
-		return "", err
-	}
-	if len(matches) == 0 {
-		return "", fmt.Errorf("could not find %s in CONFLUENT_HOME", pattern)
-	}
-
-	versionFile := matches[0]
-	x := strings.Split(pattern, "*")
-	prefix, suffix := x[0], x[1]
-	version := versionFile[len(prefix) : len(versionFile)-len(suffix)]
-
-	return version, nil
-}
-

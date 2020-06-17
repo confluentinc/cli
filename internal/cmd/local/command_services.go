@@ -162,7 +162,7 @@ func runServicesListCommand(command *cobra.Command, _ []string) error {
 	}
 
 	command.Println("Available Services:")
-	command.Println(buildTabbedList(availableServices))
+	command.Println(local.BuildTabbedList(availableServices))
 	return nil
 }
 

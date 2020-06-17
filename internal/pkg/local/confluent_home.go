@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 /*
@@ -45,6 +46,12 @@ var (
 		"jdbc-sink":          "kafka-connect-jdbc/sink-quickstart-sqlite.properties",
 		"jdbc-source":        "kafka-connect-jdbc/source-quickstart-sqlite.properties",
 		"s3-sink":            "kafka-connect-s3/quickstart-s3.properties",
+	}
+	versionFiles = map[string]string{
+		"Confluent Platform":           "share/java/kafka-connect-replicator/connect-replicator-*.jar",
+		"Confluent Community Software": "share/java/confluent-common/common-config-*.jar",
+		"kafka":                        "share/java/kafka/kafka-clients-*.jar",
+		"zookeeper":                    "share/java/kafka/zookeeper-*.jar",
 	}
 )
 
@@ -94,7 +101,16 @@ func (ch *ConfluentHomeManager) FindFile(pattern string) ([]string, error) {
 }
 
 func (ch *ConfluentHomeManager) getConfigFile(service string) (string, error) {
-	// TODO: Return ksql/ksql-server.properties for older versions
+	if service == "ksql-server" {
+		isKsqlDB, err := ch.isAboveVersion("5.5")
+		if err != nil {
+			return "", err
+		}
+		if !isKsqlDB {
+			return "etc/ksql/ksql-server.properties", nil
+		}
+	}
+
 	return ch.getFile(filepath.Join("etc", serviceConfigs[service]))
 }
 
@@ -118,13 +134,27 @@ func (ch *ConfluentHomeManager) GetScriptFile(service string) (string, error) {
 func (ch *ConfluentHomeManager) GetKafkaScriptFile(format, mode string) (string, error) {
 	var script string
 
+	if format == "json" || format == "protobuf" {
+		supported, err := ch.isAboveVersion("5.5")
+		if err != nil {
+			return "", err
+		}
+		if !supported {
+			return "", fmt.Errorf("format %s is not supported in this version", format)
+		}
+	}
+
 	switch format {
 	case "":
 		script = fmt.Sprintf("kafka-console-%s", mode)
+	case "avro":
+		script = fmt.Sprintf("kafka-avro-console-%s", mode)
 	case "json":
 		script = fmt.Sprintf("kafka-json-schema-console-%s", mode)
+	case "protobuf":
+		script = fmt.Sprintf("kafka-protobuf-console-%s", mode)
 	default:
-		script = fmt.Sprintf("kafka-%s-console-%s", format, mode)
+		return "", fmt.Errorf("invalid format: %s", format)
 	}
 
 	return ch.getFile(filepath.Join("bin", script))
@@ -145,4 +175,54 @@ func (ch *ConfluentHomeManager) getFile(file string) (string, error) {
 	}
 
 	return filepath.Join(dir, file), nil
+}
+
+// Get the version number of a service based on a trusted file
+func (ch *ConfluentHomeManager) GetVersion(service string) (string, error) {
+	pattern, ok := versionFiles[service]
+	if !ok {
+		return ch.getConfluentVersion()
+	}
+
+	matches, err := ch.FindFile(pattern)
+	if err != nil {
+		return "", err
+	}
+	if len(matches) == 0 {
+		return "", fmt.Errorf("could not find %s in CONFLUENT_HOME", pattern)
+	}
+
+	versionFile := matches[0]
+	x := strings.Split(pattern, "*")
+	prefix, suffix := x[0], x[1]
+	version := versionFile[len(prefix) : len(versionFile)-len(suffix)]
+
+	return version, nil
+}
+
+func (ch *ConfluentHomeManager) getConfluentVersion() (string, error) {
+	isCP, err := ch.IsConfluentPlatform()
+	if err != nil {
+		return "", err
+	}
+
+	if isCP {
+		return ch.GetVersion("Confluent Platform")
+	} else {
+		return ch.GetVersion("Confluent Community Software")
+	}
+}
+
+func (ch *ConfluentHomeManager) isAboveVersion(target string) (bool, error) {
+	version, err := ch.getConfluentVersion()
+	if err != nil {
+		return false, err
+	}
+
+	cmp, err := versionCmp(version, target)
+	if err != nil {
+		return false, err
+	}
+
+	return cmp >= 0, nil
 }
