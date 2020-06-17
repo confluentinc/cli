@@ -3,6 +3,7 @@ package local
 import (
 	"fmt"
 	"net"
+	"os"
 	"os/exec"
 	"testing"
 
@@ -42,7 +43,9 @@ func TestIsRunning(t *testing.T) {
 
 	cat := exec.Command("cat")
 	req.NoError(cat.Start())
-	defer cat.Process.Kill()
+	defer func(proc *os.Process) {
+		_ = proc.Kill()
+	}(cat.Process)
 
 	cc := &mock.MockConfluentCurrent{
 		HasPidFileFunc: func(service string) (bool, error) {

@@ -1,11 +1,11 @@
 package local
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/local"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config/v3"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/local"
 )
 
 func NewCurrentCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
@@ -32,4 +32,3 @@ func runCurrentCommand(command *cobra.Command, _ []string) error {
 	command.Println(dir)
 	return nil
 }
-
