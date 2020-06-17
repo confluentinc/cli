@@ -49,7 +49,7 @@ type structuredDescribeDisplay struct {
 }
 
 // NewTopicCommand returns the Cobra command for Kafka topic.
-func NewTopicCommand(prerunner pcmd.PreRunner, logger *log.Logger, clientID string) *cobra.Command {
+func NewTopicCommand(isAPIKeyLogin bool, prerunner pcmd.PreRunner, logger *log.Logger, clientID string) *cobra.Command {
 	command := &cobra.Command{
 		Use:   "topic",
 		Short: "Manage Kafka topics.",
@@ -60,19 +60,19 @@ func NewTopicCommand(prerunner pcmd.PreRunner, logger *log.Logger, clientID stri
 		logger:              logger,
 		clientID:            clientID,
 	}
-	authenticatedCmd := &authenticatedTopicCommand{
-		AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(command, prerunner),
-		logger:                  logger,
-		clientID:                clientID,
-	}
-	authenticatedCmd.init()
 	hasAPIKeyCmd.init()
+	if !isAPIKeyLogin {
+		authenticatedCmd := &authenticatedTopicCommand{
+			AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(command, prerunner),
+			logger:                  logger,
+			clientID:                clientID,
+		}
+		authenticatedCmd.init()
+	}
 	return command
 }
 
 func (h *hasAPIKeyTopicCommand) init() {
-	// Hack to overwrite Authenticated prerunner set by authenticatedTopicCmd
-	h.PersistentPreRunE = h.prerunner.HasAPIKey(h.HasAPIKeyCLICommand)
 	cmd := &cobra.Command{
 		Use:   "produce <topic>",
 		Short: "Produce messages to a Kafka topic.",

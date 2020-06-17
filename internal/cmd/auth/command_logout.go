@@ -14,12 +14,12 @@ type logoutCommand struct {
 	analyticsClient analytics.Client
 }
 
-func NewLogoutCmd(cliName string, prerunner pcmd.PreRunner, analyticsClient analytics.Client) *cobra.Command {
-	logoutCmd := logoutCommand{
+func NewLogoutCmd(cliName string, prerunner pcmd.PreRunner, analyticsClient analytics.Client) *logoutCommand {
+	logoutCmd := &logoutCommand{
 		analyticsClient: analyticsClient,
 	}
 	logoutCmd.init(cliName, prerunner)
-	return logoutCmd.Command
+	return logoutCmd
 }
 
 func (a *logoutCommand) init(cliName string, prerunner pcmd.PreRunner) {

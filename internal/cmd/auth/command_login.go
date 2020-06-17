@@ -36,7 +36,7 @@ type loginCommand struct {
 func NewLoginCommand(cliName string, prerunner pcmd.PreRunner, log *log.Logger, prompt pcmd.Prompt,
 	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *ccloud.Client,
 	jwtHTTPClientFactory func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *ccloud.Client,
-	mdsClientManager pauth.MDSClientManager, analyticsClient analytics.Client, netrcHandler *pauth.NetrcHandler) *cobra.Command {
+	mdsClientManager pauth.MDSClientManager, analyticsClient analytics.Client, netrcHandler *pauth.NetrcHandler) *loginCommand {
 	cmd := &loginCommand{
 		Logger:                log,
 		prompt:                prompt,
@@ -47,7 +47,7 @@ func NewLoginCommand(cliName string, prerunner pcmd.PreRunner, log *log.Logger, 
 		netrcHandler:          netrcHandler,
 	}
 	cmd.init(cliName, prerunner)
-	return cmd.Command
+	return cmd
 }
 
 func (a *loginCommand) init(cliName string, prerunner pcmd.PreRunner) {

@@ -6,7 +6,7 @@ import (
 )
 
 func mockLocalCommand(args... string) (string, error) {
-	mockPrerunner := mock.NewPreRunnerMock(nil, nil)
+	mockPrerunner := mock.NewPreRunnerMock(nil, nil, nil)
 
 	command := cmd.BuildRootCommand()
 	command.AddCommand(NewCommand(mockPrerunner))

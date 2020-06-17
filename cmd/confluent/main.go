@@ -11,7 +11,6 @@ import (
 	"github.com/confluentinc/cli/internal/cmd"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -34,9 +33,7 @@ func main() {
 
 	version := pversion.NewVersion(cliName, version, commit, date, host)
 
-	logger := log.New()
-
-	cli, err := cmd.NewConfluentCommand(cliName, isTest, logger, version, pauth.NewNetrcHandler(pauth.GetNetrcFilePath(isTest)))
+	cli, err := cmd.NewConfluentCommand(cliName, isTest, version, pauth.NewNetrcHandler(pauth.GetNetrcFilePath(isTest)))
 	if err != nil {
 		if cli == nil {
 			fmt.Fprintln(os.Stderr, err)

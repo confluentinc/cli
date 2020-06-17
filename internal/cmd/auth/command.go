@@ -29,5 +29,5 @@ func New(cliName string, prerunner pcmd.PreRunner, logger *log.Logger, userAgent
 		analyticsClient, netrcHandler,
 	)
 	logoutCmd := NewLogoutCmd(cliName, prerunner, analyticsClient)
-	return []*cobra.Command{loginCmd, logoutCmd}
+	return []*cobra.Command{loginCmd.Command, logoutCmd.Command}
 }

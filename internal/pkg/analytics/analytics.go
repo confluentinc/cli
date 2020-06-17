@@ -135,9 +135,9 @@ func (a *ClientObj) SessionTimedOut() error {
 	// just in case; redundant if config.DeleteUserAuth called before TrackCommand in prerunner.Anonymous()
 	a.user = userInfo{}
 	if a.config != nil {
-		err := a.config.ResetAnonymousId()
+		err := a.resetAnonymousId()
 		if err != nil {
-			return errors.Wrap(err, "Unable to reset anonymous id")
+			return err
 		}
 	}
 	return nil
@@ -185,7 +185,7 @@ func (a *ClientObj) sendCommandSucceeded() error {
 	// only reset anonymous id if logout from a username credential
 	// preventing logouts that have no effects from resetting anonymous id
 	if a.commandType == Logout && a.user.credentialType == v2.Username.String() {
-		if err := a.config.ResetAnonymousId(); err != nil {
+		if err := a.resetAnonymousId(); err != nil {
 			return err
 		}
 	}
@@ -263,6 +263,15 @@ func (a *ClientObj) malformedCommandError(e error) error {
 	return a.client.Enqueue(track)
 }
 
+func (a *ClientObj) resetAnonymousId() error {
+	err := a.config.ResetAnonymousId()
+	if err != nil {
+		return errors.Wrap(err, "Unable to reset anonymous id")
+	}
+	a.user.anonymousId = a.config.AnonymousId
+	return nil
+}
+
 func (a *ClientObj) addFlagProperties(cmd *cobra.Command) {
 	flags := make(map[string]string)
 	cmd.Flags().Visit(func(f *pflag.Flag) {
@@ -308,6 +317,7 @@ func (a *ClientObj) getUser() userInfo {
 			anonymousId: nonUser,
 		}
 	}
+	user.anonymousId = a.config.AnonymousId
 	user.credentialType = a.getCredentialType()
 	// If the user is not logged in
 	if user.credentialType == "" {
@@ -324,7 +334,6 @@ func (a *ClientObj) getUser() userInfo {
 	} else {
 		user.id = a.getCPUsername()
 	}
-	user.anonymousId = a.config.AnonymousId
 	return user
 }
 
@@ -380,7 +389,7 @@ func (a *ClientObj) loginHandler() error {
 	}
 
 	if a.isSwitchUserLogin(prevUser) {
-		if err := a.config.ResetAnonymousId(); err != nil {
+		if err := a.resetAnonymousId(); err != nil {
 			return err
 		}
 		return a.identify()

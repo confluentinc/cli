@@ -123,7 +123,7 @@ func (suite *KSQLTestSuite) newCMD() *cobra.Command {
 		User:  suite.userc,
 		KSQL:  suite.ksqlc,
 	}
-	cmd := New(cliMock.NewPreRunnerMock(client, nil), suite.conf)
+	cmd := New(cliMock.NewPreRunnerMock(client, nil, suite.conf))
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	return cmd
 }

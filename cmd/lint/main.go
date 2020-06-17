@@ -11,12 +11,8 @@ import (
 
 	"github.com/confluentinc/cli/internal/cmd"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
-	"github.com/confluentinc/cli/internal/pkg/config"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	linter "github.com/confluentinc/cli/internal/pkg/lint-cli"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/version"
-	"github.com/confluentinc/cli/mock"
 )
 
 var (
@@ -168,12 +164,7 @@ func main() {
 
 	var issues *multierror.Error
 	for _, cliName := range cliNames {
-		cfg := v3.New(&config.Params{
-			CLIName:    cliName,
-			MetricSink: nil,
-			Logger:     log.New(),
-		})
-		cli, err := cmd.NewConfluentCommand(cliName, cfg, cfg.Logger, &version.Version{Binary: cliName}, mock.NewDummyAnalyticsMock(), pauth.NewNetrcHandler(""))
+		cli, err := cmd.NewConfluentCommand(cliName, true, &version.Version{Binary: cliName}, pauth.NewNetrcHandler(""))
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)

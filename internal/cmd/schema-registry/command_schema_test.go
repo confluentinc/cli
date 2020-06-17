@@ -82,7 +82,7 @@ func (suite *SchemaTestSuite) newCMD() *cobra.Command {
 	client := &ccloud.Client{
 		SchemaRegistry: suite.srMothershipMock,
 	}
-	cmd := New(cliMock.NewPreRunnerMock(client, nil), suite.conf, suite.srClientMock, suite.conf.Logger)
+	cmd := New("ccloud", cliMock.NewPreRunnerMock(client, nil, suite.conf), suite.srClientMock, suite.conf.Logger)
 	return cmd
 }
 

@@ -147,8 +147,9 @@ func (suite *APITestSuite) newCMD() *cobra.Command {
 		FlagResolver: resolverMock,
 		Client:       client,
 		MDSClient:    nil,
+		Config:       suite.conf,
 	}
-	return New(prerunner, suite.conf, suite.keystore, resolverMock)
+	return New(prerunner, suite.keystore, resolverMock)
 }
 
 func (suite *APITestSuite) TestCreateSrApiKey() {

@@ -19,19 +19,18 @@ type aclCommand struct {
 }
 
 // NewACLCommand returns the Cobra command for ACLs.
-func NewACLCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func NewACLCommand(cliName string, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &aclCommand{
 		AuthenticatedCLICommand: pcmd.NewAuthenticatedWithMDSCLICommand(&cobra.Command{
 			Use:   "acl",
 			Short: `Manage Kafka ACLs (5.4+ only).`,
 		}, prerunner),
 	}
-	cmd.init()
+	cmd.init(cliName)
 	return cmd.Command
 }
 
-func (c *aclCommand) init() {
-	cliName := c.Config.CLIName
+func (c *aclCommand) init(cliName string) {
 
 	cmd := &cobra.Command{
 		Use:   "create",

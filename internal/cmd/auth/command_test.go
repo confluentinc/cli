@@ -65,9 +65,9 @@ func TestCredentialsOverride(t *testing.T) {
 			}, nil
 		},
 	}
-	cmds, cfg := newAuthCommand(prompt, auth, user, "ccloud", req)
+	loginCmd, cfg := newLoginCmd(prompt, auth, user, "ccloud", req)
 
-	output, err := pcmd.ExecuteCommand(cmds.Commands[0].Command)
+	output, err := pcmd.ExecuteCommand(loginCmd.Command)
 	req.NoError(err)
 	req.Contains(output, "Logged in as test-email")
 	ctx := cfg.Context()
@@ -125,8 +125,8 @@ func TestLoginSuccess(t *testing.T) {
 
 	for _, s := range suite {
 		// Login to the CLI control plane
-		cmds, cfg := newAuthCommand(prompt, auth, user, s.cliName, req)
-		output, err := pcmd.ExecuteCommand(cmds.Commands[LoginIndex].Command, s.args...)
+		loginCmd, cfg := newLoginCmd(prompt, auth, user, s.cliName, req)
+		output, err := pcmd.ExecuteCommand(loginCmd.Command, s.args...)
 		req.NoError(err)
 		req.Contains(output, "Logged in as cody@confluent.io")
 		verifyLoggedInState(t, cfg, s.cliName)
@@ -149,9 +149,9 @@ func TestLoginFail(t *testing.T) {
 			}, nil
 		},
 	}
-	cmds, _ := newAuthCommand(prompt, auth, user, "ccloud", req)
+	loginCmd, _ := newLoginCmd(prompt, auth, user, "ccloud", req)
 
-	_, err := pcmd.ExecuteCommand(cmds.Commands[0].Command)
+	_, err := pcmd.ExecuteCommand(loginCmd.Command)
 	req.Contains(err.Error(), "You have entered an incorrect username or password.")
 }
 
@@ -164,23 +164,21 @@ func TestURLRequiredWithMDS(t *testing.T) {
 			return "", &ccloud.InvalidLoginError{}
 		},
 	}
-	cmds, _ := newAuthCommand(prompt, auth, nil, "confluent", req)
+	loginCmd, _ := newLoginCmd(prompt, auth, nil, "confluent", req)
 
-	_, err := pcmd.ExecuteCommand(cmds.Commands[0].Command)
+	_, err := pcmd.ExecuteCommand(loginCmd.Command)
 	req.Contains(err.Error(), "required flag(s) \"url\" not set")
 }
 
 func TestLogout(t *testing.T) {
 	req := require.New(t)
 
-	prompt := prompt("cody@confluent.io", "iamrobin")
-	auth := &sdkMock.Auth{}
-	cmds, _ := newAuthCommand(prompt, auth, nil, "ccloud", req)
-	cmds.config = v3.AuthenticatedCloudConfigMock()
-	output, err := pcmd.ExecuteCommand(cmds.Commands[1].Command)
+	cfg := v3.AuthenticatedCloudConfigMock()
+	logoutCmd, cfg := newLogoutCmd("ccloud", cfg)
+	output, err := pcmd.ExecuteCommand(logoutCmd.Command)
 	req.NoError(err)
 	req.Contains(output, "You are now logged out")
-	verifyLoggedOutState(t, cmds.config)
+	verifyLoggedOutState(t, cfg)
 }
 
 func Test_credentials_NoSpacesAroundEmail_ShouldSupportSpacesAtBeginOrEnd(t *testing.T) {
@@ -188,9 +186,9 @@ func Test_credentials_NoSpacesAroundEmail_ShouldSupportSpacesAtBeginOrEnd(t *tes
 
 	prompt := prompt(" cody@confluent.io ", " iamrobin ")
 	auth := &sdkMock.Auth{}
-	cmds, _ := newAuthCommand(prompt, auth, nil, "ccloud", req)
+	loginCmd, _ := newLoginCmd(prompt, auth, nil, "ccloud", req)
 
-	user, pass, err := cmds.credentials(cmds.Commands[0].Command, "Email", nil)
+	user, pass, err := loginCmd.credentials(loginCmd.Command, "Email", nil)
 	req.NoError(err)
 	req.Equal("cody@confluent.io", user)
 	req.Equal(" iamrobin ", pass)
@@ -206,7 +204,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 		Logger:     log.New(),
 	})
 	prompt := prompt("cody@confluent.io", "iambatman")
-	prerunner := cliMock.NewPreRunnerMock(nil, nil)
+	prerunner := cliMock.NewPreRunnerMock(nil, nil, cfg)
 
 	// Create a test certificate to be read in by the command
 	ca := &x509.Certificate{
@@ -253,11 +251,9 @@ func Test_SelfSignedCerts(t *testing.T) {
 			return mdsClient, nil
 		},
 	}
-	cmds := newCommands(prerunner, cfg, log.New(), prompt, nil, nil, mdsClientManager, cliMock.NewDummyAnalyticsMock(), nil)
-	for _, c := range cmds.Commands {
-		c.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
-	}
-	_, err = pcmd.ExecuteCommand(cmds.Commands[0].Command, "--url=http://localhost:8090", "--ca-cert-path=testcert.pem")
+	loginCmd := NewLoginCommand("confluent", prerunner, log.New(), prompt, nil, nil, mdsClientManager, cliMock.NewDummyAnalyticsMock(), nil)
+	loginCmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
+	_, err = pcmd.ExecuteCommand(loginCmd.Command, "--url=http://localhost:8090", "--ca-cert-path=testcert.pem")
 	req.NoError(err)
 }
 
@@ -320,10 +316,10 @@ func TestLoginWithExistingContext(t *testing.T) {
 	}
 
 	for _, s := range suite {
-		cmds, cfg := newAuthCommand(prompt, auth, user, s.cliName, req)
+		loginCmd, cfg := newLoginCmd(prompt, auth, user, s.cliName, req)
 
 		// Login to the CLI control plane
-		output, err := pcmd.ExecuteCommand(cmds.Commands[LoginIndex].Command, s.args...)
+		output, err := pcmd.ExecuteCommand(loginCmd.Command, s.args...)
 		req.NoError(err)
 		req.Contains(output, "Logged in as cody@confluent.io")
 		verifyLoggedInState(t, cfg, s.cliName)
@@ -334,13 +330,14 @@ func TestLoginWithExistingContext(t *testing.T) {
 		ctx.KafkaClusterContext.SetActiveKafkaCluster(kafkaCluster.ID)
 
 		// Executing logout
-		output, err = pcmd.ExecuteCommand(cmds.Commands[1].Command)
+		logoutCmd, _ := newLogoutCmd(cfg.CLIName, cfg)
+		output, err = pcmd.ExecuteCommand(logoutCmd.Command)
 		req.NoError(err)
 		req.Contains(output, "You are now logged out")
 		verifyLoggedOutState(t, cfg)
 
 		// logging back in the the same context
-		output, err = pcmd.ExecuteCommand(cmds.Commands[LoginIndex].Command, s.args...)
+		output, err = pcmd.ExecuteCommand(loginCmd.Command, s.args...)
 		req.NoError(err)
 		req.Contains(output, "Logged in as cody@confluent.io")
 		verifyLoggedInState(t, cfg, s.cliName)
@@ -391,7 +388,7 @@ func prompt(username, password string) *cliMock.Prompt {
 	}
 }
 
-func newAuthCommand(prompt pcmd.Prompt, auth *sdkMock.Auth, user *sdkMock.User, cliName string, req *require.Assertions) (*commands, *v3.Config) {
+func newLoginCmd(prompt pcmd.Prompt, auth *sdkMock.Auth, user *sdkMock.User, cliName string, req *require.Assertions) (*loginCommand, *v3.Config) {
 	var mockAnonHTTPClientFactory = func(baseURL string, logger *log.Logger) *ccloud.Client {
 		req.Equal("https://confluent.cloud", baseURL)
 		return &ccloud.Client{Auth: auth, User: user}
@@ -423,11 +420,13 @@ func newAuthCommand(prompt pcmd.Prompt, auth *sdkMock.Auth, user *sdkMock.User, 
 			return mdsClient, nil
 		},
 	}
-	commands := newCommands(cliMock.NewPreRunnerMock(mockAnonHTTPClientFactory("https://confluent.cloud", nil), mdsClient),
-		cfg, log.New(), prompt, mockAnonHTTPClientFactory, mockJwtHTTPClientFactory, mdsClientManager,
+	prerunner := cliMock.NewPreRunnerMock(mockAnonHTTPClientFactory("https://confluent.cloud", nil), mdsClient, cfg)
+	loginCmd := NewLoginCommand(cliName, prerunner, log.New(), prompt, mockAnonHTTPClientFactory, mockJwtHTTPClientFactory, mdsClientManager,
 		cliMock.NewDummyAnalyticsMock(), nil)
-	for _, c := range commands.Commands {
-		c.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
-	}
-	return commands, cfg
+	return loginCmd, cfg
+}
+
+func newLogoutCmd(cliName string, cfg *v3.Config) (*logoutCommand, *v3.Config) {
+	logoutCmd := NewLogoutCmd(cliName, cliMock.NewPreRunnerMock(nil, nil, cfg), cliMock.NewDummyAnalyticsMock())
+	return logoutCmd, cfg
 }

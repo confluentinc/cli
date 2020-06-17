@@ -1,14 +1,14 @@
 package feedback
 
 import (
+	"github.com/confluentinc/cli/internal/pkg/config"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"testing"
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/mock"
 )
 
@@ -34,9 +34,10 @@ func TestFeedbackEmptyMessage(t *testing.T) {
 }
 
 func mockFeedbackCommand(msg string) *cobra.Command {
-	mockPreRunner := mock.NewPreRunnerMock(nil, nil)
-	mockConfig := v3.New(&config.Params{CLIName: "ccloud"})
+	cliName := "ccloud"
+	mockConfig := v3.New(&config.Params{CLIName: cliName})
+	mockPreRunner := mock.NewPreRunnerMock(nil, nil, mockConfig)
 	mockAnalytics := mock.NewDummyAnalyticsMock()
 	mockPrompt := mock.NewPromptMock(msg)
-	return NewFeedbackCmdWithPrompt(mockPreRunner, mockConfig, mockAnalytics, mockPrompt)
+	return NewFeedbackCmdWithPrompt(cliName, mockPreRunner, mockAnalytics, mockPrompt)
 }

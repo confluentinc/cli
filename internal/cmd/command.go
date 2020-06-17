@@ -1,12 +1,14 @@
 package cmd
 
 import (
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"net/http"
 	"os"
 	"runtime"
 
 	"github.com/DABH/go-basher"
 	"github.com/jonboulle/clockwork"
+	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/cmd/apikey"
@@ -32,19 +34,17 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	pconfig "github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/config/load"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	pfeedback "github.com/confluentinc/cli/internal/pkg/feedback"
 	"github.com/confluentinc/cli/internal/pkg/help"
 	"github.com/confluentinc/cli/internal/pkg/io"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/metric"
 	pps1 "github.com/confluentinc/cli/internal/pkg/ps1"
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
-
-	segment "github.com/segmentio/analytics-go"
-	pconfig "github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/cli/internal/pkg/config/load"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
-	"github.com/confluentinc/cli/internal/pkg/metric"
 	"github.com/confluentinc/cli/mock"
 )
 
@@ -57,7 +57,13 @@ type Command struct {
 	logger    *log.Logger
 }
 
-func NewConfluentCommand(cliName string, isTest bool, logger *log.Logger, ver *pversion.Version, netrcHandler *pauth.NetrcHandler) (*Command, error) {
+func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, netrcHandler *pauth.NetrcHandler) (*Command, error) {
+	logger := log.New()
+	cfg, configLoadingErr := loadConfig(logger)
+	if cfg != nil {
+		cfg.Logger = logger
+	}
+	analyticsClient := getAnalyticsClient(isTest, cliName, cfg, ver.Version, logger)
 	cli := &cobra.Command{
 		Use:               cliName,
 		Version:           ver.Version,
@@ -81,16 +87,12 @@ func NewConfluentCommand(cliName string, isTest bool, logger *log.Logger, ver *p
 
 	prompt := pcmd.NewPrompt(os.Stdin)
 
-	updateClient, err := update.NewClient(cliName, logger)
+	disableUpdateCheck := cfg != nil && (cfg.DisableUpdates || cfg.DisableUpdateCheck)
+	updateClient, err := update.NewClient(cliName, disableUpdateCheck,logger)
 	if err != nil {
 		return nil, err
 	}
 
-	cfg, configLoadingErr := loadConfig(logger)
-	if cfg != nil {
-		cfg.Logger = logger
-	}
-	analyticsClient := getAnalyticsClient(isTest, cliName, cfg, ver.Version, logger)
 	resolver := &pcmd.FlagResolverImpl{Prompt: prompt, Out: os.Stdout}
 	prerunner := &pcmd.PreRun{
 		Config: cfg,
@@ -111,19 +113,24 @@ func NewConfluentCommand(cliName string, isTest bool, logger *log.Logger, ver *p
 
 	cli.AddCommand(completion.NewCompletionCmd(cli, cliName))
 
-	cli.AddCommand(update.New(cliName, logger, ver, prompt, updateClient, analyticsClient))
+	if cfg == nil || !cfg.DisableUpdates {
+		cli.AddCommand(update.New(cliName, logger, ver, prompt, updateClient, analyticsClient))
+	}
 
 	cli.AddCommand(auth.New(cliName, prerunner, logger, ver.UserAgent, analyticsClient, netrcHandler)...)
-
+	isAPILogin := isAPIKeyCredential(cfg)
 	if cliName == "ccloud" {
-		cmd := kafka.New(prerunner, logger.Named("kafka"), ver.ClientID)
+		cmd := kafka.New(isAPILogin, prerunner, logger.Named("kafka"), ver.ClientID)
 		cli.AddCommand(cmd)
 		cli.AddCommand(feedback.NewFeedbackCmd(cliName, prerunner, analyticsClient))
 		cli.AddCommand(initcontext.New(prerunner, prompt, resolver, analyticsClient))
+		cli.AddCommand(config.New(prerunner, analyticsClient))
+		if isAPILogin {
+			return command, nil
+		}
 		cli.AddCommand(ps1.NewPromptCmd(cliName, prerunner, &pps1.Prompt{}, logger))
 		cli.AddCommand(environment.New(cliName, prerunner))
 		cli.AddCommand(service_account.New(prerunner))
-		cli.AddCommand(config.New(prerunner, analyticsClient))
 		// Keystore exposed so tests can pass mocks.
 		cli.AddCommand(apikey.New(prerunner, nil, resolver))
 
@@ -137,7 +144,7 @@ func NewConfluentCommand(cliName string, isTest bool, logger *log.Logger, ver *p
 		//conn.Hidden = true // The connect feature isn't finished yet, so let's hide it
 		//cli.AddCommand(conn)
 	} else if cliName == "confluent" {
-		cli.AddCommand(iam.New(prerunner))
+		cli.AddCommand(iam.New(cliName, prerunner))
 
 		metaClient := cluster.NewScopedIdService(&http.Client{}, ver.UserAgent, logger)
 		cli.AddCommand(cluster.New(prerunner, metaClient))
@@ -168,6 +175,17 @@ func getAnalyticsClient(isTest bool, cliName string, cfg *v3.Config, cliVersion 
 		Logger: analytics.NewLogger(logger),
 	})
 	return analytics.NewAnalyticsClient(cliName, cfg, cliVersion, segmentClient, clockwork.NewRealClock())
+}
+
+func isAPIKeyCredential(cfg *v3.Config) bool {
+	if cfg == nil {
+		return false
+	}
+	currCtx := cfg.Context()
+	if currCtx != nil && currCtx.Credential != nil && currCtx.Credential.CredentialType == v2.APIKey {
+		return true
+	}
+	return false
 }
 
 func (c *Command) Execute(cliName string, args []string) error {

@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
@@ -17,11 +18,12 @@ type Commander struct {
 	Client       *ccloud.Client
 	MDSClient    *mds.APIClient
 	Version      *version.Version
+	Config       *v3.Config
 }
 
 var _ cmd.PreRunner = (*Commander)(nil)
 
-func NewPreRunnerMock(client *ccloud.Client, mdsClient *mds.APIClient) cmd.PreRunner {
+func NewPreRunnerMock(client *ccloud.Client, mdsClient *mds.APIClient, cfg *v3.Config) cmd.PreRunner {
 	flagResolverMock := &cmd.FlagResolverImpl{
 		Prompt: &Prompt{},
 		Out:    os.Stdout,
@@ -30,6 +32,7 @@ func NewPreRunnerMock(client *ccloud.Client, mdsClient *mds.APIClient) cmd.PreRu
 		FlagResolver: flagResolverMock,
 		Client:       client,
 		MDSClient:    mdsClient,
+		Config:       cfg,
 	}
 }
 
@@ -38,6 +41,7 @@ func (c *Commander) Anonymous(command *cmd.CLICommand) func(cmd *cobra.Command, 
 		if command != nil {
 			command.Version = c.Version
 			command.Config.Resolver = c.FlagResolver
+			command.Config.Config = c.Config
 		}
 		return nil
 	}
