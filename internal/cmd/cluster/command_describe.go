@@ -8,12 +8,13 @@ import (
 	"net/http"
 	"sort"
 
+	"github.com/confluentinc/go-printer"
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/go-printer"
-	"github.com/spf13/cobra"
 )
 
 type Metadata interface {

@@ -1,16 +1,19 @@
 package auth
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/log"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
-	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"os"
 	"testing"
 
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	"github.com/stretchr/testify/require"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/log"
+
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
+
 	authMock "github.com/confluentinc/cli/internal/pkg/auth/mock"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	testUtils "github.com/confluentinc/cli/test"
