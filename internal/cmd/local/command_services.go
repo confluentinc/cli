@@ -2,7 +2,6 @@ package local
 
 import (
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/local"
 	"os"
 	"os/exec"
 	"runtime"
@@ -12,7 +11,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config/v3"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/local"
 )
 
 type Service struct {

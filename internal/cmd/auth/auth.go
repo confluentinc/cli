@@ -10,6 +10,8 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/spf13/cobra"
 
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -18,7 +20,6 @@ import (
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 )
 
 type commands struct {

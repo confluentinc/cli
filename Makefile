@@ -411,7 +411,7 @@ clean-release-notes:
 
 .PHONY: fmt
 fmt:
-	@gofmt -e -s -l -w $(ALL_SRC)
+	@goimports -e -l -local github.com/confluentinc/cli/ -w $(ALL_SRC)
 
 .PHONY: release-ci
 release-ci:

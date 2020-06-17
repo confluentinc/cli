@@ -33,25 +33,3 @@ func TestConfigService(t *testing.T) {
 	config := map[string]string{"replace": "new", "comment": "new", "append": "new"}
 	req.NoError(configService(ch, cc, exampleService, config))
 }
-
-func TestIsNotRunning(t *testing.T) {
-	req := require.New(t)
-
-	cc := &mock.MockConfluentCurrent{
-		HasPidFileFunc: func(service string) (bool, error) {
-			return false, nil
-		},
-	}
-
-	isUp, err := isRunning(cc, exampleService)
-	req.NoError(err)
-	req.False(isUp)
-}
-
-func TestIsPortClosed(t *testing.T) {
-	req := require.New(t)
-
-	isOpen, err := isPortOpen(exampleService)
-	req.NoError(err)
-	req.False(isOpen)
-}

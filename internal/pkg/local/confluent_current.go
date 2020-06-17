@@ -32,7 +32,6 @@ type ConfluentCurrent interface {
 	GetCurrentDir() (string, error)
 	RemoveCurrentDir() error
 
-	GetServiceDir(service string) (string, error)
 	GetDataDir(service string) (string, error)
 
 	GetConfigFile(service string) (string, error)
@@ -64,7 +63,7 @@ func (cc *ConfluentCurrentManager) GetCurrentDir() (string, error) {
 		return cc.currentDir, nil
 	}
 
-	if _, err := os.Stat(cc.getTrackingFile()); os.IsNotExist(err) {
+	if !fileExists(cc.getTrackingFile()) {
 		cc.currentDir = getRandomChildDir(cc.getRootDir())
 		if err := os.MkdirAll(cc.currentDir, 0777); err != nil {
 			return "", err
@@ -83,7 +82,7 @@ func (cc *ConfluentCurrentManager) GetCurrentDir() (string, error) {
 	return cc.currentDir, nil
 }
 
-func (cc *ConfluentCurrentManager) GetServiceDir(service string) (string, error) {
+func (cc *ConfluentCurrentManager) getServiceDir(service string) (string, error) {
 	dir, err := cc.GetCurrentDir()
 	if err != nil {
 		return "", err
@@ -98,7 +97,7 @@ func (cc *ConfluentCurrentManager) GetServiceDir(service string) (string, error)
 }
 
 func (cc *ConfluentCurrentManager) GetDataDir(service string) (string, error) {
-	dir, err := cc.GetServiceDir(service)
+	dir, err := cc.getServiceDir(service)
 	if err != nil {
 		return "", err
 	}
@@ -208,7 +207,7 @@ func (cc *ConfluentCurrentManager) getTrackingFile() string {
 }
 
 func (cc *ConfluentCurrentManager) getServiceFile(service, file string) (string, error) {
-	dir, err := cc.GetServiceDir(service)
+	dir, err := cc.getServiceDir(service)
 	if err != nil {
 		return "", err
 	}
@@ -222,7 +221,7 @@ func getRandomChildDir(parentDir string) string {
 	for {
 		childDir := fmt.Sprintf("confluent.%06d", rand.Intn(1000000))
 		path := filepath.Join(parentDir, childDir)
-		if _, err := os.Stat(path); os.IsNotExist(err) {
+		if !fileExists(path) {
 			return path
 		}
 	}
