@@ -71,7 +71,7 @@ func TestGetServiceDir(t *testing.T) {
 	cc := NewConfluentCurrentManager()
 	cc.currentDir = dir
 
-	serviceDir, err := cc.GetServiceDir(exampleService)
+	serviceDir, err := cc.getServiceDir(exampleService)
 	req.NoError(err)
 	req.DirExists(serviceDir)
 }
@@ -86,7 +86,7 @@ func TestGetDataDir(t *testing.T) {
 	cc := NewConfluentCurrentManager()
 	cc.currentDir = dir
 
-	_, err = cc.GetServiceDir(exampleService)
+	_, err = cc.getServiceDir(exampleService)
 	req.NoError(err)
 
 	dataDir, err := cc.GetDataDir(exampleService)
@@ -104,7 +104,7 @@ func TestGetDataDirKSQL(t *testing.T) {
 	cc := NewConfluentCurrentManager()
 	cc.currentDir = dir
 
-	_, err = cc.GetServiceDir("ksql-server")
+	_, err = cc.getServiceDir("ksql-server")
 	req.NoError(err)
 
 	dataDir, err := cc.GetDataDir("ksql-server")
