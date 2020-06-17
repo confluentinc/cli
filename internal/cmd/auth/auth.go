@@ -159,11 +159,12 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 		state.Auth = &v1.AuthConfig{}
 	}
 
-	// Always overwrite the user and list of accounts when logging in -- but don't necessarily
+	// Always overwrite the user, organization, and list of accounts when logging in -- but don't necessarily
 	// overwrite `Account` (current/active environment) since we want that to be remembered
 	// between CLI sessions.
 	state.Auth.User = user.User
 	state.Auth.Accounts = user.Accounts
+	state.Auth.Organization = user.Organization
 
 	// Default to 0th environment if no suitable environment is already configured
 	hasGoodEnv := false
