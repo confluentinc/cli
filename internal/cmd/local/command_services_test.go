@@ -10,7 +10,7 @@ import (
 
 const exampleDir = "dir"
 
-func TestGetDataDirConfig(t *testing.T) {
+func TestGetConfig(t *testing.T) {
 	req := require.New(t)
 
 	ch := &mock.MockConfluentHome{
@@ -24,6 +24,7 @@ func TestGetDataDirConfig(t *testing.T) {
 			return exampleDir, nil
 		},
 	}
+
 	config, err := getConfig(ch, cc, exampleService)
 
 	req.NoError(err)
