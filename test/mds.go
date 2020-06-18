@@ -52,43 +52,6 @@ var (
                               "allowedOperations":[
                                       {"resourceType":"All","operations":["All"]}]}}`,
 	}
-	rbacRolesV2 = map[string]string{
-		"DeveloperRead": `{
-                      "name":"DeveloperRead",
-                      "accessPolicy":{
-                              "scopeType":"Resource",
-                              "allowedOperations":[
-                                      {"resourceType":"Cluster","operations":[]},
-                                      {"resourceType":"TransactionalId","operations":["Describe"]},
-                                      {"resourceType":"Group","operations":["Read","Describe"]},
-                                      {"resourceType":"Subject","operations":["Read","ReadCompatibility"]},
-                                      {"resourceType":"Connector","operations":["ReadStatus","ReadConfig"]},
-                                      {"resourceType":"Topic","operations":["Read","Describe"]}]}}`,
-		"DeveloperWrite": `{
-                      "name":"DeveloperWrite",
-                      "accessPolicy":{
-                              "scopeType":"Resource",
-                              "allowedOperations":[
-                                      {"resourceType":"Subject","operations":["Write"]},
-                                      {"resourceType":"Group","operations":[]},
-                                      {"resourceType":"Topic","operations":["Write","Describe"]},
-                                      {"resourceType":"Cluster","operations":["IdempotentWrite"]},
-                                      {"resourceType":"KsqlCluster","operations":["Contribute"]},
-                                      {"resourceType":"Connector","operations":["ReadStatus","Configure"]},
-                                      {"resourceType":"TransactionalId","operations":["Write","Describe"]}]}}`,
-		"SecurityAdmin": `{
-                      "name":"SecurityAdmin",
-                      "accessPolicy":{
-                              "scopeType":"Cluster",
-                              "allowedOperations":[
-                                      {"resourceType":"All","operations":["DescribeAccess"]}]}}`,
-		"SystemAdmin": `{
-                      "name":"SystemAdmin",
-                      "accessPolicy":{
-                              "scopeType":"Cluster",
-                              "allowedOperations":[
-                                      {"resourceType":"All","operations":["All"]}]}}`,
-	}
 )
 
 func serveMds(t *testing.T) *httptest.Server {
@@ -166,24 +129,8 @@ func serveMds(t *testing.T) *httptest.Server {
 		"/security/1.0/lookup/role/DeveloperRead/resource/Topic/name/food":           `["Group:hobbits"]`,
 		"/security/1.0/lookup/role/DeveloperRead/resource/Topic/name/shire-parties":  `[]`,
 		"/security/1.0/lookup/role/DeveloperWrite/resource/Topic/name/shire-parties": `["Group:hobbits"]`,
-
-		/* "/api/metadata/security/v2alpha1/principals/User:frodo/groups": `[
-                       "hobbits",
-                       "ringBearers"]`, */
-		"/api/metadata/security/v2alpha1/principals/User:frodo/roleNames": `[
-                       "DeveloperRead",
-                       "DeveloperWrite",
-                       "SecurityAdmin"]`,
-		"/api/metadata/security/v2alpha1/lookup/role/DeveloperRead":                                    `["Group:hobbits"]`,
-		"/api/metadata/security/v2alpha1/lookup/role/DeveloperWrite":                                   `["Group:hobbits","Group:ringBearers"]`,
-		"/api/metadata/security/v2alpha1/lookup/role/SecurityAdmin":                                    `["User:frodo"]`,
-		"/api/metadata/security/v2alpha1/lookup/role/SystemAdmin":                                      `[]`,
-		// "/api/metadata/security/v2alpha1/lookup/role/DeveloperRead/resource/Topic/name/food":           `["Group:hobbits"]`,
-		// "/api/metadata/security/v2alpha1/lookup/role/DeveloperRead/resource/Topic/name/shire-parties":  `[]`,
-		// "/api/metadata/security/v2alpha1/lookup/role/DeveloperWrite/resource/Topic/name/shire-parties": `["Group:hobbits"]`,
 	}
 	addRoles(routesAndReplies)
-	addRolesV2(routesAndReplies)
 
 	for route, reply := range routesAndReplies {
 		s := reply
@@ -208,23 +155,6 @@ func addRoles(routesAndReplies map[string]string) {
 	base := "/security/1.0/roles"
 	var roleNameList []string
 	for roleName, roleInfo := range rbacRoles {
-		routesAndReplies[base+"/"+roleName] = roleInfo
-		roleNameList = append(roleNameList, roleName)
-	}
-
-	sort.Strings(roleNameList)
-
-	var allRoles []string
-	for _, roleName := range roleNameList {
-		allRoles = append(allRoles, rbacRoles[roleName])
-	}
-	routesAndReplies[base] = "[" + strings.Join(allRoles, ",") + "]"
-}
-
-func addRolesV2(routesAndReplies map[string]string) {
-	base := "/api/metadata/security/v2alpha1/roles"
-	var roleNameList []string
-	for roleName, roleInfo := range rbacRolesV2 {
 		routesAndReplies[base+"/"+roleName] = roleInfo
 		roleNameList = append(roleNameList, roleName)
 	}

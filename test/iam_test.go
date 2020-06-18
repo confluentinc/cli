@@ -305,7 +305,7 @@ func (s *CLITestSuite) Test_Ccloud_Iam_Role_List() {
 		},
 	}
 	for _, tt := range tests {
-		s.runCcloudTest(tt, serveMds(s.T()).URL, "")
+		s.runCcloudTest(tt, serveMdsv2alpha1(s.T()).URL, "")
 	}
 }
 
