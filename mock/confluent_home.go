@@ -22,11 +22,14 @@ type MockConfluentHome struct {
 	lockGetConnectorConfigFile sync.Mutex
 	GetConnectorConfigFileFunc func(connector string) (string, error)
 
+	lockGetScriptFile sync.Mutex
+	GetScriptFileFunc func(service string) (string, error)
+
 	lockGetKafkaScriptFile sync.Mutex
 	GetKafkaScriptFileFunc func(mode, format string) (string, error)
 
-	lockGetScriptFile sync.Mutex
-	GetScriptFileFunc func(service string) (string, error)
+	lockGetACLCLIFile sync.Mutex
+	GetACLCLIFileFunc func() (string, error)
 
 	lockGetVersion sync.Mutex
 	GetVersionFunc func(service string) (string, error)
@@ -46,12 +49,14 @@ type MockConfluentHome struct {
 		GetConnectorConfigFile []struct {
 			Connector string
 		}
+		GetScriptFile []struct {
+			Service string
+		}
 		GetKafkaScriptFile []struct {
 			Mode   string
 			Format string
 		}
-		GetScriptFile []struct {
-			Service string
+		GetACLCLIFile []struct {
 		}
 		GetVersion []struct {
 			Service string
@@ -209,6 +214,44 @@ func (m *MockConfluentHome) GetConnectorConfigFileCalls() []struct {
 	return m.calls.GetConnectorConfigFile
 }
 
+// GetScriptFile mocks base method by wrapping the associated func.
+func (m *MockConfluentHome) GetScriptFile(service string) (string, error) {
+	m.lockGetScriptFile.Lock()
+	defer m.lockGetScriptFile.Unlock()
+
+	if m.GetScriptFileFunc == nil {
+		panic("mocker: MockConfluentHome.GetScriptFileFunc is nil but MockConfluentHome.GetScriptFile was called.")
+	}
+
+	call := struct {
+		Service string
+	}{
+		Service: service,
+	}
+
+	m.calls.GetScriptFile = append(m.calls.GetScriptFile, call)
+
+	return m.GetScriptFileFunc(service)
+}
+
+// GetScriptFileCalled returns true if GetScriptFile was called at least once.
+func (m *MockConfluentHome) GetScriptFileCalled() bool {
+	m.lockGetScriptFile.Lock()
+	defer m.lockGetScriptFile.Unlock()
+
+	return len(m.calls.GetScriptFile) > 0
+}
+
+// GetScriptFileCalls returns the calls made to GetScriptFile.
+func (m *MockConfluentHome) GetScriptFileCalls() []struct {
+	Service string
+} {
+	m.lockGetScriptFile.Lock()
+	defer m.lockGetScriptFile.Unlock()
+
+	return m.calls.GetScriptFile
+}
+
 // GetKafkaScriptFile mocks base method by wrapping the associated func.
 func (m *MockConfluentHome) GetKafkaScriptFile(mode, format string) (string, error) {
 	m.lockGetKafkaScriptFile.Lock()
@@ -250,42 +293,38 @@ func (m *MockConfluentHome) GetKafkaScriptFileCalls() []struct {
 	return m.calls.GetKafkaScriptFile
 }
 
-// GetScriptFile mocks base method by wrapping the associated func.
-func (m *MockConfluentHome) GetScriptFile(service string) (string, error) {
-	m.lockGetScriptFile.Lock()
-	defer m.lockGetScriptFile.Unlock()
+// GetACLCLIFile mocks base method by wrapping the associated func.
+func (m *MockConfluentHome) GetACLCLIFile() (string, error) {
+	m.lockGetACLCLIFile.Lock()
+	defer m.lockGetACLCLIFile.Unlock()
 
-	if m.GetScriptFileFunc == nil {
-		panic("mocker: MockConfluentHome.GetScriptFileFunc is nil but MockConfluentHome.GetScriptFile was called.")
+	if m.GetACLCLIFileFunc == nil {
+		panic("mocker: MockConfluentHome.GetACLCLIFileFunc is nil but MockConfluentHome.GetACLCLIFile was called.")
 	}
 
 	call := struct {
-		Service string
-	}{
-		Service: service,
-	}
+	}{}
 
-	m.calls.GetScriptFile = append(m.calls.GetScriptFile, call)
+	m.calls.GetACLCLIFile = append(m.calls.GetACLCLIFile, call)
 
-	return m.GetScriptFileFunc(service)
+	return m.GetACLCLIFileFunc()
 }
 
-// GetScriptFileCalled returns true if GetScriptFile was called at least once.
-func (m *MockConfluentHome) GetScriptFileCalled() bool {
-	m.lockGetScriptFile.Lock()
-	defer m.lockGetScriptFile.Unlock()
+// GetACLCLIFileCalled returns true if GetACLCLIFile was called at least once.
+func (m *MockConfluentHome) GetACLCLIFileCalled() bool {
+	m.lockGetACLCLIFile.Lock()
+	defer m.lockGetACLCLIFile.Unlock()
 
-	return len(m.calls.GetScriptFile) > 0
+	return len(m.calls.GetACLCLIFile) > 0
 }
 
-// GetScriptFileCalls returns the calls made to GetScriptFile.
-func (m *MockConfluentHome) GetScriptFileCalls() []struct {
-	Service string
+// GetACLCLIFileCalls returns the calls made to GetACLCLIFile.
+func (m *MockConfluentHome) GetACLCLIFileCalls() []struct {
 } {
-	m.lockGetScriptFile.Lock()
-	defer m.lockGetScriptFile.Unlock()
+	m.lockGetACLCLIFile.Lock()
+	defer m.lockGetACLCLIFile.Unlock()
 
-	return m.calls.GetScriptFile
+	return m.calls.GetACLCLIFile
 }
 
 // GetVersion mocks base method by wrapping the associated func.
@@ -374,12 +413,15 @@ func (m *MockConfluentHome) Reset() {
 	m.lockGetConnectorConfigFile.Lock()
 	m.calls.GetConnectorConfigFile = nil
 	m.lockGetConnectorConfigFile.Unlock()
-	m.lockGetKafkaScriptFile.Lock()
-	m.calls.GetKafkaScriptFile = nil
-	m.lockGetKafkaScriptFile.Unlock()
 	m.lockGetScriptFile.Lock()
 	m.calls.GetScriptFile = nil
 	m.lockGetScriptFile.Unlock()
+	m.lockGetKafkaScriptFile.Lock()
+	m.calls.GetKafkaScriptFile = nil
+	m.lockGetKafkaScriptFile.Unlock()
+	m.lockGetACLCLIFile.Lock()
+	m.calls.GetACLCLIFile = nil
+	m.lockGetACLCLIFile.Unlock()
 	m.lockGetVersion.Lock()
 	m.calls.GetVersion = nil
 	m.lockGetVersion.Unlock()

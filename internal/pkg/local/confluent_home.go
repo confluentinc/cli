@@ -62,8 +62,9 @@ type ConfluentHome interface {
 	GetConfig(service string) ([]byte, error)
 	GetConnectPluginPath() (string, error)
 	GetConnectorConfigFile(connector string) (string, error)
-	GetKafkaScriptFile(mode, format string) (string, error)
 	GetScriptFile(service string) (string, error)
+	GetKafkaScriptFile(mode, format string) (string, error)
+	GetACLCLIFile() (string, error)
 	GetVersion(service string) (string, error)
 	IsConfluentPlatform() (bool, error)
 }
@@ -180,6 +181,15 @@ func (ch *ConfluentHomeManager) GetKafkaScriptFile(format, mode string) (string,
 	}
 
 	return ch.getFile(filepath.Join("bin", script))
+}
+
+func (ch *ConfluentHomeManager) GetACLCLIFile() (string, error) {
+	dir, err := ch.getRootDir()
+	if err != nil {
+		return "", err
+	}
+
+	return filepath.Join(dir, "bin", "sr-acl-cli"), nil
 }
 
 func (ch *ConfluentHomeManager) GetVersion(service string) (string, error) {
