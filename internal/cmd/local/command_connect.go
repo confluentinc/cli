@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -14,16 +13,17 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/local"
 )
 
-var connectorConfigs = map[string]string{
-	"elasticsearch-sink": "kafka-connect-elasticsearch/quickstart-elasticsearch.properties",
-	"file-sink":          "kafka/connect-file-sink.properties",
-	"file-source":        "kafka/connect-file-source.properties",
-	"hdfs-sink":          "kafka-connect-hdfs/quickstart-hdfs.properties",
-	"jdbc-sink":          "kafka-connect-jdbc/sink-quickstart-sqlite.properties",
-	"jdbc-source":        "kafka-connect-jdbc/source-quickstart-sqlite.properties",
-	"s3-sink":            "kafka-connect-s3/quickstart-s3.properties",
+var connectors = []string{
+	"elasticsearch-sink",
+	"file-sink",
+	"file-source",
+	"hdfs-sink",
+	"jdbc-sink",
+	"jdbc-source",
+	"s3-sink",
 }
 
 func NewConnectConnectorCommand(prerunner cmd.PreRunner) *cobra.Command {
@@ -143,7 +143,7 @@ func NewConnectConnectorListCommand(prerunner cmd.PreRunner) *cobra.Command {
 
 func runConnectConnectorListCommand(command *cobra.Command, _ []string) {
 	command.Println("Bundled Predefined Connectors:")
-	command.Println(buildTabbedList(getConnectors()))
+	command.Println(buildTabbedList(connectors))
 }
 
 func NewConnectConnectorLoadCommand(prerunner cmd.PreRunner) *cobra.Command {
@@ -163,22 +163,24 @@ func NewConnectConnectorLoadCommand(prerunner cmd.PreRunner) *cobra.Command {
 func runConnectConnectorLoadCommand(command *cobra.Command, args []string) error {
 	connector := args[0]
 
-	configFile, ok := connectorConfigs[connector]
-	if ok {
-		confluentHome, err := getConfluentHome()
+	var configFile string
+	var err error
+
+	if isBuiltin(connector) {
+		ch := local.NewConfluentHomeManager()
+
+		configFile, err = ch.GetConnectorConfigFile(connector)
 		if err != nil {
 			return err
 		}
-		configFile = filepath.Join(confluentHome, "etc", configFile)
 	} else {
-		file, err := command.Flags().GetString("config")
+		configFile, err = command.Flags().GetString("config")
 		if err != nil {
 			return err
 		}
-		if file == "" {
+		if configFile == "" {
 			return fmt.Errorf("invalid connector: %s", connector)
 		}
-		configFile = file
 	}
 
 	data, err := ioutil.ReadFile(configFile)
@@ -273,12 +275,13 @@ func runConnectPluginListCommand(command *cobra.Command, _ []string) error {
 	return nil
 }
 
-func getConnectors() []string {
-	var connectors []string
-	for connector := range connectorConfigs {
-		connectors = append(connectors, connector)
+func isBuiltin(connector string) bool {
+	for _, builtinConnector := range connectors {
+		if connector == builtinConnector {
+			return true
+		}
 	}
-	return connectors
+	return false
 }
 
 func isJSON(data []byte) bool {

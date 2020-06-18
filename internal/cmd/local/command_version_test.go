@@ -9,34 +9,32 @@ import (
 	"github.com/confluentinc/cli/mock"
 )
 
-func TestConfluentCommunitySoftwareVersion(t *testing.T) {
+const exampleVersion = "0.0.0"
+
+func TestGetVersion(t *testing.T) {
 	req := require.New(t)
 
-	cp := mock.NewConfluentCommunitySoftware()
-	defer cp.TearDown()
+	ch := &mock.MockConfluentHome{
+		FindFileFunc: func(pattern string) ([]string, error) {
+			versionFile := strings.ReplaceAll(versionFiles[exampleService], "*", exampleVersion)
+			return []string{versionFile}, nil
+		},
+	}
 
-	req.NoError(cp.NewConfluentHome())
-
-	file := strings.Replace(versionFiles["Confluent Community Software"], "*", "0.0.0", 1)
-	req.NoError(cp.AddEmptyFileToConfluentHome(file))
-
-	out, err := mockLocalCommand("version")
+	version, err := getVersion(ch, exampleService)
 	req.NoError(err)
-	req.Contains(out, "Confluent Community Software: 0.0.0")
+	req.Equal(exampleVersion, version)
 }
 
-func TestConfluentPlatformVersion(t *testing.T) {
+func TestGetVersionNoMatchError(t *testing.T) {
 	req := require.New(t)
 
-	cp := mock.NewConfluentPlatform()
-	defer cp.TearDown()
+	ch := &mock.MockConfluentHome{
+		FindFileFunc: func(pattern string) ([]string, error) {
+			return []string{}, nil
+		},
+	}
 
-	req.NoError(cp.NewConfluentHome())
-
-	file := strings.Replace(versionFiles["Confluent Platform"], "*", "1.0.0", 1)
-	req.NoError(cp.AddEmptyFileToConfluentHome(file))
-
-	out, err := mockLocalCommand("version")
-	req.NoError(err)
-	req.Contains(out, "Confluent Platform: 1.0.0")
+	_, err := getVersion(ch, exampleService)
+	req.Error(err)
 }

@@ -8,37 +8,65 @@ import (
 	"github.com/confluentinc/cli/mock"
 )
 
+const exampleDir = "dir"
+
+func TestGetDataDirConfig(t *testing.T) {
+	req := require.New(t)
+
+	cc := &mock.MockConfluentCurrent{
+		GetDataDirFunc: func(service string) (string, error) {
+			return exampleDir, nil
+		},
+	}
+	config, err := getDataDirConfig(cc, exampleService)
+
+	req.NoError(err)
+	req.Len(config, 1)
+}
+
 func TestConfluentPlatformAvailableServices(t *testing.T) {
 	req := require.New(t)
 
-	cp := mock.NewConfluentPlatform()
-	defer cp.TearDown()
-	req.NoError(cp.NewConfluentHome())
+	ch := &mock.MockConfluentHome{
+		IsConfluentPlatformFunc: func() (bool, error) {
+			return true, nil
+		},
+	}
 
-	availableServices, err := getAvailableServices()
+	availableServices, err := getAvailableServices(ch)
 	req.NoError(err)
-	req.Equal(orderedServices, availableServices)
+
+	services := []string{
+		"zookeeper",
+		"kafka",
+		"schema-registry",
+		"kafka-rest",
+		"connect",
+		"ksql-server",
+		"control-center",
+	}
+	req.Equal(services, availableServices)
 }
 
 func TestConfluentCommunitySoftwareAvailableServices(t *testing.T) {
 	req := require.New(t)
 
-	cp := mock.NewConfluentCommunitySoftware()
-	defer cp.TearDown()
-	req.NoError(cp.NewConfluentHome())
+	ch := &mock.MockConfluentHome{
+		IsConfluentPlatformFunc: func() (bool, error) {
+			return false, nil
+		},
+	}
 
-	availableServices, err := getAvailableServices()
+	availableServices, err := getAvailableServices(ch)
 	req.NoError(err)
-	req.NotContains(availableServices, "control-center")
-}
 
-func TestTopErrorNoRunningServices(t *testing.T) {
-	req := require.New(t)
-
-	cp := mock.NewConfluentPlatform()
-	defer cp.TearDown()
-	req.NoError(cp.NewConfluentCurrent())
-
-	_, err := mockLocalCommand("services", "top")
-	req.Error(err)
+	services := []string{
+		"zookeeper",
+		"kafka",
+		"schema-registry",
+		"kafka-rest",
+		"connect",
+		"ksql-server",
+	}
+	req.Equal(services, availableServices)
 }
