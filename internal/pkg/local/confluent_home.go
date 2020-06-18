@@ -56,13 +56,14 @@ var (
 )
 
 type ConfluentHome interface {
-	IsConfluentPlatform() (bool, error)
 	FindFile(pattern string) ([]string, error)
 	GetConfig(service string) ([]byte, error)
+	GetConnectPluginPath() (string, error)
 	GetConnectorConfigFile(connector string) (string, error)
-	GetScriptFile(service string) (string, error)
 	GetKafkaScriptFile(mode, format string) (string, error)
+	GetScriptFile(service string) (string, error)
 	GetVersion(service string) (string, error)
+	IsConfluentPlatform() (bool, error)
 }
 
 type ConfluentHomeManager struct{}
@@ -130,6 +131,16 @@ func (ch *ConfluentHomeManager) GetConfig(service string) ([]byte, error) {
 	}
 
 	return ioutil.ReadFile(file)
+}
+
+func (ch *ConfluentHomeManager) GetConnectPluginPath() (string, error) {
+	dir, err := ch.getRootDir()
+	if err != nil {
+		return "", err
+	}
+
+	path := filepath.Join(dir, "/share/java")
+	return path, nil
 }
 
 func (ch *ConfluentHomeManager) GetConnectorConfigFile(connector string) (string, error) {

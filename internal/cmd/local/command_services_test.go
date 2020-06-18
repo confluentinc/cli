@@ -13,12 +13,18 @@ const exampleDir = "dir"
 func TestGetDataDirConfig(t *testing.T) {
 	req := require.New(t)
 
+	ch := &mock.MockConfluentHome{
+		IsConfluentPlatformFunc: func() (bool, error) {
+			return false, nil
+		},
+	}
+
 	cc := &mock.MockConfluentCurrent{
 		GetDataDirFunc: func(service string) (string, error) {
 			return exampleDir, nil
 		},
 	}
-	config, err := getDataDirConfig(cc, exampleService)
+	config, err := getConfig(ch, cc, exampleService)
 
 	req.NoError(err)
 	req.Len(config, 1)
