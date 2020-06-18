@@ -8,6 +8,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/hashicorp/go-version"
 )
 
 /*
@@ -197,9 +199,7 @@ func (ch *ConfluentHomeManager) GetVersion(service string) (string, error) {
 	versionFile := matches[0]
 	x := strings.Split(pattern, "*")
 	prefix, suffix := x[0], x[1]
-	version := versionFile[len(prefix) : len(versionFile)-len(suffix)]
-
-	return version, nil
+	return versionFile[len(prefix) : len(versionFile)-len(suffix)], nil
 }
 
 func (ch *ConfluentHomeManager) getConfluentVersion() (string, error) {
@@ -215,18 +215,23 @@ func (ch *ConfluentHomeManager) getConfluentVersion() (string, error) {
 	}
 }
 
-func (ch *ConfluentHomeManager) isAboveVersion(target string) (bool, error) {
-	version, err := ch.getConfluentVersion()
+func (ch *ConfluentHomeManager) isAboveVersion(targetVersion string) (bool, error) {
+	confluentVersion, err := ch.getConfluentVersion()
 	if err != nil {
 		return false, err
 	}
 
-	cmp, err := versionCmp(version, target)
+	a, err := version.NewSemver(confluentVersion)
 	if err != nil {
 		return false, err
 	}
 
-	return cmp >= 0, nil
+	b, err := version.NewSemver(targetVersion)
+	if err != nil {
+		return false, err
+	}
+
+	return a.Compare(b) >= 0, nil
 }
 
 func (ch *ConfluentHomeManager) getFile(file string) (string, error) {

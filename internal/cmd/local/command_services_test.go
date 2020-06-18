@@ -8,29 +8,6 @@ import (
 	"github.com/confluentinc/cli/mock"
 )
 
-const exampleDir = "dir"
-
-func TestGetConfig(t *testing.T) {
-	req := require.New(t)
-
-	ch := &mock.MockConfluentHome{
-		IsConfluentPlatformFunc: func() (bool, error) {
-			return false, nil
-		},
-	}
-
-	cc := &mock.MockConfluentCurrent{
-		GetDataDirFunc: func(service string) (string, error) {
-			return exampleDir, nil
-		},
-	}
-
-	config, err := getConfig(ch, cc, exampleService)
-
-	req.NoError(err)
-	req.Len(config, 1)
-}
-
 func TestConfluentPlatformAvailableServices(t *testing.T) {
 	req := require.New(t)
 
