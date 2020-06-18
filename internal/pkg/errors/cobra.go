@@ -40,9 +40,9 @@ func HandleCommon(err error, cmd *cobra.Command) error {
 	}
 	switch e := err.(type) {
 	case mds.GenericOpenAPIError:
-		return fmt.Errorf("metadata service backend error: " + e.Error() + ": " + string(e.Body()))
+		return fmt.Errorf("Backend error: " + e.Error() + ": " + string(e.Body()))
 	case mdsv2alpha1.GenericOpenAPIError:
-		return fmt.Errorf("metadata service backend error: " + e.Error() + ": " + string(e.Body()))
+		return fmt.Errorf("Backend error: " + e.Error() + ": " + string(e.Body()))
 	case *corev1.Error:
 		var result error
 		result = multierror.Append(result, e)

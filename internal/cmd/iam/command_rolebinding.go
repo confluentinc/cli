@@ -81,11 +81,13 @@ func (c *rolebindingCommand) init() {
 	}
 	listCmd.Flags().String("principal", "", "Principal whose rolebindings should be listed.")
 	listCmd.Flags().String("role", "", "List rolebindings under a specific role given to a principal. Or if no principal is specified, list principals with the role.")
-	listCmd.Flags().String("resource", "", "If specified with a role and no principals, list principals with rolebindings to the role for this qualified resource.")
 	listCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for scope of rolebinding listings.")
-	listCmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for scope of rolebinding listings.")
-	listCmd.Flags().String("ksql-cluster-id", "", "KSQL cluster ID for scope of rolebinding listings.")
-	listCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for scope of rolebinding listings.")
+	if c.Config.CLIName != "ccloud" {
+		listCmd.Flags().String("resource", "", "If specified with a role and no principals, list principals with rolebindings to the role for this qualified resource.")
+		listCmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for scope of rolebinding listings.")
+		listCmd.Flags().String("ksql-cluster-id", "", "KSQL cluster ID for scope of rolebinding listings.")
+		listCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for scope of rolebinding listings.")
+	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
 
@@ -102,9 +104,11 @@ func (c *rolebindingCommand) init() {
 	createCmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
 	createCmd.Flags().String("principal", "", "Qualified principal name for the role binding.")
 	createCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
-	createCmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding.")
-	createCmd.Flags().String("ksql-cluster-id", "", "KSQL cluster ID for the role binding.")
-	createCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for the role binding.")
+	if c.Config.CLIName != "ccloud" {
+		createCmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding.")
+		createCmd.Flags().String("ksql-cluster-id", "", "KSQL cluster ID for the role binding.")
+		createCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for the role binding.")
+	}
 	createCmd.Flags().SortFlags = false
 	check(createCmd.MarkFlagRequired("role"))
 	check(createCmd.MarkFlagRequired("principal"))
@@ -117,13 +121,15 @@ func (c *rolebindingCommand) init() {
 		Args:  cobra.NoArgs,
 	}
 	deleteCmd.Flags().String("role", "", "Role name of the existing role binding.")
-	deleteCmd.Flags().String("resource", "", "Qualified resource name associated with the role binding.")
 	deleteCmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
 	deleteCmd.Flags().String("principal", "", "Qualified principal name associated with the role binding.")
 	deleteCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
-	deleteCmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding.")
-	deleteCmd.Flags().String("ksql-cluster-id", "", "KSQL cluster ID for the role binding.")
-	deleteCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for the role binding.")
+	if c.Config.CLIName != "ccloud" {
+		deleteCmd.Flags().String("resource", "", "Qualified resource name associated with the role binding.")
+		deleteCmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding.")
+		deleteCmd.Flags().String("ksql-cluster-id", "", "KSQL cluster ID for the role binding.")
+		deleteCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for the role binding.")
+	}
 	deleteCmd.Flags().SortFlags = false
 	check(createCmd.MarkFlagRequired("role"))
 	check(deleteCmd.MarkFlagRequired("principal"))
