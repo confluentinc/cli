@@ -27,7 +27,7 @@ func NewFeedbackCmdWithPrompt(prerunner pcmd.PreRunner, cfg *v3.Config, analytic
 				if err != nil {
 					return err
 				}
-				msg = strings.TrimRight(msg, "\n")
+				msg = strings.TrimSuffix(msg, "\n")
 
 				if len(msg) > 0 {
 					analyticsClient.SetSpecialProperty(analytics.FeedbackPropertiesKey, msg)

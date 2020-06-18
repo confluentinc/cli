@@ -3,13 +3,14 @@ package s3
 import (
 	"encoding/xml"
 	"fmt"
-	"github.com/hashicorp/go-version"
 	"io/ioutil"
 	"net/http"
 	"path/filepath"
 	"runtime"
 	"sort"
 	"strings"
+
+	"github.com/hashicorp/go-version"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	pio "github.com/confluentinc/cli/internal/pkg/io"

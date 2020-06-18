@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"os"
 	"runtime"
-	"strings"
 
 	"github.com/DABH/go-basher"
 	"github.com/jonboulle/clockwork"
@@ -35,6 +34,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	pfeedback "github.com/confluentinc/cli/internal/pkg/feedback"
 	"github.com/confluentinc/cli/internal/pkg/help"
 	"github.com/confluentinc/cli/internal/pkg/io"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -163,49 +163,7 @@ func (c *Command) Execute(cliName string, args []string) error {
 	if analyticsError != nil {
 		c.logger.Debugf("segment analytics sending event failed: %s\n", analyticsError.Error())
 	}
-
-	if cliName == "ccloud" && isHumanReadable(args) {
-		failed := err != nil
-		c.sendFeedbackNudge(failed, args)
-	}
+	pfeedback.HandleFeedbackNudge(cliName, args)
 
 	return err
-}
-
-func isHumanReadable(args []string) bool {
-	for i := 0; i < len(args)-1; i++ {
-		if args[i] == "-o" || args[i] == "--output" {
-			return args[i+1] == "human"
-		}
-	}
-	return true
-}
-
-func (c *Command) sendFeedbackNudge(failed bool, args []string) {
-	feedbackNudge := "\nDid you know you can use the \"ccloud feedback\" command to send the team feedback?\nLet us know if the ccloud CLI is meeting your needs, or what we can do to improve it."
-
-	if failed {
-		c.PrintErrln(feedbackNudge)
-		return
-	}
-
-	feedbackNudgeCmds := []string{
-		"api-key create", "api-key delete",
-		"connector create", "connector delete",
-		"environment create", "environment delete",
-		"kafka acl create", "kafka acl delete",
-		"kafka cluster create", "kafka cluster delete",
-		"kafka topic create", "kafka topic delete",
-		"ksql app create", "ksql app delete",
-		"schema-registry schema create", "schema-registry schema delete",
-		"service-account create", "service-account delete",
-	}
-
-	cmd := strings.Join(args, " ")
-	for _, cmdPrefix := range feedbackNudgeCmds {
-		if strings.HasPrefix(cmd, cmdPrefix) {
-			c.PrintErrln(feedbackNudge)
-			return
-		}
-	}
 }

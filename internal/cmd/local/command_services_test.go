@@ -1,7 +1,6 @@
 package local
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -14,35 +13,32 @@ func TestConfluentPlatformAvailableServices(t *testing.T) {
 
 	cp := mock.NewConfluentPlatform()
 	defer cp.TearDown()
-
 	req.NoError(cp.NewConfluentHome())
-
-	file := strings.Replace(confluentControlCenter, "*", "0.0.0", 1)
-	req.NoError(cp.AddFileToConfluentHome(file))
 
 	availableServices, err := getAvailableServices()
 	req.NoError(err)
 	req.Equal(orderedServices, availableServices)
 }
 
-func TestAvailableServicesNoConfluentPlatform(t *testing.T) {
+func TestConfluentCommunitySoftwareAvailableServices(t *testing.T) {
+	req := require.New(t)
+
+	cp := mock.NewConfluentCommunitySoftware()
+	defer cp.TearDown()
+	req.NoError(cp.NewConfluentHome())
+
+	availableServices, err := getAvailableServices()
+	req.NoError(err)
+	req.NotContains(availableServices, "control-center")
+}
+
+func TestTopErrorNoRunningServices(t *testing.T) {
 	req := require.New(t)
 
 	cp := mock.NewConfluentPlatform()
 	defer cp.TearDown()
+	req.NoError(cp.NewConfluentCurrent())
 
-	req.NoError(cp.NewConfluentHome())
-
-	servicesNoControlCenter := []string{
-		"zookeeper",
-		"kafka",
-		"connect",
-		"kafka-rest",
-		"schema-registry",
-		"ksql-server",
-	}
-	availableServices, err := getAvailableServices()
-	req.NoError(err)
-	req.Equal(servicesNoControlCenter, availableServices)
-
+	_, err := mockLocalCommand("services", "top")
+	req.Error(err)
 }

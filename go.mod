@@ -26,9 +26,9 @@ require (
 	github.com/confluentinc/cc-structs/operator v0.419.0
 	github.com/confluentinc/cc-utils-public v0.1.0
 	github.com/confluentinc/ccloud-sdk-go v0.0.30
-	github.com/confluentinc/go-editor v0.4.0 // indirect
+	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-printer v0.13.0
-	github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.5
+	github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.4
 	github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.6
 	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787
 	github.com/confluentinc/schema-registry-sdk-go v0.0.8
@@ -94,6 +94,7 @@ require (
 	golang.org/x/exp v0.0.0-20200207192155-f17229e696bd // indirect
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/sys v0.0.0-20200409092240-59c9f1ba88fa // indirect
+	golang.org/x/tools v0.0.0-20200615190835-a2fa627c4bf4 // indirect
 	gonum.org/v1/netlib v0.0.0-20200317120129-c5a04cffd98a // indirect
 	google.golang.org/appengine v1.6.5 // indirect
 	gopkg.in/jcmturner/goidentity.v3 v3.0.0 // indirect

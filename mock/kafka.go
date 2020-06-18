@@ -3,6 +3,7 @@ package mock
 import (
 	"context"
 	"fmt"
+
 	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 
 	"github.com/golang/protobuf/proto"

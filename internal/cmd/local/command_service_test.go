@@ -1,8 +1,8 @@
 package local
 
 import (
+	"io/ioutil"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"testing"
 
@@ -11,31 +11,30 @@ import (
 	"github.com/confluentinc/cli/mock"
 )
 
-func TestServiceZookeeperStart(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		// Bash scripts can not be run on Windows
-		return
-	}
-
+func TestConfigService(t *testing.T) {
 	req := require.New(t)
 
 	cp := mock.NewConfluentPlatform()
 	defer cp.TearDown()
 
 	req.NoError(cp.NewConfluentHome())
-	req.NoError(cp.AddScriptToConfluentHome("bin/zookeeper-server-start"))
-	req.NoError(cp.AddFileToConfluentHome("etc/kafka/zookeeper.properties"))
+	req.NoError(cp.AddFileToConfluentHome("etc/kafka/zookeeper.properties", "replace=old\n# comment=old\n", 0644))
 	req.NoError(cp.NewConfluentCurrent())
-	req.NoError(cp.NewConfluentCurrentDir())
 
-	out, err := mockLocalCommand("services", "zookeeper", "start")
+	dir, err := getServiceDir("zookeeper")
 	req.NoError(err)
-	req.Contains(out, "Starting zookeeper")
-	req.Contains(out, "zookeeper is [UP]")
-	req.DirExists(filepath.Join(cp.ConfluentCurrentDir, "zookeeper"))
-	req.FileExists(filepath.Join(cp.ConfluentCurrentDir, "zookeeper", "zookeeper.log"))
-	req.FileExists(filepath.Join(cp.ConfluentCurrentDir, "zookeeper", "zookeeper.pid"))
-	req.FileExists(filepath.Join(cp.ConfluentCurrentDir, "zookeeper", "zookeeper.properties"))
+	config := map[string]string{"replace": "new", "comment": "new", "append": "new"}
+	req.NoError(configService("zookeeper", dir, config))
+
+	properties := filepath.Join(cp.ConfluentCurrent, "zookeeper", "zookeeper.properties")
+	req.FileExists(properties)
+	data, err := ioutil.ReadFile(properties)
+	req.NoError(err)
+	req.NotContains(string(data), "replace=old")
+	req.Contains(string(data), "replace=new")
+	req.NotContains(string(data), "# comment=old")
+	req.Contains(string(data), "comment=new")
+	req.Contains(string(data), "append=new")
 }
 
 func TestServiceVersions(t *testing.T) {
@@ -43,11 +42,7 @@ func TestServiceVersions(t *testing.T) {
 
 	cp := mock.NewConfluentPlatform()
 	defer cp.TearDown()
-
 	req.NoError(cp.NewConfluentHome())
-
-	file := strings.Replace(confluentControlCenter, "*", "0.0.0", 1)
-	req.NoError(cp.AddFileToConfluentHome(file))
 
 	versions := map[string]string{
 		"Confluent Platform": "1.0.0",
@@ -57,7 +52,7 @@ func TestServiceVersions(t *testing.T) {
 
 	for service, version := range versions {
 		file := strings.Replace(versionFiles[service], "*", version, 1)
-		req.NoError(cp.AddFileToConfluentHome(file))
+		req.NoError(cp.AddEmptyFileToConfluentHome(file))
 	}
 
 	for service := range services {

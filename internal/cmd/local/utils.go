@@ -6,9 +6,11 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
-)
 
-var confluentControlCenter = "share/java/confluent-control-center/control-center-*.jar"
+	"github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/mock"
+)
 
 func findConfluentFile(pattern string) ([]string, error) {
 	confluentHome, err := getConfluentHome()
@@ -40,7 +42,8 @@ func getConfluentHome() (string, error) {
 }
 
 func isConfluentPlatform() (bool, error) {
-	files, err := findConfluentFile(confluentControlCenter)
+	controlCenter := "share/java/confluent-control-center/control-center-*.jar"
+	files, err := findConfluentFile(controlCenter)
 	if err != nil {
 		return false, err
 	}
@@ -55,4 +58,15 @@ func buildTabbedList(slice []string) string {
 		fmt.Fprintf(&list, "  %s\n", x)
 	}
 	return list.String()
+}
+
+func mockLocalCommand(args... string) (string, error) {
+	mockPrerunner := mock.NewPreRunnerMock(nil, nil)
+	mockCfg := &v3.Config{}
+
+	command := cmd.BuildRootCommand()
+	command.AddCommand(NewCommand(mockPrerunner, mockCfg))
+
+	args = append([]string{"local-v2"}, args...)
+	return cmd.ExecuteCommand(command, args...)
 }

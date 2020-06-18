@@ -12,14 +12,14 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config/v3"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 )
 
 func NewCurrentCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
 	currentCommand := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "current",
-			Short: "Get the path of the data and logs of the services managed by the current Confluent run.",
+			Short: "Get the path of the data and logs for the current Confluent run.",
 			Args:  cobra.NoArgs,
 			RunE:  runCurrentCommand,
 		},
@@ -77,14 +77,3 @@ func createCurrentDirectory(parentDir string) string {
 		}
 	}
 }
-
-func notifyConfluentCurrent(command *cobra.Command) error {
-	current, err := getConfluentCurrent()
-	if err != nil {
-		return err
-	}
-
-	command.Printf("Using CONFLUENT_CURRENT: %s\n", current)
-	return nil
-}
-

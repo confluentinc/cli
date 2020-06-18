@@ -2,11 +2,12 @@ package secret
 
 import (
 	"fmt"
-	"github.com/confluentinc/properties"
 	"regexp"
 	"strings"
 	"text/scanner"
 	"unicode"
+
+	"github.com/confluentinc/properties"
 )
 
 type JAASParserInterface interface {
