@@ -5,7 +5,6 @@ import (
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"io"
 	"net/http"
-	"net/http/httptest"
 	"sort"
 	"strings"
 	"testing"
@@ -103,9 +102,8 @@ var (
 	}
 )
 
-func serveMdsv2alpha1(t *testing.T) *httptest.Server {
+func addMdsv2alpha1(t *testing.T, router *http.ServeMux) {
 	req := require.New(t)
-	router := http.NewServeMux()
 	router.HandleFunc("/api/metadata/security/v2alpha1/authenticate", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/json")
 		reply := &mds.AuthenticationResponse{
@@ -118,7 +116,6 @@ func serveMdsv2alpha1(t *testing.T) *httptest.Server {
 		_, err = io.WriteString(w, string(b))
 		req.NoError(err)
 	})
-	// router.HandleFunc('lol', )
 
 	routesAndReplies := map[string]string{
 		"/api/metadata/security/v2alpha1/principals/User:frodo/roleNames": `[
@@ -143,11 +140,12 @@ func serveMdsv2alpha1(t *testing.T) *httptest.Server {
 
 	// router.HandleFunc("/security/1.0/registry/clusters", handleRegistryClusters(t))
 
+	/*
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		_, err := io.WriteString(w, `{"error": {"message": "unexpected call to mdsv2alpha1 `+r.URL.Path+`"}}`)
 		require.NoError(t, err)
 	})
-	return httptest.NewServer(router)
+	*/
 }
 
 func addRolesV2(routesAndReplies map[string]string) {

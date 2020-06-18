@@ -763,6 +763,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		_, err = io.WriteString(w, string(reply))
 		require.NoError(t, err)
 	})
+	addMdsv2alpha1(t, router)
 	return httptest.NewServer(router)
 }
 

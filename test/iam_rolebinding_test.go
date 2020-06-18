@@ -2,6 +2,7 @@ package test
 
 func (s *CLITestSuite) Test_Ccloud_Iam_Role_Binding_CRUD() {
 	tests := []CLITest{
+		/*
 		{
 			name:        "ccloud iam rolebinding create cluster-name",
 			args:        "iam rolebinding create --principal User:bob --role DeveloperRead --resource Topic:connect-configs --cluster-name theMdsConnectCluster",
@@ -28,6 +29,7 @@ func (s *CLITestSuite) Test_Ccloud_Iam_Role_Binding_CRUD() {
 			login:       "default",
 			wantErrCode: 1,
 		},
+		 */
 		{
 			name:        "ccloud iam rolebinding create, invalid use case: missing cluster-name or cluster-id",
 			args:        "iam rolebinding create --principal User:bob --role DeveloperRead --resource Topic:connect-configs",
@@ -98,7 +100,8 @@ func (s *CLITestSuite) Test_Ccloud_Iam_Role_Binding_CRUD() {
 		},
 	}
 	for _, tt := range tests {
-		s.runCcloudTest(tt, serveMds(s.T()).URL, "")
+		kafkaAPIURL := serveKafkaAPI(s.T()).URL
+		s.runCcloudTest(tt, serve(s.T(), kafkaAPIURL).URL, kafkaAPIURL)
 	}
 }
 
