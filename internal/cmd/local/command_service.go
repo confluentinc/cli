@@ -15,6 +15,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/local"
+	"github.com/confluentinc/cli/internal/pkg/spinner"
 )
 
 func NewServiceCommand(service string, prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
@@ -245,6 +246,9 @@ func startService(command *cobra.Command, ch local.ConfluentHome, cc local.Confl
 
 	command.Printf("Starting %s\n", service)
 
+	spin := spinner.New()
+	spin.Start()
+
 	scriptFile, err := ch.GetScriptFile(service)
 	if err != nil {
 		return err
@@ -297,6 +301,8 @@ func startService(command *cobra.Command, ch local.ConfluentHome, cc local.Confl
 		}
 		time.Sleep(time.Second)
 	}
+
+	spin.Stop()
 
 	return printStatus(command, cc, service)
 }
@@ -352,6 +358,9 @@ func stopService(command *cobra.Command, cc local.ConfluentCurrent, service stri
 
 	command.Printf("Stopping %s\n", service)
 
+	spin := spinner.New()
+	spin.Start()
+
 	pid, err := cc.GetPid(service)
 	if err != nil {
 		return err
@@ -379,6 +388,8 @@ func stopService(command *cobra.Command, cc local.ConfluentCurrent, service stri
 	if err := cc.RemovePidFile(service); err != nil {
 		return err
 	}
+
+	spin.Stop()
 
 	return printStatus(command, cc, service)
 }
