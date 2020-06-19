@@ -43,6 +43,35 @@ func (s *ConfluentHomeTestSuite) TearDownTest() {
 	os.Clearenv()
 }
 
+func (s *ConfluentHomeTestSuite) TestGetFile() {
+	req := require.New(s.T())
+
+	dir, err := s.ch.getRootDir()
+	req.NoError(err)
+
+	file, err := s.ch.GetFile(exampleDir, exampleFile)
+	req.NoError(err)
+	req.Equal(filepath.Join(dir, exampleDir, exampleFile), file)
+}
+
+func (s *ConfluentHomeTestSuite) TestHasFile() {
+	req := require.New(s.T())
+
+	dir, err := s.ch.getRootDir()
+	req.NoError(err)
+
+	has, err := s.ch.HasFile(exampleFile)
+	req.NoError(err)
+	req.False(has)
+
+	_, err = os.Create(filepath.Join(dir, exampleFile))
+	req.NoError(err)
+
+	has, err = s.ch.HasFile(exampleFile)
+	req.NoError(err)
+	req.True(has)
+}
+
 func (s *ConfluentHomeTestSuite) TestIsConfluentPlatform() {
 	req := require.New(s.T())
 
