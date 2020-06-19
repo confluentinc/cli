@@ -15,6 +15,10 @@ import (
 )
 
 var supportedDemos = []string{
+	"ccloud",
+	"connect-streams-pipeline",
+	"cp-quickstart",
+	"microservices-orders",
 	"music",
 }
 
