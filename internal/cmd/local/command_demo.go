@@ -164,7 +164,10 @@ func fetchExamplesRepo(ch local.ConfluentHome) error {
 	}
 
 	if hasRepo {
-		tree.Pull(&git.PullOptions{})
+		err := tree.Pull(&git.PullOptions{})
+		if err != nil && err.Error() != "already up-to-date" {
+			return err
+		}
 	}
 
 	version, err := ch.GetConfluentVersion()
