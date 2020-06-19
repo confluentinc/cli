@@ -7,5 +7,5 @@ var (
 	UserNotLoggedInErrMsg                           = "You must log in to run that command."
 	CorruptedAuthTokenErrorMsg                      = "Your auth token has been corrupted. Please login again."
 	NotLoggedInInternalErrorMsg                     = "not logged in"
-	APIKeyCommandResourceTypeNotImplementedErrorMsg = "Command not yet available for non -Kafka cluster resources."
+	APIKeyCommandResourceTypeNotImplementedErrorMsg = "Command not yet available for non-Kafka cluster resources."
 )
