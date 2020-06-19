@@ -456,17 +456,6 @@ lint-licenses: build
 		echo ; \
 	done
 
-.PHONY: coverage-unit
-coverage-unit:
-      ifdef CI
-	@# Run unit tests with coverage.
-	@GO111MODULE=on GOPRIVATE=github.com/confluentinc go test -v -race -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS)
-	@grep -h -v "mode: atomic" unit_coverage.txt >> coverage.txt
-      else
-	@# Run unit tests.
-	@GO111MODULE=on GOPRIVATE=github.com/confluentinc go test -race -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS)
-      endif
-
 .PHONY: coverage-integ
 coverage-integ:
       ifdef CI
@@ -496,10 +485,10 @@ test-prep: bindata mocks lint
       endif
 
 .PHONY: test
-test: test-prep coverage-unit coverage-integ test-installers
+test: test-prep coverage-integ test-installers
 
 .PHONY: unit-test
-unit-test: test-prep coverage-unit
+unit-test: test-prep
 
 .PHONY: int-test
 int-test: test-prep coverage-integ
