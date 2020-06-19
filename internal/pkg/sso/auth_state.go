@@ -172,7 +172,7 @@ func (s *authState) refreshOAuthToken() error {
 func (s *authState) getOAuthTokenResponse(payload *strings.Reader) (map[string]interface{}, error) {
 	url := s.SSOProviderHost + "/oauth/token"
 	s.logger.Debugf("Oauth token request URL: %s\n", url)
-	s.logger.Debugf("Oauth token request payload: %s\n", url)
+	s.logger.Debugf("Oauth token request payload: %s\n", payload)
 	req, err := http.NewRequest("POST", url, payload)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to construct oauth token request")
