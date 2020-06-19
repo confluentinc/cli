@@ -456,21 +456,26 @@ lint-licenses: build
 		echo ; \
 	done
 
-.PHONY: coverage
-coverage:
+.PHONY: coverage-unit
+coverage-unit:
       ifdef CI
 	@# Run unit tests with coverage.
-	@GO111MODULE=on GOPRIVATE=github.com/confluentinc go test -v -race -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) $(TEST_ARGS)
-	@# Run integration tests with coverage.
-	@GO111MODULE=on INTEG_COVER=on go test -v $$(go list ./... | grep cli/test) $(TEST_ARGS)
-	@echo "mode: atomic" > coverage.txt
+	@GO111MODULE=on GOPRIVATE=github.com/confluentinc go test -v -race -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS)
 	@grep -h -v "mode: atomic" unit_coverage.txt >> coverage.txt
-	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
       else
 	@# Run unit tests.
-	@GO111MODULE=on GOPRIVATE=github.com/confluentinc go test -race -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test) $(TEST_ARGS)
+	@GO111MODULE=on GOPRIVATE=github.com/confluentinc go test -race -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS)
+      endif
+
+.PHONY: coverage-integ
+coverage-integ:
+      ifdef CI
+	@# Run integration tests with coverage.
+	@GO111MODULE=on INTEG_COVER=on go test -v $$(go list ./... | grep cli/test) $(INT_TEST_ARGS)
+	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
+      else
 	@# Run integration tests.
-	@GO111MODULE=on GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(TEST_ARGS) $(INT_TEST_ARGS)
+	@GO111MODULE=on GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(INT_TEST_ARGS)
       endif
 
 .PHONY: mocks
@@ -484,8 +489,20 @@ test-installers:
 	@echo Running packaging/installer tests
 	@bash test-installers.sh
 
+.PHONY: test-prep
+test-prep: bindata mocks lint
+      ifdef CI
+    @echo "mode: atomic" > coverage.txt
+      endif
+
 .PHONY: test
-test: bindata mocks lint coverage test-installers
+test: test-prep coverage-unit coverage-integ test-installers
+
+.PHONY: unit-test
+unit-test: test-prep coverage-unit
+
+.PHONY: int-test
+int-test: test-prep coverage-integ
 
 .PHONY: doctoc
 doctoc:

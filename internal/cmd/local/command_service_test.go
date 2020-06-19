@@ -15,15 +15,14 @@ func TestConfigService(t *testing.T) {
 
 	ch := &mock.MockConfluentHome{
 		GetConfigFunc: func(service string) ([]byte, error) {
-			return []byte("replace=old\n# comment=old\n"), nil
+			return []byte("replace=old\n# replace=commented-duplicate\n# comment=old\n"), nil
 		},
 	}
 
 	cc := &mock.MockConfluentCurrent{
 		SetConfigFunc: func(service string, config []byte) error {
-			req.NotContains(string(config), "replace=old")
 			req.Contains(string(config), "replace=new")
-			req.NotContains(string(config), "# comment=old")
+			req.Contains(string(config), "# replace=commented-duplicate")
 			req.Contains(string(config), "comment=new")
 			req.Contains(string(config), "append=new")
 			return nil

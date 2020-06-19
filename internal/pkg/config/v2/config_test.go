@@ -59,6 +59,10 @@ func TestConfig_Load(t *testing.T) {
 					Name: "test-env",
 				},
 			},
+			Organization: &orgv1.Organization{
+				Id: 321,
+				Name: "test-org",
+			},
 		},
 		AuthToken: "abc123",
 	}
@@ -182,8 +186,8 @@ func TestConfig_Load(t *testing.T) {
 					"acc-123\":{\"id\":\"lsrc-123\",\"schema_registry_endpoint\":\"http://some-lsrc-endpoint\",\"" +
 					"schema_registry_credentials\":null}}}},\"context_states\":{\"my-context\":{\"auth\":{\"user\"" +
 					":{\"id\":123,\"email\":\"test-user@email\"},\"account\":{\"id\":\"acc-123\",\"name\":\"test-env\"" +
-					"},\"accounts\":[{\"id\":\"acc-123\",\"name\":\"test-env\"}]},\"auth_token\":\"abc123\"}},\"" +
-					"current_context\":\"my-context\"}",
+					"},\"accounts\":[{\"id\":\"acc-123\",\"name\":\"test-env\"}],\"organization\":{\"id\":321,\"name\":\"test-org\"}},"+
+					"\"auth_token\":\"abc123\"}},\"current_context\":\"my-context\"}",
 			},
 			want: &Config{
 				BaseConfig: &config.BaseConfig{
@@ -304,6 +308,10 @@ func TestConfig_Save(t *testing.T) {
 					Name: "test-env",
 				},
 			},
+			Organization: &orgv1.Organization{
+				Id: 321,
+				Name: "test-org",
+			},
 		},
 		AuthToken: "abc123",
 	}
@@ -398,7 +406,7 @@ func TestConfig_Save(t *testing.T) {
 				},
 				CurrentContext: "my-context",
 			},
-			want: "{\n  \"version\": \"2.0.0\",\n  \"disable_update_check\": false,\n  \"disable_updates\": false,\n  \"no_browser\": false,\n  \"platforms\": {\n    \"http://test\": {\n      \"name\": \"http://test\",\n      \"server\": \"http://test\"\n    }\n  },\n  \"credentials\": {\n    \"api-key-abc-key-123\": {\n      \"name\": \"api-key-abc-key-123\",\n      \"username\": \"\",\n      \"password\": \"\",\n      \"api_key_pair\": {\n        \"api_key\": \"abc-key-123\",\n        \"api_secret\": \"def-secret-456\"\n      },\n      \"credential_type\": 1\n    },\n    \"username-test-user\": {\n      \"name\": \"username-test-user\",\n      \"username\": \"test-user\",\n      \"password\": \"\",\n      \"api_key_pair\": null,\n      \"credential_type\": 0\n    }\n  },\n  \"contexts\": {\n    \"my-context\": {\n      \"name\": \"my-context\",\n      \"platform\": \"http://test\",\n      \"credential\": \"username-test-user\",\n      \"kafka_clusters\": {\n        \"anonymous-id\": {\n          \"id\": \"anonymous-id\",\n          \"name\": \"anonymous-cluster\",\n          \"bootstrap_servers\": \"http://test\",\n          \"api_keys\": {\n            \"abc-key-123\": {\n              \"api_key\": \"abc-key-123\",\n              \"api_secret\": \"def-secret-456\"\n            }\n          },\n          \"api_key\": \"abc-key-123\"\n        }\n      },\n      \"kafka_cluster\": \"anonymous-id\",\n      \"schema_registry_clusters\": {\n        \"acc-123\": {\n          \"id\": \"lsrc-123\",\n          \"schema_registry_endpoint\": \"http://some-lsrc-endpoint\",\n          \"schema_registry_credentials\": null\n        }\n      }\n    }\n  },\n  \"context_states\": {\n    \"my-context\": {\n      \"auth\": {\n        \"user\": {\n          \"id\": 123,\n          \"email\": \"test-user@email\"\n        },\n        \"account\": {\n          \"id\": \"acc-123\",\n          \"name\": \"test-env\"\n        },\n        \"accounts\": [\n          {\n            \"id\": \"acc-123\",\n            \"name\": \"test-env\"\n          }\n        ]\n      },\n      \"auth_token\": \"abc123\"\n    }\n  },\n  \"current_context\": \"my-context\"\n}",
+			want: "{\n  \"version\": \"2.0.0\",\n  \"disable_update_check\": false,\n  \"disable_updates\": false,\n  \"no_browser\": false,\n  \"platforms\": {\n    \"http://test\": {\n      \"name\": \"http://test\",\n      \"server\": \"http://test\"\n    }\n  },\n  \"credentials\": {\n    \"api-key-abc-key-123\": {\n      \"name\": \"api-key-abc-key-123\",\n      \"username\": \"\",\n      \"password\": \"\",\n      \"api_key_pair\": {\n        \"api_key\": \"abc-key-123\",\n        \"api_secret\": \"def-secret-456\"\n      },\n      \"credential_type\": 1\n    },\n    \"username-test-user\": {\n      \"name\": \"username-test-user\",\n      \"username\": \"test-user\",\n      \"password\": \"\",\n      \"api_key_pair\": null,\n      \"credential_type\": 0\n    }\n  },\n  \"contexts\": {\n    \"my-context\": {\n      \"name\": \"my-context\",\n      \"platform\": \"http://test\",\n      \"credential\": \"username-test-user\",\n      \"kafka_clusters\": {\n        \"anonymous-id\": {\n          \"id\": \"anonymous-id\",\n          \"name\": \"anonymous-cluster\",\n          \"bootstrap_servers\": \"http://test\",\n          \"api_keys\": {\n            \"abc-key-123\": {\n              \"api_key\": \"abc-key-123\",\n              \"api_secret\": \"def-secret-456\"\n            }\n          },\n          \"api_key\": \"abc-key-123\"\n        }\n      },\n      \"kafka_cluster\": \"anonymous-id\",\n      \"schema_registry_clusters\": {\n        \"acc-123\": {\n          \"id\": \"lsrc-123\",\n          \"schema_registry_endpoint\": \"http://some-lsrc-endpoint\",\n          \"schema_registry_credentials\": null\n        }\n      }\n    }\n  },\n  \"context_states\": {\n    \"my-context\": {\n      \"auth\": {\n        \"user\": {\n          \"id\": 123,\n          \"email\": \"test-user@email\"\n        },\n        \"account\": {\n          \"id\": \"acc-123\",\n          \"name\": \"test-env\"\n        },\n        \"accounts\": [\n          {\n            \"id\": \"acc-123\",\n            \"name\": \"test-env\"\n          }\n        ],\n        \"organization\": {\n          \"id\": 321,\n          \"name\": \"test-org\"\n        }\n      },\n      \"auth_token\": \"abc123\"\n    }\n  },\n  \"current_context\": \"my-context\"\n}",
 		},
 		{
 			name: "save stateless config to file",

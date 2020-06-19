@@ -162,7 +162,7 @@ func runServicesListCommand(command *cobra.Command, _ []string) error {
 	}
 
 	command.Println("Available Services:")
-	command.Println(buildTabbedList(availableServices))
+	command.Println(local.BuildTabbedList(availableServices))
 	return nil
 }
 
@@ -321,8 +321,13 @@ func runServicesTopCommand(command *cobra.Command, _ []string) error {
 	return top(pids)
 }
 
-func getDataDirConfig(cc local.ConfluentCurrent, service string) (map[string]string, error) {
+func getConfig(ch local.ConfluentHome, cc local.ConfluentCurrent, service string) (map[string]string, error) {
 	data, err := cc.GetDataDir(service)
+	if err != nil {
+		return map[string]string{}, err
+	}
+
+	isCP, err := ch.IsConfluentPlatform()
 	if err != nil {
 		return map[string]string{}, err
 	}
@@ -330,36 +335,63 @@ func getDataDirConfig(cc local.ConfluentCurrent, service string) (map[string]str
 	config := make(map[string]string)
 
 	switch service {
+	case "connect":
+		config["bootstrap.servers"] = fmt.Sprintf("localhost:%d", services["kafka"].port)
+		path, err := ch.GetConnectPluginPath()
+		if err != nil {
+			return map[string]string{}, err
+		}
+		config["plugin.path"] = path
+		matches, err := ch.FindFile("share/java/kafka-connect-replicator/replicator-rest-extension-*.jar")
+		if err != nil {
+			return map[string]string{}, err
+		}
+		if len(matches) > 0 {
+			classpath := fmt.Sprintf("%s:%s", os.Getenv("CLASSPATH"), matches[0])
+			if err := os.Setenv("CLASSPATH", classpath); err != nil {
+				return map[string]string{}, err
+			}
+			config["rest.extension.classes"] = "io.confluent.connect.replicator.monitoring.ReplicatorMonitoringExtension"
+		}
+		if isCP {
+			config["producer.interceptor.classes"] = "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
+			config["consumer.interceptor.classes"] = "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
+		}
 	case "control-center":
 		config["confluent.controlcenter.data.dir"] = data
 	case "kafka":
 		config["log.dirs"] = data
+		if isCP {
+			config["metric.reporters"] = "io.confluent.metrics.reporter.ConfluentMetricsReporter"
+			config["confluent.metrics.reporter.bootstrap.servers"] = fmt.Sprintf("localhost:%d", services["kafka"].port)
+			config["confluent.metrics.reporter.topic.replicas"] = "1"
+		}
+	case "kafka-rest":
+		config["schema.registry.url"] = fmt.Sprintf("http://localhost:%d", services["schema-registry"].port)
+		config["zookeeper.connect"] = fmt.Sprintf("localhost:%d", services["zookeeper"].port)
+		if isCP {
+			config["producer.interceptor.classes"] = "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
+			config["consumer.interceptor.classes"] = "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
+		}
 	case "ksql-server":
+		config["kafkastore.connection.url"] = fmt.Sprintf("localhost:%d", services["zookeeper"].port)
+		config["ksql.schema.registry.url"] = fmt.Sprintf("http://localhost:%d", services["schema-registry"].port)
 		config["state.dir"] = data
+		if isCP {
+			config["producer.interceptor.classes"] = "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
+			config["consumer.interceptor.classes"] = "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
+		}
+	case "schema-registry":
+		config["kafkastore.connection.url"] = fmt.Sprintf("localhost:%d", services["zookeeper"].port)
+		if isCP {
+			config["producer.interceptor.classes"] = "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
+			config["consumer.interceptor.classes"] = "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
+		}
 	case "zookeeper":
 		config["dataDir"] = data
 	}
 
 	return config, nil
-}
-
-func getPortConfig(service string) map[string]string {
-	config := make(map[string]string)
-
-	switch service {
-	case "connect":
-		config["bootstrap.servers"] = fmt.Sprintf("localhost:%d", services["kafka"].port)
-	case "kafka-rest":
-		config["zookeeper.connect"] = fmt.Sprintf("localhost:%d", services["zookeeper"].port)
-		config["schema.registry.url"] = fmt.Sprintf("http://localhost:%d", services["schema-registry"].port)
-	case "ksql-server":
-		config["kafkastore.connection.url"] = fmt.Sprintf("localhost:%d", services["zookeeper"].port)
-		config["ksql.schema.registry.url"] = fmt.Sprintf("http://localhost:%d", services["schema-registry"].port)
-	case "schema-registry":
-		config["kafkastore.connection.url"] = fmt.Sprintf("localhost:%d", services["zookeeper"].port)
-	}
-
-	return config
 }
 
 func top(pids []int) error {

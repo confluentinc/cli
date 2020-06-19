@@ -179,12 +179,16 @@ func TestGetTrackingFile(t *testing.T) {
 func TestGetServiceFile(t *testing.T) {
 	req := require.New(t)
 
+	dir, err := createTestDir()
+	req.NoError(err)
+	defer os.RemoveAll(dir)
+
 	cc := NewConfluentCurrentManager()
-	cc.currentDir = exampleDir
+	cc.currentDir = dir
 
 	file, err := cc.getServiceFile(exampleService, exampleFile)
 	req.NoError(err)
-	req.Equal(filepath.Join(exampleDir, exampleService, exampleFile), file)
+	req.Equal(filepath.Join(dir, exampleService, exampleFile), file)
 }
 
 func TestGetRandomChildDir(t *testing.T) {
