@@ -54,9 +54,11 @@ type ConfluentHome interface {
 	GetConfig(service string) ([]byte, error)
 	GetConnectorConfigFile(connector string) (string, error)
 	GetScriptFile(service string) (string, error)
+	HasExamplesRepo() (bool, error)
+	GetExamplesRepo() (string, error)
 }
 
-type ConfluentHomeManager struct {}
+type ConfluentHomeManager struct{}
 
 func NewConfluentHomeManager() *ConfluentHomeManager {
 	return new(ConfluentHomeManager)
@@ -112,6 +114,25 @@ func (ch *ConfluentHomeManager) GetConnectorConfigFile(connector string) (string
 
 func (ch *ConfluentHomeManager) GetScriptFile(service string) (string, error) {
 	return ch.getFile(filepath.Join("bin", scripts[service]))
+}
+
+func (ch *ConfluentHomeManager) HasExamplesRepo() (bool, error) {
+	repo, err := ch.GetExamplesRepo()
+	if err != nil {
+		return false, err
+	}
+
+	return exists(repo), nil
+}
+
+func (ch *ConfluentHomeManager) GetExamplesRepo() (string, error) {
+	dir, err := ch.getRootDir()
+	if err != nil {
+		return "", err
+	}
+
+	repo := filepath.Join(dir, "examples")
+	return repo, nil
 }
 
 func (ch *ConfluentHomeManager) getRootDir() (string, error) {

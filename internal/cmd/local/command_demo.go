@@ -1,10 +1,12 @@
 package local
 
 import (
+	"github.com/go-git/go-git/v5"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/local"
 )
 
 func NewDemoCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
@@ -56,6 +58,47 @@ func NewDemoListCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command 
 }
 
 func runDemoListCommand(command *cobra.Command, _ []string) error {
+	ch := local.NewConfluentHomeManager()
+
+	hasRepo, err := ch.HasExamplesRepo()
+	if err != nil {
+		return err
+	}
+
+	dir, err := ch.GetExamplesRepo()
+	if err != nil {
+		return err
+	}
+
+	var repo *git.Repository
+
+	if hasRepo {
+		repo, err = git.PlainOpen(dir)
+		if err != nil {
+			return err
+		}
+		// TODO: Update
+	} else {
+		repo, err = git.PlainClone(dir, false, &git.CloneOptions{
+			URL: "https://github.com/confluentinc/examples.git",
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	tree, err := repo.Worktree()
+	if err != nil {
+		return err
+	}
+
+	err = tree.Checkout(&git.CheckoutOptions{
+		Branch: "5.5.0-post",
+	})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

@@ -25,6 +25,12 @@ type MockConfluentHome struct {
 	lockGetScriptFile sync.Mutex
 	GetScriptFileFunc func(service string) (string, error)
 
+	lockHasExamplesRepo sync.Mutex
+	HasExamplesRepoFunc func() (bool, error)
+
+	lockGetExamplesRepo sync.Mutex
+	GetExamplesRepoFunc func() (string, error)
+
 	calls struct {
 		IsConfluentPlatform []struct {
 		}
@@ -39,6 +45,10 @@ type MockConfluentHome struct {
 		}
 		GetScriptFile []struct {
 			Service string
+		}
+		HasExamplesRepo []struct {
+		}
+		GetExamplesRepo []struct {
 		}
 	}
 }
@@ -229,6 +239,74 @@ func (m *MockConfluentHome) GetScriptFileCalls() []struct {
 	return m.calls.GetScriptFile
 }
 
+// HasExamplesRepo mocks base method by wrapping the associated func.
+func (m *MockConfluentHome) HasExamplesRepo() (bool, error) {
+	m.lockHasExamplesRepo.Lock()
+	defer m.lockHasExamplesRepo.Unlock()
+
+	if m.HasExamplesRepoFunc == nil {
+		panic("mocker: MockConfluentHome.HasExamplesRepoFunc is nil but MockConfluentHome.HasExamplesRepo was called.")
+	}
+
+	call := struct {
+	}{}
+
+	m.calls.HasExamplesRepo = append(m.calls.HasExamplesRepo, call)
+
+	return m.HasExamplesRepoFunc()
+}
+
+// HasExamplesRepoCalled returns true if HasExamplesRepo was called at least once.
+func (m *MockConfluentHome) HasExamplesRepoCalled() bool {
+	m.lockHasExamplesRepo.Lock()
+	defer m.lockHasExamplesRepo.Unlock()
+
+	return len(m.calls.HasExamplesRepo) > 0
+}
+
+// HasExamplesRepoCalls returns the calls made to HasExamplesRepo.
+func (m *MockConfluentHome) HasExamplesRepoCalls() []struct {
+} {
+	m.lockHasExamplesRepo.Lock()
+	defer m.lockHasExamplesRepo.Unlock()
+
+	return m.calls.HasExamplesRepo
+}
+
+// GetExamplesRepo mocks base method by wrapping the associated func.
+func (m *MockConfluentHome) GetExamplesRepo() (string, error) {
+	m.lockGetExamplesRepo.Lock()
+	defer m.lockGetExamplesRepo.Unlock()
+
+	if m.GetExamplesRepoFunc == nil {
+		panic("mocker: MockConfluentHome.GetExamplesRepoFunc is nil but MockConfluentHome.GetExamplesRepo was called.")
+	}
+
+	call := struct {
+	}{}
+
+	m.calls.GetExamplesRepo = append(m.calls.GetExamplesRepo, call)
+
+	return m.GetExamplesRepoFunc()
+}
+
+// GetExamplesRepoCalled returns true if GetExamplesRepo was called at least once.
+func (m *MockConfluentHome) GetExamplesRepoCalled() bool {
+	m.lockGetExamplesRepo.Lock()
+	defer m.lockGetExamplesRepo.Unlock()
+
+	return len(m.calls.GetExamplesRepo) > 0
+}
+
+// GetExamplesRepoCalls returns the calls made to GetExamplesRepo.
+func (m *MockConfluentHome) GetExamplesRepoCalls() []struct {
+} {
+	m.lockGetExamplesRepo.Lock()
+	defer m.lockGetExamplesRepo.Unlock()
+
+	return m.calls.GetExamplesRepo
+}
+
 // Reset resets the calls made to the mocked methods.
 func (m *MockConfluentHome) Reset() {
 	m.lockIsConfluentPlatform.Lock()
@@ -246,4 +324,10 @@ func (m *MockConfluentHome) Reset() {
 	m.lockGetScriptFile.Lock()
 	m.calls.GetScriptFile = nil
 	m.lockGetScriptFile.Unlock()
+	m.lockHasExamplesRepo.Lock()
+	m.calls.HasExamplesRepo = nil
+	m.lockHasExamplesRepo.Unlock()
+	m.lockGetExamplesRepo.Lock()
+	m.calls.GetExamplesRepo = nil
+	m.lockGetExamplesRepo.Unlock()
 }
