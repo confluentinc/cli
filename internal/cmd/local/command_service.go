@@ -37,8 +37,8 @@ func NewServiceCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
 		serviceCommand.AddCommand(NewConnectConnectorCommand(prerunner))
 		serviceCommand.AddCommand(NewConnectPluginCommand(prerunner))
 	case "kafka":
-		serviceCommand.AddCommand(NewKafkaConsumeCommand(prerunner, cfg))
-		serviceCommand.AddCommand(NewKafkaProduceCommand(prerunner, cfg))
+		serviceCommand.AddCommand(NewKafkaConsumeCommand(prerunner))
+		serviceCommand.AddCommand(NewKafkaProduceCommand(prerunner))
 	case "schema-registry":
 		// TODO
 	}

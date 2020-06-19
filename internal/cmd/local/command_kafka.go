@@ -11,7 +11,6 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/local"
 )
 
@@ -106,15 +105,14 @@ var (
 	}
 )
 
-func NewKafkaConsumeCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
+func NewKafkaConsumeCommand(prerunner cmd.PreRunner) *cobra.Command {
 	kafkaConsumeCommand := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "consume [topic]",
 			Short: "Consume from a kafka topic.",
 			Args:  cobra.ExactArgs(1),
 			RunE:  runKafkaConsumeCommand,
-		},
-		cfg, prerunner)
+		}, prerunner)
 
 	// CLI Flags
 	kafkaConsumeCommand.Flags().Bool("cloud", defaultBool, commonFlagUsage["cloud"])
@@ -143,15 +141,14 @@ func runKafkaConsumeCommand(command *cobra.Command, args []string) error {
 	return runKafkaCommand(command, args, "consume", kafkaConsumeDefaultValues)
 }
 
-func NewKafkaProduceCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
+func NewKafkaProduceCommand(prerunner cmd.PreRunner) *cobra.Command {
 	kafkaProduceCommand := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "produce [topic]",
 			Short: "Produce to a kafka topic.",
 			Args:  cobra.ExactArgs(1),
 			RunE:  runKafkaProduceCommand,
-		},
-		cfg, prerunner)
+		}, prerunner)
 
 	// CLI Flags
 	kafkaProduceCommand.Flags().Bool("cloud", defaultBool, commonFlagUsage["cloud"])
