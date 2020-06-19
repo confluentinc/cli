@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"regexp"
-	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -81,7 +79,7 @@ func runConnectConnectorConfigCommand(command *cobra.Command, args []string) err
 		return err
 	}
 	if !isJSON(data) {
-		config := extractConfig(data)
+		config := local.ExtractConfig(data)
 		data, err = json.Marshal(config)
 		if err != nil {
 			return err
@@ -145,7 +143,7 @@ func NewConnectConnectorListCommand(prerunner cmd.PreRunner, cfg *v3.Config) *co
 
 func runConnectConnectorListCommand(command *cobra.Command, _ []string) {
 	command.Println("Bundled Predefined Connectors:")
-	command.Println(buildTabbedList(connectors))
+	command.Println(local.BuildTabbedList(connectors))
 }
 
 func NewConnectConnectorLoadCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
@@ -191,7 +189,7 @@ func runConnectConnectorLoadCommand(command *cobra.Command, args []string) error
 		return err
 	}
 	if !isJSON(data) {
-		config := extractConfig(data)
+		config := local.ExtractConfig(data)
 		delete(config, "name")
 
 		full := map[string]interface{}{
@@ -292,19 +290,6 @@ func isBuiltin(connector string) bool {
 func isJSON(data []byte) bool {
 	var out map[string]interface{}
 	return json.Unmarshal(data, &out) == nil
-}
-
-func extractConfig(data []byte) map[string]string {
-	re := regexp.MustCompile(`(?m)^[^\s#]*=.+`)
-	matches := re.FindAllString(string(data), -1)
-	config := map[string]string{}
-
-	for _, match := range matches {
-		x := strings.Split(match, "=")
-		key, val := x[0], x[1]
-		config[key] = val
-	}
-	return config
 }
 
 func getConnectorConfig(connector string) (string, error) {

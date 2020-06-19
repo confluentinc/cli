@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -15,7 +16,8 @@ import (
 const (
 	exampleDir     = "dir"
 	exampleFile    = "file"
-	exampleService = "service"
+	exampleService = "kafka"
+	exampleVersion = "0.0.0"
 )
 
 var dirCount = 0
@@ -68,6 +70,24 @@ func (s *ConfluentHomeTestSuite) TestFindFile() {
 	matches, err := s.ch.FindFile("file-*.txt")
 	req.NoError(err)
 	req.Equal([]string{"file-0.0.0.txt"}, matches)
+}
+
+func (s *ConfluentHomeTestSuite) TestGetVersion() {
+	req := require.New(s.T())
+
+	file := strings.ReplaceAll(versionFiles[exampleService], "*", exampleVersion)
+	req.NoError(s.createTestConfluentFile(file))
+
+	version, err := s.ch.GetVersion(exampleService)
+	req.NoError(err)
+	req.Equal(exampleVersion, version)
+}
+
+func (s *ConfluentHomeTestSuite) TestGetVersionNoMatchError() {
+	req := require.New(s.T())
+
+	_, err := s.ch.GetVersion(exampleService)
+	req.Error(err)
 }
 
 // Create an empty file inside of CONFLUENT_HOME
