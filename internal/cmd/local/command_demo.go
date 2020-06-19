@@ -1,7 +1,12 @@
 package local
 
 import (
+	"fmt"
+	"os"
+	"os/exec"
+
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
@@ -9,11 +14,15 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/local"
 )
 
+var supportedDemos = []string{
+	"music",
+}
+
 func NewDemoCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
 	demoCommand := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "demo",
-			Short: "Run demos provided in GitHub repo https://github.com/confluentinc/examples.",
+			Short: "Run demos provided at https://github.com/confluentinc/examples.",
 			Args:  cobra.NoArgs,
 		},
 		cfg, prerunner)
@@ -22,7 +31,8 @@ func NewDemoCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
 	demoCommand.AddCommand(NewDemoListCommand(prerunner, cfg))
 	demoCommand.AddCommand(NewDemoStartCommand(prerunner, cfg))
 	demoCommand.AddCommand(NewDemoStopCommand(prerunner, cfg))
-	demoCommand.AddCommand(NewDemoUpdateCommand(prerunner, cfg))
+
+	demoCommand.Hidden = true
 
 	return demoCommand.Command
 }
@@ -31,7 +41,7 @@ func NewDemoInfoCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command 
 	demoInfoCommand := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "info [demo]",
-			Short: "Show README for the specified demo.",
+			Short: "Show the README for a demo.",
 			Args:  cobra.ExactArgs(1),
 			RunE:  runDemoInfoCommand,
 		},
@@ -40,7 +50,24 @@ func NewDemoInfoCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command 
 	return demoInfoCommand.Command
 }
 
-func runDemoInfoCommand(command *cobra.Command, _ []string) error {
+func runDemoInfoCommand(command *cobra.Command, args []string) error {
+	demo := args[0]
+	if !isSupported(demo) {
+		return fmt.Errorf("demo not supported: %s", demo)
+	}
+
+	ch := local.NewConfluentHomeManager()
+
+	if err := fetchExamplesRepo(ch); err != nil {
+		return err
+	}
+
+	readme, err := ch.GetDemoReadme(demo)
+	if err != nil {
+		return err
+	}
+
+	command.Println(readme)
 	return nil
 }
 
@@ -48,24 +75,65 @@ func NewDemoListCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command 
 	demoListCommand := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "list",
-			Short: "List names of available demos.",
+			Short: "List available demos.",
 			Args:  cobra.NoArgs,
-			RunE:  runDemoListCommand,
+			Run:   runDemoListCommand,
 		},
 		cfg, prerunner)
 
 	return demoListCommand.Command
 }
 
-func runDemoListCommand(command *cobra.Command, _ []string) error {
-	ch := local.NewConfluentHomeManager()
+func runDemoListCommand(command *cobra.Command, _ []string) {
+	list := local.BuildTabbedList(supportedDemos)
+	command.Println("Available demos:")
+	command.Println(list)
+	command.Println("To start a demo, run 'confluent local demo start [demo]'")
+}
 
-	hasRepo, err := ch.HasExamplesRepo()
+func NewDemoStartCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
+	demoStartCommand := cmd.NewAnonymousCLICommand(
+		&cobra.Command{
+			Use:   "start [demo]",
+			Short: "Start a demo.",
+			Args:  cobra.ExactArgs(1),
+			RunE:  runDemoStartCommand,
+		},
+		cfg, prerunner)
+
+	return demoStartCommand.Command
+}
+
+func runDemoStartCommand(command *cobra.Command, args []string) error {
+	ch := local.NewConfluentHomeManager()
+	return run(ch, args[0], "start.sh")
+}
+
+func NewDemoStopCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
+	demoStopCommand := cmd.NewAnonymousCLICommand(
+		&cobra.Command{
+			Use:   "stop [demo]",
+			Short: "Stop a demo.",
+			Args:  cobra.ExactArgs(1),
+			RunE:  runDemoStopCommand,
+		},
+		cfg, prerunner)
+
+	return demoStopCommand.Command
+}
+
+func runDemoStopCommand(command *cobra.Command, args []string) error {
+	ch := local.NewConfluentHomeManager()
+	return run(ch, args[0], "stop.sh")
+}
+
+func fetchExamplesRepo(ch local.ConfluentHome) error {
+	hasRepo, err := ch.HasFile("examples")
 	if err != nil {
 		return err
 	}
 
-	dir, err := ch.GetExamplesRepo()
+	dir, err := ch.GetFile("examples")
 	if err != nil {
 		return err
 	}
@@ -77,7 +145,6 @@ func runDemoListCommand(command *cobra.Command, _ []string) error {
 		if err != nil {
 			return err
 		}
-		// TODO: Update
 	} else {
 		repo, err = git.PlainClone(dir, false, &git.CloneOptions{
 			URL: "https://github.com/confluentinc/examples.git",
@@ -92,63 +159,55 @@ func runDemoListCommand(command *cobra.Command, _ []string) error {
 		return err
 	}
 
-	err = tree.Checkout(&git.CheckoutOptions{
-		Branch: "5.5.0-post",
-	})
+	if hasRepo {
+		tree.Pull(&git.PullOptions{})
+	}
+
+	version, err := ch.GetConfluentVersion()
 	if err != nil {
+		return err
+	}
+
+	branch := plumbing.NewBranchReferenceName(fmt.Sprintf("%s-post", version))
+	if err := tree.Checkout(&git.CheckoutOptions{Branch: branch}); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func NewDemoStartCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
-	demoStartCommand := cmd.NewAnonymousCLICommand(
-		&cobra.Command{
-			Use:   "start [demo]",
-			Short: "Start the specified demo.",
-			Args:  cobra.ExactArgs(1),
-			RunE:  runDemoStartCommand,
-		},
-		cfg, prerunner)
-
-	return demoStartCommand.Command
+func isSupported(demo string) bool {
+	for _, supportedDemo := range supportedDemos {
+		if demo == supportedDemo {
+			return true
+		}
+	}
+	return false
 }
 
-func runDemoStartCommand(command *cobra.Command, _ []string) error {
-	return nil
-}
+func run(ch local.ConfluentHome, demo string, script string) error {
+	if !isSupported(demo) {
+		return fmt.Errorf("demo not supported: %s", demo)
+	}
 
-func NewDemoStopCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
-	demoStopCommand := cmd.NewAnonymousCLICommand(
-		&cobra.Command{
-			Use:   "stop [demo]",
-			Short: "Stop the specified demo.",
-			Args:  cobra.ExactArgs(1),
-			RunE:  runDemoStopCommand,
-		},
-		cfg, prerunner)
+	if err := fetchExamplesRepo(ch); err != nil {
+		return err
+	}
 
-	return demoStopCommand.Command
-}
+	scriptFile, err := ch.GetFile("examples", demo, script)
+	if err != nil {
+		return err
+	}
 
-func runDemoStopCommand(command *cobra.Command, _ []string) error {
-	return nil
-}
+	dir, err := ch.GetFile("examples", demo)
+	if err != nil {
+		return err
+	}
 
-func NewDemoUpdateCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
-	demoUpdateCommand := cmd.NewAnonymousCLICommand(
-		&cobra.Command{
-			Use:   "update [demo]",
-			Short: "Update the specified demo.",
-			Args:  cobra.ExactArgs(1),
-			RunE:  runDemoUpdateCommand,
-		},
-		cfg, prerunner)
+	command := exec.Command(scriptFile)
+	command.Dir = dir
+	command.Stdout = os.Stdout
+	command.Stderr = os.Stderr
 
-	return demoUpdateCommand.Command
-}
-
-func runDemoUpdateCommand(command *cobra.Command, _ []string) error {
-	return nil
+	return command.Run()
 }

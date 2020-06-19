@@ -245,7 +245,7 @@ func startService(command *cobra.Command, ch local.ConfluentHome, cc local.Confl
 
 	command.Printf("Starting %s\n", service)
 
-	scriptFile, err := ch.GetScriptFile(service)
+	scriptFile, err := ch.GetServiceStartScript(service)
 	if err != nil {
 		return err
 	}
@@ -302,7 +302,7 @@ func startService(command *cobra.Command, ch local.ConfluentHome, cc local.Confl
 }
 
 func configService(ch local.ConfluentHome, cc local.ConfluentCurrent, service string, config map[string]string) error {
-	data, err := ch.GetConfig(service)
+	data, err := ch.GetServiceConfig(service)
 	if err != nil {
 		return err
 	}
