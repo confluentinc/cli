@@ -15,6 +15,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/local"
+	"github.com/confluentinc/cli/internal/pkg/spinner"
 )
 
 func NewServiceCommand(service string, prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
@@ -245,6 +246,18 @@ func startService(command *cobra.Command, ch local.ConfluentHome, cc local.Confl
 
 	command.Printf("Starting %s\n", service)
 
+	spin := spinner.New()
+	spin.Start()
+	err = startProcess(ch, cc, service)
+	spin.Stop()
+	if err != nil {
+		return err
+	}
+
+	return printStatus(command, cc, service)
+}
+
+func startProcess(ch local.ConfluentHome, cc local.ConfluentCurrent, service string) error {
 	scriptFile, err := ch.GetServiceStartScript(service)
 	if err != nil {
 		return err
@@ -298,7 +311,7 @@ func startService(command *cobra.Command, ch local.ConfluentHome, cc local.Confl
 		time.Sleep(time.Second)
 	}
 
-	return printStatus(command, cc, service)
+	return nil
 }
 
 func configService(ch local.ConfluentHome, cc local.ConfluentCurrent, service string, config map[string]string) error {
@@ -352,6 +365,18 @@ func stopService(command *cobra.Command, cc local.ConfluentCurrent, service stri
 
 	command.Printf("Stopping %s\n", service)
 
+	spin := spinner.New()
+	spin.Start()
+	err = stopProcess(cc, service)
+	spin.Stop()
+	if err != nil {
+		return err
+	}
+
+	return printStatus(command, cc, service)
+}
+
+func stopProcess(cc local.ConfluentCurrent, service string) error {
 	pid, err := cc.GetPid(service)
 	if err != nil {
 		return err
@@ -380,7 +405,7 @@ func stopService(command *cobra.Command, cc local.ConfluentCurrent, service stri
 		return err
 	}
 
-	return printStatus(command, cc, service)
+	return nil
 }
 
 func isRunning(cc local.ConfluentCurrent, service string) (bool, error) {
