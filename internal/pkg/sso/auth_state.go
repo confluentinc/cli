@@ -171,8 +171,8 @@ func (s *authState) refreshOAuthToken() error {
 
 func (s *authState) getOAuthTokenResponse(payload *strings.Reader) (map[string]interface{}, error) {
 	url := s.SSOProviderHost + "/oauth/token"
-	s.logger.Debugf("Oauth token request URL: %s\n", url)
-	s.logger.Debugf("Oauth token request payload: %s\n", payload)
+	s.logger.Debugf("Oauth token request URL: %s", url)
+	s.logger.Debugf("Oauth token request payload: %s", payload)
 	req, err := http.NewRequest("POST", url, payload)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to construct oauth token request")
@@ -184,7 +184,7 @@ func (s *authState) getOAuthTokenResponse(payload *strings.Reader) (map[string]i
 	}
 	defer res.Body.Close()
 	responseBody, _ := ioutil.ReadAll(res.Body)
-	s.logger.Debugf("Oauth token response body: %s\n", responseBody)
+	s.logger.Debugf("Oauth token response body: %s", responseBody)
 	var data map[string]interface{}
 	err = json.Unmarshal([]byte(responseBody), &data)
 	if err != nil {
