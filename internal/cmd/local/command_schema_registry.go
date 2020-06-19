@@ -1,7 +1,6 @@
 package local
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 
@@ -14,14 +13,37 @@ import (
 )
 
 var (
+	usages = map[string]string{
+		"add":    "Indicates you are trying to add ACLs.",
+		"list":   "List all the current ACLs",
+		"remove": "Indicates you are trying to remove ACLs.",
+
+		"operation": "Operation that is being authorized. Valid operation names are: [SUBJECT_READ, SUBJECT_WRITE, SUBJECT_DELETE, SUBJECT_COMPATIBILITY_READ, SUBJECT_COMPATIBILITY_WRITE, GLOBAL_COMPATIBILITY_READ, GLOBAL_COMPATIBILITY_WRITE, GLOBAL_SUBJECTS_READ]",
+		"principal": "Principal to which the ACL is being applied to. Use * to apply to all principals.",
+		"subject":   "Subject to which the ACL is being applied to. Only applicable for SUBJECT operations. Use * to apply to all subjects.",
+		"topic":     "Topic to which the ACL is being applied to. The corresponding subjects would be topic-key and topic-value. Only applicable for SUBJECT operations. Use * to apply to all subjects.",
+	}
+
 	defaultValues = map[string]interface{}{
-		"add":       defaultBool,
-		"list":      defaultBool,
-		"remove":    defaultBool,
+		"add":    defaultBool,
+		"list":   defaultBool,
+		"remove": defaultBool,
+
 		"operation": defaultString,
 		"principal": defaultString,
 		"subject":   defaultString,
 		"topic":     defaultString,
+	}
+
+	shorthands = map[string]string{
+		"add":    "",
+		"list":   "",
+		"remove": "",
+
+		"operation": "o",
+		"principal": "p",
+		"subject":   "s",
+		"topic":     "t",
 	}
 )
 
@@ -35,35 +57,20 @@ func NewSchemaRegistryACLCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra
 		},
 		cfg, prerunner)
 
-	schemaRegistryACLCommand.Flags().Bool("add", false, "Indicates you are trying to add ACLs.")
-	schemaRegistryACLCommand.Flags().Bool("list", false, "List all the current ACLs")
-	schemaRegistryACLCommand.Flags().Bool("remove", false, "Indicates you are trying to remove ACLs.")
-
-	schemaRegistryACLCommand.Flags().StringP("operation", "o", "", "Operation that is being authorized. Valid operation names are: [SUBJECT_READ, SUBJECT_WRITE, SUBJECT_DELETE, SUBJECT_COMPATIBILITY_READ, SUBJECT_COMPATIBILITY_WRITE, GLOBAL_COMPATIBILITY_READ, GLOBAL_COMPATIBILITY_WRITE, GLOBAL_SUBJECTS_READ]")
-	schemaRegistryACLCommand.Flags().StringP("principal", "p", "", "Principal to which the ACL is being applied to. Use * to apply to all principals.")
-	schemaRegistryACLCommand.Flags().StringP("subject", "s", "", "Subject to which the ACL is being applied to. Only applicable for SUBJECT operations. Use * to apply to all subjects.")
-	schemaRegistryACLCommand.Flags().StringP("topic", "t", "", "Topic to which the ACL is being applied to. The corresponding subjects would be topic-key and topic-value. Only applicable for SUBJECT operations. Use * to apply to all subjects.")
-
+	for flag, val := range defaultValues {
+		switch val.(type) {
+		case bool:
+			schemaRegistryACLCommand.Flags().BoolP(flag, shorthands[flag], val.(bool), usages[flag])
+		case string:
+			schemaRegistryACLCommand.Flags().StringP(flag, shorthands[flag], val.(string), usages[flag])
+		}
+	}
 	schemaRegistryACLCommand.Flags().SortFlags = false
 
 	return schemaRegistryACLCommand.Command
 }
 
 func runSchemaRegistryACLCommand(command *cobra.Command, _ []string) error {
-	actions := 0
-	for _, flag := range []string{"add", "list", "remove"} {
-		isUsed, err := command.Flags().GetBool(flag)
-		if err != nil {
-			return err
-		}
-		if isUsed {
-			actions++
-		}
-	}
-	if actions != 1 {
-		return fmt.Errorf("command must include exactly one action: --add, --list, or --remove")
-	}
-
 	ch := local.NewConfluentHomeManager()
 
 	file, err := ch.GetACLCLIFile()
