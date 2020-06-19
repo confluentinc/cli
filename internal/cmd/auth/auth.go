@@ -130,7 +130,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	token, refreshToken, err := pauth.GetCCloudAuthToken(client, url, email, password, noBrowser)
+	token, refreshToken, err := pauth.GetCCloudAuthToken(client, url, email, password, noBrowser, a.Logger)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}

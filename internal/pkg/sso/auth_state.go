@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 var (
@@ -41,12 +42,13 @@ type authState struct {
 	SSOProviderClientID           string
 	SSOProviderCallbackUrl        string
 	SSOProviderIdentifier         string
+	logger                        *log.Logger
 }
 
 // InitState generates various auth0 related codes and hashes
 // and tweaks certain variables for internal development and testing of the CLIs
 // auth0 server / SSO integration.
-func newState(authURL string, noBrowser bool) (*authState, error) {
+func newState(authURL string, noBrowser bool, logger *log.Logger) (*authState, error) {
 	env := "prod"
 	if strings.Contains(authURL, "priv.cpdev.cloud") {
 		env = "cpd"
@@ -59,6 +61,7 @@ func newState(authURL string, noBrowser bool) (*authState, error) {
 	}
 
 	state := &authState{}
+	state.logger = logger
 	switch env {
 	case "cpd":
 		state.SSOProviderCallbackUrl = authURL + ssoProviderCallbackEndpoint // callback to the cpd cluster url that was passed in
@@ -168,6 +171,8 @@ func (s *authState) refreshOAuthToken() error {
 
 func (s *authState) getOAuthTokenResponse(payload *strings.Reader) (map[string]interface{}, error) {
 	url := s.SSOProviderHost + "/oauth/token"
+	s.logger.Debugf("Oauth token request URL: %s\n", url)
+	s.logger.Debugf("Oauth token request payload: %s\n", url)
 	req, err := http.NewRequest("POST", url, payload)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to construct oauth token request")
@@ -179,6 +184,7 @@ func (s *authState) getOAuthTokenResponse(payload *strings.Reader) (map[string]i
 	}
 	defer res.Body.Close()
 	responseBody, _ := ioutil.ReadAll(res.Body)
+	s.logger.Debugf("Oauth token response body: %s\n", responseBody)
 	var data map[string]interface{}
 	err = json.Unmarshal([]byte(responseBody), &data)
 	if err != nil {
