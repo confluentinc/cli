@@ -248,7 +248,16 @@ func startService(command *cobra.Command, ch local.ConfluentHome, cc local.Confl
 
 	spin := spinner.New()
 	spin.Start()
+	err = startProcess(ch, cc, service)
+	spin.Stop()
+	if err != nil {
+		return err
+	}
 
+	return printStatus(command, cc, service)
+}
+
+func startProcess(ch local.ConfluentHome, cc local.ConfluentCurrent, service string) error {
 	scriptFile, err := ch.GetScriptFile(service)
 	if err != nil {
 		return err
@@ -302,9 +311,7 @@ func startService(command *cobra.Command, ch local.ConfluentHome, cc local.Confl
 		time.Sleep(time.Second)
 	}
 
-	spin.Stop()
-
-	return printStatus(command, cc, service)
+	return nil
 }
 
 func configService(ch local.ConfluentHome, cc local.ConfluentCurrent, service string, config map[string]string) error {
@@ -360,7 +367,16 @@ func stopService(command *cobra.Command, cc local.ConfluentCurrent, service stri
 
 	spin := spinner.New()
 	spin.Start()
+	err = stopProcess(cc, service)
+	spin.Stop()
+	if err != nil {
+		return err
+	}
 
+	return printStatus(command, cc, service)
+}
+
+func stopProcess(cc local.ConfluentCurrent, service string) error {
 	pid, err := cc.GetPid(service)
 	if err != nil {
 		return err
@@ -389,9 +405,7 @@ func stopService(command *cobra.Command, cc local.ConfluentCurrent, service stri
 		return err
 	}
 
-	spin.Stop()
-
-	return printStatus(command, cc, service)
+	return nil
 }
 
 func isRunning(cc local.ConfluentCurrent, service string) (bool, error) {
