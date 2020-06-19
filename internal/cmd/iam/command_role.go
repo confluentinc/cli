@@ -82,15 +82,8 @@ func (c *roleCommand) init() {
 	c.AddCommand(describeCmd)
 }
 
-func (c *roleCommand) list(cmd *cobra.Command, args []string) error {
-	var rolesV2 []mdsv2alpha1.Role
-	var roles []mds.Role
-	var err error
-	if c.Config.CLIName == "ccloud" {
-		rolesV2, _, err = c.MDSv2Client.RBACRoleDefinitionsApi.Roles(c.createContext())
-	} else {
-		roles, _, err = c.MDSClient.RBACRoleDefinitionsApi.Roles(c.createContext())
-	}
+func (c *roleCommand) confluentListHelper(cmd *cobra.Command) error {
+	roles, _, err := c.MDSClient.RBACRoleDefinitionsApi.Roles(c.createContext())
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -100,28 +93,51 @@ func (c *roleCommand) list(cmd *cobra.Command, args []string) error {
 	}
 	if format == output.Human.String() {
 		var data [][]string
-		if c.Config.CLIName == "ccloud" {
-			for _, role := range rolesV2 {
-				roleDisplay, err := createPrettyRoleV2(role)
-				if err != nil {
-					return errors.HandleCommon(err, cmd)
-				}
-				data = append(data, printer.ToRow(roleDisplay, roleFields))
-			}
-		} else {
-			for _, role := range roles {
-				roleDisplay, err := createPrettyRole(role)
-				if err != nil {
-					return errors.HandleCommon(err, cmd)
-				}
-				data = append(data, printer.ToRow(roleDisplay, roleFields))
-			}
+		for _, role := range roles {
+			roleDisplay, err := createPrettyRole(role)
+			if err != nil {
+					  return errors.HandleCommon(err, cmd)
+					  }
+			data = append(data, printer.ToRow(roleDisplay, roleFields))
 		}
 		outputTable(data)
 	} else {
 		return output.StructuredOutput(format, roles)
 	}
 	return nil
+}
+
+func (c *roleCommand) ccloudListHelper(cmd *cobra.Command) error {
+	rolesV2, _, err := c.MDSv2Client.RBACRoleDefinitionsApi.Roles(c.createContext())
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	format, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	if format == output.Human.String() {
+		var data [][]string
+		for _, role := range rolesV2 {
+			roleDisplay, err := createPrettyRoleV2(role)
+			if err != nil {
+					  return errors.HandleCommon(err, cmd)
+					  }
+			data = append(data, printer.ToRow(roleDisplay, roleFields))
+		}
+		outputTable(data)
+	} else {
+		return output.StructuredOutput(format, rolesV2)
+	}
+	return nil
+}
+
+func (c *roleCommand) list(cmd *cobra.Command, args []string) error {
+	if c.Config.CLIName == "ccloud" {
+		return c.ccloudListHelper(cmd)
+	} else {
+		return c.confluentListHelper(cmd)
+	}
 }
 
 func (c *roleCommand) describe(cmd *cobra.Command, args []string) error {
