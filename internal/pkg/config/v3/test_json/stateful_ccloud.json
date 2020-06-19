@@ -80,7 +80,11 @@
             "id": "acc-123",
             "name": "test-env"
           }
-        ]
+        ],
+        "organization": {
+          "id": 321,
+          "name": "test-org"
+        }
       },
       "auth_token": "abc123"
     }

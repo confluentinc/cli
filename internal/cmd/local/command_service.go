@@ -37,7 +37,8 @@ func NewServiceCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
 		serviceCommand.AddCommand(NewConnectConnectorCommand(prerunner))
 		serviceCommand.AddCommand(NewConnectPluginCommand(prerunner))
 	case "kafka":
-		// TODO
+		serviceCommand.AddCommand(NewKafkaConsumeCommand(prerunner, cfg))
+		serviceCommand.AddCommand(NewKafkaProduceCommand(prerunner, cfg))
 	case "schema-registry":
 		// TODO
 	}
@@ -208,7 +209,7 @@ func runServiceVersionCommand(command *cobra.Command, _ []string) error {
 
 	ch := local.NewConfluentHomeManager()
 
-	version, err := getVersion(ch, service)
+	version, err := ch.GetVersion(service)
 	if err != nil {
 		return err
 	}
@@ -226,13 +227,9 @@ func startService(command *cobra.Command, ch local.ConfluentHome, cc local.Confl
 		return printStatus(command, cc, service)
 	}
 
-	config, err := getDataDirConfig(cc, service)
+	config, err := getConfig(ch, cc, service)
 	if err != nil {
 		return err
-	}
-
-	for key, val := range getPortConfig(service) {
-		config[key] = val
 	}
 
 	if err := configService(ch, cc, service, config); err != nil {
@@ -307,10 +304,15 @@ func configService(ch local.ConfluentHome, cc local.ConfluentCurrent, service st
 		re := regexp.MustCompile(fmt.Sprintf(`(?m)^(#\s)?%s=.+\n`, key))
 		line := []byte(fmt.Sprintf("%s=%s\n", key, val))
 
-		if len(re.FindAll(data, -1)) > 0 {
-			data = re.ReplaceAll(data, line)
-		} else {
+		matches := re.FindAll(data, -1)
+		switch len(matches) {
+		case 0:
 			data = append(data, line...)
+		case 1:
+			data = re.ReplaceAll(data, line)
+		default:
+			re := regexp.MustCompile(fmt.Sprintf(`(?m)^%s=.+\n`, key))
+			data = re.ReplaceAll(data, line)
 		}
 	}
 
