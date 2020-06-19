@@ -76,6 +76,10 @@ func SetupTestInputs(cliName string) *TestInputs {
 			Accounts: []*orgv1.Account{
 				account,
 			},
+			Organization: &orgv1.Organization{
+				Id: 321,
+				Name: "test-org",
+			},
 		},
 		AuthToken: "abc123",
 	}
