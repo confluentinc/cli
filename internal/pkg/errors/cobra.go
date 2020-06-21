@@ -56,4 +56,7 @@ func HandleCCloudSDKGoError(err error) error {
 
 	// error for when no api-key for a resource
 
+	//Error: kafka: client has run out of available brokers to talk to (Is your cluster reachable?)
+	// This is what happens when your api key and secret is wrong
+
 }
