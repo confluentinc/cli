@@ -34,29 +34,25 @@ const (
 )
 
 var (
-	s3CCloudReleaseNotesBuildParams = &ReleaseNotesBuilderParams{
+	s3CCloudReleaseNotesBuilderParams = &ReleaseNotesBuilderParams{
 		cliDisplayName:      s3CCloudCLIName,
 		titleFormat:         s3ReleaseNotesTitleFormat,
 		sectionHeaderFormat: s3SectionHeaderFormat,
-		version:             "",
 	}
-	s3ConfluentReleaseNotesBuildParams = &ReleaseNotesBuilderParams{
+	s3ConfluentReleaseNotesBuilderParams = &ReleaseNotesBuilderParams{
 		cliDisplayName:      s3ConfluentCLIName,
 		titleFormat:         s3ReleaseNotesTitleFormat,
 		sectionHeaderFormat: s3SectionHeaderFormat,
-		version:             "",
 	}
-	docsCCloudReleaseNotesBuildParams = &ReleaseNotesBuilderParams{
+	docsCCloudReleaseNotesBuilderParams = &ReleaseNotesBuilderParams{
 		cliDisplayName:      docsCCloudCLIName,
 		titleFormat:         docsReleaseNotesTitleFormat,
 		sectionHeaderFormat: docsSectionHeaderFormat,
-		version:             "",
 	}
-	docsConfluentReleaseNotesBuildParmas = &ReleaseNotesBuilderParams{
+	docsConfluentReleaseNotesBuilderParmas = &ReleaseNotesBuilderParams{
 		cliDisplayName:      docsConfluentCLIName,
 		titleFormat:         docsReleaseNotesTitleFormat,
 		sectionHeaderFormat: docsSectionHeaderFormat,
-		version:             "",
 	}
 )
 
@@ -65,12 +61,11 @@ func WriteReleaseNotes(ccloudDocsPath, confluentDocsPath, releaseVersion string)
 	if err != nil {
 		return err
 	}
-	setReleaseNotesBuildParamsVersion(releaseVersion)
-	err = buildAndWriteCCloudReleaseNotes(ccloudReleaseNotesContent, ccloudDocsPath)
+	err = buildAndWriteCCloudReleaseNotes(releaseVersion, ccloudReleaseNotesContent, ccloudDocsPath)
 	if err != nil {
 		return err
 	}
-	err = buildAndWriteConfluentReleaseNotes(confluentReleaseNotesContent, confluentDocsPath)
+	err = buildAndWriteConfluentReleaseNotes(releaseVersion, confluentReleaseNotesContent, confluentDocsPath)
 	if err != nil {
 		return err
 	}
@@ -94,20 +89,13 @@ func getCCloudAndConfluentReleaseNotesContent() (*ReleaseNotesContent, *ReleaseN
 	return ccloudReleaseNotesContent, confluentReleaseNotesContent, nil
 }
 
-func setReleaseNotesBuildParamsVersion(version string) {
-	s3CCloudReleaseNotesBuildParams.version = version
-	s3ConfluentReleaseNotesBuildParams.version = version
-	docsCCloudReleaseNotesBuildParams.version = version
-	docsConfluentReleaseNotesBuildParmas.version = version
-}
-
-func buildAndWriteCCloudReleaseNotes(content *ReleaseNotesContent, docsPath string) error {
-	s3ReleaseNotes := buildReleaseNotes(s3CCloudReleaseNotesBuildParams, content)
+func buildAndWriteCCloudReleaseNotes(version string, content *ReleaseNotesContent, docsPath string) error {
+	s3ReleaseNotes := buildReleaseNotes(version, s3CCloudReleaseNotesBuilderParams, content)
 	err := writeFile(s3CCloudReleaseNotesFilePath, s3ReleaseNotes)
 	if err != nil {
 		return err
 	}
-	ccloudDocsReleaseNotes := buildReleaseNotes(docsCCloudReleaseNotesBuildParams, content)
+	ccloudDocsReleaseNotes := buildReleaseNotes(version, docsCCloudReleaseNotesBuilderParams, content)
 	ccloudDocsPage, err := buildDocsPage(docsPath, ccloudDocsPageHeader, ccloudDocsReleaseNotes)
 	if err != nil {
 		return err
@@ -119,13 +107,13 @@ func buildAndWriteCCloudReleaseNotes(content *ReleaseNotesContent, docsPath stri
 	return nil
 }
 
-func buildAndWriteConfluentReleaseNotes(content *ReleaseNotesContent, docsPath string) error {
-	s3ReleaseNotes := buildReleaseNotes(s3ConfluentReleaseNotesBuildParams, content)
+func buildAndWriteConfluentReleaseNotes(version string, content *ReleaseNotesContent, docsPath string) error {
+	s3ReleaseNotes := buildReleaseNotes(version, s3ConfluentReleaseNotesBuilderParams, content)
 	err := writeFile(s3ConfluentReleaseNotesFilePath, s3ReleaseNotes)
 	if err != nil {
 		return err
 	}
-	docsReleaseNotes := buildReleaseNotes(docsConfluentReleaseNotesBuildParmas, content)
+	docsReleaseNotes := buildReleaseNotes(version, docsConfluentReleaseNotesBuilderParmas, content)
 	updatedDocsPage, err := buildDocsPage(docsPath, confluentDocsPageHeader, docsReleaseNotes)
 	if err != nil {
 		return err
@@ -137,8 +125,8 @@ func buildAndWriteConfluentReleaseNotes(content *ReleaseNotesContent, docsPath s
 	return nil
 }
 
-func buildReleaseNotes(releaseNotesBuildParams *ReleaseNotesBuilderParams, content *ReleaseNotesContent) string {
-	releaseNotesBuilder := NewReleaseNotesBuilder(releaseNotesBuildParams)
+func buildReleaseNotes(version string, releaseNotesBuildParams *ReleaseNotesBuilderParams, content *ReleaseNotesContent) string {
+	releaseNotesBuilder := NewReleaseNotesBuilder(version, releaseNotesBuildParams)
 	return releaseNotesBuilder.buildReleaseNotes(content)
 }
 

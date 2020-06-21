@@ -1,15 +1,8 @@
 package release_notes
 
 import (
-	"fmt"
-	"io/ioutil"
-	"runtime"
-	"strings"
-	"testing"
-
 	"github.com/stretchr/testify/require"
-
-	testUtils "github.com/confluentinc/cli/test"
+	"testing"
 )
 
 func Test_Prep_Reader_Imp_Read_File(t *testing.T) {
@@ -117,104 +110,4 @@ func Test_Prep_Reader_Impl_Get_Content_Funcs(t *testing.T) {
 			require.Equal(t, tt.wantConfleuntBugFixes, confluentContent.bugFixes)
 		})
 	}
-}
-
-func Test_Release_Notes_Builder(t *testing.T) {
-	content := &ReleaseNotesContent{
-		newFeatures: []string{"new feature1", "new feature2"},
-		bugFixes:    []string{"bug fixes1", "bug fixes2"},
-	}
-	contentNoBugFix := &ReleaseNotesContent{
-		newFeatures: []string{"new feature1", "new feature2"},
-		bugFixes:    []string{},
-	}
-	contentNoChange := &ReleaseNotesContent{
-		newFeatures: []string{},
-		bugFixes:    []string{},
-	}
-	tests := []struct {
-		name     string
-		content  *ReleaseNotesContent
-		wantFile string
-	}{
-		{
-			name:     "basics release notes",
-			content:  content,
-			wantFile: "test_files/release_notes_builder_output1",
-		},
-		{
-			name:     "empty bug fixes",
-			content:  contentNoBugFix,
-			wantFile: "test_files/release_notes_builder_output2",
-		},
-		{
-			name:     "empty bug fixes",
-			content:  contentNoChange,
-			wantFile: "test_files/release_notes_builder_output3",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s3CCloudReleaseNotesBuildParams.version = "v1.2.3"
-			releaseNotesBuilder := NewReleaseNotesBuilder(s3CCloudReleaseNotesBuildParams)
-			releaseNotes := releaseNotesBuilder.buildReleaseNotes(tt.content)
-			want, err := readTestFile(tt.wantFile)
-			require.NoError(t, err)
-			require.Equal(t, want, releaseNotes)
-		})
-	}
-}
-
-func Test_Docs_Update_Handler(t *testing.T) {
-	newReleaseNotes := `|ccloud| CLI v1.2.0 Release Notes
-=================================
-
-New Features
-------------------------
-- 1.2 cloud feature
-- 1.2 both feat
-
-Bug Fixes
-------------------------
-- 1.2 cloud bug
-- 1.2 two both bugs`
-
-	if runtime.GOOS == "windows" {
-		newReleaseNotes = strings.ReplaceAll(newReleaseNotes, "\n", "\r\n")
-	}
-
-	tests := []struct {
-		name            string
-		newReleaseNotes string
-		docsFile        string
-		wantFile        string
-	}{
-		{
-			name:            "basics release notes",
-			newReleaseNotes: newReleaseNotes,
-			docsFile:        "test_files/release-notes.rst",
-			wantFile:        "test_files/docs_update_handler_output",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			docsUpdateHandler := NewDocsUpdateHandler(ccloudDocsPageHeader, tt.docsFile)
-			docs, err := docsUpdateHandler.getUpdatedDocsPage(tt.newReleaseNotes)
-			require.NoError(t, err)
-			want, err := readTestFile(tt.wantFile)
-			require.NoError(t, err)
-			// got windows docs result will contain /r/n but readTestfile already uses NormalizeNewLines
-			docs = testUtils.NormalizeNewLines(docs)
-			require.Equal(t, want, docs)
-		})
-	}
-}
-
-func readTestFile(filePath string) (string, error) {
-	fileBytes, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		return "", fmt.Errorf("Unable to load output file.")
-	}
-	fileContent := string(fileBytes)
-	return testUtils.NormalizeNewLines(fileContent), nil
 }
