@@ -2,6 +2,7 @@ package errors
 
 import (
 	"fmt"
+	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/spf13/cobra"
 	"io"
 )
@@ -30,4 +31,29 @@ func HandleDirectionsMessageDisplay(err error, writer io.Writer) {
 	if ok && cliErr.GetDirectionsMsg() != "" {
 		_, _ = fmt.Fprintf(writer, directionsMessageFormat, cliErr.GetDirectionsMsg())
 	}
+}
+
+func HandleCCloudSDKGoError(err error) error {
+	switch err.(type) {
+	case *ccloud.InvalidLoginError:
+		return fmt.Errorf("You have entered an incorrect username or password. Please try again.")
+	case *ccloud.InvalidTokenError:
+		return fmt.Errorf(CorruptedAuthTokenErrorMsg)
+	case *ccloud.ExpiredTokenError:
+		return fmt.Errorf("expired token")
+	}
+
+	switch err.Error() {
+	case "resource not found":
+		return err
+	}
+	switch "logicalCluster: Authentication failed" {
+		return err
+	}
+
+	// non existent topic produce and consume
+
+
+	// error for when no api-key for a resource
+
 }

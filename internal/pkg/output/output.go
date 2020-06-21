@@ -75,7 +75,7 @@ func NewListOutputCustomizableWriter(cmd *cobra.Command, listFields []string, hu
 			writer:       writer,
 		}, nil
 	default:
-		return nil, errors.NewFlagUseErrorf(errors.OutputWriterInvalidFormatFlagErrorMsg, format)
+		return nil, errors.NewFlagUseErrorf(errors.InvalidOutputFormatFlagErrorMsg, format)
 	}
 }
 
@@ -85,7 +85,7 @@ func DescribeObject(cmd *cobra.Command, obj interface{}, fields []string, humanR
 		return errors.HandleCommon(err, cmd)
 	}
 	if !(format == Human.String() || format == JSON.String() || format == YAML.String()) {
-		return errors.NewFlagUseErrorf(errors.OutputWriterInvalidFormatFlagErrorMsg, format)
+		return errors.NewFlagUseErrorf(errors.InvalidOutputFormatFlagErrorMsg, format)
 	}
 	return printer.RenderOut(obj, fields, humanRenames, structuredRenames, format, os.Stdout)
 }
@@ -98,7 +98,7 @@ func StructuredOutput(format string, obj interface{}) error {
 	} else if format == YAML.String() {
 		b, _ = yaml.Marshal(obj)
 	} else {
-		return errors.NewFlagUseErrorf(errors.OutputWriterInvalidFormatFlagErrorMsg, format)
+		return errors.NewFlagUseErrorf(errors.InvalidOutputFormatFlagErrorMsg, format)
 	}
 	_, err := fmt.Fprintf(os.Stdout, string(b))
 	return err

@@ -62,7 +62,7 @@ func (d *DynamicContext) FindKafkaCluster(cmd *cobra.Command, clusterId string) 
 		return cluster, nil
 	}
 	if d.client == nil {
-		return nil, errors.NewUnexpectedCLIBehaviorErrorf(errors.FindKafkaClusterNoClientErrorMsg, clusterId)
+		return nil, errors.NewUnexpectedCLIBehaviorErrorf(errors.FindKafkaNoClientErrorMsg, clusterId)
 	}
 	// Resolve cluster details if not found locally.
 	ctxClient := NewContextClient(d)

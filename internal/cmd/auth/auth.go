@@ -141,7 +141,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(user.Accounts) == 0 {
-		return errors.HandleCommon(errors.NewResourceValidationErrorf(errors.LoginNoEnvironmentErrorMsg), cmd)
+		return errors.HandleCommon(errors.NewResourceValidationErrorf(errors.NoEnvironmentFoundErrorMsg), cmd)
 	}
 	username := user.User.Email
 	name := generateContextName(username, url)
@@ -183,7 +183,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	}
 	err = a.config.Save()
 	if err != nil {
-		return errors.HandleCommon(errors.NewUnexpectedCLIBehaviorErrorWrapf(err, errors.LoginUnableToSaveUserAuthErrorMsg), cmd)
+		return errors.HandleCommon(errors.NewUnexpectedCLIBehaviorErrorWrapf(err, errors.UnableToSaveUserAuthErrorMsg), cmd)
 	}
 
 	saveToNetrc, err := cmd.Flags().GetBool("save")

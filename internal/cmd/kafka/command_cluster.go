@@ -381,13 +381,13 @@ func checkCloudAndRegion(cloudId string, regionId string, clouds []*schedv1.Clou
 					}
 				}
 			}
-			cliErr := errors.NewResourceValidationErrorf(errors.KafkaClusterCreateCloudRegionNotAvailableErrorMsg,  regionId, cloudId)
-			cliErr.SetDirectionsMsg(errors.KafkaClusterCreateCloudRegionNotAvailableDirectionsMsg, cloudId, cloudId)
+			cliErr := errors.NewResourceValidationErrorf(errors.CloudRegionNotAvailableErrorMsg,  regionId, cloudId)
+			cliErr.SetDirectionsMsg(errors.CloudRegionNotAvailableSuggestions, cloudId, cloudId)
 			return cliErr
 		}
 	}
-	cliErr := errors.NewResourceValidationErrorf(errors.KafkaClusterCreateCloudProviderNotAvailableErrorMsg,  cloudId)
-	cliErr.SetDirectionsMsg(errors.KafkaClusterCreateCloudProviderNotAvailableDirectionsMsg)
+	cliErr := errors.NewResourceValidationErrorf(errors.CloudProviderNotAvailableErrorMsg,  cloudId)
+	cliErr.SetDirectionsMsg(errors.CloudProviderNotAvailableSuggestions)
 	return cliErr
 }
 
