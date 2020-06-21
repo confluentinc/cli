@@ -229,9 +229,6 @@ func (ch *ConfluentHomeManager) GetKafkaScript(format, mode string) (string, err
 
 func (ch *ConfluentHomeManager) GetDemoReadme(demo string) (string, error) {
 	readme, err := ch.GetFile("examples", demo, "README.md")
-	if err != nil {
-		return "", err
-	}
 
 	data, err := ioutil.ReadFile(readme)
 	if err != nil {

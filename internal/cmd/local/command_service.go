@@ -42,7 +42,7 @@ func NewServiceCommand(service string, prerunner cmd.PreRunner, cfg *v3.Config) 
 		serviceCommand.AddCommand(NewKafkaConsumeCommand(prerunner, cfg))
 		serviceCommand.AddCommand(NewKafkaProduceCommand(prerunner, cfg))
 	case "schema-registry":
-		// TODO
+		serviceCommand.AddCommand(NewSchemaRegistryACLCommand(prerunner, cfg))
 	}
 
 	return serviceCommand.Command
@@ -52,7 +52,7 @@ func NewServiceLogCommand(service string, prerunner cmd.PreRunner, cfg *v3.Confi
 	serviceLogCommand := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "log",
-			Short: "Print logs for " + service + ".",
+			Short: fmt.Sprintf("Print logs for %s.", service),
 			Args:  cobra.NoArgs,
 			RunE:  runServiceLogCommand,
 		},
@@ -84,7 +84,7 @@ func NewServiceStartCommand(service string, prerunner cmd.PreRunner, cfg *v3.Con
 	serviceVersionCommand := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "start",
-			Short: "Start " + service + ".",
+			Short: fmt.Sprintf("Start %s.", service),
 			Args:  cobra.NoArgs,
 			RunE:  runServiceStartCommand,
 		},

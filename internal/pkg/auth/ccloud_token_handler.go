@@ -3,6 +3,7 @@ package auth
 
 import (
 	"context"
+	"github.com/confluentinc/cli/internal/pkg/log"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
@@ -14,8 +15,8 @@ import (
 type CCloudTokenHandler interface {
 	GetUserSSO(client *ccloud.Client, email string) (*orgv1.User, error)
 	GetCredentialsToken(client *ccloud.Client, email string, password string) (string, error)
-	GetSSOToken(client *ccloud.Client, url string, noBrowser bool, userSSO *orgv1.User) (string, string, error)
-	RefreshSSOToken(client *ccloud.Client, refreshToken string, url string) (string, error)
+	GetSSOToken(client *ccloud.Client, url string, noBrowser bool, userSSO *orgv1.User, logger *log.Logger) (string, string, error)
+	RefreshSSOToken(client *ccloud.Client, refreshToken string, url string, logger *log.Logger) (string, error)
 }
 
 type CCloudTokenHandlerImpl struct{}
@@ -35,8 +36,8 @@ func (c *CCloudTokenHandlerImpl) GetCredentialsToken(client *ccloud.Client, emai
 	return client.Auth.Login(context.Background(), "", email, password)
 }
 
-func (c *CCloudTokenHandlerImpl) GetSSOToken(client *ccloud.Client, url string, noBrowser bool, userSSO *orgv1.User) (string, string, error) {
-	idToken, refreshToken, err := sso.Login(url, noBrowser, userSSO.Sso.Auth0ConnectionName)
+func (c *CCloudTokenHandlerImpl) GetSSOToken(client *ccloud.Client, url string, noBrowser bool, userSSO *orgv1.User, logger *log.Logger) (string, string, error) {
+	idToken, refreshToken, err := sso.Login(url, noBrowser, userSSO.Sso.Auth0ConnectionName, logger)
 	if err != nil {
 		return "", "", err
 	}
@@ -48,8 +49,8 @@ func (c *CCloudTokenHandlerImpl) GetSSOToken(client *ccloud.Client, url string, 
 	return token, refreshToken, nil
 }
 
-func (c *CCloudTokenHandlerImpl) RefreshSSOToken(client *ccloud.Client, refreshToken string, url string) (string, error) {
-	idToken, err := sso.GetNewIDTokenFromRefreshToken(url, refreshToken)
+func (c *CCloudTokenHandlerImpl) RefreshSSOToken(client *ccloud.Client, refreshToken string, url string, logger *log.Logger) (string, error) {
+	idToken, err := sso.GetNewIDTokenFromRefreshToken(url, refreshToken, logger)
 	if err != nil {
 		return "", err
 	}
