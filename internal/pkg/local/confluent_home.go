@@ -18,6 +18,7 @@ Directory Structure:
 CONFLUENT_HOME/
 	bin/
 	etc/
+	examples/
 	share/
 */
 
@@ -58,15 +59,20 @@ var (
 )
 
 type ConfluentHome interface {
+	GetFile(path ...string) (string, error)
+	HasFile(path ...string) (bool, error)
 	FindFile(pattern string) ([]string, error)
-	GetConfig(service string) ([]byte, error)
-	GetConnectPluginPath() (string, error)
-	GetConnectorConfigFile(connector string) (string, error)
-	GetScriptFile(service string) (string, error)
-	GetKafkaScriptFile(mode, format string) (string, error)
-	GetACLCLIFile() (string, error)
-	GetVersion(service string) (string, error)
+
 	IsConfluentPlatform() (bool, error)
+	GetConfluentVersion() (string, error)
+
+	GetServiceStartScript(service string) (string, error)
+	GetServiceConfig(service string) ([]byte, error)
+	GetVersion(service string) (string, error)
+
+	GetConnectorConfigFile(connector string) (string, error)
+	GetKafkaScript(mode, format string) (string, error)
+	GetDemoReadme(demo string) (string, error)
 }
 
 type ConfluentHomeManager struct{}
@@ -75,13 +81,30 @@ func NewConfluentHomeManager() *ConfluentHomeManager {
 	return new(ConfluentHomeManager)
 }
 
-func (ch *ConfluentHomeManager) IsConfluentPlatform() (bool, error) {
-	controlCenter := "share/java/confluent-control-center/control-center-*.jar"
-	files, err := ch.FindFile(controlCenter)
+func (ch *ConfluentHomeManager) getRootDir() (string, error) {
+	if dir := os.Getenv("CONFLUENT_HOME"); dir != "" {
+		return dir, nil
+	}
+
+	return "", fmt.Errorf("set environment variable CONFLUENT_HOME")
+}
+
+func (ch *ConfluentHomeManager) GetFile(path ...string) (string, error) {
+	dir, err := ch.getRootDir()
+	if err != nil {
+		return "", err
+	}
+
+	return filepath.Join(dir, filepath.Join(path...)), nil
+}
+
+func (ch *ConfluentHomeManager) HasFile(path ...string) (bool, error) {
+	file, err := ch.GetFile(path...)
 	if err != nil {
 		return false, err
 	}
-	return len(files) > 0, nil
+
+	return exists(file), nil
 }
 
 func (ch *ConfluentHomeManager) FindFile(pattern string) ([]string, error) {
@@ -91,6 +114,7 @@ func (ch *ConfluentHomeManager) FindFile(pattern string) ([]string, error) {
 	}
 
 	path := filepath.Join(dir, pattern)
+
 	matches, err := filepath.Glob(path)
 	if err != nil {
 		return []string{}, err
@@ -105,56 +129,76 @@ func (ch *ConfluentHomeManager) FindFile(pattern string) ([]string, error) {
 	return matches, nil
 }
 
-func (ch *ConfluentHomeManager) getRootDir() (string, error) {
-	if dir := os.Getenv("CONFLUENT_HOME"); dir != "" {
-		return dir, nil
+func (ch *ConfluentHomeManager) IsConfluentPlatform() (bool, error) {
+	controlCenter := "share/java/confluent-control-center/control-center-*.jar"
+	files, err := ch.FindFile(controlCenter)
+	if err != nil {
+		return false, err
 	}
-
-	return "", fmt.Errorf("set environment variable CONFLUENT_HOME")
+	return len(files) > 0, nil
 }
 
-func (ch *ConfluentHomeManager) getConfigFile(service string) (string, error) {
+func (ch *ConfluentHomeManager) GetConfluentVersion() (string, error) {
+	isCP, err := ch.IsConfluentPlatform()
+	if err != nil {
+		return "", err
+	}
+
+	if isCP {
+		return ch.GetVersion("Confluent Platform")
+	} else {
+		return ch.GetVersion("Confluent Community Software")
+	}
+}
+
+func (ch *ConfluentHomeManager) GetServiceStartScript(service string) (string, error) {
+	return ch.GetFile("bin", scripts[service])
+}
+
+func (ch *ConfluentHomeManager) GetServiceConfig(service string) ([]byte, error) {
+	file, err := ch.GetFile("etc", serviceConfigs[service])
+	if err != nil {
+		return []byte{}, err
+	}
+
 	if service == "ksql-server" {
 		isKsqlDB, err := ch.isAboveVersion("5.5")
 		if err != nil {
-			return "", err
+			return []byte{}, err
 		}
 		if !isKsqlDB {
-			return "etc/ksql/ksql-server.properties", nil
+			file = "etc/ksql/ksql-server.properties"
 		}
-	}
-
-	return ch.getFile(filepath.Join("etc", serviceConfigs[service]))
-}
-
-func (ch *ConfluentHomeManager) GetConfig(service string) ([]byte, error) {
-	file, err := ch.getConfigFile(service)
-	if err != nil {
-		return []byte{}, err
 	}
 
 	return ioutil.ReadFile(file)
 }
 
-func (ch *ConfluentHomeManager) GetConnectPluginPath() (string, error) {
-	dir, err := ch.getRootDir()
+func (ch *ConfluentHomeManager) GetVersion(service string) (string, error) {
+	pattern, ok := versionFiles[service]
+	if !ok {
+		return ch.GetConfluentVersion()
+	}
+
+	matches, err := ch.FindFile(pattern)
 	if err != nil {
 		return "", err
 	}
+	if len(matches) == 0 {
+		return "", fmt.Errorf("could not find %s in CONFLUENT_HOME", pattern)
+	}
 
-	path := filepath.Join(dir, "/share/java")
-	return path, nil
+	versionFile := matches[0]
+	x := strings.Split(pattern, "*")
+	prefix, suffix := x[0], x[1]
+	return versionFile[len(prefix) : len(versionFile)-len(suffix)], nil
 }
 
 func (ch *ConfluentHomeManager) GetConnectorConfigFile(connector string) (string, error) {
-	return ch.getFile(filepath.Join("etc", connectorConfigs[connector]))
+	return ch.GetFile("etc", connectorConfigs[connector])
 }
 
-func (ch *ConfluentHomeManager) GetScriptFile(service string) (string, error) {
-	return ch.getFile(filepath.Join("bin", scripts[service]))
-}
-
-func (ch *ConfluentHomeManager) GetKafkaScriptFile(format, mode string) (string, error) {
+func (ch *ConfluentHomeManager) GetKafkaScript(format, mode string) (string, error) {
 	var script string
 
 	if format == "json" || format == "protobuf" {
@@ -180,53 +224,25 @@ func (ch *ConfluentHomeManager) GetKafkaScriptFile(format, mode string) (string,
 		return "", fmt.Errorf("invalid format: %s", format)
 	}
 
-	return ch.getFile(filepath.Join("bin", script))
+	return ch.GetFile("bin", script)
 }
 
-func (ch *ConfluentHomeManager) GetACLCLIFile() (string, error) {
-	dir, err := ch.getRootDir()
+func (ch *ConfluentHomeManager) GetDemoReadme(demo string) (string, error) {
+	readme, err := ch.GetFile("examples", demo, "README.md")
 	if err != nil {
 		return "", err
 	}
 
-	return filepath.Join(dir, "bin", "sr-acl-cli"), nil
-}
-
-func (ch *ConfluentHomeManager) GetVersion(service string) (string, error) {
-	pattern, ok := versionFiles[service]
-	if !ok {
-		return ch.getConfluentVersion()
-	}
-
-	matches, err := ch.FindFile(pattern)
-	if err != nil {
-		return "", err
-	}
-	if len(matches) == 0 {
-		return "", fmt.Errorf("could not find %s in CONFLUENT_HOME", pattern)
-	}
-
-	versionFile := matches[0]
-	x := strings.Split(pattern, "*")
-	prefix, suffix := x[0], x[1]
-	return versionFile[len(prefix) : len(versionFile)-len(suffix)], nil
-}
-
-func (ch *ConfluentHomeManager) getConfluentVersion() (string, error) {
-	isCP, err := ch.IsConfluentPlatform()
+	data, err := ioutil.ReadFile(readme)
 	if err != nil {
 		return "", err
 	}
 
-	if isCP {
-		return ch.GetVersion("Confluent Platform")
-	} else {
-		return ch.GetVersion("Confluent Community Software")
-	}
+	return string(data), nil
 }
 
 func (ch *ConfluentHomeManager) isAboveVersion(targetVersion string) (bool, error) {
-	confluentVersion, err := ch.getConfluentVersion()
+	confluentVersion, err := ch.GetConfluentVersion()
 	if err != nil {
 		return false, err
 	}
@@ -242,13 +258,4 @@ func (ch *ConfluentHomeManager) isAboveVersion(targetVersion string) (bool, erro
 	}
 
 	return a.Compare(b) >= 0, nil
-}
-
-func (ch *ConfluentHomeManager) getFile(file string) (string, error) {
-	dir, err := ch.getRootDir()
-	if err != nil {
-		return "", err
-	}
-
-	return filepath.Join(dir, file), nil
 }

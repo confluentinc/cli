@@ -40,6 +40,7 @@ require (
 	github.com/flynn/go-shlex v0.0.0-20150515145356-3f9db97f8568 // indirect
 	github.com/frankban/quicktest v1.7.2 // indirect
 	github.com/gliderlabs/ssh v0.2.2 // indirect
+	github.com/go-git/go-git/v5 v5.1.0
 	github.com/go-openapi/spec v0.19.2 // indirect
 	github.com/go-openapi/swag v0.19.4 // indirect
 	github.com/go-yaml/yaml v2.1.0+incompatible

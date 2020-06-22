@@ -73,7 +73,7 @@ func NewSchemaRegistryACLCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra
 func runSchemaRegistryACLCommand(command *cobra.Command, _ []string) error {
 	ch := local.NewConfluentHomeManager()
 
-	file, err := ch.GetACLCLIFile()
+	file, err := ch.GetFile("bin", "sr-acl-cli")
 	if err != nil {
 		return err
 	}

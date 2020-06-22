@@ -10,60 +10,149 @@ import (
 
 // MockConfluentHome is a mock of ConfluentHome interface
 type MockConfluentHome struct {
+	lockGetFile sync.Mutex
+	GetFileFunc func(path ...string) (string, error)
+
+	lockHasFile sync.Mutex
+	HasFileFunc func(path ...string) (bool, error)
+
 	lockFindFile sync.Mutex
 	FindFileFunc func(pattern string) ([]string, error)
-
-	lockGetConfig sync.Mutex
-	GetConfigFunc func(service string) ([]byte, error)
-
-	lockGetConnectPluginPath sync.Mutex
-	GetConnectPluginPathFunc func() (string, error)
-
-	lockGetConnectorConfigFile sync.Mutex
-	GetConnectorConfigFileFunc func(connector string) (string, error)
-
-	lockGetScriptFile sync.Mutex
-	GetScriptFileFunc func(service string) (string, error)
-
-	lockGetKafkaScriptFile sync.Mutex
-	GetKafkaScriptFileFunc func(mode, format string) (string, error)
-
-	lockGetACLCLIFile sync.Mutex
-	GetACLCLIFileFunc func() (string, error)
-
-	lockGetVersion sync.Mutex
-	GetVersionFunc func(service string) (string, error)
 
 	lockIsConfluentPlatform sync.Mutex
 	IsConfluentPlatformFunc func() (bool, error)
 
+	lockGetConfluentVersion sync.Mutex
+	GetConfluentVersionFunc func() (string, error)
+
+	lockGetServiceStartScript sync.Mutex
+	GetServiceStartScriptFunc func(service string) (string, error)
+
+	lockGetServiceConfig sync.Mutex
+	GetServiceConfigFunc func(service string) ([]byte, error)
+
+	lockGetVersion sync.Mutex
+	GetVersionFunc func(service string) (string, error)
+
+	lockGetConnectorConfigFile sync.Mutex
+	GetConnectorConfigFileFunc func(connector string) (string, error)
+
+	lockGetKafkaScript sync.Mutex
+	GetKafkaScriptFunc func(mode, format string) (string, error)
+
+	lockGetDemoReadme sync.Mutex
+	GetDemoReadmeFunc func(demo string) (string, error)
+
 	calls struct {
+		GetFile []struct {
+			Path []string
+		}
+		HasFile []struct {
+			Path []string
+		}
 		FindFile []struct {
 			Pattern string
 		}
-		GetConfig []struct {
+		IsConfluentPlatform []struct {
+		}
+		GetConfluentVersion []struct {
+		}
+		GetServiceStartScript []struct {
 			Service string
 		}
-		GetConnectPluginPath []struct {
-		}
-		GetConnectorConfigFile []struct {
-			Connector string
-		}
-		GetScriptFile []struct {
+		GetServiceConfig []struct {
 			Service string
-		}
-		GetKafkaScriptFile []struct {
-			Mode   string
-			Format string
-		}
-		GetACLCLIFile []struct {
 		}
 		GetVersion []struct {
 			Service string
 		}
-		IsConfluentPlatform []struct {
+		GetConnectorConfigFile []struct {
+			Connector string
+		}
+		GetKafkaScript []struct {
+			Mode   string
+			Format string
+		}
+		GetDemoReadme []struct {
+			Demo string
 		}
 	}
+}
+
+// GetFile mocks base method by wrapping the associated func.
+func (m *MockConfluentHome) GetFile(path ...string) (string, error) {
+	m.lockGetFile.Lock()
+	defer m.lockGetFile.Unlock()
+
+	if m.GetFileFunc == nil {
+		panic("mocker: MockConfluentHome.GetFileFunc is nil but MockConfluentHome.GetFile was called.")
+	}
+
+	call := struct {
+		Path []string
+	}{
+		Path: path,
+	}
+
+	m.calls.GetFile = append(m.calls.GetFile, call)
+
+	return m.GetFileFunc(path...)
+}
+
+// GetFileCalled returns true if GetFile was called at least once.
+func (m *MockConfluentHome) GetFileCalled() bool {
+	m.lockGetFile.Lock()
+	defer m.lockGetFile.Unlock()
+
+	return len(m.calls.GetFile) > 0
+}
+
+// GetFileCalls returns the calls made to GetFile.
+func (m *MockConfluentHome) GetFileCalls() []struct {
+	Path []string
+} {
+	m.lockGetFile.Lock()
+	defer m.lockGetFile.Unlock()
+
+	return m.calls.GetFile
+}
+
+// HasFile mocks base method by wrapping the associated func.
+func (m *MockConfluentHome) HasFile(path ...string) (bool, error) {
+	m.lockHasFile.Lock()
+	defer m.lockHasFile.Unlock()
+
+	if m.HasFileFunc == nil {
+		panic("mocker: MockConfluentHome.HasFileFunc is nil but MockConfluentHome.HasFile was called.")
+	}
+
+	call := struct {
+		Path []string
+	}{
+		Path: path,
+	}
+
+	m.calls.HasFile = append(m.calls.HasFile, call)
+
+	return m.HasFileFunc(path...)
+}
+
+// HasFileCalled returns true if HasFile was called at least once.
+func (m *MockConfluentHome) HasFileCalled() bool {
+	m.lockHasFile.Lock()
+	defer m.lockHasFile.Unlock()
+
+	return len(m.calls.HasFile) > 0
+}
+
+// HasFileCalls returns the calls made to HasFile.
+func (m *MockConfluentHome) HasFileCalls() []struct {
+	Path []string
+} {
+	m.lockHasFile.Lock()
+	defer m.lockHasFile.Unlock()
+
+	return m.calls.HasFile
 }
 
 // FindFile mocks base method by wrapping the associated func.
@@ -104,13 +193,81 @@ func (m *MockConfluentHome) FindFileCalls() []struct {
 	return m.calls.FindFile
 }
 
-// GetConfig mocks base method by wrapping the associated func.
-func (m *MockConfluentHome) GetConfig(service string) ([]byte, error) {
-	m.lockGetConfig.Lock()
-	defer m.lockGetConfig.Unlock()
+// IsConfluentPlatform mocks base method by wrapping the associated func.
+func (m *MockConfluentHome) IsConfluentPlatform() (bool, error) {
+	m.lockIsConfluentPlatform.Lock()
+	defer m.lockIsConfluentPlatform.Unlock()
 
-	if m.GetConfigFunc == nil {
-		panic("mocker: MockConfluentHome.GetConfigFunc is nil but MockConfluentHome.GetConfig was called.")
+	if m.IsConfluentPlatformFunc == nil {
+		panic("mocker: MockConfluentHome.IsConfluentPlatformFunc is nil but MockConfluentHome.IsConfluentPlatform was called.")
+	}
+
+	call := struct {
+	}{}
+
+	m.calls.IsConfluentPlatform = append(m.calls.IsConfluentPlatform, call)
+
+	return m.IsConfluentPlatformFunc()
+}
+
+// IsConfluentPlatformCalled returns true if IsConfluentPlatform was called at least once.
+func (m *MockConfluentHome) IsConfluentPlatformCalled() bool {
+	m.lockIsConfluentPlatform.Lock()
+	defer m.lockIsConfluentPlatform.Unlock()
+
+	return len(m.calls.IsConfluentPlatform) > 0
+}
+
+// IsConfluentPlatformCalls returns the calls made to IsConfluentPlatform.
+func (m *MockConfluentHome) IsConfluentPlatformCalls() []struct {
+} {
+	m.lockIsConfluentPlatform.Lock()
+	defer m.lockIsConfluentPlatform.Unlock()
+
+	return m.calls.IsConfluentPlatform
+}
+
+// GetConfluentVersion mocks base method by wrapping the associated func.
+func (m *MockConfluentHome) GetConfluentVersion() (string, error) {
+	m.lockGetConfluentVersion.Lock()
+	defer m.lockGetConfluentVersion.Unlock()
+
+	if m.GetConfluentVersionFunc == nil {
+		panic("mocker: MockConfluentHome.GetConfluentVersionFunc is nil but MockConfluentHome.GetConfluentVersion was called.")
+	}
+
+	call := struct {
+	}{}
+
+	m.calls.GetConfluentVersion = append(m.calls.GetConfluentVersion, call)
+
+	return m.GetConfluentVersionFunc()
+}
+
+// GetConfluentVersionCalled returns true if GetConfluentVersion was called at least once.
+func (m *MockConfluentHome) GetConfluentVersionCalled() bool {
+	m.lockGetConfluentVersion.Lock()
+	defer m.lockGetConfluentVersion.Unlock()
+
+	return len(m.calls.GetConfluentVersion) > 0
+}
+
+// GetConfluentVersionCalls returns the calls made to GetConfluentVersion.
+func (m *MockConfluentHome) GetConfluentVersionCalls() []struct {
+} {
+	m.lockGetConfluentVersion.Lock()
+	defer m.lockGetConfluentVersion.Unlock()
+
+	return m.calls.GetConfluentVersion
+}
+
+// GetServiceStartScript mocks base method by wrapping the associated func.
+func (m *MockConfluentHome) GetServiceStartScript(service string) (string, error) {
+	m.lockGetServiceStartScript.Lock()
+	defer m.lockGetServiceStartScript.Unlock()
+
+	if m.GetServiceStartScriptFunc == nil {
+		panic("mocker: MockConfluentHome.GetServiceStartScriptFunc is nil but MockConfluentHome.GetServiceStartScript was called.")
 	}
 
 	call := struct {
@@ -119,108 +276,36 @@ func (m *MockConfluentHome) GetConfig(service string) ([]byte, error) {
 		Service: service,
 	}
 
-	m.calls.GetConfig = append(m.calls.GetConfig, call)
+	m.calls.GetServiceStartScript = append(m.calls.GetServiceStartScript, call)
 
-	return m.GetConfigFunc(service)
+	return m.GetServiceStartScriptFunc(service)
 }
 
-// GetConfigCalled returns true if GetConfig was called at least once.
-func (m *MockConfluentHome) GetConfigCalled() bool {
-	m.lockGetConfig.Lock()
-	defer m.lockGetConfig.Unlock()
+// GetServiceStartScriptCalled returns true if GetServiceStartScript was called at least once.
+func (m *MockConfluentHome) GetServiceStartScriptCalled() bool {
+	m.lockGetServiceStartScript.Lock()
+	defer m.lockGetServiceStartScript.Unlock()
 
-	return len(m.calls.GetConfig) > 0
+	return len(m.calls.GetServiceStartScript) > 0
 }
 
-// GetConfigCalls returns the calls made to GetConfig.
-func (m *MockConfluentHome) GetConfigCalls() []struct {
+// GetServiceStartScriptCalls returns the calls made to GetServiceStartScript.
+func (m *MockConfluentHome) GetServiceStartScriptCalls() []struct {
 	Service string
 } {
-	m.lockGetConfig.Lock()
-	defer m.lockGetConfig.Unlock()
+	m.lockGetServiceStartScript.Lock()
+	defer m.lockGetServiceStartScript.Unlock()
 
-	return m.calls.GetConfig
+	return m.calls.GetServiceStartScript
 }
 
-// GetConnectPluginPath mocks base method by wrapping the associated func.
-func (m *MockConfluentHome) GetConnectPluginPath() (string, error) {
-	m.lockGetConnectPluginPath.Lock()
-	defer m.lockGetConnectPluginPath.Unlock()
+// GetServiceConfig mocks base method by wrapping the associated func.
+func (m *MockConfluentHome) GetServiceConfig(service string) ([]byte, error) {
+	m.lockGetServiceConfig.Lock()
+	defer m.lockGetServiceConfig.Unlock()
 
-	if m.GetConnectPluginPathFunc == nil {
-		panic("mocker: MockConfluentHome.GetConnectPluginPathFunc is nil but MockConfluentHome.GetConnectPluginPath was called.")
-	}
-
-	call := struct {
-	}{}
-
-	m.calls.GetConnectPluginPath = append(m.calls.GetConnectPluginPath, call)
-
-	return m.GetConnectPluginPathFunc()
-}
-
-// GetConnectPluginPathCalled returns true if GetConnectPluginPath was called at least once.
-func (m *MockConfluentHome) GetConnectPluginPathCalled() bool {
-	m.lockGetConnectPluginPath.Lock()
-	defer m.lockGetConnectPluginPath.Unlock()
-
-	return len(m.calls.GetConnectPluginPath) > 0
-}
-
-// GetConnectPluginPathCalls returns the calls made to GetConnectPluginPath.
-func (m *MockConfluentHome) GetConnectPluginPathCalls() []struct {
-} {
-	m.lockGetConnectPluginPath.Lock()
-	defer m.lockGetConnectPluginPath.Unlock()
-
-	return m.calls.GetConnectPluginPath
-}
-
-// GetConnectorConfigFile mocks base method by wrapping the associated func.
-func (m *MockConfluentHome) GetConnectorConfigFile(connector string) (string, error) {
-	m.lockGetConnectorConfigFile.Lock()
-	defer m.lockGetConnectorConfigFile.Unlock()
-
-	if m.GetConnectorConfigFileFunc == nil {
-		panic("mocker: MockConfluentHome.GetConnectorConfigFileFunc is nil but MockConfluentHome.GetConnectorConfigFile was called.")
-	}
-
-	call := struct {
-		Connector string
-	}{
-		Connector: connector,
-	}
-
-	m.calls.GetConnectorConfigFile = append(m.calls.GetConnectorConfigFile, call)
-
-	return m.GetConnectorConfigFileFunc(connector)
-}
-
-// GetConnectorConfigFileCalled returns true if GetConnectorConfigFile was called at least once.
-func (m *MockConfluentHome) GetConnectorConfigFileCalled() bool {
-	m.lockGetConnectorConfigFile.Lock()
-	defer m.lockGetConnectorConfigFile.Unlock()
-
-	return len(m.calls.GetConnectorConfigFile) > 0
-}
-
-// GetConnectorConfigFileCalls returns the calls made to GetConnectorConfigFile.
-func (m *MockConfluentHome) GetConnectorConfigFileCalls() []struct {
-	Connector string
-} {
-	m.lockGetConnectorConfigFile.Lock()
-	defer m.lockGetConnectorConfigFile.Unlock()
-
-	return m.calls.GetConnectorConfigFile
-}
-
-// GetScriptFile mocks base method by wrapping the associated func.
-func (m *MockConfluentHome) GetScriptFile(service string) (string, error) {
-	m.lockGetScriptFile.Lock()
-	defer m.lockGetScriptFile.Unlock()
-
-	if m.GetScriptFileFunc == nil {
-		panic("mocker: MockConfluentHome.GetScriptFileFunc is nil but MockConfluentHome.GetScriptFile was called.")
+	if m.GetServiceConfigFunc == nil {
+		panic("mocker: MockConfluentHome.GetServiceConfigFunc is nil but MockConfluentHome.GetServiceConfig was called.")
 	}
 
 	call := struct {
@@ -229,102 +314,27 @@ func (m *MockConfluentHome) GetScriptFile(service string) (string, error) {
 		Service: service,
 	}
 
-	m.calls.GetScriptFile = append(m.calls.GetScriptFile, call)
+	m.calls.GetServiceConfig = append(m.calls.GetServiceConfig, call)
 
-	return m.GetScriptFileFunc(service)
+	return m.GetServiceConfigFunc(service)
 }
 
-// GetScriptFileCalled returns true if GetScriptFile was called at least once.
-func (m *MockConfluentHome) GetScriptFileCalled() bool {
-	m.lockGetScriptFile.Lock()
-	defer m.lockGetScriptFile.Unlock()
+// GetServiceConfigCalled returns true if GetServiceConfig was called at least once.
+func (m *MockConfluentHome) GetServiceConfigCalled() bool {
+	m.lockGetServiceConfig.Lock()
+	defer m.lockGetServiceConfig.Unlock()
 
-	return len(m.calls.GetScriptFile) > 0
+	return len(m.calls.GetServiceConfig) > 0
 }
 
-// GetScriptFileCalls returns the calls made to GetScriptFile.
-func (m *MockConfluentHome) GetScriptFileCalls() []struct {
+// GetServiceConfigCalls returns the calls made to GetServiceConfig.
+func (m *MockConfluentHome) GetServiceConfigCalls() []struct {
 	Service string
 } {
-	m.lockGetScriptFile.Lock()
-	defer m.lockGetScriptFile.Unlock()
+	m.lockGetServiceConfig.Lock()
+	defer m.lockGetServiceConfig.Unlock()
 
-	return m.calls.GetScriptFile
-}
-
-// GetKafkaScriptFile mocks base method by wrapping the associated func.
-func (m *MockConfluentHome) GetKafkaScriptFile(mode, format string) (string, error) {
-	m.lockGetKafkaScriptFile.Lock()
-	defer m.lockGetKafkaScriptFile.Unlock()
-
-	if m.GetKafkaScriptFileFunc == nil {
-		panic("mocker: MockConfluentHome.GetKafkaScriptFileFunc is nil but MockConfluentHome.GetKafkaScriptFile was called.")
-	}
-
-	call := struct {
-		Mode   string
-		Format string
-	}{
-		Mode:   mode,
-		Format: format,
-	}
-
-	m.calls.GetKafkaScriptFile = append(m.calls.GetKafkaScriptFile, call)
-
-	return m.GetKafkaScriptFileFunc(mode, format)
-}
-
-// GetKafkaScriptFileCalled returns true if GetKafkaScriptFile was called at least once.
-func (m *MockConfluentHome) GetKafkaScriptFileCalled() bool {
-	m.lockGetKafkaScriptFile.Lock()
-	defer m.lockGetKafkaScriptFile.Unlock()
-
-	return len(m.calls.GetKafkaScriptFile) > 0
-}
-
-// GetKafkaScriptFileCalls returns the calls made to GetKafkaScriptFile.
-func (m *MockConfluentHome) GetKafkaScriptFileCalls() []struct {
-	Mode   string
-	Format string
-} {
-	m.lockGetKafkaScriptFile.Lock()
-	defer m.lockGetKafkaScriptFile.Unlock()
-
-	return m.calls.GetKafkaScriptFile
-}
-
-// GetACLCLIFile mocks base method by wrapping the associated func.
-func (m *MockConfluentHome) GetACLCLIFile() (string, error) {
-	m.lockGetACLCLIFile.Lock()
-	defer m.lockGetACLCLIFile.Unlock()
-
-	if m.GetACLCLIFileFunc == nil {
-		panic("mocker: MockConfluentHome.GetACLCLIFileFunc is nil but MockConfluentHome.GetACLCLIFile was called.")
-	}
-
-	call := struct {
-	}{}
-
-	m.calls.GetACLCLIFile = append(m.calls.GetACLCLIFile, call)
-
-	return m.GetACLCLIFileFunc()
-}
-
-// GetACLCLIFileCalled returns true if GetACLCLIFile was called at least once.
-func (m *MockConfluentHome) GetACLCLIFileCalled() bool {
-	m.lockGetACLCLIFile.Lock()
-	defer m.lockGetACLCLIFile.Unlock()
-
-	return len(m.calls.GetACLCLIFile) > 0
-}
-
-// GetACLCLIFileCalls returns the calls made to GetACLCLIFile.
-func (m *MockConfluentHome) GetACLCLIFileCalls() []struct {
-} {
-	m.lockGetACLCLIFile.Lock()
-	defer m.lockGetACLCLIFile.Unlock()
-
-	return m.calls.GetACLCLIFile
+	return m.calls.GetServiceConfig
 }
 
 // GetVersion mocks base method by wrapping the associated func.
@@ -365,67 +375,156 @@ func (m *MockConfluentHome) GetVersionCalls() []struct {
 	return m.calls.GetVersion
 }
 
-// IsConfluentPlatform mocks base method by wrapping the associated func.
-func (m *MockConfluentHome) IsConfluentPlatform() (bool, error) {
-	m.lockIsConfluentPlatform.Lock()
-	defer m.lockIsConfluentPlatform.Unlock()
+// GetConnectorConfigFile mocks base method by wrapping the associated func.
+func (m *MockConfluentHome) GetConnectorConfigFile(connector string) (string, error) {
+	m.lockGetConnectorConfigFile.Lock()
+	defer m.lockGetConnectorConfigFile.Unlock()
 
-	if m.IsConfluentPlatformFunc == nil {
-		panic("mocker: MockConfluentHome.IsConfluentPlatformFunc is nil but MockConfluentHome.IsConfluentPlatform was called.")
+	if m.GetConnectorConfigFileFunc == nil {
+		panic("mocker: MockConfluentHome.GetConnectorConfigFileFunc is nil but MockConfluentHome.GetConnectorConfigFile was called.")
 	}
 
 	call := struct {
-	}{}
+		Connector string
+	}{
+		Connector: connector,
+	}
 
-	m.calls.IsConfluentPlatform = append(m.calls.IsConfluentPlatform, call)
+	m.calls.GetConnectorConfigFile = append(m.calls.GetConnectorConfigFile, call)
 
-	return m.IsConfluentPlatformFunc()
+	return m.GetConnectorConfigFileFunc(connector)
 }
 
-// IsConfluentPlatformCalled returns true if IsConfluentPlatform was called at least once.
-func (m *MockConfluentHome) IsConfluentPlatformCalled() bool {
-	m.lockIsConfluentPlatform.Lock()
-	defer m.lockIsConfluentPlatform.Unlock()
+// GetConnectorConfigFileCalled returns true if GetConnectorConfigFile was called at least once.
+func (m *MockConfluentHome) GetConnectorConfigFileCalled() bool {
+	m.lockGetConnectorConfigFile.Lock()
+	defer m.lockGetConnectorConfigFile.Unlock()
 
-	return len(m.calls.IsConfluentPlatform) > 0
+	return len(m.calls.GetConnectorConfigFile) > 0
 }
 
-// IsConfluentPlatformCalls returns the calls made to IsConfluentPlatform.
-func (m *MockConfluentHome) IsConfluentPlatformCalls() []struct {
+// GetConnectorConfigFileCalls returns the calls made to GetConnectorConfigFile.
+func (m *MockConfluentHome) GetConnectorConfigFileCalls() []struct {
+	Connector string
 } {
-	m.lockIsConfluentPlatform.Lock()
-	defer m.lockIsConfluentPlatform.Unlock()
+	m.lockGetConnectorConfigFile.Lock()
+	defer m.lockGetConnectorConfigFile.Unlock()
 
-	return m.calls.IsConfluentPlatform
+	return m.calls.GetConnectorConfigFile
+}
+
+// GetKafkaScript mocks base method by wrapping the associated func.
+func (m *MockConfluentHome) GetKafkaScript(mode, format string) (string, error) {
+	m.lockGetKafkaScript.Lock()
+	defer m.lockGetKafkaScript.Unlock()
+
+	if m.GetKafkaScriptFunc == nil {
+		panic("mocker: MockConfluentHome.GetKafkaScriptFunc is nil but MockConfluentHome.GetKafkaScript was called.")
+	}
+
+	call := struct {
+		Mode   string
+		Format string
+	}{
+		Mode:   mode,
+		Format: format,
+	}
+
+	m.calls.GetKafkaScript = append(m.calls.GetKafkaScript, call)
+
+	return m.GetKafkaScriptFunc(mode, format)
+}
+
+// GetKafkaScriptCalled returns true if GetKafkaScript was called at least once.
+func (m *MockConfluentHome) GetKafkaScriptCalled() bool {
+	m.lockGetKafkaScript.Lock()
+	defer m.lockGetKafkaScript.Unlock()
+
+	return len(m.calls.GetKafkaScript) > 0
+}
+
+// GetKafkaScriptCalls returns the calls made to GetKafkaScript.
+func (m *MockConfluentHome) GetKafkaScriptCalls() []struct {
+	Mode   string
+	Format string
+} {
+	m.lockGetKafkaScript.Lock()
+	defer m.lockGetKafkaScript.Unlock()
+
+	return m.calls.GetKafkaScript
+}
+
+// GetDemoReadme mocks base method by wrapping the associated func.
+func (m *MockConfluentHome) GetDemoReadme(demo string) (string, error) {
+	m.lockGetDemoReadme.Lock()
+	defer m.lockGetDemoReadme.Unlock()
+
+	if m.GetDemoReadmeFunc == nil {
+		panic("mocker: MockConfluentHome.GetDemoReadmeFunc is nil but MockConfluentHome.GetDemoReadme was called.")
+	}
+
+	call := struct {
+		Demo string
+	}{
+		Demo: demo,
+	}
+
+	m.calls.GetDemoReadme = append(m.calls.GetDemoReadme, call)
+
+	return m.GetDemoReadmeFunc(demo)
+}
+
+// GetDemoReadmeCalled returns true if GetDemoReadme was called at least once.
+func (m *MockConfluentHome) GetDemoReadmeCalled() bool {
+	m.lockGetDemoReadme.Lock()
+	defer m.lockGetDemoReadme.Unlock()
+
+	return len(m.calls.GetDemoReadme) > 0
+}
+
+// GetDemoReadmeCalls returns the calls made to GetDemoReadme.
+func (m *MockConfluentHome) GetDemoReadmeCalls() []struct {
+	Demo string
+} {
+	m.lockGetDemoReadme.Lock()
+	defer m.lockGetDemoReadme.Unlock()
+
+	return m.calls.GetDemoReadme
 }
 
 // Reset resets the calls made to the mocked methods.
 func (m *MockConfluentHome) Reset() {
+	m.lockGetFile.Lock()
+	m.calls.GetFile = nil
+	m.lockGetFile.Unlock()
+	m.lockHasFile.Lock()
+	m.calls.HasFile = nil
+	m.lockHasFile.Unlock()
 	m.lockFindFile.Lock()
 	m.calls.FindFile = nil
 	m.lockFindFile.Unlock()
-	m.lockGetConfig.Lock()
-	m.calls.GetConfig = nil
-	m.lockGetConfig.Unlock()
-	m.lockGetConnectPluginPath.Lock()
-	m.calls.GetConnectPluginPath = nil
-	m.lockGetConnectPluginPath.Unlock()
-	m.lockGetConnectorConfigFile.Lock()
-	m.calls.GetConnectorConfigFile = nil
-	m.lockGetConnectorConfigFile.Unlock()
-	m.lockGetScriptFile.Lock()
-	m.calls.GetScriptFile = nil
-	m.lockGetScriptFile.Unlock()
-	m.lockGetKafkaScriptFile.Lock()
-	m.calls.GetKafkaScriptFile = nil
-	m.lockGetKafkaScriptFile.Unlock()
-	m.lockGetACLCLIFile.Lock()
-	m.calls.GetACLCLIFile = nil
-	m.lockGetACLCLIFile.Unlock()
-	m.lockGetVersion.Lock()
-	m.calls.GetVersion = nil
-	m.lockGetVersion.Unlock()
 	m.lockIsConfluentPlatform.Lock()
 	m.calls.IsConfluentPlatform = nil
 	m.lockIsConfluentPlatform.Unlock()
+	m.lockGetConfluentVersion.Lock()
+	m.calls.GetConfluentVersion = nil
+	m.lockGetConfluentVersion.Unlock()
+	m.lockGetServiceStartScript.Lock()
+	m.calls.GetServiceStartScript = nil
+	m.lockGetServiceStartScript.Unlock()
+	m.lockGetServiceConfig.Lock()
+	m.calls.GetServiceConfig = nil
+	m.lockGetServiceConfig.Unlock()
+	m.lockGetVersion.Lock()
+	m.calls.GetVersion = nil
+	m.lockGetVersion.Unlock()
+	m.lockGetConnectorConfigFile.Lock()
+	m.calls.GetConnectorConfigFile = nil
+	m.lockGetConnectorConfigFile.Unlock()
+	m.lockGetKafkaScript.Lock()
+	m.calls.GetKafkaScript = nil
+	m.lockGetKafkaScript.Unlock()
+	m.lockGetDemoReadme.Lock()
+	m.calls.GetDemoReadme = nil
+	m.lockGetDemoReadme.Unlock()
 }

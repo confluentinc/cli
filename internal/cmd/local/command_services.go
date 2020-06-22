@@ -337,7 +337,7 @@ func getConfig(ch local.ConfluentHome, cc local.ConfluentCurrent, service string
 	switch service {
 	case "connect":
 		config["bootstrap.servers"] = fmt.Sprintf("localhost:%d", services["kafka"].port)
-		path, err := ch.GetConnectPluginPath()
+		path, err := ch.GetFile("share", "java")
 		if err != nil {
 			return map[string]string{}, err
 		}

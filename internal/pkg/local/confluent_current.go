@@ -63,7 +63,7 @@ func (cc *ConfluentCurrentManager) GetCurrentDir() (string, error) {
 		return cc.currentDir, nil
 	}
 
-	if !fileExists(cc.getTrackingFile()) {
+	if !exists(cc.getTrackingFile()) {
 		cc.currentDir = getRandomChildDir(cc.getRootDir())
 		if err := os.MkdirAll(cc.currentDir, 0777); err != nil {
 			return "", err
@@ -137,7 +137,7 @@ func (cc *ConfluentCurrentManager) HasPidFile(service string) (bool, error) {
 		return false, err
 	}
 
-	return fileExists(file), nil
+	return exists(file), nil
 }
 
 func (cc *ConfluentCurrentManager) GetPidFile(service string) (string, error) {
@@ -221,13 +221,13 @@ func getRandomChildDir(parentDir string) string {
 	for {
 		childDir := fmt.Sprintf("confluent.%06d", rand.Intn(1000000))
 		path := filepath.Join(parentDir, childDir)
-		if !fileExists(path) {
+		if !exists(path) {
 			return path
 		}
 	}
 }
 
-func fileExists(file string) bool {
+func exists(file string) bool {
 	_, err := os.Stat(file)
 	return !os.IsNotExist(err)
 }
