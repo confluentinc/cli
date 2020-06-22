@@ -41,7 +41,7 @@ func NewServiceCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
 		serviceCommand.AddCommand(NewKafkaConsumeCommand(prerunner))
 		serviceCommand.AddCommand(NewKafkaProduceCommand(prerunner))
 	case "schema-registry":
-		serviceCommand.AddCommand(NewSchemaRegistryACLCommand(prerunner, cfg))
+		serviceCommand.AddCommand(NewSchemaRegistryACLCommand(prerunner))
 	}
 
 	return serviceCommand.Command
