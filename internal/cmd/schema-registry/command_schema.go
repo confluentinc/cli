@@ -59,6 +59,10 @@ Where schemafilepath may include these contents:
 	   ]
 	}
 
+- For more information on schema types, see
+  https://docs.confluent.io/current/schema-registry/serdes-develop/index.html.
+- For more information on schema references, see
+  https://docs.confluent.io/current/schema-registry/serdes-develop/index.html#schema-references.
 `, cliName),
 		RunE: c.create,
 		Args: cobra.NoArgs,
@@ -66,7 +70,7 @@ Where schemafilepath may include these contents:
 	RequireSubjectFlag(cmd)
 	cmd.Flags().String("schema", "", "The path to the schema file.")
 	_ = cmd.MarkFlagRequired("schema")
-	cmd.Flags().String("type", "", "The schema type.")
+	cmd.Flags().String("type", "", `Specify the schema type as "AVRO", "PROTOBUF", or "JSON".`)
 	cmd.Flags().String("refs", "", "The path to the references file.")
 	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	cmd.Flags().SortFlags = false

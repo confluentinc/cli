@@ -14,7 +14,7 @@ func TestConfigService(t *testing.T) {
 	req := require.New(t)
 
 	ch := &mock.MockConfluentHome{
-		GetConfigFunc: func(service string) ([]byte, error) {
+		GetServiceConfigFunc: func(service string) ([]byte, error) {
 			return []byte("replace=old\n# replace=commented-duplicate\n# comment=old\n"), nil
 		},
 	}

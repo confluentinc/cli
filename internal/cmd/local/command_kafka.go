@@ -189,7 +189,7 @@ func runKafkaCommand(command *cobra.Command, args []string, mode string, kafkaFl
 
 	ch := local.NewConfluentHomeManager()
 
-	scriptFile, err := ch.GetKafkaScriptFile(format, modeNoun)
+	scriptFile, err := ch.GetKafkaScript(format, modeNoun)
 	if err != nil {
 		return err
 	}

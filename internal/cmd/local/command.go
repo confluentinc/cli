@@ -15,7 +15,7 @@ func NewCommand(prerunner cmd.PreRunner) *cobra.Command {
 	)
 
 	localCommand.AddCommand(NewCurrentCommand(prerunner))
-	// TODO: confluent local demo
+	localCommand.AddCommand(NewDemoCommand(prerunner))
 	localCommand.AddCommand(NewDestroyCommand(prerunner))
 	localCommand.AddCommand(NewServicesCommand(prerunner))
 	localCommand.AddCommand(NewVersionCommand(prerunner))

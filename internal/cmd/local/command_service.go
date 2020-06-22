@@ -14,6 +14,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/local"
+	"github.com/confluentinc/cli/internal/pkg/spinner"
 )
 
 func NewServiceCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
@@ -40,7 +41,7 @@ func NewServiceCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
 		serviceCommand.AddCommand(NewKafkaConsumeCommand(prerunner))
 		serviceCommand.AddCommand(NewKafkaProduceCommand(prerunner))
 	case "schema-registry":
-		// TODO
+		serviceCommand.AddCommand(NewSchemaRegistryACLCommand(prerunner, cfg))
 	}
 
 	return serviceCommand.Command
@@ -50,7 +51,7 @@ func NewServiceLogCommand(service string, prerunner cmd.PreRunner) *cobra.Comman
 	serviceLogCommand := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "log",
-			Short: "Print logs for " + service + ".",
+			Short: fmt.Sprintf("Print logs for %s.", service),
 			Args:  cobra.NoArgs,
 			RunE:  runServiceLogCommand,
 		}, prerunner)
@@ -81,7 +82,7 @@ func NewServiceStartCommand(service string, prerunner cmd.PreRunner) *cobra.Comm
 	serviceVersionCommand := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "start",
-			Short: "Start " + service + ".",
+			Short: fmt.Sprintf("Start %s.", service),
 			Args:  cobra.NoArgs,
 			RunE:  runServiceStartCommand,
 		}, prerunner)
@@ -238,7 +239,19 @@ func startService(command *cobra.Command, ch local.ConfluentHome, cc local.Confl
 
 	command.Printf("Starting %s\n", service)
 
-	scriptFile, err := ch.GetScriptFile(service)
+	spin := spinner.New()
+	spin.Start()
+	err = startProcess(ch, cc, service)
+	spin.Stop()
+	if err != nil {
+		return err
+	}
+
+	return printStatus(command, cc, service)
+}
+
+func startProcess(ch local.ConfluentHome, cc local.ConfluentCurrent, service string) error {
+	scriptFile, err := ch.GetServiceStartScript(service)
 	if err != nil {
 		return err
 	}
@@ -291,11 +304,11 @@ func startService(command *cobra.Command, ch local.ConfluentHome, cc local.Confl
 		time.Sleep(time.Second)
 	}
 
-	return printStatus(command, cc, service)
+	return nil
 }
 
 func configService(ch local.ConfluentHome, cc local.ConfluentCurrent, service string, config map[string]string) error {
-	data, err := ch.GetConfig(service)
+	data, err := ch.GetServiceConfig(service)
 	if err != nil {
 		return err
 	}
@@ -345,6 +358,18 @@ func stopService(command *cobra.Command, cc local.ConfluentCurrent, service stri
 
 	command.Printf("Stopping %s\n", service)
 
+	spin := spinner.New()
+	spin.Start()
+	err = stopProcess(cc, service)
+	spin.Stop()
+	if err != nil {
+		return err
+	}
+
+	return printStatus(command, cc, service)
+}
+
+func stopProcess(cc local.ConfluentCurrent, service string) error {
 	pid, err := cc.GetPid(service)
 	if err != nil {
 		return err
@@ -373,7 +398,7 @@ func stopService(command *cobra.Command, cc local.ConfluentCurrent, service stri
 		return err
 	}
 
-	return printStatus(command, cc, service)
+	return nil
 }
 
 func isRunning(cc local.ConfluentCurrent, service string) (bool, error) {
