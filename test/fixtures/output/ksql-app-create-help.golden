@@ -6,7 +6,7 @@ Usage:
 Flags:
       --cluster string   Kafka cluster ID.
       --csu int32        Number of CSUs to use in the cluster. (default 4)
-  -o, --output string    Specify the output format as "human", "json" or "yaml". (default "human")
+  -o, --output string    Specify the output format as "human", "json", or "yaml". (default "human")
   -h, --help             help for create
 
 Global Flags:
