@@ -2,11 +2,12 @@ package auth
 
 import (
 	"github.com/confluentinc/ccloud-sdk-go"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 )
 
 // If user is sso then will return refresh token, but if user is email password login then refresh token is ""
-func GetCCloudAuthToken(client *ccloud.Client, url string, email string, password string, noBrowser bool) (string, string, error) {
+func GetCCloudAuthToken(client *ccloud.Client, url string, email string, password string, noBrowser bool, logger *log.Logger) (string, string, error) {
 	tokenHandler := CCloudTokenHandlerImpl{}
 	userSSO, err := tokenHandler.GetUserSSO(client, email)
 	if err != nil {
@@ -16,7 +17,7 @@ func GetCCloudAuthToken(client *ccloud.Client, url string, email string, passwor
 	refreshToken := ""
 	// Check if user has an enterprise SSO connection enabled.
 	if userSSO != nil {
-		token, refreshToken, err = tokenHandler.GetSSOToken(client, url, noBrowser, userSSO)
+		token, refreshToken, err = tokenHandler.GetSSOToken(client, url, noBrowser, userSSO, logger)
 	} else {
 		token, err = tokenHandler.GetCredentialsToken(client, email, password)
 	}

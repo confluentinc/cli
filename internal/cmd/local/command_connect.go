@@ -6,25 +6,23 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"path/filepath"
-	"regexp"
-	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/local"
 )
 
-var connectorConfigs = map[string]string{
-	"elasticsearch-sink": "kafka-connect-elasticsearch/quickstart-elasticsearch.properties",
-	"file-sink":          "kafka/connect-file-sink.properties",
-	"file-source":        "kafka/connect-file-source.properties",
-	"hdfs-sink":          "kafka-connect-hdfs/quickstart-hdfs.properties",
-	"jdbc-sink":          "kafka-connect-jdbc/sink-quickstart-sqlite.properties",
-	"jdbc-source":        "kafka-connect-jdbc/source-quickstart-sqlite.properties",
-	"s3-sink":            "kafka-connect-s3/quickstart-s3.properties",
+var connectors = []string{
+	"elasticsearch-sink",
+	"file-sink",
+	"file-source",
+	"hdfs-sink",
+	"jdbc-sink",
+	"jdbc-source",
+	"s3-sink",
 }
 
 func NewConnectConnectorCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
@@ -81,7 +79,7 @@ func runConnectConnectorConfigCommand(command *cobra.Command, args []string) err
 		return err
 	}
 	if !isJSON(data) {
-		config := extractConfig(data)
+		config := local.ExtractConfig(data)
 		data, err = json.Marshal(config)
 		if err != nil {
 			return err
@@ -145,7 +143,7 @@ func NewConnectConnectorListCommand(prerunner cmd.PreRunner, cfg *v3.Config) *co
 
 func runConnectConnectorListCommand(command *cobra.Command, _ []string) {
 	command.Println("Bundled Predefined Connectors:")
-	command.Println(buildTabbedList(getConnectors()))
+	command.Println(local.BuildTabbedList(connectors))
 }
 
 func NewConnectConnectorLoadCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
@@ -166,22 +164,24 @@ func NewConnectConnectorLoadCommand(prerunner cmd.PreRunner, cfg *v3.Config) *co
 func runConnectConnectorLoadCommand(command *cobra.Command, args []string) error {
 	connector := args[0]
 
-	configFile, ok := connectorConfigs[connector]
-	if ok {
-		confluentHome, err := getConfluentHome()
+	var configFile string
+	var err error
+
+	if isBuiltin(connector) {
+		ch := local.NewConfluentHomeManager()
+
+		configFile, err = ch.GetConnectorConfigFile(connector)
 		if err != nil {
 			return err
 		}
-		configFile = filepath.Join(confluentHome, "etc", configFile)
 	} else {
-		file, err := command.Flags().GetString("config")
+		configFile, err = command.Flags().GetString("config")
 		if err != nil {
 			return err
 		}
-		if file == "" {
+		if configFile == "" {
 			return fmt.Errorf("invalid connector: %s", connector)
 		}
-		configFile = file
 	}
 
 	data, err := ioutil.ReadFile(configFile)
@@ -189,7 +189,7 @@ func runConnectConnectorLoadCommand(command *cobra.Command, args []string) error
 		return err
 	}
 	if !isJSON(data) {
-		config := extractConfig(data)
+		config := local.ExtractConfig(data)
 		delete(config, "name")
 
 		full := map[string]interface{}{
@@ -278,30 +278,18 @@ func runConnectPluginListCommand(command *cobra.Command, _ []string) error {
 	return nil
 }
 
-func getConnectors() []string {
-	var connectors []string
-	for connector := range connectorConfigs {
-		connectors = append(connectors, connector)
+func isBuiltin(connector string) bool {
+	for _, builtinConnector := range connectors {
+		if connector == builtinConnector {
+			return true
+		}
 	}
-	return connectors
+	return false
 }
 
 func isJSON(data []byte) bool {
 	var out map[string]interface{}
 	return json.Unmarshal(data, &out) == nil
-}
-
-func extractConfig(data []byte) map[string]string {
-	re := regexp.MustCompile(`(?m)^[^\s#]*=.+`)
-	matches := re.FindAllString(string(data), -1)
-	config := map[string]string{}
-
-	for _, match := range matches {
-		x := strings.Split(match, "=")
-		key, val := x[0], x[1]
-		config[key] = val
-	}
-	return config
 }
 
 func getConnectorConfig(connector string) (string, error) {

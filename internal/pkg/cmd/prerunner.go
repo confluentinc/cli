@@ -295,7 +295,7 @@ func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, name string, curren
 	if isUpdateCommand(cmd) {
 		return nil
 	}
-	updateAvailable, latestVersion, err := r.UpdateClient.CheckForUpdates(name, currentVersion, true)
+	updateAvailable, latestVersion, err := r.UpdateClient.CheckForUpdates(name, currentVersion, false)
 	if err != nil {
 		// This is a convenience helper to check-for-updates before arbitrary commands. Since the CLI supports running
 		// in internet-less environments (e.g., local or on-prem deploys), swallow the error and log a warning.
