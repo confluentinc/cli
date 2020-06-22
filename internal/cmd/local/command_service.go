@@ -290,25 +290,49 @@ func startProcess(ch local.ConfluentHome, cc local.ConfluentCurrent, service str
 		return err
 	}
 
-	for {
-		isUp, err := isRunning(cc, service)
-		if err != nil {
-			return err
+	errors := make(chan error)
+
+	up := make(chan bool)
+	go func() {
+		for {
+			isUp, err := isRunning(cc, service)
+			if err != nil {
+				errors <- err
+			}
+			if isUp {
+				up <- isUp
+			}
 		}
-		if isUp {
-			break
-		}
+	}()
+	select {
+	case <-up:
+		break
+	case err := <-errors:
+		return err
+	case <-time.After(time.Second):
+		return fmt.Errorf("%s failed to start", service)
 	}
 
-	for {
-		isOpen, err := isPortOpen(service)
-		if err != nil {
-			return err
+	open := make(chan bool)
+	go func() {
+		for {
+			isOpen, err := isPortOpen(service)
+			if err != nil {
+				errors <- err
+			}
+			if isOpen {
+				open <- isOpen
+			}
+			time.Sleep(time.Second)
 		}
-		if isOpen {
-			break
-		}
-		time.Sleep(time.Second)
+	}()
+	select {
+	case <-open:
+		break
+	case err := <-errors:
+		return err
+	case <-time.After(60 * time.Second):
+		return fmt.Errorf("%s failed to start", service)
 	}
 
 	return nil
@@ -391,14 +415,27 @@ func stopProcess(cc local.ConfluentCurrent, service string) error {
 		return err
 	}
 
-	for {
-		isUp, err := isRunning(cc, service)
-		if err != nil {
-			return err
+	errors := make(chan error)
+
+	up := make(chan bool)
+	go func() {
+		for {
+			isUp, err := isRunning(cc, service)
+			if err != nil {
+				errors <- err
+			}
+			if !isUp {
+				up <- isUp
+			}
 		}
-		if !isUp {
-			break
-		}
+	}()
+	select {
+	case <-up:
+		break
+	case err := <-errors:
+		return err
+	case <-time.After(time.Second):
+		return fmt.Errorf("%s failed to stop", service)
 	}
 
 	if err := cc.RemovePidFile(service); err != nil {

@@ -347,7 +347,11 @@ func getConfig(ch local.ConfluentHome, cc local.ConfluentCurrent, service string
 			return map[string]string{}, err
 		}
 		if len(matches) > 0 {
-			classpath := fmt.Sprintf("%s:%s", os.Getenv("CLASSPATH"), matches[0])
+			file, err := ch.GetFile(matches[0])
+			if err != nil {
+				return map[string]string{}, err
+			}
+			classpath := fmt.Sprintf("%s:%s", os.Getenv("CLASSPATH"), file)
 			if err := os.Setenv("CLASSPATH", classpath); err != nil {
 				return map[string]string{}, err
 			}
