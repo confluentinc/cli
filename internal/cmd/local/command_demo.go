@@ -2,7 +2,6 @@ package local
 
 import (
 	"fmt"
-	"gopkg.in/src-d/go-git.v4"
 	"os"
 	"os/exec"
 

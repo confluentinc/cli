@@ -9,7 +9,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 )
 
 var (
@@ -47,15 +46,14 @@ var (
 	}
 )
 
-func NewSchemaRegistryACLCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
+func NewSchemaRegistryACLCommand(prerunner cmd.PreRunner) *cobra.Command {
 	schemaRegistryACLCommand := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "acl",
 			Short: "Specify ACL for schema-registry.",
 			Args:  cobra.NoArgs,
 			RunE:  runSchemaRegistryACLCommand,
-		},
-		cfg, prerunner)
+		}, prerunner)
 
 	for flag, val := range defaultValues {
 		switch val.(type) {
