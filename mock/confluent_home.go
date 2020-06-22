@@ -31,6 +31,9 @@ type MockConfluentHome struct {
 	lockGetServiceConfig sync.Mutex
 	GetServiceConfigFunc func(service string) ([]byte, error)
 
+	lockGetServicePort sync.Mutex
+	GetServicePortFunc func(service string) (int, error)
+
 	lockGetVersion sync.Mutex
 	GetVersionFunc func(service string) (string, error)
 
@@ -61,6 +64,9 @@ type MockConfluentHome struct {
 			Service string
 		}
 		GetServiceConfig []struct {
+			Service string
+		}
+		GetServicePort []struct {
 			Service string
 		}
 		GetVersion []struct {
@@ -337,6 +343,44 @@ func (m *MockConfluentHome) GetServiceConfigCalls() []struct {
 	return m.calls.GetServiceConfig
 }
 
+// GetServicePort mocks base method by wrapping the associated func.
+func (m *MockConfluentHome) GetServicePort(service string) (int, error) {
+	m.lockGetServicePort.Lock()
+	defer m.lockGetServicePort.Unlock()
+
+	if m.GetServicePortFunc == nil {
+		panic("mocker: MockConfluentHome.GetServicePortFunc is nil but MockConfluentHome.GetServicePort was called.")
+	}
+
+	call := struct {
+		Service string
+	}{
+		Service: service,
+	}
+
+	m.calls.GetServicePort = append(m.calls.GetServicePort, call)
+
+	return m.GetServicePortFunc(service)
+}
+
+// GetServicePortCalled returns true if GetServicePort was called at least once.
+func (m *MockConfluentHome) GetServicePortCalled() bool {
+	m.lockGetServicePort.Lock()
+	defer m.lockGetServicePort.Unlock()
+
+	return len(m.calls.GetServicePort) > 0
+}
+
+// GetServicePortCalls returns the calls made to GetServicePort.
+func (m *MockConfluentHome) GetServicePortCalls() []struct {
+	Service string
+} {
+	m.lockGetServicePort.Lock()
+	defer m.lockGetServicePort.Unlock()
+
+	return m.calls.GetServicePort
+}
+
 // GetVersion mocks base method by wrapping the associated func.
 func (m *MockConfluentHome) GetVersion(service string) (string, error) {
 	m.lockGetVersion.Lock()
@@ -515,6 +559,9 @@ func (m *MockConfluentHome) Reset() {
 	m.lockGetServiceConfig.Lock()
 	m.calls.GetServiceConfig = nil
 	m.lockGetServiceConfig.Unlock()
+	m.lockGetServicePort.Lock()
+	m.calls.GetServicePort = nil
+	m.lockGetServicePort.Unlock()
 	m.lockGetVersion.Lock()
 	m.calls.GetVersion = nil
 	m.lockGetVersion.Unlock()

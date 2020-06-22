@@ -235,6 +235,23 @@ func startService(command *cobra.Command, ch local.ConfluentHome, cc local.Confl
 		return printStatus(command, cc, service)
 	}
 
+	port, err := ch.GetServicePort(service)
+	if err != nil {
+		if err.Error() != "no port specified" {
+			return err
+		}
+	} else {
+		services[service].port = port
+	}
+
+	isOpen, err := isPortOpen(service)
+	if err != nil {
+		return err
+	}
+	if isOpen {
+		return fmt.Errorf("couldn't start %s: port %d is in use", service, services[service].port)
+	}
+
 	config, err := getConfig(ch, cc, service)
 	if err != nil {
 		return err

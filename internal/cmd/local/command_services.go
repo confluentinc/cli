@@ -23,7 +23,7 @@ type Service struct {
 }
 
 var (
-	services = map[string]Service{
+	services = map[string]*Service{
 		"connect": {
 			startDependencies: []string{
 				"zookeeper",

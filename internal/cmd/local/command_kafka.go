@@ -181,6 +181,16 @@ func runKafkaProduceCommand(command *cobra.Command, args []string) error {
 }
 
 func runKafkaCommand(command *cobra.Command, args []string, mode string, kafkaFlagTypes map[string]interface{}) error {
+	cc := local.NewConfluentCurrentManager()
+
+	isUp, err := isRunning(cc, "kafka")
+	if err != nil {
+		return err
+	}
+	if !isUp {
+		return printStatus(command, cc, "kafka")
+	}
+
 	format, err := command.Flags().GetString("value-format")
 	if err != nil {
 		return err
@@ -242,7 +252,7 @@ func runKafkaCommand(command *cobra.Command, args []string, mode string, kafkaFl
 	kafkaCommand.Stderr = os.Stderr
 	if mode == "produce" {
 		kafkaCommand.Stdin = os.Stdin
-		fmt.Println("Exit with Ctrl+D")
+		command.Println("Exit with Ctrl+D")
 	}
 
 	return kafkaCommand.Run()

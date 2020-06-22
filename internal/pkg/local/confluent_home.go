@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/hashicorp/go-version"
@@ -41,6 +42,15 @@ var (
 		"schema-registry": "schema-registry/schema-registry.properties",
 		"zookeeper":       "kafka/zookeeper.properties",
 	}
+	servicePortKeys = map[string]string{
+		"connect":         "rest.port",
+		"control-center":  "listeners",
+		"kafka":           "listeners",
+		"kafka-rest":      "listeners",
+		"ksql-server":     "listeners",
+		"schema-registry": "listeners",
+		"zookeeper":       "clientPort",
+	}
 	connectorConfigs = map[string]string{
 		"elasticsearch-sink": "kafka-connect-elasticsearch/quickstart-elasticsearch.properties",
 		"file-sink":          "kafka/connect-file-sink.properties",
@@ -68,6 +78,7 @@ type ConfluentHome interface {
 
 	GetServiceStartScript(service string) (string, error)
 	GetServiceConfig(service string) ([]byte, error)
+	GetServicePort(service string) (int, error)
 	GetVersion(service string) (string, error)
 
 	GetConnectorConfigFile(connector string) (string, error)
@@ -172,6 +183,32 @@ func (ch *ConfluentHomeManager) GetServiceConfig(service string) ([]byte, error)
 	}
 
 	return ioutil.ReadFile(file)
+}
+
+func (ch *ConfluentHomeManager) GetServicePort(service string) (int, error) {
+	data, err := ch.GetServiceConfig(service)
+	if err != nil {
+		return 0, err
+	}
+
+	config := ExtractConfig(data)
+
+	key := servicePortKeys[service]
+	val, ok := config[key]
+	if !ok {
+		return 0, fmt.Errorf("no port specified")
+	}
+
+	if key == "listeners" {
+		val = strings.Split(val, ":")[1]
+	}
+
+	port, err := strconv.Atoi(val)
+	if err != nil {
+		return 0, err
+	}
+
+	return port, nil
 }
 
 func (ch *ConfluentHomeManager) GetVersion(service string) (string, error) {
