@@ -255,6 +255,13 @@ func runKafkaCommand(command *cobra.Command, args []string, mode string, kafkaFl
 		command.Println("Exit with Ctrl+D")
 	}
 
+	kafkaCommand.Env = []string{
+		fmt.Sprintf("LOG_DIR=%s", os.TempDir()),
+	}
+	if mode == "consume" {
+		kafkaCommand.Env = append(kafkaCommand.Env, "SCHEMA_REGISTRY_LOG4J_LOGGERS=\"INFO, stdout\"")
+	}
+
 	return kafkaCommand.Run()
 }
 

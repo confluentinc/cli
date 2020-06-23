@@ -360,6 +360,7 @@ func getConfig(ch local.ConfluentHome, cc local.ConfluentCurrent, service string
 				return map[string]string{}, err
 			}
 			classpath := fmt.Sprintf("%s:%s", os.Getenv("CLASSPATH"), file)
+			classpath = strings.TrimPrefix(classpath, ":")
 			if err := os.Setenv("CLASSPATH", classpath); err != nil {
 				return map[string]string{}, err
 			}

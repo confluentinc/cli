@@ -200,7 +200,8 @@ func (ch *ConfluentHomeManager) GetServicePort(service string) (int, error) {
 	}
 
 	if key == "listeners" {
-		val = strings.Split(val, ":")[1]
+		x := strings.Split(val, ":")
+		val = x[len(x)-1]
 	}
 
 	port, err := strconv.Atoi(val)

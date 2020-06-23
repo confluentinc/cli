@@ -5,11 +5,15 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
+	"runtime"
+	"strings"
 	"syscall"
 	"time"
 
 	"github.com/fatih/color"
+	"github.com/hashicorp/go-version"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
@@ -227,7 +231,15 @@ func runServiceVersionCommand(command *cobra.Command, _ []string) error {
 }
 
 func startService(command *cobra.Command, ch local.ConfluentHome, cc local.ConfluentCurrent, service string) error {
-	if err := checkService(command, ch, cc, service); err != nil {
+	isUp, err := isRunning(cc, service)
+	if err != nil {
+		return err
+	}
+	if isUp {
+		return printStatus(command, cc, service)
+	}
+
+	if err := checkService(service); err != nil {
 		return err
 	}
 
@@ -239,7 +251,7 @@ func startService(command *cobra.Command, ch local.ConfluentHome, cc local.Confl
 
 	spin := spinner.New()
 	spin.Start()
-	err := startProcess(ch, cc, service)
+	err = startProcess(ch, cc, service)
 	spin.Stop()
 	if err != nil {
 		return err
@@ -248,18 +260,19 @@ func startService(command *cobra.Command, ch local.ConfluentHome, cc local.Confl
 	return printStatus(command, cc, service)
 }
 
-func checkService(command *cobra.Command, ch local.ConfluentHome, cc local.ConfluentCurrent, service string) error {
-	// TODO: Check Java version
-	// TODO: Check OS version
-
-	isUp, err := isRunning(cc, service)
-	if err != nil {
+func checkService(service string) error {
+	if err := checkOSVersion(); err != nil {
 		return err
 	}
-	if isUp {
-		return printStatus(command, cc, service)
+
+	if err := checkJavaVersion(service); err != nil {
+		return err
 	}
 
+	return nil
+}
+
+func configService(ch local.ConfluentHome, cc local.ConfluentCurrent, service string) error {
 	port, err := ch.GetServicePort(service)
 	if err != nil {
 		if err.Error() != "no port specified" {
@@ -269,18 +282,6 @@ func checkService(command *cobra.Command, ch local.ConfluentHome, cc local.Confl
 		services[service].port = port
 	}
 
-	isOpen, err := isPortOpen(service)
-	if err != nil {
-		return err
-	}
-	if isOpen {
-		return fmt.Errorf("couldn't start %s: port %d is in use", service, services[service].port)
-	}
-
-	return nil
-}
-
-func configService(ch local.ConfluentHome, cc local.ConfluentCurrent, service string) error {
 	data, err := ch.GetServiceConfig(service)
 	if err != nil {
 		return err
@@ -548,19 +549,95 @@ func setServiceEnvs(service string) error {
 		env := fmt.Sprintf(envFormat, "KAFKA")
 		savedEnv := fmt.Sprintf("SAVED_%s", env)
 		if os.Getenv(savedEnv) == "" {
-			if err := os.Setenv(savedEnv, os.Getenv(env)); err != nil {
-				return err
+			val := os.Getenv(env)
+			if val != "" {
+				if err := os.Setenv(savedEnv, val); err != nil {
+					return err
+				}
 			}
 		}
 	}
 
 	prefix := services[service].envPrefix
 	for env, envFormat := range serviceEnvFormats {
-		ptr := fmt.Sprintf(envFormat, prefix)
-		if err := os.Setenv(env, os.Getenv(ptr)); err != nil {
-			return err
+		val := os.Getenv(fmt.Sprintf(envFormat, prefix))
+		if val != "" {
+			if err := os.Setenv(env, val); err != nil {
+				return err
+			}
 		}
 	}
 
 	return nil
+}
+
+func checkOSVersion() error {
+	// CLI-84: Require macOS version >= 10.13
+	if runtime.GOOS == "darwin" {
+		osVersion, err := exec.Command("sw_vers", "-productVersion").Output()
+		if err != nil {
+			return err
+		}
+
+		v, err := version.NewSemver(strings.TrimSuffix(string(osVersion), "\n"))
+		if err != nil {
+			return err
+		}
+
+		v10_13, _ := version.NewSemver("10.13")
+		if v.Compare(v10_13) < 0 {
+			return fmt.Errorf("macOS version >= 10.13 is required (detected: %s)", osVersion)
+		}
+	}
+	return nil
+}
+
+func checkJavaVersion(service string) error {
+	java := filepath.Join(os.Getenv("JAVA_HOME"), "/bin/java")
+	data, err := exec.Command(java, "-version").CombinedOutput()
+	if err != nil {
+		return err
+	}
+
+	re := regexp.MustCompile(`.+ version "([\d._]+)"`)
+	javaVersion := string(re.FindSubmatch(data)[1])
+
+	isValid, err := isValidJavaVersion(service, javaVersion)
+	if err != nil {
+		return err
+	}
+	if !isValid {
+		return fmt.Errorf("the Confluent CLI requires Java version 1.8 or 1.11.\nSee https://docs.confluent.io/current/installation/versions-interoperability.html\nIf you have multiple versions of Java installed, you may need to set JAVA_HOME to the version you want Confluent to use.")
+	}
+
+	return nil
+}
+
+func isValidJavaVersion(service, javaVersion string) (bool, error) {
+	// 1.8.0_152 -> 8.0_152 -> 8.0
+	javaVersion = strings.TrimPrefix(javaVersion, "1.")
+	javaVersion = strings.Split(javaVersion, "_")[0]
+
+	v, err := version.NewSemver(javaVersion)
+	if err != nil {
+		return false, err
+	}
+
+	v8, _ := version.NewSemver("8")
+	v9, _ := version.NewSemver("9")
+	v11, _ := version.NewSemver("11")
+	if v.Compare(v8) < 0 || v.Compare(v9) >= 0 && v.Compare(v11) < 0 {
+		return false, nil
+	}
+
+	if service == "zookeeper" || service == "kafka" {
+		return true, nil
+	}
+
+	v12, _ := version.NewSemver("12")
+	if v.Compare(v12) >= 0 {
+		return false, nil
+	}
+
+	return true, nil
 }

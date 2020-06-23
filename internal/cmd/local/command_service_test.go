@@ -37,3 +37,26 @@ func TestSetServiceEnvs(t *testing.T) {
 	req.Equal("saveme", os.Getenv("SAVED_KAFKA_LOG4J_OPTS"))
 	req.Equal("useme", os.Getenv("KAFKA_LOG4J_OPTS"))
 }
+
+func TestIsValidJavaVersion(t *testing.T) {
+	req := require.New(t)
+
+	var isValid bool
+	var err error
+
+	isValid, err = isValidJavaVersion("", "1.8.0_152")
+	req.NoError(err)
+	req.True(isValid)
+
+	isValid, err = isValidJavaVersion("", "9.0.4")
+	req.NoError(err)
+	req.False(isValid)
+
+	isValid, err = isValidJavaVersion("zookeeper", "13")
+	req.NoError(err)
+	req.True(isValid)
+
+	isValid, err = isValidJavaVersion("", "13")
+	req.NoError(err)
+	req.False(isValid)
+}

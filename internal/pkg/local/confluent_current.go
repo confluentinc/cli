@@ -122,10 +122,6 @@ func (cc *ConfluentCurrentManager) GetLogsDir(service string) (string, error) {
 	}
 
 	dir = filepath.Join(dir, "logs")
-	if err := os.MkdirAll(dir, 0777); err != nil {
-		return "", err
-	}
-
 	return dir, nil
 }
 
