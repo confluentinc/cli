@@ -20,6 +20,7 @@ type Service struct {
 	stopDependencies        []string
 	port                    int
 	isConfluentPlatformOnly bool
+	envPrefix               string
 }
 
 var (
@@ -33,6 +34,7 @@ var (
 			stopDependencies:        []string{},
 			port:                    8083,
 			isConfluentPlatformOnly: false,
+			envPrefix:               "CONNECT",
 		},
 		"control-center": {
 			startDependencies: []string{
@@ -45,6 +47,7 @@ var (
 			stopDependencies:        []string{},
 			port:                    9021,
 			isConfluentPlatformOnly: true,
+			envPrefix:               "CONTROL_CENTER",
 		},
 		"kafka": {
 			startDependencies: []string{
@@ -59,6 +62,7 @@ var (
 			},
 			port:                    9092,
 			isConfluentPlatformOnly: false,
+			envPrefix:               "SAVED_KAFKA",
 		},
 		"kafka-rest": {
 			startDependencies: []string{
@@ -69,6 +73,7 @@ var (
 			stopDependencies:        []string{},
 			port:                    8082,
 			isConfluentPlatformOnly: false,
+			envPrefix:               "KAFKAREST",
 		},
 		"ksql-server": {
 			startDependencies: []string{
@@ -79,6 +84,7 @@ var (
 			stopDependencies:        []string{},
 			port:                    8088,
 			isConfluentPlatformOnly: false,
+			envPrefix:               "KSQL",
 		},
 		"schema-registry": {
 			startDependencies: []string{
@@ -88,6 +94,7 @@ var (
 			stopDependencies:        []string{},
 			port:                    8081,
 			isConfluentPlatformOnly: false,
+			envPrefix:               "SCHEMA_REGISTRY",
 		},
 		"zookeeper": {
 			startDependencies: []string{},
@@ -101,6 +108,7 @@ var (
 			},
 			port:                    2181,
 			isConfluentPlatformOnly: false,
+			envPrefix:               "ZOOKEEPER",
 		},
 	}
 

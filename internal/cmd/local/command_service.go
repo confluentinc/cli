@@ -227,6 +227,31 @@ func runServiceVersionCommand(command *cobra.Command, _ []string) error {
 }
 
 func startService(command *cobra.Command, ch local.ConfluentHome, cc local.ConfluentCurrent, service string) error {
+	if err := checkService(command, ch, cc, service); err != nil {
+		return err
+	}
+
+	if err := configService(ch, cc, service); err != nil {
+		return err
+	}
+
+	command.Printf("Starting %s\n", service)
+
+	spin := spinner.New()
+	spin.Start()
+	err := startProcess(ch, cc, service)
+	spin.Stop()
+	if err != nil {
+		return err
+	}
+
+	return printStatus(command, cc, service)
+}
+
+func checkService(command *cobra.Command, ch local.ConfluentHome, cc local.ConfluentCurrent, service string) error {
+	// TODO: Check Java version
+	// TODO: Check OS version
+
 	isUp, err := isRunning(cc, service)
 	if err != nil {
 		return err
@@ -252,26 +277,59 @@ func startService(command *cobra.Command, ch local.ConfluentHome, cc local.Confl
 		return fmt.Errorf("couldn't start %s: port %d is in use", service, services[service].port)
 	}
 
+	return nil
+}
+
+func configService(ch local.ConfluentHome, cc local.ConfluentCurrent, service string) error {
+	data, err := ch.GetServiceConfig(service)
+	if err != nil {
+		return err
+	}
+
 	config, err := getConfig(ch, cc, service)
 	if err != nil {
 		return err
 	}
 
-	if err := configService(ch, cc, service, config); err != nil {
+	data = injectConfig(data, config)
+
+	if err := cc.SetConfig(service, data); err != nil {
 		return err
 	}
 
-	command.Printf("Starting %s\n", service)
-
-	spin := spinner.New()
-	spin.Start()
-	err = startProcess(ch, cc, service)
-	spin.Stop()
+	logs, err := cc.GetLogsDir(service)
 	if err != nil {
 		return err
 	}
+	if err := os.Setenv("LOG_DIR", logs); err != nil {
+		return err
+	}
 
-	return printStatus(command, cc, service)
+	if err := setServiceEnvs(service); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func injectConfig(data []byte, config map[string]string) []byte {
+	for key, val := range config {
+		re := regexp.MustCompile(fmt.Sprintf(`(?m)^(#\s)?%s=.+\n`, key))
+		line := []byte(fmt.Sprintf("%s=%s\n", key, val))
+
+		matches := re.FindAll(data, -1)
+		switch len(matches) {
+		case 0:
+			data = append(data, line...)
+		case 1:
+			data = re.ReplaceAll(data, line)
+		default:
+			re := regexp.MustCompile(fmt.Sprintf(`(?m)^%s=.+\n`, key))
+			data = re.ReplaceAll(data, line)
+		}
+	}
+
+	return data
 }
 
 func startProcess(ch local.ConfluentHome, cc local.ConfluentCurrent, service string) error {
@@ -355,46 +413,6 @@ func startProcess(ch local.ConfluentHome, cc local.ConfluentCurrent, service str
 	return nil
 }
 
-func configService(ch local.ConfluentHome, cc local.ConfluentCurrent, service string, config map[string]string) error {
-	data, err := ch.GetServiceConfig(service)
-	if err != nil {
-		return err
-	}
-
-	for key, val := range config {
-		re := regexp.MustCompile(fmt.Sprintf(`(?m)^(#\s)?%s=.+\n`, key))
-		line := []byte(fmt.Sprintf("%s=%s\n", key, val))
-
-		matches := re.FindAll(data, -1)
-		switch len(matches) {
-		case 0:
-			data = append(data, line...)
-		case 1:
-			data = re.ReplaceAll(data, line)
-		default:
-			re := regexp.MustCompile(fmt.Sprintf(`(?m)^%s=.+\n`, key))
-			data = re.ReplaceAll(data, line)
-		}
-	}
-
-	return cc.SetConfig(service, data)
-}
-
-func printStatus(command *cobra.Command, cc local.ConfluentCurrent, service string) error {
-	isUp, err := isRunning(cc, service)
-	if err != nil {
-		return err
-	}
-
-	status := color.RedString("DOWN")
-	if isUp {
-		status = color.GreenString("UP")
-	}
-
-	command.Printf("%s is [%s]\n", service, status)
-	return nil
-}
-
 func stopService(command *cobra.Command, cc local.ConfluentCurrent, service string) error {
 	isUp, err := isRunning(cc, service)
 	if err != nil {
@@ -462,6 +480,21 @@ func stopProcess(cc local.ConfluentCurrent, service string) error {
 	return nil
 }
 
+func printStatus(command *cobra.Command, cc local.ConfluentCurrent, service string) error {
+	isUp, err := isRunning(cc, service)
+	if err != nil {
+		return err
+	}
+
+	status := color.RedString("DOWN")
+	if isUp {
+		status = color.GreenString("UP")
+	}
+
+	command.Printf("%s is [%s]\n", service, status)
+	return nil
+}
+
 func isRunning(cc local.ConfluentCurrent, service string) (bool, error) {
 	hasPidFile, err := cc.HasPidFile(service)
 	if err != nil {
@@ -495,4 +528,39 @@ func isPortOpen(service string) (bool, error) {
 		return false, nil
 	}
 	return len(out) > 0, nil
+}
+
+func setServiceEnvs(service string) error {
+	serviceEnvFormats := map[string]string{
+		"KAFKA_LOG4J_OPTS":           "%s_LOG4J_OPTS",
+		"EXTRA_ARGS":                 "%s_EXTRA_ARGS",
+		"KAFKA_HEAP_OPTS":            "%s_HEAP_OPTS",
+		"KAFKA_JVM_PERFORMANCE_OPTS": "%s_JVM_PERFORMANCE_OPTS",
+		"KAFKA_GC_LOG_OPTS":          "%s_GC_LOG_OPTS",
+		"KAFKA_JMX_OPTS":             "%s_JMX_OPTS",
+		"KAFKA_DEBUG":                "%s_DEBUG",
+		"KAFKA_OPTS":                 "%s_OPTS",
+		"CLASSPATH":                  "%s_CLASSPATH",
+		"JMX_PORT":                   "%s_JMX_PORT",
+	}
+
+	for _, envFormat := range serviceEnvFormats {
+		env := fmt.Sprintf(envFormat, "KAFKA")
+		savedEnv := fmt.Sprintf("SAVED_%s", env)
+		if os.Getenv(savedEnv) == "" {
+			if err := os.Setenv(savedEnv, os.Getenv(env)); err != nil {
+				return err
+			}
+		}
+	}
+
+	prefix := services[service].envPrefix
+	for env, envFormat := range serviceEnvFormats {
+		ptr := fmt.Sprintf(envFormat, prefix)
+		if err := os.Setenv(env, os.Getenv(ptr)); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
