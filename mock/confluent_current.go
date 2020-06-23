@@ -19,11 +19,11 @@ type MockConfluentCurrent struct {
 	lockRemoveCurrentDir sync.Mutex
 	RemoveCurrentDirFunc func() error
 
-	lockGetServiceDir sync.Mutex
-	GetServiceDirFunc func(service string) (string, error)
-
 	lockGetDataDir sync.Mutex
 	GetDataDirFunc func(service string) (string, error)
+
+	lockGetLogsDir sync.Mutex
+	GetLogsDirFunc func(service string) (string, error)
 
 	lockGetConfigFile sync.Mutex
 	GetConfigFileFunc func(service string) (string, error)
@@ -56,10 +56,10 @@ type MockConfluentCurrent struct {
 		}
 		RemoveCurrentDir []struct {
 		}
-		GetServiceDir []struct {
+		GetDataDir []struct {
 			Service string
 		}
-		GetDataDir []struct {
+		GetLogsDir []struct {
 			Service string
 		}
 		GetConfigFile []struct {
@@ -193,44 +193,6 @@ func (m *MockConfluentCurrent) RemoveCurrentDirCalls() []struct {
 	return m.calls.RemoveCurrentDir
 }
 
-// GetServiceDir mocks base method by wrapping the associated func.
-func (m *MockConfluentCurrent) GetServiceDir(service string) (string, error) {
-	m.lockGetServiceDir.Lock()
-	defer m.lockGetServiceDir.Unlock()
-
-	if m.GetServiceDirFunc == nil {
-		panic("mocker: MockConfluentCurrent.GetServiceDirFunc is nil but MockConfluentCurrent.GetServiceDir was called.")
-	}
-
-	call := struct {
-		Service string
-	}{
-		Service: service,
-	}
-
-	m.calls.GetServiceDir = append(m.calls.GetServiceDir, call)
-
-	return m.GetServiceDirFunc(service)
-}
-
-// GetServiceDirCalled returns true if GetServiceDir was called at least once.
-func (m *MockConfluentCurrent) GetServiceDirCalled() bool {
-	m.lockGetServiceDir.Lock()
-	defer m.lockGetServiceDir.Unlock()
-
-	return len(m.calls.GetServiceDir) > 0
-}
-
-// GetServiceDirCalls returns the calls made to GetServiceDir.
-func (m *MockConfluentCurrent) GetServiceDirCalls() []struct {
-	Service string
-} {
-	m.lockGetServiceDir.Lock()
-	defer m.lockGetServiceDir.Unlock()
-
-	return m.calls.GetServiceDir
-}
-
 // GetDataDir mocks base method by wrapping the associated func.
 func (m *MockConfluentCurrent) GetDataDir(service string) (string, error) {
 	m.lockGetDataDir.Lock()
@@ -267,6 +229,44 @@ func (m *MockConfluentCurrent) GetDataDirCalls() []struct {
 	defer m.lockGetDataDir.Unlock()
 
 	return m.calls.GetDataDir
+}
+
+// GetLogsDir mocks base method by wrapping the associated func.
+func (m *MockConfluentCurrent) GetLogsDir(service string) (string, error) {
+	m.lockGetLogsDir.Lock()
+	defer m.lockGetLogsDir.Unlock()
+
+	if m.GetLogsDirFunc == nil {
+		panic("mocker: MockConfluentCurrent.GetLogsDirFunc is nil but MockConfluentCurrent.GetLogsDir was called.")
+	}
+
+	call := struct {
+		Service string
+	}{
+		Service: service,
+	}
+
+	m.calls.GetLogsDir = append(m.calls.GetLogsDir, call)
+
+	return m.GetLogsDirFunc(service)
+}
+
+// GetLogsDirCalled returns true if GetLogsDir was called at least once.
+func (m *MockConfluentCurrent) GetLogsDirCalled() bool {
+	m.lockGetLogsDir.Lock()
+	defer m.lockGetLogsDir.Unlock()
+
+	return len(m.calls.GetLogsDir) > 0
+}
+
+// GetLogsDirCalls returns the calls made to GetLogsDir.
+func (m *MockConfluentCurrent) GetLogsDirCalls() []struct {
+	Service string
+} {
+	m.lockGetLogsDir.Lock()
+	defer m.lockGetLogsDir.Unlock()
+
+	return m.calls.GetLogsDir
 }
 
 // GetConfigFile mocks base method by wrapping the associated func.
@@ -590,12 +590,12 @@ func (m *MockConfluentCurrent) Reset() {
 	m.lockRemoveCurrentDir.Lock()
 	m.calls.RemoveCurrentDir = nil
 	m.lockRemoveCurrentDir.Unlock()
-	m.lockGetServiceDir.Lock()
-	m.calls.GetServiceDir = nil
-	m.lockGetServiceDir.Unlock()
 	m.lockGetDataDir.Lock()
 	m.calls.GetDataDir = nil
 	m.lockGetDataDir.Unlock()
+	m.lockGetLogsDir.Lock()
+	m.calls.GetLogsDir = nil
+	m.lockGetLogsDir.Unlock()
 	m.lockGetConfigFile.Lock()
 	m.calls.GetConfigFile = nil
 	m.lockGetConfigFile.Unlock()

@@ -343,10 +343,6 @@ func (c *LocalCommand) getConfig(service string) (map[string]string, error) {
 			}
 			config["rest.extension.classes"] = "io.confluent.connect.replicator.monitoring.ReplicatorMonitoringExtension"
 		}
-		if isCP {
-			config["producer.interceptor.classes"] = "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
-			config["consumer.interceptor.classes"] = "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
-		}
 	case "control-center":
 		config["confluent.controlcenter.data.dir"] = data
 	case "kafka":
@@ -359,28 +355,31 @@ func (c *LocalCommand) getConfig(service string) (map[string]string, error) {
 	case "kafka-rest":
 		config["schema.registry.url"] = fmt.Sprintf("http://localhost:%d", services["schema-registry"].port)
 		config["zookeeper.connect"] = fmt.Sprintf("localhost:%d", services["zookeeper"].port)
-		if isCP {
-			config["producer.interceptor.classes"] = "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
-			config["consumer.interceptor.classes"] = "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
-		}
 	case "ksql-server":
 		config["kafkastore.connection.url"] = fmt.Sprintf("localhost:%d", services["zookeeper"].port)
 		config["ksql.schema.registry.url"] = fmt.Sprintf("http://localhost:%d", services["schema-registry"].port)
 		config["state.dir"] = data
-		if isCP {
-			config["producer.interceptor.classes"] = "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
-			config["consumer.interceptor.classes"] = "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
-		}
 	case "schema-registry":
 		config["kafkastore.connection.url"] = fmt.Sprintf("localhost:%d", services["zookeeper"].port)
-		if isCP {
-			config["producer.interceptor.classes"] = "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
-			config["consumer.interceptor.classes"] = "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
-		}
 	case "zookeeper":
 		config["dataDir"] = data
 	}
 
+	if isCP {
+		if local.Contains([]string{"connect", "kafka-rest", "ksql-server", "schema-registry"}, service) {
+			config, err = appendMonitoringInterceptors(config)
+			if err != nil {
+				return map[string]string{}, err
+			}
+		}
+	}
+
+	return config, nil
+}
+
+func appendMonitoringInterceptors(config map[string]string) (map[string]string, error) {
+	config["consumer.interceptor.classes"] = "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
+	config["producer.interceptor.classes"] = "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
 	return config, nil
 }
 
@@ -405,9 +404,9 @@ func top(pids []int) error {
 		return fmt.Errorf("top not available on platform: %s", runtime.GOOS)
 	}
 
+	top.Stdin = os.Stdin
 	top.Stdout = os.Stdout
 	top.Stderr = os.Stderr
-	top.Stdin = os.Stdin
 
 	return top.Run()
 }

@@ -185,7 +185,7 @@ func (c *LocalCommand) runConnectConnectorLoadCommand(command *cobra.Command, ar
 
 	var configFile string
 
-	if isBuiltin(connector) {
+	if local.Contains(connectors, connector) {
 		configFile, err = c.ch.GetConnectorConfigFile(connector)
 		if err != nil {
 			return err
@@ -308,15 +308,6 @@ func (c *LocalCommand) runConnectPluginListCommand(command *cobra.Command, _ []s
 	return nil
 }
 
-func isBuiltin(connector string) bool {
-	for _, builtinConnector := range connectors {
-		if connector == builtinConnector {
-			return true
-		}
-	}
-	return false
-}
-
 func isJSON(data []byte) bool {
 	var out map[string]interface{}
 	return json.Unmarshal(data, &out) == nil
@@ -362,7 +353,7 @@ func makeRequest(method, url string, body []byte) (string, error) {
 	client := &http.Client{Timeout: 10 * time.Second}
 	res, err := client.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("start the connect service with \"confluent local services connect start\"")
+		return "", err
 	}
 
 	return formatJSONResponse(res)

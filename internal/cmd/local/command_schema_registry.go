@@ -4,6 +4,8 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/confluentinc/cli/internal/pkg/local"
+
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
@@ -85,7 +87,7 @@ func (c *LocalCommand) runSchemaRegistryACLCommand(command *cobra.Command, _ []s
 		return err
 	}
 
-	args, err := collectFlags(command.Flags(), defaultValues)
+	args, err := local.CollectFlags(command.Flags(), defaultValues)
 	if err != nil {
 		return err
 	}

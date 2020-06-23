@@ -54,7 +54,7 @@ func NewDemoInfoCommand(prerunner cmd.PreRunner) *cobra.Command {
 
 func (c *LocalCommand) runDemoInfoCommand(command *cobra.Command, args []string) error {
 	demo := args[0]
-	if !isSupported(demo) {
+	if !local.Contains(supportedDemos, demo) {
 		return fmt.Errorf("demo not supported: %s", demo)
 	}
 
@@ -102,7 +102,7 @@ func NewDemoStartCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *LocalCommand) runDemoStartCommand(command *cobra.Command, args []string) error {
+func (c *LocalCommand) runDemoStartCommand(_ *cobra.Command, args []string) error {
 	return c.run(args[0], "start.sh")
 }
 
@@ -118,7 +118,7 @@ func NewDemoStopCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *LocalCommand) runDemoStopCommand(command *cobra.Command, args []string) error {
+func (c *LocalCommand) runDemoStopCommand(_ *cobra.Command, args []string) error {
 	return c.run(args[0], "stop.sh")
 }
 
@@ -174,17 +174,8 @@ func (c *LocalCommand) fetchExamplesRepo() error {
 	return nil
 }
 
-func isSupported(demo string) bool {
-	for _, supportedDemo := range supportedDemos {
-		if demo == supportedDemo {
-			return true
-		}
-	}
-	return false
-}
-
 func (c *LocalCommand) run(demo string, script string) error {
-	if !isSupported(demo) {
+	if !local.Contains(supportedDemos, demo) {
 		return fmt.Errorf("demo not supported: %s", demo)
 	}
 

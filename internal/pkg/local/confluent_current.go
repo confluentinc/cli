@@ -237,8 +237,3 @@ func getRandomChildDir(parentDir string) string {
 		}
 	}
 }
-
-func exists(file string) bool {
-	_, err := os.Stat(file)
-	return !os.IsNotExist(err)
-}

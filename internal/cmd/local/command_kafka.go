@@ -5,10 +5,8 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"strconv"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/local"
@@ -194,7 +192,6 @@ func (c *LocalCommand) runKafkaCommand(command *cobra.Command, args []string, mo
 	}
 
 	// "consume" -> "consumer"
-	// "produce" -> "producer"
 	modeNoun := fmt.Sprintf("%sr", mode)
 
 	scriptFile, err := c.ch.GetKafkaScript(format, modeNoun)
@@ -230,7 +227,7 @@ func (c *LocalCommand) runKafkaCommand(command *cobra.Command, args []string, mo
 		delete(kafkaFlagTypes, "bootstrap-server")
 	}
 
-	kafkaArgs, err := collectFlags(command.Flags(), kafkaFlagTypes)
+	kafkaArgs, err := local.CollectFlags(command.Flags(), kafkaFlagTypes)
 	if err != nil {
 		return err
 	}
@@ -258,42 +255,4 @@ func (c *LocalCommand) runKafkaCommand(command *cobra.Command, args []string, mo
 	}
 
 	return kafkaCommand.Run()
-}
-
-func collectFlags(flags *pflag.FlagSet, flagTypes map[string]interface{}) ([]string, error) {
-	var args []string
-
-	for key, typeDefault := range flagTypes {
-		var val interface{}
-		var err error
-
-		switch typeDefault.(type) {
-		case bool:
-			val, err = flags.GetBool(key)
-		case string:
-			val, err = flags.GetString(key)
-		case int:
-			val, err = flags.GetInt(key)
-		}
-
-		if err != nil {
-			return []string{}, err
-		}
-		if val == typeDefault {
-			continue
-		}
-
-		flag := fmt.Sprintf("--%s", key)
-
-		switch typeDefault.(type) {
-		case bool:
-			args = append(args, flag)
-		case string:
-			args = append(args, flag, val.(string))
-		case int:
-			args = append(args, flag, strconv.Itoa(val.(int)))
-		}
-	}
-
-	return args, nil
 }
