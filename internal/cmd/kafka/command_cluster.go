@@ -12,7 +12,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/confirm"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -78,13 +77,12 @@ type describeStruct struct {
 }
 
 // NewClusterCommand returns the Cobra command for Kafka cluster.
-func NewClusterCommand(prerunner pcmd.PreRunner, config *v3.Config) *cobra.Command {
+func NewClusterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "cluster",
 			Short: "Manage Kafka clusters.",
-		},
-		config, prerunner)
+		}, prerunner)
 	cmd := &clusterCommand{
 		AuthenticatedCLICommand: cliCmd,
 		prerunner:               prerunner,

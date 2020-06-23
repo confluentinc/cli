@@ -34,7 +34,8 @@ deps:
 	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.21.0 && \
 	go get github.com/mitchellh/golicense@v0.1.1 && \
 	go get github.com/golang/mock/mockgen@v1.3.1 && \
-	go get github.com/kevinburke/go-bindata/...@v3.13.0
+	go get github.com/kevinburke/go-bindata/...@v3.13.0 && \
+	export GOPRIVATE=github.com/confluentinc
 
 build: bindata build-go
 
@@ -285,7 +286,8 @@ docs:
 
 .PHONY: publish-docs
 publish-docs: docs
-	@TMP_DIR=$$(mktemp -d)/docs || exit 1; \
+	@TMP_BASE=$$(mktemp -d) || exit 1; \
+		TMP_DIR=$${TMP_BASE}/docs || exit 1; \
 		git clone git@github.com:confluentinc/docs.git $${TMP_DIR}; \
 		cd $${TMP_DIR} || exit 1; \
 		git fetch ; \
@@ -299,8 +301,7 @@ publish-docs: docs
 		git commit -m "chore: updating CLI docs for $(VERSION)" || exit 1; \
 		git push origin cli-$(VERSION) || exit 1; \
 		hub pull-request -b $(DOCS_BRANCH) -m "chore: updating CLI docs for $(VERSION)" || exit 1; \
-		cd - || exit 1; \
-		rm -rf $${TMP_DIR}
+		rm -rf $${TMP_BASE}
 #   TODO: we can't enable auto-docs generation for confluent until we migrate go-basher commands into cobra
 #	    make publish-docs-internal BASE_DIR=$${TMP_DIR} CLI_NAME=confluent || exit 1; \
 
@@ -323,9 +324,94 @@ endif
 clean-docs:
 	rm docs/*/*.rst
 
+.PHONY: release-notes-prep
+release-notes-prep:
+	@echo "Preparing Release Notes for $(BUMPED_VERSION) (Previous Release Version: v$(CLEAN_VERSION))"
+	@echo
+	@GO11MODULE=on go run -ldflags '-X main.releaseVersion=$(BUMPED_VERSION) -X main.prevVersion=v$(CLEAN_VERSION)' cmd/release-notes/prep/main.go
+	$(print-release-notes-prep-next-steps)
+
+define print-release-notes-prep-next-steps
+	@echo "===================="
+	@echo "NEXT STEPS"
+	@echo "===================="
+	@echo
+	@echo "- Open './release-notes/prep' and fill in the content following the instructions."
+	@echo
+	@echo "- Once finished, run 'make publish-release-notes'."
+	@echo
+	@echo "===================="
+endef
+
+RELEASE_NOTES_BRANCH ?= cli-$(BUMPED_VERSION)-release-notes
+.PHONY: publish-release-notes
+publish-release-notes:
+	@TMP_BASE=$$(mktemp -d) || exit 1; \
+		TMP_DOCS=$${TMP_BASE}/docs; \
+		git clone git@github.com:confluentinc/docs.git $${TMP_DOCS}; \
+		cd $${TMP_DOCS} || exit 1; \
+		git fetch ; \
+		git checkout -b $(RELEASE_NOTES_BRANCH) origin/$(DOCS_BRANCH) || exit 1; \
+		cd - || exit 1; \
+		CCLOUD_DOCS_DIR=$${TMP_DOCS}/cloud/cli; \
+		CONFLUENT_DOCS_DIR=$${TMP_DOCS}/cli; \
+		make release-notes CCLOUD_DOCS_DIR=$${CCLOUD_DOCS_DIR} CONFLUENT_DOCS_DIR=$${CONFLUENT_DOCS_DIR}; \
+		make publish-release-notes-to-local-docs-repo CCLOUD_DOCS_DIR=$${CCLOUD_DOCS_DIR} CONFLUENT_DOCS_DIR=$${CONFLUENT_DOCS_DIR} || exit 1; \
+		cd $${TMP_DOCS} || exit 1; \
+		git add . || exit 1; \
+		git diff --cached --exit-code > /dev/null && echo "nothing to update" && exit 0; \
+		git commit -m "New release notes for $(BUMPED_VERSION)" || exit 1; \
+		git push origin $(RELEASE_NOTES_BRANCH) || exit 1; \
+		hub pull-request -b $(DOCS_BRANCH) -m "New release notes for $(BUMPED_VERSION)" || exit 1; \
+		rm -rf $${TMP_BASE}
+	make publish-release-notes-to-s3
+	$(print-publish-release-notes-next-steps)
+
+.PHONY: publish-release-notes-to-s3
+publish-release-notes-to-s3:
+	$(caasenv-authenticate); \
+	aws s3 cp release-notes/ccloud/latest-release.rst s3://confluent.cloud/ccloud-cli/release-notes/$(BUMPED_VERSION:v%=%)/release-notes.rst --acl public-read; \
+    aws s3 cp release-notes/confluent/latest-release.rst s3://confluent.cloud/confluent-cli/release-notes/$(BUMPED_VERSION:v%=%)/release-notes.rst --acl public-read
+
+define print-publish-release-notes-next-steps
+	@echo
+	@echo
+	@echo "===================="
+	@echo "NEXT STEPS"
+	@echo "===================="
+	@echo
+	@echo "- Find PR named 'New release notes for $(BUMPED_VERSION)' in confluentinc/docs and merge it."
+	@echo
+	@echo "- Check release notes file in s3 confluent.cloud/ccloud-cli/release-notes/$(BUMPED_VERSION)/"
+	@echo
+	@echo "- Run 'make clean-release-notes' to clean up your local repo"
+	@echo
+	@echo "- Once the release notes are ready, it's time to release the CLI!"
+	@echo
+	@echo "===================="
+endef
+
+.PHONY: release-notes
+release-notes:
+	@echo Previous Release Version: v$(CLEAN_VERSION)
+	@GO11MODULE=on go run -ldflags '-X main.releaseVersion=$(BUMPED_VERSION) -X main.ccloudReleaseNotesPath=$(CCLOUD_DOCS_DIR) -X main.confluentReleaseNotesPath=$(CONFLUENT_DOCS_DIR)' cmd/release-notes/release/main.go
+
+.PHONY: publish-release-notes-to-local-docs-repo
+publish-release-notes-to-local-docs-repo:
+	cp release-notes/ccloud/release-notes.rst $(CCLOUD_DOCS_DIR)
+	cp release-notes/confluent/release-notes.rst $(CONFLUENT_DOCS_DIR)
+
+.PHONY: clean-release-notes
+clean-release-notes:
+	-rm release-notes/prep
+	-rm release-notes/ccloud/release-notes.rst
+	-rm release-notes/confluent/release-notes.rst
+	-rm release-notes/ccloud/latest-release.rst
+	-rm release-notes/confluent/latest-release.rst
+
 .PHONY: fmt
 fmt:
-	@gofmt -e -s -l -w $(ALL_SRC)
+	@goimports -e -l -local github.com/confluentinc/cli/ -w $(ALL_SRC)
 
 .PHONY: release-ci
 release-ci:
@@ -370,22 +456,26 @@ lint-licenses: build
 		echo ; \
 	done
 
-.PHONY: coverage
-coverage:
+.PHONY: coverage-unit
+coverage-unit:
       ifdef CI
 	@# Run unit tests with coverage.
-	@GO111MODULE=on go test -v -race -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') \
-		-coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test)
-	@# Run integration tests with coverage.
-	@GO111MODULE=on INTEG_COVER=on go test -v $$(go list ./... | grep cli/test) $(TEST_ARGS)
-	@echo "mode: atomic" > coverage.txt
+	@GO111MODULE=on GOPRIVATE=github.com/confluentinc go test -v -race -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS)
 	@grep -h -v "mode: atomic" unit_coverage.txt >> coverage.txt
-	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
       else
 	@# Run unit tests.
-	@GO111MODULE=on go test -race -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test)
+	@GO111MODULE=on GOPRIVATE=github.com/confluentinc go test -race -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS)
+      endif
+
+.PHONY: coverage-integ
+coverage-integ:
+      ifdef CI
+	@# Run integration tests with coverage.
+	@GO111MODULE=on INTEG_COVER=on go test -v $$(go list ./... | grep cli/test) $(INT_TEST_ARGS)
+	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
+      else
 	@# Run integration tests.
-	@GO111MODULE=on go test -v -race $$(go list ./... | grep cli/test) $(TEST_ARGS)
+	@GO111MODULE=on GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(INT_TEST_ARGS)
       endif
 
 .PHONY: mocks
@@ -399,8 +489,20 @@ test-installers:
 	@echo Running packaging/installer tests
 	@bash test-installers.sh
 
+.PHONY: test-prep
+test-prep: bindata mocks lint
+      ifdef CI
+    @echo "mode: atomic" > coverage.txt
+      endif
+
 .PHONY: test
-test: bindata mocks lint coverage test-installers
+test: test-prep coverage-unit coverage-integ test-installers
+
+.PHONY: unit-test
+unit-test: test-prep coverage-unit
+
+.PHONY: int-test
+int-test: test-prep coverage-integ
 
 .PHONY: doctoc
 doctoc:

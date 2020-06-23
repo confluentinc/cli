@@ -10,6 +10,8 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/spf13/cobra"
 
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -18,13 +20,11 @@ import (
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
-	mds "github.com/confluentinc/mds-sdk-go"
 )
 
-type commands struct {
-	Commands        []*pcmd.CLICommand
+type loginCommand struct {
+	*pcmd.CLICommand
 	Logger          *log.Logger
-	config          *v3.Config
 	analyticsClient analytics.Client
 	// for testing
 	MDSClientManager      pauth.MDSClientManager
@@ -34,35 +34,11 @@ type commands struct {
 	netrcHandler          *pauth.NetrcHandler
 }
 
-var (
-	LoginIndex = 0
-)
-
-// New returns a list of auth-related Cobra commands.
-func New(prerunner pcmd.PreRunner, config *v3.Config, logger *log.Logger, userAgent string, analyticsClient analytics.Client, netrcHandler *pauth.NetrcHandler) []*cobra.Command {
-	var defaultAnonHTTPClientFactory = func(baseURL string, logger *log.Logger) *ccloud.Client {
-		return ccloud.NewClient(&ccloud.Params{BaseURL: baseURL, HttpClient: ccloud.BaseClient, Logger: logger, UserAgent: userAgent})
-	}
-	var defaultJwtHTTPClientFactory = func(ctx context.Context, jwt string, baseURL string, logger *log.Logger) *ccloud.Client {
-		return ccloud.NewClientWithJWT(ctx, jwt, &ccloud.Params{BaseURL: baseURL, Logger: logger, UserAgent: userAgent})
-	}
-	cmds := newCommands(prerunner, config, logger, pcmd.NewPrompt(os.Stdin),
-		defaultAnonHTTPClientFactory, defaultJwtHTTPClientFactory, &pauth.MDSClientManagerImpl{},
-		analyticsClient, netrcHandler,
-	)
-	var cobraCmds []*cobra.Command
-	for _, cmd := range cmds.Commands {
-		cobraCmds = append(cobraCmds, cmd.Command)
-	}
-	return cobraCmds
-}
-
-func newCommands(prerunner pcmd.PreRunner, config *v3.Config, log *log.Logger, prompt pcmd.Prompt,
+func NewLoginCommand(cliName string, prerunner pcmd.PreRunner, log *log.Logger, prompt pcmd.Prompt,
 	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *ccloud.Client,
 	jwtHTTPClientFactory func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *ccloud.Client,
-	mdsClientManager pauth.MDSClientManager, analyticsClient analytics.Client, netrcHandler *pauth.NetrcHandler) *commands {
-	cmd := &commands{
-		config:                config,
+	mdsClientManager pauth.MDSClientManager, analyticsClient analytics.Client, netrcHandler *pauth.NetrcHandler) *loginCommand {
+	cmd := &loginCommand{
 		Logger:                log,
 		prompt:                prompt,
 		analyticsClient:       analyticsClient,
@@ -71,18 +47,23 @@ func newCommands(prerunner pcmd.PreRunner, config *v3.Config, log *log.Logger, p
 		MDSClientManager:      mdsClientManager,
 		netrcHandler:          netrcHandler,
 	}
-	cmd.init(prerunner)
+	cmd.init(cliName, prerunner)
 	return cmd
 }
 
-func (a *commands) init(prerunner pcmd.PreRunner) {
+func (a *loginCommand) init(cliName string, prerunner pcmd.PreRunner) {
+	remoteAPIName := getRemoteAPIName(cliName)
 	loginCmd := &cobra.Command{
 		Use:   "login",
-		Short: fmt.Sprintf("Log in to %s.", a.config.APIName()),
-		Long:  fmt.Sprintf("Log in to %s.", a.config.APIName()),
+		Short: fmt.Sprintf("Log in to %s.", remoteAPIName),
+		Long:  fmt.Sprintf("Log in to %s.", remoteAPIName),
 		Args:  cobra.NoArgs,
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			a.analyticsClient.SetCommandType(analytics.Login)
+			return a.CLICommand.PersistentPreRunE(cmd, args)
+		},
 	}
-	if a.config.CLIName == "ccloud" {
+	if cliName == "ccloud" {
 		loginCmd.RunE = a.login
 		loginCmd.Flags().String("url", "https://confluent.cloud", "Confluent Cloud service URL.")
 	} else {
@@ -96,22 +77,18 @@ func (a *commands) init(prerunner pcmd.PreRunner) {
 	loginCmd.Flags().Bool("no-browser", false, "Do not open browser when authenticating via Single Sign-On.")
 	loginCmd.Flags().Bool("save", false, "Save login credentials or refresh token (in the case of SSO) to local netrc file.")
 	loginCmd.Flags().SortFlags = false
-	cliLoginCmd := pcmd.NewAnonymousCLICommand(loginCmd, a.config, prerunner)
-	loginCmd.PersistentPreRunE = a.analyticsPreRunCover(cliLoginCmd, analytics.Login, prerunner)
-	logoutCmd := &cobra.Command{
-		Use:   "logout",
-		Short: fmt.Sprintf("Logout of %s.", a.config.APIName()),
-		Long:  fmt.Sprintf("Logout of %s.", a.config.APIName()),
-
-		RunE: a.logout,
-		Args: cobra.NoArgs,
-	}
-	cliLogoutCmd := pcmd.NewAnonymousCLICommand(logoutCmd, a.config, prerunner)
-	logoutCmd.PersistentPreRunE = a.analyticsPreRunCover(cliLogoutCmd, analytics.Logout, prerunner)
-	a.Commands = []*pcmd.CLICommand{cliLoginCmd, cliLogoutCmd}
+	cliLoginCmd := pcmd.NewAnonymousCLICommand(loginCmd, prerunner)
+	a.CLICommand = cliLoginCmd
 }
 
-func (a *commands) login(cmd *cobra.Command, args []string) error {
+func getRemoteAPIName(cliName string) string {
+	if cliName == "ccloud" {
+		return "Confluent Cloud"
+	}
+	return "Confluent Platform"
+}
+
+func (a *loginCommand) login(cmd *cobra.Command, args []string) error {
 	url, err := cmd.Flags().GetString("url")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -121,20 +98,20 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	a.config.NoBrowser = noBrowser
+	a.Config.NoBrowser = noBrowser
 
-	client := a.anonHTTPClientFactory(url, a.config.Logger)
+	client := a.anonHTTPClientFactory(url, a.Config.Logger)
 	email, password, err := a.credentials(cmd, "Email", client)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	token, refreshToken, err := pauth.GetCCloudAuthToken(client, url, email, password, noBrowser)
+	token, refreshToken, err := pauth.GetCCloudAuthToken(client, url, email, password, noBrowser, a.Logger)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	client = a.jwtHTTPClientFactory(context.Background(), token, url, a.config.Logger)
+	client = a.jwtHTTPClientFactory(context.Background(), token, url, a.Config.Logger)
 	user, err := client.Auth.User(context.Background())
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -146,7 +123,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	username := user.User.Email
 	name := generateContextName(username, url)
 	var state *v2.ContextState
-	ctx, err := a.config.FindContext(name)
+	ctx, err := a.Config.FindContext(name)
 	if err == nil {
 		state = ctx.State
 	} else {
@@ -158,11 +135,12 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 		state.Auth = &v1.AuthConfig{}
 	}
 
-	// Always overwrite the user and list of accounts when logging in -- but don't necessarily
+	// Always overwrite the user, organization, and list of accounts when logging in -- but don't necessarily
 	// overwrite `Account` (current/active environment) since we want that to be remembered
 	// between CLI sessions.
 	state.Auth.User = user.User
 	state.Auth.Accounts = user.Accounts
+	state.Auth.Organization = user.Organization
 
 	// Default to 0th environment if no suitable environment is already configured
 	hasGoodEnv := false
@@ -181,7 +159,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	err = a.config.Save()
+	err = a.Config.Save()
 	if err != nil {
 		return errors.HandleCommon(errors.Wrap(err, errors.UnableToSaveUserAuthErrorMsg), cmd)
 	}
@@ -203,7 +181,7 @@ func (a *commands) login(cmd *cobra.Command, args []string) error {
 	return err
 }
 
-func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
+func (a *loginCommand) loginMDS(cmd *cobra.Command, args []string) error {
 	url, err := cmd.Flags().GetString("url")
 	if err != nil {
 		return err
@@ -212,7 +190,7 @@ func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	dynamicContext, err := a.Commands[0].Config.Context(cmd)
+	dynamicContext, err := a.Config.Context(cmd)
 	if err != nil {
 		return err
 	}
@@ -260,24 +238,7 @@ func (a *commands) loginMDS(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (a *commands) logout(cmd *cobra.Command, args []string) error {
-	ctx := a.config.Context()
-	if ctx == nil {
-		return nil
-	}
-	err := ctx.DeleteUserAuth()
-	if err != nil {
-		return err
-	}
-	err = a.config.Save()
-	if err != nil {
-		return err
-	}
-	pcmd.Println(cmd, "You are now logged out")
-	return nil
-}
-
-func (a *commands) credentials(cmd *cobra.Command, userField string, cloudClient *ccloud.Client) (string, string, error) {
+func (a *loginCommand) credentials(cmd *cobra.Command, userField string, cloudClient *ccloud.Client) (string, string, error) {
 	email := os.Getenv("XX_CCLOUD_EMAIL")
 	if len(email) == 0 {
 		email = os.Getenv("XX_CONFLUENT_USERNAME")
@@ -330,7 +291,7 @@ func (a *commands) credentials(cmd *cobra.Command, userField string, cloudClient
 	return email, password, nil
 }
 
-func (a *commands) addOrUpdateContext(username string, url string, state *v2.ContextState, caCertPath string) error {
+func (a *loginCommand) addOrUpdateContext(username string, url string, state *v2.ContextState, caCertPath string) error {
 	ctxName := generateContextName(username, url)
 	credName := generateCredentialName(username)
 	platform := &v2.Platform{
@@ -343,45 +304,40 @@ func (a *commands) addOrUpdateContext(username string, url string, state *v2.Con
 		Username: username,
 		// don't save password if they entered it interactively.
 	}
-	err := a.config.SavePlatform(platform)
+	err := a.Config.SavePlatform(platform)
 	if err != nil {
 		return err
 	}
-	err = a.config.SaveCredential(credential)
+	err = a.Config.SaveCredential(credential)
 	if err != nil {
 		return err
 	}
-	if ctx, ok := a.config.Contexts[ctxName]; ok {
-		a.config.ContextStates[ctxName] = state
+	if ctx, ok := a.Config.Contexts[ctxName]; ok {
+		a.Config.ContextStates[ctxName] = state
 		ctx.State = state
 	} else {
-		err = a.config.AddContext(ctxName, platform.Name, credential.Name, map[string]*v1.KafkaClusterConfig{},
+		err = a.Config.AddContext(ctxName, platform.Name, credential.Name, map[string]*v1.KafkaClusterConfig{},
 			"", nil, state)
 	}
 	if err != nil {
 		return err
 	}
-	err = a.config.SetContext(ctxName)
+	err = a.Config.SetContext(ctxName)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (a *commands) analyticsPreRunCover(command *pcmd.CLICommand, commandType analytics.CommandType, prerunner pcmd.PreRunner) func(cmd *cobra.Command, args []string) error {
-	return func(cmd *cobra.Command, args []string) error {
-		a.analyticsClient.SetCommandType(commandType)
-		return prerunner.Anonymous(command)(cmd, args)
-	}
-}
 
-func (a *commands) saveToNetrc(cmd *cobra.Command, email, password, refreshToken string) error {
+
+func (a *loginCommand) saveToNetrc(cmd *cobra.Command, email, password, refreshToken string) error {
 	// sso if refresh token is empty
 	var err error
 	if refreshToken == "" {
-		err = a.netrcHandler.WriteNetrcCredentials(a.config.CLIName, false, a.config.Context().Name, email, password)
+		err = a.netrcHandler.WriteNetrcCredentials(a.Config.CLIName, false, a.Config.Config.Context().Name, email, password)
 	} else {
-		err = a.netrcHandler.WriteNetrcCredentials(a.config.CLIName, true, a.config.Context().Name, email, refreshToken)
+		err = a.netrcHandler.WriteNetrcCredentials(a.Config.CLIName, true, a.Config.Config.Context().Name, email, refreshToken)
 	}
 	if err != nil {
 		return err

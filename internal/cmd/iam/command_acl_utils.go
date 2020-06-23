@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	"github.com/confluentinc/mds-sdk-go"
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 )
 
 // ACLConfiguration wrapper used for flag parsing and validation
@@ -65,11 +65,11 @@ func aclFlags() *pflag.FlagSet {
 	flgSet.String("principal", "", "Principal for this operation with User: or Group: prefix.")
 	flgSet.String("host", "*", "Set host for access.")
 	flgSet.String("operation", "", fmt.Sprintf("Set ACL Operation to: (%s).",
-		convertToFlags(mds.ACL_OPERATION_ALL, mds.ACL_OPERATION_READ, mds.ACL_OPERATION_WRITE,
-			mds.ACL_OPERATION_CREATE, mds.ACL_OPERATION_DELETE, mds.ACL_OPERATION_ALTER,
-			mds.ACL_OPERATION_DESCRIBE, mds.ACL_OPERATION_CLUSTER_ACTION,
-			mds.ACL_OPERATION_DESCRIBE_CONFIGS, mds.ACL_OPERATION_ALTER_CONFIGS,
-			mds.ACL_OPERATION_IDEMPOTENT_WRITE)))
+		convertToFlags(mds.ACLOPERATION_ALL, mds.ACLOPERATION_READ, mds.ACLOPERATION_WRITE,
+			mds.ACLOPERATION_CREATE, mds.ACLOPERATION_DELETE, mds.ACLOPERATION_ALTER,
+			mds.ACLOPERATION_DESCRIBE, mds.ACLOPERATION_CLUSTER_ACTION,
+			mds.ACLOPERATION_DESCRIBE_CONFIGS, mds.ACLOPERATION_ALTER_CONFIGS,
+			mds.ACLOPERATION_IDEMPOTENT_WRITE)))
 	flgSet.Bool("cluster-scope", false, `Set the cluster resource. With this option the ACL grants
 access to the provided operations on the Kafka cluster itself.`)
 	flgSet.String("consumer-group", "", "Set the Consumer Group resource.")
@@ -121,11 +121,11 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 		case "transactional-id":
 			setResourcePattern(conf, n, v)
 		case "allow":
-			conf.AclBinding.Entry.PermissionType = mds.ACL_PERMISSION_TYPE_ALLOW
+			conf.AclBinding.Entry.PermissionType = mds.ACLPERMISSIONTYPE_ALLOW
 		case "deny":
-			conf.AclBinding.Entry.PermissionType = mds.ACL_PERMISSION_TYPE_DENY
+			conf.AclBinding.Entry.PermissionType = mds.ACLPERMISSIONTYPE_DENY
 		case "prefix":
-			conf.AclBinding.Pattern.PatternType = mds.PATTERN_TYPE_PREFIXED
+			conf.AclBinding.Pattern.PatternType = mds.PATTERNTYPE_PREFIXED
 		case "principal":
 			conf.AclBinding.Entry.Principal = v
 		case "host":
@@ -135,19 +135,19 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 			v = strings.Replace(v, "-", "_", -1)
 			enumUtils := enumUtils{}
 			enumUtils.init(
-				mds.ACL_OPERATION_UNKNOWN,
-				mds.ACL_OPERATION_ANY,
-				mds.ACL_OPERATION_ALL,
-				mds.ACL_OPERATION_READ,
-				mds.ACL_OPERATION_WRITE,
-				mds.ACL_OPERATION_CREATE,
-				mds.ACL_OPERATION_DELETE,
-				mds.ACL_OPERATION_ALTER,
-				mds.ACL_OPERATION_DESCRIBE,
-				mds.ACL_OPERATION_CLUSTER_ACTION,
-				mds.ACL_OPERATION_DESCRIBE_CONFIGS,
-				mds.ACL_OPERATION_ALTER_CONFIGS,
-				mds.ACL_OPERATION_IDEMPOTENT_WRITE,
+				mds.ACLOPERATION_UNKNOWN,
+				mds.ACLOPERATION_ANY,
+				mds.ACLOPERATION_ALL,
+				mds.ACLOPERATION_READ,
+				mds.ACLOPERATION_WRITE,
+				mds.ACLOPERATION_CREATE,
+				mds.ACLOPERATION_DELETE,
+				mds.ACLOPERATION_ALTER,
+				mds.ACLOPERATION_DESCRIBE,
+				mds.ACLOPERATION_CLUSTER_ACTION,
+				mds.ACLOPERATION_DESCRIBE_CONFIGS,
+				mds.ACLOPERATION_ALTER_CONFIGS,
+				mds.ACLOPERATION_IDEMPOTENT_WRITE,
 			)
 			if op, ok := enumUtils[v]; ok {
 				conf.AclBinding.Entry.Operation = op.(mds.AclOperation)
@@ -162,8 +162,8 @@ func setResourcePattern(conf *ACLConfiguration, n string, v string) {
 	if conf.AclBinding.Pattern.ResourceType != "" {
 		// A resourceType has already been set with a previous flag
 		conf.errors = multierror.Append(conf.errors, fmt.Errorf("exactly one of %v must be set",
-			convertToFlags(mds.ACL_RESOURCE_TYPE_TOPIC, mds.ACL_RESOURCE_TYPE_GROUP,
-				mds.ACL_RESOURCE_TYPE_CLUSTER, mds.ACL_RESOURCE_TYPE_TRANSACTIONAL_ID)))
+			convertToFlags(mds.ACLRESOURCETYPE_TOPIC, mds.ACLRESOURCETYPE_GROUP,
+				mds.ACLRESOURCETYPE_CLUSTER, mds.ACLRESOURCETYPE_TRANSACTIONAL_ID)))
 		return
 	}
 
@@ -172,12 +172,12 @@ func setResourcePattern(conf *ACLConfiguration, n string, v string) {
 	n = strings.Replace(n, "-", "_", -1)
 
 	enumUtils := enumUtils{}
-	enumUtils.init(mds.ACL_RESOURCE_TYPE_TOPIC, mds.ACL_RESOURCE_TYPE_GROUP,
-		mds.ACL_RESOURCE_TYPE_CLUSTER, mds.ACL_RESOURCE_TYPE_TRANSACTIONAL_ID)
+	enumUtils.init(mds.ACLRESOURCETYPE_TOPIC, mds.ACLRESOURCETYPE_GROUP,
+		mds.ACLRESOURCETYPE_CLUSTER, mds.ACLRESOURCETYPE_TRANSACTIONAL_ID)
 	conf.AclBinding.Pattern.ResourceType = enumUtils[n].(mds.AclResourceType)
 
-	if conf.AclBinding.Pattern.ResourceType == mds.ACL_RESOURCE_TYPE_CLUSTER {
-		conf.AclBinding.Pattern.PatternType = mds.PATTERN_TYPE_LITERAL
+	if conf.AclBinding.Pattern.ResourceType == mds.ACLRESOURCETYPE_CLUSTER {
+		conf.AclBinding.Pattern.PatternType = mds.PATTERNTYPE_LITERAL
 	}
 	conf.AclBinding.Pattern.Name = v
 }
@@ -186,10 +186,10 @@ func convertToFlags(operations ...interface{}) string {
 	var ops []string
 
 	for _, v := range operations {
-		if v == mds.ACL_RESOURCE_TYPE_GROUP {
+		if v == mds.ACLRESOURCETYPE_GROUP {
 			v = "consumer-group"
 		}
-		if v == mds.ACL_RESOURCE_TYPE_CLUSTER {
+		if v == mds.ACLRESOURCETYPE_CLUSTER {
 			v = "cluster-scope"
 		}
 		s := fmt.Sprintf("%v", v)

@@ -66,7 +66,7 @@ func TestLocal(t *testing.T) {
 	verifyTestEnvironmentVariables(shellRunner)
 	shellRunner.EXPECT().Source("cp_cli/confluent.sh", gomock.Any())
 	shellRunner.EXPECT().Run("main", gomock.Eq([]string{"local", "help"})).Return(0, nil)
-	localCmd := New(&cobra.Command{}, cliMock.NewPreRunnerMock(nil, nil), shellRunner, log.New(), &mock.FileSystem{}, &v3.Config{})
+	localCmd := New(&cobra.Command{}, cliMock.NewPreRunnerMock(nil, nil, &v3.Config{}), shellRunner, log.New(), &mock.FileSystem{}, &v3.Config{})
 	_, err := cmd.ExecuteCommand(localCmd, "local", "--path", "blah", "help")
 	req.NoError(err)
 }
@@ -83,7 +83,7 @@ func TestLocalErrorDuringSource(t *testing.T) {
 	shellRunner.EXPECT().Init(os.Stdout, os.Stderr)
 	verifyTestEnvironmentVariables(shellRunner)
 	shellRunner.EXPECT().Source("cp_cli/confluent.sh", gomock.Any()).Return(errors.New("oh no"))
-	localCmd := New(&cobra.Command{}, cliMock.NewPreRunnerMock(nil, nil), shellRunner, log.New(), &mock.FileSystem{}, &v3.Config{})
+	localCmd := New(&cobra.Command{}, cliMock.NewPreRunnerMock(nil, nil, &v3.Config{}), shellRunner, log.New(), &mock.FileSystem{}, &v3.Config{})
 	_, err := cmd.ExecuteCommand(localCmd, "local", "--path", "blah", "help")
 	req.Error(err)
 }

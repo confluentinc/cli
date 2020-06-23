@@ -12,12 +12,13 @@ import (
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/go-printer"
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/go-printer"
-	"github.com/confluentinc/mds-sdk-go"
 )
 
 const (
@@ -53,8 +54,7 @@ func NewListCommand(cfg *v3.Config, prerunner cmd.PreRunner) *cobra.Command {
 				Use:   "list",
 				Short: "List registered clusters.",
 				Long:  "List clusters that are registered with the MDS cluster registry.",
-			},
-			cfg, prerunner),
+			}, prerunner),
 	}
 	listCmd.Flags().String(typeFlag, "", fmt.Sprintf("Filter list to this cluster type (%s).", strings.Join(clusterTypeNames, ", ")))
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)

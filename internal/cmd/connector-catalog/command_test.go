@@ -13,7 +13,7 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go/mock"
 
-	"github.com/confluentinc/cli/internal/pkg/config/v3"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	cliMock "github.com/confluentinc/cli/mock"
 )
@@ -69,8 +69,8 @@ func (suite *CatalogTestSuite) SetupTest() {
 }
 
 func (suite *CatalogTestSuite) newCMD() *cobra.Command {
-	prerunner := cliMock.NewPreRunnerMock(&ccloud.Client{Connect: suite.connectMock, Kafka: suite.kafkaMock}, nil)
-	cmd := New(prerunner, suite.conf)
+	prerunner := cliMock.NewPreRunnerMock(&ccloud.Client{Connect: suite.connectMock, Kafka: suite.kafkaMock}, nil, suite.conf)
+	cmd := New("ccloud", prerunner)
 	return cmd
 }
 

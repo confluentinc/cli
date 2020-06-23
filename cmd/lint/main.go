@@ -11,12 +11,8 @@ import (
 
 	"github.com/confluentinc/cli/internal/cmd"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
-	"github.com/confluentinc/cli/internal/pkg/config"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	linter "github.com/confluentinc/cli/internal/pkg/lint-cli"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/version"
-	"github.com/confluentinc/cli/mock"
 )
 
 var (
@@ -34,7 +30,7 @@ var (
 	}
 	vocabWords = []string{
 		"ccloud", "kafka", "api", "url", "config", "configs", "csu", "transactional", "ksql", "KSQL", "stdin",
-		"connect", "connect-catalog", "JSON", "plaintext", "json", "YAML", "yaml", "SSO", "netrc", "single-zone", "multi-zone",
+		"connect", "connect-catalog", "AVRO", "JSON", "PROTOBUF", "plaintext", "json", "YAML", "yaml", "SSO", "netrc", "single-zone", "multi-zone",
 		// security
 		"iam", "acl", "acls", "ACL", "rolebinding", "rolebindings", "PEM", "auth", "init", "decrypt", "READWRITE",
 		"txt", // this is because @file.txt -> file txt
@@ -95,6 +91,12 @@ var rules = []linter.Rule{
 		linter.ExcludeCommandContains("cluster describe"),
 		// skip connector-catalog describe as it connector plugin name
 		linter.ExcludeCommandContains("connector-catalog describe"),
+		// skip feedback command
+		linter.ExcludeCommand("feedback"),
+		// config context commands
+		linter.ExcludeCommand("config context current"),
+		linter.ExcludeCommandContains("config context get"),
+		linter.ExcludeCommandContains("config context set"),
 	),
 	// TODO: ensuring --cluster is optional DOES NOT actually ensure that the cluster context is used
 	linter.Filter(linter.RequireFlag("cluster", true), clusterScopedCommands...),
@@ -162,12 +164,7 @@ func main() {
 
 	var issues *multierror.Error
 	for _, cliName := range cliNames {
-		cfg := v3.New(&config.Params{
-			CLIName:    cliName,
-			MetricSink: nil,
-			Logger:     log.New(),
-		})
-		cli, err := cmd.NewConfluentCommand(cliName, cfg, cfg.Logger, &version.Version{Binary: cliName}, mock.NewDummyAnalyticsMock(), pauth.NewNetrcHandler(""))
+		cli, err := cmd.NewConfluentCommand(cliName, true, &version.Version{Binary: cliName}, pauth.NewNetrcHandler(""))
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)

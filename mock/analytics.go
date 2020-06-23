@@ -19,23 +19,20 @@ type AnalyticsClient struct {
 	lockTrackCommand sync.Mutex
 	TrackCommandFunc func(cmd *github_com_spf13_cobra.Command, args []string)
 
-	lockCatchHelpCall sync.Mutex
-	CatchHelpCallFunc func(rootCmd *github_com_spf13_cobra.Command, args []string)
-
-	lockSendCommandSucceeded sync.Mutex
-	SendCommandSucceededFunc func() error
-
-	lockSendCommandFailed sync.Mutex
-	SendCommandFailedFunc func(e error) error
-
 	lockSetCommandType sync.Mutex
 	SetCommandTypeFunc func(commandType github_com_confluentinc_cli_internal_pkg_analytics.CommandType)
 
 	lockSessionTimedOut sync.Mutex
 	SessionTimedOutFunc func() error
 
+	lockSendCommandAnalytics sync.Mutex
+	SendCommandAnalyticsFunc func(cmd *github_com_spf13_cobra.Command, args []string, cmdExecutionError error) error
+
 	lockClose sync.Mutex
 	CloseFunc func() error
+
+	lockSetSpecialProperty sync.Mutex
+	SetSpecialPropertyFunc func(propertiesKey string, value interface{})
 
 	calls struct {
 		SetStartTime []struct {
@@ -44,21 +41,21 @@ type AnalyticsClient struct {
 			Cmd  *github_com_spf13_cobra.Command
 			Args []string
 		}
-		CatchHelpCall []struct {
-			RootCmd *github_com_spf13_cobra.Command
-			Args    []string
-		}
-		SendCommandSucceeded []struct {
-		}
-		SendCommandFailed []struct {
-			E error
-		}
 		SetCommandType []struct {
 			CommandType github_com_confluentinc_cli_internal_pkg_analytics.CommandType
 		}
 		SessionTimedOut []struct {
 		}
+		SendCommandAnalytics []struct {
+			Cmd               *github_com_spf13_cobra.Command
+			Args              []string
+			CmdExecutionError error
+		}
 		Close []struct {
+		}
+		SetSpecialProperty []struct {
+			PropertiesKey string
+			Value         interface{}
 		}
 	}
 }
@@ -138,119 +135,6 @@ func (m *AnalyticsClient) TrackCommandCalls() []struct {
 	return m.calls.TrackCommand
 }
 
-// CatchHelpCall mocks base method by wrapping the associated func.
-func (m *AnalyticsClient) CatchHelpCall(rootCmd *github_com_spf13_cobra.Command, args []string) {
-	m.lockCatchHelpCall.Lock()
-	defer m.lockCatchHelpCall.Unlock()
-
-	if m.CatchHelpCallFunc == nil {
-		panic("mocker: AnalyticsClient.CatchHelpCallFunc is nil but AnalyticsClient.CatchHelpCall was called.")
-	}
-
-	call := struct {
-		RootCmd *github_com_spf13_cobra.Command
-		Args    []string
-	}{
-		RootCmd: rootCmd,
-		Args:    args,
-	}
-
-	m.calls.CatchHelpCall = append(m.calls.CatchHelpCall, call)
-
-	m.CatchHelpCallFunc(rootCmd, args)
-}
-
-// CatchHelpCallCalled returns true if CatchHelpCall was called at least once.
-func (m *AnalyticsClient) CatchHelpCallCalled() bool {
-	m.lockCatchHelpCall.Lock()
-	defer m.lockCatchHelpCall.Unlock()
-
-	return len(m.calls.CatchHelpCall) > 0
-}
-
-// CatchHelpCallCalls returns the calls made to CatchHelpCall.
-func (m *AnalyticsClient) CatchHelpCallCalls() []struct {
-	RootCmd *github_com_spf13_cobra.Command
-	Args    []string
-} {
-	m.lockCatchHelpCall.Lock()
-	defer m.lockCatchHelpCall.Unlock()
-
-	return m.calls.CatchHelpCall
-}
-
-// SendCommandSucceeded mocks base method by wrapping the associated func.
-func (m *AnalyticsClient) SendCommandSucceeded() error {
-	m.lockSendCommandSucceeded.Lock()
-	defer m.lockSendCommandSucceeded.Unlock()
-
-	if m.SendCommandSucceededFunc == nil {
-		panic("mocker: AnalyticsClient.SendCommandSucceededFunc is nil but AnalyticsClient.SendCommandSucceeded was called.")
-	}
-
-	call := struct {
-	}{}
-
-	m.calls.SendCommandSucceeded = append(m.calls.SendCommandSucceeded, call)
-
-	return m.SendCommandSucceededFunc()
-}
-
-// SendCommandSucceededCalled returns true if SendCommandSucceeded was called at least once.
-func (m *AnalyticsClient) SendCommandSucceededCalled() bool {
-	m.lockSendCommandSucceeded.Lock()
-	defer m.lockSendCommandSucceeded.Unlock()
-
-	return len(m.calls.SendCommandSucceeded) > 0
-}
-
-// SendCommandSucceededCalls returns the calls made to SendCommandSucceeded.
-func (m *AnalyticsClient) SendCommandSucceededCalls() []struct {
-} {
-	m.lockSendCommandSucceeded.Lock()
-	defer m.lockSendCommandSucceeded.Unlock()
-
-	return m.calls.SendCommandSucceeded
-}
-
-// SendCommandFailed mocks base method by wrapping the associated func.
-func (m *AnalyticsClient) SendCommandFailed(e error) error {
-	m.lockSendCommandFailed.Lock()
-	defer m.lockSendCommandFailed.Unlock()
-
-	if m.SendCommandFailedFunc == nil {
-		panic("mocker: AnalyticsClient.SendCommandFailedFunc is nil but AnalyticsClient.SendCommandFailed was called.")
-	}
-
-	call := struct {
-		E error
-	}{
-		E: e,
-	}
-
-	m.calls.SendCommandFailed = append(m.calls.SendCommandFailed, call)
-
-	return m.SendCommandFailedFunc(e)
-}
-
-// SendCommandFailedCalled returns true if SendCommandFailed was called at least once.
-func (m *AnalyticsClient) SendCommandFailedCalled() bool {
-	m.lockSendCommandFailed.Lock()
-	defer m.lockSendCommandFailed.Unlock()
-
-	return len(m.calls.SendCommandFailed) > 0
-}
-
-// SendCommandFailedCalls returns the calls made to SendCommandFailed.
-func (m *AnalyticsClient) SendCommandFailedCalls() []struct {
-	E error
-} {
-	m.lockSendCommandFailed.Lock()
-	defer m.lockSendCommandFailed.Unlock()
-
-	return m.calls.SendCommandFailed
-}
-
 // SetCommandType mocks base method by wrapping the associated func.
 func (m *AnalyticsClient) SetCommandType(commandType github_com_confluentinc_cli_internal_pkg_analytics.CommandType) {
 	m.lockSetCommandType.Lock()
@@ -323,6 +207,50 @@ func (m *AnalyticsClient) SessionTimedOutCalls() []struct {
 	return m.calls.SessionTimedOut
 }
 
+// SendCommandAnalytics mocks base method by wrapping the associated func.
+func (m *AnalyticsClient) SendCommandAnalytics(cmd *github_com_spf13_cobra.Command, args []string, cmdExecutionError error) error {
+	m.lockSendCommandAnalytics.Lock()
+	defer m.lockSendCommandAnalytics.Unlock()
+
+	if m.SendCommandAnalyticsFunc == nil {
+		panic("mocker: AnalyticsClient.SendCommandAnalyticsFunc is nil but AnalyticsClient.SendCommandAnalytics was called.")
+	}
+
+	call := struct {
+		Cmd               *github_com_spf13_cobra.Command
+		Args              []string
+		CmdExecutionError error
+	}{
+		Cmd:               cmd,
+		Args:              args,
+		CmdExecutionError: cmdExecutionError,
+	}
+
+	m.calls.SendCommandAnalytics = append(m.calls.SendCommandAnalytics, call)
+
+	return m.SendCommandAnalyticsFunc(cmd, args, cmdExecutionError)
+}
+
+// SendCommandAnalyticsCalled returns true if SendCommandAnalytics was called at least once.
+func (m *AnalyticsClient) SendCommandAnalyticsCalled() bool {
+	m.lockSendCommandAnalytics.Lock()
+	defer m.lockSendCommandAnalytics.Unlock()
+
+	return len(m.calls.SendCommandAnalytics) > 0
+}
+
+// SendCommandAnalyticsCalls returns the calls made to SendCommandAnalytics.
+func (m *AnalyticsClient) SendCommandAnalyticsCalls() []struct {
+	Cmd               *github_com_spf13_cobra.Command
+	Args              []string
+	CmdExecutionError error
+} {
+	m.lockSendCommandAnalytics.Lock()
+	defer m.lockSendCommandAnalytics.Unlock()
+
+	return m.calls.SendCommandAnalytics
+}
+
 // Close mocks base method by wrapping the associated func.
 func (m *AnalyticsClient) Close() error {
 	m.lockClose.Lock()
@@ -357,6 +285,47 @@ func (m *AnalyticsClient) CloseCalls() []struct {
 	return m.calls.Close
 }
 
+// SetSpecialProperty mocks base method by wrapping the associated func.
+func (m *AnalyticsClient) SetSpecialProperty(propertiesKey string, value interface{}) {
+	m.lockSetSpecialProperty.Lock()
+	defer m.lockSetSpecialProperty.Unlock()
+
+	if m.SetSpecialPropertyFunc == nil {
+		panic("mocker: AnalyticsClient.SetSpecialPropertyFunc is nil but AnalyticsClient.SetSpecialProperty was called.")
+	}
+
+	call := struct {
+		PropertiesKey string
+		Value         interface{}
+	}{
+		PropertiesKey: propertiesKey,
+		Value:         value,
+	}
+
+	m.calls.SetSpecialProperty = append(m.calls.SetSpecialProperty, call)
+
+	m.SetSpecialPropertyFunc(propertiesKey, value)
+}
+
+// SetSpecialPropertyCalled returns true if SetSpecialProperty was called at least once.
+func (m *AnalyticsClient) SetSpecialPropertyCalled() bool {
+	m.lockSetSpecialProperty.Lock()
+	defer m.lockSetSpecialProperty.Unlock()
+
+	return len(m.calls.SetSpecialProperty) > 0
+}
+
+// SetSpecialPropertyCalls returns the calls made to SetSpecialProperty.
+func (m *AnalyticsClient) SetSpecialPropertyCalls() []struct {
+	PropertiesKey string
+	Value         interface{}
+} {
+	m.lockSetSpecialProperty.Lock()
+	defer m.lockSetSpecialProperty.Unlock()
+
+	return m.calls.SetSpecialProperty
+}
+
 // Reset resets the calls made to the mocked methods.
 func (m *AnalyticsClient) Reset() {
 	m.lockSetStartTime.Lock()
@@ -365,22 +334,19 @@ func (m *AnalyticsClient) Reset() {
 	m.lockTrackCommand.Lock()
 	m.calls.TrackCommand = nil
 	m.lockTrackCommand.Unlock()
-	m.lockCatchHelpCall.Lock()
-	m.calls.CatchHelpCall = nil
-	m.lockCatchHelpCall.Unlock()
-	m.lockSendCommandSucceeded.Lock()
-	m.calls.SendCommandSucceeded = nil
-	m.lockSendCommandSucceeded.Unlock()
-	m.lockSendCommandFailed.Lock()
-	m.calls.SendCommandFailed = nil
-	m.lockSendCommandFailed.Unlock()
 	m.lockSetCommandType.Lock()
 	m.calls.SetCommandType = nil
 	m.lockSetCommandType.Unlock()
 	m.lockSessionTimedOut.Lock()
 	m.calls.SessionTimedOut = nil
 	m.lockSessionTimedOut.Unlock()
+	m.lockSendCommandAnalytics.Lock()
+	m.calls.SendCommandAnalytics = nil
+	m.lockSendCommandAnalytics.Unlock()
 	m.lockClose.Lock()
 	m.calls.Close = nil
 	m.lockClose.Unlock()
+	m.lockSetSpecialProperty.Lock()
+	m.calls.SetSpecialProperty = nil
+	m.lockSetSpecialProperty.Unlock()
 }

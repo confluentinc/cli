@@ -25,10 +25,10 @@ require (
 	github.com/confluentinc/cc-structs/kafka/util v0.419.0
 	github.com/confluentinc/cc-structs/operator v0.419.0
 	github.com/confluentinc/cc-utils-public v0.1.0
-	github.com/confluentinc/ccloud-sdk-go v0.0.30
-	github.com/confluentinc/go-editor v0.4.0
+	github.com/confluentinc/ccloud-sdk-go v0.0.37
+	github.com/confluentinc/go-editor v0.4.0 // indirect
 	github.com/confluentinc/go-printer v0.13.0
-	github.com/confluentinc/mds-sdk-go v0.0.0-20200330220448-02620efc8d62
+	github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.4
 	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787
 	github.com/confluentinc/schema-registry-sdk-go v0.0.8
 	github.com/dghubble/sling v1.3.0 // indirect
@@ -40,6 +40,7 @@ require (
 	github.com/flynn/go-shlex v0.0.0-20150515145356-3f9db97f8568 // indirect
 	github.com/frankban/quicktest v1.7.2 // indirect
 	github.com/gliderlabs/ssh v0.2.2 // indirect
+	github.com/go-git/go-git/v5 v5.1.0
 	github.com/go-openapi/spec v0.19.2 // indirect
 	github.com/go-openapi/swag v0.19.4 // indirect
 	github.com/go-yaml/yaml v2.1.0+incompatible
@@ -93,11 +94,13 @@ require (
 	golang.org/x/exp v0.0.0-20200207192155-f17229e696bd // indirect
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/sys v0.0.0-20200409092240-59c9f1ba88fa // indirect
+	golang.org/x/tools v0.0.0-20200615190835-a2fa627c4bf4 // indirect
 	gonum.org/v1/netlib v0.0.0-20200317120129-c5a04cffd98a // indirect
 	google.golang.org/appengine v1.6.5 // indirect
 	gopkg.in/jcmturner/goidentity.v3 v3.0.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.3.1
 	gopkg.in/src-d/go-git-fixtures.v3 v3.5.0 // indirect
+	gopkg.in/src-d/go-git.v4 v4.7.0
 	k8s.io/kube-openapi v0.0.0-20200427153329-656914f816f9 // indirect
 )
 

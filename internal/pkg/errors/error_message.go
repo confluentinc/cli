@@ -13,6 +13,7 @@ const (
 	RefuseToOverrideSecretErrorMsg    = "refusing to overwrite existing secret for API Key \"%s\""
 	RefuseToOverrideSecretSuggestions = "If you would like to override the existing secret stored for API key \"%s\", please use `--force` flag."
 	APIKeyUseFailedErrorMsg           = "unable to set active API key"
+	APIKeyCommandResourceTypeNotImplementedErrorMsg = "Command not yet available for non-Kafka cluster resources."
 
 	// Login
 	UnableToSaveUserAuthErrorMsg = "unable to save user authentication"

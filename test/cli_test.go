@@ -174,7 +174,7 @@ func (s *CLITestSuite) Test_Confluent_Help() {
 
 func (s *CLITestSuite) Test_Ccloud_Help() {
 	tests := []CLITest{
-		{name: "no args", fixture: "help-flag.golden", wantErrCode: 1},
+		{name: "no args", fixture: "help-flag-fail.golden", wantErrCode: 1},
 		{args: "help", fixture: "help.golden"},
 		{args: "--help", fixture: "help-flag.golden"},
 		{args: "version", fixture: "version.golden", regex: true},
@@ -264,36 +264,36 @@ func (s *CLITestSuite) Test_Ccloud_Errors() {
 		loginURL := serveErrors(tt)
 		env := []string{"XX_CCLOUD_EMAIL=incorrect@user.com", "XX_CCLOUD_PASSWORD=pass1"}
 		output := runCommand(tt, ccloudTestBin, env, "login --url "+loginURL, 1)
-		require.Equal(tt, "Error: You have entered an incorrect username or password. Please try again.\n", output)
+		require.Contains(tt, output, "Error: You have entered an incorrect username or password. Please try again.\n")
 	})
 
 	t.Run("expired token", func(tt *testing.T) {
 		loginURL := serveErrors(tt)
 		env := []string{"XX_CCLOUD_EMAIL=expired@user.com", "XX_CCLOUD_PASSWORD=pass1"}
 		output := runCommand(tt, ccloudTestBin, env, "login --url "+loginURL, 0)
-		require.Equal(tt, "Logged in as expired@user.com\nUsing environment a-595 (\"default\")\n", output)
+		require.Contains(tt, output, "Logged in as expired@user.com\nUsing environment a-595 (\"default\")\n")
 		output = runCommand(tt, ccloudTestBin, []string{}, "kafka cluster list", 1)
-		require.Equal(tt, "Your token has expired. You are now logged out.\nError: You must log in to run that command.\n", output)
+		require.Contains(tt, output, "Your token has expired. You are now logged out.\nError: You must log in to run that command.\n")
 	})
 
 	t.Run("malformed token", func(tt *testing.T) {
 		loginURL := serveErrors(tt)
 		env := []string{"XX_CCLOUD_EMAIL=malformed@user.com", "XX_CCLOUD_PASSWORD=pass1"}
 		output := runCommand(tt, ccloudTestBin, env, "login --url "+loginURL, 0)
-		require.Equal(tt, "Logged in as malformed@user.com\nUsing environment a-595 (\"default\")\n", output)
+		require.Contains(tt, output, "Logged in as malformed@user.com\nUsing environment a-595 (\"default\")\n")
 
 		output = runCommand(t, ccloudTestBin, []string{}, "kafka cluster list", 1)
-		require.Equal(tt, "Error: Your auth token has been corrupted. Please login again.\n", output)
+		require.Contains(tt, output, "Error: Your auth token has been corrupted. Please login again.\n")
 	})
 
 	t.Run("invalid jwt", func(tt *testing.T) {
 		loginURL := serveErrors(tt)
 		env := []string{"XX_CCLOUD_EMAIL=invalid@user.com", "XX_CCLOUD_PASSWORD=pass1"}
 		output := runCommand(tt, ccloudTestBin, env, "login --url "+loginURL, 0)
-		require.Equal(tt, "Logged in as invalid@user.com\nUsing environment a-595 (\"default\")\n", output)
+		require.Contains(tt, output, "Logged in as invalid@user.com\nUsing environment a-595 (\"default\")\n")
 
 		output = runCommand(t, ccloudTestBin, []string{}, "kafka cluster list", 1)
-		require.Equal(tt, "Error: Your auth token has been corrupted. Please login again.\n", output)
+		require.Contains(tt, output, "Error: Your auth token has been corrupted. Please login again.\n")
 	})
 }
 
