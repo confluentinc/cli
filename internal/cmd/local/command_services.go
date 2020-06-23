@@ -123,7 +123,7 @@ var (
 )
 
 func NewServicesCommand(prerunner cmd.PreRunner) *cobra.Command {
-	servicesCommand := cmd.NewAnonymousCLICommand(
+	c := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "services [command]",
 			Short: "Manage Confluent Platform services.",
@@ -135,20 +135,20 @@ func NewServicesCommand(prerunner cmd.PreRunner) *cobra.Command {
 	availableServices, _ := getAvailableServices(ch)
 
 	for _, service := range availableServices {
-		servicesCommand.AddCommand(NewServiceCommand(service, prerunner))
+		c.AddCommand(NewServiceCommand(service, prerunner))
 	}
 
-	servicesCommand.AddCommand(NewServicesListCommand(prerunner))
-	servicesCommand.AddCommand(NewServicesStartCommand(prerunner))
-	servicesCommand.AddCommand(NewServicesStatusCommand(prerunner))
-	servicesCommand.AddCommand(NewServicesStopCommand(prerunner))
-	servicesCommand.AddCommand(NewServicesTopCommand(prerunner))
+	c.AddCommand(NewServicesListCommand(prerunner))
+	c.AddCommand(NewServicesStartCommand(prerunner))
+	c.AddCommand(NewServicesStatusCommand(prerunner))
+	c.AddCommand(NewServicesStopCommand(prerunner))
+	c.AddCommand(NewServicesTopCommand(prerunner))
 
-	return servicesCommand.Command
+	return c.Command
 }
 
 func NewServicesListCommand(prerunner cmd.PreRunner) *cobra.Command {
-	servicesListCommand := cmd.NewAnonymousCLICommand(
+	c := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "list",
 			Short: "List all Confluent Platform services.",
@@ -156,7 +156,7 @@ func NewServicesListCommand(prerunner cmd.PreRunner) *cobra.Command {
 			RunE:  runServicesListCommand,
 		}, prerunner)
 
-	return servicesListCommand.Command
+	return c.Command
 }
 
 func runServicesListCommand(command *cobra.Command, _ []string) error {
@@ -173,7 +173,7 @@ func runServicesListCommand(command *cobra.Command, _ []string) error {
 }
 
 func NewServicesStartCommand(prerunner cmd.PreRunner) *cobra.Command {
-	servicesStartCommand := cmd.NewAnonymousCLICommand(
+	c := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "start",
 			Short: "Start all Confluent Platform services.",
@@ -181,7 +181,7 @@ func NewServicesStartCommand(prerunner cmd.PreRunner) *cobra.Command {
 			RunE:  runServicesStartCommand,
 		}, prerunner)
 
-	return servicesStartCommand.Command
+	return c.Command
 }
 
 func runServicesStartCommand(command *cobra.Command, _ []string) error {
@@ -210,7 +210,7 @@ func runServicesStartCommand(command *cobra.Command, _ []string) error {
 }
 
 func NewServicesStatusCommand(prerunner cmd.PreRunner) *cobra.Command {
-	servicesStatusCommand := cmd.NewAnonymousCLICommand(
+	c := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "status",
 			Short: "Check the status of all Confluent Platform services.",
@@ -218,7 +218,7 @@ func NewServicesStatusCommand(prerunner cmd.PreRunner) *cobra.Command {
 			RunE:  runServicesStatusCommand,
 		}, prerunner)
 
-	return servicesStatusCommand.Command
+	return c.Command
 }
 
 func runServicesStatusCommand(command *cobra.Command, _ []string) error {
@@ -241,7 +241,7 @@ func runServicesStatusCommand(command *cobra.Command, _ []string) error {
 }
 
 func NewServicesStopCommand(prerunner cmd.PreRunner) *cobra.Command {
-	servicesStopCommand := cmd.NewAnonymousCLICommand(
+	c := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "stop",
 			Short: "Stop all Confluent Platform services.",
@@ -249,7 +249,7 @@ func NewServicesStopCommand(prerunner cmd.PreRunner) *cobra.Command {
 			RunE:  runServicesStopCommand,
 		}, prerunner)
 
-	return servicesStopCommand.Command
+	return c.Command
 }
 
 func runServicesStopCommand(command *cobra.Command, _ []string) error {
@@ -278,7 +278,7 @@ func runServicesStopCommand(command *cobra.Command, _ []string) error {
 }
 
 func NewServicesTopCommand(prerunner cmd.PreRunner) *cobra.Command {
-	servicesTopCommand := cmd.NewAnonymousCLICommand(
+	c := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "top",
 			Short: "Monitor all Confluent Platform services.",
@@ -286,7 +286,7 @@ func NewServicesTopCommand(prerunner cmd.PreRunner) *cobra.Command {
 			RunE:  runServicesTopCommand,
 		}, prerunner)
 
-	return servicesTopCommand.Command
+	return c.Command
 }
 
 func runServicesTopCommand(command *cobra.Command, _ []string) error {

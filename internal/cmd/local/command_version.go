@@ -8,7 +8,7 @@ import (
 )
 
 func NewVersionCommand(prerunner cmd.PreRunner) *cobra.Command {
-	versionCommand := cmd.NewAnonymousCLICommand(
+	c := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "version",
 			Short: "Print the Confluent Platform version.",
@@ -16,7 +16,7 @@ func NewVersionCommand(prerunner cmd.PreRunner) *cobra.Command {
 			RunE:  runVersionCommand,
 		}, prerunner)
 
-	return versionCommand.Command
+	return c.Command
 }
 
 func runVersionCommand(command *cobra.Command, _ []string) error {

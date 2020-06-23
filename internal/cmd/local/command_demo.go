@@ -22,25 +22,26 @@ var supportedDemos = []string{
 }
 
 func NewDemoCommand(prerunner cmd.PreRunner) *cobra.Command {
-	demoCommand := cmd.NewAnonymousCLICommand(
+	c := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "demo",
 			Short: "Run demos provided at https://github.com/confluentinc/examples.",
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
-	demoCommand.AddCommand(NewDemoInfoCommand(prerunner))
-	demoCommand.AddCommand(NewDemoListCommand(prerunner))
-	demoCommand.AddCommand(NewDemoStartCommand(prerunner))
-	demoCommand.AddCommand(NewDemoStopCommand(prerunner))
+	c.AddCommand(NewDemoInfoCommand(prerunner))
+	c.AddCommand(NewDemoListCommand(prerunner))
+	c.AddCommand(NewDemoStartCommand(prerunner))
+	c.AddCommand(NewDemoStopCommand(prerunner))
 
-	demoCommand.Hidden = true
+	// TODO: Show once demos are updated with new confluent local syntax
+	c.Hidden = true
 
-	return demoCommand.Command
+	return c.Command
 }
 
 func NewDemoInfoCommand(prerunner cmd.PreRunner) *cobra.Command {
-	demoInfoCommand := cmd.NewAnonymousCLICommand(
+	c := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "info [demo]",
 			Short: "Show the README for a demo.",
@@ -48,7 +49,7 @@ func NewDemoInfoCommand(prerunner cmd.PreRunner) *cobra.Command {
 			RunE:  runDemoInfoCommand,
 		}, prerunner)
 
-	return demoInfoCommand.Command
+	return c.Command
 }
 
 func runDemoInfoCommand(command *cobra.Command, args []string) error {
@@ -73,7 +74,7 @@ func runDemoInfoCommand(command *cobra.Command, args []string) error {
 }
 
 func NewDemoListCommand(prerunner cmd.PreRunner) *cobra.Command {
-	demoListCommand := cmd.NewAnonymousCLICommand(
+	c := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "list",
 			Short: "List available demos.",
@@ -81,7 +82,7 @@ func NewDemoListCommand(prerunner cmd.PreRunner) *cobra.Command {
 			Run:   runDemoListCommand,
 		}, prerunner)
 
-	return demoListCommand.Command
+	return c.Command
 }
 
 func runDemoListCommand(command *cobra.Command, _ []string) {
@@ -92,7 +93,7 @@ func runDemoListCommand(command *cobra.Command, _ []string) {
 }
 
 func NewDemoStartCommand(prerunner cmd.PreRunner) *cobra.Command {
-	demoStartCommand := cmd.NewAnonymousCLICommand(
+	c := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "start [demo]",
 			Short: "Start a demo.",
@@ -100,7 +101,7 @@ func NewDemoStartCommand(prerunner cmd.PreRunner) *cobra.Command {
 			RunE:  runDemoStartCommand,
 		}, prerunner)
 
-	return demoStartCommand.Command
+	return c.Command
 }
 
 func runDemoStartCommand(command *cobra.Command, args []string) error {
@@ -109,7 +110,7 @@ func runDemoStartCommand(command *cobra.Command, args []string) error {
 }
 
 func NewDemoStopCommand(prerunner cmd.PreRunner) *cobra.Command {
-	demoStopCommand := cmd.NewAnonymousCLICommand(
+	c := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "stop [demo]",
 			Short: "Stop a demo.",
@@ -117,7 +118,7 @@ func NewDemoStopCommand(prerunner cmd.PreRunner) *cobra.Command {
 			RunE:  runDemoStopCommand,
 		}, prerunner)
 
-	return demoStopCommand.Command
+	return c.Command
 }
 
 func runDemoStopCommand(command *cobra.Command, args []string) error {

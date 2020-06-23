@@ -7,18 +7,18 @@ import (
 )
 
 func NewCommand(prerunner cmd.PreRunner) *cobra.Command {
-	localCommand := cmd.NewAnonymousCLICommand(
+	c := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "local-v2 [command]",
 			Short: "Manage a local Confluent Platform development environment.",
 		}, prerunner,
 	)
 
-	localCommand.AddCommand(NewCurrentCommand(prerunner))
-	localCommand.AddCommand(NewDemoCommand(prerunner))
-	localCommand.AddCommand(NewDestroyCommand(prerunner))
-	localCommand.AddCommand(NewServicesCommand(prerunner))
-	localCommand.AddCommand(NewVersionCommand(prerunner))
+	c.AddCommand(NewCurrentCommand(prerunner))
+	c.AddCommand(NewDemoCommand(prerunner))
+	c.AddCommand(NewDestroyCommand(prerunner))
+	c.AddCommand(NewServicesCommand(prerunner))
+	c.AddCommand(NewVersionCommand(prerunner))
 
-	return localCommand.Command
+	return c.Command
 }

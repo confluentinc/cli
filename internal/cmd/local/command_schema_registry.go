@@ -47,7 +47,7 @@ var (
 )
 
 func NewSchemaRegistryACLCommand(prerunner cmd.PreRunner) *cobra.Command {
-	schemaRegistryACLCommand := cmd.NewAnonymousCLICommand(
+	c := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "acl",
 			Short: "Specify ACL for schema-registry.",
@@ -58,14 +58,14 @@ func NewSchemaRegistryACLCommand(prerunner cmd.PreRunner) *cobra.Command {
 	for flag, val := range defaultValues {
 		switch val.(type) {
 		case bool:
-			schemaRegistryACLCommand.Flags().BoolP(flag, shorthands[flag], val.(bool), usages[flag])
+			c.Flags().BoolP(flag, shorthands[flag], val.(bool), usages[flag])
 		case string:
-			schemaRegistryACLCommand.Flags().StringP(flag, shorthands[flag], val.(string), usages[flag])
+			c.Flags().StringP(flag, shorthands[flag], val.(string), usages[flag])
 		}
 	}
-	schemaRegistryACLCommand.Flags().SortFlags = false
+	c.Flags().SortFlags = false
 
-	return schemaRegistryACLCommand.Command
+	return c.Command
 }
 
 func runSchemaRegistryACLCommand(command *cobra.Command, _ []string) error {

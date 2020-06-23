@@ -8,7 +8,7 @@ import (
 )
 
 func NewCurrentCommand(prerunner cmd.PreRunner) *cobra.Command {
-	currentCommand := cmd.NewAnonymousCLICommand(
+	c := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "current",
 			Short: "Get the path of the data and logs for the current Confluent run.",
@@ -16,7 +16,7 @@ func NewCurrentCommand(prerunner cmd.PreRunner) *cobra.Command {
 			RunE:  runCurrentCommand,
 		}, prerunner)
 
-	return currentCommand.Command
+	return c.Command
 }
 
 func runCurrentCommand(command *cobra.Command, _ []string) error {

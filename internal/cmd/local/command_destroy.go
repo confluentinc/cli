@@ -8,7 +8,7 @@ import (
 )
 
 func NewDestroyCommand(prerunner cmd.PreRunner) *cobra.Command {
-	destroyCommand := cmd.NewAnonymousCLICommand(
+	c := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "destroy",
 			Short: "Delete the data and logs for the current Confluent run.",
@@ -16,7 +16,7 @@ func NewDestroyCommand(prerunner cmd.PreRunner) *cobra.Command {
 			RunE:  runDestroyCommand,
 		}, prerunner)
 
-	return destroyCommand.Command
+	return c.Command
 }
 
 func runDestroyCommand(command *cobra.Command, _ []string) error {

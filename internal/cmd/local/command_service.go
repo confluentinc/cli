@@ -22,37 +22,37 @@ import (
 )
 
 func NewServiceCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
-	serviceCommand := cmd.NewAnonymousCLICommand(
+	c := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   fmt.Sprintf("%s [command]", service),
 			Short: fmt.Sprintf("Manage the %s service.", service),
 			Args:  cobra.ExactArgs(1),
 		}, prerunner)
 
-	serviceCommand.AddCommand(NewServiceLogCommand(service, prerunner))
-	serviceCommand.AddCommand(NewServiceStartCommand(service, prerunner))
-	serviceCommand.AddCommand(NewServiceStatusCommand(service, prerunner))
-	serviceCommand.AddCommand(NewServiceStopCommand(service, prerunner))
-	serviceCommand.AddCommand(NewServiceVersionCommand(service, prerunner))
-	serviceCommand.AddCommand(NewServiceTopCommand(service, prerunner))
-	serviceCommand.AddCommand(NewServiceVersionCommand(service, prerunner))
+	c.AddCommand(NewServiceLogCommand(service, prerunner))
+	c.AddCommand(NewServiceStartCommand(service, prerunner))
+	c.AddCommand(NewServiceStatusCommand(service, prerunner))
+	c.AddCommand(NewServiceStopCommand(service, prerunner))
+	c.AddCommand(NewServiceVersionCommand(service, prerunner))
+	c.AddCommand(NewServiceTopCommand(service, prerunner))
+	c.AddCommand(NewServiceVersionCommand(service, prerunner))
 
 	switch service {
 	case "connect":
-		serviceCommand.AddCommand(NewConnectConnectorCommand(prerunner))
-		serviceCommand.AddCommand(NewConnectPluginCommand(prerunner))
+		c.AddCommand(NewConnectConnectorCommand(prerunner))
+		c.AddCommand(NewConnectPluginCommand(prerunner))
 	case "kafka":
-		serviceCommand.AddCommand(NewKafkaConsumeCommand(prerunner))
-		serviceCommand.AddCommand(NewKafkaProduceCommand(prerunner))
+		c.AddCommand(NewKafkaConsumeCommand(prerunner))
+		c.AddCommand(NewKafkaProduceCommand(prerunner))
 	case "schema-registry":
-		serviceCommand.AddCommand(NewSchemaRegistryACLCommand(prerunner))
+		c.AddCommand(NewSchemaRegistryACLCommand(prerunner))
 	}
 
-	return serviceCommand.Command
+	return c.Command
 }
 
 func NewServiceLogCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
-	serviceLogCommand := cmd.NewAnonymousCLICommand(
+	c := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "log",
 			Short: fmt.Sprintf("Print logs for %s.", service),
@@ -60,7 +60,7 @@ func NewServiceLogCommand(service string, prerunner cmd.PreRunner) *cobra.Comman
 			RunE:  runServiceLogCommand,
 		}, prerunner)
 
-	return serviceLogCommand.Command
+	return c.Command
 }
 
 func runServiceLogCommand(command *cobra.Command, _ []string) error {
@@ -83,7 +83,7 @@ func runServiceLogCommand(command *cobra.Command, _ []string) error {
 }
 
 func NewServiceStartCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
-	serviceVersionCommand := cmd.NewAnonymousCLICommand(
+	c := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "start",
 			Short: fmt.Sprintf("Start %s.", service),
@@ -91,7 +91,7 @@ func NewServiceStartCommand(service string, prerunner cmd.PreRunner) *cobra.Comm
 			RunE:  runServiceStartCommand,
 		}, prerunner)
 
-	return serviceVersionCommand.Command
+	return c.Command
 }
 
 func runServiceStartCommand(command *cobra.Command, _ []string) error {
@@ -115,7 +115,7 @@ func runServiceStartCommand(command *cobra.Command, _ []string) error {
 }
 
 func NewServiceStatusCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
-	serviceVersionCommand := cmd.NewAnonymousCLICommand(
+	c := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "status",
 			Short: fmt.Sprintf("Check the status of %s.", service),
@@ -123,7 +123,7 @@ func NewServiceStatusCommand(service string, prerunner cmd.PreRunner) *cobra.Com
 			RunE:  runServiceStatusCommand,
 		}, prerunner)
 
-	return serviceVersionCommand.Command
+	return c.Command
 }
 
 func runServiceStatusCommand(command *cobra.Command, _ []string) error {
@@ -135,7 +135,7 @@ func runServiceStatusCommand(command *cobra.Command, _ []string) error {
 }
 
 func NewServiceStopCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
-	serviceVersionCommand := cmd.NewAnonymousCLICommand(
+	c := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "stop",
 			Short: fmt.Sprintf("Stop %s.", service),
@@ -143,7 +143,7 @@ func NewServiceStopCommand(service string, prerunner cmd.PreRunner) *cobra.Comma
 			RunE:  runServiceStopCommand,
 		}, prerunner)
 
-	return serviceVersionCommand.Command
+	return c.Command
 }
 
 func runServiceStopCommand(command *cobra.Command, _ []string) error {
@@ -165,7 +165,7 @@ func runServiceStopCommand(command *cobra.Command, _ []string) error {
 }
 
 func NewServiceTopCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
-	serviceTopCommand := cmd.NewAnonymousCLICommand(
+	c := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "top",
 			Short: fmt.Sprintf("Monitor %s processes.", service),
@@ -173,7 +173,7 @@ func NewServiceTopCommand(service string, prerunner cmd.PreRunner) *cobra.Comman
 			RunE:  runServiceTopCommand,
 		}, prerunner)
 
-	return serviceTopCommand.Command
+	return c.Command
 }
 
 func runServiceTopCommand(command *cobra.Command, _ []string) error {
@@ -198,7 +198,7 @@ func runServiceTopCommand(command *cobra.Command, _ []string) error {
 }
 
 func NewServiceVersionCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
-	serviceVersionCommand := cmd.NewAnonymousCLICommand(
+	c := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "version",
 			Short: fmt.Sprintf("Print the version of %s.", service),
@@ -206,7 +206,7 @@ func NewServiceVersionCommand(service string, prerunner cmd.PreRunner) *cobra.Co
 			RunE:  runServiceVersionCommand,
 		}, prerunner)
 
-	return serviceVersionCommand.Command
+	return c.Command
 }
 
 func runServiceVersionCommand(command *cobra.Command, _ []string) error {
@@ -214,12 +214,12 @@ func runServiceVersionCommand(command *cobra.Command, _ []string) error {
 
 	ch := local.NewConfluentHomeManager()
 
-	version, err := ch.GetVersion(service)
+	ver, err := ch.GetVersion(service)
 	if err != nil {
 		return err
 	}
 
-	command.Println(version)
+	command.Println(ver)
 	return nil
 }
 

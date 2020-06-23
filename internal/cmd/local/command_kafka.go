@@ -106,7 +106,7 @@ var (
 )
 
 func NewKafkaConsumeCommand(prerunner cmd.PreRunner) *cobra.Command {
-	kafkaConsumeCommand := cmd.NewAnonymousCLICommand(
+	c := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "consume [topic]",
 			Short: "Consume from a kafka topic.",
@@ -115,26 +115,26 @@ func NewKafkaConsumeCommand(prerunner cmd.PreRunner) *cobra.Command {
 		}, prerunner)
 
 	// CLI Flags
-	kafkaConsumeCommand.Flags().Bool("cloud", defaultBool, commonFlagUsage["cloud"])
+	c.Flags().Bool("cloud", defaultBool, commonFlagUsage["cloud"])
 	defaultConfig := fmt.Sprintf("%s/.ccloud/config", os.Getenv("HOME"))
-	kafkaConsumeCommand.Flags().String("config", defaultConfig, commonFlagUsage["config"])
-	kafkaConsumeCommand.Flags().String("value-format", defaultString, commonFlagUsage["value-format"])
+	c.Flags().String("config", defaultConfig, commonFlagUsage["config"])
+	c.Flags().String("value-format", defaultString, commonFlagUsage["value-format"])
 
 	// Kafka Flags
 	defaultBootstrapServer := fmt.Sprintf("localhost:%d", services["kafka"].port)
-	kafkaConsumeCommand.Flags().String("bootstrap-server", defaultBootstrapServer, commonFlagUsage["bootstrap-server"])
+	c.Flags().String("bootstrap-server", defaultBootstrapServer, commonFlagUsage["bootstrap-server"])
 	for flag, val := range kafkaConsumeDefaultValues {
 		switch val.(type) {
 		case bool:
-			kafkaConsumeCommand.Flags().Bool(flag, val.(bool), kafkaConsumeFlagUsage[flag])
+			c.Flags().Bool(flag, val.(bool), kafkaConsumeFlagUsage[flag])
 		case int:
-			kafkaConsumeCommand.Flags().Int(flag, val.(int), kafkaConsumeFlagUsage[flag])
+			c.Flags().Int(flag, val.(int), kafkaConsumeFlagUsage[flag])
 		case string:
-			kafkaConsumeCommand.Flags().String(flag, val.(string), kafkaConsumeFlagUsage[flag])
+			c.Flags().String(flag, val.(string), kafkaConsumeFlagUsage[flag])
 		}
 	}
 
-	return kafkaConsumeCommand.Command
+	return c.Command
 }
 
 func runKafkaConsumeCommand(command *cobra.Command, args []string) error {
@@ -142,7 +142,7 @@ func runKafkaConsumeCommand(command *cobra.Command, args []string) error {
 }
 
 func NewKafkaProduceCommand(prerunner cmd.PreRunner) *cobra.Command {
-	kafkaProduceCommand := cmd.NewAnonymousCLICommand(
+	c := cmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "produce [topic]",
 			Short: "Produce to a kafka topic.",
@@ -151,26 +151,26 @@ func NewKafkaProduceCommand(prerunner cmd.PreRunner) *cobra.Command {
 		}, prerunner)
 
 	// CLI Flags
-	kafkaProduceCommand.Flags().Bool("cloud", defaultBool, commonFlagUsage["cloud"])
+	c.Flags().Bool("cloud", defaultBool, commonFlagUsage["cloud"])
 	defaultConfig := fmt.Sprintf("%s/.ccloud/config", os.Getenv("HOME"))
-	kafkaProduceCommand.Flags().String("config", defaultConfig, commonFlagUsage["config"])
-	kafkaProduceCommand.Flags().String("value-format", defaultString, commonFlagUsage["value-format"])
+	c.Flags().String("config", defaultConfig, commonFlagUsage["config"])
+	c.Flags().String("value-format", defaultString, commonFlagUsage["value-format"])
 
 	// Kafka Flags
 	defaultBootstrapServer := fmt.Sprintf("localhost:%d", services["kafka"].port)
-	kafkaProduceCommand.Flags().String("bootstrap-server", defaultBootstrapServer, commonFlagUsage["bootstrap-server"])
+	c.Flags().String("bootstrap-server", defaultBootstrapServer, commonFlagUsage["bootstrap-server"])
 	for flag, val := range kafkaProduceDefaultValues {
 		switch val.(type) {
 		case bool:
-			kafkaProduceCommand.Flags().Bool(flag, val.(bool), kafkaProduceFlagUsage[flag])
+			c.Flags().Bool(flag, val.(bool), kafkaProduceFlagUsage[flag])
 		case int:
-			kafkaProduceCommand.Flags().Int(flag, val.(int), kafkaProduceFlagUsage[flag])
+			c.Flags().Int(flag, val.(int), kafkaProduceFlagUsage[flag])
 		case string:
-			kafkaProduceCommand.Flags().String(flag, val.(string), kafkaProduceFlagUsage[flag])
+			c.Flags().String(flag, val.(string), kafkaProduceFlagUsage[flag])
 		}
 	}
 
-	return kafkaProduceCommand.Command
+	return c.Command
 }
 
 func runKafkaProduceCommand(command *cobra.Command, args []string) error {
