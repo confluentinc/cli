@@ -57,12 +57,12 @@ type NetrcHandler struct {
 func (n *NetrcHandler) WriteNetrcCredentials(cliName string, isSSO bool, ctxName string, username string, password string) error {
 	filename, err := homedir.Expand(n.FileName)
 	if err != nil {
-		return errors.NewUnexpectedCLIBehaviorErrorWrapf(err, errors.ResolvingFilepathErrorMsg, filename)
+		return errors.Wrapf(err, errors.ResolvingFilepathErrorMsg, filename)
 	}
 
 	netrcFile, err := getOrCreateNetrc(filename)
 	if err != nil {
-		return errors.NewUnexpectedCLIBehaviorErrorWrapf(err, errors.WriteToNetrcFileErrorMsg, filename)
+		return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, filename)
 	}
 
 	machineName := getNetrcMachineName(cliName, isSSO, ctxName)
@@ -76,11 +76,11 @@ func (n *NetrcHandler) WriteNetrcCredentials(cliName string, isSSO bool, ctxName
 	}
 	netrcBytes, err := netrcFile.MarshalText()
 	if err != nil {
-		return errors.NewUnexpectedCLIBehaviorErrorWrapf(err, errors.WriteToNetrcFileErrorMsg, filename)
+		return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, filename)
 	}
 	err = ioutil.WriteFile(filename, netrcBytes, 0600)
 	if err != nil {
-		return errors.NewUnexpectedCLIBehaviorErrorWrapf(err, errors.WriteToNetrcFileErrorMsg, filename)
+		return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, filename)
 	}
 	return nil
 }
@@ -89,15 +89,15 @@ func (n *NetrcHandler) WriteNetrcCredentials(cliName string, isSSO bool, ctxName
 func (n *NetrcHandler) getNetrcCredentials(cliName string, isSSO bool, ctxName string) (username string, password string, err error) {
 	filename, err := homedir.Expand(n.FileName)
 	if err != nil {
-		return "", "", errors.NewUnexpectedCLIBehaviorErrorWrapf(err, errors.ResolvingFilepathErrorMsg, filename)
+		return "", "", errors.Wrapf(err, errors.ResolvingFilepathErrorMsg, filename)
 	}
 	machineName := getNetrcMachineName(cliName, isSSO, ctxName)
 	machine, err := netrc.FindMachine(filename, machineName)
 	if err != nil {
-		return "", "", errors.NewUnexpectedCLIBehaviorErrorWrapf(err, errors.GetNetrcCredentialsErrorMsg, filename)
+		return "", "", errors.Wrapf(err, errors.GetNetrcCredentialsErrorMsg, filename)
 	}
 	if machine == nil {
-		return "", "", errors.NewResourceValidationErrorf(errors.CredentialsNotFoundErrorMsg, filename)
+		return "", "", errors.Errorf(errors.CredentialsNotFoundErrorMsg, filename)
 	}
 	return machine.Login, machine.Password, nil
 }
@@ -122,7 +122,7 @@ func getOrCreateNetrc(filename string) (*netrc.Netrc, error) {
 		if os.IsNotExist(err) {
 			_, err = os.OpenFile(filename, os.O_CREATE, 0600)
 			if err != nil {
-				return nil, errors.NewUnexpectedCLIBehaviorErrorWrapf(err, errors.CreateFileErrorMsg, filename)
+				return nil, errors.Wrapf(err, errors.CreateFileErrorMsg, filename)
 			}
 			n, err = netrc.ParseFile(filename)
 			if err != nil {

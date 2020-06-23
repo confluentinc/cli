@@ -175,9 +175,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	}
 	if currentUser {
 		if userId != 0 {
-			return errors.HandleCommon(errors.NewFlagUseErrorf(
-				errors.ProhibitedFlagCombinationErrorMsg, "service-account", "current-user"),
-				cmd)
+			return errors.HandleCommon(errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "service-account", "current-user"), cmd)
 		}
 		userId = c.State.Auth.User.Id
 	}
@@ -305,9 +303,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 
 	if resourceType == pcmd.KafkaResourceType {
 		if err := c.keystore.StoreAPIKey(userKey, clusterId, cmd); err != nil {
-			return errors.HandleCommon(
-				errors.NewUnexpectedCLIBehaviorErrorWrapf(err, errors.UnableToStoreAPIKeyErrorMsg),
-				cmd)
+			return errors.HandleCommon(errors.Wrap(err, errors.UnableToStoreAPIKeyErrorMsg), cmd)
 		}
 	}
 	return nil
@@ -387,15 +383,13 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	if found, err := c.keystore.HasAPIKey(key, cluster.ID, cmd); err != nil {
 		return errors.HandleCommon(err, cmd)
 	} else if found && !force {
-		cliErr := errors.NewProhibitedActionErrorf(errors.RefuseToOverrideSecretErrorMsg, key)
-		cliErr.SetDirectionsMsg(errors.RefuseToOverrideSecretSuggestions, key)
-		return errors.HandleCommon(cliErr, cmd)
+		err := errors.NewErrorWithSuggestions(fmt.Sprintf(errors.RefuseToOverrideSecretErrorMsg, key),
+			fmt.Sprintf(errors.RefuseToOverrideSecretSuggestions, key))
+		return errors.HandleCommon(err, cmd)
 	}
 
 	if err := c.keystore.StoreAPIKey(&schedv1.ApiKey{Key: key, Secret: secret}, cluster.ID, cmd); err != nil {
-		return errors.HandleCommon(
-			errors.NewUnexpectedCLIBehaviorErrorWrapf(err, errors.UnableToStoreAPIKeyErrorMsg),
-			cmd)
+		return errors.Wrap(err, errors.UnableToStoreAPIKeyErrorMsg)
 	}
 	return nil
 }
@@ -408,7 +402,7 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	if resourceType != pcmd.KafkaResourceType {
-		return errors.HandleCommon(errors.NewProhibitedActionErrorf(errors.NonKafkaNotImplementedErrorMsg), cmd)
+		return errors.HandleCommon(errors.Errorf(errors.NonKafkaNotImplementedErrorMsg), cmd)
 	}
 	cluster, err := c.Context.FindKafkaCluster(cmd, clusterId)
 	if err != nil {
@@ -416,7 +410,7 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 	}
 	err = c.Context.UseAPIKey(cmd, apiKey, cluster.ID)
 	if err != nil {
-		return errors.HandleCommon(errors.NewUnexpectedCLIBehaviorErrorWrapf(err, errors.APIKeyUseFailedErrorMsg), cmd)
+		return errors.HandleCommon(errors.Wrap(err, errors.APIKeyUseFailedErrorMsg), cmd)
 	}
 	return nil
 }

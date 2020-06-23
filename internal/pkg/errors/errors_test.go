@@ -148,7 +148,7 @@ func TestDirectionsMessage(t *testing.T) {
 	require.Equal(t, wantDirectionsMsg, err.GetDirectionsMsg())
 
 	var b bytes.Buffer
-	HandleDirectionsMessageDisplay(err, &b)
+	HandleSuggestionsMessageDisplay(err, &b)
 	out := b.String()
 	wantDirectionsOutput := fmt.Sprintf(directionsMessageFormat, wantDirectionsMsg)
 	require.Equal(t, wantDirectionsOutput, out)

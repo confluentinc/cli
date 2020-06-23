@@ -5,6 +5,7 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/spf13/cobra"
 	"io"
+	"strings"
 )
 
 var (
@@ -12,24 +13,22 @@ var (
 )
 
 func HandleCommon(err error, cmd *cobra.Command) error {
-	if err == nil {
-		return nil
+	cmd.SilenceUsage = true
+	e := HandleCCloudSDKGoError(err)
+	if e != nil {
+		return e
 	}
-	var cliError CLIDefinedError
-	switch e := err.(type) {
-	case CLIDefinedError:
-		cliError = e
-	default:
-		cliError = NewUnexpectedCLIBehaviorErrorf(e.Error())
+	e = HandleSaramaError(err)
+	if e != nil {
+		return e
 	}
-	cmd.SilenceUsage = cliError.SilenceUsage()
-	return cliError
+	return err
 }
 
-func HandleDirectionsMessageDisplay(err error, writer io.Writer) {
-	cliErr, ok := err.(CLIDefinedError)
-	if ok && cliErr.GetDirectionsMsg() != "" {
-		_, _ = fmt.Fprintf(writer, directionsMessageFormat, cliErr.GetDirectionsMsg())
+func HandleSuggestionsMessageDisplay(err error, writer io.Writer) {
+	cliErr, ok := err.(ErrorWithSuggestions)
+	if ok && cliErr.GetSuggestionsMsg() != "" {
+		_, _ = fmt.Fprintf(writer, directionsMessageFormat, cliErr.GetSuggestionsMsg())
 	}
 }
 
@@ -43,20 +42,22 @@ func HandleCCloudSDKGoError(err error) error {
 		return fmt.Errorf("expired token")
 	}
 
-	switch err.Error() {
-	case "resource not found":
-		return err
-	}
-	switch "logicalCluster: Authentication failed" {
-		return err
+	errMsg := err.Error()
+	if strings.Contains(errMsg, "resource not found") {
+		return NewErrorWithSuggestions("not found resource", "check your resource name and stuff dude")
+	} else if strings.Contains(errMsg,"logicalCluster: Authentication failed") {
+		return NewErrorWithSuggestions("not ready", "wait a bit fam!")
 	}
 
 	// non existent topic produce and consume
+	// Failed to produce offset -1: kafka server: Request was for a topic or partition that does not exist on this broker.
 
+	return nil
+}
 
-	// error for when no api-key for a resource
-
-	//Error: kafka: client has run out of available brokers to talk to (Is your cluster reachable?)
-	// This is what happens when your api key and secret is wrong
-
+func HandleSaramaError(err error) error {
+	if strings.Contains(err.Error(), "client has run out of available brokers to talk to (Is your cluster reachable?)") {
+		return NewErrorWithSuggestions("Unable to connect to kafka cluster", "Check your api key and secret")
+	}
+	return nil
 }

@@ -381,14 +381,12 @@ func checkCloudAndRegion(cloudId string, regionId string, clouds []*schedv1.Clou
 					}
 				}
 			}
-			cliErr := errors.NewResourceValidationErrorf(errors.CloudRegionNotAvailableErrorMsg,  regionId, cloudId)
-			cliErr.SetDirectionsMsg(errors.CloudRegionNotAvailableSuggestions, cloudId, cloudId)
-			return cliErr
+			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.CloudRegionNotAvailableErrorMsg, regionId, cloudId),
+				fmt.Sprintf(errors.CloudRegionNotAvailableSuggestions, cloudId, cloudId))
 		}
 	}
-	cliErr := errors.NewResourceValidationErrorf(errors.CloudProviderNotAvailableErrorMsg,  cloudId)
-	cliErr.SetDirectionsMsg(errors.CloudProviderNotAvailableSuggestions)
-	return cliErr
+	return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.CloudProviderNotAvailableErrorMsg, cloudId),
+		errors.CloudRegionNotAvailableSuggestions)
 }
 
 func getAccountsForCloud(cloudId string, clouds []*schedv1.CloudMetadata) []string {

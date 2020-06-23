@@ -162,7 +162,7 @@ func (c *Command) Execute(args []string) error {
 	c.Command.SetArgs(args)
 	err := c.Command.Execute()
 	c.AnalyticsHandling(err, args)
-	errors.HandleDirectionsMessageDisplay(err, os.Stdout)
+	errors.HandleSuggestionsMessageDisplay(err, os.Stdout)
 	return err
 }
 
