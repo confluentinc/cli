@@ -135,22 +135,6 @@ func (s *CLITestSuite) Test_Ccloud_Iam_Rolebinding_List() {
 			login:   "default",
 		},
 		{
-			args:    "iam rolebinding list --cluster-name kafka --principal User:frodo",
-			fixture: "ccloud-iam-rolebinding-list-user.golden",
-			login:   "default",
-		},
-		{
-			args:        "iam rolebinding list --cluster-name kafka  --kafka-cluster-id CID --principal User:frodo",
-			fixture:     "ccloud-iam-rolebinding-name-and-id.golden",
-			login:       "default",
-			wantErrCode: 1,
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --principal User:frodo --role DeveloperRead",
-			fixture: "ccloud-iam-rolebinding-list-user-and-role-with-multiple-resources-from-one-group.golden",
-			login:   "default",
-		},
-		{
 			args:    "iam rolebinding list --kafka-cluster-id CID --principal User:frodo --role DeveloperRead -o json",
 			fixture: "ccloud-iam-rolebinding-list-user-and-role-with-multiple-resources-from-one-group-json.golden",
 			login:   "default",
@@ -171,33 +155,18 @@ func (s *CLITestSuite) Test_Ccloud_Iam_Rolebinding_List() {
 			login:   "default",
 		},
 		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --principal User:frodo --role SystemAdmin",
+			args:    "iam rolebinding list --kafka-cluster-id CID --principal User:frodo --role OrganizationAdmin",
 			fixture: "ccloud-iam-rolebinding-list-user-and-role-with-no-matches.golden",
 			login:   "default",
 		},
 		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --principal User:frodo --role SystemAdmin -o json",
+			args:    "iam rolebinding list --kafka-cluster-id CID --principal User:frodo --role OrganizationAdmin -o json",
 			fixture: "ccloud-iam-rolebinding-list-user-and-role-with-no-matches-json.golden",
 			login:   "default",
 		},
 		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --principal User:frodo --role SystemAdmin -o yaml",
+			args:    "iam rolebinding list --kafka-cluster-id CID --principal User:frodo --role OrganizationAdmin -o yaml",
 			fixture: "ccloud-iam-rolebinding-list-user-and-role-with-no-matches-yaml.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --principal Group:hobbits --role DeveloperRead",
-			fixture: "ccloud-iam-rolebinding-list-group-and-role-with-multiple-resources.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --principal Group:hobbits --role DeveloperWrite",
-			fixture: "ccloud-iam-rolebinding-list-group-and-role-with-one-resource.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --principal Group:hobbits --role SecurityAdmin",
-			fixture: "ccloud-iam-rolebinding-list-group-and-role-with-no-matches.golden",
 			login:   "default",
 		},
 		{
@@ -213,11 +182,6 @@ func (s *CLITestSuite) Test_Ccloud_Iam_Rolebinding_List() {
 		{
 			args:    "iam rolebinding list --kafka-cluster-id CID --role DeveloperRead -o yaml",
 			fixture: "ccloud-iam-rolebinding-list-role-with-multiple-bindings-to-one-group-yaml.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --role DeveloperWrite",
-			fixture: "ccloud-iam-rolebinding-list-role-with-bindings-to-multiple-groups.golden",
 			login:   "default",
 		},
 		{
@@ -238,11 +202,6 @@ func (s *CLITestSuite) Test_Ccloud_Iam_Rolebinding_List() {
 		{
 			args:    "iam rolebinding list --kafka-cluster-id CID --role DeveloperRead --resource Topic:shire-parties",
 			fixture: "ccloud-iam-rolebinding-list-role-and-resource-with-no-match.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --role DeveloperWrite --resource Topic:shire-parties",
-			fixture: "ccloud-iam-rolebinding-list-role-and-resource-with-prefix-match.golden",
 			login:   "default",
 		},
 	}

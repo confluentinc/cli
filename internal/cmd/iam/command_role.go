@@ -140,9 +140,7 @@ func (c *roleCommand) list(cmd *cobra.Command, args []string) error {
 	}
 }
 
-func (c *roleCommand) describe(cmd *cobra.Command, args []string) error {
-	role := args[0]
-
+func (c *roleCommand) confluentDescribeHelper(cmd *cobra.Command, role string) error {
 	details, r, err := c.MDSClient.RBACRoleDefinitionsApi.RoleDetail(c.createContext(), role)
 	if err != nil {
 		if r.StatusCode == http.StatusNoContent {
@@ -176,6 +174,52 @@ func (c *roleCommand) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
+}
+
+func (c *roleCommand) ccloudDescribeHelper(cmd *cobra.Command, role string) error {
+	details, r, err := c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(c.createContext(), role)
+	if err != nil {
+		if r.StatusCode == http.StatusNotFound {
+			availableRoleNames, _, err := c.MDSv2Client.RBACRoleDefinitionsApi.Rolenames(c.createContext())
+			if err != nil {
+				return errors.HandleCommon(err, cmd)
+			}
+
+			cmd.SilenceUsage = true
+			return fmt.Errorf("Unknown role specified.  Role should be one of " + strings.Join(availableRoleNames, ", "))
+		}
+
+		return errors.HandleCommon(err, cmd)
+	}
+
+	format, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	if format == output.Human.String() {
+		var data [][]string
+		roleDisplay, err := createPrettyRoleV2(details)
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+		data = append(data, printer.ToRow(roleDisplay, roleFields))
+		outputTable(data)
+	} else {
+		return output.StructuredOutput(format, details)
+	}
+
+	return nil
+}
+
+func (c *roleCommand) describe(cmd *cobra.Command, args []string) error {
+	role := args[0]
+
+	if c.Config.CLIName == "ccloud" {
+		return c.ccloudDescribeHelper(cmd, role)
+	} else {
+		return c.confluentDescribeHelper(cmd, role)
+	}
 }
 
 func createPrettyRole(role mds.Role) (*prettyRole, error) {
