@@ -72,6 +72,9 @@ func HandleCommon(err error, cmd *cobra.Command) error {
 }
 
 func HandleSuggestionsMessageDisplay(err error, writer io.Writer) {
+	if err == nil {
+		return
+	}
 	cliErr, ok := err.(ErrorWithSuggestions)
 	if ok && cliErr.GetSuggestionsMsg() != "" {
 		_, _ = fmt.Fprintf(writer, suggestionsMessageFormat, cliErr.GetSuggestionsMsg())
