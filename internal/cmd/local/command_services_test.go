@@ -11,16 +11,18 @@ import (
 func TestConfluentPlatformAvailableServices(t *testing.T) {
 	req := require.New(t)
 
-	ch := &mock.MockConfluentHome{
-		IsConfluentPlatformFunc: func() (bool, error) {
-			return true, nil
+	c := &LocalCommand{
+		ch: &mock.MockConfluentHome{
+			IsConfluentPlatformFunc: func() (bool, error) {
+				return true, nil
+			},
 		},
 	}
 
-	availableServices, err := getAvailableServices(ch)
+	got, err := c.getAvailableServices()
 	req.NoError(err)
 
-	services := []string{
+	want := []string{
 		"zookeeper",
 		"kafka",
 		"schema-registry",
@@ -29,22 +31,24 @@ func TestConfluentPlatformAvailableServices(t *testing.T) {
 		"ksql-server",
 		"control-center",
 	}
-	req.Equal(services, availableServices)
+	req.Equal(want, got)
 }
 
 func TestConfluentCommunitySoftwareAvailableServices(t *testing.T) {
 	req := require.New(t)
 
-	ch := &mock.MockConfluentHome{
-		IsConfluentPlatformFunc: func() (bool, error) {
-			return false, nil
+	c := &LocalCommand{
+		ch: &mock.MockConfluentHome{
+			IsConfluentPlatformFunc: func() (bool, error) {
+				return false, nil
+			},
 		},
 	}
 
-	availableServices, err := getAvailableServices(ch)
+	got, err := c.getAvailableServices()
 	req.NoError(err)
 
-	services := []string{
+	want := []string{
 		"zookeeper",
 		"kafka",
 		"schema-registry",
@@ -52,5 +56,5 @@ func TestConfluentCommunitySoftwareAvailableServices(t *testing.T) {
 		"connect",
 		"ksql-server",
 	}
-	req.Equal(services, availableServices)
+	req.Equal(want, got)
 }

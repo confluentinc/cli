@@ -17,12 +17,11 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/local"
 	"github.com/confluentinc/cli/internal/pkg/spinner"
 )
 
 func NewServiceCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
-	c := cmd.NewAnonymousCLICommand(
+	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   fmt.Sprintf("%s [command]", service),
 			Short: fmt.Sprintf("Manage the %s service.", service),
@@ -52,23 +51,21 @@ func NewServiceCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
 }
 
 func NewServiceLogCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
-	c := cmd.NewAnonymousCLICommand(
+	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "log",
 			Short: fmt.Sprintf("Print logs for %s.", service),
 			Args:  cobra.NoArgs,
-			RunE:  runServiceLogCommand,
 		}, prerunner)
 
+	c.Command.RunE = c.runServiceLogCommand
 	return c.Command
 }
 
-func runServiceLogCommand(command *cobra.Command, _ []string) error {
+func (c *LocalCommand) runServiceLogCommand(command *cobra.Command, _ []string) error {
 	service := command.Parent().Name()
 
-	cc := local.NewConfluentCurrentManager()
-
-	log, err := cc.GetLogFile(service)
+	log, err := c.cc.GetLogFile(service)
 	if err != nil {
 		return err
 	}
@@ -83,113 +80,103 @@ func runServiceLogCommand(command *cobra.Command, _ []string) error {
 }
 
 func NewServiceStartCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
-	c := cmd.NewAnonymousCLICommand(
+	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "start",
 			Short: fmt.Sprintf("Start %s.", service),
 			Args:  cobra.NoArgs,
-			RunE:  runServiceStartCommand,
 		}, prerunner)
 
+	c.Command.RunE = c.runServiceStartCommand
 	return c.Command
 }
 
-func runServiceStartCommand(command *cobra.Command, _ []string) error {
+func (c *LocalCommand) runServiceStartCommand(command *cobra.Command, _ []string) error {
 	service := command.Parent().Name()
 
-	cc := local.NewConfluentCurrentManager()
-
-	if err := notifyConfluentCurrent(command, cc); err != nil {
+	if err := c.notifyConfluentCurrent(command); err != nil {
 		return err
 	}
 
-	ch := local.NewConfluentHomeManager()
-
 	for _, dependency := range services[service].startDependencies {
-		if err := startService(command, ch, cc, dependency); err != nil {
+		if err := c.startService(command, dependency); err != nil {
 			return err
 		}
 	}
 
-	return startService(command, ch, cc, service)
+	return c.startService(command, service)
 }
 
 func NewServiceStatusCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
-	c := cmd.NewAnonymousCLICommand(
+	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "status",
 			Short: fmt.Sprintf("Check the status of %s.", service),
 			Args:  cobra.NoArgs,
-			RunE:  runServiceStatusCommand,
 		}, prerunner)
 
+	c.Command.RunE = c.runServiceStatusCommand
 	return c.Command
 }
 
-func runServiceStatusCommand(command *cobra.Command, _ []string) error {
+func (c *LocalCommand) runServiceStatusCommand(command *cobra.Command, _ []string) error {
 	service := command.Parent().Name()
 
-	cc := local.NewConfluentCurrentManager()
-
-	return printStatus(command, cc, service)
+	return c.printStatus(command, service)
 }
 
 func NewServiceStopCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
-	c := cmd.NewAnonymousCLICommand(
+	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "stop",
 			Short: fmt.Sprintf("Stop %s.", service),
 			Args:  cobra.NoArgs,
-			RunE:  runServiceStopCommand,
 		}, prerunner)
 
+	c.Command.RunE = c.runServiceStopCommand
 	return c.Command
 }
 
-func runServiceStopCommand(command *cobra.Command, _ []string) error {
+func (c *LocalCommand) runServiceStopCommand(command *cobra.Command, _ []string) error {
 	service := command.Parent().Name()
 
-	cc := local.NewConfluentCurrentManager()
-
-	if err := notifyConfluentCurrent(command, cc); err != nil {
+	if err := c.notifyConfluentCurrent(command); err != nil {
 		return err
 	}
 
 	for _, dependency := range services[service].stopDependencies {
-		if err := stopService(command, cc, dependency); err != nil {
+		if err := c.stopService(command, dependency); err != nil {
 			return err
 		}
 	}
 
-	return stopService(command, cc, service)
+	return c.stopService(command, service)
 }
 
 func NewServiceTopCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
-	c := cmd.NewAnonymousCLICommand(
+	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "top",
 			Short: fmt.Sprintf("Monitor %s processes.", service),
 			Args:  cobra.NoArgs,
-			RunE:  runServiceTopCommand,
 		}, prerunner)
 
+	c.Command.RunE = c.runServiceTopCommand
 	return c.Command
 }
 
-func runServiceTopCommand(command *cobra.Command, _ []string) error {
-	cc := local.NewConfluentCurrentManager()
-
+func (c *LocalCommand) runServiceTopCommand(command *cobra.Command, _ []string) error {
 	service := command.Parent().Name()
 
-	isUp, err := isRunning(cc, service)
+	isUp, err := c.isRunning(service)
 	if err != nil {
 		return err
 	}
 	if !isUp {
-		return printStatus(command, cc, service)
+		return c.printStatus(command, service)
 	}
 
-	pid, err := cc.GetPid(service)
+	pid, err := c.cc.GetPid(service)
 	if err != nil {
 		return err
 	}
@@ -198,23 +185,22 @@ func runServiceTopCommand(command *cobra.Command, _ []string) error {
 }
 
 func NewServiceVersionCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
-	c := cmd.NewAnonymousCLICommand(
+	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "version",
 			Short: fmt.Sprintf("Print the version of %s.", service),
 			Args:  cobra.NoArgs,
-			RunE:  runServiceVersionCommand,
 		}, prerunner)
+
+	c.Command.RunE = c.runServiceVersionCommand
 
 	return c.Command
 }
 
-func runServiceVersionCommand(command *cobra.Command, _ []string) error {
+func (c *LocalCommand) runServiceVersionCommand(command *cobra.Command, _ []string) error {
 	service := command.Parent().Name()
 
-	ch := local.NewConfluentHomeManager()
-
-	ver, err := ch.GetVersion(service)
+	ver, err := c.ch.GetVersion(service)
 	if err != nil {
 		return err
 	}
@@ -223,20 +209,20 @@ func runServiceVersionCommand(command *cobra.Command, _ []string) error {
 	return nil
 }
 
-func startService(command *cobra.Command, ch local.ConfluentHome, cc local.ConfluentCurrent, service string) error {
-	isUp, err := isRunning(cc, service)
+func (c *LocalCommand) startService(command *cobra.Command, service string) error {
+	isUp, err := c.isRunning(service)
 	if err != nil {
 		return err
 	}
 	if isUp {
-		return printStatus(command, cc, service)
+		return c.printStatus(command, service)
 	}
 
 	if err := checkService(service); err != nil {
 		return err
 	}
 
-	if err := configService(ch, cc, service); err != nil {
+	if err := c.configService(service); err != nil {
 		return err
 	}
 
@@ -244,13 +230,13 @@ func startService(command *cobra.Command, ch local.ConfluentHome, cc local.Confl
 
 	spin := spinner.New()
 	spin.Start()
-	err = startProcess(ch, cc, service)
+	err = c.startProcess(service)
 	spin.Stop()
 	if err != nil {
 		return err
 	}
 
-	return printStatus(command, cc, service)
+	return c.printStatus(command, service)
 }
 
 func checkService(service string) error {
@@ -265,8 +251,8 @@ func checkService(service string) error {
 	return nil
 }
 
-func configService(ch local.ConfluentHome, cc local.ConfluentCurrent, service string) error {
-	port, err := ch.GetServicePort(service)
+func (c *LocalCommand) configService(service string) error {
+	port, err := c.ch.GetServicePort(service)
 	if err != nil {
 		if err.Error() != "no port specified" {
 			return err
@@ -275,23 +261,23 @@ func configService(ch local.ConfluentHome, cc local.ConfluentCurrent, service st
 		services[service].port = port
 	}
 
-	data, err := ch.GetServiceConfig(service)
+	data, err := c.ch.GetServiceConfig(service)
 	if err != nil {
 		return err
 	}
 
-	config, err := getConfig(ch, cc, service)
+	config, err := c.getConfig(service)
 	if err != nil {
 		return err
 	}
 
 	data = injectConfig(data, config)
 
-	if err := cc.SetConfig(service, data); err != nil {
+	if err := c.cc.SetConfig(service, data); err != nil {
 		return err
 	}
 
-	logs, err := cc.GetLogsDir(service)
+	logs, err := c.cc.GetLogsDir(service)
 	if err != nil {
 		return err
 	}
@@ -326,20 +312,20 @@ func injectConfig(data []byte, config map[string]string) []byte {
 	return data
 }
 
-func startProcess(ch local.ConfluentHome, cc local.ConfluentCurrent, service string) error {
-	scriptFile, err := ch.GetServiceStartScript(service)
+func (c *LocalCommand) startProcess(service string) error {
+	scriptFile, err := c.ch.GetServiceStartScript(service)
 	if err != nil {
 		return err
 	}
 
-	configFile, err := cc.GetConfigFile(service)
+	configFile, err := c.cc.GetConfigFile(service)
 	if err != nil {
 		return err
 	}
 
 	start := exec.Command(scriptFile, configFile)
 
-	logFile, err := cc.GetLogFile(service)
+	logFile, err := c.cc.GetLogFile(service)
 	if err != nil {
 		return err
 	}
@@ -355,7 +341,7 @@ func startProcess(ch local.ConfluentHome, cc local.ConfluentCurrent, service str
 		return err
 	}
 
-	if err := cc.SetPid(service, start.Process.Pid); err != nil {
+	if err := c.cc.SetPid(service, start.Process.Pid); err != nil {
 		return err
 	}
 
@@ -364,7 +350,7 @@ func startProcess(ch local.ConfluentHome, cc local.ConfluentCurrent, service str
 	up := make(chan bool)
 	go func() {
 		for {
-			isUp, err := isRunning(cc, service)
+			isUp, err := c.isRunning(service)
 			if err != nil {
 				errors <- err
 			}
@@ -407,30 +393,30 @@ func startProcess(ch local.ConfluentHome, cc local.ConfluentCurrent, service str
 	return nil
 }
 
-func stopService(command *cobra.Command, cc local.ConfluentCurrent, service string) error {
-	isUp, err := isRunning(cc, service)
+func (c *LocalCommand) stopService(command *cobra.Command, service string) error {
+	isUp, err := c.isRunning(service)
 	if err != nil {
 		return err
 	}
 	if !isUp {
-		return printStatus(command, cc, service)
+		return c.printStatus(command, service)
 	}
 
 	command.Printf("Stopping %s\n", service)
 
 	spin := spinner.New()
 	spin.Start()
-	err = stopProcess(cc, service)
+	err = c.stopProcess(service)
 	spin.Stop()
 	if err != nil {
 		return err
 	}
 
-	return printStatus(command, cc, service)
+	return c.printStatus(command, service)
 }
 
-func stopProcess(cc local.ConfluentCurrent, service string) error {
-	pid, err := cc.GetPid(service)
+func (c *LocalCommand) stopProcess(service string) error {
+	pid, err := c.cc.GetPid(service)
 	if err != nil {
 		return err
 	}
@@ -449,7 +435,7 @@ func stopProcess(cc local.ConfluentCurrent, service string) error {
 	up := make(chan bool)
 	go func() {
 		for {
-			isUp, err := isRunning(cc, service)
+			isUp, err := c.isRunning(service)
 			if err != nil {
 				errors <- err
 			}
@@ -467,15 +453,15 @@ func stopProcess(cc local.ConfluentCurrent, service string) error {
 		return fmt.Errorf("%s failed to stop", service)
 	}
 
-	if err := cc.RemovePidFile(service); err != nil {
+	if err := c.cc.RemovePidFile(service); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func printStatus(command *cobra.Command, cc local.ConfluentCurrent, service string) error {
-	isUp, err := isRunning(cc, service)
+func (c *LocalCommand) printStatus(command *cobra.Command, service string) error {
+	isUp, err := c.isRunning(service)
 	if err != nil {
 		return err
 	}
@@ -489,8 +475,8 @@ func printStatus(command *cobra.Command, cc local.ConfluentCurrent, service stri
 	return nil
 }
 
-func isRunning(cc local.ConfluentCurrent, service string) (bool, error) {
-	hasPidFile, err := cc.HasPidFile(service)
+func (c *LocalCommand) isRunning(service string) (bool, error) {
+	hasPidFile, err := c.cc.HasPidFile(service)
 	if err != nil {
 		return false, err
 	}
@@ -498,7 +484,7 @@ func isRunning(cc local.ConfluentCurrent, service string) (bool, error) {
 		return false, nil
 	}
 
-	pid, err := cc.GetPid(service)
+	pid, err := c.cc.GetPid(service)
 	if err != nil {
 		return false, err
 	}

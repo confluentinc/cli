@@ -22,7 +22,7 @@ var supportedDemos = []string{
 }
 
 func NewDemoCommand(prerunner cmd.PreRunner) *cobra.Command {
-	c := cmd.NewAnonymousCLICommand(
+	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "demo",
 			Short: "Run demos provided at https://github.com/confluentinc/examples.",
@@ -41,30 +41,28 @@ func NewDemoCommand(prerunner cmd.PreRunner) *cobra.Command {
 }
 
 func NewDemoInfoCommand(prerunner cmd.PreRunner) *cobra.Command {
-	c := cmd.NewAnonymousCLICommand(
+	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "info [demo]",
 			Short: "Show the README for a demo.",
 			Args:  cobra.ExactArgs(1),
-			RunE:  runDemoInfoCommand,
 		}, prerunner)
 
+	c.Command.RunE = c.runDemoInfoCommand
 	return c.Command
 }
 
-func runDemoInfoCommand(command *cobra.Command, args []string) error {
+func (c *LocalCommand) runDemoInfoCommand(command *cobra.Command, args []string) error {
 	demo := args[0]
 	if !isSupported(demo) {
 		return fmt.Errorf("demo not supported: %s", demo)
 	}
 
-	ch := local.NewConfluentHomeManager()
-
-	if err := fetchExamplesRepo(ch); err != nil {
+	if err := c.fetchExamplesRepo(); err != nil {
 		return err
 	}
 
-	readme, err := ch.GetDemoReadme(demo)
+	readme, err := c.ch.GetDemoReadme(demo)
 	if err != nil {
 		return err
 	}
@@ -74,18 +72,18 @@ func runDemoInfoCommand(command *cobra.Command, args []string) error {
 }
 
 func NewDemoListCommand(prerunner cmd.PreRunner) *cobra.Command {
-	c := cmd.NewAnonymousCLICommand(
+	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "list",
 			Short: "List available demos.",
 			Args:  cobra.NoArgs,
-			Run:   runDemoListCommand,
 		}, prerunner)
 
+	c.Command.Run = c.runDemoListCommand
 	return c.Command
 }
 
-func runDemoListCommand(command *cobra.Command, _ []string) {
+func (c *LocalCommand) runDemoListCommand(command *cobra.Command, _ []string) {
 	list := local.BuildTabbedList(supportedDemos)
 	command.Println("Available demos:")
 	command.Println(list)
@@ -93,46 +91,44 @@ func runDemoListCommand(command *cobra.Command, _ []string) {
 }
 
 func NewDemoStartCommand(prerunner cmd.PreRunner) *cobra.Command {
-	c := cmd.NewAnonymousCLICommand(
+	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "start [demo]",
 			Short: "Start a demo.",
 			Args:  cobra.ExactArgs(1),
-			RunE:  runDemoStartCommand,
 		}, prerunner)
 
+	c.Command.RunE = c.runDemoStartCommand
 	return c.Command
 }
 
-func runDemoStartCommand(command *cobra.Command, args []string) error {
-	ch := local.NewConfluentHomeManager()
-	return run(ch, args[0], "start.sh")
+func (c *LocalCommand) runDemoStartCommand(command *cobra.Command, args []string) error {
+	return c.run(args[0], "start.sh")
 }
 
 func NewDemoStopCommand(prerunner cmd.PreRunner) *cobra.Command {
-	c := cmd.NewAnonymousCLICommand(
+	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "stop [demo]",
 			Short: "Stop a demo.",
 			Args:  cobra.ExactArgs(1),
-			RunE:  runDemoStopCommand,
 		}, prerunner)
 
+	c.Command.RunE = c.runDemoStopCommand
 	return c.Command
 }
 
-func runDemoStopCommand(command *cobra.Command, args []string) error {
-	ch := local.NewConfluentHomeManager()
-	return run(ch, args[0], "stop.sh")
+func (c *LocalCommand) runDemoStopCommand(command *cobra.Command, args []string) error {
+	return c.run(args[0], "stop.sh")
 }
 
-func fetchExamplesRepo(ch local.ConfluentHome) error {
-	hasRepo, err := ch.HasFile("examples")
+func (c *LocalCommand) fetchExamplesRepo() error {
+	hasRepo, err := c.ch.HasFile("examples")
 	if err != nil {
 		return err
 	}
 
-	dir, err := ch.GetFile("examples")
+	dir, err := c.ch.GetFile("examples")
 	if err != nil {
 		return err
 	}
@@ -165,7 +161,7 @@ func fetchExamplesRepo(ch local.ConfluentHome) error {
 		}
 	}
 
-	version, err := ch.GetConfluentVersion()
+	version, err := c.ch.GetConfluentVersion()
 	if err != nil {
 		return err
 	}
@@ -187,21 +183,21 @@ func isSupported(demo string) bool {
 	return false
 }
 
-func run(ch local.ConfluentHome, demo string, script string) error {
+func (c *LocalCommand) run(demo string, script string) error {
 	if !isSupported(demo) {
 		return fmt.Errorf("demo not supported: %s", demo)
 	}
 
-	if err := fetchExamplesRepo(ch); err != nil {
+	if err := c.fetchExamplesRepo(); err != nil {
 		return err
 	}
 
-	scriptFile, err := ch.GetFile("examples", demo, script)
+	scriptFile, err := c.ch.GetFile("examples", demo, script)
 	if err != nil {
 		return err
 	}
 
-	dir, err := ch.GetFile("examples", demo)
+	dir, err := c.ch.GetFile("examples", demo)
 	if err != nil {
 		return err
 	}

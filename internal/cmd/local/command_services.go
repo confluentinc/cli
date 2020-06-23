@@ -123,16 +123,14 @@ var (
 )
 
 func NewServicesCommand(prerunner cmd.PreRunner) *cobra.Command {
-	c := cmd.NewAnonymousCLICommand(
+	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "services [command]",
 			Short: "Manage Confluent Platform services.",
 			Args:  cobra.MinimumNArgs(1),
 		}, prerunner)
 
-	ch := local.NewConfluentHomeManager()
-
-	availableServices, _ := getAvailableServices(ch)
+	availableServices, _ := c.getAvailableServices()
 
 	for _, service := range availableServices {
 		c.AddCommand(NewServiceCommand(service, prerunner))
@@ -148,21 +146,19 @@ func NewServicesCommand(prerunner cmd.PreRunner) *cobra.Command {
 }
 
 func NewServicesListCommand(prerunner cmd.PreRunner) *cobra.Command {
-	c := cmd.NewAnonymousCLICommand(
+	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "list",
 			Short: "List all Confluent Platform services.",
 			Args:  cobra.NoArgs,
-			RunE:  runServicesListCommand,
 		}, prerunner)
 
+	c.Command.RunE = c.runServicesListCommand
 	return c.Command
 }
 
-func runServicesListCommand(command *cobra.Command, _ []string) error {
-	ch := local.NewConfluentHomeManager()
-
-	availableServices, err := getAvailableServices(ch)
+func (c *LocalCommand) runServicesListCommand(command *cobra.Command, _ []string) error {
+	availableServices, err := c.getAvailableServices()
 	if err != nil {
 		return err
 	}
@@ -173,35 +169,32 @@ func runServicesListCommand(command *cobra.Command, _ []string) error {
 }
 
 func NewServicesStartCommand(prerunner cmd.PreRunner) *cobra.Command {
-	c := cmd.NewAnonymousCLICommand(
+	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "start",
 			Short: "Start all Confluent Platform services.",
 			Args:  cobra.NoArgs,
-			RunE:  runServicesStartCommand,
 		}, prerunner)
+
+	c.Command.RunE = c.runServicesStartCommand
 
 	return c.Command
 }
 
-func runServicesStartCommand(command *cobra.Command, _ []string) error {
-	ch := local.NewConfluentHomeManager()
-
-	availableServices, err := getAvailableServices(ch)
+func (c *LocalCommand) runServicesStartCommand(command *cobra.Command, _ []string) error {
+	availableServices, err := c.getAvailableServices()
 	if err != nil {
 		return err
 	}
 
-	cc := local.NewConfluentCurrentManager()
-
-	if err := notifyConfluentCurrent(command, cc); err != nil {
+	if err := c.notifyConfluentCurrent(command); err != nil {
 		return err
 	}
 
 	// Topological order
 	for i := 0; i < len(availableServices); i++ {
 		service := availableServices[i]
-		if err := startService(command, ch, cc, service); err != nil {
+		if err := c.startService(command, service); err != nil {
 			return err
 		}
 	}
@@ -210,29 +203,25 @@ func runServicesStartCommand(command *cobra.Command, _ []string) error {
 }
 
 func NewServicesStatusCommand(prerunner cmd.PreRunner) *cobra.Command {
-	c := cmd.NewAnonymousCLICommand(
+	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "status",
 			Short: "Check the status of all Confluent Platform services.",
 			Args:  cobra.NoArgs,
-			RunE:  runServicesStatusCommand,
 		}, prerunner)
 
+	c.Command.RunE = c.runServicesStatusCommand
 	return c.Command
 }
 
-func runServicesStatusCommand(command *cobra.Command, _ []string) error {
-	ch := local.NewConfluentHomeManager()
-
-	availableServices, err := getAvailableServices(ch)
+func (c *LocalCommand) runServicesStatusCommand(command *cobra.Command, _ []string) error {
+	availableServices, err := c.getAvailableServices()
 	if err != nil {
 		return err
 	}
 
-	cc := local.NewConfluentCurrentManager()
-
 	for _, service := range availableServices {
-		if err := printStatus(command, cc, service); err != nil {
+		if err := c.printStatus(command, service); err != nil {
 			return err
 		}
 	}
@@ -241,35 +230,32 @@ func runServicesStatusCommand(command *cobra.Command, _ []string) error {
 }
 
 func NewServicesStopCommand(prerunner cmd.PreRunner) *cobra.Command {
-	c := cmd.NewAnonymousCLICommand(
+	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "stop",
 			Short: "Stop all Confluent Platform services.",
 			Args:  cobra.NoArgs,
-			RunE:  runServicesStopCommand,
 		}, prerunner)
+
+	c.Command.RunE = c.runServicesStopCommand
 
 	return c.Command
 }
 
-func runServicesStopCommand(command *cobra.Command, _ []string) error {
-	ch := local.NewConfluentHomeManager()
-
-	availableServices, err := getAvailableServices(ch)
+func (c *LocalCommand) runServicesStopCommand(command *cobra.Command, _ []string) error {
+	availableServices, err := c.getAvailableServices()
 	if err != nil {
 		return err
 	}
 
-	cc := local.NewConfluentCurrentManager()
-
-	if err := notifyConfluentCurrent(command, cc); err != nil {
+	if err := c.notifyConfluentCurrent(command); err != nil {
 		return err
 	}
 
 	// Reverse topological order
 	for i := len(availableServices) - 1; i >= 0; i-- {
 		service := availableServices[i]
-		if err := stopService(command, cc, service); err != nil {
+		if err := c.stopService(command, service); err != nil {
 			return err
 		}
 	}
@@ -278,36 +264,33 @@ func runServicesStopCommand(command *cobra.Command, _ []string) error {
 }
 
 func NewServicesTopCommand(prerunner cmd.PreRunner) *cobra.Command {
-	c := cmd.NewAnonymousCLICommand(
+	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "top",
 			Short: "Monitor all Confluent Platform services.",
 			Args:  cobra.NoArgs,
-			RunE:  runServicesTopCommand,
 		}, prerunner)
+
+	c.Command.RunE = c.runServicesTopCommand
 
 	return c.Command
 }
 
-func runServicesTopCommand(command *cobra.Command, _ []string) error {
-	ch := local.NewConfluentHomeManager()
-
-	availableServices, err := getAvailableServices(ch)
+func (c *LocalCommand) runServicesTopCommand(command *cobra.Command, _ []string) error {
+	availableServices, err := c.getAvailableServices()
 	if err != nil {
 		return err
 	}
 
-	cc := local.NewConfluentCurrentManager()
-
 	var pids []int
 	for _, service := range availableServices {
-		isUp, err := isRunning(cc, service)
+		isUp, err := c.isRunning(service)
 		if err != nil {
 			return err
 		}
 
 		if isUp {
-			pid, err := cc.GetPid(service)
+			pid, err := c.cc.GetPid(service)
 			if err != nil {
 				return err
 			}
@@ -323,13 +306,13 @@ func runServicesTopCommand(command *cobra.Command, _ []string) error {
 	return top(pids)
 }
 
-func getConfig(ch local.ConfluentHome, cc local.ConfluentCurrent, service string) (map[string]string, error) {
-	data, err := cc.GetDataDir(service)
+func (c *LocalCommand) getConfig(service string) (map[string]string, error) {
+	data, err := c.cc.GetDataDir(service)
 	if err != nil {
 		return map[string]string{}, err
 	}
 
-	isCP, err := ch.IsConfluentPlatform()
+	isCP, err := c.ch.IsConfluentPlatform()
 	if err != nil {
 		return map[string]string{}, err
 	}
@@ -339,17 +322,17 @@ func getConfig(ch local.ConfluentHome, cc local.ConfluentCurrent, service string
 	switch service {
 	case "connect":
 		config["bootstrap.servers"] = fmt.Sprintf("localhost:%d", services["kafka"].port)
-		path, err := ch.GetFile("share", "java")
+		path, err := c.ch.GetFile("share", "java")
 		if err != nil {
 			return map[string]string{}, err
 		}
 		config["plugin.path"] = path
-		matches, err := ch.FindFile("share/java/kafka-connect-replicator/replicator-rest-extension-*.jar")
+		matches, err := c.ch.FindFile("share/java/kafka-connect-replicator/replicator-rest-extension-*.jar")
 		if err != nil {
 			return map[string]string{}, err
 		}
 		if len(matches) > 0 {
-			file, err := ch.GetFile(matches[0])
+			file, err := c.ch.GetFile(matches[0])
 			if err != nil {
 				return map[string]string{}, err
 			}
@@ -429,8 +412,8 @@ func top(pids []int) error {
 	return top.Run()
 }
 
-func getAvailableServices(ch local.ConfluentHome) ([]string, error) {
-	isCP, err := ch.IsConfluentPlatform()
+func (c *LocalCommand) getAvailableServices() ([]string, error) {
+	isCP, err := c.ch.IsConfluentPlatform()
 
 	var available []string
 	for _, service := range orderedServices {
@@ -442,8 +425,8 @@ func getAvailableServices(ch local.ConfluentHome) ([]string, error) {
 	return available, err
 }
 
-func notifyConfluentCurrent(command *cobra.Command, cc local.ConfluentCurrent) error {
-	dir, err := cc.GetCurrentDir()
+func (c *LocalCommand) notifyConfluentCurrent(command *cobra.Command) error {
+	dir, err := c.cc.GetCurrentDir()
 	if err != nil {
 		return err
 	}

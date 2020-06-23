@@ -106,13 +106,14 @@ var (
 )
 
 func NewKafkaConsumeCommand(prerunner cmd.PreRunner) *cobra.Command {
-	c := cmd.NewAnonymousCLICommand(
+	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "consume [topic]",
 			Short: "Consume from a kafka topic.",
 			Args:  cobra.ExactArgs(1),
-			RunE:  runKafkaConsumeCommand,
 		}, prerunner)
+
+	c.Command.RunE = c.runKafkaConsumeCommand
 
 	// CLI Flags
 	c.Flags().Bool("cloud", defaultBool, commonFlagUsage["cloud"])
@@ -137,18 +138,19 @@ func NewKafkaConsumeCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func runKafkaConsumeCommand(command *cobra.Command, args []string) error {
-	return runKafkaCommand(command, args, "consume", kafkaConsumeDefaultValues)
+func (c *LocalCommand) runKafkaConsumeCommand(command *cobra.Command, args []string) error {
+	return c.runKafkaCommand(command, args, "consume", kafkaConsumeDefaultValues)
 }
 
 func NewKafkaProduceCommand(prerunner cmd.PreRunner) *cobra.Command {
-	c := cmd.NewAnonymousCLICommand(
+	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "produce [topic]",
 			Short: "Produce to a kafka topic.",
 			Args:  cobra.ExactArgs(1),
-			RunE:  runKafkaProduceCommand,
 		}, prerunner)
+
+	c.Command.RunE = c.runKafkaProduceCommand
 
 	// CLI Flags
 	c.Flags().Bool("cloud", defaultBool, commonFlagUsage["cloud"])
@@ -173,19 +175,17 @@ func NewKafkaProduceCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func runKafkaProduceCommand(command *cobra.Command, args []string) error {
-	return runKafkaCommand(command, args, "produce", kafkaProduceDefaultValues)
+func (c *LocalCommand) runKafkaProduceCommand(command *cobra.Command, args []string) error {
+	return c.runKafkaCommand(command, args, "produce", kafkaProduceDefaultValues)
 }
 
-func runKafkaCommand(command *cobra.Command, args []string, mode string, kafkaFlagTypes map[string]interface{}) error {
-	cc := local.NewConfluentCurrentManager()
-
-	isUp, err := isRunning(cc, "kafka")
+func (c *LocalCommand) runKafkaCommand(command *cobra.Command, args []string, mode string, kafkaFlagTypes map[string]interface{}) error {
+	isUp, err := c.isRunning("kafka")
 	if err != nil {
 		return err
 	}
 	if !isUp {
-		return printStatus(command, cc, "kafka")
+		return c.printStatus(command, "kafka")
 	}
 
 	format, err := command.Flags().GetString("value-format")
@@ -197,9 +197,7 @@ func runKafkaCommand(command *cobra.Command, args []string, mode string, kafkaFl
 	// "produce" -> "producer"
 	modeNoun := fmt.Sprintf("%sr", mode)
 
-	ch := local.NewConfluentHomeManager()
-
-	scriptFile, err := ch.GetKafkaScript(format, modeNoun)
+	scriptFile, err := c.ch.GetKafkaScript(format, modeNoun)
 	if err != nil {
 		return err
 	}
