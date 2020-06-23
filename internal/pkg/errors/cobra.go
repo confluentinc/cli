@@ -26,6 +26,9 @@ var (
 )
 
 func HandleCommon(err error, cmd *cobra.Command) error {
+	if err == nil {
+		return nil
+	}
 	cmd.SilenceUsage = true
 	e := HandleCCloudSDKGoError(err)
 	if e != nil {

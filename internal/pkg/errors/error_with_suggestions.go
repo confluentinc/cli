@@ -17,7 +17,6 @@ func NewErrorWithSuggestions(errorMessage string, suggestionsMessage string) Err
 	}
 }
 
-
 func (b *ErrorWithSuggestionsImpl) Error() string {
 	return b.errorMessage
 }

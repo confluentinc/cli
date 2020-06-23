@@ -342,7 +342,7 @@ func (a *loginCommand) saveToNetrc(cmd *cobra.Command, email, password, refreshT
 	if err != nil {
 		return err
 	}
-	pcmd.ErrPrintf(cmd, errors.LoginWroteCredentialsToNetrcWarningMsg, a.netrcHandler.FileName)
+	pcmd.ErrPrintf(cmd, errors.LoginWrittenCredentialsToNetrcWarningMsg, a.netrcHandler.FileName)
 	return nil
 }
 

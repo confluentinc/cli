@@ -202,7 +202,7 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
-		return r.validateToken(cmd, ctx)
+		return errors.HandleCommon(r.validateToken(cmd, ctx), cmd)
 	}
 }
 
@@ -232,7 +232,7 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd
 		}
 		command.Context = ctx
 		command.State = ctx.State
-		return r.validateToken(cmd, ctx)
+		return errors.HandleCommon(r.validateToken(cmd, ctx), cmd)
 	}
 }
 
@@ -260,11 +260,11 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 		} else if command.Context.Credential.CredentialType == v2.Username {
 			err := r.checkUserAuthentication(ctx, cmd)
 			if err != nil {
-				return err
+				return errors.HandleCommon(err, cmd)
 			}
 			clusterId, err = r.getClusterIdForAuthenticatedUser(command, ctx, cmd)
 			if err != nil {
-				return err
+				return errors.HandleCommon(err, cmd)
 			}
 		} else {
 			panic("Invalid Credential Type")
@@ -424,10 +424,10 @@ func (r *PreRun) validateToken(cmd *cobra.Command, ctx *DynamicContext) error {
 	var claims map[string]interface{}
 	token, err := jwt.ParseSigned(authToken)
 	if err != nil {
-		return r.updateToken(errors.HandleCommon(new(ccloud.InvalidTokenError), cmd), ctx)
+		return r.updateToken(new(ccloud.InvalidTokenError), ctx)
 	}
 	if err := token.UnsafeClaimsWithoutVerification(&claims); err != nil {
-		return r.updateToken(errors.HandleCommon(err, cmd), ctx)
+		return r.updateToken(err, ctx)
 	}
 	exp, ok := claims["exp"].(float64)
 	if !ok {
@@ -435,7 +435,7 @@ func (r *PreRun) validateToken(cmd *cobra.Command, ctx *DynamicContext) error {
 	}
 	if float64(r.Clock.Now().Unix()) > exp {
 		r.Logger.Debug("Token expired.")
-		return r.updateToken(errors.HandleCommon(new(ccloud.ExpiredTokenError), cmd), ctx)
+		return r.updateToken(new(ccloud.ExpiredTokenError), ctx)
 	}
 	return nil
 }
