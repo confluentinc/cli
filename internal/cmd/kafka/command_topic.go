@@ -331,6 +331,7 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	InitSarama(h.logger)
 	producer, err := NewSaramaProducer(cluster, h.clientID)
 	if err != nil {
+		err = errors.CatchClusterUnreachableError(err, cluster.ID, cluster.APIKey)
 		return errors.HandleCommon(err, cmd)
 	}
 
@@ -379,6 +380,12 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		msg := &sarama.ProducerMessage{Topic: topic, Key: key, Value: value}
 		_, offset, err := producer.SendMessage(msg)
 		if err != nil {
+			isTopicNotExistError, err := errors.CatchTopicNotExistError(err, topic, cluster.ID)
+			if isTopicNotExistError {
+				scanErr = err
+				close(input)
+				break
+			}
 			pcmd.ErrPrintf(cmd, "Failed to produce offset %d: %s\n", offset, err)
 		}
 
@@ -410,6 +417,7 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	InitSarama(h.logger)
 	consumer, err := NewSaramaConsumer(group, cluster, h.clientID, beginning)
 	if err != nil {
+		err = errors.CatchClusterUnreachableError(err, cluster.ID, cluster.APIKey)
 		return errors.HandleCommon(err, cmd)
 	}
 
@@ -431,7 +439,7 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	pcmd.ErrPrintln(cmd, "Starting Kafka Consumer. ^C to exit")
 
 	err = consumer.Consume(context.Background(), []string{topic}, &GroupHandler{Out: cmd.OutOrStdout()})
-
+	_, err = errors.CatchTopicNotExistError(err, topic, cluster.ID)
 	return errors.HandleCommon(err, cmd)
 }
 

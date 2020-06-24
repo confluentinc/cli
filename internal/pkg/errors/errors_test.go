@@ -13,7 +13,7 @@ func TestSuggestionsMessage(t *testing.T) {
 	suggestionsMessage := "This is a suggestion"
 	err := NewErrorWithSuggestions(errorMessage, suggestionsMessage)
 	var b bytes.Buffer
-	HandleSuggestionsMessageDisplay(err, &b)
+	DisplaySuggestionsMessage(err, &b)
 	out := b.String()
 	wantDirectionsOutput := fmt.Sprintf(suggestionsMessageFormat, suggestionsMessage)
 	require.Equal(t, wantDirectionsOutput, out)

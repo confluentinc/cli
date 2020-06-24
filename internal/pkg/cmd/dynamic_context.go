@@ -38,6 +38,7 @@ func (d *DynamicContext) GetKafkaClusterForCommand(cmd *cobra.Command) (*v1.Kafk
 	}
 	cluster, err := d.FindKafkaCluster(cmd, clusterId)
 	if err != nil {
+		err = errors.CatchKafkaNotFoundError(err, clusterId)
 		return nil, err
 	}
 	return cluster, nil
@@ -146,6 +147,7 @@ func (d *DynamicContext) SchemaRegistryCluster(cmd *cobra.Command) (*v2.SchemaRe
 		if cluster == nil || missingDetails(cluster) {
 			srCluster, err := ctxClient.FetchSchemaRegistryById(context.Background(), resourceId, envId)
 			if err != nil {
+				err = errors.CatchResourceNotFoundError(err, resourceId)
 				return nil, err
 			}
 			cluster = makeSRCluster(srCluster)
@@ -156,6 +158,7 @@ func (d *DynamicContext) SchemaRegistryCluster(cmd *cobra.Command) (*v2.SchemaRe
 		if cluster == nil || missingDetails(cluster) {
 			srCluster, err := ctxClient.FetchSchemaRegistryByAccountId(context.Background(), envId)
 			if err != nil {
+				err = errors.CatchResourceNotFoundError(err, resourceId)
 				return nil, err
 			}
 			cluster = makeSRCluster(srCluster)

@@ -295,7 +295,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	req := &schedv1.KafkaCluster{AccountId: c.EnvironmentId(), Id: args[0]}
 	cluster, err := c.Client.Kafka.Describe(context.Background(), req)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return errors.HandleCommon(errors.CatchKafkaNotFoundError(err, args[0]), cmd)
 	}
 	return errors.HandleCommon(outputKafkaClusterDescription(cmd, cluster), cmd)
 }
@@ -345,7 +345,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	req := &schedv1.KafkaCluster{AccountId: c.EnvironmentId(), Id: args[0]}
 	err := c.Client.Kafka.Delete(context.Background(), req)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return errors.HandleCommon(errors.CatchKafkaNotFoundError(err, args[0]), cmd)
 	}
 	pcmd.Printf(cmd, errors.KafkaClusterDeletedWarningMsg, args[0])
 	return nil
@@ -356,6 +356,7 @@ func (c *clusterCommand) use(cmd *cobra.Command, args []string) error {
 
 	_, err := c.Context.FindKafkaCluster(cmd, clusterID)
 	if err != nil {
+		err = errors.CatchKafkaNotFoundError(err, clusterID)
 		return errors.HandleCommon(err, cmd)
 	}
 	return errors.HandleCommon(c.Context.SetActiveKafkaCluster(cmd, clusterID), cmd)
@@ -384,7 +385,7 @@ func checkCloudAndRegion(cloudId string, regionId string, clouds []*schedv1.Clou
 		}
 	}
 	return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.CloudProviderNotAvailableErrorMsg, cloudId),
-		errors.CloudRegionNotAvailableSuggestions)
+		errors.CloudProviderNotAvailableSuggestions)
 }
 
 func getAccountsForCloud(cloudId string, clouds []*schedv1.CloudMetadata) []string {

@@ -6,21 +6,21 @@ type ErrorWithSuggestions interface {
 }
 
 type ErrorWithSuggestionsImpl struct {
-	errorMessage string
-	suggestionsMessage string
+	errorMsg string
+	suggestionsMsg string
 }
 
-func NewErrorWithSuggestions(errorMessage string, suggestionsMessage string) ErrorWithSuggestions {
+func NewErrorWithSuggestions(errorMsg string, suggestionsMsg string) ErrorWithSuggestions {
 	return &ErrorWithSuggestionsImpl{
-		errorMessage:       errorMessage,
-		suggestionsMessage: suggestionsMessage,
+		errorMsg:       errorMsg,
+		suggestionsMsg: suggestionsMsg,
 	}
 }
 
 func (b *ErrorWithSuggestionsImpl) Error() string {
-	return b.errorMessage
+	return b.errorMsg
 }
 
 func (b *ErrorWithSuggestionsImpl) GetSuggestionsMsg() string {
-	return b.suggestionsMessage
+	return b.suggestionsMsg
 }

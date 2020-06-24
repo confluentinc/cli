@@ -15,7 +15,8 @@ import (
 )
 
 var (
-	suggestionsMessageFormat = "\nSuggestions:\n    %s\n"
+	suggestionsMessageHeader = "\nSuggestions:\n"
+	suggestionsLineFormat    = "    %s\n"
 
     messages = map[error]string{
 		ErrNoContext:      UserNotLoggedInErrMsg,
@@ -74,28 +75,44 @@ func HandleCommon(err error, cmd *cobra.Command) error {
 	return err
 }
 
-func HandleSuggestionsMessageDisplay(err error, writer io.Writer) {
+func DisplaySuggestionsMessage(err error, writer io.Writer) {
 	if err == nil {
 		return
 	}
 	cliErr, ok := err.(ErrorWithSuggestions)
 	if ok && cliErr.GetSuggestionsMsg() != "" {
-		_, _ = fmt.Fprintf(writer, suggestionsMessageFormat, cliErr.GetSuggestionsMsg())
+		_, _ = fmt.Fprint(writer, composeSuggestionsMessage(cliErr.GetSuggestionsMsg()))
 	}
+}
+
+func composeSuggestionsMessage(msg string) string {
+	lines := strings.Split(msg, "\n")
+	suggestionsMsg := suggestionsMessageHeader
+	for _, line := range lines {
+		suggestionsMsg += fmt.Sprintf(suggestionsLineFormat, line)
+	}
+	return suggestionsMsg
 }
 
 func HandleCCloudSDKGoError(err error) error {
 	switch err.(type) {
 	case *ccloud.InvalidLoginError:
-		return fmt.Errorf("You have entered an incorrect username or password. Please try again.")
+		return Errorf("You have entered an incorrect username or password. Please try again.")
 	case *ccloud.InvalidTokenError:
-		return fmt.Errorf(CorruptedAuthTokenErrorMsg)
+		return Errorf(CorruptedAuthTokenErrorMsg)
 	case *ccloud.ExpiredTokenError:
-		return fmt.Errorf("expired token")
+		return Errorf("expired token")
 	}
+
+
+	/*
+		Error: 1 error occurred:
+			* error describing kafka cluster: resource not found
+	*/
 
 	errMsg := err.Error()
 	if strings.Contains(errMsg, "resource not found") {
+		fmt.Println(errMsg)
 		return NewErrorWithSuggestions("not found resource", "check your resource name and stuff dude")
 	} else if strings.Contains(errMsg,"logicalCluster: Authentication failed") {
 		return NewErrorWithSuggestions("not ready", "wait a bit fam!")
@@ -104,10 +121,29 @@ func HandleCCloudSDKGoError(err error) error {
 	// non existent topic produce and consume
 	// Failed to produce offset -1: kafka server: Request was for a topic or partition that does not exist on this broker.
 
+
+	/*
+
+	Error: 1 error occurred:
+		* error listing topics: Authentication failed: 1 extensions are invalid! They are: logicalCluster: Authentication failed
+
+	Error: 1 error occurred:
+		* error creating topic test-topic: Authentication failed: 1 extensions are invalid! They are: logicalCluster: Authentication failed
+	 */
+
+
+	/*
+	Error: 1 error occurred:
+		* error describing kafka cluster: resource not found
+	 */
+
 	return nil
 }
 
 func HandleSaramaError(err error) error {
+	/*
+	Error: kafka: client has run out of available brokers to talk to (Is your cluster reachable?)
+	 */
 	if strings.Contains(err.Error(), "client has run out of available brokers to talk to (Is your cluster reachable?)") {
 		return NewErrorWithSuggestions("Unable to connect to kafka cluster", "Check your api key and secret")
 	}
