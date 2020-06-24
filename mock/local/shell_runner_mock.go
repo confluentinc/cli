@@ -5,10 +5,9 @@
 package mock_local
 
 import (
+	gomock "github.com/golang/mock/gomock"
 	io "io"
 	reflect "reflect"
-
-	gomock "github.com/golang/mock/gomock"
 )
 
 // MockShellRunner is a mock of ShellRunner interface
