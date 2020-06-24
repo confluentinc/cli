@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/confluentinc/cli/internal/cmd/auditlog"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"net/http"
 	"os"
@@ -172,6 +173,8 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		cli.AddCommand(command)
 
 		cli.AddCommand(secret.New(prompt, resolver, secrets.NewPasswordProtectionPlugin(logger)))
+
+		cli.AddCommand(auditlog.New(prerunner))
 	}
 	return command, nil
 }

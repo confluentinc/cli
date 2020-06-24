@@ -1,0 +1,104 @@
+package auditlog
+
+import (
+	"encoding/json"
+	"github.com/antihax/optional"
+	"github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	"github.com/spf13/cobra"
+
+	"context"
+)
+
+type routeCommand struct {
+	*cmd.AuthenticatedCLICommand
+	prerunner cmd.PreRunner
+}
+
+// NewRouteCommand returns the sub-command object for interacting with audit log route rules.
+func NewRouteCommand(prerunner cmd.PreRunner) *cobra.Command {
+	cliCmd := cmd.NewAuthenticatedWithMDSCLICommand(
+		&cobra.Command{
+			Use:   "route",
+			Short: "Examine audit log route rules (since 6.0).",
+			Long:  "Examine routing rules that determine which auditable events are logged, and where (since 6.0).",
+		}, prerunner)
+	cmd := &routeCommand{
+		AuthenticatedCLICommand: cliCmd,
+		prerunner:               prerunner,
+	}
+	cmd.init()
+	return cmd.Command
+}
+
+func (c *routeCommand) init() {
+	listCmd := &cobra.Command{
+		Use:   "list",
+		Short: "List routes matching a resource & sub-resources (since 6.0).",
+		Long:  "List the routes that could match the queried resource or its sub-resources (since 6.0).",
+		RunE:  c.list,
+		Args:  cobra.NoArgs,
+	}
+	listCmd.Flags().StringP("resource", "r", "", "The confluent resource name that is the subject of the query.")
+	check(listCmd.MarkFlagRequired("resource"))
+	listCmd.Flags().SortFlags = false
+	c.AddCommand(listCmd)
+
+	lookupCmd := &cobra.Command{
+		Use:   "lookup <crn>",
+		Short: "Returns the matching audit-log route rule (since 6.0).",
+		Long:  "Returns the single route that describes how audit log messages regarding this CRN would be routed, with all defaults populated (since 6.0).",
+		RunE:  c.lookup,
+		Args:  cobra.ExactArgs(1),
+	}
+	c.AddCommand(lookupCmd)
+}
+
+func (c *routeCommand) createContext() context.Context {
+	return context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
+}
+
+func (c *routeCommand) list(cmd *cobra.Command, args []string) error {
+	var opts *mds.ListRoutesOpts
+	if cmd.Flags().Changed("resource") {
+		resource, err := cmd.Flags().GetString("resource")
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+		opts = &mds.ListRoutesOpts{Q: optional.NewString(resource)}
+	} else {
+		opts = &mds.ListRoutesOpts{Q: optional.EmptyString()}
+	}
+	result, _, err := c.MDSClient.AuditLogConfigurationApi.ListRoutes(c.createContext(), opts)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	enc := json.NewEncoder(c.OutOrStdout())
+	enc.SetIndent("", "  ")
+	if err = enc.Encode(result); err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	return nil
+}
+
+func (c *routeCommand) lookup(cmd *cobra.Command, args []string) error {
+	resource := args[0]
+	opts := &mds.ResolveResourceRouteOpts{Crn: optional.NewString(resource)}
+	result, _, err := c.MDSClient.AuditLogConfigurationApi.ResolveResourceRoute(c.createContext(), opts)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	enc := json.NewEncoder(c.OutOrStdout())
+	enc.SetIndent("", "  ")
+	if err = enc.Encode(result); err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	return nil
+}
+
+func check(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
