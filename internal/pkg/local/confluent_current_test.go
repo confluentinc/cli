@@ -134,8 +134,8 @@ func TestSetAndGetPid(t *testing.T) {
 	cc := NewConfluentCurrentManager()
 	cc.currentDir = dir
 
-	req.NoError(cc.SetPid(exampleService, 1))
-	pid, err := cc.GetPid(exampleService)
+	req.NoError(cc.WritePid(exampleService, 1))
+	pid, err := cc.ReadPid(exampleService)
 	req.NoError(err)
 	req.Equal(1, pid)
 }

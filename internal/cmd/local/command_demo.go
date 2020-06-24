@@ -62,7 +62,7 @@ func (c *LocalCommand) runDemoInfoCommand(command *cobra.Command, args []string)
 		return err
 	}
 
-	readme, err := c.ch.GetDemoReadme(demo)
+	readme, err := c.ch.ReadDemoReadme(demo)
 	if err != nil {
 		return err
 	}

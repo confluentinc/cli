@@ -32,7 +32,6 @@ func NewServiceCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
 	c.AddCommand(NewServiceStartCommand(service, prerunner))
 	c.AddCommand(NewServiceStatusCommand(service, prerunner))
 	c.AddCommand(NewServiceStopCommand(service, prerunner))
-	c.AddCommand(NewServiceVersionCommand(service, prerunner))
 	c.AddCommand(NewServiceTopCommand(service, prerunner))
 	c.AddCommand(NewServiceVersionCommand(service, prerunner))
 
@@ -72,7 +71,7 @@ func (c *LocalCommand) runServiceLogCommand(command *cobra.Command, _ []string) 
 
 	data, err := ioutil.ReadFile(log)
 	if err != nil {
-		return err
+		return fmt.Errorf("no log found: to run %s, use \"confluent local services %s start\"", service, service)
 	}
 	command.Print(string(data))
 
@@ -121,6 +120,10 @@ func NewServiceStatusCommand(service string, prerunner cmd.PreRunner) *cobra.Com
 
 func (c *LocalCommand) runServiceStatusCommand(command *cobra.Command, _ []string) error {
 	service := command.Parent().Name()
+
+	if err := c.notifyConfluentCurrent(command); err != nil {
+		return err
+	}
 
 	return c.printStatus(command, service)
 }
@@ -176,7 +179,7 @@ func (c *LocalCommand) runServiceTopCommand(command *cobra.Command, _ []string) 
 		return c.printStatus(command, service)
 	}
 
-	pid, err := c.cc.GetPid(service)
+	pid, err := c.cc.ReadPid(service)
 	if err != nil {
 		return err
 	}
@@ -252,7 +255,7 @@ func checkService(service string) error {
 }
 
 func (c *LocalCommand) configService(service string) error {
-	port, err := c.ch.GetServicePort(service)
+	port, err := c.ch.ReadServicePort(service)
 	if err != nil {
 		if err.Error() != "no port specified" {
 			return err
@@ -261,7 +264,7 @@ func (c *LocalCommand) configService(service string) error {
 		services[service].port = port
 	}
 
-	data, err := c.ch.GetServiceConfig(service)
+	data, err := c.ch.ReadServiceConfig(service)
 	if err != nil {
 		return err
 	}
@@ -273,7 +276,7 @@ func (c *LocalCommand) configService(service string) error {
 
 	data = injectConfig(data, config)
 
-	if err := c.cc.SetConfig(service, data); err != nil {
+	if err := c.cc.WriteConfig(service, data); err != nil {
 		return err
 	}
 
@@ -341,7 +344,7 @@ func (c *LocalCommand) startProcess(service string) error {
 		return err
 	}
 
-	if err := c.cc.SetPid(service, start.Process.Pid); err != nil {
+	if err := c.cc.WritePid(service, start.Process.Pid); err != nil {
 		return err
 	}
 
@@ -416,7 +419,7 @@ func (c *LocalCommand) stopService(command *cobra.Command, service string) error
 }
 
 func (c *LocalCommand) stopProcess(service string) error {
-	pid, err := c.cc.GetPid(service)
+	pid, err := c.cc.ReadPid(service)
 	if err != nil {
 		return err
 	}
@@ -484,7 +487,7 @@ func (c *LocalCommand) isRunning(service string) (bool, error) {
 		return false, nil
 	}
 
-	pid, err := c.cc.GetPid(service)
+	pid, err := c.cc.ReadPid(service)
 	if err != nil {
 		return false, err
 	}

@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -220,6 +221,11 @@ func (c *LocalCommand) runServicesStatusCommand(command *cobra.Command, _ []stri
 		return err
 	}
 
+	if err := c.notifyConfluentCurrent(command); err != nil {
+		return err
+	}
+
+	sort.Strings(availableServices)
 	for _, service := range availableServices {
 		if err := c.printStatus(command, service); err != nil {
 			return err
@@ -290,7 +296,7 @@ func (c *LocalCommand) runServicesTopCommand(command *cobra.Command, _ []string)
 		}
 
 		if isUp {
-			pid, err := c.cc.GetPid(service)
+			pid, err := c.cc.ReadPid(service)
 			if err != nil {
 				return err
 			}
@@ -299,8 +305,7 @@ func (c *LocalCommand) runServicesTopCommand(command *cobra.Command, _ []string)
 	}
 
 	if len(pids) == 0 {
-		command.PrintErrln("No services are running.")
-		return nil
+		return fmt.Errorf("no services running")
 	}
 
 	return top(pids)

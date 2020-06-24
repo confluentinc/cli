@@ -77,13 +77,13 @@ type ConfluentHome interface {
 	GetConfluentVersion() (string, error)
 
 	GetServiceStartScript(service string) (string, error)
-	GetServiceConfig(service string) ([]byte, error)
-	GetServicePort(service string) (int, error)
+	ReadServiceConfig(service string) ([]byte, error)
+	ReadServicePort(service string) (int, error)
 	GetVersion(service string) (string, error)
 
 	GetConnectorConfigFile(connector string) (string, error)
 	GetKafkaScript(mode, format string) (string, error)
-	GetDemoReadme(demo string) (string, error)
+	ReadDemoReadme(demo string) (string, error)
 }
 
 type ConfluentHomeManager struct{}
@@ -166,7 +166,7 @@ func (ch *ConfluentHomeManager) GetServiceStartScript(service string) (string, e
 	return ch.GetFile("bin", scripts[service])
 }
 
-func (ch *ConfluentHomeManager) GetServiceConfig(service string) ([]byte, error) {
+func (ch *ConfluentHomeManager) ReadServiceConfig(service string) ([]byte, error) {
 	file, err := ch.GetFile("etc", serviceConfigs[service])
 	if err != nil {
 		return []byte{}, err
@@ -185,8 +185,8 @@ func (ch *ConfluentHomeManager) GetServiceConfig(service string) ([]byte, error)
 	return ioutil.ReadFile(file)
 }
 
-func (ch *ConfluentHomeManager) GetServicePort(service string) (int, error) {
-	data, err := ch.GetServiceConfig(service)
+func (ch *ConfluentHomeManager) ReadServicePort(service string) (int, error) {
+	data, err := ch.ReadServiceConfig(service)
 	if err != nil {
 		return 0, err
 	}
@@ -265,7 +265,7 @@ func (ch *ConfluentHomeManager) GetKafkaScript(format, mode string) (string, err
 	return ch.GetFile("bin", script)
 }
 
-func (ch *ConfluentHomeManager) GetDemoReadme(demo string) (string, error) {
+func (ch *ConfluentHomeManager) ReadDemoReadme(demo string) (string, error) {
 	readme, err := ch.GetFile("examples", demo, "README.md")
 	if err != nil {
 		return "", err

@@ -10,6 +10,9 @@ import (
 
 // MockConfluentCurrent is a mock of ConfluentCurrent interface
 type MockConfluentCurrent struct {
+	lockHasTrackingFile sync.Mutex
+	HasTrackingFileFunc func() bool
+
 	lockRemoveTrackingFile sync.Mutex
 	RemoveTrackingFileFunc func() error
 
@@ -28,8 +31,8 @@ type MockConfluentCurrent struct {
 	lockGetConfigFile sync.Mutex
 	GetConfigFileFunc func(service string) (string, error)
 
-	lockSetConfig sync.Mutex
-	SetConfigFunc func(service string, config []byte) error
+	lockWriteConfig sync.Mutex
+	WriteConfigFunc func(service string, config []byte) error
 
 	lockGetLogFile sync.Mutex
 	GetLogFileFunc func(service string) (string, error)
@@ -40,16 +43,18 @@ type MockConfluentCurrent struct {
 	lockHasPidFile sync.Mutex
 	HasPidFileFunc func(service string) (bool, error)
 
-	lockGetPid sync.Mutex
-	GetPidFunc func(service string) (int, error)
+	lockReadPid sync.Mutex
+	ReadPidFunc func(service string) (int, error)
 
-	lockSetPid sync.Mutex
-	SetPidFunc func(service string, pid int) error
+	lockWritePid sync.Mutex
+	WritePidFunc func(service string, pid int) error
 
 	lockRemovePidFile sync.Mutex
 	RemovePidFileFunc func(service string) error
 
 	calls struct {
+		HasTrackingFile []struct {
+		}
 		RemoveTrackingFile []struct {
 		}
 		GetCurrentDir []struct {
@@ -65,7 +70,7 @@ type MockConfluentCurrent struct {
 		GetConfigFile []struct {
 			Service string
 		}
-		SetConfig []struct {
+		WriteConfig []struct {
 			Service string
 			Config  []byte
 		}
@@ -78,10 +83,10 @@ type MockConfluentCurrent struct {
 		HasPidFile []struct {
 			Service string
 		}
-		GetPid []struct {
+		ReadPid []struct {
 			Service string
 		}
-		SetPid []struct {
+		WritePid []struct {
 			Service string
 			Pid     int
 		}
@@ -89,6 +94,40 @@ type MockConfluentCurrent struct {
 			Service string
 		}
 	}
+}
+
+// HasTrackingFile mocks base method by wrapping the associated func.
+func (m *MockConfluentCurrent) HasTrackingFile() bool {
+	m.lockHasTrackingFile.Lock()
+	defer m.lockHasTrackingFile.Unlock()
+
+	if m.HasTrackingFileFunc == nil {
+		panic("mocker: MockConfluentCurrent.HasTrackingFileFunc is nil but MockConfluentCurrent.HasTrackingFile was called.")
+	}
+
+	call := struct {
+	}{}
+
+	m.calls.HasTrackingFile = append(m.calls.HasTrackingFile, call)
+
+	return m.HasTrackingFileFunc()
+}
+
+// HasTrackingFileCalled returns true if HasTrackingFile was called at least once.
+func (m *MockConfluentCurrent) HasTrackingFileCalled() bool {
+	m.lockHasTrackingFile.Lock()
+	defer m.lockHasTrackingFile.Unlock()
+
+	return len(m.calls.HasTrackingFile) > 0
+}
+
+// HasTrackingFileCalls returns the calls made to HasTrackingFile.
+func (m *MockConfluentCurrent) HasTrackingFileCalls() []struct {
+} {
+	m.lockHasTrackingFile.Lock()
+	defer m.lockHasTrackingFile.Unlock()
+
+	return m.calls.HasTrackingFile
 }
 
 // RemoveTrackingFile mocks base method by wrapping the associated func.
@@ -307,13 +346,13 @@ func (m *MockConfluentCurrent) GetConfigFileCalls() []struct {
 	return m.calls.GetConfigFile
 }
 
-// SetConfig mocks base method by wrapping the associated func.
-func (m *MockConfluentCurrent) SetConfig(service string, config []byte) error {
-	m.lockSetConfig.Lock()
-	defer m.lockSetConfig.Unlock()
+// WriteConfig mocks base method by wrapping the associated func.
+func (m *MockConfluentCurrent) WriteConfig(service string, config []byte) error {
+	m.lockWriteConfig.Lock()
+	defer m.lockWriteConfig.Unlock()
 
-	if m.SetConfigFunc == nil {
-		panic("mocker: MockConfluentCurrent.SetConfigFunc is nil but MockConfluentCurrent.SetConfig was called.")
+	if m.WriteConfigFunc == nil {
+		panic("mocker: MockConfluentCurrent.WriteConfigFunc is nil but MockConfluentCurrent.WriteConfig was called.")
 	}
 
 	call := struct {
@@ -324,28 +363,28 @@ func (m *MockConfluentCurrent) SetConfig(service string, config []byte) error {
 		Config:  config,
 	}
 
-	m.calls.SetConfig = append(m.calls.SetConfig, call)
+	m.calls.WriteConfig = append(m.calls.WriteConfig, call)
 
-	return m.SetConfigFunc(service, config)
+	return m.WriteConfigFunc(service, config)
 }
 
-// SetConfigCalled returns true if SetConfig was called at least once.
-func (m *MockConfluentCurrent) SetConfigCalled() bool {
-	m.lockSetConfig.Lock()
-	defer m.lockSetConfig.Unlock()
+// WriteConfigCalled returns true if WriteConfig was called at least once.
+func (m *MockConfluentCurrent) WriteConfigCalled() bool {
+	m.lockWriteConfig.Lock()
+	defer m.lockWriteConfig.Unlock()
 
-	return len(m.calls.SetConfig) > 0
+	return len(m.calls.WriteConfig) > 0
 }
 
-// SetConfigCalls returns the calls made to SetConfig.
-func (m *MockConfluentCurrent) SetConfigCalls() []struct {
+// WriteConfigCalls returns the calls made to WriteConfig.
+func (m *MockConfluentCurrent) WriteConfigCalls() []struct {
 	Service string
 	Config  []byte
 } {
-	m.lockSetConfig.Lock()
-	defer m.lockSetConfig.Unlock()
+	m.lockWriteConfig.Lock()
+	defer m.lockWriteConfig.Unlock()
 
-	return m.calls.SetConfig
+	return m.calls.WriteConfig
 }
 
 // GetLogFile mocks base method by wrapping the associated func.
@@ -462,13 +501,13 @@ func (m *MockConfluentCurrent) HasPidFileCalls() []struct {
 	return m.calls.HasPidFile
 }
 
-// GetPid mocks base method by wrapping the associated func.
-func (m *MockConfluentCurrent) GetPid(service string) (int, error) {
-	m.lockGetPid.Lock()
-	defer m.lockGetPid.Unlock()
+// ReadPid mocks base method by wrapping the associated func.
+func (m *MockConfluentCurrent) ReadPid(service string) (int, error) {
+	m.lockReadPid.Lock()
+	defer m.lockReadPid.Unlock()
 
-	if m.GetPidFunc == nil {
-		panic("mocker: MockConfluentCurrent.GetPidFunc is nil but MockConfluentCurrent.GetPid was called.")
+	if m.ReadPidFunc == nil {
+		panic("mocker: MockConfluentCurrent.ReadPidFunc is nil but MockConfluentCurrent.ReadPid was called.")
 	}
 
 	call := struct {
@@ -477,36 +516,36 @@ func (m *MockConfluentCurrent) GetPid(service string) (int, error) {
 		Service: service,
 	}
 
-	m.calls.GetPid = append(m.calls.GetPid, call)
+	m.calls.ReadPid = append(m.calls.ReadPid, call)
 
-	return m.GetPidFunc(service)
+	return m.ReadPidFunc(service)
 }
 
-// GetPidCalled returns true if GetPid was called at least once.
-func (m *MockConfluentCurrent) GetPidCalled() bool {
-	m.lockGetPid.Lock()
-	defer m.lockGetPid.Unlock()
+// ReadPidCalled returns true if ReadPid was called at least once.
+func (m *MockConfluentCurrent) ReadPidCalled() bool {
+	m.lockReadPid.Lock()
+	defer m.lockReadPid.Unlock()
 
-	return len(m.calls.GetPid) > 0
+	return len(m.calls.ReadPid) > 0
 }
 
-// GetPidCalls returns the calls made to GetPid.
-func (m *MockConfluentCurrent) GetPidCalls() []struct {
+// ReadPidCalls returns the calls made to ReadPid.
+func (m *MockConfluentCurrent) ReadPidCalls() []struct {
 	Service string
 } {
-	m.lockGetPid.Lock()
-	defer m.lockGetPid.Unlock()
+	m.lockReadPid.Lock()
+	defer m.lockReadPid.Unlock()
 
-	return m.calls.GetPid
+	return m.calls.ReadPid
 }
 
-// SetPid mocks base method by wrapping the associated func.
-func (m *MockConfluentCurrent) SetPid(service string, pid int) error {
-	m.lockSetPid.Lock()
-	defer m.lockSetPid.Unlock()
+// WritePid mocks base method by wrapping the associated func.
+func (m *MockConfluentCurrent) WritePid(service string, pid int) error {
+	m.lockWritePid.Lock()
+	defer m.lockWritePid.Unlock()
 
-	if m.SetPidFunc == nil {
-		panic("mocker: MockConfluentCurrent.SetPidFunc is nil but MockConfluentCurrent.SetPid was called.")
+	if m.WritePidFunc == nil {
+		panic("mocker: MockConfluentCurrent.WritePidFunc is nil but MockConfluentCurrent.WritePid was called.")
 	}
 
 	call := struct {
@@ -517,28 +556,28 @@ func (m *MockConfluentCurrent) SetPid(service string, pid int) error {
 		Pid:     pid,
 	}
 
-	m.calls.SetPid = append(m.calls.SetPid, call)
+	m.calls.WritePid = append(m.calls.WritePid, call)
 
-	return m.SetPidFunc(service, pid)
+	return m.WritePidFunc(service, pid)
 }
 
-// SetPidCalled returns true if SetPid was called at least once.
-func (m *MockConfluentCurrent) SetPidCalled() bool {
-	m.lockSetPid.Lock()
-	defer m.lockSetPid.Unlock()
+// WritePidCalled returns true if WritePid was called at least once.
+func (m *MockConfluentCurrent) WritePidCalled() bool {
+	m.lockWritePid.Lock()
+	defer m.lockWritePid.Unlock()
 
-	return len(m.calls.SetPid) > 0
+	return len(m.calls.WritePid) > 0
 }
 
-// SetPidCalls returns the calls made to SetPid.
-func (m *MockConfluentCurrent) SetPidCalls() []struct {
+// WritePidCalls returns the calls made to WritePid.
+func (m *MockConfluentCurrent) WritePidCalls() []struct {
 	Service string
 	Pid     int
 } {
-	m.lockSetPid.Lock()
-	defer m.lockSetPid.Unlock()
+	m.lockWritePid.Lock()
+	defer m.lockWritePid.Unlock()
 
-	return m.calls.SetPid
+	return m.calls.WritePid
 }
 
 // RemovePidFile mocks base method by wrapping the associated func.
@@ -581,6 +620,9 @@ func (m *MockConfluentCurrent) RemovePidFileCalls() []struct {
 
 // Reset resets the calls made to the mocked methods.
 func (m *MockConfluentCurrent) Reset() {
+	m.lockHasTrackingFile.Lock()
+	m.calls.HasTrackingFile = nil
+	m.lockHasTrackingFile.Unlock()
 	m.lockRemoveTrackingFile.Lock()
 	m.calls.RemoveTrackingFile = nil
 	m.lockRemoveTrackingFile.Unlock()
@@ -599,9 +641,9 @@ func (m *MockConfluentCurrent) Reset() {
 	m.lockGetConfigFile.Lock()
 	m.calls.GetConfigFile = nil
 	m.lockGetConfigFile.Unlock()
-	m.lockSetConfig.Lock()
-	m.calls.SetConfig = nil
-	m.lockSetConfig.Unlock()
+	m.lockWriteConfig.Lock()
+	m.calls.WriteConfig = nil
+	m.lockWriteConfig.Unlock()
 	m.lockGetLogFile.Lock()
 	m.calls.GetLogFile = nil
 	m.lockGetLogFile.Unlock()
@@ -611,12 +653,12 @@ func (m *MockConfluentCurrent) Reset() {
 	m.lockHasPidFile.Lock()
 	m.calls.HasPidFile = nil
 	m.lockHasPidFile.Unlock()
-	m.lockGetPid.Lock()
-	m.calls.GetPid = nil
-	m.lockGetPid.Unlock()
-	m.lockSetPid.Lock()
-	m.calls.SetPid = nil
-	m.lockSetPid.Unlock()
+	m.lockReadPid.Lock()
+	m.calls.ReadPid = nil
+	m.lockReadPid.Unlock()
+	m.lockWritePid.Lock()
+	m.calls.WritePid = nil
+	m.lockWritePid.Unlock()
 	m.lockRemovePidFile.Lock()
 	m.calls.RemovePidFile = nil
 	m.lockRemovePidFile.Unlock()
