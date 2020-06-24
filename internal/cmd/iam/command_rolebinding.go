@@ -180,7 +180,7 @@ func (c *rolebindingCommand) validateRoleAndResourceType(roleName string, resour
 }
 
 func (c *rolebindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mds.MdsScope, error) {
-	scope := &mds.ScopeClusters{}
+	scope := &mds.MdsScopeClusters{}
 	nonKafkaScopesSet := 0
 
 	clusterName, err := cmd.Flags().GetString("cluster-name")
@@ -440,7 +440,7 @@ func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOption
 			parsedResourcePattern,
 		}
 		resourcesRequest = mds.ResourcesRequest{
-			MdsScope:         *scope,
+			Scope:         *scope,
 			ResourcePatterns: resourcePatterns,
 		}
 	}
