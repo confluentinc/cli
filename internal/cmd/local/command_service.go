@@ -389,7 +389,7 @@ func (c *LocalCommand) startProcess(service string) error {
 		break
 	case err := <-errors:
 		return err
-	case <-time.After(60 * time.Second):
+	case <-time.After(90 * time.Second):
 		return fmt.Errorf("%s failed to start", service)
 	}
 
