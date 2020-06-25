@@ -16,85 +16,95 @@ var (
 	rbacRolesV2 = map[string]string{
 		"CCloudRoleBindingAdmin": `{
 			"name": "CCloudRoleBindingAdmin",
-			"accessPolicy": {
-				"scopeType": "ROOT",
+			"policy": {
+				"bindingScope": "root",
+				"bindWithResource": false,
 				"allowedOperations": [
+				{"resourceType":"SecurityMetadata","operations":["Describe","Alter"]},
 				{"resourceType":"Organization","operations":["AlterAccess","DescribeAccess"]}]}}`,
 		"CloudClusterAdmin": `{
 			"name": "CloudClusterAdmin",
-			"accessPolicies": [
+			"policies": [
 			{
-				"scopeType": "CLUSTER",
+				"bindingScope": "cluster",
+				"bindWithResource": false,
 				"allowedOperations": [
-				{"resourceType": "ClusterMetric","operations": ["All"]},
 				{"resourceType": "Topic","operations": ["All"]},
-				{"resourceType": "ClusterApiKey","operations": ["All"]},
 				{"resourceType": "KsqlCluster","operations": ["All"]},
+				{"resourceType": "Subject","operations": ["All"]},
 				{"resourceType": "Connector","operations": ["All"]},
 				{"resourceType": "NetworkAccess","operations": ["All"]},
-				{"resourceType": "Subject","operations": ["All"]},
-				{"resourceType": "Cluster","operations": ["All"]}]
+				{"resourceType": "ClusterMetric","operations": ["All"]},
+				{"resourceType": "Cluster","operations": ["All"]},
+				{"resourceType": "ClusterApiKey","operations": ["All"]},
+				{"resourceType": "SecurityMetadata","operations": ["Describe", "Alter"]}]
 			},
 			{
-				"scopeType": "ORGANIZATION",
+				"bindingScope": "organization",
+				"bindWithResource": false,
 				"allowedOperations": [
-				{"resourceType": "User","operations": ["Describe","Invite"]},
 				{"resourceType": "SupportPlan","operations": ["Describe"]},
+				{"resourceType": "User","operations": ["Describe","Invite"]},
 				{"resourceType": "ServiceAccount","operations": ["Describe"]}]
 			}]}`,
-		"EnvironmentAdmin": `{
+			"EnvironmentAdmin": `{
 			"name": "EnvironmentAdmin",
-			"accessPolicies": [
+			"policies": [
 			{
-				"scopeType": "ENVIRONMENT",
+				"bindingScope": "ENVIRONMENT",
+				"bindWithResource": false,
 				"allowedOperations": [
-				{"resourceType": "Subject","operations": ["All"]},
-				{"resourceType": "Topic","operations": ["All"]},
-				{"resourceType": "NetworkAccess","operations": ["All"]},
-				{"resourceType": "Connector","operations": ["All"]},
-				{"resourceType": "NetworkRegion","operations": ["All"]},
-				{"resourceType": "KsqlCluster","operations": ["All"]},
-				{"resourceType": "Cluster","operations": ["All"]},
-				{"resourceType": "ClusterMetric","operations": ["All"]},
+				{"resourceType": "SecurityMetadata","operations": ["Describe", "Alter"]},
 				{"resourceType": "ClusterApiKey","operations": ["All"]},
+				{"resourceType": "Connector","operations": ["All"]},
+				{"resourceType": "NetworkAccess","operations": ["All"]},
+				{"resourceType": "KsqlCluster","operations": ["All"]},
 				{"resourceType": "Environment","operations": ["Alter","Delete","AlterAccess","CreateKafkaCluster","DescribeAccess"]},
-				{"resourceType": "Deployment","operations": ["All"]},
+				{"resourceType": "Subject","operations": ["All"]},
 				{"resourceType": "NetworkConfig","operations": ["All"]},
-				{"resourceType": "SchemaRegistry","operations": ["All"]}
+				{"resourceType": "ClusterMetric","operations": ["All"]},
+				{"resourceType": "Cluster","operations": ["All"]},
+				{"resourceType": "SchemaRegistry","operations": ["All"]},
+				{"resourceType": "NetworkRegion","operations": ["All"]},
+				{"resourceType": "Deployment","operations": ["All"]},
+				{"resourceType": "Topic","operations": ["All"]}
 				]
 			},
 			{
-				"scopeType": "ORGANIZATION",
+				"bindingScope": "organization",
+				"bindWithResource": false,
 				"allowedOperations": [
-				{"resourceType": "SupportPlan","operations": ["Describe"]},
 				{"resourceType": "User","operations": ["Describe","Invite"]},
-				{"resourceType": "ServiceAccount","operations": ["Describe"]}
+				{"resourceType": "ServiceAccount","operations": ["Describe"]},
+				{"resourceType": "SupportPlan","operations": ["Describe"]}
 				]
 			}]}`,
 		"OrganizationAdmin": `{
 			"name": "OrganizationAdmin",
-			"accessPolicy": {
-				"scopeType": "ORGANIZATION",
+			"policy": {
+				"bindingScope": "organization",
+				"bindWithResource": false,
 				"allowedOperations": [
-				{"resourceType": "SchemaRegistry","operations": ["All"]},
-				{"resourceType": "NetworkAccess","operations": ["All"]},
-				{"resourceType": "ClusterApiKey","operations": ["All"]},
-				{"resourceType": "ClusterMetric","operations": ["All"]},
-				{"resourceType": "CloudApiKey","operations": ["All"]},
-				{"resourceType": "Organization","operations": ["Alter","CreateEnvironment","AlterAccess","DescribeAccess"]},
-				{"resourceType": "Subject","operations": ["All"]},
-				{"resourceType": "ServiceAccount","operations": ["All"]},
-				{"resourceType": "SupportPlan","operations": ["All"]},
-				{"resourceType": "SecuritySSO","operations": ["All"]},
-				{"resourceType": "Environment","operations": ["All"]},
-				{"resourceType": "KsqlCluster","operations": ["All"]},
-				{"resourceType": "Deployment","operations": ["All"]},
-				{"resourceType": "Billing","operations": ["All"]},
-				{"resourceType": "Connector","operations": ["All"]},
-				{"resourceType": "NetworkConfig","operations": ["All"]},
 				{"resourceType": "Topic","operations": ["All"]},
-				{"resourceType": "NetworkRegion","operations": ["All"]},
+				{"resourceType": "NetworkConfig","operations": ["All"]},
+				{"resourceType": "SecurityMetadata","operations": ["Describe", "Alter"]},
+				{"resourceType": "Billing","operations": ["All"]},
+				{"resourceType": "ClusterApiKey","operations": ["All"]},
+				{"resourceType": "Deployment","operations": ["All"]},
+				{"resourceType": "SchemaRegistry","operations": ["All"]},
+				{"resourceType": "KsqlCluster","operations": ["All"]},
+				{"resourceType": "CloudApiKey","operations": ["All"]},
+				{"resourceType": "NetworkAccess","operations": ["All"]},
+				{"resourceType": "SecuritySSO","operations": ["All"]},
+				{"resourceType": "SupportPlan","operations": ["All"]},
+				{"resourceType": "Connector","operations": ["All"]},
+				{"resourceType": "ClusterMetric","operations": ["All"]},
+				{"resourceType": "ServiceAccount","operations": ["All"]},
+				{"resourceType": "Subject","operations": ["All"]},
 				{"resourceType": "Cluster","operations": ["All"]},
+				{"resourceType": "Environment","operations": ["All"]},
+				{"resourceType": "NetworkRegion","operations": ["All"]},
+				{"resourceType": "Organization","operations": ["Alter","CreateEnvironment","AlterAccess","DescribeAccess"]},
 				{"resourceType": "User","operations": ["All"]}
 				]
 			}
@@ -118,14 +128,51 @@ func addMdsv2alpha1(t *testing.T, router *http.ServeMux) {
 	})
 
 	routesAndReplies := map[string]string{
-		"/api/metadata/security/v2alpha1/principals/User:frodo/roleNames": `[
-                       "DeveloperRead",
-                       "DeveloperWrite",
-                       "SecurityAdmin"]`,
-		"/api/metadata/security/v2alpha1/lookup/role/DeveloperRead":                                    `["Group:hobbits"]`,
-		"/api/metadata/security/v2alpha1/lookup/role/DeveloperWrite":                                   `["Group:hobbits","Group:ringBearers"]`,
-		"/api/metadata/security/v2alpha1/lookup/role/SecurityAdmin":                                    `["User:frodo"]`,
-		"/api/metadata/security/v2alpha1/lookup/role/SystemAdmin":                                      `[]`,
+		"/api/metadata/security/v2alpha1/lookup/rolebindings/principal/User:789": `[
+		  	{
+				"scope": {
+				  	"path": [
+						"organization=1234",
+						"environment=t55"
+					],
+					"clusters": {
+						"kafka-cluster": "lkc-abc123"
+					}
+				},
+				"rolebindings": {
+					"User:789": {
+						"CloudClusterAdmin": [
+							{
+								"resourceType": "Cluster",
+								"name": "cluster1",
+								"patternType": "LITERAL"
+							},
+						  	{
+								"resourceType": "Cluster",
+								"name": "cluster2",
+								"patternType": "PREFIXED"
+						  	}
+						],
+						"EnvironmentAdmin": [
+						  	{
+								"resourceType": "Environment",
+								"name": "env1",
+								"patternType": "PREFIXED"
+						  	}
+						]
+					},
+					"User:890": {
+						"CloudClusterAdmin": [
+							{
+								"resourceType": "Cluster",
+								"name": "cluster3",
+								"patternType": "LITERAL"
+						  	}
+						]
+					}
+				}
+		  	}
+		]`,
 	}
 	addRolesV2(routesAndReplies)
 

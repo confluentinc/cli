@@ -130,78 +130,8 @@ func (s *CLITestSuite) Test_Ccloud_Iam_Rolebinding_List() {
 			wantErrCode: 1,
 		},
 		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --principal User:frodo",
+			args:    "iam rolebinding list --kafka-cluster-id CID --principal User:789",
 			fixture: "ccloud-iam-rolebinding-list-user.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --principal User:frodo --role DeveloperRead -o json",
-			fixture: "ccloud-iam-rolebinding-list-user-and-role-with-multiple-resources-from-one-group-json.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --principal User:frodo --role DeveloperRead -o yaml",
-			fixture: "ccloud-iam-rolebinding-list-user-and-role-with-multiple-resources-from-one-group-yaml.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --principal User:frodo --role DeveloperWrite",
-			fixture: "ccloud-iam-rolebinding-list-user-and-role-with-resources-from-multiple-groups.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --principal User:frodo --role SecurityAdmin",
-			fixture: "ccloud-iam-rolebinding-list-user-and-role-with-cluster-resource.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --principal User:frodo --role OrganizationAdmin",
-			fixture: "ccloud-iam-rolebinding-list-user-and-role-with-no-matches.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --principal User:frodo --role OrganizationAdmin -o json",
-			fixture: "ccloud-iam-rolebinding-list-user-and-role-with-no-matches-json.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --principal User:frodo --role OrganizationAdmin -o yaml",
-			fixture: "ccloud-iam-rolebinding-list-user-and-role-with-no-matches-yaml.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --role DeveloperRead",
-			fixture: "ccloud-iam-rolebinding-list-role-with-multiple-bindings-to-one-group.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --role DeveloperRead -o json",
-			fixture: "ccloud-iam-rolebinding-list-role-with-multiple-bindings-to-one-group-json.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --role DeveloperRead -o yaml",
-			fixture: "ccloud-iam-rolebinding-list-role-with-multiple-bindings-to-one-group-yaml.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --role SecurityAdmin",
-			fixture: "ccloud-iam-rolebinding-list-role-on-cluster-bound-to-user.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --role SystemAdmin",
-			fixture: "ccloud-iam-rolebinding-list-role-with-no-matches.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --role DeveloperRead --resource Topic:food",
-			fixture: "ccloud-iam-rolebinding-list-role-and-resource-with-exact-match.golden",
-			login:   "default",
-		},
-		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --role DeveloperRead --resource Topic:shire-parties",
-			fixture: "ccloud-iam-rolebinding-list-role-and-resource-with-no-match.golden",
 			login:   "default",
 		},
 	}
@@ -303,21 +233,21 @@ func (s *CLITestSuite) Test_Ccloud_Iam_Role_Describe() {
 	tests := []CLITest{
 		{
 			name:        "ccloud iam role describe",
-			args:        "iam role describe DeveloperRead",
+			args:        "iam role describe CloudClusterAdmin",
 			fixture:     "ccloud-iam-role-describe.golden",
 			login:       "default",
 			wantErrCode: 0,
 		},
 		{
 			name:        "ccloud iam role describe json",
-			args:        "iam role describe DeveloperRead -o json",
+			args:        "iam role describe CloudClusterAdmin -o json",
 			fixture:     "ccloud-iam-role-describe-json.golden",
 			login:       "default",
 			wantErrCode: 0,
 		},
 		{
 			name:        "ccloud iam role describe yaml",
-			args:        "iam role describe DeveloperRead -o yaml",
+			args:        "iam role describe CloudClusterAdmin -o yaml",
 			fixture:     "ccloud-iam-role-describe-yaml.golden",
 			login:       "default",
 			wantErrCode: 0,
