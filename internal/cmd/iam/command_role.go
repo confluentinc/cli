@@ -234,7 +234,7 @@ func createPrettyRole(role mds.Role) (*prettyRole, error) {
 }
 
 func createPrettyRoleV2(role mdsv2alpha1.Role) (*prettyRole, error) {
-	marshalled, err := json.Marshal(role.AccessPolicy)
+	marshalled, err := json.Marshal(role.Policies)
 	if err != nil {
 		return nil, err
 	}
