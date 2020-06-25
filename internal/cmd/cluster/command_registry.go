@@ -10,7 +10,6 @@ import (
 
 	print "github.com/confluentinc/cli/internal/pkg/cluster"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
@@ -29,7 +28,7 @@ const (
 )
 
 // NewRegisterCommand registers a cluster to the Cluster Registry in MDS
-func NewRegisterCommand(cfg *v3.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func NewRegisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	registerCmd := &registryCommand{
 		AuthenticatedCLICommand: pcmd.NewAuthenticatedWithMDSCLICommand(
 			&cobra.Command{
@@ -38,7 +37,7 @@ func NewRegisterCommand(cfg *v3.Config, prerunner pcmd.PreRunner) *cobra.Command
 				Long:  "Register cluster with the MDS cluster registry.",
 				Args:  cobra.NoArgs,
 			},
-			cfg, prerunner),
+			prerunner),
 	}
 	registerCmd.Flags().String("cluster-name", "", "Cluster name.")
 	check(registerCmd.MarkFlagRequired("cluster-name"))
@@ -56,7 +55,7 @@ func NewRegisterCommand(cfg *v3.Config, prerunner pcmd.PreRunner) *cobra.Command
 	return registerCmd.Command
 }
 
-func NewUnregisterCommand(cfg *v3.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func NewUnregisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	unregisterCmd := &registryCommand{
 		AuthenticatedCLICommand: pcmd.NewAuthenticatedWithMDSCLICommand(
 			&cobra.Command{
@@ -65,7 +64,7 @@ func NewUnregisterCommand(cfg *v3.Config, prerunner pcmd.PreRunner) *cobra.Comma
 				Long:  "Unregister cluster from the MDS cluster registry.",
 				Args:  cobra.NoArgs,
 			},
-			cfg, prerunner),
+			prerunner),
 	}
 	unregisterCmd.Flags().String("cluster-name", "", "Cluster Name.")
 	check(unregisterCmd.MarkFlagRequired("cluster-name"))

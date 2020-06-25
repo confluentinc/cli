@@ -7,7 +7,6 @@ import (
 	"github.com/antihax/optional"
 	print "github.com/confluentinc/cli/internal/pkg/cluster"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
@@ -21,13 +20,13 @@ type clusterCommandOnPrem struct {
 }
 
 // NewClusterCommand returns the Cobra command for Kafka cluster.
-func NewClusterCommandOnPrem(prerunner pcmd.PreRunner, config *v3.Config) *cobra.Command {
+func NewClusterCommandOnPrem(prerunner pcmd.PreRunner) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedWithMDSCLICommand(
 		&cobra.Command{
 			Use:   "cluster",
 			Short: "Manage Schema Registry clusters.",
 		},
-		config, prerunner)
+		prerunner)
 	cmd := &clusterCommandOnPrem{
 		AuthenticatedCLICommand: cliCmd,
 		prerunner:               prerunner,

@@ -5,7 +5,6 @@ import (
 
 	print "github.com/confluentinc/cli/internal/pkg/cluster"
 	"github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
@@ -17,7 +16,7 @@ type listCommand struct {
 }
 
 // NewListCommand returns the sub-command object for listing clusters
-func NewListCommand(cfg *v3.Config, prerunner cmd.PreRunner) *cobra.Command {
+func NewListCommand(prerunner cmd.PreRunner) *cobra.Command {
 	listCmd := &listCommand{
 		AuthenticatedCLICommand: cmd.NewAuthenticatedWithMDSCLICommand(
 			&cobra.Command{
@@ -25,7 +24,7 @@ func NewListCommand(cfg *v3.Config, prerunner cmd.PreRunner) *cobra.Command {
 				Short: "List registered clusters.",
 				Long:  "List clusters that are registered with the MDS cluster registry.",
 			},
-			cfg, prerunner),
+			prerunner),
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
