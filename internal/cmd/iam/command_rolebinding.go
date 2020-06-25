@@ -33,6 +33,18 @@ var (
 		"UserAdmin":     true,
 		"Operator":      true,
 	}
+
+	clusterScopedRolesV2 = map[string]bool {
+		"CloudClusterAdmin": true,
+	}
+
+	environmentScopedRoles = map[string]bool {
+		"EnvironmentAdmin": true,
+	}
+
+	organizationScopedRoles = map[string]bool {
+		"OrganizationAdmin": true,
+	}
 )
 
 type rolebindingOptions struct {
@@ -124,8 +136,8 @@ func (c *rolebindingCommand) init() {
 	deleteCmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
 	deleteCmd.Flags().String("principal", "", "Qualified principal name associated with the role binding.")
 	deleteCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
+	deleteCmd.Flags().String("resource", "", "Qualified resource name associated with the role binding.")
 	if c.Config.CLIName != "ccloud" {
-		deleteCmd.Flags().String("resource", "", "Qualified resource name associated with the role binding.")
 		deleteCmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding.")
 		deleteCmd.Flags().String("ksql-cluster-id", "", "KSQL cluster ID for the role binding.")
 		deleteCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for the role binding.")
@@ -227,7 +239,7 @@ func (c *rolebindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mds.Sco
 		return nil, errors.HandleCommon(errors.New("Must also specify a --kafka-cluster-id to uniquely identify the scope."), cmd)
 	}
 
-	if scope.KafkaCluster == "" && nonKafkaScopesSet == 0 {
+	if c.Config.CLIName != "ccloud" && scope.KafkaCluster == "" && nonKafkaScopesSet == 0 {
 		return nil, errors.HandleCommon(errors.New("Must specify at least one cluster ID flag to indicate role binding scope."), cmd)
 	}
 
@@ -341,11 +353,29 @@ func (c *rolebindingCommand) ccloudListPrincipalResourcesHelper(cmd *cobra.Comma
 							PatternType:  resourcePattern.PatternType,
 						})
 					}
-					if len(resourcePatterns) == 0 && clusterScopedRoles[roleName] {
+					if len(resourcePatterns) == 0 && clusterScopedRolesV2[roleName] {
 						outputWriter.AddElement(&listDisplay{
 							Principal:    principalName,
 							Role:         roleName,
 							ResourceType: "Cluster",
+							Name:         "",
+							PatternType:  "",
+						})
+					}
+					if len(resourcePatterns) == 0 && environmentScopedRoles[roleName] {
+						outputWriter.AddElement(&listDisplay{
+							Principal:    principalName,
+							Role:         roleName,
+							ResourceType: "Environment",
+							Name:         "",
+							PatternType:  "",
+						})
+					}
+					if len(resourcePatterns) == 0 && organizationScopedRoles[roleName] {
+						outputWriter.AddElement(&listDisplay{
+							Principal:    principalName,
+							Role:         roleName,
+							ResourceType: "Organization",
 							Name:         "",
 							PatternType:  "",
 						})
