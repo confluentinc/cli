@@ -316,7 +316,7 @@ func injectConfig(data []byte, config map[string]string) []byte {
 }
 
 func (c *LocalCommand) startProcess(service string) error {
-	scriptFile, err := c.ch.GetServiceStartScript(service)
+	scriptFile, err := c.ch.GetServiceScript("start", service)
 	if err != nil {
 		return err
 	}
@@ -419,22 +419,33 @@ func (c *LocalCommand) stopService(command *cobra.Command, service string) error
 }
 
 func (c *LocalCommand) stopProcess(service string) error {
-	pid, err := c.cc.ReadPid(service)
+	scriptFile, err := c.ch.GetServiceScript("stop", service)
 	if err != nil {
 		return err
 	}
 
-	process, err := os.FindProcess(pid)
-	if err != nil {
-		return err
-	}
+	if scriptFile == "" {
+		pid, err := c.cc.ReadPid(service)
+		if err != nil {
+			return err
+		}
 
-	if err := process.Kill(); err != nil {
-		return err
+		process, err := os.FindProcess(pid)
+		if err != nil {
+			return err
+		}
+
+		if err := process.Kill(); err != nil {
+			return err
+		}
+	} else {
+		stop := exec.Command(scriptFile)
+		if err := stop.Start(); err != nil {
+			return err
+		}
 	}
 
 	errors := make(chan error)
-
 	up := make(chan bool)
 	go func() {
 		for {
@@ -452,7 +463,7 @@ func (c *LocalCommand) stopProcess(service string) error {
 		break
 	case err := <-errors:
 		return err
-	case <-time.After(time.Second):
+	case <-time.After(30 * time.Second):
 		return fmt.Errorf("%s failed to stop", service)
 	}
 

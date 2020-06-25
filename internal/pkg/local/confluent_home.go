@@ -26,12 +26,12 @@ CONFLUENT_HOME/
 var (
 	scripts = map[string]string{
 		"connect":         "connect-distributed",
-		"control-center":  "control-center-start",
-		"kafka":           "kafka-server-start",
-		"kafka-rest":      "kafka-rest-start",
-		"ksql-server":     "ksql-server-start",
-		"schema-registry": "schema-registry-start",
-		"zookeeper":       "zookeeper-server-start",
+		"control-center":  "control-center-%s",
+		"kafka":           "kafka-server-%s",
+		"kafka-rest":      "kafka-rest-%s",
+		"ksql-server":     "ksql-server-%s",
+		"schema-registry": "schema-registry-%s",
+		"zookeeper":       "zookeeper-server-%s",
 	}
 	serviceConfigs = map[string]string{
 		"connect":         "schema-registry/connect-avro-distributed.properties",
@@ -76,7 +76,7 @@ type ConfluentHome interface {
 	IsConfluentPlatform() (bool, error)
 	GetConfluentVersion() (string, error)
 
-	GetServiceStartScript(service string) (string, error)
+	GetServiceScript(action, service string) (string, error)
 	ReadServiceConfig(service string) ([]byte, error)
 	ReadServicePort(service string) (int, error)
 	GetVersion(service string) (string, error)
@@ -162,8 +162,15 @@ func (ch *ConfluentHomeManager) GetConfluentVersion() (string, error) {
 	}
 }
 
-func (ch *ConfluentHomeManager) GetServiceStartScript(service string) (string, error) {
-	return ch.GetFile("bin", scripts[service])
+func (ch *ConfluentHomeManager) GetServiceScript(action, service string) (string, error) {
+	if service == "connect" {
+		if action == "start" {
+			return ch.GetFile("bin", scripts[service])
+		} else {
+			return "", nil
+		}
+	}
+	return ch.GetFile("bin", fmt.Sprintf(scripts[service], action))
 }
 
 func (ch *ConfluentHomeManager) ReadServiceConfig(service string) ([]byte, error) {
