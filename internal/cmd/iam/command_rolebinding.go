@@ -245,7 +245,7 @@ func (c *rolebindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mds.Sco
 		return nil, errors.HandleCommon(errors.New("Must also specify a --kafka-cluster-id to uniquely identify the scope."), cmd)
 	}
 
-	if c.Config.CLIName != "ccloud" && scope.KafkaCluster == "" && nonKafkaScopesSet == 0 {
+	if scope.KafkaCluster == "" && nonKafkaScopesSet == 0 {
 		return nil, errors.HandleCommon(errors.New("Must specify at least one cluster ID flag to indicate role binding scope."), cmd)
 	}
 
