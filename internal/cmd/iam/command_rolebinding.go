@@ -257,21 +257,27 @@ func (c *rolebindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mds.Sco
 }
 
 func (c *rolebindingCommand) parseAndValidateScopeV2(cmd *cobra.Command) (*mdsv2alpha1.Scope, error) {
-	scopeClusters, err := c.parseAndValidateScope(cmd)
-	if err != nil {
-		return nil, err
-	}
+	scopeV2 := &mdsv2alpha1.Scope{}
 	orgResourceId := c.State.Auth.Organization.GetResourceId()
-	scopeV2 := &mdsv2alpha1.Scope{
-		Path: []string{"organization=" + orgResourceId, "environment=" + c.EnvironmentId()},
-		Clusters: mdsv2alpha1.ScopeClusters{
-			KafkaCluster: scopeClusters.KafkaCluster,
-			ConnectCluster: scopeClusters.ConnectCluster,
-			KsqlCluster: scopeClusters.KsqlCluster,
-			SchemaRegistryCluster: scopeClusters.SchemaRegistryCluster,
-		},
+	scopeV2.Path = []string{"organization=" + orgResourceId, "environment=" + c.EnvironmentId()}
+
+	cmd.Flags().Visit(func(flag *pflag.Flag) {
+		switch flag.Name {
+		case "cloud-cluster":
+			scopeV2.Clusters.KafkaCluster = flag.Value.String()
+		}
+	})
+
+	if cmd.Flags().Changed("role") {
+		role, err := cmd.Flags().GetString("role")
+		if err != nil {
+			return nil, errors.HandleCommon(err, cmd)
+		}
+		if clusterScopedRolesV2[role] && scopeV2.Clusters.KafkaCluster == "" {
+			return nil, errors.HandleCommon(errors.New("Must specify cloud-cluster flag to indicate role binding scope."), cmd)
+		}
 	}
-	return scopeV2, err
+	return scopeV2, nil
 }
 
 func (c *rolebindingCommand) confluentListHelper(cmd *cobra.Command) error {
