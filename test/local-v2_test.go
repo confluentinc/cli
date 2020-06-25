@@ -126,7 +126,8 @@ func (s *CLITestSuite) createCH(files []string) {
 func (s *CLITestSuite) destroy() {
 	req := require.New(s.T())
 
-	os.Clearenv()
+	req.NoError(os.Setenv("CONFLUENT_HOME", ""))
+	req.NoError(os.Setenv("CONFLUENT_CURRENT", ""))
 	dir := filepath.Join(os.TempDir(), "confluent-int-test")
 	req.NoError(os.RemoveAll(dir))
 }
