@@ -1,11 +1,7 @@
 The local commands are intended for a single-node development environment only,
 NOT for production usage. https://docs.confluent.io/current/cli/index.html
 
-<<<<<<< HEAD
-Using CONFLUENT_CURRENT: .+/confluent.\d{6}
-=======
 Using CONFLUENT_CURRENT: .+confluent.\d{6}
->>>>>>> master
 control-center is \[DOWN\]
 ksql-server is \[DOWN\]
 connect is \[DOWN\]
@@ -13,8 +9,4 @@ kafka-rest is \[DOWN\]
 schema-registry is \[DOWN\]
 kafka is \[DOWN\]
 zookeeper is \[DOWN\]
-<<<<<<< HEAD
-Deleting: .+/confluent.\d{6}
-=======
 Deleting: .+confluent.\d{6}
->>>>>>> master
