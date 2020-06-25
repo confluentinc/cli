@@ -1,4 +1,4 @@
-- name: theMdsConnectCluster
+- clustername: theMdsConnectCluster
   scope:
     clusters:
       kafkacluster: kafka-GUID
@@ -8,7 +8,8 @@
   hosts:
   - host: 10.5.5.5
     port: 9005
-- name: theMdsKafkaCluster
+  protocol: ""
+- clustername: theMdsKafkaCluster
   scope:
     clusters:
       kafkacluster: kafka-GUID
@@ -20,7 +21,8 @@
     port: 8090
   - host: mds.example.com
     port: 8090
-- name: theMdsKSQLCluster
+  protocol: ""
+- clustername: theMdsKSQLCluster
   scope:
     clusters:
       kafkacluster: kafka-GUID
@@ -30,7 +32,8 @@
   hosts:
   - host: 10.4.4.4
     port: 9004
-- name: theMdsSchemaRegistryCluster
+  protocol: ""
+- clustername: theMdsSchemaRegistryCluster
   scope:
     clusters:
       kafkacluster: kafka-GUID
@@ -40,3 +43,4 @@
   hosts:
   - host: 10.3.3.3
     port: 9003
+  protocol: ""

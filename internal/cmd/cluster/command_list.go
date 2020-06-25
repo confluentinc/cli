@@ -146,7 +146,7 @@ func createPrettyCluster(clusterInfo mds.ClusterInfo) (*prettyCluster, error) {
 		hosts[i], _ = createPrettyHost(hostInfo)
 	}
 	return &prettyCluster{
-		clusterInfo.Name,
+		clusterInfo.ClusterName,
 		t,
 		id,
 		strings.Join(hosts, ", "),
