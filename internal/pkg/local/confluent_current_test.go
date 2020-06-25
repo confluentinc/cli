@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -40,7 +41,7 @@ func TestCreateAndTrackCurrentDir(t *testing.T) {
 	req.FileExists(cc.trackingFile)
 	data, err := ioutil.ReadFile(cc.trackingFile)
 	req.NoError(err)
-	req.Equal(currentDir, string(data))
+	req.Equal(currentDir, strings.TrimSuffix(string(data), "\n"))
 }
 
 func TestGetCurrentDirFromTrackingFile(t *testing.T) {
