@@ -136,7 +136,7 @@ func NewKafkaConsumeCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *LocalCommand) runKafkaConsumeCommand(command *cobra.Command, args []string) error {
+func (c *Command) runKafkaConsumeCommand(command *cobra.Command, args []string) error {
 	return c.runKafkaCommand(command, args, "consume", kafkaConsumeDefaultValues)
 }
 
@@ -173,11 +173,11 @@ func NewKafkaProduceCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *LocalCommand) runKafkaProduceCommand(command *cobra.Command, args []string) error {
+func (c *Command) runKafkaProduceCommand(command *cobra.Command, args []string) error {
 	return c.runKafkaCommand(command, args, "produce", kafkaProduceDefaultValues)
 }
 
-func (c *LocalCommand) runKafkaCommand(command *cobra.Command, args []string, mode string, kafkaFlagTypes map[string]interface{}) error {
+func (c *Command) runKafkaCommand(command *cobra.Command, args []string, mode string, kafkaFlagTypes map[string]interface{}) error {
 	isUp, err := c.isRunning("kafka")
 	if err != nil {
 		return err

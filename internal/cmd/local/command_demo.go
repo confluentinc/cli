@@ -52,7 +52,7 @@ func NewDemoInfoCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *LocalCommand) runDemoInfoCommand(command *cobra.Command, args []string) error {
+func (c *Command) runDemoInfoCommand(command *cobra.Command, args []string) error {
 	demo := args[0]
 	if !local.Contains(supportedDemos, demo) {
 		return fmt.Errorf("demo not supported: %s", demo)
@@ -83,7 +83,7 @@ func NewDemoListCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *LocalCommand) runDemoListCommand(command *cobra.Command, _ []string) {
+func (c *Command) runDemoListCommand(command *cobra.Command, _ []string) {
 	list := local.BuildTabbedList(supportedDemos)
 	command.Println("Available demos:")
 	command.Println(list)
@@ -102,7 +102,7 @@ func NewDemoStartCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *LocalCommand) runDemoStartCommand(_ *cobra.Command, args []string) error {
+func (c *Command) runDemoStartCommand(_ *cobra.Command, args []string) error {
 	return c.run(args[0], "start.sh")
 }
 
@@ -118,11 +118,11 @@ func NewDemoStopCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *LocalCommand) runDemoStopCommand(_ *cobra.Command, args []string) error {
+func (c *Command) runDemoStopCommand(_ *cobra.Command, args []string) error {
 	return c.run(args[0], "stop.sh")
 }
 
-func (c *LocalCommand) fetchExamplesRepo() error {
+func (c *Command) fetchExamplesRepo() error {
 	hasRepo, err := c.ch.HasFile("examples")
 	if err != nil {
 		return err
@@ -174,7 +174,7 @@ func (c *LocalCommand) fetchExamplesRepo() error {
 	return nil
 }
 
-func (c *LocalCommand) run(demo string, script string) error {
+func (c *Command) run(demo string, script string) error {
 	if !local.Contains(supportedDemos, demo) {
 		return fmt.Errorf("demo not supported: %s", demo)
 	}

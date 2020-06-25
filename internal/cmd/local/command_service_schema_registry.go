@@ -68,7 +68,7 @@ func NewSchemaRegistryACLCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *LocalCommand) runSchemaRegistryACLCommand(command *cobra.Command, _ []string) error {
+func (c *Command) runSchemaRegistryACLCommand(command *cobra.Command, _ []string) error {
 	isUp, err := c.isRunning("kafka")
 	if err != nil {
 		return err

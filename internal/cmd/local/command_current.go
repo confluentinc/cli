@@ -18,7 +18,7 @@ func NewCurrentCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *LocalCommand) runCurrentCommand(command *cobra.Command, _ []string) error {
+func (c *Command) runCurrentCommand(command *cobra.Command, _ []string) error {
 	dir, err := c.cc.GetCurrentDir()
 	if err != nil {
 		return err

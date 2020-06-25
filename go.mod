@@ -1,7 +1,6 @@
 module github.com/confluentinc/cli
 
 require (
-	github.com/DABH/go-basher v0.0.0-20191104233559-daa7fee9545c
 	github.com/DataDog/zstd v1.4.1 // indirect
 	github.com/Shopify/sarama v1.23.1
 	github.com/alcortesm/tgz v0.0.0-20161220082320-9c5fe88206d7 // indirect
@@ -64,7 +63,6 @@ require (
 	github.com/havoc-io/gopass v0.0.0-20170602182606-9a121bec1ae7
 	github.com/iancoleman/strcase v0.0.0-20190422225806-e506e3ef7365
 	github.com/jonboulle/clockwork v0.1.0
-	github.com/kevinburke/go-bindata v3.13.0+incompatible
 	github.com/lithammer/dedent v1.1.0
 	github.com/mattn/go-isatty v0.0.9
 	github.com/mattn/go-runewidth v0.0.3 // indirect
@@ -100,7 +98,6 @@ require (
 	gopkg.in/jcmturner/goidentity.v3 v3.0.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.3.1
 	gopkg.in/src-d/go-git-fixtures.v3 v3.5.0 // indirect
-	gopkg.in/src-d/go-git.v4 v4.7.0
 	k8s.io/kube-openapi v0.0.0-20200427153329-656914f816f9 // indirect
 )
 

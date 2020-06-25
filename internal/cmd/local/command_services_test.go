@@ -85,7 +85,7 @@ func TestGetZookeeperConfig(t *testing.T) {
 func testGetConfig(t *testing.T, service string, want map[string]string) {
 	req := require.New(t)
 
-	c := &LocalCommand{
+	c := &Command{
 		ch: &mock.MockConfluentHome{
 			IsConfluentPlatformFunc: func() (bool, error) {
 				return true, nil
@@ -113,7 +113,7 @@ func testGetConfig(t *testing.T, service string, want map[string]string) {
 func TestConfluentPlatformAvailableServices(t *testing.T) {
 	req := require.New(t)
 
-	c := &LocalCommand{
+	c := &Command{
 		ch: &mock.MockConfluentHome{
 			IsConfluentPlatformFunc: func() (bool, error) {
 				return true, nil
@@ -139,7 +139,7 @@ func TestConfluentPlatformAvailableServices(t *testing.T) {
 func TestConfluentCommunitySoftwareAvailableServices(t *testing.T) {
 	req := require.New(t)
 
-	c := &LocalCommand{
+	c := &Command{
 		ch: &mock.MockConfluentHome{
 			IsConfluentPlatformFunc: func() (bool, error) {
 				return false, nil

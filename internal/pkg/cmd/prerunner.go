@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"os"
 	"strings"
 
@@ -15,6 +14,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/update"
@@ -112,7 +112,7 @@ func NewAnonymousCLICommand(command *cobra.Command, prerunner PreRunner) *CLICom
 
 func NewCLICommand(command *cobra.Command, prerunner PreRunner) *CLICommand {
 	return &CLICommand{
-		Config: &DynamicConfig{},
+		Config:    &DynamicConfig{},
 		Command:   command,
 		prerunner: prerunner,
 	}
@@ -341,7 +341,7 @@ func isUpdateCommand(cmd *cobra.Command) bool {
 }
 
 func (r *PreRun) warnIfConfluentLocal(cmd *cobra.Command) {
-	if strings.HasPrefix(cmd.CommandPath(), "confluent local-v2") {
+	if strings.HasPrefix(cmd.CommandPath(), "confluent local") {
 		cmd.PrintErrln("The local commands are intended for a single-node development environment only,")
 		cmd.PrintErrln("NOT for production usage. https://docs.confluent.io/current/cli/index.html")
 		cmd.PrintErrln()

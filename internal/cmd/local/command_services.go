@@ -158,7 +158,7 @@ func NewServicesListCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *LocalCommand) runServicesListCommand(command *cobra.Command, _ []string) error {
+func (c *Command) runServicesListCommand(command *cobra.Command, _ []string) error {
 	availableServices, err := c.getAvailableServices()
 	if err != nil {
 		return err
@@ -182,7 +182,7 @@ func NewServicesStartCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *LocalCommand) runServicesStartCommand(command *cobra.Command, _ []string) error {
+func (c *Command) runServicesStartCommand(command *cobra.Command, _ []string) error {
 	availableServices, err := c.getAvailableServices()
 	if err != nil {
 		return err
@@ -215,7 +215,7 @@ func NewServicesStatusCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *LocalCommand) runServicesStatusCommand(command *cobra.Command, _ []string) error {
+func (c *Command) runServicesStatusCommand(command *cobra.Command, _ []string) error {
 	availableServices, err := c.getAvailableServices()
 	if err != nil {
 		return err
@@ -248,7 +248,7 @@ func NewServicesStopCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *LocalCommand) runServicesStopCommand(command *cobra.Command, _ []string) error {
+func (c *Command) runServicesStopCommand(command *cobra.Command, _ []string) error {
 	availableServices, err := c.getAvailableServices()
 	if err != nil {
 		return err
@@ -282,7 +282,7 @@ func NewServicesTopCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *LocalCommand) runServicesTopCommand(command *cobra.Command, _ []string) error {
+func (c *Command) runServicesTopCommand(_ *cobra.Command, _ []string) error {
 	availableServices, err := c.getAvailableServices()
 	if err != nil {
 		return err
@@ -311,7 +311,7 @@ func (c *LocalCommand) runServicesTopCommand(command *cobra.Command, _ []string)
 	return top(pids)
 }
 
-func (c *LocalCommand) getConfig(service string) (map[string]string, error) {
+func (c *Command) getConfig(service string) (map[string]string, error) {
 	data, err := c.cc.GetDataDir(service)
 	if err != nil {
 		return map[string]string{}, err
@@ -416,7 +416,7 @@ func top(pids []int) error {
 	return top.Run()
 }
 
-func (c *LocalCommand) getAvailableServices() ([]string, error) {
+func (c *Command) getAvailableServices() ([]string, error) {
 	isCP, err := c.ch.IsConfluentPlatform()
 
 	var available []string
@@ -429,7 +429,7 @@ func (c *LocalCommand) getAvailableServices() ([]string, error) {
 	return available, err
 }
 
-func (c *LocalCommand) notifyConfluentCurrent(command *cobra.Command) error {
+func (c *Command) notifyConfluentCurrent(command *cobra.Command) error {
 	dir, err := c.cc.GetCurrentDir()
 	if err != nil {
 		return err

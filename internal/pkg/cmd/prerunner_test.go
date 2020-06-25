@@ -1,11 +1,12 @@
 package cmd_test
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/config/load"
 	"os"
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/confluentinc/cli/internal/pkg/config/load"
 
 	"github.com/confluentinc/cli/internal/pkg/auth"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -111,7 +112,7 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 				Analytics:          cliMock.NewDummyAnalyticsMock(),
 				Clock:              clockwork.NewRealClock(),
 				UpdateTokenHandler: auth.NewUpdateTokenHandler(auth.NewNetrcHandler("")),
-				Config: cfg,
+				Config:             cfg,
 			}
 
 			root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}

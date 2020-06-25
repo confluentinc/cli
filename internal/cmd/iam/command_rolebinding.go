@@ -440,7 +440,7 @@ func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOption
 			parsedResourcePattern,
 		}
 		resourcesRequest = mds.ResourcesRequest{
-			Scope:         *scope,
+			Scope:            *scope,
 			ResourcePatterns: resourcePatterns,
 		}
 	}

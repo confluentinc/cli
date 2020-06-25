@@ -54,7 +54,7 @@ func NewConnectConnectorConfigCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *LocalCommand) runConnectConnectorConfigCommand(command *cobra.Command, args []string) error {
+func (c *Command) runConnectConnectorConfigCommand(command *cobra.Command, args []string) error {
 	isUp, err := c.isRunning("connect")
 	if err != nil {
 		return err
@@ -113,7 +113,7 @@ func NewConnectConnectorStatusCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *LocalCommand) runConnectConnectorStatusCommand(command *cobra.Command, args []string) error {
+func (c *Command) runConnectConnectorStatusCommand(command *cobra.Command, args []string) error {
 	isUp, err := c.isRunning("connect")
 	if err != nil {
 		return err
@@ -154,7 +154,7 @@ func NewConnectConnectorListCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *LocalCommand) runConnectConnectorListCommand(command *cobra.Command, _ []string) {
+func (c *Command) runConnectConnectorListCommand(command *cobra.Command, _ []string) {
 	command.Println("Bundled Predefined Connectors:")
 	command.Println(local.BuildTabbedList(connectors))
 }
@@ -172,7 +172,7 @@ func NewConnectConnectorLoadCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *LocalCommand) runConnectConnectorLoadCommand(command *cobra.Command, args []string) error {
+func (c *Command) runConnectConnectorLoadCommand(command *cobra.Command, args []string) error {
 	isUp, err := c.isRunning("connect")
 	if err != nil {
 		return err
@@ -240,7 +240,7 @@ func NewConnectConnectorUnloadCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *LocalCommand) runConnectConnectorUnloadCommand(command *cobra.Command, args []string) error {
+func (c *Command) runConnectConnectorUnloadCommand(command *cobra.Command, args []string) error {
 	isUp, err := c.isRunning("connect")
 	if err != nil {
 		return err
@@ -288,7 +288,7 @@ func NewConnectPluginListCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *LocalCommand) runConnectPluginListCommand(command *cobra.Command, _ []string) error {
+func (c *Command) runConnectPluginListCommand(command *cobra.Command, _ []string) error {
 	isUp, err := c.isRunning("connect")
 	if err != nil {
 		return err
