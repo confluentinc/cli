@@ -587,6 +587,17 @@ func checkOSVersion() error {
 
 func checkJavaVersion(service string) error {
 	java := filepath.Join(os.Getenv("JAVA_HOME"), "/bin/java")
+	if os.Getenv("JAVA_HOME") == "" {
+		out, err := exec.Command("which", "java").Output()
+		if err != nil {
+			return err
+		}
+		java = strings.TrimSuffix(string(out), "\n")
+		if java == "java not found" {
+			return fmt.Errorf("could not find java executable, please install java or set JAVA_HOME")
+		}
+	}
+
 	data, err := exec.Command(java, "-version").CombinedOutput()
 	if err != nil {
 		return err
