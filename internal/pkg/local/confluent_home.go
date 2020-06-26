@@ -207,11 +207,11 @@ func (ch *ConfluentHomeManager) ReadServicePort(service string) (int, error) {
 	}
 
 	if key == "listeners" {
-		x := strings.Split(val, ":")
+		x := strings.Split(val.(string), ":")
 		val = x[len(x)-1]
 	}
 
-	port, err := strconv.Atoi(val)
+	port, err := strconv.Atoi(val.(string))
 	if err != nil {
 		return 0, err
 	}

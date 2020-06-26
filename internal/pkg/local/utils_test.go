@@ -20,7 +20,7 @@ func TestExtractConfig(t *testing.T) {
 
 	in := []byte("key1=val1\nkey2=val2\n#commented=val\n")
 
-	out := map[string]string{
+	out := map[string]interface{}{
 		"key1": "val1",
 		"key2": "val2",
 	}

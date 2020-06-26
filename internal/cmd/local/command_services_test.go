@@ -96,6 +96,9 @@ func testGetConfig(t *testing.T, service string, want map[string]string) {
 			FindFileFunc: func(pattern string) ([]string, error) {
 				return []string{exampleFile}, nil
 			},
+			ReadServiceConfigFunc: func(service string) ([]byte, error) {
+				return []byte("plugin.path=share/java"), nil
+			},
 		},
 		cc: &mock.MockConfluentCurrent{
 			GetDataDirFunc: func(service string) (string, error) {

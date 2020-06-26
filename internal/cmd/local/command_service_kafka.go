@@ -211,7 +211,7 @@ func (c *Command) runKafkaCommand(command *cobra.Command, args []string, mode st
 		}
 
 		config := local.ExtractConfig(data)
-		cloudServer = config["bootstrap.servers"]
+		cloudServer = config["bootstrap.servers"].(string)
 	}
 
 	if cloud {

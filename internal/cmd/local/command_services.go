@@ -334,11 +334,18 @@ func (c *Command) getConfig(service string) (map[string]string, error) {
 	switch service {
 	case "connect":
 		config["bootstrap.servers"] = fmt.Sprintf("localhost:%d", services["kafka"].port)
-		path, err := c.ch.GetFile("share", "java")
+
+		data, err := c.ch.ReadServiceConfig(service)
 		if err != nil {
 			return map[string]string{}, err
 		}
-		config["plugin.path"] = path
+		path := local.ExtractConfig(data)["plugin.path"].(string)
+		full, err := c.ch.GetFile("share", "java")
+		if err != nil {
+			return map[string]string{}, err
+		}
+		config["plugin.path"] = strings.ReplaceAll(path, "share/java", full)
+
 		matches, err := c.ch.FindFile("share/java/kafka-connect-replicator/replicator-rest-extension-*.jar")
 		if err != nil {
 			return map[string]string{}, err
