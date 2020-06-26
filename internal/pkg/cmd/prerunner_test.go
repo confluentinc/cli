@@ -6,17 +6,15 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/confluentinc/cli/internal/pkg/config/load"
-
-	"github.com/confluentinc/cli/internal/pkg/auth"
-	"github.com/confluentinc/cli/internal/pkg/errors"
-
 	"github.com/jonboulle/clockwork"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
+	"github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/config/load"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	pmock "github.com/confluentinc/cli/internal/pkg/mock"
 	"github.com/confluentinc/cli/internal/pkg/update/mock"

@@ -151,7 +151,8 @@ var flagRules = []linter.FlagRule{
 		linter.ExcludeFlag(
 			"batch-size", "enable-systest-events", "formatter", "isolation-level", "line-reader", "max-block-ms",
 			"max-memory-bytes", "max-partition-memory-bytes", "message-send-max-retries", "metadata-expiry-ms",
-			"offset", "property", "retry-backoff-ms", "socket-buffer-size", "timeout",
+			"offset", "property", "request-required-acks", "request-timeout-ms", "retry-backoff-ms",
+			"socket-buffer-size", "timeout",
 		),
 	),
 	linter.RequireFlagKebabCase,
