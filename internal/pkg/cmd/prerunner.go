@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"context"
+	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1/mock"
+	"net/http"
 	"os"
 	"strings"
 
@@ -396,15 +398,53 @@ func (r *PreRun) createMDSClient(ctx *DynamicContext, ver *version.Version) *mds
 	return mds.NewAPIClient(mdsConfig)
 }
 
+func createMDSv2ClientWithMock(mdsv2Config *mdsv2alpha1.Configuration) *mdsv2alpha1.APIClient {
+	clientWithMock := mdsv2alpha1.NewAPIClient(mdsv2Config)
+	mockManagedFunc := func (ctx context.Context, principal string, scope mdsv2alpha1.Scope) ([]mdsv2alpha1.ManagedScopeRoleBindingMapping, *http.Response, error) {
+		resourceRoleBinding1 := make(map[string][]mdsv2alpha1.ResourcePattern)
+		resourceRoleBinding1["EnvironmentAdmin"] = make([]mdsv2alpha1.ResourcePattern, 0)
+		resourceRoleBindings1 := make(map[string]map[string][]mdsv2alpha1.ResourcePattern)
+		resourceRoleBindings1["User:u-m4nvve"] = resourceRoleBinding1
+		mockManagedScopeRoleBindingMapping1 := mdsv2alpha1.ManagedScopeRoleBindingMapping{
+			Scope:                mdsv2alpha1.Scope{
+				Path:     []string{"environment=testenv", "organization=testorg"},
+				Clusters: mdsv2alpha1.ScopeClusters{},
+			},
+			ClusterRoleBindings:  nil,
+			ResourceRoleBindings: resourceRoleBindings1,
+		}
+		resourceRoleBinding2 := make(map[string][]mdsv2alpha1.ResourcePattern)
+		resourceRoleBinding2["CloudClusterAdmin"] = make([]mdsv2alpha1.ResourcePattern, 0)
+		resourceRoleBindings2 := make(map[string]map[string][]mdsv2alpha1.ResourcePattern)
+		resourceRoleBindings2["User:u-dlzg04"] = resourceRoleBinding2
+		mockManagedScopeRoleBindingMapping2 := mdsv2alpha1.ManagedScopeRoleBindingMapping{
+			Scope:                mdsv2alpha1.Scope{
+				Path:     []string{"environment=testenv", "organization=testorg"},
+				Clusters: mdsv2alpha1.ScopeClusters{},
+			},
+			ClusterRoleBindings:  nil,
+			ResourceRoleBindings: resourceRoleBindings2,
+		}
+		return []mdsv2alpha1.ManagedScopeRoleBindingMapping{mockManagedScopeRoleBindingMapping1, mockManagedScopeRoleBindingMapping2}, nil, nil
+	}
+	clientWithMock.RBACRoleBindingSummariesApi = &mock.RBACRoleBindingSummariesApi{
+		ManagedRoleBindingsFunc: mockManagedFunc,
+		MyRoleBindingsFunc:      clientWithMock.RBACRoleBindingSummariesApi.MyRoleBindings,
+	}
+	return clientWithMock
+}
+
 func (r *PreRun) createMDSv2Client(ctx *DynamicContext, ver *version.Version) *mdsv2alpha1.APIClient {
 	mdsv2Config := mdsv2alpha1.NewConfiguration()
 	if ctx == nil {
-		return mdsv2alpha1.NewAPIClient(mdsv2Config)
+		// return mdsv2alpha1.NewAPIClient(mdsv2Config)
+		return createMDSv2ClientWithMock(mdsv2Config)
 	}
 	mdsv2Config.BasePath = ctx.Platform.Server + "/api/metadata/security/v2alpha1"
 	mdsv2Config.UserAgent = ver.UserAgent
 	if ctx.Platform.CaCertPath == "" {
-		return mdsv2alpha1.NewAPIClient(mdsv2Config)
+		// return mdsv2alpha1.NewAPIClient(mdsv2Config)
+		return createMDSv2ClientWithMock(mdsv2Config)
 	}
 	caCertPath := ctx.Platform.CaCertPath
 	// Try to load certs. On failure, warn, but don't error out because this may be an auth command, so there may
@@ -422,7 +462,7 @@ func (r *PreRun) createMDSv2Client(ctx *DynamicContext, ver *version.Version) *m
 		mdsv2Config.HTTPClient = pauth.DefaultClient()
 
 	}
-	return mdsv2alpha1.NewAPIClient(mdsv2Config)
+	return createMDSv2ClientWithMock(mdsv2Config)
 }
 
 func (r *PreRun) validateToken(cmd *cobra.Command, ctx *DynamicContext) error {

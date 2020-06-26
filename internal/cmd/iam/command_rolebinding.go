@@ -273,7 +273,7 @@ func (c *rolebindingCommand) parseAndValidateScopeV2(cmd *cobra.Command) (*mdsv2
 		if err != nil {
 			return nil, errors.HandleCommon(err, cmd)
 		}
-		if clusterScopedRolesV2[role] && scopeV2.Clusters.KafkaCluster == "" {
+		if cmd.Use != "list" && clusterScopedRolesV2[role] && scopeV2.Clusters.KafkaCluster == "" {
 			return nil, errors.HandleCommon(errors.New("Must specify cloud-cluster flag to indicate role binding scope."), cmd)
 		}
 	}
@@ -354,33 +354,93 @@ func (c *rolebindingCommand) listMyRoleBindings(cmd *cobra.Command, principal st
 }
 
 func (c *rolebindingCommand) listManagedRoleBindings(cmd *cobra.Command, principal string, scopeV2 *mdsv2alpha1.Scope) error {
-	/*
-	scopedPrincipalsRolesResourcePatterns, _, err := c.MDSv2Client.RBACRoleBindingSummariesApi.ManagedRoleBindings(
+	scopedRoleBindingMappings, _, err := c.MDSv2Client.RBACRoleBindingSummariesApi.ManagedRoleBindings(
 		c.createContext(),
 		principal,
 		*scopeV2)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	 */
 
 	// do filter + display based on the received rolebindings here
-	/*
 	outputWriter, err := output.NewListOutputWriter(cmd, resourcePatternListFields, resourcePatternHumanListLabels, resourcePatternStructuredListLabels)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	*/
 
-	if cmd.Flags().Changed("principal") {
-
+	for _, scopedRoleBindingMapping := range scopedRoleBindingMappings {
+		for principalName, roleBindings := range scopedRoleBindingMapping.ResourceRoleBindings {
+			if cmd.Flags().Changed("principal") {
+				principal, err := cmd.Flags().GetString("principal")
+				if err != nil {
+					return err
+				}
+				if principal != principalName {
+					continue
+				}
+			}
+			for roleName, resourcePatterns := range roleBindings {
+				if cmd.Flags().Changed("role") {
+					role, err := cmd.Flags().GetString("role")
+					if err != nil {
+						return err
+					}
+					if role != roleName {
+						continue
+					}
+				}
+				for _, resourcePattern := range resourcePatterns {
+					if cmd.Flags().Changed("resource") {
+						resource, err := cmd.Flags().GetString("resource")
+						if err != nil {
+							return err
+						}
+						if resource !=  resourcePattern.ResourceType {
+							continue
+						}
+					}
+					outputWriter.AddElement(&listDisplay{
+						Principal:    principalName,
+						Role:         roleName,
+						ResourceType: resourcePattern.ResourceType,
+						Name:         resourcePattern.Name,
+						PatternType:  resourcePattern.PatternType,
+					})
+				}
+				if len(resourcePatterns) == 0 && clusterScopedRolesV2[roleName] {
+					outputWriter.AddElement(&listDisplay{
+						Principal:    principalName,
+						Role:         roleName,
+						ResourceType: "Cluster",
+						Name:         "",
+						PatternType:  "",
+					})
+				}
+				if len(resourcePatterns) == 0 && environmentScopedRoles[roleName] {
+					outputWriter.AddElement(&listDisplay{
+						Principal:    principalName,
+						Role:         roleName,
+						ResourceType: "Environment",
+						Name:         "",
+						PatternType:  "",
+					})
+				}
+				if len(resourcePatterns) == 0 && organizationScopedRoles[roleName] {
+					outputWriter.AddElement(&listDisplay{
+						Principal:    principalName,
+						Role:         roleName,
+						ResourceType: "Organization",
+						Name:         "",
+						PatternType:  "",
+					})
+				}
+			}
+		}
 	}
-	if cmd.Flags().Changed("role") {
 
-	}
-	if cmd.Flags().Changed("resource") {
+	outputWriter.StableSort()
 
-	}
+	return outputWriter.Out()
 
 	return nil
 }
@@ -394,7 +454,6 @@ func (c *rolebindingCommand) ccloudListHelper(cmd *cobra.Command) error {
 	}
 
 	principal := "User:" + c.State.Auth.User.ResourceId
-	fmt.Println(principal)
 
 	err = c.validatePrincipalFormat(principal)
 	if err != nil {
