@@ -4,15 +4,19 @@ Usage:
   confluent [command]
 
 Available Commands:
-  cluster     Retrieve metadata about Confluent clusters.
-  completion  Print shell completion code.
-  help        Help about any command
-  iam         Manage RBAC, ACL and IAM permissions.
-  login       Log in to Confluent Platform (required for RBAC).
-  logout      Logout of Confluent Platform.
-  secret      Manage secrets for Confluent Platform.
-  update      Update the confluent CLI.
-  version     Print the confluent CLI version.
+  cluster         Retrieve metadata about Confluent clusters.
+  completion      Print shell completion code.
+  connect         Manage Connect.
+  help            Help about any command
+  iam             Manage RBAC, ACL and IAM permissions.
+  kafka           Manage Apache Kafka.
+  ksql            Manage KSQL applications.
+  login           Log in to Confluent Platform (required for RBAC).
+  logout          Logout of Confluent Platform.
+  schema-registry Manage Schema Registry.
+  secret          Manage secrets for Confluent Platform.
+  update          Update the confluent CLI.
+  version         Print the confluent CLI version.
 
 Flags:
   -h, --help            help for confluent
