@@ -316,7 +316,7 @@ func injectConfig(data []byte, config map[string]string) []byte {
 }
 
 func (c *Command) startProcess(service string) error {
-	scriptFile, err := c.ch.GetServiceStartScript(service)
+	scriptFile, err := c.ch.GetServiceScript("start", service)
 	if err != nil {
 		return err
 	}
@@ -419,22 +419,33 @@ func (c *Command) stopService(command *cobra.Command, service string) error {
 }
 
 func (c *Command) stopProcess(service string) error {
-	pid, err := c.cc.ReadPid(service)
+	scriptFile, err := c.ch.GetServiceScript("stop", service)
 	if err != nil {
 		return err
 	}
 
-	process, err := os.FindProcess(pid)
-	if err != nil {
-		return err
-	}
+	if scriptFile == "" {
+		pid, err := c.cc.ReadPid(service)
+		if err != nil {
+			return err
+		}
 
-	if err := process.Kill(); err != nil {
-		return err
+		process, err := os.FindProcess(pid)
+		if err != nil {
+			return err
+		}
+
+		if err := process.Kill(); err != nil {
+			return err
+		}
+	} else {
+		stop := exec.Command(scriptFile)
+		if err := stop.Start(); err != nil {
+			return err
+		}
 	}
 
 	errors := make(chan error)
-
 	up := make(chan bool)
 	go func() {
 		for {
@@ -452,7 +463,7 @@ func (c *Command) stopProcess(service string) error {
 		break
 	case err := <-errors:
 		return err
-	case <-time.After(time.Second):
+	case <-time.After(30 * time.Second):
 		return fmt.Errorf("%s failed to stop", writeServiceName(service))
 	}
 
@@ -576,6 +587,17 @@ func checkOSVersion() error {
 
 func checkJavaVersion(service string) error {
 	java := filepath.Join(os.Getenv("JAVA_HOME"), "/bin/java")
+	if os.Getenv("JAVA_HOME") == "" {
+		out, err := exec.Command("which", "java").Output()
+		if err != nil {
+			return err
+		}
+		java = strings.TrimSuffix(string(out), "\n")
+		if java == "java not found" {
+			return fmt.Errorf("could not find java executable, please install java or set JAVA_HOME")
+		}
+	}
+
 	data, err := exec.Command(java, "-version").CombinedOutput()
 	if err != nil {
 		return err

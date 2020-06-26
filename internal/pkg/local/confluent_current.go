@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -21,9 +22,9 @@ CONFLUENT_CURRENT/
 		[service]/
 			data/
 			logs/
-			[service].config
-			[service].log
 			[service].pid
+			[service].properties
+			[service].stdout
 */
 
 type ConfluentCurrent interface {
@@ -79,7 +80,7 @@ func (cc *ConfluentCurrentManager) GetCurrentDir() (string, error) {
 		if err := os.MkdirAll(cc.currentDir, 0777); err != nil {
 			return "", err
 		}
-		if err := ioutil.WriteFile(cc.getTrackingFile(), []byte(cc.currentDir), 0644); err != nil {
+		if err := ioutil.WriteFile(cc.getTrackingFile(), []byte(cc.currentDir+"\n"), 0644); err != nil {
 			return "", err
 		}
 	} else {
@@ -87,7 +88,7 @@ func (cc *ConfluentCurrentManager) GetCurrentDir() (string, error) {
 		if err != nil {
 			return "", err
 		}
-		cc.currentDir = string(data)
+		cc.currentDir = strings.TrimSuffix(string(data), "\n")
 	}
 
 	return cc.currentDir, nil
@@ -126,7 +127,7 @@ func (cc *ConfluentCurrentManager) GetLogsDir(service string) (string, error) {
 }
 
 func (cc *ConfluentCurrentManager) GetConfigFile(service string) (string, error) {
-	return cc.getServiceFile(service, fmt.Sprintf("%s.config", service))
+	return cc.getServiceFile(service, fmt.Sprintf("%s.properties", service))
 }
 
 func (cc *ConfluentCurrentManager) WriteConfig(service string, config []byte) error {
@@ -139,7 +140,7 @@ func (cc *ConfluentCurrentManager) WriteConfig(service string, config []byte) er
 }
 
 func (cc *ConfluentCurrentManager) GetLogFile(service string) (string, error) {
-	return cc.getServiceFile(service, fmt.Sprintf("%s.log", service))
+	return cc.getServiceFile(service, fmt.Sprintf("%s.stdout", service))
 }
 
 func (cc *ConfluentCurrentManager) HasPidFile(service string) (bool, error) {
@@ -176,7 +177,7 @@ func (cc *ConfluentCurrentManager) ReadPid(service string) (int, error) {
 		return 0, err
 	}
 
-	return strconv.Atoi(string(data))
+	return strconv.Atoi(strings.TrimSuffix(string(data), "\n"))
 }
 
 func (cc *ConfluentCurrentManager) WritePid(service string, pid int) error {
@@ -185,7 +186,7 @@ func (cc *ConfluentCurrentManager) WritePid(service string, pid int) error {
 		return err
 	}
 
-	data := []byte(strconv.Itoa(pid))
+	data := []byte(strconv.Itoa(pid) + "\n")
 	return ioutil.WriteFile(file, data, 0644)
 }
 

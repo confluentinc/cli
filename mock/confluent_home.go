@@ -25,8 +25,8 @@ type MockConfluentHome struct {
 	lockGetConfluentVersion sync.Mutex
 	GetConfluentVersionFunc func() (string, error)
 
-	lockGetServiceStartScript sync.Mutex
-	GetServiceStartScriptFunc func(service string) (string, error)
+	lockGetServiceScript sync.Mutex
+	GetServiceScriptFunc func(action, service string) (string, error)
 
 	lockReadServiceConfig sync.Mutex
 	ReadServiceConfigFunc func(service string) ([]byte, error)
@@ -60,7 +60,8 @@ type MockConfluentHome struct {
 		}
 		GetConfluentVersion []struct {
 		}
-		GetServiceStartScript []struct {
+		GetServiceScript []struct {
+			Action  string
 			Service string
 		}
 		ReadServiceConfig []struct {
@@ -267,42 +268,45 @@ func (m *MockConfluentHome) GetConfluentVersionCalls() []struct {
 	return m.calls.GetConfluentVersion
 }
 
-// GetServiceStartScript mocks base method by wrapping the associated func.
-func (m *MockConfluentHome) GetServiceStartScript(service string) (string, error) {
-	m.lockGetServiceStartScript.Lock()
-	defer m.lockGetServiceStartScript.Unlock()
+// GetServiceScript mocks base method by wrapping the associated func.
+func (m *MockConfluentHome) GetServiceScript(action, service string) (string, error) {
+	m.lockGetServiceScript.Lock()
+	defer m.lockGetServiceScript.Unlock()
 
-	if m.GetServiceStartScriptFunc == nil {
-		panic("mocker: MockConfluentHome.GetServiceStartScriptFunc is nil but MockConfluentHome.GetServiceStartScript was called.")
+	if m.GetServiceScriptFunc == nil {
+		panic("mocker: MockConfluentHome.GetServiceScriptFunc is nil but MockConfluentHome.GetServiceScript was called.")
 	}
 
 	call := struct {
+		Action  string
 		Service string
 	}{
+		Action:  action,
 		Service: service,
 	}
 
-	m.calls.GetServiceStartScript = append(m.calls.GetServiceStartScript, call)
+	m.calls.GetServiceScript = append(m.calls.GetServiceScript, call)
 
-	return m.GetServiceStartScriptFunc(service)
+	return m.GetServiceScriptFunc(action, service)
 }
 
-// GetServiceStartScriptCalled returns true if GetServiceStartScript was called at least once.
-func (m *MockConfluentHome) GetServiceStartScriptCalled() bool {
-	m.lockGetServiceStartScript.Lock()
-	defer m.lockGetServiceStartScript.Unlock()
+// GetServiceScriptCalled returns true if GetServiceScript was called at least once.
+func (m *MockConfluentHome) GetServiceScriptCalled() bool {
+	m.lockGetServiceScript.Lock()
+	defer m.lockGetServiceScript.Unlock()
 
-	return len(m.calls.GetServiceStartScript) > 0
+	return len(m.calls.GetServiceScript) > 0
 }
 
-// GetServiceStartScriptCalls returns the calls made to GetServiceStartScript.
-func (m *MockConfluentHome) GetServiceStartScriptCalls() []struct {
+// GetServiceScriptCalls returns the calls made to GetServiceScript.
+func (m *MockConfluentHome) GetServiceScriptCalls() []struct {
+	Action  string
 	Service string
 } {
-	m.lockGetServiceStartScript.Lock()
-	defer m.lockGetServiceStartScript.Unlock()
+	m.lockGetServiceScript.Lock()
+	defer m.lockGetServiceScript.Unlock()
 
-	return m.calls.GetServiceStartScript
+	return m.calls.GetServiceScript
 }
 
 // ReadServiceConfig mocks base method by wrapping the associated func.
@@ -553,9 +557,9 @@ func (m *MockConfluentHome) Reset() {
 	m.lockGetConfluentVersion.Lock()
 	m.calls.GetConfluentVersion = nil
 	m.lockGetConfluentVersion.Unlock()
-	m.lockGetServiceStartScript.Lock()
-	m.calls.GetServiceStartScript = nil
-	m.lockGetServiceStartScript.Unlock()
+	m.lockGetServiceScript.Lock()
+	m.calls.GetServiceScript = nil
+	m.lockGetServiceScript.Unlock()
 	m.lockReadServiceConfig.Lock()
 	m.calls.ReadServiceConfig = nil
 	m.lockReadServiceConfig.Unlock()
