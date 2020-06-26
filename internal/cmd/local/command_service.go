@@ -463,8 +463,10 @@ func (c *Command) stopProcess(service string) error {
 		break
 	case err := <-errors:
 		return err
-	case <-time.After(30 * time.Second):
-		return fmt.Errorf("%s failed to stop", writeServiceName(service))
+	case <-time.After(10 * time.Second):
+		if err := c.killProcess(service); err != nil {
+			return err
+		}
 	}
 
 	if err := c.cc.RemovePidFile(service); err != nil {
@@ -472,6 +474,44 @@ func (c *Command) stopProcess(service string) error {
 	}
 
 	return nil
+}
+
+func (c *Command) killProcess(service string) error {
+	pid, err := c.cc.ReadPid(service)
+	if err != nil {
+		return err
+	}
+
+	process, err := os.FindProcess(pid)
+	if err != nil {
+		return err
+	}
+
+	if err := process.Signal(syscall.SIGKILL); err != nil {
+		return err
+	}
+
+	errors := make(chan error)
+	up := make(chan bool)
+	go func() {
+		for {
+			isUp, err := c.isRunning(service)
+			if err != nil {
+				errors <- err
+			}
+			if !isUp {
+				up <- isUp
+			}
+		}
+	}()
+	select {
+	case <-up:
+		return nil
+	case err := <-errors:
+		return err
+	case <-time.After(time.Second):
+		return fmt.Errorf("%s failed to stop", writeServiceName(service))
+	}
 }
 
 func (c *Command) printStatus(command *cobra.Command, service string) error {
