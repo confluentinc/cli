@@ -259,7 +259,7 @@ func (c *rolebindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mds.Sco
 func (c *rolebindingCommand) parseAndValidateScopeV2(cmd *cobra.Command) (*mdsv2alpha1.Scope, error) {
 	scopeV2 := &mdsv2alpha1.Scope{}
 	orgResourceId := c.State.Auth.Organization.GetResourceId()
-	scopeV2.Path = []string{"organization=" + orgResourceId, "environment=" + c.EnvironmentId()}
+	scopeV2.Path = []string{"organization=" + orgResourceId}
 
 	cmd.Flags().Visit(func(flag *pflag.Flag) {
 		switch flag.Name {
