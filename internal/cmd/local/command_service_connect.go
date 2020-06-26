@@ -86,6 +86,8 @@ func (c *Command) runConnectConnectorConfigCommand(command *cobra.Command, args 
 	}
 	if !isJSON(data) {
 		config := local.ExtractConfig(data)
+		config["name"] = connector
+
 		data, err = json.Marshal(config)
 		if err != nil {
 			return err
