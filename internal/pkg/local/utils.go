@@ -50,16 +50,25 @@ func CollectFlags(flags *pflag.FlagSet, flagTypes map[string]interface{}) ([]str
 		switch typeDefault.(type) {
 		case bool:
 			val, err = flags.GetBool(key)
-		case string:
-			val, err = flags.GetString(key)
 		case int:
 			val, err = flags.GetInt(key)
+		case string:
+			val, err = flags.GetString(key)
+		case []string:
+			val, err = flags.GetStringArray(key)
 		}
-
 		if err != nil {
 			return []string{}, err
 		}
-		if val == typeDefault {
+
+		isDefault := false
+		switch typeDefault.(type) {
+		case []string:
+			isDefault = len(val.([]string)) == 0
+		default:
+			isDefault = val == typeDefault
+		}
+		if isDefault {
 			continue
 		}
 
@@ -68,10 +77,14 @@ func CollectFlags(flags *pflag.FlagSet, flagTypes map[string]interface{}) ([]str
 		switch typeDefault.(type) {
 		case bool:
 			args = append(args, flag)
-		case string:
-			args = append(args, flag, val.(string))
 		case int:
 			args = append(args, flag, strconv.Itoa(val.(int)))
+		case string:
+			args = append(args, flag, val.(string))
+		case []string:
+			for _, v := range val.([]string) {
+				args = append(args, flag, v)
+			}
 		}
 	}
 

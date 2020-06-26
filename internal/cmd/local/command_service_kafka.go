@@ -12,13 +12,12 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/local"
 )
 
-const (
-	defaultBool   = false
-	defaultInt    = 0
-	defaultString = ""
-)
-
 var (
+	defaultBool        bool
+	defaultInt         int
+	defaultString      string
+	defaultStringArray []string
+
 	commonFlagUsage = map[string]string{
 		"cloud":        "Consume from Confluent Cloud.",
 		"config":       "Change the ccloud configuration file.",
@@ -57,7 +56,7 @@ var (
 		"max-messages":          defaultInt,
 		"offset":                defaultString,
 		"partition":             defaultInt,
-		"property":              defaultString,
+		"property":              defaultStringArray,
 		"skip-message-on-error": defaultBool,
 		"timeout-ms":            defaultInt,
 		"value-deserializer":    defaultString,
@@ -96,7 +95,7 @@ var (
 		"metadata-expiry-ms":         defaultInt,
 		"producer-property":          defaultString,
 		"producer.config":            defaultString,
-		"property":                   defaultString,
+		"property":                   defaultStringArray,
 		"request-required-acks":      defaultString,
 		"request-timeout-ms":         defaultInt,
 		"retry-backoff-ms":           defaultInt,
@@ -165,6 +164,8 @@ func (c *Command) initFlags(mode string) {
 			c.Flags().Int(flag, val.(int), usage[flag])
 		case string:
 			c.Flags().String(flag, val.(string), usage[flag])
+		case []string:
+			c.Flags().StringArray(flag, val.([]string), usage[flag])
 		}
 	}
 }
