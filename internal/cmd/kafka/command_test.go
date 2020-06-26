@@ -601,7 +601,27 @@ func TestCreateEncryptionKeyId(t *testing.T) {
 
 	b, err := ioutil.ReadAll(stdout)
 	require.NoError(t, err)
-	require.Equal(t, "Please confirm you've authorized the key for these accounts account-xyz (y/n): ", string(b))
+	require.Equal(t, `Copy and append these permissions to the existing "Statements" array field in the key policy of your ARN to authorize access for Confluent:
+
+{
+    "Sid" : "Allow Confluent account (account-xyz) to use the key",
+    "Effect" : "Allow",
+    "Principal" : {
+      "AWS" : ["arn:aws:iam::account-xyz:root"]
+    },
+    "Action" : [ "kms:Encrypt", "kms:Decrypt", "kms:ReEncrypt*", "kms:GenerateDataKey*", "kms:DescribeKey" ],
+    "Resource" : "*"
+  }, {
+    "Sid" : "Allow Confluent account (account-xyz) to attach persistent resources",
+    "Effect" : "Allow",
+    "Principal" : {
+      "AWS" : ["arn:aws:iam::account-xyz:root"]
+    },
+    "Action" : [ "kms:CreateGrant", "kms:ListGrants", "kms:RevokeGrant" ],
+    "Resource" : "*"
+}
+
+ (y/n): `, string(b))
 }
 
 func init() {

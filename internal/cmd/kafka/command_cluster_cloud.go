@@ -1,11 +1,13 @@
 package kafka
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
 	"os"
 	"strings"
+	"text/template"
 
 	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
@@ -118,7 +120,6 @@ func (c *clusterCommand) init() {
 	createCmd.Flags().Int("cku", 0, "Number of Confluent Kafka Units (non-negative). Required for Kafka clusters of type 'dedicated'.")
 	createCmd.Flags().String("encryption-key", "", "Encryption Key ID (e.g. for Amazon Web Services, the Amazon Resource Name of the key).")
 	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	_ = createCmd.Flags().MarkHidden("encryption-key")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
@@ -224,19 +225,8 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	if encryptionKeyID != "" {
-		accounts := getAccountsForCloud(cloud, clouds)
-		accountsStr := strings.Join(accounts, ", ")
-		msg := fmt.Sprintf("Please confirm you've authorized the key for these accounts %s", accountsStr)
-		ok, err := confirm.Do(
-			stdout,
-			stdin,
-			msg,
-		)
-		if err != nil {
-			return errors.HandleCommon(errors.New("Failed to read your confirmation"), cmd)
-		}
-		if !ok {
-			return errors.HandleCommon(errors.New("Please authorize the accounts for the key"), cmd)
+		if err := c.validateEncryptionKey(cloud, clouds); err != nil {
+			return errors.HandleCommon(err, cmd)
 		}
 	}
 
@@ -269,6 +259,47 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	return outputKafkaClusterDescription(cmd, cluster)
+}
+
+var encryptionKeyPolicy = template.Must(template.New("encryptionKey").Parse(`{{range  $i, $accountID := .}}{{if $i}},{{end}}{
+    "Sid" : "Allow Confluent account ({{$accountID}}) to use the key",
+    "Effect" : "Allow",
+    "Principal" : {
+      "AWS" : ["arn:aws:iam::{{$accountID}}:root"]
+    },
+    "Action" : [ "kms:Encrypt", "kms:Decrypt", "kms:ReEncrypt*", "kms:GenerateDataKey*", "kms:DescribeKey" ],
+    "Resource" : "*"
+  }, {
+    "Sid" : "Allow Confluent account ({{$accountID}}) to attach persistent resources",
+    "Effect" : "Allow",
+    "Principal" : {
+      "AWS" : ["arn:aws:iam::{{$accountID}}:root"]
+    },
+    "Action" : [ "kms:CreateGrant", "kms:ListGrants", "kms:RevokeGrant" ],
+    "Resource" : "*"
+}{{end}}`))
+
+func (c *clusterCommand) validateEncryptionKey(cloud string, clouds []*schedv1.CloudMetadata) error {
+	accounts := getAccountsForCloud(cloud, clouds)
+	var buf bytes.Buffer
+	buf.WriteString(`Copy and append these permissions to the existing "Statements" array field in the key policy of your ARN to authorize access for Confluent:`)
+	buf.WriteString("\n\n")
+	if err := encryptionKeyPolicy.Execute(&buf, accounts); err != nil {
+		return fmt.Errorf("Failed to render key policy")
+	}
+	buf.WriteString("\n\n")
+	ok, err := confirm.Do(
+		stdout,
+		stdin,
+		buf.String(),
+	)
+	if err != nil {
+		return fmt.Errorf("Failed to read your confirmation")
+	}
+	if !ok {
+		return fmt.Errorf("Please authorize the accounts for the key")
+	}
+	return nil
 }
 
 func stringToAvailability(s string) (schedv1.Durability, error) {
