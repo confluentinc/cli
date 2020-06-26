@@ -104,7 +104,6 @@ func NewConfluentCommand(cliName string, cfg *v3.Config, logger *log.Logger, ver
 		cli.AddCommand(update.New(cliName, cfg, ver, prompt, updateClient, analytics))
 	}
 	cli.AddCommand(auth.New(prerunner, cfg, logger, ver.UserAgent, analytics, netrcHandler)...)
-	cli.AddCommand(iam.New(prerunner, cfg))
 
 	if cliName == "ccloud" {
 		cmd := kafka.New(prerunner, cfg, logger.Named("kafka"), ver.ClientID)
@@ -131,6 +130,9 @@ func NewConfluentCommand(cliName string, cfg *v3.Config, logger *log.Logger, ver
 		//conn = connect.New(prerunner, cfg, connects.New(client, logger))
 		//conn.Hidden = true // The connect feature isn't finished yet, so let's hide it
 		//cli.AddCommand(conn)
+		if os.Getenv("XX_CLOUD_RBAC") != "" {
+			cli.AddCommand(iam.New(prerunner, cfg))
+		}
 	} else if cliName == "confluent" {
 
 		metaClient := cluster.NewScopedIdService(&http.Client{}, ver.UserAgent, logger)
@@ -150,6 +152,7 @@ func NewConfluentCommand(cliName string, cfg *v3.Config, logger *log.Logger, ver
 		cli.AddCommand(command)
 
 		cli.AddCommand(secret.New(prompt, resolver, secrets.NewPasswordProtectionPlugin(logger)))
+		cli.AddCommand(iam.New(prerunner, cfg))
 	}
 	return command, nil
 }
