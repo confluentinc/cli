@@ -126,9 +126,9 @@ var (
 func NewServicesCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
-			Use:   "services [command]",
+			Use:   "services",
 			Short: "Manage Confluent Platform services.",
-			Args:  cobra.MinimumNArgs(1),
+			Args:  cobra.NoArgs,
 		}, prerunner)
 
 	availableServices, _ := c.getAvailableServices()
@@ -159,13 +159,20 @@ func NewServicesListCommand(prerunner cmd.PreRunner) *cobra.Command {
 }
 
 func (c *Command) runServicesListCommand(command *cobra.Command, _ []string) error {
-	availableServices, err := c.getAvailableServices()
+	services, err := c.getAvailableServices()
 	if err != nil {
 		return err
 	}
 
+	sort.Strings(services)
+
+	serviceNames := make([]string, len(services))
+	for i, service := range services {
+		serviceNames[i] = writeServiceName(service)
+	}
+
 	command.Println("Available Services:")
-	command.Println(local.BuildTabbedList(availableServices))
+	command.Println(local.BuildTabbedList(serviceNames))
 	return nil
 }
 

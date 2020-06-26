@@ -25,8 +25,9 @@ func NewLocalCommand(command *cobra.Command, prerunner cmd.PreRunner) *Command {
 func New(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
-			Use:   "local [command]",
+			Use:   "local",
 			Short: "Manage a local Confluent Platform development environment.",
+			Args:  cobra.NoArgs,
 		}, prerunner)
 
 	c.AddCommand(NewCurrentCommand(prerunner))

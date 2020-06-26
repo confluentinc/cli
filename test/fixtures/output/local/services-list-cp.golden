@@ -2,11 +2,11 @@ The local commands are intended for a single-node development environment only,
 NOT for production usage. https://docs.confluent.io/current/cli/index.html
 
 Available Services:
-  connect
-  control-center
-  kafka
-  kafka-rest
-  ksql-server
-  schema-registry
-  zookeeper
+  Connect
+  Control Center
+  Kafka
+  Kafka REST
+  KSQL Server
+  Schema Registry
+  Zookeeper
 

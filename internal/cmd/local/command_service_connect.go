@@ -45,7 +45,7 @@ func NewConnectConnectorConfigCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "config [connector]",
-			Short: "Print a connector config, or configure an existing connector.",
+			Short: "Print a connector config, or configure a connector.",
 			Args:  cobra.ExactArgs(1),
 		}, prerunner)
 
@@ -267,7 +267,7 @@ func NewConnectPluginCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "plugin",
-			Short: "Manage connect plugins.",
+			Short: "Manage Connect plugins.",
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
@@ -280,7 +280,7 @@ func NewConnectPluginListCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "list",
-			Short: "List available connect plugins.",
+			Short: "List available Connect plugins.",
 			Args:  cobra.NoArgs,
 		}, prerunner)
 

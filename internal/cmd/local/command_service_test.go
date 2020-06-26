@@ -60,3 +60,10 @@ func TestIsValidJavaVersion(t *testing.T) {
 	req.NoError(err)
 	req.False(isValid)
 }
+
+func TestWriteServiceName(t *testing.T) {
+	req := require.New(t)
+
+	req.Equal("Kafka", writeServiceName("kafka"))
+	req.Equal("Schema Registry", writeServiceName("schema-registry"))
+}

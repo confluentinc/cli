@@ -220,11 +220,9 @@ func isCapitalized(word string) bool {
 
 // Separate for testability
 func requireNotTitleCaseHelper(fieldValue string, properNouns []string, field string, fullCommand string) *multierror.Error {
-	if fieldValue[len(fieldValue)-1] == '.' {
-		fieldValue = fieldValue[0 : len(fieldValue)-1]
-	}
 	var issues *multierror.Error
 
+	fieldValue = strings.TrimSuffix(fieldValue, ".")
 	for _, properNoun := range properNouns {
 		fieldValue = strings.ReplaceAll(fieldValue, properNoun, "")
 	}
@@ -247,7 +245,7 @@ func requireNotTitleCaseHelper(fieldValue string, properNouns []string, field st
 			continue
 		}
 		// Starting a new sentence
-		if i > 0 && words[i-1][len(words[i-1])-1] == '.' {
+		if i > 0 && strings.HasSuffix(words[i-1], ".") {
 			continue
 		}
 		issue := fmt.Errorf("don't title case %s on %s - %s",
@@ -422,6 +420,9 @@ func RequireFlagKebabCase(flag *pflag.Flag, cmd *cobra.Command) error {
 func RequireFlagUsageRealWords(flag *pflag.Flag, cmd *cobra.Command) error {
 	var issues *multierror.Error
 	usage := strings.TrimRight(alnum.ReplaceAllString(flag.Usage, " "), " ") // Remove any punctuation before checking spelling
+	if usage == "" {
+		return nil
+	}
 	for _, w := range strings.Split(usage, " ") {
 		if ok := vocab.Spell(w); !ok {
 			issue := fmt.Errorf("flag usage should consist of delimited real english words for %s on %s - unknown '%s' in '%s'",

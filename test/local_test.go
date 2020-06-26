@@ -80,7 +80,7 @@ func (s *CLITestSuite) TestLocalServicesLifecycle() {
 	}
 }
 
-func (s *CLITestSuite) TestLocalServiceLifecycle() {
+func (s *CLITestSuite) TestLocalZookeeperLifecycle() {
 	s.createCH([]string{
 		"share/java/kafka/zookeeper-0.0.0.jar",
 	})

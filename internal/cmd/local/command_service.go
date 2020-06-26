@@ -23,9 +23,9 @@ import (
 func NewServiceCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
-			Use:   fmt.Sprintf("%s [command]", service),
-			Short: fmt.Sprintf("Manage the %s service.", service),
-			Args:  cobra.ExactArgs(1),
+			Use:   service,
+			Short: fmt.Sprintf("Manage the %s service.", writeServiceName(service)),
+			Args:  cobra.NoArgs,
 		}, prerunner)
 
 	c.AddCommand(NewServiceLogCommand(service, prerunner))
@@ -53,7 +53,7 @@ func NewServiceLogCommand(service string, prerunner cmd.PreRunner) *cobra.Comman
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "log",
-			Short: fmt.Sprintf("Print logs for %s.", service),
+			Short: fmt.Sprintf("Print logs for %s.", writeServiceName(service)),
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
@@ -71,7 +71,7 @@ func (c *Command) runServiceLogCommand(command *cobra.Command, _ []string) error
 
 	data, err := ioutil.ReadFile(log)
 	if err != nil {
-		return fmt.Errorf("no log found: to run %s, use \"confluent local services %s start\"", service, service)
+		return fmt.Errorf("no log found: to run %s, use \"confluent local services %s start\"", writeServiceName(service), service)
 	}
 	command.Print(string(data))
 
@@ -82,7 +82,7 @@ func NewServiceStartCommand(service string, prerunner cmd.PreRunner) *cobra.Comm
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "start",
-			Short: fmt.Sprintf("Start %s.", service),
+			Short: fmt.Sprintf("Start the %s service.", writeServiceName(service)),
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
@@ -110,7 +110,7 @@ func NewServiceStatusCommand(service string, prerunner cmd.PreRunner) *cobra.Com
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "status",
-			Short: fmt.Sprintf("Check the status of %s.", service),
+			Short: fmt.Sprintf("Check the status of %s.", writeServiceName(service)),
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
@@ -132,7 +132,7 @@ func NewServiceStopCommand(service string, prerunner cmd.PreRunner) *cobra.Comma
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "stop",
-			Short: fmt.Sprintf("Stop %s.", service),
+			Short: fmt.Sprintf("Stop the %s service.", writeServiceName(service)),
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
@@ -160,7 +160,7 @@ func NewServiceTopCommand(service string, prerunner cmd.PreRunner) *cobra.Comman
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "top",
-			Short: fmt.Sprintf("Monitor %s processes.", service),
+			Short: fmt.Sprintf("Monitor %s processes.", writeServiceName(service)),
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
@@ -191,7 +191,7 @@ func NewServiceVersionCommand(service string, prerunner cmd.PreRunner) *cobra.Co
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "version",
-			Short: fmt.Sprintf("Print the version of %s.", service),
+			Short: fmt.Sprintf("Print the version of %s.", writeServiceName(service)),
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
@@ -229,7 +229,7 @@ func (c *Command) startService(command *cobra.Command, service string) error {
 		return err
 	}
 
-	command.Printf("Starting %s\n", service)
+	command.Printf("Starting %s\n", writeServiceName(service))
 
 	spin := spinner.New()
 	spin.Start()
@@ -368,7 +368,7 @@ func (c *Command) startProcess(service string) error {
 	case err := <-errors:
 		return err
 	case <-time.After(time.Second):
-		return fmt.Errorf("%s failed to start", service)
+		return fmt.Errorf("%s failed to start", writeServiceName(service))
 	}
 
 	open := make(chan bool)
@@ -390,7 +390,7 @@ func (c *Command) startProcess(service string) error {
 	case err := <-errors:
 		return err
 	case <-time.After(90 * time.Second):
-		return fmt.Errorf("%s failed to start", service)
+		return fmt.Errorf("%s failed to start", writeServiceName(service))
 	}
 
 	return nil
@@ -405,7 +405,7 @@ func (c *Command) stopService(command *cobra.Command, service string) error {
 		return c.printStatus(command, service)
 	}
 
-	command.Printf("Stopping %s\n", service)
+	command.Printf("Stopping %s\n", writeServiceName(service))
 
 	spin := spinner.New()
 	spin.Start()
@@ -453,7 +453,7 @@ func (c *Command) stopProcess(service string) error {
 	case err := <-errors:
 		return err
 	case <-time.After(time.Second):
-		return fmt.Errorf("%s failed to stop", service)
+		return fmt.Errorf("%s failed to stop", writeServiceName(service))
 	}
 
 	if err := c.cc.RemovePidFile(service); err != nil {
@@ -474,7 +474,7 @@ func (c *Command) printStatus(command *cobra.Command, service string) error {
 		status = color.GreenString("UP")
 	}
 
-	command.Printf("%s is [%s]\n", service, status)
+	command.Printf("%s is [%s]\n", writeServiceName(service), status)
 	return nil
 }
 
@@ -622,4 +622,15 @@ func isValidJavaVersion(service, javaVersion string) (bool, error) {
 	}
 
 	return true, nil
+}
+
+func writeServiceName(service string) string {
+	switch service {
+	case "kafka-rest":
+		return "Kafka REST"
+	case "ksql-server":
+		return "KSQL Server"
+	}
+
+	return strings.Title(strings.ReplaceAll(service, "-", " "))
 }

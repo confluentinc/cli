@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"regexp"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -12,8 +11,6 @@ import (
 )
 
 func BuildTabbedList(arr []string) string {
-	sort.Strings(arr)
-
 	var list strings.Builder
 	for _, x := range arr {
 		fmt.Fprintf(&list, "  %s\n", x)

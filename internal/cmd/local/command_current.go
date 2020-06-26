@@ -10,7 +10,7 @@ func NewCurrentCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "current",
-			Short: "Get the path of the data and logs for the current Confluent run.",
+			Short: "Get the path of the current Confluent run.",
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
