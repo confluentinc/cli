@@ -21,8 +21,8 @@ func NewRouteCommand(prerunner cmd.PreRunner) *cobra.Command {
 	cliCmd := cmd.NewAuthenticatedWithMDSCLICommand(
 		&cobra.Command{
 			Use:   "route",
-			Short: "Examine audit log route rules (since 6.0).",
-			Long:  "Examine routing rules that determine which auditable events are logged, and where (since 6.0).",
+			Short: "Examine audit log route rules.",
+			Long:  "Examine routing rules that determine which auditable events are logged, and where.",
 		}, prerunner)
 	cmd := &routeCommand{
 		AuthenticatedCLICommand: cliCmd,
@@ -35,8 +35,8 @@ func NewRouteCommand(prerunner cmd.PreRunner) *cobra.Command {
 func (c *routeCommand) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
-		Short: "List routes matching a resource & sub-resources (since 6.0).",
-		Long:  "List the routes that could match the queried resource or its sub-resources (since 6.0).",
+		Short: "List routes matching a resource & sub-resources.",
+		Long:  "List the routes that could match the queried resource or its sub-resources.",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	}
@@ -47,8 +47,8 @@ func (c *routeCommand) init() {
 
 	lookupCmd := &cobra.Command{
 		Use:   "lookup <crn>",
-		Short: "Returns the matching audit-log route rule (since 6.0).",
-		Long:  "Returns the single route that describes how audit log messages regarding this CRN would be routed, with all defaults populated (since 6.0).",
+		Short: "Returns the matching audit-log route rule.",
+		Long:  "Returns the single route that describes how audit log messages regarding this CRN would be routed, with all defaults populated.",
 		RunE:  c.lookup,
 		Args:  cobra.ExactArgs(1),
 	}
@@ -70,9 +70,9 @@ func (c *routeCommand) list(cmd *cobra.Command, args []string) error {
 	} else {
 		opts = &mds.ListRoutesOpts{Q: optional.EmptyString()}
 	}
-	result, _, err := c.MDSClient.AuditLogConfigurationApi.ListRoutes(c.createContext(), opts)
+	result, response, err := c.MDSClient.AuditLogConfigurationApi.ListRoutes(c.createContext(), opts)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return HandleMdsAuditLogApiError(cmd, err, response)
 	}
 	enc := json.NewEncoder(c.OutOrStdout())
 	enc.SetIndent("", "  ")
@@ -85,9 +85,9 @@ func (c *routeCommand) list(cmd *cobra.Command, args []string) error {
 func (c *routeCommand) lookup(cmd *cobra.Command, args []string) error {
 	resource := args[0]
 	opts := &mds.ResolveResourceRouteOpts{Crn: optional.NewString(resource)}
-	result, _, err := c.MDSClient.AuditLogConfigurationApi.ResolveResourceRoute(c.createContext(), opts)
+	result, response, err := c.MDSClient.AuditLogConfigurationApi.ResolveResourceRoute(c.createContext(), opts)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return HandleMdsAuditLogApiError(cmd, err, response)
 	}
 	enc := json.NewEncoder(c.OutOrStdout())
 	enc.SetIndent("", "  ")

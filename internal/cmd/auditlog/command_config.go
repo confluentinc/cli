@@ -25,8 +25,8 @@ func NewConfigCommand(prerunner cmd.PreRunner) *cobra.Command {
 	cliCmd := cmd.NewAuthenticatedWithMDSCLICommand(
 		&cobra.Command{
 			Use:   "config",
-			Short: "Manage audit log configuration specification (since 6.0).",
-			Long:  "Manage audit log defaults and routing rules that determine which auditable events are logged, and where (since 6.0).",
+			Short: "Manage audit log configuration specification.",
+			Long:  "Manage audit log defaults and routing rules that determine which auditable events are logged, and where.",
 		}, prerunner)
 	cmd := &configCommand{
 		AuthenticatedCLICommand: cliCmd,
@@ -39,7 +39,7 @@ func NewConfigCommand(prerunner cmd.PreRunner) *cobra.Command {
 func (c *configCommand) init() {
 	describeCmd := &cobra.Command{
 		Use:   "describe",
-		Short: "Prints the audit log configuration spec object (since 6.0).",
+		Short: "Prints the audit log configuration spec object.",
 		RunE:  c.describe,
 		Args:  cobra.NoArgs,
 	}
@@ -47,8 +47,8 @@ func (c *configCommand) init() {
 
 	updateCmd := &cobra.Command{
 		Use:   "update",
-		Short: "Submits audit-log config spec object to the API (since 6.0).",
-		Long:  "Submits an audit-log configuration specification JSON object to the API (since 6.0).",
+		Short: "Submits audit-log config spec object to the API.",
+		Long:  "Submits an audit-log configuration specification JSON object to the API.",
 		RunE:  c.update,
 		Args:  cobra.NoArgs,
 	}
@@ -59,8 +59,8 @@ func (c *configCommand) init() {
 
 	editCmd := &cobra.Command{
 		Use:   "edit",
-		Short: "Edit the audit-log config spec interactively (since 6.0).",
-		Long:  "Edit the audit-log config spec object interactively, using the EDITOR specified in your env (since 6.0).",
+		Short: "Edit the audit-log config spec interactively.",
+		Long:  "Edit the audit-log config spec object interactively, using the EDITOR specified in your environment.",
 		RunE:  c.edit,
 		Args:  cobra.NoArgs,
 	}
@@ -116,9 +116,9 @@ func (c *configCommand) update(cmd *cobra.Command, args []string) error {
 			return errors.HandleCommon(err, cmd)
 		}
 		if force {
-			gotSpec, _, err := c.MDSClient.AuditLogConfigurationApi.GetConfig(c.createContext())
+			gotSpec, response, err := c.MDSClient.AuditLogConfigurationApi.GetConfig(c.createContext())
 			if err != nil {
-				return errors.HandleCommon(err, cmd)
+				return HandleMdsAuditLogApiError(cmd, err, response)
 			}
 			putSpec = &mds.AuditLogConfigSpec{
 				Destinations:       fileSpec.Destinations,
@@ -139,11 +139,13 @@ func (c *configCommand) update(cmd *cobra.Command, args []string) error {
 		if r != nil && r.StatusCode == http.StatusConflict {
 			if apiError, ok := err.(mds.GenericOpenAPIError); ok {
 				if err2 := enc.Encode(apiError.Model()); err2 != nil {
-					// Ignore it, I guess
+					// We can just ignore this extra error. Why?
+					// We expected a payload we could display as JSON, but got something unexpected.
+					// That's OK though, we'll still handle and show the API error message.
 				}
 			}
 		}
-		return errors.HandleCommon(err, cmd)
+		return HandleMdsAuditLogApiError(cmd, err, r)
 	}
 	if err = enc.Encode(result); err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -152,9 +154,9 @@ func (c *configCommand) update(cmd *cobra.Command, args []string) error {
 }
 
 func (c *configCommand) edit(cmd *cobra.Command, args []string) error {
-	gotSpec, _, err := c.MDSClient.AuditLogConfigurationApi.GetConfig(c.createContext())
+	gotSpec, response, err := c.MDSClient.AuditLogConfigurationApi.GetConfig(c.createContext())
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return HandleMdsAuditLogApiError(cmd, err, response)
 	}
 	gotSpecBytes, err := json.MarshalIndent(gotSpec, "", "  ")
 	if err != nil {
@@ -176,10 +178,12 @@ func (c *configCommand) edit(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		if r.StatusCode == http.StatusConflict {
 			if err2 := enc.Encode(result); err2 != nil {
-				// Ignore it, I guess
+				// We can just ignore this extra error. Why?
+				// We expected a payload we could display as JSON, but got something unexpected.
+				// That's OK though, we'll still handle and show the API error message.
 			}
 		}
-		return errors.HandleCommon(err, cmd)
+		return HandleMdsAuditLogApiError(cmd, err, r)
 	}
 	if err = enc.Encode(result); err != nil {
 		return errors.HandleCommon(err, cmd)
