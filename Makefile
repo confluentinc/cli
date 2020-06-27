@@ -277,6 +277,7 @@ publish-docs: docs
 		git checkout -b cli-$(VERSION) origin/$(DOCS_BRANCH) || exit 1; \
 		cd - || exit 1; \
 		make publish-docs-internal BASE_DIR=$${TMP_DIR} CLI_NAME=ccloud || exit 1; \
+	    make publish-docs-internal BASE_DIR=$${TMP_DIR} CLI_NAME=confluent || exit 1; \
 		cd $${TMP_DIR} || exit 1; \
 		sed -i '' 's/default "confluent_cli_consumer_[^"]*"/default "confluent_cli_consumer_<uuid>"/' cloud/cli/command-reference/ccloud_kafka_topic_consume.rst || exit 1; \
 		git add . || exit 1; \
@@ -284,8 +285,7 @@ publish-docs: docs
 		git commit -m "chore: updating CLI docs for $(VERSION)" || exit 1; \
 		git push origin cli-$(VERSION) || exit 1; \
 		hub pull-request -b $(DOCS_BRANCH) -m "chore: updating CLI docs for $(VERSION)" || exit 1; \
-		rm -rf $${TMP_BASE}; \
-	    make publish-docs-internal BASE_DIR=$${TMP_DIR} CLI_NAME=confluent || exit 1
+		rm -rf $${TMP_BASE}
 
 .PHONY: publish-docs-internal
 publish-docs-internal:
