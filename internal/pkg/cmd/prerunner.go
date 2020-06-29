@@ -329,11 +329,11 @@ func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, name string, curren
 		return nil
 	}
 	if updateAvailable {
-		// msg := "Updates are available for %s from (current: %s, latest: %s).\nTo view release notes and install them, please run:\n$ %s update\n\n"
+		msg := "Updates are available for %s from (current: %s, latest: %s).\nTo view release notes and install them, please run:\n$ %s update\n\n"
 		if !strings.HasPrefix(latestVersion, "v") {
 			latestVersion = "v" + latestVersion
 		}
-		// ErrPrintf(cmd, msg, name, currentVersion, latestVersion, name)
+		ErrPrintf(cmd, msg, name, currentVersion, latestVersion, name)
 	}
 	return nil
 }

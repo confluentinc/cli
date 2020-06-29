@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"github.com/confluentinc/cli/internal/cmd/auditlog"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"net/http"
@@ -97,7 +96,6 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 	}
 
 	resolver := &pcmd.FlagResolverImpl{Prompt: prompt, Out: os.Stdout}
-	fmt.Println(cfg.CLIName)
 	prerunner := &pcmd.PreRun{
 		Config: cfg,
 		ConfigLoadingError: configLoadingErr,
