@@ -264,8 +264,8 @@ publish-installers:
 
 .PHONY: docs
 docs:
-	@GO111MODULE=on go run -ldflags '-X main.cliName=confluent' cmd/docs/main.go
 	@GO111MODULE=on go run -ldflags '-X main.cliName=ccloud' cmd/docs/main.go
+	@GO111MODULE=on go run -ldflags '-X main.cliName=confluent' cmd/docs/main.go
 
 .PHONY: publish-docs
 publish-docs: docs
