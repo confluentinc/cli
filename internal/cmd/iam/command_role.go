@@ -28,6 +28,7 @@ var (
 
 type roleCommand struct {
 	*cmd.AuthenticatedCLICommand
+	CLIName string
 }
 
 type prettyRole struct {
@@ -36,7 +37,7 @@ type prettyRole struct {
 }
 
 // NewRoleCommand returns the sub-command object for interacting with RBAC roles.
-func NewRoleCommand(prerunner cmd.PreRunner) *cobra.Command {
+func NewRoleCommand(cliName string, prerunner cmd.PreRunner) *cobra.Command {
 	cliCmd := cmd.NewAuthenticatedWithMDSCLICommand(
 		&cobra.Command{
 			Use:   "role",
@@ -45,13 +46,14 @@ func NewRoleCommand(prerunner cmd.PreRunner) *cobra.Command {
 		}, prerunner)
 	roleCmd := &roleCommand{
 		AuthenticatedCLICommand: cliCmd,
+		CLIName: cliName,
 	}
 	roleCmd.init()
 	return roleCmd.Command
 }
 
 func (c *roleCommand) createContext() context.Context {
-	if c.Config.CLIName == "ccloud" {
+	if c.CLIName == "ccloud" {
 		return context.WithValue(context.Background(), mdsv2alpha1.ContextAccessToken, c.State.AuthToken)
 	} else {
 		return context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
@@ -131,7 +133,7 @@ func (c *roleCommand) ccloudListHelper(cmd *cobra.Command) error {
 }
 
 func (c *roleCommand) list(cmd *cobra.Command, args []string) error {
-	if c.Config.CLIName == "ccloud" {
+	if c.CLIName == "ccloud" {
 		return c.ccloudListHelper(cmd)
 	} else {
 		return c.confluentListHelper(cmd)
@@ -213,7 +215,7 @@ func (c *roleCommand) ccloudDescribeHelper(cmd *cobra.Command, role string) erro
 func (c *roleCommand) describe(cmd *cobra.Command, args []string) error {
 	role := args[0]
 
-	if c.Config.CLIName == "ccloud" {
+	if c.CLIName == "ccloud" {
 		return c.ccloudDescribeHelper(cmd, role)
 	} else {
 		return c.confluentDescribeHelper(cmd, role)

@@ -17,6 +17,7 @@ import (
 
 type aclCommand struct {
 	*pcmd.AuthenticatedCLICommand
+	CLIName string
 }
 
 // NewACLCommand returns the Cobra command for ACLs.
@@ -26,6 +27,7 @@ func NewACLCommand(cliName string, prerunner pcmd.PreRunner) *cobra.Command {
 			Use:   "acl",
 			Short: `Manage Kafka ACLs (5.4+ only).`,
 		}, prerunner),
+		CLIName: cliName,
 	}
 	cmd.init(cliName)
 	return cmd.Command
@@ -243,7 +245,7 @@ func PrintAcls(cmd *cobra.Command, kafkaClusterId string, bindingsObj []mds.AclB
 }
 
 func (c *aclCommand) createContext() context.Context {
-	if c.Config.CLIName == "ccloud" {
+	if c.CLIName == "ccloud" {
 		return context.WithValue(context.Background(), mdsv2alpha1.ContextAccessToken, c.State.AuthToken)
 	} else {
 		return context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
