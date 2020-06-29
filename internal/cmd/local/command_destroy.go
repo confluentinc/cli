@@ -1,48 +1,43 @@
 package local
 
 import (
-	"os"
-	"path/filepath"
+	"fmt"
 
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config/v3"
 )
 
-func NewDestroyCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
-	destroyCommand := cmd.NewAnonymousCLICommand(
+func NewDestroyCommand(prerunner cmd.PreRunner) *cobra.Command {
+	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "destroy",
 			Short: "Delete the data and logs for the current Confluent run.",
 			Args:  cobra.NoArgs,
-			RunE:  runDestroyCommand,
-		},
-		cfg, prerunner)
+		}, prerunner)
 
-	return destroyCommand.Command
+	c.Command.RunE = c.runDestroyCommand
+	return c.Command
 }
 
-func runDestroyCommand(command *cobra.Command, _ []string) error {
-	if err := runServicesStopCommand(command, []string{}); err != nil {
+func (c *LocalCommand) runDestroyCommand(command *cobra.Command, _ []string) error {
+	if !c.cc.HasTrackingFile() {
+		return fmt.Errorf("nothing to destroy")
+	}
+
+	if err := c.runServicesStopCommand(command, []string{}); err != nil {
 		return err
 	}
 
-	confluentCurrent, err := getConfluentCurrent()
+	dir, err := c.cc.GetCurrentDir()
 	if err != nil {
 		return err
 	}
 
-	command.Printf("Deleting: %s\n", confluentCurrent)
-	if err := os.RemoveAll(confluentCurrent); err != nil {
+	command.Printf("Deleting: %s\n", dir)
+	if err := c.cc.RemoveCurrentDir(); err != nil {
 		return err
 	}
 
-	root := os.Getenv("CONFLUENT_CURRENT")
-	if root == "" {
-		root = os.TempDir()
-	}
-
-	trackingFile := filepath.Join(root, "confluent.current")
-	return os.Remove(trackingFile)
+	return c.cc.RemoveTrackingFile()
 }

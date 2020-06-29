@@ -1,3 +1,3 @@
-        Name        |     Type     |    ID     |     Hosts      
-+-------------------+--------------+-----------+---------------+
-  theMdsKSQLCluster | ksql-cluster | ksql-name | 10.4.4.4:9004  
+        Name        |     Type     |  Kafka ID  | Component ID |     Hosts     | Protocol  
++-------------------+--------------+------------+--------------+---------------+----------+
+  theMdsKSQLCluster | ksql-cluster | kafka-GUID | ksql-name    | 10.4.4.4:9004 | HTTPS     

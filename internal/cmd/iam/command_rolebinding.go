@@ -15,7 +15,6 @@ import (
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -53,7 +52,7 @@ type rolebindingOptions struct {
 	prefix           bool
 	principal        string
 	scopeV2			 mdsv2alpha1.Scope
-	scopeClusters    mds.ScopeClusters
+	mdsScope         mds.MdsScope
 	resourcesRequest mds.ResourcesRequest
 }
 
@@ -70,14 +69,13 @@ type listDisplay struct {
 }
 
 // NewRolebindingCommand returns the sub-command object for interacting with RBAC rolebindings.
-func NewRolebindingCommand(cfg *v3.Config, prerunner cmd.PreRunner) *cobra.Command {
+func NewRolebindingCommand(prerunner cmd.PreRunner) *cobra.Command {
 	cliCmd := cmd.NewAuthenticatedWithMDSCLICommand(
 		&cobra.Command{
 			Use:   "rolebinding",
 			Short: "Manage RBAC and IAM role bindings.",
 			Long:  "Manage Role Based Access (RBAC) and Identity and Access Management (IAM) role bindings.",
-		},
-		cfg, prerunner)
+		}, prerunner)
 	roleBindingCmd := &rolebindingCommand{AuthenticatedCLICommand: cliCmd}
 	roleBindingCmd.init()
 	return roleBindingCmd.Command
@@ -102,6 +100,7 @@ func (c *rolebindingCommand) init() {
 		listCmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for scope of rolebinding listings.")
 		listCmd.Flags().String("ksql-cluster-id", "", "KSQL cluster ID for scope of rolebinding listings.")
 		listCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for scope of rolebinding listings.")
+		listCmd.Flags().String("cluster-name", "", "Cluster name to uniquely identify the cluster for rolebinding listings.")
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
@@ -126,6 +125,7 @@ func (c *rolebindingCommand) init() {
 		createCmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding.")
 		createCmd.Flags().String("ksql-cluster-id", "", "KSQL cluster ID for the role binding.")
 		createCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for the role binding.")
+		createCmd.Flags().String("cluster-name", "", "Cluster name to uniquely identify the cluster for rolebinding listings.")
 	}
 	createCmd.Flags().SortFlags = false
 	check(createCmd.MarkFlagRequired("role"))
@@ -150,6 +150,7 @@ func (c *rolebindingCommand) init() {
 		deleteCmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding.")
 		deleteCmd.Flags().String("ksql-cluster-id", "", "KSQL cluster ID for the role binding.")
 		deleteCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for the role binding.")
+		deleteCmd.Flags().String("cluster-name", "", "Cluster name to uniquely identify the cluster for rolebinding listings.")
 	}
 	deleteCmd.Flags().SortFlags = false
 	check(createCmd.MarkFlagRequired("role"))
@@ -223,10 +224,14 @@ func (c *rolebindingCommand) validateRoleAndResourceType(roleName string, resour
 	return nil
 }
 
-func (c *rolebindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mds.ScopeClusters, error) {
-	scope := &mds.ScopeClusters{}
-
+func (c *rolebindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mds.MdsScope, error) {
+	scope := &mds.MdsScopeClusters{}
 	nonKafkaScopesSet := 0
+
+	clusterName, err := cmd.Flags().GetString("cluster-name")
+	if err != nil {
+		return nil, errors.HandleCommon(err, cmd)
+	}
 
 	cmd.Flags().Visit(func(flag *pflag.Flag) {
 		switch flag.Name {
@@ -244,19 +249,26 @@ func (c *rolebindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mds.Sco
 		}
 	})
 
-	if scope.KafkaCluster == "" && nonKafkaScopesSet > 0 {
-		return nil, errors.HandleCommon(errors.New("Must also specify a --kafka-cluster-id to uniquely identify the scope."), cmd)
+	if clusterName != "" && (scope.KafkaCluster != "" || nonKafkaScopesSet > 0) {
+		return nil, errors.HandleCommon(errors.New("Cannot specify both cluster name and cluster scope."), cmd)
 	}
 
-	if scope.KafkaCluster == "" && nonKafkaScopesSet == 0 {
-		return nil, errors.HandleCommon(errors.New("Must specify at least one cluster ID flag to indicate role binding scope."), cmd)
+	if clusterName == "" {
+		if scope.KafkaCluster == "" && nonKafkaScopesSet > 0 {
+			return nil, errors.HandleCommon(errors.New("Must also specify a --kafka-cluster-id to uniquely identify the scope."), cmd)
+		}
+
+		if scope.KafkaCluster == "" && nonKafkaScopesSet == 0 {
+			return nil, errors.HandleCommon(errors.New("Must specify either cluster ID flag to indicate role binding scope or the cluster name."), cmd)
+		}
+
+		if nonKafkaScopesSet > 1 {
+			return nil, errors.HandleCommon(errors.New("Cannot specify more than one non-Kafka cluster ID for a scope."), cmd)
+		}
+		return &mds.MdsScope{Clusters: *scope}, nil
 	}
 
-	if nonKafkaScopesSet > 1 {
-		return nil, errors.HandleCommon(errors.New("Cannot specify more than one non-Kafka cluster ID for a scope."), cmd)
-	}
-
-	return scope, nil
+	return &mds.MdsScope{ClusterName: clusterName}, nil
 }
 
 func (c *rolebindingCommand) parseAndValidateScopeV2(cmd *cobra.Command) (*mdsv2alpha1.Scope, error) {
@@ -574,9 +586,7 @@ func (c *rolebindingCommand) ccloudListPrincipalResourcesHelper(cmd *cobra.Comma
 }
 
 func (c *rolebindingCommand) listPrincipalResources(cmd *cobra.Command) error {
-	scopeClusters := &mds.ScopeClusters{}
-	var err error
-	scopeClusters, err = c.parseAndValidateScope(cmd)
+	scope, err := c.parseAndValidateScope(cmd)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -598,14 +608,13 @@ func (c *rolebindingCommand) listPrincipalResources(cmd *cobra.Command) error {
 		}
 		role = r
 	}
-
 	principalsRolesResourcePatterns, response, err := c.MDSClient.RBACRoleBindingSummariesApi.LookupResourcesForPrincipal(
 		c.createContext(),
 		principal,
-		mds.Scope{Clusters: *scopeClusters})
+		*scope)
 	if err != nil {
 		if response.StatusCode == http.StatusNotFound {
-			return c.listPrincipalResourcesV1(cmd, scopeClusters, principal, role)
+			return c.listPrincipalResourcesV1(cmd, scope, principal, role)
 		}
 		return errors.HandleCommon(err, cmd)
 	}
@@ -645,14 +654,14 @@ func (c *rolebindingCommand) listPrincipalResources(cmd *cobra.Command) error {
 	return outputWriter.Out()
 }
 
-func (c *rolebindingCommand) listPrincipalResourcesV1(cmd *cobra.Command, scopeClusters *mds.ScopeClusters, principal string, role string) error {
+func (c *rolebindingCommand) listPrincipalResourcesV1(cmd *cobra.Command, mdsScope *mds.MdsScope, principal string, role string) error {
 	var err error
 	roleNames := []string{role}
 	if role == "*" {
 		roleNames, _, err = c.MDSClient.RBACRoleBindingSummariesApi.ScopedPrincipalRolenames(
 			c.createContext(),
 			principal,
-			mds.Scope{Clusters: *scopeClusters})
+			*mdsScope)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
@@ -664,7 +673,7 @@ func (c *rolebindingCommand) listPrincipalResourcesV1(cmd *cobra.Command, scopeC
 			c.createContext(),
 			principal,
 			roleName,
-			mds.Scope{Clusters: *scopeClusters})
+			*mdsScope)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
@@ -681,9 +690,7 @@ func (c *rolebindingCommand) listPrincipalResourcesV1(cmd *cobra.Command, scopeC
 }
 
 func (c *rolebindingCommand) listRolePrincipals(cmd *cobra.Command) error {
-	scopeClusters := &mds.ScopeClusters{}
-	var err error
-	scopeClusters, err = c.parseAndValidateScope(cmd)
+	scope, err := c.parseAndValidateScope(cmd)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -694,7 +701,7 @@ func (c *rolebindingCommand) listRolePrincipals(cmd *cobra.Command) error {
 	}
 
 	var principals []string
-	if cmd.Flags().Changed("resource") && c.Config.CLIName != "ccloud" {
+	if cmd.Flags().Changed("resource") {
 		r, err := cmd.Flags().GetString("resource")
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
@@ -712,7 +719,7 @@ func (c *rolebindingCommand) listRolePrincipals(cmd *cobra.Command) error {
 			role,
 			resource.ResourceType,
 			resource.Name,
-			mds.Scope{Clusters: *scopeClusters})
+			*scope)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
@@ -720,7 +727,7 @@ func (c *rolebindingCommand) listRolePrincipals(cmd *cobra.Command) error {
 		principals, _, err = c.MDSClient.RBACRoleBindingSummariesApi.LookupPrincipalsWithRole(
 			c.createContext(),
 			role,
-			mds.Scope{Clusters: *scopeClusters})
+			*scope)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
@@ -764,10 +771,10 @@ func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOption
 		return nil, errors.HandleCommon(err, cmd)
 	}
 
-	scopeClusters := &mds.ScopeClusters{}
+	scope := &mds.Scope{}
 	scopeV2 := &mdsv2alpha1.Scope{}
 	if c.Config.CLIName != "ccloud" {
-		scopeClusters, err = c.parseAndValidateScope(cmd)
+		scope, err := c.parseAndValidateScope(cmd)
 	} else {
 		scopeV2, err = c.parseAndValidateScopeV2(cmd)
 	}
@@ -776,33 +783,30 @@ func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOption
 	}
 
 	resourcesRequest := mds.ResourcesRequest{}
-	if c.Config.CLIName != "ccloud" {
-		if resource != "" {
-			parsedResourcePattern, err := c.parseAndValidateResourcePattern(resource, prefix)
-			if err != nil {
-				return nil, errors.HandleCommon(err, cmd)
-			}
-			err = c.validateRoleAndResourceType(role, parsedResourcePattern.ResourceType)
-			if err != nil {
-				return nil, errors.HandleCommon(err, cmd)
-			}
-			resourcePatterns := []mds.ResourcePattern{
-				parsedResourcePattern,
-			}
-			resourcesRequest = mds.ResourcesRequest{
-				Scope:            mds.Scope{Clusters: *scopeClusters},
-				ResourcePatterns: resourcePatterns,
-			}
+	if resource != "" && c.Config.CLIName != "ccloud" {
+		parsedResourcePattern, err := c.parseAndValidateResourcePattern(resource, prefix)
+		if err != nil {
+			return nil, errors.HandleCommon(err, cmd)
+		}
+		err = c.validateRoleAndResourceType(role, parsedResourcePattern.ResourceType)
+		if err != nil {
+			return nil, errors.HandleCommon(err, cmd)
+		}
+		resourcePatterns := []mds.ResourcePattern{
+			parsedResourcePattern,
+		}
+		resourcesRequest = mds.ResourcesRequest{
+			Scope:         *scope,
+			ResourcePatterns: resourcePatterns,
 		}
 	}
-
 	return &rolebindingOptions{
 			role,
 			resource,
 			prefix,
 			principal,
 			*scopeV2,
-			*scopeClusters,
+			*scope,
 			resourcesRequest,
 		},
 		nil
@@ -820,9 +824,8 @@ func (c *rolebindingCommand) confluentCreateHelper(options *rolebindingOptions) 
 			c.createContext(),
 			options.principal,
 			options.role,
-			mds.Scope{Clusters: options.scopeClusters})
+			options.mdsScope)
 	}
-	return
 }
 
 func (c *rolebindingCommand) ccloudCreateHelper(options *rolebindingOptions) (resp *http.Response, err error) {
@@ -879,9 +882,8 @@ func (c* rolebindingCommand) confluentDeleteHelper(options *rolebindingOptions) 
 			c.createContext(),
 			options.principal,
 			options.role,
-			mds.Scope{Clusters: options.scopeClusters})
+			options.mdsScope)
 	}
-	return
 }
 
 func (c* rolebindingCommand) ccloudDeleteHelper(options *rolebindingOptions) (resp *http.Response, err error) {

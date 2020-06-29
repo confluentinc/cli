@@ -20,7 +20,7 @@ const (
 	yamlString    = "yaml"
 	FlagName      = "output"
 	ShortHandFlag = "o"
-	Usage         = `Specify the output format as "human", "json" or "yaml".`
+	Usage         = `Specify the output format as "human", "json", or "yaml".`
 	DefaultValue  = humanString
 )
 

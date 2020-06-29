@@ -4,8 +4,6 @@ require (
 	github.com/DABH/go-basher v0.0.0-20191104233559-daa7fee9545c
 	github.com/DataDog/zstd v1.4.1 // indirect
 	github.com/Shopify/sarama v1.23.1
-	github.com/alcortesm/tgz v0.0.0-20161220082320-9c5fe88206d7 // indirect
-	github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239 // indirect
 	github.com/antihax/optional v1.0.0
 	github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da
 	github.com/atrox/homedir v1.0.0
@@ -28,8 +26,8 @@ require (
 	github.com/confluentinc/ccloud-sdk-go v0.0.37
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-printer v0.13.0
-	github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.4
 	github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.6
+	github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.9
 	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787
 	github.com/confluentinc/schema-registry-sdk-go v0.0.8
 	github.com/dghubble/sling v1.3.0 // indirect
@@ -38,9 +36,8 @@ require (
 	github.com/eapache/go-resiliency v1.2.0 // indirect
 	github.com/emicklei/go-restful v2.9.6+incompatible // indirect
 	github.com/fatih/color v1.7.0
-	github.com/flynn/go-shlex v0.0.0-20150515145356-3f9db97f8568 // indirect
 	github.com/frankban/quicktest v1.7.2 // indirect
-	github.com/gliderlabs/ssh v0.2.2 // indirect
+	github.com/go-git/go-git/v5 v5.1.0
 	github.com/go-openapi/spec v0.19.2 // indirect
 	github.com/go-openapi/swag v0.19.4 // indirect
 	github.com/go-yaml/yaml v2.1.0+incompatible
@@ -104,7 +101,6 @@ require (
 )
 
 replace (
-	github.com/mutagen-io/gopass => github.com/mutagen-io/gopass v0.0.0-20161007065903-6331a34a3f3b
 	github.com/shurcooL/sanitized_anchor_name => github.com/shurcooL/sanitized_anchor_name v1.0.0
 	github.com/ugorji/go v1.1.4 => github.com/ugorji/go v0.0.0-20190316192920-e2bddce071ad
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20171026124306-e509bb64fe11

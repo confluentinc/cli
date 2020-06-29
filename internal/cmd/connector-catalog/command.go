@@ -9,7 +9,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -29,18 +28,18 @@ var (
 )
 
 // New returns the default command object for interacting with Connect.
-func New(prerunner pcmd.PreRunner, config *v3.Config) *cobra.Command {
+func New(cliName string, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &command{
 		AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(&cobra.Command{
 			Use:   "connector-catalog",
 			Short: "Catalog of connectors and their configurations.",
-		}, config, prerunner),
+		}, prerunner),
 	}
-	cmd.init()
+	cmd.init(cliName)
 	return cmd.Command
 }
 
-func (c *command) init() {
+func (c *command) init(cliName string) {
 	cmd := &cobra.Command{
 		Use:   "describe <connector-type>",
 		Short: "Describe a connector plugin type.",
@@ -50,7 +49,7 @@ With the --sample-file flag, create a sample connector configuration file.
 ::
 
         {{.CLIName}} connector-catalog describe <PluginName>
-        {{.CLIName}} connector-catalog describe <PluginName> --sample-file <filename>`, c.Config.CLIName),
+        {{.CLIName}} connector-catalog describe <PluginName> --sample-file <filename>`, cliName),
 		RunE: c.describe,
 		Args: cobra.ExactArgs(1),
 	}
@@ -67,7 +66,7 @@ List connectors in the current or specified Kafka cluster context.
 
 ::
 
-        {{.CLIName}} connector-catalog list`, c.Config.CLIName),
+        {{.CLIName}} connector-catalog list`, cliName),
 		RunE: c.list,
 		Args: cobra.NoArgs,
 	}

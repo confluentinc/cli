@@ -34,9 +34,10 @@ func TestFeedbackEmptyMessage(t *testing.T) {
 }
 
 func mockFeedbackCommand(msg string) *cobra.Command {
-	mockPreRunner := mock.NewPreRunnerMock(nil, nil)
-	mockConfig := v3.New(&config.Params{CLIName: "ccloud"})
+	cliName := "ccloud"
+	mockConfig := v3.New(&config.Params{CLIName: cliName})
+	mockPreRunner := mock.NewPreRunnerMock(nil, nil, mockConfig)
 	mockAnalytics := mock.NewDummyAnalyticsMock()
 	mockPrompt := mock.NewPromptMock(msg)
-	return NewFeedbackCmdWithPrompt(mockPreRunner, mockConfig, mockAnalytics, mockPrompt)
+	return NewFeedbackCmdWithPrompt(cliName, mockPreRunner, mockAnalytics, mockPrompt)
 }

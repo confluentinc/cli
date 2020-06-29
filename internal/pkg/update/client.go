@@ -83,16 +83,14 @@ func (c *client) CheckForUpdates(name string, currentVersion string, forceCheck 
 		err = errors.Wrapf(err, "unable to parse %s version %s", name, currentVersion)
 		return false, currentVersion, err
 	}
-
-	if err := c.touchCheckFile(); err != nil {
-		return false, currentVersion, errors.Wrapf(err, "unable to touch last check file")
-	}
-
 	latestBinaryVersion, err := c.Repository.GetLatestBinaryVersion(name)
 	if err != nil {
 		return false, currentVersion, err
 	}
 	if isLessThanVersion(currVersion, latestBinaryVersion) {
+		if err := c.touchCheckFile(); err != nil {
+			return false, currentVersion, errors.Wrapf(err, "unable to touch last check file")
+		}
 		return true, latestBinaryVersion.Original(), nil
 	}
 	return false, currentVersion, nil

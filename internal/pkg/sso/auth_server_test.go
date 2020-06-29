@@ -6,10 +6,11 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 func TestServerTimeout(t *testing.T) {
-	state, err := newState("https://devel.cpdev.cloud", false)
+	state, err := newState("https://devel.cpdev.cloud", false, log.New())
 	require.NoError(t, err)
 	server := newServer(state)
 
@@ -21,7 +22,7 @@ func TestServerTimeout(t *testing.T) {
 }
 
 func TestCallback(t *testing.T) {
-	state, err := newState("https://devel.cpdev.cloud", false)
+	state, err := newState("https://devel.cpdev.cloud", false, log.New())
 	require.NoError(t, err)
 	server := newServer(state)
 

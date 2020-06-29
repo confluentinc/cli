@@ -8,7 +8,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -27,13 +26,12 @@ var (
 )
 
 // New returns the Cobra command for `environment`.
-func New(prerunner pcmd.PreRunner, config *v3.Config, cliName string) *cobra.Command {
+func New(cliName string, prerunner pcmd.PreRunner) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "environment",
 			Short: fmt.Sprintf("Manage and select %s environments.", cliName),
-		},
-		config, prerunner)
+		}, prerunner)
 	cmd := &command{AuthenticatedCLICommand: cliCmd}
 	cmd.init()
 	return cmd.Command

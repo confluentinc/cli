@@ -1,0 +1,11 @@
+Error: required flag(s) "cluster-name" not set
+Usage:
+  confluent cluster unregister [flags]
+
+Flags:
+      --cluster-name string   Cluster Name.
+  -h, --help                  help for unregister
+
+Global Flags:
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+

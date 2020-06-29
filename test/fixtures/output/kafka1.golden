@@ -8,7 +8,7 @@ Flags:
       --availability string   Availability of the cluster. Allowed Values: single-zone, multi-zone. (default "single-zone")
       --type string           Type of the Kafka cluster. Allowed values: basic, standard, dedicated. (default "basic")
       --cku int               Number of Confluent Kafka Units (non-negative). Required for Kafka clusters of type 'dedicated'.
-  -o, --output string         Specify the output format as "human", "json" or "yaml". (default "human")
+  -o, --output string         Specify the output format as "human", "json", or "yaml". (default "human")
   -h, --help                  help for create
 
 Global Flags:

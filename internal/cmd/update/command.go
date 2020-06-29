@@ -64,13 +64,12 @@ type command struct {
 }
 
 // New returns the command for the built-in updater.
-func New(cliName string, config *v3.Config, version *cliVersion.Version, prompt pcmd.Prompt,
+func New(cliName string, logger *log.Logger, version *cliVersion.Version, prompt pcmd.Prompt,
 	client update.Client, analytics analytics.Client) *cobra.Command {
 	cmd := &command{
 		cliName:         cliName,
-		config:          config,
 		version:         version,
-		logger:          config.Logger,
+		logger:          logger,
 		prompt:          prompt,
 		client:          client,
 		analyticsClient: analytics,
@@ -95,7 +94,6 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.Wrap(err, "error reading --yes as bool")
 	}
-
 	pcmd.ErrPrintln(cmd, "Checking for updates...")
 	updateAvailable, latestVersion, err := c.client.CheckForUpdates(c.cliName, c.version.Version, true)
 	if err != nil {

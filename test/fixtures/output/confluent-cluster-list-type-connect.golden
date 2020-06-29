@@ -1,0 +1,3 @@
+          Name         |      Type       |  Kafka ID  | Component ID |     Hosts     | Protocol  
++----------------------+-----------------+------------+--------------+---------------+----------+
+  theMdsConnectCluster | connect-cluster | kafka-GUID | connect-name | 10.5.5.5:9005 | HTTPS     

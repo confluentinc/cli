@@ -4,7 +4,7 @@ Usage:
   ccloud ksql app list [flags]
 
 Flags:
-  -o, --output string   Specify the output format as "human", "json" or "yaml". (default "human")
+  -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")
   -h, --help            help for list
 
 Global Flags:

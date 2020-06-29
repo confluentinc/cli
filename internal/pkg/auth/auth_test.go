@@ -194,7 +194,7 @@ func TestUpateSSOToken(t *testing.T) {
 		GetUserSSOFunc: func(client *ccloud.Client, email string) (user *orgv1.User, e error) {
 			return &orgv1.User{}, nil
 		},
-		RefreshSSOTokenFunc: func(client *ccloud.Client, refreshToken, url string) (s string, e error) {
+		RefreshSSOTokenFunc: func(client *ccloud.Client, refreshToken, url string, logger *log.Logger) (s string, e error) {
 			require.Equal(t, refreshToken, mockConfigPassword)
 			return finalAuthToken, nil
 		},

@@ -12,7 +12,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/io"
 	plocal "github.com/confluentinc/cli/internal/pkg/local"
@@ -59,15 +58,14 @@ type command struct {
 }
 
 // New returns the Cobra command for `local`.
-func New(rootCmd *cobra.Command, prerunner pcmd.PreRunner, shell ShellRunner, log *log.Logger, fs io.FileSystem, cfg *v3.Config) *cobra.Command {
+func New(rootCmd *cobra.Command, prerunner pcmd.PreRunner, shell ShellRunner, log *log.Logger, fs io.FileSystem) *cobra.Command {
 	cliCmd := pcmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "local",
 			Short: "Manage a local Confluent Platform development environment.",
 			Long:  longDescription,
 			Args:  cobra.ArbitraryArgs,
-		},
-		cfg, prerunner)
+		}, prerunner)
 	localCmd := &command{
 		CLICommand: cliCmd,
 		shell:      shell,

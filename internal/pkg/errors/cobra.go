@@ -38,6 +38,7 @@ func HandleCommon(err error, cmd *cobra.Command) error {
 			return fmt.Errorf(msg)
 		}
 	}
+
 	switch e := err.(type) {
 	case mds.GenericOpenAPIError:
 		return fmt.Errorf("Backend error: " + e.Error() + ": " + string(e.Body()))

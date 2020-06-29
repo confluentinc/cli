@@ -1,68 +1,62 @@
 package local
 
 import (
-	"io/ioutil"
-	"path/filepath"
-	"strings"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
-	"github.com/confluentinc/cli/mock"
 )
 
-func TestConfigService(t *testing.T) {
+func TestInjectConfigs(t *testing.T) {
 	req := require.New(t)
 
-	cp := mock.NewConfluentPlatform()
-	defer cp.TearDown()
+	data := []byte("replace=old\n# replace=commented-duplicate\n# comment=old\n")
 
-	req.NoError(cp.NewConfluentHome())
-	req.NoError(cp.AddFileToConfluentHome("etc/kafka/zookeeper.properties", "replace=old\n# comment=old\n", 0644))
-	req.NoError(cp.NewConfluentCurrent())
+	config := map[string]string{
+		"replace": "new",
+		"comment": "new",
+		"append":  "new",
+	}
 
-	dir, err := getServiceDir("zookeeper")
-	req.NoError(err)
-	config := map[string]string{"replace": "new", "comment": "new", "append": "new"}
-	req.NoError(configService("zookeeper", dir, config))
+	data = injectConfig(data, config)
 
-	properties := filepath.Join(cp.ConfluentCurrent, "zookeeper", "zookeeper.properties")
-	req.FileExists(properties)
-	data, err := ioutil.ReadFile(properties)
-	req.NoError(err)
-	req.NotContains(string(data), "replace=old")
 	req.Contains(string(data), "replace=new")
-	req.NotContains(string(data), "# comment=old")
+	req.Contains(string(data), "# replace=commented-duplicate")
 	req.Contains(string(data), "comment=new")
 	req.Contains(string(data), "append=new")
 }
 
-func TestServiceVersions(t *testing.T) {
+func TestSetServiceEnvs(t *testing.T) {
 	req := require.New(t)
 
-	cp := mock.NewConfluentPlatform()
-	defer cp.TearDown()
-	req.NoError(cp.NewConfluentHome())
+	req.NoError(os.Setenv("KAFKA_LOG4J_OPTS", "saveme"))
+	req.NoError(os.Setenv("CONNECT_LOG4J_OPTS", "useme"))
 
-	versions := map[string]string{
-		"Confluent Platform": "1.0.0",
-		"kafka":              "2.0.0",
-		"zookeeper":          "3.0.0",
-	}
+	req.NoError(setServiceEnvs("connect"))
 
-	for service, version := range versions {
-		file := strings.Replace(versionFiles[service], "*", version, 1)
-		req.NoError(cp.AddEmptyFileToConfluentHome(file))
-	}
+	req.Equal("saveme", os.Getenv("SAVED_KAFKA_LOG4J_OPTS"))
+	req.Equal("useme", os.Getenv("KAFKA_LOG4J_OPTS"))
+}
 
-	for service := range services {
-		out, err := mockLocalCommand("services", service, "version")
-		req.NoError(err)
+func TestIsValidJavaVersion(t *testing.T) {
+	req := require.New(t)
 
-		version, ok := versions[service]
-		if !ok {
-			version = versions["Confluent Platform"]
-		}
-		req.Contains(out, version)
-	}
+	var isValid bool
+	var err error
+
+	isValid, err = isValidJavaVersion("", "1.8.0_152")
+	req.NoError(err)
+	req.True(isValid)
+
+	isValid, err = isValidJavaVersion("", "9.0.4")
+	req.NoError(err)
+	req.False(isValid)
+
+	isValid, err = isValidJavaVersion("zookeeper", "13")
+	req.NoError(err)
+	req.True(isValid)
+
+	isValid, err = isValidJavaVersion("", "13")
+	req.NoError(err)
+	req.False(isValid)
 }

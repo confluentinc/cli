@@ -251,15 +251,6 @@ func (c *Config) SetContext(name string) error {
 	return c.Save()
 }
 
-// Name returns the display name for the CLI
-func (c *Config) Name() string {
-	name := "Confluent CLI"
-	if c.CLIName == "ccloud" {
-		name = "Confluent Cloud CLI"
-	}
-	return name
-}
-
 func (c *Config) SaveCredential(credential *v2.Credential) error {
 	if credential.Name == "" {
 		return fmt.Errorf("credential must have a name")
@@ -274,24 +265,6 @@ func (c *Config) SavePlatform(platform *v2.Platform) error {
 	}
 	c.Platforms[platform.Name] = platform
 	return c.Save()
-}
-
-func (c *Config) Support() string {
-	support := "https://confluent.io; support@confluent.io"
-	if c.CLIName == "ccloud" {
-		support = "https://confluent.cloud; support@confluent.io"
-	}
-	return support
-}
-
-// APIName returns the display name of the remote API
-// (e.g., Confluent Platform or Confluent Cloud)
-func (c *Config) APIName() string {
-	name := "Confluent Platform"
-	if c.CLIName == "ccloud" {
-		name = "Confluent Cloud"
-	}
-	return name
 }
 
 // Context returns the user specified context if it exists,

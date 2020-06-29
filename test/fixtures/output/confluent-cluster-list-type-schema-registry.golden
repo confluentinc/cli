@@ -1,0 +1,3 @@
+             Name             |          Type           |  Kafka ID  |     Component ID     |     Hosts     | Protocol  
++-----------------------------+-------------------------+------------+----------------------+---------------+----------+
+  theMdsSchemaRegistryCluster | schema-registry-cluster | kafka-GUID | schema-registry-name | 10.3.3.3:9003 | HTTPS     

@@ -5,7 +5,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -16,22 +15,21 @@ type subjectCommand struct {
 }
 
 // NewSubjectCommand returns the Cobra command for Schema Registry subject list
-func NewSubjectCommand(config *v3.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
+func NewSubjectCommand(cliName string, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "subject",
 			Short: "Manage Schema Registry subjects.",
-		},
-		config, prerunner)
+		}, prerunner)
 	subjectCmd := &subjectCommand{
 		AuthenticatedCLICommand: cliCmd,
 		srClient:                srClient,
 	}
-	subjectCmd.init()
+	subjectCmd.init(cliName)
 	return subjectCmd.Command
 }
 
-func (c *subjectCommand) init() {
+func (c *subjectCommand) init(cliName string) {
 
 	listCmd := &cobra.Command{
 		Use:   "list",
@@ -41,7 +39,7 @@ Retrieve all subjects available in a Schema Registry
 
 ::
 		config.CLIName schema-registry subject list
-`, c.Config.CLIName),
+`, cliName),
 		RunE: c.list,
 		Args: cobra.NoArgs,
 	}
@@ -58,7 +56,7 @@ Update subject level compatibility or mode of schema registry.
 ::
 		config.CLIName schema-registry subject update <subjectname> --compatibility=BACKWARD
 		config.CLIName schema-registry subject update <subjectname> --mode=READWRITE
-`, c.Config.CLIName),
+`, cliName),
 		RunE: c.update,
 		Args: cobra.ExactArgs(1),
 	}
@@ -76,7 +74,7 @@ Retrieve all versions registered under a given subject and its compatibility lev
 
 ::
 		config.CLIName schema-registry subject describe <subjectname>
-`, c.Config.CLIName),
+`, cliName),
 		RunE: c.describe,
 		Args: cobra.ExactArgs(1),
 	}

@@ -11,12 +11,8 @@ import (
 
 	"github.com/confluentinc/cli/internal/cmd"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
-	"github.com/confluentinc/cli/internal/pkg/config"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	linter "github.com/confluentinc/cli/internal/pkg/lint-cli"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/version"
-	"github.com/confluentinc/cli/mock"
 )
 
 var (
@@ -34,7 +30,7 @@ var (
 	}
 	vocabWords = []string{
 		"ccloud", "kafka", "api", "url", "config", "configs", "csu", "transactional", "ksql", "KSQL", "stdin",
-		"connect", "connect-catalog", "JSON", "plaintext", "json", "YAML", "yaml", "SSO", "netrc", "single-zone", "multi-zone",
+		"connect", "connect-catalog", "AVRO", "JSON", "PROTOBUF", "plaintext", "json", "YAML", "yaml", "SSO", "netrc", "single-zone", "multi-zone",
 		// security
 		"iam", "acl", "acls", "ACL", "rolebinding", "rolebindings", "PEM", "auth", "init", "decrypt", "READWRITE",
 		"txt", // this is because @file.txt -> file txt
@@ -85,6 +81,10 @@ var rules = []linter.Rule{
 		linter.ExcludeCommand("api-key store <apikey> <secret>"),
 		// skip for rolebindings since they don't have names/IDs
 		linter.ExcludeCommandContains("iam rolebinding"),
+		// skip for register command since they don't have names/IDs
+		linter.ExcludeCommandContains("cluster register"),
+		// skip for unregister command since they don't have names/IDs
+		linter.ExcludeCommandContains("cluster unregister"),
 		// skip secret commands
 		linter.ExcludeCommandContains("secret"),
 		// skip schema-registry commands which do not use names/ID's
@@ -101,6 +101,7 @@ var rules = []linter.Rule{
 		linter.ExcludeCommand("config context current"),
 		linter.ExcludeCommandContains("config context get"),
 		linter.ExcludeCommandContains("config context set"),
+		linter.ExcludeCommandContains("audit-log"),
 	),
 	// TODO: ensuring --cluster is optional DOES NOT actually ensure that the cluster context is used
 	linter.Filter(linter.RequireFlag("cluster", true), clusterScopedCommands...),
@@ -127,7 +128,8 @@ var rules = []linter.Rule{
 	linter.RequireCapitalizeProperNouns("Long", linter.SetDifferenceIgnoresCase(properNouns, cliNames)),
 	linter.Filter(linter.RequireNotTitleCase("Short", properNouns),
 		linter.ExcludeCommandContains("secret")),
-	linter.RequireRealWords("Use", '-'),
+	linter.Filter(linter.RequireRealWords("Use", '-'),
+		linter.ExcludeCommandContains("unregister")),
 }
 
 var flagRules = []linter.FlagRule{
@@ -168,12 +170,7 @@ func main() {
 
 	var issues *multierror.Error
 	for _, cliName := range cliNames {
-		cfg := v3.New(&config.Params{
-			CLIName:    cliName,
-			MetricSink: nil,
-			Logger:     log.New(),
-		})
-		cli, err := cmd.NewConfluentCommand(cliName, cfg, cfg.Logger, &version.Version{Binary: cliName}, mock.NewDummyAnalyticsMock(), pauth.NewNetrcHandler(""))
+		cli, err := cmd.NewConfluentCommand(cliName, true, &version.Version{Binary: cliName}, pauth.NewNetrcHandler(""))
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)

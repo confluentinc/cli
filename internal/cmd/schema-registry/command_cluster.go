@@ -12,7 +12,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -44,27 +43,26 @@ type clusterCommand struct {
 	srClient *srsdk.APIClient
 }
 
-func NewClusterCommand(config *v3.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient, logger *log.Logger) *cobra.Command {
+func NewClusterCommand(cliName string, prerunner pcmd.PreRunner, srClient *srsdk.APIClient, logger *log.Logger) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "cluster",
 			Short: "Manage Schema Registry cluster.",
-		},
-		config, prerunner)
+		}, prerunner)
 	clusterCmd := &clusterCommand{
 		AuthenticatedCLICommand: cliCmd,
 		srClient:                srClient,
 		logger:                  logger,
 	}
-	clusterCmd.init()
+	clusterCmd.init(cliName)
 	return clusterCmd.Command
 }
 
-func (c *clusterCommand) init() {
+func (c *clusterCommand) init(cliName string) {
 	createCmd := &cobra.Command{
 		Use:     "enable",
 		Short:   `Enable Schema Registry for this environment.`,
-		Example: FormatDescription(`{{.CLIName}} schema-registry cluster enable --cloud gcp --geo us`, c.Config.CLIName),
+		Example: FormatDescription(`{{.CLIName}} schema-registry cluster enable --cloud gcp --geo us`, cliName),
 		RunE:    c.enable,
 		Args:    cobra.NoArgs,
 	}
@@ -78,7 +76,7 @@ func (c *clusterCommand) init() {
 	describeCmd := &cobra.Command{
 		Use:     "describe",
 		Short:   `Describe the Schema Registry cluster for this environment.`,
-		Example: FormatDescription(`{{.CLIName}} schema-registry cluster describe`, c.Config.CLIName),
+		Example: FormatDescription(`{{.CLIName}} schema-registry cluster describe`, cliName),
 		RunE:    c.describe,
 		Args:    cobra.NoArgs,
 	}
@@ -92,7 +90,7 @@ func (c *clusterCommand) init() {
 
 ::
 		{{.CLIName}} schema-registry cluster update --compatibility=BACKWARD
-		{{.CLIName}} schema-registry cluster update --mode=READWRITE`, c.Config.CLIName),
+		{{.CLIName}} schema-registry cluster update --mode=READWRITE`, cliName),
 		RunE: c.update,
 		Args: cobra.NoArgs,
 	}

@@ -12,7 +12,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -67,13 +66,13 @@ type describeCommand struct {
 }
 
 // NewDescribeCommand returns the sub-command object for describing clusters through /v1/metadata/id
-func NewDescribeCommand(cfg *v3.Config, prerunner pcmd.PreRunner, client Metadata) *cobra.Command {
+func NewDescribeCommand(prerunner pcmd.PreRunner, client Metadata) *cobra.Command {
 	describeCmd := &describeCommand{
 		CLICommand: pcmd.NewAnonymousCLICommand(&cobra.Command{
 			Use:   "describe",
 			Short: "Describe a Confluent cluster.",
 			Args:  cobra.NoArgs,
-		}, cfg, prerunner),
+		}, prerunner),
 		client: client,
 	}
 	describeCmd.Flags().String("url", "", "URL to a Confluent cluster.")

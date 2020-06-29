@@ -7,9 +7,8 @@ package mock
 import (
 	sync "sync"
 
-	github_com_spf13_cobra "github.com/spf13/cobra"
-
 	github_com_confluentinc_cli_internal_pkg_analytics "github.com/confluentinc/cli/internal/pkg/analytics"
+	github_com_spf13_cobra "github.com/spf13/cobra"
 )
 
 // AnalyticsClient is a mock of Client interface

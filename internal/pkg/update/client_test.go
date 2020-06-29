@@ -193,7 +193,7 @@ func TestCheckForUpdates(t *testing.T) {
 			client: NewClient(&ClientParams{
 				Repository: &updateMock.Repository{
 					GetLatestBinaryVersionFunc: func(name string) (*version.Version, error) {
-						v1, _ := version.NewSemver("v1")
+						v1, _ := version.NewSemver("v2")
 						return v1, nil
 					},
 				},
@@ -214,7 +214,7 @@ func TestCheckForUpdates(t *testing.T) {
 			client: NewClient(&ClientParams{
 				Repository: &updateMock.Repository{
 					GetLatestBinaryVersionFunc: func(name string) (*version.Version, error) {
-						v1, _ := version.NewSemver("v1")
+						v1, _ := version.NewSemver("v2")
 						return v1, nil
 					},
 				},

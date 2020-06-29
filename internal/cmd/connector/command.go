@@ -11,7 +11,6 @@ import (
 	opv1 "github.com/confluentinc/cc-structs/operator/v1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -50,19 +49,19 @@ var (
 )
 
 // New returns the default command object for interacting with Connect.
-func New(prerunner pcmd.PreRunner, config *v3.Config) *cobra.Command {
+func New(cliName string, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &command{
 		AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(
 			&cobra.Command{
 				Use:   "connector",
 				Short: "Manage Kafka Connect.",
-			}, config, prerunner),
+			}, prerunner),
 	}
-	cmd.init()
+	cmd.init(cliName)
 	return cmd.Command
 }
 
-func (c *command) init() {
+func (c *command) init(cliName string) {
 	cmd := &cobra.Command{
 		Use:   "describe <id>",
 		Short: "Describe a connector.",
@@ -72,7 +71,7 @@ Describe connector and task level details of a connector in the current or speci
 ::
 
         {{.CLIName}} connector describe <id>
-        {{.CLIName}} connector describe <id> --cluster <cluster-id>		`, c.Config.CLIName),
+        {{.CLIName}} connector describe <id> --cluster <cluster-id>		`, cliName),
 		RunE: c.describe,
 		Args: cobra.ExactArgs(1),
 	}
@@ -90,7 +89,7 @@ List connectors in the current or specified Kafka cluster context.
 ::
 
         {{.CLIName}} connector list
-        {{.CLIName}} connector list --cluster <cluster-id>		`, c.Config.CLIName),
+        {{.CLIName}} connector list --cluster <cluster-id>		`, cliName),
 		RunE: c.list,
 		Args: cobra.NoArgs,
 	}
@@ -108,7 +107,7 @@ Create connector in the current or specified Kafka cluster context.
 ::
 
         {{.CLIName}} connector create --config <file>
-        {{.CLIName}} connector create --cluster <cluster-id> --config <file>		`, c.Config.CLIName),
+        {{.CLIName}} connector create --cluster <cluster-id> --config <file>		`, cliName),
 		RunE: c.create,
 		Args: cobra.NoArgs,
 	}
@@ -128,7 +127,7 @@ Delete connector in the current or specified Kafka cluster context.
 ::
 
         {{.CLIName}} connector delete <id>
-        {{.CLIName}} connector delete <id> --cluster <cluster-id>	`, c.Config.CLIName),
+        {{.CLIName}} connector delete <id> --cluster <cluster-id>	`, cliName),
 		RunE: c.delete,
 		Args: cobra.ExactArgs(1),
 	}
@@ -157,7 +156,7 @@ Pause connector in the current or specified Kafka cluster context.
 ::
 
         {{.CLIName}} connector pause <connector-id>
-        {{.CLIName}} connector pause <connector-id> --cluster <cluster-id>	`, c.Config.CLIName),
+        {{.CLIName}} connector pause <connector-id> --cluster <cluster-id>	`, cliName),
 		RunE: c.pause,
 		Args: cobra.ExactArgs(1),
 	}
@@ -174,7 +173,7 @@ Resume connector in the current or specified Kafka cluster context.
 ::
 
         {{.CLIName}} connector resume <id>
-        {{.CLIName}} connector resume <id> --cluster <cluster-id>	`, c.Config.CLIName),
+        {{.CLIName}} connector resume <id> --cluster <cluster-id>	`, cliName),
 		RunE: c.resume,
 		Args: cobra.ExactArgs(1),
 	}

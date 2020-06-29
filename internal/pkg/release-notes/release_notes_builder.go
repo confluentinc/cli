@@ -8,7 +8,7 @@ import (
 const (
 	newFeaturesSectionTitle = "New Features"
 	bugFixesSectionTitle    = "Bug Fixes"
-	noChangeContentFormat   = "No changes relating to %s CLI for this version."
+	noChangeContentFormat   = "No changes relating to %s for this version."
 	bulletPointFormat       = "  - %s"
 )
 
@@ -20,15 +20,18 @@ type ReleaseNotesBuilderParams struct {
 	cliDisplayName      string
 	titleFormat         string
 	sectionHeaderFormat string
-	version             string
 }
 
 type ReleaseNotesBuilderImpl struct {
 	*ReleaseNotesBuilderParams
+	version string
 }
 
-func NewReleaseNotesBuilder(params *ReleaseNotesBuilderParams) ReleaseNotesBuilder {
-	return &ReleaseNotesBuilderImpl{params}
+func NewReleaseNotesBuilder(version string, params *ReleaseNotesBuilderParams) ReleaseNotesBuilder {
+	return &ReleaseNotesBuilderImpl{
+		ReleaseNotesBuilderParams: params,
+		version:                   version,
+	}
 }
 
 func (b *ReleaseNotesBuilderImpl) buildReleaseNotes(content *ReleaseNotesContent) string {
@@ -63,6 +66,12 @@ func (b *ReleaseNotesBuilderImpl) assembleReleaseNotes(title string, newFeatures
 func (b *ReleaseNotesBuilderImpl) getReleaseNotesContent(newFeaturesSection string, bugFixesSection string) string {
 	if newFeaturesSection == "" && bugFixesSection == "" {
 		return fmt.Sprintf(noChangeContentFormat, b.cliDisplayName)
+	}
+	if newFeaturesSection == "" {
+		return bugFixesSection
+	}
+	if bugFixesSection == "" {
+		return newFeaturesSection
 	}
 	return newFeaturesSection + "\n\n" + bugFixesSection
 }
