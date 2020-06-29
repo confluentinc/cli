@@ -77,7 +77,10 @@ func NewRolebindingCommand(cliName string, prerunner cmd.PreRunner) *cobra.Comma
 			Short: "Manage RBAC and IAM role bindings.",
 			Long:  "Manage Role Based Access (RBAC) and Identity and Access Management (IAM) role bindings.",
 		}, prerunner)
-	roleBindingCmd := &rolebindingCommand{AuthenticatedCLICommand: cliCmd}
+	roleBindingCmd := &rolebindingCommand{
+		AuthenticatedCLICommand: cliCmd,
+		CLIName: cliName,
+	}
 	roleBindingCmd.init()
 	return roleBindingCmd.Command
 }
@@ -280,7 +283,7 @@ func (c *rolebindingCommand) parseAndValidateScopeV2(cmd *cobra.Command) (*mdsv2
 	cmd.Flags().Visit(func(flag *pflag.Flag) {
 		switch flag.Name {
 		case "cloud-cluster":
-			scopeV2.Clusters.KafkaCluster = flag.Value.String()
+			scopeV2.Path = append(scopeV2.Path, "cloud-cluster="+flag.Value.String())
 		case "environment":
 			env := flag.Value.String()
 			if env == "current" {
