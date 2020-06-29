@@ -31,7 +31,6 @@ func New(prerunner cmd.PreRunner) *cobra.Command {
 		}, prerunner)
 
 	c.AddCommand(NewCurrentCommand(prerunner))
-	c.AddCommand(NewDemoCommand(prerunner))
 	c.AddCommand(NewDestroyCommand(prerunner))
 	c.AddCommand(NewServicesCommand(prerunner))
 	c.AddCommand(NewVersionCommand(prerunner))

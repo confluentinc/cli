@@ -83,7 +83,6 @@ type ConfluentHome interface {
 
 	GetConnectorConfigFile(connector string) (string, error)
 	GetKafkaScript(mode, format string) (string, error)
-	ReadDemoReadme(demo string) (string, error)
 }
 
 type ConfluentHomeManager struct{}
@@ -270,20 +269,6 @@ func (ch *ConfluentHomeManager) GetKafkaScript(format, mode string) (string, err
 	}
 
 	return ch.GetFile("bin", script)
-}
-
-func (ch *ConfluentHomeManager) ReadDemoReadme(demo string) (string, error) {
-	readme, err := ch.GetFile("examples", demo, "README.md")
-	if err != nil {
-		return "", err
-	}
-
-	data, err := ioutil.ReadFile(readme)
-	if err != nil {
-		return "", err
-	}
-
-	return string(data), nil
 }
 
 func (ch *ConfluentHomeManager) isAboveVersion(targetVersion string) (bool, error) {
