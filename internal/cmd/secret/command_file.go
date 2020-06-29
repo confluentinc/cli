@@ -1,7 +1,6 @@
 package secret
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/confluentinc/go-printer"
@@ -368,10 +367,10 @@ func (c *secureFileCommand) getConfigs(cmd *cobra.Command, configSource string, 
 		switch err {
 		case pcmd.ErrNoValueSpecified:
 			cmd.SilenceUsage = true
-			return "", fmt.Errorf("Please enter " + inputType)
+			return "", errors.Errorf(errors.EnterInputTypeErrorMsg, inputType)
 		case pcmd.ErrNoPipe:
 			cmd.SilenceUsage = true
-			return "", fmt.Errorf("Please pipe your " + inputType + " over stdin.")
+			return "", errors.Errorf(errors.PipeInputTypeErrorMsg, inputType)
 		}
 		return "", err
 	}

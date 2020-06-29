@@ -110,9 +110,8 @@ func (c *roleCommand) describe(cmd *cobra.Command, args []string) error {
 			if err != nil {
 				return errors.HandleCommon(err, cmd)
 			}
-
-			cmd.SilenceUsage = true
-			return fmt.Errorf("Unknown role specified.  Role should be one of " + strings.Join(availableRoleNames, ", "))
+			suggestionsMsg :=  fmt.Sprintf(errors.UnknownRoleSuggestions, strings.Join(availableRoleNames, ","))
+			return errors.HandleCommon(errors.NewErrorWithSuggestions(fmt.Sprintf(errors.UnknownRoleErrorMsg, role), suggestionsMsg), cmd)
 		}
 
 		return errors.HandleCommon(err, cmd)

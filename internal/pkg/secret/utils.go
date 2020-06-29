@@ -2,7 +2,7 @@ package secret
 
 import (
 	"bytes"
-	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -48,7 +48,7 @@ func SaveConfiguration(path string, configuration *properties.Properties, addSec
 	case ".json":
 		return writeJSONConfig(path, configuration, addSecureConfig)
 	default:
-		return fmt.Errorf("The file format is currently not supported.")
+		return errors.Errorf(errors.UnsupportedFileFormatErrorMsg, path)
 	}
 }
 
@@ -84,7 +84,7 @@ func DoesPathExist(path string) bool {
 
 func LoadPropertiesFile(path string) (*properties.Properties, error) {
 	if !DoesPathExist(path) {
-		return nil, fmt.Errorf("Invalid file path.")
+		return nil, errors.Errorf(errors.InvalidFilePathErrorMsg, path)
 	}
 	loader := new(properties.Loader)
 	loader.Encoding = properties.UTF8
@@ -120,7 +120,7 @@ func addSecureConfigProviderProperty(property *properties.Properties) (*properti
 
 func LoadConfiguration(path string, configKeys []string, filter bool) (*properties.Properties, error) {
 	if !DoesPathExist(path) {
-		return nil, fmt.Errorf("Invalid file path.")
+		return nil, errors.Errorf(errors.InvalidFilePathErrorMsg, path)
 	}
 	fileType := filepath.Ext(path)
 	switch fileType {
@@ -129,7 +129,7 @@ func LoadConfiguration(path string, configKeys []string, filter bool) (*properti
 	case ".json":
 		return loadJSONConfig(path, configKeys)
 	default:
-		return nil, fmt.Errorf("The file format is currently not supported.")
+		return nil, errors.Errorf(errors.UnsupportedFileFormatErrorMsg, path)
 	}
 }
 
@@ -148,7 +148,7 @@ func filterProperties(configProps *properties.Properties, configKeys []string, f
 					return nil, err
 				}
 			} else {
-				return nil, fmt.Errorf("Configuration key " + key + " is not present in the configuration file.")
+				return nil, errors.Errorf(errors.ConfigKeyNotPresentErrorMsg, key)
 			}
 		}
 		return matchProps, nil
@@ -257,7 +257,7 @@ func LoadJSONFile(path string) (string, error) {
 
 	jsonConfig := string(jsonByteArr)
 	if !gjson.Valid(jsonConfig) {
-		return "", fmt.Errorf("Invalid json file format.")
+		return "", errors.New(errors.InvalidJSONFileFormatErrorMsg)
 	}
 
 	return jsonConfig, nil
@@ -281,7 +281,7 @@ func loadJSONConfig(path string, configKeys []string) (*properties.Properties, e
 				return nil, err
 			}
 		} else {
-			return nil, fmt.Errorf("Configuration key " + key + " is not present in JSON configuration file.")
+			return nil, errors.Errorf(errors.ConfigKeyNotInJSONErrorMsg, key)
 		}
 	}
 
@@ -338,7 +338,7 @@ func RemovePropertiesConfig(removeConfigs []string, path string) error {
 		} else {
 			_, ok := configProps.Get(key)
 			if !ok {
-				return fmt.Errorf("Configuration key " + key + " is not present in the configuration file.")
+				return errors.Errorf(errors.ConfigKeyNotPresentErrorMsg, key)
 			}
 			configProps.Delete(key)
 		}

@@ -105,7 +105,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	if len(args) == 0 {
-		return errors.HandleCommon(errors.ErrNoPluginName, cmd)
+		return errors.HandleCommon(errors.Errorf(errors.PluginNameNotPassedErrorMsg), cmd)
 	}
 	config := map[string]string{"connector.class": args[0]}
 
@@ -133,7 +133,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		}
 		return nil
 	}
-	return errors.HandleCommon(errors.ErrInvalidCloud, cmd)
+	return errors.HandleCommon(errors.Errorf(errors.InvalidCloudErrorMsg), cmd)
 }
 
 func FormatDescription(description string, cliName string) string {

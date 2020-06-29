@@ -155,7 +155,7 @@ func (r *PreRun) Anonymous(command *CLICommand) func(cmd *cobra.Command, args []
 				if err != nil {
 					return err
 				}
-				ErrPrintln(cmd, "Your token has expired. You are now logged out.")
+				ErrPrintln(cmd, errors.TokenExpiredMsg)
 				analyticsError := r.Analytics.SessionTimedOut()
 				if analyticsError != nil {
 					r.Logger.Debug(analyticsError.Error())
@@ -195,7 +195,7 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 			return errors.HandleCommon(err, cmd)
 		}
 		if ctx == nil {
-			return errors.HandleCommon(errors.ErrNoContext, cmd)
+			return errors.HandleCommon(&errors.NoContextError{CLIName:r.CLIName}, cmd)
 		}
 		command.Context = ctx
 		command.State, err = ctx.AuthenticatedState(cmd)
@@ -225,10 +225,10 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd
 			return errors.HandleCommon(err, cmd)
 		}
 		if ctx == nil {
-			return errors.HandleCommon(errors.ErrNoContext, cmd)
+			return errors.HandleCommon(&errors.NoContextError{CLIName:r.CLIName}, cmd)
 		}
 		if !ctx.HasMDSLogin() {
-			return errors.HandleCommon(errors.ErrNotLoggedIn, cmd)
+			return errors.HandleCommon(&errors.NotLoggedInError{CLIName:r.CLIName}, cmd)
 		}
 		command.Context = ctx
 		command.State = ctx.State
@@ -251,7 +251,7 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 			return errors.HandleCommon(err, cmd)
 		}
 		if ctx == nil {
-			return errors.HandleCommon(errors.ErrNoContext, cmd)
+			return errors.HandleCommon(&errors.NoContextError{CLIName:r.CLIName}, cmd)
 		}
 		command.Context = ctx
 		var clusterId string
@@ -327,11 +327,10 @@ func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, name string, curren
 		return nil
 	}
 	if updateAvailable {
-		msg := "Updates are available for %s from (current: %s, latest: %s).\nTo view release notes and install them, please run:\n$ %s update\n\n"
 		if !strings.HasPrefix(latestVersion, "v") {
 			latestVersion = "v" + latestVersion
 		}
-		ErrPrintf(cmd, msg, name, currentVersion, latestVersion, name)
+		ErrPrintln(cmd, errors.NotifyUpdateMsg, name, currentVersion, latestVersion, name)
 	}
 	return nil
 }
@@ -342,8 +341,7 @@ func isUpdateCommand(cmd *cobra.Command) bool {
 
 func (r *PreRun) warnIfConfluentLocal(cmd *cobra.Command) {
 	if strings.HasPrefix(cmd.CommandPath(), "confluent local-v2") {
-		cmd.PrintErrln("The local commands are intended for a single-node development environment only,")
-		cmd.PrintErrln("NOT for production usage. https://docs.confluent.io/current/cli/index.html")
+		cmd.PrintErrln(errors.LocalCommandDevOnlyMsg)
 		cmd.PrintErrln()
 	}
 }
@@ -431,7 +429,7 @@ func (r *PreRun) validateToken(cmd *cobra.Command, ctx *DynamicContext) error {
 	}
 	exp, ok := claims["exp"].(float64)
 	if !ok {
-		return r.updateToken(errors.New("Malformed JWT claims: no expiration."), ctx)
+		return r.updateToken(errors.New(errors.MalformedJWTNoExprErrorMsg), ctx)
 	}
 	if float64(r.Clock.Now().Unix()) > exp {
 		r.Logger.Debug("Token expired.")

@@ -8,6 +8,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var (
+	wantSuggestionsMsgFormat =`
+Suggestions:
+    %s
+`
+)
+
 func TestSuggestionsMessage(t *testing.T) {
 	errorMessage := "im an error hi"
 	suggestionsMessage := "This is a suggestion"
@@ -15,7 +22,7 @@ func TestSuggestionsMessage(t *testing.T) {
 	var b bytes.Buffer
 	DisplaySuggestionsMessage(err, &b)
 	out := b.String()
-	wantDirectionsOutput := fmt.Sprintf(suggestionsMessageFormat, suggestionsMessage)
-	require.Equal(t, wantDirectionsOutput, out)
+	wantSuggestionsMsg := fmt.Sprintf(wantSuggestionsMsgFormat, suggestionsMessage)
+	require.Equal(t, wantSuggestionsMsg, out)
 }
 

@@ -88,9 +88,9 @@ func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
 	bindings, response, err := c.MDSClient.KafkaACLManagementApi.SearchAclBinding(c.createContext(), convertToAclFilterRequest(acl.CreateAclRequest))
 
 	if err != nil {
-		return c.handleAclError(cmd, err, response)
+		return errors.HandleCommon(c.handleAclError(cmd, err, response), cmd)
 	}
-	return PrintAcls(cmd, acl.Scope.Clusters.KafkaCluster, bindings)
+	return errors.HandleCommon(PrintAcls(cmd, acl.Scope.Clusters.KafkaCluster, bindings), cmd)
 }
 
 func (c *aclCommand) create(cmd *cobra.Command, args []string) error {
@@ -103,7 +103,7 @@ func (c *aclCommand) create(cmd *cobra.Command, args []string) error {
 	response, err := c.MDSClient.KafkaACLManagementApi.AddAclBinding(c.createContext(), *acl.CreateAclRequest)
 
 	if err != nil {
-		return c.handleAclError(cmd, err, response)
+		return errors.HandleCommon(c.handleAclError(cmd, err, response), cmd)
 	}
 
 	return nil
@@ -119,7 +119,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, args []string) error {
 	bindings, response, err := c.MDSClient.KafkaACLManagementApi.RemoveAclBindings(c.createContext(), convertToAclFilterRequest(acl.CreateAclRequest))
 
 	if err != nil {
-		return c.handleAclError(cmd, err, response)
+		return errors.HandleCommon(c.handleAclError(cmd, err, response), cmd)
 	}
 
 	return PrintAcls(cmd, acl.Scope.Clusters.KafkaCluster, bindings)
@@ -128,9 +128,9 @@ func (c *aclCommand) delete(cmd *cobra.Command, args []string) error {
 func (c *aclCommand) handleAclError(cmd *cobra.Command, err error, response *http.Response) error {
 	if response != nil && response.StatusCode == http.StatusNotFound {
 		cmd.SilenceUsage = true
-		return fmt.Errorf("Unable to %s ACLs (%s). Ensure that you're running against MDS with CP 5.4+.", cmd.Name(), err.Error())
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.UnableToPerformAclErrorMsg, cmd.Name(), err.Error()), errors.UnableToPerformAclSuggestions)
 	}
-	return errors.HandleCommon(err, cmd)
+	return err
 }
 
 // validateAclAddDelete ensures the minimum requirements for acl add/delete is met
@@ -139,7 +139,7 @@ func validateAclAddDelete(aclConfiguration *ACLConfiguration) *ACLConfiguration 
 	// deletion of too many acls at once. Expectation is that multi delete will be done via
 	// repeated invocation of the cli by external scripts.
 	if aclConfiguration.AclBinding.Entry.PermissionType == "" {
-		aclConfiguration.errors = multierror.Append(aclConfiguration.errors, fmt.Errorf("--allow or --deny must be set when adding or deleting an ACL"))
+		aclConfiguration.errors = multierror.Append(aclConfiguration.errors, errors.Errorf(errors.MustSetAllowOrDenyErrorMsg))
 	}
 
 	if aclConfiguration.AclBinding.Pattern.PatternType == "" {
@@ -147,7 +147,7 @@ func validateAclAddDelete(aclConfiguration *ACLConfiguration) *ACLConfiguration 
 	}
 
 	if aclConfiguration.AclBinding.Pattern.ResourceType == "" {
-		aclConfiguration.errors = multierror.Append(aclConfiguration.errors, fmt.Errorf("exactly one of %v must be set",
+		aclConfiguration.errors = multierror.Append(aclConfiguration.errors, errors.Errorf(errors.MustSetResourceTypeErrorMsg,
 			convertToFlags(mds.ACLRESOURCETYPE_TOPIC, mds.ACLRESOURCETYPE_GROUP,
 				mds.ACLRESOURCETYPE_CLUSTER, mds.ACLRESOURCETYPE_TRANSACTIONAL_ID)))
 	}
@@ -205,7 +205,7 @@ func PrintAcls(cmd *cobra.Command, kafkaClusterId string, bindingsObj []mds.AclB
 	var fields = []string{"KafkaClusterId", "Principal", "Permission", "Operation", "Host", "Resource", "Name", "Type"}
 	var structuredRenames = []string{"kafka_cluster_id", "principal", "permission", "operation", "host", "resource", "name", "type"}
 
-	// delete also uses this function but doesn't have -o flag defined, -o flag is needed NewListOutputWriter
+	// delete also uses this function but doesn't have -o flag defined, -o flag is needed for NewListOutputWriter initializers
 	_, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
 		cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)

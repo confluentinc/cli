@@ -165,7 +165,7 @@ func (c *promptCommand) prompt(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		di, err := strconv.Atoi(t)
 		if err != nil {
-			return fmt.Errorf(`invalid argument "%s" for "-t, --timeout" flag: unable to parse %s as duration or milliseconds`, t, t)
+			return fmt.Errorf(errors.ParseTimeOutErrorMsg, t, t)
 		}
 		timeout = time.Duration(di) * time.Millisecond
 	}
@@ -188,7 +188,7 @@ func (c *promptCommand) prompt(cmd *cobra.Command, args []string) error {
 		pcmd.Println(cmd, prompt)
 	case err := <-errCh:
 		c.Command.SilenceUsage = true
-		return errors.Wrapf(err, `error parsing prompt format string "%s"`, format)
+		return errors.Wrapf(err, errors.ParsePromptFormatErrorMsg, format)
 	case <-time.After(timeout):
 		// log the timeout and just print nothing
 		c.logger.Warnf("timed out after %s", timeout)

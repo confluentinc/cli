@@ -19,8 +19,8 @@ func TestHandleError(t *testing.T) {
 	}{
 		{
 			name:    "static message",
-			err:     ErrNotLoggedIn,
-			want:    UserNotLoggedInErrMsg,
+			err:     &NotLoggedInError{},
+			want:    NotLoggedInErrorMsg,
 			wantErr: true,
 		},
 		{

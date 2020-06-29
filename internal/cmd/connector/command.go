@@ -253,7 +253,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	}
 	trace := connectorExpansion.Status.Connector.Trace
 	if outputFormat == output.Human.String() {
-		pcmd.Printf(cmd, "Created connector %s %s\n", connector.Name, connectorExpansion.Id.Id)
+		pcmd.Println(cmd, errors.CreatedConnectorMsg, connector.Name, connectorExpansion.Id.Id)
 		if trace != "" {
 			pcmd.Printf(cmd, "Error Trace: %s\n", trace)
 		}
@@ -289,7 +289,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	pcmd.Println(cmd, "Updated connector "+args[0])
+	pcmd.Println(cmd, errors.UpdatedConnectorMsg, args[0])
 	return nil
 }
 
@@ -306,7 +306,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	pcmd.Println(cmd, "Successfully deleted connector")
+	pcmd.Println(cmd, errors.DeletedConnectorMsg, args[0])
 	return nil
 }
 
@@ -323,7 +323,7 @@ func (c *command) pause(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	pcmd.Println(cmd, "Successfully paused connector")
+	pcmd.Println(cmd, errors.PausedConnectorMsg, args[0])
 	return nil
 }
 
@@ -340,7 +340,7 @@ func (c *command) resume(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	pcmd.Println(cmd, "Successfully resumed connector")
+	pcmd.Println(cmd, errors.ResumedConnectorMsg, args[0])
 	return nil
 }
 

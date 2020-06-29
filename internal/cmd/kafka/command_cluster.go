@@ -224,19 +224,19 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	if encryptionKeyID != "" {
-		accounts := getAccountsForCloud(cloud, clouds)
+		accounts := getEnvironmentsForCloud(cloud, clouds)
 		accountsStr := strings.Join(accounts, ", ")
-		msg := fmt.Sprintf("Please confirm you've authorized the key for these accounts %s", accountsStr)
+		msg := fmt.Sprintf(errors.ConfirmAuthorizedKeyMsg, accountsStr)
 		ok, err := confirm.Do(
 			stdout,
 			stdin,
 			msg,
 		)
 		if err != nil {
-			return errors.HandleCommon(errors.New("Failed to read your confirmation"), cmd)
+			return errors.HandleCommon(errors.Wrapf(err, errors.FailedToReadConfirmationErrorMsg), cmd)
 		}
 		if !ok {
-			return errors.HandleCommon(errors.New("Please authorize the accounts for the key"), cmd)
+			return errors.HandleCommon(errors.Errorf(errors.AuthorizeAccountsErrorMsg, accountsStr), cmd)
 		}
 	}
 
@@ -255,10 +255,10 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 			return errors.HandleCommon(err, cmd)
 		}
 		if sku != productv1.Sku_DEDICATED {
-			return errors.New("specifying --cku is valid only for dedicated Kafka cluster creation")
+			return errors.HandleCommon(errors.New(errors.CKUOnlyForDedicatedErrorMsg), cmd)
 		}
 		if cku <= 0 {
-			return errors.HandleCommon(errors.New("--cku should be passed with value greater than 0"), cmd)
+			return errors.HandleCommon(errors.New(errors.CKUMoreThanZeroErrorMsg), cmd)
 		}
 		cfg.Cku = int32(cku)
 	}
@@ -277,7 +277,8 @@ func stringToAvailability(s string) (schedv1.Durability, error) {
 	} else if s == multiZone {
 		return schedv1.Durability_HIGH, nil
 	}
-	return schedv1.Durability_LOW, fmt.Errorf("Only allowed values for --availability are: %s, %s.", singleZone, multiZone)
+	return schedv1.Durability_LOW, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidAvailableFlagErrorMsg, s),
+		fmt.Sprintf(errors.InvalidAvailableFlagSuggesions, singleZone, multiZone))
 }
 
 func stringToSku(s string) (productv1.Sku, error) {
@@ -286,7 +287,8 @@ func stringToSku(s string) (productv1.Sku, error) {
 	case productv1.Sku_BASIC, productv1.Sku_STANDARD, productv1.Sku_DEDICATED:
 		break
 	default:
-		return productv1.Sku_UNKNOWN, fmt.Errorf("Only allowed values for --type are: %s, %s, %s.", skuBasic, skuStandard, skuDedicated)
+		return productv1.Sku_UNKNOWN, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidTypeFlagErrorMsg, s),
+			fmt.Sprintf(errors.InvalidTypeFlagSuggestions, skuBasic, skuStandard, skuDedicated))
 	}
 	return sku, nil
 }
@@ -302,7 +304,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 
 func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 	if !cmd.Flags().Changed("name") && !cmd.Flags().Changed("cku") {
-		return errors.HandleCommon(errors.New("Must either specify --name with non-empty value or --cku (for dedicated clusters) with positive integer when updating a cluster."), cmd)
+		return errors.HandleCommon(errors.New(errors.NameOrCKUFlagErrorMsg), cmd)
 	}
 	req := &schedv1.KafkaCluster{
 		AccountId: c.EnvironmentId(),
@@ -314,7 +316,7 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 			return errors.HandleCommon(err, cmd)
 		}
 		if name == "" {
-			return errors.HandleCommon(errors.New("must specify --name with non-empty value"), cmd)
+			return errors.HandleCommon(errors.New(errors.NonEmptyNameErrorMsg), cmd)
 		}
 		req.Name = name
 	} else {
@@ -330,7 +332,7 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 			return errors.HandleCommon(err, cmd)
 		}
 		if cku <= 0 {
-			return errors.HandleCommon(errors.New("--cku should be passed with value greater than 0"), cmd)
+			return errors.HandleCommon(errors.New(errors.CKUMoreThanZeroErrorMsg), cmd)
 		}
 		req.Cku = int32(cku)
 	}
@@ -347,7 +349,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(errors.CatchKafkaNotFoundError(err, args[0]), cmd)
 	}
-	pcmd.Printf(cmd, errors.KafkaClusterDeletedWarningMsg, args[0])
+	pcmd.Println(cmd, errors.KafkaClusterDeletedMsg, args[0])
 	return nil
 }
 
@@ -388,7 +390,7 @@ func checkCloudAndRegion(cloudId string, regionId string, clouds []*schedv1.Clou
 		errors.CloudProviderNotAvailableSuggestions)
 }
 
-func getAccountsForCloud(cloudId string, clouds []*schedv1.CloudMetadata) []string {
+func getEnvironmentsForCloud(cloudId string, clouds []*schedv1.CloudMetadata) []string {
 	var accounts []string
 	for _, cloud := range clouds {
 		if cloudId == cloud.Id {

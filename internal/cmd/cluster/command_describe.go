@@ -101,7 +101,7 @@ func (s *ScopedIdService) DescribeCluster(ctx context.Context, url string) (*Sco
 		return nil, err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unable to fetch cluster metadata: %s - %s", resp.Status, body)
+		return nil, errors.Errorf(errors.FetchClusterMetadataErrorMsg, resp.Status, body)
 	}
 	meta := &ScopedId{}
 	err = json.Unmarshal(body, meta)

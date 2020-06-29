@@ -57,7 +57,7 @@ type NetrcHandler struct {
 func (n *NetrcHandler) WriteNetrcCredentials(cliName string, isSSO bool, ctxName string, username string, password string) error {
 	filename, err := homedir.Expand(n.FileName)
 	if err != nil {
-		return errors.Wrapf(err, errors.ResolvingFilepathErrorMsg, filename)
+		return errors.Wrapf(err, errors.ResolvingNetrcFilepathErrorMsg, filename)
 	}
 
 	netrcFile, err := getOrCreateNetrc(filename)
@@ -89,7 +89,7 @@ func (n *NetrcHandler) WriteNetrcCredentials(cliName string, isSSO bool, ctxName
 func (n *NetrcHandler) getNetrcCredentials(cliName string, isSSO bool, ctxName string) (username string, password string, err error) {
 	filename, err := homedir.Expand(n.FileName)
 	if err != nil {
-		return "", "", errors.Wrapf(err, errors.ResolvingFilepathErrorMsg, filename)
+		return "", "", errors.Wrapf(err, errors.ResolvingNetrcFilepathErrorMsg, filename)
 	}
 	machineName := getNetrcMachineName(cliName, isSSO, ctxName)
 	machine, err := netrc.FindMachine(filename, machineName)
@@ -97,7 +97,7 @@ func (n *NetrcHandler) getNetrcCredentials(cliName string, isSSO bool, ctxName s
 		return "", "", errors.Wrapf(err, errors.GetNetrcCredentialsErrorMsg, filename)
 	}
 	if machine == nil {
-		return "", "", errors.Errorf(errors.CredentialsNotFoundErrorMsg, filename)
+		return "", "", errors.Errorf(errors.NetrcCredentialsNotFoundErrorMsg, filename)
 	}
 	return machine.Login, machine.Password, nil
 }
@@ -122,7 +122,7 @@ func getOrCreateNetrc(filename string) (*netrc.Netrc, error) {
 		if os.IsNotExist(err) {
 			_, err = os.OpenFile(filename, os.O_CREATE, 0600)
 			if err != nil {
-				return nil, errors.Wrapf(err, errors.CreateFileErrorMsg, filename)
+				return nil, errors.Wrapf(err, errors.CreateNetrcFileErrorMsg, filename)
 			}
 			n, err = netrc.ParseFile(filename)
 			if err != nil {

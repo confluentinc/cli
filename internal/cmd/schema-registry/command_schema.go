@@ -123,24 +123,24 @@ Describe the schema by both subject and version
 func (c *schemaCommand) create(cmd *cobra.Command, args []string) error {
 	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, cmd)
 	}
 	subject, err := cmd.Flags().GetString("subject")
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, cmd)
 	}
 	schemaPath, err := cmd.Flags().GetString("schema")
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, cmd)
 	}
 	schemaType, err := cmd.Flags().GetString("type")
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, cmd)
 	}
 
 	schema, err := ioutil.ReadFile(schemaPath)
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, cmd)
 	}
 
 	var refs []srsdk.SchemaReference
@@ -150,11 +150,11 @@ func (c *schemaCommand) create(cmd *cobra.Command, args []string) error {
 	} else if refPath != "" {
 		refBlob, err := ioutil.ReadFile(refPath)
 		if err != nil {
-			return err
+			return errors.HandleCommon(err, cmd)
 		}
 		err = json.Unmarshal(refBlob, &refs)
 		if err != nil {
-			return err
+			return errors.HandleCommon(err, cmd)
 		}
 	}
 
@@ -167,11 +167,12 @@ func (c *schemaCommand) create(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	if outputFormat == output.Human.String() {
-		pcmd.Printf(cmd, "Successfully registered schema with ID: %v \n", response.Id)
+		pcmd.Println(cmd, errors.RegisteredSchemaMsg, response.Id)
 	} else {
-		return output.StructuredOutput(outputFormat, &struct {
+		err = output.StructuredOutput(outputFormat, &struct {
 			Id int32 `json:"id" yaml:"id"`
 		}{response.Id})
+		return errors.HandleCommon(err, cmd)
 	}
 	return nil
 }
@@ -179,30 +180,30 @@ func (c *schemaCommand) create(cmd *cobra.Command, args []string) error {
 func (c *schemaCommand) delete(cmd *cobra.Command, args []string) error {
 	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, cmd)
 	}
 	subject, err := cmd.Flags().GetString("subject")
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, cmd)
 	}
 	version, err := cmd.Flags().GetString("version")
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, cmd)
 	}
 	if version == "all" {
 		versions, _, err := srClient.DefaultApi.DeleteSubject(ctx, subject)
 		if err != nil {
-			return err
+			return errors.HandleCommon(err, cmd)
 		}
-		pcmd.Println(cmd, "Successfully deleted all versions for subject")
+		pcmd.Println(cmd, errors.DeletedAllSubjectVersionMsg)
 		PrintVersions(versions)
 		return nil
 	} else {
 		versionResult, _, err := srClient.DefaultApi.DeleteSchemaVersion(ctx, subject, version)
 		if err != nil {
-			return err
+			return errors.HandleCommon(err, cmd)
 		}
-		pcmd.Println(cmd, "Successfully deleted version for subject")
+		pcmd.Println(cmd, errors.DeletedSubjectVersionMsg, version)
 		PrintVersions([]int32{versionResult})
 		return nil
 	}
@@ -211,27 +212,27 @@ func (c *schemaCommand) delete(cmd *cobra.Command, args []string) error {
 func (c *schemaCommand) preDescribe(cmd *cobra.Command, args []string) error {
 	subject, err := cmd.Flags().GetString("subject")
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, cmd)
 	}
 
 	version, err := cmd.Flags().GetString("version")
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, cmd)
 	}
 
 	if len(args) > 0 && (subject != "" || version != "") {
-		return fmt.Errorf("Cannot specify both schema ID and subject/version")
+		return errors.HandleCommon(errors.New(errors.BothSchemaAndSubjectErrorMsg), cmd)
 	} else if len(args) == 0 && (subject == "" || version == "") {
-		return fmt.Errorf("Must specify either schema ID or subject and version")
+		return errors.HandleCommon(errors.New(errors.SchemaOrSubjectErrorMsg), cmd)
 	}
 	return nil
 }
 
 func (c *schemaCommand) describe(cmd *cobra.Command, args []string) error {
 	if len(args) > 0 {
-		return c.describeById(cmd, args)
+		return errors.HandleCommon(c.describeById(cmd, args), cmd)
 	} else {
-		return c.describeBySubject(cmd, args)
+		return errors.HandleCommon(c.describeBySubject(cmd, args), cmd)
 	}
 }
 
@@ -242,7 +243,7 @@ func (c *schemaCommand) describeById(cmd *cobra.Command, args []string) error {
 	}
 	schema, err := strconv.Atoi(args[0])
 	if err != nil {
-		return fmt.Errorf("unexpected argument: Must be an integer Schema ID")
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.SchemaIntegerErrorMsg, args[0]), errors.SchemaIntegerSuggestions)
 	}
 	schemaString, _, err := srClient.DefaultApi.GetSchema(ctx, int32(schema), nil)
 	if err != nil {

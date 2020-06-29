@@ -146,7 +146,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	return output.DescribeObject(cmd, user, describeFields, describeHumanRenames, describeStructuredRenames)
+	return errors.HandleCommon(output.DescribeObject(cmd, user, describeFields, describeHumanRenames, describeStructuredRenames), cmd)
 }
 
 func (c *command) update(cmd *cobra.Command, args []string) error {
@@ -206,5 +206,5 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	for _, u := range users {
 		outputWriter.AddElement(u)
 	}
-	return outputWriter.Out()
+	return errors.HandleCommon(outputWriter.Out(), cmd)
 }

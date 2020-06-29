@@ -231,7 +231,7 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 	if mode != "" {
 		return c.updateMode(cmd, args)
 	}
-	return errors.New("flag --compatibility or --mode is required.")
+	return errors.HandleCommon(errors.New(errors.CompatibilityOrModeErrorMsg), cmd)
 }
 func (c *clusterCommand) updateCompatibility(cmd *cobra.Command, args []string) error {
 	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
@@ -247,7 +247,7 @@ func (c *clusterCommand) updateCompatibility(cmd *cobra.Command, args []string) 
 	if err != nil {
 		return err
 	}
-	pcmd.Printf(cmd, "Successfully updated Top Level compatibilty: %s \n", updateReq.Compatibility)
+	pcmd.Println(cmd, errors.UpdatedToLevelCompatibilityMsg, updateReq.Compatibility)
 	return nil
 }
 
@@ -264,6 +264,6 @@ func (c *clusterCommand) updateMode(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	pcmd.Printf(cmd, "Successfully updated Top Level mode: %s \n", modeUpdate.Mode)
+	pcmd.Printf(cmd, errors.UpdatedTopLevelModeMsg, modeUpdate.Mode)
 	return nil
 }

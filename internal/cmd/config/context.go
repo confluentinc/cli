@@ -185,7 +185,7 @@ func (c *contextCommand) context(cmd *cobra.Command, args []string) (*pcmd.Dynam
 	} else {
 		context, err = c.Config.Context(cmd)
 		if context == nil {
-			err = errors.ErrNoContext
+			err = &errors.NoContextError{CLIName:c.Config.CLIName}
 		}
 	}
 	if err != nil {

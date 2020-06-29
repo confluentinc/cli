@@ -62,6 +62,7 @@ func (c *Config) Load() error {
 	if err != nil {
 		return err
 	}
+	c.Filename = filename
 	input, err := ioutil.ReadFile(filename)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -83,10 +84,10 @@ func (c *Config) Load() error {
 			return errors.New("one of the existing contexts has no name")
 		}
 		if context.CredentialName == "" {
-			return &errors.UnspecifiedCredentialError{ContextName: context.Name}
+			return errors.NewCorruptedConfigError(errors.UnspecifiedCredentialErrorMsg, context.Name, c.CLIName, c.Filename)
 		}
 		if context.PlatformName == "" {
-			return &errors.UnspecifiedPlatformError{ContextName: context.Name}
+			return errors.NewCorruptedConfigError(errors.UnspecifiedPlatformErrorMsg, context.Name, c.CLIName, c.Filename)
 		}
 		context.State = c.ContextStates[context.Name]
 		context.Credential = c.Credentials[context.CredentialName]
@@ -145,11 +146,11 @@ func (c *Config) Validate() error {
 		}
 		if _, ok := c.Credentials[context.CredentialName]; !ok {
 			c.Logger.Trace("unspecified credential error")
-			return &errors.UnspecifiedCredentialError{ContextName: context.Name}
+			return errors.NewCorruptedConfigError(errors.UnspecifiedCredentialErrorMsg, context.Name, c.CLIName, c.Filename)
 		}
 		if _, ok := c.Platforms[context.PlatformName]; !ok {
 			c.Logger.Trace("unspecified platform error")
-			return &errors.UnspecifiedPlatformError{ContextName: context.Name}
+			return errors.NewCorruptedConfigError(errors.UnspecifiedPlatformErrorMsg, context.Name, c.CLIName, c.Filename)
 		}
 		if _, ok := c.ContextStates[context.Name]; !ok {
 			c.ContextStates[context.Name] = new(ContextState)

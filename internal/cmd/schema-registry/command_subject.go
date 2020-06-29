@@ -98,7 +98,7 @@ func (c *subjectCommand) update(cmd *cobra.Command, args []string) error {
 	if mode != "" {
 		return c.updateMode(cmd, args)
 	}
-	return errors.New("flag --compatibility or --mode is required.")
+	return errors.New(errors.CompatibilityOrModeErrorMsg)
 }
 func (c *subjectCommand) updateCompatibility(cmd *cobra.Command, args []string) error {
 	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
@@ -114,7 +114,7 @@ func (c *subjectCommand) updateCompatibility(cmd *cobra.Command, args []string) 
 	if err != nil {
 		return err
 	}
-	pcmd.Println(cmd, "Successfully updated")
+	pcmd.Println(cmd, errors.UpdatedSubjectLevelCompatibilityMsg, compat, args[0])
 	return nil
 }
 
@@ -131,7 +131,7 @@ func (c *subjectCommand) updateMode(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	pcmd.Println(cmd, "Successfully updated Subject level Mode: "+updatedMode.Mode)
+	pcmd.Println(cmd, errors.UpdatedSubjectLevelModeMsg, updatedMode, args[0])
 	return nil
 }
 
@@ -160,7 +160,7 @@ func (c *subjectCommand) list(cmd *cobra.Command, args []string) error {
 		}
 		return outputWriter.Out()
 	} else {
-		pcmd.Println(cmd, "No subjects")
+		pcmd.Println(cmd, errors.NoSubjectsMsg)
 	}
 	return nil
 }

@@ -2,6 +2,7 @@ package auth
 
 import (
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	"github.com/spf13/cobra"
@@ -54,6 +55,6 @@ func (a *logoutCommand) logout(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	pcmd.Println(cmd, "You are now logged out")
+	pcmd.Println(cmd, errors.LoggedOutMsg)
 	return nil
 }

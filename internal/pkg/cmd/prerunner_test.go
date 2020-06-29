@@ -365,12 +365,12 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 		{
 			name:   "not logged in user",
 			config: userNotLoggedIn,
-			errMsg: errors.UserNotLoggedInErrMsg,
+			errMsg: errors.NotLoggedInErrorMsg,
 		},
 		{
 			name:   "username context corrupted auth token",
 			config: userNameCfgCorruptedAuthToken,
-			errMsg: errors.CorruptedAuthTokenErrorMsg,
+			errMsg: errors.CorruptedTokenErrorMsg,
 		},
 		{
 			name:   "api credential context",

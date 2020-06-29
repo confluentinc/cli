@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"sort"
 	"strings"
 
@@ -181,5 +182,5 @@ func getAclOperation(operation string) (schedv1.ACLOperations_ACLOperation, erro
 	if operation, ok := schedv1.ACLOperations_ACLOperation_value[op]; ok {
 		return schedv1.ACLOperations_ACLOperation(operation), nil
 	}
-	return schedv1.ACLOperations_UNKNOWN, fmt.Errorf("Invalid operation value: %s", op)
+	return schedv1.ACLOperations_UNKNOWN, fmt.Errorf(errors.InvalidOperationValueErrorMsg, op)
 }

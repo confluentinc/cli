@@ -326,7 +326,7 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		return errors.HandleCommon(err, cmd)
 	}
 
-	pcmd.ErrPrintln(cmd, "Starting Kafka Producer. ^C or ^D to exit")
+	pcmd.ErrPrintln(cmd, errors.StartingProducerMsg)
 
 	InitSarama(h.logger)
 	producer, err := NewSaramaProducer(cluster, h.clientID)
@@ -386,7 +386,7 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 				close(input)
 				break
 			}
-			pcmd.ErrPrintf(cmd, "Failed to produce offset %d: %s\n", offset, err)
+			pcmd.ErrPrintf(cmd, errors.FailedToProduceErrorMsg, offset, err)
 		}
 
 		// Reset key prior to reuse
@@ -426,7 +426,7 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	signal.Notify(signals, os.Interrupt)
 	go func() {
 		<-signals
-		pcmd.ErrPrintln(cmd, "Stopping Consumer.")
+		pcmd.ErrPrintln(cmd, errors.StoppingConsumer)
 		consumer.Close()
 	}()
 
@@ -436,7 +436,7 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		}
 	}()
 
-	pcmd.ErrPrintln(cmd, "Starting Kafka Consumer. ^C to exit")
+	pcmd.ErrPrintln(cmd, errors.StartingConsumerMsg)
 
 	err = consumer.Consume(context.Background(), []string{topic}, &GroupHandler{Out: cmd.OutOrStdout()})
 	_, err = errors.CatchTopicNotExistError(err, topic, cluster.ID)
@@ -448,7 +448,7 @@ func toMap(configs []string) (map[string]string, error) {
 	for _, cfg := range configs {
 		pair := strings.SplitN(cfg, "=", 2)
 		if len(pair) < 2 {
-			return nil, fmt.Errorf("The configuration must be in the form of key=value")
+			return nil, fmt.Errorf(errors.ConfigurationFormErrorMsg)
 		}
 		configMap[pair[0]] = pair[1]
 	}

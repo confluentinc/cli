@@ -92,17 +92,16 @@ func (c *command) init() {
 func (c *command) update(cmd *cobra.Command, args []string) error {
 	updateYes, err := cmd.Flags().GetBool("yes")
 	if err != nil {
-		return errors.Wrap(err, "error reading --yes as bool")
+		return errors.HandleCommon(errors.Wrap(err, errors.ReadingYesFlagErrorMsg), cmd)
 	}
-	pcmd.ErrPrintln(cmd, "Checking for updates...")
+	pcmd.ErrPrintln(cmd, errors.CheckingForUpdatesMsg)
 	updateAvailable, latestVersion, err := c.client.CheckForUpdates(c.cliName, c.version.Version, true)
 	if err != nil {
-		c.Command.SilenceUsage = true
-		return errors.Wrap(err, "error checking for updates")
+		return errors.HandleCommon(errors.NewUpdateClientWrapError(err, errors.CheckingForUpdateErrorMsg, c.cliName), cmd)
 	}
 
 	if !updateAvailable {
-		pcmd.Println(cmd, "Already up to date.")
+		pcmd.Println(cmd, errors.UpToDateMsg)
 		return nil
 	}
 
@@ -121,12 +120,12 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 
 	oldBin, err := os.Executable()
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, cmd)
 	}
 	if err := c.client.UpdateBinary(c.cliName, latestVersion, oldBin); err != nil {
-		return err
+		return errors.HandleCommon(errors.NewUpdateClientWrapError(err, errors.UpdateBinaryErrorMsg, c.cliName), cmd)
 	}
-	pcmd.ErrPrintf(cmd, "Update your autocomplete scripts as instructed by: %s help completion\n", c.config.CLIName)
+	pcmd.ErrPrintln(cmd, errors.UpdateAutocompleteMsg, c.config.CLIName)
 
 	return nil
 }
@@ -135,14 +134,14 @@ func (c *command) getReleaseNotes(latestBinaryVersion string) string {
 	latestReleaseNotesVersion, releaseNotes, err := c.client.GetLatestReleaseNotes()
 	var errMsg string
 	if err != nil {
-		errMsg = fmt.Sprintf("error obtaining release notes: %s", err)
+		errMsg = fmt.Sprintf(errors.ObtainingReleaseNotesErrorMsg, err)
 	} else {
 		isSameVersion, err := sameVersionCheck(latestBinaryVersion, latestReleaseNotesVersion)
 		if err != nil {
-			errMsg = fmt.Sprintf("unable to perform release notes and binary version check: %s", err)
+			errMsg = fmt.Sprintf(errors.ReleaseNotesVersionCheckErrorMsg, err)
 		}
 		if !isSameVersion {
-			errMsg = fmt.Sprintf("binary version (v%s) and latest release notes version (v%s) mismatch", latestBinaryVersion, latestReleaseNotesVersion)
+			errMsg = fmt.Sprintf(errors.ReleaseNotesVersionMismatchErrorMsg, latestBinaryVersion, latestReleaseNotesVersion)
 		}
 	}
 	if errMsg != "" {

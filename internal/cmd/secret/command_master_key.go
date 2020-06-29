@@ -1,7 +1,6 @@
 package secret
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/confluentinc/go-printer"
@@ -62,10 +61,10 @@ func (c *masterKeyCommand) generate(cmd *cobra.Command, args []string) error {
 		case pcmd.ErrUnexpectedStdinPipe:
 			cmd.SilenceUsage = true
 			// TODO: should we require this or just assume that pipe to stdin implies '--passphrase -' ?
-			return fmt.Errorf("please specify '--passphrase -' if you intend to pipe your passphrase over stdin")
+			return errors.HandleCommon(errors.New(errors.SpecifyPassphraseErrorMsg), cmd)
 		case pcmd.ErrNoPipe:
 			cmd.SilenceUsage = true
-			return fmt.Errorf("please pipe your passphrase over stdin")
+			return errors.HandleCommon(errors.New(errors.PipePassphraseErrorMsg), cmd)
 		}
 		return errors.HandleCommon(err, cmd)
 	}
@@ -80,7 +79,7 @@ func (c *masterKeyCommand) generate(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	pcmd.ErrPrintln(cmd, "Save the master key. It cannot be retrieved later.")
+	pcmd.ErrPrintln(cmd, errors.SaveTheMasterKeyMsg)
 	err = printer.RenderTableOut(&struct{ MasterKey string }{MasterKey: masterKey}, []string{"MasterKey"}, map[string]string{"MasterKey": "Master Key"}, os.Stdout)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)

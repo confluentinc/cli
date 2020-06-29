@@ -1,6 +1,7 @@
 package feedback
 
 import (
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"os"
 	"strings"
 
@@ -30,7 +31,7 @@ func NewFeedbackCmdWithPrompt(cliName string, prerunner pcmd.PreRunner, analytic
 
 				if len(msg) > 0 {
 					analyticsClient.SetSpecialProperty(analytics.FeedbackPropertiesKey, msg)
-					pcmd.Println(cmd, "Thanks for your feedback.")
+					pcmd.Println(cmd, errors.ThanksForFeedbackMsg)
 				}
 				return nil
 			},

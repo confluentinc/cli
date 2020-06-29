@@ -91,7 +91,7 @@ func SchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *vers
 	srClient = srsdk.NewAPIClient(srConfig)
 	_, _, err = srClient.DefaultApi.Get(ctx)
 	if err != nil {
-		return nil, nil, errors.Errorf("Failed to validate Schema Registry API Key and Secret")
+		return nil, nil, errors.Errorf(errors.ValidateSRAPIErrorMsg)
 	}
 	return srClient, ctx, nil
 }

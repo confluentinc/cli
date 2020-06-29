@@ -141,7 +141,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		count += 1
 	}
 	if cluster.Endpoint == "" {
-		pcmd.ErrPrint(cmd, "Endpoint not yet populated. To obtain the endpoint please use `ccloud ksql app describe`.")
+		pcmd.ErrPrintln(cmd, errors.EndPointNotPopulatedMsg)
 	}
 	return output.DescribeObject(cmd, cluster, describeFields, describeHumanRenames, describeStructuredRenames)
 }
@@ -162,7 +162,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	pcmd.Printf(cmd, "The KSQL app %s has been deleted.\n", args[0])
+	pcmd.Println(cmd, errors.KSQLDeletedMsg, args[0])
 	return nil
 }
 
@@ -256,7 +256,7 @@ func (c *clusterCommand) getServiceAccount(cluster *schedv1.KSQLCluster) (string
 			return strconv.Itoa(int(user.Id)), nil
 		}
 	}
-	return "", errors.New(fmt.Sprintf("No service account found for %s", cluster.Id))
+	return "", errors.Errorf(errors.NoServiceAccountErrorMsg, cluster.Id)
 }
 
 func (c *clusterCommand) configureACLs(cmd *cobra.Command, args []string) error {
@@ -274,7 +274,7 @@ func (c *clusterCommand) configureACLs(cmd *cobra.Command, args []string) error 
 		return errors.HandleCommon(err, cmd)
 	}
 	if cluster.KafkaClusterId != kafkaCluster.Id {
-		pcmd.ErrPrintf(cmd, "This KSQL cluster is not backed by the current Kafka cluster.")
+		pcmd.ErrPrintln(cmd, errors.KSQLNotBackedByKafkaMsg, args[0], cluster.KafkaClusterId, kafkaCluster.Id)
 	}
 
 	serviceAccountId, err := c.getServiceAccount(cluster)

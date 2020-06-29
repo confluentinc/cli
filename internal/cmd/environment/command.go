@@ -106,7 +106,7 @@ func (c *command) refreshEnvList(cmd *cobra.Command) error {
 
 	err = c.Config.Save()
 	if err != nil {
-		return errors.Wrap(err, "unable to save user auth while refreshing environment list")
+		return errors.Wrap(err, errors.EnvRefreshErrorMsg)
 	}
 
 	return nil
@@ -141,14 +141,15 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 
 	acc, err := c.Client.Account.Get(context.Background(), &orgv1.Account{Id: id})
 	if err != nil {
-		return errors.HandleCommon(errors.New("The specified environment ID was not found.  To see available environments, use `ccloud environment list`."), cmd)
+		err = errors.NewErrorWithSuggestions(fmt.Sprintf(errors.EnvNotFoundErrorMsg, id), errors.EnvNotFoundSuggestions)
+		return errors.HandleCommon(err, cmd)
 	}
 
 	c.Context.State.Auth.Account = acc
 	if err := c.Config.Save(); err != nil {
-		return errors.HandleCommon(errors.New("couldn't switch to new environment: couldn't save config."), cmd)
+		return errors.HandleCommon(errors.Wrap(err, errors.EnvSwitchErrorMsg), cmd)
 	}
-	pcmd.Println(cmd, "Now using", id, "as the default (active) environment.")
+	pcmd.Println(cmd, errors.UsingEnvMsg)
 	return nil
 }
 

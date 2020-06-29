@@ -175,9 +175,8 @@ func (a *loginCommand) login(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	pcmd.Println(cmd, "Logged in as", email)
-	pcmd.Print(cmd, "Using environment ", state.Auth.Account.Id,
-		" (\"", state.Auth.Account.Name, "\")\n")
+	pcmd.Println(cmd, errors.LoggedInAsMsg, email)
+	pcmd.Println(cmd, errors.LoginUsingEnvMsg, state.Auth.Account.Id, state.Auth.Account.Name)
 	return err
 }
 
@@ -234,7 +233,7 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, args []string) error {
 			return err
 		}
 	}
-	pcmd.Println(cmd, "Logged in as", email)
+	pcmd.Printf(cmd, errors.LoggedInAsMsg, email)
 	return nil
 }
 
@@ -342,7 +341,7 @@ func (a *loginCommand) saveToNetrc(cmd *cobra.Command, email, password, refreshT
 	if err != nil {
 		return err
 	}
-	pcmd.ErrPrintf(cmd, errors.LoginWrittenCredentialsToNetrcWarningMsg, a.netrcHandler.FileName)
+	pcmd.ErrPrintln(cmd, errors.WrittenCredentialsToNetrcMsg, a.netrcHandler.FileName)
 	return nil
 }
 

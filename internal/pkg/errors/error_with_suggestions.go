@@ -17,6 +17,13 @@ func NewErrorWithSuggestions(errorMsg string, suggestionsMsg string) ErrorWithSu
 	}
 }
 
+func NewWrapErrorWithSuggestions(err error, errorMsg string, suggestionsMsg string) ErrorWithSuggestions {
+	return &ErrorWithSuggestionsImpl{
+		errorMsg:       Wrap(err, errorMsg).Error(),
+		suggestionsMsg: suggestionsMsg,
+	}
+}
+
 func (b *ErrorWithSuggestionsImpl) Error() string {
 	return b.errorMsg
 }

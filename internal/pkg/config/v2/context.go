@@ -125,10 +125,10 @@ func (c *Context) validate() error {
 		return errors.New("one of the existing contexts has no name")
 	}
 	if c.CredentialName == "" || c.Credential == nil {
-		return &errors.UnspecifiedCredentialError{ContextName: c.Name}
+		return errors.NewCorruptedConfigError(errors.UnspecifiedCredentialErrorMsg, c.Name, c.Config.CLIName, c.Config.Filename)
 	}
 	if c.PlatformName == "" || c.Platform == nil {
-		return &errors.UnspecifiedPlatformError{ContextName: c.Name}
+		return errors.NewCorruptedConfigError(errors.UnspecifiedPlatformErrorMsg, c.Name, c.Config.CLIName, c.Config.Filename)
 	}
 	if _, ok := c.KafkaClusters[c.Kafka]; c.Kafka != "" && !ok {
 		return fmt.Errorf("context '%s' has a nonexistent active kafka cluster", c.Name)

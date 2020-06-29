@@ -159,7 +159,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, args []string) error {
 // validateAddDelete ensures the minimum requirements for acl add and delete are met
 func validateAddDelete(binding *ACLConfiguration) {
 	if binding.Entry.PermissionType == schedv1.ACLPermissionTypes_UNKNOWN {
-		binding.errors = multierror.Append(binding.errors, fmt.Errorf("--allow or --deny must be set when adding or deleting an ACL"))
+		binding.errors = multierror.Append(binding.errors, fmt.Errorf(errors.MustSetAllowOrDenyErrorMsg))
 	}
 
 	if binding.Pattern.PatternType == schedv1.PatternTypes_UNKNOWN {
@@ -167,7 +167,7 @@ func validateAddDelete(binding *ACLConfiguration) {
 	}
 
 	if binding.Pattern == nil || binding.Pattern.ResourceType == schedv1.ResourceTypes_UNKNOWN {
-		binding.errors = multierror.Append(binding.errors, fmt.Errorf("exactly one of %v must be set",
+		binding.errors = multierror.Append(binding.errors, fmt.Errorf(errors.MustSetResourceTypeErrorMsg,
 			listEnum(schedv1.ResourceTypes_ResourceType_name, []string{"ANY", "UNKNOWN"})))
 	}
 }

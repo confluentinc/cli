@@ -128,7 +128,7 @@ func (c *rolebindingCommand) init() {
 
 func (c *rolebindingCommand) validatePrincipalFormat(principal string) error {
 	if len(strings.Split(principal, ":")) == 1 {
-		return errors.New("Principal must be specified in this format: <Principal Type>:<Principal Name>")
+		return errors.NewErrorWithSuggestions(errors.PrincipalFormatErrorMsg, errors.PrincipalFormatSuggestions)
 	}
 
 	return nil
@@ -144,7 +144,7 @@ func (c *rolebindingCommand) parseAndValidateResourcePattern(typename string, pr
 
 	parts := strings.Split(typename, ":")
 	if len(parts) != 2 {
-		return result, errors.New("Resource must be specified in this format: <Resource Type>:<Resource Name>")
+		return result, errors.NewErrorWithSuggestions(errors.ResourceFormatErrorMsg, errors.ResourceFormatSuggestions)
 	}
 	result.ResourceType = parts[0]
 	result.Name = parts[1]
@@ -156,7 +156,7 @@ func (c *rolebindingCommand) validateRoleAndResourceType(roleName string, resour
 	ctx := c.createContext()
 	role, _, err := c.MDSClient.RBACRoleDefinitionsApi.RoleDetail(ctx, roleName)
 	if err != nil {
-		return errors.Wrapf(err, "Failed to look up role %s. Was an invalid role name specified?", roleName)
+		return errors.NewWrapErrorWithSuggestions(err, fmt.Sprintf(errors.LookUpRoleErrorMsg, roleName), errors.LookUpRoleSuggestions)
 	}
 
 	allResourceTypes := []string{}
@@ -170,7 +170,8 @@ func (c *rolebindingCommand) validateRoleAndResourceType(roleName string, resour
 	}
 
 	if !found {
-		return errors.New("Invalid resource type " + resourceType + " specified. It must be one of " + strings.Join(allResourceTypes, ", "))
+		suggestionsMsg := fmt.Sprintf(errors.InvalidResourceTypeSuggestions, strings.Join(allResourceTypes, ", "))
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidResourceTypeErrorMsg, resourceType), suggestionsMsg)
 	}
 
 	return nil
@@ -198,15 +199,15 @@ func (c *rolebindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mds.Sco
 	})
 
 	if scope.KafkaCluster == "" && nonKafkaScopesSet > 0 {
-		return nil, errors.HandleCommon(errors.New("Must also specify a --kafka-cluster-id to uniquely identify the scope."), cmd)
+		return nil, errors.HandleCommon(errors.New(errors.SpecifyKafkaIDErrorMsg), cmd)
 	}
 
 	if scope.KafkaCluster == "" && nonKafkaScopesSet == 0 {
-		return nil, errors.HandleCommon(errors.New("Must specify at least one cluster ID flag to indicate role binding scope."), cmd)
+		return nil, errors.HandleCommon(errors.New(errors.SpecifyClusterIDErrorMsg), cmd)
 	}
 
 	if nonKafkaScopesSet > 1 {
-		return nil, errors.HandleCommon(errors.New("Cannot specify more than one non-Kafka cluster ID for a scope."), cmd)
+		return nil, errors.HandleCommon(errors.New(errors.MoreThanOneNonKafkaErrorMsg), cmd)
 	}
 
 	return scope, nil
@@ -218,7 +219,7 @@ func (c *rolebindingCommand) list(cmd *cobra.Command, args []string) error {
 	} else if cmd.Flags().Changed("role") {
 		return c.listRolePrincipals(cmd)
 	}
-	return errors.HandleCommon(fmt.Errorf("required: either principal or role is required"), cmd)
+	return errors.HandleCommon(errors.New(errors.PrincipalOrRoleRequiredErrorMsg), cmd)
 }
 
 func (c *rolebindingCommand) listPrincipalResources(cmd *cobra.Command) error {
@@ -468,7 +469,7 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, args []string) error {
 	}
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
-		return errors.HandleCommon(errors.Wrapf(err, "No error, but received HTTP status code %d.  Please file a support ticket with details", resp.StatusCode), cmd)
+		return errors.HandleCommon(errors.NewErrorWithSuggestions(fmt.Sprintf(errors.HTTPStatusCodeErrorMsg, resp.StatusCode), errors.HTTPStatusCodeSuggestions), cmd)
 	}
 
 	return nil
@@ -500,7 +501,7 @@ func (c *rolebindingCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
-		return errors.HandleCommon(errors.Wrapf(err, "No error, but received HTTP status code %d.  Please file a support ticket with details", resp.StatusCode), cmd)
+		return errors.HandleCommon(errors.NewErrorWithSuggestions(fmt.Sprintf(errors.HTTPStatusCodeErrorMsg, resp.StatusCode), errors.HTTPStatusCodeSuggestions), cmd)
 	}
 
 	return nil

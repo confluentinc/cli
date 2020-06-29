@@ -66,7 +66,7 @@ func (c *command) parseStringFlag(name string, prompt string, secure bool, displ
 	}
 	val = strings.TrimSpace(val)
 	if len(val) == 0 {
-		return "", fmt.Errorf("%s cannot be empty", displayName)
+		return "", fmt.Errorf(errors.CannotBeEmptyErrorMsg, displayName)
 	}
 	return val, nil
 }
@@ -78,7 +78,7 @@ func (c *command) initContext(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	if !kafkaAuth {
-		return errors.HandleCommon(errors.New("only kafka-auth is currently supported"), cmd)
+		return errors.HandleCommon(errors.New(errors.OnlyKafkaAuthErrorMsg), cmd)
 	}
 	bootstrapURL, err := c.parseStringFlag("bootstrap", "Bootstrap URL: ", false,
 		"Bootstrap URL")
@@ -142,7 +142,7 @@ func (c *command) addContext(name string, bootstrapURL string, apiKey string, ap
 	case v2.APIKey:
 		credential.Name = fmt.Sprintf("%s-%s", &credential.CredentialType, credential.APIKeyPair.Key)
 	default:
-		return fmt.Errorf("credential type %d unknown", credential.CredentialType)
+		return errors.Errorf(errors.UnknownCredentialTypeErrorMsg, credential.CredentialType)
 	}
 	err := c.Config.SaveCredential(credential)
 	if err != nil {

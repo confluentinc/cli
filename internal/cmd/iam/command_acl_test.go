@@ -435,7 +435,7 @@ func (suite *AclTestSuite) TestMdsHandleErrorNotLoggedIn() {
 		}()
 		err := cmd.Execute()
 		assert.NotNil(suite.T(), err)
-		assert.Contains(suite.T(), err.Error(), errors.HandleCommon(errors.ErrNotLoggedIn, cmd).Error())
+		assert.Contains(suite.T(), err.Error(), errors.HandleCommon(&errors.NotLoggedInError{CLIName: suite.conf.CLIName}, cmd).Error())
 	}
 	suite.conf.CurrentContext = oldContext
 }

@@ -53,7 +53,7 @@ func (d *DynamicContext) getKafkaClusterIDForCommand(cmd *cobra.Command) (string
 		clusterId = d.KafkaClusterContext.GetActiveKafkaClusterId()
 	}
 	if clusterId == "" {
-		return "", errors.ErrNoKafkaContext
+		return "", errors.NewErrorWithSuggestions(errors.NoKafkaSelectedErrorMsg, errors.NoKafkaSelectedSuggestions)
 	}
 	return clusterId, nil
 }
@@ -208,7 +208,7 @@ func (d *DynamicContext) AuthenticatedState(cmd *cobra.Command) (*v2.ContextStat
 		return nil, err
 	}
 	if !hasLogin {
-		return nil, errors.ErrNotLoggedIn
+		return nil, &errors.NotLoggedInError{CLIName:d.Config.CLIName}
 	}
 	envId, err := d.resolveEnvironmentId(cmd)
 	if err != nil {
@@ -248,25 +248,25 @@ func (d *DynamicContext) resolveEnvironmentId(cmd *cobra.Command) (string, error
 		return "", err
 	}
 	if d.State == nil || d.State.Auth == nil {
-		return "", errors.ErrNotLoggedIn
+		return "", &errors.NotLoggedInError{CLIName:d.Config.CLIName}
 	}
 	if envId == "" {
 		// Environment flag not set.
 		if d.State.Auth.Account == nil || d.State.Auth.Account.Id == "" {
-			return "", errors.ErrNotLoggedIn
+			return "", &errors.NotLoggedInError{CLIName:d.Config.CLIName}
 		}
 		return d.State.Auth.Account.Id, nil
 	}
 	// Environment flag is set.
 	if d.State.Auth.Accounts == nil {
-		return "", errors.ErrNotLoggedIn
+		return "", &errors.NotLoggedInError{CLIName:d.Config.CLIName}
 	}
 	for _, account := range d.State.Auth.Accounts {
 		if account.Id == envId {
 			return envId, nil
 		}
 	}
-	return "", fmt.Errorf("environment with id '%s' not found in context '%s'", envId, d.Name)
+	return "", fmt.Errorf(errors.EnvironmentNotFoundErrorMsg, envId, d.Name)
 }
 
 func missingDetails(cluster *v2.SchemaRegistryCluster) bool {

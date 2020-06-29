@@ -79,7 +79,9 @@ func (c *listCommand) list(cmd *cobra.Command, args []string) error {
 			}
 		}
 		if !known {
-			return fmt.Errorf("%s should be one of %s", typeFlag, strings.Join(clusterTypeNames, ", "))
+			err = errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidFlagValueErrorMsg, t, typeFlag),
+				fmt.Sprintf(errors.InvalidFlagValueSuggestions, typeFlag, strings.Join(clusterTypeNames, ", ")))
+			return errors.HandleCommon(err, cmd)
 		}
 		clusterType = optional.NewString(t)
 	}
@@ -88,7 +90,7 @@ func (c *listCommand) list(cmd *cobra.Command, args []string) error {
 	}
 	clusterInfos, response, err := c.MDSClient.ClusterRegistryApi.ClusterRegistryList(c.createContext(), ct)
 	if err != nil {
-		return c.handleClusterError(cmd, err, response)
+		return errors.HandleCommon(c.handleClusterError(cmd, err, response), cmd)
 	}
 	format, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
@@ -112,10 +114,9 @@ func (c *listCommand) list(cmd *cobra.Command, args []string) error {
 
 func (c *listCommand) handleClusterError(cmd *cobra.Command, err error, response *http.Response) error {
 	if response != nil && response.StatusCode == http.StatusNotFound {
-		cmd.SilenceUsage = true
-		return fmt.Errorf("Unable to access Cluster Registry (%s). Ensure that you're running against MDS with CP 6.0+.", err.Error())
+		return errors.NewWrapErrorWithSuggestions(err, errors.AccessClusterRegistryErrorMsg, errors.AccessClusterRegistrySuggestions)
 	}
-	return errors.HandleCommon(err, cmd)
+	return err
 }
 
 func createPrettyHost(hostInfo mds.HostInfo) (string, error) {
