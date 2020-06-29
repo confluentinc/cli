@@ -128,49 +128,77 @@ func addMdsv2alpha1(t *testing.T, router *http.ServeMux) {
 	})
 
 	routesAndReplies := map[string]string{
-		"/api/metadata/security/v2alpha1/lookup/rolebindings/principal/User:789": `[
+		"/api/metadata/security/v2alpha1/lookup/managed/rolebindings/principal/User:u-11111": `[
+			{
+				"scope": {
+				  	"path": [
+						"organization=1234"
+					],
+					"clusters": {
+					}
+				},
+				"cluster_role_bindings": {
+					"User:u-11111": {
+						"OrganizationAdmin": [
+							{
+								"resourceType": "Organization",
+								"name": "org1",
+								"patternType": "LITERAL"
+							}
+						]
+					}
+				},
+				"resource_role_bindings": {}
+		  	},
 		  	{
 				"scope": {
 				  	"path": [
 						"organization=1234",
-						"environment=t55"
+						"environment=a-595"
 					],
 					"clusters": {
-						"kafka-cluster": "lkc-abc123"
+						"kafka-cluster": "cluster1"
 					}
 				},
-				"rolebindings": {
-					"User:789": {
+				"cluster_role_bindings": {
+					"User:u-11111": {
 						"CloudClusterAdmin": [
 							{
 								"resourceType": "Cluster",
 								"name": "cluster1",
 								"patternType": "LITERAL"
-							},
-						  	{
-								"resourceType": "Cluster",
-								"name": "cluster2",
-								"patternType": "PREFIXED"
-						  	}
-						],
+							}
+						]
+					},
+					"User:u-22222": {
 						"EnvironmentAdmin": [
-						  	{
+							{
 								"resourceType": "Environment",
 								"name": "env1",
-								"patternType": "PREFIXED"
+								"patternType": "LITERAL"
 						  	}
 						]
 					},
-					"User:890": {
+					"User:u-33333": {
 						"CloudClusterAdmin": [
 							{
 								"resourceType": "Cluster",
-								"name": "cluster3",
+								"name": "cluster1",
+								"patternType": "LITERAL"
+						  	}
+						]
+					},
+					"User:u-44444": {
+						"CloudClusterAdmin": [
+							{
+								"resourceType": "Cluster",
+								"name": "cluster1",
 								"patternType": "LITERAL"
 						  	}
 						]
 					}
-				}
+				},
+				"resource_role_bindings": {}
 		  	}
 		]`,
 	}
@@ -184,15 +212,6 @@ func addMdsv2alpha1(t *testing.T, router *http.ServeMux) {
 			req.NoError(err)
 		})
 	}
-
-	// router.HandleFunc("/security/1.0/registry/clusters", handleRegistryClusters(t))
-
-	/*
-	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		_, err := io.WriteString(w, `{"error": {"message": "unexpected call to mdsv2alpha1 `+r.URL.Path+`"}}`)
-		require.NoError(t, err)
-	})
-	*/
 }
 
 func addRolesV2(routesAndReplies map[string]string) {

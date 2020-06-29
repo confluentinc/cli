@@ -839,6 +839,7 @@ func handleMe(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 				Id:        23,
 				Email:     "cody@confluent.io",
 				FirstName: "Cody",
+				ResourceId: "u-11111",
 			},
 			Accounts: environments,
 		})

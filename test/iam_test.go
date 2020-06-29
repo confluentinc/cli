@@ -135,13 +135,43 @@ func (s *CLITestSuite) Test_Ccloud_Iam_Rolebinding_List() {
 	tests := []CLITest{
 		{
 			name:        "ccloud iam rolebinding list, no principal nor role",
-			args:        "iam rolebinding list --kafka-cluster-id CID",
+			args:        "iam rolebinding list --cloud-cluster CID",
 			fixture:     "ccloud-iam-rolebinding-list-no-principal-nor-role.golden",
 			login:       "default",
 			wantErrCode: 1,
 		},
 		{
-			args:    "iam rolebinding list --kafka-cluster-id CID --principal User:789",
+			args:    "iam rolebinding list --environment current --cloud-cluster cluster1 --principal User:u-11111",
+			fixture: "ccloud-iam-rolebinding-list-user.golden",
+			login:   "default",
+		},
+		{
+			args:    "iam rolebinding list --environment current --cloud-cluster cluster1 --principal User:u-22222",
+			fixture: "ccloud-iam-rolebinding-list-user.golden",
+			login:   "default",
+		},
+		{
+			args:    "iam rolebinding list --environment current --cloud-cluster cluster1 --principal User:u-33333",
+			fixture: "ccloud-iam-rolebinding-list-user.golden",
+			login:   "default",
+		},
+		{
+			args:    "iam rolebinding list --environment current --cloud-cluster cluster1 --principal User:u-44444",
+			fixture: "ccloud-iam-rolebinding-list-user.golden",
+			login:   "default",
+		},
+		{
+			args:    "iam rolebinding list --environment current --cloud-cluster cluster1 --role OrganizationAdmin",
+			fixture: "ccloud-iam-rolebinding-list-user.golden",
+			login:   "default",
+		},
+		{
+			args:    "iam rolebinding list --environment current --cloud-cluster cluster1 --role EnvironmentAdmin",
+			fixture: "ccloud-iam-rolebinding-list-user.golden",
+			login:   "default",
+		},
+		{
+			args:    "iam rolebinding list --environment current --cloud-cluster cluster1 --role CloudClusterAdmin",
 			fixture: "ccloud-iam-rolebinding-list-user.golden",
 			login:   "default",
 		},
