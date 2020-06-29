@@ -138,7 +138,6 @@ func serveMds(t *testing.T) *httptest.Server {
 	return httptest.NewServer(router)
 }
 
-
 func addRoles(routesAndReplies map[string]string) {
 	base := "/security/1.0/roles"
 	var roleNameList []string

@@ -230,38 +230,3 @@ func addRolesV2(routesAndReplies map[string]string) {
 	}
 	routesAndReplies[base] = "[" + strings.Join(allRoles, ",") + "]"
 }
-
-/*
-func handleRegistryClusters(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/json")
-		clusterType := r.URL.Query().Get("clusterType")
-		response := `[ {
-		"name": "theMdsConnectCluster",
-		"scope": { "clusters": { "kafka-cluster": "kafka-GUID", "connect-cluster": "connect-name" } },
-		"hosts": [ { "host": "10.5.5.5", "port": 9005 } ]
-	  },{
-		"name": "theMdsKafkaCluster",
-		"scope": { "clusters": { "kafka-cluster": "kafka-GUID" } },
-		"hosts": [ { "host": "10.10.10.10", "port": 8090 },{ "host": "mds.example.com", "port": 8090 } ]
-	  },{
-		"name": "theMdsKSQLCluster",
-		"scope": { "clusters": { "kafka-cluster": "kafka-GUID", "ksql-cluster": "ksql-name" } },
-		"hosts": [ { "host": "10.4.4.4", "port": 9004 } ]
-	  },{
-		"name": "theMdsSchemaRegistryCluster",
-		"scope": { "clusters": { "kafka-cluster": "kafka-GUID", "schema-registry-cluster": "schema-registry-name" } },
-		"hosts": [ { "host": "10.3.3.3", "port": 9003 } ]
-	} ]`
-		if clusterType == "ksql-cluster" {
-			response = `[ {
-		    "name": "theMdsKSQLCluster",
-		    "scope": { "clusters": { "kafka-cluster": "kafka-GUID", "ksql-cluster": "ksql-name" } },
-		    "hosts": [ { "host": "10.4.4.4", "port": 9004 } ]
-		  } ]`
-		}
-		_, err := io.WriteString(w, response)
-		require.NoError(t, err)
-	}
-}
- */

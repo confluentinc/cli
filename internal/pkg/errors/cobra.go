@@ -64,10 +64,5 @@ func HandleCommon(err error, cmd *cobra.Command) error {
 	case *ccloud.InvalidTokenError:
 		return fmt.Errorf(CorruptedAuthTokenErrorMsg)
 	}
-
-	if msg, ok := messages[err]; ok {
-		return fmt.Errorf(msg)
-	}
-
 	return err
 }

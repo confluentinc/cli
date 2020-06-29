@@ -96,8 +96,8 @@ func (c *roleCommand) confluentListHelper(cmd *cobra.Command) error {
 		for _, role := range roles {
 			roleDisplay, err := createPrettyRole(role)
 			if err != nil {
-					  return errors.HandleCommon(err, cmd)
-					  }
+				return errors.HandleCommon(err, cmd)
+			}
 			data = append(data, printer.ToRow(roleDisplay, roleFields))
 		}
 		outputTable(data)
