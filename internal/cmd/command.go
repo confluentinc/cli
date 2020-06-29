@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/cmd/apikey"
+	"github.com/confluentinc/cli/internal/cmd/auditlog"
 	"github.com/confluentinc/cli/internal/cmd/auth"
 	"github.com/confluentinc/cli/internal/cmd/cluster"
 	"github.com/confluentinc/cli/internal/cmd/completion"
@@ -142,18 +143,14 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		//conn.Hidden = true // The connect feature isn't finished yet, so let's hide it
 		//cli.AddCommand(conn)
 	} else if cliName == "confluent" {
-		cli.AddCommand(iam.New(cliName, prerunner))
-		// Kafka Command
-		isAPILogin := isAPIKeyCredential(cfg)
-		cmd := kafka.New(isAPILogin, cliName, prerunner, logger.Named("kafka"), ver.ClientID)
-		cli.AddCommand(cmd)
-		sr := schema_registry.New(cliName, prerunner, nil, logger)
-		cli.AddCommand(sr)
-		cli.AddCommand(ksql.New(cliName, prerunner))
+		cli.AddCommand(auditlog.New(prerunner))
+		cli.AddCommand(cluster.New(prerunner, cluster.NewScopedIdService(&http.Client{}, ver.UserAgent, logger)))
 		cli.AddCommand(connect.New(prerunner))
-		metaClient := cluster.NewScopedIdService(&http.Client{}, ver.UserAgent, logger)
-		cli.AddCommand(cluster.New(prerunner, metaClient))
+		cli.AddCommand(iam.New(cliName, prerunner))
+		cli.AddCommand(kafka.New(isAPIKeyCredential(cfg), cliName, prerunner, logger.Named("kafka"), ver.ClientID))
+		cli.AddCommand(ksql.New(cliName, prerunner))
 		cli.AddCommand(local.New(prerunner))
+		cli.AddCommand(schema_registry.New(cliName, prerunner, nil, logger))
 		cli.AddCommand(secret.New(prompt, resolver, secrets.NewPasswordProtectionPlugin(logger)))
 	}
 	return command, nil

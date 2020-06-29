@@ -1,0 +1,38 @@
+{
+  "destinations": {
+    "bootstrap_servers": [
+      "localhost:9092",
+      "localhost:9093"
+    ],
+    "topics": {
+      "confluent-audit-log-events-1": {
+        "retention_ms": 10000
+      },
+      "confluent-audit-log-events-2": {
+        "retention_ms": 10000
+      }
+    }
+  },
+  "excluded_principals": [],
+  "default_topics": {
+    "allowed": "",
+    "denied": "confluent-audit-log-events-1"
+  },
+  "routes": {
+    "crn:///kafka=abc123/topic=*": {
+      "authorize": {
+        "allowed": null,
+        "denied": "confluent-audit-log-events-2"
+      }
+    },
+    "crn:///kafka=abc123/topic=purchases": {
+      "authorize": {
+        "allowed": null,
+        "denied": null
+      }
+    }
+  },
+  "metadata": {
+    "resource_version": "blahblahblah"
+  }
+}
