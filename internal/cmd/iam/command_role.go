@@ -82,7 +82,7 @@ func (c *roleCommand) init() {
 	c.AddCommand(describeCmd)
 }
 
-func (c *roleCommand) confluentListHelper(cmd *cobra.Command) error {
+func (c *roleCommand) confluentList(cmd *cobra.Command) error {
 	roles, _, err := c.MDSClient.RBACRoleDefinitionsApi.Roles(c.createContext())
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -107,7 +107,7 @@ func (c *roleCommand) confluentListHelper(cmd *cobra.Command) error {
 	return nil
 }
 
-func (c *roleCommand) ccloudListHelper(cmd *cobra.Command) error {
+func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
 	rolesV2, _, err := c.MDSv2Client.RBACRoleDefinitionsApi.Roles(c.createContext())
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -134,13 +134,13 @@ func (c *roleCommand) ccloudListHelper(cmd *cobra.Command) error {
 
 func (c *roleCommand) list(cmd *cobra.Command, args []string) error {
 	if c.CLIName == "ccloud" {
-		return c.ccloudListHelper(cmd)
+		return c.ccloudList(cmd)
 	} else {
-		return c.confluentListHelper(cmd)
+		return c.confluentList(cmd)
 	}
 }
 
-func (c *roleCommand) confluentDescribeHelper(cmd *cobra.Command, role string) error {
+func (c *roleCommand) confluentDescribe(cmd *cobra.Command, role string) error {
 	details, r, err := c.MDSClient.RBACRoleDefinitionsApi.RoleDetail(c.createContext(), role)
 	if err != nil {
 		if r.StatusCode == http.StatusNoContent {
@@ -176,7 +176,7 @@ func (c *roleCommand) confluentDescribeHelper(cmd *cobra.Command, role string) e
 	return nil
 }
 
-func (c *roleCommand) ccloudDescribeHelper(cmd *cobra.Command, role string) error {
+func (c *roleCommand) ccloudDescribe(cmd *cobra.Command, role string) error {
 	details, r, err := c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(c.createContext(), role)
 	if err != nil {
 		if r.StatusCode == http.StatusNotFound {
@@ -216,9 +216,9 @@ func (c *roleCommand) describe(cmd *cobra.Command, args []string) error {
 	role := args[0]
 
 	if c.CLIName == "ccloud" {
-		return c.ccloudDescribeHelper(cmd, role)
+		return c.ccloudDescribe(cmd, role)
 	} else {
-		return c.confluentDescribeHelper(cmd, role)
+		return c.confluentDescribe(cmd, role)
 	}
 }
 

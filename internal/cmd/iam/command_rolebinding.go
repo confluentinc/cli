@@ -313,7 +313,7 @@ func (c *rolebindingCommand) parseAndValidateScopeV2(cmd *cobra.Command) (*mdsv2
 	return scopeV2, nil
 }
 
-func (c *rolebindingCommand) confluentListHelper(cmd *cobra.Command) error {
+func (c *rolebindingCommand) confluentList(cmd *cobra.Command) error {
 	if cmd.Flags().Changed("principal") {
 		return c.listPrincipalResources(cmd)
 	} else if cmd.Flags().Changed("role") {
@@ -407,7 +407,7 @@ func (c *rolebindingCommand) listManagedRoleBindings(cmd *cobra.Command, princip
 	return outputWriter.Out()
 }
 
-func (c *rolebindingCommand) ccloudListHelper(cmd *cobra.Command) error {
+func (c *rolebindingCommand) ccloudList(cmd *cobra.Command) error {
 	scopeV2, err := c.parseAndValidateScopeV2(cmd)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -425,9 +425,9 @@ func (c *rolebindingCommand) ccloudListHelper(cmd *cobra.Command) error {
 
 func (c *rolebindingCommand) list(cmd *cobra.Command, args []string) error {
 	if c.CLIName == "ccloud" {
-		return c.ccloudListHelper(cmd)
+		return c.ccloudList(cmd)
 	} else {
-		return c.confluentListHelper(cmd)
+		return c.confluentList(cmd)
 	}
 }
 
@@ -661,7 +661,7 @@ func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOption
 		nil
 }
 
-func (c *rolebindingCommand) confluentCreateHelper(options *rolebindingOptions) (resp *http.Response, err error) {
+func (c *rolebindingCommand) confluentCreate(options *rolebindingOptions) (resp *http.Response, err error) {
 	if options.resource != "" {
 		resp, err = c.MDSClient.RBACRoleBindingCRUDApi.AddRoleResourcesForPrincipal(
 			c.createContext(),
@@ -678,7 +678,7 @@ func (c *rolebindingCommand) confluentCreateHelper(options *rolebindingOptions) 
 	return
 }
 
-func (c *rolebindingCommand) ccloudCreateHelper(options *rolebindingOptions) (*http.Response, error) {
+func (c *rolebindingCommand) ccloudCreate(options *rolebindingOptions) (*http.Response, error) {
 	return c.MDSv2Client.RBACRoleBindingCRUDApi.AddRoleForPrincipal(
 		c.createContext(),
 		options.principal,
@@ -694,9 +694,9 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, args []string) error {
 
 	var resp *http.Response
 	if c.CLIName == "ccloud" {
-		resp, err = c.ccloudCreateHelper(options)
+		resp, err = c.ccloudCreate(options)
 	} else {
-		resp, err = c.confluentCreateHelper(options)
+		resp, err = c.confluentCreate(options)
 	}
 
 	if err != nil {
@@ -710,7 +710,7 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c* rolebindingCommand) confluentDeleteHelper(options *rolebindingOptions) (resp *http.Response, err error) {
+func (c* rolebindingCommand) confluentDelete(options *rolebindingOptions) (resp *http.Response, err error) {
 	if options.resource != "" {
 		resp, err = c.MDSClient.RBACRoleBindingCRUDApi.RemoveRoleResourcesForPrincipal(
 			c.createContext(),
@@ -727,7 +727,7 @@ func (c* rolebindingCommand) confluentDeleteHelper(options *rolebindingOptions) 
 	return
 }
 
-func (c* rolebindingCommand) ccloudDeleteHelper(options *rolebindingOptions) (*http.Response, error) {
+func (c* rolebindingCommand) ccloudDelete(options *rolebindingOptions) (*http.Response, error) {
 	return c.MDSv2Client.RBACRoleBindingCRUDApi.DeleteRoleForPrincipal(
 		c.createContext(),
 		options.principal,
@@ -743,9 +743,9 @@ func (c *rolebindingCommand) delete(cmd *cobra.Command, args []string) error {
 
 	var resp *http.Response
 	if c.CLIName == "ccloud" {
-		resp, err = c.ccloudDeleteHelper(options)
+		resp, err = c.ccloudDelete(options)
 	} else {
-		resp, err = c.confluentDeleteHelper(options)
+		resp, err = c.confluentDelete(options)
 	}
 
 	if err != nil {
