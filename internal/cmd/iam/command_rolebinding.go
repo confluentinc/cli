@@ -95,6 +95,7 @@ func (c *rolebindingCommand) init() {
 	listCmd.Flags().String("role", "", "List rolebindings under a specific role given to a principal. Or if no principal is specified, list principals with the role.")
 	if c.Config.CLIName == "ccloud" {
 		listCmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for scope of rolebinding listings.")
+		listCmd.Flags().String("environment", "", "Environment ID for scope of rolebinding listings", )
 	} else {
 		listCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for scope of rolebinding listings.")
 		listCmd.Flags().String("resource", "", "If specified with a role and no principals, list principals with rolebindings to the role for this qualified resource.")
@@ -119,6 +120,7 @@ func (c *rolebindingCommand) init() {
 	createCmd.Flags().String("principal", "", "Qualified principal name for the role binding.")
 	if c.Config.CLIName == "ccloud" {
 		createCmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for the role binding.")
+		createCmd.Flags().String("environment", "", "Environment ID for scope of rolebinding listings")
 	} else {
 		createCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
 		createCmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding.")
@@ -141,7 +143,8 @@ func (c *rolebindingCommand) init() {
 	deleteCmd.Flags().String("principal", "", "Qualified principal name associated with the role binding.")
 	deleteCmd.Flags().String("resource", "", "Qualified resource name associated with the role binding.")
 	if c.Config.CLIName == "ccloud" {
-		deleteCmd.Flags().String("cloud-cluster-id", "", "Cloud cluster ID for the role binding.")
+		deleteCmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for the role binding.")
+		deleteCmd.Flags().String("environment", "", "Environment ID for scope of rolebinding listings", )
 	} else {
 		deleteCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
 		deleteCmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding.")
@@ -265,6 +268,13 @@ func (c *rolebindingCommand) parseAndValidateScopeV2(cmd *cobra.Command) (*mdsv2
 		switch flag.Name {
 		case "cloud-cluster":
 			scopeV2.Clusters.KafkaCluster = flag.Value.String()
+		case "environment":
+			env := flag.Value.String()
+			if env == "current" {
+				scopeV2.Path = append(scopeV2.Path, "environment="+c.EnvironmentId())
+			} else {
+				scopeV2.Path = append(scopeV2.Path, "environment="+flag.Value.String())
+			}
 		}
 	})
 
@@ -273,9 +283,16 @@ func (c *rolebindingCommand) parseAndValidateScopeV2(cmd *cobra.Command) (*mdsv2
 		if err != nil {
 			return nil, errors.HandleCommon(err, cmd)
 		}
-		if cmd.Use != "list" && clusterScopedRolesV2[role] && scopeV2.Clusters.KafkaCluster == "" {
+		if clusterScopedRolesV2[role] && !cmd.Flags().Changed("cloud-cluster") {
 			return nil, errors.HandleCommon(errors.New("Must specify cloud-cluster flag to indicate role binding scope."), cmd)
 		}
+		if (environmentScopedRoles[role] || clusterScopedRolesV2[role]) && !cmd.Flags().Changed("environment") {
+			return nil, errors.HandleCommon(errors.New("Must specify environment flag to indicate role binding scope"), cmd)
+		}
+	}
+
+	if cmd.Flags().Changed("cloud-cluster") && !cmd.Flags().Changed("environment") {
+		return nil, errors.HandleCommon(errors.New("Must also specify environment flag to indicate role binding scope"), cmd)
 	}
 	return scopeV2, nil
 }
@@ -290,7 +307,7 @@ func (c *rolebindingCommand) confluentListHelper(cmd *cobra.Command) error {
 }
 
 func (c *rolebindingCommand) listMyRoleBindings(cmd *cobra.Command, principal string, scopeV2 *mdsv2alpha1.Scope) error {
-	scopedPrincipalsRolesResourcePatterns, _, err := c.MDSv2Client.RBACRoleBindingSummariesApi.MyRoleBindings(
+	scopedRoleBindingMappings, _, err := c.MDSv2Client.RBACRoleBindingSummariesApi.MyRoleBindings(
 		c.createContext(),
 		principal,
 		*scopeV2)
@@ -303,11 +320,10 @@ func (c *rolebindingCommand) listMyRoleBindings(cmd *cobra.Command, principal st
 		return errors.HandleCommon(err, cmd)
 	}
 
-	for _, scopeRoleBindingMapping := range scopedPrincipalsRolesResourcePatterns {
-		// roleBindingScope := scopeRoleBindingMapping.Scope
-		principalsRolesResourcePatterns := scopeRoleBindingMapping.Rolebindings
-		for principalName, rolesResourcePatterns := range principalsRolesResourcePatterns {
-			for roleName, resourcePatterns := range rolesResourcePatterns {
+	for _, scopedRoleBindingMapping := range scopedRoleBindingMappings {
+		roleBindingScope := scopedRoleBindingMapping.Scope
+		for principalName, roleBindings := range scopedRoleBindingMapping.Rolebindings {
+			for roleName, resourcePatterns := range roleBindings {
 				for _, resourcePattern := range resourcePatterns {
 					outputWriter.AddElement(&listDisplay{
 						Principal:    principalName,
@@ -317,12 +333,22 @@ func (c *rolebindingCommand) listMyRoleBindings(cmd *cobra.Command, principal st
 						PatternType:  resourcePattern.PatternType,
 					})
 				}
-				if len(resourcePatterns) == 0 && clusterScopedRolesV2[roleName] {
+				orgName := ""
+				envName := ""
+				for _, elem := range roleBindingScope.Path {
+					if strings.HasPrefix(elem, "organization=") {
+						orgName = strings.TrimPrefix(elem, "organization=")
+					}
+					if strings.HasPrefix(elem, "environment=") {
+						envName = strings.TrimPrefix(elem, "environment=")
+					}
+				}
+				if len(resourcePatterns) == 0 && organizationScopedRoles[roleName] {
 					outputWriter.AddElement(&listDisplay{
 						Principal:    principalName,
 						Role:         roleName,
-						ResourceType: "Cluster",
-						Name:         "",
+						ResourceType: "Organization",
+						Name:         orgName,
 						PatternType:  "",
 					})
 				}
@@ -331,16 +357,16 @@ func (c *rolebindingCommand) listMyRoleBindings(cmd *cobra.Command, principal st
 						Principal:    principalName,
 						Role:         roleName,
 						ResourceType: "Environment",
-						Name:         "",
+						Name:         envName,
 						PatternType:  "",
 					})
 				}
-				if len(resourcePatterns) == 0 && organizationScopedRoles[roleName] {
+				if len(resourcePatterns) == 0 && clusterScopedRolesV2[roleName] {
 					outputWriter.AddElement(&listDisplay{
 						Principal:    principalName,
 						Role:         roleName,
-						ResourceType: "Organization",
-						Name:         "",
+						ResourceType: "Cluster",
+						Name:         roleBindingScope.Clusters.KafkaCluster,
 						PatternType:  "",
 					})
 				}
@@ -362,34 +388,34 @@ func (c *rolebindingCommand) listManagedRoleBindings(cmd *cobra.Command, princip
 		return errors.HandleCommon(err, cmd)
 	}
 
-	// do filter + display based on the received rolebindings here
 	outputWriter, err := output.NewListOutputWriter(cmd, resourcePatternListFields, resourcePatternHumanListLabels, resourcePatternStructuredListLabels)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 
 	for _, scopedRoleBindingMapping := range scopedRoleBindingMappings {
-		for principalName, roleBindings := range scopedRoleBindingMapping.ResourceRoleBindings {
-			if cmd.Flags().Changed("principal") {
-				principal, err := cmd.Flags().GetString("principal")
-				if err != nil {
-					return err
-				}
-				if principal != principalName {
-					continue
-				}
-			}
+		roleBindingScope := scopedRoleBindingMapping.Scope
+		for principalName, roleBindings := range scopedRoleBindingMapping.ClusterRoleBindings {
 			for roleName, resourcePatterns := range roleBindings {
-				if cmd.Flags().Changed("role") {
-					role, err := cmd.Flags().GetString("role")
-					if err != nil {
-						return err
-					}
-					if role != roleName {
-						continue
-					}
-				}
 				for _, resourcePattern := range resourcePatterns {
+					if cmd.Flags().Changed("principal") {
+						principal, err := cmd.Flags().GetString("principal")
+						if err != nil {
+							return err
+						}
+						if principal != principalName {
+							continue
+						}
+					}
+					if cmd.Flags().Changed("role") {
+						role, err := cmd.Flags().GetString("role")
+						if err != nil {
+							return err
+						}
+						if role != roleName {
+							continue
+						}
+					}
 					if cmd.Flags().Changed("resource") {
 						resource, err := cmd.Flags().GetString("resource")
 						if err != nil {
@@ -407,12 +433,22 @@ func (c *rolebindingCommand) listManagedRoleBindings(cmd *cobra.Command, princip
 						PatternType:  resourcePattern.PatternType,
 					})
 				}
-				if len(resourcePatterns) == 0 && clusterScopedRolesV2[roleName] {
+				orgName := ""
+				envName := ""
+				for _, elem := range roleBindingScope.Path {
+					if strings.HasPrefix(elem, "organization=") {
+						orgName = strings.TrimPrefix(elem, "organization=")
+					}
+					if strings.HasPrefix(elem, "environment=") {
+						envName = strings.TrimPrefix(elem, "environment=")
+					}
+				}
+				if len(resourcePatterns) == 0 && organizationScopedRoles[roleName] {
 					outputWriter.AddElement(&listDisplay{
 						Principal:    principalName,
 						Role:         roleName,
-						ResourceType: "Cluster",
-						Name:         "",
+						ResourceType: "Organization",
+						Name:         orgName,
 						PatternType:  "",
 					})
 				}
@@ -421,16 +457,16 @@ func (c *rolebindingCommand) listManagedRoleBindings(cmd *cobra.Command, princip
 						Principal:    principalName,
 						Role:         roleName,
 						ResourceType: "Environment",
-						Name:         "",
+						Name:         envName,
 						PatternType:  "",
 					})
 				}
-				if len(resourcePatterns) == 0 && organizationScopedRoles[roleName] {
+				if len(resourcePatterns) == 0 && clusterScopedRolesV2[roleName] {
 					outputWriter.AddElement(&listDisplay{
 						Principal:    principalName,
 						Role:         roleName,
-						ResourceType: "Organization",
-						Name:         "",
+						ResourceType: "Cluster",
+						Name:         scopeV2.Clusters.KafkaCluster,
 						PatternType:  "",
 					})
 				}
@@ -441,14 +477,10 @@ func (c *rolebindingCommand) listManagedRoleBindings(cmd *cobra.Command, princip
 	outputWriter.StableSort()
 
 	return outputWriter.Out()
-
-	return nil
 }
 
 func (c *rolebindingCommand) ccloudListHelper(cmd *cobra.Command) error {
-	scopeV2 := &mdsv2alpha1.Scope{}
-	var err error
-	scopeV2, err = c.parseAndValidateScopeV2(cmd)
+	scopeV2, err := c.parseAndValidateScopeV2(cmd)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -650,13 +682,8 @@ func (c *rolebindingCommand) listPrincipalResourcesV1(cmd *cobra.Command, scopeC
 
 func (c *rolebindingCommand) listRolePrincipals(cmd *cobra.Command) error {
 	scopeClusters := &mds.ScopeClusters{}
-	// scopeV2 := &mdsv2alpha1.Scope{}
 	var err error
-	if c.Config.CLIName == "ccloud" {
-		// scopeV2, err = c.parseAndValidateScopeV2(cmd)
-	} else {
-		scopeClusters, err = c.parseAndValidateScope(cmd)
-	}
+	scopeClusters, err = c.parseAndValidateScope(cmd)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
