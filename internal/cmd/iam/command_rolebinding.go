@@ -402,6 +402,47 @@ func (c *rolebindingCommand) listManagedRoleBindings(cmd *cobra.Command, princip
 		}
 	}
 
+	for principalName, roleResourcePatterns := range scopedRoleBindingMapping.ResourceRoleBindings {
+		for roleName, resourcePatterns := range roleResourcePatterns {
+			for _, resourcePattern := range resourcePatterns {
+				if cmd.Flags().Changed("principal") {
+					principal, err := cmd.Flags().GetString("principal")
+					if err != nil {
+						return err
+					}
+					if principal != principalName {
+						continue
+					}
+				}
+				if cmd.Flags().Changed("role") {
+					role, err := cmd.Flags().GetString("role")
+					if err != nil {
+						return err
+					}
+					if role != roleName {
+						continue
+					}
+				}
+				if cmd.Flags().Changed("resource") {
+					resource, err := cmd.Flags().GetString("resource")
+					if err != nil {
+						return err
+					}
+					if resource !=  resourcePattern.ResourceType {
+						continue
+					}
+				}
+				outputWriter.AddElement(&listDisplay{
+					Principal:    principalName,
+					Role:         roleName,
+					ResourceType: resourcePattern.ResourceType,
+					Name:         resourcePattern.Name,
+					PatternType:  resourcePattern.PatternType,
+				})
+			}
+		}
+	}
+
 	outputWriter.StableSort()
 
 	return outputWriter.Out()
