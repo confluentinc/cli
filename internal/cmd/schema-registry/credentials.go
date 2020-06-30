@@ -14,7 +14,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
-func promptSrCredentials() (string, string, error) {
+func promptSchemaRegistryCredentials() (string, string, error) {
 	prompt := pcmd.NewPrompt(os.Stdin)
 
 	fmt.Print("Enter your Schema Registry API key: ")
@@ -36,7 +36,7 @@ func promptSrCredentials() (string, string, error) {
 	return key, secret, nil
 }
 
-func getSrAuth(srCredentials *v0.APIKeyPair) (*srsdk.BasicAuth, bool, error) {
+func getSchemaRegistryAuth(srCredentials *v0.APIKeyPair) (*srsdk.BasicAuth, bool, error) {
 	auth := &srsdk.BasicAuth{}
 	didPromptUser := false
 
@@ -47,7 +47,7 @@ func getSrAuth(srCredentials *v0.APIKeyPair) (*srsdk.BasicAuth, bool, error) {
 
 	if auth.UserName == "" || auth.Password == "" {
 		var err error
-		auth.UserName, auth.Password, err = promptSrCredentials()
+		auth.UserName, auth.Password, err = promptSchemaRegistryCredentials()
 		if err != nil {
 			return nil, false, err
 		}
@@ -71,7 +71,7 @@ func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *v
 	}
 
 	// Get credentials as Schema Registry BasicAuth
-	srAuth, didPromptUser, err := getSrAuth(srCluster.SrCredentials)
+	srAuth, didPromptUser, err := getSchemaRegistryAuth(srCluster.SrCredentials)
 	if err != nil {
 		return nil, nil, err
 	}
