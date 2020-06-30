@@ -142,7 +142,7 @@ var flagRules = []linter.FlagRule{
 	linter.RequireFlagCharacters('-'),
 	linter.FlagFilter(linter.RequireFlagDelimiter('-', 1),
 		linter.ExcludeFlag("service-account", "kafka-cluster-id", "connect-cluster-id", "schema-registry-cluster-id",
-			"ksql-cluster-id", "local-secrets-file", "remote-secrets-file", "ca-cert-path")),
+			"ksql-cluster-id", "local-secrets-file", "remote-secrets-file", "ca-cert-path", "if-not-exists")),
 	linter.RequireFlagRealWords('-'),
 	linter.RequireFlagUsageRealWords,
 }
