@@ -23,7 +23,7 @@ const (
 	ThanksForFeedbackMsg = "Thanks for your feedback."
 
 	// kafka cluster command
-	ConfirmAuthorizedKeyMsg = "Please confirm that you hava authorized the key for these accounts: %s"
+	ConfirmAuthorizedKeyMsg = "Please confirm you have authorized the key for these accounts: %s"
 
 	// kafka topic command
 	StartingProducerMsg = "Starting Kafka Producer. ^C or ^D to exit"

@@ -49,7 +49,7 @@ func HandleCommon(err error, cmd *cobra.Command) error {
 func handleCCloudSDKGoError(err error) error {
 	switch err.(type) {
 	case *ccloud.InvalidLoginError:
-		return NewErrorWithSuggestions(InvalidLoginErrorMsg, InvalidLoginSUggestions)
+		return NewErrorWithSuggestions(InvalidLoginErrorMsg, InvalidLoginSuggestions)
 	case *ccloud.InvalidTokenError:
 		return NewErrorWithSuggestions(CorruptedTokenErrorMsg, CorruptedTokenSuggestions)
 	case *ccloud.ExpiredTokenError:
