@@ -215,13 +215,13 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	return output.DescribeObject(cmd, data, describeLabels, describeHumanRenames, describeStructuredRenames)
 }
 
-func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
+func (c *clusterCommand) update(cmd *cobra.Command, _ []string) error {
 	compat, err := cmd.Flags().GetString("compatibility")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 	if compat != "" {
-		return c.updateCompatibility(cmd, args)
+		return c.updateCompatibility(cmd)
 	}
 
 	mode, err := cmd.Flags().GetString("mode")
@@ -229,11 +229,12 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	if mode != "" {
-		return c.updateMode(cmd, args)
+		return c.updateMode(cmd)
 	}
 	return errors.New("flag --compatibility or --mode is required.")
 }
-func (c *clusterCommand) updateCompatibility(cmd *cobra.Command, args []string) error {
+
+func (c *clusterCommand) updateCompatibility(cmd *cobra.Command) error {
 	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
@@ -251,7 +252,7 @@ func (c *clusterCommand) updateCompatibility(cmd *cobra.Command, args []string) 
 	return nil
 }
 
-func (c *clusterCommand) updateMode(cmd *cobra.Command, args []string) error {
+func (c *clusterCommand) updateMode(cmd *cobra.Command) error {
 	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err

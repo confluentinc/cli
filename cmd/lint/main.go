@@ -171,8 +171,8 @@ var flagRules = []linter.FlagRule{
 	linter.FlagFilter(
 		linter.RequireFlagDelimiter('-', 1),
 		linter.ExcludeFlag(
-			"ca-cert-path", "connect-cluster-id", "enable-systest-events", "kafka-cluster-id", "ksql-cluster-id",
-			"local-secrets-file", "max-block-ms", "max-memory-bytes", "max-partition-memory-bytes",
+			"ca-cert-path", "connect-cluster-id", "enable-systest-events", "if-not-exists", "kafka-cluster-id",
+			"ksql-cluster-id", "local-secrets-file", "max-block-ms", "max-memory-bytes", "max-partition-memory-bytes",
 			"message-send-max-retries", "metadata-expiry-ms", "remote-secrets-file", "request-required-acks",
 			"request-timeout-ms", "retry-backoff-ms", "schema-registry-cluster-id", "service-account",
 			"skip-message-on-error", "socket-buffer-size",
