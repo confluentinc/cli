@@ -205,36 +205,23 @@ func (c *rolebindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mds.Mds
 		}
 	})
 
-<<<<<<< HEAD
-	if scope.KafkaCluster == "" && nonKafkaScopesSet > 0 {
-		return nil, errors.HandleCommon(errors.New(errors.SpecifyKafkaIDErrorMsg), cmd)
-	}
-
-	if scope.KafkaCluster == "" && nonKafkaScopesSet == 0 {
-		return nil, errors.HandleCommon(errors.New(errors.SpecifyClusterIDErrorMsg), cmd)
-	}
-
-	if nonKafkaScopesSet > 1 {
-		return nil, errors.HandleCommon(errors.New(errors.MoreThanOneNonKafkaErrorMsg), cmd)
-=======
 	if clusterName != "" && (scope.KafkaCluster != "" || nonKafkaScopesSet > 0) {
-		return nil, errors.HandleCommon(errors.New("Cannot specify both cluster name and cluster scope."), cmd)
+		return nil, errors.HandleCommon(errors.New(errors.BothClusterNameAndScopeErrorMsg), cmd)
 	}
 
 	if clusterName == "" {
 		if scope.KafkaCluster == "" && nonKafkaScopesSet > 0 {
-			return nil, errors.HandleCommon(errors.New("Must also specify a --kafka-cluster-id to uniquely identify the scope."), cmd)
+			return nil, errors.HandleCommon(errors.New(errors.SpecifyKafkaIDErrorMsg), cmd)
 		}
 
 		if scope.KafkaCluster == "" && nonKafkaScopesSet == 0 {
-			return nil, errors.HandleCommon(errors.New("Must specify either cluster ID flag to indicate role binding scope or the cluster name."), cmd)
+			return nil, errors.HandleCommon(errors.New(errors.SpecifyClusterErrorMsg), cmd)
 		}
 
 		if nonKafkaScopesSet > 1 {
-			return nil, errors.HandleCommon(errors.New("Cannot specify more than one non-Kafka cluster ID for a scope."), cmd)
+			return nil, errors.HandleCommon(errors.New(errors.MoreThanOneNonKafkaErrorMsg), cmd)
 		}
 		return &mds.MdsScope{Clusters: *scope}, nil
->>>>>>> 78034772d58de134191bfa5e10203a2fbd9e2862
 	}
 
 	return &mds.MdsScope{ClusterName: clusterName}, nil
