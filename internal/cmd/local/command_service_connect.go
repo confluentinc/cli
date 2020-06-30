@@ -25,37 +25,44 @@ var connectors = []string{
 }
 
 func NewConnectConnectorCommand(prerunner cmd.PreRunner) *cobra.Command {
-	connectConnectorCommand := cmd.NewAnonymousCLICommand(
+	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "connector",
 			Short: "Manage connectors.",
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
-	connectConnectorCommand.AddCommand(NewConnectConnectorConfigCommand(prerunner))
-	connectConnectorCommand.AddCommand(NewConnectConnectorStatusCommand(prerunner))
-	connectConnectorCommand.AddCommand(NewConnectConnectorListCommand(prerunner))
-	connectConnectorCommand.AddCommand(NewConnectConnectorLoadCommand(prerunner))
-	connectConnectorCommand.AddCommand(NewConnectConnectorUnloadCommand(prerunner))
+	c.AddCommand(NewConnectConnectorConfigCommand(prerunner))
+	c.AddCommand(NewConnectConnectorStatusCommand(prerunner))
+	c.AddCommand(NewConnectConnectorListCommand(prerunner))
+	c.AddCommand(NewConnectConnectorLoadCommand(prerunner))
+	c.AddCommand(NewConnectConnectorUnloadCommand(prerunner))
 
-	return connectConnectorCommand.Command
+	return c.Command
 }
 
 func NewConnectConnectorConfigCommand(prerunner cmd.PreRunner) *cobra.Command {
-	connectConnectorConfigCommand := cmd.NewAnonymousCLICommand(
+	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "config [connector]",
 			Short: "Print a connector config, or configure an existing connector.",
 			Args:  cobra.ExactArgs(1),
-			RunE:  runConnectConnectorConfigCommand,
 		}, prerunner)
 
-	connectConnectorConfigCommand.Flags().StringP("config", "c", "", "Configuration file for a connector.")
-
-	return connectConnectorConfigCommand.Command
+	c.Command.RunE = c.runConnectConnectorConfigCommand
+	c.Flags().StringP("config", "c", "", "Configuration file for a connector.")
+	return c.Command
 }
 
-func runConnectConnectorConfigCommand(command *cobra.Command, args []string) error {
+func (c *LocalCommand) runConnectConnectorConfigCommand(command *cobra.Command, args []string) error {
+	isUp, err := c.isRunning("connect")
+	if err != nil {
+		return err
+	}
+	if !isUp {
+		return c.printStatus(command, "connect")
+	}
+
 	connector := args[0]
 
 	configFile, err := command.Flags().GetString("config")
@@ -95,18 +102,26 @@ func runConnectConnectorConfigCommand(command *cobra.Command, args []string) err
 }
 
 func NewConnectConnectorStatusCommand(prerunner cmd.PreRunner) *cobra.Command {
-	connectConnectorStatusCommand := cmd.NewAnonymousCLICommand(
+	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "status [connector]",
 			Short: "Check the status of all connectors, or a single connector.",
 			Args:  cobra.MaximumNArgs(1),
-			RunE:  runConnectConnectorStatusCommand,
 		}, prerunner)
 
-	return connectConnectorStatusCommand.Command
+	c.Command.RunE = c.runConnectConnectorStatusCommand
+	return c.Command
 }
 
-func runConnectConnectorStatusCommand(command *cobra.Command, args []string) error {
+func (c *LocalCommand) runConnectConnectorStatusCommand(command *cobra.Command, args []string) error {
+	isUp, err := c.isRunning("connect")
+	if err != nil {
+		return err
+	}
+	if !isUp {
+		return c.printStatus(command, "connect")
+	}
+
 	if len(args) == 0 {
 		out, err := getConnectorsStatus()
 		if err != nil {
@@ -128,46 +143,50 @@ func runConnectConnectorStatusCommand(command *cobra.Command, args []string) err
 }
 
 func NewConnectConnectorListCommand(prerunner cmd.PreRunner) *cobra.Command {
-	connectConnectorListCommand := cmd.NewAnonymousCLICommand(
+	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "list",
 			Short: "List connectors.",
 			Args:  cobra.NoArgs,
-			Run:   runConnectConnectorListCommand,
 		}, prerunner)
 
-	return connectConnectorListCommand.Command
+	c.Command.Run = c.runConnectConnectorListCommand
+	return c.Command
 }
 
-func runConnectConnectorListCommand(command *cobra.Command, _ []string) {
+func (c *LocalCommand) runConnectConnectorListCommand(command *cobra.Command, _ []string) {
 	command.Println("Bundled Predefined Connectors:")
 	command.Println(local.BuildTabbedList(connectors))
 }
 
 func NewConnectConnectorLoadCommand(prerunner cmd.PreRunner) *cobra.Command {
-	connectConnectorLoadCommand := cmd.NewAnonymousCLICommand(
+	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "load [connector]",
 			Short: "Load a connector.",
 			Args:  cobra.ExactArgs(1),
-			RunE:  runConnectConnectorLoadCommand,
 		}, prerunner)
 
-	connectConnectorLoadCommand.Flags().StringP("config", "c", "", "Configuration file for a connector.")
-
-	return connectConnectorLoadCommand.Command
+	c.Command.RunE = c.runConnectConnectorLoadCommand
+	c.Flags().StringP("config", "c", "", "Configuration file for a connector.")
+	return c.Command
 }
 
-func runConnectConnectorLoadCommand(command *cobra.Command, args []string) error {
+func (c *LocalCommand) runConnectConnectorLoadCommand(command *cobra.Command, args []string) error {
+	isUp, err := c.isRunning("connect")
+	if err != nil {
+		return err
+	}
+	if !isUp {
+		return c.printStatus(command, "connect")
+	}
+
 	connector := args[0]
 
 	var configFile string
-	var err error
 
-	if isBuiltin(connector) {
-		ch := local.NewConfluentHomeManager()
-
-		configFile, err = ch.GetConnectorConfigFile(connector)
+	if local.Contains(connectors, connector) {
+		configFile, err = c.ch.GetConnectorConfigFile(connector)
 		if err != nil {
 			return err
 		}
@@ -210,18 +229,26 @@ func runConnectConnectorLoadCommand(command *cobra.Command, args []string) error
 }
 
 func NewConnectConnectorUnloadCommand(prerunner cmd.PreRunner) *cobra.Command {
-	connectConnectorUnloadCommand := cmd.NewAnonymousCLICommand(
+	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "unload [connector]",
 			Short: "Unload a connector.",
 			Args:  cobra.ExactArgs(1),
-			RunE:  runConnectConnectorUnloadCommand,
 		}, prerunner)
 
-	return connectConnectorUnloadCommand.Command
+	c.Command.RunE = c.runConnectConnectorUnloadCommand
+	return c.Command
 }
 
-func runConnectConnectorUnloadCommand(command *cobra.Command, args []string) error {
+func (c *LocalCommand) runConnectConnectorUnloadCommand(command *cobra.Command, args []string) error {
+	isUp, err := c.isRunning("connect")
+	if err != nil {
+		return err
+	}
+	if !isUp {
+		return c.printStatus(command, "connect")
+	}
+
 	connector := args[0]
 	out, err := deleteConnectorConfig(connector)
 	if err != nil {
@@ -237,31 +264,39 @@ func runConnectConnectorUnloadCommand(command *cobra.Command, args []string) err
 }
 
 func NewConnectPluginCommand(prerunner cmd.PreRunner) *cobra.Command {
-	connectPluginCommand := cmd.NewAnonymousCLICommand(
+	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "plugin",
 			Short: "Manage connect plugins.",
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
-	connectPluginCommand.AddCommand(NewConnectPluginListCommand(prerunner))
+	c.AddCommand(NewConnectPluginListCommand(prerunner))
 
-	return connectPluginCommand.Command
+	return c.Command
 }
 
 func NewConnectPluginListCommand(prerunner cmd.PreRunner) *cobra.Command {
-	connectPluginListCommand := cmd.NewAnonymousCLICommand(
+	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "list",
 			Short: "List available connect plugins.",
 			Args:  cobra.NoArgs,
-			RunE:  runConnectPluginListCommand,
 		}, prerunner)
 
-	return connectPluginListCommand.Command
+	c.Command.RunE = c.runConnectPluginListCommand
+	return c.Command
 }
 
-func runConnectPluginListCommand(command *cobra.Command, _ []string) error {
+func (c *LocalCommand) runConnectPluginListCommand(command *cobra.Command, _ []string) error {
+	isUp, err := c.isRunning("connect")
+	if err != nil {
+		return err
+	}
+	if !isUp {
+		return c.printStatus(command, "connect")
+	}
+
 	url := fmt.Sprintf("http://localhost:%d/connector-plugins", services["connect"].port)
 	out, err := makeRequest("GET", url, []byte{})
 	if err != nil {
@@ -271,15 +306,6 @@ func runConnectPluginListCommand(command *cobra.Command, _ []string) error {
 	command.Println("Available Connect Plugins:")
 	command.Println(out)
 	return nil
-}
-
-func isBuiltin(connector string) bool {
-	for _, builtinConnector := range connectors {
-		if connector == builtinConnector {
-			return true
-		}
-	}
-	return false
 }
 
 func isJSON(data []byte) bool {
@@ -327,7 +353,7 @@ func makeRequest(method, url string, body []byte) (string, error) {
 	client := &http.Client{Timeout: 10 * time.Second}
 	res, err := client.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("start the connect service with \"confluent local services connect start\"")
+		return "", err
 	}
 
 	return formatJSONResponse(res)

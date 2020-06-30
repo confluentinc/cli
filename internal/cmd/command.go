@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/confluentinc/cli/internal/cmd/auditlog"
 	"net/http"
 	"os"
 	"runtime"
@@ -15,6 +16,7 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/cluster"
 	"github.com/confluentinc/cli/internal/cmd/completion"
 	"github.com/confluentinc/cli/internal/cmd/config"
+	"github.com/confluentinc/cli/internal/cmd/connect"
 	"github.com/confluentinc/cli/internal/cmd/connector"
 	connector_catalog "github.com/confluentinc/cli/internal/cmd/connector-catalog"
 	"github.com/confluentinc/cli/internal/cmd/environment"
@@ -121,7 +123,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 	cli.AddCommand(auth.New(cliName, prerunner, logger, ver.UserAgent, analyticsClient, netrcHandler)...)
 	isAPILogin := isAPIKeyCredential(cfg)
 	if cliName == "ccloud" {
-		cmd := kafka.New(isAPILogin, prerunner, logger.Named("kafka"), ver.ClientID)
+		cmd := kafka.New(isAPILogin, cliName, prerunner, logger.Named("kafka"), ver.ClientID)
 		cli.AddCommand(cmd)
 		cli.AddCommand(feedback.NewFeedbackCmd(cliName, prerunner, analyticsClient))
 		cli.AddCommand(initcontext.New(prerunner, prompt, resolver, analyticsClient))
@@ -138,7 +140,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		// Schema Registry
 		// If srClient is nil, the function will look it up after prerunner verifies authentication. Exposed so tests can pass mocks
 		cli.AddCommand(schema_registry.New(cliName, prerunner, nil, logger))
-		cli.AddCommand(ksql.New(prerunner))
+		cli.AddCommand(ksql.New(cliName, prerunner))
 		cli.AddCommand(connector.New(cliName, prerunner))
 		cli.AddCommand(connector_catalog.New(cliName, prerunner))
 		//conn = connect.New(prerunner, cfg, connects.New(client, logger))
@@ -146,6 +148,14 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		//cli.AddCommand(conn)
 	} else if cliName == "confluent" {
 		cli.AddCommand(iam.New(cliName, prerunner))
+		// Kafka Command
+		isAPILogin := isAPIKeyCredential(cfg)
+		cmd := kafka.New(isAPILogin, cliName, prerunner, logger.Named("kafka"), ver.ClientID)
+		cli.AddCommand(cmd)
+		sr := schema_registry.New(cliName, prerunner, nil, logger)
+		cli.AddCommand(sr)
+		cli.AddCommand(ksql.New(cliName, prerunner))
+		cli.AddCommand(connect.New(prerunner))
 
 		metaClient := cluster.NewScopedIdService(&http.Client{}, ver.UserAgent, logger)
 		cli.AddCommand(cluster.New(prerunner, metaClient))
@@ -164,6 +174,8 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		cli.AddCommand(command)
 
 		cli.AddCommand(secret.New(prompt, resolver, secrets.NewPasswordProtectionPlugin(logger)))
+
+		cli.AddCommand(auditlog.New(prerunner))
 	}
 	return command, nil
 }

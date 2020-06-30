@@ -34,7 +34,11 @@ func New(cliName string, prerunner pcmd.PreRunner, srClient *srsdk.APIClient, lo
 }
 
 func (c *command) init(cliName string) {
-	c.AddCommand(NewClusterCommand(cliName, c.prerunner, c.srClient, c.logger))
-	c.AddCommand(NewSubjectCommand(cliName, c.prerunner, c.srClient))
-	c.AddCommand(NewSchemaCommand(cliName, c.prerunner, c.srClient))
+	if cliName == "ccloud" {
+		c.AddCommand(NewClusterCommand(cliName, c.prerunner, c.srClient, c.logger))
+		c.AddCommand(NewSubjectCommand(cliName, c.prerunner, c.srClient))
+		c.AddCommand(NewSchemaCommand(cliName, c.prerunner, c.srClient))
+	} else {
+		c.AddCommand(NewClusterCommandOnPrem(c.prerunner))
+	}
 }

@@ -1,0 +1,17 @@
+Error: required flag(s) "kafka-cluster-id" not set
+Usage:
+  confluent cluster register [flags]
+
+Flags:
+      --cluster-name string                 Cluster name.
+      --kafka-cluster-id string             Kafka cluster ID.
+      --schema-registry-cluster-id string   Schema Registry cluster ID.
+      --ksql-cluster-id string              KSQL cluster ID.
+      --connect-cluster-id string           Kafka Connect cluster ID.
+      --hosts string                        A comma separated list of hosts.
+      --protocol string                     Security protocol.
+  -h, --help                                help for register
+
+Global Flags:
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+

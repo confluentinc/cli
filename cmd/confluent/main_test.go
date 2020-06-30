@@ -41,8 +41,6 @@ func TestAddCommands_ShownInHelpUsage_Confluent(t *testing.T) {
 
 	output, err := pcmd.ExecuteCommand(root.Command, "help")
 	req.NoError(err)
-	req.NotContains(output, "kafka")
-	req.NotContains(output, "ksql")
 	req.NotContains(output, "Manage and select")
 	req.NotContains(output, "service-account")
 	req.NotContains(output, "api-key")
@@ -52,4 +50,8 @@ func TestAddCommands_ShownInHelpUsage_Confluent(t *testing.T) {
 	req.Contains(output, "version")
 	req.Contains(output, "completion")
 	req.Contains(output, "iam")
+	req.Contains(output, "kafka")
+	req.Contains(output, "ksql")
+	req.Contains(output, "schema-registry")
+	req.Contains(output, "connect")
 }

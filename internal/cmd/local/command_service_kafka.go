@@ -5,10 +5,8 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"strconv"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/local"
@@ -106,90 +104,97 @@ var (
 )
 
 func NewKafkaConsumeCommand(prerunner cmd.PreRunner) *cobra.Command {
-	kafkaConsumeCommand := cmd.NewAnonymousCLICommand(
+	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "consume [topic]",
 			Short: "Consume from a kafka topic.",
 			Args:  cobra.ExactArgs(1),
-			RunE:  runKafkaConsumeCommand,
 		}, prerunner)
 
+	c.Command.RunE = c.runKafkaConsumeCommand
+
 	// CLI Flags
-	kafkaConsumeCommand.Flags().Bool("cloud", defaultBool, commonFlagUsage["cloud"])
+	c.Flags().Bool("cloud", defaultBool, commonFlagUsage["cloud"])
 	defaultConfig := fmt.Sprintf("%s/.ccloud/config", os.Getenv("HOME"))
-	kafkaConsumeCommand.Flags().String("config", defaultConfig, commonFlagUsage["config"])
-	kafkaConsumeCommand.Flags().String("value-format", defaultString, commonFlagUsage["value-format"])
+	c.Flags().String("config", defaultConfig, commonFlagUsage["config"])
+	c.Flags().String("value-format", defaultString, commonFlagUsage["value-format"])
 
 	// Kafka Flags
 	defaultBootstrapServer := fmt.Sprintf("localhost:%d", services["kafka"].port)
-	kafkaConsumeCommand.Flags().String("bootstrap-server", defaultBootstrapServer, commonFlagUsage["bootstrap-server"])
+	c.Flags().String("bootstrap-server", defaultBootstrapServer, commonFlagUsage["bootstrap-server"])
 	for flag, val := range kafkaConsumeDefaultValues {
 		switch val.(type) {
 		case bool:
-			kafkaConsumeCommand.Flags().Bool(flag, val.(bool), kafkaConsumeFlagUsage[flag])
+			c.Flags().Bool(flag, val.(bool), kafkaConsumeFlagUsage[flag])
 		case int:
-			kafkaConsumeCommand.Flags().Int(flag, val.(int), kafkaConsumeFlagUsage[flag])
+			c.Flags().Int(flag, val.(int), kafkaConsumeFlagUsage[flag])
 		case string:
-			kafkaConsumeCommand.Flags().String(flag, val.(string), kafkaConsumeFlagUsage[flag])
+			c.Flags().String(flag, val.(string), kafkaConsumeFlagUsage[flag])
 		}
 	}
 
-	return kafkaConsumeCommand.Command
+	return c.Command
 }
 
-func runKafkaConsumeCommand(command *cobra.Command, args []string) error {
-	return runKafkaCommand(command, args, "consume", kafkaConsumeDefaultValues)
+func (c *LocalCommand) runKafkaConsumeCommand(command *cobra.Command, args []string) error {
+	return c.runKafkaCommand(command, args, "consume", kafkaConsumeDefaultValues)
 }
 
 func NewKafkaProduceCommand(prerunner cmd.PreRunner) *cobra.Command {
-	kafkaProduceCommand := cmd.NewAnonymousCLICommand(
+	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "produce [topic]",
 			Short: "Produce to a kafka topic.",
 			Args:  cobra.ExactArgs(1),
-			RunE:  runKafkaProduceCommand,
 		}, prerunner)
 
+	c.Command.RunE = c.runKafkaProduceCommand
+
 	// CLI Flags
-	kafkaProduceCommand.Flags().Bool("cloud", defaultBool, commonFlagUsage["cloud"])
+	c.Flags().Bool("cloud", defaultBool, commonFlagUsage["cloud"])
 	defaultConfig := fmt.Sprintf("%s/.ccloud/config", os.Getenv("HOME"))
-	kafkaProduceCommand.Flags().String("config", defaultConfig, commonFlagUsage["config"])
-	kafkaProduceCommand.Flags().String("value-format", defaultString, commonFlagUsage["value-format"])
+	c.Flags().String("config", defaultConfig, commonFlagUsage["config"])
+	c.Flags().String("value-format", defaultString, commonFlagUsage["value-format"])
 
 	// Kafka Flags
 	defaultBootstrapServer := fmt.Sprintf("localhost:%d", services["kafka"].port)
-	kafkaProduceCommand.Flags().String("bootstrap-server", defaultBootstrapServer, commonFlagUsage["bootstrap-server"])
+	c.Flags().String("bootstrap-server", defaultBootstrapServer, commonFlagUsage["bootstrap-server"])
 	for flag, val := range kafkaProduceDefaultValues {
 		switch val.(type) {
 		case bool:
-			kafkaProduceCommand.Flags().Bool(flag, val.(bool), kafkaProduceFlagUsage[flag])
+			c.Flags().Bool(flag, val.(bool), kafkaProduceFlagUsage[flag])
 		case int:
-			kafkaProduceCommand.Flags().Int(flag, val.(int), kafkaProduceFlagUsage[flag])
+			c.Flags().Int(flag, val.(int), kafkaProduceFlagUsage[flag])
 		case string:
-			kafkaProduceCommand.Flags().String(flag, val.(string), kafkaProduceFlagUsage[flag])
+			c.Flags().String(flag, val.(string), kafkaProduceFlagUsage[flag])
 		}
 	}
 
-	return kafkaProduceCommand.Command
+	return c.Command
 }
 
-func runKafkaProduceCommand(command *cobra.Command, args []string) error {
-	return runKafkaCommand(command, args, "produce", kafkaProduceDefaultValues)
+func (c *LocalCommand) runKafkaProduceCommand(command *cobra.Command, args []string) error {
+	return c.runKafkaCommand(command, args, "produce", kafkaProduceDefaultValues)
 }
 
-func runKafkaCommand(command *cobra.Command, args []string, mode string, kafkaFlagTypes map[string]interface{}) error {
+func (c *LocalCommand) runKafkaCommand(command *cobra.Command, args []string, mode string, kafkaFlagTypes map[string]interface{}) error {
+	isUp, err := c.isRunning("kafka")
+	if err != nil {
+		return err
+	}
+	if !isUp {
+		return c.printStatus(command, "kafka")
+	}
+
 	format, err := command.Flags().GetString("value-format")
 	if err != nil {
 		return err
 	}
 
 	// "consume" -> "consumer"
-	// "produce" -> "producer"
 	modeNoun := fmt.Sprintf("%sr", mode)
 
-	ch := local.NewConfluentHomeManager()
-
-	scriptFile, err := ch.GetKafkaScript(format, modeNoun)
+	scriptFile, err := c.ch.GetKafkaScript(format, modeNoun)
 	if err != nil {
 		return err
 	}
@@ -222,7 +227,7 @@ func runKafkaCommand(command *cobra.Command, args []string, mode string, kafkaFl
 		delete(kafkaFlagTypes, "bootstrap-server")
 	}
 
-	kafkaArgs, err := collectFlags(command.Flags(), kafkaFlagTypes)
+	kafkaArgs, err := local.CollectFlags(command.Flags(), kafkaFlagTypes)
 	if err != nil {
 		return err
 	}
@@ -239,46 +244,15 @@ func runKafkaCommand(command *cobra.Command, args []string, mode string, kafkaFl
 	kafkaCommand.Stderr = os.Stderr
 	if mode == "produce" {
 		kafkaCommand.Stdin = os.Stdin
-		fmt.Println("Exit with Ctrl+D")
+		command.Println("Exit with Ctrl+D")
+	}
+
+	kafkaCommand.Env = []string{
+		fmt.Sprintf("LOG_DIR=%s", os.TempDir()),
+	}
+	if mode == "consume" {
+		kafkaCommand.Env = append(kafkaCommand.Env, "SCHEMA_REGISTRY_LOG4J_LOGGERS=\"INFO, stdout\"")
 	}
 
 	return kafkaCommand.Run()
-}
-
-func collectFlags(flags *pflag.FlagSet, flagTypes map[string]interface{}) ([]string, error) {
-	var args []string
-
-	for key, typeDefault := range flagTypes {
-		var val interface{}
-		var err error
-
-		switch typeDefault.(type) {
-		case bool:
-			val, err = flags.GetBool(key)
-		case string:
-			val, err = flags.GetString(key)
-		case int:
-			val, err = flags.GetInt(key)
-		}
-
-		if err != nil {
-			return []string{}, err
-		}
-		if val == typeDefault {
-			continue
-		}
-
-		flag := fmt.Sprintf("--%s", key)
-
-		switch typeDefault.(type) {
-		case bool:
-			args = append(args, flag)
-		case string:
-			args = append(args, flag, val.(string))
-		case int:
-			args = append(args, flag, strconv.Itoa(val.(int)))
-		}
-	}
-
-	return args, nil
 }

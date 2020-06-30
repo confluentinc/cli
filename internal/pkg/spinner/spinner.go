@@ -2,6 +2,7 @@ package spinner
 
 import (
 	"fmt"
+	"os"
 	"time"
 )
 
@@ -34,7 +35,7 @@ func (s *Spinner) run() {
 		select {
 		case <-tick:
 			clear()
-			fmt.Print(frames[i])
+			fmt.Fprint(os.Stderr, frames[i])
 		case <-s.stop:
 			clear()
 			close(s.wait)
@@ -44,5 +45,5 @@ func (s *Spinner) run() {
 }
 
 func clear() {
-	fmt.Print("\033[1D")
+	fmt.Fprint(os.Stderr, "\033[1D")
 }

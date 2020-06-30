@@ -25,11 +25,14 @@ type MockConfluentHome struct {
 	lockGetConfluentVersion sync.Mutex
 	GetConfluentVersionFunc func() (string, error)
 
-	lockGetServiceStartScript sync.Mutex
-	GetServiceStartScriptFunc func(service string) (string, error)
+	lockGetServiceScript sync.Mutex
+	GetServiceScriptFunc func(action, service string) (string, error)
 
-	lockGetServiceConfig sync.Mutex
-	GetServiceConfigFunc func(service string) ([]byte, error)
+	lockReadServiceConfig sync.Mutex
+	ReadServiceConfigFunc func(service string) ([]byte, error)
+
+	lockReadServicePort sync.Mutex
+	ReadServicePortFunc func(service string) (int, error)
 
 	lockGetVersion sync.Mutex
 	GetVersionFunc func(service string) (string, error)
@@ -40,8 +43,8 @@ type MockConfluentHome struct {
 	lockGetKafkaScript sync.Mutex
 	GetKafkaScriptFunc func(mode, format string) (string, error)
 
-	lockGetDemoReadme sync.Mutex
-	GetDemoReadmeFunc func(demo string) (string, error)
+	lockReadDemoReadme sync.Mutex
+	ReadDemoReadmeFunc func(demo string) (string, error)
 
 	calls struct {
 		GetFile []struct {
@@ -57,10 +60,14 @@ type MockConfluentHome struct {
 		}
 		GetConfluentVersion []struct {
 		}
-		GetServiceStartScript []struct {
+		GetServiceScript []struct {
+			Action  string
 			Service string
 		}
-		GetServiceConfig []struct {
+		ReadServiceConfig []struct {
+			Service string
+		}
+		ReadServicePort []struct {
 			Service string
 		}
 		GetVersion []struct {
@@ -73,7 +80,7 @@ type MockConfluentHome struct {
 			Mode   string
 			Format string
 		}
-		GetDemoReadme []struct {
+		ReadDemoReadme []struct {
 			Demo string
 		}
 	}
@@ -261,13 +268,54 @@ func (m *MockConfluentHome) GetConfluentVersionCalls() []struct {
 	return m.calls.GetConfluentVersion
 }
 
-// GetServiceStartScript mocks base method by wrapping the associated func.
-func (m *MockConfluentHome) GetServiceStartScript(service string) (string, error) {
-	m.lockGetServiceStartScript.Lock()
-	defer m.lockGetServiceStartScript.Unlock()
+// GetServiceScript mocks base method by wrapping the associated func.
+func (m *MockConfluentHome) GetServiceScript(action, service string) (string, error) {
+	m.lockGetServiceScript.Lock()
+	defer m.lockGetServiceScript.Unlock()
 
-	if m.GetServiceStartScriptFunc == nil {
-		panic("mocker: MockConfluentHome.GetServiceStartScriptFunc is nil but MockConfluentHome.GetServiceStartScript was called.")
+	if m.GetServiceScriptFunc == nil {
+		panic("mocker: MockConfluentHome.GetServiceScriptFunc is nil but MockConfluentHome.GetServiceScript was called.")
+	}
+
+	call := struct {
+		Action  string
+		Service string
+	}{
+		Action:  action,
+		Service: service,
+	}
+
+	m.calls.GetServiceScript = append(m.calls.GetServiceScript, call)
+
+	return m.GetServiceScriptFunc(action, service)
+}
+
+// GetServiceScriptCalled returns true if GetServiceScript was called at least once.
+func (m *MockConfluentHome) GetServiceScriptCalled() bool {
+	m.lockGetServiceScript.Lock()
+	defer m.lockGetServiceScript.Unlock()
+
+	return len(m.calls.GetServiceScript) > 0
+}
+
+// GetServiceScriptCalls returns the calls made to GetServiceScript.
+func (m *MockConfluentHome) GetServiceScriptCalls() []struct {
+	Action  string
+	Service string
+} {
+	m.lockGetServiceScript.Lock()
+	defer m.lockGetServiceScript.Unlock()
+
+	return m.calls.GetServiceScript
+}
+
+// ReadServiceConfig mocks base method by wrapping the associated func.
+func (m *MockConfluentHome) ReadServiceConfig(service string) ([]byte, error) {
+	m.lockReadServiceConfig.Lock()
+	defer m.lockReadServiceConfig.Unlock()
+
+	if m.ReadServiceConfigFunc == nil {
+		panic("mocker: MockConfluentHome.ReadServiceConfigFunc is nil but MockConfluentHome.ReadServiceConfig was called.")
 	}
 
 	call := struct {
@@ -276,36 +324,36 @@ func (m *MockConfluentHome) GetServiceStartScript(service string) (string, error
 		Service: service,
 	}
 
-	m.calls.GetServiceStartScript = append(m.calls.GetServiceStartScript, call)
+	m.calls.ReadServiceConfig = append(m.calls.ReadServiceConfig, call)
 
-	return m.GetServiceStartScriptFunc(service)
+	return m.ReadServiceConfigFunc(service)
 }
 
-// GetServiceStartScriptCalled returns true if GetServiceStartScript was called at least once.
-func (m *MockConfluentHome) GetServiceStartScriptCalled() bool {
-	m.lockGetServiceStartScript.Lock()
-	defer m.lockGetServiceStartScript.Unlock()
+// ReadServiceConfigCalled returns true if ReadServiceConfig was called at least once.
+func (m *MockConfluentHome) ReadServiceConfigCalled() bool {
+	m.lockReadServiceConfig.Lock()
+	defer m.lockReadServiceConfig.Unlock()
 
-	return len(m.calls.GetServiceStartScript) > 0
+	return len(m.calls.ReadServiceConfig) > 0
 }
 
-// GetServiceStartScriptCalls returns the calls made to GetServiceStartScript.
-func (m *MockConfluentHome) GetServiceStartScriptCalls() []struct {
+// ReadServiceConfigCalls returns the calls made to ReadServiceConfig.
+func (m *MockConfluentHome) ReadServiceConfigCalls() []struct {
 	Service string
 } {
-	m.lockGetServiceStartScript.Lock()
-	defer m.lockGetServiceStartScript.Unlock()
+	m.lockReadServiceConfig.Lock()
+	defer m.lockReadServiceConfig.Unlock()
 
-	return m.calls.GetServiceStartScript
+	return m.calls.ReadServiceConfig
 }
 
-// GetServiceConfig mocks base method by wrapping the associated func.
-func (m *MockConfluentHome) GetServiceConfig(service string) ([]byte, error) {
-	m.lockGetServiceConfig.Lock()
-	defer m.lockGetServiceConfig.Unlock()
+// ReadServicePort mocks base method by wrapping the associated func.
+func (m *MockConfluentHome) ReadServicePort(service string) (int, error) {
+	m.lockReadServicePort.Lock()
+	defer m.lockReadServicePort.Unlock()
 
-	if m.GetServiceConfigFunc == nil {
-		panic("mocker: MockConfluentHome.GetServiceConfigFunc is nil but MockConfluentHome.GetServiceConfig was called.")
+	if m.ReadServicePortFunc == nil {
+		panic("mocker: MockConfluentHome.ReadServicePortFunc is nil but MockConfluentHome.ReadServicePort was called.")
 	}
 
 	call := struct {
@@ -314,27 +362,27 @@ func (m *MockConfluentHome) GetServiceConfig(service string) ([]byte, error) {
 		Service: service,
 	}
 
-	m.calls.GetServiceConfig = append(m.calls.GetServiceConfig, call)
+	m.calls.ReadServicePort = append(m.calls.ReadServicePort, call)
 
-	return m.GetServiceConfigFunc(service)
+	return m.ReadServicePortFunc(service)
 }
 
-// GetServiceConfigCalled returns true if GetServiceConfig was called at least once.
-func (m *MockConfluentHome) GetServiceConfigCalled() bool {
-	m.lockGetServiceConfig.Lock()
-	defer m.lockGetServiceConfig.Unlock()
+// ReadServicePortCalled returns true if ReadServicePort was called at least once.
+func (m *MockConfluentHome) ReadServicePortCalled() bool {
+	m.lockReadServicePort.Lock()
+	defer m.lockReadServicePort.Unlock()
 
-	return len(m.calls.GetServiceConfig) > 0
+	return len(m.calls.ReadServicePort) > 0
 }
 
-// GetServiceConfigCalls returns the calls made to GetServiceConfig.
-func (m *MockConfluentHome) GetServiceConfigCalls() []struct {
+// ReadServicePortCalls returns the calls made to ReadServicePort.
+func (m *MockConfluentHome) ReadServicePortCalls() []struct {
 	Service string
 } {
-	m.lockGetServiceConfig.Lock()
-	defer m.lockGetServiceConfig.Unlock()
+	m.lockReadServicePort.Lock()
+	defer m.lockReadServicePort.Unlock()
 
-	return m.calls.GetServiceConfig
+	return m.calls.ReadServicePort
 }
 
 // GetVersion mocks base method by wrapping the associated func.
@@ -454,13 +502,13 @@ func (m *MockConfluentHome) GetKafkaScriptCalls() []struct {
 	return m.calls.GetKafkaScript
 }
 
-// GetDemoReadme mocks base method by wrapping the associated func.
-func (m *MockConfluentHome) GetDemoReadme(demo string) (string, error) {
-	m.lockGetDemoReadme.Lock()
-	defer m.lockGetDemoReadme.Unlock()
+// ReadDemoReadme mocks base method by wrapping the associated func.
+func (m *MockConfluentHome) ReadDemoReadme(demo string) (string, error) {
+	m.lockReadDemoReadme.Lock()
+	defer m.lockReadDemoReadme.Unlock()
 
-	if m.GetDemoReadmeFunc == nil {
-		panic("mocker: MockConfluentHome.GetDemoReadmeFunc is nil but MockConfluentHome.GetDemoReadme was called.")
+	if m.ReadDemoReadmeFunc == nil {
+		panic("mocker: MockConfluentHome.ReadDemoReadmeFunc is nil but MockConfluentHome.ReadDemoReadme was called.")
 	}
 
 	call := struct {
@@ -469,27 +517,27 @@ func (m *MockConfluentHome) GetDemoReadme(demo string) (string, error) {
 		Demo: demo,
 	}
 
-	m.calls.GetDemoReadme = append(m.calls.GetDemoReadme, call)
+	m.calls.ReadDemoReadme = append(m.calls.ReadDemoReadme, call)
 
-	return m.GetDemoReadmeFunc(demo)
+	return m.ReadDemoReadmeFunc(demo)
 }
 
-// GetDemoReadmeCalled returns true if GetDemoReadme was called at least once.
-func (m *MockConfluentHome) GetDemoReadmeCalled() bool {
-	m.lockGetDemoReadme.Lock()
-	defer m.lockGetDemoReadme.Unlock()
+// ReadDemoReadmeCalled returns true if ReadDemoReadme was called at least once.
+func (m *MockConfluentHome) ReadDemoReadmeCalled() bool {
+	m.lockReadDemoReadme.Lock()
+	defer m.lockReadDemoReadme.Unlock()
 
-	return len(m.calls.GetDemoReadme) > 0
+	return len(m.calls.ReadDemoReadme) > 0
 }
 
-// GetDemoReadmeCalls returns the calls made to GetDemoReadme.
-func (m *MockConfluentHome) GetDemoReadmeCalls() []struct {
+// ReadDemoReadmeCalls returns the calls made to ReadDemoReadme.
+func (m *MockConfluentHome) ReadDemoReadmeCalls() []struct {
 	Demo string
 } {
-	m.lockGetDemoReadme.Lock()
-	defer m.lockGetDemoReadme.Unlock()
+	m.lockReadDemoReadme.Lock()
+	defer m.lockReadDemoReadme.Unlock()
 
-	return m.calls.GetDemoReadme
+	return m.calls.ReadDemoReadme
 }
 
 // Reset resets the calls made to the mocked methods.
@@ -509,12 +557,15 @@ func (m *MockConfluentHome) Reset() {
 	m.lockGetConfluentVersion.Lock()
 	m.calls.GetConfluentVersion = nil
 	m.lockGetConfluentVersion.Unlock()
-	m.lockGetServiceStartScript.Lock()
-	m.calls.GetServiceStartScript = nil
-	m.lockGetServiceStartScript.Unlock()
-	m.lockGetServiceConfig.Lock()
-	m.calls.GetServiceConfig = nil
-	m.lockGetServiceConfig.Unlock()
+	m.lockGetServiceScript.Lock()
+	m.calls.GetServiceScript = nil
+	m.lockGetServiceScript.Unlock()
+	m.lockReadServiceConfig.Lock()
+	m.calls.ReadServiceConfig = nil
+	m.lockReadServiceConfig.Unlock()
+	m.lockReadServicePort.Lock()
+	m.calls.ReadServicePort = nil
+	m.lockReadServicePort.Unlock()
 	m.lockGetVersion.Lock()
 	m.calls.GetVersion = nil
 	m.lockGetVersion.Unlock()
@@ -524,7 +575,7 @@ func (m *MockConfluentHome) Reset() {
 	m.lockGetKafkaScript.Lock()
 	m.calls.GetKafkaScript = nil
 	m.lockGetKafkaScript.Unlock()
-	m.lockGetDemoReadme.Lock()
-	m.calls.GetDemoReadme = nil
-	m.lockGetDemoReadme.Unlock()
+	m.lockReadDemoReadme.Lock()
+	m.calls.ReadDemoReadme = nil
+	m.lockReadDemoReadme.Unlock()
 }

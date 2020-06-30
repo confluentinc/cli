@@ -12,7 +12,7 @@ type command struct {
 }
 
 // New returns the default command object for interacting with KSQL.
-func New(prerunner pcmd.PreRunner) *cobra.Command {
+func New(cliName string, prerunner pcmd.PreRunner) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "ksql",
@@ -22,10 +22,14 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 		AuthenticatedCLICommand: cliCmd,
 		prerunner:               prerunner,
 	}
-	cmd.init()
+	cmd.init(cliName)
 	return cmd.Command
 }
 
-func (c *command) init() {
-	c.AddCommand(NewClusterCommand(c.prerunner))
+func (c *command) init(cliName string) {
+	if cliName == "ccloud" {
+		c.AddCommand(NewClusterCommand(c.prerunner))
+	} else {
+		c.AddCommand(NewClusterCommandOnPrem(c.prerunner))
+	}
 }

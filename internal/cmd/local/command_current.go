@@ -4,25 +4,22 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/local"
 )
 
 func NewCurrentCommand(prerunner cmd.PreRunner) *cobra.Command {
-	currentCommand := cmd.NewAnonymousCLICommand(
+	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "current",
 			Short: "Get the path of the data and logs for the current Confluent run.",
 			Args:  cobra.NoArgs,
-			RunE:  runCurrentCommand,
 		}, prerunner)
 
-	return currentCommand.Command
+	c.Command.RunE = c.runCurrentCommand
+	return c.Command
 }
 
-func runCurrentCommand(command *cobra.Command, _ []string) error {
-	cc := local.NewConfluentCurrentManager()
-
-	dir, err := cc.GetCurrentDir()
+func (c *LocalCommand) runCurrentCommand(command *cobra.Command, _ []string) error {
+	dir, err := c.cc.GetCurrentDir()
 	if err != nil {
 		return err
 	}

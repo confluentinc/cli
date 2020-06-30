@@ -4,25 +4,22 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/local"
 )
 
 func NewVersionCommand(prerunner cmd.PreRunner) *cobra.Command {
-	versionCommand := cmd.NewAnonymousCLICommand(
+	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "version",
 			Short: "Print the Confluent Platform version.",
 			Args:  cobra.NoArgs,
-			RunE:  runVersionCommand,
 		}, prerunner)
 
-	return versionCommand.Command
+	c.Command.RunE = c.runVersionCommand
+	return c.Command
 }
 
-func runVersionCommand(command *cobra.Command, _ []string) error {
-	ch := local.NewConfluentHomeManager()
-
-	isCP, err := ch.IsConfluentPlatform()
+func (c *LocalCommand) runVersionCommand(command *cobra.Command, _ []string) error {
+	isCP, err := c.ch.IsConfluentPlatform()
 	if err != nil {
 		return err
 	}
@@ -32,7 +29,7 @@ func runVersionCommand(command *cobra.Command, _ []string) error {
 		flavor = "Confluent Platform"
 	}
 
-	version, err := ch.GetVersion(flavor)
+	version, err := c.ch.GetVersion(flavor)
 	if err != nil {
 		return err
 	}

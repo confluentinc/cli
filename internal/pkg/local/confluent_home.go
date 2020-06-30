@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/hashicorp/go-version"
@@ -25,12 +26,12 @@ CONFLUENT_HOME/
 var (
 	scripts = map[string]string{
 		"connect":         "connect-distributed",
-		"control-center":  "control-center-start",
-		"kafka":           "kafka-server-start",
-		"kafka-rest":      "kafka-rest-start",
-		"ksql-server":     "ksql-server-start",
-		"schema-registry": "schema-registry-start",
-		"zookeeper":       "zookeeper-server-start",
+		"control-center":  "control-center-%s",
+		"kafka":           "kafka-server-%s",
+		"kafka-rest":      "kafka-rest-%s",
+		"ksql-server":     "ksql-server-%s",
+		"schema-registry": "schema-registry-%s",
+		"zookeeper":       "zookeeper-server-%s",
 	}
 	serviceConfigs = map[string]string{
 		"connect":         "schema-registry/connect-avro-distributed.properties",
@@ -40,6 +41,15 @@ var (
 		"ksql-server":     "ksqldb/ksql-server.properties",
 		"schema-registry": "schema-registry/schema-registry.properties",
 		"zookeeper":       "kafka/zookeeper.properties",
+	}
+	servicePortKeys = map[string]string{
+		"connect":         "rest.port",
+		"control-center":  "listeners",
+		"kafka":           "listeners",
+		"kafka-rest":      "listeners",
+		"ksql-server":     "listeners",
+		"schema-registry": "listeners",
+		"zookeeper":       "clientPort",
 	}
 	connectorConfigs = map[string]string{
 		"elasticsearch-sink": "kafka-connect-elasticsearch/quickstart-elasticsearch.properties",
@@ -66,13 +76,14 @@ type ConfluentHome interface {
 	IsConfluentPlatform() (bool, error)
 	GetConfluentVersion() (string, error)
 
-	GetServiceStartScript(service string) (string, error)
-	GetServiceConfig(service string) ([]byte, error)
+	GetServiceScript(action, service string) (string, error)
+	ReadServiceConfig(service string) ([]byte, error)
+	ReadServicePort(service string) (int, error)
 	GetVersion(service string) (string, error)
 
 	GetConnectorConfigFile(connector string) (string, error)
 	GetKafkaScript(mode, format string) (string, error)
-	GetDemoReadme(demo string) (string, error)
+	ReadDemoReadme(demo string) (string, error)
 }
 
 type ConfluentHomeManager struct{}
@@ -151,11 +162,18 @@ func (ch *ConfluentHomeManager) GetConfluentVersion() (string, error) {
 	}
 }
 
-func (ch *ConfluentHomeManager) GetServiceStartScript(service string) (string, error) {
-	return ch.GetFile("bin", scripts[service])
+func (ch *ConfluentHomeManager) GetServiceScript(action, service string) (string, error) {
+	if service == "connect" {
+		if action == "start" {
+			return ch.GetFile("bin", scripts[service])
+		} else {
+			return "", nil
+		}
+	}
+	return ch.GetFile("bin", fmt.Sprintf(scripts[service], action))
 }
 
-func (ch *ConfluentHomeManager) GetServiceConfig(service string) ([]byte, error) {
+func (ch *ConfluentHomeManager) ReadServiceConfig(service string) ([]byte, error) {
 	file, err := ch.GetFile("etc", serviceConfigs[service])
 	if err != nil {
 		return []byte{}, err
@@ -172,6 +190,33 @@ func (ch *ConfluentHomeManager) GetServiceConfig(service string) ([]byte, error)
 	}
 
 	return ioutil.ReadFile(file)
+}
+
+func (ch *ConfluentHomeManager) ReadServicePort(service string) (int, error) {
+	data, err := ch.ReadServiceConfig(service)
+	if err != nil {
+		return 0, err
+	}
+
+	config := ExtractConfig(data)
+
+	key := servicePortKeys[service]
+	val, ok := config[key]
+	if !ok {
+		return 0, fmt.Errorf("no port specified")
+	}
+
+	if key == "listeners" {
+		x := strings.Split(val, ":")
+		val = x[len(x)-1]
+	}
+
+	port, err := strconv.Atoi(val)
+	if err != nil {
+		return 0, err
+	}
+
+	return port, nil
 }
 
 func (ch *ConfluentHomeManager) GetVersion(service string) (string, error) {
@@ -227,7 +272,7 @@ func (ch *ConfluentHomeManager) GetKafkaScript(format, mode string) (string, err
 	return ch.GetFile("bin", script)
 }
 
-func (ch *ConfluentHomeManager) GetDemoReadme(demo string) (string, error) {
+func (ch *ConfluentHomeManager) ReadDemoReadme(demo string) (string, error) {
 	readme, err := ch.GetFile("examples", demo, "README.md")
 	if err != nil {
 		return "", err

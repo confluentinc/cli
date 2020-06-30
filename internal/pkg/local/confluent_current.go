@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -20,29 +21,31 @@ CONFLUENT_CURRENT/
 	confluent.000000/
 		[service]/
 			data/
-			logs/ # TODO
-			[service].config
-			[service].log
+			logs/
 			[service].pid
+			[service].properties
+			[service].stdout
 */
 
 type ConfluentCurrent interface {
+	HasTrackingFile() bool
 	RemoveTrackingFile() error
 
 	GetCurrentDir() (string, error)
 	RemoveCurrentDir() error
 
 	GetDataDir(service string) (string, error)
+	GetLogsDir(service string) (string, error)
 
 	GetConfigFile(service string) (string, error)
-	SetConfig(service string, config []byte) error
+	WriteConfig(service string, config []byte) error
 
 	GetLogFile(service string) (string, error)
 
 	GetPidFile(service string) (string, error)
 	HasPidFile(service string) (bool, error)
-	GetPid(service string) (int, error)
-	SetPid(service string, pid int) error
+	ReadPid(service string) (int, error)
+	WritePid(service string, pid int) error
 	RemovePidFile(service string) error
 }
 
@@ -58,6 +61,15 @@ func NewConfluentCurrentManager() *ConfluentCurrentManager {
 	return cc
 }
 
+func (cc *ConfluentCurrentManager) HasTrackingFile() bool {
+	file := cc.getTrackingFile()
+	return exists(file)
+}
+
+func (cc *ConfluentCurrentManager) RemoveTrackingFile() error {
+	return os.Remove(cc.trackingFile)
+}
+
 func (cc *ConfluentCurrentManager) GetCurrentDir() (string, error) {
 	if cc.currentDir != "" {
 		return cc.currentDir, nil
@@ -68,7 +80,7 @@ func (cc *ConfluentCurrentManager) GetCurrentDir() (string, error) {
 		if err := os.MkdirAll(cc.currentDir, 0777); err != nil {
 			return "", err
 		}
-		if err := ioutil.WriteFile(cc.getTrackingFile(), []byte(cc.currentDir), 0644); err != nil {
+		if err := ioutil.WriteFile(cc.getTrackingFile(), []byte(cc.currentDir+"\n"), 0644); err != nil {
 			return "", err
 		}
 	} else {
@@ -76,24 +88,14 @@ func (cc *ConfluentCurrentManager) GetCurrentDir() (string, error) {
 		if err != nil {
 			return "", err
 		}
-		cc.currentDir = string(data)
+		cc.currentDir = strings.TrimSuffix(string(data), "\n")
 	}
 
 	return cc.currentDir, nil
 }
 
-func (cc *ConfluentCurrentManager) getServiceDir(service string) (string, error) {
-	dir, err := cc.GetCurrentDir()
-	if err != nil {
-		return "", err
-	}
-
-	dir = filepath.Join(dir, service)
-	if err := os.MkdirAll(dir, 0777); err != nil {
-		return "", err
-	}
-
-	return dir, nil
+func (cc *ConfluentCurrentManager) RemoveCurrentDir() error {
+	return os.RemoveAll(cc.currentDir)
 }
 
 func (cc *ConfluentCurrentManager) GetDataDir(service string) (string, error) {
@@ -114,11 +116,21 @@ func (cc *ConfluentCurrentManager) GetDataDir(service string) (string, error) {
 	return dir, nil
 }
 
-func (cc *ConfluentCurrentManager) GetConfigFile(service string) (string, error) {
-	return cc.getServiceFile(service, fmt.Sprintf("%s.config", service))
+func (cc *ConfluentCurrentManager) GetLogsDir(service string) (string, error) {
+	dir, err := cc.getServiceDir(service)
+	if err != nil {
+		return "", err
+	}
+
+	dir = filepath.Join(dir, "logs")
+	return dir, nil
 }
 
-func (cc *ConfluentCurrentManager) SetConfig(service string, config []byte) error {
+func (cc *ConfluentCurrentManager) GetConfigFile(service string) (string, error) {
+	return cc.getServiceFile(service, fmt.Sprintf("%s.properties", service))
+}
+
+func (cc *ConfluentCurrentManager) WriteConfig(service string, config []byte) error {
 	file, err := cc.GetConfigFile(service)
 	if err != nil {
 		return err
@@ -128,7 +140,7 @@ func (cc *ConfluentCurrentManager) SetConfig(service string, config []byte) erro
 }
 
 func (cc *ConfluentCurrentManager) GetLogFile(service string) (string, error) {
-	return cc.getServiceFile(service, fmt.Sprintf("%s.log", service))
+	return cc.getServiceFile(service, fmt.Sprintf("%s.stdout", service))
 }
 
 func (cc *ConfluentCurrentManager) HasPidFile(service string) (bool, error) {
@@ -154,7 +166,7 @@ func (cc *ConfluentCurrentManager) GetPidFile(service string) (string, error) {
 	return cc.pidFiles[service], nil
 }
 
-func (cc *ConfluentCurrentManager) GetPid(service string) (int, error) {
+func (cc *ConfluentCurrentManager) ReadPid(service string) (int, error) {
 	file, err := cc.GetPidFile(service)
 	if err != nil {
 		return 0, err
@@ -165,25 +177,17 @@ func (cc *ConfluentCurrentManager) GetPid(service string) (int, error) {
 		return 0, err
 	}
 
-	return strconv.Atoi(string(data))
+	return strconv.Atoi(strings.TrimSuffix(string(data), "\n"))
 }
 
-func (cc *ConfluentCurrentManager) SetPid(service string, pid int) error {
+func (cc *ConfluentCurrentManager) WritePid(service string, pid int) error {
 	file, err := cc.GetPidFile(service)
 	if err != nil {
 		return err
 	}
 
-	data := []byte(strconv.Itoa(pid))
+	data := []byte(strconv.Itoa(pid) + "\n")
 	return ioutil.WriteFile(file, data, 0644)
-}
-
-func (cc *ConfluentCurrentManager) RemoveTrackingFile() error {
-	return os.Remove(cc.trackingFile)
-}
-
-func (cc *ConfluentCurrentManager) RemoveCurrentDir() error {
-	return os.RemoveAll(cc.currentDir)
 }
 
 func (cc *ConfluentCurrentManager) RemovePidFile(service string) error {
@@ -206,6 +210,20 @@ func (cc *ConfluentCurrentManager) getTrackingFile() string {
 	return cc.trackingFile
 }
 
+func (cc *ConfluentCurrentManager) getServiceDir(service string) (string, error) {
+	dir, err := cc.GetCurrentDir()
+	if err != nil {
+		return "", err
+	}
+
+	dir = filepath.Join(dir, service)
+	if err := os.MkdirAll(dir, 0777); err != nil {
+		return "", err
+	}
+
+	return dir, nil
+}
+
 func (cc *ConfluentCurrentManager) getServiceFile(service, file string) (string, error) {
 	dir, err := cc.getServiceDir(service)
 	if err != nil {
@@ -225,9 +243,4 @@ func getRandomChildDir(parentDir string) string {
 			return path
 		}
 	}
-}
-
-func exists(file string) bool {
-	_, err := os.Stat(file)
-	return !os.IsNotExist(err)
 }

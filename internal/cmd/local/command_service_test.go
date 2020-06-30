@@ -1,34 +1,62 @@
 package local
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
-	"github.com/confluentinc/cli/mock"
 )
 
-const exampleService = "kafka"
-
-func TestConfigService(t *testing.T) {
+func TestInjectConfigs(t *testing.T) {
 	req := require.New(t)
 
-	ch := &mock.MockConfluentHome{
-		GetServiceConfigFunc: func(service string) ([]byte, error) {
-			return []byte("replace=old\n# replace=commented-duplicate\n# comment=old\n"), nil
-		},
+	data := []byte("replace=old\n# replace=commented-duplicate\n# comment=old\n")
+
+	config := map[string]string{
+		"replace": "new",
+		"comment": "new",
+		"append":  "new",
 	}
 
-	cc := &mock.MockConfluentCurrent{
-		SetConfigFunc: func(service string, config []byte) error {
-			req.Contains(string(config), "replace=new")
-			req.Contains(string(config), "# replace=commented-duplicate")
-			req.Contains(string(config), "comment=new")
-			req.Contains(string(config), "append=new")
-			return nil
-		},
-	}
+	data = injectConfig(data, config)
 
-	config := map[string]string{"replace": "new", "comment": "new", "append": "new"}
-	req.NoError(configService(ch, cc, exampleService, config))
+	req.Contains(string(data), "replace=new")
+	req.Contains(string(data), "# replace=commented-duplicate")
+	req.Contains(string(data), "comment=new")
+	req.Contains(string(data), "append=new")
+}
+
+func TestSetServiceEnvs(t *testing.T) {
+	req := require.New(t)
+
+	req.NoError(os.Setenv("KAFKA_LOG4J_OPTS", "saveme"))
+	req.NoError(os.Setenv("CONNECT_LOG4J_OPTS", "useme"))
+
+	req.NoError(setServiceEnvs("connect"))
+
+	req.Equal("saveme", os.Getenv("SAVED_KAFKA_LOG4J_OPTS"))
+	req.Equal("useme", os.Getenv("KAFKA_LOG4J_OPTS"))
+}
+
+func TestIsValidJavaVersion(t *testing.T) {
+	req := require.New(t)
+
+	var isValid bool
+	var err error
+
+	isValid, err = isValidJavaVersion("", "1.8.0_152")
+	req.NoError(err)
+	req.True(isValid)
+
+	isValid, err = isValidJavaVersion("", "9.0.4")
+	req.NoError(err)
+	req.False(isValid)
+
+	isValid, err = isValidJavaVersion("zookeeper", "13")
+	req.NoError(err)
+	req.True(isValid)
+
+	isValid, err = isValidJavaVersion("", "13")
+	req.NoError(err)
+	req.False(isValid)
 }
