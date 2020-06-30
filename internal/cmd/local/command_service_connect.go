@@ -87,13 +87,11 @@ func (c *Command) runConnectConnectorConfigCommand(command *cobra.Command, args 
 
 	var config map[string]interface{}
 	if isJSON(data) {
-		var nestedConfig map[string]interface{}
-		if err := json.Unmarshal(data, &nestedConfig); err != nil {
-			if err := json.Unmarshal(data, &config); err != nil {
-				return err
-			}
-		} else {
-			config = nestedConfig["config"].(map[string]interface{})
+		if err := json.Unmarshal(data, &config); err != nil {
+			return err
+		}
+		if inner, ok := config["config"]; ok {
+			config = inner.(map[string]interface{})
 		}
 	} else {
 		config = local.ExtractConfig(data)

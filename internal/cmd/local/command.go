@@ -1,6 +1,8 @@
 package local
 
 import (
+	"runtime"
+
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/local"
@@ -29,6 +31,10 @@ func New(prerunner cmd.PreRunner) *cobra.Command {
 			Short: "Manage a local Confluent Platform development environment.",
 			Args:  cobra.NoArgs,
 		}, prerunner)
+
+	if runtime.GOOS == "windows" {
+		c.Hidden = true
+	}
 
 	c.AddCommand(NewCurrentCommand(prerunner))
 	c.AddCommand(NewDestroyCommand(prerunner))

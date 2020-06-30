@@ -1,3 +1,4 @@
+SHELL           := /bin/bash
 ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
 GIT_REMOTE_NAME ?= origin
 MASTER_BRANCH   ?= master
