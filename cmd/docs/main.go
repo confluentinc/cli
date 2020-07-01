@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"path"
+	"strings"
 
 	"github.com/confluentinc/cli/internal/cmd"
 	"github.com/confluentinc/cli/internal/pkg/auth"
@@ -33,17 +35,18 @@ func main() {
 	}
 
 	indexHeader := func(filename string) string {
-		return `.. _ccloud-ref:
+		buf := new(bytes.Buffer)
 
-|ccloud| CLI Command Reference
-==============================
+		buf.WriteString(fmt.Sprintf(".. _%s-ref:\n\n", cliName))
+		title := fmt.Sprintf("|%s| CLI Command Reference\n", cliName)
+		buf.WriteString(title)
+		buf.WriteString(strings.Repeat("=", len(title)) + "\n\n")
+		buf.WriteString(fmt.Sprintf("The available |%s| CLI commands are documented here.\n\n", cliName))
 
-The available |ccloud| CLI commands are documented here.
-
-`
+		return buf.String()
 	}
-	err = doc.GenReSTIndex(confluent.Command, path.Join(".", "docs", cliName, "index.rst"), indexHeader, sphinxRef)
-	if err != nil {
+
+	if err := doc.GenReSTIndex(confluent.Command, path.Join(".", "docs", cliName, "index.rst"), indexHeader, sphinxRef); err != nil {
 		panic(err)
 	}
 }

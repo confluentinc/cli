@@ -13,6 +13,7 @@ func NewDestroyCommand(prerunner cmd.PreRunner) *cobra.Command {
 		&cobra.Command{
 			Use:   "destroy",
 			Short: "Delete the data and logs for the current Confluent run.",
+			Long:  "Delete an existing Confluent Platform run. All running services are stopped and the data and the log files of all services are deleted.",
 			Args:  cobra.NoArgs,
 		}, prerunner)
 

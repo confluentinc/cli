@@ -26,23 +26,23 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func printOptionsReST(buf *bytes.Buffer, cmd *cobra.Command, name string) error {
-	long := cmd.Long
-
+func printOptionsReST(buf *bytes.Buffer, cmd *cobra.Command) error {
 	flags := cmd.NonInheritedFlags()
 	flags.SetOutput(buf)
 	if flags.HasAvailableFlags() {
 		buf.WriteString("Flags\n")
-		buf.WriteString("~~~~~\n\n::\n\n")
+		buf.WriteString("~~~~~\n\n")
+		buf.WriteString("::\n\n")
 		flags.PrintDefaults()
-		buf.WriteString("\n" + long + "\n\n")
+		buf.WriteString("\n")
 	}
 
 	parentFlags := cmd.InheritedFlags()
 	parentFlags.SetOutput(buf)
 	if parentFlags.HasAvailableFlags() {
 		buf.WriteString("Global Flags\n")
-		buf.WriteString("~~~~~~~~~~~~\n\n::\n\n")
+		buf.WriteString("~~~~~~~~~~~~\n\n")
+		buf.WriteString("::\n\n")
 		parentFlags.PrintDefaults()
 		buf.WriteString("\n")
 	}
@@ -50,10 +50,25 @@ func printOptionsReST(buf *bytes.Buffer, cmd *cobra.Command, name string) error 
 	if len(cmd.Example) > 0 {
 		buf.WriteString("Examples\n")
 		buf.WriteString("~~~~~~~~\n\n")
-		buf.WriteString(fmt.Sprintf("%s\n\n", cmd.Example))
+		buf.WriteString(fmt.Sprintf("%s\n", cmd.Example))
+		buf.WriteString("\n")
 	}
 
 	return nil
+}
+
+func printWarnings(buf *bytes.Buffer, cmd *cobra.Command) {
+	if strings.HasPrefix(cmd.CommandPath(), "confluent local") {
+		buf.WriteString(".. include:: ../../includes/cli.rst\n")
+		buf.WriteString("  :start-after: cli_limitations_start\n")
+		buf.WriteString("  :end-before: cli_limitations_end\n\n")
+	}
+}
+
+func printTips(buf *bytes.Buffer, cmd *cobra.Command) {
+	if strings.HasPrefix(cmd.CommandPath(), "confluent local") {
+		buf.WriteString(".. include:: ../../includes/path-set-cli.rst\n\n")
+	}
 }
 
 // linkHandler for default ReST hyperlink markup
@@ -72,25 +87,34 @@ func GenReSTCustom(cmd *cobra.Command, w io.Writer, linkHandler func(string, str
 	cmd.InitDefaultHelpFlag()
 
 	buf := new(bytes.Buffer)
-	name := cmd.CommandPath()
 
-	short := cmd.Short
+	name := cmd.CommandPath()
 	ref := strings.Replace(name, " ", "_", -1)
 
 	buf.WriteString(".. _" + ref + ":\n\n")
 	buf.WriteString(name + "\n")
 	buf.WriteString(strings.Repeat("-", len(name)) + "\n\n")
+
+	printWarnings(buf, cmd)
+
+	desc := cmd.Short
+	if cmd.Long != "" {
+		desc = cmd.Long
+	}
 	buf.WriteString("Description\n")
 	buf.WriteString("~~~~~~~~~~~\n\n")
-	buf.WriteString(short + "\n\n")
+	buf.WriteString(desc + "\n\n")
 
 	if cmd.Runnable() {
 		buf.WriteString(fmt.Sprintf("::\n\n  %s\n\n", cmd.UseLine()))
 	}
 
-	if err := printOptionsReST(buf, cmd, name); err != nil {
+	printTips(buf, cmd)
+
+	if err := printOptionsReST(buf, cmd); err != nil {
 		return err
 	}
+
 	if hasSeeAlso(cmd) {
 		buf.WriteString("See Also\n")
 		buf.WriteString("~~~~~~~~\n\n")

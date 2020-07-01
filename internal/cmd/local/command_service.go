@@ -167,7 +167,7 @@ func NewServiceTopCommand(service string, prerunner cmd.PreRunner) *cobra.Comman
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "top",
-			Short: fmt.Sprintf("Monitor %s processes.", writeServiceName(service)),
+			Short: fmt.Sprintf("View resource usage for %s.", writeServiceName(service)),
 			Args:  cobra.NoArgs,
 		}, prerunner)
 

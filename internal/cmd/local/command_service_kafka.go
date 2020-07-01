@@ -110,6 +110,7 @@ func NewKafkaConsumeCommand(prerunner cmd.PreRunner) *cobra.Command {
 		&cobra.Command{
 			Use:   "consume [topic]",
 			Short: "Consume from a Kafka topic.",
+			Long:  "Consume data from topics. By default this command consumes binary data from the Apache Kafka® cluster on localhost.",
 			Args:  cobra.ExactArgs(1),
 		}, prerunner)
 
@@ -128,6 +129,7 @@ func NewKafkaProduceCommand(prerunner cmd.PreRunner) *cobra.Command {
 		&cobra.Command{
 			Use:   "produce [topic]",
 			Short: "Produce to a Kafka topic.",
+			Long:  "Produce data to topics. By default this command produces non-Avro data to the Apache Kafka® cluster on localhost.",
 			Args:  cobra.ExactArgs(1),
 		}, prerunner)
 

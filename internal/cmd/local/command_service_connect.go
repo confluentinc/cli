@@ -45,7 +45,7 @@ func NewConnectConnectorConfigCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "config [connector]",
-			Short: "Print a connector config, or configure a connector.",
+			Short: "View or set connector configurations.",
 			Args:  cobra.ExactArgs(1),
 		}, prerunner)
 
@@ -157,7 +157,7 @@ func NewConnectConnectorListCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "list",
-			Short: "List connectors.",
+			Short: "List all bundled predefined connectors.",
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
@@ -175,6 +175,7 @@ func NewConnectConnectorLoadCommand(prerunner cmd.PreRunner) *cobra.Command {
 		&cobra.Command{
 			Use:   "load [connector]",
 			Short: "Load a connector.",
+			Long:  "Load a bundled connector with a predefined name or a custom connector.",
 			Args:  cobra.ExactArgs(1),
 		}, prerunner)
 
