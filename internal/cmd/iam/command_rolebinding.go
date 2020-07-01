@@ -157,8 +157,8 @@ func (c *rolebindingCommand) parseAndValidateResourcePattern(typename string, pr
 
 func (c *rolebindingCommand) validateRoleAndResourceType(roleName string, resourceType string) error {
 	ctx := c.createContext()
-	role, _, err := c.MDSClient.RBACRoleDefinitionsApi.RoleDetail(ctx, roleName)
-	if err != nil {
+	role, resp, err := c.MDSClient.RBACRoleDefinitionsApi.RoleDetail(ctx, roleName)
+	if err != nil || resp.StatusCode == 204 {
 		return errors.Wrapf(err, "Failed to look up role %s. Was an invalid role name specified?", roleName)
 	}
 
@@ -440,7 +440,7 @@ func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOption
 			parsedResourcePattern,
 		}
 		resourcesRequest = mds.ResourcesRequest{
-			Scope:         *scope,
+			Scope:            *scope,
 			ResourcePatterns: resourcePatterns,
 		}
 	}
