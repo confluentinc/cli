@@ -142,37 +142,47 @@ func (s *CLITestSuite) Test_Ccloud_Iam_Rolebinding_List() {
 		},
 		{
 			args:    "iam rolebinding list --environment current --cloud-cluster cluster1 --principal User:u-11111",
-			fixture: "ccloud-iam-rolebinding-list-user.golden",
+			fixture: "ccloud-iam-rolebinding-list-user-1.golden",
 			login:   "default",
 		},
 		{
 			args:    "iam rolebinding list --environment current --cloud-cluster cluster1 --principal User:u-22222",
-			fixture: "ccloud-iam-rolebinding-list-user.golden",
+			fixture: "ccloud-iam-rolebinding-list-user-2.golden",
 			login:   "default",
 		},
 		{
 			args:    "iam rolebinding list --environment current --cloud-cluster cluster1 --principal User:u-33333",
-			fixture: "ccloud-iam-rolebinding-list-user.golden",
+			fixture: "ccloud-iam-rolebinding-list-user-3.golden",
 			login:   "default",
 		},
 		{
 			args:    "iam rolebinding list --environment current --cloud-cluster cluster1 --principal User:u-44444",
-			fixture: "ccloud-iam-rolebinding-list-user.golden",
+			fixture: "ccloud-iam-rolebinding-list-user-4.golden",
 			login:   "default",
 		},
 		{
 			args:    "iam rolebinding list --environment current --cloud-cluster cluster1 --role OrganizationAdmin",
-			fixture: "ccloud-iam-rolebinding-list-user.golden",
+			fixture: "ccloud-iam-rolebinding-list-user-orgadmin.golden",
 			login:   "default",
 		},
 		{
 			args:    "iam rolebinding list --environment current --cloud-cluster cluster1 --role EnvironmentAdmin",
-			fixture: "ccloud-iam-rolebinding-list-user.golden",
+			fixture: "ccloud-iam-rolebinding-list-user-envadmin.golden",
 			login:   "default",
 		},
 		{
 			args:    "iam rolebinding list --environment current --cloud-cluster cluster1 --role CloudClusterAdmin",
-			fixture: "ccloud-iam-rolebinding-list-user.golden",
+			fixture: "ccloud-iam-rolebinding-list-user-clusteradmin.golden",
+			login:   "default",
+		},
+		{
+			args:    "iam rolebinding list --environment current --cloud-cluster cluster1 --role CloudClusterAdmin -o yaml",
+			fixture: "ccloud-iam-rolebinding-list-user-clusteradmin-yaml.golden",
+			login:   "default",
+		},
+		{
+			args:    "iam rolebinding list --environment current --cloud-cluster cluster1 --role CloudClusterAdmin -o json",
+			fixture: "ccloud-iam-rolebinding-list-user-clusteradmin-json.golden",
 			login:   "default",
 		},
 	}
