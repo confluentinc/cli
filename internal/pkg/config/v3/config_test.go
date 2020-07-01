@@ -77,7 +77,7 @@ func SetupTestInputs(cliName string) *TestInputs {
 				account,
 			},
 			Organization: &orgv1.Organization{
-				Id: 321,
+				Id:   321,
 				Name: "test-org",
 			},
 		},

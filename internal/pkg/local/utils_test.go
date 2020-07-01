@@ -20,7 +20,7 @@ func TestExtractConfig(t *testing.T) {
 
 	in := []byte("key1=val1\nkey2=val2\n#commented=val\n")
 
-	out := map[string]string{
+	out := map[string]interface{}{
 		"key1": "val1",
 		"key2": "val2",
 	}
@@ -48,17 +48,29 @@ func TestCollectFlags(t *testing.T) {
 	flags.Int("int-use", 1, "")
 	flags.String("string-skip", "", "")
 	flags.String("string-use", "example", "")
+	flags.StringArray("string-array-skip", []string{}, "")
+	flags.StringArray("string-array-use", []string{"A", "B"}, "")
 
 	defaults := map[string]interface{}{
-		"bool-skip":   false,
-		"bool-use":    false,
-		"int-skip":    0,
-		"int-use":     0,
-		"string-skip": "",
-		"string-use":  "",
+		"bool-skip":         false,
+		"bool-use":          false,
+		"int-skip":          0,
+		"int-use":           0,
+		"string-skip":       "",
+		"string-use":        "",
+		"string-array-skip": []string{},
+		"string-array-use":  []string{},
 	}
 
 	args, err := CollectFlags(flags, defaults)
 	req.NoError(err)
-	req.ElementsMatch([]string{"--bool-use", "--int-use", "1", "--string-use", "example"}, args)
+	req.ElementsMatch(
+		[]string{
+			"--bool-use",
+			"--int-use", "1",
+			"--string-use", "example",
+			"--string-array-use", "A", "--string-array-use", "B",
+		},
+		args,
+	)
 }

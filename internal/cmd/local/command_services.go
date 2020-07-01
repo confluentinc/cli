@@ -126,9 +126,9 @@ var (
 func NewServicesCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
-			Use:   "services [command]",
+			Use:   "services",
 			Short: "Manage Confluent Platform services.",
-			Args:  cobra.MinimumNArgs(1),
+			Args:  cobra.NoArgs,
 		}, prerunner)
 
 	availableServices, _ := c.getAvailableServices()
@@ -158,14 +158,21 @@ func NewServicesListCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *LocalCommand) runServicesListCommand(command *cobra.Command, _ []string) error {
-	availableServices, err := c.getAvailableServices()
+func (c *Command) runServicesListCommand(command *cobra.Command, _ []string) error {
+	services, err := c.getAvailableServices()
 	if err != nil {
 		return err
 	}
 
+	sort.Strings(services)
+
+	serviceNames := make([]string, len(services))
+	for i, service := range services {
+		serviceNames[i] = writeServiceName(service)
+	}
+
 	command.Println("Available Services:")
-	command.Println(local.BuildTabbedList(availableServices))
+	command.Println(local.BuildTabbedList(serviceNames))
 	return nil
 }
 
@@ -182,7 +189,7 @@ func NewServicesStartCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *LocalCommand) runServicesStartCommand(command *cobra.Command, _ []string) error {
+func (c *Command) runServicesStartCommand(command *cobra.Command, _ []string) error {
 	availableServices, err := c.getAvailableServices()
 	if err != nil {
 		return err
@@ -195,7 +202,7 @@ func (c *LocalCommand) runServicesStartCommand(command *cobra.Command, _ []strin
 	// Topological order
 	for i := 0; i < len(availableServices); i++ {
 		service := availableServices[i]
-		if err := c.startService(command, service); err != nil {
+		if err := c.startService(command, service, ""); err != nil {
 			return err
 		}
 	}
@@ -215,7 +222,7 @@ func NewServicesStatusCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *LocalCommand) runServicesStatusCommand(command *cobra.Command, _ []string) error {
+func (c *Command) runServicesStatusCommand(command *cobra.Command, _ []string) error {
 	availableServices, err := c.getAvailableServices()
 	if err != nil {
 		return err
@@ -248,7 +255,7 @@ func NewServicesStopCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *LocalCommand) runServicesStopCommand(command *cobra.Command, _ []string) error {
+func (c *Command) runServicesStopCommand(command *cobra.Command, _ []string) error {
 	availableServices, err := c.getAvailableServices()
 	if err != nil {
 		return err
@@ -282,7 +289,7 @@ func NewServicesTopCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *LocalCommand) runServicesTopCommand(command *cobra.Command, _ []string) error {
+func (c *Command) runServicesTopCommand(_ *cobra.Command, _ []string) error {
 	availableServices, err := c.getAvailableServices()
 	if err != nil {
 		return err
@@ -311,7 +318,7 @@ func (c *LocalCommand) runServicesTopCommand(command *cobra.Command, _ []string)
 	return top(pids)
 }
 
-func (c *LocalCommand) getConfig(service string) (map[string]string, error) {
+func (c *Command) getConfig(service string) (map[string]string, error) {
 	data, err := c.cc.GetDataDir(service)
 	if err != nil {
 		return map[string]string{}, err
@@ -327,11 +334,18 @@ func (c *LocalCommand) getConfig(service string) (map[string]string, error) {
 	switch service {
 	case "connect":
 		config["bootstrap.servers"] = fmt.Sprintf("localhost:%d", services["kafka"].port)
-		path, err := c.ch.GetFile("share", "java")
+
+		data, err := c.ch.ReadServiceConfig(service)
 		if err != nil {
 			return map[string]string{}, err
 		}
-		config["plugin.path"] = path
+		path := local.ExtractConfig(data)["plugin.path"].(string)
+		full, err := c.ch.GetFile("share", "java")
+		if err != nil {
+			return map[string]string{}, err
+		}
+		config["plugin.path"] = strings.ReplaceAll(path, "share/java", full)
+
 		matches, err := c.ch.FindFile("share/java/kafka-connect-replicator/replicator-rest-extension-*.jar")
 		if err != nil {
 			return map[string]string{}, err
@@ -416,7 +430,7 @@ func top(pids []int) error {
 	return top.Run()
 }
 
-func (c *LocalCommand) getAvailableServices() ([]string, error) {
+func (c *Command) getAvailableServices() ([]string, error) {
 	isCP, err := c.ch.IsConfluentPlatform()
 
 	var available []string
@@ -429,7 +443,7 @@ func (c *LocalCommand) getAvailableServices() ([]string, error) {
 	return available, err
 }
 
-func (c *LocalCommand) notifyConfluentCurrent(command *cobra.Command) error {
+func (c *Command) notifyConfluentCurrent(command *cobra.Command) error {
 	dir, err := c.cc.GetCurrentDir()
 	if err != nil {
 		return err

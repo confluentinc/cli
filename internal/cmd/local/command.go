@@ -1,6 +1,8 @@
 package local
 
 import (
+	"runtime"
+
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/local"
@@ -8,29 +10,33 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
-type LocalCommand struct {
+type Command struct {
 	*cmd.CLICommand
 	ch local.ConfluentHome
 	cc local.ConfluentCurrent
 }
 
-func NewLocalCommand(command *cobra.Command, prerunner cmd.PreRunner) *LocalCommand {
-	return &LocalCommand{
+func NewLocalCommand(command *cobra.Command, prerunner cmd.PreRunner) *Command {
+	return &Command{
 		CLICommand: cmd.NewAnonymousCLICommand(command, prerunner),
 		ch:         local.NewConfluentHomeManager(),
 		cc:         local.NewConfluentCurrentManager(),
 	}
 }
 
-func NewCommand(prerunner cmd.PreRunner) *cobra.Command {
+func New(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
-			Use:   "local-v2 [command]",
+			Use:   "local",
 			Short: "Manage a local Confluent Platform development environment.",
+			Args:  cobra.NoArgs,
 		}, prerunner)
 
+	if runtime.GOOS == "windows" {
+		c.Hidden = true
+	}
+
 	c.AddCommand(NewCurrentCommand(prerunner))
-	c.AddCommand(NewDemoCommand(prerunner))
 	c.AddCommand(NewDestroyCommand(prerunner))
 	c.AddCommand(NewServicesCommand(prerunner))
 	c.AddCommand(NewVersionCommand(prerunner))

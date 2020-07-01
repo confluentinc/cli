@@ -1,18 +1,15 @@
 package cmd
 
 import (
-	"github.com/confluentinc/cli/internal/cmd/auditlog"
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"net/http"
 	"os"
-	"runtime"
 
-	"github.com/DABH/go-basher"
 	"github.com/jonboulle/clockwork"
 	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/cmd/apikey"
+	"github.com/confluentinc/cli/internal/cmd/auditlog"
 	"github.com/confluentinc/cli/internal/cmd/auth"
 	"github.com/confluentinc/cli/internal/cmd/cluster"
 	"github.com/confluentinc/cli/internal/cmd/completion"
@@ -38,10 +35,10 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	pconfig "github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/config/load"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	pfeedback "github.com/confluentinc/cli/internal/pkg/feedback"
 	"github.com/confluentinc/cli/internal/pkg/help"
-	"github.com/confluentinc/cli/internal/pkg/io"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/metric"
 	pps1 "github.com/confluentinc/cli/internal/pkg/ps1"
@@ -90,14 +87,14 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 	prompt := pcmd.NewPrompt(os.Stdin)
 
 	disableUpdateCheck := cfg != nil && (cfg.DisableUpdates || cfg.DisableUpdateCheck)
-	updateClient, err := update.NewClient(cliName, disableUpdateCheck,logger)
+	updateClient, err := update.NewClient(cliName, disableUpdateCheck, logger)
 	if err != nil {
 		return nil, err
 	}
 
 	resolver := &pcmd.FlagResolverImpl{Prompt: prompt, Out: os.Stdout}
 	prerunner := &pcmd.PreRun{
-		Config: cfg,
+		Config:             cfg,
 		ConfigLoadingError: configLoadingErr,
 		UpdateClient:       updateClient,
 		CLIName:            cliName,
@@ -146,35 +143,15 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		//conn.Hidden = true // The connect feature isn't finished yet, so let's hide it
 		//cli.AddCommand(conn)
 	} else if cliName == "confluent" {
-		cli.AddCommand(iam.New(cliName, prerunner))
-		// Kafka Command
-		isAPILogin := isAPIKeyCredential(cfg)
-		cmd := kafka.New(isAPILogin, cliName, prerunner, logger.Named("kafka"), ver.ClientID)
-		cli.AddCommand(cmd)
-		sr := schema_registry.New(cliName, prerunner, nil, logger)
-		cli.AddCommand(sr)
-		cli.AddCommand(ksql.New(cliName, prerunner))
-		cli.AddCommand(connect.New(prerunner))
-
-		metaClient := cluster.NewScopedIdService(&http.Client{}, ver.UserAgent, logger)
-		cli.AddCommand(cluster.New(prerunner, metaClient))
-
-		if runtime.GOOS != "windows" {
-			bash, err := basher.NewContext("/bin/bash", false)
-			if err != nil {
-				return nil, err
-			}
-			shellRunner := &local.BashShellRunner{BasherContext: bash}
-			cli.AddCommand(local.New(cli, prerunner, shellRunner, logger, &io.RealFileSystem{}))
-		}
-
-		command := local.NewCommand(prerunner)
-		command.Hidden = true // WIP
-		cli.AddCommand(command)
-
-		cli.AddCommand(secret.New(prompt, resolver, secrets.NewPasswordProtectionPlugin(logger)))
-
 		cli.AddCommand(auditlog.New(prerunner))
+		cli.AddCommand(cluster.New(prerunner, cluster.NewScopedIdService(&http.Client{}, ver.UserAgent, logger)))
+		cli.AddCommand(connect.New(prerunner))
+		cli.AddCommand(iam.New(cliName, prerunner))
+		cli.AddCommand(kafka.New(isAPIKeyCredential(cfg), cliName, prerunner, logger.Named("kafka"), ver.ClientID))
+		cli.AddCommand(ksql.New(cliName, prerunner))
+		cli.AddCommand(local.New(prerunner))
+		cli.AddCommand(schema_registry.New(cliName, prerunner, nil, logger))
+		cli.AddCommand(secret.New(prompt, resolver, secrets.NewPasswordProtectionPlugin(logger)))
 	}
 	return command, nil
 }

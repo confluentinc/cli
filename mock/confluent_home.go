@@ -43,9 +43,6 @@ type MockConfluentHome struct {
 	lockGetKafkaScript sync.Mutex
 	GetKafkaScriptFunc func(mode, format string) (string, error)
 
-	lockReadDemoReadme sync.Mutex
-	ReadDemoReadmeFunc func(demo string) (string, error)
-
 	calls struct {
 		GetFile []struct {
 			Path []string
@@ -79,9 +76,6 @@ type MockConfluentHome struct {
 		GetKafkaScript []struct {
 			Mode   string
 			Format string
-		}
-		ReadDemoReadme []struct {
-			Demo string
 		}
 	}
 }
@@ -502,44 +496,6 @@ func (m *MockConfluentHome) GetKafkaScriptCalls() []struct {
 	return m.calls.GetKafkaScript
 }
 
-// ReadDemoReadme mocks base method by wrapping the associated func.
-func (m *MockConfluentHome) ReadDemoReadme(demo string) (string, error) {
-	m.lockReadDemoReadme.Lock()
-	defer m.lockReadDemoReadme.Unlock()
-
-	if m.ReadDemoReadmeFunc == nil {
-		panic("mocker: MockConfluentHome.ReadDemoReadmeFunc is nil but MockConfluentHome.ReadDemoReadme was called.")
-	}
-
-	call := struct {
-		Demo string
-	}{
-		Demo: demo,
-	}
-
-	m.calls.ReadDemoReadme = append(m.calls.ReadDemoReadme, call)
-
-	return m.ReadDemoReadmeFunc(demo)
-}
-
-// ReadDemoReadmeCalled returns true if ReadDemoReadme was called at least once.
-func (m *MockConfluentHome) ReadDemoReadmeCalled() bool {
-	m.lockReadDemoReadme.Lock()
-	defer m.lockReadDemoReadme.Unlock()
-
-	return len(m.calls.ReadDemoReadme) > 0
-}
-
-// ReadDemoReadmeCalls returns the calls made to ReadDemoReadme.
-func (m *MockConfluentHome) ReadDemoReadmeCalls() []struct {
-	Demo string
-} {
-	m.lockReadDemoReadme.Lock()
-	defer m.lockReadDemoReadme.Unlock()
-
-	return m.calls.ReadDemoReadme
-}
-
 // Reset resets the calls made to the mocked methods.
 func (m *MockConfluentHome) Reset() {
 	m.lockGetFile.Lock()
@@ -575,7 +531,4 @@ func (m *MockConfluentHome) Reset() {
 	m.lockGetKafkaScript.Lock()
 	m.calls.GetKafkaScript = nil
 	m.lockGetKafkaScript.Unlock()
-	m.lockReadDemoReadme.Lock()
-	m.calls.ReadDemoReadme = nil
-	m.lockReadDemoReadme.Unlock()
 }
