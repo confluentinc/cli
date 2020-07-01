@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/confluentinc/mds-sdk-go"
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 )
 
 func AuditLogConfigTranslation(clusterConfigs map[string]string, bootstrapServers []string, crnAuthority string) (mds.AuditLogConfigSpec, []string, error) {
@@ -66,10 +66,10 @@ func addOtherBlock(specs map[string]*mds.AuditLogConfigSpec, defaultTopicName st
 				Allowed: &spec.DefaultTopics.Allowed,
 				Denied:  &spec.DefaultTopics.Denied,
 			}
-			for routeName, route := range spec.Routes {
+			for routeName, route := range *spec.Routes {
 				if route.Other == nil {
 					route.Other = &other
-					spec.Routes[routeName] = route
+					(*spec.Routes)[routeName] = route
 				}
 			}
 		}
@@ -79,7 +79,7 @@ func addOtherBlock(specs map[string]*mds.AuditLogConfigSpec, defaultTopicName st
 func warnMultipleCrnAuthorities(specs map[string]*mds.AuditLogConfigSpec) []string {
 	warnings := []string{}
 	for clusterId, spec := range specs {
-		routes := spec.Routes
+		routes := *spec.Routes
 		foundAuthorities := []string{}
 		for routeName := range routes {
 			foundAuthority := getCrnAuthority(routeName)
@@ -103,7 +103,7 @@ func getCrnAuthority(routeName string) string {
 func warnMismatchKafaClusters(specs map[string]*mds.AuditLogConfigSpec) []string {
 	warnings := []string{}
 	for clusterId, spec := range specs {
-		routes := spec.Routes
+		routes := *spec.Routes
 		for routeName := range routes {
 			if checkMismatchKafkaCluster(routeName, clusterId) {
 				newWarning := fmt.Sprintf("Mismatched Kafka Cluster Warning: Cluster %q has a route with a different clusterId. Route: %q.", clusterId, routeName)
@@ -163,7 +163,7 @@ func combineDestinationTopics(specs map[string]*mds.AuditLogConfigSpec, newSpec 
 					topicRetentionDiscrepancies[topicName] = retentionTime
 				}
 				newTopics[topicName] = mds.AuditLogConfigDestinationConfig{
-					retentionTime,
+					RetentionMs: retentionTime,
 				}
 			} else {
 				newTopics[topicName] = destination
@@ -195,7 +195,7 @@ func setDefaultTopic(newSpec *mds.AuditLogConfigSpec, defaultTopicName string) {
 
 	if _, ok := newSpec.Destinations.Topics[defaultTopicName]; !ok {
 		newSpec.Destinations.Topics[defaultTopicName] = mds.AuditLogConfigDestinationConfig{
-			DEFAULT_RETENTION_MS,
+			RetentionMs: DEFAULT_RETENTION_MS,
 		}
 	}
 }
@@ -204,7 +204,7 @@ func combineExcludedPrincipals(specs map[string]*mds.AuditLogConfigSpec, newSpec
 	var newExcludedPrincipals []string
 
 	for _, spec := range specs {
-		excludedPrincipals := spec.ExcludedPrincipals
+		excludedPrincipals := *spec.ExcludedPrincipals
 		for _, principal := range excludedPrincipals {
 			if !find(newExcludedPrincipals, principal) {
 				newExcludedPrincipals = append(newExcludedPrincipals, principal)
@@ -214,7 +214,7 @@ func combineExcludedPrincipals(specs map[string]*mds.AuditLogConfigSpec, newSpec
 
 	sort.Strings(newExcludedPrincipals)
 
-	newSpec.ExcludedPrincipals = newExcludedPrincipals
+	newSpec.ExcludedPrincipals = &newExcludedPrincipals
 }
 
 func combineRoutes(specs map[string]*mds.AuditLogConfigSpec, newSpec *mds.AuditLogConfigSpec) []string {
@@ -222,7 +222,7 @@ func combineRoutes(specs map[string]*mds.AuditLogConfigSpec, newSpec *mds.AuditL
 	warnings := []string{}
 
 	for clusterId, spec := range specs {
-		routes := spec.Routes
+		routes := *spec.Routes
 		for crnPath, route := range routes {
 			newCrnPath := replaceClusterId(crnPath, clusterId)
 			if _, ok := newRoutes[newCrnPath]; ok {
@@ -234,12 +234,12 @@ func combineRoutes(specs map[string]*mds.AuditLogConfigSpec, newSpec *mds.AuditL
 		}
 	}
 
-	newSpec.Routes = newRoutes
+	newSpec.Routes = &newRoutes
 	return warnings
 }
 
 func replaceCRNAuthorityRoutes(newSpec *mds.AuditLogConfigSpec, newCrnAuthority string) {
-	routes := newSpec.Routes
+	routes := *newSpec.Routes
 
 	for crnPath, routeValue := range routes {
 		if !crnPathContainsAuthority(crnPath, newCrnAuthority) {
@@ -292,8 +292,9 @@ func generateAlternateDefaultTopicRoutes(specs map[string]*mds.AuditLogConfigSpe
 			pathExtensions := []string{"", "topic", "connect", "ksql"}
 			for _, extension := range pathExtensions {
 				routeName := generateCrnPath(clusterId, crnAuthority, extension)
-				if _, ok := newSpec.Routes[routeName]; !ok {
-					newSpec.Routes[routeName] = newRouteConfig
+				newSpecRoutes := *newSpec.Routes
+				if _, ok := newSpecRoutes[routeName]; !ok {
+					newSpecRoutes[routeName] = newRouteConfig
 				}
 			}
 		}
@@ -303,9 +304,10 @@ func generateAlternateDefaultTopicRoutes(specs map[string]*mds.AuditLogConfigSpe
 func warnNewExcludedPrincipals(specs map[string]*mds.AuditLogConfigSpec, newSpec *mds.AuditLogConfigSpec) []string {
 	warnings := []string{}
 	for clusterId, spec := range specs {
-		excludedPrincipals := spec.ExcludedPrincipals
+		excludedPrincipals := *spec.ExcludedPrincipals
 		differentPrincipals := []string{}
-		for _, principal := range newSpec.ExcludedPrincipals {
+		newSpecPrincipals := *newSpec.ExcludedPrincipals
+		for _, principal := range newSpecPrincipals {
 			if !find(excludedPrincipals, principal) {
 				differentPrincipals = append(differentPrincipals, principal)
 			}

@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/confluentinc/mds-sdk-go"
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 )
 
 func TestAuditLogConfigTranslation(t *testing.T) {
@@ -33,7 +33,7 @@ func TestAuditLogConfigTranslation(t *testing.T) {
 	}
 	for _, c := range testCases {
 		var want mds.AuditLogConfigSpec
-		json.Unmarshal([]byte(c.wantSpecAsString), &want)
+		_ = json.Unmarshal([]byte(c.wantSpecAsString), &want)
 
 		got, gotWarnings, err := AuditLogConfigTranslation(c.clusterConfigs, c.bootstrapServers, c.crnAuthority)
 		require.Nil(t, err)
