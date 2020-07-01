@@ -538,6 +538,9 @@ func (c *rolebindingCommand) ccloudList(cmd *cobra.Command) error {
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
+		if principal == "current" {
+			principal = "User:" + c.State.Auth.User.ResourceId
+		}
 		err = c.validatePrincipalFormat(principal)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
@@ -548,7 +551,7 @@ func (c *rolebindingCommand) ccloudList(cmd *cobra.Command) error {
 			return errors.HandleCommon(err, cmd)
 		}
 	} else {
-		principal = "User:" + c.State.Auth.User.ResourceId
+		return errors.HandleCommon(errors.New("Must specify principal flag"), cmd)
 	}
 
 	// return c.listManagedRoleBindings(cmd, principal, scopeV2)
