@@ -149,7 +149,7 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 	if err := c.Config.Save(); err != nil {
 		return errors.HandleCommon(errors.Wrap(err, errors.EnvSwitchErrorMsg), cmd)
 	}
-	pcmd.Println(cmd, errors.UsingEnvMsg)
+	pcmd.Printf(cmd, errors.UsingEnvMsg)
 	return nil
 }
 

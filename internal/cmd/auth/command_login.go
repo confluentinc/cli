@@ -108,6 +108,7 @@ func (a *loginCommand) login(cmd *cobra.Command, args []string) error {
 
 	token, refreshToken, err := pauth.GetCCloudAuthToken(client, url, email, password, noBrowser, a.Logger)
 	if err != nil {
+		err = errors.CatchEmailNotFoundError(err, email)
 		return errors.HandleCommon(err, cmd)
 	}
 
@@ -175,8 +176,8 @@ func (a *loginCommand) login(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	pcmd.Println(cmd, errors.LoggedInAsMsg, email)
-	pcmd.Println(cmd, errors.LoginUsingEnvMsg, state.Auth.Account.Id, state.Auth.Account.Name)
+	pcmd.Printf(cmd, errors.LoggedInAsMsg, email)
+	pcmd.Printf(cmd, errors.LoginUsingEnvMsg, state.Auth.Account.Id, state.Auth.Account.Name)
 	return err
 }
 
@@ -341,7 +342,7 @@ func (a *loginCommand) saveToNetrc(cmd *cobra.Command, email, password, refreshT
 	if err != nil {
 		return err
 	}
-	pcmd.ErrPrintln(cmd, errors.WrittenCredentialsToNetrcMsg, a.netrcHandler.FileName)
+	pcmd.ErrPrintf(cmd, errors.WrittenCredentialsToNetrcMsg, a.netrcHandler.FileName)
 	return nil
 }
 

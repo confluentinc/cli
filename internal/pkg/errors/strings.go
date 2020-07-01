@@ -1,23 +1,25 @@
 package errors
 
 const (
-	// auth commands
-    LoggedInAsMsg = "Logged in as %s."
-    LoginUsingEnvMsg    = "Using environment %s (%s)."
-    LoggedOutMsg = "You are now logged out."
+	// api-key command
+	APIKeySuccessfullyDeletedMsg = "API Key successfully deleted."
 
-	WrittenCredentialsToNetrcMsg = "Written credentials to netrc file \"%s\""
-	KafkaClusterDeletedMsg       = "The Kafka cluster \"%s\" has been deleted."
+	// auth commands
+    LoggedInAsMsg = "Logged in as \"%s\".\n"
+    LoginUsingEnvMsg    = "Using environment \"%s\" (\"%s\").\n"
+    LoggedOutMsg = "You are now logged out."
+	WrittenCredentialsToNetrcMsg = "Written credentials to netrc file \"%s\"\n"
+	KafkaClusterDeletedMsg       = "The Kafka cluster \"%s\" has been deleted.\n"
 
 	// connector commands
-	CreatedConnectorMsg = "Created connector %s %s"
-	UpdatedConnectorMsg = "Updated connector %s"
-	DeletedConnectorMsg = "Successfully deleted connector %s"
-	PausedConnectorMsg  = "Successfully paused connector %s"
-	ResumedConnectorMsg = "Successfully resumed connector %s"
+	CreatedConnectorMsg = "Created connector %s %s\n"
+	UpdatedConnectorMsg = "Updated connector %s\n"
+	DeletedConnectorMsg = "Successfully deleted connector %s\n"
+	PausedConnectorMsg  = "Successfully paused connector %s\n"
+	ResumedConnectorMsg = "Successfully resumed connector %s\n"
 
 	// environment commands
-	UsingEnvMsg = "Now using \"%s\" as the default (active) environment."
+	UsingEnvMsg = "Now using \"%s\" as the default (active) environment.\n"
 
 	// feedback command
 	ThanksForFeedbackMsg = "Thanks for your feedback."
@@ -32,17 +34,17 @@ const (
 
 	// ksql command
 	EndPointNotPopulatedMsg = "Endpoint not yet populated. To obtain the endpoint please use `ccloud ksql app describe`."
-	KSQLDeletedMsg = "KSQL app \"%s\" has been deleted."
-	KSQLNotBackedByKafkaMsg = "The KSQL cluster \"%s\" is not backed by \"%s\" which is not the current Kafka cluster \"%s\"."
+	KSQLDeletedMsg = "KSQL app \"%s\" has been deleted.\n"
+	KSQLNotBackedByKafkaMsg = "The KSQL cluster \"%s\" is not backed by \"%s\" which is not the current Kafka cluster \"%s\".\n"
 
 	// schema-registry commands
-	UpdatedToLevelCompatibilityMsg = "Successfully updated Top Level compatibility to \"%s\""
-	UpdatedTopLevelModeMsg         = "Successfully updated Top Level mode to \"%s\""
+	UpdatedToLevelCompatibilityMsg = "Successfully updated Top Level compatibility to \"%s\"\n"
+	UpdatedTopLevelModeMsg         = "Successfully updated Top Level mode to \"%s\"\n"
 	RegisteredSchemaMsg            = "Successfully registered schema with ID %v"
 	DeletedAllSubjectVersionMsg    = "Successfully deleted all versions for subject"
-	DeletedSubjectVersionMsg       = "Successfully deleted version \"%s\" for subject"
-	UpdatedSubjectLevelCompatibilityMsg = "Successfully updated Subject Level compatibility to \"%s\" for subject \"%s\""
-	UpdatedSubjectLevelModeMsg = "Successfully updated Subject level Mode to \"%s\" for subject \"%s\""
+	DeletedSubjectVersionMsg       = "Successfully deleted version \"%s\" for subject\n"
+	UpdatedSubjectLevelCompatibilityMsg = "Successfully updated Subject Level compatibility to \"%s\" for subject \"%s\"\n"
+	UpdatedSubjectLevelModeMsg = "Successfully updated Subject level Mode to \"%s\" for subject \"%s\"\n"
 	NoSubjectsMsg = "No subjects"
 
 	// secret commands
@@ -51,13 +53,13 @@ const (
 	// update command
 	CheckingForUpdatesMsg = "Checking for updates..."
 	UpToDateMsg           = "Already up to date."
-	UpdateAutocompleteMsg = "Update your autocomplete scripts as instructed by `%s help completion`."
+	UpdateAutocompleteMsg = "Update your autocomplete scripts as instructed by `%s help completion`.\n"
 
 	// Packages
 
 	// cmd package
 	TokenExpiredMsg = "Your token has expired. You are now logged out."
-	NotifyUpdateMsg = "Updates are available for %s from (current: %s, latest: %s).\nTo view release notes and install them, please run:\n$ %s update\n"
+	NotifyUpdateMsg = "Updates are available for %s from (current: %s, latest: %s).\nTo view release notes and install them, please run:\n$ %s update\n\n"
 	LocalCommandDevOnlyMsg = "The local commands are intended for a single-node development environment only,\n" +
 		"NOT for production usage. https://docs.confluent.io/current/cli/index.html"
 
@@ -70,13 +72,14 @@ const (
 		"The issues are the following: %s.\n"+
 		"Deleting the malformed entries.\n"+
 		"You can re-add the API key secret pair with `ccloud api-key store --resource %s`\n"
-	CurrentAPIKeyAutofixMsg = "Current API key \"%s'\" of resource \"%s\" under context \"%s\" is not found.\n"+
+	CurrentAPIKeyAutofixMsg = "Current API key \"%s\" of resource \"%s\" under context \"%s\" is not found.\n"+
 		"Removing current API key setting for the resource.\n"+
-		"You can re-add the API key with 'ccloud api-key store --resource %s' and set current API key with 'ccloud api-key use'.\n"
+		"You can re-add the API key with `ccloud api-key store --resource %s'` and then set current API key with `ccloud api-key use`.\n"
 
 
 	// feedback package
-	FeedbackNudgeMsg = "\nDid you know you can use the \"ccloud feedback\" command to send the team feedback?\nLet us know if the ccloud CLI is meeting your needs, or what we can do to improve it."
+	FeedbackNudgeMsg = "\nDid you know you can use the `ccloud feedback` command to send the team feedback?\n" +
+		"Let us know if the CLI is meeting your needs, or what we can do to improve it.\n"
 
 
 	// sso package

@@ -1,9 +1,11 @@
 package errors
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/log"
+)
 
 var (
-	prefixFormat = "%s: %s"
 	cliDownLoadLink = map[string]string {
 		"confluent": "https://docs.confluent.io/current/cli/installing.html",
 		"ccloud": "https://docs.confluent.io/current/cloud/cli/install.html",
@@ -73,36 +75,32 @@ func (e *UnconfiguredAPISecretError) UserFacingError() error {
 	return NewErrorWithSuggestions(errorMsg, suggestionsMsg)
 }
 
-func NewCorruptedConfigError(format string, contextName string, cliName string, configFile string) CLITypedError {
-	return &CorruptedConfigError{
-		messageFormat: format,
-		contextName:   contextName,
-		cliName:       cliName,
-		configFile:    configFile,
+func NewCorruptedConfigError(format string, contextName string, cliName string, configFile string, logger *log.Logger) CLITypedError {
+	e := &CorruptedConfigError{}
+	var errorWithStackTrace error
+	if contextName != "" {
+		errorWithStackTrace = Errorf(format, contextName)
+	} else {
+		errorWithStackTrace = Errorf(format)
 	}
+	// logging stack trace of the error use pkg/errors error type
+	logger.Debugf("%+v", errorWithStackTrace)
+	e.errorMsg = fmt.Sprintf(prefixFormat, CorruptedConfigErrorPrefix, errorWithStackTrace.Error())
+	e.suggestionsMsg = fmt.Sprintf(CorruptedConfigSuggestions, configFile, cliName, cliName)
+	return e
 }
 
 type CorruptedConfigError struct {
-	messageFormat string
-	contextName   string
-	cliName       string
-	configFile    string
+	errorMsg       string
+	suggestionsMsg string
 }
 
 func (e *CorruptedConfigError) Error() string {
-	return e.contextName
+	return e.errorMsg
 }
 
 func (e *CorruptedConfigError) UserFacingError() error {
-	var errorMsg string
-	if e.contextName != "" {
-		errorMsg = fmt.Sprintf(e.messageFormat, e.contextName)
-	} else {
-		errorMsg = e.messageFormat
-	}
-	errorMsg = fmt.Sprintf(prefixFormat, CorruptedConfigErrorPrefix, errorMsg)
-	suggestionsMsg := fmt.Sprintf(CorruptedConfigSuggestions, e.configFile, e.cliName, e.cliName)
-	return NewErrorWithSuggestions(errorMsg, suggestionsMsg)
+	return NewErrorWithSuggestions(e.errorMsg, e.suggestionsMsg)
 }
 
 func NewUpdateClientWrapError(err error, errorMsg string, cliName string) CLITypedError {

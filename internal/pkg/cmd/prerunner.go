@@ -330,7 +330,7 @@ func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, name string, curren
 		if !strings.HasPrefix(latestVersion, "v") {
 			latestVersion = "v" + latestVersion
 		}
-		ErrPrintln(cmd, errors.NotifyUpdateMsg, name, currentVersion, latestVersion, name)
+		ErrPrintf(cmd, errors.NotifyUpdateMsg, name, currentVersion, latestVersion, name)
 	}
 	return nil
 }

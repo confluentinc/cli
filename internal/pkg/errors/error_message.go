@@ -1,8 +1,13 @@
 package errors
 
-// Error message and suggestions message associated with them
+/*
+	Error message and suggestions message associated with them
+ */
 
 const (
+	// format
+	prefixFormat = "%s: %s"
+
 	// api-key commands
 	UnableToStoreAPIKeyErrorMsg       = "unable to store API key locally"
 	NonKafkaNotImplementedErrorMsg    = "command not yet available for non-Kafka cluster resources"
@@ -44,11 +49,11 @@ const (
 
 	// iam role-binding commands
 	PrincipalFormatErrorMsg = "incorrect principal format specified"
-	PrincipalFormatSuggestions = "Principal must be specified in this format: <Principal Type>:<Principal Name>."
+	PrincipalFormatSuggestions = "Principal must be specified in this format: `<Principal Type>:<Principal Name>`."
 	ResourceFormatErrorMsg = "incorrect resource format specified"
-	ResourceFormatSuggestions = "Resource must be specified in this format: <Resource Type>:<Resource Name>."
+	ResourceFormatSuggestions = "Resource must be specified in this format: `<Resource Type>:<Resource Name>`."
 	LookUpRoleErrorMsg     = "failed to lookup role \"%s\""
-	LookUpRoleSuggestions  = "Check that the role name is valid with `confluent role list`"
+	LookUpRoleSuggestions  = "Check for valid roles with `confluent role list`."
 	InvalidResourceTypeErrorMsg = "invalid resource type \"%s\""
 	InvalidResourceTypeSuggestions = "The available resource types are: %s"
 	SpecifyKafkaIDErrorMsg = "must also specify a --kafka-cluster-id to uniquely identify the scope"
@@ -67,34 +72,34 @@ const (
 	// kafka cluster commands
 	FailedToReadConfirmationErrorMsg = "BYOK error: failed to read your confirmation"
 	AuthorizeAccountsErrorMsg = "BYOK error: please authorize the accounts (%s) for the key"
-	CKUOnlyForDedicatedErrorMsg = "specifying \"--cku\" flag is valid only for dedicated Kafka cluster creation"
-	CKUMoreThanZeroErrorMsg = "\"--cku\" valaue must be greater than 0"
+	CKUOnlyForDedicatedErrorMsg = "specifying `--cku` flag is valid only for dedicated Kafka cluster creation"
+	CKUMoreThanZeroErrorMsg = "`--cku` valaue must be greater than 0"
 	CloudRegionNotAvailableErrorMsg      = "\"%s\" is not an available region for \"%s\""
 	CloudRegionNotAvailableSuggestions   = "You can view a list of available regions for \"%s\" with `ccloud kafka region list --cloud %s` command."
 	CloudProviderNotAvailableErrorMsg    = "\"%s\" is not an available cloud provider"
 	CloudProviderNotAvailableSuggestions = "You can view a list of available cloud providers and regions with the `ccloud kafka region list` command."
 	TopicNotExistsErrorMsg               = "topic \"%s\" does not exist"
 	TopicNotExistsSuggestions            = "Check the available topics for Kafka cluster \"%s\" with `ccloud kafka topic list --cluster %s`."
-	InvalidAvailableFlagErrorMsg = "invalid value \"%s\" for \"--availability\" flag"
-	InvalidAvailableFlagSuggesions = "Allowed values for \"--availablility\" flag are: %s, %s."
-	InvalidTypeFlagErrorMsg = "invalid vale \"%s\" for \"--type\" flag"
-	InvalidTypeFlagSuggestions = "Allowed values for \"--type\" flag are: %s, %s, %s."
+	InvalidAvailableFlagErrorMsg = "invalid value \"%s\" for `--availability` flag"
+	InvalidAvailableFlagSuggesions = "Allowed values for `--availability` flag are: %s, %s."
+	InvalidTypeFlagErrorMsg = "invalid value \"%s\" for `--type` flag"
+	InvalidTypeFlagSuggestions = "Allowed values for `--type` flag are: %s, %s, %s."
 	NameOrCKUFlagErrorMsg = "must either specify --name with non-empty value or --cku (for dedicated clusters) with positive integer"
-	NonEmptyNameErrorMsg = "\"--name\" flag value must not be emtpy"
+	NonEmptyNameErrorMsg = "`--name` flag value must not be emtpy"
 
 	// kafka topic commands
-	FailedToProduceErrorMsg = "Failed to produce offset %d: %s\n"
+	FailedToProduceErrorMsg = "failed to produce offset %d: %s\n"
 	ConfigurationFormErrorMsg = "configuration must be in the form of key=value"
 
 	// ksql commands
 	NoServiceAccountErrorMsg = "no service account found for KSQL cluster \"%s\""
 
 	// prompt command
-	ParseTimeOutErrorMsg = "invalid value \"%s\" for \"-t, --timeout\" flag: unable to parse %s as duration or milliseconds"
+	ParseTimeOutErrorMsg = "invalid value \"%s\" for `-t, --timeout` flag: unable to parse %s as duration or milliseconds"
 	ParsePromptFormatErrorMsg = "error parsing prompt format string \"%s\""
 
 	// schema-registry commands
-	CompatibilityOrModeErrorMsg  = "must pass either \"--compatibility\" or \"--mode\" flag"
+	CompatibilityOrModeErrorMsg  = "must pass either `--compatibility` or `--mode` flag"
 	BothSchemaAndSubjectErrorMsg = "cannot specify both schema ID and subject/version"
 	SchemaOrSubjectErrorMsg      = "must specify either schema ID or subject/version"
 	SchemaIntegerErrorMsg        = "invalid schema ID \"%s\""
@@ -104,7 +109,7 @@ const (
 	// secret commands
 	EnterInputTypeErrorMsg = "please enter %s"
 	PipeInputTypeErrorMsg = "please pipe %s over stdin"
-	SpecifyPassphraseErrorMsg = "please specify '--passphrase -' if you intend to pipe your passphrase over stdin"
+	SpecifyPassphraseErrorMsg = "please specify `--passphrase -` if you intend to pipe your passphrase over stdin"
 	PipePassphraseErrorMsg = "please pipe your passphrase over stdin"
 
 	// update command
@@ -112,7 +117,7 @@ const (
 	UpdateClientFailureSuggestions = "Please submit a support ticket.\n" +
 		"In the meantime, see link for other ways to download the latest CLI version:\n" +
 		"%s"
-	ReadingYesFlagErrorMsg = "error reading \"--yes\" flag as bool"
+	ReadingYesFlagErrorMsg = "error reading `--yes` flag as bool"
 	CheckingForUpdateErrorMsg = "error checking for updates"
 	UpdateBinaryErrorMsg = "error updating CLI binary"
 	ObtainingReleaseNotesErrorMsg = "error obtaining release notes: %s"
@@ -141,10 +146,16 @@ const (
 	MalformedJWTNoExprErrorMsg = "malformed JWT claims: no expiration"
 
 	// config package
+	CorruptedConfigErrorPrefix = "corrupted CLI config"
+	CorruptedConfigSuggestions = "Your CLI config file \"%s\" is corrupted.\n" +
+		"You can solve this problem by removing the config file, and run `%s login` or `%s init`.\n" +
+		"Unfortunately, your active CLI state will be lost as a result.\n" +
+		"Please file a support ticket with details about your config file to help us address this issue.\n" +
+		"Please rerun the command with the verbosity flag `-vvvv` and attach the output with the support ticket."
 	UnableToCreateConfigErrorMsg = "unable to create config"
 	UnableToReadConfigErrorMsg   = "unable to read config file \"%s\""
 	ConfigNotUpToDateErrorMsg    = "config version v%s not up to date with the latest version v%s"
-	InvalidConfigVersionErrorMsg = "invalid config version V%s"
+	InvalidConfigVersionErrorMsg = "invalid config version v%s"
 	ParseConfigErrorMsg = "unable to parse config file \"%s\""
 	NoNameContextErrorMsg = "one of the existing contexts has no name"
 	MissingKafkaClusterContextErrorMsg = "context \"%s\" missing KafkaClusterContext"
@@ -160,18 +171,14 @@ const (
 	NoNamePlatformErrorMsg = "platform must have a name"
 	ResolvingConfigPathErrorMsg = "error resolving the config filepath at %s has occurred"
 	ResolvingConfigPathSuggestions = "Please try moving the config file to a different location."
-	UnspecifiedPlatformErrorMsg   = "corrupted config: context \"%s\" has corrupted platform"
-	UnspecifiedCredentialErrorMsg = "corrupted config: context \"%s\" has corrupted credentials"
-	ContextStateMismatchErrorMsg = "corrupted config: context state mismatch for context \"%s\""
-	ContextStateNotMappedErrorMsg = "corrupted config: context state mapping error for context \"%s\""
-	CorruptedConfigErrorPrefix = "corrupted CLI config"
-	CorruptedConfigSuggestions = "Your CLI config file \"%s\" is corrupted. Please remove the file, and run `%s login` or `%s init`.\n" +
-		"Unfortunately, your CLI state will be lost as a result.\n" +
-		"Please file a support ticket with details about your config file to help us address this issue."
+	UnspecifiedPlatformErrorMsg   = "context \"%s\" has corrupted platform"
+	UnspecifiedCredentialErrorMsg = "context \"%s\" has corrupted credentials"
+	ContextStateMismatchErrorMsg = "context state mismatch for context \"%s\""
+	ContextStateNotMappedErrorMsg = "context state mapping error for context \"%s\""
 	ClearInvalidAPIFailErrorMsg = "unable to clear invalid API key pairs"
 	DeleteUserAuthErrorMsg = "unable to delete user auth"
 	ResetInvalidAPIKeyErrorMsg = "unable to reset invalid active API key"
-	NoIDClusterErrorMsg = "Kafka cluster under context '%s' has no ID"
+	NoIDClusterErrorMsg = "Kafka cluster under context \"%s\" has no ID"
 
 	// secret package
 	EncryptPlainTextErrorMsg       = "failed to encrypt the plain text"
@@ -200,8 +207,8 @@ const (
 	ConfigKeyNotEncryptedErrorMsg   = "configuration key \"%s\" is not encrypted"
 	FileTypeNotSupportedErrorMsg    = "file type \"%s\" currently not supported"
 	ConfigKeyNotInJSONErrorMsg      = "configuration key \"%s\" not present in JSON configuration file"
-	MasterKeyNotExportedErrorMsg    = "master key is not exported in '%s' environment variable"
-	MasterKeyNotExportedSuggestions = "Please set the environment variable '%s' to the master key and execute this command again."
+	MasterKeyNotExportedErrorMsg    = "master key is not exported in `%s` environment variable"
+	MasterKeyNotExportedSuggestions = "Please set the environment variable `%s` to the master key and execute this command again."
 	ConfigKeyNotPresentErrorMsg     = "configuration key \"%s\" not present in the configuration file"
 	InvalidJSONFileFormatErrorMsg   = "invalid json file format"
 	InvalidFilePathErrorMsg         = "invalid file path \"%s\""
@@ -248,11 +255,14 @@ const (
 	FindAWSCredsErrorMsg = "failed to find aws credentials in profiles: %s"
 
 	// Flag Errors
-	ProhibitedFlagCombinationErrorMsg = "cannot use \"--%s\" and \"--%s\" flags at the same time"
-	InvalidFlagValueErrorMsg        = "invalid value \"%s\" for flag \"--%s\""
-	InvalidFlagValueSuggestions     = "The possible values for flag \"%s\" are: %s."
+	ProhibitedFlagCombinationErrorMsg = "cannot use `--%s` and `--%s` flags at the same time"
+	InvalidFlagValueErrorMsg        = "invalid value \"%s\" for flag `--%s`"
+	InvalidFlagValueSuggestions     = "The possible values for flag `%s` are: %s."
 
 	// catcher
+	UnexpectedBackendOutputPrefix = "unexpected backend output"
+	UnexpectedBackendOutputSuggestions = "Please submit a support ticket."
+	BackendUnmarshallingErrorMsg = "protobuf unmarshalling error"
 	ResourceNotFoundErrorMsg    = "resource \"%s\" not found"
 	ResourceNotFoundSuggestions = "Please check that the resource \"%s\" exists.\n" +
 		"To list Kafka clusters use `ccloud kafka cluster list`\n" +
@@ -264,32 +274,40 @@ const (
 	KafkaNotReadyErrorMsg      = "Kafka cluster \"%s\" not ready"
 	KafkaNotReadySuggestions   = "It may take up to 5 minutes for a recently created Kafka cluster to be ready."
 	NoKafkaSelectedErrorMsg    = "no Kafka cluster selected"
-	NoKafkaSelectedSuggestions = "You must pass \"--cluster\" flag with the command or set an active kafka in your context with `ccloud kafka cluster use`"
+	NoKafkaSelectedSuggestions = "You must pass `--cluster` flag with the command or set an active kafka in your context with `ccloud kafka cluster use`"
 	UnableToConnectToKafkaErrorMsg = "unable to connect to Kafka cluster"
 	UnableToConnectToKafkaSuggestions = "For recently created Kafka clusters and API keys, it may take a few minutes before the resources are ready.\n" +
-		"Otherwise, verify that for Kafka cluster \"%s\", the active API key \"%s\" used is correct, and that the API secret is stored for that API key is correct.\n" +
+		"Otherwise, verify that for Kafka cluster \"%s\" the active API key \"%s\" used is the right one.\n" +
+		"Also, verify that the correct API secret is stored for the API key.\n" +
 		"If the API secret is incorrect, override with `ccloud api-key store %s --resource %s --force`."
 	NoAPISecretStoredErrorMsg   = "no API secret for API key \"%s\" of resource \"%s\" stored in local CLI state"
 	NoAPISecretStoredSuggestions = "Store the API secret with `ccloud api-key store %s --resource %s`."
 
 
-
-	//
+	// Special error handling
+	avoidTimeoutWithCLINameSuggestion = "To avoid session timeouts, you can save credentials to netrc file with `%s login --save`."
+	ccloudAvoidTimeoutSuggestion = "To avoid session timeouts, you can save credentials to netrc file with `ccloud login --save`."
+	avoidTimeoutGeneralSuggestion = "To avoid session timeouts, you can save credentials to netrc file by logging in with `--save` flag."
 	NotLoggedInErrorMsg    = "not logged in"
 	NotLoggedInSuggestions = "You must be logged in to run this command.\n" +
-		"To avoid session timeouts, you can save credentials to netrc with `%s login --save`."
+		avoidTimeoutWithCLINameSuggestion
 	CorruptedTokenErrorMsg = "corrupted auth token"
 	CorruptedTokenSuggestions = "Please log in again.\n" +
-		"To automatically recover from corrupted token, you can save credentials to netrc with \"--save\" flag during `login`."
+		avoidTimeoutGeneralSuggestion
 	ExpiredTokenErrorMsg = "expired token"
 	ExpiredTokenSuggestions = "Your session has timed out, please log in again.\n" +
-		"To avoid session timeouts, you can save credentials to netrc with \"--save\" flag during `login`."
-	InvalidLoginErrorMsg    = "incorrect username or password"
-	InvalidLoginSuggestions = "Please login again.\n" +
-		"To avoid session timeouts, you can save credentials to netrc with \"--save\" flag during `login`."
+		avoidTimeoutGeneralSuggestion
+	InvalidEmailErrorMsg     = "user \"%s\" not found"
+	InvalidEmailSuggestions = "Please check the email.\n" +
+		"If the email is correct, please check that you have successfully verified your email.\n" +
+		"If the problem persists, please submit a support ticket.\n" +
+		ccloudAvoidTimeoutSuggestion
+	InvalidLoginErrorMsg    = "incorrect email or password"
+	CCloudInvalidLoginSuggestions = "Please login again.\n" +
+		ccloudAvoidTimeoutSuggestion
 	NoAPIKeySelectedErrorMsg   = "no API key selected for resource \"%s\""
 	NoAPIKeySelectedSuggestions = "Select an API key for resource \"%s\" with `ccloud api-key use <API_KEY> --resource %s`.\n" +
-		"If the resource does not have an API key stored in local CLI state, you must first either create an API key or store an existing key in the CLI.\n" +
+		"To do so, you must have either already created or stored an API key for the resource.\n" +
 		"To create an API key use `ccloud api-key create --resource %s`.\n" +
 		"To store an existing API key use `ccluod api-key store --resource %s`."
 

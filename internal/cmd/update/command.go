@@ -125,7 +125,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	if err := c.client.UpdateBinary(c.cliName, latestVersion, oldBin); err != nil {
 		return errors.HandleCommon(errors.NewUpdateClientWrapError(err, errors.UpdateBinaryErrorMsg, c.cliName), cmd)
 	}
-	pcmd.ErrPrintln(cmd, errors.UpdateAutocompleteMsg, c.config.CLIName)
+	pcmd.ErrPrintf(cmd, errors.UpdateAutocompleteMsg, c.config.CLIName)
 
 	return nil
 }

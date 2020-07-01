@@ -203,7 +203,7 @@ func (c *schemaCommand) delete(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
-		pcmd.Println(cmd, errors.DeletedSubjectVersionMsg, version)
+		pcmd.Printf(cmd, errors.DeletedSubjectVersionMsg, version)
 		PrintVersions([]int32{versionResult})
 		return nil
 	}

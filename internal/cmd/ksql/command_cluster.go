@@ -162,7 +162,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	pcmd.Println(cmd, errors.KSQLDeletedMsg, args[0])
+	pcmd.Printf(cmd, errors.KSQLDeletedMsg, args[0])
 	return nil
 }
 
@@ -274,7 +274,7 @@ func (c *clusterCommand) configureACLs(cmd *cobra.Command, args []string) error 
 		return errors.HandleCommon(err, cmd)
 	}
 	if cluster.KafkaClusterId != kafkaCluster.Id {
-		pcmd.ErrPrintln(cmd, errors.KSQLNotBackedByKafkaMsg, args[0], cluster.KafkaClusterId, kafkaCluster.Id)
+		pcmd.ErrPrintf(cmd, errors.KSQLNotBackedByKafkaMsg, args[0], cluster.KafkaClusterId, kafkaCluster.Id)
 	}
 
 	serviceAccountId, err := c.getServiceAccount(cluster)

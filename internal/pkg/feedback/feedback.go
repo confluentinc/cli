@@ -9,7 +9,7 @@ import (
 
 func HandleFeedbackNudge(cliName string, cmdArgs []string) {
 	if cliName == "ccloud" && isHelpCommand(cmdArgs) {
-		_, _ = fmt.Fprintln(os.Stderr, errors.FeedbackNudgeMsg)
+		_, _ = fmt.Fprintf(os.Stderr, errors.FeedbackNudgeMsg)
 	}
 }
 

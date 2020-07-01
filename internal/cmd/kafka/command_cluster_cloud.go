@@ -349,7 +349,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(errors.CatchKafkaNotFoundError(err, args[0]), cmd)
 	}
-	pcmd.Println(cmd, errors.KafkaClusterDeletedMsg, args[0])
+	pcmd.Printf(cmd, errors.KafkaClusterDeletedMsg, args[0])
 	return nil
 }
 

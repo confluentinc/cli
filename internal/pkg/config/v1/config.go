@@ -223,7 +223,7 @@ func (c *Config) CredentialType() (CredentialType, error) {
 	if cred, ok := c.Credentials[context.Credential]; ok {
 		return cred.CredentialType, nil
 	}
-	return -1, errors.NewCorruptedConfigError(errors.UnspecifiedCredentialErrorMsg, c.CurrentContext, c.CLIName, c.Filename)
+	return -1, errors.NewCorruptedConfigError(errors.UnspecifiedCredentialErrorMsg, c.CurrentContext, c.CLIName, c.Filename, c.Logger)
 }
 
 // SchemaRegistryCluster returns the SchemaRegistryCluster for the current Context,

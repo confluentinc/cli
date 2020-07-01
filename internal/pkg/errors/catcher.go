@@ -4,11 +4,87 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+
+	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
+	"github.com/confluentinc/ccloud-sdk-go"
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	"github.com/hashicorp/go-multierror"
 )
 
 /*
-	ccloud-sdk-go errors
+	HANDLECOMMON HELPERS
+ */
+
+
+func catchTypedErrors(err error) error {
+	if typedErr, ok := err.(CLITypedError); ok {
+		return typedErr.UserFacingError()
+	}
+	return err
+}
+
+func catchSpecialErrors(err error) error {
+	switch e := err.(type) {
+	case mds.GenericOpenAPIError:
+		return Errorf(GenericOpenAPIErrorMsg, e.Error(), string(e.Body()))
+	case *corev1.Error:
+		var result error
+		result = multierror.Append(result, e)
+		for name, msg := range e.GetNestedErrors() {
+			result = multierror.Append(result, fmt.Errorf("%s: %s", name, msg))
+		}
+		return result
+	default:
+		return err
+	}
+}
+
+func catchCCloudTokenErrors(err error) error {
+	switch err.(type) {
+	case *ccloud.InvalidLoginError:
+		return NewErrorWithSuggestions(InvalidLoginErrorMsg, CCloudInvalidLoginSuggestions)
+	case *ccloud.InvalidTokenError:
+		return NewErrorWithSuggestions(CorruptedTokenErrorMsg, CorruptedTokenSuggestions)
+	case *ccloud.ExpiredTokenError:
+		return NewErrorWithSuggestions(ExpiredTokenErrorMsg, ExpiredTokenSuggestions)
+	}
+	return err
+}
+
+/*
+Error: 1 error occurred:
+	* error creating ACLs: reply error: invalid character 'C' looking for beginning of value
+Error: 1 error occurred:
+	* error updating topic ENTERPRISE.LOANALT2-ALTERNATE-LOAN-MASTER-2.DLQ: reply error: invalid character '<' looking for beginning of value
 */
+func catchCCloudBackendUnmarshallingError(err error) error {
+	backendUnmarshllingErrorRegex := regexp.MustCompile(`reply error: invalid character '.' looking for beginning of value`)
+	if backendUnmarshllingErrorRegex.MatchString(err.Error()) {
+		errorMsg := fmt.Sprintf(prefixFormat, UnexpectedBackendOutputPrefix, BackendUnmarshallingErrorMsg)
+		return NewErrorWithSuggestions(errorMsg, UnexpectedBackendOutputSuggestions)
+	}
+	return err
+}
+
+
+
+/*
+	CCLOUD-SDK-GO CLIENT ERROR CATCHING
+*/
+
+
+/*
+Error: 1 error occurred:
+	* error checking email: User Not Found
+ */
+func CatchEmailNotFoundError(err error, email string) error {
+	if strings.Contains(err.Error(), "error checking email: User Not Found") {
+		errorMsg := fmt.Sprintf(InvalidEmailErrorMsg, email)
+		return NewErrorWithSuggestions(errorMsg, InvalidEmailSuggestions)
+	}
+	return err
+}
+
 
 func CatchResourceNotFoundError(err error, resourceId string) error {
 	if isResourceNotFoundError(err) {
@@ -45,14 +121,14 @@ func CatchSchemaRegistryNotFoundError(err error, clusterId string) error {
 }
 
 /*
-	Error: 1 error occurred:
-		* error describing kafka cluster: resource not found
-	Error: 1 error occurred:
-		* error describing kafka cluster: resource not found
-	Error: 1 error occurred:
-		* error listing schema-registry cluster: resource not found
-	Error: 1 error occurred:
-		* error describing ksql cluster: resource not found
+Error: 1 error occurred:
+	* error describing kafka cluster: resource not found
+Error: 1 error occurred:
+	* error describing kafka cluster: resource not found
+Error: 1 error occurred:
+	* error listing schema-registry cluster: resource not found
+Error: 1 error occurred:
+	* error describing ksql cluster: resource not found
 */
 func isResourceNotFoundError(err error) bool {
 	resourceNotFoundRegex := regexp.MustCompile(`error .* cluster: resource not found`)
@@ -60,10 +136,10 @@ func isResourceNotFoundError(err error) bool {
 }
 
 /*
-	Error: 1 error occurred:
-		* error listing topics: Authentication failed: 1 extensions are invalid! They are: logicalCluster: Authentication failed
-	Error: 1 error occurred:
-		* error creating topic test-topic: Authentication failed: 1 extensions are invalid! They are: logicalCluster: Authentication failed
+Error: 1 error occurred:
+	* error listing topics: Authentication failed: 1 extensions are invalid! They are: logicalCluster: Authentication failed
+Error: 1 error occurred:
+	* error creating topic test-topic: Authentication failed: 1 extensions are invalid! They are: logicalCluster: Authentication failed
  */
 func CatchClusterNotReadyError(err error, clusterId string) error {
 	if strings.Contains(err.Error(), "Authentication failed: 1 extensions are invalid! They are: logicalCluster: Authentication failed") {
@@ -75,12 +151,14 @@ func CatchClusterNotReadyError(err error, clusterId string) error {
 
 
 
-
 /*
-	Sarama Errors
+	SARAMA ERROR CATCHING
  */
 
-// kafka server: Request was for a topic or partition that does not exist on this broker.
+
+/*
+kafka server: Request was for a topic or partition that does not exist on this broker.
+ */
 func CatchTopicNotExistError(err error, topicName string, clusterId string) (bool, error) {
 	if strings.Contains(err.Error(), "kafka server: Request was for a topic or partition that does not exist on this broker.") {
 		errorMsg := fmt.Sprintf(TopicNotExistsErrorMsg, topicName)
@@ -90,7 +168,9 @@ func CatchTopicNotExistError(err error, topicName string, clusterId string) (boo
 	return false, err
 }
 
-// Error: "kafka: client has run out of available brokers to talk to (Is your cluster reachable?)"
+/*
+Error: "kafka: client has run out of available brokers to talk to (Is your cluster reachable?)"
+ */
 func CatchClusterUnreachableError(err error, clusterId string, apiKey string) error {
 	if strings.Contains(err.Error(), "kafka: client has run out of available brokers to talk to (Is your cluster reachable?)") {
 		suggestionsMsg := fmt.Sprintf(UnableToConnectToKafkaSuggestions, clusterId, apiKey, apiKey, clusterId)

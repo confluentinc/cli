@@ -247,7 +247,7 @@ func (c *clusterCommand) updateCompatibility(cmd *cobra.Command, args []string) 
 	if err != nil {
 		return err
 	}
-	pcmd.Println(cmd, errors.UpdatedToLevelCompatibilityMsg, updateReq.Compatibility)
+	pcmd.Printf(cmd, errors.UpdatedToLevelCompatibilityMsg, updateReq.Compatibility)
 	return nil
 }
 

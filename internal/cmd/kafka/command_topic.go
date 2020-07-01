@@ -201,6 +201,7 @@ func (a *authenticatedTopicCommand) list(cmd *cobra.Command, args []string) erro
 	}
 	resp, err := a.Client.Kafka.ListTopics(context.Background(), cluster)
 	if err != nil {
+		err = errors.CatchClusterNotReadyError(err, cluster.Id)
 		return errors.HandleCommon(err, cmd)
 	}
 
@@ -250,8 +251,11 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 		return errors.HandleCommon(err, cmd)
 	}
 	err = a.Client.Kafka.CreateTopic(context.Background(), cluster, topic)
-
-	return errors.HandleCommon(err, cmd)
+	if err != nil {
+		err = errors.CatchClusterNotReadyError(err, cluster.Id)
+		return errors.HandleCommon(err, cmd)
+	}
+	return nil
 }
 
 func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) error {
@@ -270,9 +274,9 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 		return errors.HandleCommon(err, cmd)
 	}
 	if outputOption == output.Human.String() {
-		return printHumanDescribe(cmd, resp)
+		return errors.HandleCommon(printHumanDescribe(cmd, resp), cmd)
 	} else {
-		return printStructuredDescribe(resp, outputOption)
+		return errors.HandleCommon(printStructuredDescribe(resp, outputOption), cmd)
 	}
 }
 
@@ -298,8 +302,11 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		return errors.HandleCommon(err, cmd)
 	}
 	err = a.Client.Kafka.UpdateTopic(context.Background(), cluster, &schedv1.Topic{Spec: topic, Validate: validate})
-
-	return errors.HandleCommon(err, cmd)
+	if err != nil {
+		err = errors.CatchClusterNotReadyError(err, cluster.Id)
+		return errors.HandleCommon(err, cmd)
+	}
+	return nil
 }
 
 func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) error {
@@ -310,8 +317,11 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 
 	topic := &schedv1.TopicSpecification{Name: args[0]}
 	err = a.Client.Kafka.DeleteTopic(context.Background(), cluster, &schedv1.Topic{Spec: topic, Validate: false})
-
-	return errors.HandleCommon(err, cmd)
+	if err != nil {
+		err = errors.CatchClusterNotReadyError(err, cluster.Id)
+		return errors.HandleCommon(err, cmd)
+	}
+	return nil
 }
 
 func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error {
