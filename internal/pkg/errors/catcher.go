@@ -82,7 +82,8 @@ func CatchEmailNotFoundError(err error, email string) error {
 }
 
 func CatchResourceNotFoundError(err error, resourceId string) error {
-	if isResourceNotFoundError(err) {
+	_, isKafkaNotFound := err.(*KafkaClusterNotFoundError)
+	if isResourceNotFoundError(err) || isKafkaNotFound {
 		errorMsg := fmt.Sprintf(ResourceNotFoundErrorMsg, resourceId)
 		suggestionsMsg := fmt.Sprintf(ResourceNotFoundSuggestions, resourceId)
 		return NewErrorWithSuggestions(errorMsg, suggestionsMsg)
@@ -92,9 +93,7 @@ func CatchResourceNotFoundError(err error, resourceId string) error {
 
 func CatchKafkaNotFoundError(err error, clusterId string) error {
 	if isResourceNotFoundError(err) {
-		errorMsg := fmt.Sprintf(ResourceNotFoundErrorMsg, clusterId)
-		suggestionsMsg := fmt.Sprintf(KafkaNotFoundSuggestions)
-		return NewErrorWithSuggestions(errorMsg, suggestionsMsg)
+		return &KafkaClusterNotFoundError{ClusterID: clusterId}
 	}
 	return err
 }

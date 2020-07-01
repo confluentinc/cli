@@ -44,6 +44,19 @@ func (e *NoContextError) UserFacingError() error {
 	return NewErrorWithSuggestions(NotLoggedInErrorMsg, suggestionsMsg)
 }
 
+type KafkaClusterNotFoundError struct {
+	ClusterID string
+}
+
+func (e *KafkaClusterNotFoundError) Error() string {
+	return e.ClusterID
+}
+
+func (e *KafkaClusterNotFoundError) UserFacingError() error {
+	errMsg := fmt.Sprintf(KafkaNotFoundErrorMsg, e.ClusterID)
+	return NewErrorWithSuggestions(errMsg, KafkaNotFoundSuggestions)
+}
+
 // UnspecifiedAPIKeyError means the user needs to set an api-key for this cluster
 type UnspecifiedAPIKeyError struct {
 	ClusterID string

@@ -21,21 +21,30 @@ const (
 	// environment commands
 	UsingEnvMsg = "Now using \"%s\" as the default (active) environment.\n"
 
-	// feedback command
+	// feedback commands
 	ThanksForFeedbackMsg = "Thanks for your feedback."
 
-	// kafka cluster command
+	// kafka cluster commands
 	ConfirmAuthorizedKeyMsg = "Please confirm you have authorized the key for these accounts: %s"
 
-	// kafka topic command
+	// kafka topic commands
 	StartingProducerMsg = "Starting Kafka Producer. ^C or ^D to exit"
 	StoppingConsumer    = "Stopping Consumer."
 	StartingConsumerMsg = "Starting Kafka Consumer. ^C or ^D to exit"
 
-	// ksql command
+	// ksql commands
 	EndPointNotPopulatedMsg = "Endpoint not yet populated. To obtain the endpoint please use `ccloud ksql app describe`."
 	KSQLDeletedMsg          = "KSQL app \"%s\" has been deleted.\n"
 	KSQLNotBackedByKafkaMsg = "The KSQL cluster \"%s\" is not backed by \"%s\" which is not the current Kafka cluster \"%s\".\n"
+
+	// local commands
+	AvailableServicesMsg = "AvailableServices:\n%s\n"
+	UsingConfluentCurrentMsg = "Using CONFLUENT_CURRENT: %s\n"
+	AvailableConnectPluginsMsg = "Available Connect Plugins:\n%s\n"
+	StartingServiceMsg = "Starting %s\n"
+	StoppingServiceMsg = "Stopping %s\n"
+	ServiceStatusMsg = "%s is [%s]\n"
+	DestroyDeletingMsg = "Deleting: %s\n"
 
 	// schema-registry commands
 	UpdatedToLevelCompatibilityMsg      = "Successfully updated Top Level compatibility to \"%s\"\n"

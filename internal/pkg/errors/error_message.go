@@ -94,6 +94,20 @@ const (
 	// ksql commands
 	NoServiceAccountErrorMsg = "no service account found for KSQL cluster \"%s\""
 
+	// local commands
+	NoServicesRunningErrorMsg = "no services running"
+	TopNotAvailableErrorMsg   = "top command not available on platform: %s"
+	InvalidConnectorErrorMsg  = "invalid connector: %s"
+	FailedToStartErrorMsg     = "%s failed to start"
+	FailedToStopErrorMsg      = "%s failed to stop"
+	JavaRequirementErrorMsg   = "the Confluent CLI requires Java version 1.8 or 1.11.\n" +
+		"See https://docs.confluent.io/current/installation/versions-interoperability.html\n" +
+		"If you have multiple versions of Java installed, you may need to set JAVA_HOME to the version you want Confluent to use."
+	NoLogFoundErrorMsg      = "no log found: to run %s, use \"confluent local services %s start\""
+	MacVersionErrorMsg      =  "macOS version >= 10.13 is required (detected: %s)"
+	JavaExecNotFondErrorMsg = "could not find java executable, please install java or set JAVA_HOME"
+	NothingToDestroyErrorMsg = "nothing to destroy"
+
 	// prompt command
 	ParseTimeOutErrorMsg      = "invalid value \"%s\" for `-t, --timeout` flag: unable to parse %s as duration or milliseconds"
 	ParsePromptFormatErrorMsg = "error parsing prompt format string \"%s\""
@@ -179,6 +193,12 @@ const (
 	ResetInvalidAPIKeyErrorMsg         = "unable to reset invalid active API key"
 	NoIDClusterErrorMsg                = "Kafka cluster under context \"%s\" has no ID"
 
+	// local package
+	ConfluentHomeNotFoundErrorMsg = "could not find %s in CONFLUENT_HOME"
+	SetConfluentHomeErrorMsg = "set environment variable CONFLUENT_HOME"
+	KafkaScriptFormatNotSupportedErrorMsg = "format %s is not supported in this version"
+	KafkaScriptInvalidFormatErrorMsg = "invalid format: %s"
+
 	// secret package
 	EncryptPlainTextErrorMsg           = "failed to encrypt the plain text"
 	DecryptCypherErrorMsg              = "failed to decrypt the cipher"
@@ -253,6 +273,8 @@ const (
 	AWSCredsExpiredErrorMsg         = "AWS credentials in profile %s are expired"
 	FindAWSCredsErrorMsg            = "failed to find aws credentials in profiles: %s"
 
+
+
 	// Flag Errors
 	ProhibitedFlagCombinationErrorMsg = "cannot use `--%s` and `--%s` flags at the same time"
 	InvalidFlagValueErrorMsg          = "invalid value \"%s\" for flag `--%s`"
@@ -264,16 +286,17 @@ const (
 	BackendUnmarshallingErrorMsg       = "protobuf unmarshalling error"
 	ResourceNotFoundErrorMsg           = "resource \"%s\" not found"
 	ResourceNotFoundSuggestions        = "Please check that the resource \"%s\" exists.\n" +
-		"To list Kafka clusters use `ccloud kafka cluster list`\n" +
-		"To check schema-registry cluster info use `ccloud schema-registry cluster describe`\n" +
+		"To list Kafka clusters use `ccloud kafka cluster list`.\n" +
+		"To check schema-registry cluster info use `ccloud schema-registry cluster describe`.\n" +
 		"To list KSQL clusters use `ccloud ksql app list`."
+	KafkaNotFoundErrorMsg             = "Kafka cluster \"%s\" not found"
 	KafkaNotFoundSuggestions          = "List Kafka clusters with `ccloud kafka cluster list`."
 	KSQLNotFoundSuggestions           = "List KSQL clusters with `ccloud ksql app list`."
 	SRNotFoundSuggestions             = "Check the schema-registry cluster ID with `ccloud schema-registry cluster describe`."
 	KafkaNotReadyErrorMsg             = "Kafka cluster \"%s\" not ready"
 	KafkaNotReadySuggestions          = "It may take up to 5 minutes for a recently created Kafka cluster to be ready."
 	NoKafkaSelectedErrorMsg           = "no Kafka cluster selected"
-	NoKafkaSelectedSuggestions        = "You must pass `--cluster` flag with the command or set an active kafka in your context with `ccloud kafka cluster use`"
+	NoKafkaSelectedSuggestions        = "You must pass `--cluster` flag with the command or set an active kafka in your context with `ccloud kafka cluster use`."
 	UnableToConnectToKafkaErrorMsg    = "unable to connect to Kafka cluster"
 	UnableToConnectToKafkaSuggestions = "For recently created Kafka clusters and API keys, it may take a few minutes before the resources are ready.\n" +
 		"Otherwise, verify that for Kafka cluster \"%s\" the active API key \"%s\" used is the right one.\n" +

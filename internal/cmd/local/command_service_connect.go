@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -207,7 +208,7 @@ func (c *Command) runConnectConnectorLoadCommand(command *cobra.Command, args []
 			return err
 		}
 		if configFile == "" {
-			return fmt.Errorf("invalid connector: %s", connector)
+			return fmt.Errorf(errors.InvalidConnectorErrorMsg, connector)
 		}
 	}
 
@@ -314,8 +315,7 @@ func (c *Command) runConnectPluginListCommand(command *cobra.Command, _ []string
 		return err
 	}
 
-	command.Println("Available Connect Plugins:")
-	command.Println(out)
+	command.Printf(errors.AvailableConnectPluginsMsg, out)
 	return nil
 }
 

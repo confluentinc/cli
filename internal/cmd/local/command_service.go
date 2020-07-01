@@ -17,6 +17,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/spinner"
 )
 
@@ -71,7 +72,7 @@ func (c *Command) runServiceLogCommand(command *cobra.Command, _ []string) error
 
 	data, err := ioutil.ReadFile(log)
 	if err != nil {
-		return fmt.Errorf("no log found: to run %s, use \"confluent local services %s start\"", writeServiceName(service), service)
+		return errors.Errorf(errors.NoLogFoundErrorMsg, writeServiceName(service), service)
 	}
 	command.Print(string(data))
 
@@ -236,7 +237,7 @@ func (c *Command) startService(command *cobra.Command, service string, configFil
 		return err
 	}
 
-	command.Printf("Starting %s\n", writeServiceName(service))
+	command.Printf(errors.StartingServiceMsg, writeServiceName(service))
 
 	spin := spinner.New()
 	spin.Start()
@@ -360,14 +361,14 @@ func (c *Command) startProcess(service string) error {
 		return err
 	}
 
-	errors := make(chan error)
+	errorsChan := make(chan error)
 
 	up := make(chan bool)
 	go func() {
 		for {
 			isUp, err := c.isRunning(service)
 			if err != nil {
-				errors <- err
+				errorsChan <- err
 			}
 			if isUp {
 				up <- isUp
@@ -377,10 +378,10 @@ func (c *Command) startProcess(service string) error {
 	select {
 	case <-up:
 		break
-	case err := <-errors:
+	case err := <-errorsChan:
 		return err
 	case <-time.After(time.Second):
-		return fmt.Errorf("%s failed to start", writeServiceName(service))
+		return errors.Errorf(errors.FailedToStartErrorMsg, writeServiceName(service))
 	}
 
 	open := make(chan bool)
@@ -388,7 +389,7 @@ func (c *Command) startProcess(service string) error {
 		for {
 			isOpen, err := isPortOpen(service)
 			if err != nil {
-				errors <- err
+				errorsChan <- err
 			}
 			if isOpen {
 				open <- isOpen
@@ -399,10 +400,10 @@ func (c *Command) startProcess(service string) error {
 	select {
 	case <-open:
 		break
-	case err := <-errors:
+	case err := <-errorsChan:
 		return err
 	case <-time.After(90 * time.Second):
-		return fmt.Errorf("%s failed to start", writeServiceName(service))
+		return errors.Errorf(errors.FailedToStartErrorMsg, writeServiceName(service))
 	}
 
 	return nil
@@ -417,7 +418,7 @@ func (c *Command) stopService(command *cobra.Command, service string) error {
 		return c.printStatus(command, service)
 	}
 
-	command.Printf("Stopping %s\n", writeServiceName(service))
+	command.Printf(errors.StoppingServiceMsg, writeServiceName(service))
 
 	spin := spinner.New()
 	spin.Start()
@@ -503,13 +504,13 @@ func (c *Command) killProcess(service string) error {
 		return err
 	}
 
-	errors := make(chan error)
+	errorsChan := make(chan error)
 	up := make(chan bool)
 	go func() {
 		for {
 			isUp, err := c.isRunning(service)
 			if err != nil {
-				errors <- err
+				errorsChan <- err
 			}
 			if !isUp {
 				up <- isUp
@@ -519,10 +520,10 @@ func (c *Command) killProcess(service string) error {
 	select {
 	case <-up:
 		return nil
-	case err := <-errors:
+	case err := <-errorsChan:
 		return err
 	case <-time.After(time.Second):
-		return fmt.Errorf("%s failed to stop", writeServiceName(service))
+		return errors.Errorf(errors.FailedToStopErrorMsg, writeServiceName(service))
 	}
 }
 
@@ -537,7 +538,7 @@ func (c *Command) printStatus(command *cobra.Command, service string) error {
 		status = color.GreenString("UP")
 	}
 
-	command.Printf("%s is [%s]\n", writeServiceName(service), status)
+	command.Printf(errors.ServiceStatusMsg, writeServiceName(service), status)
 	return nil
 }
 
@@ -631,7 +632,7 @@ func checkOSVersion() error {
 
 		v10_13, _ := version.NewSemver("10.13")
 		if v.Compare(v10_13) < 0 {
-			return fmt.Errorf("macOS version >= 10.13 is required (detected: %s)", osVersion)
+			return errors.Errorf(errors.MacVersionErrorMsg, osVersion)
 		}
 	}
 	return nil
@@ -646,7 +647,7 @@ func checkJavaVersion(service string) error {
 		}
 		java = strings.TrimSuffix(string(out), "\n")
 		if java == "java not found" {
-			return fmt.Errorf("could not find java executable, please install java or set JAVA_HOME")
+			return errors.New(errors.JavaExecNotFondErrorMsg)
 		}
 	}
 
@@ -663,7 +664,7 @@ func checkJavaVersion(service string) error {
 		return err
 	}
 	if !isValid {
-		return fmt.Errorf("the Confluent CLI requires Java version 1.8 or 1.11.\nSee https://docs.confluent.io/current/installation/versions-interoperability.html\nIf you have multiple versions of Java installed, you may need to set JAVA_HOME to the version you want Confluent to use.")
+		return errors.New(errors.JavaRequirementErrorMsg)
 	}
 
 	return nil

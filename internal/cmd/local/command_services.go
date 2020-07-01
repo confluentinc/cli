@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/local"
 )
 
@@ -170,9 +171,7 @@ func (c *Command) runServicesListCommand(command *cobra.Command, _ []string) err
 	for i, service := range services {
 		serviceNames[i] = writeServiceName(service)
 	}
-
-	command.Println("Available Services:")
-	command.Println(local.BuildTabbedList(serviceNames))
+	command.Printf(errors.AvailableServicesMsg, local.BuildTabbedList(serviceNames))
 	return nil
 }
 
@@ -312,7 +311,7 @@ func (c *Command) runServicesTopCommand(_ *cobra.Command, _ []string) error {
 	}
 
 	if len(pids) == 0 {
-		return fmt.Errorf("no services running")
+		return errors.New(errors.NoServicesRunningErrorMsg)
 	}
 
 	return top(pids)
@@ -420,7 +419,7 @@ func top(pids []int) error {
 		}
 		top = exec.Command("top", "-p", strings.Join(args, ","))
 	default:
-		return fmt.Errorf("top not available on platform: %s", runtime.GOOS)
+		return errors.Errorf(errors.TopNotAvailableErrorMsg, runtime.GOOS)
 	}
 
 	top.Stdin = os.Stdin
@@ -449,6 +448,6 @@ func (c *Command) notifyConfluentCurrent(command *cobra.Command) error {
 		return err
 	}
 
-	command.Printf("Using CONFLUENT_CURRENT: %s\n", dir)
+	command.Printf(errors.UsingConfluentCurrentMsg, dir)
 	return nil
 }

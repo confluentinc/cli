@@ -1,11 +1,10 @@
 package local
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 func NewDestroyCommand(prerunner cmd.PreRunner) *cobra.Command {
@@ -22,7 +21,7 @@ func NewDestroyCommand(prerunner cmd.PreRunner) *cobra.Command {
 
 func (c *Command) runDestroyCommand(command *cobra.Command, _ []string) error {
 	if !c.cc.HasTrackingFile() {
-		return fmt.Errorf("nothing to destroy")
+		return errors.New(errors.NothingToDestroyErrorMsg)
 	}
 
 	if err := c.runServicesStopCommand(command, []string{}); err != nil {
@@ -34,7 +33,7 @@ func (c *Command) runDestroyCommand(command *cobra.Command, _ []string) error {
 		return err
 	}
 
-	command.Printf("Deleting: %s\n", dir)
+	command.Printf(errors.DestroyDeletingMsg, dir)
 	if err := c.cc.RemoveCurrentDir(); err != nil {
 		return err
 	}
