@@ -322,6 +322,83 @@ func (c *rolebindingCommand) confluentList(cmd *cobra.Command) error {
 	return errors.HandleCommon(fmt.Errorf("required: either principal or role is required"), cmd)
 }
 
+func (c *rolebindingCommand) listMyRoleBindings(cmd *cobra.Command, principal string, scopeV2 *mdsv2alpha1.Scope) error {
+	scopedRoleBindingMappings, _, err := c.MDSv2Client.RBACRoleBindingSummariesApi.MyRoleBindings(
+		c.createContext(),
+		principal,
+		*scopeV2)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	outputWriter, err := output.NewListOutputWriter(cmd, resourcePatternListFields, resourcePatternHumanListLabels, resourcePatternStructuredListLabels)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	for _, scopedRoleBindingMapping := range scopedRoleBindingMappings {
+		roleBindingScope := scopedRoleBindingMapping.Scope
+		for principalName, roleBindings := range scopedRoleBindingMapping.Rolebindings {
+			for roleName, resourcePatterns := range roleBindings {
+				for _, resourcePattern := range resourcePatterns {
+					outputWriter.AddElement(&listDisplay{
+						Principal:    principalName,
+						Role:         roleName,
+						ResourceType: resourcePattern.ResourceType,
+						Name:         resourcePattern.Name,
+						PatternType:  resourcePattern.PatternType,
+					})
+				}
+				orgName := ""
+				envName := ""
+				clusterName := ""
+				for _, elem := range roleBindingScope.Path {
+					if strings.HasPrefix(elem, "organization=") {
+						orgName = strings.TrimPrefix(elem, "organization=")
+					}
+					if strings.HasPrefix(elem, "environment=") {
+						envName = strings.TrimPrefix(elem, "environment=")
+					}
+					if strings.HasPrefix(elem, "cloud-cluster=") {
+						clusterName = strings.TrimPrefix(elem, "cloud-cluster=")
+					}
+				}
+				if len(resourcePatterns) == 0 && organizationScopedRoles[roleName] {
+					outputWriter.AddElement(&listDisplay{
+						Principal:    principalName,
+						Role:         roleName,
+						ResourceType: "Organization",
+						Name:         orgName,
+						PatternType:  "",
+					})
+				}
+				if len(resourcePatterns) == 0 && environmentScopedRoles[roleName] {
+					outputWriter.AddElement(&listDisplay{
+						Principal:    principalName,
+						Role:         roleName,
+						ResourceType: "Environment",
+						Name:         envName,
+						PatternType:  "",
+					})
+				}
+				if len(resourcePatterns) == 0 && clusterScopedRolesV2[roleName] {
+					outputWriter.AddElement(&listDisplay{
+						Principal:    principalName,
+						Role:         roleName,
+						ResourceType: "Cluster",
+						Name:         clusterName,
+						PatternType:  "",
+					})
+				}
+			}
+		}
+	}
+
+	outputWriter.StableSort()
+
+	return outputWriter.Out()
+}
+
 func (c *rolebindingCommand) listManagedRoleBindings(cmd *cobra.Command, principal string, scopeV2 *mdsv2alpha1.Scope) error {
 	scopedRoleBindingMapping, _, err := c.MDSv2Client.RBACRoleBindingSummariesApi.ManagedRoleBindings(
 		c.createContext(),
@@ -454,14 +531,28 @@ func (c *rolebindingCommand) ccloudList(cmd *cobra.Command) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
-	principal := "User:" + c.State.Auth.User.ResourceId
+	// principal := "User:" + c.State.Auth.User.ResourceId
+	principal := ""
+	if cmd.Flags().Changed("principal") {
+		principal, err = cmd.Flags().GetString("principal")
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+		err = c.validatePrincipalFormat(principal)
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
 
-	err = c.validatePrincipalFormat(principal)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		err = c.validatePrincipalFormat(principal)
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+	} else {
+		principal = "User:" + c.State.Auth.User.ResourceId
 	}
 
-	return c.listManagedRoleBindings(cmd, principal, scopeV2)
+	// return c.listManagedRoleBindings(cmd, principal, scopeV2)
+	return c.listMyRoleBindings(cmd, principal, scopeV2)
 }
 
 func (c *rolebindingCommand) list(cmd *cobra.Command, args []string) error {
