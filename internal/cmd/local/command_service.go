@@ -87,6 +87,8 @@ func NewServiceStartCommand(service string, prerunner cmd.PreRunner) *cobra.Comm
 		}, prerunner)
 
 	c.Command.RunE = c.runServiceStartCommand
+	c.Command.Flags().StringP("config", "c", "", fmt.Sprintf("Configure %s with a specific properties file.", service))
+
 	return c.Command
 }
 
@@ -98,12 +100,17 @@ func (c *Command) runServiceStartCommand(command *cobra.Command, _ []string) err
 	}
 
 	for _, dependency := range services[service].startDependencies {
-		if err := c.startService(command, dependency); err != nil {
+		if err := c.startService(command, dependency, ""); err != nil {
 			return err
 		}
 	}
 
-	return c.startService(command, service)
+	configFile, err := command.Flags().GetString("config")
+	if err != nil {
+		return err
+	}
+
+	return c.startService(command, service, configFile)
 }
 
 func NewServiceStatusCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
@@ -212,7 +219,7 @@ func (c *Command) runServiceVersionCommand(command *cobra.Command, _ []string) e
 	return nil
 }
 
-func (c *Command) startService(command *cobra.Command, service string) error {
+func (c *Command) startService(command *cobra.Command, service string, configFile string) error {
 	isUp, err := c.isRunning(service)
 	if err != nil {
 		return err
@@ -225,7 +232,7 @@ func (c *Command) startService(command *cobra.Command, service string) error {
 		return err
 	}
 
-	if err := c.configService(service); err != nil {
+	if err := c.configService(service, configFile); err != nil {
 		return err
 	}
 
@@ -254,7 +261,7 @@ func checkService(service string) error {
 	return nil
 }
 
-func (c *Command) configService(service string) error {
+func (c *Command) configService(service string, configFile string) error {
 	port, err := c.ch.ReadServicePort(service)
 	if err != nil {
 		if err.Error() != "no port specified" {
@@ -264,7 +271,12 @@ func (c *Command) configService(service string) error {
 		services[service].port = port
 	}
 
-	data, err := c.ch.ReadServiceConfig(service)
+	var data []byte
+	if configFile == "" {
+		data, err = c.ch.ReadServiceConfig(service)
+	} else {
+		data, err = ioutil.ReadFile(configFile)
+	}
 	if err != nil {
 		return err
 	}

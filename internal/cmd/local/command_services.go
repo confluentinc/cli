@@ -202,7 +202,7 @@ func (c *Command) runServicesStartCommand(command *cobra.Command, _ []string) er
 	// Topological order
 	for i := 0; i < len(availableServices); i++ {
 		service := availableServices[i]
-		if err := c.startService(command, service); err != nil {
+		if err := c.startService(command, service, ""); err != nil {
 			return err
 		}
 	}
