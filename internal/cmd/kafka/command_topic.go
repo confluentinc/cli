@@ -252,15 +252,11 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 		return errors.HandleCommon(err, cmd)
 	}
 	if err := a.Client.Kafka.CreateTopic(context.Background(), cluster, topic); err != nil {
-		if err.Error() == fmt.Sprintf("error creating topic %s: Topic '%s' already exists.", topic.Spec.Name, topic.Spec.Name) {
-			ifNotExists, flagErr := cmd.Flags().GetBool("if-not-exists")
-			if flagErr != nil {
-				return errors.HandleCommon(flagErr, cmd)
-			}
-			if ifNotExists {
-				return nil
-			}
+		ifNotExistsFlag, flagErr := cmd.Flags().GetBool("if-not-exists")
+		if flagErr != nil {
+			return errors.HandleCommon(flagErr, cmd)
 		}
+		err = errors.CatchTopicExistsError(err, cluster.Id, topic.Spec.Name, ifNotExistsFlag)
 		return errors.HandleCommon(err, cmd)
 	}
 	return nil

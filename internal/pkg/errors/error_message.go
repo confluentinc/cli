@@ -90,6 +90,8 @@ const (
 	// kafka topic commands
 	FailedToProduceErrorMsg   = "failed to produce offset %d: %s\n"
 	ConfigurationFormErrorMsg = "configuration must be in the form of key=value"
+	TopicExistsErrorMsg       = "topic \"%s\" already exists for Kafka cluster \"%s\""
+	TopicExistsSuggestions    = "You can list Kafka topics for cluster with `ccloud kafka topic list --cluster %s`."
 
 	// ksql commands
 	NoServiceAccountErrorMsg = "no service account found for KSQL cluster \"%s\""

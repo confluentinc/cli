@@ -129,6 +129,24 @@ func isResourceNotFoundError(err error) bool {
 	return resourceNotFoundRegex.MatchString(err.Error())
 }
 
+
+/*
+Error: 1 error occurred:
+	* error creating topic bob: Topic 'bob' already exists.
+ */
+func CatchTopicExistsError(err error, clusterId string, topicName string, ifNotExistsFlag bool) error {
+	compiledRegex := regexp.MustCompile(`error creating topic .*: Topic '.*' already exists\.`)
+	if compiledRegex.MatchString(err.Error()) {
+		if ifNotExistsFlag {
+			return nil
+		}
+		errorMsg := fmt.Sprintf(TopicExistsErrorMsg, topicName, clusterId)
+		suggestions := fmt.Sprintf(TopicExistsSuggestions, clusterId)
+		return NewErrorWithSuggestions(errorMsg, suggestions)
+	}
+	return err
+}
+
 /*
 Error: 1 error occurred:
 	* error listing topics: Authentication failed: 1 extensions are invalid! They are: logicalCluster: Authentication failed
