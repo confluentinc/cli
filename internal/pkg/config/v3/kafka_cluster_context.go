@@ -101,6 +101,18 @@ func (k *KafkaClusterContext) AddKafkaClusterConfig(kcc *v1.KafkaClusterConfig) 
 	}
 }
 
+func (k *KafkaClusterContext) RemoveKafkaCluster(clusterId string) {
+	if !k.EnvContext {
+		delete(k.KafkaClusterConfigs, clusterId)
+	} else {
+		kafkaEnvContext := k.GetCurrentKafkaEnvContext()
+		delete(kafkaEnvContext.KafkaClusterConfigs, clusterId)
+	}
+	if clusterId == k.GetActiveKafkaClusterId() {
+		k.SetActiveKafkaCluster("")
+	}
+}
+
 func (k *KafkaClusterContext) DeleteAPIKey(apiKey string) {
 	var clusterConfigs map[string]*v1.KafkaClusterConfig
 	if !k.EnvContext {
