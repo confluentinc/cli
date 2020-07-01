@@ -20,7 +20,7 @@ func NewDestroyCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *LocalCommand) runDestroyCommand(command *cobra.Command, _ []string) error {
+func (c *Command) runDestroyCommand(command *cobra.Command, _ []string) error {
 	if !c.cc.HasTrackingFile() {
 		return fmt.Errorf("nothing to destroy")
 	}

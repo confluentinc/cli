@@ -14,10 +14,10 @@ import (
 var (
 	usages = map[string]string{
 		"add":    "Indicates you are trying to add ACLs.",
-		"list":   "List all the current ACLs",
+		"list":   "List all the current ACLs.",
 		"remove": "Indicates you are trying to remove ACLs.",
 
-		"operation": "Operation that is being authorized. Valid operation names are: [SUBJECT_READ, SUBJECT_WRITE, SUBJECT_DELETE, SUBJECT_COMPATIBILITY_READ, SUBJECT_COMPATIBILITY_WRITE, GLOBAL_COMPATIBILITY_READ, GLOBAL_COMPATIBILITY_WRITE, GLOBAL_SUBJECTS_READ]",
+		"operation": "Operation that is being authorized. Valid operation names are SUBJECT_READ, SUBJECT_WRITE, SUBJECT_DELETE, SUBJECT_COMPATIBILITY_READ, SUBJECT_COMPATIBILITY_WRITE, GLOBAL_COMPATIBILITY_READ, GLOBAL_COMPATIBILITY_WRITE, and GLOBAL_SUBJECTS_READ.",
 		"principal": "Principal to which the ACL is being applied to. Use * to apply to all principals.",
 		"subject":   "Subject to which the ACL is being applied to. Only applicable for SUBJECT operations. Use * to apply to all subjects.",
 		"topic":     "Topic to which the ACL is being applied to. The corresponding subjects would be topic-key and topic-value. Only applicable for SUBJECT operations. Use * to apply to all subjects.",
@@ -68,7 +68,7 @@ func NewSchemaRegistryACLCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *LocalCommand) runSchemaRegistryACLCommand(command *cobra.Command, _ []string) error {
+func (c *Command) runSchemaRegistryACLCommand(command *cobra.Command, _ []string) error {
 	isUp, err := c.isRunning("kafka")
 	if err != nil {
 		return err

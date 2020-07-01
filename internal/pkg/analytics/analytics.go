@@ -2,12 +2,13 @@
 package analytics
 
 import (
+	"strconv"
+	"strings"
+
 	"github.com/jonboulle/clockwork"
 	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"strconv"
-	"strings"
 
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
@@ -251,8 +252,8 @@ func (a *ClientObj) identify() error {
 
 func (a *ClientObj) malformedCommandError(e error) error {
 	track := segment.Track{
-		Event:       malformedCmdEventName,
-		Properties:  a.properties,
+		Event:      malformedCmdEventName,
+		Properties: a.properties,
 	}
 	if a.config != nil {
 		a.user = a.getUser()

@@ -46,6 +46,7 @@ const (
 	UpdatedSubjectLevelCompatibilityMsg = "Successfully updated Subject Level compatibility to \"%s\" for subject \"%s\"\n"
 	UpdatedSubjectLevelModeMsg = "Successfully updated Subject level Mode to \"%s\" for subject \"%s\"\n"
 	NoSubjectsMsg = "No subjects"
+	SRCredsValidationFailedMsg = "Failed to validate Schema Registry API key and secret. Try again."
 
 	// secret commands
 	SaveTheMasterKeyMsg = "Save the master key. It cannot be retrieved later."
@@ -61,7 +62,7 @@ const (
 	TokenExpiredMsg = "Your token has expired. You are now logged out."
 	NotifyUpdateMsg = "Updates are available for %s from (current: %s, latest: %s).\nTo view release notes and install them, please run:\n$ %s update\n\n"
 	LocalCommandDevOnlyMsg = "The local commands are intended for a single-node development environment only,\n" +
-		"NOT for production usage. https://docs.confluent.io/current/cli/index.html"
+		"NOT for production usage. https://docs.confluent.io/current/cli/index.html\n"
 
 
 	// config package

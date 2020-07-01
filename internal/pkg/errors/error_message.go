@@ -104,7 +104,6 @@ const (
 	SchemaOrSubjectErrorMsg      = "must specify either schema ID or subject/version"
 	SchemaIntegerErrorMsg        = "invalid schema ID \"%s\""
 	SchemaIntegerSuggestions     = "Schema ID must be an integer."
-	ValidateSRAPIErrorMsg = "failed Schema Registry API key and secret validation"
 
 	// secret commands
 	EnterInputTypeErrorMsg = "please enter %s"

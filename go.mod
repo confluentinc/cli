@@ -1,7 +1,6 @@
 module github.com/confluentinc/cli
 
 require (
-	github.com/DABH/go-basher v0.0.0-20191104233559-daa7fee9545c
 	github.com/DataDog/zstd v1.4.1 // indirect
 	github.com/Shopify/sarama v1.23.1
 	github.com/antihax/optional v1.0.0
@@ -36,13 +35,11 @@ require (
 	github.com/emicklei/go-restful v2.9.6+incompatible // indirect
 	github.com/fatih/color v1.7.0
 	github.com/frankban/quicktest v1.7.2 // indirect
-	github.com/go-git/go-git/v5 v5.1.0
 	github.com/go-openapi/spec v0.19.2 // indirect
 	github.com/go-openapi/swag v0.19.4 // indirect
 	github.com/go-yaml/yaml v2.1.0+incompatible
 	github.com/gobuffalo/flect v0.1.3
 	github.com/gogo/protobuf v1.3.1
-	github.com/golang/mock v1.3.1
 	github.com/golang/protobuf v1.3.5
 	github.com/golangci/gocyclo v0.0.0-20180528144436-0a533e8fa43d // indirect
 	github.com/golangci/golangci-lint v1.21.0
@@ -60,7 +57,6 @@ require (
 	github.com/havoc-io/gopass v0.0.0-20170602182606-9a121bec1ae7
 	github.com/iancoleman/strcase v0.0.0-20190422225806-e506e3ef7365
 	github.com/jonboulle/clockwork v0.1.0
-	github.com/kevinburke/go-bindata v3.13.0+incompatible
 	github.com/lithammer/dedent v1.1.0
 	github.com/mattn/go-isatty v0.0.9
 	github.com/mattn/go-runewidth v0.0.3 // indirect

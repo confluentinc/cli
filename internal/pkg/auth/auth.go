@@ -2,8 +2,9 @@ package auth
 
 import (
 	"github.com/confluentinc/ccloud-sdk-go"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+
+	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 // If user is sso then will return refresh token, but if user is email password login then refresh token is ""

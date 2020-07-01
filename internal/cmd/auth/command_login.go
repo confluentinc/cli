@@ -329,8 +329,6 @@ func (a *loginCommand) addOrUpdateContext(username string, url string, state *v2
 	return nil
 }
 
-
-
 func (a *loginCommand) saveToNetrc(cmd *cobra.Command, email, password, refreshToken string) error {
 	// sso if refresh token is empty
 	var err error

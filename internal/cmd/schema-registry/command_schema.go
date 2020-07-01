@@ -95,7 +95,7 @@ Delete one or more topics. This command should only be used in extreme circumsta
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
-		Use:   "describe <schema-id> [--subject <subject>] [--version <version]",
+		Use:   "describe <schema-id> [--subject <subject>] [--version <version>]",
 		Short: "Get schema either by schema-id, or by subject/version.",
 		Example: FormatDescription(`
 Describe the schema string by schema ID
@@ -120,7 +120,7 @@ Describe the schema by both subject and version
 	c.AddCommand(cmd)
 }
 
-func (c *schemaCommand) create(cmd *cobra.Command, args []string) error {
+func (c *schemaCommand) create(cmd *cobra.Command, _ []string) error {
 	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -177,7 +177,7 @@ func (c *schemaCommand) create(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *schemaCommand) delete(cmd *cobra.Command, args []string) error {
+func (c *schemaCommand) delete(cmd *cobra.Command, _ []string) error {
 	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -232,7 +232,7 @@ func (c *schemaCommand) describe(cmd *cobra.Command, args []string) error {
 	if len(args) > 0 {
 		return errors.HandleCommon(c.describeById(cmd, args), cmd)
 	} else {
-		return errors.HandleCommon(c.describeBySubject(cmd, args), cmd)
+		return errors.HandleCommon(c.describeBySubject(cmd), cmd)
 	}
 }
 
@@ -252,7 +252,7 @@ func (c *schemaCommand) describeById(cmd *cobra.Command, args []string) error {
 	return c.printSchema(cmd, schemaString.Schema, schemaString.SchemaType, schemaString.References)
 }
 
-func (c *schemaCommand) describeBySubject(cmd *cobra.Command, args []string) error {
+func (c *schemaCommand) describeBySubject(cmd *cobra.Command) error {
 	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
