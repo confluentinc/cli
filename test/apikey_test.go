@@ -67,9 +67,12 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 		{args: "api-key list --resource lkc-cool1", fixture: "apikey11.golden"},
 		{args: "api-key list --resource lkc-other1", fixture: "apikey12.golden"},
 
-		// store an api-key for ksql cluster
-		{args: "api-key store UIAPIKEY103 UIAPISECRET103 --resource lksqlc-ksql1", fixture: "empty.golden"},
-		{args: "api-key list --resource lksqlc-ksql1", fixture: "apikey10.golden"},
+		// store an api-key for ksql cluster (not yet supported)
+		//{args: "api-key store UIAPIKEY103 UIAPISECRET103 --resource lksqlc-ksql1", fixture: "empty.golden"},
+		//{args: "api-key list --resource lksqlc-ksql1", fixture: "apikey10.golden"},
+		// TODO: change test back once api-key store and use command allows for non kafka clusters
+		{args: "api-key store UIAPIKEY103 UIAPISECRET103 --resource lksqlc-ksql1", fixture: "apikey36.golden", wantErrCode: 1},
+		{args: "api-key use UIAPIKEY103 --resource lksqlc-ksql1", fixture: "apikey36.golden", wantErrCode: 1},
 
 		// list all api-keys
 		{args: "api-key list", fixture: "apikey22.golden"},
@@ -116,6 +119,12 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 		{name: "error if using non-existent api-key", args: "api-key use UNKNOWN --resource lkc-cool1", fixture: "apikey17.golden"},
 		{name: "error if using api-key for wrong cluster", args: "api-key use MYKEY2 --resource lkc-cool1", fixture: "apikey18.golden"},
 		{name: "error if using api-key without existing secret", args: "api-key use UIAPIKEY103 --resource lkc-cool1", fixture: "apikey19.golden"},
+
+		// more errors
+		{args: "api-key use UIAPIKEY103", fixture: "apikey37.golden", wantErrCode: 1},
+		{args: "api-key create", fixture: "apikey38.golden", wantErrCode: 1},
+		{args: "api-key use UIAPIKEY103 --resource lkc-unknown", fixture: "apikey39.golden", wantErrCode: 1},
+		{args: "api-key create --resource lkc-unknown", fixture: "apikey39.golden", wantErrCode: 1},
 	}
 	resetConfiguration(s.T(), "ccloud")
 	for _, tt := range tests {

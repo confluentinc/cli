@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/confluentinc/ccloud-sdk-go"
-	"github.com/confluentinc/mds-sdk-go"
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/jonboulle/clockwork"
 	"github.com/spf13/cobra"
 	"gopkg.in/square/go-jose.v2/jwt"
@@ -31,6 +31,8 @@ type PreRunner interface {
 
 // PreRun is the standard PreRunner implementation
 type PreRun struct {
+	Config             *v3.Config
+	ConfigLoadingError error
 	UpdateClient       update.Client
 	CLIName            string
 	Logger             *log.Logger
@@ -64,13 +66,14 @@ type HasAPIKeyCLICommand struct {
 func (a *AuthenticatedCLICommand) AuthToken() string {
 	return a.State.AuthToken
 }
+
 func (a *AuthenticatedCLICommand) EnvironmentId() string {
 	return a.State.Auth.Account.Id
 }
 
-func NewAuthenticatedCLICommand(command *cobra.Command, cfg *v3.Config, prerunner PreRunner) *AuthenticatedCLICommand {
+func NewAuthenticatedCLICommand(command *cobra.Command, prerunner PreRunner) *AuthenticatedCLICommand {
 	cmd := &AuthenticatedCLICommand{
-		CLICommand: NewCLICommand(command, cfg, prerunner),
+		CLICommand: NewCLICommand(command, prerunner),
 		Context:    nil,
 		State:      nil,
 	}
@@ -79,9 +82,9 @@ func NewAuthenticatedCLICommand(command *cobra.Command, cfg *v3.Config, prerunne
 	return cmd
 }
 
-func NewAuthenticatedWithMDSCLICommand(command *cobra.Command, cfg *v3.Config, prerunner PreRunner) *AuthenticatedCLICommand {
+func NewAuthenticatedWithMDSCLICommand(command *cobra.Command, prerunner PreRunner) *AuthenticatedCLICommand {
 	cmd := &AuthenticatedCLICommand{
-		CLICommand: NewCLICommand(command, cfg, prerunner),
+		CLICommand: NewCLICommand(command, prerunner),
 		Context:    nil,
 		State:      nil,
 	}
@@ -90,9 +93,9 @@ func NewAuthenticatedWithMDSCLICommand(command *cobra.Command, cfg *v3.Config, p
 	return cmd
 }
 
-func NewHasAPIKeyCLICommand(command *cobra.Command, cfg *v3.Config, prerunner PreRunner) *HasAPIKeyCLICommand {
+func NewHasAPIKeyCLICommand(command *cobra.Command, prerunner PreRunner) *HasAPIKeyCLICommand {
 	cmd := &HasAPIKeyCLICommand{
-		CLICommand: NewCLICommand(command, cfg, prerunner),
+		CLICommand: NewCLICommand(command, prerunner),
 		Context:    nil,
 	}
 	command.PersistentPreRunE = prerunner.HasAPIKey(cmd)
@@ -100,16 +103,16 @@ func NewHasAPIKeyCLICommand(command *cobra.Command, cfg *v3.Config, prerunner Pr
 	return cmd
 }
 
-func NewAnonymousCLICommand(command *cobra.Command, cfg *v3.Config, prerunner PreRunner) *CLICommand {
-	cmd := NewCLICommand(command, cfg, prerunner)
+func NewAnonymousCLICommand(command *cobra.Command, prerunner PreRunner) *CLICommand {
+	cmd := NewCLICommand(command, prerunner)
 	command.PersistentPreRunE = prerunner.Anonymous(cmd)
 	cmd.Command = command
 	return cmd
 }
 
-func NewCLICommand(command *cobra.Command, cfg *v3.Config, prerunner PreRunner) *CLICommand {
+func NewCLICommand(command *cobra.Command, prerunner PreRunner) *CLICommand {
 	return &CLICommand{
-		Config:    NewDynamicConfig(cfg, nil, nil),
+		Config:    &DynamicConfig{},
 		Command:   command,
 		prerunner: prerunner,
 	}
@@ -128,40 +131,58 @@ func (h *HasAPIKeyCLICommand) AddCommand(command *cobra.Command) {
 // Anonymous provides PreRun operations for commands that may be run without a logged-in user
 func (r *PreRun) Anonymous(command *CLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
+		r.Analytics.TrackCommand(cmd, args)
+		command.Config.Config = r.Config
 		command.Version = r.Version
 		command.Config.Resolver = r.FlagResolver
 		if err := log.SetLoggingVerbosity(cmd, r.Logger); err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
+		r.Logger.Flush()
 		if err := r.notifyIfUpdateAvailable(cmd, r.CLIName, command.Version.Version); err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
-		ctx, err := command.Config.Context(cmd)
-		if err != nil {
-			return err
-		}
-		err = r.validateToken(cmd, ctx)
-		switch err.(type) {
-		case *ccloud.ExpiredTokenError:
-			err := ctx.DeleteUserAuth()
+		r.warnIfConfluentLocal(cmd)
+		if r.Config != nil {
+			ctx, err := command.Config.Context(cmd)
 			if err != nil {
 				return err
 			}
-			ErrPrintln(cmd, "Your token has expired. You are now logged out.")
-			analyticsError := r.Analytics.SessionTimedOut()
-			if analyticsError != nil {
-				r.Logger.Debug(analyticsError.Error())
+			err = r.validateToken(cmd, ctx)
+			switch err.(type) {
+			case *ccloud.ExpiredTokenError:
+				err := ctx.DeleteUserAuth()
+				if err != nil {
+					return err
+				}
+				ErrPrintln(cmd, "Your token has expired. You are now logged out.")
+				analyticsError := r.Analytics.SessionTimedOut()
+				if analyticsError != nil {
+					r.Logger.Debug(analyticsError.Error())
+				}
+			}
+		} else {
+			if isAuthOrConfigCommands(cmd) {
+				return errors.HandleCommon(r.ConfigLoadingError, cmd)
 			}
 		}
-		r.Analytics.TrackCommand(cmd, args)
 		return nil
 	}
+}
+
+func isAuthOrConfigCommands(cmd *cobra.Command) bool {
+	return strings.Contains(cmd.CommandPath(), "login") ||
+		strings.Contains(cmd.CommandPath(), "logout") ||
+		strings.Contains(cmd.CommandPath(), "config")
 }
 
 // Authenticated provides PreRun operations for commands that require a logged-in Confluent Cloud user.
 func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		err := r.Anonymous(command.CLICommand)(cmd, args)
+		if r.Config == nil {
+			return errors.HandleCommon(r.ConfigLoadingError, cmd)
+		}
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
@@ -192,6 +213,9 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
+		if r.Config == nil {
+			return errors.HandleCommon(r.ConfigLoadingError, cmd)
+		}
 		err = r.setClients(command)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
@@ -219,6 +243,9 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
+		if r.Config == nil {
+			return errors.HandleCommon(r.ConfigLoadingError, cmd)
+		}
 		ctx, err := command.Config.Context(cmd)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
@@ -227,32 +254,71 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 			return errors.HandleCommon(errors.ErrNoContext, cmd)
 		}
 		command.Context = ctx
-		if r.CLIName == "ccloud" {
-			// if context is authenticated, client is created and used to for DynamicContext.FindKafkaCluster for finding active cluster
-			ctx.client, err = r.createCCloudClient(ctx, cmd, command.Version)
-			if err != nil && err != errors.ErrNotLoggedIn {
-				return errors.HandleCommon(err, cmd)
+		var clusterId string
+		if command.Context.Credential.CredentialType == v2.APIKey {
+			clusterId = r.getClusterIdForAPIKeyCredential(ctx)
+		} else if command.Context.Credential.CredentialType == v2.Username {
+			err := r.checkUserAuthentication(ctx, cmd)
+			if err != nil {
+				return err
 			}
+			clusterId, err = r.getClusterIdForAuthenticatedUser(command, ctx, cmd)
+			if err != nil {
+				return err
+			}
+		} else {
+			panic("Invalid Credential Type")
 		}
-		// Get active kafka cluster
-		cluster, err := KafkaCluster(cmd, ctx)
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-		hasAPIKey, err := ctx.HasAPIKey(cmd, cluster.Id)
+		hasAPIKey, err := ctx.HasAPIKey(cmd, clusterId)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
 		if !hasAPIKey {
-			err = &errors.UnspecifiedAPIKeyError{ClusterID: cluster.Id}
+			err = &errors.UnspecifiedAPIKeyError{ClusterID: clusterId}
 			return errors.HandleCommon(err, cmd)
 		}
 		return nil
 	}
 }
 
+// Check if user is logged in with valid auth token, for commands that are not of AuthenticatedCLICommand type which already
+// does that check automatically in the prerun
+func (r *PreRun) checkUserAuthentication(ctx *DynamicContext, cmd *cobra.Command) error {
+	_, err := ctx.AuthenticatedState(cmd)
+	if err != nil {
+		return err
+	}
+	err = r.validateToken(cmd, ctx)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// if context is authenticated, client is created and used to for DynamicContext.FindKafkaCluster for finding active cluster
+func (r *PreRun) getClusterIdForAuthenticatedUser(command *HasAPIKeyCLICommand, ctx *DynamicContext, cmd *cobra.Command) (string, error) {
+	client, err := r.createCCloudClient(ctx, cmd, command.Version)
+	if err != nil {
+		return "", errors.HandleCommon(err, cmd)
+	}
+	ctx.client = client
+	cluster, err := ctx.GetKafkaClusterForCommand(cmd)
+	if err != nil {
+		return "", errors.HandleCommon(err, cmd)
+	}
+	return cluster.ID, nil
+}
+
+// if API key credential then the context is initialized to be used for only one cluster, and cluster id can be obtained directly from the context config
+func (r *PreRun) getClusterIdForAPIKeyCredential(ctx *DynamicContext) string {
+	return ctx.KafkaClusterContext.GetActiveKafkaClusterId()
+}
+
 // notifyIfUpdateAvailable prints a message if an update is available
 func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, name string, currentVersion string) error {
+	if isUpdateCommand(cmd) {
+		return nil
+	}
 	updateAvailable, latestVersion, err := r.UpdateClient.CheckForUpdates(name, currentVersion, false)
 	if err != nil {
 		// This is a convenience helper to check-for-updates before arbitrary commands. Since the CLI supports running
@@ -261,13 +327,25 @@ func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, name string, curren
 		return nil
 	}
 	if updateAvailable {
-		msg := "Updates are available for %s from (current: %s, latest: %s). To install them, please run:\n$ %s update\n\n"
+		msg := "Updates are available for %s from (current: %s, latest: %s).\nTo view release notes and install them, please run:\n$ %s update\n\n"
 		if !strings.HasPrefix(latestVersion, "v") {
 			latestVersion = "v" + latestVersion
 		}
 		ErrPrintf(cmd, msg, name, currentVersion, latestVersion, name)
 	}
 	return nil
+}
+
+func isUpdateCommand(cmd *cobra.Command) bool {
+	return strings.Contains(cmd.CommandPath(), "update")
+}
+
+func (r *PreRun) warnIfConfluentLocal(cmd *cobra.Command) {
+	if strings.HasPrefix(cmd.CommandPath(), "confluent local") {
+		cmd.PrintErrln("The local commands are intended for a single-node development environment only,")
+		cmd.PrintErrln("NOT for production usage. https://docs.confluent.io/current/cli/index.html")
+		cmd.PrintErrln()
+	}
 }
 
 func (r *PreRun) setClients(cliCmd *AuthenticatedCLICommand) error {

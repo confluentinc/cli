@@ -11,87 +11,107 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
-func getSrCredentials() (key string, secret string, err error) {
+func promptSchemaRegistryCredentials() (string, string, error) {
 	prompt := pcmd.NewPrompt(os.Stdin)
-	fmt.Println("Enter your Schema Registry API Key:")
-	key, err = prompt.ReadString('\n')
+
+	fmt.Print("Enter your Schema Registry API key: ")
+	key, err := prompt.ReadString('\n')
 	if err != nil {
 		return "", "", err
 	}
 	key = strings.TrimSpace(key)
-	fmt.Println("Enter your Schema Registry API Secret:")
-	secret, err = prompt.ReadString('\n')
+
+	fmt.Print("Enter your Schema Registry API secret: ")
+	secret, err := prompt.ReadString('\n')
 	if err != nil {
 		return "", "", err
 	}
 	secret = strings.TrimSpace(secret)
 
+	fmt.Println()
+
 	return key, secret, nil
 }
 
-func srContext(cfg *pcmd.DynamicConfig, cmd *cobra.Command) (context.Context, error) {
-	ctx, err := cfg.Context(cmd)
-	if err != nil {
-		return nil, err
+func getSchemaRegistryAuth(srCredentials *v0.APIKeyPair) (*srsdk.BasicAuth, bool, error) {
+	auth := &srsdk.BasicAuth{}
+	didPromptUser := false
+
+	if srCredentials != nil {
+		auth.UserName = srCredentials.Key
+		auth.Password = srCredentials.Secret
 	}
-	srCluster, err := ctx.SchemaRegistryCluster(cmd)
-	if err != nil {
-		return nil, err
-	}
-	if srCluster.SrCredentials == nil || len(srCluster.SrCredentials.Key) == 0 || len(srCluster.SrCredentials.Secret) == 0 {
-		key, secret, err := getSrCredentials()
+
+	if auth.UserName == "" || auth.Password == "" {
+		var err error
+		auth.UserName, auth.Password, err = promptSchemaRegistryCredentials()
 		if err != nil {
-			return nil, err
+			return nil, false, err
 		}
-		srCluster.SrCredentials = &v0.APIKeyPair{
-			Key:    key,
-			Secret: secret,
-		}
-		err = ctx.Save()
-		if err != nil {
-			return nil, err
-		}
+		didPromptUser = true
 	}
-	return context.WithValue(context.Background(), srsdk.ContextBasicAuth, srsdk.BasicAuth{
-		UserName: srCluster.SrCredentials.Key,
-		Password: srCluster.SrCredentials.Secret,
-	}), nil
+
+	return auth, didPromptUser, nil
 }
 
-func SchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *version.Version) (srClient *srsdk.APIClient, ctx context.Context, err error) {
-	ctx, err = srContext(cfg, cmd)
-	if err != nil {
-		return nil, nil, err
-	}
+func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *version.Version) (*srsdk.APIClient, context.Context, error) {
 	srConfig := srsdk.NewConfiguration()
+
 	currCtx, err := cfg.Context(cmd)
 	if err != nil {
 		return nil, nil, err
 	}
+
+	srCluster, err := currCtx.SchemaRegistryCluster(cmd)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Get credentials as Schema Registry BasicAuth
+	srAuth, didPromptUser, err := getSchemaRegistryAuth(srCluster.SrCredentials)
+	if err != nil {
+		return nil, nil, err
+	}
+	srCtx := context.WithValue(context.Background(), srsdk.ContextBasicAuth, *srAuth)
+
 	envId, err := currCtx.AuthenticatedEnvId(cmd)
 	if err != nil {
 		return nil, nil, err
 	}
+
 	if srCluster, ok := currCtx.SchemaRegistryClusters[envId]; ok {
 		srConfig.BasePath = srCluster.SchemaRegistryEndpoint
 	} else {
 		ctxClient := pcmd.NewContextClient(currCtx)
-		srCluster, err := ctxClient.FetchSchemaRegistryByAccountId(ctx, envId)
+		srCluster, err := ctxClient.FetchSchemaRegistryByAccountId(srCtx, envId)
 		if err != nil {
 			return nil, nil, err
 		}
 		srConfig.BasePath = srCluster.Endpoint
 	}
 	srConfig.UserAgent = ver.UserAgent
-	// validate before returning.
-	srClient = srsdk.NewAPIClient(srConfig)
-	_, _, err = srClient.DefaultApi.Get(ctx)
-	if err != nil {
-		return nil, nil, errors.Errorf("Failed to validate Schema Registry API Key and Secret")
+
+	srClient := srsdk.NewAPIClient(srConfig)
+
+	// Test credentials
+	if _, _, err = srClient.DefaultApi.Get(srCtx); err != nil {
+		cmd.PrintErrln("Failed to validate Schema Registry API key and secret. Try again.")
+		return getSchemaRegistryClient(cmd, cfg, ver)
 	}
-	return srClient, ctx, nil
+
+	if didPromptUser {
+		// Save credentials
+		srCluster.SrCredentials = &v0.APIKeyPair{
+			Key:    srAuth.UserName,
+			Secret: srAuth.Password,
+		}
+		if err := currCtx.Save(); err != nil {
+			return nil, nil, err
+		}
+	}
+
+	return srClient, srCtx, nil
 }

@@ -196,12 +196,12 @@ func parseJAASProperties(props *properties.Properties) *properties.Properties {
 	return props
 }
 
-func convertPropertiesJAAS(props *properties.Properties, originalConfigs *properties.Properties, op string) *properties.Properties {
+func convertPropertiesJAAS(props *properties.Properties, originalConfigs *properties.Properties, op string) (*properties.Properties, error) {
 	parser := NewJAASParser()
 	matchProps, err := props.Filter("(?i).jaas")
 	matchProps.DisableExpansion = true
 	if err != nil {
-		return props
+		return props, err
 	}
 	pattern := regexp.MustCompile(JAAS_KEY_PATTERN)
 
@@ -218,11 +218,11 @@ func convertPropertiesJAAS(props *properties.Properties, originalConfigs *proper
 			if ok {
 				_, _, err = jaasProps.Set(key, value)
 				if err != nil {
-					return props
+					return props, nil
 				}
 				_, _, err = jaasOriginal.Set(parentKeys[CLASS_ID]+KEY_SEPARATOR+parentKeys[PARENT_ID], origVal)
 				if err != nil {
-					return props
+					return props, nil
 				}
 				props.Delete(key)
 			}
@@ -236,7 +236,7 @@ func convertPropertiesJAAS(props *properties.Properties, originalConfigs *proper
 		props.Merge(jaasConf)
 	}
 
-	return props
+	return props, err
 }
 
 func LoadJSONFile(path string) (string, error) {
@@ -294,7 +294,11 @@ func writePropertiesConfig(path string, configs *properties.Properties, addSecur
 		return err
 	}
 	configProps.DisableExpansion = true
-	configs = convertPropertiesJAAS(configs, configProps, UPDATE)
+	configs, err = convertPropertiesJAAS(configs, configProps, UPDATE)
+
+	if err != nil {
+		return err
+	}
 
 	for key, value := range configs.Map() {
 		_, _, err = configProps.Set(key, value)
@@ -309,6 +313,49 @@ func writePropertiesConfig(path string, configs *properties.Properties, addSecur
 		if err != nil {
 			return err
 		}
+	}
+
+	err = WritePropertiesFile(path, configProps, true)
+	return err
+}
+
+func RemovePropertiesConfig(removeConfigs []string, path string) error {
+	configProps, err := LoadPropertiesFile(path)
+	pattern := regexp.MustCompile(JAAS_KEY_PATTERN)
+	if err != nil {
+		return err
+	}
+	configProps.DisableExpansion = true
+	removeJAASConfig := properties.NewProperties()
+	removeJAASConfig.DisableExpansion = true
+	for _, key := range removeConfigs {
+		//Check if config is present
+		if pattern.MatchString(key) {
+			_, _, err = removeJAASConfig.Set(key, "")
+			if err != nil {
+				return err
+			}
+		} else {
+			_, ok := configProps.Get(key)
+			if !ok {
+				return fmt.Errorf("Configuration key " + key + " is not present in the configuration file.")
+			}
+			configProps.Delete(key)
+		}
+	}
+
+	configs, err := convertPropertiesJAAS(removeJAASConfig, configProps, DELETE)
+
+	if err != nil {
+		return err
+	}
+
+	for key, value := range configs.Map() {
+		_, _, err = configProps.Set(key, value)
+		if err != nil {
+			return err
+		}
+
 	}
 
 	err = WritePropertiesFile(path, configProps, true)

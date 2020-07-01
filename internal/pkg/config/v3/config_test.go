@@ -9,7 +9,7 @@ import (
 	"runtime"
 	"testing"
 
-	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -75,6 +75,10 @@ func SetupTestInputs(cliName string) *TestInputs {
 			Account: account,
 			Accounts: []*orgv1.Account{
 				account,
+			},
+			Organization: &orgv1.Organization{
+				Id:   321,
+				Name: "test-org",
 			},
 		},
 		AuthToken: "abc123",

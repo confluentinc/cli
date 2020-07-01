@@ -1,0 +1,14 @@
+{
+  "id": "lkc-update",
+  "name": "lkc-update-name",
+  "type": "BASIC",
+  "ingress": 100,
+  "egress": 100,
+  "storage": 500,
+  "provider": "aws",
+  "region": "us-west-2",
+  "availability": "LOW",
+  "status": "UP",
+  "endpoint": "SASL_SSL://kafka-endpoint",
+  "api_endpoint": "http://kafka-api-url"
+}

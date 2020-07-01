@@ -4,6 +4,7 @@ package auth
 
 import (
 	"github.com/confluentinc/ccloud-sdk-go"
+
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
@@ -48,7 +49,7 @@ func (u *UpdateTokenHandlerImpl) UpdateCCloudAuthTokenUsingNetrcCredentials(ctx 
 			logger.Debugf(failedRefreshTokenMsg, err)
 			return err
 		}
-		token, err = u.ccloudTokenHandler.RefreshSSOToken(client, refreshToken, url)
+		token, err = u.ccloudTokenHandler.RefreshSSOToken(client, refreshToken, url, logger)
 		if err != nil {
 			logger.Debugf(failedRefreshTokenMsg, err)
 			return err

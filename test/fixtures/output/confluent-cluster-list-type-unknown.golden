@@ -4,7 +4,7 @@ Usage:
 
 Flags:
       --type string     Filter list to this cluster type (connect-cluster, kafka-cluster, ksql-cluster, schema-registry-cluster).
-  -o, --output string   Specify the output format as "human", "json" or "yaml". (default "human")
+  -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")
   -h, --help            help for list
 
 Global Flags:

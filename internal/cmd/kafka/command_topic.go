@@ -9,14 +9,12 @@ import (
 	"strings"
 
 	"github.com/Shopify/sarama"
-	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/go-printer"
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -51,30 +49,30 @@ type structuredDescribeDisplay struct {
 }
 
 // NewTopicCommand returns the Cobra command for Kafka topic.
-func NewTopicCommand(prerunner pcmd.PreRunner, config *v3.Config, logger *log.Logger, clientID string) *cobra.Command {
+func NewTopicCommand(isAPIKeyLogin bool, prerunner pcmd.PreRunner, logger *log.Logger, clientID string) *cobra.Command {
 	command := &cobra.Command{
 		Use:   "topic",
 		Short: "Manage Kafka topics.",
 	}
 	hasAPIKeyCmd := &hasAPIKeyTopicCommand{
-		HasAPIKeyCLICommand: pcmd.NewHasAPIKeyCLICommand(command, config, prerunner),
+		HasAPIKeyCLICommand: pcmd.NewHasAPIKeyCLICommand(command, prerunner),
 		prerunner:           prerunner,
 		logger:              logger,
 		clientID:            clientID,
 	}
-	authenticatedCmd := &authenticatedTopicCommand{
-		AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(command, config, prerunner),
-		logger:                  logger,
-		clientID:                clientID,
-	}
-	authenticatedCmd.init()
 	hasAPIKeyCmd.init()
+	if !isAPIKeyLogin {
+		authenticatedCmd := &authenticatedTopicCommand{
+			AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(command, prerunner),
+			logger:                  logger,
+			clientID:                clientID,
+		}
+		authenticatedCmd.init()
+	}
 	return command
 }
 
 func (h *hasAPIKeyTopicCommand) init() {
-	// Hack to overwrite Authenticated prerunner set by authenticatedTopicCmd
-	h.PersistentPreRunE = h.prerunner.HasAPIKey(h.HasAPIKeyCLICommand)
 	cmd := &cobra.Command{
 		Use:   "produce <topic>",
 		Short: "Produce messages to a Kafka topic.",
@@ -106,11 +104,6 @@ Consume items from the 'my_topic' topic and press 'Ctrl + C' to exit.
 }
 
 func (a *authenticatedTopicCommand) init() {
-	// Issue: Can't resolve context here, but need context to decide whether or not to show command.
-	ctx := a.Config.Config.Context() // TODO: Change to DynamicConfig to handle flags.
-	if ctx != nil && ctx.Credential.CredentialType == v2.APIKey {
-		return
-	}
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List Kafka topics.",
@@ -144,6 +137,7 @@ Create a topic named 'my_topic' with default options.
 	cmd.Flags().Uint32("partitions", 6, "Number of topic partitions.")
 	cmd.Flags().StringSlice("config", nil, "A comma-separated list of topics. Configuration ('key=value') overrides for the topic being created.")
 	cmd.Flags().Bool("dry-run", false, "Run the command without committing changes to Kafka.")
+	cmd.Flags().Bool("if-not-exists", false, "Exit gracefully if topic already exists.")
 	cmd.Flags().SortFlags = false
 	a.AddCommand(cmd)
 
@@ -227,8 +221,8 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 		return errors.HandleCommon(err, cmd)
 	}
 
-	topic := &kafkav1.Topic{
-		Spec: &kafkav1.TopicSpecification{
+	topic := &schedv1.Topic{
+		Spec: &schedv1.TopicSpecification{
 			Configs: make(map[string]string)},
 		Validate: false,
 	}
@@ -256,9 +250,21 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 	if topic.Spec.Configs, err = toMap(configs); err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	err = a.Client.Kafka.CreateTopic(context.Background(), cluster, topic)
 
-	return errors.HandleCommon(err, cmd)
+	if err := a.Client.Kafka.CreateTopic(context.Background(), cluster, topic); err != nil {
+		if err.Error() == fmt.Sprintf("error creating topic %s: Topic '%s' already exists.", topic.Spec.Name, topic.Spec.Name) {
+			ifNotExists, flagErr := cmd.Flags().GetBool("if-not-exists")
+			if flagErr != nil {
+				return errors.HandleCommon(flagErr, cmd)
+			}
+			if ifNotExists {
+				return nil
+			}
+		}
+		return errors.HandleCommon(err, cmd)
+	}
+
+	return nil
 }
 
 func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) error {
@@ -267,8 +273,8 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 		return errors.HandleCommon(err, cmd)
 	}
 
-	topic := &kafkav1.TopicSpecification{Name: args[0]}
-	resp, err := a.Client.Kafka.DescribeTopic(context.Background(), cluster, &kafkav1.Topic{Spec: topic, Validate: false})
+	topic := &schedv1.TopicSpecification{Name: args[0]}
+	resp, err := a.Client.Kafka.DescribeTopic(context.Background(), cluster, &schedv1.Topic{Spec: topic, Validate: false})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -289,7 +295,7 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		return errors.HandleCommon(err, cmd)
 	}
 
-	topic := &kafkav1.TopicSpecification{Name: args[0], Configs: make(map[string]string)}
+	topic := &schedv1.TopicSpecification{Name: args[0], Configs: make(map[string]string)}
 
 	configs, err := cmd.Flags().GetStringSlice("config")
 	if err != nil {
@@ -304,7 +310,7 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	err = a.Client.Kafka.UpdateTopic(context.Background(), cluster, &kafkav1.Topic{Spec: topic, Validate: validate})
+	err = a.Client.Kafka.UpdateTopic(context.Background(), cluster, &schedv1.Topic{Spec: topic, Validate: validate})
 
 	return errors.HandleCommon(err, cmd)
 }
@@ -315,15 +321,15 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 		return errors.HandleCommon(err, cmd)
 	}
 
-	topic := &kafkav1.TopicSpecification{Name: args[0]}
-	err = a.Client.Kafka.DeleteTopic(context.Background(), cluster, &kafkav1.Topic{Spec: topic, Validate: false})
+	topic := &schedv1.TopicSpecification{Name: args[0]}
+	err = a.Client.Kafka.DeleteTopic(context.Background(), cluster, &schedv1.Topic{Spec: topic, Validate: false})
 
 	return errors.HandleCommon(err, cmd)
 }
 
 func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error {
 	topic := args[0]
-	cluster, err := h.Context.ActiveKafkaCluster(cmd)
+	cluster, err := h.Context.GetKafkaClusterForCommand(cmd)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -405,7 +411,7 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	cluster, err := h.Context.ActiveKafkaCluster(cmd)
+	cluster, err := h.Context.GetKafkaClusterForCommand(cmd)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
@@ -454,7 +460,7 @@ func toMap(configs []string) (map[string]string, error) {
 	return configMap, nil
 }
 
-func printHumanDescribe(cmd *cobra.Command, resp *kafkav1.TopicDescription) error {
+func printHumanDescribe(cmd *cobra.Command, resp *schedv1.TopicDescription) error {
 	pcmd.Printf(cmd, "Topic: %s PartitionCount: %d ReplicationFactor: %d\n",
 		resp.Name, len(resp.Partitions), len(resp.Partitions[0].Replicas))
 
@@ -484,7 +490,7 @@ func printHumanDescribe(cmd *cobra.Command, resp *kafkav1.TopicDescription) erro
 	return nil
 }
 
-func printStructuredDescribe(resp *kafkav1.TopicDescription, format string) error {
+func printStructuredDescribe(resp *schedv1.TopicDescription, format string) error {
 	structuredDisplay := &structuredDescribeDisplay{Config: make(map[string]string)}
 	structuredDisplay.TopicName = resp.Name
 	structuredDisplay.PartitionCount = len(resp.Partitions)
@@ -503,7 +509,7 @@ func printStructuredDescribe(resp *kafkav1.TopicDescription, format string) erro
 	return output.StructuredOutput(format, structuredDisplay)
 }
 
-func getPartitionDisplay(partition *kafkav1.TopicPartitionInfo, topicName string) *partitionDescribeDisplay {
+func getPartitionDisplay(partition *schedv1.TopicPartitionInfo, topicName string) *partitionDescribeDisplay {
 	var replicas []uint32
 	for _, replica := range partition.Replicas {
 		replicas = append(replicas, replica.Id)

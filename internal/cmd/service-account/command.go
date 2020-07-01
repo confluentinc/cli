@@ -7,9 +7,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -31,13 +31,12 @@ const nameLength = 32
 const descriptionLength = 128
 
 // New returns the Cobra command for service accounts.
-func New(prerunner pcmd.PreRunner, config *v3.Config) *cobra.Command {
+func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "service-account",
 			Short: `Manage service accounts.`,
-		},
-		config, prerunner)
+		}, prerunner)
 	cmd := &command{
 		AuthenticatedCLICommand: cliCmd,
 	}
@@ -85,7 +84,7 @@ Update the description of a service account with the ID ` + "``2786``" + `.
 
 ::
 
-    ccloud service-account update service-account-id 2786 \
+    ccloud service-account update 2786 \
     --description "Update demo service account information."
 
 `,

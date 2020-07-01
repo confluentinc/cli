@@ -1,31 +1,22 @@
 package errors
 
 import (
-	"crypto/x509"
 	"fmt"
-	"net/url"
 	"reflect"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
+	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
-	corev1 "github.com/confluentinc/ccloudapis/core/v1"
-	"github.com/confluentinc/go-editor"
-	"github.com/confluentinc/mds-sdk-go"
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 )
 
 var messages = map[error]string{
-	ErrNoContext:      "You must log in to run that command.",
-	ErrNotLoggedIn:    "You must log in to run that command.",
+	ErrNoContext:      UserNotLoggedInErrMsg,
+	ErrNotLoggedIn:    UserNotLoggedInErrMsg,
 	ErrNotImplemented: "Sorry, this functionality is not yet available in the CLI.",
 	ErrNoKafkaContext: "You must pass --cluster or set an active kafka in your context with 'kafka cluster use'",
-	ErrNoKSQL:         "Could not find KSQL cluster with Resource ID specified.",
-}
-
-var typeMessages = map[reflect.Type]string{
-	reflect.TypeOf(&ccloud.InvalidLoginError{}): "You have entered an incorrect username or password. Please try again.",
-	reflect.TypeOf(&ccloud.InvalidTokenError{}): "Your auth token has been corrupted. Please login again.",
 }
 
 // HandleCommon provides standard error messaging for common errors.
@@ -34,65 +25,42 @@ func HandleCommon(err error, cmd *cobra.Command) error {
 	if err == nil {
 		return nil
 	}
+	cmd.SilenceUsage = true
 
-	if oerr, ok := err.(mds.GenericOpenAPIError); ok {
-		cmd.SilenceUsage = true
-		return fmt.Errorf(oerr.Error() + ": " + string(oerr.Body()))
+	// [CLI-505] mds.GenericOpenAPIErrors are not hashable so messages[err] panics;
+	// so check if the error is hashable before trying to use messages[err]
+	// (This is a recommended way of checking whether a variable is hashable, see
+	//  https://groups.google.com/forum/#!topic/golang-nuts/fpzQdHBdV3c )
+	k := reflect.TypeOf(err).Kind()
+	hashable := k < reflect.Array || k == reflect.Ptr || k == reflect.UnsafePointer
+	if hashable {
+		if msg, ok := messages[err]; ok {
+			return fmt.Errorf(msg)
+		}
 	}
 
-	if e, ok := err.(*corev1.Error); ok {
+	switch e := err.(type) {
+	case mds.GenericOpenAPIError:
+		return fmt.Errorf("metadata service backend error: " + e.Error() + ": " + string(e.Body()))
+	case *corev1.Error:
 		var result error
 		result = multierror.Append(result, e)
 		for name, msg := range e.GetNestedErrors() {
 			result = multierror.Append(result, fmt.Errorf("%s: %s", name, msg))
 		}
-		cmd.SilenceUsage = true
 		return result
-	}
-
-	if urlErr, ok := err.(*url.Error); ok {
-		if certErr, ok := urlErr.Err.(x509.CertificateInvalidError); ok {
-			cmd.SilenceUsage = true
-			return fmt.Errorf("%s. Check the system keystore or login again with the --ca-cert-path option to add custom certs", certErr.Error())
-		}
-	}
-
-	// Intercept errors to prevent usage from being printed.
-	if msg, ok := messages[err]; ok {
-		cmd.SilenceUsage = true
-		return fmt.Errorf(msg)
-	}
-	if msg, ok := typeMessages[reflect.TypeOf(err)]; ok {
-		cmd.SilenceUsage = true
-		return fmt.Errorf(msg)
-	}
-
-	switch e := err.(type) {
-	case *UnspecifiedKafkaClusterError:
-		cmd.SilenceUsage = true
-		return fmt.Errorf("no auth found for Kafka %s, please run `ccloud kafka cluster auth` first", e.KafkaClusterID)
 	case *UnspecifiedAPIKeyError:
-		cmd.SilenceUsage = true
 		return fmt.Errorf("no API key selected for %s, please select an api-key first (e.g., with `api-key use`)", e.ClusterID)
-	case *UnconfiguredAPISecretError:
-		cmd.SilenceUsage = true
-		return err
 	case *UnspecifiedCredentialError:
-		cmd.SilenceUsage = true
 		// TODO: Add more context to credential error messages (add variable error).
-		return fmt.Errorf("context \"%s\" has corrupted credentials. To fix, please remove the config file, "+
-			"and run `login` or `init`", e.ContextName)
+		return fmt.Errorf(ConfigUnspecifiedCredentialError, e.ContextName)
 	case *UnspecifiedPlatformError:
-		cmd.SilenceUsage = true
 		// TODO: Add more context to platform error messages (add variable error).
-		return fmt.Errorf("context \"%s\" has a corrupted platform. To fix, please remove the config file, "+
-			"and run `login` or `init`", e.ContextName)
-	// TODO: ErrEditing is declared incorrectly as "type ErrEditing error"
-	//  That doesn't work for type switches, so put last otherwise everything will hit this case
-	case editor.ErrEditing:
-		cmd.SilenceUsage = true
-		return err
+		return fmt.Errorf(ConfigUnspecifiedPlatformError, e.ContextName)
+	case *ccloud.InvalidLoginError:
+		return fmt.Errorf("You have entered an incorrect username or password. Please try again.")
+	case *ccloud.InvalidTokenError:
+		return fmt.Errorf(CorruptedAuthTokenErrorMsg)
 	}
-
 	return err
 }

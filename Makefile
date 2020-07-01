@@ -4,7 +4,7 @@ GIT_REMOTE_NAME ?= origin
 MASTER_BRANCH   ?= master
 RELEASE_BRANCH  ?= master
 
-DOCS_BRANCH     ?= 5.4.0-post
+DOCS_BRANCH     ?= 5.5.0-post
 
 include ./semver.mk
 
@@ -16,27 +16,19 @@ RESOLVED_PATH=github.com/confluentinc/cli/cmd/confluent
 .PHONY: clean
 clean:
 	rm -rf $(shell pwd)/dist
-	rm -f internal/cmd/local/bindata.go
-	rm -f mock/local/shell_runner_mock.go
 
 .PHONY: generate
-generate: generate-go mocks
-
-.PHONY: generate-go
-generate-go:
+generate:
 	@go generate ./...
 
 .PHONY: deps
 deps:
 	export GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc && \
 	export GO111MODULE=on && \
-        go get github.com/goreleaser/goreleaser@v0.106.0 && \
+	export GOPRIVATE=github.com/confluentinc && \
+	go get github.com/goreleaser/goreleaser@v0.106.0 && \
 	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.21.0 && \
-	go get github.com/mitchellh/golicense@v0.1.1 && \
-	go get github.com/golang/mock/mockgen@v1.2.0 && \
-	go get github.com/kevinburke/go-bindata/...@v3.13.0
-
-build: bindata build-go
+	go get github.com/mitchellh/golicense@v0.1.1
 
 ifeq ($(shell uname),Darwin)
 GORELEASER_SUFFIX ?= -mac.yml
@@ -87,18 +79,18 @@ run-confluent:
 # END DEVELOPMENT HELPERS
 #
 
-.PHONY: build-go
-build-go:
+.PHONY: build
+build:
 	make build-ccloud
 	make build-confluent
 
 .PHONY: build-ccloud
 build-ccloud:
-	@GO111MODULE=on GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --snapshot --rm-dist -f .goreleaser-ccloud$(GORELEASER_SUFFIX)
+	@GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --snapshot --rm-dist -f .goreleaser-ccloud$(GORELEASER_SUFFIX)
 
 .PHONY: build-confluent
 build-confluent:
-	@GO111MODULE=on GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --snapshot --rm-dist -f .goreleaser-confluent$(GORELEASER_SUFFIX)
+	@GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --snapshot --rm-dist -f .goreleaser-confluent$(GORELEASER_SUFFIX)
 
 .PHONY: build-integ
 build-integ:
@@ -147,20 +139,40 @@ build-integ-confluent-race:
 		    -X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) \
 		    -X $(RESOLVED_PATH).version=$(VERSION) -X $(RESOLVED_PATH).isTest=true" -tags testrunmain -coverpkg=./... -c -o $${binexe} -race
 
-.PHONY: bindata
-bindata: internal/pkg/local/bindata.go
-
-internal/pkg/local/bindata.go: cp_cli/*
-	@go-bindata -pkg local -o internal/pkg/local/bindata.go cp_cli/
-
-.PHONY: authenticate
-authenticate:
-	# If you setup your laptop following https://github.com/confluentinc/cc-documentation/blob/master/Operations/Laptop%20Setup.md
-	# then assuming caas.sh lives here should be fine
+# If you setup your laptop following https://github.com/confluentinc/cc-documentation/blob/master/Operations/Laptop%20Setup.md
+# then assuming caas.sh lives here should be fine
+define caasenv-authenticate
 	source $$GOPATH/src/github.com/confluentinc/cc-dotfiles/caas.sh && caasenv prod
+endef
+
+.PHONY: unrelease
+unrelease: unrelease-warn
+	$(caasenv-authenticate); \
+	aws s3 rm s3://confluent.cloud/ccloud-cli/binaries/$(CLEAN_VERSION) --recursive; \
+	aws s3 rm s3://confluent.cloud/ccloud-cli/archives/$(CLEAN_VERSION) --recursive; \
+	aws s3 rm s3://confluent.cloud/ccloud-cli/release-notes/$(CLEAN_VERSION) --recursive; \
+	aws s3 rm s3://confluent.cloud/confluent-cli/binaries/$(CLEAN_VERSION) --recursive; \
+	aws s3 rm s3://confluent.cloud/confluent-cli/archives/$(CLEAN_VERSION) --recursive; \
+	aws s3 rm s3://confluent.cloud/confluent-cli/release-notes/$(CLEAN_VERSION) --recursive;
+	git checkout master
+	git pull
+	git diff-index --quiet HEAD # ensures git status is clean
+	git tag -d v$(CLEAN_VERSION) # delete local tag
+	git push --delete origin v$(CLEAN_VERSION) # delete remote tag
+	git reset --hard HEAD~1 # warning: assumes "chore" version bump was last commit
+	git push origin HEAD --force
+
+.PHONY: unrelease-warn
+unrelease-warn:
+	@echo "Latest tag:"
+	@git describe --tags `git rev-list --tags --max-count=1`
+	@echo "Latest commits:"
+	@git --no-pager log --decorate=short --pretty=oneline -n10
+	@echo "Warning: Ensure a git version bump (new commit and new tag) has occurred before continuing, else you will remove the prior version.  Continue? [Y/n]"
+	@read line; if [ $$line = "n" ]; then echo aborting; exit 1 ; fi
 
 .PHONY: release
-release: authenticate get-release-image commit-release tag-release
+release: get-release-image commit-release tag-release
 	@GO111MODULE=on make gorelease
 	git checkout go.sum
 	@GO111MODULE=on VERSION=$(VERSION) make publish
@@ -173,15 +185,16 @@ fakerelease: get-release-image commit-release tag-release
 
 .PHONY: gorelease
 gorelease:
-	@GO111MODULE=off go get -u github.com/inconshreveable/mousetrap # dep from cobra -- incompatible with go mod
-	@GO111MODULE=on GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --rm-dist -f .goreleaser-ccloud.yml
-	@GO111MODULE=on GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --rm-dist -f .goreleaser-confluent.yml
+	$(caasenv-authenticate) && \
+	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
+	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --rm-dist -f .goreleaser-ccloud.yml && \
+	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --rm-dist -f .goreleaser-confluent.yml
 
 .PHONY: fakegorelease
 fakegorelease:
 	@GO111MODULE=off go get -u github.com/inconshreveable/mousetrap # dep from cobra -- incompatible with go mod
-	@GO111MODULE=on GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --rm-dist -f .goreleaser-ccloud-fake.yml
-	@GO111MODULE=on GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --rm-dist -f .goreleaser-confluent-fake.yml
+	@GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --rm-dist -f .goreleaser-ccloud-fake.yml
+	@GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --rm-dist -f .goreleaser-confluent-fake.yml
 
 .PHONY: sign
 sign:
@@ -236,8 +249,8 @@ dist: download-licenses
 .PHONY: publish
 ## Note: gorelease target publishes unsigned binaries to the binaries folder in the bucket, we have to overwrite them here after signing
 publish: sign dist
-	@for binary in ccloud confluent; do \
-		source $$GOPATH/src/github.com/confluentinc/cc-dotfiles/caas.sh && caasenv prod && \
+	@$(caasenv-authenticate); \
+	for binary in ccloud confluent; do \
 		aws s3 cp dist/$${binary}/darwin_amd64/$${binary} s3://confluent.cloud/$${binary}-cli/binaries/$(VERSION:v%=%)/$${binary}_$(VERSION:v%=%)_darwin_amd64 --acl public-read ; \
 		aws s3 cp dist/$${binary}/ s3://confluent.cloud/$${binary}-cli/archives/$(VERSION:v%=%)/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --include "*_checksums.txt" --exclude "*_latest_*" --acl public-read ; \
 		aws s3 cp dist/$${binary}/ s3://confluent.cloud/$${binary}-cli/archives/latest/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --include "*_checksums.txt" --exclude "*_$(VERSION)_*" --acl public-read ; \
@@ -246,25 +259,26 @@ publish: sign dist
 .PHONY: publish-installers
 ## Publish install scripts to S3. You MUST re-run this if/when you update any install script.
 publish-installers:
-	source $$GOPATH/src/github.com/confluentinc/cc-dotfiles/caas.sh && caasenv prod && \
+	$(caasenv-authenticate) && \
 	aws s3 cp install-ccloud.sh s3://confluent.cloud/ccloud-cli/install.sh --acl public-read && \
 	aws s3 cp install-confluent.sh s3://confluent.cloud/confluent-cli/install.sh --acl public-read
 
 .PHONY: docs
 docs:
-#   TODO: we can't enable auto-docs generation for confluent until we migrate go-basher commands into cobra
-#	@GO111MODULE=on go run -ldflags '-X main.cliName=confluent' cmd/docs/main.go
 	@GO111MODULE=on go run -ldflags '-X main.cliName=ccloud' cmd/docs/main.go
+	@GO111MODULE=on go run -ldflags '-X main.cliName=confluent' cmd/docs/main.go
 
 .PHONY: publish-docs
 publish-docs: docs
-	@TMP_DIR=$$(mktemp -d)/docs || exit 1; \
+	@TMP_BASE=$$(mktemp -d) || exit 1; \
+		TMP_DIR=$${TMP_BASE}/docs || exit 1; \
 		git clone git@github.com:confluentinc/docs.git $${TMP_DIR}; \
 		cd $${TMP_DIR} || exit 1; \
 		git fetch ; \
 		git checkout -b cli-$(VERSION) origin/$(DOCS_BRANCH) || exit 1; \
 		cd - || exit 1; \
 		make publish-docs-internal BASE_DIR=$${TMP_DIR} CLI_NAME=ccloud || exit 1; \
+	    make publish-docs-internal BASE_DIR=$${TMP_DIR} CLI_NAME=confluent || exit 1; \
 		cd $${TMP_DIR} || exit 1; \
 		sed -i '' 's/default "confluent_cli_consumer_[^"]*"/default "confluent_cli_consumer_<uuid>"/' cloud/cli/command-reference/ccloud_kafka_topic_consume.rst || exit 1; \
 		git add . || exit 1; \
@@ -272,10 +286,7 @@ publish-docs: docs
 		git commit -m "chore: updating CLI docs for $(VERSION)" || exit 1; \
 		git push origin cli-$(VERSION) || exit 1; \
 		hub pull-request -b $(DOCS_BRANCH) -m "chore: updating CLI docs for $(VERSION)" || exit 1; \
-		cd - || exit 1; \
-		rm -rf $${TMP_DIR}
-#   TODO: we can't enable auto-docs generation for confluent until we migrate go-basher commands into cobra
-#	    make publish-docs-internal BASE_DIR=$${TMP_DIR} CLI_NAME=confluent || exit 1; \
+		rm -rf $${TMP_BASE}
 
 .PHONY: publish-docs-internal
 publish-docs-internal:
@@ -296,9 +307,94 @@ endif
 clean-docs:
 	rm docs/*/*.rst
 
+.PHONY: release-notes-prep
+release-notes-prep:
+	@echo "Preparing Release Notes for $(BUMPED_VERSION) (Previous Release Version: v$(CLEAN_VERSION))"
+	@echo
+	@GO11MODULE=on go run -ldflags '-X main.releaseVersion=$(BUMPED_VERSION) -X main.prevVersion=v$(CLEAN_VERSION)' cmd/release-notes/prep/main.go
+	$(print-release-notes-prep-next-steps)
+
+define print-release-notes-prep-next-steps
+	@echo "===================="
+	@echo "NEXT STEPS"
+	@echo "===================="
+	@echo
+	@echo "- Open './release-notes/prep' and fill in the content following the instructions."
+	@echo
+	@echo "- Once finished, run 'make publish-release-notes'."
+	@echo
+	@echo "===================="
+endef
+
+RELEASE_NOTES_BRANCH ?= cli-$(BUMPED_VERSION)-release-notes
+.PHONY: publish-release-notes
+publish-release-notes:
+	@TMP_BASE=$$(mktemp -d) || exit 1; \
+		TMP_DOCS=$${TMP_BASE}/docs; \
+		git clone git@github.com:confluentinc/docs.git $${TMP_DOCS}; \
+		cd $${TMP_DOCS} || exit 1; \
+		git fetch ; \
+		git checkout -b $(RELEASE_NOTES_BRANCH) origin/$(DOCS_BRANCH) || exit 1; \
+		cd - || exit 1; \
+		CCLOUD_DOCS_DIR=$${TMP_DOCS}/cloud/cli; \
+		CONFLUENT_DOCS_DIR=$${TMP_DOCS}/cli; \
+		make release-notes CCLOUD_DOCS_DIR=$${CCLOUD_DOCS_DIR} CONFLUENT_DOCS_DIR=$${CONFLUENT_DOCS_DIR}; \
+		make publish-release-notes-to-local-docs-repo CCLOUD_DOCS_DIR=$${CCLOUD_DOCS_DIR} CONFLUENT_DOCS_DIR=$${CONFLUENT_DOCS_DIR} || exit 1; \
+		cd $${TMP_DOCS} || exit 1; \
+		git add . || exit 1; \
+		git diff --cached --exit-code > /dev/null && echo "nothing to update" && exit 0; \
+		git commit -m "New release notes for $(BUMPED_VERSION)" || exit 1; \
+		git push origin $(RELEASE_NOTES_BRANCH) || exit 1; \
+		hub pull-request -b $(DOCS_BRANCH) -m "New release notes for $(BUMPED_VERSION)" || exit 1; \
+		rm -rf $${TMP_BASE}
+	make publish-release-notes-to-s3
+	$(print-publish-release-notes-next-steps)
+
+.PHONY: publish-release-notes-to-s3
+publish-release-notes-to-s3:
+	$(caasenv-authenticate); \
+	aws s3 cp release-notes/ccloud/latest-release.rst s3://confluent.cloud/ccloud-cli/release-notes/$(BUMPED_VERSION:v%=%)/release-notes.rst --acl public-read; \
+    aws s3 cp release-notes/confluent/latest-release.rst s3://confluent.cloud/confluent-cli/release-notes/$(BUMPED_VERSION:v%=%)/release-notes.rst --acl public-read
+
+define print-publish-release-notes-next-steps
+	@echo
+	@echo
+	@echo "===================="
+	@echo "NEXT STEPS"
+	@echo "===================="
+	@echo
+	@echo "- Find PR named 'New release notes for $(BUMPED_VERSION)' in confluentinc/docs and merge it."
+	@echo
+	@echo "- Check release notes file in s3 confluent.cloud/ccloud-cli/release-notes/$(BUMPED_VERSION)/"
+	@echo
+	@echo "- Run 'make clean-release-notes' to clean up your local repo"
+	@echo
+	@echo "- Once the release notes are ready, it's time to release the CLI!"
+	@echo
+	@echo "===================="
+endef
+
+.PHONY: release-notes
+release-notes:
+	@echo Previous Release Version: v$(CLEAN_VERSION)
+	@GO11MODULE=on go run -ldflags '-X main.releaseVersion=$(BUMPED_VERSION) -X main.ccloudReleaseNotesPath=$(CCLOUD_DOCS_DIR) -X main.confluentReleaseNotesPath=$(CONFLUENT_DOCS_DIR)' cmd/release-notes/release/main.go
+
+.PHONY: publish-release-notes-to-local-docs-repo
+publish-release-notes-to-local-docs-repo:
+	cp release-notes/ccloud/release-notes.rst $(CCLOUD_DOCS_DIR)
+	cp release-notes/confluent/release-notes.rst $(CONFLUENT_DOCS_DIR)
+
+.PHONY: clean-release-notes
+clean-release-notes:
+	-rm release-notes/prep
+	-rm release-notes/ccloud/release-notes.rst
+	-rm release-notes/confluent/release-notes.rst
+	-rm release-notes/ccloud/latest-release.rst
+	-rm release-notes/confluent/latest-release.rst
+
 .PHONY: fmt
 fmt:
-	@gofmt -e -s -l -w $(ALL_SRC)
+	@goimports -e -l -local github.com/confluentinc/cli/ -w $(ALL_SRC)
 
 .PHONY: release-ci
 release-ci:
@@ -343,37 +439,47 @@ lint-licenses: build
 		echo ; \
 	done
 
-.PHONY: coverage
-coverage:
+.PHONY: coverage-unit
+coverage-unit:
       ifdef CI
 	@# Run unit tests with coverage.
-	@GO111MODULE=on go test -v -race -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') \
-		-coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test)
-	@# Run integration tests with coverage.
-	@GO111MODULE=on INTEG_COVER=on go test -v $$(go list ./... | grep cli/test) $(TEST_ARGS)
-	@echo "mode: atomic" > coverage.txt
+	@GO111MODULE=on GOPRIVATE=github.com/confluentinc go test -v -race -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS)
 	@grep -h -v "mode: atomic" unit_coverage.txt >> coverage.txt
-	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
       else
 	@# Run unit tests.
-	@GO111MODULE=on go test -race -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test)
-	@# Run integration tests.
-	@GO111MODULE=on go test -v -race $$(go list ./... | grep cli/test) $(TEST_ARGS)
+	@GO111MODULE=on GOPRIVATE=github.com/confluentinc go test -race -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS)
       endif
 
-.PHONY: mocks
-mocks: mock/local/shell_runner_mock.go
-
-mock/local/shell_runner_mock.go:
-	mockgen -source internal/cmd/local/shell_runner.go -destination mock/local/shell_runner_mock.go ShellRunner
+.PHONY: coverage-integ
+coverage-integ:
+      ifdef CI
+	@# Run integration tests with coverage.
+	@GO111MODULE=on INTEG_COVER=on go test -v $$(go list ./... | grep cli/test) $(INT_TEST_ARGS)
+	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
+      else
+	@# Run integration tests.
+	@GO111MODULE=on GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(INT_TEST_ARGS)
+      endif
 
 .PHONY: test-installers
 test-installers:
 	@echo Running packaging/installer tests
 	@bash test-installers.sh
 
+.PHONY: test-prep
+test-prep: lint
+      ifdef CI
+    @echo "mode: atomic" > coverage.txt
+      endif
+
 .PHONY: test
-test: bindata mocks lint coverage test-installers
+test: test-prep coverage-unit coverage-integ test-installers
+
+.PHONY: unit-test
+unit-test: test-prep coverage-unit
+
+.PHONY: int-test
+int-test: test-prep coverage-integ
 
 .PHONY: doctoc
 doctoc:

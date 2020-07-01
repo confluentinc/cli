@@ -5,10 +5,10 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/confluentinc/cli/internal/pkg/config/v1"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
-	"github.com/confluentinc/cli/internal/pkg/template-color"
+	template_color "github.com/confluentinc/cli/internal/pkg/template-color"
 )
 
 var (

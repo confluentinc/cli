@@ -19,7 +19,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 
 	"github.com/confluentinc/cli/internal/cmd"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
@@ -100,7 +100,7 @@ func (suite *AnalyticsTestSuite) TestHelpCall() {
 		Command:   cobraCmd,
 		Analytics: suite.analyticsClient,
 	}
-	err := command.Execute([]string{"ccloud", "--help"})
+	err := command.Execute(ccloudName, []string{"ccloud", "--help"})
 	req.NoError(err)
 
 	req.Equal(1, len(suite.output))
@@ -128,7 +128,7 @@ func (suite *AnalyticsTestSuite) TestSuccessWithFlagAndArgs() {
 		Command:   cobraCmd,
 		Analytics: suite.analyticsClient,
 	}
-	err := command.Execute([]string{arg1, arg2, "--" + flagName, flagArg})
+	err := command.Execute(ccloudName, []string{arg1, arg2, "--" + flagName, flagArg})
 	req.NoError(err)
 
 	req.Equal(1, len(suite.output))
@@ -153,6 +153,40 @@ func (suite *AnalyticsTestSuite) TestSuccessWithFlagAndArgs() {
 	req.Equal(arg2, args[1])
 }
 
+func (suite *AnalyticsTestSuite) TestSetSpecialProperty() {
+	// assume user already logged in
+	suite.loginUser()
+	specialPropertyKey := "special key"
+	specialPropertyValue := "special value"
+	req := require.New(suite.T())
+	cobraCmd := &cobra.Command{
+		Use: suite.config.CLIName,
+		Run: func(cmd *cobra.Command, args []string) {
+			suite.analyticsClient.SetSpecialProperty(specialPropertyKey, specialPropertyValue)
+		},
+		PreRun: suite.preRunFunc(),
+	}
+	cobraCmd.Flags().String(flagName, "", "")
+	command := cmd.Command{
+		Command:   cobraCmd,
+		Analytics: suite.analyticsClient,
+	}
+	err := command.Execute(ccloudName, []string{})
+	req.NoError(err)
+
+	req.Equal(1, len(suite.output))
+	page, ok := suite.output[0].(segment.Page)
+	req.True(ok)
+
+	suite.checkPageBasic(page)
+	suite.checkPageLoggedIn(page)
+	suite.checkPageSuccess(page)
+
+	propertyValue, ok := page.Properties[specialPropertyKey]
+	req.True(ok)
+	req.Equal(specialPropertyValue, propertyValue)
+}
+
 func (suite *AnalyticsTestSuite) TestHelpWithFlagAndArgs() {
 
 	// assume user already logged in
@@ -169,7 +203,7 @@ func (suite *AnalyticsTestSuite) TestHelpWithFlagAndArgs() {
 		Command:   cobraCmd,
 		Analytics: suite.analyticsClient,
 	}
-	err := command.Execute([]string{arg1, arg2, "--" + flagName, flagArg, "-h"})
+	err := command.Execute(ccloudName, []string{arg1, arg2, "--" + flagName, flagArg, "-h"})
 	req.NoError(err)
 
 	req.Equal(1, len(suite.output))
@@ -225,7 +259,7 @@ func (suite *AnalyticsTestSuite) TestHelpWithFlagAndArgsSwapOrder() {
 		Command:   rootCmd,
 		Analytics: suite.analyticsClient,
 	}
-	err := command.Execute([]string{"login", "--" + flagName, flagArg, "user", arg1, arg2, "--help"})
+	err := command.Execute(ccloudName, []string{"login", "--" + flagName, flagArg, "user", arg1, arg2, "--help"})
 	req.NoError(err)
 
 	req.Equal(1, len(suite.output))
@@ -274,7 +308,7 @@ func (suite *AnalyticsTestSuite) TestLogin() {
 		Command:   rootCmd,
 		Analytics: suite.analyticsClient,
 	}
-	err := command.Execute([]string{"login"})
+	err := command.Execute(ccloudName, []string{"login"})
 	req.NoError(err)
 
 	req.Equal(2, len(suite.output))
@@ -338,7 +372,7 @@ func (suite *AnalyticsTestSuite) TestAnonymousIdResetOnLogin() {
 		Command:   rootCmd,
 		Analytics: suite.analyticsClient,
 	}
-	err := command.Execute([]string{"login", "user"})
+	err := command.Execute(ccloudName, []string{"login", "user"})
 	req.NoError(err)
 
 	req.Equal(2, len(suite.output))
@@ -358,7 +392,7 @@ func (suite *AnalyticsTestSuite) TestAnonymousIdResetOnLogin() {
 		}
 	}
 
-	err = command.Execute([]string{"login", "other"})
+	err = command.Execute(ccloudName, []string{"login", "other"})
 	req.NoError(err)
 
 	req.Equal(4, len(suite.output))
@@ -405,7 +439,7 @@ func (suite *AnalyticsTestSuite) TestAnonymousIdResetOnContextSwitch() {
 		Analytics: suite.analyticsClient,
 	}
 
-	err := command.Execute([]string{})
+	err := command.Execute(ccloudName, []string{})
 	req.NoError(err)
 
 	req.Equal(2, len(suite.output))
@@ -442,7 +476,7 @@ func (suite *AnalyticsTestSuite) TestUserNotLoggedIn() {
 		Command:   cobraCmd,
 		Analytics: suite.analyticsClient,
 	}
-	err := command.Execute([]string{})
+	err := command.Execute(ccloudName, []string{})
 	req.NoError(err)
 
 	req.Equal(1, len(suite.output))
@@ -472,7 +506,7 @@ func (suite *AnalyticsTestSuite) TestSessionTimedOut() {
 		Command:   cobraCmd,
 		Analytics: suite.analyticsClient,
 	}
-	err := command.Execute([]string{})
+	err := command.Execute(ccloudName, []string{})
 	req.NoError(err)
 
 	req.Equal(1, len(suite.output))
@@ -501,7 +535,7 @@ func (suite *AnalyticsTestSuite) TestErrorReturnedByCommand() {
 		Command:   cobraCmd,
 		Analytics: suite.analyticsClient,
 	}
-	err := command.Execute([]string{})
+	err := command.Execute(ccloudName, []string{})
 	req.NotNil(err)
 
 	req.Equal(1, len(suite.output))
@@ -528,7 +562,7 @@ func (suite *AnalyticsTestSuite) TestMalformedCommand() {
 		Command:   rootCmd,
 		Analytics: suite.analyticsClient,
 	}
-	err := command.Execute([]string{unknownCmd})
+	err := command.Execute(ccloudName, []string{unknownCmd})
 	req.NotNil(err)
 
 	req.Equal(1, len(suite.output))
@@ -565,7 +599,7 @@ func (suite *AnalyticsTestSuite) TestApiKeyStoreSecretHandler() {
 	filePathArg := "@/file.txt"
 	secondArgs := []string{apiSecret, pipeSymbol, filePathArg}
 	for _, secondArg := range secondArgs {
-		err := command.Execute([]string{"api-key", "store", apiKey, secondArg})
+		err := command.Execute(ccloudName, []string{"api-key", "store", apiKey, secondArg})
 		req.NoError(err)
 
 		req.Equal(1, len(suite.output))

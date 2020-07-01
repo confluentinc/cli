@@ -1,0 +1,12 @@
+api_endpoint: http://kafka-api-url
+availability: LOW
+egress: 100
+endpoint: SASL_SSL://kafka-endpoint
+id: lkc-update
+ingress: 100
+name: lkc-update-name
+provider: aws
+region: us-west-2
+status: UP
+storage: 500
+type: BASIC

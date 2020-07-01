@@ -11,7 +11,6 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -21,22 +20,21 @@ type schemaCommand struct {
 	srClient *srsdk.APIClient
 }
 
-func NewSchemaCommand(config *v3.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
+func NewSchemaCommand(cliName string, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "schema",
 			Short: "Manage Schema Registry schemas.",
-		},
-		config, prerunner)
+		}, prerunner)
 	schemaCmd := &schemaCommand{
 		AuthenticatedCLICommand: cliCmd,
 		srClient:                srClient,
 	}
-	schemaCmd.init()
+	schemaCmd.init(cliName)
 	return schemaCmd.Command
 }
 
-func (c *schemaCommand) init() {
+func (c *schemaCommand) init(cliName string) {
 	cmd := &cobra.Command{
 		Use:   "create --subject <subject> --schema <schema-file> --type <schema-type> --refs <ref-file>",
 		Short: "Create a schema.",
@@ -61,14 +59,18 @@ Where schemafilepath may include these contents:
 	   ]
 	}
 
-`, c.Config.CLIName),
+- For more information on schema types, see
+  https://docs.confluent.io/current/schema-registry/serdes-develop/index.html.
+- For more information on schema references, see
+  https://docs.confluent.io/current/schema-registry/serdes-develop/index.html#schema-references.
+`, cliName),
 		RunE: c.create,
 		Args: cobra.NoArgs,
 	}
 	RequireSubjectFlag(cmd)
 	cmd.Flags().String("schema", "", "The path to the schema file.")
 	_ = cmd.MarkFlagRequired("schema")
-	cmd.Flags().String("type", "", "The schema type.")
+	cmd.Flags().String("type", "", `Specify the schema type as "AVRO", "PROTOBUF", or "JSON".`)
 	cmd.Flags().String("refs", "", "The path to the references file.")
 	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	cmd.Flags().SortFlags = false
@@ -82,7 +84,7 @@ Delete one or more topics. This command should only be used in extreme circumsta
 
 ::
 
-		{{.CLIName}} schema-registry schema delete --subject payments --version latest`, c.Config.CLIName),
+		{{.CLIName}} schema-registry schema delete --subject payments --version latest`, cliName),
 		RunE: c.delete,
 		Args: cobra.NoArgs,
 	}
@@ -93,7 +95,7 @@ Delete one or more topics. This command should only be used in extreme circumsta
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
-		Use:   "describe <schema-id> [--subject <subject>] [--version <version]",
+		Use:   "describe <schema-id> [--subject <subject>] [--version <version>]",
 		Short: "Get schema either by schema-id, or by subject/version.",
 		Example: FormatDescription(`
 Describe the schema string by schema ID
@@ -107,10 +109,10 @@ Describe the schema by both subject and version
 ::
 
 		{{.CLIName}} schema-registry describe --subject payments --version latest
-`, c.Config.CLIName),
-        PreRunE: c.preDescribe,
-		RunE: c.describe,
-		Args: cobra.MaximumNArgs(1),
+`, cliName),
+		PreRunE: c.preDescribe,
+		RunE:    c.describe,
+		Args:    cobra.MaximumNArgs(1),
 	}
 	cmd.Flags().StringP("subject", "S", "", SubjectUsage)
 	cmd.Flags().StringP("version", "V", "", "Version of the schema. Can be a specific version or 'latest'.")
@@ -118,7 +120,7 @@ Describe the schema by both subject and version
 	c.AddCommand(cmd)
 }
 
-func (c *schemaCommand) create(cmd *cobra.Command, args []string) error {
+func (c *schemaCommand) create(cmd *cobra.Command, _ []string) error {
 	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
@@ -174,7 +176,7 @@ func (c *schemaCommand) create(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *schemaCommand) delete(cmd *cobra.Command, args []string) error {
+func (c *schemaCommand) delete(cmd *cobra.Command, _ []string) error {
 	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
@@ -211,7 +213,7 @@ func (c *schemaCommand) preDescribe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	
+
 	version, err := cmd.Flags().GetString("version")
 	if err != nil {
 		return err
@@ -229,7 +231,7 @@ func (c *schemaCommand) describe(cmd *cobra.Command, args []string) error {
 	if len(args) > 0 {
 		return c.describeById(cmd, args)
 	} else {
-		return c.describeBySubject(cmd, args)
+		return c.describeBySubject(cmd)
 	}
 }
 
@@ -249,7 +251,7 @@ func (c *schemaCommand) describeById(cmd *cobra.Command, args []string) error {
 	return c.printSchema(cmd, schemaString.Schema, schemaString.SchemaType, schemaString.References)
 }
 
-func (c *schemaCommand) describeBySubject(cmd *cobra.Command, args []string) error {
+func (c *schemaCommand) describeBySubject(cmd *cobra.Command) error {
 	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err

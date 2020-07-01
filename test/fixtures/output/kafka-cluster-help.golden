@@ -8,6 +8,7 @@ Available Commands:
   delete      Delete a Kafka cluster.
   describe    Describe a Kafka cluster.
   list        List Kafka clusters.
+  update      Update a Kafka cluster.
   use         Make the Kafka cluster active for use in other commands.
 
 Flags:
@@ -17,3 +18,6 @@ Global Flags:
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
 
 Use "ccloud kafka cluster [command] --help" for more information about a command.
+
+Did you know you can use the "ccloud feedback" command to send the team feedback?
+Let us know if the ccloud CLI is meeting your needs, or what we can do to improve it.
