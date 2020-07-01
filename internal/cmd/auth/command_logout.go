@@ -2,6 +2,7 @@ package auth
 
 import (
 	"fmt"
+
 	"github.com/confluentinc/cli/internal/pkg/errors"
 
 	"github.com/spf13/cobra"

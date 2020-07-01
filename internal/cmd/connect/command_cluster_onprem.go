@@ -2,14 +2,16 @@ package connect
 
 import (
 	"context"
+
 	"github.com/spf13/cobra"
 
 	"github.com/antihax/optional"
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+
 	print "github.com/confluentinc/cli/internal/pkg/cluster"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 )
 
 var clusterType = "connect-cluster"

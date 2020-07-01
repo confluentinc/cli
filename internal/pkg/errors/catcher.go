@@ -13,8 +13,7 @@ import (
 
 /*
 	HANDLECOMMON HELPERS
- */
-
+*/
 
 func catchTypedErrors(err error) error {
 	if typedErr, ok := err.(CLITypedError); ok {
@@ -66,17 +65,14 @@ func catchCCloudBackendUnmarshallingError(err error) error {
 	return err
 }
 
-
-
 /*
 	CCLOUD-SDK-GO CLIENT ERROR CATCHING
 */
 
-
 /*
 Error: 1 error occurred:
 	* error checking email: User Not Found
- */
+*/
 func CatchEmailNotFoundError(err error, email string) error {
 	if strings.Contains(err.Error(), "error checking email: User Not Found") {
 		errorMsg := fmt.Sprintf(InvalidEmailErrorMsg, email)
@@ -84,7 +80,6 @@ func CatchEmailNotFoundError(err error, email string) error {
 	}
 	return err
 }
-
 
 func CatchResourceNotFoundError(err error, resourceId string) error {
 	if isResourceNotFoundError(err) {
@@ -140,7 +135,7 @@ Error: 1 error occurred:
 	* error listing topics: Authentication failed: 1 extensions are invalid! They are: logicalCluster: Authentication failed
 Error: 1 error occurred:
 	* error creating topic test-topic: Authentication failed: 1 extensions are invalid! They are: logicalCluster: Authentication failed
- */
+*/
 func CatchClusterNotReadyError(err error, clusterId string) error {
 	if strings.Contains(err.Error(), "Authentication failed: 1 extensions are invalid! They are: logicalCluster: Authentication failed") {
 		errorMsg := fmt.Sprintf(KafkaNotReadyErrorMsg, clusterId)
@@ -149,16 +144,13 @@ func CatchClusterNotReadyError(err error, clusterId string) error {
 	return err
 }
 
-
-
 /*
 	SARAMA ERROR CATCHING
- */
-
+*/
 
 /*
 kafka server: Request was for a topic or partition that does not exist on this broker.
- */
+*/
 func CatchTopicNotExistError(err error, topicName string, clusterId string) (bool, error) {
 	if strings.Contains(err.Error(), "kafka server: Request was for a topic or partition that does not exist on this broker.") {
 		errorMsg := fmt.Sprintf(TopicNotExistsErrorMsg, topicName)
@@ -170,7 +162,7 @@ func CatchTopicNotExistError(err error, topicName string, clusterId string) (boo
 
 /*
 Error: "kafka: client has run out of available brokers to talk to (Is your cluster reachable?)"
- */
+*/
 func CatchClusterUnreachableError(err error, clusterId string, apiKey string) error {
 	if strings.Contains(err.Error(), "kafka: client has run out of available brokers to talk to (Is your cluster reachable?)") {
 		suggestionsMsg := fmt.Sprintf(UnableToConnectToKafkaSuggestions, clusterId, apiKey, apiKey, clusterId)
@@ -178,5 +170,3 @@ func CatchClusterUnreachableError(err error, clusterId string, apiKey string) er
 	}
 	return err
 }
-
-

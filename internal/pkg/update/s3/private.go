@@ -4,12 +4,13 @@ package s3
 
 import (
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"io"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -95,7 +96,7 @@ func validate(params *PrivateRepoParams) error {
 		err = multierror.Append(err, errors.Errorf(errors.MissingRequiredParamErrorMsg, "S3BinBucket"))
 	}
 	if params.S3BinPrefix == "" {
-		err = multierror.Append(err, errors.Errorf(errors.MissingRequiredParamErrorMsg,"S3BinPrefix"))
+		err = multierror.Append(err, errors.Errorf(errors.MissingRequiredParamErrorMsg, "S3BinPrefix"))
 	}
 	return err.ErrorOrNil()
 }

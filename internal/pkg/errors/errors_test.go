@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	wantSuggestionsMsgFormat =`
+	wantSuggestionsMsgFormat = `
 Suggestions:
     %s
 `
@@ -25,4 +25,3 @@ func TestSuggestionsMessage(t *testing.T) {
 	wantSuggestionsMsg := fmt.Sprintf(wantSuggestionsMsgFormat, suggestionsMessage)
 	require.Equal(t, wantSuggestionsMsg, out)
 }
-

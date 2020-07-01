@@ -3,12 +3,13 @@ package cluster
 import (
 	"context"
 
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	"github.com/spf13/cobra"
+
 	print "github.com/confluentinc/cli/internal/pkg/cluster"
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
-	"github.com/spf13/cobra"
 )
 
 type listCommand struct {

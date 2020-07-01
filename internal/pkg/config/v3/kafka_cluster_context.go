@@ -2,11 +2,12 @@ package v3
 
 import (
 	"fmt"
+	"os"
+
 	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"os"
 )
 
 type KafkaClusterContext struct {

@@ -2,9 +2,10 @@ package kafka
 
 import (
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"sort"
 	"strings"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 
 	"github.com/hashicorp/go-multierror"
 

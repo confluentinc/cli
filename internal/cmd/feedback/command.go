@@ -1,9 +1,10 @@
 package feedback
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"os"
 	"strings"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 
 	"github.com/spf13/cobra"
 

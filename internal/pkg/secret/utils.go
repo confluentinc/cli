@@ -2,12 +2,13 @@ package secret
 
 import (
 	"bytes"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 
 	"github.com/confluentinc/properties"
 	"github.com/tidwall/gjson"

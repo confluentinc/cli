@@ -2,9 +2,10 @@ package errors
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"io"
 	"strings"
+
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -46,4 +47,3 @@ func composeSuggestionsMessage(msg string) string {
 	}
 	return suggestionsMsg
 }
-

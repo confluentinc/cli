@@ -208,7 +208,7 @@ func (d *DynamicContext) AuthenticatedState(cmd *cobra.Command) (*v2.ContextStat
 		return nil, err
 	}
 	if !hasLogin {
-		return nil, &errors.NotLoggedInError{CLIName:d.Config.CLIName}
+		return nil, &errors.NotLoggedInError{CLIName: d.Config.CLIName}
 	}
 	envId, err := d.resolveEnvironmentId(cmd)
 	if err != nil {
@@ -248,18 +248,18 @@ func (d *DynamicContext) resolveEnvironmentId(cmd *cobra.Command) (string, error
 		return "", err
 	}
 	if d.State == nil || d.State.Auth == nil {
-		return "", &errors.NotLoggedInError{CLIName:d.Config.CLIName}
+		return "", &errors.NotLoggedInError{CLIName: d.Config.CLIName}
 	}
 	if envId == "" {
 		// Environment flag not set.
 		if d.State.Auth.Account == nil || d.State.Auth.Account.Id == "" {
-			return "", &errors.NotLoggedInError{CLIName:d.Config.CLIName}
+			return "", &errors.NotLoggedInError{CLIName: d.Config.CLIName}
 		}
 		return d.State.Auth.Account.Id, nil
 	}
 	// Environment flag is set.
 	if d.State.Auth.Accounts == nil {
-		return "", &errors.NotLoggedInError{CLIName:d.Config.CLIName}
+		return "", &errors.NotLoggedInError{CLIName: d.Config.CLIName}
 	}
 	for _, account := range d.State.Auth.Accounts {
 		if account.Id == envId {

@@ -2,13 +2,14 @@ package errors
 
 import (
 	"fmt"
+
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 var (
-	cliDownLoadLink = map[string]string {
+	cliDownLoadLink = map[string]string{
 		"confluent": "https://docs.confluent.io/current/cli/installing.html",
-		"ccloud": "https://docs.confluent.io/current/cloud/cli/install.html",
+		"ccloud":    "https://docs.confluent.io/current/cloud/cli/install.html",
 	}
 )
 
@@ -58,7 +59,6 @@ func (e *UnspecifiedAPIKeyError) UserFacingError() error {
 	return NewErrorWithSuggestions(errorMsg, suggestionsMsg)
 }
 
-
 // UnconfiguredAPISecretError means the user needs to store the API secret locally
 type UnconfiguredAPISecretError struct {
 	APIKey    string
@@ -104,12 +104,12 @@ func (e *CorruptedConfigError) UserFacingError() error {
 }
 
 func NewUpdateClientWrapError(err error, errorMsg string, cliName string) CLITypedError {
-	return &UpdateClientError{errorMsg:Wrap(err, errorMsg).Error(), cliName: cliName}
+	return &UpdateClientError{errorMsg: Wrap(err, errorMsg).Error(), cliName: cliName}
 }
 
 type UpdateClientError struct {
 	errorMsg string
-	cliName string
+	cliName  string
 }
 
 func (e *UpdateClientError) Error() string {

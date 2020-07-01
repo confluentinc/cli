@@ -6,7 +6,7 @@ type ErrorWithSuggestions interface {
 }
 
 type ErrorWithSuggestionsImpl struct {
-	errorMsg string
+	errorMsg       string
 	suggestionsMsg string
 }
 

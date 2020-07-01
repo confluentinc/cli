@@ -2,11 +2,12 @@ package secret
 
 import (
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"regexp"
 	"strings"
 	"text/scanner"
 	"unicode"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 
 	"github.com/confluentinc/properties"
 )

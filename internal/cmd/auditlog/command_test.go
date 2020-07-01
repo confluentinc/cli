@@ -4,21 +4,24 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/antihax/optional"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
-	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	net_http "net/http"
 	"os"
 	"testing"
 	"time"
 
+	"github.com/antihax/optional"
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/assert"
+
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+
 	"github.com/stretchr/testify/suite"
 
-	cliMock "github.com/confluentinc/cli/mock"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/confluentinc/mds-sdk-go/mdsv1/mock"
+
+	cliMock "github.com/confluentinc/cli/mock"
 )
 
 var (

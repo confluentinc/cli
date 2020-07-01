@@ -195,7 +195,7 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 			return errors.HandleCommon(err, cmd)
 		}
 		if ctx == nil {
-			return errors.HandleCommon(&errors.NoContextError{CLIName:r.CLIName}, cmd)
+			return errors.HandleCommon(&errors.NoContextError{CLIName: r.CLIName}, cmd)
 		}
 		command.Context = ctx
 		command.State, err = ctx.AuthenticatedState(cmd)
@@ -225,10 +225,10 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd
 			return errors.HandleCommon(err, cmd)
 		}
 		if ctx == nil {
-			return errors.HandleCommon(&errors.NoContextError{CLIName:r.CLIName}, cmd)
+			return errors.HandleCommon(&errors.NoContextError{CLIName: r.CLIName}, cmd)
 		}
 		if !ctx.HasMDSLogin() {
-			return errors.HandleCommon(&errors.NotLoggedInError{CLIName:r.CLIName}, cmd)
+			return errors.HandleCommon(&errors.NotLoggedInError{CLIName: r.CLIName}, cmd)
 		}
 		command.Context = ctx
 		command.State = ctx.State
@@ -251,7 +251,7 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 			return errors.HandleCommon(err, cmd)
 		}
 		if ctx == nil {
-			return errors.HandleCommon(&errors.NoContextError{CLIName:r.CLIName}, cmd)
+			return errors.HandleCommon(&errors.NoContextError{CLIName: r.CLIName}, cmd)
 		}
 		command.Context = ctx
 		var clusterId string

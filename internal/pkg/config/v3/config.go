@@ -89,7 +89,7 @@ func (c *Config) Load() error {
 		// Some "pre-validation"
 		if context.Name == "" {
 			return errors.NewCorruptedConfigError(errors.NoNameContextErrorMsg, "", c.CLIName, c.Filename, c.Logger)
-	}
+		}
 		if context.CredentialName == "" {
 			return errors.NewCorruptedConfigError(errors.UnspecifiedCredentialErrorMsg, context.Name, c.CLIName, c.Filename, c.Logger)
 		}
@@ -299,4 +299,3 @@ func (c *Config) getFilename() (string, error) {
 	}
 	return filename, nil
 }
-
