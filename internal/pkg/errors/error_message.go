@@ -91,7 +91,7 @@ const (
 	FailedToProduceErrorMsg   = "failed to produce offset %d: %s\n"
 	ConfigurationFormErrorMsg = "configuration must be in the form of key=value"
 	TopicExistsErrorMsg       = "topic \"%s\" already exists for Kafka cluster \"%s\""
-	TopicExistsSuggestions    = "You can list Kafka topics for cluster with `ccloud kafka topic list --cluster %s`."
+	TopicExistsSuggestions    = "You can list Kafka topics for the cluster with `ccloud kafka topic list --cluster %s`."
 
 	// ksql commands
 	NoServiceAccountErrorMsg = "no service account found for KSQL cluster \"%s\""
@@ -332,7 +332,7 @@ const (
 	NoAPIKeySelectedSuggestions = "Select an API key for resource \"%s\" with `ccloud api-key use <API_KEY> --resource %s`.\n" +
 		"To do so, you must have either already created or stored an API key for the resource.\n" +
 		"To create an API key use `ccloud api-key create --resource %s`.\n" +
-		"To store an existing API key use `ccluod api-key store --resource %s`."
+		"To store an existing API key use `ccloud api-key store --resource %s`."
 
 	// Special error types
 	GenericOpenAPIErrorMsg = "metadata service backend error: %s: %s"

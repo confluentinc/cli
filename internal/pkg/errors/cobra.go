@@ -24,7 +24,8 @@ func HandleCommon(err error, cmd *cobra.Command) error {
 func handleErrors(err error) error {
 	err = catchCCloudTokenErrors(err)
 	err = catchCCloudBackendUnmarshallingError(err)
-	err = catchSpecialErrors(err)
+	err = catchMDSErrors(err)
+	err = catchCoreV1Errors(err)
 	err = catchTypedErrors(err)
 	return err
 }

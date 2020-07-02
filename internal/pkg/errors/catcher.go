@@ -2,13 +2,13 @@ package errors
 
 import (
 	"fmt"
+	"github.com/hashicorp/go-multierror"
 	"regexp"
 	"strings"
 
 	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
-	"github.com/hashicorp/go-multierror"
 )
 
 /*
@@ -22,20 +22,25 @@ func catchTypedErrors(err error) error {
 	return err
 }
 
-func catchSpecialErrors(err error) error {
-	switch e := err.(type) {
-	case mds.GenericOpenAPIError:
+func catchMDSErrors(err error) error {
+	e, ok := err.(mds.GenericOpenAPIError)
+	if ok {
 		return Errorf(GenericOpenAPIErrorMsg, e.Error(), string(e.Body()))
-	case *corev1.Error:
+	}
+	return err
+}
+
+func catchCoreV1Errors(err error) error {
+	e, ok := err.(*corev1.Error)
+	if ok {
 		var result error
 		result = multierror.Append(result, e)
 		for name, msg := range e.GetNestedErrors() {
 			result = multierror.Append(result, fmt.Errorf("%s: %s", name, msg))
 		}
 		return result
-	default:
-		return err
 	}
+	return err
 }
 
 func catchCCloudTokenErrors(err error) error {
@@ -129,7 +134,6 @@ func isResourceNotFoundError(err error) bool {
 	return resourceNotFoundRegex.MatchString(err.Error())
 }
 
-
 /*
 Error: 1 error occurred:
 	* error creating topic bob: Topic 'bob' already exists.
@@ -161,6 +165,14 @@ func CatchClusterNotReadyError(err error, clusterId string) error {
 	return err
 }
 
+
+/*
+	MDS ERROR CATCHING
+*/
+
+
+
+
 /*
 	SARAMA ERROR CATCHING
 */
@@ -187,3 +199,4 @@ func CatchClusterUnreachableError(err error, clusterId string, apiKey string) er
 	}
 	return err
 }
+
