@@ -88,7 +88,7 @@ func parse(cmd *cobra.Command) ([]*ACLConfiguration, error) {
 	}
 	for _, operation := range operations {
 		aclConfig := NewACLConfig()
-		op, err := getAclOperation(operation)
+		op, err := getACLOperation(operation)
 		if err != nil {
 			return nil, err
 		}
@@ -175,7 +175,7 @@ OUTER:
 	return strings.Join(ops, ", ")
 }
 
-func getAclOperation(operation string) (schedv1.ACLOperations_ACLOperation, error) {
+func getACLOperation(operation string) (schedv1.ACLOperations_ACLOperation, error) {
 	op := strings.ToUpper(operation)
 	op = strings.ReplaceAll(op, "-", "_")
 	if operation, ok := schedv1.ACLOperations_ACLOperation_value[op]; ok {

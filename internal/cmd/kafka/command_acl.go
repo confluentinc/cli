@@ -106,7 +106,7 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	return aclutil.PrintAcls(cmd, resp, os.Stdout)
+	return aclutil.PrintACLs(cmd, resp, os.Stdout)
 }
 
 func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {

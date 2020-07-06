@@ -29,7 +29,7 @@ func (enumUtils enumUtils) init(enums ...interface{}) enumUtils {
 }
 
 // aclConfigFlags returns a flag set which can be parsed to create an ACLConfiguration object.
-func addAclFlags() *pflag.FlagSet {
+func addACLFlags() *pflag.FlagSet {
 	// An error is only returned if the flag name is not present.
 	// We know the flag name is present so its safe to ignore this.
 	flgSet := aclFlags()
@@ -39,7 +39,7 @@ func addAclFlags() *pflag.FlagSet {
 	return flgSet
 }
 
-func deleteAclFlags() *pflag.FlagSet {
+func deleteACLFlags() *pflag.FlagSet {
 	flgSet := aclFlags()
 	// MDS delete apis allow principal/operation/host to be skipped, but we deliberately
 	// want cli delete to only work on 1 acl at a time.
@@ -50,7 +50,7 @@ func deleteAclFlags() *pflag.FlagSet {
 	return flgSet
 }
 
-func listAclFlags() *pflag.FlagSet {
+func listACLFlags() *pflag.FlagSet {
 	flgSet := aclFlags()
 	_ = cobra.MarkFlagRequired(flgSet, "kafka-cluster-id")
 	return flgSet
