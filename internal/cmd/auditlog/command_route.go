@@ -2,11 +2,13 @@ package auditlog
 
 import (
 	"encoding/json"
+
 	"github.com/antihax/optional"
-	"github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 
 	"context"
 )
@@ -59,7 +61,7 @@ func (c *routeCommand) createContext() context.Context {
 	return context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
 }
 
-func (c *routeCommand) list(cmd *cobra.Command, args []string) error {
+func (c *routeCommand) list(cmd *cobra.Command, _ []string) error {
 	var opts *mds.ListRoutesOpts
 	if cmd.Flags().Changed("resource") {
 		resource, err := cmd.Flags().GetString("resource")

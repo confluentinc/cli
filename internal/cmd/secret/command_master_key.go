@@ -50,7 +50,7 @@ to read from a file use "@<path-to-file>", e.g. "--passphrase @/User/bob/secret.
 	c.AddCommand(generateCmd)
 }
 
-func (c *masterKeyCommand) generate(cmd *cobra.Command, args []string) error {
+func (c *masterKeyCommand) generate(cmd *cobra.Command, _ []string) error {
 	passphraseSource, err := cmd.Flags().GetString("passphrase")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)

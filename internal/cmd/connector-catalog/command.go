@@ -76,7 +76,7 @@ List connectors in the current or specified Kafka cluster context.
 	c.AddCommand(cmd)
 }
 
-func (c *command) list(cmd *cobra.Command, args []string) error {
+func (c *command) list(cmd *cobra.Command, _ []string) error {
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(cmd)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)

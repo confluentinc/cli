@@ -91,7 +91,7 @@ func (c *aclCommand) init() {
 	c.AddCommand(listCmd)
 }
 
-func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
+func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 	acl, err := parse(cmd)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -109,7 +109,7 @@ func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
 	return aclutil.PrintAcls(cmd, resp, os.Stdout)
 }
 
-func (c *aclCommand) create(cmd *cobra.Command, args []string) error {
+func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 	acls, err := parse(cmd)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -133,7 +133,7 @@ func (c *aclCommand) create(cmd *cobra.Command, args []string) error {
 	return errors.HandleCommon(err, cmd)
 }
 
-func (c *aclCommand) delete(cmd *cobra.Command, args []string) error {
+func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 	acls, err := parse(cmd)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)

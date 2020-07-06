@@ -4,13 +4,15 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
+	"io/ioutil"
+	"os"
+
 	"github.com/confluentinc/go-editor"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/spf13/cobra"
-	"io/ioutil"
-	"os"
+
+	"github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 
 	"net/http"
 )
@@ -71,7 +73,7 @@ func (c *configCommand) createContext() context.Context {
 	return context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
 }
 
-func (c *configCommand) describe(cmd *cobra.Command, args []string) error {
+func (c *configCommand) describe(cmd *cobra.Command, _ []string) error {
 	spec, _, err := c.MDSClient.AuditLogConfigurationApi.GetConfig(c.createContext())
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -84,7 +86,7 @@ func (c *configCommand) describe(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *configCommand) update(cmd *cobra.Command, args []string) error {
+func (c *configCommand) update(cmd *cobra.Command, _ []string) error {
 	var data []byte
 	var err error
 	if cmd.Flags().Changed("file") {
@@ -153,7 +155,7 @@ func (c *configCommand) update(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *configCommand) edit(cmd *cobra.Command, args []string) error {
+func (c *configCommand) edit(cmd *cobra.Command, _ []string) error {
 	gotSpec, response, err := c.MDSClient.AuditLogConfigurationApi.GetConfig(c.createContext())
 	if err != nil {
 		return HandleMdsAuditLogApiError(cmd, err, response)

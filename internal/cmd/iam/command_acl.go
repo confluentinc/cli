@@ -82,7 +82,7 @@ func (c *aclCommand) init(cliName string) {
 	c.AddCommand(cmd)
 }
 
-func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
+func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 	acl := parse(cmd)
 
 	bindings, response, err := c.MDSClient.KafkaACLManagementApi.SearchAclBinding(c.createContext(), convertToAclFilterRequest(acl.CreateAclRequest))
@@ -93,7 +93,7 @@ func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
 	return PrintAcls(cmd, acl.Scope.Clusters.KafkaCluster, bindings)
 }
 
-func (c *aclCommand) create(cmd *cobra.Command, args []string) error {
+func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 	acl := validateAclAddDelete(parse(cmd))
 
 	if acl.errors != nil {
@@ -109,7 +109,7 @@ func (c *aclCommand) create(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *aclCommand) delete(cmd *cobra.Command, args []string) error {
+func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 	acl := parse(cmd)
 
 	if acl.errors != nil {

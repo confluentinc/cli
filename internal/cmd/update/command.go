@@ -89,7 +89,7 @@ func (c *command) init() {
 	c.Command.Flags().SortFlags = false
 }
 
-func (c *command) update(cmd *cobra.Command, args []string) error {
+func (c *command) update(cmd *cobra.Command, _ []string) error {
 	updateYes, err := cmd.Flags().GetBool("yes")
 	if err != nil {
 		return errors.Wrap(err, "error reading --yes as bool")

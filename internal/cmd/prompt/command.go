@@ -144,7 +144,7 @@ func (c *promptCommand) init(cliName string, prerunner pcmd.PreRunner) {
 
 // Output context about the current CLI config suitable for a PS1 prompt.
 // It allows custom user formatting the configuration by parsing format flags.
-func (c *promptCommand) prompt(cmd *cobra.Command, args []string) error {
+func (c *promptCommand) prompt(cmd *cobra.Command, _ []string) error {
 	c.ps1.Config = c.Config.Config
 	format, err := cmd.Flags().GetString("format")
 	if err != nil {

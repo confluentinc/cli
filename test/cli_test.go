@@ -583,12 +583,12 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 	})
 	router.HandleFunc("/api/accounts/a-595", handleEnvironmentGet(t, "a-595"))
 	router.HandleFunc("/api/accounts/not-595", handleEnvironmentGet(t, "not-595"))
-	router.HandleFunc("/api/clusters/lkc-describe", handleKafkaClusterDescribeTest(t, kafkaAPIURL))
-	router.HandleFunc("/api/clusters/lkc-describe-dedicated", handleKafkaClusterDescribeTest(t, kafkaAPIURL))
-	router.HandleFunc("/api/clusters/lkc-describe-dedicated-pending", handleKafkaClusterDescribeTest(t, kafkaAPIURL))
-	router.HandleFunc("/api/clusters/lkc-describe-dedicated-with-encryption", handleKafkaClusterDescribeTest(t, kafkaAPIURL))
-	router.HandleFunc("/api/clusters/lkc-update", handleKafkaClusterUpdateTest(t, kafkaAPIURL))
-	router.HandleFunc("/api/clusters/lkc-update-dedicated", handleKafkaDedicatedClusterUpdateTest(t, kafkaAPIURL))
+	router.HandleFunc("/api/clusters/lkc-describe", handleKafkaClusterDescribeTest(t))
+	router.HandleFunc("/api/clusters/lkc-describe-dedicated", handleKafkaClusterDescribeTest(t))
+	router.HandleFunc("/api/clusters/lkc-describe-dedicated-pending", handleKafkaClusterDescribeTest(t))
+	router.HandleFunc("/api/clusters/lkc-describe-dedicated-with-encryption", handleKafkaClusterDescribeTest(t))
+	router.HandleFunc("/api/clusters/lkc-update", handleKafkaClusterUpdateTest(t))
+	router.HandleFunc("/api/clusters/lkc-update-dedicated", handleKafkaDedicatedClusterUpdateTest(t))
 	router.HandleFunc("/api/clusters/", handleKafkaClusterGetListDeleteDescribe(t, kafkaAPIURL))
 	router.HandleFunc("/api/clusters", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
@@ -902,7 +902,7 @@ func handleKafkaClusterGetListDeleteDescribe(t *testing.T, kafkaAPIURL string) f
 	}
 }
 
-func handleKafkaClusterDescribeTest(t *testing.T, kafkaAPIURL string) func(w http.ResponseWriter, r *http.Request) {
+func handleKafkaClusterDescribeTest(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := r.URL.Query().Get("id")
 		cluster := &schedv1.KafkaCluster{
@@ -939,7 +939,7 @@ func handleKafkaClusterDescribeTest(t *testing.T, kafkaAPIURL string) func(w htt
 	}
 }
 
-func handleKafkaClusterUpdateTest(t *testing.T, kafkaAPIURL string) func(w http.ResponseWriter, r *http.Request) {
+func handleKafkaClusterUpdateTest(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Describe client call
 		var out []byte
@@ -999,7 +999,7 @@ func handleKafkaClusterUpdateTest(t *testing.T, kafkaAPIURL string) func(w http.
 	}
 }
 
-func handleKafkaDedicatedClusterUpdateTest(t *testing.T, kafkaAPIURL string) func(w http.ResponseWriter, r *http.Request) {
+func handleKafkaDedicatedClusterUpdateTest(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var out []byte
 		if r.Method == "GET" {

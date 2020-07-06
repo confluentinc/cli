@@ -152,7 +152,7 @@ func (c *registryCommand) parseProtocol(cmd *cobra.Command) (mds.Protocol, error
 	}
 }
 
-func (c *registryCommand) register(cmd *cobra.Command, args []string) error {
+func (c *registryCommand) register(cmd *cobra.Command, _ []string) error {
 
 	name, err := cmd.Flags().GetString("cluster-name")
 	if err != nil {
@@ -187,7 +187,7 @@ func (c *registryCommand) register(cmd *cobra.Command, args []string) error {
 	return print.PrintCluster(cmd, []mds.ClusterInfo{clusterInfo}, output.Human.String())
 }
 
-func (c *registryCommand) unregister(cmd *cobra.Command, args []string) error {
+func (c *registryCommand) unregister(cmd *cobra.Command, _ []string) error {
 	name, err := cmd.Flags().GetString("cluster-name")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)

@@ -88,7 +88,7 @@ func getRemoteAPIName(cliName string) string {
 	return "Confluent Platform"
 }
 
-func (a *loginCommand) login(cmd *cobra.Command, args []string) error {
+func (a *loginCommand) login(cmd *cobra.Command, _ []string) error {
 	url, err := cmd.Flags().GetString("url")
 	if err != nil {
 		return err
@@ -181,7 +181,7 @@ func (a *loginCommand) login(cmd *cobra.Command, args []string) error {
 	return err
 }
 
-func (a *loginCommand) loginMDS(cmd *cobra.Command, args []string) error {
+func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 	url, err := cmd.Flags().GetString("url")
 	if err != nil {
 		return err

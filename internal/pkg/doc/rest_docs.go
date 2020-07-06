@@ -26,7 +26,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func printOptionsReST(buf *bytes.Buffer, cmd *cobra.Command, name string) error {
+func printOptionsReST(buf *bytes.Buffer, cmd *cobra.Command) error {
 	long := cmd.Long
 
 	flags := cmd.NonInheritedFlags()
@@ -88,7 +88,7 @@ func GenReSTCustom(cmd *cobra.Command, w io.Writer, linkHandler func(string, str
 		buf.WriteString(fmt.Sprintf("::\n\n  %s\n\n", cmd.UseLine()))
 	}
 
-	if err := printOptionsReST(buf, cmd, name); err != nil {
+	if err := printOptionsReST(buf, cmd); err != nil {
 		return err
 	}
 	if hasSeeAlso(cmd) {
