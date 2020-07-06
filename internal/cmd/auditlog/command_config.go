@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"io/ioutil"
+	"net/http"
 	"os"
 
 	"github.com/confluentinc/go-editor"
@@ -13,8 +14,6 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-
-	"net/http"
 )
 
 type configCommand struct {
