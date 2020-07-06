@@ -114,7 +114,7 @@ func (c *aclCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	bindings := []*schedv1.ACLBinding{}
+	var bindings []*schedv1.ACLBinding
 	for _, acl := range acls {
 		validateAddDelete(acl)
 		if acl.errors != nil {
@@ -138,7 +138,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	filters := []*schedv1.ACLFilter{}
+	var filters []*schedv1.ACLFilter
 	for _, acl := range acls {
 		validateAddDelete(acl)
 		if acl.errors != nil {

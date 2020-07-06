@@ -73,7 +73,7 @@ the --prefix option was also passed.`)
 
 // parse returns ACLConfiguration from the contents of cmd
 func parse(cmd *cobra.Command) ([]*ACLConfiguration, error) {
-	aclConfigs := []*ACLConfiguration{}
+	var aclConfigs []*ACLConfiguration
 
 	if cmd.Name() == listCmd.Name() {
 		aclConfig := NewACLConfig()

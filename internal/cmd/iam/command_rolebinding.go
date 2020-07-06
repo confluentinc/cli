@@ -162,7 +162,7 @@ func (c *rolebindingCommand) validateRoleAndResourceType(roleName string, resour
 		return errors.Wrapf(err, "Failed to look up role %s. Was an invalid role name specified?", roleName)
 	}
 
-	allResourceTypes := []string{}
+	var allResourceTypes []string
 	found := false
 	for _, operation := range role.AccessPolicy.AllowedOperations {
 		allResourceTypes = append(allResourceTypes, operation.ResourceType)

@@ -126,7 +126,7 @@ func (c *PasswordProtectionSuite) EncryptConfigFileSecrets(configFilePath string
 	if !DoesPathExist(configFilePath) {
 		return fmt.Errorf("invalid config file path: %s", configFilePath)
 	}
-	configs := []string{}
+	var configs []string
 	// Load the configs.
 	if strings.TrimSpace(encryptConfigKeys) != "" {
 		configs = strings.Split(encryptConfigKeys, ",")
@@ -160,7 +160,7 @@ func (c *PasswordProtectionSuite) DecryptConfigFileSecrets(configFilePath string
 		return fmt.Errorf("invalid secrets file path:" + localSecureConfigPath)
 	}
 
-	configKeys := []string{}
+	var configKeys []string
 	// Load the configs.
 	if strings.TrimSpace(configs) != "" {
 		configKeys = strings.Split(configs, ",")
