@@ -36,11 +36,11 @@ func DisplaySuggestionsMessage(err error, writer io.Writer) {
 	}
 	cliErr, ok := err.(ErrorWithSuggestions)
 	if ok && cliErr.GetSuggestionsMsg() != "" {
-		_, _ = fmt.Fprint(writer, composeSuggestionsMessage(cliErr.GetSuggestionsMsg()))
+		_, _ = fmt.Fprint(writer, ComposeSuggestionsMessage(cliErr.GetSuggestionsMsg()))
 	}
 }
 
-func composeSuggestionsMessage(msg string) string {
+func ComposeSuggestionsMessage(msg string) string {
 	lines := strings.Split(msg, "\n")
 	suggestionsMsg := suggestionsMessageHeader
 	for _, line := range lines {

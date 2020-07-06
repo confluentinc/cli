@@ -1,4 +1,4 @@
-Error: 1 error occurred:
-	* error deleting kafka cluster: resource not found
+Error: Kafka cluster "lkc-unknown" not found
 
-
+Suggestions:
+    List Kafka clusters with `ccloud kafka cluster list`.

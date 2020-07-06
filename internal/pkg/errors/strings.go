@@ -6,7 +6,7 @@ const (
 
 	// auth commands
 	LoggedInAsMsg                = "Logged in as \"%s\".\n"
-	LoginUsingEnvMsg             = "Using environment \"%s\" (\"%s\").\n"
+	LoggedInUsingEnvMsg          = "Using environment \"%s\" (\"%s\").\n"
 	LoggedOutMsg                 = "You are now logged out."
 	WrittenCredentialsToNetrcMsg = "Written credentials to netrc file \"%s\"\n"
 	KafkaClusterDeletedMsg       = "The Kafka cluster \"%s\" has been deleted.\n"

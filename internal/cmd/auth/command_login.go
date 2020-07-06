@@ -177,7 +177,7 @@ func (a *loginCommand) login(cmd *cobra.Command, args []string) error {
 	}
 
 	pcmd.Printf(cmd, errors.LoggedInAsMsg, email)
-	pcmd.Printf(cmd, errors.LoginUsingEnvMsg, state.Auth.Account.Id, state.Auth.Account.Name)
+	pcmd.Printf(cmd, errors.LoggedInUsingEnvMsg, state.Auth.Account.Id, state.Auth.Account.Name)
 	return err
 }
 
