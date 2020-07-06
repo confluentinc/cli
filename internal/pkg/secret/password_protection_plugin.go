@@ -75,7 +75,7 @@ func (c *PasswordProtectionSuite) CreateMasterKey(passphrase string, localSecure
 	}
 
 	// save the master key salt
-	_, _, err = secureConfigProps.Set(MetadataMekSalt, salt)
+	_, _, err = secureConfigProps.Set(MetadataMEKSalt, salt)
 	if err != nil {
 		return "", err
 	}
@@ -313,7 +313,7 @@ func (c *PasswordProtectionSuite) RotateDataKey(masterPassphrase string, localSe
 	if err != nil {
 		return err
 	}
-	_, _, err = secureConfigProps.Set(MetadataDekSalt, salt)
+	_, _, err = secureConfigProps.Set(MetadataDEKSalt, salt)
 	if err != nil {
 		return err
 	}
@@ -397,7 +397,7 @@ func (c *PasswordProtectionSuite) RotateMasterKey(oldPassphrase string, newPassp
 	}
 
 	// save the master key salt
-	_, _, err = secureConfigProps.Set(MetadataMekSalt, salt)
+	_, _, err = secureConfigProps.Set(MetadataMEKSalt, salt)
 	if err != nil {
 		return "", err
 	}
@@ -562,8 +562,8 @@ func (c *PasswordProtectionSuite) loadCipherSuiteFromSecureProps(secureConfigPro
 	cipher := NewDefaultCipher()
 	cipher.Iterations = matchProps.GetInt(MetadataKeyIterations, MetadataKeyDefaultIterations)
 	cipher.KeyLength = matchProps.GetInt(MetadataKeyLength, MetadataKeyDefaultLengthBytes)
-	cipher.SaltDEK = matchProps.GetString(MetadataDekSalt, "")
-	cipher.SaltMEK = matchProps.GetString(MetadataMekSalt, "")
+	cipher.SaltDEK = matchProps.GetString(MetadataDEKSalt, "")
+	cipher.SaltMEK = matchProps.GetString(MetadataMEKSalt, "")
 	cipher.EncryptedDataKey = matchProps.GetString(MetadataDataKey, "")
 	return cipher, nil
 }
@@ -651,7 +651,7 @@ func (c *PasswordProtectionSuite) fetchSecureConfigProps(localSecureConfigPath s
 	if err != nil {
 		return nil, nil, err
 	}
-	_, _, err = secureConfigProps.Set(MetadataDekSalt, cipherSuites.SaltDEK)
+	_, _, err = secureConfigProps.Set(MetadataDEKSalt, cipherSuites.SaltDEK)
 	if err != nil {
 		return nil, nil, err
 	}

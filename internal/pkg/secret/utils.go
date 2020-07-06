@@ -16,7 +16,7 @@ import (
 )
 
 var dataRegex = regexp.MustCompile(DataPattern)
-var ivRegex = regexp.MustCompile(IvPattern)
+var ivRegex = regexp.MustCompile(IVPattern)
 var algoRegex = regexp.MustCompile(EncPattern)
 var passwordRegex = regexp.MustCompile(PasswordPattern)
 var cipherRegex = regexp.MustCompile(CipherPattern)

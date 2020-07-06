@@ -13,8 +13,8 @@ const (
 	MetadataKeyEnvvar             = "_metadata.symmetric_key.0.envvar"
 	MetadataKeyTimestamp          = "_metadata.symmetric_key.0.created_at"
 	MetadataKeyLength             = "_metadata.symmetric_key.0.length"
-	MetadataDekSalt               = "_metadata.symmetric_key.0.salt"
-	MetadataMekSalt               = "_metadata.master_key.0.salt"
+	MetadataDEKSalt               = "_metadata.symmetric_key.0.salt"
+	MetadataMEKSalt               = "_metadata.master_key.0.salt"
 	MetadataKeyIterations         = "_metadata.symmetric_key.0.iterations"
 	MetadataDataKey               = "_metadata.symmetric_key.0.enc"
 	MetadataKeyDefaultLengthBytes = 32
@@ -25,7 +25,7 @@ const (
 const (
 	MetadataEncAlgorithm = "AES/CBC/PKCS5Padding"
 	DataPattern          = "data\\:(.*?)\\,"
-	IvPattern            = "iv\\:(.*?)\\,"
+	IVPattern            = "iv\\:(.*?)\\,"
 	EncPattern           = "ENC\\[(.*?)\\,"
 	PasswordPattern      = "^\\$\\{(.*?):((.*?):)?(.*?)\\}$"
 	CipherPattern        = "ENC\\[(.*?)\\]"

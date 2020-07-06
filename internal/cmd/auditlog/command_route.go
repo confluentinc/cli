@@ -1,6 +1,7 @@
 package auditlog
 
 import (
+	"context"
 	"encoding/json"
 
 	"github.com/antihax/optional"
@@ -9,8 +10,6 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-
-	"context"
 )
 
 type routeCommand struct {

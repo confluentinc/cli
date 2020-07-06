@@ -3,10 +3,9 @@ package kafka
 import (
 	"context"
 
-	"github.com/spf13/cobra"
-
 	"github.com/antihax/optional"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	"github.com/spf13/cobra"
 
 	print "github.com/confluentinc/cli/internal/pkg/cluster"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
