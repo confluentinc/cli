@@ -71,7 +71,7 @@ func (c *EncryptEngineImpl) GenerateMasterKey(masterKeyPassphrase string, salt s
 	// Generate random salt
 	var err error
 	if salt == "" {
-		salt, err = c.generateRandomString(METADATA_KEY_DEFAULT_LENGTH_BYTES)
+		salt, err = c.generateRandomString(MetadataKeyDefaultLengthBytes)
 		if err != nil {
 			return "", "", err
 		}

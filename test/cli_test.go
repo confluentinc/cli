@@ -448,8 +448,8 @@ func binaryPath(t *testing.T, binaryName string) string {
 	return path.Join(dir, binaryName)
 }
 
-var KEY_STORE = map[int32]*schedv1.ApiKey{}
-var KEY_INDEX = int32(1)
+var keyStore = map[int32]*schedv1.ApiKey{}
+var keyIndex = int32(1)
 
 type ApiKeyList []*schedv1.ApiKey
 
@@ -469,7 +469,7 @@ func (d ApiKeyList) Less(i, j int) bool {
 }
 
 func init() {
-	KEY_STORE[KEY_INDEX] = &schedv1.ApiKey{
+	keyStore[keyIndex] = &schedv1.ApiKey{
 		Key:    "MYKEY1",
 		Secret: "MYSECRET1",
 		LogicalClusters: []*schedv1.ApiKey_Cluster{
@@ -477,8 +477,8 @@ func init() {
 		},
 		UserId: 12,
 	}
-	KEY_INDEX += 1
-	KEY_STORE[KEY_INDEX] = &schedv1.ApiKey{
+	keyIndex += 1
+	keyStore[keyIndex] = &schedv1.ApiKey{
 		Key:    "MYKEY2",
 		Secret: "MYSECRET2",
 		LogicalClusters: []*schedv1.ApiKey_Cluster{
@@ -486,8 +486,8 @@ func init() {
 		},
 		UserId: 18,
 	}
-	KEY_INDEX += 1
-	KEY_STORE[100] = &schedv1.ApiKey{
+	keyIndex += 1
+	keyStore[100] = &schedv1.ApiKey{
 		Key:    "UIAPIKEY100",
 		Secret: "UIAPISECRET100",
 		LogicalClusters: []*schedv1.ApiKey_Cluster{
@@ -495,7 +495,7 @@ func init() {
 		},
 		UserId: 25,
 	}
-	KEY_STORE[101] = &schedv1.ApiKey{
+	keyStore[101] = &schedv1.ApiKey{
 		Key:    "UIAPIKEY101",
 		Secret: "UIAPISECRET101",
 		LogicalClusters: []*schedv1.ApiKey_Cluster{
@@ -503,7 +503,7 @@ func init() {
 		},
 		UserId: 25,
 	}
-	KEY_STORE[102] = &schedv1.ApiKey{
+	keyStore[102] = &schedv1.ApiKey{
 		Key:    "UIAPIKEY102",
 		Secret: "UIAPISECRET102",
 		LogicalClusters: []*schedv1.ApiKey_Cluster{
@@ -511,7 +511,7 @@ func init() {
 		},
 		UserId: 25,
 	}
-	KEY_STORE[103] = &schedv1.ApiKey{
+	keyStore[103] = &schedv1.ApiKey{
 		Key:    "UIAPIKEY103",
 		Secret: "UIAPISECRET103",
 		LogicalClusters: []*schedv1.ApiKey_Cluster{
@@ -533,16 +533,16 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 			require.NoError(t, err)
 			require.NotEmpty(t, req.ApiKey.AccountId)
 			apiKey := req.ApiKey
-			apiKey.Id = int32(KEY_INDEX)
-			apiKey.Key = fmt.Sprintf("MYKEY%d", KEY_INDEX)
-			apiKey.Secret = fmt.Sprintf("MYSECRET%d", KEY_INDEX)
+			apiKey.Id = int32(keyIndex)
+			apiKey.Key = fmt.Sprintf("MYKEY%d", keyIndex)
+			apiKey.Secret = fmt.Sprintf("MYSECRET%d", keyIndex)
 			if req.ApiKey.UserId == 0 {
 				apiKey.UserId = 23
 			} else {
 				apiKey.UserId = req.ApiKey.UserId
 			}
-			KEY_INDEX++
-			KEY_STORE[apiKey.Id] = apiKey
+			keyIndex++
+			keyStore[apiKey.Id] = apiKey
 			b, err := utilv1.MarshalJSONToBytes(&schedv1.CreateApiKeyReply{ApiKey: apiKey})
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(b))
@@ -771,7 +771,7 @@ func apiKeysFilter(url *url.URL) []*schedv1.ApiKey {
 	uid := q.Get("user_id")
 	clusterIds := q["cluster_id"]
 
-	for _, a := range KEY_STORE {
+	for _, a := range keyStore {
 		uidFilter := (uid == "0") || (uid == strconv.Itoa(int(a.UserId)))
 		clusterFilter := (len(clusterIds) == 0) || func(clusterIds []string) bool {
 			for _, c := range a.LogicalClusters {

@@ -4,21 +4,21 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/antihax/optional"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
-	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
-	net_http "net/http"
+	"net/http"
 	"os"
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/suite"
-
-	cliMock "github.com/confluentinc/cli/mock"
+	"github.com/antihax/optional"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/confluentinc/mds-sdk-go/mdsv1/mock"
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
+
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	cliMock "github.com/confluentinc/cli/mock"
 )
 
 var (
@@ -143,7 +143,7 @@ func (suite *AuditConfigTestSuite) mockCmdReceiver(expect chan MockCall, expecte
 
 func (suite *AuditConfigTestSuite) newMockCmd(expect chan MockCall) *cobra.Command {
 	suite.mockApi = &mock.AuditLogConfigurationApi{
-		GetConfigFunc: func(ctx context.Context) (mds.AuditLogConfigSpec, *net_http.Response, error) {
+		GetConfigFunc: func(ctx context.Context) (mds.AuditLogConfigSpec, *http.Response, error) {
 			result, err := suite.mockCmdReceiver(expect, GetConfig, nil)
 			if err != nil {
 				return mds.AuditLogConfigSpec{}, nil, nil
@@ -156,7 +156,7 @@ func (suite *AuditConfigTestSuite) newMockCmd(expect chan MockCall) *cobra.Comma
 				return mds.AuditLogConfigSpec{}, nil, nil
 			}
 		},
-		ListRoutesFunc: func(ctx context.Context, opts *mds.ListRoutesOpts) (mds.AuditLogConfigListRoutesResponse, *net_http.Response, error) {
+		ListRoutesFunc: func(ctx context.Context, opts *mds.ListRoutesOpts) (mds.AuditLogConfigListRoutesResponse, *http.Response, error) {
 			result, err := suite.mockCmdReceiver(expect, ListRoutes, opts)
 			if err != nil {
 				return mds.AuditLogConfigListRoutesResponse{}, nil, nil
@@ -169,7 +169,7 @@ func (suite *AuditConfigTestSuite) newMockCmd(expect chan MockCall) *cobra.Comma
 				return mds.AuditLogConfigListRoutesResponse{}, nil, nil
 			}
 		},
-		PutConfigFunc: func(ctx context.Context, spec mds.AuditLogConfigSpec) (mds.AuditLogConfigSpec, *net_http.Response, error) {
+		PutConfigFunc: func(ctx context.Context, spec mds.AuditLogConfigSpec) (mds.AuditLogConfigSpec, *http.Response, error) {
 			result, err := suite.mockCmdReceiver(expect, PutConfig, spec)
 			if err != nil {
 				return mds.AuditLogConfigSpec{}, nil, nil
@@ -182,7 +182,7 @@ func (suite *AuditConfigTestSuite) newMockCmd(expect chan MockCall) *cobra.Comma
 				return mds.AuditLogConfigSpec{}, nil, nil
 			}
 		},
-		ResolveResourceRouteFunc: func(ctx context.Context, opts *mds.ResolveResourceRouteOpts) (mds.AuditLogConfigResolveResourceRouteResponse, *net_http.Response, error) {
+		ResolveResourceRouteFunc: func(ctx context.Context, opts *mds.ResolveResourceRouteOpts) (mds.AuditLogConfigResolveResourceRouteResponse, *http.Response, error) {
 			result, err := suite.mockCmdReceiver(expect, ResolveResourceRoute, opts)
 			if err != nil {
 				return mds.AuditLogConfigResolveResourceRouteResponse{}, nil, nil

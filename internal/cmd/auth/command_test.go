@@ -211,12 +211,12 @@ func Test_SelfSignedCerts(t *testing.T) {
 	}
 	priv, err := rsa.GenerateKey(rand.Reader, 512)
 	req.NoError(err, "Couldn't generate private key")
-	ca_b, err := x509.CreateCertificate(rand.Reader, ca, ca, &priv.PublicKey, priv)
+	certBytes, err := x509.CreateCertificate(rand.Reader, ca, ca, &priv.PublicKey, priv)
 	req.NoError(err, "Couldn't generate certificate from private key")
-	pemBytes := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: ca_b})
+	pemBytes := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: certBytes})
 	certReader := bytes.NewReader(pemBytes)
 
-	cert, err := x509.ParseCertificate(ca_b)
+	cert, err := x509.ParseCertificate(certBytes)
 	req.NoError(err, "Couldn't reparse certificate")
 	expectedSubject := cert.RawSubject
 	mdsClient.TokensAndAuthenticationApi = &mdsMock.TokensAndAuthenticationApi{

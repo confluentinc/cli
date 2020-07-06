@@ -16,7 +16,7 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/config"
 	"github.com/confluentinc/cli/internal/cmd/connect"
 	"github.com/confluentinc/cli/internal/cmd/connector"
-	connector_catalog "github.com/confluentinc/cli/internal/cmd/connector-catalog"
+	connectorcatalog "github.com/confluentinc/cli/internal/cmd/connector-catalog"
 	"github.com/confluentinc/cli/internal/cmd/environment"
 	"github.com/confluentinc/cli/internal/cmd/feedback"
 	"github.com/confluentinc/cli/internal/cmd/iam"
@@ -25,9 +25,9 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/ksql"
 	"github.com/confluentinc/cli/internal/cmd/local"
 	ps1 "github.com/confluentinc/cli/internal/cmd/prompt"
-	schema_registry "github.com/confluentinc/cli/internal/cmd/schema-registry"
+	schemaregistry "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	"github.com/confluentinc/cli/internal/cmd/secret"
-	service_account "github.com/confluentinc/cli/internal/cmd/service-account"
+	serviceaccount "github.com/confluentinc/cli/internal/cmd/service-account"
 	"github.com/confluentinc/cli/internal/cmd/update"
 	"github.com/confluentinc/cli/internal/cmd/version"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
@@ -129,16 +129,16 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		}
 		cli.AddCommand(ps1.NewPromptCmd(cliName, prerunner, &pps1.Prompt{}, logger))
 		cli.AddCommand(environment.New(cliName, prerunner))
-		cli.AddCommand(service_account.New(prerunner))
+		cli.AddCommand(serviceaccount.New(prerunner))
 		// Keystore exposed so tests can pass mocks.
 		cli.AddCommand(apikey.New(prerunner, nil, resolver))
 
 		// Schema Registry
 		// If srClient is nil, the function will look it up after prerunner verifies authentication. Exposed so tests can pass mocks
-		cli.AddCommand(schema_registry.New(cliName, prerunner, nil, logger))
+		cli.AddCommand(schemaregistry.New(cliName, prerunner, nil, logger))
 		cli.AddCommand(ksql.New(cliName, prerunner))
 		cli.AddCommand(connector.New(cliName, prerunner))
-		cli.AddCommand(connector_catalog.New(cliName, prerunner))
+		cli.AddCommand(connectorcatalog.New(cliName, prerunner))
 		//conn = connect.New(prerunner, cfg, connects.New(client, logger))
 		//conn.Hidden = true // The connect feature isn't finished yet, so let's hide it
 		//cli.AddCommand(conn)
@@ -150,7 +150,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		cli.AddCommand(kafka.New(isAPIKeyCredential(cfg), cliName, prerunner, logger.Named("kafka"), ver.ClientID))
 		cli.AddCommand(ksql.New(cliName, prerunner))
 		cli.AddCommand(local.New(prerunner))
-		cli.AddCommand(schema_registry.New(cliName, prerunner, nil, logger))
+		cli.AddCommand(schemaregistry.New(cliName, prerunner, nil, logger))
 		cli.AddCommand(secret.New(prompt, resolver, secrets.NewPasswordProtectionPlugin(logger)))
 	}
 	return command, nil

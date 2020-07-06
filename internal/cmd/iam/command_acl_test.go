@@ -2,7 +2,7 @@ package iam
 
 import (
 	"context"
-	net_http "net/http"
+	"net/http"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -178,15 +178,15 @@ func (suite *AclTestSuite) SetupSuite() {
 
 func (suite *AclTestSuite) newMockIamCmd(expect chan interface{}, message string) *cobra.Command {
 	suite.kafkaApi = &mock.KafkaACLManagementApi{
-		AddAclBindingFunc: func(ctx context.Context, createAclRequest mds.CreateAclRequest) (*net_http.Response, error) {
+		AddAclBindingFunc: func(ctx context.Context, createAclRequest mds.CreateAclRequest) (*http.Response, error) {
 			assert.Equal(suite.T(), createAclRequest, <-expect, message)
 			return nil, nil
 		},
-		RemoveAclBindingsFunc: func(ctx context.Context, aclFilterRequest mds.AclFilterRequest) ([]mds.AclBinding, *net_http.Response, error) {
+		RemoveAclBindingsFunc: func(ctx context.Context, aclFilterRequest mds.AclFilterRequest) ([]mds.AclBinding, *http.Response, error) {
 			assert.Equal(suite.T(), aclFilterRequest, <-expect, message)
 			return nil, nil, nil
 		},
-		SearchAclBindingFunc: func(ctx context.Context, aclFilterRequest mds.AclFilterRequest) ([]mds.AclBinding, *net_http.Response, error) {
+		SearchAclBindingFunc: func(ctx context.Context, aclFilterRequest mds.AclFilterRequest) ([]mds.AclBinding, *http.Response, error) {
 			assert.Equal(suite.T(), aclFilterRequest, <-expect, message)
 			return nil, nil, nil
 		},
