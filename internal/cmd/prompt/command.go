@@ -112,8 +112,8 @@ type promptCommand struct {
 	logger *log.Logger
 }
 
-// NewPromptCmd returns the Cobra command for the PS1 prompt.
-func NewPromptCmd(cliName string, prerunner pcmd.PreRunner, ps1 *ps1.Prompt, logger *log.Logger) *cobra.Command {
+// Returns the Cobra command for the PS1 prompt.
+func New(cliName string, prerunner pcmd.PreRunner, ps1 *ps1.Prompt, logger *log.Logger) *cobra.Command {
 	cmd := &promptCommand{
 		ps1:    ps1,
 		logger: logger,

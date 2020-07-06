@@ -108,9 +108,9 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 	command := &Command{Command: cli, Analytics: analyticsClient, logger: logger}
 
 	cli.Version = ver.Version
-	cli.AddCommand(version.NewVersionCmd(prerunner, ver))
+	cli.AddCommand(version.New(prerunner, ver))
 
-	cli.AddCommand(completion.NewCompletionCmd(cli, cliName))
+	cli.AddCommand(completion.New(cli, cliName))
 
 	if cfg == nil || !cfg.DisableUpdates {
 		cli.AddCommand(update.New(cliName, logger, ver, prompt, updateClient, analyticsClient))
@@ -119,29 +119,21 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 	cli.AddCommand(auth.New(cliName, prerunner, logger, ver.UserAgent, analyticsClient, netrcHandler)...)
 	isAPILogin := isAPIKeyCredential(cfg)
 	if cliName == "ccloud" {
-		cmd := kafka.New(isAPILogin, cliName, prerunner, logger.Named("kafka"), ver.ClientID)
-		cli.AddCommand(cmd)
-		cli.AddCommand(feedback.NewFeedbackCmd(cliName, prerunner, analyticsClient))
-		cli.AddCommand(initcontext.New(prerunner, prompt, resolver, analyticsClient))
 		cli.AddCommand(config.New(prerunner, analyticsClient))
-		if isAPILogin {
+		cli.AddCommand(feedback.New(cliName, prerunner, analyticsClient))
+		cli.AddCommand(initcontext.New(prerunner, prompt, resolver, analyticsClient))
+		cli.AddCommand(kafka.New(isAPILogin, cliName, prerunner, logger.Named("kafka"), ver.ClientID))
+		if isAPIKeyCredential(cfg) {
 			return command, nil
 		}
-		cli.AddCommand(ps1.NewPromptCmd(cliName, prerunner, &pps1.Prompt{}, logger))
-		cli.AddCommand(environment.New(cliName, prerunner))
-		cli.AddCommand(serviceaccount.New(prerunner))
-		// Keystore exposed so tests can pass mocks.
-		cli.AddCommand(apikey.New(prerunner, nil, resolver))
-
-		// Schema Registry
-		// If srClient is nil, the function will look it up after prerunner verifies authentication. Exposed so tests can pass mocks
-		cli.AddCommand(schemaregistry.New(cliName, prerunner, nil, logger))
-		cli.AddCommand(ksql.New(cliName, prerunner))
+		cli.AddCommand(apikey.New(prerunner, nil, resolver)) // Exposed for testing
 		cli.AddCommand(connector.New(cliName, prerunner))
 		cli.AddCommand(connectorcatalog.New(cliName, prerunner))
-		//conn = connect.New(prerunner, cfg, connects.New(client, logger))
-		//conn.Hidden = true // The connect feature isn't finished yet, so let's hide it
-		//cli.AddCommand(conn)
+		cli.AddCommand(environment.New(cliName, prerunner))
+		cli.AddCommand(ksql.New(cliName, prerunner))
+		cli.AddCommand(ps1.New(cliName, prerunner, &pps1.Prompt{}, logger))
+		cli.AddCommand(schemaregistry.New(cliName, prerunner, nil, logger)) // Exposed for testing
+		cli.AddCommand(serviceaccount.New(prerunner))
 	} else if cliName == "confluent" {
 		cli.AddCommand(auditlog.New(prerunner))
 		cli.AddCommand(cluster.New(prerunner, cluster.NewScopedIdService(&http.Client{}, ver.UserAgent, logger)))

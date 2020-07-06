@@ -7,8 +7,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
-// NewVersionCmd returns the Cobra command for the version.
-func NewVersionCmd(prerunner pcmd.PreRunner, version *version.Version) *cobra.Command {
+// New returns the Cobra command for the version.
+func New(prerunner pcmd.PreRunner, version *version.Version) *cobra.Command {
 	cliCmd := pcmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "version",
