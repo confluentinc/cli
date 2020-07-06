@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -21,6 +20,8 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"

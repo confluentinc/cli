@@ -2,9 +2,10 @@ package errors
 
 import (
 	"fmt"
-	"github.com/hashicorp/go-multierror"
 	"regexp"
 	"strings"
+
+	"github.com/hashicorp/go-multierror"
 
 	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
@@ -137,7 +138,7 @@ func isResourceNotFoundError(err error) bool {
 /*
 Error: 1 error occurred:
 	* error creating topic bob: Topic 'bob' already exists.
- */
+*/
 func CatchTopicExistsError(err error, clusterId string, topicName string, ifNotExistsFlag bool) error {
 	compiledRegex := regexp.MustCompile(`error creating topic .*: Topic '.*' already exists\.`)
 	if compiledRegex.MatchString(err.Error()) {
@@ -165,13 +166,9 @@ func CatchClusterNotReadyError(err error, clusterId string) error {
 	return err
 }
 
-
 /*
 	MDS ERROR CATCHING
 */
-
-
-
 
 /*
 	SARAMA ERROR CATCHING
@@ -199,4 +196,3 @@ func CatchClusterUnreachableError(err error, clusterId string, apiKey string) er
 	}
 	return err
 }
-

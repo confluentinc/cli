@@ -9,12 +9,13 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"math/big"
 	"net/http"
 	"os"
 	"reflect"
 	"testing"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go"

@@ -3,12 +3,13 @@ package secret
 import (
 	"encoding/base32"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"io/ioutil"
 	"math/rand"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 
 	"github.com/confluentinc/properties"
 	"github.com/jonboulle/clockwork"
@@ -660,7 +661,7 @@ config.properties/testPassword = ENC[AES/CBC/PKCS5Padding,data:SclgTBDDeLwccqtsa
 				newMasterKey:           "xyz233",
 			},
 			wantErr:    true,
-			wantErrMsg:  fmt.Sprintf(errors.DecryptConfigErrorMsg, "testPassword"),
+			wantErrMsg: fmt.Sprintf(errors.DecryptConfigErrorMsg, "testPassword"),
 		},
 		{
 			name: "ValidTestCase: Decrypt Config File",

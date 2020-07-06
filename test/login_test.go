@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -17,13 +16,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/confluentinc/cli/internal/pkg/errors"
+
 	"github.com/chromedp/chromedp"
 
 	"github.com/confluentinc/cli/internal/pkg/auth"
 )
 
 var (
-	urlPlaceHolder       = "<URL_PLACEHOLDER>"
+	urlPlaceHolder     = "<URL_PLACEHOLDER>"
 	savedToNetrcOutput = fmt.Sprintf(errors.WrittenCredentialsToNetrcMsg, "/tmp/netrc_test")
 	loggedInAsOutput   = fmt.Sprintf(errors.LoggedInAsMsg, "good@user.com")
 	loggedInEnvOutput  = fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default")
@@ -245,7 +246,7 @@ func (s *CLITestSuite) Test_SSO_Login_And_Save() {
 			s.NoError(e)
 
 			scanner.Scan()
-			s.Equal(fmt.Sprintf(errors.LoggedInAsMsg, ssoTestEmail), scanner.Text() + "\n")
+			s.Equal(fmt.Sprintf(errors.LoggedInAsMsg, ssoTestEmail), scanner.Text()+"\n")
 		}
 	}()
 

@@ -105,9 +105,9 @@ const (
 	JavaRequirementErrorMsg   = "the Confluent CLI requires Java version 1.8 or 1.11.\n" +
 		"See https://docs.confluent.io/current/installation/versions-interoperability.html\n" +
 		"If you have multiple versions of Java installed, you may need to set JAVA_HOME to the version you want Confluent to use."
-	NoLogFoundErrorMsg      = "no log found: to run %s, use \"confluent local services %s start\""
-	MacVersionErrorMsg      =  "macOS version >= 10.13 is required (detected: %s)"
-	JavaExecNotFondErrorMsg = "could not find java executable, please install java or set JAVA_HOME"
+	NoLogFoundErrorMsg       = "no log found: to run %s, use \"confluent local services %s start\""
+	MacVersionErrorMsg       = "macOS version >= 10.13 is required (detected: %s)"
+	JavaExecNotFondErrorMsg  = "could not find java executable, please install java or set JAVA_HOME"
 	NothingToDestroyErrorMsg = "nothing to destroy"
 
 	// prompt command
@@ -196,22 +196,22 @@ const (
 	NoIDClusterErrorMsg                = "Kafka cluster under context \"%s\" has no ID"
 
 	// local package
-	ConfluentHomeNotFoundErrorMsg = "could not find %s in CONFLUENT_HOME"
-	SetConfluentHomeErrorMsg = "set environment variable CONFLUENT_HOME"
+	ConfluentHomeNotFoundErrorMsg         = "could not find %s in CONFLUENT_HOME"
+	SetConfluentHomeErrorMsg              = "set environment variable CONFLUENT_HOME"
 	KafkaScriptFormatNotSupportedErrorMsg = "format %s is not supported in this version"
-	KafkaScriptInvalidFormatErrorMsg = "invalid format: %s"
+	KafkaScriptInvalidFormatErrorMsg      = "invalid format: %s"
 
 	// secret package
-	EncryptPlainTextErrorMsg        = "failed to encrypt the plain text"
-	DecryptCypherErrorMsg           = "failed to decrypt the cipher"
-	DataCorruptedErrorMsg           = "failed to decrypt the cipher: data is corrupted"
-	ConfigNotInJAASErrorMsg         = "the configuration \"%s\" not present in JAAS configuration"
-	OperationNotSupportedErrorMsg   = "the operation \"%s\" is not supported"
-	InvalidJAASConfigErrorMsg       = "invalid JAAS configuration: %s"
-	ExpectedConfigNameErrorMsg      = "expected a configuration name but received \"%s\""
-	LoginModuleControlFlagErrorMsg  = "login module control flag is not specified"
-	ConvertPropertiesToJAASErrorMsg = "failed to convert the properties to a JAAS configuration"
-	ValueNotSpecifiedForKeyErrorMsg = "value is not specified for the key \"%s\""
+	EncryptPlainTextErrorMsg           = "failed to encrypt the plain text"
+	DecryptCypherErrorMsg              = "failed to decrypt the cipher"
+	DataCorruptedErrorMsg              = "failed to decrypt the cipher: data is corrupted"
+	ConfigNotInJAASErrorMsg            = "the configuration \"%s\" not present in JAAS configuration"
+	OperationNotSupportedErrorMsg      = "the operation \"%s\" is not supported"
+	InvalidJAASConfigErrorMsg          = "invalid JAAS configuration: %s"
+	ExpectedConfigNameErrorMsg         = "expected a configuration name but received \"%s\""
+	LoginModuleControlFlagErrorMsg     = "login module control flag is not specified"
+	ConvertPropertiesToJAASErrorMsg    = "failed to convert the properties to a JAAS configuration"
+	ValueNotSpecifiedForKeyErrorMsg    = "value is not specified for the key \"%s\""
 	MissSemicolonErrorMsg              = "configuration not terminated with a ';'"
 	EmptyPassphraseErrorMsg            = "master key passphrase cannot be empty"
 	AlreadyGeneratedErrorMsg           = "master key is already generated"
@@ -274,8 +274,6 @@ const (
 	EmptyAccessKeyIDErrorMsg        = "access key id is empty for %s"
 	AWSCredsExpiredErrorMsg         = "AWS credentials in profile %s are expired"
 	FindAWSCredsErrorMsg            = "failed to find AWS credentials in profiles: %s"
-
-
 
 	// Flag Errors
 	ProhibitedFlagCombinationErrorMsg = "cannot use `--%s` and `--%s` flags at the same time"

@@ -196,7 +196,7 @@ func Test_getCredentials(t *testing.T) {
 	*   %s
 
 `, fmt.Sprintf(errors.FindAWSCredsErrorMsg, "default"),
-fmt.Sprintf(errors.EmptyAccessKeyIDErrorMsg, "default")),
+				fmt.Sprintf(errors.EmptyAccessKeyIDErrorMsg, "default")),
 		},
 		{
 			name: "should reformat errors to be more easily readable - multiple profiles",
@@ -218,11 +218,11 @@ fmt.Sprintf(errors.EmptyAccessKeyIDErrorMsg, "default")),
 	*   %s
 	*   %s
 
-`, fmt.Sprintf(errors.FindAWSCredsErrorMsg, strings.Join([]string{"profile1", "profile2", "profile3", "profile4",}, ", ")),
-fmt.Sprintf(errors.AWSCredsExpiredErrorMsg, "profile1"),
-fmt.Sprintf(errors.EmptyAccessKeyIDErrorMsg, "profile2"),
-fmt.Sprintf("%s: %s", errors.FindingCredsErrorMsg, "error3"),
-fmt.Sprintf("%s: %s", errors.FindingCredsErrorMsg, "error4")),
+`, fmt.Sprintf(errors.FindAWSCredsErrorMsg, strings.Join([]string{"profile1", "profile2", "profile3", "profile4"}, ", ")),
+				fmt.Sprintf(errors.AWSCredsExpiredErrorMsg, "profile1"),
+				fmt.Sprintf(errors.EmptyAccessKeyIDErrorMsg, "profile2"),
+				fmt.Sprintf("%s: %s", errors.FindingCredsErrorMsg, "error3"),
+				fmt.Sprintf("%s: %s", errors.FindingCredsErrorMsg, "error4")),
 		},
 	}
 	for _, tt := range tests {

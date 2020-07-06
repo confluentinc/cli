@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"io/ioutil"
 	"net/http"
 	"time"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 
 	"github.com/spf13/cobra"
 

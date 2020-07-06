@@ -602,7 +602,7 @@ func TestCreateEncryptionKeyId(t *testing.T) {
 
 	b, err := ioutil.ReadAll(stdout)
 	require.NoError(t, err)
-	require.Equal(t, fmt.Sprintf(errors.ConfirmAuthorizedKeyMsg, "account-xyz") + " (y/n): ", string(b))
+	require.Equal(t, fmt.Sprintf(errors.ConfirmAuthorizedKeyMsg, "account-xyz")+" (y/n): ", string(b))
 }
 
 func init() {

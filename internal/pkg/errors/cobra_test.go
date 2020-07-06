@@ -24,10 +24,10 @@ func TestHandleError(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name:        "dynamic message",
-			err:         &UnconfiguredAPISecretError{APIKey: "MYKEY", ClusterID: "lkc-mine"},
-			want:        fmt.Sprintf(NoAPISecretStoredErrorMsg, "MYKEY", "lkc-mine"),
-			wantErr:     true,
+			name:    "dynamic message",
+			err:     &UnconfiguredAPISecretError{APIKey: "MYKEY", ClusterID: "lkc-mine"},
+			want:    fmt.Sprintf(NoAPISecretStoredErrorMsg, "MYKEY", "lkc-mine"),
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {

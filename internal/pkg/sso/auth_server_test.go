@@ -1,10 +1,11 @@
 package sso
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"net/http"
 	"testing"
 	"time"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 
 	"github.com/stretchr/testify/require"
 
