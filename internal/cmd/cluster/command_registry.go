@@ -8,12 +8,13 @@ import (
 
 	"github.com/spf13/cobra"
 
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	"github.com/spf13/pflag"
+
 	print "github.com/confluentinc/cli/internal/pkg/cluster"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
-	"github.com/spf13/pflag"
 )
 
 type registryCommand struct {
@@ -77,7 +78,7 @@ func (c *registryCommand) createContext() context.Context {
 	return context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
 }
 
-func (r *registryCommand) resolveClusterScope(cmd *cobra.Command) (*mds.ScopeClusters, error) {
+func (c *registryCommand) resolveClusterScope(cmd *cobra.Command) (*mds.ScopeClusters, error) {
 	scope := &mds.ScopeClusters{}
 
 	nonKafkaScopesSet := 0
