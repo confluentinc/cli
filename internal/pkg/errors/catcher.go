@@ -167,10 +167,6 @@ func CatchClusterNotReadyError(err error, clusterId string) error {
 }
 
 /*
-	MDS ERROR CATCHING
-*/
-
-/*
 	SARAMA ERROR CATCHING
 */
 
