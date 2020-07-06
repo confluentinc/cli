@@ -1,10 +1,4 @@
-[
-  {
-    "id": "a-595",
-    "name": "default"
-  }, 
-  {
-    "id": "not-595",
-    "name": "other"
-  }
-]
+- id: a-595
+  name: default
+- id: not-595
+  name: other

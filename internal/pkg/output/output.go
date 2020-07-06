@@ -67,7 +67,7 @@ func NewListOutputCustomizableWriter(cmd *cobra.Command, listFields []string, hu
 		}, nil
 	case YAML.String():
 		return &StructuredListWriter{
-			outputFormat: JSON,
+			outputFormat: YAML,
 			listFields:   listFields,
 			listLabels:   structuredLabels,
 			writer:       writer,
