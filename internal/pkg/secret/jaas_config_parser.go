@@ -37,14 +37,14 @@ func (j *JAASParser) updateJAASConfig(op string, key string, value string, confi
 	case Delete:
 		keyValuePattern := key + JAASValuePattern
 		pattern := regexp.MustCompile(keyValuePattern)
-		delete := ""
+		del := ""
 		// check if value is in JAAS format
 		if pattern.MatchString(config) {
 			matched := pattern.FindString(config)
 			if matched == "" {
 				return "", fmt.Errorf("The configuration " + config + " not present in JAAS configuration.")
 			}
-			config = pattern.ReplaceAllString(config, delete)
+			config = pattern.ReplaceAllString(config, del)
 			if strings.HasSuffix(matched, ";") {
 				config = config + ";"
 			}
@@ -55,7 +55,7 @@ func (j *JAASParser) updateJAASConfig(op string, key string, value string, confi
 			if matched == "" {
 				return "", fmt.Errorf("The configuration " + key + " not present in JAAS configuration.")
 			}
-			config = pattern.ReplaceAllString(config, delete)
+			config = pattern.ReplaceAllString(config, del)
 		}
 		break
 	case Update:
