@@ -15,7 +15,7 @@ RESOLVED_PATH=github.com/confluentinc/cli/cmd/confluent
 
 .PHONY: clean
 clean:
-	rm -rf dist/ docs/ release-notes/
+	rm -rf (shell pwd)/dist
 
 .PHONY: generate
 generate:
