@@ -172,7 +172,7 @@ func getCredentials(cf credsFactory, allProfiles []string) (*credentials.Credent
 		}
 
 		if val.AccessKeyID == "" {
-			allErrors = multierror.Append(allErrors, errors.Errorf(errors.MissingAccessKeyIDErrorMsg, profile))
+			allErrors = multierror.Append(allErrors, errors.Errorf(errors.EmptyAccessKeyIDErrorMsg, profile))
 			continue
 		}
 

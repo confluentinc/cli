@@ -1,6 +1,7 @@
 package sso
 
 import (
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"net/http"
 	"testing"
 	"time"
@@ -19,7 +20,7 @@ func TestServerTimeout(t *testing.T) {
 
 	err = server.awaitAuthorizationCode(1 * time.Second)
 	require.Error(t, err)
-	require.Equal(t, err.Error(), "timed out while waiting for browser authentication to occur; please try logging in again")
+	require.Equal(t, err.Error(), errors.BrowserAuthTimedOutErrorMsg)
 }
 
 func TestCallback(t *testing.T) {

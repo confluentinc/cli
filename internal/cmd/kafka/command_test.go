@@ -3,6 +3,7 @@ package kafka
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io/ioutil"
 	"strconv"
 	"strings"
@@ -552,9 +553,9 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 	cmd.SetOutput(buf)
 
 	err := cmd.Execute()
-	want := "You must log in to run that command."
+	want := errors.NotLoggedInErrorMsg
 	if err.Error() != want {
-		t.Errorf("unexpected output, got %s, want %s", err, want)
+		t.Errorf("unexpected output\n got: %s\n want: %s", err, want)
 	}
 }
 
@@ -601,7 +602,7 @@ func TestCreateEncryptionKeyId(t *testing.T) {
 
 	b, err := ioutil.ReadAll(stdout)
 	require.NoError(t, err)
-	require.Equal(t, "Please confirm you have authorized the key for these accounts: account-xyz (y/n): ", string(b))
+	require.Equal(t, fmt.Sprintf(errors.ConfirmAuthorizedKeyMsg, "account-xyz") + " (y/n): ", string(b))
 }
 
 func init() {

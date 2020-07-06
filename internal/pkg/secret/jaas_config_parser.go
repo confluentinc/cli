@@ -44,7 +44,7 @@ func (j *JAASParser) updateJAASConfig(op string, key string, value string, confi
 		if pattern.MatchString(config) {
 			matched := pattern.FindString(config)
 			if matched == "" {
-				return "", errors.Errorf(errors.ConfigNotPresentInJAASErrorMsg, config)
+				return "", errors.Errorf(errors.ConfigNotInJAASErrorMsg, config)
 			}
 			config = pattern.ReplaceAllString(config, delete)
 			if strings.HasSuffix(matched, ";") {
@@ -55,7 +55,7 @@ func (j *JAASParser) updateJAASConfig(op string, key string, value string, confi
 			pattern := regexp.MustCompile(keyValuePattern)
 			matched := pattern.FindString(config)
 			if matched == "" {
-				return "", errors.Errorf(errors.ConfigNotPresentInJAASErrorMsg, key)
+				return "", errors.Errorf(errors.ConfigNotInJAASErrorMsg, key)
 			}
 			config = pattern.ReplaceAllString(config, delete)
 		}

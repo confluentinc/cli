@@ -1,7 +1,7 @@
 package errors
 
 import (
-	"reflect"
+	"fmt"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -26,9 +26,8 @@ func TestHandleError(t *testing.T) {
 		{
 			name:        "dynamic message",
 			err:         &UnconfiguredAPISecretError{APIKey: "MYKEY", ClusterID: "lkc-mine"},
-			want:        "please add API secret with 'api-key store MYKEY --resource lkc-mine'",
+			want:        fmt.Sprintf(NoAPISecretStoredErrorMsg, "MYKEY", "lkc-mine"),
 			wantErr:     true,
-			wantErrType: "*errors.UnconfiguredAPISecretError",
 		},
 	}
 	for _, tt := range tests {
@@ -36,14 +35,10 @@ func TestHandleError(t *testing.T) {
 			cmd := &cobra.Command{}
 			var err error
 			if err = HandleCommon(tt.err, cmd); (err != nil) != tt.wantErr {
-				t.Errorf("HandleCommon() error: %v, wantErr: %v", err, tt.wantErr)
+				t.Errorf("HandleCommon()\nerror: %v\nwantErr: %v", err, tt.wantErr)
 			}
 			if err.Error() != tt.want {
-				t.Errorf("HandleCommon() got: %s, want: %s", err, tt.want)
-			}
-			errType := reflect.TypeOf(err).String()
-			if tt.wantErrType != "" && tt.wantErrType != errType {
-				t.Errorf("HandleCommon() got type: %s, wantErrType: %s", errType, tt.wantErrType)
+				t.Errorf("HandleCommon()\ngot: %s\nwant: %s", err, tt.want)
 			}
 		})
 	}

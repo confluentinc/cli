@@ -3,6 +3,7 @@ package secret
 import (
 	"encoding/base32"
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"io/ioutil"
 	"math/rand"
 	"os"
@@ -124,7 +125,7 @@ func TestPasswordProtectionSuite_CreateMasterKey(t *testing.T) {
 				seed:                  99,
 			},
 			wantErr:    true,
-			wantErrMsg: "master key passphrase cannot be empty",
+			wantErrMsg: errors.EmptyPassphraseErrorMsg,
 		},
 	}
 	for _, tt := range tests {
@@ -206,7 +207,7 @@ func TestPasswordProtectionSuite_EncryptConfigFileSecrets(t *testing.T) {
 				validateUsingDecrypt:   false,
 			},
 			wantErr:    true,
-			wantErrMsg: "master key is not exported in CONFLUENT_SECURITY_MASTER_KEY environment variable; export the key and execute this command again",
+			wantErrMsg: fmt.Sprintf(errors.MasterKeyNotExportedErrorMsg, CONFLUENT_KEY_ENVVAR),
 		},
 		{
 			name: "InvalidTestCase: invalid config file path",
@@ -223,7 +224,7 @@ func TestPasswordProtectionSuite_EncryptConfigFileSecrets(t *testing.T) {
 				validateUsingDecrypt:   false,
 			},
 			wantErr:    true,
-			wantErrMsg: "invalid config file path: /tmp/securePass987/encrypt/random.properties",
+			wantErrMsg: fmt.Sprintf(errors.InvalidConfigFilePathErrorMsg, "/tmp/securePass987/encrypt/random.properties"),
 		},
 		{
 			name: "ValidTestCase: encrypt config file with no config param, create new dek",
@@ -434,7 +435,7 @@ config.json/credentials.ssl\.keystore\.password = ENC[AES/CBC/PKCS5Padding,data:
 				validateUsingDecrypt:   false,
 			},
 			wantErr:    true,
-			wantErrMsg: "Configuration key credentials.ssl\\.trustore.\\location is not present in JSON configuration file.",
+			wantErrMsg: fmt.Sprintf(errors.ConfigKeyNotInJSONErrorMsg, "credentials.ssl\\.trustore.\\location"),
 		},
 		{
 			name: "InvalidTestCase: encrypt configuration in invalid a JSON file",
@@ -456,7 +457,7 @@ config.json/credentials.ssl\.keystore\.password = ENC[AES/CBC/PKCS5Padding,data:
 				validateUsingDecrypt:   false,
 			},
 			wantErr:    true,
-			wantErrMsg: "Invalid json file format.",
+			wantErrMsg: errors.InvalidJSONFileFormatErrorMsg,
 		},
 	}
 	for _, tt := range tests {
@@ -547,7 +548,7 @@ config.properties/testPassword = ENC[AES/CBC/PKCS5Padding,data:SclgTBDDeLwccqtsa
 				setNewMEK:              true,
 			},
 			wantErr:    true,
-			wantErrMsg: "failed to unwrap the data key due to invalid master key or corrupted data key.",
+			wantErrMsg: errors.UnwrapDataKeyErrorMsg,
 		},
 		{
 			name: "InvalidTestCase: Corrupted encrypted data",
@@ -575,7 +576,7 @@ config.properties/testPassword = ENC[AES/CBC/PKCS5Padding,data:asdsdsssddsoooofs
 				newMasterKey:           "xyz233",
 			},
 			wantErr:    true,
-			wantErrMsg: "failed to decrypt config testPassword due to corrupted data.",
+			wantErrMsg: fmt.Sprintf(errors.DecryptConfigErrorMsg, "testPassword"),
 		},
 		{
 			name: "InvalidTestCase: Corrupted DEK",
@@ -603,7 +604,7 @@ config.properties/testPassword = ENC[AES/CBC/PKCS5Padding,data:SclgTBDDeLwccqtsa
 				newMasterKey:           "xyz233",
 			},
 			wantErr:    true,
-			wantErrMsg: "failed to unwrap the data key due to invalid master key or corrupted data key.",
+			wantErrMsg: errors.UnwrapDataKeyErrorMsg,
 		},
 		{
 			name: "InvalidTestCase: Corrupted Data few characters interchanged",
@@ -631,7 +632,7 @@ config.properties/testPassword = ENC[AES/CBC/PKCS5Padding,data:lcSgTBDDeLwccqtsa
 				newMasterKey:           "xyz233",
 			},
 			wantErr:    true,
-			wantErrMsg: "failed to decrypt config testPassword due to corrupted data.",
+			wantErrMsg: fmt.Sprintf(errors.DecryptConfigErrorMsg, "testPassword"),
 		},
 		{
 			name: "InvalidTestCase: Corrupted Data few characters removed",
@@ -659,7 +660,7 @@ config.properties/testPassword = ENC[AES/CBC/PKCS5Padding,data:SclgTBDDeLwccqtsa
 				newMasterKey:           "xyz233",
 			},
 			wantErr:    true,
-			wantErrMsg: "failed to decrypt config testPassword due to corrupted data.",
+			wantErrMsg:  fmt.Sprintf(errors.DecryptConfigErrorMsg, "testPassword"),
 		},
 		{
 			name: "ValidTestCase: Decrypt Config File",
@@ -906,7 +907,7 @@ func TestPasswordProtectionSuite_UpdateConfigFileSecrets(t *testing.T) {
 				validateUsingDecrypt:   true,
 			},
 			wantErr:    true,
-			wantErrMsg: "Configuration key ssl.keystore.password is not present in the configuration file.",
+			wantErrMsg: fmt.Sprintf(errors.ConfigKeyNotPresentErrorMsg, "ssl.keystore.password"),
 		},
 		{
 			name: "ValidTestCase: Update existing config in jaas config file",
@@ -1003,7 +1004,7 @@ func TestPasswordProtectionSuite_RemoveConfigFileSecrets(t *testing.T) {
 				config:                 "",
 			},
 			wantErr:    true,
-			wantErrMsg: "Configuration key ssl.keystore.password is not encrypted.",
+			wantErrMsg: fmt.Sprintf(errors.ConfigKeyNotEncryptedErrorMsg, "ssl.keystore.password"),
 		},
 		{
 			name: "ValidTestCase:Remove existing configs from jaas config file",
@@ -1058,7 +1059,7 @@ func TestPasswordProtectionSuite_RemoveConfigFileSecrets(t *testing.T) {
 				config:                 "",
 			},
 			wantErr:    true,
-			wantErrMsg: "Configuration key test.config.jaas/com.sun.security.auth.module.Krb5LoginModule/location is not encrypted.",
+			wantErrMsg: fmt.Sprintf(errors.ConfigKeyNotEncryptedErrorMsg, "test.config.jaas/com.sun.security.auth.module.Krb5LoginModule/location"),
 		},
 		{
 			name: "ValidTestCase:Remove existing configs from json config file",
@@ -1097,7 +1098,7 @@ func TestPasswordProtectionSuite_RemoveConfigFileSecrets(t *testing.T) {
 				config:                 "",
 			},
 			wantErr:    true,
-			wantErrMsg: "Configuration key credentials/location is not encrypted.",
+			wantErrMsg: fmt.Sprintf(errors.ConfigKeyNotEncryptedErrorMsg, "credentials/location"),
 		},
 	}
 	for _, tt := range tests {
@@ -1176,7 +1177,7 @@ func TestPasswordProtectionSuite_RotateDataKey(t *testing.T) {
 				invalidMEK:             false,
 			},
 			wantErr:    true,
-			wantErrMsg: "failed to unwrap the data key due to invalid master key or corrupted data key.",
+			wantErrMsg: errors.UnwrapDataKeyErrorMsg,
 		},
 		{
 			name: "InvalidTestCase: Invalid master key",
@@ -1193,7 +1194,7 @@ func TestPasswordProtectionSuite_RotateDataKey(t *testing.T) {
 				invalidPassphrase:      "random",
 			},
 			wantErr:    true,
-			wantErrMsg: "authentication failure: incorrect master key passphrase.",
+			wantErrMsg: errors.IncorrectPassphraseErrorMsg,
 		},
 		{
 			name: "InvalidTestCase: Invalid master key special character space",
@@ -1210,7 +1211,7 @@ func TestPasswordProtectionSuite_RotateDataKey(t *testing.T) {
 				invalidPassphrase:      "abc123",
 			},
 			wantErr:    true,
-			wantErrMsg: "authentication failure: incorrect master key passphrase.",
+			wantErrMsg: errors.IncorrectPassphraseErrorMsg,
 		},
 		{
 			name: "InvalidTestCase: Invalid master key special character tab",
@@ -1227,7 +1228,7 @@ func TestPasswordProtectionSuite_RotateDataKey(t *testing.T) {
 				invalidPassphrase:      "abc123",
 			},
 			wantErr:    true,
-			wantErrMsg: "authentication failure: incorrect master key passphrase.",
+			wantErrMsg: errors.IncorrectPassphraseErrorMsg,
 		},
 	}
 	for _, tt := range tests {
@@ -1336,7 +1337,7 @@ func TestPasswordProtectionSuite_RotateMasterKey(t *testing.T) {
 				invalidMEK:             false,
 			},
 			wantErr:    true,
-			wantErrMsg: "master key passphrase cannot be empty.",
+			wantErrMsg: errors.EmptyPassphraseErrorMsg,
 		},
 		{
 			name: "InvalidTestCase: Incorrect old master key passphrase",
@@ -1353,7 +1354,7 @@ func TestPasswordProtectionSuite_RotateMasterKey(t *testing.T) {
 				invalidMEK:             true,
 			},
 			wantErr:    true,
-			wantErrMsg: "authentication failure: incorrect master key passphrase.",
+			wantErrMsg: errors.IncorrectPassphraseErrorMsg,
 		},
 		{
 			name: "InvalidTestCase: Incorrect old master key passphrase with special char space",
@@ -1370,7 +1371,7 @@ func TestPasswordProtectionSuite_RotateMasterKey(t *testing.T) {
 				invalidMEK:             true,
 			},
 			wantErr:    true,
-			wantErrMsg: "authentication failure: incorrect master key passphrase.",
+			wantErrMsg: errors.IncorrectPassphraseErrorMsg,
 		},
 		{
 			name: "InvalidTestCase: New master key passphrase same as old master key passphrase",
@@ -1386,7 +1387,7 @@ func TestPasswordProtectionSuite_RotateMasterKey(t *testing.T) {
 				invalidMEK:             false,
 			},
 			wantErr:    true,
-			wantErrMsg: "new master key passphrase may not be the same as the previous passphrase.",
+			wantErrMsg: errors.SamePassphraseErrorMsg,
 		},
 	}
 	for _, tt := range tests {

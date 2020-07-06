@@ -1,10 +1,13 @@
 package secret
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/confluentinc/properties"
 	"github.com/stretchr/testify/require"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 func TestJAASParser_String(t *testing.T) {
@@ -60,7 +63,7 @@ listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config/com.sun.security.auth.modu
 `,
 			},
 			wantErr:    true,
-			wantErrMsg: "Invalid JAAS configuration: login module control flag is not specified.",
+			wantErrMsg: fmt.Sprintf(errors.InvalidJAASConfigErrorMsg, errors.LoginModuleControlFlagErrorMsg),
 		},
 		{
 			name: "Invalid: ; field missing in JAAS file",
@@ -72,7 +75,7 @@ listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config/com.sun.security.auth.modu
 `,
 			},
 			wantErr:    true,
-			wantErrMsg: "Invalid JAAS configuration: expected a configuration name but received ",
+			wantErrMsg: fmt.Sprintf(errors.InvalidJAASConfigErrorMsg, fmt.Sprintf(errors.ExpectedConfigNameErrorMsg, "")),
 		},
 	}
 	for _, tt := range tests {

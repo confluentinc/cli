@@ -202,16 +202,16 @@ const (
 	KafkaScriptInvalidFormatErrorMsg = "invalid format: %s"
 
 	// secret package
-	EncryptPlainTextErrorMsg           = "failed to encrypt the plain text"
-	DecryptCypherErrorMsg              = "failed to decrypt the cipher"
-	DataCorruptedErrorMsg              = "failed to decrypt the cipher: data is corrupted"
-	ConfigNotPresentInJAASErrorMsg     = "the configuration \"%s\" not present in JAAS configuration"
-	OperationNotSupportedErrorMsg      = "the operation \"%s\" is not supported"
-	InvalidJAASConfigErrorMsg          = "invalid JAAS configuration: %s"
-	ExpectedConfigNameErrorMsg         = "expected a configuration name but received \"%s\""
-	LoginModuleControlFlagErrorMsg     = "login module control flag is not specified"
-	ConvertPropertiesToJAASErrorMsg    = "failed to convert the properties to a JAAS configuration"
-	ValueNotSpecifiedForKeyErrorMsg    = "value is not specified for the key \"%s\""
+	EncryptPlainTextErrorMsg        = "failed to encrypt the plain text"
+	DecryptCypherErrorMsg           = "failed to decrypt the cipher"
+	DataCorruptedErrorMsg           = "failed to decrypt the cipher: data is corrupted"
+	ConfigNotInJAASErrorMsg         = "the configuration \"%s\" not present in JAAS configuration"
+	OperationNotSupportedErrorMsg   = "the operation \"%s\" is not supported"
+	InvalidJAASConfigErrorMsg       = "invalid JAAS configuration: %s"
+	ExpectedConfigNameErrorMsg      = "expected a configuration name but received \"%s\""
+	LoginModuleControlFlagErrorMsg  = "login module control flag is not specified"
+	ConvertPropertiesToJAASErrorMsg = "failed to convert the properties to a JAAS configuration"
+	ValueNotSpecifiedForKeyErrorMsg = "value is not specified for the key \"%s\""
 	MissSemicolonErrorMsg              = "configuration not terminated with a ';'"
 	EmptyPassphraseErrorMsg            = "master key passphrase cannot be empty"
 	AlreadyGeneratedErrorMsg           = "master key is already generated"
@@ -271,9 +271,9 @@ const (
 	MissingRequiredParamErrorMsg    = "missing required parameter: %s"
 	ListingS3BucketErrorMsg         = "error listing s3 bucket"
 	FindingCredsErrorMsg            = "error while finding credentials"
-	MissingAccessKeyIDErrorMsg      = "access key id is empty for %s"
+	EmptyAccessKeyIDErrorMsg        = "access key id is empty for %s"
 	AWSCredsExpiredErrorMsg         = "AWS credentials in profile %s are expired"
-	FindAWSCredsErrorMsg            = "failed to find aws credentials in profiles: %s"
+	FindAWSCredsErrorMsg            = "failed to find AWS credentials in profiles: %s"
 
 
 
