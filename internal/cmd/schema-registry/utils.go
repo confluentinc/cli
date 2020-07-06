@@ -28,8 +28,8 @@ func GetApiClient(cmd *cobra.Command, srClient *srsdk.APIClient, cfg *cmd.Dynami
 func PrintVersions(versions []int32) {
 	titleRow := []string{"Version"}
 	var entries [][]string
-	for _, version := range versions {
-		record := &struct{ Version int32 }{version}
+	for _, v := range versions {
+		record := &struct{ Version int32 }{v}
 		entries = append(entries, printer.ToRow(record, titleRow))
 	}
 	printer.RenderCollectionTable(entries, titleRow)

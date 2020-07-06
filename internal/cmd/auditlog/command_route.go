@@ -26,12 +26,12 @@ func NewRouteCommand(prerunner cmd.PreRunner) *cobra.Command {
 			Short: "Examine audit log route rules.",
 			Long:  "Examine routing rules that determine which auditable events are logged, and where.",
 		}, prerunner)
-	cmd := &routeCommand{
+	command := &routeCommand{
 		AuthenticatedCLICommand: cliCmd,
 		prerunner:               prerunner,
 	}
-	cmd.init()
-	return cmd.Command
+	command.init()
+	return command.Command
 }
 
 func (c *routeCommand) init() {

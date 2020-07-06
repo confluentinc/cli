@@ -30,12 +30,12 @@ func NewConfigCommand(prerunner cmd.PreRunner) *cobra.Command {
 			Short: "Manage audit log configuration specification.",
 			Long:  "Manage audit log defaults and routing rules that determine which auditable events are logged, and where.",
 		}, prerunner)
-	cmd := &configCommand{
+	command := &configCommand{
 		AuthenticatedCLICommand: cliCmd,
 		prerunner:               prerunner,
 	}
-	cmd.init()
-	return cmd.Command
+	command.init()
+	return command.Command
 }
 
 func (c *configCommand) init() {
