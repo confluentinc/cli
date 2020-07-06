@@ -132,7 +132,7 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 			conf.AclBinding.Entry.Host = v
 		case "operation":
 			v = strings.ToUpper(v)
-			v = strings.Replace(v, "-", "_", -1)
+			v = strings.ReplaceAll(v, "-", "_")
 			enumUtils := enumUtils{}
 			enumUtils.init(
 				mds.ACLOPERATION_UNKNOWN,
@@ -169,7 +169,7 @@ func setResourcePattern(conf *ACLConfiguration, n string, v string) {
 
 	// Normalize the resource pattern name
 	n = strings.ToUpper(n)
-	n = strings.Replace(n, "-", "_", -1)
+	n = strings.ReplaceAll(n, "-", "_")
 
 	enumUtils := enumUtils{}
 	enumUtils.init(mds.ACLRESOURCETYPE_TOPIC, mds.ACLRESOURCETYPE_GROUP,
@@ -193,7 +193,7 @@ func convertToFlags(operations ...interface{}) string {
 			v = "cluster-scope"
 		}
 		s := fmt.Sprintf("%v", v)
-		s = strings.Replace(s, "_", "-", -1)
+		s = strings.ReplaceAll(s, "_", "-")
 		ops = append(ops, strings.ToLower(s))
 	}
 

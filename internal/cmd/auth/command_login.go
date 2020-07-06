@@ -70,8 +70,8 @@ func (a *loginCommand) init(cliName string, prerunner pcmd.PreRunner) {
 		loginCmd.RunE = a.loginMDS
 		loginCmd.Flags().String("url", "", "Metadata service URL.")
 		loginCmd.Flags().String("ca-cert-path", "", "Self-signed certificate chain in PEM format.")
-		loginCmd.Short = strings.Replace(loginCmd.Short, ".", " (required for RBAC).", -1)
-		loginCmd.Long = strings.Replace(loginCmd.Long, ".", " (required for RBAC).", -1)
+		loginCmd.Short = strings.ReplaceAll(loginCmd.Short, ".", " (required for RBAC).")
+		loginCmd.Long = strings.ReplaceAll(loginCmd.Long, ".", " (required for RBAC).")
 		check(loginCmd.MarkFlagRequired("url")) // because https://confluent.cloud isn't an MDS endpoint
 	}
 	loginCmd.Flags().Bool("no-browser", false, "Do not open browser when authenticating via Single Sign-On.")
