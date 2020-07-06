@@ -181,7 +181,7 @@ func (s *CLITestSuite) Test_Ccloud_Help() {
 	}
 	for _, tt := range tests {
 		kafkaAPIURL := serveKafkaAPI(s.T()).URL
-		s.runCcloudTest(tt, serve(s.T(), kafkaAPIURL).URL, kafkaAPIURL)
+		s.runCcloudTest(tt, serve(s.T(), kafkaAPIURL).URL)
 	}
 }
 
@@ -297,7 +297,7 @@ func (s *CLITestSuite) Test_Ccloud_Errors() {
 	})
 }
 
-func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint string) {
+func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL string) {
 	if tt.name == "" {
 		tt.name = tt.args
 	}
