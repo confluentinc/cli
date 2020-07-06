@@ -187,7 +187,7 @@ func (c *EncryptEngineImpl) decrypt(crypt []byte, key []byte, iv []byte) (plain 
 		return []byte{}, err
 	}
 
-	ecb := cipher.NewCBCDecrypter(block, []byte(iv))
+	ecb := cipher.NewCBCDecrypter(block, iv)
 	decrypted := make([]byte, len(crypt))
 	ecb.CryptBlocks(decrypted, crypt)
 

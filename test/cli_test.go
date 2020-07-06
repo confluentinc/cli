@@ -380,7 +380,7 @@ func (s *CLITestSuite) validateTestOutput(tt CLITest, t *testing.T, output strin
 	if *update && !tt.regex && tt.fixture != "" {
 		writeFixture(t, tt.fixture, output)
 	}
-	actual := NormalizeNewLines(string(output))
+	actual := NormalizeNewLines(output)
 	if tt.contains != "" {
 		require.Contains(t, actual, tt.contains)
 	} else if tt.notContains != "" {
@@ -533,7 +533,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 			require.NoError(t, err)
 			require.NotEmpty(t, req.ApiKey.AccountId)
 			apiKey := req.ApiKey
-			apiKey.Id = int32(keyIndex)
+			apiKey.Id = keyIndex
 			apiKey.Key = fmt.Sprintf("MYKEY%d", keyIndex)
 			apiKey.Secret = fmt.Sprintf("MYSECRET%d", keyIndex)
 			if req.ApiKey.UserId == 0 {
