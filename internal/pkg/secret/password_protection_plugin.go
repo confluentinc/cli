@@ -461,10 +461,10 @@ func (c *PasswordProtectionSuite) UpdateEncryptedPasswords(configFilePath string
 
 func (c *PasswordProtectionSuite) RemoveEncryptedPasswords(configFilePath string, localSecureConfigPath string, removeConfigs string) error {
 	secureConfigProps, err := LoadPropertiesFile(localSecureConfigPath)
-	secureConfigProps.DisableExpansion = true
 	if err != nil {
 		return err
 	}
+	secureConfigProps.DisableExpansion = true
 
 	configs := strings.Split(removeConfigs, ",")
 	configProps := properties.NewProperties()

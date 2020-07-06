@@ -175,9 +175,7 @@ func (c *registryCommand) register(cmd *cobra.Command, _ []string) error {
 	}
 
 	clusterInfo := mds.ClusterInfo{ClusterName: name, Scope: mds.Scope{Clusters: *scopeClusters}, Hosts: hosts, Protocol: protocol}
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
+
 	response, err := c.MDSClient.ClusterRegistryApi.UpdateClusters(c.createContext(), []mds.ClusterInfo{clusterInfo})
 	if err != nil {
 		return print.HandleClusterError(cmd, err, response)

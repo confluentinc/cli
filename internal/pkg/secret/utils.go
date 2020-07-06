@@ -182,10 +182,10 @@ func loadPropertiesConfig(path string, configKeys []string, filter bool) (*prope
 func parseJAASProperties(props *properties.Properties) *properties.Properties {
 	parser := NewJAASParser()
 	matchProps, err := props.Filter("(?i).jaas")
-	matchProps.DisableExpansion = true
 	if err != nil {
 		return props
 	}
+	matchProps.DisableExpansion = true
 	for key, value := range matchProps.Map() {
 		jaasProps, err := parser.ParseJAASConfigurationEntry(value, key)
 		if err == nil {
@@ -199,10 +199,11 @@ func parseJAASProperties(props *properties.Properties) *properties.Properties {
 func convertPropertiesJAAS(props *properties.Properties, originalConfigs *properties.Properties, op string) (*properties.Properties, error) {
 	parser := NewJAASParser()
 	matchProps, err := props.Filter("(?i).jaas")
-	matchProps.DisableExpansion = true
 	if err != nil {
 		return props, err
 	}
+	matchProps.DisableExpansion = true
+
 	pattern := regexp.MustCompile(JAASKeyPattern)
 
 	jaasProps := properties.NewProperties()
