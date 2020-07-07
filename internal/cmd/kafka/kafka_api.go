@@ -137,7 +137,7 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 func setResourcePattern(conf *ACLConfiguration, n, v string) {
 	/* Normalize the resource pattern name */
 	if conf.Pattern.ResourceType != schedv1.ResourceTypes_UNKNOWN {
-		conf.errors = multierror.Append(conf.errors, fmt.Errorf("exactly one of %v must be set",
+		conf.errors = multierror.Append(conf.errors, fmt.Errorf(errors.ExactlyOneSetErrorMsg,
 			listEnum(schedv1.ResourceTypes_ResourceType_name, []string{"ANY", "UNKNOWN"})))
 		return
 	}

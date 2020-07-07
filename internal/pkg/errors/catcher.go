@@ -146,7 +146,7 @@ func CatchTopicExistsError(err error, clusterId string, topicName string, ifNotE
 			return nil
 		}
 		errorMsg := fmt.Sprintf(TopicExistsErrorMsg, topicName, clusterId)
-		suggestions := fmt.Sprintf(TopicExistsSuggestions, clusterId)
+		suggestions := fmt.Sprintf(TopicExistsSuggestions, clusterId, clusterId)
 		return NewErrorWithSuggestions(errorMsg, suggestions)
 	}
 	return err

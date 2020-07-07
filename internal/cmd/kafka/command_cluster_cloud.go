@@ -278,7 +278,7 @@ func stringToAvailability(s string) (schedv1.Durability, error) {
 		return schedv1.Durability_HIGH, nil
 	}
 	return schedv1.Durability_LOW, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidAvailableFlagErrorMsg, s),
-		fmt.Sprintf(errors.InvalidAvailableFlagSuggesions, singleZone, multiZone))
+		fmt.Sprintf(errors.InvalidAvailableFlagSuggestions, singleZone, multiZone))
 }
 
 func stringToSku(s string) (productv1.Sku, error) {

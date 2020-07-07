@@ -1,6 +1,7 @@
 package cmd_test
 
 import (
+	"fmt"
 	"os"
 	"reflect"
 	"strings"
@@ -356,6 +357,7 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 		name   string
 		config *v3.Config
 		errMsg string
+		suggestionsMsg string
 	}{
 		{
 			name:   "username logged in user",
@@ -365,11 +367,13 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 			name:   "not logged in user",
 			config: userNotLoggedIn,
 			errMsg: errors.NotLoggedInErrorMsg,
+			suggestionsMsg: fmt.Sprintf(errors.NotLoggedInSuggestions, "ccloud"),
 		},
 		{
 			name:   "username context corrupted auth token",
 			config: userNameCfgCorruptedAuthToken,
 			errMsg: errors.CorruptedTokenErrorMsg,
+			suggestionsMsg: errors.CorruptedTokenSuggestions,
 		},
 		{
 			name:   "api credential context",
@@ -409,6 +413,9 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 			if tt.errMsg != "" {
 				require.Error(t, err)
 				require.Equal(t, tt.errMsg, err.Error())
+				if tt.suggestionsMsg != "" {
+					errors.VerifyErrorAndSuggestions(require.New(t), err, tt.errMsg, tt.suggestionsMsg)
+				}
 			} else {
 				require.NoError(t, err)
 			}

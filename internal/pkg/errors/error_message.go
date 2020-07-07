@@ -12,7 +12,7 @@ const (
 	UnableToStoreAPIKeyErrorMsg       = "unable to store API key locally"
 	NonKafkaNotImplementedErrorMsg    = "command not yet available for non-Kafka cluster resources"
 	RefuseToOverrideSecretErrorMsg    = "refusing to overwrite existing secret for API Key \"%s\""
-	RefuseToOverrideSecretSuggestions = "If you would like to override the existing secret stored for API key \"%s\", please use `--force` flag."
+	RefuseToOverrideSecretSuggestions = "If you would like to override the existing secret stored for API key \"%s\", use `--force` flag."
 	APIKeyUseFailedErrorMsg           = "unable to set active API key"
 
 	// login command
@@ -22,13 +22,13 @@ const (
 	// Confluent Cluster commands
 	FetchClusterMetadataErrorMsg     = "unable to fetch cluster metadata: %s - %s"
 	AccessClusterRegistryErrorMsg    = "unable to access Cluster Registry"
-	AccessClusterRegistrySuggestions = "Ensure that you're running against MDS with CP 6.0+."
+	AccessClusterRegistrySuggestions = "Ensure that you are running against MDS with CP 6.0+."
 
 	// connect and connector-catalog commands
 	EmptyConfigFileErrorMsg        = "connector config file \"%s\" is empty"
 	MissingRequiredConfigsErrorMsg = "required configs \"name\" and \"connector.class\" missing from connector config file \"%s\""
 	PluginNameNotPassedErrorMsg    = "plugin name must be passed"
-	InvalidCloudErrorMsg           = "error defining plugin on given kafka cluster"
+	InvalidCloudErrorMsg           = "error defining plugin on given Kafka cluster"
 
 	// environment command
 	EnvNotFoundErrorMsg    = "environment \"%s\" not found"
@@ -37,11 +37,12 @@ const (
 	EnvRefreshErrorMsg     = "unable to save user auth while refreshing environment list"
 
 	// iam acl & kafka acl commands
-	UnableToPerformAclErrorMsg    = "unable to %s ACLs (%s)"
+	UnableToPerformAclErrorMsg    = "unable to %s ACLs: %s"
 	UnableToPerformAclSuggestions = "Ensure that you're running against MDS with CP 5.4+."
 	MustSetAllowOrDenyErrorMsg    = "--allow or --deny must be set when adding or deleting an ACL"
 	MustSetResourceTypeErrorMsg   = "exactly one resource type (%v) must be set"
 	InvalidOperationValueErrorMsg = "invalid operation value: %s"
+	ExactlyOneSetErrorMsg         = "exactly one of %v must be set"
 
 	// iam role commands
 	UnknownRoleErrorMsg    = "unknown role \"%s\""
@@ -53,12 +54,12 @@ const (
 	ResourceFormatErrorMsg          = "incorrect resource format specified"
 	ResourceFormatSuggestions       = "Resource must be specified in this format: `<Resource Type>:<Resource Name>`."
 	LookUpRoleErrorMsg              = "failed to lookup role \"%s\""
-	LookUpRoleSuggestions           = "Check for valid roles with `confluent role list`."
+	LookUpRoleSuggestions           = "To check for valid roles, use `confluent role list`."
 	InvalidResourceTypeErrorMsg     = "invalid resource type \"%s\""
 	InvalidResourceTypeSuggestions  = "The available resource types are: %s"
 	SpecifyKafkaIDErrorMsg          = "must also specify a --kafka-cluster-id to uniquely identify the scope"
 	BothClusterNameAndScopeErrorMsg = "cannot specify both cluster name and cluster scope"
-	SpecifyClusterErrorMsg          = "must specify either cluster ID to indicate role binding scope or the cluster name "
+	SpecifyClusterErrorMsg          = "must specify either cluster ID to indicate role binding scope or the cluster name"
 	MoreThanOneNonKafkaErrorMsg     = "cannot specify more than one non-Kafka cluster ID for a scope"
 	PrincipalOrRoleRequiredErrorMsg = "must specify either principal or role"
 	HTTPStatusCodeErrorMsg          = "no error but received HTTP status code %d"
@@ -66,22 +67,23 @@ const (
 
 	// init command
 	CannotBeEmptyErrorMsg         = "%s cannot be empty"
-	OnlyKafkaAuthErrorMsg         = "only kafka-auth is currently supported"
+	OnlyKafkaAuthErrorMsg         = "only `kafka-auth` is currently supported"
 	UnknownCredentialTypeErrorMsg = "credential type %d unknown"
 
 	// kafka cluster commands
+	ListTopicSuggestions                 = "To list topics for the cluster \"%s\", use `ccloud kafka topic list --cluster %s`."
 	FailedToReadConfirmationErrorMsg     = "BYOK error: failed to read your confirmation"
 	AuthorizeAccountsErrorMsg            = "BYOK error: please authorize the accounts (%s) for the key"
 	CKUOnlyForDedicatedErrorMsg          = "specifying `--cku` flag is valid only for dedicated Kafka cluster creation"
 	CKUMoreThanZeroErrorMsg              = "`--cku` valaue must be greater than 0"
 	CloudRegionNotAvailableErrorMsg      = "\"%s\" is not an available region for \"%s\""
-	CloudRegionNotAvailableSuggestions   = "You can view a list of available regions for \"%s\" with `ccloud kafka region list --cloud %s` command."
+	CloudRegionNotAvailableSuggestions   = "To view a list of available regions for \"%s\", use `ccloud kafka region list --cloud %s`."
 	CloudProviderNotAvailableErrorMsg    = "\"%s\" is not an available cloud provider"
-	CloudProviderNotAvailableSuggestions = "You can view a list of available cloud providers and regions with the `ccloud kafka region list` command."
+	CloudProviderNotAvailableSuggestions = "To view a list of available cloud providers and regions, use `ccloud kafka region list`."
 	TopicNotExistsErrorMsg               = "topic \"%s\" does not exist"
-	TopicNotExistsSuggestions            = "Check the available topics for Kafka cluster \"%s\" with `ccloud kafka topic list --cluster %s`."
+	TopicNotExistsSuggestions            = ListTopicSuggestions
 	InvalidAvailableFlagErrorMsg         = "invalid value \"%s\" for `--availability` flag"
-	InvalidAvailableFlagSuggesions       = "Allowed values for `--availability` flag are: %s, %s."
+	InvalidAvailableFlagSuggestions      = "Allowed values for `--availability` flag are: %s, %s."
 	InvalidTypeFlagErrorMsg              = "invalid value \"%s\" for `--type` flag"
 	InvalidTypeFlagSuggestions           = "Allowed values for `--type` flag are: %s, %s, %s."
 	NameOrCKUFlagErrorMsg                = "must either specify --name with non-empty value or --cku (for dedicated clusters) with positive integer"
@@ -91,7 +93,7 @@ const (
 	FailedToProduceErrorMsg   = "failed to produce offset %d: %s\n"
 	ConfigurationFormErrorMsg = "configuration must be in the form of key=value"
 	TopicExistsErrorMsg       = "topic \"%s\" already exists for Kafka cluster \"%s\""
-	TopicExistsSuggestions    = "You can list Kafka topics for the cluster with `ccloud kafka topic list --cluster %s`."
+	TopicExistsSuggestions    = ListTopicSuggestions
 
 	// ksql commands
 	NoServiceAccountErrorMsg = "no service account found for KSQL cluster \"%s\""
@@ -122,10 +124,10 @@ const (
 	SchemaIntegerSuggestions     = "Schema ID must be an integer."
 
 	// secret commands
-	EnterInputTypeErrorMsg    = "please enter %s"
-	PipeInputTypeErrorMsg     = "please pipe %s over stdin"
-	SpecifyPassphraseErrorMsg = "please specify `--passphrase -` if you intend to pipe your passphrase over stdin"
-	PipePassphraseErrorMsg    = "please pipe your passphrase over stdin"
+	EnterInputTypeErrorMsg    = "enter %s"
+	PipeInputTypeErrorMsg     = "pipe %s over stdin"
+	SpecifyPassphraseErrorMsg = "specify `--passphrase -` if you intend to pipe your passphrase over stdin"
+	PipePassphraseErrorMsg    = "pipe your passphrase over stdin"
 
 	// update command
 	UpdateClientFailurePrefix      = "update client failure"
@@ -152,8 +154,8 @@ const (
 	// cmd package
 	FindKafkaNoClientErrorMsg = "unable to obtain Kafka cluster information for cluster \"%s\": no client"
 	InvalidAPIKeyErrorMsg     = "invalid API key \"%s\" for resource \"%s\""
-	InvalidAPIKeySuggestions  = "List API key that belongs to resource \"%s\" with `ccloud api-key list --resource %s`.\n" +
-		"Create new API key for resource \"%s\" with `ccloud api-key create --resource %s`."
+	InvalidAPIKeySuggestions  = "To list API key that belongs to resource \"%s\", use `ccloud api-key list --resource %s`.\n" +
+		"To create new API key for resource \"%s\", use `ccloud api-key create --resource %s`."
 	SRNotEnabledErrorMsg    = "Schema Registry not enabled"
 	SRNotEnabledSuggestions = "Schema Registry must be enabled for the environment in order to run the command.\n" +
 		"You can enable Schema Registry for this environment with `ccloud schema-registry cluster enable`."
@@ -163,7 +165,7 @@ const (
 	// config package
 	CorruptedConfigErrorPrefix = "corrupted CLI config"
 	CorruptedConfigSuggestions = "Your CLI config file \"%s\" is corrupted.\n" +
-		"You can solve this problem by removing the config file, and run `%s login` or `%s init`.\n" +
+		"Remove config file, and run `%s login` or `%s init`.\n" +
 		"Unfortunately, your active CLI state will be lost as a result.\n" +
 		"Please file a support ticket with details about your config file to help us address this issue.\n" +
 		"Please rerun the command with the verbosity flag `-vvvv` and attach the output with the support ticket."
@@ -185,7 +187,7 @@ const (
 	NoNameCredentialErrorMsg           = "credential must have a name"
 	NoNamePlatformErrorMsg             = "platform must have a name"
 	ResolvingConfigPathErrorMsg        = "error resolving the config filepath at %s has occurred"
-	ResolvingConfigPathSuggestions     = "Please try moving the config file to a different location."
+	ResolvingConfigPathSuggestions     = "Try moving the config file to a different location."
 	UnspecifiedPlatformErrorMsg        = "context \"%s\" has corrupted platform"
 	UnspecifiedCredentialErrorMsg      = "context \"%s\" has corrupted credentials"
 	ContextStateMismatchErrorMsg       = "context state mismatch for context \"%s\""
@@ -229,7 +231,7 @@ const (
 	FileTypeNotSupportedErrorMsg       = "file type \"%s\" currently not supported"
 	ConfigKeyNotInJSONErrorMsg         = "configuration key \"%s\" not present in JSON configuration file"
 	MasterKeyNotExportedErrorMsg       = "master key is not exported in `%s` environment variable"
-	MasterKeyNotExportedSuggestions    = "Please set the environment variable `%s` to the master key and execute this command again."
+	MasterKeyNotExportedSuggestions    = "Set the environment variable `%s` to the master key and execute this command again."
 	ConfigKeyNotPresentErrorMsg        = "configuration key \"%s\" not present in the configuration file"
 	InvalidJSONFileFormatErrorMsg      = "invalid json file format"
 	InvalidFilePathErrorMsg            = "invalid file path \"%s\""
@@ -240,7 +242,7 @@ const (
 	AuthServerRunningErrorMsg          = "CLI HTTP auth server encountered error while running: %s\n"
 	AuthServerShutdownErrorMsg         = "CLI HTTP auth server encountered error while shutting down: %s\n"
 	BrowserAuthTimedOutErrorMsg        = "timed out while waiting for browser authentication to occur"
-	BrowserAuthTimedOutSuggestions     = "Please try logging in again."
+	BrowserAuthTimedOutSuggestions     = "Try logging in again."
 	LoginFailedCallbackURLErrorMsg     = "authentication callback URL either did not contain a state parameter in query string, or the state parameter was invalid; login will fail"
 	LoginFailedQueryStringErrorMsg     = "authentication callback URL did not contain code parameter in query string; login will fail"
 	ReadCallbackPageTemplateErrorMsg   = "could not read callback page template"
@@ -285,13 +287,13 @@ const (
 	UnexpectedBackendOutputSuggestions = "Please submit a support ticket."
 	BackendUnmarshallingErrorMsg       = "protobuf unmarshalling error"
 	ResourceNotFoundErrorMsg           = "resource \"%s\" not found"
-	ResourceNotFoundSuggestions        = "Please check that the resource \"%s\" exists.\n" +
-		"To list Kafka clusters use `ccloud kafka cluster list`.\n" +
-		"To check schema-registry cluster info use `ccloud schema-registry cluster describe`.\n" +
-		"To list KSQL clusters use `ccloud ksql app list`."
+	ResourceNotFoundSuggestions        = "Check that the resource \"%s\" exists.\n" +
+		"To list Kafka clusters, use `ccloud kafka cluster list`.\n" +
+		"To check schema-registry cluster info, use `ccloud schema-registry cluster describe`.\n" +
+		"To list KSQL clusters, use `ccloud ksql app list`."
 	KafkaNotFoundErrorMsg             = "Kafka cluster \"%s\" not found"
-	KafkaNotFoundSuggestions          = "List Kafka clusters with `ccloud kafka cluster list`."
-	KSQLNotFoundSuggestions           = "List KSQL clusters with `ccloud ksql app list`."
+	KafkaNotFoundSuggestions          = "To list Kafka clusters, use `ccloud kafka cluster list`."
+	KSQLNotFoundSuggestions           = "To list KSQL clusters, use `ccloud ksql app list`."
 	SRNotFoundSuggestions             = "Check the schema-registry cluster ID with `ccloud schema-registry cluster describe`."
 	KafkaNotReadyErrorMsg             = "Kafka cluster \"%s\" not ready"
 	KafkaNotReadySuggestions          = "It may take up to 5 minutes for a recently created Kafka cluster to be ready."
@@ -300,7 +302,7 @@ const (
 	UnableToConnectToKafkaErrorMsg    = "unable to connect to Kafka cluster"
 	UnableToConnectToKafkaSuggestions = "For recently created Kafka clusters and API keys, it may take a few minutes before the resources are ready.\n" +
 		"Otherwise, verify that for Kafka cluster \"%s\" the active API key \"%s\" used is the right one.\n" +
-		"Also, verify that the correct API secret is stored for the API key.\n" +
+		"Also verify that the correct API secret is stored for the API key.\n" +
 		"If the API secret is incorrect, override with `ccloud api-key store %s --resource %s --force`."
 	NoAPISecretStoredErrorMsg    = "no API secret for API key \"%s\" of resource \"%s\" stored in local CLI state"
 	NoAPISecretStoredSuggestions = "Store the API secret with `ccloud api-key store %s --resource %s`."
@@ -316,21 +318,20 @@ const (
 	CorruptedTokenSuggestions = "Please log in again.\n" +
 		avoidTimeoutGeneralSuggestion
 	ExpiredTokenErrorMsg    = "expired token"
-	ExpiredTokenSuggestions = "Your session has timed out, please log in again.\n" +
+	ExpiredTokenSuggestions = "Your session has timed out, you need to log in again.\n" +
 		avoidTimeoutGeneralSuggestion
 	InvalidEmailErrorMsg    = "user \"%s\" not found"
 	InvalidEmailSuggestions = "Please check the email.\n" +
-		"If the email is correct, please check that you have successfully verified your email.\n" +
+		"If the email is correct, check that you have successfully verified your email.\n" +
 		"If the problem persists, please submit a support ticket.\n" +
 		ccloudAvoidTimeoutSuggestion
 	InvalidLoginErrorMsg          = "incorrect email or password"
-	CCloudInvalidLoginSuggestions = "Please login again.\n" +
-		ccloudAvoidTimeoutSuggestion
+	CCloudInvalidLoginSuggestions = ccloudAvoidTimeoutSuggestion
 	NoAPIKeySelectedErrorMsg    = "no API key selected for resource \"%s\""
 	NoAPIKeySelectedSuggestions = "Select an API key for resource \"%s\" with `ccloud api-key use <API_KEY> --resource %s`.\n" +
 		"To do so, you must have either already created or stored an API key for the resource.\n" +
-		"To create an API key use `ccloud api-key create --resource %s`.\n" +
-		"To store an existing API key use `ccloud api-key store --resource %s`."
+		"To create an API key, use `ccloud api-key create --resource %s`.\n" +
+		"To store an existing API key, use `ccloud api-key store --resource %s`."
 
 	// Special error types
 	GenericOpenAPIErrorMsg = "metadata service backend error: %s: %s"

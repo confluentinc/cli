@@ -190,6 +190,7 @@ func TestPasswordProtectionSuite_EncryptConfigFileSecrets(t *testing.T) {
 		args            *args
 		wantErr         bool
 		wantErrMsg      string
+		wantSuggestions string
 		wantConfigFile  string
 		wantSecretsFile string
 	}{
@@ -209,6 +210,7 @@ func TestPasswordProtectionSuite_EncryptConfigFileSecrets(t *testing.T) {
 			},
 			wantErr:    true,
 			wantErrMsg: fmt.Sprintf(errors.MasterKeyNotExportedErrorMsg, CONFLUENT_KEY_ENVVAR),
+			wantSuggestions: fmt.Sprintf(errors.MasterKeyNotExportedSuggestions, CONFLUENT_KEY_ENVVAR),
 		},
 		{
 			name: "InvalidTestCase: invalid config file path",
@@ -484,7 +486,7 @@ config.json/credentials.ssl\.keystore\.password = ENC[AES/CBC/PKCS5Padding,data:
 
 			err = plugin.EncryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.remoteSecureConfigPath, tt.args.config)
 
-			checkError(err, tt.wantErr, tt.wantErrMsg, req)
+			checkErrorAndSuggestions(err, tt.wantErr, tt.wantErrMsg, tt.wantSuggestions, req)
 
 			// Validate file contents for valid test cases
 			if !tt.wantErr {
@@ -1554,6 +1556,18 @@ func checkError(err error, wantErr bool, wantErrMsg string, req *require.Asserti
 	if wantErr {
 		req.Error(err)
 		req.Contains(err.Error(), wantErrMsg)
+	} else {
+		req.NoError(err)
+	}
+}
+
+func checkErrorAndSuggestions(err error, wantErr bool, wantErrMsg string, wantSuggestions string, req *require.Assertions) {
+	if wantErr {
+		req.Error(err)
+		req.Contains(err.Error(), wantErrMsg)
+		if wantSuggestions != "" {
+			errors.VerifyErrorAndSuggestions(req, err, wantErrMsg, wantSuggestions)
+		}
 	} else {
 		req.NoError(err)
 	}

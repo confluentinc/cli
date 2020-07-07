@@ -385,7 +385,6 @@ func TestListResourcePrincipalFilterACL(t *testing.T) {
 }
 
 func TestMultipleResourceACL(t *testing.T) {
-	expect := "exactly one of cluster-scope, consumer-group, topic, transactional-id must be set"
 	args := []string{"acl", "create", "--allow", "--operation", "read", "--service-account", "42",
 		"--topic", "resource1", "--consumer-group", "resource2"}
 
@@ -393,6 +392,7 @@ func TestMultipleResourceACL(t *testing.T) {
 	cmd.SetArgs(args)
 
 	err := cmd.Execute()
+	expect := fmt.Sprintf(errors.ExactlyOneSetErrorMsg, "cluster-scope, consumer-group, topic, transactional-id")
 	if !strings.Contains(err.Error(), expect) {
 		t.Errorf("expected: %s got: %s", expect, err.Error())
 	}
@@ -554,9 +554,9 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 
 	err := cmd.Execute()
 	want := errors.NotLoggedInErrorMsg
-	if err.Error() != want {
-		t.Errorf("unexpected output\n got: %s\n want: %s", err, want)
-	}
+	require.Error(t, err)
+	require.Equal(t, want, err.Error())
+	errors.VerifyErrorAndSuggestions(require.New(t), err, errors.NotLoggedInErrorMsg, fmt.Sprintf(errors.NotLoggedInSuggestions, "ccloud"))
 }
 
 /*************** TEST setup/helpers ***************/

@@ -153,6 +153,7 @@ func TestLoginFail(t *testing.T) {
 
 	_, err := pcmd.ExecuteCommand(loginCmd.Command)
 	req.Contains(err.Error(), errors.InvalidLoginErrorMsg)
+	errors.VerifyErrorAndSuggestions(req, err, errors.InvalidLoginErrorMsg, errors.CCloudInvalidLoginSuggestions)
 }
 
 func TestURLRequiredWithMDS(t *testing.T) {

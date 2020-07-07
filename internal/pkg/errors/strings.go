@@ -57,15 +57,10 @@ const (
 	NoSubjectsMsg                       = "No subjects"
 	SRCredsValidationFailedMsg          = "Failed to validate Schema Registry API key and secret. Try again."
 
-	// secret commands
-	SaveTheMasterKeyMsg = "Save the master key. It cannot be retrieved later."
-
 	// update command
 	CheckingForUpdatesMsg = "Checking for updates..."
 	UpToDateMsg           = "Already up to date."
 	UpdateAutocompleteMsg = "Update your autocomplete scripts as instructed by `%s help completion`.\n"
-
-	// Packages
 
 	// cmd package
 	TokenExpiredMsg        = "Your token has expired. You are now logged out."
