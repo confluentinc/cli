@@ -128,7 +128,7 @@ func addMdsv2alpha1(t *testing.T, router *http.ServeMux) {
 	})
 
 	routesAndReplies := map[string]string{
-		"/api/metadata/security/v2alpha1/lookup/managed/rolebindings/principal/User:u-11111": `[
+		"/api/metadata/security/v2alpha1/lookup/rolebindings/principal/User:u-11111": `[
 			{
 				"scope": {
 				  	"path": [
@@ -137,19 +137,30 @@ func addMdsv2alpha1(t *testing.T, router *http.ServeMux) {
 					"clusters": {
 					}
 				},
-				"cluster_role_bindings": {
+				"rolebindings": {
 					"User:u-11111": {
-						"OrganizationAdmin": [
-							{
-								"resourceType": "Organization",
-								"name": "org1",
-								"patternType": "LITERAL"
-							}
-						]
+						"OrganizationAdmin": []
+					}
+				}
+		  	},
+		  	{
+				"scope": {
+				  	"path": [
+						"organization=1234",
+						"environment=a-595",
+						"cloud-cluster=lkc-1234"
+					],
+					"clusters": {
 					}
 				},
-				"resource_role_bindings": {}
-		  	},
+				"rolebindings": {
+					"User:u-11111": {
+						"CloudClusterAdmin": []
+					}
+				}
+		  	}
+		]`,
+		"/api/metadata/security/v2alpha1/lookup/rolebindings/principal/User:u-22222": `[
 		  	{
 				"scope": {
 				  	"path": [
@@ -157,49 +168,59 @@ func addMdsv2alpha1(t *testing.T, router *http.ServeMux) {
 						"environment=a-595"
 					],
 					"clusters": {
-						"kafka-cluster": "cluster1"
 					}
 				},
-				"cluster_role_bindings": {
-					"User:u-11111": {
-						"CloudClusterAdmin": [
-							{
-								"resourceType": "Cluster",
-								"name": "cluster1",
-								"patternType": "LITERAL"
-							}
-						]
-					},
+				"rolebindings": {
 					"User:u-22222": {
-						"EnvironmentAdmin": [
-							{
-								"resourceType": "Environment",
-								"name": "env1",
-								"patternType": "LITERAL"
-						  	}
-						]
-					},
-					"User:u-33333": {
-						"CloudClusterAdmin": [
-							{
-								"resourceType": "Cluster",
-								"name": "cluster1",
-								"patternType": "LITERAL"
-						  	}
-						]
-					},
-					"User:u-44444": {
-						"CloudClusterAdmin": [
-							{
-								"resourceType": "Cluster",
-								"name": "cluster1",
-								"patternType": "LITERAL"
-						  	}
-						]
+						"EnvironmentAdmin": []
+					}
+				}
+		  	}
+		]`,
+		"/api/metadata/security/v2alpha1/lookup/rolebindings/principal/User:u-33333": `[
+		  	{
+				"scope": {
+				  	"path": [
+						"organization=1234",
+						"environment=a-595",
+						"cloud-cluster=lkc-1234"
+					],
+					"clusters": {
 					}
 				},
-				"resource_role_bindings": {}
+				"rolebindings": {
+					"User:u-33333": {
+						"CloudClusterAdmin": []
+					}
+				}
 		  	}
+		]`,
+		"/api/metadata/security/v2alpha1/lookup/rolebindings/principal/User:u-44444": `[
+		  	{
+				"scope": {
+				  	"path": [
+						"organization=1234",
+						"environment=a-595",
+						"cloud-cluster=lkc-1234"
+					],
+					"clusters": {
+					}
+				},
+				"rolebindings": {
+					"User:u-44444": {
+						"CloudClusterAdmin": []
+					}
+				}
+		  	}
+		]`,
+		"/api/metadata/security/v2alpha1/lookup/role/OrganizationAdmin": `[
+			"User:u-11111"
+		]`,
+		"/api/metadata/security/v2alpha1/lookup/role/EnvironmentAdmin": `[
+			"User:u-22222"
+		]`,
+		"/api/metadata/security/v2alpha1/lookup/role/CloudClusterAdmin": `[
+			"User:u-33333", "User:u-44444"
 		]`,
 	}
 	addRolesV2(routesAndReplies)
