@@ -110,6 +110,7 @@ func GenReST(cmd *cobra.Command, w io.Writer, linkHandler func(string) string, d
 			}
 
 			buf.WriteString(fmt.Sprintf("* %s - %s\n", linkHandler(ref), parent.Short))
+
 			cmd.VisitParents(func(c *cobra.Command) {
 				if c.DisableAutoGenTag {
 					cmd.DisableAutoGenTag = c.DisableAutoGenTag
@@ -126,7 +127,7 @@ func GenReST(cmd *cobra.Command, w io.Writer, linkHandler func(string) string, d
 			}
 			cname := name + " " + child.Name()
 			ref = strings.ReplaceAll(cname, " ", "_")
-			buf.WriteString(fmt.Sprintf("* %s \t - %s\n", linkHandler(ref), child.Short))
+			buf.WriteString(fmt.Sprintf("* %s - %s\n", linkHandler(ref), child.Short))
 		}
 		buf.WriteString("\n")
 	}

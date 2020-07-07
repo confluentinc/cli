@@ -15,11 +15,11 @@ import (
 	"github.com/tidwall/sjson"
 )
 
-var dataRegex = regexp.MustCompile(DATA_PATTERN)
-var ivRegex = regexp.MustCompile(IV_PATTERN)
-var algoRegex = regexp.MustCompile(ENC_PATTERN)
-var passwordRegex = regexp.MustCompile(PASSWORD_PATTERN)
-var cipherRegex = regexp.MustCompile(CIPHER_PATTERN)
+var dataRegex = regexp.MustCompile(DataPattern)
+var ivRegex = regexp.MustCompile(IVPattern)
+var algoRegex = regexp.MustCompile(EncPattern)
+var passwordRegex = regexp.MustCompile(PasswordPattern)
+var cipherRegex = regexp.MustCompile(CipherPattern)
 
 func GenerateConfigValue(key string, path string) string {
 	return "${securepass:" + path + ":" + key + "}"
@@ -100,18 +100,18 @@ func LoadPropertiesFile(path string) (*properties.Properties, error) {
 
 func addSecureConfigProviderProperty(property *properties.Properties) (*properties.Properties, error) {
 	property.DisableExpansion = true
-	configProviders := property.GetString(CONFIG_PROVIDER_KEY, "")
+	configProviders := property.GetString(ConfigProviderKey, "")
 	if configProviders == "" {
-		configProviders = SECURE_CONFIG_PROVIDER
-	} else if !strings.Contains(configProviders, SECURE_CONFIG_PROVIDER) {
-		configProviders = configProviders + "," + SECURE_CONFIG_PROVIDER
+		configProviders = SecureConfigProvider
+	} else if !strings.Contains(configProviders, SecureConfigProvider) {
+		configProviders = configProviders + "," + SecureConfigProvider
 	}
 
-	_, _, err := property.Set(CONFIG_PROVIDER_KEY, configProviders)
+	_, _, err := property.Set(ConfigProviderKey, configProviders)
 	if err != nil {
 		return nil, err
 	}
-	_, _, err = property.Set(SECURE_CONFIG_PROVIDER_CLASS_KEY, SECURE_CONFIG_PROVIDER_CLASS)
+	_, _, err = property.Set(SecureConfigProviderClassKey, SecureConfigProviderClass)
 	if err != nil {
 		return nil, err
 	}
@@ -182,10 +182,10 @@ func loadPropertiesConfig(path string, configKeys []string, filter bool) (*prope
 func parseJAASProperties(props *properties.Properties) *properties.Properties {
 	parser := NewJAASParser()
 	matchProps, err := props.Filter("(?i).jaas")
-	matchProps.DisableExpansion = true
 	if err != nil {
 		return props
 	}
+	matchProps.DisableExpansion = true
 	for key, value := range matchProps.Map() {
 		jaasProps, err := parser.ParseJAASConfigurationEntry(value, key)
 		if err == nil {
@@ -199,11 +199,12 @@ func parseJAASProperties(props *properties.Properties) *properties.Properties {
 func convertPropertiesJAAS(props *properties.Properties, originalConfigs *properties.Properties, op string) (*properties.Properties, error) {
 	parser := NewJAASParser()
 	matchProps, err := props.Filter("(?i).jaas")
-	matchProps.DisableExpansion = true
 	if err != nil {
 		return props, err
 	}
-	pattern := regexp.MustCompile(JAAS_KEY_PATTERN)
+	matchProps.DisableExpansion = true
+
+	pattern := regexp.MustCompile(JAASKeyPattern)
 
 	jaasProps := properties.NewProperties()
 	jaasProps.DisableExpansion = true
@@ -212,15 +213,15 @@ func convertPropertiesJAAS(props *properties.Properties, originalConfigs *proper
 
 	for key, value := range matchProps.Map() {
 		if pattern.MatchString(key) {
-			parentKeys := strings.Split(key, KEY_SEPARATOR)
-			origKey := parentKeys[CLASS_ID]
+			parentKeys := strings.Split(key, KeySeparator)
+			origKey := parentKeys[ClassId]
 			origVal, ok := originalConfigs.Get(origKey)
 			if ok {
 				_, _, err = jaasProps.Set(key, value)
 				if err != nil {
 					return props, nil
 				}
-				_, _, err = jaasOriginal.Set(parentKeys[CLASS_ID]+KEY_SEPARATOR+parentKeys[PARENT_ID], origVal)
+				_, _, err = jaasOriginal.Set(parentKeys[ClassId]+KeySeparator+parentKeys[ParentId], origVal)
 				if err != nil {
 					return props, nil
 				}
@@ -294,7 +295,7 @@ func writePropertiesConfig(path string, configs *properties.Properties, addSecur
 		return err
 	}
 	configProps.DisableExpansion = true
-	configs, err = convertPropertiesJAAS(configs, configProps, UPDATE)
+	configs, err = convertPropertiesJAAS(configs, configProps, Update)
 
 	if err != nil {
 		return err
@@ -321,7 +322,7 @@ func writePropertiesConfig(path string, configs *properties.Properties, addSecur
 
 func RemovePropertiesConfig(removeConfigs []string, path string) error {
 	configProps, err := LoadPropertiesFile(path)
-	pattern := regexp.MustCompile(JAAS_KEY_PATTERN)
+	pattern := regexp.MustCompile(JAASKeyPattern)
 	if err != nil {
 		return err
 	}
@@ -344,7 +345,7 @@ func RemovePropertiesConfig(removeConfigs []string, path string) error {
 		}
 	}
 
-	configs, err := convertPropertiesJAAS(removeJAASConfig, configProps, DELETE)
+	configs, err := convertPropertiesJAAS(removeJAASConfig, configProps, Delete)
 
 	if err != nil {
 		return err
@@ -368,9 +369,9 @@ func writeJSONConfig(path string, configs *properties.Properties, addSecureConfi
 		return err
 	}
 
-	if gjson.Get(jsonConfig, CONFIG_PROVIDER_KEY).Exists() {
-		configValue := gjson.Get(jsonConfig, CONFIG_PROVIDER_KEY)
-		_, _, err = configs.Set(CONFIG_PROVIDER_KEY, configValue.String())
+	if gjson.Get(jsonConfig, ConfigProviderKey).Exists() {
+		configValue := gjson.Get(jsonConfig, ConfigProviderKey)
+		_, _, err = configs.Set(ConfigProviderKey, configValue.String())
 		if err != nil {
 			return err
 		}
@@ -389,15 +390,15 @@ func writeJSONConfig(path string, configs *properties.Properties, addSecureConfi
 			return err
 		}
 
-		providerKeyJson := strings.ReplaceAll(CONFIG_PROVIDER_KEY, ".", "\\.")
-		providerClassKeyJson := strings.ReplaceAll(SECURE_CONFIG_PROVIDER_CLASS_KEY, ".", "\\.")
+		providerKeyJson := strings.ReplaceAll(ConfigProviderKey, ".", "\\.")
+		providerClassKeyJson := strings.ReplaceAll(SecureConfigProviderClassKey, ".", "\\.")
 
-		value, _ := configs.Get(CONFIG_PROVIDER_KEY)
+		value, _ := configs.Get(ConfigProviderKey)
 		jsonConfig, err = sjson.Set(jsonConfig, providerKeyJson, value)
 		if err != nil {
 			return err
 		}
-		value, _ = configs.Get(SECURE_CONFIG_PROVIDER_CLASS_KEY)
+		value, _ = configs.Get(SecureConfigProviderClassKey)
 		jsonConfig, err = sjson.Set(jsonConfig, providerClassKeyJson, value)
 		if err != nil {
 			return err

@@ -287,7 +287,7 @@ func TestCreateACLs(t *testing.T) {
 			cmd.SetArgs(append(args, aclEntry.args...))
 
 			go func() {
-				bindings := []*schedv1.ACLBinding{}
+				var bindings []*schedv1.ACLBinding
 				for _, entry := range aclEntry.entries {
 					bindings = append(bindings, &schedv1.ACLBinding{Pattern: resource.pattern, Entry: entry})
 				}
@@ -310,7 +310,7 @@ func TestDeleteACLs(t *testing.T) {
 			cmd.SetArgs(append(args, aclEntry.args...))
 
 			go func() {
-				filters := []*schedv1.ACLFilter{}
+				var filters []*schedv1.ACLFilter
 				for _, entry := range aclEntry.entries {
 					filters = append(filters, convertToFilter(&schedv1.ACLBinding{Pattern: resource.pattern, Entry: entry}))
 				}

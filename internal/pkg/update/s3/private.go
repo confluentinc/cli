@@ -217,7 +217,7 @@ func formatError(profiles []string, origErrors error) error {
 				2019/01/17 09:27:12   error while finding creds: SharedCredsLoad: failed to get profile caused by: section 'default' does not exist
 				2019/01/17 09:27:12 Checking for updates...
 			*/
-			newErrors = multierror.Append(newErrors, fmt.Errorf("  %s", strings.Replace(errMsg.Error(), "\n", " ", -1)))
+			newErrors = multierror.Append(newErrors, fmt.Errorf("  %s", strings.ReplaceAll(errMsg.Error(), "\n", " ")))
 		}
 	}
 	return newErrors.ErrorOrNil()

@@ -84,7 +84,7 @@ func NewDescribeCommand(prerunner pcmd.PreRunner, client Metadata) *cobra.Comman
 	return describeCmd.Command
 }
 
-func (s *ScopedIdService) DescribeCluster(ctx context.Context, url string) (*ScopedId, error) {
+func (s *ScopedIdService) DescribeCluster(_ context.Context, url string) (*ScopedId, error) {
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/v1/metadata/id", url), nil)
 	if err != nil {
 		return nil, err
@@ -108,7 +108,7 @@ func (s *ScopedIdService) DescribeCluster(ctx context.Context, url string) (*Sco
 	return meta, err
 }
 
-func (c *describeCommand) describe(cmd *cobra.Command, args []string) error {
+func (c *describeCommand) describe(cmd *cobra.Command, _ []string) error {
 	url, err := cmd.Flags().GetString("url")
 	if err != nil {
 		return nil

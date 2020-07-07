@@ -159,7 +159,7 @@ func (c *clusterCommand) init() {
 	})
 }
 
-func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
+func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
 	req := &schedv1.KafkaCluster{AccountId: c.EnvironmentId()}
 	clusters, err := c.Client.Kafka.List(context.Background(), req)
 	if err != nil {
@@ -344,6 +344,10 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	req := &schedv1.KafkaCluster{AccountId: c.EnvironmentId(), Id: args[0]}
 	err := c.Client.Kafka.Delete(context.Background(), req)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	err = c.Context.RemoveKafkaClusterConfig(args[0])
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}

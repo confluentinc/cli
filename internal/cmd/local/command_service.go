@@ -629,8 +629,8 @@ func checkOSVersion() error {
 			return err
 		}
 
-		v10_13, _ := version.NewSemver("10.13")
-		if v.Compare(v10_13) < 0 {
+		required, _ := version.NewSemver("10.13")
+		if v.Compare(required) < 0 {
 			return fmt.Errorf("macOS version >= 10.13 is required (detected: %s)", osVersion)
 		}
 	}

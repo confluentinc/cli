@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"io/ioutil"
+	"net/http"
 	"os"
 
 	"github.com/confluentinc/go-editor"
@@ -13,8 +14,6 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-
-	"net/http"
 )
 
 type configCommand struct {
@@ -30,12 +29,12 @@ func NewConfigCommand(prerunner cmd.PreRunner) *cobra.Command {
 			Short: "Manage the audit log configuration specification.",
 			Long:  "Manage the audit log defaults and routing rules that determine which auditable events are logged, and where.",
 		}, prerunner)
-	cmd := &configCommand{
+	command := &configCommand{
 		AuthenticatedCLICommand: cliCmd,
 		prerunner:               prerunner,
 	}
-	cmd.init()
-	return cmd.Command
+	command.init()
+	return command.Command
 }
 
 func (c *configCommand) init() {
@@ -74,7 +73,7 @@ func (c *configCommand) createContext() context.Context {
 	return context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
 }
 
-func (c *configCommand) describe(cmd *cobra.Command, args []string) error {
+func (c *configCommand) describe(cmd *cobra.Command, _ []string) error {
 	spec, _, err := c.MDSClient.AuditLogConfigurationApi.GetConfig(c.createContext())
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -87,7 +86,7 @@ func (c *configCommand) describe(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *configCommand) update(cmd *cobra.Command, args []string) error {
+func (c *configCommand) update(cmd *cobra.Command, _ []string) error {
 	var data []byte
 	var err error
 	if cmd.Flags().Changed("file") {
@@ -156,7 +155,7 @@ func (c *configCommand) update(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *configCommand) edit(cmd *cobra.Command, args []string) error {
+func (c *configCommand) edit(cmd *cobra.Command, _ []string) error {
 	gotSpec, response, err := c.MDSClient.AuditLogConfigurationApi.GetConfig(c.createContext())
 	if err != nil {
 		return HandleMdsAuditLogApiError(cmd, err, response)

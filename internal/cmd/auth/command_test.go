@@ -40,7 +40,7 @@ func TestCredentialsOverride(t *testing.T) {
 	os.Setenv("XX_CCLOUD_EMAIL", "test-email")
 	os.Setenv("XX_CCLOUD_PASSWORD", "test-password")
 
-	prompt := prompt("cody@confluent.io", "iambatman")
+	prompt := prompt()
 	auth := &sdkMock.Auth{
 		LoginFunc: func(ctx context.Context, idToken string, username string, password string) (string, error) {
 			return "y0ur.jwt.T0kEn", nil
@@ -81,7 +81,7 @@ func TestCredentialsOverride(t *testing.T) {
 func TestLoginSuccess(t *testing.T) {
 	req := require.New(t)
 
-	prompt := prompt("cody@confluent.io", "iambatman")
+	prompt := prompt()
 	auth := &sdkMock.Auth{
 		LoginFunc: func(ctx context.Context, idToken string, username string, password string) (string, error) {
 			return "y0ur.jwt.T0kEn", nil
@@ -134,7 +134,7 @@ func TestLoginSuccess(t *testing.T) {
 func TestLoginFail(t *testing.T) {
 	req := require.New(t)
 
-	prompt := prompt("cody@confluent.io", "iamrobin")
+	prompt := prompt()
 	auth := &sdkMock.Auth{
 		LoginFunc: func(ctx context.Context, idToken string, username string, password string) (string, error) {
 			return "", &ccloud.InvalidLoginError{}
@@ -156,7 +156,7 @@ func TestLoginFail(t *testing.T) {
 func TestURLRequiredWithMDS(t *testing.T) {
 	req := require.New(t)
 
-	prompt := prompt("cody@confluent.io", "iamrobin")
+	prompt := prompt()
 	auth := &sdkMock.Auth{
 		LoginFunc: func(ctx context.Context, idToken string, username string, password string) (string, error) {
 			return "", &ccloud.InvalidLoginError{}
@@ -182,7 +182,7 @@ func TestLogout(t *testing.T) {
 func Test_credentials_NoSpacesAroundEmail_ShouldSupportSpacesAtBeginOrEnd(t *testing.T) {
 	req := require.New(t)
 
-	prompt := prompt(" cody@confluent.io ", " iamrobin ")
+	prompt := prompt()
 	auth := &sdkMock.Auth{}
 	loginCmd, _ := newLoginCmd(prompt, auth, nil, "ccloud", req)
 
@@ -201,7 +201,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 		MetricSink: nil,
 		Logger:     log.New(),
 	})
-	prompt := prompt("cody@confluent.io", "iambatman")
+	prompt := prompt()
 	prerunner := cliMock.NewPreRunnerMock(nil, nil, cfg)
 
 	// Create a test certificate to be read in by the command
@@ -211,12 +211,12 @@ func Test_SelfSignedCerts(t *testing.T) {
 	}
 	priv, err := rsa.GenerateKey(rand.Reader, 512)
 	req.NoError(err, "Couldn't generate private key")
-	ca_b, err := x509.CreateCertificate(rand.Reader, ca, ca, &priv.PublicKey, priv)
+	certBytes, err := x509.CreateCertificate(rand.Reader, ca, ca, &priv.PublicKey, priv)
 	req.NoError(err, "Couldn't generate certificate from private key")
-	pemBytes := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: ca_b})
+	pemBytes := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: certBytes})
 	certReader := bytes.NewReader(pemBytes)
 
-	cert, err := x509.ParseCertificate(ca_b)
+	cert, err := x509.ParseCertificate(certBytes)
 	req.NoError(err, "Couldn't reparse certificate")
 	expectedSubject := cert.RawSubject
 	mdsClient.TokensAndAuthenticationApi = &mdsMock.TokensAndAuthenticationApi{
@@ -258,7 +258,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 func TestLoginWithExistingContext(t *testing.T) {
 	req := require.New(t)
 
-	prompt := prompt("cody@confluent.io", "iambatman")
+	prompt := prompt()
 	auth := &sdkMock.Auth{
 		LoginFunc: func(ctx context.Context, idToken string, username string, password string) (string, error) {
 			return "y0ur.jwt.T0kEn", nil
@@ -375,7 +375,7 @@ func verifyLoggedOutState(t *testing.T, cfg *v3.Config) {
 	req.Empty(state.Auth)
 }
 
-func prompt(username, password string) *cliMock.Prompt {
+func prompt() *cliMock.Prompt {
 	return &cliMock.Prompt{
 		ReadStringFunc: func(delim byte) (string, error) {
 			return "cody@confluent.io", nil

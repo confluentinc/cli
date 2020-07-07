@@ -84,7 +84,7 @@ func (c *command) init() {
 	})
 }
 
-func (c *command) refreshEnvList(cmd *cobra.Command) error {
+func (c *command) refreshEnvList() error {
 	environments, err := c.Client.Account.List(context.Background(), &orgv1.Account{})
 	if err != nil {
 		return err
@@ -112,7 +112,7 @@ func (c *command) refreshEnvList(cmd *cobra.Command) error {
 	return nil
 }
 
-func (c *command) list(cmd *cobra.Command, args []string) error {
+func (c *command) list(cmd *cobra.Command, _ []string) error {
 	environments, err := c.Client.Account.List(context.Background(), &orgv1.Account{})
 	if err != nil {
 		return errors.HandleCommon(err, cmd)

@@ -21,6 +21,6 @@ func (s *CLITestSuite) TestEnvironmentCommands() {
 		}
 		tt.login = "default"
 		tt.workflow = true
-		s.runCcloudTest(tt, loginURL, serveKafkaAPI(s.T()).URL)
+		s.runCcloudTest(tt, loginURL)
 	}
 }

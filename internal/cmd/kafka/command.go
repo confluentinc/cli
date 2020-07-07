@@ -15,7 +15,7 @@ type command struct {
 }
 
 // New returns the default command object for interacting with Kafka.
-func New(isAPIKeyLogin bool,  cliName string, prerunner pcmd.PreRunner, logger *log.Logger, clientID string) *cobra.Command {
+func New(isAPIKeyLogin bool, cliName string, prerunner pcmd.PreRunner, logger *log.Logger, clientID string) *cobra.Command {
 	cliCmd := pcmd.NewCLICommand(
 		&cobra.Command{
 			Use:   "kafka",

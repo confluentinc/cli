@@ -53,7 +53,7 @@ func (c *aclCommand) init(cliName string) {
 		RunE: c.create,
 		Args: cobra.NoArgs,
 	}
-	cmd.Flags().AddFlagSet(addAclFlags())
+	cmd.Flags().AddFlagSet(addACLFlags())
 	cmd.Flags().SortFlags = false
 
 	c.AddCommand(cmd)
@@ -64,7 +64,7 @@ func (c *aclCommand) init(cliName string) {
 		RunE:  c.delete,
 		Args:  cobra.NoArgs,
 	}
-	cmd.Flags().AddFlagSet(deleteAclFlags())
+	cmd.Flags().AddFlagSet(deleteACLFlags())
 	cmd.Flags().SortFlags = false
 
 	c.AddCommand(cmd)
@@ -75,26 +75,26 @@ func (c *aclCommand) init(cliName string) {
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	}
-	cmd.Flags().AddFlagSet(listAclFlags())
+	cmd.Flags().AddFlagSet(listACLFlags())
 	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	cmd.Flags().SortFlags = false
 
 	c.AddCommand(cmd)
 }
 
-func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
+func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 	acl := parse(cmd)
 
-	bindings, response, err := c.MDSClient.KafkaACLManagementApi.SearchAclBinding(c.createContext(), convertToAclFilterRequest(acl.CreateAclRequest))
+	bindings, response, err := c.MDSClient.KafkaACLManagementApi.SearchAclBinding(c.createContext(), convertToACLFilterRequest(acl.CreateAclRequest))
 
 	if err != nil {
-		return c.handleAclError(cmd, err, response)
+		return c.handleACLError(cmd, err, response)
 	}
-	return PrintAcls(cmd, acl.Scope.Clusters.KafkaCluster, bindings)
+	return PrintACLs(cmd, acl.Scope.Clusters.KafkaCluster, bindings)
 }
 
-func (c *aclCommand) create(cmd *cobra.Command, args []string) error {
-	acl := validateAclAddDelete(parse(cmd))
+func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
+	acl := validateACLAddDelete(parse(cmd))
 
 	if acl.errors != nil {
 		return errors.HandleCommon(acl.errors, cmd)
@@ -103,29 +103,29 @@ func (c *aclCommand) create(cmd *cobra.Command, args []string) error {
 	response, err := c.MDSClient.KafkaACLManagementApi.AddAclBinding(c.createContext(), *acl.CreateAclRequest)
 
 	if err != nil {
-		return c.handleAclError(cmd, err, response)
+		return c.handleACLError(cmd, err, response)
 	}
 
 	return nil
 }
 
-func (c *aclCommand) delete(cmd *cobra.Command, args []string) error {
+func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 	acl := parse(cmd)
 
 	if acl.errors != nil {
 		return errors.HandleCommon(acl.errors, cmd)
 	}
 
-	bindings, response, err := c.MDSClient.KafkaACLManagementApi.RemoveAclBindings(c.createContext(), convertToAclFilterRequest(acl.CreateAclRequest))
+	bindings, response, err := c.MDSClient.KafkaACLManagementApi.RemoveAclBindings(c.createContext(), convertToACLFilterRequest(acl.CreateAclRequest))
 
 	if err != nil {
-		return c.handleAclError(cmd, err, response)
+		return c.handleACLError(cmd, err, response)
 	}
 
-	return PrintAcls(cmd, acl.Scope.Clusters.KafkaCluster, bindings)
+	return PrintACLs(cmd, acl.Scope.Clusters.KafkaCluster, bindings)
 }
 
-func (c *aclCommand) handleAclError(cmd *cobra.Command, err error, response *http.Response) error {
+func (c *aclCommand) handleACLError(cmd *cobra.Command, err error, response *http.Response) error {
 	if response != nil && response.StatusCode == http.StatusNotFound {
 		cmd.SilenceUsage = true
 		return fmt.Errorf("Unable to %s ACLs (%s). Ensure that you're running against MDS with CP 5.4+.", cmd.Name(), err.Error())
@@ -133,8 +133,8 @@ func (c *aclCommand) handleAclError(cmd *cobra.Command, err error, response *htt
 	return errors.HandleCommon(err, cmd)
 }
 
-// validateAclAddDelete ensures the minimum requirements for acl add/delete is met
-func validateAclAddDelete(aclConfiguration *ACLConfiguration) *ACLConfiguration {
+// validateACLAddDelete ensures the minimum requirements for acl add/delete is met
+func validateACLAddDelete(aclConfiguration *ACLConfiguration) *ACLConfiguration {
 	// delete is deliberately less powerful in the cli than in the API to prevent accidental
 	// deletion of too many acls at once. Expectation is that multi delete will be done via
 	// repeated invocation of the cli by external scripts.
@@ -154,8 +154,8 @@ func validateAclAddDelete(aclConfiguration *ACLConfiguration) *ACLConfiguration 
 	return aclConfiguration
 }
 
-// convertToFilter converts a CreateAclRequest to an ACLFilterRequest
-func convertToAclFilterRequest(request *mds.CreateAclRequest) mds.AclFilterRequest {
+// convertToFilter converts a CreateAclRequest to an AclFilterRequest
+func convertToACLFilterRequest(request *mds.CreateAclRequest) mds.AclFilterRequest {
 	// ACE matching rules
 	// https://github.com/apache/kafka/blob/trunk/clients/src/main/java/org/apache/kafka/common/acl/AccessControlEntryFilter.java#L102-L113
 
@@ -201,7 +201,7 @@ func convertToAclFilterRequest(request *mds.CreateAclRequest) mds.AclFilterReque
 	}
 }
 
-func PrintAcls(cmd *cobra.Command, kafkaClusterId string, bindingsObj []mds.AclBinding) error {
+func PrintACLs(cmd *cobra.Command, kafkaClusterId string, bindingsObj []mds.AclBinding) error {
 	var fields = []string{"KafkaClusterId", "Principal", "Permission", "Operation", "Host", "Resource", "Name", "Type"}
 	var structuredRenames = []string{"kafka_cluster_id", "principal", "permission", "operation", "host", "resource", "name", "type"}
 

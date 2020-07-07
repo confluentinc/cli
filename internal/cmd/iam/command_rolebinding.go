@@ -157,12 +157,12 @@ func (c *rolebindingCommand) parseAndValidateResourcePattern(typename string, pr
 
 func (c *rolebindingCommand) validateRoleAndResourceType(roleName string, resourceType string) error {
 	ctx := c.createContext()
-	role, _, err := c.MDSClient.RBACRoleDefinitionsApi.RoleDetail(ctx, roleName)
-	if err != nil {
+	role, resp, err := c.MDSClient.RBACRoleDefinitionsApi.RoleDetail(ctx, roleName)
+	if err != nil || resp.StatusCode == 204 {
 		return errors.Wrapf(err, "Failed to look up role %s. Was an invalid role name specified?", roleName)
 	}
 
-	allResourceTypes := []string{}
+	var allResourceTypes []string
 	found := false
 	for _, operation := range role.AccessPolicy.AllowedOperations {
 		allResourceTypes = append(allResourceTypes, operation.ResourceType)
@@ -226,7 +226,7 @@ func (c *rolebindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mds.Mds
 	return &mds.MdsScope{ClusterName: clusterName}, nil
 }
 
-func (c *rolebindingCommand) list(cmd *cobra.Command, args []string) error {
+func (c *rolebindingCommand) list(cmd *cobra.Command, _ []string) error {
 	if cmd.Flags().Changed("principal") {
 		return c.listPrincipalResources(cmd)
 	} else if cmd.Flags().Changed("role") {
@@ -455,7 +455,7 @@ func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOption
 		nil
 }
 
-func (c *rolebindingCommand) create(cmd *cobra.Command, args []string) error {
+func (c *rolebindingCommand) create(cmd *cobra.Command, _ []string) error {
 	options, err := c.parseCommon(cmd)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -487,7 +487,7 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *rolebindingCommand) delete(cmd *cobra.Command, args []string) error {
+func (c *rolebindingCommand) delete(cmd *cobra.Command, _ []string) error {
 	options, err := c.parseCommon(cmd)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)

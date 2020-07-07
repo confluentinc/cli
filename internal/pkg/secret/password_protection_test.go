@@ -462,7 +462,7 @@ config.json/credentials.ssl\.keystore\.password = ENC[AES/CBC/PKCS5Padding,data:
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Clean Up
-			os.Unsetenv(CONFLUENT_KEY_ENVVAR)
+			os.Unsetenv(ConfluentKeyEnvvar)
 			os.RemoveAll(tt.args.secureDir)
 			logger := log.New()
 			req := require.New(t)
@@ -496,7 +496,7 @@ config.json/credentials.ssl\.keystore\.password = ENC[AES/CBC/PKCS5Padding,data:
 			}
 
 			// Clean Up
-			os.Unsetenv(CONFLUENT_KEY_ENVVAR)
+			os.Unsetenv(ConfluentKeyEnvvar)
 			os.RemoveAll(tt.args.secureDir)
 		})
 	}
@@ -691,7 +691,7 @@ config.properties/testPassword = ENC[AES/CBC/PKCS5Padding,data:SclgTBDDeLwccqtsa
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			req := require.New(t)
-			os.Unsetenv(CONFLUENT_KEY_ENVVAR)
+			os.Unsetenv(ConfluentKeyEnvvar)
 			os.RemoveAll(tt.args.secureDir)
 			plugin, err := setUpDir(tt.args.masterKeyPassphrase, tt.args.secureDir, tt.args.configFilePath, tt.args.localSecureConfigPath, "")
 			req.NoError(err)
@@ -704,7 +704,7 @@ config.properties/testPassword = ENC[AES/CBC/PKCS5Padding,data:SclgTBDDeLwccqtsa
 			req.NoError(err)
 
 			if tt.args.setNewMEK {
-				os.Setenv(CONFLUENT_KEY_ENVVAR, tt.args.newMasterKey)
+				os.Setenv(ConfluentKeyEnvvar, tt.args.newMasterKey)
 			}
 
 			err = plugin.DecryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.outputConfigPath, "")
@@ -715,7 +715,7 @@ config.properties/testPassword = ENC[AES/CBC/PKCS5Padding,data:SclgTBDDeLwccqtsa
 			}
 
 			// Clean Up
-			os.Unsetenv(CONFLUENT_KEY_ENVVAR)
+			os.Unsetenv(ConfluentKeyEnvvar)
 			os.RemoveAll(tt.args.secureDir)
 		})
 	}
@@ -829,7 +829,7 @@ config.json/credentials.password = ENC[AES/CBC/PKCS5Padding,data:SclgTBDDeLwccqt
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			os.Unsetenv(CONFLUENT_KEY_ENVVAR)
+			os.Unsetenv(ConfluentKeyEnvvar)
 			os.RemoveAll(tt.args.secureDir)
 			req := require.New(t)
 			// SetUp
@@ -851,7 +851,7 @@ config.json/credentials.password = ENC[AES/CBC/PKCS5Padding,data:SclgTBDDeLwccqt
 			}
 
 			// Clean Up
-			os.Unsetenv(CONFLUENT_KEY_ENVVAR)
+			os.Unsetenv(ConfluentKeyEnvvar)
 			os.RemoveAll(tt.args.secureDir)
 		})
 	}
@@ -932,7 +932,7 @@ func TestPasswordProtectionSuite_UpdateConfigFileSecrets(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			req := require.New(t)
 			// Clean Up
-			os.Unsetenv(CONFLUENT_KEY_ENVVAR)
+			os.Unsetenv(ConfluentKeyEnvvar)
 			os.RemoveAll(tt.args.secureDir)
 			plugin, err := setUpDir(tt.args.masterKeyPassphrase, tt.args.secureDir, tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.contents)
 			req.NoError(err)
@@ -950,7 +950,7 @@ func TestPasswordProtectionSuite_UpdateConfigFileSecrets(t *testing.T) {
 				validateFileContents(tt.args.localSecureConfigPath, tt.wantSecretsFile, req)
 			}
 			// Clean Up
-			os.Unsetenv(CONFLUENT_KEY_ENVVAR)
+			os.Unsetenv(ConfluentKeyEnvvar)
 			os.RemoveAll(tt.args.secureDir)
 		})
 	}
@@ -1104,7 +1104,7 @@ func TestPasswordProtectionSuite_RemoveConfigFileSecrets(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			req := require.New(t)
 			// Clean Up
-			os.Unsetenv(CONFLUENT_KEY_ENVVAR)
+			os.Unsetenv(ConfluentKeyEnvvar)
 			os.RemoveAll(tt.args.secureDir)
 			// SetUp
 			plugin, err := setUpDir(tt.args.masterKeyPassphrase, tt.args.secureDir, tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.contents)
@@ -1122,7 +1122,7 @@ func TestPasswordProtectionSuite_RemoveConfigFileSecrets(t *testing.T) {
 				req.NoError(err)
 			}
 			// Clean Up
-			os.Unsetenv(CONFLUENT_KEY_ENVVAR)
+			os.Unsetenv(ConfluentKeyEnvvar)
 			os.RemoveAll(tt.args.secureDir)
 		})
 	}
@@ -1258,7 +1258,7 @@ func TestPasswordProtectionSuite_RotateDataKey(t *testing.T) {
 				rotatedProps, err := properties.LoadFile(tt.args.localSecureConfigPath, properties.UTF8)
 				req.NoError(err)
 				for key, value := range originalProps.Map() {
-					if !strings.HasPrefix(key, METADATA_PREFIX) {
+					if !strings.HasPrefix(key, MetadataPrefix) {
 						cipher := rotatedProps.GetString(key, "")
 						req.NotEqual(cipher, value)
 					}
@@ -1267,7 +1267,7 @@ func TestPasswordProtectionSuite_RotateDataKey(t *testing.T) {
 				req.NoError(err)
 			}
 			// Clean Up
-			os.Unsetenv(CONFLUENT_KEY_ENVVAR)
+			os.Unsetenv(ConfluentKeyEnvvar)
 			os.RemoveAll(tt.args.secureDir)
 		})
 	}
@@ -1406,12 +1406,12 @@ func TestPasswordProtectionSuite_RotateMasterKey(t *testing.T) {
 			checkError(err, tt.wantErr, tt.wantErrMsg, req)
 
 			if !tt.wantErr {
-				os.Setenv(CONFLUENT_KEY_ENVVAR, newKey)
+				os.Setenv(ConfluentKeyEnvvar, newKey)
 				err = validateUsingDecryption(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.outputConfigPath, tt.args.contents, plugin)
 				req.NoError(err)
 			}
 			// Clean Up
-			os.Unsetenv(CONFLUENT_KEY_ENVVAR)
+			os.Unsetenv(ConfluentKeyEnvvar)
 			os.RemoveAll(tt.args.secureDir)
 		})
 	}
@@ -1423,7 +1423,7 @@ func createMasterKey(passphrase string, localSecretsFile string, plugin *Passwor
 		fmt.Println(err)
 		return err
 	}
-	os.Setenv(CONFLUENT_KEY_ENVVAR, key)
+	os.Setenv(ConfluentKeyEnvvar, key)
 	return nil
 }
 
@@ -1455,12 +1455,12 @@ func corruptEncryptedDEK(localSecureConfigPath string) error {
 	if err != nil {
 		return err
 	}
-	value := secretsProps.GetString(METADATA_DATA_KEY, "")
+	value := secretsProps.GetString(MetadataDataKey, "")
 	corruptedCipher, err := generateCorruptedData(value)
 	if err != nil {
 		return err
 	}
-	_, _, err = secretsProps.Set(METADATA_DATA_KEY, corruptedCipher)
+	_, _, err = secretsProps.Set(MetadataDataKey, corruptedCipher)
 	if err != nil {
 		return err
 	}

@@ -185,7 +185,7 @@ func (s *authState) getOAuthTokenResponse(payload *strings.Reader) (map[string]i
 	defer res.Body.Close()
 	responseBody, _ := ioutil.ReadAll(res.Body)
 	var data map[string]interface{}
-	err = json.Unmarshal([]byte(responseBody), &data)
+	err = json.Unmarshal(responseBody, &data)
 	if err != nil {
 		s.logger.Debugf("Failed oauth token response body: %s", responseBody)
 		return nil, errors.Wrap(err, "failed to unmarshal response body in oauth token request")

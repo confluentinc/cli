@@ -94,7 +94,7 @@ func (c *clusterCommand) init() {
 	c.AddCommand(aclsCmd)
 }
 
-func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
+func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
 	req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId()}
 	clusters, err := c.Client.KSQL.List(context.Background(), req)
 	if err != nil {
@@ -165,7 +165,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *clusterCommand) createAcl(prefix string, patternType schedv1.PatternTypes_PatternType, operation schedv1.ACLOperations_ACLOperation, resource schedv1.ResourceTypes_ResourceType, serviceAccountId string) *schedv1.ACLBinding {
+func (c *clusterCommand) createACL(prefix string, patternType schedv1.PatternTypes_PatternType, operation schedv1.ACLOperations_ACLOperation, resource schedv1.ResourceTypes_ResourceType, serviceAccountId string) *schedv1.ACLBinding {
 	binding := &schedv1.ACLBinding{
 		Entry: &schedv1.AccessControlEntryConfig{
 			Host: "*",
@@ -215,16 +215,16 @@ func (c *clusterCommand) buildACLBindings(serviceAccountId string, cluster *sche
 		schedv1.ACLOperations_WRITE,
 		schedv1.ACLOperations_DELETE,
 	} {
-		bindings = append(bindings, c.createAcl(cluster.OutputTopicPrefix, schedv1.PatternTypes_PREFIXED, op, schedv1.ResourceTypes_TOPIC, serviceAccountId))
-		bindings = append(bindings, c.createAcl("_confluent-ksql-"+cluster.OutputTopicPrefix, schedv1.PatternTypes_PREFIXED, op, schedv1.ResourceTypes_TOPIC, serviceAccountId))
-		bindings = append(bindings, c.createAcl("_confluent-ksql-"+cluster.OutputTopicPrefix, schedv1.PatternTypes_PREFIXED, op, schedv1.ResourceTypes_GROUP, serviceAccountId))
+		bindings = append(bindings, c.createACL(cluster.OutputTopicPrefix, schedv1.PatternTypes_PREFIXED, op, schedv1.ResourceTypes_TOPIC, serviceAccountId))
+		bindings = append(bindings, c.createACL("_confluent-ksql-"+cluster.OutputTopicPrefix, schedv1.PatternTypes_PREFIXED, op, schedv1.ResourceTypes_TOPIC, serviceAccountId))
+		bindings = append(bindings, c.createACL("_confluent-ksql-"+cluster.OutputTopicPrefix, schedv1.PatternTypes_PREFIXED, op, schedv1.ResourceTypes_GROUP, serviceAccountId))
 	}
 	for _, op := range []schedv1.ACLOperations_ACLOperation{
 		schedv1.ACLOperations_DESCRIBE,
 		schedv1.ACLOperations_DESCRIBE_CONFIGS,
 	} {
-		bindings = append(bindings, c.createAcl("*", schedv1.PatternTypes_LITERAL, op, schedv1.ResourceTypes_TOPIC, serviceAccountId))
-		bindings = append(bindings, c.createAcl("*", schedv1.PatternTypes_LITERAL, op, schedv1.ResourceTypes_GROUP, serviceAccountId))
+		bindings = append(bindings, c.createACL("*", schedv1.PatternTypes_LITERAL, op, schedv1.ResourceTypes_TOPIC, serviceAccountId))
+		bindings = append(bindings, c.createACL("*", schedv1.PatternTypes_LITERAL, op, schedv1.ResourceTypes_GROUP, serviceAccountId))
 	}
 	for _, op := range []schedv1.ACLOperations_ACLOperation{
 		schedv1.ACLOperations_DESCRIBE,
@@ -232,7 +232,7 @@ func (c *clusterCommand) buildACLBindings(serviceAccountId string, cluster *sche
 		schedv1.ACLOperations_READ,
 	} {
 		for _, t := range topics {
-			bindings = append(bindings, c.createAcl(t, schedv1.PatternTypes_LITERAL, op, schedv1.ResourceTypes_TOPIC, serviceAccountId))
+			bindings = append(bindings, c.createACL(t, schedv1.PatternTypes_LITERAL, op, schedv1.ResourceTypes_TOPIC, serviceAccountId))
 		}
 	}
 	// for transactional produces to command topic
@@ -240,7 +240,7 @@ func (c *clusterCommand) buildACLBindings(serviceAccountId string, cluster *sche
 		schedv1.ACLOperations_DESCRIBE,
 		schedv1.ACLOperations_WRITE,
 	} {
-		bindings = append(bindings, c.createAcl(cluster.PhysicalClusterId, schedv1.PatternTypes_LITERAL, op, schedv1.ResourceTypes_TRANSACTIONAL_ID, serviceAccountId))
+		bindings = append(bindings, c.createACL(cluster.PhysicalClusterId, schedv1.PatternTypes_LITERAL, op, schedv1.ResourceTypes_TRANSACTIONAL_ID, serviceAccountId))
 	}
 	return bindings
 }
@@ -284,7 +284,7 @@ func (c *clusterCommand) configureACLs(cmd *cobra.Command, args []string) error 
 	// Setup ACLs
 	bindings := c.buildACLBindings(serviceAccountId, cluster, args[1:])
 	if aclsDryRun {
-		return acl.PrintAcls(cmd, bindings, cmd.OutOrStderr())
+		return acl.PrintACLs(cmd, bindings, cmd.OutOrStderr())
 	}
 	err = c.Client.Kafka.CreateACLs(ctx, kafkaCluster, bindings)
 	if err != nil {

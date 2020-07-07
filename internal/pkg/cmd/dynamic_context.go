@@ -93,6 +93,11 @@ func (d *DynamicContext) SetActiveKafkaCluster(cmd *cobra.Command, clusterId str
 	return d.Save()
 }
 
+func (d *DynamicContext) RemoveKafkaClusterConfig(clusterId string) error {
+	d.KafkaClusterContext.RemoveKafkaCluster(clusterId)
+	return d.Save()
+}
+
 func (d *DynamicContext) UseAPIKey(cmd *cobra.Command, apiKey string, clusterId string) error {
 	kcc, err := d.FindKafkaCluster(cmd, clusterId)
 	if err != nil {

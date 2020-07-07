@@ -17,6 +17,6 @@ func (s *CLITestSuite) TestServiceAccountCommands() {
 		tt.login = "default"
 		tt.workflow = true
 		kafkaAPIURL := serveKafkaAPI(s.T()).URL
-		s.runCcloudTest(tt, serve(s.T(), kafkaAPIURL).URL, kafkaAPIURL)
+		s.runCcloudTest(tt, serve(s.T(), kafkaAPIURL).URL)
 	}
 }

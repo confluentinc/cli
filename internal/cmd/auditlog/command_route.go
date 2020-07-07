@@ -1,6 +1,7 @@
 package auditlog
 
 import (
+	"context"
 	"encoding/json"
 
 	"github.com/antihax/optional"
@@ -9,8 +10,6 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-
-	"context"
 )
 
 type routeCommand struct {
@@ -26,12 +25,12 @@ func NewRouteCommand(prerunner cmd.PreRunner) *cobra.Command {
 			Short: "Return the audit log route rules.",
 			Long:  "Return the routing rules that determine which auditable events are logged, and where.",
 		}, prerunner)
-	cmd := &routeCommand{
+	command := &routeCommand{
 		AuthenticatedCLICommand: cliCmd,
 		prerunner:               prerunner,
 	}
-	cmd.init()
-	return cmd.Command
+	command.init()
+	return command.Command
 }
 
 func (c *routeCommand) init() {
@@ -61,7 +60,7 @@ func (c *routeCommand) createContext() context.Context {
 	return context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
 }
 
-func (c *routeCommand) list(cmd *cobra.Command, args []string) error {
+func (c *routeCommand) list(cmd *cobra.Command, _ []string) error {
 	var opts *mds.ListRoutesOpts
 	if cmd.Flags().Changed("resource") {
 		resource, err := cmd.Flags().GetString("resource")

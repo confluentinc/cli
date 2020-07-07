@@ -22,7 +22,7 @@ type cryptoSource struct {
 
 var _ mrand.Source = (*cryptoSource)(nil)
 
-func (s *cryptoSource) Seed(seed int64) {
+func (s *cryptoSource) Seed(_ int64) {
 	// no-op - seeds are only for pseudo-random RNGs,
 	// not cryptographically-secure / entropy-driven RNGs
 }

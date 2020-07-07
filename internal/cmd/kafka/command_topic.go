@@ -195,7 +195,7 @@ Delete the topics 'my_topic' and 'my_topic_avro'. Use this command carefully as 
 	a.AddCommand(cmd)
 }
 
-func (a *authenticatedTopicCommand) list(cmd *cobra.Command, args []string) error {
+func (a *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
 	cluster, err := pcmd.KafkaCluster(cmd, a.Context)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
