@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/confluentinc/cli/internal/pkg/examples"
+
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
@@ -45,8 +47,22 @@ func NewConnectConnectorConfigCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "config [connector]",
-			Short: "Print a connector config, or configure a connector.",
+			Short: "View or set connector configurations.",
 			Args:  cobra.ExactArgs(1),
+			Example: examples.BuildExampleString(
+				examples.Example{
+					Desc: "Print the current configuration of a connector named `s3-sink`:",
+					Code: "confluent local services connect connector config s3-sink",
+				},
+				examples.Example{
+					Desc: "Configure a connector named `wikipedia-file-source` by passing its configuration properties in JSON format.",
+					Code: "confluent local services connect connector config wikipedia-file-source --config <path-to-connector>/wikipedia-file-source.json",
+				},
+				examples.Example{
+					Desc: "Configure a connector named `wikipedia-file-source` by passing its configuration properties as Java properties.",
+					Code: "confluent local services connect connector config wikipedia-file-source --config <path-to-connector>/wikipedia-file-source.properties",
+				},
+			),
 		}, prerunner)
 
 	c.Command.RunE = c.runConnectConnectorConfigCommand
@@ -176,6 +192,13 @@ func NewConnectConnectorLoadCommand(prerunner cmd.PreRunner) *cobra.Command {
 			Use:   "load [connector]",
 			Short: "Load a connector.",
 			Args:  cobra.ExactArgs(1),
+			Long:  "Load a bundled connector with a predefined name or a custom connector.",
+			Example: examples.BuildExampleString(
+				examples.Example{
+					Desc: "Load a predefined connector called `s3-sink`:",
+					Code: "confluent local load s3-sink",
+				},
+			),
 		}, prerunner)
 
 	c.Command.RunE = c.runConnectConnectorLoadCommand
@@ -244,7 +267,13 @@ func NewConnectConnectorUnloadCommand(prerunner cmd.PreRunner) *cobra.Command {
 		&cobra.Command{
 			Use:   "unload [connector]",
 			Short: "Unload a connector.",
-			Args:  cobra.ExactArgs(1),
+			Example: examples.BuildExampleString(
+				examples.Example{
+					Desc: "Unload a predefined connector called `s3-sink`:",
+					Code: "confluent local unload s3-sink",
+				},
+			),
+			Args: cobra.ExactArgs(1),
 		}, prerunner)
 
 	c.Command.RunE = c.runConnectConnectorUnloadCommand

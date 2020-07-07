@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"sort"
 
+	"github.com/confluentinc/cli/internal/pkg/examples"
+
 	"github.com/confluentinc/go-printer"
 	"github.com/spf13/cobra"
 
@@ -70,8 +72,14 @@ func NewDescribeCommand(prerunner pcmd.PreRunner, client Metadata) *cobra.Comman
 	describeCmd := &describeCommand{
 		CLICommand: pcmd.NewAnonymousCLICommand(&cobra.Command{
 			Use:   "describe",
-			Short: "Describe a Confluent cluster.",
 			Args:  cobra.NoArgs,
+			Short: "Describe a Kafka cluster.",
+			Example: examples.BuildExampleString(
+				examples.Example{
+					Desc: "Discover the cluster ID and Kafka ID for Connect.",
+					Code: "confluent cluster describe --url http://localhost:8083",
+				},
+			),
 		}, prerunner),
 		client: client,
 	}

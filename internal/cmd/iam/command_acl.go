@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/confluentinc/cli/internal/pkg/examples"
+
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
@@ -19,39 +21,37 @@ type aclCommand struct {
 }
 
 // NewACLCommand returns the Cobra command for ACLs.
-func NewACLCommand(cliName string, prerunner pcmd.PreRunner) *cobra.Command {
+func NewACLCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &aclCommand{
 		AuthenticatedCLICommand: pcmd.NewAuthenticatedWithMDSCLICommand(&cobra.Command{
 			Use:   "acl",
 			Short: `Manage Kafka ACLs (5.4+ only).`,
 		}, prerunner),
 	}
-	cmd.init(cliName)
+	cmd.init()
 	return cmd.Command
 }
 
-func (c *aclCommand) init(cliName string) {
-
+func (c *aclCommand) init() {
 	cmd := &cobra.Command{
 		Use:   "create",
-		Short: `Create a Kafka ACL.`,
-		Example: `You can only specify one of these flags per command invocation: ` + "``cluster``, ``consumer-group``" + `,
-` + "``topic``, or ``transactional-id``" + ` per command invocation. For example, if you want to specify both
-` + "``consumer-group`` and ``topic``" + `, you must specify this as two separate commands:
-
-::
-
-	` + cliName + ` iam acl create --allow --principal User:1522 --operation READ --consumer-group \
-	java_example_group_1 --kafka-cluster-id my-cluster
-
-::
-
-	` + cliName + ` iam acl create --allow --principal User:1522 --operation READ --topic '*' \
-	--kafka-cluster-id my-cluster
-
-`,
-		RunE: c.create,
-		Args: cobra.NoArgs,
+		Args:  cobra.NoArgs,
+		Short: "Create a Kafka ACL.",
+		RunE:  c.create,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Desc: "Create an ACL that grants the specified user READ permission to the specified consumer group in the specified Kafka cluster:",
+				Code: "confluent iam acl create --allow --principal User:User1 --operation READ --consumer-group java_example_group_1 --kafka-cluster-id <kafka-cluster-id>",
+			},
+			examples.Example{
+				Desc: "Create an ACL that grants the specified user WRITE permission on all topics in the specified Kafka cluster.",
+				Code: "confluent iam acl create --allow --principal User:User1 --operation WRITE --topic '*' --kafka-cluster-id <kafka-cluster-id>",
+			},
+			examples.Example{
+				Desc: "Create an ACL that assigns a group READ access to all topics that use the specified prefix in the specified Kafka cluster.",
+				Code: "confluent iam acl create --allow --principal Group:Finance --operation READ --topic financial --prefix --kafka-cluster-id <kafka-cluster-id>",
+			},
+		),
 	}
 	cmd.Flags().AddFlagSet(addAclFlags())
 	cmd.Flags().SortFlags = false
@@ -61,8 +61,14 @@ func (c *aclCommand) init(cliName string) {
 	cmd = &cobra.Command{
 		Use:   "delete",
 		Short: `Delete a Kafka ACL.`,
-		RunE:  c.delete,
-		Args:  cobra.NoArgs,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Desc: "Delete an ACL that granted the specified user access to the Test topic in the specified cluster:",
+				Code: "confluent iam acl delete --kafka-cluster-id <kafka-cluster-id> --allow --principal User:Jane --topic Test",
+			},
+		),
+		RunE: c.delete,
+		Args: cobra.NoArgs,
 	}
 	cmd.Flags().AddFlagSet(deleteAclFlags())
 	cmd.Flags().SortFlags = false
@@ -71,9 +77,19 @@ func (c *aclCommand) init(cliName string) {
 
 	cmd = &cobra.Command{
 		Use:   "list",
-		Short: `List Kafka ACLs for a resource.`,
-		RunE:  c.list,
-		Args:  cobra.NoArgs,
+		Short: "List Kafka ACLs for a resource.",
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Desc: "List all the ACLs for the specified Kafka cluster:",
+				Code: "confluent iam acl list --kafka-cluster-id <kafka-cluster-id>",
+			},
+			examples.Example{
+				Desc: "List all the ACLs for the specified cluster that include allow permissions for the user Jane:",
+				Code: "confluent iam acl list --kafka-cluster-id <kafka-cluster-id> --allow --principal User:Jane",
+			},
+		),
+		RunE: c.list,
+		Args: cobra.NoArgs,
 	}
 	cmd.Flags().AddFlagSet(listAclFlags())
 	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
