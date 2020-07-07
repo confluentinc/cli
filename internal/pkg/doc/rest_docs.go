@@ -109,7 +109,7 @@ func GenReST(cmd *cobra.Command, w io.Writer, linkHandler func(string) string, d
 				ref += "-ref"
 			}
 
-			buf.WriteString(fmt.Sprintf("* %s \t - %s\n", linkHandler(ref), parent.Short))
+			buf.WriteString(fmt.Sprintf("* %s - %s\n", linkHandler(ref), parent.Short))
 			cmd.VisitParents(func(c *cobra.Command) {
 				if c.DisableAutoGenTag {
 					cmd.DisableAutoGenTag = c.DisableAutoGenTag

@@ -70,7 +70,7 @@ func NewDescribeCommand(prerunner pcmd.PreRunner, client Metadata) *cobra.Comman
 	describeCmd := &describeCommand{
 		CLICommand: pcmd.NewAnonymousCLICommand(&cobra.Command{
 			Use:   "describe",
-			Short: "Describe a Confluent cluster.",
+			Short: "Describe a Kafka cluster.",
 			Args:  cobra.NoArgs,
 		}, prerunner),
 		client: client,

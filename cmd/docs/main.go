@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"path"
 	"strings"
 
@@ -19,6 +20,11 @@ var cliName = "confluent"
 
 // See https://github.com/spf13/cobra/blob/master/doc/rest_docs.md
 func main() {
+	// Prevent printing the user's HOME in docs when generating confluent local services kafka
+	if err := os.Setenv("HOME", "$HOME"); err != nil {
+		panic(err)
+	}
+
 	confluent, err := cmd.NewConfluentCommand(cliName, true, &version.Version{}, auth.NewNetrcHandler(""))
 	if err != nil {
 		panic(err)

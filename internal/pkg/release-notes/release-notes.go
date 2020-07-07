@@ -30,7 +30,7 @@ const (
 	docsCCloudCLIName = "|ccloud| CLI"
 
 	s3ConfluentCLIName   = "Confluent CLI"
-	docsConfluentCLIName = "|confluent-cli|"
+	docsConfluentCLIName = "|confluent|"
 )
 
 var (

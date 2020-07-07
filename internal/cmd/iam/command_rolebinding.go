@@ -80,7 +80,7 @@ func (c *rolebindingCommand) init() {
 	listCmd.Flags().String("resource", "", "If specified with a role and no principals, list principals with rolebindings to the role for this qualified resource.")
 	listCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for scope of rolebinding listings.")
 	listCmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for scope of rolebinding listings.")
-	listCmd.Flags().String("ksql-cluster-id", "", "KSQL cluster ID for scope of rolebinding listings.")
+	listCmd.Flags().String("ksql-cluster-id", "", "ksqlDB cluster ID for scope of rolebinding listings.")
 	listCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for scope of rolebinding listings.")
 	listCmd.Flags().String("cluster-name", "", "Cluster name to uniquely identify the cluster for rolebinding listings.")
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
@@ -100,7 +100,7 @@ func (c *rolebindingCommand) init() {
 	createCmd.Flags().String("principal", "", "Qualified principal name for the role binding.")
 	createCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
 	createCmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding.")
-	createCmd.Flags().String("ksql-cluster-id", "", "KSQL cluster ID for the role binding.")
+	createCmd.Flags().String("ksql-cluster-id", "", "ksqlDB cluster ID for the role binding.")
 	createCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for the role binding.")
 	createCmd.Flags().String("cluster-name", "", "Cluster name to uniquely identify the cluster for rolebinding listings.")
 	createCmd.Flags().SortFlags = false
@@ -120,7 +120,7 @@ func (c *rolebindingCommand) init() {
 	deleteCmd.Flags().String("principal", "", "Qualified principal name associated with the role binding.")
 	deleteCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
 	deleteCmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding.")
-	deleteCmd.Flags().String("ksql-cluster-id", "", "KSQL cluster ID for the role binding.")
+	deleteCmd.Flags().String("ksql-cluster-id", "", "ksqlDB cluster ID for the role binding.")
 	deleteCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for the role binding.")
 	deleteCmd.Flags().String("cluster-name", "", "Cluster name to uniquely identify the cluster for rolebinding listings.")
 	deleteCmd.Flags().SortFlags = false

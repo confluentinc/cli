@@ -16,7 +16,7 @@ func New(cliName string, prerunner pcmd.PreRunner) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "ksql",
-			Short: "Manage KSQL applications.",
+			Short: "Manage ksqlDB applications.",
 		}, prerunner)
 	cmd := &command{
 		AuthenticatedCLICommand: cliCmd,

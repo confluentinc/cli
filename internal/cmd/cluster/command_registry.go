@@ -8,12 +8,13 @@ import (
 
 	"github.com/spf13/cobra"
 
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	"github.com/spf13/pflag"
+
 	print "github.com/confluentinc/cli/internal/pkg/cluster"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
-	"github.com/spf13/pflag"
 )
 
 type registryCommand struct {
@@ -44,7 +45,7 @@ func NewRegisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	registerCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID.")
 	check(registerCmd.MarkFlagRequired("kafka-cluster-id"))
 	registerCmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID.")
-	registerCmd.Flags().String("ksql-cluster-id", "", "KSQL cluster ID.")
+	registerCmd.Flags().String("ksql-cluster-id", "", "ksqlDB cluster ID.")
 	registerCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID.")
 	registerCmd.Flags().String("hosts", "", "A comma separated list of hosts.")
 	check(registerCmd.MarkFlagRequired("hosts"))

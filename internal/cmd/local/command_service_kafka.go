@@ -20,7 +20,7 @@ var (
 
 	commonFlagUsage = map[string]string{
 		"cloud":        "Consume from Confluent Cloud.",
-		"config":       "Change the ccloud configuration file.",
+		"config":       "Change the Confluent Cloud configuration file.",
 		"value-format": "Format output data: avro, json, or protobuf.",
 	}
 
@@ -71,13 +71,13 @@ var (
 		"max-block-ms":               "The max time that the producer will block for during a send request (default 60000)",
 		"max-memory-bytes":           "The total memory used by the producer to buffer records waiting to be sent to the server. (default 33554432)",
 		"max-partition-memory-bytes": "The buffer size allocated for a partition. When records are received which are small than this size, the producer will attempt to optimistically group them together until this size is reached. (default 16384)",
-		"message-send-max-retries":   "Brokers can fail receiving a message for multiple reasons, and being unavailable transiently is just one of them. This property specifies the number of retries before the producer gives up and drops this message. (default 3)",
-		"metadata-expiry-ms":         "The period of time in milliseconds after which we force a refresh of metadata even if we haven't seen any leadership changes. (default 300000)",
+		"message-send-max-retries":   "This property specifies the number of retries before the producer gives up and drops this message. Brokers can fail receiving a message for multiple reasons, and being unavailable transiently is just one of them. (default 3)",
+		"metadata-expiry-ms":         "The amount of time in milliseconds before a forced metadata refresh. This will occur independent of any leadership changes. (default 300000)",
 		"producer-property":          "A mechanism to pass user-defined properties in the form key=value to the producer.",
 		"producer.config":            "Producer config properties file. Note that [producer-property] takes precedence over this config.",
 		"property":                   "A mechanism to pass user-defined properties in the form key=value to the message reader. This allows custom configuration for a user-defined message reader. Default properties include:\n\tparse.key=true|false\n\tkey.separator=<key.separator>\n\tignore.error=true|false",
-		"request-required-acks":      "The required acks of the producer requests (default 1)",
-		"request-timeout-ms":         "The ack timeout of the producer requests. Value must be positive (default 1500)",
+		"request-required-acks":      "The required ACKs of the producer requests (default 1)",
+		"request-timeout-ms":         "The ACK timeout of the producer requests. Value must be positive (default 1500)",
 		"retry-backoff-ms":           "Before each retry, the producer refreshes the metadata of relevant topics. Since leader election takes a bit of time, this property specifies the amount of time that the producer waits before refreshing the metadata. (default 100)",
 		"socket-buffer-size":         "The size of the TCP RECV size. (default 102400)",
 		"sync":                       "If set, message send requests to brokers arrive synchronously.",

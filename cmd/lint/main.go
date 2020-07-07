@@ -27,13 +27,13 @@ var (
 
 	properNouns = []string{
 		"ACL", "ACLs", "API", "Apache", "CLI", "Confluent Cloud", "Confluent Platform", "Confluent", "Connect",
-		"Control Center", "Enterprise", "IAM", "KSQL Server", "KSQL", "Kafka REST", "Kafka", "RBAC", "Schema Registry",
-		"Zookeeper", "cku",
+		"Control Center", "Enterprise", "IAM", "ksqlDB Server", "ksqlDB", "Kafka REST", "Kafka", "RBAC",
+		"Schema Registry", "Zookeeper", "cku",
 	}
 	vocabWords = []string{
 		"ack", "acks", "acl", "acls", "apac", "api", "auth", "avro", "aws", "backoff", "ccloud", "cku", "codec",
 		"config", "configs", "connect", "connect-catalog", "consumer.config", "csu", "decrypt", "deserializer",
-		"deserializers", "eu", "formatter", "gcp", "geo", "gzip", "iam", "init", "json", "kafka", "ksql", "lifecycle",
+		"deserializers", "eu", "formatter", "gcp", "geo", "gzip", "iam", "init", "json", "kafka", "lifecycle",
 		"lz4", "multi-zone", "netrc", "pem", "plaintext", "producer.config", "protobuf", "readwrite", "recv",
 		"rolebinding", "rolebindings", "single-zone", "sso", "stdin", "systest", "tcp", "transactional", "txt", "url",
 		"us", "whitelist", "yaml", "zstd",
