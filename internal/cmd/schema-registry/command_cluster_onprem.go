@@ -3,10 +3,9 @@ package schema_registry
 import (
 	"context"
 
-	"github.com/spf13/cobra"
-
 	"github.com/antihax/optional"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	"github.com/spf13/cobra"
 
 	print "github.com/confluentinc/cli/internal/pkg/cluster"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -54,7 +53,7 @@ func (c *clusterCommandOnPrem) createContext() context.Context {
 	return context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
 }
 
-func (c *clusterCommandOnPrem) list(cmd *cobra.Command, args []string) error {
+func (c *clusterCommandOnPrem) list(cmd *cobra.Command, _ []string) error {
 	schemaClustertype := &mds.ClusterRegistryListOpts{
 		ClusterType: optional.NewString(clusterType),
 	}

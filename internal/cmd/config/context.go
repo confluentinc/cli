@@ -95,7 +95,7 @@ func (c *contextCommand) init() {
 	})
 }
 
-func (c *contextCommand) list(cmd *cobra.Command, args []string) error {
+func (c *contextCommand) list(cmd *cobra.Command, _ []string) error {
 	type row struct {
 		Current    string
 		Name       string
@@ -139,7 +139,7 @@ func (c *contextCommand) use(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *contextCommand) current(cmd *cobra.Command, args []string) error {
+func (c *contextCommand) current(cmd *cobra.Command, _ []string) error {
 	pcmd.Println(cmd, c.Config.CurrentContext)
 	return nil
 }

@@ -26,7 +26,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func printOptionsReST(buf *bytes.Buffer, cmd *cobra.Command, name string) error {
+func printOptionsReST(buf *bytes.Buffer, cmd *cobra.Command) error {
 	long := cmd.Long
 
 	flags := cmd.NonInheritedFlags()
@@ -75,7 +75,7 @@ func GenReSTCustom(cmd *cobra.Command, w io.Writer, linkHandler func(string, str
 	name := cmd.CommandPath()
 
 	short := cmd.Short
-	ref := strings.Replace(name, " ", "_", -1)
+	ref := strings.ReplaceAll(name, " ", "_")
 
 	buf.WriteString(".. _" + ref + ":\n\n")
 	buf.WriteString(name + "\n")
@@ -88,7 +88,7 @@ func GenReSTCustom(cmd *cobra.Command, w io.Writer, linkHandler func(string, str
 		buf.WriteString(fmt.Sprintf("::\n\n  %s\n\n", cmd.UseLine()))
 	}
 
-	if err := printOptionsReST(buf, cmd, name); err != nil {
+	if err := printOptionsReST(buf, cmd); err != nil {
 		return err
 	}
 	if hasSeeAlso(cmd) {
@@ -97,7 +97,7 @@ func GenReSTCustom(cmd *cobra.Command, w io.Writer, linkHandler func(string, str
 		if cmd.HasParent() {
 			parent := cmd.Parent()
 			pname := parent.CommandPath()
-			ref = strings.Replace(pname, " ", "_", -1)
+			ref = strings.ReplaceAll(pname, " ", "_")
 			buf.WriteString(fmt.Sprintf("* %s \t - %s\n", linkHandler(pname, ref), parent.Short))
 			cmd.VisitParents(func(c *cobra.Command) {
 				if c.DisableAutoGenTag {
@@ -114,7 +114,7 @@ func GenReSTCustom(cmd *cobra.Command, w io.Writer, linkHandler func(string, str
 				continue
 			}
 			cname := name + " " + child.Name()
-			ref = strings.Replace(cname, " ", "_", -1)
+			ref = strings.ReplaceAll(cname, " ", "_")
 			buf.WriteString(fmt.Sprintf("* %s \t - %s\n", linkHandler(cname, ref), child.Short))
 		}
 		buf.WriteString("\n")
@@ -149,7 +149,7 @@ func GenReSTTreeCustom(cmd *cobra.Command, dir string, filePrepender func(string
 		}
 	}
 
-	basename := strings.Replace(cmd.CommandPath(), " ", "_", -1) + ".rst"
+	basename := strings.ReplaceAll(cmd.CommandPath(), " ", "_") + ".rst"
 	filename := filepath.Join(dir, basename)
 	f, err := os.Create(filename)
 	if err != nil {

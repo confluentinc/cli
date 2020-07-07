@@ -159,7 +159,7 @@ func (c *clusterCommand) init() {
 	})
 }
 
-func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
+func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
 	req := &schedv1.KafkaCluster{AccountId: c.EnvironmentId()}
 	clusters, err := c.Client.Kafka.List(context.Background(), req)
 	if err != nil {

@@ -62,8 +62,8 @@ type completionCommand struct {
 	rootCmd *cobra.Command
 }
 
-// NewCompletionCmd returns the Cobra command for shell completion.
-func NewCompletionCmd(rootCmd *cobra.Command, cliName string) *cobra.Command {
+// New returns the Cobra command for shell completion.
+func New(rootCmd *cobra.Command, cliName string) *cobra.Command {
 	cmd := &completionCommand{
 		rootCmd: rootCmd,
 	}

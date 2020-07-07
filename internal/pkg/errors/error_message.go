@@ -15,14 +15,19 @@ const (
 	RefuseToOverrideSecretSuggestions = "If you would like to override the existing secret stored for API key \"%s\", use `--force` flag."
 	APIKeyUseFailedErrorMsg           = "unable to set active API key"
 
+	// audit-log command
+	EnsureCPSixPlusSuggestions       = "Ensure that you are running against MDS with CP 6.0+."
+	UnableToAccessEndpointErrorMsg = "unable to access endpoint"
+	UnableToAccessEndpointSuggestions = EnsureCPSixPlusSuggestions
+
 	// login command
 	UnableToSaveUserAuthErrorMsg = "unable to save user authentication"
 	NoEnvironmentFoundErrorMsg   = "no environment found for authenticated user"
 
-	// Confluent Cluster commands
+	// confluent cluster commands
 	FetchClusterMetadataErrorMsg     = "unable to fetch cluster metadata: %s - %s"
 	AccessClusterRegistryErrorMsg    = "unable to access Cluster Registry"
-	AccessClusterRegistrySuggestions = "Ensure that you are running against MDS with CP 6.0+."
+	AccessClusterRegistrySuggestions = EnsureCPSixPlusSuggestions
 
 	// connect and connector-catalog commands
 	EmptyConfigFileErrorMsg        = "connector config file \"%s\" is empty"

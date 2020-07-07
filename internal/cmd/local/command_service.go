@@ -630,9 +630,9 @@ func checkOSVersion() error {
 			return err
 		}
 
-		v10_13, _ := version.NewSemver("10.13")
-		if v.Compare(v10_13) < 0 {
-			return errors.Errorf(errors.MacVersionErrorMsg, osVersion)
+		required, _ := version.NewSemver("10.13")
+		if v.Compare(required) < 0 {
+			return fmt.Errorf(errors.MacVersionErrorMsg, osVersion)
 		}
 	}
 	return nil

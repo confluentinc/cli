@@ -48,7 +48,7 @@ func (c *regionCommand) init() {
 	c.AddCommand(listCmd)
 }
 
-func (c *regionCommand) list(cmd *cobra.Command, args []string) error {
+func (c *regionCommand) list(cmd *cobra.Command, _ []string) error {
 	clouds, err := c.Client.EnvironmentMetadata.Get(context.Background())
 	if err != nil {
 		return errors.HandleCommon(err, cmd)

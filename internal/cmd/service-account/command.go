@@ -193,7 +193,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *command) list(cmd *cobra.Command, args []string) error {
+func (c *command) list(cmd *cobra.Command, _ []string) error {
 	users, err := c.Client.User.GetServiceAccounts(context.Background())
 	if err != nil {
 		return errors.HandleCommon(err, cmd)

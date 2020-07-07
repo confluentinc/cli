@@ -60,6 +60,6 @@ func appendIfNotPresent(s, stringToAppend string) string {
 
 // rpad adds padding to the right of a string.
 func rpad(s string, padding int) string {
-	template := fmt.Sprintf("%%-%ds", padding)
-	return fmt.Sprintf(template, s)
+	temp := fmt.Sprintf("%%-%ds", padding)
+	return fmt.Sprintf(temp, s)
 }

@@ -37,7 +37,7 @@ func (c *listCommand) createContext() context.Context {
 	return context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
 }
 
-func (c *listCommand) list(cmd *cobra.Command, args []string) error {
+func (c *listCommand) list(cmd *cobra.Command, _ []string) error {
 	clusterInfos, response, err := c.MDSClient.ClusterRegistryApi.ClusterRegistryList(c.createContext(), &mds.ClusterRegistryListOpts{})
 	if err != nil {
 		return print.HandleClusterError(cmd, err, response)

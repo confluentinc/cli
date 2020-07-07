@@ -1,14 +1,12 @@
 package auditlog
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/errors"
-
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 type command struct {
@@ -40,7 +38,7 @@ func (c *command) init() {
 func HandleMdsAuditLogApiError(cmd *cobra.Command, err error, response *http.Response) error {
 	if response != nil && response.StatusCode == http.StatusNotFound {
 		cmd.SilenceUsage = true
-		return fmt.Errorf("Unable to access endpoint (%s). Ensure that you're running against MDS with CP 6.0+.", err.Error())
+		return errors.HandleCommon(errors.NewWrapErrorWithSuggestions(err, errors.UnableToAccessEndpointErrorMsg, errors.UnableToAccessEndpointSuggestions), cmd)
 	}
 	return errors.HandleCommon(err, cmd)
 }

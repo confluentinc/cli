@@ -135,7 +135,7 @@ func (c *subjectCommand) updateMode(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *subjectCommand) list(cmd *cobra.Command, args []string) error {
+func (c *subjectCommand) list(cmd *cobra.Command, _ []string) error {
 	type listDisplay struct {
 		Subject string
 	}

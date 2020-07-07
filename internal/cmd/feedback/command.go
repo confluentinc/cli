@@ -12,7 +12,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
-func NewFeedbackCmd(cliName string, prerunner pcmd.PreRunner, analytics analytics.Client) *cobra.Command {
+func New(cliName string, prerunner pcmd.PreRunner, analytics analytics.Client) *cobra.Command {
 	prompt := pcmd.NewPrompt(os.Stdin)
 	return NewFeedbackCmdWithPrompt(cliName, prerunner, analytics, prompt)
 }

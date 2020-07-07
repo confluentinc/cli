@@ -100,7 +100,7 @@ func (c *clusterCommand) init(cliName string) {
 	c.AddCommand(updateCmd)
 }
 
-func (c *clusterCommand) enable(cmd *cobra.Command, args []string) error {
+func (c *clusterCommand) enable(cmd *cobra.Command, _ []string) error {
 	ctx := context.Background()
 	// Collect the parameters
 	serviceProvider, err := cmd.Flags().GetString("cloud")
@@ -144,7 +144,7 @@ func (c *clusterCommand) enable(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
+func (c *clusterCommand) describe(cmd *cobra.Command, _ []string) error {
 	var compatibility string
 	var mode string
 	var numSchemas string

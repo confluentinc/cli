@@ -75,7 +75,7 @@ func (c *roleCommand) init() {
 	c.AddCommand(describeCmd)
 }
 
-func (c *roleCommand) list(cmd *cobra.Command, args []string) error {
+func (c *roleCommand) list(cmd *cobra.Command, _ []string) error {
 	roles, _, err := c.MDSClient.RBACRoleDefinitionsApi.Roles(c.createContext())
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
