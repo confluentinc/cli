@@ -35,9 +35,9 @@ func (c *aclCommand) init(cliName string) {
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: `Create a Kafka ACL.`,
-		Example: `You can only specify one of these flags per command invocation: ` + "``cluster``, ``consumer-group``" + `,
-` + "``topic``, or ``transactional-id``" + ` per command invocation. For example, if you want to specify both
-` + "``consumer-group`` and ``topic``" + `, you must specify this as two separate commands:
+		Example: `You can specify only one of these flags per command invocation: ` + "``cluster``, ``consumer-group``" + `,
+` + "``topic``, or ``transactional-id``" + `. For example, if you want to specify both
+` + "``consumer-group`` and ``topic``" + `, you must use two separate commands:
 
 ::
 

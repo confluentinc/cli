@@ -60,7 +60,7 @@ func NewRolebindingCommand(prerunner cmd.PreRunner) *cobra.Command {
 		&cobra.Command{
 			Use:   "rolebinding",
 			Short: "Manage RBAC and IAM role bindings.",
-			Long:  "Manage Role Based Access (RBAC) and Identity and Access Management (IAM) role bindings.",
+			Long:  "Manage Role-Based Access Control (RBAC) and Identity and Access Management (IAM) role bindings.",
 		}, prerunner)
 	roleBindingCmd := &rolebindingCommand{AuthenticatedCLICommand: cliCmd}
 	roleBindingCmd.init()
