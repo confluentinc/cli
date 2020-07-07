@@ -1,4 +1,4 @@
 Error: "oops" is not an available region for "aws"
 
 Suggestions:
-    You can view a list of available regions for "aws" with `ccloud kafka region list --cloud aws` command.
+    To view a list of available regions for "aws", use `ccloud kafka region list --cloud aws`.

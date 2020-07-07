@@ -1,4 +1,4 @@
 Error: "oops" is not an available cloud provider
 
 Suggestions:
-    You can view a list of available cloud providers and regions with the `ccloud kafka region list` command.
+    To view a list of available cloud providers and regions, use `ccloud kafka region list`.
