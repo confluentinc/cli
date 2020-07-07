@@ -4,13 +4,15 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
+	"io/ioutil"
+	"os"
+
 	"github.com/confluentinc/go-editor"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/spf13/cobra"
-	"io/ioutil"
-	"os"
+
+	"github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 
 	"net/http"
 )
@@ -39,7 +41,7 @@ func NewConfigCommand(prerunner cmd.PreRunner) *cobra.Command {
 func (c *configCommand) init() {
 	describeCmd := &cobra.Command{
 		Use:   "describe",
-		Short: "Prints the audit log configuration spec object.",
+		Short: "Prints the audit log configuration spec object. \"Spec\" refers to the JSON blob that describes audit log routing rules.",
 		RunE:  c.describe,
 		Args:  cobra.NoArgs,
 	}
@@ -60,7 +62,7 @@ func (c *configCommand) init() {
 	editCmd := &cobra.Command{
 		Use:   "edit",
 		Short: "Edit the audit-log config spec interactively.",
-		Long:  "Edit the audit-log config spec object interactively, using the EDITOR specified in your environment.",
+		Long:  "Edit the audit-log config spec object interactively, using the $EDITOR specified in your environment (for example, vim).",
 		RunE:  c.edit,
 		Args:  cobra.NoArgs,
 	}

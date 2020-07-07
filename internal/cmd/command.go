@@ -108,7 +108,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 	command := &Command{Command: cli, Analytics: analyticsClient, logger: logger}
 
 	cli.Version = ver.Version
-	cli.AddCommand(version.NewVersionCmd(prerunner, ver))
+	cli.AddCommand(version.NewVersionCmd(cliName, prerunner, ver))
 
 	cli.AddCommand(completion.NewCompletionCmd(cli, cliName))
 
