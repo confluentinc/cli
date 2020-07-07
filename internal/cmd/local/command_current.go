@@ -3,9 +3,8 @@ package local
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/examples"
-
 	"github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/examples"
 )
 
 func NewCurrentCommand(prerunner cmd.PreRunner) *cobra.Command {

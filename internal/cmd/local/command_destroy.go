@@ -3,11 +3,10 @@ package local
 import (
 	"fmt"
 
-	"github.com/confluentinc/cli/internal/pkg/examples"
-
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/examples"
 )
 
 func NewDestroyCommand(prerunner cmd.PreRunner) *cobra.Command {

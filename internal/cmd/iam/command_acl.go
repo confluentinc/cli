@@ -5,14 +5,13 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/confluentinc/cli/internal/pkg/examples"
-
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
