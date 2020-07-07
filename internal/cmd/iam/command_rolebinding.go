@@ -74,7 +74,7 @@ func (c *rolebindingCommand) init() {
 		Long:  "List the role bindings for a particular principal and/or role, and a particular scope.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Desc: "Only use the `--resource` flag when specifying a `--role` with no `--principal` specified. If specifying a `--principal`, then the `--resource` flag is ignored. To list role bindings for a specific role on an identified resource:",
+				Desc: "Only use the ``--resource`` flag when specifying a ``--role`` with no ``--principal`` specified. If specifying a ``--principal``, then the ``--resource`` flag is ignored. To list role bindings for a specific role on an identified resource:",
 				Code: "iam rolebinding list --kafka-cluster-id CID  --role DeveloperRead --resource Topic",
 			},
 			examples.Example{
