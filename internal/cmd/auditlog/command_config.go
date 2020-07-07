@@ -41,7 +41,8 @@ func NewConfigCommand(prerunner cmd.PreRunner) *cobra.Command {
 func (c *configCommand) init() {
 	describeCmd := &cobra.Command{
 		Use:   "describe",
-		Short: "Prints the audit log configuration spec object. \"Spec\" refers to the JSON blob that describes audit log routing rules.",
+		Short: "Prints the audit log configuration spec object.",
+		Long:  "Prints the audit log configuration spec object, where \"spec\" refers to the JSON blob that describes audit log routing rules.",
 		RunE:  c.describe,
 		Args:  cobra.NoArgs,
 	}
