@@ -2,11 +2,13 @@ package auditlog
 
 import (
 	"encoding/json"
+
 	"github.com/antihax/optional"
-	"github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 
 	"context"
 )
@@ -40,7 +42,7 @@ func (c *routeCommand) init() {
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	}
-	listCmd.Flags().StringP("resource", "r", "", "The confluent resource name that is the subject of the query.")
+	listCmd.Flags().StringP("resource", "r", "", "The Confluent resource name (CRN) that is the subject of the query.")
 	check(listCmd.MarkFlagRequired("resource"))
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
@@ -48,7 +50,7 @@ func (c *routeCommand) init() {
 	lookupCmd := &cobra.Command{
 		Use:   "lookup <crn>",
 		Short: "Returns the matching audit-log route rule.",
-		Long:  "Returns the single route that describes how audit log messages regarding this CRN would be routed, with all defaults populated.",
+		Long:  "Returns the single route that describes how audit log messages using this CRN would be routed, with all defaults populated.",
 		RunE:  c.lookup,
 		Args:  cobra.ExactArgs(1),
 	}

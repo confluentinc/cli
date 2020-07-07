@@ -55,8 +55,8 @@ func (c *configCommand) init() {
 		RunE:  c.update,
 		Args:  cobra.NoArgs,
 	}
-	updateCmd.Flags().String("file", "", "A local file path, read as input. Otherwise the command will read from standard in.")
-	updateCmd.Flags().Bool("force", false, "Tries to update even with concurrent modifications.")
+	updateCmd.Flags().String("file", "", "A local file path to the JSON configuration file, read as input. Otherwise the command will read from standard input.")
+	updateCmd.Flags().Bool("force", false, "Updates the configuration, overwriting any concurrent modifications.")
 	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
 

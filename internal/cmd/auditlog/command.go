@@ -2,9 +2,11 @@ package auditlog
 
 import (
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/spf13/cobra"
 	"net/http"
+
+	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
@@ -20,7 +22,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 		&cobra.Command{
 			Use:   "audit-log",
 			Short: "Manage audit log configuration.",
-			Long:  "Manage which auditable events are logged, and where the events are sent.",
+			Long:  "Manage which auditable events are logged, and where the event logs are sent.",
 		}, prerunner)
 	cmd := &command{
 		AuthenticatedCLICommand: cliCmd,
@@ -34,7 +36,6 @@ func (c *command) init() {
 	c.AddCommand(NewConfigCommand(c.prerunner))
 	c.AddCommand(NewRouteCommand(c.prerunner))
 }
-
 
 func HandleMdsAuditLogApiError(cmd *cobra.Command, err error, response *http.Response) error {
 	if response != nil && response.StatusCode == http.StatusNotFound {

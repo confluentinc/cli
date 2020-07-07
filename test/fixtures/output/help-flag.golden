@@ -21,7 +21,7 @@ Available Commands:
   schema-registry   Manage Schema Registry.
   service-account   Manage service accounts.
   update            Update the CCloud CLI.
-  version           Print the ccloud CLI version.
+  version           Print the CCloud CLI version.
 
 Flags:
   -h, --help            help for ccloud
