@@ -2,10 +2,10 @@ The local commands are intended for a single-node development environment only,
 NOT for production usage. https://docs.confluent.io/current/cli/index.html
 
 Using CONFLUENT_CURRENT: .+confluent.\d{6}
-control-center is \[DOWN\]
-ksql-server is \[DOWN\]
-connect is \[DOWN\]
-kafka-rest is \[DOWN\]
-schema-registry is \[DOWN\]
-kafka is \[DOWN\]
-zookeeper is \[DOWN\]
+Control Center is \[DOWN\]
+KSQL Server is \[DOWN\]
+Connect is \[DOWN\]
+Kafka REST is \[DOWN\]
+Schema Registry is \[DOWN\]
+Kafka is \[DOWN\]
+Zookeeper is \[DOWN\]

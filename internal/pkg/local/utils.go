@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"regexp"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -12,8 +11,6 @@ import (
 )
 
 func BuildTabbedList(arr []string) string {
-	sort.Strings(arr)
-
 	var list strings.Builder
 	for _, x := range arr {
 		fmt.Fprintf(&list, "  %s\n", x)
@@ -21,11 +18,11 @@ func BuildTabbedList(arr []string) string {
 	return list.String()
 }
 
-func ExtractConfig(data []byte) map[string]string {
+func ExtractConfig(data []byte) map[string]interface{} {
 	re := regexp.MustCompile(`(?m)^[^\s#]*=.+`)
 	matches := re.FindAllString(string(data), -1)
-	config := map[string]string{}
 
+	config := make(map[string]interface{})
 	for _, match := range matches {
 		x := strings.Split(match, "=")
 		key, val := x[0], x[1]
@@ -53,16 +50,25 @@ func CollectFlags(flags *pflag.FlagSet, flagTypes map[string]interface{}) ([]str
 		switch typeDefault.(type) {
 		case bool:
 			val, err = flags.GetBool(key)
-		case string:
-			val, err = flags.GetString(key)
 		case int:
 			val, err = flags.GetInt(key)
+		case string:
+			val, err = flags.GetString(key)
+		case []string:
+			val, err = flags.GetStringArray(key)
 		}
-
 		if err != nil {
 			return []string{}, err
 		}
-		if val == typeDefault {
+
+		isDefault := false
+		switch typeDefault.(type) {
+		case bool, int, string:
+			isDefault = val == typeDefault
+		default:
+			isDefault = val == nil
+		}
+		if isDefault {
 			continue
 		}
 
@@ -71,10 +77,14 @@ func CollectFlags(flags *pflag.FlagSet, flagTypes map[string]interface{}) ([]str
 		switch typeDefault.(type) {
 		case bool:
 			args = append(args, flag)
-		case string:
-			args = append(args, flag, val.(string))
 		case int:
 			args = append(args, flag, strconv.Itoa(val.(int)))
+		case string:
+			args = append(args, flag, val.(string))
+		case []string:
+			for _, v := range val.([]string) {
+				args = append(args, flag, v)
+			}
 		}
 	}
 

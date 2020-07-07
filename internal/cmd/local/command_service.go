@@ -23,9 +23,9 @@ import (
 func NewServiceCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
-			Use:   fmt.Sprintf("%s [command]", service),
-			Short: fmt.Sprintf("Manage the %s service.", service),
-			Args:  cobra.ExactArgs(1),
+			Use:   service,
+			Short: fmt.Sprintf("Manage the %s service.", writeServiceName(service)),
+			Args:  cobra.NoArgs,
 		}, prerunner)
 
 	c.AddCommand(NewServiceLogCommand(service, prerunner))
@@ -53,7 +53,7 @@ func NewServiceLogCommand(service string, prerunner cmd.PreRunner) *cobra.Comman
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "log",
-			Short: fmt.Sprintf("Print logs for %s.", service),
+			Short: fmt.Sprintf("Print logs for %s.", writeServiceName(service)),
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
@@ -61,7 +61,7 @@ func NewServiceLogCommand(service string, prerunner cmd.PreRunner) *cobra.Comman
 	return c.Command
 }
 
-func (c *LocalCommand) runServiceLogCommand(command *cobra.Command, _ []string) error {
+func (c *Command) runServiceLogCommand(command *cobra.Command, _ []string) error {
 	service := command.Parent().Name()
 
 	log, err := c.cc.GetLogFile(service)
@@ -71,7 +71,7 @@ func (c *LocalCommand) runServiceLogCommand(command *cobra.Command, _ []string) 
 
 	data, err := ioutil.ReadFile(log)
 	if err != nil {
-		return fmt.Errorf("no log found: to run %s, use \"confluent local services %s start\"", service, service)
+		return fmt.Errorf("no log found: to run %s, use \"confluent local services %s start\"", writeServiceName(service), service)
 	}
 	command.Print(string(data))
 
@@ -82,15 +82,17 @@ func NewServiceStartCommand(service string, prerunner cmd.PreRunner) *cobra.Comm
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "start",
-			Short: fmt.Sprintf("Start %s.", service),
+			Short: fmt.Sprintf("Start the %s service.", writeServiceName(service)),
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
 	c.Command.RunE = c.runServiceStartCommand
+	c.Command.Flags().StringP("config", "c", "", fmt.Sprintf("Configure %s with a specific properties file.", service))
+
 	return c.Command
 }
 
-func (c *LocalCommand) runServiceStartCommand(command *cobra.Command, _ []string) error {
+func (c *Command) runServiceStartCommand(command *cobra.Command, _ []string) error {
 	service := command.Parent().Name()
 
 	if err := c.notifyConfluentCurrent(command); err != nil {
@@ -98,19 +100,24 @@ func (c *LocalCommand) runServiceStartCommand(command *cobra.Command, _ []string
 	}
 
 	for _, dependency := range services[service].startDependencies {
-		if err := c.startService(command, dependency); err != nil {
+		if err := c.startService(command, dependency, ""); err != nil {
 			return err
 		}
 	}
 
-	return c.startService(command, service)
+	configFile, err := command.Flags().GetString("config")
+	if err != nil {
+		return err
+	}
+
+	return c.startService(command, service, configFile)
 }
 
 func NewServiceStatusCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "status",
-			Short: fmt.Sprintf("Check the status of %s.", service),
+			Short: fmt.Sprintf("Check the status of %s.", writeServiceName(service)),
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
@@ -118,7 +125,7 @@ func NewServiceStatusCommand(service string, prerunner cmd.PreRunner) *cobra.Com
 	return c.Command
 }
 
-func (c *LocalCommand) runServiceStatusCommand(command *cobra.Command, _ []string) error {
+func (c *Command) runServiceStatusCommand(command *cobra.Command, _ []string) error {
 	service := command.Parent().Name()
 
 	if err := c.notifyConfluentCurrent(command); err != nil {
@@ -132,7 +139,7 @@ func NewServiceStopCommand(service string, prerunner cmd.PreRunner) *cobra.Comma
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "stop",
-			Short: fmt.Sprintf("Stop %s.", service),
+			Short: fmt.Sprintf("Stop the %s service.", writeServiceName(service)),
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
@@ -140,7 +147,7 @@ func NewServiceStopCommand(service string, prerunner cmd.PreRunner) *cobra.Comma
 	return c.Command
 }
 
-func (c *LocalCommand) runServiceStopCommand(command *cobra.Command, _ []string) error {
+func (c *Command) runServiceStopCommand(command *cobra.Command, _ []string) error {
 	service := command.Parent().Name()
 
 	if err := c.notifyConfluentCurrent(command); err != nil {
@@ -160,7 +167,7 @@ func NewServiceTopCommand(service string, prerunner cmd.PreRunner) *cobra.Comman
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "top",
-			Short: fmt.Sprintf("Monitor %s processes.", service),
+			Short: fmt.Sprintf("Monitor %s processes.", writeServiceName(service)),
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
@@ -168,7 +175,7 @@ func NewServiceTopCommand(service string, prerunner cmd.PreRunner) *cobra.Comman
 	return c.Command
 }
 
-func (c *LocalCommand) runServiceTopCommand(command *cobra.Command, _ []string) error {
+func (c *Command) runServiceTopCommand(command *cobra.Command, _ []string) error {
 	service := command.Parent().Name()
 
 	isUp, err := c.isRunning(service)
@@ -191,7 +198,7 @@ func NewServiceVersionCommand(service string, prerunner cmd.PreRunner) *cobra.Co
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "version",
-			Short: fmt.Sprintf("Print the version of %s.", service),
+			Short: fmt.Sprintf("Print the version of %s.", writeServiceName(service)),
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
@@ -200,7 +207,7 @@ func NewServiceVersionCommand(service string, prerunner cmd.PreRunner) *cobra.Co
 	return c.Command
 }
 
-func (c *LocalCommand) runServiceVersionCommand(command *cobra.Command, _ []string) error {
+func (c *Command) runServiceVersionCommand(command *cobra.Command, _ []string) error {
 	service := command.Parent().Name()
 
 	ver, err := c.ch.GetVersion(service)
@@ -212,7 +219,7 @@ func (c *LocalCommand) runServiceVersionCommand(command *cobra.Command, _ []stri
 	return nil
 }
 
-func (c *LocalCommand) startService(command *cobra.Command, service string) error {
+func (c *Command) startService(command *cobra.Command, service string, configFile string) error {
 	isUp, err := c.isRunning(service)
 	if err != nil {
 		return err
@@ -225,11 +232,11 @@ func (c *LocalCommand) startService(command *cobra.Command, service string) erro
 		return err
 	}
 
-	if err := c.configService(service); err != nil {
+	if err := c.configService(service, configFile); err != nil {
 		return err
 	}
 
-	command.Printf("Starting %s\n", service)
+	command.Printf("Starting %s\n", writeServiceName(service))
 
 	spin := spinner.New()
 	spin.Start()
@@ -254,7 +261,7 @@ func checkService(service string) error {
 	return nil
 }
 
-func (c *LocalCommand) configService(service string) error {
+func (c *Command) configService(service string, configFile string) error {
 	port, err := c.ch.ReadServicePort(service)
 	if err != nil {
 		if err.Error() != "no port specified" {
@@ -264,7 +271,12 @@ func (c *LocalCommand) configService(service string) error {
 		services[service].port = port
 	}
 
-	data, err := c.ch.ReadServiceConfig(service)
+	var data []byte
+	if configFile == "" {
+		data, err = c.ch.ReadServiceConfig(service)
+	} else {
+		data, err = ioutil.ReadFile(configFile)
+	}
 	if err != nil {
 		return err
 	}
@@ -315,7 +327,7 @@ func injectConfig(data []byte, config map[string]string) []byte {
 	return data
 }
 
-func (c *LocalCommand) startProcess(service string) error {
+func (c *Command) startProcess(service string) error {
 	scriptFile, err := c.ch.GetServiceScript("start", service)
 	if err != nil {
 		return err
@@ -368,7 +380,7 @@ func (c *LocalCommand) startProcess(service string) error {
 	case err := <-errors:
 		return err
 	case <-time.After(time.Second):
-		return fmt.Errorf("%s failed to start", service)
+		return fmt.Errorf("%s failed to start", writeServiceName(service))
 	}
 
 	open := make(chan bool)
@@ -390,13 +402,13 @@ func (c *LocalCommand) startProcess(service string) error {
 	case err := <-errors:
 		return err
 	case <-time.After(90 * time.Second):
-		return fmt.Errorf("%s failed to start", service)
+		return fmt.Errorf("%s failed to start", writeServiceName(service))
 	}
 
 	return nil
 }
 
-func (c *LocalCommand) stopService(command *cobra.Command, service string) error {
+func (c *Command) stopService(command *cobra.Command, service string) error {
 	isUp, err := c.isRunning(service)
 	if err != nil {
 		return err
@@ -405,7 +417,7 @@ func (c *LocalCommand) stopService(command *cobra.Command, service string) error
 		return c.printStatus(command, service)
 	}
 
-	command.Printf("Stopping %s\n", service)
+	command.Printf("Stopping %s\n", writeServiceName(service))
 
 	spin := spinner.New()
 	spin.Start()
@@ -418,7 +430,7 @@ func (c *LocalCommand) stopService(command *cobra.Command, service string) error
 	return c.printStatus(command, service)
 }
 
-func (c *LocalCommand) stopProcess(service string) error {
+func (c *Command) stopProcess(service string) error {
 	scriptFile, err := c.ch.GetServiceScript("stop", service)
 	if err != nil {
 		return err
@@ -463,8 +475,10 @@ func (c *LocalCommand) stopProcess(service string) error {
 		break
 	case err := <-errors:
 		return err
-	case <-time.After(30 * time.Second):
-		return fmt.Errorf("%s failed to stop", service)
+	case <-time.After(10 * time.Second):
+		if err := c.killProcess(service); err != nil {
+			return err
+		}
 	}
 
 	if err := c.cc.RemovePidFile(service); err != nil {
@@ -474,7 +488,45 @@ func (c *LocalCommand) stopProcess(service string) error {
 	return nil
 }
 
-func (c *LocalCommand) printStatus(command *cobra.Command, service string) error {
+func (c *Command) killProcess(service string) error {
+	pid, err := c.cc.ReadPid(service)
+	if err != nil {
+		return err
+	}
+
+	process, err := os.FindProcess(pid)
+	if err != nil {
+		return err
+	}
+
+	if err := process.Signal(syscall.SIGKILL); err != nil {
+		return err
+	}
+
+	errors := make(chan error)
+	up := make(chan bool)
+	go func() {
+		for {
+			isUp, err := c.isRunning(service)
+			if err != nil {
+				errors <- err
+			}
+			if !isUp {
+				up <- isUp
+			}
+		}
+	}()
+	select {
+	case <-up:
+		return nil
+	case err := <-errors:
+		return err
+	case <-time.After(time.Second):
+		return fmt.Errorf("%s failed to stop", writeServiceName(service))
+	}
+}
+
+func (c *Command) printStatus(command *cobra.Command, service string) error {
 	isUp, err := c.isRunning(service)
 	if err != nil {
 		return err
@@ -485,11 +537,11 @@ func (c *LocalCommand) printStatus(command *cobra.Command, service string) error
 		status = color.GreenString("UP")
 	}
 
-	command.Printf("%s is [%s]\n", service, status)
+	command.Printf("%s is [%s]\n", writeServiceName(service), status)
 	return nil
 }
 
-func (c *LocalCommand) isRunning(service string) (bool, error) {
+func (c *Command) isRunning(service string) (bool, error) {
 	hasPidFile, err := c.cc.HasPidFile(service)
 	if err != nil {
 		return false, err
@@ -644,4 +696,15 @@ func isValidJavaVersion(service, javaVersion string) (bool, error) {
 	}
 
 	return true, nil
+}
+
+func writeServiceName(service string) string {
+	switch service {
+	case "kafka-rest":
+		return "Kafka REST"
+	case "ksql-server":
+		return "KSQL Server"
+	}
+
+	return strings.Title(strings.ReplaceAll(service, "-", " "))
 }

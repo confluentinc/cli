@@ -60,7 +60,7 @@ func TestConfig_Load(t *testing.T) {
 				},
 			},
 			Organization: &orgv1.Organization{
-				Id: 321,
+				Id:   321,
 				Name: "test-org",
 			},
 		},
@@ -186,7 +186,7 @@ func TestConfig_Load(t *testing.T) {
 					"acc-123\":{\"id\":\"lsrc-123\",\"schema_registry_endpoint\":\"http://some-lsrc-endpoint\",\"" +
 					"schema_registry_credentials\":null}}}},\"context_states\":{\"my-context\":{\"auth\":{\"user\"" +
 					":{\"id\":123,\"email\":\"test-user@email\"},\"account\":{\"id\":\"acc-123\",\"name\":\"test-env\"" +
-					"},\"accounts\":[{\"id\":\"acc-123\",\"name\":\"test-env\"}],\"organization\":{\"id\":321,\"name\":\"test-org\"}},"+
+					"},\"accounts\":[{\"id\":\"acc-123\",\"name\":\"test-env\"}],\"organization\":{\"id\":321,\"name\":\"test-org\"}}," +
 					"\"auth_token\":\"abc123\"}},\"current_context\":\"my-context\"}",
 			},
 			want: &Config{
@@ -309,7 +309,7 @@ func TestConfig_Save(t *testing.T) {
 				},
 			},
 			Organization: &orgv1.Organization{
-				Id: 321,
+				Id:   321,
 				Name: "test-org",
 			},
 		},

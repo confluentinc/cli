@@ -9,7 +9,7 @@ import (
 type command struct {
 	*pcmd.AuthenticatedCLICommand
 	prerunner pcmd.PreRunner
-	cliName string
+	cliName   string
 }
 
 // New returns the default command object for interacting with RBAC.

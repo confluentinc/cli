@@ -1,8 +1,9 @@
 package release_notes
 
 import (
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func Test_Prep_Reader_Imp_Read_File(t *testing.T) {

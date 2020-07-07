@@ -84,7 +84,7 @@ Update the description of a service account with the ID ` + "``2786``" + `.
 
 ::
 
-    ccloud service-account update service-account-id 2786 \
+    ccloud service-account update 2786 \
     --description "Update demo service account information."
 
 `,

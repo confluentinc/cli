@@ -12,21 +12,20 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/local"
 )
 
-const (
-	defaultBool   = false
-	defaultInt    = 0
-	defaultString = ""
-)
-
 var (
+	defaultBool        bool
+	defaultInt         int
+	defaultString      string
+	defaultStringArray []string
+
 	commonFlagUsage = map[string]string{
-		"bootstrap-server": "The server(s) to connect to. The broker list string has the form HOST1:PORT1,HOST2:PORT2.",
-		"cloud":            "Consume from Confluent Cloud.",
-		"config":           "Change the ccloud configuration file.",
-		"value-format":     "Format output data: avro, json, or protobuf.",
+		"cloud":        "Consume from Confluent Cloud.",
+		"config":       "Change the ccloud configuration file.",
+		"value-format": "Format output data: avro, json, or protobuf.",
 	}
 
 	kafkaConsumeFlagUsage = map[string]string{
+		"bootstrap-server":      "The server(s) to connect to. The broker list string has the form HOST1:PORT1,HOST2:PORT2.",
 		"consumer-property":     "A mechanism to pass user-defined properties in the form key=value to the consumer.",
 		"consumer.config":       "Consumer config properties file. Note that [consumer-property] takes precedence over this config.",
 		"enable-systest-events": "Log lifecycle events of the consumer in addition to logging consumed messages. (This is specific for system tests.)",
@@ -45,6 +44,7 @@ var (
 		"whitelist":             "Regular expression specifying whitelist of topics to include for consumption.",
 	}
 	kafkaConsumeDefaultValues = map[string]interface{}{
+		"bootstrap-server":      defaultString,
 		"consumer-property":     defaultString,
 		"consumer.config":       defaultString,
 		"enable-systest-events": defaultBool,
@@ -56,7 +56,7 @@ var (
 		"max-messages":          defaultInt,
 		"offset":                defaultString,
 		"partition":             defaultInt,
-		"property":              defaultString,
+		"property":              defaultStringArray,
 		"skip-message-on-error": defaultBool,
 		"timeout-ms":            defaultInt,
 		"value-deserializer":    defaultString,
@@ -64,6 +64,7 @@ var (
 	}
 
 	kafkaProduceFlagUsage = map[string]string{
+		"bootstrap-server":           "The server(s) to connect to. The broker list string has the form HOST1:PORT1,HOST2:PORT2.",
 		"batch-size":                 "Number of messages to send in a single batch if they are not being sent synchronously. (default 200)",
 		"compression-codec":          "The compression codec: either \"none\", \"gzip\", \"snappy\", \"lz4\", or \"zstd\". If specified without value, the it defaults to \"gzip\".",
 		"line-reader":                "The class name of the class to use for reading lines from stdin. By default each line is read as a separate message. (default \"kafka.tools.ConsoleProducer$LineMessageReader\")",
@@ -84,6 +85,7 @@ var (
 	}
 	kafkaProduceDefaultValues = map[string]interface{}{
 		"batch-size":                 defaultInt,
+		"bootstrap-server":           defaultString,
 		"compression-codec":          defaultString,
 		"line-reader":                defaultString,
 		"max-block-ms":               defaultInt,
@@ -93,7 +95,7 @@ var (
 		"metadata-expiry-ms":         defaultInt,
 		"producer-property":          defaultString,
 		"producer.config":            defaultString,
-		"property":                   defaultString,
+		"property":                   defaultStringArray,
 		"request-required-acks":      defaultString,
 		"request-timeout-ms":         defaultInt,
 		"retry-backoff-ms":           defaultInt,
@@ -107,36 +109,17 @@ func NewKafkaConsumeCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "consume [topic]",
-			Short: "Consume from a kafka topic.",
+			Short: "Consume from a Kafka topic.",
 			Args:  cobra.ExactArgs(1),
 		}, prerunner)
 
 	c.Command.RunE = c.runKafkaConsumeCommand
-
-	// CLI Flags
-	c.Flags().Bool("cloud", defaultBool, commonFlagUsage["cloud"])
-	defaultConfig := fmt.Sprintf("%s/.ccloud/config", os.Getenv("HOME"))
-	c.Flags().String("config", defaultConfig, commonFlagUsage["config"])
-	c.Flags().String("value-format", defaultString, commonFlagUsage["value-format"])
-
-	// Kafka Flags
-	defaultBootstrapServer := fmt.Sprintf("localhost:%d", services["kafka"].port)
-	c.Flags().String("bootstrap-server", defaultBootstrapServer, commonFlagUsage["bootstrap-server"])
-	for flag, val := range kafkaConsumeDefaultValues {
-		switch val.(type) {
-		case bool:
-			c.Flags().Bool(flag, val.(bool), kafkaConsumeFlagUsage[flag])
-		case int:
-			c.Flags().Int(flag, val.(int), kafkaConsumeFlagUsage[flag])
-		case string:
-			c.Flags().String(flag, val.(string), kafkaConsumeFlagUsage[flag])
-		}
-	}
+	c.initFlags("consume")
 
 	return c.Command
 }
 
-func (c *LocalCommand) runKafkaConsumeCommand(command *cobra.Command, args []string) error {
+func (c *Command) runKafkaConsumeCommand(command *cobra.Command, args []string) error {
 	return c.runKafkaCommand(command, args, "consume", kafkaConsumeDefaultValues)
 }
 
@@ -144,12 +127,21 @@ func NewKafkaProduceCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "produce [topic]",
-			Short: "Produce to a kafka topic.",
+			Short: "Produce to a Kafka topic.",
 			Args:  cobra.ExactArgs(1),
 		}, prerunner)
 
 	c.Command.RunE = c.runKafkaProduceCommand
+	c.initFlags("produce")
 
+	return c.Command
+}
+
+func (c *Command) runKafkaProduceCommand(command *cobra.Command, args []string) error {
+	return c.runKafkaCommand(command, args, "produce", kafkaProduceDefaultValues)
+}
+
+func (c *Command) initFlags(mode string) {
 	// CLI Flags
 	c.Flags().Bool("cloud", defaultBool, commonFlagUsage["cloud"])
 	defaultConfig := fmt.Sprintf("%s/.ccloud/config", os.Getenv("HOME"))
@@ -157,27 +149,28 @@ func NewKafkaProduceCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c.Flags().String("value-format", defaultString, commonFlagUsage["value-format"])
 
 	// Kafka Flags
-	defaultBootstrapServer := fmt.Sprintf("localhost:%d", services["kafka"].port)
-	c.Flags().String("bootstrap-server", defaultBootstrapServer, commonFlagUsage["bootstrap-server"])
-	for flag, val := range kafkaProduceDefaultValues {
-		switch val.(type) {
-		case bool:
-			c.Flags().Bool(flag, val.(bool), kafkaProduceFlagUsage[flag])
-		case int:
-			c.Flags().Int(flag, val.(int), kafkaProduceFlagUsage[flag])
-		case string:
-			c.Flags().String(flag, val.(string), kafkaProduceFlagUsage[flag])
-		}
+	defaults := kafkaConsumeDefaultValues
+	usage := kafkaConsumeFlagUsage
+	if mode == "produce" {
+		defaults = kafkaProduceDefaultValues
+		usage = kafkaProduceFlagUsage
 	}
 
-	return c.Command
+	for flag, val := range defaults {
+		switch val.(type) {
+		case bool:
+			c.Flags().Bool(flag, val.(bool), usage[flag])
+		case int:
+			c.Flags().Int(flag, val.(int), usage[flag])
+		case string:
+			c.Flags().String(flag, val.(string), usage[flag])
+		case []string:
+			c.Flags().StringArray(flag, val.([]string), usage[flag])
+		}
+	}
 }
 
-func (c *LocalCommand) runKafkaProduceCommand(command *cobra.Command, args []string) error {
-	return c.runKafkaCommand(command, args, "produce", kafkaProduceDefaultValues)
-}
-
-func (c *LocalCommand) runKafkaCommand(command *cobra.Command, args []string, mode string, kafkaFlagTypes map[string]interface{}) error {
+func (c *Command) runKafkaCommand(command *cobra.Command, args []string, mode string, kafkaFlagTypes map[string]interface{}) error {
 	isUp, err := c.isRunning("kafka")
 	if err != nil {
 		return err
@@ -218,10 +211,8 @@ func (c *LocalCommand) runKafkaCommand(command *cobra.Command, args []string, mo
 		}
 
 		config := local.ExtractConfig(data)
-		cloudServer = config["bootstrap.servers"]
-	}
+		cloudServer = config["bootstrap.servers"].(string)
 
-	if cloud {
 		configFileFlag := fmt.Sprintf("%s.config", modeNoun)
 		delete(kafkaFlagTypes, configFileFlag)
 		delete(kafkaFlagTypes, "bootstrap-server")
@@ -237,6 +228,11 @@ func (c *LocalCommand) runKafkaCommand(command *cobra.Command, args []string, mo
 		configFileFlag := fmt.Sprintf("--%s.config", modeNoun)
 		kafkaArgs = append(kafkaArgs, configFileFlag, cloudConfigFile)
 		kafkaArgs = append(kafkaArgs, "--bootstrap-server", cloudServer)
+	} else {
+		if !local.Contains(kafkaArgs, "--bootstrap-server") {
+			defaultBootstrapServer := fmt.Sprintf("localhost:%d", services["kafka"].port)
+			kafkaArgs = append(kafkaArgs, "--bootstrap-server", defaultBootstrapServer)
+		}
 	}
 
 	kafkaCommand := exec.Command(scriptFile, kafkaArgs...)

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 

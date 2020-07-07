@@ -137,6 +137,7 @@ Create a topic named 'my_topic' with default options.
 	cmd.Flags().Uint32("partitions", 6, "Number of topic partitions.")
 	cmd.Flags().StringSlice("config", nil, "A comma-separated list of topics. Configuration ('key=value') overrides for the topic being created.")
 	cmd.Flags().Bool("dry-run", false, "Run the command without committing changes to Kafka.")
+	cmd.Flags().Bool("if-not-exists", false, "Exit gracefully if topic already exists.")
 	cmd.Flags().SortFlags = false
 	a.AddCommand(cmd)
 
@@ -249,9 +250,21 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 	if topic.Spec.Configs, err = toMap(configs); err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	err = a.Client.Kafka.CreateTopic(context.Background(), cluster, topic)
 
-	return errors.HandleCommon(err, cmd)
+	if err := a.Client.Kafka.CreateTopic(context.Background(), cluster, topic); err != nil {
+		if err.Error() == fmt.Sprintf("error creating topic %s: Topic '%s' already exists.", topic.Spec.Name, topic.Spec.Name) {
+			ifNotExists, flagErr := cmd.Flags().GetBool("if-not-exists")
+			if flagErr != nil {
+				return errors.HandleCommon(flagErr, cmd)
+			}
+			if ifNotExists {
+				return nil
+			}
+		}
+		return errors.HandleCommon(err, cmd)
+	}
+
+	return nil
 }
 
 func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) error {
