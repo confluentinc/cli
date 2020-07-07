@@ -1,4 +1,4 @@
-Describe a KSQL app.
+Describe a ksqlDB app.
 
 Usage:
   ccloud ksql app describe <id> [flags]

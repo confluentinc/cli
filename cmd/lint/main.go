@@ -26,14 +26,14 @@ var (
 	cliNames = []string{"confluent", "ccloud"}
 
 	properNouns = []string{
-		"ACL", "ACLs", "API", "Apache", "CLI", "Confluent Cloud", "Confluent Platform", "Confluent", "Connect",
-		"Control Center", "Enterprise", "IAM", "ksqlDB Server", "ksqlDB", "Kafka REST", "Kafka", "RBAC",
-		"Schema Registry", "Zookeeper", "cku",
+		"ACL", "ACLs", "API", "Apache", "CCloud CLI", "CLI", "Confluent Cloud", "Confluent Platform", "Confluent",
+		"Connect", "Control Center", "Enterprise", "IAM", "ksqlDB Server", "ksqlDB", "Kafka REST", "Kafka", "RBAC",
+		"Schema Registry", "ZooKeeper", "ZooKeeper™", "cku",
 	}
 	vocabWords = []string{
 		"ack", "acks", "acl", "acls", "apac", "api", "auth", "avro", "aws", "backoff", "ccloud", "cku", "codec",
 		"config", "configs", "connect", "connect-catalog", "consumer.config", "csu", "decrypt", "deserializer",
-		"deserializers", "eu", "formatter", "gcp", "geo", "gzip", "iam", "init", "json", "kafka", "lifecycle",
+		"deserializers", "eu", "formatter", "gcp", "geo", "gzip", "iam", "init", "json", "kafka", "ksql", "lifecycle",
 		"lz4", "multi-zone", "netrc", "pem", "plaintext", "producer.config", "protobuf", "readwrite", "recv",
 		"rolebinding", "rolebindings", "single-zone", "sso", "stdin", "systest", "tcp", "transactional", "txt", "url",
 		"us", "whitelist", "yaml", "zstd",
@@ -153,7 +153,10 @@ var flagRules = []linter.FlagRule{
 		linter.RequireFlagUsageMessage,
 		linter.ExcludeFlag("key-deserializer", "value-deserializer"),
 	),
-	linter.RequireFlagUsageStartWithCapital,
+	linter.FlagFilter(
+		linter.RequireFlagUsageStartWithCapital,
+		linter.ExcludeFlag("ksql-cluster-id"),
+	),
 	linter.FlagFilter(
 		linter.RequireFlagUsageEndWithPunctuation,
 		linter.ExcludeFlag(

@@ -6,7 +6,7 @@ Flags:
       --cluster-name string                 Cluster name.
       --kafka-cluster-id string             Kafka cluster ID.
       --schema-registry-cluster-id string   Schema Registry cluster ID.
-      --ksql-cluster-id string              KSQL cluster ID.
+      --ksql-cluster-id string              ksqlDB cluster ID.
       --connect-cluster-id string           Kafka Connect cluster ID.
       --hosts string                        A comma separated list of hosts.
       --protocol string                     Security protocol.
