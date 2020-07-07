@@ -185,11 +185,6 @@ func (s *CLITestSuite) Test_Ccloud_Iam_Rolebinding_List() {
 			fixture: "ccloud-iam-rolebinding-list-user-clusteradmin-json.golden",
 			login:   "default",
 		},
-		{
-			args:    "iam rolebinding list --environment current --cloud-cluster lkc-1234 --role CloudClusterAdmin -o json",
-			fixture: "ccloud-iam-rolebinding-list-user-clusteradmin-json.golden",
-			login:   "default",
-		},
 	}
 	for _, tt := range tests {
 		kafkaAPIURL := serveKafkaAPI(s.T()).URL

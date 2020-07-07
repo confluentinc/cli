@@ -1,0 +1,158 @@
+           Name          |                 AccessPolicy                  
++------------------------+----------------------------------------------+
+  CCloudRoleBindingAdmin | null                                          
+                         |                                               
+  CloudClusterAdmin      | [                                             
+                         |   {                                           
+                         |     "bindingScope": "cluster",                
+                         |     "bindWithResource": false,                
+                         |     "allowedOperations": [                    
+                         |       {                                       
+                         |         "resourceType": "Topic",              
+                         |         "operations": ["All"]                 
+                         |       },                                      
+                         |       {                                       
+                         |         "resourceType": "KsqlCluster",        
+                         |         "operations": ["All"]                 
+                         |       },                                      
+                         |       {                                       
+                         |         "resourceType": "Subject",            
+                         |         "operations": ["All"]                 
+                         |       },                                      
+                         |       {                                       
+                         |         "resourceType": "Connector",          
+                         |         "operations": ["All"]                 
+                         |       },                                      
+                         |       {                                       
+                         |         "resourceType": "NetworkAccess",      
+                         |         "operations": ["All"]                 
+                         |       },                                      
+                         |       {                                       
+                         |         "resourceType": "ClusterMetric",      
+                         |         "operations": ["All"]                 
+                         |       },                                      
+                         |       {                                       
+                         |         "resourceType": "Cluster",            
+                         |         "operations": ["All"]                 
+                         |       },                                      
+                         |       {                                       
+                         |         "resourceType": "ClusterApiKey",      
+                         |         "operations": ["All"]                 
+                         |       },                                      
+                         |       {                                       
+                         |         "resourceType": "SecurityMetadata",   
+                         |         "operations": ["Describe", "Alter"]   
+                         |       }                                       
+                         |     ]                                         
+                         |   },                                          
+                         |   {                                           
+                         |     "bindingScope": "organization",           
+                         |     "bindWithResource": false,                
+                         |     "allowedOperations": [                    
+                         |       {                                       
+                         |         "resourceType": "SupportPlan",        
+                         |         "operations": ["Describe"]            
+                         |       },                                      
+                         |       {                                       
+                         |         "resourceType": "User",               
+                         |         "operations": ["Describe", "Invite"]  
+                         |       },                                      
+                         |       {                                       
+                         |         "resourceType": "ServiceAccount",     
+                         |         "operations": ["Describe"]            
+                         |       }                                       
+                         |     ]                                         
+                         |   }                                           
+                         | ]                                             
+                         |                                               
+  EnvironmentAdmin       | [                                             
+                         |   {                                           
+                         |     "bindingScope": "ENVIRONMENT",            
+                         |     "bindWithResource": false,                
+                         |     "allowedOperations": [                    
+                         |       {                                       
+                         |         "resourceType": "SecurityMetadata",   
+                         |         "operations": ["Describe", "Alter"]   
+                         |       },                                      
+                         |       {                                       
+                         |         "resourceType": "ClusterApiKey",      
+                         |         "operations": ["All"]                 
+                         |       },                                      
+                         |       {                                       
+                         |         "resourceType": "Connector",          
+                         |         "operations": ["All"]                 
+                         |       },                                      
+                         |       {                                       
+                         |         "resourceType": "NetworkAccess",      
+                         |         "operations": ["All"]                 
+                         |       },                                      
+                         |       {                                       
+                         |         "resourceType": "KsqlCluster",        
+                         |         "operations": ["All"]                 
+                         |       },                                      
+                         |       {                                       
+                         |         "resourceType": "Environment",        
+                         |         "operations": [                       
+                         |           "Alter",                            
+                         |           "Delete",                           
+                         |           "AlterAccess",                      
+                         |           "CreateKafkaCluster",               
+                         |           "DescribeAccess"                    
+                         |         ]                                     
+                         |       },                                      
+                         |       {                                       
+                         |         "resourceType": "Subject",            
+                         |         "operations": ["All"]                 
+                         |       },                                      
+                         |       {                                       
+                         |         "resourceType": "NetworkConfig",      
+                         |         "operations": ["All"]                 
+                         |       },                                      
+                         |       {                                       
+                         |         "resourceType": "ClusterMetric",      
+                         |         "operations": ["All"]                 
+                         |       },                                      
+                         |       {                                       
+                         |         "resourceType": "Cluster",            
+                         |         "operations": ["All"]                 
+                         |       },                                      
+                         |       {                                       
+                         |         "resourceType": "SchemaRegistry",     
+                         |         "operations": ["All"]                 
+                         |       },                                      
+                         |       {                                       
+                         |         "resourceType": "NetworkRegion",      
+                         |         "operations": ["All"]                 
+                         |       },                                      
+                         |       {                                       
+                         |         "resourceType": "Deployment",         
+                         |         "operations": ["All"]                 
+                         |       },                                      
+                         |       {                                       
+                         |         "resourceType": "Topic",              
+                         |         "operations": ["All"]                 
+                         |       }                                       
+                         |     ]                                         
+                         |   },                                          
+                         |   {                                           
+                         |     "bindingScope": "organization",           
+                         |     "bindWithResource": false,                
+                         |     "allowedOperations": [                    
+                         |       {                                       
+                         |         "resourceType": "User",               
+                         |         "operations": ["Describe", "Invite"]  
+                         |       },                                      
+                         |       {                                       
+                         |         "resourceType": "ServiceAccount",     
+                         |         "operations": ["Describe"]            
+                         |       },                                      
+                         |       {                                       
+                         |         "resourceType": "SupportPlan",        
+                         |         "operations": ["Describe"]            
+                         |       }                                       
+                         |     ]                                         
+                         |   }                                           
+                         | ]                                             
+                         |                                               
+  OrganizationAdmin      | null                                          
+                         |                                               

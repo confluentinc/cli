@@ -1,0 +1,115 @@
+- name: CCloudRoleBindingAdmin
+  policies: []
+- name: CloudClusterAdmin
+  policies:
+  - bindingscope: cluster
+    bindwithresource: false
+    allowedoperations:
+    - resourcetype: Topic
+      operations:
+      - All
+    - resourcetype: KsqlCluster
+      operations:
+      - All
+    - resourcetype: Subject
+      operations:
+      - All
+    - resourcetype: Connector
+      operations:
+      - All
+    - resourcetype: NetworkAccess
+      operations:
+      - All
+    - resourcetype: ClusterMetric
+      operations:
+      - All
+    - resourcetype: Cluster
+      operations:
+      - All
+    - resourcetype: ClusterApiKey
+      operations:
+      - All
+    - resourcetype: SecurityMetadata
+      operations:
+      - Describe
+      - Alter
+  - bindingscope: organization
+    bindwithresource: false
+    allowedoperations:
+    - resourcetype: SupportPlan
+      operations:
+      - Describe
+    - resourcetype: User
+      operations:
+      - Describe
+      - Invite
+    - resourcetype: ServiceAccount
+      operations:
+      - Describe
+- name: EnvironmentAdmin
+  policies:
+  - bindingscope: ENVIRONMENT
+    bindwithresource: false
+    allowedoperations:
+    - resourcetype: SecurityMetadata
+      operations:
+      - Describe
+      - Alter
+    - resourcetype: ClusterApiKey
+      operations:
+      - All
+    - resourcetype: Connector
+      operations:
+      - All
+    - resourcetype: NetworkAccess
+      operations:
+      - All
+    - resourcetype: KsqlCluster
+      operations:
+      - All
+    - resourcetype: Environment
+      operations:
+      - Alter
+      - Delete
+      - AlterAccess
+      - CreateKafkaCluster
+      - DescribeAccess
+    - resourcetype: Subject
+      operations:
+      - All
+    - resourcetype: NetworkConfig
+      operations:
+      - All
+    - resourcetype: ClusterMetric
+      operations:
+      - All
+    - resourcetype: Cluster
+      operations:
+      - All
+    - resourcetype: SchemaRegistry
+      operations:
+      - All
+    - resourcetype: NetworkRegion
+      operations:
+      - All
+    - resourcetype: Deployment
+      operations:
+      - All
+    - resourcetype: Topic
+      operations:
+      - All
+  - bindingscope: organization
+    bindwithresource: false
+    allowedoperations:
+    - resourcetype: User
+      operations:
+      - Describe
+      - Invite
+    - resourcetype: ServiceAccount
+      operations:
+      - Describe
+    - resourcetype: SupportPlan
+      operations:
+      - Describe
+- name: OrganizationAdmin
+  policies: []
