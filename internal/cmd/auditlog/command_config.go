@@ -27,8 +27,8 @@ func NewConfigCommand(prerunner cmd.PreRunner) *cobra.Command {
 	cliCmd := cmd.NewAuthenticatedWithMDSCLICommand(
 		&cobra.Command{
 			Use:   "config",
-			Short: "Manage audit log configuration specification.",
-			Long:  "Manage audit log defaults and routing rules that determine which auditable events are logged, and where.",
+			Short: "Manage the audit log configuration specification.",
+			Long:  "Manage the audit log defaults and routing rules that determine which auditable events are logged, and where.",
 		}, prerunner)
 	cmd := &configCommand{
 		AuthenticatedCLICommand: cliCmd,

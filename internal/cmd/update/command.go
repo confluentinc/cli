@@ -94,7 +94,7 @@ func (c *command) cliTitle() string {
 	case "confluent":
 		return "Confluent CLI"
 	case "ccloud":
-		return "CCloud CLI"
+		return "Confluent Cloud CLI"
 	}
 	return ""
 }

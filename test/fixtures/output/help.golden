@@ -20,8 +20,8 @@ Available Commands:
   prompt            Print ccloud CLI context for your terminal prompt.
   schema-registry   Manage Schema Registry.
   service-account   Manage service accounts.
-  update            Update the CCloud CLI.
-  version           Print the CCloud CLI version.
+  update            Update the Confluent Cloud CLI.
+  version           Print the Confluent Cloud CLI version.
 
 Flags:
   -h, --help            help for ccloud

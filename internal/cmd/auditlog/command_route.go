@@ -23,8 +23,8 @@ func NewRouteCommand(prerunner cmd.PreRunner) *cobra.Command {
 	cliCmd := cmd.NewAuthenticatedWithMDSCLICommand(
 		&cobra.Command{
 			Use:   "route",
-			Short: "Examine audit log route rules.",
-			Long:  "Examine routing rules that determine which auditable events are logged, and where.",
+			Short: "Return the audit log route rules.",
+			Long:  "Return the routing rules that determine which auditable events are logged, and where.",
 		}, prerunner)
 	cmd := &routeCommand{
 		AuthenticatedCLICommand: cliCmd,
@@ -38,7 +38,7 @@ func (c *routeCommand) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List routes matching a resource & sub-resources.",
-		Long:  "List the routes that could match the queried resource or its sub-resources.",
+		Long:  "List the routes that match either the queried resource or its sub-resources.",
 		RunE:  c.list,
 		Args:  cobra.NoArgs,
 	}
@@ -49,8 +49,8 @@ func (c *routeCommand) init() {
 
 	lookupCmd := &cobra.Command{
 		Use:   "lookup <crn>",
-		Short: "Returns the matching audit-log route rule.",
-		Long:  "Returns the single route that describes how audit log messages using this CRN would be routed, with all defaults populated.",
+		Short: "Return the matching audit-log route rule.",
+		Long:  "Return the single route that describes how audit log messages using this CRN would be routed, with all defaults populated.",
 		RunE:  c.lookup,
 		Args:  cobra.ExactArgs(1),
 	}
