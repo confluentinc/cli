@@ -103,7 +103,7 @@ func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *v
 
 		// Test credentials
 		if _, _, err = srClient.DefaultApi.Get(srCtx); err != nil {
-			cmd.PrintErrln("Failed to validate Schema Registry API key and secret. Try again.")
+			cmd.PrintErrln("Failed to validate Schema Registry API key and secret.")
 			// Prompt users to enter new credentials if validation fails.
 			shouldPrompt = true
 			continue
