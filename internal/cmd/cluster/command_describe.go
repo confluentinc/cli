@@ -13,6 +13,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -70,8 +71,14 @@ func NewDescribeCommand(prerunner pcmd.PreRunner, client Metadata) *cobra.Comman
 	describeCmd := &describeCommand{
 		CLICommand: pcmd.NewAnonymousCLICommand(&cobra.Command{
 			Use:   "describe",
-			Short: "Describe a Confluent cluster.",
 			Args:  cobra.NoArgs,
+			Short: "Describe a Confluent cluster.",
+			Example: examples.BuildExampleString(
+				examples.Example{
+					Desc: "Discover the cluster ID and Kafka ID for Connect.",
+					Code: "confluent cluster describe --url http://localhost:8083",
+				},
+			),
 		}, prerunner),
 		client: client,
 	}

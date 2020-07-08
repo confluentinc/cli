@@ -2,12 +2,3 @@ The local commands are intended for a single-node development environment only,
 NOT for production usage. https://docs.confluent.io/current/cli/index.html
 
 Error: nothing to destroy
-Usage:
-  confluent local destroy [flags]
-
-Flags:
-  -h, --help   help for destroy
-
-Global Flags:
-  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
-

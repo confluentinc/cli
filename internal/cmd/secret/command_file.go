@@ -366,10 +366,8 @@ func (c *secureFileCommand) getConfigs(cmd *cobra.Command, configSource string, 
 	if err != nil {
 		switch err {
 		case pcmd.ErrNoValueSpecified:
-			cmd.SilenceUsage = true
 			return "", errors.Errorf(errors.EnterInputTypeErrorMsg, inputType)
 		case pcmd.ErrNoPipe:
-			cmd.SilenceUsage = true
 			return "", errors.Errorf(errors.PipeInputTypeErrorMsg, inputType)
 		}
 		return "", err

@@ -7,14 +7,14 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/confluentinc/go-printer"
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	"github.com/confluentinc/go-printer"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
-
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -70,10 +70,32 @@ func NewRolebindingCommand(prerunner cmd.PreRunner) *cobra.Command {
 func (c *rolebindingCommand) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
+		Args:  cobra.NoArgs,
+		RunE:  c.list,
 		Short: "List role bindings.",
 		Long:  "List the role bindings for a particular principal and/or role, and a particular scope.",
-		RunE:  c.list,
-		Args:  cobra.NoArgs,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Desc: "Only use the ``--resource`` flag when specifying a ``--role`` with no ``--principal`` specified. If specifying a ``--principal``, then the ``--resource`` flag is ignored. To list role bindings for a specific role on an identified resource:",
+				Code: "iam rolebinding list --kafka-cluster-id CID  --role DeveloperRead --resource Topic",
+			},
+			examples.Example{
+				Desc: "To list the role bindings for a specific principal:",
+				Code: "iam rolebinding list --kafka-cluster-id $CID --principal User:frodo",
+			},
+			examples.Example{
+				Desc: "To list the role bindings for a specific principal, filtered to a specific role:",
+				Code: "iam rolebinding list --kafka-cluster-id $CID --principal User:frodo --role DeveloperRead",
+			},
+			examples.Example{
+				Desc: "To list the principals bound to a specific role:",
+				Code: "iam rolebinding list --kafka-cluster-id $CID --role DeveloperWrite",
+			},
+			examples.Example{
+				Desc: "To list the principals bound to a specific resource with a specific role:",
+				Code: "iam rolebinding list --kafka-cluster-id $CID --role DeveloperWrite --resource Topic:shire-parties",
+			},
+		),
 	}
 	listCmd.Flags().String("principal", "", "Principal whose rolebindings should be listed.")
 	listCmd.Flags().String("role", "", "List rolebindings under a specific role given to a principal. Or if no principal is specified, list principals with the role.")

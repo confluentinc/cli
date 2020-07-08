@@ -38,7 +38,7 @@ const (
 	KSQLNotBackedByKafkaMsg = "The KSQL cluster \"%s\" is not backed by \"%s\" which is not the current Kafka cluster \"%s\".\n"
 
 	// local commands
-	AvailableServicesMsg       = "AvailableServices:\n%s\n"
+	AvailableServicesMsg       = "Available Services:\n%s\n"
 	UsingConfluentCurrentMsg   = "Using CONFLUENT_CURRENT: %s\n"
 	AvailableConnectPluginsMsg = "Available Connect Plugins:\n%s\n"
 	StartingServiceMsg         = "Starting %s\n"

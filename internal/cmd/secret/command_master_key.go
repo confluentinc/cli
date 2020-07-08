@@ -59,11 +59,9 @@ func (c *masterKeyCommand) generate(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		switch err {
 		case pcmd.ErrUnexpectedStdinPipe:
-			cmd.SilenceUsage = true
 			// TODO: should we require this or just assume that pipe to stdin implies '--passphrase -' ?
 			return errors.HandleCommon(errors.New(errors.SpecifyPassphraseErrorMsg), cmd)
 		case pcmd.ErrNoPipe:
-			cmd.SilenceUsage = true
 			return errors.HandleCommon(errors.New(errors.PipePassphraseErrorMsg), cmd)
 		}
 		return errors.HandleCommon(err, cmd)

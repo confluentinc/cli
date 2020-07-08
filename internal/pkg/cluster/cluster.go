@@ -124,8 +124,7 @@ func outputTable(data [][]string) {
 
 func HandleClusterError(cmd *cobra.Command, err error, response *http.Response) error {
 	if response != nil && response.StatusCode == http.StatusNotFound {
-		cmd.SilenceUsage = true
-		return errors.NewWrapErrorWithSuggestions(err, errors.AccessClusterRegistryErrorMsg, errors.AccessClusterRegistrySuggestions)
+		return errors.HandleCommon(errors.NewWrapErrorWithSuggestions(err, errors.AccessClusterRegistryErrorMsg, errors.AccessClusterRegistrySuggestions), cmd)
 	}
 	return errors.HandleCommon(err, cmd)
 }

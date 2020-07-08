@@ -59,6 +59,8 @@ func NewServiceLogCommand(service string, prerunner cmd.PreRunner) *cobra.Comman
 		}, prerunner)
 
 	c.Command.RunE = c.runServiceLogCommand
+	c.Command.Flags().BoolP("follow", "f", false, "Log additional output until the command is interrupted.")
+
 	return c.Command
 }
 
@@ -70,12 +72,23 @@ func (c *Command) runServiceLogCommand(command *cobra.Command, _ []string) error
 		return err
 	}
 
+	shouldFollow, err := command.Flags().GetBool("follow")
+	if err != nil {
+		return errors.HandleCommon(err, c.Command)
+	}
+	if shouldFollow {
+		tail := exec.Command("tail", "-f", log)
+		tail.Stdout = os.Stdout
+		tail.Stderr = os.Stderr
+		return tail.Run()
+	}
+
 	data, err := ioutil.ReadFile(log)
 	if err != nil {
-		return errors.Errorf(errors.NoLogFoundErrorMsg, writeServiceName(service), service)
+		return errors.HandleCommon(errors.Errorf(errors.NoLogFoundErrorMsg, writeServiceName(service), service), c.Command)
 	}
-	command.Print(string(data))
 
+	command.Print(string(data))
 	return nil
 }
 
@@ -97,21 +110,21 @@ func (c *Command) runServiceStartCommand(command *cobra.Command, _ []string) err
 	service := command.Parent().Name()
 
 	if err := c.notifyConfluentCurrent(command); err != nil {
-		return err
+		return errors.HandleCommon(err, c.Command)
 	}
 
 	for _, dependency := range services[service].startDependencies {
 		if err := c.startService(command, dependency, ""); err != nil {
-			return err
+			return errors.HandleCommon(err, c.Command)
 		}
 	}
 
 	configFile, err := command.Flags().GetString("config")
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, c.Command)
 	}
 
-	return c.startService(command, service, configFile)
+	return errors.HandleCommon(c.startService(command, service, configFile), c.Command)
 }
 
 func NewServiceStatusCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
@@ -130,10 +143,10 @@ func (c *Command) runServiceStatusCommand(command *cobra.Command, _ []string) er
 	service := command.Parent().Name()
 
 	if err := c.notifyConfluentCurrent(command); err != nil {
-		return err
+		return errors.HandleCommon(err, c.Command)
 	}
 
-	return c.printStatus(command, service)
+	return errors.HandleCommon(c.printStatus(command, service), c.Command)
 }
 
 func NewServiceStopCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
@@ -152,12 +165,12 @@ func (c *Command) runServiceStopCommand(command *cobra.Command, _ []string) erro
 	service := command.Parent().Name()
 
 	if err := c.notifyConfluentCurrent(command); err != nil {
-		return err
+		return errors.HandleCommon(err, c.Command)
 	}
 
 	for _, dependency := range services[service].stopDependencies {
 		if err := c.stopService(command, dependency); err != nil {
-			return err
+			return errors.HandleCommon(err, c.Command)
 		}
 	}
 
@@ -181,7 +194,7 @@ func (c *Command) runServiceTopCommand(command *cobra.Command, _ []string) error
 
 	isUp, err := c.isRunning(service)
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, c.Command)
 	}
 	if !isUp {
 		return c.printStatus(command, service)
@@ -189,7 +202,7 @@ func (c *Command) runServiceTopCommand(command *cobra.Command, _ []string) error
 
 	pid, err := c.cc.ReadPid(service)
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, c.Command)
 	}
 
 	return top([]int{pid})
@@ -213,7 +226,7 @@ func (c *Command) runServiceVersionCommand(command *cobra.Command, _ []string) e
 
 	ver, err := c.ch.GetVersion(service)
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, c.Command)
 	}
 
 	command.Println(ver)
@@ -223,18 +236,18 @@ func (c *Command) runServiceVersionCommand(command *cobra.Command, _ []string) e
 func (c *Command) startService(command *cobra.Command, service string, configFile string) error {
 	isUp, err := c.isRunning(service)
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, c.Command)
 	}
 	if isUp {
-		return c.printStatus(command, service)
+		return errors.HandleCommon(c.printStatus(command, service), c.Command)
 	}
 
 	if err := checkService(service); err != nil {
-		return err
+		return errors.HandleCommon(err, c.Command)
 	}
 
 	if err := c.configService(service, configFile); err != nil {
-		return err
+		return errors.HandleCommon(err, c.Command)
 	}
 
 	command.Printf(errors.StartingServiceMsg, writeServiceName(service))
@@ -247,7 +260,7 @@ func (c *Command) startService(command *cobra.Command, service string, configFil
 		return err
 	}
 
-	return c.printStatus(command, service)
+	return errors.HandleCommon(c.printStatus(command, service), c.Command)
 }
 
 func checkService(service string) error {
@@ -279,30 +292,30 @@ func (c *Command) configService(service string, configFile string) error {
 		data, err = ioutil.ReadFile(configFile)
 	}
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, c.Command)
 	}
 
 	config, err := c.getConfig(service)
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, c.Command)
 	}
 
 	data = injectConfig(data, config)
 
 	if err := c.cc.WriteConfig(service, data); err != nil {
-		return err
+		return errors.HandleCommon(err, c.Command)
 	}
 
 	logs, err := c.cc.GetLogsDir(service)
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, c.Command)
 	}
 	if err := os.Setenv("LOG_DIR", logs); err != nil {
-		return err
+		return errors.HandleCommon(err, c.Command)
 	}
 
 	if err := setServiceEnvs(service); err != nil {
-		return err
+		return errors.HandleCommon(err, c.Command)
 	}
 
 	return nil
@@ -331,12 +344,12 @@ func injectConfig(data []byte, config map[string]string) []byte {
 func (c *Command) startProcess(service string) error {
 	scriptFile, err := c.ch.GetServiceScript("start", service)
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, c.Command)
 	}
 
 	configFile, err := c.cc.GetConfigFile(service)
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, c.Command)
 	}
 
 	start := exec.Command(scriptFile, configFile)
