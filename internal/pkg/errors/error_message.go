@@ -80,7 +80,7 @@ const (
 	FailedToReadConfirmationErrorMsg     = "BYOK error: failed to read your confirmation"
 	AuthorizeAccountsErrorMsg            = "BYOK error: please authorize the accounts (%s) for the key"
 	CKUOnlyForDedicatedErrorMsg          = "specifying `--cku` flag is valid only for dedicated Kafka cluster creation"
-	CKUMoreThanZeroErrorMsg              = "`--cku` valaue must be greater than 0"
+	CKUMoreThanZeroErrorMsg              = "`--cku` value must be greater than 0"
 	CloudRegionNotAvailableErrorMsg      = "\"%s\" is not an available region for \"%s\""
 	CloudRegionNotAvailableSuggestions   = "To view a list of available regions for \"%s\", use `ccloud kafka region list --cloud %s`."
 	CloudProviderNotAvailableErrorMsg    = "\"%s\" is not an available cloud provider"
