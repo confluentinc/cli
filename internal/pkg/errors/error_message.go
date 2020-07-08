@@ -288,7 +288,8 @@ const (
 	InvalidFlagValueSuggestions       = "The possible values for flag `%s` are: %s."
 
 	// catcher
-	UnexpectedBackendOutputPrefix      = "unexpected backend output"
+	CCloudBackendErrorPrefix           = "CCloud backend error"
+	UnexpectedBackendOutputPrefix      = "unexpected CCloud backend output"
 	UnexpectedBackendOutputSuggestions = "Please submit a support ticket."
 	BackendUnmarshallingErrorMsg       = "protobuf unmarshalling error"
 	ResourceNotFoundErrorMsg           = "resource \"%s\" not found"
@@ -326,7 +327,7 @@ const (
 	ExpiredTokenSuggestions = "Your session has timed out, you need to log in again.\n" +
 		avoidTimeoutGeneralSuggestion
 	InvalidEmailErrorMsg    = "user \"%s\" not found"
-	InvalidEmailSuggestions = "Please check the email.\n" +
+	InvalidEmailSuggestions = "Check the email credential.\n" +
 		"If the email is correct, check that you have successfully verified your email.\n" +
 		"If the problem persists, please submit a support ticket.\n" +
 		ccloudAvoidTimeoutSuggestion
@@ -339,5 +340,5 @@ const (
 		"To store an existing API key, use `ccloud api-key store --resource %s`."
 
 	// Special error types
-	GenericOpenAPIErrorMsg = "metadata service backend error: %s: %s"
+	GenericOpenAPIErrorMsg = "Metadata Service backend error: %s: %s"
 )

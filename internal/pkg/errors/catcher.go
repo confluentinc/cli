@@ -31,6 +31,9 @@ func catchMDSErrors(err error) error {
 	return err
 }
 
+// All errors from CCloud backend services will be of corev1.Error type
+// This catcher function should then be used last to not accidentally convert errors that
+// are supposed to be caught by more specific catchers.
 func catchCoreV1Errors(err error) error {
 	e, ok := err.(*corev1.Error)
 	if ok {
@@ -39,7 +42,7 @@ func catchCoreV1Errors(err error) error {
 		for name, msg := range e.GetNestedErrors() {
 			result = multierror.Append(result, fmt.Errorf("%s: %s", name, msg))
 		}
-		return result
+		return Wrap(result, CCloudBackendErrorPrefix)
 	}
 	return err
 }
