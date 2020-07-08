@@ -171,15 +171,19 @@ func printOptions(buf *bytes.Buffer, cmd *cobra.Command) error {
 
 func printWarnings(buf *bytes.Buffer, cmd *cobra.Command, depth int) {
 	if strings.HasPrefix(cmd.CommandPath(), "confluent local") {
-		buf.WriteString(sphinxInclude(fmt.Sprintf("%sincludes/cli.rst", strings.Repeat("../", depth+1))))
-		buf.WriteString("  :start-after: cli_limitations_start\n")
-		buf.WriteString("  :end-before: cli_limitations_end\n\n")
+		buf.WriteString(sphinxInclude(
+			fmt.Sprintf("%sincludes/cli.rst", strings.Repeat("../", depth+1)),
+			map[string]string{
+				"start-after": "cli_limitations_start",
+				"end-before":  "cli_limitations_end",
+			},
+		))
 	}
 }
 
 func printTips(buf *bytes.Buffer, cmd *cobra.Command, depth int) {
 	if strings.HasPrefix(cmd.CommandPath(), "confluent local") {
-		buf.WriteString(sphinxInclude(fmt.Sprintf("%sincludes/path-set-cli.rst", strings.Repeat("../", depth+1))))
+		buf.WriteString(sphinxInclude(fmt.Sprintf("%sincludes/path-set-cli.rst", strings.Repeat("../", depth+1)), nil))
 	}
 
 	if cmd.CommandPath() == "confluent iam rolebinding create" {
@@ -191,8 +195,16 @@ func SphinxRef(ref string) string {
 	return fmt.Sprintf(":ref:`%s`", ref)
 }
 
-func sphinxInclude(include string) string {
-	return fmt.Sprintf(".. include:: %s\n\n", include)
+func sphinxInclude(include string, args map[string]string) string {
+	str := strings.Builder{}
+
+	str.WriteString(fmt.Sprintf(".. include:: %s\n", include))
+	for key, val := range args {
+		str.WriteString(fmt.Sprintf("  :%s: %s\n", key, val))
+	}
+	str.WriteString("\n")
+
+	return str.String()
 }
 
 func sphinxNote(note string) string {
