@@ -181,6 +181,7 @@ func NewServicesStartCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "start",
+			Args:  cobra.NoArgs,
 			Short: "Start all Confluent Platform services.",
 			Example: examples.BuildExampleString(
 				examples.Example{
@@ -192,7 +193,6 @@ func NewServicesStartCommand(prerunner cmd.PreRunner) *cobra.Command {
 					Code: "confluent local services kafka start",
 				},
 			),
-			Args: cobra.NoArgs,
 		}, prerunner)
 
 	c.Command.RunE = c.runServicesStartCommand
@@ -257,6 +257,7 @@ func NewServicesStopCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "stop",
+			Args:  cobra.NoArgs,
 			Short: "Stop all Confluent Platform services.",
 			Example: examples.BuildExampleString(
 				examples.Example{
@@ -268,7 +269,6 @@ func NewServicesStopCommand(prerunner cmd.PreRunner) *cobra.Command {
 					Code: "confluent local services kafka stop",
 				},
 			),
-			Args: cobra.NoArgs,
 		}, prerunner)
 
 	c.Command.RunE = c.runServicesStopCommand

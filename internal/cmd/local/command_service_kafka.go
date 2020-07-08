@@ -110,9 +110,8 @@ func NewKafkaConsumeCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "consume [topic]",
-			Short: "Consume from a Kafka topic.",
-			Long:  "Consume data from topics. By default this command consumes binary data from the Apache Kafka® cluster on localhost.",
 			Args:  cobra.ExactArgs(1),
+			Short: "Consume from a Kafka topic.",
 			Example: examples.BuildExampleString(
 				examples.Example{
 					Desc: "Consume Avro data from the beginning of topic called ``mytopic1`` on a development Kafka cluster on localhost. Assumes Confluent Schema Registry is listening at ``http://localhost:8081``.",
@@ -159,9 +158,8 @@ func NewKafkaProduceCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "produce [topic]",
-			Short: "Produce to a Kafka topic.",
-			Long:  "Produce data to topics. By default this command produces non-Avro data to the Apache Kafka® cluster on localhost.",
 			Args:  cobra.ExactArgs(1),
+			Short: "Produce to a Kafka topic.",
 			Example: examples.BuildExampleString(
 				examples.Example{
 					Desc: "Produce Avro data to a topic called ``mytopic1`` on a development Kafka cluster on localhost. Assumes Confluent Schema Registry is listening at ``http://localhost:8081``.",

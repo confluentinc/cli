@@ -70,6 +70,8 @@ func NewRolebindingCommand(prerunner cmd.PreRunner) *cobra.Command {
 func (c *rolebindingCommand) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
+		Args:  cobra.NoArgs,
+		RunE:  c.list,
 		Short: "List role bindings.",
 		Long:  "List the role bindings for a particular principal and/or role, and a particular scope.",
 		Example: examples.BuildExampleString(
@@ -94,8 +96,6 @@ func (c *rolebindingCommand) init() {
 				Code: "iam rolebinding list --kafka-cluster-id $CID --role DeveloperWrite --resource Topic:shire-parties",
 			},
 		),
-		RunE: c.list,
-		Args: cobra.NoArgs,
 	}
 	listCmd.Flags().String("principal", "", "Principal whose rolebindings should be listed.")
 	listCmd.Flags().String("role", "", "List rolebindings under a specific role given to a principal. Or if no principal is specified, list principals with the role.")

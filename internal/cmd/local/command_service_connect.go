@@ -46,8 +46,8 @@ func NewConnectConnectorConfigCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "config [connector]",
-			Short: "View or set connector configurations.",
 			Args:  cobra.ExactArgs(1),
+			Short: "Print a connector config, or configure a connector.",
 			Example: examples.BuildExampleString(
 				examples.Example{
 					Desc: "Print the current configuration of a connector named ``s3-sink``:",
@@ -189,9 +189,8 @@ func NewConnectConnectorLoadCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "load [connector]",
-			Short: "Load a connector.",
 			Args:  cobra.ExactArgs(1),
-			Long:  "Load a bundled connector with a predefined name or a custom connector.",
+			Short: "Load a connector.",
 			Example: examples.BuildExampleString(
 				examples.Example{
 					Desc: "Load a predefined connector called ``s3-sink``:",
@@ -265,6 +264,7 @@ func NewConnectConnectorUnloadCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "unload [connector]",
+			Args:  cobra.ExactArgs(1),
 			Short: "Unload a connector.",
 			Example: examples.BuildExampleString(
 				examples.Example{
@@ -272,7 +272,6 @@ func NewConnectConnectorUnloadCommand(prerunner cmd.PreRunner) *cobra.Command {
 					Code: "confluent local unload s3-sink",
 				},
 			),
-			Args: cobra.ExactArgs(1),
 		}, prerunner)
 
 	c.Command.RunE = c.runConnectConnectorUnloadCommand
