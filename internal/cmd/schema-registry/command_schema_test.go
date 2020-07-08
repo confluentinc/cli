@@ -123,6 +123,20 @@ func (suite *SchemaTestSuite) TestDeleteSchemaVersion() {
 	req.Equal(retVal.Version, "12345")
 }
 
+func (suite *SchemaTestSuite) TestPermanentDeleteSchemaVersion() {
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"schema", "delete", "--subject", subjectName, "--version", versionString, "--permanent"}))
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
+	req.True(apiMock.DeleteSchemaVersionCalled())
+	retVal := apiMock.DeleteSchemaVersionCalls()[0]
+	req.Equal(retVal.Subject, subjectName)
+	req.Equal(retVal.Version, "12345")
+	req.Equal(retVal.LocalVarOptionals.Permanent.Value(), true)
+}
+
 func (suite *SchemaTestSuite) TestDescribeBySubjectVersion() {
 	cmd := suite.newCMD()
 	cmd.SetArgs(append([]string{"schema", "describe", "--subject", subjectName, "--version", versionString}))

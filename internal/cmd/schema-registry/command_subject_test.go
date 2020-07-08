@@ -96,6 +96,18 @@ func (suite *SubjectTestSuite) TestSubjectList() {
 	req.True(apiMock.ListCalled())
 }
 
+func (suite *SubjectTestSuite) TestSubjectListDeleted() {
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"subject", "list", "--deleted"}))
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
+	req.True(apiMock.ListCalled())
+	retVal := apiMock.ListCalls()[0]
+	req.Equal(retVal.LocalVarOptionals.Deleted.Value(), true)
+}
+
 func (suite *SubjectTestSuite) TestSubjectUpdateMode() {
 	cmd := suite.newCMD()
 	cmd.SetArgs(append([]string{"subject", "update", subjectName, "--mode", "READWRITE"}))
@@ -139,6 +151,19 @@ func (suite *SubjectTestSuite) TestSubjectDescribe() {
 	req.True(apiMock.ListVersionsCalled())
 	retVal := apiMock.ListVersionsCalls()[0]
 	req.Equal(retVal.Subject, subjectName)
+}
+
+func (suite *SubjectTestSuite) TestSubjectDescribeDeleted() {
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"subject", "describe", subjectName, "--deleted"}))
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
+	req.True(apiMock.ListVersionsCalled())
+	retVal := apiMock.ListVersionsCalls()[0]
+	req.Equal(retVal.Subject, subjectName)
+	req.Equal(retVal.LocalVarOptionals.Deleted.Value(), true)
 }
 
 func TestSubjectSuite(t *testing.T) {
