@@ -1,3 +1,3 @@
-   Principal   |       Role        | ResourceType |   Name   | PatternType  
-+--------------+-------------------+--------------+----------+-------------+
-  User:u-44444 | CloudClusterAdmin | Cluster      | lkc-1234 |              
+   Principal   |       Role        | ResourceType |    Name     | PatternType  
++--------------+-------------------+--------------+-------------+-------------+
+  User:u-44ddd | CloudClusterAdmin | Cluster      | lkc-1111aaa |              

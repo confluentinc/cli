@@ -128,17 +128,17 @@ func addMdsv2alpha1(t *testing.T, router *http.ServeMux) {
 	})
 
 	routesAndReplies := map[string]string{
-		"/api/metadata/security/v2alpha1/lookup/rolebindings/principal/User:u-11111": `[
+		"/api/metadata/security/v2alpha1/lookup/rolebindings/principal/User:u-11aaa": `[
 			{
 				"scope": {
 				  	"path": [
-						"organization=1234"
+						"organization=1111aaaa-11aa-11aa-11aa-111111aaaaaac"
 					],
 					"clusters": {
 					}
 				},
 				"rolebindings": {
-					"User:u-11111": {
+					"User:u-11aaa": {
 						"OrganizationAdmin": []
 					}
 				}
@@ -148,19 +148,19 @@ func addMdsv2alpha1(t *testing.T, router *http.ServeMux) {
 				  	"path": [
 						"organization=1234",
 						"environment=a-595",
-						"cloud-cluster=lkc-1234"
+						"cloud-cluster=lkc-1111aaa"
 					],
 					"clusters": {
 					}
 				},
 				"rolebindings": {
-					"User:u-11111": {
+					"User:u-11aaa": {
 						"CloudClusterAdmin": []
 					}
 				}
 		  	}
 		]`,
-		"/api/metadata/security/v2alpha1/lookup/rolebindings/principal/User:u-22222": `[
+		"/api/metadata/security/v2alpha1/lookup/rolebindings/principal/User:u-22bbb": `[
 		  	{
 				"scope": {
 				  	"path": [
@@ -171,56 +171,56 @@ func addMdsv2alpha1(t *testing.T, router *http.ServeMux) {
 					}
 				},
 				"rolebindings": {
-					"User:u-22222": {
+					"User:u-22bbb": {
 						"EnvironmentAdmin": []
 					}
 				}
 		  	}
 		]`,
-		"/api/metadata/security/v2alpha1/lookup/rolebindings/principal/User:u-33333": `[
+		"/api/metadata/security/v2alpha1/lookup/rolebindings/principal/User:u-33ccc": `[
 		  	{
 				"scope": {
 				  	"path": [
 						"organization=1234",
 						"environment=a-595",
-						"cloud-cluster=lkc-1234"
+						"cloud-cluster=lkc-1111aaa"
 					],
 					"clusters": {
 					}
 				},
 				"rolebindings": {
-					"User:u-33333": {
+					"User:u-33ccc": {
 						"CloudClusterAdmin": []
 					}
 				}
 		  	}
 		]`,
-		"/api/metadata/security/v2alpha1/lookup/rolebindings/principal/User:u-44444": `[
+		"/api/metadata/security/v2alpha1/lookup/rolebindings/principal/User:u-44ddd": `[
 		  	{
 				"scope": {
 				  	"path": [
 						"organization=1234",
 						"environment=a-595",
-						"cloud-cluster=lkc-1234"
+						"cloud-cluster=lkc-1111aaa"
 					],
 					"clusters": {
 					}
 				},
 				"rolebindings": {
-					"User:u-44444": {
+					"User:u-44ddd": {
 						"CloudClusterAdmin": []
 					}
 				}
 		  	}
 		]`,
 		"/api/metadata/security/v2alpha1/lookup/role/OrganizationAdmin": `[
-			"User:u-11111"
+			"User:u-11aaa"
 		]`,
 		"/api/metadata/security/v2alpha1/lookup/role/EnvironmentAdmin": `[
-			"User:u-22222"
+			"User:u-22bbb"
 		]`,
 		"/api/metadata/security/v2alpha1/lookup/role/CloudClusterAdmin": `[
-			"User:u-33333", "User:u-44444"
+			"User:u-33ccc", "User:u-44ddd"
 		]`,
 	}
 	addRolesV2(routesAndReplies)
