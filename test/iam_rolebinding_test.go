@@ -59,7 +59,7 @@ func (s *CLITestSuite) Test_Ccloud_Iam_Role_Binding_CRUD() {
 	}
 	for _, tt := range tests {
 		kafkaAPIURL := serveKafkaAPI(s.T()).URL
-		s.runCcloudTest(tt, serve(s.T(), kafkaAPIURL).URL, kafkaAPIURL)
+		s.runCcloudTest(tt, serve(s.T(), kafkaAPIURL).URL)
 	}
 }
 

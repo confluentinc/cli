@@ -188,7 +188,7 @@ func (s *CLITestSuite) Test_Ccloud_Iam_Rolebinding_List() {
 	}
 	for _, tt := range tests {
 		kafkaAPIURL := serveKafkaAPI(s.T()).URL
-		s.runCcloudTest(tt, serve(s.T(), kafkaAPIURL).URL, kafkaAPIURL)
+		s.runCcloudTest(tt, serve(s.T(), kafkaAPIURL).URL)
 	}
 }
 
@@ -247,7 +247,7 @@ func (s *CLITestSuite) Test_Ccloud_Iam_Role_List() {
 	}
 	for _, tt := range tests {
 		kafkaAPIURL := serveKafkaAPI(s.T()).URL
-		s.runCcloudTest(tt, serve(s.T(), kafkaAPIURL).URL, kafkaAPIURL)
+		s.runCcloudTest(tt, serve(s.T(), kafkaAPIURL).URL)
 	}
 }
 
@@ -306,6 +306,6 @@ func (s *CLITestSuite) Test_Ccloud_Iam_Role_Describe() {
 	}
 	for _, tt := range tests {
 		kafkaAPIURL := serveKafkaAPI(s.T()).URL
-		s.runCcloudTest(tt, serve(s.T(), kafkaAPIURL).URL, kafkaAPIURL)
+		s.runCcloudTest(tt, serve(s.T(), kafkaAPIURL).URL)
 	}
 }
