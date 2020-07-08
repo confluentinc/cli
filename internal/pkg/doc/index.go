@@ -83,7 +83,7 @@ func genReSTIndex(cmd *cobra.Command, linkHandler func(string, string) string) (
 
 func link(cmd *cobra.Command) (name, ref string) {
 	name = fullCommand(cmd)
-	ref = strings.Replace(name, " ", "_", -1)
+	ref = strings.ReplaceAll(name, " ", "_")
 	return
 }
 

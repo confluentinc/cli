@@ -158,7 +158,7 @@ command returns a failure if a master key has not already been set using the "ma
 	c.AddCommand(rotateKeyCmd)
 }
 
-func (c *secureFileCommand) encrypt(cmd *cobra.Command, args []string) error {
+func (c *secureFileCommand) encrypt(cmd *cobra.Command, _ []string) error {
 	configs, err := cmd.Flags().GetString("config")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -177,7 +177,7 @@ func (c *secureFileCommand) encrypt(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *secureFileCommand) decrypt(cmd *cobra.Command, args []string) error {
+func (c *secureFileCommand) decrypt(cmd *cobra.Command, _ []string) error {
 	configs, err := cmd.Flags().GetString("config")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -206,7 +206,7 @@ func (c *secureFileCommand) decrypt(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *secureFileCommand) add(cmd *cobra.Command, args []string) error {
+func (c *secureFileCommand) add(cmd *cobra.Command, _ []string) error {
 	configSource, err := cmd.Flags().GetString("config")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -230,7 +230,7 @@ func (c *secureFileCommand) add(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *secureFileCommand) update(cmd *cobra.Command, args []string) error {
+func (c *secureFileCommand) update(cmd *cobra.Command, _ []string) error {
 	configSource, err := cmd.Flags().GetString("config")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -273,7 +273,7 @@ func (c *secureFileCommand) getConfigFilePath(cmd *cobra.Command) (string, strin
 	return configPath, localSecretsPath, remoteSecretsPath, nil
 }
 
-func (c *secureFileCommand) remove(cmd *cobra.Command, args []string) error {
+func (c *secureFileCommand) remove(cmd *cobra.Command, _ []string) error {
 	configSource, err := cmd.Flags().GetString("config")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -302,7 +302,7 @@ func (c *secureFileCommand) remove(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *secureFileCommand) rotate(cmd *cobra.Command, args []string) error {
+func (c *secureFileCommand) rotate(cmd *cobra.Command, _ []string) error {
 	localSecretsPath, err := cmd.Flags().GetString("local-secrets-file")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)

@@ -8,12 +8,13 @@ import (
 
 	"github.com/spf13/cobra"
 
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	"github.com/spf13/pflag"
+
 	print "github.com/confluentinc/cli/internal/pkg/cluster"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
-	"github.com/spf13/pflag"
 )
 
 type registryCommand struct {
@@ -77,7 +78,7 @@ func (c *registryCommand) createContext() context.Context {
 	return context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
 }
 
-func (r *registryCommand) resolveClusterScope(cmd *cobra.Command) (*mds.ScopeClusters, error) {
+func (c *registryCommand) resolveClusterScope(cmd *cobra.Command) (*mds.ScopeClusters, error) {
 	scope := &mds.ScopeClusters{}
 
 	nonKafkaScopesSet := 0
@@ -151,7 +152,7 @@ func (c *registryCommand) parseProtocol(cmd *cobra.Command) (mds.Protocol, error
 	}
 }
 
-func (c *registryCommand) register(cmd *cobra.Command, args []string) error {
+func (c *registryCommand) register(cmd *cobra.Command, _ []string) error {
 
 	name, err := cmd.Flags().GetString("cluster-name")
 	if err != nil {
@@ -174,9 +175,7 @@ func (c *registryCommand) register(cmd *cobra.Command, args []string) error {
 	}
 
 	clusterInfo := mds.ClusterInfo{ClusterName: name, Scope: mds.Scope{Clusters: *scopeClusters}, Hosts: hosts, Protocol: protocol}
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
+
 	response, err := c.MDSClient.ClusterRegistryApi.UpdateClusters(c.createContext(), []mds.ClusterInfo{clusterInfo})
 	if err != nil {
 		return print.HandleClusterError(cmd, err, response)
@@ -186,7 +185,7 @@ func (c *registryCommand) register(cmd *cobra.Command, args []string) error {
 	return print.PrintCluster(cmd, []mds.ClusterInfo{clusterInfo}, output.Human.String())
 }
 
-func (c *registryCommand) unregister(cmd *cobra.Command, args []string) error {
+func (c *registryCommand) unregister(cmd *cobra.Command, _ []string) error {
 	name, err := cmd.Flags().GetString("cluster-name")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)

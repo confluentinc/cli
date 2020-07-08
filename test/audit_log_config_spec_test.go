@@ -2,8 +2,9 @@ package test
 
 import (
 	"encoding/json"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"regexp"
+
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 )
 
 func (s *CLITestSuite) TestAuditLogConfigSpecSerialization() {
@@ -21,7 +22,7 @@ func (s *CLITestSuite) TestAuditLogConfigSpecSerialization() {
 
 	re := regexp.MustCompile(`[\r\n]+`)
 
-	if re.ReplaceAllString(original,"") != re.ReplaceAllString(roundTrip,"") {
+	if re.ReplaceAllString(original, "") != re.ReplaceAllString(roundTrip, "") {
 		s.T().Fail()
 	}
 }

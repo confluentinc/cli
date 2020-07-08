@@ -76,6 +76,7 @@ func TestCheckForUpdates(t *testing.T) {
 	u, err := user.Current()
 	require.NoError(t, err)
 	tmpCheckFile2Handle, err := ioutil.TempFile(u.HomeDir, "cli-test2-")
+	require.NoError(t, err)
 	// replace the user homedir with ~ to test expansion by our own code
 	tmpCheckFile2 := strings.Replace(tmpCheckFile2Handle.Name(), u.HomeDir, "~", 1)
 	defer os.Remove(tmpCheckFile2Handle.Name())

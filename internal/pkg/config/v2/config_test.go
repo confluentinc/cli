@@ -581,9 +581,9 @@ func TestConfig_AddContext(t *testing.T) {
 }
 
 func TestConfig_SetContext(t *testing.T) {
-	config := AuthenticatedConfigMock()
-	contextName := config.Context().Name
-	config.CurrentContext = ""
+	cfg := AuthenticatedConfigMock()
+	contextName := cfg.Context().Name
+	cfg.CurrentContext = ""
 	type fields struct {
 		Config *Config
 	}
@@ -599,7 +599,7 @@ func TestConfig_SetContext(t *testing.T) {
 		{
 			name: "succeed setting valid context",
 			fields: fields{
-				Config: config,
+				Config: cfg,
 			},
 			args:    args{name: contextName},
 			wantErr: false,
@@ -607,7 +607,7 @@ func TestConfig_SetContext(t *testing.T) {
 		{
 			name: "fail setting nonexistent context",
 			fields: fields{
-				Config: config,
+				Config: cfg,
 			},
 			args:    args{name: "some-context"},
 			wantErr: true,

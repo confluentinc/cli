@@ -39,7 +39,7 @@ func (a *logoutCommand) init(cliName string, prerunner pcmd.PreRunner) {
 	a.CLICommand = cliLogoutCmd
 }
 
-func (a *logoutCommand) logout(cmd *cobra.Command, args []string) error {
+func (a *logoutCommand) logout(cmd *cobra.Command, _ []string) error {
 	ctx := a.Config.Config.Context()
 	if ctx == nil {
 		return nil

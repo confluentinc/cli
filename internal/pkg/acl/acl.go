@@ -10,8 +10,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func PrintAcls(cmd *cobra.Command, bindingsObj []*schedv1.ACLBinding, writer io.Writer) error {
-
+func PrintACLs(cmd *cobra.Command, bindingsObj []*schedv1.ACLBinding, writer io.Writer) error {
 	// non list commands which do not have -o flags also uses this function, need to set default
 	_, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {

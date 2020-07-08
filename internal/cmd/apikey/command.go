@@ -142,7 +142,7 @@ func (c *command) init() {
 	c.AddCommand(useCmd)
 }
 
-func (c *command) list(cmd *cobra.Command, args []string) error {
+func (c *command) list(cmd *cobra.Command, _ []string) error {
 	c.setKeyStoreIfNil()
 	type keyDisplay struct {
 		Key          string
@@ -257,7 +257,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *command) create(cmd *cobra.Command, args []string) error {
+func (c *command) create(cmd *cobra.Command, _ []string) error {
 	c.setKeyStoreIfNil()
 	resourceType, clusterId, _, err := c.resolveResourceId(cmd, c.Config.Resolver, c.Client)
 	if err != nil {

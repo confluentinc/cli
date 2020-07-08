@@ -18,7 +18,7 @@ var (
 		":ref:`only available <cloud-limits>`": "only available",
 		":ref:`acl-manage`":                    "https://docs.confluent.io/current/cloud/access-management/acl.html",
 		":ref:`kafka_authorization`":           "https://docs.confluent.io/current/kafka/authorization.html",
-		".. include:: ../includes/example-ref.rst": `  For a complete example of |ccloud| user account administration, service 
+		".. include:: ../includes/example-ref.rst": `  For a complete example of |ccloud| user account administration, service
   account management, and topic management, see https://docs.confluent.io/current/cloud/access-management/user-service-example.html`,
 		".. important::": "",
 	}
@@ -39,9 +39,9 @@ func ResolveReST(template string, cmd *cobra.Command) error {
 
 func resolveReSTHelper(cmd *cobra.Command) error {
 	for rest, text := range replacements {
-		cmd.Short = strings.Replace(cmd.Short, rest, text, -1)
-		cmd.Long = strings.Replace(cmd.Long, rest, text, -1)
-		cmd.Example = strings.Replace(cmd.Example, rest, text, -1)
+		cmd.Short = strings.ReplaceAll(cmd.Short, rest, text)
+		cmd.Long = strings.ReplaceAll(cmd.Long, rest, text)
+		cmd.Example = strings.ReplaceAll(cmd.Example, rest, text)
 	}
 	if cmd.HasAvailableSubCommands() {
 		for _, c := range cmd.Commands() {

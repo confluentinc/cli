@@ -211,7 +211,7 @@ func (c *rolebindingCommand) validateRoleAndResourceType(roleName string, resour
 		return errors.Wrapf(err, "Failed to look up role %s. Was an invalid role name specified?", roleName)
 	}
 
-	allResourceTypes := []string{}
+	var allResourceTypes []string
 	found := false
 	for _, operation := range role.AccessPolicy.AllowedOperations {
 		allResourceTypes = append(allResourceTypes, operation.ResourceType)
@@ -455,7 +455,7 @@ func (c *rolebindingCommand) ccloudList(cmd *cobra.Command) error {
 	}
 }
 
-func (c *rolebindingCommand) list(cmd *cobra.Command, args []string) error {
+func (c *rolebindingCommand) list(cmd *cobra.Command, _ []string) error {
 	if c.CLIName == "ccloud" {
 		return c.ccloudList(cmd)
 	} else {
@@ -753,7 +753,7 @@ func (c *rolebindingCommand) ccloudCreate(options *rolebindingOptions) (*http.Re
 		options.scopeV2)
 }
 
-func (c *rolebindingCommand) create(cmd *cobra.Command, args []string) error {
+func (c *rolebindingCommand) create(cmd *cobra.Command, _ []string) error {
 	options, err := c.parseCommon(cmd)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -802,7 +802,7 @@ func (c* rolebindingCommand) ccloudDelete(options *rolebindingOptions) (*http.Re
 		options.scopeV2)
 }
 
-func (c *rolebindingCommand) delete(cmd *cobra.Command, args []string) error {
+func (c *rolebindingCommand) delete(cmd *cobra.Command, _ []string) error {
 	options, err := c.parseCommon(cmd)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)

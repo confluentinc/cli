@@ -13,10 +13,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
-var (
-	LoginIndex = 0
-)
-
 // New returns a list of auth-related Cobra commands.
 func New(cliName string, prerunner pcmd.PreRunner, logger *log.Logger, userAgent string, analyticsClient analytics.Client, netrcHandler *pauth.NetrcHandler) []*cobra.Command {
 	var defaultAnonHTTPClientFactory = func(baseURL string, logger *log.Logger) *ccloud.Client {

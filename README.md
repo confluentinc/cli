@@ -285,7 +285,7 @@ We also have end-to-end system tests for
 To run all tests
 
     make test
-    
+
 UNIT_TEST_ARGS environment variable is used to manipulate unit test execution,
 while INT_TEST_ARGS environment variable is for integration tests.
 
@@ -302,15 +302,15 @@ Unit tests exist in `_test.go` files alongside the main source code files.
 You can run the all unit tests with
 
     make unit-test
-   
+
 To run only a subset of unit tests, you must find the suite and test name and filter with
 
     # all tests within a suite
     make unit-test UNIT_TEST_ARGS="-run TestApiTestSuite"
-    
+
     # a very specific subset of tests
     make unit-test UNIT_TEST_ARGS="-run TestApiTestSuite/TestCreateCloudAPIKey"
-   
+
 UNIT_TEST_ARGS is can also be used with `make test` target, if you want to filter unit tests but still run integration tests
 
     make test UNIT_TEST_ARGS="-run TestApiTestSuite/TestCreateCloudAPIKey"
@@ -354,7 +354,7 @@ To run a single test case (or all test cases with a prefix)
 INT_TEST_ARGS is can also be used with `make test` target, if you want to filter or update integration tests but still run unit tests
 
     make test INT_TEST_ARGS="-run TestCLI/Test_Confluent_Iam_Rolebinding_List"
-    
+
 
 ## Adding a New Command to the CLI
 
@@ -475,7 +475,7 @@ func (s *CLITestSuite) TestFileCommands() {
 		}
 		tt.workflow = true
 		kafkaAPIURL := serveKafkaAPI(s.T()).URL
-		s.runCcloudTest(tt, serve(s.T(), kafkaAPIURL).URL, kafkaAPIURL)
+		s.runCcloudTest(tt, serve(s.T(), kafkaAPIURL).URL)
 	}
 }
 ```

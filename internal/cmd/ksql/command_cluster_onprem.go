@@ -2,14 +2,15 @@ package ksql
 
 import (
 	"context"
-	"github.com/spf13/cobra"
 
 	"github.com/antihax/optional"
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	"github.com/spf13/cobra"
+
 	print "github.com/confluentinc/cli/internal/pkg/cluster"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 )
 
 var clusterType = "ksql-cluster"
@@ -52,7 +53,7 @@ func (c *clusterCommandOnPrem) createContext() context.Context {
 	return context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
 }
 
-func (c *clusterCommandOnPrem) list(cmd *cobra.Command, args []string) error {
+func (c *clusterCommandOnPrem) list(cmd *cobra.Command, _ []string) error {
 	ksqlClustertype := &mds.ClusterRegistryListOpts{
 		ClusterType: optional.NewString(clusterType),
 	}
