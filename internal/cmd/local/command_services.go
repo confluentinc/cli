@@ -163,7 +163,7 @@ func NewServicesListCommand(prerunner cmd.PreRunner) *cobra.Command {
 func (c *Command) runServicesListCommand(command *cobra.Command, _ []string) error {
 	services, err := c.getAvailableServices()
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, c.Command)
 	}
 
 	sort.Strings(services)
@@ -202,18 +202,18 @@ func NewServicesStartCommand(prerunner cmd.PreRunner) *cobra.Command {
 func (c *Command) runServicesStartCommand(command *cobra.Command, _ []string) error {
 	availableServices, err := c.getAvailableServices()
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, c.Command)
 	}
 
 	if err := c.notifyConfluentCurrent(command); err != nil {
-		return err
+		return errors.HandleCommon(err, c.Command)
 	}
 
 	// Topological order
 	for i := 0; i < len(availableServices); i++ {
 		service := availableServices[i]
 		if err := c.startService(command, service, ""); err != nil {
-			return err
+			return errors.HandleCommon(err, c.Command)
 		}
 	}
 
@@ -235,17 +235,17 @@ func NewServicesStatusCommand(prerunner cmd.PreRunner) *cobra.Command {
 func (c *Command) runServicesStatusCommand(command *cobra.Command, _ []string) error {
 	availableServices, err := c.getAvailableServices()
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, c.Command)
 	}
 
 	if err := c.notifyConfluentCurrent(command); err != nil {
-		return err
+		return errors.HandleCommon(err, c.Command)
 	}
 
 	sort.Strings(availableServices)
 	for _, service := range availableServices {
 		if err := c.printStatus(command, service); err != nil {
-			return err
+			return errors.HandleCommon(err, c.Command)
 		}
 	}
 
@@ -278,18 +278,18 @@ func NewServicesStopCommand(prerunner cmd.PreRunner) *cobra.Command {
 func (c *Command) runServicesStopCommand(command *cobra.Command, _ []string) error {
 	availableServices, err := c.getAvailableServices()
 	if err != nil {
-		return err
+		return errors.HandleCommon(err, c.Command)
 	}
 
 	if err := c.notifyConfluentCurrent(command); err != nil {
-		return err
+		return errors.HandleCommon(err, c.Command)
 	}
 
 	// Reverse topological order
 	for i := len(availableServices) - 1; i >= 0; i-- {
 		service := availableServices[i]
 		if err := c.stopService(command, service); err != nil {
-			return err
+			return errors.HandleCommon(err, c.Command)
 		}
 	}
 
@@ -319,20 +319,20 @@ func (c *Command) runServicesTopCommand(_ *cobra.Command, _ []string) error {
 	for _, service := range availableServices {
 		isUp, err := c.isRunning(service)
 		if err != nil {
-			return err
+			return errors.HandleCommon(err, c.Command)
 		}
 
 		if isUp {
 			pid, err := c.cc.ReadPid(service)
 			if err != nil {
-				return err
+				return errors.HandleCommon(err, c.Command)
 			}
 			pids = append(pids, pid)
 		}
 	}
 
 	if len(pids) == 0 {
-		return errors.New(errors.NoServicesRunningErrorMsg)
+		return errors.HandleCommon(errors.New(errors.NoServicesRunningErrorMsg), c.Command)
 	}
 
 	return top(pids)
