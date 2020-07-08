@@ -171,7 +171,7 @@ func printOptions(buf *bytes.Buffer, cmd *cobra.Command) error {
 
 func printWarnings(buf *bytes.Buffer, cmd *cobra.Command, depth int) {
 	if strings.HasPrefix(cmd.CommandPath(), "confluent local") {
-		buf.WriteString(fmt.Sprintf(".. include:: %sincludes/cli.rst\n", strings.Repeat("../", depth+1)))
+		buf.WriteString(sphinxInclude(fmt.Sprintf("%sincludes/cli.rst", strings.Repeat("../", depth+1))))
 		buf.WriteString("  :start-after: cli_limitations_start\n")
 		buf.WriteString("  :end-before: cli_limitations_end\n\n")
 	}
@@ -179,10 +179,22 @@ func printWarnings(buf *bytes.Buffer, cmd *cobra.Command, depth int) {
 
 func printTips(buf *bytes.Buffer, cmd *cobra.Command, depth int) {
 	if strings.HasPrefix(cmd.CommandPath(), "confluent local") {
-		buf.WriteString(fmt.Sprintf(".. include:: %sincludes/path-set-cli.rst\n\n", strings.Repeat("../", depth+1)))
+		buf.WriteString(sphinxInclude(fmt.Sprintf("%sincludes/path-set-cli.rst", strings.Repeat("../", depth+1))))
+	}
+
+	if cmd.CommandPath() == "confluent iam rolebinding create" {
+		buf.WriteString(sphinxNote("If you need to troubleshoot when setting up role bindings, it may be helpful to view audit logs on the fly to identify authorization events for specific principals, resources, or operations. For details, refer to :ref:`view-audit-logs-on-the-fly`."))
 	}
 }
 
 func SphinxRef(ref string) string {
 	return fmt.Sprintf(":ref:`%s`", ref)
+}
+
+func sphinxInclude(include string) string {
+	return fmt.Sprintf(".. include:: %s\n\n", include)
+}
+
+func sphinxNote(note string) string {
+	return fmt.Sprintf(".. note::\n\n  %s\n\n", note)
 }
