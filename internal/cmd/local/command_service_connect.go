@@ -28,8 +28,8 @@ func NewConnectConnectorCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "connector",
-			Short: "Manage connectors.",
 			Args:  cobra.NoArgs,
+			Short: "Manage connectors.",
 		}, prerunner)
 
 	c.AddCommand(NewConnectConnectorConfigCommand(prerunner))
@@ -44,9 +44,9 @@ func NewConnectConnectorCommand(prerunner cmd.PreRunner) *cobra.Command {
 func NewConnectConnectorConfigCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
-			Use:   "config [connector]",
-			Short: "View or set connector configurations.",
+			Use:   "config [connector-name]",
 			Args:  cobra.ExactArgs(1),
+			Short: "View or set connector configurations.",
 		}, prerunner)
 
 	c.Command.RunE = c.runConnectConnectorConfigCommand
@@ -115,9 +115,9 @@ func (c *Command) runConnectConnectorConfigCommand(command *cobra.Command, args 
 func NewConnectConnectorStatusCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
-			Use:   "status [connector]",
-			Short: "Check the status of all connectors, or a single connector.",
+			Use:   "status [connector-name]",
 			Args:  cobra.MaximumNArgs(1),
+			Short: "Check the status of all connectors, or a single connector.",
 		}, prerunner)
 
 	c.Command.RunE = c.runConnectConnectorStatusCommand
@@ -157,8 +157,9 @@ func NewConnectConnectorListCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "list",
-			Short: "List all bundled predefined connectors.",
 			Args:  cobra.NoArgs,
+			Short: "List all bundled connectors.",
+			Long:  "List all connectors bundled with Confluent Platform.",
 		}, prerunner)
 
 	c.Command.Run = c.runConnectConnectorListCommand
@@ -166,17 +167,17 @@ func NewConnectConnectorListCommand(prerunner cmd.PreRunner) *cobra.Command {
 }
 
 func (c *Command) runConnectConnectorListCommand(command *cobra.Command, _ []string) {
-	command.Println("Bundled Predefined Connectors:")
+	command.Println("Bundled Connectors:")
 	command.Println(local.BuildTabbedList(connectors))
 }
 
 func NewConnectConnectorLoadCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
-			Use:   "load [connector]",
-			Short: "Load a connector.",
-			Long:  "Load a bundled connector with a predefined name or a custom connector.",
+			Use:   "load [connector-name]",
 			Args:  cobra.ExactArgs(1),
+			Short: "Load a connector.",
+			Long:  "Load a bundled connector from Confluent Platform or your own custom connector.",
 		}, prerunner)
 
 	c.Command.RunE = c.runConnectConnectorLoadCommand
@@ -243,9 +244,9 @@ func (c *Command) runConnectConnectorLoadCommand(command *cobra.Command, args []
 func NewConnectConnectorUnloadCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
-			Use:   "unload [connector]",
-			Short: "Unload a connector.",
+			Use:   "unload [connector-name]",
 			Args:  cobra.ExactArgs(1),
+			Short: "Unload a connector.",
 		}, prerunner)
 
 	c.Command.RunE = c.runConnectConnectorUnloadCommand
@@ -279,8 +280,8 @@ func NewConnectPluginCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "plugin",
-			Short: "Manage Connect plugins.",
 			Args:  cobra.NoArgs,
+			Short: "Manage Connect plugins.",
 		}, prerunner)
 
 	c.AddCommand(NewConnectPluginListCommand(prerunner))
@@ -292,8 +293,9 @@ func NewConnectPluginListCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "list",
-			Short: "List available Connect plugins.",
 			Args:  cobra.NoArgs,
+			Short: "List available Connect plugins.",
+			Long:  "List available Connect plugins bundled with Confluent Platform.",
 		}, prerunner)
 
 	c.Command.RunE = c.runConnectPluginListCommand
