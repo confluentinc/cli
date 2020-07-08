@@ -130,8 +130,8 @@ github.com/confluentinc/go-printer v0.13.0/go.mod h1:bOK/pPNm4ao7bZIcRnGPGca1B64
 github.com/confluentinc/mds-sdk-go v0.0.6 h1:BnBaKQNpHGNYi/pbU46lkKyPBcFNPUYQEuDDwKkbPRg=
 github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.9 h1:TsJzNxIN5hyq8AT/F24nSkyknS6u8NEpKU5C88pzS04=
 github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.9/go.mod h1:wyYeXb6d0I/RRhPV7LaAFneTGqbT7chHZtpzfKwdrh0=
-github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.10 h1:fjV+VY4X+r4Rn3NubgJ2aJHIjs7BX/b264XhiI2Q69A=
-github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.10/go.mod h1:WimNyaI+msAxUXsM2oRMarBdkod/cnsQeWSbtXi0kGg=
+github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.11 h1:SqknPrUP6isE35o3//c5agXxOl4/cVyxtNIsi65EPTY=
+github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.11/go.mod h1:WimNyaI+msAxUXsM2oRMarBdkod/cnsQeWSbtXi0kGg=
 github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787 h1:hHiVn9sDY/pZCETOV3489odsMhj8NEyiamjwhBy6TLA=
 github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787/go.mod h1:e8oa6xV9gIddL04yTbRjly4s7U3Fn57PAOUMTUPibUA=
 github.com/confluentinc/proto-go-setter v0.0.0-20180912191759-fb17e76fc076 h1:tJszovtvIkdc+Sq0TBZK2d8ExqQ6Y2jjUbBERqivSMk=
