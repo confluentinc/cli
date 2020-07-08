@@ -68,10 +68,10 @@ func (suite *SchemaTestSuite) SetupTest() {
 			GetSchemaByVersionFunc: func(ctx context.Context, subject, version string, opts *srsdk.GetSchemaByVersionOpts) (schema srsdk.Schema, response *http.Response, e error) {
 				return srsdk.Schema{Schema: "Potatoes", Version: versionInt32}, nil, nil
 			},
-			DeleteSchemaVersionFunc: func(ctx context.Context, subject, version string) (i int32, response *http.Response, e error) {
+			DeleteSchemaVersionFunc: func(ctx context.Context, subject, version string, opts *srsdk.DeleteSchemaVersionOpts) (i int32, response *http.Response, e error) {
 				return id, nil, nil
 			},
-			DeleteSubjectFunc: func(ctx context.Context, subject string) (int32s []int32, response *http.Response, e error) {
+			DeleteSubjectFunc: func(ctx context.Context, subject string, opts *srsdk.DeleteSubjectOpts) (int32s []int32, response *http.Response, e error) {
 				return []int32{id}, nil, nil
 			},
 		},
