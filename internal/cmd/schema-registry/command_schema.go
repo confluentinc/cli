@@ -92,7 +92,7 @@ Delete one or more topics. This command should only be used in extreme circumsta
 	RequireSubjectFlag(cmd)
 	cmd.Flags().StringP("version", "V", "", "Version of the schema. Can be a specific version, 'all', or 'latest'.")
 	_ = cmd.MarkFlagRequired("version")
-	cmd.Flags().BoolP("permanent", "P", false, "Permanent deletion.")
+	cmd.Flags().BoolP("permanent", "P", false, "Permanently delete the schema.")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 

@@ -46,7 +46,7 @@ Retrieve all subjects available in a Schema Registry
 		Args: cobra.NoArgs,
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	listCmd.Flags().BoolP("deleted", "D", false, "View deleted subjects.")
+	listCmd.Flags().BoolP("deleted", "D", false, "View the deleted subjects.")
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 	// Update
@@ -82,7 +82,7 @@ Retrieve all versions registered under a given subject and its compatibility lev
 		Args: cobra.ExactArgs(1),
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	describeCmd.Flags().BoolP("deleted", "D", false, "View deleted schema.")
+	describeCmd.Flags().BoolP("deleted", "D", false, "View the deleted schema.")
 	describeCmd.Flags().SortFlags = false
 	c.AddCommand(describeCmd)
 }
