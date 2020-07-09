@@ -148,6 +148,7 @@ func (s *CLITestSuite) SetupSuite() {
 
 func (s *CLITestSuite) TearDownSuite() {
 	// Merge coverage profiles.
+	_ = os.Unsetenv("XX_CLOUD_RBAC")
 	covCollector.TearDown()
 }
 
