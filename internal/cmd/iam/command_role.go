@@ -132,7 +132,7 @@ func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
 	return nil
 }
 
-func (c *roleCommand) list(cmd *cobra.Command, args []string) error {
+func (c *roleCommand) list(cmd *cobra.Command, _ []string) error {
 	if c.cliName == "ccloud" {
 		return c.ccloudList(cmd)
 	} else {
@@ -150,7 +150,7 @@ func (c *roleCommand) confluentDescribe(cmd *cobra.Command, role string) error {
 			}
 
 			cmd.SilenceUsage = true
-			return fmt.Errorf("Unknown role specified.  Role should be one of " + strings.Join(availableRoleNames, ", "))
+			return fmt.Errorf("Unknown role specified.  Role should be one of %s", strings.Join(availableRoleNames, ", "))
 		}
 
 		return errors.HandleCommon(err, cmd)
@@ -186,7 +186,7 @@ func (c *roleCommand) ccloudDescribe(cmd *cobra.Command, role string) error {
 			}
 
 			cmd.SilenceUsage = true
-			return fmt.Errorf("Unknown role specified.  Role should be one of " + strings.Join(availableRoleNames, ", "))
+			return fmt.Errorf("Unknown role specified.  Role should be one of %s", strings.Join(availableRoleNames, ", "))
 		}
 
 		return errors.HandleCommon(err, cmd)

@@ -120,6 +120,20 @@ func (c *rolebindingCommand) init() {
 	if c.cliName == "ccloud" {
 		listCmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for scope of rolebinding listings.")
 		listCmd.Flags().String("environment", "", "Environment ID for scope of rolebinding listings.")
+		c.Example = examples.BuildExampleString(
+			examples.Example{
+				Desc: "To list the role bindings for a specific principal:",
+				Code: "iam rolebinding list --principal User:frodo",
+			},
+			examples.Example{
+				Desc: "To list the role bindings for a specific principal, filtered to a specific role:",
+				Code: "iam rolebinding list --principal User:frodo --role CloudClusterAdmin --environment current --cloud-cluster lkc-1111aaa",
+			},
+			examples.Example{
+				Desc: "To list the principals bound to a specific role",
+				Code: "iam rolebinding list --role CloudClusterAdmin --environment current --cloud-cluster lkc-1111aaa",
+			},
+		)
 	} else {
 		listCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for scope of rolebinding listings.")
 		listCmd.Flags().String("resource", "", "If specified with a role and no principals, list principals with rolebindings to the role for this qualified resource.")
@@ -140,12 +154,12 @@ func (c *rolebindingCommand) init() {
 		Args:  cobra.NoArgs,
 	}
 	createCmd.Flags().String("role", "", "Role name of the new role binding.")
-	createCmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
 	createCmd.Flags().String("principal", "", "Qualified principal name for the role binding.")
 	if c.cliName == "ccloud" {
 		createCmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for the role binding.")
 		createCmd.Flags().String("environment", "", "Environment ID for scope of rolebinding listings.")
 	} else {
+		createCmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
 		createCmd.Flags().String("resource", "", "Qualified resource name for the role binding.")
 		createCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
 		createCmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding.")
@@ -165,12 +179,12 @@ func (c *rolebindingCommand) init() {
 		Args:  cobra.NoArgs,
 	}
 	deleteCmd.Flags().String("role", "", "Role name of the existing role binding.")
-	deleteCmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
 	deleteCmd.Flags().String("principal", "", "Qualified principal name associated with the role binding.")
 	if c.cliName == "ccloud" {
 		deleteCmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for the role binding.")
 		deleteCmd.Flags().String("environment", "", "Environment ID for scope of rolebinding listings.")
 	} else {
+		deleteCmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
 		deleteCmd.Flags().String("resource", "", "Qualified resource name associated with the role binding.")
 		deleteCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
 		deleteCmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding.")
@@ -363,11 +377,6 @@ func (c *rolebindingCommand) listMyRoleBindings(cmd *cobra.Command) error {
 	if principal == "current" {
 		principal = "User:" + c.State.Auth.User.ResourceId
 	}
-	err = c.validatePrincipalFormat(principal)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
 	err = c.validatePrincipalFormat(principal)
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
@@ -691,14 +700,14 @@ func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOption
 	}
 
 	resource := ""
+	prefix := false
 	if c.cliName != "ccloud" {
 		resource, err = cmd.Flags().GetString("resource")
 		if err != nil {
 			return nil, errors.HandleCommon(err, cmd)
 		}
+		prefix = cmd.Flags().Changed("prefix")
 	}
-
-	prefix := cmd.Flags().Changed("prefix")
 
 	principal, err := cmd.Flags().GetString("principal")
 	if err != nil {

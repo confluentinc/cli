@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
-	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
@@ -262,9 +261,5 @@ func PrintACLs(cmd *cobra.Command, kafkaClusterId string, bindingsObj []mds.AclB
 }
 
 func (c *aclCommand) createContext() context.Context {
-	if c.cliName == "ccloud" {
-		return context.WithValue(context.Background(), mdsv2alpha1.ContextAccessToken, c.State.AuthToken)
-	} else {
-		return context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
-	}
+	return context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
 }
