@@ -2,14 +2,15 @@ package errors
 
 import (
 	"fmt"
-	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	"reflect"
+
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
 	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 )
 
 var messages = map[error]string{

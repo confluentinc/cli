@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	"net/http"
 	"os"
 	"strings"
@@ -15,6 +14,7 @@ import (
 
 	"github.com/confluentinc/go-printer"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -28,7 +28,7 @@ var (
 
 type roleCommand struct {
 	*cmd.AuthenticatedCLICommand
-	CLIName string
+	cliName string
 }
 
 type prettyRole struct {
@@ -46,14 +46,14 @@ func NewRoleCommand(cliName string, prerunner cmd.PreRunner) *cobra.Command {
 		}, prerunner)
 	roleCmd := &roleCommand{
 		AuthenticatedCLICommand: cliCmd,
-		CLIName: cliName,
+		cliName:                 cliName,
 	}
 	roleCmd.init()
 	return roleCmd.Command
 }
 
 func (c *roleCommand) createContext() context.Context {
-	if c.CLIName == "ccloud" {
+	if c.cliName == "ccloud" {
 		return context.WithValue(context.Background(), mdsv2alpha1.ContextAccessToken, c.State.AuthToken)
 	} else {
 		return context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
@@ -121,8 +121,8 @@ func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
 		for _, role := range rolesV2 {
 			roleDisplay, err := createPrettyRoleV2(role)
 			if err != nil {
-					  return errors.HandleCommon(err, cmd)
-					  }
+				return errors.HandleCommon(err, cmd)
+			}
 			data = append(data, printer.ToRow(roleDisplay, roleFields))
 		}
 		outputTable(data)
@@ -133,7 +133,7 @@ func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
 }
 
 func (c *roleCommand) list(cmd *cobra.Command, args []string) error {
-	if c.CLIName == "ccloud" {
+	if c.cliName == "ccloud" {
 		return c.ccloudList(cmd)
 	} else {
 		return c.confluentList(cmd)
@@ -215,7 +215,7 @@ func (c *roleCommand) ccloudDescribe(cmd *cobra.Command, role string) error {
 func (c *roleCommand) describe(cmd *cobra.Command, args []string) error {
 	role := args[0]
 
-	if c.CLIName == "ccloud" {
+	if c.cliName == "ccloud" {
 		return c.ccloudDescribe(cmd, role)
 	} else {
 		return c.confluentDescribe(cmd, role)

@@ -3,13 +3,13 @@ package iam
 import (
 	"context"
 	"fmt"
-	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	"net/http"
 	"sort"
 	"strings"
 
 	"github.com/confluentinc/go-printer"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
@@ -33,15 +33,15 @@ var (
 		"Operator":      true,
 	}
 
-	clusterScopedRolesV2 = map[string]bool {
+	clusterScopedRolesV2 = map[string]bool{
 		"CloudClusterAdmin": true,
 	}
 
-	environmentScopedRoles = map[string]bool {
+	environmentScopedRoles = map[string]bool{
 		"EnvironmentAdmin": true,
 	}
 
-	organizationScopedRoles = map[string]bool {
+	organizationScopedRoles = map[string]bool{
 		"OrganizationAdmin": true,
 	}
 )
@@ -51,14 +51,14 @@ type rolebindingOptions struct {
 	resource         string
 	prefix           bool
 	principal        string
-	scopeV2			 mdsv2alpha1.Scope
+	scopeV2          mdsv2alpha1.Scope
 	mdsScope         mds.MdsScope
 	resourcesRequest mds.ResourcesRequest
 }
 
 type rolebindingCommand struct {
 	*cmd.AuthenticatedCLICommand
-	CLIName string
+	cliName string
 }
 
 type listDisplay struct {
@@ -79,7 +79,7 @@ func NewRolebindingCommand(cliName string, prerunner cmd.PreRunner) *cobra.Comma
 		}, prerunner)
 	roleBindingCmd := &rolebindingCommand{
 		AuthenticatedCLICommand: cliCmd,
-		CLIName: cliName,
+		cliName:                 cliName,
 	}
 	roleBindingCmd.init()
 	return roleBindingCmd.Command
@@ -117,7 +117,7 @@ func (c *rolebindingCommand) init() {
 	}
 	listCmd.Flags().String("principal", "", "Principal whose rolebindings should be listed.")
 	listCmd.Flags().String("role", "", "List rolebindings under a specific role given to a principal. Or if no principal is specified, list principals with the role.")
-	if c.CLIName == "ccloud" {
+	if c.cliName == "ccloud" {
 		listCmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for scope of rolebinding listings.")
 		listCmd.Flags().String("environment", "", "Environment ID for scope of rolebinding listings.")
 	} else {
@@ -142,7 +142,7 @@ func (c *rolebindingCommand) init() {
 	createCmd.Flags().String("role", "", "Role name of the new role binding.")
 	createCmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
 	createCmd.Flags().String("principal", "", "Qualified principal name for the role binding.")
-	if c.CLIName == "ccloud" {
+	if c.cliName == "ccloud" {
 		createCmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for the role binding.")
 		createCmd.Flags().String("environment", "", "Environment ID for scope of rolebinding listings.")
 	} else {
@@ -167,7 +167,7 @@ func (c *rolebindingCommand) init() {
 	deleteCmd.Flags().String("role", "", "Role name of the existing role binding.")
 	deleteCmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
 	deleteCmd.Flags().String("principal", "", "Qualified principal name associated with the role binding.")
-	if c.CLIName == "ccloud" {
+	if c.cliName == "ccloud" {
 		deleteCmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for the role binding.")
 		deleteCmd.Flags().String("environment", "", "Environment ID for scope of rolebinding listings.")
 	} else {
@@ -224,7 +224,7 @@ func (c *rolebindingCommand) parseAndValidateResourcePatternV2(typename string, 
 }
 
 func (c *rolebindingCommand) validateRoleAndResourceType(roleName string, resourceType string) error {
-	if c.CLIName == "ccloud" {
+	if c.cliName == "ccloud" {
 		return nil
 	}
 	ctx := c.createContext()
@@ -396,7 +396,7 @@ func (c *rolebindingCommand) listMyRoleBindings(cmd *cobra.Command) error {
 						if err != nil {
 							return err
 						}
-						if resource !=  resourcePattern.ResourceType {
+						if resource != resourcePattern.ResourceType {
 							continue
 						}
 					}
@@ -478,7 +478,7 @@ func (c *rolebindingCommand) ccloudList(cmd *cobra.Command) error {
 }
 
 func (c *rolebindingCommand) list(cmd *cobra.Command, _ []string) error {
-	if c.CLIName == "ccloud" {
+	if c.cliName == "ccloud" {
 		return c.ccloudList(cmd)
 	} else {
 		return c.confluentList(cmd)
@@ -691,7 +691,7 @@ func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOption
 	}
 
 	resource := ""
-	if c.CLIName != "ccloud" {
+	if c.cliName != "ccloud" {
 		resource, err = cmd.Flags().GetString("resource")
 		if err != nil {
 			return nil, errors.HandleCommon(err, cmd)
@@ -711,7 +711,7 @@ func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOption
 
 	scope := &mds.MdsScope{}
 	scopeV2 := &mdsv2alpha1.Scope{}
-	if c.CLIName != "ccloud" {
+	if c.cliName != "ccloud" {
 		scope, err = c.parseAndValidateScope(cmd)
 	} else {
 		scopeV2, err = c.parseAndValidateScopeV2(cmd)
@@ -782,7 +782,7 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, _ []string) error {
 	}
 
 	var resp *http.Response
-	if c.CLIName == "ccloud" {
+	if c.cliName == "ccloud" {
 		resp, err = c.ccloudCreate(options)
 	} else {
 		resp, err = c.confluentCreate(options)
@@ -799,7 +799,7 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, _ []string) error {
 	return nil
 }
 
-func (c* rolebindingCommand) confluentDelete(options *rolebindingOptions) (resp *http.Response, err error) {
+func (c *rolebindingCommand) confluentDelete(options *rolebindingOptions) (resp *http.Response, err error) {
 	if options.resource != "" {
 		resp, err = c.MDSClient.RBACRoleBindingCRUDApi.RemoveRoleResourcesForPrincipal(
 			c.createContext(),
@@ -816,7 +816,7 @@ func (c* rolebindingCommand) confluentDelete(options *rolebindingOptions) (resp 
 	return
 }
 
-func (c* rolebindingCommand) ccloudDelete(options *rolebindingOptions) (*http.Response, error) {
+func (c *rolebindingCommand) ccloudDelete(options *rolebindingOptions) (*http.Response, error) {
 	return c.MDSv2Client.RBACRoleBindingCRUDApi.DeleteRoleForPrincipal(
 		c.createContext(),
 		options.principal,
@@ -831,7 +831,7 @@ func (c *rolebindingCommand) delete(cmd *cobra.Command, _ []string) error {
 	}
 
 	var resp *http.Response
-	if c.CLIName == "ccloud" {
+	if c.cliName == "ccloud" {
 		resp, err = c.ccloudDelete(options)
 	} else {
 		resp, err = c.confluentDelete(options)
@@ -855,7 +855,7 @@ func check(err error) {
 }
 
 func (c *rolebindingCommand) createContext() context.Context {
-	if c.CLIName == "ccloud" {
+	if c.cliName == "ccloud" {
 		return context.WithValue(context.Background(), mdsv2alpha1.ContextAccessToken, c.AuthToken())
 	} else {
 		return context.WithValue(context.Background(), mds.ContextAccessToken, c.AuthToken())

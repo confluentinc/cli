@@ -2,12 +2,13 @@ package test
 
 import (
 	"encoding/json"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"io"
 	"net/http"
 	"sort"
 	"strings"
 	"testing"
+
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 
 	"github.com/stretchr/testify/require"
 )
@@ -47,7 +48,7 @@ var (
 				{"resourceType": "User","operations": ["Describe","Invite"]},
 				{"resourceType": "ServiceAccount","operations": ["Describe"]}]
 			}]}`,
-			"EnvironmentAdmin": `{
+		"EnvironmentAdmin": `{
 			"name": "EnvironmentAdmin",
 			"policies": [
 			{

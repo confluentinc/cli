@@ -838,9 +838,9 @@ func handleMe(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		b, err := utilv1.MarshalJSONToBytes(&orgv1.GetUserReply{
 			User: &orgv1.User{
-				Id:        23,
-				Email:     "cody@confluent.io",
-				FirstName: "Cody",
+				Id:         23,
+				Email:      "cody@confluent.io",
+				FirstName:  "Cody",
 				ResourceId: "u-11aaa",
 			},
 			Accounts: environments,
