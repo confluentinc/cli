@@ -162,8 +162,7 @@ func printOptions(buf *bytes.Buffer, cmd *cobra.Command) error {
 	if len(cmd.Example) > 0 {
 		buf.WriteString("Examples\n")
 		buf.WriteString("~~~~~~~~\n\n")
-		buf.WriteString(fmt.Sprintf("%s\n", cmd.Example))
-		buf.WriteString("\n")
+		buf.WriteString(cmd.Example)
 	}
 
 	return nil
