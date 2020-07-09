@@ -58,6 +58,8 @@ func NewServiceLogCommand(service string, prerunner cmd.PreRunner) *cobra.Comman
 		}, prerunner)
 
 	c.Command.RunE = c.runServiceLogCommand
+	c.Command.Flags().BoolP("follow", "f", false, "Log additional output until the command is interrupted.")
+
 	return c.Command
 }
 
@@ -69,12 +71,23 @@ func (c *Command) runServiceLogCommand(command *cobra.Command, _ []string) error
 		return err
 	}
 
+	shouldFollow, err := command.Flags().GetBool("follow")
+	if err != nil {
+		return err
+	}
+	if shouldFollow {
+		tail := exec.Command("tail", "-f", log)
+		tail.Stdout = os.Stdout
+		tail.Stderr = os.Stderr
+		return tail.Run()
+	}
+
 	data, err := ioutil.ReadFile(log)
 	if err != nil {
 		return fmt.Errorf("no log found: to run %s, use \"confluent local services %s start\"", writeServiceName(service), service)
 	}
-	command.Print(string(data))
 
+	command.Print(string(data))
 	return nil
 }
 
