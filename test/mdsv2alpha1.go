@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"path"
 	"sort"
 	"strings"
 	"testing"
@@ -240,7 +241,7 @@ func addRolesV2(routesAndReplies map[string]string) {
 	base := "/api/metadata/security/v2alpha1/roles"
 	var roleNameList []string
 	for roleName, roleInfo := range rbacRolesV2 {
-		routesAndReplies[base+"/"+roleName] = roleInfo
+		routesAndReplies[path.Join(base, roleName)] = roleInfo
 		roleNameList = append(roleNameList, roleName)
 	}
 

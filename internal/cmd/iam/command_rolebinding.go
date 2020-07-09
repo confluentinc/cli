@@ -224,19 +224,6 @@ func (c *rolebindingCommand) parseAndValidateResourcePattern(typename string, pr
 	return result, nil
 }
 
-func (c *rolebindingCommand) parseAndValidateResourcePatternV2(typename string, prefix bool) (mdsv2alpha1.ResourcePattern, error) {
-	r, err := c.parseAndValidateResourcePattern(typename, prefix)
-	rv2 := mdsv2alpha1.ResourcePattern{
-		PatternType: r.PatternType,
-	}
-	if err != nil {
-		return rv2, err
-	}
-	rv2.Name = r.Name
-	rv2.ResourceType = r.ResourceType
-	return rv2, err
-}
-
 func (c *rolebindingCommand) validateRoleAndResourceType(roleName string, resourceType string) error {
 	if c.cliName == "ccloud" {
 		return nil

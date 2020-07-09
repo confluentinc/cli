@@ -36,15 +36,15 @@ func HandleCommon(err error, cmd *cobra.Command) error {
 	hashable := k < reflect.Array || k == reflect.Ptr || k == reflect.UnsafePointer
 	if hashable {
 		if msg, ok := messages[err]; ok {
-			return fmt.Errorf(msg)
+			return fmt.Errorf("%s", msg)
 		}
 	}
 
 	switch e := err.(type) {
 	case mds.GenericOpenAPIError:
-		return fmt.Errorf("Backend error: " + e.Error() + ": " + string(e.Body()))
+		return fmt.Errorf("backend error: %s: %s", e.Error(), string(e.Body()))
 	case mdsv2alpha1.GenericOpenAPIError:
-		return fmt.Errorf("Backend error: " + e.Error() + ": " + string(e.Body()))
+		return fmt.Errorf("backend error: %s: %s", e.Error(), string(e.Body()))
 	case *corev1.Error:
 		var result error
 		result = multierror.Append(result, e)
