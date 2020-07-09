@@ -195,13 +195,17 @@ func (c *schemaCommand) delete(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+	deleteType := "soft"
+	if permanent {
+		deleteType = "hard"
+	}
 	if version == "all" {
 		deleteSubjectOpts := srsdk.DeleteSubjectOpts{Permanent: optional.NewBool(permanent)}
 		versions, _, err := srClient.DefaultApi.DeleteSubject(ctx, subject, &deleteSubjectOpts)
 		if err != nil {
 			return err
 		}
-		pcmd.Println(cmd, "Successfully deleted all versions for subject")
+		pcmd.Println(cmd, "Successfully "+deleteType+" deleted all versions for subject")
 		PrintVersions(versions)
 		return nil
 	} else {
@@ -210,7 +214,7 @@ func (c *schemaCommand) delete(cmd *cobra.Command, _ []string) error {
 		if err != nil {
 			return err
 		}
-		pcmd.Println(cmd, "Successfully deleted version for subject")
+		pcmd.Println(cmd, "Successfully "+deleteType+" deleted version for subject")
 		PrintVersions([]int32{versionResult})
 		return nil
 	}
