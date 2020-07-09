@@ -62,6 +62,7 @@ func (c *aclCommand) init() {
 		Args: cobra.NoArgs,
 	}
 	createCmd.Flags().AddFlagSet(aclConfigFlags())
+	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	createCmd.Flags().SortFlags = false
 
 	c.AddCommand(createCmd)
@@ -129,8 +130,10 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 	}
 
 	err = c.Client.Kafka.CreateACLs(context.Background(), cluster, bindings)
-
-	return errors.HandleCommon(err, cmd)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	return errors.HandleCommon(aclutil.PrintACLs(cmd, bindings, os.Stderr), cmd)
 }
 
 func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {

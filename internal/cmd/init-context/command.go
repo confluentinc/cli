@@ -104,6 +104,7 @@ func (c *command) initContext(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
+	pcmd.Printf(cmd,"Context \"%s\" initialized and set as current context.\n", contextName)
 	return nil
 }
 

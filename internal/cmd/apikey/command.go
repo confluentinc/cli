@@ -292,6 +292,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	}
 
 	if outputFormat == output.Human.String() {
+		pcmd.ErrPrintln(cmd, errors.APIKeyTime)
 		pcmd.ErrPrintln(cmd, "Save the API key and secret. The secret is not retrievable later.")
 	}
 

@@ -103,6 +103,7 @@ func (c *rolebindingCommand) init() {
 	createCmd.Flags().String("ksql-cluster-id", "", "KSQL cluster ID for the role binding.")
 	createCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for the role binding.")
 	createCmd.Flags().String("cluster-name", "", "Cluster name to uniquely identify the cluster for rolebinding listings.")
+	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	createCmd.Flags().SortFlags = false
 	check(createCmd.MarkFlagRequired("role"))
 	check(createCmd.MarkFlagRequired("principal"))
@@ -484,7 +485,30 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, _ []string) error {
 		return errors.HandleCommon(errors.Wrapf(err, "No error, but received HTTP status code %d.  Please file a support ticket with details", resp.StatusCode), cmd)
 	}
 
-	return nil
+	return errors.HandleCommon(displayCreateOutput(cmd, options), cmd)
+}
+
+func displayCreateOutput(cmd *cobra.Command, options *rolebindingOptions) error {
+	var fieldsSelected []string
+	structuredRename := map[string]string{"Principal": "principal", "Role": "role", "ResourceType": "resource_type", "Name": "name",  "PatternType": "pattern_type"}
+	displayStruct := &listDisplay{
+		Principal:    options.principal,
+		Role:         options.role,
+	}
+	if options.resource != "" {
+			fieldsSelected = resourcePatternListFields
+			if len(options.resourcesRequest.ResourcePatterns) != 1 {
+				return errors.New("display error: number of resource pattern is not 1")
+			}
+			resourcePattern := options.resourcesRequest.ResourcePatterns[0]
+			displayStruct.ResourceType = resourcePattern.ResourceType
+			displayStruct.Name = resourcePattern.Name
+			displayStruct.PatternType = resourcePattern.PatternType
+	} else {
+			fieldsSelected = []string{"Principal", "Role", "ResourceType"}
+			displayStruct.ResourceType = "Cluster"
+	}
+	return output.DescribeObject(cmd, displayStruct, fieldsSelected, map[string]string{}, structuredRename)
 }
 
 func (c *rolebindingCommand) delete(cmd *cobra.Command, _ []string) error {

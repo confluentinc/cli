@@ -1,3 +1,4 @@
+It may take up to 5 minutes for the Kafka cluster to be ready.
 +--------------+---------------------------+
 | Id           | lkc-def963                |
 | Name         | my-dedicated-cluster      |

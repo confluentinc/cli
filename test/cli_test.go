@@ -330,7 +330,7 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL string) {
 				fmt.Println(output)
 			}
 			// HACK: we don't have scriptable output yet so we parse it from the table
-			key := strings.TrimSpace(strings.Split(strings.Split(output, "\n")[2], "|")[2])
+			key := strings.TrimSpace(strings.Split(strings.Split(output, "\n")[3], "|")[2])
 			output = runCommand(t, ccloudTestBin, []string{}, fmt.Sprintf("api-key use %s --resource %s", key, tt.useKafka), 0)
 			if *debug {
 				fmt.Println(output)

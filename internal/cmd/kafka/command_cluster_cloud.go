@@ -268,6 +268,13 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		// TODO: don't swallow validation errors (reportedly separately)
 		return errors.HandleCommon(err, cmd)
 	}
+	outputFormat, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	if outputFormat == output.Human.String() {
+		pcmd.ErrPrintln(cmd, errors.KafkaClusterTime)
+	}
 	return outputKafkaClusterDescription(cmd, cluster)
 }
 

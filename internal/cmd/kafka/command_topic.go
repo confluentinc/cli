@@ -263,7 +263,7 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 		}
 		return errors.HandleCommon(err, cmd)
 	}
-
+	pcmd.ErrPrintf(cmd, errors.TopicCreateSuccessMsg, topic.Spec.Name)
 	return nil
 }
 
