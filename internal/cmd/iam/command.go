@@ -30,7 +30,7 @@ func New(cliName string, prerunner pcmd.PreRunner) *cobra.Command {
 	if cliName != "ccloud" {
 		c.AddCommand(NewACLCommand(cliName, c.prerunner))
 	} else {
-		c.Short = "Manage RBAC and IAM permissions"
+		c.Short = "Manage RBAC and IAM permissions."
 		c.Long = "Manage Role Based Access (RBAC) and Identity and Access Management (IAM) permissions."
 	}
 

@@ -12,7 +12,7 @@ Available Commands:
   environment       Manage and select ccloud environments.
   feedback          Submit feedback about the ccloud CLI.
   help              Help about any command
-  iam               Manage RBAC, ACL and IAM permissions.
+  iam               Manage RBAC and IAM permissions.
   init              Initialize a context.
   kafka             Manage Apache Kafka.
   ksql              Manage KSQL applications.

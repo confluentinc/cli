@@ -355,32 +355,18 @@ func (c *rolebindingCommand) parseAndValidateScopeV2(cmd *cobra.Command) (*mdsv2
 	return scopeV2, nil
 }
 
-func (c *rolebindingCommand) confluentList(cmd *cobra.Command) error {
+func (c *rolebindingCommand) confluentList(cmd *cobra.Command, options *rolebindingOptions) error {
 	if cmd.Flags().Changed("principal") {
-		return c.listPrincipalResources(cmd)
+		return c.listPrincipalResources(cmd, options)
 	} else if cmd.Flags().Changed("role") {
-		return c.confluentListRolePrincipals(cmd)
+		return c.confluentListRolePrincipals(cmd, options)
 	}
 	return errors.HandleCommon(fmt.Errorf("required: either principal or role is required"), cmd)
 }
 
-func (c *rolebindingCommand) listMyRoleBindings(cmd *cobra.Command) error {
-	scopeV2, err := c.parseAndValidateScopeV2(cmd)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
-	principal, err := cmd.Flags().GetString("principal")
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	if principal == "current" {
-		principal = "User:" + c.State.Auth.User.ResourceId
-	}
-	err = c.validatePrincipalFormat(principal)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
+func (c *rolebindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rolebindingOptions) error {
+	scopeV2 := &options.scopeV2
+	principal := options.principal
 
 	scopedRoleBindingMappings, _, err := c.MDSv2Client.RBACRoleBindingSummariesApi.MyRoleBindings(
 		c.createContext(),
@@ -476,38 +462,31 @@ func (c *rolebindingCommand) listMyRoleBindings(cmd *cobra.Command) error {
 	return outputWriter.Out()
 }
 
-func (c *rolebindingCommand) ccloudList(cmd *cobra.Command) error {
+func (c *rolebindingCommand) ccloudList(cmd *cobra.Command, options *rolebindingOptions) error {
 	if cmd.Flags().Changed("principal") {
-		return c.listMyRoleBindings(cmd)
+		return c.listMyRoleBindings(cmd, options)
 	} else if cmd.Flags().Changed("role") {
-		return c.ccloudListRolePrincipals(cmd)
+		return c.ccloudListRolePrincipals(cmd, options)
 	} else {
 		return errors.HandleCommon(errors.New("required: either principal or role is required"), cmd)
 	}
 }
 
 func (c *rolebindingCommand) list(cmd *cobra.Command, _ []string) error {
+	options, err := c.parseCommon(cmd)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
 	if c.cliName == "ccloud" {
-		return c.ccloudList(cmd)
+		return c.ccloudList(cmd, options)
 	} else {
-		return c.confluentList(cmd)
+		return c.confluentList(cmd, options)
 	}
 }
 
-func (c *rolebindingCommand) listPrincipalResources(cmd *cobra.Command) error {
-	scope, err := c.parseAndValidateScope(cmd)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
-	principal, err := cmd.Flags().GetString("principal")
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	err = c.validatePrincipalFormat(principal)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
+func (c *rolebindingCommand) listPrincipalResources(cmd *cobra.Command, options *rolebindingOptions) error {
+	scope := &options.mdsScope
+	principal := options.principal
 
 	role := "*"
 	if cmd.Flags().Changed("role") {
@@ -598,18 +577,12 @@ func (c *rolebindingCommand) listPrincipalResourcesV1(cmd *cobra.Command, mdsSco
 	return nil
 }
 
-func (c *rolebindingCommand) confluentListRolePrincipals(cmd *cobra.Command) error {
-	scope, err := c.parseAndValidateScope(cmd)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
-	role, err := cmd.Flags().GetString("role")
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
+func (c *rolebindingCommand) confluentListRolePrincipals(cmd *cobra.Command, options *rolebindingOptions) error {
+	scope := &options.mdsScope
+	role := options.role
 
 	var principals []string
+	var err error
 	if cmd.Flags().Changed("resource") {
 		r, err := cmd.Flags().GetString("resource")
 		if err != nil {
@@ -658,16 +631,9 @@ func (c *rolebindingCommand) confluentListRolePrincipals(cmd *cobra.Command) err
 	return outputWriter.Out()
 }
 
-func (c *rolebindingCommand) ccloudListRolePrincipals(cmd *cobra.Command) error {
-	scopeV2, err := c.parseAndValidateScopeV2(cmd)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-
-	role, err := cmd.Flags().GetString("role")
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
+func (c *rolebindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, options *rolebindingOptions) error {
+	scopeV2 := &options.scopeV2
+	role := options.role
 
 	principals, _, err := c.MDSv2Client.RBACRoleBindingSummariesApi.LookupPrincipalsWithRole(
 		c.createContext(),
@@ -713,9 +679,14 @@ func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOption
 	if err != nil {
 		return nil, errors.HandleCommon(err, cmd)
 	}
-	err = c.validatePrincipalFormat(principal)
-	if err != nil {
-		return nil, errors.HandleCommon(err, cmd)
+	if principal == "current" {
+		principal = "User:" + c.State.Auth.User.ResourceId
+	}
+	if cmd.Flags().Changed("principal") {
+		err = c.validatePrincipalFormat(principal)
+		if err != nil {
+			return nil, errors.HandleCommon(err, cmd)
+		}
 	}
 
 	scope := &mds.MdsScope{}

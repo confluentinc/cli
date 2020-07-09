@@ -135,7 +135,14 @@ func (s *CLITestSuite) Test_Ccloud_Iam_Rolebinding_List() {
 	tests := []CLITest{
 		{
 			name:        "ccloud iam rolebinding list, no principal nor role",
-			args:        "iam rolebinding list --cloud-cluster lkc-1111aaa",
+			args:        "iam rolebinding list",
+			fixture:     "ccloud-iam-rolebinding-list-no-principal-nor-role.golden",
+			login:       "default",
+			wantErrCode: 1,
+		},
+		{
+			name:        "ccloud iam rolebinding list, no principal nor role",
+			args:        "iam rolebinding list --environment current --cloud-cluster lkc-1111aaa",
 			fixture:     "ccloud-iam-rolebinding-list-no-principal-nor-role.golden",
 			login:       "default",
 			wantErrCode: 1,
