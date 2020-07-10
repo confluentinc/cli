@@ -128,6 +128,7 @@ func addMdsv2alpha1(t *testing.T, router *http.ServeMux) {
 		_, err = io.WriteString(w, string(b))
 		req.NoError(err)
 	})
+	router.Handle("/api/metadata/security/v2alpha1/roles/InvalidRole", http.NotFoundHandler())
 
 	routesAndReplies := map[string]string{
 		"/api/metadata/security/v2alpha1/principals/User:u-11aaa/roles/CloudClusterAdmin": `[]`,

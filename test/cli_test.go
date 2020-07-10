@@ -614,6 +614,10 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 			require.NoError(t, err)
 		}
 	})
+	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		_, err := io.WriteString(w, `{"error": {"message": "unexpected call to `+r.URL.Path+`"}}`)
+		require.NoError(t, err)
+	})
 	router.HandleFunc("/api/schema_registries/", func(w http.ResponseWriter, r *http.Request) {
 		q := r.URL.Query()
 		id := q.Get("id")
