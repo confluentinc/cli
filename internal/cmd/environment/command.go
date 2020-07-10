@@ -175,6 +175,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
+	pcmd.ErrPrintf(cmd, errors.UpdateSuccessMsg, "name", "environment", id, newName)
 	return nil
 }
 

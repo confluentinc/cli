@@ -301,17 +301,44 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		return errors.HandleCommon(err, cmd)
 	}
 
-	if topic.Configs, err = toMap(configs); err != nil {
+	configMap, err := toMap(configs)
+	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
+	topic.Configs = copyMap(configMap)
 
 	validate, err := cmd.Flags().GetBool("dry-run")
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
 	err = a.Client.Kafka.UpdateTopic(context.Background(), cluster, &schedv1.Topic{Spec: topic, Validate: validate})
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	pcmd.Printf(cmd, errors.UpdateTopicConfigMsg, args[0])
+	var entries [][]string
+	titleRow := []string{"Name", "Value"}
+	fmt.Println(configMap)
+	for name, value := range configMap {
+		record := &struct {
+			Name  string
+			Value string
+		}{
+			name,
+			value,
+		}
+		entries = append(entries, printer.ToRow(record, titleRow))
+	}
+	printer.RenderCollectionTable(entries, titleRow)
+	return nil
+}
 
-	return errors.HandleCommon(err, cmd)
+func copyMap(inputMap map[string]string) map[string]string {
+	newMap := make(map[string]string)
+	for key, val := range inputMap {
+		newMap[key] = val
+	}
+	return newMap
 }
 
 func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) error {
