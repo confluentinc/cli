@@ -146,6 +146,7 @@ func (c *rolebindingCommand) init() {
 	deleteCmd.Flags().String("ksql-cluster-id", "", "KSQL cluster ID for the role binding.")
 	deleteCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for the role binding.")
 	deleteCmd.Flags().String("cluster-name", "", "Cluster name to uniquely identify the cluster for rolebinding listings.")
+	deleteCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	deleteCmd.Flags().SortFlags = false
 	check(createCmd.MarkFlagRequired("role"))
 	check(deleteCmd.MarkFlagRequired("principal"))
@@ -507,10 +508,10 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, _ []string) error {
 		return errors.HandleCommon(errors.Wrapf(err, "No error, but received HTTP status code %d.  Please file a support ticket with details", resp.StatusCode), cmd)
 	}
 
-	return errors.HandleCommon(displayCreateOutput(cmd, options), cmd)
+	return errors.HandleCommon(displayCreateAndDeleteOutput(cmd, options), cmd)
 }
 
-func displayCreateOutput(cmd *cobra.Command, options *rolebindingOptions) error {
+func displayCreateAndDeleteOutput(cmd *cobra.Command, options *rolebindingOptions) error {
 	var fieldsSelected []string
 	structuredRename := map[string]string{"Principal": "principal", "Role": "role", "ResourceType": "resource_type", "Name": "name",  "PatternType": "pattern_type"}
 	displayStruct := &listDisplay{
@@ -562,7 +563,7 @@ func (c *rolebindingCommand) delete(cmd *cobra.Command, _ []string) error {
 		return errors.HandleCommon(errors.Wrapf(err, "No error, but received HTTP status code %d.  Please file a support ticket with details", resp.StatusCode), cmd)
 	}
 
-	return nil
+	return errors.HandleCommon(displayCreateAndDeleteOutput(cmd, options), cmd)
 }
 
 func check(err error) {
