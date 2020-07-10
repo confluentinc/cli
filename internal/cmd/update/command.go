@@ -85,7 +85,7 @@ func (c *command) init() {
 		RunE:  c.update,
 		Args:  cobra.NoArgs,
 	}
-	c.Command.Flags().Bool("yes", false, "Update without prompting.")
+	c.Command.Flags().BoolP("yes", "y", false, "Update without prompting.")
 	c.Command.Flags().SortFlags = false
 }
 
@@ -114,8 +114,7 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 	//   Current Version: v0.0.0
 	//   Latest Version:  0.50.0
 	// Unfortunately the "UpdateBinary" output will still show 0.50.0, and we can't hack that since it must match S3
-	doUpdate := c.client.PromptToDownload(c.cliName, c.version.Version, "v"+latestVersion, releaseNotes, !updateYes)
-	if !doUpdate {
+	if !c.client.PromptToDownload(c.cliName, c.version.Version, "v"+latestVersion, releaseNotes, !updateYes) {
 		return nil
 	}
 

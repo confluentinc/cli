@@ -3,7 +3,6 @@ package kafka
 import (
 	"context"
 	"fmt"
-	"io"
 	"os"
 	"strings"
 
@@ -12,8 +11,8 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/confirm"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -183,9 +182,6 @@ func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
 	return outputWriter.Out()
 }
 
-var stdin io.ReadWriter = os.Stdin
-var stdout io.ReadWriter = os.Stdout
-
 func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	cloud, err := cmd.Flags().GetString("cloud")
 	if err != nil {
@@ -225,18 +221,19 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	}
 	if encryptionKeyID != "" {
 		accounts := getAccountsForCloud(cloud, clouds)
-		accountsStr := strings.Join(accounts, ", ")
-		msg := fmt.Sprintf("Please confirm you've authorized the key for these accounts %s", accountsStr)
-		ok, err := confirm.Do(
-			stdout,
-			stdin,
-			msg,
-		)
-		if err != nil {
-			return errors.HandleCommon(errors.New("Failed to read your confirmation"), cmd)
-		}
-		if !ok {
-			return errors.HandleCommon(errors.New("Please authorize the accounts for the key"), cmd)
+		for {
+			f := form.New(map[string]form.Field{
+				"authorized": {
+					Prompt: "Please confirm you've authorized the key for these accounts " + strings.Join(accounts, ", "),
+				},
+			})
+			if err := f.Prompt(cmd, pcmd.NewPrompt(os.Stdin)); err != nil {
+				cmd.Println("Failed to read your confirmation.")
+				continue
+			}
+			if f.Responses["authorized"].(bool) {
+				return errors.HandleCommon(errors.New("Please authorize the accounts for the key"), cmd)
+			}
 		}
 	}
 

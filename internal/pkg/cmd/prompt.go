@@ -1,3 +1,5 @@
+//go:generate go run github.com/travisjeffery/mocker/cmd/mocker --prefix "" --dst ../../../mock/prompt.go --pkg mock --selfpkg github.com/confluentinc/cli prompt.go Prompt
+
 package cmd
 
 import (
@@ -11,7 +13,7 @@ import (
 // Prompt represents input and output to a terminal
 type Prompt interface {
 	ReadString(delim byte) (string, error)
-	ReadPassword() ([]byte, error)
+	ReadPassword() (string, error)
 	IsPipe() (bool, error)
 }
 
@@ -34,8 +36,9 @@ func (p *RealPrompt) ReadString(delim byte) (string, error) {
 }
 
 // ReadPassword reads a line of input from a terminal without local echo.
-func (p *RealPrompt) ReadPassword() ([]byte, error) {
-	return gopass.GetPasswd()
+func (p *RealPrompt) ReadPassword() (string, error) {
+	pwd, err := gopass.GetPasswd()
+	return string(pwd), err
 }
 
 // ReadPassword reads a line of input from a terminal without local echo.

@@ -380,8 +380,8 @@ func prompt() *cliMock.Prompt {
 		ReadStringFunc: func(delim byte) (string, error) {
 			return "cody@confluent.io", nil
 		},
-		ReadPasswordFunc: func() ([]byte, error) {
-			return []byte(" iamrobin "), nil
+		ReadPasswordFunc: func() (string, error) {
+			return " iamrobin ", nil
 		},
 	}
 }

@@ -46,19 +46,21 @@ func (r *FlagResolverImpl) ValueFrom(source string, prompt string, secure bool) 
 		if err != nil {
 			return "", err
 		}
+
 		if secure {
-			valueByte, err := r.Prompt.ReadPassword()
-			if err != nil {
-				return "", err
-			}
-			value = string(valueByte)
+			value, err = r.Prompt.ReadPassword()
 		} else {
 			value, err = r.Prompt.ReadString('\n')
 		}
+		if err != nil {
+			return "", err
+		}
+
 		_, err = fmt.Fprintf(r.Out, "\n")
 		if err != nil {
 			return "", err
 		}
+
 		return value, err
 	}
 
