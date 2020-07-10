@@ -351,7 +351,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	pcmd.Printf(cmd, "Deleted Kafka cluster %s.\n", args[0])
+	pcmd.Printf(cmd, "Deleted Kafka cluster \"%s\".\n", args[0])
 	return nil
 }
 
