@@ -53,7 +53,7 @@ func NewServiceLogCommand(service string, prerunner cmd.PreRunner) *cobra.Comman
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "log",
-			Short: fmt.Sprintf("Print logs for %s.", writeOfficialServiceName(service)),
+			Short: fmt.Sprintf("Print logs showing %s output.", writeOfficialServiceName(service)),
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
@@ -130,7 +130,7 @@ func NewServiceStatusCommand(service string, prerunner cmd.PreRunner) *cobra.Com
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "status",
-			Short: fmt.Sprintf("Check the status of %s.", writeOfficialServiceName(service)),
+			Short: fmt.Sprintf("Check if %s is running.", writeOfficialServiceName(service)),
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
@@ -211,7 +211,7 @@ func NewServiceVersionCommand(service string, prerunner cmd.PreRunner) *cobra.Co
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "version",
-			Short: fmt.Sprintf("Print the version of %s.", writeOfficialServiceName(service)),
+			Short: fmt.Sprintf("Print the current version of %s.", writeOfficialServiceName(service)),
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
