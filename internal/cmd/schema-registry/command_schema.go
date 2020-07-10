@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"strconv"
 
+	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
@@ -77,7 +78,7 @@ Where schemafilepath may include these contents:
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
-		Use:   "delete --subject <subject> --version <version>",
+		Use:   "delete --subject <subject> --version <version> --permanent",
 		Short: "Delete one or more schemas.",
 		Example: FormatDescription(`
 Delete one or more topics. This command should only be used in extreme circumstances.
@@ -91,6 +92,7 @@ Delete one or more topics. This command should only be used in extreme circumsta
 	RequireSubjectFlag(cmd)
 	cmd.Flags().StringP("version", "V", "", "Version of the schema. Can be a specific version, 'all', or 'latest'.")
 	_ = cmd.MarkFlagRequired("version")
+	cmd.Flags().BoolP("permanent", "P", false, "Permanently delete the schema.")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
@@ -189,20 +191,30 @@ func (c *schemaCommand) delete(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+	permanent, err := cmd.Flags().GetBool("permanent")
+	if err != nil {
+		return err
+	}
+	deleteType := "soft"
+	if permanent {
+		deleteType = "hard"
+	}
 	if version == "all" {
-		versions, _, err := srClient.DefaultApi.DeleteSubject(ctx, subject)
+		deleteSubjectOpts := srsdk.DeleteSubjectOpts{Permanent: optional.NewBool(permanent)}
+		versions, _, err := srClient.DefaultApi.DeleteSubject(ctx, subject, &deleteSubjectOpts)
 		if err != nil {
 			return err
 		}
-		pcmd.Println(cmd, "Successfully deleted all versions for subject")
+		pcmd.Println(cmd, "Successfully "+deleteType+" deleted all versions for subject")
 		PrintVersions(versions)
 		return nil
 	} else {
-		versionResult, _, err := srClient.DefaultApi.DeleteSchemaVersion(ctx, subject, version)
+		deleteVersionOpts := srsdk.DeleteSchemaVersionOpts{Permanent: optional.NewBool(permanent)}
+		versionResult, _, err := srClient.DefaultApi.DeleteSchemaVersion(ctx, subject, version, &deleteVersionOpts)
 		if err != nil {
 			return err
 		}
-		pcmd.Println(cmd, "Successfully deleted version for subject")
+		pcmd.Println(cmd, "Successfully "+deleteType+" deleted version for subject")
 		PrintVersions([]int32{versionResult})
 		return nil
 	}
