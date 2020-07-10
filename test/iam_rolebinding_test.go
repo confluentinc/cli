@@ -5,12 +5,14 @@ func (s *CLITestSuite) Test_Confluent_Iam_Role_Binding_CRUD() {
 		{
 			name:        "confluent iam rolebinding create cluster-name",
 			args:        "iam rolebinding create --principal User:bob --role DeveloperRead --resource Topic:connect-configs --cluster-name theMdsConnectCluster",
+			fixture:     "confluent-iam-create-cluster-name.golden",
 			login:       "default",
 			wantErrCode: 0,
 		},
 		{
-			name:        "confluent iam rolebinding create cluster-name",
+			name:        "confluent iam rolebinding create cluster-id",
 			args:        "iam rolebinding create --principal User:bob --role DeveloperRead --resource Topic:connect-configs --kafka-cluster-id kafka-GUID",
+			fixture:     "confluent-iam-create-cluster-id.golden",
 			login:       "default",
 			wantErrCode: 0,
 		},
@@ -57,7 +59,7 @@ func (s *CLITestSuite) Test_Confluent_Iam_Role_Binding_CRUD() {
 			wantErrCode: 0,
 		},
 		{
-			name:        "confluent iam rolebinding delete cluster-name",
+			name:        "confluent iam rolebinding delete cluster-id",
 			args:        "iam rolebinding delete --principal User:bob --role DeveloperRead --resource Topic:connect-configs --kafka-cluster-id kafka-GUID",
 			fixture:     "confluent-iam-delete-cluster-id.golden",
 			login:       "default",
