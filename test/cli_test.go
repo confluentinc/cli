@@ -126,7 +126,8 @@ func (s *CLITestSuite) SetupSuite() {
 
 	// dumb but effective
 	err := os.Chdir("..")
-	_ = os.Setenv("XX_CLOUD_RBAC", "yes")
+	req.NoError(err)
+	err = os.Setenv("XX_CLOUD_RBAC", "yes")
 	req.NoError(err)
 	for _, binary := range []string{ccloudTestBin, confluentTestBin} {
 		if _, err = os.Stat(binaryPath(s.T(), binary)); os.IsNotExist(err) || !*noRebuild {
