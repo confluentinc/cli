@@ -330,7 +330,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	pcmd.Printf(cmd, "API Key \"%s\" successfully deleted.\n", apiKey)
+	pcmd.Printf(cmd, "Deleted API Key \"%s\".\n", apiKey)
 	return c.keystore.DeleteAPIKey(apiKey, cmd)
 }
 

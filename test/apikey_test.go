@@ -60,6 +60,10 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 		{args: "api-key list --resource lkc-cool1", fixture: "apikey11.golden"},
 		{args: "api-key list --resource lkc-other1", fixture: "apikey12.golden"},
 
+		// delete api key that is in use
+		{args: "api-key delete MYKEY5", fixture: "apikey42.golden"},
+		{args: "api-key list --resource lkc-other1", fixture: "apikey43.golden"},
+
 		// store an api-key for kafka cluster
 		{args: "api-key store UIAPIKEY100 @test/fixtures/input/UIAPISECRET100.txt --resource lkc-cool1", fixture: "empty.golden"},
 		{args: "api-key list --resource lkc-cool1", fixture: "apikey11.golden"},
@@ -67,7 +71,7 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 		// store an api-key for other kafka cluster
 		{args: "api-key store UIAPIKEY101 @test/fixtures/input/UIAPISECRET101.txt --resource lkc-other1", fixture: "empty.golden"},
 		{args: "api-key list --resource lkc-cool1", fixture: "apikey11.golden"},
-		{args: "api-key list --resource lkc-other1", fixture: "apikey12.golden"},
+		{args: "api-key list --resource lkc-other1", fixture: "apikey44.golden"},
 
 		// store an api-key for ksql cluster (not yet supported)
 		//{args: "api-key store UIAPIKEY103 UIAPISECRET103 --resource lksqlc-ksql1", fixture: "empty.golden"},
