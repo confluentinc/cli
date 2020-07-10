@@ -306,7 +306,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	pcmd.Println(cmd, "Successfully deleted connector")
+	pcmd.Printf(cmd, "Successfully deleted connector \"%s\".\n", args[0])
 	return nil
 }
 
@@ -323,7 +323,7 @@ func (c *command) pause(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	pcmd.Println(cmd, "Successfully paused connector")
+	pcmd.Printf(cmd, "Successfully paused connector \"%s\".\n", args[0])
 	return nil
 }
 
@@ -340,7 +340,7 @@ func (c *command) resume(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-	pcmd.Println(cmd, "Successfully resumed connector")
+	pcmd.Printf(cmd, "Successfully resumed connector \"%s\".\n", args[0])
 	return nil
 }
 

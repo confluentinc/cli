@@ -298,7 +298,7 @@ func (c *secureFileCommand) remove(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-
+	pcmd.ErrPrintln(cmd, "Deleted configuration values.")
 	return nil
 }
 

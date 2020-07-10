@@ -322,8 +322,11 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 
 	topic := &schedv1.TopicSpecification{Name: args[0]}
 	err = a.Client.Kafka.DeleteTopic(context.Background(), cluster, &schedv1.Topic{Spec: topic, Validate: false})
-
-	return errors.HandleCommon(err, cmd)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	pcmd.ErrPrintf(cmd, "Deleted topic \"%s\"\n.", args[0])
+	return nil
 }
 
 func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error {

@@ -152,8 +152,11 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	err = c.Client.Kafka.DeleteACLs(context.Background(), cluster, filters)
-
-	return errors.HandleCommon(err, cmd)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	pcmd.ErrPrintf(cmd, "Deleted ACLs.")
+	return nil
 }
 
 // validateAddDelete ensures the minimum requirements for acl add and delete are met

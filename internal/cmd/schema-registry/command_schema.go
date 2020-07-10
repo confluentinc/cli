@@ -205,7 +205,7 @@ func (c *schemaCommand) delete(cmd *cobra.Command, _ []string) error {
 		if err != nil {
 			return err
 		}
-		pcmd.Println(cmd, "Successfully "+deleteType+" deleted all versions for subject")
+		pcmd.Printf(cmd, "Successfully "+deleteType+" deleted all versions for subject \"%s\"\n", subject)
 		PrintVersions(versions)
 		return nil
 	} else {
@@ -214,8 +214,7 @@ func (c *schemaCommand) delete(cmd *cobra.Command, _ []string) error {
 		if err != nil {
 			return err
 		}
-		pcmd.Println(cmd, "Successfully "+deleteType+" deleted version for subject")
-		PrintVersions([]int32{versionResult})
+		pcmd.Println(cmd, "Successfully "+deleteType+" deleted version \"%s\" for subject \"%s\".\n", versionResult, subject)
 		return nil
 	}
 }
