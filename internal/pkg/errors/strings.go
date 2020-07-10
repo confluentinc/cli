@@ -33,7 +33,7 @@ const (
 	StartingConsumerMsg = "Starting Kafka Consumer. ^C or ^D to exit"
 
 	// ksql commands
-	EndPointNotPopulatedMsg = "Endpoint not yet populated. To obtain the endpoint please use `ccloud ksql app describe`."
+	EndPointNotPopulatedMsg = "Endpoint not yet populated. To obtain the endpoint, use `ccloud ksql app describe`."
 	KSQLDeletedMsg          = "KSQL app \"%s\" has been deleted.\n"
 	KSQLNotBackedByKafkaMsg = "The KSQL cluster \"%s\" is not backed by \"%s\" which is not the current Kafka cluster \"%s\".\n"
 
@@ -50,12 +50,12 @@ const (
 	UpdatedToLevelCompatibilityMsg      = "Successfully updated Top Level compatibility to \"%s\"\n"
 	UpdatedTopLevelModeMsg              = "Successfully updated Top Level mode to \"%s\"\n"
 	RegisteredSchemaMsg                 = "Successfully registered schema with ID %v"
-	DeletedAllSubjectVersionMsg         = "Successfully deleted all versions for subject"
-	DeletedSubjectVersionMsg            = "Successfully deleted version \"%s\" for subject\n"
+	DeletedAllSubjectVersionMsg         = "Successfully %s deleted all versions for subject\n"
+	DeletedSubjectVersionMsg            = "Successfully %s deleted version \"%s\" for subject\n"
 	UpdatedSubjectLevelCompatibilityMsg = "Successfully updated Subject Level compatibility to \"%s\" for subject \"%s\"\n"
 	UpdatedSubjectLevelModeMsg          = "Successfully updated Subject level Mode to \"%s\" for subject \"%s\"\n"
 	NoSubjectsMsg                       = "No subjects"
-	SRCredsValidationFailedMsg          = "Failed to validate Schema Registry API key and secret. Try again."
+	SRCredsValidationFailedMsg          = "Failed to validate Schema Registry API key and secret."
 
 	// update command
 	CheckingForUpdatesMsg = "Checking for updates..."

@@ -2,6 +2,8 @@ package schema_registry
 
 import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+
+	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -44,6 +46,7 @@ Retrieve all subjects available in a Schema Registry
 		Args: cobra.NoArgs,
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	listCmd.Flags().BoolP("deleted", "D", false, "View the deleted subjects.")
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 	// Update
@@ -79,6 +82,7 @@ Retrieve all versions registered under a given subject and its compatibility lev
 		Args: cobra.ExactArgs(1),
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	describeCmd.Flags().BoolP("deleted", "D", false, "View the deleted schema.")
 	describeCmd.Flags().SortFlags = false
 	c.AddCommand(describeCmd)
 }
@@ -141,10 +145,14 @@ func (c *subjectCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
-
 		return err
 	}
-	list, _, err := srClient.DefaultApi.List(ctx)
+	deleted, err := cmd.Flags().GetBool("deleted")
+	if err != nil {
+		return err
+	}
+	listOpts := srsdk.ListOpts{Deleted: optional.NewBool(deleted)}
+	list, _, err := srClient.DefaultApi.List(ctx, &listOpts)
 	if err != nil {
 		return err
 	}
@@ -170,7 +178,12 @@ func (c *subjectCommand) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	versions, _, err := srClient.DefaultApi.ListVersions(ctx, args[0])
+	deleted, err := cmd.Flags().GetBool("deleted")
+	if err != nil {
+		return err
+	}
+	listVersionsOpts := srsdk.ListVersionsOpts{Deleted: optional.NewBool(deleted)}
+	versions, _, err := srClient.DefaultApi.ListVersions(ctx, args[0], &listVersionsOpts)
 	if err != nil {
 		return err
 	}
