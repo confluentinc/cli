@@ -22,7 +22,7 @@ func TestSrAuthFound(t *testing.T) {
 	srCluster, err := currCtx.SchemaRegistryCluster(cmd)
 	req.NoError(err)
 
-	srAuth, didPromptUser, err := getSchemaRegistryAuth(srCluster.SrCredentials)
+	srAuth, didPromptUser, err := getSchemaRegistryAuth(srCluster.SrCredentials, false)
 	req.NoError(err)
 
 	req.False(didPromptUser)

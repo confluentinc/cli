@@ -250,7 +250,7 @@ func (c *secureFileCommand) update(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
-
+	pcmd.ErrPrintf(cmd, errors.UpdateSecretFileMsg)
 	return nil
 }
 

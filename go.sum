@@ -136,8 +136,8 @@ github.com/confluentinc/protoc-gen-ccloud v0.0.3 h1:i2+J04C4iW1hoe0tvzWH8wXg05rm
 github.com/confluentinc/protoc-gen-ccloud v0.0.3/go.mod h1:aZRVEnVpDqGKlGNaR75eWMcMzXOFDDps7ByPJiPPwxg=
 github.com/confluentinc/prototools v0.0.2-0.20190205163623-ca587b85ed4e/go.mod h1:ycwwz5+n4KxCfEKvkF5uC21S5wKtkHKcUD7OWCOGG3k=
 github.com/confluentinc/prototools v0.0.3/go.mod h1:BeYyZpaHqLMJ3uFf5aGl30F6xnideWJLd0HsGm9QY2U=
-github.com/confluentinc/schema-registry-sdk-go v0.0.8 h1:2fSgDRUQc4+uDaeBbhbQXoXJ3jrYSl2fkodRM4A+HMA=
-github.com/confluentinc/schema-registry-sdk-go v0.0.8/go.mod h1:+3hPLr84tBmDdQV1XSvo3H9FZwL3+Nx9MGbm17QyXq0=
+github.com/confluentinc/schema-registry-sdk-go v0.0.9 h1:Ux5Ht1rk5soi+Zf/cw1z0Je76qMrV0LqyoXfRYZolFk=
+github.com/confluentinc/schema-registry-sdk-go v0.0.9/go.mod h1:+3hPLr84tBmDdQV1XSvo3H9FZwL3+Nx9MGbm17QyXq0=
 github.com/coreos/bbolt v1.3.2/go.mod h1:iRUV2dpdMOn7Bo10OQBFzIJO9kkE559Wcmn+qkEiiKk=
 github.com/coreos/etcd v3.3.10+incompatible/go.mod h1:uF7uidLiAD3TWHmW31ZFd/JWoc32PjwdhPthX9715RE=
 github.com/coreos/go-etcd v2.0.0+incompatible/go.mod h1:Jez6KQU2B/sWsbdaef3ED8NzMklzPG4d5KIOhIy30Tk=

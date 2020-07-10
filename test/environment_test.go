@@ -6,6 +6,7 @@ func (s *CLITestSuite) TestEnvironmentCommands() {
 	tests := []CLITest{
 		{args: "environment list", fixture: "environment1.golden", wantErrCode: 0},
 		{args: "environment use not-595", fixture: "environment2.golden", wantErrCode: 0},
+		{args: "environment update not-595 --name new-other-name", fixture: "environment10.golden", wantErrCode: 0},
 		{args: "environment list", fixture: "environment3.golden", wantErrCode: 0},
 		{args: "environment list -o json", fixture: "environment4.golden", wantErrCode: 0},
 		{args: "environment list -o yaml", fixture: "environment5.golden", wantErrCode: 0},

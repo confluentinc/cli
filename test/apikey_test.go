@@ -20,6 +20,8 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 		{args: "api-key create --resource lkc-bob", login: "default", fixture: "apikey1.golden"}, // MYKEY3
 		{args: "api-key list --resource lkc-bob", fixture: "apikey2.golden"},
 		{args: "api-key list --resource lkc-abc", fixture: "apikey3.golden"},
+		{args: "api-key update MYKEY1 --description first-key", fixture: "apikey40.golden"},
+		{args: "api-key list --resource lkc-bob", fixture: "apikey41.golden"},
 
 		// list json and yaml output
 		{args: "api-key list", fixture: "apikey28.golden"},

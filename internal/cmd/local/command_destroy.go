@@ -6,14 +6,21 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/examples"
 )
 
 func NewDestroyCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "destroy",
-			Short: "Delete the data and logs for the current Confluent run.",
 			Args:  cobra.NoArgs,
+			Short: "Delete the data and logs for the current Confluent run.",
+			Example: examples.BuildExampleString(
+				examples.Example{
+					Desc: "If you run the ``confluent local destroy`` command, your output will confirm that every service is stopped and the deleted filesystem path is printed:",
+					Code: "confluent local destroy",
+				},
+			),
 		}, prerunner)
 
 	c.Command.RunE = c.runDestroyCommand
