@@ -6,7 +6,6 @@ func (s *CLITestSuite) Test_Ccloud_Iam_Role_Binding_CRUD() {
 			name:        "ccloud iam rolebinding create cloud-cluster",
 			args:        "iam rolebinding create --principal User:u-11aaa --role CloudClusterAdmin --environment current --cloud-cluster lkc-1111aaa",
 			login:       "default",
-			wantErrCode: 0,
 		},
 		{
 			name:        "ccloud iam rolebinding create, invalid use case: missing cloud-cluster",
@@ -33,7 +32,6 @@ func (s *CLITestSuite) Test_Ccloud_Iam_Role_Binding_CRUD() {
 			name:        "ccloud iam rolebinding delete cluster-name",
 			args:        "iam rolebinding delete --principal User:u-11aaa --role CloudClusterAdmin --environment current --cloud-cluster lkc-1111aaa",
 			login:       "default",
-			wantErrCode: 0,
 		},
 		{
 			name:        "ccloud iam rolebinding delete, invalid use case: missing cloud-cluster",
@@ -69,13 +67,11 @@ func (s *CLITestSuite) Test_Confluent_Iam_Role_Binding_CRUD() {
 			name:        "confluent iam rolebinding create cluster-name",
 			args:        "iam rolebinding create --principal User:bob --role DeveloperRead --resource Topic:connect-configs --cluster-name theMdsConnectCluster",
 			login:       "default",
-			wantErrCode: 0,
 		},
 		{
 			name:        "confluent iam rolebinding create cluster-name",
 			args:        "iam rolebinding create --principal User:bob --role DeveloperRead --resource Topic:connect-configs --kafka-cluster-id kafka-GUID",
 			login:       "default",
-			wantErrCode: 0,
 		},
 		{
 			name:        "confluent iam rolebinding create, invalid use case: cluster-name & kafka-cluster-id specified",
@@ -116,13 +112,11 @@ func (s *CLITestSuite) Test_Confluent_Iam_Role_Binding_CRUD() {
 			name:        "confluent iam rolebinding delete cluster-name",
 			args:        "iam rolebinding delete --principal User:bob --role DeveloperRead --resource Topic:connect-configs --cluster-name theMdsConnectCluster",
 			login:       "default",
-			wantErrCode: 0,
 		},
 		{
 			name:        "confluent iam rolebinding delete cluster-name",
 			args:        "iam rolebinding delete --principal User:bob --role DeveloperRead --resource Topic:connect-configs --kafka-cluster-id kafka-GUID",
 			login:       "default",
-			wantErrCode: 0,
 		},
 		{
 			name:        "confluent iam rolebinding delete, invalid use case: cluster-name & kafka-cluster-id specified",

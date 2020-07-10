@@ -206,21 +206,18 @@ func (s *CLITestSuite) Test_Confluent_Iam_Role_List() {
 			args:        "iam role list",
 			fixture:     "confluent-iam-role-list.golden",
 			login:       "default",
-			wantErrCode: 0,
 		},
 		{
 			name:        "confluent iam role list json",
 			args:        "iam role list -o json",
 			fixture:     "confluent-iam-role-list-json.golden",
 			login:       "default",
-			wantErrCode: 0,
 		},
 		{
 			name:        "confluent iam role list yaml",
 			args:        "iam role list -o yaml",
 			fixture:     "confluent-iam-role-list-yaml.golden",
 			login:       "default",
-			wantErrCode: 0,
 		},
 	}
 	for _, tt := range tests {
@@ -235,21 +232,18 @@ func (s *CLITestSuite) Test_Ccloud_Iam_Role_List() {
 			args:        "iam role list",
 			fixture:     "ccloud-iam-role-list.golden",
 			login:       "default",
-			wantErrCode: 0,
 		},
 		{
 			name:        "ccloud iam role list json",
 			args:        "iam role list -o json",
 			fixture:     "ccloud-iam-role-list-json.golden",
 			login:       "default",
-			wantErrCode: 0,
 		},
 		{
 			name:        "ccloud iam role list yaml",
 			args:        "iam role list -o yaml",
 			fixture:     "ccloud-iam-role-list-yaml.golden",
 			login:       "default",
-			wantErrCode: 0,
 		},
 	}
 	for _, tt := range tests {
@@ -265,21 +259,18 @@ func (s *CLITestSuite) Test_Confluent_Iam_Role_Describe() {
 			args:        "iam role describe DeveloperRead",
 			fixture:     "confluent-iam-role-describe.golden",
 			login:       "default",
-			wantErrCode: 0,
 		},
 		{
 			name:        "confluent iam role describe json",
 			args:        "iam role describe DeveloperRead -o json",
 			fixture:     "confluent-iam-role-describe-json.golden",
 			login:       "default",
-			wantErrCode: 0,
 		},
 		{
 			name:        "confluent iam role describe yaml",
 			args:        "iam role describe DeveloperRead -o yaml",
 			fixture:     "confluent-iam-role-describe-yaml.golden",
 			login:       "default",
-			wantErrCode: 0,
 		},
 	}
 	for _, tt := range tests {
@@ -294,21 +285,25 @@ func (s *CLITestSuite) Test_Ccloud_Iam_Role_Describe() {
 			args:        "iam role describe CloudClusterAdmin",
 			fixture:     "ccloud-iam-role-describe.golden",
 			login:       "default",
-			wantErrCode: 0,
+		},
+		{
+			name:        "ccloud iam role describe invalid role",
+			args:        "iam role describe InvalidRole",
+			fixture:     "ccloud-iam-role-describe-invalid-role.golden",
+			login:       "default",
+			wantErrCode: 1,
 		},
 		{
 			name:        "ccloud iam role describe json",
 			args:        "iam role describe CloudClusterAdmin -o json",
 			fixture:     "ccloud-iam-role-describe-json.golden",
 			login:       "default",
-			wantErrCode: 0,
 		},
 		{
 			name:        "ccloud iam role describe yaml",
 			args:        "iam role describe CloudClusterAdmin -o yaml",
 			fixture:     "ccloud-iam-role-describe-yaml.golden",
 			login:       "default",
-			wantErrCode: 0,
 		},
 	}
 	for _, tt := range tests {

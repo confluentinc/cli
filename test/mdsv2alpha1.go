@@ -130,6 +130,13 @@ func addMdsv2alpha1(t *testing.T, router *http.ServeMux) {
 	})
 
 	routesAndReplies := map[string]string{
+		"/api/metadata/security/v2alpha1/principals/User:u-11aaa/roles/CloudClusterAdmin": `[]`,
+		"/api/metadata/security/v2alpha1/roleNames": `[
+			"CCloudRoleBindingAdmin",
+			"CloudClusterAdmin",
+			"EnvironmentAdmin",
+			"OrganizationAdmin"
+		]`,
 		"/api/metadata/security/v2alpha1/lookup/rolebindings/principal/User:u-11aaa": `[
 			{
 				"scope": {
