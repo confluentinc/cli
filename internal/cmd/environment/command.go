@@ -186,6 +186,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.HandleCommon(err, cmd)
 	}
+	pcmd.ErrPrintf(cmd, "Deleted environment \"%s\".\n", id)
 	return nil
 }
 

@@ -14,6 +14,7 @@ func (s *CLITestSuite) TestEnvironmentCommands() {
 		{args: "environment create saucayyy", fixture: "environment7.golden", wantErrCode: 0},
 		{args: "environment create saucayyy -o json", fixture: "environment8.golden", wantErrCode: 0},
 		{args: "environment create saucayyy -o yaml", fixture: "environment9.golden", wantErrCode: 0},
+		{args: "environment create saucayyy -o yaml", fixture: "environment9.golden", wantErrCode: 0},
 	}
 	resetConfiguration(s.T(), "ccloud")
 	for _, tt := range tests {
