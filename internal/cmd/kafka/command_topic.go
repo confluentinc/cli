@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"sort"
 	"strings"
 
 	"github.com/Shopify/sarama"
@@ -483,7 +484,9 @@ func printHumanDescribe(cmd *cobra.Command, resp *schedv1.TopicDescription) erro
 		}
 		entries = append(entries, printer.ToRow(record, titleRow))
 	}
-
+	sort.Slice(entries, func(i, j int) bool {
+		return entries[i][0] < entries[j][0]
+	})
 	pcmd.Println(cmd, "\nConfiguration\n ")
 	printer.RenderCollectionTable(entries, titleRow)
 	return nil
@@ -504,7 +507,6 @@ func printStructuredDescribe(resp *schedv1.TopicDescription, format string) erro
 	for _, entry := range resp.Config {
 		structuredDisplay.Config[entry.Name] = entry.Value
 	}
-
 	return output.StructuredOutput(format, structuredDisplay)
 }
 
