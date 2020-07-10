@@ -139,6 +139,11 @@ Now clone the repo and update your shell profile:
     echo 'export PATH="$GOENV_ROOT/bin:$PATH"' >> ~/.bash_profile
     echo 'eval "$(goenv init -)"' >> ~/.bash_profile
 
+Install the required version of `goreleaser`
+
+    go get github.com/goreleaser/goreleaser@v0.106.0
+
+
 ### Mac Setup Notes
 
 Our integration tests (`make test`) open a lot of files while they are running.
