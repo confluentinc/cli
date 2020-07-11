@@ -68,10 +68,10 @@ func (suite *SchemaTestSuite) SetupTest() {
 			GetSchemaByVersionFunc: func(ctx context.Context, subject, version string, opts *srsdk.GetSchemaByVersionOpts) (schema srsdk.Schema, response *http.Response, e error) {
 				return srsdk.Schema{Schema: "Potatoes", Version: versionInt32}, nil, nil
 			},
-			DeleteSchemaVersionFunc: func(ctx context.Context, subject, version string) (i int32, response *http.Response, e error) {
+			DeleteSchemaVersionFunc: func(ctx context.Context, subject, version string, opts *srsdk.DeleteSchemaVersionOpts) (i int32, response *http.Response, e error) {
 				return id, nil, nil
 			},
-			DeleteSubjectFunc: func(ctx context.Context, subject string) (int32s []int32, response *http.Response, e error) {
+			DeleteSubjectFunc: func(ctx context.Context, subject string, opts *srsdk.DeleteSubjectOpts) (int32s []int32, response *http.Response, e error) {
 				return []int32{id}, nil, nil
 			},
 		},
@@ -121,6 +121,20 @@ func (suite *SchemaTestSuite) TestDeleteSchemaVersion() {
 	retVal := apiMock.DeleteSchemaVersionCalls()[0]
 	req.Equal(retVal.Subject, subjectName)
 	req.Equal(retVal.Version, "12345")
+}
+
+func (suite *SchemaTestSuite) TestPermanentDeleteSchemaVersion() {
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"schema", "delete", "--subject", subjectName, "--version", versionString, "--permanent"}))
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
+	req.True(apiMock.DeleteSchemaVersionCalled())
+	retVal := apiMock.DeleteSchemaVersionCalls()[0]
+	req.Equal(retVal.Subject, subjectName)
+	req.Equal(retVal.Version, "12345")
+	req.Equal(retVal.LocalVarOptionals.Permanent.Value(), true)
 }
 
 func (suite *SchemaTestSuite) TestDescribeBySubjectVersion() {

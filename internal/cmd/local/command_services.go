@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/local"
 )
 
@@ -180,8 +181,18 @@ func NewServicesStartCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "start",
-			Short: "Start all Confluent Platform services.",
 			Args:  cobra.NoArgs,
+			Short: "Start all Confluent Platform services.",
+			Example: examples.BuildExampleString(
+				examples.Example{
+					Desc: "Start all available services:",
+					Code: "confluent local services start",
+				},
+				examples.Example{
+					Desc: "Start Apache Kafka® and ZooKeeper as its dependency:",
+					Code: "confluent local services kafka start",
+				},
+			),
 		}, prerunner)
 
 	c.Command.RunE = c.runServicesStartCommand
@@ -246,8 +257,18 @@ func NewServicesStopCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "stop",
-			Short: "Stop all Confluent Platform services.",
 			Args:  cobra.NoArgs,
+			Short: "Stop all Confluent Platform services.",
+			Example: examples.BuildExampleString(
+				examples.Example{
+					Desc: "Stop all running services:",
+					Code: "confluent local services stop",
+				},
+				examples.Example{
+					Desc: "Stop Apache Kafka® and its dependent services.",
+					Code: "confluent local services kafka stop",
+				},
+			),
 		}, prerunner)
 
 	c.Command.RunE = c.runServicesStopCommand
