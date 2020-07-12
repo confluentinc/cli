@@ -14,7 +14,7 @@ import (
 
 type command struct {
 	analyticsClient analytics.Client
-	prompt pcmd.Prompt
+	prompt          pcmd.Prompt
 }
 
 func New(cliName string, prerunner pcmd.PreRunner, analytics analytics.Client) *cobra.Command {
@@ -31,8 +31,8 @@ func NewFeedbackCmdWithPrompt(cliName string, prerunner pcmd.PreRunner, analytic
 		&cobra.Command{
 			Use:   "feedback",
 			Short: "Submit feedback about the " + cliName + " CLI.",
-			RunE: pcmd.NewCLIRunE(c.feedbackRunE),
-			Args: cobra.NoArgs,
+			RunE:  pcmd.NewCLIRunE(c.feedbackRunE),
+			Args:  cobra.NoArgs,
 		}, prerunner)
 
 	return cmd.Command

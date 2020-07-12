@@ -208,8 +208,8 @@ func TestPasswordProtectionSuite_EncryptConfigFileSecrets(t *testing.T) {
 				createConfig:           true,
 				validateUsingDecrypt:   false,
 			},
-			wantErr:    true,
-			wantErrMsg: fmt.Sprintf(errors.MasterKeyNotExportedErrorMsg, ConfluentKeyEnvVar),
+			wantErr:         true,
+			wantErrMsg:      fmt.Sprintf(errors.MasterKeyNotExportedErrorMsg, ConfluentKeyEnvVar),
 			wantSuggestions: fmt.Sprintf(errors.MasterKeyNotExportedSuggestions, ConfluentKeyEnvVar),
 		},
 		{

@@ -3,6 +3,7 @@ package errors
 import (
 	"bytes"
 	"fmt"
+
 	"github.com/stretchr/testify/require"
 )
 
@@ -24,7 +25,7 @@ func GetErrorStringWithSuggestions(err error) string {
 	return "Error: " + err.Error() + "\n" + out
 }
 
-func expectedErrorOutput(errMsg string, suggestionsMsg string) string{
+func expectedErrorOutput(errMsg string, suggestionsMsg string) string {
 	suggestionsMsg = ComposeSuggestionsMessage(suggestionsMsg)
 	return fmt.Sprintf(errorAndSuggestionsMessageFormat, errMsg, suggestionsMsg)
 }

@@ -354,9 +354,9 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 	userNotLoggedIn.Context().State.Auth = nil
 
 	tests := []struct {
-		name   string
-		config *v3.Config
-		errMsg string
+		name           string
+		config         *v3.Config
+		errMsg         string
 		suggestionsMsg string
 	}{
 		{
@@ -364,15 +364,15 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 			config: userNameConfigLoggedIn,
 		},
 		{
-			name:   "not logged in user",
-			config: userNotLoggedIn,
-			errMsg: errors.NotLoggedInErrorMsg,
+			name:           "not logged in user",
+			config:         userNotLoggedIn,
+			errMsg:         errors.NotLoggedInErrorMsg,
 			suggestionsMsg: fmt.Sprintf(errors.NotLoggedInSuggestions, "ccloud"),
 		},
 		{
-			name:   "username context corrupted auth token",
-			config: userNameCfgCorruptedAuthToken,
-			errMsg: errors.CorruptedTokenErrorMsg,
+			name:           "username context corrupted auth token",
+			config:         userNameCfgCorruptedAuthToken,
+			errMsg:         errors.CorruptedTokenErrorMsg,
 			suggestionsMsg: errors.CorruptedTokenSuggestions,
 		},
 		{

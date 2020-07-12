@@ -16,8 +16,8 @@ const (
 	APIKeyUseFailedErrorMsg           = "unable to set active API key"
 
 	// audit-log command
-	EnsureCPSixPlusSuggestions       = "Ensure that you are running against MDS with CP 6.0+."
-	UnableToAccessEndpointErrorMsg = "unable to access endpoint"
+	EnsureCPSixPlusSuggestions        = "Ensure that you are running against MDS with CP 6.0+."
+	UnableToAccessEndpointErrorMsg    = "unable to access endpoint"
 	UnableToAccessEndpointSuggestions = EnsureCPSixPlusSuggestions
 
 	// login command
@@ -338,8 +338,8 @@ const (
 		ccloudAvoidTimeoutSuggestion
 	InvalidLoginErrorMsg          = "incorrect email or password"
 	CCloudInvalidLoginSuggestions = ccloudAvoidTimeoutSuggestion
-	NoAPIKeySelectedErrorMsg    = "no API key selected for resource \"%s\""
-	NoAPIKeySelectedSuggestions = "Select an API key for resource \"%s\" with `ccloud api-key use <API_KEY> --resource %s`.\n" +
+	NoAPIKeySelectedErrorMsg      = "no API key selected for resource \"%s\""
+	NoAPIKeySelectedSuggestions   = "Select an API key for resource \"%s\" with `ccloud api-key use <API_KEY> --resource %s`.\n" +
 		"To do so, you must have either already created or stored an API key for the resource.\n" +
 		"To create an API key, use `ccloud api-key create --resource %s`.\n" +
 		"To store an existing API key, use `ccloud api-key store --resource %s`."
