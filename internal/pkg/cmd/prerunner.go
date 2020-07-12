@@ -77,7 +77,7 @@ func NewAuthenticatedCLICommand(command *cobra.Command, prerunner PreRunner) *Au
 		Context:    nil,
 		State:      nil,
 	}
-	command.PersistentPreRunE = prerunner.Authenticated(cmd)
+	command.PersistentPreRunE = NewCLIPreRunnerE(prerunner.Authenticated(cmd))
 	cmd.Command = command
 	return cmd
 }
@@ -88,7 +88,7 @@ func NewAuthenticatedWithMDSCLICommand(command *cobra.Command, prerunner PreRunn
 		Context:    nil,
 		State:      nil,
 	}
-	command.PersistentPreRunE = prerunner.AuthenticatedWithMDS(cmd)
+	command.PersistentPreRunE = NewCLIPreRunnerE(prerunner.AuthenticatedWithMDS(cmd))
 	cmd.Command = command
 	return cmd
 }
@@ -98,14 +98,14 @@ func NewHasAPIKeyCLICommand(command *cobra.Command, prerunner PreRunner) *HasAPI
 		CLICommand: NewCLICommand(command, prerunner),
 		Context:    nil,
 	}
-	command.PersistentPreRunE = prerunner.HasAPIKey(cmd)
+	command.PersistentPreRunE = NewCLIPreRunnerE(prerunner.HasAPIKey(cmd))
 	cmd.Command = command
 	return cmd
 }
 
 func NewAnonymousCLICommand(command *cobra.Command, prerunner PreRunner) *CLICommand {
 	cmd := NewCLICommand(command, prerunner)
-	command.PersistentPreRunE = prerunner.Anonymous(cmd)
+	command.PersistentPreRunE = NewCLIPreRunnerE(prerunner.Anonymous(cmd))
 	cmd.Command = command
 	return cmd
 }
@@ -136,11 +136,11 @@ func (r *PreRun) Anonymous(command *CLICommand) func(cmd *cobra.Command, args []
 		command.Version = r.Version
 		command.Config.Resolver = r.FlagResolver
 		if err := log.SetLoggingVerbosity(cmd, r.Logger); err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		r.Logger.Flush()
 		if err := r.notifyIfUpdateAvailable(cmd, r.CLIName, command.Version.Version); err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		r.warnIfConfluentLocal(cmd)
 		if r.Config != nil {
@@ -163,7 +163,7 @@ func (r *PreRun) Anonymous(command *CLICommand) func(cmd *cobra.Command, args []
 			}
 		} else {
 			if isAuthOrConfigCommands(cmd) {
-				return errors.HandleCommon(r.ConfigLoadingError, cmd)
+				return r.ConfigLoadingError
 			}
 		}
 		return nil
@@ -181,28 +181,28 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 	return func(cmd *cobra.Command, args []string) error {
 		err := r.Anonymous(command.CLICommand)(cmd, args)
 		if r.Config == nil {
-			return errors.HandleCommon(r.ConfigLoadingError, cmd)
+			return r.ConfigLoadingError
 		}
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		err = r.setClients(command)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		ctx, err := command.Config.Context(cmd)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		if ctx == nil {
-			return errors.HandleCommon(&errors.NoContextError{CLIName: r.CLIName}, cmd)
+			return &errors.NoContextError{CLIName: r.CLIName}
 		}
 		command.Context = ctx
 		command.State, err = ctx.AuthenticatedState(cmd)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
-		return errors.HandleCommon(r.validateToken(cmd, ctx), cmd)
+		return r.validateToken(cmd, ctx)
 	}
 }
 
@@ -211,28 +211,28 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd
 	return func(cmd *cobra.Command, args []string) error {
 		err := r.Anonymous(command.CLICommand)(cmd, args)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		if r.Config == nil {
-			return errors.HandleCommon(r.ConfigLoadingError, cmd)
+			return r.ConfigLoadingError
 		}
 		err = r.setClients(command)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		ctx, err := command.Config.Context(cmd)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		if ctx == nil {
-			return errors.HandleCommon(&errors.NoContextError{CLIName: r.CLIName}, cmd)
+			return &errors.NoContextError{CLIName: r.CLIName}
 		}
 		if !ctx.HasMDSLogin() {
-			return errors.HandleCommon(&errors.NotLoggedInError{CLIName: r.CLIName}, cmd)
+			return &errors.NotLoggedInError{CLIName: r.CLIName}
 		}
 		command.Context = ctx
 		command.State = ctx.State
-		return errors.HandleCommon(r.validateToken(cmd, ctx), cmd)
+		return r.validateToken(cmd, ctx)
 	}
 }
 
@@ -241,17 +241,17 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 	return func(cmd *cobra.Command, args []string) error {
 		err := r.Anonymous(command.CLICommand)(cmd, args)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		if r.Config == nil {
-			return errors.HandleCommon(r.ConfigLoadingError, cmd)
+			return r.ConfigLoadingError
 		}
 		ctx, err := command.Config.Context(cmd)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		if ctx == nil {
-			return errors.HandleCommon(&errors.NoContextError{CLIName: r.CLIName}, cmd)
+			return &errors.NoContextError{CLIName: r.CLIName}
 		}
 		command.Context = ctx
 		var clusterId string
@@ -260,22 +260,22 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 		} else if command.Context.Credential.CredentialType == v2.Username {
 			err := r.checkUserAuthentication(ctx, cmd)
 			if err != nil {
-				return errors.HandleCommon(err, cmd)
+				return err
 			}
 			clusterId, err = r.getClusterIdForAuthenticatedUser(command, ctx, cmd)
 			if err != nil {
-				return errors.HandleCommon(err, cmd)
+				return err
 			}
 		} else {
 			panic("Invalid Credential Type")
 		}
 		hasAPIKey, err := ctx.HasAPIKey(cmd, clusterId)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		if !hasAPIKey {
 			err = &errors.UnspecifiedAPIKeyError{ClusterID: clusterId}
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		return nil
 	}
@@ -299,12 +299,12 @@ func (r *PreRun) checkUserAuthentication(ctx *DynamicContext, cmd *cobra.Command
 func (r *PreRun) getClusterIdForAuthenticatedUser(command *HasAPIKeyCLICommand, ctx *DynamicContext, cmd *cobra.Command) (string, error) {
 	client, err := r.createCCloudClient(ctx, cmd, command.Version)
 	if err != nil {
-		return "", errors.HandleCommon(err, cmd)
+		return "", err
 	}
 	ctx.client = client
 	cluster, err := ctx.GetKafkaClusterForCommand(cmd)
 	if err != nil {
-		return "", errors.HandleCommon(err, cmd)
+		return "", err
 	}
 	return cluster.ID, nil
 }

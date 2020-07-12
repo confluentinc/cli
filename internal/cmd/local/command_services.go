@@ -156,14 +156,14 @@ func NewServicesListCommand(prerunner cmd.PreRunner) *cobra.Command {
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
-	c.Command.RunE = c.runServicesListCommand
+	c.Command.RunE = cmd.NewCLIRunE(c.runServicesListCommand)
 	return c.Command
 }
 
 func (c *Command) runServicesListCommand(command *cobra.Command, _ []string) error {
 	services, err := c.getAvailableServices()
 	if err != nil {
-		return errors.HandleCommon(err, c.Command)
+		return err
 	}
 
 	sort.Strings(services)
@@ -194,7 +194,7 @@ func NewServicesStartCommand(prerunner cmd.PreRunner) *cobra.Command {
 			),
 		}, prerunner)
 
-	c.Command.RunE = c.runServicesStartCommand
+	c.Command.RunE = cmd.NewCLIRunE(c.runServicesStartCommand)
 
 	return c.Command
 }
@@ -202,18 +202,18 @@ func NewServicesStartCommand(prerunner cmd.PreRunner) *cobra.Command {
 func (c *Command) runServicesStartCommand(command *cobra.Command, _ []string) error {
 	availableServices, err := c.getAvailableServices()
 	if err != nil {
-		return errors.HandleCommon(err, c.Command)
+		return err
 	}
 
 	if err := c.notifyConfluentCurrent(command); err != nil {
-		return errors.HandleCommon(err, c.Command)
+		return err
 	}
 
 	// Topological order
 	for i := 0; i < len(availableServices); i++ {
 		service := availableServices[i]
 		if err := c.startService(command, service, ""); err != nil {
-			return errors.HandleCommon(err, c.Command)
+			return err
 		}
 	}
 
@@ -228,24 +228,24 @@ func NewServicesStatusCommand(prerunner cmd.PreRunner) *cobra.Command {
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
-	c.Command.RunE = c.runServicesStatusCommand
+	c.Command.RunE = cmd.NewCLIRunE(c.runServicesStatusCommand)
 	return c.Command
 }
 
 func (c *Command) runServicesStatusCommand(command *cobra.Command, _ []string) error {
 	availableServices, err := c.getAvailableServices()
 	if err != nil {
-		return errors.HandleCommon(err, c.Command)
+		return err
 	}
 
 	if err := c.notifyConfluentCurrent(command); err != nil {
-		return errors.HandleCommon(err, c.Command)
+		return err
 	}
 
 	sort.Strings(availableServices)
 	for _, service := range availableServices {
 		if err := c.printStatus(command, service); err != nil {
-			return errors.HandleCommon(err, c.Command)
+			return err
 		}
 	}
 
@@ -270,7 +270,7 @@ func NewServicesStopCommand(prerunner cmd.PreRunner) *cobra.Command {
 			),
 		}, prerunner)
 
-	c.Command.RunE = c.runServicesStopCommand
+	c.Command.RunE = cmd.NewCLIRunE(c.runServicesStopCommand)
 
 	return c.Command
 }
@@ -278,18 +278,18 @@ func NewServicesStopCommand(prerunner cmd.PreRunner) *cobra.Command {
 func (c *Command) runServicesStopCommand(command *cobra.Command, _ []string) error {
 	availableServices, err := c.getAvailableServices()
 	if err != nil {
-		return errors.HandleCommon(err, c.Command)
+		return err
 	}
 
 	if err := c.notifyConfluentCurrent(command); err != nil {
-		return errors.HandleCommon(err, c.Command)
+		return err
 	}
 
 	// Reverse topological order
 	for i := len(availableServices) - 1; i >= 0; i-- {
 		service := availableServices[i]
 		if err := c.stopService(command, service); err != nil {
-			return errors.HandleCommon(err, c.Command)
+			return err
 		}
 	}
 
@@ -304,7 +304,7 @@ func NewServicesTopCommand(prerunner cmd.PreRunner) *cobra.Command {
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
-	c.Command.RunE = c.runServicesTopCommand
+	c.Command.RunE = cmd.NewCLIRunE(c.runServicesTopCommand)
 
 	return c.Command
 }
@@ -319,20 +319,20 @@ func (c *Command) runServicesTopCommand(_ *cobra.Command, _ []string) error {
 	for _, service := range availableServices {
 		isUp, err := c.isRunning(service)
 		if err != nil {
-			return errors.HandleCommon(err, c.Command)
+			return err
 		}
 
 		if isUp {
 			pid, err := c.cc.ReadPid(service)
 			if err != nil {
-				return errors.HandleCommon(err, c.Command)
+				return err
 			}
 			pids = append(pids, pid)
 		}
 	}
 
 	if len(pids) == 0 {
-		return errors.HandleCommon(errors.New(errors.NoServicesRunningErrorMsg), c.Command)
+		return errors.New(errors.NoServicesRunningErrorMsg)
 	}
 
 	return top(pids)

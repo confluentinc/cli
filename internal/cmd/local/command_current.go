@@ -1,7 +1,6 @@
 package local
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
@@ -26,14 +25,14 @@ func NewCurrentCommand(prerunner cmd.PreRunner) *cobra.Command {
 			),
 		}, prerunner)
 
-	c.Command.RunE = c.runCurrentCommand
+	c.Command.RunE = cmd.NewCLIRunE(c.runCurrentCommand)
 	return c.Command
 }
 
 func (c *Command) runCurrentCommand(command *cobra.Command, _ []string) error {
 	dir, err := c.cc.GetCurrentDir()
 	if err != nil {
-		return errors.HandleCommon(err, c.Command)
+		return err
 	}
 
 	command.Println(dir)

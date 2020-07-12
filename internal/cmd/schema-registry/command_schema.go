@@ -65,7 +65,7 @@ Where schemafilepath may include these contents:
 - For more information on schema references, see
   https://docs.confluent.io/current/schema-registry/serdes-develop/index.html#schema-references.
 `, cliName),
-		RunE: c.create,
+		RunE: pcmd.NewCLIRunE(c.create),
 		Args: cobra.NoArgs,
 	}
 	RequireSubjectFlag(cmd)
@@ -86,7 +86,7 @@ Delete one or more topics. This command should only be used in extreme circumsta
 ::
 
 		{{.CLIName}} schema-registry schema delete --subject payments --version latest`, cliName),
-		RunE: c.delete,
+		RunE: pcmd.NewCLIRunE(c.delete),
 		Args: cobra.NoArgs,
 	}
 	RequireSubjectFlag(cmd)
@@ -113,7 +113,7 @@ Describe the schema by both subject and version
 		{{.CLIName}} schema-registry describe --subject payments --version latest
 `, cliName),
 		PreRunE: c.preDescribe,
-		RunE:    c.describe,
+		RunE:    pcmd.NewCLIRunE(c.describe),
 		Args:    cobra.MaximumNArgs(1),
 	}
 	cmd.Flags().StringP("subject", "S", "", SubjectUsage)
@@ -125,24 +125,24 @@ Describe the schema by both subject and version
 func (c *schemaCommand) create(cmd *cobra.Command, _ []string) error {
 	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	subject, err := cmd.Flags().GetString("subject")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	schemaPath, err := cmd.Flags().GetString("schema")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	schemaType, err := cmd.Flags().GetString("type")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	schema, err := ioutil.ReadFile(schemaPath)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	var refs []srsdk.SchemaReference
@@ -152,11 +152,11 @@ func (c *schemaCommand) create(cmd *cobra.Command, _ []string) error {
 	} else if refPath != "" {
 		refBlob, err := ioutil.ReadFile(refPath)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		err = json.Unmarshal(refBlob, &refs)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 	}
 
@@ -166,7 +166,7 @@ func (c *schemaCommand) create(cmd *cobra.Command, _ []string) error {
 	}
 	outputFormat, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	if outputFormat == output.Human.String() {
 		pcmd.Println(cmd, errors.RegisteredSchemaMsg, response.Id)
@@ -174,7 +174,7 @@ func (c *schemaCommand) create(cmd *cobra.Command, _ []string) error {
 		err = output.StructuredOutput(outputFormat, &struct {
 			Id int32 `json:"id" yaml:"id"`
 		}{response.Id})
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	return nil
 }
@@ -182,15 +182,15 @@ func (c *schemaCommand) create(cmd *cobra.Command, _ []string) error {
 func (c *schemaCommand) delete(cmd *cobra.Command, _ []string) error {
 	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	subject, err := cmd.Flags().GetString("subject")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	version, err := cmd.Flags().GetString("version")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	permanent, err := cmd.Flags().GetBool("permanent")
 	if err != nil {
@@ -204,7 +204,7 @@ func (c *schemaCommand) delete(cmd *cobra.Command, _ []string) error {
 		deleteSubjectOpts := srsdk.DeleteSubjectOpts{Permanent: optional.NewBool(permanent)}
 		versions, _, err := srClient.DefaultApi.DeleteSubject(ctx, subject, &deleteSubjectOpts)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		pcmd.Printf(cmd, errors.DeletedAllSubjectVersionMsg, deleteType)
 		PrintVersions(versions)
@@ -213,7 +213,7 @@ func (c *schemaCommand) delete(cmd *cobra.Command, _ []string) error {
 		deleteVersionOpts := srsdk.DeleteSchemaVersionOpts{Permanent: optional.NewBool(permanent)}
 		versionResult, _, err := srClient.DefaultApi.DeleteSchemaVersion(ctx, subject, version, &deleteVersionOpts)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		pcmd.Printf(cmd, errors.DeletedSubjectVersionMsg, deleteType, version)
 		PrintVersions([]int32{versionResult})
@@ -224,27 +224,27 @@ func (c *schemaCommand) delete(cmd *cobra.Command, _ []string) error {
 func (c *schemaCommand) preDescribe(cmd *cobra.Command, args []string) error {
 	subject, err := cmd.Flags().GetString("subject")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	version, err := cmd.Flags().GetString("version")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	if len(args) > 0 && (subject != "" || version != "") {
-		return errors.HandleCommon(errors.New(errors.BothSchemaAndSubjectErrorMsg), cmd)
+		return errors.New(errors.BothSchemaAndSubjectErrorMsg)
 	} else if len(args) == 0 && (subject == "" || version == "") {
-		return errors.HandleCommon(errors.New(errors.SchemaOrSubjectErrorMsg), cmd)
+		return errors.New(errors.SchemaOrSubjectErrorMsg)
 	}
 	return nil
 }
 
 func (c *schemaCommand) describe(cmd *cobra.Command, args []string) error {
 	if len(args) > 0 {
-		return errors.HandleCommon(c.describeById(cmd, args), cmd)
+		return c.describeById(cmd, args)
 	} else {
-		return errors.HandleCommon(c.describeBySubject(cmd), cmd)
+		return c.describeBySubject(cmd)
 	}
 }
 

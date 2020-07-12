@@ -127,7 +127,7 @@ func (c *promptCommand) init(cliName string, prerunner pcmd.PreRunner) {
 		Use:   "prompt",
 		Short: fmt.Sprintf("Print %s CLI context for your terminal prompt.", cliName),
 		Long:  strings.ReplaceAll(longDescriptionTemplate, "{{.CLIName}}", cliName),
-		RunE:  c.prompt,
+		RunE:  pcmd.NewCLIRunE(c.prompt),
 		Args:  cobra.NoArgs,
 	}
 	// Ideally we'd default to %c but contexts are implicit today with uber-verbose names like `login-cody@confluent.io-https://devel.cpdev.cloud`

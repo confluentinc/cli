@@ -71,7 +71,7 @@ func (c *rolebindingCommand) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Args:  cobra.NoArgs,
-		RunE:  c.list,
+		RunE:  cmd.NewCLIRunE(c.list),
 		Short: "List role bindings.",
 		Long:  "List the role bindings for a particular principal and/or role, and a particular scope.",
 		Example: examples.BuildExampleString(
@@ -113,7 +113,7 @@ func (c *rolebindingCommand) init() {
 	createCmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create a role binding.",
-		RunE:  c.create,
+		RunE:  cmd.NewCLIRunE(c.create),
 		Args:  cobra.NoArgs,
 	}
 	createCmd.Flags().String("role", "", "Role name of the new role binding.")
@@ -133,7 +133,7 @@ func (c *rolebindingCommand) init() {
 	deleteCmd := &cobra.Command{
 		Use:   "delete",
 		Short: "Delete an existing role binding.",
-		RunE:  c.delete,
+		RunE:  cmd.NewCLIRunE(c.delete),
 		Args:  cobra.NoArgs,
 	}
 	deleteCmd.Flags().String("role", "", "Role name of the existing role binding.")
@@ -208,7 +208,7 @@ func (c *rolebindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mds.Mds
 
 	clusterName, err := cmd.Flags().GetString("cluster-name")
 	if err != nil {
-		return nil, errors.HandleCommon(err, cmd)
+		return nil, err
 	}
 
 	cmd.Flags().Visit(func(flag *pflag.Flag) {
@@ -228,20 +228,20 @@ func (c *rolebindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mds.Mds
 	})
 
 	if clusterName != "" && (scope.KafkaCluster != "" || nonKafkaScopesSet > 0) {
-		return nil, errors.HandleCommon(errors.New(errors.BothClusterNameAndScopeErrorMsg), cmd)
+		return nil, errors.New(errors.BothClusterNameAndScopeErrorMsg)
 	}
 
 	if clusterName == "" {
 		if scope.KafkaCluster == "" && nonKafkaScopesSet > 0 {
-			return nil, errors.HandleCommon(errors.New(errors.SpecifyKafkaIDErrorMsg), cmd)
+			return nil, errors.New(errors.SpecifyKafkaIDErrorMsg)
 		}
 
 		if scope.KafkaCluster == "" && nonKafkaScopesSet == 0 {
-			return nil, errors.HandleCommon(errors.New(errors.SpecifyClusterErrorMsg), cmd)
+			return nil, errors.New(errors.SpecifyClusterErrorMsg)
 		}
 
 		if nonKafkaScopesSet > 1 {
-			return nil, errors.HandleCommon(errors.New(errors.MoreThanOneNonKafkaErrorMsg), cmd)
+			return nil, errors.New(errors.MoreThanOneNonKafkaErrorMsg)
 		}
 		return &mds.MdsScope{Clusters: *scope}, nil
 	}
@@ -255,29 +255,29 @@ func (c *rolebindingCommand) list(cmd *cobra.Command, _ []string) error {
 	} else if cmd.Flags().Changed("role") {
 		return c.listRolePrincipals(cmd)
 	}
-	return errors.HandleCommon(errors.New(errors.PrincipalOrRoleRequiredErrorMsg), cmd)
+	return errors.New(errors.PrincipalOrRoleRequiredErrorMsg)
 }
 
 func (c *rolebindingCommand) listPrincipalResources(cmd *cobra.Command) error {
 	scope, err := c.parseAndValidateScope(cmd)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	principal, err := cmd.Flags().GetString("principal")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	err = c.validatePrincipalFormat(principal)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	role := "*"
 	if cmd.Flags().Changed("role") {
 		r, err := cmd.Flags().GetString("role")
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		role = r
 	}
@@ -289,12 +289,12 @@ func (c *rolebindingCommand) listPrincipalResources(cmd *cobra.Command) error {
 		if response.StatusCode == http.StatusNotFound {
 			return c.listPrincipalResourcesV1(cmd, scope, principal, role)
 		}
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	outputWriter, err := output.NewListOutputWriter(cmd, resourcePatternListFields, resourcePatternHumanListLabels, resourcePatternStructuredListLabels)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	for principalName, rolesResourcePatterns := range principalsRolesResourcePatterns {
@@ -336,7 +336,7 @@ func (c *rolebindingCommand) listPrincipalResourcesV1(cmd *cobra.Command, mdsSco
 			principal,
 			*mdsScope)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 	}
 
@@ -348,7 +348,7 @@ func (c *rolebindingCommand) listPrincipalResourcesV1(cmd *cobra.Command, mdsSco
 			roleName,
 			*mdsScope)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		for _, pattern := range rps {
 			data = append(data, []string{roleName, pattern.ResourceType, pattern.Name, pattern.PatternType})
@@ -365,27 +365,27 @@ func (c *rolebindingCommand) listPrincipalResourcesV1(cmd *cobra.Command, mdsSco
 func (c *rolebindingCommand) listRolePrincipals(cmd *cobra.Command) error {
 	scope, err := c.parseAndValidateScope(cmd)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	role, err := cmd.Flags().GetString("role")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	var principals []string
 	if cmd.Flags().Changed("resource") {
 		r, err := cmd.Flags().GetString("resource")
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		resource, err := c.parseAndValidateResourcePattern(r, false)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		err = c.validateRoleAndResourceType(role, resource.ResourceType)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		principals, _, err = c.MDSClient.RBACRoleBindingSummariesApi.LookupPrincipalsWithRoleOnResource(
 			c.createContext(),
@@ -394,7 +394,7 @@ func (c *rolebindingCommand) listRolePrincipals(cmd *cobra.Command) error {
 			resource.Name,
 			*scope)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 	} else {
 		principals, _, err = c.MDSClient.RBACRoleBindingSummariesApi.LookupPrincipalsWithRole(
@@ -402,14 +402,14 @@ func (c *rolebindingCommand) listRolePrincipals(cmd *cobra.Command) error {
 			role,
 			*scope)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 	}
 
 	sort.Strings(principals)
 	outputWriter, err := output.NewListOutputWriter(cmd, []string{"Principal"}, []string{"Principal"}, []string{"principal"})
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	for _, principal := range principals {
 		displayStruct := &struct {
@@ -425,39 +425,39 @@ func (c *rolebindingCommand) listRolePrincipals(cmd *cobra.Command) error {
 func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOptions, error) {
 	role, err := cmd.Flags().GetString("role")
 	if err != nil {
-		return nil, errors.HandleCommon(err, cmd)
+		return nil, err
 	}
 
 	resource, err := cmd.Flags().GetString("resource")
 	if err != nil {
-		return nil, errors.HandleCommon(err, cmd)
+		return nil, err
 	}
 
 	prefix := cmd.Flags().Changed("prefix")
 
 	principal, err := cmd.Flags().GetString("principal")
 	if err != nil {
-		return nil, errors.HandleCommon(err, cmd)
+		return nil, err
 	}
 	err = c.validatePrincipalFormat(principal)
 	if err != nil {
-		return nil, errors.HandleCommon(err, cmd)
+		return nil, err
 	}
 
 	scope, err := c.parseAndValidateScope(cmd)
 	if err != nil {
-		return nil, errors.HandleCommon(err, cmd)
+		return nil, err
 	}
 
 	resourcesRequest := mds.ResourcesRequest{}
 	if resource != "" {
 		parsedResourcePattern, err := c.parseAndValidateResourcePattern(resource, prefix)
 		if err != nil {
-			return nil, errors.HandleCommon(err, cmd)
+			return nil, err
 		}
 		err = c.validateRoleAndResourceType(role, parsedResourcePattern.ResourceType)
 		if err != nil {
-			return nil, errors.HandleCommon(err, cmd)
+			return nil, err
 		}
 		resourcePatterns := []mds.ResourcePattern{
 			parsedResourcePattern,
@@ -481,7 +481,7 @@ func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOption
 func (c *rolebindingCommand) create(cmd *cobra.Command, _ []string) error {
 	options, err := c.parseCommon(cmd)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	var resp *http.Response
@@ -500,11 +500,11 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, _ []string) error {
 	}
 
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
-		return errors.HandleCommon(errors.NewErrorWithSuggestions(fmt.Sprintf(errors.HTTPStatusCodeErrorMsg, resp.StatusCode), errors.HTTPStatusCodeSuggestions), cmd)
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.HTTPStatusCodeErrorMsg, resp.StatusCode), errors.HTTPStatusCodeSuggestions)
 	}
 
 	return nil
@@ -513,7 +513,7 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, _ []string) error {
 func (c *rolebindingCommand) delete(cmd *cobra.Command, _ []string) error {
 	options, err := c.parseCommon(cmd)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	var resp *http.Response
@@ -532,11 +532,11 @@ func (c *rolebindingCommand) delete(cmd *cobra.Command, _ []string) error {
 	}
 
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
-		return errors.HandleCommon(errors.NewErrorWithSuggestions(fmt.Sprintf(errors.HTTPStatusCodeErrorMsg, resp.StatusCode), errors.HTTPStatusCodeSuggestions), cmd)
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.HTTPStatusCodeErrorMsg, resp.StatusCode), errors.HTTPStatusCodeSuggestions)
 	}
 
 	return nil

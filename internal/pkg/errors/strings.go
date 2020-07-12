@@ -11,6 +11,9 @@ const (
 	WrittenCredentialsToNetrcMsg = "Written credentials to netrc file \"%s\"\n"
 	KafkaClusterDeletedMsg       = "The Kafka cluster \"%s\" has been deleted.\n"
 
+	// confluent cluster command
+	UnregisteredClusterMsg = "Successfully unregistered the cluster %s from the Cluster Registry.\n"
+
 	// connector commands
 	CreatedConnectorMsg = "Created connector %s %s\n"
 	UpdatedConnectorMsg = "Updated connector %s\n"

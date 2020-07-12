@@ -28,6 +28,11 @@ const (
 	FetchClusterMetadataErrorMsg     = "unable to fetch cluster metadata: %s - %s"
 	AccessClusterRegistryErrorMsg    = "unable to access Cluster Registry"
 	AccessClusterRegistrySuggestions = EnsureCPSixPlusSuggestions
+	MustSpecifyOneClusterIDErrorMsg  = "must specify at least one cluster ID"
+	ProtocolNotSupportedErrorMsg     = "protocol %s is currently not supported"
+
+	// completion command
+	UnsupportedShellErrorMsg = "unsupported shell type \"%s\""
 
 	// connect and connector-catalog commands
 	EmptyConfigFileErrorMsg        = "connector config file \"%s\" is empty"

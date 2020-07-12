@@ -22,27 +22,27 @@ func NewDestroyCommand(prerunner cmd.PreRunner) *cobra.Command {
 			),
 		}, prerunner)
 
-	c.Command.RunE = c.runDestroyCommand
+	c.Command.RunE = cmd.NewCLIRunE(c.runDestroyCommand)
 	return c.Command
 }
 
 func (c *Command) runDestroyCommand(command *cobra.Command, _ []string) error {
 	if !c.cc.HasTrackingFile() {
-		return errors.HandleCommon(errors.New(errors.NothingToDestroyErrorMsg), c.Command)
+		return errors.New(errors.NothingToDestroyErrorMsg)
 	}
 
 	if err := c.runServicesStopCommand(command, []string{}); err != nil {
-		return errors.HandleCommon(err, c.Command)
+		return err
 	}
 
 	dir, err := c.cc.GetCurrentDir()
 	if err != nil {
-		return errors.HandleCommon(err, c.Command)
+		return err
 	}
 
 	command.Printf(errors.DestroyDeletingMsg, dir)
 	if err := c.cc.RemoveCurrentDir(); err != nil {
-		return errors.HandleCommon(err, c.Command)
+		return err
 	}
 
 	return c.cc.RemoveTrackingFile()

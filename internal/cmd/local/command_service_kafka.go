@@ -144,7 +144,7 @@ func NewKafkaConsumeCommand(prerunner cmd.PreRunner) *cobra.Command {
 			),
 		}, prerunner)
 
-	c.Command.RunE = c.runKafkaConsumeCommand
+	c.Command.RunE = cmd.NewCLIRunE(c.runKafkaConsumeCommand)
 	c.initFlags("consume")
 
 	return c.Command
@@ -192,7 +192,7 @@ func NewKafkaProduceCommand(prerunner cmd.PreRunner) *cobra.Command {
 			),
 		}, prerunner)
 
-	c.Command.RunE = c.runKafkaProduceCommand
+	c.Command.RunE = cmd.NewCLIRunE(c.runKafkaProduceCommand)
 	c.initFlags("produce")
 
 	return c.Command

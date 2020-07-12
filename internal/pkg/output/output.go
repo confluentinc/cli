@@ -55,7 +55,7 @@ func NewListOutputWriter(cmd *cobra.Command, listFields []string, humanLabels []
 func NewListOutputCustomizableWriter(cmd *cobra.Command, listFields []string, humanLabels []string, structuredLabels []string, writer io.Writer) (ListOutputWriter, error) {
 	format, err := cmd.Flags().GetString(FlagName)
 	if err != nil {
-		return nil, errors.HandleCommon(err, cmd)
+		return nil, err
 	}
 	switch format {
 	case JSON.String():
@@ -87,7 +87,7 @@ func NewListOutputCustomizableWriter(cmd *cobra.Command, listFields []string, hu
 func DescribeObject(cmd *cobra.Command, obj interface{}, fields []string, humanRenames, structuredRenames map[string]string) error {
 	format, err := cmd.Flags().GetString(FlagName)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	if !(format == Human.String() || format == JSON.String() || format == YAML.String()) {
 		return newInvalidOutputFormatFlagError(format)

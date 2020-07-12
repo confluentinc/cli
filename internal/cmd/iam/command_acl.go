@@ -37,7 +37,7 @@ func (c *aclCommand) init(cliName string) {
 	cmd := &cobra.Command{
 		Use:   "create",
 		Args:  cobra.NoArgs,
-		RunE:  c.create,
+		RunE:  pcmd.NewCLIRunE(c.create),
 		Short: "Create a Kafka ACL.",
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -62,7 +62,7 @@ func (c *aclCommand) init(cliName string) {
 	cmd = &cobra.Command{
 		Use:   "delete",
 		Args:  cobra.NoArgs,
-		RunE:  c.delete,
+		RunE:  pcmd.NewCLIRunE(c.delete),
 		Short: "Delete a Kafka ACL.",
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -79,7 +79,7 @@ func (c *aclCommand) init(cliName string) {
 	cmd = &cobra.Command{
 		Use:   "list",
 		Args:  cobra.NoArgs,
-		RunE:  c.list,
+		RunE:  pcmd.NewCLIRunE(c.list),
 		Short: "List Kafka ACLs for a resource.",
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -105,22 +105,22 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 	bindings, response, err := c.MDSClient.KafkaACLManagementApi.SearchAclBinding(c.createContext(), convertToACLFilterRequest(acl.CreateAclRequest))
 
 	if err != nil {
-		return errors.HandleCommon(c.handleACLError(cmd, err, response), cmd)
+		return c.handleACLError(cmd, err, response)
 	}
-	return errors.HandleCommon(PrintACLs(cmd, acl.Scope.Clusters.KafkaCluster, bindings), cmd)
+	return PrintACLs(cmd, acl.Scope.Clusters.KafkaCluster, bindings)
 }
 
 func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 	acl := validateACLAddDelete(parse(cmd))
 
 	if acl.errors != nil {
-		return errors.HandleCommon(acl.errors, cmd)
+		return acl.errors
 	}
 
 	response, err := c.MDSClient.KafkaACLManagementApi.AddAclBinding(c.createContext(), *acl.CreateAclRequest)
 
 	if err != nil {
-		return errors.HandleCommon(c.handleACLError(cmd, err, response), cmd)
+		return c.handleACLError(cmd, err, response)
 	}
 
 	return nil
@@ -130,13 +130,13 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 	acl := parse(cmd)
 
 	if acl.errors != nil {
-		return errors.HandleCommon(acl.errors, cmd)
+		return acl.errors
 	}
 
 	bindings, response, err := c.MDSClient.KafkaACLManagementApi.RemoveAclBindings(c.createContext(), convertToACLFilterRequest(acl.CreateAclRequest))
 
 	if err != nil {
-		return errors.HandleCommon(c.handleACLError(cmd, err, response), cmd)
+		return c.handleACLError(cmd, err, response)
 	}
 
 	return PrintACLs(cmd, acl.Scope.Clusters.KafkaCluster, bindings)

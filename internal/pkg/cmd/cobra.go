@@ -1,0 +1,18 @@
+package cmd
+
+import (
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/spf13/cobra"
+)
+
+func NewCLIRunE(runEFunc func (*cobra.Command, []string) error) func (*cobra.Command, []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		return errors.HandleCommon(runEFunc(cmd, args), cmd)
+	}
+}
+
+func NewCLIPreRunnerE(prerunnerE func(*cobra.Command, []string) error) func(*cobra.Command, []string) error{
+	return func(cmd *cobra.Command, args []string) error {
+		return errors.HandleCommon(prerunnerE(cmd, args), cmd)
+	}
+}

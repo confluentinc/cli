@@ -82,7 +82,7 @@ func (c *command) init() {
 	c.Command = &cobra.Command{
 		Use:   "update",
 		Short: fmt.Sprintf("Update the %s CLI.", c.cliName),
-		RunE:  c.update,
+		RunE:  pcmd.NewCLIRunE(c.update),
 		Args:  cobra.NoArgs,
 	}
 	c.Command.Flags().Bool("yes", false, "Update without prompting.")
@@ -92,12 +92,12 @@ func (c *command) init() {
 func (c *command) update(cmd *cobra.Command, _ []string) error {
 	updateYes, err := cmd.Flags().GetBool("yes")
 	if err != nil {
-		return errors.HandleCommon(errors.Wrap(err, errors.ReadingYesFlagErrorMsg), cmd)
+		return errors.Wrap(err, errors.ReadingYesFlagErrorMsg)
 	}
 	pcmd.ErrPrintln(cmd, errors.CheckingForUpdatesMsg)
 	updateAvailable, latestVersion, err := c.client.CheckForUpdates(c.cliName, c.version.Version, true)
 	if err != nil {
-		return errors.HandleCommon(errors.NewUpdateClientWrapError(err, errors.CheckingForUpdateErrorMsg, c.cliName), cmd)
+		return errors.NewUpdateClientWrapError(err, errors.CheckingForUpdateErrorMsg, c.cliName)
 	}
 
 	if !updateAvailable {
@@ -120,10 +120,10 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 
 	oldBin, err := os.Executable()
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	if err := c.client.UpdateBinary(c.cliName, latestVersion, oldBin); err != nil {
-		return errors.HandleCommon(errors.NewUpdateClientWrapError(err, errors.UpdateBinaryErrorMsg, c.cliName), cmd)
+		return errors.NewUpdateClientWrapError(err, errors.UpdateBinaryErrorMsg, c.cliName)
 	}
 	pcmd.ErrPrintf(cmd, errors.UpdateAutocompleteMsg, c.config.CLIName)
 

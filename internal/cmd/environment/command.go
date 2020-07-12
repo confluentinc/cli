@@ -41,7 +41,7 @@ func (c *command) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List Confluent Cloud environments.",
-		RunE:  c.list,
+		RunE:  pcmd.NewCLIRunE(c.list),
 		Args:  cobra.NoArgs,
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
@@ -51,14 +51,14 @@ func (c *command) init() {
 	c.AddCommand(&cobra.Command{
 		Use:   "use <environment-id>",
 		Short: "Switch to the specified Confluent Cloud environment.",
-		RunE:  c.use,
+		RunE:  pcmd.NewCLIRunE(c.use),
 		Args:  cobra.ExactArgs(1),
 	})
 
 	createCmd := &cobra.Command{
 		Use:   "create <name>",
 		Short: "Create a new Confluent Cloud environment.",
-		RunE:  c.create,
+		RunE:  pcmd.NewCLIRunE(c.create),
 		Args:  cobra.ExactArgs(1),
 	}
 	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
@@ -68,7 +68,7 @@ func (c *command) init() {
 	updateCmd := &cobra.Command{
 		Use:   "update <environment-id>",
 		Short: "Update an existing Confluent Cloud environment.",
-		RunE:  c.update,
+		RunE:  pcmd.NewCLIRunE(c.update),
 		Args:  cobra.ExactArgs(1),
 	}
 	updateCmd.Flags().String("name", "", "New name for Confluent Cloud environment.")
@@ -79,7 +79,7 @@ func (c *command) init() {
 	c.AddCommand(&cobra.Command{
 		Use:   "delete <environment-id>",
 		Short: "Delete a Confluent Cloud environment and all its resources.",
-		RunE:  c.delete,
+		RunE:  pcmd.NewCLIRunE(c.delete),
 		Args:  cobra.ExactArgs(1),
 	})
 }
@@ -115,12 +115,12 @@ func (c *command) refreshEnvList() error {
 func (c *command) list(cmd *cobra.Command, _ []string) error {
 	environments, err := c.Client.Account.List(context.Background(), &orgv1.Account{})
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	for _, environment := range environments {
 		// Add '*' only in the case where we are printing out tables
@@ -142,12 +142,12 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 	acc, err := c.Client.Account.Get(context.Background(), &orgv1.Account{Id: id})
 	if err != nil {
 		err = errors.NewErrorWithSuggestions(fmt.Sprintf(errors.EnvNotFoundErrorMsg, id), errors.EnvNotFoundSuggestions)
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	c.Context.State.Auth.Account = acc
 	if err := c.Config.Save(); err != nil {
-		return errors.HandleCommon(errors.Wrap(err, errors.EnvSwitchErrorMsg), cmd)
+		return errors.Wrap(err, errors.EnvSwitchErrorMsg)
 	}
 	pcmd.Printf(cmd, errors.UsingEnvMsg, id)
 	return nil
@@ -158,7 +158,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 
 	environment, err := c.Client.Account.Create(context.Background(), &orgv1.Account{Name: name, OrganizationId: c.State.Auth.Account.OrganizationId})
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	return output.DescribeObject(cmd, environment, createFields, createHumanLabels, createStructuredLabels)
 }
@@ -174,7 +174,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	err = c.Client.Account.Update(context.Background(), &orgv1.Account{Id: id, Name: newName, OrganizationId: c.State.Auth.Account.OrganizationId})
 
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	return nil
 }
@@ -184,7 +184,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 
 	err := c.Client.Account.Delete(context.Background(), &orgv1.Account{Id: id, OrganizationId: c.State.Auth.Account.OrganizationId})
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	return nil
 }

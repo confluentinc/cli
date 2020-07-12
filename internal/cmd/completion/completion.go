@@ -6,6 +6,9 @@ import (
 	"text/template"
 
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 const longDescriptionTemplate = `Use this command to print the output shell completion
@@ -76,7 +79,7 @@ func (c *completionCommand) init(cliName string) {
 		Use:   "completion <shell>",
 		Short: "Print shell completion code.",
 		Long:  getLongDescription(cliName),
-		RunE:  c.completion,
+		RunE:  cmd.NewCLIRunE(c.completion),
 		Args:  cobra.ExactArgs(1),
 	}
 }
@@ -88,7 +91,7 @@ func (c *completionCommand) completion(cmd *cobra.Command, args []string) error 
 	} else if args[0] == "zsh" {
 		err = c.rootCmd.GenZshCompletion(cmd.OutOrStdout())
 	} else {
-		err = fmt.Errorf(`unsupported shell type "%s"`, args[0])
+		err = fmt.Errorf(errors.UnsupportedShellErrorMsg, args[0])
 	}
 	return err
 }
