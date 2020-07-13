@@ -25,7 +25,7 @@ func AuditLogConfigTranslation(clusterConfigs map[string]string, bootstrapServer
 
 	addOtherBlock(clusterAuditLogConfigSpecs, defaultTopicName)
 
-	newWarnings = warnMultipleCrnAuthorities(clusterAuditLogConfigSpecs)
+	newWarnings = warnMultipleCRNAuthorities(clusterAuditLogConfigSpecs)
 	warnings = append(warnings, newWarnings...)
 
 	newWarnings = warnMismatchKafaClusters(clusterAuditLogConfigSpecs)
@@ -76,26 +76,26 @@ func addOtherBlock(specs map[string]*mds.AuditLogConfigSpec, defaultTopicName st
 	}
 }
 
-func warnMultipleCrnAuthorities(specs map[string]*mds.AuditLogConfigSpec) []string {
+func warnMultipleCRNAuthorities(specs map[string]*mds.AuditLogConfigSpec) []string {
 	warnings := []string{}
 	for clusterId, spec := range specs {
 		routes := *spec.Routes
 		foundAuthorities := []string{}
 		for routeName := range routes {
-			foundAuthority := getCrnAuthority(routeName)
+			foundAuthority := getCRNAuthority(routeName)
 			foundAuthorities = append(foundAuthorities, foundAuthority)
 		}
 		foundAuthorities = removeDuplicates(foundAuthorities)
 		if len(foundAuthorities) != 1 {
 			sort.Strings(foundAuthorities)
-			newWarning := fmt.Sprintf("Multiple Crn Authorities Warning: Cluster %q had multiple CRN Authorities in its routes: %v.", clusterId, foundAuthorities)
+			newWarning := fmt.Sprintf("Multiple CRN Authorities Warning: Cluster %q had multiple CRN Authorities in its routes: %v.", clusterId, foundAuthorities)
 			warnings = append(warnings, newWarning)
 		}
 	}
 	return warnings
 }
 
-func getCrnAuthority(routeName string) string {
+func getCRNAuthority(routeName string) string {
 	re := regexp.MustCompile("^crn://[^/]+/")
 	return re.FindString(routeName)
 }
@@ -224,12 +224,12 @@ func combineRoutes(specs map[string]*mds.AuditLogConfigSpec, newSpec *mds.AuditL
 	for clusterId, spec := range specs {
 		routes := *spec.Routes
 		for crnPath, route := range routes {
-			newCrnPath := replaceClusterId(crnPath, clusterId)
-			if _, ok := newRoutes[newCrnPath]; ok {
-				newWarning := fmt.Sprintf("Repeated Route Warning: Route Name : %q.", newCrnPath)
+			newCRNPath := replaceClusterId(crnPath, clusterId)
+			if _, ok := newRoutes[newCRNPath]; ok {
+				newWarning := fmt.Sprintf("Repeated Route Warning: Route Name : %q.", newCRNPath)
 				warnings = append(warnings, newWarning)
 			} else {
-				newRoutes[newCrnPath] = route
+				newRoutes[newCRNPath] = route
 			}
 		}
 	}
@@ -238,13 +238,13 @@ func combineRoutes(specs map[string]*mds.AuditLogConfigSpec, newSpec *mds.AuditL
 	return warnings
 }
 
-func replaceCRNAuthorityRoutes(newSpec *mds.AuditLogConfigSpec, newCrnAuthority string) {
+func replaceCRNAuthorityRoutes(newSpec *mds.AuditLogConfigSpec, newCRNAuthority string) {
 	routes := *newSpec.Routes
 
 	for crnPath, routeValue := range routes {
-		if !crnPathContainsAuthority(crnPath, newCrnAuthority) {
-			newCrnPath := replaceCRNAuthority(crnPath, newCrnAuthority)
-			routes[newCrnPath] = routeValue
+		if !crnPathContainsAuthority(crnPath, newCRNAuthority) {
+			newCRNPath := replaceCRNAuthority(crnPath, newCRNAuthority)
+			routes[newCRNPath] = routeValue
 			delete(routes, crnPath)
 		}
 	}
@@ -255,9 +255,9 @@ func crnPathContainsAuthority(crnPath, crnAuthority string) bool {
 	return re.MatchString(crnPath)
 }
 
-func replaceCRNAuthority(crnPath, newCrnAuthority string) string {
+func replaceCRNAuthority(crnPath, newCRNAuthority string) string {
 	re := regexp.MustCompile("^crn://([^/]*)/")
-	return re.ReplaceAllString(crnPath, "crn://"+newCrnAuthority+"/")
+	return re.ReplaceAllString(crnPath, "crn://"+newCRNAuthority+"/")
 }
 
 func replaceClusterId(crnPath, clusterId string) string {
@@ -269,7 +269,7 @@ func replaceClusterId(crnPath, clusterId string) string {
 	return strings.Replace(crnPath, kafkaIdentifier, "kafka="+clusterId, 1)
 }
 
-func generateCrnPath(clusterId, crnAuthority, pathExtension string) string {
+func generateCRNPath(clusterId, crnAuthority, pathExtension string) string {
 	path := "crn://" + crnAuthority + "/kafka=" + clusterId
 	if pathExtension != "" {
 		path += "/" + pathExtension + "=*"
@@ -291,7 +291,7 @@ func generateAlternateDefaultTopicRoutes(specs map[string]*mds.AuditLogConfigSpe
 			}
 			pathExtensions := []string{"", "topic", "connect", "ksql"}
 			for _, extension := range pathExtensions {
-				routeName := generateCrnPath(clusterId, crnAuthority, extension)
+				routeName := generateCRNPath(clusterId, crnAuthority, extension)
 				newSpecRoutes := *newSpec.Routes
 				if _, ok := newSpecRoutes[routeName]; !ok {
 					newSpecRoutes[routeName] = newRouteConfig
@@ -328,7 +328,6 @@ func max(x, y int64) int64 {
 }
 
 func testEq(a, b []string) bool {
-
 	// If one is nil, the other must also be nil.
 	if (a == nil) != (b == nil) {
 		return false
