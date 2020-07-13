@@ -8,10 +8,8 @@ Available Commands:
   list        List subjects.
   update      Update subject compatibility or mode.
 
-Flags:
-  -h, --help   help for subject
-
 Global Flags:
+  -h, --help            Show help for this command.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
 
 Use "ccloud schema-registry subject [command] --help" for more information about a command.

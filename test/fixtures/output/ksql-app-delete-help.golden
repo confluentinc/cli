@@ -3,10 +3,8 @@ Delete a KSQL app.
 Usage:
   ccloud ksql app delete <id> [flags]
 
-Flags:
-  -h, --help   help for delete
-
 Global Flags:
+  -h, --help            Show help for this command.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
 
 Did you know you can use the "ccloud feedback" command to send the team feedback?

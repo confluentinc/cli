@@ -10,8 +10,8 @@ Flags:
       --connect-cluster-id string           Kafka Connect cluster ID.
       --hosts string                        A comma separated list of hosts.
       --protocol string                     Security protocol.
-  -h, --help                                help for register
 
 Global Flags:
+  -h, --help            Show help for this command.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
 

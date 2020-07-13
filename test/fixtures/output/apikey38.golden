@@ -7,8 +7,8 @@ Flags:
       --service-account int32   Service account ID. If not specified, the API key will have full access on the cluster.
       --description string      Description of API key.
   -o, --output string           Specify the output format as "human", "json", or "yaml". (default "human")
-  -h, --help                    help for create
 
 Global Flags:
+  -h, --help            Show help for this command.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
 

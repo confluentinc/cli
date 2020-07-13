@@ -4,8 +4,8 @@ Usage:
 
 Flags:
       --cluster-name string   Cluster Name.
-  -h, --help                  help for unregister
 
 Global Flags:
+  -h, --help            Show help for this command.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
 

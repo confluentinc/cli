@@ -5,7 +5,7 @@ Usage:
 Flags:
       --type string     Filter list to this cluster type (connect-cluster, kafka-cluster, ksql-cluster, schema-registry-cluster).
   -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")
-  -h, --help            help for list
+  -h, --help            Show help for this command.
 
 Global Flags:
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

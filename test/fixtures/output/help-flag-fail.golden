@@ -24,8 +24,8 @@ Available Commands:
   version           Print the ccloud CLI version.
 
 Flags:
-  -h, --help            help for ccloud
+  -h, --help            Show help for this command.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
-      --version         version for ccloud
+      --version         Show version of ccloud.
 
 Use "ccloud [command] --help" for more information about a command.

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 
@@ -81,8 +82,10 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		cli.Short = "Confluent CLI."
 		cli.Long = "Manage your Confluent Platform."
 	}
-	cli.PersistentFlags().CountP("verbose", "v",
-		"Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).")
+
+	cli.PersistentFlags().BoolP("help", "h", false, "Show help for this command.")
+	cli.PersistentFlags().CountP("verbose", "v", "Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).")
+	cli.Flags().Bool("version", false, fmt.Sprintf("Show version of %s.", cliName))
 
 	prompt := pcmd.NewPrompt(os.Stdin)
 

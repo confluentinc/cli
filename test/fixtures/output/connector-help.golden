@@ -12,10 +12,8 @@ Available Commands:
   resume      Resume a connector.
   update      Update connector configuration.
 
-Flags:
-  -h, --help   help for connector
-
 Global Flags:
+  -h, --help            Show help for this command.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
 
 Use "ccloud connector [command] --help" for more information about a command.

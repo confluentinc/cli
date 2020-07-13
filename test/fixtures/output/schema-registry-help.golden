@@ -8,10 +8,8 @@ Available Commands:
   schema      Manage Schema Registry schemas.
   subject     Manage Schema Registry subjects.
 
-Flags:
-  -h, --help   help for schema-registry
-
 Global Flags:
+  -h, --help            Show help for this command.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
 
 Use "ccloud schema-registry [command] --help" for more information about a command.
