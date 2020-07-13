@@ -3,8 +3,8 @@
 The CLI codebase stores the strings of all messages in one location: the errors package [internal/pkg/errors](internal/pkg/errors). This encompasses all kinds of communication with the users, whether it be error messages, or message indicating success (e.g. successfully deleting a Kafka cluster). The goal is to ease the verification of consistency and correctness of messages, and to simplify future work in internationalizing the CLI.
 
 ## General Message Format
-- `””` surrounding names and ID’s
-    - e.g. `Check that the resource “lkc-abc“ exists.`, `Error: topic "bob" does not exist`
+- `""` surrounding names and ID’s
+    - e.g. `Check that the resource "lkc-abc" exists.`, `Error: topic "bob" does not exist`
 - ```` `` ```` surrounding commands or flags
     - e.g. ``You must pass `--cluster` flag with the command or set an active Kafka in your context with `ccloud kafka cluster use`.``
 
@@ -39,7 +39,7 @@ Suggestions:
     Select an API key for resource "lkc-dvnr7" with `ccloud api-key use <API_KEY> --resource lkc-dvnr7`.
     To do so, you must have either already created or stored an API key for the resource.
     To create an API key use `ccloud api-key create --resource lkc-dvnr7`.
-    To store an existing API key use `ccluod api-key store --resource lkc-dvnr7`.
+    To store an existing API key use `ccloud api-key store --resource lkc-dvnr7`.
 ```
 ```
 Error: Kafka cluster "lkc-yydnp" not ready
