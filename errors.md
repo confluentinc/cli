@@ -61,7 +61,7 @@ errors.Errorf(errors.AuthorizeAccountsErrorMsg, accountsStr)
 ResolvingConfigPathErrorMsg        = "error resolving the config filepath at \"%s\" has occurred"
 ResolvingConfigPathSuggestions     = "Try moving the config file to a different location."
 
-return “”, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.ResolvingConfigPathErrorMsg, c.Filename), errors.ResolvingConfigPathSuggestions)
+return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.ResolvingConfigPathErrorMsg, c.Filename), errors.ResolvingConfigPathSuggestions)
 ```
 
 ```
