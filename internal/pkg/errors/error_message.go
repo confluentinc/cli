@@ -196,7 +196,7 @@ const (
 	PlatformNotFoundErrorMsg           = "platform \"%s\" not found"
 	NoNameCredentialErrorMsg           = "credential must have a name"
 	NoNamePlatformErrorMsg             = "platform must have a name"
-	ResolvingConfigPathErrorMsg        = "error resolving the config filepath at %s has occurred"
+	ResolvingConfigPathErrorMsg        = "error resolving the config filepath at \"%s\" has occurred"
 	ResolvingConfigPathSuggestions     = "Try moving the config file to a different location."
 	UnspecifiedPlatformErrorMsg        = "context \"%s\" has corrupted platform"
 	UnspecifiedCredentialErrorMsg      = "context \"%s\" has corrupted credentials"

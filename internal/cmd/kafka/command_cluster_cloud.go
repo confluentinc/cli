@@ -233,7 +233,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 			msg,
 		)
 		if err != nil {
-			return errors.Wrapf(err, errors.FailedToReadConfirmationErrorMsg)
+			return errors.Wrap(err, errors.FailedToReadConfirmationErrorMsg)
 		}
 		if !ok {
 			return errors.Errorf(errors.AuthorizeAccountsErrorMsg, accountsStr)
