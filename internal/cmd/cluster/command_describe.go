@@ -86,7 +86,7 @@ func NewDescribeCommand(prerunner pcmd.PreRunner, client Metadata) *cobra.Comman
 	check(describeCmd.MarkFlagRequired("url"))
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	describeCmd.Flags().SortFlags = false
-	describeCmd.RunE = describeCmd.describe
+	describeCmd.RunE = pcmd.NewCLIRunE(describeCmd.describe)
 
 	return describeCmd.Command
 }
@@ -108,7 +108,7 @@ func (s *ScopedIdService) DescribeCluster(_ context.Context, url string) (*Scope
 		return nil, err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unable to fetch cluster metadata: %s - %s", resp.Status, body)
+		return nil, errors.Errorf(errors.FetchClusterMetadataErrorMsg, resp.Status, body)
 	}
 	meta := &ScopedId{}
 	err = json.Unmarshal(body, meta)
@@ -123,12 +123,12 @@ func (c *describeCommand) describe(cmd *cobra.Command, _ []string) error {
 
 	meta, err := c.client.DescribeCluster(context.Background(), url)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	outputOption, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	return printDescribe(cmd, meta, outputOption)

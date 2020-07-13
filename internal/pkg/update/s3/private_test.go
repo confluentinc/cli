@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -190,11 +191,12 @@ func Test_getCredentials(t *testing.T) {
 				cf: makeCreds("default", credentials.Value{}, nil, true),
 			},
 			wantErr: true,
-			wantErrMsg: `2 errors occurred:
-	* failed to find aws credentials in profiles: default
-	*   error: access key id is empty for default
+			wantErrMsg: fmt.Sprintf(`2 errors occurred:
+	* %s
+	*   %s
 
-`,
+`, fmt.Sprintf(errors.FindAWSCredsErrorMsg, "default"),
+				fmt.Sprintf(errors.EmptyAccessKeyIDErrorMsg, "default")),
 		},
 		{
 			name: "should reformat errors to be more easily readable - multiple profiles",
@@ -209,14 +211,18 @@ func Test_getCredentials(t *testing.T) {
 				}},
 			},
 			wantErr: true,
-			wantErrMsg: `5 errors occurred:
-	* failed to find aws credentials in profiles: profile1, profile2, profile3, profile4
-	*   error: aws creds in profile profile1 are expired
-	*   error: access key id is empty for profile2
-	*   error while finding creds: error3
-	*   error while finding creds: error4
+			wantErrMsg: fmt.Sprintf(`5 errors occurred:
+	* %s
+	*   %s
+	*   %s
+	*   %s
+	*   %s
 
-`,
+`, fmt.Sprintf(errors.FindAWSCredsErrorMsg, strings.Join([]string{"profile1", "profile2", "profile3", "profile4"}, ", ")),
+				fmt.Sprintf(errors.AWSCredsExpiredErrorMsg, "profile1"),
+				fmt.Sprintf(errors.EmptyAccessKeyIDErrorMsg, "profile2"),
+				fmt.Sprintf("%s: %s", errors.FindingCredsErrorMsg, "error3"),
+				fmt.Sprintf("%s: %s", errors.FindingCredsErrorMsg, "error4")),
 		},
 	}
 	for _, tt := range tests {

@@ -6,12 +6,11 @@ import (
 	"crypto/cipher"
 	"crypto/sha512"
 	"encoding/base64"
-	"errors"
-	"fmt"
 	"math/rand"
 
 	"golang.org/x/crypto/pbkdf2"
 
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
@@ -114,11 +113,11 @@ func (c *EncryptEngineImpl) Encrypt(plainText string, key []byte) (data string, 
 		if r := recover(); r != nil {
 			switch x := r.(type) {
 			case string:
-				err = errors.New("failed to encrypt the plain text:" + x)
+				err = errors.New(errors.EncryptPlainTextErrorMsg + ": " + x)
 			case error:
 				err = x
 			default:
-				err = errors.New("failed to encrypt the plain text")
+				err = errors.New(errors.EncryptPlainTextErrorMsg)
 			}
 		}
 	}()
@@ -173,11 +172,11 @@ func (c *EncryptEngineImpl) decrypt(crypt []byte, key []byte, iv []byte) (plain 
 		if r := recover(); r != nil {
 			switch x := r.(type) {
 			case string:
-				err = errors.New("failed to decrypt the cipher:" + x)
+				err = errors.New(errors.DecryptCypherErrorMsg + ": " + x)
 			case error:
 				err = x
 			default:
-				err = errors.New("failed to decrypt the cipher")
+				err = errors.New(errors.DecryptCypherErrorMsg)
 			}
 		}
 	}()
@@ -205,7 +204,7 @@ func (c *EncryptEngineImpl) pKCS5Trimming(encrypt []byte) ([]byte, error) {
 	padding := encrypt[len(encrypt)-1]
 	length := len(encrypt) - int(padding)
 	if length < 0 || length > len(encrypt) {
-		return nil, fmt.Errorf("failed to decrypt the cipher: data is corrupted.")
+		return nil, errors.New(errors.DataCorruptedErrorMsg)
 	}
 	return encrypt[:len(encrypt)-int(padding)], nil
 }

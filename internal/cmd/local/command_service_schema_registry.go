@@ -54,7 +54,7 @@ func NewSchemaRegistryACLCommand(prerunner cmd.PreRunner) *cobra.Command {
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
-	c.Command.RunE = c.runSchemaRegistryACLCommand
+	c.Command.RunE = cmd.NewCLIRunE(c.runSchemaRegistryACLCommand)
 	for flag, val := range defaultValues {
 		switch val.(type) {
 		case bool:

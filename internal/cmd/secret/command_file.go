@@ -1,7 +1,6 @@
 package secret
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/confluentinc/go-printer"
@@ -39,7 +38,7 @@ func (c *secureFileCommand) init() {
 		Use:   "encrypt",
 		Short: "Encrypt secrets in a configuration properties file.",
 		Long:  "This command encrypts the passwords in file specified in --config-file. This command returns a failure if a master key has not already been set in the environment variable. Create master key using \"master-key generate\" command and save the generated master key in environment variable.",
-		RunE:  c.encrypt,
+		RunE:  pcmd.NewCLIRunE(c.encrypt),
 		Args:  cobra.NoArgs,
 	}
 	encryptCmd.Flags().String("config-file", "", "Path to the configuration properties file.")
@@ -57,8 +56,8 @@ func (c *secureFileCommand) init() {
 	decryptCmd := &cobra.Command{
 		Use:   "decrypt",
 		Short: "Decrypt encrypted secrets from the configuration properties file.",
-		Long:  "This command decrypts the passwords in file specified in --config-file. This command returns a failure if a master key has not already been set using the \"master-key generate\" command.",
-		RunE:  c.decrypt,
+		Long:  `This command decrypts the passwords in file specified in --config-file. This command returns a failure if a master key has not already been set using the "master-key generate" command.`,
+		RunE:  pcmd.NewCLIRunE(c.decrypt),
 		Args:  cobra.NoArgs,
 	}
 	decryptCmd.Flags().String("config-file", "", "Path to the configuration properties file.")
@@ -78,7 +77,7 @@ func (c *secureFileCommand) init() {
 		Use:   "add",
 		Short: "Add encrypted secrets to a configuration properties file.",
 		Long:  "This command encrypts the password and adds it to the configuration file specified in --config-file. This command returns a failure if a master key has not already been set using the \"master-key generate\" command.",
-		RunE:  c.add,
+		RunE:  pcmd.NewCLIRunE(c.add),
 		Args:  cobra.NoArgs,
 	}
 	addCmd.Flags().String("config-file", "", "Path to the configuration properties file.")
@@ -99,7 +98,7 @@ func (c *secureFileCommand) init() {
 		Use:   "update",
 		Short: "Update the encrypted secrets from the configuration properties file.",
 		Long:  "This command updates the encrypted secrets from the configuration properties file.",
-		RunE:  c.update,
+		RunE:  pcmd.NewCLIRunE(c.update),
 		Args:  cobra.NoArgs,
 	}
 	updateCmd.Flags().String("config-file", "", "Path to the configuration properties file.")
@@ -119,7 +118,7 @@ func (c *secureFileCommand) init() {
 	removeCmd := &cobra.Command{
 		Use:   "remove",
 		Short: "Delete the configuration values from the configuration properties file.",
-		RunE:  c.remove,
+		RunE:  pcmd.NewCLIRunE(c.remove),
 		Args:  cobra.NoArgs,
 	}
 	removeCmd.Flags().String("config-file", "", "Path to the configuration properties file.")
@@ -136,8 +135,8 @@ func (c *secureFileCommand) init() {
 	rotateKeyCmd := &cobra.Command{
 		Use:   "rotate",
 		Short: "Rotate master or data key.",
-		Long:  "This command rotates either the master or data key. To rotate the master key, specify the current master key passphrase flag (\"--passphrase\") followed by the new master key passphrase flag (\"--passphrase-new\"). To rotate the data key, specify the current master key passphrase flag (\"--passphrase\").",
-		RunE:  c.rotate,
+		Long:  `This command rotates either the master or data key. To rotate the master key, specify the current master key passphrase flag ("--passphrase") followed by the new master key passphrase flag ("--passphrase-new"). To rotate the data key, specify the current master key passphrase flag ("--passphrase").`,
+		RunE:  pcmd.NewCLIRunE(c.rotate),
 		Args:  cobra.NoArgs,
 	}
 
@@ -154,17 +153,17 @@ func (c *secureFileCommand) init() {
 func (c *secureFileCommand) encrypt(cmd *cobra.Command, _ []string) error {
 	configs, err := cmd.Flags().GetString("config")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	configPath, localSecretsPath, remoteSecretsPath, err := c.getConfigFilePath(cmd)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	err = c.plugin.EncryptConfigFileSecrets(configPath, localSecretsPath, remoteSecretsPath, configs)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	return nil
@@ -173,27 +172,27 @@ func (c *secureFileCommand) encrypt(cmd *cobra.Command, _ []string) error {
 func (c *secureFileCommand) decrypt(cmd *cobra.Command, _ []string) error {
 	configs, err := cmd.Flags().GetString("config")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	configPath, err := cmd.Flags().GetString("config-file")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	localSecretsPath, err := cmd.Flags().GetString("local-secrets-file")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	outputPath, err := cmd.Flags().GetString("output-file")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	err = c.plugin.DecryptConfigFileSecrets(configPath, localSecretsPath, outputPath, configs)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	return nil
@@ -202,22 +201,22 @@ func (c *secureFileCommand) decrypt(cmd *cobra.Command, _ []string) error {
 func (c *secureFileCommand) add(cmd *cobra.Command, _ []string) error {
 	configSource, err := cmd.Flags().GetString("config")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	newConfigs, err := c.getConfigs(cmd, configSource, "config properties", "", false)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	configPath, localSecretsPath, remoteSecretsPath, err := c.getConfigFilePath(cmd)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	err = c.plugin.AddEncryptedPasswords(configPath, localSecretsPath, remoteSecretsPath, newConfigs)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	return nil
@@ -226,22 +225,22 @@ func (c *secureFileCommand) add(cmd *cobra.Command, _ []string) error {
 func (c *secureFileCommand) update(cmd *cobra.Command, _ []string) error {
 	configSource, err := cmd.Flags().GetString("config")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	newConfigs, err := c.getConfigs(cmd, configSource, "config properties", "", false)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	configPath, localSecretsPath, remoteSecretsPath, err := c.getConfigFilePath(cmd)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	err = c.plugin.UpdateEncryptedPasswords(configPath, localSecretsPath, remoteSecretsPath, newConfigs)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	return nil
@@ -250,17 +249,17 @@ func (c *secureFileCommand) update(cmd *cobra.Command, _ []string) error {
 func (c *secureFileCommand) getConfigFilePath(cmd *cobra.Command) (string, string, string, error) {
 	configPath, err := cmd.Flags().GetString("config-file")
 	if err != nil {
-		return "", "", "", errors.HandleCommon(err, cmd)
+		return "", "", "", err
 	}
 
 	localSecretsPath, err := cmd.Flags().GetString("local-secrets-file")
 	if err != nil {
-		return "", "", "", errors.HandleCommon(err, cmd)
+		return "", "", "", err
 	}
 
 	remoteSecretsPath, err := cmd.Flags().GetString("remote-secrets-file")
 	if err != nil {
-		return "", "", "", errors.HandleCommon(err, cmd)
+		return "", "", "", err
 	}
 
 	return configPath, localSecretsPath, remoteSecretsPath, nil
@@ -269,27 +268,27 @@ func (c *secureFileCommand) getConfigFilePath(cmd *cobra.Command) (string, strin
 func (c *secureFileCommand) remove(cmd *cobra.Command, _ []string) error {
 	configSource, err := cmd.Flags().GetString("config")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	removeConfigs, err := c.getConfigs(cmd, configSource, "config properties", "", false)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	configPath, err := cmd.Flags().GetString("config-file")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	localSecretsPath, err := cmd.Flags().GetString("local-secrets-file")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	err = c.plugin.RemoveEncryptedPasswords(configPath, localSecretsPath, removeConfigs)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	return nil
@@ -298,57 +297,57 @@ func (c *secureFileCommand) remove(cmd *cobra.Command, _ []string) error {
 func (c *secureFileCommand) rotate(cmd *cobra.Command, _ []string) error {
 	localSecretsPath, err := cmd.Flags().GetString("local-secrets-file")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	rotateMEK, err := cmd.Flags().GetBool("master-key")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	if rotateMEK {
 		oldPassphraseSource, err := cmd.Flags().GetString("passphrase")
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 
 		oldPassphrase, err := c.getConfigs(cmd, oldPassphraseSource, "passphrase", "Old Master Key Passphrase: ", true)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 
 		newPassphraseSource, err := cmd.Flags().GetString("passphrase-new")
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 
 		newPassphrase, err := c.getConfigs(cmd, newPassphraseSource, "passphrase-new", "New Master Key Passphrase: ", true)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 
 		masterKey, err := c.plugin.RotateMasterKey(oldPassphrase, newPassphrase, localSecretsPath)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 
 		pcmd.ErrPrintln(cmd, "Save the Master Key. It is not retrievable later.")
 		err = printer.RenderTableOut(&struct{ MasterKey string }{MasterKey: masterKey}, []string{"MasterKey"}, map[string]string{"MasterKey": "Master Key"}, os.Stdout)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 	} else {
 		passphraseSource, err := cmd.Flags().GetString("passphrase")
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		passphrase, err := c.getConfigs(cmd, passphraseSource, "passphrase", "Master Key Passphrase: ", true)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		err = c.plugin.RotateDataKey(passphrase, localSecretsPath)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 	}
 
@@ -360,11 +359,9 @@ func (c *secureFileCommand) getConfigs(cmd *cobra.Command, configSource string, 
 	if err != nil {
 		switch err {
 		case pcmd.ErrNoValueSpecified:
-			cmd.SilenceUsage = true
-			return "", fmt.Errorf("Please enter " + inputType)
+			return "", errors.Errorf(errors.EnterInputTypeErrorMsg, inputType)
 		case pcmd.ErrNoPipe:
-			cmd.SilenceUsage = true
-			return "", fmt.Errorf("Please pipe your " + inputType + " over stdin.")
+			return "", errors.Errorf(errors.PipeInputTypeErrorMsg, inputType)
 		}
 		return "", err
 	}

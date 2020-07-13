@@ -9,6 +9,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/mock"
 )
 
@@ -20,7 +21,7 @@ func TestFeedback(t *testing.T) {
 	out, err := cmd.ExecuteCommand(command, "feedback")
 	req.NoError(err)
 	req.Contains(out, "Enter feedback: ")
-	req.Contains(out, "Thanks for your feedback.")
+	req.Contains(out, errors.ThanksForFeedbackMsg)
 }
 
 func TestFeedbackEmptyMessage(t *testing.T) {

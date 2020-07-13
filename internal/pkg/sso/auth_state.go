@@ -104,14 +104,14 @@ func (s *authState) generateCodes() error {
 
 	_, err := rand.Read(randomBytes)
 	if err != nil {
-		return errors.Wrap(err, "unable to generate random bytes for SSO provider state")
+		return errors.Wrap(err, errors.GenerateRandomSSOProviderErrorMsg)
 	}
 
 	s.SSOProviderState = base64.RawURLEncoding.EncodeToString(randomBytes)
 
 	_, err = rand.Read(randomBytes)
 	if err != nil {
-		return errors.Wrap(err, "unable to generate random bytes for code verifier")
+		return errors.Wrap(err, errors.GenerateRandomCodeVerifierErrorMsg)
 	}
 
 	s.CodeVerifier = base64.RawURLEncoding.EncodeToString(randomBytes)
@@ -119,7 +119,7 @@ func (s *authState) generateCodes() error {
 	hasher := sha256.New()
 	_, err = hasher.Write([]byte(s.CodeVerifier))
 	if err != nil {
-		return errors.Wrap(err, "unable to compute hash for code challenge")
+		return errors.Wrap(err, errors.ComputeHashErrorMsg)
 	}
 	s.CodeChallenge = base64.RawURLEncoding.EncodeToString(hasher.Sum(nil))
 
@@ -141,7 +141,7 @@ func (s *authState) getOAuthToken() error {
 	if ok {
 		s.SSOProviderIDToken = token.(string)
 	} else {
-		return errors.New("oauth token response body did not contain id_token field")
+		return errors.New(errors.MissingIDTokenFieldErrorMsg)
 	}
 	refreshToken, ok := data["refresh_token"]
 	if ok {
@@ -164,7 +164,7 @@ func (s *authState) refreshOAuthToken() error {
 	if ok {
 		s.SSOProviderIDToken = token.(string)
 	} else {
-		return errors.New("oauth token response body did not contain id_token field")
+		return errors.New(errors.MissingIDTokenFieldErrorMsg)
 	}
 	return nil
 }
@@ -175,7 +175,7 @@ func (s *authState) getOAuthTokenResponse(payload *strings.Reader) (map[string]i
 	s.logger.Debug("Oauth token request payload: ", payload)
 	req, err := http.NewRequest("POST", url, payload)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to construct oauth token request")
+		return nil, errors.Wrap(err, errors.ConstructOAuthRequestErrorMsg)
 	}
 	req.Header.Add("content-type", "application/x-www-form-urlencoded")
 	res, err := http.DefaultClient.Do(req)
@@ -188,7 +188,7 @@ func (s *authState) getOAuthTokenResponse(payload *strings.Reader) (map[string]i
 	err = json.Unmarshal(responseBody, &data)
 	if err != nil {
 		s.logger.Debugf("Failed oauth token response body: %s", responseBody)
-		return nil, errors.Wrap(err, "failed to unmarshal response body in oauth token request")
+		return nil, errors.Wrap(err, errors.UnmarshalOAuthTokenErrorMsg)
 	}
 	return data, nil
 }

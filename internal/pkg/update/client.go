@@ -21,10 +21,10 @@ import (
 
 // Client lets you check for updated application binaries and install them if desired
 type Client interface {
-	CheckForUpdates(name string, currentVersion string, forceCheck bool) (updateAvailable bool, latestVersion string, err error)
+	CheckForUpdates(cliName string, currentVersion string, forceCheck bool) (updateAvailable bool, latestVersion string, err error)
 	GetLatestReleaseNotes() (string, string, error)
-	PromptToDownload(name, currVersion, latestVersion string, releaseNotes string, confirm bool) bool
-	UpdateBinary(name, version, path string) error
+	PromptToDownload(cliName, currVersion, latestVersion string, releaseNotes string, confirm bool) bool
+	UpdateBinary(cliName, version, path string) error
 }
 
 type client struct {
@@ -67,7 +67,7 @@ func NewClient(params *ClientParams) *client {
 }
 
 // CheckForUpdates checks for new versions in the repo
-func (c *client) CheckForUpdates(name string, currentVersion string, forceCheck bool) (updateAvailable bool, latestVersion string, err error) {
+func (c *client) CheckForUpdates(cliName string, currentVersion string, forceCheck bool) (updateAvailable bool, latestVersion string, err error) {
 	if c.DisableCheck {
 		return false, currentVersion, nil
 	}
@@ -80,16 +80,16 @@ func (c *client) CheckForUpdates(name string, currentVersion string, forceCheck 
 	}
 	currVersion, err := version.NewVersion(currentVersion)
 	if err != nil {
-		err = errors.Wrapf(err, "unable to parse %s version %s", name, currentVersion)
+		err = errors.Wrapf(err, errors.ParseVersionErrorMsg, cliName, currentVersion)
 		return false, currentVersion, err
 	}
-	latestBinaryVersion, err := c.Repository.GetLatestBinaryVersion(name)
+	latestBinaryVersion, err := c.Repository.GetLatestBinaryVersion(cliName)
 	if err != nil {
 		return false, currentVersion, err
 	}
 	if isLessThanVersion(currVersion, latestBinaryVersion) {
 		if err := c.touchCheckFile(); err != nil {
-			return false, currentVersion, errors.Wrapf(err, "unable to touch last check file")
+			return false, currentVersion, errors.Wrap(err, errors.TouchLastCheckFileErrorMsg)
 		}
 		return true, latestBinaryVersion.Original(), nil
 	}
@@ -131,23 +131,20 @@ func isLessThanVersion(curr, latest *version.Version) bool {
 }
 
 // PromptToDownload displays an interactive CLI prompt to download the latest version
-func (c *client) PromptToDownload(name, currVersion, latestVersion, releaseNotes string, confirm bool) bool {
+func (c *client) PromptToDownload(cliName, currVersion, latestVersion, releaseNotes string, confirm bool) bool {
 	if confirm && !c.fs.IsTerminal(c.Out.Fd()) {
 		c.Logger.Warn("disable confirm as stdout is not a tty")
 		confirm = false
 	}
 
-	fmt.Fprintf(c.Out, "New version of %s is available\n", name)
-	fmt.Fprintf(c.Out, "Current Version: %s\n", currVersion)
-	fmt.Fprintf(c.Out, "Latest Version:  %s\n", latestVersion)
-	fmt.Fprintf(c.Out, "%s\n\n\n", releaseNotes)
+	fmt.Fprintf(c.Out, errors.PromptToDownloadDescriptionMsg, cliName, currVersion, latestVersion, releaseNotes)
 
 	if !confirm {
 		return true
 	}
 
 	for {
-		fmt.Fprint(c.Out, "Do you want to download and install this update? (y/n): ")
+		fmt.Fprint(c.Out, errors.PromptToDownloadQuestionMsg)
 
 		reader := c.fs.NewBufferedReader(os.Stdin)
 		input, _ := reader.ReadString('\n')
@@ -160,17 +157,17 @@ func (c *client) PromptToDownload(name, currVersion, latestVersion, releaseNotes
 		case "no", "n", "N":
 			return false
 		default:
-			fmt.Fprintf(c.Out, "%s is not a valid choice\n", choice)
+			fmt.Fprintf(c.Out, errors.InvalidChoiceMsg, choice)
 			continue
 		}
 	}
 }
 
 // UpdateBinary replaces the named binary at path with the desired version
-func (c *client) UpdateBinary(name, version, path string) error {
-	downloadDir, err := c.fs.TempDir("", name)
+func (c *client) UpdateBinary(cliName, version, path string) error {
+	downloadDir, err := c.fs.TempDir("", cliName)
 	if err != nil {
-		return errors.Wrapf(err, "unable to get temp dir for %s", name)
+		return errors.Wrapf(err, errors.GetTempDirErrorMsg, cliName)
 	}
 	defer func() {
 		err = c.fs.RemoveAll(downloadDir)
@@ -179,12 +176,12 @@ func (c *client) UpdateBinary(name, version, path string) error {
 		}
 	}()
 
-	fmt.Fprintf(c.Out, "Downloading %s version %s...\n", name, version)
+	fmt.Fprintf(c.Out, "Downloading %s version %s...\n", cliName, version)
 	startTime := c.clock.Now()
 
-	newBin, bytes, err := c.Repository.DownloadVersion(name, version, downloadDir)
+	newBin, bytes, err := c.Repository.DownloadVersion(cliName, version, downloadDir)
 	if err != nil {
-		return errors.Wrapf(err, "unable to download %s version %s to %s", name, version, downloadDir)
+		return errors.Wrapf(err, errors.DownloadVersionErrorMsg, cliName, version, downloadDir)
 	}
 
 	mb := float64(bytes) / 1024.0 / 1024.0
@@ -198,10 +195,10 @@ func (c *client) UpdateBinary(name, version, path string) error {
 
 	if c.OS == "windows" {
 		// The old version will get deleted automatically eventually as we put it in the system's or user's temp dir
-		previousVersionBinary := filepath.Join(downloadDir, name+".old")
+		previousVersionBinary := filepath.Join(downloadDir, cliName+".old")
 		err = c.fs.Move(path, previousVersionBinary)
 		if err != nil {
-			return errors.Wrapf(err, "unable to move %s to %s", path, previousVersionBinary)
+			return errors.Wrapf(err, errors.MoveFileErrorMsg, path, previousVersionBinary)
 		}
 		err = c.copyFile(newBin, path)
 		if err != nil {
@@ -212,20 +209,19 @@ func (c *client) UpdateBinary(name, version, path string) error {
 				// Warning: this is a bad case where the user will need to re-download the CLI.  However,
 				// we shouldn't reach here since if the Move succeeded in one direction it's likely to work
 				// in the opposite direction as well
-				return errors.Wrapf(restoreErr, "unable to move (restore) %s to %s", previousVersionBinary, path)
+				return errors.Wrapf(restoreErr, errors.MoveRestoreErrorMsg, previousVersionBinary, path)
 			}
-
-			return errors.Wrapf(err, "unable to copy %s to %s", newBin, path)
+			return errors.Wrapf(err, errors.CopyErrorMsg, newBin, path)
 		}
 	} else {
 		err = c.copyFile(newBin, path)
 		if err != nil {
-			return errors.Wrapf(err, "unable to copy %s to %s", newBin, path)
+			return errors.Wrapf(err, errors.CopyErrorMsg, newBin, path)
 		}
 	}
 
 	if err := c.fs.Chmod(path, 0755); err != nil {
-		return errors.Wrapf(err, "unable to chmod 0755 %s", path)
+		return errors.Wrapf(err, errors.ChmodErrorMsg, path)
 	}
 
 	return nil

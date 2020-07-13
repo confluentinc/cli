@@ -10,7 +10,6 @@ import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -48,7 +47,7 @@ func (c *command) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: `List service accounts.`,
-		RunE:  c.list,
+		RunE:  pcmd.NewCLIRunE(c.list),
 		Args:  cobra.NoArgs,
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
@@ -67,7 +66,7 @@ Create a service account named ` + "``DemoServiceAccount``" + `.
   --description "This is a demo service account."
 
 `,
-		RunE: c.create,
+		RunE: pcmd.NewCLIRunE(c.create),
 		Args: cobra.ExactArgs(1),
 	}
 	createCmd.Flags().String("description", "", "Description of the service account.")
@@ -88,7 +87,7 @@ Update the description of a service account with the ID ` + "``2786``" + `.
     --description "Update demo service account information."
 
 `,
-		RunE: c.update,
+		RunE: pcmd.NewCLIRunE(c.update),
 		Args: cobra.ExactArgs(1),
 	}
 	updateCmd.Flags().String("description", "", "Description of the service account.")
@@ -107,7 +106,7 @@ Delete a service account with the ID ` + "``2786``" + `.
     ccloud service-account delete 2786
 
 `,
-		RunE: c.delete,
+		RunE: pcmd.NewCLIRunE(c.delete),
 		Args: cobra.ExactArgs(1),
 	})
 }
@@ -124,16 +123,16 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
 	if err := requireLen(name, nameLength, "service name"); err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	description, err := cmd.Flags().GetString("description")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	if err := requireLen(description, descriptionLength, "description"); err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	user := &orgv1.User{
@@ -144,7 +143,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	}
 	user, err = c.Client.User.CreateServiceAccount(context.Background(), user)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	return output.DescribeObject(cmd, user, describeFields, describeHumanRenames, describeStructuredRenames)
 }
@@ -152,17 +151,17 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 func (c *command) update(cmd *cobra.Command, args []string) error {
 	idp, err := strconv.Atoi(args[0])
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	id := int32(idp)
 
 	description, err := cmd.Flags().GetString("description")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	if err := requireLen(description, descriptionLength, "description"); err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	user := &orgv1.User{
@@ -171,7 +170,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 	err = c.Client.User.UpdateServiceAccount(context.Background(), user)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	return nil
 }
@@ -179,7 +178,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 func (c *command) delete(cmd *cobra.Command, args []string) error {
 	idp, err := strconv.Atoi(args[0])
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	id := int32(idp)
 
@@ -188,7 +187,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	}
 	err = c.Client.User.DeleteServiceAccount(context.Background(), user)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	return nil
 }
@@ -196,12 +195,12 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 func (c *command) list(cmd *cobra.Command, _ []string) error {
 	users, err := c.Client.User.GetServiceAccounts(context.Background())
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	for _, u := range users {
 		outputWriter.AddElement(u)

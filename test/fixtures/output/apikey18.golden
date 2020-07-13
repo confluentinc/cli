@@ -1,1 +1,1 @@
-Error: invalid api-key MYKEY2 for cluster lkc-cool1
+Error: unable to set active API key: invalid API key "MYKEY2" for resource "lkc-cool1"

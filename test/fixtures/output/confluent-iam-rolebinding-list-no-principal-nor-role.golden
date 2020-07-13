@@ -1,1 +1,1 @@
-Error: required: either principal or role is required
+Error: must specify either principal or role

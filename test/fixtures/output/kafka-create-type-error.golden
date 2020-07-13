@@ -1,0 +1,4 @@
+Error: invalid value "oops" for `--type` flag
+
+Suggestions:
+    Allowed values for `--type` flag are: basic, standard, dedicated.

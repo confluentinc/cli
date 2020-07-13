@@ -72,7 +72,7 @@ Describe connector and task level details of a connector in the current or speci
 
         {{.CLIName}} connector describe <id>
         {{.CLIName}} connector describe <id> --cluster <cluster-id>		`, cliName),
-		RunE: c.describe,
+		RunE: pcmd.NewCLIRunE(c.describe),
 		Args: cobra.ExactArgs(1),
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
@@ -90,7 +90,7 @@ List connectors in the current or specified Kafka cluster context.
 
         {{.CLIName}} connector list
         {{.CLIName}} connector list --cluster <cluster-id>		`, cliName),
-		RunE: c.list,
+		RunE: pcmd.NewCLIRunE(c.list),
 		Args: cobra.NoArgs,
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
@@ -108,7 +108,7 @@ Create connector in the current or specified Kafka cluster context.
 
         {{.CLIName}} connector create --config <file>
         {{.CLIName}} connector create --cluster <cluster-id> --config <file>		`, cliName),
-		RunE: c.create,
+		RunE: pcmd.NewCLIRunE(c.create),
 		Args: cobra.NoArgs,
 	}
 	cmd.Flags().String("config", "", "JSON connector config file.")
@@ -128,7 +128,7 @@ Delete connector in the current or specified Kafka cluster context.
 
         {{.CLIName}} connector delete <id>
         {{.CLIName}} connector delete <id> --cluster <cluster-id>	`, cliName),
-		RunE: c.delete,
+		RunE: pcmd.NewCLIRunE(c.delete),
 		Args: cobra.ExactArgs(1),
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
@@ -138,7 +138,7 @@ Delete connector in the current or specified Kafka cluster context.
 	cmd = &cobra.Command{
 		Use:   "update <id>",
 		Short: "Update connector configuration.",
-		RunE:  c.update,
+		RunE:  pcmd.NewCLIRunE(c.update),
 		Args:  cobra.ExactArgs(1),
 	}
 	cmd.Flags().String("config", "", "JSON connector config file.")
@@ -157,7 +157,7 @@ Pause connector in the current or specified Kafka cluster context.
 
         {{.CLIName}} connector pause <connector-id>
         {{.CLIName}} connector pause <connector-id> --cluster <cluster-id>	`, cliName),
-		RunE: c.pause,
+		RunE: pcmd.NewCLIRunE(c.pause),
 		Args: cobra.ExactArgs(1),
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
@@ -174,7 +174,7 @@ Resume connector in the current or specified Kafka cluster context.
 
         {{.CLIName}} connector resume <id>
         {{.CLIName}} connector resume <id> --cluster <cluster-id>	`, cliName),
-		RunE: c.resume,
+		RunE: pcmd.NewCLIRunE(c.resume),
 		Args: cobra.ExactArgs(1),
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
@@ -185,15 +185,15 @@ Resume connector in the current or specified Kafka cluster context.
 func (c *command) list(cmd *cobra.Command, _ []string) error {
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(cmd)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	connectors, err := c.Client.Connect.ListWithExpansions(context.Background(), &schedv1.Connector{AccountId: c.EnvironmentId(), KafkaClusterId: kafkaCluster.ID}, "status,info,id")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listFields, listStructuredLabels)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	for name, connector := range connectors {
 		connector := &connectorDescribeDisplay{
@@ -211,16 +211,16 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 func (c *command) describe(cmd *cobra.Command, args []string) error {
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(cmd)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	connector, err := c.Client.Connect.GetExpansionById(context.Background(), &schedv1.Connector{AccountId: c.EnvironmentId(), KafkaClusterId: kafkaCluster.ID, Id: args[0]})
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	outputOption, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	if outputOption == output.Human.String() {
 		return printHumanDescribe(cmd, connector)
@@ -232,28 +232,28 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 func (c *command) create(cmd *cobra.Command, _ []string) error {
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(cmd)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	userConfigs, err := getConfig(cmd)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	connector, err := c.Client.Connect.Create(context.Background(), &schedv1.ConnectorConfig{UserConfigs: *userConfigs, AccountId: c.EnvironmentId(), KafkaClusterId: kafkaCluster.ID, Name: (*userConfigs)["name"], Plugin: (*userConfigs)["connector.class"]})
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	// Resolve Connector ID from Name of created connector
 	connectorExpansion, err := c.Client.Connect.GetExpansionByName(context.Background(), &schedv1.Connector{AccountId: c.EnvironmentId(), KafkaClusterId: kafkaCluster.ID, Name: connector.Name})
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	outputFormat, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	trace := connectorExpansion.Status.Connector.Trace
 	if outputFormat == output.Human.String() {
-		pcmd.Printf(cmd, "Created connector %s %s\n", connector.Name, connectorExpansion.Id.Id)
+		pcmd.Printf(cmd, errors.CreatedConnectorMsg, connector.Name, connectorExpansion.Id.Id)
 		if trace != "" {
 			pcmd.Printf(cmd, "Error Trace: %s\n", trace)
 		}
@@ -274,73 +274,73 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 func (c *command) update(cmd *cobra.Command, args []string) error {
 	userConfigs, err := getConfig(cmd)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(cmd)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	// Resolve Connector Name from ID
 	connector, err := c.Client.Connect.GetExpansionById(context.Background(), &schedv1.Connector{AccountId: c.EnvironmentId(), KafkaClusterId: kafkaCluster.ID, Id: args[0]})
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	_, err = c.Client.Connect.Update(context.Background(), &schedv1.ConnectorConfig{UserConfigs: *userConfigs, AccountId: c.EnvironmentId(), KafkaClusterId: kafkaCluster.ID, Name: connector.Info.Name, Plugin: (*userConfigs)["connector.class"]})
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
-	pcmd.Println(cmd, "Updated connector "+args[0])
+	pcmd.Printf(cmd, errors.UpdatedConnectorMsg, args[0])
 	return nil
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(cmd)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	connector, err := c.Client.Connect.GetExpansionById(context.Background(), &schedv1.Connector{AccountId: c.EnvironmentId(), KafkaClusterId: kafkaCluster.ID, Id: args[0]})
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	err = c.Client.Connect.Delete(context.Background(), &schedv1.Connector{Name: connector.Info.Name, AccountId: c.EnvironmentId(), KafkaClusterId: kafkaCluster.ID})
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
-	pcmd.Println(cmd, "Successfully deleted connector")
+	pcmd.Printf(cmd, errors.DeletedConnectorMsg, args[0])
 	return nil
 }
 
 func (c *command) pause(cmd *cobra.Command, args []string) error {
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(cmd)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	connector, err := c.Client.Connect.GetExpansionById(context.Background(), &schedv1.Connector{AccountId: c.EnvironmentId(), KafkaClusterId: kafkaCluster.ID, Id: args[0]})
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	err = c.Client.Connect.Pause(context.Background(), &schedv1.Connector{Name: connector.Info.Name, AccountId: c.EnvironmentId(), KafkaClusterId: kafkaCluster.ID})
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
-	pcmd.Println(cmd, "Successfully paused connector")
+	pcmd.Printf(cmd, errors.PausedConnectorMsg, args[0])
 	return nil
 }
 
 func (c *command) resume(cmd *cobra.Command, args []string) error {
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(cmd)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	connector, err := c.Client.Connect.GetExpansionById(context.Background(), &schedv1.Connector{AccountId: c.EnvironmentId(), KafkaClusterId: kafkaCluster.ID, Id: args[0]})
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	err = c.Client.Connect.Resume(context.Background(), &schedv1.Connector{Name: connector.Info.Name, AccountId: c.EnvironmentId(), KafkaClusterId: kafkaCluster.ID})
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
-	pcmd.Println(cmd, "Successfully resumed connector")
+	pcmd.Printf(cmd, errors.ResumedConnectorMsg, args[0])
 	return nil
 }
 

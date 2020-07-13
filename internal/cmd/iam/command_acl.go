@@ -37,7 +37,7 @@ func (c *aclCommand) init(cliName string) {
 	cmd := &cobra.Command{
 		Use:   "create",
 		Args:  cobra.NoArgs,
-		RunE:  c.create,
+		RunE:  pcmd.NewCLIRunE(c.create),
 		Short: "Create a Kafka ACL.",
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -62,7 +62,7 @@ func (c *aclCommand) init(cliName string) {
 	cmd = &cobra.Command{
 		Use:   "delete",
 		Args:  cobra.NoArgs,
-		RunE:  c.delete,
+		RunE:  pcmd.NewCLIRunE(c.delete),
 		Short: "Delete a Kafka ACL.",
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -79,7 +79,7 @@ func (c *aclCommand) init(cliName string) {
 	cmd = &cobra.Command{
 		Use:   "list",
 		Args:  cobra.NoArgs,
-		RunE:  c.list,
+		RunE:  pcmd.NewCLIRunE(c.list),
 		Short: "List Kafka ACLs for a resource.",
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -114,7 +114,7 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 	acl := validateACLAddDelete(parse(cmd))
 
 	if acl.errors != nil {
-		return errors.HandleCommon(acl.errors, cmd)
+		return acl.errors
 	}
 
 	response, err := c.MDSClient.KafkaACLManagementApi.AddAclBinding(c.createContext(), *acl.CreateAclRequest)
@@ -130,7 +130,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 	acl := parse(cmd)
 
 	if acl.errors != nil {
-		return errors.HandleCommon(acl.errors, cmd)
+		return acl.errors
 	}
 
 	bindings, response, err := c.MDSClient.KafkaACLManagementApi.RemoveAclBindings(c.createContext(), convertToACLFilterRequest(acl.CreateAclRequest))
@@ -144,10 +144,9 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 
 func (c *aclCommand) handleACLError(cmd *cobra.Command, err error, response *http.Response) error {
 	if response != nil && response.StatusCode == http.StatusNotFound {
-		cmd.SilenceUsage = true
-		return fmt.Errorf("Unable to %s ACLs (%s). Ensure that you're running against MDS with CP 5.4+.", cmd.Name(), err.Error())
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.UnableToPerformAclErrorMsg, cmd.Name(), err.Error()), errors.UnableToPerformAclSuggestions)
 	}
-	return errors.HandleCommon(err, cmd)
+	return err
 }
 
 // validateACLAddDelete ensures the minimum requirements for acl add/delete is met
@@ -156,7 +155,7 @@ func validateACLAddDelete(aclConfiguration *ACLConfiguration) *ACLConfiguration 
 	// deletion of too many acls at once. Expectation is that multi delete will be done via
 	// repeated invocation of the cli by external scripts.
 	if aclConfiguration.AclBinding.Entry.PermissionType == "" {
-		aclConfiguration.errors = multierror.Append(aclConfiguration.errors, fmt.Errorf("--allow or --deny must be set when adding or deleting an ACL"))
+		aclConfiguration.errors = multierror.Append(aclConfiguration.errors, errors.Errorf(errors.MustSetAllowOrDenyErrorMsg))
 	}
 
 	if aclConfiguration.AclBinding.Pattern.PatternType == "" {
@@ -164,7 +163,7 @@ func validateACLAddDelete(aclConfiguration *ACLConfiguration) *ACLConfiguration 
 	}
 
 	if aclConfiguration.AclBinding.Pattern.ResourceType == "" {
-		aclConfiguration.errors = multierror.Append(aclConfiguration.errors, fmt.Errorf("exactly one of %v must be set",
+		aclConfiguration.errors = multierror.Append(aclConfiguration.errors, errors.Errorf(errors.MustSetResourceTypeErrorMsg,
 			convertToFlags(mds.ACLRESOURCETYPE_TOPIC, mds.ACLRESOURCETYPE_GROUP,
 				mds.ACLRESOURCETYPE_CLUSTER, mds.ACLRESOURCETYPE_TRANSACTIONAL_ID)))
 	}
@@ -222,7 +221,7 @@ func PrintACLs(cmd *cobra.Command, kafkaClusterId string, bindingsObj []mds.AclB
 	var fields = []string{"KafkaClusterId", "Principal", "Permission", "Operation", "Host", "Resource", "Name", "Type"}
 	var structuredRenames = []string{"kafka_cluster_id", "principal", "permission", "operation", "host", "resource", "name", "type"}
 
-	// delete also uses this function but doesn't have -o flag defined, -o flag is needed NewListOutputWriter
+	// delete also uses this function but doesn't have -o flag defined, -o flag is needed for NewListOutputWriter initializers
 	_, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
 		cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)

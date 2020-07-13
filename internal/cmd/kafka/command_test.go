@@ -3,6 +3,7 @@ package kafka
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io/ioutil"
 	"strconv"
 	"strings"
@@ -384,7 +385,6 @@ func TestListResourcePrincipalFilterACL(t *testing.T) {
 }
 
 func TestMultipleResourceACL(t *testing.T) {
-	expect := "exactly one of cluster-scope, consumer-group, topic, transactional-id must be set"
 	args := []string{"acl", "create", "--allow", "--operation", "read", "--service-account", "42",
 		"--topic", "resource1", "--consumer-group", "resource2"}
 
@@ -392,6 +392,7 @@ func TestMultipleResourceACL(t *testing.T) {
 	cmd.SetArgs(args)
 
 	err := cmd.Execute()
+	expect := fmt.Sprintf(errors.ExactlyOneSetErrorMsg, "cluster-scope, consumer-group, topic, transactional-id")
 	if !strings.Contains(err.Error(), expect) {
 		t.Errorf("expected: %s got: %s", expect, err.Error())
 	}
@@ -541,7 +542,7 @@ func TestDefaults(t *testing.T) {
 func Test_HandleError_NotLoggedIn(t *testing.T) {
 	kafka := &mock.Kafka{
 		ListFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) ([]*schedv1.KafkaCluster, error) {
-			return nil, errors.ErrNotLoggedIn
+			return nil, &errors.NotLoggedInError{CLIName: "ccloud"}
 		},
 	}
 	client := &ccloud.Client{Kafka: kafka}
@@ -552,10 +553,10 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 	cmd.SetOutput(buf)
 
 	err := cmd.Execute()
-	want := "You must log in to run that command."
-	if err.Error() != want {
-		t.Errorf("unexpected output, got %s, want %s", err, want)
-	}
+	want := errors.NotLoggedInErrorMsg
+	require.Error(t, err)
+	require.Equal(t, want, err.Error())
+	errors.VerifyErrorAndSuggestions(require.New(t), err, errors.NotLoggedInErrorMsg, fmt.Sprintf(errors.NotLoggedInSuggestions, "ccloud"))
 }
 
 /*************** TEST setup/helpers ***************/
@@ -601,7 +602,7 @@ func TestCreateEncryptionKeyId(t *testing.T) {
 
 	b, err := ioutil.ReadAll(stdout)
 	require.NoError(t, err)
-	require.Equal(t, "Please confirm you've authorized the key for these accounts account-xyz (y/n): ", string(b))
+	require.Equal(t, fmt.Sprintf(errors.ConfirmAuthorizedKeyMsg, "account-xyz")+" (y/n): ", string(b))
 }
 
 func init() {

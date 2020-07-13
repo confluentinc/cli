@@ -2,7 +2,6 @@ package cluster
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -52,7 +51,7 @@ func NewRegisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	registerCmd.Flags().String("protocol", "", "Security protocol.")
 	check(registerCmd.MarkFlagRequired("protocol"))
 	registerCmd.Flags().SortFlags = false
-	registerCmd.RunE = registerCmd.register
+	registerCmd.RunE = pcmd.NewCLIRunE(registerCmd.register)
 	return registerCmd.Command
 }
 
@@ -69,7 +68,7 @@ func NewUnregisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	}
 	unregisterCmd.Flags().String("cluster-name", "", "Cluster Name.")
 	check(unregisterCmd.MarkFlagRequired("cluster-name"))
-	unregisterCmd.RunE = unregisterCmd.unregister
+	unregisterCmd.RunE = pcmd.NewCLIRunE(unregisterCmd.unregister)
 	unregisterCmd.Flags().SortFlags = false
 	return unregisterCmd.Command
 }
@@ -100,15 +99,15 @@ func (c *registryCommand) resolveClusterScope(cmd *cobra.Command) (*mds.ScopeClu
 	})
 
 	if scope.KafkaCluster == "" && nonKafkaScopesSet > 0 {
-		return nil, errors.New("Must also specify a --kafka-cluster-id to uniquely identify the scope.")
+		return nil, errors.New(errors.SpecifyKafkaIDErrorMsg)
 	}
 
 	if scope.KafkaCluster == "" && nonKafkaScopesSet == 0 {
-		return nil, errors.New("Must specify at least one cluster ID ")
+		return nil, errors.New(errors.MustSpecifyOneClusterIDErrorMsg)
 	}
 
 	if nonKafkaScopesSet > 1 {
-		return nil, errors.New("Cannot specify more than one non-Kafka cluster ID for a scope.")
+		return nil, errors.New(errors.MoreThanOneNonKafkaErrorMsg)
 	}
 
 	return scope, nil
@@ -117,7 +116,7 @@ func (c *registryCommand) resolveClusterScope(cmd *cobra.Command) (*mds.ScopeClu
 func (c *registryCommand) parseHosts(cmd *cobra.Command) ([]mds.HostInfo, error) {
 	hostStr, err := cmd.Flags().GetString("hosts")
 	if err != nil {
-		return nil, errors.HandleCommon(err, cmd)
+		return nil, err
 	}
 
 	hostInfos := make([]mds.HostInfo, 0)
@@ -135,7 +134,7 @@ func (c *registryCommand) parseHosts(cmd *cobra.Command) ([]mds.HostInfo, error)
 func (c *registryCommand) parseProtocol(cmd *cobra.Command) (mds.Protocol, error) {
 	protocol, err := cmd.Flags().GetString("protocol")
 	if err != nil {
-		return "", errors.HandleCommon(err, cmd)
+		return "", err
 	}
 
 	switch strings.ToUpper(protocol) {
@@ -148,7 +147,7 @@ func (c *registryCommand) parseProtocol(cmd *cobra.Command) (mds.Protocol, error
 	case "HTTPS":
 		return mds.PROTOCOL_HTTPS, nil
 	default:
-		return "", fmt.Errorf("Protocol %s is currently not supported.", protocol)
+		return "", errors.Errorf(errors.ProtocolNotSupportedErrorMsg, protocol)
 	}
 }
 
@@ -156,22 +155,22 @@ func (c *registryCommand) register(cmd *cobra.Command, _ []string) error {
 
 	name, err := cmd.Flags().GetString("cluster-name")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	scopeClusters, err := c.resolveClusterScope(cmd)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	hosts, err := c.parseHosts(cmd)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	protocol, err := c.parseProtocol(cmd)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	clusterInfo := mds.ClusterInfo{ClusterName: name, Scope: mds.Scope{Clusters: *scopeClusters}, Hosts: hosts, Protocol: protocol}
@@ -188,7 +187,7 @@ func (c *registryCommand) register(cmd *cobra.Command, _ []string) error {
 func (c *registryCommand) unregister(cmd *cobra.Command, _ []string) error {
 	name, err := cmd.Flags().GetString("cluster-name")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	response, err := c.MDSClient.ClusterRegistryApi.DeleteNamedCluster(c.createContext(), name)
@@ -196,6 +195,6 @@ func (c *registryCommand) unregister(cmd *cobra.Command, _ []string) error {
 		return print.HandleClusterError(cmd, err, response)
 	}
 
-	pcmd.Printf(cmd, "Successfully unregistered the cluster %s from the Cluster Registry. \n", name)
+	pcmd.Printf(cmd, errors.UnregisteredClusterMsg, name)
 	return nil
 }

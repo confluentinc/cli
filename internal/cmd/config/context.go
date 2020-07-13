@@ -44,7 +44,7 @@ func (c *contextCommand) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List all config contexts.",
-		RunE:  c.list,
+		RunE:  pcmd.NewCLIRunE(c.list),
 		Args:  cobra.NoArgs,
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
@@ -53,7 +53,7 @@ func (c *contextCommand) init() {
 	c.AddCommand(&cobra.Command{
 		Use:   "use <id>",
 		Short: "Use a config context.",
-		RunE:  c.use,
+		RunE:  pcmd.NewCLIRunE(c.use),
 		Args:  cobra.ExactArgs(1),
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			c.analytics.SetCommandType(analytics.ContextUse)
@@ -63,14 +63,14 @@ func (c *contextCommand) init() {
 	c.AddCommand(&cobra.Command{
 		Use:   "current",
 		Short: "Show the current config context.",
-		RunE:  c.current,
+		RunE:  pcmd.NewCLIRunE(c.current),
 		Args:  cobra.NoArgs,
 	})
 
 	getCmd := &cobra.Command{
 		Use:   "get <id or no argument for current context>",
 		Short: "Get a config context parameter.",
-		RunE:  c.get,
+		RunE:  pcmd.NewCLIRunE(c.get),
 		Args:  cobra.RangeArgs(0, 1),
 	}
 	getCmd.Hidden = true
@@ -79,7 +79,7 @@ func (c *contextCommand) init() {
 	setCmd := &cobra.Command{
 		Use:   "set <id or no argument for current context>",
 		Short: "Set a config context parameter.",
-		RunE:  c.set,
+		RunE:  pcmd.NewCLIRunE(c.set),
 		Args:  cobra.RangeArgs(0, 1),
 	}
 	setCmd.Flags().String("kafka-cluster", "", "Set the current Kafka cluster context.")
@@ -90,7 +90,7 @@ func (c *contextCommand) init() {
 	c.AddCommand(&cobra.Command{
 		Use:   "delete <id>",
 		Short: "Delete a config context.",
-		RunE:  c.delete,
+		RunE:  pcmd.NewCLIRunE(c.delete),
 		Args:  cobra.ExactArgs(1),
 	})
 }
@@ -109,7 +109,7 @@ func (c *contextCommand) list(cmd *cobra.Command, _ []string) error {
 	sort.Strings(contextNames)
 	outputWriter, err := output.NewListOutputWriter(cmd, contextListFields, contextListHumanLabels, contextListStructuredLabels)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	for _, name := range contextNames {
 		context := c.Config.Contexts[name]
@@ -134,7 +134,7 @@ func (c *contextCommand) use(cmd *cobra.Command, args []string) error {
 	name := args[0]
 	err := c.Config.SetContext(name)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	return nil
 }
@@ -147,7 +147,7 @@ func (c *contextCommand) current(cmd *cobra.Command, _ []string) error {
 func (c *contextCommand) get(cmd *cobra.Command, args []string) error {
 	context, err := c.context(cmd, args)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	return printer.RenderYAMLOut(context, nil, nil, cmd.OutOrStdout())
 }
@@ -155,12 +155,12 @@ func (c *contextCommand) get(cmd *cobra.Command, args []string) error {
 func (c *contextCommand) set(cmd *cobra.Command, args []string) error {
 	context, err := c.context(cmd, args)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	if cmd.Flags().Changed("kafka-cluster") {
 		clusterId, err := cmd.Flags().GetString("kafka-cluster")
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		return context.SetActiveKafkaCluster(cmd, clusterId)
 	}
@@ -171,7 +171,7 @@ func (c *contextCommand) delete(cmd *cobra.Command, args []string) error {
 	contextName := args[0]
 	err := c.Config.DeleteContext(contextName)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	return c.Config.Save()
 }
@@ -185,11 +185,11 @@ func (c *contextCommand) context(cmd *cobra.Command, args []string) (*pcmd.Dynam
 	} else {
 		context, err = c.Config.Context(cmd)
 		if context == nil {
-			err = errors.ErrNoContext
+			err = &errors.NoContextError{CLIName: c.Config.CLIName}
 		}
 	}
 	if err != nil {
-		return nil, errors.HandleCommon(err, cmd)
+		return nil, err
 	}
 	return context, nil
 }
