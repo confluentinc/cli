@@ -15,6 +15,8 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/confluentinc/cli/internal/pkg/errors"
+
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
 	sdkMock "github.com/confluentinc/ccloud-sdk-go/mock"
@@ -67,7 +69,7 @@ func TestCredentialsOverride(t *testing.T) {
 
 	output, err := pcmd.ExecuteCommand(loginCmd.Command)
 	req.NoError(err)
-	req.Contains(output, "Logged in as test-email")
+	req.Contains(output, fmt.Sprintf(errors.LoggedInAsMsg, "test-email"))
 	ctx := cfg.Context()
 	req.NotNil(ctx)
 
@@ -126,7 +128,7 @@ func TestLoginSuccess(t *testing.T) {
 		loginCmd, cfg := newLoginCmd(prompt, auth, user, s.cliName, req)
 		output, err := pcmd.ExecuteCommand(loginCmd.Command, s.args...)
 		req.NoError(err)
-		req.Contains(output, "Logged in as cody@confluent.io")
+		req.Contains(output, fmt.Sprintf(errors.LoggedInAsMsg, "cody@confluent.io"))
 		verifyLoggedInState(t, cfg, s.cliName)
 	}
 }
@@ -150,7 +152,8 @@ func TestLoginFail(t *testing.T) {
 	loginCmd, _ := newLoginCmd(prompt, auth, user, "ccloud", req)
 
 	_, err := pcmd.ExecuteCommand(loginCmd.Command)
-	req.Contains(err.Error(), "You have entered an incorrect username or password.")
+	req.Contains(err.Error(), errors.InvalidLoginErrorMsg)
+	errors.VerifyErrorAndSuggestions(req, err, errors.InvalidLoginErrorMsg, errors.CCloudInvalidLoginSuggestions)
 }
 
 func TestURLRequiredWithMDS(t *testing.T) {
@@ -175,7 +178,7 @@ func TestLogout(t *testing.T) {
 	logoutCmd, cfg := newLogoutCmd("ccloud", cfg)
 	output, err := pcmd.ExecuteCommand(logoutCmd.Command)
 	req.NoError(err)
-	req.Contains(output, "You are now logged out")
+	req.Contains(output, errors.LoggedOutMsg)
 	verifyLoggedOutState(t, cfg)
 }
 
@@ -319,7 +322,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 		// Login to the CLI control plane
 		output, err := pcmd.ExecuteCommand(loginCmd.Command, s.args...)
 		req.NoError(err)
-		req.Contains(output, "Logged in as cody@confluent.io")
+		req.Contains(output, fmt.Sprintf(errors.LoggedInAsMsg, "cody@confluent.io"))
 		verifyLoggedInState(t, cfg, s.cliName)
 
 		// Set kafka related states for the logged in context
@@ -331,13 +334,13 @@ func TestLoginWithExistingContext(t *testing.T) {
 		logoutCmd, _ := newLogoutCmd(cfg.CLIName, cfg)
 		output, err = pcmd.ExecuteCommand(logoutCmd.Command)
 		req.NoError(err)
-		req.Contains(output, "You are now logged out")
+		req.Contains(output, errors.LoggedOutMsg)
 		verifyLoggedOutState(t, cfg)
 
 		// logging back in the the same context
 		output, err = pcmd.ExecuteCommand(loginCmd.Command, s.args...)
 		req.NoError(err)
-		req.Contains(output, "Logged in as cody@confluent.io")
+		req.Contains(output, fmt.Sprintf(errors.LoggedInAsMsg, "cody@confluent.io"))
 		verifyLoggedInState(t, cfg, s.cliName)
 
 		// verify that kafka cluster info persists between logging back in again

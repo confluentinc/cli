@@ -16,15 +16,18 @@ import (
 	"testing"
 	"time"
 
+	"github.com/confluentinc/cli/internal/pkg/errors"
+
 	"github.com/chromedp/chromedp"
 
 	"github.com/confluentinc/cli/internal/pkg/auth"
 )
 
 var (
-	urlPlaceHolder       = "<URL_PLACEHOLDER>"
-	ccloudLoginOutput    = "Written credentials to file /tmp/netrc_test\nLogged in as good@user.com\nUsing environment a-595 (\"default\")\n"
-	confluentLoginOutput = "Written credentials to file /tmp/netrc_test\nLogged in as good@user.com\n"
+	urlPlaceHolder     = "<URL_PLACEHOLDER>"
+	savedToNetrcOutput = fmt.Sprintf(errors.WrittenCredentialsToNetrcMsg, "/tmp/netrc_test")
+	loggedInAsOutput   = fmt.Sprintf(errors.LoggedInAsMsg, "good@user.com")
+	loggedInEnvOutput  = fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default")
 )
 
 func (s *CLITestSuite) Test_Ccloud_Login_UseKafka_AuthKafka_Errors() {
@@ -93,17 +96,20 @@ func (s *CLITestSuite) Test_Save_Username_Password() {
 		cliName  string
 		want     string
 		loginURL string
+		bin      string
 	}
 	tests := []saveTest{
 		{
 			"ccloud",
 			"netrc-save-ccloud-username-password.golden",
 			serveLogin(t).URL,
+			ccloudTestBin,
 		},
 		{
 			"confluent",
 			"netrc-save-mds-username-password.golden",
 			serveMds(t).URL,
+			confluentTestBin,
 		},
 	}
 	_, callerFileName, _, ok := runtime.Caller(0)
@@ -119,18 +125,13 @@ func (s *CLITestSuite) Test_Save_Username_Password() {
 		s.NoError(err)
 
 		// run the login command with --save flag and check output
-		var bin string
-		var expectedOutput string
-		if tt.cliName == "ccloud" {
-			bin = ccloudTestBin
-			expectedOutput = ccloudLoginOutput
-		} else {
-			bin = confluentTestBin
-			expectedOutput = confluentLoginOutput
-		}
 		env := []string{"XX_CCLOUD_EMAIL=good@user.com", "XX_CCLOUD_PASSWORD=pass1"}
-		output := runCommand(t, bin, env, "login --save --url "+tt.loginURL, 0)
-		s.Equal(expectedOutput, output)
+		output := runCommand(t, tt.bin, env, "login --save --url "+tt.loginURL, 0)
+		s.Contains(output, savedToNetrcOutput)
+		s.Contains(output, loggedInAsOutput)
+		if tt.cliName == "ccloud" {
+			s.Contains(output, loggedInEnvOutput)
+		}
 
 		// check netrc file result
 		got, err := ioutil.ReadFile(auth.NetrcIntegrationTestFile)
@@ -152,6 +153,7 @@ func (s *CLITestSuite) Test_Update_Netrc_Password() {
 		cliName  string
 		want     string
 		loginURL string
+		bin      string
 	}
 	_, callerFileName, _, ok := runtime.Caller(0)
 	if !ok {
@@ -163,12 +165,14 @@ func (s *CLITestSuite) Test_Update_Netrc_Password() {
 			"ccloud",
 			"netrc-save-ccloud-username-password.golden",
 			serveLogin(t).URL,
+			ccloudTestBin,
 		},
 		{
 			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-old-password-mds"),
 			"confluent",
 			"netrc-save-mds-username-password.golden",
 			serveMds(t).URL,
+			confluentTestBin,
 		},
 	}
 	for _, tt := range tests {
@@ -180,18 +184,13 @@ func (s *CLITestSuite) Test_Update_Netrc_Password() {
 		s.NoError(err)
 
 		// run the login command with --save flag and check output
-		var bin string
-		var expectedOutput string
-		if tt.cliName == "ccloud" {
-			bin = ccloudTestBin
-			expectedOutput = ccloudLoginOutput
-		} else {
-			bin = confluentTestBin
-			expectedOutput = confluentLoginOutput
-		}
 		env := []string{"XX_CCLOUD_EMAIL=good@user.com", "XX_CCLOUD_PASSWORD=pass1"}
-		output := runCommand(t, bin, env, "login --save --url "+tt.loginURL, 0)
-		s.Equal(expectedOutput, output)
+		output := runCommand(t, tt.bin, env, "login --save --url "+tt.loginURL, 0)
+		s.Contains(output, savedToNetrcOutput)
+		s.Contains(output, loggedInAsOutput)
+		if tt.cliName == "ccloud" {
+			s.Contains(output, loggedInEnvOutput)
+		}
 
 		// check netrc file result
 		got, err := ioutil.ReadFile(auth.NetrcIntegrationTestFile)
@@ -247,7 +246,7 @@ func (s *CLITestSuite) Test_SSO_Login_And_Save() {
 			s.NoError(e)
 
 			scanner.Scan()
-			s.Equal("Logged in as "+ssoTestEmail, scanner.Text())
+			s.Equal(fmt.Sprintf(errors.LoggedInAsMsg, ssoTestEmail), scanner.Text()+"\n")
 		}
 	}()
 

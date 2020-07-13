@@ -5,6 +5,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/confluentinc/cli/internal/pkg/errors"
+
 	"github.com/hashicorp/go-multierror"
 
 	"github.com/spf13/cobra"
@@ -135,7 +137,7 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 func setResourcePattern(conf *ACLConfiguration, n, v string) {
 	/* Normalize the resource pattern name */
 	if conf.Pattern.ResourceType != schedv1.ResourceTypes_UNKNOWN {
-		conf.errors = multierror.Append(conf.errors, fmt.Errorf("exactly one of %v must be set",
+		conf.errors = multierror.Append(conf.errors, fmt.Errorf(errors.ExactlyOneSetErrorMsg,
 			listEnum(schedv1.ResourceTypes_ResourceType_name, []string{"ANY", "UNKNOWN"})))
 		return
 	}
@@ -181,5 +183,5 @@ func getACLOperation(operation string) (schedv1.ACLOperations_ACLOperation, erro
 	if operation, ok := schedv1.ACLOperations_ACLOperation_value[op]; ok {
 		return schedv1.ACLOperations_ACLOperation(operation), nil
 	}
-	return schedv1.ACLOperations_UNKNOWN, fmt.Errorf("Invalid operation value: %s", op)
+	return schedv1.ACLOperations_UNKNOWN, fmt.Errorf(errors.InvalidOperationValueErrorMsg, op)
 }

@@ -1,11 +1,10 @@
 package local
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 )
 
@@ -15,6 +14,7 @@ func NewDestroyCommand(prerunner cmd.PreRunner) *cobra.Command {
 			Use:   "destroy",
 			Args:  cobra.NoArgs,
 			Short: "Delete the data and logs for the current Confluent run.",
+			Long:  "Delete an existing Confluent Platform run. All running services are stopped and the data and the log files of all services are deleted.",
 			Example: examples.BuildExampleString(
 				examples.Example{
 					Desc: "If you run the ``confluent local destroy`` command, your output will confirm that every service is stopped and the deleted filesystem path is printed:",
@@ -23,13 +23,13 @@ func NewDestroyCommand(prerunner cmd.PreRunner) *cobra.Command {
 			),
 		}, prerunner)
 
-	c.Command.RunE = c.runDestroyCommand
+	c.Command.RunE = cmd.NewCLIRunE(c.runDestroyCommand)
 	return c.Command
 }
 
 func (c *Command) runDestroyCommand(command *cobra.Command, _ []string) error {
 	if !c.cc.HasTrackingFile() {
-		return fmt.Errorf("nothing to destroy")
+		return errors.New(errors.NothingToDestroyErrorMsg)
 	}
 
 	if err := c.runServicesStopCommand(command, []string{}); err != nil {
@@ -41,7 +41,7 @@ func (c *Command) runDestroyCommand(command *cobra.Command, _ []string) error {
 		return err
 	}
 
-	command.Printf("Deleting: %s\n", dir)
+	command.Printf(errors.DestroyDeletingMsg, dir)
 	if err := c.cc.RemoveCurrentDir(); err != nil {
 		return err
 	}

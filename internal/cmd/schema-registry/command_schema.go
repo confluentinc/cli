@@ -65,7 +65,7 @@ Where schemafilepath may include these contents:
 - For more information on schema references, see
   https://docs.confluent.io/current/schema-registry/serdes-develop/index.html#schema-references.
 `, cliName),
-		RunE: c.create,
+		RunE: pcmd.NewCLIRunE(c.create),
 		Args: cobra.NoArgs,
 	}
 	RequireSubjectFlag(cmd)
@@ -86,7 +86,7 @@ Delete one or more topics. This command should only be used in extreme circumsta
 ::
 
 		{{.CLIName}} schema-registry schema delete --subject payments --version latest`, cliName),
-		RunE: c.delete,
+		RunE: pcmd.NewCLIRunE(c.delete),
 		Args: cobra.NoArgs,
 	}
 	RequireSubjectFlag(cmd)
@@ -113,7 +113,7 @@ Describe the schema by both subject and version
 		{{.CLIName}} schema-registry describe --subject payments --version latest
 `, cliName),
 		PreRunE: c.preDescribe,
-		RunE:    c.describe,
+		RunE:    pcmd.NewCLIRunE(c.describe),
 		Args:    cobra.MaximumNArgs(1),
 	}
 	cmd.Flags().StringP("subject", "S", "", SubjectUsage)
@@ -166,14 +166,15 @@ func (c *schemaCommand) create(cmd *cobra.Command, _ []string) error {
 	}
 	outputFormat, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	if outputFormat == output.Human.String() {
-		pcmd.Printf(cmd, "Successfully registered schema with ID: %v \n", response.Id)
+		pcmd.Println(cmd, errors.RegisteredSchemaMsg, response.Id)
 	} else {
-		return output.StructuredOutput(outputFormat, &struct {
+		err = output.StructuredOutput(outputFormat, &struct {
 			Id int32 `json:"id" yaml:"id"`
 		}{response.Id})
+		return err
 	}
 	return nil
 }
@@ -205,7 +206,7 @@ func (c *schemaCommand) delete(cmd *cobra.Command, _ []string) error {
 		if err != nil {
 			return err
 		}
-		pcmd.Println(cmd, "Successfully "+deleteType+" deleted all versions for subject")
+		pcmd.Printf(cmd, errors.DeletedAllSubjectVersionMsg, deleteType)
 		PrintVersions(versions)
 		return nil
 	} else {
@@ -214,7 +215,7 @@ func (c *schemaCommand) delete(cmd *cobra.Command, _ []string) error {
 		if err != nil {
 			return err
 		}
-		pcmd.Println(cmd, "Successfully "+deleteType+" deleted version for subject")
+		pcmd.Printf(cmd, errors.DeletedSubjectVersionMsg, deleteType, version)
 		PrintVersions([]int32{versionResult})
 		return nil
 	}
@@ -232,9 +233,9 @@ func (c *schemaCommand) preDescribe(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(args) > 0 && (subject != "" || version != "") {
-		return fmt.Errorf("Cannot specify both schema ID and subject/version")
+		return errors.New(errors.BothSchemaAndSubjectErrorMsg)
 	} else if len(args) == 0 && (subject == "" || version == "") {
-		return fmt.Errorf("Must specify either schema ID or subject and version")
+		return errors.New(errors.SchemaOrSubjectErrorMsg)
 	}
 	return nil
 }
@@ -254,7 +255,7 @@ func (c *schemaCommand) describeById(cmd *cobra.Command, args []string) error {
 	}
 	schema, err := strconv.Atoi(args[0])
 	if err != nil {
-		return fmt.Errorf("unexpected argument: Must be an integer Schema ID")
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.SchemaIntegerErrorMsg, args[0]), errors.SchemaIntegerSuggestions)
 	}
 	schemaString, _, err := srClient.DefaultApi.GetSchema(ctx, int32(schema), nil)
 	if err != nil {

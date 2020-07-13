@@ -4,8 +4,8 @@ Usage:
 
 Flags:
       --resource string   REQUIRED: The resource ID.
-  -h, --help              help for use
 
 Global Flags:
+  -h, --help            Show help for this command.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
 

@@ -10,6 +10,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/confluentinc/cli/internal/pkg/errors"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -88,13 +90,13 @@ func NewPrivateRepo(params *PrivateRepoParams) (*PrivateRepo, error) {
 func validate(params *PrivateRepoParams) error {
 	var err *multierror.Error
 	if params.S3BinRegion == "" {
-		err = multierror.Append(err, fmt.Errorf("missing required parameter: S3BinRegion"))
+		err = multierror.Append(err, errors.Errorf(errors.MissingRequiredParamErrorMsg, "S3BinRegion"))
 	}
 	if params.S3BinBucket == "" {
-		err = multierror.Append(err, fmt.Errorf("missing required parameter: S3BinBucket"))
+		err = multierror.Append(err, errors.Errorf(errors.MissingRequiredParamErrorMsg, "S3BinBucket"))
 	}
 	if params.S3BinPrefix == "" {
-		err = multierror.Append(err, fmt.Errorf("missing required parameter: S3BinPrefix"))
+		err = multierror.Append(err, errors.Errorf(errors.MissingRequiredParamErrorMsg, "S3BinPrefix"))
 	}
 	return err.ErrorOrNil()
 }
@@ -105,7 +107,7 @@ func (r *PrivateRepo) GetAvailableVersions(name string) (version.Collection, err
 		Prefix: aws.String(r.S3BinPrefix + "/"),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("error listing s3 bucket %s", err)
+		return nil, errors.Wrap(err, errors.ListingS3BucketErrorMsg)
 	}
 
 	var availableVersions version.Collection
@@ -121,7 +123,7 @@ func (r *PrivateRepo) GetAvailableVersions(name string) (version.Collection, err
 	}
 
 	if len(availableVersions) <= 0 {
-		return nil, fmt.Errorf("no versions found, that's pretty weird")
+		return nil, errors.New(errors.NoVersionsErrorMsg)
 	}
 
 	sort.Sort(availableVersions)
@@ -165,17 +167,17 @@ func getCredentials(cf credsFactory, allProfiles []string) (*credentials.Credent
 		profileCreds := credentials.NewCredentials(cf.newProvider(profile))
 		val, err := profileCreds.Get()
 		if err != nil {
-			allErrors = multierror.Append(allErrors, fmt.Errorf("error while finding creds: %s", err))
+			allErrors = multierror.Append(allErrors, errors.Wrap(err, errors.FindingCredsErrorMsg))
 			continue
 		}
 
 		if val.AccessKeyID == "" {
-			allErrors = multierror.Append(allErrors, fmt.Errorf("error: access key id is empty for %s", profile))
+			allErrors = multierror.Append(allErrors, errors.Errorf(errors.EmptyAccessKeyIDErrorMsg, profile))
 			continue
 		}
 
 		if profileCreds.IsExpired() {
-			allErrors = multierror.Append(allErrors, fmt.Errorf("error: aws creds in profile %s are expired", profile))
+			allErrors = multierror.Append(allErrors, errors.Errorf(errors.AWSCredsExpiredErrorMsg, profile))
 			continue
 		}
 
@@ -192,7 +194,7 @@ func getCredentials(cf credsFactory, allProfiles []string) (*credentials.Credent
 func formatError(profiles []string, origErrors error) error {
 	var newErrors *multierror.Error
 	if e, ok := (origErrors).(*multierror.Error); ok {
-		newErrors = multierror.Append(newErrors, fmt.Errorf("failed to find aws credentials in profiles: %s",
+		newErrors = multierror.Append(newErrors, errors.Errorf(errors.FindAWSCredsErrorMsg,
 			strings.Join(profiles, ", ")),
 		)
 		for _, errMsg := range e.Errors {
@@ -217,7 +219,7 @@ func formatError(profiles []string, origErrors error) error {
 				2019/01/17 09:27:12   error while finding creds: SharedCredsLoad: failed to get profile caused by: section 'default' does not exist
 				2019/01/17 09:27:12 Checking for updates...
 			*/
-			newErrors = multierror.Append(newErrors, fmt.Errorf("  %s", strings.ReplaceAll(errMsg.Error(), "\n", " ")))
+			newErrors = multierror.Append(newErrors, errors.Errorf("  %s", strings.ReplaceAll(errMsg.Error(), "\n", " ")))
 		}
 	}
 	return newErrors.ErrorOrNil()

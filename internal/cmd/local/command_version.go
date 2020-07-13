@@ -14,7 +14,7 @@ func NewVersionCommand(prerunner cmd.PreRunner) *cobra.Command {
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
-	c.Command.RunE = c.runVersionCommand
+	c.Command.RunE = cmd.NewCLIRunE(c.runVersionCommand)
 	return c.Command
 }
 
