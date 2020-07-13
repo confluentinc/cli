@@ -24,13 +24,13 @@ Suggestions format. Suggestion message is not required.
 - the variable name must end with *Suggestions*
 
 example:
-
+```
 > ./ccloud ksql app create kk --cluster lkc-asfdsaf
 Error: Kafka cluster "lkc-asfdsaf" not found
 
 Suggestions:
     List Kafka clusters with `ccloud kafka cluster list`.
-
+```
 ```
 Error: no API key selected for resource "lkc-dvnr7"
 
@@ -40,14 +40,12 @@ Suggestions:
     To create an API key use `ccloud api-key create --resource lkc-dvnr7`.
     To store an existing API key use `ccluod api-key store --resource lkc-dvnr7`.
 ```
-
 ```
 Error: Kafka cluster "lkc-yydnp" not ready
 
 Suggestions:
     It may take up to 5 minutes for a recently created Kafka cluster to be ready.
 ```
-
 
 
 There are four ways to create errors for the CLI. Note that all error messages will be defined in [error_message.go](internal/pkg/errors/error_message.go) file.
