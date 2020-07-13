@@ -68,6 +68,8 @@ const (
 	InvalidResourceTypeErrorMsg     = "invalid resource type \"%s\""
 	InvalidResourceTypeSuggestions  = "The available resource types are: %s"
 	SpecifyKafkaIDErrorMsg          = "must also specify a --kafka-cluster-id to uniquely identify the scope"
+	SpecifyCloudClusterErrorMsg     = "Must specify cloud-cluster flag to indicate role binding scope."
+	SpecifyEnvironmentErrorMsg      = "Must specify environment flag to indicate role binding scope"
 	BothClusterNameAndScopeErrorMsg = "cannot specify both cluster name and cluster scope"
 	SpecifyClusterErrorMsg          = "must specify either cluster ID to indicate role binding scope or the cluster name"
 	MoreThanOneNonKafkaErrorMsg     = "cannot specify more than one non-Kafka cluster ID for a scope"

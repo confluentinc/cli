@@ -327,18 +327,18 @@ func (c *rolebindingCommand) parseAndValidateScopeV2(cmd *cobra.Command) (*mdsv2
 	if cmd.Flags().Changed("role") {
 		role, err := cmd.Flags().GetString("role")
 		if err != nil {
-			return nil, errors.HandleCommon(err, cmd)
+			return nil, err
 		}
 		if clusterScopedRolesV2[role] && !cmd.Flags().Changed("cloud-cluster") {
-			return nil, errors.HandleCommon(errors.New("Must specify cloud-cluster flag to indicate role binding scope."), cmd)
+			return nil, errors.New(errors.SpecifyCloudClusterErrorMsg)
 		}
 		if (environmentScopedRoles[role] || clusterScopedRolesV2[role]) && !cmd.Flags().Changed("environment") {
-			return nil, errors.HandleCommon(errors.New("Must specify environment flag to indicate role binding scope"), cmd)
+			return nil, errors.New(errors.SpecifyEnvironmentErrorMsg)
 		}
 	}
 
 	if cmd.Flags().Changed("cloud-cluster") && !cmd.Flags().Changed("environment") {
-		return nil, errors.HandleCommon(errors.New("Must also specify environment flag to indicate role binding scope"), cmd)
+		return nil, errors.New(errors.SpecifyCloudClusterErrorMsg)
 	}
 	return scopeV2, nil
 }
@@ -456,7 +456,7 @@ func (c *rolebindingCommand) ccloudList(cmd *cobra.Command, options *rolebinding
 	} else if cmd.Flags().Changed("role") {
 		return c.ccloudListRolePrincipals(cmd, options)
 	} else {
-		return errors.HandleCommon(errors.New("required: either principal or role is required"), cmd)
+		return errors.New(errors.PrincipalOrRoleRequiredErrorMsg)
 	}
 }
 
@@ -606,7 +606,7 @@ func (c *rolebindingCommand) confluentListRolePrincipals(cmd *cobra.Command, opt
 	sort.Strings(principals)
 	outputWriter, err := output.NewListOutputWriter(cmd, []string{"Principal"}, []string{"Principal"}, []string{"principal"})
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	for _, principal := range principals {
 		displayStruct := &struct {
@@ -628,7 +628,7 @@ func (c *rolebindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, option
 		role,
 		*scopeV2)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	sort.Strings(principals)
@@ -746,7 +746,7 @@ func (c *rolebindingCommand) ccloudCreate(options *rolebindingOptions) (*http.Re
 func (c *rolebindingCommand) create(cmd *cobra.Command, _ []string) error {
 	options, err := c.parseCommon(cmd)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	var resp *http.Response
@@ -795,7 +795,7 @@ func (c *rolebindingCommand) ccloudDelete(options *rolebindingOptions) (*http.Re
 func (c *rolebindingCommand) delete(cmd *cobra.Command, _ []string) error {
 	options, err := c.parseCommon(cmd)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	var resp *http.Response

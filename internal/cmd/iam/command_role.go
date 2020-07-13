@@ -110,18 +110,18 @@ func (c *roleCommand) confluentList(cmd *cobra.Command) error {
 func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
 	rolesV2, _, err := c.MDSv2Client.RBACRoleDefinitionsApi.Roles(c.createContext())
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	format, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	if format == output.Human.String() {
 		var data [][]string
 		for _, role := range rolesV2 {
 			roleDisplay, err := createPrettyRoleV2(role)
 			if err != nil {
-				return errors.HandleCommon(err, cmd)
+				return err
 			}
 			data = append(data, printer.ToRow(roleDisplay, roleFields))
 		}
@@ -181,26 +181,26 @@ func (c *roleCommand) ccloudDescribe(cmd *cobra.Command, role string) error {
 		if r.StatusCode == http.StatusNotFound {
 			availableRoleNames, _, err := c.MDSv2Client.RBACRoleDefinitionsApi.Rolenames(c.createContext())
 			if err != nil {
-				return errors.HandleCommon(err, cmd)
+				return err
 			}
 
 			cmd.SilenceUsage = true
 			return fmt.Errorf("Unknown role specified.  Role should be one of %s", strings.Join(availableRoleNames, ", "))
 		}
 
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	format, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	if format == output.Human.String() {
 		var data [][]string
 		roleDisplay, err := createPrettyRoleV2(details)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		data = append(data, printer.ToRow(roleDisplay, roleFields))
 		outputTable(data)
