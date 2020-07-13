@@ -78,7 +78,7 @@ type CLITypedError interface {
 	UserFacingError() error
 }
 ```
-    See [typed.go](internal/pkg/errors/typed.go) for examples and interface definition.
+  See [typed.go](internal/pkg/errors/typed.go) for examples and interface definition.
 
 4. For important errors that are thrown by external packages that need to be caught translated, define a catcher in [catcher.go](internal/pkg/errors/catcher.go). The catcher can then be either inserted anyhwere in the CLI repo, or simply in `handleErrors` function in [handle.go](internal/pkg/errors/handle.go).
 
