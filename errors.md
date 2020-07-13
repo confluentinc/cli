@@ -80,7 +80,7 @@ type CLITypedError interface {
 ```
   See [typed.go](internal/pkg/errors/typed.go) for examples and interface definition.
 
-4. For important errors that are thrown by external packages that need to be caught translated, define a catcher in [catcher.go](internal/pkg/errors/catcher.go). The catcher can then be either inserted anyhwere in the CLI repo, or simply in `handleErrors` function in [handle.go](internal/pkg/errors/handle.go).
+4. For important errors that are thrown by external packages that need to be caught and translated, define a catcher in [catcher.go](internal/pkg/errors/catcher.go). The catcher can then be either inserted anyhwere in the CLI repo, or simply in `handleErrors` function in [handle.go](internal/pkg/errors/handle.go).
 
 ## HandleCommon
 `errors.HandleCommon` is called for every cobra RunE or PrerunE command, to handle common logic required for all errors, including turning off the usage message. This is done under the hood when defining new CLI RunE and PrerunE with `cmd.NewCLIRunE` and `cmd.NewCLIPrerunE` intializers.
