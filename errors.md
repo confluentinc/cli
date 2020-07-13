@@ -1,4 +1,4 @@
-Errors And Messages Handling
+#Errors And Messages Handling
 
 The CLI codebase stores the strings of all messages in one location, the errors package [internal/pkg/errors](internal/pkg/errors). This encompasses all kinds of communication with the users, whether it be error messages, or message indicating success (e.g. successfully deleting a Kafak cluster). The goal is to ease the verification of consistency and correctness of messages, and for future work in internationalizing the CLI.
 
