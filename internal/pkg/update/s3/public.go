@@ -71,7 +71,7 @@ func NewPublicRepo(params *PublicRepoParams) *PublicRepo {
 func (r *PublicRepo) GetLatestBinaryVersion(name string) (*version.Version, error) {
 	availableVersions, err := r.GetAvailableBinaryVersions(name)
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable to get available binary versions")
+		return nil, errors.Wrapf(err, errors.GetBinaryVersionsErrorMsg)
 	}
 	return availableVersions[len(availableVersions)-1], nil
 }
@@ -86,7 +86,7 @@ func (r *PublicRepo) GetAvailableBinaryVersions(name string) (version.Collection
 		return nil, err
 	}
 	if len(availableVersions) <= 0 {
-		return nil, fmt.Errorf("no versions found")
+		return nil, errors.New(errors.NoVersionsErrorMsg)
 	}
 	return availableVersions, nil
 }
@@ -131,7 +131,7 @@ func (r *PublicRepo) getMatchedBinaryVersionsFromListBucketResult(result *ListBu
 func (r *PublicRepo) GetLatestReleaseNotesVersion() (*version.Version, error) {
 	availableVersions, err := r.GetAvailableReleaseNotesVersions()
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable to get available release notes versions")
+		return nil, errors.Wrapf(err, errors.GetReleaseNotesVersionsErrorMsg)
 	}
 	return availableVersions[len(availableVersions)-1], nil
 }
@@ -146,7 +146,7 @@ func (r *PublicRepo) GetAvailableReleaseNotesVersions() (version.Collection, err
 		return nil, err
 	}
 	if len(availableVersions) <= 0 {
-		return nil, fmt.Errorf("no versions found")
+		return nil, errors.New(errors.NoVersionsErrorMsg)
 	}
 	return availableVersions, nil
 }
@@ -232,7 +232,7 @@ func (r *PublicRepo) getHttpResponse(url string) (*http.Response, error) {
 		if err == nil {
 			r.Logger.Tracef("Response from AWS: %s", string(body))
 		}
-		return nil, errors.Errorf("received unexpected response from S3: %s", resp.Status)
+		return nil, errors.Errorf(errors.UnexpectedS3ResponseErrorMsg, resp.Status)
 	}
 	return resp, nil
 }

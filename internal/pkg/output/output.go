@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/confluentinc/go-printer"
 	"github.com/go-yaml/yaml"
@@ -25,7 +26,7 @@ const (
 )
 
 var (
-	InvalidFormatString = "Invalid output format type '%s'."
+	allFormatStrings = []string{humanString, jsonString, yamlString}
 )
 
 type Format int
@@ -37,7 +38,7 @@ const (
 )
 
 func (o Format) String() string {
-	return [...]string{humanString, jsonString, yamlString}[o]
+	return allFormatStrings[o]
 }
 
 type ListOutputWriter interface {
@@ -54,40 +55,42 @@ func NewListOutputWriter(cmd *cobra.Command, listFields []string, humanLabels []
 func NewListOutputCustomizableWriter(cmd *cobra.Command, listFields []string, humanLabels []string, structuredLabels []string, writer io.Writer) (ListOutputWriter, error) {
 	format, err := cmd.Flags().GetString(FlagName)
 	if err != nil {
-		return nil, errors.HandleCommon(err, cmd)
+		return nil, err
 	}
-	if format == JSON.String() {
+	switch format {
+	case JSON.String():
 		return &StructuredListWriter{
 			outputFormat: JSON,
 			listFields:   listFields,
 			listLabels:   structuredLabels,
 			writer:       writer,
 		}, nil
-	} else if format == YAML.String() {
+	case YAML.String():
 		return &StructuredListWriter{
 			outputFormat: YAML,
 			listFields:   listFields,
 			listLabels:   structuredLabels,
 			writer:       writer,
 		}, nil
-	} else if format == Human.String() {
+	case Human.String():
 		return &HumanListWriter{
 			outputFormat: Human,
 			listFields:   listFields,
 			listLabels:   humanLabels,
 			writer:       writer,
 		}, nil
+	default:
+		return nil, newInvalidOutputFormatFlagError(format)
 	}
-	return nil, fmt.Errorf(InvalidFormatString, format)
 }
 
 func DescribeObject(cmd *cobra.Command, obj interface{}, fields []string, humanRenames, structuredRenames map[string]string) error {
 	format, err := cmd.Flags().GetString(FlagName)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	if !(format == Human.String() || format == JSON.String() || format == YAML.String()) {
-		return fmt.Errorf(InvalidFormatString, format)
+		return newInvalidOutputFormatFlagError(format)
 	}
 	return printer.RenderOut(obj, fields, humanRenames, structuredRenames, format, os.Stdout)
 }
@@ -100,8 +103,14 @@ func StructuredOutput(format string, obj interface{}) error {
 	} else if format == YAML.String() {
 		b, _ = yaml.Marshal(obj)
 	} else {
-		return fmt.Errorf(InvalidFormatString, format)
+		return newInvalidOutputFormatFlagError(format)
 	}
 	_, err := fmt.Fprintf(os.Stdout, string(b))
 	return err
+}
+
+func newInvalidOutputFormatFlagError(format string) error {
+	errorMsg := fmt.Sprintf(errors.InvalidFlagValueErrorMsg, format, FlagName)
+	suggestionsMsg := fmt.Sprintf(errors.InvalidFlagValueSuggestions, FlagName, strings.Join(allFormatStrings, ", "))
+	return errors.NewErrorWithSuggestions(errorMsg, suggestionsMsg)
 }

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 
@@ -37,6 +38,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/config/load"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	pfeedback "github.com/confluentinc/cli/internal/pkg/feedback"
 	"github.com/confluentinc/cli/internal/pkg/help"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -81,8 +83,10 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		cli.Short = "Confluent CLI."
 		cli.Long = "Manage your Confluent Platform."
 	}
-	cli.PersistentFlags().CountP("verbose", "v",
-		"Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).")
+
+	cli.PersistentFlags().BoolP("help", "h", false, "Show help for this command.")
+	cli.PersistentFlags().CountP("verbose", "v", "Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).")
+	cli.Flags().Bool("version", false, fmt.Sprintf("Show version of %s.", cliName))
 
 	prompt := pcmd.NewPrompt(os.Stdin)
 
@@ -172,8 +176,8 @@ func isAPIKeyCredential(cfg *v3.Config) bool {
 func (c *Command) Execute(cliName string, args []string) error {
 	c.Analytics.SetStartTime()
 	c.Command.SetArgs(args)
-
 	err := c.Command.Execute()
+	errors.DisplaySuggestionsMessage(err, os.Stdout)
 	c.sendAndFlushAnalytics(args, err)
 	pfeedback.HandleFeedbackNudge(cliName, args)
 	return err

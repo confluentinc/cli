@@ -73,6 +73,9 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 		{args: "api-key list --resource lkc-cool1", fixture: "apikey11.golden"},
 		{args: "api-key list --resource lkc-other1", fixture: "apikey44.golden"},
 
+		// store exists already error
+		{args: "api-key store UIAPIKEY101 @test/fixtures/input/UIAPISECRET101.txt --resource lkc-other1", fixture: "apikey-override-error.golden", wantErrCode: 1},
+
 		// store an api-key for ksql cluster (not yet supported)
 		//{args: "api-key store UIAPIKEY103 UIAPISECRET103 --resource lksqlc-ksql1", fixture: "empty.golden"},
 		//{args: "api-key list --resource lksqlc-ksql1", fixture: "apikey10.golden"},
@@ -129,8 +132,8 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 		// more errors
 		{args: "api-key use UIAPIKEY103", fixture: "apikey37.golden", wantErrCode: 1},
 		{args: "api-key create", fixture: "apikey38.golden", wantErrCode: 1},
-		{args: "api-key use UIAPIKEY103 --resource lkc-unknown", fixture: "apikey39.golden", wantErrCode: 1},
-		{args: "api-key create --resource lkc-unknown", fixture: "apikey39.golden", wantErrCode: 1},
+		{args: "api-key use UIAPIKEY103 --resource lkc-unknown", fixture: "apikey-resource-unknown-error.golden", wantErrCode: 1},
+		{args: "api-key create --resource lkc-unknown", fixture: "apikey-resource-unknown-error.golden", wantErrCode: 1},
 	}
 	resetConfiguration(s.T(), "ccloud")
 	for _, tt := range tests {

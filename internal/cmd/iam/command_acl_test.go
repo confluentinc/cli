@@ -2,6 +2,7 @@ package iam
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"testing"
 
@@ -344,7 +345,6 @@ func (suite *ACLTestSuite) TestMdsListPrincipalFilterACL() {
 }
 
 func (suite *ACLTestSuite) TestMdsMultipleResourceACL() {
-	expect := "exactly one of cluster-scope, consumer-group, topic, transactional-id must be set"
 	args := []string{"acl", "create", "--kafka-cluster-id", "testcluster",
 		"--allow", "--operation", "read", "--principal", "User:42",
 		"--topic", "resource1", "--consumer-group", "resource2"}
@@ -354,6 +354,7 @@ func (suite *ACLTestSuite) TestMdsMultipleResourceACL() {
 
 	err := cmd.Execute()
 	assert.NotNil(suite.T(), err)
+	expect := fmt.Sprintf(errors.ExactlyOneSetErrorMsg, "cluster-scope, consumer-group, topic, transactional-id")
 	assert.Contains(suite.T(), err.Error(), expect)
 }
 
@@ -435,7 +436,8 @@ func (suite *ACLTestSuite) TestMdsHandleErrorNotLoggedIn() {
 		}()
 		err := cmd.Execute()
 		assert.NotNil(suite.T(), err)
-		assert.Contains(suite.T(), err.Error(), errors.HandleCommon(errors.ErrNotLoggedIn, cmd).Error())
+		expectedError := (&errors.NotLoggedInError{CLIName: suite.conf.CLIName}).UserFacingError()
+		assert.Equal(suite.T(), errors.GetErrorStringWithSuggestions(expectedError), errors.GetErrorStringWithSuggestions(err))
 	}
 	suite.conf.CurrentContext = oldContext
 }

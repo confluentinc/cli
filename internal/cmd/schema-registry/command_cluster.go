@@ -63,7 +63,7 @@ func (c *clusterCommand) init(cliName string) {
 		Use:     "enable",
 		Short:   `Enable Schema Registry for this environment.`,
 		Example: FormatDescription(`{{.CLIName}} schema-registry cluster enable --cloud gcp --geo us`, cliName),
-		RunE:    c.enable,
+		RunE:    pcmd.NewCLIRunE(c.enable),
 		Args:    cobra.NoArgs,
 	}
 	createCmd.Flags().String("cloud", "", "Cloud provider (e.g. 'aws', 'azure', or 'gcp').")
@@ -77,7 +77,7 @@ func (c *clusterCommand) init(cliName string) {
 		Use:     "describe",
 		Short:   `Describe the Schema Registry cluster for this environment.`,
 		Example: FormatDescription(`{{.CLIName}} schema-registry cluster describe`, cliName),
-		RunE:    c.describe,
+		RunE:    pcmd.NewCLIRunE(c.describe),
 		Args:    cobra.NoArgs,
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
@@ -91,7 +91,7 @@ func (c *clusterCommand) init(cliName string) {
 ::
 		{{.CLIName}} schema-registry cluster update --compatibility=BACKWARD
 		{{.CLIName}} schema-registry cluster update --mode=READWRITE`, cliName),
-		RunE: c.update,
+		RunE: pcmd.NewCLIRunE(c.update),
 		Args: cobra.NoArgs,
 	}
 	updateCmd.Flags().String("compatibility", "", "Can be BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, or NONE.")
@@ -105,11 +105,11 @@ func (c *clusterCommand) enable(cmd *cobra.Command, _ []string) error {
 	// Collect the parameters
 	serviceProvider, err := cmd.Flags().GetString("cloud")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	locationFlag, err := cmd.Flags().GetString("geo")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	// Trust the API will handle CCP/CCE
@@ -131,7 +131,7 @@ func (c *clusterCommand) enable(cmd *cobra.Command, _ []string) error {
 		cluster, getExistingErr := c.Context.SchemaRegistryCluster(cmd)
 		if getExistingErr != nil {
 			// Propagate CreateSchemaRegistryCluster error.
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		_ = output.DescribeObject(cmd, cluster, enableLabels, enableHumanRenames, enableStructuredRenames)
 	} else {
@@ -156,12 +156,12 @@ func (c *clusterCommand) describe(cmd *cobra.Command, _ []string) error {
 	ctxClient := pcmd.NewContextClient(c.Context)
 	cluster, err := ctxClient.FetchSchemaRegistryByAccountId(ctx, c.EnvironmentId())
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	//Retrieve SR compatibility and Mode if API key is set up in user's config.json file
 	srClusterHasAPIKey, err := c.Context.CheckSchemaRegistryHasAPIKey(cmd)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	if srClusterHasAPIKey {
 		srClient, ctx, err = GetApiClient(cmd, c.srClient, c.Config, c.Version)
@@ -218,7 +218,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, _ []string) error {
 func (c *clusterCommand) update(cmd *cobra.Command, _ []string) error {
 	compat, err := cmd.Flags().GetString("compatibility")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	if compat != "" {
 		return c.updateCompatibility(cmd)
@@ -226,12 +226,12 @@ func (c *clusterCommand) update(cmd *cobra.Command, _ []string) error {
 
 	mode, err := cmd.Flags().GetString("mode")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	if mode != "" {
 		return c.updateMode(cmd)
 	}
-	return errors.New("flag --compatibility or --mode is required.")
+	return errors.New(errors.CompatibilityOrModeErrorMsg)
 }
 
 func (c *clusterCommand) updateCompatibility(cmd *cobra.Command) error {
@@ -248,7 +248,7 @@ func (c *clusterCommand) updateCompatibility(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	pcmd.Printf(cmd, "Successfully updated Top Level compatibilty: %s \n", updateReq.Compatibility)
+	pcmd.Printf(cmd, errors.UpdatedToLevelCompatibilityMsg, updateReq.Compatibility)
 	return nil
 }
 
@@ -265,6 +265,6 @@ func (c *clusterCommand) updateMode(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	pcmd.Printf(cmd, "Successfully updated Top Level mode: %s \n", modeUpdate.Mode)
+	pcmd.Printf(cmd, errors.UpdatedTopLevelModeMsg, modeUpdate.Mode)
 	return nil
 }

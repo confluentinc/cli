@@ -58,16 +58,16 @@ func (a *loginCommand) init(cliName string, prerunner pcmd.PreRunner) {
 		Short: fmt.Sprintf("Log in to %s.", remoteAPIName),
 		Long:  fmt.Sprintf("Log in to %s.", remoteAPIName),
 		Args:  cobra.NoArgs,
-		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		PersistentPreRunE: pcmd.NewCLIPreRunnerE(func(cmd *cobra.Command, args []string) error {
 			a.analyticsClient.SetCommandType(analytics.Login)
 			return a.CLICommand.PersistentPreRunE(cmd, args)
-		},
+		}),
 	}
 	if cliName == "ccloud" {
-		loginCmd.RunE = a.login
+		loginCmd.RunE = pcmd.NewCLIRunE(a.login)
 		loginCmd.Flags().String("url", "https://confluent.cloud", "Confluent Cloud service URL.")
 	} else {
-		loginCmd.RunE = a.loginMDS
+		loginCmd.RunE = pcmd.NewCLIRunE(a.loginMDS)
 		loginCmd.Flags().String("url", "", "Metadata service URL.")
 		loginCmd.Flags().String("ca-cert-path", "", "Self-signed certificate chain in PEM format.")
 		loginCmd.Short = strings.ReplaceAll(loginCmd.Short, ".", " (required for RBAC).")
@@ -108,17 +108,18 @@ func (a *loginCommand) login(cmd *cobra.Command, _ []string) error {
 
 	token, refreshToken, err := pauth.GetCCloudAuthToken(client, url, email, password, noBrowser, a.Logger)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		err = errors.CatchEmailNotFoundError(err, email)
+		return err
 	}
 
 	client = a.jwtHTTPClientFactory(context.Background(), token, url, a.Config.Logger)
 	user, err := client.Auth.User(context.Background())
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	if len(user.Accounts) == 0 {
-		return errors.HandleCommon(errors.New("No environments found for authenticated user!"), cmd)
+		return errors.Errorf(errors.NoEnvironmentFoundErrorMsg)
 	}
 	username := user.User.Email
 	name := generateContextName(username, url)
@@ -161,7 +162,7 @@ func (a *loginCommand) login(cmd *cobra.Command, _ []string) error {
 	}
 	err = a.Config.Save()
 	if err != nil {
-		return errors.Wrap(err, "unable to save user authentication")
+		return errors.Wrap(err, errors.UnableToSaveUserAuthErrorMsg)
 	}
 
 	saveToNetrc, err := cmd.Flags().GetBool("save")
@@ -175,9 +176,8 @@ func (a *loginCommand) login(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	pcmd.Println(cmd, "Logged in as", email)
-	pcmd.Print(cmd, "Using environment ", state.Auth.Account.Id,
-		" (\"", state.Auth.Account.Name, "\")\n")
+	pcmd.Printf(cmd, errors.LoggedInAsMsg, email)
+	pcmd.Printf(cmd, errors.LoggedInUsingEnvMsg, state.Auth.Account.Id, state.Auth.Account.Name)
 	return err
 }
 
@@ -188,7 +188,7 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 	}
 	email, password, err := a.credentials(cmd, "Username", nil)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	dynamicContext, err := a.Config.Context(cmd)
 	if err != nil {
@@ -201,20 +201,20 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 	flagChanged := cmd.Flags().Changed("ca-cert-path")
 	caCertPath, err := cmd.Flags().GetString("ca-cert-path")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	mdsClient, err := a.MDSClientManager.GetMDSClient(ctx, caCertPath, flagChanged, url, a.Logger)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	authToken, err := pauth.GetConfluentAuthToken(mdsClient, email, password)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	basicContext := context.WithValue(context.Background(), mds.ContextBasicAuth, mds.BasicAuth{UserName: email, Password: password})
 	_, _, err = mdsClient.TokensAndAuthenticationApi.GetToken(basicContext)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	state := &v2.ContextState{
 		Auth:      nil,
@@ -234,7 +234,7 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 			return err
 		}
 	}
-	pcmd.Println(cmd, "Logged in as", email)
+	pcmd.Printf(cmd, errors.LoggedInAsMsg, email)
 	return nil
 }
 
@@ -340,7 +340,7 @@ func (a *loginCommand) saveToNetrc(cmd *cobra.Command, email, password, refreshT
 	if err != nil {
 		return err
 	}
-	pcmd.ErrPrintf(cmd, "Written credentials to file %s\n", a.netrcHandler.FileName)
+	pcmd.ErrPrintf(cmd, errors.WrittenCredentialsToNetrcMsg, a.netrcHandler.FileName)
 	return nil
 }
 

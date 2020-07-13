@@ -21,7 +21,8 @@ Available Commands:
   version         Print the confluent CLI version.
 
 Flags:
-  -h, --help            help for confluent
+  -h, --help            Show help for this command.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+      --version         Show version of confluent.
 
 Use "confluent [command] --help" for more information about a command.

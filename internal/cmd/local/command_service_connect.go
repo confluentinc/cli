@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/confluentinc/cli/internal/pkg/errors"
+
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
@@ -64,7 +66,7 @@ func NewConnectConnectorConfigCommand(prerunner cmd.PreRunner) *cobra.Command {
 			),
 		}, prerunner)
 
-	c.Command.RunE = c.runConnectConnectorConfigCommand
+	c.Command.RunE = cmd.NewCLIRunE(c.runConnectConnectorConfigCommand)
 	c.Flags().StringP("config", "c", "", "Configuration file for a connector.")
 	return c.Command
 }
@@ -135,7 +137,7 @@ func NewConnectConnectorStatusCommand(prerunner cmd.PreRunner) *cobra.Command {
 			Args:  cobra.MaximumNArgs(1),
 		}, prerunner)
 
-	c.Command.RunE = c.runConnectConnectorStatusCommand
+	c.Command.RunE = cmd.NewCLIRunE(c.runConnectConnectorStatusCommand)
 	return c.Command
 }
 
@@ -199,7 +201,7 @@ func NewConnectConnectorLoadCommand(prerunner cmd.PreRunner) *cobra.Command {
 			),
 		}, prerunner)
 
-	c.Command.RunE = c.runConnectConnectorLoadCommand
+	c.Command.RunE = cmd.NewCLIRunE(c.runConnectConnectorLoadCommand)
 	c.Flags().StringP("config", "c", "", "Configuration file for a connector.")
 	return c.Command
 }
@@ -228,7 +230,7 @@ func (c *Command) runConnectConnectorLoadCommand(command *cobra.Command, args []
 			return err
 		}
 		if configFile == "" {
-			return fmt.Errorf("invalid connector: %s", connector)
+			return fmt.Errorf(errors.InvalidConnectorErrorMsg, connector)
 		}
 	}
 
@@ -274,7 +276,7 @@ func NewConnectConnectorUnloadCommand(prerunner cmd.PreRunner) *cobra.Command {
 			),
 		}, prerunner)
 
-	c.Command.RunE = c.runConnectConnectorUnloadCommand
+	c.Command.RunE = cmd.NewCLIRunE(c.runConnectConnectorUnloadCommand)
 	return c.Command
 }
 
@@ -322,7 +324,7 @@ func NewConnectPluginListCommand(prerunner cmd.PreRunner) *cobra.Command {
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
-	c.Command.RunE = c.runConnectPluginListCommand
+	c.Command.RunE = cmd.NewCLIRunE(c.runConnectPluginListCommand)
 	return c.Command
 }
 
@@ -341,8 +343,7 @@ func (c *Command) runConnectPluginListCommand(command *cobra.Command, _ []string
 		return err
 	}
 
-	command.Println("Available Connect Plugins:")
-	command.Println(out)
+	command.Printf(errors.AvailableConnectPluginsMsg, out)
 	return nil
 }
 

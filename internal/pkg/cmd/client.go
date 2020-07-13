@@ -29,7 +29,7 @@ func (c *contextClient) FetchCluster(cmd *cobra.Command, clusterId string) (*sch
 	req := &schedv1.KafkaCluster{AccountId: envId, Id: clusterId}
 	kc, err := c.context.client.Kafka.Describe(context.Background(), req)
 	if err != nil {
-		return nil, err
+		return nil, errors.CatchKafkaNotFoundError(err, clusterId)
 	}
 	return kc, nil
 }
@@ -54,7 +54,9 @@ func (c *contextClient) FetchAPIKeyError(cmd *cobra.Command, apiKey string, clus
 	}
 	// this means the requested api-key belongs to a different cluster
 	if !found {
-		return fmt.Errorf("invalid api-key %s for cluster %s", apiKey, clusterID)
+		errorMsg := fmt.Sprintf(errors.InvalidAPIKeyErrorMsg, apiKey, clusterID)
+		suggestionsMsg := fmt.Sprintf(errors.InvalidAPIKeySuggestions, clusterID, clusterID, clusterID, clusterID)
+		return errors.NewErrorWithSuggestions(errorMsg, suggestionsMsg)
 	}
 	// this means the requested api-key exists, but we just don't have the secret saved locally
 	return &errors.UnconfiguredAPISecretError{APIKey: apiKey, ClusterID: clusterID}
@@ -71,7 +73,7 @@ func (c *contextClient) FetchSchemaRegistryByAccountId(context context.Context, 
 	if len(existingClusters) > 0 {
 		return existingClusters[0], nil
 	}
-	return nil, errors.ErrNoSrEnabled
+	return nil, errors.NewErrorWithSuggestions(errors.SRNotEnabledErrorMsg, errors.SRNotEnabledSuggestions)
 }
 
 func (c *contextClient) FetchSchemaRegistryById(context context.Context, id string, accountId string) (*schedv1.SchemaRegistryCluster, error) {
@@ -83,7 +85,7 @@ func (c *contextClient) FetchSchemaRegistryById(context context.Context, id stri
 		return nil, err
 	}
 	if existingCluster == nil {
-		return nil, errors.ErrNoSrEnabled
+		return nil, errors.NewErrorWithSuggestions(errors.SRNotEnabledErrorMsg, errors.SRNotEnabledSuggestions)
 	} else {
 		return existingCluster, nil
 	}

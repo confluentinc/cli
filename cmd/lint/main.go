@@ -111,6 +111,7 @@ var rules = []linter.Rule{
 	linter.Filter(linter.RequireFlagDescription("resource", "REQUIRED: The resource ID."), append(resourceScopedCommands, linter.ExcludeCommand("api-key create"))...),
 	linter.Filter(
 		linter.RequireFlagSort(false),
+		linter.OnlyLeafCommands,
 		linter.ExcludeCommandContains("local"),
 	),
 	linter.RequireLowerCase("Use"),

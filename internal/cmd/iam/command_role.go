@@ -57,7 +57,7 @@ func (c *roleCommand) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List the available roles.",
-		RunE:  c.list,
+		RunE:  cmd.NewCLIRunE(c.list),
 		Args:  cobra.NoArgs,
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
@@ -67,7 +67,7 @@ func (c *roleCommand) init() {
 	describeCmd := &cobra.Command{
 		Use:   "describe <name>",
 		Short: "Describe the resources and operations allowed for a role.",
-		RunE:  c.describe,
+		RunE:  cmd.NewCLIRunE(c.describe),
 		Args:  cobra.ExactArgs(1),
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
@@ -78,18 +78,18 @@ func (c *roleCommand) init() {
 func (c *roleCommand) list(cmd *cobra.Command, _ []string) error {
 	roles, _, err := c.MDSClient.RBACRoleDefinitionsApi.Roles(c.createContext())
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	format, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	if format == output.Human.String() {
 		var data [][]string
 		for _, role := range roles {
 			roleDisplay, err := createPrettyRole(role)
 			if err != nil {
-				return errors.HandleCommon(err, cmd)
+				return err
 			}
 			data = append(data, printer.ToRow(roleDisplay, roleFields))
 		}
@@ -108,26 +108,25 @@ func (c *roleCommand) describe(cmd *cobra.Command, args []string) error {
 		if r.StatusCode == http.StatusNoContent {
 			availableRoleNames, _, err := c.MDSClient.RBACRoleDefinitionsApi.Rolenames(c.createContext())
 			if err != nil {
-				return errors.HandleCommon(err, cmd)
+				return err
 			}
-
-			cmd.SilenceUsage = true
-			return fmt.Errorf("Unknown role specified.  Role should be one of " + strings.Join(availableRoleNames, ", "))
+			suggestionsMsg := fmt.Sprintf(errors.UnknownRoleSuggestions, strings.Join(availableRoleNames, ","))
+			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.UnknownRoleErrorMsg, role), suggestionsMsg)
 		}
 
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	format, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	if format == output.Human.String() {
 		var data [][]string
 		roleDisplay, err := createPrettyRole(details)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		data = append(data, printer.ToRow(roleDisplay, roleFields))
 		outputTable(data)

@@ -26,7 +26,7 @@ func (c *ConfigKeyStore) HasAPIKey(key string, clusterId string, cmd *cobra.Comm
 		return false, err
 	}
 	if ctx == nil {
-		return false, errors.ErrNoContext
+		return false, &errors.NoContextError{CLIName: c.Config.CLIName}
 	}
 	kcc, err := ctx.FindKafkaCluster(cmd, clusterId)
 	if err != nil {
@@ -43,7 +43,7 @@ func (c *ConfigKeyStore) StoreAPIKey(key *schedv1.ApiKey, clusterId string, cmd 
 		return err
 	}
 	if ctx == nil {
-		return errors.ErrNoContext
+		return &errors.NoContextError{CLIName: c.Config.CLIName}
 	}
 	kcc, err := ctx.FindKafkaCluster(cmd, clusterId)
 	if err != nil {
@@ -62,7 +62,7 @@ func (c *ConfigKeyStore) DeleteAPIKey(key string, cmd *cobra.Command) error {
 		return err
 	}
 	if context == nil {
-		return errors.ErrNoContext
+		return &errors.NoContextError{CLIName: c.Config.CLIName}
 	}
 	context.KafkaClusterContext.DeleteAPIKey(key)
 	return c.Config.Save()

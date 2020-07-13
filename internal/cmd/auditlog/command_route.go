@@ -9,7 +9,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 type routeCommand struct {
@@ -38,7 +37,7 @@ func (c *routeCommand) init() {
 		Use:   "list",
 		Short: "List routes matching a resource & sub-resources.",
 		Long:  "List the routes that could match the queried resource or its sub-resources.",
-		RunE:  c.list,
+		RunE:  cmd.NewCLIRunE(c.list),
 		Args:  cobra.NoArgs,
 	}
 	listCmd.Flags().StringP("resource", "r", "", "The confluent resource name that is the subject of the query.")
@@ -50,7 +49,7 @@ func (c *routeCommand) init() {
 		Use:   "lookup <crn>",
 		Short: "Returns the matching audit-log route rule.",
 		Long:  "Returns the single route that describes how audit log messages regarding this CRN would be routed, with all defaults populated.",
-		RunE:  c.lookup,
+		RunE:  cmd.NewCLIRunE(c.lookup),
 		Args:  cobra.ExactArgs(1),
 	}
 	c.AddCommand(lookupCmd)
@@ -65,7 +64,7 @@ func (c *routeCommand) list(cmd *cobra.Command, _ []string) error {
 	if cmd.Flags().Changed("resource") {
 		resource, err := cmd.Flags().GetString("resource")
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		opts = &mds.ListRoutesOpts{Q: optional.NewString(resource)}
 	} else {
@@ -78,7 +77,7 @@ func (c *routeCommand) list(cmd *cobra.Command, _ []string) error {
 	enc := json.NewEncoder(c.OutOrStdout())
 	enc.SetIndent("", "  ")
 	if err = enc.Encode(result); err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	return nil
 }
@@ -93,7 +92,7 @@ func (c *routeCommand) lookup(cmd *cobra.Command, args []string) error {
 	enc := json.NewEncoder(c.OutOrStdout())
 	enc.SetIndent("", "  ")
 	if err = enc.Encode(result); err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	return nil
 }
