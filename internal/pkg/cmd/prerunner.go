@@ -180,11 +180,11 @@ func isAuthOrConfigCommands(cmd *cobra.Command) bool {
 func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		err := r.Anonymous(command.CLICommand)(cmd, args)
-		if r.Config == nil {
-			return errors.HandleCommon(r.ConfigLoadingError, cmd)
-		}
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
+		}
+		if r.Config == nil {
+			return errors.HandleCommon(r.ConfigLoadingError, cmd)
 		}
 		err = r.setClients(command)
 		if err != nil {
