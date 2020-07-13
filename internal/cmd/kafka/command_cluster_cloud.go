@@ -395,16 +395,16 @@ func checkCloudAndRegion(cloudId string, regionId string, clouds []*schedv1.Clou
 }
 
 func getEnvironmentsForCloud(cloudId string, clouds []*schedv1.CloudMetadata) []string {
-	var accounts []string
+	var environments []string
 	for _, cloud := range clouds {
 		if cloudId == cloud.Id {
-			for _, account := range cloud.Accounts {
-				accounts = append(accounts, account.Id)
+			for _, environment := range cloud.Accounts {
+				environments = append(environments, environment.Id)
 			}
 			break
 		}
 	}
-	return accounts
+	return environments
 }
 
 func outputKafkaClusterDescription(cmd *cobra.Command, cluster *schedv1.KafkaCluster) error {
