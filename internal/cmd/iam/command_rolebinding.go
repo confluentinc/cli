@@ -117,7 +117,6 @@ func (c *rolebindingCommand) init() {
 	}
 	listCmd.Flags().String("principal", "", "Principal whose rolebindings should be listed.")
 	listCmd.Flags().String("role", "", "List rolebindings under a specific role given to a principal. Or if no principal is specified, list principals with the role.")
-	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	if c.cliName == "ccloud" {
 		listCmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for scope of rolebinding listings.")
 		listCmd.Flags().String("environment", "", "Environment ID for scope of rolebinding listings.")
@@ -143,6 +142,7 @@ func (c *rolebindingCommand) init() {
 		listCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for scope of rolebinding listings.")
 		listCmd.Flags().String("cluster-name", "", "Cluster name to uniquely identify the cluster for rolebinding listings.")
 	}
+	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
 
 	c.AddCommand(listCmd)
@@ -155,7 +155,6 @@ func (c *rolebindingCommand) init() {
 	}
 	createCmd.Flags().String("role", "", "Role name of the new role binding.")
 	createCmd.Flags().String("principal", "", "Qualified principal name for the role binding.")
-	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	if c.cliName == "ccloud" {
 		createCmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for the role binding.")
 		createCmd.Flags().String("environment", "", "Environment ID for scope of rolebinding listings.")
@@ -168,6 +167,7 @@ func (c *rolebindingCommand) init() {
 		createCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for the role binding.")
 		createCmd.Flags().String("cluster-name", "", "Cluster name to uniquely identify the cluster for rolebinding listings.")
 	}
+	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	createCmd.Flags().SortFlags = false
 	check(createCmd.MarkFlagRequired("role"))
 	check(createCmd.MarkFlagRequired("principal"))
@@ -181,7 +181,6 @@ func (c *rolebindingCommand) init() {
 	}
 	deleteCmd.Flags().String("role", "", "Role name of the existing role binding.")
 	deleteCmd.Flags().String("principal", "", "Qualified principal name associated with the role binding.")
-	deleteCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	if c.cliName == "ccloud" {
 		deleteCmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for the role binding.")
 		deleteCmd.Flags().String("environment", "", "Environment ID for scope of rolebinding listings.")
@@ -194,6 +193,7 @@ func (c *rolebindingCommand) init() {
 		deleteCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for the role binding.")
 		deleteCmd.Flags().String("cluster-name", "", "Cluster name to uniquely identify the cluster for rolebinding listings.")
 	}
+	deleteCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	deleteCmd.Flags().SortFlags = false
 	check(createCmd.MarkFlagRequired("role"))
 	check(deleteCmd.MarkFlagRequired("principal"))
