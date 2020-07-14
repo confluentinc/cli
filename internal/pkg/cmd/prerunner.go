@@ -359,11 +359,9 @@ func (r *PreRun) setClients(cliCmd *AuthenticatedCLICommand) error {
 		}
 		cliCmd.Client = ccloudClient
 		cliCmd.Config.Client = ccloudClient
-		cliCmd.MDSClient = nil
 		cliCmd.MDSv2Client = r.createMDSv2Client(ctx, cliCmd.Version)
 	} else {
 		cliCmd.MDSClient = r.createMDSClient(ctx, cliCmd.Version)
-		cliCmd.MDSv2Client = nil
 	}
 	return nil
 }
