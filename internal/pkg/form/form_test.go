@@ -1,44 +1,27 @@
 package form
 
 import (
+	"bufio"
 	"bytes"
+	"strings"
 	"testing"
 
-	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
-
-	"github.com/confluentinc/cli/mock"
 )
 
 func TestPrompt(t *testing.T) {
-	f := New(map[string]Field{
-		"username": {
-			Prompt: "Username",
-		},
-		"password": {
-			Prompt:   "Password",
-			IsHidden: true,
-		},
-	})
+	f := New(
+		Field{ID: "username", Prompt: "Username"},
+		Field{ID: "password", Prompt: "Password", IsHidden: true},
+	)
 
-	command := &cobra.Command{}
-	buf := new(bytes.Buffer)
-	command.SetOut(buf)
+	r := bufio.NewReader(strings.NewReader("user\npass\n"))
+	w := bufio.NewWriter(new(bytes.Buffer))
 
-	prompt := &mock.Prompt{
-		ReadStringFunc: func(_ byte) (string, error) {
-			return "username\n", nil
-		},
-		ReadPasswordFunc: func() (string, error) {
-			return "password\n", nil
-		},
-	}
-
-	err := f.Prompt(command, prompt)
+	err := f.Prompt(r, w)
 	require.NoError(t, err)
-
-	require.Equal(t, "username", f.Responses["username"].(string))
-	require.Equal(t, "password", f.Responses["password"].(string))
+	require.Equal(t, "user", f.Responses["username"].(string))
+	require.Equal(t, "pass", f.Responses["password"].(string))
 }
 
 func TestShow(t *testing.T) {
@@ -62,37 +45,30 @@ func TestShowSavedValue(t *testing.T) {
 }
 
 func testShow(t *testing.T, field Field, savedValue interface{}, output string) {
-	command := new(cobra.Command)
+	buf := new(bytes.Buffer)
+	w := bufio.NewWriter(buf)
 
-	out := new(bytes.Buffer)
-	command.SetOut(out)
-
-	show(command, field, savedValue)
-	require.Equal(t, output, out.String())
-}
-
-func TestReadPassword(t *testing.T) {
-	field := Field{IsHidden: true}
-
-	prompt := &mock.Prompt{
-		ReadPasswordFunc: func() (string, error) {
-			return "password\n", nil
-		},
-	}
-
-	password, _ := read(field, prompt)
-	require.Equal(t, "password", password)
+	err := show(w, field, savedValue)
+	require.NoError(t, err)
+	require.Equal(t, output, buf.String())
 }
 
 func TestRead(t *testing.T) {
-	prompt := &mock.Prompt{
-		ReadStringFunc: func(_ byte) (string, error) {
-			return "username\n", nil
-		},
-	}
+	in := bufio.NewReader(strings.NewReader("user\n"))
+	username, _ := read(in, Field{})
+	require.Equal(t, "user", username)
+}
 
-	username, _ := read(Field{}, prompt)
-	require.Equal(t, "username", username)
+func TestReadToEOF(t *testing.T) {
+	in := bufio.NewReader(strings.NewReader("user"))
+	username, _ := read(in, Field{})
+	require.Equal(t, "user", username)
+}
+
+func TestSave(t *testing.T) {
+	res, err := save(Field{}, "res")
+	require.NoError(t, err)
+	require.Equal(t, "res", res)
 }
 
 func TestSaveYesOrNo(t *testing.T) {
@@ -110,20 +86,14 @@ func TestSaveYesOrNo(t *testing.T) {
 		require.False(t, res.(bool))
 	}
 
-	_, err := save(field, "")
+	_, err := save(field, "maybe")
 	require.Error(t, err)
 }
 
-func TestSaveDefaultVal(t *testing.T) {
+func TestSaveDefaultValue(t *testing.T) {
 	field := Field{DefaultValue: "default"}
 
 	res, err := save(field, "")
+	require.NoError(t, err)
 	require.Equal(t, "default", res)
-	require.NoError(t, err)
-}
-
-func TestSave(t *testing.T) {
-	res, err := save(Field{}, "res")
-	require.Equal(t, "res", res)
-	require.NoError(t, err)
 }

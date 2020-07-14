@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"os"
@@ -28,19 +29,19 @@ type loginCommand struct {
 	analyticsClient analytics.Client
 	// for testing
 	MDSClientManager      pauth.MDSClientManager
-	prompt                pcmd.Prompt
+	in                    *bufio.Reader
 	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *ccloud.Client
 	jwtHTTPClientFactory  func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *ccloud.Client
 	netrcHandler          *pauth.NetrcHandler
 }
 
-func NewLoginCommand(cliName string, prerunner pcmd.PreRunner, log *log.Logger, prompt pcmd.Prompt,
+func NewLoginCommand(cliName string, prerunner pcmd.PreRunner, log *log.Logger, in *bufio.Reader,
 	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *ccloud.Client,
 	jwtHTTPClientFactory func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *ccloud.Client,
 	mdsClientManager pauth.MDSClientManager, analyticsClient analytics.Client, netrcHandler *pauth.NetrcHandler) *loginCommand {
 	cmd := &loginCommand{
 		Logger:                log,
-		prompt:                prompt,
+		in:                    in,
 		analyticsClient:       analyticsClient,
 		anonHTTPClientFactory: anonHTTPClientFactory,
 		jwtHTTPClientFactory:  jwtHTTPClientFactory,
@@ -254,10 +255,8 @@ func (a *loginCommand) credentials(cmd *cobra.Command, userField string, cloudCl
 	}
 
 	if len(email) == 0 {
-		f := form.New(map[string]form.Field{
-			"email": {Prompt: userField},
-		})
-		if err := f.Prompt(cmd, a.prompt); err != nil {
+		f := form.New(form.Field{ID: "email", Prompt: userField})
+		if err := f.Prompt(a.in, bufio.NewWriter(cmd.OutOrStdout())); err != nil {
 			return "", "", err
 		}
 		email = f.Responses["email"].(string)
@@ -279,10 +278,8 @@ func (a *loginCommand) credentials(cmd *cobra.Command, userField string, cloudCl
 	}
 
 	if len(password) == 0 {
-		f := form.New(map[string]form.Field{
-			"password": {Prompt: "Password", IsHidden: true},
-		})
-		if err := f.Prompt(cmd, a.prompt); err != nil {
+		f := form.New(form.Field{ID: "password", Prompt: "Password", IsHidden: true})
+		if err := f.Prompt(a.in, bufio.NewWriter(cmd.OutOrStdout())); err != nil {
 			return "", "", err
 		}
 		password = f.Responses["password"].(string)

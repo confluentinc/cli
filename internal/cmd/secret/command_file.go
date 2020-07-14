@@ -15,19 +15,17 @@ import (
 type secureFileCommand struct {
 	*cobra.Command
 	plugin secret.PasswordProtection
-	prompt pcmd.Prompt
 	resolv pcmd.FlagResolver
 }
 
 // NewFileCommand returns the Cobra command for managing encrypted file.
-func NewFileCommand(prompt pcmd.Prompt, resolv pcmd.FlagResolver, plugin secret.PasswordProtection) *cobra.Command {
+func NewFileCommand(resolv pcmd.FlagResolver, plugin secret.PasswordProtection) *cobra.Command {
 	cmd := &secureFileCommand{
 		Command: &cobra.Command{
 			Use:   "file",
 			Short: "Secure secrets in a configuration properties file.",
 		},
 		plugin: plugin,
-		prompt: prompt,
 		resolv: resolv,
 	}
 	cmd.init()

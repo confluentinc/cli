@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"bufio"
 	"context"
 	"os"
 
@@ -21,7 +22,7 @@ func New(cliName string, prerunner pcmd.PreRunner, logger *log.Logger, userAgent
 	var defaultJwtHTTPClientFactory = func(ctx context.Context, jwt string, baseURL string, logger *log.Logger) *ccloud.Client {
 		return ccloud.NewClientWithJWT(ctx, jwt, &ccloud.Params{BaseURL: baseURL, Logger: logger, UserAgent: userAgent})
 	}
-	loginCmd := NewLoginCommand(cliName, prerunner, logger, pcmd.NewPrompt(os.Stdin),
+	loginCmd := NewLoginCommand(cliName, prerunner, logger, bufio.NewReader(os.Stdin),
 		defaultAnonHTTPClientFactory, defaultJwtHTTPClientFactory, &pauth.MDSClientManagerImpl{},
 		analyticsClient, netrcHandler,
 	)

@@ -5,6 +5,7 @@
 package mock
 
 import (
+	bufio "bufio"
 	io "io"
 	os "os"
 	sync "sync"
@@ -48,8 +49,8 @@ type FileSystem struct {
 	lockMove sync.Mutex
 	MoveFunc func(src, dst string) error
 
-	lockNewBufferedReader sync.Mutex
-	NewBufferedReaderFunc func(rd io.Reader) github_com_confluentinc_cli_internal_pkg_io.Reader
+	lockNewReader sync.Mutex
+	NewReaderFunc func(rd io.Reader) *bufio.Reader
 
 	lockIsTerminal sync.Mutex
 	IsTerminalFunc func(fd uintptr) bool
@@ -97,7 +98,7 @@ type FileSystem struct {
 			Src string
 			Dst string
 		}
-		NewBufferedReader []struct {
+		NewReader []struct {
 			Rd io.Reader
 		}
 		IsTerminal []struct {
@@ -545,13 +546,13 @@ func (m *FileSystem) MoveCalls() []struct {
 	return m.calls.Move
 }
 
-// NewBufferedReader mocks base method by wrapping the associated func.
-func (m *FileSystem) NewBufferedReader(rd io.Reader) github_com_confluentinc_cli_internal_pkg_io.Reader {
-	m.lockNewBufferedReader.Lock()
-	defer m.lockNewBufferedReader.Unlock()
+// NewReader mocks base method by wrapping the associated func.
+func (m *FileSystem) NewReader(rd io.Reader) *bufio.Reader {
+	m.lockNewReader.Lock()
+	defer m.lockNewReader.Unlock()
 
-	if m.NewBufferedReaderFunc == nil {
-		panic("mocker: FileSystem.NewBufferedReaderFunc is nil but FileSystem.NewBufferedReader was called.")
+	if m.NewReaderFunc == nil {
+		panic("mocker: FileSystem.NewReaderFunc is nil but FileSystem.NewReader was called.")
 	}
 
 	call := struct {
@@ -560,27 +561,27 @@ func (m *FileSystem) NewBufferedReader(rd io.Reader) github_com_confluentinc_cli
 		Rd: rd,
 	}
 
-	m.calls.NewBufferedReader = append(m.calls.NewBufferedReader, call)
+	m.calls.NewReader = append(m.calls.NewReader, call)
 
-	return m.NewBufferedReaderFunc(rd)
+	return m.NewReaderFunc(rd)
 }
 
-// NewBufferedReaderCalled returns true if NewBufferedReader was called at least once.
-func (m *FileSystem) NewBufferedReaderCalled() bool {
-	m.lockNewBufferedReader.Lock()
-	defer m.lockNewBufferedReader.Unlock()
+// NewReaderCalled returns true if NewReader was called at least once.
+func (m *FileSystem) NewReaderCalled() bool {
+	m.lockNewReader.Lock()
+	defer m.lockNewReader.Unlock()
 
-	return len(m.calls.NewBufferedReader) > 0
+	return len(m.calls.NewReader) > 0
 }
 
-// NewBufferedReaderCalls returns the calls made to NewBufferedReader.
-func (m *FileSystem) NewBufferedReaderCalls() []struct {
+// NewReaderCalls returns the calls made to NewReader.
+func (m *FileSystem) NewReaderCalls() []struct {
 	Rd io.Reader
 } {
-	m.lockNewBufferedReader.Lock()
-	defer m.lockNewBufferedReader.Unlock()
+	m.lockNewReader.Lock()
+	defer m.lockNewReader.Unlock()
 
-	return m.calls.NewBufferedReader
+	return m.calls.NewReader
 }
 
 // IsTerminal mocks base method by wrapping the associated func.
@@ -694,9 +695,9 @@ func (m *FileSystem) Reset() {
 	m.lockMove.Lock()
 	m.calls.Move = nil
 	m.lockMove.Unlock()
-	m.lockNewBufferedReader.Lock()
-	m.calls.NewBufferedReader = nil
-	m.lockNewBufferedReader.Unlock()
+	m.lockNewReader.Lock()
+	m.calls.NewReader = nil
+	m.lockNewReader.Unlock()
 	m.lockIsTerminal.Lock()
 	m.calls.IsTerminal = nil
 	m.lockIsTerminal.Unlock()

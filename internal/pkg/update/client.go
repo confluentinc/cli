@@ -2,19 +2,20 @@
 package update
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"time"
-	"unicode"
 
 	"github.com/atrox/homedir"
 	"github.com/hashicorp/go-version"
 	"github.com/jonboulle/clockwork"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	pio "github.com/confluentinc/cli/internal/pkg/io"
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
@@ -146,23 +147,19 @@ func (c *client) PromptToDownload(name, currVersion, latestVersion, releaseNotes
 		return true
 	}
 
+	f := form.New(
+		form.Field{
+			ID:        "update",
+			Prompt:    "Do you want to download and install this update?",
+			IsYesOrNo: true,
+		},
+	)
 	for {
-		fmt.Fprint(c.Out, "Do you want to download and install this update? (y/n): ")
-
-		reader := c.fs.NewBufferedReader(os.Stdin)
-		input, _ := reader.ReadString('\n')
-
-		choice := strings.TrimRightFunc(input, unicode.IsSpace)
-
-		switch choice {
-		case "yes", "y", "Y":
-			return true
-		case "no", "n", "N":
-			return false
-		default:
-			fmt.Fprintf(c.Out, "%s is not a valid choice\n", choice)
+		if err := f.Prompt(c.fs.NewReader(os.Stdin), bufio.NewWriter(c.Out)); err != nil {
+			fmt.Fprintln(c.Out, err.Error())
 			continue
 		}
+		return f.Responses["update"].(bool)
 	}
 }
 
