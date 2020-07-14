@@ -10,6 +10,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
@@ -87,12 +88,11 @@ func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *v
 			srConfig.BasePath = srCluster.Endpoint
 		}
 		srConfig.UserAgent = ver.UserAgent
-
 		srClient := srsdk.NewAPIClient(srConfig)
 
 		// Test credentials
 		if _, _, err = srClient.DefaultApi.Get(srCtx); err != nil {
-			cmd.PrintErrln("Failed to validate Schema Registry API key and secret.")
+			cmd.PrintErrln(errors.SRCredsValidationFailedMsg)
 			// Prompt users to enter new credentials if validation fails.
 			shouldPrompt = true
 			continue

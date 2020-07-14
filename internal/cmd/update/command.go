@@ -78,28 +78,37 @@ func New(cliName string, logger *log.Logger, version *cliVersion.Version, client
 func (c *command) init() {
 	c.Command = &cobra.Command{
 		Use:   "update",
-		Short: fmt.Sprintf("Update the %s CLI.", c.cliName),
-		RunE:  c.update,
+		Short: fmt.Sprintf("Update the %s.", c.cliTitle()),
+		RunE:  pcmd.NewCLIRunE(c.update),
 		Args:  cobra.NoArgs,
 	}
 	c.Command.Flags().BoolP("yes", "y", false, "Update without prompting.")
 	c.Command.Flags().SortFlags = false
 }
 
+func (c *command) cliTitle() string {
+	switch c.cliName {
+	case "confluent":
+		return "Confluent CLI"
+	case "ccloud":
+		return "Confluent Cloud CLI"
+	}
+	return ""
+}
+
 func (c *command) update(cmd *cobra.Command, _ []string) error {
 	updateYes, err := cmd.Flags().GetBool("yes")
 	if err != nil {
-		return errors.Wrap(err, "error reading --yes as bool")
+		return errors.Wrap(err, errors.ReadingYesFlagErrorMsg)
 	}
-	pcmd.ErrPrintln(cmd, "Checking for updates...")
+	pcmd.ErrPrintln(cmd, errors.CheckingForUpdatesMsg)
 	updateAvailable, latestVersion, err := c.client.CheckForUpdates(c.cliName, c.version.Version, true)
 	if err != nil {
-		c.Command.SilenceUsage = true
-		return errors.Wrap(err, "error checking for updates")
+		return errors.NewUpdateClientWrapError(err, errors.CheckingForUpdateErrorMsg, c.cliName)
 	}
 
 	if !updateAvailable {
-		pcmd.Println(cmd, "Already up to date.")
+		pcmd.Println(cmd, errors.UpToDateMsg)
 		return nil
 	}
 
@@ -120,9 +129,9 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if err := c.client.UpdateBinary(c.cliName, latestVersion, oldBin); err != nil {
-		return err
+		return errors.NewUpdateClientWrapError(err, errors.UpdateBinaryErrorMsg, c.cliName)
 	}
-	pcmd.ErrPrintf(cmd, "Update your autocomplete scripts as instructed by: %s help completion\n", c.config.CLIName)
+	pcmd.ErrPrintf(cmd, errors.UpdateAutocompleteMsg, c.config.CLIName)
 
 	return nil
 }
@@ -131,14 +140,14 @@ func (c *command) getReleaseNotes(latestBinaryVersion string) string {
 	latestReleaseNotesVersion, releaseNotes, err := c.client.GetLatestReleaseNotes()
 	var errMsg string
 	if err != nil {
-		errMsg = fmt.Sprintf("error obtaining release notes: %s", err)
+		errMsg = fmt.Sprintf(errors.ObtainingReleaseNotesErrorMsg, err)
 	} else {
 		isSameVersion, err := sameVersionCheck(latestBinaryVersion, latestReleaseNotesVersion)
 		if err != nil {
-			errMsg = fmt.Sprintf("unable to perform release notes and binary version check: %s", err)
+			errMsg = fmt.Sprintf(errors.ReleaseNotesVersionCheckErrorMsg, err)
 		}
 		if !isSameVersion {
-			errMsg = fmt.Sprintf("binary version (v%s) and latest release notes version (v%s) mismatch", latestBinaryVersion, latestReleaseNotesVersion)
+			errMsg = fmt.Sprintf(errors.ReleaseNotesVersionMismatchErrorMsg, latestBinaryVersion, latestReleaseNotesVersion)
 		}
 	}
 	if errMsg != "" {

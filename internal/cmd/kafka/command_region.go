@@ -6,7 +6,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -39,7 +38,7 @@ func (c *regionCommand) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List cloud provider regions.",
-		RunE:  c.list,
+		RunE:  pcmd.NewCLIRunE(c.list),
 		Args:  cobra.NoArgs,
 	}
 	listCmd.Flags().String("cloud", "", "The cloud ID to filter by.")
@@ -51,15 +50,15 @@ func (c *regionCommand) init() {
 func (c *regionCommand) list(cmd *cobra.Command, _ []string) error {
 	clouds, err := c.Client.EnvironmentMetadata.Get(context.Background())
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	cloudIdFilter, err := cmd.Flags().GetString("cloud")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	outputWriter, err := output.NewListOutputWriter(cmd, regionListFields, regionListHumanLabels, regionListStructuredLabels)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	type regionStruct struct {
 		CloudId    string

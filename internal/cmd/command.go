@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 
@@ -37,6 +38,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/config/load"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	pfeedback "github.com/confluentinc/cli/internal/pkg/feedback"
 	"github.com/confluentinc/cli/internal/pkg/help"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -81,8 +83,10 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		cli.Short = "Confluent CLI."
 		cli.Long = "Manage your Confluent Platform."
 	}
-	cli.PersistentFlags().CountP("verbose", "v",
-		"Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).")
+
+	cli.PersistentFlags().BoolP("help", "h", false, "Show help for this command.")
+	cli.PersistentFlags().CountP("verbose", "v", "Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).")
+	cli.Flags().Bool("version", false, fmt.Sprintf("Show version of %s.", cliName))
 
 	disableUpdateCheck := cfg != nil && (cfg.DisableUpdates || cfg.DisableUpdateCheck)
 	updateClient, err := update.NewClient(cliName, disableUpdateCheck, logger)
@@ -106,7 +110,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 	command := &Command{Command: cli, Analytics: analyticsClient, logger: logger}
 
 	cli.Version = ver.Version
-	cli.AddCommand(version.New(prerunner, ver))
+	cli.AddCommand(version.New(cliName, prerunner, ver))
 
 	cli.AddCommand(completion.New(cli, cliName))
 
@@ -132,6 +136,9 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		cli.AddCommand(ps1.New(cliName, prerunner, &pps1.Prompt{}, logger))
 		cli.AddCommand(schemaregistry.New(cliName, prerunner, nil, logger)) // Exposed for testing
 		cli.AddCommand(serviceaccount.New(prerunner))
+		if os.Getenv("XX_CCLOUD_RBAC") != "" {
+			cli.AddCommand(iam.New(cliName, prerunner))
+		}
 	} else if cliName == "confluent" {
 		cli.AddCommand(auditlog.New(prerunner))
 		cli.AddCommand(cluster.New(prerunner, cluster.NewScopedIdService(&http.Client{}, ver.UserAgent, logger)))
@@ -170,8 +177,8 @@ func isAPIKeyCredential(cfg *v3.Config) bool {
 func (c *Command) Execute(cliName string, args []string) error {
 	c.Analytics.SetStartTime()
 	c.Command.SetArgs(args)
-
 	err := c.Command.Execute()
+	errors.DisplaySuggestionsMessage(err, os.Stdout)
 	c.sendAndFlushAnalytics(args, err)
 	pfeedback.HandleFeedbackNudge(cliName, args)
 	return err

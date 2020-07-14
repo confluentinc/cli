@@ -90,6 +90,7 @@ github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 h1:sIWhdehnHPCWoZeM
 github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2/go.mod h1:HNotNNYHefttEUajcmByCW4bWNBiYd7s5mNZWzB62r0=
 github.com/confluentinc/bincover v0.0.0-20191217221125-80a7bb37ae5e h1:AD1FNb9oVlqmbfWRTr/5NYVo8GDz3avvt58OMXoCL7k=
 github.com/confluentinc/bincover v0.0.0-20191217221125-80a7bb37ae5e/go.mod h1:SDRY3Jkno8P4DtD+znY7Rysg2vI+puuknPxZ4ummZJ4=
+github.com/confluentinc/cc-structs v0.489.0 h1:xCAh+ucgf/8f21f+5IN/Yf3IKJEmBA49/dzqm8TuV6A=
 github.com/confluentinc/cc-structs/kafka/connect v0.441.0 h1:IN35U9e0RCFV8aMuYw2T5HYqgFXyVAMG5sjhByls3QA=
 github.com/confluentinc/cc-structs/kafka/connect v0.441.0/go.mod h1:L+dZvy79zQxK77MuOeqbJ8UWevydL1U1pqYGNiZGs3M=
 github.com/confluentinc/cc-structs/kafka/core v0.402.0/go.mod h1:5XSLYdbP1n3OA27wLNG0FjpiJcZWuAcKEYc03pz4r4s=
@@ -108,6 +109,7 @@ github.com/confluentinc/cc-structs/kafka/product/core v0.419.0/go.mod h1:FF4M+qX
 github.com/confluentinc/cc-structs/kafka/scheduler v0.408.0/go.mod h1:VzT5EDgrn2JRsRPkY+12iN6L8hP+UzH4Zbn0IfxB0sc=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.441.0 h1:zg5/pQf7YjgFS9wTp5TPx6weMbTuT6QG3pNrNQteg60=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.441.0/go.mod h1:ObI7Nx0HE/gAltBMzoDYDlUna0LITS8ZTLtyjxQYGY0=
+github.com/confluentinc/cc-structs/kafka/scheduler v0.489.0 h1:RVYzQPu+MkQwrmr2hBeJKLNuQf/iN7t/H/ifg/PVjQo=
 github.com/confluentinc/cc-structs/kafka/util v0.44.0/go.mod h1:2dfBQRadkzTsF+JgcEODjsvrHsw/U3GcftdEOZVv+D4=
 github.com/confluentinc/cc-structs/kafka/util v0.405.0/go.mod h1:gsDgEuy4t2754lindeBd5ESWJPUQEO0byDd97RJkKA0=
 github.com/confluentinc/cc-structs/kafka/util v0.408.0 h1:bDeXoIAPhHZjpaceVGldJ0gm4y1n5DrzZELd+th+J28=
@@ -125,8 +127,11 @@ github.com/confluentinc/go-editor v0.4.0 h1:5hMjKsKmIOmlu3Yyz8zDq66Qpdin8HSmRaMh
 github.com/confluentinc/go-editor v0.4.0/go.mod h1:sW1NzJdowffHQzy4iSbfY/ykRFMDE69I8EaT33Ebh7Y=
 github.com/confluentinc/go-printer v0.13.0 h1:zgmoYZPQ51xjOPSW4G+QimPcoZEAflCb4UsgvlKA544=
 github.com/confluentinc/go-printer v0.13.0/go.mod h1:bOK/pPNm4ao7bZIcRnGPGca1B64nW+lApFXHZEZ0PcM=
+github.com/confluentinc/mds-sdk-go v0.0.6 h1:BnBaKQNpHGNYi/pbU46lkKyPBcFNPUYQEuDDwKkbPRg=
 github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.9 h1:TsJzNxIN5hyq8AT/F24nSkyknS6u8NEpKU5C88pzS04=
 github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.9/go.mod h1:wyYeXb6d0I/RRhPV7LaAFneTGqbT7chHZtpzfKwdrh0=
+github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.11 h1:SqknPrUP6isE35o3//c5agXxOl4/cVyxtNIsi65EPTY=
+github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.11/go.mod h1:WimNyaI+msAxUXsM2oRMarBdkod/cnsQeWSbtXi0kGg=
 github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787 h1:hHiVn9sDY/pZCETOV3489odsMhj8NEyiamjwhBy6TLA=
 github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787/go.mod h1:e8oa6xV9gIddL04yTbRjly4s7U3Fn57PAOUMTUPibUA=
 github.com/confluentinc/proto-go-setter v0.0.0-20180912191759-fb17e76fc076 h1:tJszovtvIkdc+Sq0TBZK2d8ExqQ6Y2jjUbBERqivSMk=

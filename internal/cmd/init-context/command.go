@@ -30,10 +30,10 @@ func New(prerunner pcmd.PreRunner, resolver pcmd.FlagResolver, analyticsClient a
 		Args:  cobra.ExactArgs(1),
 	}
 	cliCmd := pcmd.NewAnonymousCLICommand(cobraCmd, prerunner)
-	cobraCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+	cobraCmd.PersistentPreRunE = pcmd.NewCLIPreRunnerE(func(cmd *cobra.Command, args []string) error {
 		analyticsClient.SetCommandType(analytics.Init)
 		return prerunner.Anonymous(cliCmd)(cmd, args)
-	}
+	})
 	cmd := &command{
 		CLICommand: cliCmd,
 		resolver:   resolver,
@@ -50,7 +50,7 @@ func (c *command) init() {
 	c.Flags().String("api-secret", "", "API secret. Can be specified as plaintext, "+
 		"as a file, starting with '@', or as stdin, starting with '-'.")
 	c.Flags().SortFlags = false
-	c.RunE = c.initContext
+	c.RunE = pcmd.NewCLIRunE(c.initContext)
 }
 
 func (c *command) parseStringFlag(name string, prompt string, secure bool, displayName string) (string, error) {
@@ -64,7 +64,7 @@ func (c *command) parseStringFlag(name string, prompt string, secure bool, displ
 	}
 	val = strings.TrimSpace(val)
 	if len(val) == 0 {
-		return "", fmt.Errorf("%s cannot be empty", displayName)
+		return "", errors.Errorf(errors.CannotBeEmptyErrorMsg, displayName)
 	}
 	return val, nil
 }
@@ -73,35 +73,36 @@ func (c *command) initContext(cmd *cobra.Command, args []string) error {
 	contextName := args[0]
 	kafkaAuth, err := c.Flags().GetBool("kafka-auth")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	if !kafkaAuth {
-		return errors.HandleCommon(errors.New("only kafka-auth is currently supported"), cmd)
+		return errors.New(errors.OnlyKafkaAuthErrorMsg)
 	}
 	bootstrapURL, err := c.parseStringFlag("bootstrap", "Bootstrap URL: ", false,
 		"Bootstrap URL")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	apiKey, err := c.parseStringFlag("api-key", "API Key: ", false,
 		"API key")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	apiSecret, err := c.parseStringFlag("api-secret", "API Secret: ", true,
 		"API secret")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	err = c.addContext(contextName, bootstrapURL, apiKey, apiSecret)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	// Set current context.
 	err = c.Config.SetContext(contextName)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
+	pcmd.Printf(cmd, errors.InitContextMsg, contextName)
 	return nil
 }
 
@@ -140,7 +141,7 @@ func (c *command) addContext(name string, bootstrapURL string, apiKey string, ap
 	case v2.APIKey:
 		credential.Name = fmt.Sprintf("%s-%s", &credential.CredentialType, credential.APIKeyPair.Key)
 	default:
-		return fmt.Errorf("credential type %d unknown", credential.CredentialType)
+		return errors.Errorf(errors.UnknownCredentialTypeErrorMsg, credential.CredentialType)
 	}
 	err := c.Config.SaveCredential(credential)
 	if err != nil {

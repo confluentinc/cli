@@ -17,7 +17,7 @@ func New(prerunner pcmd.PreRunner, metaClient Metadata) *cobra.Command {
 	cmd := &command{
 		CLICommand: pcmd.NewAnonymousCLICommand(&cobra.Command{
 			Use:   "cluster",
-			Short: "Retrieve metadata about Confluent clusters.",
+			Short: "Retrieve metadata about Confluent Platform clusters.",
 		}, prerunner),
 		prerunner:  prerunner,
 		metaClient: metaClient,

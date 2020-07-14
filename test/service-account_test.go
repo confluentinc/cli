@@ -8,6 +8,8 @@ func (s *CLITestSuite) TestServiceAccountCommands() {
 		{args: "service-account create human-service --description human-output", fixture: "service-account4.golden", wantErrCode: 0},
 		{args: "service-account create json-service --description json-output -o json", fixture: "service-account5.golden", wantErrCode: 0},
 		{args: "service-account create yaml-service --description yaml-output -o yaml", fixture: "service-account6.golden", wantErrCode: 0},
+		{args: "service-account update 12345 --description new-description", fixture: "service-account7.golden", wantErrCode: 0},
+		{args: "service-account delete 12345", fixture: "service-account8.golden", wantErrCode: 0},
 	}
 	resetConfiguration(s.T(), "ccloud")
 	for _, tt := range tests {

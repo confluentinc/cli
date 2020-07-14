@@ -7,6 +7,7 @@ import (
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	"github.com/jonboulle/clockwork"
 	"github.com/spf13/cobra"
 	"gopkg.in/square/go-jose.v2/jwt"
@@ -52,10 +53,11 @@ type CLICommand struct {
 
 type AuthenticatedCLICommand struct {
 	*CLICommand
-	Client    *ccloud.Client
-	MDSClient *mds.APIClient
-	Context   *DynamicContext
-	State     *v2.ContextState
+	Client      *ccloud.Client
+	MDSClient   *mds.APIClient
+	MDSv2Client *mdsv2alpha1.APIClient
+	Context     *DynamicContext
+	State       *v2.ContextState
 }
 
 type HasAPIKeyCLICommand struct {
@@ -77,7 +79,7 @@ func NewAuthenticatedCLICommand(command *cobra.Command, prerunner PreRunner) *Au
 		Context:    nil,
 		State:      nil,
 	}
-	command.PersistentPreRunE = prerunner.Authenticated(cmd)
+	command.PersistentPreRunE = NewCLIPreRunnerE(prerunner.Authenticated(cmd))
 	cmd.Command = command
 	return cmd
 }
@@ -88,7 +90,7 @@ func NewAuthenticatedWithMDSCLICommand(command *cobra.Command, prerunner PreRunn
 		Context:    nil,
 		State:      nil,
 	}
-	command.PersistentPreRunE = prerunner.AuthenticatedWithMDS(cmd)
+	command.PersistentPreRunE = NewCLIPreRunnerE(prerunner.AuthenticatedWithMDS(cmd))
 	cmd.Command = command
 	return cmd
 }
@@ -98,14 +100,14 @@ func NewHasAPIKeyCLICommand(command *cobra.Command, prerunner PreRunner) *HasAPI
 		CLICommand: NewCLICommand(command, prerunner),
 		Context:    nil,
 	}
-	command.PersistentPreRunE = prerunner.HasAPIKey(cmd)
+	command.PersistentPreRunE = NewCLIPreRunnerE(prerunner.HasAPIKey(cmd))
 	cmd.Command = command
 	return cmd
 }
 
 func NewAnonymousCLICommand(command *cobra.Command, prerunner PreRunner) *CLICommand {
 	cmd := NewCLICommand(command, prerunner)
-	command.PersistentPreRunE = prerunner.Anonymous(cmd)
+	command.PersistentPreRunE = NewCLIPreRunnerE(prerunner.Anonymous(cmd))
 	cmd.Command = command
 	return cmd
 }
@@ -136,11 +138,11 @@ func (r *PreRun) Anonymous(command *CLICommand) func(cmd *cobra.Command, args []
 		command.Version = r.Version
 		command.Config.Resolver = r.FlagResolver
 		if err := log.SetLoggingVerbosity(cmd, r.Logger); err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		r.Logger.Flush()
 		if err := r.notifyIfUpdateAvailable(cmd, r.CLIName, command.Version.Version); err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		r.warnIfConfluentLocal(cmd)
 		if r.Config != nil {
@@ -155,7 +157,7 @@ func (r *PreRun) Anonymous(command *CLICommand) func(cmd *cobra.Command, args []
 				if err != nil {
 					return err
 				}
-				ErrPrintln(cmd, "Your token has expired. You are now logged out.")
+				ErrPrintln(cmd, errors.TokenExpiredMsg)
 				analyticsError := r.Analytics.SessionTimedOut()
 				if analyticsError != nil {
 					r.Logger.Debug(analyticsError.Error())
@@ -163,7 +165,7 @@ func (r *PreRun) Anonymous(command *CLICommand) func(cmd *cobra.Command, args []
 			}
 		} else {
 			if isAuthOrConfigCommands(cmd) {
-				return errors.HandleCommon(r.ConfigLoadingError, cmd)
+				return r.ConfigLoadingError
 			}
 		}
 		return nil
@@ -181,26 +183,26 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 	return func(cmd *cobra.Command, args []string) error {
 		err := r.Anonymous(command.CLICommand)(cmd, args)
 		if r.Config == nil {
-			return errors.HandleCommon(r.ConfigLoadingError, cmd)
+			return r.ConfigLoadingError
 		}
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		err = r.setClients(command)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		ctx, err := command.Config.Context(cmd)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		if ctx == nil {
-			return errors.HandleCommon(errors.ErrNoContext, cmd)
+			return &errors.NoContextError{CLIName: r.CLIName}
 		}
 		command.Context = ctx
 		command.State, err = ctx.AuthenticatedState(cmd)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		return r.validateToken(cmd, ctx)
 	}
@@ -211,24 +213,24 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd
 	return func(cmd *cobra.Command, args []string) error {
 		err := r.Anonymous(command.CLICommand)(cmd, args)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		if r.Config == nil {
-			return errors.HandleCommon(r.ConfigLoadingError, cmd)
+			return r.ConfigLoadingError
 		}
 		err = r.setClients(command)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		ctx, err := command.Config.Context(cmd)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		if ctx == nil {
-			return errors.HandleCommon(errors.ErrNoContext, cmd)
+			return &errors.NoContextError{CLIName: r.CLIName}
 		}
 		if !ctx.HasMDSLogin() {
-			return errors.HandleCommon(errors.ErrNotLoggedIn, cmd)
+			return &errors.NotLoggedInError{CLIName: r.CLIName}
 		}
 		command.Context = ctx
 		command.State = ctx.State
@@ -241,17 +243,17 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 	return func(cmd *cobra.Command, args []string) error {
 		err := r.Anonymous(command.CLICommand)(cmd, args)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		if r.Config == nil {
-			return errors.HandleCommon(r.ConfigLoadingError, cmd)
+			return r.ConfigLoadingError
 		}
 		ctx, err := command.Config.Context(cmd)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		if ctx == nil {
-			return errors.HandleCommon(errors.ErrNoContext, cmd)
+			return &errors.NoContextError{CLIName: r.CLIName}
 		}
 		command.Context = ctx
 		var clusterId string
@@ -271,11 +273,11 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 		}
 		hasAPIKey, err := ctx.HasAPIKey(cmd, clusterId)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		if !hasAPIKey {
 			err = &errors.UnspecifiedAPIKeyError{ClusterID: clusterId}
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		return nil
 	}
@@ -299,12 +301,12 @@ func (r *PreRun) checkUserAuthentication(ctx *DynamicContext, cmd *cobra.Command
 func (r *PreRun) getClusterIdForAuthenticatedUser(command *HasAPIKeyCLICommand, ctx *DynamicContext, cmd *cobra.Command) (string, error) {
 	client, err := r.createCCloudClient(ctx, cmd, command.Version)
 	if err != nil {
-		return "", errors.HandleCommon(err, cmd)
+		return "", err
 	}
 	ctx.client = client
 	cluster, err := ctx.GetKafkaClusterForCommand(cmd)
 	if err != nil {
-		return "", errors.HandleCommon(err, cmd)
+		return "", err
 	}
 	return cluster.ID, nil
 }
@@ -327,11 +329,10 @@ func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, name string, curren
 		return nil
 	}
 	if updateAvailable {
-		msg := "Updates are available for %s from (current: %s, latest: %s).\nTo view release notes and install them, please run:\n$ %s update\n\n"
 		if !strings.HasPrefix(latestVersion, "v") {
 			latestVersion = "v" + latestVersion
 		}
-		ErrPrintf(cmd, msg, name, currentVersion, latestVersion, name)
+		ErrPrintf(cmd, errors.NotifyUpdateMsg, name, currentVersion, latestVersion, name)
 	}
 	return nil
 }
@@ -342,9 +343,7 @@ func isUpdateCommand(cmd *cobra.Command) bool {
 
 func (r *PreRun) warnIfConfluentLocal(cmd *cobra.Command) {
 	if strings.HasPrefix(cmd.CommandPath(), "confluent local") {
-		cmd.PrintErrln("The local commands are intended for a single-node development environment only,")
-		cmd.PrintErrln("NOT for production usage. https://docs.confluent.io/current/cli/index.html")
-		cmd.PrintErrln()
+		cmd.PrintErrln(errors.LocalCommandDevOnlyMsg)
 	}
 }
 
@@ -360,6 +359,7 @@ func (r *PreRun) setClients(cliCmd *AuthenticatedCLICommand) error {
 		}
 		cliCmd.Client = ccloudClient
 		cliCmd.Config.Client = ccloudClient
+		cliCmd.MDSv2Client = r.createMDSv2Client(ctx, cliCmd.Version)
 	} else {
 		cliCmd.MDSClient = r.createMDSClient(ctx, cliCmd.Version)
 	}
@@ -415,6 +415,35 @@ func (r *PreRun) createMDSClient(ctx *DynamicContext, ver *version.Version) *mds
 	return mds.NewAPIClient(mdsConfig)
 }
 
+func (r *PreRun) createMDSv2Client(ctx *DynamicContext, ver *version.Version) *mdsv2alpha1.APIClient {
+	mdsv2Config := mdsv2alpha1.NewConfiguration()
+	if ctx == nil {
+		return mdsv2alpha1.NewAPIClient(mdsv2Config)
+	}
+	mdsv2Config.BasePath = ctx.Platform.Server + "/api/metadata/security/v2alpha1"
+	mdsv2Config.UserAgent = ver.UserAgent
+	if ctx.Platform.CaCertPath == "" {
+		return mdsv2alpha1.NewAPIClient(mdsv2Config)
+	}
+	caCertPath := ctx.Platform.CaCertPath
+	// Try to load certs. On failure, warn, but don't error out because this may be an auth command, so there may
+	// be a --ca-cert-path flag on the cmd line that'll fix whatever issue there is with the cert file in the config
+	caCertFile, err := os.Open(caCertPath)
+	if err == nil {
+		defer caCertFile.Close()
+		mdsv2Config.HTTPClient, err = pauth.SelfSignedCertClient(caCertFile, r.Logger)
+		if err != nil {
+			r.Logger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
+			mdsv2Config.HTTPClient = pauth.DefaultClient()
+		}
+	} else {
+		r.Logger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
+		mdsv2Config.HTTPClient = pauth.DefaultClient()
+
+	}
+	return mdsv2alpha1.NewAPIClient(mdsv2Config)
+}
+
 func (r *PreRun) validateToken(cmd *cobra.Command, ctx *DynamicContext) error {
 	// validate token (not expired)
 	var authToken string
@@ -424,18 +453,18 @@ func (r *PreRun) validateToken(cmd *cobra.Command, ctx *DynamicContext) error {
 	var claims map[string]interface{}
 	token, err := jwt.ParseSigned(authToken)
 	if err != nil {
-		return r.updateToken(errors.HandleCommon(new(ccloud.InvalidTokenError), cmd), ctx)
+		return r.updateToken(new(ccloud.InvalidTokenError), ctx)
 	}
 	if err := token.UnsafeClaimsWithoutVerification(&claims); err != nil {
-		return r.updateToken(errors.HandleCommon(err, cmd), ctx)
+		return r.updateToken(err, ctx)
 	}
 	exp, ok := claims["exp"].(float64)
 	if !ok {
-		return r.updateToken(errors.New("Malformed JWT claims: no expiration."), ctx)
+		return r.updateToken(errors.New(errors.MalformedJWTNoExprErrorMsg), ctx)
 	}
 	if float64(r.Clock.Now().Unix()) > exp {
 		r.Logger.Debug("Token expired.")
-		return r.updateToken(errors.HandleCommon(new(ccloud.ExpiredTokenError), cmd), ctx)
+		return r.updateToken(new(ccloud.ExpiredTokenError), ctx)
 	}
 	return nil
 }

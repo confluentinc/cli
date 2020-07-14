@@ -1,0 +1,4 @@
+   Principal   |       Role        | ResourceType |                 Name                  | PatternType  
++--------------+-------------------+--------------+---------------------------------------+-------------+
+  User:u-11aaa | CloudClusterAdmin | Cluster      | lkc-1111aaa                           |              
+  User:u-11aaa | OrganizationAdmin | Organization | 1111aaaa-11aa-11aa-11aa-111111aaaaaac |              

@@ -7,6 +7,8 @@ import (
 	"os"
 	"strings"
 	"syscall"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 /*
@@ -133,7 +135,7 @@ func save(field Field, val string) (interface{}, error) {
 		case "N", "NO":
 			return false, nil
 		}
-		return false, fmt.Errorf("%s is not a valid choice", val)
+		return false, fmt.Errorf(errors.InvalidChoiceMsg, val)
 	}
 
 	if val == "" {
