@@ -184,8 +184,8 @@ func (c *roleCommand) ccloudDescribe(cmd *cobra.Command, role string) error {
 				return err
 			}
 
-			cmd.SilenceUsage = true
-			return fmt.Errorf("Unknown role specified.  Role should be one of %s", strings.Join(availableRoleNames, ", "))
+			suggestionsMsg := fmt.Sprintf(errors.UnknownRoleSuggestions, strings.Join(availableRoleNames, ","))
+			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.UnknownRoleErrorMsg, role), suggestionsMsg)
 		}
 
 		return err

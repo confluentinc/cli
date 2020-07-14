@@ -225,9 +225,6 @@ func (c *rolebindingCommand) parseAndValidateResourcePattern(typename string, pr
 }
 
 func (c *rolebindingCommand) validateRoleAndResourceType(roleName string, resourceType string) error {
-	if c.cliName == "ccloud" {
-		return nil
-	}
 	ctx := c.createContext()
 	role, resp, err := c.MDSClient.RBACRoleDefinitionsApi.RoleDetail(ctx, roleName)
 	if err != nil || resp.StatusCode == 204 {

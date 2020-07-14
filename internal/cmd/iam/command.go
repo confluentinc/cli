@@ -13,12 +13,22 @@ type command struct {
 
 // New returns the default command object for interacting with RBAC.
 func New(cliName string, prerunner pcmd.PreRunner) *cobra.Command {
-	cliCmd := pcmd.NewAuthenticatedWithMDSCLICommand(
-		&cobra.Command{
-			Use:   "iam",
-			Short: "Manage RBAC, ACL and IAM permissions.",
-			Long:  "Manage Role-Based Access Control (RBAC), Access Control Lists (ACL), and Identity and Access Management (IAM) permissions.",
-		}, prerunner)
+	var cliCmd *pcmd.AuthenticatedCLICommand
+	if cliName != "ccloud" {
+		cliCmd = pcmd.NewAuthenticatedWithMDSCLICommand(
+			&cobra.Command{
+				Use:   "iam",
+				Short: "Manage RBAC, ACL and IAM permissions.",
+				Long:  "Manage Role-Based Access Control (RBAC), Access Control Lists (ACL), and Identity and Access Management (IAM) permissions.",
+			}, prerunner)
+	} else {
+		cliCmd = pcmd.NewAuthenticatedCLICommand(
+			&cobra.Command{
+				Use:   "iam",
+				Short: "Manage RBAC, ACL and IAM permissions.",
+				Long:  "Manage Role-Based Access Control (RBAC), Access Control Lists (ACL), and Identity and Access Management (IAM) permissions.",
+			}, prerunner)
+	}
 
 	c := &command{
 		AuthenticatedCLICommand: cliCmd,
