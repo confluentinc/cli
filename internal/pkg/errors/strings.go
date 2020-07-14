@@ -30,6 +30,9 @@ const (
 	// feedback commands
 	ThanksForFeedbackMsg = "Thanks for your feedback."
 
+	// init command
+	InitContextMsg = "Context \"%s\" initialized and set as current context.\n"
+
 	// kafka cluster commands
 	UseKafkaClusterMsg = "Set Kafka cluster \"%s\" as the active cluster for environment \"%s\"."
 	ConfirmAuthorizedKeyMsg = "Please confirm you have authorized the key for these accounts: %s"
