@@ -25,8 +25,8 @@ func New(cliName string, prerunner pcmd.PreRunner) *cobra.Command {
 		cliCmd = pcmd.NewAuthenticatedCLICommand(
 			&cobra.Command{
 				Use:   "iam",
-				Short: "Manage RBAC, ACL and IAM permissions.",
-				Long:  "Manage Role-Based Access Control (RBAC), Access Control Lists (ACL), and Identity and Access Management (IAM) permissions.",
+				Short: "Manage RBAC and IAM permissions.",
+				Long:  "Manage Role Based Access (RBAC) and Identity and Access Management (IAM) permissions.",
 			}, prerunner)
 	}
 
@@ -39,9 +39,6 @@ func New(cliName string, prerunner pcmd.PreRunner) *cobra.Command {
 	c.AddCommand(NewRolebindingCommand(cliName, c.prerunner))
 	if cliName != "ccloud" {
 		c.AddCommand(NewACLCommand(cliName, c.prerunner))
-	} else {
-		c.Short = "Manage RBAC and IAM permissions."
-		c.Long = "Manage Role Based Access (RBAC) and Identity and Access Management (IAM) permissions."
 	}
 
 	return c.Command
