@@ -509,7 +509,7 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, _ []string) error {
 		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.HTTPStatusCodeErrorMsg, resp.StatusCode), errors.HTTPStatusCodeSuggestions)
 	}
 
-	return errors.HandleCommon(displayCreateAndDeleteOutput(cmd, options), cmd)
+	return displayCreateAndDeleteOutput(cmd, options)
 }
 
 func displayCreateAndDeleteOutput(cmd *cobra.Command, options *rolebindingOptions) error {
@@ -564,7 +564,7 @@ func (c *rolebindingCommand) delete(cmd *cobra.Command, _ []string) error {
 		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.HTTPStatusCodeErrorMsg, resp.StatusCode), errors.HTTPStatusCodeSuggestions)
 	}
 
-	return errors.HandleCommon(displayCreateAndDeleteOutput(cmd, options), cmd)
+	return displayCreateAndDeleteOutput(cmd, options)
 }
 
 func check(err error) {

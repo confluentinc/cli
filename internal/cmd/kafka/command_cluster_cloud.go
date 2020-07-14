@@ -270,7 +270,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	}
 	outputFormat, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	if outputFormat == output.Human.String() {
 		pcmd.ErrPrintln(cmd, errors.KafkaClusterTime)

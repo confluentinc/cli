@@ -25,6 +25,7 @@ const (
 
 	// environment commands
 	UsingEnvMsg = "Now using \"%s\" as the default (active) environment.\n"
+	DeletedEnvMsg = "Deleted environment \"%s\".\n"
 
 	// feedback commands
 	ThanksForFeedbackMsg = "Thanks for your feedback."

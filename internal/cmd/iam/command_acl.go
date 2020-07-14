@@ -122,7 +122,7 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return c.handleACLError(cmd, err, response)
 	}
-	return errors.HandleCommon(PrintACLs(cmd, acl.CreateAclRequest.Scope.Clusters.KafkaCluster, []mds.AclBinding{acl.CreateAclRequest.AclBinding}), cmd)
+	return PrintACLs(cmd, acl.CreateAclRequest.Scope.Clusters.KafkaCluster, []mds.AclBinding{acl.CreateAclRequest.AclBinding})
 }
 
 func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
