@@ -242,7 +242,7 @@ func (c *Command) startService(command *cobra.Command, service string, configFil
 		return c.printStatus(command, service)
 	}
 
-	if err := checkService(service); err != nil {
+	if err := c.checkService(service); err != nil {
 		return err
 	}
 
@@ -263,12 +263,12 @@ func (c *Command) startService(command *cobra.Command, service string, configFil
 	return c.printStatus(command, service)
 }
 
-func checkService(service string) error {
-	if err := checkOSVersion(); err != nil {
+func (c *Command) checkService(service string) error {
+	if err := c.checkOSVersion(); err != nil {
 		return err
 	}
 
-	if err := checkJavaVersion(service); err != nil {
+	if err := c.checkJavaVersion(service); err != nil {
 		return err
 	}
 
@@ -630,9 +630,14 @@ func setServiceEnvs(service string) error {
 	return nil
 }
 
-func checkOSVersion() error {
-	// CLI-84: Require macOS version >= 10.13
+func (c *Command) checkOSVersion() error {
 	if runtime.GOOS == "darwin" {
+		required, _ := version.NewSemver("10.13")
+		// CLI-584 CP 6.0 now requires at least 10.14
+		if above, err := c.ch.IsAtLeastVersion("6.0"); above && err == nil {
+			required, _ = version.NewSemver("10.14")
+		}
+
 		osVersion, err := exec.Command("sw_vers", "-productVersion").Output()
 		if err != nil {
 			return err
@@ -643,15 +648,14 @@ func checkOSVersion() error {
 			return err
 		}
 
-		required, _ := version.NewSemver("10.13")
 		if v.Compare(required) < 0 {
-			return fmt.Errorf(errors.MacVersionErrorMsg, osVersion)
+			return fmt.Errorf(errors.MacVersionErrorMsg, required.String(), osVersion)
 		}
 	}
 	return nil
 }
 
-func checkJavaVersion(service string) error {
+func (c *Command) checkJavaVersion(service string) error {
 	java := filepath.Join(os.Getenv("JAVA_HOME"), "/bin/java")
 	if os.Getenv("JAVA_HOME") == "" {
 		out, err := exec.Command("which", "java").Output()

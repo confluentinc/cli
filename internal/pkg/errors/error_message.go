@@ -121,7 +121,7 @@ const (
 		"See https://docs.confluent.io/current/installation/versions-interoperability.html\n" +
 		"If you have multiple versions of Java installed, you may need to set JAVA_HOME to the version you want Confluent to use."
 	NoLogFoundErrorMsg       = "no log found: to run %s, use \"confluent local services %s start\""
-	MacVersionErrorMsg       = "macOS version >= 10.13 is required (detected: %s)"
+	MacVersionErrorMsg       = "macOS version >= %s is required (detected: %s)"
 	JavaExecNotFondErrorMsg  = "could not find java executable, please install java or set JAVA_HOME"
 	NothingToDestroyErrorMsg = "nothing to destroy"
 
