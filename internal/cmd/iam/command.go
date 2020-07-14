@@ -17,7 +17,7 @@ func New(cliName string, prerunner pcmd.PreRunner) *cobra.Command {
 		&cobra.Command{
 			Use:   "iam",
 			Short: "Manage RBAC, ACL and IAM permissions.",
-			Long:  "Manage Role Based Access (RBAC), Access Control Lists (ACL), and Identity and Access Management (IAM) permissions.",
+			Long:  "Manage Role-Based Access Control (RBAC), Access Control Lists (ACL), and Identity and Access Management (IAM) permissions.",
 		}, prerunner)
 
 	c := &command{

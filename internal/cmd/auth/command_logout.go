@@ -3,6 +3,8 @@ package auth
 import (
 	"fmt"
 
+	"github.com/confluentinc/cli/internal/pkg/errors"
+
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
@@ -26,14 +28,13 @@ func (a *logoutCommand) init(cliName string, prerunner pcmd.PreRunner) {
 	remoteAPIName := getRemoteAPIName(cliName)
 	logoutCmd := &cobra.Command{
 		Use:   "logout",
-		Short: fmt.Sprintf("Logout of %s.", remoteAPIName),
-		Long:  fmt.Sprintf("Logout of %s.", remoteAPIName),
-		RunE:  a.logout,
+		Short: fmt.Sprintf("Log out of %s.", remoteAPIName),
+		RunE:  pcmd.NewCLIRunE(a.logout),
 		Args:  cobra.NoArgs,
-		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		PersistentPreRunE: pcmd.NewCLIPreRunnerE(func(cmd *cobra.Command, args []string) error {
 			a.analyticsClient.SetCommandType(analytics.Logout)
 			return a.CLICommand.PersistentPreRunE(cmd, args)
-		},
+		}),
 	}
 	cliLogoutCmd := pcmd.NewAnonymousCLICommand(logoutCmd, prerunner)
 	a.CLICommand = cliLogoutCmd
@@ -52,6 +53,6 @@ func (a *logoutCommand) logout(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	pcmd.Println(cmd, "You are now logged out")
+	pcmd.Println(cmd, errors.LoggedOutMsg)
 	return nil
 }

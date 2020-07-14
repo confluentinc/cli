@@ -414,7 +414,7 @@ func (c *fileCommand) init() {
 		Use:   "show <num-times>",
 		Short: "Show the config file a specified number of times.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.show,
+		RunE:  pcmd.NewCLIRunE(c.show),
 	}
 	c.AddCommand(showCmd)
 }
@@ -426,7 +426,7 @@ func (c *fileCommand) show(cmd *cobra.Command, args []string) error {
 	}
 	filename := c.config.Filename
 	if filename == "" {
-		return errors.New("No config file exists!")
+		return errors.New(errors.NoConfigFileErrorMsg)
 	}
 	for i := 0; i < numTimes; i++ {
 		pcmd.Println(cmd, filename)
@@ -443,11 +443,12 @@ For our command, the constructor needs to take a `Config` struct as a parameter.
 
 
 #### `init` Function
-Here, we add the subcommands, in this case just `show`. We specify the usage messages, number of arguments our command needs, and the function that will be executed when our command is run.
-
+Here, we add the subcommands, in this case just `show`. We specify the usage messages, number of arguments our command needs, and the function that will be executed when our command is run. Not that all `RunE` function must be intialized using `cmd` package's `NewCLIRunE` function, which handles the common logic for all CLI commands.
 #### Main (Work) Function
 This function is named after the verb component of the command, `show`. It does the "heavy" lifting by parsing the `<num-times>` arg, retrieving the filename, and either printing its name to the console, or returning an error if there's no filename set.
 
+#### Error Handling
+See [error.md](errors.md) for details.
 
 ### Registering the Command
 We must register our newly created command with the top-level `config` command located at `internal/cmd/config/command.go`. We add it to the `config` command with `c.AddCommand(NewFileCommand(c.config))`.

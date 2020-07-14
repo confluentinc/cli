@@ -10,7 +10,7 @@ const (
 
 // Encryption Keys Metadata
 const (
-	MetadataKeyEnvvar             = "_metadata.symmetric_key.0.envvar"
+	MetadataKeyEnvVar             = "_metadata.symmetric_key.0.envvar"
 	MetadataKeyTimestamp          = "_metadata.symmetric_key.0.created_at"
 	MetadataKeyLength             = "_metadata.symmetric_key.0.length"
 	MetadataDEKSalt               = "_metadata.symmetric_key.0.salt"
@@ -33,7 +33,7 @@ const (
 
 // Password Protection File Metadata
 const (
-	ConfluentKeyEnvvar = "CONFLUENT_SECURITY_MASTER_KEY"
+	ConfluentKeyEnvVar = "CONFLUENT_SECURITY_MASTER_KEY"
 )
 
 // JAAS Configuration Const

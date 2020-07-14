@@ -50,11 +50,11 @@ func NewSchemaRegistryACLCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "acl",
-			Short: "Specify ACL for schema-registry.",
+			Short: "Specify an ACL for Schema Registry.",
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
-	c.Command.RunE = c.runSchemaRegistryACLCommand
+	c.Command.RunE = cmd.NewCLIRunE(c.runSchemaRegistryACLCommand)
 	for flag, val := range defaultValues {
 		switch val.(type) {
 		case bool:

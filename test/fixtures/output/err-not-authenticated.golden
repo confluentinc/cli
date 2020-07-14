@@ -1,1 +1,5 @@
-Error: You must log in to run that command.
+Error: not logged in
+
+Suggestions:
+    You must be logged in to run this command.
+    To avoid session timeouts, you can save credentials to netrc file with `ccloud login --save`.

@@ -1,4 +1,4 @@
-- description: ""
+- description: first-key
   key: MYKEY1
   owner: "12"
   resource_id: lkc-bob
