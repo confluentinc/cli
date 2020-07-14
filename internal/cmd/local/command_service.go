@@ -631,7 +631,7 @@ func setServiceEnvs(service string) error {
 }
 
 func checkOSVersion() error {
-	// CLI-84: Require macOS version >= 10.13
+	// CLI-584: Require macOS version >= 10.14
 	if runtime.GOOS == "darwin" {
 		osVersion, err := exec.Command("sw_vers", "-productVersion").Output()
 		if err != nil {
@@ -643,7 +643,7 @@ func checkOSVersion() error {
 			return err
 		}
 
-		required, _ := version.NewSemver("10.13")
+		required, _ := version.NewSemver("10.14")
 		if v.Compare(required) < 0 {
 			return fmt.Errorf(errors.MacVersionErrorMsg, osVersion)
 		}
