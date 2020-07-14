@@ -186,9 +186,6 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 		if r.Config == nil {
 			return r.ConfigLoadingError
 		}
-		if r.Config == nil {
-			return errors.HandleCommon(r.ConfigLoadingError, cmd)
-		}
 		err = r.setClients(command)
 		if err != nil {
 			return err
