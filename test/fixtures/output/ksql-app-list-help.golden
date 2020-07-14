@@ -1,4 +1,4 @@
-List KSQL apps.
+List ksqlDB apps.
 
 Usage:
   ccloud ksql app list [flags]

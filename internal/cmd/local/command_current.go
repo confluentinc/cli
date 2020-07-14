@@ -13,6 +13,7 @@ func NewCurrentCommand(prerunner cmd.PreRunner) *cobra.Command {
 			Use:   "current",
 			Args:  cobra.NoArgs,
 			Short: "Get the path of the current Confluent run.",
+			Long:  "Print the filesystem path of the data and logs of the services managed by the current \"confluent local\" command. If such a path does not exist, it will be created.",
 			Example: examples.BuildExampleString(
 				examples.Example{
 					Desc: "In Linux, running ``confluent local current`` should resemble the following:",

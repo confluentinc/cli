@@ -19,7 +19,7 @@ type Version struct {
 }
 
 func NewVersion(cliName, version, commit, buildDate, buildHost string) *Version {
-	name := getFullCLIName(cliName)
+	name := GetFullCLIName(cliName)
 	support := getSupport(cliName)
 	return &Version{
 		Binary:    cliName,
@@ -58,7 +58,7 @@ Development: %s
 		strconv.FormatBool(!v.IsReleased()))
 }
 
-func getFullCLIName(cliName string) string {
+func GetFullCLIName(cliName string) string {
 	if cliName == "ccloud" {
 		return "Confluent Cloud CLI"
 	}

@@ -24,7 +24,7 @@ func NewClusterCommandOnPrem(prerunner pcmd.PreRunner) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedWithMDSCLICommand(
 		&cobra.Command{
 			Use:   "cluster",
-			Short: "Manage KSQL clusters.",
+			Short: "Manage ksqlDB clusters.",
 		},
 		prerunner)
 	cmd := &clusterCommandOnPrem{
@@ -38,8 +38,8 @@ func NewClusterCommandOnPrem(prerunner pcmd.PreRunner) *cobra.Command {
 func (c *clusterCommandOnPrem) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
-		Short: "List registered KSQL clusters.",
-		Long:  "List KSQL clusters that are registered with the MDS cluster registry.",
+		Short: "List registered ksqlDB clusters.",
+		Long:  "List ksqlDB clusters that are registered with the MDS cluster registry.",
 		RunE:  pcmd.NewCLIRunE(c.list),
 		Args:  cobra.NoArgs,
 	}

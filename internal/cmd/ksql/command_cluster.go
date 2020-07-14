@@ -34,7 +34,7 @@ func NewClusterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "app",
-			Short: "Manage KSQL apps.",
+			Short: "Manage ksqlDB apps.",
 		}, prerunner)
 	cmd := &clusterCommand{AuthenticatedCLICommand: cliCmd}
 	cmd.prerunner = prerunner
@@ -45,7 +45,7 @@ func NewClusterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 func (c *clusterCommand) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
-		Short: "List KSQL apps.",
+		Short: "List ksqlDB apps.",
 		RunE:  pcmd.NewCLIRunE(c.list),
 		Args:  cobra.NoArgs,
 	}
@@ -55,7 +55,7 @@ func (c *clusterCommand) init() {
 
 	createCmd := &cobra.Command{
 		Use:   "create <name>",
-		Short: "Create a KSQL app.",
+		Short: "Create a ksqlDB app.",
 		RunE:  pcmd.NewCLIRunE(c.create),
 		Args:  cobra.ExactArgs(1),
 	}
@@ -67,7 +67,7 @@ func (c *clusterCommand) init() {
 
 	describeCmd := &cobra.Command{
 		Use:   "describe <id>",
-		Short: "Describe a KSQL app.",
+		Short: "Describe a ksqlDB app.",
 		RunE:  pcmd.NewCLIRunE(c.describe),
 		Args:  cobra.ExactArgs(1),
 	}
@@ -77,14 +77,14 @@ func (c *clusterCommand) init() {
 
 	c.AddCommand(&cobra.Command{
 		Use:   "delete <id>",
-		Short: "Delete a KSQL app.",
+		Short: "Delete a ksqlDB app.",
 		RunE:  pcmd.NewCLIRunE(c.delete),
 		Args:  cobra.ExactArgs(1),
 	})
 
 	aclsCmd := &cobra.Command{
 		Use:   "configure-acls <id> TOPICS...",
-		Short: "Configure ACLs for a KSQL cluster.",
+		Short: "Configure ACLs for a ksqlDB cluster.",
 		RunE:  pcmd.NewCLIRunE(c.configureACLs),
 		Args:  cobra.MinimumNArgs(1),
 	}
@@ -162,7 +162,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	pcmd.Printf(cmd, errors.KSQLDeletedMsg, args[0])
+	pcmd.Printf(cmd, errors.KsqlDBDeletedMsg, args[0])
 	return nil
 }
 
@@ -274,7 +274,7 @@ func (c *clusterCommand) configureACLs(cmd *cobra.Command, args []string) error 
 		return err
 	}
 	if cluster.KafkaClusterId != kafkaCluster.Id {
-		pcmd.ErrPrintf(cmd, errors.KSQLNotBackedByKafkaMsg, args[0], cluster.KafkaClusterId, kafkaCluster.Id)
+		pcmd.ErrPrintf(cmd, errors.KsqlDBNotBackedByKafkaMsg, args[0], cluster.KafkaClusterId, kafkaCluster.Id)
 	}
 
 	serviceAccountId, err := c.getServiceAccount(cluster)

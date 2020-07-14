@@ -24,7 +24,7 @@ func NewACLCommand(cliName string, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &aclCommand{
 		AuthenticatedCLICommand: pcmd.NewAuthenticatedWithMDSCLICommand(&cobra.Command{
 			Use:   "acl",
-			Short: `Manage Kafka ACLs (5.4+ only).`,
+			Short: "Manage Kafka ACLs (5.4+ only).",
 		}, prerunner),
 	}
 

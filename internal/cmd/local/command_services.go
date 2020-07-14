@@ -300,7 +300,7 @@ func NewServicesTopCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "top",
-			Short: "Monitor all Confluent Platform services.",
+			Short: "View resource usage for all Confluent Platform services.",
 			Args:  cobra.NoArgs,
 		}, prerunner)
 

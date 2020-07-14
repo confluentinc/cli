@@ -25,7 +25,7 @@ func NewServiceCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   service,
-			Short: fmt.Sprintf("Manage the %s service.", writeServiceName(service)),
+			Short: fmt.Sprintf("Manage %s.", writeOfficialServiceName(service)),
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
@@ -54,7 +54,7 @@ func NewServiceLogCommand(service string, prerunner cmd.PreRunner) *cobra.Comman
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "log",
-			Short: fmt.Sprintf("Print logs for %s.", writeServiceName(service)),
+			Short: fmt.Sprintf("Print logs showing %s output.", writeOfficialServiceName(service)),
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
@@ -85,7 +85,7 @@ func (c *Command) runServiceLogCommand(command *cobra.Command, _ []string) error
 
 	data, err := ioutil.ReadFile(log)
 	if err != nil {
-		return errors.Errorf(errors.NoLogFoundErrorMsg, writeServiceName(service), service)
+		return errors.Errorf(errors.NoLogFoundErrorMsg, writeOfficialServiceName(service), service)
 	}
 
 	command.Print(string(data))
@@ -96,12 +96,12 @@ func NewServiceStartCommand(service string, prerunner cmd.PreRunner) *cobra.Comm
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "start",
-			Short: fmt.Sprintf("Start the %s service.", writeServiceName(service)),
+			Short: fmt.Sprintf("Start %s.", writeOfficialServiceName(service)),
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
 	c.Command.RunE = cmd.NewCLIRunE(c.runServiceStartCommand)
-	c.Command.Flags().StringP("config", "c", "", fmt.Sprintf("Configure %s with a specific properties file.", service))
+	c.Command.Flags().StringP("config", "c", "", fmt.Sprintf("Configure %s with a specific properties file.", writeOfficialServiceName(service)))
 
 	return c.Command
 }
@@ -131,7 +131,7 @@ func NewServiceStatusCommand(service string, prerunner cmd.PreRunner) *cobra.Com
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "status",
-			Short: fmt.Sprintf("Check the status of %s.", writeServiceName(service)),
+			Short: fmt.Sprintf("Check if %s is running.", writeOfficialServiceName(service)),
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
@@ -153,7 +153,7 @@ func NewServiceStopCommand(service string, prerunner cmd.PreRunner) *cobra.Comma
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "stop",
-			Short: fmt.Sprintf("Stop the %s service.", writeServiceName(service)),
+			Short: fmt.Sprintf("Stop %s.", writeOfficialServiceName(service)),
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
@@ -181,7 +181,7 @@ func NewServiceTopCommand(service string, prerunner cmd.PreRunner) *cobra.Comman
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "top",
-			Short: fmt.Sprintf("Monitor %s processes.", writeServiceName(service)),
+			Short: fmt.Sprintf("View resource usage for %s.", writeOfficialServiceName(service)),
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
@@ -212,7 +212,7 @@ func NewServiceVersionCommand(service string, prerunner cmd.PreRunner) *cobra.Co
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "version",
-			Short: fmt.Sprintf("Print the version of %s.", writeServiceName(service)),
+			Short: fmt.Sprintf("Print the current version of %s.", writeOfficialServiceName(service)),
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
@@ -712,13 +712,26 @@ func isValidJavaVersion(service, javaVersion string) (bool, error) {
 	return true, nil
 }
 
+func writeOfficialServiceName(service string) string {
+	switch service {
+	case "kafka":
+		return "Apache Kafka®"
+	case "zookeeper":
+		return "Apache ZooKeeper™"
+	default:
+		return writeServiceName(service)
+	}
+}
+
 func writeServiceName(service string) string {
 	switch service {
 	case "kafka-rest":
 		return "Kafka REST"
 	case "ksql-server":
-		return "KSQL Server"
+		return "ksqlDB Server"
+	case "zookeeper":
+		return "ZooKeeper"
+	default:
+		return strings.Title(strings.ReplaceAll(service, "-", " "))
 	}
-
-	return strings.Title(strings.ReplaceAll(service, "-", " "))
 }

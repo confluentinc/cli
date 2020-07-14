@@ -5,7 +5,7 @@ Available Services:
   Connect
   Kafka
   Kafka REST
-  KSQL Server
+  ksqlDB Server
   Schema Registry
-  Zookeeper
+  ZooKeeper
 

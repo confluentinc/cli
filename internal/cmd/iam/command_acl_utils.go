@@ -57,9 +57,8 @@ func listACLFlags() *pflag.FlagSet {
 }
 
 func aclFlags() *pflag.FlagSet {
-
 	flgSet := pflag.NewFlagSet("acl-config", pflag.ExitOnError)
-	flgSet.String("kafka-cluster-id", "", "Kafka cluster ID for scope of acl commands.")
+	flgSet.String("kafka-cluster-id", "", "Kafka cluster ID for scope of ACL commands.")
 	flgSet.Bool("allow", false, "ACL permission to allow access.")
 	flgSet.Bool("deny", false, "ACL permission to restrict access to resource.")
 	flgSet.String("principal", "", "Principal for this operation with User: or Group: prefix.")

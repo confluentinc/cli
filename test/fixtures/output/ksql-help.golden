@@ -1,10 +1,10 @@
-Manage KSQL applications.
+Manage ksqlDB applications.
 
 Usage:
   ccloud ksql [command]
 
 Available Commands:
-  app         Manage KSQL apps.
+  app         Manage ksqlDB apps.
 
 Global Flags:
   -h, --help            Show help for this command.

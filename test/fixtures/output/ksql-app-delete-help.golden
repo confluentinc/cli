@@ -1,4 +1,4 @@
-Delete a KSQL app.
+Delete a ksqlDB app.
 
 Usage:
   ccloud ksql app delete <id> [flags]

@@ -25,8 +25,8 @@ func NewConfigCommand(prerunner cmd.PreRunner) *cobra.Command {
 	cliCmd := cmd.NewAuthenticatedWithMDSCLICommand(
 		&cobra.Command{
 			Use:   "config",
-			Short: "Manage audit log configuration specification.",
-			Long:  "Manage audit log defaults and routing rules that determine which auditable events are logged, and where.",
+			Short: "Manage the audit log configuration specification.",
+			Long:  "Manage the audit log defaults and routing rules that determine which auditable events are logged, and where.",
 		}, prerunner)
 	command := &configCommand{
 		AuthenticatedCLICommand: cliCmd,
@@ -40,6 +40,7 @@ func (c *configCommand) init() {
 	describeCmd := &cobra.Command{
 		Use:   "describe",
 		Short: "Prints the audit log configuration spec object.",
+		Long:  `Prints the audit log configuration spec object, where "spec" refers to the JSON blob that describes audit log routing rules.`,
 		RunE:  cmd.NewCLIRunE(c.describe),
 		Args:  cobra.NoArgs,
 	}
@@ -52,15 +53,15 @@ func (c *configCommand) init() {
 		RunE:  cmd.NewCLIRunE(c.update),
 		Args:  cobra.NoArgs,
 	}
-	updateCmd.Flags().String("file", "", "A local file path, read as input. Otherwise the command will read from standard in.")
-	updateCmd.Flags().Bool("force", false, "Tries to update even with concurrent modifications.")
+	updateCmd.Flags().String("file", "", "A local file path to the JSON configuration file, read as input. Otherwise the command will read from standard input.")
+	updateCmd.Flags().Bool("force", false, "Updates the configuration, overwriting any concurrent modifications.")
 	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
 
 	editCmd := &cobra.Command{
 		Use:   "edit",
 		Short: "Edit the audit-log config spec interactively.",
-		Long:  "Edit the audit-log config spec object interactively, using the EDITOR specified in your environment.",
+		Long:  "Edit the audit-log config spec object interactively, using the $EDITOR specified in your environment (for example, vim).",
 		RunE:  cmd.NewCLIRunE(c.edit),
 		Args:  cobra.NoArgs,
 	}

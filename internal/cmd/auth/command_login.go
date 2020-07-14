@@ -56,7 +56,6 @@ func (a *loginCommand) init(cliName string, prerunner pcmd.PreRunner) {
 	loginCmd := &cobra.Command{
 		Use:   "login",
 		Short: fmt.Sprintf("Log in to %s.", remoteAPIName),
-		Long:  fmt.Sprintf("Log in to %s.", remoteAPIName),
 		Args:  cobra.NoArgs,
 		PersistentPreRunE: pcmd.NewCLIPreRunnerE(func(cmd *cobra.Command, args []string) error {
 			a.analyticsClient.SetCommandType(analytics.Login)

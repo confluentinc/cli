@@ -14,14 +14,14 @@ Available Commands:
   help              Help about any command
   init              Initialize a context.
   kafka             Manage Apache Kafka.
-  ksql              Manage KSQL applications.
+  ksql              Manage ksqlDB applications.
   login             Log in to Confluent Cloud.
-  logout            Logout of Confluent Cloud.
+  logout            Log out of Confluent Cloud.
   prompt            Print ccloud CLI context for your terminal prompt.
   schema-registry   Manage Schema Registry.
   service-account   Manage service accounts.
-  update            Update the ccloud CLI.
-  version           Print the ccloud CLI version.
+  update            Update the Confluent Cloud CLI.
+  version           Print the Confluent Cloud CLI version.
 
 Flags:
   -h, --help            Show help for this command.

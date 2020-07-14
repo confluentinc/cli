@@ -20,7 +20,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 		&cobra.Command{
 			Use:   "audit-log",
 			Short: "Manage audit log configuration.",
-			Long:  "Manage which auditable events are logged, and where the events are sent.",
+			Long:  "Manage which auditable events are logged, and where the event logs are sent.",
 		}, prerunner)
 	cmd := &command{
 		AuthenticatedCLICommand: cliCmd,

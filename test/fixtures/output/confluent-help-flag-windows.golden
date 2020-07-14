@@ -5,19 +5,19 @@ Usage:
 
 Available Commands:
   audit-log       Manage audit log configuration.
-  cluster         Retrieve metadata about Confluent clusters.
+  cluster         Retrieve metadata about Confluent Platform clusters.
   completion      Print shell completion code.
   connect         Manage Connect.
   help            Help about any command
   iam             Manage RBAC, ACL and IAM permissions.
   kafka           Manage Apache Kafka.
-  ksql            Manage KSQL applications.
+  ksql            Manage ksqlDB applications.
   login           Log in to Confluent Platform (required for RBAC).
-  logout          Logout of Confluent Platform.
+  logout          Log out of Confluent Platform.
   schema-registry Manage Schema Registry.
   secret          Manage secrets for Confluent Platform.
-  update          Update the confluent CLI.
-  version         Print the confluent CLI version.
+  update          Update the Confluent CLI.
+  version         Print the Confluent CLI version.
 
 Flags:
   -h, --help            Show help for this command.

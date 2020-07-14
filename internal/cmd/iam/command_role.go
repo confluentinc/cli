@@ -40,7 +40,7 @@ func NewRoleCommand(prerunner cmd.PreRunner) *cobra.Command {
 		&cobra.Command{
 			Use:   "role",
 			Short: "Manage RBAC and IAM roles.",
-			Long:  "Manage Role Based Access (RBAC) and Identity and Access Management (IAM) roles.",
+			Long:  "Manage Role-Based Access Control (RBAC) and Identity and Access Management (IAM) roles.",
 		}, prerunner)
 	roleCmd := &roleCommand{
 		AuthenticatedCLICommand: cliCmd,
@@ -56,7 +56,7 @@ func (c *roleCommand) createContext() context.Context {
 func (c *roleCommand) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
-		Short: "List the available roles.",
+		Short: "List the available RBAC roles.",
 		RunE:  cmd.NewCLIRunE(c.list),
 		Args:  cobra.NoArgs,
 	}

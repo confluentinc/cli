@@ -46,9 +46,9 @@ const (
 	UpdateTopicConfigMsg = "Updated the following configs for topic \"%s\":\n"
 
 	// ksql commands
-	EndPointNotPopulatedMsg = "Endpoint not yet populated. To obtain the endpoint, use `ccloud ksql app describe`."
-	KSQLDeletedMsg          = "Deleted KSQL app \"%s\".\n"
-	KSQLNotBackedByKafkaMsg = "The KSQL cluster \"%s\" is not backed by \"%s\" which is not the current Kafka cluster \"%s\".\n"
+	EndPointNotPopulatedMsg   = "Endpoint not yet populated. To obtain the endpoint, use `ccloud ksql app describe`."
+	KsqlDBDeletedMsg          = "ksqlDB app \"%s\" has been deleted.\n"
+	KsqlDBNotBackedByKafkaMsg = "The ksqlDB cluster \"%s\" is not backed by \"%s\" which is not the current Kafka cluster \"%s\".\n"
 
 	// local commands
 	AvailableServicesMsg       = "Available Services:\n%s\n"

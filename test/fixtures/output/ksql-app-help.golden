@@ -1,14 +1,14 @@
-Manage KSQL apps.
+Manage ksqlDB apps.
 
 Usage:
   ccloud ksql app [command]
 
 Available Commands:
-  configure-acls Configure ACLs for a KSQL cluster.
-  create         Create a KSQL app.
-  delete         Delete a KSQL app.
-  describe       Describe a KSQL app.
-  list           List KSQL apps.
+  configure-acls Configure ACLs for a ksqlDB cluster.
+  create         Create a ksqlDB app.
+  delete         Delete a ksqlDB app.
+  describe       Describe a ksqlDB app.
+  list           List ksqlDB apps.
 
 Global Flags:
   -h, --help            Show help for this command.
