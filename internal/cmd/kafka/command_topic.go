@@ -334,14 +334,6 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 	return nil
 }
 
-func copyMap(inputMap map[string]string) map[string]string {
-	newMap := make(map[string]string)
-	for key, val := range inputMap {
-		newMap[key] = val
-	}
-	return newMap
-}
-
 func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) error {
 	cluster, err := pcmd.KafkaCluster(cmd, a.Context)
 	if err != nil {
