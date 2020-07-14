@@ -41,9 +41,7 @@ steps:
   displayName: 'Install Go 1.14.2 (Darwin)'
 
 - powershell: |
-    [Net.ServicePointManager]::SecurityProtocol
-    [Net.SecurityProtocolType]
-    [enum]::GetNames([Net.SecurityProtocolType])
+    $ProgressPreference = 'SilentlyContinue'
     Invoke-WebRequest -Uri "https://s3-us-west-2.amazonaws.com/confluent.cloud/cli/go-binaries/1.14.2/go1.14.2.windows-amd64.zip" -OutFile "$(Agent.BuildDirectory)\go1.14.2.zip" -Verbose
     & ${env:ProgramFiles}\7-Zip\7z.exe x $(Agent.BuildDirectory)/go1.14.2.zip "-o$(Agent.BuildDirectory)" -y
   condition: eq( variables['Agent.OS'], 'Windows_NT' )
