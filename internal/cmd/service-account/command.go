@@ -3,8 +3,9 @@ package service_account
 import (
 	"context"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"strconv"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 
 	"github.com/spf13/cobra"
 

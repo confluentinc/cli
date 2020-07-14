@@ -1345,8 +1345,8 @@ func handleAPIKeyUpdateAndDelete(t *testing.T) func(w http.ResponseWriter, r *ht
 			require.NoError(t, err)
 			apiKey.Description = req.ApiKey.Description
 			result := &schedv1.UpdateApiKeyReply{
-				ApiKey:               apiKey,
-				Error:                nil,
+				ApiKey: apiKey,
+				Error:  nil,
 			}
 			reply, err := json.Marshal(result)
 			require.NoError(t, err)
@@ -1358,8 +1358,8 @@ func handleAPIKeyUpdateAndDelete(t *testing.T) func(w http.ResponseWriter, r *ht
 			require.NoError(t, err)
 			delete(keyStore, index)
 			result := &schedv1.DeleteApiKeyReply{
-				ApiKey:               apiKey,
-				Error:                nil,
+				ApiKey: apiKey,
+				Error:  nil,
 			}
 			reply, err := json.Marshal(result)
 			require.NoError(t, err)
@@ -1406,8 +1406,8 @@ func handleServiceAccountRequests(t *testing.T) func(w http.ResponseWriter, r *h
 			err := utilv1.UnmarshalJSON(r.Body, req)
 			require.NoError(t, err)
 			updateReply, err := utilv1.MarshalJSONToBytes(&orgv1.UpdateServiceAccountReply{
-				Error:                nil,
-				User:                 req.User,
+				Error: nil,
+				User:  req.User,
 			})
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(updateReply))

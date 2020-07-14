@@ -514,23 +514,23 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, _ []string) error {
 
 func displayCreateAndDeleteOutput(cmd *cobra.Command, options *rolebindingOptions) error {
 	var fieldsSelected []string
-	structuredRename := map[string]string{"Principal": "principal", "Role": "role", "ResourceType": "resource_type", "Name": "name",  "PatternType": "pattern_type"}
+	structuredRename := map[string]string{"Principal": "principal", "Role": "role", "ResourceType": "resource_type", "Name": "name", "PatternType": "pattern_type"}
 	displayStruct := &listDisplay{
-		Principal:    options.principal,
-		Role:         options.role,
+		Principal: options.principal,
+		Role:      options.role,
 	}
 	if options.resource != "" {
-			fieldsSelected = resourcePatternListFields
-			if len(options.resourcesRequest.ResourcePatterns) != 1 {
-				return errors.New("display error: number of resource pattern is not 1")
-			}
-			resourcePattern := options.resourcesRequest.ResourcePatterns[0]
-			displayStruct.ResourceType = resourcePattern.ResourceType
-			displayStruct.Name = resourcePattern.Name
-			displayStruct.PatternType = resourcePattern.PatternType
+		fieldsSelected = resourcePatternListFields
+		if len(options.resourcesRequest.ResourcePatterns) != 1 {
+			return errors.New("display error: number of resource pattern is not 1")
+		}
+		resourcePattern := options.resourcesRequest.ResourcePatterns[0]
+		displayStruct.ResourceType = resourcePattern.ResourceType
+		displayStruct.Name = resourcePattern.Name
+		displayStruct.PatternType = resourcePattern.PatternType
 	} else {
-			fieldsSelected = []string{"Principal", "Role", "ResourceType"}
-			displayStruct.ResourceType = "Cluster"
+		fieldsSelected = []string{"Principal", "Role", "ResourceType"}
+		displayStruct.ResourceType = "Cluster"
 	}
 	return output.DescribeObject(cmd, displayStruct, fieldsSelected, map[string]string{}, structuredRename)
 }

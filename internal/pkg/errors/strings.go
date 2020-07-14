@@ -24,7 +24,7 @@ const (
 	ResumedConnectorMsg = "Resumed connector \"%s\".\n"
 
 	// environment commands
-	UsingEnvMsg = "Now using \"%s\" as the default (active) environment.\n"
+	UsingEnvMsg   = "Now using \"%s\" as the default (active) environment.\n"
 	DeletedEnvMsg = "Deleted environment \"%s\".\n"
 
 	// feedback commands
@@ -34,16 +34,19 @@ const (
 	InitContextMsg = "Context \"%s\" initialized and set as current context.\n"
 
 	// kafka cluster commands
-	UseKafkaClusterMsg = "Set Kafka cluster \"%s\" as the active cluster for environment \"%s\"."
+	UseKafkaClusterMsg      = "Set Kafka cluster \"%s\" as the active cluster for environment \"%s\"."
 	ConfirmAuthorizedKeyMsg = "Please confirm you have authorized the key for these accounts: %s"
 
 	// kafka topic commands
-	StartingProducerMsg = "Starting Kafka Producer. ^C or ^D to exit"
-	StoppingConsumer    = "Stopping Consumer."
-	StartingConsumerMsg = "Starting Kafka Consumer. ^C or ^D to exit"
-	CreatedTopicMsg     = "Created topic \"%s\"."
-	DeletedTopicMsg     = "Deleted topic \"%s\"\n."
+	StartingProducerMsg  = "Starting Kafka Producer. ^C or ^D to exit"
+	StoppingConsumer     = "Stopping Consumer."
+	StartingConsumerMsg  = "Starting Kafka Consumer. ^C or ^D to exit"
+	CreatedTopicMsg      = "Created topic \"%s\"."
+	DeletedTopicMsg      = "Deleted topic \"%s\"\n."
 	UpdateTopicConfigMsg = "Updated the following configs for topic \"%s\":\n"
+
+	// kafka acl commands
+	DeletedACLsMsg = "Deleted ACLs."
 
 	// ksql commands
 	EndPointNotPopulatedMsg   = "Endpoint not yet populated. To obtain the endpoint, use `ccloud ksql app describe`."
