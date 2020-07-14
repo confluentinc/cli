@@ -14,11 +14,11 @@ func NewVersionCommand(prerunner cmd.PreRunner) *cobra.Command {
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
-	c.Command.RunE = c.runVersionCommand
+	c.Command.RunE = cmd.NewCLIRunE(c.runVersionCommand)
 	return c.Command
 }
 
-func (c *LocalCommand) runVersionCommand(command *cobra.Command, _ []string) error {
+func (c *Command) runVersionCommand(command *cobra.Command, _ []string) error {
 	isCP, err := c.ch.IsConfluentPlatform()
 	if err != nil {
 		return err

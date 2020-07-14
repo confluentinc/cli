@@ -12,6 +12,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/local"
 )
 
@@ -126,9 +128,9 @@ var (
 func NewServicesCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
-			Use:   "services [command]",
+			Use:   "services",
 			Short: "Manage Confluent Platform services.",
-			Args:  cobra.MinimumNArgs(1),
+			Args:  cobra.NoArgs,
 		}, prerunner)
 
 	availableServices, _ := c.getAvailableServices()
@@ -154,18 +156,23 @@ func NewServicesListCommand(prerunner cmd.PreRunner) *cobra.Command {
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
-	c.Command.RunE = c.runServicesListCommand
+	c.Command.RunE = cmd.NewCLIRunE(c.runServicesListCommand)
 	return c.Command
 }
 
-func (c *LocalCommand) runServicesListCommand(command *cobra.Command, _ []string) error {
-	availableServices, err := c.getAvailableServices()
+func (c *Command) runServicesListCommand(command *cobra.Command, _ []string) error {
+	services, err := c.getAvailableServices()
 	if err != nil {
 		return err
 	}
 
-	command.Println("Available Services:")
-	command.Println(local.BuildTabbedList(availableServices))
+	sort.Strings(services)
+
+	serviceNames := make([]string, len(services))
+	for i, service := range services {
+		serviceNames[i] = writeServiceName(service)
+	}
+	command.Printf(errors.AvailableServicesMsg, local.BuildTabbedList(serviceNames))
 	return nil
 }
 
@@ -173,16 +180,26 @@ func NewServicesStartCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "start",
-			Short: "Start all Confluent Platform services.",
 			Args:  cobra.NoArgs,
+			Short: "Start all Confluent Platform services.",
+			Example: examples.BuildExampleString(
+				examples.Example{
+					Desc: "Start all available services:",
+					Code: "confluent local services start",
+				},
+				examples.Example{
+					Desc: "Start Apache Kafka® and ZooKeeper as its dependency:",
+					Code: "confluent local services kafka start",
+				},
+			),
 		}, prerunner)
 
-	c.Command.RunE = c.runServicesStartCommand
+	c.Command.RunE = cmd.NewCLIRunE(c.runServicesStartCommand)
 
 	return c.Command
 }
 
-func (c *LocalCommand) runServicesStartCommand(command *cobra.Command, _ []string) error {
+func (c *Command) runServicesStartCommand(command *cobra.Command, _ []string) error {
 	availableServices, err := c.getAvailableServices()
 	if err != nil {
 		return err
@@ -195,7 +212,7 @@ func (c *LocalCommand) runServicesStartCommand(command *cobra.Command, _ []strin
 	// Topological order
 	for i := 0; i < len(availableServices); i++ {
 		service := availableServices[i]
-		if err := c.startService(command, service); err != nil {
+		if err := c.startService(command, service, ""); err != nil {
 			return err
 		}
 	}
@@ -211,11 +228,11 @@ func NewServicesStatusCommand(prerunner cmd.PreRunner) *cobra.Command {
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
-	c.Command.RunE = c.runServicesStatusCommand
+	c.Command.RunE = cmd.NewCLIRunE(c.runServicesStatusCommand)
 	return c.Command
 }
 
-func (c *LocalCommand) runServicesStatusCommand(command *cobra.Command, _ []string) error {
+func (c *Command) runServicesStatusCommand(command *cobra.Command, _ []string) error {
 	availableServices, err := c.getAvailableServices()
 	if err != nil {
 		return err
@@ -239,16 +256,26 @@ func NewServicesStopCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "stop",
-			Short: "Stop all Confluent Platform services.",
 			Args:  cobra.NoArgs,
+			Short: "Stop all Confluent Platform services.",
+			Example: examples.BuildExampleString(
+				examples.Example{
+					Desc: "Stop all running services:",
+					Code: "confluent local services stop",
+				},
+				examples.Example{
+					Desc: "Stop Apache Kafka® and its dependent services.",
+					Code: "confluent local services kafka stop",
+				},
+			),
 		}, prerunner)
 
-	c.Command.RunE = c.runServicesStopCommand
+	c.Command.RunE = cmd.NewCLIRunE(c.runServicesStopCommand)
 
 	return c.Command
 }
 
-func (c *LocalCommand) runServicesStopCommand(command *cobra.Command, _ []string) error {
+func (c *Command) runServicesStopCommand(command *cobra.Command, _ []string) error {
 	availableServices, err := c.getAvailableServices()
 	if err != nil {
 		return err
@@ -273,16 +300,16 @@ func NewServicesTopCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "top",
-			Short: "Monitor all Confluent Platform services.",
+			Short: "View resource usage for all Confluent Platform services.",
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
-	c.Command.RunE = c.runServicesTopCommand
+	c.Command.RunE = cmd.NewCLIRunE(c.runServicesTopCommand)
 
 	return c.Command
 }
 
-func (c *LocalCommand) runServicesTopCommand(command *cobra.Command, _ []string) error {
+func (c *Command) runServicesTopCommand(_ *cobra.Command, _ []string) error {
 	availableServices, err := c.getAvailableServices()
 	if err != nil {
 		return err
@@ -305,13 +332,13 @@ func (c *LocalCommand) runServicesTopCommand(command *cobra.Command, _ []string)
 	}
 
 	if len(pids) == 0 {
-		return fmt.Errorf("no services running")
+		return errors.New(errors.NoServicesRunningErrorMsg)
 	}
 
 	return top(pids)
 }
 
-func (c *LocalCommand) getConfig(service string) (map[string]string, error) {
+func (c *Command) getConfig(service string) (map[string]string, error) {
 	data, err := c.cc.GetDataDir(service)
 	if err != nil {
 		return map[string]string{}, err
@@ -327,11 +354,18 @@ func (c *LocalCommand) getConfig(service string) (map[string]string, error) {
 	switch service {
 	case "connect":
 		config["bootstrap.servers"] = fmt.Sprintf("localhost:%d", services["kafka"].port)
-		path, err := c.ch.GetFile("share", "java")
+
+		data, err := c.ch.ReadServiceConfig(service)
 		if err != nil {
 			return map[string]string{}, err
 		}
-		config["plugin.path"] = path
+		path := local.ExtractConfig(data)["plugin.path"].(string)
+		full, err := c.ch.GetFile("share", "java")
+		if err != nil {
+			return map[string]string{}, err
+		}
+		config["plugin.path"] = strings.ReplaceAll(path, "share/java", full)
+
 		matches, err := c.ch.FindFile("share/java/kafka-connect-replicator/replicator-rest-extension-*.jar")
 		if err != nil {
 			return map[string]string{}, err
@@ -406,7 +440,7 @@ func top(pids []int) error {
 		}
 		top = exec.Command("top", "-p", strings.Join(args, ","))
 	default:
-		return fmt.Errorf("top not available on platform: %s", runtime.GOOS)
+		return errors.Errorf(errors.TopNotAvailableErrorMsg, runtime.GOOS)
 	}
 
 	top.Stdin = os.Stdin
@@ -416,7 +450,7 @@ func top(pids []int) error {
 	return top.Run()
 }
 
-func (c *LocalCommand) getAvailableServices() ([]string, error) {
+func (c *Command) getAvailableServices() ([]string, error) {
 	isCP, err := c.ch.IsConfluentPlatform()
 
 	var available []string
@@ -429,12 +463,12 @@ func (c *LocalCommand) getAvailableServices() ([]string, error) {
 	return available, err
 }
 
-func (c *LocalCommand) notifyConfluentCurrent(command *cobra.Command) error {
+func (c *Command) notifyConfluentCurrent(command *cobra.Command) error {
 	dir, err := c.cc.GetCurrentDir()
 	if err != nil {
 		return err
 	}
 
-	command.Printf("Using CONFLUENT_CURRENT: %s\n", dir)
+	command.Printf(errors.UsingConfluentCurrentMsg, dir)
 	return nil
 }

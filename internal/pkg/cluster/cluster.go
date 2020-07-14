@@ -6,13 +6,13 @@ import (
 	"os"
 	"strings"
 
+	"github.com/confluentinc/go-printer"
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/go-printer"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
-	"github.com/olekukonko/tablewriter"
 )
 
 type prettyCluster struct {
@@ -42,7 +42,7 @@ func PrintCluster(cmd *cobra.Command, clusterInfos []mds.ClusterInfo, format str
 		for _, clusterInfo := range clusterInfos {
 			clusterDisplay, err := createPrettyCluster(clusterInfo)
 			if err != nil {
-				return errors.HandleCommon(err, cmd)
+				return err
 			}
 			data = append(data, printer.ToRow(clusterDisplay, clusterFields))
 		}
@@ -124,8 +124,7 @@ func outputTable(data [][]string) {
 
 func HandleClusterError(cmd *cobra.Command, err error, response *http.Response) error {
 	if response != nil && response.StatusCode == http.StatusNotFound {
-		cmd.SilenceUsage = true
-		return fmt.Errorf("Unable to access Cluster Registry (%s). Ensure that you're running against MDS with CP 6.0+.", err.Error())
+		return errors.NewWrapErrorWithSuggestions(err, errors.AccessClusterRegistryErrorMsg, errors.AccessClusterRegistrySuggestions)
 	}
-	return errors.HandleCommon(err, cmd)
+	return err
 }

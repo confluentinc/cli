@@ -2,18 +2,15 @@ package auth
 
 import (
 	"context"
+	"os"
+
 	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/spf13/cobra"
-	"os"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/log"
-)
-
-var (
-	LoginIndex = 0
 )
 
 // New returns a list of auth-related Cobra commands.

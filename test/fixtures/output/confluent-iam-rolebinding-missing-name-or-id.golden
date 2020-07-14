@@ -1,1 +1,1 @@
-Error: Must specify either cluster ID flag to indicate role binding scope or the cluster name.
+Error: must specify either cluster ID to indicate role binding scope or the cluster name

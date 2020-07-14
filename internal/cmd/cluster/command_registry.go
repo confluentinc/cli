@@ -2,18 +2,18 @@ package cluster
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
 
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	"github.com/spf13/pflag"
+
 	print "github.com/confluentinc/cli/internal/pkg/cluster"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
-	"github.com/spf13/pflag"
 )
 
 type registryCommand struct {
@@ -44,14 +44,14 @@ func NewRegisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	registerCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID.")
 	check(registerCmd.MarkFlagRequired("kafka-cluster-id"))
 	registerCmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID.")
-	registerCmd.Flags().String("ksql-cluster-id", "", "KSQL cluster ID.")
+	registerCmd.Flags().String("ksql-cluster-id", "", "ksqlDB cluster ID.")
 	registerCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID.")
 	registerCmd.Flags().String("hosts", "", "A comma separated list of hosts.")
 	check(registerCmd.MarkFlagRequired("hosts"))
 	registerCmd.Flags().String("protocol", "", "Security protocol.")
 	check(registerCmd.MarkFlagRequired("protocol"))
 	registerCmd.Flags().SortFlags = false
-	registerCmd.RunE = registerCmd.register
+	registerCmd.RunE = pcmd.NewCLIRunE(registerCmd.register)
 	return registerCmd.Command
 }
 
@@ -68,7 +68,7 @@ func NewUnregisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	}
 	unregisterCmd.Flags().String("cluster-name", "", "Cluster Name.")
 	check(unregisterCmd.MarkFlagRequired("cluster-name"))
-	unregisterCmd.RunE = unregisterCmd.unregister
+	unregisterCmd.RunE = pcmd.NewCLIRunE(unregisterCmd.unregister)
 	unregisterCmd.Flags().SortFlags = false
 	return unregisterCmd.Command
 }
@@ -77,7 +77,7 @@ func (c *registryCommand) createContext() context.Context {
 	return context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
 }
 
-func (r *registryCommand) resolveClusterScope(cmd *cobra.Command) (*mds.ScopeClusters, error) {
+func (c *registryCommand) resolveClusterScope(cmd *cobra.Command) (*mds.ScopeClusters, error) {
 	scope := &mds.ScopeClusters{}
 
 	nonKafkaScopesSet := 0
@@ -99,15 +99,15 @@ func (r *registryCommand) resolveClusterScope(cmd *cobra.Command) (*mds.ScopeClu
 	})
 
 	if scope.KafkaCluster == "" && nonKafkaScopesSet > 0 {
-		return nil, errors.New("Must also specify a --kafka-cluster-id to uniquely identify the scope.")
+		return nil, errors.New(errors.SpecifyKafkaIDErrorMsg)
 	}
 
 	if scope.KafkaCluster == "" && nonKafkaScopesSet == 0 {
-		return nil, errors.New("Must specify at least one cluster ID ")
+		return nil, errors.New(errors.MustSpecifyOneClusterIDErrorMsg)
 	}
 
 	if nonKafkaScopesSet > 1 {
-		return nil, errors.New("Cannot specify more than one non-Kafka cluster ID for a scope.")
+		return nil, errors.New(errors.MoreThanOneNonKafkaErrorMsg)
 	}
 
 	return scope, nil
@@ -116,7 +116,7 @@ func (r *registryCommand) resolveClusterScope(cmd *cobra.Command) (*mds.ScopeClu
 func (c *registryCommand) parseHosts(cmd *cobra.Command) ([]mds.HostInfo, error) {
 	hostStr, err := cmd.Flags().GetString("hosts")
 	if err != nil {
-		return nil, errors.HandleCommon(err, cmd)
+		return nil, err
 	}
 
 	hostInfos := make([]mds.HostInfo, 0)
@@ -134,7 +134,7 @@ func (c *registryCommand) parseHosts(cmd *cobra.Command) ([]mds.HostInfo, error)
 func (c *registryCommand) parseProtocol(cmd *cobra.Command) (mds.Protocol, error) {
 	protocol, err := cmd.Flags().GetString("protocol")
 	if err != nil {
-		return "", errors.HandleCommon(err, cmd)
+		return "", err
 	}
 
 	switch strings.ToUpper(protocol) {
@@ -147,36 +147,34 @@ func (c *registryCommand) parseProtocol(cmd *cobra.Command) (mds.Protocol, error
 	case "HTTPS":
 		return mds.PROTOCOL_HTTPS, nil
 	default:
-		return "", fmt.Errorf("Protocol %s is currently not supported.", protocol)
+		return "", errors.Errorf(errors.ProtocolNotSupportedErrorMsg, protocol)
 	}
 }
 
-func (c *registryCommand) register(cmd *cobra.Command, args []string) error {
+func (c *registryCommand) register(cmd *cobra.Command, _ []string) error {
 
 	name, err := cmd.Flags().GetString("cluster-name")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	scopeClusters, err := c.resolveClusterScope(cmd)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	hosts, err := c.parseHosts(cmd)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	protocol, err := c.parseProtocol(cmd)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	clusterInfo := mds.ClusterInfo{ClusterName: name, Scope: mds.Scope{Clusters: *scopeClusters}, Hosts: hosts, Protocol: protocol}
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
+
 	response, err := c.MDSClient.ClusterRegistryApi.UpdateClusters(c.createContext(), []mds.ClusterInfo{clusterInfo})
 	if err != nil {
 		return print.HandleClusterError(cmd, err, response)
@@ -186,10 +184,10 @@ func (c *registryCommand) register(cmd *cobra.Command, args []string) error {
 	return print.PrintCluster(cmd, []mds.ClusterInfo{clusterInfo}, output.Human.String())
 }
 
-func (c *registryCommand) unregister(cmd *cobra.Command, args []string) error {
+func (c *registryCommand) unregister(cmd *cobra.Command, _ []string) error {
 	name, err := cmd.Flags().GetString("cluster-name")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	response, err := c.MDSClient.ClusterRegistryApi.DeleteNamedCluster(c.createContext(), name)
@@ -197,6 +195,6 @@ func (c *registryCommand) unregister(cmd *cobra.Command, args []string) error {
 		return print.HandleClusterError(cmd, err, response)
 	}
 
-	pcmd.Printf(cmd, "Successfully unregistered the cluster %s from the Cluster Registry. \n", name)
+	pcmd.Printf(cmd, errors.UnregisteredClusterMsg, name)
 	return nil
 }

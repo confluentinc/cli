@@ -37,7 +37,7 @@ func NewMockPublicS3Error() *httptest.Server {
 	return httptest.NewServer(mux)
 }
 
-func NewTestVersionPrefixedKeyParser(prefix, name, goos, goarch string, req *require.Assertions) *PrefixedKey {
+func NewTestVersionPrefixedKeyParser(prefix, goos, goarch string, req *require.Assertions) *PrefixedKey {
 	p, err := NewPrefixedKey(prefix, "_", true)
 	req.NoError(err)
 	p.goos = goos
@@ -179,7 +179,7 @@ func TestPublicRepo_GetAvailableBinaryVersions(t *testing.T) {
 				S3BinBucket: tt.fields.S3BinBucket,
 				S3BinRegion: tt.fields.S3BinRegion,
 				S3BinPrefix: tt.fields.S3BinPrefix,
-				S3ObjectKey: NewTestVersionPrefixedKeyParser(tt.fields.S3BinPrefix, tt.args.name, goos, goarch, req),
+				S3ObjectKey: NewTestVersionPrefixedKeyParser(tt.fields.S3BinPrefix, goos, goarch, req),
 				Logger:      logger,
 			})
 			r.endpoint = tt.fields.Endpoint
@@ -277,7 +277,7 @@ func TestPublicRepo_GetLatestBinaryVersion(t *testing.T) {
 				S3BinBucket: tt.fields.S3BinBucket,
 				S3BinRegion: tt.fields.S3BinRegion,
 				S3BinPrefix: tt.fields.S3BinPrefix,
-				S3ObjectKey: NewTestVersionPrefixedKeyParser(tt.fields.S3BinPrefix, tt.args.name, goos, goarch, req),
+				S3ObjectKey: NewTestVersionPrefixedKeyParser(tt.fields.S3BinPrefix, goos, goarch, req),
 				Logger:      logger,
 			})
 			r.endpoint = tt.fields.Endpoint
@@ -605,7 +605,7 @@ func TestPublicRepo_DownloadVersion(t *testing.T) {
 				S3BinBucket: tt.fields.S3BinBucket,
 				S3BinRegion: tt.fields.S3BinRegion,
 				S3BinPrefix: tt.fields.S3BinPrefix,
-				S3ObjectKey: NewTestVersionPrefixedKeyParser(tt.fields.S3BinPrefix, tt.args.name, goos, goarch, req),
+				S3ObjectKey: NewTestVersionPrefixedKeyParser(tt.fields.S3BinPrefix, goos, goarch, req),
 				Logger:      log.New(),
 			})
 			r.endpoint = tt.fields.Endpoint

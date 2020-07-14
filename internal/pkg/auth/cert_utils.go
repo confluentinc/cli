@@ -3,7 +3,6 @@ package auth
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net"
@@ -11,6 +10,8 @@ import (
 	"time"
 
 	"github.com/confluentinc/cli/internal/pkg/log"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 func SelfSignedCertClient(certReader io.Reader, logger *log.Logger) (*http.Client, error) {
@@ -23,16 +24,16 @@ func SelfSignedCertClient(certReader io.Reader, logger *log.Logger) (*http.Clien
 	}
 
 	if certReader == nil {
-		return nil, fmt.Errorf("no reader specified for reading custom certificates")
+		return nil, errors.New(errors.NoReaderForCustomCertErrorMsg)
 	}
 	certs, err := ioutil.ReadAll(certReader)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read certificate: %v", err)
+		return nil, errors.Wrap(err, errors.ReadCertErrorMsg)
 	}
 
 	// Append new cert to the system pool
 	if ok := certPool.AppendCertsFromPEM(certs); !ok {
-		return nil, fmt.Errorf("no certs appended, using system certs only")
+		return nil, errors.New(errors.NoCertsAppendedErrorMsg)
 	}
 
 	// Trust the updated cert pool in our client

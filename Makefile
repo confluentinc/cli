@@ -16,14 +16,9 @@ RESOLVED_PATH=github.com/confluentinc/cli/cmd/confluent
 .PHONY: clean
 clean:
 	rm -rf $(shell pwd)/dist
-	rm -f internal/cmd/local/bindata.go
-	rm -f mock/local/shell_runner_mock.go
 
 .PHONY: generate
-generate: generate-go mocks
-
-.PHONY: generate-go
-generate-go:
+generate:
 	@go generate ./...
 
 .PHONY: deps
@@ -31,13 +26,9 @@ deps:
 	export GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc && \
 	export GO111MODULE=on && \
 	export GOPRIVATE=github.com/confluentinc && \
-        go get github.com/goreleaser/goreleaser@v0.106.0 && \
+	go get github.com/goreleaser/goreleaser@v0.106.0 && \
 	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.21.0 && \
-	go get github.com/mitchellh/golicense@v0.1.1 && \
-	go get github.com/golang/mock/mockgen@v1.3.1 && \
-	go get github.com/kevinburke/go-bindata/...@v3.13.0
-
-build: bindata build-go
+	go get github.com/mitchellh/golicense@v0.1.1
 
 ifeq ($(shell uname),Darwin)
 GORELEASER_SUFFIX ?= -mac.yml
@@ -88,8 +79,8 @@ run-confluent:
 # END DEVELOPMENT HELPERS
 #
 
-.PHONY: build-go
-build-go:
+.PHONY: build
+build:
 	make build-ccloud
 	make build-confluent
 
@@ -147,12 +138,6 @@ build-integ-confluent-race:
 	GO111MODULE=on go test ./cmd/confluent -ldflags="-s -w -X $(RESOLVED_PATH).cliName=confluent \
 		    -X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) \
 		    -X $(RESOLVED_PATH).version=$(VERSION) -X $(RESOLVED_PATH).isTest=true" -tags testrunmain -coverpkg=./... -c -o $${binexe} -race
-
-.PHONY: bindata
-bindata: internal/pkg/local/bindata.go
-
-internal/pkg/local/bindata.go: cp_cli/*
-	@go-bindata -pkg local -o internal/pkg/local/bindata.go cp_cli/
 
 # If you setup your laptop following https://github.com/confluentinc/cc-documentation/blob/master/Operations/Laptop%20Setup.md
 # then assuming caas.sh lives here should be fine
@@ -280,9 +265,8 @@ publish-installers:
 
 .PHONY: docs
 docs:
-#   TODO: we can't enable auto-docs generation for confluent until we migrate go-basher commands into cobra
-#	@GO111MODULE=on go run -ldflags '-X main.cliName=confluent' cmd/docs/main.go
 	@GO111MODULE=on go run -ldflags '-X main.cliName=ccloud' cmd/docs/main.go
+	@GO111MODULE=on go run -ldflags '-X main.cliName=confluent' cmd/docs/main.go
 
 .PHONY: publish-docs
 publish-docs: docs
@@ -294,6 +278,7 @@ publish-docs: docs
 		git checkout -b cli-$(VERSION) origin/$(DOCS_BRANCH) || exit 1; \
 		cd - || exit 1; \
 		make publish-docs-internal BASE_DIR=$${TMP_DIR} CLI_NAME=ccloud || exit 1; \
+	    make publish-docs-internal BASE_DIR=$${TMP_DIR} CLI_NAME=confluent || exit 1; \
 		cd $${TMP_DIR} || exit 1; \
 		sed -i '' 's/default "confluent_cli_consumer_[^"]*"/default "confluent_cli_consumer_<uuid>"/' cloud/cli/command-reference/ccloud_kafka_topic_consume.rst || exit 1; \
 		git add . || exit 1; \
@@ -302,8 +287,6 @@ publish-docs: docs
 		git push origin cli-$(VERSION) || exit 1; \
 		hub pull-request -b $(DOCS_BRANCH) -m "chore: updating CLI docs for $(VERSION)" || exit 1; \
 		rm -rf $${TMP_BASE}
-#   TODO: we can't enable auto-docs generation for confluent until we migrate go-basher commands into cobra
-#	    make publish-docs-internal BASE_DIR=$${TMP_DIR} CLI_NAME=confluent || exit 1; \
 
 .PHONY: publish-docs-internal
 publish-docs-internal:
@@ -478,19 +461,13 @@ coverage-integ:
 	@GO111MODULE=on GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(INT_TEST_ARGS)
       endif
 
-.PHONY: mocks
-mocks: mock/local/shell_runner_mock.go
-
-mock/local/shell_runner_mock.go:
-	mockgen -source internal/cmd/local/shell_runner.go -destination mock/local/shell_runner_mock.go ShellRunner
-
 .PHONY: test-installers
 test-installers:
 	@echo Running packaging/installer tests
 	@bash test-installers.sh
 
 .PHONY: test-prep
-test-prep: bindata mocks lint
+test-prep: lint
       ifdef CI
     @echo "mode: atomic" > coverage.txt
       endif

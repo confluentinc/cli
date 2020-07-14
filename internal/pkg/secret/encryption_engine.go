@@ -6,12 +6,11 @@ import (
 	"crypto/cipher"
 	"crypto/sha512"
 	"encoding/base64"
-	"errors"
-	"fmt"
 	"math/rand"
 
 	"golang.org/x/crypto/pbkdf2"
 
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
@@ -71,7 +70,7 @@ func (c *EncryptEngineImpl) GenerateMasterKey(masterKeyPassphrase string, salt s
 	// Generate random salt
 	var err error
 	if salt == "" {
-		salt, err = c.generateRandomString(METADATA_KEY_DEFAULT_LENGTH_BYTES)
+		salt, err = c.generateRandomString(MetadataKeyDefaultLengthBytes)
 		if err != nil {
 			return "", "", err
 		}
@@ -95,7 +94,7 @@ func (c *EncryptEngineImpl) WrapDataKey(dataKey []byte, masterKey string) (strin
 	return c.Encrypt(dataKeyStr, masterKeyByte)
 }
 
-func (c *EncryptEngineImpl) UnwrapDataKey(dataKey string, iv string, algo string, masterKey string) ([]byte, error) {
+func (c *EncryptEngineImpl) UnwrapDataKey(dataKey string, iv string, _ string, masterKey string) ([]byte, error) {
 	masterKeyByte, err := base64.StdEncoding.DecodeString(masterKey)
 	if err != nil {
 		return []byte{}, err
@@ -114,11 +113,11 @@ func (c *EncryptEngineImpl) Encrypt(plainText string, key []byte) (data string, 
 		if r := recover(); r != nil {
 			switch x := r.(type) {
 			case string:
-				err = errors.New("failed to encrypt the plain text:" + x)
+				err = errors.New(errors.EncryptPlainTextErrorMsg + ": " + x)
 			case error:
 				err = x
 			default:
-				err = errors.New("failed to encrypt the plain text")
+				err = errors.New(errors.EncryptPlainTextErrorMsg)
 			}
 		}
 	}()
@@ -146,7 +145,7 @@ func (c *EncryptEngineImpl) Encrypt(plainText string, key []byte) (data string, 
 	return result, ivStr, nil
 }
 
-func (c *EncryptEngineImpl) Decrypt(cipher string, iv string, algo string, key []byte) (string, error) {
+func (c *EncryptEngineImpl) Decrypt(cipher string, iv string, _ string, key []byte) (string, error) {
 	cipherBytes, err := base64.StdEncoding.DecodeString(cipher)
 	if err != nil {
 		return "", err
@@ -173,11 +172,11 @@ func (c *EncryptEngineImpl) decrypt(crypt []byte, key []byte, iv []byte) (plain 
 		if r := recover(); r != nil {
 			switch x := r.(type) {
 			case string:
-				err = errors.New("failed to decrypt the cipher:" + x)
+				err = errors.New(errors.DecryptCypherErrorMsg + ": " + x)
 			case error:
 				err = x
 			default:
-				err = errors.New("failed to decrypt the cipher")
+				err = errors.New(errors.DecryptCypherErrorMsg)
 			}
 		}
 	}()
@@ -187,7 +186,7 @@ func (c *EncryptEngineImpl) decrypt(crypt []byte, key []byte, iv []byte) (plain 
 		return []byte{}, err
 	}
 
-	ecb := cipher.NewCBCDecrypter(block, []byte(iv))
+	ecb := cipher.NewCBCDecrypter(block, iv)
 	decrypted := make([]byte, len(crypt))
 	ecb.CryptBlocks(decrypted, crypt)
 
@@ -205,7 +204,7 @@ func (c *EncryptEngineImpl) pKCS5Trimming(encrypt []byte) ([]byte, error) {
 	padding := encrypt[len(encrypt)-1]
 	length := len(encrypt) - int(padding)
 	if length < 0 || length > len(encrypt) {
-		return nil, fmt.Errorf("failed to decrypt the cipher: data is corrupted.")
+		return nil, errors.New(errors.DataCorruptedErrorMsg)
 	}
 	return encrypt[:len(encrypt)-int(padding)], nil
 }

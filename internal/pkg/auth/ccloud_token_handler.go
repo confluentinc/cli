@@ -3,6 +3,7 @@ package auth
 
 import (
 	"context"
+
 	"github.com/confluentinc/cli/internal/pkg/log"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"

@@ -77,7 +77,7 @@ func SetupTestInputs(cliName string) *TestInputs {
 				account,
 			},
 			Organization: &orgv1.Organization{
-				Id: 321,
+				Id:   321,
 				Name: "test-org",
 			},
 		},
@@ -774,5 +774,35 @@ func TestKafkaClusterContext_DeleteAPIKey(t *testing.T) {
 		if kcc.APIKey != "" {
 			t.Errorf("DeleteAPIKey did not remove deleted active API key.")
 		}
+	}
+}
+
+func TestKafkaClusterContext_RemoveKafkaCluster(t *testing.T) {
+	clusterID := "lkc-abcdefg"
+	apiKey := "akey"
+	kcc := &v1.KafkaClusterConfig{
+		ID:          clusterID,
+		Name:        "lit",
+		Bootstrap:   "http://test",
+		APIEndpoint: "",
+		APIKeys: map[string]*v0.APIKeyPair{
+			apiKey: {
+				Key:    apiKey,
+				Secret: "asecret",
+			},
+		},
+		APIKey: apiKey,
+	}
+	for _, cliName := range []string{"ccloud", "confluent"} {
+		testInputs := SetupTestInputs(cliName)
+		kafkaClusterContext := testInputs.statefulConfig.Context().KafkaClusterContext
+		kafkaClusterContext.AddKafkaClusterConfig(kcc)
+		kafkaClusterContext.SetActiveKafkaCluster(clusterID)
+		require.Equal(t, clusterID, kafkaClusterContext.GetActiveKafkaClusterId())
+
+		kafkaClusterContext.RemoveKafkaCluster(clusterID)
+		_, ok := kafkaClusterContext.KafkaClusterConfigs[clusterID]
+		require.False(t, ok)
+		require.Empty(t, kafkaClusterContext.GetActiveKafkaClusterId())
 	}
 }

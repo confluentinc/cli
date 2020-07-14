@@ -17,7 +17,7 @@ variables:
 
 steps:
 - script: |
-    wget "https://storage.googleapis.com/golang/go1.14.2.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
+    wget "https://s3-us-west-2.amazonaws.com/confluent.cloud/cli/go-binaries/1.14.2/go1.14.2.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
     tar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
   condition: eq( variables['Agent.OS'], 'Linux' )
   displayName: 'Install Go 1.14.2 (Linux)'
@@ -35,13 +35,13 @@ steps:
   displayName: 'Install chrome (Darwin)'
 
 - script: |
-    wget "https://storage.googleapis.com/golang/go1.14.2.darwin-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
+    wget "https://s3-us-west-2.amazonaws.com/confluent.cloud/cli/go-binaries/1.14.2/go1.14.2.darwin-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
     gtar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
   condition: eq( variables['Agent.OS'], 'Darwin' )
   displayName: 'Install Go 1.14.2 (Darwin)'
 
 - powershell: |
-    Invoke-WebRequest -Uri "https://storage.googleapis.com/golang/go1.14.2.windows-amd64.zip" -OutFile "$(Agent.BuildDirectory)\go1.14.2.zip" -Verbose
+    Invoke-WebRequest -Uri "https://s3-us-west-2.amazonaws.com/confluent.cloud/cli/go-binaries/1.14.2/go1.14.2.windows-amd64.zip" -OutFile "$(Agent.BuildDirectory)\go1.14.2.zip" -Verbose
     & ${env:ProgramFiles}\7-Zip\7z.exe x $(Agent.BuildDirectory)/go1.14.2.zip "-o$(Agent.BuildDirectory)" -y
   condition: eq( variables['Agent.OS'], 'Windows_NT' )
   displayName: 'Install Go 1.14.2 (Windows)'

@@ -1,24 +1,23 @@
 package cmd
 
 import (
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	"fmt"
 	"net/http"
 	"os"
-	"runtime"
 
-	"github.com/DABH/go-basher"
 	"github.com/jonboulle/clockwork"
 	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/cmd/apikey"
+	"github.com/confluentinc/cli/internal/cmd/auditlog"
 	"github.com/confluentinc/cli/internal/cmd/auth"
 	"github.com/confluentinc/cli/internal/cmd/cluster"
 	"github.com/confluentinc/cli/internal/cmd/completion"
 	"github.com/confluentinc/cli/internal/cmd/config"
 	"github.com/confluentinc/cli/internal/cmd/connect"
 	"github.com/confluentinc/cli/internal/cmd/connector"
-	connector_catalog "github.com/confluentinc/cli/internal/cmd/connector-catalog"
+	connectorcatalog "github.com/confluentinc/cli/internal/cmd/connector-catalog"
 	"github.com/confluentinc/cli/internal/cmd/environment"
 	"github.com/confluentinc/cli/internal/cmd/feedback"
 	"github.com/confluentinc/cli/internal/cmd/iam"
@@ -27,9 +26,9 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/ksql"
 	"github.com/confluentinc/cli/internal/cmd/local"
 	ps1 "github.com/confluentinc/cli/internal/cmd/prompt"
-	schema_registry "github.com/confluentinc/cli/internal/cmd/schema-registry"
+	schemaregistry "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	"github.com/confluentinc/cli/internal/cmd/secret"
-	service_account "github.com/confluentinc/cli/internal/cmd/service-account"
+	serviceaccount "github.com/confluentinc/cli/internal/cmd/service-account"
 	"github.com/confluentinc/cli/internal/cmd/update"
 	"github.com/confluentinc/cli/internal/cmd/version"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
@@ -37,10 +36,11 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	pconfig "github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/config/load"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	pfeedback "github.com/confluentinc/cli/internal/pkg/feedback"
 	"github.com/confluentinc/cli/internal/pkg/help"
-	"github.com/confluentinc/cli/internal/pkg/io"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/metric"
 	pps1 "github.com/confluentinc/cli/internal/pkg/ps1"
@@ -83,20 +83,22 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		cli.Short = "Confluent CLI."
 		cli.Long = "Manage your Confluent Platform."
 	}
-	cli.PersistentFlags().CountP("verbose", "v",
-		"Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).")
+
+	cli.PersistentFlags().BoolP("help", "h", false, "Show help for this command.")
+	cli.PersistentFlags().CountP("verbose", "v", "Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).")
+	cli.Flags().Bool("version", false, fmt.Sprintf("Show version of %s.", cliName))
 
 	prompt := pcmd.NewPrompt(os.Stdin)
 
 	disableUpdateCheck := cfg != nil && (cfg.DisableUpdates || cfg.DisableUpdateCheck)
-	updateClient, err := update.NewClient(cliName, disableUpdateCheck,logger)
+	updateClient, err := update.NewClient(cliName, disableUpdateCheck, logger)
 	if err != nil {
 		return nil, err
 	}
 
 	resolver := &pcmd.FlagResolverImpl{Prompt: prompt, Out: os.Stdout}
 	prerunner := &pcmd.PreRun{
-		Config: cfg,
+		Config:             cfg,
 		ConfigLoadingError: configLoadingErr,
 		UpdateClient:       updateClient,
 		CLIName:            cliName,
@@ -110,9 +112,9 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 	command := &Command{Command: cli, Analytics: analyticsClient, logger: logger}
 
 	cli.Version = ver.Version
-	cli.AddCommand(version.NewVersionCmd(prerunner, ver))
+	cli.AddCommand(version.New(cliName, prerunner, ver))
 
-	cli.AddCommand(completion.NewCompletionCmd(cli, cliName))
+	cli.AddCommand(completion.New(cli, cliName))
 
 	if cfg == nil || !cfg.DisableUpdates {
 		cli.AddCommand(update.New(cliName, logger, ver, prompt, updateClient, analyticsClient))
@@ -121,56 +123,30 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 	cli.AddCommand(auth.New(cliName, prerunner, logger, ver.UserAgent, analyticsClient, netrcHandler)...)
 	isAPILogin := isAPIKeyCredential(cfg)
 	if cliName == "ccloud" {
-		cmd := kafka.New(isAPILogin, cliName, prerunner, logger.Named("kafka"), ver.ClientID)
-		cli.AddCommand(cmd)
-		cli.AddCommand(feedback.NewFeedbackCmd(cliName, prerunner, analyticsClient))
-		cli.AddCommand(initcontext.New(prerunner, prompt, resolver, analyticsClient))
 		cli.AddCommand(config.New(prerunner, analyticsClient))
-		if isAPILogin {
+		cli.AddCommand(feedback.New(cliName, prerunner, analyticsClient))
+		cli.AddCommand(initcontext.New(prerunner, prompt, resolver, analyticsClient))
+		cli.AddCommand(kafka.New(isAPILogin, cliName, prerunner, logger.Named("kafka"), ver.ClientID))
+		if isAPIKeyCredential(cfg) {
 			return command, nil
 		}
-		cli.AddCommand(ps1.NewPromptCmd(cliName, prerunner, &pps1.Prompt{}, logger))
-		cli.AddCommand(environment.New(cliName, prerunner))
-		cli.AddCommand(service_account.New(prerunner))
-		// Keystore exposed so tests can pass mocks.
-		cli.AddCommand(apikey.New(prerunner, nil, resolver))
-
-		// Schema Registry
-		// If srClient is nil, the function will look it up after prerunner verifies authentication. Exposed so tests can pass mocks
-		cli.AddCommand(schema_registry.New(cliName, prerunner, nil, logger))
-		cli.AddCommand(ksql.New(cliName, prerunner))
+		cli.AddCommand(apikey.New(prerunner, nil, resolver)) // Exposed for testing
 		cli.AddCommand(connector.New(cliName, prerunner))
-		cli.AddCommand(connector_catalog.New(cliName, prerunner))
-		//conn = connect.New(prerunner, cfg, connects.New(client, logger))
-		//conn.Hidden = true // The connect feature isn't finished yet, so let's hide it
-		//cli.AddCommand(conn)
-	} else if cliName == "confluent" {
-		cli.AddCommand(iam.New(cliName, prerunner))
-		// Kafka Command
-		isAPILogin := isAPIKeyCredential(cfg)
-		cmd := kafka.New(isAPILogin, cliName, prerunner, logger.Named("kafka"), ver.ClientID)
-		cli.AddCommand(cmd)
-		sr := schema_registry.New(cliName, prerunner, nil, logger)
-		cli.AddCommand(sr)
+		cli.AddCommand(connectorcatalog.New(cliName, prerunner))
+		cli.AddCommand(environment.New(cliName, prerunner))
 		cli.AddCommand(ksql.New(cliName, prerunner))
+		cli.AddCommand(ps1.New(cliName, prerunner, &pps1.Prompt{}, logger))
+		cli.AddCommand(schemaregistry.New(cliName, prerunner, nil, logger)) // Exposed for testing
+		cli.AddCommand(serviceaccount.New(prerunner))
+	} else if cliName == "confluent" {
+		cli.AddCommand(auditlog.New(prerunner))
+		cli.AddCommand(cluster.New(prerunner, cluster.NewScopedIdService(&http.Client{}, ver.UserAgent, logger)))
 		cli.AddCommand(connect.New(prerunner))
-
-		metaClient := cluster.NewScopedIdService(&http.Client{}, ver.UserAgent, logger)
-		cli.AddCommand(cluster.New(prerunner, metaClient))
-
-		if runtime.GOOS != "windows" {
-			bash, err := basher.NewContext("/bin/bash", false)
-			if err != nil {
-				return nil, err
-			}
-			shellRunner := &local.BashShellRunner{BasherContext: bash}
-			cli.AddCommand(local.New(cli, prerunner, shellRunner, logger, &io.RealFileSystem{}))
-		}
-
-		command := local.NewCommand(prerunner)
-		command.Hidden = true // WIP
-		cli.AddCommand(command)
-
+		cli.AddCommand(iam.New(cliName, prerunner))
+		cli.AddCommand(kafka.New(isAPIKeyCredential(cfg), cliName, prerunner, logger.Named("kafka"), ver.ClientID))
+		cli.AddCommand(ksql.New(cliName, prerunner))
+		cli.AddCommand(local.New(prerunner))
+		cli.AddCommand(schemaregistry.New(cliName, prerunner, nil, logger))
 		cli.AddCommand(secret.New(prompt, resolver, secrets.NewPasswordProtectionPlugin(logger)))
 	}
 	return command, nil
@@ -200,8 +176,8 @@ func isAPIKeyCredential(cfg *v3.Config) bool {
 func (c *Command) Execute(cliName string, args []string) error {
 	c.Analytics.SetStartTime()
 	c.Command.SetArgs(args)
-
 	err := c.Command.Execute()
+	errors.DisplaySuggestionsMessage(err, os.Stdout)
 	c.sendAndFlushAnalytics(args, err)
 	pfeedback.HandleFeedbackNudge(cliName, args)
 	return err

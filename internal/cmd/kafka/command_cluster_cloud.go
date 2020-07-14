@@ -97,7 +97,7 @@ func (c *clusterCommand) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List Kafka clusters.",
-		RunE:  c.list,
+		RunE:  pcmd.NewCLIRunE(c.list),
 		Args:  cobra.NoArgs,
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
@@ -107,7 +107,7 @@ func (c *clusterCommand) init() {
 	createCmd := &cobra.Command{
 		Use:   "create <name>",
 		Short: "Create a Kafka cluster.",
-		RunE:  c.create,
+		RunE:  pcmd.NewCLIRunE(c.create),
 		Args:  cobra.ExactArgs(1),
 	}
 
@@ -126,7 +126,7 @@ func (c *clusterCommand) init() {
 	describeCmd := &cobra.Command{
 		Use:   "describe <id>",
 		Short: "Describe a Kafka cluster.",
-		RunE:  c.describe,
+		RunE:  pcmd.NewCLIRunE(c.describe),
 		Args:  cobra.ExactArgs(1),
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
@@ -136,7 +136,7 @@ func (c *clusterCommand) init() {
 	updateCmd := &cobra.Command{
 		Use:   "update <id>",
 		Short: "Update a Kafka cluster.",
-		RunE:  c.update,
+		RunE:  pcmd.NewCLIRunE(c.update),
 		Args:  cobra.ExactArgs(1),
 	}
 	updateCmd.Flags().String("name", "", "Name of the Kafka cluster.")
@@ -148,27 +148,27 @@ func (c *clusterCommand) init() {
 	deleteCmd := &cobra.Command{
 		Use:   "delete <id>",
 		Short: "Delete a Kafka cluster.",
-		RunE:  c.delete,
+		RunE:  pcmd.NewCLIRunE(c.delete),
 		Args:  cobra.ExactArgs(1),
 	}
 	c.AddCommand(deleteCmd)
 	c.AddCommand(&cobra.Command{
 		Use:   "use <id>",
 		Short: "Make the Kafka cluster active for use in other commands.",
-		RunE:  c.use,
+		RunE:  pcmd.NewCLIRunE(c.use),
 		Args:  cobra.ExactArgs(1),
 	})
 }
 
-func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
+func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
 	req := &schedv1.KafkaCluster{AccountId: c.EnvironmentId()}
 	clusters, err := c.Client.Kafka.List(context.Background(), req)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	for _, cluster := range clusters {
 		// Add '*' only in the case where we are printing out tables
@@ -190,39 +190,39 @@ var stdout io.ReadWriter = os.Stdout
 func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	cloud, err := cmd.Flags().GetString("cloud")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	region, err := cmd.Flags().GetString("region")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	clouds, err := c.Client.EnvironmentMetadata.Get(context.Background())
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	err = checkCloudAndRegion(cloud, region, clouds)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	availabilityString, err := cmd.Flags().GetString("availability")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	availability, err := stringToAvailability(availabilityString)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	typeString, err := cmd.Flags().GetString("type")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	sku, err := stringToSku(typeString)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	encryptionKeyID, err := cmd.Flags().GetString("encryption-key")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	if encryptionKeyID != "" {
 		if err := c.validateEncryptionKey(cloud, clouds); err != nil {
@@ -242,13 +242,13 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	if cmd.Flags().Changed("cku") {
 		cku, err := cmd.Flags().GetInt("cku")
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		if sku != productv1.Sku_DEDICATED {
-			return errors.New("specifying --cku is valid only for dedicated Kafka cluster creation")
+			return errors.New(errors.CKUOnlyForDedicatedErrorMsg)
 		}
 		if cku <= 0 {
-			return errors.HandleCommon(errors.New("--cku should be passed with value greater than 0"), cmd)
+			return errors.New(errors.CKUMoreThanZeroErrorMsg)
 		}
 		cfg.Cku = int32(cku)
 	}
@@ -256,7 +256,14 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	cluster, err := c.Client.Kafka.Create(context.Background(), cfg)
 	if err != nil {
 		// TODO: don't swallow validation errors (reportedly separately)
-		return errors.HandleCommon(err, cmd)
+		return err
+	}
+	outputFormat, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		return err
+	}
+	if outputFormat == output.Human.String() {
+		pcmd.ErrPrintln(cmd, errors.KafkaClusterTime)
 	}
 	return outputKafkaClusterDescription(cmd, cluster)
 }
@@ -280,12 +287,12 @@ var encryptionKeyPolicy = template.Must(template.New("encryptionKey").Parse(`{{r
 }{{end}}`))
 
 func (c *clusterCommand) validateEncryptionKey(cloud string, clouds []*schedv1.CloudMetadata) error {
-	accounts := getAccountsForCloud(cloud, clouds)
+	accounts := getEnvironmentsForCloud(cloud, clouds)
 	var buf bytes.Buffer
-	buf.WriteString(`Copy and append these permissions to the existing "Statements" array field in the key policy of your ARN to authorize access for Confluent:`)
+	buf.WriteString(errors.CopyBYOKPermissionsHeaderMsg)
 	buf.WriteString("\n\n")
 	if err := encryptionKeyPolicy.Execute(&buf, accounts); err != nil {
-		return fmt.Errorf("Failed to render key policy")
+		return errors.New(errors.FailedToRenderKeyPolicyErrorMsg)
 	}
 	buf.WriteString("\n\n")
 	ok, err := confirm.Do(
@@ -294,10 +301,10 @@ func (c *clusterCommand) validateEncryptionKey(cloud string, clouds []*schedv1.C
 		buf.String(),
 	)
 	if err != nil {
-		return fmt.Errorf("Failed to read your confirmation")
+		return errors.New(errors.FailedToReadConfirmationErrorMsg)
 	}
 	if !ok {
-		return fmt.Errorf("Please authorize the accounts for the key")
+		return errors.Errorf(errors.AuthorizeAccountsErrorMsg, strings.Join(accounts, ", "))
 	}
 	return nil
 }
@@ -308,7 +315,8 @@ func stringToAvailability(s string) (schedv1.Durability, error) {
 	} else if s == multiZone {
 		return schedv1.Durability_HIGH, nil
 	}
-	return schedv1.Durability_LOW, fmt.Errorf("Only allowed values for --availability are: %s, %s.", singleZone, multiZone)
+	return schedv1.Durability_LOW, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidAvailableFlagErrorMsg, s),
+		fmt.Sprintf(errors.InvalidAvailableFlagSuggestions, singleZone, multiZone))
 }
 
 func stringToSku(s string) (productv1.Sku, error) {
@@ -317,7 +325,8 @@ func stringToSku(s string) (productv1.Sku, error) {
 	case productv1.Sku_BASIC, productv1.Sku_STANDARD, productv1.Sku_DEDICATED:
 		break
 	default:
-		return productv1.Sku_UNKNOWN, fmt.Errorf("Only allowed values for --type are: %s, %s, %s.", skuBasic, skuStandard, skuDedicated)
+		return productv1.Sku_UNKNOWN, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidTypeFlagErrorMsg, s),
+			fmt.Sprintf(errors.InvalidTypeFlagSuggestions, skuBasic, skuStandard, skuDedicated))
 	}
 	return sku, nil
 }
@@ -326,14 +335,14 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	req := &schedv1.KafkaCluster{AccountId: c.EnvironmentId(), Id: args[0]}
 	cluster, err := c.Client.Kafka.Describe(context.Background(), req)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return errors.CatchKafkaNotFoundError(err, args[0])
 	}
 	return outputKafkaClusterDescription(cmd, cluster)
 }
 
 func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 	if !cmd.Flags().Changed("name") && !cmd.Flags().Changed("cku") {
-		return errors.HandleCommon(errors.New("Must either specify --name with non-empty value or --cku (for dedicated clusters) with positive integer when updating a cluster."), cmd)
+		return errors.New(errors.NameOrCKUFlagErrorMsg)
 	}
 	req := &schedv1.KafkaCluster{
 		AccountId: c.EnvironmentId(),
@@ -342,32 +351,32 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 	if cmd.Flags().Changed("name") {
 		name, err := cmd.Flags().GetString("name")
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		if name == "" {
-			return errors.HandleCommon(errors.New("must specify --name with non-empty value"), cmd)
+			return errors.New(errors.NonEmptyNameErrorMsg)
 		}
 		req.Name = name
 	} else {
 		currentCluster, err := c.Client.Kafka.Describe(context.Background(), req)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		req.Name = currentCluster.Name
 	}
 	if cmd.Flags().Changed("cku") {
 		cku, err := cmd.Flags().GetInt("cku")
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		if cku <= 0 {
-			return errors.HandleCommon(errors.New("--cku should be passed with value greater than 0"), cmd)
+			return errors.New(errors.CKUMoreThanZeroErrorMsg)
 		}
 		req.Cku = int32(cku)
 	}
 	updatedCluster, err := c.Client.Kafka.Update(context.Background(), req)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	return outputKafkaClusterDescription(cmd, updatedCluster)
 }
@@ -376,9 +385,13 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	req := &schedv1.KafkaCluster{AccountId: c.EnvironmentId(), Id: args[0]}
 	err := c.Client.Kafka.Delete(context.Background(), req)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return errors.CatchKafkaNotFoundError(err, args[0])
 	}
-	pcmd.Printf(cmd, "The Kafka cluster %s has been deleted.\n", args[0])
+	err = c.Context.RemoveKafkaClusterConfig(args[0])
+	if err != nil {
+		return err
+	}
+	pcmd.Printf(cmd, errors.KafkaClusterDeletedMsg, args[0])
 	return nil
 }
 
@@ -387,9 +400,15 @@ func (c *clusterCommand) use(cmd *cobra.Command, args []string) error {
 
 	_, err := c.Context.FindKafkaCluster(cmd, clusterID)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		err = errors.CatchKafkaNotFoundError(err, clusterID)
+		return err
 	}
-	return c.Context.SetActiveKafkaCluster(cmd, clusterID)
+	err = c.Context.SetActiveKafkaCluster(cmd, clusterID)
+	if err != nil {
+		return err
+	}
+	cmd.PrintErrf(errors.UseKafkaClusterMsg, clusterID, c.Context.GetCurrentEnvironmentId())
+	return nil
 }
 
 func check(err error) {
@@ -410,23 +429,25 @@ func checkCloudAndRegion(cloudId string, regionId string, clouds []*schedv1.Clou
 					}
 				}
 			}
-			return fmt.Errorf("'%s' is not an available region for '%s'. You can view a list of available regions for '%s' with 'kafka region list --cloud %s' command.", regionId, cloudId, cloudId, cloudId)
+			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.CloudRegionNotAvailableErrorMsg, regionId, cloudId),
+				fmt.Sprintf(errors.CloudRegionNotAvailableSuggestions, cloudId, cloudId))
 		}
 	}
-	return fmt.Errorf("'%s' cloud provider does not exist. You can view a list of available cloud providers and regions with the 'kafka region list' command.", cloudId)
+	return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.CloudProviderNotAvailableErrorMsg, cloudId),
+		errors.CloudProviderNotAvailableSuggestions)
 }
 
-func getAccountsForCloud(cloudId string, clouds []*schedv1.CloudMetadata) []string {
-	var accounts []string
+func getEnvironmentsForCloud(cloudId string, clouds []*schedv1.CloudMetadata) []string {
+	var environments []string
 	for _, cloud := range clouds {
 		if cloudId == cloud.Id {
-			for _, account := range cloud.Accounts {
-				accounts = append(accounts, account.Id)
+			for _, environment := range cloud.Accounts {
+				environments = append(environments, environment.Id)
 			}
 			break
 		}
 	}
-	return accounts
+	return environments
 }
 
 func outputKafkaClusterDescription(cmd *cobra.Command, cluster *schedv1.KafkaCluster) error {

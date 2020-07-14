@@ -1,21 +1,21 @@
 package cmd_test
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/config/load"
+	"fmt"
 	"os"
 	"reflect"
 	"strings"
 	"testing"
 
-	"github.com/confluentinc/cli/internal/pkg/auth"
-	"github.com/confluentinc/cli/internal/pkg/errors"
-
 	"github.com/jonboulle/clockwork"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
+	"github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/config/load"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	pmock "github.com/confluentinc/cli/internal/pkg/mock"
 	"github.com/confluentinc/cli/internal/pkg/update/mock"
@@ -111,7 +111,7 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 				Analytics:          cliMock.NewDummyAnalyticsMock(),
 				Clock:              clockwork.NewRealClock(),
 				UpdateTokenHandler: auth.NewUpdateTokenHandler(auth.NewNetrcHandler("")),
-				Config: cfg,
+				Config:             cfg,
 			}
 
 			root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
@@ -354,23 +354,26 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 	userNotLoggedIn.Context().State.Auth = nil
 
 	tests := []struct {
-		name   string
-		config *v3.Config
-		errMsg string
+		name           string
+		config         *v3.Config
+		errMsg         string
+		suggestionsMsg string
 	}{
 		{
 			name:   "username logged in user",
 			config: userNameConfigLoggedIn,
 		},
 		{
-			name:   "not logged in user",
-			config: userNotLoggedIn,
-			errMsg: errors.NotLoggedInInternalErrorMsg,
+			name:           "not logged in user",
+			config:         userNotLoggedIn,
+			errMsg:         errors.NotLoggedInErrorMsg,
+			suggestionsMsg: fmt.Sprintf(errors.NotLoggedInSuggestions, "ccloud"),
 		},
 		{
-			name:   "username context corrupted auth token",
-			config: userNameCfgCorruptedAuthToken,
-			errMsg: errors.CorruptedAuthTokenErrorMsg,
+			name:           "username context corrupted auth token",
+			config:         userNameCfgCorruptedAuthToken,
+			errMsg:         errors.CorruptedTokenErrorMsg,
+			suggestionsMsg: errors.CorruptedTokenSuggestions,
 		},
 		{
 			name:   "api credential context",
@@ -410,6 +413,9 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 			if tt.errMsg != "" {
 				require.Error(t, err)
 				require.Equal(t, tt.errMsg, err.Error())
+				if tt.suggestionsMsg != "" {
+					errors.VerifyErrorAndSuggestions(require.New(t), err, tt.errMsg, tt.suggestionsMsg)
+				}
 			} else {
 				require.NoError(t, err)
 			}

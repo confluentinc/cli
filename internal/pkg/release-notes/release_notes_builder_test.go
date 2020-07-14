@@ -2,12 +2,11 @@ package release_notes
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
-
 
 type ReleaseNotesBuilderTestSuite struct {
 	suite.Suite
@@ -97,5 +96,3 @@ func (suite *ReleaseNotesBuilderTestSuite) runTest(testNamePrefix string, output
 		})
 	}
 }
-
-

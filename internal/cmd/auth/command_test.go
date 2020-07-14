@@ -15,6 +15,8 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/confluentinc/cli/internal/pkg/errors"
+
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
 	sdkMock "github.com/confluentinc/ccloud-sdk-go/mock"
@@ -40,7 +42,7 @@ func TestCredentialsOverride(t *testing.T) {
 	os.Setenv("XX_CCLOUD_EMAIL", "test-email")
 	os.Setenv("XX_CCLOUD_PASSWORD", "test-password")
 
-	prompt := prompt("cody@confluent.io", "iambatman")
+	prompt := prompt()
 	auth := &sdkMock.Auth{
 		LoginFunc: func(ctx context.Context, idToken string, username string, password string) (string, error) {
 			return "y0ur.jwt.T0kEn", nil
@@ -67,7 +69,7 @@ func TestCredentialsOverride(t *testing.T) {
 
 	output, err := pcmd.ExecuteCommand(loginCmd.Command)
 	req.NoError(err)
-	req.Contains(output, "Logged in as test-email")
+	req.Contains(output, fmt.Sprintf(errors.LoggedInAsMsg, "test-email"))
 	ctx := cfg.Context()
 	req.NotNil(ctx)
 
@@ -81,7 +83,7 @@ func TestCredentialsOverride(t *testing.T) {
 func TestLoginSuccess(t *testing.T) {
 	req := require.New(t)
 
-	prompt := prompt("cody@confluent.io", "iambatman")
+	prompt := prompt()
 	auth := &sdkMock.Auth{
 		LoginFunc: func(ctx context.Context, idToken string, username string, password string) (string, error) {
 			return "y0ur.jwt.T0kEn", nil
@@ -126,7 +128,7 @@ func TestLoginSuccess(t *testing.T) {
 		loginCmd, cfg := newLoginCmd(prompt, auth, user, s.cliName, req)
 		output, err := pcmd.ExecuteCommand(loginCmd.Command, s.args...)
 		req.NoError(err)
-		req.Contains(output, "Logged in as cody@confluent.io")
+		req.Contains(output, fmt.Sprintf(errors.LoggedInAsMsg, "cody@confluent.io"))
 		verifyLoggedInState(t, cfg, s.cliName)
 	}
 }
@@ -134,7 +136,7 @@ func TestLoginSuccess(t *testing.T) {
 func TestLoginFail(t *testing.T) {
 	req := require.New(t)
 
-	prompt := prompt("cody@confluent.io", "iamrobin")
+	prompt := prompt()
 	auth := &sdkMock.Auth{
 		LoginFunc: func(ctx context.Context, idToken string, username string, password string) (string, error) {
 			return "", &ccloud.InvalidLoginError{}
@@ -150,13 +152,14 @@ func TestLoginFail(t *testing.T) {
 	loginCmd, _ := newLoginCmd(prompt, auth, user, "ccloud", req)
 
 	_, err := pcmd.ExecuteCommand(loginCmd.Command)
-	req.Contains(err.Error(), "You have entered an incorrect username or password.")
+	req.Contains(err.Error(), errors.InvalidLoginErrorMsg)
+	errors.VerifyErrorAndSuggestions(req, err, errors.InvalidLoginErrorMsg, errors.CCloudInvalidLoginSuggestions)
 }
 
 func TestURLRequiredWithMDS(t *testing.T) {
 	req := require.New(t)
 
-	prompt := prompt("cody@confluent.io", "iamrobin")
+	prompt := prompt()
 	auth := &sdkMock.Auth{
 		LoginFunc: func(ctx context.Context, idToken string, username string, password string) (string, error) {
 			return "", &ccloud.InvalidLoginError{}
@@ -175,14 +178,14 @@ func TestLogout(t *testing.T) {
 	logoutCmd, cfg := newLogoutCmd("ccloud", cfg)
 	output, err := pcmd.ExecuteCommand(logoutCmd.Command)
 	req.NoError(err)
-	req.Contains(output, "You are now logged out")
+	req.Contains(output, errors.LoggedOutMsg)
 	verifyLoggedOutState(t, cfg)
 }
 
 func Test_credentials_NoSpacesAroundEmail_ShouldSupportSpacesAtBeginOrEnd(t *testing.T) {
 	req := require.New(t)
 
-	prompt := prompt(" cody@confluent.io ", " iamrobin ")
+	prompt := prompt()
 	auth := &sdkMock.Auth{}
 	loginCmd, _ := newLoginCmd(prompt, auth, nil, "ccloud", req)
 
@@ -201,7 +204,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 		MetricSink: nil,
 		Logger:     log.New(),
 	})
-	prompt := prompt("cody@confluent.io", "iambatman")
+	prompt := prompt()
 	prerunner := cliMock.NewPreRunnerMock(nil, nil, cfg)
 
 	// Create a test certificate to be read in by the command
@@ -211,12 +214,12 @@ func Test_SelfSignedCerts(t *testing.T) {
 	}
 	priv, err := rsa.GenerateKey(rand.Reader, 512)
 	req.NoError(err, "Couldn't generate private key")
-	ca_b, err := x509.CreateCertificate(rand.Reader, ca, ca, &priv.PublicKey, priv)
+	certBytes, err := x509.CreateCertificate(rand.Reader, ca, ca, &priv.PublicKey, priv)
 	req.NoError(err, "Couldn't generate certificate from private key")
-	pemBytes := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: ca_b})
+	pemBytes := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: certBytes})
 	certReader := bytes.NewReader(pemBytes)
 
-	cert, err := x509.ParseCertificate(ca_b)
+	cert, err := x509.ParseCertificate(certBytes)
 	req.NoError(err, "Couldn't reparse certificate")
 	expectedSubject := cert.RawSubject
 	mdsClient.TokensAndAuthenticationApi = &mdsMock.TokensAndAuthenticationApi{
@@ -258,7 +261,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 func TestLoginWithExistingContext(t *testing.T) {
 	req := require.New(t)
 
-	prompt := prompt("cody@confluent.io", "iambatman")
+	prompt := prompt()
 	auth := &sdkMock.Auth{
 		LoginFunc: func(ctx context.Context, idToken string, username string, password string) (string, error) {
 			return "y0ur.jwt.T0kEn", nil
@@ -319,7 +322,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 		// Login to the CLI control plane
 		output, err := pcmd.ExecuteCommand(loginCmd.Command, s.args...)
 		req.NoError(err)
-		req.Contains(output, "Logged in as cody@confluent.io")
+		req.Contains(output, fmt.Sprintf(errors.LoggedInAsMsg, "cody@confluent.io"))
 		verifyLoggedInState(t, cfg, s.cliName)
 
 		// Set kafka related states for the logged in context
@@ -331,13 +334,13 @@ func TestLoginWithExistingContext(t *testing.T) {
 		logoutCmd, _ := newLogoutCmd(cfg.CLIName, cfg)
 		output, err = pcmd.ExecuteCommand(logoutCmd.Command)
 		req.NoError(err)
-		req.Contains(output, "You are now logged out")
+		req.Contains(output, errors.LoggedOutMsg)
 		verifyLoggedOutState(t, cfg)
 
 		// logging back in the the same context
 		output, err = pcmd.ExecuteCommand(loginCmd.Command, s.args...)
 		req.NoError(err)
-		req.Contains(output, "Logged in as cody@confluent.io")
+		req.Contains(output, fmt.Sprintf(errors.LoggedInAsMsg, "cody@confluent.io"))
 		verifyLoggedInState(t, cfg, s.cliName)
 
 		// verify that kafka cluster info persists between logging back in again
@@ -375,7 +378,7 @@ func verifyLoggedOutState(t *testing.T, cfg *v3.Config) {
 	req.Empty(state.Auth)
 }
 
-func prompt(username, password string) *cliMock.Prompt {
+func prompt() *cliMock.Prompt {
 	return &cliMock.Prompt{
 		ReadStringFunc: func(delim byte) (string, error) {
 			return "cody@confluent.io", nil

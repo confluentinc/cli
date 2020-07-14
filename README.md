@@ -139,6 +139,11 @@ Now clone the repo and update your shell profile:
     echo 'export PATH="$GOENV_ROOT/bin:$PATH"' >> ~/.bash_profile
     echo 'eval "$(goenv init -)"' >> ~/.bash_profile
 
+Install the required version of `goreleaser`
+
+    go get github.com/goreleaser/goreleaser@v0.106.0
+
+
 ### Mac Setup Notes
 
 Our integration tests (`make test`) open a lot of files while they are running.
@@ -285,7 +290,7 @@ We also have end-to-end system tests for
 To run all tests
 
     make test
-    
+
 UNIT_TEST_ARGS environment variable is used to manipulate unit test execution,
 while INT_TEST_ARGS environment variable is for integration tests.
 
@@ -302,15 +307,15 @@ Unit tests exist in `_test.go` files alongside the main source code files.
 You can run the all unit tests with
 
     make unit-test
-   
+
 To run only a subset of unit tests, you must find the suite and test name and filter with
 
     # all tests within a suite
     make unit-test UNIT_TEST_ARGS="-run TestApiTestSuite"
-    
+
     # a very specific subset of tests
     make unit-test UNIT_TEST_ARGS="-run TestApiTestSuite/TestCreateCloudAPIKey"
-   
+
 UNIT_TEST_ARGS is can also be used with `make test` target, if you want to filter unit tests but still run integration tests
 
     make test UNIT_TEST_ARGS="-run TestApiTestSuite/TestCreateCloudAPIKey"
@@ -354,7 +359,7 @@ To run a single test case (or all test cases with a prefix)
 INT_TEST_ARGS is can also be used with `make test` target, if you want to filter or update integration tests but still run unit tests
 
     make test INT_TEST_ARGS="-run TestCLI/Test_Confluent_Iam_Rolebinding_List"
-    
+
 
 ## Adding a New Command to the CLI
 
@@ -409,7 +414,7 @@ func (c *fileCommand) init() {
 		Use:   "show <num-times>",
 		Short: "Show the config file a specified number of times.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.show,
+		RunE:  pcmd.NewCLIRunE(c.show),
 	}
 	c.AddCommand(showCmd)
 }
@@ -421,7 +426,7 @@ func (c *fileCommand) show(cmd *cobra.Command, args []string) error {
 	}
 	filename := c.config.Filename
 	if filename == "" {
-		return errors.New("No config file exists!")
+		return errors.New(errors.NoConfigFileErrorMsg)
 	}
 	for i := 0; i < numTimes; i++ {
 		pcmd.Println(cmd, filename)
@@ -438,11 +443,12 @@ For our command, the constructor needs to take a `Config` struct as a parameter.
 
 
 #### `init` Function
-Here, we add the subcommands, in this case just `show`. We specify the usage messages, number of arguments our command needs, and the function that will be executed when our command is run.
-
+Here, we add the subcommands, in this case just `show`. We specify the usage messages, number of arguments our command needs, and the function that will be executed when our command is run. Not that all `RunE` function must be intialized using `cmd` package's `NewCLIRunE` function, which handles the common logic for all CLI commands.
 #### Main (Work) Function
 This function is named after the verb component of the command, `show`. It does the "heavy" lifting by parsing the `<num-times>` arg, retrieving the filename, and either printing its name to the console, or returning an error if there's no filename set.
 
+#### Error Handling
+See [error.md](errors.md) for details.
 
 ### Registering the Command
 We must register our newly created command with the top-level `config` command located at `internal/cmd/config/command.go`. We add it to the `config` command with `c.AddCommand(NewFileCommand(c.config))`.
@@ -475,7 +481,7 @@ func (s *CLITestSuite) TestFileCommands() {
 		}
 		tt.workflow = true
 		kafkaAPIURL := serveKafkaAPI(s.T()).URL
-		s.runCcloudTest(tt, serve(s.T(), kafkaAPIURL).URL, kafkaAPIURL)
+		s.runCcloudTest(tt, serve(s.T(), kafkaAPIURL).URL)
 	}
 }
 ```

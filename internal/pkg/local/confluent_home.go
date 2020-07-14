@@ -11,6 +11,8 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-version"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 /*
@@ -83,7 +85,6 @@ type ConfluentHome interface {
 
 	GetConnectorConfigFile(connector string) (string, error)
 	GetKafkaScript(mode, format string) (string, error)
-	ReadDemoReadme(demo string) (string, error)
 }
 
 type ConfluentHomeManager struct{}
@@ -97,7 +98,7 @@ func (ch *ConfluentHomeManager) getRootDir() (string, error) {
 		return dir, nil
 	}
 
-	return "", fmt.Errorf("set environment variable CONFLUENT_HOME")
+	return "", errors.New(errors.SetConfluentHomeErrorMsg)
 }
 
 func (ch *ConfluentHomeManager) GetFile(path ...string) (string, error) {
@@ -207,11 +208,11 @@ func (ch *ConfluentHomeManager) ReadServicePort(service string) (int, error) {
 	}
 
 	if key == "listeners" {
-		x := strings.Split(val, ":")
+		x := strings.Split(val.(string), ":")
 		val = x[len(x)-1]
 	}
 
-	port, err := strconv.Atoi(val)
+	port, err := strconv.Atoi(val.(string))
 	if err != nil {
 		return 0, err
 	}
@@ -230,7 +231,7 @@ func (ch *ConfluentHomeManager) GetVersion(service string) (string, error) {
 		return "", err
 	}
 	if len(matches) == 0 {
-		return "", fmt.Errorf("could not find %s in CONFLUENT_HOME", pattern)
+		return "", errors.Errorf(errors.ConfluentHomeNotFoundErrorMsg, pattern)
 	}
 
 	versionFile := matches[0]
@@ -252,7 +253,7 @@ func (ch *ConfluentHomeManager) GetKafkaScript(format, mode string) (string, err
 			return "", err
 		}
 		if !supported {
-			return "", fmt.Errorf("format %s is not supported in this version", format)
+			return "", errors.Errorf(errors.KafkaScriptFormatNotSupportedErrorMsg, format)
 		}
 	}
 
@@ -266,24 +267,10 @@ func (ch *ConfluentHomeManager) GetKafkaScript(format, mode string) (string, err
 	case "protobuf":
 		script = fmt.Sprintf("kafka-protobuf-console-%s", mode)
 	default:
-		return "", fmt.Errorf("invalid format: %s", format)
+		return "", errors.Errorf(errors.KafkaScriptInvalidFormatErrorMsg, format)
 	}
 
 	return ch.GetFile("bin", script)
-}
-
-func (ch *ConfluentHomeManager) ReadDemoReadme(demo string) (string, error) {
-	readme, err := ch.GetFile("examples", demo, "README.md")
-	if err != nil {
-		return "", err
-	}
-
-	data, err := ioutil.ReadFile(readme)
-	if err != nil {
-		return "", err
-	}
-
-	return string(data), nil
 }
 
 func (ch *ConfluentHomeManager) isAboveVersion(targetVersion string) (bool, error) {

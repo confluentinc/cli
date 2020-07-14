@@ -16,12 +16,12 @@ import (
 
 var (
 	// Injected from linker flags like `go build -ldflags "-X main.version=$VERSION" -X ...`
-	version    = "v0.0.0"
-	commit     = ""
-	date       = ""
-	host       = ""
-	cliName    = "confluent"
-	isTest     = "false"
+	version = "v0.0.0"
+	commit  = ""
+	date    = ""
+	host    = ""
+	cliName = "confluent"
+	isTest  = "false"
 )
 
 func main() {
@@ -58,7 +58,6 @@ func main() {
 	}
 	exit(0)
 }
-
 
 func exit(exitCode int) {
 	if exitCode == 1 {
