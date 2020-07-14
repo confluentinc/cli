@@ -634,7 +634,11 @@ func (c *Command) checkOSVersion() error {
 	if runtime.GOOS == "darwin" {
 		required, _ := version.NewSemver("10.13")
 		// CLI-584 CP 6.0 now requires at least 10.14
-		if above, err := c.ch.IsAtLeastVersion("6.0"); above && err == nil {
+		above, err := c.ch.IsAtLeastVersion("6.0")
+		if err != nil {
+			return err
+		}
+		if above {
 			required, _ = version.NewSemver("10.14")
 		}
 
