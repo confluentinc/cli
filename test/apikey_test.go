@@ -52,11 +52,11 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 		{args: "api-key list --resource cloud", fixture: "apikey35.golden"},
 
 		// use an api key for kafka cluster
-		{args: "api-key use MYKEY4 --resource lkc-cool1", fixture: "empty.golden"},
+		{args: "api-key use MYKEY4 --resource lkc-cool1", fixture: "apikey45.golden"},
 		{args: "api-key list --resource lkc-cool1", fixture: "apikey11.golden"},
 
 		// use an api key for other kafka cluster
-		{args: "api-key use MYKEY5 --resource lkc-other1", fixture: "empty.golden"},
+		{args: "api-key use MYKEY5 --resource lkc-other1", fixture: "apikey46.golden"},
 		{args: "api-key list --resource lkc-cool1", fixture: "apikey11.golden"},
 		{args: "api-key list --resource lkc-other1", fixture: "apikey12.golden"},
 
@@ -65,11 +65,11 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 		{args: "api-key list --resource lkc-other1", fixture: "apikey43.golden"},
 
 		// store an api-key for kafka cluster
-		{args: "api-key store UIAPIKEY100 @test/fixtures/input/UIAPISECRET100.txt --resource lkc-cool1", fixture: "empty.golden"},
+		{args: "api-key store UIAPIKEY100 @test/fixtures/input/UIAPISECRET100.txt --resource lkc-cool1", fixture: "apikey47.golden"},
 		{args: "api-key list --resource lkc-cool1", fixture: "apikey11.golden"},
 
 		// store an api-key for other kafka cluster
-		{args: "api-key store UIAPIKEY101 @test/fixtures/input/UIAPISECRET101.txt --resource lkc-other1", fixture: "empty.golden"},
+		{args: "api-key store UIAPIKEY101 @test/fixtures/input/UIAPISECRET101.txt --resource lkc-other1", fixture: "apikey48.golden"},
 		{args: "api-key list --resource lkc-cool1", fixture: "apikey11.golden"},
 		{args: "api-key list --resource lkc-other1", fixture: "apikey44.golden"},
 
@@ -105,7 +105,7 @@ func (s *CLITestSuite) TestAPIKeyCommands() {
 		// store: error handling
 		{name: "error if storing unknown api key", args: "api-key store UNKNOWN @test/fixtures/input/UIAPISECRET100.txt --resource lkc-cool1", fixture: "apikey15.golden"},
 		{name: "error if storing api key with existing secret", args: "api-key store UIAPIKEY100 NEWSECRET --resource lkc-cool1", fixture: "apikey16.golden"},
-		{name: "succeed if forced to overwrite existing secret", args: "api-key store -f UIAPIKEY100 NEWSECRET --resource lkc-cool1", fixture: "empty.golden",
+		{name: "succeed if forced to overwrite existing secret", args: "api-key store -f UIAPIKEY100 NEWSECRET --resource lkc-cool1", fixture: "apikey49.golden",
 			wantFunc: func(t *testing.T) {
 				logger := log.New()
 				cfg := v3.New(&config.Params{

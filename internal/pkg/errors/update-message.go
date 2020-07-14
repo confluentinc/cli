@@ -1,5 +1,0 @@
-package errors
-
-const (
-
-)

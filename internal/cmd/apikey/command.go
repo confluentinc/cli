@@ -254,7 +254,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if cmd.Flags().Changed("description") {
-		pcmd.ErrPrintf(cmd, errors.UpdateSuccessMsg, "description", "API key", apiKey, description)
+		cmd.PrintErrf(errors.UpdateSuccessMsg, "description", "API key", apiKey, description)
 	}
 	return nil
 }
@@ -329,7 +329,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	pcmd.Println(cmd, errors.APIKeySuccessfullyDeletedMsg, apiKey)
+	pcmd.Printf(cmd, errors.DeletedAPIKeyMsg, apiKey)
 	return c.keystore.DeleteAPIKey(apiKey, cmd)
 }
 
@@ -392,6 +392,7 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	if err := c.keystore.StoreAPIKey(&schedv1.ApiKey{Key: key, Secret: secret}, cluster.ID, cmd); err != nil {
 		return errors.Wrap(err, errors.UnableToStoreAPIKeyErrorMsg)
 	}
+	cmd.PrintErrf(errors.StoredAPIKeyMsg, key)
 	return nil
 }
 
@@ -413,6 +414,7 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.Wrap(err, errors.APIKeyUseFailedErrorMsg)
 	}
+	cmd.PrintErrf(errors.UseAPIKeyMsg, apiKey, clusterId)
 	return nil
 }
 

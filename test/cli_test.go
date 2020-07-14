@@ -1372,7 +1372,8 @@ func handleAPIKeyUpdateAndDelete(t *testing.T) func(w http.ResponseWriter, r *ht
 
 func handleServiceAccountRequests(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == "GET" {
+		switch r.Method {
+		case "GET":
 			serviceAccount := &orgv1.User{
 				Id:                 12345,
 				ServiceName:        "service_account",
@@ -1384,7 +1385,7 @@ func handleServiceAccountRequests(t *testing.T) func(w http.ResponseWriter, r *h
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(listReply))
 			require.NoError(t, err)
-		} else if r.Method == "POST" {
+		case "POST":
 			req := &orgv1.CreateServiceAccountRequest{}
 			err := utilv1.UnmarshalJSON(r.Body, req)
 			require.NoError(t, err)
@@ -1400,7 +1401,7 @@ func handleServiceAccountRequests(t *testing.T) func(w http.ResponseWriter, r *h
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(createReply))
 			require.NoError(t, err)
-		} else if r.Method == "PUT" {
+		case "PUT":
 			req := &orgv1.UpdateServiceAccountRequest{}
 			err := utilv1.UnmarshalJSON(r.Body, req)
 			require.NoError(t, err)
@@ -1411,7 +1412,7 @@ func handleServiceAccountRequests(t *testing.T) func(w http.ResponseWriter, r *h
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(updateReply))
 			require.NoError(t, err)
-		} else if r.Method == "DELETE" {
+		case "DELETE":
 			req := &orgv1.DeleteServiceAccountRequest{}
 			err := utilv1.UnmarshalJSON(r.Body, req)
 			require.NoError(t, err)

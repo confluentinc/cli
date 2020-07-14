@@ -2,7 +2,9 @@ package errors
 
 const (
 	// api-key command
-	APIKeySuccessfullyDeletedMsg = "Deleted API Key \"%s\".\n"
+	DeletedAPIKeyMsg = "Deleted API key \"%s\".\n"
+	StoredAPIKeyMsg  = "Stored API secret for API key \"%s\"."
+	UseAPIKeyMsg     = "Set API Key \"%s\" as the active API key for \"%s\"."
 
 	// auth commands
 	LoggedInAsMsg                = "Logged in as \"%s\".\n"
@@ -28,6 +30,7 @@ const (
 	ThanksForFeedbackMsg = "Thanks for your feedback."
 
 	// kafka cluster commands
+	UseKafkaClusterMsg = "Set Kafka cluster \"%s\" as the active cluster for environment \"%s\"."
 	ConfirmAuthorizedKeyMsg = "Please confirm you have authorized the key for these accounts: %s"
 
 	// kafka topic commands

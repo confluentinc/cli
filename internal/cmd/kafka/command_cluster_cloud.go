@@ -372,7 +372,12 @@ func (c *clusterCommand) use(cmd *cobra.Command, args []string) error {
 		err = errors.CatchKafkaNotFoundError(err, clusterID)
 		return err
 	}
-	return c.Context.SetActiveKafkaCluster(cmd, clusterID)
+	err = c.Context.SetActiveKafkaCluster(cmd, clusterID)
+	if err != nil {
+		return err
+	}
+	cmd.PrintErrf(errors.UseKafkaClusterMsg, clusterID, c.Context.GetCurrentEnvironmentId())
+	return nil
 }
 
 func check(err error) {
