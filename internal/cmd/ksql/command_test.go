@@ -123,7 +123,7 @@ func (suite *KSQLTestSuite) newCMD() *cobra.Command {
 		User:  suite.userc,
 		KSQL:  suite.ksqlc,
 	}
-	cmd := New(cliMock.NewPreRunnerMock(client, nil), suite.conf)
+	cmd := New("ccloud", cliMock.NewPreRunnerMock(client, nil, suite.conf))
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	return cmd
 }
@@ -139,7 +139,7 @@ func (suite *KSQLTestSuite) TestShouldConfigureACLs() {
 	req.Equal(1, len(suite.kafkac.CreateACLsCalls()))
 	bindings := suite.kafkac.CreateACLsCalls()[0].Bindings
 	buf := new(bytes.Buffer)
-	req.NoError(acl.PrintAcls(cmd, bindings, buf))
+	req.NoError(acl.PrintACLs(cmd, bindings, buf))
 	req.Equal(expectedACLs, buf.String())
 }
 
@@ -157,7 +157,7 @@ func (suite *KSQLTestSuite) TestShouldAlsoConfigureForPro() {
 	req.Equal(1, len(suite.kafkac.CreateACLsCalls()))
 	bindings := suite.kafkac.CreateACLsCalls()[0].Bindings
 	buf := new(bytes.Buffer)
-	req.NoError(acl.PrintAcls(cmd, bindings, buf))
+	req.NoError(acl.PrintACLs(cmd, bindings, buf))
 	req.Equal(expectedACLs, buf.String())
 }
 

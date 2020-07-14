@@ -1,21 +1,21 @@
 package cmd_test
 
 import (
+	"fmt"
 	"os"
 	"reflect"
 	"strings"
 	"testing"
 
-	"github.com/confluentinc/cli/internal/pkg/auth"
-	"github.com/confluentinc/cli/internal/pkg/errors"
-
 	"github.com/jonboulle/clockwork"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
+	"github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config/load"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	pmock "github.com/confluentinc/cli/internal/pkg/mock"
 	"github.com/confluentinc/cli/internal/pkg/update/mock"
@@ -93,6 +93,9 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ver := pmock.NewVersionMock()
+			cfg := v3.New(nil)
+			cfg, err := load.LoadAndMigrate(cfg)
+			require.NoError(t, err)
 			r := &pcmd.PreRun{
 				Version: ver,
 				Logger:  tt.fields.Logger,
@@ -108,14 +111,12 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 				Analytics:          cliMock.NewDummyAnalyticsMock(),
 				Clock:              clockwork.NewRealClock(),
 				UpdateTokenHandler: auth.NewUpdateTokenHandler(auth.NewNetrcHandler("")),
+				Config:             cfg,
 			}
 
 			root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
 			root.Flags().CountP("verbose", "v", "Increase verbosity")
-			cfg := v3.New(nil)
-			cfg, err := load.LoadAndMigrate(cfg)
-			require.NoError(t, err)
-			rootCmd := pcmd.NewAnonymousCLICommand(root, cfg, r)
+			rootCmd := pcmd.NewAnonymousCLICommand(root, r)
 
 			args := strings.Split(tt.fields.Command, " ")
 			_, err = pcmd.ExecuteCommand(rootCmd.Command, args...)
@@ -130,10 +131,6 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 }
 
 func TestPreRun_HasAPIKey_SetupLoggingAndCheckForUpdates(t *testing.T) {
-	cfg := v3.New(nil)
-	cfg, err := load.LoadAndMigrate(cfg)
-	require.NoError(t, err)
-
 	ver := pmock.NewVersionMock()
 
 	calledAnonymous := false
@@ -157,9 +154,9 @@ func TestPreRun_HasAPIKey_SetupLoggingAndCheckForUpdates(t *testing.T) {
 
 	root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
 	root.Flags().CountP("verbose", "v", "Increase verbosity")
-	rootCmd := pcmd.NewAnonymousCLICommand(root, cfg, r)
+	rootCmd := pcmd.NewAnonymousCLICommand(root, r)
 	args := strings.Split("help", " ")
-	_, err = pcmd.ExecuteCommand(rootCmd.Command, args...)
+	_, err := pcmd.ExecuteCommand(rootCmd.Command, args...)
 	require.NoError(t, err)
 
 	if !calledAnonymous {
@@ -168,10 +165,6 @@ func TestPreRun_HasAPIKey_SetupLoggingAndCheckForUpdates(t *testing.T) {
 }
 
 func TestPreRun_CallsAnalyticsTrackCommand(t *testing.T) {
-	cfg := v3.New(nil)
-	cfg, err := load.LoadAndMigrate(cfg)
-	require.NoError(t, err)
-
 	ver := pmock.NewVersionMock()
 	analyticsClient := cliMock.NewDummyAnalyticsMock()
 
@@ -195,10 +188,10 @@ func TestPreRun_CallsAnalyticsTrackCommand(t *testing.T) {
 	root := &cobra.Command{
 		Run: func(cmd *cobra.Command, args []string) {},
 	}
-	rootCmd := pcmd.NewAnonymousCLICommand(root, cfg, r)
+	rootCmd := pcmd.NewAnonymousCLICommand(root, r)
 	root.Flags().CountP("verbose", "v", "Increase verbosity")
 
-	_, err = pcmd.ExecuteCommand(rootCmd.Command)
+	_, err := pcmd.ExecuteCommand(rootCmd.Command)
 	require.NoError(t, err)
 
 	require.True(t, analyticsClient.TrackCommandCalled())
@@ -226,12 +219,13 @@ func TestPreRun_TokenExpires(t *testing.T) {
 		Analytics:          analyticsClient,
 		Clock:              clockwork.NewRealClock(),
 		UpdateTokenHandler: auth.NewUpdateTokenHandler(auth.NewNetrcHandler("")),
+		Config:             cfg,
 	}
 
 	root := &cobra.Command{
 		Run: func(cmd *cobra.Command, args []string) {},
 	}
-	rootCmd := pcmd.NewAnonymousCLICommand(root, cfg, r)
+	rootCmd := pcmd.NewAnonymousCLICommand(root, r)
 	root.Flags().CountP("verbose", "v", "Increase verbosity")
 
 	_, err := pcmd.ExecuteCommand(rootCmd.Command)
@@ -327,12 +321,13 @@ func Test_UpdateToken(t *testing.T) {
 				Analytics:          cliMock.NewDummyAnalyticsMock(),
 				Clock:              clockwork.NewRealClock(),
 				UpdateTokenHandler: updateTokenHandler,
+				Config:             cfg,
 			}
 
 			root := &cobra.Command{
 				Run: func(cmd *cobra.Command, args []string) {},
 			}
-			rootCmd := pcmd.NewAnonymousCLICommand(root, cfg, r)
+			rootCmd := pcmd.NewAnonymousCLICommand(root, r)
 			root.Flags().CountP("verbose", "v", "Increase verbosity")
 
 			_, err := pcmd.ExecuteCommand(rootCmd.Command)
@@ -359,23 +354,26 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 	userNotLoggedIn.Context().State.Auth = nil
 
 	tests := []struct {
-		name   string
-		config *v3.Config
-		errMsg string
+		name           string
+		config         *v3.Config
+		errMsg         string
+		suggestionsMsg string
 	}{
 		{
 			name:   "username logged in user",
 			config: userNameConfigLoggedIn,
 		},
 		{
-			name:   "not logged in user",
-			config: userNotLoggedIn,
-			errMsg: errors.NotLoggedInInternalErrorMsg,
+			name:           "not logged in user",
+			config:         userNotLoggedIn,
+			errMsg:         errors.NotLoggedInErrorMsg,
+			suggestionsMsg: fmt.Sprintf(errors.NotLoggedInSuggestions, "ccloud"),
 		},
 		{
-			name:   "username context corrupted auth token",
-			config: userNameCfgCorruptedAuthToken,
-			errMsg: errors.CorruptedAuthTokenErrorMsg,
+			name:           "username context corrupted auth token",
+			config:         userNameCfgCorruptedAuthToken,
+			errMsg:         errors.CorruptedTokenErrorMsg,
+			suggestionsMsg: errors.CorruptedTokenSuggestions,
 		},
 		{
 			name:   "api credential context",
@@ -402,18 +400,22 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 				Analytics:          analyticsClient,
 				Clock:              clockwork.NewRealClock(),
 				UpdateTokenHandler: auth.NewUpdateTokenHandler(auth.NewNetrcHandler("")),
+				Config:             tt.config,
 			}
 
 			root := &cobra.Command{
 				Run: func(cmd *cobra.Command, args []string) {},
 			}
-			rootCmd := pcmd.NewHasAPIKeyCLICommand(root, tt.config, r)
+			rootCmd := pcmd.NewHasAPIKeyCLICommand(root, r)
 			root.Flags().CountP("verbose", "v", "Increase verbosity")
 
 			_, err := pcmd.ExecuteCommand(rootCmd.Command)
 			if tt.errMsg != "" {
 				require.Error(t, err)
 				require.Equal(t, tt.errMsg, err.Error())
+				if tt.suggestionsMsg != "" {
+					errors.VerifyErrorAndSuggestions(require.New(t), err, tt.errMsg, tt.suggestionsMsg)
+				}
 			} else {
 				require.NoError(t, err)
 			}

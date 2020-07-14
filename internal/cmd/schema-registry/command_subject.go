@@ -2,10 +2,11 @@ package schema_registry
 
 import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+
+	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -16,22 +17,21 @@ type subjectCommand struct {
 }
 
 // NewSubjectCommand returns the Cobra command for Schema Registry subject list
-func NewSubjectCommand(config *v3.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
+func NewSubjectCommand(cliName string, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "subject",
 			Short: "Manage Schema Registry subjects.",
-		},
-		config, prerunner)
+		}, prerunner)
 	subjectCmd := &subjectCommand{
 		AuthenticatedCLICommand: cliCmd,
 		srClient:                srClient,
 	}
-	subjectCmd.init()
+	subjectCmd.init(cliName)
 	return subjectCmd.Command
 }
 
-func (c *subjectCommand) init() {
+func (c *subjectCommand) init(cliName string) {
 
 	listCmd := &cobra.Command{
 		Use:   "list",
@@ -41,11 +41,12 @@ Retrieve all subjects available in a Schema Registry
 
 ::
 		config.CLIName schema-registry subject list
-`, c.Config.CLIName),
-		RunE: c.list,
+`, cliName),
+		RunE: pcmd.NewCLIRunE(c.list),
 		Args: cobra.NoArgs,
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	listCmd.Flags().BoolP("deleted", "D", false, "View the deleted subjects.")
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 	// Update
@@ -58,8 +59,8 @@ Update subject level compatibility or mode of schema registry.
 ::
 		config.CLIName schema-registry subject update <subjectname> --compatibility=BACKWARD
 		config.CLIName schema-registry subject update <subjectname> --mode=READWRITE
-`, c.Config.CLIName),
-		RunE: c.update,
+`, cliName),
+		RunE: pcmd.NewCLIRunE(c.update),
 		Args: cobra.ExactArgs(1),
 	}
 	updateCmd.Flags().String("compatibility", "", "Can be BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, or NONE.")
@@ -76,11 +77,12 @@ Retrieve all versions registered under a given subject and its compatibility lev
 
 ::
 		config.CLIName schema-registry subject describe <subjectname>
-`, c.Config.CLIName),
-		RunE: c.describe,
+`, cliName),
+		RunE: pcmd.NewCLIRunE(c.describe),
 		Args: cobra.ExactArgs(1),
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	describeCmd.Flags().BoolP("deleted", "D", false, "View the deleted schema.")
 	describeCmd.Flags().SortFlags = false
 	c.AddCommand(describeCmd)
 }
@@ -88,19 +90,19 @@ Retrieve all versions registered under a given subject and its compatibility lev
 func (c *subjectCommand) update(cmd *cobra.Command, args []string) error {
 	compat, err := cmd.Flags().GetString("compatibility")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	if compat != "" {
 		return c.updateCompatibility(cmd, args)
 	}
 	mode, err := cmd.Flags().GetString("mode")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	if mode != "" {
 		return c.updateMode(cmd, args)
 	}
-	return errors.New("flag --compatibility or --mode is required.")
+	return errors.New(errors.CompatibilityOrModeErrorMsg)
 }
 func (c *subjectCommand) updateCompatibility(cmd *cobra.Command, args []string) error {
 	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
@@ -116,7 +118,7 @@ func (c *subjectCommand) updateCompatibility(cmd *cobra.Command, args []string) 
 	if err != nil {
 		return err
 	}
-	pcmd.Println(cmd, "Successfully updated")
+	pcmd.Printf(cmd, errors.UpdatedSubjectLevelCompatibilityMsg, compat, args[0])
 	return nil
 }
 
@@ -133,27 +135,31 @@ func (c *subjectCommand) updateMode(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	pcmd.Println(cmd, "Successfully updated Subject level Mode: "+updatedMode.Mode)
+	pcmd.Printf(cmd, errors.UpdatedSubjectLevelModeMsg, updatedMode, args[0])
 	return nil
 }
 
-func (c *subjectCommand) list(cmd *cobra.Command, args []string) error {
+func (c *subjectCommand) list(cmd *cobra.Command, _ []string) error {
 	type listDisplay struct {
 		Subject string
 	}
 	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
-
 		return err
 	}
-	list, _, err := srClient.DefaultApi.List(ctx)
+	deleted, err := cmd.Flags().GetBool("deleted")
+	if err != nil {
+		return err
+	}
+	listOpts := srsdk.ListOpts{Deleted: optional.NewBool(deleted)}
+	list, _, err := srClient.DefaultApi.List(ctx, &listOpts)
 	if err != nil {
 		return err
 	}
 	if len(list) > 0 {
 		outputWriter, err := output.NewListOutputWriter(cmd, []string{"Subject"}, []string{"Subject"}, []string{"subject"})
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		for _, l := range list {
 			outputWriter.AddElement(&listDisplay{
@@ -162,7 +168,7 @@ func (c *subjectCommand) list(cmd *cobra.Command, args []string) error {
 		}
 		return outputWriter.Out()
 	} else {
-		pcmd.Println(cmd, "No subjects")
+		pcmd.Println(cmd, errors.NoSubjectsMsg)
 	}
 	return nil
 }
@@ -172,13 +178,18 @@ func (c *subjectCommand) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	versions, _, err := srClient.DefaultApi.ListVersions(ctx, args[0])
+	deleted, err := cmd.Flags().GetBool("deleted")
+	if err != nil {
+		return err
+	}
+	listVersionsOpts := srsdk.ListVersionsOpts{Deleted: optional.NewBool(deleted)}
+	versions, _, err := srClient.DefaultApi.ListVersions(ctx, args[0], &listVersionsOpts)
 	if err != nil {
 		return err
 	}
 	outputOption, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	if outputOption == output.Human.String() {
 		PrintVersions(versions)

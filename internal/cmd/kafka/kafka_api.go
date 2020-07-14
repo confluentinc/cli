@@ -5,6 +5,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/confluentinc/cli/internal/pkg/errors"
+
 	"github.com/hashicorp/go-multierror"
 
 	"github.com/spf13/cobra"
@@ -73,7 +75,7 @@ the --prefix option was also passed.`)
 
 // parse returns ACLConfiguration from the contents of cmd
 func parse(cmd *cobra.Command) ([]*ACLConfiguration, error) {
-	aclConfigs := []*ACLConfiguration{}
+	var aclConfigs []*ACLConfiguration
 
 	if cmd.Name() == listCmd.Name() {
 		aclConfig := NewACLConfig()
@@ -88,7 +90,7 @@ func parse(cmd *cobra.Command) ([]*ACLConfiguration, error) {
 	}
 	for _, operation := range operations {
 		aclConfig := NewACLConfig()
-		op, err := getAclOperation(operation)
+		op, err := getACLOperation(operation)
 		if err != nil {
 			return nil, err
 		}
@@ -135,13 +137,13 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 func setResourcePattern(conf *ACLConfiguration, n, v string) {
 	/* Normalize the resource pattern name */
 	if conf.Pattern.ResourceType != schedv1.ResourceTypes_UNKNOWN {
-		conf.errors = multierror.Append(conf.errors, fmt.Errorf("exactly one of %v must be set",
+		conf.errors = multierror.Append(conf.errors, fmt.Errorf(errors.ExactlyOneSetErrorMsg,
 			listEnum(schedv1.ResourceTypes_ResourceType_name, []string{"ANY", "UNKNOWN"})))
 		return
 	}
 
 	n = strings.ToUpper(n)
-	n = strings.Replace(n, "-", "_", -1)
+	n = strings.ReplaceAll(n, "-", "_")
 
 	conf.Pattern.ResourceType = schedv1.ResourceTypes_ResourceType(schedv1.ResourceTypes_ResourceType_value[n])
 
@@ -167,7 +169,7 @@ OUTER:
 		if v == "CLUSTER" {
 			v = "cluster-scope"
 		}
-		v = strings.Replace(v, "_", "-", -1)
+		v = strings.ReplaceAll(v, "_", "-")
 		ops = append(ops, strings.ToLower(v))
 	}
 
@@ -175,11 +177,11 @@ OUTER:
 	return strings.Join(ops, ", ")
 }
 
-func getAclOperation(operation string) (schedv1.ACLOperations_ACLOperation, error) {
+func getACLOperation(operation string) (schedv1.ACLOperations_ACLOperation, error) {
 	op := strings.ToUpper(operation)
-	op = strings.Replace(op, "-", "_", -1)
+	op = strings.ReplaceAll(op, "-", "_")
 	if operation, ok := schedv1.ACLOperations_ACLOperation_value[op]; ok {
 		return schedv1.ACLOperations_ACLOperation(operation), nil
 	}
-	return schedv1.ACLOperations_UNKNOWN, fmt.Errorf("Invalid operation value: %s", op)
+	return schedv1.ACLOperations_UNKNOWN, fmt.Errorf(errors.InvalidOperationValueErrorMsg, op)
 }

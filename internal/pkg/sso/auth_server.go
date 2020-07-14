@@ -37,7 +37,7 @@ func (s *authServer) startServer() error {
 	listener, err := net.ListenTCP("tcp4", &net.TCPAddr{IP: net.IPv4(127, 0, 0, 1), Port: 26635}) // confl
 
 	if err != nil {
-		return errors.Wrap(err, "unable to start HTTP server")
+		return errors.Wrap(err, errors.StartHTTPServerErrorMsg)
 	}
 
 	s.wg = &sync.WaitGroup{}
@@ -50,7 +50,7 @@ func (s *authServer) startServer() error {
 		// https://go.googlesource.com/go/+/master/src/net/http/server.go#2854
 		// So don't surface that error to the user.
 		if serverErr != nil && serverErr.Error() != "http: Server closed" {
-			fmt.Fprintf(os.Stderr, "CLI HTTP auth server encountered error while running: %s\n", serverErr.Error())
+			fmt.Fprintf(os.Stderr, errors.AuthServerRunningErrorMsg, serverErr.Error())
 		}
 	}()
 
@@ -62,7 +62,7 @@ func (s *authServer) awaitAuthorizationCode(timeout time.Duration) error {
 	// Wait until flow is finished / callback is called (or timeout...)
 	go func() {
 		time.Sleep(timeout)
-		s.bgErr = errors.New("timed out while waiting for browser authentication to occur; please try logging in again")
+		s.bgErr = errors.NewErrorWithSuggestions(errors.BrowserAuthTimedOutErrorMsg, errors.BrowserAuthTimedOutSuggestions)
 		s.server.Close()
 		s.wg.Done()
 	}()
@@ -71,7 +71,7 @@ func (s *authServer) awaitAuthorizationCode(timeout time.Duration) error {
 	defer func() {
 		serverErr := s.server.Shutdown(context.Background())
 		if serverErr != nil {
-			fmt.Fprintf(os.Stderr, "CLI HTTP auth server encountered error while shutting down: %s\n", serverErr.Error())
+			fmt.Fprintf(os.Stderr, errors.AuthServerShutdownErrorMsg, serverErr.Error())
 		}
 	}()
 
@@ -82,12 +82,12 @@ func (s *authServer) awaitAuthorizationCode(timeout time.Duration) error {
 func (s *authServer) callbackHandler(rw http.ResponseWriter, request *http.Request) {
 	states, ok := request.URL.Query()["state"]
 	if !(ok && states[0] == s.State.SSOProviderState) {
-		s.bgErr = errors.New("authentication callback URL either did not contain a state parameter in query string, or the state parameter was invalid; login will fail")
+		s.bgErr = errors.New(errors.LoginFailedCallbackURLErrorMsg)
 	}
 
 	rawCallbackFile, err := local.Asset("assets/sso_callback.html")
 	if err != nil {
-		s.bgErr = errors.New("could not read callback page template")
+		s.bgErr = errors.New(errors.ReadCallbackPageTemplateErrorMsg)
 		fmt.Fprintf(rw, "could not read callback page template, see CLI terminal for more details")
 	}
 	fmt.Fprintf(rw, string(rawCallbackFile))
@@ -96,7 +96,7 @@ func (s *authServer) callbackHandler(rw http.ResponseWriter, request *http.Reque
 	if ok {
 		s.State.SSOProviderAuthenticationCode = codes[0]
 	} else {
-		s.bgErr = errors.New("authentication callback URL did not contain code parameter in query string; login will fail")
+		s.bgErr = errors.New(errors.LoginFailedQueryStringErrorMsg)
 	}
 
 	s.wg.Done()

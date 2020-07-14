@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 var (
@@ -41,12 +42,13 @@ type authState struct {
 	SSOProviderClientID           string
 	SSOProviderCallbackUrl        string
 	SSOProviderIdentifier         string
+	logger                        *log.Logger
 }
 
 // InitState generates various auth0 related codes and hashes
 // and tweaks certain variables for internal development and testing of the CLIs
 // auth0 server / SSO integration.
-func newState(authURL string, noBrowser bool) (*authState, error) {
+func newState(authURL string, noBrowser bool, logger *log.Logger) (*authState, error) {
 	env := "prod"
 	if strings.Contains(authURL, "priv.cpdev.cloud") {
 		env = "cpd"
@@ -59,6 +61,7 @@ func newState(authURL string, noBrowser bool) (*authState, error) {
 	}
 
 	state := &authState{}
+	state.logger = logger
 	switch env {
 	case "cpd":
 		state.SSOProviderCallbackUrl = authURL + ssoProviderCallbackEndpoint // callback to the cpd cluster url that was passed in
@@ -101,14 +104,14 @@ func (s *authState) generateCodes() error {
 
 	_, err := rand.Read(randomBytes)
 	if err != nil {
-		return errors.Wrap(err, "unable to generate random bytes for SSO provider state")
+		return errors.Wrap(err, errors.GenerateRandomSSOProviderErrorMsg)
 	}
 
 	s.SSOProviderState = base64.RawURLEncoding.EncodeToString(randomBytes)
 
 	_, err = rand.Read(randomBytes)
 	if err != nil {
-		return errors.Wrap(err, "unable to generate random bytes for code verifier")
+		return errors.Wrap(err, errors.GenerateRandomCodeVerifierErrorMsg)
 	}
 
 	s.CodeVerifier = base64.RawURLEncoding.EncodeToString(randomBytes)
@@ -116,7 +119,7 @@ func (s *authState) generateCodes() error {
 	hasher := sha256.New()
 	_, err = hasher.Write([]byte(s.CodeVerifier))
 	if err != nil {
-		return errors.Wrap(err, "unable to compute hash for code challenge")
+		return errors.Wrap(err, errors.ComputeHashErrorMsg)
 	}
 	s.CodeChallenge = base64.RawURLEncoding.EncodeToString(hasher.Sum(nil))
 
@@ -138,7 +141,7 @@ func (s *authState) getOAuthToken() error {
 	if ok {
 		s.SSOProviderIDToken = token.(string)
 	} else {
-		return errors.New("oauth token response body did not contain id_token field")
+		return errors.New(errors.MissingIDTokenFieldErrorMsg)
 	}
 	refreshToken, ok := data["refresh_token"]
 	if ok {
@@ -161,16 +164,18 @@ func (s *authState) refreshOAuthToken() error {
 	if ok {
 		s.SSOProviderIDToken = token.(string)
 	} else {
-		return errors.New("oauth token response body did not contain id_token field")
+		return errors.New(errors.MissingIDTokenFieldErrorMsg)
 	}
 	return nil
 }
 
 func (s *authState) getOAuthTokenResponse(payload *strings.Reader) (map[string]interface{}, error) {
 	url := s.SSOProviderHost + "/oauth/token"
+	s.logger.Debugf("Oauth token request URL: %s", url)
+	s.logger.Debug("Oauth token request payload: ", payload)
 	req, err := http.NewRequest("POST", url, payload)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to construct oauth token request")
+		return nil, errors.Wrap(err, errors.ConstructOAuthRequestErrorMsg)
 	}
 	req.Header.Add("content-type", "application/x-www-form-urlencoded")
 	res, err := http.DefaultClient.Do(req)
@@ -180,9 +185,10 @@ func (s *authState) getOAuthTokenResponse(payload *strings.Reader) (map[string]i
 	defer res.Body.Close()
 	responseBody, _ := ioutil.ReadAll(res.Body)
 	var data map[string]interface{}
-	err = json.Unmarshal([]byte(responseBody), &data)
+	err = json.Unmarshal(responseBody, &data)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to unmarshal response body in oauth token request")
+		s.logger.Debugf("Failed oauth token response body: %s", responseBody)
+		return nil, errors.Wrap(err, errors.UnmarshalOAuthTokenErrorMsg)
 	}
 	return data, nil
 }

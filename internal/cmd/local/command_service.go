@@ -2,243 +2,546 @@ package local
 
 import (
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strconv"
+	"regexp"
+	"runtime"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/fatih/color"
+	"github.com/hashicorp/go-version"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/spinner"
 )
 
-func NewServiceCommand(service string, prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
-	serviceCommand := cmd.NewAnonymousCLICommand(
+func NewServiceCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
+	c := NewLocalCommand(
 		&cobra.Command{
-			Use:   service + " [command]",
-			Short: "Manage the " + service + " service.",
-			Args:  cobra.ExactArgs(1),
-		},
-		cfg, prerunner)
+			Use:   service,
+			Short: fmt.Sprintf("Manage %s.", writeOfficialServiceName(service)),
+			Args:  cobra.NoArgs,
+		}, prerunner)
 
-	serviceCommand.AddCommand(NewServiceLogCommand(service, prerunner, cfg))
-	serviceCommand.AddCommand(NewServiceStartCommand(service, prerunner, cfg))
-	serviceCommand.AddCommand(NewServiceStatusCommand(service, prerunner, cfg))
-	serviceCommand.AddCommand(NewServiceStopCommand(service, prerunner, cfg))
-	serviceCommand.AddCommand(NewServiceVersionCommand(service, prerunner, cfg))
+	c.AddCommand(NewServiceLogCommand(service, prerunner))
+	c.AddCommand(NewServiceStartCommand(service, prerunner))
+	c.AddCommand(NewServiceStatusCommand(service, prerunner))
+	c.AddCommand(NewServiceStopCommand(service, prerunner))
+	c.AddCommand(NewServiceTopCommand(service, prerunner))
+	c.AddCommand(NewServiceVersionCommand(service, prerunner))
 
-	return serviceCommand.Command
+	switch service {
+	case "connect":
+		c.AddCommand(NewConnectConnectorCommand(prerunner))
+		c.AddCommand(NewConnectPluginCommand(prerunner))
+	case "kafka":
+		c.AddCommand(NewKafkaConsumeCommand(prerunner))
+		c.AddCommand(NewKafkaProduceCommand(prerunner))
+	case "schema-registry":
+		c.AddCommand(NewSchemaRegistryACLCommand(prerunner))
+	}
+
+	return c.Command
 }
 
-func NewServiceLogCommand(service string, prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
-	serviceLogCommand := cmd.NewAnonymousCLICommand(
+func NewServiceLogCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
+	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "log",
-			Short: "Print logs for " + service + ".",
+			Short: fmt.Sprintf("Print logs showing %s output.", writeOfficialServiceName(service)),
 			Args:  cobra.NoArgs,
-			RunE:  runServiceLogCommand,
-		},
-		cfg, prerunner)
+		}, prerunner)
 
-	return serviceLogCommand.Command
+	c.Command.RunE = cmd.NewCLIRunE(c.runServiceLogCommand)
+	c.Command.Flags().BoolP("follow", "f", false, "Log additional output until the command is interrupted.")
+
+	return c.Command
 }
 
-func runServiceLogCommand(command *cobra.Command, _ []string) error {
+func (c *Command) runServiceLogCommand(command *cobra.Command, _ []string) error {
 	service := command.Parent().Name()
 
-	dir, err := getServiceDir(service)
+	log, err := c.cc.GetLogFile(service)
 	if err != nil {
 		return err
 	}
 
-	log := filepath.Join(dir, fmt.Sprintf("%s.log", service))
+	shouldFollow, err := command.Flags().GetBool("follow")
+	if err != nil {
+		return err
+	}
+	if shouldFollow {
+		tail := exec.Command("tail", "-f", log)
+		tail.Stdout = os.Stdout
+		tail.Stderr = os.Stderr
+		return tail.Run()
+	}
 
 	data, err := ioutil.ReadFile(log)
 	if err != nil {
-		return err
+		return errors.Errorf(errors.NoLogFoundErrorMsg, writeOfficialServiceName(service), service)
 	}
-	command.Print(string(data))
 
+	command.Print(string(data))
 	return nil
 }
 
-func NewServiceStartCommand(service string, prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
-	serviceVersionCommand := cmd.NewAnonymousCLICommand(
+func NewServiceStartCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
+	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "start",
-			Short: "Start " + service + ".",
+			Short: fmt.Sprintf("Start %s.", writeOfficialServiceName(service)),
 			Args:  cobra.NoArgs,
-			RunE:  runServiceStartCommand,
-		},
-		cfg, prerunner)
+		}, prerunner)
 
-	return serviceVersionCommand.Command
+	c.Command.RunE = cmd.NewCLIRunE(c.runServiceStartCommand)
+	c.Command.Flags().StringP("config", "c", "", fmt.Sprintf("Configure %s with a specific properties file.", writeOfficialServiceName(service)))
+
+	return c.Command
 }
 
-func runServiceStartCommand(command *cobra.Command, _ []string) error {
+func (c *Command) runServiceStartCommand(command *cobra.Command, _ []string) error {
 	service := command.Parent().Name()
 
-	if err := notifyConfluentCurrent(command); err != nil {
+	if err := c.notifyConfluentCurrent(command); err != nil {
 		return err
 	}
 
 	for _, dependency := range services[service].startDependencies {
-		if err := startService(command, dependency); err != nil {
+		if err := c.startService(command, dependency, ""); err != nil {
 			return err
 		}
 	}
 
-	return startService(command, service)
+	configFile, err := command.Flags().GetString("config")
+	if err != nil {
+		return err
+	}
+
+	return c.startService(command, service, configFile)
 }
 
-func NewServiceStatusCommand(service string, prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
-	serviceVersionCommand := cmd.NewAnonymousCLICommand(
+func NewServiceStatusCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
+	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "status",
-			Short: "Check the status of " + service + ".",
+			Short: fmt.Sprintf("Check if %s is running.", writeOfficialServiceName(service)),
 			Args:  cobra.NoArgs,
-			RunE:  runServiceStatusCommand,
-		},
-		cfg, prerunner)
+		}, prerunner)
 
-	return serviceVersionCommand.Command
+	c.Command.RunE = cmd.NewCLIRunE(c.runServiceStatusCommand)
+	return c.Command
 }
 
-func runServiceStatusCommand(command *cobra.Command, _ []string) error {
+func (c *Command) runServiceStatusCommand(command *cobra.Command, _ []string) error {
 	service := command.Parent().Name()
-	return printStatus(command, service)
+
+	if err := c.notifyConfluentCurrent(command); err != nil {
+		return err
+	}
+
+	return c.printStatus(command, service)
 }
 
-func NewServiceStopCommand(service string, prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
-	serviceVersionCommand := cmd.NewAnonymousCLICommand(
+func NewServiceStopCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
+	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "stop",
-			Short: "Stop " + service + ".",
+			Short: fmt.Sprintf("Stop %s.", writeOfficialServiceName(service)),
 			Args:  cobra.NoArgs,
-			RunE:  runServiceStopCommand,
-		},
-		cfg, prerunner)
+		}, prerunner)
 
-	return serviceVersionCommand.Command
+	c.Command.RunE = cmd.NewCLIRunE(c.runServiceStopCommand)
+	return c.Command
 }
 
-func runServiceStopCommand(command *cobra.Command, _ []string) error {
+func (c *Command) runServiceStopCommand(command *cobra.Command, _ []string) error {
 	service := command.Parent().Name()
 
-	if err := notifyConfluentCurrent(command); err != nil {
+	if err := c.notifyConfluentCurrent(command); err != nil {
 		return err
 	}
 
 	for _, dependency := range services[service].stopDependencies {
-		if err := stopService(command, dependency); err != nil {
+		if err := c.stopService(command, dependency); err != nil {
 			return err
 		}
 	}
 
-	return stopService(command, service)
+	return c.stopService(command, service)
 }
 
-func NewServiceVersionCommand(service string, prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
-	serviceVersionCommand := cmd.NewAnonymousCLICommand(
+func NewServiceTopCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
+	c := NewLocalCommand(
 		&cobra.Command{
-			Use:   "version",
-			Short: "Print the version of " + service + ".",
+			Use:   "top",
+			Short: fmt.Sprintf("View resource usage for %s.", writeOfficialServiceName(service)),
 			Args:  cobra.NoArgs,
-			RunE:  runServiceVersionCommand,
-		},
-		cfg, prerunner)
+		}, prerunner)
 
-	return serviceVersionCommand.Command
+	c.Command.RunE = cmd.NewCLIRunE(c.runServiceTopCommand)
+	return c.Command
 }
 
-func runServiceVersionCommand(command *cobra.Command, _ []string) error {
+func (c *Command) runServiceTopCommand(command *cobra.Command, _ []string) error {
 	service := command.Parent().Name()
 
-	version, err := getVersion(service)
+	isUp, err := c.isRunning(service)
+	if err != nil {
+		return err
+	}
+	if !isUp {
+		return c.printStatus(command, service)
+	}
+
+	pid, err := c.cc.ReadPid(service)
 	if err != nil {
 		return err
 	}
 
-	command.Println(version)
+	return top([]int{pid})
+}
+
+func NewServiceVersionCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
+	c := NewLocalCommand(
+		&cobra.Command{
+			Use:   "version",
+			Short: fmt.Sprintf("Print the current version of %s.", writeOfficialServiceName(service)),
+			Args:  cobra.NoArgs,
+		}, prerunner)
+
+	c.Command.RunE = cmd.NewCLIRunE(c.runServiceVersionCommand)
+
+	return c.Command
+}
+
+func (c *Command) runServiceVersionCommand(command *cobra.Command, _ []string) error {
+	service := command.Parent().Name()
+
+	ver, err := c.ch.GetVersion(service)
+	if err != nil {
+		return err
+	}
+
+	command.Println(ver)
 	return nil
 }
 
-func startService(command *cobra.Command, service string) error {
-	dir, err := getServiceDir(service)
-	if err != nil {
-		return err
-	}
-
-	if err := os.MkdirAll(dir, 0777); err != nil {
-		return err
-	}
-
-	isUp, err := isRunning(service, dir)
+func (c *Command) startService(command *cobra.Command, service string, configFile string) error {
+	isUp, err := c.isRunning(service)
 	if err != nil {
 		return err
 	}
 	if isUp {
-		return nil
+		return c.printStatus(command, service)
 	}
 
-	command.Printf("Starting %s\n", service)
+	if err := checkService(service); err != nil {
+		return err
+	}
 
-	confluentHome, err := getConfluentHome()
+	if err := c.configService(service, configFile); err != nil {
+		return err
+	}
+
+	command.Printf(errors.StartingServiceMsg, writeServiceName(service))
+
+	spin := spinner.New()
+	spin.Start()
+	err = c.startProcess(service)
+	spin.Stop()
 	if err != nil {
 		return err
 	}
-	src := filepath.Join(confluentHome, "etc", services[service].properties)
-	dst := filepath.Join(dir, fmt.Sprintf("%s.properties", service))
-	if err := copyFile(src, dst); err != nil {
+
+	return c.printStatus(command, service)
+}
+
+func checkService(service string) error {
+	if err := checkOSVersion(); err != nil {
 		return err
 	}
 
-	bin := filepath.Join(confluentHome, "bin", services[service].startCommand)
-	startCmd := exec.Command(bin, dst)
+	if err := checkJavaVersion(service); err != nil {
+		return err
+	}
 
-	log := filepath.Join(dir, fmt.Sprintf("%s.log", service))
-	fd, err := os.Create(log)
+	return nil
+}
+
+func (c *Command) configService(service string, configFile string) error {
+	port, err := c.ch.ReadServicePort(service)
+	if err != nil {
+		if err.Error() != "no port specified" {
+			return err
+		}
+	} else {
+		services[service].port = port
+	}
+
+	var data []byte
+	if configFile == "" {
+		data, err = c.ch.ReadServiceConfig(service)
+	} else {
+		data, err = ioutil.ReadFile(configFile)
+	}
 	if err != nil {
 		return err
 	}
-	startCmd.Stdout = fd
-	startCmd.Stderr = fd
 
-	if err := startCmd.Start(); err != nil {
+	config, err := c.getConfig(service)
+	if err != nil {
 		return err
 	}
 
-	pidFile := getPidFile(service, dir)
-	if err := writeInt(pidFile, startCmd.Process.Pid); err != nil {
+	data = injectConfig(data, config)
+
+	if err := c.cc.WriteConfig(service, data); err != nil {
 		return err
 	}
 
-	for {
-		isUp, err := isRunning(service, dir)
+	logs, err := c.cc.GetLogsDir(service)
+	if err != nil {
+		return err
+	}
+	if err := os.Setenv("LOG_DIR", logs); err != nil {
+		return err
+	}
+
+	if err := setServiceEnvs(service); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func injectConfig(data []byte, config map[string]string) []byte {
+	for key, val := range config {
+		re := regexp.MustCompile(fmt.Sprintf(`(?m)^(#\s)?%s=.+\n`, key))
+		line := []byte(fmt.Sprintf("%s=%s\n", key, val))
+
+		matches := re.FindAll(data, -1)
+		switch len(matches) {
+		case 0:
+			data = append(data, line...)
+		case 1:
+			data = re.ReplaceAll(data, line)
+		default:
+			re := regexp.MustCompile(fmt.Sprintf(`(?m)^%s=.+\n`, key))
+			data = re.ReplaceAll(data, line)
+		}
+	}
+
+	return data
+}
+
+func (c *Command) startProcess(service string) error {
+	scriptFile, err := c.ch.GetServiceScript("start", service)
+	if err != nil {
+		return err
+	}
+
+	configFile, err := c.cc.GetConfigFile(service)
+	if err != nil {
+		return err
+	}
+
+	start := exec.Command(scriptFile, configFile)
+
+	logFile, err := c.cc.GetLogFile(service)
+	if err != nil {
+		return err
+	}
+
+	fd, err := os.Create(logFile)
+	if err != nil {
+		return err
+	}
+	start.Stdout = fd
+	start.Stderr = fd
+
+	if err := start.Start(); err != nil {
+		return err
+	}
+
+	if err := c.cc.WritePid(service, start.Process.Pid); err != nil {
+		return err
+	}
+
+	errorsChan := make(chan error)
+
+	up := make(chan bool)
+	go func() {
+		for {
+			isUp, err := c.isRunning(service)
+			if err != nil {
+				errorsChan <- err
+			}
+			if isUp {
+				up <- isUp
+			}
+		}
+	}()
+	select {
+	case <-up:
+		break
+	case err := <-errorsChan:
+		return err
+	case <-time.After(time.Second):
+		return errors.Errorf(errors.FailedToStartErrorMsg, writeServiceName(service))
+	}
+
+	open := make(chan bool)
+	go func() {
+		for {
+			isOpen, err := isPortOpen(service)
+			if err != nil {
+				errorsChan <- err
+			}
+			if isOpen {
+				open <- isOpen
+			}
+			time.Sleep(time.Second)
+		}
+	}()
+	select {
+	case <-open:
+		break
+	case err := <-errorsChan:
+		return err
+	case <-time.After(90 * time.Second):
+		return errors.Errorf(errors.FailedToStartErrorMsg, writeServiceName(service))
+	}
+
+	return nil
+}
+
+func (c *Command) stopService(command *cobra.Command, service string) error {
+	isUp, err := c.isRunning(service)
+	if err != nil {
+		return err
+	}
+	if !isUp {
+		return c.printStatus(command, service)
+	}
+
+	command.Printf(errors.StoppingServiceMsg, writeServiceName(service))
+
+	spin := spinner.New()
+	spin.Start()
+	err = c.stopProcess(service)
+	spin.Stop()
+	if err != nil {
+		return err
+	}
+
+	return c.printStatus(command, service)
+}
+
+func (c *Command) stopProcess(service string) error {
+	scriptFile, err := c.ch.GetServiceScript("stop", service)
+	if err != nil {
+		return err
+	}
+
+	if scriptFile == "" {
+		pid, err := c.cc.ReadPid(service)
 		if err != nil {
 			return err
 		}
-		if isUp {
-			break
+
+		process, err := os.FindProcess(pid)
+		if err != nil {
+			return err
+		}
+
+		if err := process.Kill(); err != nil {
+			return err
+		}
+	} else {
+		stop := exec.Command(scriptFile)
+		if err := stop.Start(); err != nil {
+			return err
 		}
 	}
 
-	return printStatus(command, service)
+	errors := make(chan error)
+	up := make(chan bool)
+	go func() {
+		for {
+			isUp, err := c.isRunning(service)
+			if err != nil {
+				errors <- err
+			}
+			if !isUp {
+				up <- isUp
+			}
+		}
+	}()
+	select {
+	case <-up:
+		break
+	case err := <-errors:
+		return err
+	case <-time.After(10 * time.Second):
+		if err := c.killProcess(service); err != nil {
+			return err
+		}
+	}
+
+	if err := c.cc.RemovePidFile(service); err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func printStatus(command *cobra.Command, service string) error {
-	dir, err := getServiceDir(service)
+func (c *Command) killProcess(service string) error {
+	pid, err := c.cc.ReadPid(service)
 	if err != nil {
 		return err
 	}
 
-	isUp, err := isRunning(service, dir)
+	process, err := os.FindProcess(pid)
+	if err != nil {
+		return err
+	}
+
+	if err := process.Signal(syscall.SIGKILL); err != nil {
+		return err
+	}
+
+	errorsChan := make(chan error)
+	up := make(chan bool)
+	go func() {
+		for {
+			isUp, err := c.isRunning(service)
+			if err != nil {
+				errorsChan <- err
+			}
+			if !isUp {
+				up <- isUp
+			}
+		}
+	}()
+	select {
+	case <-up:
+		return nil
+	case err := <-errorsChan:
+		return err
+	case <-time.After(time.Second):
+		return errors.Errorf(errors.FailedToStopErrorMsg, writeServiceName(service))
+	}
+}
+
+func (c *Command) printStatus(command *cobra.Command, service string) error {
+	isUp, err := c.isRunning(service)
 	if err != nil {
 		return err
 	}
@@ -248,75 +551,20 @@ func printStatus(command *cobra.Command, service string) error {
 		status = color.GreenString("UP")
 	}
 
-	command.Printf("%s is [%s]\n", service, status)
+	command.Printf(errors.ServiceStatusMsg, writeServiceName(service), status)
 	return nil
 }
 
-func stopService(command *cobra.Command, service string) error {
-	dir, err := getServiceDir(service)
+func (c *Command) isRunning(service string) (bool, error) {
+	hasPidFile, err := c.cc.HasPidFile(service)
 	if err != nil {
-		return err
+		return false, err
 	}
-
-	isUp, err := isRunning(service, dir)
-	if err != nil {
-		return err
-	}
-	if !isUp {
-		return nil
-	}
-
-	command.Printf("Stopping %s\n", service)
-
-	pidFile := getPidFile(service, dir)
-	pid, err := readInt(pidFile)
-	if err != nil {
-		return err
-	}
-
-	process, err := os.FindProcess(pid)
-	if err != nil {
-		return err
-	}
-
-	if err := process.Kill(); err != nil {
-		return err
-	}
-
-	for {
-		isUp, err := isRunning(service, dir)
-		if err != nil {
-			return err
-		}
-		if !isUp {
-			break
-		}
-	}
-
-	if err := os.Remove(pidFile); err != nil {
-		return err
-	}
-
-	return printStatus(command, service)
-}
-
-func getServiceDir(service string) (string, error) {
-	confluentCurrent, err := getConfluentCurrent()
-	if err != nil {
-		return "", err
-	}
-
-	return filepath.Join(confluentCurrent, service), nil
-}
-
-func isRunning(service, dir string) (bool, error) {
-	pidFile := getPidFile(service, dir)
-
-	if !fileExists(pidFile) {
+	if !hasPidFile {
 		return false, nil
 	}
 
-	pid, err := readInt(pidFile)
+	pid, err := c.cc.ReadPid(service)
 	if err != nil {
 		return false, err
 	}
@@ -326,51 +574,164 @@ func isRunning(service, dir string) (bool, error) {
 		return false, err
 	}
 
-	err = process.Signal(syscall.Signal(0))
-	return err == nil, nil
-}
-
-func getPidFile(service, dir string) string {
-	return filepath.Join(dir, fmt.Sprintf("%s.pid", service))
-}
-
-func fileExists(file string) bool {
-	_, err := os.Stat(file)
-	return !os.IsNotExist(err)
-}
-
-func readInt(file string) (int, error) {
-	data, err := ioutil.ReadFile(file)
-	if err != nil {
-		return 0, err
+	if err := process.Signal(syscall.Signal(0)); err != nil {
+		return false, nil
 	}
 
-	x, err := strconv.Atoi(strings.TrimRight(string(data), "\n"))
+	return true, nil
+}
+
+func isPortOpen(service string) (bool, error) {
+	addr := fmt.Sprintf(":%d", services[service].port)
+	out, err := exec.Command("lsof", "-i", addr).Output()
 	if err != nil {
-		return 0, err
+		return false, nil
+	}
+	return len(out) > 0, nil
+}
+
+func setServiceEnvs(service string) error {
+	serviceEnvFormats := map[string]string{
+		"KAFKA_LOG4J_OPTS":           "%s_LOG4J_OPTS",
+		"EXTRA_ARGS":                 "%s_EXTRA_ARGS",
+		"KAFKA_HEAP_OPTS":            "%s_HEAP_OPTS",
+		"KAFKA_JVM_PERFORMANCE_OPTS": "%s_JVM_PERFORMANCE_OPTS",
+		"KAFKA_GC_LOG_OPTS":          "%s_GC_LOG_OPTS",
+		"KAFKA_JMX_OPTS":             "%s_JMX_OPTS",
+		"KAFKA_DEBUG":                "%s_DEBUG",
+		"KAFKA_OPTS":                 "%s_OPTS",
+		"CLASSPATH":                  "%s_CLASSPATH",
+		"JMX_PORT":                   "%s_JMX_PORT",
 	}
 
-	return x, nil
+	for _, envFormat := range serviceEnvFormats {
+		env := fmt.Sprintf(envFormat, "KAFKA")
+		savedEnv := fmt.Sprintf("SAVED_%s", env)
+		if os.Getenv(savedEnv) == "" {
+			val := os.Getenv(env)
+			if val != "" {
+				if err := os.Setenv(savedEnv, val); err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	prefix := services[service].envPrefix
+	for env, envFormat := range serviceEnvFormats {
+		val := os.Getenv(fmt.Sprintf(envFormat, prefix))
+		if val != "" {
+			if err := os.Setenv(env, val); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
-func writeInt(file string, x int) error {
-	data := []byte(fmt.Sprintf("%d\n", x))
-	return ioutil.WriteFile(file, data, 0644)
+func checkOSVersion() error {
+	// CLI-84: Require macOS version >= 10.13
+	if runtime.GOOS == "darwin" {
+		osVersion, err := exec.Command("sw_vers", "-productVersion").Output()
+		if err != nil {
+			return err
+		}
+
+		v, err := version.NewSemver(strings.TrimSuffix(string(osVersion), "\n"))
+		if err != nil {
+			return err
+		}
+
+		required, _ := version.NewSemver("10.13")
+		if v.Compare(required) < 0 {
+			return fmt.Errorf(errors.MacVersionErrorMsg, osVersion)
+		}
+	}
+	return nil
 }
 
-func copyFile(src string, dst string) error {
-	srcFd, err := os.Open(src)
+func checkJavaVersion(service string) error {
+	java := filepath.Join(os.Getenv("JAVA_HOME"), "/bin/java")
+	if os.Getenv("JAVA_HOME") == "" {
+		out, err := exec.Command("which", "java").Output()
+		if err != nil {
+			return err
+		}
+		java = strings.TrimSuffix(string(out), "\n")
+		if java == "java not found" {
+			return errors.New(errors.JavaExecNotFondErrorMsg)
+		}
+	}
+
+	data, err := exec.Command(java, "-version").CombinedOutput()
 	if err != nil {
 		return err
 	}
-	defer srcFd.Close()
 
-	dstFd, err := os.Create(dst)
+	re := regexp.MustCompile(`.+ version "([\d._]+)"`)
+	javaVersion := string(re.FindSubmatch(data)[1])
+
+	isValid, err := isValidJavaVersion(service, javaVersion)
 	if err != nil {
 		return err
 	}
-	defer dstFd.Close()
+	if !isValid {
+		return errors.New(errors.JavaRequirementErrorMsg)
+	}
 
-	_, err = io.Copy(dstFd, srcFd)
-	return err
+	return nil
+}
+
+func isValidJavaVersion(service, javaVersion string) (bool, error) {
+	// 1.8.0_152 -> 8.0_152 -> 8.0
+	javaVersion = strings.TrimPrefix(javaVersion, "1.")
+	javaVersion = strings.Split(javaVersion, "_")[0]
+
+	v, err := version.NewSemver(javaVersion)
+	if err != nil {
+		return false, err
+	}
+
+	v8, _ := version.NewSemver("8")
+	v9, _ := version.NewSemver("9")
+	v11, _ := version.NewSemver("11")
+	if v.Compare(v8) < 0 || v.Compare(v9) >= 0 && v.Compare(v11) < 0 {
+		return false, nil
+	}
+
+	if service == "zookeeper" || service == "kafka" {
+		return true, nil
+	}
+
+	v12, _ := version.NewSemver("12")
+	if v.Compare(v12) >= 0 {
+		return false, nil
+	}
+
+	return true, nil
+}
+
+func writeOfficialServiceName(service string) string {
+	switch service {
+	case "kafka":
+		return "Apache Kafka®"
+	case "zookeeper":
+		return "Apache ZooKeeper™"
+	default:
+		return writeServiceName(service)
+	}
+}
+
+func writeServiceName(service string) string {
+	switch service {
+	case "kafka-rest":
+		return "Kafka REST"
+	case "ksql-server":
+		return "ksqlDB Server"
+	case "zookeeper":
+		return "ZooKeeper"
+	default:
+		return strings.Title(strings.ReplaceAll(service, "-", " "))
+	}
 }

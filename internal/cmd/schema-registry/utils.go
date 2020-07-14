@@ -22,18 +22,14 @@ func GetApiClient(cmd *cobra.Command, srClient *srsdk.APIClient, cfg *cmd.Dynami
 		// Tests/mocks
 		return srClient, nil, nil
 	}
-	srClient, ctx, err := SchemaRegistryClient(cmd, cfg, ver)
-	if err != nil {
-		return nil, nil, err
-	}
-	return srClient, ctx, nil
+	return getSchemaRegistryClient(cmd, cfg, ver)
 }
 
 func PrintVersions(versions []int32) {
 	titleRow := []string{"Version"}
 	var entries [][]string
-	for _, version := range versions {
-		record := &struct{ Version int32 }{version}
+	for _, v := range versions {
+		record := &struct{ Version int32 }{v}
 		entries = append(entries, printer.ToRow(record, titleRow))
 	}
 	printer.RenderCollectionTable(entries, titleRow)

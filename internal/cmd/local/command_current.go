@@ -1,89 +1,41 @@
 package local
 
 import (
-	"fmt"
-	"io/ioutil"
-	"math/rand"
-	"os"
-	"path/filepath"
-	"strings"
-	"time"
-
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/examples"
 )
 
-func NewCurrentCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
-	currentCommand := cmd.NewAnonymousCLICommand(
+func NewCurrentCommand(prerunner cmd.PreRunner) *cobra.Command {
+	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "current",
-			Short: "Get the path of the data and logs of the services managed by the current Confluent run.",
 			Args:  cobra.NoArgs,
-			RunE:  runCurrentCommand,
-		},
-		cfg, prerunner)
+			Short: "Get the path of the current Confluent run.",
+			Long:  "Print the filesystem path of the data and logs of the services managed by the current \"confluent local\" command. If such a path does not exist, it will be created.",
+			Example: examples.BuildExampleString(
+				examples.Example{
+					Desc: "In Linux, running ``confluent local current`` should resemble the following:",
+					Code: "/tmp/confluent.SpBP4fQi",
+				},
+				examples.Example{
+					Desc: "In macOS, running ``confluent local current`` should resemble the following:",
+					Code: "/var/folders/cs/1rndf6593qb3kb6r89h50vgr0000gp/T/confluent.000000",
+				},
+			),
+		}, prerunner)
 
-	return currentCommand.Command
+	c.Command.RunE = cmd.NewCLIRunE(c.runCurrentCommand)
+	return c.Command
 }
 
-func runCurrentCommand(command *cobra.Command, _ []string) error {
-	current, err := getConfluentCurrent()
+func (c *Command) runCurrentCommand(command *cobra.Command, _ []string) error {
+	dir, err := c.cc.GetCurrentDir()
 	if err != nil {
 		return err
 	}
 
-	command.Println(current)
-	return nil
-}
-
-func getConfluentCurrent() (string, error) {
-	root := os.Getenv("CONFLUENT_CURRENT")
-	if root == "" {
-		root = os.TempDir()
-	}
-
-	var confluentCurrent string
-
-	trackingFile := filepath.Join(root, "confluent.current")
-	if _, err := os.Stat(trackingFile); os.IsNotExist(err) {
-		confluentCurrent = createCurrentDirectory(root)
-		if err := os.Mkdir(confluentCurrent, 0777); err != nil {
-			return "", err
-		}
-		if err := ioutil.WriteFile(trackingFile, []byte(confluentCurrent), 0644); err != nil {
-			return "", err
-		}
-	} else {
-		data, err := ioutil.ReadFile(trackingFile)
-		if err != nil {
-			return "", err
-		}
-		confluentCurrent = strings.TrimSuffix(string(data), "\n")
-	}
-
-	return confluentCurrent, nil
-}
-
-func createCurrentDirectory(parentDir string) string {
-	rand.Seed(time.Now().Unix())
-
-	for {
-		childDir := fmt.Sprintf("confluent.%06d", rand.Intn(1000000))
-		path := filepath.Join(parentDir, childDir)
-		if _, err := os.Stat(path); os.IsNotExist(err) {
-			return path
-		}
-	}
-}
-
-func notifyConfluentCurrent(command *cobra.Command) error {
-	current, err := getConfluentCurrent()
-	if err != nil {
-		return err
-	}
-
-	command.Printf("Using CONFLUENT_CURRENT: %s\n", current)
+	command.Println(dir)
 	return nil
 }

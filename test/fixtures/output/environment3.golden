@@ -1,4 +1,4 @@
-     Id     |  Name    
-+-----------+---------+
-    a-595   | default  
-  * not-595 | other    
+     Id     |      Name       
++-----------+----------------+
+    a-595   | default         
+  * not-595 | new-other-name  

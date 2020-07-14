@@ -10,7 +10,6 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/acl"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -31,13 +30,12 @@ type clusterCommand struct {
 }
 
 // NewClusterCommand returns the Cobra clusterCommand for Ksql Cluster.
-func NewClusterCommand(config *v3.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func NewClusterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "app",
-			Short: "Manage KSQL apps.",
-		},
-		config, prerunner)
+			Short: "Manage ksqlDB apps.",
+		}, prerunner)
 	cmd := &clusterCommand{AuthenticatedCLICommand: cliCmd}
 	cmd.prerunner = prerunner
 	cmd.init()
@@ -47,8 +45,8 @@ func NewClusterCommand(config *v3.Config, prerunner pcmd.PreRunner) *cobra.Comma
 func (c *clusterCommand) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
-		Short: "List KSQL apps.",
-		RunE:  c.list,
+		Short: "List ksqlDB apps.",
+		RunE:  pcmd.NewCLIRunE(c.list),
 		Args:  cobra.NoArgs,
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
@@ -57,8 +55,8 @@ func (c *clusterCommand) init() {
 
 	createCmd := &cobra.Command{
 		Use:   "create <name>",
-		Short: "Create a KSQL app.",
-		RunE:  c.create,
+		Short: "Create a ksqlDB app.",
+		RunE:  pcmd.NewCLIRunE(c.create),
 		Args:  cobra.ExactArgs(1),
 	}
 	createCmd.Flags().String("cluster", "", "Kafka cluster ID.")
@@ -69,8 +67,8 @@ func (c *clusterCommand) init() {
 
 	describeCmd := &cobra.Command{
 		Use:   "describe <id>",
-		Short: "Describe a KSQL app.",
-		RunE:  c.describe,
+		Short: "Describe a ksqlDB app.",
+		RunE:  pcmd.NewCLIRunE(c.describe),
 		Args:  cobra.ExactArgs(1),
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
@@ -79,15 +77,15 @@ func (c *clusterCommand) init() {
 
 	c.AddCommand(&cobra.Command{
 		Use:   "delete <id>",
-		Short: "Delete a KSQL app.",
-		RunE:  c.delete,
+		Short: "Delete a ksqlDB app.",
+		RunE:  pcmd.NewCLIRunE(c.delete),
 		Args:  cobra.ExactArgs(1),
 	})
 
 	aclsCmd := &cobra.Command{
 		Use:   "configure-acls <id> TOPICS...",
-		Short: "Configure ACLs for a KSQL cluster.",
-		RunE:  c.configureACLs,
+		Short: "Configure ACLs for a ksqlDB cluster.",
+		RunE:  pcmd.NewCLIRunE(c.configureACLs),
 		Args:  cobra.MinimumNArgs(1),
 	}
 	aclsCmd.Flags().String("cluster", "", "Kafka cluster ID.")
@@ -96,15 +94,15 @@ func (c *clusterCommand) init() {
 	c.AddCommand(aclsCmd)
 }
 
-func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
+func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
 	req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId()}
 	clusters, err := c.Client.KSQL.List(context.Background(), req)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	for _, cluster := range clusters {
 		outputWriter.AddElement(cluster)
@@ -115,11 +113,11 @@ func (c *clusterCommand) list(cmd *cobra.Command, args []string) error {
 func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(cmd)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	csus, err := cmd.Flags().GetInt32("csu")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	cfg := &schedv1.KSQLClusterConfig{
 		AccountId:      c.EnvironmentId(),
@@ -129,7 +127,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	}
 	cluster, err := c.Client.KSQL.Create(context.Background(), cfg)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	// use count to prevent the command from hanging too long waiting for the endpoint value
 	count := 0
@@ -138,12 +136,12 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId(), Id: cluster.Id}
 		cluster, err = c.Client.KSQL.Describe(context.Background(), req)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		count += 1
 	}
 	if cluster.Endpoint == "" {
-		pcmd.ErrPrint(cmd, "Endpoint not yet populated. To obtain the endpoint please use `ccloud ksql app describe`.")
+		pcmd.ErrPrintln(cmd, errors.EndPointNotPopulatedMsg)
 	}
 	return output.DescribeObject(cmd, cluster, describeFields, describeHumanRenames, describeStructuredRenames)
 }
@@ -152,7 +150,8 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId(), Id: args[0]}
 	cluster, err := c.Client.KSQL.Describe(context.Background(), req)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		err = errors.CatchKSQLNotFoundError(err, args[0])
+		return err
 	}
 	return output.DescribeObject(cmd, cluster, describeFields, describeHumanRenames, describeStructuredRenames)
 }
@@ -161,13 +160,13 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId(), Id: args[0]}
 	err := c.Client.KSQL.Delete(context.Background(), req)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
-	pcmd.Printf(cmd, "The KSQL app %s has been deleted.\n", args[0])
+	pcmd.Printf(cmd, errors.KsqlDBDeletedMsg, args[0])
 	return nil
 }
 
-func (c *clusterCommand) createAcl(prefix string, patternType schedv1.PatternTypes_PatternType, operation schedv1.ACLOperations_ACLOperation, resource schedv1.ResourceTypes_ResourceType, serviceAccountId string) *schedv1.ACLBinding {
+func (c *clusterCommand) createACL(prefix string, patternType schedv1.PatternTypes_PatternType, operation schedv1.ACLOperations_ACLOperation, resource schedv1.ResourceTypes_ResourceType, serviceAccountId string) *schedv1.ACLBinding {
 	binding := &schedv1.ACLBinding{
 		Entry: &schedv1.AccessControlEntryConfig{
 			Host: "*",
@@ -217,16 +216,16 @@ func (c *clusterCommand) buildACLBindings(serviceAccountId string, cluster *sche
 		schedv1.ACLOperations_WRITE,
 		schedv1.ACLOperations_DELETE,
 	} {
-		bindings = append(bindings, c.createAcl(cluster.OutputTopicPrefix, schedv1.PatternTypes_PREFIXED, op, schedv1.ResourceTypes_TOPIC, serviceAccountId))
-		bindings = append(bindings, c.createAcl("_confluent-ksql-"+cluster.OutputTopicPrefix, schedv1.PatternTypes_PREFIXED, op, schedv1.ResourceTypes_TOPIC, serviceAccountId))
-		bindings = append(bindings, c.createAcl("_confluent-ksql-"+cluster.OutputTopicPrefix, schedv1.PatternTypes_PREFIXED, op, schedv1.ResourceTypes_GROUP, serviceAccountId))
+		bindings = append(bindings, c.createACL(cluster.OutputTopicPrefix, schedv1.PatternTypes_PREFIXED, op, schedv1.ResourceTypes_TOPIC, serviceAccountId))
+		bindings = append(bindings, c.createACL("_confluent-ksql-"+cluster.OutputTopicPrefix, schedv1.PatternTypes_PREFIXED, op, schedv1.ResourceTypes_TOPIC, serviceAccountId))
+		bindings = append(bindings, c.createACL("_confluent-ksql-"+cluster.OutputTopicPrefix, schedv1.PatternTypes_PREFIXED, op, schedv1.ResourceTypes_GROUP, serviceAccountId))
 	}
 	for _, op := range []schedv1.ACLOperations_ACLOperation{
 		schedv1.ACLOperations_DESCRIBE,
 		schedv1.ACLOperations_DESCRIBE_CONFIGS,
 	} {
-		bindings = append(bindings, c.createAcl("*", schedv1.PatternTypes_LITERAL, op, schedv1.ResourceTypes_TOPIC, serviceAccountId))
-		bindings = append(bindings, c.createAcl("*", schedv1.PatternTypes_LITERAL, op, schedv1.ResourceTypes_GROUP, serviceAccountId))
+		bindings = append(bindings, c.createACL("*", schedv1.PatternTypes_LITERAL, op, schedv1.ResourceTypes_TOPIC, serviceAccountId))
+		bindings = append(bindings, c.createACL("*", schedv1.PatternTypes_LITERAL, op, schedv1.ResourceTypes_GROUP, serviceAccountId))
 	}
 	for _, op := range []schedv1.ACLOperations_ACLOperation{
 		schedv1.ACLOperations_DESCRIBE,
@@ -234,7 +233,7 @@ func (c *clusterCommand) buildACLBindings(serviceAccountId string, cluster *sche
 		schedv1.ACLOperations_READ,
 	} {
 		for _, t := range topics {
-			bindings = append(bindings, c.createAcl(t, schedv1.PatternTypes_LITERAL, op, schedv1.ResourceTypes_TOPIC, serviceAccountId))
+			bindings = append(bindings, c.createACL(t, schedv1.PatternTypes_LITERAL, op, schedv1.ResourceTypes_TOPIC, serviceAccountId))
 		}
 	}
 	// for transactional produces to command topic
@@ -242,7 +241,7 @@ func (c *clusterCommand) buildACLBindings(serviceAccountId string, cluster *sche
 		schedv1.ACLOperations_DESCRIBE,
 		schedv1.ACLOperations_WRITE,
 	} {
-		bindings = append(bindings, c.createAcl(cluster.PhysicalClusterId, schedv1.PatternTypes_LITERAL, op, schedv1.ResourceTypes_TRANSACTIONAL_ID, serviceAccountId))
+		bindings = append(bindings, c.createACL(cluster.PhysicalClusterId, schedv1.PatternTypes_LITERAL, op, schedv1.ResourceTypes_TRANSACTIONAL_ID, serviceAccountId))
 	}
 	return bindings
 }
@@ -257,7 +256,7 @@ func (c *clusterCommand) getServiceAccount(cluster *schedv1.KSQLCluster) (string
 			return strconv.Itoa(int(user.Id)), nil
 		}
 	}
-	return "", errors.New(fmt.Sprintf("No service account found for %s", cluster.Id))
+	return "", errors.Errorf(errors.NoServiceAccountErrorMsg, cluster.Id)
 }
 
 func (c *clusterCommand) configureACLs(cmd *cobra.Command, args []string) error {
@@ -266,31 +265,31 @@ func (c *clusterCommand) configureACLs(cmd *cobra.Command, args []string) error 
 	// Get the Kafka Cluster
 	kafkaCluster, err := pcmd.KafkaCluster(cmd, c.Context)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	// Ensure the KSQL cluster talks to the current Kafka Cluster
 	req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId(), Id: args[0]}
 	cluster, err := c.Client.KSQL.Describe(context.Background(), req)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	if cluster.KafkaClusterId != kafkaCluster.Id {
-		pcmd.ErrPrintf(cmd, "This KSQL cluster is not backed by the current Kafka cluster.")
+		pcmd.ErrPrintf(cmd, errors.KsqlDBNotBackedByKafkaMsg, args[0], cluster.KafkaClusterId, kafkaCluster.Id)
 	}
 
 	serviceAccountId, err := c.getServiceAccount(cluster)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	// Setup ACLs
 	bindings := c.buildACLBindings(serviceAccountId, cluster, args[1:])
 	if aclsDryRun {
-		return acl.PrintAcls(cmd, bindings, cmd.OutOrStderr())
+		return acl.PrintACLs(cmd, bindings, cmd.OutOrStderr())
 	}
 	err = c.Client.Kafka.CreateACLs(ctx, kafkaCluster, bindings)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	return nil
 }

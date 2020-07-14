@@ -12,7 +12,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -44,28 +43,27 @@ type clusterCommand struct {
 	srClient *srsdk.APIClient
 }
 
-func NewClusterCommand(config *v3.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient, logger *log.Logger) *cobra.Command {
+func NewClusterCommand(cliName string, prerunner pcmd.PreRunner, srClient *srsdk.APIClient, logger *log.Logger) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "cluster",
 			Short: "Manage Schema Registry cluster.",
-		},
-		config, prerunner)
+		}, prerunner)
 	clusterCmd := &clusterCommand{
 		AuthenticatedCLICommand: cliCmd,
 		srClient:                srClient,
 		logger:                  logger,
 	}
-	clusterCmd.init()
+	clusterCmd.init(cliName)
 	return clusterCmd.Command
 }
 
-func (c *clusterCommand) init() {
+func (c *clusterCommand) init(cliName string) {
 	createCmd := &cobra.Command{
 		Use:     "enable",
 		Short:   `Enable Schema Registry for this environment.`,
-		Example: FormatDescription(`{{.CLIName}} schema-registry cluster enable --cloud gcp --geo us`, c.Config.CLIName),
-		RunE:    c.enable,
+		Example: FormatDescription(`{{.CLIName}} schema-registry cluster enable --cloud gcp --geo us`, cliName),
+		RunE:    pcmd.NewCLIRunE(c.enable),
 		Args:    cobra.NoArgs,
 	}
 	createCmd.Flags().String("cloud", "", "Cloud provider (e.g. 'aws', 'azure', or 'gcp').")
@@ -78,8 +76,8 @@ func (c *clusterCommand) init() {
 	describeCmd := &cobra.Command{
 		Use:     "describe",
 		Short:   `Describe the Schema Registry cluster for this environment.`,
-		Example: FormatDescription(`{{.CLIName}} schema-registry cluster describe`, c.Config.CLIName),
-		RunE:    c.describe,
+		Example: FormatDescription(`{{.CLIName}} schema-registry cluster describe`, cliName),
+		RunE:    pcmd.NewCLIRunE(c.describe),
 		Args:    cobra.NoArgs,
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
@@ -92,8 +90,8 @@ func (c *clusterCommand) init() {
 
 ::
 		{{.CLIName}} schema-registry cluster update --compatibility=BACKWARD
-		{{.CLIName}} schema-registry cluster update --mode=READWRITE`, c.Config.CLIName),
-		RunE: c.update,
+		{{.CLIName}} schema-registry cluster update --mode=READWRITE`, cliName),
+		RunE: pcmd.NewCLIRunE(c.update),
 		Args: cobra.NoArgs,
 	}
 	updateCmd.Flags().String("compatibility", "", "Can be BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, or NONE.")
@@ -102,16 +100,16 @@ func (c *clusterCommand) init() {
 	c.AddCommand(updateCmd)
 }
 
-func (c *clusterCommand) enable(cmd *cobra.Command, args []string) error {
+func (c *clusterCommand) enable(cmd *cobra.Command, _ []string) error {
 	ctx := context.Background()
 	// Collect the parameters
 	serviceProvider, err := cmd.Flags().GetString("cloud")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	locationFlag, err := cmd.Flags().GetString("geo")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	// Trust the API will handle CCP/CCE
@@ -133,7 +131,7 @@ func (c *clusterCommand) enable(cmd *cobra.Command, args []string) error {
 		cluster, getExistingErr := c.Context.SchemaRegistryCluster(cmd)
 		if getExistingErr != nil {
 			// Propagate CreateSchemaRegistryCluster error.
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		_ = output.DescribeObject(cmd, cluster, enableLabels, enableHumanRenames, enableStructuredRenames)
 	} else {
@@ -146,7 +144,7 @@ func (c *clusterCommand) enable(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
+func (c *clusterCommand) describe(cmd *cobra.Command, _ []string) error {
 	var compatibility string
 	var mode string
 	var numSchemas string
@@ -158,12 +156,12 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	ctxClient := pcmd.NewContextClient(c.Context)
 	cluster, err := ctxClient.FetchSchemaRegistryByAccountId(ctx, c.EnvironmentId())
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	//Retrieve SR compatibility and Mode if API key is set up in user's config.json file
 	srClusterHasAPIKey, err := c.Context.CheckSchemaRegistryHasAPIKey(cmd)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	if srClusterHasAPIKey {
 		srClient, ctx, err = GetApiClient(cmd, c.srClient, c.Config, c.Version)
@@ -217,25 +215,26 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	return output.DescribeObject(cmd, data, describeLabels, describeHumanRenames, describeStructuredRenames)
 }
 
-func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
+func (c *clusterCommand) update(cmd *cobra.Command, _ []string) error {
 	compat, err := cmd.Flags().GetString("compatibility")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	if compat != "" {
-		return c.updateCompatibility(cmd, args)
+		return c.updateCompatibility(cmd)
 	}
 
 	mode, err := cmd.Flags().GetString("mode")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	if mode != "" {
-		return c.updateMode(cmd, args)
+		return c.updateMode(cmd)
 	}
-	return errors.New("flag --compatibility or --mode is required.")
+	return errors.New(errors.CompatibilityOrModeErrorMsg)
 }
-func (c *clusterCommand) updateCompatibility(cmd *cobra.Command, args []string) error {
+
+func (c *clusterCommand) updateCompatibility(cmd *cobra.Command) error {
 	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
@@ -249,11 +248,11 @@ func (c *clusterCommand) updateCompatibility(cmd *cobra.Command, args []string) 
 	if err != nil {
 		return err
 	}
-	pcmd.Printf(cmd, "Successfully updated Top Level compatibilty: %s \n", updateReq.Compatibility)
+	pcmd.Printf(cmd, errors.UpdatedToLevelCompatibilityMsg, updateReq.Compatibility)
 	return nil
 }
 
-func (c *clusterCommand) updateMode(cmd *cobra.Command, args []string) error {
+func (c *clusterCommand) updateMode(cmd *cobra.Command) error {
 	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
@@ -266,6 +265,6 @@ func (c *clusterCommand) updateMode(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	pcmd.Printf(cmd, "Successfully updated Top Level mode: %s \n", modeUpdate.Mode)
+	pcmd.Printf(cmd, errors.UpdatedTopLevelModeMsg, modeUpdate.Mode)
 	return nil
 }

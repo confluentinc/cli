@@ -1,1 +1,4 @@
-Error: The specified environment ID was not found.  To see available environments, use `ccloud environment list`.
+Error: environment "non-existent-id" not found
+
+Suggestions:
+    List available environments with `ccloud environment list`.

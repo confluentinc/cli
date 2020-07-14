@@ -1,29 +1,46 @@
 package local
 
 import (
+	"runtime"
+
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/pkg/local"
+
 	"github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 )
 
-func NewCommand(prerunner cmd.PreRunner, cfg *v3.Config) *cobra.Command {
-	localCommand := cmd.NewAnonymousCLICommand(
+type Command struct {
+	*cmd.CLICommand
+	ch local.ConfluentHome
+	cc local.ConfluentCurrent
+}
+
+func NewLocalCommand(command *cobra.Command, prerunner cmd.PreRunner) *Command {
+	return &Command{
+		CLICommand: cmd.NewAnonymousCLICommand(command, prerunner),
+		ch:         local.NewConfluentHomeManager(),
+		cc:         local.NewConfluentCurrentManager(),
+	}
+}
+
+func New(prerunner cmd.PreRunner) *cobra.Command {
+	c := NewLocalCommand(
 		&cobra.Command{
-			Use:   "local-v2 [command]",
+			Use:   "local",
 			Short: "Manage a local Confluent Platform development environment.",
-		},
-		cfg, prerunner,
-	)
+			Long:  "Use the \"confluent local\" commands to try out Confluent Platform by running a single-node instance locally on your machine. Keep in mind, these commands require Java to run.",
+			Args:  cobra.NoArgs,
+		}, prerunner)
 
-	localCommand.AddCommand(NewConnectorsCommand(prerunner, cfg))
-	localCommand.AddCommand(NewCurrentCommand(prerunner, cfg))
-	// TODO: confluent local demo
-	// TODO: confluent local destroy
-	localCommand.AddCommand(NewPluginsCommand(prerunner, cfg))
-	localCommand.AddCommand(NewServicesCommand(prerunner, cfg))
-	// TODO: confluent local topics
-	localCommand.AddCommand(NewVersionCommand(prerunner, cfg))
+	if runtime.GOOS == "windows" {
+		c.Hidden = true
+	}
 
-	return localCommand.Command
+	c.AddCommand(NewCurrentCommand(prerunner))
+	c.AddCommand(NewDestroyCommand(prerunner))
+	c.AddCommand(NewServicesCommand(prerunner))
+	c.AddCommand(NewVersionCommand(prerunner))
+
+	return c.Command
 }

@@ -1,6 +1,6 @@
 [
   {
-    "name": "theMdsConnectCluster",
+    "clusterName": "theMdsConnectCluster",
     "scope": {
       "clusters": {
         "kafka-cluster": "kafka-GUID",
@@ -12,10 +12,27 @@
         "host": "10.5.5.5",
         "port": 9005
       }
-    ]
+    ],
+    "protocol": "HTTPS"
   }, 
   {
-    "name": "theMdsKafkaCluster",
+    "clusterName": "theMdsKSQLCluster",
+    "scope": {
+      "clusters": {
+        "kafka-cluster": "kafka-GUID",
+        "ksql-cluster": "ksql-name"
+      }
+    },
+    "hosts": [
+      {
+        "host": "10.4.4.4",
+        "port": 9004
+      }
+    ],
+    "protocol": "HTTPS"
+  }, 
+  {
+    "clusterName": "theMdsKafkaCluster",
     "scope": {
       "clusters": {
         "kafka-cluster": "kafka-GUID"
@@ -30,25 +47,11 @@
         "host": "mds.example.com",
         "port": 8090
       }
-    ]
+    ],
+    "protocol": "SASL_PLAINTEXT"
   }, 
   {
-    "name": "theMdsKSQLCluster",
-    "scope": {
-      "clusters": {
-        "kafka-cluster": "kafka-GUID",
-        "ksql-cluster": "ksql-name"
-      }
-    },
-    "hosts": [
-      {
-        "host": "10.4.4.4",
-        "port": 9004
-      }
-    ]
-  }, 
-  {
-    "name": "theMdsSchemaRegistryCluster",
+    "clusterName": "theMdsSchemaRegistryCluster",
     "scope": {
       "clusters": {
         "kafka-cluster": "kafka-GUID",
@@ -60,6 +63,7 @@
         "host": "10.3.3.3",
         "port": 9003
       }
-    ]
+    ],
+    "protocol": "HTTPS"
   }
 ]
