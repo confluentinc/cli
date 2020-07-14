@@ -8,7 +8,6 @@ import (
 type Example struct {
 	Desc string
 	Code string
-	MoreInfo string
 }
 
 func BuildExampleString(examples ...Example) string {
