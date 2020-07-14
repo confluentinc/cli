@@ -62,6 +62,7 @@ func (c *aclCommand) init() {
 		Args: cobra.NoArgs,
 	}
 	createCmd.Flags().AddFlagSet(aclConfigFlags())
+	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	createCmd.Flags().SortFlags = false
 
 	c.AddCommand(createCmd)
@@ -129,8 +130,10 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 	}
 
 	err = c.Client.Kafka.CreateACLs(context.Background(), cluster, bindings)
-
-	return err
+	if err != nil {
+		return err
+	}
+	return aclutil.PrintACLs(cmd, bindings, os.Stderr)
 }
 
 func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
@@ -152,8 +155,11 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	err = c.Client.Kafka.DeleteACLs(context.Background(), cluster, filters)
-
-	return err
+	if err != nil {
+		return err
+	}
+	pcmd.ErrPrintf(cmd, errors.DeletedACLsMsg)
+	return nil
 }
 
 // validateAddDelete ensures the minimum requirements for acl add and delete are met

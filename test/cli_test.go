@@ -342,7 +342,7 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL string) {
 				fmt.Println(output)
 			}
 			// HACK: we don't have scriptable output yet so we parse it from the table
-			key := strings.TrimSpace(strings.Split(strings.Split(output, "\n")[2], "|")[2])
+			key := strings.TrimSpace(strings.Split(strings.Split(output, "\n")[3], "|")[2])
 			output = runCommand(t, ccloudTestBin, []string{}, fmt.Sprintf("api-key use %s --resource %s", key, tt.useKafka), 0)
 			if *debug {
 				fmt.Println(output)
@@ -482,6 +482,7 @@ func (d ApiKeyList) Less(i, j int) bool {
 
 func init() {
 	keyStore[keyIndex] = &schedv1.ApiKey{
+		Id:     keyIndex,
 		Key:    "MYKEY1",
 		Secret: "MYSECRET1",
 		LogicalClusters: []*schedv1.ApiKey_Cluster{
@@ -491,6 +492,7 @@ func init() {
 	}
 	keyIndex += 1
 	keyStore[keyIndex] = &schedv1.ApiKey{
+		Id:     keyIndex,
 		Key:    "MYKEY2",
 		Secret: "MYSECRET2",
 		LogicalClusters: []*schedv1.ApiKey_Cluster{
@@ -500,6 +502,7 @@ func init() {
 	}
 	keyIndex += 1
 	keyStore[100] = &schedv1.ApiKey{
+		Id:     keyIndex,
 		Key:    "UIAPIKEY100",
 		Secret: "UIAPISECRET100",
 		LogicalClusters: []*schedv1.ApiKey_Cluster{
@@ -508,6 +511,7 @@ func init() {
 		UserId: 25,
 	}
 	keyStore[101] = &schedv1.ApiKey{
+		Id:     keyIndex,
 		Key:    "UIAPIKEY101",
 		Secret: "UIAPISECRET101",
 		LogicalClusters: []*schedv1.ApiKey_Cluster{
@@ -516,6 +520,7 @@ func init() {
 		UserId: 25,
 	}
 	keyStore[102] = &schedv1.ApiKey{
+		Id:     keyIndex,
 		Key:    "UIAPIKEY102",
 		Secret: "UIAPISECRET102",
 		LogicalClusters: []*schedv1.ApiKey_Cluster{
@@ -524,6 +529,7 @@ func init() {
 		UserId: 25,
 	}
 	keyStore[103] = &schedv1.ApiKey{
+		Id:     keyIndex,
 		Key:    "UIAPIKEY103",
 		Secret: "UIAPISECRET103",
 		LogicalClusters: []*schedv1.ApiKey_Cluster{
@@ -570,6 +576,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 			require.NoError(t, err)
 		}
 	})
+	router.HandleFunc("/api/api_keys/", handleAPIKeyUpdateAndDelete(t))
 	router.HandleFunc("/api/accounts", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
 			b, err := utilv1.MarshalJSONToBytes(&orgv1.ListAccountsReply{Accounts: environments})
@@ -593,8 +600,8 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 			require.NoError(t, err)
 		}
 	})
-	router.HandleFunc("/api/accounts/a-595", handleEnvironmentGet(t, "a-595"))
-	router.HandleFunc("/api/accounts/not-595", handleEnvironmentGet(t, "not-595"))
+	router.HandleFunc("/api/accounts/a-595", handleEnvironmentRequests(t, "a-595"))
+	router.HandleFunc("/api/accounts/not-595", handleEnvironmentRequests(t, "not-595"))
 	router.HandleFunc("/api/clusters/lkc-describe", handleKafkaClusterDescribeTest(t))
 	router.HandleFunc("/api/clusters/lkc-describe-dedicated", handleKafkaClusterDescribeTest(t))
 	router.HandleFunc("/api/clusters/lkc-describe-dedicated-pending", handleKafkaClusterDescribeTest(t))
@@ -648,37 +655,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		_, err = io.WriteString(w, string(b))
 		require.NoError(t, err)
 	})
-	router.HandleFunc("/api/service_accounts", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == "GET" {
-			serviceAccount := &orgv1.User{
-				Id:                 12345,
-				ServiceName:        "service_account",
-				ServiceDescription: "at your service.",
-			}
-			listReply, err := utilv1.MarshalJSONToBytes(&orgv1.GetServiceAccountsReply{
-				Users: []*orgv1.User{serviceAccount},
-			})
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(listReply))
-			require.NoError(t, err)
-		} else if r.Method == "POST" {
-			req := &orgv1.CreateServiceAccountRequest{}
-			err := utilv1.UnmarshalJSON(r.Body, req)
-			require.NoError(t, err)
-			serviceAccount := &orgv1.User{
-				Id:                 55555,
-				ServiceName:        req.User.ServiceName,
-				ServiceDescription: req.User.ServiceDescription,
-			}
-			createReply, err := utilv1.MarshalJSONToBytes(&orgv1.CreateServiceAccountReply{
-				Error: nil,
-				User:  serviceAccount,
-			})
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(createReply))
-			require.NoError(t, err)
-		}
-	})
+	router.HandleFunc("/api/service_accounts", handleServiceAccountRequests(t))
 	router.HandleFunc("/api/accounts/a-595/clusters/lkc-123/connectors/az-connector/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 		return
@@ -1128,7 +1105,6 @@ func handleKafkaACLsList(t *testing.T) func(w http.ResponseWriter, r *http.Reque
 			},
 		}
 		reply, err := json.Marshal(results)
-
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(reply))
 		require.NoError(t, err)
@@ -1328,18 +1304,129 @@ func compose(funcs ...func(w http.ResponseWriter, r *http.Request)) func(w http.
 	}
 }
 
-func handleEnvironmentGet(t *testing.T, id string) func(w http.ResponseWriter, r *http.Request) {
+func handleEnvironmentRequests(t *testing.T, id string) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		for _, env := range environments {
 			if env.Id == id {
 				// env found
-				b, err := utilv1.MarshalJSONToBytes(&orgv1.GetAccountReply{Account: env})
-				require.NoError(t, err)
-				_, err = io.WriteString(w, string(b))
-				require.NoError(t, err)
+				if r.Method == "GET" {
+					b, err := utilv1.MarshalJSONToBytes(&orgv1.GetAccountReply{Account: env})
+					require.NoError(t, err)
+					_, err = io.WriteString(w, string(b))
+					require.NoError(t, err)
+				} else if r.Method == "PUT" {
+					req := &orgv1.UpdateAccountRequest{}
+					err := utilv1.UnmarshalJSON(r.Body, req)
+					require.NoError(t, err)
+					env.Name = req.Account.Name
+					b, err := utilv1.MarshalJSONToBytes(&orgv1.UpdateAccountReply{Account: env})
+					require.NoError(t, err)
+					_, err = io.WriteString(w, string(b))
+					require.NoError(t, err)
+				} else if r.Method == "DELETE" {
+					b, err := utilv1.MarshalJSONToBytes(&orgv1.DeleteAccountReply{})
+					require.NoError(t, err)
+					_, err = io.WriteString(w, string(b))
+					require.NoError(t, err)
+				}
+				return
 			}
 		}
 		// env not found
 		w.WriteHeader(http.StatusNotFound)
+	}
+}
+
+func handleAPIKeyUpdateAndDelete(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		urlSplit := strings.Split(r.URL.Path, "/")
+		keyId, err := strconv.Atoi(urlSplit[len(urlSplit)-1])
+		require.NoError(t, err)
+		index := int32(keyId)
+		apiKey := keyStore[index]
+		if r.Method == "PUT" {
+			req := &schedv1.UpdateApiKeyRequest{}
+			err = utilv1.UnmarshalJSON(r.Body, req)
+			require.NoError(t, err)
+			apiKey.Description = req.ApiKey.Description
+			result := &schedv1.UpdateApiKeyReply{
+				ApiKey: apiKey,
+				Error:  nil,
+			}
+			reply, err := json.Marshal(result)
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(reply))
+			require.NoError(t, err)
+		} else if r.Method == "DELETE" {
+			req := &schedv1.DeleteApiKeyRequest{}
+			err = utilv1.UnmarshalJSON(r.Body, req)
+			require.NoError(t, err)
+			delete(keyStore, index)
+			result := &schedv1.DeleteApiKeyReply{
+				ApiKey: apiKey,
+				Error:  nil,
+			}
+			reply, err := json.Marshal(result)
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(reply))
+			require.NoError(t, err)
+		}
+
+	}
+}
+
+func handleServiceAccountRequests(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case "GET":
+			serviceAccount := &orgv1.User{
+				Id:                 12345,
+				ServiceName:        "service_account",
+				ServiceDescription: "at your service.",
+			}
+			listReply, err := utilv1.MarshalJSONToBytes(&orgv1.GetServiceAccountsReply{
+				Users: []*orgv1.User{serviceAccount},
+			})
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(listReply))
+			require.NoError(t, err)
+		case "POST":
+			req := &orgv1.CreateServiceAccountRequest{}
+			err := utilv1.UnmarshalJSON(r.Body, req)
+			require.NoError(t, err)
+			serviceAccount := &orgv1.User{
+				Id:                 55555,
+				ServiceName:        req.User.ServiceName,
+				ServiceDescription: req.User.ServiceDescription,
+			}
+			createReply, err := utilv1.MarshalJSONToBytes(&orgv1.CreateServiceAccountReply{
+				Error: nil,
+				User:  serviceAccount,
+			})
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(createReply))
+			require.NoError(t, err)
+		case "PUT":
+			req := &orgv1.UpdateServiceAccountRequest{}
+			err := utilv1.UnmarshalJSON(r.Body, req)
+			require.NoError(t, err)
+			updateReply, err := utilv1.MarshalJSONToBytes(&orgv1.UpdateServiceAccountReply{
+				Error: nil,
+				User:  req.User,
+			})
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(updateReply))
+			require.NoError(t, err)
+		case "DELETE":
+			req := &orgv1.DeleteServiceAccountRequest{}
+			err := utilv1.UnmarshalJSON(r.Body, req)
+			require.NoError(t, err)
+			updateReply, err := utilv1.MarshalJSONToBytes(&orgv1.DeleteServiceAccountReply{
+				Error: nil,
+			})
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(updateReply))
+			require.NoError(t, err)
+		}
 	}
 }

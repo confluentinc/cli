@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/confluentinc/cli/internal/pkg/errors"
+
 	"github.com/spf13/cobra"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
@@ -172,6 +174,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	pcmd.ErrPrintf(cmd, errors.UpdateSuccessMsg, "description", "service account", args[0], description)
 	return nil
 }
 

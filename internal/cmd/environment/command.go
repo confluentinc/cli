@@ -176,6 +176,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	pcmd.ErrPrintf(cmd, errors.UpdateSuccessMsg, "name", "environment", id, newName)
 	return nil
 }
 
@@ -186,6 +187,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	pcmd.ErrPrintf(cmd, errors.DeletedEnvMsg, id)
 	return nil
 }
 

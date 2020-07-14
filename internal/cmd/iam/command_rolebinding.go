@@ -166,6 +166,7 @@ func (c *rolebindingCommand) init() {
 		createCmd.Flags().String("ksql-cluster-id", "", "ksqlDB cluster ID for the role binding.")
 		createCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for the role binding.")
 		createCmd.Flags().String("cluster-name", "", "Cluster name to uniquely identify the cluster for rolebinding listings.")
+		createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	}
 	createCmd.Flags().SortFlags = false
 	check(createCmd.MarkFlagRequired("role"))
@@ -191,6 +192,7 @@ func (c *rolebindingCommand) init() {
 		deleteCmd.Flags().String("ksql-cluster-id", "", "ksqlDB cluster ID for the role binding.")
 		deleteCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for the role binding.")
 		deleteCmd.Flags().String("cluster-name", "", "Cluster name to uniquely identify the cluster for rolebinding listings.")
+		deleteCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	}
 	deleteCmd.Flags().SortFlags = false
 	check(createCmd.MarkFlagRequired("role"))
@@ -761,7 +763,30 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, _ []string) error {
 		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.HTTPStatusCodeErrorMsg, resp.StatusCode), errors.HTTPStatusCodeSuggestions)
 	}
 
-	return nil
+	return displayCreateAndDeleteOutput(cmd, options)
+}
+
+func displayCreateAndDeleteOutput(cmd *cobra.Command, options *rolebindingOptions) error {
+	var fieldsSelected []string
+	structuredRename := map[string]string{"Principal": "principal", "Role": "role", "ResourceType": "resource_type", "Name": "name", "PatternType": "pattern_type"}
+	displayStruct := &listDisplay{
+		Principal: options.principal,
+		Role:      options.role,
+	}
+	if options.resource != "" {
+		fieldsSelected = resourcePatternListFields
+		if len(options.resourcesRequest.ResourcePatterns) != 1 {
+			return errors.New("display error: number of resource pattern is not 1")
+		}
+		resourcePattern := options.resourcesRequest.ResourcePatterns[0]
+		displayStruct.ResourceType = resourcePattern.ResourceType
+		displayStruct.Name = resourcePattern.Name
+		displayStruct.PatternType = resourcePattern.PatternType
+	} else {
+		fieldsSelected = []string{"Principal", "Role", "ResourceType"}
+		displayStruct.ResourceType = "Cluster"
+	}
+	return output.DescribeObject(cmd, displayStruct, fieldsSelected, map[string]string{}, structuredRename)
 }
 
 func (c *rolebindingCommand) confluentDelete(options *rolebindingOptions) (resp *http.Response, err error) {
@@ -810,7 +835,7 @@ func (c *rolebindingCommand) delete(cmd *cobra.Command, _ []string) error {
 		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.HTTPStatusCodeErrorMsg, resp.StatusCode), errors.HTTPStatusCodeSuggestions)
 	}
 
-	return nil
+	return displayCreateAndDeleteOutput(cmd, options)
 }
 
 func check(err error) {

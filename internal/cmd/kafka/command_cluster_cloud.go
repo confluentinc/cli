@@ -268,6 +268,13 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		// TODO: don't swallow validation errors (reportedly separately)
 		return err
 	}
+	outputFormat, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		return err
+	}
+	if outputFormat == output.Human.String() {
+		pcmd.ErrPrintln(cmd, errors.KafkaClusterTime)
+	}
 	return outputKafkaClusterDescription(cmd, cluster)
 }
 
@@ -365,7 +372,12 @@ func (c *clusterCommand) use(cmd *cobra.Command, args []string) error {
 		err = errors.CatchKafkaNotFoundError(err, clusterID)
 		return err
 	}
-	return c.Context.SetActiveKafkaCluster(cmd, clusterID)
+	err = c.Context.SetActiveKafkaCluster(cmd, clusterID)
+	if err != nil {
+		return err
+	}
+	cmd.PrintErrf(errors.UseKafkaClusterMsg, clusterID, c.Context.GetCurrentEnvironmentId())
+	return nil
 }
 
 func check(err error) {

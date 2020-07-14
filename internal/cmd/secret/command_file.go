@@ -242,7 +242,7 @@ func (c *secureFileCommand) update(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-
+	pcmd.ErrPrintf(cmd, errors.UpdateSecretFileMsg)
 	return nil
 }
 
@@ -290,7 +290,7 @@ func (c *secureFileCommand) remove(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-
+	pcmd.ErrPrintln(cmd, "Deleted configuration values.")
 	return nil
 }
 

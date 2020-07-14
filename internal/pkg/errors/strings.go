@@ -2,14 +2,16 @@ package errors
 
 const (
 	// api-key command
-	APIKeySuccessfullyDeletedMsg = "API Key successfully deleted."
+	DeletedAPIKeyMsg = "Deleted API key \"%s\".\n"
+	StoredAPIKeyMsg  = "Stored API secret for API key \"%s\"."
+	UseAPIKeyMsg     = "Set API Key \"%s\" as the active API key for \"%s\"."
 
 	// auth commands
 	LoggedInAsMsg                = "Logged in as \"%s\".\n"
 	LoggedInUsingEnvMsg          = "Using environment \"%s\" (\"%s\").\n"
 	LoggedOutMsg                 = "You are now logged out."
 	WrittenCredentialsToNetrcMsg = "Written credentials to netrc file \"%s\"\n"
-	KafkaClusterDeletedMsg       = "The Kafka cluster \"%s\" has been deleted.\n"
+	KafkaClusterDeletedMsg       = "Deleted Kafka cluster \"%s\".\n"
 
 	// confluent cluster command
 	UnregisteredClusterMsg = "Successfully unregistered the cluster %s from the Cluster Registry.\n"
@@ -17,23 +19,34 @@ const (
 	// connector commands
 	CreatedConnectorMsg = "Created connector %s %s\n"
 	UpdatedConnectorMsg = "Updated connector %s\n"
-	DeletedConnectorMsg = "Successfully deleted connector %s\n"
-	PausedConnectorMsg  = "Successfully paused connector %s\n"
-	ResumedConnectorMsg = "Successfully resumed connector %s\n"
+	DeletedConnectorMsg = "Deleted connector \"%s\".\n"
+	PausedConnectorMsg  = "Paused connector \"%s\".\n"
+	ResumedConnectorMsg = "Resumed connector \"%s\".\n"
 
 	// environment commands
-	UsingEnvMsg = "Now using \"%s\" as the default (active) environment.\n"
+	UsingEnvMsg   = "Now using \"%s\" as the default (active) environment.\n"
+	DeletedEnvMsg = "Deleted environment \"%s\".\n"
 
 	// feedback commands
 	ThanksForFeedbackMsg = "Thanks for your feedback."
 
+	// init command
+	InitContextMsg = "Context \"%s\" initialized and set as current context.\n"
+
 	// kafka cluster commands
+	UseKafkaClusterMsg      = "Set Kafka cluster \"%s\" as the active cluster for environment \"%s\"."
 	ConfirmAuthorizedKeyMsg = "Please confirm you have authorized the key for these accounts: %s"
 
 	// kafka topic commands
-	StartingProducerMsg = "Starting Kafka Producer. ^C or ^D to exit"
-	StoppingConsumer    = "Stopping Consumer."
-	StartingConsumerMsg = "Starting Kafka Consumer. ^C or ^D to exit"
+	StartingProducerMsg  = "Starting Kafka Producer. ^C or ^D to exit"
+	StoppingConsumer     = "Stopping Consumer."
+	StartingConsumerMsg  = "Starting Kafka Consumer. ^C or ^D to exit"
+	CreatedTopicMsg      = "Created topic \"%s\"."
+	DeletedTopicMsg      = "Deleted topic \"%s\"\n."
+	UpdateTopicConfigMsg = "Updated the following configs for topic \"%s\":\n"
+
+	// kafka acl commands
+	DeletedACLsMsg = "Deleted ACLs."
 
 	// ksql commands
 	EndPointNotPopulatedMsg   = "Endpoint not yet populated. To obtain the endpoint, use `ccloud ksql app describe`."
@@ -53,12 +66,15 @@ const (
 	UpdatedToLevelCompatibilityMsg      = "Successfully updated Top Level compatibility to \"%s\"\n"
 	UpdatedTopLevelModeMsg              = "Successfully updated Top Level mode to \"%s\"\n"
 	RegisteredSchemaMsg                 = "Successfully registered schema with ID %v"
-	DeletedAllSubjectVersionMsg         = "Successfully %s deleted all versions for subject\n"
-	DeletedSubjectVersionMsg            = "Successfully %s deleted version \"%s\" for subject\n"
+	DeletedAllSubjectVersionMsg         = "Successfully %s deleted all versions for subject \"%s\"\n"
+	DeletedSubjectVersionMsg            = "Successfully %s deleted version \"%s\" for subject \"%s\".\n"
 	UpdatedSubjectLevelCompatibilityMsg = "Successfully updated Subject Level compatibility to \"%s\" for subject \"%s\"\n"
 	UpdatedSubjectLevelModeMsg          = "Successfully updated Subject level Mode to \"%s\" for subject \"%s\"\n"
 	NoSubjectsMsg                       = "No subjects"
 	SRCredsValidationFailedMsg          = "Failed to validate Schema Registry API key and secret."
+
+	// secret commands
+	UpdateSecretFileMsg = "Updated the encrypted secrets."
 
 	// update command
 	CheckingForUpdatesMsg = "Checking for updates..."
@@ -100,4 +116,7 @@ const (
 		"%s\n\n\n"
 	PromptToDownloadQuestionMsg = "Do you want to download and install this update? (y/n): "
 	InvalidChoiceMsg            = "%s is not a valid choice\n"
+
+	// General
+	UpdateSuccessMsg = "Updated the %s of %s \"%s\" to \"%s\"."
 )

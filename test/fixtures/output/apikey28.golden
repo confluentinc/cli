@@ -1,6 +1,6 @@
        Key      | Owner | Description | Resource Type | Resource ID   
 +---------------+-------+-------------+---------------+--------------+
-    MYKEY1      |    12 |             | kafka         | lkc-bob       
+    MYKEY1      |    12 | first-key   | kafka         | lkc-bob       
     MYKEY2      |    18 |             | kafka         | lkc-abc       
     MYKEY3      |    23 |             | kafka         | lkc-bob       
     UIAPIKEY100 |    25 |             | kafka         | lkc-cool1     

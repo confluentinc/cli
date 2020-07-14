@@ -27,7 +27,7 @@ func (s *CLITestSuite) Test_Confluent_Iam_Rolebinding_List() {
 		},
 		{
 			args:        "iam rolebinding list --cluster-name kafka  --kafka-cluster-id CID --principal User:frodo",
-			fixture:     "confluent-iam-rolebinding-name-and-id.golden",
+			fixture:     "confluent-iam-rolebinding-name-and-id-error.golden",
 			login:       "default",
 			wantErrCode: 1,
 		},

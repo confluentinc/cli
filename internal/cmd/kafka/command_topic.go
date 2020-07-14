@@ -259,6 +259,7 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 		err = errors.CatchTopicExistsError(err, cluster.Id, topic.Spec.Name, ifNotExistsFlag)
 		return err
 	}
+	pcmd.ErrPrintf(cmd, errors.CreatedTopicMsg, topic.Spec.Name)
 	return nil
 }
 
@@ -297,9 +298,11 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	if topic.Configs, err = toMap(configs); err != nil {
+	configMap, err := toMap(configs)
+	if err != nil {
 		return err
 	}
+	topic.Configs = copyMap(configMap)
 
 	validate, err := cmd.Flags().GetBool("dry-run")
 	if err != nil {
@@ -310,6 +313,24 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		err = errors.CatchClusterNotReadyError(err, cluster.Id)
 		return err
 	}
+	pcmd.Printf(cmd, errors.UpdateTopicConfigMsg, args[0])
+	var entries [][]string
+	titleRow := []string{"Name", "Value"}
+	fmt.Println(configMap)
+	for name, value := range configMap {
+		record := &struct {
+			Name  string
+			Value string
+		}{
+			name,
+			value,
+		}
+		entries = append(entries, printer.ToRow(record, titleRow))
+	}
+	sort.Slice(entries, func(i, j int) bool {
+		return entries[i][0] < entries[j][0]
+	})
+	printer.RenderCollectionTable(entries, titleRow)
 	return nil
 }
 
@@ -325,6 +346,7 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 		err = errors.CatchClusterNotReadyError(err, cluster.Id)
 		return err
 	}
+	pcmd.ErrPrintf(cmd, errors.DeletedTopicMsg, args[0])
 	return nil
 }
 
