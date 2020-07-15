@@ -59,7 +59,7 @@ func (c *subjectCommand) init(cliName string) {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Desc: "Update subject level compatibility or mode of Schema Registry:",
-				Code: fmt.Sprintf("%s schema-registry subject update <subject-name> --compatibility=BACKWARD\n%s schema-registry subject update <subject-name> --mode=READWRITE"),
+				Code: fmt.Sprintf("%s schema-registry subject update <subject-name> --compatibility=BACKWARD\n%s schema-registry subject update <subject-name> --mode=READWRITE", cliName, cliName),
 			},
 		),
 	}
