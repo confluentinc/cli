@@ -163,6 +163,7 @@ func printOptions(buf *bytes.Buffer, cmd *cobra.Command) error {
 		buf.WriteString("Examples\n")
 		buf.WriteString("~~~~~~~~\n\n")
 		buf.WriteString(cmd.Example)
+		buf.WriteString("\n")
 	}
 
 	return nil
