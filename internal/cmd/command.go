@@ -177,7 +177,7 @@ func (c *Command) Execute(cliName string, args []string) error {
 	c.Analytics.SetStartTime()
 	c.Command.SetArgs(args)
 	err := c.Command.Execute()
-	errors.DisplaySuggestionsMessage(err, os.Stdout)
+	errors.DisplaySuggestionsMessage(err, os.Stderr)
 	c.sendAndFlushAnalytics(args, err)
 	pfeedback.HandleFeedbackNudge(cliName, args)
 	return err
