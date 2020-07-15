@@ -5,15 +5,12 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/confluentinc/cli/internal/pkg/examples"
-
-	"github.com/confluentinc/cli/internal/pkg/errors"
-
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 

@@ -6,16 +6,14 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/confluentinc/cli/internal/pkg/examples"
-
-	"github.com/spf13/cobra"
-
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
