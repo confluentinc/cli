@@ -34,7 +34,7 @@ const (
 	InitContextMsg = "Context \"%s\" initialized and set as current context.\n"
 
 	// kafka cluster commands
-	UseKafkaClusterMsg      = "Set Kafka cluster \"%s\" as the active cluster for environment \"%s\"."
+	UseKafkaClusterMsg           = "Set Kafka cluster \"%s\" as the active cluster for environment \"%s\"."
 	CopyBYOKPermissionsHeaderMsg = "Copy and append these permissions to the existing \"Statements\" array field in the key policy of your ARN to authorize access for Confluent:"
 
 	// kafka topic commands
@@ -114,8 +114,8 @@ const (
 		"Current Version: %s\n" +
 		"Latest Version:  %s\n" +
 		"%s\n\n\n"
-	PromptToDownloadQuestionMsg = "Do you want to download and install this update? (y/n): "
-	InvalidChoiceMsg            = "%s is not a valid choice\n"
+	PromptToDownloadQuestionMsg = "Do you want to download and install this update?"
+	InvalidChoiceMsg            = "%s is not a valid choice"
 
 	// General
 	UpdateSuccessMsg = "Updated the %s of %s \"%s\" to \"%s\"."

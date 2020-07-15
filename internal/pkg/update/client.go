@@ -144,7 +144,7 @@ func (c *client) PromptToDownload(cliName, currVersion, latestVersion, releaseNo
 	}
 
 	for {
-		fmt.Fprint(c.Out, errors.PromptToDownloadQuestionMsg)
+		fmt.Fprint(c.Out, "Do you want to download and install this update? (y/n): ")
 
 		reader := c.fs.NewBufferedReader(os.Stdin)
 		input, _ := reader.ReadString('\n')
@@ -157,7 +157,7 @@ func (c *client) PromptToDownload(cliName, currVersion, latestVersion, releaseNo
 		case "no", "n", "N":
 			return false
 		default:
-			fmt.Fprintf(c.Out, errors.InvalidChoiceMsg, choice)
+			fmt.Fprintf(c.Out, "%s is not a valid choice\n", choice)
 			continue
 		}
 	}

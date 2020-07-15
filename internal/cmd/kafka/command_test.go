@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
 	"strconv"
 	"strings"
 	"testing"
@@ -22,11 +21,6 @@ import (
 )
 
 var conf *v3.Config
-
-func init() {
-	stdin = bytes.NewBuffer(nil)
-	stdout = bytes.NewBuffer(nil)
-}
 
 /*************** TEST command_acl ***************/
 var resourcePatterns = []struct {
@@ -577,52 +571,6 @@ func NewCMD(expect chan interface{}) *cobra.Command {
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 
 	return cmd
-}
-
-func TestCreateEncryptionKeyId(t *testing.T) {
-	c := make(chan interface{})
-
-	_, err := stdin.Write([]byte("y\n"))
-	require.NoError(t, err)
-
-	cmd := NewCMD(c)
-	// err: not dedicated, the api validates this too
-	cmd.SetArgs([]string{
-		"cluster",
-		"create",
-		"name-xyz",
-		"--region=us-west-2",
-		"--cloud=aws",
-		"--encryption-key=xyz",
-		"--type=dedicated",
-		"--cku=4",
-	})
-	err = cmd.Execute()
-	require.NoError(t, err)
-
-	b, err := ioutil.ReadAll(stdout)
-	require.NoError(t, err)
-	require.Equal(t, `Copy and append these permissions to the existing "Statements" array field in the key policy of your ARN to authorize access for Confluent:
-
-{
-    "Sid" : "Allow Confluent account (account-xyz) to use the key",
-    "Effect" : "Allow",
-    "Principal" : {
-      "AWS" : ["arn:aws:iam::account-xyz:root"]
-    },
-    "Action" : [ "kms:Encrypt", "kms:Decrypt", "kms:ReEncrypt*", "kms:GenerateDataKey*", "kms:DescribeKey" ],
-    "Resource" : "*"
-  }, {
-    "Sid" : "Allow Confluent account (account-xyz) to attach persistent resources",
-    "Effect" : "Allow",
-    "Principal" : {
-      "AWS" : ["arn:aws:iam::account-xyz:root"]
-    },
-    "Action" : [ "kms:CreateGrant", "kms:ListGrants", "kms:RevokeGrant" ],
-    "Resource" : "*"
-}
-
- (y/n): `, string(b))
 }
 
 func init() {

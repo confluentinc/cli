@@ -88,15 +88,13 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 	cli.PersistentFlags().CountP("verbose", "v", "Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).")
 	cli.Flags().Bool("version", false, fmt.Sprintf("Show version of %s.", cliName))
 
-	prompt := pcmd.NewPrompt(os.Stdin)
-
 	disableUpdateCheck := cfg != nil && (cfg.DisableUpdates || cfg.DisableUpdateCheck)
 	updateClient, err := update.NewClient(cliName, disableUpdateCheck, logger)
 	if err != nil {
 		return nil, err
 	}
 
-	resolver := &pcmd.FlagResolverImpl{Prompt: prompt, Out: os.Stdout}
+	resolver := &pcmd.FlagResolverImpl{Prompt: pcmd.NewPrompt(os.Stdin), Out: os.Stdout}
 	prerunner := &pcmd.PreRun{
 		Config:             cfg,
 		ConfigLoadingError: configLoadingErr,
@@ -117,7 +115,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 	cli.AddCommand(completion.New(cli, cliName))
 
 	if cfg == nil || !cfg.DisableUpdates {
-		cli.AddCommand(update.New(cliName, logger, ver, prompt, updateClient, analyticsClient))
+		cli.AddCommand(update.New(cliName, logger, ver, updateClient, analyticsClient))
 	}
 
 	cli.AddCommand(auth.New(cliName, prerunner, logger, ver.UserAgent, analyticsClient, netrcHandler)...)
@@ -125,7 +123,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 	if cliName == "ccloud" {
 		cli.AddCommand(config.New(prerunner, analyticsClient))
 		cli.AddCommand(feedback.New(cliName, prerunner, analyticsClient))
-		cli.AddCommand(initcontext.New(prerunner, prompt, resolver, analyticsClient))
+		cli.AddCommand(initcontext.New(prerunner, resolver, analyticsClient))
 		cli.AddCommand(kafka.New(isAPILogin, cliName, prerunner, logger.Named("kafka"), ver.ClientID))
 		if isAPIKeyCredential(cfg) {
 			return command, nil
@@ -150,7 +148,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		cli.AddCommand(ksql.New(cliName, prerunner))
 		cli.AddCommand(local.New(prerunner))
 		cli.AddCommand(schemaregistry.New(cliName, prerunner, nil, logger))
-		cli.AddCommand(secret.New(prompt, resolver, secrets.NewPasswordProtectionPlugin(logger)))
+		cli.AddCommand(secret.New(resolver, secrets.NewPasswordProtectionPlugin(logger)))
 	}
 	return command, nil
 }
