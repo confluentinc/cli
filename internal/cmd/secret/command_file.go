@@ -14,19 +14,17 @@ import (
 type secureFileCommand struct {
 	*cobra.Command
 	plugin secret.PasswordProtection
-	prompt pcmd.Prompt
 	resolv pcmd.FlagResolver
 }
 
 // NewFileCommand returns the Cobra command for managing encrypted file.
-func NewFileCommand(prompt pcmd.Prompt, resolv pcmd.FlagResolver, plugin secret.PasswordProtection) *cobra.Command {
+func NewFileCommand(resolv pcmd.FlagResolver, plugin secret.PasswordProtection) *cobra.Command {
 	cmd := &secureFileCommand{
 		Command: &cobra.Command{
 			Use:   "file",
 			Short: "Secure secrets in a configuration properties file.",
 		},
 		plugin: plugin,
-		prompt: prompt,
 		resolv: resolv,
 	}
 	cmd.init()
@@ -204,7 +202,7 @@ func (c *secureFileCommand) add(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	newConfigs, err := c.getConfigs(cmd, configSource, "config properties", "", false)
+	newConfigs, err := c.getConfigs(configSource, "config properties", "", false)
 	if err != nil {
 		return err
 	}
@@ -228,7 +226,7 @@ func (c *secureFileCommand) update(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	newConfigs, err := c.getConfigs(cmd, configSource, "config properties", "", false)
+	newConfigs, err := c.getConfigs(configSource, "config properties", "", false)
 	if err != nil {
 		return err
 	}
@@ -271,7 +269,7 @@ func (c *secureFileCommand) remove(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	removeConfigs, err := c.getConfigs(cmd, configSource, "config properties", "", false)
+	removeConfigs, err := c.getConfigs(configSource, "config properties", "", false)
 	if err != nil {
 		return err
 	}
@@ -311,7 +309,7 @@ func (c *secureFileCommand) rotate(cmd *cobra.Command, _ []string) error {
 			return err
 		}
 
-		oldPassphrase, err := c.getConfigs(cmd, oldPassphraseSource, "passphrase", "Old Master Key Passphrase: ", true)
+		oldPassphrase, err := c.getConfigs(oldPassphraseSource, "passphrase", "Old Master Key Passphrase: ", true)
 		if err != nil {
 			return err
 		}
@@ -321,7 +319,7 @@ func (c *secureFileCommand) rotate(cmd *cobra.Command, _ []string) error {
 			return err
 		}
 
-		newPassphrase, err := c.getConfigs(cmd, newPassphraseSource, "passphrase-new", "New Master Key Passphrase: ", true)
+		newPassphrase, err := c.getConfigs(newPassphraseSource, "passphrase-new", "New Master Key Passphrase: ", true)
 		if err != nil {
 			return err
 		}
@@ -341,7 +339,7 @@ func (c *secureFileCommand) rotate(cmd *cobra.Command, _ []string) error {
 		if err != nil {
 			return err
 		}
-		passphrase, err := c.getConfigs(cmd, passphraseSource, "passphrase", "Master Key Passphrase: ", true)
+		passphrase, err := c.getConfigs(passphraseSource, "passphrase", "Master Key Passphrase: ", true)
 		if err != nil {
 			return err
 		}
@@ -354,7 +352,7 @@ func (c *secureFileCommand) rotate(cmd *cobra.Command, _ []string) error {
 	return nil
 }
 
-func (c *secureFileCommand) getConfigs(cmd *cobra.Command, configSource string, inputType string, prompt string, secure bool) (string, error) {
+func (c *secureFileCommand) getConfigs(configSource string, inputType string, prompt string, secure bool) (string, error) {
 	newConfigs, err := c.resolv.ValueFrom(configSource, prompt, secure)
 	if err != nil {
 		switch err {

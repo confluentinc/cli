@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"os"
 	"strings"
 	"text/template"
@@ -14,9 +13,9 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/confirm"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -191,9 +190,6 @@ func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
 	return outputWriter.Out()
 }
 
-var stdin io.ReadWriter = os.Stdin
-var stdout io.ReadWriter = os.Stdout
-
 func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	cloud, err := cmd.Flags().GetString("cloud")
 	if err != nil {
@@ -232,8 +228,8 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if encryptionKeyID != "" {
-		if err := c.validateEncryptionKey(cloud, clouds); err != nil {
-			return errors.HandleCommon(err, cmd)
+		if err := c.validateEncryptionKey(cmd, cloud, clouds); err != nil {
+			return err
 		}
 	}
 
@@ -293,27 +289,31 @@ var encryptionKeyPolicy = template.Must(template.New("encryptionKey").Parse(`{{r
     "Resource" : "*"
 }{{end}}`))
 
-func (c *clusterCommand) validateEncryptionKey(cloud string, clouds []*schedv1.CloudMetadata) error {
+func (c *clusterCommand) validateEncryptionKey(cmd *cobra.Command, cloud string, clouds []*schedv1.CloudMetadata) error {
 	accounts := getEnvironmentsForCloud(cloud, clouds)
-	var buf bytes.Buffer
+
+	buf := new(bytes.Buffer)
 	buf.WriteString(errors.CopyBYOKPermissionsHeaderMsg)
 	buf.WriteString("\n\n")
-	if err := encryptionKeyPolicy.Execute(&buf, accounts); err != nil {
+	if err := encryptionKeyPolicy.Execute(buf, accounts); err != nil {
 		return errors.New(errors.FailedToRenderKeyPolicyErrorMsg)
 	}
 	buf.WriteString("\n\n")
-	ok, err := confirm.Do(
-		stdout,
-		stdin,
-		buf.String(),
-	)
-	if err != nil {
-		return errors.New(errors.FailedToReadConfirmationErrorMsg)
+
+	f := form.New(form.Field{
+		ID:        "authorized",
+		Prompt:    "Please confirm you've authorized the key for these accounts " + strings.Join(accounts, ", "),
+		IsYesOrNo: true,
+	})
+	for {
+		if err := f.Prompt(cmd, pcmd.NewPrompt(os.Stdin)); err != nil {
+			cmd.PrintErrln(errors.FailedToReadConfirmationErrorMsg)
+			continue
+		}
+		if f.Responses["authorized"].(bool) {
+			return errors.Errorf(errors.AuthorizeAccountsErrorMsg, strings.Join(accounts, ", "))
+		}
 	}
-	if !ok {
-		return errors.Errorf(errors.AuthorizeAccountsErrorMsg, strings.Join(accounts, ", "))
-	}
-	return nil
 }
 
 func stringToAvailability(s string) (schedv1.Durability, error) {

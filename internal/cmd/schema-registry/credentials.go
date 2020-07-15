@@ -2,9 +2,7 @@ package schema_registry
 
 import (
 	"context"
-	"fmt"
 	"os"
-	"strings"
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
@@ -12,32 +10,22 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
-func promptSchemaRegistryCredentials() (string, string, error) {
-	prompt := pcmd.NewPrompt(os.Stdin)
-
-	fmt.Print("Enter your Schema Registry API key: ")
-	key, err := prompt.ReadString('\n')
-	if err != nil {
+func promptSchemaRegistryCredentials(command *cobra.Command) (string, string, error) {
+	f := form.New(
+		form.Field{ID: "api-key", Prompt: "Enter your Schema Registry API key"},
+		form.Field{ID: "secret", Prompt: "Enter your Schema Registry API secret"},
+	)
+	if err := f.Prompt(command, pcmd.NewPrompt(os.Stdin)); err != nil {
 		return "", "", err
 	}
-	key = strings.TrimSpace(key)
-
-	fmt.Print("Enter your Schema Registry API secret: ")
-	secret, err := prompt.ReadString('\n')
-	if err != nil {
-		return "", "", err
-	}
-	secret = strings.TrimSpace(secret)
-
-	fmt.Println()
-
-	return key, secret, nil
+	return f.Responses["api-key"].(string), f.Responses["secret"].(string), nil
 }
 
-func getSchemaRegistryAuth(srCredentials *v0.APIKeyPair, shouldPrompt bool) (*srsdk.BasicAuth, bool, error) {
+func getSchemaRegistryAuth(cmd *cobra.Command, srCredentials *v0.APIKeyPair, shouldPrompt bool) (*srsdk.BasicAuth, bool, error) {
 	auth := &srsdk.BasicAuth{}
 	didPromptUser := false
 
@@ -48,7 +36,7 @@ func getSchemaRegistryAuth(srCredentials *v0.APIKeyPair, shouldPrompt bool) (*sr
 
 	if auth.UserName == "" || auth.Password == "" || shouldPrompt {
 		var err error
-		auth.UserName, auth.Password, err = promptSchemaRegistryCredentials()
+		auth.UserName, auth.Password, err = promptSchemaRegistryCredentials(cmd)
 		if err != nil {
 			return nil, false, err
 		}
@@ -77,7 +65,7 @@ func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *v
 
 	for {
 		// Get credentials as Schema Registry BasicAuth
-		srAuth, didPromptUser, err := getSchemaRegistryAuth(srCluster.SrCredentials, shouldPrompt)
+		srAuth, didPromptUser, err := getSchemaRegistryAuth(cmd, srCluster.SrCredentials, shouldPrompt)
 		if err != nil {
 			return nil, nil, err
 		}

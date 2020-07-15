@@ -13,19 +13,17 @@ import (
 
 type masterKeyCommand struct {
 	*cobra.Command
-	prompt pcmd.Prompt
 	resolv pcmd.FlagResolver
 	plugin secureplugin.PasswordProtection
 }
 
 // NewMasterKeyCommand returns the Cobra command for managing master key.
-func NewMasterKeyCommand(prompt pcmd.Prompt, resolv pcmd.FlagResolver, plugin secureplugin.PasswordProtection) *cobra.Command {
+func NewMasterKeyCommand(resolv pcmd.FlagResolver, plugin secureplugin.PasswordProtection) *cobra.Command {
 	cmd := &masterKeyCommand{
 		Command: &cobra.Command{
 			Use:   "master-key",
 			Short: "Manage the master key for Confluent Platform.",
 		},
-		prompt: prompt,
 		resolv: resolv,
 		plugin: plugin,
 	}
