@@ -9,6 +9,8 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/confluentinc/cli/internal/pkg/examples"
+
 	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
@@ -106,18 +108,15 @@ func (c *clusterCommand) init() {
 
 	createCmd := &cobra.Command{
 		Use:   "create <name>",
-		Short: "Create a Kafka cluster.",
-		Example: `
-Create a new dedicated cluster that uses a customer-managed encryption key in AWS:
-
-::
-
-	ccloud kafka cluster create sales092020 --cloud "aws" --type "dedicated" --encryption-key "arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"
-
-For more information, see https://docs.confluent.io/current/cloud/clusters/byok-encrypted-clusters.html.
-`,
-		RunE:  pcmd.NewCLIRunE(c.create),
 		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.create),
+		Short: "Create a Kafka cluster.",
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Desc: "Create a new dedicated cluster that uses a customer-managed encryption key in AWS. For more information, see https://docs.confluent.io/current/cloud/clusters/byok-encrypted-clusters.html.",
+				Code: `ccloud kafka cluster create sales092020 --cloud "aws" --type "dedicated" --encryption-key "arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"`,
+			},
+		),
 	}
 
 	createCmd.Flags().String("cloud", "", "Cloud provider ID (e.g. 'aws' or 'gcp').")

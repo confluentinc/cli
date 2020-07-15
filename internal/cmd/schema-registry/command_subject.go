@@ -1,7 +1,11 @@
 package schema_registry
 
 import (
+	"fmt"
+
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+
+	"github.com/confluentinc/cli/internal/pkg/examples"
 
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
@@ -32,54 +36,51 @@ func NewSubjectCommand(cliName string, prerunner pcmd.PreRunner, srClient *srsdk
 }
 
 func (c *subjectCommand) init(cliName string) {
-
 	listCmd := &cobra.Command{
 		Use:   "list",
+		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(c.list),
 		Short: "List subjects.",
-		Example: FormatDescription(`
-Retrieve all subjects available in a Schema Registry
-
-::
-		config.CLIName schema-registry subject list
-`, cliName),
-		RunE: pcmd.NewCLIRunE(c.list),
-		Args: cobra.NoArgs,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Desc: "Retrieve all subjects available in a Schema Registry:",
+				Code: fmt.Sprintf("%s schema-registry subject list", cliName),
+			},
+		),
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().BoolP("deleted", "D", false, "View the deleted subjects.")
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
-	// Update
-	updateCmd := &cobra.Command{
-		Use:   "update <subjectname> [--compatibility <compatibility>] [--mode <mode>] ",
-		Short: "Update subject compatibility or mode.",
-		Example: FormatDescription(`
-Update subject level compatibility or mode of schema registry.
 
-::
-		config.CLIName schema-registry subject update <subjectname> --compatibility=BACKWARD
-		config.CLIName schema-registry subject update <subjectname> --mode=READWRITE
-`, cliName),
-		RunE: pcmd.NewCLIRunE(c.update),
-		Args: cobra.ExactArgs(1),
+	updateCmd := &cobra.Command{
+		Use:   "update <subjectname> [--compatibility <compatibility>] [--mode <mode>]",
+		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.update),
+		Short: "Update subject compatibility or mode.",
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Desc: "Update subject level compatibility or mode of Schema Registry:",
+				Code: fmt.Sprintf("%s schema-registry subject update <subject-name> --compatibility=BACKWARD\n%s schema-registry subject update <subject-name> --mode=READWRITE"),
+			},
+		),
 	}
 	updateCmd.Flags().String("compatibility", "", "Can be BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, or NONE.")
 	updateCmd.Flags().String("mode", "", "Can be READWRITE, READ, OR WRITE.")
 	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
 
-	// Describe
 	describeCmd := &cobra.Command{
 		Use:   "describe <subjectname>",
+		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.describe),
 		Short: "Describe subject versions and compatibility.",
-		Example: FormatDescription(`
-Retrieve all versions registered under a given subject and its compatibility level.
-
-::
-		config.CLIName schema-registry subject describe <subjectname>
-`, cliName),
-		RunE: pcmd.NewCLIRunE(c.describe),
-		Args: cobra.ExactArgs(1),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Desc: "Retrieve all versions registered under a given subject and its compatibility level.",
+				Code: fmt.Sprintf("%s schema-registry subject describe <subject-name>", cliName),
+			},
+		),
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	describeCmd.Flags().BoolP("deleted", "D", false, "View the deleted schema.")

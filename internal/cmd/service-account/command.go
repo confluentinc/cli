@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/confluentinc/cli/internal/pkg/examples"
+
 	"github.com/confluentinc/cli/internal/pkg/errors"
 
 	"github.com/spf13/cobra"
@@ -48,9 +50,9 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 func (c *command) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
-		Short: `List service accounts.`,
-		RunE:  pcmd.NewCLIRunE(c.list),
 		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(c.list),
+		Short: "List service accounts.",
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
@@ -58,18 +60,15 @@ func (c *command) init() {
 
 	createCmd := &cobra.Command{
 		Use:   "create <name>",
-		Short: `Create a service account.`,
-		Example: `
-Create a service account named ` + "``DemoServiceAccount``" + `.
-
-::
-
-  ccloud service-account create "DemoServiceAccount" \
-  --description "This is a demo service account."
-
-`,
-		RunE: pcmd.NewCLIRunE(c.create),
-		Args: cobra.ExactArgs(1),
+		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.create),
+		Short: "Create a service account.",
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Desc: "Create a service account named ``DemoServiceAccount``.",
+				Code: `ccloud service-account create DemoServiceAccount --description "This is a demo service account."`,
+			},
+		),
 	}
 	createCmd.Flags().String("description", "", "Description of the service account.")
 	_ = createCmd.MarkFlagRequired("description")
@@ -79,18 +78,15 @@ Create a service account named ` + "``DemoServiceAccount``" + `.
 
 	updateCmd := &cobra.Command{
 		Use:   "update <id>",
-		Short: `Update a service account.`,
-		Example: `
-Update the description of a service account with the ID ` + "``2786``" + `.
-
-::
-
-    ccloud service-account update 2786 \
-    --description "Update demo service account information."
-
-`,
-		RunE: pcmd.NewCLIRunE(c.update),
-		Args: cobra.ExactArgs(1),
+		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.update),
+		Short: "Update a service account.",
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Desc: "Update the description of a service account with the ID ``2786``",
+				Code: `ccloud service-account update 2786 --description "Update demo service account information."`,
+			},
+		),
 	}
 	updateCmd.Flags().String("description", "", "Description of the service account.")
 	_ = updateCmd.MarkFlagRequired("description")
@@ -99,17 +95,15 @@ Update the description of a service account with the ID ` + "``2786``" + `.
 
 	c.AddCommand(&cobra.Command{
 		Use:   "delete <id>",
-		Short: `Delete a service account.`,
-		Example: `
-Delete a service account with the ID ` + "``2786``" + `.
-
-::
-
-    ccloud service-account delete 2786
-
-`,
-		RunE: pcmd.NewCLIRunE(c.delete),
-		Args: cobra.ExactArgs(1),
+		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.delete),
+		Short: "Delete a service account.",
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Desc: "Delete a service account with the ID ``2786``",
+				Code: "ccloud service-account delete 2786",
+			},
+		),
 	})
 }
 

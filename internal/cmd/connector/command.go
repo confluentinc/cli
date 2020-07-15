@@ -2,7 +2,10 @@ package connector
 
 import (
 	"context"
+	"fmt"
 	"os"
+
+	"github.com/confluentinc/cli/internal/pkg/examples"
 
 	"github.com/confluentinc/go-printer"
 	"github.com/spf13/cobra"
@@ -64,16 +67,15 @@ func New(cliName string, prerunner pcmd.PreRunner) *cobra.Command {
 func (c *command) init(cliName string) {
 	cmd := &cobra.Command{
 		Use:   "describe <id>",
+		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.describe),
 		Short: "Describe a connector.",
-		Example: FormatDescription(`
-Describe connector and task level details of a connector in the current or specified Kafka cluster context.
-
-::
-
-        {{.CLIName}} connector describe <id>
-        {{.CLIName}} connector describe <id> --cluster <cluster-id>		`, cliName),
-		RunE: pcmd.NewCLIRunE(c.describe),
-		Args: cobra.ExactArgs(1),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Desc: "Describe connector and task level details of a connector in the current or specified Kafka cluster context.",
+				Code: fmt.Sprintf("%s connector describe <id>\n%s connector describe <id> --cluster <cluster-id>", cliName, cliName),
+			},
+		),
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
@@ -82,16 +84,15 @@ Describe connector and task level details of a connector in the current or speci
 
 	cmd = &cobra.Command{
 		Use:   "list",
+		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(c.list),
 		Short: "List connectors.",
-		Example: FormatDescription(`
-List connectors in the current or specified Kafka cluster context.
-
-::
-
-        {{.CLIName}} connector list
-        {{.CLIName}} connector list --cluster <cluster-id>		`, cliName),
-		RunE: pcmd.NewCLIRunE(c.list),
-		Args: cobra.NoArgs,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Desc: "List connectors in the current or specified Kafka cluster context.",
+				Code: fmt.Sprintf("%s connector list\n%s connector list --cluster <cluster-id>", cliName, cliName),
+			},
+		),
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
@@ -100,16 +101,15 @@ List connectors in the current or specified Kafka cluster context.
 
 	cmd = &cobra.Command{
 		Use:   "create",
+		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(c.create),
 		Short: "Create a connector.",
-		Example: FormatDescription(`
-Create connector in the current or specified Kafka cluster context.
-
-::
-
-        {{.CLIName}} connector create --config <file>
-        {{.CLIName}} connector create --cluster <cluster-id> --config <file>		`, cliName),
-		RunE: pcmd.NewCLIRunE(c.create),
-		Args: cobra.NoArgs,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Desc: "Create a connector in the current or specified Kafka cluster context.",
+				Code: fmt.Sprintf("%s connector create --config <file>\n%s connector create --cluster <cluster-id> --config <file>", cliName, cliName),
+			},
+		),
 	}
 	cmd.Flags().String("config", "", "JSON connector config file.")
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
@@ -120,16 +120,15 @@ Create connector in the current or specified Kafka cluster context.
 
 	cmd = &cobra.Command{
 		Use:   "delete <id>",
+		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.delete),
 		Short: "Delete a connector.",
-		Example: FormatDescription(`
-Delete connector in the current or specified Kafka cluster context.
-
-::
-
-        {{.CLIName}} connector delete <id>
-        {{.CLIName}} connector delete <id> --cluster <cluster-id>	`, cliName),
-		RunE: pcmd.NewCLIRunE(c.delete),
-		Args: cobra.ExactArgs(1),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Desc: "Delete a connector in the current or specified Kafka cluster context.",
+				Code: fmt.Sprintf("%s connector delete --config <file>\n%s connector delete --cluster <cluster-id> --config <file>", cliName, cliName),
+			},
+		),
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().SortFlags = false
@@ -137,9 +136,9 @@ Delete connector in the current or specified Kafka cluster context.
 
 	cmd = &cobra.Command{
 		Use:   "update <id>",
-		Short: "Update connector configuration.",
-		RunE:  pcmd.NewCLIRunE(c.update),
 		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.update),
+		Short: "Update connector configuration.",
 	}
 	cmd.Flags().String("config", "", "JSON connector config file.")
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
@@ -149,16 +148,15 @@ Delete connector in the current or specified Kafka cluster context.
 
 	cmd = &cobra.Command{
 		Use:   "pause <id>",
+		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.pause),
 		Short: "Pause a connector.",
-		Example: FormatDescription(`
-Pause connector in the current or specified Kafka cluster context.
-
-::
-
-        {{.CLIName}} connector pause <connector-id>
-        {{.CLIName}} connector pause <connector-id> --cluster <cluster-id>	`, cliName),
-		RunE: pcmd.NewCLIRunE(c.pause),
-		Args: cobra.ExactArgs(1),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Desc: "Pause a connector in the current or specified Kafka cluster context.",
+				Code: fmt.Sprintf("%s connector pause --config <file>\n%s connector pause --cluster <cluster-id> --config <file>", cliName, cliName),
+			},
+		),
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().SortFlags = false
@@ -166,16 +164,15 @@ Pause connector in the current or specified Kafka cluster context.
 
 	cmd = &cobra.Command{
 		Use:   "resume <id>",
+		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.resume),
 		Short: "Resume a connector.",
-		Example: FormatDescription(`
-Resume connector in the current or specified Kafka cluster context.
-
-::
-
-        {{.CLIName}} connector resume <id>
-        {{.CLIName}} connector resume <id> --cluster <cluster-id>	`, cliName),
-		RunE: pcmd.NewCLIRunE(c.resume),
-		Args: cobra.ExactArgs(1),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Desc: "Resume a connector in the current or specified Kafka cluster context.",
+				Code: fmt.Sprintf("%s connector resume --config <file>\n%s connector resume --cluster <cluster-id> --config <file>", cliName, cliName),
+			},
+		),
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().SortFlags = false
