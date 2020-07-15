@@ -30,7 +30,7 @@ type FileSystem interface {
 	Copy(dst io.Writer, src io.Reader) (written int64, err error)
 	Move(src string, dst string) error
 	// bufio
-	NewReader(rd io.Reader) *bufio.Reader
+	NewBufferedReader(rd io.Reader) Reader
 	// isatty
 	IsTerminal(fd uintptr) bool
 	// filepath
@@ -47,6 +47,11 @@ type File interface {
 	io.Seeker
 	Stat() (os.FileInfo, error)
 	Fd() uintptr
+}
+
+// Reader reads buffered strings
+type Reader interface {
+	ReadString(delim byte) (string, error)
 }
 
 // RealFileSystem implements fileSystem using the local disk.
@@ -67,7 +72,7 @@ func (*RealFileSystem) TempDir(dir, prefix string) (string, error) {
 }
 func (*RealFileSystem) Copy(dst io.Writer, src io.Reader) (int64, error) { return io.Copy(dst, src) }
 func (*RealFileSystem) Move(src string, dst string) error                { return os.Rename(src, dst) }
-func (*RealFileSystem) NewReader(rd io.Reader) *bufio.Reader             { return bufio.NewReader(rd) }
+func (*RealFileSystem) NewBufferedReader(rd io.Reader) Reader            { return bufio.NewReader(rd) }
 func (*RealFileSystem) IsTerminal(fd uintptr) bool                       { return isatty.IsTerminal(fd) }
 func (*RealFileSystem) Glob(pattern string) (matches []string, err error) {
 	return filepath.Glob(pattern)

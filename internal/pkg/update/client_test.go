@@ -1,7 +1,7 @@
 package update
 
 import (
-	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -835,9 +835,10 @@ func TestPromptToDownload(t *testing.T) {
 				IsTerminalFunc: func(fd uintptr) bool {
 					return terminal
 				},
-				NewReaderFunc: func(rd io.Reader) *bufio.Reader {
+				NewBufferedReaderFunc: func(rd io.Reader) pio.Reader {
 					req.Equal(os.Stdin, rd)
-					return bufio.NewReader(strings.NewReader(input + "\n"))
+					_, _ = fmt.Println() // to go to newline after test prompt
+					return bytes.NewBuffer([]byte(input + "\n"))
 				},
 			},
 			FS: &pio.RealFileSystem{},
@@ -911,27 +912,35 @@ func TestPromptToDownload(t *testing.T) {
 			want:   false,
 		},
 		{
+			name:   "should prompt interactively and ignore trailing whitespace",
+			client: makeClient(makeFS(true, "y ")),
+			args:   basicArgs,
+			want:   true,
+		},
+		{
 			name: "should prompt repeatedly until user enters yes/no",
 			client: makeClient(&mock.PassThroughFileSystem{
 				Mock: &mock.FileSystem{
 					IsTerminalFunc: func(fd uintptr) bool {
 						return true
 					},
-					NewReaderFunc: func(rd io.Reader) *bufio.Reader {
+					NewBufferedReaderFunc: func(rd io.Reader) pio.Reader {
 						req.Equal(os.Stdin, rd)
+						_, _ = fmt.Println() // to go to newline after test prompt
 						countRepeated++
 						switch countRepeated {
 						case 1:
-							return bufio.NewReader(strings.NewReader("maybe"))
+							return bytes.NewBuffer([]byte("maybe"))
 						case 2:
-							return bufio.NewReader(strings.NewReader("youwish"))
+							return bytes.NewBuffer([]byte("youwish"))
 						case 3:
-							return bufio.NewReader(strings.NewReader("perhaps"))
+							return bytes.NewBuffer([]byte("YES"))
 						case 4:
-							return bufio.NewReader(strings.NewReader("never"))
-						default:
-							return bufio.NewReader(strings.NewReader("no"))
+							return bytes.NewBuffer([]byte("never"))
+						case 5:
+							return bytes.NewBuffer([]byte("no"))
 						}
+						return bytes.NewBuffer([]byte("n"))
 					},
 				},
 				FS: &pio.RealFileSystem{},
@@ -946,9 +955,9 @@ func TestPromptToDownload(t *testing.T) {
 					IsTerminalFunc: func(fd uintptr) bool {
 						return true
 					},
-					NewReaderFunc: func(rd io.Reader) *bufio.Reader {
+					NewBufferedReaderFunc: func(rd io.Reader) pio.Reader {
 						countNoConfirm++
-						return bufio.NewReader(strings.NewReader("n"))
+						return bytes.NewBuffer([]byte("n"))
 					},
 				},
 				FS: &pio.RealFileSystem{},
@@ -968,9 +977,9 @@ func TestPromptToDownload(t *testing.T) {
 					IsTerminalFunc: func(fd uintptr) bool {
 						return false
 					},
-					NewReaderFunc: func(rd io.Reader) *bufio.Reader {
+					NewBufferedReaderFunc: func(rd io.Reader) pio.Reader {
 						countNoPrompt++
-						return bufio.NewReader(strings.NewReader("n"))
+						return bytes.NewBuffer([]byte("n"))
 					},
 				},
 				FS: &pio.RealFileSystem{},

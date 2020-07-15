@@ -1,7 +1,6 @@
 package mock
 
 import (
-	"bufio"
 	"io"
 	"os"
 	"time"
@@ -95,11 +94,11 @@ func (c *PassThroughFileSystem) Move(src string, dst string) error {
 	return c.FS.Move(src, dst)
 }
 
-func (c *PassThroughFileSystem) NewReader(rd io.Reader) *bufio.Reader {
-	if c.Mock.NewReaderFunc != nil {
-		return c.Mock.NewReader(rd)
+func (c *PassThroughFileSystem) NewBufferedReader(rd io.Reader) pio.Reader {
+	if c.Mock.NewBufferedReaderFunc != nil {
+		return c.Mock.NewBufferedReader(rd)
 	}
-	return c.FS.NewReader(rd)
+	return c.FS.NewBufferedReader(rd)
 }
 
 func (c *PassThroughFileSystem) IsTerminal(fd uintptr) bool {

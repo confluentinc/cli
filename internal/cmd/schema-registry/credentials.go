@@ -1,7 +1,6 @@
 package schema_registry
 
 import (
-	"bufio"
 	"context"
 	"os"
 
@@ -16,11 +15,11 @@ import (
 )
 
 func promptSchemaRegistryCredentials(command *cobra.Command) (string, string, error) {
-	f := form.New(
-		form.Field{ID: "api-key", Prompt: "Enter your Schema Registry API key"},
-		form.Field{ID: "secret", Prompt: "Enter your Schema Registry API secret"},
-	)
-	if err := f.Prompt(bufio.NewReader(os.Stdin), bufio.NewWriter(command.OutOrStdout())); err != nil {
+	f := form.New(map[string]form.Field{
+		"api-key": {Prompt: "Enter your Schema Registry API key"},
+		"secret":  {Prompt: "Enter your Schema Registry API secret"},
+	})
+	if err := f.Prompt(command, pcmd.NewPrompt(os.Stdin)); err != nil {
 		return "", "", err
 	}
 	return f.Responses["api-key"].(string), f.Responses["secret"].(string), nil

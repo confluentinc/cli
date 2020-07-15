@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"crypto/rand"
@@ -14,7 +13,6 @@ import (
 	"net/http"
 	"os"
 	"reflect"
-	"strings"
 	"testing"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -44,6 +42,7 @@ func TestCredentialsOverride(t *testing.T) {
 	os.Setenv("XX_CCLOUD_EMAIL", "test-email")
 	os.Setenv("XX_CCLOUD_PASSWORD", "test-password")
 
+	prompt := prompt()
 	auth := &sdkMock.Auth{
 		LoginFunc: func(ctx context.Context, idToken string, username string, password string) (string, error) {
 			return "y0ur.jwt.T0kEn", nil
@@ -66,7 +65,7 @@ func TestCredentialsOverride(t *testing.T) {
 			}, nil
 		},
 	}
-	loginCmd, cfg := newLoginCmd(auth, user, "ccloud", req)
+	loginCmd, cfg := newLoginCmd(prompt, auth, user, "ccloud", req)
 
 	output, err := pcmd.ExecuteCommand(loginCmd.Command)
 	req.NoError(err)
@@ -84,6 +83,7 @@ func TestCredentialsOverride(t *testing.T) {
 func TestLoginSuccess(t *testing.T) {
 	req := require.New(t)
 
+	prompt := prompt()
 	auth := &sdkMock.Auth{
 		LoginFunc: func(ctx context.Context, idToken string, username string, password string) (string, error) {
 			return "y0ur.jwt.T0kEn", nil
@@ -125,7 +125,7 @@ func TestLoginSuccess(t *testing.T) {
 
 	for _, s := range suite {
 		// Login to the CLI control plane
-		loginCmd, cfg := newLoginCmd(auth, user, s.cliName, req)
+		loginCmd, cfg := newLoginCmd(prompt, auth, user, s.cliName, req)
 		output, err := pcmd.ExecuteCommand(loginCmd.Command, s.args...)
 		req.NoError(err)
 		req.Contains(output, fmt.Sprintf(errors.LoggedInAsMsg, "cody@confluent.io"))
@@ -136,6 +136,7 @@ func TestLoginSuccess(t *testing.T) {
 func TestLoginFail(t *testing.T) {
 	req := require.New(t)
 
+	prompt := prompt()
 	auth := &sdkMock.Auth{
 		LoginFunc: func(ctx context.Context, idToken string, username string, password string) (string, error) {
 			return "", &ccloud.InvalidLoginError{}
@@ -148,7 +149,7 @@ func TestLoginFail(t *testing.T) {
 			}, nil
 		},
 	}
-	loginCmd, _ := newLoginCmd(auth, user, "ccloud", req)
+	loginCmd, _ := newLoginCmd(prompt, auth, user, "ccloud", req)
 
 	_, err := pcmd.ExecuteCommand(loginCmd.Command)
 	req.Contains(err.Error(), errors.InvalidLoginErrorMsg)
@@ -158,12 +159,13 @@ func TestLoginFail(t *testing.T) {
 func TestURLRequiredWithMDS(t *testing.T) {
 	req := require.New(t)
 
+	prompt := prompt()
 	auth := &sdkMock.Auth{
 		LoginFunc: func(ctx context.Context, idToken string, username string, password string) (string, error) {
 			return "", &ccloud.InvalidLoginError{}
 		},
 	}
-	loginCmd, _ := newLoginCmd(auth, nil, "confluent", req)
+	loginCmd, _ := newLoginCmd(prompt, auth, nil, "confluent", req)
 
 	_, err := pcmd.ExecuteCommand(loginCmd.Command)
 	req.Contains(err.Error(), "required flag(s) \"url\" not set")
@@ -183,8 +185,9 @@ func TestLogout(t *testing.T) {
 func Test_credentials_NoSpacesAroundEmail_ShouldSupportSpacesAtBeginOrEnd(t *testing.T) {
 	req := require.New(t)
 
+	prompt := prompt()
 	auth := &sdkMock.Auth{}
-	loginCmd, _ := newLoginCmd(auth, nil, "ccloud", req)
+	loginCmd, _ := newLoginCmd(prompt, auth, nil, "ccloud", req)
 
 	user, pass, err := loginCmd.credentials(loginCmd.Command, "Email", nil)
 	req.NoError(err)
@@ -201,6 +204,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 		MetricSink: nil,
 		Logger:     log.New(),
 	})
+	prompt := prompt()
 	prerunner := cliMock.NewPreRunnerMock(nil, nil, cfg)
 
 	// Create a test certificate to be read in by the command
@@ -248,7 +252,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 			return mdsClient, nil
 		},
 	}
-	loginCmd := NewLoginCommand("confluent", prerunner, log.New(), prompt(), nil, nil, mdsClientManager, cliMock.NewDummyAnalyticsMock(), nil)
+	loginCmd := NewLoginCommand("confluent", prerunner, log.New(), prompt, nil, nil, mdsClientManager, cliMock.NewDummyAnalyticsMock(), nil)
 	loginCmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	_, err = pcmd.ExecuteCommand(loginCmd.Command, "--url=http://localhost:8090", "--ca-cert-path=testcert.pem")
 	req.NoError(err)
@@ -257,6 +261,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 func TestLoginWithExistingContext(t *testing.T) {
 	req := require.New(t)
 
+	prompt := prompt()
 	auth := &sdkMock.Auth{
 		LoginFunc: func(ctx context.Context, idToken string, username string, password string) (string, error) {
 			return "y0ur.jwt.T0kEn", nil
@@ -312,7 +317,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 	}
 
 	for _, s := range suite {
-		loginCmd, cfg := newLoginCmd(auth, user, s.cliName, req)
+		loginCmd, cfg := newLoginCmd(prompt, auth, user, s.cliName, req)
 
 		// Login to the CLI control plane
 		output, err := pcmd.ExecuteCommand(loginCmd.Command, s.args...)
@@ -373,15 +378,18 @@ func verifyLoggedOutState(t *testing.T, cfg *v3.Config) {
 	req.Empty(state.Auth)
 }
 
-func prompt() *bufio.Reader {
-	username := "cody@confluent.io"
-	password := " iamrobin "
-
-	stream := username + "\n" + password + "\n"
-	return bufio.NewReader(strings.NewReader(stream + stream)) // Pass the stream twice for multi-login test
+func prompt() *cliMock.Prompt {
+	return &cliMock.Prompt{
+		ReadStringFunc: func(delim byte) (string, error) {
+			return "cody@confluent.io", nil
+		},
+		ReadPasswordFunc: func() (string, error) {
+			return " iamrobin ", nil
+		},
+	}
 }
 
-func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, cliName string, req *require.Assertions) (*loginCommand, *v3.Config) {
+func newLoginCmd(prompt pcmd.Prompt, auth *sdkMock.Auth, user *sdkMock.User, cliName string, req *require.Assertions) (*loginCommand, *v3.Config) {
 	var mockAnonHTTPClientFactory = func(baseURL string, logger *log.Logger) *ccloud.Client {
 		req.Equal("https://confluent.cloud", baseURL)
 		return &ccloud.Client{Auth: auth, User: user}
@@ -414,7 +422,8 @@ func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, cliName string, req *re
 		},
 	}
 	prerunner := cliMock.NewPreRunnerMock(mockAnonHTTPClientFactory("https://confluent.cloud", nil), mdsClient, cfg)
-	loginCmd := NewLoginCommand(cliName, prerunner, log.New(), prompt(), mockAnonHTTPClientFactory, mockJwtHTTPClientFactory, mdsClientManager, cliMock.NewDummyAnalyticsMock(), nil)
+	loginCmd := NewLoginCommand(cliName, prerunner, log.New(), prompt, mockAnonHTTPClientFactory, mockJwtHTTPClientFactory, mdsClientManager,
+		cliMock.NewDummyAnalyticsMock(), nil)
 	return loginCmd, cfg
 }
 

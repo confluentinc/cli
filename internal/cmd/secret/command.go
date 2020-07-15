@@ -9,17 +9,19 @@ import (
 
 type command struct {
 	*cobra.Command
+	prompt pcmd.Prompt
 	resolv pcmd.FlagResolver
 	plugin secret.PasswordProtection
 }
 
 // New returns the default command object for Password Protection
-func New(resolv pcmd.FlagResolver, plugin secret.PasswordProtection) *cobra.Command {
+func New(prompt pcmd.Prompt, resolv pcmd.FlagResolver, plugin secret.PasswordProtection) *cobra.Command {
 	cmd := &command{
 		Command: &cobra.Command{
 			Use:   "secret",
 			Short: "Manage secrets for Confluent Platform.",
 		},
+		prompt: prompt,
 		resolv: resolv,
 		plugin: plugin,
 	}
@@ -28,6 +30,6 @@ func New(resolv pcmd.FlagResolver, plugin secret.PasswordProtection) *cobra.Comm
 }
 
 func (c *command) init() {
-	c.AddCommand(NewMasterKeyCommand(c.resolv, c.plugin))
-	c.AddCommand(NewFileCommand(c.resolv, c.plugin))
+	c.AddCommand(NewMasterKeyCommand(c.prompt, c.resolv, c.plugin))
+	c.AddCommand(NewFileCommand(c.prompt, c.resolv, c.plugin))
 }

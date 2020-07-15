@@ -16,13 +16,14 @@ import (
 
 type command struct {
 	*pcmd.CLICommand
+	prompt   pcmd.Prompt
 	resolver pcmd.FlagResolver
 }
 
 // TODO: Make long description better.
 const longDescription = "Initialize and set a current context."
 
-func New(prerunner pcmd.PreRunner, resolver pcmd.FlagResolver, analyticsClient analytics.Client) *cobra.Command {
+func New(prerunner pcmd.PreRunner, prompt pcmd.Prompt, resolver pcmd.FlagResolver, analyticsClient analytics.Client) *cobra.Command {
 	cobraCmd := &cobra.Command{
 		Use:   "init <context-name>",
 		Short: "Initialize a context.",
@@ -36,6 +37,7 @@ func New(prerunner pcmd.PreRunner, resolver pcmd.FlagResolver, analyticsClient a
 	})
 	cmd := &command{
 		CLICommand: cliCmd,
+		prompt:     prompt,
 		resolver:   resolver,
 	}
 	cmd.init()

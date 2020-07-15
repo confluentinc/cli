@@ -1,13 +1,12 @@
 package form
 
 import (
-	"bufio"
 	"fmt"
-	"io"
-	"os"
 	"strings"
-	"syscall"
 
+	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
@@ -26,37 +25,34 @@ Password: ****
 * Confirmation
 Submit? (y/n): y
 
-* Defaults
-Save File As: (file.txt) other.txt
+* Default Values
+Save file as: (file.txt) other.txt
 */
 
 type Form struct {
-	Fields    []Field
+	Fields    map[string]Field
 	Responses map[string]interface{}
 }
 
 type Field struct {
-	ID           string
 	Prompt       string
 	DefaultValue interface{}
 	IsYesOrNo    bool
 	IsHidden     bool
 }
 
-func New(fields ...Field) *Form {
+func New(fields map[string]Field) *Form {
 	return &Form{
 		Fields:    fields,
 		Responses: make(map[string]interface{}),
 	}
 }
 
-func (f *Form) Prompt(in *bufio.Reader, out *bufio.Writer) error {
-	for _, field := range f.Fields {
-		if err := show(out, field, f.Responses[field.ID]); err != nil {
-			return err
-		}
+func (f *Form) Prompt(command *cobra.Command, prompt cmd.Prompt) error {
+	for id, field := range f.Fields {
+		show(command, field, f.Responses[id])
 
-		val, err := read(in, field)
+		val, err := read(field, prompt)
 		if err != nil {
 			return err
 		}
@@ -65,66 +61,40 @@ func (f *Form) Prompt(in *bufio.Reader, out *bufio.Writer) error {
 		if err != nil {
 			return err
 		}
-		f.Responses[field.ID] = res
+		f.Responses[id] = res
 	}
 
 	return nil
 }
 
-func show(out *bufio.Writer, field Field, savedValue interface{}) error {
-	line := field.Prompt
-
+func show(command *cobra.Command, field Field, savedValue interface{}) {
+	command.Print(field.Prompt)
 	if field.IsYesOrNo {
-		line += " (y/n)"
+		command.Print(" (y/n)")
 	}
-	line += ": "
+	command.Print(": ")
 
 	if savedValue != nil {
-		line += fmt.Sprintf("(%v) ", savedValue)
+		command.Printf("(%v) ", savedValue)
 	} else if field.DefaultValue != nil {
-		line += fmt.Sprintf("(%v) ", field.DefaultValue)
+		command.Printf("(%v) ", field.DefaultValue)
 	}
-
-	if _, err := out.WriteString(line); err != nil {
-		return err
-	}
-	return out.Flush()
 }
 
-func read(in *bufio.Reader, field Field) (string, error) {
-	if field.IsHidden {
-		if err := setTTY("-echo"); err != nil {
-			return "", err
-		}
-	}
-
-	val, err := in.ReadString('\n')
-	val = strings.TrimSuffix(val, "\n")
-	if err == io.EOF {
-		err = nil
-	}
+func read(field Field, prompt cmd.Prompt) (string, error) {
+	var val string
+	var err error
 
 	if field.IsHidden {
-		if err := setTTY("echo"); err != nil {
-			return "", err
-		}
+		val, err = prompt.ReadPassword()
+	} else {
+		val, err = prompt.ReadString('\n')
 	}
-
-	return val, err
-}
-
-func setTTY(opt string) error {
-	attrs := syscall.ProcAttr{
-		Files: []uintptr{os.Stdin.Fd(), os.Stdout.Fd(), os.Stderr.Fd()},
-	}
-
-	pid, err := syscall.ForkExec("/bin/stty", []string{"stty", opt}, &attrs)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	_, err = syscall.Wait4(pid, new(syscall.WaitStatus), 0, nil)
-	return err
+	return strings.TrimSuffix(val, "\n"), nil
 }
 
 func save(field Field, val string) (interface{}, error) {

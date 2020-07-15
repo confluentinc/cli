@@ -59,15 +59,18 @@ type command struct {
 	logger  *log.Logger
 	client  update.Client
 	// for testing
+	prompt          pcmd.Prompt
 	analyticsClient analytics.Client
 }
 
 // New returns the command for the built-in updater.
-func New(cliName string, logger *log.Logger, version *cliVersion.Version, client update.Client, analytics analytics.Client) *cobra.Command {
+func New(cliName string, logger *log.Logger, version *cliVersion.Version, prompt pcmd.Prompt,
+	client update.Client, analytics analytics.Client) *cobra.Command {
 	cmd := &command{
 		cliName:         cliName,
 		version:         version,
 		logger:          logger,
+		prompt:          prompt,
 		client:          client,
 		analyticsClient: analytics,
 	}

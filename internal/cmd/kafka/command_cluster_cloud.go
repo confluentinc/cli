@@ -1,7 +1,6 @@
 package kafka
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"fmt"
@@ -303,13 +302,18 @@ func (c *clusterCommand) validateEncryptionKey(cmd *cobra.Command, cloud string,
 	}
 	buf.WriteString("\n\n")
 
-	f := form.New(form.Field{ID: "authorized", Prompt: buf.String()})
 	for {
-		if err := f.Prompt(bufio.NewReader(os.Stdin), bufio.NewWriter(cmd.OutOrStdout())); err != nil {
+		f := form.New(map[string]form.Field{
+			"authorized": {
+				Prompt:    "Please confirm you've authorized the key for these accounts " + strings.Join(accounts, ", "),
+				IsYesOrNo: true,
+			},
+		})
+		if err := f.Prompt(cmd, pcmd.NewPrompt(os.Stdin)); err != nil {
 			cmd.PrintErrln(errors.FailedToReadConfirmationErrorMsg)
 			continue
 		}
-		if !f.Responses["authorized"].(bool) {
+		if f.Responses["authorized"].(bool) {
 			return errors.Errorf(errors.AuthorizeAccountsErrorMsg, strings.Join(accounts, ", "))
 		}
 	}
