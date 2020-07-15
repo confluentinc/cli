@@ -11,34 +11,27 @@ import (
 )
 
 func TestPrompt(t *testing.T) {
-	f := New(map[string]Field{
-		"username": {
-			Prompt: "Username",
-		},
-		"password": {
-			Prompt:   "Password",
-			IsHidden: true,
-		},
-	})
+	f := New(
+		Field{ID: "username", Prompt: "Username"},
+		Field{ID: "password", Prompt: "Password", IsHidden: true},
+	)
 
 	command := &cobra.Command{}
-	buf := new(bytes.Buffer)
-	command.SetOut(buf)
+	command.SetOut(new(bytes.Buffer))
 
 	prompt := &mock.Prompt{
-		ReadStringFunc: func(_ byte) (string, error) {
-			return "username\n", nil
+		ReadLineFunc: func() (string, error) {
+			return "user", nil
 		},
-		ReadPasswordFunc: func() (string, error) {
-			return "password\n", nil
+		ReadLineMaskedFunc: func() (string, error) {
+			return "pass", nil
 		},
 	}
 
 	err := f.Prompt(command, prompt)
 	require.NoError(t, err)
-
-	require.Equal(t, "username", f.Responses["username"].(string))
-	require.Equal(t, "password", f.Responses["password"].(string))
+	require.Equal(t, "user", f.Responses["username"].(string))
+	require.Equal(t, "pass", f.Responses["password"].(string))
 }
 
 func TestShow(t *testing.T) {
@@ -71,28 +64,28 @@ func testShow(t *testing.T, field Field, savedValue interface{}, output string) 
 	require.Equal(t, output, out.String())
 }
 
-func TestReadPassword(t *testing.T) {
-	field := Field{IsHidden: true}
-
-	prompt := &mock.Prompt{
-		ReadPasswordFunc: func() (string, error) {
-			return "password\n", nil
-		},
-	}
-
-	password, _ := read(field, prompt)
-	require.Equal(t, "password", password)
-}
-
 func TestRead(t *testing.T) {
 	prompt := &mock.Prompt{
-		ReadStringFunc: func(_ byte) (string, error) {
-			return "username\n", nil
+		ReadLineFunc: func() (string, error) {
+			return "user", nil
 		},
 	}
 
 	username, _ := read(Field{}, prompt)
-	require.Equal(t, "username", username)
+	require.Equal(t, "user", username)
+}
+
+func TestReadPassword(t *testing.T) {
+	field := Field{IsHidden: true}
+
+	prompt := &mock.Prompt{
+		ReadLineMaskedFunc: func() (string, error) {
+			return "pass", nil
+		},
+	}
+
+	password, _ := read(field, prompt)
+	require.Equal(t, "pass", password)
 }
 
 func TestSaveYesOrNo(t *testing.T) {
@@ -110,7 +103,7 @@ func TestSaveYesOrNo(t *testing.T) {
 		require.False(t, res.(bool))
 	}
 
-	_, err := save(field, "")
+	_, err := save(field, "maybe")
 	require.Error(t, err)
 }
 

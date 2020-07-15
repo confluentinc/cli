@@ -48,9 +48,9 @@ func (r *FlagResolverImpl) ValueFrom(source string, prompt string, secure bool) 
 		}
 
 		if secure {
-			value, err = r.Prompt.ReadPassword()
+			value, err = r.Prompt.ReadLineMasked()
 		} else {
-			value, err = r.Prompt.ReadString('\n')
+			value, err = r.Prompt.ReadLine()
 		}
 		if err != nil {
 			return "", err
@@ -71,7 +71,7 @@ func (r *FlagResolverImpl) ValueFrom(source string, prompt string, secure bool) 
 		} else if !yes {
 			return "", ErrNoPipe
 		}
-		value, err = r.Prompt.ReadString('\n')
+		value, err = r.Prompt.ReadLine()
 		if err != nil {
 			return "", err
 		}

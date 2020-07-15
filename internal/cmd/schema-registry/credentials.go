@@ -15,10 +15,10 @@ import (
 )
 
 func promptSchemaRegistryCredentials(command *cobra.Command) (string, string, error) {
-	f := form.New(map[string]form.Field{
-		"api-key": {Prompt: "Enter your Schema Registry API key"},
-		"secret":  {Prompt: "Enter your Schema Registry API secret"},
-	})
+	f := form.New(
+		form.Field{ID: "api-key", Prompt: "Enter your Schema Registry API key"},
+		form.Field{ID: "secret", Prompt: "Enter your Schema Registry API secret"},
+	)
 	if err := f.Prompt(command, pcmd.NewPrompt(os.Stdin)); err != nil {
 		return "", "", err
 	}

@@ -6,14 +6,15 @@ import (
 	"bufio"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/havoc-io/gopass"
 )
 
 // Prompt represents input and output to a terminal
 type Prompt interface {
-	ReadString(delim byte) (string, error)
-	ReadPassword() (string, error)
+	ReadLine() (string, error)
+	ReadLineMasked() (string, error)
 	IsPipe() (bool, error)
 }
 
@@ -29,19 +30,18 @@ func NewPrompt(stdin *os.File) *RealPrompt {
 	return &RealPrompt{In: bufio.NewReader(stdin), Out: os.Stdout, Stdin: stdin}
 }
 
-// ReadString reads until the first occurrence of delim in the input,
-// returning a string containing the data up to and including the delimiter.
-func (p *RealPrompt) ReadString(delim byte) (string, error) {
-	return p.In.ReadString(delim)
+// ReadLine reads a line of input, without the newline.
+func (p *RealPrompt) ReadLine() (string, error) {
+	str, err := p.In.ReadString('\n')
+	return strings.TrimSuffix(str, "\n"), err
 }
 
-// ReadPassword reads a line of input from a terminal without local echo.
-func (p *RealPrompt) ReadPassword() (string, error) {
-	pwd, err := gopass.GetPasswd()
+// ReadLineMasked reads a line of input from a terminal without local echo.
+func (p *RealPrompt) ReadLineMasked() (string, error) {
+	pwd, err := gopass.GetPasswdMasked()
 	return string(pwd), err
 }
 
-// ReadPassword reads a line of input from a terminal without local echo.
 func (p *RealPrompt) IsPipe() (bool, error) {
 	fi, err := p.Stdin.Stat()
 	if err != nil {

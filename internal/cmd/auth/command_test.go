@@ -380,10 +380,10 @@ func verifyLoggedOutState(t *testing.T, cfg *v3.Config) {
 
 func prompt() *cliMock.Prompt {
 	return &cliMock.Prompt{
-		ReadStringFunc: func(delim byte) (string, error) {
+		ReadLineFunc: func() (string, error) {
 			return "cody@confluent.io", nil
 		},
-		ReadPasswordFunc: func() (string, error) {
+		ReadLineMaskedFunc: func() (string, error) {
 			return " iamrobin ", nil
 		},
 	}

@@ -253,9 +253,7 @@ func (a *loginCommand) credentials(cmd *cobra.Command, userField string, cloudCl
 	}
 
 	if len(email) == 0 {
-		f := form.New(map[string]form.Field{
-			"email": {Prompt: userField},
-		})
+		f := form.New(form.Field{ID: "email", Prompt: userField})
 		if err := f.Prompt(cmd, a.prompt); err != nil {
 			return "", "", err
 		}
@@ -278,9 +276,7 @@ func (a *loginCommand) credentials(cmd *cobra.Command, userField string, cloudCl
 	}
 
 	if len(password) == 0 {
-		f := form.New(map[string]form.Field{
-			"password": {Prompt: "Password", IsHidden: true},
-		})
+		f := form.New(form.Field{ID: "password", Prompt: "Password", IsHidden: true})
 		if err := f.Prompt(cmd, a.prompt); err != nil {
 			return "", "", err
 		}

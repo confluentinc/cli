@@ -129,10 +129,10 @@ func (suite *APITestSuite) newCMD() *cobra.Command {
 		Metrics:        &ccsdkmock.Metrics{},
 	}
 	prompt := &cliMock.Prompt{
-		ReadStringFunc: func(delim byte) (string, error) {
+		ReadLineFunc: func() (string, error) {
 			return promptReadString + "\n", nil
 		},
-		ReadPasswordFunc: func() (string, error) {
+		ReadLineMaskedFunc: func() (string, error) {
 			return promptReadPass + "\n", nil
 		},
 		IsPipeFunc: func() (b bool, e error) {

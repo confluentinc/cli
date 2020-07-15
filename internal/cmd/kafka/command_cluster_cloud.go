@@ -302,13 +302,12 @@ func (c *clusterCommand) validateEncryptionKey(cmd *cobra.Command, cloud string,
 	}
 	buf.WriteString("\n\n")
 
+	f := form.New(form.Field{
+		ID:        "authorized",
+		Prompt:    "Please confirm you've authorized the key for these accounts " + strings.Join(accounts, ", "),
+		IsYesOrNo: true,
+	})
 	for {
-		f := form.New(map[string]form.Field{
-			"authorized": {
-				Prompt:    "Please confirm you've authorized the key for these accounts " + strings.Join(accounts, ", "),
-				IsYesOrNo: true,
-			},
-		})
 		if err := f.Prompt(cmd, pcmd.NewPrompt(os.Stdin)); err != nil {
 			cmd.PrintErrln(errors.FailedToReadConfirmationErrorMsg)
 			continue

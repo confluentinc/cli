@@ -30,18 +30,19 @@ Save file as: (file.txt) other.txt
 */
 
 type Form struct {
-	Fields    map[string]Field
+	Fields    []Field
 	Responses map[string]interface{}
 }
 
 type Field struct {
+	ID           string
 	Prompt       string
 	DefaultValue interface{}
 	IsYesOrNo    bool
 	IsHidden     bool
 }
 
-func New(fields map[string]Field) *Form {
+func New(fields ...Field) *Form {
 	return &Form{
 		Fields:    fields,
 		Responses: make(map[string]interface{}),
@@ -49,8 +50,8 @@ func New(fields map[string]Field) *Form {
 }
 
 func (f *Form) Prompt(command *cobra.Command, prompt cmd.Prompt) error {
-	for id, field := range f.Fields {
-		show(command, field, f.Responses[id])
+	for _, field := range f.Fields {
+		show(command, field, f.Responses[field.ID])
 
 		val, err := read(field, prompt)
 		if err != nil {
@@ -61,7 +62,7 @@ func (f *Form) Prompt(command *cobra.Command, prompt cmd.Prompt) error {
 		if err != nil {
 			return err
 		}
-		f.Responses[id] = res
+		f.Responses[field.ID] = res
 	}
 
 	return nil
@@ -86,15 +87,15 @@ func read(field Field, prompt cmd.Prompt) (string, error) {
 	var err error
 
 	if field.IsHidden {
-		val, err = prompt.ReadPassword()
+		val, err = prompt.ReadLineMasked()
 	} else {
-		val, err = prompt.ReadString('\n')
+		val, err = prompt.ReadLine()
 	}
 	if err != nil {
 		return "", err
 	}
 
-	return strings.TrimSuffix(val, "\n"), nil
+	return val, nil
 }
 
 func save(field Field, val string) (interface{}, error) {
@@ -108,7 +109,7 @@ func save(field Field, val string) (interface{}, error) {
 		return false, fmt.Errorf(errors.InvalidChoiceMsg, val)
 	}
 
-	if val == "" {
+	if val == "" && field.DefaultValue != nil {
 		return field.DefaultValue, nil
 	}
 
