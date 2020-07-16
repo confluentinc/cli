@@ -257,6 +257,7 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 			return flagErr
 		}
 		err = errors.CatchTopicExistsError(err, cluster.Id, topic.Spec.Name, ifNotExistsFlag)
+		err = errors.CatchClusterNotReadyError(err, cluster.Id)
 		return err
 	}
 	pcmd.ErrPrintf(cmd, errors.CreatedTopicMsg, topic.Spec.Name)

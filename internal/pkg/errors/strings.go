@@ -3,8 +3,8 @@ package errors
 const (
 	// api-key command
 	DeletedAPIKeyMsg = "Deleted API key \"%s\".\n"
-	StoredAPIKeyMsg  = "Stored API secret for API key \"%s\"."
-	UseAPIKeyMsg     = "Set API Key \"%s\" as the active API key for \"%s\"."
+	StoredAPIKeyMsg  = "Stored API secret for API key \"%s\".\n"
+	UseAPIKeyMsg     = "Set API Key \"%s\" as the active API key for \"%s\".\n"
 
 	// auth commands
 	LoggedInAsMsg                = "Logged in as \"%s\".\n"
