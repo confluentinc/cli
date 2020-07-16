@@ -10,6 +10,7 @@ Create a new dedicated cluster that uses a customer-managed encryption key in AW
   ccloud kafka cluster create sales092020 --cloud "aws" --type "dedicated" --encryption-key "arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"
 
 
+
 Flags:
       --cloud string            Cloud provider ID (e.g. 'aws' or 'gcp').
       --region string           Cloud region ID for cluster (e.g. 'us-west-2').
