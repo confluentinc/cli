@@ -118,5 +118,5 @@ const (
 	InvalidChoiceMsg            = "%s is not a valid choice\n"
 
 	// General
-	UpdateSuccessMsg = "Updated the %s of %s \"%s\" to \"%s\"\n."
+	UpdateSuccessMsg = "Updated the %s of %s \"%s\" to \"%s\".\n"
 )
