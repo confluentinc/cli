@@ -1,12 +1,20 @@
 package kafka
 
 import (
+	"context"
+	"encoding/binary"
 	"fmt"
 	"io"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"strconv"
 	"strings"
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	serde "github.com/confluentinc/cli/internal/pkg/serdes"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	"github.com/Shopify/sarama"
 )
@@ -38,9 +46,19 @@ func NewSaramaProducer(kafka *v1.KafkaClusterConfig, clientID string) (sarama.Sy
 	return sarama.NewSyncProducer(strings.Split(kafka.Bootstrap, ","), conf)
 }
 
+type ConsumerProperties struct {
+	PrintKey   bool
+	Delimiter  string
+	SchemaPath string
+}
+
 // GroupHandler instances are used to handle individual topic-partition claims.
 type GroupHandler struct {
-	Out io.Writer
+	SrClient   *srsdk.APIClient
+	Ctx        context.Context
+	Format     string
+	Out        io.Writer
+	Properties ConsumerProperties
 }
 
 // Setup is run at the beginning of a new session, before ConsumeClaim.
@@ -55,13 +73,69 @@ func (*GroupHandler) Cleanup(_ sarama.ConsumerGroupSession) error { return nil }
 // loop and exit.
 func (h *GroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	for msg := range claim.Messages() {
-		_, err := fmt.Fprintln(h.Out, string(msg.Value))
+		value := msg.Value
+		// For messages with schema, first byte is magic byte 0x0.
+		_ = value[0]
+		if h.Properties.PrintKey {
+			key := msg.Key
+			var keyString string
+			if len(key) == 0 {
+				keyString = "null"
+			} else {
+				keyString = string(key)
+			}
+			_, err := fmt.Fprint(h.Out, keyString+h.Properties.Delimiter)
+			if err != nil {
+				return err
+			}
+		}
+
+		deserializationProvider, err := serde.GetDeserializationProvider(h.Format)
+		if err != nil {
+			return err
+		}
+
+		tempStorePath := ""
+		if h.Format != "STRING" {
+			schemaPath, err := h.RequestSchema(value)
+			if err != nil {
+				return err
+			}
+			tempStorePath = schemaPath
+			// Message body is encoded after 5 bytes of meta information.
+			value = value[5:]
+		}
+		jsonMessage, err := serde.Deserialize(deserializationProvider, value, tempStorePath)
+		if err != nil {
+			return err
+		}
+
+		_, err = fmt.Fprintln(h.Out, jsonMessage)
 		if err != nil {
 			return err
 		}
 		sess.MarkMessage(msg, "")
 	}
 	return nil
+}
+
+func (h *GroupHandler) RequestSchema(value []byte) (string, error) {
+	// Retrieve schema from cluster only if schema is specified.
+	schemaID := int32(binary.BigEndian.Uint32(value[1:5]))
+
+	// Create temporary file to store schema retrieved (also for cache)
+	tempStorePath := filepath.Join(h.Properties.SchemaPath, strconv.Itoa(int(schemaID))+".txt")
+	if !fileExists(tempStorePath) {
+		schemaString, _, err := h.SrClient.DefaultApi.GetSchema(h.Ctx, schemaID, nil)
+		if err != nil {
+			return "", err
+		}
+		err = ioutil.WriteFile(tempStorePath, []byte(schemaString.Schema), 0644)
+		if err != nil {
+			return "", err
+		}
+	}
+	return tempStorePath, nil
 }
 
 // saramaConf converts KafkaClusterConfig to sarama.Config
@@ -112,4 +186,12 @@ func (l *logAdapter) log(msg string) {
 	// This is how hclog.StandardLogger works as well; it fixes the unnecessary extra newlines
 	msg = strings.TrimRight(msg, " \t\n")
 	l.logger.Log("msg", msg)
+}
+
+func fileExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
 }

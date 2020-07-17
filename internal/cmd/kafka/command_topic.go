@@ -3,17 +3,25 @@ package kafka
 import (
 	"bufio"
 	"context"
+	"encoding/binary"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"sort"
 	"strings"
+
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	"github.com/Shopify/sarama"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/go-printer"
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
+
+	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
+	serde "github.com/confluentinc/cli/internal/pkg/serdes"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -83,6 +91,10 @@ func (h *hasAPIKeyTopicCommand) init() {
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().String("delimiter", ":", "The key/value delimiter.")
+	cmd.Flags().String("value-format", "STRING", "Format of message value.")
+	cmd.Flags().String("schema", "", "The path to the schema file.")
+	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
+	cmd.Flags().String("resource", "", "Resource name.")
 	cmd.Flags().SortFlags = false
 	h.AddCommand(cmd)
 
@@ -101,6 +113,9 @@ func (h *hasAPIKeyTopicCommand) init() {
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().String("group", fmt.Sprintf("confluent_cli_consumer_%s", uuid.New()), "Consumer group ID.")
 	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
+	cmd.Flags().String("value-format", "STRING", "Format of message value.")
+	cmd.Flags().Bool("print-key", false, "Print key of the message.")
+	cmd.Flags().String("delimiter", "\t", "The key/value delimiter.")
 	cmd.Flags().SortFlags = false
 	h.AddCommand(cmd)
 }
@@ -351,6 +366,45 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 	return nil
 }
 
+func initCCloudClient(cliCmd *hasAPIKeyTopicCommand) error {
+	ctx, err := cliCmd.Config.Context(cliCmd.Command)
+	if err != nil {
+		return err
+	}
+	ccloudClient, err := pcmd.CreateCCloudClient(ctx, cliCmd.Command, cliCmd.Version)
+	if err != nil {
+		return err
+	}
+	cliCmd.Config.Client = ccloudClient
+	return nil
+}
+
+func (h *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, subject string, valueFormat string, schemaPath string) ([]byte, error) {
+	schema, err := ioutil.ReadFile(schemaPath)
+	if err != nil {
+		return nil, errors.HandleCommon(err, cmd)
+	}
+	var refs []srsdk.SchemaReference
+
+	srClient, ctx, err := sr.GetApiClient(cmd, nil, h.Config, h.Version)
+	if err != nil {
+		return nil, err
+	}
+
+	response, _, err := srClient.DefaultApi.Register(ctx, subject, srsdk.RegisterSchemaRequest{Schema: string(schema), SchemaType: valueFormat, References: refs})
+	if err != nil {
+		return nil, err
+	}
+
+	pcmd.Printf(cmd, "Successfully registered schema with ID: %v \n", response.Id)
+
+	metaInfo := []byte{0x0}
+	schemaIdBuffer := make([]byte, 4)
+	binary.BigEndian.PutUint32(schemaIdBuffer, uint32(response.Id))
+	metaInfo = append(metaInfo, schemaIdBuffer...)
+	return metaInfo, nil
+}
+
 func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error {
 	topic := args[0]
 	cluster, err := h.Context.GetKafkaClusterForCommand(cmd)
@@ -361,6 +415,45 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	delim, err := cmd.Flags().GetString("delimiter")
 	if err != nil {
 		return err
+	}
+
+	valueFormat, err := cmd.Flags().GetString("value-format")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	schemaPath, err := cmd.Flags().GetString("schema")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	parseKey, err := cmd.Flags().GetBool("parse-key")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	subject := topic + "-value"
+	serializationProvider, err := serde.GetSerializationProvider(valueFormat)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	// Meta info contains magic byte and schema ID (4 bytes).
+	// For plain string encoding, meta info is empty.
+	metaInfo := []byte{}
+
+	// Registering schema when specified, and fill metaInfo array.
+	if valueFormat != "STRING" && len(schemaPath) > 0 {
+		// Initialize ccloud client for retrieving SR cluster info.
+		err := initCCloudClient(h)
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+		info, err := h.registerSchema(cmd, subject, valueFormat, schemaPath)
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+		metaInfo = info
 	}
 
 	pcmd.ErrPrintln(cmd, errors.StartingProducerMsg)
@@ -403,17 +496,34 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		close(input)
 	}()
 	// Prime reader
-	scan()
+	go scan()
 
 	var key sarama.Encoder
 	for data := range input {
-		data = strings.TrimSpace(data)
-
-		record := strings.SplitN(data, delim, 2)
-		value := sarama.StringEncoder(record[len(record)-1])
-		if len(record) == 2 {
-			key = sarama.StringEncoder(record[0])
+		if len(data) == 0 {
+			go scan()
+			continue
 		}
+		var valueString string
+		if parseKey {
+			record := strings.SplitN(data, delim, 2)
+			valueString = strings.TrimSpace(record[len(record)-1])
+
+			if len(record) == 2 {
+				key = sarama.StringEncoder(strings.TrimSpace(record[0]))
+			} else {
+				return errors.HandleCommon(errors.New("Missing key in message."), cmd)
+			}
+		} else {
+			valueString = strings.TrimSpace(data)
+		}
+		encodedMessage, err := serde.Serialize(serializationProvider, valueString, schemaPath)
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+		encoded := append(metaInfo, encodedMessage...)
+		value := sarama.StringEncoder(string(encoded))
+
 		msg := &sarama.ProducerMessage{Topic: topic, Key: key, Value: value}
 		_, offset, err := producer.SendMessage(msg)
 		if err != nil {
@@ -442,6 +552,12 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return err
 	}
+
+	valueFormat, err := cmd.Flags().GetString("value-format")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
 	cluster, err := h.Context.GetKafkaClusterForCommand(cmd)
 	if err != nil {
 		return err
@@ -449,6 +565,16 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	group, err := cmd.Flags().GetString("group")
 	if err != nil {
 		return err
+	}
+
+	printKey, err := cmd.Flags().GetBool("print-key")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
+	delimiter, err := cmd.Flags().GetString("delimiter")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
 	}
 
 	InitSarama(h.logger)
@@ -473,11 +599,49 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		}
 	}()
 
+	var srClient *srsdk.APIClient
+	var ctx context.Context
+	if valueFormat != "STRING" {
+		// Initialize ccloud client for retrieving SR cluster info.
+		err := initCCloudClient(h)
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+		// Only initialize client and context when schema is specified.
+		srClient, ctx, err = sr.GetApiClient(cmd, nil, h.Config, h.Version)
+		if err != nil {
+			return err
+		}
+	} else {
+		srClient, ctx = nil, nil
+	}
+
 	pcmd.ErrPrintln(cmd, errors.StartingConsumerMsg)
 
-	err = consumer.Consume(context.Background(), []string{topic}, &GroupHandler{Out: cmd.OutOrStdout()})
-	_, err = errors.CatchTopicNotExistError(err, topic, cluster.ID)
-	return err
+	dir := filepath.Join(os.TempDir(), "ccloud-schema")
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		err = os.Mkdir(dir, 0755)
+		if err != nil {
+			return errors.HandleCommon(err, cmd)
+		}
+	}
+
+	groupHandler := &GroupHandler{
+		SrClient:   srClient,
+		Ctx:        ctx,
+		Format:     valueFormat,
+		Out:        cmd.OutOrStdout(),
+		Properties: ConsumerProperties{PrintKey: printKey, Delimiter: delimiter, SchemaPath: dir},
+	}
+	err = consumer.Consume(context.Background(), []string{topic}, groupHandler)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	err = os.RemoveAll(dir)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+	return nil
 }
 
 func toMap(configs []string) (map[string]string, error) {

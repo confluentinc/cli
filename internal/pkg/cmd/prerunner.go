@@ -299,7 +299,7 @@ func (r *PreRun) checkUserAuthentication(ctx *DynamicContext, cmd *cobra.Command
 
 // if context is authenticated, client is created and used to for DynamicContext.FindKafkaCluster for finding active cluster
 func (r *PreRun) getClusterIdForAuthenticatedUser(command *HasAPIKeyCLICommand, ctx *DynamicContext, cmd *cobra.Command) (string, error) {
-	client, err := r.createCCloudClient(ctx, cmd, command.Version)
+	client, err := CreateCCloudClient(ctx, cmd, command.Version)
 	if err != nil {
 		return "", err
 	}
@@ -353,7 +353,7 @@ func (r *PreRun) setClients(cliCmd *AuthenticatedCLICommand) error {
 		return err
 	}
 	if r.CLIName == "ccloud" {
-		ccloudClient, err := r.createCCloudClient(ctx, cliCmd.Command, cliCmd.Version)
+		ccloudClient, err := CreateCCloudClient(ctx, cliCmd.Command, cliCmd.Version)
 		if err != nil {
 			return err
 		}
@@ -366,7 +366,7 @@ func (r *PreRun) setClients(cliCmd *AuthenticatedCLICommand) error {
 	return nil
 }
 
-func (r *PreRun) createCCloudClient(ctx *DynamicContext, cmd *cobra.Command, ver *version.Version) (*ccloud.Client, error) {
+func CreateCCloudClient(ctx *DynamicContext, cmd *cobra.Command, ver *version.Version) (*ccloud.Client, error) {
 	var baseURL string
 	var authToken string
 	var logger *log.Logger
