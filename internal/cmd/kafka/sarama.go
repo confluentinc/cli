@@ -96,7 +96,7 @@ func (h *GroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sara
 		}
 
 		tempStorePath := ""
-		if h.Format != "STRING" {
+		if h.Format != "RAW" {
 			schemaPath, err := h.RequestSchema(value)
 			if err != nil {
 				return err

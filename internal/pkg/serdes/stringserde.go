@@ -1,23 +1,23 @@
 package serdes
 
-type StringSerializationProvider uint32
+type RawSerializationProvider uint32
 
-func (stringProvider *StringSerializationProvider) getSchemaName() string {
-	return "STRING"
+func (rawProvider *RawSerializationProvider) GetSchemaName() string {
+	return "RAW"
 }
 
-func (stringProvider *StringSerializationProvider) encode(str string, schemaPath string) ([]byte, error) {
+func (rawProvider *RawSerializationProvider) encode(str string, schemaPath string) ([]byte, error) {
 	// Simply returns bytes in string.
 	return []byte(str), nil
 }
 
-type StringDeserializationProvider uint32
+type RawDeserializationProvider uint32
 
-func (stringProvider *StringDeserializationProvider) getSchemaName() string {
-	return "STRING"
+func (rawProvider *RawDeserializationProvider) GetSchemaName() string {
+	return "RAW"
 }
 
-func (stringProvider *StringDeserializationProvider) decode(data []byte, schemaPath string) (string, error) {
+func (rawProvider *RawDeserializationProvider) decode(data []byte, schemaPath string) (string, error) {
 	// Simply wraps up bytes in string and returns.
 	return string(data), nil
 }

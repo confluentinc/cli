@@ -91,7 +91,7 @@ func (h *hasAPIKeyTopicCommand) init() {
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().String("delimiter", ":", "The key/value delimiter.")
-	cmd.Flags().String("value-format", "STRING", "Format of message value.")
+	cmd.Flags().String("value-format", "RAW", "Format of message value.")
 	cmd.Flags().String("schema", "", "The path to the schema file.")
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
 	cmd.Flags().String("resource", "", "Resource name.")
@@ -113,7 +113,7 @@ func (h *hasAPIKeyTopicCommand) init() {
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().String("group", fmt.Sprintf("confluent_cli_consumer_%s", uuid.New()), "Consumer group ID.")
 	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
-	cmd.Flags().String("value-format", "STRING", "Format of message value.")
+	cmd.Flags().String("value-format", "RAW", "Format of message value.")
 	cmd.Flags().Bool("print-key", false, "Print key of the message.")
 	cmd.Flags().String("delimiter", "\t", "The key/value delimiter.")
 	cmd.Flags().SortFlags = false
@@ -443,13 +443,13 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	metaInfo := []byte{}
 
 	// Registering schema when specified, and fill metaInfo array.
-	if valueFormat != "STRING" && len(schemaPath) > 0 {
+	if valueFormat != "RAW" && len(schemaPath) > 0 {
 		// Initialize ccloud client for retrieving SR cluster info.
 		err := initCCloudClient(h)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
-		info, err := h.registerSchema(cmd, subject, valueFormat, schemaPath)
+		info, err := h.registerSchema(cmd, subject, serializationProvider.GetSchemaName(), schemaPath)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
@@ -601,7 +601,7 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 
 	var srClient *srsdk.APIClient
 	var ctx context.Context
-	if valueFormat != "STRING" {
+	if valueFormat != "RAW" {
 		// Initialize ccloud client for retrieving SR cluster info.
 		err := initCCloudClient(h)
 		if err != nil {

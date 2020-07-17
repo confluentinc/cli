@@ -12,8 +12,8 @@ func GetSerializationProvider(valueFormat string) (SerializationProvider, error)
 	//} else if valueFormat == "JSON" {
 	//	provider = new(JsonSerializationProvider)
 	//} else if valueFormat == "STRING" {
-	if valueFormat == "STRING" {
-		provider = new(StringSerializationProvider)
+	if valueFormat == "RAW" {
+		provider = new(RawSerializationProvider)
 	} else {
 		return nil, errors.New("Unknown value format type.")
 	}
@@ -30,8 +30,8 @@ func GetDeserializationProvider(valueFormat string) (DeserializationProvider, er
 	//} else if valueFormat == "JSON" {
 	//	provider = new(JsonDeserializationProvider)
 	//} else if valueFormat == "STRING" {
-	if valueFormat == "STRING" {
-		provider = new(StringDeserializationProvider)
+	if valueFormat == "RAW" {
+		provider = new(RawDeserializationProvider)
 	} else {
 		return nil, errors.New("Unknown value format type.")
 	}
@@ -40,7 +40,7 @@ func GetDeserializationProvider(valueFormat string) (DeserializationProvider, er
 
 type SerializationProvider interface {
 	encode(string, string) ([]byte, error)
-	getSchemaName() string
+	GetSchemaName() string
 }
 
 func Serialize(provider SerializationProvider, str string, schemaPath string) ([]byte, error) {
@@ -49,7 +49,7 @@ func Serialize(provider SerializationProvider, str string, schemaPath string) ([
 
 type DeserializationProvider interface {
 	decode([]byte, string) (string, error)
-	getSchemaName() string
+	GetSchemaName() string
 }
 
 func Deserialize(provider DeserializationProvider, data []byte, schemaPath string) (string, error) {

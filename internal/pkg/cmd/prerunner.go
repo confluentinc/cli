@@ -304,6 +304,7 @@ func (r *PreRun) getClusterIdForAuthenticatedUser(command *HasAPIKeyCLICommand, 
 		return "", err
 	}
 	ctx.client = client
+	command.Config.Client = client
 	cluster, err := ctx.GetKafkaClusterForCommand(cmd)
 	if err != nil {
 		return "", err
