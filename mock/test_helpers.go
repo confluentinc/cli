@@ -20,7 +20,7 @@ func NewDummyAnalyticsMock() *AnalyticsClient {
 
 func NewPromptMock(msg string) *Prompt {
 	return &Prompt{
-		ReadStringFunc: func(delim byte) (string, error) {
+		ReadLineFunc: func() (string, error) {
 			return msg, nil
 		},
 	}

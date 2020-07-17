@@ -8,9 +8,8 @@ import (
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
-	"github.com/spf13/cobra"
-
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
@@ -19,6 +18,7 @@ import (
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
@@ -242,22 +242,23 @@ func (a *loginCommand) credentials(cmd *cobra.Command, userField string, cloudCl
 	if len(email) == 0 {
 		email = os.Getenv("XX_CONFLUENT_USERNAME")
 	}
+
 	password := os.Getenv("XX_CCLOUD_PASSWORD")
 	if len(password) == 0 {
 		password = os.Getenv("XX_CONFLUENT_PASSWORD")
 	}
+
 	if len(email) == 0 || len(password) == 0 {
-		pcmd.Println(cmd, "Enter your Confluent credentials:")
-	}
-	if len(email) == 0 {
-		pcmd.Print(cmd, userField+": ")
-		emailFromPrompt, err := a.prompt.ReadString('\n')
-		if err != nil {
-			return "", "", err
-		}
-		email = strings.TrimSpace(emailFromPrompt)
+		cmd.Println("Enter your Confluent credentials:")
 	}
 
+	if len(email) == 0 {
+		f := form.New(form.Field{ID: "email", Prompt: userField})
+		if err := f.Prompt(cmd, a.prompt); err != nil {
+			return "", "", err
+		}
+		email = f.Responses["email"].(string)
+	}
 	a.Logger.Trace("Successfully obtained email")
 
 	// In the case of MDS login (`confluent`) or in the case of some of the mocks,
@@ -275,16 +276,12 @@ func (a *loginCommand) credentials(cmd *cobra.Command, userField string, cloudCl
 	}
 
 	if len(password) == 0 {
-		var err error
-		pcmd.Print(cmd, "Password: ")
-		bytePassword, err := a.prompt.ReadPassword()
-		if err != nil {
+		f := form.New(form.Field{ID: "password", Prompt: "Password", IsHidden: true})
+		if err := f.Prompt(cmd, a.prompt); err != nil {
 			return "", "", err
 		}
-		pcmd.Println(cmd)
-		password = string(bytePassword)
+		password = f.Responses["password"].(string)
 	}
-
 	a.Logger.Trace("Successfully obtained password")
 
 	return email, password, nil

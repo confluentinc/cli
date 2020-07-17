@@ -59,18 +59,16 @@ type command struct {
 	logger  *log.Logger
 	client  update.Client
 	// for testing
-	prompt          pcmd.Prompt
 	analyticsClient analytics.Client
 }
 
 // New returns the command for the built-in updater.
-func New(cliName string, logger *log.Logger, version *cliVersion.Version, prompt pcmd.Prompt,
+func New(cliName string, logger *log.Logger, version *cliVersion.Version,
 	client update.Client, analytics analytics.Client) *cobra.Command {
 	cmd := &command{
 		cliName:         cliName,
 		version:         version,
 		logger:          logger,
-		prompt:          prompt,
 		client:          client,
 		analyticsClient: analytics,
 	}
@@ -85,7 +83,7 @@ func (c *command) init() {
 		RunE:  pcmd.NewCLIRunE(c.update),
 		Args:  cobra.NoArgs,
 	}
-	c.Command.Flags().Bool("yes", false, "Update without prompting.")
+	c.Command.Flags().BoolP("yes", "y", false, "Update without prompting.")
 	c.Command.Flags().SortFlags = false
 }
 
@@ -117,14 +115,13 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 
 	releaseNotes := c.getReleaseNotes(latestVersion)
 
-	// HACK: our packaging doesn't include the "v" in the version, so we add it back so  that the prompt is consistent
+	// HACK: our packaging doesn't include the "v" in the version, so we add it back so that the prompt is consistent
 	//   example S3 path: ccloud-cli/binaries/0.50.0/ccloud_0.50.0_darwin_amd64
 	// Without this hack, the prompt looks like
 	//   Current Version: v0.0.0
 	//   Latest Version:  0.50.0
 	// Unfortunately the "UpdateBinary" output will still show 0.50.0, and we can't hack that since it must match S3
-	doUpdate := c.client.PromptToDownload(c.cliName, c.version.Version, "v"+latestVersion, releaseNotes, !updateYes)
-	if !doUpdate {
+	if !c.client.PromptToDownload(c.cliName, c.version.Version, "v"+latestVersion, releaseNotes, !updateYes) {
 		return nil
 	}
 

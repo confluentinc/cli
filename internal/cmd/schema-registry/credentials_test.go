@@ -3,9 +3,8 @@ package schema_registry
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/cli/mock"
 )
@@ -22,7 +21,7 @@ func TestSrAuthFound(t *testing.T) {
 	srCluster, err := currCtx.SchemaRegistryCluster(cmd)
 	req.NoError(err)
 
-	srAuth, didPromptUser, err := getSchemaRegistryAuth(srCluster.SrCredentials, false)
+	srAuth, didPromptUser, err := getSchemaRegistryAuth(cmd, srCluster.SrCredentials, false)
 	req.NoError(err)
 
 	req.False(didPromptUser)

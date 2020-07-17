@@ -2,14 +2,13 @@ package feedback
 
 import (
 	"os"
-	"strings"
-
-	"github.com/confluentinc/cli/internal/pkg/errors"
 
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/form"
 )
 
 type command struct {
@@ -39,16 +38,15 @@ func NewFeedbackCmdWithPrompt(cliName string, prerunner pcmd.PreRunner, analytic
 }
 
 func (c *command) feedbackRunE(cmd *cobra.Command, _ []string) error {
-	pcmd.Print(cmd, "Enter feedback: ")
-	msg, err := c.prompt.ReadString('\n')
-	if err != nil {
+	f := form.New(form.Field{ID: "feedback", Prompt: "Enter feedback"})
+	if err := f.Prompt(cmd, c.prompt); err != nil {
 		return err
 	}
-	msg = strings.TrimSuffix(msg, "\n")
+	msg := f.Responses["feedback"].(string)
 
 	if len(msg) > 0 {
 		c.analyticsClient.SetSpecialProperty(analytics.FeedbackPropertiesKey, msg)
-		pcmd.Println(cmd, errors.ThanksForFeedbackMsg)
+		cmd.Println(errors.ThanksForFeedbackMsg)
 	}
 	return nil
 }

@@ -170,23 +170,31 @@ func printOptions(buf *bytes.Buffer, cmd *cobra.Command) error {
 
 func printWarnings(buf *bytes.Buffer, cmd *cobra.Command, depth int) {
 	if strings.HasPrefix(cmd.CommandPath(), "confluent local") {
-		buf.WriteString(sphinxInclude(
-			fmt.Sprintf("%sincludes/cli.rst", strings.Repeat("../", depth+1)),
-			map[string]string{
-				"start-after": "cli_limitations_start",
-				"end-before":  "cli_limitations_end",
-			},
-		))
+		include := strings.Repeat("../", depth+1) + "includes/cli.rst"
+		args := map[string]string{
+			"start-after": "cli_limitations_start",
+			"end-before":  "cli_limitations_end",
+		}
+		buf.WriteString(sphinxBlock("include", include, args))
 	}
 }
 
 func printTips(buf *bytes.Buffer, cmd *cobra.Command, depth int) {
 	if strings.HasPrefix(cmd.CommandPath(), "confluent local") {
-		buf.WriteString(sphinxInclude(fmt.Sprintf("%sincludes/path-set-cli.rst", strings.Repeat("../", depth+1)), nil))
+		include := strings.Repeat("../", depth+1) + "includes/path-set-cli.rst"
+		buf.WriteString(sphinxBlock("include", include, nil))
+	}
+
+	if strings.HasPrefix(cmd.CommandPath(), "confluent secret") {
+		ref := SphinxRef("secrets-examples")
+		tip := fmt.Sprintf("For examples, see %s.", ref)
+		buf.WriteString(sphinxBlock("tip", tip, nil))
 	}
 
 	if cmd.CommandPath() == "confluent iam rolebinding create" {
-		buf.WriteString(sphinxNote("If you need to troubleshoot when setting up role bindings, it may be helpful to view audit logs on the fly to identify authorization events for specific principals, resources, or operations. For details, refer to :ref:`view-audit-logs-on-the-fly`."))
+		ref := SphinxRef("view-audit-logs-on-the-fly")
+		note := fmt.Sprintf("If you need to troubleshoot when setting up role bindings, it may be helpful to view audit logs on the fly to identify authorization events for specific principals, resources, or operations. For details, refer to %s.", ref)
+		buf.WriteString(sphinxBlock("note", note, nil))
 	}
 }
 
@@ -194,18 +202,22 @@ func SphinxRef(ref string) string {
 	return fmt.Sprintf(":ref:`%s`", ref)
 }
 
-func sphinxInclude(include string, args map[string]string) string {
+func sphinxBlock(key, val string, args map[string]string) string {
 	str := strings.Builder{}
 
-	str.WriteString(fmt.Sprintf(".. include:: %s\n", include))
-	for key, val := range args {
+	str.WriteString(fmt.Sprintf(".. %s:: %s\n", key, val))
+
+	var keys []string
+	for key, _ := range args {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	for _, key := range keys {
+		val := args[key]
 		str.WriteString(fmt.Sprintf("  :%s: %s\n", key, val))
 	}
+
 	str.WriteString("\n")
 
 	return str.String()
-}
-
-func sphinxNote(note string) string {
-	return fmt.Sprintf(".. note::\n\n  %s\n\n", note)
 }
