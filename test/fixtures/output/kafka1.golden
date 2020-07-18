@@ -3,7 +3,7 @@ Usage:
   ccloud kafka cluster create <name> [flags]
 
 Examples:
-Create a new dedicated cluster that uses a customer-managed encryption key in AWS.
+Create a new dedicated cluster that uses a customer-managed encryption key in AWS:
 
 ::
 
