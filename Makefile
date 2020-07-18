@@ -4,7 +4,7 @@ GIT_REMOTE_NAME ?= origin
 MASTER_BRANCH   ?= master
 RELEASE_BRANCH  ?= master
 
-DOCS_BRANCH     ?= 5.5.0-post
+DOCS_BRANCH     ?= 5.5.1-post
 
 include ./semver.mk
 
@@ -280,7 +280,7 @@ publish-docs: docs
 		make publish-docs-internal BASE_DIR=$${TMP_DIR} CLI_NAME=ccloud || exit 1; \
 	    make publish-docs-internal BASE_DIR=$${TMP_DIR} CLI_NAME=confluent || exit 1; \
 		cd $${TMP_DIR} || exit 1; \
-		sed -i '' 's/default "confluent_cli_consumer_[^"]*"/default "confluent_cli_consumer_<uuid>"/' cloud/cli/command-reference/ccloud_kafka_topic_consume.rst || exit 1; \
+		sed -i '' 's/default "confluent_cli_consumer_[^"]*"/default "confluent_cli_consumer_<uuid>"/' cloud/cli/command-reference/kafka/topic/ccloud_kafka_topic_consume.rst || exit 1; \
 		git add . || exit 1; \
 		git diff --cached --exit-code >/dev/null && echo "nothing to update for docs" && exit 0; \
 		git commit -m "chore: updating CLI docs for $(VERSION)" || exit 1; \
@@ -300,12 +300,12 @@ else ifeq (confluent,$(CLI_NAME))
 else
 	$(error CLI_NAME is not set correctly - must be one of "confluent" or "ccloud")
 endif
-	rm -R $(BASE_DIR)/$(DOCS_DIR)/*.rst
-	cp -R $(GOPATH)/src/github.com/confluentinc/cli/docs/$(CLI_NAME)/*.rst $(BASE_DIR)/$(DOCS_DIR)
+	rm -R $(BASE_DIR)/$(DOCS_DIR)/
+	cp -R $(GOPATH)/src/github.com/confluentinc/cli/docs/$(CLI_NAME)/ $(BASE_DIR)/$(DOCS_DIR)/
 
 .PHONY: clean-docs
 clean-docs:
-	rm docs/*/*.rst
+	rm -R docs/
 
 .PHONY: release-notes-prep
 release-notes-prep:
