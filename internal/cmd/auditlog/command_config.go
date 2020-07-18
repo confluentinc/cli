@@ -73,9 +73,9 @@ func (c *configCommand) createContext() context.Context {
 }
 
 func (c *configCommand) describe(cmd *cobra.Command, _ []string) error {
-	spec, _, err := c.MDSClient.AuditLogConfigurationApi.GetConfig(c.createContext())
+	spec, response, err := c.MDSClient.AuditLogConfigurationApi.GetConfig(c.createContext())
 	if err != nil {
-		return err
+		return HandleMdsAuditLogApiError(cmd, err, response)
 	}
 	enc := json.NewEncoder(c.OutOrStdout())
 	enc.SetIndent("", "  ")

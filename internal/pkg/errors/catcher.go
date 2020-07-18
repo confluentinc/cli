@@ -17,6 +17,9 @@ import (
 */
 
 func catchTypedErrors(err error) error {
+	if err == nil {
+		return nil
+	}
 	if typedErr, ok := err.(CLITypedError); ok {
 		return typedErr.UserFacingError()
 	}
@@ -24,6 +27,9 @@ func catchTypedErrors(err error) error {
 }
 
 func catchMDSErrors(err error) error {
+	if err == nil {
+		return nil
+	}
 	e, ok := err.(mds.GenericOpenAPIError)
 	if ok {
 		return Errorf(GenericOpenAPIErrorMsg, e.Error(), string(e.Body()))
@@ -35,6 +41,9 @@ func catchMDSErrors(err error) error {
 // This catcher function should then be used last to not accidentally convert errors that
 // are supposed to be caught by more specific catchers.
 func catchCoreV1Errors(err error) error {
+	if err == nil {
+		return nil
+	}
 	e, ok := err.(*corev1.Error)
 	if ok {
 		var result error
@@ -48,6 +57,9 @@ func catchCoreV1Errors(err error) error {
 }
 
 func catchCCloudTokenErrors(err error) error {
+	if err == nil {
+		return nil
+	}
 	switch err.(type) {
 	case *ccloud.InvalidLoginError:
 		return NewErrorWithSuggestions(InvalidLoginErrorMsg, CCloudInvalidLoginSuggestions)
@@ -66,6 +78,9 @@ Error: 1 error occurred:
 	* error updating topic ENTERPRISE.LOANALT2-ALTERNATE-LOAN-MASTER-2.DLQ: reply error: invalid character '<' looking for beginning of value
 */
 func catchCCloudBackendUnmarshallingError(err error) error {
+	if err == nil {
+		return nil
+	}
 	backendUnmarshllingErrorRegex := regexp.MustCompile(`reply error: invalid character '.' looking for beginning of value`)
 	if backendUnmarshllingErrorRegex.MatchString(err.Error()) {
 		errorMsg := fmt.Sprintf(prefixFormat, UnexpectedBackendOutputPrefix, BackendUnmarshallingErrorMsg)
@@ -83,6 +98,9 @@ Error: 1 error occurred:
 	* error checking email: User Not Found
 */
 func CatchEmailNotFoundError(err error, email string) error {
+	if err == nil {
+		return nil
+	}
 	if strings.Contains(err.Error(), "error checking email: User Not Found") {
 		errorMsg := fmt.Sprintf(InvalidEmailErrorMsg, email)
 		return NewErrorWithSuggestions(errorMsg, InvalidEmailSuggestions)
@@ -91,6 +109,9 @@ func CatchEmailNotFoundError(err error, email string) error {
 }
 
 func CatchResourceNotFoundError(err error, resourceId string) error {
+	if err == nil {
+		return nil
+	}
 	_, isKafkaNotFound := err.(*KafkaClusterNotFoundError)
 	if isResourceNotFoundError(err) || isKafkaNotFound {
 		errorMsg := fmt.Sprintf(ResourceNotFoundErrorMsg, resourceId)
@@ -101,6 +122,9 @@ func CatchResourceNotFoundError(err error, resourceId string) error {
 }
 
 func CatchKafkaNotFoundError(err error, clusterId string) error {
+	if err == nil {
+		return nil
+	}
 	if isResourceNotFoundError(err) {
 		return &KafkaClusterNotFoundError{ClusterID: clusterId}
 	}
@@ -108,6 +132,9 @@ func CatchKafkaNotFoundError(err error, clusterId string) error {
 }
 
 func CatchKSQLNotFoundError(err error, clusterId string) error {
+	if err == nil {
+		return nil
+	}
 	if isResourceNotFoundError(err) {
 		errorMsg := fmt.Sprintf(ResourceNotFoundErrorMsg, clusterId)
 		return NewErrorWithSuggestions(errorMsg, KSQLNotFoundSuggestions)
@@ -116,6 +143,9 @@ func CatchKSQLNotFoundError(err error, clusterId string) error {
 }
 
 func CatchSchemaRegistryNotFoundError(err error, clusterId string) error {
+	if err == nil {
+		return nil
+	}
 	if isResourceNotFoundError(err) {
 		errorMsg := fmt.Sprintf(ResourceNotFoundErrorMsg, clusterId)
 		return NewErrorWithSuggestions(errorMsg, SRNotFoundSuggestions)
@@ -143,6 +173,9 @@ Error: 1 error occurred:
 	* error creating topic bob: Topic 'bob' already exists.
 */
 func CatchTopicExistsError(err error, clusterId string, topicName string, ifNotExistsFlag bool) error {
+	if err == nil {
+		return nil
+	}
 	compiledRegex := regexp.MustCompile(`error creating topic .*: Topic '.*' already exists\.`)
 	if compiledRegex.MatchString(err.Error()) {
 		if ifNotExistsFlag {
@@ -162,6 +195,9 @@ Error: 1 error occurred:
 	* error creating topic test-topic: Authentication failed: 1 extensions are invalid! They are: logicalCluster: Authentication failed
 */
 func CatchClusterNotReadyError(err error, clusterId string) error {
+	if err == nil {
+		return nil
+	}
 	if strings.Contains(err.Error(), "Authentication failed: 1 extensions are invalid! They are: logicalCluster: Authentication failed") {
 		errorMsg := fmt.Sprintf(KafkaNotReadyErrorMsg, clusterId)
 		return NewErrorWithSuggestions(errorMsg, KafkaNotReadySuggestions)
@@ -177,6 +213,9 @@ func CatchClusterNotReadyError(err error, clusterId string) error {
 kafka server: Request was for a topic or partition that does not exist on this broker.
 */
 func CatchTopicNotExistError(err error, topicName string, clusterId string) (bool, error) {
+	if err == nil {
+		return false, nil
+	}
 	if strings.Contains(err.Error(), "kafka server: Request was for a topic or partition that does not exist on this broker.") {
 		errorMsg := fmt.Sprintf(TopicNotExistsErrorMsg, topicName)
 		suggestionsMsg := fmt.Sprintf(TopicNotExistsSuggestions, clusterId, clusterId)
@@ -189,6 +228,9 @@ func CatchTopicNotExistError(err error, topicName string, clusterId string) (boo
 Error: "kafka: client has run out of available brokers to talk to (Is your cluster reachable?)"
 */
 func CatchClusterUnreachableError(err error, clusterId string, apiKey string) error {
+	if err == nil {
+		return nil
+	}
 	if strings.Contains(err.Error(), "kafka: client has run out of available brokers to talk to (Is your cluster reachable?)") {
 		suggestionsMsg := fmt.Sprintf(UnableToConnectToKafkaSuggestions, clusterId, apiKey, apiKey, clusterId)
 		return NewErrorWithSuggestions(UnableToConnectToKafkaErrorMsg, suggestionsMsg)

@@ -300,8 +300,8 @@ else ifeq (confluent,$(CLI_NAME))
 else
 	$(error CLI_NAME is not set correctly - must be one of "confluent" or "ccloud")
 endif
-	rm $(BASE_DIR)/$(DOCS_DIR)/*.rst
-	cp $(GOPATH)/src/github.com/confluentinc/cli/docs/$(CLI_NAME)/*.rst $(BASE_DIR)/$(DOCS_DIR)
+	rm -R $(BASE_DIR)/$(DOCS_DIR)/*.rst
+	cp -R $(GOPATH)/src/github.com/confluentinc/cli/docs/$(CLI_NAME)/*.rst $(BASE_DIR)/$(DOCS_DIR)
 
 .PHONY: clean-docs
 clean-docs:
