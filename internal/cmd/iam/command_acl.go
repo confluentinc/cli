@@ -38,20 +38,20 @@ func NewACLCommand(cliName string, prerunner pcmd.PreRunner) *cobra.Command {
 func (c *aclCommand) init(cliName string) {
 	cmd := &cobra.Command{
 		Use:   "create",
+		Short: "Create a Kafka ACL.",
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.create),
-		Short: "Create a Kafka ACL.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Desc: "Create an ACL that grants the specified user READ permission to the specified consumer group in the specified Kafka cluster:",
+				Text: "Create an ACL that grants the specified user READ permission to the specified consumer group in the specified Kafka cluster:",
 				Code: cliName + " iam acl create --allow --principal User:User1 --operation READ --consumer-group java_example_group_1 --kafka-cluster-id <kafka-cluster-id>",
 			},
 			examples.Example{
-				Desc: "Create an ACL that grants the specified user WRITE permission on all topics in the specified Kafka cluster.",
+				Text: "Create an ACL that grants the specified user WRITE permission on all topics in the specified Kafka cluster.",
 				Code: cliName + " iam acl create --allow --principal User:User1 --operation WRITE --topic '*' --kafka-cluster-id <kafka-cluster-id>",
 			},
 			examples.Example{
-				Desc: "Create an ACL that assigns a group READ access to all topics that use the specified prefix in the specified Kafka cluster.",
+				Text: "Create an ACL that assigns a group READ access to all topics that use the specified prefix in the specified Kafka cluster.",
 				Code: cliName + " iam acl create --allow --principal Group:Finance --operation READ --topic financial --prefix --kafka-cluster-id <kafka-cluster-id>",
 			},
 		),
@@ -63,12 +63,12 @@ func (c *aclCommand) init(cliName string) {
 
 	cmd = &cobra.Command{
 		Use:   "delete",
+		Short: "Delete a Kafka ACL.",
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.delete),
-		Short: "Delete a Kafka ACL.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Desc: "Delete an ACL that granted the specified user access to the Test topic in the specified cluster:",
+				Text: "Delete an ACL that granted the specified user access to the Test topic in the specified cluster:",
 				Code: cliName + " iam acl delete --kafka-cluster-id <kafka-cluster-id> --allow --principal User:Jane --topic Test",
 			},
 		),
@@ -80,16 +80,16 @@ func (c *aclCommand) init(cliName string) {
 
 	cmd = &cobra.Command{
 		Use:   "list",
+		Short: "List Kafka ACLs for a resource.",
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.list),
-		Short: "List Kafka ACLs for a resource.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Desc: "List all the ACLs for the specified Kafka cluster:",
+				Text: "List all the ACLs for the specified Kafka cluster:",
 				Code: cliName + " iam acl list --kafka-cluster-id <kafka-cluster-id>",
 			},
 			examples.Example{
-				Desc: "List all the ACLs for the specified cluster that include allow permissions for the user Jane:",
+				Text: "List all the ACLs for the specified cluster that include allow permissions for the user Jane:",
 				Code: cliName + " iam acl list --kafka-cluster-id <kafka-cluster-id> --allow --principal User:Jane",
 			},
 		),

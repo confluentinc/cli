@@ -1,6 +1,7 @@
 package feedback
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -29,9 +30,9 @@ func NewFeedbackCmdWithPrompt(cliName string, prerunner pcmd.PreRunner, analytic
 	cmd := pcmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "feedback",
-			Short: "Submit feedback about the " + cliName + " CLI.",
-			RunE:  pcmd.NewCLIRunE(c.feedbackRunE),
+			Short: fmt.Sprintf("Submit feedback about the %s CLI.", cliName),
 			Args:  cobra.NoArgs,
+			RunE:  pcmd.NewCLIRunE(c.feedbackRunE),
 		}, prerunner)
 
 	return cmd.Command

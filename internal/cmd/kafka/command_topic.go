@@ -78,8 +78,8 @@ func (h *hasAPIKeyTopicCommand) init() {
 	cmd := &cobra.Command{
 		Use:   "produce <topic>",
 		Short: "Produce messages to a Kafka topic.",
-		RunE:  pcmd.NewCLIRunE(h.produce),
 		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(h.produce),
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().String("delimiter", ":", "The key/value delimiter.")
@@ -88,12 +88,12 @@ func (h *hasAPIKeyTopicCommand) init() {
 
 	cmd = &cobra.Command{
 		Use:   "consume <topic>",
+		Short: "Consume messages from a Kafka topic.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(h.consume),
-		Short: "Consume messages from a Kafka topic.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Desc: "Consume items from the ``my_topic`` topic and press ``Ctrl+C`` to exit.",
+				Text: "Consume items from the ``my_topic`` topic and press ``Ctrl+C`` to exit.",
 				Code: "ccloud kafka topic consume -b my_topic",
 			},
 		),
@@ -108,12 +108,12 @@ func (h *hasAPIKeyTopicCommand) init() {
 func (a *authenticatedTopicCommand) init() {
 	cmd := &cobra.Command{
 		Use:   "list",
+		Short: "List Kafka topics.",
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(a.list),
-		Short: "List Kafka topics.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Desc: "List all topics.",
+				Text: "List all topics.",
 				Code: "ccloud kafka topic list",
 			},
 		),
@@ -125,12 +125,12 @@ func (a *authenticatedTopicCommand) init() {
 
 	cmd = &cobra.Command{
 		Use:   "create <topic>",
+		Short: "Create a Kafka topic.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(a.create),
-		Short: "Create a Kafka topic.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Desc: "Create a topic named ``my_topic`` with default options.",
+				Text: "Create a topic named ``my_topic`` with default options.",
 				Code: "ccloud kafka topic create my_topic",
 			},
 		),
@@ -145,12 +145,12 @@ func (a *authenticatedTopicCommand) init() {
 
 	cmd = &cobra.Command{
 		Use:   "describe <topic>",
+		Short: "Describe a Kafka topic.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(a.describe),
-		Short: "Describe a Kafka topic.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Desc: "Describe the ``my_topic`` topic.",
+				Text: "Describe the ``my_topic`` topic.",
 				Code: "ccloud kafka topic describe my_topic",
 			},
 		),
@@ -162,12 +162,12 @@ func (a *authenticatedTopicCommand) init() {
 
 	cmd = &cobra.Command{
 		Use:   "update <topic>",
+		Short: "Update a Kafka topic.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(a.update),
-		Short: "Update a Kafka topic.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Desc: "Modify the ``my_topic`` topic to have a retention period of 3 days (259200000 milliseconds).",
+				Text: "Modify the ``my_topic`` topic to have a retention period of 3 days (259200000 milliseconds).",
 				Code: `ccloud kafka topic update my_topic --config="retention.ms=259200000"`,
 			},
 		),
@@ -180,12 +180,12 @@ func (a *authenticatedTopicCommand) init() {
 
 	cmd = &cobra.Command{
 		Use:   "delete <topic>",
+		Short: "Delete a Kafka topic.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(a.delete),
-		Short: "Delete a Kafka topic.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Desc: "Delete the topics ``my_topic`` and ``my_topic_avro``. Use this command carefully as data loss can occur.",
+				Text: "Delete the topics ``my_topic`` and ``my_topic_avro``. Use this command carefully as data loss can occur.",
 				Code: "ccloud kafka topic delete my_topic\nccloud kafka topic delete my_topic_avro",
 			},
 		),

@@ -38,16 +38,16 @@ func NewSchemaCommand(cliName string, prerunner pcmd.PreRunner, srClient *srsdk.
 func (c *schemaCommand) init(cliName string) {
 	cmd := &cobra.Command{
 		Use:   "create --subject <subject> --schema <schema-file> --type <schema-type> --refs <ref-file>",
+		Short: "Create a schema.",
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.create),
-		Short: "Create a schema.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Desc: "Register a new schema:",
+				Text: "Register a new schema:",
 				Code: fmt.Sprintf("%s schema-registry schema create --subject payments --schema schemafilepath", cliName),
 			},
 			examples.Example{
-				Desc: "Where schemafilepath may include these contents: (For more information on schema types, see https://docs.confluent.io/current/schema-registry/serdes-develop/index.html. For more information on schema references, see https://docs.confluent.io/current/schema-registry/serdes-develop/index.html#schema-references.)",
+				Text: "Where schemafilepath may include these contents:",
 				Code: `{
 	"type" : "record",
 	"namespace" : "Example",
@@ -57,6 +57,12 @@ func (c *schemaCommand) init(cliName string) {
 		{ "name" : "Age" , "type" : "int" }
 	]
 }`,
+			},
+			examples.Example{
+				Text: "For more information on schema types, see https://docs.confluent.io/current/schema-registry/serdes-develop/index.html.",
+			},
+			examples.Example{
+				Text: "For more information on schema references, see https://docs.confluent.io/current/schema-registry/serdes-develop/index.html#schema-references.",
 			},
 		),
 	}
@@ -72,14 +78,14 @@ func (c *schemaCommand) init(cliName string) {
 	cmd = &cobra.Command{
 		Use:   "delete --subject <subject> --version <version> --permanent",
 		Short: "Delete one or more schemas.",
+		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(c.delete),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Desc: "Delete one or more topics. This command should only be used in extreme circumstances.",
+				Text: "Delete one or more topics. This command should only be used in extreme circumstances.",
 				Code: fmt.Sprintf("%s schema-registry schema delete --subject payments --version latest", cliName),
 			},
 		),
-		RunE: pcmd.NewCLIRunE(c.delete),
-		Args: cobra.NoArgs,
 	}
 	RequireSubjectFlag(cmd)
 	cmd.Flags().StringP("version", "V", "", "Version of the schema. Can be a specific version, 'all', or 'latest'.")
@@ -90,17 +96,17 @@ func (c *schemaCommand) init(cliName string) {
 
 	cmd = &cobra.Command{
 		Use:     "describe <schema-id> [--subject <subject>] [--version <version>]",
+		Short:   "Get schema either by schema-id, or by subject/version.",
 		Args:    cobra.MaximumNArgs(1),
 		PreRunE: pcmd.NewCLIPreRunnerE(c.preDescribe),
 		RunE:    pcmd.NewCLIRunE(c.describe),
-		Short:   "Get schema either by schema-id, or by subject/version.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Desc: "Describe the schema string by schema ID:",
+				Text: "Describe the schema string by schema ID:",
 				Code: fmt.Sprintf("%s schema-registry schema describe 1337", cliName),
 			},
 			examples.Example{
-				Desc: "Describe the schema by both subject and version:",
+				Text: "Describe the schema by both subject and version:",
 				Code: fmt.Sprintf("%s schema-registry describe --subject payments --version latest", cliName),
 			},
 		),

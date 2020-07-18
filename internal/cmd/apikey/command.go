@@ -70,8 +70,8 @@ func (c *command) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List the API keys.",
-		RunE:  pcmd.NewCLIRunE(c.list),
 		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(c.list),
 	}
 	listCmd.Flags().String(resourceFlagName, "", "The resource ID to filter by. Use \"cloud\" to show only Cloud API keys.")
 	listCmd.Flags().Bool("current-user", false, "Show only API keys belonging to current user.")
@@ -83,8 +83,8 @@ func (c *command) init() {
 	createCmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create API keys for a given resource.",
-		RunE:  pcmd.NewCLIRunE(c.create),
 		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(c.create),
 	}
 	createCmd.Flags().String(resourceFlagName, "", "REQUIRED: The resource ID. Use \"cloud\" to create a Cloud API key.")
 	createCmd.Flags().Int32("service-account", 0, "Service account ID. If not specified, the API key will have full access on the cluster.")
@@ -97,28 +97,28 @@ func (c *command) init() {
 	c.AddCommand(createCmd)
 
 	updateCmd := &cobra.Command{
-		Use:   "update <apikey>",
-		Short: "Update API key.",
-		RunE:  pcmd.NewCLIRunE(c.update),
+		Use:   "update <api-key>",
+		Short: "Update an API key.",
 		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.update),
 	}
 	updateCmd.Flags().String("description", "", "Description of the API key.")
 	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
 
 	c.AddCommand(&cobra.Command{
-		Use:   "delete <apikey>",
-		Short: "Delete API keys.",
-		RunE:  pcmd.NewCLIRunE(c.delete),
+		Use:   "delete <api-key>",
+		Short: "Delete an API key.",
 		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.delete),
 	})
 
 	storeCmd := &cobra.Command{
-		Use:   "store <apikey> <secret>",
-		Short: `Store an API key/secret locally to use in the CLI.`,
+		Use:   "store <api-key> <secret>",
+		Short: "Store an API key/secret locally to use in the CLI.",
 		Long:  longDescription,
-		RunE:  pcmd.NewCLIRunE(c.store),
 		Args:  cobra.MaximumNArgs(2),
+		RunE:  pcmd.NewCLIRunE(c.store),
 	}
 	storeCmd.Flags().String(resourceFlagName, "", "REQUIRED: The resource ID.")
 	storeCmd.Flags().BoolP("force", "f", false, "Force overwrite existing secret for this key.")
@@ -129,10 +129,10 @@ func (c *command) init() {
 	c.AddCommand(storeCmd)
 
 	useCmd := &cobra.Command{
-		Use:   "use <apikey>",
-		Short: "Make API key active for use in other commands.",
-		RunE:  pcmd.NewCLIRunE(c.use),
+		Use:   "use <api-key>",
+		Short: "Make an API key active for use in other commands.",
 		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.use),
 	}
 	useCmd.Flags().String(resourceFlagName, "", "REQUIRED: The resource ID.")
 	useCmd.Flags().SortFlags = false

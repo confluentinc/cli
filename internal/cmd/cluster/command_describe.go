@@ -71,11 +71,11 @@ func NewDescribeCommand(prerunner pcmd.PreRunner, client Metadata) *cobra.Comman
 	describeCmd := &describeCommand{
 		CLICommand: pcmd.NewAnonymousCLICommand(&cobra.Command{
 			Use:   "describe",
-			Args:  cobra.NoArgs,
 			Short: "Describe a Kafka cluster.",
+			Args:  cobra.NoArgs,
 			Example: examples.BuildExampleString(
 				examples.Example{
-					Desc: "Discover the cluster ID and Kafka ID for Connect.",
+					Text: "Discover the cluster ID and Kafka ID for Connect.",
 					Code: "confluent cluster describe --url http://localhost:8083",
 				},
 			),

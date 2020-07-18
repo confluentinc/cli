@@ -36,12 +36,12 @@ func NewSubjectCommand(cliName string, prerunner pcmd.PreRunner, srClient *srsdk
 func (c *subjectCommand) init(cliName string) {
 	listCmd := &cobra.Command{
 		Use:   "list",
+		Short: "List subjects.",
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.list),
-		Short: "List subjects.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Desc: "Retrieve all subjects available in a Schema Registry:",
+				Text: "Retrieve all subjects available in a Schema Registry:",
 				Code: fmt.Sprintf("%s schema-registry subject list", cliName),
 			},
 		),
@@ -52,13 +52,13 @@ func (c *subjectCommand) init(cliName string) {
 	c.AddCommand(listCmd)
 
 	updateCmd := &cobra.Command{
-		Use:   "update <subjectname> [--compatibility <compatibility>] [--mode <mode>]",
+		Use:   "update <subject-name> [--compatibility <compatibility>] [--mode <mode>]",
+		Short: "Update subject compatibility or mode.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.update),
-		Short: "Update subject compatibility or mode.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Desc: "Update subject level compatibility or mode of Schema Registry:",
+				Text: "Update subject level compatibility or mode of Schema Registry:",
 				Code: fmt.Sprintf("%s schema-registry subject update <subject-name> --compatibility=BACKWARD\n%s schema-registry subject update <subject-name> --mode=READWRITE", cliName, cliName),
 			},
 		),
@@ -69,13 +69,13 @@ func (c *subjectCommand) init(cliName string) {
 	c.AddCommand(updateCmd)
 
 	describeCmd := &cobra.Command{
-		Use:   "describe <subjectname>",
+		Use:   "describe <subject-name>",
+		Short: "Describe subject versions and compatibility.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.describe),
-		Short: "Describe subject versions and compatibility.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Desc: "Retrieve all versions registered under a given subject and its compatibility level.",
+				Text: "Retrieve all versions registered under a given subject and its compatibility level.",
 				Code: fmt.Sprintf("%s schema-registry subject describe <subject-name>", cliName),
 			},
 		),

@@ -11,16 +11,16 @@ func NewCurrentCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "current",
-			Args:  cobra.NoArgs,
 			Short: "Get the path of the current Confluent run.",
-			Long:  "Print the filesystem path of the data and logs of the services managed by the current \"confluent local\" command. If such a path does not exist, it will be created.",
+			Long:  `Print the filesystem path of the data and logs of the services managed by the current "confluent local" command. If such a path does not exist, it will be created.`,
+			Args:  cobra.NoArgs,
 			Example: examples.BuildExampleString(
 				examples.Example{
-					Desc: "In Linux, running ``confluent local current`` should resemble the following:",
+					Text: "In Linux, running ``confluent local current`` should resemble the following:",
 					Code: "/tmp/confluent.SpBP4fQi",
 				},
 				examples.Example{
-					Desc: "In macOS, running ``confluent local current`` should resemble the following:",
+					Text: "In macOS, running ``confluent local current`` should resemble the following:",
 					Code: "/var/folders/cs/1rndf6593qb3kb6r89h50vgr0000gp/T/confluent.000000",
 				},
 			),

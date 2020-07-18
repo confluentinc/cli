@@ -41,8 +41,8 @@ func (c *command) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List Confluent Cloud environments.",
-		RunE:  pcmd.NewCLIRunE(c.list),
 		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(c.list),
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
@@ -51,15 +51,15 @@ func (c *command) init() {
 	c.AddCommand(&cobra.Command{
 		Use:   "use <environment-id>",
 		Short: "Switch to the specified Confluent Cloud environment.",
-		RunE:  pcmd.NewCLIRunE(c.use),
 		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.use),
 	})
 
 	createCmd := &cobra.Command{
 		Use:   "create <name>",
 		Short: "Create a new Confluent Cloud environment.",
-		RunE:  pcmd.NewCLIRunE(c.create),
 		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.create),
 	}
 	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	createCmd.Flags().SortFlags = false
@@ -68,8 +68,8 @@ func (c *command) init() {
 	updateCmd := &cobra.Command{
 		Use:   "update <environment-id>",
 		Short: "Update an existing Confluent Cloud environment.",
-		RunE:  pcmd.NewCLIRunE(c.update),
 		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.update),
 	}
 	updateCmd.Flags().String("name", "", "New name for Confluent Cloud environment.")
 	check(updateCmd.MarkFlagRequired("name"))
@@ -79,8 +79,8 @@ func (c *command) init() {
 	c.AddCommand(&cobra.Command{
 		Use:   "delete <environment-id>",
 		Short: "Delete a Confluent Cloud environment and all its resources.",
-		RunE:  pcmd.NewCLIRunE(c.delete),
 		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.delete),
 	})
 }
 

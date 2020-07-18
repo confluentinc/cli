@@ -97,8 +97,8 @@ func (c *clusterCommand) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List Kafka clusters.",
-		RunE:  pcmd.NewCLIRunE(c.list),
 		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(c.list),
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
@@ -106,13 +106,16 @@ func (c *clusterCommand) init() {
 
 	createCmd := &cobra.Command{
 		Use:   "create <name>",
+		Short: "Create a Kafka cluster.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.create),
-		Short: "Create a Kafka cluster.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Desc: "Create a new dedicated cluster that uses a customer-managed encryption key in AWS. For more information, see https://docs.confluent.io/current/cloud/clusters/byok-encrypted-clusters.html.",
+				Text: "Create a new dedicated cluster that uses a customer-managed encryption key in AWS:",
 				Code: `ccloud kafka cluster create sales092020 --cloud "aws" --type "dedicated" --encryption-key "arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"`,
+			},
+			examples.Example{
+				Text: "For more information, see https://docs.confluent.io/current/cloud/clusters/byok-encrypted-clusters.html.",
 			},
 		),
 	}
@@ -132,8 +135,8 @@ func (c *clusterCommand) init() {
 	describeCmd := &cobra.Command{
 		Use:   "describe <id>",
 		Short: "Describe a Kafka cluster.",
-		RunE:  pcmd.NewCLIRunE(c.describe),
 		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.describe),
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	describeCmd.Flags().SortFlags = false
@@ -142,8 +145,8 @@ func (c *clusterCommand) init() {
 	updateCmd := &cobra.Command{
 		Use:   "update <id>",
 		Short: "Update a Kafka cluster.",
-		RunE:  pcmd.NewCLIRunE(c.update),
 		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.update),
 	}
 	updateCmd.Flags().String("name", "", "Name of the Kafka cluster.")
 	updateCmd.Flags().Int("cku", 0, "Number of Confluent Kafka Units (non-negative). For Kafka clusters of type 'dedicated' only.")
@@ -154,15 +157,15 @@ func (c *clusterCommand) init() {
 	deleteCmd := &cobra.Command{
 		Use:   "delete <id>",
 		Short: "Delete a Kafka cluster.",
-		RunE:  pcmd.NewCLIRunE(c.delete),
 		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.delete),
 	}
 	c.AddCommand(deleteCmd)
 	c.AddCommand(&cobra.Command{
 		Use:   "use <id>",
 		Short: "Make the Kafka cluster active for use in other commands.",
-		RunE:  pcmd.NewCLIRunE(c.use),
 		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.use),
 	})
 }
 

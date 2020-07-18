@@ -62,12 +62,12 @@ func NewClusterCommand(cliName string, prerunner pcmd.PreRunner, srClient *srsdk
 func (c *clusterCommand) init(cliName string) {
 	createCmd := &cobra.Command{
 		Use:   "enable",
+		Short: "Enable Schema Registry for this environment.",
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.enable),
-		Short: "Enable Schema Registry for this environment.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Desc: "Enable Schema Registry, using Google Cloud Platform in the US:",
+				Text: "Enable Schema Registry, using Google Cloud Platform in the US:",
 				Code: fmt.Sprintf("%s schema-registry cluster enable --cloud gcp --geo us", cliName),
 			},
 		),
@@ -82,9 +82,9 @@ func (c *clusterCommand) init(cliName string) {
 
 	describeCmd := &cobra.Command{
 		Use:   "describe",
+		Short: "Describe the Schema Registry cluster for this environment.",
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.describe),
-		Short: "Describe the Schema Registry cluster for this environment.",
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	describeCmd.Flags().SortFlags = false
@@ -92,12 +92,12 @@ func (c *clusterCommand) init(cliName string) {
 
 	updateCmd := &cobra.Command{
 		Use:   "update",
+		Short: "Update global mode or compatibility of Schema Registry.",
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.update),
-		Short: "Update global mode or compatibility of Schema Registry.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Desc: "Update top level compatibility or mode of Schema Registry.",
+				Text: "Update top level compatibility or mode of Schema Registry.",
 				Code: fmt.Sprintf("%s schema-registry cluster update --compatibility=BACKWARD\n%s schema-registry cluster update --mode=READWRITE", cliName, cliName),
 			},
 		),

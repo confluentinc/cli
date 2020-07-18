@@ -180,15 +180,15 @@ func NewServicesStartCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "start",
-			Args:  cobra.NoArgs,
 			Short: "Start all Confluent Platform services.",
+			Args:  cobra.NoArgs,
 			Example: examples.BuildExampleString(
 				examples.Example{
-					Desc: "Start all available services:",
+					Text: "Start all available services:",
 					Code: "confluent local services start",
 				},
 				examples.Example{
-					Desc: "Start Apache Kafka® and ZooKeeper as its dependency:",
+					Text: "Start Apache Kafka® and ZooKeeper as its dependency:",
 					Code: "confluent local services kafka start",
 				},
 			),
@@ -256,15 +256,15 @@ func NewServicesStopCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "stop",
-			Args:  cobra.NoArgs,
 			Short: "Stop all Confluent Platform services.",
+			Args:  cobra.NoArgs,
 			Example: examples.BuildExampleString(
 				examples.Example{
-					Desc: "Stop all running services:",
+					Text: "Stop all running services:",
 					Code: "confluent local services stop",
 				},
 				examples.Example{
-					Desc: "Stop Apache Kafka® and its dependent services.",
+					Text: "Stop Apache Kafka® and its dependent services.",
 					Code: "confluent local services kafka stop",
 				},
 			),

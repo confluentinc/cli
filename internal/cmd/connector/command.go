@@ -67,12 +67,12 @@ func New(cliName string, prerunner pcmd.PreRunner) *cobra.Command {
 func (c *command) init(cliName string) {
 	cmd := &cobra.Command{
 		Use:   "describe <id>",
+		Short: "Describe a connector.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.describe),
-		Short: "Describe a connector.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Desc: "Describe connector and task level details of a connector in the current or specified Kafka cluster context.",
+				Text: "Describe connector and task level details of a connector in the current or specified Kafka cluster context.",
 				Code: fmt.Sprintf("%s connector describe <id>\n%s connector describe <id> --cluster <cluster-id>", cliName, cliName),
 			},
 		),
@@ -84,12 +84,12 @@ func (c *command) init(cliName string) {
 
 	cmd = &cobra.Command{
 		Use:   "list",
+		Short: "List connectors.",
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.list),
-		Short: "List connectors.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Desc: "List connectors in the current or specified Kafka cluster context.",
+				Text: "List connectors in the current or specified Kafka cluster context.",
 				Code: fmt.Sprintf("%s connector list\n%s connector list --cluster <cluster-id>", cliName, cliName),
 			},
 		),
@@ -101,12 +101,12 @@ func (c *command) init(cliName string) {
 
 	cmd = &cobra.Command{
 		Use:   "create",
+		Short: "Create a connector.",
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.create),
-		Short: "Create a connector.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Desc: "Create a connector in the current or specified Kafka cluster context.",
+				Text: "Create a connector in the current or specified Kafka cluster context.",
 				Code: fmt.Sprintf("%s connector create --config <file>\n%s connector create --cluster <cluster-id> --config <file>", cliName, cliName),
 			},
 		),
@@ -120,12 +120,12 @@ func (c *command) init(cliName string) {
 
 	cmd = &cobra.Command{
 		Use:   "delete <id>",
+		Short: "Delete a connector.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.delete),
-		Short: "Delete a connector.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Desc: "Delete a connector in the current or specified Kafka cluster context.",
+				Text: "Delete a connector in the current or specified Kafka cluster context.",
 				Code: fmt.Sprintf("%s connector delete --config <file>\n%s connector delete --cluster <cluster-id> --config <file>", cliName, cliName),
 			},
 		),
@@ -136,9 +136,9 @@ func (c *command) init(cliName string) {
 
 	cmd = &cobra.Command{
 		Use:   "update <id>",
+		Short: "Update a connector configuration.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.update),
-		Short: "Update connector configuration.",
 	}
 	cmd.Flags().String("config", "", "JSON connector config file.")
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
@@ -148,12 +148,12 @@ func (c *command) init(cliName string) {
 
 	cmd = &cobra.Command{
 		Use:   "pause <id>",
+		Short: "Pause a connector.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.pause),
-		Short: "Pause a connector.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Desc: "Pause a connector in the current or specified Kafka cluster context.",
+				Text: "Pause a connector in the current or specified Kafka cluster context.",
 				Code: fmt.Sprintf("%s connector pause --config <file>\n%s connector pause --cluster <cluster-id> --config <file>", cliName, cliName),
 			},
 		),
@@ -164,12 +164,12 @@ func (c *command) init(cliName string) {
 
 	cmd = &cobra.Command{
 		Use:   "resume <id>",
+		Short: "Resume a connector.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.resume),
-		Short: "Resume a connector.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Desc: "Resume a connector in the current or specified Kafka cluster context.",
+				Text: "Resume a connector in the current or specified Kafka cluster context.",
 				Code: fmt.Sprintf("%s connector resume --config <file>\n%s connector resume --cluster <cluster-id> --config <file>", cliName, cliName),
 			},
 		),

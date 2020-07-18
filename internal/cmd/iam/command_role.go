@@ -64,8 +64,8 @@ func (c *roleCommand) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List the available RBAC roles.",
-		RunE:  cmd.NewCLIRunE(c.list),
 		Args:  cobra.NoArgs,
+		RunE:  cmd.NewCLIRunE(c.list),
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
@@ -74,8 +74,8 @@ func (c *roleCommand) init() {
 	describeCmd := &cobra.Command{
 		Use:   "describe <name>",
 		Short: "Describe the resources and operations allowed for a role.",
-		RunE:  cmd.NewCLIRunE(c.describe),
 		Args:  cobra.ExactArgs(1),
+		RunE:  cmd.NewCLIRunE(c.describe),
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	describeCmd.Flags().SortFlags = false

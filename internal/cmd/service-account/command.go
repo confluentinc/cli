@@ -47,9 +47,9 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 func (c *command) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
+		Short: "List service accounts.",
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.list),
-		Short: "List service accounts.",
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
@@ -57,12 +57,12 @@ func (c *command) init() {
 
 	createCmd := &cobra.Command{
 		Use:   "create <name>",
+		Short: "Create a service account.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.create),
-		Short: "Create a service account.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Desc: "Create a service account named ``DemoServiceAccount``.",
+				Text: "Create a service account named ``DemoServiceAccount``.",
 				Code: `ccloud service-account create DemoServiceAccount --description "This is a demo service account."`,
 			},
 		),
@@ -75,12 +75,12 @@ func (c *command) init() {
 
 	updateCmd := &cobra.Command{
 		Use:   "update <id>",
+		Short: "Update a service account.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.update),
-		Short: "Update a service account.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Desc: "Update the description of a service account with the ID ``2786``",
+				Text: "Update the description of a service account with the ID ``2786``",
 				Code: `ccloud service-account update 2786 --description "Update demo service account information."`,
 			},
 		),
@@ -92,12 +92,12 @@ func (c *command) init() {
 
 	c.AddCommand(&cobra.Command{
 		Use:   "delete <id>",
+		Short: "Delete a service account.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.delete),
-		Short: "Delete a service account.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Desc: "Delete a service account with the ID ``2786``",
+				Text: "Delete a service account with the ID ``2786``",
 				Code: "ccloud service-account delete 2786",
 			},
 		),
