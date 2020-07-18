@@ -11,6 +11,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/local"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 var (
@@ -292,7 +293,7 @@ func (c *Command) runKafkaCommand(command *cobra.Command, args []string, mode st
 		kafkaArgs = append(kafkaArgs, configFileFlag, cloudConfigFile)
 		kafkaArgs = append(kafkaArgs, "--bootstrap-server", cloudServer)
 	} else {
-		if !local.Contains(kafkaArgs, "--bootstrap-server") {
+		if !utils.Contains(kafkaArgs, "--bootstrap-server") {
 			defaultBootstrapServer := fmt.Sprintf("localhost:%d", services["kafka"].port)
 			kafkaArgs = append(kafkaArgs, "--bootstrap-server", defaultBootstrapServer)
 		}
