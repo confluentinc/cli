@@ -10,7 +10,6 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/update"
@@ -54,7 +53,6 @@ func NewClient(cliName string, disableUpdateCheck bool, logger *log.Logger) (upd
 type command struct {
 	Command *cobra.Command
 	cliName string
-	config  *v3.Config
 	version *cliVersion.Version
 	logger  *log.Logger
 	client  update.Client
@@ -132,7 +130,7 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 	if err := c.client.UpdateBinary(c.cliName, latestVersion, oldBin); err != nil {
 		return errors.NewUpdateClientWrapError(err, errors.UpdateBinaryErrorMsg, c.cliName)
 	}
-	pcmd.ErrPrintf(cmd, errors.UpdateAutocompleteMsg, c.config.CLIName)
+	pcmd.ErrPrintf(cmd, errors.UpdateAutocompleteMsg, c.cliName)
 
 	return nil
 }

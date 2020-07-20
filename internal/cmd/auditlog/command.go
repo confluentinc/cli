@@ -1,6 +1,9 @@
 package auditlog
 
 import (
+	"encoding/json"
+	"fmt"
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"net/http"
 
 	"github.com/spf13/cobra"
@@ -35,9 +38,30 @@ func (c *command) init() {
 	c.AddCommand(NewRouteCommand(c.prerunner))
 }
 
+type errorMessage struct {
+	ErrorCode uint32 `json:"error_code" yaml:"error_code"`
+	Message   string `json:"message" yaml:"message"`
+}
+
+
 func HandleMdsAuditLogApiError(cmd *cobra.Command, err error, response *http.Response) error {
-	if response != nil && response.StatusCode == http.StatusNotFound {
-		return errors.NewWrapErrorWithSuggestions(err, errors.UnableToAccessEndpointErrorMsg, errors.UnableToAccessEndpointSuggestions)
+	if response != nil {
+		switch status := response.StatusCode; status {
+		case http.StatusNotFound:
+			cmd.SilenceUsage = true
+			return errors.NewWrapErrorWithSuggestions(err, errors.UnableToAccessEndpointErrorMsg, errors.UnableToAccessEndpointSuggestions)
+		case http.StatusForbidden:
+			switch e := err.(type) {
+			case mds.GenericOpenAPIError:
+				cmd.SilenceUsage = true
+				em := errorMessage{}
+				if err = json.Unmarshal(e.Body(), &em); err != nil {
+					// It wasn't what we expected. Use the regular error handler.
+					return errors.HandleCommon(err, cmd)
+				}
+				return fmt.Errorf("%s\n%s", e.Error(), em.Message)
+			}
+		}
 	}
 	return err
 }

@@ -33,7 +33,7 @@ func NewPrompt(stdin *os.File) *RealPrompt {
 // ReadLine reads a line of input, without the newline.
 func (p *RealPrompt) ReadLine() (string, error) {
 	str, err := p.In.ReadString('\n')
-	return strings.TrimSuffix(str, "\n"), err
+	return strings.TrimSuffix(strings.TrimSuffix(str, "\n"), "\r"), err
 }
 
 // ReadLineMasked reads a line of input from a terminal without local echo.
