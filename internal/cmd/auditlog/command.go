@@ -3,9 +3,9 @@ package auditlog
 import (
 	"encoding/json"
 	"fmt"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"net/http"
 
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -42,7 +42,6 @@ type errorMessage struct {
 	ErrorCode uint32 `json:"error_code" yaml:"error_code"`
 	Message   string `json:"message" yaml:"message"`
 }
-
 
 func HandleMdsAuditLogApiError(cmd *cobra.Command, err error, response *http.Response) error {
 	if response != nil {
