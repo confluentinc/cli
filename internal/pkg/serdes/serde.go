@@ -1,6 +1,6 @@
 package serdes
 
-import "errors"
+import "github.com/confluentinc/cli/internal/pkg/errors"
 
 func GetSerializationProvider(valueFormat string) (SerializationProvider, error) {
 	var provider SerializationProvider
@@ -15,7 +15,7 @@ func GetSerializationProvider(valueFormat string) (SerializationProvider, error)
 	if valueFormat == "RAW" {
 		provider = new(RawSerializationProvider)
 	} else {
-		return nil, errors.New("Unknown value format type.")
+		return nil, errors.New(errors.UnknownValueFormatErrorMsg)
 	}
 	return provider, nil
 }
@@ -33,7 +33,7 @@ func GetDeserializationProvider(valueFormat string) (DeserializationProvider, er
 	if valueFormat == "RAW" {
 		provider = new(RawDeserializationProvider)
 	} else {
-		return nil, errors.New("Unknown value format type.")
+		return nil, errors.New(errors.UnknownValueFormatErrorMsg)
 	}
 	return provider, nil
 }

@@ -368,7 +368,7 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 func (h *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, subject string, valueFormat string, schemaPath string) ([]byte, error) {
 	schema, err := ioutil.ReadFile(schemaPath)
 	if err != nil {
-		return nil, errors.HandleCommon(err, cmd)
+		return nil, err
 	}
 	var refs []srsdk.SchemaReference
 
@@ -405,23 +405,23 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 
 	valueFormat, err := cmd.Flags().GetString("value-format")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	schemaPath, err := cmd.Flags().GetString("schema")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	parseKey, err := cmd.Flags().GetBool("parse-key")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	subject := topic + "-value"
 	serializationProvider, err := serde.GetSerializationProvider(valueFormat)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	// Meta info contains magic byte and schema ID (4 bytes).
@@ -430,9 +430,12 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 
 	// Registering schema when specified, and fill metaInfo array.
 	if valueFormat != "RAW" && len(schemaPath) > 0 {
+		if h.Config.Client == nil {
+			return errors.New(errors.NotUsernameAuthenticatedErrorMsg)
+		}
 		info, err := h.registerSchema(cmd, subject, serializationProvider.GetSchemaName(), schemaPath)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		metaInfo = info
 	}
@@ -493,14 +496,14 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 			if len(record) == 2 {
 				key = sarama.StringEncoder(strings.TrimSpace(record[0]))
 			} else {
-				return errors.HandleCommon(errors.New("Missing key in message."), cmd)
+				return errors.New(errors.MissingKeyErrorMsg)
 			}
 		} else {
 			valueString = strings.TrimSpace(data)
 		}
 		encodedMessage, err := serde.Serialize(serializationProvider, valueString, schemaPath)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		encoded := append(metaInfo, encodedMessage...)
 		value := sarama.StringEncoder(string(encoded))
@@ -536,7 +539,7 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 
 	valueFormat, err := cmd.Flags().GetString("value-format")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	cluster, err := h.Context.GetKafkaClusterForCommand(cmd)
@@ -550,12 +553,12 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 
 	printKey, err := cmd.Flags().GetBool("print-key")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	delimiter, err := cmd.Flags().GetString("delimiter")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	InitSarama(h.logger)
@@ -583,6 +586,10 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	var srClient *srsdk.APIClient
 	var ctx context.Context
 	if valueFormat != "RAW" {
+		if h.Config.Client == nil {
+			return errors.New(errors.NotUsernameAuthenticatedErrorMsg)
+		}
+
 		// Only initialize client and context when schema is specified.
 		srClient, ctx, err = sr.GetApiClient(cmd, nil, h.Config, h.Version)
 		if err != nil {
@@ -598,7 +605,7 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		err = os.Mkdir(dir, 0755)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 	}
 
@@ -610,14 +617,12 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		Properties: ConsumerProperties{PrintKey: printKey, Delimiter: delimiter, SchemaPath: dir},
 	}
 	err = consumer.Consume(context.Background(), []string{topic}, groupHandler)
+	_, err = errors.CatchTopicNotExistError(err, topic, cluster.ID)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	err = os.RemoveAll(dir)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	return nil
+	return err
 }
 
 func toMap(configs []string) (map[string]string, error) {
