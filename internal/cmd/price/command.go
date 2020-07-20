@@ -36,7 +36,7 @@ func New(prerunner cmd.PreRunner) *cobra.Command {
 func (c *command) newListCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "list",
-		Short: "Print an organization's price list",
+		Short: "Print an organization's price list.",
 		Args:  cobra.NoArgs,
 		RunE:  cmd.NewCLIRunE(c.list),
 	}
