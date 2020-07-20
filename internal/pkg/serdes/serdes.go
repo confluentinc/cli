@@ -5,14 +5,13 @@ import "github.com/confluentinc/cli/internal/pkg/errors"
 func GetSerializationProvider(valueFormat string) (SerializationProvider, error) {
 	var provider SerializationProvider
 	// Will add other providers in later commits.
-	//if valueFormat == "AVRO" {
-	//	provider = new(AvroSerializationProvider)
-	//} else if valueFormat == "PROTOBUF" {
-	//	provider = new(ProtoSerializationProvider)
-	//} else if valueFormat == "JSON" {
-	//	provider = new(JsonSerializationProvider)
-	//} else if valueFormat == "STRING" {
-	if valueFormat == "RAW" {
+	if valueFormat == "AVRO" {
+		provider = new(AvroSerializationProvider)
+	} else if valueFormat == "PROTOBUF" {
+		provider = new(ProtoSerializationProvider)
+	} else if valueFormat == "JSON" {
+		provider = new(JsonSerializationProvider)
+	} else if valueFormat == "RAW" {
 		provider = new(RawSerializationProvider)
 	} else {
 		return nil, errors.New(errors.UnknownValueFormatErrorMsg)
@@ -23,14 +22,13 @@ func GetSerializationProvider(valueFormat string) (SerializationProvider, error)
 func GetDeserializationProvider(valueFormat string) (DeserializationProvider, error) {
 	var provider DeserializationProvider
 	// Will add other providers in later commits.
-	//if valueFormat == "AVRO" {
-	//	provider = new(AvroDeserializationProvider)
-	//} else if valueFormat == "PROTOBUF" {
-	//	provider = new(ProtoDeserializationProvider)
-	//} else if valueFormat == "JSON" {
-	//	provider = new(JsonDeserializationProvider)
-	//} else if valueFormat == "STRING" {
-	if valueFormat == "RAW" {
+	if valueFormat == "AVRO" {
+		provider = new(AvroDeserializationProvider)
+	} else if valueFormat == "PROTOBUF" {
+		provider = new(ProtoDeserializationProvider)
+	} else if valueFormat == "JSON" {
+		provider = new(JsonDeserializationProvider)
+	} else if valueFormat == "RAW" {
 		provider = new(RawDeserializationProvider)
 	} else {
 		return nil, errors.New(errors.UnknownValueFormatErrorMsg)
