@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -186,12 +185,4 @@ func (l *logAdapter) log(msg string) {
 	// This is how hclog.StandardLogger works as well; it fixes the unnecessary extra newlines
 	msg = strings.TrimRight(msg, " \t\n")
 	l.logger.Log("msg", msg)
-}
-
-func fileExists(filename string) bool {
-	info, err := os.Stat(filename)
-	if os.IsNotExist(err) {
-		return false
-	}
-	return !info.IsDir()
 }

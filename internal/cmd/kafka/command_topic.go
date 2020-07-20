@@ -94,6 +94,7 @@ func (h *hasAPIKeyTopicCommand) init() {
 	cmd.Flags().String("value-format", "RAW", "Format of message value.")
 	cmd.Flags().String("schema", "", "The path to the schema file.")
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
+	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	cmd.Flags().SortFlags = false
 	h.AddCommand(cmd)
 
@@ -382,7 +383,20 @@ func (h *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, subject strin
 		return nil, err
 	}
 
-	pcmd.Printf(cmd, "Successfully registered schema with ID: %v \n", response.Id)
+	outputFormat, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		return nil, err
+	}
+	if outputFormat == output.Human.String() {
+		pcmd.Println(cmd, errors.RegisteredSchemaMsg, response.Id)
+	} else {
+		err = output.StructuredOutput(outputFormat, &struct {
+			Id int32 `json:"id" yaml:"id"`
+		}{response.Id})
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	metaInfo := []byte{0x0}
 	schemaIdBuffer := make([]byte, 4)
