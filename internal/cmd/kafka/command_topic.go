@@ -21,7 +21,7 @@ import (
 	"github.com/spf13/cobra"
 
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
-	serde "github.com/confluentinc/cli/internal/pkg/serdes"
+	serdes "github.com/confluentinc/cli/internal/pkg/serdes"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -419,7 +419,7 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	}
 
 	subject := topic + "-value"
-	serializationProvider, err := serde.GetSerializationProvider(valueFormat)
+	serializationProvider, err := serdes.GetSerializationProvider(valueFormat)
 	if err != nil {
 		return err
 	}
@@ -501,7 +501,7 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		} else {
 			valueString = strings.TrimSpace(data)
 		}
-		encodedMessage, err := serde.Serialize(serializationProvider, valueString, schemaPath)
+		encodedMessage, err := serdes.Serialize(serializationProvider, valueString, schemaPath)
 		if err != nil {
 			return err
 		}

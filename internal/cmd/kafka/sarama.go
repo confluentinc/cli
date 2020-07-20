@@ -13,7 +13,7 @@ import (
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/log"
-	serde "github.com/confluentinc/cli/internal/pkg/serdes"
+	serdes "github.com/confluentinc/cli/internal/pkg/serdes"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	"github.com/Shopify/sarama"
@@ -90,7 +90,7 @@ func (h *GroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sara
 			}
 		}
 
-		deserializationProvider, err := serde.GetDeserializationProvider(h.Format)
+		deserializationProvider, err := serdes.GetDeserializationProvider(h.Format)
 		if err != nil {
 			return err
 		}
@@ -105,7 +105,7 @@ func (h *GroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sara
 			// Message body is encoded after 5 bytes of meta information.
 			value = value[5:]
 		}
-		jsonMessage, err := serde.Deserialize(deserializationProvider, value, tempStorePath)
+		jsonMessage, err := serdes.Deserialize(deserializationProvider, value, tempStorePath)
 		if err != nil {
 			return err
 		}
