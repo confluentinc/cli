@@ -94,7 +94,6 @@ func (h *hasAPIKeyTopicCommand) init() {
 	cmd.Flags().String("value-format", "RAW", "Format of message value.")
 	cmd.Flags().String("schema", "", "The path to the schema file.")
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
-	cmd.Flags().String("resource", "", "Resource name.")
 	cmd.Flags().SortFlags = false
 	h.AddCommand(cmd)
 
@@ -366,19 +365,6 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 	return nil
 }
 
-func initCCloudClient(cliCmd *hasAPIKeyTopicCommand) error {
-	ctx, err := cliCmd.Config.Context(cliCmd.Command)
-	if err != nil {
-		return err
-	}
-	ccloudClient, err := pcmd.CreateCCloudClient(ctx, cliCmd.Command, cliCmd.Version)
-	if err != nil {
-		return err
-	}
-	cliCmd.Config.Client = ccloudClient
-	return nil
-}
-
 func (h *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, subject string, valueFormat string, schemaPath string) ([]byte, error) {
 	schema, err := ioutil.ReadFile(schemaPath)
 	if err != nil {
@@ -444,11 +430,6 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 
 	// Registering schema when specified, and fill metaInfo array.
 	if valueFormat != "RAW" && len(schemaPath) > 0 {
-		// Initialize ccloud client for retrieving SR cluster info.
-		err := initCCloudClient(h)
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
 		info, err := h.registerSchema(cmd, subject, serializationProvider.GetSchemaName(), schemaPath)
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
@@ -602,11 +583,6 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	var srClient *srsdk.APIClient
 	var ctx context.Context
 	if valueFormat != "RAW" {
-		// Initialize ccloud client for retrieving SR cluster info.
-		err := initCCloudClient(h)
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
 		// Only initialize client and context when schema is specified.
 		srClient, ctx, err = sr.GetApiClient(cmd, nil, h.Config, h.Version)
 		if err != nil {
