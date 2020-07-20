@@ -751,6 +751,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		_, err = io.WriteString(w, string(reply))
 		require.NoError(t, err)
 	})
+	router.HandleFunc("/api/organizations/0/price_table", handlePriceTable(t))
 	addMdsv2alpha1(t, router)
 	return httptest.NewServer(router)
 }
